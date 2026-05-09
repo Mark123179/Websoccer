@@ -46,7 +46,10 @@
 
             <td>{{ player.age }}</td>
 
-            <td>{{ player.strength }}</td>
+            <td>{% if player.strength_profile %}
+                 {{ player.strength_profile.final_strength }}
+                 {% else %}
+                -{% endif %}</td>
 
             <td>{{ player.potential }}</td>
         </tr>
