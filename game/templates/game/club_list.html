@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Vereinsübersicht
+{% endblock %}
+
+{% block content %}
+
+{% load humanize %}
+
+<h1>Vereinsübersicht</h1>
+
+<table class="club-table">
+
+    <thead>
+        <tr>
+            <th>Verein</th>
+            <th>Kurzname</th>
+            <th>Liga</th>
+            <th>Budget</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for club in clubs %}
+
+        <tr>
+            <td><a href="/clubs/{{ club.id }}/">
+        {{ club.name }}
+    </a>
+</td>
+            <td>{{ club.short_name }}</td>
+            <td>{{ club.league.name }}</td>
+            <td>{{ club.budget|floatformat:0|intcomma }} €</td>
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% endblock %}

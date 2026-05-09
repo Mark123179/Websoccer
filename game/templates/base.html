@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        {% block title %}
+            Websoccer
+        {% endblock %}
+    </title>
+
+    <style>
+
+        body {
+            background-color: #1e1e1e;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #111;
+            padding: 15px 30px;
+            border-bottom: 3px solid #00bfff;
+
+            display: flex;
+            gap: 20px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .navbar a:hover {
+            color: #00bfff;
+        }
+
+        .container {
+            width: 90%;
+            margin: 30px auto;
+        }
+
+        .club-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2a2a2a;
+        }
+
+        .club-table th {
+            background-color: #00bfff;
+            color: black;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .club-table td {
+            padding: 12px;
+            border-bottom: 1px solid #444;
+        }
+
+        .club-table tr:hover {
+            background-color: #3a3a3a;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="navbar">
+
+        <a href="/clubs/">Vereine</a>
+
+    </div>
+
+    <div class="container">
+
+        {% block content %}
+        {% endblock %}
+
+    </div>
+
+</body>
+</html>

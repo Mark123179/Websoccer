@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ club.name }}
+{% endblock %}
+
+{% block content %}
+
+<h1>{{ club.name }}</h1>
+
+<p><strong>Kurzname:</strong> {{ club.short_name }}</p>
+
+<p><strong>Liga:</strong> {{ club.league.name }}</p>
+
+<<p><strong>Budget:</strong> {{ club.budget|floatformat:0|intcomma }} €</p>
+
+<hr>
+
+<h2>Kader</h2>
+
+<table class="club-table">
+
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Alter</th>
+            <th>Stärke</th>
+            <th>Potential</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for player in players %}
+
+        <tr>
+            <td>
+                {{ player.first_name }}
+                {{ player.last_name }}
+            </td>
+
+            <td>{{ player.position }}</td>
+
+            <td>{{ player.age }}</td>
+
+            <td>{{ player.strength }}</td>
+
+            <td>{{ player.potential }}</td>
+        </tr>
+
+        {% empty %}
+
+        <tr>
+            <td colspan="5">
+                Keine Spieler vorhanden.
+            </td>
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% endblock %}
