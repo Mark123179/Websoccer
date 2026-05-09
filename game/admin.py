@@ -1,10 +1,16 @@
 from django.contrib import admin
-from .models import League, Club, Player
+from .models import (
+    League,
+    Club,
+    Player,
+    PlayerStrengthProfile
+)
 
 
 class PlayerInline(admin.TabularInline):
     model = Player
     extra = 0
+
     fields = (
         'first_name',
         'last_name',
@@ -25,3 +31,4 @@ class ClubAdmin(admin.ModelAdmin):
 admin.site.register(League)
 admin.site.register(Club, ClubAdmin)
 admin.site.register(Player)
+admin.site.register(PlayerStrengthProfile)

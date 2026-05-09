@@ -6,13 +6,15 @@
 
 {% block content %}
 
+{% load humanize %}
+
 <h1>{{ club.name }}</h1>
 
 <p><strong>Kurzname:</strong> {{ club.short_name }}</p>
 
 <p><strong>Liga:</strong> {{ club.league.name }}</p>
 
-<<p><strong>Budget:</strong> {{ club.budget|floatformat:0|intcomma }} €</p>
+<p><strong>Budget:</strong> {{ club.budget|floatformat:0|intcomma }} €</p>
 
 <hr>
 
