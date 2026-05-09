@@ -16,7 +16,6 @@ class PlayerInline(admin.TabularInline):
         'last_name',
         'position',
         'age',
-        'strength',
         'potential',
         'market_value',
     )
