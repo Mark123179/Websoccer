@@ -68,6 +68,8 @@ class PageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Kadergröße')
         self.assertContains(response, 'Marktwert')
+        self.assertContains(response, 'https://www.transfermarkt.de/harry-kane/profil/spieler/132098')
+        self.assertNotContains(response, 'https://www.transfermarkt.de/harry-kane/marktwertverlauf/spieler/132098')
 
     def test_player_detail_renders_profile_shell(self):
         player = Player.objects.get(transfermarkt_id=132098)

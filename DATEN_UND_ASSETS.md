@@ -62,7 +62,8 @@ Der Befehl laedt:
 - Borussia Dortmund mit Club-ID `907`
 - FC Bayern Muenchen mit Club-ID `915`
 - nur die Spieler der 1. Mannschaft von Transfermarkt
-- Transfermarkt-ID, Transfermarkt-Profil-Link und Transfermarkt-Marktwert-Link
+- Transfermarkt-ID, Transfermarkt-Profil-Link und Transfermarkt-Marktwert-Link als Rohdaten
+- sichtbare Transfermarkt-Verlinkungen im Kader fuehren auf das Spielerprofil, nicht auf den Marktwertverlauf
 - FMInside-ID, Rating und Potential als interne Admin-/Staerke-Daten
 - Geburtstag, Alter, Nationalitaeten, Hauptposition, Nebenpositionen, Marktwert und Vertragsende
 - Gehalt pro Spiel nach Startformel: `5.000 EUR je 1.000.000 EUR Marktwert`
@@ -72,4 +73,4 @@ Aktueller Umfang nach dem Seed:
 - Borussia Dortmund: 26 Spieler
 - FC Bayern Muenchen: 25 Spieler
 
-Hinweis: Spielerbilder und Vereinswappen werden spaeter lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI ein lokales Default-Spielerbild.
+Hinweis: Spielerbilder und Vereinswappen werden spaeter lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI automatisch das lokale Default-Spielerbild `game/static/game/images/default_player.svg`.

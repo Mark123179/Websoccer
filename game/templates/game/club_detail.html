@@ -96,8 +96,8 @@
             <td>{{ player.primary_position|default:player.get_position_display }}</td>
             <td>{{ player.source_positions|default:"-" }}</td>
             <td>
-                {% if player.transfermarkt_market_value_url %}
-                    <a href="{{ player.transfermarkt_market_value_url }}" target="_blank" rel="noopener">
+                {% if player.transfermarkt_profile_url %}
+                    <a href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener">
                         {{ player.market_value|floatformat:0|intcomma }} €
                     </a>
                 {% else %}
