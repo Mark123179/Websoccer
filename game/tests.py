@@ -27,8 +27,11 @@ class PageSmokeTests(TestCase):
             fm_inside_id=28049320,
             age=31,
             position='ST',
+            source_positions='ST',
             potential=90,
             market_value=Decimal('100000000.00'),
+            market_value_note='€80M - €120M',
+            weekly_wage=Decimal('381200.00'),
             club=self.club,
         )
         PlayerStrengthProfile.objects.create(

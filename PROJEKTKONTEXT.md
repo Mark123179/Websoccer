@@ -37,6 +37,7 @@ Das Projekt enthaelt bereits eine erste fachliche Basis:
 - `requirements.txt` dokumentiert die lokale Django-Umgebung
 - Smoke-Tests pruefen Startseite, Vereinsuebersicht und Vereinsdetailseite
 - Vereine und Spieler haben eine `fm_inside_id` als stabile externe Referenz-ID fuer Daten- und Asset-Zuordnung
+- Management Command `seed_reference_clubs` laedt Borussia Dortmund und FC Bayern inklusive FMInside-Spieler-IDs und Kaderdaten
 
 Zusaetzlich gibt es ein eigenes Arbeitsdokument fuer das geplante Spielstaerkemodell:
 
@@ -94,6 +95,7 @@ Wichtig fuer unser Projekt:
    - Spielplan und Spieltage
    - Tabellenstand
    - Spielerattribute und Staerkelogik gemaess `SPIELSTAERKEMODELL.md`
+   - Kaderansichten nach Profis, Jugend und Reserve trennen
 
 3. Spielsimulation vorbereiten
    - einfache Match-Engine

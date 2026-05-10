@@ -61,6 +61,10 @@ class Player(models.Model):
         max_length=10,
         choices=POSITION_CHOICES
     )
+    source_positions = models.CharField(
+        max_length=100,
+        blank=True
+    )
 
     potential = models.IntegerField(default=50)
 
@@ -68,6 +72,19 @@ class Player(models.Model):
         max_digits=15,
         decimal_places=2,
         default=0
+    )
+    market_value_note = models.CharField(
+        max_length=100,
+        blank=True
+    )
+    weekly_wage = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+    contract_until = models.DateField(
+        null=True,
+        blank=True
     )
 
     club = models.ForeignKey(

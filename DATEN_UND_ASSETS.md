@@ -48,3 +48,25 @@ Fuer allgemeine Logos, Icons und Symbolgrafiken gilt weiterhin:
 - Code soll spaeter nur anhand der `fm_inside_id` den erwarteten Dateipfad bauen.
 - Fehlende Bilder muessen einen neutralen Platzhalter anzeigen.
 - Die ersten Referenzvereine sind Borussia Dortmund und FC Bayern.
+
+## Referenzdaten laden
+
+Die ersten beiden Referenzvereine koennen per Management Command aus FMInside-Daten geladen werden:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py seed_reference_clubs
+```
+
+Der Befehl laedt:
+
+- Borussia Dortmund mit Club-ID `907`
+- FC Bayern Muenchen mit Club-ID `915`
+- Spieler-IDs aus den FMInside-Spieler-URLs
+- Alter, Originalpositionen, gemappte Websoccer-Position, Rating, Potential, Wertbereich, Wochengehalt und Vertragsende
+
+Aktueller Umfang nach dem Seed:
+
+- Borussia Dortmund: 73 Spieler
+- FC Bayern Muenchen: 100 Spieler
+
+Hinweis: Das ist der FMInside-Full-Squad-Datensatz inklusive Jugend-/Reserve-Spielern. Fuer das spaetere Spielgefuehl sollte die UI zwischen Profikader, Jugend und Reserve unterscheiden.

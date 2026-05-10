@@ -19,6 +19,9 @@ class PlayerInline(admin.TabularInline):
         'age',
         'potential',
         'market_value',
+        'market_value_note',
+        'weekly_wage',
+        'contract_until',
     )
 
 
@@ -53,6 +56,8 @@ class PlayerAdmin(admin.ModelAdmin):
         'club',
         'fm_inside_id',
         'market_value',
+        'weekly_wage',
+        'contract_until',
     )
     search_fields = (
         'first_name',
