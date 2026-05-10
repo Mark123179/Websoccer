@@ -13,14 +13,17 @@ class PlayerInline(admin.TabularInline):
 
     fields = (
         'fm_inside_id',
+        'transfermarkt_id',
         'first_name',
         'last_name',
         'position',
+        'primary_position',
+        'date_of_birth',
+        'nationalities',
         'age',
         'potential',
         'market_value',
-        'market_value_note',
-        'weekly_wage',
+        'salary_per_match',
         'contract_until',
     )
 
@@ -55,14 +58,17 @@ class PlayerAdmin(admin.ModelAdmin):
         'position',
         'club',
         'fm_inside_id',
+        'transfermarkt_id',
+        'date_of_birth',
         'market_value',
-        'weekly_wage',
+        'salary_per_match',
         'contract_until',
     )
     search_fields = (
         'first_name',
         'last_name',
         'fm_inside_id',
+        'transfermarkt_id',
     )
     list_filter = (
         'club',

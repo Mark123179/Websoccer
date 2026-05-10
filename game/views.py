@@ -65,3 +65,18 @@ def club_detail(request, club_id):
             'average_strength': average_strength,
         }
     )
+
+
+def player_detail(request, player_id):
+    player = get_object_or_404(
+        Player.objects.select_related('club', 'club__league', 'strength_profile'),
+        id=player_id,
+    )
+
+    return render(
+        request,
+        'game/player_detail.html',
+        {
+            'player': player,
+        }
+    )

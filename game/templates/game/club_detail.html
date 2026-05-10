@@ -7,19 +7,11 @@
 {% block content %}
 
 {% load humanize %}
+{% load static %}
 
 <h1>{{ club.name }}</h1>
 
 <p><strong>Kurzname:</strong> {{ club.short_name }}</p>
-<p>
-    <strong>FM-ID:</strong>
-    {% if club.fm_inside_id %}
-        {{ club.fm_inside_id }}
-    {% else %}
-        -
-    {% endif %}
-</p>
-
 <div class="dashboard-grid">
     <div class="panel">
         <span class="muted">Liga</span>
@@ -50,20 +42,20 @@
 
 <hr>
 
-<h2>Kader</h2>
+<h2>1. Mannschaft</h2>
 
 <table class="club-table">
 
     <thead>
         <tr>
-            <th>Name</th>
-            <th>FM-ID</th>
-            <th>Position</th>
+            <th>Bild</th>
+            <th>Land</th>
             <th>Alter</th>
-            <th>Stärke</th>
-            <th>Potential</th>
+            <th>Name</th>
+            <th>HP</th>
+            <th>NP</th>
             <th>Marktwert</th>
-            <th>Gehalt/Woche</th>
+            <th>Gehalt/Spiel</th>
             <th>Vertrag</th>
         </tr>
     </thead>
@@ -74,38 +66,45 @@
 
         <tr>
             <td>
-                {{ player.first_name }}
-                {{ player.last_name }}
+                <img
+                    class="player-photo"
+                    src="{% static 'game/images/default_player.svg' %}"
+                    alt="{{ player.full_name }}"
+                >
             </td>
 
             <td>
-                {% if player.fm_inside_id %}
-                    {{ player.fm_inside_id }}
-                {% else %}
-                    -
-                {% endif %}
+                <span class="flag-list">
+                    {% for nationality in player.nationality_badges %}
+                        <span class="flag-badge" title="{{ nationality.name }}">
+                            {{ nationality.flag }}
+                        </span>
+                    {% empty %}
+                        -
+                    {% endfor %}
+                </span>
             </td>
-
-            <td>{{ player.position }}</td>
 
             <td>{{ player.age }}</td>
 
             <td>
-                {% if player.strength_profile %}
-                    {{ player.strength_profile.final_strength }}
-                {% else %}
-                    -
-                {% endif %}
+                <a href="{% url 'player_detail' player.id %}">
+                    {{ player.full_name }}
+                </a>
             </td>
 
-            <td>{{ player.potential }}</td>
+            <td>{{ player.primary_position|default:player.get_position_display }}</td>
+            <td>{{ player.source_positions|default:"-" }}</td>
             <td>
-                {{ player.market_value|floatformat:0|intcomma }} €
-                {% if player.market_value_note %}
-                    <span class="muted">({{ player.market_value_note }})</span>
+                {% if player.transfermarkt_market_value_url %}
+                    <a href="{{ player.transfermarkt_market_value_url }}" target="_blank" rel="noopener">
+                        {{ player.market_value|floatformat:0|intcomma }} €
+                    </a>
+                {% else %}
+                    {{ player.market_value|floatformat:0|intcomma }} €
                 {% endif %}
             </td>
-            <td>{{ player.weekly_wage|floatformat:0|intcomma }} €</td>
+            <td>{{ player.salary_per_match|floatformat:0|intcomma }} €</td>
             <td>
                 {% if player.contract_until %}
                     {{ player.contract_until|date:"d.m.Y" }}

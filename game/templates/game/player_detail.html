@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% load humanize %}
+{% load static %}
+
+{% block title %}
+    {{ player.full_name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="player-cell">
+    <img
+        class="player-photo"
+        src="{% static 'game/images/default_player.svg' %}"
+        alt="{{ player.full_name }}"
+    >
+    <div>
+        <h1>{{ player.full_name }}</h1>
+        <p class="muted">{{ player.club.name }} · {{ player.primary_position }}</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="panel">
+        <span class="muted">Geburtstag</span>
+        <span class="stat-value">
+            {% if player.date_of_birth %}
+                {{ player.date_of_birth|date:"d.m.Y" }}
+            {% else %}
+                -
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Alter</span>
+        <span class="stat-value">{{ player.age }}</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Marktwert</span>
+        <span class="stat-value">{{ player.market_value|floatformat:0|intcomma }} €</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Gehalt/Spiel</span>
+        <span class="stat-value">{{ player.salary_per_match|floatformat:0|intcomma }} €</span>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Profil</h2>
+    <p><strong>HP:</strong> {{ player.primary_position }}</p>
+    <p><strong>NP:</strong> {{ player.source_positions|default:"-" }}</p>
+    <p>
+        <strong>Nationalität:</strong>
+        {% for nationality in player.nationality_badges %}
+            <span title="{{ nationality.name }}">{{ nationality.flag }}</span>
+        {% empty %}
+            -
+        {% endfor %}
+    </p>
+    <p><strong>Vertrag:</strong> {{ player.contract_until|date:"d.m.Y" }}</p>
+    {% if player.transfermarkt_profile_url %}
+        <p>
+            <a href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener">
+                Transfermarkt-Profil öffnen
+            </a>
+        </p>
+    {% endif %}
+</div>
+
+{% endblock %}

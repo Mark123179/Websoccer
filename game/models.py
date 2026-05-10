@@ -1,6 +1,42 @@
 from django.db import models
 
 
+COUNTRY_FLAGS = {
+    'Algerien': '🇩🇿',
+    'Belgien': '🇧🇪',
+    'Brasilien': '🇧🇷',
+    'Deutschland': '🇩🇪',
+    'Elfenbeinküste': '🇨🇮',
+    'England': '🏴',
+    'Frankreich': '🇫🇷',
+    'Gambia': '🇬🇲',
+    'Guinea': '🇬🇳',
+    'Guinea-Bissau': '🇬🇼',
+    'Irland': '🇮🇪',
+    'Island': '🇮🇸',
+    'Italien': '🇮🇹',
+    'Japan': '🇯🇵',
+    'Kanada': '🇨🇦',
+    'Kolumbien': '🇨🇴',
+    'Kosovo': '🇽🇰',
+    'Kroatien': '🇭🇷',
+    'Liberia': '🇱🇷',
+    'Libyen': '🇱🇾',
+    'Nigeria': '🇳🇬',
+    'Norwegen': '🇳🇴',
+    'Österreich': '🇦🇹',
+    'Polen': '🇵🇱',
+    'Portugal': '🇵🇹',
+    'Schweden': '🇸🇪',
+    'Schweiz': '🇨🇭',
+    'Senegal': '🇸🇳',
+    'Serbien': '🇷🇸',
+    'Südkorea': '🇰🇷',
+    'Türkei': '🇹🇷',
+    'Vereinigte Staaten': '🇺🇸',
+}
+
+
 class League(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
@@ -55,11 +91,30 @@ class Player(models.Model):
         null=True,
         blank=True
     )
+    transfermarkt_id = models.PositiveBigIntegerField(
+        unique=True,
+        null=True,
+        blank=True
+    )
+    transfermarkt_profile_url = models.URLField(blank=True)
+    transfermarkt_market_value_url = models.URLField(blank=True)
+    date_of_birth = models.DateField(
+        null=True,
+        blank=True
+    )
+    nationalities = models.CharField(
+        max_length=150,
+        blank=True
+    )
     age = models.IntegerField()
 
     position = models.CharField(
         max_length=10,
         choices=POSITION_CHOICES
+    )
+    primary_position = models.CharField(
+        max_length=100,
+        blank=True
     )
     source_positions = models.CharField(
         max_length=100,
@@ -73,11 +128,7 @@ class Player(models.Model):
         decimal_places=2,
         default=0
     )
-    market_value_note = models.CharField(
-        max_length=100,
-        blank=True
-    )
-    weekly_wage = models.DecimalField(
+    salary_per_match = models.DecimalField(
         max_digits=12,
         decimal_places=2,
         default=0
@@ -96,6 +147,26 @@ class Player(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
+    @property
+    def nationality_badges(self):
+        countries = [
+            country.strip()
+            for country in self.nationalities.split(',')
+            if country.strip()
+        ]
+
+        return [
+            {
+                'name': country,
+                'flag': COUNTRY_FLAGS.get(country, '🏳'),
+            }
+            for country in countries
+        ]
 
 
 class PlayerStrengthProfile(models.Model):

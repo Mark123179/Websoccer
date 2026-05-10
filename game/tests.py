@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import date
 
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -25,13 +26,18 @@ class PageSmokeTests(TestCase):
             first_name='Harry',
             last_name='Kane',
             fm_inside_id=28049320,
+            transfermarkt_id=132098,
+            transfermarkt_profile_url='https://www.transfermarkt.de/harry-kane/profil/spieler/132098',
+            transfermarkt_market_value_url='https://www.transfermarkt.de/harry-kane/marktwertverlauf/spieler/132098',
+            date_of_birth=date(1993, 7, 28),
+            nationalities='England, Irland',
             age=31,
             position='ST',
+            primary_position='Mittelstürmer',
             source_positions='ST',
             potential=90,
             market_value=Decimal('100000000.00'),
-            market_value_note='€80M - €120M',
-            weekly_wage=Decimal('381200.00'),
+            salary_per_match=Decimal('500000.00'),
             club=self.club,
         )
         PlayerStrengthProfile.objects.create(
@@ -62,3 +68,13 @@ class PageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Kadergröße')
         self.assertContains(response, 'Marktwert')
+
+    def test_player_detail_renders_profile_shell(self):
+        player = Player.objects.get(transfermarkt_id=132098)
+        response = self.client.get(
+            reverse('player_detail', kwargs={'player_id': player.id})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Harry Kane')
+        self.assertContains(response, 'Gehalt/Spiel')

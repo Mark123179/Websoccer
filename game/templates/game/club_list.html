@@ -15,7 +15,6 @@
     <thead>
         <tr>
             <th>Verein</th>
-            <th>FM-ID</th>
             <th>Kurzname</th>
             <th>Liga</th>
             <th>Spieler</th>
@@ -31,13 +30,6 @@
         <tr>
             <td>
                 <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
-            </td>
-            <td>
-                {% if club.fm_inside_id %}
-                    {{ club.fm_inside_id }}
-                {% else %}
-                    -
-                {% endif %}
             </td>
             <td>{{ club.short_name }}</td>
             <td>{{ club.league.name }}</td>

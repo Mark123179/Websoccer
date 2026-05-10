@@ -51,7 +51,7 @@ Fuer allgemeine Logos, Icons und Symbolgrafiken gilt weiterhin:
 
 ## Referenzdaten laden
 
-Die ersten beiden Referenzvereine koennen per Management Command aus FMInside-Daten geladen werden:
+Die ersten beiden Referenzvereine koennen per Management Command aus Transfermarkt- und FMInside-Daten geladen werden:
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py seed_reference_clubs
@@ -61,12 +61,15 @@ Der Befehl laedt:
 
 - Borussia Dortmund mit Club-ID `907`
 - FC Bayern Muenchen mit Club-ID `915`
-- Spieler-IDs aus den FMInside-Spieler-URLs
-- Alter, Originalpositionen, gemappte Websoccer-Position, Rating, Potential, Wertbereich, Wochengehalt und Vertragsende
+- nur die Spieler der 1. Mannschaft von Transfermarkt
+- Transfermarkt-ID, Transfermarkt-Profil-Link und Transfermarkt-Marktwert-Link
+- FMInside-ID, Rating und Potential als interne Admin-/Staerke-Daten
+- Geburtstag, Alter, Nationalitaeten, Hauptposition, Nebenpositionen, Marktwert und Vertragsende
+- Gehalt pro Spiel nach Startformel: `5.000 EUR je 1.000.000 EUR Marktwert`
 
 Aktueller Umfang nach dem Seed:
 
-- Borussia Dortmund: 73 Spieler
-- FC Bayern Muenchen: 100 Spieler
+- Borussia Dortmund: 26 Spieler
+- FC Bayern Muenchen: 25 Spieler
 
-Hinweis: Das ist der FMInside-Full-Squad-Datensatz inklusive Jugend-/Reserve-Spielern. Fuer das spaetere Spielgefuehl sollte die UI zwischen Profikader, Jugend und Reserve unterscheiden.
+Hinweis: Spielerbilder und Vereinswappen werden spaeter lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI ein lokales Default-Spielerbild.
