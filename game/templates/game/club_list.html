@@ -7,6 +7,7 @@
 {% block content %}
 
 {% load humanize %}
+{% load static %}
 
 <h1>Vereinsübersicht</h1>
 
@@ -29,6 +30,9 @@
 
         <tr>
             <td>
+                {% if club.crest_static_path %}
+                    <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                {% endif %}
                 <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
             </td>
             <td>{{ club.short_name }}</td>

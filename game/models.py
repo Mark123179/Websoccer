@@ -69,6 +69,13 @@ class Club(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def crest_static_path(self):
+        if not self.fm_inside_id:
+            return ''
+
+        return f'game/images/crests/{self.fm_inside_id}.png'
+
 
 class Player(models.Model):
     POSITION_CHOICES = [

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load humanize %}
+{% load static %}
 
 {% block title %}
     Websoccer Start
@@ -67,7 +68,12 @@
     <tbody>
         {% for club in richest_clubs %}
             <tr>
-                <td><a href="/clubs/{{ club.id }}/">{{ club.name }}</a></td>
+                <td>
+                    {% if club.crest_static_path %}
+                        <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                    {% endif %}
+                    <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
+                </td>
                 <td>{{ club.league.name }}</td>
                 <td>{{ club.player_count }}</td>
                 <td>

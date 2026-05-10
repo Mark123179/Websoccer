@@ -9,7 +9,12 @@
 {% load humanize %}
 {% load static %}
 
-<h1>{{ club.name }}</h1>
+<div class="club-title">
+    {% if club.crest_static_path %}
+        <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+    {% endif %}
+    <h1>{{ club.name }}</h1>
+</div>
 
 <p><strong>Kurzname:</strong> {{ club.short_name }}</p>
 <div class="dashboard-grid">
@@ -68,7 +73,7 @@
             <td>
                 <img
                     class="player-photo"
-                    src="{% static 'game/images/default_player.svg' %}"
+                    src="{% static 'game/images/default_player.png' %}"
                     alt="{{ player.full_name }}"
                 >
             </td>

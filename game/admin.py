@@ -57,6 +57,7 @@ class PlayerAdmin(admin.ModelAdmin):
         'last_name',
         'position',
         'club',
+        'final_strength',
         'fm_inside_id',
         'transfermarkt_id',
         'date_of_birth',
@@ -74,6 +75,13 @@ class PlayerAdmin(admin.ModelAdmin):
         'club',
         'position',
     )
+
+    @admin.display(description='Stärke', ordering='strength_profile__final_strength')
+    def final_strength(self, obj):
+        if hasattr(obj, 'strength_profile'):
+            return obj.strength_profile.final_strength
+
+        return '-'
 
 
 admin.site.register(Player, PlayerAdmin)

@@ -73,4 +73,9 @@ Aktueller Umfang nach dem Seed:
 - Borussia Dortmund: 26 Spieler
 - FC Bayern Muenchen: 25 Spieler
 
-Hinweis: Spielerbilder und Vereinswappen werden spaeter lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI automatisch das lokale Default-Spielerbild `game/static/game/images/default_player.svg`.
+Hinweis: Spielerbilder und Vereinswappen werden lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI automatisch das lokale Default-Spielerbild `game/static/game/images/default_player.png`.
+
+Aktuell eingebundene Wappen:
+
+- Borussia Dortmund: `game/static/game/images/crests/907.png`
+- FC Bayern Muenchen: `game/static/game/images/crests/915.png`
