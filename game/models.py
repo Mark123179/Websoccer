@@ -1,41 +1,36 @@
-from django.db import models
+﻿from django.db import models
 
 
-COUNTRY_FLAGS = {
-    'Algerien': '🇩🇿',
-    'Belgien': '🇧🇪',
-    'Brasilien': '🇧🇷',
-    'Deutschland': '🇩🇪',
-    'Elfenbeinküste': '🇨🇮',
-    'England': '🏴',
-    'Frankreich': '🇫🇷',
-    'Gambia': '🇬🇲',
-    'Guinea': '🇬🇳',
-    'Guinea-Bissau': '🇬🇼',
-    'Irland': '🇮🇪',
-    'Island': '🇮🇸',
-    'Italien': '🇮🇹',
-    'Japan': '🇯🇵',
-    'Kanada': '🇨🇦',
-    'Kolumbien': '🇨🇴',
-    'Kosovo': '🇽🇰',
-    'Kroatien': '🇭🇷',
-    'Liberia': '🇱🇷',
-    'Libyen': '🇱🇾',
-    'Nigeria': '🇳🇬',
-    'Norwegen': '🇳🇴',
-    'Österreich': '🇦🇹',
-    'Polen': '🇵🇱',
-    'Portugal': '🇵🇹',
-    'Schweden': '🇸🇪',
-    'Schweiz': '🇨🇭',
-    'Senegal': '🇸🇳',
-    'Serbien': '🇷🇸',
-    'Südkorea': '🇰🇷',
-    'Türkei': '🇹🇷',
-    'Vereinigte Staaten': '🇺🇸',
+COUNTRY_FLAG_ASSETS = {
+    'Algerien': {'asset_id': '5', 'code': 'DZ'},
+    'Brasilien': {'asset_id': '1651', 'code': 'BR'},
+    'Deutschland': {'asset_id': '771', 'code': 'DE'},
+    'Elfenbeink\u00fcste': {'asset_id': '24', 'code': 'CI'},
+    'England': {'asset_id': '765', 'code': 'ENG'},
+    'Frankreich': {'asset_id': '769', 'code': 'FR'},
+    'Gambia': {'asset_id': '20', 'code': 'GM'},
+    'Guinea': {'asset_id': '22', 'code': 'GN'},
+    'Guinea-Bissau': {'asset_id': '23', 'code': 'GW'},
+    'Irland': {'asset_id': '789', 'code': 'IE'},
+    'Italien': {'asset_id': '776', 'code': 'IT'},
+    'Japan': {'asset_id': '116', 'code': 'JP'},
+    'Kanada': {'asset_id': '364', 'code': 'CA'},
+    'Kolumbien': {'asset_id': '1653', 'code': 'CO'},
+    'Kroatien': {'asset_id': '761', 'code': 'HR'},
+    'Liberia': {'asset_id': '27', 'code': 'LR'},
+    'Libyen': {'asset_id': '28', 'code': 'LY'},
+    'Nigeria': {'asset_id': '38', 'code': 'NG'},
+    'Norwegen': {'asset_id': '786', 'code': 'NO'},
+    '\u00d6sterreich': {'asset_id': '755', 'code': 'AT'},
+    'Portugal': {'asset_id': '788', 'code': 'PT'},
+    'Schweden': {'asset_id': '797', 'code': 'SE'},
+    'Schweiz': {'asset_id': '798', 'code': 'CH'},
+    'Senegal': {'asset_id': '41', 'code': 'SN'},
+    'Serbien': {'asset_id': '802', 'code': 'RS'},
+    'S\u00fcdkorea': {'asset_id': '135', 'code': 'KR'},
+    'T\u00fcrkei': {'asset_id': '799', 'code': 'TR'},
+    'Vereinigte Staaten': {'asset_id': '390', 'code': 'US'},
 }
-
 
 class League(models.Model):
     name = models.CharField(max_length=100)
@@ -86,9 +81,9 @@ class Player(models.Model):
         ('ZDM', 'Zentrales Defensives Mittelfeld'),
         ('ZM', 'Zentrales Mittelfeld'),
         ('ZOM', 'Zentrales Offensives Mittelfeld'),
-        ('LF', 'Linker Flügel'),
-        ('RF', 'Rechter Flügel'),
-        ('ST', 'Stürmer'),
+        ('LF', 'Linker FlÃ¼gel'),
+        ('RF', 'Rechter FlÃ¼gel'),
+        ('ST', 'StÃ¼rmer'),
     ]
 
     first_name = models.CharField(max_length=100)
@@ -170,7 +165,11 @@ class Player(models.Model):
         return [
             {
                 'name': country,
-                'flag': COUNTRY_FLAGS.get(country, '🏳'),
+                'code': COUNTRY_FLAG_ASSETS.get(country, {'code': country[:2].upper()})['code'],
+                'flag_static_path': (
+                    f'game/images/flags/'
+                    f"{COUNTRY_FLAG_ASSETS[country]['asset_id']}.svg"
+                ) if country in COUNTRY_FLAG_ASSETS else '',
             }
             for country in countries
         ]
@@ -205,5 +204,6 @@ class PlayerStrengthProfile(models.Model):
     def __str__(self):
         return (
             f"{self.player} - "
-            f"Stärke {self.final_strength}"
+            f"StÃ¤rke {self.final_strength}"
         )
+

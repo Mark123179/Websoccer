@@ -81,3 +81,9 @@ Aktuell eingebundene Wappen:
 - FC Bayern Muenchen: `game/static/game/images/crests/915.svg`
 
 Die aktuellen Wappen-SVGs sind Wrapper um die vorhandenen PNG-Dateien mit `180x180` Pixeln. Sie lassen sich im Code sauber wie SVG-Assets verwenden, sind aber noch keine echten Vektorpfade. Fuer sehr grosse Darstellungen oder perfekt scharfe Skalierung sollten spaeter echte SVG-Wappen oder groessere Originaldateien pro Verein ergaenzt werden.
+
+## Flaggen
+
+Die Nationalitaeten der Spieler werden in der UI als lokale Flaggenbilder angezeigt. Fuer die aktuell genutzten Nationen liegen SVG-Wrapper unter `game/static/game/images/flags/<nation_id>.svg`.
+
+Die Nation-IDs entsprechen den Football-Manager-Nation-IDs aus den lokalen Flaggen-Dateien. Die SVGs betten die vorhandenen PNGs ein. Sie sind damit einheitlich adressierbar und fuer kleine UI-Groessen gut geeignet, aber noch keine echten Vektorpfade.

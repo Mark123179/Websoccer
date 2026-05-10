@@ -56,7 +56,18 @@
     <p>
         <strong>Nationalität:</strong>
         {% for nationality in player.nationality_badges %}
-            <span title="{{ nationality.name }}">{{ nationality.flag }}</span>
+            {% if nationality.flag_static_path %}
+                <img
+                    class="flag-badge"
+                    src="{% static nationality.flag_static_path %}"
+                    alt="{{ nationality.name }}"
+                    title="{{ nationality.name }}"
+                >
+            {% else %}
+                <span class="flag-code" title="{{ nationality.name }}">
+                    {{ nationality.code }}
+                </span>
+            {% endif %}
         {% empty %}
             -
         {% endfor %}

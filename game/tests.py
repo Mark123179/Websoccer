@@ -68,6 +68,8 @@ class PageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Kadergröße')
         self.assertContains(response, 'Marktwert')
+        self.assertContains(response, 'game/images/flags/765.svg')
+        self.assertContains(response, 'game/images/flags/789.svg')
         self.assertContains(response, 'https://www.transfermarkt.de/harry-kane/profil/spieler/132098')
         self.assertNotContains(response, 'https://www.transfermarkt.de/harry-kane/marktwertverlauf/spieler/132098')
 
