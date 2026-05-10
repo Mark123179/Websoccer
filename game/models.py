@@ -10,6 +10,12 @@ class League(models.Model):
 
 
 class Club(models.Model):
+    fm_inside_id = models.PositiveBigIntegerField(
+        unique=True,
+        null=True,
+        blank=True
+    )
+
     name = models.CharField(max_length=100)
     short_name = models.CharField(max_length=20)
     founded_year = models.IntegerField()
@@ -44,6 +50,11 @@ class Player(models.Model):
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    fm_inside_id = models.PositiveBigIntegerField(
+        unique=True,
+        null=True,
+        blank=True
+    )
     age = models.IntegerField()
 
     position = models.CharField(

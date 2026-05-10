@@ -11,6 +11,14 @@
 <h1>{{ club.name }}</h1>
 
 <p><strong>Kurzname:</strong> {{ club.short_name }}</p>
+<p>
+    <strong>FM-ID:</strong>
+    {% if club.fm_inside_id %}
+        {{ club.fm_inside_id }}
+    {% else %}
+        -
+    {% endif %}
+</p>
 
 <div class="dashboard-grid">
     <div class="panel">
@@ -49,6 +57,7 @@
     <thead>
         <tr>
             <th>Name</th>
+            <th>FM-ID</th>
             <th>Position</th>
             <th>Alter</th>
             <th>Stärke</th>
@@ -65,6 +74,14 @@
             <td>
                 {{ player.first_name }}
                 {{ player.last_name }}
+            </td>
+
+            <td>
+                {% if player.fm_inside_id %}
+                    {{ player.fm_inside_id }}
+                {% else %}
+                    -
+                {% endif %}
             </td>
 
             <td>{{ player.position }}</td>
@@ -86,7 +103,7 @@
         {% empty %}
 
         <tr>
-            <td colspan="6">
+            <td colspan="7">
                 Keine Spieler vorhanden.
             </td>
         </tr>

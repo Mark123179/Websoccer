@@ -16,6 +16,7 @@ class PageSmokeTests(TestCase):
         self.club = Club.objects.create(
             name='Borussia Dortmund',
             short_name='BVB',
+            fm_inside_id=907,
             founded_year=1909,
             budget=Decimal('5000000.00'),
             league=league,
@@ -23,6 +24,7 @@ class PageSmokeTests(TestCase):
         player = Player.objects.create(
             first_name='Harry',
             last_name='Kane',
+            fm_inside_id=28049320,
             age=31,
             position='ST',
             potential=90,

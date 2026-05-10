@@ -36,11 +36,13 @@ Das Projekt enthaelt bereits eine erste fachliche Basis:
 - Gemeinsames Template `base.html` mit dunklem Layout und Navigation
 - `requirements.txt` dokumentiert die lokale Django-Umgebung
 - Smoke-Tests pruefen Startseite, Vereinsuebersicht und Vereinsdetailseite
+- Vereine und Spieler haben eine `fm_inside_id` als stabile externe Referenz-ID fuer Daten- und Asset-Zuordnung
 
 Zusaetzlich gibt es ein eigenes Arbeitsdokument fuer das geplante Spielstaerkemodell:
 
 - `SPIELSTAERKEMODELL.md`
 - `OEKONOMIE_AGENT.md` fuer Finanzlogik, Geldfluesse und Balancing
+- `DATEN_UND_ASSETS.md` fuer FMInside-IDs und spaetere lokale Bildzuordnung
 
 ## Bekannte Themen
 
@@ -52,6 +54,7 @@ Zusaetzlich gibt es ein eigenes Arbeitsdokument fuer das geplante Spielstaerkemo
 
 - Fuer Logos, Icons und vergleichbare externe Marken-/Symbolgrafiken immer `https://api.svgl.app` verwenden.
 - Spielerbilder, Vereinswappen und eigene Websoccer-Grafiken werden spaeter lokal anders geloest und sollen vorerst nicht ueber externe Quellen fest eingebaut werden.
+- Lokale Bilder sollen spaeter ueber die `fm_inside_id` von Verein oder Spieler eindeutig zugeordnet werden.
 
 ## Referenzprojekte
 
