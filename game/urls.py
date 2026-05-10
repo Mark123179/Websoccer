@@ -1,8 +1,14 @@
 from django.urls import path
-from .views import club_list, club_detail
+from .views import home, club_list, club_detail
 
 
 urlpatterns = [
+    path(
+        '',
+        home,
+        name='home'
+    ),
+
     path(
         'clubs/',
         club_list,

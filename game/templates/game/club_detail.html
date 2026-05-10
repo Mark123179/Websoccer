@@ -12,9 +12,33 @@
 
 <p><strong>Kurzname:</strong> {{ club.short_name }}</p>
 
-<p><strong>Liga:</strong> {{ club.league.name }}</p>
+<div class="dashboard-grid">
+    <div class="panel">
+        <span class="muted">Liga</span>
+        <span class="stat-value">{{ club.league.name }}</span>
+    </div>
 
-<p><strong>Budget:</strong> {{ club.budget|floatformat:0|intcomma }} €</p>
+    <div class="panel">
+        <span class="muted">Budget</span>
+        <span class="stat-value">{{ club.budget|floatformat:0|intcomma }} €</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Kadergröße</span>
+        <span class="stat-value">{{ player_count }}</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Ø Stärke</span>
+        <span class="stat-value">
+            {% if average_strength %}
+                {{ average_strength|floatformat:1 }}
+            {% else %}
+                -
+            {% endif %}
+        </span>
+    </div>
+</div>
 
 <hr>
 
@@ -29,6 +53,7 @@
             <th>Alter</th>
             <th>Stärke</th>
             <th>Potential</th>
+            <th>Marktwert</th>
         </tr>
     </thead>
 
@@ -46,18 +71,22 @@
 
             <td>{{ player.age }}</td>
 
-            <td>{% if player.strength_profile %}
-                 {{ player.strength_profile.final_strength }}
-                 {% else %}
-                -{% endif %}</td>
+            <td>
+                {% if player.strength_profile %}
+                    {{ player.strength_profile.final_strength }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
 
             <td>{{ player.potential }}</td>
+            <td>{{ player.market_value|floatformat:0|intcomma }} €</td>
         </tr>
 
         {% empty %}
 
         <tr>
-            <td colspan="5">
+            <td colspan="6">
                 Keine Spieler vorhanden.
             </td>
         </tr>

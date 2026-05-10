@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% load humanize %}
+
+{% block title %}
+    Websoccer Start
+{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+    <h1>Websoccer</h1>
+    <p>
+        Die erste spielbare Managerbasis steht: Vereine, Kader, Budgets und
+        Stärken sind sichtbar. Der nächste Schritt ist eine lebendige
+        Saisonvorbereitung mit mehr Daten, Entscheidungen und Spielgefühl.
+    </p>
+
+    <div class="quick-actions">
+        <a class="button-link" href="/clubs/">Vereine ansehen</a>
+        <a class="button-link" href="/admin/">Admin öffnen</a>
+    </div>
+</section>
+
+<div class="dashboard-grid">
+    <div class="panel">
+        <span class="muted">Status</span>
+        <span class="stat-value">Saisonvorbereitung</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Ligen</span>
+        <span class="stat-value">{{ totals.league_count }}</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Vereine</span>
+        <span class="stat-value">{{ totals.club_count }}</span>
+    </div>
+
+    <div class="panel">
+        <span class="muted">Spieler</span>
+        <span class="stat-value">{{ totals.player_count }}</span>
+    </div>
+</div>
+
+<div class="panel">
+    <h2>Finanzübersicht</h2>
+    <p class="muted">
+        Gesamtbudget im aktuellen Datenbestand:
+        <strong>{{ totals.total_budget|floatformat:0|intcomma }} €</strong>
+    </p>
+</div>
+
+<h2>Top-Vereine nach Budget</h2>
+
+<table class="club-table">
+    <thead>
+        <tr>
+            <th>Verein</th>
+            <th>Liga</th>
+            <th>Spieler</th>
+            <th>Ø Stärke</th>
+            <th>Budget</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for club in richest_clubs %}
+            <tr>
+                <td><a href="/clubs/{{ club.id }}/">{{ club.name }}</a></td>
+                <td>{{ club.league.name }}</td>
+                <td>{{ club.player_count }}</td>
+                <td>
+                    {% if club.average_strength %}
+                        {{ club.average_strength|floatformat:1 }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ club.budget|floatformat:0|intcomma }} €</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5">Noch keine Vereine vorhanden.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

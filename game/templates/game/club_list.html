@@ -17,6 +17,8 @@
             <th>Verein</th>
             <th>Kurzname</th>
             <th>Liga</th>
+            <th>Spieler</th>
+            <th>Ø Stärke</th>
             <th>Budget</th>
         </tr>
     </thead>
@@ -26,12 +28,19 @@
         {% for club in clubs %}
 
         <tr>
-            <td><a href="/clubs/{{ club.id }}/">
-        {{ club.name }}
-    </a>
-</td>
+            <td>
+                <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
+            </td>
             <td>{{ club.short_name }}</td>
             <td>{{ club.league.name }}</td>
+            <td>{{ club.player_count }}</td>
+            <td>
+                {% if club.average_strength %}
+                    {{ club.average_strength|floatformat:1 }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
             <td>{{ club.budget|floatformat:0|intcomma }} €</td>
         </tr>
 

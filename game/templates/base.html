@@ -27,6 +27,7 @@
 
             display: flex;
             gap: 20px;
+            align-items: center;
         }
 
         .navbar a {
@@ -39,9 +40,84 @@
             color: #00bfff;
         }
 
+        .brand {
+            color: #00bfff;
+            font-size: 18px;
+            font-weight: 800;
+            margin-right: 16px;
+        }
+
         .container {
             width: 90%;
             margin: 30px auto;
+            max-width: 1180px;
+        }
+
+        a {
+            color: #00bfff;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #111 0%, #173241 100%);
+            border: 1px solid #333;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+        }
+
+        .hero p {
+            color: #d6d6d6;
+            margin: 0;
+            max-width: 760px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            margin-bottom: 24px;
+        }
+
+        .panel {
+            background-color: #2a2a2a;
+            border: 1px solid #3f3f3f;
+            padding: 18px;
+        }
+
+        .panel h2,
+        .panel h3 {
+            margin-top: 0;
+        }
+
+        .stat-value {
+            color: #00bfff;
+            display: block;
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 8px;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .button-link {
+            background-color: #00bfff;
+            color: #061018;
+            display: inline-block;
+            font-weight: 800;
+            padding: 10px 14px;
+            text-decoration: none;
+        }
+
+        .muted {
+            color: #b8b8b8;
         }
 
         .club-table {
@@ -74,6 +150,8 @@
 
     <div class="navbar">
 
+        <span class="brand">Websoccer</span>
+        <a href="/">Start</a>
         <a href="/clubs/">Vereine</a>
 
     </div>
