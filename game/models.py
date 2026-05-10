@@ -74,7 +74,7 @@ class Club(models.Model):
         if not self.fm_inside_id:
             return ''
 
-        return f'game/images/crests/{self.fm_inside_id}.png'
+        return f'game/images/crests/{self.fm_inside_id}.svg'
 
 
 class Player(models.Model):

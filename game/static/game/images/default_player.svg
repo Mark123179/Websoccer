@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Default Spielerbild">
-  <rect width="80" height="80" rx="8" fill="#e8eef5"/>
-  <circle cx="40" cy="27" r="14" fill="#15202b"/>
-  <path d="M16 70c2.7-18.7 13.9-29 24-29s21.3 10.3 24 29H16z" fill="#15202b"/>
-  <path d="M18 70c3.4-15 12.7-23 22-23s18.6 8 22 23" fill="none" stroke="#334155" stroke-width="3"/>
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Default Spielerbild">
+  <rect width="80" height="80" rx="8" fill="#f3f7fb"/>
+  <rect x="0.5" y="0.5" width="79" height="79" rx="7.5" fill="none" stroke="#7b8794"/>
+  <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAjCAYAAAAe2bNZAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH2QcXCQkxCcbUjQAAAZxJREFUeNrN2L9PFEEUwPEPh1FDLIg/GjFoQUksSSBWNrY21lYQKkKws7uGyj/Bv4DextiqFFZaGE0sNBH1iCYSiAHcO5o12Sjc7c48N7zkdftmvjPv17zlFMlYoH0HfQzaPMB5XMMCNsrNB/iIVcxhvK2bvIFPKCogVS2wjSe48L9AprGOtydAHKfvsRgQDv/Io0pMNNVuJMgsvieCDNDDxag4eZ4B8kcfRMBcxa8AmF651onSqQGzjHMBh7qCe7kwtwKzYS4HpoPJ4PKQDNPHflvtp46bitMEsxsI08+BuTlqgYTiOZ1q/Cqgvvytd3PcFC0HqTAvg0F+412q8cKQd0uKbuZ44wzeBIHs4nbu1d7HXiZIgaUoX9/JdNcBZqJgJst3bSrMN5wdtUndYNrJyQJ8LjMpBKaPZxkwr+tU8iZp9jSjNfyo81ETmF7b0+IwuZ6RUR9yGuRxspJZa15EvBrHMI+fAVV4C2upLWG2HO4PA/tTgce41ORPQzdoXho2R3VHTZpTQRNkk+r8EJerEBPlCPq1RZCqfjkCCTJ/tcJm6wUAAAAASUVORK5CYII=" x="22" y="22" width="36" height="36" preserveAspectRatio="xMidYMid meet"/>
 </svg>
