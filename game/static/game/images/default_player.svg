@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" role="img" aria-label="Default Spielerbild">
+  <rect width="80" height="80" rx="8" fill="#e8eef5"/>
+  <circle cx="40" cy="27" r="14" fill="#15202b"/>
+  <path d="M16 70c2.7-18.7 13.9-29 24-29s21.3 10.3 24 29H16z" fill="#15202b"/>
+  <path d="M18 70c3.4-15 12.7-23 22-23s18.6 8 22 23" fill="none" stroke="#334155" stroke-width="3"/>
+</svg>

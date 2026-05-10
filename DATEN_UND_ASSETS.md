@@ -73,9 +73,11 @@ Aktueller Umfang nach dem Seed:
 - Borussia Dortmund: 26 Spieler
 - FC Bayern Muenchen: 25 Spieler
 
-Hinweis: Spielerbilder und Vereinswappen werden lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI automatisch das lokale Default-Spielerbild `game/static/game/images/default_player.png`.
+Hinweis: Spielerbilder und Vereinswappen werden lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI automatisch das lokale Default-Spielerbild `game/static/game/images/default_player.svg`. Das SVG ist bewusst kontrastreich und skalierbar, damit es in Tabellen und Profilen gut lesbar bleibt.
 
 Aktuell eingebundene Wappen:
 
 - Borussia Dortmund: `game/static/game/images/crests/907.png`
 - FC Bayern Muenchen: `game/static/game/images/crests/915.png`
+
+Die aktuellen Wappen sind PNG-Dateien mit `180x180` Pixeln. Sie sind fuer kleine UI-Groessen geeignet, aber nicht vektorbasiert. Fuer grosse Darstellungen oder sehr scharfe Skalierung sollten spaeter SVGs oder groessere Originaldateien pro Verein ergaenzt werden.
