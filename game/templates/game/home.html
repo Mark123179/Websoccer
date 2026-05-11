@@ -4,93 +4,289 @@
 {% load static %}
 
 {% block title %}
-    Websoccer Start
+    Websoccer Managerzentrale
 {% endblock %}
 
 {% block content %}
 
-<section class="hero">
-    <h1>Websoccer</h1>
-    <p>
-        Die erste spielbare Managerbasis steht: Vereine, Kader, Budgets und
-        Stärken sind sichtbar. Der nächste Schritt ist eine lebendige
-        Saisonvorbereitung mit mehr Daten, Entscheidungen und Spielgefühl.
-    </p>
+<section class="start-dashboard">
+    <header class="home-topbar">
+        <div class="control-room-title">
+            <span class="control-mark">WS</span>
+            <div>
+                <h1>Websoccer</h1>
+                <span>Saisonvorbereitung · Creator Mode</span>
+            </div>
+        </div>
 
-    <div class="quick-actions">
-        <a class="button-link" href="/clubs/">Vereine ansehen</a>
-        <a class="button-link" href="/admin/">Admin öffnen</a>
+        <div class="search-box">Suche nach Vereinen, Spielern, Transfers...</div>
+
+        <div class="top-icons">
+            <span class="top-icon">M<span>3</span></span>
+            <span class="top-icon">P<span>2</span></span>
+        </div>
+
+        <div class="top-date">
+            11. Mai 2026
+            <span>Managerzentrale</span>
+        </div>
+
+        <a class="primary-action" href="/clubs/">Vereine öffnen</a>
+    </header>
+
+    <div class="start-grid-main">
+        <article class="dashboard-card start-hero-card">
+            <div class="hero-content">
+                <span class="system-label">Datenbank online</span>
+                <h2>Dein Websoccer-Kontrollraum steht.</h2>
+                <p>
+                    Vereine, Kader, Budgets, Spielerbilder, Flaggen und erste
+                    Stärkedaten sind verbunden. Der nächste Hebel ist das
+                    Spielgefühl: Startseite, Vereinszentrale, Spielerstärke und
+                    Ökonomie müssen wie ein lebendiger Manager laufen.
+                </p>
+            </div>
+
+            <div class="start-actions">
+                <a class="card-action" href="/clubs/">Vereine ansehen</a>
+                <a class="card-action secondary-action" href="/admin/">Admin öffnen</a>
+            </div>
+
+            <div class="hero-signal-grid">
+                <div>
+                    <span>Status</span>
+                    <strong>Saisonvorbereitung</strong>
+                </div>
+                <div>
+                    <span>Nächster Fokus</span>
+                    <strong>Startseite & Spielerstärke</strong>
+                </div>
+                <div>
+                    <span>Designsystem</span>
+                    <strong>Football Command Center</strong>
+                </div>
+            </div>
+        </article>
+
+        <article class="dashboard-card start-match-card">
+            <h2 class="card-title">Fokusspiel</h2>
+            <div class="matchup">
+                <div class="match-team">
+                    {% if primary_club and primary_club.crest_static_path %}
+                        <img class="match-crest" src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                    {% endif %}
+                    <strong>
+                        {% if primary_club %}
+                            {{ primary_club.short_name }}
+                        {% else %}
+                            Heim
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="vs-mark">VS</div>
+                <div class="match-team">
+                    {% if secondary_club and secondary_club.crest_static_path %}
+                        <img class="match-crest" src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                    {% endif %}
+                    <strong>
+                        {% if secondary_club %}
+                            {{ secondary_club.short_name }}
+                        {% else %}
+                            Gast
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+            <p class="match-meta">1. Bundesliga · Testlauf für Dashboard, Daten und Spielgefühl</p>
+            {% if primary_club %}
+                <a class="card-action" href="/clubs/{{ primary_club.id }}/">Clubzentrale öffnen</a>
+            {% else %}
+                <a class="card-action" href="/clubs/">Clubzentrale öffnen</a>
+            {% endif %}
+        </article>
+
+        <article class="dashboard-card readiness-card">
+            <h2 class="card-title">Projektstatus</h2>
+            <div class="readiness-list">
+                <div>
+                    <span>Datenbasis</span>
+                    <strong>{{ totals.club_count }} Vereine · {{ totals.player_count }} Spieler</strong>
+                    <i style="--bar: 84%"></i>
+                </div>
+                <div>
+                    <span>Assets</span>
+                    <strong>Wappen · Kits · Spieler · Flaggen</strong>
+                    <i style="--bar: 72%"></i>
+                </div>
+                <div>
+                    <span>Simulation</span>
+                    <strong>Stärkemodell im Aufbau</strong>
+                    <i style="--bar: 36%"></i>
+                </div>
+            </div>
+        </article>
+    </div>
+
+    <div class="start-kpi-grid">
+        <article class="dashboard-card kpi-card">
+            <span>Ligen</span>
+            <strong>{{ totals.league_count }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Vereine</span>
+            <strong>{{ totals.club_count }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Spieler</span>
+            <strong>{{ totals.player_count }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Ø Stärke</span>
+            <strong>{{ totals.average_strength|floatformat:1 }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Ø Alter</span>
+            <strong>{{ totals.average_age|floatformat:1 }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Gesamtbudget</span>
+            <strong>{{ totals.total_budget|floatformat:0|intcomma }} €</strong>
+        </article>
+    </div>
+
+    <div class="home-grid-two">
+        <article class="dashboard-card start-table-card">
+            <div class="section-head">
+                <h2 class="card-title">Top-Vereine nach Budget</h2>
+                <a href="/clubs/">Alle Vereine</a>
+            </div>
+
+            <div class="table-wrap">
+                <table class="club-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Verein</th>
+                            <th>Liga</th>
+                            <th>Spieler</th>
+                            <th>Ø Stärke</th>
+                            <th>Budget</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for club in richest_clubs %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <span class="club-name-cell">
+                                        {% if club.crest_static_path %}
+                                            <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                                        {% endif %}
+                                        <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
+                                    </span>
+                                </td>
+                                <td>{{ club.league.name }}</td>
+                                <td>{{ club.player_count }}</td>
+                                <td>
+                                    {% if club.average_strength %}
+                                        {{ club.average_strength|floatformat:1 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ club.budget|floatformat:0|intcomma }} €</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6">Noch keine Vereine vorhanden.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="dashboard-card player-radar-card">
+            <h2 class="card-title">Spielerradar</h2>
+            <div class="player-radar-list">
+                {% for player in top_market_players %}
+                    <a class="radar-player" href="/players/{{ player.id }}/">
+                        <img src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                        <span>
+                            <strong>{{ player.full_name }}</strong>
+                            <small>{{ player.age }} Jahre · {{ player.position }}</small>
+                        </span>
+                        <em>{{ player.market_value|floatformat:0|intcomma }} €</em>
+                    </a>
+                {% empty %}
+                    <p class="muted">Noch keine Spieler vorhanden.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+
+    <div class="home-grid-bottom">
+        <article class="dashboard-card finance-command-card">
+            <h2 class="card-title">Ökonomie</h2>
+            <div class="finance-body">
+                <div class="finance-numbers">
+                    <div>
+                        <span>Kaderwert</span>
+                        <strong>{{ totals.total_market_value|floatformat:0|intcomma }} €</strong>
+                    </div>
+                    <div>
+                        <span>Gehalt pro Spiel</span>
+                        <strong>{{ totals.total_salary_per_match|floatformat:0|intcomma }} €</strong>
+                    </div>
+                    <div>
+                        <span>Regel</span>
+                        <strong>5.000 € je 1 Mio. Marktwert</strong>
+                    </div>
+                </div>
+                <div class="chart">
+                    <i style="height: 34%"></i>
+                    <i style="height: 48%"></i>
+                    <i style="height: 42%"></i>
+                    <i style="height: 63%"></i>
+                    <i style="height: 78%"></i>
+                    <i style="height: 84%"></i>
+                </div>
+            </div>
+        </article>
+
+        <article class="dashboard-card strength-command-card">
+            <h2 class="card-title">Stärkekern</h2>
+            <div class="strength-list">
+                {% for player in top_strength_players %}
+                    <div>
+                        <span>{{ player.full_name }}</span>
+                        <strong>{{ player.strength_profile.final_strength }}</strong>
+                    </div>
+                {% empty %}
+                    <p class="muted">Noch keine Stärkeprofile vorhanden.</p>
+                {% endfor %}
+            </div>
+            <a class="card-action" href="/clubs/">Kaderdaten prüfen</a>
+        </article>
+
+        <article class="dashboard-card sprint-card">
+            <h2 class="card-title">Nächste Sprints</h2>
+            <div class="sprint-list">
+                <div>
+                    <strong>Startseite modernisieren</strong>
+                    <span>Heute · Designsystem vereinheitlichen</span>
+                </div>
+                <div>
+                    <strong>Spielerstärke modellieren</strong>
+                    <span>Nächster Schritt · Herz der Simulation</span>
+                </div>
+                <div>
+                    <strong>Ökonomie-Agent einbinden</strong>
+                    <span>Budget, Gehalt, Transfers balancieren</span>
+                </div>
+            </div>
+        </article>
     </div>
 </section>
-
-<div class="dashboard-grid">
-    <div class="panel">
-        <span class="muted">Status</span>
-        <span class="stat-value">Saisonvorbereitung</span>
-    </div>
-
-    <div class="panel">
-        <span class="muted">Ligen</span>
-        <span class="stat-value">{{ totals.league_count }}</span>
-    </div>
-
-    <div class="panel">
-        <span class="muted">Vereine</span>
-        <span class="stat-value">{{ totals.club_count }}</span>
-    </div>
-
-    <div class="panel">
-        <span class="muted">Spieler</span>
-        <span class="stat-value">{{ totals.player_count }}</span>
-    </div>
-</div>
-
-<div class="panel">
-    <h2>Finanzübersicht</h2>
-    <p class="muted">
-        Gesamtbudget im aktuellen Datenbestand:
-        <strong>{{ totals.total_budget|floatformat:0|intcomma }} €</strong>
-    </p>
-</div>
-
-<h2>Top-Vereine nach Budget</h2>
-
-<table class="club-table">
-    <thead>
-        <tr>
-            <th>Verein</th>
-            <th>Liga</th>
-            <th>Spieler</th>
-            <th>Ø Stärke</th>
-            <th>Budget</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for club in richest_clubs %}
-            <tr>
-                <td>
-                    {% if club.crest_static_path %}
-                        <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
-                    {% endif %}
-                    <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
-                </td>
-                <td>{{ club.league.name }}</td>
-                <td>{{ club.player_count }}</td>
-                <td>
-                    {% if club.average_strength %}
-                        {{ club.average_strength|floatformat:1 }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                <td>{{ club.budget|floatformat:0|intcomma }} €</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="5">Noch keine Vereine vorhanden.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
 
 {% endblock %}

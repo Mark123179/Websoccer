@@ -8,19 +8,61 @@ def home(request):
         player_count=Count('player'),
         average_strength=Avg('player__strength_profile__final_strength'),
     )
+    richest_clubs = clubs.order_by('-budget')[:6]
+    featured_clubs = list(clubs.order_by('-budget')[:2])
+    primary_club = featured_clubs[0] if featured_clubs else None
+    secondary_club = featured_clubs[1] if len(featured_clubs) > 1 else None
+    top_market_players = Player.objects.select_related(
+        'club',
+        'strength_profile',
+    ).order_by(
+        '-market_value',
+        '-potential',
+        'last_name',
+        'first_name',
+    )[:4]
+    top_strength_players = Player.objects.select_related(
+        'club',
+        'strength_profile',
+    ).filter(
+        strength_profile__isnull=False,
+    ).order_by(
+        '-strength_profile__final_strength',
+        '-market_value',
+        'last_name',
+        'first_name',
+    )[:4]
 
     totals = {
         'league_count': League.objects.count(),
         'club_count': Club.objects.count(),
         'player_count': Player.objects.count(),
         'total_budget': Club.objects.aggregate(total=Sum('budget'))['total'] or 0,
+        'total_market_value': (
+            Player.objects.aggregate(total=Sum('market_value'))['total'] or 0
+        ),
+        'total_salary_per_match': (
+            Player.objects.aggregate(total=Sum('salary_per_match'))['total'] or 0
+        ),
+        'average_strength': (
+            Player.objects.aggregate(
+                average=Avg('strength_profile__final_strength')
+            )['average'] or 0
+        ),
+        'average_age': (
+            Player.objects.aggregate(average=Avg('age'))['average'] or 0
+        ),
     }
 
     return render(
         request,
         'game/home.html',
         {
-            'richest_clubs': clubs.order_by('-budget')[:5],
+            'richest_clubs': richest_clubs,
+            'primary_club': primary_club,
+            'secondary_club': secondary_club,
+            'top_market_players': top_market_players,
+            'top_strength_players': top_strength_players,
             'totals': totals,
         }
     )
