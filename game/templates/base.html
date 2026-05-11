@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -133,18 +134,23 @@
             padding: 0 14px;
         }
 
-        .navbar a::before {
+        .nav-icon {
             align-items: center;
             background: rgba(255, 255, 255, 0.06);
             border-radius: 8px;
             color: var(--cyan);
-            content: attr(data-icon);
             display: inline-flex;
-            font-size: 12px;
-            font-weight: 900;
             height: 26px;
             justify-content: center;
+            padding: 4px;
             width: 26px;
+        }
+
+        .nav-icon img {
+            display: block;
+            filter: invert(79%) sepia(78%) saturate(1534%) hue-rotate(142deg) brightness(105%) contrast(103%);
+            height: 18px;
+            width: 18px;
         }
 
         .navbar a:first-of-type {
@@ -1601,13 +1607,60 @@
 
     <nav class="navbar">
         <span class="brand">Web<strong>Soccer</strong></span>
-        <a href="/" data-icon="Ü">Übersicht</a>
-        <a href="/clubs/" data-icon="K">Kader</a>
-        <a href="/clubs/" data-icon="T">Taktik</a>
-        <a href="/clubs/" data-icon="↔">Transfers</a>
-        <a href="/clubs/" data-icon="€">Finanzen</a>
-        <a href="/clubs/" data-icon="V">Verein</a>
-        <a href="/admin/" data-icon="A">Admin</a>
+
+        <a href="/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/uebersicht.svg' %}" alt=""></span>
+            Übersicht
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/kader.svg' %}" alt=""></span>
+            Kader
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/taktik.svg' %}" alt=""></span>
+            Taktik
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/training.svg' %}" alt=""></span>
+            Training
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/transfers.svg' %}" alt=""></span>
+            Transfers
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/scouting.svg' %}" alt=""></span>
+            Scouting
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/jugend.svg' %}" alt=""></span>
+            Jugend
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/finanzen.svg' %}" alt=""></span>
+            Finanzen
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/verein.svg' %}" alt=""></span>
+            Verein
+        </a>
+        <a href="/admin/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/mitarbeiter.svg' %}" alt=""></span>
+            Mitarbeiter
+        </a>
+        <a href="/clubs/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/wettbewerbe.svg' %}" alt=""></span>
+            Wettbewerbe
+        </a>
+        <a href="/admin/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/posteingang.svg' %}" alt=""></span>
+            Posteingang
+        </a>
+        <a href="/admin/">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/einstellungen.svg' %}" alt=""></span>
+            Einstellungen
+        </a>
+
 
         <div class="sidebar-profile">
             <span>Manager</span>
