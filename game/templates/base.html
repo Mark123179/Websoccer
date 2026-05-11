@@ -11,6 +11,8 @@
             Websoccer
         {% endblock %}
     </title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'game/images/brand/favicon-32.png' %}">
+    <link rel="apple-touch-icon" sizes="256x256" href="{% static 'game/images/brand/matchengine-logo-256.png' %}">
 
     <style>
 
@@ -97,24 +99,22 @@
             align-items: center;
             color: var(--text);
             display: flex;
-            font-size: 25px;
+            font-size: 23px;
             font-weight: 900;
             gap: 11px;
             margin-bottom: 24px;
         }
 
-        .brand::before {
-            align-items: center;
-            border: 2px solid var(--cyan);
+        .brand-logo {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08), rgba(34, 230, 255, 0.06));
+            border: 1px solid var(--line-strong);
             border-radius: 10px;
             box-shadow: var(--glow);
-            color: var(--cyan);
-            content: "W";
-            display: inline-flex;
-            font-size: 18px;
-            height: 38px;
-            justify-content: center;
-            width: 38px;
+            display: block;
+            height: 48px;
+            object-fit: contain;
+            padding: 2px;
+            width: 48px;
         }
 
         .brand strong {
@@ -350,6 +350,21 @@
             height: 56px;
             justify-content: center;
             width: 56px;
+        }
+
+        .control-logo {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08), rgba(34, 230, 255, 0.06));
+            color: transparent;
+            font-size: 0;
+            overflow: hidden;
+            padding: 2px;
+        }
+
+        .control-logo img {
+            display: block;
+            height: 100%;
+            object-fit: contain;
+            width: 100%;
         }
 
         .control-room-title h1 {
@@ -1606,7 +1621,10 @@
 <body>
 
     <nav class="navbar">
-        <span class="brand">Web<strong>Soccer</strong></span>
+        <span class="brand">
+            <img class="brand-logo" src="{% static 'game/images/brand/matchengine-logo-128.png' %}" alt="MatchEngine Logo">
+            <span>Match<strong>Engine</strong></span>
+        </span>
 
         <a href="/">
             <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/uebersicht.svg' %}" alt=""></span>
