@@ -54,6 +54,18 @@ def club_detail(request, club_id):
     average_strength = players.aggregate(
         average=Avg('strength_profile__final_strength')
     )['average']
+    total_market_value = players.aggregate(
+        total=Sum('market_value')
+    )['total'] or 0
+    average_age = players.aggregate(
+        average=Avg('age')
+    )['average']
+    top_market_player = players.order_by('-market_value').first()
+    top_strength_player = players.order_by(
+        '-strength_profile__final_strength'
+    ).first()
+    top_potential_player = players.order_by('-potential').first()
+    top_salary_player = players.order_by('-salary_per_match').first()
 
     return render(
         request,
@@ -63,6 +75,12 @@ def club_detail(request, club_id):
             'players': players,
             'player_count': players.count(),
             'average_strength': average_strength,
+            'average_age': average_age,
+            'top_market_player': top_market_player,
+            'top_potential_player': top_potential_player,
+            'top_salary_player': top_salary_player,
+            'top_strength_player': top_strength_player,
+            'total_market_value': total_market_value,
         }
     )
 

@@ -9,147 +9,242 @@
 {% load humanize %}
 {% load static %}
 
-<div class="club-title">
-    {% if club.crest_static_path %}
-        <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
-    {% endif %}
-    <h1>{{ club.name }}</h1>
-</div>
+<section class="club-screen">
 
-<p><strong>Kurzname:</strong> {{ club.short_name }}</p>
+    <header class="club-hero">
+        <div class="club-link-stack">
+            <a href="#squad">Kader: {{ player_count }} Spieler</a>
+            <a href="#notables">Auffällige Spieler</a>
+            <a href="#squad">Transferübersicht</a>
+            <a href="#squad">Statistiken</a>
+        </div>
 
-<div class="kit-strip">
-    {% for kit in club.kit_static_paths %}
-        <figure class="kit-item">
-            <img class="club-kit" src="{% static kit.path %}" alt="{{ club.name }} {{ kit.label }}">
-            <figcaption>{{ kit.label }}</figcaption>
-        </figure>
-    {% endfor %}
-</div>
-
-<div class="dashboard-grid">
-    <div class="panel">
-        <span class="muted">Liga</span>
-        <span class="stat-value">{{ club.league.name }}</span>
-    </div>
-
-    <div class="panel">
-        <span class="muted">Budget</span>
-        <span class="stat-value">{{ club.budget|floatformat:0|intcomma }} €</span>
-    </div>
-
-    <div class="panel">
-        <span class="muted">Kadergröße</span>
-        <span class="stat-value">{{ player_count }}</span>
-    </div>
-
-    <div class="panel">
-        <span class="muted">Ø Stärke</span>
-        <span class="stat-value">
-            {% if average_strength %}
-                {{ average_strength|floatformat:1 }}
-            {% else %}
-                -
+        <div class="club-identity">
+            <h1>{{ club.name }}</h1>
+            {% if club.crest_static_path %}
+                <img class="club-hero-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
             {% endif %}
-        </span>
-    </div>
-</div>
+        </div>
 
-<hr>
+        <div class="club-link-stack club-link-stack-right">
+            <a href="#squad">Saison</a>
+            <a href="#kits">Trikots</a>
+            <a href="#squad">Leihübersicht</a>
+            <a href="#squad">Historie</a>
+        </div>
+    </header>
 
-<h2>1. Mannschaft</h2>
-
-<table class="club-table">
-
-    <thead>
-        <tr>
-            <th>Bild</th>
-            <th>Land</th>
-            <th>Alter</th>
-            <th>Name</th>
-            <th>HP</th>
-            <th>NP</th>
-            <th>Marktwert</th>
-            <th>Gehalt/Spiel</th>
-            <th>Vertrag</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        {% for player in players %}
-
-        <tr>
-            <td>
-                <img
-                    class="player-photo"
-                    src="{% static player.portrait_static_path %}"
-                    alt="{{ player.full_name }}"
-                >
-            </td>
-
-            <td>
-                <span class="flag-list">
-                    {% for nationality in player.nationality_badges %}
-                        {% if nationality.flag_static_path %}
-                            <img
-                                class="flag-badge"
-                                src="{% static nationality.flag_static_path %}"
-                                alt="{{ nationality.name }}"
-                                title="{{ nationality.name }}"
-                            >
-                        {% else %}
-                            <span class="flag-code" title="{{ nationality.name }}">
-                                {{ nationality.code }}
-                            </span>
-                        {% endif %}
-                    {% empty %}
+    <section class="info-band">
+        <h2>Informationen</h2>
+        <div class="info-grid">
+            <div class="info-row">
+                <span>Name</span>
+                <strong>{{ club.name }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Manager</span>
+                <strong>frei</strong>
+            </div>
+            <div class="info-row">
+                <span>Liga</span>
+                <strong>{{ club.league.name }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Kadergröße</span>
+                <strong>{{ player_count }} Spieler</strong>
+            </div>
+            <div class="info-row">
+                <span>MW Profis</span>
+                <strong>{{ total_market_value|floatformat:0|intcomma }} €</strong>
+            </div>
+            <div class="info-row">
+                <span>Ø Alter</span>
+                <strong>
+                    {% if average_age %}
+                        {{ average_age|floatformat:1 }}
+                    {% else %}
                         -
+                    {% endif %}
+                </strong>
+            </div>
+            <div class="info-row">
+                <span>Budget</span>
+                <strong>{{ club.budget|floatformat:0|intcomma }} €</strong>
+            </div>
+            <div class="info-row">
+                <span>Ø Stärke</span>
+                <strong>
+                    {% if average_strength %}
+                        {{ average_strength|floatformat:1 }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="info-band" id="notables">
+        <h2>Auffällige Spieler</h2>
+        <div class="notable-grid">
+            {% if top_market_player %}
+                <article class="notable-row">
+                    <span class="notable-label">wertvollster Spieler</span>
+                    <img class="notable-photo" src="{% static top_market_player.portrait_static_path %}" alt="{{ top_market_player.full_name }}">
+                    <div>
+                        <a href="{% url 'player_detail' top_market_player.id %}">{{ top_market_player.full_name }}</a>
+                        <strong>{{ top_market_player.market_value|floatformat:0|intcomma }} €</strong>
+                    </div>
+                </article>
+            {% endif %}
+
+            {% if top_strength_player %}
+                <article class="notable-row">
+                    <span class="notable-label">stärkster Spieler</span>
+                    <img class="notable-photo" src="{% static top_strength_player.portrait_static_path %}" alt="{{ top_strength_player.full_name }}">
+                    <div>
+                        <a href="{% url 'player_detail' top_strength_player.id %}">{{ top_strength_player.full_name }}</a>
+                        <strong>{{ top_strength_player.strength_profile.final_strength }}</strong>
+                    </div>
+                </article>
+            {% endif %}
+
+            {% if top_potential_player %}
+                <article class="notable-row">
+                    <span class="notable-label">größtes Potential</span>
+                    <img class="notable-photo" src="{% static top_potential_player.portrait_static_path %}" alt="{{ top_potential_player.full_name }}">
+                    <div>
+                        <a href="{% url 'player_detail' top_potential_player.id %}">{{ top_potential_player.full_name }}</a>
+                        <strong>{{ top_potential_player.potential }}</strong>
+                    </div>
+                </article>
+            {% endif %}
+
+            {% if top_salary_player %}
+                <article class="notable-row">
+                    <span class="notable-label">höchstes Gehalt</span>
+                    <img class="notable-photo" src="{% static top_salary_player.portrait_static_path %}" alt="{{ top_salary_player.full_name }}">
+                    <div>
+                        <a href="{% url 'player_detail' top_salary_player.id %}">{{ top_salary_player.full_name }}</a>
+                        <strong>{{ top_salary_player.salary_per_match|floatformat:0|intcomma }} € / Spiel</strong>
+                    </div>
+                </article>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="split-band" id="kits">
+        <div class="info-band split-panel">
+            <h2>Trikots</h2>
+            <div class="kit-strip">
+                {% for kit in club.kit_static_paths %}
+                    <figure class="kit-item">
+                        <img class="club-kit" src="{% static kit.path %}" alt="{{ club.name }} {{ kit.label }}">
+                        <figcaption>{{ kit.label }}</figcaption>
+                    </figure>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="info-band split-panel">
+            <h2>Vereinsstatus</h2>
+            <div class="status-list">
+                <p><span>Stadion</span><strong>wird lokal ergänzt</strong></p>
+                <p><span>Zuschauerschnitt</span><strong>offen</strong></p>
+                <p><span>Stadtbild</span><strong>wird lokal ergänzt</strong></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="info-band" id="squad">
+        <h2>1. Mannschaft</h2>
+
+        <div class="table-wrap">
+            <table class="club-table squad-table">
+                <thead>
+                    <tr>
+                        <th>Bild</th>
+                        <th>Land</th>
+                        <th>Alter</th>
+                        <th>Name</th>
+                        <th>HP</th>
+                        <th>NP</th>
+                        <th>Marktwert</th>
+                        <th>Gehalt/Spiel</th>
+                        <th>Vertrag</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for player in players %}
+                        <tr>
+                            <td>
+                                <img
+                                    class="player-photo"
+                                    src="{% static player.portrait_static_path %}"
+                                    alt="{{ player.full_name }}"
+                                >
+                            </td>
+
+                            <td>
+                                <span class="flag-list">
+                                    {% for nationality in player.nationality_badges %}
+                                        {% if nationality.flag_static_path %}
+                                            <img
+                                                class="flag-badge"
+                                                src="{% static nationality.flag_static_path %}"
+                                                alt="{{ nationality.name }}"
+                                                title="{{ nationality.name }}"
+                                            >
+                                        {% else %}
+                                            <span class="flag-code" title="{{ nationality.name }}">
+                                                {{ nationality.code }}
+                                            </span>
+                                        {% endif %}
+                                    {% empty %}
+                                        -
+                                    {% endfor %}
+                                </span>
+                            </td>
+
+                            <td>{{ player.age }}</td>
+
+                            <td class="player-name-cell">
+                                <a href="{% url 'player_detail' player.id %}">
+                                    {{ player.full_name }}
+                                </a>
+                            </td>
+
+                            <td>{{ player.primary_position|default:player.get_position_display }}</td>
+                            <td>{{ player.source_positions|default:"-" }}</td>
+                            <td>
+                                {% if player.transfermarkt_profile_url %}
+                                    <a href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener">
+                                        {{ player.market_value|floatformat:0|intcomma }} €
+                                    </a>
+                                {% else %}
+                                    {{ player.market_value|floatformat:0|intcomma }} €
+                                {% endif %}
+                            </td>
+                            <td>{{ player.salary_per_match|floatformat:0|intcomma }} €</td>
+                            <td>
+                                {% if player.contract_until %}
+                                    {{ player.contract_until|date:"d.m.Y" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9">Keine Spieler vorhanden.</td>
+                        </tr>
                     {% endfor %}
-                </span>
-            </td>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
-            <td>{{ player.age }}</td>
-
-            <td>
-                <a href="{% url 'player_detail' player.id %}">
-                    {{ player.full_name }}
-                </a>
-            </td>
-
-            <td>{{ player.primary_position|default:player.get_position_display }}</td>
-            <td>{{ player.source_positions|default:"-" }}</td>
-            <td>
-                {% if player.transfermarkt_profile_url %}
-                    <a href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener">
-                        {{ player.market_value|floatformat:0|intcomma }} €
-                    </a>
-                {% else %}
-                    {{ player.market_value|floatformat:0|intcomma }} €
-                {% endif %}
-            </td>
-            <td>{{ player.salary_per_match|floatformat:0|intcomma }} €</td>
-            <td>
-                {% if player.contract_until %}
-                    {{ player.contract_until|date:"d.m.Y" }}
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-        </tr>
-
-        {% empty %}
-
-        <tr>
-            <td colspan="9">
-                Keine Spieler vorhanden.
-            </td>
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
+</section>
 
 {% endblock %}
