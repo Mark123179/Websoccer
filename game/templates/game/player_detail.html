@@ -14,16 +14,19 @@
         <div class="control-room-title">
             <span class="control-mark">SP</span>
             <div>
-                <h1>Spielerprofil</h1>
-                <span>{{ player.club.name }} · {{ player.primary_position }}</span>
+                <h1>{{ player.full_name }}</h1>
+                <span>
+                    WS: {{ player.club.name|default:"ohne Verein" }}
+                    · RL: {{ player.real_life_club.name|default:"offen" }}
+                </span>
             </div>
         </div>
 
-        <div class="search-box">Suche nach Spielern, Vereinen, Transfers...</div>
+        <div class="search-box">Spielerprofil wird spaeter final gestaltet.</div>
 
         <div class="top-icons">
-            <span class="top-icon">S<span>{{ player.strength_profile.final_strength|default:"-" }}</span></span>
-            <span class="top-icon">P<span>{{ player.potential }}</span></span>
+            <span class="top-icon">HP<span>{{ player.main_position_1|default:"-" }}</span></span>
+            <span class="top-icon">NP<span>{{ player.secondary_position_1|default:"-" }}</span></span>
         </div>
 
         <div class="top-date">
@@ -31,7 +34,9 @@
             <span>Spielerdatenbank</span>
         </div>
 
-        <a class="primary-action" href="/clubs/{{ player.club.id }}/">Zur Clubzentrale</a>
+        {% if player.club %}
+            <a class="primary-action" href="/clubs/{{ player.club.id }}/">Zur Clubzentrale</a>
+        {% endif %}
     </header>
 
     <div class="player-layout-grid">
@@ -46,8 +51,8 @@
                     <span class="system-label">Spielerprofil</span>
                     <h2>{{ player.full_name }}</h2>
                     <div class="player-identity-meta">
-                        <span>{{ player.club.name }}</span>
-                        <span>{{ player.primary_position }}</span>
+                        <span>{{ player.club.name|default:"ohne WS-Verein" }}</span>
+                        <span>{{ player.main_position_1|default:"-" }}</span>
                         <span>{{ player.age }} Jahre</span>
                     </div>
                     <div class="flag-list">
@@ -68,36 +73,34 @@
                             <span class="flag-code">-</span>
                         {% endfor %}
                     </div>
-                    <div class="profile-actions">
-                        {% if player.transfermarkt_profile_url %}
-                            <a class="card-action" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener">
-                                Transfermarkt öffnen
-                            </a>
-                        {% endif %}
-                        <a class="card-action secondary-action" href="/clubs/{{ player.club.id }}/#squad">Kader anzeigen</a>
-                    </div>
                 </div>
             </div>
         </article>
 
         <aside class="dashboard-card player-context-card">
-            <h2 class="card-title">Sim-Kontext</h2>
+            <h2 class="card-title">Kurzstatus</h2>
             <div class="readiness-list">
                 <div>
-                    <span>Aktuelle Stärke</span>
+                    <span>WS-Verletzung</span>
                     <strong>
-                        {% if player.strength_profile %}
-                            {{ player.strength_profile.final_strength }}
+                        {% if player.is_ws_injured %}
+                            {{ player.ws_injury_type }} · {{ player.ws_injury_days_remaining }} Tage
                         {% else %}
-                            -
+                            keine
                         {% endif %}
                     </strong>
-                    <i style="--bar: {% if player.strength_profile %}{{ player.strength_profile.final_strength }}{% else %}0{% endif %}%"></i>
+                    <i style="--bar: {% if player.is_ws_injured %}35{% else %}100{% endif %}%"></i>
                 </div>
                 <div>
-                    <span>Potential</span>
-                    <strong>{{ player.potential }}</strong>
-                    <i style="--bar: {{ player.potential }}%"></i>
+                    <span>WS-Sperre</span>
+                    <strong>
+                        {% if player.is_ws_suspended %}
+                            {{ player.ws_suspension_reason }} · {{ player.ws_suspension_matches_remaining }} Spiele
+                        {% else %}
+                            keine
+                        {% endif %}
+                    </strong>
+                    <i style="--bar: {% if player.is_ws_suspended %}40{% else %}100{% endif %}%"></i>
                 </div>
                 <div>
                     <span>Vertrag</span>
@@ -116,90 +119,60 @@
 
     <div class="player-kpi-grid">
         <article class="dashboard-card kpi-card">
-            <span>Geburtstag</span>
-            <strong>
-                {% if player.date_of_birth %}
-                    {{ player.date_of_birth|date:"d.m.Y" }}
-                {% else %}
-                    -
-                {% endif %}
-            </strong>
+            <span>WS-Verein</span>
+            <strong>{{ player.club.name|default:"-" }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>RL-Verein</span>
+            <strong>{{ player.real_life_club.name|default:"-" }}</strong>
         </article>
         <article class="dashboard-card kpi-card">
             <span>Marktwert</span>
-            <strong>{{ player.market_value|floatformat:0|intcomma }} €</strong>
+            <strong>{{ player.market_value|floatformat:0|intcomma }} EUR</strong>
         </article>
         <article class="dashboard-card kpi-card">
-            <span>Gehalt/Spiel</span>
-            <strong>{{ player.salary_per_match|floatformat:0|intcomma }} €</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Vertrag</span>
-            <strong>
-                {% if player.contract_until %}
-                    {{ player.contract_until|date:"d.m.Y" }}
-                {% else %}
-                    -
-                {% endif %}
-            </strong>
+            <span>Gehalt pro Spiel</span>
+            <strong>{{ player.salary_per_match|floatformat:0|intcomma }} EUR</strong>
         </article>
     </div>
 
     <div class="player-layout-grid">
         <article class="dashboard-card player-profile-card">
-            <h2 class="card-title">Profilinformationen</h2>
+            <h2 class="card-title">Positionen</h2>
             <div class="detail-list">
                 <div>
-                    <strong>Hauptposition</strong>
-                    <span>{{ player.primary_position }}</span>
+                    <strong>Hauptpositionen</strong>
+                    <span>
+                        {% for position in player.main_positions %}
+                            <span class="position-badge">{{ position }}</span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </span>
                 </div>
                 <div>
                     <strong>Nebenpositionen</strong>
-                    <span>{{ player.source_positions|default:"-" }}</span>
+                    <span>
+                        {% for position in player.secondary_positions %}
+                            <span class="position-badge">{{ position }}</span>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </span>
                 </div>
                 <div>
-                    <strong>Nationalität</strong>
+                    <strong>Nationalitaeten</strong>
                     <span>{{ player.nationalities|default:"-" }}</span>
-                </div>
-                <div>
-                    <strong>Transfermarkt-ID</strong>
-                    <span>{{ player.transfermarkt_id|default:"-" }}</span>
                 </div>
             </div>
         </article>
 
         <article class="dashboard-card player-profile-card">
-            <h2 class="card-title">Stärkeprofil</h2>
-            <div class="strength-list">
+            <h2 class="card-title">Hinweis</h2>
+            <div class="detail-list">
                 <div>
-                    <span>Basisstärke</span>
-                    <strong>
-                        {% if player.strength_profile %}
-                            {{ player.strength_profile.base_strength }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </strong>
-                </div>
-                <div>
-                    <span>Formmodifier</span>
-                    <strong>
-                        {% if player.strength_profile %}
-                            {{ player.strength_profile.form_modifier }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </strong>
-                </div>
-                <div>
-                    <span>Finale Stärke</span>
-                    <strong>
-                        {% if player.strength_profile %}
-                            {{ player.strength_profile.final_strength }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </strong>
+                    <strong>Frontend-Profil</strong>
+                    <span>Die finale Spielerprofil-Ansicht gestalten wir spaeter. Die Reiter liegen jetzt in der Django-Verwaltung.</span>
                 </div>
             </div>
         </article>

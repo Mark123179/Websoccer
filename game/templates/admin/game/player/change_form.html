@@ -1,0 +1,190 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'game/admin_compact.css' %}">
+<style>
+    .ws-admin-tabs {
+        align-items: stretch;
+        background: var(--darkened-bg);
+        border: 1px solid var(--hairline-color);
+        border-bottom: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        margin: 0 0 18px;
+    }
+
+    .object-tools .historylink {
+        display: none;
+    }
+
+    .ws-admin-tab-button {
+        background: transparent;
+        border: 0;
+        border-right: 1px solid var(--hairline-color);
+        color: var(--body-quiet-color);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0;
+        padding: 14px 18px;
+        text-transform: uppercase;
+    }
+
+    .ws-admin-tab-button:hover,
+    .ws-admin-tab-button.is-active {
+        background: rgba(0, 155, 190, 0.18);
+        color: var(--link-fg);
+    }
+
+    .ws-admin-tab-button.is-active {
+        box-shadow: inset 0 -3px 0 var(--link-fg);
+    }
+
+    .ws-admin-tab-hidden {
+        display: none !important;
+    }
+
+    .ws-admin-preview-table {
+        border-collapse: collapse;
+        margin: 4px 0 8px;
+        min-width: 620px;
+        width: 100%;
+    }
+
+    .ws-admin-preview-table th,
+    .ws-admin-preview-table td {
+        border: 1px solid var(--hairline-color);
+        padding: 8px 10px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .ws-admin-preview-table th:first-child,
+    .ws-admin-preview-table td:first-child {
+        text-align: left;
+    }
+
+    .ws-admin-preview-table th {
+        background: var(--darkened-bg);
+        color: var(--body-fg);
+        font-weight: 800;
+    }
+
+    .ws-admin-muted {
+        color: var(--body-quiet-color);
+    }
+
+    .form-row .fieldBox label {
+        margin-right: 8px;
+        min-width: 0;
+        width: auto;
+    }
+
+    .form-row .fieldBox select,
+    .form-row .fieldBox input {
+        margin-left: 0;
+    }
+
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabs = [
+            { id: 'profile', label: 'SPIELERPROFIL', titles: ['SPIELERPROFIL'] },
+            { id: 'strength', label: 'STAERKE', titles: ['STAERKE'] },
+            { id: 'source', label: 'SOURCE', titles: ['SOURCE'] },
+            { id: 'season', label: 'SAISON', titles: ['SAISON'] },
+            { id: 'career', label: 'KARRIERE', titles: ['KARRIERE'] },
+            {
+                id: 'transfers',
+                label: 'TRANSFERHISTORIE WS',
+                titles: ['TRANSFERHISTORIE WS']
+            },
+            {
+                id: 'history',
+                label: 'GESCHICHTE',
+                titles: ['GESCHICHTE']
+            }
+        ];
+        const tabByTitle = new Map();
+        tabs.forEach(function (tab) {
+            tab.titles.forEach(function (title) {
+                tabByTitle.set(title, tab.id);
+            });
+        });
+
+        const containers = Array.from(
+            document.querySelectorAll('fieldset.module, .inline-group')
+        );
+        const groupedContainers = [];
+
+        containers.forEach(function (container) {
+            const headline = container.querySelector(':scope > h2');
+            if (!headline) {
+                return;
+            }
+
+            const title = headline.textContent.trim().toUpperCase();
+            const tabId = tabByTitle.get(title);
+            if (!tabId) {
+                return;
+            }
+
+            container.dataset.wsAdminTab = tabId;
+            groupedContainers.push(container);
+        });
+
+        if (!groupedContainers.length) {
+            return;
+        }
+
+        const nav = document.createElement('nav');
+        nav.className = 'ws-admin-tabs';
+        nav.setAttribute('aria-label', 'Spieler-Verwaltung');
+
+        const contentMain = document.getElementById('content-main');
+        if (!contentMain) {
+            return;
+        }
+
+        tabs.forEach(function (tab, index) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'ws-admin-tab-button';
+            button.textContent = tab.label;
+            button.dataset.wsAdminTabButton = tab.id;
+            button.addEventListener('click', function () {
+                showTab(tab.id);
+            });
+            nav.appendChild(button);
+
+            if (index === 0) {
+                button.classList.add('is-active');
+            }
+        });
+
+        contentMain.prepend(nav);
+
+        function showTab(tabId) {
+            groupedContainers.forEach(function (container) {
+                container.classList.toggle(
+                    'ws-admin-tab-hidden',
+                    container.dataset.wsAdminTab !== tabId
+                );
+            });
+
+            nav.querySelectorAll('.ws-admin-tab-button').forEach(function (button) {
+                button.classList.toggle(
+                    'is-active',
+                    button.dataset.wsAdminTabButton === tabId
+                );
+            });
+        }
+
+        showTab('profile');
+    });
+</script>
+{% endblock %}

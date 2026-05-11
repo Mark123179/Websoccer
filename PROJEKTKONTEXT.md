@@ -27,7 +27,10 @@ Das Projekt enthaelt bereits eine erste fachliche Basis:
 
 - Modell `League` fuer Ligen mit Name und Land
 - Modell `Club` fuer Vereine mit Name, Kurzname, Gruendungsjahr, Budget und Liga
-- Modell `Player` fuer Spieler mit Name, Alter, Position, Potential, Marktwert und optionalem Verein
+- Modell `Player` fuer Spieler mit Name, Alter, bis zu 3 Hauptpositionen, bis zu 3 Nebenpositionen, Marktwert, Gehalt, WS-Verein und getrenntem RL-Verein
+- Spieler koennen im Websoccer eigene Verletzungen und Sperren erhalten, die separat von Real-Life-Verletzungen gepflegt werden
+- Die Django-Verwaltung fuer Spieler ist in Reiter aufgeteilt: Spielerprofil, Staerke, Source, Saison, Karriere und WS-Transferhistorie
+- Modell `PlayerSourceRating` fuer EA-/SoFIFA-/FIFAIndex- und FMInside-Ratings inklusive Potential; EA + FM ergibt die interne Source-Base
 - Modell `PlayerStrengthProfile` fuer berechnete Spielerstaerke aus Basisstaerke und Formmodifikator
 - Admin-Integration fuer Ligen, Vereine, Spieler und Staerkeprofile
 - Vereinsuebersicht unter `/clubs/`
@@ -95,7 +98,7 @@ Wichtig fuer unser Projekt:
    - Spielplan und Spieltage
    - Tabellenstand
    - Spielerattribute und Staerkelogik gemaess `SPIELSTAERKEMODELL.md`
-   - Spielerprofil mit Saisonstatistik, Karriere und Sim-Informationen ausbauen
+   - Admin-Spielerreiter fachlich mit echten Saison-, Karriere- und Transferdaten verbinden
 
 3. Spielsimulation vorbereiten
    - einfache Match-Engine

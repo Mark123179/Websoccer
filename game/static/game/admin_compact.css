@@ -1,0 +1,46 @@
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3 .form-multiline,
+.change-form .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 .form-multiline {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    justify-content: flex-start;
+    max-width: 470px;
+}
+
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3 .form-multiline > div,
+.change-form .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 .form-multiline > div,
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3 .fieldBox,
+.change-form .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 .fieldBox {
+    align-items: center;
+    display: flex;
+    flex: 0 0 132px;
+    gap: 8px;
+    margin: 0;
+    min-width: 0;
+}
+
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3 .fieldBox label,
+.change-form .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 .fieldBox label {
+    flex: 0 0 34px;
+    float: none;
+    margin: 0;
+    padding: 0;
+    width: auto;
+}
+
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3 .fieldBox select,
+.change-form .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 .fieldBox select {
+    min-height: 32px;
+    width: 90px;
+}
+
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3,
+.change-form .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 {
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.change-form .form-row.field-main_position_1.field-main_position_2.field-main_position_3 + .form-row.field-secondary_position_1.field-secondary_position_2.field-secondary_position_3 {
+    border-top: 1px solid var(--hairline-color);
+}

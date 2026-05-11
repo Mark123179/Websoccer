@@ -90,7 +90,7 @@ def club_detail(request, club_id):
     )
     opponent_club = Club.objects.exclude(id=club.id).order_by('name').first()
     players = club.player_set.select_related('strength_profile').order_by(
-        'position',
+        'main_position_1',
         'last_name',
         'first_name',
     )
@@ -113,7 +113,7 @@ def club_detail(request, club_id):
     squad_preview = players.order_by(
         '-strength_profile__final_strength',
         '-market_value',
-        'position',
+        'main_position_1',
         'last_name',
         'first_name',
     )[:8]
@@ -267,7 +267,13 @@ def club_detail(request, club_id):
 
 def player_detail(request, player_id):
     player = get_object_or_404(
-        Player.objects.select_related('club', 'club__league', 'strength_profile'),
+        Player.objects.select_related(
+            'club',
+            'club__league',
+            'real_life_club',
+            'real_life_club__league',
+            'strength_profile',
+        ).prefetch_related('source_ratings'),
         id=player_id,
     )
 
