@@ -34,9 +34,13 @@ Der Look kombiniert:
 ## Komponenten
 
 - Sidebar: fixe linke Navigation mit WebSoccer-Brand, aktiver Cyan-Kante und Managerbox.
-- Topbar: Club-Switcher, Suche, Statusicons, Datum und Fortfahren-Aktion.
+- Page Shell: `start-dashboard`, `club-dashboard`, `list-dashboard` und `player-dashboard` nutzen dieselbe dunkle Stadionfläche, denselben Grid-Hintergrund und dieselben Laptop-/Desktop-Breakpoints.
+- Topbar: `app-topbar`, `home-topbar` und `page-topbar` nutzen dasselbe Raster aus Kontext, Suche, Statusicons, Datum und Primäraktion.
 - Dashboard-Card: dunkles Glas-Panel mit 8px Radius, dünner Cyan-Linie und sanftem Schatten.
+- KPI-Card: kompakte Kennzahlenkarte mit kleinem Uppercase-Label und großem Cyan-Wert.
 - Vereinsübersicht: Wappen, Liga, Kaderwert, Budget, Moral und Form.
+- Vereinsliste: Clubdatenbank mit denselben Tabellen-, KPI- und Radar-Mustern wie die Startseite.
+- Spielerprofil: Spieler-Hero, Sim-Kontext, KPI-Leiste, Profilinformationen und Stärkeprofil im gleichen Dashboard-System.
 - Match Center: VS-Karte, letztes Spiel und Spielvorschau.
 - Ligatabelle: kompakt, aktuelle Zeile hervorgehoben.
 - Kaderübersicht: Mini-Tabelle mit Spielerbild, Stärke und Fitness.

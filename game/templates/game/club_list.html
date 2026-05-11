@@ -1,57 +1,143 @@
 {% extends 'base.html' %}
 
+{% load humanize %}
+{% load static %}
+
 {% block title %}
     Vereinsübersicht
 {% endblock %}
 
 {% block content %}
 
-{% load humanize %}
-{% load static %}
+<section class="list-dashboard">
+    <header class="page-topbar">
+        <div class="control-room-title">
+            <span class="control-mark">VK</span>
+            <div>
+                <h1>Vereinsübersicht</h1>
+                <span>Scoutingzentrale · Datenbank</span>
+            </div>
+        </div>
 
-<h1>Vereinsübersicht</h1>
+        <div class="search-box">Suche nach Vereinen, Ligen, Budgets...</div>
 
-<table class="club-table">
+        <div class="top-icons">
+            <span class="top-icon">M<span>3</span></span>
+            <span class="top-icon">T<span>{{ clubs|length }}</span></span>
+        </div>
 
-    <thead>
-        <tr>
-            <th>Verein</th>
-            <th>Kurzname</th>
-            <th>Liga</th>
-            <th>Spieler</th>
-            <th>Ø Stärke</th>
-            <th>Budget</th>
-        </tr>
-    </thead>
+        <div class="top-date">
+            11. Mai 2026
+            <span>Managerzentrale</span>
+        </div>
 
-    <tbody>
+        <a class="primary-action" href="/">Zur Startseite</a>
+    </header>
 
-        {% for club in clubs %}
+    <div class="clubs-kpi-grid">
+        <article class="dashboard-card kpi-card">
+            <span>Vereine</span>
+            <strong>{{ clubs|length }}</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Wettbewerb</span>
+            <strong>1. Bundesliga</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Datenstand</span>
+            <strong>1. Mannschaft</strong>
+        </article>
+        <article class="dashboard-card kpi-card">
+            <span>Nächster Fokus</span>
+            <strong>Stärke & Balance</strong>
+        </article>
+    </div>
 
-        <tr>
-            <td>
-                {% if club.crest_static_path %}
-                    <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
-                {% endif %}
-                <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
-            </td>
-            <td>{{ club.short_name }}</td>
-            <td>{{ club.league.name }}</td>
-            <td>{{ club.player_count }}</td>
-            <td>
-                {% if club.average_strength %}
-                    {{ club.average_strength|floatformat:1 }}
-                {% else %}
-                    -
-                {% endif %}
-            </td>
-            <td>{{ club.budget|floatformat:0|intcomma }} €</td>
-        </tr>
+    <div class="clubs-layout-grid">
+        <article class="dashboard-card clubs-table-card">
+            <div class="section-head">
+                <h2 class="card-title">Clubdatenbank</h2>
+                <a href="/admin/game/club/">Admin</a>
+            </div>
 
-        {% endfor %}
+            <p class="page-intro">
+                Diese Ansicht ist der schnelle Einstieg in die aktiven Vereine.
+                Wappen, Liga, Kadergröße, Ø Stärke und Budget sollen später die
+                Grundlage für freie Vereine, Managerwahl und Ligabalance bilden.
+            </p>
 
-    </tbody>
+            <div class="table-wrap">
+                <table class="club-table">
+                    <thead>
+                        <tr>
+                            <th>Verein</th>
+                            <th>Kurzname</th>
+                            <th>Liga</th>
+                            <th>Spieler</th>
+                            <th>Ø Stärke</th>
+                            <th>Budget</th>
+                        </tr>
+                    </thead>
 
-</table>
+                    <tbody>
+                        {% for club in clubs %}
+                            <tr>
+                                <td>
+                                    <span class="club-name-cell">
+                                        {% if club.crest_static_path %}
+                                            <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                                        {% endif %}
+                                        <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
+                                    </span>
+                                </td>
+                                <td>{{ club.short_name }}</td>
+                                <td>{{ club.league.name }}</td>
+                                <td>{{ club.player_count }}</td>
+                                <td>
+                                    {% if club.average_strength %}
+                                        {{ club.average_strength|floatformat:1 }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>{{ club.budget|floatformat:0|intcomma }} €</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6">Noch keine Vereine vorhanden.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <aside class="dashboard-card clubs-radar-card">
+            <h2 class="card-title">Manager-Fokus</h2>
+            <div class="club-radar-list">
+                {% for club in clubs %}
+                    <a class="club-radar-item" href="/clubs/{{ club.id }}/">
+                        {% if club.crest_static_path %}
+                            <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                        {% endif %}
+                        <span>
+                            <strong>{{ club.name }}</strong>
+                            <span>{{ club.league.name }} · {{ club.player_count }} Spieler</span>
+                        </span>
+                        <em class="value-pill">
+                            {% if club.average_strength %}
+                                {{ club.average_strength|floatformat:1 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </em>
+                    </a>
+                {% empty %}
+                    <p class="muted">Noch keine Vereine vorhanden.</p>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
+</section>
 
 {% endblock %}

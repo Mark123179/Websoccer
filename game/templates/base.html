@@ -257,7 +257,9 @@
             position: relative;
         }
 
-        .start-dashboard {
+        .start-dashboard,
+        .list-dashboard,
+        .player-dashboard {
             background:
                 linear-gradient(rgba(2, 7, 12, 0.76), rgba(2, 7, 12, 0.96)),
                 radial-gradient(circle at 62% 0%, rgba(34, 230, 255, 0.2), transparent 26%),
@@ -286,7 +288,9 @@
             z-index: 1;
         }
 
-        .start-dashboard::before {
+        .start-dashboard::before,
+        .list-dashboard::before,
+        .player-dashboard::before {
             background:
                 radial-gradient(ellipse at 48% 0%, rgba(255, 255, 255, 0.28), transparent 5%),
                 linear-gradient(180deg, rgba(20, 140, 78, 0.16), transparent 42%),
@@ -298,7 +302,9 @@
             position: absolute;
         }
 
-        .start-dashboard > * {
+        .start-dashboard > *,
+        .list-dashboard > *,
+        .player-dashboard > * {
             position: relative;
             z-index: 1;
         }
@@ -311,7 +317,8 @@
             margin-bottom: 18px;
         }
 
-        .home-topbar {
+        .home-topbar,
+        .page-topbar {
             align-items: center;
             display: grid;
             gap: 18px;
@@ -479,6 +486,28 @@
             margin-top: 16px;
         }
 
+        .clubs-kpi-grid,
+        .player-kpi-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 16px;
+        }
+
+        .clubs-layout-grid {
+            align-items: start;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.35fr 0.8fr;
+        }
+
+        .player-layout-grid {
+            align-items: start;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1fr 0.82fr;
+        }
+
         .card-title {
             color: var(--text);
             font-size: 15px;
@@ -506,7 +535,12 @@
         .player-radar-card,
         .finance-command-card,
         .strength-command-card,
-        .sprint-card {
+        .sprint-card,
+        .clubs-table-card,
+        .clubs-radar-card,
+        .player-hero-card,
+        .player-profile-card,
+        .player-context-card {
             padding: 18px;
         }
 
@@ -514,7 +548,9 @@
         .next-match-card,
         .match-result-card,
         .start-hero-card,
-        .start-match-card {
+        .start-match-card,
+        .clubs-radar-card,
+        .player-hero-card {
             background:
                 linear-gradient(rgba(7, 20, 31, 0.88), rgba(5, 15, 23, 0.9)),
                 radial-gradient(circle at 75% 15%, rgba(255, 255, 255, 0.16), transparent 22%);
@@ -738,6 +774,113 @@
         .sprint-list div {
             border-left: 3px solid var(--cyan);
             padding: 2px 0 2px 12px;
+        }
+
+        .page-intro {
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.55;
+            margin: 0;
+            max-width: 780px;
+        }
+
+        .club-radar-list,
+        .detail-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .club-radar-item {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
+            color: var(--text);
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 46px 1fr auto;
+            padding: 11px;
+        }
+
+        .club-radar-item img {
+            height: 46px;
+            object-fit: contain;
+            width: 46px;
+        }
+
+        .club-radar-item strong,
+        .detail-list strong {
+            color: var(--text);
+            display: block;
+            font-size: 14px;
+        }
+
+        .club-radar-item span,
+        .detail-list span {
+            color: var(--muted);
+            display: block;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .value-pill {
+            background: rgba(48, 242, 156, 0.12);
+            border: 1px solid rgba(48, 242, 156, 0.28);
+            border-radius: 6px;
+            color: var(--green);
+            font-size: 12px;
+            font-weight: 900;
+            padding: 7px 9px;
+            white-space: nowrap;
+        }
+
+        .player-identity {
+            align-items: center;
+            display: grid;
+            gap: 22px;
+            grid-template-columns: 132px 1fr;
+        }
+
+        .player-portrait-large {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: var(--radius);
+            height: 132px;
+            object-fit: cover;
+            width: 132px;
+        }
+
+        .player-identity h2 {
+            color: var(--text);
+            font-size: 32px;
+            line-height: 1.08;
+            margin: 0 0 10px;
+        }
+
+        .player-identity-meta {
+            color: var(--muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            margin-bottom: 16px;
+        }
+
+        .profile-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .profile-actions .card-action {
+            margin-top: 0;
+            width: auto;
+        }
+
+        .detail-list div {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius);
+            padding: 12px;
         }
 
         .overview-content {
@@ -1251,7 +1394,9 @@
             }
 
             .club-dashboard,
-            .start-dashboard {
+            .start-dashboard,
+            .list-dashboard,
+            .player-dashboard {
                 padding: 18px 20px 24px;
             }
 
@@ -1282,7 +1427,8 @@
 
         @media (max-width: 1450px) {
             .app-topbar,
-            .home-topbar {
+            .home-topbar,
+            .page-topbar {
                 gap: 14px;
                 grid-template-columns: minmax(230px, 1fr) minmax(240px, 360px) auto auto 170px;
             }
@@ -1315,6 +1461,11 @@
             .start-kpi-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
+
+            .clubs-layout-grid,
+            .player-layout-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 1280px) {
@@ -1328,12 +1479,15 @@
             }
 
             .club-dashboard,
-            .start-dashboard {
+            .start-dashboard,
+            .list-dashboard,
+            .player-dashboard {
                 padding: 16px;
             }
 
             .app-topbar,
-            .home-topbar {
+            .home-topbar,
+            .page-topbar {
                 grid-template-columns: 1fr 1fr;
             }
 
@@ -1342,7 +1496,8 @@
             }
 
             .app-topbar .primary-action,
-            .home-topbar .primary-action {
+            .home-topbar .primary-action,
+            .page-topbar .primary-action {
                 grid-column: 1 / -1;
                 justify-self: end;
                 width: 190px;
@@ -1352,7 +1507,9 @@
             .dashboard-grid-mid,
             .dashboard-grid-bottom,
             .start-grid-main,
-            .home-grid-bottom {
+            .home-grid-bottom,
+            .clubs-kpi-grid,
+            .player-kpi-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
@@ -1378,12 +1535,18 @@
             .home-grid-two,
             .home-grid-bottom,
             .app-topbar,
-            .home-topbar {
+            .home-topbar,
+            .page-topbar,
+            .clubs-kpi-grid,
+            .player-kpi-grid,
+            .clubs-layout-grid,
+            .player-layout-grid {
                 grid-template-columns: 1fr;
             }
 
             .app-topbar .primary-action,
-            .home-topbar .primary-action {
+            .home-topbar .primary-action,
+            .page-topbar .primary-action {
                 grid-column: auto;
                 justify-self: stretch;
                 width: 100%;
@@ -1413,9 +1576,15 @@
                 padding: 16px;
             }
 
+            .list-dashboard,
+            .player-dashboard {
+                padding: 16px;
+            }
+
             .overview-content,
             .overview-stats,
-            .finance-body {
+            .finance-body,
+            .player-identity {
                 grid-template-columns: 1fr;
             }
 
