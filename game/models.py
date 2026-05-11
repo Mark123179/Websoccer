@@ -1,4 +1,5 @@
-﻿from django.db import models
+﻿from django.contrib.staticfiles import finders
+from django.db import models
 
 
 COUNTRY_FLAG_ASSETS = {
@@ -70,6 +71,26 @@ class Club(models.Model):
             return ''
 
         return f'game/images/crests/{self.fm_inside_id}.svg'
+
+    @property
+    def kit_static_paths(self):
+        if not self.fm_inside_id:
+            return []
+
+        return [
+            {
+                'label': 'Heim',
+                'path': f'game/images/kits/{self.fm_inside_id}_home.svg',
+            },
+            {
+                'label': 'Auswärts',
+                'path': f'game/images/kits/{self.fm_inside_id}_away.svg',
+            },
+            {
+                'label': 'Third',
+                'path': f'game/images/kits/{self.fm_inside_id}_third.svg',
+            },
+        ]
 
 
 class Player(models.Model):
@@ -155,6 +176,17 @@ class Player(models.Model):
         return f"{self.first_name} {self.last_name}".strip()
 
     @property
+    def portrait_static_path(self):
+        if not self.fm_inside_id:
+            return 'game/images/default_player.svg'
+
+        path = f'game/images/players/{self.fm_inside_id}.svg'
+        if finders.find(path):
+            return path
+
+        return 'game/images/default_player.svg'
+
+    @property
     def nationality_badges(self):
         countries = [
             country.strip()
@@ -206,4 +238,5 @@ class PlayerStrengthProfile(models.Model):
             f"{self.player} - "
             f"StÃ¤rke {self.final_strength}"
         )
+
 

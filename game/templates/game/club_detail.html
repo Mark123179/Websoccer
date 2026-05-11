@@ -17,6 +17,16 @@
 </div>
 
 <p><strong>Kurzname:</strong> {{ club.short_name }}</p>
+
+<div class="kit-strip">
+    {% for kit in club.kit_static_paths %}
+        <figure class="kit-item">
+            <img class="club-kit" src="{% static kit.path %}" alt="{{ club.name }} {{ kit.label }}">
+            <figcaption>{{ kit.label }}</figcaption>
+        </figure>
+    {% endfor %}
+</div>
+
 <div class="dashboard-grid">
     <div class="panel">
         <span class="muted">Liga</span>
@@ -73,7 +83,7 @@
             <td>
                 <img
                     class="player-photo"
-                    src="{% static 'game/images/default_player.svg' %}"
+                    src="{% static player.portrait_static_path %}"
                     alt="{{ player.full_name }}"
                 >
             </td>

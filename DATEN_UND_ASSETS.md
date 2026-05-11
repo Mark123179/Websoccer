@@ -86,4 +86,22 @@ Die aktuellen Wappen-SVGs sind Wrapper um die vorhandenen PNG-Dateien mit `180x1
 
 Die Nationalitaeten der Spieler werden in der UI als lokale Flaggenbilder angezeigt. Fuer die aktuell genutzten Nationen liegen SVG-Wrapper unter `game/static/game/images/flags/<nation_id>.svg`.
 
-Die Nation-IDs entsprechen den Football-Manager-Nation-IDs aus den lokalen Flaggen-Dateien. Die SVGs betten die vorhandenen PNGs ein. Sie sind damit einheitlich adressierbar und fuer kleine UI-Groessen gut geeignet, aber noch keine echten Vektorpfade.
+Die Nation-IDs entsprechen den Football-Manager-Nation-IDs aus den lokalen Flaggen-Dateien. Die SVGs betten die vorhandenen PNGs aus `Images/Flaggen` ein. Der lokale Ordner `Images/Nationen` enthaelt Nationenlogos und wird nicht fuer die Spieler-Nationalitaeten verwendet.
+
+## Spielerbilder und Kits
+
+Spielerportraits werden ueber `Player.fm_inside_id` zugeordnet:
+
+```text
+game/static/game/images/players/<player_fm_inside_id>.svg
+```
+
+Die aktuellen SVGs betten die lokalen PNG-Dateien aus `Images/Players/face_<id>.png` ein. Fehlt ein Spielerbild, nutzt die UI weiter `game/static/game/images/default_player.svg`.
+
+Vereins-Kits werden ueber `Club.fm_inside_id` zugeordnet:
+
+```text
+game/static/game/images/kits/<club_fm_inside_id>_home.svg
+game/static/game/images/kits/<club_fm_inside_id>_away.svg
+game/static/game/images/kits/<club_fm_inside_id>_third.svg
+```

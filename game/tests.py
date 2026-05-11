@@ -1,4 +1,4 @@
-from decimal import Decimal
+﻿from decimal import Decimal
 from datetime import date
 
 from django.test import TestCase, override_settings
@@ -33,7 +33,7 @@ class PageSmokeTests(TestCase):
             nationalities='England, Irland',
             age=31,
             position='ST',
-            primary_position='Mittelstürmer',
+            primary_position='MittelstÃ¼rmer',
             source_positions='ST',
             potential=90,
             market_value=Decimal('100000000.00'),
@@ -57,8 +57,8 @@ class PageSmokeTests(TestCase):
         response = self.client.get(reverse('club_list'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Vereinsübersicht')
-        self.assertContains(response, 'Ø Stärke')
+        self.assertContains(response, 'Borussia Dortmund')
+        self.assertContains(response, '1. Bundesliga')
 
     def test_club_detail_renders_squad_metrics(self):
         response = self.client.get(
@@ -66,8 +66,10 @@ class PageSmokeTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Kadergröße')
+        self.assertContains(response, '1. Mannschaft')
         self.assertContains(response, 'Marktwert')
+        self.assertContains(response, 'game/images/players/28049320.svg')
+        self.assertContains(response, 'game/images/kits/907_home.svg')
         self.assertContains(response, 'game/images/flags/765.svg')
         self.assertContains(response, 'game/images/flags/789.svg')
         self.assertContains(response, 'https://www.transfermarkt.de/harry-kane/profil/spieler/132098')
@@ -82,3 +84,4 @@ class PageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Harry Kane')
         self.assertContains(response, 'Gehalt/Spiel')
+
