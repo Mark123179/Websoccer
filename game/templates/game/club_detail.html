@@ -9,134 +9,249 @@
 {% load humanize %}
 {% load static %}
 
-<section class="club-screen">
+<section class="club-dashboard">
 
-    <header class="club-hero">
-        <div class="club-link-stack">
-            <a href="#squad">Kader: {{ player_count }} Spieler</a>
-            <a href="#notables">Auffällige Spieler</a>
-            <a href="#squad">Transferübersicht</a>
-            <a href="#squad">Statistiken</a>
-        </div>
-
-        <div class="club-identity">
-            <h1>{{ club.name }}</h1>
+    <header class="app-topbar">
+        <div class="club-switcher">
             {% if club.crest_static_path %}
-                <img class="club-hero-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
             {% endif %}
+            <div>
+                <h1>{{ club.name }}</h1>
+                <span>Saison 2026/27 · {{ club.league.name }}</span>
+            </div>
         </div>
 
-        <div class="club-link-stack club-link-stack-right">
-            <a href="#squad">Saison</a>
-            <a href="#kits">Trikots</a>
-            <a href="#squad">Leihübersicht</a>
-            <a href="#squad">Historie</a>
+        <div class="search-box">Suche nach Spielern, Vereinen, Transfers...</div>
+
+        <div class="top-icons">
+            <div class="top-icon">M<span>3</span></div>
+            <div class="top-icon">P<span>2</span></div>
         </div>
+
+        <div class="top-date">
+            11. Mai 2026
+            <span>Managerzentrale</span>
+        </div>
+
+        <a class="primary-action" href="#squad">Fortfahren</a>
     </header>
 
-    <section class="info-band">
-        <h2>Informationen</h2>
-        <div class="info-grid">
-            <div class="info-row">
-                <span>Name</span>
-                <strong>{{ club.name }}</strong>
+    <div class="dashboard-grid-main">
+        <article class="dashboard-card club-overview-card">
+            <h2 class="card-title">Vereinsübersicht</h2>
+
+            <div class="overview-content">
+                {% if club.crest_static_path %}
+                    <img class="overview-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                {% endif %}
+
+                <div class="overview-name">
+                    <h2>{{ club.name }}</h2>
+                    <div class="overview-meta">
+                        <span>{{ club.league.name }}</span>
+                        <span>Deutschland</span>
+                    </div>
+                </div>
             </div>
-            <div class="info-row">
-                <span>Manager</span>
-                <strong>frei</strong>
+
+            <div class="overview-stats">
+                <div class="mini-stat">
+                    <span>Finanzen</span>
+                    <strong>{{ club.budget|floatformat:0|intcomma }} €</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Kaderwert</span>
+                    <strong>{{ total_market_value|floatformat:0|intcomma }} €</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Form</span>
+                    <span class="form-dots">
+                        <i>S</i><i>S</i><i>U</i><i>S</i><i>S</i>
+                    </span>
+                </div>
+                <div class="mini-stat">
+                    <span>Kader</span>
+                    <strong>{{ player_count }} Spieler</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Ø Alter</span>
+                    <strong>{{ average_age|floatformat:1 }}</strong>
+                </div>
+                <div class="mini-stat">
+                    <span>Moral</span>
+                    <strong class="mood-chip">● Sehr gut</strong>
+                </div>
             </div>
-            <div class="info-row">
-                <span>Liga</span>
-                <strong>{{ club.league.name }}</strong>
-            </div>
-            <div class="info-row">
-                <span>Kadergröße</span>
-                <strong>{{ player_count }} Spieler</strong>
-            </div>
-            <div class="info-row">
-                <span>MW Profis</span>
-                <strong>{{ total_market_value|floatformat:0|intcomma }} €</strong>
-            </div>
-            <div class="info-row">
-                <span>Ø Alter</span>
-                <strong>
-                    {% if average_age %}
-                        {{ average_age|floatformat:1 }}
-                    {% else %}
-                        -
+        </article>
+
+        <article class="dashboard-card next-match-card">
+            <h2 class="card-title">Nächstes Spiel</h2>
+            <div class="matchup">
+                <div class="match-team">
+                    {% if club.crest_static_path %}
+                        <img class="match-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
                     {% endif %}
-                </strong>
-            </div>
-            <div class="info-row">
-                <span>Budget</span>
-                <strong>{{ club.budget|floatformat:0|intcomma }} €</strong>
-            </div>
-            <div class="info-row">
-                <span>Ø Stärke</span>
-                <strong>
-                    {% if average_strength %}
-                        {{ average_strength|floatformat:1 }}
+                    <strong>{{ club.short_name }}</strong>
+                </div>
+
+                <div class="vs-mark">VS</div>
+
+                <div class="match-team">
+                    {% if opponent_club and opponent_club.crest_static_path %}
+                        <img class="match-crest" src="{% static opponent_club.crest_static_path %}" alt="{{ opponent_club.name }}">
+                        <strong>{{ opponent_club.short_name }}</strong>
                     {% else %}
-                        -
+                        <div class="match-crest"></div>
+                        <strong>Gegner</strong>
                     {% endif %}
-                </strong>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <section class="info-band" id="notables">
-        <h2>Auffällige Spieler</h2>
-        <div class="notable-grid">
-            {% if top_market_player %}
-                <article class="notable-row">
-                    <span class="notable-label">wertvollster Spieler</span>
-                    <img class="notable-photo" src="{% static top_market_player.portrait_static_path %}" alt="{{ top_market_player.full_name }}">
-                    <div>
-                        <a href="{% url 'player_detail' top_market_player.id %}">{{ top_market_player.full_name }}</a>
-                        <strong>{{ top_market_player.market_value|floatformat:0|intcomma }} €</strong>
+            <p class="match-meta">
+                {{ match_center_mock.next_match.competition }} · 34. Spieltag<br>
+                {{ match_center_mock.next_match.kickoff }} · Stadion folgt
+            </p>
+
+            <a class="card-action" href="#squad">Spielvorschau</a>
+        </article>
+
+        <article class="dashboard-card league-table-card">
+            <h2 class="card-title">Ligatabelle</h2>
+            <table class="league-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Verein</th>
+                        <th>Sp.</th>
+                        <th>Tore</th>
+                        <th>Diff.</th>
+                        <th>Pkt.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in league_table_mock %}
+                        <tr class="{% if row.is_current_club %}current-row{% endif %}">
+                            <td>{{ row.position }}</td>
+                            <td>{{ row.club_name }}</td>
+                            <td>{{ row.played }}</td>
+                            <td>{{ row.goals }}</td>
+                            <td>{{ row.goal_difference }}</td>
+                            <td class="points-cell">{{ row.points }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a class="card-action" href="/clubs/">Komplette Tabelle anzeigen</a>
+        </article>
+    </div>
+
+    <div class="dashboard-grid-mid">
+        <article class="dashboard-card squad-preview-card">
+            <h2 class="card-title">Kaderübersicht</h2>
+            <table class="squad-table-compact">
+                <thead>
+                    <tr>
+                        <th>Pos.</th>
+                        <th>Spieler</th>
+                        <th>GES</th>
+                        <th>Fit.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in squad_preview %}
+                        <tr>
+                            <td>{{ player.position }}</td>
+                            <td>
+                                <div class="player-mini">
+                                    <img src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                                    <strong>{{ player.full_name }}</strong>
+                                </div>
+                            </td>
+                            <td>{{ player.strength_profile.final_strength }}</td>
+                            <td class="fitness">92%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a class="card-action" href="#squad">Kompletten Kader anzeigen</a>
+        </article>
+
+        <article class="dashboard-card tactics-card">
+            <h2 class="card-title">Taktik</h2>
+            <span class="muted">4-2-3-1 Breit · Ballbesitz</span>
+            <div class="pitch">
+                {% for player in squad_preview %}
+                    <span class="pitch-player pitch-slot-{{ forloop.counter }}">
+                        {{ forloop.counter }}
+                    </span>
+                {% endfor %}
+            </div>
+            <div class="tactic-meta">
+                <span>Mentalität: Positiv</span>
+                <span>Tempo: Hoch</span>
+                <span>Pressing: Hoch</span>
+            </div>
+            <a class="card-action" href="#squad">Taktik bearbeiten</a>
+        </article>
+
+        <article class="dashboard-card transfer-card">
+            <h2 class="card-title">Transfermarkt</h2>
+            <div class="transfer-list">
+                {% for player in transfer_targets %}
+                    <div class="transfer-item">
+                        <img src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                        <div>
+                            <strong>{{ player.full_name }}</strong>
+                            <span>{{ player.age }} Jahre · {{ player.position }}</span>
+                        </div>
+                        <span class="badge">{{ player.market_value|floatformat:0|intcomma }} €</span>
                     </div>
-                </article>
-            {% endif %}
-
-            {% if top_strength_player %}
-                <article class="notable-row">
-                    <span class="notable-label">stärkster Spieler</span>
-                    <img class="notable-photo" src="{% static top_strength_player.portrait_static_path %}" alt="{{ top_strength_player.full_name }}">
-                    <div>
-                        <a href="{% url 'player_detail' top_strength_player.id %}">{{ top_strength_player.full_name }}</a>
-                        <strong>{{ top_strength_player.strength_profile.final_strength }}</strong>
+                {% empty %}
+                    <div class="news-item">
+                        <div></div>
+                        <div>
+                            <strong>Keine Transferziele</strong>
+                            <span>Weitere Vereine folgen später.</span>
+                        </div>
                     </div>
-                </article>
-            {% endif %}
+                {% endfor %}
+            </div>
+            <a class="card-action" href="#squad">Zum Transfermarkt</a>
+        </article>
 
-            {% if top_potential_player %}
-                <article class="notable-row">
-                    <span class="notable-label">größtes Potential</span>
-                    <img class="notable-photo" src="{% static top_potential_player.portrait_static_path %}" alt="{{ top_potential_player.full_name }}">
-                    <div>
-                        <a href="{% url 'player_detail' top_potential_player.id %}">{{ top_potential_player.full_name }}</a>
-                        <strong>{{ top_potential_player.potential }}</strong>
-                    </div>
-                </article>
-            {% endif %}
+        <article class="dashboard-card match-result-card">
+            <h2 class="card-title">Spielzentrum</h2>
+            <div class="result-score">
+                <div class="match-team">
+                    {% if club.crest_static_path %}
+                        <img class="match-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                    {% endif %}
+                    <strong>{{ club.short_name }}</strong>
+                </div>
+                <div class="score-number">2 - 1</div>
+                <div class="match-team">
+                    {% if opponent_club and opponent_club.crest_static_path %}
+                        <img class="match-crest" src="{% static opponent_club.crest_static_path %}" alt="{{ opponent_club.name }}">
+                    {% endif %}
+                    <strong>
+                        {% if opponent_club %}
+                            {{ opponent_club.short_name }}
+                        {% else %}
+                            Gast
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+            <p class="match-meta">{{ club.league.name }} · 33. Spieltag</p>
+            <a class="card-action" href="#squad">Spielbericht anzeigen</a>
+        </article>
+    </div>
 
-            {% if top_salary_player %}
-                <article class="notable-row">
-                    <span class="notable-label">höchstes Gehalt</span>
-                    <img class="notable-photo" src="{% static top_salary_player.portrait_static_path %}" alt="{{ top_salary_player.full_name }}">
-                    <div>
-                        <a href="{% url 'player_detail' top_salary_player.id %}">{{ top_salary_player.full_name }}</a>
-                        <strong>{{ top_salary_player.salary_per_match|floatformat:0|intcomma }} € / Spiel</strong>
-                    </div>
-                </article>
-            {% endif %}
-        </div>
-    </section>
-
-    <section class="split-band" id="kits">
-        <div class="info-band split-panel">
-            <h2>Trikots</h2>
-            <div class="kit-strip">
+    <div class="dashboard-grid-bottom">
+        <article class="dashboard-card kits-card" id="kits">
+            <h2 class="card-title">Trikots</h2>
+            <div class="kits-row">
                 {% for kit in club.kit_static_paths %}
                     <figure class="kit-item">
                         <img class="club-kit" src="{% static kit.path %}" alt="{{ club.name }} {{ kit.label }}">
@@ -144,20 +259,73 @@
                     </figure>
                 {% endfor %}
             </div>
-        </div>
+            <a class="card-action" href="#kits">Alle Trikots anzeigen</a>
+        </article>
 
-        <div class="info-band split-panel">
-            <h2>Vereinsstatus</h2>
-            <div class="status-list">
-                <p><span>Stadion</span><strong>wird lokal ergänzt</strong></p>
-                <p><span>Zuschauerschnitt</span><strong>offen</strong></p>
-                <p><span>Stadtbild</span><strong>wird lokal ergänzt</strong></p>
+        <article class="dashboard-card news-card">
+            <h2 class="card-title">Neuigkeiten</h2>
+            <div class="news-list">
+                {% if top_strength_player %}
+                    <div class="news-item">
+                        <div></div>
+                        <div>
+                            <strong>{{ top_strength_player.full_name }} führt die Kabine an</strong>
+                            <span>Heute</span>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if top_potential_player %}
+                    <div class="news-item">
+                        <div></div>
+                        <div>
+                            <strong>{{ top_potential_player.full_name }} bleibt Top-Talent</strong>
+                            <span>Gestern</span>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="news-item">
+                    <div></div>
+                    <div>
+                        <strong>Scoutingsystem und Spielstärkenmodell in Arbeit</strong>
+                        <span>Nächster Sprint</span>
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
+            <a class="card-action" href="#squad">Alle Nachrichten anzeigen</a>
+        </article>
 
-    <section class="info-band" id="squad">
-        <h2>1. Mannschaft</h2>
+        <article class="dashboard-card finance-card">
+            <h2 class="card-title">Finanzen</h2>
+            <div class="finance-body">
+                <div class="finance-numbers">
+                    <div>
+                        <span>Kontostand</span>
+                        <strong>{{ finance_summary.budget|floatformat:0|intcomma }} €</strong>
+                    </div>
+                    <div>
+                        <span>Kaderwert</span>
+                        <strong>{{ finance_summary.total_market_value|floatformat:0|intcomma }} €</strong>
+                    </div>
+                    <div>
+                        <span>Gehalt/Spiel</span>
+                        <strong>{{ finance_summary.total_salary_per_match|floatformat:0|intcomma }} €</strong>
+                    </div>
+                </div>
+                <div class="chart">
+                    <i style="height: 34%;"></i>
+                    <i style="height: 48%;"></i>
+                    <i style="height: 58%;"></i>
+                    <i style="height: 44%;"></i>
+                    <i style="height: 66%;"></i>
+                    <i style="height: 78%;"></i>
+                </div>
+            </div>
+            <a class="card-action" href="#squad">Finanzübersicht anzeigen</a>
+        </article>
+    </div>
+
+    <article class="dashboard-card squad-full-card" id="squad">
+        <h2 class="card-title">1. Mannschaft</h2>
 
         <div class="table-wrap">
             <table class="club-table squad-table">
@@ -215,7 +383,11 @@
                                 </a>
                             </td>
 
-                            <td>{{ player.primary_position|default:player.get_position_display }}</td>
+                            <td>
+                                <span class="position-badge">
+                                    {{ player.primary_position|default:player.get_position_display }}
+                                </span>
+                            </td>
                             <td>{{ player.source_positions|default:"-" }}</td>
                             <td>
                                 {% if player.transfermarkt_profile_url %}
@@ -243,7 +415,7 @@
                 </tbody>
             </table>
         </div>
-    </section>
+    </article>
 
 </section>
 
