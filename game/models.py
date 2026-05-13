@@ -1,6 +1,10 @@
 ﻿from django.contrib.staticfiles import finders
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from decimal import Decimal, InvalidOperation
 
 
 COUNTRY_FLAG_ASSETS = {
@@ -34,9 +38,164 @@ COUNTRY_FLAG_ASSETS = {
     'Vereinigte Staaten': {'asset_id': '390', 'code': 'US'},
 }
 
+
+STRENGTH_DEFAULT_BASE = Decimal('40.00')
+STRENGTH_QUANT = Decimal('0.01')
+SNAPSHOT_HISTORY_LIMIT = 10
+
+
+def strength_decimal(value):
+    return Decimal(str(value)).quantize(STRENGTH_QUANT)
+
+
+def prune_snapshot_history(model, filters, limit=SNAPSHOT_HISTORY_LIMIT):
+    stale_ids = list(
+        model.objects.filter(**filters).order_by(
+            '-recorded_at',
+            '-id',
+        ).values_list('id', flat=True)[limit:]
+    )
+    if stale_ids:
+        model.objects.filter(id__in=stale_ids).delete()
+
+
+class DataSource(models.Model):
+    CODE_TRANSFERMARKT = 'TM'
+    CODE_FMINSIDE = 'FM'
+    CODE_SOFIFA = 'SOFIFA'
+    CODE_API_FOOTBALL = 'API_FOOTBALL'
+    CODE_WEBSOCCER = 'WSC'
+    CODE_CHOICES = [
+        (CODE_TRANSFERMARKT, 'Transfermarkt'),
+        (CODE_FMINSIDE, 'FMInside'),
+        (CODE_SOFIFA, 'SoFIFA'),
+        (CODE_API_FOOTBALL, 'API-Football'),
+        (CODE_WEBSOCCER, 'Websoccer'),
+    ]
+
+    code = models.CharField(max_length=40, unique=True, choices=CODE_CHOICES)
+    name = models.CharField(max_length=100)
+    base_url = models.URLField(blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Datenquelle'
+        verbose_name_plural = 'Datenquellen'
+
+    def __str__(self):
+        return self.name
+
+
+class StrengthFormulaSettings(models.Model):
+    name = models.CharField(max_length=100, default='Standard')
+    is_active = models.BooleanField(default=True)
+    rating_modifier_factor = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('5.00'),
+        help_text='Faktor fuer (Spieler-Rating - Liga-Medianrating).',
+    )
+    default_league_median_rating = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        default=Decimal('6.80'),
+        help_text='Fallback, bis der Median dynamisch aus Massendaten berechnet wird.',
+    )
+    default_freshness = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('100.00'),
+        validators=[
+            MinValueValidator(Decimal('0.00')),
+            MaxValueValidator(Decimal('100.00')),
+        ],
+        help_text='Wird genutzt, wenn noch kein Spieler-Frischewert gepflegt ist.',
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text='Balancing-Notizen, z. B. Peak-Verteilung oder offene Tests.',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Spielstaerke-Modifikator'
+        verbose_name_plural = 'Spielstaerke-Modifikatoren'
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def active(cls):
+        return cls.objects.filter(is_active=True).order_by('id').first()
+
+
+class StrengthModifierRule(models.Model):
+    CATEGORY_MINUTES = 'minutes'
+    CATEGORY_FRESHNESS = 'freshness'
+    CATEGORY_CHOICES = [
+        (CATEGORY_MINUTES, 'Minutenquote'),
+        (CATEGORY_FRESHNESS, 'Frische'),
+    ]
+
+    settings = models.ForeignKey(
+        StrengthFormulaSettings,
+        on_delete=models.CASCADE,
+        related_name='modifier_rules',
+    )
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    label = models.CharField(max_length=100)
+    min_value = models.DecimalField(max_digits=6, decimal_places=2)
+    max_value = models.DecimalField(max_digits=6, decimal_places=2)
+    modifier = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        help_text='Staerkepunkte. Bei Frische sind Abzuege negativ.',
+    )
+    risk_label = models.CharField(
+        max_length=80,
+        blank=True,
+        help_text='Nur fuer Frische relevant, z. B. leichtes Risiko.',
+    )
+    sort_order = models.PositiveSmallIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = [
+            'category',
+            'sort_order',
+            '-min_value',
+        ]
+        verbose_name = 'Spielstaerke-Regel'
+        verbose_name_plural = 'Spielstaerke-Regeln'
+
+    def __str__(self):
+        return f'{self.get_category_display()} {self.min_value}-{self.max_value}: {self.modifier}'
+
+    def matches(self, value):
+        value = Decimal(value)
+        return self.min_value <= value <= self.max_value
+
+
 class League(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
+    api_football_id = models.PositiveIntegerField(
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    strength_coefficient = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('1.00'),
+        help_text='Liga-Koeffizient fuer Form- und Leistungsgewichtung.',
+    )
+    coefficient_source = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='z. B. UEFA association coefficient oder interne Einstufung.',
+    )
 
     def __str__(self):
         return self.name
@@ -47,6 +206,11 @@ class Club(models.Model):
         unique=True,
         null=True,
         blank=True
+    )
+    api_football_id = models.PositiveIntegerField(
+        unique=True,
+        null=True,
+        blank=True,
     )
 
     name = models.CharField(max_length=100)
@@ -116,6 +280,13 @@ class Player(models.Model):
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    wsc_player_id = models.CharField(
+        max_length=40,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='Stabile Websoccer-ID fuer Assets, Graphen und externe Zuordnung.',
+    )
     fm_inside_id = models.PositiveBigIntegerField(
         unique=True,
         null=True,
@@ -125,6 +296,11 @@ class Player(models.Model):
         unique=True,
         null=True,
         blank=True
+    )
+    api_football_id = models.PositiveIntegerField(
+        unique=True,
+        null=True,
+        blank=True,
     )
     transfermarkt_profile_url = models.URLField(blank=True)
     transfermarkt_market_value_url = models.URLField(blank=True)
@@ -137,6 +313,21 @@ class Player(models.Model):
         blank=True
     )
     age = models.IntegerField()
+    height_cm = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='Koerpergroesse in Zentimetern.',
+    )
+    strong_foot = models.CharField(
+        max_length=10,
+        blank=True,
+        choices=[
+            ('left', 'Links'),
+            ('right', 'Rechts'),
+            ('both', 'Beidfuss'),
+        ],
+        help_text='Staerkerer Fuss des Spielers.',
+    )
 
     position = models.CharField(
         max_length=10,
@@ -246,11 +437,25 @@ class Player(models.Model):
         if not self.fm_inside_id:
             return 'game/images/default_player.svg'
 
-        path = f'game/images/players/{self.fm_inside_id}.svg'
-        if finders.find(path):
-            return path
+        for extension in ('png', 'svg'):
+            path = f'game/images/players/{self.fm_inside_id}.{extension}'
+            if finders.find(path):
+                return path
 
         return 'game/images/default_player.svg'
+
+    @property
+    def profile_portrait_static_path(self):
+        from .player_assets import get_cached_profile_portrait_static_path
+
+        return get_cached_profile_portrait_static_path(self)
+
+    @property
+    def strong_foot_label(self):
+        return dict(self._meta.get_field('strong_foot').choices).get(
+            self.strong_foot,
+            '-',
+        )
 
     @property
     def nationality_badges(self):
@@ -271,6 +476,32 @@ class Player(models.Model):
             }
             for country in countries
         ]
+
+    @property
+    def primary_nation_crest(self):
+        countries = [
+            country.strip()
+            for country in self.nationalities.split(',')
+            if country.strip()
+        ]
+        if not countries:
+            return {}
+
+        country = countries[0]
+        nation_asset = COUNTRY_FLAG_ASSETS.get(country)
+        if not nation_asset:
+            return {}
+
+        from .player_assets import get_cached_nation_static_path
+
+        static_path = get_cached_nation_static_path(nation_asset['asset_id'])
+        if not static_path:
+            return {}
+
+        return {
+            'name': country,
+            'static_path': static_path,
+        }
 
     @property
     def main_positions(self):
@@ -335,29 +566,73 @@ class Player(models.Model):
         return self.get_source_rating(PlayerSourceRating.SOURCE_FM)
 
     @property
+    def source_rating_count(self):
+        return sum(
+            1
+            for rating in [self.ea_source_rating, self.fm_source_rating]
+            if rating
+        )
+
+    @property
+    def source_base_quality(self):
+        if self.source_rating_count == 2:
+            return 'complete'
+
+        if self.source_rating_count == 1:
+            return 'partial'
+
+        return 'default'
+
+    @property
+    def source_base_quality_label(self):
+        labels = {
+            'complete': 'EA + FM',
+            'partial': 'nur eine Quelle',
+            'default': 'Default 40.00',
+        }
+        return labels[self.source_base_quality]
+
+    @property
+    def uses_default_base_strength(self):
+        return self.source_base_quality == 'default'
+
+    @property
     def calculated_base_strength(self):
         ea_rating = self.ea_source_rating
         fm_rating = self.fm_source_rating
 
-        if not ea_rating or not fm_rating:
-            return None
+        if ea_rating and fm_rating:
+            return strength_decimal(ea_rating.rating + fm_rating.rating)
 
-        return ea_rating.rating + fm_rating.rating
+        if ea_rating:
+            return strength_decimal(ea_rating.rating * 2)
+
+        if fm_rating:
+            return strength_decimal(fm_rating.rating * 2)
+
+        return STRENGTH_DEFAULT_BASE
 
     @property
     def calculated_potential_strength(self):
         ea_rating = self.ea_source_rating
         fm_rating = self.fm_source_rating
 
-        if (
-            not ea_rating
-            or not fm_rating
-            or ea_rating.potential is None
-            or fm_rating.potential is None
-        ):
+        ea_potential = ea_rating.potential if ea_rating else None
+        fm_potential = fm_rating.potential if fm_rating else None
+
+        if ea_potential is not None and fm_potential is not None:
+            return strength_decimal(ea_potential + fm_potential)
+
+        if ea_potential is not None:
+            return strength_decimal(ea_potential * 2)
+
+        if fm_potential is not None:
+            return strength_decimal(fm_potential * 2)
+
+        if self.uses_default_base_strength:
             return None
 
-        return ea_rating.potential + fm_rating.potential
+        return self.calculated_base_strength
 
     @property
     def source_strength_explanation(self):
@@ -376,9 +651,20 @@ class Player(models.Model):
             lines.append('FM Staerke fehlt')
 
         if self.calculated_base_strength is not None:
-            lines.append(
-                f'Base = EA + FM = {self.calculated_base_strength}'
-            )
+            if ea_rating and fm_rating:
+                lines.append(
+                    f'Base = EA + FM = {self.calculated_base_strength:.2f}'
+                )
+            elif ea_rating:
+                lines.append(
+                    f'Base = EA * 2 = {self.calculated_base_strength:.2f}'
+                )
+            elif fm_rating:
+                lines.append(
+                    f'Base = FM * 2 = {self.calculated_base_strength:.2f}'
+                )
+            else:
+                lines.append('Base = Default = 40.00')
         else:
             lines.append('Base kann erst mit EA- und FM-Wert berechnet werden')
 
@@ -394,11 +680,48 @@ class Player(models.Model):
 
         if self.calculated_potential_strength is not None:
             lines.append(
-                'Potential-Ceiling = EA Potential + FM Potential = '
-                f'{self.calculated_potential_strength}'
+                'Potential-Ceiling = '
+                f'{self.calculated_potential_strength:.2f}'
             )
 
         return ' | '.join(lines)
+
+
+class PlayerExternalId(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='external_ids',
+    )
+    source = models.ForeignKey(
+        DataSource,
+        on_delete=models.CASCADE,
+        related_name='player_external_ids',
+    )
+    external_id = models.CharField(max_length=120)
+    profile_url = models.URLField(blank=True)
+    is_primary = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['player__last_name', 'player__first_name', 'source__name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source', 'external_id'],
+                name='unique_external_player_id_per_source',
+            ),
+            models.UniqueConstraint(
+                fields=['player', 'source'],
+                name='unique_player_external_id_per_source',
+            ),
+        ]
+        verbose_name = 'Spieler-ID'
+        verbose_name_plural = 'Spieler-IDs'
+
+    def __str__(self):
+        return f'{self.player} - {self.source.code}: {self.external_id}'
 
 
 class PlayerSourceRating(models.Model):
@@ -466,6 +789,89 @@ class PlayerSourceRating(models.Model):
         return f'{self.player} - {self.get_source_display()} {self.rating}'
 
 
+class PlayerFormSnapshot(models.Model):
+    SOURCE_API_FOOTBALL = 'api_football'
+    SOURCE_SPORTDB_FLASHSCORE = 'sportdb_flashscore'
+    SOURCE_CHOICES = [
+        (SOURCE_API_FOOTBALL, 'API-Football'),
+        (SOURCE_SPORTDB_FLASHSCORE, 'SportDB / Flashscore'),
+    ]
+
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='form_snapshots',
+    )
+    source = models.CharField(
+        max_length=40,
+        choices=SOURCE_CHOICES,
+        default=SOURCE_API_FOOTBALL,
+    )
+    fixture_id = models.CharField(max_length=80)
+    fixture_date = models.DateField()
+    league_api_football_id = models.PositiveIntegerField(null=True, blank=True)
+    team_api_football_id = models.PositiveIntegerField(null=True, blank=True)
+    team_name = models.CharField(max_length=120, blank=True)
+    opponent_name = models.CharField(max_length=120, blank=True)
+    minutes_played = models.PositiveSmallIntegerField(default=0)
+    possible_minutes = models.PositiveSmallIntegerField(default=90)
+    minutes_quote = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('0.00'),
+    )
+    started = models.BooleanField(default=False)
+    substituted_in = models.BooleanField(default=False)
+    captain = models.BooleanField(default=False)
+    position = models.CharField(max_length=10, blank=True)
+    rating = models.DecimalField(
+        max_digits=4,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    goals = models.PositiveSmallIntegerField(default=0)
+    assists = models.PositiveSmallIntegerField(default=0)
+    yellow_cards = models.PositiveSmallIntegerField(default=0)
+    red_cards = models.PositiveSmallIntegerField(default=0)
+    raw_payload = models.JSONField(default=dict, blank=True)
+    fetched_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = [
+            '-fixture_date',
+            '-fixture_id',
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    'player',
+                    'source',
+                    'fixture_id',
+                ],
+                name='unique_player_form_snapshot_source_fixture',
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if self.possible_minutes:
+            self.minutes_quote = strength_decimal(
+                Decimal(self.minutes_played) /
+                Decimal(self.possible_minutes) *
+                Decimal('100')
+            )
+        else:
+            self.minutes_quote = Decimal('0.00')
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return (
+            f'{self.player} - {self.fixture_date} '
+            f'{self.minutes_played} Min.'
+        )
+
+
 class PlayerStrengthProfile(models.Model):
     player = models.OneToOneField(
         Player,
@@ -473,14 +879,36 @@ class PlayerStrengthProfile(models.Model):
         related_name='strength_profile'
     )
 
-    base_strength = models.IntegerField(default=50)
-    form_modifier = models.IntegerField(default=0)
-    final_strength = models.IntegerField(default=50)
+    base_strength = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('50.00'),
+    )
+    form_modifier = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0.00'),
+    )
+    freshness = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal('100.00'),
+        validators=[
+            MinValueValidator(Decimal('0.00')),
+            MaxValueValidator(Decimal('100.00')),
+        ],
+        help_text='Aktuelle Websoccer-Frische. Wirkt als Punktabzug, nicht als Multiplikator.',
+    )
+    final_strength = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('50.00'),
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
     def calculate_final_strength(self):
-        self.final_strength = (
+        self.final_strength = strength_decimal(
             self.base_strength +
             self.form_modifier
         )
@@ -495,7 +923,590 @@ class PlayerStrengthProfile(models.Model):
     def __str__(self):
         return (
             f"{self.player} - "
-            f"StÃ¤rke {self.final_strength}"
+            f"StÃ¤rke {self.final_strength:.2f}"
         )
+
+
+class PlayerMarketValueSnapshot(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='market_value_snapshots',
+    )
+    source = models.ForeignKey(
+        DataSource,
+        on_delete=models.CASCADE,
+        related_name='market_value_snapshots',
+    )
+    recorded_at = models.DateField(default=timezone.localdate)
+    value_eur = models.DecimalField(max_digits=15, decimal_places=2)
+    profile_url = models.URLField(blank=True)
+    source_version = models.CharField(max_length=100, blank=True)
+    update_current = models.BooleanField(
+        default=True,
+        help_text='Aktualisiert Player.market_value und salary_per_match beim Speichern.',
+    )
+    raw_payload = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'source', 'recorded_at'],
+                name='unique_player_market_value_snapshot',
+            ),
+        ]
+        verbose_name = 'Marktwert-Snapshot'
+        verbose_name_plural = 'Marktwert-Snapshots'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.update_current:
+            salary_per_match = (
+                self.value_eur / Decimal('1000000')
+            ) * Decimal('5000')
+            Player.objects.filter(pk=self.player_id).update(
+                market_value=self.value_eur,
+                salary_per_match=salary_per_match,
+            )
+        prune_snapshot_history(
+            PlayerMarketValueSnapshot,
+            {
+                'player_id': self.player_id,
+                'source_id': self.source_id,
+            },
+        )
+
+    def __str__(self):
+        return f'{self.player} - {self.value_eur:.0f} EUR'
+
+
+class PlayerSeasonStat(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='ws_season_stats',
+    )
+    season = models.CharField(max_length=20, default='2026/27')
+    season_number = models.PositiveSmallIntegerField(default=1)
+    competition = models.CharField(max_length=120, default='Liga')
+    matches = models.PositiveSmallIntegerField(default=0)
+    goals = models.PositiveSmallIntegerField(default=0)
+    assists = models.PositiveSmallIntegerField(default=0)
+    substitutions_in = models.PositiveSmallIntegerField(default=0)
+    substitutions_out = models.PositiveSmallIntegerField(default=0)
+    yellow_cards = models.PositiveSmallIntegerField(default=0)
+    red_cards = models.PositiveSmallIntegerField(default=0)
+    minutes_played = models.PositiveIntegerField(default=0)
+    average_grade = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Websoccer-Note. 1.00 ist sehr gut, 6.00 schwach.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-season_number', 'competition']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'season', 'competition'],
+                name='unique_player_ws_season_stat',
+            ),
+        ]
+        verbose_name = 'WS-Saisonstatistik'
+        verbose_name_plural = 'WS-Saisonstatistiken'
+
+    def __str__(self):
+        return f'{self.player} - {self.season} {self.competition}'
+
+
+class PlayerTransferHistory(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='ws_transfer_history',
+    )
+    transfer_date = models.DateField(default=timezone.localdate)
+    season = models.CharField(max_length=20, blank=True)
+    from_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='outgoing_ws_transfers',
+    )
+    to_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='incoming_ws_transfers',
+    )
+    fee_eur = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-transfer_date', '-id']
+        verbose_name = 'WS-Transfer'
+        verbose_name_plural = 'WS-Transfers'
+
+    def __str__(self):
+        return f'{self.player} - {self.transfer_date}'
+
+
+class PlayerInjuryRecord(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='ws_injury_records',
+    )
+    start_date = models.DateField(default=timezone.localdate)
+    end_date = models.DateField(null=True, blank=True)
+    injury_type = models.CharField(max_length=120)
+    days_missed = models.PositiveSmallIntegerField(default=0)
+    competition = models.CharField(max_length=120, blank=True)
+    is_active = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-start_date', '-id']
+        verbose_name = 'WS-Verletzung'
+        verbose_name_plural = 'WS-Verletzungen'
+
+    def __str__(self):
+        return f'{self.player} - {self.injury_type}'
+
+
+class PlayerSuspensionRecord(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='ws_suspension_records',
+    )
+    start_date = models.DateField(default=timezone.localdate)
+    end_date = models.DateField(null=True, blank=True)
+    reason = models.CharField(max_length=120)
+    matches_missed = models.PositiveSmallIntegerField(default=0)
+    competition = models.CharField(max_length=120, blank=True)
+    is_active = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-start_date', '-id']
+        verbose_name = 'WS-Sperre'
+        verbose_name_plural = 'WS-Sperren'
+
+    def __str__(self):
+        return f'{self.player} - {self.reason}'
+
+
+class PlayerAwardTitle(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='ws_awards_titles',
+    )
+    title = models.CharField(max_length=120)
+    season = models.CharField(max_length=20, blank=True)
+    competition = models.CharField(max_length=120, blank=True)
+    trophy_asset_id = models.CharField(
+        max_length=80,
+        blank=True,
+        help_text='Dateiname oder ID aus Images/Trophies ohne Dateiendung.',
+    )
+    count = models.PositiveSmallIntegerField(default=1)
+    awarded_at = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-awarded_at', '-id']
+        verbose_name = 'WS-Auszeichnung/Titel'
+        verbose_name_plural = 'WS-Auszeichnungen/Titel'
+
+    @property
+    def trophy_static_path(self):
+        from .player_assets import get_cached_trophy_static_path
+
+        return get_cached_trophy_static_path(self.trophy_asset_id)
+
+    def __str__(self):
+        return f'{self.player} - {self.title}'
+
+
+class PlayerSourceRatingSnapshot(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='source_rating_snapshots',
+    )
+    source = models.ForeignKey(
+        DataSource,
+        on_delete=models.CASCADE,
+        related_name='source_rating_snapshots',
+    )
+    recorded_at = models.DateField(default=timezone.localdate)
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    potential = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+    source_url = models.URLField(blank=True)
+    source_version = models.CharField(max_length=100, blank=True)
+    update_current = models.BooleanField(
+        default=True,
+        help_text='Aktualisiert PlayerSourceRating fuer die aktuelle Staerkeberechnung.',
+    )
+    raw_payload = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'source', 'recorded_at'],
+                name='unique_player_source_rating_snapshot',
+            ),
+        ]
+        verbose_name = 'Source-Rating-Snapshot'
+        verbose_name_plural = 'Source-Rating-Snapshots'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.update_current and self.source.code in {
+            PlayerSourceRating.SOURCE_EA,
+            PlayerSourceRating.SOURCE_FM,
+        }:
+            PlayerSourceRating.objects.update_or_create(
+                player=self.player,
+                source=self.source.code,
+                defaults={
+                    'rating': self.rating,
+                    'potential': self.potential,
+                    'source_url': self.source_url,
+                    'source_version': self.source_version,
+                    'checked_at': self.recorded_at,
+                    'notes': self.notes,
+                },
+            )
+        prune_snapshot_history(
+            PlayerSourceRatingSnapshot,
+            {
+                'player_id': self.player_id,
+                'source_id': self.source_id,
+            },
+        )
+
+    def __str__(self):
+        return f'{self.player} - {self.source.code} {self.rating}'
+
+
+class PlayerWeightedRatingSnapshot(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='weighted_rating_snapshots',
+    )
+    source = models.CharField(
+        max_length=40,
+        choices=PlayerFormSnapshot.SOURCE_CHOICES,
+        default=PlayerFormSnapshot.SOURCE_SPORTDB_FLASHSCORE,
+    )
+    recorded_at = models.DateField(default=timezone.localdate)
+    fixture_reference = models.CharField(max_length=120, blank=True)
+    weighted_rating = models.DecimalField(max_digits=4, decimal_places=2)
+    rating_minutes = models.PositiveSmallIntegerField(default=0)
+    match_count = models.PositiveSmallIntegerField(default=0)
+    window_label = models.CharField(
+        max_length=80,
+        default='Letzte 10 Spiele',
+    )
+    raw_payload = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'source', 'recorded_at', 'fixture_reference'],
+                name='unique_player_weighted_rating_snapshot',
+            ),
+        ]
+        verbose_name = 'Gewichteter Rating-Snapshot'
+        verbose_name_plural = 'Gewichtete Rating-Snapshots'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        prune_snapshot_history(
+            PlayerWeightedRatingSnapshot,
+            {
+                'player_id': self.player_id,
+                'source': self.source,
+            },
+        )
+
+    def __str__(self):
+        return f'{self.player} - {self.weighted_rating:.2f}'
+
+
+class PlayerStrengthSnapshot(models.Model):
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='strength_snapshots',
+    )
+    recorded_at = models.DateField(default=timezone.localdate)
+    match_reference = models.CharField(max_length=120, blank=True)
+    base_strength = models.DecimalField(max_digits=6, decimal_places=2)
+    final_strength = models.DecimalField(max_digits=6, decimal_places=2)
+    max_strength = models.DecimalField(max_digits=6, decimal_places=2)
+    last_10_average_strength = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    freshness = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+    form_modifier = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=Decimal('0.00'),
+    )
+    raw_payload = models.JSONField(default=dict, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'recorded_at', 'match_reference'],
+                name='unique_player_strength_snapshot',
+            ),
+        ]
+        verbose_name = 'Staerke-Snapshot'
+        verbose_name_plural = 'Staerke-Snapshots'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        prune_snapshot_history(
+            PlayerStrengthSnapshot,
+            {
+                'player_id': self.player_id,
+            },
+        )
+
+    def __str__(self):
+        return f'{self.player} - {self.recorded_at} {self.final_strength:.2f}'
+
+
+class PlayerEditRequest(models.Model):
+    FIELD_NATIONALITIES = 'nationalities'
+    FIELD_REAL_LIFE_CLUB = 'real_life_club'
+    FIELD_MARKET_VALUE = 'market_value'
+    FIELD_MAIN_POSITIONS = 'main_positions'
+    FIELD_SECONDARY_POSITIONS = 'secondary_positions'
+    FIELD_SOURCE_RATING = 'source_rating'
+    FIELD_DEFAULT_BASE = 'default_base'
+    FIELD_CHOICES = [
+        (FIELD_NATIONALITIES, 'Nationalitaet'),
+        (FIELD_REAL_LIFE_CLUB, 'RL-Verein'),
+        (FIELD_MARKET_VALUE, 'Marktwert'),
+        (FIELD_MAIN_POSITIONS, 'Hauptpositionen'),
+        (FIELD_SECONDARY_POSITIONS, 'Nebenpositionen'),
+        (FIELD_SOURCE_RATING, 'Source Rating'),
+        (FIELD_DEFAULT_BASE, 'Default-Basisstaerke'),
+    ]
+
+    STATUS_OPEN = 'open'
+    STATUS_ACCEPTED = 'accepted'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Offen'),
+        (STATUS_ACCEPTED, 'Angenommen'),
+        (STATUS_REJECTED, 'Abgelehnt'),
+    ]
+
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='edit_requests',
+    )
+    field_name = models.CharField(
+        max_length=40,
+        choices=FIELD_CHOICES,
+    )
+    old_value = models.TextField(blank=True)
+    new_value = models.TextField(blank=True)
+    requester_name = models.CharField(max_length=120, blank=True)
+    requester_note = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_OPEN,
+    )
+    decision_note = models.TextField(blank=True)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='decided_player_edit_requests',
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = [
+            'status',
+            '-created_at',
+        ]
+        verbose_name = 'Spielerbearbeitungsantrag'
+        verbose_name_plural = 'Spielerbearbeitungsantraege'
+
+    def __str__(self):
+        return f'{self.player} - {self.get_field_name_display()}'
+
+    def _parse_decimal(self, value):
+        normalized = value.strip().replace('.', '').replace(',', '.')
+        try:
+            return Decimal(normalized)
+        except InvalidOperation as exc:
+            raise ValidationError('Der neue Marktwert ist keine gueltige Zahl.') from exc
+
+    def _parse_positions(self, value):
+        valid_positions = {position for position, label in Player.POSITION_CHOICES}
+        positions = [
+            position.strip().upper()
+            for position in value.replace(';', ',').split(',')
+            if position.strip()
+        ]
+
+        if len(positions) > 3:
+            raise ValidationError('Es sind maximal drei Positionen erlaubt.')
+
+        invalid_positions = [
+            position
+            for position in positions
+            if position not in valid_positions
+        ]
+        if invalid_positions:
+            raise ValidationError(
+                f"Ungueltige Position(en): {', '.join(invalid_positions)}"
+            )
+
+        return positions
+
+    def apply_to_player(self):
+        player = self.player
+        value = self.new_value.strip()
+
+        if self.field_name == self.FIELD_NATIONALITIES:
+            player.nationalities = value
+            player.save(update_fields=['nationalities'])
+            return
+
+        if self.field_name == self.FIELD_REAL_LIFE_CLUB:
+            if not value:
+                player.real_life_club = None
+            else:
+                club = None
+                if value.isdigit():
+                    club = Club.objects.filter(pk=int(value)).first()
+
+                if club is None:
+                    club = Club.objects.filter(name__iexact=value).first()
+
+                if club is None:
+                    raise ValidationError('Der neue RL-Verein wurde nicht gefunden.')
+
+                player.real_life_club = club
+
+            player.save(update_fields=['real_life_club'])
+            return
+
+        if self.field_name == self.FIELD_MARKET_VALUE:
+            player.market_value = self._parse_decimal(value)
+            player.save(update_fields=['market_value'])
+            return
+
+        if self.field_name == self.FIELD_MAIN_POSITIONS:
+            positions = self._parse_positions(value)
+            player.main_position_1 = positions[0] if len(positions) > 0 else ''
+            player.main_position_2 = positions[1] if len(positions) > 1 else ''
+            player.main_position_3 = positions[2] if len(positions) > 2 else ''
+            player.position = player.main_position_1
+            player.save(
+                update_fields=[
+                    'main_position_1',
+                    'main_position_2',
+                    'main_position_3',
+                    'position',
+                ]
+            )
+            return
+
+        if self.field_name == self.FIELD_SECONDARY_POSITIONS:
+            positions = self._parse_positions(value)
+            player.secondary_position_1 = positions[0] if len(positions) > 0 else ''
+            player.secondary_position_2 = positions[1] if len(positions) > 1 else ''
+            player.secondary_position_3 = positions[2] if len(positions) > 2 else ''
+            player.primary_position = player.secondary_position_1
+            player.source_positions = player.secondary_position_1
+            player.save(
+                update_fields=[
+                    'secondary_position_1',
+                    'secondary_position_2',
+                    'secondary_position_3',
+                    'primary_position',
+                    'source_positions',
+                ]
+            )
+            return
+
+        raise ValidationError(
+            'Dieser Antrag ist eine Markierung und muss manuell bearbeitet werden.'
+        )
+
+    def accept(self, user=None):
+        self.apply_to_player()
+        self.status = self.STATUS_ACCEPTED
+        self.decided_by = user if user and user.is_authenticated else None
+        self.decided_at = timezone.now()
+        self.save(update_fields=['status', 'decided_by', 'decided_at', 'updated_at'])
+
+    def reject(self, user=None):
+        self.status = self.STATUS_REJECTED
+        self.decided_by = user if user and user.is_authenticated else None
+        self.decided_at = timezone.now()
+        self.save(update_fields=['status', 'decided_by', 'decided_at', 'updated_at'])
+
+
+class PlayerDataReview(Player):
+    class Meta:
+        proxy = True
+        verbose_name = 'Spieler-Datenpruefung'
+        verbose_name_plural = 'Spieler-Datenpruefung'
 
 

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import home, club_list, club_detail, player_detail
+from .views import home, club_list, club_detail, player_detail, player_graph_data
 
 
 urlpatterns = [
@@ -25,5 +25,11 @@ urlpatterns = [
         'players/<int:player_id>/',
         player_detail,
         name='player_detail'
+    ),
+
+    path(
+        'players/<int:player_id>/graph-data/',
+        player_graph_data,
+        name='player_graph_data'
     ),
 ]

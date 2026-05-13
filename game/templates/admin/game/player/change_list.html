@@ -1,0 +1,136 @@
+{% extends "admin/change_list.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .ws-player-admin-stats {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(4, minmax(150px, 1fr));
+        margin: 0 0 18px;
+    }
+
+    .ws-player-admin-stat {
+        background: var(--darkened-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 8px;
+        padding: 12px 14px;
+    }
+
+    .ws-player-admin-stat span {
+        color: var(--body-quiet-color);
+        display: block;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .ws-player-admin-stat strong {
+        color: var(--body-fg);
+        display: block;
+        font-size: 22px;
+        line-height: 1.15;
+        margin-top: 4px;
+    }
+
+    #changelist-filter {
+        max-width: 260px;
+    }
+
+    #changelist-filter details {
+        padding: 0 12px 12px;
+    }
+
+    #changelist-filter h3 {
+        margin: 12px 0 6px;
+    }
+
+    #changelist-filter ul {
+        display: none;
+    }
+
+    .ws-admin-filter-select {
+        background: var(--body-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--body-fg);
+        min-height: 32px;
+        width: 100%;
+    }
+
+    @media (max-width: 900px) {
+        .ws-player-admin-stats {
+            grid-template-columns: repeat(2, minmax(150px, 1fr));
+        }
+    }
+
+    @media (max-width: 520px) {
+        .ws-player-admin-stats {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+<div class="ws-player-admin-stats" aria-label="Spielerstatistik">
+    <div class="ws-player-admin-stat">
+        <span>Spieler</span>
+        <strong>{{ player_admin_stats.player_count }}</strong>
+    </div>
+    <div class="ws-player-admin-stat">
+        <span>Durchschnittsstaerke</span>
+        <strong>{{ player_admin_stats.average_strength }}</strong>
+    </div>
+    <div class="ws-player-admin-stat">
+        <span>Durchschnittsmarktwert</span>
+        <strong>{{ player_admin_stats.average_market_value }}</strong>
+    </div>
+    <div class="ws-player-admin-stat">
+        <span>Durchschnittsgehalt</span>
+        <strong>{{ player_admin_stats.average_salary }}</strong>
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterPanel = document.getElementById('changelist-filter');
+        if (!filterPanel) {
+            return;
+        }
+
+        filterPanel.querySelectorAll('details').forEach(function (group) {
+            const links = Array.from(group.querySelectorAll('ul li a'));
+            if (!links.length) {
+                return;
+            }
+
+            const select = document.createElement('select');
+            select.className = 'ws-admin-filter-select';
+            select.setAttribute(
+                'aria-label',
+                group.querySelector('h3')?.textContent?.trim() || 'Filter'
+            );
+
+            links.forEach(function (link) {
+                const option = document.createElement('option');
+                option.value = link.href;
+                option.textContent = link.textContent.trim();
+                if (link.closest('li')?.classList.contains('selected')) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', function () {
+                window.location.href = select.value;
+            });
+
+            group.appendChild(select);
+        });
+    });
+</script>
+{% endblock %}

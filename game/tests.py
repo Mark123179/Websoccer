@@ -1,17 +1,34 @@
 ﻿from decimal import Decimal
 from datetime import date
+from io import StringIO
 
 from django.contrib.auth import get_user_model
+from django.contrib import admin
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .admin import PlayerNationalityForm
 from .models import (
     Club,
+    DataSource,
     League,
     Player,
+    PlayerAwardTitle,
+    PlayerEditRequest,
+    PlayerExternalId,
+    PlayerFormSnapshot,
+    PlayerInjuryRecord,
+    PlayerMarketValueSnapshot,
+    PlayerSeasonStat,
     PlayerSourceRating,
+    PlayerSourceRatingSnapshot,
     PlayerStrengthProfile,
+    PlayerStrengthSnapshot,
+    PlayerSuspensionRecord,
+    PlayerTransferHistory,
+    PlayerWeightedRatingSnapshot,
+    StrengthFormulaSettings,
 )
 
 
@@ -30,9 +47,10 @@ class PageSmokeTests(TestCase):
             budget=Decimal('5000000.00'),
             league=league,
         )
-        player = Player.objects.create(
+        self.player = Player.objects.create(
             first_name='Harry',
             last_name='Kane',
+            wsc_player_id='WSC-TEST-1',
             fm_inside_id=28049320,
             transfermarkt_id=132098,
             transfermarkt_profile_url='https://www.transfermarkt.de/harry-kane/profil/spieler/132098',
@@ -40,6 +58,8 @@ class PageSmokeTests(TestCase):
             date_of_birth=date(1993, 7, 28),
             nationalities='England, Irland',
             age=31,
+            height_cm=188,
+            strong_foot='right',
             position='ST',
             primary_position='OM',
             source_positions='OM',
@@ -53,23 +73,44 @@ class PageSmokeTests(TestCase):
             real_life_club=self.club,
         )
         PlayerSourceRating.objects.create(
-            player=player,
+            player=self.player,
             source=PlayerSourceRating.SOURCE_EA,
             rating=90,
             potential=90,
             source_version='FC 26 Testdaten',
         )
         PlayerSourceRating.objects.create(
-            player=player,
+            player=self.player,
             source=PlayerSourceRating.SOURCE_FM,
             rating=94,
             potential=95,
             source_version='FMInside Testdaten',
         )
         PlayerStrengthProfile.objects.create(
-            player=player,
+            player=self.player,
             base_strength=88,
             form_modifier=2,
+        )
+        self.tm_source, _created = DataSource.objects.get_or_create(
+            code=DataSource.CODE_TRANSFERMARKT,
+            defaults={
+                'name': 'Transfermarkt',
+                'base_url': 'https://www.transfermarkt.de/',
+            },
+        )
+        self.fm_source, _created = DataSource.objects.get_or_create(
+            code=DataSource.CODE_FMINSIDE,
+            defaults={
+                'name': 'FMInside',
+                'base_url': 'https://fminside.net/',
+            },
+        )
+        self.sofifa_source, _created = DataSource.objects.get_or_create(
+            code=DataSource.CODE_SOFIFA,
+            defaults={
+                'name': 'SoFIFA',
+                'base_url': 'https://sofifa.com/',
+            },
         )
 
     def test_home_page_renders_dashboard(self):
@@ -94,7 +135,7 @@ class PageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '1. Mannschaft')
         self.assertContains(response, 'Marktwert')
-        self.assertContains(response, 'game/images/players/28049320.svg')
+        self.assertContains(response, 'game/images/players/28049320.png')
         self.assertContains(response, 'game/images/kits/907_home.svg')
         self.assertContains(response, 'game/images/flags/765.svg')
         self.assertContains(response, 'game/images/flags/789.svg')
@@ -103,29 +144,120 @@ class PageSmokeTests(TestCase):
 
     def test_player_detail_renders_profile_shell(self):
         player = Player.objects.get(transfermarkt_id=132098)
+        PlayerSeasonStat.objects.create(
+            player=player,
+            season='Saison #1',
+            season_number=1,
+            competition='Websoccer Liga',
+            matches=12,
+            goals=8,
+            assists=3,
+            substitutions_in=1,
+            substitutions_out=2,
+            yellow_cards=1,
+            minutes_played=990,
+            average_grade=Decimal('1.74'),
+        )
+        PlayerTransferHistory.objects.create(
+            player=player,
+            transfer_date=date(2026, 7, 1),
+            season='2026/27',
+            from_club=None,
+            to_club=self.club,
+            fee_eur=Decimal('45000000.00'),
+        )
+        PlayerInjuryRecord.objects.create(
+            player=player,
+            start_date=date(2026, 9, 1),
+            injury_type='Muskelverletzung',
+            days_missed=12,
+            competition='Websoccer Liga',
+        )
+        PlayerSuspensionRecord.objects.create(
+            player=player,
+            start_date=date(2026, 10, 2),
+            reason='Gelbsperre',
+            matches_missed=1,
+            competition='Websoccer Liga',
+        )
+        PlayerAwardTitle.objects.create(
+            player=player,
+            title='Spieler des Monats',
+            season='2026/27',
+            count=1,
+        )
         response = self.client.get(
             reverse('player_detail', kwargs={'player_id': player.id})
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Harry Kane')
-        self.assertContains(response, 'Spielerprofil')
         self.assertContains(response, 'Gehalt pro Spiel')
         self.assertContains(response, 'WS-Verein')
-        self.assertContains(
-            response,
-            'Die Reiter liegen jetzt in der Django-Verwaltung.',
-        )
+        self.assertContains(response, 'Saisonleistungen')
+        self.assertContains(response, 'Saison #1')
+        self.assertContains(response, '<th>Ein</th>', html=True)
+        self.assertContains(response, '<th>Aus</th>', html=True)
+        self.assertContains(response, 'Karriereleistungen')
+        self.assertContains(response, 'Transferhistorie')
+        self.assertContains(response, 'Letzte 5 Verletzungen')
+        self.assertContains(response, 'Letzte 5 Sperren')
+        self.assertContains(response, '<th>Note</th>', html=True)
+        self.assertContains(response, '1,74')
+        self.assertContains(response, 'Websoccer Liga')
+        self.assertContains(response, 'Muskelverletzung')
+        self.assertContains(response, 'Gelbsperre')
+        self.assertNotContains(response, 'Fähigkeiten')
+        self.assertNotContains(response, 'Stärke')
+        self.assertNotContains(response, 'Potential')
+        self.assertNotContains(response, 'Rating')
 
     def test_player_source_ratings_calculate_base_and_potential(self):
         player = Player.objects.get(transfermarkt_id=132098)
 
-        self.assertEqual(player.calculated_base_strength, 184)
-        self.assertEqual(player.calculated_potential_strength, 185)
+        self.assertEqual(player.calculated_base_strength, Decimal('184.00'))
+        self.assertEqual(player.calculated_potential_strength, Decimal('185.00'))
         self.assertIn(
-            'Base = EA + FM = 184',
+            'Base = EA + FM = 184.00',
             player.source_strength_explanation,
         )
+
+    def test_player_source_rating_fallback_uses_single_source_or_default(self):
+        ea_only_player = Player.objects.create(
+            first_name='EA',
+            last_name='Only',
+            nationalities='England',
+            age=20,
+            position='ST',
+            main_position_1='ST',
+            potential=50,
+            market_value=Decimal('0.00'),
+            salary_per_match=Decimal('0.00'),
+            club=self.club,
+        )
+        PlayerSourceRating.objects.create(
+            player=ea_only_player,
+            source=PlayerSourceRating.SOURCE_EA,
+            rating=72,
+            potential=80,
+        )
+        default_player = Player.objects.create(
+            first_name='Default',
+            last_name='Base',
+            nationalities='England',
+            age=20,
+            position='ST',
+            main_position_1='ST',
+            potential=50,
+            market_value=Decimal('0.00'),
+            salary_per_match=Decimal('0.00'),
+            club=self.club,
+        )
+
+        self.assertEqual(ea_only_player.calculated_base_strength, Decimal('144.00'))
+        self.assertEqual(ea_only_player.source_base_quality, 'partial')
+        self.assertEqual(default_player.calculated_base_strength, Decimal('40.00'))
+        self.assertTrue(default_player.uses_default_base_strength)
 
     def test_player_admin_nationality_form_stores_two_dropdown_values(self):
         player = Player.objects.get(transfermarkt_id=132098)
@@ -236,6 +368,32 @@ class PageSmokeTests(TestCase):
 
     def test_player_admin_change_form_contains_management_tabs(self):
         player = Player.objects.get(transfermarkt_id=132098)
+        PlayerWeightedRatingSnapshot.objects.create(
+            player=player,
+            source=PlayerFormSnapshot.SOURCE_SPORTDB_FLASHSCORE,
+            recorded_at=date(2025, 4, 1),
+            fixture_reference='BL-1',
+            weighted_rating=Decimal('8.20'),
+            rating_minutes=90,
+            match_count=1,
+        )
+        PlayerMarketValueSnapshot.objects.create(
+            player=player,
+            source=self.tm_source,
+            recorded_at=date(2025, 4, 1),
+            value_eur=Decimal('110000000.00'),
+            profile_url=player.transfermarkt_profile_url,
+            update_current=False,
+        )
+        PlayerStrengthSnapshot.objects.create(
+            player=player,
+            recorded_at=date(2025, 4, 1),
+            match_reference='BL-1',
+            base_strength=Decimal('184.00'),
+            final_strength=Decimal('186.00'),
+            max_strength=Decimal('190.00'),
+            last_10_average_strength=Decimal('185.00'),
+        )
         admin_user = get_user_model().objects.create_superuser(
             username='admin',
             email='admin@example.com',
@@ -251,9 +409,320 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'ws-admin-tabs')
         self.assertContains(response, 'SPIELERPROFIL')
         self.assertContains(response, 'STAERKE')
+        self.assertContains(response, 'Spielstaerke-Berechnung')
+        self.assertContains(response, 'Endstaerke ohne Peak')
+        self.assertContains(response, 'Endstaerke Max')
+        self.assertContains(response, 'Staerke-Verlauf')
+        self.assertContains(response, 'ws-strength-chart')
+        self.assertContains(response, 'Base: 184.00')
+        self.assertContains(response, 'Final: 186.00')
+        self.assertContains(response, 'Max: 190.00')
         self.assertContains(response, 'SOURCE')
+        self.assertContains(response, 'Marktwert-Verlauf')
+        self.assertContains(response, 'ws-market-chart')
+        self.assertContains(response, '110.0 Mio')
         self.assertContains(response, 'SAISON')
-        self.assertContains(response, 'KARRIERE')
+        self.assertContains(response, 'Gewichteter Rating-Verlauf')
+        self.assertContains(response, 'ws-rating-chart')
+        self.assertContains(response, 'Rating')
+        self.assertContains(response, 'Spiele')
+        self.assertContains(response, '8.2')
+        self.assertContains(response, 'Noch keine Websoccer-Saisonstatistik vorhanden.')
+        self.assertContains(response, 'Noch keine Websoccer-Karrierestatistik vorhanden.')
+        self.assertContains(response, 'Noch keine Websoccer-Transfers vorhanden.')
+        self.assertContains(response, 'ws-season-career-grid')
+        self.assertNotContains(response, 'Premier League')
+        self.assertNotContains(response, '95.000.000 EUR')
+        self.assertNotContains(response, '>KARRIERE</button>')
         self.assertContains(response, 'TRANSFERHISTORIE WS')
         self.assertContains(response, 'GESCHICHTE')
+
+    def test_strength_modifier_settings_seed_default_rules(self):
+        settings = StrengthFormulaSettings.objects.get(name='Standard')
+
+        self.assertEqual(settings.rating_modifier_factor, Decimal('5.00'))
+        self.assertEqual(settings.default_league_median_rating, Decimal('6.80'))
+        self.assertEqual(settings.modifier_rules.count(), 15)
+
+    def test_player_edit_request_accepts_market_value_change(self):
+        player = Player.objects.get(transfermarkt_id=132098)
+        edit_request = PlayerEditRequest.objects.create(
+            player=player,
+            field_name=PlayerEditRequest.FIELD_MARKET_VALUE,
+            old_value='100000000,00',
+            new_value='105000000,00',
+            requester_note='Marktwert aktualisiert.',
+        )
+
+        edit_request.accept()
+        player.refresh_from_db()
+
+        self.assertEqual(player.market_value, Decimal('105000000.00'))
+        self.assertEqual(edit_request.status, PlayerEditRequest.STATUS_ACCEPTED)
+
+    def test_player_form_snapshot_calculates_minutes_quote(self):
+        player = Player.objects.get(transfermarkt_id=132098)
+        snapshot = PlayerFormSnapshot.objects.create(
+            player=player,
+            fixture_id=12345,
+            fixture_date=date(2025, 2, 15),
+            minutes_played=45,
+            possible_minutes=90,
+        )
+
+        self.assertEqual(snapshot.minutes_quote, Decimal('50.00'))
+
+    def test_player_external_id_is_unique_per_source(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.tm_source,
+            external_id='132098',
+            profile_url=self.player.transfermarkt_profile_url,
+        )
+
+        self.assertEqual(
+            self.player.external_ids.get(source=self.tm_source).external_id,
+            '132098',
+        )
+
+    def test_market_value_snapshots_keep_latest_10_and_update_current(self):
+        for index in range(12):
+            PlayerMarketValueSnapshot.objects.create(
+                player=self.player,
+                source=self.tm_source,
+                recorded_at=date(2025, 1, index + 1),
+                value_eur=Decimal('1000000.00') * (index + 1),
+                profile_url=self.player.transfermarkt_profile_url,
+            )
+
+        self.player.refresh_from_db()
+        snapshots = self.player.market_value_snapshots.order_by('recorded_at')
+
+        self.assertEqual(snapshots.count(), 10)
+        self.assertEqual(snapshots.first().recorded_at, date(2025, 1, 3))
+        self.assertEqual(self.player.market_value, Decimal('12000000.00'))
+        self.assertEqual(self.player.salary_per_match, Decimal('60000.00'))
+
+    def test_source_rating_snapshot_updates_current_rating(self):
+        PlayerSourceRatingSnapshot.objects.create(
+            player=self.player,
+            source=self.fm_source,
+            recorded_at=date(2025, 5, 1),
+            rating=95,
+            potential=96,
+            source_version='FMInside 26',
+        )
+
+        current_rating = self.player.source_ratings.get(
+            source=PlayerSourceRating.SOURCE_FM,
+        )
+        self.assertEqual(current_rating.rating, 95)
+        self.assertEqual(current_rating.potential, 96)
+        self.assertEqual(current_rating.checked_at, date(2025, 5, 1))
+
+    def test_source_rating_snapshots_keep_latest_10_per_source(self):
+        for index in range(12):
+            PlayerSourceRatingSnapshot.objects.create(
+                player=self.player,
+                source=self.sofifa_source,
+                recorded_at=date(2025, 2, index + 1),
+                rating=70 + index,
+                potential=80 + index,
+                source_version='SoFIFA FC26',
+            )
+
+        snapshots = self.player.source_rating_snapshots.filter(
+            source=self.sofifa_source,
+        ).order_by('recorded_at')
+
+        self.assertEqual(snapshots.count(), 10)
+        self.assertEqual(snapshots.first().recorded_at, date(2025, 2, 3))
+
+    def test_strength_snapshots_keep_latest_10(self):
+        for index in range(12):
+            PlayerStrengthSnapshot.objects.create(
+                player=self.player,
+                recorded_at=date(2025, 3, index + 1),
+                match_reference=f'BL-{index + 1}',
+                base_strength=Decimal('180.00'),
+                final_strength=Decimal('181.00') + index,
+                max_strength=Decimal('190.00'),
+                last_10_average_strength=Decimal('180.50') + index,
+            )
+
+        snapshots = self.player.strength_snapshots.order_by('recorded_at')
+
+        self.assertEqual(snapshots.count(), 10)
+        self.assertEqual(snapshots.first().recorded_at, date(2025, 3, 3))
+
+    def test_player_graph_data_returns_chart_series(self):
+        PlayerMarketValueSnapshot.objects.create(
+            player=self.player,
+            source=self.tm_source,
+            recorded_at=date(2025, 4, 1),
+            value_eur=Decimal('110000000.00'),
+            profile_url=self.player.transfermarkt_profile_url,
+        )
+        PlayerSourceRatingSnapshot.objects.create(
+            player=self.player,
+            source=self.fm_source,
+            recorded_at=date(2025, 4, 1),
+            rating=95,
+            potential=96,
+            source_version='FMInside 26',
+        )
+        PlayerSourceRatingSnapshot.objects.create(
+            player=self.player,
+            source=self.sofifa_source,
+            recorded_at=date(2025, 4, 1),
+            rating=90,
+            potential=91,
+            source_version='SoFIFA FC26',
+        )
+        PlayerStrengthSnapshot.objects.create(
+            player=self.player,
+            recorded_at=date(2025, 4, 1),
+            match_reference='BL-1',
+            base_strength=Decimal('184.00'),
+            final_strength=Decimal('186.00'),
+            max_strength=Decimal('190.00'),
+            last_10_average_strength=Decimal('185.00'),
+        )
+        PlayerFormSnapshot.objects.create(
+            player=self.player,
+            fixture_id='BL-1',
+            fixture_date=date(2025, 4, 1),
+            opponent_name='Borussia Dortmund',
+            minutes_played=90,
+            possible_minutes=90,
+            rating=Decimal('8.20'),
+            goals=1,
+            assists=1,
+        )
+        PlayerWeightedRatingSnapshot.objects.create(
+            player=self.player,
+            source=PlayerFormSnapshot.SOURCE_SPORTDB_FLASHSCORE,
+            recorded_at=date(2025, 4, 1),
+            fixture_reference='BL-1',
+            weighted_rating=Decimal('8.20'),
+            rating_minutes=90,
+            match_count=1,
+        )
+
+        response = self.client.get(
+            reverse('player_graph_data', kwargs={'player_id': self.player.id})
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload['player']['wsc_player_id'], 'WSC-TEST-1')
+        self.assertEqual(payload['market_value'][0]['y'], 110000000.0)
+        self.assertEqual(payload['source_ratings']['fm_rating'][0]['y'], 95)
+        self.assertEqual(payload['source_ratings']['sofifa_potential'][0]['y'], 91)
+        self.assertEqual(payload['match_ratings'][0]['y'], 8.2)
+        self.assertEqual(payload['weighted_ratings'][0]['y'], 8.2)
+        self.assertEqual(payload['strength']['final_strength'][0]['y'], 186.0)
+
+    def test_player_graph_data_handles_players_without_snapshots(self):
+        player = Player.objects.create(
+            first_name='No',
+            last_name='Snapshots',
+            age=20,
+            market_value=Decimal('0.00'),
+            salary_per_match=Decimal('0.00'),
+            club=self.club,
+        )
+
+        response = self.client.get(
+            reverse('player_graph_data', kwargs={'player_id': player.id})
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload['market_value'], [])
+        self.assertEqual(payload['source_ratings']['fm_rating'], [])
+        self.assertEqual(payload['match_ratings'], [])
+        self.assertEqual(payload['weighted_ratings'], [])
+        self.assertEqual(payload['strength']['final_strength'], [])
+
+    def test_player_admin_contains_data_history_inlines(self):
+        player_admin = admin.site._registry[Player]
+        inline_models = [
+            inline.model
+            for inline in player_admin.inlines
+        ]
+
+        self.assertIn(PlayerExternalId, inline_models)
+        self.assertNotIn(PlayerMarketValueSnapshot, inline_models)
+        self.assertNotIn(PlayerSourceRatingSnapshot, inline_models)
+        self.assertNotIn(PlayerFormSnapshot, inline_models)
+        self.assertNotIn(PlayerWeightedRatingSnapshot, inline_models)
+        self.assertNotIn(PlayerStrengthSnapshot, inline_models)
+        self.assertNotIn(PlayerExternalId, admin.site._registry)
+        self.assertNotIn(PlayerMarketValueSnapshot, admin.site._registry)
+        self.assertNotIn(PlayerSourceRatingSnapshot, admin.site._registry)
+        self.assertNotIn(PlayerWeightedRatingSnapshot, admin.site._registry)
+        self.assertNotIn(PlayerStrengthSnapshot, admin.site._registry)
+
+    def test_weighted_rating_snapshots_keep_latest_10_per_source(self):
+        for index in range(12):
+            PlayerWeightedRatingSnapshot.objects.create(
+                player=self.player,
+                source=PlayerFormSnapshot.SOURCE_SPORTDB_FLASHSCORE,
+                recorded_at=date(2025, 5, index + 1),
+                fixture_reference=f'BL-{index + 1}',
+                weighted_rating=Decimal('7.00') + Decimal(index) / Decimal('10'),
+                rating_minutes=90,
+                match_count=min(index + 1, 10),
+            )
+
+        snapshots = self.player.weighted_rating_snapshots.order_by('recorded_at')
+
+        self.assertEqual(snapshots.count(), 10)
+        self.assertEqual(snapshots.first().recorded_at, date(2025, 5, 3))
+
+    def test_recalculate_player_strengths_keeps_existing_base_without_sources(self):
+        player = Player.objects.create(
+            first_name='Seeded',
+            last_name='Base',
+            nationalities='England',
+            age=24,
+            position='ST',
+            main_position_1='ST',
+            potential=82,
+            market_value=Decimal('10000000.00'),
+            salary_per_match=Decimal('50000.00'),
+            club=self.club,
+        )
+        PlayerStrengthProfile.objects.create(
+            player=player,
+            base_strength=Decimal('76.00'),
+            form_modifier=Decimal('1.50'),
+            freshness=Decimal('97.00'),
+        )
+        output = StringIO()
+
+        call_command('recalculate_player_strengths', stdout=output)
+        player.refresh_from_db()
+        profile = player.strength_profile
+        snapshot = player.strength_snapshots.get(
+            match_reference__startswith='RECALC-',
+        )
+
+        self.assertEqual(profile.base_strength, Decimal('76.00'))
+        self.assertEqual(profile.final_strength, Decimal('77.50'))
+        self.assertEqual(snapshot.base_strength, Decimal('76.00'))
+        self.assertEqual(snapshot.final_strength, Decimal('77.50'))
+        self.assertEqual(snapshot.max_strength, Decimal('82.00'))
+        self.assertIn('Spieler berechnet', output.getvalue())
+
+    def test_recalculate_player_strengths_uses_source_ratings_when_available(self):
+        player = Player.objects.get(transfermarkt_id=132098)
+        output = StringIO()
+
+        call_command('recalculate_player_strengths', stdout=output)
+        player.refresh_from_db()
+
+        self.assertEqual(player.strength_profile.base_strength, Decimal('184.00'))
+        self.assertEqual(player.strength_profile.final_strength, Decimal('186.00'))
 

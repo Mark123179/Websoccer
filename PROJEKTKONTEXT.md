@@ -25,12 +25,19 @@ Die klare Arbeitsrichtung ist: Entwicklung in VS Code, Umsetzung in Django, iter
 
 Das Projekt enthaelt bereits eine erste fachliche Basis:
 
-- Modell `League` fuer Ligen mit Name und Land
+- Modell `League` fuer Ligen mit Name, Land und Liga-Koeffizient fuer spaetere Formgewichtung
 - Modell `Club` fuer Vereine mit Name, Kurzname, Gruendungsjahr, Budget und Liga
 - Modell `Player` fuer Spieler mit Name, Alter, bis zu 3 Hauptpositionen, bis zu 3 Nebenpositionen, Marktwert, Gehalt, WS-Verein und getrenntem RL-Verein
 - Spieler koennen im Websoccer eigene Verletzungen und Sperren erhalten, die separat von Real-Life-Verletzungen gepflegt werden
 - Die Django-Verwaltung fuer Spieler ist in Reiter aufgeteilt: Spielerprofil, Staerke, Source, Saison, Karriere und WS-Transferhistorie
 - Modell `PlayerSourceRating` fuer EA-/SoFIFA-/FIFAIndex- und FMInside-Ratings inklusive Potential; EA + FM ergibt die interne Source-Base
+- Source-Base nutzt Fallbacks: EA+FM, eine Source mal 2 oder Default 40.00 mit sichtbarer Datenpruefungsmarkierung
+- Modell `PlayerEditRequest` fuer Spielerbearbeitungsantraege mit altem Wert, neuem Wert, Bemerkung und Admin-Entscheidung
+- Admin-Bereich `Spieler-Datenpruefung` zeigt Spieler mit fehlenden Sources oder offenen Antraegen
+- API-Football-IDs sind fuer Liga, Verein und Spieler vorgesehen; Bundesliga `78`, FC Bayern `157`, Harry Kane `184` sind als Pilot hinterlegt
+- Management Command `import_api_football_player_form` importiert API-Football-Form-Snapshots fuer einen Spieler; Free-Plan ist aktuell auf Seasons `2022` bis `2024` beschraenkt
+- Management Command `import_sportdb_flashscore_form` importiert SportDB-/Flashscore-Form-Snapshots; Harry Kane ist mit Flashscore-ID `v5HSlEAa` als Pilot getestet
+- `PlayerFormSnapshot` speichert Formdaten quellenuebergreifend; Match-IDs sind alphanumerisch moeglich, damit API-Football und SportDB/Flashscore parallel funktionieren
 - Modell `PlayerStrengthProfile` fuer berechnete Spielerstaerke aus Basisstaerke und Formmodifikator
 - Admin-Integration fuer Ligen, Vereine, Spieler und Staerkeprofile
 - Vereinsuebersicht unter `/clubs/`
@@ -45,6 +52,7 @@ Das Projekt enthaelt bereits eine erste fachliche Basis:
 Zusaetzlich gibt es ein eigenes Arbeitsdokument fuer das geplante Spielstaerkemodell:
 
 - `SPIELSTAERKEMODELL.md`
+- `Infos/SPIELSTAERKE_PLAYBOOK.md` als aktuelle Playbook-Referenz fuer die beschlossenen Staerkeregeln
 - `OEKONOMIE_AGENT.md` fuer Finanzlogik, Geldfluesse und Balancing
 - `DATEN_UND_ASSETS.md` fuer FMInside-IDs und spaetere lokale Bildzuordnung
 
