@@ -7,137 +7,131 @@
     {{ player.full_name }}
 {% endblock %}
 
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}">
+    <link rel="stylesheet" href="{% static 'game/css/trophy-cabinet.css' %}">
+{% endblock %}
+
 {% block content %}
 
-<section class="player-dashboard player-command-profile">
-    <header class="page-topbar player-profile-topbar">
-        <div class="control-room-title">
-            <div>
-                <h1>{{ player.full_name }}</h1>
-                <span>WS-Profil &middot; {{ player.club.name|default:"ohne Verein" }}</span>
-            </div>
+<section class="player-dashboard player-command-profile is-aaa-profile">
+    <header class="aaa-profile-topbar">
+        <a class="aaa-back-button" href="{% if player.club %}{% url 'club_detail' player.club.id %}{% else %}/{% endif %}" aria-label="Zurueck">&larr;</a>
+        <div class="aaa-top-title">
+            <h1>Spielerprofil</h1>
+            <span>{{ player.full_name }} &middot; {{ player.club.name|default:"ohne Verein" }}</span>
         </div>
-
+        <div class="aaa-search">Suche...</div>
+        <div class="aaa-club-chip">
+            {% if player.club and player.club.crest_static_path %}
+                <img src="{% static player.club.crest_static_path %}" alt="{{ player.club.name }}">
+            {% endif %}
+            <strong>{{ player.club.name|default:"Websoccer" }}</strong>
+        </div>
+        <div class="aaa-top-date">
+            <strong>24. Mai 2025</strong>
+            <span>Sa 21:45</span>
+        </div>
+        <a class="aaa-continue-button" href="{% if player.club %}{% url 'club_detail' player.club.id %}{% else %}/{% endif %}">Fortfahren</a>
     </header>
 
-    <div class="player-profile-grid">
-        <aside class="dashboard-card player-identity-panel">
-            <div class="player-card-stage">
-                <span class="shirt-number">10</span>
-                {% if player.club and player.club.crest_static_path %}
-                    <img class="player-card-crest" src="{% static player.club.crest_static_path %}" alt="{{ player.club.name }}">
-                {% endif %}
-                {% with nation_crest=player.primary_nation_crest %}
-                    {% if nation_crest.static_path %}
-                        <img class="player-card-nation-crest" src="{% static nation_crest.static_path %}" alt="{{ nation_crest.name }}" title="{{ nation_crest.name }}">
+    <div class="aaa-profile-grid">
+        <aside class="aaa-left-column">
+            <article class="aaa-player-card">
+                <div class="aaa-player-poster">
+                    <span class="aaa-shirt-number">10</span>
+                    {% if player.club and player.club.crest_static_path %}
+                        <img class="aaa-poster-club" src="{% static player.club.crest_static_path %}" alt="{{ player.club.name }}">
                     {% endif %}
-                {% endwith %}
-                <img class="player-profile-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
-                <div class="player-name-overlay">
-                    <h2>{{ player.full_name }}</h2>
+                    {% with nation_crest=player.primary_nation_crest %}
+                        {% if nation_crest.static_path %}
+                            <img class="aaa-poster-nation" src="{% static nation_crest.static_path %}" alt="{{ nation_crest.name }}" title="{{ nation_crest.name }}">
+                        {% endif %}
+                    {% endwith %}
+                    <img class="aaa-player-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                    <div class="aaa-player-nameplate">
+                        <h2>{{ player.full_name }}</h2>
+                    </div>
                 </div>
-            </div>
 
-            <dl class="player-fact-list">
-                <div>
-                    <dt>Nationalit&auml;t</dt>
-                    <dd>
-                        <span class="flag-list">
+                <div class="aaa-bio-strip">
+                    <span>
+                        <b>
                             {% for nationality in player.nationality_badges %}
                                 {% if nationality.flag_static_path %}
                                     <img class="flag-badge" src="{% static nationality.flag_static_path %}" alt="{{ nationality.name }}" title="{{ nationality.name }}">
                                 {% else %}
-                                    <span class="flag-code" title="{{ nationality.name }}">{{ nationality.code }}</span>
+                                    {{ nationality.code }}
                                 {% endif %}
                             {% empty %}
                                 -
                             {% endfor %}
-                        </span>
-                    </dd>
-                </div>
-                <div>
-                    <dt>Geburtsdatum</dt>
-                    <dd>{% if player.date_of_birth %}{{ player.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</dd>
-                </div>
-                <div>
-                    <dt>Alter</dt>
-                    <dd>{{ player.age }} Jahre</dd>
-                </div>
-                <div>
-                    <dt>Gr&ouml;&szlig;e</dt>
-                    <dd>{% if player.height_cm %}{{ player.height_cm }} cm{% else %}-{% endif %}</dd>
-                </div>
-                <div>
-                    <dt>Fu&szlig;</dt>
-                    <dd>{{ player.strong_foot_label }}</dd>
-                </div>
-            </dl>
-
-            <div class="player-club-stack">
-                <div>
-                    {% if player.club and player.club.crest_static_path %}
-                        <img src="{% static player.club.crest_static_path %}" alt="{{ player.club.name }}">
-                    {% endif %}
-                    <span>
-                        <strong>{{ player.club.name|default:"ohne WS-Verein" }}</strong>
-                        <small>WS-Verein &middot; {{ player.club.league.name|default:"Websoccer" }}</small>
+                        </b>
+                        <small>Nation</small>
                     </span>
+                    <span><b>{% if player.date_of_birth %}{{ player.date_of_birth|date:"d.m.Y" }}{% else %}-{% endif %}</b><small>{{ player.age }} Jahre</small></span>
+                    <span><b>{% if player.height_cm %}{{ player.height_cm }} cm{% else %}-{% endif %}</b><small>Größe</small></span>
+                    <span><b>{{ player.strong_foot_label }}</b><small>Fuß</small></span>
                 </div>
-                {% if player.real_life_club %}
-                    <div>
-                        {% if player.real_life_club.crest_static_path %}
-                            <img src="{% static player.real_life_club.crest_static_path %}" alt="{{ player.real_life_club.name }}">
-                        {% endif %}
-                        <span>
-                            <strong>{{ player.real_life_club.name }}</strong>
-                            <small>Realwelt-Zuordnung</small>
-                        </span>
-                    </div>
-                {% endif %}
-            </div>
 
-            <section class="availability-panel">
-                <div class="availability-heading">
-                    <h2 class="card-title">Frische</h2>
-                    {% if freshness != None %}
-                        <span class="freshness-ring" style="--freshness: {{ freshness|floatformat:0 }};">{{ freshness|floatformat:0 }}%</span>
-                    {% else %}
-                        <span class="freshness-ring is-empty" style="--freshness: 0;">-</span>
-                    {% endif %}
+                <div class="aaa-player-info-list">
+                    <div>
+                        <span>WS-Verein</span>
+                        <strong>
+                            {% if player.club and player.club.crest_static_path %}
+                                <img src="{% static player.club.crest_static_path %}" alt="">
+                            {% endif %}
+                            {{ player.club.name|default:"ohne WS-Verein" }}
+                        </strong>
+                    </div>
+                    <div>
+                        <span>Wettbewerb</span>
+                        <strong>
+                            {% if league_logo %}
+                                <img src="{% static league_logo %}" alt="">
+                            {% endif %}
+                            {{ player.club.league.name|default:"Websoccer" }}
+                        </strong>
+                    </div>
+                    <div>
+                        <span>Gehalt pro Spiel</span>
+                        <strong>{{ player.salary_per_match|floatformat:0|intcomma }} &euro;</strong>
+                    </div>
+                    <div class="aaa-player-freshness-panel">
+                        <div class="aaa-player-freshness-main">
+                            <span class="aaa-player-freshness-title">
+                                <i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-fitness"></use></svg></i>
+                                Frische
+                            </span>
+                            <strong>Sehr frisch</strong>
+                            {% if freshness != None %}
+                                <em class="aaa-freshness-ring" style="--freshness: {{ freshness|floatformat:0 }};">{{ freshness|floatformat:0 }}%</em>
+                            {% else %}
+                                <em class="aaa-freshness-ring is-empty" style="--freshness: 0;">-</em>
+                            {% endif %}
+                        </div>
+                        <div class="aaa-player-freshness-body">
+                            <dl>
+                                <span>Wechselsperre <b>Keine</b></span>
+                                <span>Spielsperre <b>{% if player.is_ws_suspended %}{{ player.ws_suspension_matches_remaining }} Spiele{% else %}Keine{% endif %}</b></span>
+                                <span>Verletzung <b>{% if player.is_ws_injured %}{{ player.ws_injury_days_remaining }} Tage{% else %}Keine{% endif %}</b></span>
+                            </dl>
+                        </div>
+                    </div>
                 </div>
-                <dl class="player-contract-list">
-                    <div>
-                        <dt>Gehalt pro Spiel</dt>
-                        <dd>{{ player.salary_per_match|floatformat:0|intcomma }} &euro;</dd>
-                    </div>
-                    <div>
-                        <dt>Wechselsperre</dt>
-                        <dd class="positive">Keine</dd>
-                    </div>
-                    <div>
-                        <dt>Spielsperre</dt>
-                        <dd class="{% if player.is_ws_suspended %}negative{% else %}positive{% endif %}">
-                            {% if player.is_ws_suspended %}{{ player.ws_suspension_matches_remaining }} Spiele{% else %}Keine{% endif %}
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>Verletzung</dt>
-                        <dd class="{% if player.is_ws_injured %}negative{% else %}positive{% endif %}">
-                            {% if player.is_ws_injured %}{{ player.ws_injury_days_remaining }} Tage{% else %}Keine{% endif %}
-                        </dd>
-                    </div>
-                </dl>
-            </section>
+            </article>
         </aside>
 
-        <main class="player-profile-main">
-            <article class="dashboard-card player-positions-panel">
-                <h2 class="card-title">Positionen</h2>
-                <div class="player-pitch">
+        <main class="aaa-center-column">
+            <article class="aaa-card aaa-position-card">
+                <div class="aaa-card-heading">
+                    <h2>Positionen</h2>
+                </div>
+                <div class="player-pitch aaa-pitch">
                     {% for slot in pitch_slots %}
-                        <span class="player-pitch-chip is-{{ slot.state }}" style="left: {{ slot.x }}%; top: {{ slot.y }}%;" title="{{ slot.code }}{% if slot.kind %} · {{ slot.kind }}{% endif %}">
+                        <span class="player-pitch-chip is-{{ slot.state }}" style="left: {{ slot.x }}%; top: {{ slot.y }}%;" title="{{ slot.code }}{% if slot.kind %} &middot; {{ slot.kind }}{% endif %}">
                             <b>{{ slot.code }}</b>
-                            {% if slot.kind %}<small>{{ slot.kind }}</small>{% endif %}
                         </span>
                     {% empty %}
                         <span class="player-pitch-empty">Keine Positionen gepflegt</span>
@@ -145,143 +139,64 @@
                 </div>
             </article>
 
-            <article class="dashboard-card player-table-panel">
-                <h2 class="card-title">
-                    Saisonleistungen
+            <article class="aaa-card aaa-season-card">
+                <div class="aaa-card-heading">
+                    <h2>Saisonleistungen</h2>
                     {% if season_rows %}<span>Saison {{ season_rows.0.season_label }}</span>{% endif %}
-                </h2>
-                <div class="table-wrap">
-                    <table class="club-table player-stat-table">
-                        <thead>
-                            <tr>
-                                <th>Wettbewerb</th>
-                                <th>Spiele</th>
-                                <th>Tore</th>
-                                <th>Vorl.</th>
-                                <th>Gelb</th>
-                                <th>Rot</th>
-                                <th>Ein</th>
-                                <th>Aus</th>
-                                <th>Min.</th>
-                                <th>Note</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in season_rows %}
-                                <tr>
-                                    <td>
-                                        <span class="competition-cell">
-                                            {% if row.competition_logo %}
-                                                <img src="{% static row.competition_logo %}" alt="">
-                                            {% endif %}
-                                            {{ row.competition }}
-                                        </span>
-                                    </td>
-                                    <td>{{ row.matches }}</td>
-                                    <td>{{ row.goals }}</td>
-                                    <td>{{ row.assists }}</td>
-                                    <td>{{ row.yellow_cards }}</td>
-                                    <td>{{ row.red_cards }}</td>
-                                    <td>{{ row.substitutions_in }}</td>
-                                    <td>{{ row.substitutions_out }}</td>
-                                    <td>{{ row.minutes_played|intcomma }}</td>
-                                    <td>
-                                        <span class="grade-badge {{ row.grade_class }}">
-                                            {% if row.average_grade %}{{ row.average_grade|floatformat:2 }}{% else %}-{% endif %}
-                                        </span>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="10">Noch keine Websoccer-Saisonstatistik vorhanden.</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
                 </div>
-            </article>
+                {% if season_rows %}
+                    <div class="aaa-season-kpis">
+                        <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-games"></use></svg></i><strong>{{ season_summary.matches }}</strong><small>Spiele</small></span>
+                        <span><i><img src="{% static 'game/images/icons/stat-goals.svg' %}" alt=""></i><strong>{{ season_summary.goals }}</strong><small>Tore</small></span>
+                        <span><i><img src="{% static 'game/images/icons/stat-assists.svg' %}" alt=""></i><strong>{{ season_summary.assists }}</strong><small>Vorlagen</small></span>
+                        <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-minutes"></use></svg></i><strong>{{ season_summary.minutes_played|intcomma }}</strong><small>Minuten</small></span>
+                        <span class="is-yellow"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-yellow-card"></use></svg></i><strong>{{ season_summary.yellow_cards }}</strong><small>Gelbe</small></span>
+                        <span class="is-red"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-red-card"></use></svg></i><strong>{{ season_summary.red_cards }}</strong><small>Rote</small></span>
+                        <span class="is-sub"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-substitutions"></use></svg></i><strong><em>{{ season_summary.substitutions_in }}</em>/<b>{{ season_summary.substitutions_out }}</b></strong><small>Ein/Aus</small></span>
+                        <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-star"></use></svg></i><strong>{{ season_summary.player_of_match_awards }}</strong><small>Spieler des Spiels</small></span>
+                    </div>
 
-            <article class="dashboard-card player-table-panel">
-                <h2 class="card-title">Karriereleistungen</h2>
-                <div class="table-wrap">
-                    <table class="club-table player-stat-table">
-                        <thead>
-                            <tr>
-                                <th>Wettbewerb</th>
-                                <th>Spiele</th>
-                                <th>Tore</th>
-                                <th>Vorl.</th>
-                                <th>Gelb</th>
-                                <th>Rot</th>
-                                <th>Ein</th>
-                                <th>Aus</th>
-                                <th>Min.</th>
-                                <th>Note</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in career_rows %}
-                                <tr>
-                                    <td>
-                                        <span class="competition-cell">
-                                            {% if row.competition_logo %}
-                                                <img src="{% static row.competition_logo %}" alt="">
-                                            {% endif %}
-                                            {{ row.competition }}
-                                        </span>
-                                    </td>
-                                    <td>{{ row.matches }}</td>
-                                    <td>{{ row.goals }}</td>
-                                    <td>{{ row.assists }}</td>
-                                    <td>{{ row.yellow_cards }}</td>
-                                    <td>{{ row.red_cards }}</td>
-                                    <td>{{ row.substitutions_in }}</td>
-                                    <td>{{ row.substitutions_out }}</td>
-                                    <td>{{ row.minutes_played|intcomma }}</td>
-                                    <td>
-                                        <span class="grade-badge {{ row.grade_class }}">
-                                            {% if row.average_grade %}{{ row.average_grade|floatformat:2 }}{% else %}-{% endif %}
-                                        </span>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="10">Noch keine Websoccer-Karrierestatistik vorhanden.</td>
-                                </tr>
-                            {% endfor %}
-                            {% if career_rows %}
-                                <tr class="total-row">
-                                    <td>Gesamt</td>
-                                    <td>{{ career_summary.matches }}</td>
-                                    <td>{{ career_summary.goals }}</td>
-                                    <td>{{ career_summary.assists }}</td>
-                                    <td>{{ career_summary.yellow_cards }}</td>
-                                    <td>{{ career_summary.red_cards }}</td>
-                                    <td>{{ career_summary.substitutions_in }}</td>
-                                    <td>{{ career_summary.substitutions_out }}</td>
-                                    <td>{{ career_summary.minutes_played|intcomma }}</td>
-                                    <td></td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="aaa-stat-board">
+                        <div class="aaa-stat-head">
+                            <span>Wettbewerbe</span><span>Sp.</span><span>Tore</span><span>Vorl.</span><span>Min.</span><span>Gelb</span><span>Rot</span><span>Ein/Aus</span><span>SdS</span><span>Note</span>
+                        </div>
+                        {% for row in season_rows %}
+                            <div class="aaa-stat-row performance-lane">
+                                <span class="aaa-stat-competition">
+                                    {% if row.competition_logo %}
+                                        <img src="{% static row.competition_logo %}" alt="">
+                                    {% endif %}
+                                    <b>{{ row.competition }}</b>
+                                </span>
+                                <span><b>{{ row.matches }}</b></span>
+                                <span><b>{{ row.goals }}</b></span>
+                                <span><b>{{ row.assists }}</b></span>
+                                <span><b>{{ row.minutes_played|intcomma }}</b></span>
+                                <span><b>{{ row.yellow_cards }}</b></span>
+                                <span><b>{{ row.red_cards }}</b></span>
+                                <span class="sub-ratio"><b><em>{{ row.substitutions_in }}</em>/<strong>{{ row.substitutions_out }}</strong></b></span>
+                                <span><b>{{ row.player_of_match_awards }}</b></span>
+                                <span class="grade-badge {{ row.grade_class }}">{% if row.average_grade %}{{ row.average_grade|floatformat:2 }}{% else %}-{% endif %}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-copy">Noch keine Websoccer-Saisonstatistik vorhanden.</p>
+                {% endif %}
             </article>
         </main>
 
-        <aside class="player-profile-side">
-            <article class="dashboard-card player-market-panel">
-                <div class="market-panel-header">
-                    <h2 class="card-title">Marktwert</h2>
+        <aside class="aaa-right-column">
+            <article class="aaa-card aaa-market-card">
+                <div class="aaa-card-heading">
+                    <h2>Marktwert</h2>
                     {% if player.transfermarkt_profile_url %}
-                        <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">
-                            {{ player.market_value|floatformat:0|intcomma }} &euro;
-                        </a>
+                        <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">{{ player.market_value|floatformat:0|intcomma }} &euro;</a>
                     {% else %}
                         <strong class="market-value-large">{{ player.market_value|floatformat:0|intcomma }} &euro;</strong>
                     {% endif %}
                 </div>
-                <div class="market-chart">
+                <div class="market-chart aaa-market-chart">
                     {% if market_points %}
                         <div class="market-axis-y" aria-hidden="true">
                             <small>Wert</small>
@@ -295,7 +210,7 @@
                                 <polyline points="{{ market_polyline }}"></polyline>
                             </svg>
                             {% for point in market_points %}
-                                <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" title="{{ point.full_date_label }} - {{ point.value }}" data-label="{{ point.value }}" data-date="{{ point.full_date_label }}" tabindex="0">
+                                <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" title="{{ point.full_date_label }} - {{ point.value }}" tabindex="0">
                                     <span class="market-point-label">{{ point.value }}</span>
                                 </i>
                             {% endfor %}
@@ -312,85 +227,163 @@
                 </div>
             </article>
 
-            <article class="dashboard-card player-table-panel">
-                <h2 class="card-title">Transferhistorie</h2>
-                <div class="transfer-history-list">
-                    {% for row in transfer_rows %}
-                        {% with transfer=row.transfer %}
-                            <div class="transfer-history-row">
-                                <time>{{ transfer.transfer_date|date:"d.m.Y" }}</time>
-                                <div class="transfer-clubs">
-                                    <span>
+            <div class="aaa-history-grid">
+                <div class="aaa-event-grid">
+                    <article class="aaa-card aaa-event-card">
+                        <div class="aaa-card-heading"><h2>Letzte 5 Verletzungen</h2></div>
+                        <div class="aaa-event-list">
+                            {% for injury in injury_rows %}
+                                <div><img class="aaa-event-icon" src="{% static 'game/images/icons/injury.png' %}" alt=""><time>{{ injury.start_date|date:"d.m.Y" }}</time><strong>{{ injury.injury_type }}</strong><small>{{ injury.days_missed }} Tage</small></div>
+                            {% empty %}
+                                <p class="empty-copy">Keine Websoccer-Verletzungen protokolliert.</p>
+                            {% endfor %}
+                        </div>
+                    </article>
+
+                    <article class="aaa-card aaa-event-card">
+                        <div class="aaa-card-heading"><h2>Letzte 5 Sperren</h2></div>
+                        <div class="aaa-event-list">
+                            {% for suspension in suspension_rows %}
+                                <div><img class="aaa-event-icon is-suspension" src="{% static 'game/images/icons/suspension-cards.svg' %}" alt=""><time>{{ suspension.start_date|date:"d.m.Y" }}</time><strong>{{ suspension.reason }}</strong><small>{{ suspension.matches_missed }} Spiele</small></div>
+                            {% empty %}
+                                <p class="empty-copy">Keine Websoccer-Sperren protokolliert.</p>
+                            {% endfor %}
+                        </div>
+                    </article>
+                </div>
+
+                <article class="aaa-card aaa-transfer-card">
+                    <div class="aaa-card-heading"><h2>Transferhistorie</h2></div>
+                    <div class="aaa-transfer-track">
+                        {% for row in transfer_rows %}
+                            {% with transfer=row.transfer %}
+                                <div class="aaa-transfer-node">
+                                    <time>{{ transfer.transfer_date|date:"Y" }}</time>
+                                    <div>
                                         {% if row.from_crest %}
                                             <img src="{% static row.from_crest %}" alt="">
                                         {% endif %}
-                                        {{ transfer.from_club.name|default:"-" }}
-                                    </span>
-                                    <b>&rarr;</b>
-                                    <span>
+                                        <span>&rarr;</span>
                                         {% if row.to_crest %}
                                             <img src="{% static row.to_crest %}" alt="">
                                         {% endif %}
-                                        {{ transfer.to_club.name|default:"-" }}
-                                    </span>
+                                    </div>
+                                    {% if row.swap_player %}
+                                        <a href="{% url 'player_detail' row.swap_player.id %}">{{ row.swap_player.full_name }}</a>
+                                    {% else %}
+                                        <strong>Tauschspieler offen</strong>
+                                    {% endif %}
+                                    <small>{{ row.detail }}</small>
                                 </div>
-                                <small>{{ row.detail }}</small>
-                            </div>
-                        {% endwith %}
-                    {% empty %}
-                        <p class="empty-copy">Noch keine Websoccer-Transfers vorhanden.</p>
-                    {% endfor %}
-                </div>
-            </article>
-
-            <div class="player-side-grid">
-                <article class="dashboard-card player-table-panel">
-                    <h2 class="card-title">Letzte 5 Verletzungen</h2>
-                    <div class="timeline-list compact">
-                        {% for injury in injury_rows %}
-                            <div>
-                                <time>{{ injury.start_date|date:"d.m.Y" }}</time>
-                                <strong>{{ injury.injury_type }}</strong>
-                                <span>{{ injury.days_missed }} Tage</span>
-                            </div>
+                            {% endwith %}
                         {% empty %}
-                            <p class="empty-copy">Keine Websoccer-Verletzungen protokolliert.</p>
-                        {% endfor %}
-                    </div>
-                </article>
-
-                <article class="dashboard-card player-table-panel">
-                    <h2 class="card-title">Letzte 5 Sperren</h2>
-                    <div class="timeline-list compact">
-                        {% for suspension in suspension_rows %}
-                            <div>
-                                <time>{{ suspension.start_date|date:"d.m.Y" }}</time>
-                                <strong>{{ suspension.reason }}</strong>
-                                <span>{{ suspension.matches_missed }} Spiele</span>
-                            </div>
-                        {% empty %}
-                            <p class="empty-copy">Keine Websoccer-Sperren protokolliert.</p>
+                            <p class="empty-copy">Noch keine Websoccer-Transfers vorhanden.</p>
                         {% endfor %}
                     </div>
                 </article>
             </div>
+        </aside>
 
-            <article class="dashboard-card player-table-panel trophy-panel">
-                <h2 class="card-title">Auszeichnungen & Titel <span>{{ award_total_count }}</span></h2>
-                <div class="trophy-list">
-                    {% for award in award_rows %}
-                        <figure>
-                            {% if award.trophy_static_path %}
-                                <img src="{% static award.trophy_static_path %}" alt="{{ award.title }}">
-                            {% endif %}
-                            <figcaption>{{ award.title }} <strong>{{ award.count }}x</strong></figcaption>
-                        </figure>
-                    {% empty %}
-                        <p class="empty-copy">Noch keine Websoccer-Titel oder Auszeichnungen.</p>
+        <section class="aaa-card aaa-trophy-stage awards-card{% if award_page.has_other_pages %} has-award-pages{% endif %}" id="awards">
+            <div class="aaa-awards-background" aria-hidden="true"></div>
+            <div class="aaa-awards-lighting" aria-hidden="true"></div>
+            <div class="aaa-card-heading awards-header">
+                <h2 class="aaa-trophy-title">
+                    <img src="{% static 'game/images/icons/trophy-heading.png' %}" alt="" aria-hidden="true">
+                    <span>Auszeichnungen & Titel</span>
+                </h2>
+                <div class="aaa-award-total" aria-label="{{ award_total_count }} Titel gesamt">
+                    <span>Gesamt</span>
+                    <img src="{% static 'game/images/icons/trophy-total.png' %}" alt="" aria-hidden="true">
+                    <strong>{{ award_total_count }}</strong>
+                    <small>Titel</small>
+                </div>
+            </div>
+            <div class="aaa-awards-stage">
+                {% for slot in award_slots %}
+                    <figure class="trophy-slot trophy-card trophy-rank-{{ forloop.counter }} is-{{ slot.shape }}{% if slot.is_placeholder %} is-placeholder{% endif %}">
+                        <img class="podium" src="{% static 'game/images/trophies/podium-trophy.png' %}" alt="" aria-hidden="true">
+                        {% if slot.image_path %}
+                            <img class="trophy-img is-{{ slot.shape }}" src="{% static slot.image_path %}{% if slot.asset_version %}?v={{ slot.asset_version }}{% endif %}" alt="{{ slot.title }}">
+                        {% endif %}
+                        {% if slot.is_placeholder %}
+                            <figcaption class="trophy-label trophy-placeholder-label" aria-hidden="true">
+                                <span class="trophy-name">&nbsp;</span>
+                                <strong class="trophy-count">&nbsp;</strong>
+                            </figcaption>
+                        {% else %}
+                            <figcaption class="trophy-label">
+                                <span class="trophy-name">{{ slot.title }}</span>
+                                <strong class="trophy-count">{{ slot.count }}x</strong>
+                            </figcaption>
+                        {% endif %}
+                    </figure>
+                {% endfor %}
+            </div>
+            {% if award_page.has_other_pages %}
+                <nav class="aaa-award-pagination" aria-label="Auszeichnungen Seiten">
+                    {% if award_page.has_previous %}
+                        <a href="?awards_page={{ award_page.previous_page_number }}#awards" aria-label="Vorherige Auszeichnungen-Seite">&lsaquo;</a>
+                    {% else %}
+                        <span class="is-disabled" aria-hidden="true">&lsaquo;</span>
+                    {% endif %}
+                    {% for page_number in award_page_range %}
+                        {% if page_number == award_page.number %}
+                            <span class="is-active" aria-current="page">{{ page_number }}</span>
+                        {% else %}
+                            <a href="?awards_page={{ page_number }}#awards">{{ page_number }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if award_page.has_next %}
+                        <a href="?awards_page={{ award_page.next_page_number }}#awards" aria-label="Nächste Auszeichnungen-Seite">&rsaquo;</a>
+                    {% else %}
+                        <span class="is-disabled" aria-hidden="true">&rsaquo;</span>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        </section>
+
+        <section class="aaa-card aaa-career-card">
+            <div class="aaa-card-heading">
+                <h2>Karriereleistungen</h2>
+                <span>Websoccer gesamt</span>
+            </div>
+            <div class="aaa-career-summary">
+                <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-games"></use></svg></i><strong>{{ career_summary.matches }}</strong><small>Spiele</small></span>
+                <span><i><img src="{% static 'game/images/icons/stat-goals.svg' %}" alt=""></i><strong>{{ career_summary.goals }}</strong><small>Tore</small></span>
+                <span><i><img src="{% static 'game/images/icons/stat-assists.svg' %}" alt=""></i><strong>{{ career_summary.assists }}</strong><small>Vorlagen</small></span>
+                <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-minutes"></use></svg></i><strong>{{ career_summary.minutes_played|intcomma }}</strong><small>Minuten</small></span>
+                <span class="is-yellow"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-yellow-card"></use></svg></i><strong>{{ career_summary.yellow_cards }}</strong><small>Gelbe</small></span>
+                <span class="is-red"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-red-card"></use></svg></i><strong>{{ career_summary.red_cards }}</strong><small>Rote</small></span>
+                <span class="is-sub"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-substitutions"></use></svg></i><strong><em>{{ career_summary.substitutions_in }}</em>/<b>{{ career_summary.substitutions_out }}</b></strong><small>Ein/Aus</small></span>
+                <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-star"></use></svg></i><strong>{{ career_summary.player_of_match_awards }}</strong><small>Spieler des Spiels</small></span>
+            </div>
+            {% if career_rows %}
+                <div class="aaa-career-rows">
+                    {% for row in career_rows %}
+                        <div class="aaa-career-row performance-lane">
+                            <span class="aaa-stat-competition">
+                                {% if row.competition_logo %}
+                                    <img src="{% static row.competition_logo %}" alt="">
+                                {% endif %}
+                                <b>{{ row.competition }}</b>
+                            </span>
+                            <span><b>{{ row.matches }}</b><small>Spiele</small></span>
+                            <span><b>{{ row.goals }}</b><small>Tore</small></span>
+                            <span><b>{{ row.assists }}</b><small>Vorlagen</small></span>
+                            <span><b>{{ row.minutes_played|intcomma }}</b><small>Minuten</small></span>
+                            <span><b>{{ row.yellow_cards }}</b><small>Gelbe</small></span>
+                            <span><b>{{ row.red_cards }}</b><small>Rote</small></span>
+                            <span class="sub-ratio"><b><em>{{ row.substitutions_in }}</em>/<strong>{{ row.substitutions_out }}</strong></b><small>Ein/Aus</small></span>
+                            <span><b>{{ row.player_of_match_awards }}</b><small>SdS</small></span>
+                            <span class="grade-badge {{ row.grade_class }}">{% if row.average_grade %}{{ row.average_grade|floatformat:2 }}{% else %}-{% endif %}</span>
+                        </div>
                     {% endfor %}
                 </div>
-            </article>
-        </aside>
+            {% else %}
+                <p class="empty-copy">Noch keine Websoccer-Karrierestatistik vorhanden.</p>
+            {% endif %}
+        </section>
     </div>
 </section>
 

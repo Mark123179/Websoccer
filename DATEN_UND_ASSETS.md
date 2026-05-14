@@ -75,18 +75,62 @@ Aktueller Umfang nach dem Seed:
 
 Hinweis: Spielerbilder und Vereinswappen werden lokal ueber die ID-Struktur ergaenzt. Bis dahin nutzt die UI automatisch das lokale Default-Spielerbild `game/static/game/images/default_player.svg`. Dieses SVG enthaelt das urspruengliche Default-PNG auf hellem Hintergrund, damit der Platzhalter in dunklen Tabellen sichtbar bleibt.
 
-Aktuell eingebundene Wappen:
+Aktuell eingebundene Club-Wappen:
 
-- Borussia Dortmund: `game/static/game/images/crests/907.svg`
-- FC Bayern Muenchen: `game/static/game/images/crests/915.svg`
+- Quelle: `C:\Users\mashu\Documents\Codex\Websoccer\Images\Logos\Europe\Germany\Clubs`
+- Borussia Dortmund: `game/static/game/images/crests/907.png` aus `TCM1_907.png`
+- FC Bayern Muenchen: `game/static/game/images/crests/915.png` aus `TCM1_915.png`
 
-Die aktuellen Wappen-SVGs sind Wrapper um die vorhandenen PNG-Dateien mit `180x180` Pixeln. Sie lassen sich im Code sauber wie SVG-Assets verwenden, sind aber noch keine echten Vektorpfade. Fuer sehr grosse Darstellungen oder perfekt scharfe Skalierung sollten spaeter echte SVG-Wappen oder groessere Originaldateien pro Verein ergaenzt werden.
+Der alte lokale Ordner `Images\Wappen` ist nicht mehr die Quelle. Vereinslogos werden ab jetzt aus `Images\Logos` uebernommen und ueber die `fm_inside_id` benannt. `Club.crest_static_path` erwartet entsprechend `game/images/crests/<club_fm_inside_id>.png`.
+
+Aktuell eingebundene Wettbewerbslogos:
+
+- Quelle national: `C:\Users\mashu\Documents\Codex\Websoccer\Images\Logos\Europe\Germany\Competitions`
+- Quelle international: `C:\Users\mashu\Documents\Codex\Websoccer\Images\Logos\Others\Internationals Competitions`
+- 1. Bundesliga: `game/static/game/images/competitions/bundesliga.png` aus `TCM2_22.png`
+- DFB-Pokal: `game/static/game/images/competitions/dfb-pokal.png` aus `TCM2_1301410.png`
+- Champions League: `game/static/game/images/competitions/champions-league.png` aus `TCM2_1301394.png`
+- Supercup: `game/static/game/images/competitions/supercup.png` aus `TCM2_1301397.png`
 
 ## Flaggen
 
-Die Nationalitaeten der Spieler werden in der UI als lokale Flaggenbilder angezeigt. Fuer die aktuell genutzten Nationen liegen SVG-Wrapper unter `game/static/game/images/flags/<nation_id>.svg`.
+Die Nationalitaeten der Spieler haben zwei Darstellungsarten:
 
-Die Nation-IDs entsprechen den Football-Manager-Nation-IDs aus den lokalen Flaggen-Dateien. Die SVGs betten die vorhandenen PNGs aus `Images/Flaggen` ein. Der lokale Ordner `Images/Nationen` enthaelt Nationenlogos und wird nicht fuer die Spieler-Nationalitaeten verwendet.
+- kompakte Bio-/Kaderanzeige: echte Flaggen aus `game/static/game/images/flags/<nation_id>.svg`
+- grosses Spielerposter: Nationalitaets-/Verbandslogo aus dem neuen Logo-Pack
+
+```text
+C:\Users\mashu\Documents\Codex\Websoccer\Images\Logos\Others\Federations\TCM4_<nation_id>.png
+```
+
+Die Verbandslogos werden im Projekt gecacht unter:
+
+```text
+game/static/game/images/nations/federations/<nation_id>.png
+```
+
+Die Nation-IDs entsprechen den Football-Manager-Nation-IDs. Beispiel: England `765`, Irland `789`, Deutschland `771`.
+
+## Trophies
+
+Titel und Auszeichnungen verwenden die Football-Manager-ID aus `Images\Trophies`:
+
+```text
+C:\Users\mashu\Documents\Codex\Websoccer\Images\Trophies\<trophy_asset_id>.png
+```
+
+Im Projekt werden diese Dateien gecacht unter:
+
+```text
+game/static/game/images/trophies/<trophy_asset_id>.png
+```
+
+Aktuelle Harry-Kane-Dummy-Zuordnung:
+
+- Meisterschaft / Bundesliga-Schale: `22`
+- DFB-Pokal: `1301410`
+- Champions League: `1301394`
+- Supercup: `1301397`
 
 ## Spielerbilder und Kits
 

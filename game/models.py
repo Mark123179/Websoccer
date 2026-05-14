@@ -235,7 +235,7 @@ class Club(models.Model):
         if not self.fm_inside_id:
             return ''
 
-        return f'game/images/crests/{self.fm_inside_id}.svg'
+        return f'game/images/crests/{self.fm_inside_id}.png'
 
     @property
     def kit_static_paths(self):
@@ -999,6 +999,7 @@ class PlayerSeasonStat(models.Model):
     substitutions_out = models.PositiveSmallIntegerField(default=0)
     yellow_cards = models.PositiveSmallIntegerField(default=0)
     red_cards = models.PositiveSmallIntegerField(default=0)
+    player_of_match_awards = models.PositiveSmallIntegerField(default=0)
     minutes_played = models.PositiveIntegerField(default=0)
     average_grade = models.DecimalField(
         max_digits=3,

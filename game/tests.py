@@ -1,6 +1,7 @@
 ﻿from decimal import Decimal
 from datetime import date
 from io import StringIO
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib import admin
@@ -155,6 +156,7 @@ class PageSmokeTests(TestCase):
             substitutions_in=1,
             substitutions_out=2,
             yellow_cards=1,
+            player_of_match_awards=2,
             minutes_played=990,
             average_grade=Decimal('1.74'),
         )
@@ -196,21 +198,142 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'WS-Verein')
         self.assertContains(response, 'Saisonleistungen')
         self.assertContains(response, 'Saison #1')
-        self.assertContains(response, '<th>Ein</th>', html=True)
-        self.assertContains(response, '<th>Aus</th>', html=True)
+        self.assertContains(response, 'performance-lane')
+        self.assertContains(response, 'Ein')
+        self.assertContains(response, 'Aus')
         self.assertContains(response, 'Karriereleistungen')
         self.assertContains(response, 'Transferhistorie')
         self.assertContains(response, 'Letzte 5 Verletzungen')
         self.assertContains(response, 'Letzte 5 Sperren')
-        self.assertContains(response, '<th>Note</th>', html=True)
+        self.assertContains(response, 'grade-badge')
+        self.assertContains(response, 'game/css/global-dashboard.css')
+        self.assertContains(response, 'game/css/player-profile.css')
+        self.assertContains(response, 'game/css/trophy-cabinet.css')
+        global_dashboard_css = (
+            Path(__file__).resolve().parent
+            / 'static'
+            / 'game'
+            / 'css'
+            / 'global-dashboard.css'
+        )
+        global_dashboard_css_text = global_dashboard_css.read_text(encoding='utf-8')
+        self.assertIn('./global-dashboard/layout-nav.css', global_dashboard_css_text)
+        self.assertIn('./global-dashboard/dashboard-cards.css', global_dashboard_css_text)
+        self.assertIn('./global-dashboard/tables-lists.css', global_dashboard_css_text)
+        self.assertIn('./global-dashboard/responsive.css', global_dashboard_css_text)
+        self.assertNotIn('.player-command-profile', global_dashboard_css_text)
+        global_dashboard_dir = global_dashboard_css.parent / 'global-dashboard'
+        layout_nav_css = (global_dashboard_dir / 'layout-nav.css').read_text(
+            encoding='utf-8'
+        )
+        dashboard_cards_css = (
+            global_dashboard_dir / 'dashboard-cards.css'
+        ).read_text(encoding='utf-8')
+        tables_lists_css = (global_dashboard_dir / 'tables-lists.css').read_text(
+            encoding='utf-8'
+        )
+        responsive_css = (global_dashboard_dir / 'responsive.css').read_text(
+            encoding='utf-8'
+        )
+        self.assertIn('.navbar', layout_nav_css)
+        self.assertIn('.dashboard-grid-main', layout_nav_css)
+        self.assertIn('.card-title', dashboard_cards_css)
+        self.assertIn('.league-table', tables_lists_css)
+        self.assertIn('@media (max-width: 1600px)', responsive_css)
+        for css_text in (
+            layout_nav_css,
+            dashboard_cards_css,
+            tables_lists_css,
+            responsive_css,
+        ):
+            self.assertNotIn('.player-command-profile', css_text)
+            self.assertNotIn('.trophy-list', css_text)
+        player_profile_css = (
+            Path(__file__).resolve().parent
+            / 'static'
+            / 'game'
+            / 'css'
+            / 'player-profile.css'
+        )
+        player_profile_css_text = player_profile_css.read_text(encoding='utf-8')
+        self.assertIn(
+            '../images/backgrounds/player-profile-stadium-atmosphere.svg',
+            player_profile_css_text,
+        )
+        self.assertIn('../images/backgrounds/spielfeld.png', player_profile_css_text)
+        trophy_css = (
+            Path(__file__).resolve().parent
+            / 'static'
+            / 'game'
+            / 'css'
+            / 'trophy-cabinet.css'
+        )
+        self.assertIn(
+            '../images/backgrounds/trophy-stage.png',
+            trophy_css.read_text(encoding='utf-8'),
+        )
+        self.assertContains(response, 'game/images/icons/stat-goals.svg')
+        self.assertContains(response, 'game/images/icons/stat-assists.svg')
+        self.assertContains(response, '#icon-fitness')
+        self.assertContains(response, '#icon-substitutions')
+        self.assertContains(response, '#icon-star')
+        self.assertContains(response, 'Spieler des Spiels')
+        self.assertContains(response, 'Ein/Aus')
         self.assertContains(response, '1,74')
         self.assertContains(response, 'Websoccer Liga')
+        self.assertContains(response, 'game/images/competitions/bundesliga.png')
         self.assertContains(response, 'Muskelverletzung')
         self.assertContains(response, 'Gelbsperre')
         self.assertNotContains(response, 'Fähigkeiten')
         self.assertNotContains(response, 'Stärke')
         self.assertNotContains(response, 'Potential')
         self.assertNotContains(response, 'Rating')
+
+    def test_player_awards_are_paginated_after_four_titles(self):
+        player = Player.objects.get(transfermarkt_id=132098)
+        detail_url = reverse('player_detail', kwargs={'player_id': player.id})
+
+        for number in range(1, 6):
+            PlayerAwardTitle.objects.create(
+                player=player,
+                title=f'Titel {number}',
+                season='2026/27',
+                count=1,
+            )
+
+        response = self.client.get(detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '?awards_page=2#awards')
+        self.assertContains(response, 'Titel 5')
+        self.assertNotContains(response, 'Titel 1')
+
+        second_page = self.client.get(detail_url, {'awards_page': 2})
+
+        self.assertEqual(second_page.status_code, 200)
+        self.assertContains(second_page, 'Titel 1')
+        self.assertNotContains(second_page, 'Titel 5')
+
+    def test_player_awards_render_empty_podium_slots_without_fake_trophies(self):
+        player = Player.objects.get(transfermarkt_id=132098)
+        PlayerAwardTitle.objects.create(
+            player=player,
+            title='Spieler des Monats',
+            season='2026/27',
+            count=1,
+        )
+
+        response = self.client.get(
+            reverse('player_detail', kwargs={'player_id': player.id})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="trophy-slot', count=4)
+        self.assertContains(response, 'class="podium"', count=4)
+        self.assertContains(response, 'game/images/trophies/podium-trophy.png')
+        self.assertNotContains(response, 'game/images/trophies/default-2.png')
+        self.assertNotContains(response, 'game/images/trophies/default-3.png')
+        self.assertNotContains(response, 'game/images/trophies/default-4.png')
 
     def test_player_source_ratings_calculate_base_and_potential(self):
         player = Player.objects.get(transfermarkt_id=132098)

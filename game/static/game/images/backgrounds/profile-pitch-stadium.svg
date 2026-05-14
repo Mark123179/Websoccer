@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 1024" role="img" aria-label="Cinematic football pitch">
+  <defs>
+    <linearGradient id="night" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#061016"/>
+      <stop offset="0.42" stop-color="#071a14"/>
+      <stop offset="1" stop-color="#02070a"/>
+    </linearGradient>
+    <radialGradient id="lightLeft" cx="0.06" cy="0.02" r="0.42">
+      <stop offset="0" stop-color="#f3ffff" stop-opacity="0.95"/>
+      <stop offset="0.08" stop-color="#cfffff" stop-opacity="0.34"/>
+      <stop offset="0.42" stop-color="#00ff9c" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#001" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lightRight" cx="0.94" cy="0.02" r="0.42">
+      <stop offset="0" stop-color="#f3ffff" stop-opacity="0.95"/>
+      <stop offset="0.08" stop-color="#cfffff" stop-opacity="0.34"/>
+      <stop offset="0.42" stop-color="#00ff9c" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#001" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="grass" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#1d6b18"/>
+      <stop offset="0.46" stop-color="#176016"/>
+      <stop offset="1" stop-color="#09380f"/>
+    </linearGradient>
+    <linearGradient id="edgeFade" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#02080b" stop-opacity="0.94"/>
+      <stop offset="0.18" stop-color="#02080b" stop-opacity="0"/>
+      <stop offset="0.82" stop-color="#02080b" stop-opacity="0"/>
+      <stop offset="1" stop-color="#02080b" stop-opacity="0.94"/>
+    </linearGradient>
+    <pattern id="mow" width="128" height="1024" patternUnits="userSpaceOnUse">
+      <rect width="64" height="1024" fill="#2a7a21" opacity="0.36"/>
+      <rect x="64" width="64" height="1024" fill="#0f4b13" opacity="0.3"/>
+    </pattern>
+    <pattern id="checks" width="96" height="96" patternUnits="userSpaceOnUse">
+      <rect width="96" height="96" fill="transparent"/>
+      <rect width="48" height="48" fill="#ffffff" opacity="0.018"/>
+      <rect x="48" y="48" width="48" height="48" fill="#ffffff" opacity="0.018"/>
+    </pattern>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softShadow">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+    <clipPath id="pitchClip">
+      <path d="M38 910 L248 122 L1288 122 L1498 910 Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1536" height="1024" fill="url(#night)"/>
+  <rect width="1536" height="1024" fill="url(#lightLeft)"/>
+  <rect width="1536" height="1024" fill="url(#lightRight)"/>
+
+  <g opacity="0.42">
+    <path d="M0 132 C300 34 573 31 768 35 C963 31 1236 34 1536 132 L1536 235 C1122 142 414 142 0 235 Z" fill="#071217"/>
+    <path d="M0 184 C414 104 1122 104 1536 184" fill="none" stroke="#52f68e" stroke-opacity="0.16" stroke-width="4"/>
+    <path d="M0 238 C414 158 1122 158 1536 238" fill="none" stroke="#52f68e" stroke-opacity="0.1" stroke-width="2"/>
+  </g>
+
+  <g filter="url(#glow)" opacity="0.8">
+    <g transform="translate(22 0)">
+      <circle cx="0" cy="0" r="16" fill="#ffffff"/>
+      <circle cx="34" cy="4" r="13" fill="#ffffff"/>
+      <circle cx="67" cy="8" r="11" fill="#ffffff"/>
+      <circle cx="99" cy="14" r="9" fill="#ffffff"/>
+    </g>
+    <g transform="translate(1514 0) scale(-1 1)">
+      <circle cx="0" cy="0" r="16" fill="#ffffff"/>
+      <circle cx="34" cy="4" r="13" fill="#ffffff"/>
+      <circle cx="67" cy="8" r="11" fill="#ffffff"/>
+      <circle cx="99" cy="14" r="9" fill="#ffffff"/>
+    </g>
+  </g>
+
+  <g clip-path="url(#pitchClip)" filter="url(#softShadow)">
+    <rect x="0" y="112" width="1536" height="820" fill="url(#grass)"/>
+    <rect x="0" y="112" width="1536" height="820" fill="url(#mow)"/>
+    <rect x="0" y="112" width="1536" height="820" fill="url(#checks)"/>
+    <rect x="0" y="112" width="1536" height="820" fill="url(#edgeFade)"/>
+    <path d="M38 910 L248 122 L1288 122 L1498 910 Z" fill="none" stroke="#c8f3bd" stroke-width="5" opacity="0.86"/>
+    <path d="M224 424 L1312 424" stroke="#d9ffd0" stroke-width="4" opacity="0.82"/>
+    <ellipse cx="768" cy="424" rx="130" ry="74" fill="none" stroke="#d9ffd0" stroke-width="4" opacity="0.84"/>
+    <circle cx="768" cy="424" r="5" fill="#d9ffd0" opacity="0.92"/>
+
+    <path d="M486 122 L1050 122 L1016 214 L520 214 Z" fill="none" stroke="#d9ffd0" stroke-width="4" opacity="0.82"/>
+    <path d="M627 122 L909 122 L895 152 L641 152 Z" fill="none" stroke="#d9ffd0" stroke-width="4" opacity="0.78"/>
+    <path d="M682 214 C714 242 822 242 854 214" fill="none" stroke="#d9ffd0" stroke-width="4" opacity="0.78"/>
+    <circle cx="768" cy="180" r="3.5" fill="#d9ffd0" opacity="0.82"/>
+
+    <path d="M348 910 L1188 910 L1116 760 L420 760 Z" fill="none" stroke="#d9ffd0" stroke-width="5" opacity="0.86"/>
+    <path d="M548 910 L988 910 L958 838 L578 838 Z" fill="none" stroke="#d9ffd0" stroke-width="5" opacity="0.82"/>
+    <path d="M636 760 C676 704 860 704 900 760" fill="none" stroke="#d9ffd0" stroke-width="4" opacity="0.78"/>
+    <circle cx="768" cy="790" r="3.8" fill="#d9ffd0" opacity="0.82"/>
+
+    <path d="M0 910 L38 910 M1498 910 L1536 910" stroke="#66ff90" stroke-width="3" opacity="0.5"/>
+    <path d="M248 122 L248 104 M1288 122 L1288 104" stroke="#66ff90" stroke-width="3" opacity="0.4"/>
+  </g>
+
+  <g opacity="0.34" filter="url(#glow)">
+    <path d="M0 650 L190 206" stroke="#1afc9c" stroke-width="2"/>
+    <path d="M1536 650 L1346 206" stroke="#1afc9c" stroke-width="2"/>
+    <path d="M88 982 L1450 982" stroke="#1afc9c" stroke-width="2" stroke-dasharray="2 22"/>
+  </g>
+
+  <rect width="1536" height="1024" fill="url(#edgeFade)"/>
+  <rect width="1536" height="1024" fill="#000000" opacity="0.08"/>
+</svg>

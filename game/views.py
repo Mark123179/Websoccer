@@ -1,4 +1,8 @@
+import os
+
+from django.contrib.staticfiles import finders
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Avg, Count, Sum
 from .models import (
@@ -13,7 +17,6 @@ from .models import (
     PlayerSuspensionRecord,
     PlayerTransferHistory,
 )
-from .player_assets import get_cached_trophy_static_path
 
 
 def decimal_number(value):
@@ -33,6 +36,65 @@ def latest_in_chronological_order(queryset):
 
 def latest_form_snapshots_in_chronological_order(queryset):
     return list(queryset.order_by('-fixture_date', '-id')[:10])[::-1]
+
+
+def award_trophy_shape(award):
+    title = award.title.lower()
+    image_path = award.trophy_static_path.lower()
+
+    if any(token in title or token in image_path for token in ['meisterschaft', 'schale']):
+        return 'wide'
+
+    if any(token in title or token in image_path for token in ['torjäger', 'torjager', 'kanone']):
+        return 'small'
+
+    if any(token in title or token in image_path for token in ['spieler der saison', 'player-of-the-season']):
+        return 'season-award'
+
+    if any(token in title or token in image_path for token in ['champions league']):
+        return 'tall'
+
+    return 'default'
+
+
+def static_asset_version(path):
+    found_path = finders.find(path)
+    if not found_path:
+        return ''
+
+    return str(int(os.path.getmtime(found_path)))
+
+
+def award_podium_slots(awards):
+    slots = []
+    for index in range(4):
+        if index < len(awards):
+            award = awards[index]
+            slots.append(
+                {
+                    'award': award,
+                    'image_path': award.trophy_static_path,
+                    'title': award.title,
+                    'count': award.count,
+                    'shape': award_trophy_shape(award),
+                    'asset_version': static_asset_version(award.trophy_static_path),
+                    'is_placeholder': False,
+                }
+            )
+            continue
+
+        slots.append(
+            {
+                'award': None,
+                'image_path': None,
+                'title': 'Freier Titelplatz',
+                'count': None,
+                'shape': 'empty',
+                'is_placeholder': True,
+            }
+        )
+
+    return slots
 
 
 def compact_money(value):
@@ -140,14 +202,14 @@ def market_area_points(points):
 
 def competition_logo_static_path(competition):
     assets = {
-        '1. Bundesliga': 'game/images/competitions/bundesliga.svg',
-        'Bundesliga': 'game/images/competitions/bundesliga.svg',
+        '1. Bundesliga': 'game/images/competitions/bundesliga.png',
+        'Bundesliga': 'game/images/competitions/bundesliga.png',
         'Websoccer Liga': 'game/images/competitions/websoccer-liga.svg',
-        'DFB-Pokal': 'game/images/competitions/dfb-pokal.svg',
-        'Pokal': 'game/images/competitions/dfb-pokal.svg',
-        'Champions League': 'game/images/competitions/champions-league.svg',
-        'CL': 'game/images/competitions/champions-league.svg',
-        'Supercup': 'game/images/competitions/supercup.svg',
+        'DFB-Pokal': 'game/images/competitions/dfb-pokal.png',
+        'Pokal': 'game/images/competitions/dfb-pokal.png',
+        'Champions League': 'game/images/competitions/champions-league.png',
+        'CL': 'game/images/competitions/champions-league.png',
+        'Supercup': 'game/images/competitions/supercup.png',
     }
     return assets.get(competition, '')
 
@@ -183,12 +245,57 @@ def season_table_rows(rows):
             'substitutions_out': row.substitutions_out,
             'yellow_cards': row.yellow_cards,
             'red_cards': row.red_cards,
+            'player_of_match_awards': row.player_of_match_awards,
             'minutes_played': row.minutes_played,
             'average_grade': row.average_grade,
             'grade_class': grade_badge_class(row.average_grade),
         }
         for row in rows
     ]
+
+
+def stat_bar_percent(value, maximum, minimum=4):
+    if not value or not maximum:
+        return 0
+
+    return max(minimum, round((value / maximum) * 100))
+
+
+def performance_visual_rows(rows):
+    if not rows:
+        return []
+
+    maxima = {
+        'matches': max(row['matches'] for row in rows),
+        'goals': max(row['goals'] for row in rows),
+        'assists': max(row['assists'] for row in rows),
+        'minutes_played': max(row['minutes_played'] for row in rows),
+        'cards': max(row['yellow_cards'] + row['red_cards'] for row in rows),
+        'subs': max(row['substitutions_in'] + row['substitutions_out'] for row in rows),
+        'player_of_match_awards': max(row['player_of_match_awards'] for row in rows),
+    }
+
+    visual_rows = []
+    for row in rows:
+        cards = row['yellow_cards'] + row['red_cards']
+        subs = row['substitutions_in'] + row['substitutions_out']
+        visual_rows.append({
+            **row,
+            'cards': cards,
+            'substitutions_total': subs,
+            'matches_bar': stat_bar_percent(row['matches'], maxima['matches']),
+            'goals_bar': stat_bar_percent(row['goals'], maxima['goals']),
+            'assists_bar': stat_bar_percent(row['assists'], maxima['assists']),
+            'minutes_bar': stat_bar_percent(row['minutes_played'], maxima['minutes_played']),
+            'cards_bar': stat_bar_percent(cards, maxima['cards']),
+            'subs_bar': stat_bar_percent(subs, maxima['subs']),
+            'player_of_match_bar': stat_bar_percent(
+                row['player_of_match_awards'],
+                maxima['player_of_match_awards'],
+            ),
+        })
+
+    return visual_rows
 
 
 def career_rows_from_ws_stats(rows):
@@ -205,6 +312,7 @@ def career_rows_from_ws_stats(rows):
             'substitutions_out': 0,
             'yellow_cards': 0,
             'red_cards': 0,
+            'player_of_match_awards': 0,
             'minutes_played': 0,
             'grade_minutes': 0,
             'grade_weighted_sum': 0,
@@ -216,6 +324,7 @@ def career_rows_from_ws_stats(rows):
         bucket['substitutions_out'] += row.substitutions_out
         bucket['yellow_cards'] += row.yellow_cards
         bucket['red_cards'] += row.red_cards
+        bucket['player_of_match_awards'] += row.player_of_match_awards
         bucket['minutes_played'] += row.minutes_played
         if row.average_grade is not None and row.matches:
             bucket['grade_minutes'] += row.matches
@@ -242,6 +351,16 @@ def transfer_display_rows(rows):
     display_rows = []
 
     for row in rows:
+        swap_player = None
+        swap_club = row.from_club or row.to_club
+        if swap_club:
+            swap_player = (
+                Player.objects.filter(club=swap_club)
+                .exclude(id=row.player_id)
+                .order_by('last_name', 'first_name')
+                .first()
+            )
+
         has_fee = row.fee_eur is not None and row.fee_eur > 0
         if has_fee:
             detail = f'{row.fee_eur:,.0f} EUR'.replace(',', '.')
@@ -255,6 +374,7 @@ def transfer_display_rows(rows):
             'detail': detail,
             'from_crest': row.from_club.crest_static_path if row.from_club else '',
             'to_crest': row.to_club.crest_static_path if row.to_club else '',
+            'swap_player': swap_player,
         })
 
     return display_rows
@@ -320,6 +440,7 @@ def career_summary_from_ws_stats(rows):
         'substitutions_out': sum(row.substitutions_out for row in rows),
         'yellow_cards': sum(row.yellow_cards for row in rows),
         'red_cards': sum(row.red_cards for row in rows),
+        'player_of_match_awards': sum(row.player_of_match_awards for row in rows),
         'minutes_played': sum(row.minutes_played for row in rows),
     }
 
@@ -621,12 +742,14 @@ def player_detail(request, player_id):
     ).filter(player=player)[:6]
     injury_rows = PlayerInjuryRecord.objects.filter(player=player)[:5]
     suspension_rows = PlayerSuspensionRecord.objects.filter(player=player)[:5]
-    award_rows = PlayerAwardTitle.objects.filter(player=player)[:12]
+    all_award_rows = list(PlayerAwardTitle.objects.filter(player=player))
+    award_paginator = Paginator(all_award_rows, 4)
+    award_page = award_paginator.get_page(request.GET.get('awards_page'))
     market_points = market_chart_points(
         market_rows,
         player.market_value,
     )
-    award_total_count = sum(row.count for row in award_rows)
+    award_total_count = sum(row.count for row in all_award_rows)
     freshness = None
     if hasattr(player, 'strength_profile'):
         freshness = player.strength_profile.freshness
@@ -636,9 +759,12 @@ def player_detail(request, player_id):
         'game/player_detail.html',
         {
             'player': player,
-            'season_rows': season_table_rows(season_rows),
+            'season_rows': performance_visual_rows(season_table_rows(season_rows)),
+            'season_summary': career_summary_from_ws_stats(season_rows),
             'career_summary': career_summary_from_ws_stats(all_season_rows),
-            'career_rows': career_rows_from_ws_stats(all_season_rows),
+            'career_rows': performance_visual_rows(
+                career_rows_from_ws_stats(all_season_rows)
+            ),
             'market_rows': market_rows,
             'market_points': market_points,
             'market_axis': market_chart_axis(market_points),
@@ -647,10 +773,18 @@ def player_detail(request, player_id):
             'transfer_rows': transfer_display_rows(transfer_rows),
             'injury_rows': injury_rows,
             'suspension_rows': suspension_rows,
-            'award_rows': award_rows,
-            'award_count': len(award_rows),
+            'award_rows': award_page.object_list,
+            'award_slots': award_podium_slots(award_page.object_list),
+            'award_page': award_page,
+            'award_page_range': award_paginator.page_range,
+            'award_count': len(all_award_rows),
             'award_total_count': award_total_count,
             'pitch_slots': pitch_position_slots(player),
+            'league_logo': (
+                competition_logo_static_path(player.club.league.name)
+                if player.club and player.club.league
+                else ''
+            ),
             'freshness': freshness,
         }
     )

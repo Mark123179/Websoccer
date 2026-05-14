@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Sperre">
+  <defs>
+    <linearGradient id="card-yellow" x1="24" x2="58" y1="30" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffe76a"/>
+      <stop offset="1" stop-color="#f2a817"/>
+    </linearGradient>
+    <linearGradient id="card-red" x1="47" x2="72" y1="28" y2="68" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff5b45"/>
+      <stop offset="1" stop-color="#c70f21"/>
+    </linearGradient>
+    <radialGradient id="panel-glow" cx="50%" cy="28%" r="64%">
+      <stop stop-color="#ffffff" stop-opacity=".12"/>
+      <stop offset=".48" stop-color="#0f1f30" stop-opacity=".42"/>
+      <stop offset="1" stop-color="#07101b" stop-opacity=".94"/>
+    </radialGradient>
+    <filter id="soft-shadow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity=".38"/>
+    </filter>
+  </defs>
+  <rect x="5" y="5" width="86" height="86" rx="13" fill="url(#panel-glow)" stroke="#26384d"/>
+  <g filter="url(#soft-shadow)">
+    <rect x="43" y="27" width="27" height="44" rx="4" transform="rotate(13 56.5 49)" fill="url(#card-red)"/>
+    <rect x="27" y="26" width="30" height="47" rx="4" transform="rotate(-13 42 49.5)" fill="url(#card-yellow)"/>
+  </g>
+</svg>

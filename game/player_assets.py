@@ -75,7 +75,7 @@ def get_cached_trophy_static_path(trophy_asset_id):
         'images' /
         'trophies'
     )
-    output_name = f'{source_path.stem}.png'
+    output_name = f'{_safe_trophy_output_stem(source_path.stem)}.png'
     output_path = output_dir / output_name
 
     if output_path.exists():
@@ -96,9 +96,10 @@ def get_cached_nation_static_path(nation_asset_id):
     source_path = (
         settings.BASE_DIR.parent /
         'Images' /
-        'Nationen' /
-        'normal' /
-        f'{clean_id}.png'
+        'Logos' /
+        'Others' /
+        'Federations' /
+        f'TCM4_{clean_id}.png'
     )
 
     if not source_path.exists():
@@ -111,19 +112,19 @@ def get_cached_nation_static_path(nation_asset_id):
         'game' /
         'images' /
         'nations' /
-        'normal'
+        'federations'
     )
     output_name = f'{clean_id}.png'
     output_path = output_dir / output_name
 
     if output_path.exists():
         if output_path.stat().st_mtime >= source_path.stat().st_mtime:
-            return f'game/images/nations/normal/{output_name}'
+            return f'game/images/nations/federations/{output_name}'
 
     output_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source_path, output_path)
 
-    return f'game/images/nations/normal/{output_name}'
+    return f'game/images/nations/federations/{output_name}'
 
 
 def _find_trophy_source(trophy_asset_id):
@@ -134,11 +135,22 @@ def _find_trophy_source(trophy_asset_id):
     if direct_path.exists():
         return direct_path
 
-    if not trophies_root.exists():
-        return None
+    symbol_path = settings.BASE_DIR.parent / 'Images' / 'Symbol' / f'{clean_id}.png'
+    if symbol_path.exists():
+        return symbol_path
 
-    matches = list(trophies_root.rglob(f'{clean_id}.png'))
-    return matches[0] if matches else None
+    if trophies_root.exists():
+        matches = list(trophies_root.rglob(f'{clean_id}.png'))
+        if matches:
+            return matches[0]
+
+    return None
+
+
+def _safe_trophy_output_stem(stem):
+    from django.utils.text import slugify
+
+    return slugify(stem) or stem
 
 
 def build_profile_portrait(face_path, kit_path, output_path):

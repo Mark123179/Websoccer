@@ -1804,6 +1804,7 @@ class PlayerSeasonStatAdmin(admin.ModelAdmin):
         'substitutions_in',
         'substitutions_out',
         'minutes_played',
+        'player_of_match_awards',
         'average_grade',
     )
     list_filter = ('season_number', 'season', 'competition')

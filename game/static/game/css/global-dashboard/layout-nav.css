@@ -1,0 +1,452 @@
+:root {
+            --app-bg: #03070c;
+            --stadium-bg: #07111a;
+            --panel: rgba(9, 23, 34, 0.82);
+            --panel-strong: rgba(12, 31, 45, 0.94);
+            --panel-soft: rgba(17, 43, 58, 0.72);
+            --line: rgba(44, 231, 255, 0.18);
+            --line-strong: rgba(44, 231, 255, 0.38);
+            --cyan: #22e6ff;
+            --cyan-soft: rgba(34, 230, 255, 0.14);
+            --green: #30f29c;
+            --yellow: #ffd166;
+            --red: #ff5570;
+            --text: #f4fbff;
+            --muted: rgba(244, 251, 255, 0.64);
+            --faint: rgba(244, 251, 255, 0.38);
+            --dark-text: #061018;
+            --radius: 8px;
+            --shadow: 0 18px 70px rgba(0, 0, 0, 0.46);
+            --glow: 0 0 28px rgba(34, 230, 255, 0.18);
+            --sidebar: 232px;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background:
+                radial-gradient(circle at 74% 8%, rgba(34, 230, 255, 0.14), transparent 24%),
+                radial-gradient(circle at 40% 110%, rgba(48, 242, 156, 0.12), transparent 28%),
+                linear-gradient(135deg, #02050a 0%, #07121d 48%, #02050a 100%);
+            color: var(--text);
+            font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            padding: 0;
+        }
+        body::before {
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+            background-size: 56px 56px;
+            content: "";
+            inset: 0;
+            pointer-events: none;
+            position: fixed;
+            z-index: -1;
+        }
+        a {
+            color: var(--cyan);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #8ff5ff;
+        }
+        .navbar {
+            background:
+                linear-gradient(180deg, rgba(3, 11, 18, 0.98), rgba(3, 9, 15, 0.94)),
+                radial-gradient(circle at 80% 10%, rgba(34, 230, 255, 0.14), transparent 34%);
+            border-right: 1px solid var(--line);
+            box-shadow: 12px 0 50px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100vh;
+            left: 0;
+            padding: 24px 16px;
+            position: fixed;
+            top: 0;
+            width: var(--sidebar);
+            z-index: 10;
+        }
+        .brand {
+            align-items: center;
+            color: var(--text);
+            display: flex;
+            font-size: 23px;
+            font-weight: 900;
+            gap: 11px;
+            margin-bottom: 24px;
+        }
+        .brand-logo {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08), rgba(34, 230, 255, 0.06));
+            border: 1px solid var(--line-strong);
+            border-radius: 10px;
+            box-shadow: var(--glow);
+            display: block;
+            height: 48px;
+            object-fit: contain;
+            padding: 2px;
+            width: 48px;
+        }
+        .brand strong {
+            color: var(--cyan);
+        }
+        .navbar a {
+            align-items: center;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            color: var(--muted);
+            display: flex;
+            font-size: 15px;
+            font-weight: 700;
+            gap: 12px;
+            min-height: 46px;
+            padding: 0 14px;
+        }
+        .nav-icon {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            color: var(--cyan);
+            display: inline-flex;
+            height: 26px;
+            justify-content: center;
+            padding: 4px;
+            width: 26px;
+        }
+        .nav-icon img {
+            display: block;
+            filter: invert(79%) sepia(78%) saturate(1534%) hue-rotate(142deg) brightness(105%) contrast(103%);
+            height: 18px;
+            width: 18px;
+        }
+        .navbar a:first-of-type {
+            background: linear-gradient(90deg, rgba(34, 230, 255, 0.2), rgba(34, 230, 255, 0.06));
+            border-color: var(--line-strong);
+            color: var(--text);
+            box-shadow: inset 3px 0 0 var(--cyan);
+        }
+        .sidebar-profile {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            margin-top: auto;
+            padding: 14px;
+        }
+        .sidebar-profile span {
+            color: var(--muted);
+            display: block;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        .sidebar-profile strong {
+            color: var(--text);
+            display: block;
+            font-size: 15px;
+        }
+        .container {
+            margin-left: var(--sidebar);
+            min-height: 100vh;
+        }
+        .hero {
+            padding: 44px;
+        }
+        .hero h1 {
+            font-size: 42px;
+            margin: 0 0 10px;
+        }
+        .hero p {
+            color: var(--muted);
+            margin: 0;
+        }
+        .dashboard-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            padding: 0 44px 44px;
+        }
+        .panel,
+        .dashboard-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .panel {
+            padding: 20px;
+        }
+        .panel h2,
+        .panel h3 {
+            margin-top: 0;
+        }
+        .stat-value {
+            color: var(--cyan);
+            display: block;
+            font-size: 28px;
+            font-weight: 900;
+            margin-top: 8px;
+        }
+        .muted {
+            color: var(--muted);
+        }
+        .button-link,
+        .primary-action,
+        .card-action {
+            background: linear-gradient(180deg, #1bd9ee, #06879a);
+            border: 1px solid rgba(93, 249, 255, 0.46);
+            border-radius: var(--radius);
+            color: #ffffff;
+            display: inline-flex;
+            font-size: 14px;
+            font-weight: 800;
+            justify-content: center;
+            min-height: 42px;
+            padding: 11px 18px;
+            text-decoration: none;
+        }
+        .club-dashboard {
+            background:
+                linear-gradient(rgba(2, 7, 12, 0.72), rgba(2, 7, 12, 0.96)),
+                radial-gradient(circle at 55% 0%, rgba(40, 215, 255, 0.2), transparent 26%),
+                linear-gradient(120deg, rgba(8, 26, 37, 0.9), rgba(4, 10, 16, 0.96));
+            min-height: 100vh;
+            padding: 20px 28px 28px;
+            position: relative;
+        }
+        .start-dashboard,
+        .list-dashboard,
+        .player-dashboard {
+            background:
+                linear-gradient(rgba(2, 7, 12, 0.76), rgba(2, 7, 12, 0.96)),
+                radial-gradient(circle at 62% 0%, rgba(34, 230, 255, 0.2), transparent 26%),
+                radial-gradient(circle at 18% 100%, rgba(48, 242, 156, 0.13), transparent 28%),
+                linear-gradient(120deg, rgba(6, 21, 31, 0.92), rgba(4, 10, 16, 0.98));
+            min-height: 100vh;
+            padding: 20px 28px 28px;
+            position: relative;
+        }
+        .club-dashboard::before {
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.34), transparent 5%),
+                radial-gradient(ellipse at 20% 15%, rgba(255, 255, 255, 0.16), transparent 12%),
+                radial-gradient(ellipse at 80% 18%, rgba(255, 255, 255, 0.14), transparent 13%),
+                linear-gradient(180deg, rgba(20, 140, 78, 0.18), transparent 42%);
+            content: "";
+            inset: 0;
+            opacity: 0.8;
+            pointer-events: none;
+            position: absolute;
+        }
+        .club-dashboard > * {
+            position: relative;
+            z-index: 1;
+        }
+        .start-dashboard::before,
+        .list-dashboard::before,
+        .player-dashboard::before {
+            background:
+                radial-gradient(ellipse at 48% 0%, rgba(255, 255, 255, 0.28), transparent 5%),
+                linear-gradient(180deg, rgba(20, 140, 78, 0.16), transparent 42%),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 82px);
+            content: "";
+            inset: 0;
+            opacity: 0.82;
+            pointer-events: none;
+            position: absolute;
+        }
+        .start-dashboard > *,
+        .list-dashboard > *,
+        .player-dashboard > * {
+            position: relative;
+            z-index: 1;
+        }
+        .app-topbar {
+            align-items: center;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(260px, 1fr) minmax(280px, 420px) auto auto 170px;
+            margin-bottom: 18px;
+        }
+        .home-topbar,
+        .page-topbar {
+            align-items: center;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(270px, 1fr) minmax(280px, 420px) auto auto 170px;
+            margin-bottom: 18px;
+        }
+        .control-room-title {
+            align-items: center;
+            display: flex;
+            gap: 14px;
+        }
+        .control-mark {
+            align-items: center;
+            border: 2px solid var(--cyan);
+            border-radius: 10px;
+            box-shadow: var(--glow);
+            color: var(--cyan);
+            display: inline-flex;
+            font-size: 16px;
+            font-weight: 900;
+            height: 56px;
+            justify-content: center;
+            width: 56px;
+        }
+        .control-logo {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08), rgba(34, 230, 255, 0.06));
+            color: transparent;
+            font-size: 0;
+            overflow: hidden;
+            padding: 2px;
+        }
+        .control-logo img {
+            display: block;
+            height: 100%;
+            object-fit: contain;
+            width: 100%;
+        }
+        .control-room-title h1 {
+            color: var(--text);
+            font-size: 27px;
+            line-height: 1.05;
+            margin: 0;
+        }
+        .control-room-title span:not(.control-mark) {
+            color: var(--muted);
+            display: block;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        .club-switcher {
+            align-items: center;
+            display: flex;
+            gap: 14px;
+        }
+        .club-switcher img {
+            height: 58px;
+            object-fit: contain;
+            width: 58px;
+        }
+        .club-switcher h1 {
+            color: var(--text);
+            font-size: 25px;
+            line-height: 1.1;
+            margin: 0;
+        }
+        .club-switcher span,
+        .top-date span {
+            color: var(--muted);
+            display: block;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        .search-box {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            color: var(--faint);
+            display: flex;
+            min-height: 48px;
+            padding: 0 16px;
+        }
+        .top-icons {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+        }
+        .top-icon {
+            align-items: center;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            color: var(--muted);
+            display: inline-flex;
+            height: 42px;
+            justify-content: center;
+            position: relative;
+            width: 42px;
+        }
+        .top-icon span {
+            align-items: center;
+            background: var(--cyan);
+            border-radius: 999px;
+            color: var(--dark-text);
+            display: inline-flex;
+            font-size: 11px;
+            font-weight: 900;
+            height: 18px;
+            justify-content: center;
+            position: absolute;
+            right: -6px;
+            top: -7px;
+            width: 18px;
+        }
+        .top-date {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.2;
+            min-width: 116px;
+        }
+        .dashboard-grid-main {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.1fr 1.05fr 1fr;
+        }
+        .dashboard-grid-mid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 0.9fr 0.9fr 0.95fr 0.8fr;
+            margin-top: 16px;
+        }
+        .dashboard-grid-bottom {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 0.9fr 1fr 1.15fr;
+            margin-top: 16px;
+        }
+        .start-grid-main {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.2fr 0.86fr 0.9fr;
+        }
+        .start-kpi-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            margin-top: 16px;
+        }
+        .home-grid-two {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.35fr 0.86fr;
+            margin-top: 16px;
+        }
+        .home-grid-bottom {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.15fr 0.82fr 0.9fr;
+            margin-top: 16px;
+        }
+        .clubs-kpi-grid,
+        .player-kpi-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-bottom: 16px;
+        }
+        .clubs-layout-grid {
+            align-items: start;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.35fr 0.8fr;
+        }
+        .player-layout-grid {
+            align-items: start;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1fr 0.82fr;
+        }
