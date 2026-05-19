@@ -248,27 +248,27 @@ class Club(models.Model):
         if not self.fm_inside_id:
             return ''
 
-        return f'game/images/crests/{self.fm_inside_id}.png'
+        for ext in ('png', 'svg'):
+            path = f'game/images/crests/{self.fm_inside_id}.{ext}'
+            if finders.find(path):
+                return path
+        return ''
 
     @property
     def kit_static_paths(self):
         if not self.fm_inside_id:
             return []
 
-        return [
-            {
-                'label': 'Heim',
-                'path': f'game/images/kits/{self.fm_inside_id}_home.svg',
-            },
-            {
-                'label': 'Auswärts',
-                'path': f'game/images/kits/{self.fm_inside_id}_away.svg',
-            },
-            {
-                'label': 'Third',
-                'path': f'game/images/kits/{self.fm_inside_id}_third.svg',
-            },
-        ]
+        kits = []
+        for label, suffix in (('Heim', 'home'), ('Auswärts', 'away'), ('Third', 'third')):
+            path = ''
+            for ext in ('svg', 'png'):
+                candidate = f'game/images/kits/{self.fm_inside_id}_{suffix}.{ext}'
+                if finders.find(candidate):
+                    path = candidate
+                    break
+            kits.append({'label': label, 'path': path})
+        return kits
 
 
 class ClubPublicProfile(models.Model):
