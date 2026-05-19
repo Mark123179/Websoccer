@@ -4,7 +4,7 @@
 # Ausführen: Rechtsklick → "Mit PowerShell ausführen"
 # ============================================================
 
-$SOURCE  = "C:\Users\mashu\Documents\Codex\Websoccer"
+$SOURCE  = "C:\Users\mashu\Documents\Codex\Websoccer\Images"
 $OUTPUT  = "C:\Users\mashu\Desktop\websoccer_upload"
 
 # ============================================================
