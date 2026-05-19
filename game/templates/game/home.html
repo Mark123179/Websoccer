@@ -197,7 +197,10 @@
 
         <aside class="dashboard-card overview-card overview-manager-widget" aria-label="Aktive Manager">
             <h2 class="card-title">Aktive Manager</h2>
-            <p>Heute waren <strong>{{ totals.manager_count }}</strong> User online. Davon sind gerade online:</p>
+            <div class="overview-manager-online-bar">
+                <span class="overview-manager-online-dot" aria-hidden="true"></span>
+                <span>{{ totals.manager_count }} heute online</span>
+            </div>
             <div class="overview-manager-list">
                 {% for manager in active_managers %}
                     <div>
