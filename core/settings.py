@@ -25,7 +25,14 @@ SECRET_KEY = 'django-insecure-n%4!0_l_-_l8+d%si&z@*mgjtkdqb82lp+gomhxj)n8!m59_x4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.replit.dev',
+    'https://*.repl.co',
+    'http://localhost:5000',
+    'http://0.0.0.0:5000',
+]
 
 
 # Application definition
