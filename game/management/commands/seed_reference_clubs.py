@@ -13,6 +13,16 @@ from game.models import Club, League, Player, PlayerStrengthProfile
 
 REFERENCE_CLUBS = [
     {
+        'name': 'FC Bayern München',
+        'short_name': 'FCB',
+        'fm_inside_id': 915,
+        'founded_year': 1900,
+        'budget': Decimal('205000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/915-fc-bayern',
+        'transfermarkt_url': 'https://www.transfermarkt.de/fc-bayern-munchen/kader/verein/27/saison_id/2025/plus/1',
+        'marker': 'Harry Kane',
+    },
+    {
         'name': 'Borussia Dortmund',
         'short_name': 'BVB',
         'fm_inside_id': 907,
@@ -23,14 +33,164 @@ REFERENCE_CLUBS = [
         'marker': 'Gregor Kobel',
     },
     {
-        'name': 'FC Bayern München',
-        'short_name': 'FCB',
-        'fm_inside_id': 915,
+        'name': 'Bayer 04 Leverkusen',
+        'short_name': 'B04',
+        'fm_inside_id': 909,
+        'founded_year': 1904,
+        'budget': Decimal('150000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/909-bayer-leverkusen',
+        'transfermarkt_url': 'https://www.transfermarkt.de/bayer-04-leverkusen/kader/verein/15/saison_id/2024/plus/1',
+        'marker': 'Florian Wirtz',
+    },
+    {
+        'name': 'RB Leipzig',
+        'short_name': 'RBL',
+        'fm_inside_id': 6721,
+        'founded_year': 2009,
+        'budget': Decimal('120000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/6721-rb-leipzig',
+        'transfermarkt_url': 'https://www.transfermarkt.de/rb-leipzig/kader/verein/23826/saison_id/2024/plus/1',
+        'marker': 'Benjamin Sesko',
+    },
+    {
+        'name': 'Eintracht Frankfurt',
+        'short_name': 'SGE',
+        'fm_inside_id': 910,
+        'founded_year': 1899,
+        'budget': Decimal('70000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/910-eintracht-frankfurt',
+        'transfermarkt_url': 'https://www.transfermarkt.de/eintracht-frankfurt/kader/verein/24/saison_id/2024/plus/1',
+        'marker': 'Hugo Larsson',
+    },
+    {
+        'name': 'VfB Stuttgart',
+        'short_name': 'VFB',
+        'fm_inside_id': 913,
+        'founded_year': 1893,
+        'budget': Decimal('80000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/913-vfb-stuttgart',
+        'transfermarkt_url': 'https://www.transfermarkt.de/vfb-stuttgart/kader/verein/79/saison_id/2025/plus/1',
+        'marker': 'Alexander Nübel',
+    },
+    {
+        'name': 'SC Freiburg',
+        'short_name': 'SCF',
+        'fm_inside_id': 914,
+        'founded_year': 1904,
+        'budget': Decimal('50000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/914-sc-freiburg',
+        'transfermarkt_url': 'https://www.transfermarkt.de/sport-club-freiburg/kader/verein/60/saison_id/2025/plus/1',
+        'marker': 'Noah Atubolu',
+    },
+    {
+        'name': 'Borussia Mönchengladbach',
+        'short_name': 'BMG',
+        'fm_inside_id': 908,
         'founded_year': 1900,
-        'budget': Decimal('205000000'),
-        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/915-fc-bayern',
-        'transfermarkt_url': 'https://www.transfermarkt.de/fc-bayern-munchen/kader/verein/27/saison_id/2025/plus/1',
-        'marker': 'Harry Kane',
+        'budget': Decimal('70000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/908-borussia-monchengladbach',
+        'transfermarkt_url': 'https://www.transfermarkt.de/borussia-monchengladbach/kader/verein/18/saison_id/2025/plus/1',
+        'marker': 'Moritz Nicolas',
+    },
+    {
+        'name': 'TSG 1899 Hoffenheim',
+        'short_name': 'TSG',
+        'fm_inside_id': 12185,
+        'founded_year': 1899,
+        'budget': Decimal('60000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/12185-tsg-hoffenheim',
+        'transfermarkt_url': 'https://www.transfermarkt.de/tsg-1899-hoffenheim/kader/verein/533/saison_id/2025/plus/1',
+        'marker': 'Oliver Baumann',
+    },
+    {
+        'name': 'VfL Wolfsburg',
+        'short_name': 'WOB',
+        'fm_inside_id': 916,
+        'founded_year': 1945,
+        'budget': Decimal('90000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/916-wolfsburg',
+        'transfermarkt_url': 'https://www.transfermarkt.de/vfl-wolfsburg/kader/verein/82/saison_id/2025/plus/1',
+        'marker': 'Kamil Grabara',
+    },
+    {
+        'name': 'SV Werder Bremen',
+        'short_name': 'SVW',
+        'fm_inside_id': 912,
+        'founded_year': 1899,
+        'budget': Decimal('45000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/912-werder-bremen',
+        'transfermarkt_url': 'https://www.transfermarkt.de/sv-werder-bremen/kader/verein/86/saison_id/2024/plus/1',
+        'marker': 'Marvin Ducksch',
+    },
+    {
+        'name': 'FC Augsburg',
+        'short_name': 'FCA',
+        'fm_inside_id': 12498,
+        'founded_year': 1907,
+        'budget': Decimal('35000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/12498-fc-augsburg',
+        'transfermarkt_url': 'https://www.transfermarkt.de/fc-augsburg/kader/verein/167/saison_id/2025/plus/1',
+        'marker': 'Finn Dahmen',
+    },
+    {
+        'name': '1. FSV Mainz 05',
+        'short_name': 'M05',
+        'fm_inside_id': 911,
+        'founded_year': 1905,
+        'budget': Decimal('40000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/911-mainz-05',
+        'transfermarkt_url': 'https://www.transfermarkt.de/1-fsv-mainz-05/kader/verein/1000/saison_id/2024/plus/1',
+        'marker': 'Anton Stach',
+    },
+    {
+        'name': '1. FC Union Berlin',
+        'short_name': 'FCU',
+        'fm_inside_id': 5890,
+        'founded_year': 1906,
+        'budget': Decimal('40000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/5890-union-berlin',
+        'transfermarkt_url': 'https://www.transfermarkt.de/1-fc-union-berlin/kader/verein/89/saison_id/2024/plus/1',
+        'marker': 'Yorbe Vertessen',
+    },
+    {
+        'name': 'VfL Bochum',
+        'short_name': 'BOC',
+        'fm_inside_id': 917,
+        'founded_year': 1848,
+        'budget': Decimal('25000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/917-bochum',
+        'transfermarkt_url': 'https://www.transfermarkt.de/vfl-bochum-1848/kader/verein/80/saison_id/2024/plus/1',
+        'marker': 'Patrick Drewes',
+    },
+    {
+        'name': '1. FC Heidenheim',
+        'short_name': 'FCH',
+        'fm_inside_id': 13076,
+        'founded_year': 1846,
+        'budget': Decimal('20000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/13076-heidenheim',
+        'transfermarkt_url': 'https://www.transfermarkt.de/1-fc-heidenheim-1846/kader/verein/2110/plus/1',
+        'marker': 'Kevin Sessa',
+    },
+    {
+        'name': 'Holstein Kiel',
+        'short_name': 'KSV',
+        'fm_inside_id': 6430,
+        'founded_year': 1900,
+        'budget': Decimal('15000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/6430-holstein-kiel',
+        'transfermarkt_url': 'https://www.transfermarkt.de/holstein-kiel/kader/verein/228/saison_id/2024/plus/1',
+        'marker': 'Shuto Machino',
+    },
+    {
+        'name': 'FC St. Pauli',
+        'short_name': 'STP',
+        'fm_inside_id': 922,
+        'founded_year': 1910,
+        'budget': Decimal('20000000'),
+        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/922-st-pauli',
+        'transfermarkt_url': 'https://www.transfermarkt.de/fc-st-pauli/kader/verein/35/saison_id/2024/plus/1',
+        'marker': 'Hauke Wahl',
     },
 ]
 
@@ -62,13 +222,26 @@ class Command(BaseCommand):
         )
 
         for club_data in REFERENCE_CLUBS:
-            fm_inside_players = self.extract_fm_inside_players(
-                self.fetch_page(club_data['fm_inside_url'])
-            )
-            transfermarkt_players = self.extract_transfermarkt_squad(
-                self.fetch_page(club_data['transfermarkt_url']),
-                club_data['marker'],
-            )
+            try:
+                fm_inside_players = self.extract_fm_inside_players(
+                    self.fetch_page(club_data['fm_inside_url'])
+                )
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(
+                    f"{club_data['name']}: FMInside fetch fehlgeschlagen ({e}), überspringe FM-Daten."
+                ))
+                fm_inside_players = {}
+
+            try:
+                transfermarkt_players = self.extract_transfermarkt_squad(
+                    self.fetch_page(club_data['transfermarkt_url']),
+                    club_data['marker'],
+                )
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(
+                    f"{club_data['name']}: Transfermarkt fetch fehlgeschlagen ({e}), überspringe Club."
+                ))
+                continue
 
             club, _ = Club.objects.update_or_create(
                 fm_inside_id=club_data['fm_inside_id'],
