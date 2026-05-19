@@ -1,0 +1,13 @@
+uploads = []
+
+[[generated]]
+id = "BykMGNLhO007IC7bf6Rw-"
+uri = "file://attached_assets/freiburg_city.png"
+type = "image"
+title = "Freiburg city panorama"
+
+[[outputs]]
+id = "0fjIy8MDMUxiYa4wzp-4L"
+uri = "file://attached_assets/freiburg_city.png"
+type = "image"
+title = "Freiburg im Breisgau — KI-generiert"
