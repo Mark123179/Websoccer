@@ -1,0 +1,20 @@
+{% load static %}
+
+<article class="club-profile-card image-profile-card city-profile-card">
+    {% if profile.city.imageUrl %}
+        <img src="{% static profile.city.imageUrl %}" alt="{{ profile.city.name }}">
+    {% endif %}
+    <div class="image-card-top">
+        <h2 class="club-card-title">STADT</h2>
+    </div>
+    <div class="city-card-location">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12Z"></path>
+            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path>
+        </svg>
+        <span>
+            <strong>{{ profile.city.name }}</strong>
+            <small>{{ profile.city.countryName }}</small>
+        </span>
+    </div>
+</article>

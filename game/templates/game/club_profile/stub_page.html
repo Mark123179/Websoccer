@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    {{ stub_title }} · {{ club.name }}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="club-dashboard club-profile-shell">
+    {% include 'game/partials/game_header.html' %}
+
+    <article class="club-profile-stub">
+        {% if club.crest_static_path %}
+            <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+        {% endif %}
+        <div>
+            <span>{{ club.name }}</span>
+            <h1>{{ stub_title }}</h1>
+            <p>{{ stub_copy }}</p>
+            <a class="club-profile-button" href="{% url 'club_detail' club.id %}">
+                Zur Vereinsübersicht
+                <span aria-hidden="true">→</span>
+            </a>
+        </div>
+    </article>
+</section>
+{% endblock %}

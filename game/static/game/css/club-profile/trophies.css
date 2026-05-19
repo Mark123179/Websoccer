@@ -1,0 +1,144 @@
+.trophy-cabinet-profile-card {
+    display: block;
+    padding: 15px 22px 14px;
+    background:
+        linear-gradient(180deg, rgba(0, 5, 10, 0.03), rgba(0, 5, 10, 0.16)),
+        url("../../images/backgrounds/trophy-cabinet-club-profile.png") center / 100% 100% no-repeat,
+        #02070d;
+}
+
+.club-trophy-pages {
+    position: absolute;
+    top: 53px;
+    right: 26px;
+    bottom: 78px;
+    left: 26px;
+    z-index: 2;
+    min-height: 0;
+}
+
+.club-trophy-page {
+    display: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+    align-items: stretch;
+    height: 100%;
+}
+
+.club-trophy-page.is-count-1 {
+    grid-template-columns: minmax(96px, 132px);
+    justify-content: center;
+}
+
+.club-trophy-page.is-count-2 {
+    grid-template-columns: repeat(2, minmax(96px, 132px));
+    justify-content: center;
+}
+
+.club-trophy-page.is-count-3 {
+    grid-template-columns: repeat(3, minmax(96px, 132px));
+    justify-content: center;
+}
+
+.club-trophy-page.is-active {
+    display: grid;
+}
+
+.club-trophy-item {
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) 28px auto;
+    align-content: end;
+    align-items: center;
+    justify-items: center;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding-bottom: 0;
+    text-align: center;
+}
+
+.club-trophy-item::before {
+    content: none;
+}
+
+.club-trophy-item img {
+    position: relative;
+    z-index: 2;
+    align-self: end;
+    width: min(132px, 110%);
+    height: 132px;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.56));
+    transform: translateY(-5px);
+}
+
+.club-trophy-item strong {
+    display: grid;
+    place-items: center;
+    z-index: 3;
+    min-width: 46px;
+    min-height: 28px;
+    margin-top: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.44));
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.club-trophy-item figcaption {
+    position: relative;
+    z-index: 3;
+    margin-top: 5px;
+    color: var(--club-muted);
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+.club-trophy-pager {
+    position: absolute;
+    right: 0;
+    bottom: 16px;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 0;
+}
+
+.club-trophy-pager button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 26px;
+    border: 1px solid rgba(113, 203, 218, 0.18);
+    border-radius: 4px;
+    color: rgba(230, 250, 255, 0.78);
+    background: rgba(2, 14, 22, 0.82);
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.club-trophy-pager button.is-active,
+.club-trophy-pager button:hover {
+    border-color: rgba(42, 229, 246, 0.55);
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(5, 79, 91, 0.94), rgba(3, 44, 58, 0.94));
+    box-shadow: 0 0 14px rgba(28, 225, 242, 0.2);
+}
+
+.club-trophy-pager button:focus-visible {
+    outline: 1px solid rgba(42, 229, 246, 0.72);
+    outline-offset: 2px;
+}
+
+.club-trophy-pager button:disabled {
+    opacity: 0.36;
+    cursor: default;
+}

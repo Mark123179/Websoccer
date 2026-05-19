@@ -1,0 +1,293 @@
+.ws-game-header {
+    align-items: stretch;
+    display: grid;
+    gap: 7px;
+    grid-template-columns: 34px minmax(150px, 210px) minmax(620px, 1fr);
+    margin-bottom: 22px;
+}
+
+.ws-header-back,
+.ws-calendar-arrow {
+    align-items: center;
+    backdrop-filter: blur(12px);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(34, 230, 255, 0.04)),
+        rgba(2, 16, 27, 0.38);
+    border: 1px solid rgba(126, 236, 255, 0.24);
+    border-radius: 4px;
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1), 0 12px 28px rgba(0, 0, 0, 0.18);
+    color: #ffffff;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 112px;
+    opacity: 0.92;
+    text-decoration: none;
+    transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.ws-header-back:hover,
+.ws-calendar-arrow:hover {
+    background:
+        linear-gradient(180deg, rgba(48, 242, 156, 0.16), rgba(34, 230, 255, 0.07)),
+        rgba(2, 20, 33, 0.52);
+    border-color: rgba(48, 242, 156, 0.58);
+    opacity: 1;
+}
+
+.ws-chevron {
+    border-top: 3px solid rgba(244, 251, 255, 0.94);
+    border-right: 3px solid rgba(244, 251, 255, 0.94);
+    display: block;
+    height: 13px;
+    width: 13px;
+}
+
+.ws-chevron-left {
+    transform: rotate(-135deg) translate(-1px, -1px);
+}
+
+.ws-chevron-right {
+    transform: rotate(45deg) translate(-1px, 1px);
+}
+
+.ws-header-context {
+    background:
+        linear-gradient(180deg, rgba(9, 64, 82, 0.94), rgba(4, 19, 31, 0.98)),
+        radial-gradient(circle at 50% 0%, rgba(48, 242, 156, 0.18), transparent 60%);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 112px;
+    padding: 12px 14px;
+}
+
+.ws-header-context strong {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+}
+
+.ws-header-context span {
+    color: rgba(219, 242, 255, 0.72);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.ws-calendar-strip {
+    display: grid;
+    gap: 3px;
+    grid-template-columns: 28px minmax(0, 1fr) 28px;
+}
+
+.ws-calendar-arrow {
+    border-radius: 4px;
+    min-height: 112px;
+}
+
+.ws-calendar-days {
+    display: grid;
+    gap: 2px;
+    grid-template-columns: repeat(7, minmax(72px, 1fr));
+    min-width: 0;
+}
+
+.ws-calendar-day {
+    background:
+        linear-gradient(180deg, rgba(5, 72, 95, 0.82), rgba(4, 20, 33, 0.94)),
+        radial-gradient(circle at 50% 35%, rgba(34, 230, 255, 0.18), rgba(255, 255, 255, 0.08) 34%, transparent 72%);
+    border: 1px solid rgba(34, 230, 255, 0.24);
+    border-radius: 4px;
+    min-height: 112px;
+    overflow: hidden;
+    position: relative;
+}
+
+.ws-calendar-day.is-today {
+    background:
+        linear-gradient(180deg, rgba(8, 109, 126, 0.94), rgba(6, 44, 56, 0.98)),
+        radial-gradient(circle at 50% 42%, rgba(48, 242, 156, 0.28), rgba(34, 230, 255, 0.16) 36%, transparent 75%);
+    border-color: rgba(48, 242, 156, 0.82);
+    box-shadow: inset 0 0 0 2px rgba(48, 242, 156, 0.7), 0 0 26px rgba(48, 242, 156, 0.18);
+    z-index: 1;
+}
+
+.ws-day-head {
+    align-items: center;
+    background: linear-gradient(180deg, rgba(5, 124, 159, 0.96), rgba(4, 72, 100, 0.96));
+    color: #ffffff;
+    display: flex;
+    font-size: 12px;
+    font-weight: 900;
+    height: 20px;
+    justify-content: space-between;
+    line-height: 1;
+    padding: 0 5px;
+}
+
+.ws-day-head strong {
+    font-size: 14px;
+}
+
+.ws-calendar-day.is-today .ws-day-head {
+    background: linear-gradient(180deg, rgba(48, 242, 156, 0.92), rgba(10, 147, 136, 0.96));
+    color: #03141b;
+}
+
+.ws-fixture-card {
+    align-items: center;
+    background: linear-gradient(180deg, rgba(235, 248, 250, 0.82), rgba(210, 225, 228, 0.74));
+    bottom: 3px;
+    display: grid;
+    gap: 2px;
+    grid-template-rows: 1fr auto;
+    justify-items: center;
+    left: 4px;
+    min-height: 82px;
+    padding: 5px 5px 4px;
+    position: absolute;
+    right: 4px;
+}
+
+.ws-fixture-card::before {
+    background:
+        linear-gradient(180deg, rgba(236, 252, 255, 0.48), rgba(220, 237, 239, 0.28)),
+        var(--fixture-stadium, none) center / cover no-repeat;
+    content: "";
+    inset: 0;
+    opacity: 0.46;
+    position: absolute;
+}
+
+.ws-fixture-card::after {
+    background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.34), transparent 60%);
+    content: "";
+    inset: 0;
+    position: absolute;
+}
+
+.ws-fixture-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.ws-calendar-day.is-ready .ws-fixture-card {
+    border: 4px solid #08d418;
+}
+
+.ws-calendar-day.is-open .ws-fixture-card {
+    border: 4px solid #f01414;
+}
+
+.ws-fixture-crests {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    min-height: 36px;
+}
+
+.ws-fixture-crest-link {
+    display: inline-grid;
+    place-items: center;
+    border-radius: 4px;
+    line-height: 0;
+}
+
+.ws-fixture-crest-link:hover,
+.ws-fixture-crest-link:focus-visible {
+    filter: brightness(1.12);
+    outline: none;
+}
+
+.ws-fixture-crests img {
+    height: 36px;
+    max-width: 54px;
+    object-fit: contain;
+}
+
+.ws-fixture-result,
+.ws-fixture-meta {
+    color: #003a6d;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.ws-fixture-meta {
+    font-weight: 800;
+}
+
+.ws-fixture-result span {
+    font-size: 10px;
+    font-weight: 900;
+    margin-left: 2px;
+}
+
+.ws-lineup-state {
+    border-bottom: 4px solid currentColor;
+    border-right: 4px solid currentColor;
+    bottom: 3px;
+    color: #08d418;
+    height: 12px;
+    position: absolute;
+    right: 5px;
+    transform: rotate(35deg);
+    width: 7px;
+}
+
+.ws-calendar-day.is-open .ws-lineup-state {
+    color: #e61010;
+}
+
+@media (max-width: 1450px) {
+    .ws-game-header {
+        grid-template-columns: 34px minmax(145px, 190px) minmax(520px, 1fr);
+    }
+
+    .ws-calendar-days {
+        grid-template-columns: repeat(7, minmax(62px, 1fr));
+    }
+}
+
+@media (max-width: 1280px) {
+    .ws-game-header {
+        grid-template-columns: 44px 1fr;
+    }
+
+    .ws-calendar-strip {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    .ws-game-header {
+        gap: 8px;
+        grid-template-columns: 34px 1fr;
+    }
+
+    .ws-header-back,
+    .ws-header-context,
+    .ws-calendar-arrow,
+    .ws-calendar-day {
+        min-height: 78px;
+    }
+
+    .ws-header-context strong {
+        font-size: 19px;
+    }
+
+    .ws-calendar-days {
+        grid-template-columns: repeat(7, minmax(54px, 1fr));
+        overflow-x: auto;
+    }
+
+    .ws-fixture-card {
+        left: 2px;
+        right: 2px;
+    }
+}

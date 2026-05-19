@@ -1,0 +1,91 @@
+@media (max-width: 1600px) {
+    .club-profile-shell {
+        padding: 14px;
+    }
+
+    .club-profile-grid {
+        gap: 7px;
+    }
+
+    .club-next-matchup img {
+        width: 78px;
+        height: 78px;
+    }
+
+    .club-trophy-item img {
+        width: 58px;
+        height: 68px;
+    }
+
+    .club-player-cutout {
+        height: 104px;
+    }
+}
+
+@media (max-width: 1280px) {
+    .club-profile-shell {
+        height: auto;
+        overflow: visible;
+    }
+
+    .club-profile-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-rows: none;
+        height: auto;
+        min-height: 0;
+    }
+
+    .club-identity-card,
+    .next-match-profile-card,
+    .trophy-cabinet-profile-card,
+    .pro-highlights-card,
+    .youth-highlights-card,
+    .last-match-profile-card,
+    .compact-table-card,
+    .stadium-profile-card,
+    .city-profile-card,
+    .kits-profile-card,
+    .partner-profile-card,
+    .news-profile-card {
+        grid-column: span 3;
+        grid-row: auto;
+        min-height: 230px;
+    }
+
+    .pro-highlights-card,
+    .trophy-cabinet-profile-card {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 760px) {
+    .club-profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .club-identity-card,
+    .next-match-profile-card,
+    .trophy-cabinet-profile-card,
+    .pro-highlights-card,
+    .youth-highlights-card,
+    .last-match-profile-card,
+    .compact-table-card,
+    .stadium-profile-card,
+    .city-profile-card,
+    .kits-profile-card,
+    .partner-profile-card,
+    .news-profile-card {
+        grid-column: 1;
+        min-height: 240px;
+    }
+
+    .club-identity-main,
+    .club-profile-stub {
+        grid-template-columns: 1fr;
+    }
+
+    .club-player-grid.is-pro,
+    .club-player-grid.is-youth {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

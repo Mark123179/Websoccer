@@ -5,6 +5,7 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -12,6 +13,8 @@ from django.urls import reverse
 from .admin import PlayerNationalityForm
 from .models import (
     Club,
+    ClubNewsItem,
+    ClubProfileMatch,
     DataSource,
     League,
     Player,
@@ -30,7 +33,10 @@ from .models import (
     PlayerTransferHistory,
     PlayerWeightedRatingSnapshot,
     StrengthFormulaSettings,
+    TacticSetup,
+    TacticTemplate,
 )
+from .tactics import sanitize_assignments
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
@@ -114,11 +120,79 @@ class PageSmokeTests(TestCase):
             },
         )
 
+    def create_tactic_player(self, index, position='ZM', age=24, injured=False, suspended=False):
+        player = Player.objects.create(
+            first_name=f'Taktik{index}',
+            last_name=f'Spieler{index:02d}',
+            wsc_player_id=f'WSC-TACTIC-{age}-{index}',
+            fm_inside_id=30000000 + age * 100 + index,
+            nationalities='Deutschland',
+            age=age,
+            position=position,
+            main_position_1=position,
+            potential=70,
+            market_value=Decimal('1000000.00'),
+            salary_per_match=Decimal('5000.00'),
+            club=self.club,
+            ws_injury_type='Muskelverletzung' if injured else '',
+            ws_injury_days_remaining=4 if injured else 0,
+            ws_suspension_reason='Gelbsperre' if suspended else '',
+            ws_suspension_matches_remaining=1 if suspended else 0,
+        )
+        PlayerStrengthProfile.objects.create(
+            player=player,
+            base_strength=Decimal('60.00'),
+            freshness=Decimal('85.00'),
+        )
+        return player
+
+    def create_full_tactic_squad(self, age=24, offset=0):
+        positions = ['TW', 'LV', 'IV', 'IV', 'RV', 'LM', 'ZM', 'ZM', 'RM', 'ST', 'ST']
+        return [
+            self.create_tactic_player(offset + index, position, age=age)
+            for index, position in enumerate(positions, start=1)
+        ]
+
+    def tactic_post_data(self, players, action='confirm'):
+        slot_keys = ['TW-1', 'LV-1', 'IV-1', 'IV-2', 'RV-1', 'LM-1', 'ZM-1', 'ZM-2', 'RM-1', 'ST-1', 'ST-2']
+        data = {
+            'action': action,
+            'squad_scope': 'pro',
+            'formation_defense': '4n',
+            'formation_defensive_midfield': '0',
+            'formation_midfield': '4',
+            'formation_offensive_midfield': '0',
+            'formation_attack': '2',
+            'first_half_orientation': '50',
+            'first_half_defense': 'standard',
+            'first_half_midfield': 'standard',
+            'first_half_attack': 'standard',
+            'first_half_effort': 'normal',
+            'second_half_orientation': '50',
+            'second_half_defense': 'standard',
+            'second_half_midfield': 'standard',
+            'second_half_attack': 'standard',
+            'second_half_effort': 'normal',
+        }
+        for slot_key, player in zip(slot_keys, players):
+            data[f'lineup_{slot_key}'] = str(player.id)
+        for index in range(1, 8):
+            data[f'bench_{index}'] = ''
+        for key in ('captain', 'penalty', 'free_kick', 'corner'):
+            data[f'standard_{key}'] = ''
+        for index in range(1, 6):
+            data[f'substitution_{index}_minute'] = ''
+            data[f'substitution_{index}_out'] = ''
+            data[f'substitution_{index}_in'] = ''
+        return data
+
     def test_home_page_renders_dashboard(self):
         response = self.client.get(reverse('home'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Saisonvorbereitung')
+        self.assertContains(response, 'Vereins&uuml;bersicht')
+        self.assertContains(response, 'MatchEngine')
+        self.assertContains(response, 'Letztes Spiel')
         self.assertContains(response, 'Borussia Dortmund')
 
     def test_club_list_renders_club_metrics(self):
@@ -128,20 +202,266 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'Borussia Dortmund')
         self.assertContains(response, '1. Bundesliga')
 
-    def test_club_detail_renders_squad_metrics(self):
+    def test_club_detail_renders_public_profile(self):
+        ClubProfileMatch.objects.create(
+            club=self.club,
+            kind=ClubProfileMatch.KIND_LAST,
+            competition_name='1. Bundesliga',
+            matchday_label='33. Spieltag',
+            home_club=self.club,
+            away_club=None,
+            home_goals=1,
+            away_goals=0,
+            result_label=ClubProfileMatch.RESULT_WIN,
+            scorers=[
+                {
+                    'clubId': str(self.club.id),
+                    'playerName': 'Harry Kane',
+                    'minute': 22,
+                },
+            ],
+        )
         response = self.client.get(
             reverse('club_detail', kwargs={'club_id': self.club.id})
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, '1. Mannschaft')
-        self.assertContains(response, 'Marktwert')
-        self.assertContains(response, 'game/images/players/28049320.png')
+        self.assertContains(response, 'VEREINSÜBERSICHT')
+        self.assertContains(response, 'NÄCHSTES SPIEL')
+        self.assertContains(response, 'TROPHÄENSCHRANK')
+        self.assertContains(response, 'PROFI-HIGHLIGHTS')
+        self.assertContains(response, 'JUGEND-HIGHLIGHTS')
+        self.assertContains(response, 'LETZTES SPIEL')
+        self.assertContains(response, 'LIGATABELLE')
+        self.assertContains(response, 'STADION')
+        self.assertContains(response, 'STADT')
+        self.assertContains(response, 'TRIKOTS')
+        self.assertContains(response, 'PARTNERVEREIN')
+        self.assertContains(response, 'VEREINSNEWS')
+        self.assertContains(response, 'Zum Profikader')
+        self.assertContains(response, 'Zur Jugend')
+        self.assertContains(response, 'Bester Passgeber')
+        self.assertContains(response, '%')
+        self.assertContains(response, 'game/css/club-profile.css')
+        self.assertContains(response, 'game/js/club-profile.js')
+        self.assertContains(response, 'game/images/icons/stat-goals.svg')
+        self.assertContains(response, 'Harry Kane')
+        self.assertContains(response, 'club-player-cutout')
+        self.assertContains(response, 'game/images/players/28049320')
+        self.assertNotContains(response, 'game/images/player_composites/')
         self.assertContains(response, 'game/images/kits/907_home.svg')
         self.assertContains(response, 'game/images/flags/765.svg')
-        self.assertContains(response, 'game/images/flags/789.svg')
-        self.assertContains(response, 'https://www.transfermarkt.de/harry-kane/profil/spieler/132098')
+        self.assertContains(response, 'Kein Partnerverein')
+        self.assertNotContains(response, 'Seite 1 von')
         self.assertNotContains(response, 'https://www.transfermarkt.de/harry-kane/marktwertverlauf/spieler/132098')
+        self.assertNotContains(response, 'class="dashboard-card tactics-card"')
+        self.assertNotContains(response, 'class="dashboard-card finance-card"')
+        self.assertNotContains(response, 'class="dashboard-card squad-full-card"')
+
+    def test_public_club_profile_links_have_routes(self):
+        news_item = ClubNewsItem.objects.create(
+            club=self.club,
+            title='Testmeldung',
+            published_at=date(2026, 5, 25),
+        )
+        routes = [
+            reverse('club_professional_squad', kwargs={'club_id': self.club.id}),
+            reverse('club_youth_squad', kwargs={'club_id': self.club.id}),
+            reverse('club_table', kwargs={'club_id': self.club.id}),
+            reverse('club_match_preview', kwargs={'club_id': self.club.id}),
+            reverse('club_match_report', kwargs={'club_id': self.club.id}),
+            reverse('club_news', kwargs={'club_id': self.club.id}),
+            reverse('club_news_detail', kwargs={
+                'club_id': self.club.id,
+                'news_id': news_item.id,
+            }),
+        ]
+
+        for route in routes:
+            with self.subTest(route=route):
+                response = self.client.get(route)
+                self.assertEqual(response.status_code, 200)
+
+    def test_tactics_route_renders_and_filters_unavailable_players(self):
+        injured = self.create_tactic_player(40, 'ST', injured=True)
+        suspended = self.create_tactic_player(41, 'ZM', suspended=True)
+
+        response = self.client.get(
+            reverse('club_tactics', kwargs={'club_id': self.club.id})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Taktik bestätigen')
+        self.assertContains(response, 'Vorlage laden')
+        self.assertContains(response, 'Wechselplanung')
+        self.assertContains(response, 'game/css/tactics.css')
+        self.assertContains(response, 'game/js/tactics.js')
+        self.assertContains(response, 'name="substitution_1_minute"')
+        self.assertContains(response, 'min="1" max="120" step="1"')
+        self.assertContains(response, 'data-minute-input')
+        option_ids = {
+            option['id']
+            for option in response.context['player_options']
+        }
+        self.assertNotIn(injured.id, option_ids)
+        self.assertNotIn(suspended.id, option_ids)
+        self.assertIn('opponent_absences', response.context)
+
+    def test_tactics_confirm_persists_complete_starting_eleven(self):
+        players = self.create_full_tactic_squad(age=24, offset=50)
+        bench_player = self.create_tactic_player(70, 'ST', age=24)
+        data = self.tactic_post_data(players)
+        data['bench_1'] = str(bench_player.id)
+        data['substitution_1_minute'] = '60'
+        data['substitution_1_out'] = str(players[1].id)
+        data['substitution_1_in'] = str(bench_player.id)
+
+        response = self.client.post(
+            reverse('club_tactics', kwargs={'club_id': self.club.id}),
+            data,
+        )
+
+        self.assertRedirects(
+            response,
+            f'/clubs/{self.club.id}/tactics/?squad=pro&confirmed=1',
+            fetch_redirect_response=False,
+        )
+        setup = TacticSetup.objects.get(club=self.club, squad_scope='pro')
+        self.assertTrue(setup.is_confirmed)
+        self.assertEqual(setup.formation['defense'], '4n')
+        self.assertEqual(setup.lineup['TW-1'], players[0].id)
+        self.assertEqual(setup.bench[0], bench_player.id)
+        self.assertEqual(setup.substitutions[0]['minute'], 60)
+
+    def test_tactics_rejects_substitution_minutes_outside_match_range(self):
+        players = self.create_full_tactic_squad(age=24, offset=75)
+        bench_player = self.create_tactic_player(95, 'ST', age=24)
+        data = self.tactic_post_data(players)
+        data['bench_1'] = str(bench_player.id)
+        data['substitution_1_minute'] = '121'
+        data['substitution_1_out'] = str(players[1].id)
+        data['substitution_1_in'] = str(bench_player.id)
+
+        response = self.client.post(
+            reverse('club_tactics', kwargs={'club_id': self.club.id}),
+            data,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Wechsel 1: Minute muss zwischen 1 und 120 liegen.',
+        )
+        setup = TacticSetup.objects.get(club=self.club, squad_scope='pro')
+        self.assertFalse(setup.is_confirmed)
+        self.assertEqual(setup.substitutions, [])
+
+    def test_tactics_confirm_requires_complete_starting_eleven(self):
+        players = self.create_full_tactic_squad(age=24, offset=80)
+        data = self.tactic_post_data(players)
+        data['lineup_ST-2'] = ''
+
+        response = self.client.post(
+            reverse('club_tactics', kwargs={'club_id': self.club.id}),
+            data,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        setup = TacticSetup.objects.get(club=self.club, squad_scope='pro')
+        self.assertFalse(setup.is_confirmed)
+        self.assertContains(
+            response,
+            'Zum Bestätigen müssen Torwart und alle 10 Feldspieler besetzt sein.',
+        )
+
+    def test_tactics_standards_only_accept_starting_eleven(self):
+        players = self.create_full_tactic_squad(age=24, offset=95)
+        bench_player = self.create_tactic_player(109, 'ST', age=24)
+        data = self.tactic_post_data(players)
+        data['bench_1'] = str(bench_player.id)
+        data['standard_captain'] = str(bench_player.id)
+        data['standard_penalty'] = str(players[1].id)
+        data['standard_corner'] = str(players[2].id)
+
+        response = self.client.post(
+            reverse('club_tactics', kwargs={'club_id': self.club.id}),
+            data,
+        )
+
+        self.assertRedirects(
+            response,
+            f'/clubs/{self.club.id}/tactics/?squad=pro&confirmed=1',
+            fetch_redirect_response=False,
+        )
+        setup = TacticSetup.objects.get(club=self.club, squad_scope='pro')
+        self.assertEqual(setup.standards['captain'], '')
+        self.assertEqual(setup.standards['penalty'], players[1].id)
+        self.assertEqual(setup.standards['corner'], players[2].id)
+
+    def test_tactics_keep_pro_and_youth_setups_separate(self):
+        pro_players = self.create_full_tactic_squad(age=24, offset=110)
+        youth_players = self.create_full_tactic_squad(age=18, offset=140)
+        pro_data = self.tactic_post_data(pro_players)
+        youth_data = self.tactic_post_data(youth_players)
+        youth_data['squad_scope'] = 'youth'
+
+        self.client.post(
+            reverse('club_tactics', kwargs={'club_id': self.club.id}),
+            pro_data,
+        )
+        self.client.post(
+            f"{reverse('club_tactics', kwargs={'club_id': self.club.id})}?squad=youth",
+            youth_data,
+        )
+
+        pro_setup = TacticSetup.objects.get(club=self.club, squad_scope='pro')
+        youth_setup = TacticSetup.objects.get(club=self.club, squad_scope='youth')
+        self.assertTrue(pro_setup.is_confirmed)
+        self.assertTrue(youth_setup.is_confirmed)
+        self.assertEqual(pro_setup.lineup['TW-1'], pro_players[0].id)
+        self.assertEqual(youth_setup.lineup['TW-1'], youth_players[0].id)
+
+    def test_tactic_model_rejects_invalid_formation_and_template_limit(self):
+        setup = TacticSetup(
+            club=self.club,
+            squad_scope='pro',
+            formation={
+                'defense': '5o',
+                'defensive_midfield': '3',
+                'midfield': '5',
+                'offensive_midfield': '3',
+                'attack': '4',
+            },
+        )
+        with self.assertRaises(ValidationError):
+            setup.full_clean()
+
+        for index in range(10):
+            TacticTemplate.objects.create(
+                club=self.club,
+                squad_scope='pro',
+                name=f'Vorlage {index}',
+            )
+        overflow = TacticTemplate(
+            club=self.club,
+            squad_scope='pro',
+            name='Vorlage 11',
+        )
+        with self.assertRaises(ValidationError):
+            overflow.full_clean()
+
+    def test_duplicate_assignment_keeps_latest_slot(self):
+        player = self.create_tactic_player(180, 'ZM', age=24)
+
+        lineup, bench = sanitize_assignments(
+            {'LV-1': player.id, 'ZM-1': player.id},
+            [],
+            {player.id},
+        )
+
+        self.assertEqual(lineup['LV-1'], '')
+        self.assertEqual(lineup['ZM-1'], player.id)
+        self.assertEqual(bench, ['', '', '', '', '', '', ''])
 
     def test_player_detail_renders_profile_shell(self):
         player = Player.objects.get(transfermarkt_id=132098)

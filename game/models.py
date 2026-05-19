@@ -5,6 +5,19 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from decimal import Decimal, InvalidOperation
+from .tactics import (
+    SQUAD_PRO,
+    SQUAD_SCOPE_CHOICES,
+    default_bench,
+    default_formation,
+    default_half_tactic,
+    default_lineup,
+    default_standards,
+    default_substitutions,
+    field_player_count,
+    formation_code,
+    validate_formation,
+)
 
 
 COUNTRY_FLAG_ASSETS = {
@@ -258,10 +271,263 @@ class Club(models.Model):
         ]
 
 
+class ClubPublicProfile(models.Model):
+    club = models.OneToOneField(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='public_profile',
+    )
+    stadium_name = models.CharField(max_length=120, blank=True)
+    stadium_capacity = models.PositiveIntegerField(default=0)
+    average_attendance = models.PositiveIntegerField(default=0)
+    city_name = models.CharField(max_length=120, blank=True)
+    city_country = models.CharField(max_length=100, blank=True)
+    stadium_image_static_path = models.CharField(max_length=240, blank=True)
+    city_image_static_path = models.CharField(max_length=240, blank=True)
+    partner_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='partnered_public_profiles',
+    )
+
+    class Meta:
+        verbose_name = 'Oeffentliches Vereinsprofil'
+        verbose_name_plural = 'Oeffentliche Vereinsprofile'
+
+    def __str__(self):
+        return f'Profil {self.club}'
+
+
+class ClubTrophy(models.Model):
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='public_trophies',
+    )
+    competition_name = models.CharField(max_length=120)
+    count = models.PositiveSmallIntegerField(default=1)
+    trophy_asset_id = models.CharField(max_length=80, blank=True)
+    sort_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'competition_name']
+        verbose_name = 'Vereinstitel'
+        verbose_name_plural = 'Vereinstitel'
+
+    @property
+    def trophy_static_path(self):
+        from .player_assets import get_cached_trophy_static_path
+
+        return get_cached_trophy_static_path(self.trophy_asset_id)
+
+    def __str__(self):
+        return f'{self.club} - {self.competition_name}'
+
+
+class ClubProfileMatch(models.Model):
+    KIND_NEXT = 'next'
+    KIND_LAST = 'last'
+    KIND_CHOICES = [
+        (KIND_NEXT, 'Naechstes Spiel'),
+        (KIND_LAST, 'Letztes Spiel'),
+    ]
+
+    RESULT_WIN = 'SIEG'
+    RESULT_DRAW = 'UNENTSCHIEDEN'
+    RESULT_LOSS = 'NIEDERLAGE'
+    RESULT_CHOICES = [
+        (RESULT_WIN, 'Sieg'),
+        (RESULT_DRAW, 'Unentschieden'),
+        (RESULT_LOSS, 'Niederlage'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='public_profile_matches',
+    )
+    kind = models.CharField(max_length=12, choices=KIND_CHOICES)
+    competition_name = models.CharField(max_length=120)
+    matchday_label = models.CharField(max_length=80)
+    date_label = models.CharField(max_length=80, blank=True)
+    time_label = models.CharField(max_length=40, blank=True)
+    stadium_name = models.CharField(max_length=120, blank=True)
+    home_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='home_public_profile_matches',
+    )
+    away_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='away_public_profile_matches',
+    )
+    home_goals = models.PositiveSmallIntegerField(null=True, blank=True)
+    away_goals = models.PositiveSmallIntegerField(null=True, blank=True)
+    result_label = models.CharField(
+        max_length=20,
+        choices=RESULT_CHOICES,
+        blank=True,
+    )
+    scorers = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        ordering = ['kind', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'kind'],
+                name='unique_club_public_profile_match_kind',
+            ),
+        ]
+        verbose_name = 'Vereinsprofil-Spiel'
+        verbose_name_plural = 'Vereinsprofil-Spiele'
+
+    def __str__(self):
+        return f'{self.club} - {self.get_kind_display()}'
+
+
+class TacticSetup(models.Model):
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='tactic_setups',
+    )
+    squad_scope = models.CharField(
+        max_length=12,
+        choices=SQUAD_SCOPE_CHOICES,
+        default=SQUAD_PRO,
+    )
+    formation = models.JSONField(default=default_formation, blank=True)
+    lineup = models.JSONField(default=default_lineup, blank=True)
+    bench = models.JSONField(default=default_bench, blank=True)
+    standards = models.JSONField(default=default_standards, blank=True)
+    substitutions = models.JSONField(default=default_substitutions, blank=True)
+    first_half = models.JSONField(default=default_half_tactic, blank=True)
+    second_half = models.JSONField(default=default_half_tactic, blank=True)
+    is_confirmed = models.BooleanField(default=False)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'squad_scope'],
+                name='unique_club_tactic_setup_scope',
+            ),
+        ]
+        ordering = ['club__name', 'squad_scope']
+        verbose_name = 'Taktik'
+        verbose_name_plural = 'Taktiken'
+
+    def clean(self):
+        super().clean()
+        validate_formation(self.formation)
+        if len(self.bench or []) > 7:
+            raise ValidationError('Es sind maximal 7 Bankspieler erlaubt.')
+        if len(self.substitutions or []) > 5:
+            raise ValidationError('Es sind maximal 5 Wechsel erlaubt.')
+
+    @property
+    def formation_code(self):
+        return formation_code(self.formation)
+
+    @property
+    def field_player_count(self):
+        return field_player_count(self.formation)
+
+    def __str__(self):
+        return f'{self.club} - {self.get_squad_scope_display()} - {self.formation_code}'
+
+
+class TacticTemplate(models.Model):
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='tactic_templates',
+    )
+    squad_scope = models.CharField(
+        max_length=12,
+        choices=SQUAD_SCOPE_CHOICES,
+        default=SQUAD_PRO,
+    )
+    name = models.CharField(max_length=80)
+    formation = models.JSONField(default=default_formation, blank=True)
+    lineup = models.JSONField(default=default_lineup, blank=True)
+    bench = models.JSONField(default=default_bench, blank=True)
+    standards = models.JSONField(default=default_standards, blank=True)
+    substitutions = models.JSONField(default=default_substitutions, blank=True)
+    first_half = models.JSONField(default=default_half_tactic, blank=True)
+    second_half = models.JSONField(default=default_half_tactic, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'squad_scope', 'name'],
+                name='unique_club_tactic_template_scope_name',
+            ),
+        ]
+        ordering = ['club__name', 'squad_scope', 'name']
+        verbose_name = 'Taktikvorlage'
+        verbose_name_plural = 'Taktikvorlagen'
+
+    def clean(self):
+        super().clean()
+        validate_formation(self.formation)
+        if len(self.bench or []) > 7:
+            raise ValidationError('Es sind maximal 7 Bankspieler erlaubt.')
+        if len(self.substitutions or []) > 5:
+            raise ValidationError('Es sind maximal 5 Wechsel erlaubt.')
+        if self.club_id and self.squad_scope:
+            existing = TacticTemplate.objects.filter(
+                club_id=self.club_id,
+                squad_scope=self.squad_scope,
+            )
+            if self.pk:
+                existing = existing.exclude(pk=self.pk)
+            if existing.count() >= 10:
+                raise ValidationError('Es sind maximal 10 Taktikvorlagen pro Bereich erlaubt.')
+
+    @property
+    def formation_code(self):
+        return formation_code(self.formation)
+
+    def __str__(self):
+        return f'{self.club} - {self.get_squad_scope_display()} - {self.name}'
+
+
+class ClubNewsItem(models.Model):
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='public_news',
+    )
+    title = models.CharField(max_length=160)
+    published_at = models.DateField(default=timezone.localdate)
+    thumbnail_static_path = models.CharField(max_length=240, blank=True)
+    sort_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', '-published_at', '-id']
+        verbose_name = 'Vereinsnews'
+        verbose_name_plural = 'Vereinsnews'
+
+    def __str__(self):
+        return f'{self.club} - {self.title}'
+
+
 class Player(models.Model):
     POSITION_CHOICES = [
         ('TW', 'TW'),
         ('IV', 'IV'),
+        ('LI', 'LI'),
         ('LV', 'LV'),
         ('RV', 'RV'),
         ('LOV', 'LOV'),

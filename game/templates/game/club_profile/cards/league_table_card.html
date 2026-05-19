@@ -1,0 +1,44 @@
+{% load static %}
+
+<article class="club-profile-card compact-table-card">
+    <h2 class="club-card-title">LIGATABELLE</h2>
+
+    <table class="club-profile-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Verein</th>
+                <th>SP</th>
+                <th>DIFF</th>
+                <th>PKT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in profile.table %}
+                <tr class="{% if row.isCurrentClub %}is-current{% endif %}">
+                    <td>{{ row.position }}</td>
+                    <td>
+                        {% if row.clubCrestUrl %}
+                            {% if row.clubProfileUrl %}
+                                <a class="club-crest-link" href="{{ row.clubProfileUrl }}" aria-label="{{ row.clubName }} Profil">
+                                    <img src="{% static row.clubCrestUrl %}" alt="{{ row.clubName }}">
+                                </a>
+                            {% else %}
+                                <img src="{% static row.clubCrestUrl %}" alt="{{ row.clubName }}">
+                            {% endif %}
+                        {% endif %}
+                        <span>{{ row.clubName }}</span>
+                    </td>
+                    <td>{{ row.played }}</td>
+                    <td>{{ row.goalDifference }}</td>
+                    <td>{{ row.points }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a class="club-card-link" href="{{ profile.links.fullTableUrl }}">
+        Komplette Tabelle anzeigen
+        <span aria-hidden="true">→</span>
+    </a>
+</article>

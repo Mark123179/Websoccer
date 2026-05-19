@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block body_class %}tactics-page{% endblock %}
+
+{% block title %}
+    Taktik · {{ club.name }}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="tactics-dashboard">
+    {% include 'game/partials/game_header.html' %}
+
+    <form class="tactics-form" method="post" data-static-prefix="{% static '' %}">
+        {% csrf_token %}
+        <input type="hidden" name="squad_scope" value="{{ squad_scope }}">
+
+        <div class="tactics-top-row">
+            <header class="tactics-match-hero" style="--tactic-header-bg: url('{% static 'game/images/backgrounds/tactics-banner-stadium-bg.png' %}?v=tactics-stadium-hero-20260519');">
+                <div class="tactics-team-block">
+                    {% if next_match.homeClub.crestUrl %}
+                        <a class="tactics-crest-link" href="{{ home_club_url }}">
+                            <img src="{% static next_match.homeClub.crestUrl %}" alt="{{ next_match.homeClub.name }}">
+                        </a>
+                    {% endif %}
+                    <div>
+                        <strong>{{ next_match.homeClub.name }}</strong>
+                        <span>Heim</span>
+                        <div class="tactics-hero-form">
+                            {% for result in home_form %}
+                                <i class="is-{{ result.tone }}">
+                                    {% if result.opponent_crest %}
+                                        <a href="{{ result.opponent_url }}" aria-label="{{ result.opponent_name }}">
+                                            <img src="{% static result.opponent_crest %}" alt="{{ result.opponent_name }}">
+                                        </a>
+                                    {% endif %}
+                                    {{ result.score }} <b>{{ result.label }}</b>
+                                </i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <strong class="tactics-vs">VS.</strong>
+
+                <div class="tactics-team-block is-away">
+                    <div>
+                        <strong>{{ next_match.awayClub.name }}</strong>
+                        <span>Auswärts</span>
+                        <div class="tactics-hero-form">
+                            {% for result in away_form %}
+                                <i class="is-{{ result.tone }}">
+                                    {% if result.opponent_crest %}
+                                        <a href="{{ result.opponent_url }}" aria-label="{{ result.opponent_name }}">
+                                            <img src="{% static result.opponent_crest %}" alt="{{ result.opponent_name }}">
+                                        </a>
+                                    {% endif %}
+                                    {{ result.score }} <b>{{ result.label }}</b>
+                                </i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if next_match.awayClub.crestUrl %}
+                        <a class="tactics-crest-link" href="{{ away_club_url }}">
+                            <img src="{% static next_match.awayClub.crestUrl %}" alt="{{ next_match.awayClub.name }}">
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="tactics-match-meta" aria-label="Spieldaten">
+                    <div class="tactics-meta-item">
+                        {% if competition_logo %}
+                            <img class="tactics-meta-logo" src="{% static competition_logo %}" alt="">
+                        {% else %}
+                            <i class="tactics-meta-icon is-ball" aria-hidden="true"></i>
+                        {% endif %}
+                        <span class="tactics-meta-copy">
+                            <b>{{ next_match.competitionName }}</b>
+                            <small>{{ next_match.matchdayLabel }}</small>
+                        </span>
+                    </div>
+                    <div class="tactics-meta-item">
+                        <img class="tactics-meta-asset" src="{% static 'game/images/icons/tactics-calendar.svg' %}" alt="">
+                        <span class="tactics-meta-copy">
+                            <b>{{ match_date_display.weekday }}</b>
+                            {% if match_date_display.date %}<small>{{ match_date_display.date }}</small>{% endif %}
+                        </span>
+                    </div>
+                    <div class="tactics-meta-item">
+                        <img class="tactics-meta-asset" src="{% static 'game/images/icons/tactics-clock.svg' %}" alt="">
+                        <span class="tactics-meta-copy">
+                            <b>{{ next_match.timeLabel|default:"20:00 Uhr" }}</b>
+                            <small>Anstoß</small>
+                        </span>
+                    </div>
+                    <div class="tactics-meta-item">
+                        <img class="tactics-meta-asset tactics-stadium-asset" src="{% static 'game/images/icons/tactics-stadium-3d.png' %}?v=stadium-3d-20260519" alt="">
+                        <span class="tactics-meta-copy">
+                            <b>{{ next_match.stadiumName|default:"Websoccer Arena" }}</b>
+                            <small>{{ next_match.homeClub.name }}</small>
+                        </span>
+                    </div>
+                </div>
+                <div class="tactics-hero-actions">
+                    <em class="tactics-status is-{{ status_tone }}">{{ status_label }}</em>
+                    <a href="/forum/">Spieltagsthread öffnen ↗</a>
+                </div>
+            </header>
+        </div>
+
+        {% if messages %}
+            <div class="tactics-flashes" aria-live="polite">
+                {% for message in messages %}
+                    <p class="tactics-flash is-{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if form_errors %}
+            <div class="tactics-errors" role="alert">
+                {% for error in form_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <main class="tactics-template-grid">
+            <aside class="tactics-panel tactics-preview-panel tactics-roster-panel">
+                <h2>Spielerkader</h2>
+                <div class="tactics-roster-list dashboard-scrollarea" data-roster-list>
+                    {% for option in player_options %}
+                        <article class="tactics-roster-player" data-roster-player="{{ option.id }}">
+                            <a class="tactics-roster-image" href="{{ option.profile_url }}">
+                                <img src="{% static option.portrait %}" alt="{{ option.name }}">
+                            </a>
+                            <strong>{{ option.name }}</strong>
+                            <span class="tactics-position-line">
+                                <b>HP</b>
+                                {% for position in option.main_positions %}
+                                    <i class="is-main">{{ position }}</i>
+                                {% empty %}
+                                    <i class="is-empty">-</i>
+                                {% endfor %}
+                            </span>
+                            <small class="tactics-position-line">
+                                <b>NP</b>
+                                {% for position in option.secondary_positions %}
+                                    <i class="is-secondary">{{ position }}</i>
+                                {% empty %}
+                                    <i class="is-empty">-</i>
+                                {% endfor %}
+                            </small>
+                            <span class="tactics-roster-freshness">
+                                <em class="tactics-freshness is-{{ option.freshness_tone }}" style="--freshness: {% if option.freshness != None %}{{ option.freshness }}{% else %}0{% endif %};" aria-label="{{ option.freshness_label }} Frische"></em>
+                                <b>{{ option.freshness_label }}</b>
+                            </span>
+                        </article>
+                    {% empty %}
+                        <p class="tactics-roster-empty">Keine verfügbaren Spieler.</p>
+                    {% endfor %}
+                </div>
+            </aside>
+
+            <section class="tactics-pitch-panel">
+                <div class="tactics-template-toolbar" aria-label="Taktik Vorlage">
+                    <div class="tactics-template-actions">
+                        <label class="tactics-template-load">
+                            <span>Vorlage laden</span>
+                            <select name="template_id" aria-label="Vorlage laden">
+                                <option value="">Keine Vorlage</option>
+                                {% for template in templates %}
+                                    <option value="{{ template.id }}">{{ template.name }} Â· {{ template.formation_code }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button type="submit" name="action" value="load_template" class="tactics-secondary-button">Vorlage laden</button>
+                        <label class="tactics-template-save">
+                            <span>Vorlage speichern ({{ template_count }}/{{ template_limit }})</span>
+                            <input type="text" name="template_name" maxlength="80" placeholder="Vorlagenname" aria-label="Vorlagenname" data-template-name>
+                        </label>
+                        <button type="submit" name="action" value="save_template" class="tactics-secondary-button" data-save-template>Vorlage speichern</button>
+                    </div>
+
+                    <strong class="tactics-toolbar-formation" data-formation-label>{{ formation_code }}</strong>
+
+                    <details class="tactics-formation-editor">
+                        <summary>Ändern</summary>
+                        <div class="tactics-formation-controls">
+                            {% for group in formation_choices %}
+                                <label>
+                                    <span>{{ group.label }}</span>
+                                    <select name="formation_{{ group.name }}" data-formation-part="{{ group.name }}">
+                                        {% for option in group.options %}
+                                            <option value="{{ option.value }}" {% if option.value == group.selected %}selected{% endif %}>{{ option.label }} Â· {{ option.summary }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            {% endfor %}
+                            <button type="button" class="tactics-secondary-button" data-apply-formation>Formation anzeigen</button>
+                        </div>
+                    </details>
+
+                    <button type="submit" name="action" value="confirm" class="tactics-confirm-button">Taktik bestätigen</button>
+                </div>
+
+                <div class="tactics-pitch" data-pitch>
+                    <p class="tactics-field-count">
+                        Feldspieler: <strong data-field-count>{{ selected_field_count }}/10</strong>
+                        <span class="{% if selected_field_count == 10 %}is-complete{% endif %}" aria-hidden="true"></span>
+                    </p>
+                    <div class="tactics-slots-layer" data-slots-layer>
+                        {% for slot in formation_slots %}
+                            <article class="tactics-slot is-{{ slot.match_state }}" style="left: {{ slot.x }}%; top: {{ slot.y }}%;" data-slot="{{ slot.key }}" data-code="{{ slot.code }}" data-group="{{ slot.group }}">
+                                <div class="tactics-slot-card">
+                                    <span class="tactics-slot-position">{{ slot.code }}</span>
+                                    <img class="tactics-captain-badge{% if slot.is_captain %} is-visible{% endif %}" data-captain-badge src="{% static 'game/images/icons/captain-armband.png' %}?v=yellow-20260519" alt="Kapitän">
+                                    <div class="tactics-slot-portrait">
+                                        {% if slot.player %}
+                                            <img src="{% static slot.player.portrait %}" alt="{{ slot.player.name }}">
+                                        {% else %}
+                                            <span></span>
+                                        {% endif %}
+                                    </div>
+                                    <strong class="tactics-slot-name">{% if slot.player %}{{ slot.player.name }}{% else %}Leer{% endif %}</strong>
+                                    <em class="tactics-freshness is-{% if slot.player %}{{ slot.player.freshness_tone }}{% else %}empty{% endif %}" style="--freshness: {% if slot.player.freshness != None %}{{ slot.player.freshness }}{% else %}0{% endif %};">
+                                        {% if slot.player %}{{ slot.player.freshness_label }}{% else %}-{% endif %}
+                                    </em>
+                                    <select name="lineup_{{ slot.key }}" data-assignment data-area="lineup" data-slot-key="{{ slot.key }}" data-slot-code="{{ slot.code }}" aria-label="{{ slot.code }} besetzen">
+                                        <option value="">Leer</option>
+                                        {% for option in player_options %}
+                                            <option value="{{ option.id }}" {% if option.id == slot.selected_id %}selected{% endif %}>{{ option.name }} · {{ option.position }} · {{ option.freshness_label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+
+                    <div class="tactics-pitch-legend" aria-label="Positionslegende">
+                        <span><i class="is-main"></i>Hauptposition</span>
+                        <span><i class="is-secondary"></i>Nebenposition</span>
+                        <span><i class="is-foreign"></i>Positionsfremd</span>
+                    </div>
+
+                    <div class="tactics-average-freshness">
+                        <span>Durchschnitt Frische</span>
+                        <strong data-average-freshness>{{ average_freshness }}</strong>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="tactics-side-stack">
+                <fieldset class="tactics-legacy-status" disabled hidden>
+                <div class="tactics-status-line">
+                    <span>Formation:</span>
+                    <strong data-formation-label>{{ formation_code }}</strong>
+                    <details class="tactics-formation-editor">
+                        <summary>Ändern</summary>
+                        <div class="tactics-formation-controls">
+                            {% for group in formation_choices %}
+                                <label>
+                                    <span>{{ group.label }}</span>
+                                    <select name="formation_{{ group.name }}" data-formation-part="{{ group.name }}">
+                                        {% for option in group.options %}
+                                            <option value="{{ option.value }}" {% if option.value == group.selected %}selected{% endif %}>{{ option.label }} · {{ option.summary }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            {% endfor %}
+                            <button type="button" class="tactics-secondary-button" data-apply-formation>Formation anzeigen</button>
+                        </div>
+                    </details>
+                </div>
+
+                <section class="tactics-builder-summary" aria-label="Formation Builder Zusammenfassung">
+                    <header>
+                        <strong>Formation-Builder (Zusammenfassung)</strong>
+                        <span aria-hidden="true">⌃</span>
+                    </header>
+                    <div class="tactics-builder-body">
+                        <div class="tactics-mini-pitch" data-formation-dots>
+                            {% for slot in formation_slots %}
+                                <i class="is-{{ slot.group }}" style="left: {{ slot.x }}%; top: {{ slot.y }}%;"></i>
+                            {% endfor %}
+                        </div>
+                        <dl class="tactics-count-summary">
+                            <div><dt>Stürmer</dt><dd data-count-attack>{{ layer_counts.attack }}</dd></div>
+                            <div><dt>Mittelfeld</dt><dd data-count-midfield>{{ layer_counts.midfield }}</dd></div>
+                            <div><dt>Abwehr</dt><dd data-count-defense>{{ layer_counts.defense }}</dd></div>
+                            <div><dt>Torwart</dt><dd data-count-goalkeeper>{{ layer_counts.goalkeeper }}</dd></div>
+                        </dl>
+                    </div>
+                </section>
+
+                <p class="tactics-field-count">
+                    Feldspieler: <strong data-field-count>{{ selected_field_count }}/10</strong>
+                    <span class="{% if selected_field_count == 10 %}is-complete{% endif %}" aria-hidden="true"></span>
+                </p>
+
+                <div class="tactics-template-actions">
+                    <label class="tactics-template-load">
+                        <span>Vorlage laden</span>
+                        <select name="template_id" aria-label="Vorlage laden">
+                            <option value="">Keine Vorlage</option>
+                            {% for template in templates %}
+                                <option value="{{ template.id }}">{{ template.name }} · {{ template.formation_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button type="submit" name="action" value="load_template" class="tactics-secondary-button">Vorlage laden</button>
+                    <label class="tactics-template-save">
+                        <span>Vorlage speichern ({{ template_count }}/{{ template_limit }})</span>
+                        <input type="text" name="template_name" maxlength="80" placeholder="Name">
+                    </label>
+                    <button type="submit" name="action" value="save_template" class="tactics-secondary-button">Vorlage speichern</button>
+                </div>
+
+                <button type="submit" name="action" value="confirm" class="tactics-confirm-button">Taktik bestätigen</button>
+                </fieldset>
+            <article class="tactics-panel tactics-bench-panel">
+                <h2>Bank</h2>
+                <div class="tactics-bench-list">
+                    {% for row in bench_rows %}
+                        <article class="tactics-bench-row tactics-bench-card">
+                            <small class="tactics-bench-position">{% if row.player %}{{ row.player.position }}{% else %}-{% endif %}</small>
+                            <span class="tactics-bench-number">{{ row.index|add:"11" }}</span>
+                            {% if row.player %}
+                                <img src="{% static row.player.portrait %}" alt="{{ row.player.name }}">
+                            {% else %}
+                                <i></i>
+                            {% endif %}
+                            <strong>{% if row.player %}{{ row.player.name }}{% else %}Leer{% endif %}</strong>
+                            <em class="tactics-freshness is-{% if row.player %}{{ row.player.freshness_tone }}{% else %}empty{% endif %}" style="--freshness: {% if row.player.freshness != None %}{{ row.player.freshness }}{% else %}0{% endif %};">{% if row.player %}{{ row.player.freshness_label }}{% else %}-{% endif %}</em>
+                            <select name="bench_{{ row.index }}" data-assignment data-area="bench" aria-label="Bankplatz {{ row.index }}">
+                                <option value="">Leer</option>
+                                {% for option in player_options %}
+                                    <option value="{{ option.id }}" {% if option.id == row.selected_id %}selected{% endif %}>{{ option.name }} · {{ option.position }} · {{ option.freshness_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </article>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-standards-panel">
+                <h2>Standards</h2>
+                <div class="tactics-standard-list">
+                    {% for row in standard_rows %}
+                        <label>
+                            <span>{{ row.label }}</span>
+                            <select name="standard_{{ row.key }}" data-standard-select="{{ row.key }}">
+                                <option value="">Nicht gesetzt</option>
+                                {% for option in lineup_player_options %}
+                                    <option value="{{ option.id }}" {% if option.id == row.selected_id %}selected{% endif %}>{{ option.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-subs-panel">
+                <h2>Wechselplanung</h2>
+                <div class="tactics-substitution-list">
+                    {% for row in substitution_rows %}
+                        <div class="tactics-substitution-row">
+                            <span>{{ row.index }}</span>
+                            <input type="number" min="1" max="120" step="1" inputmode="numeric" data-minute-input name="substitution_{{ row.index }}_minute" value="{{ row.minute }}" placeholder="Min." aria-label="Wechsel {{ row.index }} Minute">
+                            <select name="substitution_{{ row.index }}_out" data-sub-out aria-label="Spieler raus {{ row.index }}">
+                                <option value="">Spieler raus</option>
+                                {% for slot in formation_slots %}
+                                    {% if slot.selected_id %}
+                                        <option value="{{ slot.selected_id }}" {% if slot.selected_id == row.out %}selected{% endif %}>{{ slot.player.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <b aria-hidden="true">→</b>
+                            <select name="substitution_{{ row.index }}_in" data-sub-in aria-label="Spieler rein {{ row.index }}">
+                                <option value="">Spieler rein</option>
+                                {% for bench in bench_rows %}
+                                    {% if bench.selected_id %}
+                                        <option value="{{ bench.selected_id }}" {% if bench.selected_id == row.in %}selected{% endif %}>{{ bench.player.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+            </aside>
+        </main>
+
+        <section class="tactics-halves-grid">
+            <article class="tactics-panel tactics-half-panel">
+                <h2>1. Halbzeit</h2>
+                <label class="tactics-orientation">
+                    <span>Grundausrichtung</span>
+                    <input type="range" min="0" max="100" value="{{ first_half.orientation }}" name="first_half_orientation" data-orientation>
+                    <strong>{{ first_half.orientation }}</strong>
+                    <em>{{ first_half.orientation }} – {{ first_half.orientation_label }}</em>
+                </label>
+                <div class="tactics-half-fields">
+                    {% for row in first_half.rows %}
+                        <label>
+                            <span>{{ row.label }}</span>
+                            <select name="first_half_{{ row.name }}">
+                                {% for option in row.options %}
+                                    <option value="{{ option.value }}" {% if option.value == row.selected %}selected{% endif %}>{{ option.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-half-panel">
+                <h2>2. Halbzeit</h2>
+                <label class="tactics-orientation">
+                    <span>Grundausrichtung</span>
+                    <input type="range" min="0" max="100" value="{{ second_half.orientation }}" name="second_half_orientation" data-orientation>
+                    <strong>{{ second_half.orientation }}</strong>
+                    <em>{{ second_half.orientation }} – {{ second_half.orientation_label }}</em>
+                </label>
+                <div class="tactics-half-fields">
+                    {% for row in second_half.rows %}
+                        <label>
+                            <span>{{ row.label }}</span>
+                            <select name="second_half_{{ row.name }}">
+                                {% for option in row.options %}
+                                    <option value="{{ option.value }}" {% if option.value == row.selected %}selected{% endif %}>{{ option.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+
+        <section class="tactics-analysis-grid">
+            <article class="tactics-panel tactics-top-list tactics-top-scorers">
+                <h2>Torjäger</h2>
+                {% for row in top_goals %}
+                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                {% endfor %}
+            </article>
+
+            <article class="tactics-panel tactics-top-list">
+                <h2>Vorbereiter</h2>
+                {% for row in top_assists %}
+                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                {% endfor %}
+            </article>
+
+            <article class="tactics-panel tactics-top-list">
+                <h2>Beste Noten</h2>
+                {% for row in top_grades %}
+                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                {% endfor %}
+            </article>
+
+            <article class="tactics-panel tactics-opponent-absences">
+                <h2>Ausfälle Gegner</h2>
+                <div class="tactics-opponent-absence-list dashboard-scrollarea">
+                    {% for row in opponent_absences %}
+                        <div class="is-{{ row.tone }}">
+                            <img src="{% static row.portrait %}" alt="{{ row.name }}">
+                            <strong>{{ row.name }}</strong>
+                            <span>{{ row.reason }}</span>
+                            <small>{{ row.duration }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-manager-duel manager-duel-card">
+                {% if manager_duel.home_avatar %}
+                    <img class="duel-manager-portrait duel-manager-portrait-left" src="{% static manager_duel.home_avatar %}" alt="{{ manager_duel.home }}">
+                {% endif %}
+                {% if manager_duel.away_avatar %}
+                    <img class="duel-manager-portrait duel-manager-portrait-right" src="{% static manager_duel.away_avatar %}" alt="{{ manager_duel.away }}">
+                {% endif %}
+                <div class="manager-duel-overlay">
+                    <section class="duel-side duel-side-left">
+                        <header class="duel-manager-header">
+                            <div class="duel-manager-name">{{ manager_duel.home }}</div>
+                            <div class="duel-manager-rank duel-rank-left">{{ manager_duel.home_rank }}</div>
+                        </header>
+                        <div class="duel-values duel-values-left">
+                            {% for row in manager_duel.rows %}
+                                <div class="is-{{ row.left_tone }}">{{ row.left }}</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="duel-center">
+                        <div class="duel-vs">VS.</div>
+                        <div class="duel-labels">
+                            {% for row in manager_duel.rows %}
+                                <div>{{ row.label }}</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+
+                    <section class="duel-side duel-side-right">
+                        <header class="duel-manager-header">
+                            <div class="duel-manager-name">{{ manager_duel.away }}</div>
+                            <div class="duel-manager-rank duel-rank-right">{{ manager_duel.away_rank }}</div>
+                        </header>
+                        <div class="duel-values duel-values-right">
+                            {% for row in manager_duel.rows %}
+                                <div class="is-{{ row.right_tone }}">{{ row.right }}</div>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
+            </article>
+        </section>
+    </form>
+
+    {{ formation_slot_data|json_script:"tactics-formation-data" }}
+    {{ player_options|json_script:"tactics-player-data" }}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'game/js/tactics.js' %}?v=tactics-template-name-20260519"></script>
+{% endblock %}

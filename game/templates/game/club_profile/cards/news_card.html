@@ -1,0 +1,24 @@
+{% load static %}
+
+<article class="club-profile-card news-profile-card">
+    <h2 class="club-card-title">VEREINSNEWS</h2>
+
+    <div class="club-news-list">
+        {% for item in profile.news %}
+            <a href="{{ item.url }}">
+                {% if item.thumbnailUrl %}
+                    <img src="{% static item.thumbnailUrl %}" alt="">
+                {% else %}
+                    <span aria-hidden="true"></span>
+                {% endif %}
+                <strong>{{ item.title }}</strong>
+                <small>{{ item.dateLabel }}</small>
+            </a>
+        {% endfor %}
+    </div>
+
+    <a class="club-card-link" href="{{ profile.links.newsUrl }}">
+        Alle News ansehen
+        <span aria-hidden="true">→</span>
+    </a>
+</article>

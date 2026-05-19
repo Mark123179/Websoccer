@@ -13,6 +13,10 @@ from datetime import timedelta
 from decimal import Decimal
 from .models import (
     COUNTRY_FLAG_ASSETS,
+    ClubNewsItem,
+    ClubProfileMatch,
+    ClubPublicProfile,
+    ClubTrophy,
     DataSource,
     League,
     Club,
@@ -34,6 +38,8 @@ from .models import (
     PlayerWeightedRatingSnapshot,
     StrengthFormulaSettings,
     StrengthModifierRule,
+    TacticSetup,
+    TacticTemplate,
     strength_decimal,
 )
 
@@ -237,6 +243,99 @@ class ClubAdmin(admin.ModelAdmin):
 
 admin.site.register(League, LeagueAdmin)
 admin.site.register(Club, ClubAdmin)
+
+
+@admin.register(ClubPublicProfile)
+class ClubPublicProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'stadium_name',
+        'city_name',
+        'partner_club',
+    )
+    search_fields = (
+        'club__name',
+        'stadium_name',
+        'city_name',
+    )
+
+
+@admin.register(ClubTrophy)
+class ClubTrophyAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'competition_name',
+        'count',
+        'sort_order',
+    )
+    list_filter = ('club',)
+    search_fields = (
+        'club__name',
+        'competition_name',
+    )
+
+
+@admin.register(ClubProfileMatch)
+class ClubProfileMatchAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'kind',
+        'competition_name',
+        'matchday_label',
+        'home_club',
+        'away_club',
+        'result_label',
+    )
+    list_filter = ('club', 'kind', 'competition_name')
+    search_fields = (
+        'club__name',
+        'competition_name',
+        'matchday_label',
+    )
+
+
+@admin.register(ClubNewsItem)
+class ClubNewsItemAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'title',
+        'published_at',
+        'sort_order',
+    )
+    list_filter = ('club', 'published_at')
+    search_fields = (
+        'club__name',
+        'title',
+    )
+
+
+@admin.register(TacticSetup)
+class TacticSetupAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'squad_scope',
+        'formation_code',
+        'is_confirmed',
+        'confirmed_at',
+        'updated_at',
+    )
+    list_filter = ('squad_scope', 'is_confirmed')
+    search_fields = ('club__name',)
+    readonly_fields = ('updated_at',)
+
+
+@admin.register(TacticTemplate)
+class TacticTemplateAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'squad_scope',
+        'name',
+        'formation_code',
+        'updated_at',
+    )
+    list_filter = ('squad_scope',)
+    search_fields = ('club__name', 'name')
+    readonly_fields = ('created_at', 'updated_at')
 
 
 class PlayerSourceRatingInline(admin.TabularInline):

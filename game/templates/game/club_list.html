@@ -10,31 +10,7 @@
 {% block content %}
 
 <section class="list-dashboard">
-    <header class="page-topbar">
-        <div class="control-room-title">
-            <span class="control-mark control-logo">
-                <img src="{% static 'game/images/brand/matchengine-logo-128.png' %}" alt="MatchEngine Logo">
-            </span>
-            <div>
-                <h1>Vereinsübersicht</h1>
-                <span>Scoutingzentrale · Datenbank</span>
-            </div>
-        </div>
-
-        <div class="search-box">Suche nach Vereinen, Ligen, Budgets...</div>
-
-        <div class="top-icons">
-            <span class="top-icon">M<span>3</span></span>
-            <span class="top-icon">T<span>{{ clubs|length }}</span></span>
-        </div>
-
-        <div class="top-date">
-            11. Mai 2026
-            <span>Managerzentrale</span>
-        </div>
-
-        <a class="primary-action" href="/">Zur Startseite</a>
-    </header>
+    {% include 'game/partials/game_header.html' %}
 
     <div class="clubs-kpi-grid">
         <article class="dashboard-card kpi-card">

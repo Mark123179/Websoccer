@@ -3,292 +3,483 @@
 {% load humanize %}
 {% load static %}
 
+{% block body_class %}overview-home-page{% endblock %}
+
 {% block title %}
-    Websoccer Managerzentrale
+    Websoccer &Uuml;bersicht
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=overview-20260518-1">
 {% endblock %}
 
 {% block content %}
 
-<section class="start-dashboard">
-    <header class="home-topbar">
-        <div class="control-room-title">
-            <span class="control-mark control-logo">
-                <img src="{% static 'game/images/brand/matchengine-logo-128.png' %}" alt="MatchEngine Logo">
-            </span>
-            <div>
-                <h1>MatchEngine</h1>
-                <span>Saisonvorbereitung · Creator Mode</span>
-            </div>
-        </div>
+<section class="start-dashboard overview-dashboard">
+    {% include 'game/partials/game_header.html' %}
 
-        <div class="search-box">Suche nach Vereinen, Spielern, Transfers...</div>
+    <div class="overview-grid">
+        <article class="dashboard-card overview-card overview-club-card"{% if overview_profile.city_static_path %} style="--overview-card-bg: url('{% static overview_profile.city_static_path %}');"{% endif %}>
+            <h2 class="card-title">Vereins&uuml;bersicht</h2>
 
-        <div class="top-icons">
-            <span class="top-icon">M<span>3</span></span>
-            <span class="top-icon">P<span>2</span></span>
-        </div>
+            <div class="overview-club-main">
+                {% if primary_club and primary_club.crest_static_path %}
+                    <img class="overview-club-crest" src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                {% endif %}
 
-        <div class="top-date">
-            11. Mai 2026
-            <span>Managerzentrale</span>
-        </div>
-
-        <a class="primary-action" href="/clubs/">Vereine öffnen</a>
-    </header>
-
-    <div class="start-grid-main">
-        <article class="dashboard-card start-hero-card">
-            <div class="hero-content">
-                <span class="system-label">Datenbank online</span>
-                <h2>Dein Websoccer-Kontrollraum steht.</h2>
-                <p>
-                    Vereine, Kader, Budgets, Spielerbilder, Flaggen und erste
-                    Stärkedaten sind verbunden. Der nächste Hebel ist das
-                    Spielgefühl: Startseite, Vereinszentrale, Spielerstärke und
-                    Ökonomie müssen wie ein lebendiger Manager laufen.
-                </p>
-            </div>
-
-            <div class="start-actions">
-                <a class="card-action" href="/clubs/">Vereine ansehen</a>
-                <a class="card-action secondary-action" href="/admin/">Admin öffnen</a>
-            </div>
-
-            <div class="hero-signal-grid">
-                <div>
-                    <span>Status</span>
-                    <strong>Saisonvorbereitung</strong>
+                <div class="overview-club-identity">
+                    <h1>
+                        {% if primary_club %}
+                            {{ primary_club.name }}
+                        {% else %}
+                            FC Novum
+                        {% endif %}
+                    </h1>
+                    <span class="overview-league-line">
+                        {% if competition_logo_static_path %}
+                            <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
+                        {% endif %}
+                        {% if primary_club and primary_club.league %}
+                            {{ primary_club.league.name }}
+                        {% else %}
+                            Elite Liga
+                        {% endif %}
+                    </span>
+                    <small><i class="flag-de" aria-hidden="true"></i>Deutschland</small>
                 </div>
-                <div>
-                    <span>Nächster Fokus</span>
-                    <strong>Startseite & Spielerstärke</strong>
+
+                <div class="overview-club-pulse">
+                    <div>
+                        <span>Fans:</span>
+                        <i class="fan-meter" style="--fan-value: {{ overview_profile.fan_percent }}%"></i>
+                        <strong>{{ overview_profile.fan_percent }}%</strong>
+                    </div>
+                    <div class="form-strip" aria-label="Form">
+                        {% for result in overview_profile.form %}
+                            <b class="form-{{ result.tone }}">{{ result.label }}</b>
+                        {% endfor %}
+                    </div>
                 </div>
-                <div>
-                    <span>Designsystem</span>
-                    <strong>Football Command Center</strong>
+            </div>
+
+            <div class="overview-club-facts">
+                <div class="overview-club-metrics">
+                    <p>
+                        <span>Finanzen</span>
+                        <strong>{{ overview_profile.budget_label }}</strong>
+                    </p>
+                    <p>
+                        <span>Vereinswert</span>
+                        <strong>{{ overview_profile.club_value_label }}</strong>
+                    </p>
+                    <p>
+                        <span>Zuschauer (&empty;)</span>
+                        <strong>{{ overview_profile.attendance_label }}</strong>
+                    </p>
                 </div>
+                {% for spotlight in overview_profile.spotlights %}
+                    <div class="overview-player-spotlight">
+                        <span>{{ spotlight.title }}</span>
+                        <strong>{{ spotlight.name }}</strong>
+                        <small>{{ spotlight.meta }}</small>
+                        {% if spotlight.portrait %}
+                            <img src="{% static spotlight.portrait %}" alt="{{ spotlight.name }}">
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
         </article>
 
-        <article class="dashboard-card start-match-card">
-            <h2 class="card-title">Fokusspiel</h2>
-            <div class="matchup">
-                <div class="match-team">
+        <article class="dashboard-card overview-card overview-next-match-card"{% if home_stadium_static_path %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
+            <h2 class="card-title">N&auml;chstes Spiel</h2>
+            <p class="overview-fixture-title">
+                {% if competition_logo_static_path %}
+                    <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
+                {% endif %}
+                {% if primary_club and primary_club.league %}
+                    {{ primary_club.league.name }}
+                {% else %}
+                    Elite Liga
+                {% endif %}
+                - 34. Spieltag
+            </p>
+
+            <div class="overview-fixture">
+                <div class="overview-team">
                     {% if primary_club and primary_club.crest_static_path %}
-                        <img class="match-crest" src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                        <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
                     {% endif %}
                     <strong>
                         {% if primary_club %}
                             {{ primary_club.short_name }}
                         {% else %}
-                            Heim
+                            FC Novum
                         {% endif %}
                     </strong>
                 </div>
-                <div class="vs-mark">VS</div>
-                <div class="match-team">
+
+                <span class="overview-vs">VS</span>
+
+                <div class="overview-team">
                     {% if secondary_club and secondary_club.crest_static_path %}
-                        <img class="match-crest" src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                        <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
                     {% endif %}
                     <strong>
                         {% if secondary_club %}
                             {{ secondary_club.short_name }}
                         {% else %}
-                            Gast
+                            FC Aurora
                         {% endif %}
                     </strong>
                 </div>
             </div>
-            <p class="match-meta">1. Bundesliga · Testlauf für Dashboard, Daten und Spielgefühl</p>
-            {% if primary_club %}
-                <a class="card-action" href="/clubs/{{ primary_club.id }}/">Clubzentrale öffnen</a>
-            {% else %}
-                <a class="card-action" href="/clubs/">Clubzentrale öffnen</a>
-            {% endif %}
-        </article>
 
-        <article class="dashboard-card readiness-card">
-            <h2 class="card-title">Projektstatus</h2>
-            <div class="readiness-list">
-                <div>
-                    <span>Datenbasis</span>
-                    <strong>{{ totals.club_count }} Vereine · {{ totals.player_count }} Spieler</strong>
-                    <i style="--bar: 84%"></i>
-                </div>
-                <div>
-                    <span>Assets</span>
-                    <strong>Wappen · Kits · Spieler · Flaggen</strong>
-                    <i style="--bar: 72%"></i>
-                </div>
-                <div>
-                    <span>Simulation</span>
-                    <strong>Stärkemodell im Aufbau</strong>
-                    <i style="--bar: 36%"></i>
-                </div>
-            </div>
-        </article>
-    </div>
-
-    <div class="start-kpi-grid">
-        <article class="dashboard-card kpi-card">
-            <span>Ligen</span>
-            <strong>{{ totals.league_count }}</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Vereine</span>
-            <strong>{{ totals.club_count }}</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Spieler</span>
-            <strong>{{ totals.player_count }}</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Ø Stärke</span>
-            <strong>{{ totals.average_strength|floatformat:1 }}</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Ø Alter</span>
-            <strong>{{ totals.average_age|floatformat:1 }}</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Gesamtbudget</span>
-            <strong>{{ totals.total_budget|floatformat:0|intcomma }} €</strong>
-        </article>
-    </div>
-
-    <div class="home-grid-two">
-        <article class="dashboard-card start-table-card">
-            <div class="section-head">
-                <h2 class="card-title">Top-Vereine nach Budget</h2>
-                <a href="/clubs/">Alle Vereine</a>
+            <div class="overview-match-meta">
+                <span>25. Mai 2025</span>
+                <strong>15:30</strong>
+                <small>Novum Arena</small>
             </div>
 
-            <div class="table-wrap">
-                <table class="club-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Verein</th>
-                            <th>Liga</th>
-                            <th>Spieler</th>
-                            <th>Ø Stärke</th>
-                            <th>Budget</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for club in richest_clubs %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>
-                                    <span class="club-name-cell">
-                                        {% if club.crest_static_path %}
-                                            <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+            <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielvorschau</a>
+        </article>
+
+        <article class="dashboard-card overview-card overview-last-match-card"{% if home_stadium_static_path %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
+            <h2 class="card-title">Letztes Spiel</h2>
+
+            <div class="overview-result">
+                <div class="overview-team compact">
+                    {% if primary_club and primary_club.crest_static_path %}
+                        <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                    {% endif %}
+                    <strong>
+                        {% if primary_club %}
+                            {{ primary_club.short_name }}
+                        {% else %}
+                            FC Novum
+                        {% endif %}
+                    </strong>
+                </div>
+                <span>2 - 1</span>
+                <div class="overview-team compact">
+                    {% if secondary_club and secondary_club.crest_static_path %}
+                        <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                    {% endif %}
+                    <strong>
+                        {% if secondary_club %}
+                            {{ secondary_club.short_name }}
+                        {% else %}
+                            FC Helios
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+            <p class="overview-result-competition">
+                {% if primary_club and primary_club.league %}
+                    {{ primary_club.league.name }}
+                {% else %}
+                    Elite Liga
+                {% endif %}
+                - 33. Spieltag
+            </p>
+
+            <div class="overview-scorers">
+                {% for scorer in last_match_scorers %}
+                    <span>
+                        <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
+                        {{ scorer.name }}&nbsp;&nbsp;{{ scorer.minute }}'
+                    </span>
+                {% endfor %}
+            </div>
+
+            <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielbericht anzeigen</a>
+        </article>
+
+        <aside class="dashboard-card overview-card overview-manager-widget" aria-label="Aktive Manager">
+            <h2 class="card-title">Aktive Manager</h2>
+            <p>Heute waren <strong>{{ totals.manager_count }}</strong> User online. Davon sind gerade online:</p>
+            <div class="overview-manager-list">
+                {% for manager in active_managers %}
+                    <div>
+                        {% if manager.crest %}
+                            <img class="overview-manager-crest" src="{% static manager.crest %}" alt="">
+                        {% else %}
+                            <span class="overview-manager-crest is-empty"></span>
+                        {% endif %}
+                        <strong>{{ manager.name }}</strong>
+                        <i aria-hidden="true"></i>
+                    </div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <article class="dashboard-card overview-chat-card">
+            <div class="overview-section-head">
+                <h2 class="card-title">Chat</h2>
+            </div>
+
+            <div class="overview-chat-log" data-overview-chat-log>
+                {% for message in chat_messages %}
+                    <p>
+                        <span>[{{ message.time }}]</span>
+                        <strong class="chat-author chat-author-{{ forloop.counter }}">{{ message.author }}</strong>
+                        {{ message.text }}
+                    </p>
+                {% endfor %}
+            </div>
+
+            <form class="overview-chat-input" data-overview-chat-form>
+                <span class="sr-only">Nachricht schreiben</span>
+                <input type="text" placeholder="Nachricht schreiben..." aria-label="Nachricht schreiben">
+                <button type="submit">Senden</button>
+            </form>
+        </article>
+
+        <article class="dashboard-card overview-transfer-card">
+            <div class="overview-section-head">
+                <h2 class="card-title">Transfermarkt</h2>
+            </div>
+
+            <div class="overview-transfer-list">
+                {% for row in transfer_rows %}
+                    <details class="overview-transfer-row">
+                        <summary>
+                            <a class="overview-transfer-avatar" href="/players/{{ row.player.id }}/" onclick="event.stopPropagation();" aria-label="Spielerprofil von {{ row.player.full_name }}">
+                                <img src="{% static row.player.portrait_static_path %}" alt="{{ row.player.full_name }}">
+                            </a>
+                            <span class="overview-transfer-player">
+                                <strong>{{ row.player.full_name }}</strong>
+                                <small>{{ row.player.age }} Jahre</small>
+                                <em>
+                                    {% for nationality in row.player.nationality_badges|slice:":1" %}
+                                        {% if nationality.flag_static_path %}
+                                            <img src="{% static nationality.flag_static_path %}" alt="{{ nationality.name }}">
                                         {% endif %}
-                                        <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
-                                    </span>
-                                </td>
-                                <td>{{ club.league.name }}</td>
-                                <td>{{ club.player_count }}</td>
-                                <td>
-                                    {% if club.average_strength %}
-                                        {{ club.average_strength|floatformat:1 }}
+                                    {% endfor %}
+                                    {{ row.player.position|default:row.player.primary_position }}
+                                </em>
+                            </span>
+                            <span class="overview-transfer-clubs">
+                                <span class="overview-transfer-crest">
+                                    {% if row.from_crest %}
+                                        <img src="{% static row.from_crest %}" alt="{{ row.from_label }}">
                                     {% else %}
-                                        -
+                                        <em>?</em>
                                     {% endif %}
-                                </td>
-                                <td>{{ club.budget|floatformat:0|intcomma }} €</td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="6">Noch keine Vereine vorhanden.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </span>
+                                <b>&rarr;</b>
+                                <span class="overview-transfer-crest">
+                                    {% if row.to_crest %}
+                                        <img src="{% static row.to_crest %}" alt="{{ row.to_label }}">
+                                    {% else %}
+                                        <em>?</em>
+                                    {% endif %}
+                                </span>
+                            </span>
+                            <span class="overview-transfer-expand" aria-hidden="true">+</span>
+                        </summary>
+                        <div class="overview-transfer-detail">
+                            <div class="overview-transfer-detail-grid">
+                                <section>
+                                    <span>Abgebend</span>
+                                    {% for player_name in row.outgoing_players %}
+                                        <span class="overview-transfer-pill">{{ player_name }}</span>
+                                    {% endfor %}
+                                </section>
+                                <section>
+                                    <span>Aufnehmend</span>
+                                    {% for player_name in row.incoming_players %}
+                                        <span class="overview-transfer-pill">{{ player_name }}</span>
+                                    {% endfor %}
+                                </section>
+                            </div>
+                            <div class="overview-transfer-fee">
+                                <span>Abl&ouml;se</span>
+                                <strong>{{ row.fee_label }}</strong>
+                            </div>
+                        </div>
+                    </details>
+                {% empty %}
+                    <p class="muted">Noch keine Transferziele vorhanden.</p>
+                {% endfor %}
             </div>
+
+            <a class="card-action" href="/clubs/">Zum Transfermarkt</a>
         </article>
 
-        <article class="dashboard-card player-radar-card">
-            <h2 class="card-title">Spielerradar</h2>
-            <div class="player-radar-list">
-                {% for player in top_market_players %}
-                    <a class="radar-player" href="/players/{{ player.id }}/">
-                        <img src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
-                        <span>
-                            <strong>{{ player.full_name }}</strong>
-                            <small>{{ player.age }} Jahre · {{ player.position }}</small>
-                        </span>
-                        <em>{{ player.market_value|floatformat:0|intcomma }} €</em>
+        <article class="dashboard-card overview-table-card">
+            <h2 class="card-title">Ligatabelle</h2>
+            <table class="league-table overview-league-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Verein</th>
+                        <th>Sp.</th>
+                        <th>Tore</th>
+                        <th>Diff.</th>
+                        <th>Pkt.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in overview_league_table %}
+                        <tr class="{% if row.is_current_club %}current-row{% endif %}">
+                            <td>{{ row.position }}</td>
+                            <td>
+                                {% if row.crest_static_path %}
+                                    <img src="{% static row.crest_static_path %}" alt="{{ row.club_name }}">
+                                {% endif %}
+                                <span>{{ row.short_name }}</span>
+                            </td>
+                            <td>{{ row.played }}</td>
+                            <td>{{ row.goals }}</td>
+                            <td>{{ row.goal_difference }}</td>
+                            <td class="points-cell">{{ row.points }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a class="table-link" href="/clubs/">Komplette Tabelle anzeigen <span>&rarr;</span></a>
+        </article>
+
+        <article class="dashboard-card overview-news-card overview-club-news-card">
+            <div class="overview-section-head">
+                <h2 class="card-title">Vereinsnews</h2>
+            </div>
+
+            <div class="overview-news-list">
+                {% for item in club_news %}
+                    <a href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">
+                        {% if primary_club and primary_club.crest_static_path %}
+                            <img class="overview-news-crest" src="{% static primary_club.crest_static_path %}" alt="">
+                        {% else %}
+                            <i aria-hidden="true"></i>
+                        {% endif %}
+                        <strong>{{ item.title }}</strong>
+                        <span>{{ item.when }}</span>
                     </a>
-                {% empty %}
-                    <p class="muted">Noch keine Spieler vorhanden.</p>
                 {% endfor %}
             </div>
-        </article>
-    </div>
 
-    <div class="home-grid-bottom">
-        <article class="dashboard-card finance-command-card">
-            <h2 class="card-title">Ökonomie</h2>
-            <div class="finance-body">
-                <div class="finance-numbers">
-                    <div>
-                        <span>Kaderwert</span>
-                        <strong>{{ totals.total_market_value|floatformat:0|intcomma }} €</strong>
-                    </div>
-                    <div>
-                        <span>Gehalt pro Spiel</span>
-                        <strong>{{ totals.total_salary_per_match|floatformat:0|intcomma }} €</strong>
-                    </div>
-                    <div>
-                        <span>Regel</span>
-                        <strong>5.000 € je 1 Mio. Marktwert</strong>
-                    </div>
-                </div>
-                <div class="chart">
-                    <i style="height: 34%"></i>
-                    <i style="height: 48%"></i>
-                    <i style="height: 42%"></i>
-                    <i style="height: 63%"></i>
-                    <i style="height: 78%"></i>
-                    <i style="height: 84%"></i>
-                </div>
+            <a class="table-link" href="/clubs/">Alle Nachrichten anzeigen <span>&rarr;</span></a>
+        </article>
+
+        <article class="dashboard-card overview-news-card overview-sim-news-card">
+            <div class="overview-section-head">
+                <h2 class="card-title">Neuigkeiten</h2>
             </div>
-        </article>
 
-        <article class="dashboard-card strength-command-card">
-            <h2 class="card-title">Stärkekern</h2>
-            <div class="strength-list">
-                {% for player in top_strength_players %}
-                    <div>
-                        <span>{{ player.full_name }}</span>
-                        <strong>{{ player.strength_profile.final_strength }}</strong>
-                    </div>
-                {% empty %}
-                    <p class="muted">Noch keine Stärkeprofile vorhanden.</p>
+            <div class="overview-news-list">
+                {% for item in sim_news %}
+                    <a href="/clubs/">
+                        <i aria-hidden="true"></i>
+                        <strong>{{ item.title }}</strong>
+                        <span>{{ item.when }}</span>
+                    </a>
                 {% endfor %}
             </div>
-            <a class="card-action" href="/clubs/">Kaderdaten prüfen</a>
+
+            <a class="table-link" href="/clubs/">Alle Nachrichten anzeigen <span>&rarr;</span></a>
         </article>
 
-        <article class="dashboard-card sprint-card">
-            <h2 class="card-title">Nächste Sprints</h2>
-            <div class="sprint-list">
-                <div>
-                    <strong>Startseite modernisieren</strong>
-                    <span>Heute · Designsystem vereinheitlichen</span>
-                </div>
-                <div>
-                    <strong>Spielerstärke modellieren</strong>
-                    <span>Nächster Schritt · Herz der Simulation</span>
-                </div>
-                <div>
-                    <strong>Ökonomie-Agent einbinden</strong>
-                    <span>Budget, Gehalt, Transfers balancieren</span>
-                </div>
-            </div>
-        </article>
+        <aside class="dashboard-card overview-card overview-social-card" aria-label="Social Feed">
+            <h2 class="card-title">Social Feed</h2>
+            {% for post in social_posts %}
+                <article>
+                    <strong>{{ post.source }}</strong>
+                    <span>{{ post.handle }}</span>
+                    <p>{{ post.text }}</p>
+                    <small>{{ post.reactions }}</small>
+                </article>
+            {% endfor %}
+        </aside>
+
+        <div class="overview-legacy-stack">
+            <aside class="dashboard-card overview-card overview-live-widget" aria-label="Livespiele Profis">
+                <h2 class="card-title">Livespiele Profis</h2>
+                {% for match in live_matches %}
+                    <div>
+                        <span>{{ match.time }}</span>
+                        {% if match.competition_logo %}
+                            <img class="overview-live-competition" src="{% static match.competition_logo %}" alt="">
+                        {% endif %}
+                        {% if match.home_crest %}
+                            <img class="overview-live-crest" src="{% static match.home_crest %}" alt="{{ match.home }}">
+                        {% else %}
+                            <span class="overview-live-crest is-empty"></span>
+                        {% endif %}
+                        <strong>{{ match.home }}</strong>
+                        <b>-</b>
+                        {% if match.away_crest %}
+                            <img class="overview-live-crest" src="{% static match.away_crest %}" alt="{{ match.away }}">
+                        {% else %}
+                            <span class="overview-live-crest is-empty"></span>
+                        {% endif %}
+                        <strong>{{ match.away }}</strong>
+                    </div>
+                {% endfor %}
+                <a href="/clubs/">Alle Live-Spiele</a>
+            </aside>
+
+            <aside class="dashboard-card overview-card overview-stats-widget" aria-label="Statistiken">
+                <h2 class="card-title">Statistiken</h2>
+                {% for stat in overview_stats %}
+                    <p><strong>{{ stat.value }}</strong><span>{{ stat.label }}</span></p>
+                {% endfor %}
+            </aside>
+        </div>
     </div>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.querySelector('[data-overview-chat-form]');
+        var log = document.querySelector('[data-overview-chat-log]');
+
+        if (!form || !log) {
+            return;
+        }
+
+        var input = form.querySelector('input');
+        var formatter = new Intl.DateTimeFormat('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+
+        function sendMessage() {
+            var text = input.value.trim();
+
+            if (!text) {
+                return;
+            }
+
+            var message = document.createElement('p');
+            var time = document.createElement('span');
+            var author = document.createElement('strong');
+
+            time.textContent = '[' + formatter.format(new Date()) + '] ';
+            author.textContent = 'Du';
+            author.className = 'chat-author chat-author-self';
+            message.append(time, author, document.createTextNode(' ' + text));
+            log.append(message);
+            input.value = '';
+            log.scrollTop = log.scrollHeight;
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            sendMessage();
+        });
+
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    });
+</script>
 
 {% endblock %}

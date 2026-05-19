@@ -1,0 +1,57 @@
+{% load static %}
+
+<article
+    class="club-profile-card next-match-profile-card"
+    {% if profile.nextMatch.backgroundImageUrl %}
+        style="--match-bg: url('{% static profile.nextMatch.backgroundImageUrl %}');"
+    {% endif %}
+>
+    <h2 class="club-card-title">NÄCHSTES SPIEL</h2>
+
+    <p class="club-match-competition">
+        {{ profile.nextMatch.competitionName }} · {{ profile.nextMatch.matchdayLabel }}
+    </p>
+
+    <div class="club-next-matchup">
+        <div>
+            {% if profile.nextMatch.homeClub.crestUrl %}
+                {% if profile.nextMatch.homeClub.profileUrl %}
+                    <a class="club-crest-link" href="{{ profile.nextMatch.homeClub.profileUrl }}" aria-label="{{ profile.nextMatch.homeClub.name }} Profil">
+                        <img src="{% static profile.nextMatch.homeClub.crestUrl %}" alt="{{ profile.nextMatch.homeClub.name }}">
+                    </a>
+                {% else %}
+                    <img src="{% static profile.nextMatch.homeClub.crestUrl %}" alt="{{ profile.nextMatch.homeClub.name }}">
+                {% endif %}
+            {% endif %}
+            <strong>{{ profile.nextMatch.homeClub.name }}</strong>
+        </div>
+        <span>VS</span>
+        <div>
+            {% if profile.nextMatch.awayClub.crestUrl %}
+                {% if profile.nextMatch.awayClub.profileUrl %}
+                    <a class="club-crest-link" href="{{ profile.nextMatch.awayClub.profileUrl }}" aria-label="{{ profile.nextMatch.awayClub.name }} Profil">
+                        <img src="{% static profile.nextMatch.awayClub.crestUrl %}" alt="{{ profile.nextMatch.awayClub.name }}">
+                    </a>
+                {% else %}
+                    <img src="{% static profile.nextMatch.awayClub.crestUrl %}" alt="{{ profile.nextMatch.awayClub.name }}">
+                {% endif %}
+            {% endif %}
+            <strong>{{ profile.nextMatch.awayClub.name }}</strong>
+        </div>
+    </div>
+
+    <div class="club-match-meta">
+        <span>{{ profile.nextMatch.dateLabel }}</span>
+        <span>
+            {% if profile.nextMatch.timeLabel %}
+                <strong>{{ profile.nextMatch.timeLabel }}</strong>
+            {% endif %}
+            <small>{{ profile.nextMatch.stadiumName }}</small>
+        </span>
+    </div>
+
+    <a class="club-profile-button" href="{{ profile.nextMatch.previewUrl }}">
+        Spielvorschau
+        <span aria-hidden="true">→</span>
+    </a>
+</article>

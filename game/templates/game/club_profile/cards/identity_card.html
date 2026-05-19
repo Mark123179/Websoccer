@@ -1,0 +1,103 @@
+{% load static %}
+
+<article class="club-profile-card club-identity-card">
+    <h2 class="club-card-title">VEREINSÜBERSICHT</h2>
+
+    <div class="club-identity-main">
+        <div class="club-identity-logo-stack">
+            {% if profile.club.league.logoUrl %}
+                <img class="club-league-watermark" src="{% static profile.club.league.logoUrl %}" alt="">
+            {% endif %}
+            {% if profile.club.crestUrl %}
+                <a class="club-crest-link club-identity-crest-link" href="{{ profile.links.profileUrl }}" aria-label="{{ profile.club.name }} Profil">
+                    <img class="club-identity-crest" src="{% static profile.club.crestUrl %}" alt="{{ profile.club.name }}">
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="club-identity-copy">
+            <h1>{{ profile.club.name }}</h1>
+            <span class="club-meta-line">
+                {% if profile.club.countryFlagUrl %}
+                    <img src="{% static profile.club.countryFlagUrl %}" alt="">
+                {% endif %}
+                {{ profile.club.countryName }}
+            </span>
+            <span class="club-meta-line">
+                {% if profile.club.league.logoUrl %}
+                    <img src="{% static profile.club.league.logoUrl %}" alt="">
+                {% endif %}
+                {{ profile.club.league.name }}
+            </span>
+            <div class="club-identity-form">
+                <span>Form (letzte 5 Spiele)</span>
+                <div class="club-form-strip" aria-label="Form letzte 5 Spiele">
+                    {% for result in profile.club.recentForm %}
+                        <b class="is-{{ result }}">{{ result }}</b>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="club-identity-stack">
+        <dl class="club-identity-stats">
+            <div>
+                <span class="club-identity-stat-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <ellipse cx="9" cy="6" rx="5" ry="2.3"></ellipse>
+                        <path d="M4 6v8c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3V6"></path>
+                        <path d="M4 10c0 1.3 2.2 2.3 5 2.3s5-1 5-2.3"></path>
+                        <path d="M14 12h3.5l2.5 5"></path>
+                        <path d="M16.4 17h5"></path>
+                    </svg>
+                </span>
+                <span>
+                    <dt>Vereinswert</dt>
+                    <dd>{{ profile.club.clubValueFormatted }}</dd>
+                </span>
+            </div>
+            {% if profile.club.averageProAgeLabel %}
+                <div>
+                    <span class="club-identity-stat-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path>
+                            <path d="M5 21a7 7 0 0 1 14 0"></path>
+                        </svg>
+                    </span>
+                    <span>
+                        <dt>Ø Alter Profis</dt>
+                        <dd>{{ profile.club.averageProAgeLabel }}</dd>
+                    </span>
+                </div>
+            {% endif %}
+            {% if profile.club.averageYouthAgeLabel %}
+                <div>
+                    <span class="club-identity-stat-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 8 11Z"></path>
+                            <path d="M3 20a5 5 0 0 1 10 0"></path>
+                            <path d="M16.5 11.5a2.7 2.7 0 1 0 0-5.4"></path>
+                            <path d="M15 15.2a4.9 4.9 0 0 1 6 4.8"></path>
+                        </svg>
+                    </span>
+                    <span>
+                        <dt>Ø Alter Jugend</dt>
+                        <dd>{{ profile.club.averageYouthAgeLabel }}</dd>
+                    </span>
+                </div>
+            {% endif %}
+        </dl>
+    </div>
+
+    <div class="club-identity-actions">
+        <a class="club-profile-button" href="{{ profile.links.professionalSquadUrl }}">
+            Zum Profikader
+            <span aria-hidden="true">→</span>
+        </a>
+        <a class="club-profile-button" href="{{ profile.links.youthSquadUrl }}">
+            Zur Jugend
+            <span aria-hidden="true">→</span>
+        </a>
+    </div>
+</article>

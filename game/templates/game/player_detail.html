@@ -16,25 +16,7 @@
 {% block content %}
 
 <section class="player-dashboard player-command-profile is-aaa-profile">
-    <header class="aaa-profile-topbar">
-        <a class="aaa-back-button" href="{% if player.club %}{% url 'club_detail' player.club.id %}{% else %}/{% endif %}" aria-label="Zurueck">&larr;</a>
-        <div class="aaa-top-title">
-            <h1>Spielerprofil</h1>
-            <span>{{ player.full_name }} &middot; {{ player.club.name|default:"ohne Verein" }}</span>
-        </div>
-        <div class="aaa-search">Suche...</div>
-        <div class="aaa-club-chip">
-            {% if player.club and player.club.crest_static_path %}
-                <img src="{% static player.club.crest_static_path %}" alt="{{ player.club.name }}">
-            {% endif %}
-            <strong>{{ player.club.name|default:"Websoccer" }}</strong>
-        </div>
-        <div class="aaa-top-date">
-            <strong>24. Mai 2025</strong>
-            <span>Sa 21:45</span>
-        </div>
-        <a class="aaa-continue-button" href="{% if player.club %}{% url 'club_detail' player.club.id %}{% else %}/{% endif %}">Fortfahren</a>
-    </header>
+    {% include 'game/partials/game_header.html' %}
 
     <div class="aaa-profile-grid">
         <aside class="aaa-left-column">
@@ -156,12 +138,12 @@
                         <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-star"></use></svg></i><strong>{{ season_summary.player_of_match_awards }}</strong><small>Spieler des Spiels</small></span>
                     </div>
 
-                    <div class="aaa-stat-board">
+                    <div class="aaa-stat-board dashboard-scrollarea">
                         <div class="aaa-stat-head">
                             <span>Wettbewerbe</span><span>Sp.</span><span>Tore</span><span>Vorl.</span><span>Min.</span><span>Gelb</span><span>Rot</span><span>Ein/Aus</span><span>SdS</span><span>Note</span>
                         </div>
                         {% for row in season_rows %}
-                            <div class="aaa-stat-row performance-lane">
+                            <div class="aaa-stat-row performance-lane{% if row.is_preview %} is-preview-row{% endif %}">
                                 <span class="aaa-stat-competition">
                                     {% if row.competition_logo %}
                                         <img src="{% static row.competition_logo %}" alt="">
@@ -229,11 +211,11 @@
 
             <div class="aaa-history-grid">
                 <div class="aaa-event-grid">
-                    <article class="aaa-card aaa-event-card">
+                    <article class="aaa-card aaa-event-card is-injury-card">
                         <div class="aaa-card-heading"><h2>Letzte 5 Verletzungen</h2></div>
                         <div class="aaa-event-list">
                             {% for injury in injury_rows %}
-                                <div><img class="aaa-event-icon" src="{% static 'game/images/icons/injury.png' %}" alt=""><time>{{ injury.start_date|date:"d.m.Y" }}</time><strong>{{ injury.injury_type }}</strong><small>{{ injury.days_missed }} Tage</small></div>
+                                <div><time>{{ injury.start_date|date:"d.m.Y" }}</time><strong>{{ injury.injury_type }}</strong><small>{{ injury.days_missed }} Tage</small></div>
                             {% empty %}
                                 <p class="empty-copy">Keine Websoccer-Verletzungen protokolliert.</p>
                             {% endfor %}
@@ -256,26 +238,53 @@
                     <div class="aaa-card-heading"><h2>Transferhistorie</h2></div>
                     <div class="aaa-transfer-track">
                         {% for row in transfer_rows %}
-                            {% with transfer=row.transfer %}
-                                <div class="aaa-transfer-node">
-                                    <time>{{ transfer.transfer_date|date:"Y" }}</time>
-                                    <div>
-                                        {% if row.from_crest %}
-                                            <img src="{% static row.from_crest %}" alt="">
-                                        {% endif %}
-                                        <span>&rarr;</span>
-                                        {% if row.to_crest %}
-                                            <img src="{% static row.to_crest %}" alt="">
-                                        {% endif %}
+                            <details class="aaa-transfer-node{% if row.is_preview %} is-preview{% endif %}">
+                                <summary>
+                                    <time class="aaa-transfer-date" datetime="{{ row.date|date:'Y-m-d' }}">
+                                        <strong>{{ row.date|date:"d" }}</strong>
+                                        <span>{{ row.date|date:"m" }}</span>
+                                        <small>{{ row.date|date:"Y" }}</small>
+                                    </time>
+                                    <span class="aaa-transfer-route">
+                                        <span class="aaa-transfer-crest">
+                                            {% if row.from_crest %}
+                                                <img src="{% static row.from_crest %}" alt="">
+                                            {% else %}
+                                                <em>?</em>
+                                            {% endif %}
+                                        </span>
+                                        <b>&rarr;</b>
+                                        <span class="aaa-transfer-crest">
+                                            {% if row.to_crest %}
+                                                <img src="{% static row.to_crest %}" alt="">
+                                            {% else %}
+                                                <em>?</em>
+                                            {% endif %}
+                                        </span>
+                                    </span>
+                                    <span class="aaa-transfer-expand" aria-hidden="true">+</span>
+                                </summary>
+                                <div class="aaa-transfer-detail">
+                                    <div class="aaa-transfer-detail-grid">
+                                        <section>
+                                            <span>Abgebend</span>
+                                            {% for player_name in row.outgoing_players %}
+                                                <span class="aaa-transfer-player">{{ player_name }}</span>
+                                            {% endfor %}
+                                        </section>
+                                        <section>
+                                            <span>Aufnehmend</span>
+                                            {% for player_name in row.incoming_players %}
+                                                <span class="aaa-transfer-player">{{ player_name }}</span>
+                                            {% endfor %}
+                                        </section>
                                     </div>
-                                    {% if row.swap_player %}
-                                        <a href="{% url 'player_detail' row.swap_player.id %}">{{ row.swap_player.full_name }}</a>
-                                    {% else %}
-                                        <strong>Tauschspieler offen</strong>
-                                    {% endif %}
-                                    <small>{{ row.detail }}</small>
+                                    <div class="aaa-transfer-fee">
+                                        <span>Ablöse</span>
+                                        <strong>{{ row.fee_label }}</strong>
+                                    </div>
                                 </div>
-                            {% endwith %}
+                            </details>
                         {% empty %}
                             <p class="empty-copy">Noch keine Websoccer-Transfers vorhanden.</p>
                         {% endfor %}
@@ -284,6 +293,7 @@
             </div>
         </aside>
 
+        <section class="aaa-profile-showcase">
         <section class="aaa-card aaa-trophy-stage awards-card{% if award_page.has_other_pages %} has-award-pages{% endif %}" id="awards">
             <div class="aaa-awards-background" aria-hidden="true"></div>
             <div class="aaa-awards-lighting" aria-hidden="true"></div>
@@ -359,30 +369,36 @@
                 <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-star"></use></svg></i><strong>{{ career_summary.player_of_match_awards }}</strong><small>Spieler des Spiels</small></span>
             </div>
             {% if career_rows %}
-                <div class="aaa-career-rows">
+                <div class="aaa-career-board">
+                    <div class="aaa-stat-head">
+                        <span>Wettbewerbe</span><span>Sp.</span><span>Tore</span><span>Vorl.</span><span>Min.</span><span>Gelb</span><span>Rot</span><span>Ein/Aus</span><span>SdS</span><span>Note</span>
+                    </div>
+                <div class="aaa-career-rows dashboard-scrollarea">
                     {% for row in career_rows %}
-                        <div class="aaa-career-row performance-lane">
+                        <div class="aaa-career-row performance-lane{% if row.is_preview %} is-preview-row{% endif %}">
                             <span class="aaa-stat-competition">
                                 {% if row.competition_logo %}
                                     <img src="{% static row.competition_logo %}" alt="">
                                 {% endif %}
                                 <b>{{ row.competition }}</b>
                             </span>
-                            <span><b>{{ row.matches }}</b><small>Spiele</small></span>
-                            <span><b>{{ row.goals }}</b><small>Tore</small></span>
-                            <span><b>{{ row.assists }}</b><small>Vorlagen</small></span>
-                            <span><b>{{ row.minutes_played|intcomma }}</b><small>Minuten</small></span>
-                            <span><b>{{ row.yellow_cards }}</b><small>Gelbe</small></span>
-                            <span><b>{{ row.red_cards }}</b><small>Rote</small></span>
-                            <span class="sub-ratio"><b><em>{{ row.substitutions_in }}</em>/<strong>{{ row.substitutions_out }}</strong></b><small>Ein/Aus</small></span>
-                            <span><b>{{ row.player_of_match_awards }}</b><small>SdS</small></span>
+                            <span><b>{{ row.matches }}</b></span>
+                            <span><b>{{ row.goals }}</b></span>
+                            <span><b>{{ row.assists }}</b></span>
+                            <span><b>{{ row.minutes_played|intcomma }}</b></span>
+                            <span><b>{{ row.yellow_cards }}</b></span>
+                            <span><b>{{ row.red_cards }}</b></span>
+                            <span class="sub-ratio"><b><em>{{ row.substitutions_in }}</em>/<strong>{{ row.substitutions_out }}</strong></b></span>
+                            <span><b>{{ row.player_of_match_awards }}</b></span>
                             <span class="grade-badge {{ row.grade_class }}">{% if row.average_grade %}{{ row.average_grade|floatformat:2 }}{% else %}-{% endif %}</span>
                         </div>
                     {% endfor %}
                 </div>
+                </div>
             {% else %}
                 <p class="empty-copy">Noch keine Websoccer-Karrierestatistik vorhanden.</p>
             {% endif %}
+        </section>
         </section>
     </div>
 </section>

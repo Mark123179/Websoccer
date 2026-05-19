@@ -1,0 +1,24 @@
+{% load static %}
+
+<article class="club-profile-card partner-profile-card">
+    <h2 class="club-card-title">PARTNERVEREIN</h2>
+
+    {% if profile.partnerClub %}
+        {% if profile.partnerClub.crestUrl %}
+            {% if profile.partnerClub.profileUrl %}
+                <a class="club-crest-link" href="{{ profile.partnerClub.profileUrl }}" aria-label="{{ profile.partnerClub.name }} Profil">
+                    <img src="{% static profile.partnerClub.crestUrl %}" alt="{{ profile.partnerClub.name }}">
+                </a>
+            {% else %}
+                <img src="{% static profile.partnerClub.crestUrl %}" alt="{{ profile.partnerClub.name }}">
+            {% endif %}
+        {% endif %}
+        <strong>{{ profile.partnerClub.name }}</strong>
+        <span>{{ profile.partnerClub.leagueName }}</span>
+        <small>{{ profile.partnerClub.countryName }}</small>
+    {% else %}
+        <div class="club-empty-state" aria-label="Kein Partnerverein">
+            <strong>Derzeit kein Partnerverein</strong>
+        </div>
+    {% endif %}
+</article>

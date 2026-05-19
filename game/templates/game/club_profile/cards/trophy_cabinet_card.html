@@ -1,0 +1,36 @@
+{% load static %}
+
+<article class="club-profile-card trophy-cabinet-profile-card" data-trophy-card>
+    <h2 class="club-card-title">TROPHÄENSCHRANK</h2>
+
+    <div class="club-trophy-pages">
+        {% for page in profile.trophyPages %}
+            <div class="club-trophy-page is-count-{{ page|length }}{% if forloop.first %} is-active{% endif %}" data-trophy-page="{{ forloop.counter0 }}">
+                {% for trophy in page %}
+                    <figure class="club-trophy-item">
+                        {% if trophy.trophyImageUrl %}
+                            <img src="{% static trophy.trophyImageUrl %}" alt="{{ trophy.competitionName }}">
+                        {% endif %}
+                        <strong>{{ trophy.count }}</strong>
+                        <figcaption>{{ trophy.competitionName }}</figcaption>
+                    </figure>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <nav class="club-trophy-pager" aria-label="Trophäenseiten">
+        <button type="button" data-trophy-prev aria-label="Vorherige Trophäenseite">‹</button>
+        {% for page in profile.trophyPages %}
+            <button
+                type="button"
+                class="{% if forloop.first %}is-active{% endif %}"
+                data-trophy-index="{{ forloop.counter0 }}"
+                aria-label="Trophäenseite {{ forloop.counter }}"
+            >
+                {{ forloop.counter }}
+            </button>
+        {% endfor %}
+        <button type="button" data-trophy-next aria-label="Nächste Trophäenseite">›</button>
+    </nav>
+</article>

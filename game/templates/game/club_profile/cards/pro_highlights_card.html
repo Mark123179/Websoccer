@@ -1,0 +1,9 @@
+<article class="club-profile-card pro-highlights-card">
+    <h2 class="club-card-title">PROFI-HIGHLIGHTS</h2>
+
+    <div class="club-player-grid is-pro">
+        {% for item in profile.proHighlights %}
+            {% include 'game/club_profile/cards/player_highlight_tile.html' with item=item compact=False %}
+        {% endfor %}
+    </div>
+</article>

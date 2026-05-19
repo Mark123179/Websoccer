@@ -1,0 +1,9 @@
+<article class="club-profile-card youth-highlights-card">
+    <h2 class="club-card-title">JUGEND-HIGHLIGHTS</h2>
+
+    <div class="club-player-grid is-youth">
+        {% for item in profile.youthHighlights %}
+            {% include 'game/club_profile/cards/player_highlight_tile.html' with item=item compact=True %}
+        {% endfor %}
+    </div>
+</article>

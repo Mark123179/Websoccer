@@ -1,0 +1,23 @@
+{% load static %}
+
+<article class="club-player-tile{% if compact %} is-compact{% endif %}">
+    <span class="club-player-category">{{ item.category }}</span>
+    <a class="club-player-main-link" href="{{ item.profileUrl }}">
+        <span class="club-player-cutout-wrap">
+            <img class="club-player-cutout" src="{% static item.cutoutUrl %}" alt="{{ item.playerName }}">
+        </span>
+        <strong class="club-player-name-row">
+            {% if item.flagUrl %}
+                <img class="club-player-name-flag" src="{% static item.flagUrl %}" alt="">
+            {% endif %}
+            <span>{{ item.playerName }}</span>
+        </strong>
+    </a>
+    {% if item.metricUrl %}
+        <a class="club-player-metric is-{{ item.metricTone }}" href="{{ item.metricUrl }}" target="_blank" rel="noopener noreferrer">
+            {{ item.metricLabel }}
+        </a>
+    {% else %}
+        <em class="club-player-metric is-{{ item.metricTone }}">{{ item.metricLabel }}</em>
+    {% endif %}
+</article>
