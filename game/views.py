@@ -269,8 +269,22 @@ def stadium_static_path(club):
         return ''
 
     stadium_assets = {
-        907: 'game/images/stadiums/germany/b-dortmund.jpg',
-        915: 'game/images/stadiums/germany/fc-bayern.jpg',
+        907:   'game/images/stadiums/germany/b-dortmund.jpg',
+        908:   'game/images/stadiums/germany/b-gladbach.jpg',
+        909:   'game/images/stadiums/germany/b-leverkusen.jpg',
+        910:   'game/images/stadiums/germany/e-frankfurt.jpg',
+        911:   'game/images/stadiums/germany/mainz.jpg',
+        913:   'game/images/stadiums/germany/stuttgart.jpg',
+        914:   'game/images/stadiums/germany/freiburg.jpg',
+        915:   'game/images/stadiums/germany/fc-bayern.jpg',
+        916:   'game/images/stadiums/germany/wolfsburg.jpg',
+        917:   'game/images/stadiums/germany/bochum.jpg',
+        922:   'game/images/stadiums/germany/st pauli.jpg',
+        5890:  'game/images/stadiums/germany/union berlin.jpg',
+        6430:  'game/images/stadiums/germany/holstein kiel.jpg',
+        6721:  'game/images/stadiums/germany/redbull-leipzig.jpg',
+        12185: 'game/images/stadiums/germany/hoffenheim.jpg',
+        13076: 'game/images/stadiums/germany/heidenheim.jpg',
     }
     return stadium_assets.get(club.fm_inside_id, '')
 
