@@ -129,21 +129,6 @@ def get_cached_nation_static_path(nation_asset_id):
 
 def _find_trophy_source(trophy_asset_id):
     clean_id = str(trophy_asset_id).removesuffix('.png')
-    trophies_root = settings.BASE_DIR.parent / 'Images' / 'Trophies'
-    direct_path = trophies_root / f'{clean_id}.png'
-
-    if direct_path.exists():
-        return direct_path
-
-    symbol_path = settings.BASE_DIR.parent / 'Images' / 'Symbol' / f'{clean_id}.png'
-    if symbol_path.exists():
-        return symbol_path
-
-    if trophies_root.exists():
-        matches = list(trophies_root.rglob(f'{clean_id}.png'))
-        if matches:
-            return matches[0]
-
     static_path = (
         settings.BASE_DIR / 'game' / 'static' / 'game' / 'images' / 'trophies' / f'{clean_id}.png'
     )
