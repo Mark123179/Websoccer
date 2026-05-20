@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 _NT_COMPETITION_KEYS = {'Nationalmannschaft', 'Nationalkader'}
 
 _NATIONALITY_CONFEDERATION = {
@@ -89,7 +93,14 @@ _CONFEDERATION_BADGE = {
 
 
 def nt_competition_logo(nationality):
-    conf = _NATIONALITY_CONFEDERATION.get(nationality or '')
+    key = nationality or ''
+    conf = _NATIONALITY_CONFEDERATION.get(key)
+    if conf is None and key:
+        logger.warning(
+            'nt_competition_logo: nationality %r is not in _NATIONALITY_CONFEDERATION — '
+            'falling back to generic badge',
+            key,
+        )
     return _CONFEDERATION_BADGE.get(conf, 'game/images/competitions/nationalmannschaft.svg')
 
 
