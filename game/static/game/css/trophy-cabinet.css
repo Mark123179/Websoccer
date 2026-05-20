@@ -212,6 +212,34 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
     margin-left: -20px;
 }
 
+.trophy-slot.trophy-rank-1.is-season-award {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: 35px;
+    margin-right: 10px;
+}
+
+.trophy-slot.trophy-rank-2.is-small {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: 20px;
+    margin-right: 10px;
+}
+
+.trophy-slot.trophy-rank-3.is-placeholder {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: 10px;
+    margin-right: 25px;
+}
+
+.trophy-slot.trophy-rank-4.is-placeholder {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: -2px;
+    margin-right: 25px;
+}
+
 .trophy-slot.is-small {
     --trophy-overlap: 0px;
 }
