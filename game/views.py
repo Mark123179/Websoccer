@@ -1826,7 +1826,7 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
         'tactic_option_groups': TACTIC_OPTION_GROUPS,
         'next_match': next_match,
         'match_date_display': tactic_match_date_display(next_match.get('dateLabel')),
-        'competition_logo': competition_logo_static_path(next_match.get('competitionName')),
+        'competition_logo': competition_logo_static_path(next_match.get('competitionName'), next_match.get('ntNationality')),
         'home_club_url': reverse_club_detail(club),
         'away_club_url': reverse_club_detail(opponent_club) if opponent_club else '#',
         'opponent_club': opponent_club,

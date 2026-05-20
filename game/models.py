@@ -376,6 +376,15 @@ class ClubProfileMatch(models.Model):
         blank=True,
     )
     scorers = models.JSONField(default=list, blank=True)
+    nt_nationality = models.CharField(
+        'NT-Nationalität',
+        max_length=60,
+        blank=True,
+        help_text=(
+            'Die Nationalität für NT-Wettbewerbe (z. B. "Deutschland"). '
+            'Wird verwendet, um das richtige Konföderation-Badge anzuzeigen.'
+        ),
+    )
 
     class Meta:
         ordering = ['kind', 'id']
