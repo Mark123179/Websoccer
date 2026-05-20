@@ -198,3 +198,16 @@ a.club-player-metric:hover {
     width: 16px;
     height: 10px;
 }
+
+.club-player-nt-badge {
+    flex: 0 0 14px;
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+.club-player-tile.is-compact .club-player-nt-badge {
+    width: 12px;
+    height: 12px;
+    flex-basis: 12px;
+}

@@ -11,6 +11,9 @@
                 <img class="club-player-name-flag" src="{% static item.flagUrl %}" alt="">
             {% endif %}
             <span>{{ item.playerName }}</span>
+            {% if item.ntBadgeUrl %}
+                <img class="club-player-nt-badge" src="{% static item.ntBadgeUrl %}" alt="">
+            {% endif %}
         </strong>
     </a>
     {% if item.metricUrl %}

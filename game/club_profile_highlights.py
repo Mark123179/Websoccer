@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.urls import reverse
 
+from .competition_assets import competition_logo_static_path
 from .models import PlayerFormSnapshot, PlayerSeasonStat
 
 
@@ -51,6 +52,7 @@ def build_highlights(club, players, season, is_youth):
             'playerName': player.full_name,
             'position': player.main_position_1 or player.position or player.primary_position or '-',
             'flagUrl': primary_flag(player),
+            'ntBadgeUrl': nt_confederation_badge(player),
             'cutoutUrl': player.portrait_static_path,
             'metricLabel': metric_label(metric_key, value),
             'metricTone': metric_key,
@@ -164,6 +166,16 @@ def primary_flag(player):
         if nationality.get('flag_static_path'):
             return nationality['flag_static_path']
     return ''
+
+
+def nt_confederation_badge(player):
+    nt_nationality = (player.nt_nationality or '').strip()
+    if not nt_nationality:
+        badges = player.nationality_badges
+        nt_nationality = badges[0]['name'] if badges else ''
+    if not nt_nationality:
+        return ''
+    return competition_logo_static_path('Nationalmannschaft', nt_nationality)
 
 
 def raw_stat_number(raw_stat):
