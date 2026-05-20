@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from itertools import product
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -946,7 +947,7 @@ def home(request):
         'league_count': League.objects.count(),
         'club_count': Club.objects.count(),
         'player_count': Player.objects.count(),
-        'manager_count': 334,
+        'manager_count': get_user_model().objects.filter(is_active=True).count(),
         'total_budget': Club.objects.aggregate(total=Sum('budget'))['total'] or 0,
         'total_market_value': (
             Player.objects.aggregate(total=Sum('market_value'))['total'] or 0
