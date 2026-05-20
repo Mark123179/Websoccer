@@ -401,15 +401,28 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
     font-size: clamp(10px, 1.2cqw, 13px);
 }
 
-.trophy-label {
+.aaa-awards-labels {
     position: absolute;
-    bottom: 0;
-    left: 50%;
-    z-index: 3;
+    right: 34px;
+    bottom: 20px;
+    left: 34px;
+    z-index: 4;
     display: grid;
-    width: 100%;
-    min-height: 66px;
-    transform: translateX(-50%);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 38px;
+    pointer-events: none;
+}
+
+.aaa-trophy-stage.has-award-pages .aaa-awards-labels {
+    bottom: 88px;
+}
+
+.trophy-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 2px;
     color: #ffffff;
     text-align: center;
     text-shadow: 0 6px 16px rgba(0, 0, 0, 0.82);
