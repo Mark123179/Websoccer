@@ -167,7 +167,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .trophy-slot {
     --podium-bottom: 70px;
-    --podium-height: 88px;
+    --podium-height: 108px;
     --trophy-overlap: 32px;
     position: relative;
     display: flex;
@@ -193,6 +193,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-slot.is-small {
+    --podium-bottom: 50px;
     --trophy-overlap: 79px;
 }
 
@@ -205,7 +206,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     bottom: var(--podium-bottom);
     left: 50%;
     z-index: 1;
-    width: 320px;
+    width: 430px;
     height: var(--podium-height);
     transform: translateX(-50%);
     object-fit: contain;
@@ -213,6 +214,10 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     pointer-events: none;
     user-select: none;
     filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.6)) drop-shadow(0 4px 12px rgba(180, 140, 60, 0.18));
+}
+
+.trophy-slot.is-small .podium {
+    opacity: 0;
 }
 
 .aaa-awards-stage .trophy-img {
@@ -245,8 +250,8 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .aaa-awards-stage .trophy-img.is-small {
-    height: 188px;
-    max-width: min(88%, 245px);
+    height: 260px;
+    max-width: min(94%, 320px);
 }
 
 .aaa-profile-showcase .aaa-trophy-stage .awards-header {
@@ -312,7 +317,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .aaa-profile-showcase .trophy-slot {
     --podium-bottom: clamp(46px, 5.8cqw, 64px);
-    --podium-height: clamp(78px, 9.5cqw, 112px);
+    --podium-height: clamp(96px, 11.8cqw, 136px);
     --trophy-overlap: clamp(30px, 4.2cqw, 48px);
 }
 
@@ -325,7 +330,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .aaa-profile-showcase .aaa-awards-stage .podium {
-    width: clamp(180px, 22cqw, 260px);
+    width: clamp(242px, 29.8cqw, 382px);
 }
 
 .aaa-profile-showcase .aaa-awards-stage .trophy-img {
@@ -345,8 +350,8 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .aaa-profile-showcase .aaa-awards-stage .trophy-img.is-small {
-    height: clamp(134px, 16.2cqw, 208px);
-    max-width: min(90%, clamp(148px, 19cqw, 240px));
+    height: clamp(172px, 21cqw, 268px);
+    max-width: min(96%, clamp(180px, 22cqw, 280px));
 }
 
 .aaa-profile-showcase .trophy-name {
