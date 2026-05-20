@@ -731,6 +731,8 @@ body.overview-home-page {
 .overview-live-widget,
 .overview-stats-widget {
     color: var(--text);
+    display: flex;
+    flex-direction: column;
     font-family: inherit;
     overflow: hidden;
     padding: 16px;

@@ -405,7 +405,7 @@
         <div class="overview-legacy-stack">
             <aside class="dashboard-card overview-card overview-live-widget" aria-label="Livespiele Profis">
                 <h2 class="card-title">Livespiele Profis</h2>
-                {% for match in live_matches|slice:":7" %}
+                {% for match in live_matches|slice:":5" %}
                     <div>
                         <span>{{ match.time }}</span>
                         {% if match.competition_logo %}
@@ -426,7 +426,7 @@
                         <strong>{{ match.away }}</strong>
                     </div>
                 {% endfor %}
-                <a href="/clubs/" style="padding-top: 4px; padding-bottom: 4px; margin-top: 105px; margin-bottom: 105px;">Alle Live-Spiele</a>
+                <a href="/clubs/">Alle Live-Spiele</a>
             </aside>
 
             <aside class="dashboard-card overview-card overview-stats-widget" aria-label="Statistiken">
