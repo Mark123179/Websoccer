@@ -192,8 +192,11 @@
                                 <polyline points="{{ market_polyline }}"></polyline>
                             </svg>
                             {% for point in market_points %}
-                                <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" title="{{ point.full_date_label }} - {{ point.value }}" tabindex="0">
-                                    <span class="market-point-label">{{ point.value }}</span>
+                                <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" tabindex="0" aria-label="{{ point.full_date_label }}: {{ point.value }}">
+                                    <span class="market-point-label">
+                                        <em class="market-point-date">{{ point.full_date_label }}</em>
+                                        <b class="market-point-value">{{ point.value }}</b>
+                                    </span>
                                 </i>
                             {% endfor %}
                         </div>
