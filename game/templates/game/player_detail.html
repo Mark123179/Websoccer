@@ -172,11 +172,19 @@
             <article class="aaa-card aaa-market-card">
                 <div class="aaa-card-heading">
                     <h2>Marktwert</h2>
-                    {% if player.transfermarkt_profile_url %}
-                        <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">{{ player.market_value|floatformat:0|intcomma }} &euro;</a>
-                    {% else %}
-                        <strong class="market-value-large">{{ player.market_value|floatformat:0|intcomma }} &euro;</strong>
-                    {% endif %}
+                    <span class="market-value-group">
+                        {% if player.transfermarkt_profile_url %}
+                            <a class="market-value-large" href="{{ player.transfermarkt_profile_url }}" target="_blank" rel="noopener" title="Transfermarkt-Profil von {{ player.full_name }}">{{ player.market_value|floatformat:0|intcomma }} &euro;</a>
+                        {% else %}
+                            <strong class="market-value-large">{{ player.market_value|floatformat:0|intcomma }} &euro;</strong>
+                        {% endif %}
+                        {% if market_trend %}
+                            <span class="market-trend-badge is-{{ market_trend.direction }}" title="Änderung zum Vorjahreswert">
+                                <svg class="market-trend-arrow" viewBox="0 0 10 10" aria-hidden="true"><polyline points="{% if market_trend.direction == 'up' %}1,8 5,2 9,8{% elif market_trend.direction == 'down' %}1,2 5,8 9,2{% else %}1,5 9,5{% endif %}"/></svg>
+                                <span>{{ market_trend.delta }}</span>
+                            </span>
+                        {% endif %}
+                    </span>
                 </div>
                 <div class="market-chart aaa-market-chart">
                     {% if market_points %}

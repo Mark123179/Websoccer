@@ -221,6 +221,28 @@ def market_chart_points(rows, current_value):
     return points
 
 
+def compute_market_value_trend(rows):
+    valid = [row for row in rows if row.value_eur is not None]
+    if len(valid) < 2:
+        return None
+    prev_value = float(valid[-2].value_eur)
+    curr_value = float(valid[-1].value_eur)
+    delta = curr_value - prev_value
+    if delta > 0:
+        direction = 'up'
+        sign = '+'
+    elif delta < 0:
+        direction = 'down'
+        sign = ''
+    else:
+        direction = 'flat'
+        sign = ''
+    return {
+        'direction': direction,
+        'delta': sign + compact_money(abs(delta)),
+    }
+
+
 def market_chart_axis(points):
     raw_values = [point['numeric_value'] for point in points]
 
@@ -2103,6 +2125,7 @@ def player_detail(request, player_id):
         market_rows,
         player.market_value,
     )
+    market_trend = compute_market_value_trend(market_rows)
     award_total_count = sum(row.count for row in all_award_rows)
     freshness = None
     if hasattr(player, 'strength_profile'):
@@ -2122,6 +2145,7 @@ def player_detail(request, player_id):
                 preview_performance_rows(career_rows_from_ws_stats(all_season_rows), 8)
             ),
             'market_rows': market_rows,
+            'market_trend': market_trend,
             'market_points': market_points,
             'market_axis': market_chart_axis(market_points),
             'market_polyline': market_polyline(market_points),
