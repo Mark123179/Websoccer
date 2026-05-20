@@ -162,7 +162,7 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
 }
 
 .trophy-slot {
-    --podium-bottom: 120px;
+    --podium-bottom: 67px;
     --podium-height: 0px;
     --trophy-overlap: 0px;
     position: relative;
