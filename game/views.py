@@ -283,8 +283,10 @@ def competition_logo_static_path(competition):
         'Champions League': 'game/images/competitions/champions-league.png',
         'CL': 'game/images/competitions/champions-league.png',
         'Supercup': 'game/images/competitions/supercup.png',
-        'Europa League': 'game/images/competitions/europa-league.svg',
-        'EL': 'game/images/competitions/europa-league.svg',
+        'Europa League': 'game/images/competitions/europa-league.png',
+        'EL': 'game/images/competitions/europa-league.png',
+        'Europa Conference League': 'game/images/competitions/europa-conference-league.png',
+        'ECL': 'game/images/competitions/europa-conference-league.png',
         'Nationalmannschaft': 'game/images/competitions/nationalmannschaft.svg',
         'Nationalkader': 'game/images/competitions/nationalmannschaft.svg',
     }
