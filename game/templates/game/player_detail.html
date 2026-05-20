@@ -22,15 +22,13 @@
         <aside class="aaa-left-column">
             <article class="aaa-player-card">
                 <div class="aaa-player-poster">
-                    <span class="aaa-shirt-number">10</span>
-                    {% if player.club and player.club.crest_static_path %}
-                        <img class="aaa-poster-club" src="{% static player.club.crest_static_path %}" alt="{{ player.club.name }}">
+                    {% if shirt_number %}<span class="aaa-shirt-number">{{ shirt_number }}</span>{% endif %}
+                    {% if rl_club_crest %}
+                        <img class="aaa-poster-club" src="{% static rl_club_crest %}" alt="">
                     {% endif %}
-                    {% with nation_crest=player.primary_nation_crest %}
-                        {% if nation_crest.static_path %}
-                            <img class="aaa-poster-nation" src="{% static nation_crest.static_path %}" alt="{{ nation_crest.name }}" title="{{ nation_crest.name }}">
-                        {% endif %}
-                    {% endwith %}
+                    {% if nation_nt_logo %}
+                        <img class="aaa-poster-nation" src="{% static nation_nt_logo %}" alt="" title="{{ player.nationality_badges.0.name }}">
+                    {% endif %}
                     <img class="aaa-player-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
                     <div class="aaa-player-nameplate">
                         <h2>{{ player.full_name }}</h2>

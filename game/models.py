@@ -594,6 +594,11 @@ class Player(models.Model):
         ],
         help_text='Staerkerer Fuss des Spielers.',
     )
+    shirt_number = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='Trikotnummer des Spielers.',
+    )
 
     position = models.CharField(
         max_length=10,

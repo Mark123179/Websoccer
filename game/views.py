@@ -2007,6 +2007,24 @@ def reverse_club_detail(club):
     return f'/clubs/{club.id}/'
 
 
+def _player_nation_nt_logo(player):
+    from django.templatetags.static import static as _static
+    from django.contrib.staticfiles import finders
+
+    badges = player.nationality_badges
+    if not badges:
+        return ''
+    asset_id = badges[0].get('flag_static_path', '').replace('game/images/flags/', '').replace('.svg', '').replace('.png', '')
+    for ext in ('png', 'svg'):
+        nt_path = f'game/images/crests/nt_{asset_id}.{ext}'
+        if finders.find(nt_path):
+            return nt_path
+    flag_path = badges[0].get('flag_static_path', '')
+    if flag_path and finders.find(flag_path):
+        return flag_path
+    return ''
+
+
 def player_detail(request, player_id):
     player = get_object_or_404(
         Player.objects.select_related(
@@ -2088,6 +2106,13 @@ def player_detail(request, player_id):
                 else ''
             ),
             'freshness': freshness,
+            'shirt_number': player.shirt_number,
+            'rl_club_crest': (
+                player.real_life_club.crest_static_path
+                if player.real_life_club
+                else (player.club.crest_static_path if player.club else '')
+            ),
+            'nation_nt_logo': _player_nation_nt_logo(player),
             'game_header': build_game_header(
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",
