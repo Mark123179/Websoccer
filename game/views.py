@@ -11,6 +11,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.db.models import Avg, Count, Sum
 from django.utils import timezone
 from .club_profile import build_club_profile_context
+from .club_profile_highlights import nt_confederation_badge
 from .competition_assets import (
     _NT_COMPETITION_KEYS,
     _NATIONALITY_CONFEDERATION,
@@ -2192,6 +2193,7 @@ def player_detail(request, player_id):
             ),
             'nation_nt_logo': _player_nation_nt_logo(player),
             'nation_nt_name': _player_nation_nt_name(player),
+            'nt_confederation_badge_url': nt_confederation_badge(player),
             'game_header': build_game_header(
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",
