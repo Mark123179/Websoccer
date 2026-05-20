@@ -1,6 +1,6 @@
 .club-identity-card {
     display: grid;
-    grid-template-rows: minmax(158px, 1fr) 82px auto;
+    grid-template-rows: minmax(158px, 1fr) auto auto;
     gap: 14px;
     padding: 16px 18px 14px;
     background:
@@ -130,8 +130,7 @@
     margin-top: 30px;
 }
 
-.club-identity-form span,
-.club-identity-stats dt {
+.club-identity-form span {
     color: var(--club-faint);
     font-size: 12px;
     font-weight: 800;
@@ -169,61 +168,124 @@
 
 .club-identity-stats {
     display: grid;
-    grid-template-columns: minmax(0, 1.12fr) repeat(2, minmax(0, 0.94fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
     margin: 0;
 }
 
-.club-identity-stats div {
-    display: grid;
-    grid-template-columns: 30px minmax(0, 1fr);
+/* ── Stat tile base ── */
+.club-stat-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 5px;
     min-width: 0;
-    padding: 10px;
-    border: 1px solid rgba(95, 220, 235, 0.34);
-    border-radius: 6px;
+    padding: 14px 6px 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.club-stat-tile::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(160deg, rgba(35, 228, 245, 0.13) 0%, rgba(4, 17, 28, 0.0) 55%);
+    pointer-events: none;
+}
+
+/* colour accents per tile */
+.club-stat-tile--value {
+    border: 1px solid rgba(35, 228, 245, 0.36);
     background:
-        radial-gradient(circle at 18% 36%, rgba(35, 228, 245, 0.16), transparent 40%),
-        linear-gradient(180deg, rgba(8, 36, 51, 0.86), rgba(4, 17, 28, 0.92));
+        radial-gradient(ellipse at 50% 0%, rgba(35, 228, 245, 0.18) 0%, transparent 68%),
+        linear-gradient(180deg, rgba(6, 28, 42, 0.94) 0%, rgba(3, 13, 22, 0.97) 100%);
+    box-shadow: 0 0 18px rgba(35, 228, 245, 0.08), inset 0 1px 0 rgba(35, 228, 245, 0.18);
 }
 
-.club-identity-stats div:first-child {
-    padding-left: 10px;
-    border-left: 1px solid rgba(95, 220, 235, 0.34);
+.club-stat-tile--pros {
+    border: 1px solid rgba(100, 220, 130, 0.34);
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(80, 200, 110, 0.18) 0%, transparent 68%),
+        linear-gradient(180deg, rgba(5, 26, 16, 0.94) 0%, rgba(3, 13, 8, 0.97) 100%);
+    box-shadow: 0 0 18px rgba(80, 200, 110, 0.07), inset 0 1px 0 rgba(100, 220, 130, 0.14);
 }
 
-.club-identity-stat-icon {
+.club-stat-tile--youth {
+    border: 1px solid rgba(255, 190, 60, 0.34);
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(255, 175, 40, 0.16) 0%, transparent 68%),
+        linear-gradient(180deg, rgba(26, 18, 4, 0.94) 0%, rgba(14, 10, 3, 0.97) 100%);
+    box-shadow: 0 0 18px rgba(255, 175, 40, 0.07), inset 0 1px 0 rgba(255, 190, 60, 0.14);
+}
+
+/* icon container */
+.club-stat-tile-icon {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
-    color: rgba(122, 232, 248, 0.9);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    margin-bottom: 2px;
 }
 
-.club-identity-stat-icon svg {
-    width: 27px;
-    height: 27px;
+.club-stat-tile--value .club-stat-tile-icon {
+    background: rgba(35, 228, 245, 0.1);
+    color: rgba(35, 228, 245, 0.95);
+    box-shadow: 0 0 12px rgba(35, 228, 245, 0.22);
+}
+
+.club-stat-tile--pros .club-stat-tile-icon {
+    background: rgba(80, 200, 110, 0.1);
+    color: rgba(100, 220, 140, 0.95);
+    box-shadow: 0 0 12px rgba(80, 200, 110, 0.2);
+}
+
+.club-stat-tile--youth .club-stat-tile-icon {
+    background: rgba(255, 175, 40, 0.1);
+    color: rgba(255, 195, 70, 0.95);
+    box-shadow: 0 0 12px rgba(255, 175, 40, 0.2);
+}
+
+.club-stat-tile-icon svg {
+    width: 22px;
+    height: 22px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-width: 1.8;
-    filter: drop-shadow(0 0 8px rgba(35, 228, 245, 0.28));
+    stroke-width: 1.9;
+    filter: drop-shadow(0 0 6px currentColor);
 }
 
+/* value & label */
 .club-identity-stats dd {
-    margin: 5px 0 0;
+    margin: 0;
+    max-width: 100%;
     overflow: hidden;
     color: #ffffff;
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 900;
+    line-height: 1.1;
     text-overflow: ellipsis;
     white-space: nowrap;
+    letter-spacing: -0.01em;
 }
 
-.club-identity-stats div:first-child dd {
-    font-size: 16px;
+.club-identity-stats dt {
+    max-width: 100%;
+    color: rgba(200, 230, 240, 0.52);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: normal;
+    word-break: break-word;
 }
 
 .club-identity-actions {
