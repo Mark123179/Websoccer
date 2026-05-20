@@ -27,7 +27,7 @@
                         <img class="aaa-poster-club" src="{% static rl_club_crest %}" alt="">
                     {% endif %}
                     {% if nation_nt_logo %}
-                        <img class="aaa-poster-nation" src="{% static nation_nt_logo %}" alt="" title="{{ player.nationality_badges.0.name }}">
+                        <img class="aaa-poster-nation" src="{% static nation_nt_logo %}" alt="" title="{{ nation_nt_name }}">
                     {% endif %}
                     <img class="aaa-player-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
                     <div class="aaa-player-nameplate">

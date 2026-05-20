@@ -2066,20 +2066,36 @@ def reverse_club_detail(club):
 
 
 def _player_nation_nt_logo(player):
-    from django.templatetags.static import static as _static
     from django.contrib.staticfiles import finders
+    from game.models import COUNTRY_FLAG_ASSETS
 
-    badges = player.nationality_badges
-    if not badges:
-        return ''
-    asset_id = badges[0].get('flag_static_path', '').replace('game/images/flags/', '').replace('.svg', '').replace('.png', '')
+    registered = (player.nt_nationality or '').strip()
+    if registered and registered in COUNTRY_FLAG_ASSETS:
+        asset_id = COUNTRY_FLAG_ASSETS[registered]['asset_id']
+        flag_path = f'game/images/flags/{asset_id}.svg'
+    else:
+        badges = player.nationality_badges
+        if not badges:
+            return ''
+        asset_id = badges[0].get('flag_static_path', '').replace('game/images/flags/', '').replace('.svg', '').replace('.png', '')
+        flag_path = badges[0].get('flag_static_path', '')
+
     for ext in ('png', 'svg'):
         nt_path = f'game/images/crests/nt_{asset_id}.{ext}'
         if finders.find(nt_path):
             return nt_path
-    flag_path = badges[0].get('flag_static_path', '')
     if flag_path and finders.find(flag_path):
         return flag_path
+    return ''
+
+
+def _player_nation_nt_name(player):
+    registered = (player.nt_nationality or '').strip()
+    if registered:
+        return registered
+    badges = player.nationality_badges
+    if badges:
+        return badges[0].get('name', '')
     return ''
 
 
@@ -2173,6 +2189,7 @@ def player_detail(request, player_id):
                 else (player.club.crest_static_path if player.club else '')
             ),
             'nation_nt_logo': _player_nation_nt_logo(player),
+            'nation_nt_name': _player_nation_nt_name(player),
             'game_header': build_game_header(
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",

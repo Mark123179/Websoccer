@@ -74,6 +74,15 @@ class PlayerNationalityForm(forms.ModelForm):
         required=False,
         label='Nationalitaet 2',
     )
+    nt_nationality = forms.ChoiceField(
+        choices=NATIONALITY_CHOICES,
+        required=False,
+        label='NT-Nation (registriert)',
+        help_text=(
+            'Die Nation, für die der Spieler international registriert ist. '
+            'Leer lassen, um automatisch die erste Nationalität zu verwenden.'
+        ),
+    )
 
     class Meta:
         model = Player
@@ -107,6 +116,9 @@ class PlayerNationalityForm(forms.ModelForm):
 
         if len(nationalities) > 1:
             self.fields['nationality_2'].initial = nationalities[1]
+
+        if self.instance and self.instance.nt_nationality:
+            self.fields['nt_nationality'].initial = self.instance.nt_nationality
 
     def clean(self):
         cleaned_data = super().clean()
@@ -148,6 +160,7 @@ class PlayerNationalityForm(forms.ModelForm):
             if self.cleaned_data.get(nationality)
         ]
         instance.nationalities = ', '.join(nationalities)
+        instance.nt_nationality = self.cleaned_data.get('nt_nationality') or ''
         instance.position = self.cleaned_data.get('main_position_1') or ''
         instance.primary_position = self.cleaned_data.get('secondary_position_1') or ''
         instance.source_positions = self.cleaned_data.get('secondary_position_1') or ''
@@ -681,6 +694,7 @@ class PlayerAdmin(admin.ModelAdmin):
                         'nationality_1',
                         'nationality_2',
                     ),
+                    'nt_nationality',
                     (
                         'market_value',
                         'salary_per_match',

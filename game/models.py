@@ -578,6 +578,16 @@ class Player(models.Model):
         max_length=150,
         blank=True
     )
+    nt_nationality = models.CharField(
+        'Nationalmannschafts-Nation',
+        max_length=60,
+        blank=True,
+        help_text=(
+            'Die Nation, für die der Spieler international registriert ist. '
+            'Wird für das NT-Badge auf dem Spielerprofil verwendet. '
+            'Leer lassen, um automatisch die erste Nationalität zu verwenden.'
+        ),
+    )
     age = models.IntegerField()
     height_cm = models.PositiveSmallIntegerField(
         null=True,
