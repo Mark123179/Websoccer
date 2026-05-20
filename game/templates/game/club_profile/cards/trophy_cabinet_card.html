@@ -18,7 +18,7 @@
                     {% else %}
                         {% with num=forloop.counter|stringformat:"d" %}
                         {% with src="game/images/trophies/default-"|add:num|add:".png" %}
-                        <figure class="club-trophy-item club-trophy-empty" aria-hidden="true">
+                        <figure class="club-trophy-item club-trophy-empty club-trophy-ghost-{{ num }}" aria-hidden="true">
                             <img src="{% static src %}" alt="">
                         </figure>
                         {% endwith %}

@@ -53,6 +53,10 @@
     filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
 }
 
+.club-trophy-ghost-2 img { margin-top: 2px; margin-bottom: 2px; }
+.club-trophy-ghost-3 img { margin-top: 5px; margin-bottom: 5px; }
+.club-trophy-ghost-4 img { margin-top: 3px; margin-bottom: 3px; }
+
 .club-trophy-item img {
     position: relative;
     z-index: 2;
