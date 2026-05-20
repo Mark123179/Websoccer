@@ -186,11 +186,12 @@
                             <span>{{ market_axis.mid }}</span>
                             <span>{{ market_axis.min }}</span>
                         </div>
-                        <div class="market-plot">
+                        <div class="market-plot" id="marketPlot">
                             <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                                 <polygon points="{{ market_area_points }}"></polygon>
                                 <polyline points="{{ market_polyline }}"></polyline>
                             </svg>
+                            <div class="market-crosshair" id="marketCrosshair" aria-hidden="true"></div>
                             {% for point in market_points %}
                                 <i class="{% if forloop.first %}is-edge-start{% endif %}{% if forloop.last %} is-edge-end{% endif %}" style="left: {{ point.x }}%; top: {{ point.y }}%;" tabindex="0" aria-label="{{ point.full_date_label }}: {{ point.value }}">
                                     <span class="market-point-label">
@@ -416,4 +417,71 @@
     </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+(function () {
+    var plot = document.getElementById('marketPlot');
+    if (!plot) return;
+    var crosshair = document.getElementById('marketCrosshair');
+    var dots = Array.from(plot.querySelectorAll('i[style]'));
+    if (!dots.length) return;
+
+    var xPositions = dots.map(function (dot) {
+        return parseFloat(dot.style.left);
+    });
+
+    var activeIndex = -1;
+
+    function snapTo(index) {
+        if (index === activeIndex) return;
+        if (activeIndex >= 0) dots[activeIndex].classList.remove('is-snap');
+        activeIndex = index;
+        dots[index].classList.add('is-snap');
+        crosshair.style.left = dots[index].style.left;
+        crosshair.style.opacity = '1';
+    }
+
+    function hide() {
+        if (activeIndex >= 0) dots[activeIndex].classList.remove('is-snap');
+        activeIndex = -1;
+        crosshair.style.opacity = '0';
+    }
+
+    function nearestIndex(pct) {
+        var best = 0;
+        var bestDist = Math.abs(xPositions[0] - pct);
+        for (var i = 1; i < xPositions.length; i++) {
+            var d = Math.abs(xPositions[i] - pct);
+            if (d < bestDist) { bestDist = d; best = i; }
+        }
+        return best;
+    }
+
+    function pctFromEvent(e, rect) {
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        return Math.max(0, Math.min(100, (clientX - rect.left) / rect.width * 100));
+    }
+
+    plot.addEventListener('mousemove', function (e) {
+        snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+    });
+
+    plot.addEventListener('mouseleave', hide);
+
+    plot.addEventListener('touchstart', function (e) {
+        snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+    }, { passive: true });
+
+    plot.addEventListener('touchmove', function (e) {
+        snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+    }, { passive: true });
+
+    plot.addEventListener('touchend', function () {
+        setTimeout(hide, 800);
+    });
+}());
+</script>
 {% endblock %}

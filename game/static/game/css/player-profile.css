@@ -216,9 +216,25 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 }
 
 .is-aaa-profile .market-chart i:hover .market-point-label,
-.is-aaa-profile .market-chart i:focus .market-point-label {
+.is-aaa-profile .market-chart i:focus .market-point-label,
+.is-aaa-profile .market-chart i.is-snap .market-point-label {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+.is-aaa-profile .market-crosshair {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: rgba(34, 239, 240, 0.72);
+    box-shadow: 0 0 8px rgba(34, 239, 240, 0.55);
+    opacity: 0;
+    pointer-events: none;
+    will-change: left, opacity;
+    transform: translateX(-50%);
+    border-radius: 1px;
 }
 
 .is-aaa-profile .market-chart i.is-edge-start .market-point-label {
@@ -232,7 +248,8 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 }
 
 .is-aaa-profile .market-chart i.is-edge-start:hover .market-point-label,
-.is-aaa-profile .market-chart i.is-edge-start:focus .market-point-label {
+.is-aaa-profile .market-chart i.is-edge-start:focus .market-point-label,
+.is-aaa-profile .market-chart i.is-edge-start.is-snap .market-point-label {
     transform: translateX(0) translateY(0);
 }
 
@@ -249,7 +266,8 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 }
 
 .is-aaa-profile .market-chart i.is-edge-end:hover .market-point-label,
-.is-aaa-profile .market-chart i.is-edge-end:focus .market-point-label {
+.is-aaa-profile .market-chart i.is-edge-end:focus .market-point-label,
+.is-aaa-profile .market-chart i.is-edge-end.is-snap .market-point-label {
     transform: translateX(0) translateY(0);
 }
 
