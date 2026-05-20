@@ -777,7 +777,10 @@
     .dashboard-scaler.dashboard-scaler .start-dashboard,
     .dashboard-scaler.dashboard-scaler .club-dashboard,
     .dashboard-scaler.dashboard-scaler .list-dashboard,
-    .dashboard-scaler.dashboard-scaler .player-dashboard {
+    .dashboard-scaler.dashboard-scaler .player-dashboard,
+    .dashboard-scaler.dashboard-scaler .tactics-dashboard,
+    .dashboard-scaler.dashboard-scaler .club-profile-shell,
+    .dashboard-scaler.dashboard-scaler .is-aaa-profile {
         min-height: calc(100vh / var(--dashboard-scale));
     }
 }
