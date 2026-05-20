@@ -434,6 +434,7 @@
     });
 
     var activeIndex = -1;
+    var touchLocked = false;
 
     function snapTo(index) {
         if (index === activeIndex) return;
@@ -472,16 +473,27 @@
     plot.addEventListener('mouseleave', hide);
 
     plot.addEventListener('touchstart', function (e) {
-        snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+        if (touchLocked) {
+            hide();
+            touchLocked = false;
+        } else {
+            snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+            touchLocked = true;
+        }
     }, { passive: true });
 
     plot.addEventListener('touchmove', function (e) {
-        snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+        if (!touchLocked) {
+            snapTo(nearestIndex(pctFromEvent(e, plot.getBoundingClientRect())));
+        }
     }, { passive: true });
 
-    plot.addEventListener('touchend', function () {
-        setTimeout(hide, 800);
-    });
+    document.addEventListener('touchstart', function (e) {
+        if (touchLocked && !plot.contains(e.target)) {
+            hide();
+            touchLocked = false;
+        }
+    }, { passive: true });
 }());
 </script>
 {% endblock %}
