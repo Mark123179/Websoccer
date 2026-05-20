@@ -624,6 +624,8 @@ def transfer_display_rows(rows):
             'date': transfer_date,
             'from_crest': visible_from_club.crest_static_path if visible_from_club else '',
             'to_crest': visible_to_club.crest_static_path if visible_to_club else '',
+            'from_club_url': reverse_club_detail(visible_from_club) if visible_from_club else '',
+            'to_club_url': reverse_club_detail(visible_to_club) if visible_to_club else '',
             'fee_label': fee_label or sample_fees[index % len(sample_fees)],
             'outgoing_players': transfer_detail_players(
                 candidate_players,
@@ -780,6 +782,8 @@ def home(request):
             'date': date(2026, 7, index + 1),
             'from_crest': player.club.crest_static_path if player.club else '',
             'to_crest': primary_club.crest_static_path if primary_club else '',
+            'from_club_url': f'/clubs/{player.club.id}/' if player.club else '',
+            'to_club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
             'fee_label': money_label(player.market_value) or money_full_eur(player.market_value),
             'from_label': player.club.short_name if player.club else 'Abgebend',
             'to_label': primary_club.short_name if primary_club else 'Zielverein',
@@ -880,18 +884,21 @@ def home(request):
                 'name': top_scorer_label,
                 'meta': '18 Tore',
                 'portrait': top_scorer_portrait,
+                'player_id': primary_top_scorer.id if primary_top_scorer else None,
             },
             {
                 'title': 'Wertvollster Spieler',
                 'name': market_player_label,
                 'meta': market_player_value,
                 'portrait': market_player_portrait,
+                'player_id': primary_market_player.id if primary_market_player else None,
             },
             {
                 'title': 'Notenbester Spieler',
                 'name': grade_player_label,
                 'meta': grade_player_value,
                 'portrait': grade_player_portrait,
+                'player_id': primary_grade_player.id if primary_grade_player else None,
             },
         ],
         'city_static_path': city_static_path(primary_club),
@@ -938,6 +945,7 @@ def home(request):
             'club_name': club.name if club else fallback[0],
             'short_name': club.short_name if club else fallback[1],
             'crest_static_path': club.crest_static_path if club else '',
+            'club_url': f'/clubs/{club.id}/' if club else '',
             'played': 33,
             'goals': table_goals[index],
             'goal_difference': table_diff[index],
@@ -1005,34 +1013,42 @@ def home(request):
                 {
                     'name': 'bojankrkic',
                     'crest': primary_club.crest_static_path if primary_club else '',
+                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
                 },
                 {
                     'name': 'husteguz92',
                     'crest': secondary_club.crest_static_path if secondary_club else '',
+                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
                 },
                 {
                     'name': 'Doppel_Loewen Power',
                     'crest': primary_club.crest_static_path if primary_club else '',
+                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
                 },
                 {
                     'name': 'FootballMaster2017',
                     'crest': secondary_club.crest_static_path if secondary_club else '',
+                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
                 },
                 {
                     'name': 'Fohlenmeister',
                     'crest': primary_club.crest_static_path if primary_club else '',
+                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
                 },
                 {
                     'name': 'Ilundehund',
                     'crest': secondary_club.crest_static_path if secondary_club else '',
+                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
                 },
                 {
                     'name': 'Schae',
                     'crest': primary_club.crest_static_path if primary_club else '',
+                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
                 },
                 {
                     'name': 'Beppi',
                     'crest': secondary_club.crest_static_path if secondary_club else '',
+                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
                 },
             ],
             'chat_messages': [
@@ -1080,6 +1096,8 @@ def home(request):
                     'away': secondary_club.short_name if secondary_club else 'FOR',
                     'home_crest': primary_club.crest_static_path if primary_club else '',
                     'away_crest': secondary_club.crest_static_path if secondary_club else '',
+                    'home_url': f'/clubs/{primary_club.id}/' if primary_club else '',
+                    'away_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1088,6 +1106,8 @@ def home(request):
                     'away': 'KAS',
                     'home_crest': secondary_club.crest_static_path if secondary_club else '',
                     'away_crest': '',
+                    'home_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
+                    'away_url': '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1096,6 +1116,8 @@ def home(request):
                     'away': 'RMA',
                     'home_crest': primary_club.crest_static_path if primary_club else '',
                     'away_crest': '',
+                    'home_url': f'/clubs/{primary_club.id}/' if primary_club else '',
+                    'away_url': '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1104,6 +1126,8 @@ def home(request):
                     'away': primary_club.short_name if primary_club else 'ASK',
                     'home_crest': secondary_club.crest_static_path if secondary_club else '',
                     'away_crest': primary_club.crest_static_path if primary_club else '',
+                    'home_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
+                    'away_url': f'/clubs/{primary_club.id}/' if primary_club else '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1112,6 +1136,8 @@ def home(request):
                     'away': 'ROM',
                     'home_crest': primary_club.crest_static_path if primary_club else '',
                     'away_crest': '',
+                    'home_url': f'/clubs/{primary_club.id}/' if primary_club else '',
+                    'away_url': '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1120,6 +1146,8 @@ def home(request):
                     'away': 'S04',
                     'home_crest': secondary_club.crest_static_path if secondary_club else '',
                     'away_crest': '',
+                    'home_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
+                    'away_url': '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1128,6 +1156,8 @@ def home(request):
                     'away': 'SGE',
                     'home_crest': primary_club.crest_static_path if primary_club else '',
                     'away_crest': '',
+                    'home_url': f'/clubs/{primary_club.id}/' if primary_club else '',
+                    'away_url': '',
                     'competition_logo': competition_logo_static_path_value,
                 },
                 {
@@ -1136,6 +1166,8 @@ def home(request):
                     'away': 'SVW',
                     'home_crest': secondary_club.crest_static_path if secondary_club else '',
                     'away_crest': '',
+                    'home_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
+                    'away_url': '',
                     'competition_logo': competition_logo_static_path_value,
                 },
             ],

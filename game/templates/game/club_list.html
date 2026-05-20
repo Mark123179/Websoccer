@@ -63,7 +63,9 @@
                                 <td>
                                     <span class="club-name-cell">
                                         {% if club.crest_static_path %}
-                                            <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                                            <a class="img-link" href="/clubs/{{ club.id }}/" aria-label="{{ club.name }} Vereinsprofil">
+                                                <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                                            </a>
                                         {% endif %}
                                         <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
                                     </span>

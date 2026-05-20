@@ -24,7 +24,9 @@
 
             <div class="overview-club-main">
                 {% if primary_club and primary_club.crest_static_path %}
-                    <img class="overview-club-crest" src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                    <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
+                        <img class="overview-club-crest" src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                    </a>
                 {% endif %}
 
                 <div class="overview-club-identity">
@@ -83,7 +85,13 @@
                         <strong>{{ spotlight.name }}</strong>
                         <small>{{ spotlight.meta }}</small>
                         {% if spotlight.portrait %}
-                            <img src="{% static spotlight.portrait %}" alt="{{ spotlight.name }}">
+                            {% if spotlight.player_id %}
+                                <a class="img-link" href="/players/{{ spotlight.player_id }}/" aria-label="Spielerprofil">
+                                    <img src="{% static spotlight.portrait %}" alt="{{ spotlight.name }}">
+                                </a>
+                            {% else %}
+                                <img src="{% static spotlight.portrait %}" alt="{{ spotlight.name }}">
+                            {% endif %}
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -107,7 +115,9 @@
             <div class="overview-fixture">
                 <div class="overview-team">
                     {% if primary_club and primary_club.crest_static_path %}
-                        <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                        <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
+                            <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                        </a>
                     {% endif %}
                     <strong>
                         {% if primary_club %}
@@ -122,7 +132,9 @@
 
                 <div class="overview-team">
                     {% if secondary_club and secondary_club.crest_static_path %}
-                        <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                        <a class="img-link" href="/clubs/{{ secondary_club.id }}/" aria-label="{{ secondary_club.name }} Vereinsprofil">
+                            <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                        </a>
                     {% endif %}
                     <strong>
                         {% if secondary_club %}
@@ -149,7 +161,9 @@
             <div class="overview-result" style="margin-top: -5px;">
                 <div class="overview-team compact">
                     {% if primary_club and primary_club.crest_static_path %}
-                        <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}" style="margin-left: -23px; margin-right: -23px;">
+                        <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
+                            <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}" style="margin-left: -23px; margin-right: -23px;">
+                        </a>
                     {% endif %}
                     <strong>
                         {% if primary_club %}
@@ -162,7 +176,9 @@
                 <span style="text-align: center; margin-left: -16px; margin-right: -16px; margin-top: -26px; margin-bottom: 0; padding: 0;">9-9</span>
                 <div class="overview-team compact">
                     {% if secondary_club and secondary_club.crest_static_path %}
-                        <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}" style="margin-left: -4px; margin-right: -4px;">
+                        <a class="img-link" href="/clubs/{{ secondary_club.id }}/" aria-label="{{ secondary_club.name }} Vereinsprofil">
+                            <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}" style="margin-left: -4px; margin-right: -4px;">
+                        </a>
                     {% endif %}
                     <strong>
                         {% if secondary_club %}
@@ -205,7 +221,9 @@
                 {% for manager in active_managers %}
                     <div>
                         {% if manager.crest %}
-                            <img class="overview-manager-crest" src="{% static manager.crest %}" alt="">
+                            <a class="img-link" href="{{ manager.club_url }}" aria-label="Vereinsprofil">
+                                <img class="overview-manager-crest" src="{% static manager.crest %}" alt="">
+                            </a>
                         {% else %}
                             <span class="overview-manager-crest is-empty"></span>
                         {% endif %}
@@ -271,7 +289,9 @@
                             <span class="overview-transfer-clubs">
                                 <span class="overview-transfer-crest">
                                     {% if row.from_crest %}
-                                        <img src="{% static row.from_crest %}" alt="{{ row.from_label }}">
+                                        <a class="img-link" href="{{ row.from_club_url }}" aria-label="Vereinsprofil">
+                                            <img src="{% static row.from_crest %}" alt="{{ row.from_label }}">
+                                        </a>
                                     {% else %}
                                         <em>?</em>
                                     {% endif %}
@@ -279,7 +299,9 @@
                                 <b>&rarr;</b>
                                 <span class="overview-transfer-crest">
                                     {% if row.to_crest %}
-                                        <img src="{% static row.to_crest %}" alt="{{ row.to_label }}">
+                                        <a class="img-link" href="{{ row.to_club_url }}" aria-label="Vereinsprofil">
+                                            <img src="{% static row.to_crest %}" alt="{{ row.to_label }}">
+                                        </a>
                                     {% else %}
                                         <em>?</em>
                                     {% endif %}
@@ -335,7 +357,9 @@
                             <td>{{ row.position }}</td>
                             <td>
                                 {% if row.crest_static_path %}
-                                    <img src="{% static row.crest_static_path %}" alt="{{ row.club_name }}">
+                                    <a class="img-link" href="{{ row.club_url }}" aria-label="{{ row.club_name }} Vereinsprofil">
+                                        <img src="{% static row.crest_static_path %}" alt="{{ row.club_name }}">
+                                    </a>
                                 {% endif %}
                                 <span>{{ row.short_name }}</span>
                             </td>
@@ -412,14 +436,18 @@
                             <img class="overview-live-competition" src="{% static match.competition_logo %}" alt="">
                         {% endif %}
                         {% if match.home_crest %}
-                            <img class="overview-live-crest" src="{% static match.home_crest %}" alt="{{ match.home }}">
+                            <a class="img-link" href="{{ match.home_url }}" aria-label="{{ match.home }} Vereinsprofil">
+                                <img class="overview-live-crest" src="{% static match.home_crest %}" alt="{{ match.home }}">
+                            </a>
                         {% else %}
                             <span class="overview-live-crest is-empty"></span>
                         {% endif %}
                         <strong>{{ match.home }}</strong>
                         <b>-</b>
                         {% if match.away_crest %}
-                            <img class="overview-live-crest" src="{% static match.away_crest %}" alt="{{ match.away }}">
+                            <a class="img-link" href="{{ match.away_url }}" aria-label="{{ match.away }} Vereinsprofil">
+                                <img class="overview-live-crest" src="{% static match.away_crest %}" alt="{{ match.away }}">
+                            </a>
                         {% else %}
                             <span class="overview-live-crest is-empty"></span>
                         {% endif %}

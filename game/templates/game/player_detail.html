@@ -60,7 +60,9 @@
                         <span>WS-Verein</span>
                         <strong>
                             {% if player.club and player.club.crest_static_path %}
-                                <img src="{% static player.club.crest_static_path %}" alt="">
+                                <a class="img-link" href="/clubs/{{ player.club.id }}/" aria-label="{{ player.club.name }} Vereinsprofil">
+                                    <img src="{% static player.club.crest_static_path %}" alt="">
+                                </a>
                             {% endif %}
                             {{ player.club.name|default:"ohne WS-Verein" }}
                         </strong>
@@ -246,7 +248,9 @@
                                     <span class="aaa-transfer-route">
                                         <span class="aaa-transfer-crest">
                                             {% if row.from_crest %}
-                                                <img src="{% static row.from_crest %}" alt="">
+                                                <a class="img-link" href="{{ row.from_club_url }}" aria-label="Vereinsprofil">
+                                                    <img src="{% static row.from_crest %}" alt="">
+                                                </a>
                                             {% else %}
                                                 <em>?</em>
                                             {% endif %}
@@ -254,7 +258,9 @@
                                         <b>&rarr;</b>
                                         <span class="aaa-transfer-crest">
                                             {% if row.to_crest %}
-                                                <img src="{% static row.to_crest %}" alt="">
+                                                <a class="img-link" href="{{ row.to_club_url }}" aria-label="Vereinsprofil">
+                                                    <img src="{% static row.to_crest %}" alt="">
+                                                </a>
                                             {% else %}
                                                 <em>?</em>
                                             {% endif %}

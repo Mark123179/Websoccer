@@ -1673,3 +1673,24 @@ body.overview-home-page {
 }
 
 /* Frueherer 2x2-Breakpoint entfernt — wird durch Dashboard-Scaler abgeloest */
+
+
+/* ── Global img-link utility ─────────────────────────────────────────────
+   Wraps any crest or player-portrait img in a transparent <a> so the img
+   is clickable without disrupting the surrounding layout.
+   Hover: subtle cyan outline + pointer cursor on the child image.
+────────────────────────────────────────────────────────────────────────── */
+a.img-link {
+    display: contents;
+}
+a.img-link > img {
+    cursor: pointer;
+    transition: outline 0.12s ease, opacity 0.12s ease;
+}
+a.img-link:hover > img,
+a.img-link:focus-visible > img {
+    opacity: 0.85;
+    outline: 2px solid #00e5cc;
+    outline-offset: 3px;
+    border-radius: 2px;
+}
