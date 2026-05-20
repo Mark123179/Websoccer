@@ -1520,16 +1520,8 @@ body.overview-home-page {
    RESPONSIVE BREAKPOINTS
    ============================================================ */
 
-@media (max-width: 1400px) {
-    .overview-grid {
-        grid-template-rows:
-            clamp(280px, 24vw, 340px)
-            clamp(260px, 22vw, 320px)
-            clamp(240px, 20vw, 290px);
-    }
-}
-
-@media (max-width: 1280px) {
+/* Single-column Mobile-Fallback (Scaler ist hier inaktiv, da <900px) */
+@media (max-width: 899px) {
     .overview-grid {
         grid-template-columns: repeat(12, minmax(0, 1fr));
         grid-template-rows: none;
@@ -1651,50 +1643,4 @@ body.overview-home-page {
     }
 }
 
-/* ============================================================
-   BREAKPOINT 1650px — Row 1 wird zu 2x2 Layout
-   Bei 1281–1650px Viewport:
-   - Club + Naechstes Spiel bekommen je 12 Spalten (50%) in Zeile 1
-   - Letztes Spiel + Manager bekommen je 12 Spalten (50%) in Zeile 2
-   - Restliche Karten ruecken eine Zeile nach unten
-   So bekommt jede Karte ~600px statt der gequetschten 200-400px.
-   ============================================================ */
-@media (max-width: 1650px) and (min-width: 1281px) {
-    .overview-grid {
-        grid-template-rows:
-            clamp(265px, 21vw, 320px)
-            clamp(265px, 21vw, 320px)
-            clamp(260px, 22vw, 320px)
-            clamp(240px, 20vw, 290px);
-    }
-
-    .overview-club-card {
-        grid-column: 1 / span 12;
-        grid-row: 1;
-    }
-    .overview-next-match-card {
-        grid-column: 13 / span 12;
-        grid-row: 1;
-    }
-    .overview-last-match-card {
-        grid-column: 1 / span 12;
-        grid-row: 2;
-    }
-    .overview-manager-widget {
-        grid-column: 13 / span 12;
-        grid-row: 2;
-    }
-
-    .overview-chat-card,
-    .overview-transfer-card,
-    .overview-table-card {
-        grid-row: 3;
-    }
-
-    .overview-club-news-card,
-    .overview-sim-news-card,
-    .overview-social-card,
-    .overview-legacy-stack {
-        grid-row: 4;
-    }
-}
+/* Frueherer 2x2-Breakpoint entfernt — wird durch Dashboard-Scaler abgeloest */

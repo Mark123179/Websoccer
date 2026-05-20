@@ -728,3 +728,62 @@
             gap: 16px;
             grid-template-columns: 1fr 0.82fr;
         }
+
+/* ============================================================
+   DASHBOARD SCALER — Identische Struktur auf allen Viewports
+   Skaliert das gesamte Layout (Sidebar + Content) proportional
+   wie ein Bild. Bei Viewports >= 1884px: native Groesse (1.0x).
+   Bei kleineren Viewports: gleichmaessig herunterskaliert.
+   Unter 900px: Scaler aus, klassisches Mobile-Layout greift.
+   ============================================================ */
+
+@media (min-width: 900px) {
+    html,
+    body {
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+        padding: 0;
+        width: 100vw;
+    }
+
+    .dashboard-scaler {
+        --sidebar: 232px;
+        --dashboard-scale: min(1, calc(100vw / 1884px));
+        height: calc(100vh / var(--dashboard-scale));
+        left: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        position: absolute;
+        top: 0;
+        transform: scale(var(--dashboard-scale));
+        transform-origin: top left;
+        width: 1884px;
+    }
+
+    /* Navbar fuellt jetzt 100% der Scaler-Hoehe (nicht mehr 100vh,
+       weil 100vh sich auf das echte Viewport bezieht und nicht
+       auf die natuerliche Hoehe des skalierten Containers) */
+    .dashboard-scaler .navbar {
+        height: 100%;
+    }
+
+    /* Container und Dashboard-Wrapper muessen ebenfalls die volle
+       Scaler-Hoehe fuellen, sonst entsteht unten Leerraum nach
+       dem Skalieren. Doppelter Klassen-Selektor erhoeht Specificity
+       genug, um seitenspezifische Overrides wie
+       `.overview-home-page .start-dashboard { min-height: 100vh }` zu schlagen. */
+    .dashboard-scaler.dashboard-scaler .container,
+    .dashboard-scaler.dashboard-scaler .start-dashboard,
+    .dashboard-scaler.dashboard-scaler .club-dashboard,
+    .dashboard-scaler.dashboard-scaler .list-dashboard,
+    .dashboard-scaler.dashboard-scaler .player-dashboard {
+        min-height: calc(100vh / var(--dashboard-scale));
+    }
+}
+
+@media (max-width: 899px) {
+    .dashboard-scaler {
+        width: 100%;
+    }
+}
