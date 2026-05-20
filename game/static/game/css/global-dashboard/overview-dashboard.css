@@ -429,7 +429,11 @@ body.overview-home-page {
 
 .form-strip {
     display: flex;
+    font-size: 17px;
     gap: 5px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    opacity: 1;
 }
 
 .form-strip b {
