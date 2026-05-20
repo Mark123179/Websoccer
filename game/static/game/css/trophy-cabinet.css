@@ -184,8 +184,32 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
 }
 
 .trophy-slot.trophy-rank-1.is-tall {
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: 25px;
+    margin-right: 0;
+    padding: 0;
+}
+
+.trophy-slot.trophy-rank-2.is-default {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: 6px;
+    margin-right: 0;
+}
+
+.trophy-slot.trophy-rank-3.is-wide {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: -20px;
+    margin-right: 0;
+    padding-left: 0;
+}
+
+.trophy-slot.trophy-rank-4.is-default {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: -20px;
 }
 
 .trophy-slot.is-small {
