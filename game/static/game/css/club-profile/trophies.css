@@ -52,8 +52,9 @@
     background-image: url("../../images/trophies/ghost-strip.png");
     background-size: 400% auto;
     background-repeat: no-repeat;
-    background-position-y: 40%;
-    opacity: 0.52;
+    background-position-y: 30%;
+    mix-blend-mode: screen;
+    opacity: 0.85;
 }
 
 .club-trophy-ghost-1 { background-position-x: 0%; }
