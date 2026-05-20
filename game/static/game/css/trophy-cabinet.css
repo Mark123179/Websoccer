@@ -219,6 +219,7 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
     height: 203px;
     max-width: min(90%, 264px);
     object-fit: contain;
+    object-position: center bottom;
     transform: translateX(-50%);
     pointer-events: none;
     user-select: none;
