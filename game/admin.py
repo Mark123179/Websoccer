@@ -294,6 +294,7 @@ class ClubProfileMatchAdmin(admin.ModelAdmin):
         'club',
         'kind',
         'competition_name',
+        'nt_nationality',
         'matchday_label',
         'home_club',
         'away_club',
@@ -304,6 +305,32 @@ class ClubProfileMatchAdmin(admin.ModelAdmin):
         'club__name',
         'competition_name',
         'matchday_label',
+    )
+    fieldsets = (
+        (None, {
+            'fields': ('club', 'kind'),
+        }),
+        ('Competition', {
+            'fields': ('competition_name', 'nt_nationality'),
+            'description': (
+                'For national team fixtures, set NT Nationality to the nation '
+                'whose badge should appear on the match card.'
+            ),
+        }),
+        ('Match details', {
+            'fields': (
+                'matchday_label',
+                'date_label',
+                'time_label',
+                'stadium_name',
+                'home_club',
+                'away_club',
+                'home_goals',
+                'away_goals',
+                'result_label',
+                'scorers',
+            ),
+        }),
     )
 
 
