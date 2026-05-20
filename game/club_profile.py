@@ -170,6 +170,7 @@ def build_match(club, opponent_club, kind, links):
         'awayGoals': 0,
         'resultLabel': 'UNENTSCHIEDEN',
         'resultTone': 'draw',
+        'backgroundImageUrl': stadium_image_for(club),
         'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
         'scorers': [],
     }
@@ -184,7 +185,7 @@ def build_table(club, opponent_club):
             table_clubs.append(candidate)
             seen_ids.add(candidate.id)
     for candidate in Club.objects.exclude(id__in=seen_ids).order_by('-budget', 'name'):
-        if len(table_clubs) >= 5:
+        if len(table_clubs) >= 7:
             break
         table_clubs.append(candidate)
         seen_ids.add(candidate.id)
@@ -194,13 +195,15 @@ def build_table(club, opponent_club):
         ('VfB Stuttgart', 'VFB'),
         ('RB Leipzig', 'RBL'),
         ('Eintracht Frankfurt', 'SGE'),
+        ('Borussia Dortmund', 'BVB'),
+        ('Wolfsburg', 'WOB'),
     ]
-    while len(table_clubs) < 5:
+    while len(table_clubs) < 7:
         table_clubs.append(None)
 
-    points = [78, 68, 63, 59, 55]
-    diffs = [67, 37, 28, 17, 15]
-    for index, candidate in enumerate(table_clubs[:5]):
+    points = [78, 68, 63, 59, 55, 50, 46]
+    diffs = [67, 37, 28, 17, 15, 8, 2]
+    for index, candidate in enumerate(table_clubs[:7]):
         fallback = fallback_names[(index - 1) % len(fallback_names)]
         rows.append({
             'position': index + 1,
@@ -216,7 +219,7 @@ def build_table(club, opponent_club):
 
     if not any(row['isCurrentClub'] for row in rows):
         rows[-1] = {
-            'position': 5,
+            'position': 7,
             'clubId': str(club.id),
             'clubName': club.short_name,
             'clubCrestUrl': club.crest_static_path,

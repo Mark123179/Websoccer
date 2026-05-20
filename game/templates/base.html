@@ -62,24 +62,25 @@
             </div>
         </form>
 
+        {% with url_name=request.resolver_match.url_name %}
         <div class="nav-menu">
-            <a href="/">
+            <a href="/"{% if url_name == 'home' %} aria-current="page"{% endif %}>
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/uebersicht.svg' %}" alt=""></span>
                 Übersicht
             </a>
-            <a href="/forum/">
+            <a href="/forum/"{% if url_name == 'forum' %} aria-current="page"{% endif %}>
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/verein.svg' %}" alt=""></span>
                 Zum Forum
             </a>
-            <a href="{{ current_manager.club_url }}">
+            <a href="{{ current_manager.club_url }}"{% if url_name == 'club_detail' or url_name == 'club_table' or url_name == 'club_match_preview' or url_name == 'club_match_report' or url_name == 'club_news' %} aria-current="page"{% endif %}>
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/verein.svg' %}" alt=""></span>
                 Verein
             </a>
-            <a href="{{ current_manager.club_url }}">
+            <a href="{{ current_manager.club_url }}"{% if url_name == 'club_professional_squad' or url_name == 'club_youth_squad' %} aria-current="page"{% endif %}>
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/kader.svg' %}" alt=""></span>
                 Kader
             </a>
-            <a href="{{ current_manager.tactics_url }}">
+            <a href="{{ current_manager.tactics_url }}"{% if url_name == 'club_tactics' %} aria-current="page"{% endif %}>
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/taktik.svg' %}" alt=""></span>
                 Taktik
             </a>
@@ -104,6 +105,7 @@
                 Community
             </a>
         </div>
+        {% endwith %}
 
         <a class="creator-mode-button" href="{% url 'creator_index' %}">
             <span>Manager</span>

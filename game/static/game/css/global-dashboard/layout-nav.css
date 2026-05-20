@@ -388,7 +388,7 @@
             height: 18px;
             width: 18px;
         }
-        .nav-menu a:first-child {
+        .nav-menu a[aria-current="page"] {
             background: linear-gradient(90deg, rgba(34, 230, 255, 0.2), rgba(34, 230, 255, 0.06));
             border-color: var(--line-strong);
             color: var(--text);
