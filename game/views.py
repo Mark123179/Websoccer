@@ -538,7 +538,7 @@ def performance_visual_rows(rows):
     return visual_rows
 
 
-def preview_performance_rows(rows, minimum_count=6):
+def preview_performance_rows(rows, minimum_count=6, nt_nationality=None):
     if not rows or len(rows) >= minimum_count:
         return rows
 
@@ -563,7 +563,7 @@ def preview_performance_rows(rows, minimum_count=6):
         result.append({
             'season_label': rows[0].get('season_label', '#1'),
             'competition': competition,
-            'competition_logo': competition_logo_static_path(competition),
+            'competition_logo': competition_logo_static_path(competition, nt_nationality),
             'matches': sample[1],
             'goals': sample[2],
             'assists': sample[3],
@@ -2193,18 +2193,31 @@ def player_detail(request, player_id):
     if hasattr(player, 'strength_profile'):
         freshness = player.strength_profile.freshness
 
+    nt_nationality = (
+        player.nt_nationality
+        or (player.nationalities.split(',')[0].strip() if player.nationalities else None)
+    )
+
     return render(
         request,
         'game/player_detail.html',
         {
             'player': player,
             'season_rows': performance_visual_rows(
-                preview_performance_rows(season_table_rows(season_rows, nt_nationality=player.nt_nationality or (player.nationalities.split(',')[0].strip() if player.nationalities else None)), 6)
+                preview_performance_rows(
+                    season_table_rows(season_rows, nt_nationality=nt_nationality),
+                    6,
+                    nt_nationality=nt_nationality,
+                )
             ),
             'season_summary': career_summary_from_ws_stats(season_rows),
             'career_summary': career_summary_from_ws_stats(all_season_rows),
             'career_rows': performance_visual_rows(
-                preview_performance_rows(career_rows_from_ws_stats(all_season_rows, nt_nationality=player.nt_nationality or (player.nationalities.split(',')[0].strip() if player.nationalities else None)), 8)
+                preview_performance_rows(
+                    career_rows_from_ws_stats(all_season_rows, nt_nationality=nt_nationality),
+                    8,
+                    nt_nationality=nt_nationality,
+                )
             ),
             'market_rows': market_rows,
             'market_trend': market_trend,
