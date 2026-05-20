@@ -144,6 +144,12 @@ def _find_trophy_source(trophy_asset_id):
         if matches:
             return matches[0]
 
+    static_path = (
+        settings.BASE_DIR / 'game' / 'static' / 'game' / 'images' / 'trophies' / f'{clean_id}.png'
+    )
+    if static_path.exists():
+        return static_path
+
     return None
 
 
