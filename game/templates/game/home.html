@@ -143,7 +143,7 @@
             <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielvorschau</a>
         </article>
 
-        <article class="dashboard-card overview-card overview-last-match-card"{% if home_stadium_static_path %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
+        <article class="dashboard-card overview-card overview-last-match-card"{% if last_match_home_stadium_static_path %} style="--overview-card-bg: url('{% static last_match_home_stadium_static_path %}');"{% endif %}>
             <h2 class="card-title">Letztes Spiel</h2>
 
             <div class="overview-result" style="margin-top: -5px;">
