@@ -166,9 +166,9 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-slot {
-    --podium-bottom: 70px;
-    --podium-height: 95px;
-    --trophy-overlap: 42px;
+    --podium-bottom: 42px;
+    --podium-height: 188px;
+    --trophy-overlap: 15px;
     position: relative;
     display: flex;
     align-items: flex-end;
@@ -193,12 +193,11 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-slot.is-small {
-    --podium-bottom: 50px;
-    --trophy-overlap: 111px;
+    --trophy-overlap: 15px;
 }
 
 .trophy-slot.is-season-award {
-    --trophy-overlap: 50px;
+    --trophy-overlap: 15px;
 }
 
 .aaa-awards-stage .podium {
@@ -206,11 +205,10 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     bottom: var(--podium-bottom);
     left: 50%;
     z-index: 1;
-    width: 540px;
-    height: var(--podium-height);
+    width: 460px;
+    height: auto;
     transform: translateX(-50%);
-    object-fit: cover;
-    object-position: center 27%;
+    object-fit: contain;
     pointer-events: none;
     user-select: none;
     filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.6)) drop-shadow(0 4px 12px rgba(180, 140, 60, 0.18));
@@ -322,23 +320,24 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .aaa-profile-showcase .trophy-slot {
-    --podium-bottom: clamp(46px, 5.8cqw, 64px);
-    --podium-height: clamp(68px, 8.4cqw, 92px);
-    --trophy-overlap: clamp(30px, 3.7cqw, 40px);
+    --podium-bottom: clamp(28px, 3.4cqw, 44px);
+    --podium-height: clamp(126px, 15.5cqw, 195px);
+    --trophy-overlap: clamp(10px, 1.2cqw, 15px);
 }
 
 .aaa-profile-showcase .trophy-slot.is-small {
-    --trophy-overlap: clamp(68px, 8.4cqw, 105px);
+    --trophy-overlap: clamp(10px, 1.2cqw, 15px);
 }
 
 .aaa-profile-showcase .trophy-slot.is-season-award {
-    --trophy-overlap: clamp(36px, 4.4cqw, 48px);
+    --trophy-overlap: clamp(10px, 1.2cqw, 15px);
 }
 
 .aaa-profile-showcase .aaa-awards-stage .podium {
     width: clamp(308px, 37.9cqw, 478px);
-    object-fit: cover;
-    object-position: center 27%;
+    height: auto;
+    object-fit: contain;
+    object-position: initial;
 }
 
 .aaa-profile-showcase .aaa-awards-stage .trophy-img {

@@ -340,6 +340,8 @@
                         <img class="podium" src="{% static 'game/images/trophies/podest.png' %}" alt="" aria-hidden="true">
                         {% if slot.image_path %}
                             <img class="trophy-img is-{{ slot.shape }}" src="{% static slot.image_path %}{% if slot.asset_version %}?v={{ slot.asset_version }}{% endif %}" alt="{{ slot.title }}">
+                        {% elif slot.is_placeholder %}
+                            <img class="trophy-img is-default" src="{% static 'game/images/trophies/default.png' %}" alt="" aria-hidden="true">
                         {% endif %}
                         {% if slot.is_placeholder %}
                             <figcaption class="trophy-label trophy-placeholder-label" aria-hidden="true">
