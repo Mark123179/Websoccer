@@ -47,7 +47,9 @@
                             {% else %}
                                 <span class="ws-fixture-meta">{{ day.fixture.meta }}</span>
                             {% endif %}
-                            <span class="ws-lineup-state" aria-hidden="true"></span>
+                            {% if day.fixture.lineup_saved %}
+                                <span class="ws-lineup-state" aria-hidden="true"></span>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </article>

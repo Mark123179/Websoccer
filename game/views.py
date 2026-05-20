@@ -1135,11 +1135,18 @@ def home(request):
                 },
             ],
             'overview_stats': [
-                {'value': '517', 'label': 'registrierte Manager'},
-                {'value': '398', 'label': 'Profiteams in 20 Ligen'},
-                {'value': '160', 'label': 'Jugendteams in 8 Ligen'},
-                {'value': '63', 'label': 'Nationalteams'},
-                {'value': '15963', 'label': 'Spieler'},
+                {'value': str(totals['manager_count']), 'label': 'registrierte Manager'},
+                {
+                    'value': str(totals['club_count']),
+                    'label': 'Profiteam{} in {} Liga{}'.format(
+                        's' if totals['club_count'] != 1 else '',
+                        totals['league_count'],
+                        'en' if totals['league_count'] != 1 else '',
+                    ),
+                },
+                {'value': '0', 'label': 'Jugendteams'},
+                {'value': '0', 'label': 'Nationalteams'},
+                {'value': str(totals['player_count']), 'label': 'Spieler'},
             ],
             'totals': totals,
             'game_header': build_game_header(

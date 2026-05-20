@@ -240,9 +240,6 @@
     width: 7px;
 }
 
-.ws-calendar-day.is-open .ws-lineup-state {
-    color: #e61010;
-}
 
 @media (max-width: 1450px) {
     .ws-game-header {

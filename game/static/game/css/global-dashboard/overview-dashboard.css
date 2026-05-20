@@ -804,7 +804,7 @@ body.overview-home-page {
     border-radius: 5px;
     display: grid;
     gap: 5px;
-    grid-template-columns: 20px minmax(0, 1fr) 8px;
+    grid-template-columns: 20px minmax(0, 1fr) 8px 14px;
     min-height: 24px;
     padding: 3px 6px;
     transition: background 120ms ease, border-color 120ms ease;
@@ -840,6 +840,30 @@ body.overview-home-page {
     display: block;
     height: 7px;
     width: 7px;
+}
+
+.overview-manager-msg {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.35);
+    display: flex;
+    justify-content: center;
+    opacity: 0.6;
+    transition: color 150ms ease, opacity 150ms ease;
+}
+
+.overview-manager-msg:hover {
+    color: var(--cyan);
+    opacity: 1;
+}
+
+.overview-manager-msg svg {
+    fill: none;
+    height: 13px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    width: 13px;
 }
 
 /* ============================================================

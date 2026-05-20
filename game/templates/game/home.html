@@ -211,6 +211,12 @@
                         {% endif %}
                         <strong>{{ manager.name }}</strong>
                         <i aria-hidden="true"></i>
+                        <a class="overview-manager-msg" href="/inbox/" aria-label="Nachricht an {{ manager.name }}">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                <path d="m2 7 10 7 10-7"></path>
+                            </svg>
+                        </a>
                     </div>
                 {% endfor %}
             </div>
