@@ -167,8 +167,8 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .trophy-slot {
     --podium-bottom: 70px;
-    --podium-height: 210px;
-    --trophy-overlap: 36px;
+    --podium-height: 95px;
+    --trophy-overlap: 42px;
     position: relative;
     display: flex;
     align-items: flex-end;
@@ -194,11 +194,11 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .trophy-slot.is-small {
     --podium-bottom: 50px;
-    --trophy-overlap: 99px;
+    --trophy-overlap: 111px;
 }
 
 .trophy-slot.is-season-award {
-    --trophy-overlap: 60px;
+    --trophy-overlap: 50px;
 }
 
 .aaa-awards-stage .podium {
@@ -210,7 +210,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     height: var(--podium-height);
     transform: translateX(-50%);
     object-fit: cover;
-    object-position: center 50%;
+    object-position: center 27%;
     pointer-events: none;
     user-select: none;
     filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.6)) drop-shadow(0 4px 12px rgba(180, 140, 60, 0.18));
@@ -323,22 +323,22 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .aaa-profile-showcase .trophy-slot {
     --podium-bottom: clamp(46px, 5.8cqw, 64px);
-    --podium-height: clamp(130px, 16cqw, 165px);
-    --trophy-overlap: clamp(26px, 3.2cqw, 40px);
+    --podium-height: clamp(68px, 8.4cqw, 92px);
+    --trophy-overlap: clamp(30px, 3.7cqw, 40px);
 }
 
 .aaa-profile-showcase .trophy-slot.is-small {
-    --trophy-overlap: clamp(70px, 8.6cqw, 108px);
+    --trophy-overlap: clamp(68px, 8.4cqw, 105px);
 }
 
 .aaa-profile-showcase .trophy-slot.is-season-award {
-    --trophy-overlap: clamp(42px, 5.2cqw, 66px);
+    --trophy-overlap: clamp(36px, 4.4cqw, 48px);
 }
 
 .aaa-profile-showcase .aaa-awards-stage .podium {
     width: clamp(308px, 37.9cqw, 478px);
     object-fit: cover;
-    object-position: center 50%;
+    object-position: center 27%;
 }
 
 .aaa-profile-showcase .aaa-awards-stage .trophy-img {
