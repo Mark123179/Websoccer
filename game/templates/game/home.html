@@ -146,10 +146,10 @@
         <article class="dashboard-card overview-card overview-last-match-card"{% if home_stadium_static_path %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
             <h2 class="card-title">Letztes Spiel</h2>
 
-            <div class="overview-result">
+            <div class="overview-result" style="margin-top: -5px;">
                 <div class="overview-team compact">
                     {% if primary_club and primary_club.crest_static_path %}
-                        <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                        <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}" style="margin-left: -23px; margin-right: -23px;">
                     {% endif %}
                     <strong>
                         {% if primary_club %}
@@ -159,10 +159,10 @@
                         {% endif %}
                     </strong>
                 </div>
-                <span>2 - 1</span>
+                <span style="text-align: center; margin-left: -16px; margin-right: -16px; margin-top: -26px; margin-bottom: 0; padding: 0;">9-9</span>
                 <div class="overview-team compact">
                     {% if secondary_club and secondary_club.crest_static_path %}
-                        <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                        <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}" style="margin-left: -4px; margin-right: -4px;">
                     {% endif %}
                     <strong>
                         {% if secondary_club %}
