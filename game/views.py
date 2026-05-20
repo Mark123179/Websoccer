@@ -273,7 +273,53 @@ def market_area_points(points):
     return f"8,92 {market_polyline(points)} 92,92"
 
 
-def competition_logo_static_path(competition):
+_NT_COMPETITION_KEYS = {'Nationalmannschaft', 'Nationalkader'}
+
+_NATIONALITY_CONFEDERATION = {
+    'Deutschland':        'uefa',
+    'England':            'uefa',
+    'Frankreich':         'uefa',
+    'Irland':             'uefa',
+    'Italien':            'uefa',
+    'Kroatien':           'uefa',
+    'Norwegen':           'uefa',
+    'Österreich':         'uefa',
+    'Portugal':           'uefa',
+    'Schweden':           'uefa',
+    'Schweiz':            'uefa',
+    'Serbien':            'uefa',
+    'Türkei':             'uefa',
+    'Brasilien':          'conmebol',
+    'Kolumbien':          'conmebol',
+    'Algerien':           'caf',
+    'Elfenbeinküste':     'caf',
+    'Gambia':             'caf',
+    'Guinea':             'caf',
+    'Guinea-Bissau':      'caf',
+    'Liberia':            'caf',
+    'Libyen':             'caf',
+    'Nigeria':            'caf',
+    'Senegal':            'caf',
+    'Japan':              'afc',
+    'Südkorea':           'afc',
+}
+
+_CONFEDERATION_BADGE = {
+    'uefa':     'game/images/competitions/nt-uefa.png',
+    'conmebol': 'game/images/competitions/nt-conmebol.png',
+    'caf':      'game/images/competitions/nt-caf.png',
+    'afc':      'game/images/competitions/nt-afc.png',
+}
+
+
+def nt_competition_logo(nationality):
+    conf = _NATIONALITY_CONFEDERATION.get(nationality or '')
+    return _CONFEDERATION_BADGE.get(conf, 'game/images/competitions/nationalmannschaft.svg')
+
+
+def competition_logo_static_path(competition, nt_nationality=None):
+    if competition in _NT_COMPETITION_KEYS:
+        return nt_competition_logo(nt_nationality)
     assets = {
         '1. Bundesliga': 'game/images/competitions/bundesliga.png',
         'Bundesliga': 'game/images/competitions/bundesliga.png',
@@ -287,8 +333,6 @@ def competition_logo_static_path(competition):
         'EL': 'game/images/competitions/europa-league.png',
         'Europa Conference League': 'game/images/competitions/europa-conference-league.png',
         'ECL': 'game/images/competitions/europa-conference-league.png',
-        'Nationalmannschaft': 'game/images/competitions/nationalmannschaft.svg',
-        'Nationalkader': 'game/images/competitions/nationalmannschaft.svg',
     }
     return assets.get(competition, '')
 
@@ -428,12 +472,12 @@ def grade_badge_class(grade):
     return 'grade-disaster'
 
 
-def season_table_rows(rows):
+def season_table_rows(rows, nt_nationality=None):
     return [
         {
             'season_label': f"#{row.season_number}",
             'competition': row.competition,
-            'competition_logo': competition_logo_static_path(row.competition),
+            'competition_logo': competition_logo_static_path(row.competition, nt_nationality),
             'matches': row.matches,
             'goals': row.goals,
             'assists': row.assists,
@@ -538,13 +582,13 @@ def preview_performance_rows(rows, minimum_count=6):
     return result
 
 
-def career_rows_from_ws_stats(rows):
+def career_rows_from_ws_stats(rows, nt_nationality=None):
     grouped = {}
 
     for row in rows:
         bucket = grouped.setdefault(row.competition, {
             'competition': row.competition,
-            'competition_logo': competition_logo_static_path(row.competition),
+            'competition_logo': competition_logo_static_path(row.competition, nt_nationality),
             'matches': 0,
             'goals': 0,
             'assists': 0,
@@ -2155,12 +2199,12 @@ def player_detail(request, player_id):
         {
             'player': player,
             'season_rows': performance_visual_rows(
-                preview_performance_rows(season_table_rows(season_rows), 6)
+                preview_performance_rows(season_table_rows(season_rows, nt_nationality=player.nt_nationality or player.nationalities.split(',')[0].strip() if player.nationalities else None), 6)
             ),
             'season_summary': career_summary_from_ws_stats(season_rows),
             'career_summary': career_summary_from_ws_stats(all_season_rows),
             'career_rows': performance_visual_rows(
-                preview_performance_rows(career_rows_from_ws_stats(all_season_rows), 8)
+                preview_performance_rows(career_rows_from_ws_stats(all_season_rows, nt_nationality=player.nt_nationality or player.nationalities.split(',')[0].strip() if player.nationalities else None), 8)
             ),
             'market_rows': market_rows,
             'market_trend': market_trend,
