@@ -123,6 +123,7 @@ def build_match(club, opponent_club, kind, links):
             'id': str(match.id),
             'competitionName': match.competition_name,
             'ntNationality': match.nt_nationality,
+            'competitionLogoUrl': competition_logo_static_path(match.competition_name, match.nt_nationality),
             'matchdayLabel': match.matchday_label,
             'homeClub': club_stub(home_club),
             'awayClub': club_stub(away_club),

@@ -9,6 +9,9 @@
     <h2 class="club-card-title">LETZTES SPIEL</h2>
 
     <p class="club-match-competition">
+        {% if profile.lastMatch.competitionLogoUrl %}
+            <img src="{% static profile.lastMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
+        {% endif %}
         {{ profile.lastMatch.competitionName }} · {{ profile.lastMatch.matchdayLabel }}
     </p>
 

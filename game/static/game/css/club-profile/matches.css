@@ -8,6 +8,17 @@
     text-align: center;
 }
 
+.club-match-competition-logo {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    max-width: 16px;
+    max-height: 16px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+
 .next-match-profile-card .club-match-competition {
     margin-top: 14px;
     color: #ffffff;
