@@ -11,8 +11,8 @@
                         {% if trophy.trophyImageUrl %}
                             <img src="{% static trophy.trophyImageUrl %}" alt="{{ trophy.competitionName }}">
                         {% endif %}
-                        <strong>{{ trophy.count }}</strong>
-                        <figcaption>{{ trophy.competitionName }}</figcaption>
+                        <strong style="margin-top: 220px;{% if forloop.first %} margin-left: -9px;{% endif %}{% if forloop.last %} margin-right: -20px;{% endif %}">{{ trophy.count }}</strong>
+                        <figcaption style="margin-bottom: -20px;{% if forloop.first %} margin-left: -10px;{% endif %}{% if forloop.last %} margin-right: -25px;{% endif %}">{{ trophy.competitionName }}</figcaption>
                     </figure>
                 {% endfor %}
             </div>
