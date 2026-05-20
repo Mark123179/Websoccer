@@ -25,20 +25,6 @@
     height: 100%;
 }
 
-.club-trophy-page.is-count-1 {
-    grid-template-columns: minmax(96px, 132px);
-    justify-content: center;
-}
-
-.club-trophy-page.is-count-2 {
-    grid-template-columns: repeat(2, minmax(96px, 132px));
-    justify-content: center;
-}
-
-.club-trophy-page.is-count-3 {
-    grid-template-columns: repeat(3, minmax(96px, 132px));
-    justify-content: center;
-}
 
 .club-trophy-page.is-active {
     display: grid;

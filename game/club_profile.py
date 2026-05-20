@@ -432,8 +432,8 @@ def format_number(value):
 
 def chunk_list(items, size):
     if not items:
-        return [[]]
+        return [[None] * size]
     return [
-        items[index:index + size]
+        (items[index:index + size] + [None] * size)[:size]
         for index in range(0, len(items), size)
     ]
