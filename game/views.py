@@ -261,6 +261,10 @@ def competition_logo_static_path(competition):
         'Champions League': 'game/images/competitions/champions-league.png',
         'CL': 'game/images/competitions/champions-league.png',
         'Supercup': 'game/images/competitions/supercup.png',
+        'Europa League': 'game/images/competitions/europa-league.svg',
+        'EL': 'game/images/competitions/europa-league.svg',
+        'Nationalmannschaft': 'game/images/competitions/nationalmannschaft.svg',
+        'Nationalkader': 'game/images/competitions/nationalmannschaft.svg',
     }
     return assets.get(competition, '')
 
