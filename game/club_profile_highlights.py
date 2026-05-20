@@ -1,12 +1,15 @@
 import hashlib
+import logging
 import re
 from collections import defaultdict
 from decimal import Decimal
 
 from django.urls import reverse
 
-from .competition_assets import competition_logo_static_path
+from .competition_assets import competition_logo_static_path, _NATIONALITY_CONFEDERATION
 from .models import PlayerFormSnapshot, PlayerSeasonStat
+
+logger = logging.getLogger(__name__)
 
 
 CURRENT_SEASON = '2026/27'
@@ -170,11 +173,29 @@ def primary_flag(player):
 
 def nt_confederation_badge(player):
     nt_nationality = (player.nt_nationality or '').strip()
+
     if not nt_nationality:
         badges = player.nationality_badges
-        nt_nationality = badges[0]['name'] if badges else ''
+        nt_nationality = badges[0].get('name', '') if badges else ''
+
     if not nt_nationality:
-        return ''
+        logger.warning(
+            'nt_confederation_badge: player %s (id=%s) has no nt_nationality and no '
+            'nationality_badges — using generic NT badge.',
+            getattr(player, 'full_name', repr(player)),
+            getattr(player, 'id', '?'),
+        )
+        return competition_logo_static_path('Nationalmannschaft', '')
+
+    if nt_nationality not in _NATIONALITY_CONFEDERATION:
+        logger.warning(
+            'nt_confederation_badge: nationality %r for player %s (id=%s) is not in '
+            '_NATIONALITY_CONFEDERATION — falling back to generic NT badge.',
+            nt_nationality,
+            getattr(player, 'full_name', repr(player)),
+            getattr(player, 'id', '?'),
+        )
+
     return competition_logo_static_path('Nationalmannschaft', nt_nationality)
 
 
