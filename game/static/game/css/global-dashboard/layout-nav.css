@@ -771,8 +771,8 @@
     /* Container und Dashboard-Wrapper muessen ebenfalls die volle
        Scaler-Hoehe fuellen, sonst entsteht unten Leerraum nach
        dem Skalieren. Doppelter Klassen-Selektor erhoeht Specificity
-       genug, um seitenspezifische Overrides wie
-       `.overview-home-page .start-dashboard { min-height: 100vh }` zu schlagen. */
+       genug, um kuenftige seitenspezifische min-height-Overrides
+       zu schlagen. */
     .dashboard-scaler.dashboard-scaler .container,
     .dashboard-scaler.dashboard-scaler .start-dashboard,
     .dashboard-scaler.dashboard-scaler .club-dashboard,
