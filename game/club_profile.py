@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.urls import reverse
 
 from .club_profile_highlights import CURRENT_SEASON, build_highlights, compact_money
+from .competition_assets import competition_logo_static_path
 from .models import (
     COUNTRY_FLAG_ASSETS,
     Club,
@@ -384,20 +385,6 @@ def country_flag_static_path(country_name):
     if not asset:
         return ''
     return f"game/images/flags/{asset['asset_id']}.svg"
-
-
-def competition_logo_static_path(competition):
-    assets = {
-        '1. Bundesliga': 'game/images/competitions/bundesliga.png',
-        'Bundesliga': 'game/images/competitions/bundesliga.png',
-        'Websoccer Liga': 'game/images/competitions/websoccer-liga.svg',
-        'DFB-Pokal': 'game/images/competitions/dfb-pokal.png',
-        'Pokal': 'game/images/competitions/dfb-pokal.png',
-        'Champions League': 'game/images/competitions/champions-league.png',
-        'CL': 'game/images/competitions/champions-league.png',
-        'Supercup': 'game/images/competitions/supercup.png',
-    }
-    return assets.get(competition, '')
 
 
 def city_static_path(club):
