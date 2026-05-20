@@ -442,9 +442,9 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 @media (max-width: 1180px) {
     .aaa-awards-stage {
-right: 28px;
-left: 28px;
-gap: 24px;
+right: clamp(14px, 2.4vw, 28px);
+left: clamp(14px, 2.4vw, 28px);
+gap: clamp(12px, 2.0vw, 24px);
     }
 
     .aaa-trophy-stage .aaa-card-heading h2 {
@@ -452,24 +452,24 @@ padding-right: 0;
     }
 
     .aaa-award-total {
-min-width: 96px;
-grid-template-columns: 38px auto;
-column-gap: 8px;
+min-width: clamp(72px, 8.1vw, 96px);
+grid-template-columns: clamp(28px, 3.2vw, 38px) auto;
+column-gap: clamp(5px, 0.7vw, 8px);
     }
 
     .aaa-award-total img {
-width: 42px;
-height: 42px;
+width: clamp(28px, 3.6vw, 42px);
+height: clamp(28px, 3.6vw, 42px);
     }
 
     .aaa-award-total strong {
-font-size: 31px;
+font-size: clamp(20px, 2.6vw, 31px);
     }
 }
 
 @media (max-width: 900px) {
     .aaa-trophy-stage.awards-card {
-min-height: 980px;
+min-height: clamp(580px, 109vw, 980px);
     }
 
     .aaa-trophy-stage .awards-header {
@@ -478,7 +478,7 @@ top: auto;
 right: auto;
 left: auto;
 z-index: 4;
-margin-bottom: 28px;
+margin-bottom: clamp(14px, 3.1vw, 28px);
     }
 
     .aaa-trophy-stage .aaa-card-heading h2 {
@@ -492,14 +492,14 @@ right: auto;
 bottom: auto;
 left: auto;
 grid-template-columns: repeat(2, minmax(0, 1fr));
-grid-template-rows: repeat(2, minmax(410px, 1fr));
+grid-template-rows: repeat(2, minmax(clamp(280px, 45.5vw, 410px), 1fr));
 height: auto;
-min-height: 860px;
-gap: 28px;
+min-height: clamp(460px, 95.5vw, 860px);
+gap: clamp(14px, 3.1vw, 28px);
     }
 
     .trophy-slot {
-min-height: 410px;
+min-height: clamp(280px, 45.5vw, 410px);
     }
 
     .aaa-award-pagination {
@@ -507,6 +507,6 @@ position: relative;
 right: auto;
 bottom: auto;
 left: auto;
-margin-top: 28px;
+margin-top: clamp(14px, 3.1vw, 28px);
     }
 }
