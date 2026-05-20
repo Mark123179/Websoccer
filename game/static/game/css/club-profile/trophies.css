@@ -49,8 +49,8 @@
 }
 
 .club-trophy-empty img {
-    opacity: 0.35;
-    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.6));
+    opacity: 0.5;
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.5));
 }
 
 .club-trophy-item img {
