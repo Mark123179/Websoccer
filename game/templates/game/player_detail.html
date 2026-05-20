@@ -212,10 +212,13 @@
             <div class="aaa-history-grid">
                 <div class="aaa-event-grid">
                     <article class="aaa-card aaa-event-card is-injury-card">
-                        <div class="aaa-card-heading"><h2>Letzte 5 Verletzungen</h2></div>
+                        <div class="aaa-card-heading">
+                            <h2>Letzte 5 Verletzungen</h2>
+                            <img class="aaa-event-section-icon" src="{% static 'game/images/icons/verletzungen.png' %}" alt="" aria-hidden="true">
+                        </div>
                         <div class="aaa-event-list">
                             {% for injury in injury_rows %}
-                                <div><time>{{ injury.start_date|date:"d.m.Y" }}</time><strong>{{ injury.injury_type }}</strong><small>{{ injury.days_missed }} Tage</small></div>
+                                <div><img class="aaa-event-icon is-injury" src="{% static 'game/images/icons/verletzungen.png' %}" alt=""><time>{{ injury.start_date|date:"d.m.Y" }}</time><strong>{{ injury.injury_type }}</strong><small>{{ injury.days_missed }} Tage</small></div>
                             {% empty %}
                                 <p class="empty-copy">Keine Websoccer-Verletzungen protokolliert.</p>
                             {% endfor %}
@@ -223,10 +226,13 @@
                     </article>
 
                     <article class="aaa-card aaa-event-card">
-                        <div class="aaa-card-heading"><h2>Letzte 5 Sperren</h2></div>
+                        <div class="aaa-card-heading">
+                            <h2>Letzte 5 Sperren</h2>
+                            <img class="aaa-event-section-icon" src="{% static 'game/images/icons/sperren.png' %}" alt="" aria-hidden="true">
+                        </div>
                         <div class="aaa-event-list">
                             {% for suspension in suspension_rows %}
-                                <div><img class="aaa-event-icon is-suspension" src="{% static 'game/images/icons/suspension-cards.svg' %}" alt=""><time>{{ suspension.start_date|date:"d.m.Y" }}</time><strong>{{ suspension.reason }}</strong><small>{{ suspension.matches_missed }} Spiele</small></div>
+                                <div><img class="aaa-event-icon is-suspension" src="{% static 'game/images/icons/sperren.png' %}" alt=""><time>{{ suspension.start_date|date:"d.m.Y" }}</time><strong>{{ suspension.reason }}</strong><small>{{ suspension.matches_missed }} Spiele</small></div>
                             {% empty %}
                                 <p class="empty-copy">Keine Websoccer-Sperren protokolliert.</p>
                             {% endfor %}

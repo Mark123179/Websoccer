@@ -1540,8 +1540,14 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
     font-size: 12px;
 }
 
-.aaa-event-card.is-injury-card .aaa-event-list div {
-    grid-template-columns: 74px minmax(0, 1fr) auto;
+.aaa-event-section-icon {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    opacity: 0.92;
+    filter: drop-shadow(0 0 10px rgba(255, 55, 55, 0.45));
+    flex-shrink: 0;
+    margin-top: -4px;
 }
 
 .aaa-event-list div span {
@@ -1555,14 +1561,16 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
 .aaa-event-list div .aaa-event-icon {
     width: 18px;
     height: 18px;
-    border-radius: 50%;
     object-fit: contain;
-    filter: drop-shadow(0 0 9px rgba(255, 68, 94, 0.36));
+    filter: drop-shadow(0 0 8px rgba(255, 55, 55, 0.5));
+}
+
+.aaa-event-list div .aaa-event-icon.is-injury {
+    filter: drop-shadow(0 0 8px rgba(255, 55, 55, 0.55));
 }
 
 .aaa-event-list div .aaa-event-icon.is-suspension {
-    border-radius: 4px;
-    filter: drop-shadow(0 0 9px rgba(244, 208, 63, 0.34));
+    filter: drop-shadow(0 0 8px rgba(255, 55, 55, 0.5));
 }
 
 .aaa-event-card:nth-child(2) .aaa-event-list div span {
