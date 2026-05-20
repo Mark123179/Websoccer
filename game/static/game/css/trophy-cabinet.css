@@ -34,18 +34,14 @@
 .aaa-awards-background {
     z-index: 0;
     background:
-linear-gradient(180deg, rgba(1, 5, 8, 0.03), rgba(1, 5, 8, 0.1)),
-url("../images/backgrounds/trophy-stage.png") center / cover no-repeat;
+url("../images/backgrounds/trophy-stage.png") center bottom / cover no-repeat;
 }
 
 .aaa-awards-lighting {
     z-index: 1;
     background:
-radial-gradient(ellipse at 24% 0%, rgba(255, 255, 255, 0.16), transparent 24%),
-radial-gradient(ellipse at 76% 0%, rgba(255, 255, 255, 0.14), transparent 26%),
-linear-gradient(180deg, transparent 0 48%, rgba(1, 5, 8, 0.6) 66%, rgba(1, 5, 8, 0.98) 82%, rgba(1, 5, 8, 1) 100%),
-linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.34)),
-linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3));
+linear-gradient(180deg, transparent 0 55%, rgba(1, 5, 8, 0.55) 72%, rgba(1, 5, 8, 0.92) 88%, rgba(1, 5, 8, 1) 100%),
+linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.18));
 }
 
 .aaa-trophy-stage .awards-header,
@@ -166,9 +162,9 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-slot {
-    --podium-bottom: 42px;
-    --podium-height: 188px;
-    --trophy-overlap: 15px;
+    --podium-bottom: 120px;
+    --podium-height: 0px;
+    --trophy-overlap: 0px;
     position: relative;
     display: flex;
     align-items: flex-end;
@@ -193,25 +189,15 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-slot.is-small {
-    --trophy-overlap: 15px;
+    --trophy-overlap: 0px;
 }
 
 .trophy-slot.is-season-award {
-    --trophy-overlap: 15px;
+    --trophy-overlap: 0px;
 }
 
 .aaa-awards-stage .podium {
-    position: absolute;
-    bottom: var(--podium-bottom);
-    left: 50%;
-    z-index: 1;
-    width: 460px;
-    height: auto;
-    transform: translateX(-50%);
-    object-fit: contain;
-    pointer-events: none;
-    user-select: none;
-    filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.6)) drop-shadow(0 4px 12px rgba(180, 140, 60, 0.18));
+    display: none;
 }
 
 .trophy-slot.is-placeholder .podium {
@@ -320,24 +306,21 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .aaa-profile-showcase .trophy-slot {
-    --podium-bottom: clamp(28px, 3.4cqw, 44px);
-    --podium-height: clamp(126px, 15.5cqw, 195px);
-    --trophy-overlap: clamp(10px, 1.2cqw, 15px);
+    --podium-bottom: clamp(68px, 8.4cqw, 106px);
+    --podium-height: 0px;
+    --trophy-overlap: 0px;
 }
 
 .aaa-profile-showcase .trophy-slot.is-small {
-    --trophy-overlap: clamp(10px, 1.2cqw, 15px);
+    --trophy-overlap: 0px;
 }
 
 .aaa-profile-showcase .trophy-slot.is-season-award {
-    --trophy-overlap: clamp(10px, 1.2cqw, 15px);
+    --trophy-overlap: 0px;
 }
 
 .aaa-profile-showcase .aaa-awards-stage .podium {
-    width: clamp(308px, 37.9cqw, 478px);
-    height: auto;
-    object-fit: contain;
-    object-position: initial;
+    display: none;
 }
 
 .aaa-profile-showcase .aaa-awards-stage .trophy-img {
