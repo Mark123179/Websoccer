@@ -6,6 +6,12 @@ uri = "file://attached_assets/freiburg_city.png"
 type = "image"
 title = "Freiburg city panorama"
 
+[[generated]]
+id = "cGJzRDr92BSsMT_VPN0XE"
+uri = "file://game/static/game/images/crests/nt_765.png"
+type = "image"
+title = "england three lions crest"
+
 [[outputs]]
 id = "0fjIy8MDMUxiYa4wzp-4L"
 uri = "file://attached_assets/freiburg_city.png"
