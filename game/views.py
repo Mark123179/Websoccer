@@ -2199,12 +2199,12 @@ def player_detail(request, player_id):
         {
             'player': player,
             'season_rows': performance_visual_rows(
-                preview_performance_rows(season_table_rows(season_rows, nt_nationality=player.nt_nationality or player.nationalities.split(',')[0].strip() if player.nationalities else None), 6)
+                preview_performance_rows(season_table_rows(season_rows, nt_nationality=player.nt_nationality or (player.nationalities.split(',')[0].strip() if player.nationalities else None)), 6)
             ),
             'season_summary': career_summary_from_ws_stats(season_rows),
             'career_summary': career_summary_from_ws_stats(all_season_rows),
             'career_rows': performance_visual_rows(
-                preview_performance_rows(career_rows_from_ws_stats(all_season_rows, nt_nationality=player.nt_nationality or player.nationalities.split(',')[0].strip() if player.nationalities else None), 8)
+                preview_performance_rows(career_rows_from_ws_stats(all_season_rows, nt_nationality=player.nt_nationality or (player.nationalities.split(',')[0].strip() if player.nationalities else None)), 8)
             ),
             'market_rows': market_rows,
             'market_trend': market_trend,
