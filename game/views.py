@@ -145,10 +145,11 @@ def award_podium_slots(awards):
         slots.append(
             {
                 'award': None,
-                'image_path': None,
+                'image_path': 'game/images/trophies/default.png',
+                'asset_version': None,
                 'title': 'Freier Titelplatz',
                 'count': None,
-                'shape': 'empty',
+                'shape': 'default',
                 'is_placeholder': True,
             }
         )

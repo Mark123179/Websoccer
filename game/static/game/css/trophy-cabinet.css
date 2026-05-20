@@ -167,8 +167,8 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .trophy-slot {
     --podium-bottom: 70px;
-    --podium-height: 108px;
-    --trophy-overlap: 32px;
+    --podium-height: 210px;
+    --trophy-overlap: 36px;
     position: relative;
     display: flex;
     align-items: flex-end;
@@ -194,11 +194,11 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .trophy-slot.is-small {
     --podium-bottom: 50px;
-    --trophy-overlap: 79px;
+    --trophy-overlap: 99px;
 }
 
 .trophy-slot.is-season-award {
-    --trophy-overlap: 85px;
+    --trophy-overlap: 60px;
 }
 
 .aaa-awards-stage .podium {
@@ -206,18 +206,24 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     bottom: var(--podium-bottom);
     left: 50%;
     z-index: 1;
-    width: 430px;
+    width: 540px;
     height: var(--podium-height);
     transform: translateX(-50%);
-    object-fit: contain;
-    object-position: center bottom;
+    object-fit: cover;
+    object-position: center 50%;
     pointer-events: none;
     user-select: none;
     filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.6)) drop-shadow(0 4px 12px rgba(180, 140, 60, 0.18));
 }
 
-.trophy-slot.is-small .podium {
-    opacity: 0;
+.trophy-slot.is-placeholder .podium {
+    opacity: 0.3;
+    filter: brightness(0.55) grayscale(0.5);
+}
+
+.trophy-slot.is-placeholder .trophy-img {
+    opacity: 0.28;
+    filter: grayscale(1) brightness(0.6);
 }
 
 .aaa-awards-stage .trophy-img {
@@ -317,20 +323,22 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .aaa-profile-showcase .trophy-slot {
     --podium-bottom: clamp(46px, 5.8cqw, 64px);
-    --podium-height: clamp(96px, 11.8cqw, 136px);
-    --trophy-overlap: clamp(30px, 4.2cqw, 48px);
+    --podium-height: clamp(130px, 16cqw, 165px);
+    --trophy-overlap: clamp(26px, 3.2cqw, 40px);
 }
 
 .aaa-profile-showcase .trophy-slot.is-small {
-    --trophy-overlap: clamp(52px, 6.4cqw, 72px);
+    --trophy-overlap: clamp(70px, 8.6cqw, 108px);
 }
 
 .aaa-profile-showcase .trophy-slot.is-season-award {
-    --trophy-overlap: clamp(58px, 6.8cqw, 82px);
+    --trophy-overlap: clamp(42px, 5.2cqw, 66px);
 }
 
 .aaa-profile-showcase .aaa-awards-stage .podium {
-    width: clamp(242px, 29.8cqw, 382px);
+    width: clamp(308px, 37.9cqw, 478px);
+    object-fit: cover;
+    object-position: center 50%;
 }
 
 .aaa-profile-showcase .aaa-awards-stage .trophy-img {
