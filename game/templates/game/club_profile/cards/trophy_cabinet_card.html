@@ -16,9 +16,13 @@
                             <figcaption>{{ trophy.competitionName }}</figcaption>
                         </figure>
                     {% else %}
+                        {% with num=forloop.counter|stringformat:"d" %}
+                        {% with src_path="game/images/trophies/default-"|add:num|add:".png" %}
                         <figure class="club-trophy-item club-trophy-empty" aria-hidden="true">
-                            <img src="{% static 'game/images/trophies/default.png' %}" alt="">
+                            <img src="{% static src_path %}" alt="">
                         </figure>
+                        {% endwith %}
+                        {% endwith %}
                     {% endif %}
                 {% endfor %}
             </div>
