@@ -405,7 +405,7 @@
         <div class="overview-legacy-stack">
             <aside class="dashboard-card overview-card overview-live-widget" aria-label="Livespiele Profis">
                 <h2 class="card-title">Livespiele Profis</h2>
-                {% for match in live_matches|slice:":5" %}
+                {% for match in live_matches|slice:":6" %}
                     <div>
                         <span>{{ match.time }}</span>
                         {% if match.competition_logo %}
