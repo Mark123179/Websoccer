@@ -48,10 +48,18 @@
     content: none;
 }
 
-.club-trophy-empty img {
-    opacity: 0.18;
-    filter: saturate(0) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.3));
+.club-trophy-empty {
+    background-image: url("../../images/trophies/ghost-strip.png");
+    background-size: 400% auto;
+    background-repeat: no-repeat;
+    background-position-y: 40%;
+    opacity: 0.52;
 }
+
+.club-trophy-ghost-1 { background-position-x: 0%; }
+.club-trophy-ghost-2 { background-position-x: 33.33%; }
+.club-trophy-ghost-3 { background-position-x: 66.66%; }
+.club-trophy-ghost-4 { background-position-x: 100%; }
 
 .club-trophy-item img {
     position: relative;
