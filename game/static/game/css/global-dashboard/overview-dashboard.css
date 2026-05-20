@@ -1650,3 +1650,23 @@ body.overview-home-page {
         grid-column: 1 / -1;
     }
 }
+
+/* ============================================================
+   BREAKPOINT 1650px — Row 1 Gleichverteilung 6-6-6-6
+   Verhindert, dass "Letztes Spiel" & Manager-Widget
+   bei 1440–1650px Viewport gequetscht werden.
+   ============================================================ */
+@media (max-width: 1650px) {
+    .overview-club-card {
+        grid-column: 1 / span 6;
+    }
+    .overview-next-match-card {
+        grid-column: 7 / span 6;
+    }
+    .overview-last-match-card {
+        grid-column: 13 / span 6;
+    }
+    .overview-manager-widget {
+        grid-column: 19 / span 6;
+    }
+}
