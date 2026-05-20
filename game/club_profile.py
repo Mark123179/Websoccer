@@ -250,8 +250,6 @@ def build_trophies(club):
         ('DFB-Pokal', 20, '1301410'),
         ('Champions League', 6, '1301394'),
         ('Supercup', 10, '1301397'),
-        ('Klub-WM', 2, '1001959'),
-        ('Ligapokal', 6, '100'),
     ]
     return [
         {
