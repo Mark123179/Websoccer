@@ -11,7 +11,9 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .admin import PlayerNationalityForm
+from .competition_assets import _NATIONALITY_CONFEDERATION
 from .models import (
+    COUNTRY_FLAG_ASSETS,
     Club,
     ClubNewsItem,
     ClubProfileMatch,
@@ -1168,4 +1170,19 @@ class PageSmokeTests(TestCase):
 
         self.assertEqual(player.strength_profile.base_strength, Decimal('184.00'))
         self.assertEqual(player.strength_profile.final_strength, Decimal('186.00'))
+
+
+class ConfederationMappingCoverageTest(TestCase):
+    def test_all_country_flag_assets_have_confederation_entry(self):
+        missing = sorted(
+            nationality
+            for nationality in COUNTRY_FLAG_ASSETS
+            if nationality not in _NATIONALITY_CONFEDERATION
+        )
+        self.assertFalse(
+            missing,
+            f"The following nationalities are in COUNTRY_FLAG_ASSETS but missing from "
+            f"_NATIONALITY_CONFEDERATION — add them to game/competition_assets.py: "
+            f"{missing}",
+        )
 
