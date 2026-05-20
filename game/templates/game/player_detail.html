@@ -322,7 +322,7 @@
             <div class="aaa-awards-stage">
                 {% for slot in award_slots %}
                     <figure class="trophy-slot trophy-card trophy-rank-{{ forloop.counter }} is-{{ slot.shape }}{% if slot.is_placeholder %} is-placeholder{% endif %}">
-                        <img class="podium" src="{% static 'game/images/trophies/podium-trophy.png' %}" alt="" aria-hidden="true">
+                        <img class="podium" src="{% static 'game/images/trophies/podest.png' %}" alt="" aria-hidden="true">
                         {% if slot.image_path %}
                             <img class="trophy-img is-{{ slot.shape }}" src="{% static slot.image_path %}{% if slot.asset_version %}?v={{ slot.asset_version }}{% endif %}" alt="{{ slot.title }}">
                         {% endif %}
