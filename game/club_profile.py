@@ -41,6 +41,7 @@ def build_club_profile_view_model(club, season=CURRENT_SEASON):
         'lastMatch': build_match(club, opponent_club, ClubProfileMatch.KIND_LAST, links),
         'table': build_table(club, opponent_club),
         'trophyPages': chunk_list(build_trophies(club), 4),
+        'trophyTotal': sum(t['count'] for t in build_trophies(club)),
         'proHighlights': build_highlights(club, players, season, is_youth=False),
         'youthHighlights': build_highlights(club, players, season, is_youth=True),
         'stadium': build_stadium(public_profile),

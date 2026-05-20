@@ -1,7 +1,39 @@
 {% load static %}
 
 <article class="club-profile-card trophy-cabinet-profile-card" data-trophy-card>
-    <h2 class="club-card-title">TROPHÄENSCHRANK</h2>
+    <header class="club-trophy-header">
+        <div class="club-trophy-heading">
+            <span class="club-trophy-heading-badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h3"/>
+                    <path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 0-1-1h-3"/>
+                    <path d="M6 4h12v6a6 6 0 0 1-12 0V4z"/>
+                    <path d="M9 18h6"/>
+                    <path d="M10 21h4"/>
+                    <path d="M12 18v3"/>
+                </svg>
+            </span>
+            <div class="club-trophy-heading-text">
+                <h2 class="club-trophy-heading-title">AUSZEICHNUNGEN &amp; TITEL</h2>
+                <p class="club-trophy-heading-subtitle">Eine Übersicht aller gewonnenen Titel und Auszeichnungen</p>
+            </div>
+        </div>
+        <div class="club-trophy-total" aria-label="Titel gesamt">
+            <span class="club-trophy-total-label">GESAMT</span>
+            <div class="club-trophy-total-value">
+                <svg class="club-trophy-total-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 9H4a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h3"/>
+                    <path d="M18 9h2a2 2 0 0 0 2-2V5a1 1 0 0 0-1-1h-3"/>
+                    <path d="M6 4h12v6a6 6 0 0 1-12 0V4z"/>
+                    <path d="M9 18h6"/>
+                    <path d="M10 21h4"/>
+                    <path d="M12 18v3"/>
+                </svg>
+                <strong>{{ profile.trophyTotal }}</strong>
+            </div>
+            <span class="club-trophy-total-suffix">Titel</span>
+        </div>
+    </header>
 
     <div class="club-trophy-pages">
         {% for page in profile.trophyPages %}
@@ -12,12 +44,12 @@
                             {% if trophy.trophyImageUrl %}
                                 <img src="{% static trophy.trophyImageUrl %}" alt="{{ trophy.competitionName }}">
                             {% endif %}
-                            <strong>{{ trophy.count }}</strong>
                             <figcaption>{{ trophy.competitionName }}</figcaption>
+                            <strong>{{ trophy.count }}x</strong>
                         </figure>
                     {% else %}
                         <figure class="club-trophy-item club-trophy-empty" aria-hidden="true">
-                            <img src="{% static 'game/images/trophies/default.png' %}" alt="">
+                            <img src="{% static 'game/images/trophies/default-' %}{{ forloop.counter }}.png" alt="">
                         </figure>
                     {% endif %}
                 {% endfor %}
