@@ -187,6 +187,11 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     content: none;
 }
 
+.trophy-slot.trophy-rank-1.is-tall {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .trophy-slot.is-small {
     --trophy-overlap: 79px;
 }
