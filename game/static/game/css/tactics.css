@@ -24,7 +24,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     background:
         linear-gradient(rgba(2, 8, 14, 0.78), rgba(2, 8, 14, 0.96)),
         url("../images/backgrounds/player-profile-stadium-atmosphere.svg") center top / cover no-repeat;
-    min-height: 100vh;
+    min-height: 100%;
     padding: 24px;
     position: relative;
 }

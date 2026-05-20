@@ -305,7 +305,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
     --aaa-profile-artboard-width: var(--dashboard-artboard-width, 1652px);
     --aaa-profile-showcase-height: 528px;
-    min-height: 100vh;
+    min-height: 100%;
     padding: 18px 18px 26px;
     position: relative;
     isolation: isolate;
