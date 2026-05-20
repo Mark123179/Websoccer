@@ -12,6 +12,168 @@ uri = "file://game/static/game/images/crests/nt_765.png"
 type = "image"
 title = "england three lions crest"
 
+[[generated]]
+id = "863SbZqaIu1rTG5BaiMX0"
+uri = "file://game/static/game/images/crests/nt_5.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "yRnaESW-urgnK5NqPvSt4"
+uri = "file://game/static/game/images/crests/nt_1651.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Ib5zehl32-Q_ysdsOPlci"
+uri = "file://game/static/game/images/crests/nt_771.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "u8yx-Wjjb0e27UAyi61zU"
+uri = "file://game/static/game/images/crests/nt_24.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "EHdguk5ZnFIbRoSWqzrD8"
+uri = "file://game/static/game/images/crests/nt_769.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "hVZvysq04UZ-akLVrEVlq"
+uri = "file://game/static/game/images/crests/nt_20.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "k6zS9dre_68yRHD4KRKh9"
+uri = "file://game/static/game/images/crests/nt_22.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "y91eCzd8WHh9W--g4AnQ8"
+uri = "file://game/static/game/images/crests/nt_23.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "xuLPaSP87GopmRUrNDfPd"
+uri = "file://game/static/game/images/crests/nt_789.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "HIiPffaJqTDosLvjvSaP6"
+uri = "file://game/static/game/images/crests/nt_776.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "38UE3VtcbPsbK7FDZ2zGC"
+uri = "file://game/static/game/images/crests/nt_116.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "9qBoypnapbArxLmMsPCcx"
+uri = "file://game/static/game/images/crests/nt_364.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "RrlEByVQpTWsyTNVqD_-a"
+uri = "file://game/static/game/images/crests/nt_1653.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "jAlSuik6KK-siFRuXt_00"
+uri = "file://game/static/game/images/crests/nt_761.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "oAK6bbsZ0CVrYZhuwA7ea"
+uri = "file://game/static/game/images/crests/nt_27.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "CT-noLvhqpiGWdHgjgEnq"
+uri = "file://game/static/game/images/crests/nt_28.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "4rclP8bTRqmv68ak5rWW2"
+uri = "file://game/static/game/images/crests/nt_38.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "cT2umgKBgIhmRv5wasagR"
+uri = "file://game/static/game/images/crests/nt_786.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "7pTw_ewI-aEQnQ_fZJbNm"
+uri = "file://game/static/game/images/crests/nt_755.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "i1lQyxGeqqLZm210ke3ie"
+uri = "file://game/static/game/images/crests/nt_788.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "ZdwlHz3DwyjSqHXVMDsLA"
+uri = "file://game/static/game/images/crests/nt_797.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "3YXiV6V02ST4o9M2RNUDR"
+uri = "file://game/static/game/images/crests/nt_798.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "Hkr6EgeFH5DOv7m-vgHPF"
+uri = "file://game/static/game/images/crests/nt_41.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "yAToXVc4ABCJKJ9cwWMKu"
+uri = "file://game/static/game/images/crests/nt_802.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "AKWR38F9547dO5TsCHmcL"
+uri = "file://game/static/game/images/crests/nt_135.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "XLdQZVLg6oy4_azH9IO3e"
+uri = "file://game/static/game/images/crests/nt_799.png"
+type = "image"
+title = "generated_image"
+
+[[generated]]
+id = "oTB5CcuYtdIRCrT0av9sb"
+uri = "file://game/static/game/images/crests/nt_390.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "0fjIy8MDMUxiYa4wzp-4L"
 uri = "file://attached_assets/freiburg_city.png"
