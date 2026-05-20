@@ -1,0 +1,356 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · {% if player %}{{ player.first_name }} {{ player.last_name }}{% else %}Neuer Spieler{% endif %}{% endblock %}
+
+{% block content %}
+<section class="creator-section">
+
+  <div class="creator-breadcrumb">
+    <a href="{% url 'creator_index' %}">Creator Mode</a>
+    <span>›</span>
+    {% if player %}
+      <a href="{% url 'creator_club_edit' club_id=player.club_id %}">{{ player.club.name }}</a>
+      <span>›</span>
+      <span>{{ player.first_name }} {{ player.last_name }}</span>
+    {% else %}
+      <a href="{% url 'creator_club_edit' club_id=club.id %}">{{ club.name }}</a>
+      <span>›</span>
+      <span>Neuer Spieler</span>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+  <div class="creator-messages">
+    {% for m in messages %}
+    <div class="creator-msg creator-msg-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="cpe-header">
+    <h1 class="cpe-title">{% if player %}{{ player.first_name }} {{ player.last_name }}{% else %}Neuer Spieler{% endif %}</h1>
+  </div>
+
+  <div class="cpe-tabs">
+    <button class="cpe-tab cpe-tab-active" data-tab="profil">Spielerprofil</button>
+    <button class="cpe-tab" data-tab="staerke">Stärke</button>
+    <button class="cpe-tab" data-tab="source">Source</button>
+    <button class="cpe-tab" data-tab="saison">Saison</button>
+    <button class="cpe-tab" data-tab="transfer">Transferhistorie WS</button>
+    <button class="cpe-tab" data-tab="geschichte">Geschichte</button>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="cpe-tab-panel" id="tab-profil">
+
+      <div class="cpe-section-bar">Spielerprofil</div>
+
+      <div class="cpe-field-row cpe-portrait-row">
+        <div class="cpe-label">Spielerbild Vorschau:</div>
+        <div class="cpe-portrait-block">
+          <div class="cpe-portrait-frame">
+            {% if portrait_path %}
+              <img id="portrait-preview" src="{% static portrait_path %}" alt="Portrait">
+            {% else %}
+              <img id="portrait-preview" src="{% static 'game/images/default_player.png' %}" alt="Portrait" style="opacity:.4">
+            {% endif %}
+          </div>
+          <div class="cpe-portrait-info">
+            {% if player and player.fm_inside_id %}
+              <strong>{% if player %}{{ player.first_name }} {{ player.last_name }}{% endif %}</strong>
+              <span>Datei: {{ player.fm_inside_id }}.png</span>
+              <span>game/images/players/{{ player.fm_inside_id }}.png</span>
+            {% else %}
+              <span class="cpe-muted">Kein FM-Portrait (keine FM-ID)</span>
+            {% endif %}
+            <label class="cpe-upload-btn">
+              <input type="file" name="portrait" accept="image/*" onchange="previewPortrait(this)">
+              Bild ändern
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="cpe-field-row">
+        <div class="cpe-label">First name:</div>
+        <div class="cpe-field">
+          <input class="cpe-input" type="text" name="first_name" value="{{ player.first_name|default:'' }}">
+        </div>
+      </div>
+
+      <div class="cpe-field-row">
+        <div class="cpe-label">Last name:</div>
+        <div class="cpe-field">
+          <input class="cpe-input cpe-input-medium" type="text" name="last_name" value="{{ player.last_name|default:'' }}">
+        </div>
+      </div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">WS-Verein:</div>
+        <div class="cpe-field">
+          <select class="cpe-select" name="club">
+            {% for c in all_clubs %}
+            <option value="{{ c.id }}" {% if player and player.club_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="cpe-label cpe-label-inline">RL-Verein:</div>
+        <div class="cpe-field">
+          <select class="cpe-select" name="real_life_club">
+            <option value="">----------</option>
+            {% for c in all_clubs %}
+            <option value="{{ c.id }}" {% if player and player.real_life_club_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">HP 1:</div>
+        <select class="cpe-select cpe-select-pos" name="main_position_1">
+          {% for val, label in position_choices %}
+          <option value="{{ val }}" {% if player and player.main_position_1 == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <span class="cpe-sep">HP 2:</span>
+        <select class="cpe-select cpe-select-pos" name="main_position_2">
+          {% for val, label in position_choices %}
+          <option value="{{ val }}" {% if player and player.main_position_2 == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <span class="cpe-sep">HP 3:</span>
+        <select class="cpe-select cpe-select-pos" name="main_position_3">
+          {% for val, label in position_choices %}
+          <option value="{{ val }}" {% if player and player.main_position_3 == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">NP 1:</div>
+        <select class="cpe-select cpe-select-pos" name="secondary_position_1">
+          {% for val, label in position_choices %}
+          <option value="{{ val }}" {% if player and player.secondary_position_1 == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <span class="cpe-sep">NP 2:</span>
+        <select class="cpe-select cpe-select-pos" name="secondary_position_2">
+          {% for val, label in position_choices %}
+          <option value="{{ val }}" {% if player and player.secondary_position_2 == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <span class="cpe-sep">NP 3:</span>
+        <select class="cpe-select cpe-select-pos" name="secondary_position_3">
+          {% for val, label in position_choices %}
+          <option value="{{ val }}" {% if player and player.secondary_position_3 == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">Date of birth:</div>
+        <input class="cpe-input cpe-input-date" type="date" name="date_of_birth" value="{{ player.date_of_birth|date:'Y-m-d'|default:'' }}">
+        <span class="cpe-sep">Age:</span>
+        <input class="cpe-input cpe-input-small" type="number" name="age_display" value="{{ player.age|default:'' }}" readonly style="opacity:.6">
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">Height cm:</div>
+        <div>
+          <input class="cpe-input cpe-input-small" type="number" name="height_cm" value="{{ player.height_cm|default:'' }}">
+          <div class="cpe-hint">Körpergrösse in Zentimetern.</div>
+        </div>
+        <span class="cpe-sep" style="margin-left:2rem">Strong foot:</span>
+        <div>
+          <select class="cpe-select" name="strong_foot">
+            <option value="" {% if not player or not player.strong_foot %}selected{% endif %}>----------</option>
+            <option value="left" {% if player and player.strong_foot == 'left' %}selected{% endif %}>Links</option>
+            <option value="right" {% if player and player.strong_foot == 'right' %}selected{% endif %}>Rechts</option>
+            <option value="both" {% if player and player.strong_foot == 'both' %}selected{% endif %}>Beidfuss</option>
+          </select>
+          <div class="cpe-hint">Stärkerer Fuss des Spielers.</div>
+        </div>
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">Nationalität 1:</div>
+        <select class="cpe-select" name="nationality_1">
+          {% for nat in nationality_choices %}
+          <option value="{{ nat }}" {% if nat == nat1 %}selected{% endif %}>{% if nat %}{{ nat }}{% else %}----------{% endif %}</option>
+          {% endfor %}
+        </select>
+        <span class="cpe-sep" style="margin-left:1rem">Nationalität 2:</span>
+        <select class="cpe-select" name="nationality_2">
+          {% for nat in nationality_choices %}
+          <option value="{{ nat }}" {% if nat == nat2 %}selected{% endif %}>{% if nat %}{{ nat }}{% else %}----------{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">Market value:</div>
+        <input class="cpe-input cpe-input-money" type="text" name="market_value" value="{{ player.market_value|default:'' }}">
+        <span class="cpe-sep" style="margin-left:1rem">Salary per match:</span>
+        <input class="cpe-input cpe-input-money" type="text" name="salary_per_match" value="{{ player.salary_per_match|default:'' }}">
+        <span class="cpe-sep" style="margin-left:1rem">Contract until:</span>
+        <input class="cpe-input cpe-input-date" type="date" name="contract_until" value="{{ player.contract_until|date:'Y-m-d'|default:'' }}">
+      </div>
+
+      <div class="cpe-divider"></div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">Ws injury type:</div>
+        <div>
+          <input class="cpe-input cpe-input-medium" type="text" name="ws_injury_type" value="{{ player.ws_injury_type|default:'' }}">
+          <div class="cpe-hint">Nur Websoccer-Verletzung, z. B. Muskelverletzung.</div>
+        </div>
+        <span class="cpe-sep" style="margin-left:1.5rem">Ws injury days remaining:</span>
+        <input class="cpe-input cpe-input-small" type="number" name="ws_injury_days_remaining" value="{{ player.ws_injury_days_remaining|default:0 }}">
+      </div>
+
+      <div class="cpe-field-row cpe-multi-field">
+        <div class="cpe-label">Ws suspension reason:</div>
+        <div>
+          <input class="cpe-input cpe-input-medium" type="text" name="ws_suspension_reason" value="{{ player.ws_suspension_reason|default:'' }}">
+          <div class="cpe-hint">Nur Websoccer-Sperre, z. B. Rotsperre.</div>
+        </div>
+        <span class="cpe-sep" style="margin-left:1.5rem">Ws suspension matches remaining:</span>
+        <input class="cpe-input cpe-input-small" type="number" name="ws_suspension_matches_remaining" value="{{ player.ws_suspension_matches_remaining|default:0 }}">
+      </div>
+
+    </div>
+
+    <div class="cpe-tab-panel cpe-tab-hidden" id="tab-staerke">
+      <div class="cpe-section-bar">Stärke</div>
+      <p class="cpe-placeholder">Stärke-Verwaltung folgt.</p>
+    </div>
+    <div class="cpe-tab-panel cpe-tab-hidden" id="tab-source">
+      <div class="cpe-section-bar">Source</div>
+      <p class="cpe-placeholder">Source-Verwaltung folgt.</p>
+    </div>
+    <div class="cpe-tab-panel cpe-tab-hidden" id="tab-saison">
+      <div class="cpe-section-bar">Saison</div>
+      <p class="cpe-placeholder">Saison-Statistiken folgen.</p>
+    </div>
+    <div class="cpe-tab-panel cpe-tab-hidden" id="tab-transfer">
+      <div class="cpe-section-bar">Transferhistorie WS</div>
+      <p class="cpe-placeholder">Transferhistorie folgt.</p>
+    </div>
+    <div class="cpe-tab-panel cpe-tab-hidden" id="tab-geschichte">
+      <div class="cpe-section-bar">Geschichte</div>
+      <p class="cpe-placeholder">Spielergeschichte folgt.</p>
+    </div>
+
+    <div class="cpe-actions">
+      <button type="submit" name="action" value="save" class="cpe-btn cpe-btn-primary">Sichern</button>
+      <button type="submit" name="action" value="save_new" class="cpe-btn cpe-btn-secondary">Sichern und neu hinzufügen</button>
+      <button type="submit" name="action" value="save_continue" class="cpe-btn cpe-btn-secondary">Sichern und weiter bearbeiten</button>
+    </div>
+
+  </form>
+
+</section>
+
+<style>
+.creator-section { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+.creator-breadcrumb { display: flex; align-items: center; gap: .5rem; color: #556677; font-size: .78rem; margin-bottom: 1.25rem; }
+.creator-breadcrumb a { color: #00d4ff88; text-decoration: none; }
+.creator-breadcrumb a:hover { color: #00d4ff; }
+.creator-messages { margin-bottom: 1rem; }
+.creator-msg { padding: .6rem 1rem; border-radius: 6px; font-size: .85rem; margin-bottom: .4rem; }
+.creator-msg-success { background: #00d4ff15; border: 1px solid #00d4ff44; color: #00d4ff; }
+.creator-msg-error { background: #ff334415; border: 1px solid #ff334444; color: #ff8899; }
+
+.cpe-header { margin-bottom: 1rem; }
+.cpe-title { color: #fff; font-size: 1.5rem; margin: 0; }
+
+.cpe-tabs { display: flex; gap: 0; border-bottom: 2px solid #0d2035; margin-bottom: 0; }
+.cpe-tab { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; padding: .6rem 1.1rem; color: #556677; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; transition: color .2s, border-color .2s; }
+.cpe-tab:hover { color: #aabbcc; }
+.cpe-tab-active { color: #00d4ff !important; border-bottom-color: #00d4ff !important; }
+
+.cpe-tab-panel { background: #050e1a; border: 1px solid #0d2035; border-top: none; }
+.cpe-tab-hidden { display: none; }
+.cpe-section-bar { background: #00d4ff22; border-left: 3px solid #00d4ff; color: #cce8ff; font-size: .8rem; font-weight: 700; padding: .4rem 1rem; }
+.cpe-placeholder { color: #334455; padding: 2rem; font-size: .85rem; margin: 0; }
+
+.cpe-field-row { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem 1.25rem; border-bottom: 1px solid #071525; }
+.cpe-multi-field { flex-wrap: wrap; align-items: center; }
+.cpe-label { color: #aabbcc; font-size: .82rem; min-width: 120px; flex-shrink: 0; padding-top: .3rem; }
+.cpe-label-inline { min-width: auto; padding-left: 1rem; }
+.cpe-sep { color: #aabbcc; font-size: .82rem; white-space: nowrap; padding-top: .3rem; }
+.cpe-field { display: flex; flex-direction: column; }
+.cpe-hint { color: #556677; font-size: .7rem; margin-top: .2rem; }
+.cpe-divider { border: none; border-top: 1px solid #071525; margin: 0; }
+.cpe-muted { color: #334455; }
+
+.cpe-input { background: #030a12; border: 1px solid #0d2035; border-radius: 4px; color: #cce8ff; padding: .35rem .6rem; font-size: .82rem; }
+.cpe-input:focus { outline: none; border-color: #00d4ff66; }
+.cpe-input-medium { width: 220px; }
+.cpe-input-small { width: 70px; }
+.cpe-input-date { width: 150px; }
+.cpe-input-money { width: 160px; }
+.cpe-select { background: #030a12; border: 1px solid #0d2035; border-radius: 4px; color: #cce8ff; padding: .35rem .5rem; font-size: .82rem; }
+.cpe-select:focus { outline: none; border-color: #00d4ff66; }
+.cpe-select-pos { width: 110px; }
+
+.cpe-portrait-row { align-items: flex-start; }
+.cpe-portrait-block { display: flex; gap: 1rem; align-items: flex-start; }
+.cpe-portrait-frame { width: 80px; height: 80px; border-radius: 4px; overflow: hidden; border: 1px solid #0d2035; background: #030a12; flex-shrink: 0; }
+.cpe-portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
+.cpe-portrait-info { display: flex; flex-direction: column; gap: .2rem; }
+.cpe-portrait-info strong { color: #cce8ff; font-size: .85rem; }
+.cpe-portrait-info span { color: #556677; font-size: .72rem; }
+.cpe-upload-btn { display: inline-block; margin-top: .4rem; background: #071d30; border: 1px solid #00d4ff33; border-radius: 4px; padding: .3rem .7rem; color: #00d4ff; font-size: .75rem; cursor: pointer; }
+.cpe-upload-btn input[type="file"] { display: none; }
+.cpe-upload-btn:hover { background: #00d4ff15; }
+
+.cpe-actions { display: flex; gap: .75rem; padding: 1rem 1.25rem; background: #071525; border-top: 1px solid #0d2035; }
+.cpe-btn { padding: .5rem 1.2rem; border-radius: 5px; border: none; font-size: .82rem; font-weight: 700; cursor: pointer; letter-spacing: .04em; }
+.cpe-btn-primary { background: #00d4ff; color: #03070c; }
+.cpe-btn-primary:hover { background: #00bce8; }
+.cpe-btn-secondary { background: #071d30; border: 1px solid #00d4ff33; color: #00d4ff; }
+.cpe-btn-secondary:hover { background: #00d4ff15; }
+</style>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.cpe-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.cpe-tab').forEach(t => t.classList.remove('cpe-tab-active'));
+    document.querySelectorAll('.cpe-tab-panel').forEach(p => p.classList.add('cpe-tab-hidden'));
+    tab.classList.add('cpe-tab-active');
+    const panel = document.getElementById('tab-' + tab.dataset.tab);
+    if (panel) panel.classList.remove('cpe-tab-hidden');
+  });
+});
+
+function previewPortrait(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('portrait-preview');
+      img.src = e.target.result;
+      img.style.opacity = '1';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}

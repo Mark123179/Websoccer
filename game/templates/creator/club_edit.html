@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · {{ club.name }}{% endblock %}
+
+{% block content %}
+<section class="creator-section">
+
+  <div class="creator-club-topbar">
+    <a class="creator-back" href="{% url 'creator_index' %}">← Creator Mode</a>
+    <div class="creator-club-identity">
+      {% if crest_path %}
+        <img class="creator-club-crest-large" src="{% static crest_path %}" alt="{{ club.name }}">
+      {% endif %}
+      <div>
+        <h1 class="creator-club-title">{{ club.name }}</h1>
+        <span class="creator-meta">ID {{ club.fm_inside_id }} · {{ club.league.name }} · {{ club.short_name }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="creator-messages">
+    {% for m in messages %}
+    <div class="creator-msg creator-msg-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="creator-assets-grid">
+
+    <div class="creator-card">
+      <div class="creator-card-head"><h2>Stadionbild</h2></div>
+      <div class="creator-card-body">
+        <div class="creator-image-preview creator-image-wide">
+          {% if stadium_path %}
+            <img src="{% static stadium_path %}" alt="Stadion">
+          {% else %}
+            <div class="creator-no-image">Kein Bild</div>
+          {% endif %}
+        </div>
+        <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_stadium' club_id=club.id %}">
+          {% csrf_token %}
+          <label class="creator-upload-label">
+            <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
+            <span>📁 Bild hochladen</span>
+          </label>
+        </form>
+      </div>
+    </div>
+
+    <div class="creator-card">
+      <div class="creator-card-head"><h2>Citypic</h2></div>
+      <div class="creator-card-body">
+        <div class="creator-image-preview creator-image-wide">
+          {% if city_path %}
+            <img src="{% static city_path %}" alt="Stadt">
+          {% else %}
+            <div class="creator-no-image">Kein Bild</div>
+          {% endif %}
+        </div>
+        <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_city' club_id=club.id %}">
+          {% csrf_token %}
+          <label class="creator-upload-label">
+            <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
+            <span>📁 Bild hochladen</span>
+          </label>
+        </form>
+      </div>
+    </div>
+
+    <div class="creator-card creator-card-kits">
+      <div class="creator-card-head"><h2>Trikots</h2></div>
+      <div class="creator-card-body creator-kits-row">
+        {% for kit in kits %}
+        <div class="creator-kit-slot">
+          <span class="creator-kit-label">{{ kit.label }}</span>
+          <div class="creator-image-preview creator-image-kit">
+            {% if kit.path %}
+              <img src="{% static kit.path %}" alt="{{ kit.label }}">
+            {% else %}
+              <div class="creator-no-image">—</div>
+            {% endif %}
+          </div>
+          <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_kit' club_id=club.id kit_type=kit.type %}">
+            {% csrf_token %}
+            <label class="creator-upload-label creator-upload-small">
+              <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
+              <span>📁</span>
+            </label>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="creator-card creator-players-card">
+    <div class="creator-card-head">
+      <h2>Kader <span class="creator-count-badge">{{ players|length }}</span></h2>
+      <a class="creator-btn creator-btn-primary" href="{% url 'creator_new_player' club_id=club.id %}">+ Spieler hinzufügen</a>
+    </div>
+    <div class="creator-card-body">
+      <table class="creator-table">
+        <thead>
+          <tr>
+            <th>Bild</th>
+            <th>Name</th>
+            <th>ID</th>
+            <th>Pos</th>
+            <th>Alter</th>
+            <th>Stärke</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for player in players %}
+          <tr>
+            <td class="creator-portrait-cell">
+              {% if player.portrait_static_path %}
+                <img class="creator-portrait-thumb" src="{% static player.portrait_static_path %}" alt="{{ player.last_name }}">
+              {% else %}
+                <div class="creator-portrait-placeholder">{{ player.first_name|first }}{{ player.last_name|first }}</div>
+              {% endif %}
+            </td>
+            <td class="creator-name-cell">
+              <strong>{{ player.last_name }}</strong>, {{ player.first_name }}
+            </td>
+            <td class="creator-id-cell">{{ player.fm_inside_id|default:"—" }}</td>
+            <td>
+              <span class="creator-position-badge">{{ player.main_position_1|default:"—" }}</span>
+            </td>
+            <td>{{ player.age }}</td>
+            <td>
+              {% if player.strength_profile %}
+                {{ player.strength_profile.final_strength|floatformat:1 }}
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              <a class="creator-edit-link" href="{% url 'creator_player_edit' player_id=player.id %}">Bearbeiten →</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="creator-empty-row">Noch keine Spieler vorhanden.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
+<style>
+.creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.creator-back { color: #00d4ff88; text-decoration: none; font-size: .8rem; letter-spacing: .04em; display: inline-block; margin-bottom: 1rem; }
+.creator-back:hover { color: #00d4ff; }
+.creator-club-topbar { margin-bottom: 1.5rem; }
+.creator-club-identity { display: flex; align-items: center; gap: 1rem; }
+.creator-club-crest-large { width: 56px; height: 56px; object-fit: contain; }
+.creator-club-title { color: #fff; font-size: 1.6rem; margin: 0 0 .2rem; }
+.creator-meta { color: #556677; font-size: .8rem; }
+
+.creator-messages { margin-bottom: 1rem; }
+.creator-msg { padding: .6rem 1rem; border-radius: 6px; font-size: .85rem; margin-bottom: .4rem; }
+.creator-msg-success { background: #00d4ff15; border: 1px solid #00d4ff44; color: #00d4ff; }
+.creator-msg-error { background: #ff334415; border: 1px solid #ff334444; color: #ff8899; }
+
+.creator-assets-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1rem; margin-bottom: 1rem; }
+.creator-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; overflow: hidden; }
+.creator-card-head { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
+.creator-card-head h2 { color: #00d4ff; font-size: .85rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: .06em; }
+.creator-card-body { padding: 1rem; }
+
+.creator-image-preview { border: 1px solid #0d2035; border-radius: 8px; overflow: hidden; margin-bottom: .75rem; display: flex; align-items: center; justify-content: center; background: #030a12; }
+.creator-image-wide { height: 160px; }
+.creator-image-kit { height: 120px; }
+.creator-image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.creator-no-image { color: #334455; font-size: .75rem; }
+
+.creator-upload-label { display: inline-flex; align-items: center; gap: .4rem; background: #071d30; border: 1px solid #00d4ff33; border-radius: 6px; padding: .4rem .85rem; cursor: pointer; color: #00d4ff; font-size: .78rem; font-weight: 600; transition: background .2s; }
+.creator-upload-label:hover { background: #00d4ff15; }
+.creator-upload-label input[type="file"] { display: none; }
+.creator-upload-small { padding: .35rem .6rem; }
+
+.creator-kits-row { display: flex; gap: 1rem; }
+.creator-kit-slot { flex: 1; text-align: center; }
+.creator-kit-label { display: block; color: #556677; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .4rem; }
+
+.creator-players-card { margin-top: 1rem; }
+.creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
+.creator-btn { display: inline-block; padding: .4rem .9rem; border-radius: 6px; font-size: .78rem; font-weight: 700; text-decoration: none; letter-spacing: .04em; }
+.creator-btn-primary { background: #00d4ff22; border: 1px solid #00d4ff55; color: #00d4ff; }
+.creator-btn-primary:hover { background: #00d4ff33; }
+
+.creator-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.creator-table thead th { color: #556677; font-weight: 600; text-transform: uppercase; font-size: .7rem; letter-spacing: .06em; border-bottom: 1px solid #0d2035; padding: .5rem .75rem; text-align: left; }
+.creator-table tbody td { padding: .55rem .75rem; border-bottom: 1px solid #071525; color: #aabbcc; vertical-align: middle; }
+.creator-table tbody tr:hover td { background: #071525; }
+.creator-portrait-cell { width: 44px; }
+.creator-portrait-thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #0d2035; }
+.creator-portrait-placeholder { width: 36px; height: 36px; border-radius: 50%; background: #0d2035; display: flex; align-items: center; justify-content: center; color: #556677; font-size: .65rem; font-weight: 700; }
+.creator-name-cell strong { color: #cce8ff; }
+.creator-id-cell { color: #556677; font-size: .75rem; font-family: monospace; }
+.creator-position-badge { background: #071d30; border: 1px solid #00d4ff22; color: #00d4ff88; padding: .15rem .4rem; border-radius: 4px; font-size: .72rem; font-weight: 700; }
+.creator-edit-link { color: #00d4ff88; text-decoration: none; font-size: .75rem; }
+.creator-edit-link:hover { color: #00d4ff; }
+.creator-empty-row { color: #334455; text-align: center; padding: 2rem !important; }
+
+@media (max-width: 900px) {
+  .creator-assets-grid { grid-template-columns: 1fr 1fr; }
+  .creator-card-kits { grid-column: 1 / -1; }
+}
+</style>
+{% endblock %}

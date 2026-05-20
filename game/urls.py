@@ -14,6 +14,15 @@ from .views import (
     player_detail,
     player_graph_data,
 )
+from .views_creator import (
+    creator_index,
+    creator_club_edit,
+    creator_upload_stadium,
+    creator_upload_city,
+    creator_upload_kit,
+    creator_player_edit,
+    creator_new_player,
+)
 
 
 urlpatterns = [
@@ -94,4 +103,12 @@ urlpatterns = [
         player_graph_data,
         name='player_graph_data'
     ),
+
+    path('creator/', creator_index, name='creator_index'),
+    path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),
+    path('creator/clubs/<int:club_id>/upload/stadium/', creator_upload_stadium, name='creator_upload_stadium'),
+    path('creator/clubs/<int:club_id>/upload/city/', creator_upload_city, name='creator_upload_city'),
+    path('creator/clubs/<int:club_id>/upload/kit/<str:kit_type>/', creator_upload_kit, name='creator_upload_kit'),
+    path('creator/players/<int:player_id>/', creator_player_edit, name='creator_player_edit'),
+    path('creator/clubs/<int:club_id>/players/new/', creator_new_player, name='creator_new_player'),
 ]
