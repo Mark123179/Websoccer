@@ -53,7 +53,7 @@
     display: inline-block;
     margin: 0;
     color: var(--aaa-text);
-    font-size: clamp(19px, 1.45vw, 26px);
+    font-size: 26px;
     font-weight: 800;
     text-decoration: none;
     white-space: nowrap;
@@ -304,7 +304,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-radius: 12px;
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
     --aaa-profile-artboard-width: var(--dashboard-artboard-width, 1652px);
-    --aaa-profile-showcase-height: clamp(500px, 28vw, 540px);
+    --aaa-profile-showcase-height: 528px;
     min-height: 100vh;
     padding: 18px 18px 26px;
     position: relative;
@@ -1254,7 +1254,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-market-card .market-value-large {
     color: #9fffff;
-    font-size: clamp(25px, 2vw, 34px);
+    font-size: 34px;
     font-weight: 800;
     text-shadow: 0 0 22px rgba(37, 244, 238, 0.22);
 }
@@ -1654,7 +1654,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
     display: grid;
     gap: 7px;
     min-height: 0;
-    max-height: clamp(218px, 13.6vw, 330px);
+    max-height: 256px;
     overflow-y: auto;
     padding-right: 4px;
 }

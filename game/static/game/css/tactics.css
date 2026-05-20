@@ -1576,13 +1576,13 @@ body.tactics-page .nav-menu a:nth-child(5) {
     border-radius: 50%;
     bottom: 11px;
     box-sizing: border-box;
-    height: clamp(52px, 3.5vw, 62px);
+    height: 62px;
     object-fit: contain;
     opacity: 0.74;
     padding: 6px;
     pointer-events: none;
     position: absolute;
-    width: clamp(52px, 3.5vw, 62px);
+    width: 62px;
     z-index: 1;
 }
 
@@ -1632,7 +1632,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-manager-name {
     color: #ffffff;
-    font-size: clamp(13px, 0.74vw, 14px);
+    font-size: 14px;
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1.12;
@@ -1645,7 +1645,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-manager-rank {
     border-radius: 999px;
-    font-size: clamp(10px, 0.56vw, 11px);
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.01em;
     line-height: 1;
@@ -1671,7 +1671,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: #f9fbff;
     display: grid;
-    font-size: clamp(10.5px, 0.6vw, 12px);
+    font-size: 11px;
     font-weight: 800;
     grid-template-rows: repeat(9, 1fr);
     letter-spacing: 0;
@@ -1751,7 +1751,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-vs {
     color: #ffffff;
-    font-size: clamp(23px, 1.55vw, 30px);
+    font-size: 29px;
     font-weight: 850;
     letter-spacing: 0.01em;
     line-height: 0.95;
@@ -1764,7 +1764,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: rgba(255, 255, 255, 0.92);
     display: grid;
-    font-size: clamp(7.5px, 0.48vw, 9px);
+    font-size: 9px;
     font-weight: 700;
     grid-template-rows: repeat(9, 1fr);
     justify-items: center;
