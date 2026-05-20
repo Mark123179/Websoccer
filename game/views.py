@@ -979,7 +979,7 @@ def home(request):
         {'title': 'FC Novum erreicht Gewinn im letzten Quartal', 'when': '22. Mai'},
     ]
     home_stadium_static_path = stadium_static_path(primary_club)
-    last_match_home_stadium_static_path = stadium_static_path(secondary_club)
+    last_match_home_stadium_static_path = stadium_static_path(primary_club)
     competition_logo_static_path_value = competition_logo_static_path(
         primary_club.league.name
         if primary_club and primary_club.league
