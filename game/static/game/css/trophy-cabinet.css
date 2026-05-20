@@ -3,17 +3,17 @@
 .aaa-trophy-stage.awards-card {
     position: relative;
     isolation: isolate;
-    min-height: clamp(500px, 28vw, 760px);
-    padding: clamp(24px, 1.6vw, 56px);
+    min-height: 528px;
+    padding: 30px;
     overflow: hidden;
-    border-radius: clamp(16px, 1vw, 28px);
+    border-radius: 19px;
     background: #02070d;
 }
 
 .aaa-profile-showcase > .aaa-trophy-stage.awards-card,
 .aaa-profile-showcase > .aaa-career-card {
-    height: var(--aaa-profile-showcase-height, clamp(500px, 28vw, 760px));
-    min-height: var(--aaa-profile-showcase-height, clamp(500px, 28vw, 760px));
+    height: var(--aaa-profile-showcase-height, 528px);
+    min-height: var(--aaa-profile-showcase-height, 528px);
 }
 
 .aaa-profile-showcase > .aaa-trophy-stage.awards-card {
@@ -57,15 +57,15 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .aaa-trophy-stage .awards-header {
     position: absolute;
-    top: clamp(18px, 1.5vw, 38px);
-    right: clamp(22px, 1.8vw, 56px);
-    left: clamp(22px, 1.8vw, 56px);
+    top: 28px;
+    right: 34px;
+    left: 34px;
     z-index: 4;
     align-items: flex-start;
 }
 
 .aaa-trophy-stage .aaa-card-heading h2 {
-    padding-right: clamp(118px, 9vw, 188px);
+    padding-right: 170px;
 }
 
 .aaa-trophy-stage .aaa-card-heading h2::before {
@@ -76,36 +76,36 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(3px, 0.32vw, 8px);
-    width: clamp(98px, 6vw, 150px);
+    gap: 6px;
+    width: 113px;
     min-width: 0;
 }
 
 .aaa-trophy-title img {
-    width: clamp(64px, 4.2vw, 116px);
-    height: clamp(64px, 4.2vw, 116px);
+    width: 79px;
+    height: 79px;
     object-fit: contain;
     flex: 0 0 auto;
 }
 
 .aaa-trophy-title span {
     max-width: 100%;
-    font-size: clamp(10px, 0.62vw, 16px);
+    font-size: 12px;
     line-height: 1.05;
     text-align: center;
 }
 
 .aaa-award-total {
     display: grid;
-    grid-template-columns: clamp(42px, 3vw, 68px) auto;
+    grid-template-columns: 57px auto;
     grid-template-areas:
 "label label"
 "icon value"
 "icon unit";
     align-items: center;
     justify-content: end;
-    column-gap: clamp(8px, 0.6vw, 16px);
-    min-width: clamp(104px, 7vw, 156px);
+    column-gap: 11px;
+    min-width: 132px;
     margin-left: auto;
     color: #ffffff;
     text-align: left;
@@ -115,12 +115,12 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 .aaa-award-total span {
     grid-area: label;
     justify-self: end;
-    margin-bottom: clamp(2px, 0.25vw, 6px);
+    margin-bottom: 5px;
     color: rgba(255, 255, 255, 0.9);
     background: transparent;
     border: 0;
     box-shadow: none;
-    font-size: clamp(12px, 0.72vw, 18px);
+    font-size: 14px;
     font-weight: 900;
     letter-spacing: 0;
     text-transform: uppercase;
@@ -128,15 +128,15 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 .aaa-award-total img {
     grid-area: icon;
-    width: clamp(38px, 2.2vw, 64px);
-    height: clamp(38px, 2.2vw, 64px);
+    width: 41px;
+    height: 41px;
     object-fit: contain;
 }
 
 .aaa-award-total strong {
     grid-area: value;
     color: #ffffff;
-    font-size: clamp(32px, 2.1vw, 58px);
+    font-size: 40px;
     font-weight: 900;
     line-height: 0.96;
 }
@@ -144,31 +144,31 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 .aaa-award-total small {
     grid-area: unit;
     color: rgba(255, 255, 255, 0.82);
-    font-size: clamp(12px, 0.72vw, 18px);
+    font-size: 14px;
     font-weight: 700;
 }
 
 .aaa-awards-stage {
     position: absolute;
-    right: clamp(22px, 1.8vw, 56px);
-    bottom: clamp(34px, 2.6vw, 74px);
-    left: clamp(22px, 1.8vw, 56px);
+    right: 34px;
+    bottom: 49px;
+    left: 34px;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(24px, 2vw, 64px);
+    gap: 38px;
     align-items: end;
-    height: clamp(350px, 23vw, 590px);
+    height: 433px;
     overflow: visible;
 }
 
 .aaa-trophy-stage.has-award-pages .aaa-awards-stage {
-    bottom: clamp(68px, 4.5vw, 112px);
+    bottom: 85px;
 }
 
 .trophy-slot {
-    --podium-bottom: clamp(58px, 3.7vw, 96px);
-    --podium-height: clamp(112px, 6.6vw, 196px);
-    --trophy-overlap: clamp(40px, 2.4vw, 64px);
+    --podium-bottom: 70px;
+    --podium-height: 124px;
+    --trophy-overlap: 45px;
     position: relative;
     display: flex;
     align-items: flex-end;
@@ -188,11 +188,11 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-slot.is-small {
-    --trophy-overlap: clamp(72px, 4.2vw, 108px);
+    --trophy-overlap: 79px;
 }
 
 .trophy-slot.is-season-award {
-    --trophy-overlap: clamp(76px, 4.5vw, 118px);
+    --trophy-overlap: 85px;
 }
 
 .aaa-awards-stage .podium {
@@ -200,7 +200,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     bottom: var(--podium-bottom);
     left: 50%;
     z-index: 1;
-    width: clamp(270px, 15.8vw, 470px);
+    width: 298px;
     height: var(--podium-height);
     transform: translateX(-50%);
     object-fit: contain;
@@ -214,8 +214,8 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     left: 50%;
     z-index: 2;
     width: auto;
-    height: clamp(190px, 10.8vw, 360px);
-    max-width: min(90%, clamp(190px, 14vw, 390px));
+    height: 203px;
+    max-width: min(90%, 264px);
     object-fit: contain;
     transform: translateX(-50%);
     pointer-events: none;
@@ -223,23 +223,23 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .aaa-awards-stage .trophy-img.is-wide {
-    height: clamp(170px, 9.2vw, 300px);
-    max-width: min(94%, clamp(200px, 13vw, 370px));
+    height: 173px;
+    max-width: min(94%, 245px);
 }
 
 .aaa-awards-stage .trophy-img.is-tall {
-    height: clamp(220px, 14vw, 420px);
-    max-width: min(82%, clamp(170px, 12vw, 340px));
+    height: 264px;
+    max-width: min(82%, 226px);
 }
 
 .aaa-awards-stage .trophy-img.is-season-award {
-    height: clamp(220px, 14vw, 420px);
-    max-width: min(82%, clamp(170px, 12vw, 340px));
+    height: 264px;
+    max-width: min(82%, 226px);
 }
 
 .aaa-awards-stage .trophy-img.is-small {
-    height: clamp(165px, 10vw, 300px);
-    max-width: min(88%, clamp(180px, 13vw, 360px));
+    height: 188px;
+    max-width: min(88%, 245px);
 }
 
 .aaa-profile-showcase .aaa-trophy-stage .awards-header {
@@ -353,7 +353,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     z-index: 3;
     display: grid;
     width: 100%;
-    min-height: clamp(48px, 3.5vw, 82px);
+    min-height: 66px;
     transform: translateX(-50%);
     color: #ffffff;
     text-align: center;
@@ -364,7 +364,7 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
     align-self: end;
     overflow-wrap: anywhere;
     color: var(--text-secondary, rgba(255, 255, 255, 0.82));
-    font-size: clamp(12px, 0.72vw, 18px);
+    font-size: 14px;
     font-weight: 750;
     letter-spacing: 0;
     line-height: 1.08;
@@ -372,9 +372,9 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 }
 
 .trophy-count {
-    margin-top: clamp(2px, 0.3vw, 8px);
+    margin-top: 6px;
     color: rgba(244, 251, 255, 0.9);
-    font-size: clamp(22px, 1.38vw, 38px);
+    font-size: 26px;
     font-weight: 850;
     line-height: 1;
     text-shadow: 0 4px 12px rgba(0, 0, 0, 0.72);
@@ -387,14 +387,14 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 .aaa-award-pagination {
     position: absolute;
     right: 0;
-    bottom: clamp(16px, 1.15vw, 34px);
+    bottom: 22px;
     left: 0;
     z-index: 5;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(8px, 0.6vw, 16px);
-    min-height: clamp(42px, 3vw, 64px);
+    gap: 11px;
+    min-height: 57px;
     margin: 0;
 }
 
@@ -402,14 +402,14 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 .aaa-award-pagination span {
     display: grid;
     place-items: center;
-    width: clamp(48px, 3.2vw, 76px);
-    height: clamp(42px, 2.8vw, 66px);
+    width: 60px;
+    height: 53px;
     border: 1px solid rgba(113, 203, 218, 0.16);
     border-radius: 6px;
     color: rgba(230, 250, 255, 0.78);
     background: rgba(2, 14, 22, 0.82);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 28px rgba(0, 0, 0, 0.2);
-    font-size: clamp(15px, 0.9vw, 22px);
+    font-size: 17px;
     font-weight: 800;
     text-decoration: none;
 }
@@ -442,9 +442,9 @@ linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 36%, rgba(0, 0, 0, 0.3)
 
 @media (max-width: 1180px) {
     .aaa-awards-stage {
-right: clamp(14px, 2vw, 28px);
-left: clamp(14px, 2vw, 28px);
-gap: clamp(12px, 1.6vw, 24px);
+right: 28px;
+left: 28px;
+gap: 24px;
     }
 
     .aaa-trophy-stage .aaa-card-heading h2 {
@@ -469,7 +469,7 @@ font-size: 31px;
 
 @media (max-width: 900px) {
     .aaa-trophy-stage.awards-card {
-min-height: clamp(760px, 140vw, 980px);
+min-height: 980px;
     }
 
     .aaa-trophy-stage .awards-header {
@@ -478,7 +478,7 @@ top: auto;
 right: auto;
 left: auto;
 z-index: 4;
-margin-bottom: clamp(16px, 4vw, 28px);
+margin-bottom: 28px;
     }
 
     .aaa-trophy-stage .aaa-card-heading h2 {
@@ -492,14 +492,14 @@ right: auto;
 bottom: auto;
 left: auto;
 grid-template-columns: repeat(2, minmax(0, 1fr));
-grid-template-rows: repeat(2, minmax(clamp(300px, 54vw, 410px), 1fr));
+grid-template-rows: repeat(2, minmax(410px, 1fr));
 height: auto;
-min-height: clamp(640px, 112vw, 860px);
-gap: clamp(14px, 4vw, 28px);
+min-height: 860px;
+gap: 28px;
     }
 
     .trophy-slot {
-min-height: clamp(300px, 54vw, 410px);
+min-height: 410px;
     }
 
     .aaa-award-pagination {
@@ -507,6 +507,6 @@ position: relative;
 right: auto;
 bottom: auto;
 left: auto;
-margin-top: clamp(16px, 4vw, 28px);
+margin-top: 28px;
     }
 }
