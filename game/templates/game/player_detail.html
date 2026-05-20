@@ -343,18 +343,20 @@
                         {% elif slot.is_placeholder %}
                             <img class="trophy-img is-default" src="{% static 'game/images/trophies/default.png' %}" alt="" aria-hidden="true">
                         {% endif %}
-                        {% if slot.is_placeholder %}
-                            <figcaption class="trophy-label trophy-placeholder-label" aria-hidden="true">
-                                <span class="trophy-name">&nbsp;</span>
-                                <strong class="trophy-count">&nbsp;</strong>
-                            </figcaption>
-                        {% else %}
-                            <figcaption class="trophy-label">
-                                <span class="trophy-name">{{ slot.title }}</span>
-                                <strong class="trophy-count">{{ slot.count }}x</strong>
-                            </figcaption>
-                        {% endif %}
                     </figure>
+                {% endfor %}
+            </div>
+            <div class="aaa-awards-labels">
+                {% for slot in award_slots %}
+                    <div class="trophy-label{% if slot.is_placeholder %} trophy-placeholder-label{% endif %}">
+                        {% if slot.is_placeholder %}
+                            <span class="trophy-name" aria-hidden="true">&nbsp;</span>
+                            <strong class="trophy-count" aria-hidden="true">&nbsp;</strong>
+                        {% else %}
+                            <span class="trophy-name">{{ slot.title }}</span>
+                            <strong class="trophy-count">{{ slot.count }}x</strong>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
             {% if award_page.has_other_pages %}
