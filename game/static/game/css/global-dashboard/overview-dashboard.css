@@ -21,7 +21,6 @@ body.overview-home-page {
         linear-gradient(180deg, rgba(1, 8, 14, 0.14), rgba(1, 8, 14, 0.92)),
         url("../../images/backgrounds/player-profile-stadium-atmosphere.svg") center / cover no-repeat,
         #02070d;
-    min-height: 100vh;
     overflow-x: hidden;
     padding: 22px 22px 30px;
 }
