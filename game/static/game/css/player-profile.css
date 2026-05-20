@@ -717,7 +717,7 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     padding-top: 13px;
     padding-bottom: 7px;
     opacity: 1;
-    transform: scale(1.55);
+    transform: scale(1.0);
     transform-origin: center;
 }
 
