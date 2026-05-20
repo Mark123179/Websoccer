@@ -16,7 +16,9 @@
                             <figcaption>{{ trophy.competitionName }}</figcaption>
                         </figure>
                     {% else %}
-                        <figure class="club-trophy-item club-trophy-empty" aria-hidden="true"></figure>
+                        <figure class="club-trophy-item club-trophy-empty" aria-hidden="true">
+                            <img src="{% static 'game/images/trophies/default.png' %}" alt="">
+                        </figure>
                     {% endif %}
                 {% endfor %}
             </div>

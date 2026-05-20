@@ -48,6 +48,11 @@
     content: none;
 }
 
+.club-trophy-empty img {
+    opacity: 0.18;
+    filter: saturate(0) drop-shadow(0 12px 16px rgba(0, 0, 0, 0.3));
+}
+
 .club-trophy-item img {
     position: relative;
     z-index: 2;
