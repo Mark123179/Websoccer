@@ -38,7 +38,8 @@ body.overview-home-page {
 
 .overview-grid {
     display: grid;
-    gap: clamp(16px, 1vw, 20px);
+    row-gap: clamp(16px, 1vw, 20px);
+    column-gap: clamp(16px, 1vw, 20px);
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
         clamp(370px, 20vw, 460px)
