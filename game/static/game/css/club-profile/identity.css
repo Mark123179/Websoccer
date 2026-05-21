@@ -48,8 +48,8 @@
     position: absolute;
     right: 0;
     bottom: 0;
-    width: 126px;
-    height: 126px;
+    width: clamp(100px, 7vw, 160px);
+    height: clamp(100px, 7vw, 160px);
     object-fit: contain;
     opacity: 0.125;
     filter: grayscale(1) brightness(1.45);
