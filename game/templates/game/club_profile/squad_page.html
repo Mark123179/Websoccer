@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+    {{ squad_title }} · {{ club.name }}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="club-dashboard club-profile-shell">
+    {% include 'game/partials/game_header.html' %}
+
+    <div class="dashboard-artboard">
+        <article class="dashboard-card clubs-table-card">
+            <div class="section-head">
+                <h2 class="card-title">{{ squad_title }}</h2>
+                <a href="{% url 'club_detail' club.id %}">Vereinsübersicht</a>
+            </div>
+
+            {% if players %}
+                <div class="table-wrap">
+                    <table class="club-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Spieler</th>
+                                <th>Pos</th>
+                                <th>Alter</th>
+                                <th>Stärke</th>
+                                <th>Fitness</th>
+                                <th>Vertrag</th>
+                                <th>Marktwert</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in players %}
+                                <tr>
+                                    <td>{{ player.shirt_number|default:"—" }}</td>
+                                    <td>
+                                        <span class="club-name-cell">
+                                            <a href="{% url 'player_detail' player.id %}" class="img-link" aria-label="{{ player.full_name }} Spielerprofil">
+                                                <img class="player-photo" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                                            </a>
+                                            <a href="{% url 'player_detail' player.id %}">{{ player.full_name }}</a>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% with pos=player.position|default:player.primary_position %}
+                                            {% if pos %}
+                                                <span class="position-badge">{{ pos }}</span>
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>{{ player.age }}</td>
+                                    <td>
+                                        {% if player.strength_profile %}
+                                            {{ player.strength_profile.final_strength|floatformat:1 }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if player.strength_profile %}
+                                            <span class="fitness">{{ player.strength_profile.freshness|floatformat:0 }} %</span>
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if player.contract_until %}
+                                            {{ player.contract_until|date:"m/Y" }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if player.market_value %}
+                                            {{ player.market_value|intcomma }} €
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="page-intro">Für diesen Kader sind noch keine Spieler eingetragen.</p>
+            {% endif %}
+        </article>
+    </div>
+</section>
+{% endblock %}

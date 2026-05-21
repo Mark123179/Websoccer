@@ -1964,22 +1964,55 @@ def club_tactics(request, club_id):
     return render(request, 'game/tactics.html', context)
 
 
+_SQUAD_POSITION_GROUP = {
+    'TW': 0,
+    'IV': 1, 'LV': 1, 'RV': 1, 'LI': 1, 'LOV': 1, 'ROV': 1,
+    'DM': 2, 'ZM': 2, 'LM': 2, 'RM': 2, 'LOM': 2, 'ROM': 2, 'OM': 2,
+    'LF': 3, 'RF': 3, 'ST': 3,
+}
+
+
+def _sorted_squad(players):
+    def _key(p):
+        pos = p.position or p.primary_position or ''
+        group = _SQUAD_POSITION_GROUP.get(pos, 9)
+        shirt = p.shirt_number if p.shirt_number is not None else 999
+        return (group, shirt, p.last_name, p.first_name)
+    return sorted(players, key=_key)
+
+
+def _build_squad_context(request, club, squad_title):
+    is_youth = squad_title == 'Jugendkader'
+    qs = Player.objects.filter(club=club).select_related('strength_profile')
+    if is_youth:
+        qs = qs.filter(age__lte=21)
+    players = _sorted_squad(qs)
+    opponent_club = Club.objects.exclude(id=club.id).order_by('name').first()
+    return {
+        'club': club,
+        'players': players,
+        'squad_title': squad_title,
+        'game_header': build_game_header(
+            squad_title,
+            club.name,
+            reverse_club_detail(club),
+            club,
+            opponent_club,
+            calendar_offset_from_request(request),
+        ),
+    }
+
+
 def club_professional_squad(request, club_id):
-    return render_public_club_stub(
-        request,
-        club_id,
-        'Profikader',
-        'Der öffentliche Profikader wird als nächster Detailbereich ausgebaut.',
-    )
+    club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
+    return render(request, 'game/club_profile/squad_page.html',
+                  _build_squad_context(request, club, 'Profikader'))
 
 
 def club_youth_squad(request, club_id):
-    return render_public_club_stub(
-        request,
-        club_id,
-        'Jugendkader',
-        'Der öffentliche Jugendkader wird als nächster Detailbereich ausgebaut.',
-    )
+    club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
+    return render(request, 'game/club_profile/squad_page.html',
+                  _build_squad_context(request, club, 'Jugendkader'))
 
 
 def club_table(request, club_id):
