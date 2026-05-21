@@ -42,6 +42,16 @@
     --dashboard-artboard-width: clamp(1200px, 88vw, 2200px);
 }
 
+/* ============================================================
+   FLUID ARTBOARD — Overview home page
+   Same clamp() pattern so the overview grid fills 2K/4K
+   screens instead of leaving dead space at 1652px.
+   ============================================================ */
+
+.overview-home-page .start-dashboard {
+    --dashboard-artboard-width: clamp(1200px, 88vw, 2200px);
+}
+
         * {
             box-sizing: border-box;
         }

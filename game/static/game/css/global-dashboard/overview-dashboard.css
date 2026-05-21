@@ -1674,6 +1674,69 @@ body.overview-home-page {
 
 /* Frueherer 2x2-Breakpoint entfernt — wird durch Dashboard-Scaler abgeloest */
 
+/* ============================================================
+   WIDE-SCREEN BOOST ≥ 2400 px (2K / 4K)
+   Slightly larger row heights, padding, and font sizes so the
+   overview grid uses the extra real-estate gracefully.
+   ============================================================ */
+
+@media (min-width: 2400px) {
+    .overview-home-page .start-dashboard {
+        padding: 28px 28px 38px;
+    }
+
+    .overview-grid {
+        gap: 20px;
+        grid-template-rows:
+            clamp(370px, 20vw, 460px)
+            clamp(340px, 18.5vw, 420px)
+            clamp(310px, 17vw, 390px);
+    }
+
+    .overview-card,
+    .overview-chat-card,
+    .overview-transfer-card,
+    .overview-table-card,
+    .overview-news-card,
+    .overview-social-card,
+    .overview-manager-widget,
+    .overview-live-widget,
+    .overview-stats-widget {
+        padding: 22px;
+    }
+
+    .overview-dashboard .card-title {
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .overview-club-identity h1 {
+        font-size: 27px;
+    }
+
+    .overview-club-facts strong {
+        font-size: 13px;
+    }
+
+    .overview-team img {
+        height: 144px;
+        width: 144px;
+    }
+
+    .overview-team.compact img {
+        height: 96px;
+        width: 96px;
+    }
+
+    .overview-vs {
+        font-size: 40px;
+    }
+
+    .overview-result > span {
+        font-size: 36px;
+    }
+}
+
 
 /* ── Global img-link utility ─────────────────────────────────────────────
    Wraps any crest or player-portrait img in a transparent <a> so the img
