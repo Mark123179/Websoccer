@@ -109,13 +109,13 @@
 .club-trophy-pager button {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 26px;
+    width: clamp(30px, 2.1vw, 40px);
+    height: clamp(26px, 1.8vw, 35px);
     border: 1px solid rgba(113, 203, 218, 0.18);
     border-radius: 4px;
     color: rgba(230, 250, 255, 0.78);
     background: rgba(2, 14, 22, 0.82);
-    font-size: 12px;
+    font-size: clamp(12px, 0.85vw, 16px);
     font-weight: 900;
     cursor: pointer;
 }
