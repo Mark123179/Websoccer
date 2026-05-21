@@ -130,6 +130,7 @@
                     {% if season_rows %}<span>Saison {{ season_rows.0.season_label }}</span>{% endif %}
                 </div>
                 {% if season_rows %}
+                    <div class="aaa-kpis-scroll-wrap">
                     <div class="aaa-season-kpis">
                         <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-games"></use></svg></i><strong>{{ season_summary.matches }}</strong><small>Spiele</small></span>
                         <span><i><img src="{% static 'game/images/icons/stat-goals.svg' %}" alt=""></i><strong>{{ season_summary.goals }}</strong><small>Tore</small></span>
@@ -139,6 +140,7 @@
                         <span class="is-red"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-red-card"></use></svg></i><strong>{{ season_summary.red_cards }}</strong><small>Rote</small></span>
                         <span class="is-sub"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-substitutions"></use></svg></i><strong><em>{{ season_summary.substitutions_in }}</em>/<b>{{ season_summary.substitutions_out }}</b></strong><small>Ein/Aus</small></span>
                         <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-star"></use></svg></i><strong>{{ season_summary.player_of_match_awards }}</strong><small>Spieler des Spiels</small></span>
+                    </div>
                     </div>
 
                     <div class="aaa-stat-board dashboard-scrollarea">
@@ -387,6 +389,7 @@
                 <h2>Karriereleistungen</h2>
                 <span>Websoccer gesamt</span>
             </div>
+            <div class="aaa-kpis-scroll-wrap">
             <div class="aaa-career-summary">
                 <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-games"></use></svg></i><strong>{{ career_summary.matches }}</strong><small>Spiele</small></span>
                 <span><i><img src="{% static 'game/images/icons/stat-goals.svg' %}" alt=""></i><strong>{{ career_summary.goals }}</strong><small>Tore</small></span>
@@ -396,6 +399,7 @@
                 <span class="is-red"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-red-card"></use></svg></i><strong>{{ career_summary.red_cards }}</strong><small>Rote</small></span>
                 <span class="is-sub"><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-substitutions"></use></svg></i><strong><em>{{ career_summary.substitutions_in }}</em>/<b>{{ career_summary.substitutions_out }}</b></strong><small>Ein/Aus</small></span>
                 <span><i><svg><use href="{% static 'game/images/icons/player-ui-icons.svg' %}#icon-star"></use></svg></i><strong>{{ career_summary.player_of_match_awards }}</strong><small>Spieler des Spiels</small></span>
+            </div>
             </div>
             {% if career_rows %}
                 <div class="aaa-career-board">

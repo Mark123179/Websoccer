@@ -1127,11 +1127,17 @@ inset 0 1px 0 rgba(255, 255, 255, 0.1);
     height: 100%;
 }
 
+.aaa-kpis-scroll-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 10px;
+}
+
 .aaa-season-kpis {
     display: grid;
     grid-template-columns: repeat(8, minmax(clamp(50px, 3.8vw, 64px), 1fr));
     gap: 0;
-    margin-bottom: 10px;
+    margin-bottom: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.13);
 }
@@ -1722,7 +1728,7 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
     display: grid;
     grid-template-columns: repeat(8, minmax(clamp(50px, 3.8vw, 64px), 1fr));
     gap: 0;
-    margin-bottom: 10px;
+    margin-bottom: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.13);
 }
@@ -1940,6 +1946,14 @@ grid-template-columns: repeat(2, minmax(0, 1fr));
 grid-template-columns: 1fr;
     }
 
+}
+
+@media (max-width: 480px) {
+    .aaa-season-kpis,
+    .aaa-career-summary {
+grid-template-columns: repeat(8, minmax(56px, 1fr));
+min-width: 448px;
+    }
 }
 
 @media (min-width: 2400px) {
