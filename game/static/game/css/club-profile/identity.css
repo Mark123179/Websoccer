@@ -145,11 +145,11 @@
 .club-form-strip b {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 26px;
+    width: clamp(26px, 1.4vw, 34px);
+    height: clamp(26px, 1.4vw, 34px);
     border-radius: 4px;
     color: #071015;
-    font-size: 12px;
+    font-size: clamp(12px, 0.7vw, 15px);
     font-weight: 900;
 }
 
