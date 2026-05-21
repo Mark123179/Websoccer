@@ -3,7 +3,7 @@
     z-index: 2;
     margin: 8px 0 6px;
     color: rgba(239, 251, 255, 0.84);
-    font-size: 13px;
+    font-size: clamp(11px, 0.9vw, 16px);
     font-weight: 900;
     text-align: center;
 }
@@ -22,7 +22,7 @@
 .next-match-profile-card .club-match-competition {
     margin-top: 14px;
     color: #ffffff;
-    font-size: 16px;
+    font-size: clamp(14px, 1.15vw, 20px);
     text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82), 0 0 10px rgba(35, 228, 245, 0.18);
 }
 
@@ -70,7 +70,7 @@
     max-width: 100%;
     overflow: hidden;
     color: var(--club-text);
-    font-size: 13px;
+    font-size: clamp(11px, 0.92vw, 16px);
     font-weight: 900;
     line-height: 1.05;
     text-transform: uppercase;
@@ -79,13 +79,13 @@
 .club-next-matchup > span {
     display: grid;
     place-items: center;
-    width: 58px;
-    height: 58px;
+    width: clamp(52px, 4.2vw, 72px);
+    height: clamp(52px, 4.2vw, 72px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 50%;
     color: #ffffff;
     background: rgba(0, 0, 0, 0.2);
-    font-size: 28px;
+    font-size: clamp(22px, 2.0vw, 36px);
     font-weight: 900;
 }
 
@@ -98,7 +98,7 @@
     gap: 2px;
     margin: -8px 0 18px;
     color: var(--club-muted);
-    font-size: 12px;
+    font-size: clamp(10px, 0.82vw, 14px);
     text-align: center;
     transform: translateY(-14px);
 }
@@ -106,15 +106,15 @@
 .next-match-profile-card .club-match-meta {
     gap: 3px;
     color: rgba(239, 251, 255, 0.86);
-    font-size: 13px;
+    font-size: clamp(11px, 0.9vw, 15px);
 }
 
 .next-match-profile-card .club-match-meta strong {
-    font-size: 14px;
+    font-size: clamp(12px, 0.98vw, 16px);
 }
 
 .next-match-profile-card .club-match-meta small {
-    font-size: 11px;
+    font-size: clamp(10px, 0.78vw, 13px);
 }
 
 .club-match-meta > span {

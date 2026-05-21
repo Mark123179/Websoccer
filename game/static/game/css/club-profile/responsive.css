@@ -72,53 +72,8 @@
 }
 
 @media (min-width: 2400px) {
-    .club-profile-shell {
-        padding: 20px 24px 22px;
-    }
-
     .club-profile-grid {
         gap: 12px;
-    }
-
-    .club-card-title {
-        font-size: 14px;
-    }
-
-    .club-identity-copy h1 {
-        font-size: 34px;
-    }
-
-    .club-identity-stats dd {
-        font-size: 18px;
-    }
-
-
-    .club-meta-line {
-        font-size: 15px;
-    }
-
-    .club-meta-line img {
-        flex: 0 0 22px;
-        width: 22px;
-        height: 22px;
-    }
-
-    .club-next-matchup strong {
-        font-size: 15px;
-    }
-
-    .club-match-competition {
-        font-size: 15px;
-    }
-
-    .next-match-profile-card .club-match-competition {
-        font-size: 19px;
-    }
-
-    .club-next-matchup > span {
-        width: 68px;
-        height: 68px;
-        font-size: 34px;
     }
 
     .club-last-result strong {
@@ -129,19 +84,5 @@
     .club-card-link {
         font-size: 14px;
         min-height: 40px;
-    }
-
-    .club-player-name-row {
-        font-size: 13px;
-    }
-
-    .club-image-metric strong,
-    .city-card-location strong {
-        font-size: 18px;
-    }
-
-    .club-image-metric small,
-    .city-card-location small {
-        font-size: 13px;
     }
 }

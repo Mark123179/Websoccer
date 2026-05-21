@@ -89,7 +89,7 @@
 .club-identity-copy h1 {
     margin: 0 0 14px;
     color: var(--club-text);
-    font-size: 26px;
+    font-size: clamp(20px, 1.6vw, 30px);
     font-weight: 900;
     line-height: 1.05;
 }
@@ -101,14 +101,14 @@
     min-width: 0;
     margin-top: 8px;
     color: var(--club-muted);
-    font-size: 13px;
+    font-size: clamp(11px, 0.9vw, 16px);
     font-weight: 800;
 }
 
 .club-meta-line img {
-    flex: 0 0 18px;
-    width: 18px;
-    height: 18px;
+    flex: 0 0 clamp(16px, 1.1vw, 22px);
+    width: clamp(16px, 1.1vw, 22px);
+    height: clamp(16px, 1.1vw, 22px);
     object-fit: contain;
 }
 
@@ -267,7 +267,7 @@
     max-width: 100%;
     overflow: hidden;
     color: #ffffff;
-    font-size: 15px;
+    font-size: clamp(13px, 1.0vw, 19px);
     font-weight: 900;
     line-height: 1.1;
     text-overflow: ellipsis;
@@ -278,7 +278,7 @@
 .club-identity-stats dt {
     max-width: 100%;
     color: rgba(200, 230, 240, 0.52);
-    font-size: 9.5px;
+    font-size: clamp(9px, 0.65vw, 11.5px);
     font-weight: 800;
     letter-spacing: 0.04em;
     line-height: 1.3;
