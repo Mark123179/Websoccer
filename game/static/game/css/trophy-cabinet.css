@@ -446,7 +446,7 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
 }
 
 .aaa-trophy-stage.has-award-pages .aaa-awards-labels {
-    bottom: clamp(78px, 5.4vw, 114px);
+    bottom: clamp(84px, 5.4vw, 114px);
 }
 
 .trophy-label {
