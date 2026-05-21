@@ -364,8 +364,8 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-faint: var(--text-muted);
     --aaa-radius: 12px;
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
-    --aaa-profile-artboard-width: var(--dashboard-artboard-width, 1652px);
-    --aaa-profile-showcase-height: 528px;
+    --aaa-profile-artboard-width: clamp(1300px, 88vw, 2200px);
+    --aaa-profile-showcase-height: clamp(460px, 31vw, 740px);
     min-height: 100%;
     padding: 18px 18px 26px;
     position: relative;
@@ -514,7 +514,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 
 .aaa-profile-grid {
     display: grid;
-    grid-template-columns: minmax(330px, 366px) minmax(560px, 1.05fr) minmax(520px, 0.95fr);
+    grid-template-columns: clamp(280px, 22vw, 380px) minmax(0, 1.05fr) minmax(0, 0.95fr);
     grid-template-areas:
 "left center right"
 "showcase showcase showcase";
@@ -545,7 +545,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 
 .aaa-profile-showcase {
     display: grid;
-    grid-template-columns: minmax(520px, 0.92fr) minmax(0, 1.58fr);
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.58fr);
     gap: 14px;
     align-items: stretch;
 }
@@ -660,7 +660,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 }
 
 .aaa-player-card {
-    min-height: 720px;
+    min-height: clamp(620px, 43vw, 1000px);
 }
 
 .aaa-left-column .aaa-player-card {
@@ -669,7 +669,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 
 .aaa-player-poster {
     position: relative;
-    height: 438px;
+    height: clamp(360px, 26vw, 620px);
     overflow: hidden;
     border-radius: var(--aaa-radius) var(--aaa-radius) 0 0;
     background:
@@ -1043,7 +1043,7 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
 }
 
 .aaa-position-card {
-    min-height: 392px;
+    min-height: clamp(320px, 24vw, 560px);
 }
 
 .aaa-position-card .aaa-card-heading {
@@ -1324,7 +1324,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 }
 
 .aaa-market-card {
-    min-height: 328px;
+    min-height: clamp(270px, 20vw, 480px);
 }
 
 .aaa-market-card .market-value-large {
@@ -1385,7 +1385,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 }
 
 .aaa-market-card .aaa-market-chart {
-    height: 224px;
+    height: clamp(190px, 14vw, 320px);
     grid-template-columns: 54px 1fr;
     grid-template-rows: 1fr 34px;
     border-bottom: 0;
@@ -1416,7 +1416,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     gap: 12px;
     align-items: stretch;
     height: 100%;
-    min-height: 354px;
+    min-height: clamp(290px, 22vw, 520px);
 }
 
 .aaa-history-grid .aaa-event-grid {
@@ -1850,32 +1850,6 @@ grid-template-columns: 44px minmax(180px, 1fr) minmax(220px, 320px) auto minmax(
 gap: 10px;
     }
 
-    .aaa-profile-grid {
-grid-template-columns: minmax(300px, 330px) minmax(520px, 1.05fr) minmax(430px, 0.9fr);
-gap: 12px;
-    }
-
-    .aaa-player-poster {
-height: 390px;
-    }
-
-    .aaa-player-card {
-min-height: 666px;
-    }
-
-    .aaa-position-card .aaa-pitch {
-width: min(100%, 548px);
-height: auto;
-    }
-
-    .aaa-position-card {
-min-height: 430px;
-    }
-
-    .aaa-season-kpis strong {
-font-size: 20px;
-    }
-
     .aaa-stat-head,
     .aaa-stat-row {
 grid-template-columns: minmax(112px, 1.08fr) repeat(8, minmax(32px, 0.48fr)) minmax(56px, 0.62fr);
@@ -1888,7 +1862,7 @@ gap: 4px;
     }
 }
 
-@media (max-width: 1450px) {
+@media (max-width: 1380px) {
     .aaa-profile-topbar {
 grid-template-columns: 44px 1fr minmax(210px, 300px);
     }
@@ -1900,7 +1874,7 @@ display: none;
     }
 
     .aaa-profile-grid {
-grid-template-columns: minmax(286px, 330px) minmax(0, 1fr);
+grid-template-columns: clamp(260px, 30vw, 330px) minmax(0, 1fr);
 grid-template-areas:
     "left center"
     "right right"
@@ -1916,12 +1890,12 @@ grid-template-columns: 1fr;
     }
 
     .aaa-market-card {
-min-height: 260px;
+min-height: clamp(230px, 16vw, 300px);
     }
 
     .aaa-history-grid {
-height: 320px;
-min-height: 320px;
+height: clamp(280px, 22vw, 380px);
+min-height: clamp(280px, 22vw, 380px);
     }
 }
 
@@ -1966,4 +1940,111 @@ grid-template-columns: repeat(2, minmax(0, 1fr));
 grid-template-columns: 1fr;
     }
 
+}
+
+@media (min-width: 2400px) {
+    .is-aaa-profile {
+padding: 28px 28px 42px;
+    }
+
+    .aaa-card {
+padding: 22px;
+    }
+
+    .aaa-card-heading h2 {
+font-size: 19px;
+    }
+
+    .aaa-card-heading {
+margin-bottom: 18px;
+    }
+
+    .aaa-profile-grid,
+    .aaa-profile-topbar {
+gap: 18px;
+    }
+
+    .aaa-player-nameplate h2 {
+font-size: 44px;
+    }
+
+    .aaa-top-title h1 {
+font-size: 30px;
+    }
+
+    .aaa-bio-strip b {
+font-size: 15px;
+    }
+
+    .aaa-player-info-list strong,
+    .aaa-player-info-list a {
+font-size: 16px;
+    }
+
+    .aaa-season-kpis i,
+    .aaa-career-summary i {
+width: 52px;
+height: 52px;
+    }
+
+    .aaa-season-kpis svg,
+    .aaa-career-summary svg,
+    .aaa-season-kpis img,
+    .aaa-career-summary img {
+width: 30px;
+height: 30px;
+    }
+
+    .aaa-season-kpis strong,
+    .aaa-career-summary strong {
+font-size: 24px;
+    }
+
+    .aaa-season-kpis small,
+    .aaa-career-summary small {
+font-size: 12px;
+    }
+
+    .aaa-market-card .market-value-large {
+font-size: 42px;
+    }
+
+    .aaa-stat-head,
+    .aaa-stat-row,
+    .aaa-career-row {
+grid-template-columns: minmax(148px, 1.16fr) repeat(8, minmax(42px, 0.5fr)) minmax(72px, 0.62fr);
+min-height: 44px;
+    }
+
+    .aaa-stat-row > span:not(.aaa-stat-competition):not(.grade-badge),
+    .aaa-career-row > span:not(.aaa-stat-competition):not(.grade-badge) {
+font-size: 13px;
+    }
+
+    .aaa-stat-board {
+max-height: 320px;
+    }
+
+    .aaa-career-rows {
+max-height: 320px;
+    }
+
+    .grade-badge {
+font-size: 15px;
+min-width: 68px;
+height: 30px;
+    }
+
+    .aaa-transfer-node summary {
+min-height: 50px;
+    }
+
+    .aaa-event-list div {
+font-size: 14px;
+min-height: 34px;
+    }
+
+    .aaa-profile-showcase {
+gap: 18px;
+    }
 }
