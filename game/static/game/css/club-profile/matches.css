@@ -198,8 +198,8 @@
 }
 
 .club-scorers img {
-    width: 14px;
-    height: 14px;
+    width: clamp(10px, 0.75vw, 13px);
+    height: clamp(10px, 0.75vw, 13px);
 }
 
 .club-no-scorers {
