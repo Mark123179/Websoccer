@@ -461,7 +461,7 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
 }
 
 .trophy-name {
-    align-self: end;
+    align-self: center;
     overflow-wrap: anywhere;
     color: var(--text-secondary, rgba(255, 255, 255, 0.82));
     font-size: clamp(12px, 1.0vw, 18px);
