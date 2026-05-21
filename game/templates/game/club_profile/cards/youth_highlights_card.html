@@ -6,4 +6,9 @@
             {% include 'game/club_profile/cards/player_highlight_tile.html' with item=item compact=True %}
         {% endfor %}
     </div>
+
+    <a class="club-profile-button" href="{{ profile.links.youthSquadUrl }}">
+        Vollständiger Kader
+        <span aria-hidden="true">→</span>
+    </a>
 </article>
