@@ -544,6 +544,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 }
 
 .aaa-profile-showcase {
+    container-type: inline-size;
     display: grid;
     grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.58fr);
     gap: 14px;

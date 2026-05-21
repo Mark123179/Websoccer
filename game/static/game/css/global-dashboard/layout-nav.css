@@ -43,6 +43,18 @@
 }
 
 /* ============================================================
+   FLUID ARTBOARD — AAA player profile
+   The .is-aaa-profile page uses --aaa-profile-artboard-width
+   (clamp 1300→2200px) for its own content grid. The
+   ws-game-header must use the same width so header and content
+   are always aligned at every resolution.
+   ============================================================ */
+
+.player-dashboard.is-aaa-profile {
+    --dashboard-artboard-width: clamp(1300px, 88vw, 2200px);
+}
+
+/* ============================================================
    FLUID ARTBOARD — Overview home page
    Same clamp() pattern so the overview grid fills 2K/4K
    screens instead of leaving dead space at 1652px.
