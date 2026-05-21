@@ -20,7 +20,7 @@
 }
 
 .next-match-profile-card .club-match-competition {
-    margin-top: 14px;
+    margin-top: clamp(8px, 1.1vw, 14px);
     color: #ffffff;
     font-size: clamp(14px, 1.15vw, 20px);
     text-shadow: 0 2px 14px rgba(0, 0, 0, 0.82), 0 0 10px rgba(35, 228, 245, 0.18);
@@ -41,7 +41,7 @@
     z-index: 2;
     display: grid;
     grid-template-columns: minmax(0, 1fr) 68px minmax(0, 1fr);
-    gap: 14px;
+    gap: clamp(8px, 1.1vw, 14px);
     align-items: center;
     align-self: center;
     text-align: center;
@@ -49,7 +49,7 @@
 
 .club-next-matchup div {
     display: grid;
-    gap: 7px;
+    gap: clamp(4px, 0.55vw, 7px);
     justify-items: center;
     min-width: 0;
 }
