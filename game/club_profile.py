@@ -87,6 +87,8 @@ def build_club_identity(club, players):
         'clubValueFormatted': compact_money(total_market_value),
         'averageProAgeLabel': average_age_label(pro_players),
         'averageYouthAgeLabel': average_age_label(youth_players),
+        'proPlayerCount': len(pro_players),
+        'youthPlayerCount': len(youth_players),
         'recentForm': ['S', 'S', 'U', 'S', 'N'],
     }
 
