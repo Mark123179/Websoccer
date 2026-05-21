@@ -61,8 +61,8 @@
     position: relative;
     z-index: 2;
     align-self: end;
-    width: min(clamp(68px, 8.5vw, 132px), 110%);
-    height: clamp(68px, 8.5vw, 132px);
+    width: min(122.4px, 110%);
+    height: 122.4px;
     object-fit: contain;
     object-position: center bottom;
     filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.56));
@@ -79,7 +79,7 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 5px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.44));
-    font-size: clamp(14px, 1.6vw, 26px);
+    font-size: 23.04px;
     font-weight: 900;
 }
 
@@ -88,7 +88,7 @@
     z-index: 3;
     margin-top: 5px;
     color: var(--club-muted);
-    font-size: clamp(9px, 0.65vw, 11.5px);
+    font-size: 9.36px;
     font-weight: 900;
     line-height: 1.05;
     text-transform: uppercase;
@@ -102,20 +102,20 @@
     z-index: 2;
     display: flex;
     justify-content: center;
-    gap: clamp(6px, 0.45vw, 9px);
+    gap: 6.48px;
     margin-top: 0;
 }
 
 .club-trophy-pager button {
     display: grid;
     place-items: center;
-    width: clamp(30px, 2.1vw, 40px);
-    height: clamp(26px, 1.8vw, 35px);
+    width: 30.24px;
+    height: 26px;
     border: 1px solid rgba(113, 203, 218, 0.18);
-    border-radius: clamp(4px, 0.3vw, 6px);
+    border-radius: 4.32px;
     color: rgba(230, 250, 255, 0.78);
     background: rgba(2, 14, 22, 0.82);
-    font-size: clamp(12px, 0.85vw, 16px);
+    font-size: 12.24px;
     font-weight: 900;
     cursor: pointer;
 }

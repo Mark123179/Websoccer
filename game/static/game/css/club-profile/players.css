@@ -103,7 +103,7 @@
     position: relative;
     z-index: 2;
     width: min(124px, 112%);
-    height: clamp(92px, 7.5vw, 116px);
+    height: 108px;
     object-fit: contain;
     object-position: center bottom;
     filter: drop-shadow(0 13px 12px rgba(0, 0, 0, 0.56));
@@ -120,7 +120,7 @@
     overflow: hidden;
     padding: 0 7px;
     color: #ffffff;
-    font-size: clamp(10px, 0.82vw, 13px);
+    font-size: 11.808px;
     font-weight: 900;
     line-height: 1.12;
 }
@@ -147,7 +147,7 @@
     min-width: 58px;
     padding: 2px 5px 6px;
     color: var(--club-teal);
-    font-size: clamp(10px, 0.8vw, 13px);
+    font-size: 11.52px;
     font-style: normal;
     font-weight: 900;
     text-decoration: none;

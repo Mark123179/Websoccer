@@ -19,15 +19,15 @@
     --club-muted: rgba(218, 236, 242, 0.72);
     --club-faint: rgba(218, 236, 242, 0.46);
     --club-radius: 7px;
-    --club-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
+    --club-artboard-width: 1180px;
     --dashboard-artboard-width: var(--club-artboard-width);
-    --club-row-1: clamp(390px, 24vw, 460px);
-    --club-row-2: clamp(270px, 16.5vw, 320px);
-    --club-row-3: clamp(235px, 14vw, 270px);
+    --club-row-1: 390px;
+    --club-row-2: 270px;
+    --club-row-3: 235px;
     box-sizing: border-box;
     min-height: 100%;
     overflow-x: hidden;
-    padding: clamp(14px, 0.85vw, 18px) clamp(16px, 1.1vw, 22px) clamp(16px, 1.0vw, 20px);
+    padding: 14px 16px 16px;
     background:
         radial-gradient(circle at 58% 0%, rgba(255, 255, 255, 0.1), transparent 18%),
         radial-gradient(circle at 18% 18%, rgba(35, 228, 245, 0.13), transparent 27%),
@@ -96,7 +96,7 @@
     z-index: 2;
     margin: 0;
     color: rgba(241, 251, 255, 0.9);
-    font-size: clamp(11px, 0.82vw, 14px);
+    font-size: 11.808px;
     font-weight: 900;
     letter-spacing: 0;
     line-height: 1;
@@ -208,8 +208,8 @@
     top: 1px;
     left: 0;
     z-index: 2;
-    width: clamp(125px, 6.5vw, 160px);
-    height: clamp(125px, 6.5vw, 160px);
+    width: 125px;
+    height: 125px;
 }
 
 .club-identity-crest-link .club-identity-crest {

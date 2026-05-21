@@ -1,0 +1,369 @@
+Der gemeinsame Nenner
+
+Die komplette App ist eine 1440px breite Bühne.
+
+Basis-Koordinatensystem: 1440 × 900
+sichtbarer First-Fold:   1440 × 900
+Content darunter:        bleibt darunter
+Scaling:                 komplette Stage per transform: scale()
+Scroll:                  genau einmal global vertikal
+Horizontal Scroll:       nie
+
+Bei 1920×1080 wird nicht das Grid breiter.
+Bei 2560×1440 wird nicht rechts ein leerer Monitorbereich erzeugt.
+Bei 3840×2160 wird nicht der Content links klein stehen gelassen.
+
+Stattdessen:
+
+scale = Math.min(window.innerWidth / 1440, window.innerHeight / 900)
+
+Bei typischen 16:9-Auflösungen ergibt das:
+
+Viewport	Scale	Stage sichtbar	Rand links/rechts
+1440×900	1.00	1440×900	0px
+1920×1080	1.20	1728×1080	96px je Seite
+2560×1440	1.60	2304×1440	128px je Seite
+3840×2160	2.40	3456×2160	192px je Seite
+
+Das ist exakt das Ziel.
+
+Wichtige Korrektur 1: height: 900px wäre falsch
+
+Die Stage darf nicht hart auf 900px Höhe limitiert werden.
+
+Richtig ist:
+
+.gameStage {
+  width: 1440px;
+  min-height: 900px;
+}
+
+Denn 900px ist nur die Basis-Viewport-Höhe, nicht die komplette Inhaltslänge.
+Die Trophies, weitere Tabellen usw. liegen unterhalb davon. Deshalb muss der Spacer die echte Content-Höhe nehmen:
+
+const contentHeight = Math.max(900, stage.scrollHeight);
+spacer.style.height = `${contentHeight * scale}px`;
+Wichtige Korrektur 2: nicht blind alle vw ersetzen
+
+Dein Satz ist grundsätzlich richtig:
+
+vw-Einheiten beziehen sich immer auf den echten Viewport, nicht auf die Stage.
+
+Aber: nicht global alles ersetzen, sondern nur alles, was innerhalb der Game-Stage liegt.
+
+Muss zu festen Basis-px werden
+
+Innerhalb der Stage:
+
+font-size: clamp(...vw...);
+width: 88vw;
+height: 12vw;
+gap: 1vw;
+padding: 2vw;
+grid-template-columns: ...vw...;
+
+Das muss raus.
+
+Darf vw/vh behalten
+
+Außerhalb der Stage:
+
+.gameViewport {
+  width: 100vw;
+  height: 100vh;
+}
+
+Oder echte Viewport-Hintergründe, globale Overlays, Ladebildschirme. Die dürfen weiterhin viewportbasiert sein.
+
+Saubere Umrechnung von vw
+
+Nicht einfach Nvw blind in N * 14.4px umrechnen, wenn clamp() beteiligt ist.
+
+Bei 1440px Basis gilt:
+
+1vw = 14.4px
+1vh = 9px
+
+Aber bei clamp() muss der Wert bei 1440px ausgewertet werden.
+
+Beispiel:
+
+font-size: clamp(16px, 1vw, 22px);
+
+Bei 1440px:
+
+1vw = 14.4px
+clamp(16px, 14.4px, 22px) = 16px
+
+Also wird daraus:
+
+font-size: 16px;
+
+Anderes Beispiel:
+
+gap: clamp(12px, 1.5vw, 28px);
+
+Bei 1440px:
+
+1.5vw = 21.6px
+clamp(12px, 21.6px, 28px) = 21.6px
+
+Also:
+
+gap: 21.6px;
+
+Das ist wichtig. Sonst verschiebt sich das Basislayout.
+
+Das HTML-Gerüst ist korrekt
+
+Ja, so:
+
+<body>
+  <div class="gameViewport">
+    <div class="gameScroll">
+      <div class="gameStageSpacer">
+        <div class="gameStage">
+          <!-- existierender App-Inhalt -->
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+Wichtig: alles, was zur Websoccer-Oberfläche gehört, muss in .gameStage liegen.
+
+Also auch:
+
+linke Sidebar
+oberer Kalender
+Profilkarte
+Positionsfeld
+Marktwert
+Saisonleistungen
+Verletzungen
+Transferhistorie
+Trophies
+
+Nicht nur der mittlere Content.
+
+CSS-Gerüst
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.gameViewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #061017;
+}
+
+.gameScroll {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.gameStageSpacer {
+  position: relative;
+  margin-inline: auto;
+}
+
+.gameStage {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 1440px;
+  min-height: 900px;
+
+  transform-origin: top left;
+}
+
+Optional, aber sinnvoll:
+
+.gameStage {
+  --stage-width: 1440px;
+  --stage-height: 900px;
+}
+JS-Gerüst
+<script>
+  (() => {
+    const BASE_WIDTH = 1440;
+    const BASE_HEIGHT = 900;
+
+    const stage = document.querySelector(".gameStage");
+    const spacer = document.querySelector(".gameStageSpacer");
+
+    if (!stage || !spacer) return;
+
+    let raf = null;
+
+    function updateGameStageScale() {
+      cancelAnimationFrame(raf);
+
+      raf = requestAnimationFrame(() => {
+        const scale = Math.min(
+          window.innerWidth / BASE_WIDTH,
+          window.innerHeight / BASE_HEIGHT
+        );
+
+        const contentHeight = Math.max(BASE_HEIGHT, stage.scrollHeight);
+
+        stage.style.transform = `scale(${scale})`;
+
+        spacer.style.width = `${Math.ceil(BASE_WIDTH * scale)}px`;
+        spacer.style.height = `${Math.ceil(contentHeight * scale)}px`;
+
+        document.documentElement.style.setProperty("--game-scale", scale);
+      });
+    }
+
+    const resizeObserver = new ResizeObserver(updateGameStageScale);
+    resizeObserver.observe(stage);
+
+    window.addEventListener("resize", updateGameStageScale);
+    window.addEventListener("load", updateGameStageScale);
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updateGameStageScale);
+    }
+
+    updateGameStageScale();
+  })();
+</script>
+
+Das ResizeObserver-Thema ist wichtig, weil Bilder, Fonts, Tabellen oder dynamische Inhalte die Stage-Höhe nachträglich verändern können.
+
+Saisonleistungen: die innere Scrollbar muss weg
+
+Die horizontale Scrollbar in „Saisonleistungen“ ist kein Feature, sondern ein Layoutfehler.
+
+Raus:
+
+.season-performance {
+  overflow-x: auto;
+}
+
+Oder:
+
+.table-wrapper {
+  overflow-x: scroll;
+}
+
+Stattdessen muss die Tabelle in ihren festen Basis-Container passen.
+
+Typische Fixes:
+
+.season-performance {
+  overflow-x: hidden;
+}
+
+.season-performance table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.season-performance * {
+  min-width: 0;
+}
+
+Bei CSS Grid:
+
+.season-performance-grid {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.season-performance-grid > * {
+  min-width: 0;
+}
+
+Falls einzelne Spalten feste Mindestbreiten haben, müssen diese ebenfalls auf 1440-Basiswerte zurückgeführt werden.
+
+Der gefährliche Teil in deinem Plan
+
+Das hier:
+
+alle anderen CSS-Dateien mit vw-Werten — per Skript auf 1440px-Baseline-px umrechnen
+
+Ja, aber nur mit Audit.
+
+Nicht blind:
+
+alle vw → px
+
+Sondern:
+
+alle vw/vh innerhalb der Stage → Basis-px
+echte Viewport-Flächen außerhalb der Stage → behalten
+
+Sonst machst du dir globale Hintergründe, Modals oder Overlays kaputt.
+
+Was außerdem geprüft werden muss
+1. max-width muss raus
+
+Solche Regeln sind ab jetzt verdächtig:
+
+max-width: 2000px;
+width: clamp(...);
+width: min(...);
+margin: 0 auto;
+
+Für die Game-Stage gilt:
+
+width: 1440px;
+
+Nicht 1180px, nicht 1420px, nicht 2000px.
+
+2. Media Queries werden größtenteils gefährlich
+
+Wenn irgendwo steht:
+
+@media (min-width: 1920px) {
+  ...
+}
+
+oder:
+
+@media (min-width: 2560px) {
+  ...
+}
+
+dann ist das im neuen Modell meistens falsch.
+
+Die Stage hat intern immer 1440px.
+2K und 4K sollen nicht andere Layouts bekommen. Nur der Scale ändert sich.
+
+3. Charts dürfen nicht viewportbasiert rechnen
+
+Wenn der Marktwert-Chart oder andere SVG/Canvas-Komponenten mit window.innerWidth, vw, ResizeObserver auf Viewportbasis oder Parent-Fluidbreiten arbeiten, können sie weiter Probleme machen.
+
+Die Chart-Fläche muss in Basismaßen definiert sein, zum Beispiel:
+
+.market-chart {
+  width: 360px;
+  height: 220px;
+}
+
+Dann wird sie über die Stage mitskaliert.
+
+4. Tooltips, Dropdowns, Modals
+
+Wenn Popups innerhalb der Stage liegen, ist alles okay.
+
+Wenn Popups aber außerhalb der Stage in ein Portal gerendert werden, zum Beispiel direkt an body, können Positionsberechnungen falsch wirken. Dann gibt es zwei Optionen:
+
+A) Popups ebenfalls innerhalb der gameStage rendern
+B) Portal-Positionen mit dem Scale-Factor korrigieren
+
+Für Websoccer wäre A meistens sauberer.

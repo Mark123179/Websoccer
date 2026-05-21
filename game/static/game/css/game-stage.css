@@ -1,0 +1,76 @@
+/* ============================================================
+   GAME STAGE — Fixed 1440×900 canvas scaled to any viewport
+   Scale = Math.min(innerWidth/1440, innerHeight/900)
+   No horizontal scroll, ever.
+   ============================================================ */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Outer fixed container — fills the real viewport */
+.gameViewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #03070c;
+    z-index: 0;
+}
+
+/* Vertical scroll lives here — never horizontal */
+.gameScroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-color: rgba(0, 240, 255, 0.35) rgba(255, 255, 255, 0.04);
+    scrollbar-width: thin;
+}
+
+.gameScroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gameScroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+}
+
+.gameScroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 240, 255, 0.35);
+    border-radius: 999px;
+}
+
+.gameScroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 240, 255, 0.55);
+}
+
+/* Spacer — sized by JS to match the scaled content height */
+.gameStageSpacer {
+    position: relative;
+    margin-inline: auto;
+}
+
+/* The 1440px canvas — everything inside runs at base coordinates */
+.gameStage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1440px;
+    min-height: 900px;
+    transform-origin: top left;
+
+    --stage-width: 1440px;
+    --stage-height: 900px;
+}

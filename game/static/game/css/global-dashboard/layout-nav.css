@@ -23,7 +23,7 @@
             --shadow: 0 18px 70px rgba(0, 0, 0, 0.46);
             --glow: 0 0 28px rgba(34, 230, 255, 0.18);
             --sidebar: 232px;
-            --dashboard-artboard-width: 1652px;
+            --dashboard-artboard-width: 1180px;
             --scrollbar-size: 6px;
             --scrollbar-track: rgba(255, 255, 255, 0.04);
             --scrollbar-thumb: rgba(0, 240, 255, 0.35);
@@ -39,7 +39,7 @@
 
 .list-dashboard,
 .player-dashboard:not(.is-aaa-profile) {
-    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
+    --dashboard-artboard-width: 1180px;
 }
 
 /* ============================================================
@@ -49,7 +49,7 @@
    ============================================================ */
 
 .player-dashboard.is-aaa-profile {
-    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
+    --dashboard-artboard-width: 1180px;
 }
 
 /* ============================================================
@@ -60,7 +60,7 @@
    ============================================================ */
 
 .overview-home-page .start-dashboard {
-    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
+    --dashboard-artboard-width: 1180px;
 }
 
         * {
@@ -110,7 +110,7 @@
             color: var(--text);
             font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
             margin: 0;
-            min-height: 100vh;
+            min-height: 900px;
             padding: 0;
         }
         body::before {
@@ -141,7 +141,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            height: 100vh;
+            height: 900px;
             left: 0;
             overflow: hidden;
             padding: 14px 12px;
@@ -467,7 +467,7 @@
         }
         .container {
             margin-left: var(--sidebar);
-            min-height: 100vh;
+            min-height: 900px;
         }
         .hero {
             padding: 44px;
@@ -531,7 +531,7 @@
                 linear-gradient(rgba(2, 7, 12, 0.72), rgba(2, 7, 12, 0.96)),
                 radial-gradient(circle at 55% 0%, rgba(40, 215, 255, 0.2), transparent 26%),
                 linear-gradient(120deg, rgba(8, 26, 37, 0.9), rgba(4, 10, 16, 0.96));
-            min-height: 100vh;
+            min-height: 900px;
             padding: 20px 28px 28px;
             position: relative;
         }
@@ -543,7 +543,7 @@
                 radial-gradient(circle at 62% 0%, rgba(34, 230, 255, 0.2), transparent 26%),
                 radial-gradient(circle at 18% 100%, rgba(48, 242, 156, 0.13), transparent 28%),
                 linear-gradient(120deg, rgba(6, 21, 31, 0.92), rgba(4, 10, 16, 0.98));
-            min-height: 100vh;
+            min-height: 900px;
             padding: 20px 28px 28px;
             position: relative;
         }
@@ -781,63 +781,11 @@
         }
 
 /* ============================================================
-   DASHBOARD SCALER — Identische Struktur auf allen Viewports
-   Skaliert das gesamte Layout (Sidebar + Content) proportional
-   wie ein Bild. Bei Viewports >= 1884px: native Groesse (1.0x).
-   Bei kleineren Viewports: gleichmaessig herunterskaliert.
-   Unter 900px: Scaler aus, klassisches Mobile-Layout greift.
+   GAME STAGE — Navbar fills the full stage height.
+   position:fixed inside a CSS-transform container is fixed
+   relative to that container (not the viewport), so the
+   navbar stays in place while gameScroll scrolls.
    ============================================================ */
-
-@media (min-width: 900px) {
-    html,
-    body {
-        height: 100vh;
-        margin: 0;
-        overflow: hidden;
-        padding: 0;
-        width: 100vw;
-    }
-
-    .dashboard-scaler {
-        --sidebar: 232px;
-        --dashboard-scale: min(1, calc(100vw / 1884px));
-        height: calc(100vh / var(--dashboard-scale));
-        left: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
-        position: absolute;
-        top: 0;
-        transform: scale(var(--dashboard-scale));
-        transform-origin: top left;
-        width: 1884px;
-    }
-
-    /* Navbar fuellt jetzt 100% der Scaler-Hoehe (nicht mehr 100vh,
-       weil 100vh sich auf das echte Viewport bezieht und nicht
-       auf die natuerliche Hoehe des skalierten Containers) */
-    .dashboard-scaler .navbar {
-        height: 100%;
-    }
-
-    /* Container und Dashboard-Wrapper muessen ebenfalls die volle
-       Scaler-Hoehe fuellen, sonst entsteht unten Leerraum nach
-       dem Skalieren. Doppelter Klassen-Selektor erhoeht Specificity
-       genug, um kuenftige seitenspezifische min-height-Overrides
-       zu schlagen. */
-    .dashboard-scaler.dashboard-scaler .container,
-    .dashboard-scaler.dashboard-scaler .start-dashboard,
-    .dashboard-scaler.dashboard-scaler .club-dashboard,
-    .dashboard-scaler.dashboard-scaler .list-dashboard,
-    .dashboard-scaler.dashboard-scaler .player-dashboard,
-    .dashboard-scaler.dashboard-scaler .tactics-dashboard,
-    .dashboard-scaler.dashboard-scaler .club-profile-shell,
-    .dashboard-scaler.dashboard-scaler .is-aaa-profile {
-        min-height: calc(100vh / var(--dashboard-scale));
-    }
-}
-
-@media (max-width: 899px) {
-    .dashboard-scaler {
-        width: 100%;
-    }
+.gameStage .navbar {
+    height: 900px;
 }
