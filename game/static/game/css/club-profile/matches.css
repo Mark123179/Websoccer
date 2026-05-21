@@ -147,15 +147,15 @@
     z-index: 2;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    gap: 8px;
+    gap: clamp(8px, 0.7vw, 14px);
     align-items: center;
-    margin-top: 4px;
+    margin-top: clamp(4px, 0.35vw, 7px);
     text-align: center;
 }
 
 .club-last-result span {
     display: grid;
-    gap: 4px;
+    gap: clamp(4px, 0.35vw, 7px);
     justify-items: center;
     color: var(--club-muted);
     font-size: clamp(10px, 0.8vw, 14px);
