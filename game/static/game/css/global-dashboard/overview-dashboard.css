@@ -38,7 +38,7 @@ body.overview-home-page {
 
 .overview-grid {
     display: grid;
-    gap: 16px;
+    gap: clamp(16px, 1vw, 20px);
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
         clamp(370px, 20vw, 460px)
@@ -1683,10 +1683,6 @@ body.overview-home-page {
 @media (min-width: 2400px) {
     .overview-home-page .start-dashboard {
         padding: 28px 28px 38px;
-    }
-
-    .overview-grid {
-        gap: 20px;
     }
 
     .overview-card,
