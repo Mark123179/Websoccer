@@ -365,9 +365,9 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-radius: 12px;
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
     --aaa-profile-artboard-width: clamp(1300px, 88vw, 2200px);
-    --aaa-profile-showcase-height: clamp(460px, 31vw, 740px);
+    --aaa-profile-showcase-height: clamp(540px, 31vw, 780px);
     min-height: 100%;
-    padding: clamp(14px, 1.2vw, 28px) clamp(14px, 1.2vw, 28px) clamp(20px, 1.7vw, 42px);
+    padding: clamp(20px, 1.2vw, 28px) clamp(20px, 1.2vw, 28px) clamp(28px, 1.7vw, 42px);
     position: relative;
     isolation: isolate;
     overflow: hidden;
@@ -660,7 +660,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 }
 
 .aaa-player-card {
-    min-height: clamp(620px, 43vw, 1000px);
+    min-height: clamp(720px, 43vw, 1040px);
 }
 
 .aaa-left-column .aaa-player-card {
@@ -669,7 +669,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 
 .aaa-player-poster {
     position: relative;
-    height: clamp(360px, 26vw, 620px);
+    height: clamp(430px, 26vw, 660px);
     overflow: hidden;
     border-radius: var(--aaa-radius) var(--aaa-radius) 0 0;
     background:

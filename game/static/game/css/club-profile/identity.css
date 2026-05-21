@@ -31,7 +31,7 @@
     position: relative;
     z-index: 2;
     display: grid;
-    grid-template-columns: clamp(146px, 7.6vw, 186px) minmax(0, 1fr);
+    grid-template-columns: clamp(172px, 7.6vw, 200px) minmax(0, 1fr);
     gap: 16px;
     align-items: start;
     min-height: 0;
@@ -39,8 +39,8 @@
 
 .club-identity-logo-stack {
     position: relative;
-    width: clamp(146px, 7.6vw, 186px);
-    height: clamp(176px, 9.2vw, 224px);
+    width: clamp(172px, 7.6vw, 200px);
+    height: clamp(202px, 9.2vw, 242px);
     overflow: visible;
 }
 
@@ -61,8 +61,8 @@
     top: 1px;
     left: 0;
     z-index: 2;
-    width: clamp(125px, 6.5vw, 160px);
-    height: clamp(125px, 6.5vw, 160px);
+    width: clamp(150px, 6.5vw, 185px);
+    height: clamp(150px, 6.5vw, 185px);
     object-fit: contain;
     filter: drop-shadow(0 0 18px rgba(35, 228, 245, 0.3));
 }
@@ -72,8 +72,8 @@
     top: 1px;
     left: 0;
     z-index: 2;
-    width: clamp(125px, 6.5vw, 160px);
-    height: clamp(125px, 6.5vw, 160px);
+    width: clamp(150px, 6.5vw, 185px);
+    height: clamp(150px, 6.5vw, 185px);
 }
 
 .club-identity-crest-link .club-identity-crest {

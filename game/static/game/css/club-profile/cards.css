@@ -8,5 +8,5 @@
 .kits-profile-card,
 .partner-profile-card,
 .news-profile-card {
-    padding: clamp(10px, 0.85vw, 16px);
+    padding: clamp(14px, 0.85vw, 18px);
 }

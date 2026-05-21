@@ -21,13 +21,13 @@
     --club-radius: 7px;
     --club-artboard-width: clamp(1200px, 88vw, 2200px);
     --dashboard-artboard-width: var(--club-artboard-width);
-    --club-row-1: clamp(300px, 24vw, 560px);
-    --club-row-2: clamp(210px, 16.5vw, 380px);
-    --club-row-3: clamp(180px, 14vw, 330px);
+    --club-row-1: clamp(390px, 24vw, 560px);
+    --club-row-2: clamp(270px, 16.5vw, 380px);
+    --club-row-3: clamp(235px, 14vw, 330px);
     box-sizing: border-box;
     min-height: 100%;
     overflow-x: hidden;
-    padding: clamp(10px, 0.85vw, 18px) clamp(12px, 1.1vw, 22px) clamp(12px, 1.0vw, 20px);
+    padding: clamp(14px, 0.85vw, 18px) clamp(16px, 1.1vw, 22px) clamp(16px, 1.0vw, 20px);
     background:
         radial-gradient(circle at 58% 0%, rgba(255, 255, 255, 0.1), transparent 18%),
         radial-gradient(circle at 18% 18%, rgba(35, 228, 245, 0.13), transparent 27%),
