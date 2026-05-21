@@ -41,9 +41,9 @@ body.overview-home-page {
     gap: 16px;
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
-        370px
-        340px
-        310px;
+        clamp(370px, 20vw, 460px)
+        clamp(340px, 18.5vw, 420px)
+        clamp(310px, 17vw, 390px);
 }
 
 /* ============================================================
@@ -1687,10 +1687,6 @@ body.overview-home-page {
 
     .overview-grid {
         gap: 20px;
-        grid-template-rows:
-            clamp(370px, 20vw, 460px)
-            clamp(340px, 18.5vw, 420px)
-            clamp(310px, 17vw, 390px);
     }
 
     .overview-card,
