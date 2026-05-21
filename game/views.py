@@ -1987,11 +1987,13 @@ def _build_squad_context(request, club, squad_title):
     if is_youth:
         qs = qs.filter(age__lte=21)
     players = _sorted_squad(qs)
+    total_squad_value = sum(p.market_value for p in players if p.market_value)
     opponent_club = Club.objects.exclude(id=club.id).order_by('name').first()
     return {
         'club': club,
         'players': players,
         'player_count': len(players),
+        'total_squad_value': total_squad_value,
         'squad_title': squad_title,
         'game_header': build_game_header(
             squad_title,

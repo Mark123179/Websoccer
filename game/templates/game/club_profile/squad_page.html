@@ -23,6 +23,9 @@
                 <h2 class="card-title">{{ squad_title }} ({{ player_count }})</h2>
                 <a href="{% url 'club_detail' club.id %}">Vereinsübersicht</a>
             </div>
+            {% if total_squad_value %}
+                <p class="squad-total-value">Gesamtmarktwert: {{ total_squad_value|format_market_value }}</p>
+            {% endif %}
 
             {% if players %}
                 <div class="table-wrap">

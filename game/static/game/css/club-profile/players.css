@@ -1,3 +1,10 @@
+.squad-total-value {
+    margin: 0 0 12px;
+    color: var(--muted, rgba(180, 210, 220, 0.72));
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .pro-highlights-card,
 .youth-highlights-card {
     padding: 10px 12px;
