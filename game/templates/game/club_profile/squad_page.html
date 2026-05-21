@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load humanize %}
+{% load market_value_filters %}
 
 {% block title %}
     {{ squad_title }} · {{ club.name }}
@@ -82,11 +83,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if player.market_value %}
-                                            {{ player.market_value|intcomma }} €
-                                        {% else %}
-                                            —
-                                        {% endif %}
+                                        {{ player.market_value|format_market_value }}
                                     </td>
                                 </tr>
                             {% endfor %}
