@@ -96,7 +96,7 @@
     position: relative;
     z-index: 2;
     width: min(124px, 112%);
-    height: 116px;
+    height: clamp(92px, 7.5vw, 116px);
     object-fit: contain;
     object-position: center bottom;
     filter: drop-shadow(0 13px 12px rgba(0, 0, 0, 0.56));

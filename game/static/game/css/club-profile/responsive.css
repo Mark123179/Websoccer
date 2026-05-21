@@ -1,28 +1,9 @@
-@media (max-width: 1600px) {
-    .club-profile-shell {
-        padding: 14px;
-    }
-
-    .club-profile-grid {
-        gap: 7px;
-    }
-
-    .club-next-matchup img {
-        width: 78px;
-        height: 78px;
-    }
-
-    .club-trophy-item img {
-        width: 58px;
-        height: 68px;
-    }
-
-    .club-player-cutout {
-        height: 104px;
-    }
-}
-
-@media (max-width: 1280px) {
+/*
+ * Responsive overrides for the club profile shell — applies to BOTH club
+ * and national team profile pages, which share the same template and CSS.
+ * Breakpoints mirror the player profile: 1380px collapse, 2400px 2K/4K boost.
+ */
+@media (max-width: 1380px) {
     .club-profile-shell {
         height: auto;
         overflow: visible;
@@ -87,5 +68,89 @@
     .club-player-grid.is-pro,
     .club-player-grid.is-youth {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 2400px) {
+    .club-profile-shell {
+        padding: 20px 24px 22px;
+    }
+
+    .club-profile-grid {
+        gap: 12px;
+    }
+
+    .club-card-title {
+        font-size: 14px;
+    }
+
+    .club-identity-copy h1 {
+        font-size: 34px;
+    }
+
+    .club-identity-stats dd {
+        font-size: 18px;
+    }
+
+    .club-stat-tile-icon {
+        width: 46px;
+        height: 46px;
+    }
+
+    .club-stat-tile-icon svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .club-meta-line {
+        font-size: 15px;
+    }
+
+    .club-meta-line img {
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+    }
+
+    .club-next-matchup strong {
+        font-size: 15px;
+    }
+
+    .club-match-competition {
+        font-size: 15px;
+    }
+
+    .next-match-profile-card .club-match-competition {
+        font-size: 19px;
+    }
+
+    .club-next-matchup > span {
+        width: 68px;
+        height: 68px;
+        font-size: 34px;
+    }
+
+    .club-last-result strong {
+        font-size: 30px;
+    }
+
+    .club-profile-button,
+    .club-card-link {
+        font-size: 14px;
+        min-height: 40px;
+    }
+
+    .club-player-name-row {
+        font-size: 13px;
+    }
+
+    .club-image-metric strong,
+    .city-card-location strong {
+        font-size: 18px;
+    }
+
+    .club-image-metric small,
+    .city-card-location small {
+        font-size: 13px;
     }
 }

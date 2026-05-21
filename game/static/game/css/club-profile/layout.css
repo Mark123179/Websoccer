@@ -1,3 +1,10 @@
+/*
+ * club-profile layout — shared by BOTH club and national team profile pages.
+ * National team clubs route through the same club_detail view and
+ * club_detail.html template, which loads club-profile.css.  There is no
+ * separate national-team CSS file; all fluid-scaling rules here apply to
+ * both club and national team profiles.
+ */
 .club-profile-shell {
     --club-card-bg: rgba(5, 18, 28, 0.86);
     --club-card-bg-strong: rgba(3, 14, 23, 0.94);
@@ -12,6 +19,11 @@
     --club-muted: rgba(218, 236, 242, 0.72);
     --club-faint: rgba(218, 236, 242, 0.46);
     --club-radius: 7px;
+    --club-artboard-width: clamp(1200px, 88vw, 2200px);
+    --dashboard-artboard-width: var(--club-artboard-width);
+    --club-row-1: clamp(300px, 24vw, 560px);
+    --club-row-2: clamp(210px, 16.5vw, 380px);
+    --club-row-3: clamp(180px, 14vw, 330px);
     box-sizing: border-box;
     min-height: 100%;
     overflow-x: hidden;
@@ -34,7 +46,7 @@
 
 .club-profile-shell > .ws-game-header,
 .club-profile-grid {
-    width: min(100%, var(--dashboard-artboard-width, 1652px));
+    width: min(100%, var(--dashboard-artboard-width, var(--club-artboard-width)));
     margin-right: auto;
     margin-left: auto;
 }
@@ -46,9 +58,9 @@
 .club-profile-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: 385px 265px 225px;
+    grid-template-rows: var(--club-row-1) var(--club-row-2) var(--club-row-3);
     gap: 8px;
-    min-height: calc(385px + 265px + 225px + 16px);
+    min-height: calc(var(--club-row-1) + var(--club-row-2) + var(--club-row-3) + 16px);
     margin-top: 0;
 }
 
