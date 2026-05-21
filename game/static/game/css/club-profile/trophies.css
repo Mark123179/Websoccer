@@ -102,7 +102,7 @@
     z-index: 2;
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: clamp(6px, 0.45vw, 9px);
     margin-top: 0;
 }
 
@@ -112,7 +112,7 @@
     width: clamp(30px, 2.1vw, 40px);
     height: clamp(26px, 1.8vw, 35px);
     border: 1px solid rgba(113, 203, 218, 0.18);
-    border-radius: 4px;
+    border-radius: clamp(4px, 0.3vw, 6px);
     color: rgba(230, 250, 255, 0.78);
     background: rgba(2, 14, 22, 0.82);
     font-size: clamp(12px, 0.85vw, 16px);
