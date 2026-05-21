@@ -1991,6 +1991,7 @@ def _build_squad_context(request, club, squad_title):
     return {
         'club': club,
         'players': players,
+        'player_count': len(players),
         'squad_title': squad_title,
         'game_header': build_game_header(
             squad_title,
