@@ -158,19 +158,19 @@
     gap: 4px;
     justify-items: center;
     color: var(--club-muted);
-    font-size: 10px;
+    font-size: clamp(10px, 0.8vw, 14px);
     font-weight: 900;
 }
 
 .club-last-result img {
-    width: 52px;
-    height: 52px;
+    width: clamp(44px, 4vw, 68px);
+    height: clamp(44px, 4vw, 68px);
     object-fit: contain;
 }
 
 .club-last-result .club-crest-link {
-    width: 52px;
-    height: 52px;
+    width: clamp(44px, 4vw, 68px);
+    height: clamp(44px, 4vw, 68px);
 }
 
 .club-last-result strong {
