@@ -175,7 +175,7 @@
 
 .club-last-result strong {
     color: #ffffff;
-    font-size: 25px;
+    font-size: clamp(20px, 1.8vw, 34px);
     transform: translateY(-4px);
     white-space: nowrap;
 }
@@ -193,7 +193,7 @@
     align-items: center;
     gap: 5px;
     color: var(--club-muted);
-    font-size: 10px;
+    font-size: clamp(10px, 0.75vw, 13px);
     font-weight: 800;
 }
 
