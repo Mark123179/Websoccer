@@ -39,29 +39,28 @@
 
 .list-dashboard,
 .player-dashboard:not(.is-aaa-profile) {
-    --dashboard-artboard-width: clamp(1200px, 88vw, 2200px);
+    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
 }
 
 /* ============================================================
    FLUID ARTBOARD — AAA player profile
-   The .is-aaa-profile page uses --aaa-profile-artboard-width
-   (clamp 1300→2200px) for its own content grid. The
-   ws-game-header must use the same width so header and content
-   are always aligned at every resolution.
+   The ws-game-header must use the same artboard width as the
+   player content grid (--aaa-profile-artboard-width).
    ============================================================ */
 
 .player-dashboard.is-aaa-profile {
-    --dashboard-artboard-width: clamp(1300px, 88vw, 2200px);
+    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
 }
 
 /* ============================================================
    FLUID ARTBOARD — Overview home page
-   Same clamp() pattern so the overview grid fills 2K/4K
-   screens instead of leaving dead space at 1652px.
+   Block fills width at 1440 baseline (no margin), then grows
+   slower than the viewport so margins appear and grow at 1920+
+   while the block itself also grows up to 2400px at 4K.
    ============================================================ */
 
 .overview-home-page .start-dashboard {
-    --dashboard-artboard-width: clamp(1200px, 88vw, 2200px);
+    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
 }
 
         * {
