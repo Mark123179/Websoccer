@@ -29,6 +29,19 @@
             --scrollbar-thumb: rgba(0, 240, 255, 0.35);
             --scrollbar-thumb-hover: rgba(0, 240, 255, 0.55);
         }
+/* ============================================================
+   FLUID ARTBOARD — Squad list & transfer market list pages
+   Mirrors the clamp() approach used by .club-profile-shell.
+   At 1920px  → ~1690px artboard (was 1652px, minimal change).
+   At 2K/4K   → 1884px artboard (fills the full scaler width).
+   At ≤1280px → 1200px minimum keeps content from squashing.
+   ============================================================ */
+
+.list-dashboard,
+.player-dashboard:not(.is-aaa-profile) {
+    --dashboard-artboard-width: clamp(1200px, 88vw, 2200px);
+}
+
         * {
             box-sizing: border-box;
         }
