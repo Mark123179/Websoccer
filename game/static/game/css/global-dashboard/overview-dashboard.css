@@ -81,7 +81,7 @@ body.overview-home-page {
     box-shadow:
         0 18px 48px rgba(0, 0, 0, 0.44),
         inset 0 1px 0 rgba(255, 255, 255, 0.045);
-    padding: 18px;
+    padding: clamp(18px, calc(18px + (100vw - 1200px) / 300), 22px);
 }
 
 /* Background image overlay on cards */
@@ -1684,18 +1684,6 @@ body.overview-home-page {
 @media (min-width: 2400px) {
     .overview-home-page .start-dashboard {
         padding: 28px 28px 38px;
-    }
-
-    .overview-card,
-    .overview-chat-card,
-    .overview-transfer-card,
-    .overview-table-card,
-    .overview-news-card,
-    .overview-social-card,
-    .overview-manager-widget,
-    .overview-live-widget,
-    .overview-stats-widget {
-        padding: 22px;
     }
 
     .overview-dashboard .card-title {
