@@ -79,7 +79,7 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 5px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(0, 0, 0, 0.44));
-    font-size: 20px;
+    font-size: clamp(14px, 1.6vw, 26px);
     font-weight: 900;
 }
 
@@ -88,7 +88,7 @@
     z-index: 3;
     margin-top: 5px;
     color: var(--club-muted);
-    font-size: 9px;
+    font-size: clamp(9px, 0.65vw, 11.5px);
     font-weight: 900;
     line-height: 1.05;
     text-transform: uppercase;
