@@ -1246,10 +1246,9 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
     display: grid;
     gap: 7px;
     min-height: 0;
-    /* No internal scroll: the .aaa-season-card grows vertically with
-       its content; the page scrolls globally via .gameScroll. Removing
-       max-height + overflow-y:auto avoids the cut-off table inside the
-       tile (42-66px hidden depending on viewport). */
+    max-height: 254px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .aaa-stat-head,
