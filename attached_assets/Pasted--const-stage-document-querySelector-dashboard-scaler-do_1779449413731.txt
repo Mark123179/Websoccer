@@ -1,0 +1,68 @@
+(() => {
+  const stage =
+    document.querySelector(".dashboard-scaler") ||
+    document.querySelector(".gameStage");
+
+  const sidebar = document.querySelector(".navbar");
+  const dashboard = document.querySelector(".player-dashboard.is-aaa-profile");
+  const topbar = document.querySelector(".aaa-profile-topbar");
+  const grid = document.querySelector(".aaa-profile-grid");
+  const season = document.querySelector(".aaa-season-card");
+
+  const get = (el) => {
+    if (!el) return null;
+
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+
+    return {
+      left: Math.round(r.left * 100) / 100,
+      right: Math.round(r.right * 100) / 100,
+      width: Math.round(r.width * 100) / 100,
+      offsetWidth: el.offsetWidth,
+      clientWidth: el.clientWidth,
+      scrollWidth: el.scrollWidth,
+      deltaX: el.scrollWidth - el.clientWidth,
+      marginLeft: cs.marginLeft,
+      marginRight: cs.marginRight,
+      paddingLeft: cs.paddingLeft,
+      paddingRight: cs.paddingRight,
+      overflowX: cs.overflowX,
+      overflowY: cs.overflowY
+    };
+  };
+
+  const stageRect = stage?.getBoundingClientRect();
+  const sidebarRect = sidebar?.getBoundingClientRect();
+  const dashboardRect = dashboard?.getBoundingClientRect();
+  const gridRect = grid?.getBoundingClientRect();
+
+  console.table({
+    viewport: `${window.innerWidth} × ${window.innerHeight}`,
+    expectedScale: Math.min(window.innerWidth / 1884, window.innerHeight / 1177.5),
+
+    globalLeftGutter: stageRect ? Math.round(stageRect.left * 100) / 100 : null,
+    globalRightGutter: stageRect ? Math.round((window.innerWidth - stageRect.right) * 100) / 100 : null,
+
+    sidebarRight: sidebarRect ? Math.round(sidebarRect.right * 100) / 100 : null,
+    dashboardLeft: dashboardRect ? Math.round(dashboardRect.left * 100) / 100 : null,
+    innerGapSidebarToDashboard:
+      sidebarRect && dashboardRect
+        ? Math.round((dashboardRect.left - sidebarRect.right) * 100) / 100
+        : null,
+
+    gridLeft: gridRect ? Math.round(gridRect.left * 100) / 100 : null,
+    gridRight: gridRect ? Math.round(gridRect.right * 100) / 100 : null,
+    gridRightToViewport:
+      gridRect ? Math.round((window.innerWidth - gridRect.right) * 100) / 100 : null
+  });
+
+  console.table({
+    stage: get(stage),
+    sidebar: get(sidebar),
+    dashboard: get(dashboard),
+    topbar: get(topbar),
+    grid: get(grid),
+    season: get(season)
+  });
+})();
