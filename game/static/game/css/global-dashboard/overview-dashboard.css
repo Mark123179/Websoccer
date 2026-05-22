@@ -38,13 +38,13 @@ body.overview-home-page {
 
 .overview-grid {
     display: grid;
-    row-gap: clamp(20px, 18.84px, 24px);
-    column-gap: clamp(20px, 18.84px, 24px);
+    row-gap: clamp(20px, 1vw, 24px);
+    column-gap: clamp(20px, 1vw, 24px);
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
-        clamp(430px, 376.8px, 520px)
-        clamp(390px, 348.54px, 470px)
-        clamp(355px, 320.28px, 430px);
+        clamp(430px, 20vw, 520px)
+        clamp(390px, 18.5vw, 470px)
+        clamp(355px, 17vw, 430px);
 }
 
 /* ============================================================
@@ -81,7 +81,7 @@ body.overview-home-page {
     box-shadow:
         0 18px 48px rgba(0, 0, 0, 0.44),
         inset 0 1px 0 rgba(255, 255, 255, 0.045);
-    padding: clamp(22px, calc(22px + (1884px - 1440px) / 300), 28px);
+    padding: clamp(22px, calc(22px + (100vw - 1440px) / 300), 28px);
 }
 
 /* Background image overlay on cards */

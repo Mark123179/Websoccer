@@ -1,0 +1,135 @@
+STOPP. stage-2 ist nicht akzeptiert.
+
+Der aktuelle Zustand ist schlechter als vorher:
+- Saisonleistungen hat interne Scrollbars.
+- Die Saisonleistungs-Karte ist gequetscht.
+- Es gibt wieder große seitliche Ränder.
+- Das Ergebnis entspricht nicht der alten funktionierenden Laptop-Ansicht.
+- Es wirkt wie ein Hybrid aus altem dashboard-scaler, neuer gameStage, CSS-Konvertierungen und Scroll-Fixes.
+
+Bitte jetzt kein weiteres lokales Patchen.
+
+Wir machen einen harten Rollback auf den letzten wirklich funktionierenden Layoutzustand vor der gesamten Stage-Umstellung.
+
+Wichtig:
+Nicht nur einzelne CSS-Dateien zurückholen.
+Bitte alle betroffenen Layout-Dateien, Templates und CSS-Dateien zurück auf den letzten funktionierenden Commit:
+- base.html
+- layout-nav.css
+- player-profile.css
+- trophy-cabinet.css
+- global-dashboard/*.css
+- club-profile/*.css
+- overview-dashboard.css
+- responsive.css
+- alle Dateien, die in stage-1/stage-2 angefasst wurden
+
+Danach bitte zuerst verifizieren:
+Die alte Ansicht muss wieder so aussehen wie ursprünglich auf dem Laptop:
+- keine gequetschte Saisonleistungen-Karte
+- keine interne horizontale Scrollbar in Saisonleistungen
+- keine doppelte Scrollbar in Saisonleistungen
+- Marktwert nicht abgeschnitten
+- Basisansicht wieder wie vor der Stage-Umstellung
+
+Erst wenn dieser Zustand wiederhergestellt ist, kommt ein MINIMALER Stage-Patch.
+
+Minimaler Stage-Patch:
+1. Keine CSS-vw/vh-Konvertierung.
+2. Kein vw_to_px.py ausführen.
+3. Keine Artboard-Variablen ändern.
+4. Keine KPI-Grids ändern.
+5. Keine Tabellen-Grids ändern.
+6. Keine overflow-x:hidden-Fake-Fixes.
+7. Keine minmax(0,1fr)-Kompression als Layoutrettung.
+8. Keine 1180px-Artboard-Overrides.
+9. Keine 1652px-Artboard-Overrides, sofern sie nicht exakt aus dem alten funktionierenden Zustand stammen.
+10. Keine neue interne Scroll-Logik.
+
+Bitte stattdessen nur den alten äußeren Scaler ersetzen.
+
+Die alte logische Shell-Breite ist gemessen:
+.dashboard-scaler width = 1884px
+
+Neue Stage-Logik:
+BASE_WIDTH = 1884
+BASE_HEIGHT = 1177.5
+
+scale = Math.min(
+  window.innerWidth / 1884,
+  window.innerHeight / 1177.5
+)
+
+Die bestehende alte Layoutgeometrie bleibt unverändert.
+Nur die äußere Skalierung wird ersetzt.
+
+Zielstruktur entweder:
+A)
+.gameViewport
+  .gameScroll
+    .gameStageSpacer
+      .dashboard-scaler
+
+oder:
+B)
+.gameViewport
+  .gameScroll
+    .gameStageSpacer
+      .gameStage
+        alter App-Inhalt
+
+Aber es darf nur EIN Element transform: scale(...) bekommen.
+Kein alter .dashboard-scaler-Scale zusätzlich.
+Keine doppelte Transform-Logik.
+
+CSS:
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.gameViewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.gameScroll {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.gameStageSpacer {
+  position: relative;
+  margin-inline: auto;
+}
+
+.dashboard-scaler,
+.gameStage {
+  width: 1884px;
+  min-height: 1177.5px;
+  transform-origin: top left;
+}
+
+JS:
+const BASE_WIDTH = 1884;
+const BASE_HEIGHT = 1177.5;
+
+const scale = Math.min(
+  window.innerWidth / BASE_WIDTH,
+  window.innerHeight / BASE_HEIGHT
+);
+
+stage.style.transform = `scale(${scale})`;
+spacer.style.width = `${BASE_WIDTH * scale}px`;
+spacer.style.height = `${Math.max(BASE_HEIGHT, stage.scrollHeight) * scale}px`;
+
+Wichtig:
+body/html dürfen NICHT auf 1884px / 1177.5px gesetzt werden.
+Nur das Stage-Element beziehungsweise der alte dashboard-scaler hat diese logische Breite.
+
+Bitte nach dem Rollback + Minimalpatch Messwerte liefern, nicht nur Screenshot.

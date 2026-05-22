@@ -39,7 +39,7 @@
 
 .list-dashboard,
 .player-dashboard:not(.is-aaa-profile) {
-    --dashboard-artboard-width: clamp(1180px, calc(942px + 460px), 2400px);
+    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
 }
 
 /* ============================================================
@@ -49,7 +49,7 @@
    ============================================================ */
 
 .player-dashboard.is-aaa-profile {
-    --dashboard-artboard-width: clamp(1180px, calc(942px + 460px), 2400px);
+    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
 }
 
 /* ============================================================
@@ -60,7 +60,7 @@
    ============================================================ */
 
 .overview-home-page .start-dashboard {
-    --dashboard-artboard-width: clamp(1180px, calc(942px + 460px), 2400px);
+    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
 }
 
         * {
@@ -110,7 +110,7 @@
             color: var(--text);
             font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
             margin: 0;
-            min-height: 1177.5px;
+            min-height: 100vh;
             padding: 0;
         }
         body::before {
@@ -141,7 +141,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            height: 1177.5px;
+            height: 100vh;
             left: 0;
             overflow: hidden;
             padding: 14px 12px;
@@ -467,7 +467,7 @@
         }
         .container {
             margin-left: var(--sidebar);
-            min-height: 1177.5px;
+            min-height: 100vh;
         }
         .hero {
             padding: 44px;
@@ -531,7 +531,7 @@
                 linear-gradient(rgba(2, 7, 12, 0.72), rgba(2, 7, 12, 0.96)),
                 radial-gradient(circle at 55% 0%, rgba(40, 215, 255, 0.2), transparent 26%),
                 linear-gradient(120deg, rgba(8, 26, 37, 0.9), rgba(4, 10, 16, 0.96));
-            min-height: 1177.5px;
+            min-height: 100vh;
             padding: 20px 28px 28px;
             position: relative;
         }
@@ -543,7 +543,7 @@
                 radial-gradient(circle at 62% 0%, rgba(34, 230, 255, 0.2), transparent 26%),
                 radial-gradient(circle at 18% 100%, rgba(48, 242, 156, 0.13), transparent 28%),
                 linear-gradient(120deg, rgba(6, 21, 31, 0.92), rgba(4, 10, 16, 0.98));
-            min-height: 1177.5px;
+            min-height: 100vh;
             padding: 20px 28px 28px;
             position: relative;
         }
@@ -780,5 +780,11 @@
             grid-template-columns: 1fr 0.82fr;
         }
 
-/* DASHBOARD SCALER entfernt — Skalierung erfolgt jetzt einmalig
-   ueber .gameStage in game-stage.css (transform:scale via JS). */
+/* DASHBOARD SCALER (alt) entfernt — der gesamte aeussere Scaler
+   wird jetzt durch .gameViewport/.gameScroll/.gameStageSpacer und
+   JS-getriebenes transform:scale auf .dashboard-scaler ersetzt
+   (siehe game-stage.css + base.html). Innere Layout-Geometrie
+   bleibt unveraendert. */
+.dashboard-scaler {
+    --sidebar: 232px;
+}
