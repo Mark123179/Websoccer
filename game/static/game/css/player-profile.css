@@ -1129,14 +1129,27 @@ inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .aaa-kpis-scroll-wrap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    /* Full-bleed innerhalb der gepaddeten Card: negative inline-
+       Margins matchen exakt das Card-Padding aus .aaa-card
+       (clamp(13px, 1.05vw, 22px)). Mit width:auto in einem
+       align-items:stretch Flex-Column-Container (.aaa-season-card)
+       streckt sich das Element über content-box + |negative margins|
+       = volle Padding-Box-Breite der Card.
+       overflow-x:visible statt auto: wir verstecken den Overflow
+       nicht, wir eliminieren ihn durch korrekte Breite. */
+    width: auto;
+    align-self: stretch;
+    margin-left: calc(clamp(13px, 1.05vw, 22px) * -1);
+    margin-right: calc(clamp(13px, 1.05vw, 22px) * -1);
     margin-bottom: 10px;
+    box-sizing: border-box;
+    overflow-x: visible;
+    overflow-y: visible;
 }
 
 .aaa-season-kpis {
     display: grid;
-    grid-template-columns: repeat(8, minmax(clamp(50px, 3.8vw, 64px), 1fr));
+    grid-template-columns: repeat(8, minmax(clamp(50px, 3.7vw, 64px), 1fr));
     gap: 0;
     margin-bottom: 0;
     padding-bottom: 10px;
@@ -1727,7 +1740,7 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
 
 .aaa-career-summary {
     display: grid;
-    grid-template-columns: repeat(8, minmax(clamp(50px, 3.8vw, 64px), 1fr));
+    grid-template-columns: repeat(8, minmax(clamp(50px, 3.7vw, 64px), 1fr));
     gap: 0;
     margin-bottom: 0;
     padding-bottom: 10px;

@@ -1,0 +1,83 @@
+Die Messwerte sind sehr eindeutig:
+
+Card: 438px
+KPI-Wrapper: 397px
+KPI-Inhalt: 438px
+Differenz: ca. 41px
+
+Das sieht nicht primär nach „KPI-Zeile ist zu groß“ aus. Es sieht eher so aus:
+
+Die KPI-Zeile will über die volle Kartenbreite laufen,
+aber der Wrapper ist nur so breit wie der gepaddete Innenbereich.
+
+Also nicht sofort Icons kleiner machen. Erst den Wrapper korrekt auf volle Kartenbreite bringen.
+
+Ein möglicher CSS-Ansatz, den Replit auf die echten Variablen/Klassen anpassen soll:
+
+.aaa-season-card {
+  --aaa-season-card-pad-x: 20px; /* echten computed Wert einsetzen */
+}
+
+.aaa-kpis-scroll-wrap {
+  min-width: 0;
+  width: auto;
+  margin-left: calc(var(--aaa-season-card-pad-x) * -1);
+  margin-right: calc(var(--aaa-season-card-pad-x) * -1);
+  overflow-x: visible;
+}
+
+Falls width:auto mit negativen Margins nicht reicht:
+
+.aaa-kpis-scroll-wrap {
+  width: calc(100% + (var(--aaa-season-card-pad-x) * 2));
+  margin-left: calc(var(--aaa-season-card-pad-x) * -1);
+  margin-right: calc(var(--aaa-season-card-pad-x) * -1);
+  overflow-x: visible;
+}
+
+Aber Replit soll das nicht blind einsetzen, sondern mit den echten computed Padding-Werten prüfen.
+
+Abnahme für diesen kleinen Fix
+
+Replit soll danach exakt diese Tabelle liefern:
+
+(() => {
+  const selectors = [
+    ".aaa-season-card",
+    ".aaa-kpis-scroll-wrap"
+  ];
+
+  console.table(
+    selectors.map((selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return { selector, found: false };
+
+      const cs = getComputedStyle(el);
+
+      return {
+        selector,
+        found: true,
+        clientWidth: el.clientWidth,
+        scrollWidth: el.scrollWidth,
+        deltaX: el.scrollWidth - el.clientWidth,
+        overflowX: cs.overflowX,
+        paddingLeft: cs.paddingLeft,
+        paddingRight: cs.paddingRight,
+        marginLeft: cs.marginLeft,
+        marginRight: cs.marginRight
+      };
+    })
+  );
+})();
+
+Und die harte Bedingung:
+
+1440×900:
+.aaa-kpis-scroll-wrap deltaX <= 1
+
+1920×1080:
+.aaa-kpis-scroll-wrap deltaX <= 1
+
+Keine sichtbare horizontale Scrollbar.
+Keine überlappenden KPI-Zahlen.
+Keine Änderung an der äußeren Stage.
