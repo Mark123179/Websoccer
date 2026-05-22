@@ -53,7 +53,7 @@
     display: inline-block;
     margin: 0;
     color: var(--aaa-text);
-    font-size: 26.64px;
+    font-size: clamp(22px, 34.854px, 35px);
     font-weight: 800;
     text-decoration: none;
     white-space: nowrap;
@@ -364,10 +364,10 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-faint: var(--text-muted);
     --aaa-radius: 12px;
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
-    --aaa-profile-artboard-width: 1180px;
-    --aaa-profile-showcase-height: 540px;
+    --aaa-profile-artboard-width: clamp(1180px, calc(942px + 460px), 2400px);
+    --aaa-profile-showcase-height: clamp(540px, 584.04px, 780px);
     min-height: 100%;
-    padding: 20px 20px 28px;
+    padding: clamp(20px, 22.608px, 28px) clamp(20px, 22.608px, 28px) clamp(28px, 32.028px, 42px);
     position: relative;
     isolation: isolate;
     overflow: hidden;
@@ -409,10 +409,10 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 .aaa-profile-topbar {
     display: grid;
     grid-template-columns: 48px minmax(220px, 1fr) minmax(260px, 360px) minmax(220px, auto) 132px;
-    gap: 12.96px;
+    gap: clamp(10px, 16.956px, 18px);
     align-items: center;
     width: min(100%, var(--aaa-profile-artboard-width));
-    margin: 0 auto 15.84px;
+    margin: 0 auto clamp(14px, 20.724px, 22px);
 }
 
 .aaa-back-button,
@@ -441,7 +441,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 .aaa-top-title h1 {
     margin: 0;
     color: #ffffff;
-    font-size: 25.2px;
+    font-size: clamp(20px, 32.97px, 30px);
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -452,7 +452,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
     display: block;
     margin-top: 4px;
     color: var(--aaa-muted);
-    font-size: 12.96px;
+    font-size: clamp(11px, 16.956px, 17px);
 }
 
 .aaa-search,
@@ -509,16 +509,16 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 
 .aaa-top-date strong {
     color: #ffffff;
-    font-size: 14.4px;
+    font-size: clamp(12px, 18.84px, 19px);
 }
 
 .aaa-profile-grid {
     display: grid;
-    grid-template-columns: 316.8px minmax(0, 1.05fr) minmax(0, 0.95fr);
+    grid-template-columns: clamp(280px, 414.48px, 380px) minmax(0, 1.05fr) minmax(0, 0.95fr);
     grid-template-areas:
 "left center right"
 "showcase showcase showcase";
-    gap: 12.96px;
+    gap: clamp(10px, 16.956px, 18px);
     align-items: stretch;
     width: min(100%, var(--aaa-profile-artboard-width));
     margin-inline: auto;
@@ -595,7 +595,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 }
 
 .aaa-card {
-    padding: 15.12px;
+    padding: clamp(13px, 19.782px, 22px);
 }
 
 .aaa-card-heading {
@@ -603,13 +603,13 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
-    margin-bottom: 12.96px;
+    margin-bottom: clamp(10px, 16.956px, 18px);
 }
 
 .aaa-card-heading h2 {
     margin: 0;
     color: #ffffff;
-    font-size: 15.84px;
+    font-size: clamp(14px, 20.724px, 18px);
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0;
@@ -630,7 +630,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 
 .aaa-card-heading span {
     color: var(--aaa-muted);
-    font-size: 12.96px;
+    font-size: clamp(11px, 16.956px, 17px);
     font-weight: 760;
 }
 
@@ -661,7 +661,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 }
 
 .aaa-player-card {
-    min-height: 720px;
+    min-height: clamp(720px, 810.12px, 1040px);
 }
 
 .aaa-left-column .aaa-player-card {
@@ -670,7 +670,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 
 .aaa-player-poster {
     position: relative;
-    height: 430px;
+    height: clamp(430px, 489.84px, 660px);
     overflow: hidden;
     border-radius: var(--aaa-radius) var(--aaa-radius) 0 0;
     background:
@@ -762,7 +762,7 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
 .aaa-player-nameplate h2 {
     margin: 0;
     color: #ffffff;
-    font-size: 36.72px;
+    font-size: clamp(28px, 48.042px, 44px);
     line-height: 1;
     font-weight: 900;
     text-transform: uppercase;
@@ -773,7 +773,7 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
-    padding: 17.28px 17.28px 14.4px;
+    padding: clamp(13px, 22.608px, 23px) clamp(14px, 22.608px, 23px) clamp(11px, 18.84px, 20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -792,13 +792,13 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
 
 .aaa-bio-strip b {
     color: #ffffff;
-    font-size: 13.248px;
+    font-size: clamp(12px, 17.333px, 15px);
     min-height: 18px;
 }
 
 .aaa-bio-strip small {
     color: var(--aaa-muted);
-    font-size: 11.232px;
+    font-size: clamp(10px, 14.695px, 14px);
 }
 
 .aaa-player-info-list {
@@ -1044,7 +1044,7 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
 }
 
 .aaa-position-card {
-    min-height: 345.6px;
+    min-height: clamp(320px, 452.16px, 560px);
 }
 
 .aaa-position-card .aaa-card-heading {
@@ -1129,13 +1129,14 @@ inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .aaa-kpis-scroll-wrap {
-    overflow-x: hidden;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     margin-bottom: 10px;
 }
 
 .aaa-season-kpis {
     display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(8, minmax(clamp(50px, 71.592px, 64px), 1fr));
     gap: 0;
     margin-bottom: 0;
     padding-bottom: 10px;
@@ -1158,8 +1159,8 @@ inset 0 1px 0 rgba(255, 255, 255, 0.1);
 .aaa-season-kpis i {
     display: grid;
     place-items: center;
-    width: 41.76px;
-    height: 41.76px;
+    width: clamp(38px, 54.636px, 52px);
+    height: clamp(38px, 54.636px, 52px);
     border: 1px solid rgba(130, 241, 255, 0.22);
     border-radius: 10px;
     color: var(--aaa-cyan);
@@ -1176,8 +1177,8 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 .aaa-career-summary svg,
 .aaa-season-kpis img,
 .aaa-career-summary img {
-    width: 24.768px;
-    height: 24.768px;
+    width: clamp(22px, 32.405px, 30px);
+    height: clamp(22px, 32.405px, 30px);
     color: currentColor;
     object-fit: contain;
     filter: drop-shadow(0 0 10px rgba(37, 244, 238, 0.28));
@@ -1198,7 +1199,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-season-kpis strong {
     color: var(--text-primary);
-    font-size: 19.872px;
+    font-size: clamp(17px, 25.999px, 24px);
     font-weight: 800;
     line-height: 1;
 }
@@ -1219,7 +1220,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-season-kpis small {
     color: var(--text-muted);
-    font-size: 10.368px;
+    font-size: clamp(9px, 13.565px, 12px);
     font-weight: 650;
     text-transform: uppercase;
 }
@@ -1236,7 +1237,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 .aaa-stat-head,
 .aaa-stat-row {
     display: grid;
-    grid-template-columns: minmax(80px, 1.16fr) repeat(8, minmax(0, 0.5fr)) minmax(44px, 0.62fr);
+    grid-template-columns: minmax(118px, 1.16fr) repeat(8, minmax(34px, 0.5fr)) minmax(58px, 0.62fr);
     gap: 4px;
     align-items: center;
 }
@@ -1258,7 +1259,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 }
 
 .aaa-stat-row {
-    min-height: 37.44px;
+    min-height: clamp(34px, 48.984px, 44px);
     padding: 6px;
     border: 1px solid rgba(119, 226, 239, 0.14);
     border-radius: 8px;
@@ -1273,7 +1274,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
     display: grid;
     gap: 4px;
     justify-items: center;
-    font-size: 11.808px;
+    font-size: clamp(10px, 15.449px, 13px);
     font-weight: 650;
     text-align: center;
 }
@@ -1330,12 +1331,12 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 }
 
 .aaa-market-card {
-    min-height: 288px;
+    min-height: clamp(270px, 376.8px, 480px);
 }
 
 .aaa-market-card .market-value-large {
     color: #9fffff;
-    font-size: 33.12px;
+    font-size: clamp(28px, 43.332px, 42px);
     font-weight: 800;
     text-shadow: 0 0 22px rgba(37, 244, 238, 0.22);
 }
@@ -1391,7 +1392,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 }
 
 .aaa-market-card .aaa-market-chart {
-    height: 201.6px;
+    height: clamp(190px, 263.76px, 320px);
     grid-template-columns: 54px 1fr;
     grid-template-rows: 1fr 34px;
     border-bottom: 0;
@@ -1422,7 +1423,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     gap: 12px;
     align-items: stretch;
     height: 100%;
-    min-height: 316.8px;
+    min-height: clamp(290px, 414.48px, 520px);
 }
 
 .aaa-history-grid .aaa-event-grid {
@@ -1463,7 +1464,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     grid-template-columns: 42px minmax(0, 1fr) 22px;
     gap: 8px;
     align-items: center;
-    min-height: 41.76px;
+    min-height: clamp(38px, 54.636px, 50px);
     padding: 5px 7px;
     border: 1px solid rgba(119, 226, 239, 0.12);
     border-radius: 8px;
@@ -1494,7 +1495,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 
 .aaa-transfer-date strong {
     color: var(--text-primary);
-    font-size: 14.4px;
+    font-size: clamp(12px, 18.84px, 19px);
     font-weight: 800;
 }
 
@@ -1726,7 +1727,7 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
 
 .aaa-career-summary {
     display: grid;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(8, minmax(clamp(50px, 71.592px, 64px), 1fr));
     gap: 0;
     margin-bottom: 0;
     padding-bottom: 10px;
@@ -1749,7 +1750,7 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
 
 .aaa-career-summary strong {
     color: var(--text-primary);
-    font-size: 19.872px;
+    font-size: clamp(17px, 25.999px, 24px);
     font-weight: 800;
     line-height: 1;
 }
@@ -1757,8 +1758,8 @@ linear-gradient(180deg, rgba(1, 7, 12, 0.06), rgba(1, 7, 12, 0.46));
 .aaa-career-summary i {
     display: grid;
     place-items: center;
-    width: 41.76px;
-    height: 41.76px;
+    width: clamp(38px, 54.636px, 52px);
+    height: clamp(38px, 54.636px, 52px);
     border: 1px solid rgba(130, 241, 255, 0.2);
     border-radius: 10px;
     color: var(--aaa-cyan);
@@ -1778,7 +1779,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-career-summary small {
     color: var(--text-muted);
-    font-size: 10.368px;
+    font-size: clamp(9px, 13.565px, 12px);
     font-weight: 650;
     text-transform: uppercase;
 }
@@ -1803,7 +1804,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
     grid-template-columns: minmax(118px, 1.16fr) repeat(8, minmax(34px, 0.5fr)) minmax(58px, 0.62fr);
     gap: 4px;
     align-items: center;
-    min-height: 37.44px;
+    min-height: clamp(34px, 48.984px, 44px);
     padding: 6px;
     border: 1px solid rgba(130, 241, 255, 0.12);
     border-radius: 8px;
@@ -1817,7 +1818,7 @@ rgba(2, 15, 24, 0.55);
     gap: 4px;
     justify-items: center;
     color: var(--text-secondary);
-    font-size: 11.808px;
+    font-size: clamp(10px, 15.449px, 13px);
     font-weight: 650;
     text-align: center;
 }
@@ -1880,7 +1881,7 @@ display: none;
     }
 
     .aaa-profile-grid {
-grid-template-columns: 330px minmax(0, 1fr);
+grid-template-columns: clamp(260px, 565.2px, 330px) minmax(0, 1fr);
 grid-template-areas:
     "left center"
     "right right"
@@ -1896,12 +1897,12 @@ grid-template-columns: 1fr;
     }
 
     .aaa-market-card {
-min-height: 230.4px;
+min-height: clamp(230px, 301.44px, 300px);
     }
 
     .aaa-history-grid {
-height: 316.8px;
-min-height: 316.8px;
+height: clamp(280px, 414.48px, 380px);
+min-height: clamp(280px, 414.48px, 380px);
     }
 }
 

@@ -338,71 +338,71 @@ border-collapse: collapse;
 @media (min-width: 2400px) {
     .club-table th,
     .club-table td {
-        font-size: 13px;
-        padding: 10px;
+        font-size: clamp(13px, 11.681px, 17px);
+        padding: clamp(10px, 10.362px, 14px);
     }
 
     .club-table th {
-        font-size: 11px;
+        font-size: clamp(11px, 9.797px, 14px);
     }
 
     .squad-table-compact th,
     .squad-table-compact td {
-        font-size: 12px;
-        padding: 7px 6px;
+        font-size: clamp(12px, 10.927px, 16px);
+        padding: clamp(7px, 7.913px, 11px) clamp(6px, 6.782px, 10px);
     }
 
     .squad-table-compact th {
-        font-size: 10px;
+        font-size: clamp(10px, 9.043px, 13px);
     }
 
     .squad-table-compact strong {
-        font-size: 13px;
+        font-size: clamp(13px, 11.681px, 17px);
     }
 
     .transfer-item strong,
     .news-item strong {
-        font-size: 14px;
+        font-size: clamp(14px, 12.623px, 18px);
     }
 
     .transfer-item span,
     .news-item span {
-        font-size: 12px;
+        font-size: clamp(12px, 10.739px, 15px);
     }
 
     .transfer-item,
     .news-item {
-        gap: 10px;
-        padding: 10px;
+        gap: clamp(10px, 10.362px, 14px);
+        padding: clamp(10px, 10.362px, 14px);
     }
 
     .player-photo {
-        height: 44px;
-        width: 44px;
+        height: clamp(44px, 45.216px, 58px);
+        width: clamp(44px, 45.216px, 58px);
     }
 
     .club-crest {
-        height: 34px;
-        width: 34px;
+        height: clamp(34px, 34.854px, 46px);
+        width: clamp(34px, 34.854px, 46px);
     }
 
     .player-mini img {
-        height: 32px;
-        width: 32px;
+        height: clamp(32px, 32.97px, 44px);
+        width: clamp(32px, 32.97px, 44px);
     }
 
     .position-badge {
-        font-size: 12px;
-        padding: 5px 8px;
+        font-size: clamp(12px, 10.927px, 15px);
+        padding: clamp(5px, 5.652px, 8px) clamp(8px, 8.855px, 12px);
     }
 
     .flag-badge {
-        height: 16px;
-        width: 22px;
+        height: clamp(16px, 16.391px, 22px);
+        width: clamp(22px, 22.608px, 30px);
     }
 
     .badge {
-        font-size: 12px;
-        padding: 6px 9px;
+        font-size: clamp(12px, 10.927px, 15px);
+        padding: clamp(6px, 6.594px, 9px) clamp(9px, 9.797px, 13px);
     }
 }

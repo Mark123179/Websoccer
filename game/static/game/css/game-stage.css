@@ -1,6 +1,7 @@
 /* ============================================================
-   GAME STAGE — Fixed 1440×900 canvas scaled to any viewport
-   Scale = Math.min(innerWidth/1440, innerHeight/900)
+   GAME STAGE — Fixed 1884×1177.5 canvas scaled to any viewport
+   Scale = Math.min(innerWidth/1884, innerHeight/1177.5)
+   At 1440×900 viewport: scale = 0.7644 (stage fills exactly).
    No horizontal scroll, ever.
    ============================================================ */
 
@@ -62,15 +63,20 @@ body {
     margin-inline: auto;
 }
 
-/* The 1440px canvas — everything inside runs at base coordinates */
+/* The 1884px canvas — everything inside runs at base coordinates */
 .gameStage {
     position: absolute;
     top: 0;
     left: 0;
-    width: 1440px;
-    min-height: 900px;
+    width: 1884px;
+    min-height: 1177.5px;
     transform-origin: top left;
 
-    --stage-width: 1440px;
-    --stage-height: 900px;
+    --stage-width: 1884px;
+    --stage-height: 1177.5px;
+}
+
+/* Sidebar/navbar matches the logical stage height (not viewport vh) */
+.gameStage .navbar {
+    height: 1177.5px;
 }

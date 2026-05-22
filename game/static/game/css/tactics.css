@@ -45,7 +45,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-dashboard {
-    --dashboard-artboard-width: 1267.2px;
+    --dashboard-artboard-width: clamp(1200px, 1657.92px, 2200px);
 }
 
 .tactics-dashboard > .ws-game-header,
