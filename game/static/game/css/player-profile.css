@@ -364,7 +364,11 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-faint: var(--text-muted);
     --aaa-radius: 12px;
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
-    --aaa-profile-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
+    /* Fixed to the stage content area: 1884px scaler width minus
+       232px fixed sidebar = 1652px. Avoid vw-based clamp which
+       collapses to ~1180px at 1440 viewport because vw resolves
+       against the real innerWidth, not the scaled stage. */
+    --aaa-profile-artboard-width: calc(1884px - var(--sidebar));
     --aaa-profile-showcase-height: clamp(540px, 31vw, 780px);
     min-height: 100%;
     padding: clamp(20px, 1.2vw, 28px) clamp(20px, 1.2vw, 28px) clamp(28px, 1.7vw, 42px);

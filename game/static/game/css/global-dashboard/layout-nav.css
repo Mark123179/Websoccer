@@ -43,13 +43,19 @@
 }
 
 /* ============================================================
-   FLUID ARTBOARD — AAA player profile
-   The ws-game-header must use the same artboard width as the
-   player content grid (--aaa-profile-artboard-width).
+   FIXED ARTBOARD — AAA player profile
+   Use the full content area inside the dashboard-scaler stage
+   (stage 1884px logical minus 232px fixed sidebar = 1652px).
+   The previous vw-based clamp collapsed to ~1180px at 1440
+   viewport because vw resolves against the real innerWidth,
+   not the scaled stage logical width — wasting ~470px of
+   horizontal space. The ws-game-header / topbar / profile grid
+   all reference --dashboard-artboard-width and --aaa-profile-
+   artboard-width (set to the same value in player-profile.css).
    ============================================================ */
 
 .player-dashboard.is-aaa-profile {
-    --dashboard-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
+    --dashboard-artboard-width: calc(1884px - var(--sidebar));
 }
 
 /* ============================================================

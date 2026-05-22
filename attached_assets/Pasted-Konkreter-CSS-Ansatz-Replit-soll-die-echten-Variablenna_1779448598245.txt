@@ -1,0 +1,99 @@
+Konkreter CSS-Ansatz
+
+Replit soll die echten Variablennamen prüfen, aber die Richtung ist:
+
+.dashboard-scaler {
+  --dashboard-shell-width: 1884px;
+  --sidebar: 232px;
+  --profile-main-width: calc(
+    var(--dashboard-shell-width) - var(--sidebar)
+  );
+}
+
+Dann für die Spielerprofil-Seite:
+
+.player-dashboard,
+.aaa-profile-artboard {
+  width: var(--profile-main-width);
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+Falls es einen gewollten Abstand zwischen Sidebar und Content gibt:
+
+.dashboard-scaler {
+  --dashboard-shell-width: 1884px;
+  --sidebar: 232px;
+  --content-gap: 20px;
+  --profile-main-width: calc(
+    var(--dashboard-shell-width) - var(--sidebar) - var(--content-gap)
+  );
+}
+
+.player-dashboard,
+.aaa-profile-artboard {
+  width: var(--profile-main-width);
+  max-width: none;
+}
+
+Aber nicht:
+
+width: clamp(1180px, calc(50vw + 460px), 2400px);
+
+für das Spielerprofil-Artboard.
+
+Abnahmebedingungen
+
+Replit soll nach dem Fix diese Werte liefern:
+
+(() => {
+  const sidebar = document.querySelector(".navbar");
+  const artboard =
+    document.querySelector(".aaa-profile-artboard") ||
+    document.querySelector(".player-dashboard");
+
+  const season = document.querySelector(".aaa-season-card");
+  const kpi = season?.querySelector(".aaa-kpis-scroll-wrap");
+
+  const sidebarRect = sidebar?.getBoundingClientRect();
+  const artboardRect = artboard?.getBoundingClientRect();
+
+  console.table({
+    viewport: `${window.innerWidth} × ${window.innerHeight}`,
+    sidebarVisualRight: sidebarRect?.right,
+    artboardVisualLeft: artboardRect?.left,
+    artboardVisualRight: artboardRect?.right,
+    viewportRight: window.innerWidth,
+    artboardOffsetWidth: artboard?.offsetWidth,
+    artboardClientWidth: artboard?.clientWidth,
+    seasonClientWidth: season?.clientWidth,
+    seasonScrollWidth: season?.scrollWidth,
+    seasonDeltaX: season ? season.scrollWidth - season.clientWidth : null,
+    kpiClientWidth: kpi?.clientWidth,
+    kpiScrollWidth: kpi?.scrollWidth,
+    kpiDeltaX: kpi ? kpi.scrollWidth - kpi.clientWidth : null,
+    kpiOverflowX: kpi ? getComputedStyle(kpi).overflowX : null
+  });
+})();
+
+Bei 1440×900 muss gelten:
+
+artboardOffsetWidth ungefähr 1652px logisch
+artboardVisualLeft direkt nach Sidebar plus kleinem Gap
+artboardVisualRight nahe 1440px
+seasonDeltaX = 0
+kpiDeltaX = 0
+keine sichtbare horizontale Scrollbar
+Verletzungen/Transferhistorie lesbar
+Klare Entscheidung
+
+Nicht nochmal rollbacken.
+
+Nicht weiter an der Stage herumspielen.
+
+Der neue Fix ist:
+
+Spielerprofil-Artboard von 1180px/viewport-clamp auf volle Stage-Content-Breite bringen.
+
+Das ist der Grund, warum du links und rechts so viel Platz siehst. Die Stage füllt die Basisauflösung, aber das Spielerprofil tut es nicht.
