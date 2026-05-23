@@ -48,10 +48,15 @@ body {
     margin-inline: auto;
 }
 
-/* Die logische Buehne — exakte Original-Dimensionen.
-   JS setzt transform:scale(...) inline. Keine CSS-Transformation hier. */
+/* Die logische Buehne — Breite ist DYNAMISCH (Wide-Shell):
+   JS setzt --dashboard-shell-width und transform:scale inline.
+   Baseline 1884px bleibt der Fallback und bei 16:10-aehnlichen
+   Viewports der echte Wert; auf breiteren Viewports (1920x1080,
+   2K, 4K) waechst die logische Buehne (~2093px), damit der ueber-
+   schuessige horizontale Platz im Layout nutzbar wird statt als
+   leerer Seitengutter zu verfallen. Hoehe bleibt fix bei 1177.5. */
 .dashboard-scaler {
-    width: 1884px;
+    width: var(--dashboard-shell-width, 1884px);
     min-height: 1177.5px;
     transform-origin: top left;
 }

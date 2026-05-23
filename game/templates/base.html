@@ -130,10 +130,27 @@
     {% block extra_js %}{% endblock %}
 
     <script>
+    /* ============================================================
+       DYNAMIC WIDE-SHELL SCALER
+       Scale is height-bound (BASE_HEIGHT) so vertical aspect stays
+       identical to the 1884x1177.5 baseline. When the real viewport
+       is wider than the baseline aspect ratio (e.g. 1920x1080, 2K,
+       4K), the extra horizontal room is converted into additional
+       LOGICAL stage width — never into empty side gutters and never
+       into bigger scale. Heightbound 1440x900 stays exactly 1884.
+         1440x900 -> scale 0.7644, logicalShellW = 1884 (unchanged)
+         1920x1080 -> scale 0.9172, logicalShellW ~= 2093
+         2560x1440 -> scale 1.2230, logicalShellW ~= 2093
+         3840x2160 -> scale 1.8344, logicalShellW ~= 2093
+       The stage CSS uses width: var(--dashboard-shell-width, 1884px)
+       and the AAA artboard uses calc(shell - sidebar), so the player
+       profile content automatically fills the widened shell.
+       ============================================================ */
     (() => {
         const BASE_WIDTH  = 1884;
         const BASE_HEIGHT = 1177.5;
 
+        const scroll = document.querySelector('.gameScroll');
         const stage  = document.querySelector('.dashboard-scaler');
         const spacer = document.querySelector('.gameStageSpacer');
         if (!stage || !spacer) return;
@@ -142,15 +159,26 @@
         function update() {
             cancelAnimationFrame(raf);
             raf = requestAnimationFrame(() => {
-                const scale = Math.min(
-                    window.innerWidth  / BASE_WIDTH,
-                    window.innerHeight / BASE_HEIGHT
-                );
-                const contentH = Math.max(BASE_HEIGHT, stage.scrollHeight);
+                const vw = (scroll && scroll.clientWidth)  || window.innerWidth;
+                const vh = (scroll && scroll.clientHeight) || window.innerHeight;
+
+                const scale = Math.min(vw / BASE_WIDTH, vh / BASE_HEIGHT);
+
+                /* Convert leftover horizontal viewport into extra logical
+                   stage width. At baseline aspect (or narrower) this is
+                   exactly BASE_WIDTH; on wider viewports it grows. */
+                const logicalShellW = Math.max(BASE_WIDTH, vw / scale);
+
+                stage.style.width = `${logicalShellW}px`;
+                stage.style.setProperty('--dashboard-shell-width', `${logicalShellW}px`);
                 stage.style.transform = `scale(${scale})`;
-                spacer.style.width  = `${BASE_WIDTH  * scale}px`;
-                spacer.style.height = `${contentH    * scale}px`;
+
+                const contentH = Math.max(BASE_HEIGHT, stage.scrollHeight);
+                spacer.style.width  = `${vw}px`;
+                spacer.style.height = `${Math.ceil(contentH * scale)}px`;
+
                 document.documentElement.style.setProperty('--game-scale', scale);
+                document.documentElement.style.setProperty('--dashboard-shell-width', `${logicalShellW}px`);
             });
         }
 

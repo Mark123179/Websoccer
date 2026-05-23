@@ -1,0 +1,75 @@
+So sollte der Scaler ungefähr aussehen:
+
+(() => {
+  const BASE_WIDTH = 1884;
+  const BASE_HEIGHT = 1177.5;
+
+  const scroll = document.querySelector(".gameScroll");
+  const spacer = document.querySelector(".gameStageSpacer");
+  const stage = document.querySelector(".dashboard-scaler");
+
+  if (!scroll || !spacer || !stage) return;
+
+  let raf = null;
+
+  function updateStage() {
+    cancelAnimationFrame(raf);
+
+    raf = requestAnimationFrame(() => {
+      const viewportWidth = scroll.clientWidth || window.innerWidth;
+      const viewportHeight = scroll.clientHeight || window.innerHeight;
+
+      const scale = Math.min(
+        viewportWidth / BASE_WIDTH,
+        viewportHeight / BASE_HEIGHT
+      );
+
+      const logicalStageWidth = Math.max(
+        BASE_WIDTH,
+        viewportWidth / scale
+      );
+
+      stage.style.width = `${logicalStageWidth}px`;
+      stage.style.setProperty("--dashboard-shell-width", `${logicalStageWidth}px`);
+      stage.style.transform = `scale(${scale})`;
+
+      const contentHeight = Math.max(BASE_HEIGHT, stage.scrollHeight);
+
+      spacer.style.width = `${viewportWidth}px`;
+      spacer.style.height = `${Math.ceil(contentHeight * scale)}px`;
+
+      document.documentElement.style.setProperty("--game-scale", scale);
+      document.documentElement.style.setProperty("--dashboard-shell-width", `${logicalStageWidth}px`);
+    });
+  }
+
+  const resizeObserver = new ResizeObserver(updateStage);
+  resizeObserver.observe(stage);
+
+  window.addEventListener("resize", updateStage);
+  window.addEventListener("load", updateStage);
+
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(updateStage);
+  }
+
+  updateStage();
+})();
+CSS-Kern
+.dashboard-scaler {
+  width: var(--dashboard-shell-width, 1884px);
+  min-height: 1177.5px;
+  transform-origin: top left;
+}
+
+.player-dashboard.is-aaa-profile {
+  --dashboard-artboard-width: calc(
+    var(--dashboard-shell-width, 1884px) - var(--sidebar, 232px)
+  );
+}
+
+.is-aaa-profile {
+  --aaa-profile-artboard-width: calc(
+    var(--dashboard-shell-width, 1884px) - var(--sidebar, 232px)
+  );
+}

@@ -364,11 +364,13 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     --aaa-faint: var(--text-muted);
     --aaa-radius: 12px;
     --aaa-shadow: 0 32px 90px rgba(0, 0, 0, 0.42);
-    /* Fixed to the stage content area: 1884px scaler width minus
-       232px fixed sidebar = 1652px. Avoid vw-based clamp which
-       collapses to ~1180px at 1440 viewport because vw resolves
-       against the real innerWidth, not the scaled stage. */
-    --aaa-profile-artboard-width: calc(1884px - var(--sidebar));
+    /* Follows the DYNAMIC stage shell (--dashboard-shell-width set
+       by the wide-shell scaler in base.html): full content area =
+       logical stage width minus fixed sidebar. Baseline 1884px is
+       used as fallback before JS runs; on wider viewports the shell
+       grows (~2093px @1920+) and the AAA profile artboard grows
+       with it. Sidebar stays 232px logical. */
+    --aaa-profile-artboard-width: calc(var(--dashboard-shell-width, 1884px) - var(--sidebar));
     --aaa-profile-showcase-height: clamp(540px, 31vw, 780px);
     min-height: 100%;
     padding: clamp(20px, 1.2vw, 28px) clamp(20px, 1.2vw, 28px) clamp(28px, 1.7vw, 42px);

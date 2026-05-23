@@ -55,7 +55,7 @@
    ============================================================ */
 
 .player-dashboard.is-aaa-profile {
-    --dashboard-artboard-width: calc(1884px - var(--sidebar));
+    --dashboard-artboard-width: calc(var(--dashboard-shell-width, 1884px) - var(--sidebar));
 }
 
 /* ============================================================
