@@ -44,9 +44,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
     z-index: 1;
 }
 
-.tactics-dashboard {
-    --dashboard-artboard-width: clamp(1200px, 88vw, 2200px);
-}
+/* Artboard-Breite erbt --dashboard-content-width aus :root
+   (Websoccer Layout Contract — siehe layout-nav.css). */
 
 .tactics-dashboard > .ws-game-header,
 .tactics-form {

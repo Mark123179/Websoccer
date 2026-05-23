@@ -1,0 +1,75 @@
+Replit soll jetzt alle Seiten nach diesen Mustern durchsuchen:
+
+clamp(1180px, calc(50vw + 460px), 2400px)
+--*-artboard-width: clamp(...)
+width: clamp(...vw...)
+max-width: 1180px
+max-width: 1200px
+margin-inline: auto
+margin: 0 auto
+width: min(100%, ...)
+
+Aber nur für strukturelle Seiten-/Artboard-Wrapper, nicht für kleine Cards, Buttons, Icons oder typografische Effekte.
+
+Konkreter Auftrag:
+
+Bitte alle bestehenden Websoccer-Hauptseiten auditieren:
+
+- Übersicht
+- Spielerprofil
+- Vereinsprofil
+- Kader
+- Taktik
+- Transfers
+- Jugend
+- Datencenter
+- Management
+- Community
+- alle weiteren Seiten, die im Sidebar-Menü hängen
+
+Für jede Seite:
+1. Route nennen.
+2. Haupt-Artboard-Selector nennen.
+3. Aktuelle Artboard-Breitenregel nennen.
+4. Prüfen, ob sie noch viewport-clamp / max-width / margin:auto nutzt.
+5. Falls ja: auf var(--dashboard-content-width) umstellen.
+6. Keine internen Grids umbauen, solange kein Overflow entsteht.
+7. Keine Stage-Logik ändern.
+Für zukünftige Seiten
+
+Das hier soll als Regel in eine kleine Doku oder Kommentar in layout-nav.css/game-stage.css:
+
+Websoccer Layout Contract
+
+Neue Seiten dürfen kein eigenes viewportbasiertes Artboard definieren.
+
+Pflicht:
+- Die Seite liegt innerhalb .dashboard-scaler.
+- Der äußere Seitenwrapper nutzt die globale Content-Breite:
+  width: var(--dashboard-content-width);
+  max-width: none;
+- Die Seite darf intern CSS Grid/Flex nutzen.
+- Interne Komponenten dürfen containerbasiert arbeiten.
+- Vertikale Scrollbereiche sind erlaubt, wenn fachlich gewollt.
+- Horizontales Scrollen ist nur mit ausdrücklicher fachlicher Begründung erlaubt.
+
+Verboten für Haupt-Artboards:
+- width: 100vw
+- width: clamp(...vw...)
+- max-width: 1180px / 1200px / 1440px
+- margin-inline:auto auf einem kleineren Artboard
+- eigene transform: scale()
+- eigene Stage-/Viewport-Scaler
+Wichtig: Nicht alles vw global killen
+
+Replit soll nicht wieder in die alte Falle laufen.
+
+Richtig:
+
+Strukturelle Artboard-Breiten weg von vw/clamp.
+
+Nicht automatisch richtig:
+
+alle vw-Werte im Projekt ersetzen.
+
+Kleine visuelle Werte können bleiben, wenn sie keine Layout-Breite zerstören. Der bekannte Fehler war konkret, dass Card-/Artboard-Container durch clamp(...vw...) gegen den echten Viewport gerechnet haben statt gegen die logische Stage; das wurde bereits als Ursache identifiziert.

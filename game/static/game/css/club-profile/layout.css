@@ -19,14 +19,18 @@
     --club-muted: rgba(218, 236, 242, 0.72);
     --club-faint: rgba(218, 236, 242, 0.46);
     --club-radius: 7px;
-    --club-artboard-width: clamp(1180px, calc(50vw + 460px), 2400px);
-    --dashboard-artboard-width: var(--club-artboard-width);
+    /* Websoccer Layout Contract: Haupt-Artboard nutzt die globale
+       Content-Breite (shell - sidebar) statt eigener vw-Clamp. */
+    --club-artboard-width: var(--dashboard-content-width);
+    --dashboard-artboard-width: var(--dashboard-content-width);
     --club-row-1: clamp(390px, 24vw, 460px);
     --club-row-2: clamp(270px, 16.5vw, 320px);
     --club-row-3: clamp(235px, 14vw, 270px);
     box-sizing: border-box;
     min-height: 100%;
-    overflow-x: hidden;
+    /* overflow-x:hidden Fake-Fix entfernt — Layout-Contract verbietet
+       das Verstecken horizontaler Überläufe auf Haupt-Wrappern.
+       Artboard nutzt jetzt --dashboard-content-width, kein Overflow. */
     padding: clamp(14px, 0.85vw, 18px) clamp(16px, 1.1vw, 22px) clamp(16px, 1.0vw, 20px);
     background:
         radial-gradient(circle at 58% 0%, rgba(255, 255, 255, 0.1), transparent 18%),

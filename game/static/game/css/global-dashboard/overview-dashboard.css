@@ -21,7 +21,8 @@ body.overview-home-page {
         linear-gradient(180deg, rgba(1, 8, 14, 0.14), rgba(1, 8, 14, 0.92)),
         url("../../images/backgrounds/player-profile-stadium-atmosphere.svg") center / cover no-repeat,
         #02070d;
-    overflow-x: hidden;
+    /* overflow-x:hidden Fake-Fix entfernt — Layout-Contract verbietet
+       das Verstecken horizontaler Überläufe auf Haupt-Wrappern. */
     padding: 22px 22px 30px;
 }
 
