@@ -97,13 +97,24 @@
     min-width: 0;
 }
 
+/* ============================================================
+   KALENDER-TAG — symmetrisches Flex-Layout
+   Jede Zelle: feste Höhe 112px, Day-Head (20px) + Fixture-Bereich.
+   Der Fixture-Bereich ist IMMER vorhanden (flex:1) — befüllt oder
+   leer — damit jede Zelle die exakt gleiche innere Aufteilung hat.
+   Ready/Open-Status wird über inset box-shadow markiert, NICHT
+   über border-width, damit kein Layout-Shift zwischen den States
+   entsteht.
+   ============================================================ */
 .ws-calendar-day {
     background:
         linear-gradient(180deg, rgba(5, 72, 95, 0.82), rgba(4, 20, 33, 0.94)),
         radial-gradient(circle at 50% 35%, rgba(34, 230, 255, 0.18), rgba(255, 255, 255, 0.08) 34%, transparent 72%);
     border: 1px solid rgba(34, 230, 255, 0.24);
     border-radius: 4px;
-    min-height: 112px;
+    display: flex;
+    flex-direction: column;
+    height: 112px;
     overflow: hidden;
     position: relative;
 }
@@ -113,8 +124,7 @@
         linear-gradient(180deg, rgba(8, 109, 126, 0.94), rgba(6, 44, 56, 0.98)),
         radial-gradient(circle at 50% 42%, rgba(48, 242, 156, 0.28), rgba(34, 230, 255, 0.16) 36%, transparent 75%);
     border-color: rgba(48, 242, 156, 0.82);
-    box-shadow: inset 0 0 0 2px rgba(48, 242, 156, 0.7), 0 0 26px rgba(48, 242, 156, 0.18);
-    z-index: 1;
+    box-shadow: inset 0 0 0 2px rgba(48, 242, 156, 0.7);
 }
 
 .ws-day-head {
@@ -122,9 +132,9 @@
     background: linear-gradient(180deg, rgba(5, 124, 159, 0.96), rgba(4, 72, 100, 0.96));
     color: #ffffff;
     display: flex;
+    flex: 0 0 20px;
     font-size: 12px;
     font-weight: 900;
-    height: 20px;
     justify-content: space-between;
     line-height: 1;
     padding: 0 5px;
@@ -142,16 +152,15 @@
 .ws-fixture-card {
     align-items: center;
     background: linear-gradient(180deg, rgba(235, 248, 250, 0.82), rgba(210, 225, 228, 0.74));
-    bottom: 3px;
     display: grid;
+    flex: 1 1 auto;
     gap: 2px;
     grid-template-rows: 1fr auto;
     justify-items: center;
-    left: 4px;
-    min-height: 82px;
+    margin: 3px 4px 4px;
+    overflow: hidden;
     padding: 5px 5px 4px;
-    position: absolute;
-    right: 4px;
+    position: relative;
 }
 
 .ws-fixture-card::before {
@@ -176,12 +185,14 @@
     z-index: 1;
 }
 
+/* Status-Markierung über inset box-shadow → kein Layout-Shift
+   gegenueber neutralen Karten oder gegenueber leeren Cells. */
 .ws-calendar-day.is-ready .ws-fixture-card {
-    border: 4px solid #08d418;
+    box-shadow: inset 0 0 0 3px #08d418;
 }
 
 .ws-calendar-day.is-open .ws-fixture-card {
-    border: 4px solid #f01414;
+    box-shadow: inset 0 0 0 3px #f01414;
 }
 
 .ws-fixture-crests {
