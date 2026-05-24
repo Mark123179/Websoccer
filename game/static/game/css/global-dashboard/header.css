@@ -199,9 +199,9 @@
 .ws-fixture-crests {
     align-items: center;
     display: flex;
-    gap: 7px;
+    gap: 8px;
     justify-content: center;
-    min-height: 36px;
+    min-height: 48px;
 }
 
 .ws-fixture-crest-link {
@@ -218,27 +218,28 @@
 }
 
 .ws-fixture-crests img {
-    height: 36px;
-    max-width: 54px;
+    height: 48px;
+    max-width: 66px;
     object-fit: contain;
 }
 
 .ws-fixture-result,
 .ws-fixture-meta {
     color: #003a6d;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 900;
     line-height: 1;
 }
 
 .ws-fixture-meta {
+    font-size: 12px;
     font-weight: 800;
 }
 
 .ws-fixture-result span {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 900;
-    margin-left: 2px;
+    margin-left: 3px;
 }
 
 .ws-lineup-state {
