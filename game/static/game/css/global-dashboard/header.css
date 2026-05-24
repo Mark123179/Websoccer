@@ -99,7 +99,7 @@
 
 /* ============================================================
    KALENDER-TAG — symmetrisches Flex-Layout
-   Jede Zelle: feste Höhe 112px, Day-Head (20px) + Fixture-Bereich.
+   Jede Zelle: feste Höhe 140px, Day-Head (20px) + Fixture-Bereich.
    Der Fixture-Bereich ist IMMER vorhanden (flex:1) — befüllt oder
    leer — damit jede Zelle die exakt gleiche innere Aufteilung hat.
    Ready/Open-Status wird über inset box-shadow markiert, NICHT
@@ -114,7 +114,7 @@
     border-radius: 12px;
     display: flex;
     flex-direction: column;
-    height: 112px;
+    height: 140px;
     overflow: hidden;
     position: relative;
 }
@@ -282,9 +282,12 @@
 
     .ws-header-back,
     .ws-header-context,
-    .ws-calendar-arrow,
-    .ws-calendar-day {
+    .ws-calendar-arrow {
         min-height: 78px;
+    }
+
+    .ws-calendar-day {
+        height: 78px;
     }
 
     .ws-header-context strong {
