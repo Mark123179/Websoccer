@@ -272,7 +272,7 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
     max-width: min(90%, clamp(168px, 16vw, 280px));
     object-fit: contain;
     object-position: center bottom;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateY(-8.5px);
     pointer-events: none;
     user-select: none;
 }
