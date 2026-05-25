@@ -1050,6 +1050,15 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
     min-height: clamp(320px, 24vw, 560px);
     display: flex;
     flex-direction: column;
+    background:
+        linear-gradient(180deg, rgba(2, 8, 14, 0.68) 0%, transparent 22%),
+        url("../images/backgrounds/spielfeld.png") center / 100% 100% no-repeat;
+    border-color: rgba(123, 245, 174, 0.32);
+    backdrop-filter: none;
+}
+
+.aaa-position-card::before {
+    content: none;
 }
 
 .aaa-position-card .aaa-card-heading {
@@ -1089,16 +1098,10 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
     margin: 0;
     overflow: hidden;
     transform: none;
-    border: 1px solid rgba(123, 245, 174, 0.32);
-    border-radius: 10px;
-    background:
-linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 32%),
-url("../images/backgrounds/spielfeld.png") center / 100% 100% no-repeat;
-    box-shadow:
-inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-inset 0 0 64px rgba(0, 0, 0, 0.24),
-0 30px 56px rgba(0, 0, 0, 0.42),
-0 0 42px rgba(34, 230, 255, 0.1);
+    border: none;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
 }
 
 .aaa-position-card .aaa-pitch::before,
