@@ -155,19 +155,12 @@
         const spacer = document.querySelector('.gameStageSpacer');
         if (!stage || !spacer) return;
 
-        /* DEBUG ONLY: ?fake_vw=&fake_vh= forces the scaler to compute as if the
-           viewport were that size. Pure layout simulation for the wide-mode
-           audit; does not affect production paths (params absent => normal). */
-        const _params = new URLSearchParams(location.search);
-        const FAKE_VW = parseFloat(_params.get('fake_vw')) || 0;
-        const FAKE_VH = parseFloat(_params.get('fake_vh')) || 0;
-
         let raf = null;
         function update() {
             cancelAnimationFrame(raf);
             raf = requestAnimationFrame(() => {
-                const vw = FAKE_VW || (scroll && scroll.clientWidth)  || window.innerWidth;
-                const vh = FAKE_VH || (scroll && scroll.clientHeight) || window.innerHeight;
+                const vw = (scroll && scroll.clientWidth)  || window.innerWidth;
+                const vh = (scroll && scroll.clientHeight) || window.innerHeight;
 
                 const scale = Math.min(vw / BASE_WIDTH, vh / BASE_HEIGHT);
 

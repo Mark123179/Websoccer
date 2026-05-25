@@ -14,7 +14,6 @@ from .views import (
     player_detail,
     player_graph_data,
 )
-from .views_debug import measure_log
 from .views_creator import (
     creator_index,
     creator_club_edit,
@@ -113,5 +112,4 @@ urlpatterns = [
     path('creator/players/<int:player_id>/', creator_player_edit, name='creator_player_edit'),
     path('creator/clubs/<int:club_id>/players/new/', creator_new_player, name='creator_new_player'),
 
-    path('__measure/log/', measure_log, name='measure_log'),
 ]
