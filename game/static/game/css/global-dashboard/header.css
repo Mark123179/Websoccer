@@ -226,13 +226,15 @@
 .ws-fixture-result,
 .ws-fixture-meta {
     color: #003a6d;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 900;
     line-height: 1;
+    margin-top: 8px;
+    margin-bottom: 8px;
 }
 
 .ws-fixture-meta {
-    font-size: 12px;
+    font-size: 20px;
     font-weight: 800;
 }
 
