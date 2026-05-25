@@ -690,7 +690,7 @@ def transfer_display_rows(rows):
 
 def pitch_position_slots(player):
     coordinate_slots = [
-        ('TW', 49, 79),
+        ('TW', 49, 84),
         ('LV', 18, 74),
         ('IV', 33, 74),
         ('IV', 49, 74),
