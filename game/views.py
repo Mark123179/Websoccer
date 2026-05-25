@@ -710,10 +710,10 @@ def pitch_position_slots(player):
         ('OM', 39, 44),
         ('OM', 59, 44),
         ('ROM', 77, 44),
-        ('LF', 28, 34),
-        ('ST', 43, 26),
-        ('ST', 57, 26),
-        ('RF', 70, 34),
+        ('LF', 28, 30),
+        ('ST', 43, 21),
+        ('ST', 57, 21),
+        ('RF', 70, 30),
     ]
     main_positions = set(player.main_positions)
     secondary_positions = set(player.secondary_positions)

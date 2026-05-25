@@ -1051,8 +1051,7 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
     display: flex;
     flex-direction: column;
     background:
-        linear-gradient(180deg, rgba(2, 8, 14, 0.68) 0%, transparent 22%),
-        url("../images/backgrounds/spielfeld.png") center / 100% 100% no-repeat;
+        linear-gradient(145deg, var(--aaa-card-strong), rgba(2, 12, 19, 0.92));
     border-color: rgba(123, 245, 174, 0.32);
     backdrop-filter: none;
 }
@@ -1100,7 +1099,9 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
     transform: none;
     border: none;
     border-radius: 0;
-    background: none;
+    background:
+        linear-gradient(180deg, rgba(2, 8, 14, 0.52) 0%, transparent 14%),
+        url("../images/backgrounds/spielfeld.png") center / 100% 100% no-repeat;
     box-shadow: none;
 }
 
