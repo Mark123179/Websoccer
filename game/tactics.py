@@ -16,7 +16,6 @@ FORMATION_PARTS = {
     'defense': {
         '3e': ['IV', 'IV', 'IV'],
         '3n': ['LV', 'IV', 'RV'],
-        '3l': ['IV', 'LI', 'IV'],
         '4n': ['LV', 'IV', 'IV', 'RV'],
         '4o': ['LOV', 'IV', 'IV', 'ROV'],
         '5n': ['LV', 'IV', 'IV', 'IV', 'RV'],
