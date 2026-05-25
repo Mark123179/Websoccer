@@ -1730,12 +1730,9 @@ a.img-link {
 }
 a.img-link > img {
     cursor: pointer;
-    transition: outline 0.12s ease, opacity 0.12s ease;
+    transition: filter 0.12s ease;
 }
 a.img-link:hover > img,
 a.img-link:focus-visible > img {
-    opacity: 0.85;
-    outline: 2px solid #00e5cc;
-    outline-offset: 3px;
-    border-radius: 2px;
+    filter: brightness(1.12);
 }
