@@ -1,0 +1,153 @@
+Technische Richtung
+
+Der wichtige Punkt ist: nicht contain, weil das wieder Leerfläche produziert.
+Und wahrscheinlich auch nicht cover, weil Marker/Positionen dann durch Cropping schlechter passen können.
+
+Für dein Ziel ist vermutlich am besten:
+
+Bild/Background auf 100% Breite und 100% Höhe der Body-Fläche strecken.
+Positionsmarker liegen auf derselben Fläche.
+
+Also sinngemäß:
+
+/* echte Selektoren von Replit einsetzen */
+.aaa-positions-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.aaa-positions-body,
+.aaa-position-pitch-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.aaa-position-pitch-bg,
+.aaa-position-pitch-image,
+.aaa-position-field-image {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  max-width: none;
+  max-height: none;
+
+  object-fit: fill;
+  display: block;
+}
+
+.aaa-position-pitch-bg {
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.aaa-position-markers,
+.aaa-position-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+Falls das Spielfeld als CSS-Background kommt:
+
+.aaa-position-pitch-wrap {
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+Falls es als <img> kommt:
+
+.aaa-position-pitch-wrap img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: fill;
+}
+Warum fill hier richtig ist
+
+Bei der POSITIONEN-Kachel ist das Spielfeld ein UI-Hintergrund mit Positionschips darüber. Wenn der Hintergrund und die Marker beide dieselbe Fläche benutzen, bleibt die optische Zuordnung stabil.
+
+contain → Bild bleibt kleiner, erzeugt Leerraum
+cover   → kann Pitch-Linien/Fläche croppen
+fill    → nutzt die komplette Kachelfläche, Marker bleiben prozentual passend
+
+Bei einem normalen Foto wäre fill oft falsch. Hier ist es als taktischer Hintergrund vertretbar.
+
+Abnahme für Replit
+Bitte auf /players/1519/ messen und Screenshots machen:
+
+1440×900:
+- POSITIONEN-Kachel unverändert positioniert
+- Kachelhöhe unverändert
+- Spielfeldbild füllt den Kartenbody sichtbar besser aus
+- keine neuen Layoutverschiebungen
+
+3840×2160:
+- Spielfeldbild wächst mit der POSITIONEN-Kachel
+- keine alte Max-Width-Begrenzung sichtbar
+- keine leere große Fläche um das Spielfeldbild
+- Positionsmarker bleiben auf dem Bild
+
+Mess-Snippet:
+
+(() => {
+  const card = [...document.querySelectorAll("*")]
+    .find((el) => /POSITIONEN/i.test(el.textContent || ""));
+
+  if (!card) {
+    console.table([{ error: "POSITIONEN-Karte nicht gefunden" }]);
+    return;
+  }
+
+  const suspects = [...card.querySelectorAll("*")]
+    .filter((el) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+
+      return (
+        r.width > 100 &&
+        r.height > 80 &&
+        (
+          cs.backgroundImage !== "none" ||
+          el.tagName === "IMG" ||
+          /pitch|field|position|formation|spielfeld/i.test(String(el.className || ""))
+        )
+      );
+    })
+    .map((el) => {
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+
+      return {
+        tag: el.tagName,
+        className: String(el.className || "").slice(0, 160),
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        ratio: Math.round((r.width / r.height) * 100) / 100,
+        maxWidth: cs.maxWidth,
+        maxHeight: cs.maxHeight,
+        objectFit: cs.objectFit,
+        backgroundSize: cs.backgroundSize,
+        position: cs.position,
+        overflow: cs.overflow
+      };
+    });
+
+  const cardRect = card.getBoundingClientRect();
+
+  console.table({
+    viewport: `${window.innerWidth}×${window.innerHeight}`,
+    cardWidth: Math.round(cardRect.width),
+    cardHeight: Math.round(cardRect.height)
+  });
+
+  console.table(suspects);
+})();
