@@ -541,7 +541,10 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
 .aaa-right-column { grid-area: right; }
 .aaa-profile-showcase { grid-area: showcase; }
 
-.aaa-center-column,
+.aaa-center-column {
+    grid-template-rows: minmax(0, 1fr) auto;
+}
+
 .aaa-right-column {
     grid-template-rows: auto minmax(0, 1fr);
 }
@@ -1048,6 +1051,7 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
 
 .aaa-position-card {
     position: relative;
+    height: 100%;
     min-height: 346px;
     display: flex;
     flex-direction: column;
@@ -1096,8 +1100,12 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
 }
 
 .aaa-position-card .aaa-pitch {
-    width: 100%;
-    aspect-ratio: 3 / 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
     height: auto;
     margin: 0;
     overflow: hidden;
