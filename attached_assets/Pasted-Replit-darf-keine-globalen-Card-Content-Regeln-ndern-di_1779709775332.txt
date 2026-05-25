@@ -1,0 +1,193 @@
+Replit darf keine globalen Card-Content-Regeln ändern, die auch bei 1440×900 greifen.
+
+Also nicht:
+
+.aaa-poster-media {
+  height: ...
+}
+
+global ändern.
+
+Sondern nur:
+
+.dashboard-scaler[data-shell-mode="wide"] .aaa-poster-media {
+  ...
+}
+
+oder ähnlich.
+
+Neue Regel
+1440×900 = locked baseline
+alles darüber = progressive wide mode
+
+Die dynamische Wide-Shell darf bei 2K/4K mehr horizontale Fläche geben.
+Aber bei Basis muss gelten:
+
+logicalStageWidth = 1884px
+dashboard/content/cards wie jetzt
+
+Bei Wide darf gelten:
+
+logicalStageWidth > 1884px
+Content darf horizontal besser verteilt werden
+
+Aber:
+
+Y-Positionen bleiben gleich
+Card-Höhen bleiben gleich
+Kalender bleibt gleich
+Navbar bleibt gleich
+Basis bleibt pixelgleich
+Das solltest du Replit schreiben
+Korrektur / Präzisierung:
+
+Die Basisauflösung 1440×900 passt in allen Bereichen.
+Sie darf weder horizontal noch vertikal verändert werden.
+
+Bitte keine globalen Kachel-/Content-Regeln ändern, die auch bei 1440×900 greifen.
+
+Neuer Standard:
+1440×900 ist der Golden Master.
+Alle Verbesserungen für 2K/4K dürfen nur im Wide-Mode greifen.
+
+Nicht anfassen:
+- Kalender
+- Navbar
+- Stage-Scale
+- Stage-Höhe
+- Basis-Artboard bei 1440×900
+- Card-Höhen
+- Grid-Y-Positionen
+- Saisonleistungen-Vertikalscroll
+
+Ziel:
+Nur bei Wide-Shell, also wenn logicalStageWidth > 1884px, dürfen Kachel-Inhalte horizontal besser ausgenutzt werden.
+
+Bitte dafür im Stage-JS einen Zustand setzen:
+stage.dataset.shellMode = logicalStageWidth > BASE_WIDTH + 1 ? "wide" : "base";
+
+Oder äquivalent:
+.dashboard-scaler.is-wide-shell
+
+Dann dürfen CSS-Anpassungen nur unter diesem Scope laufen:
+
+.dashboard-scaler[data-shell-mode="wide"] .selector { ... }
+
+Bei 1440×900 darf kein einziger relevanter Card-/Grid-/Content-Rect anders sein als jetzt.
+JS-Ergänzung
+
+Sinngemäß:
+
+const BASE_WIDTH = 1884;
+const BASE_HEIGHT = 1177.5;
+
+const scale = Math.min(
+  viewportWidth / BASE_WIDTH,
+  viewportHeight / BASE_HEIGHT
+);
+
+const logicalStageWidth = Math.max(
+  BASE_WIDTH,
+  viewportWidth / scale
+);
+
+stage.style.width = `${logicalStageWidth}px`;
+stage.style.setProperty("--dashboard-shell-width", `${logicalStageWidth}px`);
+
+stage.dataset.shellMode =
+  logicalStageWidth > BASE_WIDTH + 1 ? "wide" : "base";
+
+Bei 1440×900:
+
+data-shell-mode="base"
+
+Bei 1920×1080, 2560×1440, 3840×2160:
+
+data-shell-mode="wide"
+Was im Wide-Mode erlaubt ist
+
+Nur solche Dinge:
+
+.dashboard-scaler[data-shell-mode="wide"] .injury-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.dashboard-scaler[data-shell-mode="wide"] .injury-name {
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+Oder bei Medienflächen:
+
+.dashboard-scaler[data-shell-mode="wide"] .aaa-poster-media img {
+  object-fit: cover;
+  object-position: center top;
+}
+
+Aber nur, wenn es die Basis nicht betrifft.
+
+Was nicht erlaubt ist
+.aaa-poster-card { ... }
+.aaa-position-card { ... }
+.aaa-market-card { ... }
+.aaa-season-card { ... }
+
+ohne Wide-Scope.
+
+Denn das würde wieder die Basis verändern.
+
+Abnahme für Replit
+
+Replit soll zwei Checks machen.
+
+1. Baseline-Lock bei 1440×900
+
+Vorher/nachher bei 1440×900 messen:
+
+(() => {
+  const selectors = [
+    ".navbar",
+    ".dashboard-scaler",
+    ".player-dashboard.is-aaa-profile",
+    ".aaa-profile-grid",
+    ".aaa-poster-card",
+    ".aaa-positions-card",
+    ".aaa-market-card",
+    ".aaa-season-card",
+    ".aaa-injuries-card",
+    ".aaa-transfer-card"
+  ];
+
+  console.table(
+    selectors.map((selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return { selector, found: false };
+
+      const r = el.getBoundingClientRect();
+
+      return {
+        selector,
+        left: Math.round(r.left * 100) / 100,
+        top: Math.round(r.top * 100) / 100,
+        width: Math.round(r.width * 100) / 100,
+        height: Math.round(r.height * 100) / 100,
+        right: Math.round(r.right * 100) / 100,
+        bottom: Math.round(r.bottom * 100) / 100
+      };
+    })
+  );
+})();
+
+Erwartung:
+
+Bei 1440×900 keine relevanten Unterschiede.
+2. Wide-Mode bei 2K/4K
+
+Bei 2560×1440 und 3840×2160:
+
+data-shell-mode = wide
+mehr horizontale Nutzfläche
+keine Änderung der vertikalen Struktur
+keine neuen Scrollbars
+keine Basis-Regeln verändert

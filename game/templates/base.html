@@ -173,6 +173,12 @@
                 stage.style.setProperty('--dashboard-shell-width', `${logicalShellW}px`);
                 stage.style.transform = `scale(${scale})`;
 
+                /* Wide-shell scope flag. 1440x900 -> "base" (golden master, untouchable).
+                   Wider viewports -> "wide" (progressive horizontal improvements may
+                   be scoped via .dashboard-scaler[data-shell-mode="wide"] .selector). */
+                stage.dataset.shellMode = logicalShellW > BASE_WIDTH + 1 ? 'wide' : 'base';
+                stage.classList.toggle('is-wide-shell', logicalShellW > BASE_WIDTH + 1);
+
                 const contentH = Math.max(BASE_HEIGHT, stage.scrollHeight);
                 spacer.style.width  = `${vw}px`;
                 spacer.style.height = `${Math.ceil(contentH * scale)}px`;
