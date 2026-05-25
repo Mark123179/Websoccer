@@ -1092,9 +1092,9 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
 }
 
 .aaa-position-card .aaa-pitch {
-    flex: 1 1 auto;
     width: 100%;
-    min-height: 0;
+    aspect-ratio: 3 / 2;
+    height: auto;
     margin: 0;
     overflow: hidden;
     transform: none;
