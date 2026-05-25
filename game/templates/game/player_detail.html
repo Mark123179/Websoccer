@@ -515,4 +515,100 @@
     }, { passive: true });
 }());
 </script>
+
+<script>
+/* DEBUG ONLY — wide-mode audit. Triggered by ?measure=1.
+   POSTs a structured report to /__measure/log/ which writes it to server stderr. */
+(function () {
+    const params = new URLSearchParams(location.search);
+    if (params.get('measure') !== '1') return;
+
+    function runAudit() {
+        const stage = document.querySelector('.dashboard-scaler');
+
+        const cards = [
+            ['poster',      '.aaa-player-card, .aaa-poster-card'],
+            ['positions',   '.aaa-positions-card, [class*="position"]'],
+            ['market',      '.aaa-market-card, [class*="market"]'],
+            ['season',      '.aaa-season-card, [class*="season"]'],
+            ['injuries',    '.aaa-event-card.is-injury-card'],
+            ['suspensions', '.aaa-event-card:not(.is-injury-card)'],
+            ['transfers',   '.aaa-transfer-card, [class*="transfer"]'],
+            ['career',      '.aaa-career-card']
+        ];
+
+        const inspect = (name, selector) => {
+            const el = document.querySelector(selector);
+            if (!el) return { name, selector, found: false };
+            const r = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+            const children = [...el.querySelectorAll('*')]
+                .filter(c => {
+                    const cr = c.getBoundingClientRect();
+                    return cr.width > 20 && cr.height > 10;
+                })
+                .slice(0, 14)
+                .map(c => {
+                    const cr = c.getBoundingClientRect();
+                    const ccs = getComputedStyle(c);
+                    return {
+                        tag: c.tagName,
+                        cls: String(c.className || '').slice(0, 70),
+                        text: (c.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40),
+                        w: Math.round(cr.width),
+                        h: Math.round(cr.height),
+                        scrollW: c.scrollWidth,
+                        overflow: c.scrollWidth - c.clientWidth,
+                        width: ccs.width,
+                        maxW: ccs.maxWidth,
+                        minW: ccs.minWidth,
+                        overflowX: ccs.overflowX,
+                        gridCols: ccs.gridTemplateColumns
+                    };
+                });
+            return {
+                name,
+                selector,
+                found: true,
+                cardW: Math.round(r.width),
+                cardH: Math.round(r.height),
+                scrollW: el.scrollWidth,
+                overflow: el.scrollWidth - el.clientWidth,
+                width: cs.width,
+                maxW: cs.maxWidth,
+                overflowX: cs.overflowX,
+                overflowY: cs.overflowY,
+                gridCols: cs.gridTemplateColumns,
+                children
+            };
+        };
+
+        const report = {
+            _tag: params.get('tag') || 'audit',
+            url: location.href,
+            innerW: window.innerWidth,
+            innerH: window.innerHeight,
+            shellMode: stage ? stage.dataset.shellMode : null,
+            stageWidth: stage ? stage.offsetWidth : null,
+            stageTransform: stage ? getComputedStyle(stage).transform : null,
+            shellWidthVar: stage ? getComputedStyle(stage).getPropertyValue('--dashboard-shell-width').trim() : null,
+            cards: cards.map(([n, s]) => inspect(n, s))
+        };
+
+        fetch('/__measure/log/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(report)
+        }).then(() => {
+            document.title = '[MEASURED] ' + document.title;
+        });
+    }
+
+    if (document.readyState === 'complete') {
+        setTimeout(runAudit, 600);
+    } else {
+        window.addEventListener('load', () => setTimeout(runAudit, 600));
+    }
+})();
+</script>
 {% endblock %}

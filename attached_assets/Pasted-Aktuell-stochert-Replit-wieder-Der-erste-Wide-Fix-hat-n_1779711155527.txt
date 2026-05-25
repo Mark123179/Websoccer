@@ -1,0 +1,112 @@
+Aktuell stochert Replit wieder. Der erste Wide-Fix hat nur gesagt:
+
+Datumsspalte atmet
+Textspalte bekommt übrige Pixel
+
+Aber wenn der Text selbst noch so etwas hat:
+
+max-width: 74px;
+width: 74px;
+overflow: hidden;
+text-overflow: ellipsis;
+
+oder wenn ein Parent-Wrapper die Breite begrenzt, bringt die neue Grid-Spalte nichts.
+
+Dasselbe kann beim Spielerbild passieren: Wenn die Card breiter wird, das Bild aber eine feste Media-Höhe oder feste object-position/object-fit-Logik hat, siehst du keinen echten Nutzen.
+
+Konkretes Diagnostic-Snippet für Replit
+(() => {
+  const stage = document.querySelector(".dashboard-scaler");
+
+  const cards = [
+    ["poster", ".aaa-poster-card"],
+    ["positions", ".aaa-positions-card"],
+    ["market", ".aaa-market-card"],
+    ["season", ".aaa-season-card"],
+    ["injuries", ".aaa-injuries-card, [class*='injur']"],
+    ["suspensions", ".aaa-suspensions-card, [class*='susp'], [class*='sperr']"],
+    ["transfers", ".aaa-transfer-card, [class*='transfer']"]
+  ];
+
+  const inspect = (name, selector) => {
+    const el = document.querySelector(selector);
+    if (!el) return { name, selector, found: false };
+
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+
+    const children = [...el.querySelectorAll("*")]
+      .filter((child) => {
+        const cr = child.getBoundingClientRect();
+        return cr.width > 20 && cr.height > 10;
+      })
+      .slice(0, 12)
+      .map((child) => {
+        const cr = child.getBoundingClientRect();
+        const ccs = getComputedStyle(child);
+
+        return {
+          tag: child.tagName,
+          className: String(child.className || "").slice(0, 80),
+          text: (child.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60),
+          w: Math.round(cr.width),
+          h: Math.round(cr.height),
+          clientW: child.clientWidth,
+          scrollW: child.scrollWidth,
+          dx: child.scrollWidth - child.clientWidth,
+          width: ccs.width,
+          maxWidth: ccs.maxWidth,
+          minWidth: ccs.minWidth,
+          overflowX: ccs.overflowX,
+          gridCols: ccs.gridTemplateColumns
+        };
+      });
+
+    return {
+      name,
+      selector,
+      found: true,
+      shellMode: stage?.dataset.shellMode,
+      cardW: Math.round(r.width),
+      cardH: Math.round(r.height),
+      clientW: el.clientWidth,
+      scrollW: el.scrollWidth,
+      dx: el.scrollWidth - el.clientWidth,
+      width: cs.width,
+      maxWidth: cs.maxWidth,
+      minWidth: cs.minWidth,
+      overflowX: cs.overflowX,
+      overflowY: cs.overflowY,
+      display: cs.display,
+      gridCols: cs.gridTemplateColumns,
+      children
+    };
+  };
+
+  console.log({
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    shellMode: stage?.dataset.shellMode,
+    stageWidth: stage?.offsetWidth
+  });
+
+  console.dir(cards.map(([name, selector]) => inspect(name, selector)), {
+    depth: null
+  });
+})();
+Danach erst fixen
+
+Wenn der Report zeigt, dass zum Beispiel die Verletzungstexte durch einen inneren Text-Span begrenzt sind, dann wäre ein echter Wide-only-Fix:
+
+.dashboard-scaler[data-shell-mode="wide"] .ECHTER-INJURY-TEXT-SELECTOR {
+  max-width: none;
+  width: auto;
+  min-width: 0;
+}
+
+Wenn der Report zeigt, dass die Poster-Media-Fläche das Problem ist:
+
+.dashboard-scaler[data-shell-mode="wide"] .ECHTER-POSTER-MEDIA-SELECTOR {
+  /* nur wenn sichtbar nötig */
+}
+
+Aber ohne Diagnose keine weiteren Regeln.
