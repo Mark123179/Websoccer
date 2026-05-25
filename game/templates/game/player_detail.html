@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=wide-1">
+    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=wide-2">
     <link rel="stylesheet" href="{% static 'game/css/trophy-cabinet.css' %}?v=tc-2">
 {% endblock %}
 
@@ -522,6 +522,32 @@
 (function () {
     const params = new URLSearchParams(location.search);
     if (params.get('measure') !== '1') return;
+
+    /* A/B switches for wide-rule justification audit. */
+    const LONG_TEXT       = params.get('long_text') === '1';
+    const DISABLE_WIDE_EV = params.get('disable_wide_event') === '1';
+
+    if (DISABLE_WIDE_EV) {
+        const s = document.createElement('style');
+        s.textContent = `
+          /* TEMP override: revert wide-rule on event-list to baseline */
+          .dashboard-scaler[data-shell-mode="wide"] .aaa-event-list div {
+            grid-template-columns: 18px 74px minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+          }
+          .dashboard-scaler[data-shell-mode="wide"] .aaa-event-list strong {
+            min-width: auto !important;
+          }
+        `;
+        document.head.appendChild(s);
+    }
+
+    if (LONG_TEXT) {
+        const fake = 'Oberschenkelverhärtung mit Muskelfaserriss im Adduktorenbereich';
+        document.querySelectorAll('.aaa-event-list div strong').forEach(el => {
+            el.textContent = fake;
+        });
+    }
 
     function runAudit() {
         const stage = document.querySelector('.dashboard-scaler');

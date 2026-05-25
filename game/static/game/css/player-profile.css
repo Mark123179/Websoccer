@@ -2080,22 +2080,3 @@ gap: 18px;
     }
 }
 
-/* ============================================================
-   WIDE-SHELL ONLY (logicalShellW > 1884px → 1920/2K/4K)
-   Golden master 1440×900 stays pixel-identical.
-   Only horizontal breathing room is added; no card heights,
-   no grid-Y, no scroll behavior is touched.
-   ============================================================ */
-.dashboard-scaler[data-shell-mode="wide"] .aaa-event-list div {
-    grid-template-columns: 18px auto minmax(0, 1fr) auto;
-    gap: 14px;
-}
-
-.dashboard-scaler[data-shell-mode="wide"] .aaa-event-list strong {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-    max-width: none;
-}
-
