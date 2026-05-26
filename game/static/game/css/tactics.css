@@ -1345,8 +1345,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-half-panel {
-    height: 109px;
-    padding: 8px 12px;
+    height: 135px;
+    padding: 10px 12px;
 }
 
 .tactics-half-panel h2 {
@@ -1364,13 +1364,13 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-orientation span,
 .tactics-orientation em {
     color: #f7fbff;
-    font-size: 11px;
+    font-size: 12px;
     font-style: normal;
 }
 
 .tactics-orientation strong {
     color: #f7fbff;
-    font-size: 12px;
+    font-size: 13px;
     text-align: right;
 }
 
@@ -2141,7 +2141,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-side-stack {
     display: grid;
     gap: 9px;
-    grid-template-rows: 298px 153px minmax(0, 117px);
+    grid-template-rows: 298px 190px minmax(0, 168px);
     min-width: 0;
 }
 
@@ -2266,14 +2266,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-side-stack .tactics-subs-panel select,
 .tactics-side-stack .tactics-subs-panel input[type="number"] {
-    font-size: 9px;
-    height: 18px;
+    font-size: 11px;
+    height: 22px;
     padding: 0 5px;
 }
 
 .tactics-side-stack .tactics-subs-panel .tactics-substitution-row > span,
 .tactics-side-stack .tactics-subs-panel .tactics-substitution-row b {
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .tactics-side-stack .tactics-standard-list {
@@ -2282,7 +2282,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-side-stack .tactics-standard-list label {
     grid-template-columns: 60px minmax(0, 1fr);
-    min-height: 17px;
+    min-height: 22px;
 }
 
 .tactics-side-stack .tactics-standards-panel h2 {
@@ -2291,17 +2291,17 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-standards-panel .tactics-standard-list span {
-    font-size: 9px;
+    font-size: 11px;
 }
 
 .tactics-side-stack .tactics-standards-panel .tactics-standard-list select {
-    font-size: 9px;
-    height: 17px;
+    font-size: 11px;
+    height: 21px;
     padding: 0 5px;
 }
 
 .tactics-analysis-grid .tactics-panel {
-    min-height: 260px;
+    min-height: 295px;
 }
 
 @media (max-width: 1440px) {
