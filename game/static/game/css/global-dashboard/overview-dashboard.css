@@ -43,7 +43,7 @@ body.overview-home-page {
     column-gap: 20px;
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
-        540px
+        430px
         390px
         355px;
 }
@@ -460,10 +460,10 @@ body.overview-home-page {
     flex: 1 1 0;
     gap: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-top: 10.6233px;
-    min-height: 150px;
-    padding-bottom: 25px;
-    padding-top: 40px;
+    margin-top: 6px;
+    min-height: 120px;
+    padding-bottom: 8px;
+    padding-top: 10px;
     width: 100%;
 }
 
@@ -516,7 +516,7 @@ body.overview-home-page {
     height: 100%;
     justify-content: flex-start;
     overflow: hidden;
-    padding: 0 8px 143px;
+    padding: 0 8px 78px;
     position: relative;
 }
 
@@ -552,7 +552,7 @@ body.overview-home-page {
 .overview-player-spotlight img {
     border-radius: 4px;
     bottom: 0;
-    height: 140px;
+    height: 75px;
     left: 50%;
     margin-bottom: 0;
     margin-top: 0;
@@ -562,7 +562,7 @@ body.overview-home-page {
     padding-top: 0;
     position: absolute;
     transform: translateX(-50%);
-    width: 140px;
+    width: 75px;
 }
 
 .overview-club-facts small {
