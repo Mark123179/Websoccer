@@ -152,8 +152,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-hero-form {
     display: flex;
+    font-size: 25px;
     gap: 7px;
-    margin-top: 9px;
+    margin-left: 50px;
+    margin-top: -15px;
 }
 
 .tactics-team-block.is-away .tactics-hero-form {
