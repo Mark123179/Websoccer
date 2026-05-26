@@ -1828,7 +1828,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: stretch;
     display: grid;
     gap: 10px;
-    grid-template-columns: minmax(320px, 1.15fr) minmax(118px, 0.42fr) 92px minmax(164px, 0.58fr);
+    grid-template-columns: minmax(380px, 1.4fr) minmax(118px, 0.42fr) 92px minmax(164px, 0.58fr);
     height: 44px;
     min-width: 0;
     position: relative;
@@ -1838,15 +1838,45 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-template-toolbar .tactics-template-actions {
     align-items: stretch;
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(118px, 0.8fr) minmax(158px, 1fr) minmax(124px, 0.86fr);
+    gap: 8px;
+    grid-template-columns: minmax(130px, 1.1fr) minmax(108px, 0.75fr) minmax(148px, 1fr) minmax(118px, 0.82fr);
     height: 44px;
     margin: 0;
     min-width: 0;
 }
 
-.tactics-template-toolbar .tactics-template-actions label {
+/* hide only the span labels, not the whole label elements */
+.tactics-template-toolbar .tactics-template-actions label span {
     display: none;
+}
+
+/* show the load label as a block to expose the select */
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load {
+    align-self: stretch;
+    display: block;
+    height: 44px;
+    min-width: 0;
+    position: relative;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load select {
+    appearance: none;
+    background: rgba(255, 255, 255, 0.07) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23a0c8e8'/%3E%3C/svg%3E") no-repeat right 10px center;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 5px;
+    color: #e8f4ff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    height: 44px;
+    outline: none;
+    padding: 0 28px 0 10px;
+    width: 100%;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load select:focus {
+    border-color: rgba(22, 207, 255, 0.5);
+    box-shadow: 0 0 0 2px rgba(22, 207, 255, 0.15);
 }
 
 .tactics-template-toolbar .tactics-template-actions .tactics-template-save {
