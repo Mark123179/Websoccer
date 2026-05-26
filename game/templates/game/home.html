@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-26">
+    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-27">
 {% endblock %}
 
 {% block content %}
@@ -56,18 +56,11 @@
                         <i class="fan-meter" style="--fan-value: {{ overview_profile.fan_percent }}%"></i>
                         <strong>{{ overview_profile.fan_percent }}%</strong>
                     </div>
-                </div>
-
-                <div class="form-strip" aria-label="Form">
-                    {% for result in overview_profile.form %}
-                        <div class="form-tile form-tile--{{ result.tone }}">
-                            {% if result.opponent_crest %}
-                                <img src="{% static result.opponent_crest %}" alt="" class="form-tile-crest">
-                            {% endif %}
-                            <span class="form-tile-score">{{ result.score }}</span>
+                    <div class="form-strip" aria-label="Form">
+                        {% for result in overview_profile.form %}
                             <b class="form-{{ result.tone }}">{{ result.label }}</b>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 

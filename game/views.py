@@ -923,11 +923,11 @@ def home(request):
         'city_static_path': city_static_path(primary_club),
         'fan_percent': 86,
         'form': [
-            {'label': 'S', 'tone': 'win',  'score': '2:1', 'opponent_crest': 'game/images/crests/908.png'},
-            {'label': 'U', 'tone': 'draw', 'score': '1:1', 'opponent_crest': 'game/images/crests/918.png'},
-            {'label': 'S', 'tone': 'win',  'score': '3:0', 'opponent_crest': 'game/images/crests/905.png'},
-            {'label': 'N', 'tone': 'loss', 'score': '0:2', 'opponent_crest': 'game/images/crests/912.png'},
-            {'label': 'S', 'tone': 'win',  'score': '2:1', 'opponent_crest': 'game/images/crests/948.png'},
+            {'label': 'S', 'tone': 'win'},
+            {'label': 'S', 'tone': 'win'},
+            {'label': 'U', 'tone': 'draw'},
+            {'label': 'S', 'tone': 'win'},
+            {'label': 'N', 'tone': 'loss'},
         ],
     }
 

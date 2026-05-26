@@ -294,17 +294,16 @@ body.overview-home-page {
    ============================================================ */
 
 .overview-club-main {
-    align-items: start;
+    align-items: center;
     display: grid;
-    gap: 0 20px;
+    gap: 20px;
     grid-template-columns: 148px minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
 }
 
 .overview-club-crest {
-    align-self: center;
     filter: drop-shadow(0 0 20px rgba(34, 230, 255, 0.28));
-    grid-row: 1 / span 3;
+    grid-row: 1 / span 2;
     height: 136px;
     object-fit: contain;
     width: 136px;
@@ -317,7 +316,6 @@ body.overview-home-page {
     grid-row: 1;
     min-width: 0;
     padding-left: 20px;
-    padding-bottom: 6px;
 }
 
 .overview-club-identity h1 {
@@ -384,8 +382,7 @@ body.overview-home-page {
     grid-row: 2;
     min-width: 0;
     padding-left: 20px;
-    padding-bottom: 8px;
-    width: 100%;
+    width: min(100%, 260px);
 }
 
 .overview-club-pulse > div:first-child {
@@ -432,46 +429,10 @@ body.overview-home-page {
 }
 
 .form-strip {
-    align-self: start;
     display: flex;
-    gap: 7px;
-    grid-column: 2;
-    grid-row: 3;
-    justify-content: flex-end;
-    padding-left: 20px;
-    width: 100%;
-}
-
-.form-tile {
-    align-items: center;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    justify-content: center;
-    min-width: 56px;
-    padding: 7px 8px;
-    position: relative;
-}
-
-.form-tile--win  { border-color: rgba(23, 191, 99, 0.35); }
-.form-tile--draw { border-color: rgba(212, 160, 23, 0.35); }
-.form-tile--loss { border-color: rgba(227, 59, 59, 0.35); }
-
-.form-tile-crest {
-    height: 28px;
-    object-fit: contain;
-    width: 28px;
-}
-
-.form-tile-score {
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    line-height: 1;
+    gap: 6px;
+    margin-bottom: 5px;
+    margin-top: 5px;
 }
 
 .form-strip b {
@@ -479,12 +440,11 @@ body.overview-home-page {
     border-radius: 4px;
     color: #ffffff;
     display: inline-flex;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 900;
-    height: 19px;
+    height: 18px;
     justify-content: center;
-    letter-spacing: 0;
-    width: 24px;
+    width: 18px;
 }
 
 .form-win    { background: #17bf63; }
@@ -498,10 +458,10 @@ body.overview-home-page {
     flex: 1 1 0;
     gap: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-top: 4px;
-    min-height: 108px;
-    padding-bottom: 6px;
-    padding-top: 8px;
+    margin-top: 6px;
+    min-height: 120px;
+    padding-bottom: 8px;
+    padding-top: 10px;
     width: 100%;
 }
 

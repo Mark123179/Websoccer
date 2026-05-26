@@ -153,32 +153,33 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-hero-form {
     display: flex;
     gap: 7px;
+    justify-content: flex-end;
     margin-top: 9px;
 }
 
 .tactics-team-block.is-away .tactics-hero-form {
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 .tactics-hero-form i {
     align-items: center;
     background: rgba(5, 19, 30, 0.72);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 4px;
+    border-radius: 6px;
     color: #f7fbff;
     display: inline-flex;
-    font-size: 12px;
+    font-size: 14px;
     font-style: normal;
     font-weight: 900;
-    gap: 5px;
-    min-height: 28px;
-    padding: 0 7px;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 10px;
 }
 
 .tactics-hero-form img {
-    height: 20px;
+    height: 26px;
     object-fit: contain;
-    width: 20px;
+    width: 26px;
 }
 
 .tactics-hero-form a {
@@ -189,10 +190,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     border-radius: 50%;
     display: inline-flex;
-    font-size: 9px;
-    height: 15px;
+    font-size: 12px;
+    height: 20px;
     justify-content: center;
-    width: 15px;
+    width: 20px;
 }
 
 .tactics-hero-form .is-win b {
