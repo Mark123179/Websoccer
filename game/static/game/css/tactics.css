@@ -1819,7 +1819,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     box-shadow: none;
     display: grid;
     gap: 0;
-    grid-template-rows: 34px minmax(0, 1fr);
+    grid-template-rows: 44px minmax(0, 1fr);
     overflow: visible;
     padding: 0;
 }
