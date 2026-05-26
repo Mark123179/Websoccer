@@ -43,7 +43,7 @@ body.overview-home-page {
     column-gap: 20px;
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
-        500px
+        560px
         390px
         355px;
 }
