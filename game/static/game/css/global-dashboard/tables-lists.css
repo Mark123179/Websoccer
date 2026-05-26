@@ -6,13 +6,15 @@ border-collapse: collapse;
         .league-table td {
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--muted);
-            font-size: 13px;
+            font-size: 14px;
+            line-height: 1.4;
             padding: 10px 8px;
             text-align: left;
         }
         .league-table th {
             color: var(--faint);
-            font-size: 11px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
         .league-table .current-row td {
@@ -32,20 +34,22 @@ border-collapse: collapse;
         .squad-table-compact td {
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--muted);
-            font-size: 12px;
+            font-size: 13px;
+            line-height: 1.4;
             padding: 7px 6px;
             text-align: left;
             vertical-align: middle;
         }
         .squad-table-compact th {
             color: var(--faint);
-            font-size: 10px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
         .squad-table-compact strong {
             color: var(--text);
             display: block;
-            font-size: 13px;
+            font-size: 14px;
         }
         .player-mini {
             align-items: center;
@@ -147,12 +151,14 @@ border-collapse: collapse;
             color: var(--text);
             display: block;
             font-size: 14px;
+            line-height: 1.4;
         }
         .transfer-item span,
         .news-item span {
             color: var(--muted);
             display: block;
-            font-size: 12px;
+            font-size: 13px;
+            line-height: 1.4;
             margin-top: 3px;
         }
         .badge {
@@ -226,8 +232,9 @@ border-collapse: collapse;
         .finance-numbers span {
             color: var(--faint);
             display: block;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
+            line-height: 1.4;
             text-transform: uppercase;
         }
         .finance-numbers strong {
@@ -272,7 +279,8 @@ border-collapse: collapse;
         }
         .club-table th {
             color: var(--faint);
-            font-size: 11px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
         .club-table tr:hover {
