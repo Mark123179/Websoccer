@@ -552,7 +552,7 @@ body.overview-home-page {
 .overview-player-spotlight img {
     border-radius: 4px;
     bottom: 0;
-    height: 75px;
+    height: 100px;
     left: 50%;
     margin-bottom: 0;
     margin-top: 0;
@@ -562,7 +562,7 @@ body.overview-home-page {
     padding-top: 0;
     position: absolute;
     transform: translateX(-50%);
-    width: 75px;
+    width: 100px;
 }
 
 .overview-club-facts small {
