@@ -85,7 +85,7 @@
     grid-template-rows: 14px auto 1fr auto;
     align-items: center;
     color: var(--aaa-muted);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
     text-align: right;
 }
@@ -100,9 +100,9 @@
 .is-aaa-profile .market-axis-y small,
 .is-aaa-profile .market-axis-x small {
     color: rgba(244, 251, 255, 0.46);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 900;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
 }
 
@@ -175,7 +175,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     border-radius: 6px;
     color: #eaffff;
     background: rgba(2, 14, 24, 0.96);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 900;
     text-align: left;
     opacity: 0;
@@ -200,7 +200,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 .is-aaa-profile .market-point-date {
     display: block;
     font-style: normal;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     color: rgba(164, 230, 235, 0.7);
     letter-spacing: 0.03em;
@@ -275,7 +275,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     position: relative;
     grid-column: 2;
     color: var(--aaa-muted);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
 }
 
@@ -320,14 +320,14 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
 }
 
 .is-aaa-profile .player-pitch-chip b {
-    font-size: 9px;
+    font-size: 12px;
     line-height: 1;
 }
 
 .is-aaa-profile .player-pitch-chip small {
     margin-top: -6px;
     color: rgba(239, 255, 255, 0.8);
-    font-size: 7px;
+    font-size: 12px;
     font-weight: 900;
     letter-spacing: 0.02em;
 }
@@ -455,7 +455,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1p
     display: block;
     margin-top: 4px;
     color: var(--aaa-muted);
-    font-size: clamp(11px, 0.9vw, 17px);
+    font-size: clamp(12px, 0.9vw, 17px);
 }
 
 .aaa-search,
@@ -636,7 +636,7 @@ repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px
 
 .aaa-card-heading span {
     color: var(--aaa-muted);
-    font-size: clamp(11px, 0.9vw, 17px);
+    font-size: clamp(12px, 0.9vw, 17px);
     font-weight: 760;
 }
 
@@ -814,7 +814,7 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
 
 .aaa-bio-strip small {
     color: var(--aaa-muted);
-    font-size: clamp(10px, 0.78vw, 14px);
+    font-size: clamp(12px, 0.78vw, 14px);
 }
 
 .aaa-player-info-list {
@@ -1101,7 +1101,7 @@ conic-gradient(var(--aaa-green) calc(var(--freshness, 0) * 1%), rgba(255, 255, 2
     border-radius: 50%;
     color: #061018;
     background: var(--aaa-green);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 900;
 }
 
@@ -1213,7 +1213,7 @@ radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.18), transparent 28%),
 linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
     font-style: normal;
     font-weight: 900;
-    font-size: 11px;
+    font-size: 12px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
@@ -1264,8 +1264,9 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-season-kpis small {
     color: var(--text-muted);
-    font-size: clamp(9px, 0.72vw, 12px);
+    font-size: 12px;
     font-weight: 650;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
 }
 
@@ -1292,8 +1293,9 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-stat-head {
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 650;
+    letter-spacing: 0.7px;
     text-align: center;
     text-transform: uppercase;
 }
@@ -1318,7 +1320,7 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
     display: grid;
     gap: 4px;
     justify-items: center;
-    font-size: clamp(10px, 0.82vw, 13px);
+    font-size: clamp(12px, 0.82vw, 13px);
     font-weight: 650;
     text-align: center;
 }
@@ -1546,7 +1548,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 .aaa-transfer-date span,
 .aaa-transfer-date small {
     color: var(--text-muted);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 650;
 }
 
@@ -1636,8 +1638,9 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 .aaa-transfer-detail section > span:first-child,
 .aaa-transfer-fee span {
     color: var(--text-muted);
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 650;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
 }
 
@@ -1648,7 +1651,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     border-radius: 6px;
     color: var(--text-secondary);
     background: rgba(255, 255, 255, 0.045);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1672,7 +1675,7 @@ linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
     border-radius: 99px;
     color: #fff0bd;
     background: rgba(112, 78, 22, 0.44);
-    font-size: 10px;
+    font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -1824,8 +1827,9 @@ linear-gradient(180deg, rgba(15, 31, 48, 0.96), rgba(2, 11, 19, 0.92));
 
 .aaa-career-summary small {
     color: var(--text-muted);
-    font-size: clamp(9px, 0.72vw, 12px);
+    font-size: 12px;
     font-weight: 650;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
 }
 
@@ -1863,7 +1867,7 @@ rgba(2, 15, 24, 0.55);
     gap: 4px;
     justify-items: center;
     color: var(--text-secondary);
-    font-size: clamp(10px, 0.82vw, 13px);
+    font-size: clamp(12px, 0.82vw, 13px);
     font-weight: 650;
     text-align: center;
 }
@@ -1874,7 +1878,8 @@ rgba(2, 15, 24, 0.55);
 
 .aaa-career-row small {
     color: var(--text-muted);
-    font-size: 9px;
+    font-size: 12px;
+    letter-spacing: 0.7px;
     text-transform: uppercase;
 }
 

@@ -75,7 +75,7 @@
     min-height: 0;
     padding: 4px 6px 0;
     color: rgba(232, 246, 250, 0.82);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 900;
     line-height: 1.05;
 }
@@ -120,7 +120,7 @@
     overflow: hidden;
     padding: 0 7px;
     color: #ffffff;
-    font-size: clamp(10px, 0.82vw, 13px);
+    font-size: clamp(12px, 0.82vw, 13px);
     font-weight: 900;
     line-height: 1.12;
 }
@@ -147,7 +147,7 @@
     min-width: 58px;
     padding: 2px 5px 6px;
     color: var(--club-teal);
-    font-size: clamp(10px, 0.8vw, 13px);
+    font-size: clamp(12px, 0.8vw, 13px);
     font-style: normal;
     font-weight: 900;
     text-decoration: none;
@@ -178,7 +178,7 @@ a.club-player-metric:hover {
 
 .club-player-tile.is-compact .club-player-category {
     padding: 4px 4px 0;
-    font-size: 9px;
+    font-size: 12px;
 }
 
 .club-player-tile.is-compact .club-player-cutout-wrap::before {
@@ -193,11 +193,11 @@ a.club-player-metric:hover {
 
 .club-player-tile.is-compact strong {
     padding: 0 4px;
-    font-size: 9px;
+    font-size: 12px;
 }
 
 .club-player-tile.is-compact .club-player-metric {
-    font-size: 9.5px;
+    font-size: 12px;
 }
 
 .club-player-tile.is-compact .club-player-name-flag {
