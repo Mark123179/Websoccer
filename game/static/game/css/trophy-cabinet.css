@@ -348,14 +348,14 @@ linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rg
 
 .aaa-profile-showcase .aaa-awards-stage {
     right: clamp(10px, 1.6cqw, 18px);
-    bottom: clamp(79px, 9.2cqw, 97px);
+    bottom: clamp(74px, 8.6cqw, 92px);
     left: clamp(10px, 1.6cqw, 18px);
     gap: clamp(8px, 1.2cqw, 16px);
     height: clamp(300px, 36cqw, 370px);
 }
 
 .aaa-profile-showcase .aaa-trophy-stage.has-award-pages .aaa-awards-stage {
-    bottom: clamp(95px, 10.4cqw, 113px);
+    bottom: clamp(90px, 9.8cqw, 108px);
 }
 
 .aaa-profile-showcase .trophy-slot {
