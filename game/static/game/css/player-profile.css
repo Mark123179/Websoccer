@@ -718,11 +718,19 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.55));
 }
 
-.aaa-poster-club { top: 26px; }
+.aaa-poster-club {
+    top: 26px;
+    margin-left: -18px;
+    margin-right: -18px;
+}
 .aaa-poster-nation {
     top: 110px;
     padding-top: 15px;
     padding-bottom: 7px;
+    padding-right: 0;
+    padding-left: 10px;
+    margin-left: -15px;
+    margin-right: -15px;
     opacity: 1;
     transform: scale(1.2);
     transform-origin: center;
@@ -737,6 +745,8 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     height: 44px;
     object-fit: contain;
     filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.52));
+    margin-left: -10px;
+    margin-right: -10px;
 }
 
 .aaa-player-portrait {
