@@ -1825,22 +1825,22 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-template-toolbar {
-    align-items: center;
+    align-items: stretch;
     display: grid;
     gap: 10px;
     grid-template-columns: minmax(320px, 1.15fr) minmax(118px, 0.42fr) 92px minmax(164px, 0.58fr);
-    height: 34px;
+    height: 44px;
     min-width: 0;
     position: relative;
     z-index: 40;
 }
 
 .tactics-template-toolbar .tactics-template-actions {
-    align-items: center;
+    align-items: stretch;
     display: grid;
     gap: 10px;
     grid-template-columns: minmax(118px, 0.8fr) minmax(158px, 1fr) minmax(124px, 0.86fr);
-    height: 29px;
+    height: 44px;
     margin: 0;
     min-width: 0;
 }
@@ -1851,7 +1851,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-template-toolbar .tactics-template-actions .tactics-template-save {
     display: block;
-    height: 29px;
+    height: 44px;
     min-width: 0;
     position: relative;
 }
@@ -1866,9 +1866,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-template-toolbar .tactics-template-actions .tactics-template-save input {
-    font-size: 11px;
-    height: 29px;
-    padding: 0 9px;
+    font-size: 13px;
+    height: 44px;
+    padding: 0 12px;
 }
 
 .tactics-template-toolbar .tactics-template-actions .tactics-template-save input.is-attention {
@@ -1879,22 +1879,60 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-template-toolbar :where(.tactics-secondary-button, .tactics-confirm-button),
 .tactics-template-toolbar .tactics-formation-editor summary {
     align-items: center;
-    border-radius: 4px;
+    align-self: stretch;
+    border-radius: 5px;
     display: inline-flex;
-    font-size: 11px;
-    height: 29px;
+    font-size: 13px;
+    height: auto;
     justify-content: center;
     line-height: 1;
     margin: 0;
     min-width: 0;
-    padding: 0 10px;
+    padding: 0 14px;
 }
 
 .tactics-template-toolbar .tactics-template-actions > .tactics-secondary-button {
-    font-size: 11px;
-    height: 29px;
+    font-size: 13px;
+    height: auto;
     line-height: 1;
-    padding: 0 10px;
+    padding: 0 14px;
+}
+
+/* Vorlage laden → Gelb */
+.tactics-template-toolbar button[value="load_template"] {
+    background: linear-gradient(180deg, #ffe066, #e6a800);
+    border-color: rgba(255, 200, 0, 0.5);
+    color: #1a0a00;
+}
+.tactics-template-toolbar button[value="load_template"]:hover {
+    background: linear-gradient(180deg, #ffd633, #cc9500);
+}
+
+/* Vorlage speichern → Grün */
+.tactics-template-toolbar button[value="save_template"] {
+    background: linear-gradient(180deg, #2edb7a, #18a050);
+    border-color: rgba(46, 219, 122, 0.45);
+    color: #ffffff;
+}
+.tactics-template-toolbar button[value="save_template"]:hover {
+    background: linear-gradient(180deg, #24c46b, #13883f);
+}
+
+/* Ändern → Orange */
+.tactics-template-toolbar .tactics-formation-editor summary {
+    background: linear-gradient(180deg, #ff9c42, #e05b00);
+    border: 1px solid rgba(255, 140, 30, 0.5);
+    box-shadow: 0 0 12px rgba(255, 120, 0, 0.18);
+    color: #ffffff;
+    cursor: pointer;
+    list-style: none;
+    width: 100%;
+}
+.tactics-template-toolbar .tactics-formation-editor summary:hover {
+    background: linear-gradient(180deg, #ffad5c, #cc5200);
+}
+.tactics-template-toolbar .tactics-formation-editor summary::-webkit-details-marker {
+    display: none;
 }
 
 .tactics-template-toolbar .tactics-confirm-button {
@@ -1905,9 +1943,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: var(--tactics-cyan);
     display: flex;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 950;
-    height: 29px;
+    height: 44px;
     justify-content: center;
     line-height: 1;
     min-width: 0;
@@ -1916,7 +1954,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-template-toolbar .tactics-formation-controls {
-    top: 32px;
+    top: 47px;
 }
 
 .tactics-template-grid .tactics-pitch {
