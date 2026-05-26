@@ -1941,15 +1941,23 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-toolbar-formation {
     align-items: center;
+    align-self: stretch;
+    background: rgba(22, 207, 255, 0.08);
+    border: 1px solid rgba(22, 207, 255, 0.35);
+    border-radius: 5px;
+    box-shadow: 0 0 14px rgba(22, 207, 255, 0.14), inset 0 1px 0 rgba(255,255,255,0.05);
     color: var(--tactics-cyan);
     display: flex;
     font-size: 19px;
     font-weight: 950;
-    height: 44px;
+    height: auto;
     justify-content: center;
+    letter-spacing: 0.5px;
     line-height: 1;
     min-width: 0;
+    padding: 0 10px;
     text-align: center;
+    text-shadow: 0 0 12px rgba(22, 207, 255, 0.55);
     white-space: nowrap;
 }
 
