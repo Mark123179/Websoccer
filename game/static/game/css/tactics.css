@@ -426,7 +426,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-panel h2,
 .tactics-pitch-panel h2 {
     color: #f7fbff;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 900;
     line-height: 1.1;
     margin: 0 0 9px;
@@ -438,7 +438,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-pitch-panel h2 {
     color: var(--tactics-cyan);
-    font-size: 16px;
+    font-size: 17px;
     margin-bottom: 5px;
     text-align: center;
 }
@@ -495,7 +495,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-roster-player strong {
     color: #ffffff;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.05;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -506,7 +506,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: rgba(244, 251, 255, 0.72);
     display: flex;
-    font-size: 9px;
+    font-size: 10px;
     gap: 4px;
     line-height: 1.05;
     overflow: hidden;
@@ -522,11 +522,11 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: var(--tactics-cyan);
     display: inline-flex;
     flex: 0 0 auto;
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 900;
-    height: 14px;
+    height: 15px;
     justify-content: center;
-    width: 20px;
+    width: 22px;
 }
 
 .tactics-position-line i {
@@ -534,10 +534,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
     border-radius: 999px;
     display: inline-flex;
     flex: 0 0 auto;
-    font-size: 9px;
+    font-size: 10px;
     font-style: normal;
     font-weight: 900;
-    height: 15px;
+    height: 16px;
     justify-content: center;
     min-width: 22px;
     padding: 0 5px;
@@ -579,7 +579,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-roster-freshness b {
     color: #ffffff;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 900;
     line-height: 1;
     min-width: 24px;
@@ -600,7 +600,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-mini-section h3 {
     color: #f7fbff;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 900;
     margin: 0;
 }
@@ -686,7 +686,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-absence-list b {
     color: rgba(244, 251, 255, 0.68);
     display: block;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -886,7 +886,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     bottom: 8px;
     color: rgba(244, 251, 255, 0.78);
     display: grid;
-    font-size: 10px;
+    font-size: 11px;
     gap: 5px;
     left: 16px;
     position: absolute;
@@ -926,7 +926,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-average-freshness span {
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .tactics-average-freshness strong {
@@ -956,7 +956,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-field-count,
 .tactics-status-line strong {
     color: #f7fbff;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .tactics-status-line strong,
@@ -1016,7 +1016,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-half-fields span,
 .tactics-template-actions span {
     color: rgba(244, 251, 255, 0.7);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
 }
 
@@ -1232,7 +1232,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-bench-number {
     color: #f7fbff;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 900;
     position: absolute;
     right: 5px;
@@ -1242,7 +1242,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-bench-position {
     color: var(--tactics-cyan);
     display: block;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 900;
     left: 5px;
     line-height: 1;
@@ -1274,10 +1274,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-bench-card strong {
     color: #ffffff;
     display: -webkit-box;
-    font-size: 9px;
+    font-size: 10px;
     line-height: 1.05;
     margin-top: 2px;
-    max-height: 19px;
+    max-height: 20px;
     overflow: hidden;
     text-align: center;
     overflow-wrap: normal;
@@ -1430,7 +1430,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-top-list strong,
 .tactics-top-list b {
     color: #f7fbff;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .tactics-top-list img {
@@ -1489,12 +1489,12 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-opponent-absence-list strong {
     color: #ffffff;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .tactics-opponent-absence-list span {
     color: rgba(244, 251, 255, 0.72);
-    font-size: 9px;
+    font-size: 10px;
 }
 
 .tactics-opponent-absence-list small {
@@ -2224,15 +2224,15 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-bench-card strong {
-    font-size: 9.5px;
+    font-size: 10.5px;
     line-height: 0.95;
     margin-top: 2px;
-    max-height: 18px;
+    max-height: 20px;
 }
 
 .tactics-side-stack .tactics-bench-position,
 .tactics-side-stack .tactics-bench-number {
-    font-size: 9px;
+    font-size: 10px;
 }
 
 .tactics-side-stack .tactics-bench-card .tactics-freshness {
@@ -2286,7 +2286,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-standards-panel h2 {
-    font-size: 15px;
+    font-size: 16px;
     margin-bottom: 4px;
 }
 
