@@ -43,7 +43,7 @@ body.overview-home-page {
     column-gap: 20px;
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
-        560px
+        430px
         390px
         355px;
 }
@@ -165,7 +165,7 @@ body.overview-home-page {
     flex-direction: column;
     grid-column: 1 / span 8;
     grid-row: 1;
-    overflow: visible;
+    overflow: hidden;
     padding-bottom: 0;
 }
 
@@ -460,9 +460,9 @@ body.overview-home-page {
     flex: 0 0 auto;
     gap: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-top: 20.6233px;
-    min-height: 220px;
-    padding-top: 50px;
+    margin-top: auto;
+    min-height: 140px;
+    padding-top: 5px;
     width: 100%;
 }
 
@@ -511,10 +511,10 @@ body.overview-home-page {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    height: 220px;
+    height: 135px;
     justify-content: flex-start;
     overflow: hidden;
-    padding: 0 8px 125px;
+    padding: 0 8px 103px;
     position: relative;
 }
 
@@ -544,13 +544,13 @@ body.overview-home-page {
 .overview-player-spotlight img {
     border-radius: 4px;
     bottom: 0;
-    height: 120px;
+    height: 100px;
     left: 50%;
     object-fit: cover;
     object-position: center top;
     position: absolute;
     transform: translateX(-50%);
-    width: 120px;
+    width: 100px;
 }
 
 .overview-club-facts small {
