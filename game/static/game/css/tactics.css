@@ -1953,6 +1953,16 @@ body.tactics-page .nav-menu a:nth-child(5) {
     white-space: nowrap;
 }
 
+.tactics-template-toolbar .tactics-formation-editor {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+}
+
+.tactics-template-toolbar .tactics-formation-editor summary {
+    flex: 1;
+}
+
 .tactics-template-toolbar .tactics-formation-controls {
     top: 47px;
 }
