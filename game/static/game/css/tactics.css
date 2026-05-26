@@ -169,18 +169,18 @@ body.tactics-page .nav-menu a:nth-child(5) {
     border-radius: 6px;
     color: #f7fbff;
     display: inline-flex;
-    font-size: 14px;
+    font-size: 18px;
     font-style: normal;
     font-weight: 900;
-    gap: 7px;
-    min-height: 38px;
-    padding: 0 10px;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0 12px;
 }
 
 .tactics-hero-form img {
-    height: 26px;
+    height: 32px;
     object-fit: contain;
-    width: 26px;
+    width: 32px;
 }
 
 .tactics-hero-form a {
