@@ -426,9 +426,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-panel h2,
 .tactics-pitch-panel h2 {
     color: #f7fbff;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 900;
-    line-height: 1.1;
+    line-height: 1.15;
     margin: 0 0 9px;
 }
 
@@ -438,7 +438,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-pitch-panel h2 {
     color: var(--tactics-cyan);
-    font-size: 17px;
+    font-size: 16px;
     margin-bottom: 5px;
     text-align: center;
 }
@@ -495,8 +495,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-roster-player strong {
     color: #ffffff;
-    font-size: 12px;
-    line-height: 1.05;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -506,9 +507,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: rgba(244, 251, 255, 0.72);
     display: flex;
-    font-size: 10px;
+    font-size: 12px;
+    font-weight: 700;
     gap: 4px;
-    line-height: 1.05;
+    line-height: 1.2;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1016,8 +1018,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-half-fields span,
 .tactics-template-actions span {
     color: rgba(244, 251, 255, 0.7);
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0.82;
 }
 
 .tactics-dashboard select,
@@ -1029,7 +1033,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: #f7fbff;
     font: inherit;
     font-size: 12px;
-    height: 31px;
+    height: 28px;
+    line-height: 1.2;
     min-width: 0;
     outline: none;
     padding: 0 9px;
@@ -1044,8 +1049,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-operations-grid select,
 .tactics-operations-grid input[type="number"] {
-    font-size: 10px;
-    height: 20px;
+    font-size: 12px;
+    height: 28px;
     padding: 0 6px;
 }
 
@@ -1430,7 +1435,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-top-list strong,
 .tactics-top-list b {
     color: #f7fbff;
-    font-size: 12px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
 }
 
 .tactics-top-list img {
@@ -1489,12 +1496,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-opponent-absence-list strong {
     color: #ffffff;
-    font-size: 11px;
+    font-size: 13px;
+    font-weight: 800;
 }
 
 .tactics-opponent-absence-list span {
     color: rgba(244, 251, 255, 0.72);
-    font-size: 10px;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .tactics-opponent-absence-list small {
@@ -1644,10 +1653,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-manager-name {
     color: #ffffff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
     letter-spacing: 0;
-    line-height: 1.12;
+    line-height: 1.15;
     text-shadow: 0 4px 16px rgba(0, 0, 0, 0.85);
     max-width: 100%;
     overflow: hidden;
@@ -1657,7 +1666,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-manager-rank {
     border-radius: 999px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.01em;
     line-height: 1;
@@ -1683,11 +1692,12 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: #f9fbff;
     display: grid;
-    font-size: 11px;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
     font-weight: 800;
     grid-template-rows: repeat(9, 1fr);
     letter-spacing: 0;
-    line-height: 1.12;
+    line-height: 1.25;
     min-height: 0;
 }
 
@@ -1776,12 +1786,12 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: rgba(255, 255, 255, 0.92);
     display: grid;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 700;
     grid-template-rows: repeat(9, 1fr);
     justify-items: center;
     letter-spacing: 0;
-    line-height: 1.08;
+    line-height: 1.2;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
     width: 100%;
 }
@@ -2196,8 +2206,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-side-stack select,
 .tactics-side-stack input[type="number"] {
-    font-size: 10px;
-    height: 22px;
+    font-size: 12px;
+    height: 28px;
     padding: 0 7px;
 }
 
@@ -2224,10 +2234,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-bench-card strong {
-    font-size: 10.5px;
-    line-height: 0.95;
+    font-size: 12px;
+    line-height: 1.1;
     margin-top: 2px;
-    max-height: 20px;
+    max-height: 26px;
 }
 
 .tactics-side-stack .tactics-bench-position,
@@ -2247,7 +2257,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-substitution-list {
-    gap: 4px;
+    gap: 2px;
 }
 
 .tactics-side-stack .tactics-substitution-row {
@@ -2266,14 +2276,16 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-side-stack .tactics-subs-panel select,
 .tactics-side-stack .tactics-subs-panel input[type="number"] {
-    font-size: 11px;
-    height: 22px;
+    font-size: 12px;
+    height: 28px;
     padding: 0 5px;
 }
 
 .tactics-side-stack .tactics-subs-panel .tactics-substitution-row > span,
 .tactics-side-stack .tactics-subs-panel .tactics-substitution-row b {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
 }
 
 .tactics-side-stack .tactics-standard-list {
@@ -2291,12 +2303,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-standards-panel .tactics-standard-list span {
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.82;
 }
 
 .tactics-side-stack .tactics-standards-panel .tactics-standard-list select {
-    font-size: 11px;
-    height: 21px;
+    font-size: 12px;
+    height: 28px;
     padding: 0 5px;
 }
 

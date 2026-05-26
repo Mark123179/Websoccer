@@ -1,0 +1,233 @@
+Also: keine globale Layout-Operation, sondern ein Taktik-Screen Readability Pass.
+
+Was ich machen würde
+1. Keine globale Typo-Erhöhung mehr
+
+Nicht:
+
+alle font-size +1px
+
+Sondern Rollen pro Komponente.
+
+Für den Taktikscreen würde ich diese Zielwerte setzen:
+
+Bereich	Ziel
+Panel-Titel	15–16px, sehr fett
+Spielernamen	13px, fett
+Positionslabels	12px
+Selects / Dropdowns	12–13px
+Tabellenwerte	12.5–13px
+Mini-Metadaten	mindestens 11.5–12px
+Trainervergleich unten rechts	13px Werte, 12px Labels
+Buttons	13px, fett
+
+Gerade Wechselplanung, Bank, Ausfälle Gegner, Statistiken unten rechts und untere Listen brauchen mehr als +1px.
+
+2. Höhe gezielt nutzen, nicht global
+
+Du hast recht: Breite nicht mehr anfassen.
+Aber in den dichten Panels darf man Zeilenhöhe und Row-Höhe erhöhen.
+
+Beispiel:
+
+.tactics-page select,
+.tactics-page input,
+.tactics-page button {
+  font-size: 12.5px;
+  min-height: 28px;
+  line-height: 1.25;
+}
+
+Für Listen:
+
+.tactics-page .list-row,
+.tactics-page .stat-row,
+.tactics-page .injury-row,
+.tactics-page .ranking-row {
+  min-height: 38px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+Für kleine Vergleichstabellen unten rechts:
+
+.tactics-page .manager-comparison td,
+.tactics-page .manager-comparison th {
+  font-size: 12.5px;
+  line-height: 1.25;
+  padding-block: 5px;
+}
+
+Das verändert nicht die Breitenlogik. Es macht nur die Inhalte lesbarer. Wenn dadurch ein Panel vertikal scrollt, ist das akzeptabler als unlesbarer Text.
+
+3. Dropdowns in der Wechselplanung brauchen einen eigenen Fix
+
+Die Wechselplanung ist im Screenshot besonders schwer lesbar, weil dort kleine Schrift + kleine Select-Höhe + viele Controls zusammenkommen.
+
+Hier würde ich Replit gezielt sagen:
+
+.tactics-page .substitution-planning select {
+  font-size: 12px;
+  height: 26px;
+  padding: 3px 8px;
+}
+
+.tactics-page .substitution-planning-row {
+  min-height: 30px;
+  gap: 6px;
+}
+
+Falls die echten Klassennamen anders heißen, soll Replit die entsprechenden Selects im Wechselplan finden.
+
+4. Unten rechts: Managervergleich nicht als Mini-Tabelle behandeln
+
+Diese Karte unten rechts wirkt wie eine sehr informationsdichte Scorecard. Da ist kleine Tabellen-Typo tödlich.
+
+Besser:
+
+Labels klein, aber lesbar.
+Werte deutlich größer und fett.
+Zentrale VS-Spalte darf prominent bleiben.
+
+Beispiel:
+
+.tactics-page .comparison-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.tactics-page .comparison-value {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+5. Spielerkader links: Namen und Fitnesswerte priorisieren
+
+Bei der Spielerliste links ist wichtig:
+
+Name
+Position
+Frische/Fitness
+
+Nicht alles gleich klein.
+
+.tactics-page .squad-player-name {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tactics-page .squad-player-meta,
+.tactics-page .squad-player-position {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.tactics-page .fitness-percent {
+  font-size: 12px;
+  font-weight: 800;
+}
+Das kannst du Replit schreiben
+Neuer Task: Taktik-Screen Readability Pass.
+
+Wichtig:
+- Stage nicht anfassen.
+- Shell nicht anfassen.
+- Breiten nicht anfassen.
+- Grid-Spalten nicht anfassen.
+- Kalender nicht anfassen.
+- Keine globale Font-size +1px Lösung.
+- Keine pauschale Änderung über alle Seiten.
+
+Ziel:
+Der Taktikscreen ist layouttechnisch jetzt korrekt, aber mehrere Bereiche sind kaum lesbar:
+- Wechselplanung rechts
+- Bankplätze rechts
+- untere Statistik-/Vergleichskarten
+- Spielerkader links
+- Ausfälle Gegner
+- Tabellen und kleine Werte
+
+Bitte einen komponentenbezogenen Lesbarkeits-Pass machen:
+Nur ändern:
+- font-size
+- font-weight
+- line-height
+- letter-spacing
+- row-height / min-height
+- padding-block innerhalb bestehender Rows
+- select/input/button height im Taktikscreen
+
+Nicht ändern:
+- width
+- grid-template-columns
+- grid-template-rows des Hauptlayouts
+- Stage-Scale
+- Shell-Breite
+- Artboard-Breite
+- horizontale Scroll-Logik
+
+Regeln:
+1. Keine spielrelevante Schrift unter 11.5px.
+2. Interaktive Elemente wie Selects mindestens 12px Schrift und ca. 26–30px Höhe.
+3. Spielernamen mindestens 13px und fett.
+4. Panel-Titel 15–16px, uppercase, fett.
+5. Tabellenwerte mindestens 12.5px, tabular-nums.
+6. Labels mindestens 11.5px, aber mit opacity/weight unterscheidbar.
+7. Wenn mehr Höhe gebraucht wird, darf ein bestehender Panel-Inhalt vertikal etwas mehr Raum benötigen oder intern scrollen.
+8. Keine Breitenänderungen.
+Konkrete Zielwerte für Replit
+Taktik Typography Targets:
+
+Panel title:
+font-size: 15px;
+font-weight: 800;
+line-height: 1.15;
+
+Body / list text:
+font-size: 13px;
+font-weight: 650;
+line-height: 1.25;
+
+Meta / labels:
+font-size: 11.5px;
+font-weight: 700;
+line-height: 1.2;
+opacity: 0.72;
+
+Table values:
+font-size: 12.5px;
+font-weight: 750;
+line-height: 1.25;
+font-variant-numeric: tabular-nums;
+
+Selects:
+font-size: 12px;
+height: 28px;
+line-height: 1.2;
+
+Buttons:
+font-size: 13px;
+font-weight: 800;
+
+Comparison card values:
+font-size: 13px;
+font-weight: 800;
+font-variant-numeric: tabular-nums;
+Abnahme
+Bitte nach dem Fix Screenshots liefern von:
+- Taktikscreen 1440×900
+- Taktikscreen 1920×1080
+
+Prüfen:
+- Wechselplanung lesbar
+- Managervergleich unten rechts lesbar
+- Spielerkader links lesbar
+- Ausfälle Gegner lesbar
+- keine Layoutverschiebung in der Breite
+- keine neue horizontale Scrollbar
+- Hauptfeld und Panels bleiben an gleicher Position
+Kurz gesagt
+
+Wir machen jetzt keinen weiteren Layout-Fix.
+Wir machen einen Taktik-spezifischen Lesbarkeits-Fix:
