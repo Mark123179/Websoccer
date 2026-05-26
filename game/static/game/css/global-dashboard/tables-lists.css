@@ -14,7 +14,7 @@ border-collapse: collapse;
         .league-table th {
             color: var(--faint);
             font-size: 12px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.7px;
             text-transform: uppercase;
         }
         .league-table .current-row td {
@@ -43,7 +43,7 @@ border-collapse: collapse;
         .squad-table-compact th {
             color: var(--faint);
             font-size: 12px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.7px;
             text-transform: uppercase;
         }
         .squad-table-compact strong {
@@ -280,7 +280,7 @@ border-collapse: collapse;
         .club-table th {
             color: var(--faint);
             font-size: 12px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.7px;
             text-transform: uppercase;
         }
         .club-table tr:hover {

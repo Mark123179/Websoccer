@@ -151,7 +151,7 @@ body.overview-home-page {
     color: var(--text-secondary);
     font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.7px;
     margin-bottom: 14px;
     text-transform: uppercase;
 }
@@ -759,7 +759,7 @@ body.overview-home-page {
     background: transparent;
     color: var(--text-secondary);
     font-size: 12px;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.7px;
     margin: 0 0 10px;
     padding: 0;
     text-align: left;
@@ -847,7 +847,7 @@ body.overview-home-page {
 
 .overview-manager-list strong {
     color: var(--text);
-    font-size: 12px;
+    font-size: 14px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1025,7 +1025,7 @@ body.overview-home-page {
 
 .overview-transfer-row {
     color: var(--text);
-    font-size: 13px;
+    font-size: 14px;
     min-height: 54px;
     min-width: 0;
     position: relative;
@@ -1084,7 +1084,8 @@ body.overview-home-page {
 .overview-transfer-player strong {
     color: var(--text);
     display: block;
-    font-size: 12px;
+    font-size: 14px;
+    line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1198,7 +1199,7 @@ body.overview-home-page {
 .overview-transfer-fee span {
     color: var(--muted);
     display: block;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1209,7 +1210,7 @@ body.overview-home-page {
     border: 1px solid rgba(34, 230, 255, 0.09);
     border-radius: 5px;
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 650;
     overflow: hidden;
     padding: 4px 6px;
@@ -1231,7 +1232,7 @@ body.overview-home-page {
     background: rgba(112, 78, 22, 0.42);
     border-radius: 99px;
     color: #fff0bd;
-    font-size: 10px;
+    font-size: 12px;
     justify-self: end;
     max-width: 100%;
     overflow: hidden;
@@ -1365,7 +1366,7 @@ body.overview-home-page {
 }
 
 .overview-news-list span {
-    font-size: 11px;
+    font-size: 12px;
     text-align: right;
 }
 
@@ -1384,19 +1385,19 @@ body.overview-home-page {
 .overview-social-card strong {
     color: var(--cyan);
     display: block;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .overview-social-card span,
 .overview-social-card small {
     color: var(--muted);
     display: block;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .overview-social-card p {
     color: var(--text);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
     margin: 4px 0;
 }
@@ -1417,7 +1418,7 @@ body.overview-home-page {
     border-radius: 5px;
     color: var(--muted);
     display: grid;
-    font-size: 11px;
+    font-size: 12px;
     gap: 4px;
     grid-template-columns: 34px 19px 22px minmax(0, 1fr) 8px 22px minmax(0, 1fr);
     margin-bottom: 4px;
@@ -1444,7 +1445,7 @@ body.overview-home-page {
 
 .overview-live-widget strong {
     color: var(--text);
-    font-size: 10px;
+    font-size: 12px;
     overflow: hidden;
     text-align: left;
     text-overflow: ellipsis;
@@ -1462,7 +1463,7 @@ body.overview-home-page {
     border-radius: 5px;
     color: var(--cyan);
     display: flex;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     justify-content: center;
     margin-top: auto;
@@ -1479,8 +1480,8 @@ body.overview-home-page {
     color: var(--muted);
     display: flex !important;
     flex-direction: column;
-    font-size: 11px;
-    line-height: 1.25;
+    font-size: 12px;
+    line-height: 1.4;
     margin: 8px 0;
 }
 
@@ -1526,9 +1527,9 @@ body.overview-home-page {
 
 .league-table th {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.7px;
     padding-bottom: 8px;
     text-align: left;
     text-transform: uppercase;
