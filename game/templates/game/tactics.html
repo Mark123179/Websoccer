@@ -175,7 +175,7 @@
                             <select name="template_id" aria-label="Vorlage laden">
                                 <option value="">Keine Vorlage</option>
                                 {% for template in templates %}
-                                    <option value="{{ template.id }}">{{ template.name }} Â· {{ template.formation_code }}</option>
+                                    <option value="{{ template.id }}">{{ template.name }} · {{ template.formation_code }}</option>
                                 {% endfor %}
                             </select>
                         </label>
@@ -197,7 +197,7 @@
                                     <span>{{ group.label }}</span>
                                     <select name="formation_{{ group.name }}" data-formation-part="{{ group.name }}">
                                         {% for option in group.options %}
-                                            <option value="{{ option.value }}" {% if option.value == group.selected %}selected{% endif %}>{{ option.label }} Â· {{ option.summary }}</option>
+                                            <option value="{{ option.value }}" {% if option.value == group.selected %}selected{% endif %}>{{ option.label }} · {{ option.summary }}</option>
                                         {% endfor %}
                                     </select>
                                 </label>
