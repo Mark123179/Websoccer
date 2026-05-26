@@ -153,12 +153,11 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-hero-form {
     display: flex;
     gap: 7px;
-    justify-content: flex-end;
     margin-top: 9px;
 }
 
 .tactics-team-block.is-away .tactics-hero-form {
-    justify-content: flex-start;
+    justify-content: flex-end;
 }
 
 .tactics-hero-form i {
