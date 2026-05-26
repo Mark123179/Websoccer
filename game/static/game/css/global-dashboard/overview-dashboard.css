@@ -514,7 +514,7 @@ body.overview-home-page {
     height: 135px;
     justify-content: flex-start;
     overflow: hidden;
-    padding: 0 8px 103px;
+    padding: 0 8px 85px;
     position: relative;
 }
 
@@ -544,13 +544,13 @@ body.overview-home-page {
 .overview-player-spotlight img {
     border-radius: 4px;
     bottom: 0;
-    height: 100px;
+    height: 80px;
     left: 50%;
     object-fit: cover;
     object-position: center top;
     position: absolute;
     transform: translateX(-50%);
-    width: 100px;
+    width: 80px;
 }
 
 .overview-club-facts small {
