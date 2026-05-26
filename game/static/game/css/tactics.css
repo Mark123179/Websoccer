@@ -159,14 +159,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
     display: flex;
     font-size: 25px;
     gap: 7px;
-    margin-left: 50px;
+    margin-left: 60px;
     margin-top: -15px;
 }
 
 .tactics-team-block.is-away .tactics-hero-form {
     justify-content: flex-end;
     margin-left: 0;
-    margin-right: 50px;
+    margin-right: 60px;
 }
 
 .tactics-hero-form i {
