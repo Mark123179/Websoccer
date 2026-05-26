@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-23">
+    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-24">
 {% endblock %}
 
 {% block content %}
@@ -58,7 +58,13 @@
                     </div>
                     <div class="form-strip" aria-label="Form">
                         {% for result in overview_profile.form %}
-                            <b class="form-{{ result.tone }}">{{ result.label }}</b>
+                            <div class="form-tile form-tile--{{ result.tone }}">
+                                {% if result.opponent_crest %}
+                                    <img src="{% static result.opponent_crest %}" alt="" class="form-tile-crest">
+                                {% endif %}
+                                <span class="form-tile-score">{{ result.score }}</span>
+                                <b class="form-{{ result.tone }}">{{ result.label }}</b>
+                            </div>
                         {% endfor %}
                     </div>
                 </div>
