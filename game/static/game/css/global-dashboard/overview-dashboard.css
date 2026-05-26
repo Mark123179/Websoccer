@@ -521,7 +521,7 @@ body.overview-home-page {
 }
 
 .overview-club-facts .overview-player-spotlight strong {
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.2;
     margin-top: 4px;
 }
@@ -529,7 +529,7 @@ body.overview-home-page {
 .overview-club-facts .overview-player-spotlight small {
     color: var(--cyan);
     display: block;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 800;
     line-height: 1.1;
     margin-top: 4px;
@@ -545,7 +545,7 @@ body.overview-home-page {
 }
 
 .overview-club-facts .overview-player-spotlight > span {
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.05;
 }
 
