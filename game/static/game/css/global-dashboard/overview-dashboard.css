@@ -431,7 +431,8 @@ body.overview-home-page {
 .form-strip {
     display: flex;
     font-size: 25px;
-    gap: 5px;
+    gap: 6px;
+    justify-content: flex-end;
     margin-bottom: 5px;
     margin-top: 5px;
     opacity: 1;
@@ -439,14 +440,15 @@ body.overview-home-page {
 
 .form-strip b {
     align-items: center;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #ffffff;
     display: inline-flex;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 900;
-    height: 18px;
+    height: 26px;
     justify-content: center;
-    width: 18px;
+    letter-spacing: 0;
+    width: 26px;
 }
 
 .form-win    { background: #17bf63; }
