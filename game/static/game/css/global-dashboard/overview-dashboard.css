@@ -430,23 +430,23 @@ body.overview-home-page {
 
 .form-strip {
     display: flex;
-    gap: 5px;
+    gap: 7px;
     justify-content: flex-end;
-    margin-bottom: 4px;
-    margin-top: 4px;
+    margin-top: 6px;
+    width: 100%;
 }
 
 .form-tile {
     align-items: center;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 7px;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     justify-content: center;
-    min-width: 44px;
-    padding: 5px 6px;
+    min-width: 56px;
+    padding: 7px 8px;
     position: relative;
 }
 
@@ -455,14 +455,14 @@ body.overview-home-page {
 .form-tile--loss { border-color: rgba(227, 59, 59, 0.35); }
 
 .form-tile-crest {
-    height: 22px;
+    height: 28px;
     object-fit: contain;
-    width: 22px;
+    width: 28px;
 }
 
 .form-tile-score {
     color: var(--text);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.5px;
     line-height: 1;
@@ -475,10 +475,10 @@ body.overview-home-page {
     display: inline-flex;
     font-size: 11px;
     font-weight: 900;
-    height: 18px;
+    height: 19px;
     justify-content: center;
     letter-spacing: 0;
-    width: 22px;
+    width: 24px;
 }
 
 .form-win    { background: #17bf63; }
@@ -492,10 +492,10 @@ body.overview-home-page {
     flex: 1 1 0;
     gap: 0;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    margin-top: 6px;
-    min-height: 120px;
-    padding-bottom: 8px;
-    padding-top: 10px;
+    margin-top: 4px;
+    min-height: 108px;
+    padding-bottom: 6px;
+    padding-top: 8px;
     width: 100%;
 }
 
