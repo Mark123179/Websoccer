@@ -1,1 +1,2 @@
 - [Wide-shell scope rule](wide-shell-scope.md) — 1440×900 is locked golden master; only wide-shell CSS scope may extend layout horizontally.
+- [Tactics layout heights](tactics-layout-heights.md) — current fixed heights for tactics panels and side-stack rows (515px / 298+190+253px).

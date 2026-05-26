@@ -412,7 +412,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-preview-panel,
 .tactics-status-panel,
 .tactics-pitch-panel {
-    height: 430px;
+    height: 515px;
 }
 
 .tactics-status-panel {
@@ -2151,7 +2151,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-side-stack {
     display: grid;
     gap: 9px;
-    grid-template-rows: 298px 190px minmax(0, 168px);
+    grid-template-rows: 298px 190px minmax(0, 253px);
     min-width: 0;
 }
 
