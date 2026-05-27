@@ -1420,7 +1420,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-analysis-grid {
     display: grid;
     gap: 9px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 200px minmax(0, 1.6fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.5fr);
 }
 
 .tactics-analysis-grid .tactics-panel {
@@ -1505,8 +1505,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     display: grid;
     gap: 7px;
     min-height: 0;
-    overflow: auto;
-    padding-right: 7px;
+    overflow: hidden;
 }
 
 .tactics-opponent-absence-list div {
