@@ -2981,88 +2981,93 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 /* ============================================================
-   RANKING STAGGER v2 — clear 1 > 2 > 3 hierarchy
-   5 levers: portrait scale · badge intensity · value size ·
-             value glow · name brightness
-   translateX values kept in sync with late-stage clamp overrides.
+   RANKING STAGGER v3 — glow/brightness/opacity hierarchy only.
+   No portrait scaling. Portraits all same base size.
+   Rank 1 vs. 2/3 distinction through visual loudness, not size.
    ============================================================ */
 
-/* ── Rank 1: full presence ───────────────────────────────── */
+/* ── Rank 1: full presence, subtle tint ─────────────────── */
 .tactics-top-list .ranking-entry:nth-child(1) {
-    background: rgba(0, 220, 255, 0.04);
+    background: rgba(0, 220, 255, 0.035);
+}
+
+.tactics-top-list .ranking-entry:nth-child(1) .player-cutout {
+    filter: brightness(1.08);
+    opacity: 1;
 }
 
 .tactics-top-list .ranking-entry:nth-child(1) .rank-badge {
     box-shadow:
-        inset 0 0 16px rgba(0, 240, 255, 0.32),
-        0 0 26px rgba(0, 240, 255, 0.26);
+        inset 0 0 14px rgba(0, 240, 255, 0.30),
+        0 0 22px rgba(0, 240, 255, 0.24);
 }
 
 .tactics-top-list .ranking-entry:nth-child(1) .entry-value {
     color: #25f4ff;
-    font-size: clamp(28px, 2.0vw, 48px);
+    font-size: clamp(26px, 1.88vw, 46px);
     text-shadow:
-        0 0 16px rgba(37, 244, 255, 0.68),
-        0 0 38px rgba(0, 200, 255, 0.32);
+        0 0 14px rgba(37, 244, 255, 0.62),
+        0 0 34px rgba(0, 200, 255, 0.28);
 }
 
 .tactics-top-list .ranking-entry:nth-child(1) .entry-name {
     color: rgba(210, 238, 255, 0.84);
 }
 
-/* ── Rank 2: clearly secondary ───────────────────────────── */
+/* ── Rank 2: slightly dimmed, same layout ────────────────── */
 .tactics-top-list .ranking-entry:nth-child(2) .player-cutout {
-    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.89);
+    filter: brightness(0.95);
+    opacity: 0.92;
+    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.96);
 }
 
 .tactics-top-list .ranking-entry:nth-child(2) .rank-badge {
-    background: linear-gradient(135deg, rgba(0, 220, 255, 0.13), rgba(0, 110, 155, 0.07));
-    border-color: rgba(0, 240, 255, 0.36);
+    border-color: rgba(0, 240, 255, 0.40);
     box-shadow:
-        inset 0 0 8px rgba(0, 240, 255, 0.10),
-        0 0 10px rgba(0, 240, 255, 0.09);
-    color: rgba(40, 244, 255, 0.76);
-    transform: translateX(clamp(6px, 0.5vw, 10px)) scale(0.89);
+        inset 0 0 9px rgba(0, 240, 255, 0.14),
+        0 0 12px rgba(0, 240, 255, 0.11);
+    color: rgba(40, 244, 255, 0.80);
+    transform: translateX(clamp(6px, 0.5vw, 10px));
 }
 
 .tactics-top-list .ranking-entry:nth-child(2) .entry-value {
-    color: rgba(37, 244, 255, 0.72);
-    font-size: clamp(21px, 1.55vw, 40px);
+    color: rgba(37, 244, 255, 0.78);
+    font-size: clamp(24px, 1.72vw, 42px);
     text-shadow:
-        0 0 10px rgba(37, 244, 255, 0.36),
-        0 0 22px rgba(0, 200, 255, 0.15);
+        0 0 11px rgba(37, 244, 255, 0.42),
+        0 0 26px rgba(0, 200, 255, 0.18);
 }
 
 .tactics-top-list .ranking-entry:nth-child(2) .entry-name {
-    color: rgba(210, 238, 255, 0.56);
+    color: rgba(210, 238, 255, 0.66);
 }
 
-/* ── Rank 3: background presence ────────────────────────── */
+/* ── Rank 3: calm background presence ───────────────────── */
 .tactics-top-list .ranking-entry:nth-child(3) .player-cutout {
-    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.78);
+    filter: brightness(0.88);
+    opacity: 0.82;
+    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.96);
 }
 
 .tactics-top-list .ranking-entry:nth-child(3) .rank-badge {
-    background: linear-gradient(135deg, rgba(0, 220, 255, 0.07), rgba(0, 110, 155, 0.03));
-    border-color: rgba(0, 240, 255, 0.22);
+    border-color: rgba(0, 240, 255, 0.28);
     box-shadow:
-        inset 0 0 5px rgba(0, 240, 255, 0.06),
-        0 0 6px rgba(0, 240, 255, 0.05);
-    color: rgba(40, 244, 255, 0.52);
-    text-shadow: 0 0 8px rgba(0, 240, 255, 0.32);
-    transform: translateX(clamp(6px, 0.5vw, 10px)) scale(0.79);
+        inset 0 0 6px rgba(0, 240, 255, 0.08),
+        0 0 7px rgba(0, 240, 255, 0.07);
+    color: rgba(40, 244, 255, 0.62);
+    transform: translateX(clamp(6px, 0.5vw, 10px));
 }
 
 .tactics-top-list .ranking-entry:nth-child(3) .entry-value {
-    color: rgba(37, 244, 255, 0.48);
-    font-size: clamp(16px, 1.22vw, 28px);
+    color: rgba(37, 244, 255, 0.58);
+    font-size: clamp(22px, 1.58vw, 38px);
     text-shadow:
-        0 0 7px rgba(37, 244, 255, 0.20),
-        0 0 14px rgba(0, 200, 255, 0.09);
+        0 0 9px rgba(37, 244, 255, 0.28),
+        0 0 20px rgba(0, 200, 255, 0.12);
 }
 
 .tactics-top-list .ranking-entry:nth-child(3) .entry-name {
-    color: rgba(210, 238, 255, 0.38);
+    color: rgba(210, 238, 255, 0.50);
 }
 
 /* ============================================================
