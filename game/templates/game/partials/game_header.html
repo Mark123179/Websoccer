@@ -23,7 +23,7 @@
                         <strong>{{ day.day_number }}</strong>
                     </div>
 
-                    <span class="ws-youth-badge" aria-hidden="true">J</span>
+                    {% if forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">J</span>{% endif %}
                     {% if day.fixture %}
                         <div class="ws-fixture-card"{% if day.fixture.stadium %} style="--fixture-stadium: url('{% static day.fixture.stadium %}');"{% endif %}>
                             <div class="ws-fixture-crests">
