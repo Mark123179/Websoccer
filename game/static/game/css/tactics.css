@@ -2979,3 +2979,68 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-top-list .ranking-entry {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
+
+/* ============================================================
+   RANKING STAGGER — 1 > 2 > 3 hierarchy
+   Scale portrait + badge, step font-size + glow down per rank.
+   translateX values mirror the late-stage overrides to stay in sync.
+   ============================================================ */
+
+/* Rank 1 — amplified glow, baseline size */
+.tactics-top-list .ranking-entry:nth-child(1) .rank-badge {
+    box-shadow:
+        inset 0 0 14px rgba(0, 240, 255, 0.26),
+        0 0 22px rgba(0, 240, 255, 0.22);
+}
+
+.tactics-top-list .ranking-entry:nth-child(1) .entry-value {
+    text-shadow:
+        0 0 14px rgba(37, 244, 255, 0.60),
+        0 0 36px rgba(0, 200, 255, 0.28);
+}
+
+/* Rank 2 — mid, pulled back ~9% */
+.tactics-top-list .ranking-entry:nth-child(2) .player-cutout {
+    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.91);
+}
+
+.tactics-top-list .ranking-entry:nth-child(2) .rank-badge {
+    box-shadow:
+        inset 0 0 8px rgba(0, 240, 255, 0.11),
+        0 0 10px rgba(0, 240, 255, 0.09);
+    transform: translateX(clamp(6px, 0.5vw, 10px)) scale(0.93);
+}
+
+.tactics-top-list .ranking-entry:nth-child(2) .entry-value {
+    font-size: clamp(21px, 1.52vw, 38px);
+    text-shadow:
+        0 0 10px rgba(37, 244, 255, 0.38),
+        0 0 24px rgba(0, 200, 255, 0.16);
+}
+
+.tactics-top-list .ranking-entry:nth-child(2) .entry-name {
+    color: rgba(210, 238, 255, 0.62);
+}
+
+/* Rank 3 — receded ~18% */
+.tactics-top-list .ranking-entry:nth-child(3) .player-cutout {
+    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.82);
+}
+
+.tactics-top-list .ranking-entry:nth-child(3) .rank-badge {
+    box-shadow:
+        inset 0 0 6px rgba(0, 240, 255, 0.07),
+        0 0 7px rgba(0, 240, 255, 0.06);
+    transform: translateX(clamp(6px, 0.5vw, 10px)) scale(0.84);
+}
+
+.tactics-top-list .ranking-entry:nth-child(3) .entry-value {
+    font-size: clamp(18px, 1.28vw, 30px);
+    text-shadow:
+        0 0 8px rgba(37, 244, 255, 0.26),
+        0 0 18px rgba(0, 200, 255, 0.11);
+}
+
+.tactics-top-list .ranking-entry:nth-child(3) .entry-name {
+    color: rgba(210, 238, 255, 0.48);
+}
