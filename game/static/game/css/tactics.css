@@ -1713,7 +1713,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-side {
     display: grid;
-    grid-template-rows: 48px minmax(0, 1fr);
+    grid-template-rows: 42px minmax(0, 1fr);
     min-width: 0;
     position: relative;
 }
@@ -1782,12 +1782,12 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: #f9fbff;
     display: grid;
-    font-size: 15px;
+    font-size: 14px;
     font-variant-numeric: tabular-nums;
     font-weight: 800;
-    grid-template-rows: repeat(9, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     letter-spacing: 0;
-    line-height: 1.25;
+    line-height: 1.2;
     min-height: 0;
 }
 
@@ -1810,7 +1810,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
         0 0 8px rgba(0, 217, 255, 0.2);
 }
 
-.duel-values-left > div:nth-child(4) {
+.duel-values-left > div:nth-child(3) {
     transform: translateX(5px);
 }
 
@@ -1855,7 +1855,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-center {
     display: grid;
-    grid-template-rows: 48px minmax(0, 1fr);
+    grid-template-rows: 42px minmax(0, 1fr);
     justify-items: center;
     min-width: 0;
     position: relative;
@@ -1876,9 +1876,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: rgba(255, 255, 255, 0.92);
     display: grid;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 700;
-    grid-template-rows: repeat(9, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     justify-items: center;
     letter-spacing: 0;
     line-height: 1.2;

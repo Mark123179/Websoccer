@@ -1792,7 +1792,6 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
             'home_avatar': CURRENT_MANAGER_PROFILE_IMAGE,
             'away_avatar': duel_avatar_path(duel_away_club),
             'rows': [
-                {'label': 'Titel', 'left': 'Profi', 'right': 'Legende', 'left_tone': 'trail', 'right_tone': 'lead'},
                 {'label': 'Trophäen', 'left': '5', 'right': '12', 'left_tone': 'trail', 'right_tone': 'lead'},
                 {'label': 'Highscore', 'left': '2.150', 'right': '2.430', 'left_tone': 'trail', 'right_tone': 'lead'},
                 {'label': 'Registriert seit', 'left': '12.03.2018', 'right': '01.07.2017', 'left_tone': 'trail', 'right_tone': 'lead'},
