@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-19">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-20">
 {% endblock %}
 
 {% block content %}
@@ -445,35 +445,38 @@
 
         <section class="tactics-analysis-grid">
             <article class="tactics-panel tactics-top-list tactics-top-scorers">
-                <h2>Torjäger</h2>
+                <h2><svg class="panel-h2-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3l3 5-3 4-3-4z M12 21l-3-5 3-4 3 4 M3 12l5-3 4 3-4 3z M21 12l-5 3-4-3 4-3z"/></svg><span>TORJÄGER</span><svg class="panel-h2-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></h2>
                 {% for row in top_goals %}
-                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                    <div><span class="rank">{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><div class="text"><strong>{{ row.name|shorten_name:18 }}</strong><small>TORE</small></div><b>{{ row.value }}</b></div>
                 {% endfor %}
             </article>
 
             <article class="tactics-panel tactics-top-list">
-                <h2>Vorbereiter</h2>
+                <h2><svg class="panel-h2-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 17l4-1 3-7 5 2-2 5 5 2 5-3v3l-7 3-5-2-4 1-4-3z"/></svg><span>VORBEREITER</span><svg class="panel-h2-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></h2>
                 {% for row in top_assists %}
-                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                    <div><span class="rank">{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><div class="text"><strong>{{ row.name|shorten_name:18 }}</strong><small>VORLAGEN</small></div><b>{{ row.value }}</b></div>
                 {% endfor %}
             </article>
 
             <article class="tactics-panel tactics-top-list">
-                <h2>Beste Noten</h2>
+                <h2><svg class="panel-h2-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15,9 22,9 16.5,13.5 18.5,21 12,17 5.5,21 7.5,13.5 2,9 9,9"/></svg><span>BESTE NOTEN</span><svg class="panel-h2-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></h2>
                 {% for row in top_grades %}
-                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                    <div><span class="rank">{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><div class="text"><strong>{{ row.name|shorten_name:18 }}</strong><small>Ø NOTE</small></div><b>{{ row.value }}</b></div>
                 {% endfor %}
             </article>
 
             <article class="tactics-panel tactics-opponent-absences">
-                <h2>Ausfälle Gegner</h2>
+                <h2><svg class="panel-h2-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M9 2h6v7h7v6h-7v7h-6v-7H2v-6h7z"/></svg><span>AUSFÄLLE GEGNER</span><svg class="panel-h2-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></h2>
                 <div class="tactics-opponent-absence-list dashboard-scrollarea">
                     {% for row in opponent_absences %}
                         <div class="is-{{ row.tone }}">
                             <img src="{% static row.portrait %}" alt="{{ row.name }}">
-                            <strong>{{ row.name|shorten_name }}</strong>
-                            <span>{{ row.reason }}</span>
-                            <small>{{ row.duration }}</small>
+                            <div class="text">
+                                <strong>{{ row.name|shorten_name }}</strong>
+                                <span>{{ row.reason }}</span>
+                                <small><svg class="absence-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>{{ row.duration }}</small>
+                            </div>
+                            <i class="absence-icon"></i>
                         </div>
                     {% endfor %}
                 </div>
