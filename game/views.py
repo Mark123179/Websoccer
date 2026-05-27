@@ -348,7 +348,7 @@ def build_game_header(
         else '1. Bundesliga'
     )
 
-    def fixture_entry(lineup_saved, result, venue, meta):
+    def fixture_entry(lineup_saved, result, venue, meta, match_time=''):
         home_club = current_club if venue == 'H' else opponent_club
         return {
             'opponent_name': opponent_name,
@@ -360,12 +360,13 @@ def build_game_header(
             'result': result,
             'venue': venue,
             'meta': meta,
+            'match_time': match_time,
         }
 
     fixtures_by_date = {
         base_game_date - timedelta(days=3): fixture_entry(False, '1:1', 'A', '33. Spieltag (A)'),
         base_game_date - timedelta(days=1): fixture_entry(True, '5:0', 'H', 'Testspiel (H)'),
-        base_game_date + timedelta(days=2): fixture_entry(False, '', 'H', '27. Spieltag (H)'),
+        base_game_date + timedelta(days=2): fixture_entry(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
     }
 
     calendar_days = []

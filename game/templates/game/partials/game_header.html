@@ -23,6 +23,7 @@
                         <strong>{{ day.day_number }}</strong>
                     </div>
 
+                    <span class="ws-youth-badge" aria-hidden="true">J</span>
                     {% if day.fixture %}
                         <div class="ws-fixture-card"{% if day.fixture.stadium %} style="--fixture-stadium: url('{% static day.fixture.stadium %}');"{% endif %}>
                             <div class="ws-fixture-crests">
@@ -45,7 +46,12 @@
                                     <span>({{ day.fixture.venue }})</span>
                                 </strong>
                             {% else %}
-                                <span class="ws-fixture-meta">{{ day.fixture.meta }}</span>
+                                <div class="ws-fixture-bottom">
+                                    {% if day.fixture.match_time %}
+                                        <span class="ws-fixture-time">{{ day.fixture.match_time }} Uhr</span>
+                                    {% endif %}
+                                    <span class="ws-fixture-meta">{{ day.fixture.meta }}</span>
+                                </div>
                             {% endif %}
                             {% if day.fixture.lineup_saved %}
                                 <span class="ws-lineup-state" aria-hidden="true"></span>

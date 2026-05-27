@@ -247,13 +247,52 @@
 .ws-lineup-state {
     border-bottom: 4px solid currentColor;
     border-right: 4px solid currentColor;
-    bottom: 3px;
+    bottom: 5px;
     color: #08d418;
-    height: 12px;
+    height: 24px;
+    position: absolute;
+    right: 7px;
+    transform: rotate(35deg);
+    width: 14px;
+}
+
+.ws-youth-badge {
+    background: rgba(30, 42, 55, 0.82);
+    border: 1px solid rgba(100, 200, 120, 0.45);
+    border-radius: 4px;
+    color: rgba(80, 220, 110, 0.72);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    line-height: 1;
+    padding: 2px 4px;
     position: absolute;
     right: 5px;
-    transform: rotate(35deg);
-    width: 7px;
+    top: 24px;
+    z-index: 2;
+}
+
+.ws-fixture-bottom {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.1;
+    padding-bottom: 2px;
+}
+
+.ws-fixture-time {
+    color: #004a8f;
+    font-size: 15px;
+    font-weight: 900;
+    position: relative;
+    z-index: 1;
+}
+
+.ws-fixture-bottom .ws-fixture-meta {
+    font-size: 11px;
+    font-weight: 700;
+    margin: 0;
 }
 
 
