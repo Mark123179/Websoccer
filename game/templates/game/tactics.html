@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-32">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-33">
 {% endblock %}
 
 {% block content %}
@@ -508,32 +508,38 @@
                     <img class="duel-manager-portrait duel-manager-portrait-right" src="{% static manager_duel.away_avatar %}" alt="{{ manager_duel.away }}">
                 {% endif %}
                 <div class="manager-duel-overlay">
-                    <header class="duel-header-left">
-                        <img class="duel-header-portrait"
-                             src="{% if manager_duel.home_avatar %}{% static manager_duel.home_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
-                             alt="{{ manager_duel.home }}">
-                        <div class="duel-header-info">
-                            <div class="duel-manager-name">{{ manager_duel.home }}</div>
-                            <div class="duel-manager-rank duel-rank-left">{{ manager_duel.home_rank }}</div>
+                    <div class="duel-header-row">
+                        <header class="duel-header-left">
+                            <img class="duel-header-portrait"
+                                 src="{% if manager_duel.home_avatar %}{% static manager_duel.home_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
+                                 alt="{{ manager_duel.home }}">
+                            <div class="duel-header-info">
+                                <div class="duel-manager-name">{{ manager_duel.home }}</div>
+                                <div class="duel-manager-rank duel-rank-left">{{ manager_duel.home_rank }}</div>
+                            </div>
+                        </header>
+                        <div class="duel-header-center">
+                            <div class="duel-vs">VS.</div>
                         </div>
-                    </header>
-                    <div class="duel-header-center">
-                        <div class="duel-vs">VS.</div>
+                        <header class="duel-header-right">
+                            <div class="duel-header-info">
+                                <div class="duel-manager-name">{{ manager_duel.away }}</div>
+                                <div class="duel-manager-rank duel-rank-right">{{ manager_duel.away_rank }}</div>
+                            </div>
+                            <img class="duel-header-portrait"
+                                 src="{% if manager_duel.away_avatar %}{% static manager_duel.away_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
+                                 alt="{{ manager_duel.away }}">
+                        </header>
                     </div>
-                    <header class="duel-header-right">
-                        <div class="duel-header-info">
-                            <div class="duel-manager-name">{{ manager_duel.away }}</div>
-                            <div class="duel-manager-rank duel-rank-right">{{ manager_duel.away_rank }}</div>
+                    <div class="vs-table">
+                        {% for row in manager_duel.rows %}
+                        <div class="vs-row">
+                            <div class="vs-value vs-value-left is-{{ row.left_tone }}">{{ row.left }}</div>
+                            <div class="vs-label">{{ row.label }}</div>
+                            <div class="vs-value vs-value-right is-{{ row.right_tone }}">{{ row.right }}</div>
                         </div>
-                        <img class="duel-header-portrait"
-                             src="{% if manager_duel.away_avatar %}{% static manager_duel.away_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
-                             alt="{{ manager_duel.away }}">
-                    </header>
-                    {% for row in manager_duel.rows %}
-                        <div class="duel-stat-left is-{{ row.left_tone }}">{{ row.left }}</div>
-                        <div class="duel-stat-label">{{ row.label }}</div>
-                        <div class="duel-stat-right is-{{ row.right_tone }}">{{ row.right }}</div>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </article>
         </section>

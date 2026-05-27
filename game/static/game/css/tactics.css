@@ -3185,3 +3185,145 @@ body.tactics-page .nav-menu a:nth-child(5) {
     object-position: top center;
     width: 74px;
 }
+
+/* ============================================================
+   VS-TABLE v1 — rigid 3-column comparison axis
+   Overlay → flex-column: header-row (fixed) + vs-table (flex-fill)
+   Each vs-row: fixed grid, left values RIGHT-aligned, right LEFT-aligned
+   ============================================================ */
+
+/* Overlay: no longer a grid, now flex-column */
+.manager-duel-overlay {
+    display: flex !important;
+    flex-direction: column;
+    grid-template-columns: unset;
+    grid-template-rows: unset;
+    padding: 10px 0 10px;
+}
+
+/* Header row: 3-col grid with same column proportions as vs-rows */
+.duel-header-row {
+    display: grid;
+    flex-shrink: 0;
+    grid-template-columns: minmax(0, 1fr) 180px minmax(0, 1fr);
+    height: 82px;
+}
+
+/* vs-table fills all remaining height */
+.vs-table {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Each vs-row: rigid 3-col grid, equal share of remaining height */
+.vs-row {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.048);
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr) 180px minmax(0, 1fr);
+    min-height: 0;
+}
+
+/* Last row: no divider */
+.vs-row:last-child {
+    border-bottom: none;
+}
+
+/* Left value cell: right-aligned, flush to label column edge */
+.vs-value-left {
+    align-items: center;
+    color: rgba(144, 228, 255, 0.82);
+    display: flex;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: flex-end;
+    letter-spacing: 0;
+    line-height: 1.2;
+    min-width: 0;
+    padding-right: 12px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(0, 217, 255, 0.18);
+}
+
+.vs-value-left.is-lead {
+    color: #67e9ff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 217, 255, 0.36);
+}
+
+.vs-value-left.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* Center label cell: fixed width, exact center, channel style */
+.vs-label {
+    align-items: center;
+    border-left: 1px solid rgba(0, 200, 255, 0.20);
+    border-right: 1px solid rgba(255, 201, 40, 0.20);
+    color: rgba(255, 255, 255, 0.58);
+    display: flex;
+    font-size: 11px;
+    font-weight: 700;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
+}
+
+/* Right value cell: left-aligned, flush to label column edge */
+.vs-value-right {
+    align-items: center;
+    color: rgba(255, 230, 150, 0.82);
+    display: flex;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: flex-start;
+    letter-spacing: 0;
+    line-height: 1.2;
+    min-width: 0;
+    padding-left: 12px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(255, 201, 40, 0.22);
+}
+
+.vs-value-right.is-lead {
+    color: #ffe784;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 201, 40, 0.34);
+}
+
+.vs-value-right.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* Header cells now live inside .duel-header-row, adjust accordingly */
+.duel-header-row .duel-header-left {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-start;
+    padding-left: 12px;
+    transform: none;
+}
+
+.duel-header-row .duel-header-right {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-right: 12px;
+    transform: none;
+}
+
+.duel-header-row .duel-header-center {
+    align-items: center;
+    border-left: 1px solid rgba(0, 200, 255, 0.20);
+    border-right: 1px solid rgba(255, 201, 40, 0.20);
+    display: flex;
+    justify-content: center;
+}
