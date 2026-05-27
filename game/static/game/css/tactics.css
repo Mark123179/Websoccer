@@ -875,14 +875,12 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-bench-card select {
     cursor: pointer;
-    height: 45px;
-    left: 50%;
+    height: 100%;
+    inset: 0;
     opacity: 0;
     padding: 0;
     position: absolute;
-    top: 7px;
-    transform: translateX(-50%);
-    width: 46px;
+    width: 100%;
     z-index: 6;
 }
 
@@ -1302,13 +1300,11 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-dashboard .tactics-bench-card select {
-    height: 45px;
-    left: 50%;
+    height: 100%;
+    inset: 0;
     min-width: 0;
     padding: 0;
-    top: 7px;
-    transform: translateX(-50%);
-    width: 46px;
+    width: 100%;
 }
 
 .tactics-standard-list {
@@ -2279,9 +2275,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-dashboard .tactics-side-stack .tactics-bench-card select {
-    height: 62px;
-    top: 10px;
-    width: 54px;
+    height: 100%;
+    inset: 0;
+    width: 100%;
 }
 
 .tactics-side-stack .tactics-substitution-list {
