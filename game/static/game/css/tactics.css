@@ -863,7 +863,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     --freshness-color: var(--tactics-red);
 }
 
-.tactics-slot select {
+.tactics-pitch .tactics-slot select {
     cursor: pointer;
     height: 100%;
     inset: 0;
@@ -2256,9 +2256,9 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-bench-card i {
-    height: 32px;
-    margin-top: 22px;
-    width: 32px;
+    height: 44px;
+    margin-top: 16px;
+    width: 44px;
 }
 
 .tactics-side-stack .tactics-bench-card strong {
@@ -2279,8 +2279,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-dashboard .tactics-side-stack .tactics-bench-card select {
-    height: 56px;
-    top: 12px;
+    height: 62px;
+    top: 10px;
     width: 54px;
 }
 
