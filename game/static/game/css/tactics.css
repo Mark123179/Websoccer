@@ -2791,3 +2791,107 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .duel-labels > div {
     border-bottom-color: rgba(255, 255, 255, 0.04);
 }
+
+/* ============================================================
+   MANAGER DUEL — unified flat grid (1 grid, 3 cols × 9 rows)
+   Header row + 8 data rows, all columns share exact row heights.
+   ============================================================ */
+
+.manager-duel-overlay {
+    grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+    grid-template-rows: 42px repeat(8, 1fr);
+}
+
+/* header cells */
+.duel-header-left {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    padding-left: 8%;
+    transform: translateX(-4px);
+}
+
+.duel-header-center {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.duel-header-right {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    padding-right: 8%;
+}
+
+/* stat row — left value (cyan theme) */
+.duel-stat-left {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: rgba(144, 228, 255, 0.80);
+    display: flex;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    padding-left: 28%;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(0, 217, 255, 0.18);
+}
+
+.duel-stat-left.is-lead {
+    color: #67e9ff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 217, 255, 0.36);
+}
+
+.duel-stat-left.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* stat row — center label */
+.duel-stat-label {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: rgba(255, 255, 255, 0.62);
+    display: flex;
+    font-size: 11px;
+    font-weight: 700;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
+}
+
+/* stat row — right value (gold theme) */
+.duel-stat-right {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: rgba(255, 230, 150, 0.80);
+    display: flex;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    padding-right: 28%;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(255, 201, 40, 0.22);
+}
+
+.duel-stat-right.is-lead {
+    color: #ffe784;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 201, 40, 0.34);
+}
+
+.duel-stat-right.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
