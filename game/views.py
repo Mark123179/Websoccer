@@ -1542,7 +1542,7 @@ def opponent_absence_rows(opponent_club):
     fallback_names = ['Spieler X', 'Spieler Y', 'Spieler Z', 'Spieler A']
     details = [
         ('injury', 'Muskelverletzung', '12 Tage'),
-        ('injury', 'Knieprobleme', '3 Wochen'),
+        ('injury', 'Knieprobleme', '21 Tage'),
         ('suspension', 'Gelbsperre', '1 Spiel'),
         ('suspension', 'Rotsperre', '2 Spiele'),
     ]
