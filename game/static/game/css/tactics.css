@@ -2463,3 +2463,84 @@ body.tactics-page .nav-menu a:nth-child(5) {
         grid-template-rows: auto;
     }
 }
+
+/* ============================================================
+   ANALYSIS ROW — Premium polish, hierarchy, consistency
+   ============================================================ */
+
+/* Section divider above the analysis row */
+.tactics-analysis-grid {
+    margin-top: 14px;
+    padding-top: 14px;
+    position: relative;
+}
+
+.tactics-analysis-grid::before {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(22, 207, 255, 0.45) 50%,
+        transparent 100%);
+    content: "";
+    height: 1px;
+    left: 8%;
+    position: absolute;
+    right: 8%;
+    top: 0;
+}
+
+/* Consistent premium treatment for ALL 3 top-list panels */
+.tactics-analysis-grid .tactics-top-list {
+    background:
+        linear-gradient(180deg, rgba(1, 10, 23, 0.46), rgba(1, 8, 19, 0.72)),
+        url("../images/backgrounds/tactics-top-scorers-bg.png") center / 100% 100% no-repeat;
+    border-color: rgba(61, 200, 255, 0.38);
+    box-shadow:
+        inset 0 0 34px rgba(0, 104, 188, 0.22),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+/* Cyan uppercase headers with bottom divider — across all analysis panels */
+.tactics-analysis-grid > .tactics-panel > h2 {
+    border-bottom: 1px solid rgba(62, 220, 255, 0.22);
+    color: var(--tactics-cyan);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    margin: 0 0 8px;
+    padding-bottom: 7px;
+    text-transform: uppercase;
+}
+
+/* Manager-duel keeps its own centered header style — opt out */
+.tactics-analysis-grid > .tactics-manager-duel > h2 {
+    border-bottom: 0;
+    text-align: center;
+}
+
+/* Subtle row hover for interactivity */
+.tactics-top-list > div {
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+.tactics-top-list > div:hover {
+    background-color: rgba(22, 207, 255, 0.06);
+}
+
+/* Ausfälle Gegner — warning-tinted border + soft red inner glow */
+.tactics-analysis-grid .tactics-opponent-absences {
+    border-color: rgba(255, 100, 120, 0.32);
+    box-shadow:
+        inset 0 0 34px rgba(180, 22, 44, 0.10),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+/* Absence cards: hover lift + clearer separation */
+.tactics-opponent-absence-list div {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.tactics-opponent-absence-list div:hover {
+    background: rgba(255, 100, 120, 0.08);
+    border-color: rgba(255, 100, 120, 0.30);
+}
