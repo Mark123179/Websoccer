@@ -1350,8 +1350,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-half-panel {
-    height: 170px;
-    padding: 12px 14px;
+    height: auto;
+    padding: 16px 16px 18px;
 }
 
 .tactics-half-panel h2 {
