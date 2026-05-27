@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-19">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-20">
 {% endblock %}
 
 {% block content %}
@@ -447,21 +447,42 @@
             <article class="tactics-panel tactics-top-list tactics-top-scorers">
                 <h2>Torjäger</h2>
                 {% for row in top_goals %}
-                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                    <div class="ranking-entry">
+                        <div class="rank-badge"><span>{{ forloop.counter }}</span></div>
+                        <div class="player-cutout"><img src="{% static row.portrait %}" alt="{{ row.name }}"></div>
+                        <div class="entry-info">
+                            <strong class="entry-name">{{ row.name|shorten_name }}</strong>
+                            <b class="entry-value">{{ row.value }}</b>
+                        </div>
+                    </div>
                 {% endfor %}
             </article>
 
             <article class="tactics-panel tactics-top-list">
                 <h2>Vorbereiter</h2>
                 {% for row in top_assists %}
-                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                    <div class="ranking-entry">
+                        <div class="rank-badge"><span>{{ forloop.counter }}</span></div>
+                        <div class="player-cutout"><img src="{% static row.portrait %}" alt="{{ row.name }}"></div>
+                        <div class="entry-info">
+                            <strong class="entry-name">{{ row.name|shorten_name }}</strong>
+                            <b class="entry-value">{{ row.value }}</b>
+                        </div>
+                    </div>
                 {% endfor %}
             </article>
 
             <article class="tactics-panel tactics-top-list">
                 <h2>Beste Noten</h2>
                 {% for row in top_grades %}
-                    <div><span>{{ forloop.counter }}</span><img src="{% static row.portrait %}" alt="{{ row.name }}"><strong>{{ row.name }}</strong><b>{{ row.value }}</b></div>
+                    <div class="ranking-entry">
+                        <div class="rank-badge"><span>{{ forloop.counter }}</span></div>
+                        <div class="player-cutout"><img src="{% static row.portrait %}" alt="{{ row.name }}"></div>
+                        <div class="entry-info">
+                            <strong class="entry-name">{{ row.name|shorten_name }}</strong>
+                            <b class="entry-value">{{ row.value }}</b>
+                        </div>
+                    </div>
                 {% endfor %}
             </article>
 
