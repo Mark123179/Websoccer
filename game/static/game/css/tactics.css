@@ -3064,3 +3064,21 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-top-list .ranking-entry:nth-child(3) .entry-name {
     color: rgba(210, 238, 255, 0.38);
 }
+
+/* ============================================================
+   DUEL STATS — outer-edge alignment (symmetric mirror)
+   Left: flush-left, numbers grow rightward (inward toward center)
+   Right: flush-right, numbers grow leftward (inward toward center)
+   ============================================================ */
+
+.duel-stat-left {
+    justify-content: flex-start;
+    padding-left: 10px;
+    padding-right: 0;
+}
+
+.duel-stat-right {
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 10px;
+}
