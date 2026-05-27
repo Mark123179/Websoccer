@@ -1420,7 +1420,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-analysis-grid {
     display: grid;
     gap: 9px;
-    grid-template-columns: 16% 16% 16% minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: 11% 11% 11% minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .tactics-analysis-grid .tactics-panel {
@@ -1447,24 +1447,24 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     display: grid;
-    gap: 8px;
-    grid-template-columns: 16px 58px minmax(0, 1fr) auto;
-    min-height: 58px;
+    gap: 5px;
+    grid-template-columns: 13px 40px minmax(0, 1fr) auto;
+    min-height: 46px;
 }
 
 .tactics-top-list span,
 .tactics-top-list strong,
 .tactics-top-list b {
     color: #f7fbff;
-    font-size: 13px;
+    font-size: 11px;
     font-variant-numeric: tabular-nums;
     line-height: 1.25;
 }
 
 .tactics-top-list img {
-    height: 56px;
+    height: 40px;
     object-fit: contain;
-    width: 56px;
+    width: 40px;
 }
 
 .tactics-top-list strong {
@@ -1492,19 +1492,23 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     background: rgba(255, 255, 255, 0.045);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 5px;
+    border-radius: 6px;
     display: grid;
-    gap: 2px 8px;
-    grid-template-columns: 38px minmax(0, 1fr) auto;
-    min-height: 33px;
-    padding: 4px 7px 4px 4px;
+    gap: 3px 10px;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    min-height: 60px;
+    padding: 6px 9px 6px 6px;
+}
+
+.tactics-opponent-absence-list div:nth-child(n+4) {
+    display: none;
 }
 
 .tactics-opponent-absence-list img {
     grid-row: span 2;
-    height: 36px;
+    height: 50px;
     object-fit: contain;
-    width: 36px;
+    width: 50px;
 }
 
 .tactics-opponent-absence-list strong,
@@ -1517,13 +1521,13 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-opponent-absence-list strong {
     color: #ffffff;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 800;
 }
 
 .tactics-opponent-absence-list span {
     color: rgba(244, 251, 255, 0.72);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
 }
 
@@ -1531,13 +1535,13 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     border-radius: 999px;
     display: inline-flex;
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 900;
-    gap: 4px;
+    gap: 5px;
     grid-column: 3;
     grid-row: 1 / span 2;
-    height: 20px;
-    padding: 0 7px;
+    height: 26px;
+    padding: 0 10px;
 }
 
 .tactics-opponent-absence-list small::before {
@@ -1674,7 +1678,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-manager-name {
     color: #ffffff;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1.15;
@@ -1687,11 +1691,11 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .duel-manager-rank {
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.01em;
     line-height: 1;
-    padding: 2px 8px 3px;
+    padding: 3px 10px 4px;
     transform: translateY(3px);
 }
 
@@ -1713,7 +1717,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: #f9fbff;
     display: grid;
-    font-size: 13px;
+    font-size: 15px;
     font-variant-numeric: tabular-nums;
     font-weight: 800;
     grid-template-rows: repeat(9, 1fr);
@@ -1807,7 +1811,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     color: rgba(255, 255, 255, 0.92);
     display: grid;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     grid-template-rows: repeat(9, 1fr);
     justify-items: center;
@@ -2344,7 +2348,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-analysis-grid .tactics-panel {
-    min-height: 295px;
+    min-height: 310px;
 }
 
 @media (max-width: 1440px) {
