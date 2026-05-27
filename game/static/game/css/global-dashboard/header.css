@@ -250,24 +250,20 @@
     bottom: 6px;
     color: #08d418;
     height: 24px;
-    left: 7px;
     position: absolute;
+    right: 7px;
     transform: rotate(35deg);
     width: 14px;
 }
 
 .ws-youth-badge {
-    border: 1px solid rgba(100, 200, 120, 0.55);
-    border-radius: 4px;
-    color: rgba(80, 220, 110, 0.85);
-    font-size: 11px;
+    color: rgba(80, 220, 110, 0.88);
+    font-size: 20px;
     font-weight: 900;
-    letter-spacing: 0.5px;
     line-height: 1;
-    padding: 2px 4px;
     position: absolute;
     right: 7px;
-    top: 26px;
+    top: 24px;
     z-index: 2;
 }
 
