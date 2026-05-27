@@ -1815,7 +1815,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-template-grid .tactics-preview-panel,
 .tactics-template-grid .tactics-pitch-panel,
 .tactics-template-grid .tactics-side-stack {
-    height: 586px;
+    height: 700px;
 }
 
 .tactics-template-grid .tactics-preview-panel {
@@ -2296,8 +2296,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-side-stack .tactics-standard-list label {
-    grid-template-columns: 60px minmax(0, 1fr);
-    min-height: 22px;
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-height: 28px;
+}
+
+.tactics-side-stack .tactics-standards-panel .tactics-standard-list span {
+    flex: 0 0 56px;
 }
 
 .tactics-side-stack .tactics-standards-panel h2 {
