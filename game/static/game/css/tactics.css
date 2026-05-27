@@ -3162,3 +3162,26 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .duel-header-center .duel-vs {
     margin-top: -8px;
 }
+
+/* ============================================================
+   DUEL CARD v2.1 — hide old bottom portraits, enlarge header portrait
+   ============================================================ */
+
+/* Old bottom-corner portraits ausblenden (jetzt im Header) */
+.duel-manager-portrait {
+    display: none;
+}
+
+/* Header-Portrait vergrößert, füllt den grauen Rahmen */
+.duel-header-portrait {
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 50%;
+    box-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.60),
+        0 0 0 2px rgba(0, 200, 255, 0.16);
+    flex-shrink: 0;
+    height: 74px;
+    object-fit: cover;
+    object-position: top center;
+    width: 74px;
+}
