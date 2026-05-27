@@ -2895,3 +2895,41 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: #ff6579;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
 }
+
+/* ============================================================
+   ABSENCE LIST — show 4, scrollbar from 5th
+   Entry height: min-height 86px + 2px border = 88px; gap: 7px
+   4 entries: 4×88 + 3×7 = 352 + 21 = 373px → +4px breathing room
+   ============================================================ */
+
+/* cancel the old hide-from-4th rule */
+.tactics-opponent-absence-list div:nth-child(n+4) {
+    display: grid;
+}
+
+/* 4 entries visible, scroll from 5th */
+.tactics-opponent-absence-list {
+    max-height: calc(4 * 88px + 3 * 7px + 4px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+/* thin dark scrollbar — cyan accent */
+.tactics-opponent-absence-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tactics-opponent-absence-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+}
+
+.tactics-opponent-absence-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 200, 255, 0.28);
+    border-radius: 4px;
+}
+
+.tactics-opponent-absence-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 200, 255, 0.55);
+}
