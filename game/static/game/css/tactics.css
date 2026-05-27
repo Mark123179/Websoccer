@@ -1577,7 +1577,6 @@ body.tactics-page .nav-menu a:nth-child(5) {
     width: 100px;
 }
 
-.tactics-opponent-absence-list strong,
 .tactics-opponent-absence-list span {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1586,8 +1585,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-opponent-absence-list strong {
     color: #ffffff;
+    display: -webkit-box;
     font-size: 20px;
     font-weight: 900;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .tactics-opponent-absence-list span {

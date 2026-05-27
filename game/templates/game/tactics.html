@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load static %}
+{% load game_filters %}
 
 {% block body_class %}tactics-page{% endblock %}
 
@@ -10,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-17">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-18">
 {% endblock %}
 
 {% block content %}
@@ -470,7 +471,7 @@
                     {% for row in opponent_absences %}
                         <div class="is-{{ row.tone }}">
                             <img src="{% static row.portrait %}" alt="{{ row.name }}">
-                            <strong>{{ row.name }}</strong>
+                            <strong>{{ row.name|shorten_name }}</strong>
                             <span>{{ row.reason }}</span>
                             <small>{{ row.duration }}</small>
                         </div>
