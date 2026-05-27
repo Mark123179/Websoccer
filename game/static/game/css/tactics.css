@@ -3082,3 +3082,78 @@ body.tactics-page .nav-menu a:nth-child(5) {
     padding-left: 0;
     padding-right: 10px;
 }
+
+/* ============================================================
+   DUEL CARD v2 — inner-boundary alignment + header portrait
+   ============================================================ */
+
+/* Values flush to inner boundary (toward center labels) */
+.duel-stat-left {
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 8px;
+}
+
+.duel-stat-right {
+    justify-content: flex-start;
+    padding-left: 8px;
+    padding-right: 0;
+}
+
+/* Narrower center column — brings both sides closer together */
+.manager-duel-overlay {
+    grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+}
+
+/* Manager portrait in header cell */
+.duel-header-portrait {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.55),
+        0 0 0 2px rgba(0, 200, 255, 0.14);
+    flex-shrink: 0;
+    height: 50px;
+    object-fit: cover;
+    object-position: top center;
+    width: 50px;
+}
+
+/* Header cells: row = portrait | name + badge */
+.duel-header-left,
+.duel-header-right {
+    align-items: center;
+    column-gap: 8px;
+    flex-direction: row;
+    padding-left: 0;
+    padding-right: 0;
+    transform: none;
+}
+
+.duel-header-left {
+    justify-content: flex-start;
+    padding-left: 10px;
+}
+
+.duel-header-right {
+    justify-content: flex-end;
+    padding-right: 10px;
+}
+
+/* Name + rank stacked within the header row */
+.duel-header-left .duel-manager-name,
+.duel-header-right .duel-manager-name {
+    margin: 0;
+}
+
+.duel-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* VS: slight upward pull for visual centering with portrait */
+.duel-header-center .duel-vs {
+    margin-top: -8px;
+}

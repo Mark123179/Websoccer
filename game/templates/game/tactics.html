@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-29">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-30">
 {% endblock %}
 
 {% block content %}
@@ -509,15 +509,25 @@
                 {% endif %}
                 <div class="manager-duel-overlay">
                     <header class="duel-header-left">
-                        <div class="duel-manager-name">{{ manager_duel.home }}</div>
-                        <div class="duel-manager-rank duel-rank-left">{{ manager_duel.home_rank }}</div>
+                        <img class="duel-header-portrait"
+                             src="{% if manager_duel.home_avatar %}{% static manager_duel.home_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
+                             alt="{{ manager_duel.home }}">
+                        <div class="duel-header-info">
+                            <div class="duel-manager-name">{{ manager_duel.home }}</div>
+                            <div class="duel-manager-rank duel-rank-left">{{ manager_duel.home_rank }}</div>
+                        </div>
                     </header>
                     <div class="duel-header-center">
                         <div class="duel-vs">VS.</div>
                     </div>
                     <header class="duel-header-right">
-                        <div class="duel-manager-name">{{ manager_duel.away }}</div>
-                        <div class="duel-manager-rank duel-rank-right">{{ manager_duel.away_rank }}</div>
+                        <div class="duel-header-info">
+                            <div class="duel-manager-name">{{ manager_duel.away }}</div>
+                            <div class="duel-manager-rank duel-rank-right">{{ manager_duel.away_rank }}</div>
+                        </div>
+                        <img class="duel-header-portrait"
+                             src="{% if manager_duel.away_avatar %}{% static manager_duel.away_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
+                             alt="{{ manager_duel.away }}">
                     </header>
                     {% for row in manager_duel.rows %}
                         <div class="duel-stat-left is-{{ row.left_tone }}">{{ row.left }}</div>
