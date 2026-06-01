@@ -492,7 +492,16 @@ class ClubTrophy(models.Model):
         verbose_name_plural = 'Vereinstitel'
 
     COMPETITION_DEFAULT_ASSETS = {
-        'Intercontinental': 'international-cup-1',
+        'Intercontinental':  'international-cup-1',
+        'Champions League':  '1301394',
+        'Copa Libertadores': 'continental cup 1',
+        'Europa League':     'continental cup 1',
+        'Klub-WM':           '1001959',
+        'Bundesliga':        '22',
+        'DFB-Pokal':         '1301410',
+        'DFL-Supercup':      '1301397',
+        'Supercup':          '1301397',
+        'DFB-Ligapokal':     '100',
     }
 
     def save(self, *args, **kwargs):
