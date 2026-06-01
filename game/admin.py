@@ -284,6 +284,7 @@ class ClubTrophyAdmin(admin.ModelAdmin):
         'count',
         'sort_order',
     )
+    list_editable = ('count',)
     list_filter = ('club',)
     search_fields = (
         'club__name',
