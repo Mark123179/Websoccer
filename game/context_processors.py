@@ -21,11 +21,18 @@ def current_manager(request):
     if manager_profile_obj:
         manager_name = manager_profile_obj.name
         trainer_type_label = manager_profile_obj.trainer_type_label
-        profile_image = manager_profile_obj.profile_image or CURRENT_MANAGER_PROFILE_IMAGE
+        _raw = manager_profile_obj.profile_image or ''
+        if _raw and not _raw.startswith('game/'):
+            from django.conf import settings as _settings
+            profile_image_url = _settings.MEDIA_URL + _raw
+        else:
+            from django.templatetags.static import static as _static
+            profile_image_url = _static(_raw or CURRENT_MANAGER_PROFILE_IMAGE)
     else:
         manager_name = 'Manager'
         trainer_type_label = 'Laptoptrainer'
-        profile_image = CURRENT_MANAGER_PROFILE_IMAGE
+        from django.templatetags.static import static as _static
+        profile_image_url = _static(CURRENT_MANAGER_PROFILE_IMAGE)
 
     return {
         'current_manager': {
@@ -35,6 +42,6 @@ def current_manager(request):
             'club_url': f'/clubs/{club.id}/' if club else '/clubs/',
             'tactics_url': f'/clubs/{club.id}/tactics/?squad=pro' if club else '/clubs/',
             'club_crest': club.crest_static_path if club else 'game/images/crests/915.png',
-            'profile_image': profile_image,
+            'profile_image': profile_image_url,
         }
     }

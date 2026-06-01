@@ -18,8 +18,8 @@
     <header class="mp-header">
         <div class="mp-header-identity">
             <div class="mp-avatar-wrap">
-                <img src="{% static manager.profile_image %}" alt="{{ manager.name }}">
-                <button class="mp-avatar-edit" type="button" aria-label="Profilbild ändern">
+                <img src="{{ manager.profile_image_url }}" alt="{{ manager.name }}" id="mpAvatarHeaderImg">
+                <button class="mp-avatar-edit" type="button" aria-label="Profilbild ändern" id="mpAvatarEditBtn">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                         <path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/>
                     </svg>
@@ -279,7 +279,7 @@
                 </header>
                 <div class="mp-badges-inner">
                     <div class="mp-badges-portrait">
-                        <img src="{% static manager.profile_image %}" alt="{{ manager.name }}">
+                        <img src="{{ manager.profile_image_url }}" alt="{{ manager.name }}" id="mpAvatarBadgeImg">
                     </div>
                     <div class="mp-badges-club-block">
                         <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-badges-crest">
@@ -1387,6 +1387,71 @@
         setTimeout(openModal, 300);
     });
     {% endif %}
+})();
+</script>
+{% endif %}
+
+{% if can_edit_profile %}
+<input type="file" id="mpAvatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+<div class="mp-avatar-upload-toast" id="mpAvatarToast" aria-live="polite"></div>
+<script>
+(function () {
+    const editBtn   = document.getElementById('mpAvatarEditBtn');
+    const fileInput = document.getElementById('mpAvatarFileInput');
+    const toast     = document.getElementById('mpAvatarToast');
+    if (!editBtn || !fileInput) return;
+
+    function showToast(msg, isError) {
+        toast.textContent = msg;
+        toast.className = 'mp-avatar-upload-toast' + (isError ? ' mp-avatar-upload-toast--error' : ' mp-avatar-upload-toast--ok');
+        toast.style.display = 'block';
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { toast.style.display = 'none'; }, 4000);
+    }
+
+    editBtn.addEventListener('click', function () {
+        fileInput.value = '';
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function () {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Datei zu groß. Maximum: 5 MB', true);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        editBtn.disabled = true;
+
+        fetch('{% url "upload_profile_image" %}', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            editBtn.disabled = false;
+            if (data.url) {
+                const cache = '?v=' + Date.now();
+                const hdr = document.getElementById('mpAvatarHeaderImg');
+                const bdg = document.getElementById('mpAvatarBadgeImg');
+                if (hdr) hdr.src = data.url + cache;
+                if (bdg) bdg.src = data.url + cache;
+                showToast('Profilbild gespeichert!', false);
+            } else {
+                showToast(data.error || 'Fehler beim Speichern', true);
+            }
+        })
+        .catch(function () {
+            editBtn.disabled = false;
+            showToast('Netzwerkfehler – bitte versuche es erneut.', true);
+        });
+    });
 })();
 </script>
 {% endif %}

@@ -3051,7 +3051,13 @@ def manager_profile(request):
         if request.user.is_authenticated and request.user.last_login
         else '–'
     )
-    profile_image = manager_profile_obj.profile_image or 'game/images/managers/kirschgutzje-test.png'
+    _raw_image = manager_profile_obj.profile_image or ''
+    if _raw_image and not _raw_image.startswith('game/'):
+        from django.conf import settings as _settings
+        profile_image_url = request.build_absolute_uri(_settings.MEDIA_URL + _raw_image)
+    else:
+        from django.templatetags.static import static as _static
+        profile_image_url = _static(_raw_image or 'game/images/managers/kirschgutzje-test.png')
 
     city_coords_json = json.dumps({k: list(v) for k, v in EUROPEAN_CITY_COORDS.items()})
 
@@ -3083,7 +3089,7 @@ def manager_profile(request):
             'club_since': '15. Aug. 2023',
             'club_season': '3. Saison',
             'member_since': member_since_display,
-            'profile_image': profile_image,
+            'profile_image_url': profile_image_url,
             'level': manager_profile_obj.level,
             'xp': manager_profile_obj.xp,
             'xp_max': manager_profile_obj.xp_max,
@@ -3349,6 +3355,48 @@ def delete_career_station(request):
         return JsonResponse({'ok': False, 'error': 'Station nicht gefunden'}, status=404)
 
     return JsonResponse({'ok': True})
+
+
+@login_required
+def upload_profile_image(request):
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+
+    file = request.FILES.get('image')
+    if not file:
+        return JsonResponse({'error': 'Keine Datei hochgeladen'}, status=400)
+
+    allowed_types = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
+    if file.content_type not in allowed_types:
+        return JsonResponse({'error': 'Ungültiges Format. Erlaubt: JPG, PNG, GIF, WebP'}, status=400)
+
+    max_size = 5 * 1024 * 1024
+    if file.size > max_size:
+        return JsonResponse({'error': 'Datei zu groß. Maximum: 5 MB'}, status=400)
+
+    ext_map = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp'}
+    ext = ext_map.get(file.content_type, '.jpg')
+
+    from django.conf import settings as _settings
+    rel_path = f'managers/{request.user.id}/avatar{ext}'
+    save_path = os.path.join(_settings.MEDIA_ROOT, rel_path)
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+    with open(save_path, 'wb+') as dest:
+        for chunk in file.chunks():
+            dest.write(chunk)
+
+    from .models import ManagerProfile
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+    profile.profile_image = rel_path
+    profile.save(update_fields=['profile_image'])
+
+    image_url = request.build_absolute_uri(_settings.MEDIA_URL + rel_path)
+    return JsonResponse({'url': image_url})
 
 
 def update_manager_profile(request):

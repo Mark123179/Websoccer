@@ -30,7 +30,7 @@
 
     <nav class="navbar" aria-label="Hauptnavigation">
         <a class="manager-profile" href="{% url 'manager_profile' %}">
-            <img class="manager-avatar" src="{% static current_manager.profile_image %}" alt="{{ current_manager.name }}">
+            <img class="manager-avatar" src="{{ current_manager.profile_image }}" alt="{{ current_manager.name }}">
             <span class="manager-copy">
                 <span>Manager</span>
                 <strong>{{ current_manager.name }}</strong>
