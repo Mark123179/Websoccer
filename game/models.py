@@ -491,6 +491,15 @@ class ClubTrophy(models.Model):
         verbose_name = 'Vereinstitel'
         verbose_name_plural = 'Vereinstitel'
 
+    COMPETITION_DEFAULT_ASSETS = {
+        'Intercontinental': 'international-cup-1',
+    }
+
+    def save(self, *args, **kwargs):
+        if not self.trophy_asset_id and self.competition_name in self.COMPETITION_DEFAULT_ASSETS:
+            self.trophy_asset_id = self.COMPETITION_DEFAULT_ASSETS[self.competition_name]
+        super().save(*args, **kwargs)
+
     @property
     def trophy_static_path(self):
         from .player_assets import get_cached_trophy_static_path
