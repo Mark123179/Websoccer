@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import date, timedelta
+from django.db import models as _db_models
 from itertools import product
 
 from django.contrib import messages
@@ -68,6 +69,288 @@ from .tactics import (
     validate_formation,
     validate_substitutions,
 )
+
+
+EUROPEAN_CITY_COORDS = {
+    # Germany
+    'münchen': (271, 214), 'munich': (271, 214),
+    'berlin': (285, 155),
+    'hamburg': (254, 133),
+    'frankfurt': (252, 182),
+    'köln': (238, 168), 'cologne': (238, 168),
+    'dortmund': (240, 160),
+    'düsseldorf': (235, 163),
+    'stuttgart': (258, 200),
+    'leipzig': (280, 162),
+    'hannover': (254, 150),
+    'bremen': (247, 140),
+    'dresden': (292, 168),
+    'nürnberg': (268, 195), 'nuremberg': (268, 195),
+    'bochum': (239, 162),
+    'wuppertal': (237, 165),
+    'bielefeld': (247, 155),
+    'bonn': (234, 172),
+    'mannheim': (252, 195),
+    'karlsruhe': (250, 200),
+    'augsburg': (264, 210),
+    'mönchengladbach': (232, 165),
+    'gelsenkirchen': (238, 160),
+    'freiburg': (248, 210),
+    'kiel': (257, 120),
+    'magdeburg': (278, 148),
+    'erfurt': (272, 168),
+    'mainz': (248, 185),
+    'kaiserslautern': (244, 192),
+    'saarbrücken': (240, 196),
+    # Austria
+    'wien': (308, 200), 'vienna': (308, 200),
+    'salzburg': (284, 209),
+    'graz': (305, 214),
+    'innsbruck': (272, 217),
+    'linz': (294, 203),
+    'klagenfurt': (296, 220),
+    # Switzerland
+    'zürich': (255, 210), 'zurich': (255, 210),
+    'basel': (247, 207),
+    'bern': (250, 215),
+    'genf': (240, 222), 'geneva': (240, 222),
+    'lausanne': (244, 220),
+    'luzern': (252, 213),
+    # France
+    'paris': (218, 190),
+    'lyon': (232, 220),
+    'marseille': (236, 240),
+    'bordeaux': (206, 228),
+    'lille': (220, 170),
+    'nantes': (198, 212),
+    'strasbourg': (248, 196),
+    'nice': (247, 240),
+    'toulouse': (215, 238),
+    'rennes': (200, 198),
+    'montpellier': (232, 242),
+    'saint-étienne': (232, 224),
+    'lens': (218, 168),
+    'metz': (237, 185),
+    'nancy': (237, 187),
+    'grenoble': (240, 228),
+    # Spain
+    'madrid': (165, 258),
+    'barcelona': (205, 248),
+    'sevilla': (143, 272), 'seville': (143, 272),
+    'valencia': (190, 258),
+    'bilbao': (174, 238),
+    'zaragoza': (184, 250),
+    'málaga': (158, 280), 'malaga': (158, 280),
+    'alicante': (190, 265),
+    'córdoba': (158, 268), 'cordoba': (158, 268),
+    'granada': (162, 272),
+    'murcia': (186, 268),
+    'valladolid': (158, 245),
+    'athletic bilbao': (174, 238),
+    'san sebastián': (176, 234), 'san sebastian': (176, 234),
+    'pamplona': (180, 242),
+    'vigo': (140, 244),
+    'las palmas': (100, 298),
+    # Portugal
+    'lisboa': (132, 268), 'lisbon': (132, 268),
+    'porto': (140, 252),
+    'braga': (140, 248),
+    'guimarães': (141, 250),
+    'setúbal': (130, 272),
+    # Italy
+    'roma': (285, 248), 'rome': (285, 248),
+    'milano': (263, 220), 'milan': (263, 220),
+    'napoli': (296, 258), 'naples': (296, 258),
+    'torino': (252, 224), 'turin': (252, 224),
+    'venezia': (280, 223), 'venice': (280, 223),
+    'firenze': (275, 238), 'florence': (275, 238),
+    'bologna': (272, 230),
+    'palermo': (284, 274),
+    'genova': (257, 230), 'genoa': (257, 230),
+    'bari': (308, 258),
+    'catania': (290, 278),
+    'verona': (272, 222),
+    'bergamo': (264, 220),
+    'brescia': (268, 222),
+    'lecce': (316, 264),
+    'parma': (268, 228),
+    'reggio calabria': (294, 272),
+    # England
+    'london': (195, 164),
+    'manchester': (185, 145),
+    'liverpool': (181, 148),
+    'birmingham': (190, 155),
+    'leeds': (190, 141),
+    'newcastle': (186, 130),
+    'bristol': (184, 163),
+    'sheffield': (190, 145),
+    'leicester': (193, 153),
+    'southampton': (192, 167),
+    'portsmouth': (192, 168),
+    'nottingham': (193, 150),
+    'wolverhampton': (187, 155),
+    'sunderland': (188, 133),
+    'brighton': (196, 168),
+    'coventry': (191, 155),
+    'middlesbrough': (190, 135),
+    'stoke': (188, 151),
+    'derby': (192, 150),
+    # Scotland
+    'glasgow': (172, 118),
+    'edinburgh': (180, 122),
+    'aberdeen': (178, 108),
+    'dundee': (178, 114),
+    # Wales
+    'cardiff': (181, 160),
+    # Ireland
+    'dublin': (163, 148),
+    'cork': (156, 160),
+    # Netherlands
+    'amsterdam': (228, 150),
+    'rotterdam': (224, 158),
+    'eindhoven': (229, 162),
+    'utrecht': (226, 154),
+    'den haag': (222, 156), 'the hague': (222, 156),
+    'tilburg': (226, 162),
+    'groningen': (236, 138),
+    'alkmaar': (225, 146),
+    'breda': (224, 163),
+    'nijmegen': (230, 160),
+    'heerenveen': (232, 138),
+    'arnhem': (230, 158),
+    'enschede': (236, 158),
+    'sittard': (228, 168),
+    'venlo': (230, 164),
+    # Belgium
+    'brüssel': (220, 163), 'brussels': (220, 163),
+    'antwerpen': (218, 158), 'antwerp': (218, 158),
+    'brügge': (215, 162), 'bruges': (215, 162),
+    'gent': (218, 162), 'ghent': (218, 162),
+    'liège': (223, 165), 'liege': (223, 165),
+    'anderlecht': (220, 163),
+    'mechelen': (218, 160),
+    'sint-truiden': (222, 166),
+    'charleroi': (220, 168),
+    # Czech Republic
+    'prag': (292, 172), 'prague': (292, 172),
+    'brno': (304, 185),
+    'ostrava': (310, 172),
+    'plzen': (285, 177), 'pilsen': (285, 177),
+    # Poland
+    'warszawa': (326, 152), 'warsaw': (326, 152),
+    'krakau': (318, 172), 'krakow': (318, 172), 'kraków': (318, 172),
+    'gdansk': (305, 132), 'danzig': (305, 132),
+    'wroclaw': (305, 162), 'breslau': (305, 162), 'wrocław': (305, 162),
+    'lodz': (316, 155), 'łódź': (316, 155),
+    'poznan': (300, 148), 'poznań': (300, 148),
+    'szczecin': (292, 136),
+    'bydgoszcz': (305, 144),
+    'lublin': (332, 158),
+    'katowice': (312, 170),
+    'rzeszów': (325, 172),
+    'białystok': (336, 144),
+    # Hungary
+    'budapest': (316, 202),
+    'debrecen': (335, 198),
+    'miskolc': (325, 190),
+    'győr': (308, 196),
+    # Romania
+    'bukarest': (355, 212), 'bucharest': (355, 212), 'bucurești': (355, 212),
+    'cluj': (338, 192), 'cluj-napoca': (338, 192),
+    'timisoara': (330, 206), 'timișoara': (330, 206),
+    'iași': (360, 190), 'iasi': (360, 190),
+    'constanta': (372, 220), 'constanța': (372, 220),
+    'brasov': (348, 202), 'brașov': (348, 202),
+    # Serbia
+    'belgrad': (325, 222), 'belgrade': (325, 222), 'beograd': (325, 222),
+    'novi sad': (318, 215),
+    # Croatia
+    'zagreb': (306, 222),
+    'split': (302, 240),
+    'rijeka': (296, 228),
+    'osijek': (318, 218),
+    # Greece
+    'athen': (342, 272), 'athens': (342, 272), 'athina': (342, 272),
+    'thessaloniki': (334, 252),
+    'patras': (328, 272),
+    'heraklion': (344, 295),
+    # Turkey
+    'istanbul': (375, 242),
+    'ankara': (400, 252),
+    'izmir': (375, 262),
+    'bursa': (380, 248),
+    'adana': (405, 265),
+    'trabzon': (420, 250),
+    # Denmark
+    'kopenhagen': (272, 120), 'copenhagen': (272, 120), 'københavn': (272, 120),
+    'aarhus': (262, 108),
+    'odense': (258, 118),
+    'aalborg': (257, 106),
+    # Sweden
+    'stockholm': (308, 100),
+    'göteborg': (268, 110), 'gothenburg': (268, 110),
+    'malmö': (272, 122),
+    'uppsala': (308, 96),
+    'norrköping': (295, 104),
+    'örebro': (286, 102),
+    'helsingborg': (268, 118),
+    # Norway
+    'oslo': (266, 90),
+    'bergen': (246, 92),
+    'trondheim': (260, 75),
+    'stavanger': (240, 98),
+    # Finland
+    'helsinki': (330, 90),
+    'tampere': (326, 80),
+    'turku': (318, 90),
+    'oulu': (326, 70),
+    # Iceland
+    'reykjavik': (110, 76),
+    # Russia
+    'moskau': (410, 125), 'moscow': (410, 125), 'moskva': (410, 125),
+    'st. petersburg': (380, 100), 'saint petersburg': (380, 100),
+    'kasan': (460, 120), 'kazan': (460, 120),
+    # Ukraine
+    'kiew': (368, 170), 'kyiv': (368, 170), 'kiev': (368, 170),
+    'charkiw': (388, 162), 'kharkiv': (388, 162),
+    'dnipro': (385, 182),
+    'odessa': (375, 196),
+    'lemberg': (345, 175), 'lviv': (345, 175),
+    'donezk': (398, 178), 'donetsk': (398, 178),
+    'saporischschja': (390, 186), 'zaporizhzhia': (390, 186),
+    # Slovakia
+    'bratislava': (306, 192),
+    'košice': (325, 183), 'kosice': (325, 183),
+    # Slovenia
+    'ljubljana': (298, 224),
+    # Bosnia
+    'sarajevo': (314, 234),
+    # Montenegro
+    'podgorica': (318, 242),
+    # Albania
+    'tirana': (321, 248),
+    # North Macedonia
+    'skopje': (330, 242),
+    # Bulgaria
+    'sofia': (335, 232),
+    'plovdiv': (346, 238),
+    'varna': (366, 228),
+    # Latvia
+    'riga': (338, 118),
+    # Lithuania
+    'vilnius': (342, 132),
+    'kaunas': (334, 130),
+    # Estonia
+    'tallinn': (334, 108),
+    # Belarus
+    'minsk': (352, 142),
+    # Moldova
+    'chisinau': (360, 195), 'chișinău': (360, 195),
+    # Luxembourg
+    'luxemburg': (230, 175), 'luxembourg': (230, 175),
+    # Cyprus
+    'nikosia': (406, 282), 'nicosia': (406, 282),
+}
 
 
 def decimal_number(value):
@@ -2690,9 +2973,10 @@ def manager_profile(request):
                 st.started_at, st.ended_at, station_games, trophy_total
             )
             map_stations.append({
+                'id': st.id,
                 'city': city_display,
                 'country': st.city_country,
-                'club': station_club_name,
+                'club': st.custom_club_name or station_club_name,
                 'crest': station_crest,
                 'x': st.map_x,
                 'y': st.map_y,
@@ -2703,6 +2987,9 @@ def manager_profile(request):
                 'titles': trophy_total,
                 'club_url': station_club_url,
                 'season_breakdown_json': json.dumps(season_rows),
+                'started_year': st.started_at.year if st.started_at else '',
+                'ended_year': st.ended_at.year if st.ended_at else '',
+                'has_club_fk': bool(st.club_id),
             })
     else:
         # Fallback: single station from ClubPublicProfile
@@ -2766,6 +3053,8 @@ def manager_profile(request):
         else '–'
     )
     profile_image = manager_profile_obj.profile_image or 'game/images/managers/kirschgutzje-test.png'
+
+    city_coords_json = json.dumps({k: list(v) for k, v in EUROPEAN_CITY_COORDS.items()})
 
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
@@ -2842,6 +3131,7 @@ def manager_profile(request):
         'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
         'current_nationality': manager_profile_obj.nationality_name,
         'can_edit_profile': request.user.is_authenticated,
+        'city_coords_json': city_coords_json,
     })
 
 
@@ -2950,6 +3240,117 @@ def set_trainer_type(request):
 
     from django.shortcuts import redirect
     return redirect('manager_profile')
+
+
+def save_career_station(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Method not allowed'}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({'ok': False, 'error': 'Nicht angemeldet'}, status=401)
+
+    from .models import ManagerProfile, ManagerCareerStation
+
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+
+    station_id = request.POST.get('station_id', '').strip()
+    club_name = request.POST.get('club_name', '').strip()
+    city_name = request.POST.get('city_name', '').strip()
+    city_country = request.POST.get('city_country', '').strip()
+    started_year = request.POST.get('started_year', '').strip()
+    ended_year = request.POST.get('ended_year', '').strip()
+    games_played = request.POST.get('games_played', '0').strip()
+    map_x = request.POST.get('map_x', '271').strip()
+    map_y = request.POST.get('map_y', '214').strip()
+
+    if not club_name or not city_name:
+        return JsonResponse({'ok': False, 'error': 'Verein und Stadt sind Pflichtfelder'}, status=400)
+
+    try:
+        started_at = date(int(started_year), 1, 1) if started_year else None
+    except (ValueError, TypeError):
+        started_at = None
+
+    try:
+        ended_at = date(int(ended_year), 12, 31) if ended_year else None
+    except (ValueError, TypeError):
+        ended_at = None
+
+    try:
+        games_played_int = max(0, int(games_played))
+    except (ValueError, TypeError):
+        games_played_int = 0
+
+    try:
+        map_x_int = max(0, min(500, int(map_x)))
+        map_y_int = max(0, min(380, int(map_y)))
+    except (ValueError, TypeError):
+        map_x_int, map_y_int = 271, 214
+
+    if station_id:
+        try:
+            station = ManagerCareerStation.objects.get(id=station_id, manager=profile)
+        except ManagerCareerStation.DoesNotExist:
+            return JsonResponse({'ok': False, 'error': 'Station nicht gefunden'}, status=404)
+        station.custom_club_name = club_name
+        station.city_name = city_name
+        station.city_country = city_country
+        station.started_at = started_at
+        station.ended_at = ended_at
+        station.games_played = games_played_int
+        station.map_x = map_x_int
+        station.map_y = map_y_int
+        station.save(update_fields=[
+            'custom_club_name', 'city_name', 'city_country',
+            'started_at', 'ended_at', 'games_played', 'map_x', 'map_y',
+        ])
+    else:
+        max_order = (
+            ManagerCareerStation.objects.filter(manager=profile)
+            .aggregate(m=_db_models.Max('order'))['m'] or 0
+        )
+        station = ManagerCareerStation.objects.create(
+            manager=profile,
+            custom_club_name=club_name,
+            city_name=city_name,
+            city_country=city_country,
+            started_at=started_at,
+            ended_at=ended_at,
+            games_played=games_played_int,
+            map_x=map_x_int,
+            map_y=map_y_int,
+            order=max_order + 1,
+        )
+
+    return JsonResponse({'ok': True, 'id': station.id})
+
+
+def delete_career_station(request):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Method not allowed'}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({'ok': False, 'error': 'Nicht angemeldet'}, status=401)
+
+    from .models import ManagerProfile, ManagerCareerStation
+
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+
+    station_id = request.POST.get('station_id', '').strip()
+    if not station_id:
+        return JsonResponse({'ok': False, 'error': 'ID fehlt'}, status=400)
+
+    try:
+        station = ManagerCareerStation.objects.get(id=station_id, manager=profile)
+        station.delete()
+    except ManagerCareerStation.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Station nicht gefunden'}, status=404)
+
+    return JsonResponse({'ok': True})
 
 
 def update_manager_profile(request):

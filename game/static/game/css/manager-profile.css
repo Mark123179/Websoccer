@@ -2341,3 +2341,222 @@ body.manager-profile-page .nav-menu a:first-child {
     justify-content: flex-end;
     margin-top: 6px;
 }
+
+
+/* ── CAREER STATION EDIT DRAWER ── */
+.mp-station-edit-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0;
+}
+
+.mp-career-edit-drawer {
+    border-top: 1px solid rgba(138, 92, 246, 0.18);
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 16px;
+    padding-top: 16px;
+}
+
+.mp-career-edit-drawer.is-open {
+    display: flex;
+}
+
+.mp-career-edit-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.mp-career-edit-header strong {
+    color: #f0f6ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.mp-career-edit-close {
+    background: none;
+    border: none;
+    color: rgba(200, 210, 240, 0.5);
+    cursor: pointer;
+    height: 24px;
+    padding: 2px;
+    width: 24px;
+}
+
+.mp-career-edit-close:hover {
+    color: #f0f6ff;
+}
+
+.mp-career-edit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 10px;
+}
+
+.mp-career-edit-row {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.mp-career-edit-row:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mp-career-edit-row-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.mp-career-edit-row-info strong {
+    color: #eef2ff;
+    font-size: 13px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-career-edit-row-info small {
+    color: rgba(180, 195, 230, 0.55);
+    font-size: 11px;
+}
+
+.mp-career-edit-row-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+.mp-career-edit-row-actions .mp-btn {
+    font-size: 11px;
+    padding: 5px 11px;
+}
+
+.mp-career-edit-empty {
+    color: rgba(180, 195, 230, 0.45);
+    font-size: 13px;
+    padding: 10px 0;
+}
+
+.mp-career-add-btn {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 8px 16px;
+    width: 100%;
+}
+
+.mp-career-add-btn svg {
+    flex-shrink: 0;
+    height: 14px;
+    width: 14px;
+}
+
+.mp-career-form {
+    background: rgba(6, 18, 34, 0.6);
+    border: 1px solid rgba(138, 92, 246, 0.22);
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+    padding: 16px;
+}
+
+.mp-career-form.is-visible {
+    display: flex;
+}
+
+.mp-career-form-header strong {
+    color: #f0f6ff;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.mp-career-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mp-career-form-row {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.mp-career-form-hint {
+    font-size: 11px;
+    min-height: 16px;
+}
+
+.mp-career-form-error {
+    background: rgba(255, 66, 88, 0.12);
+    border: 1px solid rgba(255, 66, 88, 0.35);
+    border-radius: 6px;
+    color: #ff6070;
+    font-size: 12px;
+    padding: 8px 12px;
+}
+
+.mp-city-suggestions {
+    background: rgba(6, 18, 34, 0.98);
+    border: 1px solid rgba(138, 92, 246, 0.3);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    display: none;
+    flex-direction: column;
+    left: 0;
+    max-height: 180px;
+    overflow-y: auto;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 50;
+}
+
+.mp-city-suggestions.is-visible {
+    display: flex;
+}
+
+.mp-city-suggestion-item {
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(220, 230, 255, 0.85);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 9px 12px;
+    text-align: left;
+    transition: background 0.12s;
+}
+
+.mp-city-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.mp-city-suggestion-item:hover {
+    background: rgba(138, 92, 246, 0.14);
+    color: #f0f6ff;
+}

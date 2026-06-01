@@ -1964,6 +1964,7 @@ class ManagerCareerStation(models.Model):
         related_name='manager_career_stations',
     )
     order = models.PositiveSmallIntegerField(default=1)
+    custom_club_name = models.CharField(max_length=150, blank=True)
     city_name = models.CharField(max_length=120)
     city_country = models.CharField(max_length=100, blank=True)
     map_x = models.PositiveSmallIntegerField(default=271)

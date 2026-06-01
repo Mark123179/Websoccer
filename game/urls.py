@@ -14,6 +14,8 @@ from .views import (
     manager_profile,
     set_trainer_type,
     update_manager_profile,
+    save_career_station,
+    delete_career_station,
     player_detail,
     player_graph_data,
 )
@@ -110,6 +112,8 @@ urlpatterns = [
     path('manager/profil/', manager_profile, name='manager_profile'),
     path('manager/set-type/', set_trainer_type, name='set_trainer_type'),
     path('manager/update-profile/', update_manager_profile, name='update_manager_profile'),
+    path('manager/career-station/save/', save_career_station, name='save_career_station'),
+    path('manager/career-station/delete/', delete_career_station, name='delete_career_station'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

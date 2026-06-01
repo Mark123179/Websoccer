@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-36">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-37">
 {% endblock %}
 
 {% block content %}
@@ -369,6 +369,11 @@
             <article class="mp-card mp-card-euromap">
                 <header class="mp-card-header">
                     <h3>Trainerstationen · Europa</h3>
+                    {% if can_edit_profile %}
+                    <button class="mp-card-link mp-station-edit-toggle" id="mpStationEditToggle" type="button">
+                        Bearbeiten
+                    </button>
+                    {% endif %}
                 </header>
                 <div class="mp-euromap-wrap">
                     <div class="mp-euromap-svg-wrap">
@@ -472,6 +477,99 @@
                         <div class="mp-station-panel-seasons" id="mpStationPanelSeasons"></div>
                     </div>
                 </div>
+
+                {% if can_edit_profile %}
+                <div class="mp-career-edit-drawer" id="mpCareerEditDrawer" aria-hidden="true">
+                    <div class="mp-career-edit-header">
+                        <strong>Karrierestationen bearbeiten</strong>
+                        <button class="mp-career-edit-close" id="mpCareerEditClose" aria-label="Schließen">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="mp-career-edit-list" id="mpCareerEditList">
+                        {% for station in map_stations %}
+                        <div class="mp-career-edit-row" data-station-id="{{ station.id }}">
+                            <div class="mp-career-edit-row-info">
+                                <strong>{{ station.club }}</strong>
+                                <small>{{ station.city }}, {{ station.country }}{% if station.started_year %} · {{ station.started_year }}–{% if station.ended_year %}{{ station.ended_year }}{% else %}heute{% endif %}{% endif %}</small>
+                            </div>
+                            <div class="mp-career-edit-row-actions">
+                                <button class="mp-btn mp-btn-secondary mp-career-edit-btn"
+                                        type="button"
+                                        data-station-id="{{ station.id }}"
+                                        data-club="{{ station.club }}"
+                                        data-city="{{ station.city }}"
+                                        data-country="{{ station.country }}"
+                                        data-started="{{ station.started_year }}"
+                                        data-ended="{{ station.ended_year }}"
+                                        data-games="{{ station.games }}"
+                                        data-x="{{ station.x }}"
+                                        data-y="{{ station.y }}">
+                                    Bearbeiten
+                                </button>
+                                <button class="mp-btn mp-btn-danger mp-career-delete-btn" type="button" data-station-id="{{ station.id }}">
+                                    Löschen
+                                </button>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="mp-career-edit-empty">Noch keine Stationen eingetragen.</p>
+                        {% endfor %}
+                    </div>
+
+                    <button class="mp-btn mp-btn-ghost mp-career-add-btn" id="mpCareerAddBtn" type="button">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+                        Station hinzufügen
+                    </button>
+
+                    <div class="mp-career-form" id="mpCareerForm" aria-hidden="true">
+                        <div class="mp-career-form-header">
+                            <strong id="mpCareerFormTitle">Neue Station</strong>
+                        </div>
+                        <input type="hidden" id="mpCareerFormStationId" value="">
+                        <div class="mp-career-form-grid">
+                            <label class="mp-edit-label">
+                                <span>Vereinsname *</span>
+                                <input type="text" class="mp-edit-input" id="mpCareerClubName" placeholder="z.B. FC Bayern München" autocomplete="off">
+                            </label>
+                            <label class="mp-edit-label">
+                                <span>Stadt *</span>
+                                <div style="position:relative">
+                                    <input type="text" class="mp-edit-input" id="mpCareerCityName" placeholder="z.B. München" autocomplete="off">
+                                    <div class="mp-city-suggestions" id="mpCitySuggestions"></div>
+                                </div>
+                            </label>
+                            <label class="mp-edit-label">
+                                <span>Land</span>
+                                <input type="text" class="mp-edit-input" id="mpCareerCityCountry" placeholder="z.B. Deutschland" autocomplete="off">
+                            </label>
+                            <div class="mp-career-form-row">
+                                <label class="mp-edit-label">
+                                    <span>Von (Jahr)</span>
+                                    <input type="number" class="mp-edit-input" id="mpCareerStartYear" placeholder="2020" min="1900" max="2100">
+                                </label>
+                                <label class="mp-edit-label">
+                                    <span>Bis (Jahr, leer = heute)</span>
+                                    <input type="number" class="mp-edit-input" id="mpCareerEndYear" placeholder="heute" min="1900" max="2100">
+                                </label>
+                            </div>
+                            <label class="mp-edit-label">
+                                <span>Spiele</span>
+                                <input type="number" class="mp-edit-input" id="mpCareerGames" placeholder="0" min="0">
+                            </label>
+                        </div>
+                        <input type="hidden" id="mpCareerMapX" value="271">
+                        <input type="hidden" id="mpCareerMapY" value="214">
+                        <div class="mp-career-form-hint" id="mpCareerCoordHint"></div>
+                        <div class="mp-edit-modal-actions">
+                            <button class="mp-btn mp-btn-ghost" type="button" id="mpCareerFormCancel">Abbrechen</button>
+                            <button class="mp-btn mp-btn-primary" type="button" id="mpCareerFormSave" style="width:auto">Speichern</button>
+                        </div>
+                        <div class="mp-career-form-error" id="mpCareerFormError" style="display:none"></div>
+                    </div>
+                </div>
+                {% endif %}
             </article>
 
             <article class="mp-card mp-card-trainertypes">
@@ -969,6 +1067,242 @@
 </script>
 
 {% if can_edit_profile %}
+<script>
+(function () {
+    const CITY_COORDS = {{ city_coords_json|safe }};
+    const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+    const drawer    = document.getElementById('mpCareerEditDrawer');
+    const toggle    = document.getElementById('mpStationEditToggle');
+    const closeBtn  = document.getElementById('mpCareerEditClose');
+    const addBtn    = document.getElementById('mpCareerAddBtn');
+    const form      = document.getElementById('mpCareerForm');
+    const formTitle = document.getElementById('mpCareerFormTitle');
+    const cancelBtn = document.getElementById('mpCareerFormCancel');
+    const saveBtn   = document.getElementById('mpCareerFormSave');
+    const errorEl   = document.getElementById('mpCareerFormError');
+    const hintEl    = document.getElementById('mpCareerCoordHint');
+    const suggestions = document.getElementById('mpCitySuggestions');
+
+    const fldStationId   = document.getElementById('mpCareerFormStationId');
+    const fldClubName    = document.getElementById('mpCareerClubName');
+    const fldCityName    = document.getElementById('mpCareerCityName');
+    const fldCityCountry = document.getElementById('mpCareerCityCountry');
+    const fldStartYear   = document.getElementById('mpCareerStartYear');
+    const fldEndYear     = document.getElementById('mpCareerEndYear');
+    const fldGames       = document.getElementById('mpCareerGames');
+    const fldMapX        = document.getElementById('mpCareerMapX');
+    const fldMapY        = document.getElementById('mpCareerMapY');
+
+    if (!drawer || !toggle) return;
+
+    function openDrawer() {
+        drawer.removeAttribute('aria-hidden');
+        drawer.classList.add('is-open');
+        toggle.textContent = 'Schließen';
+    }
+    function closeDrawer() {
+        drawer.setAttribute('aria-hidden', 'true');
+        drawer.classList.remove('is-open');
+        toggle.textContent = 'Bearbeiten';
+        hideForm();
+    }
+
+    toggle.addEventListener('click', () => {
+        if (drawer.classList.contains('is-open')) closeDrawer();
+        else openDrawer();
+    });
+    closeBtn.addEventListener('click', closeDrawer);
+
+    function showForm(title) {
+        formTitle.textContent = title;
+        form.removeAttribute('aria-hidden');
+        form.classList.add('is-visible');
+        errorEl.style.display = 'none';
+        fldClubName.focus();
+    }
+    function hideForm() {
+        form.setAttribute('aria-hidden', 'true');
+        form.classList.remove('is-visible');
+        clearForm();
+    }
+    function clearForm() {
+        fldStationId.value = '';
+        fldClubName.value  = '';
+        fldCityName.value  = '';
+        fldCityCountry.value = '';
+        fldStartYear.value = '';
+        fldEndYear.value   = '';
+        fldGames.value     = '';
+        fldMapX.value = '271';
+        fldMapY.value = '214';
+        hintEl.textContent = '';
+        suggestions.innerHTML = '';
+        suggestions.classList.remove('is-visible');
+    }
+
+    addBtn.addEventListener('click', () => {
+        clearForm();
+        showForm('Neue Station');
+    });
+    cancelBtn.addEventListener('click', hideForm);
+
+    function lookupCoords(cityName) {
+        const key = cityName.trim().toLowerCase();
+        return CITY_COORDS[key] || null;
+    }
+
+    function applyCoords(coords, cityName) {
+        if (coords) {
+            fldMapX.value = coords[0];
+            fldMapY.value = coords[1];
+            hintEl.textContent = `📍 Kartenposition automatisch erkannt für „${cityName}"`;
+            hintEl.style.color = 'var(--mp-green, #17df53)';
+        } else {
+            hintEl.textContent = 'Stadt nicht in der Datenbank — Standardposition wird verwendet.';
+            hintEl.style.color = 'rgba(180,195,230,0.5)';
+            fldMapX.value = '271';
+            fldMapY.value = '214';
+        }
+    }
+
+    let suggestTimeout = null;
+    fldCityName.addEventListener('input', () => {
+        clearTimeout(suggestTimeout);
+        suggestTimeout = setTimeout(() => {
+            const val = fldCityName.value.trim().toLowerCase();
+            if (val.length < 2) {
+                suggestions.innerHTML = '';
+                suggestions.classList.remove('is-visible');
+                return;
+            }
+            const matches = Object.keys(CITY_COORDS).filter(k => k.startsWith(val)).slice(0, 6);
+            if (!matches.length) {
+                suggestions.innerHTML = '';
+                suggestions.classList.remove('is-visible');
+                return;
+            }
+            suggestions.innerHTML = '';
+            matches.forEach(m => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'mp-city-suggestion-item';
+                btn.textContent = m.charAt(0).toUpperCase() + m.slice(1);
+                btn.addEventListener('click', () => {
+                    fldCityName.value = btn.textContent;
+                    suggestions.innerHTML = '';
+                    suggestions.classList.remove('is-visible');
+                    applyCoords(CITY_COORDS[m], btn.textContent);
+                });
+                suggestions.appendChild(btn);
+            });
+            suggestions.classList.add('is-visible');
+        }, 150);
+    });
+
+    fldCityName.addEventListener('blur', () => {
+        setTimeout(() => {
+            suggestions.classList.remove('is-visible');
+            const coords = lookupCoords(fldCityName.value);
+            if (fldCityName.value.trim()) applyCoords(coords, fldCityName.value.trim());
+        }, 200);
+    });
+
+    document.querySelectorAll('.mp-career-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const d = btn.dataset;
+            fldStationId.value   = d.stationId || '';
+            fldClubName.value    = d.club || '';
+            fldCityName.value    = d.city || '';
+            fldCityCountry.value = d.country || '';
+            fldStartYear.value   = d.started || '';
+            fldEndYear.value     = d.ended || '';
+            fldGames.value       = d.games || '';
+            fldMapX.value        = d.x || '271';
+            fldMapY.value        = d.y || '214';
+            const knownCoords = lookupCoords(d.city || '');
+            if (knownCoords) {
+                hintEl.textContent = `📍 Bekannte Stadt: ${d.city}`;
+                hintEl.style.color = 'var(--mp-green, #17df53)';
+            } else {
+                hintEl.textContent = '';
+            }
+            showForm('Station bearbeiten');
+        });
+    });
+
+    document.querySelectorAll('.mp-career-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!confirm('Diese Station wirklich löschen?')) return;
+            const stationId = btn.dataset.stationId;
+            const fd = new FormData();
+            fd.append('station_id', stationId);
+            fetch('/manager/career-station/delete/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF },
+                body: fd,
+            }).then(r => r.json()).then(data => {
+                if (data.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
+                }
+            });
+        });
+    });
+
+    saveBtn.addEventListener('click', () => {
+        const club = fldClubName.value.trim();
+        const city = fldCityName.value.trim();
+        if (!club || !city) {
+            errorEl.textContent = 'Verein und Stadt sind Pflichtfelder.';
+            errorEl.style.display = 'block';
+            return;
+        }
+        errorEl.style.display = 'none';
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Speichert…';
+
+        const coords = lookupCoords(city);
+        if (coords) {
+            fldMapX.value = coords[0];
+            fldMapY.value = coords[1];
+        }
+
+        const fd = new FormData();
+        fd.append('station_id',   fldStationId.value);
+        fd.append('club_name',    club);
+        fd.append('city_name',    city);
+        fd.append('city_country', fldCityCountry.value.trim());
+        fd.append('started_year', fldStartYear.value.trim());
+        fd.append('ended_year',   fldEndYear.value.trim());
+        fd.append('games_played', fldGames.value.trim() || '0');
+        fd.append('map_x',        fldMapX.value);
+        fd.append('map_y',        fldMapY.value);
+
+        fetch('/manager/career-station/save/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': CSRF },
+            body: fd,
+        }).then(r => r.json()).then(data => {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Speichern';
+            if (data.ok) {
+                window.location.reload();
+            } else {
+                errorEl.textContent = 'Fehler: ' + (data.error || 'Unbekannter Fehler');
+                errorEl.style.display = 'block';
+            }
+        }).catch(() => {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Speichern';
+            errorEl.textContent = 'Netzwerkfehler – bitte versuche es erneut.';
+            errorEl.style.display = 'block';
+        });
+    });
+})();
+</script>
+
 <div class="mp-edit-profile-overlay" id="mpEditProfileOverlay" aria-modal="true" role="dialog" aria-label="Profil bearbeiten">
     <div class="mp-edit-profile-modal" id="mpEditProfileModal">
         <header class="mp-edit-modal-header">
