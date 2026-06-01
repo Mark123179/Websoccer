@@ -2560,3 +2560,49 @@ body.manager-profile-page .nav-menu a:first-child {
     background: rgba(138, 92, 246, 0.14);
     color: #f0f6ff;
 }
+
+.mp-onboarding-banner {
+    align-items: center;
+    background: linear-gradient(90deg, rgba(138, 92, 246, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+    border: 1px solid rgba(138, 92, 246, 0.35);
+    border-radius: 10px;
+    color: #c8d2f0;
+    display: flex;
+    font-size: 14px;
+    gap: 12px;
+    margin: 16px 0 0;
+    padding: 14px 18px;
+}
+
+.mp-onboarding-banner svg {
+    color: #a78bfa;
+    flex-shrink: 0;
+    height: 20px;
+    width: 20px;
+}
+
+.mp-onboarding-banner span {
+    flex: 1;
+    line-height: 1.5;
+}
+
+.mp-onboarding-banner strong {
+    color: #f0f6ff;
+}
+
+.mp-onboarding-cta {
+    background: rgba(138, 92, 246, 0.85);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.mp-onboarding-cta:hover {
+    background: rgba(138, 92, 246, 1);
+}

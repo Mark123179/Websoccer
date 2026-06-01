@@ -3130,6 +3130,7 @@ def manager_profile(request):
         'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
         'current_nationality': manager_profile_obj.nationality_name,
         'can_edit_profile': request.user.is_authenticated,
+        'name_is_default': request.user.is_authenticated and (manager_profile_obj.name == request.user.username),
         'city_coords_json': city_coords_json,
     })
 
