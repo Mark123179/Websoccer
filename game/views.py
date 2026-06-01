@@ -3088,11 +3088,7 @@ def manager_profile(request):
             'trainer_type': manager_profile_obj.trainer_type_label,
             'active_type': manager_profile_obj.trainer_type_label,
             'flag': manager_profile_obj.nationality_flag,
-            'flag_url': (
-                manager_profile_obj.nationality_flag
-                if manager_profile_obj.nationality_flag.startswith('http')
-                else ''
-            ),
+            'flag_url': manager_profile_obj.nationality_flag,
             'flag_name': manager_profile_obj.nationality_name,
             'club_name': club_name,
             'club_crest': club_crest,
