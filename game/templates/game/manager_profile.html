@@ -377,7 +377,7 @@
                                 176,180 186,194 172,218 150,224 130,237
                                 110,257 90,274 70,287
                             "/>
-                            <polyline class="mp-map-route mp-map-route-animated" points="197,182 252,204"/>
+                            <polyline class="mp-map-route mp-map-route-animated" points="{% for station in map_stations %}{{ station.x }},{{ station.y }}{% if not forloop.last %} {% endif %}{% endfor %}"/>
                             {% for station in map_stations %}
                             <g class="mp-map-station {% if station.active %}is-active{% endif %}"
                                transform="translate({{ station.x }}, {{ station.y }})"

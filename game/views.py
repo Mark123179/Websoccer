@@ -2641,26 +2641,69 @@ def manager_profile(request):
                 'icon': 'transfer',
             })
 
-    # --- Map stations from ClubPublicProfile ---
-    map_stations = []
-    if club_profile and club_profile.city_name:
-        map_stations.append({
-            'city': club_profile.city_name,
-            'country': club_profile.city_country or '',
-            'club': club_name,
-            'crest': club_crest,
-            'x': 271,
-            'y': 214,
-            'active': True,
-            'period': '15. Aug. 2023 – heute',
-            'order': 1,
-            'games': games,
-            'titles': trophies_count,
-        })
+    # --- Manager profile (needed for career stations and trainer types) ---
+    from .models import ManagerProfile, ManagerCareerStation
+    from django.db.models import Sum as _Sum
+    if request.user.is_authenticated:
+        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'name': request.user.username},
+        )
     else:
+        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+
+    # --- Map stations from ManagerCareerStation (real career history) ---
+    db_stations = list(
+        ManagerCareerStation.objects.filter(manager=manager_profile_obj)
+        .select_related('club', 'club__public_profile')
+        .order_by('order')
+    )
+
+    map_stations = []
+    if db_stations:
+        for st in db_stations:
+            is_active = st.ended_at is None
+            if st.club:
+                station_crest = st.club.crest_static_path
+                station_club_name = st.club.name
+                trophy_total = (
+                    ClubTrophy.objects.filter(club_id=st.club_id)
+                    .aggregate(total=_Sum('count'))['total'] or 0
+                )
+            else:
+                station_crest = club_crest
+                station_club_name = st.city_name
+                trophy_total = 0
+
+            station_games = games if is_active else st.games_played
+
+            city_display = st.city_name
+            if not city_display and st.club:
+                try:
+                    city_display = st.club.public_profile.city_name or st.club.name
+                except Exception:
+                    city_display = st.club.name
+
+            map_stations.append({
+                'city': city_display,
+                'country': st.city_country,
+                'club': station_club_name,
+                'crest': station_crest,
+                'x': st.map_x,
+                'y': st.map_y,
+                'active': is_active,
+                'period': st.period_label,
+                'order': st.order,
+                'games': station_games,
+                'titles': trophy_total,
+            })
+    else:
+        # Fallback: single station from ClubPublicProfile
+        city = (club_profile.city_name if club_profile and club_profile.city_name else 'München')
+        country = (club_profile.city_country if club_profile and club_profile.city_country else 'Deutschland')
         map_stations.append({
-            'city': 'München',
-            'country': 'Deutschland',
+            'city': city,
+            'country': country,
             'club': club_name,
             'crest': club_crest,
             'x': 271,
@@ -2673,14 +2716,6 @@ def manager_profile(request):
         })
 
     # --- Trainer types (db-persisted) ---
-    from .models import ManagerProfile
-    if request.user.is_authenticated:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'name': request.user.username},
-        )
-    else:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
     manager_name = manager_profile_obj.name
     active_type_key = manager_profile_obj.trainer_type
     trainer_types_selectable = [

@@ -20,6 +20,8 @@ from .models import (
     DataSource,
     League,
     Club,
+    ManagerCareerStation,
+    ManagerProfile,
     MatchResult,
     Player,
     PlayerAwardTitle,
@@ -2351,3 +2353,52 @@ admin.site.register(PlayerFormSnapshot, PlayerFormSnapshotAdmin)
 admin.site.register(PlayerSourceRating, PlayerSourceRatingAdmin)
 admin.site.register(PlayerStrengthProfile)
 admin.site.register(StrengthFormulaSettings, StrengthFormulaSettingsAdmin)
+
+
+class ManagerCareerStationInline(admin.TabularInline):
+    model = ManagerCareerStation
+    extra = 0
+    fields = (
+        'order',
+        'club',
+        'city_name',
+        'city_country',
+        'map_x',
+        'map_y',
+        'started_at',
+        'ended_at',
+        'games_played',
+    )
+    ordering = ('order',)
+
+
+@admin.register(ManagerProfile)
+class ManagerProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'user',
+        'trainer_type',
+        'level',
+        'xp',
+        'member_since',
+    )
+    search_fields = ('name', 'user__username')
+    list_filter = ('trainer_type',)
+    inlines = [ManagerCareerStationInline]
+
+
+@admin.register(ManagerCareerStation)
+class ManagerCareerStationAdmin(admin.ModelAdmin):
+    list_display = (
+        'manager',
+        'order',
+        'club',
+        'city_name',
+        'city_country',
+        'started_at',
+        'ended_at',
+        'games_played',
+    )
+    list_filter = ('manager',)
+    search_fields = ('manager__name', 'city_name', 'club__name')
+    ordering = ('manager', 'order')

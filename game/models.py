@@ -1950,3 +1950,56 @@ class ManagerProfile(models.Model):
         return f'{self.xp:,} / {self.xp_max:,} XP'.replace(',', '.')
 
 
+class ManagerCareerStation(models.Model):
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='career_stations',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='manager_career_stations',
+    )
+    order = models.PositiveSmallIntegerField(default=1)
+    city_name = models.CharField(max_length=120)
+    city_country = models.CharField(max_length=100, blank=True)
+    map_x = models.PositiveSmallIntegerField(default=271)
+    map_y = models.PositiveSmallIntegerField(default=214)
+    started_at = models.DateField(null=True, blank=True)
+    ended_at = models.DateField(null=True, blank=True)
+    games_played = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['manager', 'order']
+        verbose_name = 'Manager-Karriere-Station'
+        verbose_name_plural = 'Manager-Karriere-Stationen'
+
+    def __str__(self):
+        return f'{self.manager} – {self.city_name}'
+
+    @property
+    def is_current(self):
+        return self.ended_at is None
+
+    @property
+    def period_label(self):
+        if self.started_at:
+            start = self.started_at.strftime('%-d. %b %Y')
+        else:
+            start = '?'
+        if self.ended_at:
+            end = self.ended_at.strftime('%-d. %b %Y')
+        else:
+            end = 'heute'
+        return f'{start} – {end}'
+
+    @property
+    def titles_count(self):
+        if self.club_id:
+            from django.db.models import Sum
+            result = ClubTrophy.objects.filter(club_id=self.club_id).aggregate(total=Sum('count'))
+            return result['total'] or 0
+        return 0
