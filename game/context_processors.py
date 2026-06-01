@@ -16,7 +16,7 @@ def current_manager(request):
             defaults={'name': request.user.username},
         )
     else:
-        manager_profile_obj = ManagerProfile.objects.filter(name='Kirschgutzje').first()
+        manager_profile_obj = None
 
     if manager_profile_obj:
         manager_name = manager_profile_obj.name

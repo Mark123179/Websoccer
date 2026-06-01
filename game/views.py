@@ -6,6 +6,7 @@ from itertools import product
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles import finders
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -2664,6 +2665,7 @@ def player_graph_data(request, player_id):
     })
 
 
+@login_required
 def manager_profile(request):
     tab = request.GET.get('tab', 'profil')
 
@@ -2928,13 +2930,10 @@ def manager_profile(request):
     # --- Manager profile (needed for career stations and trainer types) ---
     from .models import ManagerProfile, ManagerCareerStation, COUNTRY_FLAG_ASSETS
     from django.db.models import Sum as _Sum
-    if request.user.is_authenticated:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'name': request.user.username},
-        )
-    else:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+    manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
 
     # --- Map stations from ManagerCareerStation (real career history) ---
     db_stations = list(
@@ -3215,6 +3214,7 @@ def _get_unlocked_achievement_keys():
     return {t['key'] for t in _build_trainer_types_unlockable(club) if t['unlocked']}
 
 
+@login_required
 def set_trainer_type(request):
     if request.method != 'POST':
         from django.http import HttpResponseNotAllowed
@@ -3228,13 +3228,10 @@ def set_trainer_type(request):
     allowed = _ALWAYS_SELECTABLE_KEYS | _get_unlocked_achievement_keys()
     if key in allowed:
         from .models import ManagerProfile
-        if request.user.is_authenticated:
-            profile, _ = ManagerProfile.objects.get_or_create(
-                user=request.user,
-                defaults={'name': request.user.username},
-            )
-        else:
-            profile, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+        profile, _ = ManagerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'name': request.user.username},
+        )
         profile.trainer_type = key
         profile.save(update_fields=['trainer_type', 'updated_at'])
 
