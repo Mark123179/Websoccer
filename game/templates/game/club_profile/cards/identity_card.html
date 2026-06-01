@@ -19,7 +19,7 @@
             <h1>{{ profile.club.name }}</h1>
             <span class="club-meta-line">
                 {% if profile.club.countryFlagUrl %}
-                    <img src="{% static profile.club.countryFlagUrl %}" alt="">
+                    <img src="{{ profile.club.countryFlagUrl }}" alt="">
                 {% endif %}
                 {{ profile.club.countryName }}
             </span>

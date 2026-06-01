@@ -387,7 +387,10 @@ def country_flag_static_path(country_name):
     asset = COUNTRY_FLAG_ASSETS.get(country_name)
     if not asset:
         return ''
-    return f"game/images/flags/{asset['asset_id']}.svg"
+    code = asset.get('code', '')
+    if not code:
+        return ''
+    return f"https://flagcdn.com/{code.lower()}.svg"
 
 
 def city_static_path(club):

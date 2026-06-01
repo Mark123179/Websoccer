@@ -8,7 +8,7 @@
         </span>
         <strong class="club-player-name-row">
             {% if item.flagUrl %}
-                <img class="club-player-name-flag" src="{% static item.flagUrl %}" alt="">
+                <img class="club-player-name-flag" src="{{ item.flagUrl }}" alt="">
             {% endif %}
             <span>{{ item.playerName }}</span>
             {% if item.ntBadgeUrl %}

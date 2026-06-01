@@ -35,7 +35,11 @@
                     {% endif %}
                 </div>
                 <div class="mp-flag-row">
+                    {% if manager.flag_url %}
+                    <img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img">
+                    {% else %}
                     <img src="{% static manager.flag %}" alt="{{ manager.flag_name }}" class="mp-flag-img">
+                    {% endif %}
                     <span>{{ manager.flag_name }}</span>
                     {% if can_edit_profile %}
                     <button class="mp-icon-btn mp-icon-btn-sm" type="button" aria-label="Nationalität bearbeiten" data-open-edit-profile>

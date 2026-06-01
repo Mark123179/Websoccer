@@ -2389,21 +2389,27 @@ def _player_nation_nt_logo(player):
 
     registered = (player.nt_nationality or '').strip()
     if registered and registered in COUNTRY_FLAG_ASSETS:
-        asset_id = COUNTRY_FLAG_ASSETS[registered]['asset_id']
-        flag_path = f'game/images/flags/{asset_id}.svg'
+        asset_id = COUNTRY_FLAG_ASSETS[registered].get('asset_id', '')
     else:
         badges = player.nationality_badges
         if not badges:
             return ''
-        asset_id = badges[0].get('flag_static_path', '').replace('game/images/flags/', '').replace('.svg', '').replace('.png', '')
-        flag_path = badges[0].get('flag_static_path', '')
+        first_country = badges[0].get('name', '')
+        asset_id = COUNTRY_FLAG_ASSETS.get(first_country, {}).get('asset_id', '')
 
-    for ext in ('png', 'svg'):
-        nt_path = f'game/images/crests/nt_{asset_id}.{ext}'
-        if finders.find(nt_path):
-            return nt_path
-    if flag_path and finders.find(flag_path):
-        return flag_path
+    if asset_id:
+        for ext in ('png', 'svg'):
+            nt_path = f'game/images/crests/nt_{asset_id}.{ext}'
+            if finders.find(nt_path):
+                return nt_path
+
+    flag_url = badges[0].get('flag_url', '') if not registered else (
+        COUNTRY_FLAG_ASSETS.get(registered, {}).get('code', '')
+    )
+    if flag_url and not flag_url.startswith('http'):
+        local_path = f'game/images/flags/{asset_id}.svg' if asset_id else ''
+        if local_path and finders.find(local_path):
+            return local_path
     return ''
 
 
@@ -3082,6 +3088,11 @@ def manager_profile(request):
             'trainer_type': manager_profile_obj.trainer_type_label,
             'active_type': manager_profile_obj.trainer_type_label,
             'flag': manager_profile_obj.nationality_flag,
+            'flag_url': (
+                manager_profile_obj.nationality_flag
+                if manager_profile_obj.nationality_flag.startswith('http')
+                else ''
+            ),
             'flag_name': manager_profile_obj.nationality_name,
             'club_name': club_name,
             'club_crest': club_crest,
@@ -3432,7 +3443,7 @@ def update_manager_profile(request):
     if nationality_name and nationality_name in COUNTRY_FLAG_ASSETS:
         info = COUNTRY_FLAG_ASSETS[nationality_name]
         profile.nationality_name = nationality_name
-        profile.nationality_flag = f'game/images/flags/{info["asset_id"]}.svg'
+        profile.nationality_flag = f'https://flagcdn.com/{info["code"].lower()}.svg'
         update_fields += ['nationality_name', 'nationality_flag']
 
     profile.save(update_fields=list(set(update_fields)))

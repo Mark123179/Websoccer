@@ -42,8 +42,8 @@
                     <span>
                         <b>
                             {% for nationality in player.nationality_badges %}
-                                {% if nationality.flag_static_path %}
-                                    <img class="flag-badge" src="{% static nationality.flag_static_path %}" alt="{{ nationality.name }}" title="{{ nationality.name }}">
+                                {% if nationality.flag_url %}
+                                    <img class="flag-badge" src="{{ nationality.flag_url }}" alt="{{ nationality.name }}" title="{{ nationality.name }}">
                                 {% else %}
                                     {{ nationality.code }}
                                 {% endif %}

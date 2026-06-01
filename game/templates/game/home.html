@@ -279,8 +279,8 @@
                                 <small>{{ row.player.age }} Jahre</small>
                                 <em>
                                     {% for nationality in row.player.nationality_badges|slice:":1" %}
-                                        {% if nationality.flag_static_path %}
-                                            <img src="{% static nationality.flag_static_path %}" alt="{{ nationality.name }}">
+                                        {% if nationality.flag_url %}
+                                            <img src="{{ nationality.flag_url }}" alt="{{ nationality.name }}">
                                         {% endif %}
                                     {% endfor %}
                                     {{ row.player.position|default:row.player.primary_position }}

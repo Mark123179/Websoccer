@@ -166,8 +166,8 @@ def metric_url(metric_key, player):
 
 def primary_flag(player):
     for nationality in player.nationality_badges:
-        if nationality.get('flag_static_path'):
-            return nationality['flag_static_path']
+        if nationality.get('flag_url'):
+            return nationality['flag_url']
     return ''
 
 
