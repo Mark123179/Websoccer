@@ -454,22 +454,30 @@
                     <p class="mp-types-section-label">Freischaltbare Titel</p>
                     <div class="mp-types-unlock-list">
                         {% for t in trainer_types_unlockable %}
-                        <div class="mp-type-unlock {% if t.unlocked %}is-unlocked{% endif %}">
+                        {% if t.unlocked %}
+                        <form method="post" action="{% url 'set_trainer_type' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
+                            <button type="submit" class="mp-type-unlock is-unlocked">
+                                <div class="mp-type-unlock-header">
+                                    <span class="mp-type-unlock-name">{{ t.label }}</span>
+                                    <span class="mp-type-unlock-badge">✓</span>
+                                </div>
+                                <small class="mp-type-unlock-cond">{{ t.condition }}</small>
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="mp-type-unlock">
                             <div class="mp-type-unlock-header">
                                 <span class="mp-type-unlock-name">{{ t.label }}</span>
-                                {% if t.unlocked %}
-                                <span class="mp-type-unlock-badge">✓</span>
-                                {% else %}
                                 <span class="mp-type-unlock-pct">{{ t.progress }}/{{ t.max }}</span>
-                                {% endif %}
                             </div>
                             <small class="mp-type-unlock-cond">{{ t.condition }}</small>
-                            {% if not t.unlocked %}
                             <div class="mp-type-unlock-bar">
                                 <div class="mp-type-unlock-fill" style="width: {% widthratio t.progress t.max 100 %}%;"></div>
                             </div>
-                            {% endif %}
                         </div>
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </div>

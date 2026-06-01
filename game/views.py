@@ -2662,14 +2662,7 @@ def manager_profile(request):
         {'key': 'underdog', 'label': 'Underdog-Flüsterer', 'active': active_type_key == 'underdog'},
     ]
 
-    trainer_types_unlockable = [
-        {'key': 'aufstiegsheld', 'label': 'Aufstiegsheld', 'condition': '3 Aufstiege geschafft', 'progress': 0, 'max': 3, 'unlocked': False},
-        {'key': 'defensivmeister', 'label': 'Defensivmeister', 'condition': 'Wenigste Gegentore der gesamten Simulation', 'progress': 0, 'max': 1, 'unlocked': False},
-        {'key': 'weltenbummler', 'label': 'Weltenbummler', 'condition': '5 Vereine in 5 verschiedenen Ländern trainiert', 'progress': 1, 'max': 5, 'unlocked': False},
-        {'key': 'serienmeister', 'label': 'Serienmeister', 'condition': 'Mehrere Meisterschaften in Folge', 'progress': trophies_count, 'max': 3, 'unlocked': trophies_count >= 3},
-        {'key': 'feuerwehrmann', 'label': 'Feuerwehrmann', 'condition': 'Klassenerhalt auf Abstiegsplatz, max. 10 Spieltage Rest', 'progress': 0, 'max': 1, 'unlocked': False},
-        {'key': 'vereinslegende', 'label': 'Vereinslegende', 'condition': '5 Saisons bei einem Verein', 'progress': 2, 'max': 5, 'unlocked': False},
-    ]
+    trainer_types_unlockable = _build_trainer_types_unlockable(club, trophies_count)
 
     login_history = [
         {'date': 'Heute, 09:42', 'location': 'München, Deutschland', 'device': 'Windows PC', 'success': True},
@@ -2754,6 +2747,19 @@ def manager_profile(request):
     })
 
 
+def _build_trainer_types_unlockable(club, trophies_count=None):
+    if trophies_count is None:
+        trophies_count = sum(t.count for t in club.public_trophies.all()) if club else 0
+    return [
+        {'key': 'aufstiegsheld', 'label': 'Aufstiegsheld', 'condition': '3 Aufstiege geschafft', 'progress': 0, 'max': 3, 'unlocked': False},
+        {'key': 'defensivmeister', 'label': 'Defensivmeister', 'condition': 'Wenigste Gegentore der gesamten Simulation', 'progress': 0, 'max': 1, 'unlocked': False},
+        {'key': 'weltenbummler', 'label': 'Weltenbummler', 'condition': '5 Vereine in 5 verschiedenen Ländern trainiert', 'progress': 1, 'max': 5, 'unlocked': False},
+        {'key': 'serienmeister', 'label': 'Serienmeister', 'condition': 'Mehrere Meisterschaften in Folge', 'progress': trophies_count, 'max': 3, 'unlocked': trophies_count >= 3},
+        {'key': 'feuerwehrmann', 'label': 'Feuerwehrmann', 'condition': 'Klassenerhalt auf Abstiegsplatz, max. 10 Spieltage Rest', 'progress': 0, 'max': 1, 'unlocked': False},
+        {'key': 'vereinslegende', 'label': 'Vereinslegende', 'condition': '5 Saisons bei einem Verein', 'progress': 2, 'max': 5, 'unlocked': False},
+    ]
+
+
 SELECTABLE_TRAINER_TYPES = {
     'laptoptrainer': 'Laptoptrainer',
     'taktikfuchs': 'Taktikfuchs',
@@ -2763,7 +2769,26 @@ SELECTABLE_TRAINER_TYPES = {
     'pokaljager': 'Pokaljäger',
     'offensivarchitekt': 'Offensivarchitekt',
     'underdog': 'Underdog-Flüsterer',
+    'aufstiegsheld': 'Aufstiegsheld',
+    'defensivmeister': 'Defensivmeister',
+    'weltenbummler': 'Weltenbummler',
+    'serienmeister': 'Serienmeister',
+    'feuerwehrmann': 'Feuerwehrmann',
+    'vereinslegende': 'Vereinslegende',
 }
+
+_ALWAYS_SELECTABLE_KEYS = {
+    'laptoptrainer', 'taktikfuchs', 'motivator', 'talentschmied',
+    'transferstratege', 'pokaljager', 'offensivarchitekt', 'underdog',
+}
+
+
+def _get_unlocked_achievement_keys():
+    club = (
+        Club.objects.filter(fm_inside_id=915).first()
+        or Club.objects.filter(name__icontains='Bayern').first()
+    )
+    return {t['key'] for t in _build_trainer_types_unlockable(club) if t['unlocked']}
 
 
 def set_trainer_type(request):
@@ -2772,7 +2797,12 @@ def set_trainer_type(request):
         return HttpResponseNotAllowed(['POST'])
 
     key = request.POST.get('trainer_type_key', '').strip()
-    if key in SELECTABLE_TRAINER_TYPES:
+    if key not in SELECTABLE_TRAINER_TYPES:
+        from django.shortcuts import redirect
+        return redirect('manager_profile')
+
+    allowed = _ALWAYS_SELECTABLE_KEYS | _get_unlocked_achievement_keys()
+    if key in allowed:
         request.session['trainer_type_key'] = key
         request.session['trainer_type_label'] = SELECTABLE_TRAINER_TYPES[key]
 
