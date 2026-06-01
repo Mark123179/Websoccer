@@ -2403,13 +2403,6 @@ def _player_nation_nt_logo(player):
             if finders.find(nt_path):
                 return nt_path
 
-    flag_url = badges[0].get('flag_url', '') if not registered else (
-        COUNTRY_FLAG_ASSETS.get(registered, {}).get('code', '')
-    )
-    if flag_url and not flag_url.startswith('http'):
-        local_path = f'game/images/flags/{asset_id}.svg' if asset_id else ''
-        if local_path and finders.find(local_path):
-            return local_path
     return ''
 
 

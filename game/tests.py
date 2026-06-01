@@ -252,7 +252,7 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'game/images/players/28049320')
         self.assertNotContains(response, 'game/images/player_composites/')
         self.assertContains(response, 'game/images/kits/907_home.svg')
-        self.assertContains(response, 'game/images/flags/765.svg')
+        self.assertContains(response, 'https://flagcdn.com/gb-eng.svg')
         self.assertContains(response, 'Kein Partnerverein')
         self.assertNotContains(response, 'Seite 1 von')
         self.assertNotContains(response, 'https://www.transfermarkt.de/harry-kane/marktwertverlauf/spieler/132098')

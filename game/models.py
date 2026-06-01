@@ -2096,7 +2096,7 @@ class ManagerProfile(models.Model):
     nationality_flag = models.CharField(
         max_length=200,
         blank=True,
-        default='game/images/flags/771.svg',
+        default='https://flagcdn.com/de.svg',
     )
     nationality_name = models.CharField(
         max_length=100,

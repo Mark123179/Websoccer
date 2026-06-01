@@ -32,14 +32,13 @@ def current_manager(request):
         if _flag_raw.startswith('http'):
             nationality_flag_url = _flag_raw
         else:
-            from django.templatetags.static import static as _static
-            nationality_flag_url = _static(_flag_raw or 'game/images/flags/771.svg')
+            nationality_flag_url = 'https://flagcdn.com/de.svg'
     else:
         manager_name = 'Manager'
         trainer_type_label = 'Laptoptrainer'
         from django.templatetags.static import static as _static
         profile_image_url = _static(CURRENT_MANAGER_PROFILE_IMAGE)
-        nationality_flag_url = _static('game/images/flags/771.svg')
+        nationality_flag_url = 'https://flagcdn.com/de.svg'
 
     return {
         'current_manager': {

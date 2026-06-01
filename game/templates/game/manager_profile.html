@@ -47,8 +47,6 @@
                 <div class="mp-flag-row">
                     {% if manager.flag_url %}
                     <img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img">
-                    {% else %}
-                    <img src="{% static manager.flag %}" alt="{{ manager.flag_name }}" class="mp-flag-img">
                     {% endif %}
                     <span>{{ manager.flag_name }}</span>
                     {% if can_edit_profile %}
@@ -677,7 +675,7 @@
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
                             <span>Land</span>
                             <div class="mp-account-select-wrap">
-                                <img src="{% static 'game/images/flags/771.svg' %}" alt="" class="mp-select-flag">
+                                <img src="https://flagcdn.com/de.svg" alt="" class="mp-select-flag">
                                 <select class="mp-inline-select" aria-label="Land">
                                     <option selected>Deutschland</option>
                                     <option>Österreich</option>
