@@ -409,7 +409,11 @@
                     <p class="mp-types-section-label">Direkt wählbar</p>
                     <div class="mp-types-grid">
                         {% for t in trainer_types_selectable %}
-                        <div class="mp-type-tile {% if t.active %}is-active{% endif %}">{{ t.label }}</div>
+                        <form method="post" action="{% url 'set_trainer_type' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
+                            <button type="submit" class="mp-type-tile {% if t.active %}is-active{% endif %}">{{ t.label }}</button>
+                        </form>
                         {% endfor %}
                     </div>
                 </div>

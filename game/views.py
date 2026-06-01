@@ -2442,15 +2442,16 @@ def manager_profile(request):
         },
     ]
 
+    active_type_key = request.session.get('trainer_type_key', 'laptoptrainer')
     trainer_types_selectable = [
-        {'key': 'laptoptrainer', 'label': 'Laptoptrainer', 'active': True},
-        {'key': 'taktikfuchs', 'label': 'Taktikfuchs', 'active': False},
-        {'key': 'motivator', 'label': 'Motivator', 'active': False},
-        {'key': 'talentschmied', 'label': 'Talentschmied', 'active': False},
-        {'key': 'transferstratege', 'label': 'Transferstratege', 'active': False},
-        {'key': 'pokaljager', 'label': 'Pokaljäger', 'active': False},
-        {'key': 'offensivarchitekt', 'label': 'Offensivarchitekt', 'active': False},
-        {'key': 'underdog', 'label': 'Underdog-Flüsterer', 'active': False},
+        {'key': 'laptoptrainer', 'label': 'Laptoptrainer', 'active': active_type_key == 'laptoptrainer'},
+        {'key': 'taktikfuchs', 'label': 'Taktikfuchs', 'active': active_type_key == 'taktikfuchs'},
+        {'key': 'motivator', 'label': 'Motivator', 'active': active_type_key == 'motivator'},
+        {'key': 'talentschmied', 'label': 'Talentschmied', 'active': active_type_key == 'talentschmied'},
+        {'key': 'transferstratege', 'label': 'Transferstratege', 'active': active_type_key == 'transferstratege'},
+        {'key': 'pokaljager', 'label': 'Pokaljäger', 'active': active_type_key == 'pokaljager'},
+        {'key': 'offensivarchitekt', 'label': 'Offensivarchitekt', 'active': active_type_key == 'offensivarchitekt'},
+        {'key': 'underdog', 'label': 'Underdog-Flüsterer', 'active': active_type_key == 'underdog'},
     ]
 
     trainer_types_unlockable = [
@@ -2526,8 +2527,8 @@ def manager_profile(request):
         'trophies_list': trophies_list,
         'manager': {
             'name': 'Kirschgutzje',
-            'trainer_type': 'Laptoptrainer',
-            'active_type': 'Taktikfuchs',
+            'trainer_type': request.session.get('trainer_type_label', 'Laptoptrainer'),
+            'active_type': request.session.get('trainer_type_label', 'Laptoptrainer'),
             'flag': 'game/images/flags/771.svg',
             'flag_name': 'Deutschland',
             'club_name': 'FC Bayern München',
@@ -2597,3 +2598,29 @@ def manager_profile(request):
         'login_points_today': 150,
         'next_reward_days': 2,
     })
+
+
+SELECTABLE_TRAINER_TYPES = {
+    'laptoptrainer': 'Laptoptrainer',
+    'taktikfuchs': 'Taktikfuchs',
+    'motivator': 'Motivator',
+    'talentschmied': 'Talentschmied',
+    'transferstratege': 'Transferstratege',
+    'pokaljager': 'Pokaljäger',
+    'offensivarchitekt': 'Offensivarchitekt',
+    'underdog': 'Underdog-Flüsterer',
+}
+
+
+def set_trainer_type(request):
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+
+    key = request.POST.get('trainer_type_key', '').strip()
+    if key in SELECTABLE_TRAINER_TYPES:
+        request.session['trainer_type_key'] = key
+        request.session['trainer_type_label'] = SELECTABLE_TRAINER_TYPES[key]
+
+    from django.shortcuts import redirect
+    return redirect('manager_profile')

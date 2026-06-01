@@ -10,10 +10,12 @@ def current_manager(request):
     )
     club_name = club.name if club else 'FC Bayern Muenchen'
 
+    trainer_type_label = request.session.get('trainer_type_label', 'Laptoptrainer')
+
     return {
         'current_manager': {
             'name': 'Kirschgutzje',
-            'role': 'Laptop-Trainer',
+            'role': trainer_type_label,
             'club_name': club_name,
             'club_url': f'/clubs/{club.id}/' if club else '/clubs/',
             'tactics_url': f'/clubs/{club.id}/tactics/?squad=pro' if club else '/clubs/',

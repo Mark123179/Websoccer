@@ -1224,17 +1224,24 @@ body.manager-profile-page .nav-menu a:first-child {
     grid-template-columns: 1fr 1fr;
 }
 
+.mp-types-grid form {
+    display: contents;
+}
+
 .mp-type-tile {
+    appearance: none;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 5px;
     color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
+    font-family: inherit;
     font-size: 10.5px;
     font-weight: 600;
     padding: 6px 8px;
     text-align: center;
     transition: all 0.15s;
+    width: 100%;
 }
 
 .mp-type-tile:hover {
