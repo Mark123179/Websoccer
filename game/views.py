@@ -28,6 +28,7 @@ from .models import (
     ClubTrophy,
     DataSource,
     League,
+    MatchResult,
     Player,
     PlayerAwardTitle,
     PlayerInjuryRecord,
@@ -2416,37 +2417,33 @@ def manager_profile(request):
     ]
     trophies_count = sum(t.count for t in db_trophies)
 
-    # --- Match stats from ClubProfileMatch results owned by this club ---
-    # ClubProfileMatch is the project's match-result storage model. We query all
-    # rows owned by the club (club=Bayern) that carry a result_label, regardless of
-    # kind (last/next). This avoids double-counting that would arise from also
-    # fetching rows from other clubs' profiles.
+    # --- Match stats from MatchResult (full career history) ---
     if club:
-        finished_matches = list(
-            ClubProfileMatch.objects.filter(club=club)
-            .exclude(result_label='')
+        all_results = list(
+            MatchResult.objects.filter(club=club)
             .select_related('home_club', 'away_club')
+            .order_by('sort_order', 'id')
         )
     else:
-        finished_matches = []
+        all_results = []
 
     wins = 0
     draws = 0
     losses = 0
     goals_scored = 0
     goals_against = 0
-    for m in finished_matches:
+    for m in all_results:
         hg = m.home_goals or 0
         ag = m.away_goals or 0
         if m.home_club_id == club.id:
             club_g, opp_g = hg, ag
         else:
             club_g, opp_g = ag, hg
-        if m.result_label == ClubProfileMatch.RESULT_WIN:
+        if m.result_label == MatchResult.RESULT_WIN:
             wins += 1
-        elif m.result_label == ClubProfileMatch.RESULT_DRAW:
+        elif m.result_label == MatchResult.RESULT_DRAW:
             draws += 1
-        elif m.result_label == ClubProfileMatch.RESULT_LOSS:
+        elif m.result_label == MatchResult.RESULT_LOSS:
             losses += 1
         goals_scored += club_g
         goals_against += opp_g
@@ -2462,6 +2459,24 @@ def manager_profile(request):
     win_rate = f'{win_pct}%'
     win_rate_detail = f'({wins} S / {draws} U / {losses} N)'
 
+    # --- Streak computation (longest run of consecutive wins / losses) ---
+    max_win_streak = 0
+    max_loss_streak = 0
+    cur_win = 0
+    cur_loss = 0
+    for m in all_results:
+        if m.result_label == MatchResult.RESULT_WIN:
+            cur_win += 1
+            cur_loss = 0
+        elif m.result_label == MatchResult.RESULT_LOSS:
+            cur_loss += 1
+            cur_win = 0
+        else:
+            cur_win = 0
+            cur_loss = 0
+        max_win_streak = max(max_win_streak, cur_win)
+        max_loss_streak = max(max_loss_streak, cur_loss)
+
     club_stats = {
         'games': games,
         'wins': wins,
@@ -2476,8 +2491,8 @@ def manager_profile(request):
         'points_per_game': ppg,
         'goals_per_game': gpg,
         'goals_against_per_game': gagpg,
-        'win_streak': 0,
-        'loss_streak': 0,
+        'win_streak': max_win_streak,
+        'loss_streak': max_loss_streak,
     }
 
     # --- Records: true maxima from all stored match results ---
@@ -2487,7 +2502,7 @@ def manager_profile(request):
     best_loss_str = '–'
     best_goals_total = -1
     best_goals_str = '–'
-    for m in finished_matches:
+    for m in all_results:
         hg = m.home_goals or 0
         ag = m.away_goals or 0
         if m.home_club_id == club.id:
@@ -2497,10 +2512,8 @@ def manager_profile(request):
             club_g, opp_g = ag, hg
             opp_name = m.home_club.name if m.home_club else '?'
         total_goals = hg + ag
-        is_win = (m.club_id == club.id and m.result_label == ClubProfileMatch.RESULT_WIN) or \
-                 (m.club_id != club.id and m.result_label == ClubProfileMatch.RESULT_LOSS)
-        is_loss = (m.club_id == club.id and m.result_label == ClubProfileMatch.RESULT_LOSS) or \
-                  (m.club_id != club.id and m.result_label == ClubProfileMatch.RESULT_WIN)
+        is_win = m.result_label == MatchResult.RESULT_WIN
+        is_loss = m.result_label == MatchResult.RESULT_LOSS
         margin = club_g - opp_g
         if is_win and margin > best_win_margin:
             best_win_margin = margin
@@ -2514,6 +2527,16 @@ def manager_profile(request):
     records_highest_win = best_win_str
     records_highest_loss = best_loss_str
     records_most_goals = best_goals_str
+
+    # --- Last match from ClubProfileMatch (for display / timeline only) ---
+    if club:
+        finished_matches = list(
+            ClubProfileMatch.objects.filter(club=club)
+            .exclude(result_label='')
+            .select_related('home_club', 'away_club')
+        )
+    else:
+        finished_matches = []
 
     # Transfer records from PlayerTransferHistory
     transfer_in_str = '–'

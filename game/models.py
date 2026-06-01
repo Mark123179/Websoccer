@@ -401,6 +401,84 @@ class ClubProfileMatch(models.Model):
         return f'{self.club} - {self.get_kind_display()}'
 
 
+class MatchResult(models.Model):
+    RESULT_WIN = 'SIEG'
+    RESULT_DRAW = 'UNENTSCHIEDEN'
+    RESULT_LOSS = 'NIEDERLAGE'
+    RESULT_CHOICES = [
+        (RESULT_WIN, 'Sieg'),
+        (RESULT_DRAW, 'Unentschieden'),
+        (RESULT_LOSS, 'Niederlage'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='match_results',
+        verbose_name='Verein',
+    )
+    season = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text='Saison, z. B. "2023/24"',
+        verbose_name='Saison',
+    )
+    competition_name = models.CharField(
+        max_length=120,
+        verbose_name='Wettbewerb',
+    )
+    matchday_label = models.CharField(
+        max_length=80,
+        blank=True,
+        verbose_name='Spieltag',
+    )
+    date_label = models.CharField(
+        max_length=80,
+        blank=True,
+        verbose_name='Datum',
+    )
+    home_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='home_match_results',
+        verbose_name='Heimverein',
+    )
+    away_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='away_match_results',
+        verbose_name='Auswärtsverein',
+    )
+    home_goals = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Heimtore')
+    away_goals = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Auswärtstore')
+    result_label = models.CharField(
+        max_length=20,
+        choices=RESULT_CHOICES,
+        verbose_name='Ergebnis',
+    )
+    sort_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Niedrigere Zahlen erscheinen zuerst (chronologische Reihenfolge).',
+        verbose_name='Sortierreihenfolge',
+    )
+
+    class Meta:
+        ordering = ['sort_order', 'id']
+        verbose_name = 'Spielergebnis'
+        verbose_name_plural = 'Spielergebnisse'
+
+    def __str__(self):
+        hg = self.home_goals if self.home_goals is not None else '?'
+        ag = self.away_goals if self.away_goals is not None else '?'
+        home = self.home_club.name if self.home_club else '?'
+        away = self.away_club.name if self.away_club else '?'
+        return f'{home} {hg}:{ag} {away} ({self.season})'
+
+
 class TacticSetup(models.Model):
     club = models.ForeignKey(
         Club,

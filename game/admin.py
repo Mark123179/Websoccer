@@ -20,6 +20,7 @@ from .models import (
     DataSource,
     League,
     Club,
+    MatchResult,
     Player,
     PlayerAwardTitle,
     PlayerDataReview,
@@ -332,6 +333,49 @@ class ClubProfileMatchAdmin(admin.ModelAdmin):
             ),
         }),
     )
+
+
+@admin.register(MatchResult)
+class MatchResultAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'season',
+        'competition_name',
+        'matchday_label',
+        'date_label',
+        'home_club',
+        'away_club',
+        'home_goals',
+        'away_goals',
+        'result_label',
+        'sort_order',
+    )
+    list_filter = ('club', 'season', 'competition_name', 'result_label')
+    search_fields = (
+        'club__name',
+        'competition_name',
+        'matchday_label',
+        'home_club__name',
+        'away_club__name',
+    )
+    fieldsets = (
+        (None, {
+            'fields': ('club', 'season', 'sort_order'),
+        }),
+        ('Wettbewerb', {
+            'fields': ('competition_name', 'matchday_label', 'date_label'),
+        }),
+        ('Spieldetails', {
+            'fields': (
+                'home_club',
+                'away_club',
+                'home_goals',
+                'away_goals',
+                'result_label',
+            ),
+        }),
+    )
+    ordering = ('club', 'sort_order', 'id')
 
 
 @admin.register(ClubNewsItem)
