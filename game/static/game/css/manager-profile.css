@@ -2335,6 +2335,20 @@ body.manager-profile-page .nav-menu a:first-child {
     background: #0a1626;
 }
 
+.mp-edit-input--error {
+    border-color: rgba(239, 68, 68, 0.7);
+}
+
+.mp-edit-input--error:focus {
+    border-color: rgba(239, 68, 68, 0.9);
+}
+
+.mp-edit-error {
+    color: #f87171;
+    font-size: 12px;
+    font-weight: 500;
+}
+
 .mp-edit-modal-actions {
     display: flex;
     gap: 10px;

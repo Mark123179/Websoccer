@@ -3373,9 +3373,13 @@ def update_manager_profile(request):
 
     if new_name and new_name != profile.name:
         taken = ManagerProfile.objects.filter(name=new_name).exclude(pk=profile.pk).exists()
-        if not taken:
-            profile.name = new_name
-            update_fields.append('name')
+        if taken:
+            from urllib.parse import urlencode
+            from django.urls import reverse
+            params = urlencode({'name_taken': '1', 'attempted_name': new_name})
+            return redirect(f"{reverse('manager_profile')}?{params}")
+        profile.name = new_name
+        update_fields.append('name')
 
     if nationality_name and nationality_name in COUNTRY_FLAG_ASSETS:
         info = COUNTRY_FLAG_ASSETS[nationality_name]

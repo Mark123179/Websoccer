@@ -1327,12 +1327,15 @@
                     type="text"
                     id="mpEditDisplayName"
                     name="display_name"
-                    class="mp-edit-input"
-                    value="{{ manager.name }}"
+                    class="mp-edit-input{% if request.GET.name_taken %} mp-edit-input--error{% endif %}"
+                    value="{% if request.GET.name_taken %}{{ request.GET.attempted_name }}{% else %}{{ manager.name }}{% endif %}"
                     maxlength="100"
                     required
                     autocomplete="off"
                 >
+                {% if request.GET.name_taken %}
+                <span class="mp-edit-error">Dieser Name ist bereits vergeben.</span>
+                {% endif %}
             </label>
             <label class="mp-edit-label" for="mpEditNationality">
                 <span>Nationalität</span>
@@ -1379,7 +1382,7 @@
         btn.addEventListener('click', closeModal);
     });
 
-    {% if name_is_default %}
+    {% if name_is_default or request.GET.name_taken %}
     window.addEventListener('load', function () {
         setTimeout(openModal, 300);
     });
