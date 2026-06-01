@@ -2381,9 +2381,11 @@ class ManagerProfileAdmin(admin.ModelAdmin):
         'level',
         'xp',
         'member_since',
+        'updated_at',
     )
     search_fields = ('name', 'user__username')
     list_filter = ('trainer_type',)
+    readonly_fields = ('updated_at',)
     inlines = [ManagerCareerStationInline]
 
 
