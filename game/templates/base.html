@@ -35,7 +35,7 @@
                 <span>Manager</span>
                 <strong>{{ current_manager.name }}</strong>
                 <small>
-                    <img class="manager-title-flag" src="{% static 'game/images/flags/771.svg' %}" alt="" aria-hidden="true">
+                    <img class="manager-title-flag" src="{{ current_manager.nationality_flag }}" alt="" aria-hidden="true">
                     <span>{{ current_manager.role }}</span>
                 </small>
             </span>
