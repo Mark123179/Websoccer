@@ -15,6 +15,7 @@ from .views import (
     set_trainer_type,
     update_manager_profile,
     upload_profile_image,
+    reset_profile_image,
     save_career_station,
     delete_career_station,
     player_detail,
@@ -114,6 +115,7 @@ urlpatterns = [
     path('manager/set-type/', set_trainer_type, name='set_trainer_type'),
     path('manager/update-profile/', update_manager_profile, name='update_manager_profile'),
     path('manager/upload-image/', upload_profile_image, name='upload_profile_image'),
+    path('manager/reset-image/', reset_profile_image, name='reset_profile_image'),
     path('manager/career-station/save/', save_career_station, name='save_career_station'),
     path('manager/career-station/delete/', delete_career_station, name='delete_career_station'),
 

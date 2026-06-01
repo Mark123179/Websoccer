@@ -19,11 +19,21 @@
         <div class="mp-header-identity">
             <div class="mp-avatar-wrap">
                 <img src="{{ manager.profile_image_url }}" alt="{{ manager.name }}" id="mpAvatarHeaderImg">
+                {% if can_edit_profile %}
                 <button class="mp-avatar-edit" type="button" aria-label="Profilbild ändern" id="mpAvatarEditBtn">
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                         <path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/>
                     </svg>
                 </button>
+                {% if has_custom_image %}
+                <button class="mp-avatar-reset" type="button" aria-label="Standard-Avatar wiederherstellen" id="mpAvatarResetBtn" title="Standard-Avatar wiederherstellen">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 8a6 6 0 1 0 1.5-3.9"/>
+                        <path d="M2 4v4h4"/>
+                    </svg>
+                </button>
+                {% endif %}
+                {% endif %}
             </div>
             <div class="mp-identity-block">
                 <div class="mp-name-row">
@@ -1403,6 +1413,7 @@
 <script>
 (function () {
     const editBtn   = document.getElementById('mpAvatarEditBtn');
+    const resetBtn  = document.getElementById('mpAvatarResetBtn');
     const fileInput = document.getElementById('mpAvatarFileInput');
     const toast     = document.getElementById('mpAvatarToast');
     if (!editBtn || !fileInput) return;
@@ -1415,10 +1426,44 @@
         toast._t = setTimeout(function () { toast.style.display = 'none'; }, 4000);
     }
 
+    function updateAvatarImages(url) {
+        const cache = '?v=' + Date.now();
+        const hdr = document.getElementById('mpAvatarHeaderImg');
+        const bdg = document.getElementById('mpAvatarBadgeImg');
+        if (hdr) hdr.src = url + cache;
+        if (bdg) bdg.src = url + cache;
+    }
+
     editBtn.addEventListener('click', function () {
         fileInput.value = '';
         fileInput.click();
     });
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+            if (!confirm('Standard-Avatar wiederherstellen? Das aktuelle Profilbild wird gelöscht.')) return;
+            resetBtn.disabled = true;
+            fetch('{% url "reset_profile_image" %}', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                resetBtn.disabled = false;
+                if (data.ok) {
+                    updateAvatarImages(data.url);
+                    resetBtn.style.display = 'none';
+                    showToast('Standard-Avatar wiederhergestellt.', false);
+                } else {
+                    showToast(data.error || 'Fehler beim Zurücksetzen', true);
+                }
+            })
+            .catch(function () {
+                resetBtn.disabled = false;
+                showToast('Netzwerkfehler – bitte versuche es erneut.', true);
+            });
+        });
+    }
 
     fileInput.addEventListener('change', function () {
         const file = fileInput.files[0];
@@ -1443,11 +1488,7 @@
         .then(function (data) {
             editBtn.disabled = false;
             if (data.url) {
-                const cache = '?v=' + Date.now();
-                const hdr = document.getElementById('mpAvatarHeaderImg');
-                const bdg = document.getElementById('mpAvatarBadgeImg');
-                if (hdr) hdr.src = data.url + cache;
-                if (bdg) bdg.src = data.url + cache;
+                updateAvatarImages(data.url);
                 showToast('Profilbild gespeichert!', false);
             } else {
                 showToast(data.error || 'Fehler beim Speichern', true);

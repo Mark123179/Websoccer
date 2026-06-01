@@ -3147,6 +3147,7 @@ def manager_profile(request):
         'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
         'current_nationality': manager_profile_obj.nationality_name,
         'can_edit_profile': request.user.is_authenticated,
+        'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
         'city_coords_json': city_coords_json,
     })
@@ -3408,6 +3409,39 @@ def upload_profile_image(request):
 
     image_url = request.build_absolute_uri(_settings.MEDIA_URL + rel_path)
     return JsonResponse({'url': image_url})
+
+
+@login_required
+def reset_profile_image(request):
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+
+    from .models import ManagerProfile
+    from django.conf import settings as _settings
+    from django.templatetags.static import static as _static
+
+    try:
+        profile = ManagerProfile.objects.get(user=request.user)
+    except ManagerProfile.DoesNotExist:
+        return JsonResponse({'ok': True})
+
+    old_path = profile.profile_image or ''
+    if old_path and not old_path.startswith('game/'):
+        full_path = os.path.join(_settings.MEDIA_ROOT, old_path)
+        if os.path.isfile(full_path):
+            try:
+                os.remove(full_path)
+            except OSError:
+                pass
+
+    profile.profile_image = ''
+    profile.save(update_fields=['profile_image'])
+
+    default_url = request.build_absolute_uri(
+        _static('game/images/managers/kirschgutzje-test.png')
+    )
+    return JsonResponse({'ok': True, 'url': default_url})
 
 
 def update_manager_profile(request):
