@@ -1330,6 +1330,260 @@ body.manager-profile-page .nav-menu a:first-child {
     text-transform: uppercase;
 }
 
+/* ── STATION DETAIL PANEL ── */
+.mp-station-panel {
+    background: rgba(8, 22, 40, 0.97);
+    border: 1px solid rgba(138, 92, 246, 0.35);
+    border-radius: 8px;
+    display: none;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.mp-station-panel.is-open {
+    display: block;
+    animation: mp-panel-in 0.22s ease;
+}
+
+@keyframes mp-panel-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.mp-station-panel-header {
+    align-items: center;
+    background: rgba(138, 92, 246, 0.07);
+    border-bottom: 1px solid rgba(138, 92, 246, 0.18);
+    display: flex;
+    gap: 14px;
+    padding: 12px 14px;
+}
+
+.mp-station-panel-identity {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    min-width: 0;
+}
+
+.mp-station-panel-crest {
+    flex: 0 0 40px;
+    height: 40px;
+    object-fit: contain;
+    width: 40px;
+}
+
+.mp-station-panel-club {
+    color: #f0f6ff;
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.mp-station-panel-location {
+    color: rgba(255, 255, 255, 0.5);
+    display: block;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.mp-station-panel-meta {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mp-station-panel-period {
+    background: rgba(138, 92, 246, 0.12);
+    border-left: 2px solid rgba(138, 92, 246, 0.55);
+    border-radius: 2px;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 10px;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.mp-station-panel.is-active-station .mp-station-panel-period {
+    background: rgba(255, 210, 31, 0.08);
+    border-left-color: var(--mp-gold);
+    color: rgba(255, 210, 31, 0.85);
+}
+
+.mp-station-panel-link {
+    color: var(--mp-cyan);
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mp-station-panel-link:hover {
+    text-decoration: underline;
+}
+
+.mp-station-panel-close {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.55);
+    cursor: pointer;
+    display: flex;
+    flex: 0 0 26px;
+    height: 26px;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.mp-station-panel-close:hover {
+    background: rgba(255, 66, 88, 0.15);
+    border-color: rgba(255, 66, 88, 0.4);
+    color: var(--mp-red);
+}
+
+.mp-station-panel-close svg {
+    height: 11px;
+    width: 11px;
+}
+
+.mp-station-panel-body {
+    padding: 12px 14px;
+}
+
+.mp-station-panel-totals {
+    display: flex;
+    gap: 0;
+    margin-bottom: 14px;
+}
+
+.mp-station-panel-totals > div {
+    align-items: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 120px;
+    padding: 4px 18px 4px 0;
+    text-align: center;
+}
+
+.mp-station-panel-totals > div:last-child {
+    border-right: none;
+    padding-left: 18px;
+    padding-right: 0;
+}
+
+.mp-station-panel-totals strong {
+    color: #f0f6ff;
+    display: block;
+    font-size: 26px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.mp-station-panel-totals span {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.mp-station-panel-seasons {
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.mp-season-row {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+    padding: 9px 12px;
+    position: relative;
+}
+
+.mp-season-row.has-title {
+    border-color: rgba(255, 210, 31, 0.3);
+    background: rgba(255, 210, 31, 0.04);
+}
+
+.mp-season-label {
+    color: rgba(255, 255, 255, 0.5);
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 7px;
+    text-transform: uppercase;
+}
+
+.mp-season-row.has-title .mp-season-label {
+    color: var(--mp-gold);
+}
+
+.mp-season-wdl {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.mp-season-wdl-item {
+    align-items: center;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    text-align: center;
+}
+
+.mp-season-wdl-val {
+    color: #f0f6ff;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.mp-season-wdl-lbl {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mp-season-wdl-item.is-w .mp-season-wdl-val { color: var(--mp-green); }
+.mp-season-wdl-item.is-l .mp-season-wdl-val { color: var(--mp-red); }
+
+.mp-season-title-badge {
+    color: var(--mp-gold);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    margin-top: 7px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.mp-season-no-data {
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 12px;
+    padding: 12px 0;
+    text-align: center;
+}
+
+.mp-station-panel-link[href=""] {
+    display: none;
+}
+
+.mp-station-panel-link[href="#"] {
+    display: none;
+}
+
 .mp-euromap-legend {
     display: flex;
     flex-direction: column;

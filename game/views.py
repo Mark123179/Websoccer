@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import date, timedelta
 from itertools import product
@@ -2684,6 +2685,10 @@ def manager_profile(request):
                 except Exception:
                     city_display = st.club.name
 
+            station_club_url = f'/clubs/{st.club.id}/' if st.club else ''
+            season_rows = _station_season_breakdown(
+                st.started_at, st.ended_at, station_games, trophy_total
+            )
             map_stations.append({
                 'city': city_display,
                 'country': st.city_country,
@@ -2696,11 +2701,16 @@ def manager_profile(request):
                 'order': st.order,
                 'games': station_games,
                 'titles': trophy_total,
+                'club_url': station_club_url,
+                'season_breakdown_json': json.dumps(season_rows),
             })
     else:
         # Fallback: single station from ClubPublicProfile
         city = (club_profile.city_name if club_profile and club_profile.city_name else 'München')
         country = (club_profile.city_country if club_profile and club_profile.city_country else 'Deutschland')
+        fallback_season_rows = _station_season_breakdown(
+            date(2023, 8, 15), None, games, trophies_count
+        )
         map_stations.append({
             'city': city,
             'country': country,
@@ -2713,6 +2723,8 @@ def manager_profile(request):
             'order': 1,
             'games': games,
             'titles': trophies_count,
+            'club_url': club_url,
+            'season_breakdown_json': json.dumps(fallback_season_rows),
         })
 
     # --- Trainer types (db-persisted) ---
@@ -2828,6 +2840,42 @@ def manager_profile(request):
         'login_points_today': 150,
         'next_reward_days': 2,
     })
+
+
+def _station_season_breakdown(started_at, ended_at, total_games, total_titles):
+    """Generate plausible season-by-season breakdown for a career station."""
+    if not started_at:
+        return []
+    today = date.today()
+    end = ended_at or today
+
+    def _season_start_year(d):
+        return d.year if d.month >= 7 else d.year - 1
+
+    start_yr = _season_start_year(started_at)
+    end_yr = _season_start_year(end)
+    num = max(1, end_yr - start_yr + 1)
+
+    base = total_games // num
+    leftover_g = total_games
+    leftover_t = total_titles
+    rows = []
+    for i in range(num):
+        yr = start_yr + i
+        label = f'{yr}/{str(yr + 1)[-2:]}'
+        if i == num - 1:
+            g = leftover_g
+            t = leftover_t
+        else:
+            g = max(0, base + (1 if i % 2 == 0 else -1))
+            leftover_g -= g
+            t = 1 if (leftover_t > 0 and i == num - 2) else 0
+            leftover_t -= t
+        w = round(g * 0.50)
+        d = round(g * 0.24)
+        l = g - w - d
+        rows.append({'season': label, 'games': g, 'wins': w, 'draws': d, 'losses': l, 'titles': t})
+    return rows
 
 
 def _build_trainer_types_unlockable(club, trophies_count=None):

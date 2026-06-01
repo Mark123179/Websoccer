@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-35">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-36">
 {% endblock %}
 
 {% block content %}
@@ -389,7 +389,9 @@
                                data-games="{{ station.games }}"
                                data-titles="{{ station.titles }}"
                                data-crest="{% static station.crest %}"
-                               data-active="{% if station.active %}1{% else %}0{% endif %}">
+                               data-active="{% if station.active %}1{% else %}0{% endif %}"
+                               data-club-url="{{ station.club_url }}"
+                               data-seasons="{{ station.season_breakdown_json }}">
                                 <circle r="14" class="mp-map-pin-halo"/>
                                 <circle r="10" class="mp-map-pin-ring"/>
                                 <circle r="5" class="mp-map-pin-dot"/>
@@ -429,6 +431,38 @@
                             </div>
                         </div>
                         {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mp-station-panel" id="mpStationPanel" aria-hidden="true">
+                    <div class="mp-station-panel-header">
+                        <div class="mp-station-panel-identity">
+                            <img class="mp-station-panel-crest" src="" alt="">
+                            <div>
+                                <strong class="mp-station-panel-club"></strong>
+                                <span class="mp-station-panel-location"></span>
+                            </div>
+                        </div>
+                        <div class="mp-station-panel-meta">
+                            <span class="mp-station-panel-period"></span>
+                            <a class="mp-station-panel-link" href="#">Vereinsprofil öffnen ›</a>
+                        </div>
+                        <button class="mp-station-panel-close" id="mpStationPanelClose" aria-label="Schließen">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+                        </button>
+                    </div>
+                    <div class="mp-station-panel-body">
+                        <div class="mp-station-panel-totals">
+                            <div>
+                                <strong class="mp-station-panel-total-games"></strong>
+                                <span>Spiele gesamt</span>
+                            </div>
+                            <div>
+                                <strong class="mp-station-panel-total-titles"></strong>
+                                <span>Titel gewonnen</span>
+                            </div>
+                        </div>
+                        <div class="mp-station-panel-seasons" id="mpStationPanelSeasons"></div>
                     </div>
                 </div>
             </article>
@@ -800,6 +834,101 @@
         tooltip.setAttribute('aria-hidden', 'true');
     }
 
+    const panel = document.getElementById('mpStationPanel');
+    const panelClose = document.getElementById('mpStationPanelClose');
+    const panelSeasons = document.getElementById('mpStationPanelSeasons');
+    let activeStation = null;
+
+    function openPanel(stationEl) {
+        const d = stationEl.dataset;
+        panel.querySelector('.mp-station-panel-crest').src = d.crest || '';
+        panel.querySelector('.mp-station-panel-crest').alt = d.club || '';
+        panel.querySelector('.mp-station-panel-club').textContent = d.club || '';
+        panel.querySelector('.mp-station-panel-location').textContent =
+            [d.city, d.country].filter(Boolean).join(', ');
+        panel.querySelector('.mp-station-panel-period').textContent = d.period || '';
+        panel.querySelector('.mp-station-panel-total-games').textContent = d.games || '0';
+        panel.querySelector('.mp-station-panel-total-titles').textContent = d.titles || '0';
+
+        const link = panel.querySelector('.mp-station-panel-link');
+        const clubUrl = d.clubUrl || '';
+        link.href = clubUrl || '#';
+        link.style.display = clubUrl ? '' : 'none';
+
+        if (d.active === '1') {
+            panel.classList.add('is-active-station');
+        } else {
+            panel.classList.remove('is-active-station');
+        }
+
+        panelSeasons.innerHTML = '';
+        let seasons = [];
+        try { seasons = JSON.parse(d.seasons || '[]'); } catch(e) {}
+
+        if (seasons.length === 0) {
+            panelSeasons.innerHTML = '<p class="mp-season-no-data">Keine Saisondaten verfügbar.</p>';
+        } else {
+            seasons.forEach(s => {
+                const hasTrophy = s.titles > 0;
+                const el = document.createElement('div');
+                el.className = 'mp-season-row' + (hasTrophy ? ' has-title' : '');
+                el.innerHTML =
+                    '<span class="mp-season-label">' + s.season + '</span>' +
+                    '<div class="mp-season-wdl">' +
+                        '<div class="mp-season-wdl-item is-w">' +
+                            '<span class="mp-season-wdl-val">' + s.wins + '</span>' +
+                            '<span class="mp-season-wdl-lbl">S</span>' +
+                        '</div>' +
+                        '<div class="mp-season-wdl-item">' +
+                            '<span class="mp-season-wdl-val">' + s.draws + '</span>' +
+                            '<span class="mp-season-wdl-lbl">U</span>' +
+                        '</div>' +
+                        '<div class="mp-season-wdl-item is-l">' +
+                            '<span class="mp-season-wdl-val">' + s.losses + '</span>' +
+                            '<span class="mp-season-wdl-lbl">N</span>' +
+                        '</div>' +
+                    '</div>' +
+                    (hasTrophy ? '<p class="mp-season-title-badge">★ ' + s.titles + ' Titel</p>' : '');
+                panelSeasons.appendChild(el);
+            });
+        }
+
+        panel.classList.add('is-open');
+        panel.removeAttribute('aria-hidden');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        activeStation = stationEl;
+    }
+
+    function closePanel() {
+        panel.classList.remove('is-open');
+        panel.setAttribute('aria-hidden', 'true');
+        activeStation = null;
+    }
+
+    stations.forEach(st => {
+        st.addEventListener('click', () => {
+            if (activeStation === st && panel.classList.contains('is-open')) {
+                closePanel();
+            } else {
+                openPanel(st);
+            }
+        });
+        st.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (activeStation === st && panel.classList.contains('is-open')) {
+                    closePanel();
+                } else {
+                    openPanel(st);
+                }
+            }
+        });
+    });
+
+    if (panel && panelClose) {
+        panelClose.addEventListener('click', closePanel);
+    }
+
     stations.forEach(st => {
         st.addEventListener('mouseenter', () => showTooltip(st));
         st.addEventListener('mouseleave', hideTooltip);
@@ -822,12 +951,12 @@
         });
     }
 
-    const activeStation = svg.querySelector('.mp-map-station.is-active');
-    if (activeStation) {
+    const activeMapPin = svg.querySelector('.mp-map-station.is-active');
+    if (activeMapPin) {
         const pulseCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         pulseCircle.setAttribute('r', '10');
         pulseCircle.classList.add('mp-map-pin-pulse');
-        activeStation.insertBefore(pulseCircle, activeStation.firstChild);
+        activeMapPin.insertBefore(pulseCircle, activeMapPin.firstChild);
     }
 })();
 </script>
