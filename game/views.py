@@ -2503,9 +2503,22 @@ def manager_profile(request):
         {'name': 'Europa League', 'count': 1, 'icon': 'game/images/icons/Default Trophy 1.png'},
     ]
 
+    club = (
+        Club.objects.filter(fm_inside_id=915).first()
+        or Club.objects.filter(name__icontains='Bayern').first()
+    )
+
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
         'timeline_events': timeline_events,
+        'game_header': build_game_header(
+            'Manager · Kirschgutzje',
+            'Trainerprofil',
+            '/',
+            club,
+            None,
+            calendar_offset_from_request(request),
+        ),
         'trainer_types_selectable': trainer_types_selectable,
         'trainer_types_unlockable': trainer_types_unlockable,
         'map_stations': map_stations,
