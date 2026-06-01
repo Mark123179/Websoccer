@@ -2631,6 +2631,8 @@ def manager_profile(request):
             'active': True,
             'period': '15. Aug. 2023 – heute',
             'order': 1,
+            'games': games,
+            'titles': trophies_count,
         })
     else:
         map_stations.append({
@@ -2643,6 +2645,8 @@ def manager_profile(request):
             'active': True,
             'period': '15. Aug. 2023 – heute',
             'order': 1,
+            'games': games,
+            'titles': trophies_count,
         })
 
     # --- Trainer types (session-based) ---

@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-34">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-35">
 {% endblock %}
 
 {% block content %}
@@ -364,28 +364,61 @@
                     <h3>Trainerstationen · Europa</h3>
                 </header>
                 <div class="mp-euromap-wrap">
-                    <svg class="mp-euromap-svg" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="500" height="380" fill="#06121d"/>
-                        <polygon class="mp-europe-land" points="
-                            55,295 72,312 100,302 130,264 152,252 168,246 178,260
-                            192,290 208,318 226,342 248,347 270,330 282,310
-                            296,318 312,297 324,272 340,255 358,268 380,250
-                            390,230 378,210 358,196 338,180 316,160 298,147
-                            282,128 270,110 252,96 240,78 232,57 222,40
-                            214,57 208,74 198,90 184,122 170,157 162,173
-                            176,180 186,194 172,218 150,224 130,237
-                            110,257 90,274 70,287
-                        "/>
-                        <polyline class="mp-map-route" points="197,182 252,204"/>
-                        {% for station in map_stations %}
-                        <g class="mp-map-station {% if station.active %}is-active{% endif %}" transform="translate({{ station.x }}, {{ station.y }})">
-                            <circle r="10" class="mp-map-pin-ring"/>
-                            <circle r="5" class="mp-map-pin-dot"/>
-                            <text x="15" y="-8" class="mp-map-city-label">{{ station.city }}</text>
-                            <text x="15" y="5" class="mp-map-club-label">{{ station.club }}</text>
-                        </g>
-                        {% endfor %}
-                    </svg>
+                    <div class="mp-euromap-svg-wrap">
+                        <svg class="mp-euromap-svg" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="500" height="380" fill="#06121d"/>
+                            <polygon class="mp-europe-land" points="
+                                55,295 72,312 100,302 130,264 152,252 168,246 178,260
+                                192,290 208,318 226,342 248,347 270,330 282,310
+                                296,318 312,297 324,272 340,255 358,268 380,250
+                                390,230 378,210 358,196 338,180 316,160 298,147
+                                282,128 270,110 252,96 240,78 232,57 222,40
+                                214,57 208,74 198,90 184,122 170,157 162,173
+                                176,180 186,194 172,218 150,224 130,237
+                                110,257 90,274 70,287
+                            "/>
+                            <polyline class="mp-map-route mp-map-route-animated" points="197,182 252,204"/>
+                            {% for station in map_stations %}
+                            <g class="mp-map-station {% if station.active %}is-active{% endif %}"
+                               transform="translate({{ station.x }}, {{ station.y }})"
+                               tabindex="0"
+                               data-club="{{ station.club }}"
+                               data-city="{{ station.city }}"
+                               data-country="{{ station.country }}"
+                               data-period="{{ station.period }}"
+                               data-games="{{ station.games }}"
+                               data-titles="{{ station.titles }}"
+                               data-crest="{% static station.crest %}"
+                               data-active="{% if station.active %}1{% else %}0{% endif %}">
+                                <circle r="14" class="mp-map-pin-halo"/>
+                                <circle r="10" class="mp-map-pin-ring"/>
+                                <circle r="5" class="mp-map-pin-dot"/>
+                                <text x="15" y="-8" class="mp-map-city-label">{{ station.city }}</text>
+                                <text x="15" y="5" class="mp-map-club-label">{{ station.club }}</text>
+                            </g>
+                            {% endfor %}
+                        </svg>
+                        <div class="mp-map-tooltip" id="mpMapTooltip" aria-hidden="true">
+                            <div class="mp-map-tooltip-header">
+                                <img class="mp-map-tooltip-crest" src="" alt="">
+                                <div>
+                                    <strong class="mp-map-tooltip-club"></strong>
+                                    <span class="mp-map-tooltip-location"></span>
+                                </div>
+                            </div>
+                            <div class="mp-map-tooltip-period"></div>
+                            <div class="mp-map-tooltip-stats">
+                                <div>
+                                    <strong class="mp-map-tooltip-games"></strong>
+                                    <span>Spiele</span>
+                                </div>
+                                <div>
+                                    <strong class="mp-map-tooltip-titles"></strong>
+                                    <span>Titel</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="mp-euromap-legend">
                         {% for station in map_stations %}
                         <div class="mp-map-legend-item {% if station.active %}is-active{% endif %}">
@@ -687,6 +720,107 @@
             });
         });
     });
+})();
+
+(function () {
+    const tooltip = document.getElementById('mpMapTooltip');
+    if (!tooltip) return;
+
+    const svgWrap = tooltip.closest('.mp-euromap-svg-wrap');
+    const svg = svgWrap && svgWrap.querySelector('.mp-euromap-svg');
+    if (!svg) return;
+
+    const stations = svg.querySelectorAll('.mp-map-station');
+
+    function positionTooltip(stationEl) {
+        const svgRect = svg.getBoundingClientRect();
+        const wrapRect = svgWrap.getBoundingClientRect();
+
+        const transform = stationEl.getAttribute('transform') || '';
+        const match = transform.match(/translate\(\s*([\d.]+)\s*,\s*([\d.]+)\s*\)/);
+        if (!match) return;
+
+        const svgX = parseFloat(match[1]);
+        const svgY = parseFloat(match[2]);
+
+        const vb = svg.viewBox.baseVal;
+        const scaleX = svgRect.width / vb.width;
+        const scaleY = svgRect.height / vb.height;
+
+        const pinPixelX = svgRect.left - wrapRect.left + svgX * scaleX;
+        const pinPixelY = svgRect.top - wrapRect.top + svgY * scaleY;
+
+        const OFFSET = 16;
+        let left = pinPixelX + OFFSET;
+        let top = pinPixelY - tooltip.offsetHeight / 2;
+
+        const wrapW = wrapRect.width;
+        if (left + 200 > wrapW) {
+            left = pinPixelX - 200 - OFFSET;
+        }
+        if (top < 0) top = 4;
+
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+    }
+
+    function showTooltip(stationEl) {
+        const d = stationEl.dataset;
+        tooltip.querySelector('.mp-map-tooltip-crest').src = d.crest || '';
+        tooltip.querySelector('.mp-map-tooltip-crest').alt = d.club || '';
+        tooltip.querySelector('.mp-map-tooltip-club').textContent = d.club || '';
+        tooltip.querySelector('.mp-map-tooltip-location').textContent =
+            [d.city, d.country].filter(Boolean).join(', ');
+        tooltip.querySelector('.mp-map-tooltip-period').textContent = d.period || '';
+        tooltip.querySelector('.mp-map-tooltip-games').textContent = d.games || '0';
+        tooltip.querySelector('.mp-map-tooltip-titles').textContent = d.titles || '0';
+
+        if (d.active === '1') {
+            tooltip.classList.add('is-active-station');
+        } else {
+            tooltip.classList.remove('is-active-station');
+        }
+
+        tooltip.classList.add('is-visible');
+        tooltip.removeAttribute('aria-hidden');
+
+        positionTooltip(stationEl);
+    }
+
+    function hideTooltip() {
+        tooltip.classList.remove('is-visible');
+        tooltip.setAttribute('aria-hidden', 'true');
+    }
+
+    stations.forEach(st => {
+        st.addEventListener('mouseenter', () => showTooltip(st));
+        st.addEventListener('mouseleave', hideTooltip);
+        st.addEventListener('focus', () => showTooltip(st));
+        st.addEventListener('blur', hideTooltip);
+    });
+
+    const route = svg.querySelector('.mp-map-route-animated');
+    if (route) {
+        const len = route.getTotalLength ? route.getTotalLength() : 600;
+        route.style.strokeDasharray = len;
+        route.style.strokeDashoffset = len;
+        route.style.animation = 'none';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                route.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s';
+                route.style.opacity = '1';
+                route.style.strokeDashoffset = '0';
+            });
+        });
+    }
+
+    const activeStation = svg.querySelector('.mp-map-station.is-active');
+    if (activeStation) {
+        const pulseCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pulseCircle.setAttribute('r', '10');
+        pulseCircle.classList.add('mp-map-pin-pulse');
+        activeStation.insertBefore(pulseCircle, activeStation.firstChild);
+    }
 })();
 </script>
 {% endblock %}
