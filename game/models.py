@@ -492,16 +492,47 @@ class ClubTrophy(models.Model):
         verbose_name_plural = 'Vereinstitel'
 
     COMPETITION_DEFAULT_ASSETS = {
-        'Intercontinental':  'international-cup-1',
-        'Champions League':  '1301394',
-        'Copa Libertadores': 'continental cup 1',
-        'Europa League':     'continental cup 1',
-        'Klub-WM':           '1001959',
-        'Bundesliga':        '22',
-        'DFB-Pokal':         '1301410',
-        'DFL-Supercup':      '1301397',
-        'Supercup':          '1301397',
-        'DFB-Ligapokal':     '100',
+        # Continental / global
+        'Intercontinental':    'international-cup-1',
+        'Champions League':    '1301394',
+        'Copa Libertadores':   '1002136',
+        'Europa League':       '1001960',
+        'Klub-WM':             '1001959',
+        # Germany
+        'Bundesliga':          '22',
+        'DFB-Pokal':           '1301410',
+        'DFL-Supercup':        '1301397',
+        'Supercup':            '1301397',
+        'DFB-Ligapokal':       '100',
+        # England
+        'Premier League':      '1301393',
+        'FA Cup':              '1301406',
+        # Spain
+        'La Liga':             '1301395',
+        'Copa del Rey':        '1301417',
+        'Supercopa de España': '1301419',
+        # Italy
+        'Serie A':             '1301398',
+        'Coppa Italia':        '1301407',
+        # Netherlands
+        'Eredivisie':          '1301412',
+        'KNVB Cup':            '1301411',
+        # Portugal
+        'Primeira Liga':       '1301403',
+        'Taça de Portugal':    '1301404',
+        # Serbia
+        'Superliga Srbije':    '1301427',
+        'Kup Srbije':          '1301426',
+        # South America — domestic (no confirmed FM Inside badge IDs available;
+        # generic competition-type assets are used as the best visual fallback)
+        'Brasileirão':         'national championship 1',
+        'Copa do Brasil':      'national cup 1',
+        'Taça Brasil':         'national cup 1',
+        'Primera División':    'national championship 1',
+        'Copa Argentina':      'national cup 1',
+        'Copa Uruguay':        'national cup 1',
+        'División de Honor':   'national championship 1',
+        'Copa Paraguay':       'national cup 1',
     }
 
     def save(self, *args, **kwargs):
