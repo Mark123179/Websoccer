@@ -3147,7 +3147,7 @@ def manager_profile(request):
         'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
         'current_nationality': manager_profile_obj.nationality_name,
         'can_edit_profile': request.user.is_authenticated,
-        'name_is_default': request.user.is_authenticated and (manager_profile_obj.name == request.user.username),
+        'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
         'city_coords_json': city_coords_json,
     })
 
@@ -3439,6 +3439,10 @@ def update_manager_profile(request):
             return redirect(f"{reverse('manager_profile')}?{params}")
         profile.name = new_name
         update_fields.append('name')
+
+    if not profile.name_confirmed and profile.name != request.user.username:
+        profile.name_confirmed = True
+        update_fields.append('name_confirmed')
 
     if nationality_name and nationality_name in COUNTRY_FLAG_ASSETS:
         info = COUNTRY_FLAG_ASSETS[nationality_name]

@@ -109,7 +109,7 @@
         </div>
     </header>
 
-    {% if name_is_default and can_edit_profile %}
+    {% if not name_confirmed and can_edit_profile %}
     <div class="mp-onboarding-banner" id="mpOnboardingBanner">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 7h.01"/></svg>
         <span>Willkommen! Lege jetzt deinen <strong>Managernamen</strong> fest – er wird in der Sidebar und auf deinem Profil angezeigt.</span>
@@ -1386,7 +1386,7 @@
         btn.addEventListener('click', closeModal);
     });
 
-    {% if name_is_default or request.GET.name_taken %}
+    {% if not name_confirmed or request.GET.name_taken %}
     window.addEventListener('load', function () {
         setTimeout(openModal, 300);
     });

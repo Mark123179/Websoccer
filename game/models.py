@@ -2096,6 +2096,10 @@ class ManagerProfile(models.Model):
     )
     member_since = models.DateField(null=True, blank=True)
     profile_image = models.CharField(max_length=200, blank=True, default='')
+    name_confirmed = models.BooleanField(
+        default=False,
+        help_text='True, sobald der Manager einen eigenen Namen gespeichert hat (nicht mehr der Standard-Username).',
+    )
     xp = models.PositiveIntegerField(default=0)
     xp_max = models.PositiveIntegerField(default=15000)
     level = models.PositiveIntegerField(default=1)
