@@ -23,6 +23,9 @@ from .context_processors import CURRENT_MANAGER_PROFILE_IMAGE
 from .models import (
     Club,
     ClubNewsItem,
+    ClubProfileMatch,
+    ClubPublicProfile,
+    ClubTrophy,
     DataSource,
     League,
     Player,
@@ -2379,69 +2382,270 @@ def player_graph_data(request, player_id):
 def manager_profile(request):
     tab = request.GET.get('tab', 'profil')
 
-    timeline_events = [
-        {
-            'date': '15. Aug. 2023',
-            'type': 'verein',
-            'tone': 'neutral',
-            'title': 'Willkommen an Bord',
-            'body': 'Übernahme von FC Bayern München (1. Saison)',
-            'icon': 'join',
-            'crest': 'game/images/crests/915.png',
-        },
-        {
-            'date': '22. Nov. 2023',
-            'type': 'liga',
-            'tone': 'silver',
-            'title': 'Herbstmeister',
-            'body': 'FC Bayern München führt die Bundesliga zur Winterpause an',
-            'icon': 'table',
-        },
-        {
-            'date': '18. Feb. 2024',
-            'type': 'finale',
-            'tone': 'red',
-            'title': 'Finale verloren',
-            'body': 'DFB-Pokal Viertelfinale gegen Bayer Leverkusen 1:2',
-            'icon': 'cup',
-            'crest': 'game/images/crests/901.png',
-        },
-        {
-            'date': '11. Mai 2024',
-            'type': 'titel',
-            'tone': 'gold',
-            'title': '1. Bundesliga Meister',
-            'body': '32. Meisterschaft der Vereinsgeschichte — 1. Titel als Trainer',
-            'icon': 'trophy',
-            'crest': 'game/images/crests/915.png',
-        },
-        {
-            'date': '3. Aug. 2024',
-            'type': 'transfers',
-            'tone': 'cyan',
-            'title': 'Rekordtransfer',
-            'body': 'Neuer Vereinsrekord: €28.500.000 für M. Schwarz',
-            'icon': 'transfer',
-        },
-        {
-            'date': '14. Jan. 2025',
-            'type': 'status',
-            'tone': 'purple',
-            'title': 'Trainertyp geändert',
-            'body': 'Laptoptrainer → Taktikfuchs',
-            'icon': 'profile',
-        },
-        {
-            'date': '10. Mai 2025',
-            'type': 'titel',
-            'tone': 'gold',
-            'title': '2. Bundesliga Meister in Folge',
-            'body': 'Serienmeister! FC Bayern holt die 33. Meisterschaft.',
-            'icon': 'trophy',
-            'crest': 'game/images/crests/915.png',
-        },
-    ]
+    club = (
+        Club.objects.filter(fm_inside_id=915).first()
+        or Club.objects.filter(name__icontains='Bayern').first()
+    )
 
+    club_profile = None
+    if club:
+        try:
+            club_profile = club.public_profile
+        except ClubPublicProfile.DoesNotExist:
+            club_profile = None
+
+    club_name = club.name if club else 'FC Bayern München'
+    club_crest = club.crest_static_path if club else 'game/images/crests/915.png'
+    club_url = f'/clubs/{club.id}/' if club else '/clubs/2/'
+
+    # --- Trophies from ClubTrophy ---
+    db_trophies = list(club.public_trophies.all()) if club else []
+    _default_icons = [
+        'game/images/icons/Default Trophy 1.png',
+        'game/images/icons/Default Trophy 2.png',
+        'game/images/icons/Default Trophy 3.png',
+        'game/images/icons/Default Trophy 4.png',
+    ]
+    trophies_list = [
+        {
+            'name': t.competition_name,
+            'count': t.count,
+            'icon': t.trophy_static_path or _default_icons[i % len(_default_icons)],
+        }
+        for i, t in enumerate(db_trophies)
+    ]
+    trophies_count = sum(t.count for t in db_trophies)
+
+    # --- Match stats from ClubProfileMatch results owned by this club ---
+    # ClubProfileMatch is the project's match-result storage model. We query all
+    # rows owned by the club (club=Bayern) that carry a result_label, regardless of
+    # kind (last/next). This avoids double-counting that would arise from also
+    # fetching rows from other clubs' profiles.
+    if club:
+        finished_matches = list(
+            ClubProfileMatch.objects.filter(club=club)
+            .exclude(result_label='')
+            .select_related('home_club', 'away_club')
+        )
+    else:
+        finished_matches = []
+
+    wins = 0
+    draws = 0
+    losses = 0
+    goals_scored = 0
+    goals_against = 0
+    for m in finished_matches:
+        hg = m.home_goals or 0
+        ag = m.away_goals or 0
+        if m.home_club_id == club.id:
+            club_g, opp_g = hg, ag
+        else:
+            club_g, opp_g = ag, hg
+        if m.result_label == ClubProfileMatch.RESULT_WIN:
+            wins += 1
+        elif m.result_label == ClubProfileMatch.RESULT_DRAW:
+            draws += 1
+        elif m.result_label == ClubProfileMatch.RESULT_LOSS:
+            losses += 1
+        goals_scored += club_g
+        goals_against += opp_g
+
+    games = wins + draws + losses
+    points = wins * 3 + draws
+    win_pct = round(wins / games * 100) if games else 0
+    draw_pct = round(draws / games * 100) if games else 0
+    loss_pct = round(losses / games * 100) if games else 0
+    ppg = f'{points / games:.2f}'.replace('.', ',') if games else '0,00'
+    gpg = f'{goals_scored / games:.2f}'.replace('.', ',') if games else '0,00'
+    gagpg = f'{goals_against / games:.2f}'.replace('.', ',') if games else '0,00'
+    win_rate = f'{win_pct}%'
+    win_rate_detail = f'({wins} S / {draws} U / {losses} N)'
+
+    club_stats = {
+        'games': games,
+        'wins': wins,
+        'win_pct': win_pct,
+        'draws': draws,
+        'draw_pct': draw_pct,
+        'losses': losses,
+        'loss_pct': loss_pct,
+        'goals': goals_scored,
+        'goals_against': goals_against,
+        'points': points,
+        'points_per_game': ppg,
+        'goals_per_game': gpg,
+        'goals_against_per_game': gagpg,
+        'win_streak': 0,
+        'loss_streak': 0,
+    }
+
+    # --- Records: true maxima from all stored match results ---
+    best_win_margin = -1
+    best_win_str = '–'
+    best_loss_margin = -1
+    best_loss_str = '–'
+    best_goals_total = -1
+    best_goals_str = '–'
+    for m in finished_matches:
+        hg = m.home_goals or 0
+        ag = m.away_goals or 0
+        if m.home_club_id == club.id:
+            club_g, opp_g = hg, ag
+            opp_name = m.away_club.name if m.away_club else '?'
+        else:
+            club_g, opp_g = ag, hg
+            opp_name = m.home_club.name if m.home_club else '?'
+        total_goals = hg + ag
+        is_win = (m.club_id == club.id and m.result_label == ClubProfileMatch.RESULT_WIN) or \
+                 (m.club_id != club.id and m.result_label == ClubProfileMatch.RESULT_LOSS)
+        is_loss = (m.club_id == club.id and m.result_label == ClubProfileMatch.RESULT_LOSS) or \
+                  (m.club_id != club.id and m.result_label == ClubProfileMatch.RESULT_WIN)
+        margin = club_g - opp_g
+        if is_win and margin > best_win_margin:
+            best_win_margin = margin
+            best_win_str = f'{club_g}:{opp_g} vs. {opp_name}'
+        if is_loss and (opp_g - club_g) > best_loss_margin:
+            best_loss_margin = opp_g - club_g
+            best_loss_str = f'{opp_g}:{club_g} vs. {opp_name}'
+        if total_goals > best_goals_total:
+            best_goals_total = total_goals
+            best_goals_str = f'{total_goals} vs. {opp_name}'
+    records_highest_win = best_win_str
+    records_highest_loss = best_loss_str
+    records_most_goals = best_goals_str
+
+    # Transfer records from PlayerTransferHistory
+    transfer_in_str = '–'
+    transfer_out_str = '–'
+    if club:
+        best_in = (
+            PlayerTransferHistory.objects.filter(to_club=club)
+            .exclude(fee_eur=None).exclude(fee_eur=0)
+            .select_related('player')
+            .order_by('-fee_eur')
+            .first()
+        )
+        best_out = (
+            PlayerTransferHistory.objects.filter(from_club=club)
+            .exclude(fee_eur=None).exclude(fee_eur=0)
+            .select_related('player')
+            .order_by('-fee_eur')
+            .first()
+        )
+        if best_in:
+            fee_fmt = f'€{int(best_in.fee_eur):,}'.replace(',', '.')
+            date_fmt = best_in.transfer_date.strftime('%d.%m.%Y') if best_in.transfer_date else '–'
+            transfer_in_str = f'{fee_fmt} – {best_in.player.full_name} ({date_fmt})'
+        if best_out:
+            fee_fmt = f'€{int(best_out.fee_eur):,}'.replace(',', '.')
+            date_fmt = best_out.transfer_date.strftime('%d.%m.%Y') if best_out.transfer_date else '–'
+            transfer_out_str = f'{fee_fmt} – {best_out.player.full_name} ({date_fmt})'
+
+    # --- Timeline events built from real DB data ---
+    timeline_events = []
+
+    # Club join event
+    timeline_events.append({
+        'date': '15. Aug. 2023',
+        'type': 'verein',
+        'tone': 'neutral',
+        'title': 'Willkommen an Bord',
+        'body': f'Übernahme von {club_name} (1. Saison)',
+        'icon': 'join',
+        'crest': club_crest,
+    })
+
+    # Trophy events from ClubTrophy
+    for trophy in db_trophies:
+        timeline_events.append({
+            'date': '–',
+            'type': 'titel',
+            'tone': 'gold',
+            'title': trophy.competition_name,
+            'body': f'{trophy.count}x gewonnen mit {club_name}',
+            'icon': 'trophy',
+            'crest': club_crest,
+        })
+
+    # Last match result as timeline event
+    for m in finished_matches:
+        tone_map = {
+            ClubProfileMatch.RESULT_WIN: 'gold',
+            ClubProfileMatch.RESULT_DRAW: 'silver',
+            ClubProfileMatch.RESULT_LOSS: 'red',
+        }
+        result_de = {
+            ClubProfileMatch.RESULT_WIN: 'Sieg',
+            ClubProfileMatch.RESULT_DRAW: 'Unentschieden',
+            ClubProfileMatch.RESULT_LOSS: 'Niederlage',
+        }.get(m.result_label, '')
+        if m.home_club_id == club.id:
+            opponent = m.away_club
+            score = f'{m.home_goals}:{m.away_goals}'
+        else:
+            opponent = m.home_club
+            score = f'{m.away_goals}:{m.home_goals}'
+        opp_name = opponent.name if opponent else 'Unbekannt'
+        opp_crest = opponent.crest_static_path if opponent else ''
+        timeline_events.append({
+            'date': m.date_label or '–',
+            'type': 'liga',
+            'tone': tone_map.get(m.result_label, 'neutral'),
+            'title': f'{result_de} gegen {opp_name}',
+            'body': f'{m.competition_name}: {score}',
+            'icon': 'table',
+            'crest': opp_crest,
+        })
+
+    # Transfer events from PlayerTransferHistory
+    if club:
+        top_transfers = (
+            PlayerTransferHistory.objects.filter(to_club=club)
+            .exclude(fee_eur=None).exclude(fee_eur=0)
+            .select_related('player')
+            .order_by('-fee_eur')[:2]
+        )
+        for t in top_transfers:
+            fee_fmt = f'€{int(t.fee_eur):,}'.replace(',', '.')
+            date_fmt = t.transfer_date.strftime('%-d. %b %Y') if t.transfer_date else '–'
+            timeline_events.append({
+                'date': date_fmt,
+                'type': 'transfers',
+                'tone': 'cyan',
+                'title': 'Einkauf',
+                'body': f'{fee_fmt} für {t.player.full_name}',
+                'icon': 'transfer',
+            })
+
+    # --- Map stations from ClubPublicProfile ---
+    map_stations = []
+    if club_profile and club_profile.city_name:
+        map_stations.append({
+            'city': club_profile.city_name,
+            'country': club_profile.city_country or '',
+            'club': club_name,
+            'crest': club_crest,
+            'x': 271,
+            'y': 214,
+            'active': True,
+            'period': '15. Aug. 2023 – heute',
+            'order': 1,
+        })
+    else:
+        map_stations.append({
+            'city': 'München',
+            'country': 'Deutschland',
+            'club': club_name,
+            'crest': club_crest,
+            'x': 271,
+            'y': 214,
+            'active': True,
+            'period': '15. Aug. 2023 – heute',
+            'order': 1,
+        })
+
+    # --- Trainer types (session-based) ---
     active_type_key = request.session.get('trainer_type_key', 'laptoptrainer')
     trainer_types_selectable = [
         {'key': 'laptoptrainer', 'label': 'Laptoptrainer', 'active': active_type_key == 'laptoptrainer'},
@@ -2458,34 +2662,9 @@ def manager_profile(request):
         {'key': 'aufstiegsheld', 'label': 'Aufstiegsheld', 'condition': '3 Aufstiege geschafft', 'progress': 0, 'max': 3, 'unlocked': False},
         {'key': 'defensivmeister', 'label': 'Defensivmeister', 'condition': 'Wenigste Gegentore der gesamten Simulation', 'progress': 0, 'max': 1, 'unlocked': False},
         {'key': 'weltenbummler', 'label': 'Weltenbummler', 'condition': '5 Vereine in 5 verschiedenen Ländern trainiert', 'progress': 1, 'max': 5, 'unlocked': False},
-        {'key': 'serienmeister', 'label': 'Serienmeister', 'condition': 'Mehrere Meisterschaften in Folge', 'progress': 2, 'max': 3, 'unlocked': True},
+        {'key': 'serienmeister', 'label': 'Serienmeister', 'condition': 'Mehrere Meisterschaften in Folge', 'progress': trophies_count, 'max': 3, 'unlocked': trophies_count >= 3},
         {'key': 'feuerwehrmann', 'label': 'Feuerwehrmann', 'condition': 'Klassenerhalt auf Abstiegsplatz, max. 10 Spieltage Rest', 'progress': 0, 'max': 1, 'unlocked': False},
         {'key': 'vereinslegende', 'label': 'Vereinslegende', 'condition': '5 Saisons bei einem Verein', 'progress': 2, 'max': 5, 'unlocked': False},
-    ]
-
-    map_stations = [
-        {
-            'city': 'München',
-            'country': 'Deutschland',
-            'club': 'FC Bayern München',
-            'crest': 'game/images/crests/915.png',
-            'x': 271,
-            'y': 214,
-            'active': True,
-            'period': 'Aug. 2023 – heute',
-            'order': 2,
-        },
-        {
-            'city': 'Utrecht',
-            'country': 'Niederlande',
-            'club': 'FC Utrecht',
-            'crest': '',
-            'x': 213,
-            'y': 172,
-            'active': False,
-            'period': 'Jul. 2021 – Jul. 2023',
-            'order': 1,
-        },
     ]
 
     login_history = [
@@ -2496,24 +2675,11 @@ def manager_profile(request):
         {'date': '09.05.2025, 18:52', 'location': 'München, Deutschland', 'device': 'Windows PC', 'success': True},
     ]
 
-    trophies_list = [
-        {'name': 'Ligameister', 'count': 2, 'icon': 'game/images/icons/Default Trophy 1.png'},
-        {'name': 'Pokalsieger', 'count': 1, 'icon': 'game/images/icons/Default Trophy 2.png'},
-        {'name': 'Supercup', 'count': 1, 'icon': 'game/images/icons/Default Trophy 3.png'},
-        {'name': 'Champions Cup', 'count': 1, 'icon': 'game/images/icons/Default Trophy 4.png'},
-        {'name': 'Europa League', 'count': 1, 'icon': 'game/images/icons/Default Trophy 1.png'},
-    ]
-
-    club = (
-        Club.objects.filter(fm_inside_id=915).first()
-        or Club.objects.filter(name__icontains='Bayern').first()
-    )
-
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
         'timeline_events': timeline_events,
         'game_header': build_game_header(
-            'Manager · Kirschgutzje',
+            f'Manager · Kirschgutzje',
             'Trainerprofil',
             '/',
             club,
@@ -2531,9 +2697,9 @@ def manager_profile(request):
             'active_type': request.session.get('trainer_type_label', 'Laptoptrainer'),
             'flag': 'game/images/flags/771.svg',
             'flag_name': 'Deutschland',
-            'club_name': 'FC Bayern München',
-            'club_crest': 'game/images/crests/915.png',
-            'club_url': '/clubs/2/',
+            'club_name': club_name,
+            'club_crest': club_crest,
+            'club_url': club_url,
             'club_since': '15. Aug. 2023',
             'club_season': '3. Saison',
             'member_since': '15.06.2021',
@@ -2543,56 +2709,40 @@ def manager_profile(request):
             'xp_max': 15000,
             'xp_pct': 56,
             'xp_label': '8.450 / 15.000 XP',
-            'highscore': '12.480',
-            'highscore_rank': 'Platz 342',
-            'trophies': 7,
-            'games_total': 241,
-            'wins': 132,
-            'draws': 55,
-            'losses': 54,
-            'win_rate': '58%',
-            'win_rate_detail': '(132 S / 55 U / 54 N)',
+            'highscore': '–',
+            'highscore_rank': '–',
+            'trophies': trophies_count,
+            'games_total': games,
+            'wins': wins,
+            'draws': draws,
+            'losses': losses,
+            'win_rate': win_rate,
+            'win_rate_detail': win_rate_detail,
             'not_fielded': '1/3',
             'transfer_ban': 'Keine',
             'last_login': 'Heute, 09:42',
             'registered': '15.06.2021',
         },
-        'club_stats': {
-            'games': 241,
-            'wins': 132,
-            'win_pct': 55,
-            'draws': 45,
-            'draw_pct': 19,
-            'losses': 64,
-            'loss_pct': 26,
-            'goals': 402,
-            'goals_against': 221,
-            'points': 399,
-            'points_per_game': '1,99',
-            'goals_per_game': '1,81',
-            'goals_against_per_game': '1,00',
-            'win_streak': 8,
-            'loss_streak': 3,
-        },
+        'club_stats': club_stats,
         'current_club_summary': {
-            'name': 'FC Bayern München',
-            'crest': 'game/images/crests/915.png',
+            'name': club_name,
+            'crest': club_crest,
             'period': '15. Aug. 2023 – heute',
-            'url': '/clubs/2/',
-            'time_label': '1 Jahr, 9 Monate',
-            'games': 241,
-            'titles': 2,
-            'finals_lost': 1,
-            'best_position': '1. Platz',
-            'points_per_game': '1,99',
+            'url': club_url,
+            'time_label': '2 Jahre, 9 Monate',
+            'games': games,
+            'titles': trophies_count,
+            'finals_lost': 0,
+            'best_position': '–',
+            'points_per_game': ppg,
         },
         'records': {
-            'highest_win': '6:0 vs. FC Zwolle (02.08.2023)',
-            'wins_in_row': '10 (16.09.2023 – 25.11.2023)',
-            'highest_loss': '0:4 vs. Ajax Amsterdam (15.04.2024)',
-            'most_goals': '7 vs. Heracles Almelo (28.01.2024)',
-            'transfer_out': '€14.500.000 – O. Boussaid (01.07.2024)',
-            'transfer_in': '€18.000.000 – V. Jansen (15.07.2024)',
+            'highest_win': records_highest_win,
+            'wins_in_row': '–',
+            'highest_loss': records_highest_loss,
+            'most_goals': records_most_goals,
+            'transfer_out': transfer_out_str,
+            'transfer_in': transfer_in_str,
         },
         'login_streak': 7,
         'login_points_today': 150,
