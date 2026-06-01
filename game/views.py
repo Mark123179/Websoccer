@@ -2674,7 +2674,14 @@ def manager_profile(request):
 
     # --- Trainer types (db-persisted) ---
     from .models import ManagerProfile
-    manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+    if request.user.is_authenticated:
+        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'name': request.user.username},
+        )
+    else:
+        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+    manager_name = manager_profile_obj.name
     active_type_key = manager_profile_obj.trainer_type
     trainer_types_selectable = [
         {'key': 'laptoptrainer', 'label': 'Laptoptrainer', 'active': active_type_key == 'laptoptrainer'},
@@ -2697,11 +2704,27 @@ def manager_profile(request):
         {'date': '09.05.2025, 18:52', 'location': 'München, Deutschland', 'device': 'Windows PC', 'success': True},
     ]
 
+    member_since_display = (
+        manager_profile_obj.member_since.strftime('%d.%m.%Y')
+        if manager_profile_obj.member_since
+        else (
+            request.user.date_joined.strftime('%d.%m.%Y')
+            if request.user.is_authenticated and request.user.date_joined
+            else '–'
+        )
+    )
+    last_login_display = (
+        request.user.last_login.strftime('%d.%m.%Y, %H:%M')
+        if request.user.is_authenticated and request.user.last_login
+        else '–'
+    )
+    profile_image = manager_profile_obj.profile_image or 'game/images/managers/kirschgutzje-test.png'
+
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
         'timeline_events': timeline_events,
         'game_header': build_game_header(
-            f'Manager · Kirschgutzje',
+            f'Manager · {manager_name}',
             'Trainerprofil',
             '/',
             club,
@@ -2714,24 +2737,24 @@ def manager_profile(request):
         'login_history': login_history,
         'trophies_list': trophies_list,
         'manager': {
-            'name': 'Kirschgutzje',
+            'name': manager_name,
             'trainer_type': manager_profile_obj.trainer_type_label,
             'active_type': manager_profile_obj.trainer_type_label,
-            'flag': 'game/images/flags/771.svg',
-            'flag_name': 'Deutschland',
+            'flag': manager_profile_obj.nationality_flag,
+            'flag_name': manager_profile_obj.nationality_name,
             'club_name': club_name,
             'club_crest': club_crest,
             'club_url': club_url,
             'club_since': '15. Aug. 2023',
             'club_season': '3. Saison',
-            'member_since': '15.06.2021',
-            'profile_image': 'game/images/managers/kirschgutzje-test.png',
-            'level': 23,
-            'xp': 8450,
-            'xp_max': 15000,
-            'xp_pct': 56,
-            'xp_label': '8.450 / 15.000 XP',
-            'highscore': '–',
+            'member_since': member_since_display,
+            'profile_image': profile_image,
+            'level': manager_profile_obj.level,
+            'xp': manager_profile_obj.xp,
+            'xp_max': manager_profile_obj.xp_max,
+            'xp_pct': manager_profile_obj.xp_pct,
+            'xp_label': manager_profile_obj.xp_label,
+            'highscore': manager_profile_obj.highscore,
             'highscore_rank': '–',
             'trophies': trophies_count,
             'games_total': games,
@@ -2742,8 +2765,8 @@ def manager_profile(request):
             'win_rate_detail': win_rate_detail,
             'not_fielded': '1/3',
             'transfer_ban': 'Keine',
-            'last_login': 'Heute, 09:42',
-            'registered': '15.06.2021',
+            'last_login': last_login_display,
+            'registered': member_since_display,
         },
         'club_stats': club_stats,
         'current_club_summary': {
@@ -2829,7 +2852,13 @@ def set_trainer_type(request):
     allowed = _ALWAYS_SELECTABLE_KEYS | _get_unlocked_achievement_keys()
     if key in allowed:
         from .models import ManagerProfile
-        profile, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+        if request.user.is_authenticated:
+            profile, _ = ManagerProfile.objects.get_or_create(
+                user=request.user,
+                defaults={'name': request.user.username},
+            )
+        else:
+            profile, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
         profile.trainer_type = key
         profile.save(update_fields=['trainer_type', 'updated_at'])
 

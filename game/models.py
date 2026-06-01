@@ -1897,12 +1897,35 @@ class ManagerProfile(models.Model):
         ('vereinslegende', 'Vereinslegende'),
     ]
 
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='manager_profile',
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=100, unique=True)
     trainer_type = models.CharField(
         max_length=30,
         choices=TRAINER_TYPE_CHOICES,
         default='laptoptrainer',
     )
+    nationality_flag = models.CharField(
+        max_length=200,
+        blank=True,
+        default='game/images/flags/771.svg',
+    )
+    nationality_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default='Deutschland',
+    )
+    member_since = models.DateField(null=True, blank=True)
+    profile_image = models.CharField(max_length=200, blank=True, default='')
+    xp = models.PositiveIntegerField(default=0)
+    xp_max = models.PositiveIntegerField(default=15000)
+    level = models.PositiveIntegerField(default=1)
+    highscore = models.CharField(max_length=50, blank=True, default='–')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -1915,5 +1938,15 @@ class ManagerProfile(models.Model):
     @property
     def trainer_type_label(self):
         return dict(self.TRAINER_TYPE_CHOICES).get(self.trainer_type, self.trainer_type)
+
+    @property
+    def xp_pct(self):
+        if not self.xp_max:
+            return 0
+        return round(self.xp / self.xp_max * 100)
+
+    @property
+    def xp_label(self):
+        return f'{self.xp:,} / {self.xp_max:,} XP'.replace(',', '.')
 
 
