@@ -3431,10 +3431,17 @@ def update_manager_profile(request):
     update_fields = ['updated_at']
 
     if new_name and new_name != profile.name:
+        import re
+        from urllib.parse import urlencode
+        from django.urls import reverse
+        MIN_NAME_LENGTH = 2
+        MAX_NAME_LENGTH = 100
+        ALLOWED_NAME_RE = re.compile(r'^[\w\s\-\.\']+$', re.UNICODE)
+        if len(new_name) < MIN_NAME_LENGTH or len(new_name) > MAX_NAME_LENGTH or not ALLOWED_NAME_RE.match(new_name):
+            params = urlencode({'name_invalid': '1', 'attempted_name': new_name})
+            return redirect(f"{reverse('manager_profile')}?{params}")
         taken = ManagerProfile.objects.filter(name=new_name).exclude(pk=profile.pk).exists()
         if taken:
-            from urllib.parse import urlencode
-            from django.urls import reverse
             params = urlencode({'name_taken': '1', 'attempted_name': new_name})
             return redirect(f"{reverse('manager_profile')}?{params}")
         profile.name = new_name

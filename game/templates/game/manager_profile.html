@@ -1331,14 +1331,16 @@
                     type="text"
                     id="mpEditDisplayName"
                     name="display_name"
-                    class="mp-edit-input{% if request.GET.name_taken %} mp-edit-input--error{% endif %}"
-                    value="{% if request.GET.name_taken %}{{ request.GET.attempted_name }}{% else %}{{ manager.name }}{% endif %}"
+                    class="mp-edit-input{% if request.GET.name_taken or request.GET.name_invalid %} mp-edit-input--error{% endif %}"
+                    value="{% if request.GET.name_taken or request.GET.name_invalid %}{{ request.GET.attempted_name }}{% else %}{{ manager.name }}{% endif %}"
                     maxlength="100"
                     required
                     autocomplete="off"
                 >
                 {% if request.GET.name_taken %}
                 <span class="mp-edit-error">Dieser Name ist bereits vergeben.</span>
+                {% elif request.GET.name_invalid %}
+                <span class="mp-edit-error">Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie die Zeichen - . ' _ enthalten.</span>
                 {% endif %}
             </label>
             <label class="mp-edit-label" for="mpEditNationality">
@@ -1386,7 +1388,7 @@
         btn.addEventListener('click', closeModal);
     });
 
-    {% if not name_confirmed or request.GET.name_taken %}
+    {% if not name_confirmed or request.GET.name_taken or request.GET.name_invalid %}
     window.addEventListener('load', function () {
         setTimeout(openModal, 300);
     });
