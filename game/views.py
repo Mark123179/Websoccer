@@ -2649,8 +2649,10 @@ def manager_profile(request):
             'titles': trophies_count,
         })
 
-    # --- Trainer types (session-based) ---
-    active_type_key = request.session.get('trainer_type_key', 'laptoptrainer')
+    # --- Trainer types (db-persisted) ---
+    from .models import ManagerProfile
+    manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+    active_type_key = manager_profile_obj.trainer_type
     trainer_types_selectable = [
         {'key': 'laptoptrainer', 'label': 'Laptoptrainer', 'active': active_type_key == 'laptoptrainer'},
         {'key': 'taktikfuchs', 'label': 'Taktikfuchs', 'active': active_type_key == 'taktikfuchs'},
@@ -2690,8 +2692,8 @@ def manager_profile(request):
         'trophies_list': trophies_list,
         'manager': {
             'name': 'Kirschgutzje',
-            'trainer_type': request.session.get('trainer_type_label', 'Laptoptrainer'),
-            'active_type': request.session.get('trainer_type_label', 'Laptoptrainer'),
+            'trainer_type': manager_profile_obj.trainer_type_label,
+            'active_type': manager_profile_obj.trainer_type_label,
             'flag': 'game/images/flags/771.svg',
             'flag_name': 'Deutschland',
             'club_name': club_name,
@@ -2803,8 +2805,10 @@ def set_trainer_type(request):
 
     allowed = _ALWAYS_SELECTABLE_KEYS | _get_unlocked_achievement_keys()
     if key in allowed:
-        request.session['trainer_type_key'] = key
-        request.session['trainer_type_label'] = SELECTABLE_TRAINER_TYPES[key]
+        from .models import ManagerProfile
+        profile, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+        profile.trainer_type = key
+        profile.save(update_fields=['trainer_type', 'updated_at'])
 
     from django.shortcuts import redirect
     return redirect('manager_profile')

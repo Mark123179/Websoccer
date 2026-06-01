@@ -1801,3 +1801,41 @@ class PlayerDataReview(Player):
         verbose_name_plural = 'Spieler-Datenpruefung'
 
 
+class ManagerProfile(models.Model):
+    TRAINER_TYPE_CHOICES = [
+        ('laptoptrainer', 'Laptoptrainer'),
+        ('taktikfuchs', 'Taktikfuchs'),
+        ('motivator', 'Motivator'),
+        ('talentschmied', 'Talentschmied'),
+        ('transferstratege', 'Transferstratege'),
+        ('pokaljager', 'Pokaljäger'),
+        ('offensivarchitekt', 'Offensivarchitekt'),
+        ('underdog', 'Underdog-Flüsterer'),
+        ('aufstiegsheld', 'Aufstiegsheld'),
+        ('defensivmeister', 'Defensivmeister'),
+        ('weltenbummler', 'Weltenbummler'),
+        ('serienmeister', 'Serienmeister'),
+        ('feuerwehrmann', 'Feuerwehrmann'),
+        ('vereinslegende', 'Vereinslegende'),
+    ]
+
+    name = models.CharField(max_length=100, unique=True)
+    trainer_type = models.CharField(
+        max_length=30,
+        choices=TRAINER_TYPE_CHOICES,
+        default='laptoptrainer',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Manager-Profil'
+        verbose_name_plural = 'Manager-Profile'
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def trainer_type_label(self):
+        return dict(self.TRAINER_TYPE_CHOICES).get(self.trainer_type, self.trainer_type)
+
+

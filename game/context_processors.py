@@ -1,4 +1,4 @@
-from .models import Club
+from .models import Club, ManagerProfile
 
 CURRENT_MANAGER_PROFILE_IMAGE = 'game/images/managers/kirschgutzje-test.png'
 
@@ -10,7 +10,8 @@ def current_manager(request):
     )
     club_name = club.name if club else 'FC Bayern Muenchen'
 
-    trainer_type_label = request.session.get('trainer_type_label', 'Laptoptrainer')
+    manager_profile_obj, _ = ManagerProfile.objects.get_or_create(name='Kirschgutzje')
+    trainer_type_label = manager_profile_obj.trainer_type_label
 
     return {
         'current_manager': {
