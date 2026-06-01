@@ -1,0 +1,686 @@
+{% extends 'base.html' %}
+{% load static game_filters %}
+
+{% block body_class %}manager-profile-page{% endblock %}
+
+{% block title %}Manager · Kirschgutzje{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-34">
+{% endblock %}
+
+{% block content %}
+<div class="mp-dashboard">
+
+    <header class="mp-header">
+        <div class="mp-header-identity">
+            <div class="mp-avatar-wrap">
+                <img src="{% static manager.profile_image %}" alt="{{ manager.name }}">
+                <button class="mp-avatar-edit" type="button" aria-label="Profilbild ändern">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="mp-identity-block">
+                <div class="mp-name-row">
+                    <h1>{{ manager.name }}</h1>
+                    <button class="mp-icon-btn" type="button" aria-label="Namen bearbeiten">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
+                    </button>
+                </div>
+                <div class="mp-flag-row">
+                    <img src="{% static manager.flag %}" alt="{{ manager.flag_name }}" class="mp-flag-img">
+                    <span>{{ manager.flag_name }}</span>
+                </div>
+                <div class="mp-type-badge-row">
+                    <span class="mp-type-badge">{{ manager.active_type }}</span>
+                    <button class="mp-icon-btn" type="button" aria-label="Trainertyp bearbeiten">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
+                    </button>
+                </div>
+                <a class="mp-club-row" href="{{ manager.club_url }}">
+                    <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-club-crest">
+                    <div>
+                        <strong>{{ manager.club_name }}</strong>
+                        <small>Seit {{ manager.club_since }} ({{ manager.club_season }})</small>
+                        <small>Mitglied seit: {{ manager.member_since }}</small>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="mp-kpi-bar">
+            <div class="mp-kpi mp-kpi-level">
+                <span class="mp-kpi-label">Managerlevel</span>
+                <strong class="mp-kpi-big mp-kpi-level-num">{{ manager.level }}</strong>
+                <div class="mp-xp-track"><div class="mp-xp-fill" style="width: {{ manager.xp_pct }}%;"></div></div>
+                <small class="mp-kpi-sub">{{ manager.xp_label }}</small>
+            </div>
+            <div class="mp-kpi">
+                <span class="mp-kpi-label">Highscore</span>
+                <strong class="mp-kpi-big mp-kpi-gold">{{ manager.highscore }}</strong>
+                <small class="mp-kpi-sub">{{ manager.highscore_rank }}</small>
+            </div>
+            <div class="mp-kpi mp-kpi-trophies">
+                <span class="mp-kpi-label">Trophäen</span>
+                <strong class="mp-kpi-big mp-kpi-trophy">{{ manager.trophies }}</strong>
+                <small class="mp-kpi-sub"><a href="?tab=profil">Alle ansehen</a></small>
+            </div>
+            <div class="mp-kpi">
+                <span class="mp-kpi-label">Spiele Gesamt</span>
+                <strong class="mp-kpi-big">{{ manager.games_total }}</strong>
+            </div>
+            <div class="mp-kpi mp-kpi-wide">
+                <span class="mp-kpi-label">Siegquote</span>
+                <strong class="mp-kpi-big">{{ manager.win_rate }}</strong>
+                <small class="mp-kpi-sub">{{ manager.win_rate_detail }}</small>
+            </div>
+            <div class="mp-kpi">
+                <span class="mp-kpi-label">Nicht aufgestellte Spiele</span>
+                <strong class="mp-kpi-big">{{ manager.not_fielded }}</strong>
+            </div>
+            <div class="mp-kpi">
+                <span class="mp-kpi-label">Transfersperre</span>
+                <strong class="mp-kpi-big">{{ manager.transfer_ban }}</strong>
+            </div>
+            <div class="mp-kpi">
+                <span class="mp-kpi-label">Letzte Anmeldung</span>
+                <strong class="mp-kpi-medium">{{ manager.last_login }}</strong>
+            </div>
+            <div class="mp-kpi">
+                <span class="mp-kpi-label">Registriert am</span>
+                <strong class="mp-kpi-medium">{{ manager.registered }}</strong>
+            </div>
+        </div>
+    </header>
+
+    <nav class="mp-tabs" aria-label="Manager-Bereiche">
+        <a href="?tab=profil" class="mp-tab {% if tab == 'profil' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            Profil
+        </a>
+        <a href="?tab=einstellungen" class="mp-tab {% if tab == 'einstellungen' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="2"/><path d="M9 1v2m0 12v2M1 9h2m12 0h2M3.2 3.2l1.4 1.4m8.8 8.8 1.4 1.4M3.2 14.8l1.4-1.4m8.8-8.8 1.4-1.4"/></svg>
+            Sicherheit &amp; Einstellungen
+        </a>
+        <a href="?tab=karriere" class="mp-tab {% if tab == 'karriere' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="5" width="14" height="11" rx="1.5"/><path d="M6 5V3.5A1.5 1.5 0 0 1 7.5 2h3A1.5 1.5 0 0 1 12 3.5V5"/><path d="M2 9h14"/></svg>
+            Karriere
+        </a>
+        <a href="?tab=vereine" class="mp-tab {% if tab == 'vereine' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 2L2 7v9h5v-5h4v5h5V7z"/></svg>
+            Vereine
+        </a>
+        <a href="?tab=rekordbuch" class="mp-tab {% if tab == 'rekordbuch' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 2h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M6 6h6M6 9h6M6 12h4"/></svg>
+            Rekordbuch
+        </a>
+        <a href="?tab=statistiken" class="mp-tab {% if tab == 'statistiken' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 14l4-5 3 3 3-5 4 4"/><path d="M2 16h14"/></svg>
+            Statistiken
+        </a>
+        <a href="?tab=auszeichnungen" class="mp-tab {% if tab == 'auszeichnungen' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 2l1.8 3.6L15 6.4l-3 2.9.7 4.1L9 11.3l-3.7 2.1.7-4.1-3-2.9 4.2-.8z"/></svg>
+            Auszeichnungen
+        </a>
+    </nav>
+
+    {% if tab == 'profil' %}
+    <section class="mp-tab-content">
+
+        <div class="mp-timeline-section">
+            <div class="mp-timeline-header">
+                <h2>Karriere Timeline</h2>
+                <div class="mp-timeline-filters" role="group" aria-label="Timeline filtern">
+                    {% for f in "ALLE,VEREIN,TITEL,FINALE,LIGA,TRANSFERS,PROFIL,STATUS"|split:"," %}
+                    <button type="button" class="mp-tl-filter {% if forloop.first %}is-active{% endif %}" data-filter="{{ f|lower }}">{{ f }}</button>
+                    {% endfor %}
+                </div>
+                <div class="mp-timeline-nav">
+                    <button type="button" class="mp-tl-nav-btn" aria-label="Zurück">&#8249;</button>
+                    <button type="button" class="mp-tl-nav-btn" aria-label="Weiter">&#8250;</button>
+                    <button type="button" class="mp-tl-today-btn">HEUTE</button>
+                </div>
+            </div>
+
+            <div class="mp-timeline-scroll" data-timeline-scroll>
+                <div class="mp-timeline-events" data-timeline-events>
+                    {% for event in timeline_events %}
+                    <div class="mp-tl-event is-{{ event.tone }}" data-type="{{ event.type }}">
+                        <div class="mp-tl-card">
+                            <time class="mp-tl-date">{{ event.date }}</time>
+                            <strong class="mp-tl-title">{{ event.title }}</strong>
+                            <p class="mp-tl-body">{{ event.body }}</p>
+                            {% if event.crest %}
+                            <img class="mp-tl-crest" src="{% static event.crest %}" alt="">
+                            {% endif %}
+                            <div class="mp-tl-icon is-{{ event.icon }}">
+                                {% if event.icon == 'trophy' %}
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M5 2v4a5 5 0 0 0 10 0V2H5zm5 13a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3zm-1 1h2v2H9v-2z"/></svg>
+                                {% elif event.icon == 'join' %}
+                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                                {% elif event.icon == 'cup' %}
+                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm-1 2h2v2H9v-2zm-3 2h8v2H6v-2z"/></svg>
+                                {% elif event.icon == 'transfer' %}
+                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h12M4 13h12"/><path d="M14 4l3 3-3 3M6 16l-3-3 3-3"/></svg>
+                                {% elif event.icon == 'profile' %}
+                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                                {% else %}
+                                <svg viewBox="0 0 20 20" fill="currentColor"><rect x="3" y="4" width="14" height="13" rx="1.5"/><path d="M3 8h14" fill="none" stroke="white" stroke-width="1.5"/></svg>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mp-timeline-axis">
+                    <div class="mp-tl-axis-line"></div>
+                    <div class="mp-tl-axis-labels">
+                        <span>Jul. 2023</span>
+                        <span>2023/24</span>
+                        <span>2024/25</span>
+                        <span>2025/26</span>
+                        <span class="mp-tl-today-marker">HEUTE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mp-current-club-bar">
+            <a class="mp-ccb-crest-link" href="{{ current_club_summary.url }}">
+                <img src="{% static current_club_summary.crest %}" alt="{{ current_club_summary.name }}">
+            </a>
+            <div class="mp-ccb-info">
+                <strong>{{ current_club_summary.name }}</strong>
+                <small>Zeitraum: {{ current_club_summary.period }}</small>
+            </div>
+            <a href="{{ current_club_summary.url }}" class="mp-ccb-switch-btn">
+                VEREIN WECHSELN
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 6h8m-3-3 3 3-3 3"/></svg>
+            </a>
+            <div class="mp-ccb-stats">
+                <div>
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
+                    <span>Zeit als Trainer</span>
+                    <strong>{{ current_club_summary.time_label }}</strong>
+                </div>
+                <div>
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 8h4M8 6v4"/></svg>
+                    <span>Spiele Gesamt</span>
+                    <strong>{{ current_club_summary.games }}</strong>
+                </div>
+                <div>
+                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l1.5 3 3.2.5-2.3 2.2.5 3.3L8 9.5l-2.9 1.5.5-3.3-2.3-2.2 3.2-.5z"/></svg>
+                    <span>Titel gewonnen</span>
+                    <strong>{{ current_club_summary.titles }}</strong>
+                </div>
+                <div>
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 2v5a4 4 0 0 0 8 0V2"/><path d="M2 2h12"/></svg>
+                    <span>Finale verloren</span>
+                    <strong>{{ current_club_summary.finals_lost }}</strong>
+                </div>
+                <div>
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 12l4-5 3 3 3-5 4 4"/></svg>
+                    <span>Beste Platzierung</span>
+                    <strong>{{ current_club_summary.best_position }}</strong>
+                </div>
+                <div>
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 2v2m0 8v2M2 8h2m8 0h2"/></svg>
+                    <span>Punkte/Spiel</span>
+                    <strong>{{ current_club_summary.points_per_game }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="mp-profile-grid">
+
+            <article class="mp-card mp-card-trophies">
+                <header class="mp-card-header">
+                    <h3>Trophäensammlung</h3>
+                    <a href="#" class="mp-card-link">Alle ansehen ▾</a>
+                </header>
+                <div class="mp-trophies-row">
+                    {% for trophy in trophies_list %}
+                    <div class="mp-trophy-slot">
+                        <img src="{% static trophy.icon %}" alt="{{ trophy.name }}">
+                        {% if trophy.count > 1 %}<span class="mp-trophy-count">{{ trophy.count }}x</span>{% endif %}
+                        <small>{{ trophy.name }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="mp-card mp-card-badges">
+                <header class="mp-card-header">
+                    <h3>Badges &amp; Trainertyp</h3>
+                    <select class="mp-card-select" aria-label="Saison">
+                        <option>Saison 2024/25</option>
+                        <option>Saison 2023/24</option>
+                    </select>
+                </header>
+                <div class="mp-badges-inner">
+                    <div class="mp-badges-portrait">
+                        <img src="{% static manager.profile_image %}" alt="{{ manager.name }}">
+                    </div>
+                    <div class="mp-badges-club-block">
+                        <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-badges-crest">
+                        <strong>{{ manager.club_name }}</strong>
+                        <span>2. Bundesliga Saison 2024/25</span>
+                    </div>
+                    <div class="mp-badges-stats-row">
+                        <div><strong>241</strong><small>Spiele</small></div>
+                        <div><strong>132</strong><small>Siege</small></div>
+                        <div><strong>45</strong><small>Unentschieden</small></div>
+                        <div><strong>64</strong><small>Niederlagen</small></div>
+                        <div><strong>399</strong><small>Punkte</small></div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="mp-card mp-card-stats">
+                <header class="mp-card-header">
+                    <h3>Statistik ({{ current_club_summary.name }})</h3>
+                    <a href="#" class="mp-card-link">Detaillierte Statistiken</a>
+                </header>
+                <div class="mp-stats-grid">
+                    <div class="mp-stat-row"><span>Spiele gesamt</span><strong>{{ club_stats.games }}</strong></div>
+                    <div class="mp-stat-row"><span>Siege</span><strong>{{ club_stats.wins }} ({{ club_stats.win_pct }}%)</strong></div>
+                    <div class="mp-stat-row"><span>Unentschieden</span><strong>{{ club_stats.draws }} ({{ club_stats.draw_pct }}%)</strong></div>
+                    <div class="mp-stat-row"><span>Niederlagen</span><strong>{{ club_stats.losses }} ({{ club_stats.loss_pct }}%)</strong></div>
+                    <div class="mp-stat-row"><span>Tore</span><strong>{{ club_stats.goals }}</strong></div>
+                    <div class="mp-stat-row"><span>Gegentore</span><strong>{{ club_stats.goals_against }}</strong></div>
+                    <div class="mp-stat-sep"></div>
+                    <div class="mp-stat-row is-right"><span>Punkte</span><strong>{{ club_stats.points }}</strong></div>
+                    <div class="mp-stat-row is-right"><span>Punkte pro Spiel</span><strong>{{ club_stats.points_per_game }}</strong></div>
+                    <div class="mp-stat-row is-right"><span>Tore pro Spiel</span><strong>{{ club_stats.goals_per_game }}</strong></div>
+                    <div class="mp-stat-row is-right"><span>Gegentore pro Spiel</span><strong>{{ club_stats.goals_against_per_game }}</strong></div>
+                    <div class="mp-stat-row is-right"><span>Siegesserie (max.)</span><strong>{{ club_stats.win_streak }}</strong></div>
+                    <div class="mp-stat-row is-right"><span>Niederlagenserie (max.)</span><strong>{{ club_stats.loss_streak }}</strong></div>
+                </div>
+            </article>
+
+            <article class="mp-card mp-card-login">
+                <h3>Login Belohnungen</h3>
+                <div class="mp-login-grid">
+                    <div class="mp-login-col">
+                        <span class="mp-login-label">Täglicher Login</span>
+                        <div class="mp-login-check">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                        </div>
+                    </div>
+                    <div class="mp-login-col">
+                        <span class="mp-login-label">Login Streak</span>
+                        <span class="mp-login-streak-label">{{ login_streak }} Tage</span>
+                        <strong class="mp-login-points">+{{ login_points_today }}</strong>
+                        <small>+1 Bonus</small>
+                    </div>
+                    <div class="mp-login-col">
+                        <span class="mp-login-label">Nächste Belohnung</span>
+                        <span class="mp-login-next-days">in {{ next_reward_days }} Tagen</span>
+                        <div class="mp-login-reward-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="mp-login-track">
+                    {% for i in "1234567"|make_list %}
+                    <div class="mp-login-pip {% if forloop.counter <= login_streak %}is-done{% endif %}">{{ forloop.counter }}</div>
+                    {% endfor %}
+                    <div class="mp-login-pip">14</div>
+                    <div class="mp-login-pip">30</div>
+                </div>
+            </article>
+
+            <article class="mp-card mp-card-records">
+                <h3>Rekordbuch</h3>
+                <div class="mp-records-grid">
+                    <div class="mp-record-row">
+                        <span>Höchster Sieg</span><strong>{{ records.highest_win }}</strong>
+                    </div>
+                    <div class="mp-record-row">
+                        <span>Meiste Siege in Folge</span><strong>{{ records.wins_in_row }}</strong>
+                    </div>
+                    <div class="mp-record-row">
+                        <span>Höchste Niederlage</span><strong>{{ records.highest_loss }}</strong>
+                    </div>
+                    <div class="mp-record-row">
+                        <span>Meiste Tore in einem Spiel</span><strong>{{ records.most_goals }}</strong>
+                    </div>
+                    <div class="mp-record-row">
+                        <span>Teuerster Transfer (Ausgabe)</span><strong>{{ records.transfer_out }}</strong>
+                    </div>
+                    <div class="mp-record-row">
+                        <span>Teuerster Transfer (Einnahme)</span><strong>{{ records.transfer_in }}</strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="mp-card mp-card-euromap">
+                <header class="mp-card-header">
+                    <h3>Trainerstationen · Europa</h3>
+                </header>
+                <div class="mp-euromap-wrap">
+                    <svg class="mp-euromap-svg" viewBox="0 0 500 380" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="500" height="380" fill="#06121d"/>
+                        <polygon class="mp-europe-land" points="
+                            55,295 72,312 100,302 130,264 152,252 168,246 178,260
+                            192,290 208,318 226,342 248,347 270,330 282,310
+                            296,318 312,297 324,272 340,255 358,268 380,250
+                            390,230 378,210 358,196 338,180 316,160 298,147
+                            282,128 270,110 252,96 240,78 232,57 222,40
+                            214,57 208,74 198,90 184,122 170,157 162,173
+                            176,180 186,194 172,218 150,224 130,237
+                            110,257 90,274 70,287
+                        "/>
+                        <polyline class="mp-map-route" points="197,182 252,204"/>
+                        {% for station in map_stations %}
+                        <g class="mp-map-station {% if station.active %}is-active{% endif %}" transform="translate({{ station.x }}, {{ station.y }})">
+                            <circle r="10" class="mp-map-pin-ring"/>
+                            <circle r="5" class="mp-map-pin-dot"/>
+                            <text x="15" y="-8" class="mp-map-city-label">{{ station.city }}</text>
+                            <text x="15" y="5" class="mp-map-club-label">{{ station.club }}</text>
+                        </g>
+                        {% endfor %}
+                    </svg>
+                    <div class="mp-euromap-legend">
+                        {% for station in map_stations %}
+                        <div class="mp-map-legend-item {% if station.active %}is-active{% endif %}">
+                            <span class="mp-map-legend-dot"></span>
+                            <div>
+                                <strong>{{ station.club }}</strong>
+                                <small>{{ station.city }}, {{ station.country }} · {{ station.period }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+
+            <article class="mp-card mp-card-trainertypes">
+                <header class="mp-card-header">
+                    <h3>Badges &amp; Auszeichnungen</h3>
+                    <a href="?tab=auszeichnungen" class="mp-card-link">Alle ansehen</a>
+                </header>
+                <div class="mp-types-section">
+                    <p class="mp-types-section-label">Direkt wählbar</p>
+                    <div class="mp-types-grid">
+                        {% for t in trainer_types_selectable %}
+                        <div class="mp-type-tile {% if t.active %}is-active{% endif %}">{{ t.label }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mp-types-section">
+                    <p class="mp-types-section-label">Freischaltbare Titel</p>
+                    <div class="mp-types-unlock-list">
+                        {% for t in trainer_types_unlockable %}
+                        <div class="mp-type-unlock {% if t.unlocked %}is-unlocked{% endif %}">
+                            <div class="mp-type-unlock-header">
+                                <span class="mp-type-unlock-name">{{ t.label }}</span>
+                                {% if t.unlocked %}
+                                <span class="mp-type-unlock-badge">✓</span>
+                                {% else %}
+                                <span class="mp-type-unlock-pct">{{ t.progress }}/{{ t.max }}</span>
+                                {% endif %}
+                            </div>
+                            <small class="mp-type-unlock-cond">{{ t.condition }}</small>
+                            {% if not t.unlocked %}
+                            <div class="mp-type-unlock-bar">
+                                <div class="mp-type-unlock-fill" style="width: {% widthratio t.progress t.max 100 %}%;"></div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    {% elif tab == 'einstellungen' %}
+    <section class="mp-tab-content mp-settings-content">
+        <div class="mp-settings-grid">
+
+            <div class="mp-settings-col">
+                <article class="mp-card mp-card-account">
+                    <h3>Kontodaten</h3>
+                    <div class="mp-account-fields">
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                            <span>Nickname</span><strong>Kirschgutzje</strong>
+                        </div>
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="9" rx="1"/><path d="M2 5l6 5 6-5"/></svg>
+                            <span>E-Mail-Adresse</span>
+                            <strong>kirschgutzje@mail.com</strong>
+                            <span class="mp-verified-badge">Verifiziert</span>
+                        </div>
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M2 6h12M5 2v4M11 2v4"/></svg>
+                            <span>Geburtstag</span><strong>12.04.1990 (35)</strong>
+                        </div>
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 2C5.8 2 4 3.8 4 6c0 3.3 4 8 4 8s4-4.7 4-8c0-2.2-1.8-4-4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>
+                            <span>Wohnort</span><strong>Köln, Deutschland</strong>
+                        </div>
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
+                            <span>Land</span>
+                            <div class="mp-account-select-wrap">
+                                <img src="{% static 'game/images/flags/771.svg' %}" alt="" class="mp-select-flag">
+                                <select class="mp-inline-select" aria-label="Land">
+                                    <option selected>Deutschland</option>
+                                    <option>Österreich</option>
+                                    <option>Schweiz</option>
+                                    <option>Spanien</option>
+                                    <option>England</option>
+                                    <option>Niederlande</option>
+                                    <option>Frankreich</option>
+                                    <option>Italien</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
+                            <span>Lieblingsverein</span>
+                            <select class="mp-inline-select" aria-label="Lieblingsverein">
+                                <option selected>Borussia Dortmund</option>
+                                <option>FC Bayern München</option>
+                                <option>Bayer 04 Leverkusen</option>
+                            </select>
+                        </div>
+                        <div class="mp-account-row">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                            <span>Trainer-Typ</span>
+                            <select class="mp-inline-select" aria-label="Trainer-Typ">
+                                <option selected>Taktikfuchs</option>
+                                <option>Laptoptrainer</option>
+                                <option>Motivator</option>
+                                <option>Talentschmied</option>
+                                <option>Transferstratege</option>
+                                <option>Pokaljäger</option>
+                                <option>Offensivarchitekt</option>
+                                <option>Underdog-Flüsterer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="mp-btn mp-btn-primary" type="button">Kontodaten bearbeiten</button>
+                </article>
+
+                <article class="mp-card mp-card-manage">
+                    <h3>Konto verwalten</h3>
+                    <div class="mp-manage-list">
+                        <div class="mp-manage-row">
+                            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="4" width="14" height="11" rx="1"/><path d="M2 7l7 5 7-5"/></svg>
+                            <div>
+                                <strong>E-Mail-Adresse ändern</strong>
+                                <small>Ändere deine hinterlegte E-Mail-Adresse.</small>
+                            </div>
+                            <button class="mp-btn mp-btn-secondary" type="button">E-Mail ändern</button>
+                        </div>
+                        <div class="mp-manage-row is-danger">
+                            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6l1.5 10.5h9L15 6"/><path d="M2 6h14M7 6V3.5A1.5 1.5 0 0 1 8.5 2h1A1.5 1.5 0 0 1 11 3.5V6"/></svg>
+                            <div>
+                                <strong>Konto löschen</strong>
+                                <small>Lösche deinen Account dauerhaft und unwiderruflich.</small>
+                            </div>
+                            <button class="mp-btn mp-btn-danger" type="button">Konto löschen</button>
+                        </div>
+                        <div class="mp-manage-row">
+                            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 2v10"/><path d="M5 8l4 4 4-4"/><rect x="2" y="14" width="14" height="3" rx="1"/></svg>
+                            <div>
+                                <strong>Daten herunterladen</strong>
+                                <small>Lade eine Kopie deiner persönlichen Daten herunter.</small>
+                            </div>
+                            <button class="mp-btn mp-btn-secondary" type="button">Anfordern</button>
+                        </div>
+                    </div>
+                    <p class="mp-manage-notice">
+                        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h2v4H7z"/></svg>
+                        Deine Daten sind sicher. Wir verwenden moderne Sicherheitsstandards, um deine Informationen zu schützen.
+                    </p>
+                </article>
+            </div>
+
+            <div class="mp-settings-col">
+                <article class="mp-card mp-card-password">
+                    <h3>Passwort ändern</h3>
+                    <div class="mp-pw-form">
+                        <label class="mp-pw-label">
+                            <span>Aktuelles Passwort</span>
+                            <div class="mp-pw-input-wrap">
+                                <input type="password" value="••••••••••••" class="mp-pw-input" autocomplete="current-password">
+                                <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen">
+                                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg>
+                                </button>
+                            </div>
+                        </label>
+                        <label class="mp-pw-label">
+                            <span>Neues Passwort</span>
+                            <div class="mp-pw-input-wrap">
+                                <input type="password" value="••••••••••" class="mp-pw-input" autocomplete="new-password">
+                                <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen">
+                                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg>
+                                </button>
+                            </div>
+                        </label>
+                        <label class="mp-pw-label">
+                            <span>Neues Passwort wiederholen</span>
+                            <div class="mp-pw-input-wrap">
+                                <input type="password" value="••••••••••" class="mp-pw-input" autocomplete="new-password">
+                                <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen">
+                                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg>
+                                </button>
+                            </div>
+                        </label>
+                        <ul class="mp-pw-rules">
+                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Mindestens 12 Zeichen</li>
+                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Groß- &amp; Kleinbuchstaben</li>
+                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Mindestens eine Zahl</li>
+                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Keine einfachen Muster</li>
+                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Nicht in den letzten 5 Passwörtern verwendet</li>
+                        </ul>
+                        <button class="mp-btn mp-btn-primary" type="button">Passwort ändern</button>
+                    </div>
+                </article>
+            </div>
+
+            <div class="mp-settings-col">
+                <article class="mp-card mp-card-privacy">
+                    <header class="mp-card-header">
+                        <h3>Sichtbarkeit &amp; Privatsphäre</h3>
+                    </header>
+                    <p class="mp-privacy-desc">Lege fest, welche Informationen andere Manager sehen dürfen.</p>
+                    <div class="mp-privacy-table">
+                        <div class="mp-privacy-thead">
+                            <span>Feld</span>
+                            <span>Öffentlich anzeigen</span>
+                        </div>
+                        {% for field in "Profilbild,Nickname,Trainer-Typ,Landesflagge,Lieblingsverein,E-Mail-Adresse,Geburtstag,Wohnort,Registriert am,Letzte Anmeldung"|split:"," %}
+                        <div class="mp-privacy-row">
+                            <span class="mp-privacy-field">{{ field }}</span>
+                            <div class="mp-privacy-controls">
+                                <label class="mp-toggle">
+                                    <input type="checkbox" {% if forloop.counter <= 5 %}checked{% endif %}>
+                                    <span class="mp-toggle-track"></span>
+                                </label>
+                                <select class="mp-visibility-select" aria-label="{{ field }} Sichtbarkeit">
+                                    <option {% if forloop.counter <= 5 %}selected{% endif %}>Für alle</option>
+                                    <option>Freunde</option>
+                                    <option {% if forloop.counter > 5 %}selected{% endif %}>Nur ich</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="mp-btn mp-btn-primary" type="button">Speichern</button>
+                </article>
+            </div>
+
+        </div>
+
+        <article class="mp-card mp-card-loginhistory">
+            <header class="mp-card-header">
+                <h3>Login-Verlauf</h3>
+            </header>
+            <p class="mp-privacy-desc">Die letzten erfolgreichen Anmeldungen an deinem Konto.</p>
+            <table class="mp-history-table">
+                <thead>
+                    <tr>
+                        <th>Datum &amp; Uhrzeit</th>
+                        <th>Standort</th>
+                        <th>Gerät</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in login_history %}
+                    <tr>
+                        <td>{{ entry.date }}</td>
+                        <td>{{ entry.location }}</td>
+                        <td>{{ entry.device }}</td>
+                        <td><span class="mp-status-badge {% if entry.success %}is-success{% endif %}">{% if entry.success %}Erfolgreich{% else %}Fehlgeschlagen{% endif %}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <button class="mp-btn mp-btn-ghost" type="button">Gesamten Verlauf anzeigen</button>
+        </article>
+    </section>
+
+    {% else %}
+    <section class="mp-tab-content mp-coming-soon">
+        <div class="mp-coming-soon-inner">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="32" cy="32" r="28"/>
+                <path d="M32 20v16l8 8"/>
+            </svg>
+            <h2>Kommt bald</h2>
+            <p>Dieser Bereich wird demnächst freigeschaltet.</p>
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const filters = document.querySelectorAll('.mp-tl-filter');
+    const events = document.querySelectorAll('.mp-tl-event');
+    filters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filters.forEach(b => b.classList.remove('is-active'));
+            btn.classList.add('is-active');
+            const f = btn.dataset.filter;
+            events.forEach(ev => {
+                ev.style.display = (f === 'alle' || ev.dataset.type === f) ? '' : 'none';
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

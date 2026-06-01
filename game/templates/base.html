@@ -29,7 +29,7 @@
     <div class="dashboard-scaler">
 
     <nav class="navbar" aria-label="Hauptnavigation">
-        <a class="manager-profile" href="{{ current_manager.club_url }}">
+        <a class="manager-profile" href="{% url 'manager_profile' %}">
             <img class="manager-avatar" src="{% static current_manager.profile_image %}" alt="{{ current_manager.name }}">
             <span class="manager-copy">
                 <span>Manager</span>

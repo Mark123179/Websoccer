@@ -11,6 +11,7 @@ from .views import (
     club_tactics,
     club_youth_squad,
     home,
+    manager_profile,
     player_detail,
     player_graph_data,
 )
@@ -103,6 +104,8 @@ urlpatterns = [
         player_graph_data,
         name='player_graph_data'
     ),
+
+    path('manager/profil/', manager_profile, name='manager_profile'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

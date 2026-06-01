@@ -16,3 +16,8 @@ def shorten_name(name, max_len=16):
     if len(parts) >= 2:
         return f"{parts[0][0]}. {parts[-1]}"
     return name[:max_len] + "\u2026"
+
+
+@register.filter
+def split(value, arg):
+    return value.split(arg)
