@@ -2643,7 +2643,7 @@ def manager_profile(request):
             })
 
     # --- Manager profile (needed for career stations and trainer types) ---
-    from .models import ManagerProfile, ManagerCareerStation
+    from .models import ManagerProfile, ManagerCareerStation, COUNTRY_FLAG_ASSETS
     from django.db.models import Sum as _Sum
     if request.user.is_authenticated:
         manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
@@ -2839,6 +2839,9 @@ def manager_profile(request):
         'login_streak': 7,
         'login_points_today': 150,
         'next_reward_days': 2,
+        'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
+        'current_nationality': manager_profile_obj.nationality_name,
+        'can_edit_profile': request.user.is_authenticated,
     })
 
 
@@ -2946,4 +2949,40 @@ def set_trainer_type(request):
         profile.save(update_fields=['trainer_type', 'updated_at'])
 
     from django.shortcuts import redirect
+    return redirect('manager_profile')
+
+
+def update_manager_profile(request):
+    if request.method != 'POST':
+        from django.http import HttpResponseNotAllowed
+        return HttpResponseNotAllowed(['POST'])
+
+    from django.shortcuts import redirect
+    if not request.user.is_authenticated:
+        return redirect('manager_profile')
+
+    from .models import ManagerProfile, COUNTRY_FLAG_ASSETS
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+
+    new_name = request.POST.get('display_name', '').strip()
+    nationality_name = request.POST.get('nationality_name', '').strip()
+
+    update_fields = ['updated_at']
+
+    if new_name and new_name != profile.name:
+        taken = ManagerProfile.objects.filter(name=new_name).exclude(pk=profile.pk).exists()
+        if not taken:
+            profile.name = new_name
+            update_fields.append('name')
+
+    if nationality_name and nationality_name in COUNTRY_FLAG_ASSETS:
+        info = COUNTRY_FLAG_ASSETS[nationality_name]
+        profile.nationality_name = nationality_name
+        profile.nationality_flag = f'game/images/flags/{info["asset_id"]}.svg'
+        update_fields += ['nationality_name', 'nationality_flag']
+
+    profile.save(update_fields=list(set(update_fields)))
     return redirect('manager_profile')

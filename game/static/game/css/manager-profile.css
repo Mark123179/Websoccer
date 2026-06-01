@@ -2222,3 +2222,122 @@ body.manager-profile-page .nav-menu a:first-child {
     font-size: 14px;
     margin: 0;
 }
+
+/* ── Edit-Profile Modal ─────────────────────────────────────────────────── */
+
+.mp-icon-btn-sm {
+    height: 20px;
+    margin-left: 4px;
+    opacity: 0.6;
+    padding: 0;
+    width: 20px;
+}
+
+.mp-icon-btn-sm:hover {
+    opacity: 1;
+}
+
+.mp-edit-profile-overlay {
+    align-items: center;
+    background: rgba(2, 6, 14, 0.72);
+    bottom: 0;
+    display: none;
+    justify-content: center;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 900;
+}
+
+.mp-edit-profile-overlay.is-open {
+    display: flex;
+}
+
+.mp-edit-profile-modal {
+    background: rgb(10, 22, 38);
+    border: 1px solid rgba(138, 92, 246, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+    max-width: 420px;
+    padding: 28px 28px 24px;
+    width: 90%;
+}
+
+.mp-edit-modal-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 22px;
+}
+
+.mp-edit-modal-header h2 {
+    color: #f0f6ff;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    margin: 0;
+}
+
+.mp-edit-modal-close {
+    background: none;
+    border: none;
+    color: rgba(200, 210, 240, 0.5);
+    cursor: pointer;
+    height: 28px;
+    padding: 4px;
+    width: 28px;
+}
+
+.mp-edit-modal-close:hover {
+    color: #f0f6ff;
+}
+
+.mp-edit-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.mp-edit-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mp-edit-label span {
+    color: rgba(180, 195, 230, 0.7);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.mp-edit-input,
+.mp-edit-select {
+    background: rgba(6, 18, 34, 0.9);
+    border: 1px solid rgba(138, 92, 246, 0.25);
+    border-radius: 7px;
+    color: #eef2ff;
+    font-size: 14px;
+    outline: none;
+    padding: 9px 12px;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+
+.mp-edit-input:focus,
+.mp-edit-select:focus {
+    border-color: rgba(138, 92, 246, 0.7);
+}
+
+.mp-edit-select option {
+    background: #0a1626;
+}
+
+.mp-edit-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 6px;
+}

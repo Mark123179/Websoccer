@@ -13,6 +13,7 @@ from .views import (
     home,
     manager_profile,
     set_trainer_type,
+    update_manager_profile,
     player_detail,
     player_graph_data,
 )
@@ -108,6 +109,7 @@ urlpatterns = [
 
     path('manager/profil/', manager_profile, name='manager_profile'),
     path('manager/set-type/', set_trainer_type, name='set_trainer_type'),
+    path('manager/update-profile/', update_manager_profile, name='update_manager_profile'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

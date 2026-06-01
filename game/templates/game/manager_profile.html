@@ -28,13 +28,20 @@
             <div class="mp-identity-block">
                 <div class="mp-name-row">
                     <h1>{{ manager.name }}</h1>
-                    <button class="mp-icon-btn" type="button" aria-label="Namen bearbeiten">
+                    {% if can_edit_profile %}
+                    <button class="mp-icon-btn" type="button" aria-label="Namen bearbeiten" data-open-edit-profile>
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
                     </button>
+                    {% endif %}
                 </div>
                 <div class="mp-flag-row">
                     <img src="{% static manager.flag %}" alt="{{ manager.flag_name }}" class="mp-flag-img">
                     <span>{{ manager.flag_name }}</span>
+                    {% if can_edit_profile %}
+                    <button class="mp-icon-btn mp-icon-btn-sm" type="button" aria-label="Nationalität bearbeiten" data-open-edit-profile>
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
+                    </button>
+                    {% endif %}
                 </div>
                 <div class="mp-type-badge-row">
                     <span class="mp-type-badge">{{ manager.active_type }}</span>
@@ -960,4 +967,76 @@
     }
 })();
 </script>
+
+{% if can_edit_profile %}
+<div class="mp-edit-profile-overlay" id="mpEditProfileOverlay" aria-modal="true" role="dialog" aria-label="Profil bearbeiten">
+    <div class="mp-edit-profile-modal" id="mpEditProfileModal">
+        <header class="mp-edit-modal-header">
+            <h2>Profil bearbeiten</h2>
+            <button class="mp-edit-modal-close" type="button" aria-label="Schließen">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+            </button>
+        </header>
+        <form method="post" action="{% url 'update_manager_profile' %}" class="mp-edit-modal-form">
+            {% csrf_token %}
+            <label class="mp-edit-label" for="mpEditDisplayName">
+                <span>Anzeigename</span>
+                <input
+                    type="text"
+                    id="mpEditDisplayName"
+                    name="display_name"
+                    class="mp-edit-input"
+                    value="{{ manager.name }}"
+                    maxlength="100"
+                    required
+                    autocomplete="off"
+                >
+            </label>
+            <label class="mp-edit-label" for="mpEditNationality">
+                <span>Nationalität</span>
+                <select id="mpEditNationality" name="nationality_name" class="mp-edit-select">
+                    {% for country in country_choices %}
+                    <option value="{{ country }}" {% if country == current_nationality %}selected{% endif %}>{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <div class="mp-edit-modal-actions">
+                <button type="button" class="mp-btn mp-btn-secondary mp-edit-modal-close">Abbrechen</button>
+                <button type="submit" class="mp-btn mp-btn-primary">Speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(function () {
+    const overlay = document.getElementById('mpEditProfileOverlay');
+    const modal   = document.getElementById('mpEditProfileModal');
+    if (!overlay || !modal) return;
+
+    function openModal() {
+        overlay.classList.add('is-open');
+        modal.querySelector('#mpEditDisplayName').focus();
+    }
+    function closeModal() {
+        overlay.classList.remove('is-open');
+    }
+
+    document.querySelectorAll('[data-open-edit-profile]').forEach(btn => {
+        btn.addEventListener('click', openModal);
+    });
+
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
+    });
+
+    modal.querySelectorAll('.mp-edit-modal-close').forEach(btn => {
+        btn.addEventListener('click', closeModal);
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}
