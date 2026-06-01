@@ -3439,7 +3439,12 @@ def update_manager_profile(request):
         return HttpResponseNotAllowed(['POST'])
 
     from django.shortcuts import redirect
+    from django.http import JsonResponse
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if not request.user.is_authenticated:
+        if is_ajax:
+            return JsonResponse({'ok': False, 'error': 'not_authenticated'}, status=403)
         return redirect('manager_profile')
 
     from .models import ManagerProfile, COUNTRY_FLAG_ASSETS
@@ -3461,10 +3466,14 @@ def update_manager_profile(request):
         MAX_NAME_LENGTH = 100
         ALLOWED_NAME_RE = re.compile(r'^[\w\s\-\.\']+$', re.UNICODE)
         if len(new_name) < MIN_NAME_LENGTH or len(new_name) > MAX_NAME_LENGTH or not ALLOWED_NAME_RE.match(new_name):
+            if is_ajax:
+                return JsonResponse({'ok': False, 'error': 'name_invalid', 'attempted_name': new_name})
             params = urlencode({'name_invalid': '1', 'attempted_name': new_name})
             return redirect(f"{reverse('manager_profile')}?{params}")
         taken = ManagerProfile.objects.filter(name=new_name).exclude(pk=profile.pk).exists()
         if taken:
+            if is_ajax:
+                return JsonResponse({'ok': False, 'error': 'name_taken', 'attempted_name': new_name})
             params = urlencode({'name_taken': '1', 'attempted_name': new_name})
             return redirect(f"{reverse('manager_profile')}?{params}")
         profile.name = new_name
@@ -3481,4 +3490,7 @@ def update_manager_profile(request):
         update_fields += ['nationality_name', 'nationality_flag']
 
     profile.save(update_fields=list(set(update_fields)))
+
+    if is_ajax:
+        return JsonResponse({'ok': True, 'name_confirmed': profile.name_confirmed, 'display_name': profile.name})
     return redirect('manager_profile')

@@ -1396,6 +1396,71 @@
         btn.addEventListener('click', closeModal);
     });
 
+    const editForm = modal.querySelector('.mp-edit-modal-form');
+    if (editForm) {
+        const nameInput  = editForm.querySelector('#mpEditDisplayName');
+        const saveBtn    = editForm.querySelector('[type="submit"]');
+        let errorEl      = editForm.querySelector('.mp-edit-error');
+
+        function showInlineError(msg) {
+            if (!errorEl) {
+                errorEl = document.createElement('span');
+                errorEl.className = 'mp-edit-error';
+                nameInput.insertAdjacentElement('afterend', errorEl);
+            }
+            errorEl.textContent = msg;
+            errorEl.style.display = '';
+            nameInput.classList.add('mp-edit-input--error');
+        }
+        function clearInlineError() {
+            if (errorEl) { errorEl.style.display = 'none'; }
+            nameInput.classList.remove('mp-edit-input--error');
+        }
+
+        editForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearInlineError();
+            saveBtn.disabled = true;
+            const origText = saveBtn.textContent;
+            saveBtn.textContent = 'Speichert…';
+
+            const fd = new FormData(editForm);
+            fetch(editForm.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: fd,
+            })
+            .then(r => r.json())
+            .then(data => {
+                saveBtn.disabled = false;
+                saveBtn.textContent = origText;
+                if (data.ok) {
+                    closeModal();
+                    if (data.name_confirmed) {
+                        const banner = document.getElementById('mpOnboardingBanner');
+                        if (banner) { banner.remove(); }
+                    }
+                    if (data.display_name) {
+                        document.querySelectorAll('.mp-manager-name, .mp-sidebar-name, [data-manager-name]').forEach(el => {
+                            el.textContent = data.display_name;
+                        });
+                    }
+                } else if (data.error === 'name_taken') {
+                    showInlineError('Dieser Name ist bereits vergeben.');
+                } else if (data.error === 'name_invalid') {
+                    showInlineError('Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie die Zeichen - . \' _ enthalten.');
+                } else {
+                    showInlineError('Speichern fehlgeschlagen – bitte versuche es erneut.');
+                }
+            })
+            .catch(() => {
+                saveBtn.disabled = false;
+                saveBtn.textContent = origText;
+                showInlineError('Netzwerkfehler – bitte versuche es erneut.');
+            });
+        });
+    }
+
     {% if not name_confirmed or request.GET.name_taken or request.GET.name_invalid %}
     window.addEventListener('load', function () {
         setTimeout(openModal, 300);
