@@ -1197,7 +1197,9 @@ body.manager-profile-page .nav-menu a:first-child {
     display: flex;
     flex-direction: column;
     position: absolute;
-    transform: translate(-50%, -100%);
+    /* crest is the only in-flow child (ring + label are absolute), so this
+       anchors the CREST CENTRE exactly on the city coordinate. */
+    transform: translate(-50%, -50%);
     z-index: 2;
 }
 
@@ -1221,8 +1223,11 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-photo-marker-ring {
     height: 22px;
-    margin-top: -3px;
+    left: 50%;
     opacity: 0.65;
+    position: absolute;
+    top: 100%;
+    transform: translate(-50%, -50%);
     width: 44px;
 }
 
@@ -1241,7 +1246,7 @@ body.manager-profile-page .nav-menu a:first-child {
     position: absolute;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
     text-transform: uppercase;
-    top: calc(100% + 2px);
+    top: calc(100% + 16px);
     transform: translateX(-50%);
     white-space: nowrap;
 }

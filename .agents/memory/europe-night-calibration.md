@@ -20,16 +20,26 @@ fixed verified values beat the formula for the cities that actually appear.
 "Barcelona over the Pyrenees" was NOT a coordinate error — pixel (505,760) is
 correctly on the NE-Spanish coast. Two *rendering* bugs shifted the visible marker:
 
-1. **Vertical distortion.** The zoom JS sized the bg `width/height = S*100%` of a
-   non-3:2 container with `object-fit:fill` → Europe stretched vertically. Fix:
-   compute the station bounding box in **image pixels**, use a single uniform scale
-   `s = min(W/bw, H/bh)` (contain), size the bg `s*1536 × s*1024` (true 3:2), and
-   position bg + markers with that same `s`/offset in px. Re-run on load + resize.
-2. **Marker anchor.** `.mp-photo-marker { transform: translate(-50%,-100%) }`
-   anchored the bottom of the WHOLE flex box — and the lowest child was the label —
-   to the coordinate, floating the visible ring/crest ~50px ABOVE the city. Fix:
-   pull `.mp-photo-marker-label` out of flow (`position:absolute; top:calc(100%+2px)`)
-   so the box bottom = the ring base, which then sits on the coordinate.
+1. **Vertical distortion + wrong zoom level.** The zoom JS must work in **image
+   pixels** with ONE uniform scale (so the map keeps true 3:2 — no stretch) AND
+   fill the whole tile while staying zoomed on the stations. The tile is a
+   `flex:1` element so it is usually **wide and short**. `min()` (contain) is
+   WRONG there — it shrinks the whole map with black bars. Correct recipe:
+   (a) station bbox in px + padding, (b) **expand the bbox to the TILE's aspect
+   ratio** (widen/heighten with real surrounding map so nothing is cropped),
+   (c) scale `s = max(W/bw, H/bh)` (cover) so the tile is always filled,
+   (d) centre on the bbox and clamp `left/top` to `[W-dispW,0]`/`[H-dispH,0]`.
+   Size the bg `s*1536 × s*1024`; place markers with the same `s`/offset.
+   Re-run on load + resize.
+2. **Marker anchor — centre the CREST on the city, not the pin base.** The crest
+   badge is the thing the eye reads as "the location", so it must sit ON the city.
+   Make the crest the ONLY in-flow child (`.mp-photo-marker-ring` and
+   `.mp-photo-marker-label` are `position:absolute`) and anchor with
+   `transform: translate(-50%,-50%)` → crest centre lands on the coordinate; ring
+   sits at `top:100%` (straddling the crest base) and label below it.
+   **Why not anchor the pin base/ring-bottom:** that floats the visible badge
+   ~50px above the city and reads as "Barcelona over France" even though the pixel
+   is correct.
 
 **Why both matter:** markers and bg share one scale/offset, so distortion never
 moves a marker *relative to the map*; the perceived drift came from the anchor (1)
