@@ -263,14 +263,16 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-club-crest {
-    height: 36px;
+    height: 72px;
     margin-bottom: -4px;
     margin-left: -85px;
     margin-right: 0px;
-    margin-top: -10px;
+    margin-top: 18px;
     object-fit: contain;
     opacity: 0.99;
-    width: 36px;
+    position: relative;
+    width: 72px;
+    z-index: 2;
 }
 
 .mp-club-row strong {
