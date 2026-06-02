@@ -2183,7 +2183,7 @@ class ManagerProfile(models.Model):
     nationality_flag = models.CharField(
         max_length=200,
         blank=True,
-        default='https://flagcdn.com/de.svg',
+        default='',
     )
     nationality_name = models.CharField(
         max_length=100,

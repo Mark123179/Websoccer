@@ -35,7 +35,7 @@
                 <span>Manager</span>
                 <strong class="mp-sidebar-name">{{ current_manager.name }}</strong>
                 <small>
-                    <img class="manager-title-flag" src="{{ current_manager.nationality_flag }}" alt="" aria-hidden="true">
+                    {% if current_manager.nationality_flag %}<img class="manager-title-flag" src="{{ current_manager.nationality_flag }}" alt="" aria-hidden="true">{% endif %}
                     <span>{{ current_manager.role }}</span>
                 </small>
             </span>
