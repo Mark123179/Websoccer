@@ -1124,8 +1124,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-records-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0;
 }
 
@@ -1136,7 +1136,16 @@ body.manager-profile-page .nav-menu a:first-child {
     padding: 6px 0;
 }
 
-.mp-record-row:last-child {
+.mp-record-row:nth-child(odd) {
+    padding-right: 16px;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mp-record-row:nth-child(even) {
+    padding-left: 16px;
+}
+
+.mp-record-row:nth-last-child(-n+2) {
     border-bottom: none;
 }
 
