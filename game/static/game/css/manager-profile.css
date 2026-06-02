@@ -9,10 +9,10 @@ body.manager-profile-page .nav-menu a:first-child {
     --mp-bg: rgba(4, 14, 24, 0.88);
     --mp-panel: rgba(6, 20, 34, 0.86);
     --mp-panel-strong: rgba(7, 24, 40, 0.96);
-    --mp-line: rgba(138, 92, 246, 0.22);
-    --mp-line-strong: rgba(138, 92, 246, 0.42);
-    --mp-purple: #a78bfa;
-    --mp-purple-bright: #8b5cf6;
+    --mp-line: rgba(44, 231, 255, 0.18);
+    --mp-line-strong: rgba(44, 231, 255, 0.38);
+    --mp-purple: #22e6ff;
+    --mp-purple-bright: #19f6ff;
     --mp-gold: #ffd21f;
     --mp-cyan: #16cfff;
     --mp-green: #17df53;
@@ -30,8 +30,8 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-dashboard::before {
     background:
-        radial-gradient(ellipse at 50% 0%, rgba(138, 92, 246, 0.14), transparent 50%),
-        linear-gradient(180deg, rgba(138, 92, 246, 0.07), transparent 35%);
+        radial-gradient(ellipse at 50% 0%, rgba(44, 231, 255, 0.14), transparent 50%),
+        linear-gradient(180deg, rgba(44, 231, 255, 0.07), transparent 35%);
     content: "";
     inset: 0;
     pointer-events: none;
@@ -85,7 +85,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-avatar-edit {
     align-items: center;
-    background: rgba(138, 92, 246, 0.85);
+    background: rgba(44, 231, 255, 0.85);
     border: none;
     border-radius: 50%;
     bottom: -6px;
@@ -201,7 +201,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-icon-btn:hover {
-    background: rgba(138, 92, 246, 0.25);
+    background: rgba(44, 231, 255, 0.25);
     color: var(--mp-purple);
 }
 
@@ -236,8 +236,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-type-badge {
-    background: linear-gradient(90deg, rgba(138, 92, 246, 0.35), rgba(138, 92, 246, 0.18));
-    border: 1px solid rgba(138, 92, 246, 0.65);
+    background: linear-gradient(90deg, rgba(44, 231, 255, 0.35), rgba(44, 231, 255, 0.18));
+    border: 1px solid rgba(44, 231, 255, 0.65);
     border-radius: 4px;
     color: var(--mp-purple);
     font-size: 11px;
@@ -376,14 +376,14 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-kpi-level {
-    background: linear-gradient(135deg, rgba(138, 92, 246, 0.12), transparent);
-    border-left: 2px solid rgba(138, 92, 246, 0.6);
+    background: linear-gradient(135deg, rgba(44, 231, 255, 0.12), transparent);
+    border-left: 2px solid rgba(44, 231, 255, 0.6);
 }
 
 .mp-kpi-level-num {
     align-items: center;
-    background: linear-gradient(135deg, rgba(138, 92, 246, 0.3), rgba(109, 60, 220, 0.3));
-    border: 2px solid rgba(138, 92, 246, 0.55);
+    background: linear-gradient(135deg, rgba(44, 231, 255, 0.3), rgba(109, 60, 220, 0.3));
+    border: 2px solid rgba(44, 231, 255, 0.55);
     border-radius: 8px;
     color: var(--mp-purple);
     display: inline-flex;
@@ -524,13 +524,13 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-tl-filter:hover {
-    background: rgba(138, 92, 246, 0.18);
+    background: rgba(44, 231, 255, 0.18);
     color: var(--mp-purple);
 }
 
 .mp-tl-filter.is-active {
-    background: rgba(138, 92, 246, 0.28);
-    border-color: rgba(138, 92, 246, 0.6);
+    background: rgba(44, 231, 255, 0.28);
+    border-color: rgba(44, 231, 255, 0.6);
     color: var(--mp-purple);
 }
 
@@ -553,8 +553,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-tl-today-btn {
-    background: rgba(138, 92, 246, 0.22);
-    border: 1px solid rgba(138, 92, 246, 0.5);
+    background: rgba(44, 231, 255, 0.22);
+    border: 1px solid rgba(44, 231, 255, 0.5);
     border-radius: 4px;
     color: var(--mp-purple);
     cursor: pointer;
@@ -575,7 +575,7 @@ body.manager-profile-page .nav-menu a:first-child {
     overflow-x: auto;
     padding-bottom: 8px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(138, 92, 246, 0.3) transparent;
+    scrollbar-color: rgba(44, 231, 255, 0.3) transparent;
 }
 
 .mp-tl-event {
@@ -606,8 +606,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-tl-event.is-purple .mp-tl-card {
-    border-color: rgba(138, 92, 246, 0.45);
-    background: linear-gradient(135deg, rgba(138, 92, 246, 0.1), rgba(12, 28, 46, 0.9));
+    border-color: rgba(44, 231, 255, 0.45);
+    background: linear-gradient(135deg, rgba(44, 231, 255, 0.1), rgba(12, 28, 46, 0.9));
 }
 
 .mp-tl-event.is-cyan .mp-tl-card {
@@ -676,7 +676,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-tl-axis-line {
-    background: linear-gradient(90deg, rgba(138, 92, 246, 0.15), rgba(138, 92, 246, 0.6), rgba(138, 92, 246, 0.15));
+    background: linear-gradient(90deg, rgba(44, 231, 255, 0.15), rgba(44, 231, 255, 0.6), rgba(44, 231, 255, 0.15));
     height: 2px;
     margin-bottom: 4px;
 }
@@ -734,8 +734,8 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-ccb-switch-btn {
     align-items: center;
-    background: linear-gradient(90deg, rgba(138, 92, 246, 0.28), rgba(138, 92, 246, 0.14));
-    border: 1px solid rgba(138, 92, 246, 0.55);
+    background: linear-gradient(90deg, rgba(44, 231, 255, 0.28), rgba(44, 231, 255, 0.14));
+    border: 1px solid rgba(44, 231, 255, 0.55);
     border-radius: 5px;
     color: var(--mp-purple);
     display: inline-flex;
@@ -1122,8 +1122,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-login-pip.is-done {
-    background: linear-gradient(135deg, rgba(138, 92, 246, 0.35), rgba(138, 92, 246, 0.18));
-    border-color: rgba(138, 92, 246, 0.65);
+    background: linear-gradient(135deg, rgba(44, 231, 255, 0.35), rgba(44, 231, 255, 0.18));
+    border-color: rgba(44, 231, 255, 0.65);
     color: var(--mp-purple);
 }
 
@@ -1184,7 +1184,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-photo-map {
-    border: 1px solid rgba(138, 92, 246, 0.15);
+    border: 1px solid rgba(44, 231, 255, 0.15);
     border-radius: 6px;
     flex: 1;
     min-height: 220px;
@@ -1283,13 +1283,13 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-europe-land {
     fill: rgba(28, 58, 90, 0.85);
-    stroke: rgba(138, 92, 246, 0.35);
+    stroke: rgba(44, 231, 255, 0.35);
     stroke-width: 1.5;
 }
 
 .mp-map-route {
     fill: none;
-    stroke: rgba(138, 92, 246, 0.55);
+    stroke: rgba(44, 231, 255, 0.55);
     stroke-dasharray: 5 4;
     stroke-width: 1.5;
 }
@@ -1313,22 +1313,22 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-map-pin-ring {
-    fill: rgba(138, 92, 246, 0.15);
+    fill: rgba(44, 231, 255, 0.15);
     pointer-events: none;
-    stroke: rgba(138, 92, 246, 0.6);
+    stroke: rgba(44, 231, 255, 0.6);
     stroke-width: 1.5;
     transition: fill 0.2s, stroke 0.2s;
 }
 
 .mp-map-pin-dot {
-    fill: rgba(138, 92, 246, 0.75);
+    fill: rgba(44, 231, 255, 0.75);
     pointer-events: none;
     transition: fill 0.2s, r 0.2s;
 }
 
 .mp-map-station:hover .mp-map-pin-ring,
 .mp-map-station:focus .mp-map-pin-ring {
-    fill: rgba(138, 92, 246, 0.3);
+    fill: rgba(44, 231, 255, 0.3);
     stroke: var(--mp-purple);
     stroke-width: 2;
 }
@@ -1388,7 +1388,7 @@ body.manager-profile-page .nav-menu a:first-child {
 /* ── MAP TOOLTIP ── */
 .mp-map-tooltip {
     background: rgba(6, 18, 34, 0.97);
-    border: 1px solid rgba(138, 92, 246, 0.45);
+    border: 1px solid rgba(44, 231, 255, 0.45);
     border-radius: 8px;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
     display: none;
@@ -1436,8 +1436,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-map-tooltip-period {
-    background: rgba(138, 92, 246, 0.1);
-    border-left: 2px solid rgba(138, 92, 246, 0.5);
+    background: rgba(44, 231, 255, 0.1);
+    border-left: 2px solid rgba(44, 231, 255, 0.5);
     border-radius: 2px;
     color: rgba(255, 255, 255, 0.65);
     font-size: 10px;
@@ -1495,7 +1495,7 @@ body.manager-profile-page .nav-menu a:first-child {
 /* ── STATION DETAIL PANEL ── */
 .mp-station-panel {
     background: rgba(8, 22, 40, 0.97);
-    border: 1px solid rgba(138, 92, 246, 0.35);
+    border: 1px solid rgba(44, 231, 255, 0.35);
     border-radius: 8px;
     display: none;
     margin-top: 10px;
@@ -1514,8 +1514,8 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-station-panel-header {
     align-items: center;
-    background: rgba(138, 92, 246, 0.07);
-    border-bottom: 1px solid rgba(138, 92, 246, 0.18);
+    background: rgba(44, 231, 255, 0.07);
+    border-bottom: 1px solid rgba(44, 231, 255, 0.18);
     display: flex;
     gap: 14px;
     padding: 12px 14px;
@@ -1559,8 +1559,8 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-station-panel-period {
-    background: rgba(138, 92, 246, 0.12);
-    border-left: 2px solid rgba(138, 92, 246, 0.55);
+    background: rgba(44, 231, 255, 0.12);
+    border-left: 2px solid rgba(44, 231, 255, 0.55);
     border-radius: 2px;
     color: rgba(255, 255, 255, 0.65);
     font-size: 10px;
@@ -1760,7 +1760,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-map-legend-dot {
-    background: rgba(138, 92, 246, 0.65);
+    background: rgba(44, 231, 255, 0.65);
     border-radius: 50%;
     flex: 0 0 10px;
     height: 10px;
@@ -1833,13 +1833,13 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-type-tile:hover {
-    background: rgba(138, 92, 246, 0.15);
+    background: rgba(44, 231, 255, 0.15);
     color: var(--mp-purple);
 }
 
 .mp-type-tile.is-active {
-    background: linear-gradient(135deg, rgba(138, 92, 246, 0.3), rgba(109, 60, 220, 0.2));
-    border-color: rgba(138, 92, 246, 0.6);
+    background: linear-gradient(135deg, rgba(44, 231, 255, 0.3), rgba(109, 60, 220, 0.2));
+    border-color: rgba(44, 231, 255, 0.6);
     color: var(--mp-purple);
     font-weight: 800;
 }
@@ -2155,7 +2155,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-btn-primary {
-    background: linear-gradient(90deg, var(--mp-purple-bright), rgba(138, 92, 246, 0.8));
+    background: linear-gradient(90deg, var(--mp-purple-bright), rgba(44, 231, 255, 0.8));
     color: #fff;
     width: 100%;
 }
@@ -2236,7 +2236,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-manage-notice svg {
-    color: rgba(138, 92, 246, 0.65);
+    color: rgba(44, 231, 255, 0.65);
     flex: 0 0 14px;
     height: 14px;
     margin-top: 1px;
@@ -2408,7 +2408,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-toggle input:checked + .mp-toggle-track {
-    background: rgba(138, 92, 246, 0.7);
+    background: rgba(44, 231, 255, 0.7);
 }
 
 .mp-toggle input:checked + .mp-toggle-track::after {
@@ -2542,7 +2542,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-edit-profile-modal {
     background: rgb(10, 22, 38);
-    border: 1px solid rgba(138, 92, 246, 0.3);
+    border: 1px solid rgba(44, 231, 255, 0.3);
     border-radius: 12px;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
     max-width: 420px;
@@ -2602,7 +2602,7 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-edit-input,
 .mp-edit-select {
     background: rgba(6, 18, 34, 0.9);
-    border: 1px solid rgba(138, 92, 246, 0.25);
+    border: 1px solid rgba(44, 231, 255, 0.25);
     border-radius: 7px;
     color: #eef2ff;
     font-size: 14px;
@@ -2614,7 +2614,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-edit-input:focus,
 .mp-edit-select:focus {
-    border-color: rgba(138, 92, 246, 0.7);
+    border-color: rgba(44, 231, 255, 0.7);
 }
 
 .mp-edit-select option {
@@ -2655,7 +2655,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-career-edit-drawer {
-    border-top: 1px solid rgba(138, 92, 246, 0.18);
+    border-top: 1px solid rgba(44, 231, 255, 0.18);
     display: none;
     flex-direction: column;
     gap: 0;
@@ -2773,7 +2773,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-career-form {
     background: rgba(6, 18, 34, 0.6);
-    border: 1px solid rgba(138, 92, 246, 0.22);
+    border: 1px solid rgba(44, 231, 255, 0.22);
     border-radius: 8px;
     display: none;
     flex-direction: column;
@@ -2822,7 +2822,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-city-suggestions {
     background: rgba(6, 18, 34, 0.98);
-    border: 1px solid rgba(138, 92, 246, 0.3);
+    border: 1px solid rgba(44, 231, 255, 0.3);
     border-radius: 6px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     display: none;
@@ -2857,14 +2857,14 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-city-suggestion-item:hover {
-    background: rgba(138, 92, 246, 0.14);
+    background: rgba(44, 231, 255, 0.14);
     color: #f0f6ff;
 }
 
 .mp-onboarding-banner {
     align-items: center;
-    background: linear-gradient(90deg, rgba(138, 92, 246, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
-    border: 1px solid rgba(138, 92, 246, 0.35);
+    background: linear-gradient(90deg, rgba(44, 231, 255, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%);
+    border: 1px solid rgba(44, 231, 255, 0.35);
     border-radius: 10px;
     color: #c8d2f0;
     display: flex;
@@ -2875,7 +2875,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-onboarding-banner svg {
-    color: #a78bfa;
+    color: #22e6ff;
     flex-shrink: 0;
     height: 20px;
     width: 20px;
@@ -2891,7 +2891,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-onboarding-cta {
-    background: rgba(138, 92, 246, 0.85);
+    background: rgba(44, 231, 255, 0.85);
     border: none;
     border-radius: 6px;
     color: #fff;
@@ -2904,5 +2904,5 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-onboarding-cta:hover {
-    background: rgba(138, 92, 246, 1);
+    background: rgba(44, 231, 255, 1);
 }
