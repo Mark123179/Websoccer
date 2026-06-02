@@ -184,6 +184,10 @@ _CITY_REF_LATLNG = {
     'frosinone':             (41.64,  13.35),
     'lecce':                 (40.35,  18.17),
     'udinese':               (46.07,  13.23),
+    'bari':                  (41.12,  16.87),
+    'palermo':               (38.12,  13.36),
+    'catania':               (37.50,  15.09),
+    'reggio calabria':       (38.11,  15.65),
     # Italy — additional entries (club names / smaller cities)
     'atalanta':              (45.69,   9.67),   # Bergamo
     'hellas verona':         (45.44,  11.00),

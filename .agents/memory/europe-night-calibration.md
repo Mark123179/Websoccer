@@ -86,6 +86,17 @@ Oder/Strausberg region — do NOT move Berlin there.
   Lecce (18.17°E) kept near old visual value (50.5, 79.8) not TPS (51.9, 78.7).
   For dim regions (Balkans) brightening PIL crop ×2.6 reveals borders for geography.
 
+## Sicily / southern Italy: TPS y% lands in the sea (~4-5% too north)
+The perspective globe render places Sicily ~4-5% further SOUTH on the image than
+TPS extrapolates from the mainland anchors. A southward brightness scan from Naples
+at x%=47.9 confirms the sea is dark from y%=80–88%; Sicily lights begin at y%≈88.5.
+- **Catania** (47.61%, 86.01% by TPS) → sea; scan peak at TPS x=47.61, y≈89.5; pinned (47.6, 89.5)
+- **Palermo** (45.97%, 84.25% by TPS) → sea AND TPS x is slightly too west (its column is dark through Sicily's y-range); pinned (46.5, 90.0)
+- **Reggio Calabria** (48.41%, 84.44% by TPS) → dark but ON LAND; the Calabria tip anchor (15.64°E, 37.65°N) at pixel (48.24%, 85.64%) is also dark/verified; Reggio 0.46° north at same longitude is correctly placed; pinned (48.4, 84.4)
+- **Bari** (TPS 50.76%, 76.66%) → slightly outside hull; EUROPEAN_CITY_COORDS cross-ref gives (308,258) → (49.5%, 77.3%); pinned (49.5, 77.3)
+**EUROPEAN_CITY_COORDS** (secondary pixel table, ~line 504) mirrors these; updated Palermo→(286,303), Catania→(294,302), Reggio→(300,283), Bari already correct at (308,258).
+**Key diagnostic:** the Calabria column (x%≈48) is completely dark from y%=83–88 because TPS anchor lands on the narrow unlit peninsula; darkness ≠ sea for the boot. The Sicily band brightness at that same x-column (y%=88.5–91.5) is Sicily's lights, NOT mainland.
+
 ## South Germany is dim too — pin via affine fit from BRIGHT anchors, not eyeball
 München/Stuttgart sit in the dim SE band, so eyeballing put München ~37px too far
 WEST in a black patch (it "passt noch nicht" even though direction was right). The

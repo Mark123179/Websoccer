@@ -379,6 +379,15 @@ CITY_MAP_PCT = {
     'salernitana': (48.4, 77.7),
     'sassuolo': (45.3, 67.7),
     'udinese': (48.5, 64.1),
+    # Southern Italy / Sicily — TPS places these in the sea; hand-pinned 2026-06:
+    # Bari: Adriatic coast, same latitude as Napoli (EUROPEAN cross-ref).
+    # Palermo/Catania: TPS y≈84-86 lands ~4-5% north of Sicily; scan shows Sicily
+    # starting at y≈88.5. Reggio Calabria: near Calabria-tip TPS anchor (correct
+    # x/y for land), dark on image but confirmed on mainland.
+    'bari': (49.5, 77.3),
+    'palermo': (46.5, 90.0),
+    'catania': (47.6, 89.5),
+    'reggio calabria': (48.4, 84.4),
     # --- Balkans — HAND-PINNED (TPS formula drifts into the Adriatic) ---
     'zagreb': (49.00, 65.50),
     'belgrad': (52.50, 69.00), 'belgrade': (52.50, 69.00), 'beograd': (52.50, 69.00),
@@ -512,16 +521,16 @@ EUROPEAN_CITY_COORDS = {
     'venezia': (280, 223), 'venice': (280, 223),
     'firenze': (275, 238), 'florence': (275, 238),
     'bologna': (272, 230),
-    'palermo': (284, 274),
+    'palermo': (286, 303),
     'genova': (257, 230), 'genoa': (257, 230),
     'bari': (308, 258),
-    'catania': (290, 278),
+    'catania': (294, 302),
     'verona': (272, 222),
     'bergamo': (264, 220),
     'brescia': (268, 222),
     'lecce': (316, 264),
     'parma': (268, 228),
-    'reggio calabria': (294, 272),
+    'reggio calabria': (300, 283),
     # England
     'london': (195, 164),
     'manchester': (185, 145),
