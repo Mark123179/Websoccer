@@ -2209,9 +2209,22 @@ class ManagerProfile(models.Model):
     class Meta:
         verbose_name = 'Manager-Profil'
         verbose_name_plural = 'Manager-Profile'
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(nationality_name='') | ~models.Q(nationality_flag=''),
+                name='managerprofile_nationality_name_requires_flag',
+            ),
+        ]
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.nationality_name and not self.nationality_flag:
+            raise ValidationError(
+                {'nationality_name': 'Eine Nationalität darf nur gesetzt werden, wenn auch ein Flag-URL vorhanden ist.'}
+            )
 
     @property
     def trainer_type_label(self):
