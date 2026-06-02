@@ -2183,6 +2183,42 @@ body.tactics-page .nav-menu a:nth-child(5) {
     transform: scale(1.04);
 }
 
+.tactics-clear-lineup-button.is-confirming {
+    animation: tactics-clear-lineup-pulse 0.6s ease-in-out infinite alternate;
+    background: rgba(255, 66, 88, 0.18);
+    border-radius: 20px;
+    box-shadow:
+        0 0 24px rgba(255, 66, 88, 0.55),
+        0 10px 24px rgba(0, 0, 0, 0.34);
+    height: 32px;
+    padding: 0 12px;
+    width: auto;
+}
+
+.tactics-clear-lineup-confirm-label {
+    color: #ff4258;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    text-shadow: 0 0 8px rgba(255, 66, 88, 0.7);
+    white-space: nowrap;
+}
+
+@keyframes tactics-clear-lineup-pulse {
+    from {
+        box-shadow:
+            0 0 16px rgba(255, 66, 88, 0.45),
+            0 10px 24px rgba(0, 0, 0, 0.34);
+    }
+    to {
+        box-shadow:
+            0 0 32px rgba(255, 66, 88, 0.75),
+            0 10px 24px rgba(0, 0, 0, 0.34);
+    }
+}
+
 .tactics-pitch > .tactics-field-count {
     align-items: center;
     background: transparent;

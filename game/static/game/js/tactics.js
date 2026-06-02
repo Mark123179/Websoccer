@@ -517,7 +517,27 @@
 
     const clearLineupButton = form.querySelector('[data-clear-lineup]');
     if (clearLineupButton) {
-        clearLineupButton.addEventListener('click', clearLineupAndBench);
+        let clearConfirmTimer = null;
+
+        function resetClearButton() {
+            clearTimeout(clearConfirmTimer);
+            clearConfirmTimer = null;
+            clearLineupButton.classList.remove('is-confirming');
+            clearLineupButton.innerHTML = clearLineupButton.dataset.originalHtml;
+        }
+
+        clearLineupButton.dataset.originalHtml = clearLineupButton.innerHTML;
+
+        clearLineupButton.addEventListener('click', () => {
+            if (clearLineupButton.classList.contains('is-confirming')) {
+                resetClearButton();
+                clearLineupAndBench();
+            } else {
+                clearLineupButton.classList.add('is-confirming');
+                clearLineupButton.innerHTML = '<span class="tactics-clear-lineup-confirm-label">Sicher?</span>';
+                clearConfirmTimer = setTimeout(resetClearButton, 2000);
+            }
+        });
     }
 
     bindAssignments();
