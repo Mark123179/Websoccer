@@ -76,9 +76,9 @@ import math as _math
 
 
 def lat_lng_to_map_pct(lat, lng):
-    x_pct = 2.717 * lng + 30.49
+    x_pct = 1.5682 * lng + 32.1882
     merc_y = _math.log(_math.tan(_math.pi / 4 + _math.radians(lat) / 2))
-    y_pct = 134.9 - 96.8 * merc_y
+    y_pct = 106.0812 - 55.8722 * merc_y
     return round(max(0.0, min(100.0, x_pct)), 2), round(max(0.0, min(100.0, y_pct)), 2)
 
 
