@@ -2211,7 +2211,7 @@ class ManagerProfile(models.Model):
         verbose_name_plural = 'Manager-Profile'
         constraints = [
             models.CheckConstraint(
-                check=models.Q(nationality_name='') | ~models.Q(nationality_flag=''),
+                condition=models.Q(nationality_name='') | ~models.Q(nationality_flag=''),
                 name='managerprofile_nationality_name_requires_flag',
             ),
         ]

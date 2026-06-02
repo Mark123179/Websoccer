@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name='managerprofile',
             constraint=models.CheckConstraint(
-                check=models.Q(nationality_name='') | ~models.Q(nationality_flag=''),
+                condition=models.Q(nationality_name='') | ~models.Q(nationality_flag=''),
                 name='managerprofile_nationality_name_requires_flag',
             ),
         ),
