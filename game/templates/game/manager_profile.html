@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-48">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-49">
 {% endblock %}
 
 {% block content %}
@@ -34,11 +34,11 @@
                     <span class="mp-type-badge">{{ manager.active_type }}</span>
                 </div>
                 <a class="mp-club-row" href="{{ manager.club_url }}">
-                    <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-club-crest mb-[-4px] ml-[-85px] mr-[0px] mt-[-10px] opacity-[0.99]">
+                    <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-club-crest">
                     <div>
-                        <strong class="ml-[40px]">{{ manager.club_name }}</strong>
-                        <small class="ml-[40px]">Seit {{ manager.club_since }} ({{ manager.club_season }})</small>
-                        <small class="ml-[40px]">Mitglied seit: {{ manager.member_since }}</small>
+                        <strong>{{ manager.club_name }}</strong>
+                        <small>Seit {{ manager.club_since }} ({{ manager.club_season }})</small>
+                        <small>Mitglied seit: {{ manager.member_since }}</small>
                     </div>
                 </a>
             </div>
