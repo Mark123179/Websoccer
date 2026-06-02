@@ -1177,6 +1177,79 @@ body.manager-profile-page .nav-menu a:first-child {
     width: 100%;
 }
 
+.mp-photo-map {
+    border: 1px solid rgba(138, 92, 246, 0.15);
+    border-radius: 6px;
+    height: 220px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.mp-photo-map-bg {
+    display: block;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    width: 100%;
+}
+
+.mp-photo-marker {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    transform: translate(-50%, -100%);
+    z-index: 2;
+}
+
+.mp-photo-marker-crest {
+    background: rgba(10, 16, 28, 0.75);
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+    height: 32px;
+    object-fit: contain;
+    padding: 2px;
+    width: 32px;
+}
+
+.mp-photo-marker.is-active .mp-photo-marker-crest {
+    border-color: #37ff4b;
+    box-shadow: 0 0 0 3px rgba(55, 255, 75, 0.25), 0 3px 14px rgba(0, 0, 0, 0.8);
+    height: 48px;
+    width: 48px;
+}
+
+.mp-photo-marker-ring {
+    height: 22px;
+    margin-top: -3px;
+    opacity: 0.65;
+    width: 44px;
+}
+
+.mp-photo-marker.is-active .mp-photo-marker-ring {
+    height: 30px;
+    opacity: 1;
+    width: 60px;
+}
+
+.mp-photo-marker-label {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-top: 3px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.mp-photo-marker.is-active .mp-photo-marker-label {
+    color: #37ff4b;
+    font-size: 10px;
+}
+
 .mp-europe-land {
     fill: rgba(28, 58, 90, 0.85);
     stroke: rgba(138, 92, 246, 0.35);
