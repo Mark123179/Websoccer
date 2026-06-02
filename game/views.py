@@ -3071,30 +3071,7 @@ def manager_profile(request):
         profile_image_url = _static(_raw_image or 'game/images/managers/kirschgutzje-test.png')
 
     # --- Photo map markers (satellite image, lat/lng-calibrated) ---
-    _DEMO_PAST_STATIONS = [
-        {
-            'lat': 41.38, 'lng': 2.07,
-            'club': 'FC Barcelona', 'city': 'Barcelona',
-            'crest_url': 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg',
-            'is_active': False,
-        },
-        {
-            'lat': 48.85, 'lng': 2.35,
-            'club': 'Paris Saint-Germain', 'city': 'Paris',
-            'crest_url': 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg',
-            'is_active': False,
-        },
-    ]
-
     photo_map_markers = []
-    for _demo in _DEMO_PAST_STATIONS:
-        _xp, _yp = lat_lng_to_map_pct(_demo['lat'], _demo['lng'])
-        photo_map_markers.append({
-            'x_pct': _xp, 'y_pct': _yp,
-            'club': _demo['club'], 'city': _demo['city'],
-            'crest_url': _demo['crest_url'],
-            'is_active': False,
-        })
 
     if db_stations:
         for _st in db_stations:

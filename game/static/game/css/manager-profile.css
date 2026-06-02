@@ -1157,7 +1157,7 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-card-euromap {
     display: flex;
     flex-direction: column;
-    grid-column: 2;
+    grid-column: 1;
 }
 
 .mp-photo-map {
