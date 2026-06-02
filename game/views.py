@@ -3136,7 +3136,12 @@ def manager_profile(request):
         'login_points_today': 150,
         'next_reward_days': 2,
         'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
+        'country_choices_with_flags': [
+            {'name': k, 'code': v['code'].lower()}
+            for k, v in sorted(COUNTRY_FLAG_ASSETS.items())
+        ],
         'current_nationality': manager_profile_obj.nationality_name,
+        'all_clubs': list(Club.objects.order_by('name').values('id', 'name')),
         'can_edit_profile': request.user.is_authenticated,
         'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
