@@ -75,10 +75,47 @@ from .tactics import (
 import math as _math
 
 
+# Thin-plate-spline calibration of europe-night.png (1536x1024). The background
+# is a perspective ("tilted globe") satellite render, NOT a flat map projection,
+# so a single linear/affine or even Mercator formula drifts badly (south-German
+# cities ended up too far north, Barcelona over the Pyrenees in France). The TPS
+# below was fitted against hand-verified light-cluster pixels of 10 well-spread,
+# unambiguous cities (clear starbursts + coastal clusters). It interpolates those
+# anchors exactly and warps smoothly between them. To re-calibrate, re-pin the
+# anchor pixels and re-solve the TPS (see .agents/memory/europe-night-calibration.md).
+_MAP_TPS_ANCHORS = (
+    (-3.70, 40.42), (2.17, 41.39), (-9.14, 38.72), (-8.61, 41.15), (2.35, 48.85),
+    (-0.13, 51.51), (4.90, 52.37), (4.84, 45.76), (9.19, 45.46), (12.50, 41.90),
+)
+# weights[0..n-1] = radial-basis weights; weights[n..n+2] = affine [c, x, y]
+_MAP_TPS_WX = (
+    -0.544691, 0.774326, 0.989405, -1.000482, -0.953162, 0.627053, -0.054187,
+    -0.055979, 0.945682, -0.727964, 263.200195, 16.330017, 5.171957,
+)
+_MAP_TPS_WY = (
+    0.561837, -0.446532, 0.362923, -0.633604, 0.361124, -0.043918, -0.065806,
+    -0.361087, 0.358906, -0.093843, 1949.379942, 2.580988, -28.943117,
+)
+_MAP_IMG_W = 1536.0
+_MAP_IMG_H = 1024.0
+
+
+def _tps_eval(weights, lng, lat):
+    n = len(_MAP_TPS_ANCHORS)
+    val = weights[n] + weights[n + 1] * lng + weights[n + 2] * lat
+    for i, (ax, ay) in enumerate(_MAP_TPS_ANCHORS):
+        r = _math.hypot(lng - ax, lat - ay)
+        if r > 0:
+            val += weights[i] * r * r * _math.log(r)
+    return val
+
+
 def lat_lng_to_map_pct(lat, lng):
-    merc_y = _math.log(_math.tan(_math.pi / 4 + _math.radians(lat) / 2))
-    x_pct = 1.67563 * lng + 8.02726 * merc_y + 22.42780
-    y_pct = 0.30407 * lng - 110.72581 * merc_y + 163.21498
+    """Map real lat/lng to x/y percent on the europe-night.png satellite image."""
+    px = _tps_eval(_MAP_TPS_WX, lng, lat)
+    py = _tps_eval(_MAP_TPS_WY, lng, lat)
+    x_pct = px / _MAP_IMG_W * 100.0
+    y_pct = py / _MAP_IMG_H * 100.0
     return round(max(0.0, min(100.0, x_pct)), 2), round(max(0.0, min(100.0, y_pct)), 2)
 
 
@@ -377,18 +414,84 @@ def map_xy_to_lat_lng(mx, my):
     return lat, lng
 
 
-def resolve_city_latlng(*names):
-    """Resolve a city name to real lat/lng via EUROPEAN_CITY_COORDS.
+# Real geographic coordinates (lat, lng) for major European cities. Used to place
+# custom career stations (no linked club) on the satellite map. Real coords are
+# fed straight into the TPS calibration, avoiding the lossy legacy map_x/map_y
+# conversion. Keys are lowercase; add German/English aliases as needed.
+REAL_CITY_LATLNG = {
+    'münchen': (48.14, 11.58), 'munchen': (48.14, 11.58), 'munich': (48.14, 11.58),
+    'augsburg': (48.37, 10.90), 'frankfurt': (50.11, 8.68), 'berlin': (52.52, 13.40),
+    'hamburg': (53.55, 9.99), 'köln': (50.94, 6.96), 'koln': (50.94, 6.96),
+    'cologne': (50.94, 6.96), 'düsseldorf': (51.23, 6.78), 'dusseldorf': (51.23, 6.78),
+    'dortmund': (51.51, 7.47), 'stuttgart': (48.78, 9.18), 'leipzig': (51.34, 12.37),
+    'bremen': (53.08, 8.80), 'hannover': (52.37, 9.74), 'hanover': (52.37, 9.74),
+    'nürnberg': (49.45, 11.08), 'nurnberg': (49.45, 11.08), 'nuremberg': (49.45, 11.08),
+    'mönchengladbach': (51.18, 6.44), 'monchengladbach': (51.18, 6.44),
+    'wolfsburg': (52.42, 10.79), 'freiburg': (47.99, 7.84), 'mainz': (50.00, 8.27),
+    'gelsenkirchen': (51.52, 7.10), 'bochum': (51.48, 7.22), 'kiel': (54.32, 10.14),
+    'london': (51.51, -0.13), 'manchester': (53.48, -2.24), 'liverpool': (53.41, -2.99),
+    'birmingham': (52.49, -1.89), 'leeds': (53.80, -1.55), 'newcastle': (54.98, -1.61),
+    'glasgow': (55.86, -4.25), 'edinburgh': (55.95, -3.19), 'dublin': (53.35, -6.26),
+    'paris': (48.85, 2.35), 'marseille': (43.30, 5.37), 'lyon': (45.76, 4.84),
+    'lille': (50.63, 3.06), 'bordeaux': (44.84, -0.58), 'nantes': (47.22, -1.55),
+    'nice': (43.70, 7.27), 'monaco': (43.74, 7.42), 'toulouse': (43.60, 1.44),
+    'saint-étienne': (45.44, 4.39), 'saint-etienne': (45.44, 4.39),
+    'madrid': (40.42, -3.70), 'barcelona': (41.39, 2.17), 'valencia': (39.47, -0.38),
+    'sevilla': (37.39, -5.99), 'seville': (37.39, -5.99), 'bilbao': (43.26, -2.92),
+    'málaga': (36.72, -4.42), 'malaga': (36.72, -4.42), 'zaragoza': (41.65, -0.89),
+    'villarreal': (39.94, -0.10), 'san sebastián': (43.32, -1.98),
+    'san sebastian': (43.32, -1.98), 'vigo': (42.24, -8.72),
+    'lisboa': (38.72, -9.14), 'lissabon': (38.72, -9.14), 'lisbon': (38.72, -9.14),
+    'porto': (41.15, -8.61),
+    'roma': (41.90, 12.50), 'rom': (41.90, 12.50), 'rome': (41.90, 12.50),
+    'milano': (45.46, 9.19), 'mailand': (45.46, 9.19), 'milan': (45.46, 9.19),
+    'torino': (45.07, 7.69), 'turin': (45.07, 7.69), 'napoli': (40.85, 14.27),
+    'neapel': (40.85, 14.27), 'naples': (40.85, 14.27), 'firenze': (43.77, 11.26),
+    'florenz': (43.77, 11.26), 'florence': (43.77, 11.26), 'genova': (44.41, 8.93),
+    'genua': (44.41, 8.93), 'genoa': (44.41, 8.93), 'bologna': (44.49, 11.34),
+    'venezia': (45.44, 12.33), 'venedig': (45.44, 12.33), 'venice': (45.44, 12.33),
+    'amsterdam': (52.37, 4.90), 'rotterdam': (51.92, 4.48), 'eindhoven': (51.44, 5.48),
+    'brussel': (50.85, 4.35), 'brüssel': (50.85, 4.35), 'brussels': (50.85, 4.35),
+    'antwerpen': (51.22, 4.40), 'antwerp': (51.22, 4.40), 'brügge': (51.21, 3.22),
+    'bruges': (51.21, 3.22),
+    'wien': (48.21, 16.37), 'vienna': (48.21, 16.37), 'salzburg': (47.81, 13.06),
+    'zürich': (47.37, 8.54), 'zurich': (47.37, 8.54), 'basel': (47.56, 7.59),
+    'bern': (46.95, 7.45), 'genf': (46.20, 6.14), 'geneva': (46.20, 6.14),
+    'warschau': (52.23, 21.01), 'warsaw': (52.23, 21.01), 'warszawa': (52.23, 21.01),
+    'krakau': (50.06, 19.94), 'krakow': (50.06, 19.94), 'prag': (50.08, 14.44),
+    'prague': (50.08, 14.44), 'praha': (50.08, 14.44), 'budapest': (47.50, 19.04),
+    'kopenhagen': (55.68, 12.57), 'copenhagen': (55.68, 12.57), 'oslo': (59.91, 10.75),
+    'stockholm': (59.33, 18.07), 'göteborg': (57.71, 11.97), 'goteborg': (57.71, 11.97),
+    'helsinki': (60.17, 24.94), 'athen': (37.98, 23.73), 'athens': (37.98, 23.73),
+    'athina': (37.98, 23.73), 'istanbul': (41.01, 28.98), 'zagreb': (45.81, 15.98),
+    'belgrad': (44.79, 20.45), 'belgrade': (44.79, 20.45), 'bukarest': (44.43, 26.10),
+    'bucharest': (44.43, 26.10), 'kyiv': (50.45, 30.52), 'kiew': (50.45, 30.52),
+    'kiev': (50.45, 30.52), 'moskau': (55.76, 37.62), 'moscow': (55.76, 37.62),
+}
 
-    Tries exact match first, then prefix match in both directions so small typos
-    like "Barcelon" still resolve to "barcelona". Returns None if nothing fits.
+
+def resolve_city_latlng(*names):
+    """Resolve a city name to real lat/lng for placement on the satellite map.
+
+    Prefers the accurate REAL_CITY_LATLNG table (exact then prefix match, so typos
+    like "Barcelon" still resolve to "barcelona"). Falls back to converting the
+    legacy EUROPEAN_CITY_COORDS pixel coords when a name is only known there.
+    Returns None if nothing fits.
     """
     for raw in names:
         key = (raw or '').strip().lower()
         if not key:
             continue
+        real = REAL_CITY_LATLNG.get(key)
+        if not real and len(key) >= 3:
+            for ck, cv in REAL_CITY_LATLNG.items():
+                if ck.startswith(key) or key.startswith(ck):
+                    real = cv
+                    break
+        if real:
+            return real
         coords = EUROPEAN_CITY_COORDS.get(key)
-        if not coords:
+        if not coords and len(key) >= 3:
             for ck, cv in EUROPEAN_CITY_COORDS.items():
                 if ck.startswith(key) or key.startswith(ck):
                     coords = cv

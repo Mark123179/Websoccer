@@ -1,3 +1,3 @@
 - [Wide-shell scope rule](wide-shell-scope.md) — 1440×900 is locked golden master; only wide-shell CSS scope may extend layout horizontally.
 - [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
-- [europe-night.png map markers](europe-night-calibration.md) — image is perspective view → use affine(lng,merc_y) fit; custom stations resolve city name via resolve_city_latlng or fall back to München.
+- [europe-night.png map markers](europe-night-calibration.md) — perspective render → use thin-plate-spline fit on unambiguous-city anchors; custom stations resolve via REAL_CITY_LATLNG (real coords, not legacy map_xy).
