@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-42">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-43">
 {% endblock %}
 
 {% block content %}
@@ -279,38 +279,6 @@
                     <div class="mp-stat-row is-right"><span>Gegentore pro Spiel</span><strong>{{ club_stats.goals_against_per_game }}</strong></div>
                     <div class="mp-stat-row is-right"><span>Siegesserie (max.)</span><strong>{{ club_stats.win_streak }}</strong></div>
                     <div class="mp-stat-row is-right"><span>Niederlagenserie (max.)</span><strong>{{ club_stats.loss_streak }}</strong></div>
-                </div>
-            </article>
-
-            <article class="mp-card mp-card-login">
-                <h3>Login Belohnungen</h3>
-                <div class="mp-login-grid">
-                    <div class="mp-login-col">
-                        <span class="mp-login-label">Täglicher Login</span>
-                        <div class="mp-login-check">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
-                        </div>
-                    </div>
-                    <div class="mp-login-col">
-                        <span class="mp-login-label">Login Streak</span>
-                        <span class="mp-login-streak-label">{{ login_streak }} Tage</span>
-                        <strong class="mp-login-points">+{{ login_points_today }}</strong>
-                        <small>+1 Bonus</small>
-                    </div>
-                    <div class="mp-login-col">
-                        <span class="mp-login-label">Nächste Belohnung</span>
-                        <span class="mp-login-next-days">in {{ next_reward_days }} Tagen</span>
-                        <div class="mp-login-reward-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="mp-login-track">
-                    {% for i in "1234567"|make_list %}
-                    <div class="mp-login-pip {% if forloop.counter <= login_streak %}is-done{% endif %}">{{ forloop.counter }}</div>
-                    {% endfor %}
-                    <div class="mp-login-pip">14</div>
-                    <div class="mp-login-pip">30</div>
                 </div>
             </article>
 
