@@ -2536,6 +2536,11 @@ body.tactics-page .nav-menu a:nth-child(5) {
     .tactics-side-stack {
         grid-template-rows: auto;
     }
+
+    .tactics-analysis-grid .tactics-top-list {
+        aspect-ratio: auto;
+        height: 420px;
+    }
 }
 
 /* ============================================================
@@ -3548,6 +3553,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
    ============================================================ */
 
 .tactics-analysis-grid .tactics-top-list {
+    aspect-ratio: 2 / 3;
     background-color: #020b17;
     background-position: center;
     background-repeat: no-repeat;
@@ -3676,9 +3682,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
         0 4px 16px rgba(0, 0, 0, 0.8);
 }
 
-.tactics-analysis-grid .tactics-top-assists .entry-value,
 .tactics-analysis-grid .tactics-top-grades .entry-value {
-    font-size: clamp(21px, 1.58vw, 36px);
+    font-size: clamp(22px, 1.65vw, 38px);
 }
 
 .tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) {
