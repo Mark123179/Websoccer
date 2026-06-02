@@ -805,6 +805,10 @@ body.manager-profile-page .nav-menu a:first-child {
     padding: 14px 16px;
 }
 
+.mp-card-account {
+    overflow: visible;
+}
+
 .mp-card-header {
     align-items: center;
     display: flex;

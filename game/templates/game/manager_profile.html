@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-39">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-40">
 {% endblock %}
 
 {% block content %}
@@ -1624,6 +1624,20 @@
             document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
                 el.classList.remove('is-open');
             });
+            return;
+        }
+        if (e.key.length !== 1) return;
+        var openCsel = document.querySelector('[data-mp-csel].is-open');
+        if (!openCsel) return;
+        var ch = e.key.toLowerCase();
+        var allOpts = openCsel.querySelectorAll('.mp-csel-opt');
+        for (var i = 0; i < allOpts.length; i++) {
+            var spanEl = allOpts[i].querySelector('span');
+            var txt = (spanEl ? spanEl.textContent : allOpts[i].textContent).trim().toLowerCase();
+            if (txt.charAt(0) === ch) {
+                allOpts[i].scrollIntoView({ block: 'nearest' });
+                break;
+            }
         }
     });
 })();
