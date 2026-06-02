@@ -76,9 +76,9 @@ import math as _math
 
 
 def lat_lng_to_map_pct(lat, lng):
-    x_pct = 1.3970 * lng + 29.4456
     merc_y = _math.log(_math.tan(_math.pi / 4 + _math.radians(lat) / 2))
-    y_pct = 175.6511 - 123.2245 * merc_y
+    x_pct = 1.67563 * lng + 8.02726 * merc_y + 22.42780
+    y_pct = 0.30407 * lng - 110.72581 * merc_y + 163.21498
     return round(max(0.0, min(100.0, x_pct)), 2), round(max(0.0, min(100.0, y_pct)), 2)
 
 
@@ -362,6 +362,40 @@ EUROPEAN_CITY_COORDS = {
     # Cyprus
     'nikosia': (406, 282), 'nicosia': (406, 282),
 }
+
+
+def map_xy_to_lat_lng(mx, my):
+    """Convert the legacy small-map pixel coords (map_x/map_y) to real lat/lng.
+
+    Calibrated (affine, least-squares) against EUROPEAN_CITY_COORDS using cities
+    whose real lat/lng are known. Lets custom stations (no linked club) be placed
+    on the lat/lng-calibrated satellite map.
+    """
+    lng = 0.137677 * mx - 0.006277 * my - 24.96416
+    merc = 0.000254 * mx - 0.002833 * my + 1.45515
+    lat = _math.degrees(2 * _math.atan(_math.exp(merc)) - _math.pi / 2)
+    return lat, lng
+
+
+def resolve_city_latlng(*names):
+    """Resolve a city name to real lat/lng via EUROPEAN_CITY_COORDS.
+
+    Tries exact match first, then prefix match in both directions so small typos
+    like "Barcelon" still resolve to "barcelona". Returns None if nothing fits.
+    """
+    for raw in names:
+        key = (raw or '').strip().lower()
+        if not key:
+            continue
+        coords = EUROPEAN_CITY_COORDS.get(key)
+        if not coords:
+            for ck, cv in EUROPEAN_CITY_COORDS.items():
+                if ck.startswith(key) or key.startswith(ck):
+                    coords = cv
+                    break
+        if coords:
+            return map_xy_to_lat_lng(coords[0], coords[1])
+    return None
 
 
 def decimal_number(value):
@@ -3082,9 +3116,11 @@ def manager_profile(request):
                     _lat, _lng = _prof.map_lat, _prof.map_lng
                 except Exception:
                     pass
-            if _lat is None:
-                from django.templatetags.static import static as _s
-                _lat, _lng = 48.22, 11.55
+            if _lat is None or _lng is None:
+                _resolved = resolve_city_latlng(_st.city_name, _st.custom_club_name)
+                if _resolved is None and (_st.map_x, _st.map_y) != (271, 214):
+                    _resolved = map_xy_to_lat_lng(_st.map_x, _st.map_y)
+                _lat, _lng = _resolved if _resolved is not None else (48.22, 11.55)
             _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
             _is_active = _st.ended_at is None
             _crest = _st.club.crest_static_path if _st.club else club_crest
