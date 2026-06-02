@@ -2664,7 +2664,6 @@ def player_graph_data(request, player_id):
     })
 
 
-@login_required
 def manager_profile(request):
     tab = request.GET.get('tab', 'profil')
 
