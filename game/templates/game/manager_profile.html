@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-43">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-44">
 {% endblock %}
 
 {% block content %}
@@ -233,30 +233,35 @@
                 </div>
             </article>
 
-            <article class="mp-card mp-card-badges">
-                <header class="mp-card-header">
-                    <h3>Badges &amp; Trainertyp</h3>
-                    <select class="mp-card-select" aria-label="Saison">
-                        <option>Saison 2024/25</option>
-                        <option>Saison 2023/24</option>
-                    </select>
-                </header>
-                <div class="mp-badges-inner">
-                    <div class="mp-badges-portrait">
-                        <img src="{{ manager.profile_image_url }}" alt="{{ manager.name }}" id="mpAvatarBadgeImg">
+            <article class="mp-card mp-card-login">
+                <h3>Login Belohnungen</h3>
+                <div class="mp-login-grid">
+                    <div class="mp-login-col">
+                        <span class="mp-login-label">Täglicher Login</span>
+                        <div class="mp-login-check">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                        </div>
                     </div>
-                    <div class="mp-badges-club-block">
-                        <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-badges-crest">
-                        <strong>{{ manager.club_name }}</strong>
-                        <span>2. Bundesliga Saison 2024/25</span>
+                    <div class="mp-login-col">
+                        <span class="mp-login-label">Login Streak</span>
+                        <span class="mp-login-streak-label">{{ login_streak }} Tage</span>
+                        <strong class="mp-login-points">+{{ login_points_today }}</strong>
+                        <small>+1 Bonus</small>
                     </div>
-                    <div class="mp-badges-stats-row">
-                        <div><strong>{{ club_stats.games }}</strong><small>Spiele</small></div>
-                        <div><strong>{{ club_stats.wins }}</strong><small>Siege</small></div>
-                        <div><strong>{{ club_stats.draws }}</strong><small>Unentschieden</small></div>
-                        <div><strong>{{ club_stats.losses }}</strong><small>Niederlagen</small></div>
-                        <div><strong>{{ club_stats.points }}</strong><small>Punkte</small></div>
+                    <div class="mp-login-col">
+                        <span class="mp-login-label">Nächste Belohnung</span>
+                        <span class="mp-login-next-days">in {{ next_reward_days }} Tagen</span>
+                        <div class="mp-login-reward-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+                        </div>
                     </div>
+                </div>
+                <div class="mp-login-track">
+                    {% for i in "1234567"|make_list %}
+                    <div class="mp-login-pip {% if forloop.counter <= login_streak %}is-done{% endif %}">{{ forloop.counter }}</div>
+                    {% endfor %}
+                    <div class="mp-login-pip">14</div>
+                    <div class="mp-login-pip">30</div>
                 </div>
             </article>
 
