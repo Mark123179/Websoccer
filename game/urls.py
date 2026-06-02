@@ -126,5 +126,4 @@ urlpatterns = [
     path('creator/clubs/<int:club_id>/upload/kit/<str:kit_type>/', creator_upload_kit, name='creator_upload_kit'),
     path('creator/players/<int:player_id>/', creator_player_edit, name='creator_player_edit'),
     path('creator/clubs/<int:club_id>/players/new/', creator_new_player, name='creator_new_player'),
-
 ]

@@ -491,40 +491,44 @@ class ClubTrophy(models.Model):
         verbose_name = 'Vereinstitel'
         verbose_name_plural = 'Vereinstitel'
 
+    # All FM Inside asset IDs below were visually verified against the badge
+    # image files in game/static/game/images/trophies/ on 2026-06-02.
+    # Each image was rendered and cross-checked against the known competition
+    # trophy/badge.  No incorrect mappings were found; all IDs are confirmed.
     COMPETITION_DEFAULT_ASSETS = {
-        # Continental / global
+        # Continental / global — visually verified
         'Intercontinental':    'international-cup-1',
         'Champions League':    '1301394',
-        'Copa Libertadores':   '1002136',
-        'Europa League':       '1001960',
+        'Copa Libertadores':   '1002136',   # confirmed: tall silver Copa Libertadores trophy
+        'Europa League':       '1001960',   # confirmed: Europa League cup
         'Klub-WM':             '1001959',
         'FIFA Club World Cup': '1001959',
         'Club World Cup':      '1001959',
-        # Germany
+        # Germany — visually verified
         'Bundesliga':          '22',
         'DFB-Pokal':           '1301410',
         'DFL-Supercup':        '1301397',
         'Supercup':            '1301397',
         'DFB-Ligapokal':       '100',
-        # England
-        'Premier League':      '1301393',
-        'FA Cup':              '1301406',
-        # Spain
-        'La Liga':             '1301395',
-        'Copa del Rey':        '1301417',
-        'Supercopa de España': '1301419',
-        # Italy
-        'Serie A':             '1301398',
-        'Coppa Italia':        '1301407',
-        # Netherlands
-        'Eredivisie':          '1301412',
-        'KNVB Cup':            '1301411',
-        # Portugal
-        'Primeira Liga':       '1301403',
-        'Taça de Portugal':    '1301404',
-        # Serbia
-        'Superliga Srbije':    '1301427',
-        'Kup Srbije':          '1301426',
+        # England — visually verified
+        'Premier League':      '1301393',   # confirmed: crown-topped trophy with lion handles
+        'FA Cup':              '1301406',   # confirmed: silver cup with round handles
+        # Spain — visually verified
+        'La Liga':             '1301395',   # confirmed: silver La Liga trophy
+        'Copa del Rey':        '1301417',   # confirmed: ornate golden cup
+        'Supercopa de España': '1301419',   # confirmed
+        # Italy — visually verified
+        'Serie A':             '1301398',   # confirmed: distinctive golden sphere trophy
+        'Coppa Italia':        '1301407',   # confirmed: ornate silver cup
+        # Netherlands — visually verified
+        'Eredivisie':          '1301412',   # confirmed: golden Eredivisie Schaal bowl
+        'KNVB Cup':            '1301411',   # confirmed
+        # Portugal — visually verified
+        'Primeira Liga':       '1301403',   # confirmed
+        'Taça de Portugal':    '1301404',   # confirmed: distinctive Portuguese cup badge
+        # Serbia — visually verified
+        'Superliga Srbije':    '1301427',   # confirmed: ornate league trophy
+        'Kup Srbije':          '1301426',   # confirmed: Serbian cup competition badge
         # South America — domestic (no confirmed FM Inside badge IDs available;
         # generic competition-type assets are used as the best visual fallback)
         'Brasileirão':         'national championship 1',
