@@ -237,24 +237,148 @@ class LeagueAdmin(admin.ModelAdmin):
     )
 
 
+def _assign_manager_action(modeladmin, request, queryset):
+    """Admin action: Trainer zuweisen — öffnet eine einfache Zwischenseite."""
+    from django.shortcuts import redirect
+    from django.urls import reverse
+    ids = ','.join(str(c.pk) for c in queryset)
+    return redirect(
+        reverse('admin:game_club_assign_manager') + f'?ids={ids}'
+    )
+_assign_manager_action.short_description = 'Trainer zuweisen…'
+
+
+def _dismiss_manager_action(modeladmin, request, queryset):
+    """Admin action: Trainer entlassen — setzt ended_at auf heute für alle
+    ausgewählten Vereine, die gerade einen Manager haben."""
+    from datetime import date
+    from game.services import record_club_departure
+    dismissed = 0
+    for club in queryset:
+        if club.managed_by_id:
+            record_club_departure(club.managed_by, departure_date=date.today())
+            dismissed += 1
+    modeladmin.message_user(
+        request,
+        f'{dismissed} Trainer entlassen und Karriere-Station(en) geschlossen.',
+    )
+_dismiss_manager_action.short_description = 'Trainer entlassen (Abgang heute)'
+
+
 class ClubAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'short_name',
         'league',
+        'managed_by',
         'api_football_id',
         'fm_inside_id',
         'budget',
     )
+    list_select_related = ('managed_by',)
     search_fields = (
         'name',
         'short_name',
         'fm_inside_id',
     )
+    autocomplete_fields = ('managed_by',)
+    readonly_fields = ('managed_by_hint',)
+    actions = [_assign_manager_action, _dismiss_manager_action]
 
     inlines = [
         PlayerInline,
     ]
+
+    def get_fieldsets(self, request, obj=None):
+        return [
+            (None, {
+                'fields': (
+                    'name', 'short_name', 'founded_year', 'budget', 'league',
+                    'fm_inside_id', 'api_football_id',
+                ),
+            }),
+            ('Trainer-Zuweisung', {
+                'fields': ('managed_by_hint',),
+                'description': (
+                    'Nutze die Admin-Aktionen "Trainer zuweisen" oder '
+                    '"Trainer entlassen" auf der Vereins-Übersicht, '
+                    'damit die Karrierekarte automatisch aktualisiert wird. '
+                    'Das Feld "managed_by" nicht direkt über das Formular ändern.'
+                ),
+            }),
+        ]
+
+    @admin.display(description='Aktueller Trainer')
+    def managed_by_hint(self, obj):
+        if obj and obj.managed_by_id:
+            return f'{obj.managed_by} (ID {obj.managed_by_id})'
+        return '— kein Trainer zugewiesen —'
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom = [
+            path(
+                'assign-manager/',
+                self.admin_site.admin_view(self.assign_manager_view),
+                name='game_club_assign_manager',
+            ),
+        ]
+        return custom + urls
+
+    def assign_manager_view(self, request):
+        from datetime import date
+        from django import forms
+        from django.contrib import messages
+        from django.shortcuts import render, redirect
+        from django.urls import reverse
+        from game.models import ManagerProfile
+        from game.services import record_club_assignment
+
+        ids_str = request.GET.get('ids', '') or request.POST.get('ids', '')
+        club_ids = [int(i) for i in ids_str.split(',') if i.strip().isdigit()]
+        clubs = Club.objects.filter(pk__in=club_ids)
+
+        class AssignForm(forms.Form):
+            manager = forms.ModelChoiceField(
+                queryset=ManagerProfile.objects.select_related('user').order_by('name'),
+                label='Manager',
+                help_text='Welcher Manager übernimmt die ausgewählten Vereine?',
+            )
+            assignment_date = forms.DateField(
+                initial=date.today,
+                widget=forms.DateInput(attrs={'type': 'date'}),
+                label='Übernahmedatum',
+                help_text='Tag, an dem der Manager den Verein übernimmt.',
+            )
+
+        if request.method == 'POST':
+            form = AssignForm(request.POST)
+            if form.is_valid():
+                manager = form.cleaned_data['manager']
+                adate = form.cleaned_data['assignment_date']
+                for club in clubs:
+                    record_club_assignment(manager, club, assignment_date=adate)
+                messages.success(
+                    request,
+                    f'{manager} wurde als Trainer für {clubs.count()} '
+                    f'Verein(e) eingetragen (ab {adate.strftime("%-d.%-m.%Y")}).',
+                )
+                return redirect(reverse('admin:game_club_changelist'))
+            else:
+                pass
+        else:
+            form = AssignForm()
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Trainer zuweisen',
+            'form': form,
+            'clubs': clubs,
+            'ids': ids_str,
+            'opts': self.model._meta,
+        }
+        return render(request, 'admin/game/club/assign_manager.html', context)
 
 
 admin.site.register(League, LeagueAdmin)

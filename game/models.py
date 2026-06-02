@@ -415,6 +415,21 @@ class Club(models.Model):
         on_delete=models.CASCADE
     )
 
+    managed_by = models.OneToOneField(
+        'ManagerProfile',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='managed_club',
+        verbose_name='Aktueller Trainer',
+        help_text=(
+            'Welcher Manager leitet diesen Verein gerade? '
+            'Bitte nicht direkt bearbeiten — stattdessen im Vereins-Admin '
+            '"Trainer zuweisen" oder "Trainer entlassen" nutzen, '
+            'damit die Karrierekarte automatisch aktualisiert wird.'
+        ),
+    )
+
     def __str__(self):
         return self.name
 

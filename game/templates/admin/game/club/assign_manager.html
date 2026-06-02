@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Trainer zuweisen{% endblock %}
+
+{% block content %}
+<h1>Trainer zuweisen</h1>
+
+<p>
+  Die folgenden Vereine erhalten einen neuen Trainer. Wenn ein Verein bereits
+  einen Trainer hat, wird dessen bisherige Karriere-Station automatisch
+  geschlossen (Enddatum = Übernahmedatum &minus; 1&nbsp;Tag). Für den neuen
+  Manager wird eine neue Station angelegt — Stadt und Land werden direkt aus
+  dem Vereinsprofil übernommen.
+</p>
+
+<h2>Ausgewählte Vereine</h2>
+<ul>
+  {% for club in clubs %}
+    <li>
+      <strong>{{ club }}</strong>
+      {% if club.managed_by %}
+        — aktueller Trainer: <em>{{ club.managed_by }}</em>
+        (wird automatisch entlassen)
+      {% else %}
+        — kein aktueller Trainer
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="ids" value="{{ ids }}">
+  <table>
+    {{ form.as_table }}
+  </table>
+  <p>
+    <input type="submit" value="Trainer zuweisen" class="default">
+    &nbsp;
+    <a href="{% url 'admin:game_club_changelist' %}">Abbrechen</a>
+  </p>
+</form>
+{% endblock %}

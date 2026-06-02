@@ -1128,7 +1128,19 @@ def stadium_static_path(club):
     return stadium_assets.get(club.fm_inside_id, '')
 
 
-def current_manager_club():
+def current_manager_club(user=None):
+    """Return the Club currently managed by *user*, or fall back to Bayern.
+
+    Pass request.user to get the real assignment; omit (or pass None / anonymous)
+    for the hardcoded Bayern fallback used by views that haven't been updated yet.
+    """
+    if user is not None and getattr(user, 'is_authenticated', False):
+        try:
+            profile = user.manager_profile
+            club = Club.objects.select_related('league').get(managed_by=profile)
+            return club
+        except (Club.DoesNotExist, AttributeError):
+            pass
     return (
         Club.objects.select_related('league')
         .filter(fm_inside_id=915)
@@ -3768,7 +3780,7 @@ def manager_profile(request):
         'all_clubs': _clubs_with_crests,
         'manager_trainer_type_key': manager_profile_obj.trainer_type,
         'manager_favourite_club_id': manager_profile_obj.favourite_club_id or '',
-        'can_edit_profile': request.user.is_authenticated,
+        'can_edit_profile': request.user.is_superuser,
         'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
         'city_coords_json': city_coords_json,
