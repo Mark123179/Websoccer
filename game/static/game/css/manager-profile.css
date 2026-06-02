@@ -1243,9 +1243,16 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 
 .mp-photo-marker.is-active .mp-photo-marker-ring {
+    animation: mp-ring-pulse 1.8s ease-in-out infinite;
     height: 30px;
     opacity: 1;
     width: 60px;
+}
+
+@keyframes mp-ring-pulse {
+    0%   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+    50%  { transform: translate(-50%, -50%) scale(1.35); opacity: 0.35; }
+    100% { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
 }
 
 .mp-photo-marker-label {
