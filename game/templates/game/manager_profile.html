@@ -19,47 +19,19 @@
         <div class="mp-header-identity">
             <div class="mp-avatar-wrap">
                 <img src="{{ manager.profile_image_url }}" alt="{{ manager.name }}" id="mpAvatarHeaderImg">
-                {% if can_edit_profile %}
-                <button class="mp-avatar-edit" type="button" aria-label="Profilbild ändern" id="mpAvatarEditBtn">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/>
-                    </svg>
-                </button>
-                {% if has_custom_image %}
-                <button class="mp-avatar-reset" type="button" aria-label="Standard-Avatar wiederherstellen" id="mpAvatarResetBtn" title="Standard-Avatar wiederherstellen">
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 8a6 6 0 1 0 1.5-3.9"/>
-                        <path d="M2 4v4h4"/>
-                    </svg>
-                </button>
-                {% endif %}
-                {% endif %}
             </div>
             <div class="mp-identity-block">
                 <div class="mp-name-row">
                     <h1>{{ manager.name }}</h1>
-                    {% if can_edit_profile %}
-                    <button class="mp-icon-btn" type="button" aria-label="Namen bearbeiten" data-open-edit-profile>
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
-                    </button>
-                    {% endif %}
                 </div>
                 <div class="mp-flag-row">
                     {% if manager.flag_url %}
                     <img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img">
                     {% endif %}
                     {% if manager.flag_name %}<span>{{ manager.flag_name }}</span>{% endif %}
-                    {% if can_edit_profile %}
-                    <button class="mp-icon-btn mp-icon-btn-sm" type="button" aria-label="Nationalität bearbeiten" data-open-edit-profile>
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
-                    </button>
-                    {% endif %}
                 </div>
                 <div class="mp-type-badge-row">
                     <span class="mp-type-badge">{{ manager.active_type }}</span>
-                    <button class="mp-icon-btn" type="button" aria-label="Trainertyp bearbeiten">
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 2.5l2.5 2.5-7.5 7.5H3.5V10L11 2.5z"/></svg>
-                    </button>
                 </div>
                 <a class="mp-club-row" href="{{ manager.club_url }}">
                     <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-club-crest">
