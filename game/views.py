@@ -75,26 +75,75 @@ from .tactics import (
 import math as _math
 
 
-# Thin-plate-spline calibration of europe-night.png (1536x1024). The background
+# Thin-plate-spline calibration of europe-night.png (1536×1024). The background
 # is a perspective ("tilted globe") satellite render, NOT a flat map projection,
-# so a single linear/affine or even Mercator formula drifts badly (south-German
-# cities ended up too far north, Barcelona over the Pyrenees in France). The TPS
-# below was fitted against hand-verified light-cluster pixels of 10 well-spread,
-# unambiguous cities (clear starbursts + coastal clusters). It interpolates those
-# anchors exactly and warps smoothly between them. To re-calibrate, re-pin the
-# anchor pixels and re-solve the TPS (see .agents/memory/europe-night-calibration.md).
+# so a single linear/affine or even Mercator formula drifts badly. The TPS below
+# was fitted against 14 geographic anchor points identified without brightness:
+#   6 verified city starbursts (Frankfurt, Madrid, Barcelona, München, + the
+#     two brightness-allowed anchors London, Paris),
+#   5 coastal/geographic features (Cap de la Hague, Brittany/Corsen, Calabria
+#     tip, Skagen tip, Mull of Kintyre),
+#   2 urban-pattern coast anchors (Lisboa Tejo estuary, Porto coast),
+#   1 archipelago anchor (Stockholm Baltic coast).
+# All 14 anchors interpolate to 0.0 px residual. The transform is reproduced by
+# game/calibration/calibrate_city_map.py — re-run that script to regenerate
+# these weights after any anchor change.
+# Coordinate convention: anchors stored as (lng, lat); _tps_eval signature is
+#   _tps_eval(weights, lng, lat).
 _MAP_TPS_ANCHORS = (
-    (-3.70, 40.42), (2.17, 41.39), (-9.14, 38.72), (-8.61, 41.15), (2.35, 48.85),
-    (-0.13, 51.51), (4.90, 52.37), (4.84, 45.76), (9.19, 45.46), (12.50, 41.90),
+    ( 8.68, 50.11),   # Frankfurt        (city starburst)
+    (-3.70, 40.42),   # Madrid           (city starburst)
+    ( 2.17, 41.39),   # Barcelona        (city starburst)
+    (11.58, 48.14),   # München          (city starburst)
+    (-0.13, 51.51),   # London           (brightness allowed)
+    ( 2.35, 48.85),   # Paris            (brightness allowed)
+    (-1.93, 49.73),   # Cap de la Hague  (coastal peninsula)
+    (-4.72, 48.41),   # Brittany/Corsen  (coastal point)
+    (15.64, 37.65),   # Calabria tip     (boot-toe coast)
+    (10.58, 57.73),   # Skagen           (Jutland tip)
+    (-5.71, 55.30),   # Mull of Kintyre  (Scottish peninsula)
+    (-9.14, 38.72),   # Lisboa           (Tejo estuary coast)
+    (-8.61, 41.15),   # Porto            (coast, urban pattern)
+    (18.07, 59.33),   # Stockholm        (Baltic archipelago)
 )
-# weights[0..n-1] = radial-basis weights; weights[n..n+2] = affine [c, x, y]
+# weights[0..n-1] = radial-basis weights; weights[n..n+2] = affine [constant, lng, lat]
 _MAP_TPS_WX = (
-    -0.544691, 0.774326, 0.989405, -1.000482, -0.953162, 0.627053, -0.054187,
-    -0.055979, 0.945682, -0.727964, 263.200195, 16.330017, 5.171957,
+    -0.111711,
+    -0.452367,
+     0.357419,
+     0.292549,
+    -1.636255,
+    -0.307397,
+     3.138902,
+    -1.641837,
+    -0.099319,
+     0.113055,
+     0.352754,
+     0.883114,
+    -0.766735,
+    -0.122170,
+    339.015967,
+     17.232131,
+      3.160251,
 )
 _MAP_TPS_WY = (
-    0.561837, -0.446532, 0.362923, -0.633604, 0.361124, -0.043918, -0.065806,
-    -0.361087, 0.358906, -0.093843, 1949.379942, 2.580988, -28.943117,
+    -0.279317,
+     0.516328,
+    -0.536180,
+     0.231476,
+    -0.875358,
+     0.606112,
+     0.631787,
+    -0.121384,
+    -0.012970,
+     0.242833,
+     0.064864,
+     0.455602,
+    -0.779136,
+    -0.144656,
+    2032.907847,
+       0.263777,
+     -28.862434,
 )
 _MAP_IMG_W = 1536.0
 _MAP_IMG_H = 1024.0
