@@ -3210,7 +3210,8 @@ def player_graph_data(request, player_id):
 def manager_profile(request):
     tab = request.GET.get('tab', 'profil')
 
-    club = (
+    # Use the manager's actual assigned club; fall back to Bayern only as demo default.
+    club = current_manager_club(user=request.user) or (
         Club.objects.filter(fm_inside_id=915).first()
         or Club.objects.filter(name__icontains='Bayern').first()
     )
@@ -3603,6 +3604,49 @@ def manager_profile(request):
         from django.templatetags.static import static as _static
         profile_image_url = _static(_raw_image or 'game/images/managers/kirschgutzje-test.png')
 
+    # --- Derive active career station for header display ---
+    _active_st = next((st for st in db_stations if st.ended_at is None), None)
+
+    def _fmt_de_date(d):
+        if d is None:
+            return '–'
+        _months_de = [
+            '', 'Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni',
+            'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.',
+        ]
+        return f'{d.day}. {_months_de[d.month]} {d.year}'
+
+    def _time_elapsed_de(d):
+        if d is None:
+            return ''
+        from datetime import date as _date_cls
+        today = _date_cls.today()
+        months = (today.year - d.year) * 12 + (today.month - d.month)
+        years, rem_months = divmod(months, 12)
+        if years and rem_months:
+            return f'{years} Jahr{"e" if years != 1 else ""}, {rem_months} Monat{"e" if rem_months != 1 else ""}'
+        if years:
+            return f'{years} Jahr{"e" if years != 1 else ""}'
+        return f'{rem_months} Monat{"e" if rem_months != 1 else ""}'
+
+    if _active_st and _active_st.started_at:
+        _club_since_dt = _active_st.started_at
+        _club_since_str = _fmt_de_date(_club_since_dt)
+        _current_period_str = f'{_club_since_str} – heute'
+        _time_label_str = _time_elapsed_de(_club_since_dt)
+        # Season count: rough estimate (season starts Aug 1)
+        from datetime import date as _date_cls
+        _today = _date_cls.today()
+        _start_year = _club_since_dt.year if _club_since_dt.month >= 8 else _club_since_dt.year - 1
+        _curr_year = _today.year if _today.month >= 8 else _today.year - 1
+        _season_num = max(1, _curr_year - _start_year + 1)
+        _club_season_str = f'{_season_num}. Saison'
+    else:
+        _club_since_str = '–'
+        _current_period_str = '–'
+        _time_label_str = '–'
+        _club_season_str = '1. Saison'
+
     # --- Photo map markers (satellite image, lat/lng-calibrated) ---
     photo_map_markers = []
 
@@ -3724,8 +3768,8 @@ def manager_profile(request):
             'club_name': club_name,
             'club_crest': club_crest,
             'club_url': club_url,
-            'club_since': '15. Aug. 2023',
-            'club_season': '3. Saison',
+            'club_since': _club_since_str,
+            'club_season': _club_season_str,
             'member_since': member_since_display,
             'profile_image_url': profile_image_url,
             'level': manager_profile_obj.level,
@@ -3751,9 +3795,9 @@ def manager_profile(request):
         'current_club_summary': {
             'name': club_name,
             'crest': club_crest,
-            'period': '15. Aug. 2023 – heute',
+            'period': _current_period_str,
             'url': club_url,
-            'time_label': '2 Jahre, 9 Monate',
+            'time_label': _time_label_str,
             'games': games,
             'titles': trophies_count,
             'finals_lost': 0,
