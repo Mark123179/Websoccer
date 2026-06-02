@@ -1,2 +1,3 @@
 - [Wide-shell scope rule](wide-shell-scope.md) — 1440×900 is locked golden master; only wide-shell CSS scope may extend layout horizontally.
 - [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
+- [europe-night.png calibration](europe-night-calibration.md) — lat_lng_to_map_pct must use multi-point least-squares; 2-point fits drift, brightness peaks snap to wrong clusters.
