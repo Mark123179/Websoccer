@@ -1690,6 +1690,18 @@
 
                     var badge = document.querySelector('.mp-type-badge');
                     if (badge && data.trainer_type_label) badge.textContent = data.trainer_type_label;
+
+                    var sidebarFlag = document.getElementById('mpSidebarFlagImg');
+                    if (sidebarFlag) {
+                        if (data.flag_url) {
+                            sidebarFlag.src = data.flag_url;
+                            sidebarFlag.style.display = '';
+                        } else {
+                            sidebarFlag.style.display = 'none';
+                        }
+                    }
+                    var sidebarRole = document.getElementById('mpSidebarRole');
+                    if (sidebarRole && data.trainer_type_label) sidebarRole.textContent = data.trainer_type_label;
                 } else {
                     saveBtn.textContent = 'Fehler';
                     setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
