@@ -58,22 +58,33 @@ keep the uniform-scale zoom + label-out-of-flow anchor intact. Custom stations w
 no linked club still resolve their name through the table; only truly unknown names
 hit the TPS/`resolve_city_latlng` path.
 
-## TPS anchor hull: reliable up to ~15.6°E (Calabria tip), extrapolates badly beyond
+## TPS anchor hull + residual error for Italian cities
 The current TPS has 14 anchors; the easternmost is the Calabria boot-toe at 15.64°E.
-The formula *interpolates* reliably across Iberia/France/UK/Benelux/Germany/Italy
-including the full Italian peninsula — Roma (12.5°E) and Napoli (14.27°E) are
-well inside the hull. Anything **east of ~15.6°E** (Lecce 18.17°E, Balkans, Greece,
-Turkey) extrapolates badly, e.g. Lecce TPS prediction lands in the Adriatic Sea.
-**Old note "hull ends at Rome 12.5°E" is stale** — Calabria was added as anchor.
-- West of 15.6°E (all of Italy including Napoli) → TPS interpolates; trust it.
-  Cross-check with satellite overlay if suspicious, but TPS is the reference.
+East of ~15.6°E (Lecce, Balkans, Greece, Turkey) → extrapolates badly into the sea.
+
+**Even inside the hull (Italy), TPS has ~8-10px residual error** — confirmed 2026-06
+via direct RGB analysis: the TPS-predicted pixel for Naples (40.85°N,14.27°E) shows
+rgb(85,83,77) warmth=+7, while the actual Naples satellite light cluster is 10px west
+at rgb(185,169,147) warmth=+30. Similarly, TPS-Roma pixel shows rgb(19,25,29) coldly
+dark; real Rome lights are 8px east at rgb(214,198,176) warmth=+30.
+
+**How to verify any Italian pin:** use RGB warmth analysis — pixel-sample the CITY_MAP_PCT
+pixel and check `warmth = (R+G)//2 - B`. Warm urban lights: warmth > +20. Cold/sea: warmth < 0.
+If the current pin is cold, scan ±40px for the warmest cluster and move there.
+Formula: `warmth = (R+G)//2 - B`; check a 7×7 neighborhood average.
+
+**Correction values (2026-06, verified):**
+- Roma NEW (46.88, 74.22) = px(720,760) rgb(214,198,176) warmth=+30
+- Napoli NEW (47.27, 77.64) = px(726,795) rgb(185,169,147) warmth=+30
+
+**Berlin note:** TPS pixel(760,480) is geometrically correct (verified by triangle
+interpolation from Skagen/Frankfurt/Stockholm anchors: geometric estimate px(765,478)
+matches TPS). The brightest nearby cluster (px 772,474) is east of Berlin in the
+Oder/Strausberg region — do NOT move Berlin there.
+
 - East of 15.6°E → hand-pin from coastlines/borders; TPS drifts into the sea.
   Lecce (18.17°E) kept near old visual value (50.5, 79.8) not TPS (51.9, 78.7).
   For dim regions (Balkans) brightening PIL crop ×2.6 reveals borders for geography.
-**Why it matters:** Italian cities re-calibrated 2026-06; old Roma/Napoli were ~3-4%
-too far south (landing in the sea) because they were set before Calabria was anchored.
-The TPS predictions corrected them onto land (confirmed via brightness nbv check).
-Don't trust old hand-pins for any city east of Rome without re-verifying the overlay.
 
 ## South Germany is dim too — pin via affine fit from BRIGHT anchors, not eyeball
 München/Stuttgart sit in the dim SE band, so eyeballing put München ~37px too far

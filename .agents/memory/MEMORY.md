@@ -1,4 +1,4 @@
 - [Wide-shell scope rule](wide-shell-scope.md) — 1440×900 is locked golden master; only wide-shell CSS scope may extend layout horizontally.
-- [Europe-night map markers](europe-night-calibration.md) — placement is a hand-verified CITY_MAP_PCT table (TPS fallback); markers look off via render bugs (object-fit:fill stretch + label-anchored translate), not coords.
+- [Europe-night map markers](europe-night-calibration.md) — placement is a hand-verified CITY_MAP_PCT table (TPS fallback); TPS has ~10px extrapolation error for Italian cities; pin positions must be verified against satellite RGB warmth (warmth=(R+G)/2-B > +20 = real city lights).
 - [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
 - [manager-profile CSS cache-bust](manager-profile-css-cachebust.md) — bump ?v= in manager_profile.html on EVERY manager-profile.css edit, else user sees stale CSS while your screenshots look fixed.

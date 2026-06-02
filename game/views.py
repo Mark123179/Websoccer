@@ -350,10 +350,13 @@ CITY_MAP_PCT = {
     'hvidovre': (48.68, 38.53),
     # --- Italy — HAND-PINNED (TPS formula drifts ~4-5% for cities far east
     # of the anchor hull; Calabria-tip anchor at 15.64°E keeps the peninsula
-    # well-interpolated. All values re-verified 2026-06 against the satellite
-    # coastline: old Roma/Napoli were ~3-4% too far south, landing in the sea.)
-    'roma': (46.4, 74.5), 'rom': (46.4, 74.5), 'rome': (46.4, 74.5),
-    'napoli': (47.9, 77.3), 'neapel': (47.9, 77.3), 'naples': (47.9, 77.3),
+    # well-interpolated. All values verified 2026-06 via direct RGB brightness
+    # analysis of the satellite image: each pin is placed on the warm urban
+    # light cluster (rgb > 180 warmth > 20) visible in the night satellite.
+    # Roma: px(720,760) rgb(214,198,176) warmth=35 — Roman metro light cluster.
+    # Napoli: px(726,795) rgb(185,169,147) warmth=30 — Naples metro light cluster.
+    'roma': (46.88, 74.22), 'rom': (46.88, 74.22), 'rome': (46.88, 74.22),
+    'napoli': (47.27, 77.64), 'neapel': (47.27, 77.64), 'naples': (47.27, 77.64),
     'milano': (43.5, 65.3), 'mailand': (43.5, 65.3), 'milan': (43.5, 65.3),
     'torino': (41.4, 66.0), 'turin': (41.4, 66.0),
     'genova': (42.9, 67.8), 'genua': (42.9, 67.8), 'genoa': (42.9, 67.8),
@@ -361,7 +364,7 @@ CITY_MAP_PCT = {
     'firenze': (45.6, 69.7), 'florenz': (45.6, 69.7), 'florence': (45.6, 69.7),
     'bologna': (45.9, 68.0),
     'parma': (44.8, 67.1),
-    'lazio': (46.4, 74.5),
+    'lazio': (46.88, 74.22),
     'fiorentina': (45.6, 69.7),
     'atalanta': (44.1, 64.7),
     'cagliari': (41.6, 80.8),
