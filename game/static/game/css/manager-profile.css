@@ -1186,6 +1186,7 @@ body.manager-profile-page .nav-menu a:first-child {
     display: block;
     height: 100%;
     left: 0;
+    object-fit: cover;
     position: absolute;
     top: 0;
     width: 100%;
@@ -1235,10 +1236,13 @@ body.manager-profile-page .nav-menu a:first-child {
     color: rgba(255, 255, 255, 0.75);
     font-size: 9px;
     font-weight: 600;
+    left: 50%;
     letter-spacing: 0.04em;
-    margin-top: 3px;
+    position: absolute;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
     text-transform: uppercase;
+    top: calc(100% + 2px);
+    transform: translateX(-50%);
     white-space: nowrap;
 }
 

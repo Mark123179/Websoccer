@@ -119,6 +119,62 @@ def lat_lng_to_map_pct(lat, lng):
     return round(max(0.0, min(100.0, x_pct)), 2), round(max(0.0, min(100.0, y_pct)), 2)
 
 
+# Hand-verified marker positions on europe-night.png as (x%, y%). Each value was
+# pixel-pinned against the satellite render via a calibration grid (1536x1024),
+# so markers sit exactly on their city instead of drifting off the perspective
+# formula. Table-first: any city listed here uses these fixed coordinates; the
+# lat/lng TPS formula is only a fallback for cities not in the table. Keys are
+# lowercase; lookup is accent/prefix tolerant via city_map_pct().
+CITY_MAP_PCT = {
+    'augsburg': (45.44, 59.47),
+    'berlin': (49.09, 49.02),
+    'bochum': (41.80, 49.71),
+    'bremen': (44.21, 45.99),
+    'dortmund': (42.06, 49.80),
+    'frankfurt am main': (43.36, 54.00), 'frankfurt': (43.36, 54.00),
+    'freiburg im breisgau': (42.12, 59.18), 'freiburg': (42.12, 59.18),
+    'hamburg': (45.64, 45.02),
+    'heidenheim an der brenz': (44.86, 58.20), 'heidenheim': (44.86, 58.20),
+    'kiel': (46.09, 42.97),
+    'leipzig': (47.59, 51.76),
+    'leverkusen': (41.34, 50.88),
+    'mainz': (42.84, 54.10),
+    'mönchengladbach': (40.56, 50.29), 'monchengladbach': (40.56, 50.29),
+    'gladbach': (40.56, 50.29),
+    'münchen': (45.96, 59.86), 'munchen': (45.96, 59.86), 'munich': (45.96, 59.86),
+    'sinsheim': (43.55, 56.35),
+    'stuttgart': (43.88, 57.62),
+    'wolfsburg': (46.29, 48.34),
+    'barcelona': (32.88, 74.22),
+}
+
+
+def city_map_pct(*names):
+    """Return the hand-verified (x%, y%) for a city name, or None.
+
+    Tolerant lookup: exact match first, then a two-way prefix match so
+    'Frankfurt' resolves to 'frankfurt am main' and minor typos still hit.
+    The first name that resolves wins.
+    """
+    for raw in names:
+        key = (raw or '').strip().lower()
+        if not key:
+            continue
+        hit = CITY_MAP_PCT.get(key)
+        if hit:
+            return hit
+        if len(key) >= 4:
+            for ck, cv in CITY_MAP_PCT.items():
+                # ck.startswith(key): tolerate truncations/typos ("frankfur").
+                # key.startswith(ck + ' '): only match a table key that is a
+                # leading *word* of the input ("frankfurt am main" -> "frankfurt")
+                # so a short key never grabs an unrelated longer name
+                # ("kielce" must not resolve to "kiel").
+                if ck.startswith(key) or key.startswith(ck + ' '):
+                    return cv
+    return None
+
+
 EUROPEAN_CITY_COORDS = {
     # Germany
     'münchen': (271, 214), 'munich': (271, 214),
@@ -3212,26 +3268,41 @@ def manager_profile(request):
 
     if db_stations:
         for _st in db_stations:
-            _lat = _lng = None
+            _prof_city = None
             if _st.club:
                 try:
-                    _prof = _st.club.public_profile
-                    _lat, _lng = _prof.map_lat, _prof.map_lng
+                    _prof_city = _st.club.public_profile.city_name
                 except Exception:
-                    pass
-            if _lat is None or _lng is None:
-                _resolved = resolve_city_latlng(_st.city_name, _st.custom_club_name)
-                if _resolved is None and (_st.map_x, _st.map_y) != (271, 214):
-                    _resolved = map_xy_to_lat_lng(_st.map_x, _st.map_y)
-                _lat, _lng = _resolved if _resolved is not None else (48.22, 11.55)
-            _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
+                    _prof_city = None
+            _city_label = _st.city_name or _prof_city or (
+                _st.club.name if _st.club else 'München'
+            )
+            # Table-first: use hand-verified pixel positions when the city is
+            # known; only fall back to the lat/lng TPS formula otherwise.
+            _pct = city_map_pct(
+                _st.city_name, _st.custom_club_name, _prof_city,
+                _st.club.name if _st.club else None,
+            )
+            if _pct is not None:
+                _xp, _yp = _pct
+            else:
+                _lat = _lng = None
+                if _st.club:
+                    try:
+                        _prof = _st.club.public_profile
+                        _lat, _lng = _prof.map_lat, _prof.map_lng
+                    except Exception:
+                        pass
+                if _lat is None or _lng is None:
+                    _resolved = resolve_city_latlng(_st.city_name, _st.custom_club_name)
+                    if _resolved is None and (_st.map_x, _st.map_y) != (271, 214):
+                        _resolved = map_xy_to_lat_lng(_st.map_x, _st.map_y)
+                    _lat, _lng = _resolved if _resolved is not None else (48.22, 11.55)
+                _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
             _is_active = _st.ended_at is None
             _crest = _st.club.crest_static_path if _st.club else club_crest
             from django.templatetags.static import static as _s
             _crest_url = _s(_crest) if _crest else ''
-            _city_label = _st.city_name or (
-                _st.club.public_profile.city_name if _st.club else 'München'
-            )
             photo_map_markers.append({
                 'x_pct': _xp, 'y_pct': _yp,
                 'club': _st.custom_club_name or (_st.club.name if _st.club else ''),
@@ -3240,9 +3311,14 @@ def manager_profile(request):
                 'is_active': _is_active,
             })
     else:
-        _lat = club_profile.map_lat if club_profile and club_profile.map_lat else 48.22
-        _lng = club_profile.map_lng if club_profile and club_profile.map_lng else 11.55
-        _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
+        _city = club_profile.city_name if club_profile and club_profile.city_name else None
+        _pct = city_map_pct(_city, club_name)
+        if _pct is not None:
+            _xp, _yp = _pct
+        else:
+            _lat = club_profile.map_lat if club_profile and club_profile.map_lat else 48.22
+            _lng = club_profile.map_lng if club_profile and club_profile.map_lng else 11.55
+            _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
         from django.templatetags.static import static as _s
         photo_map_markers.append({
             'x_pct': _xp, 'y_pct': _yp,
