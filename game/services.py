@@ -33,14 +33,28 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
         assignment_date = _date.today()
 
     with transaction.atomic():
-        # Close any open station for this manager
+        # If the club already has a different manager, close that incumbent's
+        # open station before displacing them. This ensures the outgoing manager
+        # always gets a correct end date even when replaced without a formal
+        # departure step.
+        if club.managed_by_id and club.managed_by_id != manager_profile.pk:
+            incumbent = club.managed_by
+            ManagerCareerStation.objects.filter(
+                manager=incumbent, ended_at__isnull=True
+            ).update(ended_at=assignment_date - timedelta(days=1))
+            # Release the club from the incumbent's record
+            Club.objects.filter(managed_by=incumbent).update(managed_by=None)
+            # Refresh the club instance so the FK is cleared before we write it again
+            club.refresh_from_db(fields=['managed_by'])
+
+        # Close any open station for the NEW manager (handles club-to-club moves)
         open_qs = ManagerCareerStation.objects.filter(
             manager=manager_profile, ended_at__isnull=True
         )
         if open_qs.exists():
             open_qs.update(ended_at=assignment_date - timedelta(days=1))
 
-        # Release any club this manager previously held
+        # Release any other club this manager previously held
         Club.objects.filter(managed_by=manager_profile).update(managed_by=None)
 
         # Assign

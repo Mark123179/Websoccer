@@ -1595,7 +1595,7 @@ def home(request):
         average_strength=Avg('player__strength_profile__final_strength'),
     )
     richest_clubs = clubs.order_by('-budget')[:6]
-    primary_club = current_manager_club() or clubs.order_by('-budget').first()
+    primary_club = current_manager_club(user=request.user) or clubs.order_by('-budget').first()
     secondary_club = (
         clubs.exclude(id=primary_club.id).order_by('-budget').first()
         if primary_club
@@ -2055,7 +2055,7 @@ def club_list(request):
         player_count=Count('player'),
         average_strength=Avg('player__strength_profile__final_strength'),
     )
-    manager_club = current_manager_club()
+    manager_club = current_manager_club(user=request.user)
     header_club = manager_club or clubs.first()
     header_opponent = (
         clubs.exclude(id=header_club.id).order_by('-budget').first()
@@ -2547,7 +2547,7 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
     display_absences = tactic_display_absences(
         unavailable_players_for_squad(club, squad_scope)
     )
-    duel_home_club = current_manager_club() or club
+    duel_home_club = current_manager_club(user=request.user) or club
     duel_away_club = opponent_club
     if duel_home_club and duel_away_club and duel_away_club.id == duel_home_club.id:
         duel_away_club = club
@@ -3897,6 +3897,8 @@ def save_career_station(request):
         return JsonResponse({'ok': False, 'error': 'Method not allowed'}, status=405)
     if not request.user.is_authenticated:
         return JsonResponse({'ok': False, 'error': 'Nicht angemeldet'}, status=401)
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Keine Berechtigung'}, status=403)
 
     from .models import ManagerProfile, ManagerCareerStation
 
@@ -3982,6 +3984,8 @@ def delete_career_station(request):
         return JsonResponse({'ok': False, 'error': 'Method not allowed'}, status=405)
     if not request.user.is_authenticated:
         return JsonResponse({'ok': False, 'error': 'Nicht angemeldet'}, status=401)
+    if not request.user.is_superuser:
+        return JsonResponse({'ok': False, 'error': 'Keine Berechtigung'}, status=403)
 
     from .models import ManagerProfile, ManagerCareerStation
 

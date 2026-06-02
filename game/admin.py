@@ -352,21 +352,30 @@ class ClubAdmin(admin.ModelAdmin):
                 help_text='Tag, an dem der Manager den Verein übernimmt.',
             )
 
+        # OneToOneField: one manager → one club. Reject multi-club selection to
+        # prevent confusing timeline data (manager would end up at last club only
+        # with all intermediate stations created and immediately closed).
+        if clubs.count() > 1:
+            messages.error(
+                request,
+                'Bitte nur EINEN Verein auswählen. Ein Manager kann immer nur '
+                'einen Verein gleichzeitig leiten.',
+            )
+            return redirect(reverse('admin:game_club_changelist'))
+
         if request.method == 'POST':
             form = AssignForm(request.POST)
             if form.is_valid():
                 manager = form.cleaned_data['manager']
                 adate = form.cleaned_data['assignment_date']
-                for club in clubs:
-                    record_club_assignment(manager, club, assignment_date=adate)
+                club = clubs.first()
+                record_club_assignment(manager, club, assignment_date=adate)
                 messages.success(
                     request,
-                    f'{manager} wurde als Trainer für {clubs.count()} '
-                    f'Verein(e) eingetragen (ab {adate.strftime("%-d.%-m.%Y")}).',
+                    f'{manager} wurde als Trainer für {club} eingetragen '
+                    f'(ab {adate.strftime("%-d.%-m.%Y")}).',
                 )
                 return redirect(reverse('admin:game_club_changelist'))
-            else:
-                pass
         else:
             form = AssignForm()
 
