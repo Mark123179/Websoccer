@@ -1256,6 +1256,13 @@ body.manager-profile-page .nav-menu a:first-child {
     font-size: 10px;
 }
 
+/* Flipped above the crest for stations near the tile's bottom edge so the
+   name stays readable at a tight zoom (set by the map zoom JS). */
+.mp-photo-marker.mp-label-above .mp-photo-marker-label {
+    top: auto;
+    bottom: calc(100% + 16px);
+}
+
 .mp-europe-land {
     fill: rgba(28, 58, 90, 0.85);
     stroke: rgba(138, 92, 246, 0.35);
