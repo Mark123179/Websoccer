@@ -2928,10 +2928,13 @@ def manager_profile(request):
     # --- Manager profile (needed for career stations and trainer types) ---
     from .models import ManagerProfile, ManagerCareerStation, COUNTRY_FLAG_ASSETS
     from django.db.models import Sum as _Sum
-    manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
-        user=request.user,
-        defaults={'name': request.user.username},
-    )
+    if request.user.is_authenticated:
+        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'name': request.user.username},
+        )
+    else:
+        manager_profile_obj = ManagerProfile.objects.first()
 
     # --- Map stations from ManagerCareerStation (real career history) ---
     db_stations = list(
