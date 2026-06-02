@@ -457,6 +457,8 @@ class ClubPublicProfile(models.Model):
     average_attendance = models.PositiveIntegerField(default=0)
     city_name = models.CharField(max_length=120, blank=True)
     city_country = models.CharField(max_length=100, blank=True)
+    map_lat = models.FloatField(null=True, blank=True, verbose_name='Breitengrad (Karte)')
+    map_lng = models.FloatField(null=True, blank=True, verbose_name='Längengrad (Karte)')
     stadium_image_static_path = models.CharField(max_length=240, blank=True)
     city_image_static_path = models.CharField(max_length=240, blank=True)
     partner_club = models.ForeignKey(

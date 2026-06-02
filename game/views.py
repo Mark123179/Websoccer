@@ -72,6 +72,16 @@ from .tactics import (
 )
 
 
+import math as _math
+
+
+def lat_lng_to_map_pct(lat, lng):
+    x_pct = 2.717 * lng + 30.49
+    merc_y = _math.log(_math.tan(_math.pi / 4 + _math.radians(lat) / 2))
+    y_pct = 134.9 - 96.8 * merc_y
+    return round(max(0.0, min(100.0, x_pct)), 2), round(max(0.0, min(100.0, y_pct)), 2)
+
+
 EUROPEAN_CITY_COORDS = {
     # Germany
     'münchen': (271, 214), 'munich': (271, 214),
@@ -3060,6 +3070,72 @@ def manager_profile(request):
         from django.templatetags.static import static as _static
         profile_image_url = _static(_raw_image or 'game/images/managers/kirschgutzje-test.png')
 
+    # --- Photo map markers (satellite image, lat/lng-calibrated) ---
+    _DEMO_PAST_STATIONS = [
+        {
+            'lat': 41.38, 'lng': 2.07,
+            'club': 'FC Barcelona', 'city': 'Barcelona',
+            'crest_url': 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg',
+            'is_active': False,
+        },
+        {
+            'lat': 48.85, 'lng': 2.35,
+            'club': 'Paris Saint-Germain', 'city': 'Paris',
+            'crest_url': 'https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg',
+            'is_active': False,
+        },
+    ]
+
+    photo_map_markers = []
+    for _demo in _DEMO_PAST_STATIONS:
+        _xp, _yp = lat_lng_to_map_pct(_demo['lat'], _demo['lng'])
+        photo_map_markers.append({
+            'x_pct': _xp, 'y_pct': _yp,
+            'club': _demo['club'], 'city': _demo['city'],
+            'crest_url': _demo['crest_url'],
+            'is_active': False,
+        })
+
+    if db_stations:
+        for _st in db_stations:
+            _lat = _lng = None
+            if _st.club:
+                try:
+                    _prof = _st.club.public_profile
+                    _lat, _lng = _prof.map_lat, _prof.map_lng
+                except Exception:
+                    pass
+            if _lat is None:
+                from django.templatetags.static import static as _s
+                _lat, _lng = 48.22, 11.55
+            _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
+            _is_active = _st.ended_at is None
+            _crest = _st.club.crest_static_path if _st.club else club_crest
+            from django.templatetags.static import static as _s
+            _crest_url = _s(_crest) if _crest else ''
+            _city_label = _st.city_name or (
+                _st.club.public_profile.city_name if _st.club else 'München'
+            )
+            photo_map_markers.append({
+                'x_pct': _xp, 'y_pct': _yp,
+                'club': _st.custom_club_name or (_st.club.name if _st.club else ''),
+                'city': _city_label,
+                'crest_url': _crest_url,
+                'is_active': _is_active,
+            })
+    else:
+        _lat = club_profile.map_lat if club_profile and club_profile.map_lat else 48.22
+        _lng = club_profile.map_lng if club_profile and club_profile.map_lng else 11.55
+        _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
+        from django.templatetags.static import static as _s
+        photo_map_markers.append({
+            'x_pct': _xp, 'y_pct': _yp,
+            'club': club_name,
+            'city': club_profile.city_name if club_profile and club_profile.city_name else 'München',
+            'crest_url': _s(club_crest),
+            'is_active': True,
+        })
+
     city_coords_json = json.dumps({k: list(v) for k, v in EUROPEAN_CITY_COORDS.items()})
 
     from django.templatetags.static import static as _static_fn
@@ -3086,6 +3162,7 @@ def manager_profile(request):
         'trainer_types_selectable': trainer_types_selectable,
         'trainer_types_unlockable': trainer_types_unlockable,
         'map_stations': map_stations,
+        'photo_map_markers': photo_map_markers,
         'login_history': login_history,
         'trophies_list': trophies_list,
         'manager': {

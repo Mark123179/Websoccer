@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-41">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-42">
 {% endblock %}
 
 {% block content %}
@@ -347,38 +347,17 @@
                     </button>
                     {% endif %}
                 </header>
-                <div class="mp-euromap-wrap">
-                    <div class="mp-euromap-svg-wrap">
-                        <div class="mp-photo-map">
-                            <img class="mp-photo-map-bg" src="{% static 'game/images/backgrounds/europe-night.png' %}" alt="Europa Karte">
-                            <div class="mp-photo-marker" style="left:38%;top:37%">
-                                <img class="mp-photo-marker-crest" src="https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg" alt="Paris Saint-Germain">
-                                <img class="mp-photo-marker-ring" src="{% static 'game/images/icons/marker-ring.svg' %}" alt="">
-                                <span class="mp-photo-marker-label">Paris</span>
-                            </div>
-                            <div class="mp-photo-marker is-active" style="left:57%;top:36%">
-                                <img class="mp-photo-marker-crest" src="{% static 'game/images/crests/915.png' %}" alt="FC Bayern München">
-                                <img class="mp-photo-marker-ring" src="{% static 'game/images/icons/marker-ring.svg' %}" alt="">
-                                <span class="mp-photo-marker-label">München</span>
-                            </div>
-                            <div class="mp-photo-marker" style="left:28%;top:59%">
-                                <img class="mp-photo-marker-crest" src="https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg" alt="FC Barcelona">
-                                <img class="mp-photo-marker-ring" src="{% static 'game/images/icons/marker-ring.svg' %}" alt="">
-                                <span class="mp-photo-marker-label">Barcelona</span>
-                            </div>
-                        </div>
+                <div class="mp-photo-map" id="mpPhotoMap">
+                    <img class="mp-photo-map-bg" id="mpPhotoMapBg" src="{% static 'game/images/backgrounds/europe-night.png' %}" alt="Europa Karte">
+                    {% for m in photo_map_markers %}
+                    <div class="mp-photo-marker{% if m.is_active %} is-active{% endif %}"
+                         data-x="{{ m.x_pct }}" data-y="{{ m.y_pct }}"
+                         style="left:{{ m.x_pct }}%;top:{{ m.y_pct }}%">
+                        <img class="mp-photo-marker-crest" src="{{ m.crest_url }}" alt="{{ m.club }}">
+                        <img class="mp-photo-marker-ring" src="{% static 'game/images/icons/marker-ring.svg' %}" alt="">
+                        <span class="mp-photo-marker-label">{{ m.city }}</span>
                     </div>
-                    <div class="mp-euromap-legend">
-                        {% for station in map_stations %}
-                        <div class="mp-map-legend-item {% if station.active %}is-active{% endif %}">
-                            <span class="mp-map-legend-dot"></span>
-                            <div>
-                                <strong>{{ station.club }}</strong>
-                                <small>{{ station.city }}, {{ station.country }} · {{ station.period }}</small>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 </div>
 
                 <div class="mp-station-panel" id="mpStationPanel" aria-hidden="true">
@@ -997,6 +976,71 @@
         pulseCircle.setAttribute('r', '10');
         pulseCircle.classList.add('mp-map-pin-pulse');
         activeMapPin.insertBefore(pulseCircle, activeMapPin.firstChild);
+    }
+})();
+</script>
+
+<script>
+(function () {
+    function mpApplyMapZoom() {
+        const map = document.getElementById('mpPhotoMap');
+        const bg  = document.getElementById('mpPhotoMapBg');
+        if (!map || !bg) return;
+
+        const markers = map.querySelectorAll('.mp-photo-marker');
+        if (!markers.length) return;
+
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        markers.forEach(function (m) {
+            var x = parseFloat(m.dataset.x);
+            var y = parseFloat(m.dataset.y);
+            if (isNaN(x) || isNaN(y)) return;
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+        });
+        if (!isFinite(minX)) return;
+
+        var spanX = maxX - minX || 0;
+        var spanY = maxY - minY || 0;
+        var padX  = Math.max(20, spanX * 0.45);
+        var padY  = Math.max(14, spanY * 0.45);
+
+        var z1x = Math.max(0,   minX - padX);
+        var z2x = Math.min(100, maxX + padX);
+        var z1y = Math.max(0,   minY - padY);
+        var z2y = Math.min(100, maxY + padY);
+
+        var zSpanX  = z2x - z1x;
+        var zSpanY  = z2y - z1y;
+        var scaleX  = 100 / zSpanX;
+        var scaleY  = 100 / zSpanY;
+        var S       = Math.min(scaleX, scaleY);
+
+        var regionW  = S * zSpanX;
+        var regionH  = S * zSpanY;
+        var leftOff  = (100 - regionW) / 2 - z1x * S;
+        var topOff   = (100 - regionH) / 2 - z1y * S;
+
+        bg.style.position = 'absolute';
+        bg.style.width    = (S * 100) + '%';
+        bg.style.height   = (S * 100) + '%';
+        bg.style.left     = leftOff + '%';
+        bg.style.top      = topOff  + '%';
+        bg.style.objectFit = 'fill';
+
+        markers.forEach(function (m) {
+            var x = parseFloat(m.dataset.x);
+            var y = parseFloat(m.dataset.y);
+            if (isNaN(x) || isNaN(y)) return;
+            m.style.left = (leftOff + x * S) + '%';
+            m.style.top  = (topOff  + y * S) + '%';
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', mpApplyMapZoom);
+    } else {
+        mpApplyMapZoom();
     }
 })();
 </script>
