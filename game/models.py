@@ -2192,7 +2192,7 @@ class ManagerProfile(models.Model):
     nationality_name = models.CharField(
         max_length=100,
         blank=True,
-        default='Deutschland',
+        default='',
     )
     member_since = models.DateField(null=True, blank=True)
     profile_image = models.CharField(max_length=200, blank=True, default='')
