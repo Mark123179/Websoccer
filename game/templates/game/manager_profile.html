@@ -960,6 +960,11 @@
     // trainer's stations.
     var IMG_W = 1536, IMG_H = 1024;
 
+    // [min_x%, max_x%, min_y%, max_y%] country bbox from the server, or null.
+    // Used to set a minimum zoom level when there is only one training station
+    // (so the whole country is visible rather than just the city).
+    var COUNTRY_BBOX = {{ country_zoom_box_json|safe }};
+
     function mpApplyMapZoom() {
         var map = document.getElementById('mpPhotoMap');
         var bg  = document.getElementById('mpPhotoMapBg');
@@ -981,6 +986,16 @@
             if (y < minY) minY = y; if (y > maxY) maxY = y;
         });
         if (!isFinite(minX)) return;
+
+        // Single-station minimum zoom: expand the bounding box to cover the
+        // whole country so the map shows geographic context rather than just
+        // the city area.
+        if (markers.length === 1 && Array.isArray(COUNTRY_BBOX)) {
+            if (COUNTRY_BBOX[0] < minX) minX = COUNTRY_BBOX[0];
+            if (COUNTRY_BBOX[1] > maxX) maxX = COUNTRY_BBOX[1];
+            if (COUNTRY_BBOX[2] < minY) minY = COUNTRY_BBOX[2];
+            if (COUNTRY_BBOX[3] > maxY) maxY = COUNTRY_BBOX[3];
+        }
 
         // Station bounding box in IMAGE PIXELS (so x and y share one scale).
         var bx1 = minX / 100 * IMG_W, bx2 = maxX / 100 * IMG_W;

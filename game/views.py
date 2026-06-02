@@ -401,6 +401,82 @@ CITY_MAP_PCT = {
 }
 
 
+# Country-level bounding boxes for single-station minimum zoom.
+# Format: [min_x%, max_x%, min_y%, max_y%] on europe-night.png (1536×1024).
+# Used when a manager has only one training station — zooms out to show the
+# whole country instead of just the city area (which gives zero geographic
+# context). Values are tuned against CITY_MAP_PCT anchor positions.
+COUNTRY_MAP_BBOX = {
+    # --- Germany ---
+    'deutschland': [37.0, 52.5, 40.0, 61.5],
+    'germany':     [37.0, 52.5, 40.0, 61.5],
+    # --- Spain / Portugal ---
+    'spanien':     [12.0, 34.5, 67.5, 91.5],
+    'spain':       [12.0, 34.5, 67.5, 91.5],
+    'portugal':    [12.0, 20.5, 70.0, 86.5],
+    # --- France / Monaco ---
+    'frankreich':  [24.5, 43.5, 48.5, 72.5],
+    'france':      [24.5, 43.5, 48.5, 72.5],
+    # --- England / UK ---
+    'england':     [22.5, 35.5, 30.5, 52.0],
+    'uk':          [20.5, 36.5, 29.0, 52.5],
+    'schottland':  [25.0, 34.0, 29.0, 39.0],
+    'scotland':    [25.0, 34.0, 29.0, 39.0],
+    'wales':       [25.0, 32.5, 39.0, 48.0],
+    'irland':      [20.5, 29.5, 36.5, 46.0],
+    'ireland':     [20.5, 29.5, 36.5, 46.0],
+    # --- Italy ---
+    'italien':     [38.0, 53.5, 61.5, 92.5],
+    'italy':       [38.0, 53.5, 61.5, 92.5],
+    # --- Netherlands / Belgium ---
+    'niederlande': [36.0, 42.5, 42.5, 51.5],
+    'netherlands': [36.0, 42.5, 42.5, 51.5],
+    'belgien':     [33.5, 40.5, 48.5, 53.5],
+    'belgium':     [33.5, 40.5, 48.5, 53.5],
+    # --- Switzerland / Austria ---
+    'schweiz':     [38.0, 45.0, 58.0, 65.5],
+    'switzerland': [38.0, 45.0, 58.0, 65.5],
+    'österreich':  [43.5, 57.5, 54.0, 64.5],
+    'austria':     [43.5, 57.5, 54.0, 64.5],
+    # --- Scandinavia ---
+    'dänemark':    [42.0, 52.0, 36.0, 41.5],
+    'denmark':     [42.0, 52.0, 36.0, 41.5],
+    'schweden':    [46.5, 58.0, 22.5, 39.0],
+    'sweden':      [46.5, 58.0, 22.5, 39.0],
+    'norwegen':    [37.5, 52.0, 13.0, 31.0],
+    'norway':      [37.5, 52.0, 13.0, 31.0],
+    'finnland':    [50.0, 65.0, 17.0, 33.0],
+    'finland':     [50.0, 65.0, 17.0, 33.0],
+    # --- Eastern Europe / Balkans ---
+    'kroatien':    [45.5, 53.5, 61.5, 71.5],
+    'croatia':     [45.5, 53.5, 61.5, 71.5],
+    'serbien':     [48.5, 56.5, 64.5, 74.5],
+    'serbia':      [48.5, 56.5, 64.5, 74.5],
+    'griechenland':[48.0, 58.0, 77.5, 93.5],
+    'greece':      [48.0, 58.0, 77.5, 93.5],
+    'türkei':      [55.0, 75.0, 72.0, 88.5],
+    'turkey':      [55.0, 75.0, 72.0, 88.5],
+}
+
+
+def country_map_bbox(country_name):
+    """Return [min_x%, max_x%, min_y%, max_y%] for the country, or None.
+
+    Tolerant lookup: exact lowercase match first, then substring match so
+    'Great Britain' → 'uk' and regional labels like 'Deutschland/Bayern' still hit.
+    """
+    key = (country_name or '').strip().lower()
+    if not key:
+        return None
+    hit = COUNTRY_MAP_BBOX.get(key)
+    if hit:
+        return hit
+    for ck, cv in COUNTRY_MAP_BBOX.items():
+        if ck in key or key in ck:
+            return cv
+    return None
+
+
 def city_map_pct(*names):
     """Return the hand-verified (x%, y%) for a city name, or None.
 
@@ -3582,6 +3658,22 @@ def manager_profile(request):
 
     city_coords_json = json.dumps({k: list(v) for k, v in EUROPEAN_CITY_COORDS.items()})
 
+    # Single-station minimum-zoom: when there is exactly one marker, supply the
+    # country's bounding box so the JS can zoom to show the whole country instead
+    # of just the city area (which gives zero geographic context).
+    _country_zoom_box = None
+    if len(photo_map_markers) == 1:
+        _station_country = ''
+        if db_stations:
+            _station_country = (db_stations[0].city_country or '').strip()
+        else:
+            _station_country = (
+                (club_profile.city_country if club_profile and club_profile.city_country else '')
+                or 'Deutschland'
+            ).strip()
+        _country_zoom_box = country_map_bbox(_station_country)
+    country_zoom_box_json = json.dumps(_country_zoom_box)  # 'null' when multi-station
+
     from django.templatetags.static import static as _static_fn
     _clubs_with_crests = [
         {
@@ -3607,6 +3699,7 @@ def manager_profile(request):
         'trainer_types_unlockable': trainer_types_unlockable,
         'map_stations': map_stations,
         'photo_map_markers': photo_map_markers,
+        'country_zoom_box_json': country_zoom_box_json,
         'login_history': login_history,
         'trophies_list': trophies_list,
         'manager': {
