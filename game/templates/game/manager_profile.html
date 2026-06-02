@@ -674,7 +674,7 @@
                         <div class="mp-account-row">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
                             <span>Land</span>
-                            <div class="mp-csel" data-mp-csel>
+                            <div class="mp-csel" data-mp-csel data-mp-csel-id="land">
                                 <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
                                     {% if manager.flag_url %}<img class="mp-csel-img" src="{{ manager.flag_url }}" alt="">{% endif %}
                                     <span class="mp-csel-label">{{ manager.flag_name|default:"– wählen –" }}</span>
@@ -693,15 +693,18 @@
                         <div class="mp-account-row">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
                             <span>Lieblingsverein</span>
-                            <div class="mp-csel" data-mp-csel>
+                            <div class="mp-csel" data-mp-csel data-mp-csel-id="club">
                                 <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
-                                    <span class="mp-csel-label">– kein –</span>
+                                    {% with fav=manager_favourite_club_id %}
+                                    {% for club in all_clubs %}{% if club.id == fav %}{% if club.crest_url %}<img class="mp-csel-img" src="{{ club.crest_url }}" alt="">{% endif %}{% endif %}{% endfor %}
+                                    <span class="mp-csel-label">{% for club in all_clubs %}{% if club.id == fav %}{{ club.name }}{% endif %}{% endfor %}{% if not manager_favourite_club_id %}– kein –{% endif %}</span>
+                                    {% endwith %}
                                     <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
                                 </button>
                                 <ul class="mp-csel-list" role="listbox">
-                                    <li class="mp-csel-opt is-selected" data-value=""><span>– kein –</span></li>
+                                    <li class="mp-csel-opt{% if not manager_favourite_club_id %} is-selected{% endif %}" data-value=""><span>– kein –</span></li>
                                     {% for club in all_clubs %}
-                                    <li class="mp-csel-opt" data-value="{{ club.id }}"{% if club.crest_url %} data-img="{{ club.crest_url }}"{% endif %}>
+                                    <li class="mp-csel-opt{% if club.id == manager_favourite_club_id %} is-selected{% endif %}" data-value="{{ club.id }}"{% if club.crest_url %} data-img="{{ club.crest_url }}"{% endif %}>
                                         {% if club.crest_url %}<img src="{{ club.crest_url }}" alt="">{% endif %}
                                         <span>{{ club.name }}</span>
                                     </li>
@@ -712,25 +715,31 @@
                         <div class="mp-account-row">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
                             <span>Trainer-Typ</span>
-                            <div class="mp-csel" data-mp-csel>
+                            <div class="mp-csel" data-mp-csel data-mp-csel-id="type">
                                 <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
-                                    <span class="mp-csel-label">Taktikfuchs</span>
+                                    <span class="mp-csel-label">{{ manager.active_type }}</span>
                                     <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
                                 </button>
                                 <ul class="mp-csel-list" role="listbox">
-                                    <li class="mp-csel-opt is-selected" data-value="Taktikfuchs"><span>Taktikfuchs</span></li>
-                                    <li class="mp-csel-opt" data-value="Laptoptrainer"><span>Laptoptrainer</span></li>
-                                    <li class="mp-csel-opt" data-value="Motivator"><span>Motivator</span></li>
-                                    <li class="mp-csel-opt" data-value="Talentschmied"><span>Talentschmied</span></li>
-                                    <li class="mp-csel-opt" data-value="Transferstratege"><span>Transferstratege</span></li>
-                                    <li class="mp-csel-opt" data-value="Pokaljäger"><span>Pokaljäger</span></li>
-                                    <li class="mp-csel-opt" data-value="Offensivarchitekt"><span>Offensivarchitekt</span></li>
-                                    <li class="mp-csel-opt" data-value="Underdog-Flüsterer"><span>Underdog-Flüsterer</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'laptoptrainer' %} is-selected{% endif %}" data-value="laptoptrainer"><span>Laptoptrainer</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'taktikfuchs' %} is-selected{% endif %}" data-value="taktikfuchs"><span>Taktikfuchs</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'motivator' %} is-selected{% endif %}" data-value="motivator"><span>Motivator</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'talentschmied' %} is-selected{% endif %}" data-value="talentschmied"><span>Talentschmied</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'transferstratege' %} is-selected{% endif %}" data-value="transferstratege"><span>Transferstratege</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'pokaljager' %} is-selected{% endif %}" data-value="pokaljager"><span>Pokaljäger</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'offensivarchitekt' %} is-selected{% endif %}" data-value="offensivarchitekt"><span>Offensivarchitekt</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'underdog' %} is-selected{% endif %}" data-value="underdog"><span>Underdog-Flüsterer</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'aufstiegsheld' %} is-selected{% endif %}" data-value="aufstiegsheld"><span>Aufstiegsheld</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'defensivmeister' %} is-selected{% endif %}" data-value="defensivmeister"><span>Defensivmeister</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'weltenbummler' %} is-selected{% endif %}" data-value="weltenbummler"><span>Weltenbummler</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'serienmeister' %} is-selected{% endif %}" data-value="serienmeister"><span>Serienmeister</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'feuerwehrmann' %} is-selected{% endif %}" data-value="feuerwehrmann"><span>Feuerwehrmann</span></li>
+                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'vereinslegende' %} is-selected{% endif %}" data-value="vereinslegende"><span>Vereinslegende</span></li>
                                 </ul>
                             </div>
                         </div>
                     </div>
-                    <button class="mp-btn mp-btn-primary" type="button" data-open-edit-profile>Kontodaten bearbeiten</button>
+                    <button class="mp-btn mp-btn-primary" type="button" id="mpAccountSaveBtn">Speichern</button>
                 </article>
 
                 <article class="mp-card mp-card-manage">
@@ -1613,6 +1622,86 @@
     }
 
     document.querySelectorAll('[data-mp-csel]').forEach(initCsel);
+
+    (function () {
+        var saveBtn = document.getElementById('mpAccountSaveBtn');
+        if (!saveBtn) return;
+
+        function getCselVal(id) {
+            var csel = document.querySelector('[data-mp-csel-id="' + id + '"]');
+            if (!csel) return '';
+            var sel = csel.querySelector('.mp-csel-opt.is-selected');
+            return sel ? (sel.dataset.value || '') : '';
+        }
+
+        function getCsrfToken() {
+            var c = document.cookie.split(';').map(function (s) { return s.trim(); });
+            for (var i = 0; i < c.length; i++) {
+                if (c[i].startsWith('csrftoken=')) return decodeURIComponent(c[i].slice(10));
+            }
+            return '';
+        }
+
+        saveBtn.addEventListener('click', function () {
+            var nationalityName = getCselVal('land');
+            var favouriteClubId = getCselVal('club');
+            var trainerType     = getCselVal('type');
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = '…';
+
+            var body = 'nationality_name=' + encodeURIComponent(nationalityName)
+                     + '&favourite_club_id=' + encodeURIComponent(favouriteClubId)
+                     + '&trainer_type=' + encodeURIComponent(trainerType);
+
+            fetch('{% url "update_manager_profile" %}', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: body,
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                saveBtn.disabled = false;
+                if (data.ok) {
+                    saveBtn.textContent = 'Gespeichert ✓';
+                    setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
+
+                    var flagRow = document.querySelector('.mp-flag-row');
+                    if (flagRow) {
+                        var flagImg  = flagRow.querySelector('.mp-flag-img');
+                        var flagSpan = flagRow.querySelector('span');
+                        if (data.flag_url) {
+                            if (!flagImg) {
+                                flagImg = document.createElement('img');
+                                flagImg.className = 'mp-flag-img';
+                                flagRow.insertBefore(flagImg, flagRow.firstChild);
+                            }
+                            flagImg.src = data.flag_url;
+                            flagImg.style.display = '';
+                        } else if (flagImg) {
+                            flagImg.style.display = 'none';
+                        }
+                        if (flagSpan) flagSpan.textContent = data.flag_name || '';
+                    }
+
+                    var badge = document.querySelector('.mp-type-badge');
+                    if (badge && data.trainer_type_label) badge.textContent = data.trainer_type_label;
+                } else {
+                    saveBtn.textContent = 'Fehler';
+                    setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
+                }
+            })
+            .catch(function () {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Fehler';
+                setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
+            });
+        });
+    })();
 
     document.addEventListener('click', function () {
         document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {

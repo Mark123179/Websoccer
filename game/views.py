@@ -3152,6 +3152,8 @@ def manager_profile(request):
         ],
         'current_nationality': manager_profile_obj.nationality_name,
         'all_clubs': _clubs_with_crests,
+        'manager_trainer_type_key': manager_profile_obj.trainer_type,
+        'manager_favourite_club_id': manager_profile_obj.favourite_club_id or '',
         'can_edit_profile': request.user.is_authenticated,
         'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
@@ -3506,8 +3508,34 @@ def update_manager_profile(request):
         profile.nationality_flag = f'https://flagcdn.com/{info["code"].lower()}.svg'
         update_fields += ['nationality_name', 'nationality_flag']
 
+    trainer_type_val = request.POST.get('trainer_type', '').strip()
+    valid_types = dict(ManagerProfile.TRAINER_TYPE_CHOICES)
+    if trainer_type_val and trainer_type_val in valid_types:
+        profile.trainer_type = trainer_type_val
+        update_fields.append('trainer_type')
+
+    favourite_club_id = request.POST.get('favourite_club_id', '').strip()
+    if favourite_club_id == '':
+        profile.favourite_club_id = None
+        update_fields.append('favourite_club')
+    elif favourite_club_id:
+        try:
+            from .models import Club
+            if Club.objects.filter(pk=int(favourite_club_id)).exists():
+                profile.favourite_club_id = int(favourite_club_id)
+                update_fields.append('favourite_club')
+        except (ValueError, TypeError):
+            pass
+
     profile.save(update_fields=list(set(update_fields)))
 
     if is_ajax:
-        return JsonResponse({'ok': True, 'name_confirmed': profile.name_confirmed, 'display_name': profile.name})
+        return JsonResponse({
+            'ok': True,
+            'name_confirmed': profile.name_confirmed,
+            'display_name': profile.name,
+            'trainer_type_label': profile.trainer_type_label,
+            'flag_url': profile.nationality_flag,
+            'flag_name': profile.nationality_name,
+        })
     return redirect('manager_profile')
