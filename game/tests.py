@@ -39,6 +39,7 @@ from .models import (
     TacticTemplate,
 )
 from .tactics import sanitize_assignments
+from .views import CITY_MAP_PCT, city_map_pct
 
 
 @override_settings(ALLOWED_HOSTS=['testserver'])
@@ -1185,4 +1186,80 @@ class ConfederationMappingCoverageTest(TestCase):
             f"_NATIONALITY_CONFEDERATION — add them to game/competition_assets.py: "
             f"{missing}",
         )
+
+
+class CityMapPctResolverTest(TestCase):
+    """Guards the hand-verified career-map marker placement logic.
+
+    These checks ensure a future edit to CITY_MAP_PCT or city_map_pct() cannot
+    silently send markers back over the wrong country.
+    """
+
+    def test_exact_match_returns_table_value(self):
+        self.assertEqual(city_map_pct('berlin'), CITY_MAP_PCT['berlin'])
+        self.assertEqual(city_map_pct('leipzig'), CITY_MAP_PCT['leipzig'])
+
+    def test_match_is_case_and_whitespace_insensitive(self):
+        self.assertEqual(city_map_pct('  Berlin  '), CITY_MAP_PCT['berlin'])
+        self.assertEqual(city_map_pct('STUTTGART'), CITY_MAP_PCT['stuttgart'])
+
+    def test_accented_and_unaccented_names_resolve_to_same_position(self):
+        muenchen = CITY_MAP_PCT['münchen']
+        self.assertEqual(city_map_pct('München'), muenchen)
+        self.assertEqual(city_map_pct('munchen'), muenchen)
+        self.assertEqual(city_map_pct('Munich'), muenchen)
+
+        gladbach = CITY_MAP_PCT['mönchengladbach']
+        self.assertEqual(city_map_pct('Mönchengladbach'), gladbach)
+        self.assertEqual(city_map_pct('monchengladbach'), gladbach)
+
+    def test_truncation_typos_still_resolve(self):
+        # A shortened/typo'd input is a prefix of the table key.
+        self.assertEqual(city_map_pct('Frankfur'), CITY_MAP_PCT['frankfurt'])
+        self.assertEqual(city_map_pct('augsbur'), CITY_MAP_PCT['augsburg'])
+
+    def test_word_boundary_multi_word_names_resolve(self):
+        # The full official name resolves to the short table key via a leading
+        # word match: "frankfurt am main" -> "frankfurt".
+        self.assertEqual(
+            city_map_pct('Frankfurt am Main'),
+            CITY_MAP_PCT['frankfurt'],
+        )
+        self.assertEqual(
+            city_map_pct('Heidenheim an der Brenz'),
+            CITY_MAP_PCT['heidenheim'],
+        )
+        self.assertEqual(
+            city_map_pct('Freiburg im Breisgau'),
+            CITY_MAP_PCT['freiburg'],
+        )
+
+    def test_unrelated_longer_name_does_not_grab_short_key(self):
+        # "kielce" (a Polish city) must NOT resolve to the German "kiel".
+        self.assertIsNone(city_map_pct('kielce'))
+        self.assertIsNone(city_map_pct('Kielce'))
+
+    def test_unknown_cities_return_none(self):
+        self.assertIsNone(city_map_pct('Atlantis'))
+        self.assertIsNone(city_map_pct('Paris'))
+        self.assertIsNone(city_map_pct(''))
+        self.assertIsNone(city_map_pct(None))
+
+    def test_first_resolving_name_wins(self):
+        # Unknown first, known second -> the known one resolves.
+        self.assertEqual(
+            city_map_pct('Atlantis', 'Berlin'),
+            CITY_MAP_PCT['berlin'],
+        )
+
+    def test_every_table_city_resolves_to_a_sensible_position(self):
+        for name, expected in CITY_MAP_PCT.items():
+            with self.subTest(city=name):
+                resolved = city_map_pct(name)
+                self.assertEqual(resolved, expected)
+                x_pct, y_pct = resolved
+                self.assertGreaterEqual(x_pct, 0.0)
+                self.assertLessEqual(x_pct, 100.0)
+                self.assertGreaterEqual(y_pct, 0.0)
+                self.assertLessEqual(y_pct, 100.0)
 
