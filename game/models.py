@@ -1726,6 +1726,51 @@ class PlayerAwardTitle(models.Model):
         verbose_name = 'WS-Auszeichnung/Titel'
         verbose_name_plural = 'WS-Auszeichnungen/Titel'
 
+    COMPETITION_DEFAULT_ASSETS = {
+        # Global — FIFA World Cup
+        'FIFA World Cup':           'international cup 1',
+        'World Cup':                'international cup 1',
+        'Weltmeisterschaft':        'international cup 1',
+        'WM':                       'international cup 1',
+        # Global — secondary international tournaments
+        'FIFA Confederations Cup':  'international cup 2',
+        'Confederations Cup':       'international cup 2',
+        'Konföderationen-Pokal':    'international cup 2',
+        'Olympic Games':            'international cup 2',
+        'Olympische Spiele':        'international cup 2',
+        'Olympia':                  'international cup 2',
+        'FIFA U-20 World Cup':      'international cup 2',
+        'FIFA U-17 World Cup':      'international cup 2',
+        # UEFA
+        'UEFA European Championship': 'continental cup 1',
+        'UEFA Euro':                'continental cup 1',
+        'Europameisterschaft':      'continental cup 1',
+        'EM':                       'continental cup 1',
+        'UEFA Nations League':      'continental cup 2',
+        'Nations League':           'continental cup 2',
+        # CONMEBOL
+        'Copa América':             'continental cup 1',
+        'Copa America':             'continental cup 1',
+        'CONMEBOL Copa América':    'continental cup 1',
+        # CAF
+        'Africa Cup of Nations':    'continental cup 1',
+        'AFCON':                    'continental cup 1',
+        'Afrikameisterschaft':      'continental cup 1',
+        # AFC
+        'AFC Asian Cup':            'continental cup 1',
+        'Asian Cup':                'continental cup 1',
+        'Asienmeisterschaft':       'continental cup 1',
+        # CONCACAF
+        'CONCACAF Gold Cup':        'continental cup 1',
+        'Gold Cup':                 'continental cup 1',
+        'CONCACAF Nations League':  'continental cup 2',
+    }
+
+    def save(self, *args, **kwargs):
+        if not self.trophy_asset_id and self.title in self.COMPETITION_DEFAULT_ASSETS:
+            self.trophy_asset_id = self.COMPETITION_DEFAULT_ASSETS[self.title]
+        super().save(*args, **kwargs)
+
     @property
     def trophy_static_path(self):
         from .player_assets import get_cached_trophy_static_path
