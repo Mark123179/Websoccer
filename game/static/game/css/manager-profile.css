@@ -1906,6 +1906,130 @@ body.manager-profile-page .nav-menu a:first-child {
     padding: 3px 8px;
 }
 
+/* ── Custom select (mp-csel) ─────────────────────────────────── */
+.mp-csel {
+    flex: 1;
+    position: relative;
+}
+
+.mp-csel-btn {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.85);
+    cursor: pointer;
+    display: flex;
+    font-size: 11px;
+    font-family: inherit;
+    gap: 5px;
+    padding: 3px 7px 3px 8px;
+    text-align: left;
+    width: 100%;
+    min-height: 24px;
+}
+
+.mp-csel-btn:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.22);
+}
+
+.mp-csel.is-open .mp-csel-btn {
+    border-color: rgba(255, 200, 50, 0.45);
+    outline: none;
+}
+
+.mp-csel-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-csel-chevron {
+    fill: none;
+    flex-shrink: 0;
+    height: 6px;
+    stroke: rgba(255, 255, 255, 0.45);
+    stroke-linecap: round;
+    stroke-width: 1.8;
+    transition: transform 0.18s;
+    width: 10px;
+}
+
+.mp-csel.is-open .mp-csel-chevron {
+    transform: rotate(180deg);
+}
+
+.mp-csel-btn .mp-csel-img {
+    border-radius: 2px;
+    flex-shrink: 0;
+    height: 12px;
+    object-fit: cover;
+    width: 18px;
+}
+
+.mp-csel-list {
+    background: #14192a;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+    display: none;
+    left: 0;
+    list-style: none;
+    margin: 3px 0 0;
+    max-height: 155px; /* ~5 items × 31px */
+    min-width: 100%;
+    overflow-y: auto;
+    padding: 3px 0;
+    position: absolute;
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+    scrollbar-width: thin;
+    top: 100%;
+    z-index: 9999;
+}
+
+.mp-csel.is-open .mp-csel-list {
+    display: block;
+}
+
+.mp-csel-opt {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+    display: flex;
+    font-size: 11px;
+    gap: 7px;
+    height: 31px;
+    padding: 0 10px;
+    white-space: nowrap;
+}
+
+.mp-csel-opt:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+}
+
+.mp-csel-opt.is-selected {
+    background: rgba(255, 200, 50, 0.11);
+    color: #ffd84d;
+}
+
+.mp-csel-opt img {
+    border-radius: 2px;
+    flex-shrink: 0;
+    height: 12px;
+    object-fit: cover;
+    width: 18px;
+}
+
+.mp-csel-opt span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* ─────────────────────────────────────────────────────────────── */
+
 .mp-btn {
     border: none;
     border-radius: 6px;

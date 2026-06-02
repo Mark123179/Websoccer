@@ -3062,6 +3062,16 @@ def manager_profile(request):
 
     city_coords_json = json.dumps({k: list(v) for k, v in EUROPEAN_CITY_COORDS.items()})
 
+    from django.templatetags.static import static as _static_fn
+    _clubs_with_crests = [
+        {
+            'id': c.id,
+            'name': c.name,
+            'crest_url': _static_fn(c.crest_static_path) if c.crest_static_path else '',
+        }
+        for c in Club.objects.order_by('name')
+    ]
+
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
         'timeline_events': timeline_events,
@@ -3141,7 +3151,7 @@ def manager_profile(request):
             for k, v in sorted(COUNTRY_FLAG_ASSETS.items())
         ],
         'current_nationality': manager_profile_obj.nationality_name,
-        'all_clubs': list(Club.objects.order_by('name').values('id', 'name')),
+        'all_clubs': _clubs_with_crests,
         'can_edit_profile': request.user.is_authenticated,
         'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,

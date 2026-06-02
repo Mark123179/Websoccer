@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-38">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-39">
 {% endblock %}
 
 {% block content %}
@@ -674,38 +674,60 @@
                         <div class="mp-account-row">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
                             <span>Land</span>
-                            <div class="mp-account-select-wrap">
-                                <img id="mpLandFlagImg" src="{% if manager.flag_url %}{{ manager.flag_url }}{% else %}https://flagcdn.com/de.svg{% endif %}" alt="" class="mp-select-flag">
-                                <select id="mpLandSelect" class="mp-inline-select" aria-label="Land">
+                            <div class="mp-csel" data-mp-csel>
+                                <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
+                                    {% if manager.flag_url %}<img class="mp-csel-img" src="{{ manager.flag_url }}" alt="">{% endif %}
+                                    <span class="mp-csel-label">{{ manager.flag_name|default:"– wählen –" }}</span>
+                                    <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+                                </button>
+                                <ul class="mp-csel-list" role="listbox">
                                     {% for c in country_choices_with_flags %}
-                                    <option value="{{ c.name }}" data-code="{{ c.code }}" {% if c.name == manager.flag_name %}selected{% endif %}>{{ c.name }}</option>
+                                    <li class="mp-csel-opt{% if c.name == manager.flag_name %} is-selected{% endif %}" data-value="{{ c.name }}" data-img="https://flagcdn.com/{{ c.code }}.svg">
+                                        <img src="https://flagcdn.com/{{ c.code }}.svg" alt="">
+                                        <span>{{ c.name }}</span>
+                                    </li>
                                     {% endfor %}
-                                </select>
+                                </ul>
                             </div>
                         </div>
                         <div class="mp-account-row">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
                             <span>Lieblingsverein</span>
-                            <select class="mp-inline-select" aria-label="Lieblingsverein">
-                                <option value="">– kein –</option>
-                                {% for club in all_clubs %}
-                                <option value="{{ club.id }}">{{ club.name }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="mp-csel" data-mp-csel>
+                                <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
+                                    <span class="mp-csel-label">– kein –</span>
+                                    <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+                                </button>
+                                <ul class="mp-csel-list" role="listbox">
+                                    <li class="mp-csel-opt is-selected" data-value=""><span>– kein –</span></li>
+                                    {% for club in all_clubs %}
+                                    <li class="mp-csel-opt" data-value="{{ club.id }}"{% if club.crest_url %} data-img="{{ club.crest_url }}"{% endif %}>
+                                        {% if club.crest_url %}<img src="{{ club.crest_url }}" alt="">{% endif %}
+                                        <span>{{ club.name }}</span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
                         <div class="mp-account-row">
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
                             <span>Trainer-Typ</span>
-                            <select class="mp-inline-select" aria-label="Trainer-Typ">
-                                <option selected>Taktikfuchs</option>
-                                <option>Laptoptrainer</option>
-                                <option>Motivator</option>
-                                <option>Talentschmied</option>
-                                <option>Transferstratege</option>
-                                <option>Pokaljäger</option>
-                                <option>Offensivarchitekt</option>
-                                <option>Underdog-Flüsterer</option>
-                            </select>
+                            <div class="mp-csel" data-mp-csel>
+                                <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
+                                    <span class="mp-csel-label">Taktikfuchs</span>
+                                    <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+                                </button>
+                                <ul class="mp-csel-list" role="listbox">
+                                    <li class="mp-csel-opt is-selected" data-value="Taktikfuchs"><span>Taktikfuchs</span></li>
+                                    <li class="mp-csel-opt" data-value="Laptoptrainer"><span>Laptoptrainer</span></li>
+                                    <li class="mp-csel-opt" data-value="Motivator"><span>Motivator</span></li>
+                                    <li class="mp-csel-opt" data-value="Talentschmied"><span>Talentschmied</span></li>
+                                    <li class="mp-csel-opt" data-value="Transferstratege"><span>Transferstratege</span></li>
+                                    <li class="mp-csel-opt" data-value="Pokaljäger"><span>Pokaljäger</span></li>
+                                    <li class="mp-csel-opt" data-value="Offensivarchitekt"><span>Offensivarchitekt</span></li>
+                                    <li class="mp-csel-opt" data-value="Underdog-Flüsterer"><span>Underdog-Flüsterer</span></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     <button class="mp-btn mp-btn-primary" type="button">Kontodaten bearbeiten</button>
@@ -1534,17 +1556,71 @@
 })();
 
 (function () {
-    const landSel = document.getElementById('mpLandSelect');
-    const landImg = document.getElementById('mpLandFlagImg');
-    if (!landSel || !landImg) return;
-    landSel.addEventListener('change', function () {
-        const opt = this.options[this.selectedIndex];
-        const code = opt.dataset.code;
-        if (code) {
-            landImg.src = 'https://flagcdn.com/' + code + '.svg';
-            landImg.style.display = '';
-        } else {
-            landImg.style.display = 'none';
+    var CHEVRON = '<svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>';
+
+    function initCsel(csel) {
+        var btn  = csel.querySelector('.mp-csel-btn');
+        var list = csel.querySelector('.mp-csel-list');
+        if (!btn || !list) return;
+        var opts     = list.querySelectorAll('.mp-csel-opt');
+        var labelEl  = btn.querySelector('.mp-csel-label');
+        var btnImgEl = btn.querySelector('.mp-csel-img');
+
+        function close() { csel.classList.remove('is-open'); }
+        function open() {
+            document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
+                if (el !== csel) el.classList.remove('is-open');
+            });
+            csel.classList.add('is-open');
+            var sel = list.querySelector('.is-selected');
+            if (sel) sel.scrollIntoView({ block: 'nearest' });
+        }
+
+        function pickOpt(opt) {
+            opts.forEach(function (o) { o.classList.remove('is-selected'); });
+            opt.classList.add('is-selected');
+            var spanEl = opt.querySelector('span');
+            labelEl.textContent = spanEl ? spanEl.textContent.trim() : opt.textContent.trim();
+            var dataImg = opt.dataset.img || '';
+            if (dataImg) {
+                if (!btnImgEl) {
+                    var img = document.createElement('img');
+                    img.className = 'mp-csel-img';
+                    btn.insertBefore(img, btn.firstChild);
+                    btnImgEl = img;
+                }
+                btnImgEl.src = dataImg;
+                btnImgEl.style.display = '';
+            } else if (btnImgEl) {
+                btnImgEl.style.display = 'none';
+            }
+            close();
+        }
+
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            csel.classList.contains('is-open') ? close() : open();
+        });
+        opts.forEach(function (opt) {
+            opt.addEventListener('click', function (e) {
+                e.stopPropagation();
+                pickOpt(opt);
+            });
+        });
+    }
+
+    document.querySelectorAll('[data-mp-csel]').forEach(initCsel);
+
+    document.addEventListener('click', function () {
+        document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
+            el.classList.remove('is-open');
+        });
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
+                el.classList.remove('is-open');
+            });
         }
     });
 })();
