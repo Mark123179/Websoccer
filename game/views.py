@@ -145,7 +145,71 @@ CITY_MAP_PCT = {
     'sinsheim': (43.55, 56.35),
     'stuttgart': (43.88, 57.62),
     'wolfsburg': (46.29, 48.34),
+    # --- Spain / Portugal (verified against europe-night.png light clusters) ---
+    'madrid': (22.14, 78.32),
     'barcelona': (32.88, 74.22),
+    'valencia': (28.13, 80.33),
+    'sevilla': (19.54, 86.83), 'seville': (19.54, 86.83),
+    'bilbao': (24.01, 69.52),
+    'san sebastián': (25.73, 69.34), 'san sebastian': (25.73, 69.34),
+    'vigo': (15.13, 70.32),
+    'zaragoza': (27.54, 74.04),
+    'villarreal': (28.75, 78.83),
+    'málaga': (21.59, 89.02), 'malaga': (21.59, 89.02),
+    'lisboa': (15.89, 81.74), 'lissabon': (15.89, 81.74), 'lisbon': (15.89, 81.74),
+    'porto': (15.30, 73.73),
+    # --- France / Monaco ---
+    'paris': (33.53, 55.37),
+    'marseille': (37.88, 69.57),
+    'lyon': (37.37, 63.18),
+    'lille': (35.43, 50.83),
+    'bordeaux': (28.52, 65.00),
+    'nice': (40.30, 69.55), 'nizza': (40.30, 69.55),
+    'monaco': (40.48, 69.54),
+    'nantes': (27.54, 58.50),
+    'toulouse': (32.03, 68.11),
+    'saint-étienne': (36.66, 63.82), 'saint-etienne': (36.66, 63.82),
+    # --- England / Scotland / Ireland ---
+    'london': (31.97, 47.36),
+    'manchester': (29.99, 41.11),
+    'liverpool': (28.86, 41.01),
+    'birmingham': (30.01, 43.99),
+    'newcastle': (31.55, 37.18),
+    'leeds': (31.13, 40.48),
+    'glasgow': (28.21, 33.72),
+    'edinburgh': (29.76, 33.88),
+    'dublin': (24.02, 39.90),
+    # --- Netherlands / Belgium ---
+    'amsterdam': (38.80, 46.58),
+    'rotterdam': (38.04, 47.69),
+    'eindhoven': (39.27, 49.28),
+    'brussel': (37.40, 50.56), 'brüssel': (37.40, 50.56), 'brussels': (37.40, 50.56),
+    'antwerpen': (37.62, 49.57), 'antwerp': (37.62, 49.57),
+    'brügge': (35.96, 49.30), 'bruges': (35.96, 49.30),
+    # --- Italy (hand-pinned: the TPS formula drifts ~4-5% E of the Rome
+    # anchor, putting Rome on Corsica and Naples on Sardinia) ---
+    'roma': (47.10, 78.10), 'rom': (47.10, 78.10), 'rome': (47.10, 78.10),
+    'napoli': (49.00, 80.40), 'neapel': (49.00, 80.40), 'naples': (49.00, 80.40),
+    'milano': (43.40, 66.00), 'mailand': (43.40, 66.00), 'milan': (43.40, 66.00),
+    'torino': (41.00, 65.90), 'turin': (41.00, 65.90),
+    'genova': (42.00, 69.20), 'genua': (42.00, 69.20), 'genoa': (42.00, 69.20),
+    'venezia': (46.00, 67.50), 'venedig': (46.00, 67.50), 'venice': (46.00, 67.50),
+    'firenze': (44.00, 71.20), 'florenz': (44.00, 71.20), 'florence': (44.00, 71.20),
+    'bologna': (44.60, 69.00),
+    # --- Switzerland ---
+    'zürich': (42.93, 61.08), 'zurich': (42.93, 61.08),
+    'basel': (41.70, 60.13),
+    'bern': (41.45, 61.60),
+    'genf': (39.43, 62.74), 'genève': (39.43, 62.74), 'geneva': (39.43, 62.74),
+    # --- Scandinavia (verified via Øresund / fjord / archipelago coastlines) ---
+    'kopenhagen': (49.00, 39.60), 'copenhagen': (49.00, 39.60), 'københavn': (49.00, 39.60),
+    'oslo': (48.30, 25.50),
+    'stockholm': (54.30, 26.50),
+    'göteborg': (49.00, 34.00), 'goteborg': (49.00, 34.00), 'gothenburg': (49.00, 34.00),
+    # --- Balkans (hand-pinned; the TPS formula drifts these into the
+    # Adriatic, e.g. Belgrade landed offshore) ---
+    'zagreb': (49.00, 65.50),
+    'belgrad': (52.50, 69.00), 'belgrade': (52.50, 69.00), 'beograd': (52.50, 69.00),
 }
 
 

@@ -57,3 +57,21 @@ render. Add/adjust the city's `(x%,y%)` in `CITY_MAP_PCT` (verify on the grid), 
 keep the uniform-scale zoom + label-out-of-flow anchor intact. Custom stations with
 no linked club still resolve their name through the table; only truly unknown names
 hit the TPS/`resolve_city_latlng` path.
+
+## TPS drifts WEST-to-EAST; the anchor hull ends at Rome (~12.5°E)
+The TPS anchors top out around Rome's longitude, so the formula *interpolates*
+reliably across Iberia/France/UK/Benelux/Italy/Switzerland but *extrapolates*
+(badly) for anything further east. Rome itself (the eastern boundary anchor) lands
+~4-5% off onto Corsica; Belgrade (20.5°E) drifts clean into the Adriatic. So:
+- West of ~12.5°E (incl. interior Spain, Scandinavia via coastlines) → TPS values
+  verify dead-on against light clusters; trust them.
+- East of it (Austria, Czechia, Poland, Hungary, Balkans, Greece, Turkey) → must be
+  hand-pinned, and that region is **dim**: the bright squiggles there are mostly
+  rivers/snow-capped Alps and white country-border overlays, NOT city lights.
+  Brightening the PIL crop (`ImageEnhance.Brightness ~2.6`) exposes the borders so
+  you can place by geography (coastline/border/river), but pixel-on-cluster accuracy
+  is often not achievable — place by geography or leave to the formula.
+**Why it matters:** don't add an eastern city to `CITY_MAP_PCT` claiming it's
+"verified" when you only matched a river or border. Athens/Istanbul were left to the
+formula for exactly this reason; Belgrade/Zagreb were corrected only because the
+formula put them offshore and the coastline+borders pin them to the right land.
