@@ -264,12 +264,14 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-club-crest {
     height: 72px;
-    margin-bottom: -4px;
-    margin-left: -85px;
+    margin-bottom: -5px;
+    margin-left: -100px;
     margin-right: 0px;
-    margin-top: 18px;
+    margin-top: -10px;
     object-fit: contain;
     opacity: 0.99;
+    padding-bottom: 6px;
+    padding-top: 6px;
     position: relative;
     width: 72px;
     z-index: 2;
@@ -280,7 +282,7 @@ body.manager-profile-page .nav-menu a:first-child {
     display: block;
     font-size: 13px;
     font-weight: 800;
-    margin-left: 40px;
+    margin-left: 25px;
 }
 
 .mp-club-row small {
@@ -288,7 +290,7 @@ body.manager-profile-page .nav-menu a:first-child {
     display: block;
     font-size: 11px;
     line-height: 1.4;
-    margin-left: 40px;
+    margin-left: 25px;
 }
 
 
