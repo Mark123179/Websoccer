@@ -141,7 +141,7 @@ CITY_MAP_PCT = {
     'mainz': (42.84, 54.10),
     'mönchengladbach': (40.56, 50.29), 'monchengladbach': (40.56, 50.29),
     'gladbach': (40.56, 50.29),
-    'münchen': (45.96, 59.86), 'munchen': (45.96, 59.86), 'munich': (45.96, 59.86),
+    'münchen': (47.07, 58.79), 'munchen': (47.07, 58.79), 'munich': (47.07, 58.79),
     'sinsheim': (43.55, 56.35),
     'stuttgart': (43.88, 57.62),
     'wolfsburg': (46.29, 48.34),

@@ -1241,7 +1241,7 @@ class CityMapPctResolverTest(TestCase):
 
     def test_unknown_cities_return_none(self):
         self.assertIsNone(city_map_pct('Atlantis'))
-        self.assertIsNone(city_map_pct('Paris'))
+        self.assertIsNone(city_map_pct('Reykjavik'))
         self.assertIsNone(city_map_pct(''))
         self.assertIsNone(city_map_pct(None))
 

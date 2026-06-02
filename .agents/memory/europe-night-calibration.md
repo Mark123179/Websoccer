@@ -75,3 +75,21 @@ reliably across Iberia/France/UK/Benelux/Italy/Switzerland but *extrapolates*
 "verified" when you only matched a river or border. Athens/Istanbul were left to the
 formula for exactly this reason; Belgrade/Zagreb were corrected only because the
 formula put them offshore and the coastline+borders pin them to the right land.
+
+## South Germany is dim too — pin via affine fit from BRIGHT anchors, not eyeball
+München/Stuttgart sit in the dim SE band, so eyeballing put München ~37px too far
+WEST in a black patch (it "passt noch nicht" even though direction was right). The
+reliable fix: fit an **affine lat/lng→pixel transform** (manual 3×3 least squares,
+no numpy) from a handful of UNAMBIGUOUS bright-cluster anchors (Frankfurt, Paris,
+Milano, Madrid, London) whose peaks you locate with a Gaussian-blur local-max search,
+then project the target city. The fit has a mild eastward overshoot, so reconcile its
+prediction with the nearest real light cluster (blurred local max within ~25px) and
+snap there. München's true cluster is px (723,602) = (47.07%, 58.79%); the old dark
+(706,613) had blur-val 44 vs 79 at the cluster. Validate the fit against a
+known-good pin (Barcelona peak (510,757) ≈ pinned (505,760)).
+
+## Zoom must leave bottom room for the southernmost station's LABEL
+The label renders BELOW the crest, so a tight crop clips the bottom station's name
+(Barcelona at the SW edge). In the zoom JS use an asymmetric bottom pad
+(`padBottom = padY + IMG_H*0.055`) before the aspect-ratio expansion so the southern
+label always clears the tile edge; top/side padding stay at `padY`/`padX`.
