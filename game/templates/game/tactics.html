@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-33">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=h700-39-ranking-entry-polish">
 {% endblock %}
 
 {% block content %}
@@ -211,6 +211,9 @@
                 </div>
 
                 <div class="tactics-pitch" data-pitch>
+                    <button type="button" class="tactics-clear-lineup-button" data-clear-lineup aria-label="Aufstellung und Bank leeren" title="Aufstellung und Bank leeren">
+                        <img src="{% static 'game/images/icons/clear-lineup-trash.png' %}" alt="">
+                    </button>
                     <p class="tactics-field-count">
                         Feldspieler: <strong data-field-count>{{ selected_field_count }}/10</strong>
                         <span class="{% if selected_field_count == 10 %}is-complete{% endif %}" aria-hidden="true"></span>
@@ -458,7 +461,7 @@
                 {% endfor %}
             </article>
 
-            <article class="tactics-panel tactics-top-list">
+            <article class="tactics-panel tactics-top-list tactics-top-assists">
                 <h2>Vorbereiter</h2>
                 {% for row in top_assists %}
                     <div class="ranking-entry">
@@ -472,7 +475,7 @@
                 {% endfor %}
             </article>
 
-            <article class="tactics-panel tactics-top-list">
+            <article class="tactics-panel tactics-top-list tactics-top-grades">
                 <h2>Beste Noten</h2>
                 {% for row in top_grades %}
                     <div class="ranking-entry">
@@ -551,5 +554,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'game/js/tactics.js' %}?v=tactics-template-name-20260519"></script>
+    <script src="{% static 'game/js/tactics.js' %}?v=tactics-clear-lineup-20260528"></script>
 {% endblock %}

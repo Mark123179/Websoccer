@@ -2145,6 +2145,44 @@ body.tactics-page .nav-menu a:nth-child(5) {
     height: 100%;
 }
 
+.tactics-clear-lineup-button {
+    align-items: center;
+    background: rgba(5, 18, 28, 0.18);
+    border: 0;
+    border-radius: 50%;
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.34),
+        0 0 18px rgba(255, 66, 88, 0.14);
+    cursor: pointer;
+    display: inline-flex;
+    height: 38px;
+    justify-content: center;
+    left: 10px;
+    padding: 0;
+    position: absolute;
+    top: 8px;
+    width: 38px;
+    z-index: 7;
+}
+
+.tactics-clear-lineup-button img {
+    display: block;
+    height: 38px;
+    object-fit: contain;
+    pointer-events: none;
+    width: 38px;
+}
+
+.tactics-clear-lineup-button:hover,
+.tactics-clear-lineup-button:focus-visible {
+    background: rgba(255, 66, 88, 0.08);
+    box-shadow:
+        0 0 20px rgba(255, 66, 88, 0.32),
+        0 10px 24px rgba(0, 0, 0, 0.34);
+    outline: none;
+    transform: scale(1.04);
+}
+
 .tactics-pitch > .tactics-field-count {
     align-items: center;
     background: transparent;
@@ -3326,4 +3364,320 @@ body.tactics-page .nav-menu a:nth-child(5) {
     border-right: 1px solid rgba(255, 201, 40, 0.20);
     display: flex;
     justify-content: center;
+}
+
+/* ============================================================
+   MANAGER DUEL FINAL ALIGNMENT
+   One shared axis for header and stat rows.
+   ============================================================ */
+
+.manager-duel-card {
+    --duel-center-width: 118px;
+    --duel-row-line: rgba(255, 255, 255, 0.07);
+    --duel-axis-blue: rgba(0, 217, 255, 0.24);
+    --duel-axis-gold: rgba(255, 201, 40, 0.24);
+}
+
+.manager-duel-overlay {
+    background:
+        linear-gradient(90deg, transparent calc(50% - 69px), rgba(0, 217, 255, 0.07) calc(50% - 68px), transparent calc(50% - 67px)),
+        linear-gradient(90deg, transparent calc(50% + 67px), rgba(255, 201, 40, 0.07) calc(50% + 68px), transparent calc(50% + 69px));
+    gap: 6px;
+    padding: 12px 14px 13px;
+}
+
+.duel-header-row,
+.vs-row {
+    grid-template-columns: minmax(0, 1fr) var(--duel-center-width) minmax(0, 1fr);
+}
+
+.duel-header-row {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    height: 86px;
+    padding-bottom: 7px;
+}
+
+.duel-header-row .duel-header-left,
+.duel-header-row .duel-header-right {
+    min-width: 0;
+}
+
+.duel-header-row .duel-header-left {
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 14px;
+    text-align: right;
+}
+
+.duel-header-row .duel-header-right {
+    justify-content: flex-start;
+    padding-left: 14px;
+    padding-right: 0;
+    text-align: left;
+}
+
+.duel-header-row .duel-header-center {
+    border-left: 1px solid var(--duel-axis-blue);
+    border-right: 1px solid var(--duel-axis-gold);
+    height: 100%;
+}
+
+.duel-header-info {
+    align-items: inherit;
+}
+
+.duel-header-left .duel-header-info {
+    align-items: flex-end;
+}
+
+.duel-header-right .duel-header-info {
+    align-items: flex-start;
+}
+
+.duel-manager-name {
+    font-size: 14px;
+    max-width: 116px;
+}
+
+.duel-manager-rank {
+    transform: none;
+}
+
+.duel-header-portrait {
+    height: 48px;
+    width: 48px;
+}
+
+.duel-vs {
+    font-size: 28px;
+    margin-top: 0;
+}
+
+.vs-table {
+    gap: 0;
+}
+
+.vs-row {
+    border-bottom-color: var(--duel-row-line);
+    min-height: 28px;
+    position: relative;
+}
+
+.vs-row::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.035), transparent);
+    content: "";
+    height: 1px;
+    left: 8px;
+    pointer-events: none;
+    position: absolute;
+    right: 8px;
+    top: 0;
+}
+
+.vs-value-left,
+.vs-value-right,
+.vs-label {
+    min-height: 28px;
+}
+
+.vs-value-left {
+    font-size: 14px;
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 16px;
+    text-align: right;
+}
+
+.vs-value-right {
+    font-size: 14px;
+    justify-content: flex-start;
+    padding-left: 16px;
+    padding-right: 0;
+    text-align: left;
+}
+
+.vs-label {
+    border-left: 1px solid var(--duel-axis-blue);
+    border-right: 1px solid var(--duel-axis-gold);
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 10px;
+    letter-spacing: 0;
+    padding: 0 6px;
+}
+
+/* ============================================================
+   RANKING PANELS WITH PROVIDED BACKGROUNDS
+   Background assets include title, rank numbers and panel frames.
+   ============================================================ */
+
+.tactics-analysis-grid .tactics-top-list {
+    background-color: #020b17;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border: 0;
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.34),
+        0 0 26px rgba(0, 190, 255, 0.12);
+    display: grid;
+    grid-template-rows: 17% 27.66% 27.66% 27.66%;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+}
+
+.tactics-analysis-grid > .tactics-top-list.tactics-top-scorers {
+    background: #020b17 url("../images/backgrounds/ranking-top-scorers.png") center / 100% 100% no-repeat;
+}
+
+.tactics-analysis-grid > .tactics-top-list.tactics-top-assists {
+    background: #020b17 url("../images/backgrounds/ranking-assists.png") center / 100% 100% no-repeat;
+}
+
+.tactics-analysis-grid > .tactics-top-list.tactics-top-grades {
+    background: #020b17 url("../images/backgrounds/ranking-grades.png") center / 100% 100% no-repeat;
+}
+
+.tactics-analysis-grid .tactics-top-list h2,
+.tactics-analysis-grid .tactics-top-list::after {
+    display: none;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    column-gap: 0;
+    display: grid;
+    grid-template-columns: 25% 27% 27% 21%;
+    min-height: 0;
+    padding: 0;
+    position: relative;
+    transform: none;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:hover {
+    background: transparent;
+    border-radius: 0;
+}
+
+.tactics-analysis-grid .tactics-top-list .rank-badge {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    clip-path: none;
+    height: auto;
+    opacity: 0;
+    pointer-events: none;
+    transform: none;
+    width: auto;
+}
+
+.tactics-analysis-grid .tactics-top-list .player-cutout {
+    align-self: center;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    clip-path: none;
+    grid-column: 2;
+    height: 82%;
+    justify-self: start;
+    overflow: visible;
+    transform: translateX(-4%);
+    width: 104%;
+    z-index: 2;
+}
+
+.tactics-analysis-grid .tactics-top-list .player-cutout img {
+    display: block;
+    filter:
+        drop-shadow(0 8px 18px rgba(0, 0, 0, 0.75))
+        drop-shadow(0 0 16px rgba(0, 210, 255, 0.18));
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    width: 100%;
+}
+
+.tactics-analysis-grid .tactics-top-list .entry-info {
+    align-self: center;
+    display: grid;
+    align-items: center;
+    gap: 2px;
+    grid-column: 3 / 5;
+    grid-template-columns: minmax(58px, 1fr) minmax(48px, auto);
+    justify-items: stretch;
+    padding: 0 13% 0 0;
+    text-align: initial;
+    z-index: 3;
+}
+
+.tactics-analysis-grid .tactics-top-list .entry-name {
+    color: rgba(235, 248, 255, 0.88);
+    font-size: clamp(10px, 0.72vw, 13px);
+    font-weight: 900;
+    grid-column: 1;
+    line-height: 1.06;
+    max-width: 100%;
+    justify-self: center;
+    text-align: center;
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.88);
+    white-space: normal;
+}
+
+.tactics-analysis-grid .tactics-top-list .entry-value {
+    color: #28eaff;
+    font-size: clamp(26px, 2.1vw, 48px);
+    font-weight: 950;
+    grid-column: 2;
+    justify-self: center;
+    line-height: 0.9;
+    text-shadow:
+        0 0 14px rgba(40, 234, 255, 0.66),
+        0 0 34px rgba(0, 180, 255, 0.28),
+        0 4px 16px rgba(0, 0, 0, 0.8);
+}
+
+.tactics-analysis-grid .tactics-top-assists .entry-value,
+.tactics-analysis-grid .tactics-top-grades .entry-value {
+    font-size: clamp(21px, 1.58vw, 36px);
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) {
+    background: transparent;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .rank-badge {
+    border: 0;
+    box-shadow: none;
+    color: transparent;
+    transform: none;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .player-cutout {
+    filter: none;
+    opacity: 1;
+    transform: translateX(-4%);
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .entry-name {
+    color: rgba(235, 248, 255, 0.88);
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .entry-value {
+    color: #28eaff;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-of-type(1) {
+    grid-row: 2;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-of-type(2) {
+    grid-row: 3;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-of-type(3) {
+    grid-row: 4;
 }

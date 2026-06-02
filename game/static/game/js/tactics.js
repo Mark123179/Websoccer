@@ -475,6 +475,22 @@
         });
     }
 
+    function clearLineupAndBench() {
+        assignmentSelects().forEach((select) => {
+            select.value = '';
+            if (select.dataset.area === 'lineup') {
+                updateSlotCard(select.closest('.tactics-slot'));
+            } else {
+                updateBenchRow(select);
+            }
+        });
+        updateStatusNumbers();
+        updateRosterList();
+        refreshStandardOptions();
+        refreshSubstitutionOptions();
+        updateCaptainBadges();
+    }
+
     function updateCaptainBadges() {
         const captainSelect = form.querySelector('[data-standard-select="captain"]');
         const captainId = captainSelect ? String(captainSelect.value || '') : '';
@@ -497,6 +513,11 @@
     const applyButton = form.querySelector('[data-apply-formation]');
     if (applyButton) {
         applyButton.addEventListener('click', applyFormation);
+    }
+
+    const clearLineupButton = form.querySelector('[data-clear-lineup]');
+    if (clearLineupButton) {
+        clearLineupButton.addEventListener('click', clearLineupAndBench);
     }
 
     bindAssignments();
