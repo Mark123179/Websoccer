@@ -58,23 +58,22 @@ keep the uniform-scale zoom + label-out-of-flow anchor intact. Custom stations w
 no linked club still resolve their name through the table; only truly unknown names
 hit the TPS/`resolve_city_latlng` path.
 
-## TPS drifts WEST-to-EAST; the anchor hull ends at Rome (~12.5°E)
-The TPS anchors top out around Rome's longitude, so the formula *interpolates*
-reliably across Iberia/France/UK/Benelux/Italy/Switzerland but *extrapolates*
-(badly) for anything further east. Rome itself (the eastern boundary anchor) lands
-~4-5% off onto Corsica; Belgrade (20.5°E) drifts clean into the Adriatic. So:
-- West of ~12.5°E (incl. interior Spain, Scandinavia via coastlines) → TPS values
-  verify dead-on against light clusters; trust them.
-- East of it (Austria, Czechia, Poland, Hungary, Balkans, Greece, Turkey) → must be
-  hand-pinned, and that region is **dim**: the bright squiggles there are mostly
-  rivers/snow-capped Alps and white country-border overlays, NOT city lights.
-  Brightening the PIL crop (`ImageEnhance.Brightness ~2.6`) exposes the borders so
-  you can place by geography (coastline/border/river), but pixel-on-cluster accuracy
-  is often not achievable — place by geography or leave to the formula.
-**Why it matters:** don't add an eastern city to `CITY_MAP_PCT` claiming it's
-"verified" when you only matched a river or border. Athens/Istanbul were left to the
-formula for exactly this reason; Belgrade/Zagreb were corrected only because the
-formula put them offshore and the coastline+borders pin them to the right land.
+## TPS anchor hull: reliable up to ~15.6°E (Calabria tip), extrapolates badly beyond
+The current TPS has 14 anchors; the easternmost is the Calabria boot-toe at 15.64°E.
+The formula *interpolates* reliably across Iberia/France/UK/Benelux/Germany/Italy
+including the full Italian peninsula — Roma (12.5°E) and Napoli (14.27°E) are
+well inside the hull. Anything **east of ~15.6°E** (Lecce 18.17°E, Balkans, Greece,
+Turkey) extrapolates badly, e.g. Lecce TPS prediction lands in the Adriatic Sea.
+**Old note "hull ends at Rome 12.5°E" is stale** — Calabria was added as anchor.
+- West of 15.6°E (all of Italy including Napoli) → TPS interpolates; trust it.
+  Cross-check with satellite overlay if suspicious, but TPS is the reference.
+- East of 15.6°E → hand-pin from coastlines/borders; TPS drifts into the sea.
+  Lecce (18.17°E) kept near old visual value (50.5, 79.8) not TPS (51.9, 78.7).
+  For dim regions (Balkans) brightening PIL crop ×2.6 reveals borders for geography.
+**Why it matters:** Italian cities re-calibrated 2026-06; old Roma/Napoli were ~3-4%
+too far south (landing in the sea) because they were set before Calabria was anchored.
+The TPS predictions corrected them onto land (confirmed via brightness nbv check).
+Don't trust old hand-pins for any city east of Rome without re-verifying the overlay.
 
 ## South Germany is dim too — pin via affine fit from BRIGHT anchors, not eyeball
 München/Stuttgart sit in the dim SE band, so eyeballing put München ~37px too far
