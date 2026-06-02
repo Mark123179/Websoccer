@@ -498,6 +498,8 @@ class ClubTrophy(models.Model):
         'Copa Libertadores':   '1002136',
         'Europa League':       '1001960',
         'Klub-WM':             '1001959',
+        'FIFA Club World Cup': '1001959',
+        'Club World Cup':      '1001959',
         # Germany
         'Bundesliga':          '22',
         'DFB-Pokal':           '1301410',
