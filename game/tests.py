@@ -123,6 +123,10 @@ class PageSmokeTests(TestCase):
             },
         )
 
+        User = get_user_model()
+        self.user = User.objects.create_user(username='setup_user', password='setuppass123')
+        self.client.force_login(self.user)
+
     def create_tactic_player(self, index, position='ZM', age=24, injured=False, suspended=False):
         player = Player.objects.create(
             first_name=f'Taktik{index}',
