@@ -3,6 +3,17 @@ from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from .models import Club, Player, League, ManagerProfile
+
+
+def _live_stats():
+    return {
+        'stat_clubs':    Club.objects.count(),
+        'stat_players':  Player.objects.count(),
+        'stat_leagues':  League.objects.count(),
+        'stat_managers': ManagerProfile.objects.count(),
+    }
+
 
 def auth_login(request):
     if request.user.is_authenticated:
@@ -21,7 +32,9 @@ def auth_login(request):
             return redirect('home')
         error = 'Benutzername oder Passwort falsch.'
 
-    return render(request, 'game/auth/login.html', {'error': error})
+    ctx = {'error': error, 'active_tab': 'login'}
+    ctx.update(_live_stats())
+    return render(request, 'game/auth/login.html', ctx)
 
 
 def auth_register(request):
@@ -56,7 +69,9 @@ def auth_register(request):
             login(request, user)
             return redirect('home')
 
-    return render(request, 'game/auth/register.html', {'errors': errors, 'values': values})
+    ctx = {'errors': errors, 'values': values, 'active_tab': 'register'}
+    ctx.update(_live_stats())
+    return render(request, 'game/auth/login.html', ctx)
 
 
 def auth_logout(request):
