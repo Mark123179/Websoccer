@@ -2898,7 +2898,7 @@ def _build_player_row(player, stats, form_map):
         'minutes': season.get('minutes', 0),
         'grade': season.get('grade'),
         'market_value': float(player.market_value or 0),
-        'market_value_fmt': compact_money(player.market_value),
+        'market_value_fmt': (f"{int(float(player.market_value)):,}".replace(',', '.') + ' €') if player.market_value else '–',
         'status': status,
         'is_loaned_in': player.is_loaned_in,
         'youth_eligible': player.age is not None and player.age < YOUTH_AGE_LIMIT,
