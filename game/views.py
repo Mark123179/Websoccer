@@ -1195,11 +1195,15 @@ def build_game_header(
             'match_time': match_time,
         }
 
-    fixtures_by_date = {
-        base_game_date - timedelta(days=3): fixture_entry(False, '1:1', 'A', '33. Spieltag (A)'),
-        base_game_date - timedelta(days=1): fixture_entry(True, '5:0', 'H', 'Testspiel (H)'),
-        base_game_date + timedelta(days=2): fixture_entry(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
-    }
+    fixtures_by_date = (
+        {
+            base_game_date - timedelta(days=3): fixture_entry(False, '1:1', 'A', '33. Spieltag (A)'),
+            base_game_date - timedelta(days=1): fixture_entry(True, '5:0', 'H', 'Testspiel (H)'),
+            base_game_date + timedelta(days=2): fixture_entry(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
+        }
+        if current_club is not None
+        else {}
+    )
 
     calendar_days = []
     for offset in range(-3, 4):
@@ -2086,8 +2090,8 @@ def home(request):
                 'MatchEngine',
                 'Saisonvorbereitung · Creator Mode',
                 '/',
-                primary_club,
-                secondary_club,
+                None if user_has_no_club else primary_club,
+                None if user_has_no_club else secondary_club,
                 calendar_offset_from_request(request),
             ),
         }

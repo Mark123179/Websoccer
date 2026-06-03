@@ -1,6 +1,6 @@
 from .models import Club, ManagerProfile
 
-CURRENT_MANAGER_PROFILE_IMAGE = 'game/images/managers/kirschgutzje-test.png'
+CURRENT_MANAGER_PROFILE_IMAGE = 'game/images/managers/default-manager.png'
 
 
 def current_manager(request):
