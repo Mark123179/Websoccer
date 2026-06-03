@@ -1658,12 +1658,12 @@ def home(request):
     primary_market_value = (
         primary_players.aggregate(total=Sum('market_value'))['total'] or 0
     )
-    primary_top_scorer = primary_players.order_by(
-        '-strength_profile__final_strength',
-        '-market_value',
-        'last_name',
-        'first_name',
-    ).first()
+    primary_top_scorer = (
+        primary_players.filter(ws_season_stats__goals__gt=0)
+        .annotate(total_goals=Sum('ws_season_stats__goals'))
+        .order_by('-total_goals', '-market_value', 'last_name', 'first_name')
+        .first()
+    ) or primary_players.order_by('-market_value', 'last_name', 'first_name').first()
     primary_market_player = primary_players.order_by(
         '-market_value',
         '-strength_profile__final_strength',
@@ -1682,11 +1682,11 @@ def home(request):
     if primary_top_scorer:
         top_scorer_label = (
             f'{primary_top_scorer.first_name[:1]}. '
-            f'{primary_top_scorer.last_name} (18)'
+            f'{primary_top_scorer.last_name}'
         )
         top_scorer_portrait = primary_top_scorer.portrait_static_path
     else:
-        top_scorer_label = 'L. Martinez (18)'
+        top_scorer_label = '–'
         top_scorer_portrait = ''
 
     if primary_market_player:
