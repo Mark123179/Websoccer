@@ -31,6 +31,7 @@ from .models import (
     ClubTrophy,
     DataSource,
     League,
+    ManagerProfile,
     MatchResult,
     Player,
     PlayerAwardTitle,
@@ -1825,6 +1826,26 @@ def home(request):
         else '1. Bundesliga'
     )
 
+    _other_profiles = ManagerProfile.objects.filter(
+        user__is_active=True,
+        user__is_staff=False,
+        user__is_superuser=False,
+    ).exclude(
+        user=request.user,
+    ).select_related('user').order_by('name')
+    _manager_clubs = {
+        club.managed_by_id: club
+        for club in Club.objects.filter(managed_by__in=_other_profiles)
+    }
+    active_managers = [
+        {
+            'name': mp.name,
+            'crest': _manager_clubs[mp.id].crest_static_path if mp.id in _manager_clubs else '',
+            'club_url': f'/clubs/{_manager_clubs[mp.id].id}/' if mp.id in _manager_clubs else '',
+        }
+        for mp in _other_profiles
+    ]
+
     return render(
         request,
         'game/home.html',
@@ -1841,48 +1862,7 @@ def home(request):
             'home_stadium_static_path': home_stadium_static_path,
             'last_match_home_stadium_static_path': last_match_home_stadium_static_path,
             'competition_logo_static_path': competition_logo_static_path_value,
-            'active_managers': [
-                {
-                    'name': 'bojankrkic',
-                    'crest': primary_club.crest_static_path if primary_club else '',
-                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
-                },
-                {
-                    'name': 'husteguz92',
-                    'crest': secondary_club.crest_static_path if secondary_club else '',
-                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
-                },
-                {
-                    'name': 'Doppel_Loewen Power',
-                    'crest': primary_club.crest_static_path if primary_club else '',
-                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
-                },
-                {
-                    'name': 'FootballMaster2017',
-                    'crest': secondary_club.crest_static_path if secondary_club else '',
-                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
-                },
-                {
-                    'name': 'Fohlenmeister',
-                    'crest': primary_club.crest_static_path if primary_club else '',
-                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
-                },
-                {
-                    'name': 'Ilundehund',
-                    'crest': secondary_club.crest_static_path if secondary_club else '',
-                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
-                },
-                {
-                    'name': 'Schae',
-                    'crest': primary_club.crest_static_path if primary_club else '',
-                    'club_url': f'/clubs/{primary_club.id}/' if primary_club else '',
-                },
-                {
-                    'name': 'Beppi',
-                    'crest': secondary_club.crest_static_path if secondary_club else '',
-                    'club_url': f'/clubs/{secondary_club.id}/' if secondary_club else '',
-                },
-            ],
+            'active_managers': active_managers,
             'chat_messages': [
                 {
                     'time': '13.05.2026, 19:34',
