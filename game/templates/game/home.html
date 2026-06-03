@@ -489,6 +489,9 @@
                         {% endif %}
                         <strong>{{ match.away }}</strong>
                     </div>
+                {% empty %}
+                    <p class="overview-no-club-headline">Kein Spielbetrieb</p>
+                    <p class="overview-no-club-copy">Noch kein Spielplan hinterlegt.</p>
                 {% endfor %}
                 <a href="/clubs/">Alle Live-Spiele</a>
             </aside>
