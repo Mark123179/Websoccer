@@ -3003,10 +3003,16 @@ def _build_squad_context(request, club, squad_title):
     loaned_in_cards = [_build_loan_card(p, stats) for p in loaned_in[:6]]
     loaned_out_cards = [_build_loan_card(p, stats) for p in loaned_out[:6]]
 
+    is_owner = (
+        request.user.is_authenticated
+        and current_manager_club(user=request.user) == club
+    )
+
     return {
         'club': club,
         'squad_title': squad_title,
         'is_youth': is_youth,
+        'is_owner': is_owner,
         'player_rows': player_rows,
         'player_count': len(player_rows),
         'header_stats': header_stats,

@@ -32,7 +32,7 @@
             <div class="squad-toolbar">
                 <div class="squad-toolbar__top">
                     <h2 class="squad-title">
-                        Meine Spieler
+                        {% if is_owner %}Meine Spieler{% else %}{{ club.name }}{% endif %}
                     </h2>
                 </div>
                 <div class="squad-filterbar" id="squadFilterBar" role="tablist" aria-label="Positionsfilter">
@@ -43,6 +43,7 @@
                 </div>
             </div>
 
+            {% if is_owner %}
             <div class="squad-actionbar" id="squadActionBar"
                  data-shirt-url="{{ shirt_action_url }}"
                  data-youth-url="{{ youth_action_url }}"
@@ -58,22 +59,25 @@
                 </div>
                 <button type="button" class="squad-actionbar__clear" id="selClear" aria-label="Auswahl aufheben">✕</button>
             </div>
+            {% endif %}
 
             <div class="squad-table-wrap">
                 <table class="squad-table">
                     <thead>
                         <tr class="squad-thead-group">
-                            <th colspan="6"></th>
+                            <th colspan="{% if is_owner %}6{% else %}5{% endif %}"></th>
                             <th colspan="5" class="grp">Saisonleistung</th>
                             <th colspan="3"></th>
                         </tr>
                         <tr class="squad-thead-cols">
+                            {% if is_owner %}
                             <th class="col-check">
                                 <label class="squad-check squad-check--head">
                                     <input type="checkbox" id="squadCheckAll" aria-label="Alle auswählen">
                                     <span></span>
                                 </label>
                             </th>
+                            {% endif %}
                             <th class="col-num">#</th>
                             <th class="col-player">Spieler</th>
                             <th class="col-pos sortable" data-sort-key="pos">Position</th>
@@ -96,12 +100,14 @@
                             data-name="{{ p.name|lower }}"
                             data-pos="{% for c in p.hp %}{{ c }} {% endfor %}{% for c in p.np %}{{ c }} {% endfor %}"
                             data-youth="{{ p.youth_eligible|yesno:'1,0' }}">
+                            {% if is_owner %}
                             <td class="col-check">
                                 <label class="squad-check">
                                     <input type="checkbox" class="squad-row-check" aria-label="{{ p.name }} auswählen">
                                     <span></span>
                                 </label>
                             </td>
+                            {% endif %}
                             <td class="col-num"><span class="squad-shirt">{{ p.shirt|default:"–" }}</span></td>
                             <td class="col-player">
                                 <a class="squad-player" href="{{ p.detail_url }}">
