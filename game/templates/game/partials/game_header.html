@@ -1,10 +1,6 @@
 {% load static %}
 
 <header class="ws-game-header">
-    <a class="ws-header-back" href="{{ game_header.back_url }}" aria-label="Zurueck">
-        <span class="ws-chevron ws-chevron-left" aria-hidden="true"></span>
-    </a>
-
     <div class="ws-header-context">
         <strong>{{ game_header.title }}</strong>
         <span>{{ game_header.subtitle }}</span>
@@ -23,7 +19,7 @@
                         <strong>{{ day.day_number }}</strong>
                     </div>
 
-                    {% if forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">J</span>{% endif %}
+                    {% if current_manager.club and forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">J</span>{% endif %}
                     {% if day.fixture %}
                         <div class="ws-fixture-card"{% if day.fixture.stadium %} style="--fixture-stadium: url('{% static day.fixture.stadium %}');"{% endif %}>
                             <div class="ws-fixture-crests">

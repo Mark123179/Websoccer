@@ -28,12 +28,12 @@ _STADIUM_ASSETS = {
     91013388: 'game/images/stadiums/germany/redbull-leipzig.jpg',
 }
 
-_BASE_GAME_DATE = date(2026, 5, 15)
 _WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
 
 def _build_global_calendar(club, calendar_offset):
-    game_date = _BASE_GAME_DATE + timedelta(days=calendar_offset)
+    today = date.today()
+    game_date = today + timedelta(days=calendar_offset)
     league_name = (
         club.league.name if club and club.league else '1. Bundesliga'
     )
@@ -55,9 +55,9 @@ def _build_global_calendar(club, calendar_offset):
 
     fixtures_by_date = (
         {
-            _BASE_GAME_DATE - timedelta(days=3): _fixture(False, '1:1', 'A', '33. Spieltag (A)'),
-            _BASE_GAME_DATE - timedelta(days=1): _fixture(True, '5:0', 'H', 'Testspiel (H)'),
-            _BASE_GAME_DATE + timedelta(days=2): _fixture(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
+            today - timedelta(days=3): _fixture(False, '1:1', 'A', '33. Spieltag (A)'),
+            today - timedelta(days=1): _fixture(True, '5:0', 'H', 'Testspiel (H)'),
+            today + timedelta(days=2): _fixture(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
         }
         if club is not None
         else {}
@@ -70,7 +70,7 @@ def _build_global_calendar(club, calendar_offset):
             'date': day,
             'weekday': _WEEKDAY_LABELS[day.weekday()],
             'day_number': day.day,
-            'is_today': day == _BASE_GAME_DATE,
+            'is_today': day == today,
             'fixture': fixtures_by_date.get(day),
         })
 
