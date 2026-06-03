@@ -111,6 +111,11 @@
         </div>
         {% endwith %}
 
+        <a href="/handbuch/" class="nav-menu-handbuch">
+            <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/handbuch.svg' %}" alt=""></span>
+            Handbuch
+        </a>
+
         <form class="nav-logout-form" action="{% url 'auth_logout' %}" method="post">
             {% csrf_token %}
             <button class="nav-logout-btn" type="submit">Abmelden</button>
