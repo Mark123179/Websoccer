@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 
 
 def auth_login(request):
@@ -14,7 +15,10 @@ def auth_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect(request.GET.get('next') or 'home')
+            next_url = request.GET.get('next') or request.POST.get('next') or ''
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return redirect(next_url)
+            return redirect('home')
         error = 'Benutzername oder Passwort falsch.'
 
     return render(request, 'game/auth/login.html', {'error': error})
