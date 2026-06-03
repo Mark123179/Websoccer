@@ -190,6 +190,9 @@ class PageSmokeTests(TestCase):
         return data
 
     def test_home_page_renders_dashboard(self):
+        User = get_user_model()
+        user = User.objects.create_user(username='smokeuser', password='smokepass123')
+        self.client.force_login(user)
         response = self.client.get(reverse('home'))
 
         self.assertEqual(response.status_code, 200)
@@ -197,6 +200,71 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'MatchEngine')
         self.assertContains(response, 'Letztes Spiel')
         self.assertContains(response, 'Borussia Dortmund')
+
+    def test_home_dashboard_shows_fixture_data(self):
+        from .models import ManagerProfile
+
+        User = get_user_model()
+        user = User.objects.create_user(username='testmanager', password='testpass123')
+        profile = ManagerProfile.objects.get(user=user)
+        self.club.managed_by = profile
+        self.club.save()
+
+        opponent = Club.objects.create(
+            name='FC Testgegner',
+            short_name='FCT',
+            fm_inside_id=9998,
+            founded_year=2000,
+            budget=Decimal('1000000.00'),
+            league=self.club.league,
+        )
+
+        ClubProfileMatch.objects.create(
+            club=self.club,
+            kind=ClubProfileMatch.KIND_NEXT,
+            competition_name='DFB-Pokal',
+            matchday_label='Viertelfinale',
+            date_label='15. Jun 2026',
+            time_label='20:30 Uhr',
+            stadium_name='Signal Iduna Park',
+            home_club=self.club,
+            away_club=opponent,
+        )
+        ClubProfileMatch.objects.create(
+            club=self.club,
+            kind=ClubProfileMatch.KIND_LAST,
+            competition_name='1. Bundesliga',
+            matchday_label='32. Spieltag',
+            date_label='01. Jun 2026',
+            home_club=self.club,
+            away_club=opponent,
+            home_goals=3,
+            away_goals=1,
+            result_label=ClubProfileMatch.RESULT_WIN,
+            scorers=[
+                {'playerName': 'Testschuetze', 'clubId': str(self.club.id), 'minute': 45},
+            ],
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse('home'))
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(response, 'DFB-Pokal')
+        self.assertContains(response, 'Viertelfinale')
+        self.assertContains(response, '15. Jun 2026')
+        self.assertContains(response, '20:30 Uhr')
+        self.assertContains(response, 'Signal Iduna Park')
+
+        self.assertContains(response, '3:1')
+        self.assertContains(response, '32. Spieltag')
+        self.assertContains(response, 'Testschuetze')
+        self.assertContains(response, "45'")
+
+        self.assertNotContains(response, '25. Mai 2025')
+        self.assertNotContains(response, '9-9')
+        self.assertNotContains(response, 'L. Martinez (18)')
 
     def test_club_list_renders_club_metrics(self):
         response = self.client.get(reverse('club_list'))
