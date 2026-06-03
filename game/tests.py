@@ -634,7 +634,7 @@ class PageSmokeTests(TestCase):
         self.assertIn('.dashboard-grid-main', layout_nav_css)
         self.assertIn('.card-title', dashboard_cards_css)
         self.assertIn('.league-table', tables_lists_css)
-        self.assertIn('@media (max-width: 1600px)', responsive_css)
+        self.assertIn('@media (max-width: 1100px)', responsive_css)
         for css_text in (
             layout_nav_css,
             dashboard_cards_css,
@@ -725,7 +725,7 @@ class PageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'class="trophy-slot', count=4)
         self.assertContains(response, 'class="podium"', count=4)
-        self.assertContains(response, 'game/images/trophies/podium-trophy.png')
+        self.assertContains(response, 'game/images/trophies/podest.png')
         self.assertNotContains(response, 'game/images/trophies/default-2.png')
         self.assertNotContains(response, 'game/images/trophies/default-3.png')
         self.assertNotContains(response, 'game/images/trophies/default-4.png')
