@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -77,12 +77,12 @@
                             <th class="col-pos">Position</th>
                             <th class="col-fit">Fitness</th>
                             <th class="col-form">Form</th>
-                            <th class="num">Sp.</th>
-                            <th class="num">Tore</th>
-                            <th class="num">Vorl.</th>
-                            <th class="num">Min.</th>
-                            <th class="num">Ø Note</th>
-                            <th class="col-mv">Marktwert</th>
+                            <th class="num sortable" data-sort-key="matches">Sp.</th>
+                            <th class="num sortable" data-sort-key="goals">Tore</th>
+                            <th class="num sortable" data-sort-key="assists">Vorl.</th>
+                            <th class="num sortable" data-sort-key="minutes">Min.</th>
+                            <th class="num sortable" data-sort-key="grade">Ø Note</th>
+                            <th class="col-mv sortable" data-sort-key="mv">Marktwert</th>
                             <th class="col-status">Status</th>
                             <th class="col-go" aria-label="Profil"></th>
                         </tr>
@@ -145,16 +145,16 @@
                                 </div>
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
-                            <td class="num">{{ p.matches }}</td>
-                            <td class="num">{{ p.goals }}</td>
-                            <td class="num">{{ p.assists }}</td>
-                            <td class="num">{{ p.minutes|intcomma }}</td>
-                            <td class="num">
+                            <td class="num" data-sort-key="matches" data-sort-val="{{ p.matches }}">{{ p.matches }}</td>
+                            <td class="num" data-sort-key="goals" data-sort-val="{{ p.goals }}">{{ p.goals }}</td>
+                            <td class="num" data-sort-key="assists" data-sort-val="{{ p.assists }}">{{ p.assists }}</td>
+                            <td class="num" data-sort-key="minutes" data-sort-val="{{ p.minutes }}">{{ p.minutes|intcomma }}</td>
+                            <td class="num" data-sort-key="grade" data-sort-val="{{ p.grade|default:'9999' }}">
                                 {% if p.grade is not None %}
                                 <span class="grade grade--{% if p.grade < 3 %}good{% elif p.grade < 5 %}ok{% else %}weak{% endif %}">{{ p.grade|floatformat:2 }}</span>
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
-                            <td class="col-mv">{{ p.market_value_fmt }}</td>
+                            <td class="col-mv" data-sort-key="mv" data-sort-val="{{ p.market_value }}">{{ p.market_value_fmt }}</td>
                             <td class="col-status">
                                 {% if p.status.code != 'fit' %}
                                 <span class="status-pill status-pill--{{ p.status.code }}">{{ p.status.label }}</span>
@@ -255,5 +255,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/squad-overview.js' %}?v=2" defer></script>
+    <script src="{% static 'game/js/squad-overview.js' %}?v=3" defer></script>
 {% endblock %}

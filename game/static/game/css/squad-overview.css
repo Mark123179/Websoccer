@@ -475,6 +475,26 @@
     font-variant-numeric: tabular-nums;
 }
 
+/* sortable column headers */
+.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    position: relative;
+}
+.sortable::after {
+    content: ' ⇅';
+    font-size: 9px;
+    opacity: 0.35;
+    vertical-align: middle;
+}
+.sortable.sort-desc::after { content: ' ↓'; opacity: 0.75; color: var(--sq-cyan); }
+.sortable.sort-asc::after  { content: ' ↑'; opacity: 0.75; color: var(--sq-cyan); }
+.sortable:hover { color: var(--sq-cyan); }
+
+/* right-align market value column */
+.col-mv { text-align: right !important; }
+
 /* form bar chart */
 .col-form { width: 148px; }
 .col-status { width: 82px; }

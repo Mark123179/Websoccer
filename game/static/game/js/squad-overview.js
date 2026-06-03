@@ -70,6 +70,44 @@
             syncCheckAll();
         }
 
+        /* ---------------- sorting ---------------- */
+        let sortKey = null;
+        let sortDir = 'desc';
+
+        document.querySelectorAll('.sortable[data-sort-key]').forEach(function (th) {
+            th.addEventListener('click', function () {
+                const key = th.getAttribute('data-sort-key');
+                if (sortKey === key) {
+                    sortDir = sortDir === 'desc' ? 'asc' : 'desc';
+                } else {
+                    sortKey = key;
+                    sortDir = 'desc';
+                }
+                document.querySelectorAll('.sortable[data-sort-key]').forEach(function (h) {
+                    h.classList.remove('sort-asc', 'sort-desc');
+                    h.removeAttribute('aria-sort');
+                });
+                th.classList.add('sort-' + sortDir);
+                th.setAttribute('aria-sort', sortDir === 'desc' ? 'descending' : 'ascending');
+
+                const sorted = rows.slice().sort(function (a, b) {
+                    const aCell = a.querySelector('[data-sort-key="' + key + '"]');
+                    const bCell = b.querySelector('[data-sort-key="' + key + '"]');
+                    const aVal = parseFloat((aCell && aCell.getAttribute('data-sort-val')) || '0');
+                    const bVal = parseFloat((bCell && bCell.getAttribute('data-sort-val')) || '0');
+                    if (sortDir === 'desc') {
+                        if (aVal === 9999 && bVal !== 9999) { return 1; }
+                        if (bVal === 9999 && aVal !== 9999) { return -1; }
+                        return bVal - aVal;
+                    }
+                    if (aVal === 9999 && bVal !== 9999) { return 1; }
+                    if (bVal === 9999 && aVal !== 9999) { return -1; }
+                    return aVal - bVal;
+                });
+                sorted.forEach(function (row) { body.appendChild(row); });
+            });
+        });
+
         if (search) { search.addEventListener('input', applyFilters); }
 
         if (filterBar) {
