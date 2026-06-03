@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard.css' %}?v=gm-1">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
     {% if request.user.is_authenticated %}
-    <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=3">
     {% endif %}
 
     {% block extra_css %}{% endblock %}
@@ -197,6 +197,45 @@
         var clearBtn = document.getElementById('aiClearBtn');
         var history  = [];
         var busy     = false;
+
+        /* ---- Kloppo intro animation after login ---- */
+        (function () {
+            function getCookie(name) {
+                var m = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+                return m ? decodeURIComponent(m[1]) : null;
+            }
+            function deleteCookie(name) {
+                document.cookie = name + '=; Max-Age=0; path=/';
+            }
+
+            if (getCookie('kloppo_intro') === '1') {
+                deleteCookie('kloppo_intro');
+
+                /* bounce-in the button after a short delay */
+                setTimeout(function () {
+                    trigger.classList.add('kloppo-intro');
+                    trigger.addEventListener('animationend', function () {
+                        trigger.classList.remove('kloppo-intro');
+                    }, { once: true });
+                }, 600);
+
+                /* speech bubble */
+                var phrases = [
+                    'Boah, <em>endlich</em> bist du da, Chef!',
+                    '<em>We go again!</em> Schön dich zu sehen!',
+                    'Wahnsinn! Ich hab auf dich gewartet, Freund!',
+                    'Lass uns den <em>Titel</em> holen — ich bin dabei!',
+                ];
+                var text = phrases[Math.floor(Math.random() * phrases.length)];
+                var bubble = document.createElement('div');
+                bubble.className = 'kloppo-bubble';
+                bubble.innerHTML = text;
+                document.body.appendChild(bubble);
+
+                /* remove from DOM after animation completes */
+                setTimeout(function () { bubble.remove(); }, 5200);
+            }
+        })();
 
         function toggle() {
             var open = drawer.classList.toggle('is-open');

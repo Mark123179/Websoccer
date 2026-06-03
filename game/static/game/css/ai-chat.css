@@ -94,6 +94,80 @@
     50%       { opacity: 1; transform: scale(1.18); }
 }
 
+/* ---- Intro bounce (plays once after login) ---- */
+.ai-trigger.kloppo-intro {
+    animation: kloppo-bounce-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes kloppo-bounce-in {
+    0%   { transform: scale(0) translateY(30px); opacity: 0; }
+    60%  { transform: scale(1.15) translateY(-6px); opacity: 1; }
+    80%  { transform: scale(0.93) translateY(2px); }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ---- Kloppo speech bubble ---- */
+.kloppo-bubble {
+    position: fixed;
+    bottom: 102px;
+    right: 16px;
+    z-index: 10000;
+    max-width: 240px;
+    background: rgba(3, 12, 22, 0.93);
+    border: 1px solid rgba(34, 230, 255, 0.28);
+    border-radius: 14px 14px 4px 14px;
+    backdrop-filter: blur(24px);
+    padding: 11px 15px;
+    box-shadow:
+        0 0 0 1px rgba(34,230,255,0.07),
+        0 0 30px rgba(34,230,255,0.18),
+        0 12px 40px rgba(0,0,0,0.6);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #eaf5ff;
+    line-height: 1.45;
+
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+    animation: kloppo-bubble-in 0.4s 0.9s cubic-bezier(0.34, 1.4, 0.64, 1) forwards,
+               kloppo-bubble-out 0.35s 4.5s ease-in forwards;
+    pointer-events: none;
+}
+.kloppo-bubble::before {
+    content: "";
+    display: block;
+    height: 2px;
+    margin: -11px -15px 10px;
+    border-radius: 14px 14px 0 0;
+    background: linear-gradient(90deg, transparent, #22e6ff 40%, #28f0c7 60%, transparent);
+    opacity: 0.9;
+}
+.kloppo-bubble em {
+    font-style: normal;
+    color: #22e6ff;
+    text-shadow: 0 0 10px rgba(34,230,255,0.55);
+}
+/* tiny tail pointer */
+.kloppo-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -7px;
+    right: 22px;
+    width: 13px;
+    height: 13px;
+    background: rgba(3, 12, 22, 0.93);
+    border-right: 1px solid rgba(34,230,255,0.28);
+    border-bottom: 1px solid rgba(34,230,255,0.28);
+    transform: rotate(45deg);
+}
+
+@keyframes kloppo-bubble-in {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes kloppo-bubble-out {
+    to { opacity: 0; transform: translateY(6px) scale(0.95); }
+}
+
 /* ---- Chat Drawer ---- */
 .ai-drawer {
     position: fixed;

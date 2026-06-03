@@ -28,8 +28,11 @@ def auth_login(request):
             login(request, user)
             next_url = request.GET.get('next') or request.POST.get('next') or ''
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-                return redirect(next_url)
-            return redirect('home')
+                response = redirect(next_url)
+            else:
+                response = redirect('home')
+            response.set_cookie('kloppo_intro', '1', max_age=30, samesite='Lax')
+            return response
         error = 'Benutzername oder Passwort falsch.'
 
     ctx = {'error': error, 'active_tab': 'login'}
