@@ -1605,6 +1605,45 @@ def home(request):
         else None
     )
 
+    next_match_obj = None
+    last_match_obj = None
+    if primary_club:
+        for _m in ClubProfileMatch.objects.filter(
+            club=primary_club
+        ).select_related('home_club', 'away_club'):
+            if _m.kind == ClubProfileMatch.KIND_NEXT:
+                next_match_obj = _m
+            elif _m.kind == ClubProfileMatch.KIND_LAST:
+                last_match_obj = _m
+
+    if next_match_obj:
+        next_match_opponent = (
+            next_match_obj.away_club
+            if next_match_obj.home_club_id == (primary_club.id if primary_club else None)
+            else next_match_obj.home_club
+        )
+    else:
+        next_match_opponent = secondary_club
+
+    if last_match_obj:
+        if last_match_obj.home_club_id == (primary_club.id if primary_club else None):
+            last_match_opponent = last_match_obj.away_club
+            last_match_score = (
+                f'{last_match_obj.home_goals}:{last_match_obj.away_goals}'
+                if last_match_obj.home_goals is not None and last_match_obj.away_goals is not None
+                else None
+            )
+        else:
+            last_match_opponent = last_match_obj.home_club
+            last_match_score = (
+                f'{last_match_obj.away_goals}:{last_match_obj.home_goals}'
+                if last_match_obj.away_goals is not None and last_match_obj.home_goals is not None
+                else None
+            )
+    else:
+        last_match_opponent = secondary_club
+        last_match_score = None
+
     transfer_queryset = Player.objects.select_related(
         'club',
         'club__league',
@@ -1940,11 +1979,12 @@ def home(request):
                     'reactions': '3 Reaktionen',
                 },
             ],
-            'last_match_scorers': [
-                {'name': 'Martinez', 'minute': 23},
-                {'name': 'Petrov', 'minute': 58},
-                {'name': 'Kaya', 'minute': 67},
-            ],
+            'next_match': next_match_obj,
+            'next_match_opponent': next_match_opponent,
+            'last_match': last_match_obj,
+            'last_match_opponent': last_match_opponent,
+            'last_match_score': last_match_score,
+            'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
             'live_matches': [
                 {
                     'time': '20:40',

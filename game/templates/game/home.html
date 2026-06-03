@@ -119,12 +119,14 @@
                 {% if competition_logo_static_path %}
                     <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
                 {% endif %}
-                {% if primary_club and primary_club.league %}
+                {% if next_match %}
+                    {{ next_match.competition_name }}
+                    {% if next_match.matchday_label %} - {{ next_match.matchday_label }}{% endif %}
+                {% elif primary_club and primary_club.league %}
                     {{ primary_club.league.name }}
                 {% else %}
                     Elite Liga
                 {% endif %}
-                - 34. Spieltag
             </p>
 
             <div class="overview-fixture">
@@ -146,25 +148,25 @@
                 <span class="overview-vs">VS</span>
 
                 <div class="overview-team">
-                    {% if secondary_club and secondary_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ secondary_club.id }}/" aria-label="{{ secondary_club.name }} Vereinsprofil">
-                            <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}">
+                    {% if next_match_opponent and next_match_opponent.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ next_match_opponent.id }}/" aria-label="{{ next_match_opponent.name }} Vereinsprofil">
+                            <img src="{% static next_match_opponent.crest_static_path %}" alt="{{ next_match_opponent.name }}">
                         </a>
                     {% endif %}
                     <strong>
-                        {% if secondary_club %}
-                            {{ secondary_club.short_name }}
+                        {% if next_match_opponent %}
+                            {{ next_match_opponent.short_name }}
                         {% else %}
-                            FC Aurora
+                            –
                         {% endif %}
                     </strong>
                 </div>
             </div>
 
             <div class="overview-match-meta">
-                <span>25. Mai 2025</span>
-                <strong>15:30</strong>
-                <small>Novum Arena</small>
+                <span>{% if next_match and next_match.date_label %}{{ next_match.date_label }}{% else %}–{% endif %}</span>
+                <strong>{% if next_match and next_match.time_label %}{{ next_match.time_label }}{% else %}–{% endif %}</strong>
+                <small>{% if next_match and next_match.stadium_name %}{{ next_match.stadium_name }}{% else %}–{% endif %}</small>
             </div>
 
             <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielvorschau</a>
@@ -196,37 +198,39 @@
                         {% endif %}
                     </strong>
                 </div>
-                <span style="text-align: center; margin-left: -16px; margin-right: -16px; margin-top: -26px; margin-bottom: 0; padding: 0;">9-9</span>
+                <span style="text-align: center; margin-left: -16px; margin-right: -16px; margin-top: -26px; margin-bottom: 0; padding: 0;">{% if last_match_score %}{{ last_match_score }}{% else %}–{% endif %}</span>
                 <div class="overview-team compact">
-                    {% if secondary_club and secondary_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ secondary_club.id }}/" aria-label="{{ secondary_club.name }} Vereinsprofil">
-                            <img src="{% static secondary_club.crest_static_path %}" alt="{{ secondary_club.name }}" style="margin-left: -4px; margin-right: -4px;">
+                    {% if last_match_opponent and last_match_opponent.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ last_match_opponent.id }}/" aria-label="{{ last_match_opponent.name }} Vereinsprofil">
+                            <img src="{% static last_match_opponent.crest_static_path %}" alt="{{ last_match_opponent.name }}" style="margin-left: -4px; margin-right: -4px;">
                         </a>
                     {% endif %}
                     <strong>
-                        {% if secondary_club %}
-                            {{ secondary_club.short_name }}
+                        {% if last_match_opponent %}
+                            {{ last_match_opponent.short_name }}
                         {% else %}
-                            FC Helios
+                            –
                         {% endif %}
                     </strong>
                 </div>
             </div>
 
             <p class="overview-result-competition">
-                {% if primary_club and primary_club.league %}
+                {% if last_match %}
+                    {{ last_match.competition_name }}
+                    {% if last_match.matchday_label %} - {{ last_match.matchday_label }}{% endif %}
+                {% elif primary_club and primary_club.league %}
                     {{ primary_club.league.name }}
                 {% else %}
                     Elite Liga
                 {% endif %}
-                - 33. Spieltag
             </p>
 
             <div class="overview-scorers">
                 {% for scorer in last_match_scorers %}
                     <span>
                         <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
-                        {{ scorer.name }}&nbsp;&nbsp;{{ scorer.minute }}'
+                        {{ scorer.playerName }}&nbsp;&nbsp;{{ scorer.minute }}'
                     </span>
                 {% endfor %}
             </div>
