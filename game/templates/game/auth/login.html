@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anmelden · Websoccer</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'game/images/brand/favicon-32.png' %}">
+    <link rel="stylesheet" href="{% static 'game/css/auth.css' %}?v=auth-1">
+</head>
+<body class="auth-page">
+
+<div class="auth-stage">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <img src="{% static 'game/images/brand/matchengine-logo-256.png' %}" alt="Websoccer" class="auth-logo">
+            <h1 class="auth-title">Websoccer</h1>
+            <p class="auth-subtitle">Managerspiel &middot; Saison 2025/26</p>
+        </div>
+
+        {% if error %}
+        <div class="auth-alert">{{ error }}</div>
+        {% endif %}
+
+        <form class="auth-form" method="post" action="{% url 'auth_login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+            {% csrf_token %}
+
+            <div class="auth-field">
+                <label for="id_username">Benutzername</label>
+                <input id="id_username" type="text" name="username" autofocus autocomplete="username" required>
+            </div>
+
+            <div class="auth-field">
+                <label for="id_password">Passwort</label>
+                <input id="id_password" type="password" name="password" autocomplete="current-password" required>
+            </div>
+
+            <button class="auth-btn" type="submit">Anmelden</button>
+        </form>
+
+        <p class="auth-switch">
+            Noch kein Konto?
+            <a href="{% url 'auth_register' %}">Jetzt registrieren</a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

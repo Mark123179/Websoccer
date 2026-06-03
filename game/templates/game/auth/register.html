@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrieren · Websoccer</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'game/images/brand/favicon-32.png' %}">
+    <link rel="stylesheet" href="{% static 'game/css/auth.css' %}?v=auth-1">
+</head>
+<body class="auth-page">
+
+<div class="auth-stage">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <img src="{% static 'game/images/brand/matchengine-logo-256.png' %}" alt="Websoccer" class="auth-logo">
+            <h1 class="auth-title">Websoccer</h1>
+            <p class="auth-subtitle">Konto erstellen &middot; Kostenlos</p>
+        </div>
+
+        <form class="auth-form" method="post" action="{% url 'auth_register' %}">
+            {% csrf_token %}
+
+            <div class="auth-field">
+                <label for="id_username">Benutzername</label>
+                <input id="id_username" type="text" name="username" value="{{ values.username|default:'' }}" autofocus autocomplete="username" required>
+                {% if errors.username %}<span class="auth-field-error">{{ errors.username }}</span>{% endif %}
+            </div>
+
+            <div class="auth-field">
+                <label for="id_password1">Passwort</label>
+                <input id="id_password1" type="password" name="password1" autocomplete="new-password" required>
+                {% if errors.password1 %}<span class="auth-field-error">{{ errors.password1 }}</span>{% endif %}
+            </div>
+
+            <div class="auth-field">
+                <label for="id_password2">Passwort wiederholen</label>
+                <input id="id_password2" type="password" name="password2" autocomplete="new-password" required>
+                {% if errors.password2 %}<span class="auth-field-error">{{ errors.password2 }}</span>{% endif %}
+            </div>
+
+            <button class="auth-btn" type="submit">Konto erstellen</button>
+        </form>
+
+        <p class="auth-switch">
+            Bereits registriert?
+            <a href="{% url 'auth_login' %}">Anmelden</a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>

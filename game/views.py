@@ -1589,6 +1589,7 @@ def career_summary_from_ws_stats(rows):
     }
 
 
+@login_required
 def home(request):
     clubs = Club.objects.select_related('league').annotate(
         player_count=Count('player'),
@@ -2050,6 +2051,7 @@ def home(request):
     )
 
 
+@login_required
 def club_list(request):
     clubs = Club.objects.select_related('league').annotate(
         player_count=Count('player'),
@@ -2657,6 +2659,7 @@ def player_match_state_from_option(option, slot_code):
     return 'foreign'
 
 
+@login_required
 def club_detail(request, club_id):
     club = get_object_or_404(
         Club.objects.select_related('league'),
@@ -3207,6 +3210,7 @@ def player_graph_data(request, player_id):
     })
 
 
+@login_required
 def manager_profile(request):
     tab = request.GET.get('tab', 'profil')
 

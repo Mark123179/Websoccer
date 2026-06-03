@@ -454,6 +454,28 @@
             color: var(--text);
             box-shadow: inset 3px 0 0 var(--cyan);
         }
+        .nav-logout-form {
+            flex-shrink: 0;
+            padding: 0 6px;
+        }
+        .nav-logout-btn {
+            background: transparent;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            padding: 6px 10px;
+            text-transform: uppercase;
+            transition: border-color 0.15s, color 0.15s;
+            width: 100%;
+        }
+        .nav-logout-btn:hover {
+            border-color: var(--line-strong);
+            color: var(--text);
+        }
         .creator-mode-button {
             background: linear-gradient(180deg, #ff9f1c, #d85d00);
             border: 1px solid rgba(255, 203, 105, 0.78);

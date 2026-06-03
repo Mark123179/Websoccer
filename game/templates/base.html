@@ -111,6 +111,11 @@
         </div>
         {% endwith %}
 
+        <form class="nav-logout-form" action="{% url 'auth_logout' %}" method="post">
+            {% csrf_token %}
+            <button class="nav-logout-btn" type="submit">Abmelden</button>
+        </form>
+
         <a class="creator-mode-button" href="{% url 'creator_index' %}">
             <span>Manager</span>
             <strong>Creator Mode</strong>

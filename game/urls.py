@@ -21,6 +21,7 @@ from .views import (
     player_detail,
     player_graph_data,
 )
+from .views_auth import auth_login, auth_register, auth_logout
 from .views_creator import (
     creator_index,
     creator_club_edit,
@@ -118,6 +119,10 @@ urlpatterns = [
     path('manager/reset-image/', reset_profile_image, name='reset_profile_image'),
     path('manager/career-station/save/', save_career_station, name='save_career_station'),
     path('manager/career-station/delete/', delete_career_station, name='delete_career_station'),
+
+    path('auth/login/', auth_login, name='auth_login'),
+    path('auth/register/', auth_register, name='auth_register'),
+    path('auth/logout/', auth_logout, name='auth_logout'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),
