@@ -16,6 +16,9 @@
     <link rel="stylesheet" href="{% static 'game/css/game-stage.css' %}?v=stage-4">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard.css' %}?v=gm-1">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
+    {% if request.user.is_authenticated %}
+    <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=1">
+    {% endif %}
 
     {% block extra_css %}{% endblock %}
 
@@ -139,6 +142,158 @@
     </div><!-- /.gameStageSpacer -->
     </div><!-- /.gameScroll -->
     </div><!-- /.gameViewport -->
+
+    {% if request.user.is_authenticated %}
+    <!-- ===== AI CHAT WIDGET ===== -->
+    <button class="ai-trigger" id="aiTrigger" aria-label="KI-Assistent öffnen" title="KI-Assistent">
+        <svg class="icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="12" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/>
+        </svg>
+        <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+    </button>
+
+    <div class="ai-drawer" id="aiDrawer" role="dialog" aria-modal="true" aria-label="KI-Assistent">
+        <div class="ai-header">
+            <div class="ai-header-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 16v-4M12 8h.01"/>
+                </svg>
+            </div>
+            <div class="ai-header-title">
+                <strong>Websoccer-Assistent</strong>
+                <span>Stell mir deine Spielfragen</span>
+            </div>
+            <button class="ai-clear-btn" id="aiClearBtn" title="Verlauf löschen">Leeren</button>
+        </div>
+
+        <div class="ai-messages" id="aiMessages">
+            <div class="ai-welcome">
+                <strong>Hallo, {{ request.user.username }}!</strong>
+                Ich beantworte alle Fragen zu Websoccer — Taktik, Transfers, Regeln und mehr.
+            </div>
+        </div>
+
+        <div class="ai-input-bar">
+            <textarea class="ai-input" id="aiInput" rows="1"
+                      placeholder="Frage stellen…" maxlength="600"></textarea>
+            <button class="ai-send" id="aiSend" aria-label="Senden">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        var trigger  = document.getElementById('aiTrigger');
+        var drawer   = document.getElementById('aiDrawer');
+        var messages = document.getElementById('aiMessages');
+        var input    = document.getElementById('aiInput');
+        var sendBtn  = document.getElementById('aiSend');
+        var clearBtn = document.getElementById('aiClearBtn');
+        var history  = [];
+        var busy     = false;
+
+        function toggle() {
+            var open = drawer.classList.toggle('is-open');
+            trigger.classList.toggle('is-open', open);
+            if (open) { input.focus(); }
+        }
+
+        trigger.addEventListener('click', toggle);
+
+        clearBtn.addEventListener('click', function () {
+            history = [];
+            messages.innerHTML = '<div class="ai-welcome"><strong>Verlauf gelöscht.</strong> Stell mir eine neue Frage!</div>';
+        });
+
+        /* auto-grow textarea */
+        input.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
+
+        sendBtn.addEventListener('click', send);
+
+        function send() {
+            var text = input.value.trim();
+            if (!text || busy) return;
+            addMsg('user', text);
+            history.push({ role: 'user', content: text });
+            input.value = '';
+            input.style.height = 'auto';
+            busy = true;
+            sendBtn.disabled = true;
+
+            var typing = addTyping();
+
+            var csrfToken = '{{ csrf_token }}';
+
+            fetch('{% url "ai_chat" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                },
+                body: JSON.stringify({ message: text, history: history.slice(-8) }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                typing.remove();
+                if (data.reply) {
+                    addMsg('bot', data.reply);
+                    history.push({ role: 'assistant', content: data.reply });
+                } else {
+                    addMsg('bot', data.error || 'Unbekannter Fehler.', true);
+                }
+            })
+            .catch(function () {
+                typing.remove();
+                addMsg('bot', 'Verbindungsfehler. Versuche es erneut.', true);
+            })
+            .finally(function () {
+                busy = false;
+                sendBtn.disabled = false;
+                input.focus();
+            });
+        }
+
+        function addMsg(role, text, isError) {
+            var wrap = document.createElement('div');
+            wrap.className = 'ai-msg ai-msg--' + role + (isError ? ' is-error' : '');
+            var bubble = document.createElement('div');
+            bubble.className = 'ai-bubble';
+            bubble.textContent = text;
+            wrap.appendChild(bubble);
+            messages.appendChild(wrap);
+            messages.scrollTop = messages.scrollHeight;
+            return wrap;
+        }
+
+        function addTyping() {
+            var wrap = document.createElement('div');
+            wrap.className = 'ai-msg ai-msg--bot ai-typing';
+            wrap.innerHTML = '<div class="ai-bubble"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></div>';
+            messages.appendChild(wrap);
+            messages.scrollTop = messages.scrollHeight;
+            return wrap;
+        }
+    })();
+    </script>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 
