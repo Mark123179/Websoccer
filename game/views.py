@@ -1604,7 +1604,7 @@ def home(request):
     richest_clubs = clubs.order_by('-budget')[:6]
     user_assigned_club = current_manager_club(user=request.user)
     user_has_no_club = user_assigned_club is None
-    primary_club = user_assigned_club or clubs.order_by('-budget').first()
+    primary_club = user_assigned_club
     secondary_club = (
         clubs.exclude(id=primary_club.id).order_by('-budget').first()
         if primary_club

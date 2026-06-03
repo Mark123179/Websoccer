@@ -44,11 +44,11 @@ body.manager-profile-page .nav-menu a:first-child {
     z-index: 1;
 }
 
-.mp-dashboard > .ws-game-header {
-    margin-left: -24px;
-    margin-right: -24px;
+body.manager-profile-page .container > .ws-game-header {
+    margin-left: auto;
+    margin-right: auto;
+    width: min(100%, var(--dashboard-artboard-width));
 }
-
 
 /* ── HEADER ── */
 .mp-header {
