@@ -1980,7 +1980,7 @@ def home(request):
             'last_match_opponent': last_match_opponent,
             'last_match_score': last_match_score,
             'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
-            'live_matches': [
+            'live_matches': [] if user_has_no_club else [
                 {
                     'time': '20:40',
                     'home': primary_club.short_name if primary_club else 'ASK',
