@@ -2667,7 +2667,7 @@ def club_tactics(request, club_id):
 
 _SQUAD_POSITION_GROUP = {
     'TW': 0,
-    'IV': 1, 'LV': 1, 'RV': 1, 'LI': 1, 'LOV': 1, 'ROV': 1,
+    'IV': 1, 'LV': 1, 'RV': 1, 'LOV': 1, 'ROV': 1,
     'DM': 2, 'ZM': 2, 'LM': 2, 'RM': 2, 'LOM': 2, 'ROM': 2, 'OM': 2,
     'LF': 3, 'RF': 3, 'ST': 3,
 }
@@ -2691,7 +2691,6 @@ SQUAD_PITCH_COORDS = {
     'TW':  (50, 93),
     'LV':  (17, 76),
     'IV':  (50, 78),
-    'LI':  (32, 82),
     'RV':  (83, 76),
     'LOV': (11, 62),
     'ROV': (89, 62),

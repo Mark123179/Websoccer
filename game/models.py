@@ -861,7 +861,6 @@ class Player(models.Model):
     POSITION_CHOICES = [
         ('TW', 'TW'),
         ('IV', 'IV'),
-        ('LI', 'LI'),
         ('LV', 'LV'),
         ('RV', 'RV'),
         ('LOV', 'LOV'),
