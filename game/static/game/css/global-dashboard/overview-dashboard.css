@@ -101,7 +101,7 @@ body.overview-home-page {
             var(--overview-card-shade-left, rgba(3, 10, 16, 0.92)),
             var(--overview-card-shade-right, rgba(3, 10, 16, 0.38))
         ),
-        var(--overview-card-bg, url("../../images/backgrounds/fc-bayern-stadium.jpg"))
+        var(--overview-card-bg, none)
             var(--overview-card-bg-position, center) / cover no-repeat;
     border-radius: inherit;
     content: "";
