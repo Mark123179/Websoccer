@@ -116,10 +116,12 @@
             <button class="nav-logout-btn" type="submit">Abmelden</button>
         </form>
 
+        {% if request.user.is_superuser %}
         <a class="creator-mode-button" href="{% url 'creator_index' %}">
             <span>Manager</span>
             <strong>Creator Mode</strong>
         </a>
+        {% endif %}
     </nav>
 
     <main class="container">
