@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -94,7 +94,8 @@
                     </thead>
                     <tbody id="squadTableBody">
                         {% for p in player_rows %}
-                        <tr class="squad-row" data-player="{{ p.id }}"
+                        <tr class="squad-row{% if p.status.code == 'injured' or p.status.code == 'suspended' %} squad-row--danger{% endif %}"
+                            data-player="{{ p.id }}"
                             data-name="{{ p.name|lower }}"
                             data-pos="{% for c in p.hp %}{{ c }} {% endfor %}{% for c in p.np %}{{ c }} {% endfor %}"
                             data-youth="{{ p.youth_eligible|yesno:'1,0' }}">
@@ -111,10 +112,14 @@
                                         <img src="{% static p.portrait %}" alt="{{ p.name }}" loading="lazy">
                                     </span>
                                     <span class="squad-player__meta">
-                                        <span class="squad-player__name">{{ p.name }}</span>
+                                        <span class="squad-player__name">
+                                            {{ p.name }}
+                                            {% if p.edit_pending %}<span class="edit-pending-dot" title="Bearbeitung beantragt">✎</span>{% endif %}
+                                        </span>
                                         <span class="squad-player__sub">
-                                            {% if p.nation_static %}<img class="squad-flag" src="{% static p.nation_static %}" alt="{{ p.nation_name }}">{% endif %}
-                                            {{ p.age|default:"–" }} J.
+                                            {% if p.flag_url %}<img class="squad-flag" src="{{ p.flag_url }}" alt="{{ p.nation_name }}" loading="lazy">{% endif %}
+                                            {% if p.nat_code %}<span class="squad-nat-code">{{ p.nat_code }}</span>{% endif %}
+                                            <span class="squad-age">{{ p.age|default:"–" }} J.</span>
                                         </span>
                                     </span>
                                 </a>
@@ -135,13 +140,14 @@
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
                             <td class="col-form">
-                                {% if p.form_points %}
-                                <span class="form-cell form-cell--{{ p.form_trend }}">
-                                    <svg class="form-spark" viewBox="0 0 66 22" preserveAspectRatio="none" aria-hidden="true">
-                                        <polyline points="{{ p.form_points }}" />
-                                    </svg>
-                                    <b class="form-val">{{ p.form_last|floatformat:1 }}</b>
-                                </span>
+                                {% if p.form_bars %}
+                                <div class="form-bars-wrap">
+                                    <div class="form-bars">
+                                        {% for _ in p.form_empty_bars %}<div class="form-bar form-bar--empty"></div>{% endfor %}
+                                        {% for bar in p.form_bars %}<div class="form-bar form-bar--{{ bar.grade }}" style="height:{{ bar.height_pct }}%" title="Note {{ bar.val }}"></div>{% endfor %}
+                                    </div>
+                                    <b class="form-avg form-avg--{% if p.form_avg <= 2.5 %}good{% elif p.form_avg <= 3.5 %}ok{% else %}weak{% endif %}">{{ p.form_avg|floatformat:2 }}</b>
+                                </div>
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
                             <td class="num">{{ p.matches }}</td>
@@ -155,7 +161,9 @@
                             </td>
                             <td class="col-mv">{{ p.market_value_fmt }}</td>
                             <td class="col-status">
+                                {% if p.status.code != 'fit' %}
                                 <span class="status-pill status-pill--{{ p.status.code }}">{{ p.status.label }}</span>
+                                {% endif %}
                             </td>
                             <td class="col-go"><a href="{{ p.detail_url }}" aria-label="Profil von {{ p.name }}">›</a></td>
                         </tr>

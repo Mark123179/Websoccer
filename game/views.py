@@ -32,6 +32,7 @@ from .models import (
     ClubProfileMatch,
     ClubPublicProfile,
     ClubTrophy,
+    COUNTRY_FLAG_ASSETS,
     DataSource,
     League,
     ManagerProfile,
@@ -2734,6 +2735,48 @@ def _aggregate_squad_season_stats(player_ids, season=CURRENT_SQUAD_SEASON):
     return stats
 
 
+# ISO-3166-1 alpha-2 / flagcdn-Sondercode → 3-Buchstaben-Anzeigecode (FIFA/IOC-Stil)
+_ISO2_TO_CODE3 = {
+    'AF': 'AFG', 'AL': 'ALB', 'DZ': 'ALG', 'AD': 'AND', 'AO': 'ANG',
+    'AR': 'ARG', 'AM': 'ARM', 'AU': 'AUS', 'AT': 'AUT', 'AZ': 'AZE',
+    'BS': 'BAH', 'BH': 'BHR', 'BD': 'BAN', 'BB': 'BRB', 'BY': 'BLR',
+    'BE': 'BEL', 'BJ': 'BEN', 'BT': 'BHU', 'BO': 'BOL', 'BA': 'BIH',
+    'BW': 'BOT', 'BR': 'BRA', 'BN': 'BRU', 'BG': 'BUL', 'BF': 'BFA',
+    'BI': 'BDI', 'CL': 'CHI', 'CN': 'CHN', 'CO': 'COL', 'CR': 'CRC',
+    'HR': 'CRO', 'CU': 'CUB', 'CW': 'CUW', 'CZ': 'CZE', 'DK': 'DEN',
+    'DJ': 'DJI', 'DO': 'DOM', 'EC': 'ECU', 'EG': 'EGY', 'SV': 'SLV',
+    'GQ': 'EQG', 'ER': 'ERI', 'EE': 'EST', 'ET': 'ETH', 'FJ': 'FIJ',
+    'FI': 'FIN', 'FR': 'FRA', 'GA': 'GAB', 'GM': 'GAM', 'GE': 'GEO',
+    'DE': 'GER', 'GH': 'GHA', 'GR': 'GRE', 'GD': 'GRN', 'GT': 'GUA',
+    'GN': 'GUI', 'GW': 'GNB', 'GY': 'GUY', 'HT': 'HAI', 'HN': 'HON',
+    'HU': 'HUN', 'IS': 'ISL', 'IN': 'IND', 'ID': 'IDN', 'IR': 'IRN',
+    'IQ': 'IRQ', 'IE': 'IRL', 'IL': 'ISR', 'IT': 'ITA', 'JM': 'JAM',
+    'JP': 'JPN', 'JO': 'JOR', 'KH': 'CAM', 'CM': 'CMR', 'CA': 'CAN',
+    'CV': 'CPV', 'KZ': 'KAZ', 'QA': 'QAT', 'KE': 'KEN', 'KG': 'KGZ',
+    'KI': 'KIR', 'KW': 'KUW', 'LA': 'LAO', 'LS': 'LES', 'LV': 'LAT',
+    'LB': 'LIB', 'LR': 'LBR', 'LY': 'LBA', 'LT': 'LTU', 'LU': 'LUX',
+    'MG': 'MAD', 'MW': 'MAW', 'MY': 'MAS', 'ML': 'MLI', 'MT': 'MLT',
+    'MR': 'MTN', 'MX': 'MEX', 'MD': 'MDA', 'MC': 'MON', 'MN': 'MGL',
+    'ME': 'MNE', 'MA': 'MAR', 'MZ': 'MOZ', 'MM': 'MYA', 'NA': 'NAM',
+    'NP': 'NEP', 'NL': 'NED', 'NZ': 'NZL', 'NI': 'NCA', 'NE': 'NIG',
+    'NG': 'NGA', 'NO': 'NOR', 'OM': 'OMA', 'PK': 'PAK', 'PA': 'PAN',
+    'PG': 'PNG', 'PY': 'PAR', 'PE': 'PER', 'PH': 'PHI', 'PL': 'POL',
+    'PT': 'POR', 'RO': 'ROU', 'RU': 'RUS', 'RW': 'RWA', 'SA': 'KSA',
+    'SN': 'SEN', 'RS': 'SRB', 'SL': 'SLE', 'SK': 'SVK', 'SI': 'SVN',
+    'SO': 'SOM', 'ZA': 'RSA', 'KR': 'KOR', 'ES': 'ESP', 'LK': 'SRI',
+    'SD': 'SDN', 'SR': 'SUR', 'SE': 'SWE', 'CH': 'SUI', 'SY': 'SYR',
+    'TJ': 'TJK', 'TZ': 'TAN', 'TH': 'THA', 'TL': 'TLS', 'TG': 'TOG',
+    'TT': 'TRI', 'TN': 'TUN', 'TR': 'TUR', 'TM': 'TKM', 'UG': 'UGA',
+    'UA': 'UKR', 'AE': 'UAE', 'US': 'USA', 'UY': 'URU', 'UZ': 'UZB',
+    'VE': 'VEN', 'VN': 'VIE', 'YE': 'YEM', 'ZM': 'ZAM', 'ZW': 'ZIM',
+    'MK': 'MKD', 'XK': 'KOS', 'KP': 'PRK', 'CI': 'CIV', 'CG': 'CGO',
+    'CD': 'COD', 'GP': 'GLP',
+    # flagcdn-Sondercodes für britische Nationen
+    'GB-ENG': 'ENG', 'GB-SCO': 'SCO', 'GB-WAL': 'WAL', 'GB-NIR': 'NIR',
+    'GB': 'GBR',
+}
+
+
 def _form_series_map(player_ids, limit=7):
     """Letzte N echten Bewertungen pro Spieler (chronologisch)."""
     series = {}
@@ -2785,12 +2828,27 @@ def _effective_positions(player):
 
 def _build_player_row(player, stats, form_map):
     season = stats.get(player.id, {})
+
+    # Fitness
     fitness = None
     profile = getattr(player, 'strength_profile', None)
     if profile and profile.freshness is not None:
         fitness = int(round(float(profile.freshness)))
-    nation = player.primary_nation_crest
-    form_values = form_map.get(player.id, [])
+
+    # Nation: flagcdn-URL + 3-Buchstaben-Code
+    nat_code = ''
+    flag_url = ''
+    nation_name = ''
+    if player.nationalities:
+        country = player.nationalities.split(',')[0].strip()
+        nation_name = country
+        asset = COUNTRY_FLAG_ASSETS.get(country, {})
+        iso2 = asset.get('code', '')
+        if iso2:
+            flag_url = f"https://flagcdn.com/{iso2.lower()}.svg"
+            nat_code = _ISO2_TO_CODE3.get(iso2, iso2)
+
+    # Status
     if player.is_ws_injured:
         status = {'code': 'injured', 'label': 'Verletzt'}
     elif player.is_ws_suspended:
@@ -2798,26 +2856,42 @@ def _build_player_row(player, stats, form_map):
     elif player.is_loaned_in:
         status = {'code': 'loaned_in', 'label': 'Geliehen'}
     else:
-        status = {'code': 'fit', 'label': 'Einsatzbereit'}
-    hp, np = _effective_positions(player)
+        status = {'code': 'fit', 'label': ''}
+
+    # Positionen: max. 3 HP + 3 NP
+    hp_all, np_all = _effective_positions(player)
+    hp = hp_all[:3]
+    np = np_all[:3]
+
+    # Form-Balkendiagramm (letzte 5 Spiele, Skala 1.00–6.00)
+    form_values = form_map.get(player.id, [])
+    recent = form_values[-5:]
+    form_bars = []
+    for v in recent:
+        grade = 'good' if v <= 2.5 else ('ok' if v <= 3.5 else 'weak')
+        form_bars.append({
+            'val': round(v, 2),
+            'height_pct': round((6.0 - v) / 5.0 * 100),
+            'grade': grade,
+        })
+    form_empty_bars = [None] * (5 - len(form_bars))
+    form_avg = round(sum(recent) / len(recent), 2) if recent else None
+
     return {
         'id': player.id,
         'shirt': player.shirt_number,
         'name': player.full_name,
         'portrait': player.portrait_static_path,
         'age': player.age,
-        'nation_name': nation.get('name', '') if nation else '',
-        'nation_static': nation.get('static_path', '') if nation else '',
+        'nation_name': nation_name,
+        'flag_url': flag_url,
+        'nat_code': nat_code,
         'hp': hp,
         'np': np,
         'fitness': fitness,
-        'form_last': form_values[-1] if form_values else None,
-        'form_points': _spark_points(form_values),
-        'form_trend': (
-            'up' if len(form_values) >= 2 and form_values[-1] > form_values[0]
-            else 'down' if len(form_values) >= 2 and form_values[-1] < form_values[0]
-            else 'flat'
-        ),
+        'form_bars': form_bars,
+        'form_empty_bars': form_empty_bars,
+        'form_avg': form_avg,
         'matches': season.get('matches', 0),
         'goals': season.get('goals', 0),
         'assists': season.get('assists', 0),
@@ -2829,6 +2903,7 @@ def _build_player_row(player, stats, form_map):
         'is_loaned_in': player.is_loaned_in,
         'youth_eligible': player.age is not None and player.age < YOUTH_AGE_LIMIT,
         'detail_url': reverse('player_detail', args=[player.id]),
+        'edit_pending': False,
     }
 
 
