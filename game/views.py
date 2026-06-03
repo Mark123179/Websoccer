@@ -3381,8 +3381,8 @@ def manager_profile(request):
                 'ended_year': st.ended_at.year if st.ended_at else '',
                 'has_club_fk': bool(st.club_id),
             })
-    else:
-        # Fallback: single station from ClubPublicProfile
+    elif club is not None:
+        # Fallback: single station from ClubPublicProfile (only if manager has a club)
         city = (club_profile.city_name if club_profile and club_profile.city_name else 'München')
         country = (club_profile.city_country if club_profile and club_profile.city_country else 'Deutschland')
         fallback_season_rows = _station_season_breakdown(
@@ -3540,7 +3540,8 @@ def manager_profile(request):
                 'crest_url': _crest_url,
                 'is_active': _is_active,
             })
-    else:
+    elif club is not None:
+        # Fallback: single marker from ClubPublicProfile (only if manager has a club)
         _city = club_profile.city_name if club_profile and club_profile.city_name else None
         _pct = city_map_pct(_city, club_name)
         if _pct is not None:
