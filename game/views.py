@@ -2083,8 +2083,8 @@ def home(request):
                 'MatchEngine',
                 'Saisonvorbereitung · Creator Mode',
                 '/',
-                None if user_has_no_club else primary_club,
-                None if user_has_no_club else secondary_club,
+                primary_club,
+                secondary_club,
                 calendar_offset_from_request(request),
             ),
         }
@@ -3264,7 +3264,7 @@ def manager_profile(request):
             club_profile = None
 
     club_name = club.name if club else 'Kein Verein'
-    club_crest = club.crest_static_path if club else 'game/images/brand/favicon-32.png'
+    club_crest = club.crest_static_path if club else ''
     club_url = f'/clubs/{club.id}/' if club else '/clubs/'
 
     # --- Trophies from ClubTrophy ---
