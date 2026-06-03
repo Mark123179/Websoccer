@@ -95,8 +95,17 @@ def current_manager(request):
         manager_profile_obj = None
         club = None
 
-    club_url = f'/clubs/{club.id}/' if club else '/clubs/'
-    tactics_url = f'/clubs/{club.id}/tactics/?squad=pro' if club else '/clubs/'
+    # Demo-Fallback: wenn kein eigener Verein → Bayern (wie squad-View-Hilfsfunktion)
+    if club is None:
+        from .models import Club as _Club
+        club = (
+            _Club.objects.filter(fm_inside_id=915).first()
+            or _Club.objects.filter(name__icontains='Bayern').first()
+        )
+
+    club_url   = f'/clubs/{club.id}/'                     if club else '/clubs/'
+    squad_url  = f'/clubs/{club.id}/squad/'               if club else '/clubs/'
+    tactics_url = f'/clubs/{club.id}/tactics/?squad=pro'  if club else '/clubs/'
     club_crest = club.crest_static_path if club else 'game/images/brand/favicon-32.png'
     club_name = club.name if club else 'Kein Verein'
 
@@ -129,6 +138,7 @@ def current_manager(request):
             'club': club,
             'club_name': club_name,
             'club_url': club_url,
+            'squad_url': squad_url,
             'tactics_url': tactics_url,
             'club_crest': club_crest,
             'profile_image': profile_image_url,
