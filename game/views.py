@@ -1596,7 +1596,9 @@ def home(request):
         average_strength=Avg('player__strength_profile__final_strength'),
     )
     richest_clubs = clubs.order_by('-budget')[:6]
-    primary_club = current_manager_club(user=request.user) or clubs.order_by('-budget').first()
+    user_assigned_club = current_manager_club(user=request.user)
+    user_has_no_club = user_assigned_club is None
+    primary_club = user_assigned_club or clubs.order_by('-budget').first()
     secondary_club = (
         clubs.exclude(id=primary_club.id).order_by('-budget').first()
         if primary_club
@@ -1852,6 +1854,7 @@ def home(request):
         'game/home.html',
         {
             'richest_clubs': richest_clubs,
+            'user_has_no_club': user_has_no_club,
             'primary_club': primary_club,
             'secondary_club': secondary_club,
             'transfer_targets': transfer_targets,

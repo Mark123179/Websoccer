@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="112" y1="44" x2="400" y2="468" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1D2A3A"/>
+      <stop offset="0.52" stop-color="#0F1722"/>
+      <stop offset="1" stop-color="#05080D"/>
+    </linearGradient>
+
+    <linearGradient id="edgeGrad" x1="84" y1="40" x2="428" y2="472" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D6F7A4"/>
+      <stop offset="0.48" stop-color="#83D94F"/>
+      <stop offset="1" stop-color="#2E8B3C"/>
+    </linearGradient>
+
+    <linearGradient id="innerGlow" x1="164" y1="115" x2="348" y2="356" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9BEA63" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#2C8F46" stop-opacity="0.15"/>
+    </linearGradient>
+
+    
+      
+    
+
+    
+      
+      
+      
+    
+  </defs>
+
+  
+  <path d="M256 34C318 60 373 70 418 70C418 211 397 344 256 476C115 344 94 211 94 70C139 70 194 60 256 34Z" fill="url(#edgeGrad)"/>
+
+  
+  <path d="M256 60C309 82 356 91 394 92C391 215 369 324 256 438C143 324 121 215 118 92C156 91 203 82 256 60Z" fill="url(#shieldGrad)"/>
+
+  
+  <path d="M256 91C297 107 333 115 363 117C360 214 342 303 256 394C170 303 152 214 149 117C179 115 215 107 256 91Z" fill="#111D2C" opacity="0.68"/>
+
+  
+  <g opacity="0.16" stroke="#D6F7A4" stroke-width="5">
+    <path d="M176 196H336"/>
+    <path d="M196 248H316"/>
+    <path d="M216 300H296"/>
+    <path d="M256 130V358"/>
+    <circle cx="256" cy="248" r="46"/>
+  </g>
+
+  
+  <circle cx="256" cy="239" r="92" fill="#071018" stroke="url(#innerGlow)" stroke-width="10"/>
+  <circle cx="256" cy="239" r="70" fill="#0D1824" stroke="#26384A" stroke-width="3"/>
+
+  
+  <g>
+    <circle cx="256" cy="214" r="26" fill="#C7F59B"/>
+    <path d="M204 294C211 262 230 246 256 246C282 246 301 262 308 294C294 309 276 317 256 317C236 317 218 309 204 294Z" fill="#C7F59B"/>
+  </g>
+
+  
+  <path d="M195 303L317 181" stroke="#0B121B" stroke-width="17" stroke-linecap="round" opacity="0.92"/>
+  <path d="M195 303L317 181" stroke="#D6F7A4" stroke-width="7" stroke-linecap="round" opacity="0.98"/>
+
+  
+  <path d="M168 342C197 360 224 368 256 368C288 368 315 360 344 342L329 384C304 401 282 409 256 409C230 409 208 401 183 384L168 342Z" fill="#080D14" stroke="#31475A" stroke-width="3"/>
+
+  <text x="256" y="378" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="26" font-weight="800" letter-spacing="2.4" fill="#D6F7A4">FREE</text>
+
+  <text x="256" y="405" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#73859A">AGENT</text>
+
+  
+  <path d="M154 104C171 103 206 95 256 74C306 95 341 103 358 104" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.14"/>
+</svg>

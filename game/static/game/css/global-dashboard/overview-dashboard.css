@@ -1748,3 +1748,37 @@ a.img-link:hover > img,
 a.img-link:focus-visible > img {
     filter: brightness(1.12);
 }
+
+
+/* ── No-club empty state ─────────────────────────────────────────────────
+   Shown inside .overview-club-card when the logged-in user has no club
+   assignment yet. Centred column layout with a CTA button.
+────────────────────────────────────────────────────────────────────────── */
+.overview-no-club-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex: 1;
+    padding: 24px 16px 20px;
+    text-align: center;
+}
+
+.overview-no-club-headline {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary, #fff);
+    margin: 0;
+}
+
+.overview-no-club-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary, rgba(255,255,255,0.65));
+    margin: 0;
+    max-width: 220px;
+}
+
+.overview-no-club-state .card-action {
+    margin-top: 8px;
+}

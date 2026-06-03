@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-27">
+    <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-28">
 {% endblock %}
 
 {% block content %}
@@ -22,6 +22,13 @@
         <article class="dashboard-card overview-card overview-club-card"{% if overview_profile.city_static_path %} style="--overview-card-bg: url('{% static overview_profile.city_static_path %}');"{% endif %}>
             <h2 class="card-title">Vereins&uuml;bersicht</h2>
 
+            {% if user_has_no_club %}
+                <div class="overview-no-club-state">
+                    <p class="overview-no-club-headline">Noch kein Verein</p>
+                    <p class="overview-no-club-sub">W&auml;hle einen Verein aus, um deine Karriere zu starten.</p>
+                    <a class="card-action" href="/clubs/">Jetzt Verein ausw&auml;hlen</a>
+                </div>
+            {% else %}
             <div class="overview-club-main">
                 {% if primary_club and primary_club.crest_static_path %}
                     <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
@@ -96,6 +103,7 @@
                     </div>
                 {% endfor %}
             </div>
+            {% endif %}
         </article>
 
         <article class="dashboard-card overview-card overview-next-match-card"{% if home_stadium_static_path %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
