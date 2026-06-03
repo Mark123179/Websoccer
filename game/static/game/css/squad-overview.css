@@ -476,7 +476,8 @@
 }
 
 /* form bar chart */
-.col-form { width: 110px; }
+.col-form { width: 148px; }
+.col-status { width: 82px; }
 .form-bars-wrap {
     display: flex;
     align-items: center;
