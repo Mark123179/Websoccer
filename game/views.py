@@ -1129,10 +1129,12 @@ def stadium_static_path(club):
 
 
 def current_manager_club(user=None):
-    """Return the Club currently managed by *user*, or fall back to Bayern.
+    """Return the Club currently managed by *user*.
 
-    Pass request.user to get the real assignment; omit (or pass None / anonymous)
-    for the hardcoded Bayern fallback used by views that haven't been updated yet.
+    Pass request.user to get the real assignment; returns None when the
+    authenticated user has no club assigned.
+    Omit user (or pass None / anonymous) only for legacy views that still
+    need the Bayern fallback — those should be migrated over time.
     """
     if user is not None and getattr(user, 'is_authenticated', False):
         try:
@@ -1140,7 +1142,7 @@ def current_manager_club(user=None):
             club = Club.objects.select_related('league').get(managed_by=profile)
             return club
         except (Club.DoesNotExist, AttributeError):
-            pass
+            return None
     return (
         Club.objects.select_related('league')
         .filter(fm_inside_id=915)
@@ -1980,7 +1982,7 @@ def home(request):
             'last_match_opponent': last_match_opponent,
             'last_match_score': last_match_score,
             'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
-            'live_matches': [] if user_has_no_club else [
+            'live_matches': [
                 {
                     'time': '20:40',
                     'home': primary_club.short_name if primary_club else 'ASK',

@@ -368,6 +368,13 @@
 
         <article class="dashboard-card overview-table-card">
             <h2 class="card-title">Ligatabelle</h2>
+            {% if user_has_no_club %}
+                <div class="overview-no-club-state">
+                    <p class="overview-no-club-headline">Noch kein Verein</p>
+                    <p class="overview-no-club-sub">W&auml;hle einen Verein aus, um deine Liga zu sehen.</p>
+                    <a class="card-action" href="/clubs/">Jetzt Verein ausw&auml;hlen</a>
+                </div>
+            {% else %}
             <table class="league-table overview-league-table">
                 <thead>
                     <tr>
@@ -400,6 +407,7 @@
                 </tbody>
             </table>
             <a class="table-link" href="/clubs/">Komplette Tabelle anzeigen <span>&rarr;</span></a>
+            {% endif %}
         </article>
 
         <article class="dashboard-card overview-news-card overview-club-news-card">

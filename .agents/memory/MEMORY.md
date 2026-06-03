@@ -2,3 +2,4 @@
 - [Europe-night map markers](europe-night-calibration.md) — placement is a hand-verified CITY_MAP_PCT table (TPS fallback); TPS has ~10px extrapolation error for Italian cities; pin positions must be verified against satellite RGB warmth (warmth=(R+G)/2-B > +20 = real city lights).
 - [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
 - [manager-profile CSS cache-bust](manager-profile-css-cachebust.md) — bump ?v= in manager_profile.html on EVERY manager-profile.css edit, else user sees stale CSS while your screenshots look fixed.
+- [current_manager_club Bayern fallback trap](current-manager-club-fallback.md) — function returns Bayern for ANY user (auth or not) unless the authenticated-user branch explicitly returns None on miss; caused all user_has_no_club guards to silently fail.
