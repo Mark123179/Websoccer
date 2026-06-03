@@ -416,8 +416,10 @@
                             <i aria-hidden="true"></i>
                         {% endif %}
                         <strong>{{ item.title }}</strong>
-                        <span>{{ item.when }}</span>
+                        <span>{{ item.published_at|date:"j. N Y" }}</span>
                     </a>
+                {% empty %}
+                    <p class="overview-news-empty">Keine Vereinsnews vorhanden.</p>
                 {% endfor %}
             </div>
 
@@ -431,11 +433,13 @@
 
             <div class="overview-news-list">
                 {% for item in sim_news %}
-                    <a href="/clubs/">
+                    <a href="/clubs/{{ item.club_id }}/">
                         <i aria-hidden="true"></i>
                         <strong>{{ item.title }}</strong>
-                        <span>{{ item.when }}</span>
+                        <span>{{ item.published_at|date:"j. N Y" }}</span>
                     </a>
+                {% empty %}
+                    <p class="overview-news-empty">Keine Neuigkeiten vorhanden.</p>
                 {% endfor %}
             </div>
 

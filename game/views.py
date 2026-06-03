@@ -1873,17 +1873,12 @@ def home(request):
         ),
     }
 
-    club_news_player = top_strength_player.last_name if top_strength_player else 'Martinez'
-    club_news = [
-        {'title': f'{club_news_player} zum Spieler des Monats gekuert', 'when': 'Heute'},
-        {'title': 'Vertragsverhandlungen mit Kaya gestartet', 'when': 'Gestern'},
-        {'title': 'FC Novum erreicht Gewinn im letzten Quartal', 'when': '22. Mai'},
-    ]
-    sim_news = [
-        {'title': 'Martinez zum Spieler des Monats gekuert', 'when': 'Heute'},
-        {'title': 'Vertragsverhandlungen mit Kaya gestartet', 'when': 'Gestern'},
-        {'title': 'FC Novum erreicht Gewinn im letzten Quartal', 'when': '22. Mai'},
-    ]
+    club_news = (
+        ClubNewsItem.objects.filter(club=primary_club)[:5]
+        if primary_club
+        else ClubNewsItem.objects.none()
+    )
+    sim_news = ClubNewsItem.objects.all()[:5]
     home_stadium_static_path = stadium_static_path(primary_club)
     last_match_home_stadium_static_path = stadium_static_path(primary_club)
     competition_logo_static_path_value = competition_logo_static_path(
