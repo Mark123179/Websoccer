@@ -71,22 +71,37 @@
         }
 
         /* ---------------- sorting ---------------- */
+        const originalOrder = rows.slice();   // server-seitige Reihenfolge (nach Position)
         let sortKey = null;
         let sortDir = 'desc';
+
+        function clearSortIndicators() {
+            document.querySelectorAll('.sortable[data-sort-key]').forEach(function (h) {
+                h.classList.remove('sort-asc', 'sort-desc', 'sort-pos');
+                h.removeAttribute('aria-sort');
+            });
+        }
 
         document.querySelectorAll('.sortable[data-sort-key]').forEach(function (th) {
             th.addEventListener('click', function () {
                 const key = th.getAttribute('data-sort-key');
+
+                /* Position-Spalte: Originalreihenfolge wiederherstellen */
+                if (key === 'pos') {
+                    clearSortIndicators();
+                    sortKey = null;
+                    th.classList.add('sort-pos');
+                    originalOrder.forEach(function (row) { body.appendChild(row); });
+                    return;
+                }
+
                 if (sortKey === key) {
                     sortDir = sortDir === 'desc' ? 'asc' : 'desc';
                 } else {
                     sortKey = key;
                     sortDir = 'desc';
                 }
-                document.querySelectorAll('.sortable[data-sort-key]').forEach(function (h) {
-                    h.classList.remove('sort-asc', 'sort-desc');
-                    h.removeAttribute('aria-sort');
-                });
+                clearSortIndicators();
                 th.classList.add('sort-' + sortDir);
                 th.setAttribute('aria-sort', sortDir === 'desc' ? 'descending' : 'ascending');
 

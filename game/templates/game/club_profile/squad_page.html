@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -74,7 +74,7 @@
                             </th>
                             <th class="col-num">#</th>
                             <th class="col-player">Spieler</th>
-                            <th class="col-pos">Position</th>
+                            <th class="col-pos sortable" data-sort-key="pos">Position</th>
                             <th class="col-fit">Fitness</th>
                             <th class="col-form">Form</th>
                             <th class="num sortable" data-sort-key="matches">Sp.</th>
@@ -154,7 +154,7 @@
                                 <span class="grade grade--{% if p.grade < 3 %}good{% elif p.grade < 5 %}ok{% else %}weak{% endif %}">{{ p.grade|floatformat:2 }}</span>
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
-                            <td class="col-mv" data-sort-key="mv" data-sort-val="{{ p.market_value }}">{{ p.market_value_fmt }}</td>
+                            <td class="col-mv" data-sort-key="mv" data-sort-val="{{ p.market_value }}">{% if p.tm_url %}<a class="squad-tm-link" href="{{ p.tm_url }}" target="_blank" rel="noopener noreferrer" title="Transfermarkt-Profil">{{ p.market_value_fmt }}</a>{% else %}{{ p.market_value_fmt }}{% endif %}</td>
                             <td class="col-status">
                                 {% if p.status.code != 'fit' %}
                                 <span class="status-pill status-pill--{{ p.status.code }}">{{ p.status.label }}</span>
@@ -255,5 +255,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/squad-overview.js' %}?v=3" defer></script>
+    <script src="{% static 'game/js/squad-overview.js' %}?v=4" defer></script>
 {% endblock %}

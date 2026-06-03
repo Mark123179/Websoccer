@@ -2903,6 +2903,7 @@ def _build_player_row(player, stats, form_map):
         'is_loaned_in': player.is_loaned_in,
         'youth_eligible': player.age is not None and player.age < YOUTH_AGE_LIMIT,
         'detail_url': reverse('player_detail', args=[player.id]),
+        'tm_url': player.transfermarkt_profile_url or '',
         'edit_pending': False,
     }
 
