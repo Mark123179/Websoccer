@@ -1873,11 +1873,7 @@ def home(request):
         ),
     }
 
-    club_news = (
-        ClubNewsItem.objects.filter(club=primary_club)[:5]
-        if primary_club
-        else ClubNewsItem.objects.all()[:5]
-    )
+    club_news = ClubNewsItem.objects.all()[:5]
     sim_news = ClubNewsItem.objects.all()[:5]
     home_stadium_static_path = stadium_static_path(primary_club)
     last_match_home_stadium_static_path = stadium_static_path(primary_club)
