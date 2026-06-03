@@ -167,6 +167,8 @@
                                 {% if p.status.code != 'fit' %}
                                 <span class="status-pill status-pill--{{ p.status.code }}">{{ p.status.label }}</span>
                                 {% endif %}
+                                {% if p.on_transfer_list %}<span class="status-pill status-pill--tl">TL</span>{% endif %}
+                                {% if p.on_loan_list %}<span class="status-pill status-pill--ll">LL</span>{% endif %}
                             </td>
                             <td class="col-go"><a href="{{ p.detail_url }}" aria-label="Profil von {{ p.name }}">›</a></td>
                         </tr>

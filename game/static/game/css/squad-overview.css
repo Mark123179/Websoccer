@@ -571,6 +571,8 @@
 .status-pill--injured { background: rgba(236, 82, 101, 0.16); color: var(--sq-red); }
 .status-pill--suspended { background: rgba(240, 192, 68, 0.16); color: var(--sq-yellow); }
 .status-pill--loaned_in { background: rgba(35, 228, 245, 0.14); color: var(--sq-cyan); }
+.status-pill--tl { background: rgba(99, 179, 237, 0.18); color: #63b3ed; }
+.status-pill--ll { background: rgba(183, 148, 246, 0.18); color: #b794f6; }
 
 .col-go a {
     color: var(--sq-faint);

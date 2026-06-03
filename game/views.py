@@ -2901,6 +2901,8 @@ def _build_player_row(player, stats, form_map):
         'market_value_fmt': (f"{int(float(player.market_value)):,}".replace(',', '.') + ' €') if player.market_value else '–',
         'status': status,
         'is_loaned_in': player.is_loaned_in,
+        'on_transfer_list': player.is_on_transfer_list,
+        'on_loan_list': player.is_on_loan_list,
         'youth_eligible': player.age is not None and player.age < YOUTH_AGE_LIMIT,
         'detail_url': reverse('player_detail', args=[player.id]),
         'tm_url': player.transfermarkt_profile_url or '',

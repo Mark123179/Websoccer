@@ -1066,6 +1066,14 @@ class Player(models.Model):
         null=True,
         blank=True,
     )
+    is_on_transfer_list = models.BooleanField(
+        'Auf Transferliste',
+        default=False,
+    )
+    is_on_loan_list = models.BooleanField(
+        'Auf Leihliste',
+        default=False,
+    )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
