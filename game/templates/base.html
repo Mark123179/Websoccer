@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard.css' %}?v=gm-1">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
     {% if request.user.is_authenticated %}
-    <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=2">
     {% endif %}
 
     {% block extra_css %}{% endblock %}
@@ -145,38 +145,33 @@
 
     {% if request.user.is_authenticated %}
     <!-- ===== AI CHAT WIDGET ===== -->
-    <button class="ai-trigger" id="aiTrigger" aria-label="KI-Assistent öffnen" title="KI-Assistent">
-        <svg class="icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            <circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="12" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/>
-        </svg>
-        <svg class="icon-close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button class="ai-trigger" id="aiTrigger" aria-label="KI-Kloppo öffnen" title="KI-Kloppo — dein Trainer-Assistent">
+        <img class="ai-trigger__avatar"
+             src="{% static 'game/images/brand/kloppo-avatar.png' %}"
+             alt="KI-Kloppo">
+        <svg class="ai-trigger__close" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
     </button>
 
-    <div class="ai-drawer" id="aiDrawer" role="dialog" aria-modal="true" aria-label="KI-Assistent">
+    <div class="ai-drawer" id="aiDrawer" role="dialog" aria-modal="true" aria-label="KI-Kloppo">
         <div class="ai-header">
-            <div class="ai-header-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 16v-4M12 8h.01"/>
-                </svg>
+            <div class="ai-header-icon" style="background:none;border:none;width:36px;height:36px;padding:0;overflow:hidden;border-radius:50%;">
+                <img src="{% static 'game/images/brand/kloppo-avatar.png' %}"
+                     alt="Kloppo" style="width:100%;height:100%;object-fit:cover;object-position:center 10%;border-radius:50%;">
             </div>
             <div class="ai-header-title">
-                <strong>Websoccer-Assistent</strong>
-                <span>Stell mir deine Spielfragen</span>
+                <strong>KI-Kloppo</strong>
+                <span>Dein persönlicher Trainer-Assistent</span>
             </div>
             <button class="ai-clear-btn" id="aiClearBtn" title="Verlauf löschen">Leeren</button>
         </div>
 
         <div class="ai-messages" id="aiMessages">
             <div class="ai-welcome">
-                <strong>Hallo, {{ request.user.username }}!</strong>
-                Ich beantworte alle Fragen zu Websoccer — Taktik, Transfers, Regeln und mehr.
+                <strong>Heeey, {{ request.user.username }}! Boah, schön dass du da bist!</strong>
+                Ich bin KI-Kloppo — stell mir alles was dich bewegt: Taktik, Transfers, Regeln, egal. We go again!
             </div>
         </div>
 
