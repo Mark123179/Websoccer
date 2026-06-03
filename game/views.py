@@ -1162,71 +1162,11 @@ def city_static_path(club):
     return ''
 
 
-def build_game_header(
-    title,
-    subtitle,
-    back_url='/',
-    current_club=None,
-    opponent_club=None,
-    calendar_offset=0,
-):
-    base_game_date = date(2026, 5, 15)
-    game_date = base_game_date + timedelta(days=calendar_offset)
-    weekday_labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
-    opponent_name = opponent_club.short_name if opponent_club else 'Gegner'
-    opponent_crest = opponent_club.crest_static_path if opponent_club else ''
-    opponent_url = reverse_club_detail(opponent_club) if opponent_club else ''
-    league_name = (
-        current_club.league.name
-        if current_club and current_club.league
-        else '1. Bundesliga'
-    )
-
-    def fixture_entry(lineup_saved, result, venue, meta, match_time=''):
-        home_club = current_club if venue == 'H' else opponent_club
-        return {
-            'opponent_name': opponent_name,
-            'opponent_crest': opponent_crest,
-            'opponent_url': opponent_url,
-            'stadium': stadium_static_path(home_club),
-            'competition_logo': competition_logo_static_path(league_name),
-            'lineup_saved': lineup_saved,
-            'result': result,
-            'venue': venue,
-            'meta': meta,
-            'match_time': match_time,
-        }
-
-    fixtures_by_date = (
-        {
-            base_game_date - timedelta(days=3): fixture_entry(False, '1:1', 'A', '33. Spieltag (A)'),
-            base_game_date - timedelta(days=1): fixture_entry(True, '5:0', 'H', 'Testspiel (H)'),
-            base_game_date + timedelta(days=2): fixture_entry(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
-        }
-        if current_club is not None
-        else {}
-    )
-
-    calendar_days = []
-    for offset in range(-3, 4):
-        day = game_date + timedelta(days=offset)
-        fixture = fixtures_by_date.get(day)
-        calendar_days.append({
-            'date': day,
-            'weekday': weekday_labels[day.weekday()],
-            'day_number': day.day,
-            'is_today': day == base_game_date,
-            'fixture': fixture,
-        })
-
+def build_game_header(title, subtitle, back_url='/'):
     return {
         'title': title,
         'subtitle': subtitle,
         'back_url': back_url,
-        'game_date': game_date,
-        'previous_calendar_offset': calendar_offset - 1,
-        'next_calendar_offset': calendar_offset + 1,
-        'calendar_days': calendar_days,
     }
 
 
@@ -2083,9 +2023,6 @@ def home(request):
                 'MatchEngine',
                 'Saisonvorbereitung · Creator Mode',
                 '/',
-                primary_club,
-                secondary_club,
-                calendar_offset_from_request(request),
             ),
         }
     )
@@ -2097,14 +2034,6 @@ def club_list(request):
         player_count=Count('player'),
         average_strength=Avg('player__strength_profile__final_strength'),
     )
-    manager_club = current_manager_club(user=request.user)
-    header_club = manager_club or clubs.first()
-    header_opponent = (
-        clubs.exclude(id=header_club.id).order_by('-budget').first()
-        if header_club
-        else None
-    )
-
     return render(
         request,
         'game/club_list.html',
@@ -2114,9 +2043,6 @@ def club_list(request):
                 'Vereinsübersicht',
                 'Scoutingzentrale · Datenbank',
                 '/',
-                header_club,
-                header_opponent,
-                calendar_offset_from_request(request),
             ),
         }
     )
@@ -2682,9 +2608,6 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
             'Taktik',
             f'{club.name} · {squad_scope_label(squad_scope)}',
             reverse_club_detail(club),
-            club,
-            opponent_club,
-            calendar_offset_from_request(request),
         ),
     }
 
@@ -2711,9 +2634,6 @@ def club_detail(request, club_id):
         club.name,
         f'Saison 2026/27 · {club.league.name}',
         '/clubs/',
-        club,
-        opponent_club,
-        calendar_offset_from_request(request),
     )
 
     return render(
@@ -2877,9 +2797,6 @@ def _build_squad_context(request, club, squad_title):
             squad_title,
             club.name,
             reverse_club_detail(club),
-            club,
-            opponent_club,
-            calendar_offset_from_request(request),
         ),
     }
 
@@ -2957,9 +2874,6 @@ def render_public_club_stub(request, club_id, title, copy):
                 title,
                 club.name,
                 reverse_club_detail(club),
-                club,
-                opponent_club,
-                calendar_offset_from_request(request),
             ),
         },
     )
@@ -3111,13 +3025,6 @@ def player_detail(request, player_id):
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",
                 f"/clubs/{player.club.id}/" if player.club else '/',
-                player.club,
-                (
-                    Club.objects.exclude(id=player.club.id).order_by('name').first()
-                    if player.club
-                    else None
-                ),
-                calendar_offset_from_request(request),
             ),
         }
     )
@@ -3787,9 +3694,6 @@ def manager_profile(request):
             f'Manager · {manager_name}',
             'Trainerprofil',
             '/',
-            club,
-            None,
-            calendar_offset_from_request(request),
         ),
         'trainer_types_selectable': trainer_types_selectable,
         'trainer_types_unlockable': trainer_types_unlockable,

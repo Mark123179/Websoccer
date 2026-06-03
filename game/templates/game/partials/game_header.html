@@ -11,12 +11,12 @@
     </div>
 
     <nav class="ws-calendar-strip" aria-label="Spielkalender">
-        <a class="ws-calendar-arrow" href="?calendar_offset={{ game_header.previous_calendar_offset }}" aria-label="Ein Tag zurueck">
+        <a class="ws-calendar-arrow" href="?calendar_offset={{ global_calendar.previous_offset }}" aria-label="Ein Tag zurueck">
             <span class="ws-chevron ws-chevron-left" aria-hidden="true"></span>
         </a>
 
         <div class="ws-calendar-days">
-            {% for day in game_header.calendar_days %}
+            {% for day in global_calendar.calendar_days %}
                 <article class="ws-calendar-day{% if day.is_today %} is-today{% endif %}{% if day.fixture %} has-fixture{% endif %}{% if day.fixture.lineup_saved %} is-ready{% elif day.fixture %} is-open{% endif %}">
                     <div class="ws-day-head">
                         <span>{{ day.weekday }}</span>
@@ -62,7 +62,7 @@
             {% endfor %}
         </div>
 
-        <a class="ws-calendar-arrow" href="?calendar_offset={{ game_header.next_calendar_offset }}" aria-label="Ein Tag vor">
+        <a class="ws-calendar-arrow" href="?calendar_offset={{ global_calendar.next_offset }}" aria-label="Ein Tag vor">
             <span class="ws-chevron ws-chevron-right" aria-hidden="true"></span>
         </a>
     </nav>

@@ -16,7 +16,6 @@
 {% block content %}
 
 <section class="start-dashboard overview-dashboard">
-    {% include 'game/partials/game_header.html' %}
 
     <div class="overview-grid">
         <article class="dashboard-card overview-card overview-club-card"{% if overview_profile.city_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static overview_profile.city_static_path %}');"{% endif %}>
