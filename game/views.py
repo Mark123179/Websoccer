@@ -3254,11 +3254,7 @@ def player_graph_data(request, player_id):
 def manager_profile(request):
     tab = request.GET.get('tab', 'profil')
 
-    # Use the manager's actual assigned club; fall back to Bayern only as demo default.
-    club = current_manager_club(user=request.user) or (
-        Club.objects.filter(fm_inside_id=915).first()
-        or Club.objects.filter(name__icontains='Bayern').first()
-    )
+    club = current_manager_club(user=request.user)
 
     club_profile = None
     if club:
@@ -3267,9 +3263,9 @@ def manager_profile(request):
         except ClubPublicProfile.DoesNotExist:
             club_profile = None
 
-    club_name = club.name if club else 'FC Bayern München'
-    club_crest = club.crest_static_path if club else 'game/images/crests/915.png'
-    club_url = f'/clubs/{club.id}/' if club else '/clubs/2/'
+    club_name = club.name if club else 'Kein Verein'
+    club_crest = club.crest_static_path if club else 'game/images/brand/favicon-32.png'
+    club_url = f'/clubs/{club.id}/' if club else '/clubs/'
 
     # --- Trophies from ClubTrophy ---
     db_trophies = list(club.public_trophies.all()) if club else []
@@ -3646,7 +3642,7 @@ def manager_profile(request):
         profile_image_url = request.build_absolute_uri(_settings.MEDIA_URL + _raw_image)
     else:
         from django.templatetags.static import static as _static
-        profile_image_url = _static(_raw_image or 'game/images/managers/kirschgutzje-test.png')
+        profile_image_url = _static(_raw_image or 'game/images/managers/default-manager.png')
 
     # --- Derive active career station for header display ---
     _active_st = next((st for st in db_stations if st.ended_at is None), None)
