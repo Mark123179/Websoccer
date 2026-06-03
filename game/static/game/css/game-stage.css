@@ -56,6 +56,7 @@ body {
    schuessige horizontale Platz im Layout nutzbar wird statt als
    leerer Seitengutter zu verfallen. Hoehe bleibt fix bei 1177.5. */
 .dashboard-scaler {
+    visibility: hidden;
     width: var(--dashboard-shell-width, 1884px);
     min-height: 1177.5px;
     transform-origin: top left;

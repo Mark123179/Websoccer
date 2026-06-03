@@ -13,7 +13,7 @@
     </title>
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'game/images/brand/favicon-32.png' %}">
     <link rel="apple-touch-icon" sizes="256x256" href="{% static 'game/images/brand/matchengine-logo-256.png' %}">
-    <link rel="stylesheet" href="{% static 'game/css/game-stage.css' %}?v=stage-3">
+    <link rel="stylesheet" href="{% static 'game/css/game-stage.css' %}?v=stage-4">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard.css' %}?v=gm-1">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
 
@@ -178,6 +178,7 @@
                 stage.style.width = `${logicalShellW}px`;
                 stage.style.setProperty('--dashboard-shell-width', `${logicalShellW}px`);
                 stage.style.transform = `scale(${scale})`;
+                stage.style.visibility = 'visible';
 
                 /* Wide-shell scope flag. 1440x900 -> "base" (golden master, untouchable).
                    Wider viewports -> "wide" (progressive horizontal improvements may
