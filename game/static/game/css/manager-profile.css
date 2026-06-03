@@ -1181,6 +1181,7 @@ body.manager-profile-page .nav-menu a:first-child {
     flex-direction: column;
     grid-column: 2;
     grid-row: 1 / 3;
+    min-height: 320px;
     overflow: hidden;
     padding: 0;
     position: relative;
@@ -1228,12 +1229,9 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-photo-map-bg {
     display: block;
-    height: 100%;
-    left: 0;
+    inset: 0;
     object-fit: cover;
     position: absolute;
-    top: 0;
-    width: 100%;
 }
 
 .mp-photo-marker {

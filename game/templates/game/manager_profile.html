@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-54">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-55">
 {% endblock %}
 
 {% block content %}
@@ -1065,7 +1065,22 @@
         });
     }
 
-    function schedule() { requestAnimationFrame(mpApplyMapZoom); }
+    var _zoomAttempts = 0;
+    function schedule() {
+        requestAnimationFrame(function () {
+            var map = document.getElementById('mpPhotoMap');
+            if (map) {
+                var r = map.getBoundingClientRect();
+                if ((!r.width || !r.height) && _zoomAttempts < 20) {
+                    _zoomAttempts++;
+                    setTimeout(schedule, 60);
+                    return;
+                }
+            }
+            _zoomAttempts = 0;
+            mpApplyMapZoom();
+        });
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', schedule);
@@ -1073,7 +1088,7 @@
         schedule();
     }
     window.addEventListener('load', schedule);
-    window.addEventListener('resize', schedule);
+    window.addEventListener('resize', function () { _zoomAttempts = 0; schedule(); });
 })();
 </script>
 
