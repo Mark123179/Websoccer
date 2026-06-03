@@ -4,46 +4,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anmelden · Websoccer</title>
+    <title>Websoccer · Online-Fußballmanager</title>
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'game/images/brand/favicon-32.png' %}">
-    <link rel="stylesheet" href="{% static 'game/css/auth.css' %}?v=auth-1">
+    <link rel="stylesheet" href="{% static 'game/css/intro.css' %}?v=1">
 </head>
-<body class="auth-page">
+<body>
 
-<div class="auth-stage">
-    <div class="auth-card">
-        <div class="auth-brand">
-            <img src="{% static 'game/images/brand/matchengine-logo-256.png' %}" alt="Websoccer" class="auth-logo">
-            <h1 class="auth-title">Websoccer</h1>
-            <p class="auth-subtitle">Managerspiel &middot; Saison 2025/26</p>
+<!-- ==================== HERO ==================== -->
+<section class="intro-hero">
+    <div class="intro-hero__bg"></div>
+    <div class="intro-hero__overlay"></div>
+    <div class="intro-hero__grid"></div>
+    <div class="intro-hero__scanline"></div>
+
+    <!-- Top bar -->
+    <header class="intro-topbar">
+        <a class="intro-topbar__brand" href="/">
+            <img class="intro-topbar__logo"
+                 src="{% static 'game/images/brand/matchengine-logo-256.png' %}"
+                 alt="Websoccer">
+            <span class="intro-topbar__name">Websoccer</span>
+        </a>
+        <div class="intro-topbar__actions">
+            <a class="intro-topbar__link" href="{% url 'auth_register' %}">Registrieren</a>
+            <a class="intro-topbar__link intro-topbar__link--cta" href="#login">Anmelden</a>
+        </div>
+    </header>
+
+    <!-- Content grid -->
+    <div class="intro-hero__content">
+
+        <!-- Left: pitch -->
+        <div class="intro-hero__left">
+            <div class="intro-badge">Saison 2025/26 läuft</div>
+
+            <h1 class="intro-hero__title">
+                Dein Verein.<br>
+                Deine <span>Taktik.</span><br>
+                Dein Titel.
+            </h1>
+
+            <p class="intro-hero__sub">
+                Websoccer ist der Online-Fußballmanager, in dem du echte Entscheidungen triffst —
+                von der Aufstellung bis zum Transfermarkt.
+            </p>
+
+            <div class="intro-hero__ctas">
+                <a class="intro-cta intro-cta--primary" href="{% url 'auth_register' %}">
+                    Kostenlos starten
+                </a>
+                <a class="intro-cta intro-cta--ghost" href="#login">
+                    Bereits Konto? Anmelden
+                </a>
+            </div>
         </div>
 
-        {% if error %}
-        <div class="auth-alert">{{ error }}</div>
-        {% endif %}
+        <!-- Right: login panel -->
+        <div class="intro-login-panel" id="login">
+            <p class="intro-panel__title">Willkommen zurück</p>
+            <p class="intro-panel__sub">Melde dich an und übernimm die Kontrolle.</p>
 
-        <form class="auth-form" method="post" action="{% url 'auth_login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
-            {% csrf_token %}
+            {% if error %}
+            <div class="intro-alert">{{ error }}</div>
+            {% endif %}
 
-            <div class="auth-field">
-                <label for="id_username">Benutzername</label>
-                <input id="id_username" type="text" name="username" autofocus autocomplete="username" required>
-            </div>
+            <form class="intro-form" method="post" action="{% url 'auth_login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+                {% csrf_token %}
 
-            <div class="auth-field">
-                <label for="id_password">Passwort</label>
-                <input id="id_password" type="password" name="password" autocomplete="current-password" required>
-            </div>
+                <div class="intro-field">
+                    <label for="id_username">Benutzername</label>
+                    <input id="id_username" type="text" name="username"
+                           autofocus autocomplete="username" required
+                           placeholder="Dein Benutzername">
+                </div>
 
-            <button class="auth-btn" type="submit">Anmelden</button>
-        </form>
+                <div class="intro-field">
+                    <label for="id_password">Passwort</label>
+                    <input id="id_password" type="password" name="password"
+                           autocomplete="current-password" required
+                           placeholder="••••••••">
+                </div>
 
-        <p class="auth-switch">
-            Noch kein Konto?
-            <a href="{% url 'auth_register' %}">Jetzt registrieren</a>
-        </p>
+                <button class="intro-submit" type="submit">Anmelden</button>
+            </form>
+
+            <p class="intro-panel__switch">
+                Noch kein Konto?
+                <a href="{% url 'auth_register' %}">Jetzt registrieren</a>
+            </p>
+        </div>
+
     </div>
-</div>
+
+    <!-- Stat strip inside hero, at the bottom -->
+    <div class="intro-stats">
+        <div class="intro-stat">
+            <div class="intro-stat__val">36<span>+</span></div>
+            <div class="intro-stat__label">Vereine im Spiel</div>
+        </div>
+        <div class="intro-stat">
+            <div class="intro-stat__val">500<span>+</span></div>
+            <div class="intro-stat__label">Profispieler</div>
+        </div>
+        <div class="intro-stat">
+            <div class="intro-stat__val">1<span> Liga</span></div>
+            <div class="intro-stat__label">Laufende Saison</div>
+        </div>
+        <div class="intro-stat">
+            <div class="intro-stat__val">∞<span></span></div>
+            <div class="intro-stat__label">Mögliche Taktiken</div>
+        </div>
+    </div>
+
+</section>
+
+<!-- ==================== FEATURES ==================== -->
+<section class="intro-features">
+    <div class="intro-features__inner">
+        <p class="intro-section-label">In drei Schritten zum Erfolg</p>
+        <h2 class="intro-features__title">Der Weg zu deinem Verein</h2>
+        <p class="intro-features__sub">
+            Kostenlos registrieren, Verein wählen und direkt loslegen.
+        </p>
+
+        <div class="intro-steps">
+            <div class="intro-step">
+                <div class="intro-step__num">1</div>
+                <h3 class="intro-step__title">Registrieren</h3>
+                <p class="intro-step__body">
+                    Erstelle ein kostenloses Konto mit Benutzername und Passwort —
+                    in weniger als 60 Sekunden bist du dabei.
+                </p>
+            </div>
+            <div class="intro-step">
+                <div class="intro-step__num">2</div>
+                <h3 class="intro-step__title">Verein übernehmen</h3>
+                <p class="intro-step__body">
+                    Wähle unter den freien Vereinen deinen Wunschklub.
+                    Kader, Budget und Taktik warten auf dich.
+                </p>
+            </div>
+            <div class="intro-step">
+                <div class="intro-step__num">3</div>
+                <h3 class="intro-step__title">Meister werden</h3>
+                <p class="intro-step__body">
+                    Trainiere, transferiere und taktiere — führe deinen Verein
+                    an die Spitze der Liga.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="intro-footer">
+    &copy; 2025/26 Websoccer &mdash;
+    <a href="/auth/register/">Registrieren</a> &middot;
+    <a href="#login">Anmelden</a>
+</footer>
 
 </body>
 </html>
