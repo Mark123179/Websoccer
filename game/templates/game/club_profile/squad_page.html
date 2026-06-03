@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -146,7 +146,7 @@
                                         {% for _ in p.form_empty_bars %}<div class="form-bar form-bar--empty"></div>{% endfor %}
                                         {% for bar in p.form_bars %}<div class="form-bar form-bar--{{ bar.grade }}" style="height:{{ bar.height_pct }}%" title="Note {{ bar.val }}"></div>{% endfor %}
                                     </div>
-                                    <b class="form-avg form-avg--{% if p.form_avg <= 2.5 %}good{% elif p.form_avg <= 3.5 %}ok{% else %}weak{% endif %}">{{ p.form_avg|floatformat:2 }}</b>
+                                    <b class="form-avg form-avg--{% if p.form_avg < 3 %}good{% elif p.form_avg < 5 %}ok{% else %}weak{% endif %}">{{ p.form_avg|floatformat:2 }}</b>
                                 </div>
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
@@ -156,7 +156,7 @@
                             <td class="num">{{ p.minutes|intcomma }}</td>
                             <td class="num">
                                 {% if p.grade is not None %}
-                                <span class="grade grade--{% if p.grade <= 2.5 %}good{% elif p.grade <= 3.5 %}ok{% else %}weak{% endif %}">{{ p.grade|floatformat:2 }}</span>
+                                <span class="grade grade--{% if p.grade < 3 %}good{% elif p.grade < 5 %}ok{% else %}weak{% endif %}">{{ p.grade|floatformat:2 }}</span>
                                 {% else %}<span class="squad-na">–</span>{% endif %}
                             </td>
                             <td class="col-mv">{{ p.market_value_fmt }}</td>

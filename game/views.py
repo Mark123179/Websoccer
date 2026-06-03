@@ -2868,7 +2868,7 @@ def _build_player_row(player, stats, form_map):
     recent = form_values[-5:]
     form_bars = []
     for v in recent:
-        grade = 'good' if v <= 2.5 else ('ok' if v <= 3.5 else 'weak')
+        grade = 'good' if v < 3.0 else ('ok' if v < 5.0 else 'weak')
         form_bars.append({
             'val': round(v, 2),
             'height_pct': round((6.0 - v) / 5.0 * 100),
