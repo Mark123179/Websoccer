@@ -3,4 +3,5 @@
 - [Tactics template-grid specificity trap](tactics-template-grid-specificity.md) — .tactics-template-grid selectors (0,2,0) override generic panel rules (0,1,0); always edit the template-grid block for height changes.
 - [manager-profile CSS cache-bust](manager-profile-css-cachebust.md) — bump ?v= in manager_profile.html on EVERY manager-profile.css edit, else user sees stale CSS while your screenshots look fixed.
 - [Global Calendar Architecture](global-calendar-architecture.md) — ws-game-header ist global in base.html; Kalenderdaten kommen aus context_processors.py (global_calendar); build_game_header() gibt nur title/subtitle/back_url zurück.
+- [Squad/club mutation auth + CSRF](squad-csrf-and-authz.md) — session-based CSRF (no cookie); use {{ csrf_token }} in JS + @login_required + current_manager_club ownership check (not just Player club scoping).
 - [current_manager_club Bayern fallback trap](current-manager-club-fallback.md) — function returns Bayern for ANY user (auth or not) unless the authenticated-user branch explicitly returns None on miss; caused all user_has_no_club guards to silently fail.

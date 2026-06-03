@@ -1,0 +1,23 @@
+{% load static %}
+<div class="loan-box loan-box--{{ tone }}">
+    <header class="loan-box__head">
+        <span class="loan-box__title">{{ title }}</span>
+        <span class="loan-box__count">{{ cards|length }}/6</span>
+    </header>
+    <div class="loan-box__scroll">
+        {% for c in cards %}
+        <a class="loan-row" href="{{ c.detail_url }}">
+            <span class="loan-row__photo"><img src="{% static c.portrait %}" alt="{{ c.name }}" loading="lazy"></span>
+            <span class="loan-row__main">
+                <span class="loan-row__name">{{ c.name }}</span>
+                <span class="loan-row__partner">{% if tone == 'in' %}von {{ c.partner }}{% else %}an {{ c.partner }}{% endif %}</span>
+            </span>
+            <span class="loan-row__hp"><span class="pos-badge pos-badge--hp">{{ c.hp }}</span></span>
+            <span class="loan-row__stat"><b>{{ c.matches }}</b><i>Sp.</i></span>
+            <span class="loan-row__stat"><b>{% if c.grade is not None %}{{ c.grade|floatformat:2 }}{% else %}–{% endif %}</b><i>Ø Note</i></span>
+        </a>
+        {% empty %}
+        <p class="loan-box__empty">{% if tone == 'in' %}Aktuell keine geliehenen Spieler.{% else %}Aktuell keine verliehenen Spieler.{% endif %}</p>
+        {% endfor %}
+    </div>
+</div>

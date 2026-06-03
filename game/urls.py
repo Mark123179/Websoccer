@@ -10,6 +10,8 @@ from .views import (
     club_table,
     club_tactics,
     club_youth_squad,
+    squad_assign_shirt,
+    squad_move_to_youth,
     home,
     manager_profile,
     set_trainer_type,
@@ -98,6 +100,18 @@ urlpatterns = [
         'clubs/<int:club_id>/news/<int:news_id>/',
         club_news_detail,
         name='club_news_detail'
+    ),
+
+    path(
+        'clubs/<int:club_id>/squad/assign-shirt/',
+        squad_assign_shirt,
+        name='squad_assign_shirt'
+    ),
+
+    path(
+        'clubs/<int:club_id>/squad/move-to-youth/',
+        squad_move_to_youth,
+        name='squad_move_to_youth'
     ),
 
     path(

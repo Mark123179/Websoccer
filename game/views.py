@@ -1,10 +1,13 @@
 import json
 import os
+from collections import OrderedDict
 from datetime import date, timedelta
 from django.db import models as _db_models
 from itertools import product
 
 from django.contrib import messages
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles import finders
@@ -35,6 +38,7 @@ from .models import (
     MatchResult,
     Player,
     PlayerAwardTitle,
+    PlayerFormSnapshot,
     PlayerInjuryRecord,
     PlayerSeasonStat,
     PlayerSourceRating,
@@ -2678,20 +2682,269 @@ def _sorted_squad(players):
     return sorted(players, key=_key)
 
 
+CURRENT_SQUAD_SEASON = '2026/27'
+YOUTH_AGE_LIMIT = 21
+
+# Logische Position jedes Postencodes auf dem Spielfeld (vertikal, TW unten,
+# ST oben). Prozentwerte (x, y) relativ zum Platz-Rechteck.
+SQUAD_PITCH_COORDS = {
+    'TW':  (50, 93),
+    'LV':  (17, 76),
+    'IV':  (50, 78),
+    'LI':  (32, 82),
+    'RV':  (83, 76),
+    'LOV': (11, 62),
+    'ROV': (89, 62),
+    'DM':  (50, 63),
+    'LM':  (17, 49),
+    'ZM':  (50, 49),
+    'RM':  (83, 49),
+    'LOM': (29, 34),
+    'OM':  (50, 33),
+    'ROM': (71, 34),
+    'LF':  (22, 17),
+    'RF':  (78, 17),
+    'ST':  (50, 12),
+}
+
+
+def _aggregate_squad_season_stats(player_ids, season=CURRENT_SQUAD_SEASON):
+    """Summiert Saisonstatistiken pro Spieler (alle Wettbewerbe)."""
+    stats = {}
+    grade_weight = {}
+    rows = PlayerSeasonStat.objects.filter(
+        player_id__in=player_ids,
+        season=season,
+    )
+    for row in rows:
+        bucket = stats.setdefault(row.player_id, {
+            'matches': 0, 'goals': 0, 'assists': 0, 'minutes': 0, 'grade': None,
+        })
+        bucket['matches'] += row.matches
+        bucket['goals'] += row.goals
+        bucket['assists'] += row.assists
+        bucket['minutes'] += row.minutes_played
+        if row.average_grade is not None:
+            weight = max(row.matches, 1)
+            acc = grade_weight.setdefault(row.player_id, [0.0, 0])
+            acc[0] += float(row.average_grade) * weight
+            acc[1] += weight
+    for pid, (total, weight) in grade_weight.items():
+        if weight:
+            stats[pid]['grade'] = round(total / weight, 2)
+    return stats
+
+
+def _form_series_map(player_ids, limit=7):
+    """Letzte N echten Bewertungen pro Spieler (chronologisch)."""
+    series = {}
+    snapshots = (
+        PlayerFormSnapshot.objects
+        .filter(player_id__in=player_ids, rating__isnull=False)
+        .order_by('player_id', '-fixture_date', '-fixture_id')
+        .values_list('player_id', 'rating')
+    )
+    for pid, rating in snapshots:
+        bucket = series.setdefault(pid, [])
+        if len(bucket) < limit:
+            bucket.append(float(rating))
+    return {pid: list(reversed(values)) for pid, values in series.items()}
+
+
+def _spark_points(values, width=66, height=22, pad=3):
+    """Erzeugt SVG-Polyline-Punkte aus einer Werteliste (5–10 Skala)."""
+    if not values:
+        return ''
+    lo, hi = 4.0, 9.0
+    span = hi - lo
+    if len(values) == 1:
+        values = values * 2
+    step = (width - 2 * pad) / (len(values) - 1)
+    points = []
+    for i, value in enumerate(values):
+        clamped = min(max(value, lo), hi)
+        ratio = (clamped - lo) / span if span else 0.5
+        x = pad + i * step
+        y = height - pad - ratio * (height - 2 * pad)
+        points.append(f'{x:.1f},{y:.1f}')
+    return ' '.join(points)
+
+
+def _effective_positions(player):
+    """Hauptposition(en) und Nebenposition(en) eines Spielers.
+
+    Viele Spieler tragen ihre Position noch im Alt-Feld ``position`` statt in
+    den HP-Feldern. Fällt ``main_positions`` leer aus, gilt ``position`` als
+    Hauptposition, damit Tabelle und Kaderanalyse die echten Daten zeigen.
+    """
+    hp = list(player.main_positions)
+    if not hp and player.position:
+        hp = [player.position]
+    np = [code for code in player.secondary_positions if code not in hp]
+    return hp, np
+
+
+def _build_player_row(player, stats, form_map):
+    season = stats.get(player.id, {})
+    fitness = None
+    profile = getattr(player, 'strength_profile', None)
+    if profile and profile.freshness is not None:
+        fitness = int(round(float(profile.freshness)))
+    nation = player.primary_nation_crest
+    form_values = form_map.get(player.id, [])
+    if player.is_ws_injured:
+        status = {'code': 'injured', 'label': 'Verletzt'}
+    elif player.is_ws_suspended:
+        status = {'code': 'suspended', 'label': 'Gesperrt'}
+    elif player.is_loaned_in:
+        status = {'code': 'loaned_in', 'label': 'Geliehen'}
+    else:
+        status = {'code': 'fit', 'label': 'Einsatzbereit'}
+    hp, np = _effective_positions(player)
+    return {
+        'id': player.id,
+        'shirt': player.shirt_number,
+        'name': player.full_name,
+        'portrait': player.portrait_static_path,
+        'age': player.age,
+        'nation_name': nation.get('name', '') if nation else '',
+        'nation_static': nation.get('static_path', '') if nation else '',
+        'hp': hp,
+        'np': np,
+        'fitness': fitness,
+        'form_last': form_values[-1] if form_values else None,
+        'form_points': _spark_points(form_values),
+        'form_trend': (
+            'up' if len(form_values) >= 2 and form_values[-1] > form_values[0]
+            else 'down' if len(form_values) >= 2 and form_values[-1] < form_values[0]
+            else 'flat'
+        ),
+        'matches': season.get('matches', 0),
+        'goals': season.get('goals', 0),
+        'assists': season.get('assists', 0),
+        'minutes': season.get('minutes', 0),
+        'grade': season.get('grade'),
+        'market_value': float(player.market_value or 0),
+        'market_value_fmt': compact_money(player.market_value),
+        'status': status,
+        'is_loaned_in': player.is_loaned_in,
+        'youth_eligible': player.age is not None and player.age < YOUTH_AGE_LIMIT,
+        'detail_url': reverse('player_detail', args=[player.id]),
+    }
+
+
+def _build_loan_card(player, stats):
+    season = stats.get(player.id, {})
+    partner = player.loan_partner_club
+    hp, _np = _effective_positions(player)
+    return {
+        'id': player.id,
+        'name': player.full_name,
+        'portrait': player.portrait_static_path,
+        'hp': hp[0] if hp else '—',
+        'matches': season.get('matches', 0),
+        'grade': season.get('grade'),
+        'partner': partner.name if partner else '',
+        'loan_until': player.loan_until,
+        'detail_url': reverse('player_detail', args=[player.id]),
+    }
+
+
 def _build_squad_context(request, club, squad_title):
     is_youth = squad_title == 'Jugendkader'
-    qs = Player.objects.filter(club=club).select_related('strength_profile')
+    qs = Player.objects.filter(club=club).select_related(
+        'strength_profile', 'loan_partner_club')
     if is_youth:
-        qs = qs.filter(age__lte=21)
-    players = _sorted_squad(qs)
-    total_squad_value = sum(p.market_value for p in players if p.market_value)
-    opponent_club = Club.objects.exclude(id=club.id).order_by('name').first()
+        qs = qs.filter(age__lte=YOUTH_AGE_LIMIT)
+    all_club_players = list(qs)
+
+    loaned_out = [p for p in all_club_players if p.is_loaned_out]
+    loaned_in = [p for p in all_club_players if p.is_loaned_in]
+    # Aktiver Kader: alle Vereinsspieler außer den aktuell Verliehenen.
+    active_players = _sorted_squad(
+        [p for p in all_club_players if not p.is_loaned_out])
+
+    all_ids = [p.id for p in all_club_players]
+    stats = _aggregate_squad_season_stats(all_ids)
+    form_map = _form_series_map([p.id for p in active_players])
+
+    player_rows = [
+        _build_player_row(p, stats, form_map) for p in active_players]
+
+    # Positionsübersicht (Kaderanalyse) — HP grün, NP gelb.
+    position_counts = OrderedDict()
+    for code, _label in Player.POSITION_CHOICES:
+        coords = SQUAD_PITCH_COORDS.get(code, (50, 50))
+        position_counts[code] = {
+            'code': code,
+            'hp': 0,
+            'np': 0,
+            'x': coords[0],
+            'y': coords[1],
+        }
+    for p in active_players:
+        hp_codes, np_codes = _effective_positions(p)
+        for code in hp_codes:
+            if code in position_counts:
+                position_counts[code]['hp'] += 1
+        for code in np_codes:
+            if code in position_counts:
+                position_counts[code]['np'] += 1
+    pitch_positions = list(position_counts.values())
+
+    injured = [r for r in player_rows if r['status']['code'] == 'injured']
+    suspended = [r for r in player_rows if r['status']['code'] == 'suspended']
+
+    grades = [r['grade'] for r in player_rows if r['grade'] is not None]
+    ages = [r['age'] for r in player_rows if r['age'] is not None]
+    total_value = sum(r['market_value'] for r in player_rows)
+    total_salary = sum(
+        float(p.salary_per_match or 0) for p in active_players)
+    available = len(
+        [r for r in player_rows
+         if r['status']['code'] in ('fit', 'loaned_in')])
+
+    header_stats = [
+        {'label': 'Spieler', 'value': str(len(player_rows)), 'sub': 'im Kader',
+         'tone': 'cyan'},
+        {'label': 'Einsatzbereit', 'value': str(available),
+         'sub': f'{len(injured)} verl. · {len(suspended)} gesp.',
+         'tone': 'green'},
+        {'label': 'Ø Note',
+         'value': (f'{sum(grades) / len(grades):.2f}'.replace('.', ',')
+                   if grades else '—'),
+         'sub': 'Saison', 'tone': 'yellow'},
+        {'label': 'Ø Alter',
+         'value': (f'{sum(ages) / len(ages):.1f}'.replace('.', ',')
+                   if ages else '—'),
+         'sub': 'Jahre', 'tone': 'teal'},
+        {'label': 'Kaderwert', 'value': compact_money(total_value),
+         'sub': 'Marktwert gesamt', 'tone': 'cyan'},
+        {'label': 'Gehalt', 'value': compact_money(total_salary),
+         'sub': 'pro Spieltag', 'tone': 'red'},
+    ]
+
+    # Max. 6 Karten je Box (UI zeigt ~3, Rest per Scroll).
+    loaned_in_cards = [_build_loan_card(p, stats) for p in loaned_in[:6]]
+    loaned_out_cards = [_build_loan_card(p, stats) for p in loaned_out[:6]]
+
     return {
         'club': club,
-        'players': players,
-        'player_count': len(players),
-        'total_squad_value': total_squad_value,
         'squad_title': squad_title,
+        'is_youth': is_youth,
+        'player_rows': player_rows,
+        'player_count': len(player_rows),
+        'header_stats': header_stats,
+        'position_filters': [code for code, _ in Player.POSITION_CHOICES],
+        'pitch_positions': pitch_positions,
+        'injured': injured,
+        'suspended': suspended,
+        'unavailable_count': len(injured) + len(suspended),
+        'loaned_in_cards': loaned_in_cards,
+        'loaned_out_cards': loaned_out_cards,
+        'youth_age_limit': YOUTH_AGE_LIMIT,
+        'shirt_action_url': reverse('squad_assign_shirt', args=[club.id]),
+        'youth_action_url': reverse('squad_move_to_youth', args=[club.id]),
         'game_header': build_game_header(
             squad_title,
             club.name,
@@ -2710,6 +2963,80 @@ def club_youth_squad(request, club_id):
     club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
     return render(request, 'game/club_profile/squad_page.html',
                   _build_squad_context(request, club, 'Jugendkader'))
+
+
+@login_required
+@require_POST
+def squad_assign_shirt(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    if current_manager_club(user=request.user) != club:
+        return JsonResponse(
+            {'ok': False, 'error': 'Keine Berechtigung für diesen Verein.'},
+            status=403)
+    try:
+        player_id = int(request.POST.get('player_id', ''))
+    except (TypeError, ValueError):
+        return JsonResponse({'ok': False, 'error': 'Ungültiger Spieler.'},
+                            status=400)
+    raw_number = (request.POST.get('shirt_number') or '').strip()
+    player = get_object_or_404(Player, id=player_id, club=club)
+
+    if raw_number == '':
+        player.shirt_number = None
+        player.save(update_fields=['shirt_number'])
+        return JsonResponse({'ok': True, 'shirt_number': None})
+
+    try:
+        number = int(raw_number)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Nummer muss eine Zahl sein.'},
+                            status=400)
+    if number < 1 or number > 99:
+        return JsonResponse(
+            {'ok': False, 'error': 'Nummer muss zwischen 1 und 99 liegen.'},
+            status=400)
+
+    clash = (Player.objects
+             .filter(club=club, shirt_number=number)
+             .exclude(id=player.id)
+             .first())
+    if clash:
+        return JsonResponse(
+            {'ok': False,
+             'error': f'Nummer {number} ist bereits an {clash.full_name} '
+                      f'vergeben.'},
+            status=409)
+
+    player.shirt_number = number
+    player.save(update_fields=['shirt_number'])
+    return JsonResponse({'ok': True, 'shirt_number': number})
+
+
+@login_required
+@require_POST
+def squad_move_to_youth(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    if current_manager_club(user=request.user) != club:
+        return JsonResponse(
+            {'ok': False, 'error': 'Keine Berechtigung für diesen Verein.'},
+            status=403)
+    try:
+        player_id = int(request.POST.get('player_id', ''))
+    except (TypeError, ValueError):
+        return JsonResponse({'ok': False, 'error': 'Ungültiger Spieler.'},
+                            status=400)
+    player = get_object_or_404(Player, id=player_id, club=club)
+    if player.age is None or player.age >= YOUTH_AGE_LIMIT:
+        return JsonResponse(
+            {'ok': False,
+             'error': 'Nur Spieler unter '
+                      f'{YOUTH_AGE_LIMIT} Jahren können in die Jugend.'},
+            status=400)
+    # Jugendkader = Vereinsspieler unter Altersgrenze; die Zuordnung erfolgt
+    # bereits über das Alter. Aktion bestätigt den Spieler als Jugendspieler.
+    return JsonResponse(
+        {'ok': True,
+         'message': f'{player.full_name} ist als Jugendspieler geführt.'})
 
 
 def club_table(request, club_id):

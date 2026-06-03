@@ -1040,8 +1040,44 @@ class Player(models.Model):
     )
     ws_suspension_matches_remaining = models.PositiveSmallIntegerField(default=0)
 
+    LOAN_STATUS_CHOICES = [
+        ('none', 'Kein Leihverhältnis'),
+        ('loaned_in', 'Geliehen'),
+        ('loaned_out', 'Verliehen'),
+    ]
+    loan_status = models.CharField(
+        'Leihstatus',
+        max_length=12,
+        choices=LOAN_STATUS_CHOICES,
+        default='none',
+        blank=True,
+        help_text='Geliehen = im Verein aktiv, gehört einem anderen Verein. '
+                  'Verliehen = gehört diesem Verein, spielt aktuell woanders.',
+    )
+    loan_partner_club = models.ForeignKey(
+        Club,
+        on_delete=models.SET_NULL,
+        related_name='loan_partner_players',
+        null=True,
+        blank=True,
+        help_text='Der andere Verein des Leihgeschäfts (Stamm- bzw. Leihverein).',
+    )
+    loan_until = models.DateField(
+        'Leihe bis',
+        null=True,
+        blank=True,
+    )
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def is_loaned_in(self):
+        return self.loan_status == 'loaned_in'
+
+    @property
+    def is_loaned_out(self):
+        return self.loan_status == 'loaned_out'
 
     @property
     def full_name(self):
