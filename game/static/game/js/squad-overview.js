@@ -262,6 +262,10 @@
                     runYouth(selected);
                 } else if (act === 'edit') {
                     showToast('Bearbeitung beantragen – genaueres folgt.', 'ok');
+                } else if (act === 'transfer') {
+                    showToast('Auf Transferliste setzen – folgt.', 'ok');
+                } else if (act === 'loan') {
+                    showToast('Auf Leihliste setzen – folgt.', 'ok');
                 }
             });
         }
