@@ -717,6 +717,12 @@ body.manager-profile-page .nav-menu a:first-child {
     width: 44px;
 }
 
+.mp-ccb-no-crest {
+    display: block;
+    height: 44px;
+    width: 44px;
+}
+
 .mp-ccb-info strong {
     color: #f0f6ff;
     display: block;

@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-59">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-60">
 {% endblock %}
 
 {% block content %}
@@ -169,7 +169,14 @@
 
         <div class="mp-current-club-bar">
             <a class="mp-ccb-crest-link" href="{{ current_club_summary.url }}">
-                <img src="{% static current_club_summary.crest %}" alt="{{ current_club_summary.name }}">
+                {% if current_club_summary.crest %}
+                    <img src="{% static current_club_summary.crest %}" alt="{{ current_club_summary.name }}">
+                {% else %}
+                    <svg class="mp-ccb-no-crest" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 2L4 8v14c0 10 7.2 19.3 16 22 8.8-2.7 16-12 16-22V8L20 2z" stroke="rgba(255,255,255,0.25)" stroke-width="2" fill="rgba(255,255,255,0.05)"/>
+                        <path d="M14 23l4 4 8-8" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                {% endif %}
             </a>
             <div class="mp-ccb-info">
                 <strong>{{ current_club_summary.name }}</strong>
