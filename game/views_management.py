@@ -1,6 +1,37 @@
 import json
 from decimal import Decimal
 
+# ── Stadionumfeld: Einrichtungsdaten ──────────────────────────────────────────
+def _fmt_euro(amount):
+    return f"{amount:,}".replace(",", ".")
+
+FACILITY_DATA = {
+    'nlz': [
+        {'desc': 'Max. 60 Jugendspieler im Kader',          'cost': 0,      'days': 0},
+        {'desc': 'Max. 63 Jugendspieler im Kader',          'cost': 50000,  'days': 1},
+        {'desc': 'Max. 66 Jugendspieler im Kader',          'cost': 100000, 'days': 1},
+        {'desc': 'Max. 70 Jugendspieler im Kader',          'cost': 200000, 'days': 1},
+    ],
+    'medizin': [
+        {'desc': 'Kein Effekt',                                            'cost': 0,      'days': 0},
+        {'desc': '−5 % Verletzungsanfälligkeit, −1–2 Tage Dauer',         'cost': 40000,  'days': 1},
+        {'desc': '−10 % Anfälligkeit, −2–3 Tage Verletzungsdauer',        'cost': 90000,  'days': 1},
+        {'desc': '−20 % Anfälligkeit, −3–4 Tage Verletzungsdauer',        'cost': 180000, 'days': 1},
+    ],
+    'training': [
+        {'desc': 'Frischeanzeige in 5er-Schritten',                       'cost': 0,      'days': 0},
+        {'desc': 'Exakte Frischeanzeige',                                  'cost': 60000,  'days': 1},
+        {'desc': 'Exakte Anzeige + −1–2 Frischeverlust pro Spiel',        'cost': 120000, 'days': 1},
+        {'desc': 'Exakte Anzeige auf Zahl + +1–2 Frischepunkte/Tag',      'cost': 250000, 'days': 1},
+    ],
+    'office': [
+        {'desc': 'Kein Platz für weitere Trainer',                         'cost': 0,      'days': 0},
+        {'desc': 'Jugendtrainer: autom. Aufstellung & Taktik',             'cost': 30000,  'days': 1},
+        {'desc': 'Co-Trainer: Erinnerung + Top-5 Standards markiert',      'cost': 75000,  'days': 1},
+        {'desc': 'Co-Trainer: Top-3 Standardschützen (Jugend & Profi)',    'cost': 150000, 'days': 1},
+    ],
+}
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -181,32 +212,32 @@ def stadium_detail(request):
     gauge_komfort     = min(100, round(seating_vip_ratio * 70 + lawn * 0.30))
 
     # Stadionumfeld-Einrichtungen
-    facilities = [
-        {
-            'num': 1, 'key': 'nlz', 'label': 'NLZ',
-            'sublabel': 'Nachwuchsleistungszentrum',
-            'level': stadium.nlz_level,
-            'pin_x': 22, 'pin_y': 18,
-        },
-        {
-            'num': 2, 'key': 'medizin', 'label': 'Medizin',
-            'sublabel': 'Medizinische Abteilung',
-            'level': stadium.medizin_level,
-            'pin_x': 78, 'pin_y': 42,
-        },
-        {
-            'num': 3, 'key': 'training', 'label': 'Trainingsgelände',
-            'sublabel': 'Trainingsgelände',
-            'level': stadium.training_level,
-            'pin_x': 50, 'pin_y': 76,
-        },
-        {
-            'num': 4, 'key': 'office', 'label': 'Geschäftsstelle',
-            'sublabel': 'Geschäftsstelle',
-            'level': stadium.office_level,
-            'pin_x': 20, 'pin_y': 64,
-        },
+    _raw_facilities = [
+        ('nlz',      1, 'NLZ',             'Nachwuchsleistungszentrum', stadium.nlz_level,      22, 18),
+        ('medizin',  2, 'Medizin',         'Medizinische Abteilung',    stadium.medizin_level,  78, 42),
+        ('training', 3, 'Trainingsgelände','Trainingsgelände',           stadium.training_level, 50, 76),
+        ('office',   4, 'Geschäftsstelle', 'Geschäftsstelle',            stadium.office_level,   20, 64),
     ]
+    facilities = []
+    for key, num, label, sublabel, lvl, px, py in _raw_facilities:
+        levels_data = FACILITY_DATA[key]
+        tooltip_levels = [
+            {'level': i, 'desc': d['desc'], 'cost_fmt': _fmt_euro(d['cost']), 'days': d['days']}
+            for i, d in enumerate(levels_data)
+        ]
+        facilities.append({
+            'num':             num,
+            'key':             key,
+            'label':           label,
+            'sublabel':        sublabel,
+            'level':           lvl,
+            'pin_x':           px,
+            'pin_y':           py,
+            'desc':            levels_data[lvl]['desc'],
+            'upgrade_cost_fmt': _fmt_euro(levels_data[lvl + 1]['cost']) if lvl < 3 else '',
+            'upgrade_days':    levels_data[lvl + 1]['days'] if lvl < 3 else 0,
+            'tooltip_levels':  tooltip_levels,
+        })
 
     return render(request, 'game/management/stadium.html', {
         'club':                  club,
