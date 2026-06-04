@@ -249,3 +249,9 @@
 .mhub-card--finanzen  .mhub-card-bg { background: linear-gradient(135deg, #1a1505 0%, #2a200a 60%, #100e03 100%); }
 .mhub-card--sponsor   .mhub-card-bg { background: linear-gradient(135deg, #1a0d1a 0%, #2a152a 60%, #110810 100%); }
 .mhub-card--news      .mhub-card-bg { background: linear-gradient(135deg, #111a25 0%, #1a2535 60%, #0a1018 100%); }
+
+/* "Kein Verein" Hinweis auf gesperrten Karten */
+.mhub-no-club-hint {
+    color: rgba(255, 200, 100, 0.70);
+    font-style: italic;
+}

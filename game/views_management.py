@@ -30,9 +30,18 @@ def _get_stadium_or_none(club):
 def management_hub(request):
     club    = current_manager_club(user=request.user)
     stadium = _get_stadium_or_none(club)
+
+    # Stadionbild: aus PublicProfile des Clubs oder generisches Fallback
+    stadium_bg = None
+    if club:
+        pp = getattr(club, 'public_profile', None)
+        if pp and pp.stadium_image_static_path:
+            stadium_bg = pp.stadium_image_static_path
+
     return render(request, 'game/management/hub.html', {
-        'club':    club,
-        'stadium': stadium,
+        'club':       club,
+        'stadium':    stadium,
+        'stadium_bg': stadium_bg,
     })
 
 
