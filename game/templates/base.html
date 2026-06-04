@@ -103,7 +103,7 @@
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/scouting.svg' %}" alt=""></span>
                 Datencenter
             </a>
-            <a href="{{ current_manager.club_url }}">
+            <a href="{% url 'management_hub' %}"{% if url_name == 'management_hub' or url_name == 'stadium_detail' %} aria-current="page"{% endif %}>
                 <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/mitarbeiter.svg' %}" alt=""></span>
                 Management
             </a>

@@ -25,6 +25,7 @@ from .views import (
 )
 from .views_auth import auth_login, auth_register, auth_logout
 from .views_ai import ai_chat
+from .views_management import management_hub
 from .views_creator import (
     creator_index,
     creator_club_edit,
@@ -140,6 +141,8 @@ urlpatterns = [
     path('auth/logout/', auth_logout, name='auth_logout'),
 
     path('ai/chat/', ai_chat, name='ai_chat'),
+
+    path('management/', management_hub, name='management_hub'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),
