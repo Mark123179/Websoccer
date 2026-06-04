@@ -230,7 +230,11 @@
                         </div>
 
                         {% if f.level < 3 %}
-                        <button class="sf-upgrade-btn">Ausbauen · {{ f.upgrade_cost_fmt }}€</button>
+                        <form method="post" action="{% url 'facility_upgrade' %}" style="margin-top:auto;">
+                            {% csrf_token %}
+                            <input type="hidden" name="facility" value="{{ f.key }}">
+                            <button type="submit" class="sf-upgrade-btn">Ausbauen · {{ f.upgrade_cost_fmt }}€</button>
+                        </form>
                         {% else %}
                         <span class="sf-maxed">✓ Maximalstufe</span>
                         {% endif %}

@@ -457,3 +457,57 @@ def stadium_cost_api(request):
         'kosten_fmt':     f'{kosten:,.0f}',
         'preis_pro_platz': float(kosten / anzahl) if anzahl else 0,
     })
+
+
+@login_required
+@require_POST
+def facility_upgrade(request):
+    club    = current_manager_club(user=request.user)
+    stadium = _get_stadium_or_none(club)
+    if not stadium or not club:
+        return redirect('management_hub')
+
+    key = request.POST.get('facility', '')
+    field_map = {
+        'nlz':      'nlz_level',
+        'medizin':  'medizin_level',
+        'training': 'training_level',
+        'office':   'office_level',
+    }
+    if key not in field_map:
+        messages.error(request, 'Unbekannte Einrichtung.')
+        return redirect('stadium_detail')
+
+    field   = field_map[key]
+    current = getattr(stadium, field)
+
+    if current >= 3:
+        messages.error(request, 'Einrichtung ist bereits auf Maximalstufe.')
+        return redirect('stadium_detail')
+
+    kosten = Decimal(FACILITY_DATA[key][current + 1]['cost'])
+
+    if club.budget < kosten:
+        messages.error(
+            request,
+            f'Budget reicht nicht. Benötigt: {kosten:,.0f} € — '
+            f'Verfügbar: {club.budget:,.0f} €'
+        )
+        return redirect('stadium_detail')
+
+    club.budget -= kosten
+    club.save(update_fields=['budget'])
+
+    setattr(stadium, field, current + 1)
+    stadium.save(update_fields=[field])
+
+    label_map = {
+        'nlz': 'NLZ', 'medizin': 'Medizin',
+        'training': 'Trainingsgelände', 'office': 'Geschäftsstelle',
+    }
+    messages.success(
+        request,
+        f'{label_map[key]} auf Stufe {current + 1} ausgebaut. '
+        f'{kosten:,.0f} € abgebucht.'
+    )
+    return redirect('stadium_detail')
