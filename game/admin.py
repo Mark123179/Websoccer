@@ -22,6 +22,7 @@ from .models import (
     Club,
     ManagerCareerStation,
     ManagerProfile,
+    MatchdayRevenue,
     MatchResult,
     Player,
     PlayerAwardTitle,
@@ -312,7 +313,7 @@ class ClubAdmin(admin.ModelAdmin):
         return [
             (None, {
                 'fields': (
-                    'name', 'short_name', 'founded_year', 'budget', 'league',
+                    'name', 'short_name', 'founded_year', 'budget', 'fan_popularity', 'league',
                     'fm_inside_id', 'api_football_id',
                 ),
             }),
@@ -490,6 +491,61 @@ class ClubProfileMatchAdmin(admin.ModelAdmin):
     )
 
 
+def _record_heimspiel_einnahmen(modeladmin, request, queryset):
+    """
+    Admin-Aktion: Verbucht Spieltags-Einnahmen für ausgewählte Heimspiele.
+    Nur Einträge, bei denen home_club ein Stadion hat und noch keine Einnahmen
+    verbucht wurden, werden verarbeitet.
+    """
+    from .stadium_revenue import record_matchday_revenue
+
+    ok = 0
+    skip_no_stadium = 0
+    skip_already = 0
+    skip_no_home_club = 0
+
+    for match in queryset.select_related('home_club__stadium'):
+        if not match.home_club:
+            skip_no_home_club += 1
+            continue
+        try:
+            _ = match.home_club.stadium
+        except Exception:
+            skip_no_stadium += 1
+            continue
+        try:
+            _ = match.matchday_revenue
+            skip_already += 1
+            continue
+        except Exception:
+            pass
+        try:
+            record_matchday_revenue(match.home_club, match_result=match)
+            ok += 1
+        except Exception as exc:
+            modeladmin.message_user(
+                request,
+                f'Fehler bei {match}: {exc}',
+                level=messages.ERROR,
+            )
+
+    parts = []
+    if ok:
+        parts.append(f'{ok} Heimspiel(e) erfolgreich verbucht')
+    if skip_already:
+        parts.append(f'{skip_already} bereits verbucht (übersprungen)')
+    if skip_no_stadium:
+        parts.append(f'{skip_no_stadium} kein Stadion (übersprungen)')
+    if skip_no_home_club:
+        parts.append(f'{skip_no_home_club} kein Heimverein (übersprungen)')
+
+    if parts:
+        modeladmin.message_user(request, ' | '.join(parts))
+
+
+_record_heimspiel_einnahmen.short_description = 'Spieltags-Einnahmen verbuchen (Heimspiele)'
+
+
 @admin.register(MatchResult)
 class MatchResultAdmin(admin.ModelAdmin):
     list_display = (
@@ -504,6 +560,7 @@ class MatchResultAdmin(admin.ModelAdmin):
         'away_goals',
         'result_label',
         'sort_order',
+        '_hat_einnahmen',
     )
     list_filter = ('club', 'season', 'competition_name', 'result_label')
     search_fields = (
@@ -531,6 +588,40 @@ class MatchResultAdmin(admin.ModelAdmin):
         }),
     )
     ordering = ('club', 'sort_order', 'id')
+    actions = [_record_heimspiel_einnahmen]
+
+    @admin.display(description='Einnahmen', boolean=True)
+    def _hat_einnahmen(self, obj):
+        return hasattr(obj, 'matchday_revenue')
+
+
+@admin.register(MatchdayRevenue)
+class MatchdayRevenueAdmin(admin.ModelAdmin):
+    list_display = (
+        'stadium',
+        'competition_name',
+        'match_label',
+        'attendance',
+        'auslastung_pct',
+        'revenue_total',
+        'created_at',
+    )
+    list_filter = ('stadium__club', 'competition_name')
+    search_fields = ('stadium__name', 'stadium__club__name', 'match_label', 'competition_name')
+    readonly_fields = (
+        'stadium',
+        'match_result',
+        'match_label',
+        'competition_name',
+        'auslastung_pct',
+        'attendance',
+        'revenue_standing',
+        'revenue_seating',
+        'revenue_vip',
+        'revenue_total',
+        'created_at',
+    )
+    ordering = ('-created_at',)
 
 
 @admin.register(ClubNewsItem)

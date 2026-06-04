@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,8 +7,9 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import StadiumExpansion
+from .models import MatchdayRevenue, StadiumExpansion
 from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
+from .stadium_revenue import record_matchday_revenue
 from .views import current_manager_club
 
 
@@ -49,6 +51,7 @@ def stadium_detail(request):
 
     expansions     = stadium.expansions.all()[:10]
     kostenmatrix   = get_kostenmatrix(stadium.capacity_total)
+    revenue_entries = stadium.revenue_entries.all()[:10]
 
     # Tribünen-Übersicht als strukturiertes Dict für das Template
     stands = [
@@ -86,30 +89,49 @@ def stadium_detail(request):
         },
     ]
 
-    # Tageseinnahmen-Schätzung (bei 80 % Auslastung)
-    auslastung_faktor = 0.80
-    einnahmen = (
-        stadium.capacity_standing * auslastung_faktor * float(stadium.price_standing) +
-        stadium.capacity_seating  * auslastung_faktor * float(stadium.price_seating)  +
-        stadium.capacity_vip      * auslastung_faktor * float(stadium.price_vip)
-    )
-    saisoneinnahmen = einnahmen * 17  # ~17 Heimspieltage pro Saison
+    # Auslastung: aus echten Spieltags-Daten ableiten oder Schätzformel
+    recent_revenues = list(revenue_entries)
+    if recent_revenues:
+        avg_auslastung = float(
+            sum(r.auslastung_pct for r in recent_revenues) / len(recent_revenues)
+        )
+        gauge_auslastung = round(avg_auslastung)
+        auslastung_faktor = avg_auslastung / 100.0
+    else:
+        from .stadium_revenue import calculate_auslastung, get_competition_factor
+        auslastung_faktor = calculate_auslastung(
+            fan_popularity=club.fan_popularity,
+            price_standing=float(stadium.price_standing),
+            price_seating=float(stadium.price_seating),
+            competition_factor=1.0,
+            opponent_strength=65.0,
+        )
+        gauge_auslastung = round(auslastung_faktor * 100)
+
+    # Tageseinnahmen-Schätzung (basierend auf Auslastungsformel / echten Daten)
+    if recent_revenues:
+        einnahmen = float(recent_revenues[0].revenue_total)
+    else:
+        einnahmen = (
+            stadium.capacity_standing * auslastung_faktor * float(stadium.price_standing) +
+            stadium.capacity_seating  * auslastung_faktor * float(stadium.price_seating)  +
+            stadium.capacity_vip      * auslastung_faktor * float(stadium.price_vip)
+        )
+    saisoneinnahmen = einnahmen * 17
 
     # ROI: Saisoneinnahmen / Gesamtinvestition aller Ausbauten × 100
-    from decimal import Decimal
     gesamtinvestition = sum(
         ex.cost for ex in stadium.expansions.all()
     ) or Decimal('0')
     roi = round(float(saisoneinnahmen) / float(gesamtinvestition) * 100, 1) \
         if gesamtinvestition > 0 else None
 
-    # Fan-Erlebnis-Werte (Proxy-Formeln bis Spieltags-Logik vorhanden)
+    # Fan-Erlebnis-Werte
     cap = stadium.capacity_total or 1
     standing_ratio = stadium.capacity_standing / cap
     seating_vip_ratio = (stadium.capacity_seating + stadium.capacity_vip) / cap
     lawn = stadium.lawn_quality
 
-    gauge_auslastung = 80  # Platzhalter bis echte Spieltagsdaten
     gauge_atmosphaere = min(100, round(standing_ratio * 65 + lawn * 0.35))
     gauge_komfort     = min(100, round(seating_vip_ratio * 70 + lawn * 0.30))
 
@@ -118,6 +140,7 @@ def stadium_detail(request):
         'stadium':               stadium,
         'stands':                stands,
         'expansions':            expansions,
+        'revenue_entries':       revenue_entries,
         'kostenmatrix_json':     json.dumps(kostenmatrix),
         'max_kapazitaet':        MAX_KAPAZITAET,
         'einnahmen_schaetzung':  einnahmen,
@@ -126,6 +149,7 @@ def stadium_detail(request):
         'gauge_auslastung':      gauge_auslastung,
         'gauge_atmosphaere':     gauge_atmosphaere,
         'gauge_komfort':         gauge_komfort,
+        'hat_echte_auslastung':  bool(recent_revenues),
     })
 
 
@@ -254,6 +278,47 @@ def stadium_expand(request):
         f'+{anzahl:,} {type_labels[seat_type]} in der {stand_labels[stand]} '
         f'für {kosten:,.0f} € erfolgreich gebaut.'
     )
+    return redirect('stadium_detail')
+
+
+# ------------------------------------------------------------------ #
+#  Spieltags-Einnahmen manuell verbuchen (Manager-Aktion)              #
+# ------------------------------------------------------------------ #
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def stadium_record_revenue(request):
+    """
+    Verbucht Spieltags-Einnahmen für ein Heimspiel ohne verknüpftes MatchResult.
+    Der Manager trägt Gegner-Stärke und Wettbewerb manuell ein.
+    """
+    club    = current_manager_club(user=request.user)
+    stadium = _get_stadium_or_none(club)
+    if not stadium:
+        return redirect('management_hub')
+
+    competition_name = request.POST.get('competition_name', '').strip() or 'Freundschaftsspiel'
+    try:
+        opponent_strength = float(request.POST.get('opponent_strength', 65))
+        opponent_strength = max(0.0, min(100.0, opponent_strength))
+    except (ValueError, TypeError):
+        opponent_strength = 65.0
+
+    try:
+        entry = record_matchday_revenue(
+            club=club,
+            match_result=None,
+            opponent_strength=opponent_strength,
+            competition_name=competition_name,
+        )
+        messages.success(
+            request,
+            f'Spieltags-Einnahmen verbucht: {entry.revenue_total:,.0f} € '
+            f'({entry.auslastung_pct} % Auslastung, {entry.attendance:,} Zuschauer)'
+        )
+    except Exception as exc:
+        messages.error(request, f'Fehler beim Verbuchen: {exc}')
+
     return redirect('stadium_detail')
 
 

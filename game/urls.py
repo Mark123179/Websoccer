@@ -31,6 +31,7 @@ from .views_management import (
     stadium_set_prices,
     stadium_expand,
     stadium_cost_api,
+    stadium_record_revenue,
 )
 from .views_creator import (
     creator_index,
@@ -153,6 +154,7 @@ urlpatterns = [
     path('management/stadion/preise/', stadium_set_prices, name='stadium_set_prices'),
     path('management/stadion/ausbau/', stadium_expand, name='stadium_expand'),
     path('management/stadion/kosten-api/', stadium_cost_api, name='stadium_cost_api'),
+    path('management/stadion/einnahmen/', stadium_record_revenue, name='stadium_record_revenue'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

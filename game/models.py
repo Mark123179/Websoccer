@@ -410,6 +410,13 @@ class Club(models.Model):
         decimal_places=2
     )
 
+    fan_popularity = models.PositiveSmallIntegerField(
+        default=50,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        verbose_name='Fanbeliebtheit (1–100)',
+        help_text='Wie beliebt ist der Verein bei Fans? Beeinflusst die Stadionauslastung.',
+    )
+
     league = models.ForeignKey(
         League,
         on_delete=models.CASCADE
@@ -566,6 +573,79 @@ class StadiumExpansion(models.Model):
         return (
             f'{self.stadium.name}: +{self.seats_added} {self.get_seat_type_display()} '
             f'({self.get_stand_display()})'
+        )
+
+
+class MatchdayRevenue(models.Model):
+    """
+    Protokolliert Stadioneinnahmen nach einem Heimspiel.
+    Wird bei jedem Heimspiel automatisch berechnet und dem Vereinsbudget gutgeschrieben.
+    """
+
+    stadium = models.ForeignKey(
+        'Stadium',
+        on_delete=models.CASCADE,
+        related_name='revenue_entries',
+        verbose_name='Stadion',
+    )
+    match_result = models.OneToOneField(
+        'MatchResult',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='matchday_revenue',
+        verbose_name='Spielergebnis',
+    )
+    match_label = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Spielbezeichnung',
+    )
+    competition_name = models.CharField(
+        max_length=120,
+        blank=True,
+        verbose_name='Wettbewerb',
+    )
+    auslastung_pct = models.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        verbose_name='Auslastung (%)',
+        help_text='Tatsächliche Auslastung dieses Spieltags in Prozent (0–100).',
+    )
+    attendance = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Zuschauer',
+    )
+    revenue_standing = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0,
+        verbose_name='Einnahmen Stehplätze (€)',
+    )
+    revenue_seating = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0,
+        verbose_name='Einnahmen Sitzplätze (€)',
+    )
+    revenue_vip = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0,
+        verbose_name='Einnahmen VIP (€)',
+    )
+    revenue_total = models.DecimalField(
+        max_digits=14, decimal_places=2, default=0,
+        verbose_name='Gesamteinnahmen (€)',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Verbucht am',
+    )
+
+    class Meta:
+        verbose_name = 'Spieltags-Einnahmen'
+        verbose_name_plural = 'Spieltags-Einnahmen'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return (
+            f'{self.stadium.name} – {self.match_label or self.competition_name}: '
+            f'{self.revenue_total:,.0f} € ({self.auslastung_pct} %)'
         )
 
 
