@@ -1146,7 +1146,7 @@
 
 /* ---- Ausbau-Button ---- */
 .sf-upgrade-btn {
-    margin-top: 4px;
+    margin-top: auto;
     width: 100%;
     padding: 5px 8px;
     background: rgba(201,168,76,0.12);
@@ -1166,45 +1166,25 @@
     border-color: rgba(201,168,76,0.60);
 }
 
-/* ---- NLZ-Kachel: Hintergrundbild ---- */
+/* ---- NLZ-Kachel: Hintergrundbild (kein overflow:hidden → Tooltip bleibt sichtbar) ---- */
 .sf-card--nlz {
-    position: relative;
-    overflow: hidden;
-    background: transparent;
-}
-
-.sf-card--nlz::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('../images/backgrounds/facility-nlz.jpg');
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-nlz.jpg');
     background-size: cover;
     background-position: center 30%;
-    opacity: 0.22;
-    z-index: 0;
-    transition: opacity 0.25s;
+    transition: background 0.25s;
 }
 
-.sf-card--nlz::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(160deg, rgba(10,15,28,0.30) 0%, rgba(10,15,28,0.75) 100%);
-    z-index: 0;
-}
-
-.sf-card--nlz:hover::before {
-    opacity: 0.35;
-}
-
-.sf-card--nlz > * {
-    position: relative;
-    z-index: 1;
+.sf-card--nlz:hover {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.60) 0%, rgba(10,15,28,0.82) 100%),
+        url('../images/backgrounds/facility-nlz.jpg');
 }
 
 /* ---- Maximalstufe ---- */
 .sf-maxed {
-    margin-top: 4px;
+    margin-top: auto;
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.08em;
