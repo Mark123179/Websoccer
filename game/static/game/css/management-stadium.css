@@ -869,38 +869,42 @@
 /* ============================================================
    STADIONUMFELD
    ============================================================ */
-/* ---- Umfeld-Panel: Foto füllt ganzes Panel ---- */
+/* ---- Umfeld-Panel: Foto links, Kacheln rechts ---- */
 .st-panel--umfeld {
     padding: 0;
     overflow: hidden;
-    position: relative;
+    display: flex;
     flex: 1;
-    min-height: 220px;
+    min-height: 200px;
 }
 
-/* Hintergrundfoto — absolute fill */
+/* Linke Foto-Hälfte */
+.sf-photo {
+    position: relative;
+    flex: 0 0 52%;
+    overflow: hidden;
+}
+
+/* Foto füllt die Foto-Hälfte vollständig */
 .sf-bg-img {
-    position: absolute;
-    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    z-index: 0;
 }
 
-/* Gradient: links transparent → rechts dunkel für Karten-Lesbarkeit */
-.sf-overlay {
+/* Rechte Kante des Fotos fließt in die Kachel-Hälfte über */
+.sf-photo::after {
+    content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(
         to right,
-        rgba(0,0,0,0.18) 0%,
-        rgba(0,0,0,0.20) 42%,
-        rgba(13,18,30,0.82) 58%,
-        rgba(13,18,30,0.96) 100%
+        transparent 0%,
+        transparent 50%,
+        rgba(13,18,30,0.70) 80%,
+        rgba(13,18,30,1.00) 100%
     );
-    z-index: 1;
     pointer-events: none;
 }
 
@@ -909,20 +913,20 @@
     position: absolute;
     top: 16px;
     left: 18px;
-    z-index: 3;
+    z-index: 2;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: rgba(255,255,255,0.75);
-    text-shadow: 0 1px 4px rgba(0,0,0,0.60);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.70);
 }
 
 /* Pins auf dem Foto */
 .sf-pin {
     position: absolute;
     transform: translate(-50%, -50%);
-    z-index: 3;
+    z-index: 2;
 }
 
 .sf-pin-num {
@@ -940,18 +944,15 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.50);
 }
 
-/* Kacheln: absolut rechts, 2×2 Grid */
+/* Rechte Kachel-Hälfte — dunkel, nahtlos an Gradient */
 .sf-cards {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    bottom: 14px;
-    width: 54%;
+    flex: 1;
+    background: rgba(13,18,30,1.00);
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
     gap: 8px;
-    z-index: 2;
+    padding: 14px;
 }
 
 .sf-card {
