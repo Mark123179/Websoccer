@@ -165,7 +165,7 @@
 }
 
 .st-stand-card {
-    background: rgba(255,255,255,0.04);
+    position: relative;
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 9px;
     padding: 14px 16px;
@@ -173,10 +173,33 @@
     flex-direction: column;
     gap: 10px;
     transition: border-color 0.2s;
+    overflow: hidden;
+    background-image: url('../images/backgrounds/stand-atmosphere.jpg');
+    background-size: cover;
+    background-position: center 30%;
+}
+
+.st-stand-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 11, 22, 0.72);
+    border-radius: 9px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.st-stand-card > * {
+    position: relative;
+    z-index: 1;
 }
 
 .st-stand-card:hover {
-    border-color: rgba(201,168,76,0.25);
+    border-color: rgba(201,168,76,0.35);
+}
+
+.st-stand-card:hover::before {
+    background: rgba(6, 11, 22, 0.62);
 }
 
 .st-stand-header {
