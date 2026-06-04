@@ -431,6 +431,37 @@
     background-image: url('../images/backgrounds/stand-east.jpg');
 }
 
+.st-stand-card--selected {
+    border-color: rgba(201,168,76,0.7) !important;
+    box-shadow: 0 0 0 2px rgba(201,168,76,0.25);
+}
+
+.st-expand-stand-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(201,168,76,0.07);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+}
+
+.st-expand-stand-hint {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+}
+
+.st-expand-stand-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #c9a84c;
+    flex: 1;
+}
+
 /* Kosten-Vorschau */
 .st-expand-cost-preview {
     background: rgba(201,168,76,0.08);

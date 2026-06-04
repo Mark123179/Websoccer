@@ -67,7 +67,7 @@
                 <p class="st-section-title">Tribünen &amp; Kapazität</p>
                 <div class="st-stands-grid">
                     {% for s in stands %}
-                    <div class="st-stand-card" data-stand="{{ s.key }}">
+                    <div class="st-stand-card" data-stand="{{ s.key }}" data-stand-val="{{ s.key|upper }}" data-stand-label="{{ s.label }}">
                         <div class="st-stand-header">
                             <span class="st-stand-label">{{ s.label }}</span>
                         </div>
@@ -149,16 +149,11 @@
                 <p class="st-section-title">Stadionausbau</p>
                 <form method="post" action="{% url 'stadium_expand' %}" id="expand-form">
                     {% csrf_token %}
-                    <!-- Tribüne Picker -->
-                    <div class="st-expand-field" style="margin-bottom:10px;">
-                        <label>Tribüne</label>
-                        <input type="hidden" name="stand" id="expand-stand" value="NORD">
-                        <div class="st-stand-picker">
-                            <button type="button" class="st-stand-btn active" data-val="NORD">Nordkurve</button>
-                            <button type="button" class="st-stand-btn" data-val="OST">Osttribüne</button>
-                            <button type="button" class="st-stand-btn" data-val="SUED">Südkurve</button>
-                            <button type="button" class="st-stand-btn" data-val="WEST">Westtribüne</button>
-                        </div>
+                    <input type="hidden" name="stand" id="expand-stand" value="NORD">
+                    <div class="st-expand-stand-display">
+                        <span class="st-expand-stand-hint">Tribüne</span>
+                        <span class="st-expand-stand-name" id="expand-stand-label">Nordkurve</span>
+                        <span class="st-expand-stand-hint" style="font-size:10px;opacity:.45;">← Kachel anklicken</span>
                     </div>
                     <div class="st-expand-grid" style="grid-template-columns:1fr 1fr auto;">
                         <div class="st-expand-field">
@@ -400,14 +395,21 @@
     const countEl  = document.getElementById('expand-count');
     const display  = document.getElementById('expand-cost-display');
 
-    // Tribüne Button-Picker
-    document.querySelectorAll('.st-stand-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.st-stand-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            if (standEl) standEl.value = this.dataset.val;
+    // Tribünen-Kacheln anklicken → Ausbau-Formular aktualisieren
+    document.querySelectorAll('.st-stand-card').forEach(card => {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function() {
+            document.querySelectorAll('.st-stand-card').forEach(c => c.classList.remove('st-stand-card--selected'));
+            this.classList.add('st-stand-card--selected');
+            if (standEl) standEl.value = this.dataset.standVal;
+            const labelEl = document.getElementById('expand-stand-label');
+            if (labelEl) labelEl.textContent = this.dataset.standLabel;
+            document.getElementById('expand-form')?.scrollIntoView({behavior:'smooth', block:'nearest'});
         });
     });
+    // Erste Kachel direkt als aktiv markieren
+    const firstCard = document.querySelector('.st-stand-card');
+    if (firstCard) firstCard.classList.add('st-stand-card--selected');
 
     function aktualisieren() {
         const typ    = typeEl ? typeEl.value : 'SITZ';
