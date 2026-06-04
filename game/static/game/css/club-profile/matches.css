@@ -241,6 +241,50 @@
 }
 
 /* ============================================================
+   LETZTES SPIEL in next-match slot
+   ============================================================ */
+
+.club-last-result-in-next-slot {
+    grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+}
+
+.club-last-result-score {
+    display: grid;
+    place-items: center;
+    width: clamp(52px, 4.2vw, 72px);
+    height: clamp(52px, 4.2vw, 72px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: clamp(14px, 1.2vw, 22px);
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.club-scorers--last-in-next {
+    margin-top: 0;
+}
+
+.club-profile-button.is-win {
+    background: #05703f;
+    border-color: #05703f;
+    color: #ffffff;
+}
+
+.club-profile-button.is-draw {
+    background: var(--club-yellow, #c8a84b);
+    border-color: var(--club-yellow, #c8a84b);
+    color: #1f1700;
+}
+
+.club-profile-button.is-loss {
+    background: var(--club-red, #c0392b);
+    border-color: var(--club-red, #c0392b);
+    color: #ffffff;
+}
+
+/* ============================================================
    VEREINSUMFELD (facility card replaces last-match slot)
    ============================================================ */
 
