@@ -67,7 +67,7 @@
                 <p class="st-section-title">Tribünen &amp; Kapazität</p>
                 <div class="st-stands-grid">
                     {% for s in stands %}
-                    <div class="st-stand-card">
+                    <div class="st-stand-card" data-stand="{{ s.key }}">
                         <div class="st-stand-header">
                             <span class="st-stand-label">{{ s.label }}</span>
                         </div>

@@ -427,6 +427,10 @@
     font-weight: 700;
 }
 
+.st-stand-card[data-stand="ost"] {
+    background-image: url('../images/backgrounds/stand-east.jpg');
+}
+
 /* Kosten-Vorschau */
 .st-expand-cost-preview {
     background: rgba(201,168,76,0.08);
