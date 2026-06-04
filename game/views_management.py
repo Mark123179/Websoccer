@@ -87,21 +87,45 @@ def stadium_detail(request):
     ]
 
     # Tageseinnahmen-Schätzung (bei 80 % Auslastung)
-    auslastung  = 0.80
-    einnahmen   = (
-        stadium.capacity_standing * auslastung * float(stadium.price_standing) +
-        stadium.capacity_seating  * auslastung * float(stadium.price_seating)  +
-        stadium.capacity_vip      * auslastung * float(stadium.price_vip)
+    auslastung_faktor = 0.80
+    einnahmen = (
+        stadium.capacity_standing * auslastung_faktor * float(stadium.price_standing) +
+        stadium.capacity_seating  * auslastung_faktor * float(stadium.price_seating)  +
+        stadium.capacity_vip      * auslastung_faktor * float(stadium.price_vip)
     )
+    saisoneinnahmen = einnahmen * 17  # ~17 Heimspieltage pro Saison
+
+    # ROI: Saisoneinnahmen / Gesamtinvestition aller Ausbauten × 100
+    from decimal import Decimal
+    gesamtinvestition = sum(
+        ex.cost for ex in stadium.expansions.all()
+    ) or Decimal('0')
+    roi = round(float(saisoneinnahmen) / float(gesamtinvestition) * 100, 1) \
+        if gesamtinvestition > 0 else None
+
+    # Fan-Erlebnis-Werte (Proxy-Formeln bis Spieltags-Logik vorhanden)
+    cap = stadium.capacity_total or 1
+    standing_ratio = stadium.capacity_standing / cap
+    seating_vip_ratio = (stadium.capacity_seating + stadium.capacity_vip) / cap
+    lawn = stadium.lawn_quality
+
+    gauge_auslastung = 80  # Platzhalter bis echte Spieltagsdaten
+    gauge_atmosphaere = min(100, round(standing_ratio * 65 + lawn * 0.35))
+    gauge_komfort     = min(100, round(seating_vip_ratio * 70 + lawn * 0.30))
 
     return render(request, 'game/management/stadium.html', {
-        'club':          club,
-        'stadium':       stadium,
-        'stands':        stands,
-        'expansions':    expansions,
-        'kostenmatrix_json': json.dumps(kostenmatrix),
-        'max_kapazitaet': MAX_KAPAZITAET,
-        'einnahmen_schaetzung': einnahmen,
+        'club':                  club,
+        'stadium':               stadium,
+        'stands':                stands,
+        'expansions':            expansions,
+        'kostenmatrix_json':     json.dumps(kostenmatrix),
+        'max_kapazitaet':        MAX_KAPAZITAET,
+        'einnahmen_schaetzung':  einnahmen,
+        'saisoneinnahmen':       saisoneinnahmen,
+        'roi':                   roi,
+        'gauge_auslastung':      gauge_auslastung,
+        'gauge_atmosphaere':     gauge_atmosphaere,
+        'gauge_komfort':         gauge_komfort,
     })
 
 

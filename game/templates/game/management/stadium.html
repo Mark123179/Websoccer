@@ -22,7 +22,7 @@
         <div class="st-hero-content">
             <div class="st-hero-left">
                 <p class="st-breadcrumb">
-                    <a href="{% url 'management_hub' %}">Management</a>
+                    <a href="{% url 'club_detail' club_id=club.id %}">Verein</a>
                     <span>›</span>
                     <a href="{% url 'stadium_detail' %}">Stadion</a>
                     <span>›</span>
@@ -214,30 +214,67 @@
         <!-- ---- Rechte Sidebar ---- -->
         <div class="st-sidebar">
 
+            <!-- FAN-ERLEBNIS GAUGES -->
+            <div class="st-panel">
+                <p class="st-section-title">Fan-Erlebnis</p>
+                <div class="st-gauges">
+                    <div class="st-gauge-item">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_auslastung }}; --gauge-color:#4a90d9;">
+                            <span class="st-gauge-val">{{ gauge_auslastung }}</span>
+                        </div>
+                        <span class="st-gauge-label">Auslastung</span>
+                        <span class="st-gauge-sub">{% if gauge_auslastung >= 85 %}Sehr gut{% elif gauge_auslastung >= 70 %}Gut{% elif gauge_auslastung >= 50 %}Befriedigend{% else %}Gering{% endif %}</span>
+                    </div>
+                    <div class="st-gauge-item">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_atmosphaere }}; --gauge-color:#5cb85c;">
+                            <span class="st-gauge-val">{{ gauge_atmosphaere }}</span>
+                        </div>
+                        <span class="st-gauge-label">Atmosphäre</span>
+                        <span class="st-gauge-sub">{% if gauge_atmosphaere >= 85 %}Hervorragend{% elif gauge_atmosphaere >= 70 %}Sehr gut{% elif gauge_atmosphaere >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
+                    </div>
+                    <div class="st-gauge-item">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_komfort }}; --gauge-color:#c9a84c;">
+                            <span class="st-gauge-val">{{ gauge_komfort }}</span>
+                        </div>
+                        <span class="st-gauge-label">Komfort</span>
+                        <span class="st-gauge-sub">{% if gauge_komfort >= 85 %}Hervorragend{% elif gauge_komfort >= 70 %}Sehr gut{% elif gauge_komfort >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- FINANZÜBERSICHT -->
             <div class="st-panel">
                 <p class="st-section-title">Finanzübersicht</p>
                 <div class="st-finance-rows">
                     <div class="st-finance-row">
-                        <span class="st-finance-label">Tageseinnahmen (80 % Auslas.)</span>
+                        <span class="st-finance-label">Tageseinnahmen (80 % Ausl.)</span>
                         <span class="st-finance-value">{{ einnahmen_schaetzung|floatformat:0|intcomma }} €</span>
                         <span class="st-finance-sub">Schätzwert bei Auslastung</span>
                     </div>
                     <div class="st-finance-row">
+                        <span class="st-finance-label">Saisoneinnahmen (17 Heimsp.)</span>
+                        <span class="st-finance-value" style="font-size:15px;">{{ saisoneinnahmen|floatformat:0|intcomma }} €</span>
+                    </div>
+                    {% if roi %}
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">ROI Ausbau</span>
+                        <span class="st-finance-value" style="font-size:17px; color:{% if roi >= 15 %}#5cb85c{% elif roi >= 8 %}#e6a817{% else %}#d9534f{% endif %};">
+                            {{ roi }} %
+                        </span>
+                        <span class="st-finance-sub">Saisoneinnahmen / Gesamtinvestition</span>
+                    </div>
+                    {% endif %}
+                    <div class="st-finance-row">
                         <span class="st-finance-label">Stehplatz-Preis</span>
-                        <span class="st-finance-value" style="font-size:15px;">{{ stadium.price_standing }} €</span>
+                        <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_standing }} €</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Sitzplatz-Preis</span>
-                        <span class="st-finance-value" style="font-size:15px;">{{ stadium.price_seating }} €</span>
+                        <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_seating }} €</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">VIP-Preis</span>
-                        <span class="st-finance-value" style="font-size:15px;">{{ stadium.price_vip }} €</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">Vereinsbudget</span>
-                        <span class="st-finance-value" style="font-size:15px; color:#fff;">{{ club.budget|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_vip }} €</span>
                     </div>
                 </div>
             </div>

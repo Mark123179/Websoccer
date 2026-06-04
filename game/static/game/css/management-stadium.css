@@ -568,3 +568,67 @@
 .st-message--error   { background: rgba(217,83,79,0.15); border: 1px solid rgba(217,83,79,0.30); color: #e87c7c; }
 .st-message--warning { background: rgba(230,168,23,0.15); border: 1px solid rgba(230,168,23,0.30); color: #e6c84c; }
 .st-message--info    { background: rgba(74,144,217,0.15); border: 1px solid rgba(74,144,217,0.30); color: #7ab8e8; }
+
+/* ============================================================
+   FAN-ERLEBNIS GAUGE-RINGE
+   ============================================================ */
+.st-gauges {
+    display: flex;
+    justify-content: space-around;
+    gap: 8px;
+    padding: 6px 0 4px;
+}
+
+.st-gauge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Ring via conic-gradient — CSS custom props: --gauge-pct (0-100), --gauge-color */
+.st-gauge-ring {
+    position: relative;
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--gauge-color) calc(var(--gauge-pct) * 3.6deg),
+        rgba(255,255,255,0.07) 0deg
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Inner dark circle to make it a ring */
+.st-gauge-ring::after {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    background: #111827;
+}
+
+.st-gauge-val {
+    position: relative;
+    z-index: 1;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+}
+
+.st-gauge-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.65);
+    text-align: center;
+    letter-spacing: 0.03em;
+}
+
+.st-gauge-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.30);
+    text-align: center;
+}
