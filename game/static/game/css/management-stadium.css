@@ -869,58 +869,56 @@
 /* ============================================================
    STADIONUMFELD
    ============================================================ */
-/* ---- Umfeld-Panel: kein Padding, Foto blutet ---- */
+/* ---- Umfeld-Panel: Foto füllt ganzes Panel ---- */
 .st-panel--umfeld {
     padding: 0;
     overflow: hidden;
-    flex: 1;
-}
-
-.sf-wrap {
-    display: flex;
-    height: 100%;
-    min-height: 200px;
-}
-
-/* Foto-Bereich: nimmt linke ~42%, volle Höhe */
-.sf-photo {
     position: relative;
-    width: 42%;
-    flex-shrink: 0;
-    overflow: hidden;
+    flex: 1;
+    min-height: 220px;
 }
 
-.sf-map-img {
+/* Hintergrundfoto — absolute fill */
+.sf-bg-img {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    z-index: 0;
 }
 
-/* Abdunklung für Lesbarkeit des Titels */
-.sf-photo::before {
-    content: '';
+/* Gradient: links transparent → rechts dunkel für Karten-Lesbarkeit */
+.sf-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(160deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.12) 55%, transparent 100%);
+    background: linear-gradient(
+        to right,
+        rgba(0,0,0,0.18) 0%,
+        rgba(0,0,0,0.20) 42%,
+        rgba(13,18,30,0.82) 58%,
+        rgba(13,18,30,0.96) 100%
+    );
     z-index: 1;
     pointer-events: none;
 }
 
-/* Titel-Overlay im Foto */
+/* Titel oben links über dem Foto */
 .sf-photo-title {
     position: absolute;
-    top: 14px;
-    left: 16px;
+    top: 16px;
+    left: 18px;
+    z-index: 3;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.70);
-    z-index: 2;
-    pointer-events: none;
+    color: rgba(255,255,255,0.75);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.60);
 }
 
+/* Pins auf dem Foto */
 .sf-pin {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -942,29 +940,36 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.50);
 }
 
-/* Kachel-Grid 2×2 rechts */
+/* Kacheln: absolut rechts, 2×2 Grid */
 .sf-cards {
-    flex: 1;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    bottom: 14px;
+    width: 54%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     gap: 8px;
-    padding: 14px;
-    align-content: start;
+    z-index: 2;
 }
 
 .sf-card {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(10,15,28,0.72);
+    border: 1px solid rgba(255,255,255,0.10);
     border-radius: 9px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    transition: border-color 0.2s;
+    gap: 5px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: border-color 0.2s, background 0.2s;
 }
 
 .sf-card:hover {
-    border-color: rgba(201,168,76,0.25);
+    border-color: rgba(201,168,76,0.30);
+    background: rgba(10,15,28,0.85);
 }
 
 .sf-card-head {
