@@ -229,25 +229,18 @@
                 <p class="st-section-title">Fan-Erlebnis</p>
                 <div class="st-gauges">
                     <div class="st-gauge-item">
-                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_auslastung }}; --gauge-color:#4a90d9;">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ club.fan_popularity }}; --gauge-color:#4ade80;">
+                            <span class="st-gauge-val">{{ club.fan_popularity }}</span>
+                        </div>
+                        <span class="st-gauge-label">Fanbeliebtheit</span>
+                        <span class="st-gauge-sub">{% if club.fan_popularity >= 85 %}Hervorragend{% elif club.fan_popularity >= 70 %}Sehr gut{% elif club.fan_popularity >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
+                    </div>
+                    <div class="st-gauge-item">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_auslastung }}; --gauge-color:#22d3ee;">
                             <span class="st-gauge-val">{{ gauge_auslastung }}</span>
                         </div>
                         <span class="st-gauge-label">Auslastung</span>
                         <span class="st-gauge-sub">{% if gauge_auslastung >= 85 %}Sehr gut{% elif gauge_auslastung >= 70 %}Gut{% elif gauge_auslastung >= 50 %}Befriedigend{% else %}Gering{% endif %}</span>
-                    </div>
-                    <div class="st-gauge-item">
-                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_atmosphaere }}; --gauge-color:#5cb85c;">
-                            <span class="st-gauge-val">{{ gauge_atmosphaere }}</span>
-                        </div>
-                        <span class="st-gauge-label">Atmosphäre</span>
-                        <span class="st-gauge-sub">{% if gauge_atmosphaere >= 85 %}Hervorragend{% elif gauge_atmosphaere >= 70 %}Sehr gut{% elif gauge_atmosphaere >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
-                    </div>
-                    <div class="st-gauge-item">
-                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_komfort }}; --gauge-color:#c9a84c;">
-                            <span class="st-gauge-val">{{ gauge_komfort }}</span>
-                        </div>
-                        <span class="st-gauge-label">Komfort</span>
-                        <span class="st-gauge-sub">{% if gauge_komfort >= 85 %}Hervorragend{% elif gauge_komfort >= 70 %}Sehr gut{% elif gauge_komfort >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
                     </div>
                 </div>
             </div>
