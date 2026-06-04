@@ -1,60 +1,24 @@
 {% load static %}
 
-<article
-    class="club-profile-card last-match-profile-card"
-    {% if profile.lastMatch.backgroundImageUrl %}
-        style="--last-match-bg: url('{% static profile.lastMatch.backgroundImageUrl %}');"
-    {% endif %}
->
-    <h2 class="club-card-title">LETZTES SPIEL</h2>
+<article class="club-profile-card club-facilities-card">
+    <h2 class="club-card-title">VEREINSUMFELD</h2>
 
-    <p class="club-match-competition">
-        {% if profile.lastMatch.competitionLogoUrl %}
-            <img src="{% static profile.lastMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
-        {% endif %}
-        {{ profile.lastMatch.competitionName }} · {{ profile.lastMatch.matchdayLabel }}
-    </p>
-
-    <div class="club-last-result">
-        <span>
-            {% if profile.lastMatch.homeClub.crestUrl %}
-                {% if profile.lastMatch.homeClub.profileUrl %}
-                    <a class="club-crest-link" href="{{ profile.lastMatch.homeClub.profileUrl }}" aria-label="{{ profile.lastMatch.homeClub.name }} Profil">
-                        <img src="{% static profile.lastMatch.homeClub.crestUrl %}" alt="{{ profile.lastMatch.homeClub.name }}">
-                    </a>
-                {% else %}
-                    <img src="{% static profile.lastMatch.homeClub.crestUrl %}" alt="{{ profile.lastMatch.homeClub.name }}">
-                {% endif %}
-            {% endif %}
-            {{ profile.lastMatch.homeClub.shortName }}
-        </span>
-        <strong>{{ profile.lastMatch.homeGoals }} - {{ profile.lastMatch.awayGoals }}</strong>
-        <span>
-            {% if profile.lastMatch.awayClub.crestUrl %}
-                {% if profile.lastMatch.awayClub.profileUrl %}
-                    <a class="club-crest-link" href="{{ profile.lastMatch.awayClub.profileUrl }}" aria-label="{{ profile.lastMatch.awayClub.name }} Profil">
-                        <img src="{% static profile.lastMatch.awayClub.crestUrl %}" alt="{{ profile.lastMatch.awayClub.name }}">
-                    </a>
-                {% else %}
-                    <img src="{% static profile.lastMatch.awayClub.crestUrl %}" alt="{{ profile.lastMatch.awayClub.name }}">
-                {% endif %}
-            {% endif %}
-            {{ profile.lastMatch.awayClub.shortName }}
-        </span>
-    </div>
-
-    <div class="club-scorers">
-        {% for scorer in profile.lastMatch.scorers %}
-            <span>
-                <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
-                {{ scorer.playerName }} {{ scorer.minute }}'
-            </span>
-        {% empty %}
-            <span class="club-no-scorers">Keine Torschützen erfasst</span>
+    <div class="club-facilities-list">
+        {% for f in profile.facilities %}
+        <div class="club-facility-row">
+            <span class="club-facility-label">{{ f.fullLabel }}</span>
+            <div class="club-facility-pips">
+                <div class="club-facility-pip{% if f.level >= 1 %} club-facility-pip--active{% endif %}"></div>
+                <div class="club-facility-pip{% if f.level >= 2 %} club-facility-pip--active{% endif %}"></div>
+                <div class="club-facility-pip{% if f.level >= 3 %} club-facility-pip--active{% endif %}"></div>
+            </div>
+            <span class="club-facility-level">Stufe {{ f.level }}</span>
+        </div>
         {% endfor %}
     </div>
 
-    <a class="club-result-badge is-{{ profile.lastMatch.resultTone }}" href="{{ profile.lastMatch.reportUrl }}">
-        {{ profile.lastMatch.resultLabel }}
+    <a class="club-profile-button club-facilities-action" href="/management/stadion/">
+        Stadionverwaltung
+        <span aria-hidden="true">→</span>
     </a>
 </article>

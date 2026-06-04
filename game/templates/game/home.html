@@ -105,7 +105,73 @@
             {% endif %}
         </article>
 
-        <article class="dashboard-card overview-card overview-next-match-card"{% if last_match_home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static last_match_home_stadium_static_path %}');"{% endif %}>
+        <article class="dashboard-card overview-card overview-next-match-card"{% if home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
+            <h2 class="card-title">N&auml;chstes Spiel</h2>
+            {% if user_has_no_club %}
+                <div class="overview-no-club-state">
+                    <p class="overview-no-club-headline">Noch kein Verein</p>
+                    <p class="overview-no-club-sub">W&auml;hle einen Verein aus, um Spiele zu sehen.</p>
+                </div>
+            {% else %}
+            <p class="overview-fixture-title">
+                {% if competition_logo_static_path %}
+                    <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
+                {% endif %}
+                {% if next_match %}
+                    {{ next_match.competition_name }}
+                    {% if next_match.matchday_label %} - {{ next_match.matchday_label }}{% endif %}
+                {% elif primary_club and primary_club.league %}
+                    {{ primary_club.league.name }}
+                {% else %}
+                    Elite Liga
+                {% endif %}
+            </p>
+
+            <div class="overview-fixture">
+                <div class="overview-team">
+                    {% if primary_club and primary_club.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
+                            <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                        </a>
+                    {% endif %}
+                    <strong>
+                        {% if primary_club %}
+                            {{ primary_club.short_name }}
+                        {% else %}
+                            FC Novum
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <span class="overview-vs">VS</span>
+
+                <div class="overview-team">
+                    {% if next_match_opponent and next_match_opponent.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ next_match_opponent.id }}/" aria-label="{{ next_match_opponent.name }} Vereinsprofil">
+                            <img src="{% static next_match_opponent.crest_static_path %}" alt="{{ next_match_opponent.name }}">
+                        </a>
+                    {% endif %}
+                    <strong>
+                        {% if next_match_opponent %}
+                            {{ next_match_opponent.short_name }}
+                        {% else %}
+                            –
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+
+            <div class="overview-match-meta">
+                <span>{% if next_match and next_match.date_label %}{{ next_match.date_label }}{% else %}–{% endif %}</span>
+                <strong>{% if next_match and next_match.time_label %}{{ next_match.time_label }}{% else %}–{% endif %}</strong>
+                <small>{% if next_match and next_match.stadium_name %}{{ next_match.stadium_name }}{% else %}–{% endif %}</small>
+            </div>
+
+            <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielvorschau</a>
+            {% endif %}
+        </article>
+
+        <article class="dashboard-card overview-card overview-last-match-card"{% if last_match_home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static last_match_home_stadium_static_path %}');"{% endif %}>
             <h2 class="card-title">Letztes Spiel</h2>
 
             {% if user_has_no_club %}
@@ -167,32 +233,6 @@
             </div>
 
             <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielbericht anzeigen</a>
-            {% endif %}
-        </article>
-
-        <article class="dashboard-card overview-card overview-last-match-card">
-            <h2 class="card-title">Vereinsumfeld</h2>
-
-            {% if user_has_no_club %}
-                <div class="overview-no-club-state">
-                    <p class="overview-no-club-headline">Noch kein Verein</p>
-                    <p class="overview-no-club-sub">W&auml;hle einen Verein aus, um das Vereinsumfeld zu sehen.</p>
-                </div>
-            {% else %}
-            <div class="overview-facilities">
-                {% for f in home_facilities %}
-                <div class="overview-facility-row">
-                    <span class="overview-facility-label">{{ f.full_label }}</span>
-                    <div class="overview-facility-pips">
-                        {% for i in "012" %}
-                        <div class="overview-facility-pip{% if forloop.counter0 < f.level %} overview-facility-pip--active{% endif %}"></div>
-                        {% endfor %}
-                    </div>
-                    <span class="overview-facility-level">Stufe {{ f.level }}</span>
-                </div>
-                {% endfor %}
-            </div>
-            <a class="card-action" href="/management/stadion/">Stadionverwaltung</a>
             {% endif %}
         </article>
 

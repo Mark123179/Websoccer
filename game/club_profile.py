@@ -45,6 +45,7 @@ def build_club_profile_view_model(club, season=CURRENT_SEASON):
         'proHighlights': build_highlights(club, players, season, is_youth=False),
         'youthHighlights': build_highlights(club, players, season, is_youth=True),
         'stadium': build_stadium(public_profile),
+        'facilities': build_facilities(club),
         'city': build_city(public_profile, club),
         'kits': build_kits(club),
         'partnerClub': build_partner_club(public_profile),
@@ -265,6 +266,29 @@ def build_trophies(club):
         }
         for competition_name, count, trophy_asset_id in fallback
     ]
+
+
+def build_facilities(club):
+    _LABELS = [
+        ('nlz_level',      'Nachwuchsleistungszentrum', 'NLZ'),
+        ('medizin_level',  'Medizinische Abteilung',    'Medizin'),
+        ('training_level', 'Trainingsgelände',           'Training'),
+        ('office_level',   'Geschäftsstelle',            'Büro'),
+    ]
+    try:
+        stadium = club.stadium
+    except Exception:
+        stadium = None
+
+    result = []
+    for attr, full_label, short_label in _LABELS:
+        level = getattr(stadium, attr, 0) if stadium else 0
+        result.append({
+            'fullLabel': full_label,
+            'shortLabel': short_label,
+            'level': level,
+        })
+    return result
 
 
 def build_stadium(public_profile):

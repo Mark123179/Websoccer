@@ -1851,20 +1851,6 @@ def home(request):
         for mp in _other_profiles
     ]
 
-    # Vereinsumfeld-Einrichtungen für home-Kachel
-    _home_stadium = None
-    if primary_club:
-        try:
-            _home_stadium = primary_club.stadium
-        except Exception:
-            _home_stadium = None
-    home_facilities = [
-        {'label': 'NLZ',             'full_label': 'Nachwuchsleistungszentrum', 'level': _home_stadium.nlz_level      if _home_stadium else 0},
-        {'label': 'Medizin',         'full_label': 'Medizinische Abteilung',    'level': _home_stadium.medizin_level  if _home_stadium else 0},
-        {'label': 'Trainingsgelände','full_label': 'Trainingsgelände',           'level': _home_stadium.training_level if _home_stadium else 0},
-        {'label': 'Geschäftsstelle', 'full_label': 'Geschäftsstelle',           'level': _home_stadium.office_level   if _home_stadium else 0},
-    ] if not user_has_no_club else []
-
     return render(
         request,
         'game/home.html',
@@ -1921,7 +1907,6 @@ def home(request):
             'last_match_opponent': last_match_opponent,
             'last_match_score': last_match_score,
             'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
-            'home_facilities': home_facilities,
             'live_matches': [],
             'overview_stats': [
                 {'value': str(totals['manager_count']), 'label': 'registrierte Manager'},

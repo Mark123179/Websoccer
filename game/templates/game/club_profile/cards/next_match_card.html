@@ -1,60 +1,60 @@
 {% load static %}
 
 <article
-    class="club-profile-card next-match-profile-card"
-    {% if profile.nextMatch.backgroundImageUrl %}
-        style="--match-bg: url('{% static profile.nextMatch.backgroundImageUrl %}');"
+    class="club-profile-card last-match-profile-card next-match-profile-card"
+    {% if profile.lastMatch.backgroundImageUrl %}
+        style="--match-bg: url('{% static profile.lastMatch.backgroundImageUrl %}'); --last-match-bg: url('{% static profile.lastMatch.backgroundImageUrl %}');"
     {% endif %}
 >
-    <h2 class="club-card-title">NÄCHSTES SPIEL</h2>
+    <h2 class="club-card-title">LETZTES SPIEL</h2>
 
     <p class="club-match-competition">
-        {% if profile.nextMatch.competitionLogoUrl %}
-            <img src="{% static profile.nextMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
+        {% if profile.lastMatch.competitionLogoUrl %}
+            <img src="{% static profile.lastMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
         {% endif %}
-        {{ profile.nextMatch.competitionName }} · {{ profile.nextMatch.matchdayLabel }}
+        {{ profile.lastMatch.competitionName }} · {{ profile.lastMatch.matchdayLabel }}
     </p>
 
-    <div class="club-next-matchup">
-        <div>
-            {% if profile.nextMatch.homeClub.crestUrl %}
-                {% if profile.nextMatch.homeClub.profileUrl %}
-                    <a class="club-crest-link" href="{{ profile.nextMatch.homeClub.profileUrl }}" aria-label="{{ profile.nextMatch.homeClub.name }} Profil">
-                        <img src="{% static profile.nextMatch.homeClub.crestUrl %}" alt="{{ profile.nextMatch.homeClub.name }}">
-                    </a>
-                {% else %}
-                    <img src="{% static profile.nextMatch.homeClub.crestUrl %}" alt="{{ profile.nextMatch.homeClub.name }}">
-                {% endif %}
-            {% endif %}
-            <strong>{{ profile.nextMatch.homeClub.name }}</strong>
-        </div>
-        <span>VS</span>
-        <div>
-            {% if profile.nextMatch.awayClub.crestUrl %}
-                {% if profile.nextMatch.awayClub.profileUrl %}
-                    <a class="club-crest-link" href="{{ profile.nextMatch.awayClub.profileUrl }}" aria-label="{{ profile.nextMatch.awayClub.name }} Profil">
-                        <img src="{% static profile.nextMatch.awayClub.crestUrl %}" alt="{{ profile.nextMatch.awayClub.name }}">
-                    </a>
-                {% else %}
-                    <img src="{% static profile.nextMatch.awayClub.crestUrl %}" alt="{{ profile.nextMatch.awayClub.name }}">
-                {% endif %}
-            {% endif %}
-            <strong>{{ profile.nextMatch.awayClub.name }}</strong>
-        </div>
-    </div>
-
-    <div class="club-match-meta">
-        <span>{{ profile.nextMatch.dateLabel }}</span>
+    <div class="club-last-result">
         <span>
-            {% if profile.nextMatch.timeLabel %}
-                <strong>{{ profile.nextMatch.timeLabel }}</strong>
+            {% if profile.lastMatch.homeClub.crestUrl %}
+                {% if profile.lastMatch.homeClub.profileUrl %}
+                    <a class="club-crest-link" href="{{ profile.lastMatch.homeClub.profileUrl }}" aria-label="{{ profile.lastMatch.homeClub.name }} Profil">
+                        <img src="{% static profile.lastMatch.homeClub.crestUrl %}" alt="{{ profile.lastMatch.homeClub.name }}">
+                    </a>
+                {% else %}
+                    <img src="{% static profile.lastMatch.homeClub.crestUrl %}" alt="{{ profile.lastMatch.homeClub.name }}">
+                {% endif %}
             {% endif %}
-            <small>{{ profile.nextMatch.stadiumName }}</small>
+            {{ profile.lastMatch.homeClub.shortName }}
+        </span>
+        <strong>{{ profile.lastMatch.homeGoals }} - {{ profile.lastMatch.awayGoals }}</strong>
+        <span>
+            {% if profile.lastMatch.awayClub.crestUrl %}
+                {% if profile.lastMatch.awayClub.profileUrl %}
+                    <a class="club-crest-link" href="{{ profile.lastMatch.awayClub.profileUrl }}" aria-label="{{ profile.lastMatch.awayClub.name }} Profil">
+                        <img src="{% static profile.lastMatch.awayClub.crestUrl %}" alt="{{ profile.lastMatch.awayClub.name }}">
+                    </a>
+                {% else %}
+                    <img src="{% static profile.lastMatch.awayClub.crestUrl %}" alt="{{ profile.lastMatch.awayClub.name }}">
+                {% endif %}
+            {% endif %}
+            {{ profile.lastMatch.awayClub.shortName }}
         </span>
     </div>
 
-    <a class="club-profile-button" href="{{ profile.nextMatch.previewUrl }}">
-        Spielvorschau
-        <span aria-hidden="true">→</span>
+    <div class="club-scorers">
+        {% for scorer in profile.lastMatch.scorers %}
+            <span>
+                <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
+                {{ scorer.playerName }} {{ scorer.minute }}'
+            </span>
+        {% empty %}
+            <span class="club-no-scorers">Keine Torschützen erfasst</span>
+        {% endfor %}
+    </div>
+
+    <a class="club-result-badge is-{{ profile.lastMatch.resultTone }}" href="{{ profile.lastMatch.reportUrl }}">
+        {{ profile.lastMatch.resultLabel }}
     </a>
 </article>
