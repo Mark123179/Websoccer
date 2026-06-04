@@ -26,19 +26,9 @@
                 </h1>
                 <p class="st-breadcrumb" style="margin-top:4px;">{{ stadium.city }}</p>
             </div>
-            <div class="st-hero-kpis">
-                <div class="st-hero-kpi">
-                    <span class="st-hero-kpi-value">{{ stadium.capacity_total|intcomma }}</span>
-                    <span class="st-hero-kpi-label">Gesamtkapazität</span>
-                </div>
-                <div class="st-hero-kpi">
-                    <span class="st-hero-kpi-value">{{ stadium.lawn_quality }}</span>
-                    <span class="st-hero-kpi-label">Rasenqualität</span>
-                </div>
-                <div class="st-hero-kpi">
-                    <span class="st-hero-kpi-value">{{ club.budget|floatformat:0|intcomma }} €</span>
-                    <span class="st-hero-kpi-label">Vereinsbudget</span>
-                </div>
+            <div class="st-hero-capacity">
+                <span class="st-hero-capacity-value">{{ stadium.capacity_total|intcomma }}</span>
+                <span class="st-hero-capacity-label">Gesamtkapazität</span>
             </div>
         </div>
     </div>

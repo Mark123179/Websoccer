@@ -89,32 +89,31 @@
 
 .st-stadium-name strong { font-weight: 800; }
 
-.st-hero-kpis {
-    display: flex;
-    gap: 28px;
-    padding-bottom: 4px;
-}
-
-.st-hero-kpi {
+.st-hero-capacity {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 2px;
+    gap: 3px;
+    padding-bottom: 4px;
 }
 
-.st-hero-kpi-value {
-    font-size: 22px;
-    font-weight: 700;
+.st-hero-capacity-value {
+    font-size: 48px;
+    font-weight: 800;
     color: #c9a84c;
     line-height: 1;
+    letter-spacing: -0.02em;
+    text-shadow:
+        0 0 30px rgba(201,168,76,0.45),
+        0 0 60px rgba(201,168,76,0.20);
 }
 
-.st-hero-kpi-label {
+.st-hero-capacity-label {
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-weight: 700;
+    letter-spacing: 0.20em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.45);
+    color: rgba(255,255,255,0.40);
 }
 
 /* ============================================================
