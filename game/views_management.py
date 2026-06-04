@@ -165,6 +165,34 @@ def stadium_detail(request):
     gauge_atmosphaere = min(100, round(standing_ratio * 65 + lawn * 0.35))
     gauge_komfort     = min(100, round(seating_vip_ratio * 70 + lawn * 0.30))
 
+    # Stadionumfeld-Einrichtungen
+    facilities = [
+        {
+            'num': 1, 'key': 'nlz', 'label': 'NLZ',
+            'sublabel': 'Nachwuchsleistungszentrum',
+            'level': stadium.nlz_level,
+            'pin_x': 22, 'pin_y': 18,
+        },
+        {
+            'num': 2, 'key': 'medizin', 'label': 'Medizin',
+            'sublabel': 'Medizinische Abteilung',
+            'level': stadium.medizin_level,
+            'pin_x': 78, 'pin_y': 42,
+        },
+        {
+            'num': 3, 'key': 'training', 'label': 'Trainingsgelände',
+            'sublabel': 'Trainingsgelände',
+            'level': stadium.training_level,
+            'pin_x': 50, 'pin_y': 76,
+        },
+        {
+            'num': 4, 'key': 'office', 'label': 'Geschäftsstelle',
+            'sublabel': 'Geschäftsstelle',
+            'level': stadium.office_level,
+            'pin_x': 20, 'pin_y': 64,
+        },
+    ]
+
     return render(request, 'game/management/stadium.html', {
         'club':                  club,
         'stadium':               stadium,
@@ -172,6 +200,7 @@ def stadium_detail(request):
         'expansions':            expansions,
         'revenue_entries':       revenue_entries,
         'kostenmatrix_json':     json.dumps(kostenmatrix),
+        'facilities':            facilities,
         'max_kapazitaet':        MAX_KAPAZITAET,
         'einnahmen_schaetzung':  einnahmen,
         'saisoneinnahmen':       saisoneinnahmen,

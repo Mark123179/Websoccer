@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -109,6 +109,43 @@
                         </div>
                     </div>
                     {% endfor %}
+                </div>
+            </div>
+
+            <!-- STADIONUMFELD -->
+            <div class="st-panel">
+                <p class="st-section-title">Stadionumfeld</p>
+                <div class="sf-layout">
+                    <!-- Luftbild mit Pins -->
+                    <div class="sf-map">
+                        <img src="{% static 'game/images/backgrounds/stadium-grounds.jpg' %}" alt="Stadionumfeld" class="sf-map-img">
+                        {% for f in facilities %}
+                        <div class="sf-pin" style="left:{{ f.pin_x }}%;top:{{ f.pin_y }}%;">
+                            <span class="sf-pin-num">{{ f.num }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Einrichtungs-Kacheln -->
+                    <div class="sf-cards">
+                        {% for f in facilities %}
+                        <div class="sf-card sf-card--{{ f.key }}">
+                            <div class="sf-card-head">
+                                <span class="sf-card-num">{{ f.num }}</span>
+                                <span class="sf-card-name">{{ f.label }}</span>
+                                {% if f.key == 'training' %}
+                                <span class="sf-level-badge sf-level-badge--training">Stufe {{ f.level }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="sf-card-sub">{{ f.sublabel }}</div>
+                            <div class="sf-level-row">
+                                {% for i in "0123" %}
+                                <div class="sf-level-pip{% if forloop.counter0 < f.level %} sf-level-pip--active{% endif %}"></div>
+                                {% endfor %}
+                                <span class="sf-level-text">Stufe {{ f.level }} / 3</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 

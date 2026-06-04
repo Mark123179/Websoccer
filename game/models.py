@@ -511,6 +511,12 @@ class Stadium(models.Model):
         verbose_name='Ticketpreis VIP (€)',
     )
 
+    # Stadionumfeld-Einrichtungen (0 = nicht vorhanden, max 3)
+    nlz_level      = models.PositiveSmallIntegerField(default=0, verbose_name='NLZ Stufe')
+    medizin_level  = models.PositiveSmallIntegerField(default=0, verbose_name='Medizin Stufe')
+    training_level = models.PositiveSmallIntegerField(default=0, verbose_name='Trainingsgelände Stufe')
+    office_level   = models.PositiveSmallIntegerField(default=0, verbose_name='Geschäftsstelle Stufe')
+
     @property
     def capacity_total(self):
         return (

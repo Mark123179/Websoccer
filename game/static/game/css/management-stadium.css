@@ -812,3 +812,147 @@
     color: rgba(255,255,255,0.30);
     text-align: center;
 }
+
+/* ============================================================
+   STADIONUMFELD
+   ============================================================ */
+.sf-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    align-items: start;
+}
+
+/* Luftbild */
+.sf-map {
+    position: relative;
+    border-radius: 9px;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+}
+
+.sf-map-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.sf-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.sf-pin-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(22, 104, 220, 0.90);
+    border: 2px solid rgba(255,255,255,0.85);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.50);
+}
+
+/* Kachel-Grid 2×2 */
+.sf-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.sf-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.2s;
+}
+
+.sf-card:hover {
+    border-color: rgba(201,168,76,0.25);
+}
+
+.sf-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sf-card-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(22, 104, 220, 0.70);
+    border: 1.5px solid rgba(255,255,255,0.30);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.sf-card-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.90);
+    flex: 1;
+    line-height: 1.2;
+}
+
+.sf-card-sub {
+    font-size: 9px;
+    color: rgba(255,255,255,0.30);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Level-Pips */
+.sf-level-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.sf-level-pip {
+    width: 22px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+    transition: background 0.2s;
+}
+
+.sf-level-pip--active {
+    background: #c9a84c;
+    box-shadow: 0 0 5px rgba(201,168,76,0.50);
+}
+
+.sf-level-text {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    margin-left: 4px;
+    white-space: nowrap;
+}
+
+/* Trainingsgelände-Badge auf dem Bild */
+.sf-level-badge--training {
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(201,168,76,0.20);
+    border: 1px solid rgba(201,168,76,0.40);
+    color: #c9a84c;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: auto;
+}
