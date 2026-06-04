@@ -62,6 +62,15 @@ def stadium_detail(request):
     kostenmatrix   = get_kostenmatrix(stadium.capacity_total)
     revenue_entries = stadium.revenue_entries.all()[:10]
 
+    # Letzte Auslastung für Tribünen-Balken
+    last_entry     = stadium.revenue_entries.order_by('-created_at').first()
+    last_pct       = float(last_entry.auslastung_pct) if last_entry else 0.0
+
+    def _bar(capacity, pct):
+        attended = int(round(capacity * pct / 100))
+        bar_pct  = round(min(100, pct))
+        return {'capacity': capacity, 'attended': attended, 'bar_pct': bar_pct}
+
     # Tribünen-Übersicht als strukturiertes Dict für das Template
     stands = [
         {
@@ -71,6 +80,9 @@ def stadium_detail(request):
             'seating':  stadium.nord_seating,
             'vip':      stadium.nord_vip,
             'total':    stadium.nord_standing + stadium.nord_seating + stadium.nord_vip,
+            'bar_steh': _bar(stadium.nord_standing, last_pct),
+            'bar_sitz': _bar(stadium.nord_seating,  last_pct),
+            'bar_vip':  _bar(stadium.nord_vip,      last_pct),
         },
         {
             'key':      'ost',
@@ -79,6 +91,9 @@ def stadium_detail(request):
             'seating':  stadium.ost_seating,
             'vip':      stadium.ost_vip,
             'total':    stadium.ost_standing + stadium.ost_seating + stadium.ost_vip,
+            'bar_steh': _bar(stadium.ost_standing, last_pct),
+            'bar_sitz': _bar(stadium.ost_seating,  last_pct),
+            'bar_vip':  _bar(stadium.ost_vip,      last_pct),
         },
         {
             'key':      'sued',
@@ -87,6 +102,9 @@ def stadium_detail(request):
             'seating':  stadium.sued_seating,
             'vip':      stadium.sued_vip,
             'total':    stadium.sued_standing + stadium.sued_seating + stadium.sued_vip,
+            'bar_steh': _bar(stadium.sued_standing, last_pct),
+            'bar_sitz': _bar(stadium.sued_seating,  last_pct),
+            'bar_vip':  _bar(stadium.sued_vip,      last_pct),
         },
         {
             'key':      'west',
@@ -95,6 +113,9 @@ def stadium_detail(request):
             'seating':  stadium.west_seating,
             'vip':      stadium.west_vip,
             'total':    stadium.west_standing + stadium.west_seating + stadium.west_vip,
+            'bar_steh': _bar(stadium.west_standing, last_pct),
+            'bar_sitz': _bar(stadium.west_seating,  last_pct),
+            'bar_vip':  _bar(stadium.west_vip,      last_pct),
         },
     ]
 

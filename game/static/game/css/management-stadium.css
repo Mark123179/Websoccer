@@ -276,6 +276,73 @@
 }
 
 /* ============================================================
+   STAND-BARS (Auslastungs-Balken in den Tribünen-Kacheln)
+   ============================================================ */
+.st-stand-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-bar-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 44px 8px 44px;
+    align-items: center;
+    gap: 4px;
+}
+
+.st-bar-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.40);
+}
+
+.st-bar-track {
+    height: 5px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.st-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.st-bar-fill--steh {
+    background: linear-gradient(90deg, #22d3ee, #38bdf8);
+    box-shadow: 0 0 6px rgba(34,211,238,0.6);
+}
+
+.st-bar-fill--sitz {
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    box-shadow: 0 0 6px rgba(74,222,128,0.5);
+}
+
+.st-bar-fill--vip {
+    background: linear-gradient(90deg, #c9a84c, #f0d070);
+    box-shadow: 0 0 6px rgba(201,168,76,0.55);
+}
+
+.st-bar-num {
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.st-bar-num--left  { color: rgba(255,255,255,0.80); text-align: right; }
+.st-bar-num--right { color: rgba(255,255,255,0.35); text-align: left; }
+
+.st-bar-sep {
+    font-size: 9px;
+    color: rgba(255,255,255,0.20);
+    text-align: center;
+}
+
+/* ============================================================
    TICKETPREISE-FORMULAR
    ============================================================ */
 .st-prices-grid {

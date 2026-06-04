@@ -75,27 +75,36 @@
                             <div class="st-stand-total">{{ s.total|intcomma }}</div>
                             <div class="st-stand-total-sub">Plätze gesamt</div>
                         </div>
-                        <div class="st-stand-rows">
-                            <div class="st-stand-row">
-                                <span class="st-stand-row-label">
-                                    <span class="st-stand-row-dot st-stand-row-dot--steh"></span>
-                                    Steh
-                                </span>
-                                <span class="st-stand-row-value">{{ s.standing|intcomma }}</span>
+                        <div class="st-stand-bars">
+                            <!-- Steh -->
+                            <div class="st-bar-row">
+                                <span class="st-bar-label">Steh</span>
+                                <div class="st-bar-track">
+                                    <div class="st-bar-fill st-bar-fill--steh" style="width:{{ s.bar_steh.bar_pct }}%"></div>
+                                </div>
+                                <span class="st-bar-num st-bar-num--left">{{ s.bar_steh.attended|intcomma }}</span>
+                                <span class="st-bar-sep">/</span>
+                                <span class="st-bar-num st-bar-num--right">{{ s.bar_steh.capacity|intcomma }}</span>
                             </div>
-                            <div class="st-stand-row">
-                                <span class="st-stand-row-label">
-                                    <span class="st-stand-row-dot st-stand-row-dot--sitz"></span>
-                                    Sitz
-                                </span>
-                                <span class="st-stand-row-value">{{ s.seating|intcomma }}</span>
+                            <!-- Sitz -->
+                            <div class="st-bar-row">
+                                <span class="st-bar-label">Sitz</span>
+                                <div class="st-bar-track">
+                                    <div class="st-bar-fill st-bar-fill--sitz" style="width:{{ s.bar_sitz.bar_pct }}%"></div>
+                                </div>
+                                <span class="st-bar-num st-bar-num--left">{{ s.bar_sitz.attended|intcomma }}</span>
+                                <span class="st-bar-sep">/</span>
+                                <span class="st-bar-num st-bar-num--right">{{ s.bar_sitz.capacity|intcomma }}</span>
                             </div>
-                            <div class="st-stand-row">
-                                <span class="st-stand-row-label">
-                                    <span class="st-stand-row-dot st-stand-row-dot--vip"></span>
-                                    VIP
-                                </span>
-                                <span class="st-stand-row-value">{{ s.vip|intcomma }}</span>
+                            <!-- VIP -->
+                            <div class="st-bar-row">
+                                <span class="st-bar-label">VIP</span>
+                                <div class="st-bar-track">
+                                    <div class="st-bar-fill st-bar-fill--vip" style="width:{{ s.bar_vip.bar_pct }}%"></div>
+                                </div>
+                                <span class="st-bar-num st-bar-num--left">{{ s.bar_vip.attended|intcomma }}</span>
+                                <span class="st-bar-sep">/</span>
+                                <span class="st-bar-num st-bar-num--right">{{ s.bar_vip.capacity|intcomma }}</span>
                             </div>
                         </div>
                     </div>
