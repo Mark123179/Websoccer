@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from openai import OpenAI
 
-SYSTEM_PROMPT = """Du bist KI-Kloppo — der legendäre Fußballtrainer Jürgen Klopp, als KI-Assistent für den Online-Fußballmanager Websoccer.
+BASE_SYSTEM_PROMPT = """Du bist KI-Kloppo — der legendäre Fußballtrainer Jürgen Klopp, als KI-Assistent für den Online-Fußballmanager Websoccer.
 
 Deine Persönlichkeit:
 - Du redest wie Klopp: enthusiastisch, mitreißend, manchmal etwas schwäbisch eingefärbt ("Boah!", "Wahnsinn!", "Ich liebe dieses Spiel!")
@@ -50,10 +50,83 @@ Du hilfst bei allen Fragen rund um Websoccer. Antworte immer auf Deutsch.
 ## Finanzen
 - Das Budget bestimmt, welche Transfers möglich sind.
 - Gehälter werden wöchentlich abgebucht — Haushalt im Auge behalten!
+- Stadioneinnahmen werden automatisch nach jedem Heimspiel dem Vereinsbudget gutgeschrieben.
 
 ## Creator-Modus (nur Admins)
 - Superuser können Vereine, Spieler und Ligen direkt bearbeiten.
+
+# Stadion-Kostenkalkulator
+
+Du kannst auf Anfrage des Managers AUSSCHLIESSLICH Kosten berechnen — du gibst KEINE Empfehlungen, welche Tribüne oder welchen Typ er ausbauen soll. Das ist seine Entscheidung.
+
+Wenn der Manager nach Ausbaukosten fragt (z.B. "Was kostet Ausbau auf 80.000?"), gehst du so vor:
+1. Frage: Welche Tribüne? (Nordkurve / Osttribüne / Südkurve / Westtribüne)
+2. Frage: Welcher Platztyp? (Stehplatz / Sitzplatz / VIP)
+3. Berechne dann mit den Kosten aus dem Abschnitt "STADION-DATEN DES MANAGERS" die Gesamtkosten.
+
+Formel: Anzahl neue Plätze × Kosten pro Platz (aus der Kostentabelle) = Gesamtkosten
+
+Nenne immer die Gesamtkosten als konkreten Euro-Betrag (z.B. "Das kostet dich 24.000.000 €, Freund!").
+Du DARFST NICHT sagen "das würde ich empfehlen" oder ähnliches — nur rechnen und präsentieren.
 """
+
+
+def _build_stadium_context(user) -> str:
+    """Inject the manager's current stadium data + cost matrix into the system prompt."""
+    try:
+        from game.views import current_manager_club
+        from game.stadium_costs import get_kostenmatrix
+
+        club = current_manager_club(user=user)
+        if not club:
+            return ""
+
+        stadium = getattr(club, 'stadium', None)
+        if not stadium:
+            return ""
+
+        cap = stadium.capacity_total
+        matrix = get_kostenmatrix(cap)
+
+        stands = [
+            ("Nordkurve",   stadium.nord_standing,  stadium.nord_seating,  stadium.nord_vip),
+            ("Osttribüne",  stadium.ost_standing,   stadium.ost_seating,   stadium.ost_vip),
+            ("Südkurve",    stadium.sued_standing,  stadium.sued_seating,  stadium.sued_vip),
+            ("Westtribüne", stadium.west_standing,  stadium.west_seating,  stadium.west_vip),
+        ]
+
+        lines = [
+            f"\n\n# STADION-DATEN DES MANAGERS",
+            f"Verein: {club.name}",
+            f"Stadion: {stadium.name} ({stadium.city})",
+            f"Gesamtkapazität: {cap:,} Plätze".replace(",", "."),
+            f"  - Stehplätze gesamt: {stadium.capacity_standing:,}".replace(",", "."),
+            f"  - Sitzplätze gesamt: {stadium.capacity_seating:,}".replace(",", "."),
+            f"  - VIP gesamt:        {stadium.capacity_vip:,}".replace(",", "."),
+            "",
+            "Tribünen-Aufteilung:",
+        ]
+        for name, steh, sitz, vip in stands:
+            total = steh + sitz + vip
+            lines.append(
+                f"  {name}: {total:,} gesamt (Steh {steh:,} | Sitz {sitz:,} | VIP {vip:,})".replace(",", ".")
+            )
+
+        lines += [
+            "",
+            "Aktuelle Kosten pro Platz (abhängig von Gesamtkapazität):",
+            f"  Stehplatz: {matrix['STEH']:,.0f} € / Platz".replace(",", "."),
+            f"  Sitzplatz: {matrix['SITZ']:,.0f} € / Platz".replace(",", "."),
+            f"  VIP:       {matrix['VIP']:,.0f} € / Platz".replace(",", "."),
+            "",
+            f"Vereinsbudget: {float(club.budget):,.0f} €".replace(",", "."),
+            f"Max. erlaubte Gesamtkapazität: 120.000 Plätze",
+        ]
+        return "\n".join(lines)
+
+    except Exception:
+        return ""
+
 
 _client = None
 
@@ -76,7 +149,10 @@ def ai_chat(request):
 
         history = data.get('history', [])[-8:]
 
-        messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
+        stadium_context = _build_stadium_context(request.user)
+        system_content = BASE_SYSTEM_PROMPT + stadium_context
+
+        messages = [{'role': 'system', 'content': system_content}]
         for h in history:
             role = h.get('role', '')
             content = h.get('content', '')
