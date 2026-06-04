@@ -970,7 +970,7 @@
 
 .sf-card:hover {
     border-color: rgba(201,168,76,0.30);
-    background: rgba(10,15,28,0.85);
+    background-color: rgba(10,15,28,0.85);
 }
 
 .sf-card-head {
