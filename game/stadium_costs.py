@@ -1,25 +1,28 @@
 """
 Kostentabelle für den Stadionausbau.
 
-Preise pro Sitzplatz (in €) basierend auf der aktuellen Gesamtkapazität.
+Preise pro Platz (in €) basierend auf der Zielkapazitäts-Stufe.
 11 Stufen × 3 Typen (Stehplatz / Sitzplatz / VIP).
+
+Beispiel: Stadion bei 75.000 → Tier "bis 80.000" → Stehplatz 5.400 €/Platz.
+Wird die Tier-Grenze überschritten, werden Plätze in jedem Tier separat berechnet.
 """
 from decimal import Decimal
 
-# Stufen: (max_kapazität_grenze, preis_steh, preis_sitz, preis_vip)
-# Gilt für: aktuelle_kapazität < grenze
+# Stufen: (kapazitätsgrenze_inkl, preis_steh, preis_sitz, preis_vip)
+# "aktuelle Kapazität <= grenze" → dieser Preis gilt für neue Plätze in diesem Tier
 KOSTENSTUFEN = [
-    (10_000,  Decimal('120'),  Decimal('280'),  Decimal('1_200')),
-    (20_000,  Decimal('150'),  Decimal('340'),  Decimal('1_500')),
-    (30_000,  Decimal('190'),  Decimal('420'),  Decimal('1_900')),
-    (40_000,  Decimal('240'),  Decimal('520'),  Decimal('2_400')),
-    (50_000,  Decimal('300'),  Decimal('650'),  Decimal('3_000')),
-    (60_000,  Decimal('370'),  Decimal('800'),  Decimal('3_700')),
-    (70_000,  Decimal('450'),  Decimal('980'),  Decimal('4_500')),
-    (80_000,  Decimal('550'), Decimal('1_200'), Decimal('5_500')),
-    (90_000,  Decimal('670'), Decimal('1_450'), Decimal('6_700')),
-    (100_000, Decimal('800'), Decimal('1_750'), Decimal('8_000')),
-    (120_001, Decimal('980'), Decimal('2_100'), Decimal('9_800')),
+    ( 20_000, Decimal('1200'),  Decimal('2200'),  Decimal('6000')),
+    ( 30_000, Decimal('1600'),  Decimal('3200'),  Decimal('8000')),
+    ( 40_000, Decimal('2200'),  Decimal('4500'),  Decimal('11000')),
+    ( 50_000, Decimal('3000'),  Decimal('6000'),  Decimal('14500')),
+    ( 60_000, Decimal('4000'),  Decimal('7500'),  Decimal('18000')),
+    ( 70_000, Decimal('5000'),  Decimal('9500'),  Decimal('22500')),
+    ( 80_000, Decimal('5400'),  Decimal('10000'), Decimal('23000')),
+    ( 90_000, Decimal('5800'),  Decimal('11000'), Decimal('24000')),
+    (100_000, Decimal('6000'),  Decimal('11500'), Decimal('25000')),
+    (110_000, Decimal('6200'),  Decimal('12000'), Decimal('27000')),
+    (120_000, Decimal('6500'),  Decimal('13000'), Decimal('30000')),
 ]
 
 SEAT_TYPE_INDEX = {
@@ -31,9 +34,21 @@ SEAT_TYPE_INDEX = {
 MAX_KAPAZITAET = 120_000
 
 
+def _get_preis_fuer_kapazitaet(kapazitaet: int, typ_idx: int) -> Decimal:
+    """Gibt den Preis pro Platz für eine gegebene Kapazität zurück."""
+    for grenze, p_steh, p_sitz, p_vip in KOSTENSTUFEN:
+        if kapazitaet <= grenze:
+            return (p_steh, p_sitz, p_vip)[typ_idx]
+    # Über 120.000 → höchste Stufe
+    return KOSTENSTUFEN[-1][typ_idx + 1]
+
+
 def get_expansion_cost(aktuelle_kapazitaet: int, sitztyp: str, anzahl: int) -> Decimal:
     """
     Berechnet die Gesamtkosten eines Ausbau-Auftrags.
+
+    Überschreitet der Ausbau eine Tier-Grenze, werden die Plätze aufgeteilt
+    und jeder Anteil zum Preis des jeweiligen Tiers berechnet.
 
     :param aktuelle_kapazitaet: Aktuelle Gesamtkapazität des Stadions
     :param sitztyp: 'STEH', 'SITZ' oder 'VIP'
@@ -42,40 +57,44 @@ def get_expansion_cost(aktuelle_kapazitaet: int, sitztyp: str, anzahl: int) -> D
     """
     typ_idx = SEAT_TYPE_INDEX.get(sitztyp.upper(), 1)
 
-    for grenze, preis_steh, preis_sitz, preis_vip in KOSTENSTUFEN:
-        if aktuelle_kapazitaet < grenze:
-            preise = (preis_steh, preis_sitz, preis_vip)
-            return preise[typ_idx] * Decimal(anzahl)
+    gesamtkosten = Decimal('0')
+    verbleibend  = anzahl
+    aktuell      = aktuelle_kapazitaet
 
-    # Fallback: höchste Stufe
-    _, preis_steh, preis_sitz, preis_vip = KOSTENSTUFEN[-1]
-    preise = (preis_steh, preis_sitz, preis_vip)
-    return preise[typ_idx] * Decimal(anzahl)
+    for grenze, p_steh, p_sitz, p_vip in KOSTENSTUFEN:
+        if verbleibend <= 0:
+            break
+        if aktuell >= grenze:
+            continue  # Dieser Tier ist bereits überschritten
+        preis       = (p_steh, p_sitz, p_vip)[typ_idx]
+        platz_im_tier = grenze - aktuell          # Wie viele Plätze bis zur Tier-Grenze
+        diesmal     = min(verbleibend, platz_im_tier)
+        gesamtkosten += preis * Decimal(diesmal)
+        aktuell      += diesmal
+        verbleibend  -= diesmal
+
+    # Falls noch Plätze übrig (über 120.000) → höchste Stufe
+    if verbleibend > 0:
+        preis = KOSTENSTUFEN[-1][typ_idx + 1]
+        gesamtkosten += preis * Decimal(verbleibend)
+
+    return gesamtkosten
 
 
 def get_preis_pro_platz(aktuelle_kapazitaet: int, sitztyp: str) -> Decimal:
-    """Gibt den Preis pro Sitzplatz zurück (für die Live-Kostenberechnung im Frontend)."""
+    """Gibt den Preis pro Platz für den aktuellen Tier zurück."""
     typ_idx = SEAT_TYPE_INDEX.get(sitztyp.upper(), 1)
-    for grenze, preis_steh, preis_sitz, preis_vip in KOSTENSTUFEN:
-        if aktuelle_kapazitaet < grenze:
-            return (preis_steh, preis_sitz, preis_vip)[typ_idx]
-    return KOSTENSTUFEN[-1][typ_idx + 1]
+    return _get_preis_fuer_kapazitaet(aktuelle_kapazitaet, typ_idx)
 
 
 def get_kostenmatrix(aktuelle_kapazitaet: int) -> dict:
     """
     Gibt ein Dict zurück: {'STEH': preis_pro_platz, 'SITZ': ..., 'VIP': ...}
+    Preise gelten für den aktuellen Kapazitäts-Tier.
     Wird im Template per JSON an den JS-Kostenrechner übergeben.
     """
-    for grenze, preis_steh, preis_sitz, preis_vip in KOSTENSTUFEN:
-        if aktuelle_kapazitaet < grenze:
-            return {
-                'STEH': float(preis_steh),
-                'SITZ': float(preis_sitz),
-                'VIP':  float(preis_vip),
-            }
     return {
-        'STEH': float(KOSTENSTUFEN[-1][1]),
-        'SITZ': float(KOSTENSTUFEN[-1][2]),
-        'VIP':  float(KOSTENSTUFEN[-1][3]),
+        'STEH': float(_get_preis_fuer_kapazitaet(aktuelle_kapazitaet, 0)),
+        'SITZ': float(_get_preis_fuer_kapazitaet(aktuelle_kapazitaet, 1)),
+        'VIP':  float(_get_preis_fuer_kapazitaet(aktuelle_kapazitaet, 2)),
     }
