@@ -11,7 +11,13 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    overflow: hidden;
+    overflow: visible;
+}
+
+/* Kalender bleibt über dem Hero-Bild */
+.stadium-detail-page .ws-game-header {
+    position: relative;
+    z-index: 2;
 }
 
 /* ============================================================
@@ -19,11 +25,13 @@
    ============================================================ */
 .st-hero {
     position: relative;
-    height: 260px;
+    height: 394px;        /* 260px Inhalt + 134px hinter Kalender (112px + 22px) */
+    margin-top: -134px;   /* rutscht hinter ws-game-header */
     flex-shrink: 0;
     overflow: hidden;
     display: flex;
     align-items: flex-end;
+    z-index: 1;
 }
 
 .st-hero-bg {
