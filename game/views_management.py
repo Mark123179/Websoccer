@@ -274,25 +274,42 @@ def stadium_set_prices(request):
     if not stadium:
         return redirect('management_hub')
 
-    try:
-        p_steh = float(request.POST['price_standing'])
-        p_sitz = float(request.POST['price_seating'])
-        p_vip  = float(request.POST['price_vip'])
-    except (KeyError, ValueError):
-        messages.error(request, 'Ungültige Preiseingabe.')
+    fields_to_save = []
+    raw = {
+        'price_standing': request.POST.get('price_standing', '').strip(),
+        'price_seating':  request.POST.get('price_seating',  '').strip(),
+        'price_vip':      request.POST.get('price_vip',      '').strip(),
+    }
+
+    parsed = {}
+    for field, val in raw.items():
+        if val == '':
+            continue
+        try:
+            parsed[field] = float(val)
+        except ValueError:
+            messages.error(request, f'Ungültige Eingabe für {field}.')
+            return redirect('stadium_detail')
+
+    if not parsed:
+        messages.warning(request, 'Keine Preise eingegeben — nichts geändert.')
         return redirect('stadium_detail')
 
-    if any(p < 0 for p in (p_steh, p_sitz, p_vip)):
-        messages.error(request, 'Ticketpreise dürfen nicht negativ sein.')
-        return redirect('stadium_detail')
+    for field, p in parsed.items():
+        if p < 0:
+            messages.error(request, 'Ticketpreise dürfen nicht negativ sein.')
+            return redirect('stadium_detail')
+        setattr(stadium, field, Decimal(str(round(p, 2))))
+        fields_to_save.append(field)
+
+    # Konsistenzhinweis nur wenn alle drei bekannt
+    p_steh = float(parsed.get('price_standing', stadium.price_standing))
+    p_sitz = float(parsed.get('price_seating',  stadium.price_seating))
+    p_vip  = float(parsed.get('price_vip',      stadium.price_vip))
     if p_vip < p_sitz or p_sitz < p_steh:
         messages.warning(request, 'Hinweis: VIP-Preise sollten höher als Sitz- und Stehpreise sein.')
 
-    from decimal import Decimal
-    stadium.price_standing = Decimal(str(round(p_steh, 2)))
-    stadium.price_seating  = Decimal(str(round(p_sitz, 2)))
-    stadium.price_vip      = Decimal(str(round(p_vip, 2)))
-    stadium.save(update_fields=['price_standing', 'price_seating', 'price_vip'])
+    stadium.save(update_fields=fields_to_save)
     messages.success(request, 'Ticketpreise erfolgreich aktualisiert.')
     return redirect('stadium_detail')
 
