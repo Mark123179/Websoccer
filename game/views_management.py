@@ -7,28 +7,28 @@ def _fmt_euro(amount):
 
 FACILITY_DATA = {
     'nlz': [
-        {'desc': 'Max. 60 Jugendspieler im Kader',          'cost': 0,      'days': 0},
-        {'desc': 'Max. 63 Jugendspieler im Kader',          'cost': 50000,  'days': 1},
-        {'desc': 'Max. 66 Jugendspieler im Kader',          'cost': 100000, 'days': 1},
-        {'desc': 'Max. 70 Jugendspieler im Kader',          'cost': 200000, 'days': 1},
+        {'desc': 'Max. 60 Jugendspieler im Kader',          'cost': 0,        'days': 0},
+        {'desc': 'Max. 63 Jugendspieler im Kader',          'cost': 500000,   'days': 1},
+        {'desc': 'Max. 66 Jugendspieler im Kader',          'cost': 1000000,  'days': 1},
+        {'desc': 'Max. 70 Jugendspieler im Kader',          'cost': 2000000,  'days': 1},
     ],
     'medizin': [
-        {'desc': 'Kein Effekt',                                            'cost': 0,      'days': 0},
-        {'desc': '−5 % Verletzungsanfälligkeit, −1–2 Tage Dauer',         'cost': 40000,  'days': 1},
-        {'desc': '−10 % Anfälligkeit, −2–3 Tage Verletzungsdauer',        'cost': 90000,  'days': 1},
-        {'desc': '−20 % Anfälligkeit, −3–4 Tage Verletzungsdauer',        'cost': 180000, 'days': 1},
+        {'desc': 'Kein Effekt',                                            'cost': 0,        'days': 0},
+        {'desc': '−5 % Verletzungsanfälligkeit, −1–2 Tage Dauer',         'cost': 400000,   'days': 1},
+        {'desc': '−10 % Anfälligkeit, −2–3 Tage Verletzungsdauer',        'cost': 900000,   'days': 1},
+        {'desc': '−20 % Anfälligkeit, −3–4 Tage Verletzungsdauer',        'cost': 1800000,  'days': 1},
     ],
     'training': [
-        {'desc': 'Frischeanzeige in 5er-Schritten',                       'cost': 0,      'days': 0},
-        {'desc': 'Exakte Frischeanzeige',                                  'cost': 60000,  'days': 1},
-        {'desc': 'Exakte Anzeige + −1–2 Frischeverlust pro Spiel',        'cost': 120000, 'days': 1},
-        {'desc': 'Exakte Anzeige auf Zahl + +1–2 Frischepunkte/Tag',      'cost': 250000, 'days': 1},
+        {'desc': 'Frischeanzeige in 5er-Schritten',                       'cost': 0,        'days': 0},
+        {'desc': 'Exakte Frischeanzeige',                                  'cost': 600000,   'days': 1},
+        {'desc': 'Exakte Anzeige + −1–2 Frischeverlust pro Spiel',        'cost': 1200000,  'days': 1},
+        {'desc': 'Exakte Anzeige auf Zahl + +1–2 Frischepunkte/Tag',      'cost': 2500000,  'days': 1},
     ],
     'office': [
-        {'desc': 'Kein Platz für weitere Trainer',                         'cost': 0,      'days': 0},
-        {'desc': 'Jugendtrainer: autom. Aufstellung & Taktik',             'cost': 30000,  'days': 1},
-        {'desc': 'Co-Trainer: Erinnerung + Top-5 Standards markiert',      'cost': 75000,  'days': 1},
-        {'desc': 'Co-Trainer: Top-3 Standardschützen (Jugend & Profi)',    'cost': 150000, 'days': 1},
+        {'desc': 'Kein Platz für weitere Trainer',                         'cost': 0,        'days': 0},
+        {'desc': 'Jugendtrainer: autom. Aufstellung & Taktik',             'cost': 300000,   'days': 1},
+        {'desc': 'Co-Trainer: Erinnerung + Top-5 Standards markiert',      'cost': 750000,   'days': 1},
+        {'desc': 'Co-Trainer: Top-3 Standardschützen (Jugend & Profi)',    'cost': 1500000,  'days': 1},
     ],
 }
 

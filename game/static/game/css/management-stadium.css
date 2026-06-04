@@ -872,7 +872,7 @@
 /* ---- Umfeld-Panel: Foto links, Kacheln rechts ---- */
 .st-panel--umfeld {
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex: 1;
     min-height: 200px;
