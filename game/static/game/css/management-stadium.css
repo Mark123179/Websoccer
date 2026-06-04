@@ -1188,6 +1188,15 @@
 }
 
 
+/* ---- Geschäftsstelle-Kachel: Hintergrundbild ---- */
+.sf-card--office {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-office.jpg');
+    background-size: cover;
+    background-position: center 40%;
+}
+
 /* ---- Trainingsgelände-Kachel: Hintergrundbild ---- */
 .sf-card--training {
     background-image:
