@@ -869,19 +869,25 @@
 /* ============================================================
    STADIONUMFELD
    ============================================================ */
-.sf-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    align-items: start;
+/* ---- Umfeld-Panel: kein Padding, Foto blutet ---- */
+.st-panel--umfeld {
+    padding: 0;
+    overflow: hidden;
+    flex: 1;
 }
 
-/* Luftbild */
-.sf-map {
+.sf-wrap {
+    display: flex;
+    height: 100%;
+    min-height: 200px;
+}
+
+/* Foto-Bereich: nimmt linke ~42%, volle Höhe */
+.sf-photo {
     position: relative;
-    border-radius: 9px;
+    width: 42%;
+    flex-shrink: 0;
     overflow: hidden;
-    aspect-ratio: 1 / 1;
 }
 
 .sf-map-img {
@@ -891,32 +897,59 @@
     display: block;
 }
 
+/* Abdunklung für Lesbarkeit des Titels */
+.sf-photo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.12) 55%, transparent 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Titel-Overlay im Foto */
+.sf-photo-title {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.70);
+    z-index: 2;
+    pointer-events: none;
+}
+
 .sf-pin {
     position: absolute;
     transform: translate(-50%, -50%);
-    z-index: 2;
+    z-index: 3;
 }
 
 .sf-pin-num {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: rgba(22, 104, 220, 0.90);
     border: 2px solid rgba(255,255,255,0.85);
     color: #fff;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     box-shadow: 0 2px 8px rgba(0,0,0,0.50);
 }
 
-/* Kachel-Grid 2×2 */
+/* Kachel-Grid 2×2 rechts */
 .sf-cards {
+    flex: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+    padding: 14px;
+    align-content: start;
 }
 
 .sf-card {

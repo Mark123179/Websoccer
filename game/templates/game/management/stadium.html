@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -183,19 +183,19 @@
             </div>
 
             <!-- STADIONUMFELD -->
-            <div class="st-panel">
-                <p class="st-section-title">Stadionumfeld</p>
-                <div class="sf-layout">
-                    <!-- Luftbild mit Pins -->
-                    <div class="sf-map">
+            <div class="st-panel st-panel--umfeld">
+                <div class="sf-wrap">
+                    <!-- Foto blutet an Oberkante + linker Kante -->
+                    <div class="sf-photo">
                         <img src="{% static 'game/images/backgrounds/stadium-grounds.jpg' %}" alt="Stadionumfeld" class="sf-map-img">
+                        <span class="sf-photo-title">Stadionumfeld</span>
                         {% for f in facilities %}
                         <div class="sf-pin" style="left:{{ f.pin_x }}%;top:{{ f.pin_y }}%;">
                             <span class="sf-pin-num">{{ f.num }}</span>
                         </div>
                         {% endfor %}
                     </div>
-                    <!-- Einrichtungs-Kacheln -->
+                    <!-- 2×2 Einrichtungs-Kacheln -->
                     <div class="sf-cards">
                         {% for f in facilities %}
                         <div class="sf-card sf-card--{{ f.key }}">
