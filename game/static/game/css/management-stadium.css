@@ -435,6 +435,10 @@
     background-image: url('../images/backgrounds/stand-south.jpg');
 }
 
+.st-stand-card[data-stand="west"] {
+    background-image: url('../images/backgrounds/stand-west.jpg');
+}
+
 .st-stand-card--selected {
     border-color: rgba(201,168,76,0.7) !important;
     box-shadow: 0 0 0 2px rgba(201,168,76,0.25);
