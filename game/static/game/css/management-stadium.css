@@ -1182,6 +1182,22 @@
         url('../images/backgrounds/facility-nlz.jpg');
 }
 
+/* ---- Medizin-Kachel: Hintergrundbild ---- */
+.sf-card--medizin {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-medizin.jpg');
+    background-size: cover;
+    background-position: center 40%;
+    transition: background 0.25s;
+}
+
+.sf-card--medizin:hover {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.60) 0%, rgba(10,15,28,0.82) 100%),
+        url('../images/backgrounds/facility-medizin.jpg');
+}
+
 /* ---- Maximalstufe ---- */
 .sf-maxed {
     margin-top: auto;
