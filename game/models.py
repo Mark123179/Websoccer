@@ -461,6 +461,78 @@ class Club(models.Model):
         return kits
 
 
+class Stadium(models.Model):
+    club = models.OneToOneField(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='stadium',
+    )
+    name = models.CharField(max_length=120)
+    city = models.CharField(max_length=100)
+    lawn_quality = models.PositiveSmallIntegerField(
+        default=85,
+        validators=[MinValueValidator(1), MaxValueValidator(100)],
+        verbose_name='Rasenqualität (1–100)',
+    )
+
+    nord_standing = models.PositiveIntegerField(default=0, verbose_name='Nord – Stehplätze')
+    nord_seating  = models.PositiveIntegerField(default=0, verbose_name='Nord – Sitzplätze')
+    nord_vip      = models.PositiveIntegerField(default=0, verbose_name='Nord – VIP')
+
+    ost_standing  = models.PositiveIntegerField(default=0, verbose_name='Ost – Stehplätze')
+    ost_seating   = models.PositiveIntegerField(default=0, verbose_name='Ost – Sitzplätze')
+    ost_vip       = models.PositiveIntegerField(default=0, verbose_name='Ost – VIP')
+
+    sued_standing = models.PositiveIntegerField(default=0, verbose_name='Süd – Stehplätze')
+    sued_seating  = models.PositiveIntegerField(default=0, verbose_name='Süd – Sitzplätze')
+    sued_vip      = models.PositiveIntegerField(default=0, verbose_name='Süd – VIP')
+
+    west_standing = models.PositiveIntegerField(default=0, verbose_name='West – Stehplätze')
+    west_seating  = models.PositiveIntegerField(default=0, verbose_name='West – Sitzplätze')
+    west_vip      = models.PositiveIntegerField(default=0, verbose_name='West – VIP')
+
+    price_standing = models.DecimalField(
+        max_digits=6, decimal_places=2, default=Decimal('15.00'),
+        verbose_name='Ticketpreis Steh (€)',
+    )
+    price_seating = models.DecimalField(
+        max_digits=6, decimal_places=2, default=Decimal('35.00'),
+        verbose_name='Ticketpreis Sitz (€)',
+    )
+    price_vip = models.DecimalField(
+        max_digits=6, decimal_places=2, default=Decimal('120.00'),
+        verbose_name='Ticketpreis VIP (€)',
+    )
+
+    @property
+    def capacity_total(self):
+        return (
+            self.nord_standing + self.nord_seating + self.nord_vip +
+            self.ost_standing  + self.ost_seating  + self.ost_vip  +
+            self.sued_standing + self.sued_seating + self.sued_vip +
+            self.west_standing + self.west_seating + self.west_vip
+        )
+
+    @property
+    def capacity_standing(self):
+        return self.nord_standing + self.ost_standing + self.sued_standing + self.west_standing
+
+    @property
+    def capacity_seating(self):
+        return self.nord_seating + self.ost_seating + self.sued_seating + self.west_seating
+
+    @property
+    def capacity_vip(self):
+        return self.nord_vip + self.ost_vip + self.sued_vip + self.west_vip
+
+    def __str__(self):
+        return f'{self.name} ({self.club.name})'
+
+    class Meta:
+        verbose_name = 'Stadion'
+        verbose_name_plural = 'Stadien'
+
+
 class ClubPublicProfile(models.Model):
     club = models.OneToOneField(
         Club,

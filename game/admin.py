@@ -39,6 +39,7 @@ from .models import (
     PlayerSuspensionRecord,
     PlayerTransferHistory,
     PlayerWeightedRatingSnapshot,
+    Stadium,
     StrengthFormulaSettings,
     StrengthModifierRule,
     TacticSetup,
@@ -194,6 +195,23 @@ class SingleLineNotesInlineMixin:
     }
 
 
+class StadiumInline(admin.StackedInline):
+    model = Stadium
+    extra = 0
+    max_num = 1
+    can_delete = False
+    verbose_name = 'Stadion'
+    verbose_name_plural = 'Stadion'
+    fields = (
+        ('name', 'city', 'lawn_quality'),
+        ('nord_standing', 'nord_seating', 'nord_vip'),
+        ('ost_standing',  'ost_seating',  'ost_vip'),
+        ('sued_standing', 'sued_seating', 'sued_vip'),
+        ('west_standing', 'west_seating', 'west_vip'),
+        ('price_standing', 'price_seating', 'price_vip'),
+    )
+
+
 class PlayerInline(admin.TabularInline):
     model = Player
     form = PlayerNationalityForm
@@ -286,6 +304,7 @@ class ClubAdmin(admin.ModelAdmin):
     actions = [_assign_manager_action, _dismiss_manager_action]
 
     inlines = [
+        StadiumInline,
         PlayerInline,
     ]
 
