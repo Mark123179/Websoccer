@@ -25,7 +25,13 @@ from .views import (
 )
 from .views_auth import auth_login, auth_register, auth_logout
 from .views_ai import ai_chat
-from .views_management import management_hub
+from .views_management import (
+    management_hub,
+    stadium_detail,
+    stadium_set_prices,
+    stadium_expand,
+    stadium_cost_api,
+)
 from .views_creator import (
     creator_index,
     creator_club_edit,
@@ -143,6 +149,10 @@ urlpatterns = [
     path('ai/chat/', ai_chat, name='ai_chat'),
 
     path('management/', management_hub, name='management_hub'),
+    path('management/stadion/', stadium_detail, name='stadium_detail'),
+    path('management/stadion/preise/', stadium_set_prices, name='stadium_set_prices'),
+    path('management/stadion/ausbau/', stadium_expand, name='stadium_expand'),
+    path('management/stadion/kosten-api/', stadium_cost_api, name='stadium_cost_api'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

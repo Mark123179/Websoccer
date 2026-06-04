@@ -1,0 +1,570 @@
+/* =========================================================
+   Stadion-Detailseite  —  /management/stadion/
+   Scope: .stadium-detail-page
+   Dunkel-blaues Theme, goldene Akzente
+   ========================================================= */
+
+/* ---- Root-Artboard ---- */
+.stadium-detail-page .dashboard-artboard {
+    background: #0a0e17;
+    min-height: 860px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+}
+
+/* ============================================================
+   HERO-BEREICH
+   ============================================================ */
+.st-hero {
+    position: relative;
+    height: 260px;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.st-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
+}
+
+.st-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(10, 14, 23, 0.10) 0%,
+        rgba(10, 14, 23, 0.55) 60%,
+        rgba(10, 14, 23, 0.92) 100%
+    );
+}
+
+.st-hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 36px 28px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.st-hero-left {}
+
+.st-breadcrumb {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.st-breadcrumb a { color: rgba(255,255,255,0.45); text-decoration: none; }
+.st-breadcrumb a:hover { color: rgba(201,168,76,0.80); }
+.st-breadcrumb span { color: rgba(255,255,255,0.25); margin: 0 6px; }
+
+.st-stadium-name {
+    font-size: 36px;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: 0.03em;
+    margin: 0 0 4px;
+    line-height: 1.1;
+}
+
+.st-stadium-name strong { font-weight: 800; }
+
+.st-hero-kpis {
+    display: flex;
+    gap: 28px;
+    padding-bottom: 4px;
+}
+
+.st-hero-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.st-hero-kpi-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #c9a84c;
+    line-height: 1;
+}
+
+.st-hero-kpi-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+}
+
+/* ============================================================
+   HAUPTBEREICH (3-Spalten-Layout)
+   ============================================================ */
+.st-body {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    grid-template-rows: auto auto;
+    gap: 18px;
+    padding: 20px 24px 24px;
+    flex: 1;
+}
+
+/* linke breite Spalte */
+.st-main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* rechte schmale Spalte */
+.st-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* ---- Section-Titel ---- */
+.st-section-title {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin: 0 0 12px;
+}
+
+/* ---- Panel (generisch) ---- */
+.st-panel {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 18px 20px;
+}
+
+/* ============================================================
+   TRIBÜNEN-GRID
+   ============================================================ */
+.st-stands-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.st-stand-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s;
+}
+
+.st-stand-card:hover {
+    border-color: rgba(201,168,76,0.25);
+}
+
+.st-stand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.st-stand-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #c9a84c;
+}
+
+.st-stand-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    text-align: right;
+    line-height: 1;
+}
+
+.st-stand-total-sub {
+    font-size: 9px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.st-stand-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.st-stand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+}
+
+.st-stand-row-label {
+    color: rgba(255,255,255,0.45);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.st-stand-row-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.st-stand-row-dot--steh { background: #4a90d9; }
+.st-stand-row-dot--sitz { background: #5cb85c; }
+.st-stand-row-dot--vip  { background: #c9a84c; }
+
+.st-stand-row-value {
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+}
+
+/* ============================================================
+   TICKETPREISE-FORMULAR
+   ============================================================ */
+.st-prices-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.st-price-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.st-price-field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.st-price-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.st-price-dot--steh { background: #4a90d9; }
+.st-price-dot--sitz { background: #5cb85c; }
+.st-price-dot--vip  { background: #c9a84c; }
+
+.st-price-input-wrap {
+    position: relative;
+}
+
+.st-price-input-wrap::before {
+    content: '€';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    pointer-events: none;
+}
+
+.st-price-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 10px 9px 24px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 7px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.st-price-input:focus {
+    border-color: rgba(201,168,76,0.55);
+    background: rgba(201,168,76,0.06);
+}
+
+/* ============================================================
+   AUSBAU-FORMULAR
+   ============================================================ */
+.st-expand-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 14px;
+}
+
+.st-expand-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.st-expand-field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+}
+
+.st-select,
+.st-input {
+    padding: 9px 11px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 7px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.st-select { cursor: pointer; }
+
+.st-select:focus,
+.st-input:focus {
+    border-color: rgba(201,168,76,0.55);
+    background: rgba(201,168,76,0.06);
+}
+
+/* Kosten-Vorschau */
+.st-expand-cost-preview {
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.20);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+}
+
+.st-expand-cost-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.st-expand-cost-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c9a84c;
+    transition: opacity 0.2s;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.st-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s, opacity 0.2s;
+    white-space: nowrap;
+}
+
+.st-btn--gold {
+    background: #c9a84c;
+    color: #0a0e17;
+}
+
+.st-btn--gold:hover { background: #dbb95e; }
+
+.st-btn--ghost {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.75);
+    border: 1px solid rgba(255,255,255,0.14);
+}
+
+.st-btn--ghost:hover { background: rgba(255,255,255,0.14); }
+
+/* ============================================================
+   AUSBAU-HISTORIE
+   ============================================================ */
+.st-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-history-empty {
+    text-align: center;
+    color: rgba(255,255,255,0.25);
+    font-size: 12px;
+    padding: 18px 0;
+}
+
+.st-history-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size: 12px;
+}
+
+.st-history-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+}
+
+.st-history-badge--steh { background: rgba(74,144,217,0.20); color: #4a90d9; }
+.st-history-badge--sitz { background: rgba(92,184,92,0.20);  color: #5cb85c; }
+.st-history-badge--vip  { background: rgba(201,168,76,0.20); color: #c9a84c; }
+
+.st-history-desc {
+    color: rgba(255,255,255,0.65);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.st-history-seats {
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.st-history-cost {
+    color: rgba(201,168,76,0.80);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   SIDEBAR: FINANZÜBERSICHT & RASEN
+   ============================================================ */
+.st-finance-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.st-finance-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.st-finance-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.st-finance-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.40);
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+}
+
+.st-finance-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #c9a84c;
+    line-height: 1.1;
+}
+
+.st-finance-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.30);
+}
+
+/* Rasenqualitäts-Balken */
+.st-lawn-bar-wrap {
+    margin-top: 8px;
+    height: 6px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.st-lawn-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.st-lawn-bar--good   { background: #5cb85c; }
+.st-lawn-bar--ok     { background: #e6a817; }
+.st-lawn-bar--poor   { background: #d9534f; }
+
+/* ============================================================
+   DJANGO-MESSAGES
+   ============================================================ */
+.st-messages {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-message {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.st-message--success { background: rgba(92,184,92,0.15); border: 1px solid rgba(92,184,92,0.30); color: #7ed47e; }
+.st-message--error   { background: rgba(217,83,79,0.15); border: 1px solid rgba(217,83,79,0.30); color: #e87c7c; }
+.st-message--warning { background: rgba(230,168,23,0.15); border: 1px solid rgba(230,168,23,0.30); color: #e6c84c; }
+.st-message--info    { background: rgba(74,144,217,0.15); border: 1px solid rgba(74,144,217,0.30); color: #7ab8e8; }

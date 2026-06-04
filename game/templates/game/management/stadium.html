@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ stadium.name }} – Stadionverwaltung{% endblock %}
+
+{% block body_class %}stadium-detail-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-artboard">
+
+    <!-- ========================================================
+         HERO
+         ======================================================== -->
+    <div class="st-hero">
+        <div class="st-hero-bg" style="background-image:url('{% static 'game/images/backgrounds/stadium-hero.jpg' %}');"></div>
+        <div class="st-hero-overlay"></div>
+        <div class="st-hero-content">
+            <div class="st-hero-left">
+                <p class="st-breadcrumb">
+                    <a href="{% url 'management_hub' %}">Management</a>
+                    <span>›</span>
+                    <a href="{% url 'stadium_detail' %}">Stadion</a>
+                    <span>›</span>
+                    Übersicht
+                </p>
+                <h1 class="st-stadium-name">
+                    <strong>{{ stadium.name }}</strong>
+                </h1>
+                <p class="st-breadcrumb" style="margin-top:4px;">{{ stadium.city }}</p>
+            </div>
+            <div class="st-hero-kpis">
+                <div class="st-hero-kpi">
+                    <span class="st-hero-kpi-value">{{ stadium.capacity_total|intcomma }}</span>
+                    <span class="st-hero-kpi-label">Gesamtkapazität</span>
+                </div>
+                <div class="st-hero-kpi">
+                    <span class="st-hero-kpi-value">{{ stadium.lawn_quality }}</span>
+                    <span class="st-hero-kpi-label">Rasenqualität</span>
+                </div>
+                <div class="st-hero-kpi">
+                    <span class="st-hero-kpi-value">{{ club.budget|floatformat:0|intcomma }} €</span>
+                    <span class="st-hero-kpi-label">Vereinsbudget</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================
+         DJANGO-MESSAGES
+         ======================================================== -->
+    {% if messages %}
+    <ul class="st-messages" style="padding:10px 24px 0;">
+        {% for msg in messages %}
+        <li class="st-message st-message--{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ========================================================
+         HAUPTBEREICH
+         ======================================================== -->
+    <div class="st-body">
+
+        <!-- ---- Linke Hauptspalte ---- -->
+        <div class="st-main">
+
+            <!-- TRIBÜNEN -->
+            <div class="st-panel">
+                <p class="st-section-title">Tribünen &amp; Kapazität</p>
+                <div class="st-stands-grid">
+                    {% for s in stands %}
+                    <div class="st-stand-card">
+                        <div class="st-stand-header">
+                            <span class="st-stand-label">{{ s.label }}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="st-stand-total">{{ s.total|intcomma }}</div>
+                            <div class="st-stand-total-sub">Plätze gesamt</div>
+                        </div>
+                        <div class="st-stand-rows">
+                            <div class="st-stand-row">
+                                <span class="st-stand-row-label">
+                                    <span class="st-stand-row-dot st-stand-row-dot--steh"></span>
+                                    Steh
+                                </span>
+                                <span class="st-stand-row-value">{{ s.standing|intcomma }}</span>
+                            </div>
+                            <div class="st-stand-row">
+                                <span class="st-stand-row-label">
+                                    <span class="st-stand-row-dot st-stand-row-dot--sitz"></span>
+                                    Sitz
+                                </span>
+                                <span class="st-stand-row-value">{{ s.seating|intcomma }}</span>
+                            </div>
+                            <div class="st-stand-row">
+                                <span class="st-stand-row-label">
+                                    <span class="st-stand-row-dot st-stand-row-dot--vip"></span>
+                                    VIP
+                                </span>
+                                <span class="st-stand-row-value">{{ s.vip|intcomma }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- TICKETPREISE -->
+            <div class="st-panel">
+                <p class="st-section-title">Ticketpreise</p>
+                <form method="post" action="{% url 'stadium_set_prices' %}">
+                    {% csrf_token %}
+                    <div class="st-prices-grid">
+                        <div class="st-price-field">
+                            <label>
+                                <span class="st-price-dot st-price-dot--steh"></span>
+                                Stehplatz
+                            </label>
+                            <div class="st-price-input-wrap">
+                                <input class="st-price-input" type="number" name="price_standing"
+                                    value="{{ stadium.price_standing }}" min="0" max="9999" step="0.50">
+                            </div>
+                        </div>
+                        <div class="st-price-field">
+                            <label>
+                                <span class="st-price-dot st-price-dot--sitz"></span>
+                                Sitzplatz
+                            </label>
+                            <div class="st-price-input-wrap">
+                                <input class="st-price-input" type="number" name="price_seating"
+                                    value="{{ stadium.price_seating }}" min="0" max="9999" step="0.50">
+                            </div>
+                        </div>
+                        <div class="st-price-field">
+                            <label>
+                                <span class="st-price-dot st-price-dot--vip"></span>
+                                VIP
+                            </label>
+                            <div class="st-price-input-wrap">
+                                <input class="st-price-input" type="number" name="price_vip"
+                                    value="{{ stadium.price_vip }}" min="0" max="9999" step="0.50">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="st-btn st-btn--gold">Preise speichern</button>
+                </form>
+            </div>
+
+            <!-- STADIONAUSBAU -->
+            <div class="st-panel">
+                <p class="st-section-title">Stadionausbau</p>
+                <form method="post" action="{% url 'stadium_expand' %}" id="expand-form">
+                    {% csrf_token %}
+                    <div class="st-expand-grid">
+                        <div class="st-expand-field">
+                            <label>Tribüne</label>
+                            <select class="st-select" name="stand" id="expand-stand">
+                                <option value="NORD">Nordkurve</option>
+                                <option value="OST">Osttribüne</option>
+                                <option value="SUED">Südkurve</option>
+                                <option value="WEST">Westtribüne</option>
+                            </select>
+                        </div>
+                        <div class="st-expand-field">
+                            <label>Platztyp</label>
+                            <select class="st-select" name="seat_type" id="expand-type">
+                                <option value="STEH">Stehplatz</option>
+                                <option value="SITZ">Sitzplatz</option>
+                                <option value="VIP">VIP</option>
+                            </select>
+                        </div>
+                        <div class="st-expand-field">
+                            <label>Anzahl Plätze</label>
+                            <input class="st-input" type="number" name="seats_added" id="expand-count"
+                                min="1" max="50000" step="100" value="1000">
+                        </div>
+                        <div class="st-expand-field">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="st-btn st-btn--gold">Bauen</button>
+                        </div>
+                    </div>
+                    <!-- Kostenvorschau -->
+                    <div class="st-expand-cost-preview">
+                        <span class="st-expand-cost-label">Geschätzte Kosten</span>
+                        <span class="st-expand-cost-value" id="expand-cost-display">—</span>
+                    </div>
+                </form>
+
+                <!-- Ausbau-Historie -->
+                {% if expansions %}
+                <p class="st-section-title" style="margin-top:18px;">Letzte Ausbauten</p>
+                <div class="st-history-list">
+                    {% for ex in expansions %}
+                    <div class="st-history-row">
+                        <span class="st-history-badge st-history-badge--{{ ex.seat_type|lower }}">{{ ex.get_seat_type_display }}</span>
+                        <span class="st-history-desc">{{ ex.get_stand_display }}</span>
+                        <span class="st-history-seats">+{{ ex.seats_added|intcomma }}</span>
+                        <span class="st-history-cost">{{ ex.cost|floatformat:0|intcomma }} €</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="st-history-empty" style="margin-top:12px;">Noch keine Ausbauten durchgeführt.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- ---- Rechte Sidebar ---- -->
+        <div class="st-sidebar">
+
+            <!-- FINANZÜBERSICHT -->
+            <div class="st-panel">
+                <p class="st-section-title">Finanzübersicht</p>
+                <div class="st-finance-rows">
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Tageseinnahmen (80 % Auslas.)</span>
+                        <span class="st-finance-value">{{ einnahmen_schaetzung|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">Schätzwert bei Auslastung</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Stehplatz-Preis</span>
+                        <span class="st-finance-value" style="font-size:15px;">{{ stadium.price_standing }} €</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Sitzplatz-Preis</span>
+                        <span class="st-finance-value" style="font-size:15px;">{{ stadium.price_seating }} €</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">VIP-Preis</span>
+                        <span class="st-finance-value" style="font-size:15px;">{{ stadium.price_vip }} €</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Vereinsbudget</span>
+                        <span class="st-finance-value" style="font-size:15px; color:#fff;">{{ club.budget|floatformat:0|intcomma }} €</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RASENQUALITÄT -->
+            <div class="st-panel">
+                <p class="st-section-title">Rasenqualität</p>
+                {% with q=stadium.lawn_quality %}
+                <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;">
+                    <span style="font-size:28px;font-weight:700;color:
+                        {% if q >= 75 %}#5cb85c{% elif q >= 50 %}#e6a817{% else %}#d9534f{% endif %};">
+                        {{ q }}
+                    </span>
+                    <span style="font-size:12px;color:rgba(255,255,255,0.35);">/ 100</span>
+                </div>
+                <div class="st-lawn-bar-wrap">
+                    <div class="st-lawn-bar
+                        {% if q >= 75 %}st-lawn-bar--good{% elif q >= 50 %}st-lawn-bar--ok{% else %}st-lawn-bar--poor{% endif %}"
+                        style="width:{{ q }}%;">
+                    </div>
+                </div>
+                <p style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px;">
+                    {% if q >= 80 %}Hervorragend{% elif q >= 65 %}Gut{% elif q >= 50 %}Befriedigend{% else %}Verbesserungsbedürftig{% endif %}
+                </p>
+                {% endwith %}
+            </div>
+
+            <!-- KAPAZITÄTS-ÜBERSICHT -->
+            <div class="st-panel">
+                <p class="st-section-title">Kapazitätsverteilung</p>
+                <div class="st-finance-rows">
+                    <div class="st-finance-row">
+                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
+                            <span class="st-stand-row-dot st-stand-row-dot--steh"></span>Stehplätze
+                        </span>
+                        <span class="st-finance-value" style="font-size:16px;">{{ stadium.capacity_standing|intcomma }}</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
+                            <span class="st-stand-row-dot st-stand-row-dot--sitz"></span>Sitzplätze
+                        </span>
+                        <span class="st-finance-value" style="font-size:16px;">{{ stadium.capacity_seating|intcomma }}</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
+                            <span class="st-stand-row-dot st-stand-row-dot--vip"></span>VIP
+                        </span>
+                        <span class="st-finance-value" style="font-size:16px;">{{ stadium.capacity_vip|intcomma }}</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Max. Kapazität</span>
+                        <span class="st-finance-value" style="font-size:13px;color:rgba(255,255,255,0.45);">
+                            {{ max_kapazitaet|intcomma }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     JS: Live-Kostenberechnung
+     ============================================================ -->
+<script>
+(function () {
+    const KOSTEN = {{ kostenmatrix_json|safe }};
+    const TYPE_KEY = { STEH: 'STEH', SITZ: 'SITZ', VIP: 'VIP' };
+
+    const standEl  = document.getElementById('expand-stand');
+    const typeEl   = document.getElementById('expand-type');
+    const countEl  = document.getElementById('expand-count');
+    const display  = document.getElementById('expand-cost-display');
+
+    function aktualisieren() {
+        const typ    = typeEl ? typeEl.value : 'SITZ';
+        const anzahl = parseInt(countEl ? countEl.value : 0, 10) || 0;
+        const preis  = KOSTEN[typ] || 0;
+        const gesamt = preis * anzahl;
+        if (anzahl > 0) {
+            display.textContent = gesamt.toLocaleString('de-DE', {
+                minimumFractionDigits: 0, maximumFractionDigits: 0
+            }) + ' €';
+        } else {
+            display.textContent = '—';
+        }
+    }
+
+    if (typeEl)  typeEl.addEventListener('change', aktualisieren);
+    if (countEl) countEl.addEventListener('input',  aktualisieren);
+    aktualisieren();
+})();
+</script>
+{% endblock %}

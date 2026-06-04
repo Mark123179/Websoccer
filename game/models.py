@@ -533,6 +533,42 @@ class Stadium(models.Model):
         verbose_name_plural = 'Stadien'
 
 
+class StadiumExpansion(models.Model):
+    STAND_CHOICES = [
+        ('NORD', 'Nordkurve'),
+        ('OST',  'Osttribüne'),
+        ('SUED', 'Südkurve'),
+        ('WEST', 'Westtribüne'),
+    ]
+    SEAT_TYPE_CHOICES = [
+        ('STEH', 'Stehplatz'),
+        ('SITZ', 'Sitzplatz'),
+        ('VIP',  'VIP'),
+    ]
+
+    stadium    = models.ForeignKey(
+        Stadium,
+        on_delete=models.CASCADE,
+        related_name='expansions',
+    )
+    stand      = models.CharField(max_length=4, choices=STAND_CHOICES)
+    seat_type  = models.CharField(max_length=4, choices=SEAT_TYPE_CHOICES)
+    seats_added = models.PositiveIntegerField()
+    cost       = models.DecimalField(max_digits=14, decimal_places=2)
+    ordered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Stadionausbau'
+        verbose_name_plural = 'Stadionausbauten'
+        ordering = ['-ordered_at']
+
+    def __str__(self):
+        return (
+            f'{self.stadium.name}: +{self.seats_added} {self.get_seat_type_display()} '
+            f'({self.get_stand_display()})'
+        )
+
+
 class ClubPublicProfile(models.Model):
     club = models.OneToOneField(
         Club,
