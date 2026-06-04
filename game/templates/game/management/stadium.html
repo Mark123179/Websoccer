@@ -149,16 +149,18 @@
                 <p class="st-section-title">Stadionausbau</p>
                 <form method="post" action="{% url 'stadium_expand' %}" id="expand-form">
                     {% csrf_token %}
-                    <div class="st-expand-grid">
-                        <div class="st-expand-field">
-                            <label>Tribüne</label>
-                            <select class="st-select" name="stand" id="expand-stand">
-                                <option value="NORD">Nordkurve</option>
-                                <option value="OST">Osttribüne</option>
-                                <option value="SUED">Südkurve</option>
-                                <option value="WEST">Westtribüne</option>
-                            </select>
+                    <!-- Tribüne Picker -->
+                    <div class="st-expand-field" style="margin-bottom:10px;">
+                        <label>Tribüne</label>
+                        <input type="hidden" name="stand" id="expand-stand" value="NORD">
+                        <div class="st-stand-picker">
+                            <button type="button" class="st-stand-btn active" data-val="NORD">Nordkurve</button>
+                            <button type="button" class="st-stand-btn" data-val="OST">Osttribüne</button>
+                            <button type="button" class="st-stand-btn" data-val="SUED">Südkurve</button>
+                            <button type="button" class="st-stand-btn" data-val="WEST">Westtribüne</button>
                         </div>
+                    </div>
+                    <div class="st-expand-grid" style="grid-template-columns:1fr 1fr auto;">
                         <div class="st-expand-field">
                             <label>Platztyp</label>
                             <select class="st-select" name="seat_type" id="expand-type">
@@ -397,6 +399,15 @@
     const typeEl   = document.getElementById('expand-type');
     const countEl  = document.getElementById('expand-count');
     const display  = document.getElementById('expand-cost-display');
+
+    // Tribüne Button-Picker
+    document.querySelectorAll('.st-stand-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.st-stand-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            if (standEl) standEl.value = this.dataset.val;
+        });
+    });
 
     function aktualisieren() {
         const typ    = typeEl ? typeEl.value : 'SITZ';
