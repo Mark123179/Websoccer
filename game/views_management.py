@@ -7,10 +7,10 @@ def _fmt_euro(amount):
 
 FACILITY_DATA = {
     'nlz': [
-        {'desc': 'Max. 60 Jugendspieler im Kader',          'cost': 0,        'days': 0},
-        {'desc': 'Max. 63 Jugendspieler im Kader',          'cost': 500000,   'days': 1},
-        {'desc': 'Max. 66 Jugendspieler im Kader',          'cost': 1000000,  'days': 1},
-        {'desc': 'Max. 70 Jugendspieler im Kader',          'cost': 2000000,  'days': 1},
+        {'desc': 'Max. 60 Spieler im Kader (Jugend & Profi)', 'cost': 0,        'days': 0},
+        {'desc': 'Max. 63 Spieler im Kader (Jugend & Profi)', 'cost': 500000,   'days': 1},
+        {'desc': 'Max. 66 Spieler im Kader (Jugend & Profi)', 'cost': 1000000,  'days': 1},
+        {'desc': 'Max. 70 Spieler im Kader (Jugend & Profi)', 'cost': 2000000,  'days': 1},
     ],
     'medizin': [
         {'desc': 'Kein Effekt',                                            'cost': 0,        'days': 0},
