@@ -144,6 +144,12 @@ def stadium_detail(request):
     gauge_atmosphaere = min(100, round(standing_ratio * 65 + lawn * 0.35))
     gauge_komfort     = min(100, round(seating_vip_ratio * 70 + lawn * 0.30))
 
+    # Stadionbild aus PublicProfile des Clubs, Fallback auf generisches Bild
+    pp = getattr(club, 'public_profile', None)
+    stadium_bg = (pp.stadium_image_static_path
+                  if pp and pp.stadium_image_static_path
+                  else 'game/images/backgrounds/stadium-hero.jpg')
+
     return render(request, 'game/management/stadium.html', {
         'club':                  club,
         'stadium':               stadium,
@@ -159,6 +165,7 @@ def stadium_detail(request):
         'gauge_atmosphaere':     gauge_atmosphaere,
         'gauge_komfort':         gauge_komfort,
         'hat_echte_auslastung':  bool(recent_revenues),
+        'stadium_bg':            stadium_bg,
     })
 
 
