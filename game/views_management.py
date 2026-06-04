@@ -138,23 +138,38 @@ def stadium_detail(request):
         )
         gauge_auslastung = round(auslastung_faktor * 100)
 
-    # Tageseinnahmen-Schätzung (basierend auf Auslastungsformel / echten Daten)
-    if recent_revenues:
-        einnahmen = float(recent_revenues[0].revenue_total)
-    else:
-        einnahmen = (
-            stadium.capacity_standing * auslastung_faktor * float(stadium.price_standing) +
-            stadium.capacity_seating  * auslastung_faktor * float(stadium.price_seating)  +
-            stadium.capacity_vip      * auslastung_faktor * float(stadium.price_vip)
-        )
-    saisoneinnahmen = einnahmen * 17
+    # Einnahmen bei Vollauslastung (Stehplätze + Sitzplätze + VIP × Preis)
+    einnahmen_vollauslastung = (
+        stadium.capacity_standing * float(stadium.price_standing) +
+        stadium.capacity_seating  * float(stadium.price_seating)  +
+        stadium.capacity_vip      * float(stadium.price_vip)
+    )
 
-    # ROI: Saisoneinnahmen / Gesamtinvestition aller Ausbauten × 100
-    gesamtinvestition = sum(
-        ex.cost for ex in stadium.expansions.all()
-    ) or Decimal('0')
-    roi = round(float(saisoneinnahmen) / float(gesamtinvestition) * 100, 1) \
-        if gesamtinvestition > 0 else None
+    # Saisoneinnahmen: tatsächliche Summe aller verbuchten Spiele
+    saisoneinnahmen_aktuell = float(
+        sum(r.revenue_total for r in recent_revenues)
+    ) if recent_revenues else 0
+
+    # Stadionkosten laufende Saison (Betriebskosten je Heimspiel × Spiele)
+    games_played = len(recent_revenues)
+    stadionkosten_saison = (
+        stadium.capacity_standing * 3 +
+        stadium.capacity_seating  * 7 +
+        stadium.capacity_vip      * 25
+    ) * games_played
+
+    # Liga-Durchschnitt Ticketpreise (alle Stadien in der gleichen Liga)
+    from django.db.models import Avg
+    from .models import Stadium as StadiumModel
+    _liga_qs = StadiumModel.objects.filter(club__league=club.league)
+    _liga_avgs = _liga_qs.aggregate(
+        avg_standing=Avg('price_standing'),
+        avg_seating=Avg('price_seating'),
+        avg_vip=Avg('price_vip'),
+    )
+    liga_avg_standing = round(float(_liga_avgs['avg_standing'] or stadium.price_standing), 2)
+    liga_avg_seating  = round(float(_liga_avgs['avg_seating']  or stadium.price_seating),  2)
+    liga_avg_vip      = round(float(_liga_avgs['avg_vip']      or stadium.price_vip),      2)
 
     # Fan-Erlebnis-Werte
     cap = stadium.capacity_total or 1
@@ -202,13 +217,17 @@ def stadium_detail(request):
         'kostenmatrix_json':     json.dumps(kostenmatrix),
         'facilities':            facilities,
         'max_kapazitaet':        MAX_KAPAZITAET,
-        'einnahmen_schaetzung':  einnahmen,
-        'saisoneinnahmen':       saisoneinnahmen,
-        'roi':                   roi,
-        'gauge_auslastung':      gauge_auslastung,
-        'gauge_atmosphaere':     gauge_atmosphaere,
-        'gauge_komfort':         gauge_komfort,
-        'hat_echte_auslastung':  bool(recent_revenues),
+        'einnahmen_vollauslastung': einnahmen_vollauslastung,
+        'saisoneinnahmen':          saisoneinnahmen_aktuell,
+        'stadionkosten_saison':     stadionkosten_saison,
+        'games_played':             games_played,
+        'liga_avg_standing':        liga_avg_standing,
+        'liga_avg_seating':         liga_avg_seating,
+        'liga_avg_vip':             liga_avg_vip,
+        'gauge_auslastung':         gauge_auslastung,
+        'gauge_atmosphaere':        gauge_atmosphaere,
+        'gauge_komfort':            gauge_komfort,
+        'hat_echte_auslastung':     bool(recent_revenues),
     })
 
 

@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -251,37 +251,42 @@
                 <div class="st-finance-rows">
                     <div class="st-finance-row">
                         <span class="st-finance-label">
-                            {% if hat_echte_auslastung %}Letztes Heimspiel (Einnahmen){% else %}Tageseinnahmen (Schätzung){% endif %}
+                            Einnahmen
+                            <span class="st-info-icon" data-tip="Bei Vollauslastung / Ausverkauf">ⓘ</span>
                         </span>
-                        <span class="st-finance-value">{{ einnahmen_schaetzung|floatformat:0|intcomma }} €</span>
-                        <span class="st-finance-sub">
-                            {% if hat_echte_auslastung %}Tatsächliche Einnahmen{% else %}Schätzwert bei {{ gauge_auslastung }} % Auslastung{% endif %}
-                        </span>
+                        <span class="st-finance-value">{{ einnahmen_vollauslastung|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">Stehplätze + Sitzplätze + VIP × Preis</span>
                     </div>
                     <div class="st-finance-row">
-                        <span class="st-finance-label">Saisoneinnahmen (17 Heimsp.)</span>
+                        <span class="st-finance-label">Saisoneinnahmen</span>
                         <span class="st-finance-value" style="font-size:15px;">{{ saisoneinnahmen|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">{{ games_played }} Heimspiel{{ games_played|pluralize:"e" }} verbucht</span>
                     </div>
-                    {% if roi %}
                     <div class="st-finance-row">
-                        <span class="st-finance-label">ROI Ausbau</span>
-                        <span class="st-finance-value" style="font-size:17px; color:{% if roi >= 15 %}#5cb85c{% elif roi >= 8 %}#e6a817{% else %}#d9534f{% endif %};">
-                            {{ roi }} %
-                        </span>
-                        <span class="st-finance-sub">Saisoneinnahmen / Gesamtinvestition</span>
+                        <span class="st-finance-label">Stadionkosten</span>
+                        <span class="st-finance-value" style="font-size:15px; color:#d9534f;">{{ stadionkosten_saison|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">Betriebskosten laufende Saison</span>
                     </div>
-                    {% endif %}
                     <div class="st-finance-row">
                         <span class="st-finance-label">Stehplatz-Preis</span>
-                        <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_standing }} €</span>
+                        <div class="st-finance-price-row">
+                            <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_standing }} €</span>
+                            <span class="st-liga-avg">Ø Liga {{ liga_avg_standing }} €</span>
+                        </div>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Sitzplatz-Preis</span>
-                        <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_seating }} €</span>
+                        <div class="st-finance-price-row">
+                            <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_seating }} €</span>
+                            <span class="st-liga-avg">Ø Liga {{ liga_avg_seating }} €</span>
+                        </div>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">VIP-Preis</span>
-                        <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_vip }} €</span>
+                        <div class="st-finance-price-row">
+                            <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_vip }} €</span>
+                            <span class="st-liga-avg">Ø Liga {{ liga_avg_vip }} €</span>
+                        </div>
                     </div>
                 </div>
             </div>
