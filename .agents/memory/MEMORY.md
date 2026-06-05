@@ -5,3 +5,4 @@
 - [Global Calendar Architecture](global-calendar-architecture.md) — ws-game-header ist global in base.html; Kalenderdaten kommen aus context_processors.py (global_calendar); build_game_header() gibt nur title/subtitle/back_url zurück.
 - [Squad/club mutation auth + CSRF](squad-csrf-and-authz.md) — session-based CSRF (no cookie); use {{ csrf_token }} in JS + @login_required + current_manager_club ownership check (not just Player club scoping).
 - [current_manager_club Bayern fallback trap](current-manager-club-fallback.md) — function returns Bayern for ANY user (auth or not) unless the authenticated-user branch explicitly returns None on miss; caused all user_has_no_club guards to silently fail.
+- [Präsident Saisonziele & Hoeneß-Coin](season-goals-president.md) — goals ranked by sum of top-11 base_strength; eval reuses strength rank until real standings exist; declaration immutable per (club,season).

@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Präsident – Saisonziele{% endblock %}
+
+{% block body_class %}president-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-artboard">
+
+    <!-- ========================================================
+         HERO — Präsidentenbüro mit Uli Hoeneß
+         ======================================================== -->
+    <div class="pr-hero">
+        <div class="pr-hero-bg" style="background-image:url('{% static 'game/images/backgrounds/praesident-office-bg.jpg' %}');"></div>
+        <div class="pr-hero-overlay"></div>
+
+        <img class="pr-hoeness"
+             src="{% static 'game/images/managers/hoeness-cutout.png' %}"
+             alt="Uli Hoeneß, Präsident">
+
+        <div class="pr-hero-content">
+            <div class="pr-hero-left">
+                <p class="pr-breadcrumb"><a href="/management/">Management</a><span>›</span>Präsident</p>
+                <h1 class="pr-title">Das <strong>Präsidentenbüro</strong></h1>
+                <p class="pr-subtitle">Uli Hoeneß · {{ club.name }}</p>
+            </div>
+            <div class="pr-hero-coin">
+                <span class="pr-coin-icon">◉</span>
+                <span class="pr-coin-value">{{ coin_balance }}</span>
+                <span class="pr-coin-label">Hoeneß-Coin</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DJANGO-MESSAGES -->
+    {% if messages %}
+    <ul class="pr-messages">
+        {% for msg in messages %}
+        <li class="pr-message pr-message--{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ========================================================
+         HAUPTBEREICH
+         ======================================================== -->
+    <div class="pr-body">
+
+        <!-- ---- Linke Spalte: Ansprache + Zufriedenheit ---- -->
+        <div class="pr-col pr-col--left">
+
+            <div class="pr-panel pr-speech">
+                <p class="pr-section-title">Ansprache des Präsidenten</p>
+                <p class="pr-speech-text">
+                    {% if declared %}
+                        „Servus. Für die Saison {{ season }} erwarte ich von dieser Mannschaft
+                        <strong>{{ tier_label }}</strong>. Bei einer Kaderstärke wie unserer
+                        ist alles andere eine Enttäuschung. Erfüllst du das Ziel, gibt’s einen
+                        <strong>Hoeneß-Coin</strong> obendrauf.“
+                    {% else %}
+                        „Setz dich. Bevor ich das offizielle Saisonziel für {{ season }} verkünde,
+                        schau dir an, was ich anhand deiner Kaderstärke erwarte. Wenn du bereit bist,
+                        verkünde ich das Ziel — und es zählt.“
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="pr-panel pr-satisfaction">
+                <p class="pr-section-title">Zufriedenheit des Präsidenten</p>
+                <div class="pr-gauge">
+                    <div class="pr-gauge-track">
+                        <div class="pr-gauge-fill" style="width: {{ satisfaction }}%;"></div>
+                    </div>
+                    <span class="pr-gauge-value">{{ satisfaction }}<span>%</span></span>
+                </div>
+                <p class="pr-gauge-hint">
+                    {% if satisfaction >= 75 %}Der Präsident ist sehr zufrieden mit deiner Arbeit.
+                    {% elif satisfaction >= 50 %}Solide Bilanz — aber da geht noch mehr.
+                    {% else %}Der Präsident erwartet deutlich bessere Ergebnisse.{% endif %}
+                </p>
+            </div>
+
+        </div>
+
+        <!-- ---- Rechte Spalte: Saisonziel-Karte ---- -->
+        <div class="pr-col pr-col--right">
+
+            <div class="pr-panel pr-goal-card {{ tier_class }}">
+                <div class="pr-goal-head">
+                    <span class="pr-goal-season">Saison {{ season }}</span>
+                    <span class="pr-goal-status {% if declared %}is-declared{% else %}is-draft{% endif %}">
+                        {% if declared %}Verkündet{% else %}Vorschau{% endif %}
+                    </span>
+                </div>
+
+                <p class="pr-goal-label">Saisonziel</p>
+                <h2 class="pr-goal-tier">{{ tier_label }}</h2>
+
+                <div class="pr-goal-stats">
+                    <div class="pr-stat">
+                        <span class="pr-stat-value">#{{ rank_now }}</span>
+                        <span class="pr-stat-label">Kaderstärke-Rang<br>von {{ league_size }}</span>
+                    </div>
+                    <div class="pr-stat">
+                        <span class="pr-stat-value">≤ {{ required_max_rank }}.</span>
+                        <span class="pr-stat-label">erforderlicher<br>Endplatz</span>
+                    </div>
+                    <div class="pr-stat">
+                        <span class="pr-stat-value">{{ squad_strength|floatformat:0 }}</span>
+                        <span class="pr-stat-label">Top-11<br>Kaderstärke</span>
+                    </div>
+                </div>
+
+                {% if goal and goal.achieved is not None %}
+                <div class="pr-goal-result {% if goal.achieved %}is-met{% else %}is-missed{% endif %}">
+                    {% if goal.achieved %}
+                        ✓ Ziel erfüllt — Endplatz {{ goal.final_rank }}. (+1 Hoeneß-Coin)
+                    {% else %}
+                        ✗ Ziel verfehlt — Endplatz {{ goal.final_rank }}.
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if not declared %}
+                <form method="post" action="{% url 'president_declare_goal' %}" class="pr-goal-form">
+                    {% csrf_token %}
+                    <button type="submit" class="pr-declare-btn">Saisonziel verkünden</button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if history %}
+            <div class="pr-panel pr-history">
+                <p class="pr-section-title">Vergangene Saisonziele</p>
+                <ul class="pr-history-list">
+                    {% for h in history %}
+                    <li class="pr-history-row">
+                        <span class="pr-history-season">S{{ h.season_number }}</span>
+                        <span class="pr-history-tier">{{ h.goal_tier_label }}</span>
+                        <span class="pr-history-badge {% if h.achieved %}is-met{% elif h.achieved is not None %}is-missed{% else %}is-pending{% endif %}">
+                            {% if h.achieved %}Erfüllt{% elif h.achieved is not None %}Verfehlt{% else %}Offen{% endif %}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- ========================================================
+         LIGA-KRÄFTEVERHÄLTNIS (Kaderstärke-Rangliste)
+         ======================================================== -->
+    <div class="pr-body pr-body--full">
+        <div class="pr-panel pr-ranking">
+            <p class="pr-section-title">Kräfteverhältnis der Liga — {{ club.league.name }}</p>
+            <p class="pr-ranking-hint">Bewertung des Präsidenten nach Top-11-Kaderstärke. Daraus leitet er dein Saisonziel ab.</p>
+            <ol class="pr-ranking-list">
+                {% for row in league_ranking %}
+                <li class="pr-ranking-row {% if row.is_own %}is-own{% endif %}">
+                    <span class="pr-rank-num">{{ row.rank }}</span>
+                    <span class="pr-rank-club">{{ row.club.name }}</span>
+                    <span class="pr-rank-strength">{{ row.strength|floatformat:0 }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

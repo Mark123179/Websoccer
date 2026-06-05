@@ -55,21 +55,36 @@
             </div>
             {% endif %}
 
-            <!-- SPORTVORSTAND — in Entwicklung -->
-            <div class="mhub-card mhub-card--locked mhub-card--vorstand">
-                <div class="mhub-card-bg"></div>
+            <!-- PRÄSIDENT -->
+            {% if club %}
+            <a href="/management/praesident/" class="mhub-card mhub-card--active mhub-card--praesident">
+                <div class="mhub-card-bg" style="background-image:url('{% static 'game/images/backgrounds/praesident-office-bg.jpg' %}');"></div>
                 <div class="mhub-card-overlay"></div>
-                <span class="mhub-badge-dev">In Entwicklung</span>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/>
                         </svg>
                     </div>
-                    <h2 class="mhub-card-title">Sportvorstand</h2>
-                    <p class="mhub-card-sub">Kaderplanung &amp; Sportliche Leitung</p>
+                    <h2 class="mhub-card-title">Präsident</h2>
+                    <p class="mhub-card-sub">Saisonziele &amp; Hoeneß-Coin</p>
+                </div>
+            </a>
+            {% else %}
+            <div class="mhub-card mhub-card--locked mhub-card--praesident">
+                <div class="mhub-card-bg"></div>
+                <div class="mhub-card-overlay"></div>
+                <div class="mhub-card-body">
+                    <div class="mhub-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/>
+                        </svg>
+                    </div>
+                    <h2 class="mhub-card-title">Präsident</h2>
+                    <p class="mhub-card-sub mhub-no-club-hint">Kein Verein zugewiesen</p>
                 </div>
             </div>
+            {% endif %}
 
             <!-- FREUNDSCHAFTSSPIELE — in Entwicklung -->
             <div class="mhub-card mhub-card--locked mhub-card--freundschaft">

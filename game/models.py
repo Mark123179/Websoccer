@@ -2557,3 +2557,100 @@ class ManagerCareerStation(models.Model):
             result = ClubTrophy.objects.filter(club_id=self.club_id).aggregate(total=Sum('count'))
             return result['total'] or 0
         return 0
+
+
+# ============================================================
+#  Präsident — Saisonziele & Hoeneß-Coin
+# ============================================================
+
+class SeasonGoal(models.Model):
+    """Vom Präsidenten zu Saisonbeginn verkündetes Ziel eines Vereins.
+
+    Das Ziel wird aus der Kaderstärke (Summe der Top-11 base_strength)
+    relativ zur restlichen Liga abgeleitet und zu Saisonende gegen die
+    erreichte Platzierung geprüft.
+    """
+
+    TIER_MEISTER = 'meister'
+    TIER_TOP4 = 'top4'
+    TIER_INTERNATIONAL = 'international'
+    TIER_MITTELFELD = 'mittelfeld'
+    TIER_KLASSENERHALT = 'klassenerhalt'
+    TIER_CHOICES = [
+        (TIER_MEISTER, 'Meister'),
+        (TIER_TOP4, 'Top 4'),
+        (TIER_INTERNATIONAL, 'Internationale Plätze'),
+        (TIER_MITTELFELD, 'Gesichertes Mittelfeld'),
+        (TIER_KLASSENERHALT, 'Klassenerhalt'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='season_goals',
+    )
+    season_number = models.PositiveSmallIntegerField(default=1)
+    goal_tier = models.CharField(max_length=20, choices=TIER_CHOICES)
+    rank_in_league = models.PositiveSmallIntegerField(
+        help_text='Kaderstärke-Rang innerhalb der Liga bei Zielverkündung.',
+    )
+    league_size = models.PositiveSmallIntegerField(default=0)
+    squad_strength = models.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Summe der Top-11 base_strength bei Zielverkündung.',
+    )
+    required_max_rank = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Maximal erlaubter Endplatz, um das Ziel zu erfüllen.',
+    )
+    final_rank = models.PositiveSmallIntegerField(null=True, blank=True)
+    achieved = models.BooleanField(
+        null=True,
+        blank=True,
+        help_text='Leer = noch nicht ausgewertet, sonst erfüllt/verfehlt.',
+    )
+    declared_at = models.DateTimeField(auto_now_add=True)
+    evaluated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Saisonziel'
+        verbose_name_plural = 'Saisonziele'
+        ordering = ['-season_number', 'rank_in_league']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'season_number'],
+                name='seasongoal_unique_club_season',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.club} – Saison {self.season_number}: {self.goal_tier_label}'
+
+    @property
+    def goal_tier_label(self):
+        return dict(self.TIER_CHOICES).get(self.goal_tier, self.goal_tier)
+
+    @property
+    def is_pending(self):
+        return self.achieved is None
+
+
+class HoenessCoin(models.Model):
+    """Hoeneß-Coin-Guthaben eines Managers — Belohnung für erfüllte Saisonziele."""
+
+    manager = models.OneToOneField(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='hoeness_coins',
+    )
+    amount = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Hoeneß-Coin-Guthaben'
+        verbose_name_plural = 'Hoeneß-Coin-Guthaben'
+
+    def __str__(self):
+        return f'{self.manager} – {self.amount} Hoeneß-Coin'

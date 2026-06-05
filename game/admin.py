@@ -18,6 +18,7 @@ from .models import (
     ClubPublicProfile,
     ClubTrophy,
     DataSource,
+    HoenessCoin,
     League,
     Club,
     ManagerCareerStation,
@@ -38,6 +39,7 @@ from .models import (
     PlayerStrengthProfile,
     PlayerStrengthSnapshot,
     PlayerSuspensionRecord,
+    SeasonGoal,
     PlayerTransferHistory,
     PlayerWeightedRatingSnapshot,
     Stadium,
@@ -2648,3 +2650,28 @@ class ManagerCareerStationAdmin(admin.ModelAdmin):
     list_filter = ('manager',)
     search_fields = ('manager__name', 'city_name', 'club__name')
     ordering = ('manager', 'order')
+
+
+@admin.register(SeasonGoal)
+class SeasonGoalAdmin(admin.ModelAdmin):
+    list_display = (
+        'club',
+        'season_number',
+        'goal_tier',
+        'rank_in_league',
+        'league_size',
+        'required_max_rank',
+        'final_rank',
+        'achieved',
+        'declared_at',
+    )
+    list_filter = ('season_number', 'goal_tier', 'achieved')
+    search_fields = ('club__name',)
+    readonly_fields = ('declared_at', 'evaluated_at')
+
+
+@admin.register(HoenessCoin)
+class HoenessCoinAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'amount', 'updated_at')
+    search_fields = ('manager__name',)
+    readonly_fields = ('updated_at',)
