@@ -2654,3 +2654,32 @@ class HoenessCoin(models.Model):
 
     def __str__(self):
         return f'{self.manager} – {self.amount} Hoeneß-Coin'
+
+
+class GameSeasonState(models.Model):
+    """Globaler, vom Admin gesteuerter Saison-Status.
+
+    Hält die aktuelle Saisonnummer (beginnt bei 0) und ob die Saison
+    offiziell gestartet wurde. Erst nach dem Start verkündet der
+    Präsident die Saisonziele — vorher bleiben sie unter Verschluss.
+    Es existiert nur eine Zeile (Singleton).
+    """
+
+    current_season = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Aktuelle Saisonnummer (beginnt bei 0).',
+    )
+    is_started = models.BooleanField(
+        default=False,
+        help_text='Erst wenn aktiv, verkündet der Präsident die Saisonziele.',
+    )
+    started_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Saison-Status'
+        verbose_name_plural = 'Saison-Status'
+
+    def __str__(self):
+        zustand = 'gestartet' if self.is_started else 'nicht gestartet'
+        return f'Saison {self.current_season} ({zustand})'

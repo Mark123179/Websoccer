@@ -17,5 +17,9 @@ A club's strength = sum of the **top-11** `PlayerStrengthProfile.base_strength` 
 
 **Why:** a code review flagged that `update_or_create` let a manager re-POST the declare endpoint to wipe an already-evaluated goal and re-roll outcomes. A pre-season target must stay fixed.
 
-## Season number
-No Season model — `current_season_number()` = max `PlayerSeasonStat.season_number` (default 1).
+## Season number & admin-gated reveal
+Season numbering comes from an admin-controlled `GameSeasonState` singleton (NOT from `PlayerSeasonStat`, which had unrelated high season numbers). Season counter starts at **0**. The season goal stays **verdeckt** (sealed card, no tier/rank/strength leaked to the template) until the admin sets `is_started=True`; on first view after start the goal is auto-declared and revealed.
+
+**Why:** the trainer must never see the league power balance (Kräfteverhältnis / squad-strength ranking) — that whole section was removed, and even the goal card only shows tier + required end place. Pre-start disclosure was also possible via a trainer-facing declare endpoint, so that POST route was removed entirely; reveal is admin-gated only.
+
+**How to apply:** read season via `current_season_number()`/`is_season_started()` (both back onto `GameSeasonState`); season 0 is falsy so use `is None` checks, never `or`, when defaulting a season arg.

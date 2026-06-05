@@ -34,7 +34,6 @@ from .views_management import (
     stadium_record_revenue,
     facility_upgrade,
     president_office,
-    president_declare_goal,
 )
 from .views_creator import (
     creator_index,
@@ -161,7 +160,6 @@ urlpatterns = [
     path('management/stadion/einrichtung-ausbauen/', facility_upgrade, name='facility_upgrade'),
 
     path('management/praesident/', president_office, name='president_office'),
-    path('management/praesident/ziel-verkuenden/', president_declare_goal, name='president_declare_goal'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

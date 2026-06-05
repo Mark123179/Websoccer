@@ -12,13 +12,12 @@ echte Tabellenstände existieren, kann ``final_rank`` in
 
 from decimal import Decimal
 
-from django.db.models import Max
 from django.utils import timezone
 
 from .models import (
     Club,
+    GameSeasonState,
     HoenessCoin,
-    PlayerSeasonStat,
     PlayerStrengthProfile,
     SeasonGoal,
 )
@@ -36,9 +35,23 @@ TIER_LABELS = dict(SeasonGoal.TIER_CHOICES)
 COIN_REWARD = 1
 
 
+def get_season_state():
+    """Singleton-Saison-Status (legt ihn bei Bedarf mit Defaults an)."""
+    state, _ = GameSeasonState.objects.get_or_create(pk=1)
+    return state
+
+
 def current_season_number():
-    """Aktuelle Saison = höchste vorhandene PlayerSeasonStat.season_number."""
-    return PlayerSeasonStat.objects.aggregate(m=Max('season_number'))['m'] or 1
+    """Aktuelle Saisonnummer aus dem admin-gesteuerten Saison-Status (Start: 0)."""
+    return get_season_state().current_season
+
+
+def is_season_started(season_number=None):
+    """True, wenn der Admin die (angegebene) Saison offiziell gestartet hat."""
+    state = get_season_state()
+    if season_number is None:
+        return state.is_started
+    return state.is_started and state.current_season == season_number
 
 
 def club_squad_strength(club):
@@ -104,7 +117,8 @@ def project_goal_for_club(club, season_number=None):
     Praktisch für die Live-Vorschau auf der Präsidenten-Seite, bevor das
     Ziel offiziell verkündet wurde.
     """
-    season_number = season_number or current_season_number()
+    if season_number is None:
+        season_number = current_season_number()
     ranked = rank_clubs_in_league(club.league)
     league_size = len(ranked) or 1
     rank, strength = _rank_and_strength(ranked, club)
@@ -129,7 +143,8 @@ def declare_goal_for_club(club, season_number=None, force=False):
     Mit ``force=True`` wird das Ziel neu berechnet und der Auswertungsstand
     zurückgesetzt (nur für administrative Korrekturen via CLI gedacht).
     """
-    season_number = season_number or current_season_number()
+    if season_number is None:
+        season_number = current_season_number()
     existing = SeasonGoal.objects.filter(
         club=club, season_number=season_number
     ).first()
@@ -160,7 +175,8 @@ def evaluate_goal_for_club(club, season_number=None, coin_reward=COIN_REWARD):
     Bei Erfolg wird dem Manager des Vereins ein Hoeneß-Coin gutgeschrieben.
     Gibt das ausgewertete SeasonGoal zurück oder None, wenn keins existiert.
     """
-    season_number = season_number or current_season_number()
+    if season_number is None:
+        season_number = current_season_number()
     try:
         goal = SeasonGoal.objects.get(club=club, season_number=season_number)
     except SeasonGoal.DoesNotExist:

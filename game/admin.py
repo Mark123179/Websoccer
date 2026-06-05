@@ -18,6 +18,7 @@ from .models import (
     ClubPublicProfile,
     ClubTrophy,
     DataSource,
+    GameSeasonState,
     HoenessCoin,
     League,
     Club,
@@ -2674,4 +2675,10 @@ class SeasonGoalAdmin(admin.ModelAdmin):
 class HoenessCoinAdmin(admin.ModelAdmin):
     list_display = ('manager', 'amount', 'updated_at')
     search_fields = ('manager__name',)
+    readonly_fields = ('updated_at',)
+
+
+@admin.register(GameSeasonState)
+class GameSeasonStateAdmin(admin.ModelAdmin):
+    list_display = ('current_season', 'is_started', 'started_at', 'updated_at')
     readonly_fields = ('updated_at',)

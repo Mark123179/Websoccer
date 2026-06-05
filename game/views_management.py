@@ -539,8 +539,8 @@ def president_office(request):
     from .models import SeasonGoal, HoenessCoin
     from .season_goals import (
         current_season_number,
-        project_goal_for_club,
-        rank_clubs_in_league,
+        declare_goal_for_club,
+        is_season_started,
         required_max_rank,
         TIER_LABELS,
     )
@@ -552,6 +552,7 @@ def president_office(request):
 
     manager = club.managed_by
     season = current_season_number()
+    season_started = is_season_started(season)
 
     # Coin-Guthaben
     coin_balance = 0
@@ -559,30 +560,21 @@ def president_office(request):
         coin, _ = HoenessCoin.objects.get_or_create(manager=manager)
         coin_balance = coin.amount
 
-    # Aktuelles Saisonziel (falls verkündet) bzw. Live-Projektion
-    goal = (
-        SeasonGoal.objects
-        .filter(club=club, season_number=season)
-        .first()
-    )
-    projection = project_goal_for_club(club, season_number=season)
+    # Das Saisonziel bleibt unter Verschluss, bis der Admin die Saison
+    # offiziell startet. Erst dann wird es verkündet (und festgeschrieben).
+    goal = None
+    tier = tier_label = tier_class = None
+    req_rank = league_size = None
 
-    if goal:
+    if season_started:
+        goal = SeasonGoal.objects.filter(club=club, season_number=season).first()
+        if not goal:
+            goal = declare_goal_for_club(club, season_number=season)
         tier = goal.goal_tier
         tier_label = goal.goal_tier_label
-        rank_now = goal.rank_in_league
-        league_size = goal.league_size or projection['league_size']
+        tier_class = f'tier-{tier}'
         req_rank = goal.required_max_rank
-        squad_strength = goal.squad_strength
-        declared = True
-    else:
-        tier = projection['goal_tier']
-        tier_label = projection['goal_tier_label']
-        rank_now = projection['rank_in_league']
-        league_size = projection['league_size']
-        req_rank = projection['required_max_rank']
-        squad_strength = projection['squad_strength']
-        declared = False
+        league_size = goal.league_size
 
     # Zufriedenheit: Anteil erfüllter, bereits ausgewerteter Ziele (sonst 50)
     evaluated = SeasonGoal.objects.filter(club=club, achieved__isnull=False)
@@ -598,65 +590,20 @@ def president_office(request):
         .order_by('-season_number')[:5]
     )
 
-    # Liga-Rangliste (Top der Kaderstärke) für Kontext-Panel
-    ranked = rank_clubs_in_league(club.league)
-    league_ranking = [
-        {
-            'rank': idx + 1,
-            'club': c,
-            'strength': strength,
-            'is_own': c.id == club.id,
-        }
-        for idx, (c, strength) in enumerate(ranked)
-    ]
-
-    tier_class = f'tier-{tier}'
-
     return render(request, 'game/management/president.html', {
         'club':            club,
         'manager':         manager,
         'season':          season,
+        'season_started':  season_started,
         'coin_balance':    coin_balance,
         'goal':            goal,
-        'declared':        declared,
         'tier':            tier,
         'tier_label':      tier_label,
         'tier_class':      tier_class,
-        'rank_now':        rank_now,
         'league_size':     league_size,
         'required_max_rank': req_rank,
-        'squad_strength':  squad_strength,
         'satisfaction':    satisfaction,
         'history':         history,
-        'league_ranking':  league_ranking,
     })
 
 
-@login_required(login_url='/auth/login/')
-@require_POST
-def president_declare_goal(request):
-    from .season_goals import current_season_number, declare_goal_for_club
-
-    club = current_manager_club(user=request.user)
-    if not club:
-        messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
-        return redirect('management_hub')
-
-    from .models import SeasonGoal
-
-    season = current_season_number()
-    if SeasonGoal.objects.filter(club=club, season_number=season).exists():
-        messages.warning(
-            request,
-            'Das Saisonziel für diese Saison wurde bereits verkündet und '
-            'kann nicht überschrieben werden.'
-        )
-        return redirect('president_office')
-
-    goal = declare_goal_for_club(club, season_number=season)
-    messages.success(
-        request,
-        f'Präsident hat das Saisonziel verkündet: {goal.goal_tier_label} '
-        f'(Kaderstärke-Rang {goal.rank_in_league} von {goal.league_size}).'
-    )
-    return redirect('president_office')
