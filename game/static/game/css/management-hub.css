@@ -248,7 +248,7 @@
 .mhub-card--freundschaft .mhub-card-bg { background-image: url('../images/backgrounds/freundschaftsspiele-bg.jpg'); background-size: cover; background-position: center 20%; }
 .mhub-card--finanzen  .mhub-card-bg { background-image: url('../images/backgrounds/finanzen-bg.jpg'); background-size: cover; background-position: center 25%; }
 .mhub-card--sponsor   .mhub-card-bg { background-image: url('../images/backgrounds/sponsoring-bg.jpg'); background-size: cover; background-position: center 20%; }
-.mhub-card--news      .mhub-card-bg { background: linear-gradient(135deg, #111a25 0%, #1a2535 60%, #0a1018 100%); }
+.mhub-card--news      .mhub-card-bg { background-image: url('../images/backgrounds/vereinsnews-bg.jpg'); background-size: cover; background-position: center 25%; }
 
 /* "Kein Verein" Hinweis auf gesperrten Karten */
 .mhub-no-club-hint {
