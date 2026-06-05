@@ -80,7 +80,7 @@
                 Zum Forum
             </a>
             <a href="{{ current_manager.club_url }}"{% if url_name == 'club_detail' or url_name == 'club_table' or url_name == 'club_match_preview' or url_name == 'club_match_report' or url_name == 'club_news' %} aria-current="page"{% endif %}>
-                <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/verein.svg' %}" alt=""></span>
+                <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-verein.png' %}" alt=""></span>
                 Verein
             </a>
             <a href="{{ current_manager.squad_url }}"{% if url_name == 'club_professional_squad' or url_name == 'club_youth_squad' %} aria-current="page"{% endif %}>
