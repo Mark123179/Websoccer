@@ -142,6 +142,13 @@
         var(--club-card-bg-strong);
 }
 
+.club-facilities-card.last-match-profile-card {
+    background:
+        linear-gradient(180deg, rgba(2, 8, 13, 0.62) 0%, rgba(2, 8, 13, 0.88) 100%),
+        url("../../images/backgrounds/vereinsumfeld-aerial.png") center / cover no-repeat,
+        var(--club-card-bg-strong);
+}
+
 .club-last-result {
     position: relative;
     z-index: 2;
