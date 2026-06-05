@@ -448,6 +448,17 @@
             height: 18px;
             width: 18px;
         }
+        .nav-icon--png {
+            background: transparent;
+            padding: 1px;
+            width: 28px;
+            height: 28px;
+        }
+        .nav-icon--png img {
+            filter: none;
+            width: 26px;
+            height: 26px;
+        }
         .nav-menu a[aria-current="page"] {
             background: linear-gradient(90deg, rgba(34, 230, 255, 0.2), rgba(34, 230, 255, 0.06));
             border-color: var(--line-strong);

@@ -72,7 +72,7 @@
         {% with url_name=request.resolver_match.url_name %}
         <div class="nav-menu">
             <a href="/"{% if url_name == 'home' %} aria-current="page"{% endif %}>
-                <span class="nav-icon"><img src="{% static 'game/images/icons/nav-uebersicht.png' %}" alt=""></span>
+                <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-uebersicht.png' %}" alt=""></span>
                 Übersicht
             </a>
             <a href="/forum/"{% if url_name == 'forum' %} aria-current="page"{% endif %}>
