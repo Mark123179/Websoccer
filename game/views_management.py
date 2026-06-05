@@ -7,28 +7,28 @@ def _fmt_euro(amount):
 
 FACILITY_DATA = {
     'nlz': [
-        {'desc': 'Basis-NLZ aktiv. Kaderlimit: 60 Spieler (Jugend & Profi). Keine aktiven Jugend-Scouts.',                                              'cost': 0,         'days': 0},
-        {'desc': 'Erweitertes NLZ. Kaderlimit: 63 Spieler. 1 Jugend-Scout aktiv – findet Talente schneller.',                                           'cost': 3000000,   'days': 3},
-        {'desc': 'Professionelles NLZ. Kaderlimit: 66 Spieler. 2 Scouts, Entwicklungsbonus +5 % für alle U-18-Spieler.',                               'cost': 5000000,   'days': 5},
-        {'desc': 'Elite-Akademie. Kaderlimit: 70 Spieler. 3 Scouts, maximale Jugendentwicklung, Talente reifen schneller zu Stamm­spielern.',          'cost': 7000000,   'days': 7},
+        {'desc': 'Basis-NLZ aktiv. Kaderlimit: 60 Spieler (Jugend & Profi).',                                                'cost': 0,         'days': 0},
+        {'desc': 'Erweitertes NLZ. Kaderlimit: 63 Spieler.',                                                                 'cost': 3000000,   'days': 3},
+        {'desc': 'Professionelles NLZ. Kaderlimit: 66 Spieler. Entwicklungsbonus +5 % für alle U-18-Spieler.',              'cost': 5000000,   'days': 5},
+        {'desc': 'Elite-Akademie. Kaderlimit: 70 Spieler. Maximale Jugendentwicklung, Talente reifen schneller.',           'cost': 7000000,   'days': 7},
     ],
     'medizin': [
-        {'desc': 'Basisversorgung. Verletzungen werden standardmäßig behandelt, keine Verkürzung der Ausfallzeiten.',                                   'cost': 0,        'days': 0},
-        {'desc': 'Modernes Reha-Center. −5 % Verletzungsanfälligkeit. Ausfallzeiten verkürzen sich um 1–2 Tage.',                                       'cost': 400000,   'days': 1},
-        {'desc': 'Sportmedizinisches Zentrum. −10 % Anfälligkeit. Ausfallzeiten −2–3 Tage. Präventionsprogramm für Stammspieler.',                      'cost': 900000,   'days': 2},
-        {'desc': 'Elite-Medizin. −20 % Anfälligkeit. Ausfallzeiten −3–4 Tage. Individualpflege + beschleunigte Reha für alle Kaderplätze.',            'cost': 1800000,  'days': 3},
+        {'desc': 'Basisversorgung. Verletzungen werden standardmäßig behandelt, keine Verkürzung der Ausfallzeiten.',        'cost': 0,         'days': 0},
+        {'desc': 'Modernes Reha-Center. −5 % Verletzungsanfälligkeit. Ausfallzeiten verkürzen sich um 1–2 Tage.',           'cost': 5000000,   'days': 3},
+        {'desc': 'Sportmedizinisches Zentrum. −10 % Anfälligkeit. Ausfallzeiten −2–3 Tage. Präventionsprogramm aktiv.',     'cost': 7000000,   'days': 5},
+        {'desc': 'Elite-Medizin. −20 % Anfälligkeit. Ausfallzeiten −3–4 Tage. Individualpflege + beschleunigte Reha.',     'cost': 12000000,  'days': 7},
     ],
     'training': [
-        {'desc': 'Einfaches Trainingsgelände. Frischewerte werden nur in 5er-Schritten angezeigt.',                                                     'cost': 0,        'days': 0},
-        {'desc': 'Modernisiertes Gelände. Exakte Frischeanzeige auf den Punkt. Konditionstraining planbar.',                                             'cost': 600000,   'days': 1},
-        {'desc': 'Profianlagen. Exakte Anzeige + Frischeverlust pro Spiel um 1–2 Punkte reduziert. Spieler erholen sich besser.',                        'cost': 1200000,  'days': 2},
-        {'desc': 'Top-Trainingszentrum. Exakte Anzeige + täglich 1–2 Frischepunkte automatisch regeneriert. Maximale Belastungssteuerung.',             'cost': 2500000,  'days': 3},
+        {'desc': 'Einfaches Trainingsgelände. Frischewerte werden nur in 5er-Schritten angezeigt.',                          'cost': 0,         'days': 0},
+        {'desc': 'Modernisiertes Gelände. Frischeanzeige auf 1–2 Punkte genau. Konditionstraining besser planbar.',          'cost': 5000000,   'days': 3},
+        {'desc': 'Profianlagen. Exakte Frischeanzeige + Frischeverlust pro Spiel um 1–2 Punkte reduziert.',                  'cost': 7000000,   'days': 5},
+        {'desc': 'Top-Trainingszentrum. Exakte Anzeige + täglich 1–2 Frischepunkte automatisch regeneriert.',               'cost': 9000000,   'days': 7},
     ],
     'office': [
-        {'desc': 'Kleine Geschäftsstelle. Kein Platz für zusätzliche Trainer oder Co-Trainer.',                                                         'cost': 0,        'days': 0},
-        {'desc': 'Erweitertes Büro. Jugendtrainer übernimmt automatisch Aufstellung & Taktik für die Jugendmannschaft.',                                'cost': 300000,   'days': 1},
-        {'desc': 'Professionelles Büro. Co-Trainer erinnert an wichtige Spieler & markiert die Top-5-Standardschützen.',                               'cost': 750000,   'days': 1},
-        {'desc': 'Vollausgestattete Geschäftsstelle. Co-Trainer analysiert Top-3-Standardschützen für Jugend & Profi und optimiert Sondereinsätze.',   'cost': 1500000,  'days': 2},
+        {'desc': 'Kleine Geschäftsstelle. Kein Platz für zusätzliche Trainer oder Co-Trainer.',                              'cost': 0,         'days': 0},
+        {'desc': 'Erweitertes Büro. Jugendtrainer übernimmt automatisch Aufstellung & Taktik für die Jugendmannschaft.',     'cost': 3000000,   'days': 3},
+        {'desc': 'Professionelles Büro. Co-Trainer erinnert an wichtige Spieler & markiert die Top-5-Standardschützen.',    'cost': 5000000,   'days': 5},
+        {'desc': 'Vollausgestattete Geschäftsstelle. Co-Trainer analysiert Top-3-Standardschützen für Jugend & Profi.',     'cost': 7000000,   'days': 7},
     ],
 }
 
