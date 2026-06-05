@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=16">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=17">
 {% endblock %}
 
 {% block content %}
@@ -202,31 +202,27 @@
                         <div class="sf-card-head">
                             <span class="sf-card-num">{{ f.num }}</span>
                             <span class="sf-card-name">{{ f.label }}</span>
-                            <div class="sf-info">
-                                <span class="sf-info-icon">ⓘ</span>
-                                <div class="sf-info-tooltip">
-                                    <div class="sf-tt-title">{{ f.label }}</div>
-                                    {% for lvl in f.tooltip_levels %}
-                                    <div class="sf-tt-row{% if lvl.level == f.level %} sf-tt-row--current{% endif %}">
-                                        <div class="sf-tt-row-head">
-                                            <span class="sf-tt-badge">Stufe {{ lvl.level }}</span>
-                                            {% if lvl.level > 0 %}<span class="sf-tt-cost">{{ lvl.cost_fmt }}€ · {{ lvl.days }} Tag</span>{% endif %}
-                                        </div>
-                                        <div class="sf-tt-desc">{{ lvl.desc }}</div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
                         </div>
 
                         <div class="sf-card-sub">{{ f.sublabel }}</div>
-                        <div class="sf-card-desc">{{ f.desc }}</div>
 
                         <div class="sf-level-row">
                             {% for i in "012" %}
                             <div class="sf-level-pip{% if forloop.counter0 < f.level %} sf-level-pip--active{% endif %}"></div>
                             {% endfor %}
                             <span class="sf-level-text">Stufe {{ f.level }} / 3</span>
+                        </div>
+
+                        <div class="sf-levels-inline">
+                            {% for lvl in f.tooltip_levels %}
+                            <div class="sf-tt-row{% if lvl.level == f.level %} sf-tt-row--current{% endif %}">
+                                <div class="sf-tt-row-head">
+                                    <span class="sf-tt-badge">Stufe {{ lvl.level }}</span>
+                                    {% if lvl.level > 0 %}<span class="sf-tt-cost">{{ lvl.cost_fmt }}€ · {{ lvl.days }} Tag</span>{% endif %}
+                                </div>
+                                <div class="sf-tt-desc">{{ lvl.desc }}</div>
+                            </div>
+                            {% endfor %}
                         </div>
 
                         {% if f.level < 3 %}
