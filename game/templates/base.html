@@ -97,10 +97,10 @@
             </a>
             <a href="{{ current_manager.club_url }}">
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-jugend.png' %}" alt=""></span>
-                2. Mannschaft U21
+                U21 / Reserve
             </a>
             <a href="{{ current_manager.club_url }}">
-                <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/scouting.svg' %}" alt=""></span>
+                <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-datencenter.png' %}" alt=""></span>
                 Datencenter
             </a>
             <a href="{% url 'management_hub' %}"{% if url_name == 'management_hub' or url_name == 'stadium_detail' %} aria-current="page"{% endif %}>
