@@ -84,7 +84,7 @@
                 Verein
             </a>
             <a href="{{ current_manager.squad_url }}"{% if url_name == 'club_professional_squad' or url_name == 'club_youth_squad' %} aria-current="page"{% endif %}>
-                <span class="nav-icon"><img src="{% static 'game/images/icons/sidebar/kader.svg' %}" alt=""></span>
+                <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-kader.png' %}" alt=""></span>
                 Kader
             </a>
             <a href="{{ current_manager.tactics_url }}"{% if url_name == 'club_tactics' %} aria-current="page"{% endif %}>
