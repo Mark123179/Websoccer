@@ -23,3 +23,8 @@ Season numbering comes from an admin-controlled `GameSeasonState` singleton (NOT
 **Why:** the trainer must never see the league power balance (Kräfteverhältnis / squad-strength ranking) — that whole section was removed, and even the goal card only shows tier + required end place. Pre-start disclosure was also possible via a trainer-facing declare endpoint, so that POST route was removed entirely; reveal is admin-gated only.
 
 **How to apply:** read season via `current_season_number()`/`is_season_started()` (both back onto `GameSeasonState`); season 0 is falsy so use `is None` checks, never `or`, when defaulting a season arg.
+
+## Hero image
+`hoeness-cutout.png` is a misnomer — it is NOT background-removed, it's the full rectangular interview photo of Hoeneß seated at a table with the CL trophy + Meisterschale behind him. `remove_image_background_tool` fails to isolate him on it (subject not detected). So do NOT composite it as a floating PNG over a separate office background (looks pasted-on / "sitzt nicht am Tisch"). Instead it IS the hero scene: set it as `.pr-hero-bg` (background-size:cover, background-position center ~18% to keep his face in frame) and drop any floating `.pr-hoeness` overlay. `praesident-office-bg.jpg` is the old empty-office background, now unused.
+
+**Why:** user complained Hoeneß didn't sit well at the desk — the floating-cutout composite never aligned with the office desk because the "cutout" still had its own background.

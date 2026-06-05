@@ -36,7 +36,7 @@
     position: absolute;
     inset: 0;
     background-size: cover;
-    background-position: center 28%;
+    background-position: center 18%;
     background-repeat: no-repeat;
 }
 
@@ -50,18 +50,6 @@
         rgba(8, 11, 16, 0.80) 82%,
         rgba(8, 11, 16, 0.97) 100%
     );
-}
-
-/* Uli Hoeneß am Schreibtisch */
-.pr-hoeness {
-    position: absolute;
-    left: 22%;
-    bottom: 40px;
-    width: 560px;
-    height: auto;
-    z-index: 2;
-    filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.65));
-    pointer-events: none;
 }
 
 .pr-hero-content {

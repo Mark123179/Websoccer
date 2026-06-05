@@ -7,7 +7,7 @@
 {% block body_class %}president-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -17,12 +17,8 @@
          HERO — Präsidentenbüro mit Uli Hoeneß
          ======================================================== -->
     <div class="pr-hero">
-        <div class="pr-hero-bg" style="background-image:url('{% static 'game/images/backgrounds/praesident-office-bg.jpg' %}');"></div>
+        <div class="pr-hero-bg" style="background-image:url('{% static 'game/images/managers/hoeness-cutout.png' %}');"></div>
         <div class="pr-hero-overlay"></div>
-
-        <img class="pr-hoeness"
-             src="{% static 'game/images/managers/hoeness-cutout.png' %}"
-             alt="Uli Hoeneß, Präsident">
 
         <div class="pr-hero-content">
             <div class="pr-hero-left">
