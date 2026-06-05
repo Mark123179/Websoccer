@@ -101,10 +101,10 @@
     padding-bottom: 4px;
 }
 .pr-coin-icon {
-    font-size: 22px;
-    color: #c9a84c;
-    line-height: 1;
-    text-shadow: 0 0 18px rgba(201, 168, 76, 0.7);
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 14px rgba(201, 168, 76, 0.65));
 }
 .pr-coin-value {
     font-size: 44px;
