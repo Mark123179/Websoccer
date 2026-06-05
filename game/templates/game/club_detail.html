@@ -8,7 +8,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}?v=ghost-17">
+    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}?v=ghost-18">
 {% endblock %}
 
 {% block content %}
@@ -21,6 +21,7 @@
         {% include 'game/club_profile/cards/pro_highlights_card.html' %}
         {% include 'game/club_profile/cards/youth_highlights_card.html' %}
         {% include 'game/club_profile/cards/last_match_card.html' %}
+        {% include 'game/club_profile/cards/league_table_card.html' %}
         {% include 'game/club_profile/cards/stadium_card.html' %}
         {% include 'game/club_profile/cards/city_card.html' %}
         {% include 'game/club_profile/cards/kits_card.html' %}
