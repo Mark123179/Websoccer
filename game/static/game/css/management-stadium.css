@@ -146,12 +146,12 @@
 
 /* ---- Section-Titel ---- */
 .st-section-title {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.20em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    margin: 0 0 12px;
+    color: rgba(255,255,255,0.50);
+    margin: 0 0 14px;
 }
 
 /* ---- Panel (generisch) ---- */
@@ -224,16 +224,16 @@
 }
 
 .st-stand-total {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 19px;
+    font-weight: 800;
     color: #fff;
     text-align: right;
     line-height: 1;
 }
 
 .st-stand-total-sub {
-    font-size: 9px;
-    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+    color: rgba(255,255,255,0.40);
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
@@ -291,11 +291,11 @@
 }
 
 .st-bar-label {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.40);
+    color: rgba(255,255,255,0.50);
 }
 
 .st-bar-track {
@@ -327,13 +327,13 @@
 }
 
 .st-bar-num {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     white-space: nowrap;
 }
 
-.st-bar-num--left  { color: rgba(255,255,255,0.80); text-align: right; }
-.st-bar-num--right { color: rgba(255,255,255,0.35); text-align: left; }
+.st-bar-num--left  { color: rgba(255,255,255,0.90); text-align: right; }
+.st-bar-num--right { color: rgba(255,255,255,0.40); text-align: left; }
 
 .st-bar-sep {
     font-size: 9px;
@@ -693,10 +693,11 @@
 .st-finance-row:last-child { border-bottom: none; padding-bottom: 0; }
 
 .st-finance-label {
-    font-size: 10px;
-    color: rgba(255,255,255,0.40);
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.52);
     text-transform: uppercase;
-    letter-spacing: 0.10em;
+    letter-spacing: 0.08em;
 }
 
 .st-finance-value {
@@ -707,8 +708,8 @@
 }
 
 .st-finance-sub {
-    font-size: 10px;
-    color: rgba(255,255,255,0.30);
+    font-size: 11px;
+    color: rgba(255,255,255,0.42);
 }
 
 /* Info-Icon mit Tooltip */
@@ -848,21 +849,21 @@
 }
 
 .st-gauge-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    color: rgba(255,255,255,0.60);
+    color: rgba(255,255,255,0.65);
     text-align: center;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
 }
 
 .st-gauge-sub {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--gauge-color, rgba(255,255,255,0.30));
     text-align: center;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     margin-top: -4px;
 }
 
@@ -995,17 +996,18 @@
 }
 
 .sf-card-name {
-    font-size: 12px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.90);
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.95);
     flex: 1;
     line-height: 1.2;
+    letter-spacing: 0.01em;
 }
 
 .sf-card-sub {
-    font-size: 9px;
-    color: rgba(255,255,255,0.30);
-    letter-spacing: 0.06em;
+    font-size: 10px;
+    color: rgba(255,255,255,0.42);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
@@ -1031,8 +1033,9 @@
 }
 
 .sf-level-text {
-    font-size: 10px;
-    color: rgba(255,255,255,0.35);
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.50);
     margin-left: 4px;
     white-space: nowrap;
 }
@@ -1135,12 +1138,12 @@
 }
 
 .sf-tt-badge {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.50);
-    background: rgba(255,255,255,0.08);
-    padding: 1px 6px;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.60);
+    background: rgba(255,255,255,0.09);
+    padding: 2px 7px;
     border-radius: 4px;
 }
 
@@ -1150,8 +1153,9 @@
 }
 
 .sf-tt-cost {
-    font-size: 9px;
-    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(201,168,76,0.80);
     margin-left: auto;
 }
 
@@ -1169,14 +1173,14 @@
 .sf-upgrade-btn {
     margin-top: auto;
     width: 100%;
-    padding: 5px 8px;
+    padding: 7px 8px;
     background: rgba(201,168,76,0.12);
     border: 1px solid rgba(201,168,76,0.35);
     border-radius: 6px;
     color: #c9a84c;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
     text-align: center;
