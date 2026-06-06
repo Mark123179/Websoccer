@@ -51,6 +51,7 @@ from .models import (
     TacticTemplate,
     strength_decimal,
 )
+from .season_goals import evaluate_goal_for_club
 
 
 NATIONALITY_CHOICES = [
@@ -2691,3 +2692,40 @@ class CoinTransactionAdmin(admin.ModelAdmin):
 class GameSeasonStateAdmin(admin.ModelAdmin):
     list_display = ('current_season', 'is_started', 'started_at', 'updated_at')
     readonly_fields = ('updated_at',)
+    actions = ['evaluate_season_goals_action']
+
+    @admin.action(description='Saison abschließen & Ziele auswerten (alle Manager-Vereine)')
+    def evaluate_season_goals_action(self, request, queryset):
+        """Wertet offene Saisonziele für alle Vereine mit Manager aus.
+
+        Verwendet die aktuelle Saisonnummer aus dem (einzigen) GameSeasonState-
+        Singleton. Die Coin-Vergabe ist idempotent — ein bereits gutgeschriebener
+        Coin wird nicht ein zweites Mal vergeben, egal wie oft die Aktion läuft.
+        """
+        managed_clubs = Club.objects.filter(managed_by__isnull=False).select_related(
+            'managed_by', 'league'
+        )
+        state = queryset.first()
+        season_number = state.current_season if state else None
+        achieved = 0
+        not_achieved = 0
+        skipped = 0
+
+        for club in managed_clubs:
+            goal = evaluate_goal_for_club(club, season_number=season_number)
+            if goal is None:
+                skipped += 1
+            elif goal.achieved:
+                achieved += 1
+            else:
+                not_achieved += 1
+
+        self.message_user(
+            request,
+            (
+                f'Auswertung abgeschlossen: {achieved} Ziel(e) erfüllt '
+                f'(Coin vergeben), {not_achieved} nicht erfüllt, '
+                f'{skipped} ohne gespeichertes Ziel übersprungen.'
+            ),
+            messages.SUCCESS,
+        )
