@@ -91,9 +91,39 @@
                 </p>
             </div>
 
+            <!-- Coin-Shop: Spielerauktionen -->
+            <div class="pr-panel pr-shop">
+                <p class="pr-section-title">Hoeneß-Shop</p>
+                <p class="pr-shop-intro">Setze deine Coins ein, um an exklusiven Spielerauktionen teilzunehmen — zweimal pro Saison.</p>
+                <ul class="pr-shop-list">
+                    <li class="pr-shop-item pr-shop-item--locked">
+                        <span class="pr-shop-icon">🏆</span>
+                        <div class="pr-shop-info">
+                            <span class="pr-shop-label">Saisonauktion <span class="pr-shop-badge">Demnächst</span></span>
+                            <span class="pr-shop-desc">Exklusive Auktion zum Saisonstart — seltene Talente und etablierte Stars werden versteigert.</span>
+                        </div>
+                        <div class="pr-shop-btn is-disabled" title="Noch nicht verfügbar">
+                            <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
+                            <span>—</span>
+                        </div>
+                    </li>
+                    <li class="pr-shop-item pr-shop-item--locked">
+                        <span class="pr-shop-icon">❄️</span>
+                        <div class="pr-shop-info">
+                            <span class="pr-shop-label">Winterauktion <span class="pr-shop-badge">Demnächst</span></span>
+                            <span class="pr-shop-desc">Auktion zur Winterpause — verstärke deinen Kader für die entscheidende Rückrunde.</span>
+                        </div>
+                        <div class="pr-shop-btn is-disabled" title="Noch nicht verfügbar">
+                            <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
+                            <span>—</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
         </div>
 
-        <!-- ---- Rechte Spalte: Saisonziel + Shop ---- -->
+        <!-- ---- Rechte Spalte: Saisonziel + Verlauf ---- -->
         <div class="pr-col pr-col--right">
 
             {% if season_started %}
@@ -140,36 +170,6 @@
                 </div>
             </div>
             {% endif %}
-
-            <!-- Coin-Shop: Spielerauktionen -->
-            <div class="pr-panel pr-shop">
-                <p class="pr-section-title">Hoeneß-Shop</p>
-                <p class="pr-shop-intro">Setze deine Coins ein, um an exklusiven Spielerauktionen teilzunehmen — zweimal pro Saison.</p>
-                <ul class="pr-shop-list">
-                    <li class="pr-shop-item pr-shop-item--locked">
-                        <span class="pr-shop-icon">🏆</span>
-                        <div class="pr-shop-info">
-                            <span class="pr-shop-label">Saisonauktion <span class="pr-shop-badge">Demnächst</span></span>
-                            <span class="pr-shop-desc">Exklusive Auktion zum Saisonstart — seltene Talente und etablierte Stars werden versteigert.</span>
-                        </div>
-                        <div class="pr-shop-btn is-disabled" title="Noch nicht verfügbar">
-                            <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
-                            <span>—</span>
-                        </div>
-                    </li>
-                    <li class="pr-shop-item pr-shop-item--locked">
-                        <span class="pr-shop-icon">❄️</span>
-                        <div class="pr-shop-info">
-                            <span class="pr-shop-label">Winterauktion <span class="pr-shop-badge">Demnächst</span></span>
-                            <span class="pr-shop-desc">Auktion zur Winterpause — verstärke deinen Kader für die entscheidende Rückrunde.</span>
-                        </div>
-                        <div class="pr-shop-btn is-disabled" title="Noch nicht verfügbar">
-                            <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
-                            <span>—</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
 
             {% if history %}
             <div class="pr-panel pr-history">
