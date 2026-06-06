@@ -89,23 +89,17 @@
 
 .mhub-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(2, 333px);
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 333px) 333px;
     gap: 14px;
     width: 100%;
     max-width: 760px;
 }
 
-/* Reihe 1 — 3 Kacheln à 4/12 Spalten */
-.mhub-card--stadion,
-.mhub-card--praesident,
-.mhub-card--freundschaft  { grid-column: span 4; }
-
-/* Reihe 2 — 4 Kacheln à 3/12 Spalten */
-.mhub-card--sportgericht,
-.mhub-card--finanzen,
-.mhub-card--sponsor,
-.mhub-card--news          { grid-column: span 3; }
+/* Vereinsnews ist die 7. Kachel — in Mitte zentriert */
+.mhub-card--news {
+    grid-column: 2 / 3;
+}
 
 /* ---- Einzelne Karte ---- */
 .mhub-card {
