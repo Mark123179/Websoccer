@@ -5,13 +5,15 @@
 {% block body_class %}halloffame-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-artboard">
 
-    <div class="hof-hero" style="background-image:url('{% static 'game/images/backgrounds/halloffame-bg.jpg' %}');"></div>
+    <div class="hof-bg-wrap">
+        <img src="{% static 'game/images/backgrounds/halloffame-bg.jpg' %}" alt="" class="hof-bg-img">
+    </div>
 
 </div>
 {% endblock %}
