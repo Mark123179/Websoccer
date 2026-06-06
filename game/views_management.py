@@ -675,11 +675,8 @@ def management_sportgericht(request):
     from .models import SupportTicket, InactivityRecord, GameSeasonState, Club
 
     my_club = current_manager_club(user=request.user)
-    if not my_club:
-        messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
-        return redirect('management_hub')
-
-    my_manager = my_club.managed_by
+    # Vereinslose Manager dürfen die Seite sehen (Aktivitätscheck + Support)
+    my_manager = my_club.managed_by if my_club else None
 
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else ''
@@ -698,7 +695,7 @@ def management_sportgericht(request):
             'profi': p,
             'u21': u,
             'worst_light': worst,
-            'is_own': club.pk == my_club.pk,
+            'is_own': my_club is not None and club.pk == my_club.pk,
         })
     # Sortierung: rot → gelb → grün, eigener Verein immer ganz oben
     all_manager_rows.sort(key=lambda r: (
@@ -707,17 +704,19 @@ def management_sportgericht(request):
         r['manager'].name,
     ))
 
-    # ── Tickets des eigenen Managers ──────────────────────────────────
-    open_tickets = SupportTicket.objects.filter(
-        manager=my_manager,
-        status__in=['open', 'in_progress'],
-    )
-    closed_tickets = SupportTicket.objects.filter(
-        manager=my_manager,
-        status='closed',
-    )[:3]
+    # ── Tickets: nur wenn Manager einem Verein zugewiesen ─────────────
+    open_tickets = []
+    closed_tickets = []
+    if my_manager:
+        open_tickets = SupportTicket.objects.filter(
+            manager=my_manager,
+            status__in=['open', 'in_progress'],
+        )
+        closed_tickets = SupportTicket.objects.filter(
+            manager=my_manager,
+            status='closed',
+        )[:3]
 
-    # Eigene Statuswerte für Penalty-Badge / Hinweis-Text
     my_row = next((r for r in all_manager_rows if r['is_own']), None)
 
     return render(request, 'game/management/sportgericht.html', {

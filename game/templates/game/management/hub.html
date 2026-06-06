@@ -102,8 +102,7 @@
                 </div>
             </div>
 
-            <!-- SPORTGERICHT -->
-            {% if club %}
+            <!-- SPORTGERICHT — immer zugänglich -->
             <a href="/management/sportgericht/" class="mhub-card mhub-card--active mhub-card--sportgericht">
                 <div class="mhub-card-bg"></div>
                 <div class="mhub-card-overlay"></div>
@@ -117,21 +116,6 @@
                     <p class="mhub-card-sub">Verfahren, Sperren &amp; Einsprüche</p>
                 </div>
             </a>
-            {% else %}
-            <div class="mhub-card mhub-card--locked mhub-card--sportgericht">
-                <div class="mhub-card-bg"></div>
-                <div class="mhub-card-overlay"></div>
-                <div class="mhub-card-body">
-                    <div class="mhub-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6L21 9 12 3zm5 10.99L12 17l-5-3.01v-3.73L12 13l5-2.74v3.73zM12 5.35L17.91 9 12 12.65 6.09 9 12 5.35z"/>
-                        </svg>
-                    </div>
-                    <h2 class="mhub-card-title">Sportgericht</h2>
-                    <p class="mhub-card-sub mhub-no-club-hint">Kein Verein zugewiesen</p>
-                </div>
-            </div>
-            {% endif %}
 
             <!-- FINANZEN — in Entwicklung -->
             <div class="mhub-card mhub-card--locked mhub-card--finanzen">
