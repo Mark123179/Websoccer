@@ -22,10 +22,9 @@
         <div class="mhub-grid">
 
             <!-- HALL OF FAME -->
-            <div class="mhub-card mhub-card--locked mhub-card--halloffame">
-                <div class="mhub-card-bg"></div>
+            <a href="{% url 'management_halloffame' %}" class="mhub-card mhub-card--active mhub-card--halloffame" style="text-decoration:none;">
+                <div class="mhub-card-bg" style="background-image:url('{% static 'game/images/backgrounds/halloffame-bg.jpg' %}');"></div>
                 <div class="mhub-card-overlay"></div>
-                <span class="mhub-badge-dev">In Entwicklung</span>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -33,9 +32,9 @@
                         </svg>
                     </div>
                     <h2 class="mhub-card-title">Hall of Fame</h2>
-                    <p class="mhub-card-sub">Legendäre Spieler &amp; Vereinsgeschichte</p>
+                    <p class="mhub-card-sub">Legenden. Rekorde. Geschichte.</p>
                 </div>
-            </div>
+            </a>
 
             <!-- STADION -->
             {% if club %}

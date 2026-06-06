@@ -979,3 +979,39 @@ def management_finanzen(request):
     })
 
 
+@login_required(login_url='/auth/login/')
+def management_halloffame(request):
+    club = current_manager_club(user=request.user)
+
+    dummy_legends = [
+        {'name': 'Michael Sternberg', 'number': 10, 'position': 'Stürmer',
+         'years': '2024 – 2037', 'spiele': 412, 'tore': 186, 'vorlagen': 97,
+         'titel': 7, 'note': '7,89', 'inducted': 2038,
+         'desc': 'Rekordspieler und Rekordtorschütze des Vereins. Führte den Verein zu 5 Meisterschaften und 2 Pokalsiegen.',
+         'timeline': [
+             {'year': 2024, 'event': 'Verpflichtet'},
+             {'year': 2025, 'event': 'Erstes Tor'},
+             {'year': 2027, 'event': 'Erster Titel'},
+             {'year': 2029, 'event': 'Vereinsrekord Tore in einer Saison (35)'},
+             {'year': 2031, 'event': '3. Meisterschaft'},
+             {'year': 2034, 'event': 'Rekordspieler (300 Spiele)'},
+             {'year': 2037, 'event': 'Abschiedsspiel'},
+             {'year': 2038, 'event': 'Aufnahme in die Hall of Fame'},
+         ]},
+    ]
+
+    context = {
+        'club': club,
+        'legends': dummy_legends,
+        'featured': dummy_legends[0],
+        'records': {
+            'best_manager': {'name': 'Jürgen Weber', 'detail': '3 Meisterschaften'},
+            'most_appearances': {'name': 'Michael Sternberg', 'detail': '412 Spiele'},
+            'top_scorer': {'name': 'Michael Sternberg', 'detail': '186 Tore'},
+            'biggest_win': {'score': '8:0', 'detail': 'vs. FC Eintracht 09'},
+            'biggest_transfer': {'amount': '92.000.000 €', 'detail': 'Verkauf: L. Hoffmann (2031)'},
+        },
+    }
+    return render(request, 'game/management/halloffame.html', context)
+
+

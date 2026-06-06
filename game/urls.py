@@ -38,6 +38,7 @@ from .views_management import (
     management_sportgericht,
     sportgericht_ticket_submit,
     management_finanzen,
+    management_halloffame,
 )
 from .views_creator import (
     creator_index,
@@ -170,6 +171,7 @@ urlpatterns = [
     path('management/sportgericht/ticket/', sportgericht_ticket_submit, name='sportgericht_ticket_submit'),
 
     path('management/finanzen/', management_finanzen, name='management_finanzen'),
+    path('management/halloffame/', management_halloffame, name='management_halloffame'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),
