@@ -19,6 +19,7 @@ from .models import (
     ClubTrophy,
     DataSource,
     GameSeasonState,
+    CoinTransaction,
     HoenessCoin,
     League,
     Club,
@@ -2676,6 +2677,14 @@ class HoenessCoinAdmin(admin.ModelAdmin):
     list_display = ('manager', 'amount', 'updated_at')
     search_fields = ('manager__name',)
     readonly_fields = ('updated_at',)
+
+
+@admin.register(CoinTransaction)
+class CoinTransactionAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'amount', 'reason', 'description', 'created_at')
+    list_filter = ('reason',)
+    search_fields = ('manager__name', 'description')
+    readonly_fields = ('created_at',)
 
 
 @admin.register(GameSeasonState)

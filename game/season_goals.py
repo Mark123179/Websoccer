@@ -16,6 +16,7 @@ from django.utils import timezone
 
 from .models import (
     Club,
+    CoinTransaction,
     GameSeasonState,
     HoenessCoin,
     PlayerStrengthProfile,
@@ -193,8 +194,15 @@ def evaluate_goal_for_club(club, season_number=None, coin_reward=COIN_REWARD):
 
     # Coin nur einmal gutschreiben (nicht bei wiederholter Auswertung)
     if goal.achieved and not was_already_met and club.managed_by_id:
-        coin, _ = HoenessCoin.objects.get_or_create(manager=club.managed_by)
+        manager = club.managed_by
+        coin, _ = HoenessCoin.objects.get_or_create(manager=manager)
         coin.amount += coin_reward
         coin.save()
+        CoinTransaction.objects.create(
+            manager=manager,
+            amount=coin_reward,
+            reason=CoinTransaction.REASON_SEASON_GOAL,
+            description=f'Saisonziel erfüllt: {TIER_LABELS.get(goal.goal_tier, goal.goal_tier)} (Saison {season_number})',
+        )
 
     return goal

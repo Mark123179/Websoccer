@@ -7,7 +7,7 @@
 {% block body_class %}president-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -29,7 +29,17 @@
             <div class="pr-hero-coin">
                 <img class="pr-coin-icon" src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="Hoeneß-Coin">
                 <span class="pr-coin-value">{{ coin_balance }}</span>
-                <span class="pr-coin-label">Hoeneß-Coin</span>
+                <span class="pr-coin-label">
+                    Hoeneß-Coin
+                    <span class="pr-coin-info" aria-label="Coins gehören dem Manager, nicht dem Verein">
+                        <span class="pr-coin-info-icon">i</span>
+                        <span class="pr-coin-info-tooltip">
+                            Hoeneß-Coins gehören <strong>dir als Manager</strong>,
+                            nicht dem Verein. Bei einem Vereinswechsel nimmst du
+                            dein Guthaben mit.
+                        </span>
+                    </span>
+                </span>
             </div>
         </div>
     </div>
@@ -57,11 +67,11 @@
                     {% if season_started %}
                         „Servus. Für die Saison {{ season }} erwarte ich von dieser Mannschaft
                         <strong>{{ tier_label }}</strong>. Alles andere wäre eine Enttäuschung.
-                        Erfüllst du das Ziel, gibt’s einen <strong>Hoeneß-Coin</strong> obendrauf.“
+                        Erfüllst du das Ziel, gibt's einen <strong>Hoeneß-Coin</strong> obendrauf."
                     {% else %}
                         „Setz dich. Das offizielle Saisonziel verkünde ich, sobald die Saison
                         offiziell gestartet wurde. Bis dahin bleibt es unter Verschluss —
-                        konzentrier dich auf deine Vorbereitung.“
+                        konzentrier dich auf deine Vorbereitung."
                     {% endif %}
                 </p>
             </div>
@@ -83,7 +93,7 @@
 
         </div>
 
-        <!-- ---- Rechte Spalte: Saisonziel-Karte ---- -->
+        <!-- ---- Rechte Spalte: Saisonziel + Shop ---- -->
         <div class="pr-col pr-col--right">
 
             {% if season_started %}
@@ -130,6 +140,33 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- Coin-Shop -->
+            <div class="pr-panel pr-shop">
+                <p class="pr-section-title">Hoeneß-Shop</p>
+                <p class="pr-shop-intro">Investiere deine Coins in Aktionen, die deinem Verein einen Vorteil verschaffen.</p>
+                <ul class="pr-shop-list">
+                    {% for item in coin_shop %}
+                    <li class="pr-shop-item">
+                        <span class="pr-shop-icon">{{ item.icon }}</span>
+                        <div class="pr-shop-info">
+                            <span class="pr-shop-label">{{ item.label }}</span>
+                            <span class="pr-shop-desc">{{ item.desc }}</span>
+                        </div>
+                        <form method="post" action="{% url 'coin_shop_purchase' %}" class="pr-shop-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_key" value="{{ item.key }}">
+                            <button type="submit"
+                                class="pr-shop-btn {% if coin_balance < item.cost %}is-disabled{% endif %}"
+                                {% if coin_balance < item.cost %}disabled title="Nicht genug Coins ({{ coin_balance }}/{{ item.cost }})"{% endif %}>
+                                <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
+                                {{ item.cost }}
+                            </button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
 
             {% if history %}
             <div class="pr-panel pr-history">

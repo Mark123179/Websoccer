@@ -534,6 +534,26 @@ def facility_upgrade(request):
 #  Präsident-Büro — Saisonziele & Hoeneß-Coin                         #
 # ------------------------------------------------------------------ #
 
+COIN_SHOP = [
+    {
+        'key':   'boost_transfer',
+        'label': 'Transfermarkt-Boost',
+        'cost':  10,
+        'icon':  '📈',
+        'desc':  'Hebt deinen Verein für eine Saison im Transfermarkt hervor — Spieler auf Vereinssuche werden auf dich aufmerksam.',
+        'reason': 'boost_transfer',
+    },
+    {
+        'key':   'scout_talent',
+        'label': 'Talentscout',
+        'cost':  15,
+        'icon':  '🔭',
+        'desc':  'Beauftragt einen Talentscout, der verborgene Nachwuchstalente für dein NLZ aufspürt.',
+        'reason': 'scout_talent',
+    },
+]
+
+
 @login_required(login_url='/auth/login/')
 def president_office(request):
     from .models import SeasonGoal, HoenessCoin
@@ -556,6 +576,7 @@ def president_office(request):
 
     # Coin-Guthaben
     coin_balance = 0
+    coin = None
     if manager:
         coin, _ = HoenessCoin.objects.get_or_create(manager=manager)
         coin_balance = coin.amount
@@ -591,19 +612,69 @@ def president_office(request):
     )
 
     return render(request, 'game/management/president.html', {
-        'club':            club,
-        'manager':         manager,
-        'season':          season,
-        'season_started':  season_started,
-        'coin_balance':    coin_balance,
-        'goal':            goal,
-        'tier':            tier,
-        'tier_label':      tier_label,
-        'tier_class':      tier_class,
-        'league_size':     league_size,
-        'required_max_rank': req_rank,
-        'satisfaction':    satisfaction,
-        'history':         history,
+        'club':               club,
+        'manager':            manager,
+        'season':             season,
+        'season_started':     season_started,
+        'coin_balance':       coin_balance,
+        'goal':               goal,
+        'tier':               tier,
+        'tier_label':         tier_label,
+        'tier_class':         tier_class,
+        'league_size':        league_size,
+        'required_max_rank':  req_rank,
+        'satisfaction':       satisfaction,
+        'history':            history,
+        'coin_shop':          COIN_SHOP,
     })
+
+
+@login_required(login_url='/auth/login/')
+def coin_shop_purchase(request):
+    """POST-Handler für den Kauf einer Shop-Aktion mit Hoeneß-Coins."""
+    from django.db import transaction as db_transaction
+    from .models import HoenessCoin, CoinTransaction
+
+    if request.method != 'POST':
+        return redirect('president_office')
+
+    club = current_manager_club(user=request.user)
+    if not club or not club.managed_by:
+        messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
+        return redirect('president_office')
+
+    manager = club.managed_by
+    action_key = request.POST.get('action_key', '')
+
+    shop_item = next((s for s in COIN_SHOP if s['key'] == action_key), None)
+    if not shop_item:
+        messages.error(request, 'Unbekannte Aktion.')
+        return redirect('president_office')
+
+    with db_transaction.atomic():
+        coin, _ = HoenessCoin.objects.select_for_update().get_or_create(manager=manager)
+
+        if coin.amount < shop_item['cost']:
+            messages.error(
+                request,
+                f'Nicht genug Hoeneß-Coins. Du brauchst {shop_item["cost"]}, hast aber nur {coin.amount}.',
+            )
+            return redirect('president_office')
+
+        coin.amount -= shop_item['cost']
+        coin.save()
+
+        CoinTransaction.objects.create(
+            manager=manager,
+            amount=-shop_item['cost'],
+            reason=shop_item['reason'],
+            description=f'{shop_item["label"]} aktiviert für {club.name}',
+        )
+
+    messages.success(
+        request,
+        f'✓ {shop_item["label"]} erfolgreich aktiviert! −{shop_item["cost"]} Hoeneß-Coin.',
+    )
+    return redirect('president_office')
 
 

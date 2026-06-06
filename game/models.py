@@ -2656,6 +2656,45 @@ class HoenessCoin(models.Model):
         return f'{self.manager} – {self.amount} Hoeneß-Coin'
 
 
+class CoinTransaction(models.Model):
+    """Protokolliert jede einzelne Hoeneß-Coin-Buchung (Einnahme oder Ausgabe)."""
+
+    REASON_WIN = 'win'
+    REASON_BIG_WIN = 'big_win'
+    REASON_SEASON_GOAL = 'season_goal'
+    REASON_BOOST_TRANSFER = 'boost_transfer'
+    REASON_SCOUT_TALENT = 'scout_talent'
+
+    REASON_CHOICES = [
+        (REASON_WIN,            'Sieg'),
+        (REASON_BIG_WIN,        'Kantersieg'),
+        (REASON_SEASON_GOAL,    'Saisonziel erfüllt'),
+        (REASON_BOOST_TRANSFER, 'Transfermarkt-Boost'),
+        (REASON_SCOUT_TALENT,   'Talentscout'),
+    ]
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='coin_transactions',
+    )
+    amount = models.SmallIntegerField(
+        help_text='Positiv = verdient, negativ = ausgegeben.',
+    )
+    reason = models.CharField(max_length=30, choices=REASON_CHOICES)
+    description = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Coin-Transaktion'
+        verbose_name_plural = 'Coin-Transaktionen'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        sign = '+' if self.amount >= 0 else ''
+        return f'{self.manager} {sign}{self.amount} ({self.get_reason_display()})'
+
+
 class GameSeasonState(models.Model):
     """Globaler, vom Admin gesteuerter Saison-Status.
 
