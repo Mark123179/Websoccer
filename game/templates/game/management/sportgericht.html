@@ -4,14 +4,19 @@
 {% block body_class %}sportgericht-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=4">
+<style>
+.sportgericht-page .gameViewport {
+    background-image: url('{% static 'game/img/sportgericht_bg.png' %}');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-artboard"
-     style="--sg-bg-url: url('{% static 'game/img/sportgericht_bg.png' %}');">
-
-    <div class="sg-bg"></div>
+<div class="dashboard-artboard">
 
     <div class="sg-content">
 

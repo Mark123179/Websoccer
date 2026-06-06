@@ -4,37 +4,32 @@
    Dunkel-goldenes Gericht-Ambiente
    ========================================================= */
 
-/* ---- Seitenstruktur ---- */
-.sportgericht-page .dashboard-artboard {
-    position: relative;
-    min-height: 900px;
-    display: flex;
-    align-items: stretch;
-    overflow: hidden;
-    background: #060b12;
-}
-
-.sg-bg {
-    position: absolute;
-    inset: 0;
-    background-image: var(--sg-bg-url);
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    z-index: 0;
-}
-
-.sg-bg::after {
+/* ---- Hintergrund: deckt den vollen Viewport ab (inkl. Header & Sidebar) ---- */
+.sportgericht-page .gameViewport::before {
     content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(
         to right,
-        rgba(6, 11, 18, 0.82) 0%,
-        rgba(6, 11, 18, 0.70) 40%,
-        rgba(6, 11, 18, 0.55) 100%
+        rgba(6, 11, 18, 0.84) 0%,
+        rgba(6, 11, 18, 0.68) 45%,
+        rgba(6, 11, 18, 0.50) 100%
     );
+    z-index: 0;
+    pointer-events: none;
 }
+
+/* ---- Seitenstruktur ---- */
+.sportgericht-page .dashboard-artboard {
+    position: relative;
+    min-height: 1117px;
+    display: flex;
+    align-items: stretch;
+    background: transparent;
+}
+
+/* .sg-bg wird nicht mehr benötigt — Hintergrund sitzt auf .gameViewport */
+.sg-bg { display: none; }
 
 /* ---- Scrollbarer Inhaltsbereich ---- */
 .sg-content {
