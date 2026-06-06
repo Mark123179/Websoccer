@@ -7,22 +7,23 @@
 .hof-hero {
     position: relative;
     width: 100%;
-    height: 230px;
+    height: 300px;
     border-radius: 10px;
     overflow: hidden;
     margin-bottom: 14px;
     background-image: var(--hof-bg);
     background-size: cover;
-    background-position: center 30%;
+    background-position: center top;
 }
 .hof-hero-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(
         to bottom,
-        rgba(0,0,0,0.30) 0%,
-        rgba(0,0,0,0.55) 60%,
-        rgba(0,0,0,0.82) 100%
+        rgba(0,0,0,0.10) 0%,
+        rgba(0,0,0,0.20) 40%,
+        rgba(0,0,0,0.72) 80%,
+        rgba(0,0,0,0.90) 100%
     );
 }
 .hof-hero-body {
@@ -33,39 +34,41 @@
     align-items: center;
     justify-content: flex-end;
     height: 100%;
-    padding-bottom: 22px;
-    gap: 3px;
+    padding-bottom: 26px;
+    gap: 2px;
 }
 .hof-hero-emblem {
-    margin-bottom: 4px;
-    opacity: 0.85;
+    margin-bottom: 6px;
+    opacity: 0.90;
 }
 .hof-hero-title {
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 30px;
+    font-size: 34px;
     font-weight: 900;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.20em;
     color: #c9a84c;
     margin: 0;
-    text-shadow: 0 2px 18px rgba(201,168,76,0.50);
+    text-shadow: 0 0 30px rgba(201,168,76,0.60), 0 2px 8px rgba(0,0,0,0.8);
     line-height: 1;
 }
 .hof-hero-sub {
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.28em;
-    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.32em;
+    color: rgba(255,255,255,0.70);
     margin: 0;
     text-transform: uppercase;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
 }
 .hof-hero-tagline {
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: rgba(255,255,255,0.38);
-    margin: 0;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.45);
+    margin: 4px 0 0;
     font-style: italic;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
 }
 
 /* ── KPI ZEILE ─────────────────────────────────────────────────── */
