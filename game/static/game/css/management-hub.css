@@ -7,7 +7,7 @@
 /* ---- Seitenstruktur ---- */
 .management-hub-page .dashboard-artboard {
     position: relative;
-    min-height: 840px;
+    min-height: 960px;
     display: flex;
     align-items: stretch;
     overflow: hidden;
@@ -76,7 +76,7 @@
     color: #c9a84c;
 }
 
-/* ---- Rechte Seite: 2×3 Karten-Grid ---- */
+/* ---- Rechte Seite: Karten-Grid ---- */
 .mhub-right {
     flex: 0 0 60%;
     position: relative;
@@ -90,11 +90,16 @@
 .mhub-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 333px);
+    grid-auto-rows: 175px;
     gap: 14px;
     width: 100%;
     max-width: 760px;
-    height: 680px;
+}
+
+/* Sportgericht spans the full third row */
+.mhub-card--sportgericht {
+    grid-column: 1 / -1;
 }
 
 /* ---- Einzelne Karte ---- */
@@ -249,6 +254,7 @@
 .mhub-card--finanzen  .mhub-card-bg { background-image: url('../images/backgrounds/finanzen-bg.jpg'); background-size: cover; background-position: center 25%; }
 .mhub-card--sponsor   .mhub-card-bg { background-image: url('../images/backgrounds/sponsoring-bg.jpg'); background-size: cover; background-position: center 20%; }
 .mhub-card--news      .mhub-card-bg { background-image: url('../images/backgrounds/vereinsnews-bg.jpg'); background-size: cover; background-position: center 25%; }
+.mhub-card--sportgericht .mhub-card-bg { background-image: url('../images/backgrounds/sportgericht-bg.png'); background-size: cover; background-position: center 30%; }
 
 /* "Kein Verein" Hinweis auf gesperrten Karten */
 .mhub-no-club-hint {

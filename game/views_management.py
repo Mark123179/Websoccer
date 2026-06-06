@@ -613,6 +613,19 @@ def president_office(request):
     })
 
 
+# ------------------------------------------------------------------ #
+#  Sportgericht — Platzhalterseite                                     #
+# ------------------------------------------------------------------ #
+
+@login_required(login_url='/auth/login/')
+def management_sportgericht(request):
+    club = current_manager_club(user=request.user)
+    if not club:
+        messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
+        return redirect('management_hub')
+    return render(request, 'game/management/sportgericht.html', {'club': club})
+
+
 @login_required(login_url='/auth/login/')
 def coin_shop_purchase(request):
     """POST-Handler für den Kauf einer Shop-Aktion mit Hoeneß-Coins."""

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sportgericht – {{ club.name }}{% endblock %}
+
+{% block body_class %}sportgericht-page{% endblock %}
+
+{% block content %}
+<div class="dashboard-artboard" style="min-height:600px; background:#060b12; position:relative; overflow:hidden;">
+
+    <div style="position:absolute; inset:0; background-image:url('{% static 'game/images/backgrounds/sportgericht-bg.png' %}'); background-size:cover; background-position:center 30%; opacity:0.25;"></div>
+    <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(6,11,18,0.55) 0%, rgba(6,11,18,0.92) 100%);"></div>
+
+    <div style="position:relative; z-index:1; max-width:760px; margin:0 auto; padding:60px 32px 80px;">
+
+        <p style="font-size:12px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.40); margin-bottom:12px;">
+            <a href="/management/" style="color:rgba(255,255,255,0.40); text-decoration:none;">Management</a>
+            <span style="margin:0 6px;">›</span>Sportgericht
+        </p>
+
+        <h1 style="font-family:'Segoe UI',Arial,sans-serif; font-size:36px; font-weight:300; letter-spacing:0.04em; color:#fff; margin:0 0 8px;">
+            Das <strong style="font-weight:700; color:#c9a84c;">Sportgericht</strong>
+        </h1>
+        <p style="font-size:13px; color:rgba(255,255,255,0.50); margin:0 0 48px;">{{ club.name }}</p>
+
+        <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.18); border-radius:10px; padding:36px 32px; display:flex; align-items:flex-start; gap:24px;">
+            <div style="width:48px; height:48px; border-radius:50%; background:rgba(201,168,76,0.12); border:1.5px solid rgba(201,168,76,0.40); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="#c9a84c">
+                    <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6L21 9 12 3zm5 10.99L12 17l-5-3.01v-3.73L12 13l5-2.74v3.73zM12 5.35L17.91 9 12 12.65 6.09 9 12 5.35z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 style="font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:#c9a84c; margin:0 0 10px;">Verfahren, Sperren &amp; Einsprüche</h2>
+                <p style="font-size:13px; color:rgba(255,255,255,0.65); line-height:1.65; margin:0;">
+                    Das Sportgericht ist die zentrale Instanz für alle sportrechtlichen Angelegenheiten deines Vereins.
+                    Hier werden Sperren verhängt, Einsprüche eingereicht und laufende Verfahren verwaltet.
+                </p>
+                <p style="font-size:12px; color:rgba(201,168,76,0.55); margin:16px 0 0; font-style:italic;">
+                    Diese Funktion befindet sich noch in der Entwicklung und wird in Kürze verfügbar sein.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
