@@ -672,34 +672,59 @@ def _inactivity_status(manager, squad_scope, season):
 
 @login_required(login_url='/auth/login/')
 def management_sportgericht(request):
-    from .models import SupportTicket, InactivityRecord, GameSeasonState
+    from .models import SupportTicket, InactivityRecord, GameSeasonState, Club
 
-    club = current_manager_club(user=request.user)
-    if not club:
+    my_club = current_manager_club(user=request.user)
+    if not my_club:
         messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
         return redirect('management_hub')
 
-    manager = club.managed_by
+    my_manager = my_club.managed_by
 
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else ''
 
-    profi_status = _inactivity_status(manager, 'pro', season)
-    u21_status = _inactivity_status(manager, 'u21', season)
+    # ── Aktivitätscheck: alle Manager mit Verein ──────────────────────
+    _light_order = {'red': 0, 'yellow': 1, 'green': 2}
+    all_manager_rows = []
+    for club in Club.objects.filter(managed_by__isnull=False).select_related('managed_by'):
+        mgr = club.managed_by
+        p = _inactivity_status(mgr, 'pro', season)
+        u = _inactivity_status(mgr, 'u21', season)
+        worst = min(p['light'], u['light'], key=lambda l: _light_order[l])
+        all_manager_rows.append({
+            'club': club,
+            'manager': mgr,
+            'profi': p,
+            'u21': u,
+            'worst_light': worst,
+            'is_own': club.pk == my_club.pk,
+        })
+    # Sortierung: rot → gelb → grün, eigener Verein immer ganz oben
+    all_manager_rows.sort(key=lambda r: (
+        0 if r['is_own'] else 1,
+        _light_order[r['worst_light']],
+        r['manager'].name,
+    ))
 
+    # ── Tickets des eigenen Managers ──────────────────────────────────
     open_tickets = SupportTicket.objects.filter(
-        manager=manager,
+        manager=my_manager,
         status__in=['open', 'in_progress'],
     )
     closed_tickets = SupportTicket.objects.filter(
-        manager=manager,
+        manager=my_manager,
         status='closed',
     )[:3]
 
+    # Eigene Statuswerte für Penalty-Badge / Hinweis-Text
+    my_row = next((r for r in all_manager_rows if r['is_own']), None)
+
     return render(request, 'game/management/sportgericht.html', {
-        'club': club,
-        'profi_status': profi_status,
-        'u21_status': u21_status,
+        'club': my_club,
+        'all_manager_rows': all_manager_rows,
+        'profi_status': my_row['profi'] if my_row else {},
+        'u21_status': my_row['u21'] if my_row else {},
         'open_tickets': open_tickets,
         'closed_tickets': closed_tickets,
         'season': season,

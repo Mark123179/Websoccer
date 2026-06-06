@@ -221,6 +221,19 @@
 .sg-sq--yellow { background: #e0b852; box-shadow: 0 0 5px rgba(224, 184, 82, 0.4); }
 .sg-sq--red    { background: #e05252; box-shadow: 0 0 5px rgba(224, 82, 82, 0.5); }
 
+/* ---- Eigene Zeile hervorheben ---- */
+.sg-act-row--own {
+    background: rgba(201, 168, 76, 0.06);
+}
+
+.sg-act-row--own td {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.sg-act-row--own .sg-act-club {
+    font-weight: 700;
+}
+
 /* ---- Legende & Hinweis ---- */
 .sg-act-legend {
     display: flex;
