@@ -7,7 +7,7 @@
 {% block body_class %}president-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'game/css/management-president.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -141,30 +141,33 @@
             </div>
             {% endif %}
 
-            <!-- Coin-Shop -->
+            <!-- Coin-Shop: Spielerauktionen -->
             <div class="pr-panel pr-shop">
                 <p class="pr-section-title">Hoeneß-Shop</p>
-                <p class="pr-shop-intro">Investiere deine Coins in Aktionen, die deinem Verein einen Vorteil verschaffen.</p>
+                <p class="pr-shop-intro">Setze deine Coins ein, um an exklusiven Spielerauktionen teilzunehmen — zweimal pro Saison.</p>
                 <ul class="pr-shop-list">
-                    {% for item in coin_shop %}
-                    <li class="pr-shop-item">
-                        <span class="pr-shop-icon">{{ item.icon }}</span>
+                    <li class="pr-shop-item pr-shop-item--locked">
+                        <span class="pr-shop-icon">🏆</span>
                         <div class="pr-shop-info">
-                            <span class="pr-shop-label">{{ item.label }}</span>
-                            <span class="pr-shop-desc">{{ item.desc }}</span>
+                            <span class="pr-shop-label">Saisonauktion <span class="pr-shop-badge">Demnächst</span></span>
+                            <span class="pr-shop-desc">Exklusive Auktion zum Saisonstart — seltene Talente und etablierte Stars werden versteigert.</span>
                         </div>
-                        <form method="post" action="{% url 'coin_shop_purchase' %}" class="pr-shop-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="action_key" value="{{ item.key }}">
-                            <button type="submit"
-                                class="pr-shop-btn {% if coin_balance < item.cost %}is-disabled{% endif %}"
-                                {% if coin_balance < item.cost %}disabled title="Nicht genug Coins ({{ coin_balance }}/{{ item.cost }})"{% endif %}>
-                                <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
-                                {{ item.cost }}
-                            </button>
-                        </form>
+                        <div class="pr-shop-btn is-disabled" title="Noch nicht verfügbar">
+                            <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
+                            <span>—</span>
+                        </div>
                     </li>
-                    {% endfor %}
+                    <li class="pr-shop-item pr-shop-item--locked">
+                        <span class="pr-shop-icon">❄️</span>
+                        <div class="pr-shop-info">
+                            <span class="pr-shop-label">Winterauktion <span class="pr-shop-badge">Demnächst</span></span>
+                            <span class="pr-shop-desc">Auktion zur Winterpause — verstärke deinen Kader für die entscheidende Rückrunde.</span>
+                        </div>
+                        <div class="pr-shop-btn is-disabled" title="Noch nicht verfügbar">
+                            <img src="{% static 'game/images/icons/hoeness-coin.png' %}" alt="" class="pr-shop-coin-icon">
+                            <span>—</span>
+                        </div>
+                    </li>
                 </ul>
             </div>
 

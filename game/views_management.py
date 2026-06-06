@@ -534,24 +534,7 @@ def facility_upgrade(request):
 #  Präsident-Büro — Saisonziele & Hoeneß-Coin                         #
 # ------------------------------------------------------------------ #
 
-COIN_SHOP = [
-    {
-        'key':   'boost_transfer',
-        'label': 'Transfermarkt-Boost',
-        'cost':  10,
-        'icon':  '📈',
-        'desc':  'Hebt deinen Verein für eine Saison im Transfermarkt hervor — Spieler auf Vereinssuche werden auf dich aufmerksam.',
-        'reason': 'boost_transfer',
-    },
-    {
-        'key':   'scout_talent',
-        'label': 'Talentscout',
-        'cost':  15,
-        'icon':  '🔭',
-        'desc':  'Beauftragt einen Talentscout, der verborgene Nachwuchstalente für dein NLZ aufspürt.',
-        'reason': 'scout_talent',
-    },
-]
+COIN_SHOP = []
 
 
 @login_required(login_url='/auth/login/')
