@@ -5,7 +5,7 @@
 {% block body_class %}finanzen-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/finanzen.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'game/css/finanzen.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -106,7 +106,8 @@
                     <div class="fn-sponsor-body">
                         <p class="fn-sponsor-type">{{ sp.get_sponsor_type_display }}</p>
                         <p class="fn-sponsor-amount">{{ sp.amount_mio }} Mio €</p>
-                        <p class="fn-sponsor-name">{{ sp.name }} / Saison</p>
+                        <p class="fn-sponsor-name">{{ sp.name }}</p>
+                        <p class="fn-sponsor-saison">/ Saison</p>
                     </div>
                 </div>
                 {% endfor %}

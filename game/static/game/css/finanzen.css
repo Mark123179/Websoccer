@@ -159,88 +159,86 @@
 .fn-sponsor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 7px;
+    gap: 8px;
 }
 .fn-sponsor-card {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 6px;
-    padding: 8px 10px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    padding: 11px 13px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: border-color 0.15s, background 0.15s;
+    gap: 12px;
+    transition: background 0.15s, border-color 0.15s;
 }
-.fn-sponsor-card--tv       { border-color: rgba(201,168,76,0.30); background: rgba(201,168,76,0.07); }
-.fn-sponsor-card--trikot   { border-color: rgba(96,165,250,0.28); background: rgba(96,165,250,0.06); }
-.fn-sponsor-card--haupt    { border-color: rgba(167,139,250,0.30); background: rgba(167,139,250,0.07); }
-.fn-sponsor-card--ausruester { border-color: rgba(34,197,94,0.28); background: rgba(34,197,94,0.06); }
-.fn-sponsor-card--sonstig  { border-color: rgba(148,163,184,0.22); background: rgba(148,163,184,0.04); }
+.fn-sponsor-card:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.14);
+}
 
 .fn-sponsor-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.07);
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
-.fn-sponsor-icon--nobg {
-    background: transparent;
-}
+.fn-sponsor-icon--nobg { background: transparent; }
+
 .fn-sponsor-logo {
-    width: 34px;
-    height: 34px;
+    width: 46px;
+    height: 46px;
     object-fit: contain;
-    filter: drop-shadow(0 0 5px rgba(201,168,76,0.55));
+    filter: drop-shadow(0 1px 6px rgba(201,168,76,0.50));
 }
-.fn-sponsor-body { min-width: 0; }
+
+.fn-sponsor-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
 .fn-sponsor-type {
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 8.5px;
+    font-size: 8px;
     font-weight: 700;
-    letter-spacing: 0.10em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    margin: 0 0 1px;
+    color: rgba(255,255,255,0.38);
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.fn-sponsor-card--tv       .fn-sponsor-type { color: rgba(201,168,76,0.75); }
-.fn-sponsor-card--trikot   .fn-sponsor-type { color: rgba(96,165,250,0.75); }
-.fn-sponsor-card--haupt    .fn-sponsor-type { color: rgba(167,139,250,0.75); }
-.fn-sponsor-card--ausruester .fn-sponsor-type { color: rgba(34,197,94,0.75); }
-
 .fn-sponsor-amount {
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
-    color: #fff;
+    color: #ffffff;
     margin: 0;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
 }
-.fn-sponsor-card--tv       .fn-sponsor-amount { color: #f0d98a; }
-.fn-sponsor-card--trikot   .fn-sponsor-amount { color: #93c5fd; }
-.fn-sponsor-card--haupt    .fn-sponsor-amount { color: #c4b5fd; }
-.fn-sponsor-card--ausruester .fn-sponsor-amount { color: #86efac; }
-
 .fn-sponsor-name {
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 9px;
-    color: rgba(255,255,255,0.32);
+    color: rgba(255,255,255,0.30);
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
+.fn-sponsor-saison {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 9px;
+    color: rgba(255,255,255,0.28);
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
 .fn-sponsor-full {
-    background: rgba(167,139,250,0.09) !important;
-    border-color: rgba(167,139,250,0.28) !important;
-    grid-column: 1/-1;
+    grid-column: 1 / -1;
 }
-.fn-sponsor-full .fn-sponsor-amount { color: #c4b5fd !important; }
 .fn-sponsors-empty {
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 11px;
