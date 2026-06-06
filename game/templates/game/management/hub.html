@@ -7,7 +7,7 @@
 {% block body_class %}management-hub-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-hub.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'game/css/management-hub.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -118,38 +118,6 @@
                 </div>
             </div>
 
-            <!-- SPONSORING — in Entwicklung -->
-            <div class="mhub-card mhub-card--locked mhub-card--sponsor">
-                <div class="mhub-card-bg"></div>
-                <div class="mhub-card-overlay"></div>
-                <span class="mhub-badge-dev">In Entwicklung</span>
-                <div class="mhub-card-body">
-                    <div class="mhub-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M11 5.08V3c-3.87.49-7 3.85-7 7.92 0 4.07 3.13 7.43 7 7.92V16.9c-2.83-.48-5-2.94-5-5.9s2.17-5.42 5-5.92zM18.97 11c-.47-2.3-2-4.3-4.97-5V3C18 3.56 21 7 21 12s-3 8.44-7 9v-3c2.97-.7 4.5-2.7 4.97-5H15v-2h3.97z"/>
-                        </svg>
-                    </div>
-                    <h2 class="mhub-card-title">Sponsoring</h2>
-                    <p class="mhub-card-sub">Partner, Verträge &amp; Innehalten</p>
-                </div>
-            </div>
-
-            <!-- VEREINSNEWS — in Entwicklung -->
-            <div class="mhub-card mhub-card--locked mhub-card--news">
-                <div class="mhub-card-bg"></div>
-                <div class="mhub-card-overlay"></div>
-                <span class="mhub-badge-dev">In Entwicklung</span>
-                <div class="mhub-card-body">
-                    <div class="mhub-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h12v2H6zm0 4h8v2H6zM6 6h12v2H6z"/>
-                        </svg>
-                    </div>
-                    <h2 class="mhub-card-title">Vereinsnews</h2>
-                    <p class="mhub-card-sub">Neuigkeiten &amp; Vereinsinformationen</p>
-                </div>
-            </div>
-
             <!-- SPORTGERICHT -->
             {% if club %}
             <a href="/management/sportgericht/" class="mhub-card mhub-card--active mhub-card--sportgericht">
@@ -180,6 +148,38 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- SPONSORING — in Entwicklung -->
+            <div class="mhub-card mhub-card--locked mhub-card--sponsor">
+                <div class="mhub-card-bg"></div>
+                <div class="mhub-card-overlay"></div>
+                <span class="mhub-badge-dev">In Entwicklung</span>
+                <div class="mhub-card-body">
+                    <div class="mhub-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11 5.08V3c-3.87.49-7 3.85-7 7.92 0 4.07 3.13 7.43 7 7.92V16.9c-2.83-.48-5-2.94-5-5.9s2.17-5.42 5-5.92zM18.97 11c-.47-2.3-2-4.3-4.97-5V3C18 3.56 21 7 21 12s-3 8.44-7 9v-3c2.97-.7 4.5-2.7 4.97-5H15v-2h3.97z"/>
+                        </svg>
+                    </div>
+                    <h2 class="mhub-card-title">Sponsoring</h2>
+                    <p class="mhub-card-sub">Partner, Verträge &amp; Innehalten</p>
+                </div>
+            </div>
+
+            <!-- VEREINSNEWS — in Entwicklung, zentriert in Reihe 3 -->
+            <div class="mhub-card mhub-card--locked mhub-card--news">
+                <div class="mhub-card-bg"></div>
+                <div class="mhub-card-overlay"></div>
+                <span class="mhub-badge-dev">In Entwicklung</span>
+                <div class="mhub-card-body">
+                    <div class="mhub-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h12v2H6zm0 4h8v2H6zM6 6h12v2H6z"/>
+                        </svg>
+                    </div>
+                    <h2 class="mhub-card-title">Vereinsnews</h2>
+                    <p class="mhub-card-sub">Neuigkeiten &amp; Vereinsinformationen</p>
+                </div>
+            </div>
 
         </div>
     </div>
