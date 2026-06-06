@@ -205,4 +205,21 @@ def evaluate_goal_for_club(club, season_number=None, coin_reward=COIN_REWARD):
             description=f'Saisonziel erfüllt: {TIER_LABELS.get(goal.goal_tier, goal.goal_tier)} (Saison {season_number})',
         )
 
+    # Präsident-Zufriedenheit aktualisieren (einmal pro Auswertung)
+    if club.managed_by_id and not was_already_met:
+        try:
+            from .models import PresidentSatisfaction
+            sat, _ = PresidentSatisfaction.objects.get_or_create(
+                manager=club.managed_by,
+                club=club,
+                defaults={'value': 100},
+            )
+            if goal.achieved:
+                sat.value = min(100, sat.value + 50)
+            else:
+                sat.value = max(0, sat.value - 50)
+            sat.save()
+        except Exception:
+            pass
+
     return goal

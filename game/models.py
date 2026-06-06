@@ -2722,3 +2722,50 @@ class GameSeasonState(models.Model):
     def __str__(self):
         zustand = 'gestartet' if self.is_started else 'nicht gestartet'
         return f'Saison {self.current_season} ({zustand})'
+
+
+class PresidentSatisfaction(models.Model):
+    """Präsident-Zufriedenheit — vereinsgebunden, pro Manager-Club-Kombination.
+
+    Startet bei 100, wenn ein Manager einen Verein übernimmt (frischer Start).
+    Sinkt um 50 bei verfehlem Saisonziel, steigt um 50 bei Zielerreichung.
+    Wird beim Vereinswechsel NICHT übertragen — neuer Verein = Neustart bei 100.
+    Bei 0 % erscheint der Manager in der Admin-Übersicht "Entlassungskandidaten".
+    """
+
+    manager = models.ForeignKey(
+        'ManagerProfile',
+        on_delete=models.CASCADE,
+        related_name='president_satisfactions',
+        verbose_name='Manager',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='president_satisfactions',
+        verbose_name='Verein',
+    )
+    value = models.PositiveSmallIntegerField(
+        default=100,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        verbose_name='Zufriedenheit (0–100)',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [('manager', 'club')]
+        ordering = ['value', '-updated_at']
+        verbose_name = 'Präsident-Zufriedenheit'
+        verbose_name_plural = 'Präsident-Zufriedenheiten'
+
+    def __str__(self):
+        return f'{self.manager} @ {self.club} — {self.value} %'
+
+
+class ManagerAtRisk(PresidentSatisfaction):
+    """Proxy-Modell: zeigt nur Manager mit Zufriedenheit 0 % (Entlassungskandidaten)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Entlassungskandidat'
+        verbose_name_plural = 'Entlassungskandidaten (Zufriedenheit 0 %)'

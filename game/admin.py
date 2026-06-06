@@ -23,6 +23,7 @@ from .models import (
     HoenessCoin,
     League,
     Club,
+    ManagerAtRisk,
     ManagerCareerStation,
     ManagerProfile,
     MatchdayRevenue,
@@ -41,6 +42,7 @@ from .models import (
     PlayerStrengthProfile,
     PlayerStrengthSnapshot,
     PlayerSuspensionRecord,
+    PresidentSatisfaction,
     SeasonGoal,
     PlayerTransferHistory,
     PlayerWeightedRatingSnapshot,
@@ -2729,3 +2731,45 @@ class GameSeasonStateAdmin(admin.ModelAdmin):
             ),
             messages.SUCCESS,
         )
+
+
+@admin.register(PresidentSatisfaction)
+class PresidentSatisfactionAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'club', 'satisfaction_display', 'updated_at')
+    list_filter = ('value',)
+    search_fields = ('manager__name', 'club__name')
+    ordering = ('value', '-updated_at')
+    readonly_fields = ('updated_at',)
+
+    @admin.display(description='Zufriedenheit')
+    def satisfaction_display(self, obj):
+        if obj.value == 0:
+            color = '#c0392b'
+        elif obj.value < 50:
+            color = '#e67e22'
+        elif obj.value < 100:
+            color = '#27ae60'
+        else:
+            color = '#2980b9'
+        return format_html(
+            '<span style="background:{};color:#fff;padding:2px 10px;'
+            'border-radius:4px;font-weight:bold;font-size:12px;">{}&nbsp;%</span>',
+            color,
+            obj.value,
+        )
+
+
+@admin.register(ManagerAtRisk)
+class ManagerAtRiskAdmin(admin.ModelAdmin):
+    """Admin-Übersicht: Entlassungskandidaten — Manager mit Zufriedenheit 0 %."""
+
+    list_display = ('manager', 'club', 'updated_at')
+    search_fields = ('manager__name', 'club__name')
+    ordering = ('-updated_at',)
+    readonly_fields = ('manager', 'club', 'value', 'updated_at')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(value=0)
+
+    def has_add_permission(self, request):
+        return False

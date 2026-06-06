@@ -580,11 +580,12 @@ def president_office(request):
         req_rank = goal.required_max_rank
         league_size = goal.league_size
 
-    # Zufriedenheit: Anteil erfüllter, bereits ausgewerteter Ziele (sonst 50)
-    evaluated = SeasonGoal.objects.filter(club=club, achieved__isnull=False)
-    total_eval = evaluated.count()
-    met_eval = evaluated.filter(achieved=True).count()
-    satisfaction = round(met_eval / total_eval * 100) if total_eval else 50
+    # Zufriedenheit: vereinsgebunden aus PresidentSatisfaction (Default 100)
+    from .models import PresidentSatisfaction
+    satisfaction = 100
+    if manager:
+        sat = PresidentSatisfaction.objects.filter(manager=manager, club=club).first()
+        satisfaction = sat.value if sat else 100
 
     # Ziel-Historie (letzte Saisons)
     history = list(

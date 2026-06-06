@@ -61,6 +61,17 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
         club.managed_by = manager_profile
         club.save(update_fields=['managed_by'])
 
+        # Präsident-Zufriedenheit: Neustart bei 100 % für diese Manager-Club-Kombination
+        try:
+            from .models import PresidentSatisfaction
+            PresidentSatisfaction.objects.update_or_create(
+                manager=manager_profile,
+                club=club,
+                defaults={'value': 100},
+            )
+        except Exception:
+            pass
+
         # Pull city/country from ClubPublicProfile (authoritative source)
         try:
             prof = club.public_profile
