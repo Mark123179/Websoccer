@@ -10,9 +10,12 @@ echte Tabellenstände existieren, kann ``final_rank`` in
 ``evaluate_goal_for_club`` daraus gespeist werden.
 """
 
+import logging
 from decimal import Decimal
 
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 from .models import (
     Club,
@@ -185,7 +188,12 @@ def evaluate_goal_for_club(club, season_number=None, coin_reward=COIN_REWARD):
 
     ranked = rank_clubs_in_league(club.league)
     final_rank, _strength = _rank_and_strength(ranked, club)
+
+    # Merken, ob das Ziel in diesem Lauf zum ersten Mal ausgewertet wird.
+    # was_already_met   → nur für Coin-Idempotenz (Coin nur bei Erfolg-Erst-Auswertung)
+    # was_already_evaluated → für Zufriedenheits-Idempotenz (nie zweimal pro Saisonziel)
     was_already_met = goal.achieved is True
+    was_already_evaluated = goal.achieved is not None
 
     goal.final_rank = final_rank
     goal.achieved = final_rank <= goal.required_max_rank
@@ -205,8 +213,8 @@ def evaluate_goal_for_club(club, season_number=None, coin_reward=COIN_REWARD):
             description=f'Saisonziel erfüllt: {TIER_LABELS.get(goal.goal_tier, goal.goal_tier)} (Saison {season_number})',
         )
 
-    # Präsident-Zufriedenheit aktualisieren (einmal pro Auswertung)
-    if club.managed_by_id and not was_already_met:
+    # Präsident-Zufriedenheit aktualisieren — nur bei Erst-Auswertung (idempotent)
+    if club.managed_by_id and not was_already_evaluated:
         try:
             from .models import PresidentSatisfaction
             sat, _ = PresidentSatisfaction.objects.get_or_create(
@@ -220,6 +228,9 @@ def evaluate_goal_for_club(club, season_number=None, coin_reward=COIN_REWARD):
                 sat.value = max(0, sat.value - 50)
             sat.save()
         except Exception:
-            pass
+            logger.warning(
+                'evaluate_goal_for_club: Zufriedenheit für %s @ %s nicht aktualisiert.',
+                club.managed_by, club, exc_info=True,
+            )
 
     return goal

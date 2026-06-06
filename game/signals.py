@@ -49,6 +49,47 @@ def auto_record_matchday_revenue(sender, instance, created, **kwargs):
         )
 
 
+@receiver(post_save, sender='game.Club')
+def reset_president_satisfaction_on_manager_change(sender, instance, created, **kwargs):
+    """Setzt Präsident-Zufriedenheit auf 100, wenn managed_by neu gesetzt wird.
+
+    Fängt alle Pfade ab, die einen Manager einem Verein zuweisen — nicht nur
+    record_club_assignment(), sondern auch direkte Admin-Saves oder andere
+    Update-Wege.  Die Funktion ist idempotent: Wenn bereits ein Eintrag mit
+    value=100 existiert, ändert sie nichts.
+    """
+    if not instance.managed_by_id:
+        return
+
+    # Nur reagieren, wenn managed_by sich geändert hat
+    try:
+        previous = sender.objects.values_list('managed_by_id', flat=True).get(pk=instance.pk)
+    except sender.DoesNotExist:
+        previous = None
+
+    # previous kommt aus der DB *nach* dem Save — wir prüfen daher via
+    # update_fields ob managed_by im Diff war, oder ob es ein neuer Club ist.
+    update_fields = kwargs.get('update_fields') or []
+    is_managed_by_update = created or 'managed_by' in (update_fields or [])
+
+    if not is_managed_by_update:
+        return
+
+    try:
+        from .models import PresidentSatisfaction
+        PresidentSatisfaction.objects.update_or_create(
+            manager_id=instance.managed_by_id,
+            club=instance,
+            defaults={'value': 100},
+        )
+    except Exception:
+        logger.warning(
+            'reset_president_satisfaction_on_manager_change: '
+            'Zufriedenheit für Club %s (manager_id=%s) nicht zurückgesetzt.',
+            instance.pk, instance.managed_by_id, exc_info=True,
+        )
+
+
 @receiver(post_save, sender='auth.User')
 def create_manager_profile_on_user_create(sender, instance, created, **kwargs):
     """Auto-create a ManagerProfile whenever a new User account is created.

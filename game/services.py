@@ -70,7 +70,11 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
                 defaults={'value': 100},
             )
         except Exception:
-            pass
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                'record_club_assignment: Zufriedenheit für %s @ %s nicht erstellt.',
+                manager_profile, club, exc_info=True,
+            )
 
         # Pull city/country from ClubPublicProfile (authoritative source)
         try:
