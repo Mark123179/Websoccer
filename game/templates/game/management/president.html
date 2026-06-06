@@ -17,7 +17,7 @@
          HERO — Präsidentenbüro mit Uli Hoeneß
          ======================================================== -->
     <div class="pr-hero">
-        <div class="pr-hero-bg" style="background-image:url('{% static 'game/images/backgrounds/praesident-office-hoeness.jpg' %}');"></div>
+        <div class="pr-hero-bg" style="background-image:url('{% if satisfaction >= 50 %}{% static 'game/img/president_happy.png' %}{% else %}{% static 'game/img/president_unhappy.png' %}{% endif %}');"></div>
         <div class="pr-hero-overlay"></div>
 
         <div class="pr-hero-content">
