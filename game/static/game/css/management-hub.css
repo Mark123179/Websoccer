@@ -96,10 +96,11 @@
     max-width: 1016px;
 }
 
-/* Reihe 1: 3 Kacheln in Spalten 2–4, Spalte 1 bleibt frei */
-.mhub-card--stadion      { grid-column: 2; }
-.mhub-card--praesident   { grid-column: 3; }
-.mhub-card--freundschaft { grid-column: 4; }
+/* Reihe 1: alle 4 Spalten belegt */
+.mhub-card--halloffame   { grid-column: 1; grid-row: 1; }
+.mhub-card--stadion      { grid-column: 2; grid-row: 1; }
+.mhub-card--praesident   { grid-column: 3; grid-row: 1; }
+.mhub-card--freundschaft { grid-column: 4; grid-row: 1; }
 
 /* Reihe 2: 4 Kacheln auto-platziert in Spalten 1–4 */
 .mhub-card--sportgericht { grid-column: 1; }
