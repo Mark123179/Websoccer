@@ -5,7 +5,7 @@
 {% block body_class %}finanzen-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/finanzen.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/finanzen.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -119,12 +119,12 @@
 
     </div><!-- /.fn-mid-row -->
 
-    <!-- ── UNTERER BEREICH: Einnahmen + Ausgaben + Donut ─────────── -->
+    <!-- ── UNTERER BEREICH: Einnahmen + Ausgaben + Donut + Buchungen ── -->
     <div class="fn-bot-row">
 
         <!-- Einnahmen nach Kategorien -->
         <div class="fn-panel">
-            <p class="fn-panel-title">Einnahmen nach Kategorien</p>
+            <p class="fn-panel-title">Einnahmen <span style="font-weight:400;opacity:.6;">nach Kategorien</span></p>
             {% if income_rows %}
             <ul class="fn-cat-list">
                 {% for row in income_rows %}
@@ -137,17 +137,17 @@
                 {% endfor %}
             </ul>
             <div class="fn-cat-total-row">
-                <span>Gesamteinnahmen</span>
+                <span>Gesamt</span>
                 <span style="color:#4ade80;">{{ income_mio }} Mio €</span>
             </div>
             {% else %}
-            <p class="fn-empty">Keine Einnahmen diese Saison.</p>
+            <p class="fn-empty">Keine Einnahmen.</p>
             {% endif %}
         </div>
 
         <!-- Ausgaben nach Kategorien -->
         <div class="fn-panel">
-            <p class="fn-panel-title">Ausgaben nach Kategorien</p>
+            <p class="fn-panel-title">Ausgaben <span style="font-weight:400;opacity:.6;">nach Kategorien</span></p>
             {% if expense_rows %}
             <ul class="fn-cat-list">
                 {% for row in expense_rows %}
@@ -160,11 +160,11 @@
                 {% endfor %}
             </ul>
             <div class="fn-cat-total-row">
-                <span>Gesamtausgaben</span>
+                <span>Gesamt</span>
                 <span style="color:#f87171;">{{ expense_mio }} Mio €</span>
             </div>
             {% else %}
-            <p class="fn-empty">Keine Ausgaben diese Saison.</p>
+            <p class="fn-empty">Keine Ausgaben.</p>
             {% endif %}
         </div>
 
@@ -185,56 +185,55 @@
                 {% endfor %}
             </ul>
             {% else %}
-            <p class="fn-empty">Keine Ausgaben diese Saison.</p>
+            <p class="fn-empty">Keine Daten.</p>
+            {% endif %}
+        </div>
+
+        <!-- Letzte Buchungen — 4. Spalte -->
+        <div class="fn-panel fn-buchungen-col">
+            <div class="fn-buchungen-header">
+                <p class="fn-panel-title" style="margin:0;">
+                    Letzte Buchungen
+                </p>
+                {% if total_pages > 1 %}
+                <div class="fn-pagination">
+                    {% for p in page_range %}
+                    <a href="?range={{ chart_range }}&page={{ p }}"
+                       class="fn-page-btn {% if p == page_num %}fn-page-btn--active{% endif %}">{{ p }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if page_obj %}
+            <table class="fn-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Typ</th>
+                        <th>Beschreibung</th>
+                        <th>Betrag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in page_obj %}
+                    <tr>
+                        <td class="fn-td-date">{{ tx.date|date:"d.m.Y" }}</td>
+                        <td><span class="fn-table-cat">{{ tx.get_category_display }}</span></td>
+                        <td class="fn-td-desc">{{ tx.description }}</td>
+                        <td class="{% if tx.amount >= 0 %}fn-amount--pos{% else %}fn-amount--neg{% endif %}">
+                            {% if tx.amount >= 0 %}+{% endif %}{{ tx.amount|floatformat:0|intcomma }} €
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="fn-empty">Keine Buchungen vorhanden.</p>
             {% endif %}
         </div>
 
     </div><!-- /.fn-bot-row -->
-
-    <!-- ── BUCHUNGEN ─────────────────────────────────────────────── -->
-    <div class="fn-buchungen-panel">
-        <div class="fn-buchungen-header">
-            <p class="fn-panel-title" style="margin:0;">
-                Letzte Buchungen
-                <span style="font-weight:400;color:rgba(255,255,255,0.25);font-size:9px;margin-left:6px;">Seite {{ page_num }} von {{ total_pages }}</span>
-            </p>
-            {% if total_pages > 1 %}
-            <div class="fn-pagination">
-                {% for p in page_range %}
-                <a href="?range={{ chart_range }}&page={{ p }}"
-                   class="fn-page-btn {% if p == page_num %}fn-page-btn--active{% endif %}">{{ p }}</a>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-
-        {% if page_obj %}
-        <table class="fn-table">
-            <thead>
-                <tr>
-                    <th>Datum</th>
-                    <th>Typ</th>
-                    <th>Verwendungszweck</th>
-                    <th>Betrag</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for tx in page_obj %}
-                <tr>
-                    <td style="color:rgba(255,255,255,0.40);white-space:nowrap;">{{ tx.date|date:"d.m.Y" }}</td>
-                    <td><span class="fn-table-cat">{{ tx.get_category_display }}</span></td>
-                    <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ tx.description }}</td>
-                    <td class="{% if tx.amount >= 0 %}fn-amount--pos{% else %}fn-amount--neg{% endif %}">
-                        {% if tx.amount >= 0 %}+{% endif %}{{ tx.amount|floatformat:0|intcomma }} €
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="fn-empty">Keine Buchungen vorhanden.</p>
-        {% endif %}
-    </div>
 
 </div><!-- /.dashboard-artboard -->
 
