@@ -681,13 +681,16 @@ def management_sportgericht(request):
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else ''
 
-    # ── Aktivitätscheck: alle Manager mit Verein ──────────────────────
+    # ── Aktivitätscheck: nur Manager mit mind. 1 Nichtaufstellung ─────
     _light_order = {'red': 0, 'yellow': 1, 'green': 2}
     all_manager_rows = []
     for club in Club.objects.filter(managed_by__isnull=False).select_related('managed_by'):
         mgr = club.managed_by
         p = _inactivity_status(mgr, 'pro', season)
         u = _inactivity_status(mgr, 'u21', season)
+        # Nur anzeigen wenn mind. 1 Nichtaufstellung in der Saison
+        if p['season_total'] == 0 and u['season_total'] == 0:
+            continue
         worst = min(p['light'], u['light'], key=lambda l: _light_order[l])
         all_manager_rows.append({
             'club': club,
