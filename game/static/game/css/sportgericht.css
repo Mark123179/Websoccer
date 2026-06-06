@@ -1,0 +1,435 @@
+/* =========================================================
+   Sportgericht  —  /management/sportgericht/
+   Scope: .sportgericht-page
+   Dunkel-goldenes Gericht-Ambiente
+   ========================================================= */
+
+/* ---- Seitenstruktur ---- */
+.sportgericht-page .dashboard-artboard {
+    position: relative;
+    min-height: 900px;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    background: #060b12;
+}
+
+.sg-bg {
+    position: absolute;
+    inset: 0;
+    background-image: var(--sg-bg-url);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    z-index: 0;
+}
+
+.sg-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        rgba(6, 11, 18, 0.82) 0%,
+        rgba(6, 11, 18, 0.70) 40%,
+        rgba(6, 11, 18, 0.55) 100%
+    );
+}
+
+/* ---- Scrollbarer Inhaltsbereich ---- */
+.sg-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    gap: 28px;
+    padding: 40px 48px;
+    overflow-y: auto;
+    align-items: flex-start;
+}
+
+/* ---- Linke Spalte: Aktivitätscheck ---- */
+.sg-left {
+    flex: 0 0 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ---- Rechte Spalte: Tickets ---- */
+.sg-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* ---- Panel-Karte ---- */
+.sg-panel {
+    background: rgba(6, 11, 18, 0.72);
+    border: 1px solid rgba(201, 168, 76, 0.18);
+    border-radius: 10px;
+    padding: 24px;
+    backdrop-filter: blur(8px);
+}
+
+.sg-panel-title {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #c9a84c;
+    margin: 0 0 18px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sg-panel-title svg {
+    flex-shrink: 0;
+}
+
+/* ---- Aktivitätskarte je Mannschaft ---- */
+.sg-activity-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sg-squad-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    min-width: 52px;
+}
+
+/* ---- Ampel ---- */
+.sg-traffic-light {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.sg-light {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: box-shadow 0.3s;
+}
+
+.sg-light--red.active    { background: #e05252; box-shadow: 0 0 8px rgba(224, 82, 82, 0.7); border-color: #e05252; }
+.sg-light--yellow.active { background: #e0b852; box-shadow: 0 0 8px rgba(224, 184, 82, 0.7); border-color: #e0b852; }
+.sg-light--green.active  { background: #52c27a; box-shadow: 0 0 8px rgba(82, 194, 122, 0.7); border-color: #52c27a; }
+
+/* ---- Verweis-Punkte ---- */
+.sg-strikes {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sg-strike-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sg-strike-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+    min-width: 110px;
+}
+
+.sg-dots {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.sg-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sg-dot--filled-green  { background: #52c27a; border-color: #52c27a; }
+.sg-dot--filled-yellow { background: #e0b852; border-color: #e0b852; }
+.sg-dot--filled-red    { background: #e05252; border-color: #e05252; }
+
+.sg-strike-count {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-left: 4px;
+}
+
+/* ---- Strafpunkt-Badge ---- */
+.sg-penalty-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(224, 82, 82, 0.15);
+    border: 1px solid rgba(224, 82, 82, 0.35);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #e05252;
+    margin-top: 12px;
+}
+
+/* ---- Ticket-Formular ---- */
+.sg-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sg-input,
+.sg-textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.sg-input::placeholder,
+.sg-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+}
+
+.sg-input:focus,
+.sg-textarea:focus {
+    border-color: rgba(201, 168, 76, 0.55);
+}
+
+.sg-textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.sg-file-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.sg-file-label:hover {
+    border-color: rgba(201, 168, 76, 0.45);
+    color: rgba(255, 255, 255, 0.70);
+}
+
+.sg-file-input {
+    display: none;
+}
+
+.sg-btn-submit {
+    align-self: flex-start;
+    background: linear-gradient(135deg, #c9a84c, #a07830);
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s;
+}
+
+.sg-btn-submit:hover { opacity: 0.85; }
+
+/* ---- Ticket-Liste ---- */
+.sg-ticket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sg-ticket {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.sg-ticket-status {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sg-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.sg-status-dot--open        { background: #52c27a; box-shadow: 0 0 6px rgba(82,194,122,0.5); }
+.sg-status-dot--in_progress { background: #e0b852; box-shadow: 0 0 6px rgba(224,184,82,0.5); }
+.sg-status-dot--closed      { background: rgba(255,255,255,0.25); }
+
+.sg-ticket-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.sg-ticket-title {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sg-ticket-meta {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.sg-ticket-desc {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    margin-top: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sg-ticket-response {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(201, 168, 76, 0.08);
+    border-left: 2px solid #c9a84c;
+    border-radius: 4px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.sg-ticket-screenshot {
+    flex-shrink: 0;
+}
+
+.sg-ticket-screenshot img {
+    width: 56px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.10);
+}
+
+.sg-empty {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.30);
+    text-align: center;
+    padding: 18px 0;
+}
+
+/* ---- Seitenüberschrift ---- */
+.sg-page-header {
+    margin-bottom: 4px;
+}
+
+.sg-page-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.40);
+    margin: 0 0 6px 0;
+}
+
+.sg-page-title {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #fff;
+    margin: 0 0 2px 0;
+    letter-spacing: 0.04em;
+}
+
+.sg-page-title strong {
+    font-weight: 700;
+    color: #c9a84c;
+}
+
+.sg-divider {
+    border: none;
+    border-top: 1px solid rgba(201, 168, 76, 0.15);
+    margin: 4px 0 20px 0;
+}
+
+/* ---- Status-Badge im Ticket ---- */
+.sg-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.sg-badge--open        { background: rgba(82,194,122,0.15); color: #52c27a; }
+.sg-badge--in_progress { background: rgba(224,184,82,0.15); color: #e0b852; }
+.sg-badge--closed      { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.45); }
+
+/* ---- Meldungen ---- */
+.sg-messages {
+    margin-bottom: 12px;
+}
+
+.sg-msg {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+.sg-msg--success { background: rgba(82,194,122,0.15); border: 1px solid rgba(82,194,122,0.3); color: #52c27a; }
+.sg-msg--error   { background: rgba(224,82,82,0.15);  border: 1px solid rgba(224,82,82,0.3);  color: #e05252; }

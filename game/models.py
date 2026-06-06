@@ -2769,3 +2769,148 @@ class ManagerAtRisk(PresidentSatisfaction):
         proxy = True
         verbose_name = 'Entlassungskandidat'
         verbose_name_plural = 'Entlassungskandidaten (Zufriedenheit 0 %)'
+
+
+# ── Sportgericht ───────────────────────────────────────────────────────────────
+
+class InactivityRecord(models.Model):
+    """Protokolliert jeden Spieltag, an dem ein Manager kein Team aufgestellt hat."""
+
+    SQUAD_PRO_LABEL = 'pro'
+    SQUAD_U21_LABEL = 'u21'
+    SCOPE_CHOICES = [
+        ('pro', 'Profis'),
+        ('u21', 'U21'),
+    ]
+
+    manager = models.ForeignKey(
+        'ManagerProfile',
+        on_delete=models.CASCADE,
+        related_name='inactivity_records',
+        verbose_name='Manager',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='inactivity_records',
+        verbose_name='Verein',
+    )
+    squad_scope = models.CharField(
+        max_length=10,
+        choices=SCOPE_CHOICES,
+        default='pro',
+        verbose_name='Mannschaft',
+    )
+    season = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Saison',
+    )
+    matchday_label = models.CharField(
+        max_length=80,
+        blank=True,
+        verbose_name='Spieltag',
+    )
+    recorded_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Erfasst am',
+    )
+
+    class Meta:
+        ordering = ['-recorded_at']
+        verbose_name = 'Inaktivitäts-Eintrag'
+        verbose_name_plural = 'Inaktivitäts-Einträge'
+
+    def __str__(self):
+        return f'{self.manager} | {self.get_squad_scope_display()} | {self.matchday_label} ({self.season})'
+
+
+class InactivityPenalty(models.Model):
+    """Strafpunkt für Manager, die bereits einmal wegen Inaktivität entlassen wurden.
+
+    Senkt die Toleranzschwelle: 3→2 hintereinander, 5→4 pro Saison.
+    """
+
+    manager = models.ForeignKey(
+        'ManagerProfile',
+        on_delete=models.CASCADE,
+        related_name='inactivity_penalties',
+        verbose_name='Manager',
+    )
+    given_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Erteilt am',
+    )
+    reason = models.TextField(
+        blank=True,
+        verbose_name='Begründung',
+    )
+
+    class Meta:
+        ordering = ['-given_at']
+        verbose_name = 'Inaktivitäts-Strafpunkt'
+        verbose_name_plural = 'Inaktivitäts-Strafpunkte'
+
+    def __str__(self):
+        return f'Strafpunkt: {self.manager} ({self.given_at:%d.%m.%Y})'
+
+
+class SupportTicket(models.Model):
+    """Support-Ticket, das ein Manager einreichen kann."""
+
+    STATUS_OPEN = 'open'
+    STATUS_IN_PROGRESS = 'in_progress'
+    STATUS_CLOSED = 'closed'
+    STATUS_CHOICES = [
+        ('open', 'Offen'),
+        ('in_progress', 'In Bearbeitung'),
+        ('closed', 'Abgeschlossen'),
+    ]
+
+    manager = models.ForeignKey(
+        'ManagerProfile',
+        on_delete=models.CASCADE,
+        related_name='support_tickets',
+        verbose_name='Manager',
+    )
+    title = models.CharField(
+        max_length=200,
+        verbose_name='Titel',
+    )
+    description = models.TextField(
+        verbose_name='Beschreibung',
+    )
+    screenshot = models.FileField(
+        upload_to='support_tickets/',
+        blank=True,
+        null=True,
+        verbose_name='Screenshot',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='open',
+        verbose_name='Status',
+    )
+    admin_response = models.TextField(
+        blank=True,
+        verbose_name='Admin-Antwort',
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Erstellt am',
+    )
+    closed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Abgeschlossen am',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Support-Ticket'
+        verbose_name_plural = 'Support-Tickets'
+
+    def __str__(self):
+        return f'#{self.pk} {self.title} ({self.get_status_display()}) — {self.manager}'

@@ -1,46 +1,282 @@
-{% extends 'base.html' %}
+{% extends "game/base.html" %}
 {% load static %}
-
-{% block title %}Sportgericht – {{ club.name }}{% endblock %}
 
 {% block body_class %}sportgericht-page{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=1">
+{% endblock %}
+
 {% block content %}
-<div class="dashboard-artboard" style="min-height:600px; background:#060b12; position:relative; overflow:hidden;">
+<div class="dashboard-artboard"
+     style="--sg-bg-url: url('{% static 'game/img/sportgericht_bg.png' %}');">
 
-    <div style="position:absolute; inset:0; background-image:url('{% static 'game/images/backgrounds/sportgericht-bg.png' %}'); background-size:cover; background-position:center 30%; opacity:0.25;"></div>
-    <div style="position:absolute; inset:0; background:linear-gradient(to bottom, rgba(6,11,18,0.55) 0%, rgba(6,11,18,0.92) 100%);"></div>
+    <div class="sg-bg"></div>
 
-    <div style="position:relative; z-index:1; max-width:760px; margin:0 auto; padding:60px 32px 80px;">
+    <div class="sg-content">
 
-        <p style="font-size:12px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:rgba(255,255,255,0.40); margin-bottom:12px;">
-            <a href="/management/" style="color:rgba(255,255,255,0.40); text-decoration:none;">Management</a>
-            <span style="margin:0 6px;">›</span>Sportgericht
-        </p>
+        <!-- ── LINKE SPALTE ─────────────────────────────────────── -->
+        <div class="sg-left">
 
-        <h1 style="font-family:'Segoe UI',Arial,sans-serif; font-size:36px; font-weight:300; letter-spacing:0.04em; color:#fff; margin:0 0 8px;">
-            Das <strong style="font-weight:700; color:#c9a84c;">Sportgericht</strong>
-        </h1>
-        <p style="font-size:13px; color:rgba(255,255,255,0.50); margin:0 0 48px;">{{ club.name }}</p>
-
-        <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.18); border-radius:10px; padding:36px 32px; display:flex; align-items:flex-start; gap:24px;">
-            <div style="width:48px; height:48px; border-radius:50%; background:rgba(201,168,76,0.12); border:1.5px solid rgba(201,168,76,0.40); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="#c9a84c">
-                    <path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6L21 9 12 3zm5 10.99L12 17l-5-3.01v-3.73L12 13l5-2.74v3.73zM12 5.35L17.91 9 12 12.65 6.09 9 12 5.35z"/>
-                </svg>
-            </div>
-            <div>
-                <h2 style="font-family:'Segoe UI',Arial,sans-serif; font-size:14px; font-weight:700; letter-spacing:0.10em; text-transform:uppercase; color:#c9a84c; margin:0 0 10px;">Verfahren, Sperren &amp; Einsprüche</h2>
-                <p style="font-size:13px; color:rgba(255,255,255,0.65); line-height:1.65; margin:0;">
-                    Das Sportgericht ist die zentrale Instanz für alle sportrechtlichen Angelegenheiten deines Vereins.
-                    Hier werden Sperren verhängt, Einsprüche eingereicht und laufende Verfahren verwaltet.
+            <div class="sg-page-header">
+                <p class="sg-page-label">
+                    <a href="/management/" style="color:inherit;text-decoration:none;">Management</a>
+                    &nbsp;›&nbsp; Sportgericht
                 </p>
-                <p style="font-size:12px; color:rgba(201,168,76,0.55); margin:16px 0 0; font-style:italic;">
-                    Diese Funktion befindet sich noch in der Entwicklung und wird in Kürze verfügbar sein.
-                </p>
+                <h1 class="sg-page-title">Sport<strong>gericht</strong></h1>
+                <hr class="sg-divider">
             </div>
-        </div>
 
-    </div>
-</div>
+            <!-- Aktivitätscheck -->
+            <div class="sg-panel">
+                <p class="sg-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Aktivitätscheck
+                </p>
+
+                {% if profi_status.penalty_pts > 0 %}
+                <div class="sg-penalty-badge">
+                    ⚠ {{ profi_status.penalty_pts }} Strafpunkt{% if profi_status.penalty_pts > 1 %}e{% endif %} — Schwellen reduziert
+                </div>
+                {% endif %}
+
+                <!-- Profis -->
+                <div class="sg-activity-card" style="margin-top:14px;">
+                    <span class="sg-squad-label">Profis</span>
+
+                    <div class="sg-traffic-light">
+                        <div class="sg-light sg-light--red    {% if profi_status.light == 'red'    %}active{% endif %}"></div>
+                        <div class="sg-light sg-light--yellow {% if profi_status.light == 'yellow' %}active{% endif %}"></div>
+                        <div class="sg-light sg-light--green  {% if profi_status.light == 'green'  %}active{% endif %}"></div>
+                    </div>
+
+                    <div class="sg-strikes">
+                        <div class="sg-strike-row">
+                            <span class="sg-strike-label">Hintereinander</span>
+                            <div class="sg-dots">
+                                {% with c=profi_status.consecutive lim=profi_status.consec_limit %}
+                                <div class="sg-dot {% if c >= 1 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if c >= 2 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                {% if lim > 2 %}
+                                <div class="sg-dot {% if c >= 3 %}sg-dot--filled-red{% endif %}"></div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <span class="sg-strike-count">{{ profi_status.consecutive }}/{{ profi_status.consec_limit }}</span>
+                        </div>
+                        <div class="sg-strike-row">
+                            <span class="sg-strike-label">Diese Saison</span>
+                            <div class="sg-dots">
+                                {% with s=profi_status.season_total lim=profi_status.season_limit %}
+                                <div class="sg-dot {% if s >= 1 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if s >= 2 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if s >= 3 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if s >= 4 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                {% if lim > 4 %}
+                                <div class="sg-dot {% if s >= 5 %}sg-dot--filled-red{% endif %}"></div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <span class="sg-strike-count">{{ profi_status.season_total }}/{{ profi_status.season_limit }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- U21 -->
+                <div class="sg-activity-card" style="margin-top:10px;">
+                    <span class="sg-squad-label">U21</span>
+
+                    <div class="sg-traffic-light">
+                        <div class="sg-light sg-light--red    {% if u21_status.light == 'red'    %}active{% endif %}"></div>
+                        <div class="sg-light sg-light--yellow {% if u21_status.light == 'yellow' %}active{% endif %}"></div>
+                        <div class="sg-light sg-light--green  {% if u21_status.light == 'green'  %}active{% endif %}"></div>
+                    </div>
+
+                    <div class="sg-strikes">
+                        <div class="sg-strike-row">
+                            <span class="sg-strike-label">Hintereinander</span>
+                            <div class="sg-dots">
+                                {% with c=u21_status.consecutive lim=u21_status.consec_limit %}
+                                <div class="sg-dot {% if c >= 1 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if c >= 2 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                {% if lim > 2 %}
+                                <div class="sg-dot {% if c >= 3 %}sg-dot--filled-red{% endif %}"></div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <span class="sg-strike-count">{{ u21_status.consecutive }}/{{ u21_status.consec_limit }}</span>
+                        </div>
+                        <div class="sg-strike-row">
+                            <span class="sg-strike-label">Diese Saison</span>
+                            <div class="sg-dots">
+                                {% with s=u21_status.season_total lim=u21_status.season_limit %}
+                                <div class="sg-dot {% if s >= 1 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if s >= 2 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if s >= 3 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                <div class="sg-dot {% if s >= 4 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
+                                {% if lim > 4 %}
+                                <div class="sg-dot {% if s >= 5 %}sg-dot--filled-red{% endif %}"></div>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                            <span class="sg-strike-count">{{ u21_status.season_total }}/{{ u21_status.season_limit }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Legende -->
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);">
+                    {% if profi_status.penalty_pts > 0 %}
+                    <p style="font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:rgba(224,82,82,0.75);margin:0;line-height:1.7;">
+                        Du trägst {{ profi_status.penalty_pts }} Strafpunkt{% if profi_status.penalty_pts > 1 %}e{% endif %} — die Schwellen sind reduziert.<br>
+                        Entlassung bei <strong>{{ profi_status.consec_limit }}×</strong> hintereinander oder <strong>{{ profi_status.season_limit }}×</strong> pro Saison.
+                    </p>
+                    {% else %}
+                    <p style="font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:rgba(255,255,255,0.30);margin:0;line-height:1.7;">
+                        Entlassung bei <strong style="color:rgba(255,255,255,0.45);">3×</strong> hintereinander oder <strong style="color:rgba(255,255,255,0.45);">5×</strong> pro Saison.<br>
+                        Nach einer Entlassung sinken die Schwellen auf 2× / 4×.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div><!-- /.sg-left -->
+
+        <!-- ── RECHTE SPALTE ─────────────────────────────────────── -->
+        <div class="sg-right">
+
+            {% if messages %}
+            <div class="sg-messages">
+                {% for msg in messages %}
+                <div class="sg-msg sg-msg--{% if 'error' in msg.tags %}error{% else %}success{% endif %}">
+                    {{ msg }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Ticket einreichen -->
+            <div class="sg-panel">
+                <p class="sg-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Support-Ticket einreichen
+                </p>
+
+                <form class="sg-form" method="post" action="{% url 'sportgericht_ticket_submit' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input class="sg-input" type="text" name="title" placeholder="Titel des Anliegens" required maxlength="200">
+                    <textarea class="sg-textarea" name="description" placeholder="Beschreibung — was ist passiert? Was erwartest du?" required></textarea>
+                    <label class="sg-file-label" for="screenshot-input">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                        <span id="file-name">Screenshot anhängen (optional)</span>
+                        <input class="sg-file-input" type="file" name="screenshot" accept="image/*" id="screenshot-input">
+                    </label>
+                    <button class="sg-btn-submit" type="submit">Ticket einreichen</button>
+                </form>
+            </div>
+
+            <!-- Offene & laufende Tickets -->
+            <div class="sg-panel">
+                <p class="sg-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    Meine offenen Tickets
+                </p>
+
+                {% if open_tickets %}
+                <div class="sg-ticket-list">
+                    {% for ticket in open_tickets %}
+                    <div class="sg-ticket">
+                        <div class="sg-ticket-status">
+                            <span class="sg-status-dot sg-status-dot--{{ ticket.status }}"></span>
+                        </div>
+                        <div class="sg-ticket-body">
+                            <p class="sg-ticket-title">#{{ ticket.pk }} — {{ ticket.title }}</p>
+                            <p class="sg-ticket-meta">
+                                <span class="sg-badge sg-badge--{{ ticket.status }}">{{ ticket.get_status_display }}</span>
+                                &nbsp;{{ ticket.created_at|date:"d.m.Y, H:i" }} Uhr
+                            </p>
+                            <p class="sg-ticket-desc">{{ ticket.description }}</p>
+                            {% if ticket.admin_response %}
+                            <div class="sg-ticket-response">
+                                <strong style="color:#c9a84c;">Admin:</strong> {{ ticket.admin_response }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if ticket.screenshot %}
+                        <div class="sg-ticket-screenshot">
+                            <a href="{{ ticket.screenshot.url }}" target="_blank" rel="noopener">
+                                <img src="{{ ticket.screenshot.url }}" alt="Screenshot">
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="sg-empty">Keine offenen Tickets.</p>
+                {% endif %}
+            </div>
+
+            <!-- Abgeschlossene Tickets (max. 3) -->
+            <div class="sg-panel">
+                <p class="sg-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    Zuletzt abgeschlossen <span style="font-weight:400;color:rgba(255,255,255,0.30);">(max. 3)</span>
+                </p>
+
+                {% if closed_tickets %}
+                <div class="sg-ticket-list">
+                    {% for ticket in closed_tickets %}
+                    <div class="sg-ticket">
+                        <div class="sg-ticket-status">
+                            <span class="sg-status-dot sg-status-dot--closed"></span>
+                        </div>
+                        <div class="sg-ticket-body">
+                            <p class="sg-ticket-title">#{{ ticket.pk }} — {{ ticket.title }}</p>
+                            <p class="sg-ticket-meta">
+                                <span class="sg-badge sg-badge--closed">Abgeschlossen</span>
+                                &nbsp;{{ ticket.created_at|date:"d.m.Y" }}
+                            </p>
+                            <p class="sg-ticket-desc">{{ ticket.description }}</p>
+                            {% if ticket.admin_response %}
+                            <div class="sg-ticket-response">
+                                <strong style="color:#c9a84c;">Admin:</strong> {{ ticket.admin_response }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% if ticket.screenshot %}
+                        <div class="sg-ticket-screenshot">
+                            <a href="{{ ticket.screenshot.url }}" target="_blank" rel="noopener">
+                                <img src="{{ ticket.screenshot.url }}" alt="Screenshot">
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="sg-empty">Keine abgeschlossenen Tickets.</p>
+                {% endif %}
+            </div>
+
+        </div><!-- /.sg-right -->
+    </div><!-- /.sg-content -->
+</div><!-- /.dashboard-artboard -->
+
+<script>
+document.getElementById('screenshot-input').addEventListener('change', function() {
+    var label = document.getElementById('file-name');
+    label.textContent = this.files.length ? this.files[0].name : 'Screenshot anhängen (optional)';
+});
+</script>
 {% endblock %}

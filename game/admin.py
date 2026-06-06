@@ -2773,3 +2773,39 @@ class ManagerAtRiskAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+# ── Sportgericht ───────────────────────────────────────────────────────────────
+
+from .models import InactivityRecord, InactivityPenalty, SupportTicket  # noqa: E402
+
+
+@admin.register(InactivityRecord)
+class InactivityRecordAdmin(admin.ModelAdmin):
+    list_display  = ('manager', 'club', 'squad_scope', 'season', 'matchday_label', 'recorded_at')
+    list_filter   = ('squad_scope', 'season')
+    search_fields = ('manager__name', 'club__name', 'matchday_label')
+    ordering      = ('-recorded_at',)
+    readonly_fields = ('recorded_at',)
+
+
+@admin.register(InactivityPenalty)
+class InactivityPenaltyAdmin(admin.ModelAdmin):
+    list_display  = ('manager', 'given_at', 'reason')
+    search_fields = ('manager__name',)
+    ordering      = ('-given_at',)
+    readonly_fields = ('given_at',)
+
+
+@admin.register(SupportTicket)
+class SupportTicketAdmin(admin.ModelAdmin):
+    list_display   = ('id', 'title', 'manager', 'status', 'created_at', 'has_screenshot')
+    list_filter    = ('status',)
+    search_fields  = ('title', 'manager__name', 'description')
+    ordering       = ('-created_at',)
+    readonly_fields = ('manager', 'title', 'description', 'screenshot', 'created_at')
+    fields         = ('manager', 'title', 'description', 'screenshot', 'status', 'admin_response', 'created_at', 'closed_at')
+
+    @admin.display(description='Screenshot', boolean=True)
+    def has_screenshot(self, obj):
+        return bool(obj.screenshot)

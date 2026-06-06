@@ -614,16 +614,129 @@ def president_office(request):
 
 
 # ------------------------------------------------------------------ #
-#  Sportgericht — Platzhalterseite                                     #
+#  Sportgericht                                                         #
 # ------------------------------------------------------------------ #
+
+def _inactivity_status(manager, squad_scope, season):
+    """Berechnet Inaktivitätsstatus für eine Mannschaft.
+
+    Gibt dict zurück mit:
+      consecutive   – aktuelle aufeinanderfolgende Fehlstarts
+      season_total  – Fehlstarts in der Saison
+      consec_limit  – Schwelle für Entlassung (hintereinander)
+      season_limit  – Schwelle für Entlassung (pro Saison)
+      penalty_pts   – Anzahl Strafpunkte des Managers
+      light         – 'green' | 'yellow' | 'red'
+    """
+    from .models import InactivityRecord, InactivityPenalty
+
+    penalty_pts = InactivityPenalty.objects.filter(manager=manager).count()
+    consec_limit = 2 if penalty_pts > 0 else 3
+    season_limit = 4 if penalty_pts > 0 else 5
+
+    season_records = list(
+        InactivityRecord.objects.filter(
+            manager=manager, squad_scope=squad_scope, season=season
+        ).order_by('recorded_at')
+    )
+    season_total = len(season_records)
+
+    all_records = list(
+        InactivityRecord.objects.filter(
+            manager=manager, squad_scope=squad_scope
+        ).order_by('-recorded_at')
+    )
+    consecutive = 0
+    for r in all_records:
+        if r.season == season or consecutive > 0:
+            consecutive += 1
+        else:
+            break
+
+    if consecutive >= consec_limit or season_total >= season_limit:
+        light = 'red'
+    elif consecutive >= max(1, consec_limit - 1) or season_total >= max(1, season_limit - 2):
+        light = 'yellow'
+    else:
+        light = 'green'
+
+    return {
+        'consecutive': consecutive,
+        'season_total': season_total,
+        'consec_limit': consec_limit,
+        'season_limit': season_limit,
+        'penalty_pts': penalty_pts,
+        'light': light,
+    }
+
 
 @login_required(login_url='/auth/login/')
 def management_sportgericht(request):
+    from .models import SupportTicket, InactivityRecord, GameSeasonState
+
     club = current_manager_club(user=request.user)
     if not club:
         messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
         return redirect('management_hub')
-    return render(request, 'game/management/sportgericht.html', {'club': club})
+
+    manager = club.managed_by
+
+    season_state = GameSeasonState.objects.first()
+    season = str(season_state.current_season) if season_state else ''
+
+    profi_status = _inactivity_status(manager, 'pro', season)
+    u21_status = _inactivity_status(manager, 'u21', season)
+
+    open_tickets = SupportTicket.objects.filter(
+        manager=manager,
+        status__in=['open', 'in_progress'],
+    )
+    closed_tickets = SupportTicket.objects.filter(
+        manager=manager,
+        status='closed',
+    )[:3]
+
+    return render(request, 'game/management/sportgericht.html', {
+        'club': club,
+        'profi_status': profi_status,
+        'u21_status': u21_status,
+        'open_tickets': open_tickets,
+        'closed_tickets': closed_tickets,
+        'season': season,
+    })
+
+
+@login_required(login_url='/auth/login/')
+def sportgericht_ticket_submit(request):
+    """POST: Neues Support-Ticket einreichen."""
+    from .models import SupportTicket
+
+    if request.method != 'POST':
+        return redirect('management_sportgericht')
+
+    club = current_manager_club(user=request.user)
+    if not club:
+        messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
+        return redirect('management_hub')
+
+    manager = club.managed_by
+    title = request.POST.get('title', '').strip()
+    description = request.POST.get('description', '').strip()
+    screenshot = request.FILES.get('screenshot')
+
+    if not title or not description:
+        messages.error(request, 'Titel und Beschreibung sind Pflichtfelder.')
+        return redirect('management_sportgericht')
+
+    ticket = SupportTicket.objects.create(
+        manager=manager,
+        title=title,
+        description=description,
+        screenshot=screenshot,
+        status='open',
+    )
+    messages.success(request, f'Ticket #{ticket.pk} wurde erfolgreich eingereicht.')
+    return redirect('management_sportgericht')
 
 
 @login_required(login_url='/auth/login/')
