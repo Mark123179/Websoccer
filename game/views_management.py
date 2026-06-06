@@ -815,3 +815,167 @@ def coin_shop_purchase(request):
     return redirect('president_office')
 
 
+# ──────────────────────────────────────────────────────────────────────────
+#  FINANZEN
+# ──────────────────────────────────────────────────────────────────────────
+
+_INCOME_CATS = {
+    'ticketverkauf':     ('Ticketverkauf',        '🎟',  'fn-icon-green'),
+    'sponsor':           ('Sponsoren',             '🤝',  'fn-icon-amber'),
+    'tv_gelder':         ('TV-Gelder',             '📺',  'fn-icon-blue'),
+    'transfer_einnahme': ('Transfers',             '💸',  'fn-icon-violet'),
+    'leih_einnahme':     ('Leihen',                '🔄',  'fn-icon-teal'),
+    'praemie':           ('Prämien',               '🏆',  'fn-icon-amber'),
+    'sonstige_einnahme': ('Sonstige',              '➕',  'fn-icon-gray'),
+}
+_EXPENSE_CATS = {
+    'transfer_ausgabe':  ('Transfers',             '💸',  'fn-icon-rose',   '#ef4444'),
+    'profigehalt':       ('Profigehälter',         '👕',  'fn-icon-orange', '#f97316'),
+    'jugendgehalt':      ('Jugendgehälter',        '🌱',  'fn-icon-teal',   '#14b8a6'),
+    'stadionkosten':     ('Stadionkosten',         '🏟',  'fn-icon-blue',   '#3b82f6'),
+    'stadionumfeld':     ('Stadionumfeld',         '🔧',  'fn-icon-violet', '#8b5cf6'),
+    'sonstige_ausgabe':  ('Sonstiges',             '📌',  'fn-icon-gray',   '#6b7280'),
+}
+
+
+@login_required(login_url='/auth/login/')
+def management_finanzen(request):
+    import json
+    from decimal import Decimal
+    from django.core.paginator import Paginator
+    from .models import ClubFinancialTransaction, ClubSponsor, GameSeasonState
+
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+
+    season_state = GameSeasonState.objects.first()
+    season = str(season_state.current_season) if season_state else ''
+
+    # ── Transaktionen ────────────────────────────────────────────────
+    all_txs = ClubFinancialTransaction.objects.filter(club=club).order_by('-date', '-created_at')
+    season_txs = list(all_txs.filter(season=season))
+
+    total_income  = sum(t.amount for t in season_txs if t.amount  > 0) or Decimal('0')
+    total_expenses = abs(sum(t.amount for t in season_txs if t.amount < 0)) or Decimal('0')
+    net = total_income - total_expenses
+
+    def _mio(val):
+        return f'{float(val)/1_000_000:.1f}'.replace('.', ',')
+
+    def _fmt(val):
+        v = float(val)
+        if v >= 1_000_000:
+            return f'{v/1_000_000:.1f} Mio €'.replace('.', ',')
+        if v >= 1_000:
+            return f'{v/1_000:.0f} Tsd €'
+        return f'{v:,.0f} €'
+
+    # ── Income rows ──────────────────────────────────────────────────
+    income_agg = {}
+    for t in season_txs:
+        if t.amount > 0:
+            income_agg[t.category] = income_agg.get(t.category, Decimal('0')) + t.amount
+
+    income_rows = []
+    for cat, amt in sorted(income_agg.items(), key=lambda x: -x[1]):
+        meta = _INCOME_CATS.get(cat, (cat, '•', 'fn-icon-gray'))
+        pct = round(float(amt) / float(total_income) * 100) if total_income else 0
+        income_rows.append({
+            'label': meta[0], 'icon': meta[1], 'icon_class': meta[2],
+            'amount_fmt': _fmt(amt), 'pct': pct,
+        })
+
+    # ── Expense rows ─────────────────────────────────────────────────
+    expense_agg = {}
+    for t in season_txs:
+        if t.amount < 0:
+            expense_agg[t.category] = expense_agg.get(t.category, Decimal('0')) + abs(t.amount)
+
+    expense_rows = []
+    for cat, amt in sorted(expense_agg.items(), key=lambda x: -x[1]):
+        meta = _EXPENSE_CATS.get(cat, (cat, '•', 'fn-icon-gray', '#6b7280'))
+        pct = round(float(amt) / float(total_expenses) * 100) if total_expenses else 0
+        expense_rows.append({
+            'label': meta[0], 'icon': meta[1], 'icon_class': meta[2],
+            'amount_fmt': _fmt(amt), 'amount': float(amt),
+            'chart_color': meta[3], 'pct': pct,
+        })
+
+    expense_rows_json = json.dumps([{
+        'label': r['label'], 'amount': r['amount'], 'chart_color': r['chart_color'],
+    } for r in expense_rows])
+
+    # ── Sponsors ─────────────────────────────────────────────────────
+    sponsor_order = {'tv': 0, 'trikot': 1, 'haupt': 2, 'ausrüster': 3, 'sonstig': 4}
+    sponsors_raw = list(ClubSponsor.objects.filter(club=club, is_active=True, season=season))
+    sponsors_raw.sort(key=lambda s: sponsor_order.get(s.sponsor_type, 9))
+    for sp in sponsors_raw:
+        sp.amount_mio = f'{float(sp.amount_per_season)/1_000_000:.1f}'.replace('.', ',')
+
+    # ── Kapitalverlauf ───────────────────────────────────────────────
+    chart_range = request.GET.get('range', 'season')
+    if chart_range == 'complete':
+        chart_qs = list(all_txs.order_by('date', 'created_at'))
+    elif chart_range == 'last5':
+        try:
+            s_int = int(season)
+            seasons_5 = [str(s_int - i) for i in range(5)]
+            chart_qs = list(all_txs.filter(season__in=seasons_5).order_by('date', 'created_at'))
+        except (ValueError, TypeError):
+            chart_qs = list(all_txs.filter(season=season).order_by('date', 'created_at'))
+    else:
+        chart_qs = list(all_txs.filter(season=season).order_by('date', 'created_at'))
+
+    chart_net = sum(t.amount for t in chart_qs) if chart_qs else Decimal('0')
+    start_balance = club.budget - chart_net
+    running = float(start_balance)
+    chart_points = []
+    if chart_qs:
+        chart_points.append({
+            'date': chart_qs[0].date.strftime('%d.%m.%Y'),
+            'label': 'Saisonbeginn',
+            'balance': round(running / 1_000_000, 2),
+            'amount': 0,
+            'category': '',
+        })
+    for t in chart_qs:
+        running += float(t.amount)
+        chart_points.append({
+            'date': t.date.strftime('%d.%m.%Y'),
+            'label': t.description[:30],
+            'balance': round(running / 1_000_000, 2),
+            'amount': float(t.amount),
+            'category': t.get_category_display(),
+        })
+
+    # ── Pagination ───────────────────────────────────────────────────
+    PER_PAGE = 10
+    MAX_PAGES = 5
+    page_num = max(1, min(int(request.GET.get('page', 1)), MAX_PAGES))
+    paginator = Paginator(all_txs, PER_PAGE)
+    total_pages = min(paginator.num_pages, MAX_PAGES)
+    page_obj = paginator.get_page(page_num)
+    page_range = list(range(1, total_pages + 1))
+
+    return render(request, 'game/management/finanzen.html', {
+        'club':             club,
+        'season':           season,
+        'budget_mio':       _mio(club.budget),
+        'income_mio':       _mio(total_income),
+        'expense_mio':      _mio(total_expenses),
+        'net_mio':          _mio(abs(net)),
+        'net':              net,
+        'income_rows':      income_rows,
+        'expense_rows':     expense_rows,
+        'expense_rows_json': expense_rows_json,
+        'sponsors':         sponsors_raw,
+        'page_obj':         page_obj,
+        'page_num':         page_num,
+        'total_pages':      total_pages,
+        'page_range':       page_range,
+        'chart_range':      chart_range,
+        'chart_points_json': json.dumps(chart_points),
+    })
+
+

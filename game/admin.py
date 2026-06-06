@@ -13,9 +13,11 @@ from datetime import timedelta
 from decimal import Decimal
 from .models import (
     COUNTRY_FLAG_ASSETS,
+    ClubFinancialTransaction,
     ClubNewsItem,
     ClubProfileMatch,
     ClubPublicProfile,
+    ClubSponsor,
     ClubTrophy,
     DataSource,
     GameSeasonState,
@@ -2809,3 +2811,25 @@ class SupportTicketAdmin(admin.ModelAdmin):
     @admin.display(description='Screenshot', boolean=True)
     def has_screenshot(self, obj):
         return bool(obj.screenshot)
+
+
+@admin.register(ClubFinancialTransaction)
+class ClubFinancialTransactionAdmin(admin.ModelAdmin):
+    list_display  = ('date', 'club', 'category', 'description', 'amount', 'season')
+    list_filter   = ('club', 'category', 'season')
+    search_fields = ('description', 'club__name')
+    ordering      = ('-date', '-created_at')
+    date_hierarchy = 'date'
+    fields        = ('club', 'date', 'season', 'category', 'description', 'amount')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('club')
+
+
+@admin.register(ClubSponsor)
+class ClubSponsorAdmin(admin.ModelAdmin):
+    list_display  = ('club', 'sponsor_type', 'name', 'amount_per_season', 'season', 'is_active')
+    list_filter   = ('club', 'sponsor_type', 'season', 'is_active')
+    search_fields = ('name', 'club__name')
+    ordering      = ('club', 'sponsor_type')
+    fields        = ('club', 'name', 'sponsor_type', 'amount_per_season', 'season', 'is_active')

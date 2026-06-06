@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block body_class %}finanzen-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/finanzen.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-artboard">
+
+    <!-- ── KPI ROW ───────────────────────────────────────────────── -->
+    <div class="fn-kpi-row">
+
+        <!-- Vereinsvermögen -->
+        <div class="fn-kpi fn-kpi--primary">
+            <p class="fn-kpi-label">Vereinsvermögen</p>
+            <p class="fn-kpi-value">{{ budget_mio }} Mio €</p>
+            <p class="fn-kpi-sub">
+                {% if net >= 0 %}
+                <span class="fn-delta fn-delta--pos">▲ +{{ net_mio }} Mio €</span>
+                {% else %}
+                <span class="fn-delta fn-delta--neg">▼ {{ net_mio }} Mio €</span>
+                {% endif %}
+                diese Saison
+            </p>
+            <div class="fn-kpi-icon">
+                <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                    <rect x="3" y="10" width="18" height="11" rx="1"/><polyline points="7 10 7 7"/><polyline points="12 10 12 6"/><polyline points="17 10 17 7"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Einnahmen -->
+        <div class="fn-kpi">
+            <p class="fn-kpi-label">Einnahmen</p>
+            <p class="fn-kpi-value" style="color:#4ade80;">{{ income_mio }} Mio €</p>
+            <p class="fn-kpi-sub">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                laufende Saison
+            </p>
+        </div>
+
+        <!-- Ausgaben -->
+        <div class="fn-kpi">
+            <p class="fn-kpi-label">Ausgaben</p>
+            <p class="fn-kpi-value" style="color:#f87171;">{{ expense_mio }} Mio €</p>
+            <p class="fn-kpi-sub">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+                laufende Saison
+            </p>
+        </div>
+
+        <!-- Gewinn / Verlust -->
+        <div class="fn-kpi">
+            <p class="fn-kpi-label">Gewinn / Verlust</p>
+            <p class="fn-kpi-value {% if net >= 0 %}fn-delta--pos{% else %}fn-delta--neg{% endif %}">
+                {% if net >= 0 %}+{% endif %}{{ net_mio }} Mio €
+            </p>
+            <p class="fn-kpi-sub">Bilanz Saison {{ season }}</p>
+        </div>
+
+    </div><!-- /.fn-kpi-row -->
+
+    <!-- ── MITTELBEREICH: Chart + Sponsoren ──────────────────────── -->
+    <div class="fn-mid-row">
+
+        <!-- Kapitalverlauf -->
+        <div class="fn-panel">
+            <p class="fn-panel-title">
+                <span>Kapitalverlauf</span>
+                <form method="get" style="display:inline;" id="chart-range-form">
+                    <input type="hidden" name="page" value="1">
+                    <select class="fn-chart-select" name="range" onchange="document.getElementById('chart-range-form').submit()">
+                        <option value="season" {% if chart_range == 'season' %}selected{% endif %}>Diese Saison</option>
+                        <option value="last5"  {% if chart_range == 'last5'  %}selected{% endif %}>Letzte 5 Saisons</option>
+                        <option value="complete" {% if chart_range == 'complete' %}selected{% endif %}>Komplett</option>
+                    </select>
+                </form>
+            </p>
+            <div class="fn-chart-wrap">
+                <canvas id="capitalChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Sponsorenübersicht -->
+        <div class="fn-panel">
+            <p class="fn-panel-title">Sponsorenübersicht</p>
+            {% if sponsors %}
+            <div class="fn-sponsor-grid">
+                {% for sp in sponsors %}
+                <div class="fn-sponsor-card {% if sp.sponsor_type == 'haupt' %}fn-sponsor-full{% endif %}">
+                    <div class="fn-sponsor-icon">
+                        {% if sp.sponsor_type == 'tv' %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
+                        {% elif sp.sponsor_type == 'trikot' %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>
+                        {% elif sp.sponsor_type == 'haupt' %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(201,168,76,0.7)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        {% elif sp.sponsor_type == 'ausrüster' %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>
+                        {% else %}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        {% endif %}
+                    </div>
+                    <div class="fn-sponsor-body">
+                        <p class="fn-sponsor-type">{{ sp.get_sponsor_type_display }}</p>
+                        <p class="fn-sponsor-amount">{{ sp.amount_mio }} Mio €</p>
+                        <p class="fn-sponsor-name">{{ sp.name }} / Saison</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="fn-sponsors-empty">Keine Sponsorenverträge für diese Saison.</p>
+            {% endif %}
+        </div>
+
+    </div><!-- /.fn-mid-row -->
+
+    <!-- ── UNTERER BEREICH: Einnahmen + Ausgaben + Donut ─────────── -->
+    <div class="fn-bot-row">
+
+        <!-- Einnahmen nach Kategorien -->
+        <div class="fn-panel">
+            <p class="fn-panel-title">Einnahmen nach Kategorien</p>
+            {% if income_rows %}
+            <ul class="fn-cat-list">
+                {% for row in income_rows %}
+                <li class="fn-cat-item">
+                    <span class="fn-cat-icon {{ row.icon_class }}">{{ row.icon }}</span>
+                    <span class="fn-cat-name">{{ row.label }}</span>
+                    <span class="fn-cat-amount">{{ row.amount_fmt }}</span>
+                    <span class="fn-cat-pct">{{ row.pct }}%</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="fn-cat-total-row">
+                <span>Gesamteinnahmen</span>
+                <span style="color:#4ade80;">{{ income_mio }} Mio €</span>
+            </div>
+            {% else %}
+            <p class="fn-empty">Keine Einnahmen diese Saison.</p>
+            {% endif %}
+        </div>
+
+        <!-- Ausgaben nach Kategorien -->
+        <div class="fn-panel">
+            <p class="fn-panel-title">Ausgaben nach Kategorien</p>
+            {% if expense_rows %}
+            <ul class="fn-cat-list">
+                {% for row in expense_rows %}
+                <li class="fn-cat-item">
+                    <span class="fn-cat-icon {{ row.icon_class }}">{{ row.icon }}</span>
+                    <span class="fn-cat-name">{{ row.label }}</span>
+                    <span class="fn-cat-amount">{{ row.amount_fmt }}</span>
+                    <span class="fn-cat-pct">{{ row.pct }}%</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="fn-cat-total-row">
+                <span>Gesamtausgaben</span>
+                <span style="color:#f87171;">{{ expense_mio }} Mio €</span>
+            </div>
+            {% else %}
+            <p class="fn-empty">Keine Ausgaben diese Saison.</p>
+            {% endif %}
+        </div>
+
+        <!-- Kostenstruktur Donut -->
+        <div class="fn-panel">
+            <p class="fn-panel-title">Kostenstruktur</p>
+            {% if expense_rows %}
+            <div class="fn-donut-wrap">
+                <canvas id="donutChart"></canvas>
+            </div>
+            <ul class="fn-donut-legend">
+                {% for row in expense_rows %}
+                <li>
+                    <span class="fn-donut-dot" style="background:{{ row.chart_color }};"></span>
+                    {{ row.label }}
+                    <span class="fn-donut-pct">{{ row.pct }}%</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="fn-empty">Keine Ausgaben diese Saison.</p>
+            {% endif %}
+        </div>
+
+    </div><!-- /.fn-bot-row -->
+
+    <!-- ── BUCHUNGEN ─────────────────────────────────────────────── -->
+    <div class="fn-buchungen-panel">
+        <div class="fn-buchungen-header">
+            <p class="fn-panel-title" style="margin:0;">
+                Letzte Buchungen
+                <span style="font-weight:400;color:rgba(255,255,255,0.25);font-size:9px;margin-left:6px;">Seite {{ page_num }} von {{ total_pages }}</span>
+            </p>
+            {% if total_pages > 1 %}
+            <div class="fn-pagination">
+                {% for p in page_range %}
+                <a href="?range={{ chart_range }}&page={{ p }}"
+                   class="fn-page-btn {% if p == page_num %}fn-page-btn--active{% endif %}">{{ p }}</a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if page_obj %}
+        <table class="fn-table">
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Typ</th>
+                    <th>Verwendungszweck</th>
+                    <th>Betrag</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in page_obj %}
+                <tr>
+                    <td style="color:rgba(255,255,255,0.40);white-space:nowrap;">{{ tx.date|date:"d.m.Y" }}</td>
+                    <td><span class="fn-table-cat">{{ tx.get_category_display }}</span></td>
+                    <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ tx.description }}</td>
+                    <td class="{% if tx.amount >= 0 %}fn-amount--pos{% else %}fn-amount--neg{% endif %}">
+                        {% if tx.amount >= 0 %}+{% endif %}{{ tx.amount|floatformat:0|intcomma }} €
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="fn-empty">Keine Buchungen vorhanden.</p>
+        {% endif %}
+    </div>
+
+</div><!-- /.dashboard-artboard -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+    var pts = {{ chart_points_json|safe }};
+
+    /* ── Line Chart ─────────────────────────────── */
+    var lineCtx = document.getElementById('capitalChart');
+    if (lineCtx && pts.length > 0) {
+        var labels  = pts.map(function(p){ return p.label || p.date; });
+        var values  = pts.map(function(p){ return p.balance; });
+
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Vereinsvermögen (Mio €)',
+                    data: values,
+                    borderColor: '#c9a84c',
+                    backgroundColor: 'rgba(201,168,76,0.10)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#c9a84c',
+                    tension: 0.35,
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15,20,35,0.92)',
+                        borderColor: 'rgba(201,168,76,0.30)',
+                        borderWidth: 1,
+                        titleColor: 'rgba(255,255,255,0.55)',
+                        bodyColor: '#f0d98a',
+                        callbacks: {
+                            label: function(ctx) {
+                                var p = pts[ctx.dataIndex];
+                                var amtStr = p.amount !== 0
+                                    ? ' (' + (p.amount > 0 ? '+' : '') + (p.amount/1000000).toFixed(2) + ' Mio €)'
+                                    : '';
+                                return ctx.dataset.label + ': ' + ctx.parsed.y + ' Mio €' + amtStr;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: 'rgba(255,255,255,0.30)', font: { size: 9 }, maxTicksLimit: 8 },
+                        grid: { color: 'rgba(255,255,255,0.04)' },
+                    },
+                    y: {
+                        ticks: {
+                            color: 'rgba(255,255,255,0.30)',
+                            font: { size: 9 },
+                            callback: function(v) { return v + ' Mio'; }
+                        },
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                    }
+                }
+            }
+        });
+    } else if (lineCtx) {
+        lineCtx.parentElement.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,0.25);font-size:12px;padding-top:60px;">Keine Daten — buche Transaktionen um den Verlauf zu sehen.</p>';
+    }
+
+    /* ── Donut Chart ────────────────────────────── */
+    var donutCtx = document.getElementById('donutChart');
+    var expRows = {{ expense_rows_json|safe }};
+    if (donutCtx && expRows.length > 0) {
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: expRows.map(function(r){ return r.label; }),
+                datasets: [{
+                    data: expRows.map(function(r){ return r.amount; }),
+                    backgroundColor: expRows.map(function(r){ return r.chart_color; }),
+                    borderWidth: 1,
+                    borderColor: 'rgba(0,0,0,0.3)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15,20,35,0.92)',
+                        borderColor: 'rgba(255,255,255,0.10)',
+                        borderWidth: 1,
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: function(ctx) {
+                                return ' ' + ctx.label + ': ' + ctx.parsed.toLocaleString('de-DE') + ' €';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

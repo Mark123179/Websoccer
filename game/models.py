@@ -2914,3 +2914,113 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f'#{self.pk} {self.title} ({self.get_status_display()}) — {self.manager}'
+
+
+class ClubFinancialTransaction(models.Model):
+    CATEGORY_CHOICES = [
+        ('ticketverkauf',    'Ticketverkauf'),
+        ('sponsor',          'Sponsoren'),
+        ('tv_gelder',        'TV-Gelder'),
+        ('transfer_einnahme','Transfer (Einnahme)'),
+        ('leih_einnahme',    'Leiheinnahme'),
+        ('praemie',          'Prämie'),
+        ('sonstige_einnahme','Sonstige Einnahme'),
+        ('transfer_ausgabe', 'Transfer (Ausgabe)'),
+        ('profigehalt',      'Profigehalt'),
+        ('jugendgehalt',     'Jugendgehalt'),
+        ('stadionkosten',    'Stadionkosten'),
+        ('stadionumfeld',    'Stadionumfeld'),
+        ('sonstige_ausgabe', 'Sonstige Ausgabe'),
+    ]
+
+    INCOME_CATEGORIES = {
+        'ticketverkauf', 'sponsor', 'tv_gelder',
+        'transfer_einnahme', 'leih_einnahme', 'praemie', 'sonstige_einnahme',
+    }
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='financial_transactions',
+        verbose_name='Verein',
+    )
+    date = models.DateField(
+        default=timezone.localdate,
+        verbose_name='Datum',
+    )
+    season = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Saison',
+    )
+    category = models.CharField(
+        max_length=30,
+        choices=CATEGORY_CHOICES,
+        verbose_name='Kategorie',
+    )
+    description = models.CharField(
+        max_length=200,
+        verbose_name='Verwendungszweck',
+    )
+    amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        verbose_name='Betrag (€)',
+        help_text='Positiv = Einnahme, Negativ = Ausgabe.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name = 'Finanztransaktion'
+        verbose_name_plural = 'Finanztransaktionen'
+
+    @property
+    def is_income(self):
+        return self.amount >= 0
+
+    def __str__(self):
+        sign = '+' if self.amount >= 0 else ''
+        return f'{self.club} | {self.get_category_display()} | {sign}{self.amount:,.0f} € ({self.date})'
+
+
+class ClubSponsor(models.Model):
+    TYPE_CHOICES = [
+        ('tv',       'TV-Vertrag'),
+        ('trikot',   'Trikotsponsor'),
+        ('haupt',    'Hauptsponsor'),
+        ('ausrüster','Ausrüster'),
+        ('sonstig',  'Sonstige Sponsoren'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='sponsors',
+        verbose_name='Verein',
+    )
+    name = models.CharField(max_length=100, verbose_name='Sponsorname')
+    sponsor_type = models.CharField(
+        max_length=20,
+        choices=TYPE_CHOICES,
+        verbose_name='Typ',
+    )
+    amount_per_season = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        verbose_name='Betrag / Saison (€)',
+    )
+    season = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Saison',
+    )
+    is_active = models.BooleanField(default=True, verbose_name='Aktiv')
+
+    class Meta:
+        ordering = ['sponsor_type', 'name']
+        verbose_name = 'Vereinssponsor'
+        verbose_name_plural = 'Vereinssponsoren'
+
+    def __str__(self):
+        return f'{self.club} — {self.get_sponsor_type_display()}: {self.name} ({self.amount_per_season:,.0f} €/Saison)'
