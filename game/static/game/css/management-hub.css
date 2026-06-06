@@ -41,7 +41,7 @@
 
 /* ---- Linke Seite: Büroatmosphäre (leer, nur BG) ---- */
 .mhub-left {
-    flex: 0 0 40%;
+    flex: 0 0 25%;
     position: relative;
     z-index: 1;
     display: flex;
@@ -78,28 +78,34 @@
 
 /* ---- Rechte Seite: Karten-Grid ---- */
 .mhub-right {
-    flex: 0 0 60%;
+    flex: 0 0 75%;
     position: relative;
     z-index: 1;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 48px 48px 48px 24px;
+    padding: 48px 24px 48px 16px;
 }
 
 .mhub-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 333px) 333px;
-    gap: 14px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 333px);
+    gap: 12px;
     width: 100%;
-    max-width: 760px;
+    max-width: 1016px;
 }
 
-/* Vereinsnews ist die 7. Kachel — in Mitte zentriert */
-.mhub-card--news {
-    grid-column: 2 / 3;
-}
+/* Reihe 1: 3 Kacheln in Spalten 2–4, Spalte 1 bleibt frei */
+.mhub-card--stadion      { grid-column: 2; }
+.mhub-card--praesident   { grid-column: 3; }
+.mhub-card--freundschaft { grid-column: 4; }
+
+/* Reihe 2: 4 Kacheln auto-platziert in Spalten 1–4 */
+.mhub-card--sportgericht { grid-column: 1; }
+.mhub-card--finanzen     { grid-column: 2; }
+.mhub-card--sponsor      { grid-column: 3; }
+.mhub-card--news         { grid-column: 4; }
 
 /* ---- Einzelne Karte ---- */
 .mhub-card {
