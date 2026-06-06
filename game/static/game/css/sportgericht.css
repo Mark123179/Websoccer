@@ -91,90 +91,114 @@
     flex-shrink: 0;
 }
 
-/* ---- Aktivitätskarte je Mannschaft ---- */
-.sg-activity-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 16px 18px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.sg-squad-label {
+/* ---- Aktivitätscheck — Tabelle ---- */
+.sg-act-table {
+    width: 100%;
+    border-collapse: collapse;
     font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 13px;
+    font-size: 12px;
+}
+
+.sg-act-table thead tr {
+    border-bottom: 1px solid rgba(201, 168, 76, 0.22);
+}
+
+.sg-act-table th {
+    font-size: 10px;
     font-weight: 700;
-    color: rgba(255, 255, 255, 0.85);
-    min-width: 52px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.75);
+    padding: 0 8px 10px 0;
+    text-align: left;
 }
 
-/* ---- Ampel ---- */
-.sg-traffic-light {
+.sg-act-table th:last-child,
+.sg-act-table th:nth-child(3),
+.sg-act-table th:nth-child(4),
+.sg-act-table th:nth-child(5) {
+    text-align: center;
+}
+
+.sg-act-table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sg-act-table td {
+    padding: 12px 8px 12px 0;
+    color: rgba(255, 255, 255, 0.75);
+    vertical-align: middle;
+}
+
+.sg-act-club {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
     align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
-.sg-light {
+.sg-act-logo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.sg-act-manager {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.sg-act-current,
+.sg-act-count {
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ---- Farbige Quadrate (wie im Screenshot) ---- */
+.sg-sq {
+    display: inline-block;
     width: 14px;
     height: 14px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.10);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    transition: box-shadow 0.3s;
+    border-radius: 2px;
+    vertical-align: middle;
+    flex-shrink: 0;
 }
 
-.sg-light--red.active    { background: #e05252; box-shadow: 0 0 8px rgba(224, 82, 82, 0.7); border-color: #e05252; }
-.sg-light--yellow.active { background: #e0b852; box-shadow: 0 0 8px rgba(224, 184, 82, 0.7); border-color: #e0b852; }
-.sg-light--green.active  { background: #52c27a; box-shadow: 0 0 8px rgba(82, 194, 122, 0.7); border-color: #52c27a; }
+.sg-sq--green  { background: #52c27a; box-shadow: 0 0 5px rgba(82, 194, 122, 0.4); }
+.sg-sq--yellow { background: #e0b852; box-shadow: 0 0 5px rgba(224, 184, 82, 0.4); }
+.sg-sq--red    { background: #e05252; box-shadow: 0 0 5px rgba(224, 82, 82, 0.5); }
 
-/* ---- Verweis-Punkte ---- */
-.sg-strikes {
-    flex: 1;
+/* ---- Legende & Hinweis ---- */
+.sg-act-legend {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.sg-strike-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.sg-strike-label {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.45);
-    min-width: 110px;
-}
-
-.sg-dots {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-
-.sg-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.20);
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.sg-dot--filled-green  { background: #52c27a; border-color: #52c27a; }
-.sg-dot--filled-yellow { background: #e0b852; border-color: #e0b852; }
-.sg-dot--filled-red    { background: #e05252; border-color: #e05252; }
-
-.sg-strike-count {
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 11px;
     color: rgba(255, 255, 255, 0.35);
-    margin-left: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.sg-act-legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sg-act-note {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.28);
+    margin: 8px 0 0 0;
+    line-height: 1.6;
+}
+
+.sg-act-note strong {
+    color: rgba(255, 255, 255, 0.50);
 }
 
 /* ---- Strafpunkt-Badge ---- */
@@ -192,6 +216,50 @@
     color: #e05252;
     margin-top: 12px;
 }
+
+/* ---- Ticket-Panel Header-Row ---- */
+.sg-ticket-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sg-btn-new-ticket {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(201, 168, 76, 0.12);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c9a84c;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.sg-btn-new-ticket:hover,
+.sg-btn-new-ticket.active {
+    background: rgba(201, 168, 76, 0.22);
+    border-color: rgba(201, 168, 76, 0.60);
+}
+
+.sg-btn-cancel {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sg-btn-cancel:hover { background: rgba(255, 255, 255, 0.10); }
 
 /* ---- Ticket-Formular ---- */
 .sg-form {

@@ -4,7 +4,7 @@
 {% block body_class %}sportgericht-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -27,7 +27,7 @@
                 <hr class="sg-divider">
             </div>
 
-            <!-- Aktivitätscheck -->
+            <!-- Aktivitätscheck — Tabellenformat -->
             <div class="sg-panel">
                 <p class="sg-panel-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -37,109 +37,85 @@
                 </p>
 
                 {% if profi_status.penalty_pts > 0 %}
-                <div class="sg-penalty-badge">
+                <div class="sg-penalty-badge" style="margin-bottom:14px;">
                     ⚠ {{ profi_status.penalty_pts }} Strafpunkt{% if profi_status.penalty_pts > 1 %}e{% endif %} — Schwellen reduziert
                 </div>
                 {% endif %}
 
-                <!-- Profis -->
-                <div class="sg-activity-card" style="margin-top:14px;">
-                    <span class="sg-squad-label">Profis</span>
-
-                    <div class="sg-traffic-light">
-                        <div class="sg-light sg-light--red    {% if profi_status.light == 'red'    %}active{% endif %}"></div>
-                        <div class="sg-light sg-light--yellow {% if profi_status.light == 'yellow' %}active{% endif %}"></div>
-                        <div class="sg-light sg-light--green  {% if profi_status.light == 'green'  %}active{% endif %}"></div>
-                    </div>
-
-                    <div class="sg-strikes">
-                        <div class="sg-strike-row">
-                            <span class="sg-strike-label">Hintereinander</span>
-                            <div class="sg-dots">
-                                {% with c=profi_status.consecutive lim=profi_status.consec_limit %}
-                                <div class="sg-dot {% if c >= 1 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if c >= 2 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                {% if lim > 2 %}
-                                <div class="sg-dot {% if c >= 3 %}sg-dot--filled-red{% endif %}"></div>
+                <!-- Tabelle -->
+                <table class="sg-act-table">
+                    <thead>
+                        <tr>
+                            <th>Verein</th>
+                            <th>Manager</th>
+                            <th>aktuell</th>
+                            <th>Profis</th>
+                            <th>Jugend</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="sg-act-club">
+                                {% if club.crest_static_path %}
+                                <img src="{% static club.crest_static_path %}" alt="{{ club.name }}" class="sg-act-logo">
                                 {% endif %}
-                                {% endwith %}
-                            </div>
-                            <span class="sg-strike-count">{{ profi_status.consecutive }}/{{ profi_status.consec_limit }}</span>
-                        </div>
-                        <div class="sg-strike-row">
-                            <span class="sg-strike-label">Diese Saison</span>
-                            <div class="sg-dots">
-                                {% with s=profi_status.season_total lim=profi_status.season_limit %}
-                                <div class="sg-dot {% if s >= 1 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if s >= 2 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if s >= 3 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if s >= 4 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                {% if lim > 4 %}
-                                <div class="sg-dot {% if s >= 5 %}sg-dot--filled-red{% endif %}"></div>
-                                {% endif %}
-                                {% endwith %}
-                            </div>
-                            <span class="sg-strike-count">{{ profi_status.season_total }}/{{ profi_status.season_limit }}</span>
-                        </div>
-                    </div>
-                </div>
+                                {{ club.name }}
+                            </td>
+                            <td class="sg-act-manager">{{ club.managed_by.name }}</td>
 
-                <!-- U21 -->
-                <div class="sg-activity-card" style="margin-top:10px;">
-                    <span class="sg-squad-label">U21</span>
-
-                    <div class="sg-traffic-light">
-                        <div class="sg-light sg-light--red    {% if u21_status.light == 'red'    %}active{% endif %}"></div>
-                        <div class="sg-light sg-light--yellow {% if u21_status.light == 'yellow' %}active{% endif %}"></div>
-                        <div class="sg-light sg-light--green  {% if u21_status.light == 'green'  %}active{% endif %}"></div>
-                    </div>
-
-                    <div class="sg-strikes">
-                        <div class="sg-strike-row">
-                            <span class="sg-strike-label">Hintereinander</span>
-                            <div class="sg-dots">
-                                {% with c=u21_status.consecutive lim=u21_status.consec_limit %}
-                                <div class="sg-dot {% if c >= 1 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if c >= 2 %}{% if c >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                {% if lim > 2 %}
-                                <div class="sg-dot {% if c >= 3 %}sg-dot--filled-red{% endif %}"></div>
+                            <!-- aktuell: schlechtere der beiden Ampeln -->
+                            <td class="sg-act-current">
+                                {% if profi_status.light == 'red' or u21_status.light == 'red' %}
+                                    <span class="sg-sq sg-sq--red" title="Entlassung droht"></span>
+                                {% elif profi_status.light == 'yellow' or u21_status.light == 'yellow' %}
+                                    <span class="sg-sq sg-sq--yellow" title="Verwarnung"></span>
+                                {% else %}
+                                    <span class="sg-sq sg-sq--green" title="Alles in Ordnung"></span>
                                 {% endif %}
-                                {% endwith %}
-                            </div>
-                            <span class="sg-strike-count">{{ u21_status.consecutive }}/{{ u21_status.consec_limit }}</span>
-                        </div>
-                        <div class="sg-strike-row">
-                            <span class="sg-strike-label">Diese Saison</span>
-                            <div class="sg-dots">
-                                {% with s=u21_status.season_total lim=u21_status.season_limit %}
-                                <div class="sg-dot {% if s >= 1 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if s >= 2 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if s >= 3 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                <div class="sg-dot {% if s >= 4 %}{% if s >= lim %}sg-dot--filled-red{% else %}sg-dot--filled-yellow{% endif %}{% endif %}"></div>
-                                {% if lim > 4 %}
-                                <div class="sg-dot {% if s >= 5 %}sg-dot--filled-red{% endif %}"></div>
+                            </td>
+
+                            <!-- Profis -->
+                            <td class="sg-act-count">
+                                {% if profi_status.consecutive > 0 %}
+                                    {% with c=profi_status.consecutive lim=profi_status.consec_limit %}
+                                    {{ c }} ×
+                                    <span class="sg-sq {% if c >= lim %}sg-sq--red{% elif c >= 1 %}sg-sq--yellow{% else %}sg-sq--green{% endif %}"
+                                          title="{{ c }} von {{ lim }} hintereinander · {{ profi_status.season_total }} von {{ profi_status.season_limit }} diese Saison"></span>
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="sg-sq sg-sq--green" title="Keine Verweise"></span>
                                 {% endif %}
-                                {% endwith %}
-                            </div>
-                            <span class="sg-strike-count">{{ u21_status.season_total }}/{{ u21_status.season_limit }}</span>
-                        </div>
-                    </div>
-                </div>
+                            </td>
+
+                            <!-- U21 / Jugend -->
+                            <td class="sg-act-count">
+                                {% if u21_status.consecutive > 0 %}
+                                    {% with c=u21_status.consecutive lim=u21_status.consec_limit %}
+                                    {{ c }} ×
+                                    <span class="sg-sq {% if c >= lim %}sg-sq--red{% elif c >= 1 %}sg-sq--yellow{% else %}sg-sq--green{% endif %}"
+                                          title="{{ c }} von {{ lim }} hintereinander · {{ u21_status.season_total }} von {{ u21_status.season_limit }} diese Saison"></span>
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="sg-sq sg-sq--green" title="Keine Verweise"></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
                 <!-- Legende -->
-                <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);">
-                    {% if profi_status.penalty_pts > 0 %}
-                    <p style="font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:rgba(224,82,82,0.75);margin:0;line-height:1.7;">
-                        Du trägst {{ profi_status.penalty_pts }} Strafpunkt{% if profi_status.penalty_pts > 1 %}e{% endif %} — die Schwellen sind reduziert.<br>
-                        Entlassung bei <strong>{{ profi_status.consec_limit }}×</strong> hintereinander oder <strong>{{ profi_status.season_limit }}×</strong> pro Saison.
-                    </p>
-                    {% else %}
-                    <p style="font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:rgba(255,255,255,0.30);margin:0;line-height:1.7;">
-                        Entlassung bei <strong style="color:rgba(255,255,255,0.45);">3×</strong> hintereinander oder <strong style="color:rgba(255,255,255,0.45);">5×</strong> pro Saison.<br>
-                        Nach einer Entlassung sinken die Schwellen auf 2× / 4×.
-                    </p>
-                    {% endif %}
+                <div class="sg-act-legend">
+                    <span><span class="sg-sq sg-sq--green"></span> Keine Verweise</span>
+                    <span><span class="sg-sq sg-sq--yellow"></span> Verwarnung</span>
+                    <span><span class="sg-sq sg-sq--red"></span> Entlassung droht</span>
                 </div>
+                <p class="sg-act-note">
+                    {% if profi_status.penalty_pts > 0 %}
+                    Strafpunkt aktiv — Entlassung bei <strong>{{ profi_status.consec_limit }}×</strong> hintereinander oder <strong>{{ profi_status.season_limit }}×</strong> pro Saison.
+                    {% else %}
+                    Entlassung bei <strong>3×</strong> hintereinander oder <strong>5×</strong> pro Saison · danach sinken die Schwellen auf 2× / 4×.
+                    {% endif %}
+                </p>
             </div>
 
         </div><!-- /.sg-left -->
@@ -157,28 +133,43 @@
             </div>
             {% endif %}
 
-            <!-- Ticket einreichen -->
+            <!-- Ticket-Button + ausklappbares Formular -->
             <div class="sg-panel">
-                <p class="sg-panel-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    Support-Ticket einreichen
-                </p>
-
-                <form class="sg-form" method="post" action="{% url 'sportgericht_ticket_submit' %}" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input class="sg-input" type="text" name="title" placeholder="Titel des Anliegens" required maxlength="200">
-                    <textarea class="sg-textarea" name="description" placeholder="Beschreibung — was ist passiert? Was erwartest du?" required></textarea>
-                    <label class="sg-file-label" for="screenshot-input">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                <div class="sg-ticket-header-row">
+                    <p class="sg-panel-title" style="margin:0;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
-                        <span id="file-name">Screenshot anhängen (optional)</span>
-                        <input class="sg-file-input" type="file" name="screenshot" accept="image/*" id="screenshot-input">
-                    </label>
-                    <button class="sg-btn-submit" type="submit">Ticket einreichen</button>
-                </form>
+                        Support
+                    </p>
+                    <button class="sg-btn-new-ticket" id="btn-new-ticket" onclick="toggleTicketForm()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Neues Ticket
+                    </button>
+                </div>
+
+                <!-- Formular — standardmäßig versteckt -->
+                <div id="ticket-form-wrap" class="sg-ticket-form-wrap" style="display:none;">
+                    <hr style="border:none;border-top:1px solid rgba(255,255,255,0.07);margin:14px 0;">
+                    <form class="sg-form" method="post" action="{% url 'sportgericht_ticket_submit' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input class="sg-input" type="text" name="title" placeholder="Titel des Anliegens" required maxlength="200">
+                        <textarea class="sg-textarea" name="description" placeholder="Beschreibung — was ist passiert? Was erwartest du?" required></textarea>
+                        <label class="sg-file-label" for="screenshot-input">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 17.2a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                            </svg>
+                            <span id="file-name">Screenshot anhängen (optional)</span>
+                            <input class="sg-file-input" type="file" name="screenshot" accept="image/*" id="screenshot-input">
+                        </label>
+                        <div style="display:flex;gap:10px;">
+                            <button class="sg-btn-submit" type="submit">Einreichen</button>
+                            <button class="sg-btn-cancel" type="button" onclick="toggleTicketForm()">Abbrechen</button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Offene & laufende Tickets -->
@@ -274,9 +265,16 @@
 </div><!-- /.dashboard-artboard -->
 
 <script>
-document.getElementById('screenshot-input').addEventListener('change', function() {
+function toggleTicketForm() {
+    var wrap = document.getElementById('ticket-form-wrap');
+    var btn  = document.getElementById('btn-new-ticket');
+    var open = wrap.style.display === 'none';
+    wrap.style.display = open ? 'block' : 'none';
+    btn.classList.toggle('active', open);
+}
+document.getElementById('screenshot-input') && document.getElementById('screenshot-input').addEventListener('change', function() {
     var label = document.getElementById('file-name');
-    label.textContent = this.files.length ? this.files[0].name : 'Screenshot anhängen (optional)';
+    if (label) label.textContent = this.files.length ? this.files[0].name : 'Screenshot anhängen (optional)';
 });
 </script>
 {% endblock %}
