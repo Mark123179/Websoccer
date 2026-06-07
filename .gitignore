@@ -7,3 +7,4 @@ db.sqlite3
 output/
 game/static/game/images/player_composites/
 game/static/game/images/trophies/
+security-audit.log
