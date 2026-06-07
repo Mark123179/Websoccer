@@ -2000,28 +2000,37 @@ def claim_club(request, club_id):
       Django wirft einen IntegrityError, den wir sauber behandeln.
     """
     from django.db import transaction, IntegrityError
-    from .models import PresidentSatisfaction
-
-    manager_profile = getattr(request.user, 'manager_profile', None)
-    if not manager_profile:
-        messages.error(request, 'Kein Manager-Profil gefunden.')
-        return redirect('club_list')
+    from .models import PresidentSatisfaction, ManagerProfile as MP
 
     try:
         with transaction.atomic():
-            # Sperrt die Club-Zeile exklusiv — kein zweiter Request kann
-            # gleichzeitig denselben Verein übernehmen.
-            club = Club.objects.select_for_update().get(id=club_id)
+            # 1. Manager-Zeile locken — verhindert, dass derselbe User in zwei
+            #    Tabs gleichzeitig zwei verschiedene Vereine übernimmt.
+            try:
+                manager_profile = MP.objects.select_for_update().get(user=request.user)
+            except MP.DoesNotExist:
+                messages.error(request, 'Kein Manager-Profil gefunden.')
+                return redirect('club_list')
 
-            # Doppelt geprüft innerhalb der Transaktion:
+            # 2. Prüfen: Hat Manager bereits einen Verein?
             if Club.objects.filter(managed_by=manager_profile).exists():
                 messages.error(request, 'Du verwaltest bereits einen Verein.')
                 return redirect('club_list')
 
+            # 3. Club-Zeile locken — verhindert, dass zwei verschiedene Manager
+            #    denselben Verein gleichzeitig übernehmen.
+            try:
+                club = Club.objects.select_for_update().get(id=club_id)
+            except Club.DoesNotExist:
+                messages.error(request, 'Verein nicht gefunden.')
+                return redirect('club_list')
+
+            # 4. Prüfen: Ist Verein noch frei?
             if club.managed_by_id is not None:
                 messages.error(request, f'„{club.name}" hat bereits einen Manager.')
                 return redirect('club_list')
 
+            # 5. Übernahme — DB-UNIQUE-Constraint ist letzte Sicherung.
             club.managed_by = manager_profile
             club.save(update_fields=['managed_by'])
 
@@ -2029,13 +2038,8 @@ def claim_club(request, club_id):
                 manager=manager_profile, club=club, defaults={'value': 100}
             )
 
-    except Club.DoesNotExist:
-        messages.error(request, 'Verein nicht gefunden.')
-        return redirect('club_list')
     except IntegrityError:
-        # DB-UNIQUE-Constraint hat zugeschlagen — ein anderer Request war
-        # schneller oder der Manager hat bereits einen Verein.
-        messages.error(request, 'Dieser Verein wurde gerade von jemand anderem übernommen.')
+        messages.error(request, 'Die Vereinsübernahme ist fehlgeschlagen. Bitte wähle einen anderen Verein.')
         return redirect('club_list')
 
     messages.success(request, f'Willkommen bei {club.name}! Deine Karriere beginnt jetzt.')

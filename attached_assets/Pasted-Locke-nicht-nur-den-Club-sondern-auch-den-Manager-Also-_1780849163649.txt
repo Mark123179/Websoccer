@@ -1,0 +1,82 @@
+Locke nicht nur den Club, sondern auch den Manager.
+
+Also nicht nur:
+
+club = Club.objects.select_for_update().get(id=club_id)
+
+sondern auch:
+
+manager = ManagerProfile.objects.select_for_update().get(user=request.user)
+
+Warum?
+
+Damit du auch sauber verhinderst, dass derselbe Manager in zwei Tabs gleichzeitig zwei Vereine übernimmt.
+
+Ideale Reihenfolge:
+
+1. transaction.atomic()
+2. ManagerProfile per select_for_update() locken
+3. Prüfen: Hat Manager schon einen Verein?
+4. Club per select_for_update() locken
+5. Prüfen: Ist Club noch frei?
+6. Club.managed_by = manager
+7. Speichern
+8. Redirect ins Dashboard
+
+Der Unique-Index bleibt trotzdem als letzte DB-Sicherung wichtig.
+
+Saubere Claim-Logik
+
+Sinngemäß:
+
+from django.db import transaction, IntegrityError
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404
+
+@transaction.atomic
+def claim_club(request, club_id):
+    manager = ManagerProfile.objects.select_for_update().get(user=request.user)
+
+    if Club.objects.filter(managed_by=manager).exists():
+        messages.error(request, "Du hast bereits einen Verein.")
+        return redirect("dashboard")
+
+    club = Club.objects.select_for_update().get(id=club_id)
+
+    if club.managed_by_id is not None:
+        messages.error(request, "Dieser Verein wurde bereits übernommen.")
+        return redirect("club_select")
+
+    try:
+        club.managed_by = manager
+        club.save(update_fields=["managed_by"])
+    except IntegrityError:
+        messages.error(request, "Die Vereinsübernahme ist fehlgeschlagen. Bitte wähle einen anderen Verein.")
+        return redirect("club_select")
+
+    messages.success(request, f"Du hast {club.name} übernommen.")
+    return redirect("dashboard")
+
+Noch besser wäre zusätzlich:
+
+Club.objects.filter(managed_by__isnull=True)
+
+für die Vereinsauswahlseite, damit vergebene Vereine gar nicht erst angeboten werden.
+
+Wichtig bei Supabase/Replit/GitHub
+
+Falls dein Frontend oder Supabase-Client direkt auf die Tabelle schreiben kann:
+
+game_club.managed_by_id
+
+dann musst du das verhindern.
+
+Die Vereinsübernahme sollte nur über deinen Backend-Endpoint laufen:
+
+POST /clubs/<id>/claim/
+
+Nicht direkt aus dem Frontend:
+
+update game_club set managed_by_id = ...
+
+Sonst kann jemand mit direktem DB/API-Zugriff die App-Logik umgehen.
