@@ -59,6 +59,17 @@ from .views_creator import (
     creator_add_goal,
     creator_delete_goal,
 )
+from .views_creator import (
+    creator_manager_list,
+    creator_manager_edit,
+    creator_save_manager_profil,
+    creator_save_manager_club,
+    creator_add_career_station,
+    creator_delete_career_station,
+    creator_save_coins,
+    creator_save_satisfaction,
+    creator_add_satisfaction,
+)
 
 
 urlpatterns = [
@@ -200,4 +211,15 @@ urlpatterns = [
     path('creator/clubs/<int:club_id>/sponsors/<int:sponsor_id>/toggle/', creator_toggle_sponsor, name='creator_toggle_sponsor'),
     path('creator/clubs/<int:club_id>/goals/add/', creator_add_goal, name='creator_add_goal'),
     path('creator/clubs/<int:club_id>/goals/<int:goal_id>/delete/', creator_delete_goal, name='creator_delete_goal'),
+
+    # Manager-Profile-Editor
+    path('creator/managers/', creator_manager_list, name='creator_manager_list'),
+    path('creator/managers/<int:manager_id>/', creator_manager_edit, name='creator_manager_edit'),
+    path('creator/managers/<int:manager_id>/profil/', creator_save_manager_profil, name='creator_save_manager_profil'),
+    path('creator/managers/<int:manager_id>/verein/', creator_save_manager_club, name='creator_save_manager_club'),
+    path('creator/managers/<int:manager_id>/karriere/add/', creator_add_career_station, name='creator_add_career_station'),
+    path('creator/managers/<int:manager_id>/karriere/<int:station_id>/delete/', creator_delete_career_station, name='creator_delete_career_station'),
+    path('creator/managers/<int:manager_id>/coins/', creator_save_coins, name='creator_save_coins'),
+    path('creator/managers/<int:manager_id>/satisfaction/<int:sat_id>/', creator_save_satisfaction, name='creator_save_satisfaction'),
+    path('creator/managers/<int:manager_id>/satisfaction/add/', creator_add_satisfaction, name='creator_add_satisfaction'),
 ]

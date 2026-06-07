@@ -10,7 +10,7 @@
       <div class="creator-header-title">
         <span class="creator-badge">CREATOR MODE</span>
         <h1>Datenbank</h1>
-        <p class="creator-subtitle">Land · Wettbewerb · Vereine · Spieler</p>
+        <p class="creator-subtitle">Land · Wettbewerb · Vereine · Spieler · Manager</p>
       </div>
       <div class="creator-stats">
         <div class="creator-stat">
@@ -23,6 +23,17 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="creator-section-nav">
+    <a class="creator-nav-tile creator-nav-tile--active" href="#">
+      <span class="creator-nav-icon">🏟</span>
+      <span>Vereine & Ligen</span>
+    </a>
+    <a class="creator-nav-tile" href="{% url 'creator_manager_list' %}">
+      <span class="creator-nav-icon">🧑‍💼</span>
+      <span>Manager-Profile</span>
+    </a>
   </div>
 
   {% for country, leagues in countries.items %}
@@ -67,6 +78,11 @@
 
 <style>
 .creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.creator-section-nav { display: flex; gap: .75rem; margin-bottom: 2rem; }
+.creator-nav-tile { display: flex; align-items: center; gap: .6rem; padding: .6rem 1.2rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; text-decoration: none; color: #556677; font-size: .82rem; font-weight: 600; transition: border-color .2s, color .2s; }
+.creator-nav-tile:hover { border-color: #00d4ff44; color: #aabbcc; }
+.creator-nav-tile--active { border-color: #00d4ff33; color: #00d4ff; background: #071525; }
+.creator-nav-icon { font-size: 1rem; }
 .creator-header { background: linear-gradient(135deg, #0a1628 0%, #03070c 100%); border: 1px solid #00d4ff22; border-radius: 12px; margin-bottom: 2rem; padding: 2rem; }
 .creator-header-inner { display: flex; justify-content: space-between; align-items: center; }
 .creator-badge { background: #00d4ff; color: #03070c; font-size: .65rem; font-weight: 800; letter-spacing: .12em; padding: .25rem .6rem; border-radius: 4px; display: inline-block; margin-bottom: .5rem; }

@@ -10,6 +10,8 @@ from django.views.decorators.http import require_POST
 from .models import (
     Club, COUNTRY_FLAG_ASSETS, League, Player,
     Stadium, ClubPublicProfile, ClubTrophy, ClubSponsor, SeasonGoal,
+    ManagerProfile, ManagerCareerStation, HoenessCoin, CoinTransaction,
+    PresidentSatisfaction,
 )
 
 STATIC_BASE = 'game/static'
@@ -654,3 +656,290 @@ def creator_delete_goal(request, club_id, goal_id):
     goal.delete()
     messages.success(request, f'Saisonziel Saison {sn} entfernt.')
     return _redirect_tab(club_id, 'saisonziele')
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  Creator Mode — Manager-Profile-Editor
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _redirect_manager_tab(manager_id, tab):
+    from django.urls import reverse
+    return redirect(f"{reverse('creator_manager_edit', args=[manager_id])}?tab={tab}")
+
+
+def creator_manager_list(request):
+    managers = list(
+        ManagerProfile.objects
+        .select_related('user', 'favourite_club')
+        .order_by('name')
+    )
+    club_map = {c.managed_by_id: c for c in Club.objects.filter(managed_by__isnull=False).select_related('league')}
+    # Build (manager, club_or_None) rows for the template
+    manager_rows = [(m, club_map.get(m.id)) for m in managers]
+    return render(request, 'creator/manager_list.html', {
+        'manager_rows': manager_rows,
+        'total_managers': len(managers),
+        'total_with_club': sum(1 for m in managers if m.id in club_map),
+    })
+
+
+def creator_manager_edit(request, manager_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    active_tab = request.GET.get('tab', 'profil')
+
+    # Managed club (Club.managed_by OneToOneField → ManagerProfile)
+    managed_club = Club.objects.filter(managed_by=manager).select_related('league').first()
+    career_stations = manager.career_stations.select_related('club').order_by('order')
+    try:
+        coin_balance = manager.hoeness_coins.amount
+    except HoenessCoin.DoesNotExist:
+        coin_balance = 0
+    coin_transactions = CoinTransaction.objects.filter(manager=manager).order_by('-created_at')[:30]
+    satisfactions = PresidentSatisfaction.objects.filter(manager=manager).select_related('club').order_by('value')
+    all_clubs = Club.objects.select_related('league').order_by('name')
+    free_clubs = Club.objects.filter(managed_by__isnull=True).select_related('league').order_by('name')
+
+    # Compute avatar URL if profile_image is set
+    avatar_url = None
+    if manager.profile_image:
+        avatar_url = manager.profile_image
+
+    return render(request, 'creator/manager_edit.html', {
+        'manager': manager,
+        'active_tab': active_tab,
+        'managed_club': managed_club,
+        'career_stations': career_stations,
+        'coin_balance': coin_balance,
+        'coin_transactions': coin_transactions,
+        'coin_reason_choices': CoinTransaction.REASON_CHOICES,
+        'satisfactions': satisfactions,
+        'all_clubs': all_clubs,
+        'free_clubs': free_clubs,
+        'trainer_type_choices': ManagerProfile.TRAINER_TYPE_CHOICES,
+        'avatar_url': avatar_url,
+    })
+
+
+@require_POST
+def creator_save_manager_profil(request, manager_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    name = request.POST.get('name', '').strip()
+    if not name:
+        messages.error(request, 'Name darf nicht leer sein.')
+        return _redirect_manager_tab(manager_id, 'profil')
+    if ManagerProfile.objects.filter(name=name).exclude(id=manager_id).exists():
+        messages.error(request, f'Name „{name}" ist bereits vergeben.')
+        return _redirect_manager_tab(manager_id, 'profil')
+
+    trainer_type = request.POST.get('trainer_type', manager.trainer_type)
+    nationality_flag = request.POST.get('nationality_flag', '').strip()
+    nationality_name = request.POST.get('nationality_name', '').strip()
+    member_since = request.POST.get('member_since', '') or None
+    highscore = request.POST.get('highscore', '').strip()
+    name_confirmed = request.POST.get('name_confirmed', '0') == '1'
+    fav_club_id = request.POST.get('favourite_club', '') or None
+
+    try:
+        level = max(1, int(request.POST.get('level', manager.level)))
+    except (ValueError, TypeError):
+        level = manager.level
+    try:
+        xp = max(0, int(request.POST.get('xp', manager.xp)))
+    except (ValueError, TypeError):
+        xp = manager.xp
+    try:
+        xp_max = max(1, int(request.POST.get('xp_max', manager.xp_max)))
+    except (ValueError, TypeError):
+        xp_max = manager.xp_max
+
+    manager.name = name
+    manager.trainer_type = trainer_type
+    manager.nationality_flag = nationality_flag
+    manager.nationality_name = nationality_name
+    manager.highscore = highscore
+    manager.name_confirmed = name_confirmed
+    manager.level = level
+    manager.xp = xp
+    manager.xp_max = xp_max
+    if fav_club_id:
+        manager.favourite_club_id = fav_club_id
+    else:
+        manager.favourite_club = None
+    if member_since:
+        from datetime import date
+        try:
+            manager.member_since = date.fromisoformat(member_since)
+        except ValueError:
+            pass
+    else:
+        manager.member_since = None
+
+    manager.save()
+    messages.success(request, 'Profil gespeichert.')
+    return _redirect_manager_tab(manager_id, 'profil')
+
+
+@require_POST
+def creator_save_manager_club(request, manager_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    action = request.POST.get('action', '')
+
+    if action == 'unassign':
+        old_club = Club.objects.filter(managed_by=manager).first()
+        if old_club:
+            old_club.managed_by = None
+            old_club.save(update_fields=['managed_by'])
+            messages.success(request, f'Verein „{old_club.name}" wurde vom Manager getrennt.')
+        else:
+            messages.error(request, 'Kein Verein zugeordnet.')
+
+    elif action == 'assign':
+        club_id = request.POST.get('club_id', '')
+        if not club_id:
+            messages.error(request, 'Kein Verein ausgewählt.')
+            return _redirect_manager_tab(manager_id, 'verein')
+        new_club = get_object_or_404(Club, id=club_id)
+
+        # Remove manager from current club first
+        old_club = Club.objects.filter(managed_by=manager).exclude(id=new_club.id).first()
+        if old_club:
+            old_club.managed_by = None
+            old_club.save(update_fields=['managed_by'])
+
+        # Remove existing manager from new club if occupied
+        if new_club.managed_by and new_club.managed_by_id != manager_id:
+            displaced = new_club.managed_by
+            messages.warning(request, f'Manager „{displaced.name}" wurde von „{new_club.name}" entfernt.')
+
+        new_club.managed_by = manager
+        new_club.save(update_fields=['managed_by'])
+        messages.success(request, f'Manager erfolgreich „{new_club.name}" zugeordnet.')
+
+    return _redirect_manager_tab(manager_id, 'verein')
+
+
+@require_POST
+def creator_add_career_station(request, manager_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    city_name = request.POST.get('city_name', '').strip()
+    if not city_name:
+        messages.error(request, 'Stadtname ist Pflichtfeld.')
+        return _redirect_manager_tab(manager_id, 'karriere')
+
+    club_id = request.POST.get('club_id', '') or None
+    custom_club_name = request.POST.get('custom_club_name', '').strip()
+    city_country = request.POST.get('city_country', '').strip()
+    started_at = request.POST.get('started_at', '') or None
+    ended_at = request.POST.get('ended_at', '') or None
+    games_played = max(0, int(request.POST.get('games_played', 0) or 0))
+    order = max(1, int(request.POST.get('order', 1) or 1))
+    map_x = max(0, int(request.POST.get('map_x', 271) or 271))
+    map_y = max(0, int(request.POST.get('map_y', 214) or 214))
+
+    from datetime import date
+    started = None
+    if started_at:
+        try:
+            started = date.fromisoformat(started_at)
+        except ValueError:
+            pass
+    ended = None
+    if ended_at:
+        try:
+            ended = date.fromisoformat(ended_at)
+        except ValueError:
+            pass
+
+    club = Club.objects.filter(id=club_id).first() if club_id else None
+
+    ManagerCareerStation.objects.create(
+        manager=manager,
+        club=club,
+        custom_club_name=custom_club_name,
+        city_name=city_name,
+        city_country=city_country,
+        order=order,
+        map_x=map_x,
+        map_y=map_y,
+        started_at=started,
+        ended_at=ended,
+        games_played=games_played,
+    )
+    messages.success(request, f'Karrierestation „{city_name}" hinzugefügt.')
+    return _redirect_manager_tab(manager_id, 'karriere')
+
+
+@require_POST
+def creator_delete_career_station(request, manager_id, station_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    station = get_object_or_404(ManagerCareerStation, id=station_id, manager=manager)
+    city = station.city_name
+    station.delete()
+    messages.success(request, f'Station „{city}" entfernt.')
+    return _redirect_manager_tab(manager_id, 'karriere')
+
+
+@require_POST
+def creator_save_coins(request, manager_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    try:
+        new_amount = max(0, int(request.POST.get('amount', 0) or 0))
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültiger Betrag.')
+        return _redirect_manager_tab(manager_id, 'coins')
+
+    reason = request.POST.get('reason', CoinTransaction.REASON_WIN)
+    description = request.POST.get('description', '').strip() or 'Admin-Korrektur'
+
+    coin, _ = HoenessCoin.objects.get_or_create(manager=manager, defaults={'amount': 0})
+    old_amount = coin.amount
+    diff = new_amount - old_amount
+    coin.amount = new_amount
+    coin.save()
+
+    if diff != 0:
+        CoinTransaction.objects.create(
+            manager=manager,
+            amount=diff,
+            reason=reason,
+            description=description,
+        )
+    messages.success(request, f'Guthaben auf {new_amount} gesetzt (Δ {diff:+d}).')
+    return _redirect_manager_tab(manager_id, 'coins')
+
+
+@require_POST
+def creator_save_satisfaction(request, manager_id, sat_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    sat = get_object_or_404(PresidentSatisfaction, id=sat_id, manager=manager)
+    try:
+        value = max(0, min(100, int(request.POST.get('value', sat.value) or sat.value)))
+    except (ValueError, TypeError):
+        value = sat.value
+    sat.value = value
+    sat.save(update_fields=['value', 'updated_at'])
+    messages.success(request, f'Zufriedenheit auf {value} % gesetzt.')
+    return _redirect_manager_tab(manager_id, 'praesident')
+
+
+@require_POST
+def creator_add_satisfaction(request, manager_id):
+    manager = get_object_or_404(ManagerProfile, id=manager_id)
+    club_id = request.POST.get('club_id', '')
+    if not club_id:
+        messages.error(request, 'Verein fehlt.')
+        return _redirect_manager_tab(manager_id, 'praesident')
+    club = get_object_or_404(Club, id=club_id)
+    try:
+        value = max(0, min(100, int(request.POST.get('value', 100) or 100)))
+    except (ValueError, TypeError):
+        value = 100
+    sat, created = PresidentSatisfaction.objects.get_or_create(
+        manager=manager, club=club,
+        defaults={'value': value},
+    )
+    if not created:
+        sat.value = value
+        sat.save(update_fields=['value', 'updated_at'])
+    messages.success(request, f'Zufriedenheit für „{club.name}" auf {sat.value} % gesetzt.')
+    return _redirect_manager_tab(manager_id, 'praesident')

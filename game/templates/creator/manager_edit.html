@@ -1,0 +1,526 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · Manager: {{ manager.name }}{% endblock %}
+
+{% block content %}
+<section class="creator-section">
+
+  <div class="creator-club-topbar">
+    <a class="creator-back" href="{% url 'creator_manager_list' %}">← Manager-Übersicht</a>
+    <div class="creator-club-identity">
+      <div class="creator-manager-avatar">
+        {% if avatar_url %}
+          <img src="{{ avatar_url }}" alt="{{ manager.name }}">
+        {% else %}
+          <div class="creator-avatar-placeholder">{{ manager.name|first }}</div>
+        {% endif %}
+      </div>
+      <div>
+        <h1 class="creator-club-title">{{ manager.name }}</h1>
+        <span class="creator-meta">
+          Level {{ manager.level }} · {{ manager.trainer_type_label }}
+          {% if managed_club %} · <span style="color:#00d4ff88">{{ managed_club.name }}</span>{% endif %}
+          {% if manager.user %} · @{{ manager.user.username }}{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="creator-messages">
+    {% for m in messages %}
+    <div class="creator-msg creator-msg-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <nav class="creator-tabs">
+    <a class="creator-tab {% if active_tab == 'profil' %}active{% endif %}" href="?tab=profil">Profil</a>
+    <a class="creator-tab {% if active_tab == 'verein' %}active{% endif %}" href="?tab=verein">Verein</a>
+    <a class="creator-tab {% if active_tab == 'karriere' %}active{% endif %}" href="?tab=karriere">Karriere <span class="creator-tab-badge">{{ career_stations|length }}</span></a>
+    <a class="creator-tab {% if active_tab == 'coins' %}active{% endif %}" href="?tab=coins">Hoeneß-Coins</a>
+    <a class="creator-tab {% if active_tab == 'praesident' %}active{% endif %}" href="?tab=praesident">Präsident</a>
+  </nav>
+
+  <!-- ═══ TAB: PROFIL ═══════════════════════════════════════════════════════ -->
+  {% if active_tab == 'profil' %}
+  <form method="post" action="{% url 'creator_save_manager_profil' manager_id=manager.id %}">
+    {% csrf_token %}
+    <div class="creator-form-grid">
+
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Identität</h2></div>
+        <div class="creator-card-body creator-field-grid">
+          <div class="creator-field">
+            <label>Manager-Name</label>
+            <input type="text" name="name" value="{{ manager.name }}" required>
+          </div>
+          <div class="creator-field">
+            <label>Trainer-Typ</label>
+            <select name="trainer_type">
+              {% for val, label in trainer_type_choices %}
+              <option value="{{ val }}" {% if manager.trainer_type == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="creator-field">
+            <label>Mitglied seit</label>
+            <input type="date" name="member_since" value="{{ manager.member_since|date:'Y-m-d'|default:'' }}">
+          </div>
+          <div class="creator-field">
+            <label>Lieblingsverein</label>
+            <select name="favourite_club">
+              <option value="">— Keiner —</option>
+              {% for c in all_clubs %}
+              <option value="{{ c.id }}" {% if manager.favourite_club_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="creator-field">
+            <label>Nationalität (Name)</label>
+            <input type="text" name="nationality_name" value="{{ manager.nationality_name }}" placeholder="z.B. Deutschland">
+          </div>
+          <div class="creator-field">
+            <label>Nationalität (Flag-URL)</label>
+            <input type="text" name="nationality_flag" value="{{ manager.nationality_flag }}" placeholder="/static/game/images/flags/...">
+          </div>
+        </div>
+      </div>
+
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Level & XP</h2></div>
+        <div class="creator-card-body creator-field-grid">
+          <div class="creator-field">
+            <label>Level</label>
+            <input type="number" name="level" value="{{ manager.level }}" min="1" max="99">
+          </div>
+          <div class="creator-field">
+            <label>XP (aktuell)</label>
+            <input type="number" name="xp" value="{{ manager.xp }}" min="0">
+          </div>
+          <div class="creator-field">
+            <label>XP (Stufe voll bei)</label>
+            <input type="number" name="xp_max" value="{{ manager.xp_max }}" min="1">
+          </div>
+          <div class="creator-field">
+            <label>Highscore-Text</label>
+            <input type="text" name="highscore" value="{{ manager.highscore }}" placeholder="z.B. 3× Meister">
+          </div>
+          <div class="creator-field">
+            <label>Name bestätigt</label>
+            <select name="name_confirmed">
+              <option value="1" {% if manager.name_confirmed %}selected{% endif %}>Ja</option>
+              <option value="0" {% if not manager.name_confirmed %}selected{% endif %}>Nein</option>
+            </select>
+          </div>
+          <div class="creator-field">
+            <label>XP-Fortschritt</label>
+            <div class="creator-stat-display">
+              <div class="creator-xp-bar">
+                <div class="creator-xp-fill" style="width:{{ manager.xp_pct }}%"></div>
+              </div>
+              <span style="font-size:.75rem;color:#556677">{{ manager.xp_label }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="creator-form-actions">
+      <button type="submit" class="creator-btn creator-btn-primary">💾 Profil speichern</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- ═══ TAB: VEREIN ════════════════════════════════════════════════════════ -->
+  {% if active_tab == 'verein' %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Vereinszuordnung</h2></div>
+    <div class="creator-card-body">
+
+      {% if managed_club %}
+      <div class="creator-current-club">
+        <div class="creator-current-club-info">
+          {% if managed_club.crest_static_path %}
+            <img src="{% static managed_club.crest_static_path %}" class="creator-club-crest-sm" alt="">
+          {% endif %}
+          <div>
+            <strong>{{ managed_club.name }}</strong>
+            <span style="color:#556677;font-size:.78rem"> · {{ managed_club.league.name }}</span>
+          </div>
+        </div>
+        <form method="post" action="{% url 'creator_save_manager_club' manager_id=manager.id %}" onsubmit="return confirm('Verein entziehen?')">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="unassign">
+          <button type="submit" class="creator-btn creator-btn-danger">Verein entziehen</button>
+        </form>
+      </div>
+      {% else %}
+      <p class="creator-empty">Dieser Manager ist keinem Verein zugeordnet.</p>
+      {% endif %}
+
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">{% if managed_club %}Anderen Verein zuordnen{% else %}Verein zuordnen{% endif %}</h3>
+        <form method="post" action="{% url 'creator_save_manager_club' manager_id=manager.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="assign">
+          <div class="creator-inline-fields">
+            <div class="creator-field" style="flex:1">
+              <label>Verein auswählen</label>
+              <select name="club_id">
+                <option value="">— Verein wählen —</option>
+                {% for c in all_clubs %}
+                <option value="{{ c.id }}" {% if c.id == managed_club.id %}selected{% endif %}>
+                  {{ c.name }}
+                  {% if c.managed_by %}(⚠ {{ c.managed_by.name }}){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-primary">Zuordnen</button>
+            </div>
+          </div>
+          <p class="creator-hint" style="margin-top:.5rem">⚠ Wenn der Verein bereits einen Manager hat, wird dieser automatisch entfernt.</p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="creator-card" style="margin-top:1rem">
+    <div class="creator-card-head"><h2>Freie Vereine</h2></div>
+    <div class="creator-card-body">
+      <table class="creator-table">
+        <thead><tr><th>Verein</th><th>Liga</th><th>Budget</th></tr></thead>
+        <tbody>
+          {% for c in free_clubs %}
+          <tr>
+            <td style="color:#cce8ff">{{ c.name }}</td>
+            <td style="color:#556677">{{ c.league.name }}</td>
+            <td style="color:#ffd166">{{ c.budget|floatformat:0 }} €</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" class="creator-empty-row">Alle Vereine sind besetzt.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══ TAB: KARRIERE ══════════════════════════════════════════════════════ -->
+  {% if active_tab == 'karriere' %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Karrierestationen <span class="creator-count-badge">{{ career_stations|length }}</span></h2></div>
+    <div class="creator-card-body">
+
+      {% if career_stations %}
+      <table class="creator-table" style="margin-bottom:1.5rem">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Verein / Name</th>
+            <th>Stadt</th>
+            <th>Land</th>
+            <th>Von</th>
+            <th>Bis</th>
+            <th>Spiele</th>
+            <th>Karte (x,y)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in career_stations %}
+          <tr>
+            <td style="color:#556677">{{ s.order }}</td>
+            <td style="color:#cce8ff;font-weight:600">
+              {% if s.club %}{{ s.club.name }}{% elif s.custom_club_name %}{{ s.custom_club_name }}{% else %}—{% endif %}
+            </td>
+            <td>{{ s.city_name }}</td>
+            <td style="color:#556677">{{ s.city_country|default:"—" }}</td>
+            <td style="color:#556677;font-size:.78rem">{{ s.started_at|default:"—" }}</td>
+            <td style="color:#556677;font-size:.78rem">{{ s.ended_at|default:"heute" }}</td>
+            <td>{{ s.games_played }}</td>
+            <td style="color:#556677;font-family:monospace;font-size:.75rem">{{ s.map_x }}, {{ s.map_y }}</td>
+            <td>
+              <form method="post" action="{% url 'creator_delete_career_station' manager_id=manager.id station_id=s.id %}" onsubmit="return confirm('Station entfernen?')">
+                {% csrf_token %}
+                <button type="submit" class="creator-btn-danger-sm">✕</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="creator-empty">Noch keine Karrierestationen vorhanden.</p>
+      {% endif %}
+
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">Station hinzufügen</h3>
+        <form method="post" action="{% url 'creator_add_career_station' manager_id=manager.id %}">
+          {% csrf_token %}
+          <div class="creator-field-grid" style="margin-bottom:.75rem">
+            <div class="creator-field">
+              <label>Verein (intern)</label>
+              <select name="club_id">
+                <option value="">— Kein interner Verein —</option>
+                {% for c in all_clubs %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="creator-field">
+              <label>Vereinsname (manuell)</label>
+              <input type="text" name="custom_club_name" placeholder="Nur wenn kein DB-Verein">
+            </div>
+            <div class="creator-field">
+              <label>Stadt</label>
+              <input type="text" name="city_name" placeholder="z.B. München" required>
+            </div>
+            <div class="creator-field">
+              <label>Land</label>
+              <input type="text" name="city_country" placeholder="z.B. Deutschland">
+            </div>
+            <div class="creator-field">
+              <label>Von</label>
+              <input type="date" name="started_at">
+            </div>
+            <div class="creator-field">
+              <label>Bis (leer = aktuell)</label>
+              <input type="date" name="ended_at">
+            </div>
+            <div class="creator-field">
+              <label>Spiele</label>
+              <input type="number" name="games_played" value="0" min="0" style="width:100px">
+            </div>
+            <div class="creator-field">
+              <label>Reihenfolge</label>
+              <input type="number" name="order" value="{{ career_stations|length|add:1 }}" min="1" style="width:80px">
+            </div>
+            <div class="creator-field">
+              <label>Karte X</label>
+              <input type="number" name="map_x" value="271" min="0" max="600" style="width:80px">
+            </div>
+            <div class="creator-field">
+              <label>Karte Y</label>
+              <input type="number" name="map_y" value="214" min="0" max="600" style="width:80px">
+            </div>
+          </div>
+          <button type="submit" class="creator-btn creator-btn-primary">+ Station hinzufügen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══ TAB: COINS ═════════════════════════════════════════════════════════ -->
+  {% if active_tab == 'coins' %}
+  <div style="display:grid;grid-template-columns:1fr 2fr;gap:1rem">
+
+    <div class="creator-card">
+      <div class="creator-card-head"><h2>Hoeneß-Coin Guthaben</h2></div>
+      <div class="creator-card-body">
+        <div style="text-align:center;padding:1rem 0">
+          <div style="font-size:2.5rem;font-weight:800;color:#ffd166">{{ coin_balance }}</div>
+          <div style="color:#556677;font-size:.8rem;margin-bottom:1.5rem">Coins aktuell</div>
+        </div>
+        <form method="post" action="{% url 'creator_save_coins' manager_id=manager.id %}">
+          {% csrf_token %}
+          <div class="creator-field" style="margin-bottom:.75rem">
+            <label>Neues Guthaben setzen</label>
+            <input type="number" name="amount" value="{{ coin_balance }}" min="0">
+          </div>
+          <div class="creator-field" style="margin-bottom:.75rem">
+            <label>Buchungsgrund (für Log)</label>
+            <select name="reason">
+              {% for val, label in coin_reason_choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="creator-field" style="margin-bottom:1rem">
+            <label>Beschreibung (optional)</label>
+            <input type="text" name="description" placeholder="Admin-Korrektur">
+          </div>
+          <button type="submit" class="creator-btn creator-btn-primary" style="width:100%">💰 Guthaben setzen</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="creator-card">
+      <div class="creator-card-head"><h2>Letzte Transaktionen</h2></div>
+      <div class="creator-card-body">
+        <table class="creator-table">
+          <thead><tr><th>Datum</th><th>Betrag</th><th>Grund</th><th>Beschreibung</th></tr></thead>
+          <tbody>
+            {% for tx in coin_transactions %}
+            <tr>
+              <td style="color:#556677;font-size:.75rem">{{ tx.created_at|date:"d.m.Y H:i" }}</td>
+              <td style="font-weight:700;color:{% if tx.amount >= 0 %}#30f29c{% else %}#ff5570{% endif %}">
+                {% if tx.amount >= 0 %}+{% endif %}{{ tx.amount }}
+              </td>
+              <td><span class="creator-position-badge">{{ tx.get_reason_display }}</span></td>
+              <td style="color:#556677;font-size:.78rem">{{ tx.description|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="creator-empty-row">Keine Transaktionen.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- ═══ TAB: PRÄSIDENT ═════════════════════════════════════════════════════ -->
+  {% if active_tab == 'praesident' %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Präsident-Zufriedenheit</h2></div>
+    <div class="creator-card-body">
+      {% if satisfactions %}
+      <table class="creator-table" style="margin-bottom:1.5rem">
+        <thead>
+          <tr><th>Verein</th><th>Zufriedenheit</th><th>Zuletzt geändert</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for sat in satisfactions %}
+          <tr>
+            <td style="color:#cce8ff;font-weight:600">{{ sat.club.name }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:.75rem">
+                <div class="creator-sat-bar">
+                  <div class="creator-sat-fill" style="width:{{ sat.value }}%;background:{% if sat.value >= 60 %}#30f29c{% elif sat.value >= 30 %}#ffd166{% else %}#ff5570{% endif %}"></div>
+                </div>
+                <form method="post" action="{% url 'creator_save_satisfaction' manager_id=manager.id sat_id=sat.id %}" style="display:inline-flex;gap:.4rem;align-items:center">
+                  {% csrf_token %}
+                  <input type="number" name="value" value="{{ sat.value }}" min="0" max="100" class="creator-inline-input" style="width:65px">
+                  <button type="submit" class="creator-btn-icon">✓</button>
+                </form>
+              </div>
+            </td>
+            <td style="color:#556677;font-size:.75rem">{{ sat.updated_at|date:"d.m.Y H:i" }}</td>
+            <td style="color:{% if sat.value >= 60 %}#30f29c{% elif sat.value >= 30 %}#ffd166{% else %}#ff5570{% endif %};font-weight:700">
+              {{ sat.value }} %
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="creator-empty">Noch keine Präsident-Einträge für diesen Manager.</p>
+      {% endif %}
+
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">Eintrag erstellen</h3>
+        <form method="post" action="{% url 'creator_add_satisfaction' manager_id=manager.id %}">
+          {% csrf_token %}
+          <div class="creator-inline-fields">
+            <div class="creator-field" style="flex:1">
+              <label>Verein</label>
+              <select name="club_id" required>
+                <option value="">— Verein wählen —</option>
+                {% for c in all_clubs %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Wert (0–100)</label>
+              <input type="number" name="value" value="100" min="0" max="100" style="width:80px">
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-primary">+ Erstellen</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</section>
+
+<style>
+.creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.creator-back { color: #00d4ff88; text-decoration: none; font-size: .8rem; letter-spacing: .04em; display: inline-block; margin-bottom: 1rem; }
+.creator-back:hover { color: #00d4ff; }
+.creator-club-topbar { margin-bottom: 1rem; }
+.creator-club-identity { display: flex; align-items: center; gap: 1rem; }
+.creator-club-title { color: #fff; font-size: 1.6rem; margin: 0 0 .2rem; }
+.creator-meta { color: #556677; font-size: .8rem; }
+
+.creator-manager-avatar { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; border: 2px solid #00d4ff33; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #071525; }
+.creator-manager-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.creator-avatar-placeholder { color: #00d4ff; font-size: 1.4rem; font-weight: 800; }
+
+.creator-messages { margin-bottom: 1rem; }
+.creator-msg { padding: .6rem 1rem; border-radius: 6px; font-size: .85rem; margin-bottom: .4rem; }
+.creator-msg-success { background: #00d4ff15; border: 1px solid #00d4ff44; color: #00d4ff; }
+.creator-msg-error { background: #ff334415; border: 1px solid #ff334444; color: #ff8899; }
+
+.creator-tabs { display: flex; gap: .25rem; margin-bottom: 1.25rem; border-bottom: 1px solid #0d2035; }
+.creator-tab { display: inline-flex; align-items: center; gap: .35rem; padding: .5rem 1rem; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; text-decoration: none; color: #556677; border-radius: 6px 6px 0 0; border: 1px solid transparent; border-bottom: none; transition: color .15s, background .15s; }
+.creator-tab:hover { color: #aabbcc; }
+.creator-tab.active { color: #00d4ff; background: #071525; border-color: #0d2035; border-bottom-color: #071525; margin-bottom: -1px; }
+.creator-tab-badge { background: #00d4ff22; color: #00d4ff88; font-size: .65rem; padding: .1rem .4rem; border-radius: 8px; font-weight: 800; }
+
+.creator-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; overflow: hidden; }
+.creator-card-full { grid-column: 1 / -1; }
+.creator-card-head { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
+.creator-card-head h2 { color: #00d4ff; font-size: .85rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: .06em; }
+.creator-card-body { padding: 1rem; }
+
+.creator-form-grid { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+.creator-field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.creator-field { display: flex; flex-direction: column; gap: .35rem; }
+.creator-field label { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.creator-field input, .creator-field select { background: #030a12; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .85rem; padding: .4rem .65rem; outline: none; width: 100%; box-sizing: border-box; }
+.creator-field input:focus, .creator-field select:focus { border-color: #00d4ff55; }
+.creator-field select option { background: #071525; }
+.creator-field-sm { min-width: 80px; }
+.creator-field-action { flex-shrink: 0; }
+.creator-stat-display { background: #030a12; border: 1px solid #0d2035; border-radius: 6px; padding: .4rem .65rem; }
+.creator-hint { color: #334455; font-size: .78rem; }
+.creator-form-actions { display: flex; justify-content: flex-end; padding-top: .5rem; }
+
+.creator-xp-bar { height: 6px; background: #0d2035; border-radius: 3px; overflow: hidden; margin-bottom: .4rem; }
+.creator-xp-fill { height: 100%; background: linear-gradient(90deg, #00d4ff, #0088ff); border-radius: 3px; }
+
+.creator-current-club { display: flex; align-items: center; justify-content: space-between; background: #071525; border: 1px solid #0d2035; border-radius: 8px; padding: .75rem 1rem; margin-bottom: 1rem; }
+.creator-current-club-info { display: flex; align-items: center; gap: .75rem; }
+.creator-club-crest-sm { width: 32px; height: 32px; object-fit: contain; }
+.creator-current-club-info strong { color: #cce8ff; font-size: .9rem; }
+
+.creator-sat-bar { width: 120px; height: 6px; background: #0d2035; border-radius: 3px; overflow: hidden; }
+.creator-sat-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+.creator-sub-section { border-top: 1px solid #0d2035; padding-top: 1rem; margin-top: .5rem; }
+.creator-sub-head { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .75rem; }
+.creator-inline-fields { display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap; }
+.creator-inline-input { background: #030a12; border: 1px solid #0d2035; border-radius: 5px; color: #cce8ff; font-size: .83rem; padding: .3rem .5rem; }
+
+.creator-btn { display: inline-block; padding: .4rem .9rem; border-radius: 6px; font-size: .78rem; font-weight: 700; text-decoration: none; letter-spacing: .04em; cursor: pointer; border: none; }
+.creator-btn-primary { background: #00d4ff22; border: 1px solid #00d4ff55 !important; color: #00d4ff; }
+.creator-btn-primary:hover { background: #00d4ff33; }
+.creator-btn-danger { background: #ff334415; border: 1px solid #ff334444 !important; color: #ff8899; }
+.creator-btn-danger:hover { background: #ff334430; }
+.creator-btn-icon { background: #071d30; border: 1px solid #00d4ff33; border-radius: 5px; color: #00d4ff; cursor: pointer; font-size: .8rem; padding: .25rem .5rem; }
+.creator-btn-danger-sm { background: #ff334415; border: 1px solid #ff334433; border-radius: 5px; color: #ff8899; cursor: pointer; font-size: .75rem; padding: .25rem .5rem; }
+
+.creator-empty { color: #334455; font-size: .85rem; padding: .5rem 0; }
+.creator-empty-row { color: #334455; text-align: center; padding: 2rem !important; }
+.creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
+
+.creator-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.creator-table thead th { color: #556677; font-weight: 600; text-transform: uppercase; font-size: .7rem; letter-spacing: .06em; border-bottom: 1px solid #0d2035; padding: .5rem .75rem; text-align: left; }
+.creator-table tbody td { padding: .55rem .75rem; border-bottom: 1px solid #071525; color: #aabbcc; vertical-align: middle; }
+.creator-table tbody tr:hover td { background: #071525; }
+.creator-position-badge { background: #071d30; border: 1px solid #00d4ff22; color: #00d4ff88; padding: .15rem .4rem; border-radius: 4px; font-size: .72rem; font-weight: 700; }
+</style>
+{% endblock %}
