@@ -9,3 +9,4 @@
 - [Asset-ID-System (fm_inside_id)](asset-id-system.md) — all club/player images keyed by fm_inside_id (not Django PK); canonical paths + known IDs for Bayern(915), BVB(907), Kane(28049320).
 - [Economy / Balancing design principles](economy-design-principles.md) — checklist for any money-touching feature; salary > transfer fee long-term; hard no-gos to prevent inflation/exploit loops.
 - [Design system tokens & rules](design-tokens.md) — canonical CSS custom properties (--cyan, --green etc.) and visual rules; cyan=functional, green=fitness, no bright backgrounds, no nested cards.
+- [Manager Career History Table](manager-career-table.md) — Club.managed_by (OneToOneField) is the live-pointer; ManagerCareerEntry is planned additive history layer for entlassungen/rücktritte/hall-of-fame.
