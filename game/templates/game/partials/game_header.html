@@ -19,7 +19,7 @@
                         <strong>{{ day.day_number }}</strong>
                     </div>
 
-                    {% if current_manager.club and forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">J</span>{% endif %}
+                    {% if current_manager.club and forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">U21</span>{% endif %}
                     {% if day.fixture %}
                         <div class="ws-fixture-card"{% if day.fixture.stadium %} style="--fixture-stadium: url('{% static day.fixture.stadium %}');"{% endif %}>
                             <div class="ws-fixture-crests">
