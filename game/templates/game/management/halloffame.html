@@ -5,7 +5,7 @@
 {% block body_class %}halloffame-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -13,6 +13,14 @@
 
     <div class="hof-bg-wrap">
         <img src="{% static 'game/images/backgrounds/halloffame-bg.jpg' %}" alt="" class="hof-bg-img">
+
+        {% if longest_manager %}
+        <div class="hof-longest-card">
+            <div class="hof-lc-label">Dienstältester Manager</div>
+            <div class="hof-lc-name">{{ longest_manager.name }} <span class="hof-lc-days">({{ longest_manager.days }} Tag{{ longest_manager.days|pluralize:"e" }})</span></div>
+            <div class="hof-lc-dates">{{ longest_manager.started }} – {{ longest_manager.ended }}{% if longest_manager.active %} <span class="hof-lc-active">●</span>{% endif %}</div>
+        </div>
+        {% endif %}
     </div>
 
 </div>

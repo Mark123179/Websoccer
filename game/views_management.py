@@ -981,7 +981,39 @@ def management_finanzen(request):
 
 @login_required(login_url='/auth/login/')
 def management_halloffame(request):
+    from datetime import date
+    from .models import ManagerCareerStation
+
     club = current_manager_club(user=request.user)
+
+    # ── Längster Manager dieses Vereins ──────────────────────────────
+    longest_manager = None
+    if club:
+        stations = (
+            ManagerCareerStation.objects
+            .filter(club=club)
+            .select_related('manager')
+        )
+        today = date.today()
+        best = None
+        best_days = -1
+        for s in stations:
+            if not s.started_at:
+                continue
+            end = s.ended_at if s.ended_at else today
+            days = (end - s.started_at).days
+            if days > best_days:
+                best_days = days
+                best = s
+        if best:
+            end_date = best.ended_at if best.ended_at else today
+            longest_manager = {
+                'name': best.manager.name,
+                'days': best_days,
+                'started': best.started_at.strftime('%d.%m.%Y'),
+                'ended': end_date.strftime('%d.%m.%Y'),
+                'active': best.ended_at is None,
+            }
 
     dummy_legends = [
         {'name': 'Michael Sternberg', 'number': 10, 'position': 'Stürmer',
@@ -1002,6 +1034,7 @@ def management_halloffame(request):
 
     context = {
         'club': club,
+        'longest_manager': longest_manager,
         'legends': dummy_legends,
         'featured': dummy_legends[0],
         'records': {

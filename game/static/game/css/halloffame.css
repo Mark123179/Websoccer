@@ -1,8 +1,9 @@
 /* ════════════════════════════════════════════════════════════════
-   HALL OF FAME  –  halloffame.css  v6
+   HALL OF FAME  –  halloffame.css  v7
    ════════════════════════════════════════════════════════════════ */
 
 .hof-bg-wrap {
+    position: relative;
     width: 100%;
     border-radius: 0 0 10px 10px;
     overflow: hidden;
@@ -14,4 +15,50 @@
     width: 100%;
     height: auto;
     display: block;
+}
+
+/* ── Dienstältester Manager Card ────────────────────────────── */
+.hof-longest-card {
+    position: absolute;
+    bottom: 32px;
+    right: 36px;
+    background: rgba(10, 8, 4, 0.72);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    border-radius: 8px;
+    padding: 14px 20px;
+    backdrop-filter: blur(6px);
+    text-align: right;
+    line-height: 1.45;
+}
+
+.hof-lc-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.65);
+    margin-bottom: 4px;
+}
+
+.hof-lc-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #e8d78a;
+}
+
+.hof-lc-days {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(201, 168, 76, 0.70);
+}
+
+.hof-lc-dates {
+    font-size: 11px;
+    color: rgba(200, 190, 160, 0.65);
+    margin-top: 2px;
+}
+
+.hof-lc-active {
+    color: #5dba6a;
+    font-size: 9px;
+    vertical-align: middle;
 }
