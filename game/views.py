@@ -1748,7 +1748,7 @@ def home(request):
             },
         ],
         'city_static_path': city_static_path(primary_club),
-        'fan_percent': primary_club.fan_popularity,
+        'fan_percent': primary_club.fan_popularity if primary_club else 0,
         'form': [
             {'label': 'S', 'tone': 'win'},
             {'label': 'S', 'tone': 'win'},
