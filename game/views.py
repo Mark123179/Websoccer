@@ -1999,8 +1999,9 @@ def claim_club(request, club_id):
       Constraint (OneToOneField → UNIQUE auf managed_by_id) den zweiten ab und
       Django wirft einen IntegrityError, den wir sauber behandeln.
     """
+    import datetime
     from django.db import transaction, IntegrityError
-    from .models import PresidentSatisfaction, ManagerProfile as MP
+    from .models import PresidentSatisfaction, ManagerProfile as MP, ManagerCareerEntry
 
     try:
         with transaction.atomic():
@@ -2034,6 +2035,15 @@ def claim_club(request, club_id):
             club.managed_by = manager_profile
             club.save(update_fields=['managed_by'])
 
+            # 6. Karriereeintrag erstellen (Historienschicht).
+            ManagerCareerEntry.objects.create(
+                manager=manager_profile,
+                club=club,
+                started_at=datetime.date.today(),
+                active=True,
+            )
+
+            # 7. Präsident-Zufriedenheit: Neustart bei 100.
             PresidentSatisfaction.objects.get_or_create(
                 manager=manager_profile, club=club, defaults={'value': 100}
             )

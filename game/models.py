@@ -3024,3 +3024,66 @@ class ClubSponsor(models.Model):
 
     def __str__(self):
         return f'{self.club} — {self.get_sponsor_type_display()}: {self.name} ({self.amount_per_season:,.0f} €/Saison)'
+
+
+class ManagerCareerEntry(models.Model):
+    """Karriere-Historientabelle — eine Zeile pro Manager-Vereins-Amtszeit.
+
+    Club.managed_by bleibt der schnelle Live-Pointer (DB-UNIQUE-Constraint).
+    Diese Tabelle ist die Historienschicht darüber: Vereinswechsel, Entlassungen,
+    Rücktritte, Amtszeiten, Hall of Fame, Saisonstatistiken.
+
+    Ablauf:
+    - Übernahme  → neuer Eintrag (active=True, ended_at=None)
+    - Entlassung → ended_at setzen, end_reason='fired',  active=False
+    - Rücktritt  → ended_at setzen, end_reason='resign', active=False
+    - Saisonende → ended_at setzen, end_reason='season_end' (optional, wenn der
+                   Manager trotzdem weitermacht: kein neuer Eintrag nötig)
+    """
+
+    END_REASONS = [
+        ('resign',     'Rücktritt'),
+        ('fired',      'Entlassung'),
+        ('season_end', 'Saisonende'),
+        ('mutual',     'Einvernehmliche Trennung'),
+    ]
+
+    manager = models.ForeignKey(
+        'ManagerProfile',
+        on_delete=models.CASCADE,
+        related_name='career_entries',
+        verbose_name='Manager',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='manager_career_entries',
+        verbose_name='Verein',
+    )
+    started_at = models.DateField(verbose_name='Amtsantritt')
+    ended_at = models.DateField(null=True, blank=True, verbose_name='Amtsende')
+    end_reason = models.CharField(
+        max_length=20,
+        choices=END_REASONS,
+        null=True,
+        blank=True,
+        verbose_name='Abgangsgrund',
+    )
+    active = models.BooleanField(
+        default=True,
+        verbose_name='Aktiv',
+        help_text='Genau ein aktiver Eintrag pro Manager erlaubt (App-Ebene).',
+    )
+
+    class Meta:
+        ordering = ['-started_at']
+        verbose_name = 'Manager-Karriereeintrag'
+        verbose_name_plural = 'Manager-Karriereeinträge'
+        indexes = [
+            models.Index(fields=['manager', 'active'], name='mgr_career_active_idx'),
+            models.Index(fields=['club', 'active'],    name='mgr_career_club_idx'),
+        ]
+
+    def __str__(self):
+        end = self.ended_at.strftime('%d.%m.%Y') if self.ended_at else 'heute'
+        return f'{self.manager.name} @ {self.club.name} ({self.started_at:%d.%m.%Y} – {end})'
