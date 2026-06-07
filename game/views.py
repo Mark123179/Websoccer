@@ -1934,14 +1934,50 @@ def home(request):
 
 @login_required
 def club_list(request):
-    clubs = Club.objects.select_related('league').annotate(
-        player_count=Count('player'),
-        average_strength=Avg('player__strength_profile__final_strength'),
-    )
+    user_has_no_club = current_manager_club(user=request.user) is None
+
+    clubs_qs = Club.objects.select_related('league', 'managed_by').order_by('league__name', 'name')
+
+    if user_has_no_club:
+        # Group by league for the "Verein wählen" screen — no strength shown
+        from collections import defaultdict
+        league_map = defaultdict(list)
+        for c in clubs_qs:
+            is_free = c.managed_by_id is None
+            league_map[c.league].append({
+                'id': c.id,
+                'name': c.name,
+                'short_name': c.short_name,
+                'crest_static_path': c.crest_static_path,
+                'is_free': is_free,
+            })
+
+        leagues = []
+        for league, club_list_data in league_map.items():
+            free_count = sum(1 for cl in club_list_data if cl['is_free'])
+            leagues.append({
+                'name': league.name,
+                'country': league.country,
+                'logo': competition_logo_static_path(league.name),
+                'clubs': club_list_data,
+                'free_count': free_count,
+                'total_count': len(club_list_data),
+            })
+        leagues.sort(key=lambda l: l['name'])
+
+        return render(request, 'game/club_list.html', {
+            'user_has_no_club': True,
+            'leagues': leagues,
+            'game_header': build_game_header('Verein wählen', 'Starte deine Karriere', '/'),
+        })
+
+    # Manager WITH a club: normal overview (no strength shown either)
+    clubs = clubs_qs.annotate(player_count=Count('player'))
     return render(
         request,
         'game/club_list.html',
         {
+            'user_has_no_club': False,
             'clubs': clubs,
             'game_header': build_game_header(
                 'Vereinsübersicht',
@@ -1950,6 +1986,38 @@ def club_list(request):
             ),
         }
     )
+
+
+@require_POST
+@login_required
+def claim_club(request, club_id):
+    """Vereinsloser Manager nimmt einen freien Verein."""
+    manager_profile = getattr(request.user, 'manager_profile', None)
+    if not manager_profile:
+        messages.error(request, 'Kein Manager-Profil gefunden.')
+        return redirect('club_list')
+
+    # Already has a club?
+    if Club.objects.filter(managed_by=manager_profile).exists():
+        messages.error(request, 'Du verwaltest bereits einen Verein.')
+        return redirect('club_list')
+
+    club = get_object_or_404(Club, id=club_id)
+    if club.managed_by_id is not None:
+        messages.error(request, f'„{club.name}" hat bereits einen Manager.')
+        return redirect('club_list')
+
+    club.managed_by = manager_profile
+    club.save(update_fields=['managed_by'])
+
+    # Create a president satisfaction record (fresh start at 100)
+    from .models import PresidentSatisfaction
+    PresidentSatisfaction.objects.get_or_create(
+        manager=manager_profile, club=club, defaults={'value': 100}
+    )
+
+    messages.success(request, f'Willkommen bei {club.name}! Deine Karriere beginnt jetzt.')
+    return redirect('/')
 
 
 def tactic_redirect_url(club, squad_scope, **params):

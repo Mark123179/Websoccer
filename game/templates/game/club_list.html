@@ -1,122 +1,188 @@
 {% extends 'base.html' %}
-
 {% load humanize %}
 {% load static %}
 
-{% block title %}
-    Vereinsübersicht
-{% endblock %}
+{% block title %}{% if user_has_no_club %}Verein wählen{% else %}Vereinsübersicht{% endif %}{% endblock %}
 
 {% block content %}
 
-<section class="list-dashboard">
+{% if user_has_no_club %}
+{# ═══════════════════════════════════════════════════════════════════════════
+   VEREINSLOSER MANAGER: Liga-Übersicht mit freien Vereinen
+═══════════════════════════════════════════════════════════════════════════ #}
 
-    <div class="clubs-kpi-grid">
-        <article class="dashboard-card kpi-card">
-            <span>Vereine</span>
-            <strong>{{ clubs|length }}</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Wettbewerb</span>
-            <strong>1. Bundesliga</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Datenstand</span>
-            <strong>1. Mannschaft</strong>
-        </article>
-        <article class="dashboard-card kpi-card">
-            <span>Nächster Fokus</span>
-            <strong>Stärke & Balance</strong>
-        </article>
+<section class="cv-section">
+
+  <div class="cv-header">
+    <div class="cv-header-text">
+      <h1 class="cv-title">Verein auswählen</h1>
+      <p class="cv-subtitle">Wähle einen freien Verein, um deine Trainerkarriere zu starten.</p>
+    </div>
+    <div class="cv-header-stats">
+      {% for lg in leagues %}
+        {% if lg.free_count > 0 %}
+        <div class="cv-stat">
+          <strong>{{ lg.free_count }}</strong>
+          <span>frei in {{ lg.name }}</span>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  {% for lg in leagues %}
+  <div class="cv-league-block">
+
+    <div class="cv-league-header">
+      <div class="cv-league-identity">
+        {% if lg.logo %}
+          <img class="cv-league-logo" src="{% static lg.logo %}" alt="{{ lg.name }}">
+        {% else %}
+          <div class="cv-league-logo-placeholder">🏆</div>
+        {% endif %}
+        <div>
+          <div class="cv-league-name">{{ lg.name }}</div>
+          <div class="cv-league-country">{{ lg.country }}</div>
+        </div>
+      </div>
+      <div class="cv-league-free-pill {% if lg.free_count == 0 %}cv-pill-full{% endif %}">
+        {% if lg.free_count > 0 %}
+          {{ lg.free_count }} von {{ lg.total_count }} frei
+        {% else %}
+          Alle besetzt
+        {% endif %}
+      </div>
     </div>
 
-    <div class="clubs-layout-grid">
+    <div class="cv-clubs-grid">
+      {% for club in lg.clubs %}
+      <div class="cv-club-card {% if not club.is_free %}cv-club-card--taken{% endif %}">
+        <div class="cv-club-crest">
+          {% if club.crest_static_path %}
+            <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+          {% else %}
+            <div class="cv-crest-placeholder">{{ club.short_name|slice:":2" }}</div>
+          {% endif %}
+        </div>
+        <div class="cv-club-info">
+          <strong>{{ club.name }}</strong>
+          <span>{{ club.short_name }}</span>
+        </div>
+        <div class="cv-club-action">
+          {% if club.is_free %}
+          <form method="post" action="{% url 'claim_club' club_id=club.id %}" onsubmit="return confirm('„{{ club.name }}" übernehmen?')">
+            {% csrf_token %}
+            <button type="submit" class="cv-btn-claim">Übernehmen</button>
+          </form>
+          {% else %}
+          <span class="cv-taken-badge">Besetzt</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+  {% empty %}
+  <div class="cv-empty">Keine Vereine vorhanden.</div>
+  {% endfor %}
+
+</section>
+
+<style>
+.cv-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+.cv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; padding: 1.5rem 2rem; background: linear-gradient(135deg, #0a1628 0%, #03070c 100%); border: 1px solid #00d4ff22; border-radius: 12px; }
+.cv-title { color: #fff; font-size: 1.7rem; margin: 0 0 .3rem; }
+.cv-subtitle { color: #00d4ff88; font-size: .87rem; margin: 0; }
+.cv-header-stats { display: flex; gap: 2rem; }
+.cv-stat { text-align: center; }
+.cv-stat strong { display: block; font-size: 1.8rem; font-weight: 800; color: #30f29c; }
+.cv-stat span { color: #8899aa; font-size: .75rem; }
+
+.cv-league-block { margin-bottom: 2rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 12px; overflow: hidden; }
+.cv-league-header { display: flex; align-items: center; justify-content: space-between; padding: .9rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
+.cv-league-identity { display: flex; align-items: center; gap: .85rem; }
+.cv-league-logo { width: 40px; height: 40px; object-fit: contain; }
+.cv-league-logo-placeholder { font-size: 1.5rem; width: 40px; text-align: center; }
+.cv-league-name { color: #cce8ff; font-weight: 700; font-size: .95rem; }
+.cv-league-country { color: #556677; font-size: .75rem; margin-top: .1rem; }
+.cv-league-free-pill { background: #30f29c22; border: 1px solid #30f29c55; color: #30f29c; font-size: .72rem; font-weight: 700; padding: .3rem .75rem; border-radius: 20px; }
+.cv-pill-full { background: #33445522; border-color: #33445566; color: #556677; }
+
+.cv-clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .6rem; padding: .85rem; }
+.cv-club-card { display: flex; align-items: center; gap: .85rem; background: #071525; border: 1px solid #0d2035; border-radius: 9px; padding: .75rem 1rem; transition: border-color .15s; }
+.cv-club-card--taken { opacity: .55; }
+.cv-club-card:not(.cv-club-card--taken):hover { border-color: #30f29c44; }
+.cv-club-crest { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cv-club-crest img { width: 40px; height: 40px; object-fit: contain; }
+.cv-crest-placeholder { width: 40px; height: 40px; background: #0d2035; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #556677; font-size: .7rem; font-weight: 700; }
+.cv-club-info { flex: 1; min-width: 0; }
+.cv-club-info strong { display: block; color: #cce8ff; font-size: .85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cv-club-info span { color: #556677; font-size: .72rem; }
+.cv-club-action { flex-shrink: 0; }
+.cv-btn-claim { background: #30f29c22; border: 1px solid #30f29c55; color: #30f29c; font-size: .75rem; font-weight: 700; padding: .35rem .8rem; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: background .15s; }
+.cv-btn-claim:hover { background: #30f29c33; }
+.cv-taken-badge { background: #0d2035; color: #334455; font-size: .72rem; font-weight: 700; padding: .35rem .7rem; border-radius: 6px; display: inline-block; }
+.cv-empty { color: #334455; text-align: center; padding: 3rem; }
+</style>
+
+{% else %}
+{# ═══════════════════════════════════════════════════════════════════════════
+   MANAGER MIT VEREIN: Standard-Vereinsübersicht (ohne Stärke)
+═══════════════════════════════════════════════════════════════════════════ #}
+
+<section class="list-dashboard">
+    <div class="clubs-layout-grid" style="grid-template-columns:1fr">
         <article class="dashboard-card clubs-table-card">
             <div class="section-head">
-                <h2 class="card-title">Clubdatenbank</h2>
-                <a href="/admin/game/club/">Admin</a>
+                <h2 class="card-title">Vereinsdatenbank</h2>
             </div>
-
-            <p class="page-intro">
-                Diese Ansicht ist der schnelle Einstieg in die aktiven Vereine.
-                Wappen, Liga, Kadergröße, Ø Stärke und Budget sollen später die
-                Grundlage für freie Vereine, Managerwahl und Ligabalance bilden.
-            </p>
-
             <div class="table-wrap">
                 <table class="club-table">
                     <thead>
                         <tr>
                             <th>Verein</th>
-                            <th>Kurzname</th>
                             <th>Liga</th>
                             <th>Spieler</th>
-                            <th>Ø Stärke</th>
                             <th>Budget</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         {% for club in clubs %}
-                            <tr>
-                                <td>
-                                    <span class="club-name-cell">
-                                        {% if club.crest_static_path %}
-                                            <a class="img-link" href="/clubs/{{ club.id }}/" aria-label="{{ club.name }} Vereinsprofil">
-                                                <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
-                                            </a>
-                                        {% endif %}
-                                        <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
-                                    </span>
-                                </td>
-                                <td>{{ club.short_name }}</td>
-                                <td>{{ club.league.name }}</td>
-                                <td>{{ club.player_count }}</td>
-                                <td>
-                                    {% if club.average_strength %}
-                                        {{ club.average_strength|floatformat:1 }}
-                                    {% else %}
-                                        -
+                        <tr>
+                            <td>
+                                <span class="club-name-cell">
+                                    {% if club.crest_static_path %}
+                                        <a class="img-link" href="/clubs/{{ club.id }}/" aria-label="{{ club.name }}">
+                                            <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                                        </a>
                                     {% endif %}
-                                </td>
-                                <td>{{ club.budget|floatformat:0|intcomma }} €</td>
-                            </tr>
+                                    <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>
+                                </span>
+                            </td>
+                            <td>{{ club.league.name }}</td>
+                            <td>{{ club.player_count }}</td>
+                            <td>{{ club.budget|floatformat:0|intcomma }} €</td>
+                            <td>
+                                {% if club.managed_by %}
+                                  <span style="color:#556677;font-size:.75rem">{{ club.managed_by.name }}</span>
+                                {% else %}
+                                  <span style="color:#30f29c;font-size:.75rem;font-weight:700">Frei</span>
+                                {% endif %}
+                            </td>
+                        </tr>
                         {% empty %}
-                            <tr>
-                                <td colspan="6">Noch keine Vereine vorhanden.</td>
-                            </tr>
+                        <tr><td colspan="5" style="text-align:center;color:#556677">Keine Vereine.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </article>
-
-        <aside class="dashboard-card clubs-radar-card">
-            <h2 class="card-title">Manager-Fokus</h2>
-            <div class="club-radar-list">
-                {% for club in clubs %}
-                    <a class="club-radar-item" href="/clubs/{{ club.id }}/">
-                        {% if club.crest_static_path %}
-                            <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
-                        {% endif %}
-                        <span>
-                            <strong>{{ club.name }}</strong>
-                            <span>{{ club.league.name }} · {{ club.player_count }} Spieler</span>
-                        </span>
-                        <em class="value-pill">
-                            {% if club.average_strength %}
-                                {{ club.average_strength|floatformat:1 }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </em>
-                    </a>
-                {% empty %}
-                    <p class="muted">Noch keine Vereine vorhanden.</p>
-                {% endfor %}
-            </div>
-        </aside>
     </div>
 </section>
+
+{% endif %}
 
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import (
+    claim_club,
     club_detail,
     club_list,
     club_match_preview,
@@ -83,6 +84,12 @@ urlpatterns = [
         'clubs/',
         club_list,
         name='club_list'
+    ),
+
+    path(
+        'clubs/<int:club_id>/claim/',
+        claim_club,
+        name='claim_club'
     ),
 
     path(
