@@ -48,77 +48,45 @@
         </div>
 
         <div class="hof-kpi hof-kpi--4">
-            <div class="hof-kpi-label">Vereinstitel</div>
-            <div class="hof-kpi-value hof-kpi-value--big">{{ total_titles }}</div>
-            <div class="hof-kpi-sub">Gewonnene Titel</div>
-        </div>
-
-        <div class="hof-kpi hof-kpi--5">
-            <div class="hof-kpi-label">Größter Transfer</div>
-            {% if biggest_transfer %}
-            <div class="hof-kpi-value">{{ biggest_transfer.name }}</div>
-            <div class="hof-kpi-sub">{{ biggest_transfer.value }}</div>
+            <div class="hof-kpi-label">Vereinsältester</div>
+            {% if longest_serving_player %}
+            <div class="hof-kpi-value">{{ longest_serving_player.name }}</div>
+            <div class="hof-kpi-sub">{{ longest_serving_player.value }} Saisons</div>
             {% else %}
             <div class="hof-kpi-value">–</div>
             {% endif %}
         </div>
 
-        {# ── Große Bildkacheln (6) – nur Kategoriebezeichnung oben ─ #}
-        <div class="hof-lc hof-lc--1"><span class="hof-lc-tag">Vereinslegenden</span></div>
-        <div class="hof-lc hof-lc--2"><span class="hof-lc-tag">Trainer</span></div>
-        <div class="hof-lc hof-lc--3"><span class="hof-lc-tag">Mannschaft</span></div>
-        <div class="hof-lc hof-lc--4"><span class="hof-lc-tag">Statistiken</span></div>
-        <div class="hof-lc hof-lc--5"><span class="hof-lc-tag">Pokale</span></div>
-        <div class="hof-lc hof-lc--6"><span class="hof-lc-tag">International</span></div>
-
-        {# ── Legende-Reihe: Portrait + 5 Rekord-Kacheln ───────────── #}
-        <div class="hof-leg hof-leg--portrait">
-            <div class="hof-leg-label">Vereins&shy;legende</div>
-            {% if longest_manager %}
-            <div class="hof-leg-name">{{ longest_manager.name }}</div>
-            <div class="hof-leg-detail">{{ longest_manager.days }} Tag{{ longest_manager.days|pluralize:"e" }} im Amt</div>
+        <div class="hof-kpi hof-kpi--5">
+            <div class="hof-kpi-label">Teuerster Transfer</div>
+            {% if most_expensive_transfer %}
+            <div class="hof-kpi-value">{{ most_expensive_transfer.name }}</div>
+            <div class="hof-kpi-sub">{{ most_expensive_transfer.value }}</div>
+            {% else %}
+            <div class="hof-kpi-value">–</div>
             {% endif %}
         </div>
 
-        <div class="hof-leg hof-leg--s1">
-            <div class="hof-leg-label">Tore</div>
-            {% if top_scorer %}
-            <div class="hof-leg-name">{{ top_scorer.value }}</div>
-            <div class="hof-leg-detail">{{ top_scorer.name }}</div>
-            {% else %}<div class="hof-leg-name">–</div>{% endif %}
+        {# ── Große Bildkacheln (6 Tiles) ────────────────────────── #}
+        {% for lc in legendary_coaches %}
+        <div class="hof-lc hof-lc--{{ forloop.counter }}">
+            {% if lc.image %}
+            <img src="{{ lc.image }}" alt="{{ lc.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">
+            {% endif %}
+            <div class="hof-lc-tag">{{ lc.name }}</div>
         </div>
+        {% endfor %}
 
-        <div class="hof-leg hof-leg--s2">
-            <div class="hof-leg-label">Einsätze</div>
-            {% if most_appearances %}
-            <div class="hof-leg-name">{{ most_appearances.value }}</div>
-            <div class="hof-leg-detail">{{ most_appearances.name }}</div>
-            {% else %}<div class="hof-leg-name">–</div>{% endif %}
+        {# ── Legende-Reihe ───────────────────────────────────────── #}
+        {% for leg in legends %}
+        <div class="hof-leg {% if forloop.first %}hof-leg--portrait{% else %}hof-leg--s{{ forloop.counter|add:"-1" }}{% endif %}">
+            <div class="hof-leg-label">{{ leg.label }}</div>
+            <div class="hof-leg-name {% if leg.name|length > 12 %}hof-leg-name--sm{% endif %}">{{ leg.name }}</div>
+            {% if leg.detail %}<div class="hof-leg-detail">{{ leg.detail }}</div>{% endif %}
         </div>
+        {% endfor %}
 
-        <div class="hof-leg hof-leg--s3">
-            <div class="hof-leg-label">Vorlagen</div>
-            {% if most_assists %}
-            <div class="hof-leg-name">{{ most_assists.value }}</div>
-            <div class="hof-leg-detail">{{ most_assists.name }}</div>
-            {% else %}<div class="hof-leg-name">–</div>{% endif %}
-        </div>
-
-        <div class="hof-leg hof-leg--s4">
-            <div class="hof-leg-label">Titel</div>
-            <div class="hof-leg-name">{{ total_titles }}</div>
-            <div class="hof-leg-detail">Gewonnene Pokale</div>
-        </div>
-
-        <div class="hof-leg hof-leg--s5">
-            <div class="hof-leg-label">Rekordtransfer</div>
-            {% if biggest_transfer %}
-            <div class="hof-leg-name hof-leg-name--sm">{{ biggest_transfer.value }}</div>
-            <div class="hof-leg-detail">{{ biggest_transfer.name }}</div>
-            {% else %}<div class="hof-leg-name">–</div>{% endif %}
-        </div>
-
-    </div>{# /hof-overlay #}
-</div>{# /hof-bg-wrap #}
-</div>{# /dashboard-artboard #}
+    </div>
+</div>
+</div>
 {% endblock %}
