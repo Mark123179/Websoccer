@@ -1991,30 +1991,52 @@ def club_list(request):
 @require_POST
 @login_required
 def claim_club(request, club_id):
-    """Vereinsloser Manager nimmt einen freien Verein."""
+    """Vereinsloser Manager nimmt einen freien Verein.
+
+    Race-Condition-Schutz:
+    - select_for_update() sperrt die Club-Zeile für die Dauer der Transaktion.
+    - Falls doch zwei Requests gleichzeitig durchkommen, fängt der DB-UNIQUE-
+      Constraint (OneToOneField → UNIQUE auf managed_by_id) den zweiten ab und
+      Django wirft einen IntegrityError, den wir sauber behandeln.
+    """
+    from django.db import transaction, IntegrityError
+    from .models import PresidentSatisfaction
+
     manager_profile = getattr(request.user, 'manager_profile', None)
     if not manager_profile:
         messages.error(request, 'Kein Manager-Profil gefunden.')
         return redirect('club_list')
 
-    # Already has a club?
-    if Club.objects.filter(managed_by=manager_profile).exists():
-        messages.error(request, 'Du verwaltest bereits einen Verein.')
+    try:
+        with transaction.atomic():
+            # Sperrt die Club-Zeile exklusiv — kein zweiter Request kann
+            # gleichzeitig denselben Verein übernehmen.
+            club = Club.objects.select_for_update().get(id=club_id)
+
+            # Doppelt geprüft innerhalb der Transaktion:
+            if Club.objects.filter(managed_by=manager_profile).exists():
+                messages.error(request, 'Du verwaltest bereits einen Verein.')
+                return redirect('club_list')
+
+            if club.managed_by_id is not None:
+                messages.error(request, f'„{club.name}" hat bereits einen Manager.')
+                return redirect('club_list')
+
+            club.managed_by = manager_profile
+            club.save(update_fields=['managed_by'])
+
+            PresidentSatisfaction.objects.get_or_create(
+                manager=manager_profile, club=club, defaults={'value': 100}
+            )
+
+    except Club.DoesNotExist:
+        messages.error(request, 'Verein nicht gefunden.')
         return redirect('club_list')
-
-    club = get_object_or_404(Club, id=club_id)
-    if club.managed_by_id is not None:
-        messages.error(request, f'„{club.name}" hat bereits einen Manager.')
+    except IntegrityError:
+        # DB-UNIQUE-Constraint hat zugeschlagen — ein anderer Request war
+        # schneller oder der Manager hat bereits einen Verein.
+        messages.error(request, 'Dieser Verein wurde gerade von jemand anderem übernommen.')
         return redirect('club_list')
-
-    club.managed_by = manager_profile
-    club.save(update_fields=['managed_by'])
-
-    # Create a president satisfaction record (fresh start at 100)
-    from .models import PresidentSatisfaction
-    PresidentSatisfaction.objects.get_or_create(
-        manager=manager_profile, club=club, defaults={'value': 100}
-    )
 
     messages.success(request, f'Willkommen bei {club.name}! Deine Karriere beginnt jetzt.')
     return redirect('/')
