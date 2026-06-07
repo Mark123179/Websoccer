@@ -4327,13 +4327,11 @@ def upload_profile_image(request):
     ext = ext_map.get(file.content_type, '.jpg')
 
     from django.conf import settings as _settings
+    from replit.object_storage import Client as _ObjClient
     rel_path = f'managers/{request.user.id}/avatar{ext}'
-    save_path = os.path.join(_settings.MEDIA_ROOT, rel_path)
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
-    with open(save_path, 'wb+') as dest:
-        for chunk in file.chunks():
-            dest.write(chunk)
+    data = b''.join(file.chunks())
+    _ObjClient().upload_from_bytes(rel_path, data)
 
     from .models import ManagerProfile
     profile, _ = ManagerProfile.objects.get_or_create(
@@ -4364,12 +4362,11 @@ def reset_profile_image(request):
 
     old_path = profile.profile_image or ''
     if old_path and not old_path.startswith('game/'):
-        full_path = os.path.join(_settings.MEDIA_ROOT, old_path)
-        if os.path.isfile(full_path):
-            try:
-                os.remove(full_path)
-            except OSError:
-                pass
+        try:
+            from replit.object_storage import Client as _ObjClient
+            _ObjClient().delete(old_path, ignore_not_found=True)
+        except Exception:
+            pass
 
     profile.profile_image = ''
     profile.save(update_fields=['profile_image'])

@@ -146,5 +146,14 @@ THOUSAND_SEPARATOR = '.'
 
 STATIC_URL = 'static/'
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "game.object_storage_backend.ReplitObjectStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
