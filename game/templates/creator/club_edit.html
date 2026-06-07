@@ -27,17 +27,25 @@
   </div>
   {% endif %}
 
-  <div class="creator-assets-grid">
+  <nav class="creator-tabs">
+    <a class="creator-tab {% if active_tab == 'bilder' %}active{% endif %}" href="?tab=bilder">Bilder</a>
+    <a class="creator-tab {% if active_tab == 'stammdaten' %}active{% endif %}" href="?tab=stammdaten">Stammdaten</a>
+    <a class="creator-tab {% if active_tab == 'infrastruktur' %}active{% endif %}" href="?tab=infrastruktur">Infrastruktur</a>
+    <a class="creator-tab {% if active_tab == 'pokale' %}active{% endif %}" href="?tab=pokale">Pokale <span class="creator-tab-badge">{{ trophies|length }}</span></a>
+    <a class="creator-tab {% if active_tab == 'sponsoring' %}active{% endif %}" href="?tab=sponsoring">Sponsoring <span class="creator-tab-badge">{{ sponsors|length }}</span></a>
+    <a class="creator-tab {% if active_tab == 'saisonziele' %}active{% endif %}" href="?tab=saisonziele">Saisonziele</a>
+    <a class="creator-tab {% if active_tab == 'kader' %}active{% endif %}" href="?tab=kader">Kader <span class="creator-tab-badge">{{ players|length }}</span></a>
+  </nav>
 
+  <!-- ═══ TAB: BILDER ═══════════════════════════════════════════════════════ -->
+  {% if active_tab == 'bilder' %}
+  <div class="creator-assets-grid">
     <div class="creator-card">
       <div class="creator-card-head"><h2>Stadionbild</h2></div>
       <div class="creator-card-body">
         <div class="creator-image-preview creator-image-wide">
-          {% if stadium_path %}
-            <img src="{% static stadium_path %}" alt="Stadion">
-          {% else %}
-            <div class="creator-no-image">Kein Bild</div>
-          {% endif %}
+          {% if stadium_path %}<img src="{% static stadium_path %}" alt="Stadion">
+          {% else %}<div class="creator-no-image">Kein Bild</div>{% endif %}
         </div>
         <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_stadium' club_id=club.id %}">
           {% csrf_token %}
@@ -53,11 +61,8 @@
       <div class="creator-card-head"><h2>Citypic</h2></div>
       <div class="creator-card-body">
         <div class="creator-image-preview creator-image-wide">
-          {% if city_path %}
-            <img src="{% static city_path %}" alt="Stadt">
-          {% else %}
-            <div class="creator-no-image">Kein Bild</div>
-          {% endif %}
+          {% if city_path %}<img src="{% static city_path %}" alt="Stadt">
+          {% else %}<div class="creator-no-image">Kein Bild</div>{% endif %}
         </div>
         <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_city' club_id=club.id %}">
           {% csrf_token %}
@@ -76,11 +81,8 @@
         <div class="creator-kit-slot">
           <span class="creator-kit-label">{{ kit.label }}</span>
           <div class="creator-image-preview creator-image-kit">
-            {% if kit.path %}
-              <img src="{% static kit.path %}" alt="{{ kit.label }}">
-            {% else %}
-              <div class="creator-no-image">—</div>
-            {% endif %}
+            {% if kit.path %}<img src="{% static kit.path %}" alt="{{ kit.label }}">
+            {% else %}<div class="creator-no-image">—</div>{% endif %}
           </div>
           <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_kit' club_id=club.id kit_type=kit.type %}">
             {% csrf_token %}
@@ -93,9 +95,475 @@
         {% endfor %}
       </div>
     </div>
-
   </div>
+  {% endif %}
 
+  <!-- ═══ TAB: STAMMDATEN ════════════════════════════════════════════════════ -->
+  {% if active_tab == 'stammdaten' %}
+  <form method="post" action="{% url 'creator_save_stammdaten' club_id=club.id %}">
+    {% csrf_token %}
+    <div class="creator-form-grid">
+
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Vereinsbasisdaten</h2></div>
+        <div class="creator-card-body creator-field-grid">
+
+          <div class="creator-field">
+            <label>Name</label>
+            <input type="text" name="name" value="{{ club.name }}" required>
+          </div>
+          <div class="creator-field">
+            <label>Kurzname</label>
+            <input type="text" name="short_name" value="{{ club.short_name }}" maxlength="20">
+          </div>
+          <div class="creator-field">
+            <label>Gründungsjahr</label>
+            <input type="number" name="founded_year" value="{{ club.founded_year }}" min="1800" max="2100">
+          </div>
+          <div class="creator-field">
+            <label>Budget (€)</label>
+            <input type="text" name="budget" value="{{ club.budget }}">
+          </div>
+          <div class="creator-field">
+            <label>Fanbeliebtheit (1–100)</label>
+            <input type="number" name="fan_popularity" value="{{ club.fan_popularity }}" min="1" max="100">
+          </div>
+          <div class="creator-field">
+            <label>Liga</label>
+            <select name="league">
+              {% for league in all_leagues %}
+              <option value="{{ league.id }}" {% if league.id == club.league_id %}selected{% endif %}>
+                {{ league.name }} ({{ league.country }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Standort & Partnerverein</h2></div>
+        <div class="creator-card-body creator-field-grid">
+
+          <div class="creator-field">
+            <label>Stadt</label>
+            <input type="text" name="city_name" value="{{ profile.city_name }}">
+          </div>
+          <div class="creator-field">
+            <label>Land</label>
+            <input type="text" name="city_country" value="{{ profile.city_country }}">
+          </div>
+          <div class="creator-field">
+            <label>Breitengrad (Karte)</label>
+            <input type="text" name="map_lat" value="{{ profile.map_lat|default:'' }}">
+          </div>
+          <div class="creator-field">
+            <label>Längengrad (Karte)</label>
+            <input type="text" name="map_lng" value="{{ profile.map_lng|default:'' }}">
+          </div>
+          <div class="creator-field creator-field-wide">
+            <label>Partnerverein</label>
+            <select name="partner_club">
+              <option value="">— Kein Partnerverein —</option>
+              {% for c in all_clubs %}
+              <option value="{{ c.id }}" {% if profile.partner_club_id == c.id %}selected{% endif %}>
+                {{ c.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <div class="creator-form-actions">
+      <button type="submit" class="creator-btn creator-btn-primary">💾 Stammdaten speichern</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- ═══ TAB: INFRASTRUKTUR ═════════════════════════════════════════════════ -->
+  {% if active_tab == 'infrastruktur' %}
+  <form method="post" action="{% url 'creator_save_infrastruktur' club_id=club.id %}">
+    {% csrf_token %}
+    <div class="creator-form-grid">
+
+      {% if stadium %}
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Stadion</h2></div>
+        <div class="creator-card-body creator-field-grid">
+          <div class="creator-field">
+            <label>Stadionname</label>
+            <input type="text" name="stadium_name" value="{{ stadium.name }}">
+          </div>
+          <div class="creator-field">
+            <label>Stadt</label>
+            <input type="text" name="stadium_city" value="{{ stadium.city }}">
+          </div>
+          <div class="creator-field">
+            <label>Gesamtkapazität</label>
+            <div class="creator-stat-display">{{ stadium.capacity_total|default:"0" }}</div>
+          </div>
+          <div class="creator-field">
+            <label>Rasenqualität</label>
+            <div class="creator-stat-display">{{ stadium.lawn_quality }}/100</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Vereinsumfeld (Stufe 0–3)</h2></div>
+        <div class="creator-card-body creator-field-grid">
+
+          <div class="creator-field">
+            <label>🏫 NLZ (Nachwuchsleistungszentrum)</label>
+            <div class="creator-level-selector">
+              {% for i in "0123" %}
+              <label class="creator-level-btn">
+                <input type="radio" name="nlz_level" value="{{ forloop.counter0 }}" {% if stadium.nlz_level == forloop.counter0 %}checked{% endif %}>
+                <span>Stufe {{ forloop.counter0 }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="creator-field">
+            <label>🏥 Medizin & Reha</label>
+            <div class="creator-level-selector">
+              {% for i in "0123" %}
+              <label class="creator-level-btn">
+                <input type="radio" name="medizin_level" value="{{ forloop.counter0 }}" {% if stadium.medizin_level == forloop.counter0 %}checked{% endif %}>
+                <span>Stufe {{ forloop.counter0 }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="creator-field">
+            <label>⚽ Trainingsgelände</label>
+            <div class="creator-level-selector">
+              {% for i in "0123" %}
+              <label class="creator-level-btn">
+                <input type="radio" name="training_level" value="{{ forloop.counter0 }}" {% if stadium.training_level == forloop.counter0 %}checked{% endif %}>
+                <span>Stufe {{ forloop.counter0 }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="creator-field">
+            <label>🏢 Geschäftsstelle</label>
+            <div class="creator-level-selector">
+              {% for i in "0123" %}
+              <label class="creator-level-btn">
+                <input type="radio" name="office_level" value="{{ forloop.counter0 }}" {% if stadium.office_level == forloop.counter0 %}checked{% endif %}>
+                <span>Stufe {{ forloop.counter0 }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {% else %}
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Stadion</h2></div>
+        <div class="creator-card-body">
+          <p class="creator-empty">Noch kein Stadion für diesen Verein angelegt. Stadionname und -stadt eingeben um es zu erstellen:</p>
+          <div class="creator-field-grid" style="margin-top:1rem">
+            <div class="creator-field">
+              <label>Stadionname</label>
+              <input type="text" name="stadium_name" placeholder="z.B. Allianz Arena">
+            </div>
+            <div class="creator-field">
+              <label>Stadt</label>
+              <input type="text" name="stadium_city" placeholder="z.B. München">
+            </div>
+          </div>
+          <p class="creator-hint">Infrastruktur-Stufen können nach dem ersten Speichern gesetzt werden.</p>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+    <div class="creator-form-actions">
+      <button type="submit" class="creator-btn creator-btn-primary">💾 Infrastruktur speichern</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <!-- ═══ TAB: POKALE ════════════════════════════════════════════════════════ -->
+  {% if active_tab == 'pokale' %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Titel & Pokale <span class="creator-count-badge">{{ trophies|length }}</span></h2></div>
+    <div class="creator-card-body">
+      {% if trophies %}
+      <table class="creator-table" style="margin-bottom:1.5rem">
+        <thead>
+          <tr>
+            <th>Bild</th>
+            <th>Wettbewerb</th>
+            <th>Anzahl</th>
+            <th>Asset-ID</th>
+            <th>Reihenfolge</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in trophies %}
+          <tr>
+            <td>
+              {% if t.trophy_asset_id %}
+              <img src="{% static 'game/images/trophies/' %}{{ t.trophy_asset_id }}.png"
+                   onerror="this.style.display='none'"
+                   style="width:32px;height:32px;object-fit:contain">
+              {% else %}—{% endif %}
+            </td>
+            <td style="color:#cce8ff;font-weight:600">{{ t.competition_name }}</td>
+            <td>
+              <form method="post" action="{% url 'creator_edit_trophy' club_id=club.id trophy_id=t.id %}" style="display:inline-flex;align-items:center;gap:.5rem">
+                {% csrf_token %}
+                <input type="hidden" name="competition_name" value="{{ t.competition_name }}">
+                <input type="hidden" name="sort_order" value="{{ t.sort_order }}">
+                <input type="hidden" name="trophy_asset_id" value="{{ t.trophy_asset_id }}">
+                <input type="number" name="count" value="{{ t.count }}" min="1" style="width:60px" class="creator-inline-input">
+                <button type="submit" class="creator-btn-icon" title="Anzahl speichern">✓</button>
+              </form>
+            </td>
+            <td style="color:#556677;font-size:.75rem;font-family:monospace">{{ t.trophy_asset_id|default:"—" }}</td>
+            <td style="color:#556677">{{ t.sort_order }}</td>
+            <td>
+              <form method="post" action="{% url 'creator_delete_trophy' club_id=club.id trophy_id=t.id %}" onsubmit="return confirm('Titel entfernen?')">
+                {% csrf_token %}
+                <button type="submit" class="creator-btn-danger-sm">✕</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="creator-empty">Noch keine Titel eingetragen.</p>
+      {% endif %}
+
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">Pokal hinzufügen</h3>
+        <form method="post" action="{% url 'creator_add_trophy' club_id=club.id %}" class="creator-inline-form">
+          {% csrf_token %}
+          <div class="creator-inline-fields">
+            <div class="creator-field">
+              <label>Wettbewerb</label>
+              <input type="text" name="competition_name" placeholder="z.B. Bundesliga" list="comp-suggestions">
+              <datalist id="comp-suggestions">
+                <option value="Bundesliga">
+                <option value="DFB-Pokal">
+                <option value="Champions League">
+                <option value="Europa League">
+                <option value="DFL-Supercup">
+                <option value="Premier League">
+                <option value="FA Cup">
+                <option value="La Liga">
+                <option value="Serie A">
+                <option value="Ligue 1">
+                <option value="Eredivisie">
+                <option value="Klub-WM">
+              </datalist>
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Anzahl</label>
+              <input type="number" name="count" value="1" min="1" style="width:70px">
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Asset-ID (auto)</label>
+              <input type="text" name="trophy_asset_id" placeholder="leer = auto">
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Sortierung</label>
+              <input type="number" name="sort_order" value="0" style="width:70px">
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-primary">+ Hinzufügen</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══ TAB: SPONSORING ════════════════════════════════════════════════════ -->
+  {% if active_tab == 'sponsoring' %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Sponsoren <span class="creator-count-badge">{{ sponsors|length }}</span></h2></div>
+    <div class="creator-card-body">
+      {% if sponsors %}
+      <table class="creator-table" style="margin-bottom:1.5rem">
+        <thead>
+          <tr>
+            <th>Sponsor</th>
+            <th>Typ</th>
+            <th>Betrag / Saison</th>
+            <th>Saison</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sponsors %}
+          <tr>
+            <td style="color:#cce8ff;font-weight:600">{{ s.name }}</td>
+            <td><span class="creator-position-badge">{{ s.get_sponsor_type_display }}</span></td>
+            <td style="color:#ffd166">{{ s.amount_per_season|floatformat:0 }} €</td>
+            <td style="color:#556677">{{ s.season|default:"—" }}</td>
+            <td>
+              <form method="post" action="{% url 'creator_toggle_sponsor' club_id=club.id sponsor_id=s.id %}">
+                {% csrf_token %}
+                <button type="submit" class="creator-status-btn {% if s.is_active %}active{% endif %}">
+                  {% if s.is_active %}✓ Aktiv{% else %}✗ Inaktiv{% endif %}
+                </button>
+              </form>
+            </td>
+            <td>
+              <form method="post" action="{% url 'creator_delete_sponsor' club_id=club.id sponsor_id=s.id %}" onsubmit="return confirm('Sponsor entfernen?')">
+                {% csrf_token %}
+                <button type="submit" class="creator-btn-danger-sm">✕</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="creator-empty">Noch keine Sponsoren eingetragen.</p>
+      {% endif %}
+
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">Sponsor hinzufügen</h3>
+        <form method="post" action="{% url 'creator_add_sponsor' club_id=club.id %}" class="creator-inline-form">
+          {% csrf_token %}
+          <div class="creator-inline-fields">
+            <div class="creator-field">
+              <label>Sponsorname</label>
+              <input type="text" name="name" placeholder="z.B. Adidas" required>
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Typ</label>
+              <select name="sponsor_type">
+                {% for val, label in sponsor_type_choices %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Betrag / Saison (€)</label>
+              <input type="text" name="amount_per_season" placeholder="z.B. 5000000">
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Saison</label>
+              <input type="text" name="season" placeholder="z.B. 2025/26">
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-primary">+ Hinzufügen</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══ TAB: SAISONZIELE ═══════════════════════════════════════════════════ -->
+  {% if active_tab == 'saisonziele' %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Saisonziele</h2></div>
+    <div class="creator-card-body">
+      {% if goals %}
+      <table class="creator-table" style="margin-bottom:1.5rem">
+        <thead>
+          <tr>
+            <th>Saison</th>
+            <th>Ziel</th>
+            <th>Rang (bei Vergabe)</th>
+            <th>Max. Endplatz</th>
+            <th>Endplatz</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in goals %}
+          <tr>
+            <td style="color:#00d4ff;font-weight:700">{{ g.season_number }}</td>
+            <td style="color:#cce8ff">{{ g.goal_tier_label }}</td>
+            <td style="color:#556677">{{ g.rank_in_league }}</td>
+            <td style="color:#556677">{{ g.required_max_rank|default:"—" }}</td>
+            <td style="color:#556677">{{ g.final_rank|default:"—" }}</td>
+            <td>
+              {% if g.achieved is None %}
+                <span class="creator-status-pending">Ausstehend</span>
+              {% elif g.achieved %}
+                <span class="creator-status-ok">✓ Erfüllt</span>
+              {% else %}
+                <span class="creator-status-fail">✗ Verfehlt</span>
+              {% endif %}
+            </td>
+            <td>
+              <form method="post" action="{% url 'creator_delete_goal' club_id=club.id goal_id=g.id %}" onsubmit="return confirm('Saisonziel entfernen?')">
+                {% csrf_token %}
+                <button type="submit" class="creator-btn-danger-sm">✕</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="creator-empty">Noch keine Saisonziele gesetzt.</p>
+      {% endif %}
+
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">Saisonziel setzen</h3>
+        <form method="post" action="{% url 'creator_add_goal' club_id=club.id %}" class="creator-inline-form">
+          {% csrf_token %}
+          <div class="creator-inline-fields">
+            <div class="creator-field creator-field-sm">
+              <label>Saison-Nr.</label>
+              <input type="number" name="season_number" value="1" min="1" style="width:80px">
+            </div>
+            <div class="creator-field">
+              <label>Zielkategorie</label>
+              <select name="goal_tier">
+                {% for val, label in goal_tier_choices %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Kaderrang (Liga)</label>
+              <input type="number" name="rank_in_league" value="1" min="1" style="width:80px">
+            </div>
+            <div class="creator-field creator-field-sm">
+              <label>Max. Endplatz</label>
+              <input type="number" name="required_max_rank" value="0" min="0" style="width:80px">
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-primary">+ Setzen</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ═══ TAB: KADER ═════════════════════════════════════════════════════════ -->
+  {% if active_tab == 'kader' %}
   <div class="creator-card creator-players-card">
     <div class="creator-card-head">
       <h2>Kader <span class="creator-count-badge">{{ players|length }}</span></h2>
@@ -124,22 +592,16 @@
                 <div class="creator-portrait-placeholder">{{ player.first_name|first }}{{ player.last_name|first }}</div>
               {% endif %}
             </td>
-            <td class="creator-name-cell">
-              <strong>{{ player.last_name }}</strong>, {{ player.first_name }}
-            </td>
+            <td class="creator-name-cell"><strong>{{ player.last_name }}</strong>, {{ player.first_name }}</td>
             <td class="creator-id-cell">{{ player.fm_inside_id|default:"—" }}</td>
-            <td>
-              <span class="creator-position-badge">{{ player.main_position_1|default:"—" }}</span>
-            </td>
+            <td><span class="creator-position-badge">{{ player.main_position_1|default:"—" }}</span></td>
             <td>{{ player.age }}</td>
             <td>
               {% if player.strength_profile %}
                 {{ player.strength_profile.final_strength|floatformat:1 }}
               {% else %}—{% endif %}
             </td>
-            <td>
-              <a class="creator-edit-link" href="{% url 'creator_player_edit' player_id=player.id %}">Bearbeiten →</a>
-            </td>
+            <td><a class="creator-edit-link" href="{% url 'creator_player_edit' player_id=player.id %}">Bearbeiten →</a></td>
           </tr>
           {% empty %}
           <tr><td colspan="7" class="creator-empty-row">Noch keine Spieler vorhanden.</td></tr>
@@ -148,6 +610,7 @@
       </table>
     </div>
   </div>
+  {% endif %}
 
 </section>
 
@@ -155,7 +618,7 @@
 .creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
 .creator-back { color: #00d4ff88; text-decoration: none; font-size: .8rem; letter-spacing: .04em; display: inline-block; margin-bottom: 1rem; }
 .creator-back:hover { color: #00d4ff; }
-.creator-club-topbar { margin-bottom: 1.5rem; }
+.creator-club-topbar { margin-bottom: 1rem; }
 .creator-club-identity { display: flex; align-items: center; gap: 1rem; }
 .creator-club-crest-large { width: 56px; height: 56px; object-fit: contain; }
 .creator-club-title { color: #fff; font-size: 1.6rem; margin: 0 0 .2rem; }
@@ -166,33 +629,82 @@
 .creator-msg-success { background: #00d4ff15; border: 1px solid #00d4ff44; color: #00d4ff; }
 .creator-msg-error { background: #ff334415; border: 1px solid #ff334444; color: #ff8899; }
 
+/* ── Tabs ── */
+.creator-tabs { display: flex; gap: .25rem; margin-bottom: 1.25rem; border-bottom: 1px solid #0d2035; padding-bottom: 0; }
+.creator-tab { display: inline-flex; align-items: center; gap: .35rem; padding: .5rem 1rem; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; text-decoration: none; color: #556677; border-radius: 6px 6px 0 0; border: 1px solid transparent; border-bottom: none; transition: color .15s, background .15s; }
+.creator-tab:hover { color: #aabbcc; }
+.creator-tab.active { color: #00d4ff; background: #071525; border-color: #0d2035; border-bottom-color: #071525; margin-bottom: -1px; }
+.creator-tab-badge { background: #00d4ff22; color: #00d4ff88; font-size: .65rem; padding: .1rem .4rem; border-radius: 8px; font-weight: 800; }
+
+/* ── Cards ── */
 .creator-assets-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1rem; margin-bottom: 1rem; }
 .creator-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; overflow: hidden; }
+.creator-card-full { grid-column: 1 / -1; }
 .creator-card-head { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
 .creator-card-head h2 { color: #00d4ff; font-size: .85rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: .06em; }
 .creator-card-body { padding: 1rem; }
 
+/* ── Images ── */
 .creator-image-preview { border: 1px solid #0d2035; border-radius: 8px; overflow: hidden; margin-bottom: .75rem; display: flex; align-items: center; justify-content: center; background: #030a12; }
 .creator-image-wide { height: 160px; }
 .creator-image-kit { height: 120px; }
 .creator-image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .creator-no-image { color: #334455; font-size: .75rem; }
-
 .creator-upload-label { display: inline-flex; align-items: center; gap: .4rem; background: #071d30; border: 1px solid #00d4ff33; border-radius: 6px; padding: .4rem .85rem; cursor: pointer; color: #00d4ff; font-size: .78rem; font-weight: 600; transition: background .2s; }
 .creator-upload-label:hover { background: #00d4ff15; }
 .creator-upload-label input[type="file"] { display: none; }
 .creator-upload-small { padding: .35rem .6rem; }
-
 .creator-kits-row { display: flex; gap: 1rem; }
 .creator-kit-slot { flex: 1; text-align: center; }
 .creator-kit-label { display: block; color: #556677; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .4rem; }
 
-.creator-players-card { margin-top: 1rem; }
-.creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
-.creator-btn { display: inline-block; padding: .4rem .9rem; border-radius: 6px; font-size: .78rem; font-weight: 700; text-decoration: none; letter-spacing: .04em; }
-.creator-btn-primary { background: #00d4ff22; border: 1px solid #00d4ff55; color: #00d4ff; }
-.creator-btn-primary:hover { background: #00d4ff33; }
+/* ── Forms ── */
+.creator-form-grid { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem; }
+.creator-field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.creator-field { display: flex; flex-direction: column; gap: .35rem; }
+.creator-field-wide { grid-column: span 2; }
+.creator-field label { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.creator-field input, .creator-field select { background: #030a12; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .85rem; padding: .4rem .65rem; outline: none; width: 100%; box-sizing: border-box; }
+.creator-field input:focus, .creator-field select:focus { border-color: #00d4ff55; }
+.creator-field select option { background: #071525; }
+.creator-stat-display { background: #030a12; border: 1px solid #0d2035; border-radius: 6px; color: #00d4ff; font-size: .9rem; font-weight: 700; padding: .4rem .65rem; }
+.creator-hint { color: #334455; font-size: .78rem; margin-top: .5rem; }
+.creator-form-actions { display: flex; justify-content: flex-end; padding-top: .5rem; }
 
+/* ── Level Selector ── */
+.creator-level-selector { display: flex; gap: .5rem; }
+.creator-level-btn { cursor: pointer; }
+.creator-level-btn input[type="radio"] { display: none; }
+.creator-level-btn span { display: block; padding: .3rem .65rem; background: #030a12; border: 1px solid #0d2035; border-radius: 5px; color: #556677; font-size: .75rem; font-weight: 700; transition: all .15s; }
+.creator-level-btn input:checked + span { background: #071d30; border-color: #00d4ff55; color: #00d4ff; }
+.creator-level-btn:hover span { border-color: #00d4ff33; color: #aabbcc; }
+
+/* ── Inline forms (Pokale / Sponsoring add-row) ── */
+.creator-sub-section { border-top: 1px solid #0d2035; padding-top: 1rem; margin-top: .5rem; }
+.creator-sub-head { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .75rem; }
+.creator-inline-form { }
+.creator-inline-fields { display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap; }
+.creator-field-sm { min-width: 80px; }
+.creator-field-action { flex-shrink: 0; }
+.creator-inline-input { background: #030a12; border: 1px solid #0d2035; border-radius: 5px; color: #cce8ff; font-size: .83rem; padding: .3rem .5rem; width: 60px; }
+
+/* ── Buttons ── */
+.creator-btn { display: inline-block; padding: .4rem .9rem; border-radius: 6px; font-size: .78rem; font-weight: 700; text-decoration: none; letter-spacing: .04em; cursor: pointer; border: none; }
+.creator-btn-primary { background: #00d4ff22; border: 1px solid #00d4ff55 !important; color: #00d4ff; }
+.creator-btn-primary:hover { background: #00d4ff33; }
+.creator-btn-icon { background: #071d30; border: 1px solid #00d4ff33; border-radius: 5px; color: #00d4ff; cursor: pointer; font-size: .8rem; padding: .25rem .5rem; }
+.creator-btn-icon:hover { background: #00d4ff22; }
+.creator-btn-danger-sm { background: #ff334415; border: 1px solid #ff334433; border-radius: 5px; color: #ff8899; cursor: pointer; font-size: .75rem; padding: .25rem .5rem; }
+.creator-btn-danger-sm:hover { background: #ff334430; }
+.creator-status-btn { padding: .25rem .65rem; border-radius: 5px; font-size: .72rem; font-weight: 700; cursor: pointer; border: 1px solid #334455; background: #030a12; color: #556677; }
+.creator-status-btn.active { background: #00d4ff15; border-color: #00d4ff44; color: #00d4ff; }
+
+/* ── Status labels ── */
+.creator-status-pending { color: #556677; font-size: .78rem; }
+.creator-status-ok { color: #30f29c; font-size: .78rem; font-weight: 700; }
+.creator-status-fail { color: #ff5570; font-size: .78rem; font-weight: 700; }
+
+/* ── Table (shared) ── */
 .creator-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
 .creator-table thead th { color: #556677; font-weight: 600; text-transform: uppercase; font-size: .7rem; letter-spacing: .06em; border-bottom: 1px solid #0d2035; padding: .5rem .75rem; text-align: left; }
 .creator-table tbody td { padding: .55rem .75rem; border-bottom: 1px solid #071525; color: #aabbcc; vertical-align: middle; }
@@ -205,11 +717,15 @@
 .creator-position-badge { background: #071d30; border: 1px solid #00d4ff22; color: #00d4ff88; padding: .15rem .4rem; border-radius: 4px; font-size: .72rem; font-weight: 700; }
 .creator-edit-link { color: #00d4ff88; text-decoration: none; font-size: .75rem; }
 .creator-edit-link:hover { color: #00d4ff; }
+.creator-empty { color: #334455; font-size: .85rem; padding: .5rem 0; }
 .creator-empty-row { color: #334455; text-align: center; padding: 2rem !important; }
+.creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
+.creator-players-card { margin-top: 0; }
 
 @media (max-width: 900px) {
   .creator-assets-grid { grid-template-columns: 1fr 1fr; }
   .creator-card-kits { grid-column: 1 / -1; }
+  .creator-field-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
 {% endblock %}

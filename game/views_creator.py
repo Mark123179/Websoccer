@@ -7,7 +7,10 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import Club, COUNTRY_FLAG_ASSETS, League, Player
+from .models import (
+    Club, COUNTRY_FLAG_ASSETS, League, Player,
+    Stadium, ClubPublicProfile, ClubTrophy, ClubSponsor, SeasonGoal,
+)
 
 STATIC_BASE = 'game/static'
 POSITION_CHOICES = [
@@ -65,7 +68,6 @@ def creator_index(request):
 
 def creator_club_edit(request, club_id):
     club = get_object_or_404(Club, id=club_id)
-    ClubPublicProfile = apps.get_model('game', 'ClubPublicProfile')
     profile, _ = ClubPublicProfile.objects.get_or_create(club=club)
 
     players = Player.objects.filter(club=club).order_by('last_name', 'first_name')
@@ -84,6 +86,18 @@ def creator_club_edit(request, club_id):
     city_path = _static_file_path(profile.city_image_static_path) if profile.city_image_static_path else ''
     crest_path = club.crest_static_path
 
+    try:
+        stadium = club.stadium
+    except Stadium.DoesNotExist:
+        stadium = None
+
+    trophies = ClubTrophy.objects.filter(club=club).order_by('sort_order', 'competition_name')
+    sponsors = ClubSponsor.objects.filter(club=club).order_by('sponsor_type', 'name')
+    goals = SeasonGoal.objects.filter(club=club).order_by('-season_number')
+    all_clubs = Club.objects.exclude(id=club_id).order_by('name')
+
+    active_tab = request.GET.get('tab', 'bilder')
+
     return render(request, 'creator/club_edit.html', {
         'club': club,
         'profile': profile,
@@ -92,6 +106,15 @@ def creator_club_edit(request, club_id):
         'stadium_path': stadium_path,
         'city_path': city_path,
         'crest_path': crest_path,
+        'stadium': stadium,
+        'trophies': trophies,
+        'sponsors': sponsors,
+        'goals': goals,
+        'all_clubs': all_clubs,
+        'active_tab': active_tab,
+        'all_leagues': League.objects.order_by('name'),
+        'sponsor_type_choices': ClubSponsor.TYPE_CHOICES,
+        'goal_tier_choices': SeasonGoal.TIER_CHOICES,
     })
 
 
@@ -346,3 +369,288 @@ def creator_new_player(request, club_id):
         'nat2': '',
         'portrait_path': '',
     })
+
+
+def _redirect_tab(club_id, tab):
+    from django.urls import reverse
+    return redirect(reverse('creator_club_edit', args=[club_id]) + f'?tab={tab}')
+
+
+@require_POST
+def creator_save_stammdaten(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    profile, _ = ClubPublicProfile.objects.get_or_create(club=club)
+
+    club.name = request.POST.get('name', club.name).strip()
+    club.short_name = request.POST.get('short_name', club.short_name).strip()
+
+    founded = request.POST.get('founded_year', '').strip()
+    if founded:
+        try:
+            club.founded_year = int(founded)
+        except ValueError:
+            pass
+
+    budget_raw = request.POST.get('budget', '').strip().replace(',', '.')
+    if budget_raw:
+        try:
+            club.budget = Decimal(budget_raw)
+        except InvalidOperation:
+            pass
+
+    fan = request.POST.get('fan_popularity', '').strip()
+    if fan:
+        try:
+            club.fan_popularity = max(1, min(100, int(fan)))
+        except ValueError:
+            pass
+
+    league_id = request.POST.get('league', '').strip()
+    if league_id:
+        try:
+            club.league = League.objects.get(id=int(league_id))
+        except (League.DoesNotExist, ValueError):
+            pass
+
+    club.save()
+
+    profile.city_name = request.POST.get('city_name', '').strip()
+    profile.city_country = request.POST.get('city_country', '').strip()
+    lat = request.POST.get('map_lat', '').strip()
+    lng = request.POST.get('map_lng', '').strip()
+    try:
+        profile.map_lat = float(lat) if lat else None
+    except ValueError:
+        profile.map_lat = None
+    try:
+        profile.map_lng = float(lng) if lng else None
+    except ValueError:
+        profile.map_lng = None
+
+    partner_id = request.POST.get('partner_club', '').strip()
+    if partner_id:
+        try:
+            profile.partner_club = Club.objects.get(id=int(partner_id))
+        except (Club.DoesNotExist, ValueError):
+            profile.partner_club = None
+    else:
+        profile.partner_club = None
+
+    profile.save()
+    messages.success(request, 'Stammdaten gespeichert.')
+    return _redirect_tab(club_id, 'stammdaten')
+
+
+# ─── Club: Infrastruktur ──────────────────────────────────────────────────────
+
+@require_POST
+def creator_save_infrastruktur(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    try:
+        stadium = club.stadium
+    except Stadium.DoesNotExist:
+        stadium = Stadium(club=club, name=club.name, city='')
+
+    sname = request.POST.get('stadium_name', '').strip()
+    if sname:
+        stadium.name = sname
+    scity = request.POST.get('stadium_city', '').strip()
+    if scity:
+        stadium.city = scity
+
+    for field in ['nlz_level', 'medizin_level', 'training_level', 'office_level']:
+        val = request.POST.get(field, '').strip()
+        if val:
+            try:
+                setattr(stadium, field, max(0, min(3, int(val))))
+            except ValueError:
+                pass
+
+    stadium.save()
+    messages.success(request, 'Infrastruktur gespeichert.')
+    return _redirect_tab(club_id, 'infrastruktur')
+
+
+# ─── Club: Pokale ─────────────────────────────────────────────────────────────
+
+@require_POST
+def creator_add_trophy(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    comp = request.POST.get('competition_name', '').strip()
+    if not comp:
+        messages.error(request, 'Wettbewerbsname erforderlich.')
+        return _redirect_tab(club_id, 'pokale')
+
+    count_raw = request.POST.get('count', '1').strip()
+    try:
+        count = max(1, int(count_raw))
+    except ValueError:
+        count = 1
+
+    asset_id = request.POST.get('trophy_asset_id', '').strip()
+    if not asset_id:
+        asset_id = ClubTrophy.COMPETITION_DEFAULT_ASSETS.get(comp, '')
+
+    sort_raw = request.POST.get('sort_order', '0').strip()
+    try:
+        sort_order = int(sort_raw)
+    except ValueError:
+        sort_order = 0
+
+    ClubTrophy.objects.create(
+        club=club,
+        competition_name=comp,
+        count=count,
+        trophy_asset_id=asset_id,
+        sort_order=sort_order,
+    )
+    messages.success(request, f'Pokal "{comp}" hinzugefügt.')
+    return _redirect_tab(club_id, 'pokale')
+
+
+@require_POST
+def creator_delete_trophy(request, club_id, trophy_id):
+    club = get_object_or_404(Club, id=club_id)
+    trophy = get_object_or_404(ClubTrophy, id=trophy_id, club=club)
+    name = trophy.competition_name
+    trophy.delete()
+    messages.success(request, f'"{name}" entfernt.')
+    return _redirect_tab(club_id, 'pokale')
+
+
+@require_POST
+def creator_edit_trophy(request, club_id, trophy_id):
+    club = get_object_or_404(Club, id=club_id)
+    trophy = get_object_or_404(ClubTrophy, id=trophy_id, club=club)
+
+    comp = request.POST.get('competition_name', '').strip()
+    if comp:
+        trophy.competition_name = comp
+
+    count_raw = request.POST.get('count', '').strip()
+    if count_raw:
+        try:
+            trophy.count = max(1, int(count_raw))
+        except ValueError:
+            pass
+
+    asset_id = request.POST.get('trophy_asset_id', '').strip()
+    trophy.trophy_asset_id = asset_id
+
+    sort_raw = request.POST.get('sort_order', '').strip()
+    if sort_raw:
+        try:
+            trophy.sort_order = int(sort_raw)
+        except ValueError:
+            pass
+
+    trophy.save()
+    messages.success(request, f'"{trophy.competition_name}" aktualisiert.')
+    return _redirect_tab(club_id, 'pokale')
+
+
+# ─── Club: Sponsoring ─────────────────────────────────────────────────────────
+
+@require_POST
+def creator_add_sponsor(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    name = request.POST.get('name', '').strip()
+    sponsor_type = request.POST.get('sponsor_type', 'sonstig').strip()
+    amount_raw = request.POST.get('amount_per_season', '0').strip().replace(',', '.')
+    season = request.POST.get('season', '').strip()
+
+    if not name:
+        messages.error(request, 'Sponsorname erforderlich.')
+        return _redirect_tab(club_id, 'sponsoring')
+
+    try:
+        amount = Decimal(amount_raw)
+    except InvalidOperation:
+        amount = Decimal('0')
+
+    ClubSponsor.objects.create(
+        club=club,
+        name=name,
+        sponsor_type=sponsor_type,
+        amount_per_season=amount,
+        season=season,
+        is_active=True,
+    )
+    messages.success(request, f'Sponsor "{name}" hinzugefügt.')
+    return _redirect_tab(club_id, 'sponsoring')
+
+
+@require_POST
+def creator_delete_sponsor(request, club_id, sponsor_id):
+    club = get_object_or_404(Club, id=club_id)
+    sponsor = get_object_or_404(ClubSponsor, id=sponsor_id, club=club)
+    name = sponsor.name
+    sponsor.delete()
+    messages.success(request, f'Sponsor "{name}" entfernt.')
+    return _redirect_tab(club_id, 'sponsoring')
+
+
+@require_POST
+def creator_toggle_sponsor(request, club_id, sponsor_id):
+    club = get_object_or_404(Club, id=club_id)
+    sponsor = get_object_or_404(ClubSponsor, id=sponsor_id, club=club)
+    sponsor.is_active = not sponsor.is_active
+    sponsor.save(update_fields=['is_active'])
+    status = 'aktiviert' if sponsor.is_active else 'deaktiviert'
+    messages.success(request, f'Sponsor "{sponsor.name}" {status}.')
+    return _redirect_tab(club_id, 'sponsoring')
+
+
+# ─── Club: Saisonziele ────────────────────────────────────────────────────────
+
+@require_POST
+def creator_add_goal(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+
+    season_raw = request.POST.get('season_number', '1').strip()
+    goal_tier = request.POST.get('goal_tier', '').strip()
+    rank_raw = request.POST.get('rank_in_league', '1').strip()
+
+    if not goal_tier:
+        messages.error(request, 'Zielkategorie erforderlich.')
+        return _redirect_tab(club_id, 'saisonziele')
+
+    try:
+        season_number = int(season_raw)
+    except ValueError:
+        season_number = 1
+
+    try:
+        rank_in_league = int(rank_raw)
+    except ValueError:
+        rank_in_league = 1
+
+    if SeasonGoal.objects.filter(club=club, season_number=season_number).exists():
+        messages.error(request, f'Für Saison {season_number} existiert bereits ein Ziel.')
+        return _redirect_tab(club_id, 'saisonziele')
+
+    required_max = request.POST.get('required_max_rank', '').strip()
+    try:
+        req_rank = int(required_max)
+    except ValueError:
+        req_rank = 0
+
+    SeasonGoal.objects.create(
+        club=club,
+        season_number=season_number,
+        goal_tier=goal_tier,
+        rank_in_league=rank_in_league,
+        required_max_rank=req_rank,
+    )
+    messages.success(request, f'Saisonziel für Saison {season_number} gesetzt.')
+    return _redirect_tab(club_id, 'saisonziele')
+
+
+@require_POST
+def creator_delete_goal(request, club_id, goal_id):
+    club = get_object_or_404(Club, id=club_id)
+    goal = get_object_or_404(SeasonGoal, id=goal_id, club=club)
+    sn = goal.season_number
+    goal.delete()
+    messages.success(request, f'Saisonziel Saison {sn} entfernt.')
+    return _redirect_tab(club_id, 'saisonziele')

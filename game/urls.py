@@ -48,6 +48,16 @@ from .views_creator import (
     creator_upload_kit,
     creator_player_edit,
     creator_new_player,
+    creator_save_stammdaten,
+    creator_save_infrastruktur,
+    creator_add_trophy,
+    creator_delete_trophy,
+    creator_edit_trophy,
+    creator_add_sponsor,
+    creator_delete_sponsor,
+    creator_toggle_sponsor,
+    creator_add_goal,
+    creator_delete_goal,
 )
 
 
@@ -180,4 +190,14 @@ urlpatterns = [
     path('creator/clubs/<int:club_id>/upload/kit/<str:kit_type>/', creator_upload_kit, name='creator_upload_kit'),
     path('creator/players/<int:player_id>/', creator_player_edit, name='creator_player_edit'),
     path('creator/clubs/<int:club_id>/players/new/', creator_new_player, name='creator_new_player'),
+    path('creator/clubs/<int:club_id>/stammdaten/', creator_save_stammdaten, name='creator_save_stammdaten'),
+    path('creator/clubs/<int:club_id>/infrastruktur/', creator_save_infrastruktur, name='creator_save_infrastruktur'),
+    path('creator/clubs/<int:club_id>/trophies/add/', creator_add_trophy, name='creator_add_trophy'),
+    path('creator/clubs/<int:club_id>/trophies/<int:trophy_id>/delete/', creator_delete_trophy, name='creator_delete_trophy'),
+    path('creator/clubs/<int:club_id>/trophies/<int:trophy_id>/edit/', creator_edit_trophy, name='creator_edit_trophy'),
+    path('creator/clubs/<int:club_id>/sponsors/add/', creator_add_sponsor, name='creator_add_sponsor'),
+    path('creator/clubs/<int:club_id>/sponsors/<int:sponsor_id>/delete/', creator_delete_sponsor, name='creator_delete_sponsor'),
+    path('creator/clubs/<int:club_id>/sponsors/<int:sponsor_id>/toggle/', creator_toggle_sponsor, name='creator_toggle_sponsor'),
+    path('creator/clubs/<int:club_id>/goals/add/', creator_add_goal, name='creator_add_goal'),
+    path('creator/clubs/<int:club_id>/goals/<int:goal_id>/delete/', creator_delete_goal, name='creator_delete_goal'),
 ]
