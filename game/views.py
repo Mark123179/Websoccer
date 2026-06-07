@@ -4326,18 +4326,30 @@ def upload_profile_image(request):
     ext_map = {'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp'}
     ext = ext_map.get(file.content_type, '.jpg')
 
+    import uuid as _uuid
     from django.conf import settings as _settings
     from replit.object_storage import Client as _ObjClient
-    rel_path = f'managers/{request.user.id}/avatar{ext}'
+
+    version = _uuid.uuid4().hex[:12]
+    rel_path = f'managers/{request.user.id}/avatar_{version}{ext}'
 
     data = b''.join(file.chunks())
-    _ObjClient().upload_from_bytes(rel_path, data)
+    obj_client = _ObjClient()
+    obj_client.upload_from_bytes(rel_path, data)
 
     from .models import ManagerProfile
     profile, _ = ManagerProfile.objects.get_or_create(
         user=request.user,
         defaults={'name': request.user.username},
     )
+
+    old_path = profile.profile_image or ''
+    if old_path and not old_path.startswith('game/'):
+        try:
+            obj_client.delete(old_path, ignore_not_found=True)
+        except Exception:
+            pass
+
     profile.profile_image = rel_path
     profile.save(update_fields=['profile_image'])
 
