@@ -1,0 +1,55 @@
+name: Security Audit
+
+on:
+  schedule:
+    # Every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "requirements.txt"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run security audit
+        id: audit
+        run: bash scripts/audit_deps.sh
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-report
+          path: security-audit.log
+          retention-days: 30
+
+      - name: Post summary on failure
+        if: failure() && steps.audit.outcome == 'failure'
+        run: |
+          echo "## Security Audit Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat security-audit.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Fix the issues above, then re-run this workflow." >> $GITHUB_STEP_SUMMARY

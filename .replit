@@ -22,6 +22,10 @@ args = "Start application"
 task = "workflow.run"
 args = "check-city-pins"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "security-audit"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -44,6 +48,17 @@ args = "python manage.py check_city_pins"
 
 [workflows.workflow.metadata]
 isValidation = true
+
+[[workflows.workflow]]
+name = "security-audit"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bash scripts/audit_deps.sh"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[ports]]
 localPort = 5000
