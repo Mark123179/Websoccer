@@ -17,48 +17,49 @@
     display: block;
 }
 
-/* ── Dienstältester Manager Card ────────────────────────────── */
+/* ── Dienstältester Manager (im ersten Kachel-Bereich) ──────── */
 .hof-longest-card {
     position: absolute;
-    bottom: 32px;
-    right: 36px;
-    background: rgba(10, 8, 4, 0.72);
-    border: 1px solid rgba(201, 168, 76, 0.35);
-    border-radius: 8px;
-    padding: 14px 20px;
-    backdrop-filter: blur(6px);
-    text-align: right;
-    line-height: 1.45;
+    top: 54%;
+    left: 4.5%;
+    width: 17%;
+    text-align: center;
+    line-height: 1.5;
+    pointer-events: none;
 }
 
 .hof-lc-label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
+    font-size: 9px;
+    letter-spacing: 0.10em;
     text-transform: uppercase;
-    color: rgba(201, 168, 76, 0.65);
-    margin-bottom: 4px;
+    color: rgba(201, 168, 76, 0.60);
+    margin-bottom: 5px;
 }
 
 .hof-lc-name {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     color: #e8d78a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .hof-lc-days {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 400;
-    color: rgba(201, 168, 76, 0.70);
+    color: rgba(201, 168, 76, 0.65);
 }
 
 .hof-lc-dates {
-    font-size: 11px;
-    color: rgba(200, 190, 160, 0.65);
+    font-size: 10px;
+    color: rgba(200, 190, 160, 0.60);
     margin-top: 2px;
+    white-space: nowrap;
 }
 
 .hof-lc-active {
     color: #5dba6a;
-    font-size: 9px;
+    font-size: 8px;
     vertical-align: middle;
 }
