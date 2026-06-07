@@ -982,29 +982,26 @@ def management_finanzen(request):
 @login_required(login_url='/auth/login/')
 def management_halloffame(request):
     from datetime import date
-    from .models import ManagerCareerStation
+    from django.db.models import Sum
+    from .models import (
+        ManagerCareerStation, PlayerSeasonStat,
+        PlayerTransferHistory, ClubTrophy,
+    )
 
     club = current_manager_club(user=request.user)
+    today = date.today()
 
-    # ── Längster Manager dieses Vereins ──────────────────────────────
+    # ── Dienstältester Manager ────────────────────────────────────────
     longest_manager = None
     if club:
-        stations = (
-            ManagerCareerStation.objects
-            .filter(club=club)
-            .select_related('manager')
-        )
-        today = date.today()
-        best = None
-        best_days = -1
-        for s in stations:
+        best, best_days = None, -1
+        for s in ManagerCareerStation.objects.filter(club=club).select_related('manager'):
             if not s.started_at:
                 continue
             end = s.ended_at if s.ended_at else today
             days = (end - s.started_at).days
             if days > best_days:
-                best_days = days
-                best = s
+                best_days, best = days, s
         if best:
             end_date = best.ended_at if best.ended_at else today
             longest_manager = {
@@ -1015,35 +1012,90 @@ def management_halloffame(request):
                 'active': best.ended_at is None,
             }
 
-    dummy_legends = [
-        {'name': 'Michael Sternberg', 'number': 10, 'position': 'Stürmer',
-         'years': '2024 – 2037', 'spiele': 412, 'tore': 186, 'vorlagen': 97,
-         'titel': 7, 'note': '7,89', 'inducted': 2038,
-         'desc': 'Rekordspieler und Rekordtorschütze des Vereins. Führte den Verein zu 5 Meisterschaften und 2 Pokalsiegen.',
-         'timeline': [
-             {'year': 2024, 'event': 'Verpflichtet'},
-             {'year': 2025, 'event': 'Erstes Tor'},
-             {'year': 2027, 'event': 'Erster Titel'},
-             {'year': 2029, 'event': 'Vereinsrekord Tore in einer Saison (35)'},
-             {'year': 2031, 'event': '3. Meisterschaft'},
-             {'year': 2034, 'event': 'Rekordspieler (300 Spiele)'},
-             {'year': 2037, 'event': 'Abschiedsspiel'},
-             {'year': 2038, 'event': 'Aufnahme in die Hall of Fame'},
-         ]},
-    ]
+    # ── Rekordtorschütze (aktuelle Kader-Spieler dieses Vereins) ─────
+    top_scorer = None
+    if club:
+        row = (
+            PlayerSeasonStat.objects
+            .filter(player__club=club)
+            .values('player__first_name', 'player__last_name')
+            .annotate(total=Sum('goals'))
+            .order_by('-total')
+            .first()
+        )
+        if row and row['total']:
+            top_scorer = {
+                'name': f"{row['player__first_name']} {row['player__last_name']}",
+                'value': row['total'],
+            }
+
+    # ── Rekordspieler (meiste Einsätze) ──────────────────────────────
+    most_appearances = None
+    if club:
+        row = (
+            PlayerSeasonStat.objects
+            .filter(player__club=club)
+            .values('player__first_name', 'player__last_name')
+            .annotate(total=Sum('matches'))
+            .order_by('-total')
+            .first()
+        )
+        if row and row['total']:
+            most_appearances = {
+                'name': f"{row['player__first_name']} {row['player__last_name']}",
+                'value': row['total'],
+            }
+
+    # ── Vereinstitel gesamt ───────────────────────────────────────────
+    total_titles = 0
+    if club:
+        total_titles = (
+            ClubTrophy.objects.filter(club=club)
+            .aggregate(t=Sum('count'))['t'] or 0
+        )
+
+    # ── Größter Transfer (Abgang) ─────────────────────────────────────
+    biggest_transfer = None
+    if club:
+        t = (
+            PlayerTransferHistory.objects
+            .filter(from_club=club, fee_eur__isnull=False)
+            .select_related('player')
+            .order_by('-fee_eur')
+            .first()
+        )
+        if t:
+            fee_m = t.fee_eur / 1_000_000
+            biggest_transfer = {
+                'name': f"{t.player.first_name} {t.player.last_name}",
+                'value': f"{fee_m:,.0f} Mio. €".replace(',', '.'),
+            }
+
+    # ── Meiste Vorlagen ───────────────────────────────────────────────
+    most_assists = None
+    if club:
+        row = (
+            PlayerSeasonStat.objects
+            .filter(player__club=club)
+            .values('player__first_name', 'player__last_name')
+            .annotate(total=Sum('assists'))
+            .order_by('-total')
+            .first()
+        )
+        if row and row['total']:
+            most_assists = {
+                'name': f"{row['player__first_name']} {row['player__last_name']}",
+                'value': row['total'],
+            }
 
     context = {
         'club': club,
         'longest_manager': longest_manager,
-        'legends': dummy_legends,
-        'featured': dummy_legends[0],
-        'records': {
-            'best_manager': {'name': 'Jürgen Weber', 'detail': '3 Meisterschaften'},
-            'most_appearances': {'name': 'Michael Sternberg', 'detail': '412 Spiele'},
-            'top_scorer': {'name': 'Michael Sternberg', 'detail': '186 Tore'},
-            'biggest_win': {'score': '8:0', 'detail': 'vs. FC Eintracht 09'},
-            'biggest_transfer': {'amount': '92.000.000 €', 'detail': 'Verkauf: L. Hoffmann (2031)'},
-        },
+        'top_scorer': top_scorer,
+        'most_appearances': most_appearances,
+        'most_assists': most_assists,
+        'total_titles': total_titles,
+        'biggest_transfer': biggest_transfer,
     }
     return render(request, 'game/management/halloffame.html', context)
 

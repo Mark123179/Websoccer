@@ -5,23 +5,120 @@
 {% block body_class %}halloffame-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-artboard">
+<div class="hof-bg-wrap">
+    <img src="{% static 'game/images/backgrounds/halloffame-bg.jpg' %}" alt="" class="hof-bg-img">
 
-    <div class="hof-bg-wrap">
-        <img src="{% static 'game/images/backgrounds/halloffame-bg.jpg' %}" alt="" class="hof-bg-img">
+    <div class="hof-overlay">
 
-        {% if longest_manager %}
-        <div class="hof-longest-card">
-            <div class="hof-lc-label">Dienstältester Manager</div>
-            <div class="hof-lc-name">{{ longest_manager.name }} <span class="hof-lc-days">({{ longest_manager.days }} Tag{{ longest_manager.days|pluralize:"e" }})</span></div>
-            <div class="hof-lc-dates">{{ longest_manager.started }} – {{ longest_manager.ended }}{% if longest_manager.active %} <span class="hof-lc-active">●</span>{% endif %}</div>
+        {# ── KPI-Streifen (5 schmale Kacheln) ──────────────────── #}
+        <div class="hof-kpi hof-kpi--1">
+            <div class="hof-kpi-label">Dienstältester Manager</div>
+            {% if longest_manager %}
+            <div class="hof-kpi-value">{{ longest_manager.name }}</div>
+            <div class="hof-kpi-sub">{{ longest_manager.days }} Tag{{ longest_manager.days|pluralize:"e" }}</div>
+            <div class="hof-kpi-sub">{{ longest_manager.started }} – {{ longest_manager.ended }}</div>
+            {% else %}
+            <div class="hof-kpi-value">–</div>
+            {% endif %}
         </div>
-        {% endif %}
-    </div>
 
-</div>
+        <div class="hof-kpi hof-kpi--2">
+            <div class="hof-kpi-label">Rekordtorschütze</div>
+            {% if top_scorer %}
+            <div class="hof-kpi-value">{{ top_scorer.name }}</div>
+            <div class="hof-kpi-sub">{{ top_scorer.value }} Tore</div>
+            {% else %}
+            <div class="hof-kpi-value">–</div>
+            {% endif %}
+        </div>
+
+        <div class="hof-kpi hof-kpi--3">
+            <div class="hof-kpi-label">Rekordspieler</div>
+            {% if most_appearances %}
+            <div class="hof-kpi-value">{{ most_appearances.name }}</div>
+            <div class="hof-kpi-sub">{{ most_appearances.value }} Einsätze</div>
+            {% else %}
+            <div class="hof-kpi-value">–</div>
+            {% endif %}
+        </div>
+
+        <div class="hof-kpi hof-kpi--4">
+            <div class="hof-kpi-label">Vereinstitel</div>
+            <div class="hof-kpi-value hof-kpi-value--big">{{ total_titles }}</div>
+            <div class="hof-kpi-sub">Gewonnene Titel</div>
+        </div>
+
+        <div class="hof-kpi hof-kpi--5">
+            <div class="hof-kpi-label">Größter Transfer</div>
+            {% if biggest_transfer %}
+            <div class="hof-kpi-value">{{ biggest_transfer.name }}</div>
+            <div class="hof-kpi-sub">{{ biggest_transfer.value }}</div>
+            {% else %}
+            <div class="hof-kpi-value">–</div>
+            {% endif %}
+        </div>
+
+        {# ── Große Bildkacheln (6) – nur Kategoriebezeichnung oben ─ #}
+        <div class="hof-lc hof-lc--1"><span class="hof-lc-tag">Vereinslegenden</span></div>
+        <div class="hof-lc hof-lc--2"><span class="hof-lc-tag">Trainer</span></div>
+        <div class="hof-lc hof-lc--3"><span class="hof-lc-tag">Mannschaft</span></div>
+        <div class="hof-lc hof-lc--4"><span class="hof-lc-tag">Statistiken</span></div>
+        <div class="hof-lc hof-lc--5"><span class="hof-lc-tag">Pokale</span></div>
+        <div class="hof-lc hof-lc--6"><span class="hof-lc-tag">International</span></div>
+
+        {# ── Legende-Reihe: Portrait + 5 Rekord-Kacheln ───────────── #}
+        <div class="hof-leg hof-leg--portrait">
+            <div class="hof-leg-label">Vereins&shy;legende</div>
+            {% if longest_manager %}
+            <div class="hof-leg-name">{{ longest_manager.name }}</div>
+            <div class="hof-leg-detail">{{ longest_manager.days }} Tag{{ longest_manager.days|pluralize:"e" }} im Amt</div>
+            {% endif %}
+        </div>
+
+        <div class="hof-leg hof-leg--s1">
+            <div class="hof-leg-label">Tore</div>
+            {% if top_scorer %}
+            <div class="hof-leg-name">{{ top_scorer.value }}</div>
+            <div class="hof-leg-detail">{{ top_scorer.name }}</div>
+            {% else %}<div class="hof-leg-name">–</div>{% endif %}
+        </div>
+
+        <div class="hof-leg hof-leg--s2">
+            <div class="hof-leg-label">Einsätze</div>
+            {% if most_appearances %}
+            <div class="hof-leg-name">{{ most_appearances.value }}</div>
+            <div class="hof-leg-detail">{{ most_appearances.name }}</div>
+            {% else %}<div class="hof-leg-name">–</div>{% endif %}
+        </div>
+
+        <div class="hof-leg hof-leg--s3">
+            <div class="hof-leg-label">Vorlagen</div>
+            {% if most_assists %}
+            <div class="hof-leg-name">{{ most_assists.value }}</div>
+            <div class="hof-leg-detail">{{ most_assists.name }}</div>
+            {% else %}<div class="hof-leg-name">–</div>{% endif %}
+        </div>
+
+        <div class="hof-leg hof-leg--s4">
+            <div class="hof-leg-label">Titel</div>
+            <div class="hof-leg-name">{{ total_titles }}</div>
+            <div class="hof-leg-detail">Gewonnene Pokale</div>
+        </div>
+
+        <div class="hof-leg hof-leg--s5">
+            <div class="hof-leg-label">Rekordtransfer</div>
+            {% if biggest_transfer %}
+            <div class="hof-leg-name hof-leg-name--sm">{{ biggest_transfer.value }}</div>
+            <div class="hof-leg-detail">{{ biggest_transfer.name }}</div>
+            {% else %}<div class="hof-leg-name">–</div>{% endif %}
+        </div>
+
+    </div>{# /hof-overlay #}
+</div>{# /hof-bg-wrap #}
+</div>{# /dashboard-artboard #}
 {% endblock %}
