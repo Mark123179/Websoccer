@@ -14,6 +14,7 @@ from .views import (
     squad_assign_shirt,
     squad_move_to_youth,
     home,
+    league_detail,
     manager_profile,
     set_trainer_type,
     update_manager_profile,
@@ -183,6 +184,12 @@ urlpatterns = [
     path('auth/logout/', auth_logout, name='auth_logout'),
 
     path('ai/chat/', ai_chat, name='ai_chat'),
+
+    path(
+        'liga/<int:league_id>/',
+        league_detail,
+        name='league_detail',
+    ),
 
     path('management/', management_hub, name='management_hub'),
     path('management/stadion/', stadium_detail, name='stadium_detail'),

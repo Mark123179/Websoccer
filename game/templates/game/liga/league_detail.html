@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ league.name }} · {{ season_display }}{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="liga-shell">
+
+    <!-- =========================================================
+         LIGA HERO BAR
+    ========================================================== -->
+    <div class="liga-hero">
+        <div class="liga-hero__left">
+            {% if league_logo_path %}
+            <img class="liga-hero__logo" src="{% static league_logo_path %}" alt="{{ league.name }}">
+            {% endif %}
+            <div class="liga-hero__meta">
+                <h1 class="liga-hero__name">{{ league.name }}</h1>
+                <span class="liga-hero__season">{{ season_display }}</span>
+            </div>
+        </div>
+        <div class="liga-hero__right">
+            {% if league.season_winner %}
+            <div class="liga-hero__trophy liga-hero__trophy--meister">
+                {% if league.season_winner.crest_static_path %}
+                <img src="{% static league.season_winner.crest_static_path %}" alt="{{ league.season_winner.name }}">
+                {% endif %}
+                <span class="liga-hero__trophy-label">Meister</span>
+                <span class="liga-hero__trophy-club">{{ league.season_winner.short_name }}</span>
+            </div>
+            {% endif %}
+            {% if league.cup_winner %}
+            <div class="liga-hero__trophy liga-hero__trophy--pokal">
+                {% if league.cup_winner.crest_static_path %}
+                <img src="{% static league.cup_winner.crest_static_path %}" alt="{{ league.cup_winner.name }}">
+                {% endif %}
+                <span class="liga-hero__trophy-label">Pokal</span>
+                <span class="liga-hero__trophy-club">{{ league.cup_winner.short_name }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- =========================================================
+         TAB NAV
+    ========================================================== -->
+    <nav class="liga-tabs" aria-label="Liga-Navigation">
+        <a class="liga-tab {% if active_tab == 'tabelle' %}is-active{% endif %}"
+           href="?tab=tabelle">Tabelle</a>
+        <a class="liga-tab {% if active_tab == 'spieltag' %}is-active{% endif %}"
+           href="?tab=spieltag">Spieltag</a>
+        <a class="liga-tab {% if active_tab == 'news' %}is-active{% endif %}"
+           href="?tab=news">News</a>
+        <a class="liga-tab {% if active_tab == 'statistiken' %}is-active{% endif %}"
+           href="?tab=statistiken">Statistiken</a>
+        <a class="liga-tab {% if active_tab == 'historie' %}is-active{% endif %}"
+           href="?tab=historie">Historie</a>
+    </nav>
+
+    <!-- =========================================================
+         TAB: TABELLE
+    ========================================================== -->
+    {% if active_tab == 'tabelle' %}
+    <div class="liga-content liga-content--tabelle">
+
+        {% if table_rows %}
+        <div class="liga-table-wrap">
+            <table class="liga-table">
+                <thead>
+                    <tr>
+                        <th class="col-zone" aria-hidden="true"></th>
+                        <th class="col-pos">#</th>
+                        <th class="col-delta" title="Platzierungsänderung">Δ</th>
+                        <th class="col-club">Verein</th>
+                        <th class="col-num" title="Spiele">Sp</th>
+                        <th class="col-num" title="Siege">S</th>
+                        <th class="col-num" title="Unentschieden">U</th>
+                        <th class="col-num" title="Niederlagen">N</th>
+                        <th class="col-goals" title="Tore">Tore</th>
+                        <th class="col-num" title="Tordifferenz">+/-</th>
+                        <th class="col-pts" title="Punkte">Pkt</th>
+                        <th class="col-form" title="Form (letzte 5)">Form</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table_rows %}
+                    {% with s=row.standing %}
+                    <tr class="liga-row liga-row--{{ row.zone }}{% if row.is_current_club %} liga-row--mine{% endif %}">
+                        <td class="col-zone liga-zone-bar liga-zone-bar--{{ row.zone }}" aria-hidden="true"></td>
+                        <td class="col-pos">{{ s.position }}</td>
+                        <td class="col-delta">
+                            {% if s.position_change > 0 %}
+                                <span class="liga-delta liga-delta--up" title="Aufgestiegen">▲</span>
+                            {% elif s.position_change < 0 %}
+                                <span class="liga-delta liga-delta--down" title="Abgestiegen">▼</span>
+                            {% else %}
+                                <span class="liga-delta liga-delta--same" aria-hidden="true">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="col-club">
+                            <div class="liga-club-cell">
+                                {% if s.club.crest_static_path %}
+                                <a class="liga-crest-link" href="/clubs/{{ s.club.id }}/" aria-label="{{ s.club.name }} Profil">
+                                    <img class="liga-crest" src="{% static s.club.crest_static_path %}" alt="{{ s.club.name }}">
+                                </a>
+                                {% endif %}
+                                <a class="liga-club-name" href="/clubs/{{ s.club.id }}/">
+                                    {{ s.club.name }}
+                                    {% if row.is_winner %}
+                                        <span class="liga-badge liga-badge--meister" title="Meister">★</span>
+                                    {% endif %}
+                                    {% if row.is_cup %}
+                                        <span class="liga-badge liga-badge--pokal" title="Pokalsieger">🏆</span>
+                                    {% endif %}
+                                </a>
+                                {% if s.point_deduction > 0 %}
+                                    <span class="liga-deduction" title="Punktabzug: {{ s.point_deduction }}">-{{ s.point_deduction }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="col-num">{{ s.played }}</td>
+                        <td class="col-num">{{ s.won }}</td>
+                        <td class="col-num">{{ s.drawn }}</td>
+                        <td class="col-num">{{ s.lost }}</td>
+                        <td class="col-goals">{{ s.goals_for }}:{{ s.goals_against }}</td>
+                        <td class="col-num {% if s.goal_difference > 0 %}is-pos{% elif s.goal_difference < 0 %}is-neg{% endif %}">
+                            {% if s.goal_difference > 0 %}+{% endif %}{{ s.goal_difference }}
+                        </td>
+                        <td class="col-pts">{{ s.points }}</td>
+                        <td class="col-form">
+                            <div class="liga-form">
+                                {% for f in row.form_items %}
+                                    <span class="liga-form-dot liga-form-dot--{{ f|lower }}" title="{% if f == 'W' %}Sieg{% elif f == 'D' %}Unentschieden{% else %}Niederlage{% endif %}">{{ f }}</span>
+                                {% empty %}
+                                    <span class="liga-form-empty">—</span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LEGENDE -->
+        <div class="liga-legend">
+            <div class="liga-legend__item">
+                <span class="liga-legend__dot liga-legend__dot--cl"></span>
+                <span>Champions League (Platz 1–{{ cl_limit }})</span>
+            </div>
+            {% if el_limit > cl_limit %}
+            <div class="liga-legend__item">
+                <span class="liga-legend__dot liga-legend__dot--el"></span>
+                <span>Europa League (Platz {{ cl_limit|add:1 }}–{{ el_limit }})</span>
+            </div>
+            {% endif %}
+            {% if conf_limit > el_limit %}
+            <div class="liga-legend__item">
+                <span class="liga-legend__dot liga-legend__dot--conf"></span>
+                <span>Conference League (Platz {{ el_limit|add:1 }}–{{ conf_limit }})</span>
+            </div>
+            {% endif %}
+            <div class="liga-legend__item">
+                <span class="liga-legend__dot liga-legend__dot--relegation"></span>
+                <span>Abstieg (Platz {{ relegate_start }}–{{ total_clubs }})</span>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="liga-empty">
+            <p>Keine Tabellendaten für Saison {{ current_season }} verfügbar.</p>
+            <p class="liga-empty-sub">Der Admin kann die Tabelle unter <strong>Ligatabelle</strong> befüllen.</p>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    <!-- =========================================================
+         TAB: SPIELTAG
+    ========================================================== -->
+    {% if active_tab == 'spieltag' %}
+    <div class="liga-content liga-content--spieltag">
+
+        <div class="liga-spieltag-columns">
+
+            <!-- Letzter Spieltag -->
+            <div class="liga-spieltag-col">
+                <h2 class="liga-spieltag-title">
+                    {% if last_matchday_num %}
+                        Spieltag {{ last_matchday_num }} · Ergebnisse
+                    {% else %}
+                        Noch keine Ergebnisse
+                    {% endif %}
+                </h2>
+                {% if last_fixtures %}
+                <div class="liga-fixture-list">
+                    {% for f in last_fixtures %}
+                    <div class="liga-fixture">
+                        <div class="liga-fixture__home">
+                            {% if f.home_club.crest_static_path %}
+                            <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
+                            {% endif %}
+                            <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
+                        </div>
+                        <div class="liga-fixture__score">
+                            {% if f.is_played %}
+                                <strong class="liga-fixture__result">{{ f.home_goals }}:{{ f.away_goals }}</strong>
+                            {% else %}
+                                <span class="liga-fixture__vs">vs</span>
+                            {% endif %}
+                        </div>
+                        <div class="liga-fixture__away">
+                            <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
+                            {% if f.away_club.crest_static_path %}
+                            <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="liga-spieltag-empty">Keine Ergebnisse vorhanden.</p>
+                {% endif %}
+            </div>
+
+            <!-- Nächster Spieltag -->
+            <div class="liga-spieltag-col">
+                <h2 class="liga-spieltag-title">
+                    {% if next_matchday_num %}
+                        Spieltag {{ next_matchday_num }} · Vorschau
+                    {% else %}
+                        Saison beendet
+                    {% endif %}
+                </h2>
+                {% if next_fixtures %}
+                <div class="liga-fixture-list">
+                    {% for f in next_fixtures %}
+                    <div class="liga-fixture">
+                        <div class="liga-fixture__home">
+                            {% if f.home_club.crest_static_path %}
+                            <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
+                            {% endif %}
+                            <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
+                        </div>
+                        <div class="liga-fixture__score">
+                            <span class="liga-fixture__vs">vs</span>
+                        </div>
+                        <div class="liga-fixture__away">
+                            <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
+                            {% if f.away_club.crest_static_path %}
+                            <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="liga-spieltag-empty">Keine anstehenden Spiele.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+    {% endif %}
+
+    <!-- =========================================================
+         TAB: NEWS
+    ========================================================== -->
+    {% if active_tab == 'news' %}
+    <div class="liga-content liga-content--news">
+
+        {% if liga_news %}
+        <div class="liga-news-grid">
+            {% for item in liga_news %}
+            <article class="liga-news-card">
+                {% if item.thumbnail_static_path %}
+                <div class="liga-news-card__thumb">
+                    <img src="{% static item.thumbnail_static_path %}" alt="{{ item.title }}">
+                </div>
+                {% endif %}
+                <div class="liga-news-card__body">
+                    <span class="liga-news-card__date">{{ item.published_at|date:"d.m.Y" }}</span>
+                    <h3 class="liga-news-card__title">{{ item.title }}</h3>
+                    {% if item.body %}
+                    <p class="liga-news-card__text">{{ item.body|truncatewords:30 }}</p>
+                    {% endif %}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="liga-empty">
+            <p>Noch keine Liga-News vorhanden.</p>
+            <p class="liga-empty-sub">Meldungen können im Admin-Bereich unter <strong>Liga-News</strong> eingetragen werden.</p>
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    <!-- =========================================================
+         TAB: STATISTIKEN (Platzhalter)
+    ========================================================== -->
+    {% if active_tab == 'statistiken' %}
+    <div class="liga-content liga-content--stub">
+        <div class="liga-stub">
+            <span class="liga-stub__icon">📊</span>
+            <h2 class="liga-stub__title">Statistiken</h2>
+            <p class="liga-stub__copy">Torschützen, Vorlagen und weitere Saison-Statistiken folgen in einer späteren Version.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- =========================================================
+         TAB: HISTORIE (Platzhalter)
+    ========================================================== -->
+    {% if active_tab == 'historie' %}
+    <div class="liga-content liga-content--stub">
+        <div class="liga-stub">
+            <span class="liga-stub__icon">📜</span>
+            <h2 class="liga-stub__title">Vereinshistorie</h2>
+            <p class="liga-stub__copy">Frühere Meister, Aufsteiger und Absteiger werden hier archiviert.</p>
+        </div>
+    </div>
+    {% endif %}
+
+</section>
+{% endblock %}

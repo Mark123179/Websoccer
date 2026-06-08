@@ -24,6 +24,8 @@ from .models import (
     CoinTransaction,
     HoenessCoin,
     League,
+    LeagueNews,
+    LeagueStandings,
     Club,
     ManagerAtRisk,
     ManagerCareerStation,
@@ -48,6 +50,7 @@ from .models import (
     SeasonGoal,
     PlayerTransferHistory,
     PlayerWeightedRatingSnapshot,
+    SeasonFixture,
     Stadium,
     StrengthFormulaSettings,
     StrengthModifierRule,
@@ -2833,3 +2836,61 @@ class ClubSponsorAdmin(admin.ModelAdmin):
     search_fields = ('name', 'club__name')
     ordering      = ('club', 'sponsor_type')
     fields        = ('club', 'name', 'sponsor_type', 'amount_per_season', 'season', 'is_active')
+
+
+@admin.register(LeagueNews)
+class LeagueNewsAdmin(admin.ModelAdmin):
+    list_display   = ('league', 'title', 'published_at', 'sort_order')
+    list_filter    = ('league',)
+    search_fields  = ('title', 'body')
+    ordering       = ('league', 'sort_order', '-published_at')
+    fields         = ('league', 'title', 'published_at', 'thumbnail_static_path', 'body', 'sort_order')
+    date_hierarchy = 'published_at'
+
+
+@admin.register(LeagueStandings)
+class LeagueStandingsAdmin(admin.ModelAdmin):
+    list_display   = (
+        'league', 'season', 'position', 'club', 'played',
+        'won', 'drawn', 'lost', 'goals_display', 'points', 'point_deduction', 'form',
+    )
+    list_filter    = ('league', 'season')
+    search_fields  = ('club__name',)
+    ordering       = ('league', 'season', 'position')
+    fields         = (
+        'league', 'club', 'season',
+        'position', 'position_change',
+        'played', 'won', 'drawn', 'lost',
+        'goals_for', 'goals_against',
+        'points', 'point_deduction',
+        'form',
+    )
+
+    @admin.display(description='Tore')
+    def goals_display(self, obj):
+        return f'{obj.goals_for}:{obj.goals_against}'
+
+
+@admin.register(SeasonFixture)
+class SeasonFixtureAdmin(admin.ModelAdmin):
+    list_display   = (
+        'league', 'season', 'matchday',
+        'home_club', 'result_or_dash', 'away_club',
+        'scheduled_date', 'scheduled_time', 'is_played',
+    )
+    list_filter    = ('league', 'season', 'matchday', 'is_played')
+    search_fields  = ('home_club__name', 'away_club__name')
+    ordering       = ('league', 'season', 'matchday', 'scheduled_date', 'scheduled_time')
+    fields         = (
+        'league', 'season', 'matchday',
+        'home_club', 'away_club',
+        'scheduled_date', 'scheduled_time',
+        'home_goals', 'away_goals', 'is_played',
+        'home_lineup_set', 'away_lineup_set',
+    )
+
+    @admin.display(description='Ergebnis')
+    def result_or_dash(self, obj):
+        if obj.is_played and obj.home_goals is not None and obj.away_goals is not None:
+            return f'{obj.home_goals}:{obj.away_goals}'
+        return '—'

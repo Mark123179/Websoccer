@@ -35,6 +35,8 @@ from .models import (
     COUNTRY_FLAG_ASSETS,
     DataSource,
     League,
+    LeagueNews,
+    LeagueStandings,
     ManagerProfile,
     MatchResult,
     Player,
@@ -45,6 +47,7 @@ from .models import (
     PlayerSourceRating,
     PlayerSuspensionRecord,
     PlayerTransferHistory,
+    SeasonFixture,
     TacticSetup,
     TacticTemplate,
 )
@@ -4580,3 +4583,139 @@ def update_manager_profile(request):
             'flag_name': profile.nationality_name,
         })
     return redirect('manager_profile')
+
+
+# ---------------------------------------------------------------------------
+# Liga-Seite
+# ---------------------------------------------------------------------------
+
+def league_detail(request, league_id):
+    """Vollständige Liga-Seite: Tabelle, Spieltag, News, Statistiken, Historie."""
+    from .models import GameSeasonState
+
+    league = get_object_or_404(
+        League.objects.select_related('season_winner', 'cup_winner'),
+        id=league_id,
+    )
+
+    try:
+        season_state = GameSeasonState.objects.first()
+        current_season_int = season_state.current_season if season_state else 0
+    except Exception:
+        current_season_int = 0
+
+    current_season = str(current_season_int)
+    if current_season_int == 0:
+        season_display = 'Vorbereitung'
+    else:
+        season_display = f'Saison {current_season_int}'
+
+    # ---- Tabelle ----------------------------------------------------------
+    standings_qs = (
+        LeagueStandings.objects
+        .filter(league=league, season=current_season)
+        .select_related('club')
+        .order_by('position', '-points', 'club__name')
+    )
+
+    total_clubs = standings_qs.count()
+    cl_limit = league.cl_spots
+    el_limit = cl_limit + league.el_spots
+    conf_limit = el_limit + league.conference_spots
+    relegate_start = max(1, total_clubs - league.relegation_spots + 1)
+
+    my_club = current_manager_club(request.user)
+
+    table_rows = []
+    for s in standings_qs:
+        pos = s.position
+        if pos <= cl_limit:
+            zone = 'cl'
+        elif pos <= el_limit:
+            zone = 'el'
+        elif pos <= conf_limit:
+            zone = 'conf'
+        elif total_clubs > 0 and pos >= relegate_start:
+            zone = 'relegation'
+        else:
+            zone = ''
+
+        form_items = list(s.form) if s.form else []
+
+        is_winner = league.season_winner_id == s.club_id
+        is_cup = league.cup_winner_id == s.club_id
+
+        table_rows.append({
+            'standing': s,
+            'zone': zone,
+            'form_items': form_items,
+            'is_current_club': bool(my_club and my_club.id == s.club_id),
+            'is_winner': is_winner,
+            'is_cup': is_cup,
+        })
+
+    # ---- Spieltag ---------------------------------------------------------
+    last_matchday_num = (
+        SeasonFixture.objects
+        .filter(league=league, season=current_season, is_played=True)
+        .order_by('-matchday')
+        .values_list('matchday', flat=True)
+        .first()
+    )
+    next_matchday_num = (
+        SeasonFixture.objects
+        .filter(league=league, season=current_season, is_played=False)
+        .order_by('matchday')
+        .values_list('matchday', flat=True)
+        .first()
+    )
+
+    last_fixtures = list(
+        SeasonFixture.objects
+        .filter(league=league, season=current_season, matchday=last_matchday_num)
+        .select_related('home_club', 'away_club')
+        .order_by('scheduled_date', 'scheduled_time')
+    ) if last_matchday_num is not None else []
+
+    next_fixtures = list(
+        SeasonFixture.objects
+        .filter(league=league, season=current_season, matchday=next_matchday_num)
+        .select_related('home_club', 'away_club')
+        .order_by('scheduled_date', 'scheduled_time')
+    ) if next_matchday_num is not None else []
+
+    # ---- News -------------------------------------------------------------
+    liga_news = list(LeagueNews.objects.filter(league=league).order_by('-published_at', '-id')[:6])
+
+    # ---- Aktiver Tab ------------------------------------------------------
+    active_tab = request.GET.get('tab', 'tabelle')
+
+    # ---- Bundesliga-Logo --------------------------------------------------
+    logo_path = league.logo_static_path
+    if not logo_path:
+        slug = league.name.lower().replace(' ', '-').replace('.', '')
+        logo_path = f'game/images/competitions/{slug}.svg'
+
+    return render(request, 'game/liga/league_detail.html', {
+        'league': league,
+        'table_rows': table_rows,
+        'cl_limit': cl_limit,
+        'el_limit': el_limit,
+        'conf_limit': conf_limit,
+        'relegate_start': relegate_start,
+        'total_clubs': total_clubs,
+        'last_matchday_num': last_matchday_num,
+        'next_matchday_num': next_matchday_num,
+        'last_fixtures': last_fixtures,
+        'next_fixtures': next_fixtures,
+        'liga_news': liga_news,
+        'active_tab': active_tab,
+        'current_season': current_season,
+        'season_display': season_display,
+        'league_logo_path': logo_path,
+        'game_header': build_game_header(
+            league.name,
+            season_display,
+            '/',
+        ),
+    })

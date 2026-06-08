@@ -1,0 +1,544 @@
+/* ==========================================================================
+   Liga-Detail-Seite  –  liga-detail.css
+   Design tokens: --cyan #22e6ff | --green #30f29c | no nested cards
+   1440×900 base, wide-shell only extends horizontally
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Shell & Layout
+   -------------------------------------------------------------------------- */
+.liga-shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    background: #0d0f12;
+    color: #e8eaf0;
+    font-family: var(--font-ui, 'Inter', sans-serif);
+}
+
+/* --------------------------------------------------------------------------
+   Liga Hero Bar
+   -------------------------------------------------------------------------- */
+.liga-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px 16px;
+    background: linear-gradient(135deg, #13161c 0%, #1a1f2b 100%);
+    border-bottom: 1px solid #ffffff0f;
+    gap: 16px;
+}
+
+.liga-hero__left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.liga-hero__logo {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(34, 230, 255, 0.18));
+}
+
+.liga-hero__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.liga-hero__name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #f0f2f8;
+    margin: 0;
+}
+
+.liga-hero__season {
+    font-size: 0.78rem;
+    color: #7a8099;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.liga-hero__right {
+    display: flex;
+    gap: 20px;
+}
+
+.liga-hero__trophy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.liga-hero__trophy img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.liga-hero__trophy-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #7a8099;
+}
+
+.liga-hero__trophy--meister .liga-hero__trophy-label { color: #d4a820; }
+.liga-hero__trophy--pokal   .liga-hero__trophy-label { color: #22e6ff; }
+
+.liga-hero__trophy-club {
+    font-size: 0.72rem;
+    color: #c8ccd8;
+    font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Tab Navigation
+   -------------------------------------------------------------------------- */
+.liga-tabs {
+    display: flex;
+    gap: 0;
+    background: #10131a;
+    border-bottom: 1px solid #ffffff0d;
+    padding: 0 32px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.liga-tabs::-webkit-scrollbar { display: none; }
+
+.liga-tab {
+    display: inline-block;
+    padding: 12px 20px 11px;
+    font-size: 0.83rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #5a6278;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.liga-tab:hover {
+    color: #a0a8c0;
+}
+
+.liga-tab.is-active {
+    color: #22e6ff;
+    border-bottom-color: #22e6ff;
+}
+
+/* --------------------------------------------------------------------------
+   Content area
+   -------------------------------------------------------------------------- */
+.liga-content {
+    padding: 24px 32px 32px;
+    flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Tabelle
+   -------------------------------------------------------------------------- */
+.liga-table-wrap {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #ffffff08;
+}
+
+.liga-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+    background: #10131a;
+    min-width: 700px;
+}
+
+.liga-table thead tr {
+    background: #13161e;
+    border-bottom: 1px solid #ffffff10;
+}
+
+.liga-table thead th {
+    padding: 10px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #4a5268;
+    white-space: nowrap;
+}
+
+.liga-table thead th.col-club { text-align: left; padding-left: 12px; }
+.liga-table thead th.col-pos  { text-align: center; width: 32px; }
+.liga-table thead th.col-zone { width: 4px; padding: 0; }
+.liga-table thead th.col-delta { width: 28px; text-align: center; }
+.liga-table thead th.col-num  { text-align: center; width: 38px; }
+.liga-table thead th.col-goals{ text-align: center; width: 56px; }
+.liga-table thead th.col-pts  { text-align: center; width: 40px; }
+.liga-table thead th.col-form { text-align: center; width: 100px; }
+
+.liga-row {
+    border-bottom: 1px solid #ffffff06;
+    transition: background 0.1s;
+}
+
+.liga-row:hover { background: #1a1f2c; }
+
+.liga-row--mine {
+    background: #0f1e20 !important;
+}
+
+.liga-row--mine:hover { background: #142227 !important; }
+
+.liga-row td {
+    padding: 9px 8px;
+    vertical-align: middle;
+}
+
+/* Zone color bar */
+.liga-zone-bar {
+    width: 4px;
+    padding: 0 !important;
+}
+
+.liga-zone-bar--cl         { background: #3b6fd6; }
+.liga-zone-bar--el         { background: #e06a20; }
+.liga-zone-bar--conf       { background: #22a87a; }
+.liga-zone-bar--relegation { background: #c0303a; }
+
+/* Position column */
+.col-pos { text-align: center; font-weight: 700; color: #a0a8c0; font-size: 0.85rem; }
+
+/* Delta column */
+.col-delta { text-align: center; }
+.liga-delta { font-size: 0.68rem; font-weight: 700; }
+.liga-delta--up   { color: #30f29c; }
+.liga-delta--down { color: #e05060; }
+.liga-delta--same { color: #3a4052; }
+
+/* Club cell */
+.col-club { text-align: left; }
+
+.liga-club-cell {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.liga-crest-link { display: flex; align-items: center; flex-shrink: 0; }
+
+.liga-crest {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.liga-club-name {
+    text-decoration: none;
+    color: #d0d4e0;
+    font-weight: 600;
+    font-size: 0.83rem;
+    transition: color 0.12s;
+}
+
+.liga-club-name:hover { color: #22e6ff; }
+
+.liga-badge {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.7rem;
+}
+
+.liga-badge--meister { color: #d4a820; }
+.liga-badge--pokal   { color: #22e6ff; }
+
+.liga-deduction {
+    font-size: 0.7rem;
+    color: #e05060;
+    font-weight: 700;
+    margin-left: 6px;
+    background: #2a1018;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+/* Numeric columns */
+.col-num  { text-align: center; color: #9298a8; }
+.col-goals{ text-align: center; color: #9298a8; font-variant-numeric: tabular-nums; }
+.col-pts  { text-align: center; font-weight: 700; font-size: 0.9rem; color: #e8eaf0; }
+
+.is-pos { color: #30f29c !important; }
+.is-neg { color: #e05060 !important; }
+
+/* Form dots */
+.col-form { text-align: center; }
+
+.liga-form {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    align-items: center;
+}
+
+.liga-form-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    font-size: 0.63rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.liga-form-dot--w { background: #1a3a28; color: #30f29c; }
+.liga-form-dot--d { background: #2a2818; color: #d4a820; }
+.liga-form-dot--l { background: #2a1218; color: #e05060; }
+
+.liga-form-empty { color: #3a4052; font-size: 0.72rem; }
+
+/* --------------------------------------------------------------------------
+   Legende
+   -------------------------------------------------------------------------- */
+.liga-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 28px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #10131a;
+    border: 1px solid #ffffff08;
+    border-radius: 6px;
+}
+
+.liga-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #6a7088;
+}
+
+.liga-legend__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.liga-legend__dot--cl         { background: #3b6fd6; }
+.liga-legend__dot--el         { background: #e06a20; }
+.liga-legend__dot--conf       { background: #22a87a; }
+.liga-legend__dot--relegation { background: #c0303a; }
+
+/* --------------------------------------------------------------------------
+   Empty state
+   -------------------------------------------------------------------------- */
+.liga-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: #5a6278;
+}
+
+.liga-empty p { margin: 0 0 8px; font-size: 0.9rem; }
+.liga-empty-sub { font-size: 0.78rem; color: #3a4258; }
+
+/* --------------------------------------------------------------------------
+   Spieltag
+   -------------------------------------------------------------------------- */
+.liga-spieltag-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.liga-spieltag-col {
+    background: #10131a;
+    border: 1px solid #ffffff08;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.liga-spieltag-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #7a8299;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 16px;
+    border-bottom: 1px solid #ffffff08;
+    padding-bottom: 10px;
+}
+
+.liga-fixture-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.liga-fixture {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px;
+    border-radius: 5px;
+    transition: background 0.1s;
+}
+
+.liga-fixture:hover { background: #181c26; }
+
+.liga-fixture__home {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.liga-fixture__away {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.liga-fixture__crest {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.liga-fixture__name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #b8bdd0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.liga-fixture__score { text-align: center; min-width: 44px; }
+
+.liga-fixture__result {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #e8eaf0;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+
+.liga-fixture__vs {
+    font-size: 0.72rem;
+    color: #3a4258;
+    font-weight: 600;
+}
+
+.liga-spieltag-empty {
+    font-size: 0.8rem;
+    color: #3a4258;
+    margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   News
+   -------------------------------------------------------------------------- */
+.liga-news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.liga-news-card {
+    background: #10131a;
+    border: 1px solid #ffffff08;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s;
+}
+
+.liga-news-card:hover { border-color: #22e6ff30; }
+
+.liga-news-card__thumb img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.liga-news-card__body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.liga-news-card__date {
+    font-size: 0.7rem;
+    color: #4a5268;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.liga-news-card__title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #d0d4e0;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.liga-news-card__text {
+    font-size: 0.78rem;
+    color: #6a7088;
+    margin: 0;
+    line-height: 1.55;
+}
+
+/* --------------------------------------------------------------------------
+   Stub tabs (Statistiken / Historie)
+   -------------------------------------------------------------------------- */
+.liga-content--stub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+}
+
+.liga-stub {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.liga-stub__icon { font-size: 2.5rem; }
+
+.liga-stub__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #5a6278;
+    margin: 0;
+}
+
+.liga-stub__copy {
+    font-size: 0.83rem;
+    color: #3a4258;
+    max-width: 340px;
+    line-height: 1.55;
+    margin: 0;
+}

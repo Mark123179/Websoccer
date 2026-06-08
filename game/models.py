@@ -384,6 +384,43 @@ class League(models.Model):
         blank=True,
         help_text='z. B. UEFA association coefficient oder interne Einstufung.',
     )
+    logo_static_path = models.CharField(
+        max_length=240,
+        blank=True,
+        help_text='Statischer Pfad zum Liga-Logo, z. B. game/images/competitions/bundesliga.svg',
+    )
+    cl_spots = models.PositiveSmallIntegerField(
+        default=2,
+        verbose_name='Champions-League-Plätze',
+    )
+    el_spots = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name='Europa-League-Plätze',
+    )
+    conference_spots = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name='Conference-League-Plätze',
+    )
+    relegation_spots = models.PositiveSmallIntegerField(
+        default=3,
+        verbose_name='Abstiegsplätze',
+    )
+    season_winner = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='league_titles',
+        verbose_name='Meister (aktuelle Saison)',
+    )
+    cup_winner = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_titles',
+        verbose_name='Pokalsieger (aktuelle Saison)',
+    )
 
     def __str__(self):
         return self.name
@@ -1049,6 +1086,156 @@ class ClubNewsItem(models.Model):
 
     def __str__(self):
         return f'{self.club} - {self.title}'
+
+
+class LeagueNews(models.Model):
+    """Liga-News — nicht vereinsgebunden, für die Liga-Seite."""
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='news_items',
+        verbose_name='Liga',
+    )
+    title = models.CharField(max_length=160, verbose_name='Titel')
+    published_at = models.DateField(default=timezone.localdate, verbose_name='Veröffentlicht')
+    thumbnail_static_path = models.CharField(max_length=240, blank=True, verbose_name='Vorschaubild')
+    body = models.TextField(blank=True, verbose_name='Text')
+    sort_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', '-published_at', '-id']
+        verbose_name = 'Liga-News'
+        verbose_name_plural = 'Liga-News'
+
+    def __str__(self):
+        return f'[{self.league}] {self.title}'
+
+
+class LeagueStandings(models.Model):
+    """Ligatabelle — eine Zeile pro Verein pro Saison.
+
+    Wird bei Saisonbeginn mit 0 initialisiert.
+    Der Admin kann `point_deduction` setzen (Punktabzug).
+    `points` wird bei jeder Ergebnisänderung aktualisiert.
+    `form` speichert die letzten 5 Spiele als String, z.B. 'WWDLW'.
+    `position_change` = vorherige Position - aktuelle Position (>0 = aufgestiegen).
+    """
+
+    FORM_WIN = 'W'
+    FORM_DRAW = 'D'
+    FORM_LOSS = 'L'
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='standings',
+        verbose_name='Liga',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='league_standings',
+        verbose_name='Verein',
+    )
+    season = models.CharField(
+        max_length=20,
+        default='0',
+        verbose_name='Saison',
+        help_text='Numerische Saisonnummer als String (z. B. "0", "1", "2") – passend zu GameSeasonState.current_season.',
+    )
+    position = models.PositiveSmallIntegerField(default=0, verbose_name='Platz')
+    position_change = models.SmallIntegerField(
+        default=0,
+        verbose_name='Platzierungsänderung',
+        help_text='Positiv = aufgestiegen, negativ = abgestiegen, 0 = unverändert.',
+    )
+    played = models.PositiveSmallIntegerField(default=0, verbose_name='Spiele')
+    won = models.PositiveSmallIntegerField(default=0, verbose_name='Siege')
+    drawn = models.PositiveSmallIntegerField(default=0, verbose_name='Unentschieden')
+    lost = models.PositiveSmallIntegerField(default=0, verbose_name='Niederlagen')
+    goals_for = models.PositiveSmallIntegerField(default=0, verbose_name='Tore')
+    goals_against = models.PositiveSmallIntegerField(default=0, verbose_name='Gegentore')
+    points = models.SmallIntegerField(default=0, verbose_name='Punkte')
+    point_deduction = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name='Punktabzug',
+        help_text='Vom Admin vergebener Punktabzug (wird von Punkten abgezogen).',
+    )
+    form = models.CharField(
+        max_length=5,
+        blank=True,
+        default='',
+        verbose_name='Form (letzte 5)',
+        help_text='5-stelliger String aus W/D/L, neuestes Ergebnis zuerst. z.B. "WWDLW".',
+    )
+
+    @property
+    def goal_difference(self):
+        return self.goals_for - self.goals_against
+
+    @property
+    def goals_display(self):
+        return f'{self.goals_for}:{self.goals_against}'
+
+    class Meta:
+        ordering = ['position', '-points', 'club__name']
+        unique_together = [('league', 'club', 'season')]
+        verbose_name = 'Ligatabelle-Eintrag'
+        verbose_name_plural = 'Ligatabelle'
+
+    def __str__(self):
+        return f'{self.season} | #{self.position} {self.club.name} ({self.points} Pkt)'
+
+
+class SeasonFixture(models.Model):
+    """Spielplan — ein Eintrag pro Partie pro Spieltag.
+
+    `home_goals`/`away_goals` sind None, solange das Spiel nicht gespielt wurde.
+    `home_lineup_set`/`away_lineup_set` zeigen, ob die Aufstellung steht (Haken).
+    """
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='fixtures',
+        verbose_name='Liga',
+    )
+    matchday = models.PositiveSmallIntegerField(verbose_name='Spieltag')
+    home_club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='home_fixtures',
+        verbose_name='Heimverein',
+    )
+    away_club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='away_fixtures',
+        verbose_name='Auswärtsverein',
+    )
+    scheduled_date = models.DateField(null=True, blank=True, verbose_name='Datum')
+    scheduled_time = models.TimeField(null=True, blank=True, verbose_name='Uhrzeit')
+    season = models.CharField(max_length=20, default='0', verbose_name='Saison')
+    home_goals = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Heimtore')
+    away_goals = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Auswärtstore')
+    is_played = models.BooleanField(default=False, verbose_name='Gespielt')
+    home_lineup_set = models.BooleanField(default=False, verbose_name='Heimaufstellung steht')
+    away_lineup_set = models.BooleanField(default=False, verbose_name='Auswärtsaufstellung steht')
+
+    @property
+    def result_display(self):
+        if self.is_played and self.home_goals is not None and self.away_goals is not None:
+            return f'{self.home_goals}:{self.away_goals}'
+        return None
+
+    class Meta:
+        ordering = ['matchday', 'scheduled_date', 'scheduled_time']
+        verbose_name = 'Spielplan-Eintrag'
+        verbose_name_plural = 'Spielplan'
+
+    def __str__(self):
+        result = f' ({self.home_goals}:{self.away_goals})' if self.is_played else ''
+        return f'[{self.league}] ST{self.matchday}: {self.home_club.short_name} vs {self.away_club.short_name}{result}'
 
 
 class Player(models.Model):

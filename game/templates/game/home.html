@@ -402,7 +402,11 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <a class="table-link" href="/clubs/">Komplette Tabelle anzeigen <span>&rarr;</span></a>
+            {% if primary_club and primary_club.league %}
+            <a class="table-link" href="{% url 'league_detail' primary_club.league.id %}">Komplette Tabelle anzeigen <span>&rarr;</span></a>
+            {% else %}
+            <a class="table-link" href="/liga/2/">Komplette Tabelle anzeigen <span>&rarr;</span></a>
+            {% endif %}
             {% endif %}
         </article>
 
