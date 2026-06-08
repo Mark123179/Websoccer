@@ -324,17 +324,29 @@
 
       <script>
       (function() {
+        var LAST_MD_KEY = 'liga_sp_last_md_{{ change_object_id }}_{{ spielplan_selected }}';
+
         function toggleMd(header) {
           var block = header.parentElement;
           var isExpanded = block.classList.contains('expanded');
-          block.classList.toggle('expanded', !isExpanded);
+          var expanding = !isExpanded;
+          block.classList.toggle('expanded', expanding);
           var key = 'liga_sp_' + block.id;
-          try { sessionStorage.setItem(key, isExpanded ? '0' : '1'); } catch(e) {}
+          try { sessionStorage.setItem(key, expanding ? '1' : '0'); } catch(e) {}
+          if (expanding) {
+            var md = block.id.replace('md-block-', '');
+            try { sessionStorage.setItem(LAST_MD_KEY, md); } catch(e) {}
+          }
         }
         window.toggleMd = toggleMd;
 
         var currentMd = {{ spielplan_current_matchday|default:"null" }};
         var currentBlock = currentMd ? document.getElementById('md-block-' + currentMd) : null;
+
+        var storedLastMd;
+        try { storedLastMd = sessionStorage.getItem(LAST_MD_KEY); } catch(e) {}
+        var targetBlock = storedLastMd ? document.getElementById('md-block-' + storedLastMd) : null;
+        if (!targetBlock) { targetBlock = currentBlock; }
 
         document.querySelectorAll('.spielplan-matchday-block').forEach(function(block) {
           var key = 'liga_sp_' + block.id;
@@ -342,13 +354,13 @@
           try { stored = sessionStorage.getItem(key); } catch(e) {}
           if (stored === '1') {
             block.classList.add('expanded');
-          } else if (stored === null && block === currentBlock) {
+          } else if (stored === null && block === targetBlock) {
             block.classList.add('expanded');
           }
         });
 
-        if (currentBlock) {
-          currentBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (targetBlock) {
+          targetBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       })();
       </script>
