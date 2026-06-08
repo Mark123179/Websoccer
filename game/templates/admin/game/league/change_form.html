@@ -1,0 +1,259 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block after_related_objects %}
+{{ block.super }}
+
+<style>
+.league-spielplan-section {
+  margin-top: 24px;
+  padding: 0;
+}
+.league-spielplan-section h2 {
+  font-size: 14px;
+  font-weight: bold;
+  color: #e0e0e0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.league-spielplan-section h2 a.spielplan-gen-btn {
+  font-size: 12px;
+  font-weight: normal;
+  padding: 3px 10px;
+  border: 1px solid #417690;
+  border-radius: 3px;
+  color: #79aec8;
+  text-decoration: none;
+  margin-left: auto;
+}
+.league-spielplan-section h2 a.spielplan-gen-btn:hover {
+  background: #204050;
+}
+.spielplan-season-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.spielplan-season-form label {
+  font-size: 12px;
+  color: #aaa;
+}
+.spielplan-season-form select {
+  font-size: 12px;
+  padding: 3px 6px;
+  background: #1e272e;
+  color: #e0e0e0;
+  border: 1px solid #444;
+  border-radius: 3px;
+}
+.spielplan-season-form button {
+  font-size: 12px;
+  padding: 3px 10px;
+  background: #204050;
+  color: #79aec8;
+  border: 1px solid #417690;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.spielplan-season-form button:hover {
+  background: #2a5060;
+}
+.spielplan-no-fixtures {
+  color: #888;
+  font-size: 12px;
+  padding: 12px 0;
+}
+.spielplan-matchday-block {
+  margin-bottom: 6px;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.spielplan-matchday-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #1e2430;
+  cursor: pointer;
+  user-select: none;
+}
+.spielplan-matchday-header:hover {
+  background: #232d3a;
+}
+.spielplan-matchday-header .md-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #79aec8;
+  min-width: 80px;
+}
+.spielplan-matchday-header .md-date {
+  font-size: 11px;
+  color: #666;
+  flex: 1;
+}
+.spielplan-matchday-header .md-count {
+  font-size: 11px;
+  color: #555;
+}
+.spielplan-matchday-header .md-toggle {
+  font-size: 11px;
+  color: #555;
+  transition: transform 0.15s;
+}
+.spielplan-matchday-block.expanded .md-toggle {
+  transform: rotate(90deg);
+}
+.spielplan-matchday-fixtures {
+  display: none;
+}
+.spielplan-matchday-block.expanded .spielplan-matchday-fixtures {
+  display: block;
+}
+.spielplan-fixture-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.spielplan-fixture-table td {
+  padding: 5px 10px;
+  border-top: 1px solid #1e1e1e;
+  color: #ccc;
+}
+.spielplan-fixture-table .col-home {
+  text-align: right;
+  width: 38%;
+}
+.spielplan-fixture-table .col-sep {
+  text-align: center;
+  width: 10%;
+  color: #555;
+  font-size: 11px;
+}
+.spielplan-fixture-table .col-result {
+  text-align: center;
+  width: 10%;
+  font-weight: bold;
+}
+.spielplan-fixture-table .col-away {
+  text-align: left;
+  width: 38%;
+}
+.spielplan-fixture-table .col-date {
+  text-align: right;
+  width: 14%;
+  color: #666;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.spielplan-fixture-table tr:hover td {
+  background: #1a1a2a;
+}
+.result-played {
+  color: #4caf50;
+}
+.result-pending {
+  color: #444;
+  font-weight: normal;
+}
+</style>
+
+<div class="league-spielplan-section module">
+  <h2>
+    &#128197; Spielplan
+    {% if spielplan_gen_url %}
+      <a class="spielplan-gen-btn" href="{{ spielplan_gen_url }}">&#9881; Generieren / Reset</a>
+    {% endif %}
+  </h2>
+
+  {% if spielplan_seasons %}
+    <form class="spielplan-season-form" method="get">
+      <label for="id_season_sel">Saison:</label>
+      <select id="id_season_sel" name="season">
+        {% for s in spielplan_seasons %}
+          <option value="{{ s }}"{% if s == spielplan_selected %} selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Anzeigen</button>
+    </form>
+
+    {% if spielplan_matchdays %}
+      <div id="spielplan-container">
+        {% for md_block in spielplan_matchdays %}
+          <div class="spielplan-matchday-block" id="md-block-{{ md_block.matchday }}">
+            <div class="spielplan-matchday-header" onclick="toggleMd(this)">
+              <span class="md-label">Spieltag {{ md_block.matchday }}</span>
+              <span class="md-date">
+                {% with first=md_block.fixtures.0 %}
+                  {% if first.scheduled_date %}{{ first.scheduled_date|date:"d.m.Y" }}{% endif %}
+                {% endwith %}
+              </span>
+              <span class="md-count">{{ md_block.fixtures|length }} Spiel{{ md_block.fixtures|length|pluralize:"e" }}</span>
+              <span class="md-toggle">&#9658;</span>
+            </div>
+            <div class="spielplan-matchday-fixtures">
+              <table class="spielplan-fixture-table">
+                {% for f in md_block.fixtures %}
+                  <tr>
+                    <td class="col-home">{{ f.home_club.short_name }}</td>
+                    <td class="col-sep">vs</td>
+                    <td class="col-away">{{ f.away_club.short_name }}</td>
+                    <td class="col-result">
+                      {% if f.is_played and f.home_goals is not None and f.away_goals is not None %}
+                        <span class="result-played">{{ f.home_goals }}:{{ f.away_goals }}</span>
+                      {% else %}
+                        <span class="result-pending">—</span>
+                      {% endif %}
+                    </td>
+                    <td class="col-date">
+                      {% if f.scheduled_date %}{{ f.scheduled_date|date:"d.m." }}{% if f.scheduled_time %} {{ f.scheduled_time|time:"H:i" }}{% endif %}{% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <script>
+      (function() {
+        function toggleMd(header) {
+          var block = header.parentElement;
+          var isExpanded = block.classList.contains('expanded');
+          block.classList.toggle('expanded', !isExpanded);
+          var key = 'liga_sp_' + block.id;
+          try { sessionStorage.setItem(key, isExpanded ? '0' : '1'); } catch(e) {}
+        }
+        window.toggleMd = toggleMd;
+
+        document.querySelectorAll('.spielplan-matchday-block').forEach(function(block) {
+          var key = 'liga_sp_' + block.id;
+          var stored;
+          try { stored = sessionStorage.getItem(key); } catch(e) {}
+          if (stored === '1') {
+            block.classList.add('expanded');
+          }
+        });
+      })();
+      </script>
+    {% else %}
+      <p class="spielplan-no-fixtures">Keine Spielplan-Einträge für Saison „{{ spielplan_selected }}" vorhanden.</p>
+    {% endif %}
+
+  {% else %}
+    <p class="spielplan-no-fixtures">
+      Noch kein Spielplan generiert.
+      {% if spielplan_gen_url %}
+        <a href="{{ spielplan_gen_url }}">&#128197; Jetzt generieren</a>
+      {% endif %}
+    </p>
+  {% endif %}
+</div>
+
+{% endblock %}

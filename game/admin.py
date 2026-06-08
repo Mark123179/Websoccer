@@ -282,7 +282,46 @@ class PlayerInline(admin.TabularInline):
     )
 
 
+class ClubLeagueInline(admin.TabularInline):
+    model = Club
+    fk_name = 'league'
+    fields = ('club_link', 'short_name', 'managed_by', 'budget', 'readiness_badge')
+    readonly_fields = ('club_link', 'short_name', 'managed_by', 'budget', 'readiness_badge')
+    extra = 0
+    can_delete = False
+    show_change_link = False
+    verbose_name = 'Verein'
+    verbose_name_plural = 'Vereine in dieser Liga'
+    ordering = ('name',)
+
+    @admin.display(description='Name')
+    def club_link(self, obj):
+        from django.urls import reverse
+        url = reverse('admin:game_club_change', args=[obj.pk])
+        return format_html('<a href="{}">{}</a>', url, obj.name)
+
+    @admin.display(description='Spielbereit')
+    def readiness_badge(self, obj):
+        from game.match_readiness import has_valid_lineup
+        setup = next(
+            (s for s in obj.tactic_setups.all() if s.squad_scope == 'pro'),
+            None,
+        )
+        ok = has_valid_lineup(setup, club=obj)
+        color = '#4caf50' if ok else '#f44336'
+        symbol = '✓' if ok else '✗'
+        return format_html('<span style="color:{};font-weight:bold;">{}</span>', color, symbol)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('tactic_setups').select_related('managed_by')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 class LeagueAdmin(admin.ModelAdmin):
+    change_form_template = 'admin/game/league/change_form.html'
+
     list_display = (
         'name',
         'country',
@@ -304,11 +343,32 @@ class LeagueAdmin(admin.ModelAdmin):
         'strength_coefficient',
         'coefficient_source',
         'logo_static_path',
+        'logo_preview',
         'cl_spots',
         'el_spots',
         'conference_spots',
         'relegation_spots',
     )
+    readonly_fields = ('logo_preview',)
+    inlines = [ClubLeagueInline]
+
+    @admin.display(description='Logo-Vorschau')
+    def logo_preview(self, obj):
+        from django.contrib.staticfiles import finders
+        from django.templatetags.static import static
+        if not obj.logo_static_path:
+            return format_html('<span style="color:#888;font-size:11px;">— kein Pfad gesetzt —</span>')
+        if finders.find(obj.logo_static_path):
+            return format_html(
+                '<img src="{}" alt="{}" style="max-height:72px;max-width:140px;'
+                'object-fit:contain;background:#1a1a1a;padding:6px;border-radius:4px;'
+                'border:1px solid #333;">',
+                static(obj.logo_static_path), obj.name,
+            )
+        return format_html(
+            '<span style="color:#f44336;font-size:11px;">&#9888; Datei nicht gefunden: {}</span>',
+            obj.logo_static_path,
+        )
 
     @admin.display(description='Vereine')
     def club_count(self, obj):
@@ -343,6 +403,52 @@ class LeagueAdmin(admin.ModelAdmin):
             '<a class="button" style="padding:2px 8px;font-size:11px;" href="{}">&#128197; Generieren</a>',
             url,
         )
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        from collections import defaultdict
+        from django.urls import reverse
+        from game.models import SeasonFixture
+
+        extra_context = extra_context or {}
+        if object_id:
+            try:
+                league = League.objects.get(pk=object_id)
+            except League.DoesNotExist:
+                league = None
+            if league:
+                seasons = list(
+                    SeasonFixture.objects.filter(league=league)
+                    .values_list('season', flat=True)
+                    .distinct()
+                    .order_by('-season')
+                )
+                selected_season = request.GET.get('season') or (seasons[0] if seasons else None)
+
+                spielplan_matchdays = []
+                if selected_season:
+                    fixtures = (
+                        SeasonFixture.objects
+                        .filter(league=league, season=selected_season)
+                        .select_related('home_club', 'away_club')
+                        .order_by('matchday', 'id')
+                    )
+                    by_md = defaultdict(list)
+                    for f in fixtures:
+                        by_md[f.matchday].append(f)
+                    for md in sorted(by_md.keys()):
+                        spielplan_matchdays.append({
+                            'matchday': md,
+                            'fixtures': by_md[md],
+                        })
+
+                extra_context.update({
+                    'spielplan_seasons': seasons,
+                    'spielplan_selected': selected_season,
+                    'spielplan_matchdays': spielplan_matchdays,
+                    'spielplan_gen_url': reverse('admin:game_league_spielplan', args=[object_id]),
+                    'change_object_id': object_id,
+                })
+        return super().changeform_view(request, object_id, form_url, extra_context)
 
     def get_urls(self):
         from django.urls import path
