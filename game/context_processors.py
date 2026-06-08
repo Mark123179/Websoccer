@@ -41,8 +41,6 @@ def _build_global_calendar(club, calendar_offset):
     fixtures_by_date = {}
 
     if club is not None:
-        stadium = _STADIUM_ASSETS.get(club.fm_inside_id, '')
-
         # Alle Partien des Vereins im 7-Tage-Fenster, ohne U21-Ligen
         qs = (
             SeasonFixture.objects
@@ -59,6 +57,12 @@ def _build_global_calendar(club, calendar_offset):
             opponent = f.away_club if is_home else f.home_club
             venue = 'H' if is_home else 'A'
             lineup_saved = f.home_lineup_set if is_home else f.away_lineup_set
+
+            # Stadionbild immer vom Heimverein des Fixtures
+            home_club_of_fixture = f.home_club
+            fixture_stadium = _STADIUM_ASSETS.get(
+                home_club_of_fixture.fm_inside_id if home_club_of_fixture else None, ''
+            )
 
             if f.is_played and f.home_goals is not None and f.away_goals is not None:
                 result = f'{f.home_goals}:{f.away_goals}'
@@ -77,7 +81,7 @@ def _build_global_calendar(club, calendar_offset):
                 'opponent_name':    opponent.name if opponent else '',
                 'opponent_crest':   opp_crest,
                 'opponent_url':     opp_url,
-                'stadium':          stadium,
+                'stadium':          fixture_stadium,
                 'competition_logo': competition_logo_static_path(f.league.name),
                 'lineup_saved':     lineup_saved,
                 'result':           result,
