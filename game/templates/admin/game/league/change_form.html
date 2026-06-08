@@ -325,6 +325,48 @@
 .sp-save-status.err {
   color: #f44336;
 }
+/* Bulk-date row inside matchday header */
+.md-bulk-date-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+.md-bulk-date-label {
+  font-size: 10px;
+  color: #556;
+  white-space: nowrap;
+}
+.md-bulk-date-input {
+  background: #1a2028;
+  color: #d0d8e0;
+  border: 1px solid #3a4a5a;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 11px;
+  width: 112px;
+  box-sizing: border-box;
+}
+.md-bulk-date-input:focus {
+  outline: none;
+  border-color: #79aec8;
+  background: #1e2e3e;
+}
+.md-bulk-date-btn {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: #1a2f3d;
+  color: #79aec8;
+  border: 1px solid #2a4f65;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+.md-bulk-date-btn:hover {
+  background: #204050;
+  color: #a0c8e0;
+}
 </style>
 
 <div class="league-spielplan-section module">
@@ -386,6 +428,16 @@
                 <a class="md-edit-link"
                    href="{{ spielplan_fixture_list_url }}?league__id__exact={{ change_object_id }}&season={{ spielplan_selected }}&matchday={{ md_block.matchday }}"
                    onclick="event.stopPropagation()">&#9998; Ergebnisse</a>
+              {% endif %}
+              {% if fixture_edit_url %}
+                <span class="md-bulk-date-wrap" onclick="event.stopPropagation()">
+                  <span class="md-bulk-date-label">Alle auf Datum:</span>
+                  <input class="md-bulk-date-input" type="date"
+                    id="md-bulk-date-{{ md_block.matchday }}"
+                    title="Alle Datumsfelder dieses Spieltags auf dieses Datum setzen">
+                  <button class="md-bulk-date-btn" type="button"
+                    onclick="applyBulkDate({{ md_block.matchday }})">&#10003; Setzen</button>
+                </span>
               {% endif %}
               <span class="md-toggle">&#9658;</span>
             </div>
@@ -556,6 +608,21 @@
         }
 
         window.saveMatchday = saveMatchday;
+
+        function applyBulkDate(matchday) {
+          var input = document.getElementById('md-bulk-date-' + matchday);
+          if (!input || !input.value) {
+            input && input.focus();
+            return;
+          }
+          var block = document.getElementById('md-block-' + matchday);
+          if (!block) return;
+          var dateInputs = block.querySelectorAll('input.sp-input-date');
+          dateInputs.forEach(function(di) {
+            di.value = input.value;
+          });
+        }
+        window.applyBulkDate = applyBulkDate;
       })();
       </script>
     {% else %}
