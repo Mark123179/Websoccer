@@ -8,6 +8,7 @@
 >
     <h2 class="club-card-title">LETZTES SPIEL</h2>
 
+    {% if profile.lastMatch %}
     <p class="club-match-competition">
         {% if profile.lastMatch.competitionLogoUrl %}
             <img src="{% static profile.lastMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
@@ -60,4 +61,8 @@
         {{ profile.lastMatch.resultLabel }}
         <span aria-hidden="true">→</span>
     </a>
+
+    {% else %}
+    <p class="club-no-last-match">Noch kein Spiel bestritten.</p>
+    {% endif %}
 </article>

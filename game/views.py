@@ -1586,7 +1586,7 @@ def home(request):
         last_match_score = f'{my_g}:{opp_g}' if my_g is not None and opp_g is not None else None
     else:
         last_match_obj = None
-        last_match_opponent = secondary_club
+        last_match_opponent = None
         last_match_score = None
 
     transfer_queryset = Player.objects.select_related(

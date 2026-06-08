@@ -385,6 +385,19 @@ body.tactics-page .nav-menu a:nth-child(5) {
     width: 30px;
 }
 
+/* Stadion-Kachel: nie abschneiden — breite passt sich dem Namen an */
+.tactics-meta-item:has(.tactics-stadium-asset) {
+    flex: 0 0 auto;
+    max-width: 340px;
+    min-width: 180px;
+}
+
+.tactics-meta-item:has(.tactics-stadium-asset) .tactics-meta-copy b {
+    overflow: visible;
+    text-overflow: unset;
+    white-space: nowrap;
+}
+
 .tactics-hero-actions .tactics-status {
     height: 29px;
     min-width: 174px;

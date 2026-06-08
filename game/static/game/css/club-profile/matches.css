@@ -215,6 +215,14 @@
     font-weight: 800;
 }
 
+.club-no-last-match {
+    color: var(--club-faint, rgba(255,255,255,0.38));
+    font-size: 13px;
+    font-weight: 600;
+    margin: auto 0;
+    text-align: center;
+}
+
 .club-result-badge {
     position: absolute;
     right: 50%;

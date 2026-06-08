@@ -204,8 +204,7 @@ def build_match(club, opponent_club, kind, links):
             'scorers': match.scorers[:5],
         }
 
-    # Final fallback: empty state
-    opponent = opponent_club
+    # Final fallback: empty state only for next match; last match returns None (no data yet)
     if kind == ClubProfileMatch.KIND_NEXT:
         return {
             'id': 'next-fallback',
@@ -215,24 +214,11 @@ def build_match(club, opponent_club, kind, links):
             'timeLabel': '',
             'stadiumName': stadium_name_for(club),
             'homeClub': club_stub(club),
-            'awayClub': club_stub(opponent) if opponent else empty_club_stub(),
+            'awayClub': club_stub(opponent_club) if opponent_club else empty_club_stub(),
             'backgroundImageUrl': stadium_image_for(club),
             'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
         }
-    return {
-        'id': 'last-fallback',
-        'competitionName': club.league.name if club.league else 'Liga',
-        'matchdayLabel': 'Letzte Partie',
-        'homeClub': club_stub(club),
-        'awayClub': club_stub(opponent) if opponent else empty_club_stub(),
-        'homeGoals': 0,
-        'awayGoals': 0,
-        'resultLabel': 'UNENTSCHIEDEN',
-        'resultTone': 'draw',
-        'backgroundImageUrl': stadium_image_for(club),
-        'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
-        'scorers': [],
-    }
+    return None
 
 
 def _current_season_key():
