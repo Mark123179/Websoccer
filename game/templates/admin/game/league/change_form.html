@@ -564,11 +564,56 @@
           targetBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        // Record initial state for each fixture row so we can detect score overwrites
+        document.querySelectorAll('tbody tr[data-fixture-id]').forEach(function(row) {
+          var homeGoalsInput = row.querySelector('input[name="home_goals"]');
+          var awayGoalsInput = row.querySelector('input[name="away_goals"]');
+          var playedInput = row.querySelector('input[name="is_played"]');
+          row._spOrigState = {
+            wasPlayed: playedInput ? playedInput.checked : false,
+            homeGoals: homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null,
+            awayGoals: awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null
+          };
+        });
+
         function saveMatchday(btn, editUrl, csrfToken) {
           var matchday = btn.dataset.matchday;
           var statusEl = document.getElementById('sp-status-' + matchday);
           var block = btn.closest('.spielplan-matchday-block');
           var rows = block.querySelectorAll('tbody tr[data-fixture-id]');
+
+          // Check for already-played fixtures whose score is being overwritten
+          var overwriteCount = 0;
+          var overwriteDetails = [];
+          rows.forEach(function(row) {
+            var orig = row._spOrigState;
+            if (!orig || !orig.wasPlayed || (orig.homeGoals === null && orig.awayGoals === null)) return;
+            var homeGoalsInput = row.querySelector('input[name="home_goals"]');
+            var awayGoalsInput = row.querySelector('input[name="away_goals"]');
+            var newHome = homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null;
+            var newAway = awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null;
+            if (newHome !== orig.homeGoals || newAway !== orig.awayGoals) {
+              overwriteCount++;
+              var homeCell = row.querySelector('.col-home');
+              var awayCell = row.querySelector('.col-away');
+              var label = (homeCell ? homeCell.textContent.trim() : '?') + ' ' +
+                          orig.homeGoals + ':' + orig.awayGoals + ' → ' +
+                          (newHome !== null ? newHome : '—') + ':' + (newAway !== null ? newAway : '—') +
+                          ' ' + (awayCell ? awayCell.textContent.trim() : '?');
+              overwriteDetails.push(label);
+            }
+          });
+
+          if (overwriteCount > 0) {
+            var msg = 'Achtung: ' + overwriteCount + ' bereits gespielte' +
+                      (overwriteCount === 1 ? 's Spiel hat' : ' Spiele haben') +
+                      ' ein gespeichertes Ergebnis.\n\n' +
+                      overwriteDetails.join('\n') +
+                      '\n\nErgebnis' + (overwriteCount === 1 ? '' : 'se') + ' wirklich überschreiben?';
+            if (!window.confirm(msg)) {
+              return;
+            }
+          }
 
           var fixtures = [];
           rows.forEach(function(row) {
@@ -608,6 +653,17 @@
                 statusEl.textContent = '✓ ' + result.data.updated + ' Spiel' + (result.data.updated !== 1 ? 'e' : '') + ' gespeichert';
                 statusEl.className = 'sp-save-status ok';
               }
+              // Update baseline so a second save won't re-warn about the same change
+              rows.forEach(function(row) {
+                var homeGoalsInput = row.querySelector('input[name="home_goals"]');
+                var awayGoalsInput = row.querySelector('input[name="away_goals"]');
+                var playedInput = row.querySelector('input[name="is_played"]');
+                row._spOrigState = {
+                  wasPlayed: playedInput ? playedInput.checked : false,
+                  homeGoals: homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null,
+                  awayGoals: awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null
+                };
+              });
             } else {
               var msg = (result.data.errors || ['Unbekannter Fehler']).join('; ');
               if (statusEl) { statusEl.textContent = '✗ ' + msg; statusEl.className = 'sp-save-status err'; }
