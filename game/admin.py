@@ -61,6 +61,28 @@ from .models import (
 from .season_goals import evaluate_goal_for_club
 
 
+def _write_to_static(file_obj, static_path):
+    """
+    Schreibt file_obj direkt nach game/static/<static_path> und überschreibt
+    eine vorhandene Datei. static_path ist der Pfad wie er in {% static %}
+    verwendet wird (z.B. 'game/images/crests/915.png').
+    """
+    import os
+    from pathlib import Path
+    from django.conf import settings
+    dest = Path(settings.BASE_DIR) / 'game' / 'static' / static_path
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    with open(dest, 'wb') as f:
+        for chunk in file_obj.chunks():
+            f.write(chunk)
+
+
+def _ext(file_obj):
+    """Gibt die Dateiendung des hochgeladenen Files zurück (z.B. 'png')."""
+    name = file_obj.name or ''
+    return name.rsplit('.', 1)[-1].lower() if '.' in name else 'jpg'
+
+
 NATIONALITY_CHOICES = [
     ('', '---------'),
     *[
@@ -71,6 +93,12 @@ NATIONALITY_CHOICES = [
 
 
 class PlayerNationalityForm(forms.ModelForm):
+    portrait_file = forms.FileField(
+        required=False,
+        label='Spielerbild hochladen',
+        help_text='JPG/PNG — überschreibt das bestehende Spielerbild (benötigt fm_inside_id).',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
     club = forms.ModelChoiceField(
         queryset=Club.objects.none(),
         required=False,
@@ -296,7 +324,39 @@ def _dismiss_manager_action(modeladmin, request, queryset):
 _dismiss_manager_action.short_description = 'Trainer entlassen (Abgang heute)'
 
 
+class ClubImagesForm(forms.ModelForm):
+    crest_file = forms.FileField(
+        required=False,
+        label='Wappen hochladen',
+        help_text='PNG/JPG — überschreibt das vorhandene Wappen (benötigt fm_inside_id).',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
+    kit_home_file = forms.FileField(
+        required=False,
+        label='Heimtrikot hochladen',
+        help_text='PNG/JPG — überschreibt das vorhandene Heimtrikot.',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
+    kit_away_file = forms.FileField(
+        required=False,
+        label='Auswärtstrikot hochladen',
+        help_text='PNG/JPG — überschreibt das vorhandene Auswärtstrikot.',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
+    kit_third_file = forms.FileField(
+        required=False,
+        label='Ausweichtrikot hochladen',
+        help_text='PNG/JPG — überschreibt das vorhandene Ausweichtrikot.',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
+
+    class Meta:
+        model = Club
+        fields = '__all__'
+
+
 class ClubAdmin(admin.ModelAdmin):
+    form = ClubImagesForm
     list_display = (
         'name',
         'short_name',
@@ -313,7 +373,7 @@ class ClubAdmin(admin.ModelAdmin):
         'fm_inside_id',
     )
     autocomplete_fields = ('managed_by',)
-    readonly_fields = ('managed_by_hint',)
+    readonly_fields = ('managed_by_hint', 'crest_preview', 'kits_preview')
     actions = [_assign_manager_action, _dismiss_manager_action]
 
     inlines = [
@@ -336,6 +396,17 @@ class ClubAdmin(admin.ModelAdmin):
                     '"Trainer entlassen" auf der Vereins-Übersicht, '
                     'damit die Karrierekarte automatisch aktualisiert wird. '
                     'Das Feld "managed_by" nicht direkt über das Formular ändern.'
+                ),
+            }),
+            ('Bilder: Wappen & Trikots', {
+                'fields': (
+                    'crest_preview', 'crest_file',
+                    'kits_preview',
+                    'kit_home_file', 'kit_away_file', 'kit_third_file',
+                ),
+                'description': (
+                    'Datei hochladen → wird sofort in den Static-Ordner geschrieben und '
+                    'ersetzt das bestehende Bild. fm_inside_id muss gesetzt sein.'
                 ),
             }),
         ]
@@ -421,13 +492,97 @@ class ClubAdmin(admin.ModelAdmin):
         }
         return render(request, 'admin/game/club/assign_manager.html', context)
 
+    @admin.display(description='Aktuelles Wappen')
+    def crest_preview(self, obj):
+        if not obj or not obj.pk:
+            return format_html('<span style="color:#999;">Erst nach dem Speichern sichtbar.</span>')
+        path = obj.crest_static_path
+        if not path:
+            return format_html('<span style="color:#999;">Kein Wappen gefunden (fm_inside_id prüfen).</span>')
+        return format_html(
+            '<img src="{}" alt="{}" style="width:80px;height:80px;object-fit:contain;'
+            'border:1px solid #ddd;padding:4px;border-radius:4px;" />',
+            static(path), obj.name,
+        )
+
+    @admin.display(description='Aktuelle Trikots (Heim / Auswärts / Ausweich)')
+    def kits_preview(self, obj):
+        if not obj or not obj.pk:
+            return format_html('<span style="color:#999;">Erst nach dem Speichern sichtbar.</span>')
+        kits = obj.kit_static_paths
+        if not kits:
+            return format_html('<span style="color:#999;">Keine Trikots gefunden (fm_inside_id prüfen).</span>')
+        imgs = ''.join(
+            f'<div style="text-align:center;margin:0 8px;">'
+            f'<img src="{static(k["path"])}" alt="{k["label"]}" '
+            f'style="width:80px;height:80px;object-fit:contain;border:1px solid #ddd;'
+            f'padding:4px;border-radius:4px;" />'
+            f'<div style="font-size:11px;margin-top:4px;">{k["label"]}</div></div>'
+            for k in kits
+        )
+        return format_html(
+            '<div style="display:flex;flex-wrap:wrap;gap:4px;">{}</div>',
+            mark_safe(imgs),
+        )
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        fm_id = obj.fm_inside_id
+        if not fm_id:
+            if any(form.cleaned_data.get(k) for k in ('crest_file', 'kit_home_file', 'kit_away_file', 'kit_third_file')):
+                messages.warning(request, 'Bild-Upload übersprungen: fm_inside_id ist nicht gesetzt.')
+            return
+
+        kit_map = {
+            'kit_home_file': f'game/images/kits/{fm_id}_home',
+            'kit_away_file': f'game/images/kits/{fm_id}_away',
+            'kit_third_file': f'game/images/kits/{fm_id}_third',
+        }
+        uploaded = []
+
+        crest_file = form.cleaned_data.get('crest_file')
+        if crest_file:
+            dest = f'game/images/crests/{fm_id}.{_ext(crest_file)}'
+            _write_to_static(crest_file, dest)
+            uploaded.append('Wappen')
+
+        for field_name, base_path in kit_map.items():
+            f = form.cleaned_data.get(field_name)
+            if f:
+                dest = f'{base_path}.{_ext(f)}'
+                _write_to_static(f, dest)
+                uploaded.append(field_name.replace('_file', '').replace('kit_', '').capitalize() + '-Trikot')
+
+        if uploaded:
+            messages.success(request, f'Bilder hochgeladen: {", ".join(uploaded)}.')
+
 
 admin.site.register(League, LeagueAdmin)
 admin.site.register(Club, ClubAdmin)
 
 
+class ClubPublicProfileForm(forms.ModelForm):
+    stadium_image_file = forms.FileField(
+        required=False,
+        label='Stadionbild hochladen',
+        help_text='JPG/PNG — überschreibt das bestehende Bild.',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
+    city_image_file = forms.FileField(
+        required=False,
+        label='Stadtbild hochladen',
+        help_text='JPG/PNG — überschreibt das bestehende Bild.',
+        widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+    )
+
+    class Meta:
+        model = ClubPublicProfile
+        fields = '__all__'
+
+
 @admin.register(ClubPublicProfile)
 class ClubPublicProfileAdmin(admin.ModelAdmin):
+    form = ClubPublicProfileForm
     list_display = (
         'club',
         'stadium_name',
@@ -439,6 +594,74 @@ class ClubPublicProfileAdmin(admin.ModelAdmin):
         'stadium_name',
         'city_name',
     )
+    readonly_fields = ('stadium_image_preview', 'city_image_preview')
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'club', 'stadium_name', 'city_name', 'partner_club',
+                'average_attendance',
+            ),
+        }),
+        ('Stadionbild', {
+            'fields': ('stadium_image_preview', 'stadium_image_static_path', 'stadium_image_file'),
+            'description': 'Datei hochladen überschreibt das bestehende Bild im Static-Ordner.',
+        }),
+        ('Stadtbild', {
+            'fields': ('city_image_preview', 'city_image_static_path', 'city_image_file'),
+            'description': 'Datei hochladen überschreibt das bestehende Bild im Static-Ordner.',
+        }),
+    )
+
+    @admin.display(description='Aktuelles Stadionbild')
+    def stadium_image_preview(self, obj):
+        if not obj or not obj.pk or not obj.stadium_image_static_path:
+            return format_html('<span style="color:#999;">Noch kein Bild gesetzt.</span>')
+        return format_html(
+            '<img src="{}" alt="Stadion" style="max-width:320px;max-height:140px;'
+            'object-fit:cover;border-radius:4px;border:1px solid #ccc;" />',
+            static(obj.stadium_image_static_path),
+        )
+
+    @admin.display(description='Aktuelles Stadtbild')
+    def city_image_preview(self, obj):
+        if not obj or not obj.pk or not obj.city_image_static_path:
+            return format_html('<span style="color:#999;">Noch kein Bild gesetzt.</span>')
+        return format_html(
+            '<img src="{}" alt="Stadt" style="max-width:320px;max-height:140px;'
+            'object-fit:cover;border-radius:4px;border:1px solid #ccc;" />',
+            static(obj.city_image_static_path),
+        )
+
+    def save_model(self, request, obj, form, change):
+        stadium_file = form.cleaned_data.get('stadium_image_file')
+        if stadium_file:
+            ext = _ext(stadium_file)
+            if obj.stadium_image_static_path:
+                dest_path = obj.stadium_image_static_path
+            elif obj.club and obj.club.fm_inside_id:
+                dest_path = f'game/images/stadiums/germany/{obj.club.fm_inside_id}.{ext}'
+            else:
+                dest_path = f'game/images/stadiums/germany/{obj.pk or "new"}.{ext}'
+            _write_to_static(stadium_file, dest_path)
+            obj.stadium_image_static_path = dest_path
+
+        city_file = form.cleaned_data.get('city_image_file')
+        if city_file:
+            ext = _ext(city_file)
+            if obj.city_image_static_path:
+                dest_path = obj.city_image_static_path
+            elif obj.club and obj.club.fm_inside_id:
+                dest_path = f'game/images/city/{obj.club.fm_inside_id}.{ext}'
+            else:
+                dest_path = f'game/images/city/{obj.pk or "new"}.{ext}'
+            _write_to_static(city_file, dest_path)
+            obj.city_image_static_path = dest_path
+
+        super().save_model(request, obj, form, change)
+
+        if stadium_file or city_file:
+            messages.success(request, 'Bild(er) erfolgreich hochgeladen und gespeichert.')
 
 
 @admin.register(ClubTrophy)
@@ -995,6 +1218,7 @@ class PlayerAdmin(admin.ModelAdmin):
                     (
                         'portrait_preview',
                     ),
+                    'portrait_file',
                     'first_name',
                     'last_name',
                     (
@@ -1094,6 +1318,18 @@ class PlayerAdmin(admin.ModelAdmin):
         PlayerExternalIdInline,
         PlayerSourceRatingInline,
     ]
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        portrait_file = form.cleaned_data.get('portrait_file')
+        if portrait_file:
+            fm_id = obj.fm_inside_id
+            if not fm_id:
+                messages.warning(request, 'Spielerbild-Upload übersprungen: fm_inside_id ist nicht gesetzt.')
+                return
+            dest = f'game/images/players/{fm_id}.{_ext(portrait_file)}'
+            _write_to_static(portrait_file, dest)
+            messages.success(request, f'Spielerbild hochgeladen: {dest}')
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
