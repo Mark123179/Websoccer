@@ -510,7 +510,22 @@
 
       <script>
       (function() {
-        var LAST_MD_KEY = 'liga_sp_last_md_{{ change_object_id }}_{{ spielplan_selected }}';
+        var LEAGUE_ID = '{{ change_object_id }}';
+        var CURRENT_SEASON = '{{ spielplan_selected }}';
+        var LAST_MD_KEY = 'liga_sp_last_md_' + LEAGUE_ID + '_' + CURRENT_SEASON;
+        var LAST_MD_PREFIX = 'liga_sp_last_md_' + LEAGUE_ID + '_';
+
+        // Clean up last-focused keys from other seasons for this league.
+        try {
+          var keysToRemove = [];
+          for (var i = 0; i < sessionStorage.length; i++) {
+            var k = sessionStorage.key(i);
+            if (k && k.indexOf(LAST_MD_PREFIX) === 0 && k !== LAST_MD_KEY) {
+              keysToRemove.push(k);
+            }
+          }
+          keysToRemove.forEach(function(k) { sessionStorage.removeItem(k); });
+        } catch(e) {}
 
         function toggleMd(header) {
           var block = header.parentElement;
