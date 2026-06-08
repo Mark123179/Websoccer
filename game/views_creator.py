@@ -960,3 +960,272 @@ def creator_add_satisfaction(request, manager_id):
         sat.save(update_fields=['value', 'updated_at'])
     messages.success(request, f'Zufriedenheit für „{club.name}" auf {sat.value} % gesetzt.')
     return _redirect_manager_tab(manager_id, 'praesident')
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CREATOR MODE — LIGA-EDITOR
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def creator_league_edit(request, league_id):
+    from collections import defaultdict
+    from django.contrib.staticfiles import finders
+    from game.models import SeasonFixture
+
+    league = get_object_or_404(League, id=league_id)
+    active_tab = request.GET.get('tab', 'stammdaten')
+
+    clubs = list(
+        league.club_set.order_by('name').prefetch_related('tactic_setups')
+    )
+
+    logo_exists = bool(
+        league.logo_static_path and finders.find(league.logo_static_path)
+    )
+
+    spielplan_seasons = []
+    spielplan_matchdays = []
+    spielplan_selected = None
+    spielplan_total_played = 0
+    spielplan_total_fixtures = 0
+    spielplan_total_matchdays = 0
+    spielplan_current_matchday = None
+    show_confirm_reset = False
+    confirm_reset_season = None
+
+    if active_tab == 'spielplan':
+        spielplan_seasons = list(
+            SeasonFixture.objects.filter(league=league)
+            .values_list('season', flat=True)
+            .distinct()
+            .order_by('-season')
+        )
+        spielplan_selected = request.GET.get('season') or (
+            spielplan_seasons[0] if spielplan_seasons else None
+        )
+        # Confirm-reset flow: if ?confirm_reset=1 and existing unplayed fixtures
+        if request.GET.get('confirm_reset') == '1':
+            season_param = request.GET.get('season', '')
+            existing = SeasonFixture.objects.filter(league=league, season=season_param)
+            if existing.exists() and not existing.filter(is_played=True).exists():
+                show_confirm_reset = True
+                confirm_reset_season = season_param
+
+        if spielplan_selected:
+            fixtures_qs = (
+                SeasonFixture.objects
+                .filter(league=league, season=spielplan_selected)
+                .select_related('home_club', 'away_club')
+                .order_by('matchday', 'id')
+            )
+            by_md = defaultdict(list)
+            for f in fixtures_qs:
+                by_md[f.matchday].append(f)
+            for md in sorted(by_md.keys()):
+                md_fixtures = by_md[md]
+                played = sum(1 for f in md_fixtures if f.is_played)
+                total = len(md_fixtures)
+                spielplan_matchdays.append({
+                    'matchday': md,
+                    'fixtures': md_fixtures,
+                    'played': played,
+                    'total': total,
+                })
+                if played > 0:
+                    spielplan_current_matchday = md
+            spielplan_total_fixtures = sum(b['total'] for b in spielplan_matchdays)
+            spielplan_total_played = sum(b['played'] for b in spielplan_matchdays)
+            spielplan_total_matchdays = len(spielplan_matchdays)
+
+    return render(request, 'creator/league_edit.html', {
+        'league': league,
+        'clubs': clubs,
+        'active_tab': active_tab,
+        'logo_exists': logo_exists,
+        'spielplan_seasons': spielplan_seasons,
+        'spielplan_selected': spielplan_selected,
+        'spielplan_matchdays': spielplan_matchdays,
+        'spielplan_total_played': spielplan_total_played,
+        'spielplan_total_fixtures': spielplan_total_fixtures,
+        'spielplan_total_matchdays': spielplan_total_matchdays,
+        'spielplan_current_matchday': spielplan_current_matchday,
+        'show_confirm_reset': show_confirm_reset,
+        'confirm_reset_season': confirm_reset_season,
+    })
+
+
+@require_POST
+def creator_league_save_stammdaten(request, league_id):
+    league = get_object_or_404(League, id=league_id)
+    league.name = request.POST.get('name', league.name).strip() or league.name
+    league.country = request.POST.get('country', league.country).strip()
+    league.logo_static_path = request.POST.get('logo_static_path', '').strip()
+    league.coefficient_source = request.POST.get('coefficient_source', '').strip()
+    try:
+        league.strength_coefficient = Decimal(request.POST.get('strength_coefficient', '1.00'))
+    except InvalidOperation:
+        pass
+    for field in ('cl_spots', 'el_spots', 'conference_spots', 'relegation_spots'):
+        try:
+            setattr(league, field, int(request.POST.get(field, getattr(league, field))))
+        except (ValueError, TypeError):
+            pass
+    league.save()
+    messages.success(request, f'Liga „{league.name}" gespeichert.')
+    return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
+
+
+@require_POST
+def creator_league_spielplan_generate(request, league_id):
+    from datetime import date, datetime, time as dt_time
+    from game.models import SeasonFixture
+    from game.schedule_generator import create_round_robin_schedule, matchday_date
+
+    league = get_object_or_404(League, id=league_id)
+    clubs = list(league.club_set.order_by('name'))
+
+    season = request.POST.get('season', '').strip()
+    confirm_reset = request.POST.get('confirm_reset') == '1'
+
+    if not season or len(clubs) < 2:
+        messages.error(request, 'Saison angeben und mindestens 2 Vereine in der Liga.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=spielplan')
+
+    try:
+        rounds = max(1, min(4, int(request.POST.get('rounds', 2))))
+    except (ValueError, TypeError):
+        rounds = 2
+    try:
+        start_date_val = datetime.strptime(request.POST.get('start_date', ''), '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        start_date_val = date.today()
+    try:
+        parts = request.POST.get('start_time', '15:30').split(':')
+        start_time_val = dt_time(int(parts[0]), int(parts[1]))
+    except (ValueError, IndexError):
+        start_time_val = dt_time(15, 30)
+    try:
+        day_interval = max(1, int(request.POST.get('day_interval', 7)))
+    except (ValueError, TypeError):
+        day_interval = 7
+    try:
+        round_break = max(0, int(request.POST.get('round_break', 0)))
+    except (ValueError, TypeError):
+        round_break = 0
+
+    existing = SeasonFixture.objects.filter(league=league, season=season)
+    if existing.exists():
+        played_count = existing.filter(is_played=True).count()
+        if played_count > 0:
+            messages.error(
+                request,
+                f'Saison „{season}" hat {played_count} gespielte Partie(n) — '
+                f'Zurücksetzen nicht möglich.',
+            )
+            return redirect(f'/creator/leagues/{league_id}/?tab=spielplan&season={season}')
+        if not confirm_reset:
+            unplayed = existing.filter(is_played=False).count()
+            messages.warning(
+                request,
+                f'__CONFIRM_RESET__{season}__{unplayed}',
+            )
+            return redirect(
+                f'/creator/leagues/{league_id}/?tab=spielplan&season={season}&confirm_reset=1'
+            )
+        existing.delete()
+
+    try:
+        schedule = create_round_robin_schedule([c.pk for c in clubs], rounds=rounds)
+    except ValueError as exc:
+        messages.error(request, f'Spielplan-Generator Fehler: {exc}')
+        return redirect(f'/creator/leagues/{league_id}/?tab=spielplan')
+
+    n = len(clubs)
+    matchdays_per_round = n if n % 2 == 1 else n - 1
+    fixtures_to_create = []
+    for spieltag, pairs in sorted(schedule.items()):
+        match_date = matchday_date(spieltag, start_date_val, day_interval, matchdays_per_round, round_break)
+        for home_id, away_id in pairs:
+            fixtures_to_create.append(SeasonFixture(
+                league=league, season=season, matchday=spieltag,
+                home_club_id=home_id, away_club_id=away_id,
+                scheduled_date=match_date, scheduled_time=start_time_val,
+            ))
+    SeasonFixture.objects.bulk_create(fixtures_to_create)
+    messages.success(
+        request,
+        f'Spielplan Saison „{season}" generiert: {len(schedule)} Spieltage, '
+        f'{len(fixtures_to_create)} Partien.',
+    )
+    return redirect(f'/creator/leagues/{league_id}/?tab=spielplan&season={season}')
+
+
+def creator_league_fixture_save(request, league_id):
+    import json
+    from django.http import JsonResponse
+    from django.db import transaction
+    from game.models import SeasonFixture
+    from datetime import datetime, time as dt_time
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    league = get_object_or_404(League, id=league_id)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Ungültiges JSON'}, status=400)
+
+    rows = data.get('fixtures', [])
+    errors = []
+    updates = []
+
+    for row in rows:
+        fid = row.get('id')
+        try:
+            fixture = SeasonFixture.objects.get(pk=fid, league=league)
+        except SeasonFixture.DoesNotExist:
+            errors.append(f'Fixture {fid} nicht gefunden.')
+            continue
+
+        sd = (row.get('scheduled_date') or '').strip()
+        st = (row.get('scheduled_time') or '').strip()
+        hg = row.get('home_goals')
+        ag = row.get('away_goals')
+        ip = bool(row.get('is_played', False))
+
+        if sd:
+            try:
+                fixture.scheduled_date = datetime.strptime(sd, '%Y-%m-%d').date()
+            except ValueError:
+                errors.append(f'Ungültiges Datum bei Fixture {fid}: {sd}')
+                continue
+        else:
+            fixture.scheduled_date = None
+
+        if st:
+            try:
+                parts = st.split(':')
+                fixture.scheduled_time = dt_time(int(parts[0]), int(parts[1]))
+            except (ValueError, IndexError):
+                errors.append(f'Ungültige Uhrzeit bei Fixture {fid}: {st}')
+                continue
+        else:
+            fixture.scheduled_time = None
+
+        fixture.home_goals = int(hg) if (hg is not None and str(hg) != '') else None
+        fixture.away_goals = int(ag) if (ag is not None and str(ag) != '') else None
+        fixture.is_played = ip
+        updates.append(fixture)
+
+    if errors:
+        return JsonResponse({'error': '\n'.join(errors)}, status=400)
+
+    with transaction.atomic():
+        for f in updates:
+            f.save(update_fields=[
+                'scheduled_date', 'scheduled_time',
+                'home_goals', 'away_goals', 'is_played',
+            ])
+
+    return JsonResponse({'ok': True, 'saved': len(updates)})

@@ -61,6 +61,10 @@ from .views_creator import (
     creator_toggle_sponsor,
     creator_add_goal,
     creator_delete_goal,
+    creator_league_edit,
+    creator_league_save_stammdaten,
+    creator_league_spielplan_generate,
+    creator_league_fixture_save,
 )
 from .views_creator import (
     creator_manager_list,
@@ -227,6 +231,12 @@ urlpatterns = [
     path('creator/clubs/<int:club_id>/sponsors/<int:sponsor_id>/toggle/', creator_toggle_sponsor, name='creator_toggle_sponsor'),
     path('creator/clubs/<int:club_id>/goals/add/', creator_add_goal, name='creator_add_goal'),
     path('creator/clubs/<int:club_id>/goals/<int:goal_id>/delete/', creator_delete_goal, name='creator_delete_goal'),
+
+    # Liga-Editor
+    path('creator/leagues/<int:league_id>/', creator_league_edit, name='creator_league_edit'),
+    path('creator/leagues/<int:league_id>/stammdaten/', creator_league_save_stammdaten, name='creator_league_save_stammdaten'),
+    path('creator/leagues/<int:league_id>/spielplan/generate/', creator_league_spielplan_generate, name='creator_league_spielplan_generate'),
+    path('creator/leagues/<int:league_id>/fixtures/save/', creator_league_fixture_save, name='creator_league_fixture_save'),
 
     # Manager-Profile-Editor
     path('creator/managers/', creator_manager_list, name='creator_manager_list'),
