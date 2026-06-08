@@ -326,7 +326,7 @@ class LeagueAdmin(admin.ModelAdmin):
                 (s for s in club.tactic_setups.all() if s.squad_scope == 'pro'),
                 None,
             )
-            if has_valid_lineup(setup):
+            if has_valid_lineup(setup, club=club):
                 ok += 1
         color = '#4caf50' if ok == total else ('#ff9800' if ok > 0 else '#f44336')
         return format_html(

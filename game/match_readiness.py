@@ -46,16 +46,59 @@ def _player_base_strength(player):
         return DUMMY_STRENGTH
 
 
-def has_valid_lineup(tactic_setup):
-    """True wenn TacticSetup existiert, 11 Slots belegt und mind. 1 TW-Slot gefüllt."""
+def has_valid_lineup(tactic_setup, club=None):
+    """Strikte Prüfung: alle Formations-Slots belegt, eindeutige IDs, TW vorhanden.
+
+    Checks (in Reihenfolge):
+    1. tactic_setup existiert und hat eine lineup-Dict
+    2. Alle erwarteten Formations-Slot-Keys sind vorhanden
+    3. Jeder Slot hat eine nicht-leere Player-ID
+    4. Alle Player-IDs sind eindeutig (kein Spieler doppelt)
+    5. Mindestens ein TW-Slot ist belegt
+    6. (Optional) Alle Player-IDs gehören zum übergebenen Verein
+
+    Args:
+        tactic_setup: TacticSetup-Instanz oder None
+        club:         Club-Instanz für Kader-Zugehörigkeitsprüfung (optional)
+    """
     if not tactic_setup:
         return False
     lineup = tactic_setup.lineup or {}
-    if len(lineup) < 11:
+    if not lineup:
         return False
-    slots = formation_slots(tactic_setup.formation or default_formation())
+
+    formation = tactic_setup.formation or default_formation()
+    slots = formation_slots(formation)
+    expected_keys = {s['key'] for s in slots}
+
+    # 1. Alle erwarteten Slot-Keys vorhanden?
+    if not expected_keys.issubset(set(lineup.keys())):
+        return False
+
+    # 2. Alle Slots haben eine nicht-leere Player-ID?
+    filled_ids = [lineup[k] for k in expected_keys]
+    if not all(filled_ids):
+        return False
+
+    # 3. Keine Duplikate?
+    if len(set(filled_ids)) != len(filled_ids):
+        return False
+
+    # 4. Mindestens ein TW-Slot belegt?
     tw_keys = [s['key'] for s in slots if s['code'] == 'TW']
-    return any(lineup.get(k) for k in tw_keys)
+    if not any(lineup.get(k) for k in tw_keys):
+        return False
+
+    # 5. Club-Zugehörigkeit: alle Player-IDs im Kader des Vereins?
+    if club is not None:
+        from .models import Player
+        valid_ids = set(
+            Player.objects.filter(club=club, pk__in=filled_ids).values_list('pk', flat=True)
+        )
+        if valid_ids != set(filled_ids):
+            return False
+
+    return True
 
 
 # ── Kernfunktionen ───────────────────────────────────────────────────────────
@@ -233,7 +276,7 @@ def prepare_matchday_lineups(league, matchday, season):
         ):
             try:
                 setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
-                valid = has_valid_lineup(setup)
+                valid = has_valid_lineup(setup, club=club)
             except TacticSetup.DoesNotExist:
                 valid = False
 
@@ -291,8 +334,8 @@ def club_readiness_status(club):
     try:
         setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
         has_tactic = True
-        valid = has_valid_lineup(setup)
-        # Check TW
+        valid = has_valid_lineup(setup, club=club)
+        # TW-Slot direkt aus Lineup ableiten (has_valid_lineup hat schon alle Checks)
         slots = formation_slots(setup.formation or default_formation())
         tw_keys = [s['key'] for s in slots if s['code'] == 'TW']
         has_gk = any(setup.lineup.get(k) for k in tw_keys) if setup.lineup else False
