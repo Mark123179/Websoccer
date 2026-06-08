@@ -101,6 +101,28 @@
   font-size: 11px;
   color: #555;
 }
+.md-status-badge {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 2px 7px;
+  border-radius: 3px;
+  line-height: 1.4;
+}
+.md-status-badge.status-done {
+  background: #1b3d1e;
+  color: #4caf50;
+  border: 1px solid #2e6b33;
+}
+.md-status-badge.status-partial {
+  background: #3d2e0a;
+  color: #f5a623;
+  border: 1px solid #6b4f1a;
+}
+.md-status-badge.status-none {
+  background: #252525;
+  color: #555;
+  border: 1px solid #333;
+}
 .spielplan-matchday-header .md-toggle {
   font-size: 11px;
   color: #555;
@@ -193,7 +215,16 @@
                   {% if first.scheduled_date %}{{ first.scheduled_date|date:"d.m.Y" }}{% endif %}
                 {% endwith %}
               </span>
-              <span class="md-count">{{ md_block.fixtures|length }} Spiel{{ md_block.fixtures|length|pluralize:"e" }}</span>
+              <span class="md-count">{{ md_block.total }} Spiel{{ md_block.total|pluralize:"e" }}</span>
+              {% if md_block.total > 0 %}
+                {% if md_block.played == md_block.total %}
+                  <span class="md-status-badge status-done">fertig</span>
+                {% elif md_block.played == 0 %}
+                  <span class="md-status-badge status-none">0/{{ md_block.total }} gespielt</span>
+                {% else %}
+                  <span class="md-status-badge status-partial">{{ md_block.played }}/{{ md_block.total }} gespielt</span>
+                {% endif %}
+              {% endif %}
               <span class="md-toggle">&#9658;</span>
             </div>
             <div class="spielplan-matchday-fixtures">

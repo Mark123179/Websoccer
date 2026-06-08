@@ -436,9 +436,14 @@ class LeagueAdmin(admin.ModelAdmin):
                     for f in fixtures:
                         by_md[f.matchday].append(f)
                     for md in sorted(by_md.keys()):
+                        md_fixtures = by_md[md]
+                        played = sum(1 for f in md_fixtures if f.is_played)
+                        total = len(md_fixtures)
                         spielplan_matchdays.append({
                             'matchday': md,
-                            'fixtures': by_md[md],
+                            'fixtures': md_fixtures,
+                            'played': played,
+                            'total': total,
                         })
 
                 extra_context.update({
