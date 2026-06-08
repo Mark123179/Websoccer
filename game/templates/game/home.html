@@ -167,7 +167,7 @@
                 <small>{% if next_match and next_match.stadium_name %}{{ next_match.stadium_name }}{% else %}–{% endif %}</small>
             </div>
 
-            <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielvorschau</a>
+            <a class="card-action" href="{% if primary_club and primary_club.league %}{% url 'league_detail' primary_club.league.id %}?tab=spielplan{% elif primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielplan anzeigen</a>
             {% endif %}
         </article>
 

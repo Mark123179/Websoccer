@@ -4684,6 +4684,35 @@ def league_detail(request, league_id):
     # ---- Aktiver Tab ------------------------------------------------------
     active_tab = request.GET.get('tab', 'tabelle')
 
+    # ---- Spielplan (alle Spieltage) ---------------------------------------
+    spielplan_matchdays = []
+    if active_tab == 'spielplan':
+        all_fixtures = list(
+            SeasonFixture.objects
+            .filter(league=league, season=current_season)
+            .select_related('home_club', 'away_club')
+            .order_by('matchday', 'scheduled_date', 'scheduled_time')
+        )
+        my_club_id = my_club.id if my_club else None
+        matchday_map = {}
+        for f in all_fixtures:
+            md = f.matchday
+            if md not in matchday_map:
+                matchday_map[md] = []
+            matchday_map[md].append(f)
+        for md_num in sorted(matchday_map.keys()):
+            fixtures_list = matchday_map[md_num]
+            is_upcoming = any(not fx.is_played for fx in fixtures_list)
+            is_current = (
+                next_matchday_num is not None and md_num == next_matchday_num
+            )
+            spielplan_matchdays.append({
+                'matchday_num': md_num,
+                'fixtures': fixtures_list,
+                'is_upcoming': is_upcoming,
+                'is_current': is_current,
+            })
+
     # ---- Bundesliga-Logo --------------------------------------------------
     logo_path = league.logo_static_path
     if not logo_path:
@@ -4707,6 +4736,8 @@ def league_detail(request, league_id):
         'current_season': current_season,
         'season_display': season_display,
         'league_logo_path': logo_path,
+        'spielplan_matchdays': spielplan_matchdays,
+        'my_club_id': my_club.id if my_club else None,
         'game_header': build_game_header(
             league.name,
             season_display,

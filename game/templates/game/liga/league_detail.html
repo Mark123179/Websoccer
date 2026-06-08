@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -54,6 +54,8 @@
            href="?tab=tabelle">Tabelle</a>
         <a class="liga-tab {% if active_tab == 'spieltag' %}is-active{% endif %}"
            href="?tab=spieltag">Spieltag</a>
+        <a class="liga-tab {% if active_tab == 'spielplan' %}is-active{% endif %}"
+           href="?tab=spielplan">Spielplan</a>
         <a class="liga-tab {% if active_tab == 'news' %}is-active{% endif %}"
            href="?tab=news">News</a>
         <a class="liga-tab {% if active_tab == 'statistiken' %}is-active{% endif %}"
@@ -267,6 +269,66 @@
             </div>
 
         </div>
+
+    </div>
+    {% endif %}
+
+    <!-- =========================================================
+         TAB: SPIELPLAN
+    ========================================================== -->
+    {% if active_tab == 'spielplan' %}
+    <div class="liga-content liga-content--spielplan">
+
+        {% if spielplan_matchdays %}
+        <div class="liga-spielplan">
+            {% for md in spielplan_matchdays %}
+            <div class="liga-spielplan-matchday {% if md.is_current %}is-current{% endif %}">
+                <h2 class="liga-spielplan-matchday__header">
+                    <span class="liga-spielplan-matchday__num">Spieltag {{ md.matchday_num }}</span>
+                    {% if md.is_current %}
+                        <span class="liga-spielplan-badge liga-spielplan-badge--next">Nächster</span>
+                    {% elif not md.is_upcoming %}
+                        <span class="liga-spielplan-badge liga-spielplan-badge--done">Gespielt</span>
+                    {% endif %}
+                </h2>
+                <div class="liga-fixture-list">
+                    {% for f in md.fixtures %}
+                    <div class="liga-fixture {% if my_club_id and f.home_club_id == my_club_id or my_club_id and f.away_club_id == my_club_id %}liga-fixture--mine{% endif %}">
+                        <div class="liga-fixture__home">
+                            {% if f.home_club.crest_static_path %}
+                            <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
+                            {% endif %}
+                            <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
+                        </div>
+                        <div class="liga-fixture__score">
+                            {% if f.is_played %}
+                                <strong class="liga-fixture__result">{{ f.home_goals }}:{{ f.away_goals }}</strong>
+                            {% else %}
+                                {% if f.scheduled_date %}
+                                    <span class="liga-fixture__date">{{ f.scheduled_date|date:"d.m." }}</span>
+                                {% else %}
+                                    <span class="liga-fixture__vs">vs</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="liga-fixture__away">
+                            <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
+                            {% if f.away_club.crest_static_path %}
+                            <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="liga-empty">
+            <p>Noch kein Spielplan für {{ season_display }} vorhanden.</p>
+            <p class="liga-empty-sub">Der Admin kann den Spielplan unter <strong>Liga → Spielplan generieren</strong> erstellen.</p>
+        </div>
+        {% endif %}
 
     </div>
     {% endif %}

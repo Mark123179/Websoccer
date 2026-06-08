@@ -509,6 +509,78 @@
 }
 
 /* --------------------------------------------------------------------------
+   Spielplan (all matchdays)
+   -------------------------------------------------------------------------- */
+.liga-spielplan {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+.liga-spielplan-matchday {
+    background: #10131a;
+    border: 1px solid #ffffff08;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.liga-spielplan-matchday.is-current {
+    border-color: #22e6ff30;
+}
+
+.liga-spielplan-matchday__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ffffff08;
+}
+
+.liga-spielplan-matchday__num {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #7a8299;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex: 1;
+}
+
+.liga-spielplan-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 3px;
+}
+
+.liga-spielplan-badge--next {
+    background: #22e6ff18;
+    color: #22e6ff;
+    border: 1px solid #22e6ff40;
+}
+
+.liga-spielplan-badge--done {
+    background: #ffffff08;
+    color: #3a4258;
+    border: 1px solid #ffffff08;
+}
+
+.liga-fixture--mine {
+    background: #14181f;
+    border-left: 2px solid #22e6ff60;
+    padding-left: 4px;
+}
+
+.liga-fixture__date {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #5a6278;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
    Stub tabs (Statistiken / Historie)
    -------------------------------------------------------------------------- */
 .liga-content--stub {
