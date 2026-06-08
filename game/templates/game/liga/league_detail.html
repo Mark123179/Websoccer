@@ -244,17 +244,26 @@
                 {% if next_fixtures %}
                 <div class="liga-fixture-list">
                     {% for f in next_fixtures %}
-                    <div class="liga-fixture">
+                    <div class="liga-fixture {% if my_club_id and f.home_club_id == my_club_id or my_club_id and f.away_club_id == my_club_id %}liga-fixture--mine{% endif %}">
                         <div class="liga-fixture__home">
                             {% if f.home_club.crest_static_path %}
                             <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
                             {% endif %}
                             <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
+                            <span class="liga-fixture__ha liga-fixture__ha--home">H</span>
                         </div>
                         <div class="liga-fixture__score">
-                            <span class="liga-fixture__vs">vs</span>
+                            {% if f.scheduled_date %}
+                                <span class="liga-fixture__date">{{ f.scheduled_date|date:"d.m." }}</span>
+                                {% if f.scheduled_time %}
+                                    <span class="liga-fixture__time">{{ f.scheduled_time|time:"H:i" }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="liga-fixture__vs">vs</span>
+                            {% endif %}
                         </div>
                         <div class="liga-fixture__away">
+                            <span class="liga-fixture__ha liga-fixture__ha--away">A</span>
                             <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
                             {% if f.away_club.crest_static_path %}
                             <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
