@@ -615,6 +615,35 @@
             }
           }
 
+          // Check for fixtures being unmarked as played that already had a recorded result
+          var unplayCount = 0;
+          var unplayDetails = [];
+          rows.forEach(function(row) {
+            var orig = row._spOrigState;
+            if (!orig || !orig.wasPlayed) return;
+            if (orig.homeGoals === null && orig.awayGoals === null) return;
+            var playedInput = row.querySelector('input[name="is_played"]');
+            if (playedInput && !playedInput.checked) {
+              unplayCount++;
+              var homeCell = row.querySelector('.col-home');
+              var awayCell = row.querySelector('.col-away');
+              var label = (homeCell ? homeCell.textContent.trim() : '?') + ' ' +
+                          orig.homeGoals + ':' + orig.awayGoals + ' ' +
+                          (awayCell ? awayCell.textContent.trim() : '?');
+              unplayDetails.push(label);
+            }
+          });
+
+          if (unplayCount > 0) {
+            var unplayMsg = 'Achtung: ' + unplayCount + (unplayCount === 1 ? ' Spiel wird' : ' Spiele werden') +
+                            ' als „nicht gespielt" markiert, obwohl bereits ein Ergebnis gespeichert ist:\n\n' +
+                            unplayDetails.join('\n') +
+                            '\n\nDas Ergebnis bleibt gespeichert, aber der Gespielt-Status wird entfernt. Wirklich fortfahren?';
+            if (!window.confirm(unplayMsg)) {
+              return;
+            }
+          }
+
           var fixtures = [];
           rows.forEach(function(row) {
             var id = parseInt(row.dataset.fixtureId, 10);
