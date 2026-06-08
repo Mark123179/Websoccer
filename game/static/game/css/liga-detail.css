@@ -553,6 +553,33 @@
     border-color: #22e6ff60;
 }
 
+.spielplan-jumpbar__btn--filter {
+    background: #ffffff0a;
+    color: #7a8299;
+    border: 1px solid #ffffff10;
+    cursor: pointer;
+}
+
+.spielplan-jumpbar__btn--filter:hover {
+    background: #ffffff14;
+    color: #c0c8e0;
+}
+
+.spielplan-jumpbar__btn--filter.is-active {
+    background: #22e6ff18;
+    color: #22e6ff;
+    border-color: #22e6ff40;
+}
+
+.spielplan-jumpbar__btn--filter.is-active:hover {
+    background: #22e6ff28;
+    border-color: #22e6ff70;
+}
+
+.liga-spielplan--filtered .liga-spielplan-matchday:not(.has-mine) {
+    display: none;
+}
+
 /* --------------------------------------------------------------------------
    Spielplan (all matchdays)
    -------------------------------------------------------------------------- */

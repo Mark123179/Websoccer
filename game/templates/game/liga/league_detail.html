@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -306,6 +306,11 @@
                 Mein nächstes Spiel →
             </a>
             {% endif %}
+            {% if my_club_id %}
+            <button class="spielplan-jumpbar__btn spielplan-jumpbar__btn--filter" id="spielplan-filter-toggle" onclick="spToggleFilter()" type="button">
+                Alle Spieltage
+            </button>
+            {% endif %}
         </div>
 
         <div class="liga-spielplan">
@@ -365,6 +370,39 @@
             <p>Noch kein Spielplan für {{ season_display }} vorhanden.</p>
             <p class="liga-empty-sub">Der Admin kann den Spielplan unter <strong>Liga → Spielplan generieren</strong> erstellen.</p>
         </div>
+        {% endif %}
+
+        {% if my_club_id %}
+        <script>
+        (function(){
+            var spielplan = document.querySelector('.liga-spielplan');
+            if (!spielplan) return;
+            var matchdays = spielplan.querySelectorAll('.liga-spielplan-matchday');
+            matchdays.forEach(function(md){
+                if (md.querySelector('.liga-fixture--mine')) md.classList.add('has-mine');
+            });
+            var btn = document.getElementById('spielplan-filter-toggle');
+            var SK = 'sp-filter-active-{{ league.id }}';
+            function applyFilter(active){
+                if (active){
+                    spielplan.classList.add('liga-spielplan--filtered');
+                    btn.textContent = 'Nur meine Spiele';
+                    btn.classList.add('is-active');
+                } else {
+                    spielplan.classList.remove('liga-spielplan--filtered');
+                    btn.textContent = 'Alle Spieltage';
+                    btn.classList.remove('is-active');
+                }
+            }
+            var stored = sessionStorage.getItem(SK);
+            if (stored === '1') applyFilter(true);
+            window.spToggleFilter = function(){
+                var nowActive = !spielplan.classList.contains('liga-spielplan--filtered');
+                applyFilter(nowActive);
+                sessionStorage.setItem(SK, nowActive ? '1' : '0');
+            };
+        })();
+        </script>
         {% endif %}
 
         {% if next_matchday_num %}
