@@ -230,6 +230,25 @@ def creator_upload_crest(request, club_id):
     return redirect('creator_club_edit', club_id=club_id)
 
 
+@require_POST
+def creator_upload_league_logo(request, league_id):
+    league = get_object_or_404(League, id=league_id)
+    f = request.FILES.get('image')
+    if not f:
+        messages.error(request, 'Keine Datei ausgewählt.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
+    if league.logo_static_path:
+        old = os.path.join(STATIC_BASE, league.logo_static_path)
+        if os.path.exists(old):
+            os.remove(old)
+    dest = os.path.join(STATIC_BASE, f'game/images/competitions/{league_id}.png')
+    _save_as_png(f, dest)
+    league.logo_static_path = f'game/images/competitions/{league_id}.png'
+    league.save(update_fields=['logo_static_path'])
+    messages.success(request, 'Liga-Logo gespeichert.')
+    return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
+
+
 def creator_player_edit(request, player_id):
     player = get_object_or_404(Player, id=player_id)
     all_clubs = Club.objects.order_by('name')

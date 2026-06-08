@@ -65,6 +65,7 @@ from .views_creator import (
     creator_league_save_stammdaten,
     creator_league_spielplan_generate,
     creator_league_fixture_save,
+    creator_upload_league_logo,
 )
 from .views_creator import (
     creator_manager_list,
@@ -237,6 +238,7 @@ urlpatterns = [
     path('creator/leagues/<int:league_id>/stammdaten/', creator_league_save_stammdaten, name='creator_league_save_stammdaten'),
     path('creator/leagues/<int:league_id>/spielplan/generate/', creator_league_spielplan_generate, name='creator_league_spielplan_generate'),
     path('creator/leagues/<int:league_id>/fixtures/save/', creator_league_fixture_save, name='creator_league_fixture_save'),
+    path('creator/leagues/<int:league_id>/upload/logo/', creator_upload_league_logo, name='creator_upload_league_logo'),
 
     # Manager-Profile-Editor
     path('creator/managers/', creator_manager_list, name='creator_manager_list'),

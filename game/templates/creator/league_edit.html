@@ -81,6 +81,15 @@
             <div class="creator-no-image" style="font-size:.78rem;">Kein Logo gefunden</div>
           {% endif %}
         </div>
+        <div class="creator-card-body" style="padding-top:0; border-top:1px solid #0d2035;">
+          <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_league_logo' league_id=league.pk %}">
+            {% csrf_token %}
+            <label class="creator-upload-label">
+              <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
+              <span>📁 Logo hochladen</span>
+            </label>
+          </form>
+        </div>
       </div>
 
       <div class="creator-card">
@@ -550,6 +559,9 @@ select.creator-input option { background: #050e1a; }
 .creator-id-cell { color: #556677; font-size: .75rem; font-family: monospace; }
 .creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
 .creator-empty-row { color: #334455; text-align: center; padding: 2rem !important; }
+.creator-upload-label { display: inline-flex; align-items: center; gap: .4rem; background: #071d30; border: 1px solid #00d4ff33; border-radius: 6px; padding: .4rem .85rem; cursor: pointer; color: #00d4ff; font-size: .78rem; font-weight: 600; transition: background .2s; }
+.creator-upload-label:hover { background: #00d4ff15; }
+.creator-upload-label input[type="file"] { display: none; }
 
 /* ── Spielplan Layout ──────────────────────────────────────────── */
 .sp-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
