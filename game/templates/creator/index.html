@@ -46,7 +46,12 @@
     <div class="creator-league-block">
       <div class="creator-league-header">
         <h3 class="creator-league-name">{{ entry.league.name }}</h3>
-        <span class="creator-league-count">{{ entry.clubs|length }} Vereine</span>
+        <div class="creator-league-actions">
+          <span class="creator-league-count">{{ entry.clubs|length }} Vereine</span>
+          <a class="creator-league-edit-btn" href="/admin/game/league/{{ entry.league.pk }}/change/" title="Liga bearbeiten">
+            ✎ Liga bearbeiten
+          </a>
+        </div>
       </div>
 
       <div class="creator-clubs-grid">
@@ -100,7 +105,10 @@
 .creator-league-block { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
 .creator-league-header { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
 .creator-league-name { color: #00d4ff; font-size: .9rem; font-weight: 700; margin: 0; }
+.creator-league-actions { display: flex; align-items: center; gap: .75rem; }
 .creator-league-count { color: #556677; font-size: .78rem; }
+.creator-league-edit-btn { font-size: .75rem; color: #79aec8; text-decoration: none; padding: .25rem .65rem; border: 1px solid #1e3d52; border-radius: 4px; background: #071a28; transition: background .15s, border-color .15s; white-space: nowrap; }
+.creator-league-edit-btn:hover { background: #0d2a40; border-color: #2a5f7f; color: #a8d4f0; }
 
 .creator-clubs-grid { padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .75rem; }
 .creator-club-card { display: flex; align-items: center; gap: .75rem; background: #071525; border: 1px solid #0d2035; border-radius: 8px; padding: .75rem 1rem; text-decoration: none; transition: border-color .2s, background .2s; cursor: pointer; }
