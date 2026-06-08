@@ -1569,24 +1569,24 @@ def home(request):
 
     if next_fixture:
         next_match_obj = FD(next_fixture, primary_club)
-        next_match_opponent = (
-            next_fixture.away_club if next_fixture.home_club_id == primary_club.pk
-            else next_fixture.home_club
-        )
+        next_match_home_club = next_fixture.home_club
+        next_match_away_club = next_fixture.away_club
     else:
         next_match_obj = None
-        next_match_opponent = secondary_club
+        next_match_home_club = primary_club
+        next_match_away_club = secondary_club
 
     if last_fixture:
         last_match_obj = FD(last_fixture, primary_club)
-        is_home = last_fixture.home_club_id == primary_club.pk
-        last_match_opponent = last_fixture.away_club if is_home else last_fixture.home_club
-        my_g = last_fixture.home_goals if is_home else last_fixture.away_goals
-        opp_g = last_fixture.away_goals if is_home else last_fixture.home_goals
-        last_match_score = f'{my_g}:{opp_g}' if my_g is not None and opp_g is not None else None
+        last_match_home_club = last_fixture.home_club
+        last_match_away_club = last_fixture.away_club
+        hg = last_fixture.home_goals
+        ag = last_fixture.away_goals
+        last_match_score = f'{hg}:{ag}' if hg is not None and ag is not None else None
     else:
         last_match_obj = None
-        last_match_opponent = None
+        last_match_home_club = None
+        last_match_away_club = None
         last_match_score = None
 
     transfer_queryset = Player.objects.select_related(
@@ -1800,8 +1800,8 @@ def home(request):
 
     club_news = ClubNewsItem.objects.all()[:5]
     sim_news = ClubNewsItem.objects.all()[:5]
-    home_stadium_static_path = stadium_static_path(primary_club)
-    last_match_home_stadium_static_path = stadium_static_path(primary_club)
+    home_stadium_static_path = stadium_static_path(next_match_home_club)
+    last_match_home_stadium_static_path = stadium_static_path(last_match_home_club)
     competition_logo_static_path_value = competition_logo_static_path(
         primary_club.league.name
         if primary_club and primary_club.league
@@ -1879,9 +1879,11 @@ def home(request):
                 },
             ],
             'next_match': next_match_obj,
-            'next_match_opponent': next_match_opponent,
+            'next_match_home_club': next_match_home_club,
+            'next_match_away_club': next_match_away_club,
             'last_match': last_match_obj,
-            'last_match_opponent': last_match_opponent,
+            'last_match_home_club': last_match_home_club,
+            'last_match_away_club': last_match_away_club,
             'last_match_score': last_match_score,
             'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
             'live_matches': [],

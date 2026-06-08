@@ -129,35 +129,23 @@
 
             <div class="overview-fixture">
                 <div class="overview-team">
-                    {% if primary_club and primary_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
-                            <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                    {% if next_match_home_club and next_match_home_club.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ next_match_home_club.id }}/" aria-label="{{ next_match_home_club.name }} Vereinsprofil">
+                            <img src="{% static next_match_home_club.crest_static_path %}" alt="{{ next_match_home_club.name }}">
                         </a>
                     {% endif %}
-                    <strong>
-                        {% if primary_club %}
-                            {{ primary_club.short_name }}
-                        {% else %}
-                            FC Novum
-                        {% endif %}
-                    </strong>
+                    <strong>{{ next_match_home_club.short_name|default:"–" }}</strong>
                 </div>
 
                 <span class="overview-vs">VS</span>
 
                 <div class="overview-team">
-                    {% if next_match_opponent and next_match_opponent.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ next_match_opponent.id }}/" aria-label="{{ next_match_opponent.name }} Vereinsprofil">
-                            <img src="{% static next_match_opponent.crest_static_path %}" alt="{{ next_match_opponent.name }}">
+                    {% if next_match_away_club and next_match_away_club.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ next_match_away_club.id }}/" aria-label="{{ next_match_away_club.name }} Vereinsprofil">
+                            <img src="{% static next_match_away_club.crest_static_path %}" alt="{{ next_match_away_club.name }}">
                         </a>
                     {% endif %}
-                    <strong>
-                        {% if next_match_opponent %}
-                            {{ next_match_opponent.short_name }}
-                        {% else %}
-                            –
-                        {% endif %}
-                    </strong>
+                    <strong>{{ next_match_away_club.short_name|default:"–" }}</strong>
                 </div>
             </div>
 
@@ -182,33 +170,21 @@
             {% else %}
             <div class="overview-result" style="margin-top: -5px;">
                 <div class="overview-team compact">
-                    {% if primary_club and primary_club.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
-                            <img src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}" style="margin-left: -23px; margin-right: -23px;">
+                    {% if last_match_home_club and last_match_home_club.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ last_match_home_club.id }}/" aria-label="{{ last_match_home_club.name }} Vereinsprofil">
+                            <img src="{% static last_match_home_club.crest_static_path %}" alt="{{ last_match_home_club.name }}" style="margin-left: -23px; margin-right: -23px;">
                         </a>
                     {% endif %}
-                    <strong>
-                        {% if primary_club %}
-                            {{ primary_club.short_name }}
-                        {% else %}
-                            FC Novum
-                        {% endif %}
-                    </strong>
+                    <strong>{{ last_match_home_club.short_name|default:"–" }}</strong>
                 </div>
                 <span style="text-align: center; margin-left: -16px; margin-right: -16px; margin-top: -26px; margin-bottom: 0; padding: 0;">{% if last_match_score %}{{ last_match_score }}{% else %}–{% endif %}</span>
                 <div class="overview-team compact">
-                    {% if last_match_opponent and last_match_opponent.crest_static_path %}
-                        <a class="img-link" href="/clubs/{{ last_match_opponent.id }}/" aria-label="{{ last_match_opponent.name }} Vereinsprofil">
-                            <img src="{% static last_match_opponent.crest_static_path %}" alt="{{ last_match_opponent.name }}" style="margin-left: -4px; margin-right: -4px;">
+                    {% if last_match_away_club and last_match_away_club.crest_static_path %}
+                        <a class="img-link" href="/clubs/{{ last_match_away_club.id }}/" aria-label="{{ last_match_away_club.name }} Vereinsprofil">
+                            <img src="{% static last_match_away_club.crest_static_path %}" alt="{{ last_match_away_club.name }}" style="margin-left: -4px; margin-right: -4px;">
                         </a>
                     {% endif %}
-                    <strong>
-                        {% if last_match_opponent %}
-                            {{ last_match_opponent.short_name }}
-                        {% else %}
-                            –
-                        {% endif %}
-                    </strong>
+                    <strong>{{ last_match_away_club.short_name|default:"–" }}</strong>
                 </div>
             </div>
 
