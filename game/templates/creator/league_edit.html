@@ -160,9 +160,9 @@
             <td class="creator-id-cell">{{ club.fm_inside_id }}</td>
             <td><span class="creator-count-badge">{{ club.player_set.count }}</span></td>
             <td>
-              {% if club._lineup_status == 'confirmed' %}
+              {% if club.lineup_status == 'confirmed' %}
                 <span class="lineup-status lineup-status-ok" title="Aufstellung bestätigt"></span>
-              {% elif club._lineup_status == 'auto' %}
+              {% elif club.lineup_status == 'auto' %}
                 <span class="lineup-status lineup-status-warn" title="Auto-Aufstellung (nicht bestätigt)"></span>
               {% else %}
                 <span class="lineup-status lineup-status-err" title="Keine Aufstellung"></span>

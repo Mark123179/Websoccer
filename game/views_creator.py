@@ -1050,11 +1050,11 @@ def creator_league_edit(request, league_id):
                 break
         if setup and has_valid_lineup(setup, club=club):
             if setup.is_confirmed:
-                club._lineup_status = 'confirmed'
+                club.lineup_status = 'confirmed'
             else:
-                club._lineup_status = 'auto'
+                club.lineup_status = 'auto'
         else:
-            club._lineup_status = 'missing'
+            club.lineup_status = 'missing'
 
     logo_path = league.logo_static_path or ''
 
