@@ -174,6 +174,23 @@ def creator_upload_kit(request, club_id, kit_type):
     return redirect('creator_club_edit', club_id=club_id)
 
 
+@require_POST
+def creator_upload_crest(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    f = request.FILES.get('image')
+    if not f:
+        messages.error(request, 'Keine Datei ausgewählt.')
+        return redirect('creator_club_edit', club_id=club_id)
+    for ext in ['png', 'svg', 'jpg', 'webp']:
+        old = os.path.join(STATIC_BASE, f'game/images/crests/{club.fm_inside_id}.{ext}')
+        if os.path.exists(old):
+            os.remove(old)
+    dest = os.path.join(STATIC_BASE, f'game/images/crests/{club.fm_inside_id}.png')
+    _save_as_png(f, dest)
+    messages.success(request, 'Vereinswappen gespeichert.')
+    return redirect('creator_club_edit', club_id=club_id)
+
+
 def creator_player_edit(request, player_id):
     player = get_object_or_404(Player, id=player_id)
     all_clubs = Club.objects.order_by('name')

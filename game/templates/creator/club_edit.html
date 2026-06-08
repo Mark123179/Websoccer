@@ -41,6 +41,27 @@
   {% if active_tab == 'bilder' %}
   <div class="creator-assets-grid">
     <div class="creator-card">
+      <div class="creator-card-head"><h2>Vereinswappen</h2></div>
+      <div class="creator-card-body">
+        <div class="creator-image-preview creator-image-crest">
+          {% if crest_path %}<img src="{% static crest_path %}" alt="Wappen">
+          {% else %}<div class="creator-no-image">Kein Wappen</div>{% endif %}
+        </div>
+        {% if not club.fm_inside_id %}
+        <p class="creator-hint creator-hint-warn">⚠ Keine fm_inside_id — Bild kann nicht gespeichert werden.</p>
+        {% else %}
+        <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_crest' club_id=club.id %}">
+          {% csrf_token %}
+          <label class="creator-upload-label">
+            <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
+            <span>📁 Wappen hochladen</span>
+          </label>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="creator-card">
       <div class="creator-card-head"><h2>Stadionbild</h2></div>
       <div class="creator-card-body">
         <div class="creator-image-preview creator-image-wide">
@@ -637,7 +658,7 @@
 .creator-tab-badge { background: #00d4ff22; color: #00d4ff88; font-size: .65rem; padding: .1rem .4rem; border-radius: 8px; font-weight: 800; }
 
 /* ── Cards ── */
-.creator-assets-grid { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 1rem; margin-bottom: 1rem; }
+.creator-assets-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.5fr; gap: 1rem; margin-bottom: 1rem; }
 .creator-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; overflow: hidden; }
 .creator-card-full { grid-column: 1 / -1; }
 .creator-card-head { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
@@ -648,6 +669,7 @@
 .creator-image-preview { border: 1px solid #0d2035; border-radius: 8px; overflow: hidden; margin-bottom: .75rem; display: flex; align-items: center; justify-content: center; background: #030a12; }
 .creator-image-wide { height: 160px; }
 .creator-image-kit { height: 120px; }
+.creator-image-crest { height: 120px; }
 .creator-image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .creator-no-image { color: #334455; font-size: .75rem; }
 .creator-upload-label { display: inline-flex; align-items: center; gap: .4rem; background: #071d30; border: 1px solid #00d4ff33; border-radius: 6px; padding: .4rem .85rem; cursor: pointer; color: #00d4ff; font-size: .78rem; font-weight: 600; transition: background .2s; }
@@ -669,6 +691,7 @@
 .creator-field select option { background: #071525; }
 .creator-stat-display { background: #030a12; border: 1px solid #0d2035; border-radius: 6px; color: #00d4ff; font-size: .9rem; font-weight: 700; padding: .4rem .65rem; }
 .creator-hint { color: #334455; font-size: .78rem; margin-top: .5rem; }
+.creator-hint-warn { color: #ffd166; background: #ffd16615; border: 1px solid #ffd16633; border-radius: 5px; padding: .4rem .75rem; font-size: .78rem; margin-top: .5rem; }
 .creator-form-actions { display: flex; justify-content: flex-end; padding-top: .5rem; }
 
 /* ── Level Selector ── */
@@ -724,7 +747,7 @@
 
 @media (max-width: 900px) {
   .creator-assets-grid { grid-template-columns: 1fr 1fr; }
-  .creator-card-kits { grid-column: 1 / -1; }
+  .creator-card-kits, .creator-card-crest { grid-column: 1 / -1; }
   .creator-field-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
