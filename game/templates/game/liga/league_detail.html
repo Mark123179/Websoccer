@@ -314,6 +314,9 @@
                  id="spielplan-md-{{ md.matchday_num }}">
                 <h2 class="liga-spielplan-matchday__header">
                     <span class="liga-spielplan-matchday__num">Spieltag {{ md.matchday_num }}</span>
+                    {% if md.date_range %}
+                        <span class="liga-spielplan-matchday__daterange">{{ md.date_range }}</span>
+                    {% endif %}
                     {% if md.is_current %}
                         <span class="liga-spielplan-badge liga-spielplan-badge--next">Nächster</span>
                     {% elif not md.is_upcoming %}

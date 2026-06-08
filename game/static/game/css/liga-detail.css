@@ -588,6 +588,13 @@
     color: #7a8299;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+}
+
+.liga-spielplan-matchday__daterange {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #4e566a;
+    letter-spacing: 0.02em;
     flex: 1;
 }
 

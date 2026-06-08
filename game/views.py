@@ -4700,6 +4700,22 @@ def league_detail(request, league_id):
             if md not in matchday_map:
                 matchday_map[md] = []
             matchday_map[md].append(f)
+        _de_months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
+
+        def _fmt_date_range(fixtures):
+            dates = [fx.scheduled_date for fx in fixtures if fx.scheduled_date]
+            if not dates:
+                return ''
+            lo, hi = min(dates), max(dates)
+            lo_mon = _de_months[lo.month - 1]
+            hi_mon = _de_months[hi.month - 1]
+            if lo == hi:
+                return f'{lo.day}. {lo_mon}'
+            if lo.month == hi.month:
+                return f'{lo.day}.–{hi.day}. {hi_mon}'
+            return f'{lo.day}. {lo_mon} – {hi.day}. {hi_mon}'
+
         for md_num in sorted(matchday_map.keys()):
             fixtures_list = matchday_map[md_num]
             is_upcoming = any(not fx.is_played for fx in fixtures_list)
@@ -4711,6 +4727,7 @@ def league_detail(request, league_id):
                 'fixtures': fixtures_list,
                 'is_upcoming': is_upcoming,
                 'is_current': is_current,
+                'date_range': _fmt_date_range(fixtures_list),
             })
 
     # ---- Bundesliga-Logo --------------------------------------------------
