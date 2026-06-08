@@ -37,6 +37,12 @@
 
   <!-- ═══ TAB: STAMMDATEN ═══════════════════════════════════════════════════ -->
   {% if active_tab == 'stammdaten' %}
+  <!-- Hidden upload form: separate from stammdaten form to avoid nested forms -->
+  <form id="logoUploadForm" method="post" enctype="multipart/form-data" action="{% url 'creator_upload_league_logo' league_id=league.pk %}" style="display:none;">
+    {% csrf_token %}
+    <input type="file" id="logoFileInput" name="image" accept="image/*" onchange="this.form.submit()">
+  </form>
+
   <form method="post" action="{% url 'creator_league_save_stammdaten' league_id=league.pk %}">
     {% csrf_token %}
     <div class="creator-assets-grid" style="grid-template-columns:1fr 1fr 1fr;">
@@ -82,13 +88,9 @@
           {% endif %}
         </div>
         <div class="creator-card-body" style="padding-top:0; border-top:1px solid #0d2035;">
-          <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_league_logo' league_id=league.pk %}">
-            {% csrf_token %}
-            <label class="creator-upload-label">
-              <input type="file" name="image" accept="image/*" onchange="this.form.submit()">
-              <span>📁 Logo hochladen</span>
-            </label>
-          </form>
+          <label class="creator-upload-label" style="cursor:pointer;" onclick="document.getElementById('logoFileInput').click()">
+            <span>📁 Logo hochladen</span>
+          </label>
         </div>
       </div>
 

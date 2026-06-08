@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.apps import apps
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -230,6 +231,7 @@ def creator_upload_crest(request, club_id):
     return redirect('creator_club_edit', club_id=club_id)
 
 
+@login_required
 @require_POST
 def creator_upload_league_logo(request, league_id):
     league = get_object_or_404(League, id=league_id)
@@ -1024,6 +1026,7 @@ def creator_add_satisfaction(request, manager_id):
 # CREATOR MODE — LIGA-EDITOR
 # ═══════════════════════════════════════════════════════════════════════════════
 
+@login_required
 def creator_league_edit(request, league_id):
     from collections import defaultdict
     from django.contrib.staticfiles import finders
@@ -1109,6 +1112,7 @@ def creator_league_edit(request, league_id):
     })
 
 
+@login_required
 @require_POST
 def creator_league_save_stammdaten(request, league_id):
     league = get_object_or_404(League, id=league_id)
@@ -1130,6 +1134,7 @@ def creator_league_save_stammdaten(request, league_id):
     return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
 
 
+@login_required
 @require_POST
 def creator_league_spielplan_generate(request, league_id):
     from datetime import date, datetime, time as dt_time
@@ -1215,6 +1220,7 @@ def creator_league_spielplan_generate(request, league_id):
     return redirect(f'/creator/leagues/{league_id}/?tab=spielplan&season={season}')
 
 
+@login_required
 def creator_league_fixture_save(request, league_id):
     import json
     from django.http import JsonResponse
@@ -1269,8 +1275,20 @@ def creator_league_fixture_save(request, league_id):
         else:
             fixture.scheduled_time = None
 
-        fixture.home_goals = int(hg) if (hg is not None and str(hg) != '') else None
-        fixture.away_goals = int(ag) if (ag is not None and str(ag) != '') else None
+        try:
+            fixture.home_goals = int(hg) if (hg is not None and str(hg) != '') else None
+            if fixture.home_goals is not None and (fixture.home_goals < 0 or fixture.home_goals > 99):
+                raise ValueError
+        except (ValueError, TypeError):
+            errors.append(f'Ungültige Heim-Tore bei Fixture {fid}: {hg}')
+            continue
+        try:
+            fixture.away_goals = int(ag) if (ag is not None and str(ag) != '') else None
+            if fixture.away_goals is not None and (fixture.away_goals < 0 or fixture.away_goals > 99):
+                raise ValueError
+        except (ValueError, TypeError):
+            errors.append(f'Ungültige Gast-Tore bei Fixture {fid}: {ag}')
+            continue
         fixture.is_played = ip
         updates.append(fixture)
 
