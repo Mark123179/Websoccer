@@ -11,3 +11,4 @@
 - [Design system tokens & rules](design-tokens.md) — canonical CSS custom properties (--cyan, --green etc.) and visual rules; cyan=functional, green=fitness, no bright backgrounds, no nested cards.
 - [Manager Career History Table](manager-career-table.md) — Club.managed_by (OneToOneField) is the live-pointer; ManagerCareerEntry is planned additive history layer for entlassungen/rücktritte/hall-of-fame.
 - [GitHub token workflow scope](github-token-workflow.md) — pushing workflows via PAT requires classic token with 'workflow' scope checked; fine-grained tokens lack this scope silently.
+- [FMI position scraper](fmi-position-scraper.md) — fminside.net URL schema is /players/7-fm-26/{fmi_id}-{name-slug}; parse span.mobile_position for primary, span.desktop_positions for secondaries.
