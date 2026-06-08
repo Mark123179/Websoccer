@@ -289,11 +289,50 @@ class LeagueAdmin(admin.ModelAdmin):
         'api_football_id',
         'strength_coefficient',
         'coefficient_source',
+        'club_count',
+        'readiness_summary',
     )
     search_fields = (
         'name',
         'country',
     )
+    fields = (
+        'name',
+        'country',
+        'api_football_id',
+        'strength_coefficient',
+        'coefficient_source',
+        'logo_static_path',
+        'cl_spots',
+        'el_spots',
+        'conference_spots',
+        'relegation_spots',
+    )
+
+    @admin.display(description='Vereine')
+    def club_count(self, obj):
+        return obj.club_set.count()
+
+    @admin.display(description='Spielbereitschaft')
+    def readiness_summary(self, obj):
+        from game.match_readiness import has_valid_lineup
+        clubs = obj.club_set.prefetch_related('tactic_setups').all()
+        total = clubs.count()
+        if total == 0:
+            return '—'
+        ok = 0
+        for club in clubs:
+            setup = next(
+                (s for s in club.tactic_setups.all() if s.squad_scope == 'pro'),
+                None,
+            )
+            if has_valid_lineup(setup):
+                ok += 1
+        color = '#4caf50' if ok == total else ('#ff9800' if ok > 0 else '#f44336')
+        return format_html(
+            '<span style="color:{};font-weight:bold;">{}/{}</span>',
+            color, ok, total,
+        )
 
 
 def _assign_manager_action(modeladmin, request, queryset):
@@ -362,6 +401,8 @@ class ClubAdmin(admin.ModelAdmin):
         'short_name',
         'league',
         'managed_by',
+        'readiness_status_display',
+        'team_strength_display',
         'api_football_id',
         'fm_inside_id',
         'budget',
@@ -380,6 +421,39 @@ class ClubAdmin(admin.ModelAdmin):
         StadiumInline,
         PlayerInline,
     ]
+
+    @admin.display(description='Bereit')
+    def readiness_status_display(self, obj):
+        from game.match_readiness import club_readiness_status
+        info = club_readiness_status(obj)
+        icons = {
+            'ok':    ('✓', '#4caf50'),
+            'warn':  ('⚠', '#ff9800'),
+            'error': ('✗', '#f44336'),
+        }
+        icon, color = icons.get(info['status'], ('?', '#999'))
+        label = f'{icon} {info["player_count"]}P'
+        return format_html(
+            '<span title="{}" style="color:{};font-weight:bold;">{}</span>',
+            f'Taktik:{info["has_tactic"]} | Aufstellung:{info["valid_lineup"]} | TW:{info["has_goalkeeper"]}',
+            color, label,
+        )
+
+    @admin.display(description='Stärke')
+    def team_strength_display(self, obj):
+        from game.match_readiness import calculate_team_strength
+        strength = calculate_team_strength(obj)
+        val = float(strength.get('overall', 50))
+        if val >= 70:
+            color = '#4caf50'
+        elif val >= 55:
+            color = '#ff9800'
+        else:
+            color = '#aaa'
+        return format_html(
+            '<span style="color:{};">{}</span>',
+            color, f'{val:.1f}',
+        )
 
     def get_fieldsets(self, request, obj=None):
         return [
@@ -3123,6 +3197,7 @@ class SeasonFixtureAdmin(admin.ModelAdmin):
         'scheduled_date', 'scheduled_time',
         'home_goals', 'away_goals', 'is_played',
         'home_lineup_set', 'away_lineup_set',
+        'home_lineup_malus', 'away_lineup_malus',
     )
 
     @admin.display(description='Ergebnis')

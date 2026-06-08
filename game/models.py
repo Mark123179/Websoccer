@@ -1221,6 +1221,16 @@ class SeasonFixture(models.Model):
     is_played = models.BooleanField(default=False, verbose_name='Gespielt')
     home_lineup_set = models.BooleanField(default=False, verbose_name='Heimaufstellung steht')
     away_lineup_set = models.BooleanField(default=False, verbose_name='Auswärtsaufstellung steht')
+    home_lineup_malus = models.BooleanField(
+        default=False,
+        verbose_name='Heim-Stärkemalus (-20 %)',
+        help_text='Automatisch gesetzt wenn der Heim-Manager keine Aufstellung gestellt hat.',
+    )
+    away_lineup_malus = models.BooleanField(
+        default=False,
+        verbose_name='Auswärts-Stärkemalus (-20 %)',
+        help_text='Automatisch gesetzt wenn der Auswärts-Manager keine Aufstellung gestellt hat.',
+    )
 
     @property
     def result_display(self):
