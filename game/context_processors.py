@@ -1,8 +1,9 @@
 from datetime import date, timedelta
 
+from django.db.models import Q
 from django.templatetags.static import static as _static
 
-from .models import Club, ManagerProfile
+from .models import Club, ManagerProfile, SeasonFixture
 from .competition_assets import competition_logo_static_path
 
 CURRENT_MANAGER_PROFILE_IMAGE = 'game/images/managers/default-manager.png'
@@ -34,34 +35,56 @@ _WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 def _build_global_calendar(club, calendar_offset):
     today = date.today()
     game_date = today + timedelta(days=calendar_offset)
-    league_name = (
-        club.league.name if club and club.league else '1. Bundesliga'
-    )
-    stadium = _STADIUM_ASSETS.get(club.fm_inside_id, '') if club else ''
+    window_start = game_date - timedelta(days=3)
+    window_end   = game_date + timedelta(days=3)
 
-    def _fixture(lineup_saved, result, venue, meta, match_time=''):
-        return {
-            'opponent_name': '',
-            'opponent_crest': '',
-            'opponent_url': '',
-            'stadium': stadium,
-            'competition_logo': competition_logo_static_path(league_name),
-            'lineup_saved': lineup_saved,
-            'result': result,
-            'venue': venue,
-            'meta': meta,
-            'match_time': match_time,
-        }
+    fixtures_by_date = {}
 
-    fixtures_by_date = (
-        {
-            today - timedelta(days=3): _fixture(False, '1:1', 'A', '33. Spieltag (A)'),
-            today - timedelta(days=1): _fixture(True, '5:0', 'H', 'Testspiel (H)'),
-            today + timedelta(days=2): _fixture(False, '', 'H', '27. Spieltag (H)', match_time='18:00'),
-        }
-        if club is not None
-        else {}
-    )
+    if club is not None:
+        stadium = _STADIUM_ASSETS.get(club.fm_inside_id, '')
+
+        # Alle Partien des Vereins im 7-Tage-Fenster, ohne U21-Ligen
+        qs = (
+            SeasonFixture.objects
+            .filter(
+                scheduled_date__range=(window_start, window_end),
+            )
+            .filter(Q(home_club=club) | Q(away_club=club))
+            .exclude(league__name__icontains='U21')
+            .select_related('home_club', 'away_club', 'league')
+        )
+
+        for f in qs:
+            is_home = (f.home_club_id == club.pk)
+            opponent = f.away_club if is_home else f.home_club
+            venue = 'H' if is_home else 'A'
+            lineup_saved = f.home_lineup_set if is_home else f.away_lineup_set
+
+            if f.is_played and f.home_goals is not None and f.away_goals is not None:
+                result = f'{f.home_goals}:{f.away_goals}'
+            else:
+                result = ''
+
+            match_time = (
+                f.scheduled_time.strftime('%H:%M') if f.scheduled_time else ''
+            )
+            meta = f'{f.matchday}. Spieltag ({venue})'
+
+            opp_crest = opponent.crest_static_path if opponent else ''
+            opp_url   = f'/clubs/{opponent.pk}/' if opponent else ''
+
+            fixtures_by_date[f.scheduled_date] = {
+                'opponent_name':    opponent.name if opponent else '',
+                'opponent_crest':   opp_crest,
+                'opponent_url':     opp_url,
+                'stadium':          stadium,
+                'competition_logo': competition_logo_static_path(f.league.name),
+                'lineup_saved':     lineup_saved,
+                'result':           result,
+                'venue':            venue,
+                'meta':             meta,
+                'match_time':       match_time,
+            }
 
     calendar_days = []
     for offset in range(-3, 4):
