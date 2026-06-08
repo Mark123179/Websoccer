@@ -1,0 +1,234 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Spielplan generieren — {{ league }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Start</a>
+  &rsaquo; <a href="{% url 'admin:game_league_changelist' %}">Ligen</a>
+  &rsaquo; <a href="{% url 'admin:game_league_change' league.pk %}">{{ league }}</a>
+  &rsaquo; Spielplan generieren
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .schedule-info-box {
+    background: #1e2a1e;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .schedule-info-box h3 {
+    margin: 0 0 8px 0;
+    color: #4caf50;
+    font-size: 14px;
+  }
+  .schedule-club-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .schedule-club-list li {
+    background: #2a3a2a;
+    border: 1px solid #3a5a3a;
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    color: #c8e6c9;
+  }
+  .schedule-warn-box {
+    background: #2a1e00;
+    border: 1px solid #ff9800;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #ffcc80;
+  }
+  .schedule-error-list {
+    background: #2a0000;
+    border: 1px solid #f44336;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #ef9a9a;
+  }
+  .schedule-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
+    max-width: 700px;
+  }
+  .schedule-form-grid .form-row {
+    margin-bottom: 16px;
+  }
+  .schedule-form-grid label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .schedule-form-grid input,
+  .schedule-form-grid select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .schedule-help {
+    font-size: 11px;
+    color: #888;
+    margin-top: 3px;
+  }
+  .schedule-preview {
+    background: #1a1a2e;
+    border: 1px solid #3a3a5e;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #aab;
+    font-size: 12px;
+  }
+  .schedule-preview strong {
+    color: #9c9cff;
+  }
+</style>
+
+<h1>Spielplan generieren — <em>{{ league }}</em></h1>
+
+{% if errors %}
+<div class="schedule-error-list">
+  <strong>Fehler:</strong>
+  <ul>
+    {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="schedule-info-box">
+  <h3>{{ clubs|length }} Verein{{ clubs|length|pluralize:"e" }} in dieser Liga</h3>
+  <ul class="schedule-club-list">
+    {% for club in clubs %}
+      <li>{{ club.short_name }}</li>
+    {% empty %}
+      <li style="color:#f44336;">Keine Vereine vorhanden!</li>
+    {% endfor %}
+  </ul>
+  {% if clubs|length|divisibleby:2 %}
+  <p style="margin:8px 0 0; font-size:12px; color:#81c784;">
+    Gerade Teamzahl ({{ clubs|length }}) &rarr; {{ clubs|length|add:"-1" }} Spieltage pro Runde.
+  </p>
+  {% else %}
+  <div class="schedule-warn-box" style="margin:8px 0 0; padding:8px 12px;">
+    Ungerade Teamzahl ({{ clubs|length }}) &rarr; ein Verein hat je Spieltag spielfrei (Freirunde).
+    {{ clubs|length }} Spieltage pro Runde.
+  </div>
+  {% endif %}
+</div>
+
+{% if not errors %}
+<form method="post">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="schedule-error-list">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
+
+  <div class="schedule-form-grid">
+    <div class="form-row">
+      {{ form.season.label_tag }}
+      {{ form.season }}
+      {% if form.season.errors %}<p style="color:#f44336;font-size:12px;">{{ form.season.errors }}</p>{% endif %}
+      {% if form.season.help_text %}<p class="schedule-help">{{ form.season.help_text }}</p>{% endif %}
+    </div>
+
+    <div class="form-row">
+      {{ form.rounds.label_tag }}
+      {{ form.rounds }}
+      {% if form.rounds.errors %}<p style="color:#f44336;font-size:12px;">{{ form.rounds.errors }}</p>{% endif %}
+      {% if form.rounds.help_text %}<p class="schedule-help">{{ form.rounds.help_text }}</p>{% endif %}
+    </div>
+
+    <div class="form-row">
+      {{ form.start_date.label_tag }}
+      {{ form.start_date }}
+      {% if form.start_date.errors %}<p style="color:#f44336;font-size:12px;">{{ form.start_date.errors }}</p>{% endif %}
+    </div>
+
+    <div class="form-row">
+      {{ form.start_time.label_tag }}
+      {{ form.start_time }}
+      {% if form.start_time.errors %}<p style="color:#f44336;font-size:12px;">{{ form.start_time.errors }}</p>{% endif %}
+    </div>
+
+    <div class="form-row">
+      {{ form.day_interval.label_tag }}
+      {{ form.day_interval }}
+      {% if form.day_interval.errors %}<p style="color:#f44336;font-size:12px;">{{ form.day_interval.errors }}</p>{% endif %}
+    </div>
+
+    <div class="form-row">
+      {{ form.round_break.label_tag }}
+      {{ form.round_break }}
+      {% if form.round_break.errors %}<p style="color:#f44336;font-size:12px;">{{ form.round_break.errors }}</p>{% endif %}
+      {% if form.round_break.help_text %}<p class="schedule-help">{{ form.round_break.help_text }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="schedule-preview" id="schedule-preview">
+    <strong>Vorschau:</strong> Bitte Felder ausfüllen, um eine Übersicht zu sehen.
+  </div>
+
+  <p>
+    <input type="submit" value="Spielplan generieren" class="default"
+      {% if errors %}disabled title="Bitte zuerst Vereine anlegen."{% endif %}>
+    &nbsp;
+    <a href="{% url 'admin:game_league_changelist' %}">Abbrechen</a>
+  </p>
+</form>
+
+<script>
+(function() {
+  var n = {{ clubs|length }};
+  var matchdaysPerRound = (n % 2 === 0) ? (n - 1) : n;
+
+  function updatePreview() {
+    var season = document.querySelector('[name=season]').value.trim();
+    var rounds = parseInt(document.querySelector('[name=rounds]').value) || 2;
+    var startDate = document.querySelector('[name=start_date]').value;
+    var startTime = document.querySelector('[name=start_time]').value;
+    var dayInterval = parseInt(document.querySelector('[name=day_interval]').value) || 7;
+    var roundBreak = parseInt(document.querySelector('[name=round_break]').value) || 0;
+
+    if (!season || !startDate || isNaN(rounds)) return;
+
+    var totalMatchdays = matchdaysPerRound * rounds;
+    var gamesPerMatchday = Math.floor(n / 2);
+    var totalGames = totalMatchdays * gamesPerMatchday;
+
+    var hinEnds = matchdaysPerRound;
+    var rueckStarts = matchdaysPerRound + 1;
+
+    var html = '<strong>Saison ' + season + ':</strong> ';
+    html += totalMatchdays + ' Spieltage &times; ' + gamesPerMatchday + ' Spiele = <strong>' + totalGames + ' Partien</strong>';
+    if (rounds >= 2) {
+      html += ' &nbsp;|&nbsp; Hinrunde: ST 1&ndash;' + hinEnds + ', Rückrunde: ST ' + rueckStarts + '&ndash;' + totalMatchdays;
+    }
+    if (roundBreak > 0) {
+      html += ' &nbsp;|&nbsp; Rundenpause: +' + roundBreak + ' Tage';
+    }
+
+    document.getElementById('schedule-preview').innerHTML = html;
+  }
+
+  document.querySelectorAll('[name=season],[name=rounds],[name=start_date],[name=start_time],[name=day_interval],[name=round_break]')
+    .forEach(function(el) { el.addEventListener('input', updatePreview); });
+  updatePreview();
+})();
+</script>
+{% endif %}
+{% endblock %}

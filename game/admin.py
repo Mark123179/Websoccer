@@ -291,6 +291,7 @@ class LeagueAdmin(admin.ModelAdmin):
         'coefficient_source',
         'club_count',
         'readiness_summary',
+        'spielplan_link',
     )
     search_fields = (
         'name',
@@ -333,6 +334,148 @@ class LeagueAdmin(admin.ModelAdmin):
             '<span style="color:{};font-weight:bold;">{}/{}</span>',
             color, ok, total,
         )
+
+    @admin.display(description='Spielplan')
+    def spielplan_link(self, obj):
+        from django.urls import reverse
+        url = reverse('admin:game_league_spielplan', args=[obj.pk])
+        return format_html(
+            '<a class="button" style="padding:2px 8px;font-size:11px;" href="{}">&#128197; Generieren</a>',
+            url,
+        )
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom = [
+            path(
+                '<int:league_id>/spielplan/',
+                self.admin_site.admin_view(self.schedule_view),
+                name='game_league_spielplan',
+            ),
+        ]
+        return custom + urls
+
+    def schedule_view(self, request, league_id):
+        from datetime import date, timedelta
+        from django.shortcuts import render, redirect, get_object_or_404
+        from django.urls import reverse
+        from game.models import SeasonFixture
+        from game.schedule_generator import create_round_robin_schedule, matchday_date
+
+        league = get_object_or_404(League, pk=league_id)
+        clubs = list(league.club_set.order_by('name'))
+
+        class SpielplanForm(forms.Form):
+            season = forms.CharField(
+                label='Saison',
+                max_length=20,
+                widget=forms.TextInput(attrs={'placeholder': '2025/26'}),
+            )
+            rounds = forms.IntegerField(
+                label='Anzahl Runden',
+                initial=2,
+                min_value=1,
+                max_value=4,
+                help_text='1 = Nur Hinrunde, 2 = Hin- & Rückrunde',
+            )
+            start_date = forms.DateField(
+                label='Erster Spieltag (Datum)',
+                initial=date.today,
+                widget=forms.DateInput(attrs={'type': 'date'}),
+            )
+            start_time = forms.TimeField(
+                label='Anstoßzeit',
+                initial='15:30',
+                widget=forms.TimeInput(attrs={'type': 'time'}),
+            )
+            day_interval = forms.IntegerField(
+                label='Tage zwischen Spieltagen',
+                initial=7,
+                min_value=1,
+                max_value=30,
+            )
+            round_break = forms.IntegerField(
+                label='Extra-Pause zwischen Runden (Tage)',
+                initial=0,
+                min_value=0,
+                max_value=90,
+                help_text='Zusätzliche Pause zwischen Hin- und Rückrunde.',
+            )
+
+        errors = []
+        if not clubs:
+            errors.append('Diese Liga hat keine Vereine — zuerst Vereine anlegen.')
+
+        if request.method == 'POST' and not errors:
+            form = SpielplanForm(request.POST)
+            if form.is_valid():
+                season = form.cleaned_data['season']
+                rounds = form.cleaned_data['rounds']
+                start_date_val = form.cleaned_data['start_date']
+                start_time_val = form.cleaned_data['start_time']
+                day_interval = form.cleaned_data['day_interval']
+                round_break = form.cleaned_data['round_break']
+
+                existing = SeasonFixture.objects.filter(league=league, season=season)
+                if existing.exists():
+                    form.add_error(
+                        'season',
+                        f'Für die Saison „{season}" existieren bereits '
+                        f'{existing.count()} Spielplan-Einträge. '
+                        f'Bitte anderen Saisonnamen wählen.',
+                    )
+                else:
+                    team_ids = [c.pk for c in clubs]
+                    schedule = create_round_robin_schedule(team_ids, rounds=rounds)
+
+                    n = len(clubs)
+                    matchdays_per_round = n if n % 2 == 1 else n - 1
+
+                    fixtures_to_create = []
+                    for spieltag, pairs in sorted(schedule.items()):
+                        match_date = matchday_date(
+                            spieltag, start_date_val, day_interval,
+                            matchdays_per_round, round_break,
+                        )
+                        for home_id, away_id in pairs:
+                            fixtures_to_create.append(SeasonFixture(
+                                league=league,
+                                season=season,
+                                matchday=spieltag,
+                                home_club_id=home_id,
+                                away_club_id=away_id,
+                                scheduled_date=match_date,
+                                scheduled_time=start_time_val,
+                            ))
+
+                    SeasonFixture.objects.bulk_create(fixtures_to_create)
+
+                    total_matchdays = len(schedule)
+                    total_games = len(fixtures_to_create)
+                    self.message_user(
+                        request,
+                        f'Spielplan für „{league}" Saison {season} generiert: '
+                        f'{total_matchdays} Spieltage, {total_games} Spiele.',
+                        messages.SUCCESS,
+                    )
+                    return redirect(
+                        reverse('admin:game_seasonfixture_changelist')
+                        + f'?league__id__exact={league_id}&season={season}'
+                    )
+        else:
+            form = SpielplanForm()
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Spielplan generieren — {league}',
+            'league': league,
+            'clubs': clubs,
+            'form': form,
+            'errors': errors,
+            'opts': self.model._meta,
+        }
+        return render(request, 'admin/game/league/schedule_generator.html', context)
 
 
 def _assign_manager_action(modeladmin, request, queryset):
