@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -299,6 +299,7 @@
                             <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
                             {% endif %}
                             <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
+                            <span class="liga-fixture__ha liga-fixture__ha--home">H</span>
                         </div>
                         <div class="liga-fixture__score">
                             {% if f.is_played %}
@@ -306,12 +307,16 @@
                             {% else %}
                                 {% if f.scheduled_date %}
                                     <span class="liga-fixture__date">{{ f.scheduled_date|date:"d.m." }}</span>
+                                    {% if f.scheduled_time %}
+                                        <span class="liga-fixture__time">{{ f.scheduled_time|time:"H:i" }}</span>
+                                    {% endif %}
                                 {% else %}
                                     <span class="liga-fixture__vs">vs</span>
                                 {% endif %}
                             {% endif %}
                         </div>
                         <div class="liga-fixture__away">
+                            <span class="liga-fixture__ha liga-fixture__ha--away">A</span>
                             <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
                             {% if f.away_club.crest_static_path %}
                             <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
