@@ -333,14 +333,23 @@
         }
         window.toggleMd = toggleMd;
 
+        var currentMd = {{ spielplan_current_matchday|default:"null" }};
+        var currentBlock = currentMd ? document.getElementById('md-block-' + currentMd) : null;
+
         document.querySelectorAll('.spielplan-matchday-block').forEach(function(block) {
           var key = 'liga_sp_' + block.id;
           var stored;
           try { stored = sessionStorage.getItem(key); } catch(e) {}
           if (stored === '1') {
             block.classList.add('expanded');
+          } else if (stored === null && block === currentBlock) {
+            block.classList.add('expanded');
           }
         });
+
+        if (currentBlock) {
+          currentBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       })();
       </script>
     {% else %}
