@@ -1077,7 +1077,7 @@ def creator_league_edit(request, league_id):
         'league': league,
         'clubs': clubs,
         'active_tab': active_tab,
-        'logo_exists': logo_exists,
+        'logo_path': logo_path,
         'spielplan_seasons': spielplan_seasons,
         'spielplan_selected': spielplan_selected,
         'spielplan_matchdays': spielplan_matchdays,
