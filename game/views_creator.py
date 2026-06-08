@@ -71,9 +71,8 @@ def creator_index(request):
         )
         leagues_data = []
         for lg in leagues_qs:
-            from django.contrib.staticfiles import finders
             logo_exists = bool(
-                lg.logo_static_path and finders.find(lg.logo_static_path)
+                lg.logo_static_path and os.path.exists(os.path.join(STATIC_BASE, lg.logo_static_path))
             )
             leagues_data.append({
                 'league': lg,
