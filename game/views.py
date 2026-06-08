@@ -52,6 +52,7 @@ from .models import (
     TacticSetup,
     TacticTemplate,
 )
+from .fixture_display import get_form_rows_with_opponents
 from .tactics import (
     HALF_TACTIC_FIELDS,
     OPPONENT_RESULT_FORM,
@@ -1561,42 +1562,30 @@ def home(request):
         else None
     )
 
-    next_match_obj = None
-    last_match_obj = None
-    if primary_club:
-        for _m in ClubProfileMatch.objects.filter(
-            club=primary_club
-        ).select_related('home_club', 'away_club'):
-            if _m.kind == ClubProfileMatch.KIND_NEXT:
-                next_match_obj = _m
-            elif _m.kind == ClubProfileMatch.KIND_LAST:
-                last_match_obj = _m
+    # --- Nächstes / Letztes Spiel aus echten SeasonFixture-Daten ---
+    from .fixture_display import FixtureDisplay as FD, get_next_fixture, get_last_fixture
+    next_fixture = get_next_fixture(primary_club) if primary_club else None
+    last_fixture = get_last_fixture(primary_club) if primary_club else None
 
-    if next_match_obj:
+    if next_fixture:
+        next_match_obj = FD(next_fixture, primary_club)
         next_match_opponent = (
-            next_match_obj.away_club
-            if next_match_obj.home_club_id == (primary_club.id if primary_club else None)
-            else next_match_obj.home_club
+            next_fixture.away_club if next_fixture.home_club_id == primary_club.pk
+            else next_fixture.home_club
         )
     else:
+        next_match_obj = None
         next_match_opponent = secondary_club
 
-    if last_match_obj:
-        if last_match_obj.home_club_id == (primary_club.id if primary_club else None):
-            last_match_opponent = last_match_obj.away_club
-            last_match_score = (
-                f'{last_match_obj.home_goals}:{last_match_obj.away_goals}'
-                if last_match_obj.home_goals is not None and last_match_obj.away_goals is not None
-                else None
-            )
-        else:
-            last_match_opponent = last_match_obj.home_club
-            last_match_score = (
-                f'{last_match_obj.away_goals}:{last_match_obj.home_goals}'
-                if last_match_obj.away_goals is not None and last_match_obj.home_goals is not None
-                else None
-            )
+    if last_fixture:
+        last_match_obj = FD(last_fixture, primary_club)
+        is_home = last_fixture.home_club_id == primary_club.pk
+        last_match_opponent = last_fixture.away_club if is_home else last_fixture.home_club
+        my_g = last_fixture.home_goals if is_home else last_fixture.away_goals
+        opp_g = last_fixture.away_goals if is_home else last_fixture.home_goals
+        last_match_score = f'{my_g}:{opp_g}' if my_g is not None and opp_g is not None else None
     else:
+        last_match_obj = None
         last_match_opponent = secondary_club
         last_match_score = None
 
@@ -2315,25 +2304,6 @@ def split_absence_labels(rows):
     }
 
 
-def form_rows_with_opponents(rows, team_club):
-    candidates = list(
-        Club.objects.filter(fm_inside_id__isnull=False)
-        .exclude(id=getattr(team_club, 'id', None))
-        .order_by('name', 'id')[:5]
-    )
-    if not candidates and team_club and team_club.fm_inside_id:
-        candidates = [team_club]
-
-    result = []
-    for index, row in enumerate(rows):
-        opponent = candidates[index % len(candidates)] if candidates else None
-        result.append({
-            **row,
-            'opponent_name': opponent.name if opponent else 'Gegner',
-            'opponent_crest': opponent.crest_static_path if opponent else '',
-            'opponent_url': reverse_club_detail(opponent) if opponent else '#',
-        })
-    return result
 
 
 def opponent_absence_rows(opponent_club):
@@ -2580,8 +2550,8 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
         'home_club_url': reverse_club_detail(club),
         'away_club_url': reverse_club_detail(opponent_club) if opponent_club else '#',
         'opponent_club': opponent_club,
-        'home_form': form_rows_with_opponents(RESULT_FORM, club),
-        'away_form': form_rows_with_opponents(OPPONENT_RESULT_FORM, opponent_club or club),
+        'home_form': get_form_rows_with_opponents(club, n=5),
+        'away_form': get_form_rows_with_opponents(opponent_club or club, n=5),
         'opponent_absences': opponent_absence_rows(opponent_club),
         'top_goals': top_goals,
         'top_assists': top_assists,

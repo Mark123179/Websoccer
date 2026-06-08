@@ -4,6 +4,12 @@ from django.urls import reverse
 
 from .club_profile_highlights import CURRENT_SEASON, build_highlights, compact_money
 from .competition_assets import competition_logo_static_path
+from .fixture_display import (
+    FixtureDisplay,
+    get_form_rows,
+    get_last_fixture,
+    get_next_fixture,
+)
 from .models import (
     COUNTRY_FLAG_ASSETS,
     Club,
@@ -96,7 +102,7 @@ def build_club_identity(club, players):
         'averageYouthAgeLabel': average_age_label(youth_players),
         'proPlayerCount': len(pro_players),
         'youthPlayerCount': len(youth_players),
-        'recentForm': ['S', 'S', 'U', 'S', 'N'],
+        'recentForm': [r['label'] for r in get_form_rows(club, n=5)],
     }
 
 
@@ -120,9 +126,51 @@ def get_public_profile(club):
 
 
 def build_match(club, opponent_club, kind, links):
+    # Prefer real SeasonFixture data; fall back to ClubProfileMatch if no fixture found
+    if kind == ClubProfileMatch.KIND_NEXT:
+        fixture = get_next_fixture(club)
+    else:
+        fixture = get_last_fixture(club)
+
+    if fixture:
+        home_club = fixture.home_club or club
+        away_club = fixture.away_club or opponent_club or club
+        is_home = fixture.home_club_id == club.pk
+        disp = FixtureDisplay(fixture, club)
+        base = {
+            'id': str(fixture.id),
+            'competitionName': fixture.league.name if fixture.league else 'Liga',
+            'ntNationality': None,
+            'competitionLogoUrl': competition_logo_static_path(
+                fixture.league.name if fixture.league else ''
+            ),
+            'matchdayLabel': f'{fixture.matchday}. Spieltag' if fixture.matchday else '',
+            'homeClub': club_stub(home_club),
+            'awayClub': club_stub(away_club),
+            'backgroundImageUrl': stadium_image_for(home_club),
+        }
+        if kind == ClubProfileMatch.KIND_NEXT:
+            return {
+                **base,
+                'dateLabel': disp.date_label,
+                'timeLabel': disp.time_label,
+                'stadiumName': disp.stadium_name or stadium_name_for(home_club),
+                'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
+            }
+        rl = disp.result_label
+        return {
+            **base,
+            'homeGoals': fixture.home_goals if fixture.home_goals is not None else 0,
+            'awayGoals': fixture.away_goals if fixture.away_goals is not None else 0,
+            'resultLabel': rl,
+            'resultTone': disp.result_tone,
+            'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
+            'scorers': [],
+        }
+
+    # Fallback: try legacy ClubProfileMatch
     match = club.public_profile_matches.filter(kind=kind).select_related(
-        'home_club',
-        'away_club',
+        'home_club', 'away_club',
     ).order_by('-id').first()
 
     if match:
@@ -146,7 +194,6 @@ def build_match(club, opponent_club, kind, links):
                 'stadiumName': match.stadium_name,
                 'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
             }
-
         return {
             **base,
             'homeGoals': match.home_goals if match.home_goals is not None else 0,
@@ -157,6 +204,7 @@ def build_match(club, opponent_club, kind, links):
             'scorers': match.scorers[:5],
         }
 
+    # Final fallback: empty state
     opponent = opponent_club
     if kind == ClubProfileMatch.KIND_NEXT:
         return {
@@ -171,7 +219,6 @@ def build_match(club, opponent_club, kind, links):
             'backgroundImageUrl': stadium_image_for(club),
             'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
         }
-
     return {
         'id': 'last-fallback',
         'competitionName': club.league.name if club.league else 'Liga',
