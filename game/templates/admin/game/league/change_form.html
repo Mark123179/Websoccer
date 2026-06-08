@@ -123,6 +123,21 @@
   color: #555;
   border: 1px solid #333;
 }
+.md-edit-link {
+  font-size: 11px;
+  color: #79aec8;
+  text-decoration: none;
+  padding: 2px 7px;
+  border: 1px solid #2a4f65;
+  border-radius: 3px;
+  background: #1a2f3d;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.md-edit-link:hover {
+  background: #204050;
+  color: #a0c8e0;
+}
 .spielplan-matchday-header .md-toggle {
   font-size: 11px;
   color: #555;
@@ -274,6 +289,11 @@
                 {% else %}
                   <span class="md-status-badge status-partial">{{ md_block.played }}/{{ md_block.total }} gespielt</span>
                 {% endif %}
+              {% endif %}
+              {% if spielplan_fixture_list_url %}
+                <a class="md-edit-link"
+                   href="{{ spielplan_fixture_list_url }}?league__id__exact={{ change_object_id }}&season={{ spielplan_selected }}&matchday={{ md_block.matchday }}"
+                   onclick="event.stopPropagation()">&#9998; Ergebnisse</a>
               {% endif %}
               <span class="md-toggle">&#9658;</span>
             </div>

@@ -464,6 +464,7 @@ class LeagueAdmin(admin.ModelAdmin):
                     'spielplan_total_fixtures': total_fixtures,
                     'spielplan_total_matchdays': total_matchdays,
                     'spielplan_current_matchday': current_matchday,
+                    'spielplan_fixture_list_url': reverse('admin:game_seasonfixture_changelist'),
                 })
         return super().changeform_view(request, object_id, form_url, extra_context)
 
