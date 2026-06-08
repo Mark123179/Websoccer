@@ -34,6 +34,7 @@ from .models import (
     ClubTrophy,
     COUNTRY_FLAG_ASSETS,
     DataSource,
+    GameSeasonState,
     League,
     LeagueNews,
     LeagueStandings,
@@ -1761,46 +1762,36 @@ def home(request):
         ],
     }
 
-    table_clubs = []
-    seen_ids = set()
-    for club in [primary_club, secondary_club]:
-        if club and club.id not in seen_ids:
-            table_clubs.append(club)
-            seen_ids.add(club.id)
-    for club in clubs.order_by('-budget'):
-        if len(table_clubs) >= 5:
-            break
-        if club.id in seen_ids:
-            continue
-        table_clubs.append(club)
-        seen_ids.add(club.id)
-
-    fallback_table = [
-        ('FC Novum', 'FC Novum', 78, '68:29', '+39'),
-        ('FC Aurora', 'FC Aurora', 72, '61:28', '+33'),
-        ('FC Helios', 'FC Helios', 64, '57:32', '+25'),
-        ('SV Fortuna', 'SV Fortuna', 55, '49:37', '+12'),
-        ('SC Meridian', 'SC Meridian', 53, '46:40', '+6'),
-    ]
-    table_points = [78, 72, 64, 55, 53]
-    table_goals = ['68:29', '61:28', '57:32', '49:37', '46:40']
-    table_diff = ['+39', '+33', '+25', '+12', '+6']
+    # Echte Ligatabelle aus LeagueStandings laden
     overview_league_table = []
-    for index in range(5):
-        club = table_clubs[index] if index < len(table_clubs) else None
-        fallback = fallback_table[index]
-        overview_league_table.append({
-            'position': index + 1,
-            'club_name': club.name if club else fallback[0],
-            'short_name': club.short_name if club else fallback[1],
-            'crest_static_path': club.crest_static_path if club else '',
-            'club_url': f'/clubs/{club.id}/' if club else '',
-            'played': 33,
-            'goals': table_goals[index],
-            'goal_difference': table_diff[index],
-            'points': table_points[index],
-            'is_current_club': bool(primary_club and club and club.id == primary_club.id),
-        })
+    _league_for_table = primary_club.league if primary_club else None
+    if _league_for_table:
+        try:
+            _state = GameSeasonState.objects.only('current_season').first()
+            _season_key = str(_state.current_season) if _state else '0'
+        except Exception:
+            _season_key = '0'
+        _all_rows = list(
+            LeagueStandings.objects
+            .filter(league=_league_for_table, season=_season_key)
+            .select_related('club')
+            .order_by('position', '-points', 'club__name')
+        )
+        # Top 5 anzeigen, eigenen Verein hervorheben
+        for _s in _all_rows[:5]:
+            _diff = _s.goals_for - _s.goals_against
+            overview_league_table.append({
+                'position': _s.position,
+                'club_name': _s.club.name,
+                'short_name': _s.club.short_name or _s.club.name,
+                'crest_static_path': _s.club.crest_static_path,
+                'club_url': f'/clubs/{_s.club_id}/',
+                'played': _s.played,
+                'goals': f'{_s.goals_for}:{_s.goals_against}',
+                'goal_difference': f'+{_diff}' if _diff > 0 else str(_diff),
+                'points': _s.points,
+                'is_current_club': bool(primary_club and _s.club_id == primary_club.id),
+            })
 
     totals = {
         'league_count': League.objects.count(),
@@ -3230,11 +3221,14 @@ def squad_move_to_youth(request, club_id):
 
 
 def club_table(request, club_id):
+    club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
+    if club.league_id:
+        return redirect('league_detail', league_id=club.league_id)
     return render_public_club_stub(
         request,
         club_id,
         'Ligatabelle',
-        'Die komplette öffentliche Tabelle wird als eigener Bereich vorbereitet.',
+        'Dieser Verein ist keiner Liga zugeordnet.',
     )
 
 

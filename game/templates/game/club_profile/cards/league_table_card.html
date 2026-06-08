@@ -3,6 +3,7 @@
 <article class="club-profile-card compact-table-card">
     <h2 class="club-card-title">LIGATABELLE</h2>
 
+    {% if profile.table %}
     <table class="club-profile-table">
         <thead>
             <tr>
@@ -36,6 +37,9 @@
             {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <p class="club-card-empty-note">Tabellendaten folgen zum Saisonstart.</p>
+    {% endif %}
 
     <a class="club-card-link" href="{{ profile.links.fullTableUrl }}">
         Komplette Tabelle anzeigen

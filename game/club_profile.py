@@ -8,6 +8,8 @@ from .models import (
     COUNTRY_FLAG_ASSETS,
     Club,
     ClubProfileMatch,
+    GameSeasonState,
+    LeagueStandings,
 )
 from .player_assets import get_cached_trophy_static_path
 
@@ -54,10 +56,14 @@ def build_club_profile_view_model(club, season=CURRENT_SEASON):
 
 
 def build_links(club):
+    if club.league_id:
+        full_table_url = reverse('league_detail', kwargs={'league_id': club.league_id})
+    else:
+        full_table_url = reverse('club_table', kwargs={'club_id': club.id})
     return {
         'professionalSquadUrl': reverse('club_professional_squad', kwargs={'club_id': club.id}),
         'youthSquadUrl': reverse('club_youth_squad', kwargs={'club_id': club.id}),
-        'fullTableUrl': reverse('club_table', kwargs={'club_id': club.id}),
+        'fullTableUrl': full_table_url,
         'newsUrl': reverse('club_news', kwargs={'club_id': club.id}),
         'profileUrl': reverse('club_detail', kwargs={'club_id': club.id}),
     }
@@ -182,59 +188,72 @@ def build_match(club, opponent_club, kind, links):
     }
 
 
+def _current_season_key():
+    """Gibt den aktuellen Saison-Schlüssel als String zurück (z. B. '0', '1')."""
+    try:
+        state = GameSeasonState.objects.only('current_season').first()
+        return str(state.current_season) if state else '0'
+    except Exception:
+        return '0'
+
+
 def build_table(club, opponent_club):
-    rows = []
-    table_clubs = []
-    seen_ids = set()
-    for candidate in [club, opponent_club]:
-        if candidate and candidate.id not in seen_ids:
-            table_clubs.append(candidate)
-            seen_ids.add(candidate.id)
-    for candidate in Club.objects.exclude(id__in=seen_ids).order_by('-budget', 'name'):
-        if len(table_clubs) >= 7:
+    """Baut die kompakte Ligatabellen-Vorschau für ein Vereinsprofil.
+
+    Zeigt bis zu 7 Zeilen aus den echten LeagueStandings, zentriert
+    um die Position des aktuellen Vereins.  Existieren noch keine
+    Standings, wird ein leeres Label zurückgegeben.
+    """
+    if not club.league_id:
+        return []
+
+    season = _current_season_key()
+    all_standings = list(
+        LeagueStandings.objects
+        .filter(league_id=club.league_id, season=season)
+        .select_related('club')
+        .order_by('position', '-points', 'club__name')
+    )
+
+    if not all_standings:
+        return []
+
+    # Eigene Position finden
+    club_pos = None
+    for s in all_standings:
+        if s.club_id == club.id:
+            club_pos = s.position
             break
-        table_clubs.append(candidate)
-        seen_ids.add(candidate.id)
 
-    fallback_names = [
-        ('Bayer Leverkusen', 'B04'),
-        ('VfB Stuttgart', 'VFB'),
-        ('RB Leipzig', 'RBL'),
-        ('Eintracht Frankfurt', 'SGE'),
-        ('Borussia Dortmund', 'BVB'),
-        ('Wolfsburg', 'WOB'),
-    ]
-    while len(table_clubs) < 7:
-        table_clubs.append(None)
+    total = len(all_standings)
+    window = 7
 
-    points = [78, 68, 63, 59, 55, 50, 46]
-    diffs = [67, 37, 28, 17, 15, 8, 2]
-    for index, candidate in enumerate(table_clubs[:7]):
-        fallback = fallback_names[(index - 1) % len(fallback_names)]
+    if club_pos is None:
+        # Verein nicht in Tabelle — einfach Top-7
+        slice_start = 0
+    else:
+        # Fenster so wählen, dass der Verein möglichst mittig liegt
+        half = window // 2
+        slice_start = max(0, club_pos - 1 - half)
+        slice_start = min(slice_start, max(0, total - window))
+
+    visible = all_standings[slice_start: slice_start + window]
+
+    rows = []
+    for s in visible:
+        diff = s.goals_for - s.goals_against
+        diff_str = f'+{diff}' if diff > 0 else str(diff)
         rows.append({
-            'position': index + 1,
-            'clubId': str(candidate.id) if candidate else '',
-            'clubName': candidate.short_name if candidate else fallback[1],
-            'clubCrestUrl': candidate.crest_static_path if candidate else '',
-            'clubProfileUrl': reverse('club_detail', kwargs={'club_id': candidate.id}) if candidate else '',
-            'played': 33,
-            'goalDifference': f'+{diffs[index]}',
-            'points': points[index],
-            'isCurrentClub': bool(candidate and candidate.id == club.id),
+            'position': s.position,
+            'clubId': str(s.club_id),
+            'clubName': s.club.short_name or s.club.name,
+            'clubCrestUrl': s.club.crest_static_path,
+            'clubProfileUrl': reverse('club_detail', kwargs={'club_id': s.club_id}),
+            'played': s.played,
+            'goalDifference': diff_str,
+            'points': s.points,
+            'isCurrentClub': s.club_id == club.id,
         })
-
-    if not any(row['isCurrentClub'] for row in rows):
-        rows[-1] = {
-            'position': 7,
-            'clubId': str(club.id),
-            'clubName': club.short_name,
-            'clubCrestUrl': club.crest_static_path,
-            'clubProfileUrl': reverse('club_detail', kwargs={'club_id': club.id}),
-            'played': 33,
-            'goalDifference': '+15',
-            'points': 55,
-            'isCurrentClub': True,
-        }
 
     return rows
 
