@@ -3018,6 +3018,12 @@ class InactivityRecord(models.Model):
         ordering = ['-recorded_at']
         verbose_name = 'Inaktivitäts-Eintrag'
         verbose_name_plural = 'Inaktivitäts-Einträge'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager', 'club', 'squad_scope', 'season', 'matchday_label'],
+                name='unique_inactivity_record_per_matchday',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.manager} | {self.get_squad_scope_display()} | {self.matchday_label} ({self.season})'

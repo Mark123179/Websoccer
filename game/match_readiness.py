@@ -299,15 +299,16 @@ def prepare_matchday_lineups(league, matchday, season):
             # Strafpunkt + Malus nur für gemanagte Vereine
             manager = club.managed_by
             if manager is not None:
-                InactivityRecord.objects.create(
+                _, created = InactivityRecord.objects.get_or_create(
                     manager=manager,
                     club=club,
                     squad_scope=SQUAD_PRO,
                     season=str(season),
                     matchday_label=f'Spieltag {matchday}',
                 )
-                setattr(fixture, malus_attr, True)
-                stats['penalized'] += 1
+                if created:
+                    setattr(fixture, malus_attr, True)
+                    stats['penalized'] += 1
 
         if fixture_dirty:
             fixture.save(
