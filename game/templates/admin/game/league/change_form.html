@@ -582,7 +582,7 @@
           var block = btn.closest('.spielplan-matchday-block');
           var rows = block.querySelectorAll('tbody tr[data-fixture-id]');
 
-          // Check for already-played fixtures whose score is being overwritten
+          // Check for already-played fixtures whose score is being overwritten with a new value
           var overwriteCount = 0;
           var overwriteDetails = [];
           rows.forEach(function(row) {
@@ -592,13 +592,15 @@
             var awayGoalsInput = row.querySelector('input[name="away_goals"]');
             var newHome = homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null;
             var newAway = awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null;
+            // Exclude the "both cleared" case — handled separately below
+            if ((newHome === null && newAway === null)) return;
             if (newHome !== orig.homeGoals || newAway !== orig.awayGoals) {
               overwriteCount++;
               var homeCell = row.querySelector('.col-home');
               var awayCell = row.querySelector('.col-away');
               var label = (homeCell ? homeCell.textContent.trim() : '?') + ' ' +
                           orig.homeGoals + ':' + orig.awayGoals + ' → ' +
-                          (newHome !== null ? newHome : '—') + ':' + (newAway !== null ? newAway : '—') +
+                          newHome + ':' + newAway +
                           ' ' + (awayCell ? awayCell.textContent.trim() : '?');
               overwriteDetails.push(label);
             }
@@ -640,6 +642,38 @@
                             unplayDetails.join('\n') +
                             '\n\nDas Ergebnis bleibt gespeichert, aber der Gespielt-Status wird entfernt. Wirklich fortfahren?';
             if (!window.confirm(unplayMsg)) {
+              return;
+            }
+          }
+
+          // Check for played fixtures whose score is being cleared while 'Gespielt' stays checked
+          var clearCount = 0;
+          var clearDetails = [];
+          rows.forEach(function(row) {
+            var orig = row._spOrigState;
+            if (!orig || !orig.wasPlayed || (orig.homeGoals === null && orig.awayGoals === null)) return;
+            var homeGoalsInput = row.querySelector('input[name="home_goals"]');
+            var awayGoalsInput = row.querySelector('input[name="away_goals"]');
+            var newHome = homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null;
+            var newAway = awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null;
+            var playedInput = row.querySelector('input[name="is_played"]');
+            if (newHome === null && newAway === null && playedInput && playedInput.checked) {
+              clearCount++;
+              var homeCell = row.querySelector('.col-home');
+              var awayCell = row.querySelector('.col-away');
+              var label = (homeCell ? homeCell.textContent.trim() : '?') + ' ' +
+                          orig.homeGoals + ':' + orig.awayGoals + ' ' +
+                          (awayCell ? awayCell.textContent.trim() : '?');
+              clearDetails.push(label);
+            }
+          });
+
+          if (clearCount > 0) {
+            var clearMsg = 'Achtung: Bei ' + clearCount + (clearCount === 1 ? ' Spiel' : ' Spielen') +
+                           ' wird das Ergebnis gelöscht, obwohl „Gespielt" weiterhin aktiv ist:\n\n' +
+                           clearDetails.join('\n') +
+                           '\n\nErgebnis' + (clearCount === 1 ? '' : 'se') + ' wirklich löschen?';
+            if (!window.confirm(clearMsg)) {
               return;
             }
           }
