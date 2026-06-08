@@ -2757,6 +2757,23 @@ def club_tactics(request, club_id):
         )
         setup.full_clean()
         setup.save()
+
+        # Mark lineup as set on the next upcoming (unplayed) fixture for this club
+        if squad_scope == 'pro':
+            from django.db.models import Q
+            today = timezone.now().date()
+            next_fixture = (
+                SeasonFixture.objects
+                .filter(Q(home_club=club) | Q(away_club=club), is_played=False, date__gte=today)
+                .order_by('date', 'id')
+                .first()
+            )
+            if next_fixture:
+                is_home = next_fixture.home_club_id == club.pk
+                field = 'home_lineup_set' if is_home else 'away_lineup_set'
+                setattr(next_fixture, field, True)
+                next_fixture.save(update_fields=[field])
+
         messages.success(request, 'Taktik bestätigt und gespeichert.')
         return redirect(tactic_redirect_url(club, squad_scope, confirmed=1))
 
