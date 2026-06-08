@@ -12,7 +12,7 @@ from .models import (
     Club, COUNTRY_FLAG_ASSETS, League, Player,
     Stadium, ClubPublicProfile, ClubTrophy, ClubSponsor, SeasonGoal,
     ManagerProfile, ManagerCareerStation, HoenessCoin, CoinTransaction,
-    PresidentSatisfaction,
+    PresidentSatisfaction, TacticSetup,
 )
 
 STATIC_BASE = 'game/static'
@@ -1038,6 +1038,23 @@ def creator_league_edit(request, league_id):
     clubs = list(
         league.club_set.order_by('name').prefetch_related('tactic_setups')
     )
+
+    # Aufstellungs-Status für jeden Verein (Vereine-Tab)
+    from .match_readiness import has_valid_lineup
+    from .tactics import SQUAD_PRO
+    for club in clubs:
+        setup = None
+        for ts in club.tactic_setups.all():
+            if ts.squad_scope == SQUAD_PRO:
+                setup = ts
+                break
+        if setup and has_valid_lineup(setup, club=club):
+            if setup.is_confirmed:
+                club._lineup_status = 'confirmed'
+            else:
+                club._lineup_status = 'auto'
+        else:
+            club._lineup_status = 'missing'
 
     logo_path = league.logo_static_path or ''
 
