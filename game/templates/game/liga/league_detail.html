@@ -280,9 +280,29 @@
     <div class="liga-content liga-content--spielplan">
 
         {% if spielplan_matchdays %}
+
+        <!-- Quick-jump toolbar -->
+        <div class="spielplan-jumpbar">
+            {% if next_matchday_num %}
+            <a class="spielplan-jumpbar__btn spielplan-jumpbar__btn--next"
+               href="#spielplan-md-{{ next_matchday_num }}"
+               onclick="document.getElementById('spielplan-md-{{ next_matchday_num }}').scrollIntoView({behavior:'smooth',block:'start'});return false;">
+                ↓ Nächster Spieltag ({{ next_matchday_num }})
+            </a>
+            {% endif %}
+            {% if my_club_id and next_matchday_num %}
+            <a class="spielplan-jumpbar__btn spielplan-jumpbar__btn--mine"
+               href="#spielplan-md-{{ next_matchday_num }}"
+               onclick="var el=document.querySelector('#spielplan-md-{{ next_matchday_num }} .liga-fixture--mine');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});}else{document.getElementById('spielplan-md-{{ next_matchday_num }}').scrollIntoView({behavior:'smooth',block:'start'});}return false;">
+                Mein nächstes Spiel →
+            </a>
+            {% endif %}
+        </div>
+
         <div class="liga-spielplan">
             {% for md in spielplan_matchdays %}
-            <div class="liga-spielplan-matchday {% if md.is_current %}is-current{% endif %}">
+            <div class="liga-spielplan-matchday {% if md.is_current %}is-current{% endif %}"
+                 id="spielplan-md-{{ md.matchday_num }}">
                 <h2 class="liga-spielplan-matchday__header">
                     <span class="liga-spielplan-matchday__num">Spieltag {{ md.matchday_num }}</span>
                     {% if md.is_current %}
@@ -333,6 +353,25 @@
             <p>Noch kein Spielplan für {{ season_display }} vorhanden.</p>
             <p class="liga-empty-sub">Der Admin kann den Spielplan unter <strong>Liga → Spielplan generieren</strong> erstellen.</p>
         </div>
+        {% endif %}
+
+        {% if next_matchday_num %}
+        <script>
+        (function(){
+            var targetId = 'spielplan-md-{{ next_matchday_num }}';
+            var el = document.getElementById(targetId);
+            if (!el) return;
+            {% if my_club_id %}
+            var mine = el.querySelector('.liga-fixture--mine');
+            var scrollTo = mine || el;
+            {% else %}
+            var scrollTo = el;
+            {% endif %}
+            setTimeout(function(){
+                scrollTo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 80);
+        })();
+        </script>
         {% endif %}
 
     </div>
