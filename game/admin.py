@@ -421,14 +421,45 @@ class LeagueAdmin(admin.ModelAdmin):
                 round_break = form.cleaned_data['round_break']
 
                 existing = SeasonFixture.objects.filter(league=league, season=season)
+                proceed = True
                 if existing.exists():
-                    form.add_error(
-                        'season',
-                        f'Für die Saison „{season}" existieren bereits '
-                        f'{existing.count()} Spielplan-Einträge. '
-                        f'Bitte anderen Saisonnamen wählen.',
-                    )
-                else:
+                    played_count = existing.filter(is_played=True).count()
+                    unplayed_count = existing.filter(is_played=False).count()
+                    if played_count > 0:
+                        form.add_error(
+                            'season',
+                            f'Für die Saison „{season}" wurden bereits {played_count} '
+                            f'Spiel(e) ausgetragen. Der Spielplan kann nicht '
+                            f'zurückgesetzt werden, solange gespielte Partien existieren — '
+                            f'eine Neugenerierung würde den bestehenden Spielplan '
+                            f'inkonsistent machen.',
+                        )
+                        proceed = False
+                    elif request.POST.get('confirm_reset') == '1':
+                        existing.delete()
+                        self.message_user(
+                            request,
+                            f'{unplayed_count} ungespieltes Spiel(e) aus Saison „{season}" gelöscht. '
+                            f'Neuer Spielplan wird generiert…',
+                            messages.WARNING,
+                        )
+                    else:
+                        context = {
+                            **self.admin_site.each_context(request),
+                            'title': f'Spielplan generieren — {league}',
+                            'league': league,
+                            'clubs': clubs,
+                            'form': form,
+                            'errors': errors,
+                            'opts': self.model._meta,
+                            'existing_warning': True,
+                            'unplayed_count': unplayed_count,
+                            'played_count': 0,
+                            'season': season,
+                        }
+                        return render(request, 'admin/game/league/schedule_generator.html', context)
+
+                if proceed:
                     team_ids = [c.pk for c in clubs]
                     try:
                         schedule = create_round_robin_schedule(team_ids, rounds=rounds)

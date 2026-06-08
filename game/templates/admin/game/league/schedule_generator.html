@@ -94,6 +94,42 @@
   .schedule-preview strong {
     color: #9c9cff;
   }
+  .schedule-reset-box {
+    background: #2a1400;
+    border: 2px solid #e65100;
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    color: #ffccbc;
+  }
+  .schedule-reset-box h3 {
+    margin: 0 0 10px 0;
+    color: #ff7043;
+    font-size: 15px;
+  }
+  .schedule-reset-box p {
+    margin: 4px 0;
+    font-size: 13px;
+  }
+  .schedule-reset-box .reset-actions {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn-danger-confirm {
+    background: #c62828;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .btn-danger-confirm:hover {
+    background: #b71c1c;
+  }
 </style>
 
 <h1>Spielplan generieren — <em>{{ league }}</em></h1>
@@ -128,7 +164,27 @@
   {% endif %}
 </div>
 
-{% if not errors %}
+{% if existing_warning %}
+<div class="schedule-reset-box">
+  <h3>&#9888; Achtung: Für Saison „{{ season }}" existiert bereits ein Spielplan</h3>
+  <p>Es gibt <strong>{{ unplayed_count }} ungespieltes Spiel{{ unplayed_count|pluralize:"e" }}</strong> für diese Saison. Keines davon wurde bisher ausgetragen.</p>
+  <p>Alle bisherigen Spielplan-Einträge dieser Saison werden unwiderruflich gelöscht und ein neuer Spielplan generiert.</p>
+  <p style="margin-top:10px; color:#ffab91;">Bitte bestätige, dass du den bestehenden Spielplan löschen und neu generieren möchtest.</p>
+  <div class="reset-actions">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="confirm_reset" value="1">
+      {% for field in form %}
+        <input type="hidden" name="{{ field.html_name }}" value="{{ field.value }}">
+      {% endfor %}
+      <button type="submit" class="btn-danger-confirm">Spielplan löschen und neu generieren</button>
+    </form>
+    <a href="{% url 'admin:game_league_spielplan' league.pk %}">Abbrechen</a>
+  </div>
+</div>
+{% endif %}
+
+{% if not errors and not existing_warning %}
 <form method="post">
   {% csrf_token %}
 
