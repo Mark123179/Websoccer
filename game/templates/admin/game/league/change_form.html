@@ -161,32 +161,39 @@
   padding: 5px 10px;
   border-top: 1px solid #1e1e1e;
   color: #ccc;
+  vertical-align: middle;
 }
 .spielplan-fixture-table .col-home {
   text-align: right;
-  width: 38%;
+  width: 30%;
 }
 .spielplan-fixture-table .col-sep {
   text-align: center;
-  width: 10%;
+  width: 6%;
   color: #555;
   font-size: 11px;
 }
 .spielplan-fixture-table .col-result {
   text-align: center;
-  width: 10%;
-  font-weight: bold;
+  width: 16%;
 }
 .spielplan-fixture-table .col-away {
   text-align: left;
-  width: 38%;
+  width: 30%;
 }
 .spielplan-fixture-table .col-date {
   text-align: right;
-  width: 14%;
-  color: #666;
-  font-size: 11px;
+  width: 12%;
   white-space: nowrap;
+}
+.spielplan-fixture-table .col-time {
+  text-align: center;
+  width: 10%;
+  white-space: nowrap;
+}
+.spielplan-fixture-table .col-played {
+  text-align: center;
+  width: 6%;
 }
 .spielplan-fixture-table tr:hover td {
   background: #1a1a2a;
@@ -232,6 +239,91 @@
 .spielplan-progress-matchday {
   color: #79aec8;
   white-space: nowrap;
+}
+/* Editable inputs */
+.sp-input-date,
+.sp-input-time {
+  background: #1a2028;
+  color: #d0d8e0;
+  border: 1px solid #3a4a5a;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 11px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.sp-input-date:focus,
+.sp-input-time:focus {
+  outline: none;
+  border-color: #79aec8;
+  background: #1e2e3e;
+}
+.sp-result-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.sp-input-goals {
+  background: #1a2028;
+  color: #d0d8e0;
+  border: 1px solid #3a4a5a;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 12px;
+  width: 32px;
+  text-align: center;
+  box-sizing: border-box;
+}
+.sp-input-goals:focus {
+  outline: none;
+  border-color: #79aec8;
+  background: #1e2e3e;
+}
+.sp-colon {
+  color: #888;
+  font-size: 12px;
+}
+.sp-played-cb {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: #4caf50;
+}
+/* Save bar per matchday */
+.spielplan-save-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: #161e26;
+  border-top: 1px solid #2a2a2a;
+}
+.sp-save-btn {
+  font-size: 11px;
+  padding: 3px 12px;
+  background: #1a3a4a;
+  color: #79aec8;
+  border: 1px solid #417690;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.sp-save-btn:hover {
+  background: #204050;
+}
+.sp-save-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.sp-save-status {
+  font-size: 11px;
+  color: #888;
+}
+.sp-save-status.ok {
+  color: #4caf50;
+}
+.sp-save-status.err {
+  color: #f44336;
 }
 </style>
 
@@ -299,24 +391,66 @@
             </div>
             <div class="spielplan-matchday-fixtures">
               <table class="spielplan-fixture-table">
-                {% for f in md_block.fixtures %}
+                <thead>
                   <tr>
-                    <td class="col-home">{{ f.home_club.short_name }}</td>
-                    <td class="col-sep">vs</td>
-                    <td class="col-away">{{ f.away_club.short_name }}</td>
-                    <td class="col-result">
-                      {% if f.is_played and f.home_goals is not None and f.away_goals is not None %}
-                        <span class="result-played">{{ f.home_goals }}:{{ f.away_goals }}</span>
-                      {% else %}
-                        <span class="result-pending">—</span>
-                      {% endif %}
-                    </td>
-                    <td class="col-date">
-                      {% if f.scheduled_date %}{{ f.scheduled_date|date:"d.m." }}{% if f.scheduled_time %} {{ f.scheduled_time|time:"H:i" }}{% endif %}{% endif %}
-                    </td>
+                    <th style="text-align:right;padding:4px 10px;font-size:10px;color:#555;font-weight:normal;">Heim</th>
+                    <th style="text-align:center;font-size:10px;color:#555;font-weight:normal;"></th>
+                    <th style="text-align:left;padding:4px 10px;font-size:10px;color:#555;font-weight:normal;">Gast</th>
+                    <th style="text-align:center;font-size:10px;color:#555;font-weight:normal;">Ergebnis</th>
+                    <th style="text-align:right;font-size:10px;color:#555;font-weight:normal;">Datum</th>
+                    <th style="text-align:center;font-size:10px;color:#555;font-weight:normal;">Uhrzeit</th>
+                    <th style="text-align:center;font-size:10px;color:#555;font-weight:normal;" title="Gespielt">&#10003;</th>
                   </tr>
-                {% endfor %}
+                </thead>
+                <tbody>
+                  {% for f in md_block.fixtures %}
+                    <tr data-fixture-id="{{ f.id }}">
+                      <td class="col-home">{{ f.home_club.short_name }}</td>
+                      <td class="col-sep">vs</td>
+                      <td class="col-away">{{ f.away_club.short_name }}</td>
+                      <td class="col-result">
+                        <div class="sp-result-wrap">
+                          <input class="sp-input-goals" type="number" min="0" max="99"
+                            name="home_goals"
+                            value="{{ f.home_goals|default:'' }}"
+                            placeholder="—">
+                          <span class="sp-colon">:</span>
+                          <input class="sp-input-goals" type="number" min="0" max="99"
+                            name="away_goals"
+                            value="{{ f.away_goals|default:'' }}"
+                            placeholder="—">
+                        </div>
+                      </td>
+                      <td class="col-date">
+                        <input class="sp-input-date" type="date"
+                          name="scheduled_date"
+                          value="{{ f.scheduled_date|date:'Y-m-d'|default:'' }}">
+                      </td>
+                      <td class="col-time">
+                        <input class="sp-input-time" type="time"
+                          name="scheduled_time"
+                          value="{{ f.scheduled_time|time:'H:i'|default:'' }}">
+                      </td>
+                      <td class="col-played">
+                        <input class="sp-played-cb" type="checkbox"
+                          name="is_played"
+                          title="Gespielt"
+                          {% if f.is_played %}checked{% endif %}>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
               </table>
+              {% if fixture_edit_url %}
+                <div class="spielplan-save-bar">
+                  <button class="sp-save-btn" type="button"
+                    data-matchday="{{ md_block.matchday }}"
+                    onclick="saveMatchday(this, '{{ fixture_edit_url }}', '{{ csrf_token }}')">
+                    &#10003; Spieltag {{ md_block.matchday }} speichern
+                  </button>
+                  <span class="sp-save-status" id="sp-status-{{ md_block.matchday }}"></span>
+                </div>
+              {% endif %}
             </div>
           </div>
         {% endfor %}
@@ -362,6 +496,66 @@
         if (targetBlock) {
           targetBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        function saveMatchday(btn, editUrl, csrfToken) {
+          var matchday = btn.dataset.matchday;
+          var statusEl = document.getElementById('sp-status-' + matchday);
+          var block = btn.closest('.spielplan-matchday-block');
+          var rows = block.querySelectorAll('tbody tr[data-fixture-id]');
+
+          var fixtures = [];
+          rows.forEach(function(row) {
+            var id = parseInt(row.dataset.fixtureId, 10);
+            var dateInput = row.querySelector('input[name="scheduled_date"]');
+            var timeInput = row.querySelector('input[name="scheduled_time"]');
+            var homeGoalsInput = row.querySelector('input[name="home_goals"]');
+            var awayGoalsInput = row.querySelector('input[name="away_goals"]');
+            var playedInput = row.querySelector('input[name="is_played"]');
+
+            fixtures.push({
+              id: id,
+              scheduled_date: dateInput ? dateInput.value : '',
+              scheduled_time: timeInput ? timeInput.value : '',
+              home_goals: homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null,
+              away_goals: awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null,
+              is_played: playedInput ? playedInput.checked : false
+            });
+          });
+
+          btn.disabled = true;
+          if (statusEl) { statusEl.textContent = 'Wird gespeichert…'; statusEl.className = 'sp-save-status'; }
+
+          fetch(editUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ fixtures: fixtures })
+          })
+          .then(function(resp) { return resp.json().then(function(data) { return { ok: resp.ok, data: data }; }); })
+          .then(function(result) {
+            btn.disabled = false;
+            if (result.ok && result.data.ok) {
+              if (statusEl) {
+                statusEl.textContent = '✓ ' + result.data.updated + ' Spiel' + (result.data.updated !== 1 ? 'e' : '') + ' gespeichert';
+                statusEl.className = 'sp-save-status ok';
+              }
+            } else {
+              var msg = (result.data.errors || ['Unbekannter Fehler']).join('; ');
+              if (statusEl) { statusEl.textContent = '✗ ' + msg; statusEl.className = 'sp-save-status err'; }
+            }
+            setTimeout(function() {
+              if (statusEl) { statusEl.textContent = ''; statusEl.className = 'sp-save-status'; }
+            }, 4000);
+          })
+          .catch(function(err) {
+            btn.disabled = false;
+            if (statusEl) { statusEl.textContent = '✗ Netzwerkfehler'; statusEl.className = 'sp-save-status err'; }
+          });
+        }
+
+        window.saveMatchday = saveMatchday;
       })();
       </script>
     {% else %}

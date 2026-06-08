@@ -459,6 +459,7 @@ class LeagueAdmin(admin.ModelAdmin):
                     'spielplan_selected': selected_season,
                     'spielplan_matchdays': spielplan_matchdays,
                     'spielplan_gen_url': reverse('admin:game_league_spielplan', args=[object_id]),
+                    'fixture_edit_url': reverse('admin:game_league_fixture_edit', args=[object_id]),
                     'change_object_id': object_id,
                     'spielplan_total_played': total_played,
                     'spielplan_total_fixtures': total_fixtures,
@@ -477,8 +478,113 @@ class LeagueAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.schedule_view),
                 name='game_league_spielplan',
             ),
+            path(
+                '<int:league_id>/fixture-edit/',
+                self.admin_site.admin_view(self.fixture_edit_view),
+                name='game_league_fixture_edit',
+            ),
         ]
         return custom + urls
+
+    def fixture_edit_view(self, request, league_id):
+        import json
+        from django.db import transaction
+        from django.http import JsonResponse
+        from django.shortcuts import get_object_or_404
+        from game.models import SeasonFixture
+
+        if request.method != 'POST':
+            return JsonResponse({'error': 'POST required'}, status=405)
+
+        if not request.user.has_perm('game.change_seasonfixture'):
+            return JsonResponse({'error': 'Keine Berechtigung'}, status=403)
+
+        league = get_object_or_404(League, pk=league_id)
+
+        if not self.has_change_permission(request):
+            return JsonResponse({'error': 'Keine Berechtigung'}, status=403)
+
+        try:
+            payload = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+        fixtures_data = payload.get('fixtures', [])
+        if not isinstance(fixtures_data, list):
+            return JsonResponse({'error': 'fixtures must be a list'}, status=400)
+
+        from datetime import datetime as dt_parse
+
+        prepared = []
+        errors = []
+        for item in fixtures_data:
+            fixture_id = item.get('id')
+            try:
+                fixture = SeasonFixture.objects.get(pk=fixture_id, league=league)
+            except SeasonFixture.DoesNotExist:
+                errors.append(f'Fixture {fixture_id} nicht gefunden')
+                continue
+
+            raw_date = item.get('scheduled_date', '')
+            if raw_date:
+                try:
+                    fixture.scheduled_date = dt_parse.strptime(raw_date, '%Y-%m-%d').date()
+                except ValueError:
+                    errors.append(f'Fixture {fixture_id}: ungültiges Datum „{raw_date}"')
+                    continue
+            else:
+                fixture.scheduled_date = None
+
+            raw_time = item.get('scheduled_time', '')
+            if raw_time:
+                try:
+                    fixture.scheduled_time = dt_parse.strptime(raw_time, '%H:%M').time()
+                except ValueError:
+                    errors.append(f'Fixture {fixture_id}: ungültige Uhrzeit „{raw_time}"')
+                    continue
+            else:
+                fixture.scheduled_time = None
+
+            fixture.is_played = bool(item.get('is_played', False))
+
+            raw_home = item.get('home_goals')
+            raw_away = item.get('away_goals')
+
+            if raw_home is not None and raw_home != '':
+                try:
+                    val = int(raw_home)
+                    if val < 0:
+                        raise ValueError('negative')
+                    fixture.home_goals = val
+                except (ValueError, TypeError):
+                    errors.append(f'Fixture {fixture_id}: ungültige Heimtore')
+                    continue
+            else:
+                fixture.home_goals = None
+
+            if raw_away is not None and raw_away != '':
+                try:
+                    val = int(raw_away)
+                    if val < 0:
+                        raise ValueError('negative')
+                    fixture.away_goals = val
+                except (ValueError, TypeError):
+                    errors.append(f'Fixture {fixture_id}: ungültige Auswärtstore')
+                    continue
+            else:
+                fixture.away_goals = None
+
+            prepared.append(fixture)
+
+        if errors:
+            return JsonResponse({'ok': False, 'errors': errors}, status=400)
+
+        save_fields = ['scheduled_date', 'scheduled_time', 'is_played', 'home_goals', 'away_goals']
+        with transaction.atomic():
+            for fixture in prepared:
+                fixture.save(update_fields=save_fields)
+
+        return JsonResponse({'ok': True, 'updated': len(prepared)})
 
     def schedule_view(self, request, league_id):
         from datetime import date, timedelta
