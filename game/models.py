@@ -3083,6 +3083,20 @@ class ManagerCareerEntry(models.Model):
             models.Index(fields=['manager', 'active'], name='mgr_career_active_idx'),
             models.Index(fields=['club', 'active'],    name='mgr_career_club_idx'),
         ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager'],
+                condition=models.Q(active=True),
+                name='one_active_entry_per_manager',
+                violation_error_message='Dieser Manager hat bereits einen aktiven Verein.',
+            ),
+            models.UniqueConstraint(
+                fields=['club'],
+                condition=models.Q(active=True),
+                name='one_active_entry_per_club',
+                violation_error_message='Dieser Verein hat bereits einen aktiven Manager.',
+            ),
+        ]
 
     def __str__(self):
         end = self.ended_at.strftime('%d.%m.%Y') if self.ended_at else 'heute'
