@@ -190,17 +190,22 @@
     <div>
       <strong>Spielplan für Saison „{{ confirm_reset_season }}" wird überschrieben</strong>
       <p>Es sind {{ spielplan_total_fixtures }} ungespielte Partien vorhanden. Alle werden gelöscht und neu generiert.</p>
+      {% if confirm_reset_params.start_date %}
+      <p style="color:#aaa;font-size:.78rem;margin:.3rem 0 0;">
+        Start: {{ confirm_reset_params.start_date }} · {{ confirm_reset_params.rounds }} Runde(n) · {{ confirm_reset_params.day_interval }} Tag(e) Abstand · Anstoß {{ confirm_reset_params.start_time }} Uhr
+      </p>
+      {% endif %}
     </div>
     <div class="sp-confirm-actions">
       <form method="post" action="{% url 'creator_league_spielplan_generate' league_id=league.pk %}" id="sp-confirm-form">
         {% csrf_token %}
         <input type="hidden" name="season" value="{{ confirm_reset_season }}">
         <input type="hidden" name="confirm_reset" value="1">
-        <input type="hidden" name="rounds" id="cr-rounds" value="2">
-        <input type="hidden" name="start_date" id="cr-start_date" value="">
-        <input type="hidden" name="start_time" id="cr-start_time" value="15:30">
-        <input type="hidden" name="day_interval" id="cr-day_interval" value="7">
-        <input type="hidden" name="round_break" id="cr-round_break" value="0">
+        <input type="hidden" name="rounds"       value="{{ confirm_reset_params.rounds|default:'2' }}">
+        <input type="hidden" name="start_date"   value="{{ confirm_reset_params.start_date }}">
+        <input type="hidden" name="start_time"   value="{{ confirm_reset_params.start_time|default:'15:30' }}">
+        <input type="hidden" name="day_interval" value="{{ confirm_reset_params.day_interval|default:'7' }}">
+        <input type="hidden" name="round_break"  value="{{ confirm_reset_params.round_break|default:'0' }}">
         <button type="submit" class="creator-btn creator-btn-danger">🗑 Ja, überschreiben</button>
       </form>
       <a href="?tab=spielplan&season={{ confirm_reset_season }}" class="creator-btn creator-btn-secondary">Abbrechen</a>
@@ -359,20 +364,22 @@
                 </select>
               </div>
               <div class="creator-field">
-                <label class="creator-label">Startdatum</label>
-                <input class="creator-input" name="start_date" type="date" required>
+                <label class="creator-label">Startdatum <span style="color:#556677;font-weight:400;">(= Datum Spieltag 1)</span></label>
+                <input class="creator-input sp-date-input" name="start_date" type="date"
+                       id="gen-start-date"
+                       min="{{ today_iso }}" required>
               </div>
               <div class="creator-field">
                 <label class="creator-label">Anstoßzeit</label>
                 <input class="creator-input" name="start_time" type="time" value="15:30">
               </div>
               <div class="creator-field">
-                <label class="creator-label">Tage zwischen Spieltagen</label>
-                <input class="creator-input" name="day_interval" type="number" min="1" value="7">
+                <label class="creator-label">Tage zwischen Spieltagen <span style="color:#556677;font-weight:400;">(Abstand pro Spieltag)</span></label>
+                <input class="creator-input" name="day_interval" type="number" min="1" max="30" value="7" id="gen-day-interval">
               </div>
               <div class="creator-field">
-                <label class="creator-label">Rundenpause (Spieltage)</label>
-                <input class="creator-input" name="round_break" type="number" min="0" value="0">
+                <label class="creator-label">Rundenpause <span style="color:#556677;font-weight:400;">(Extra-Tage nach Hin-/Rückrunde)</span></label>
+                <input class="creator-input" name="round_break" type="number" min="0" max="90" value="0">
               </div>
             </div>
             <div class="sp-gen-info">

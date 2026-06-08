@@ -1029,8 +1029,10 @@ def creator_add_satisfaction(request, manager_id):
 @login_required
 def creator_league_edit(request, league_id):
     from collections import defaultdict
+    from datetime import date
     from django.contrib.staticfiles import finders
-    from game.models import SeasonFixture
+    from game.match_readiness import has_valid_lineup
+    from game.models import SeasonFixture, SQUAD_PRO
 
     league = get_object_or_404(League, id=league_id)
     active_tab = request.GET.get('tab', 'stammdaten')
@@ -1067,6 +1069,7 @@ def creator_league_edit(request, league_id):
     spielplan_current_matchday = None
     show_confirm_reset = False
     confirm_reset_season = None
+    confirm_reset_params = {}
 
     if active_tab == 'spielplan':
         spielplan_seasons = list(
@@ -1085,6 +1088,14 @@ def creator_league_edit(request, league_id):
             if existing.exists() and not existing.filter(is_played=True).exists():
                 show_confirm_reset = True
                 confirm_reset_season = season_param
+                # Pass through all generator params so the confirm form is accurate
+                confirm_reset_params = {
+                    'rounds':       request.GET.get('rounds', '2'),
+                    'start_date':   request.GET.get('start_date', ''),
+                    'start_time':   request.GET.get('start_time', '15:30'),
+                    'day_interval': request.GET.get('day_interval', '7'),
+                    'round_break':  request.GET.get('round_break', '0'),
+                }
 
         if spielplan_selected:
             fixtures_qs = (
@@ -1146,6 +1157,8 @@ def creator_league_edit(request, league_id):
         'spielplan_current_matchday': spielplan_current_matchday,
         'show_confirm_reset': show_confirm_reset,
         'confirm_reset_season': confirm_reset_season,
+        'confirm_reset_params': confirm_reset_params,
+        'today_iso': date.today().isoformat(),
     })
 
 
@@ -1228,6 +1241,11 @@ def creator_league_spielplan_generate(request, league_id):
             )
             return redirect(
                 f'/creator/leagues/{league_id}/?tab=spielplan&season={season}&confirm_reset=1'
+                f'&rounds={rounds}'
+                f'&start_date={start_date_val.isoformat()}'
+                f'&start_time={start_time_val.strftime("%H:%M")}'
+                f'&day_interval={day_interval}'
+                f'&round_break={round_break}'
             )
         existing.delete()
 
