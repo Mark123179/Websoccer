@@ -678,6 +678,36 @@
             }
           }
 
+          // Check for fixtures being marked as played but with no score entered
+          var noScoreCount = 0;
+          var noScoreDetails = [];
+          rows.forEach(function(row) {
+            var orig = row._spOrigState;
+            var playedInput = row.querySelector('input[name="is_played"]');
+            if (!playedInput || !playedInput.checked) return;
+            var homeGoalsInput = row.querySelector('input[name="home_goals"]');
+            var awayGoalsInput = row.querySelector('input[name="away_goals"]');
+            var newHome = homeGoalsInput && homeGoalsInput.value !== '' ? parseInt(homeGoalsInput.value, 10) : null;
+            var newAway = awayGoalsInput && awayGoalsInput.value !== '' ? parseInt(awayGoalsInput.value, 10) : null;
+            if (newHome !== null || newAway !== null) return;
+            // Skip fixtures already handled by the clear-score guard (was played + had a score + now cleared)
+            if (orig && orig.wasPlayed && (orig.homeGoals !== null || orig.awayGoals !== null)) return;
+            noScoreCount++;
+            var homeCell = row.querySelector('.col-home');
+            var awayCell = row.querySelector('.col-away');
+            noScoreDetails.push((homeCell ? homeCell.textContent.trim() : '?') + ' vs. ' + (awayCell ? awayCell.textContent.trim() : '?'));
+          });
+
+          if (noScoreCount > 0) {
+            var noScoreMsg = 'Achtung: ' + noScoreCount + (noScoreCount === 1 ? ' Spiel ist' : ' Spiele sind') +
+                             ' als „Gespielt" markiert, aber es wurde kein Ergebnis eingetragen:\n\n' +
+                             noScoreDetails.join('\n') +
+                             '\n\nWirklich ohne Ergebnis speichern?';
+            if (!window.confirm(noScoreMsg)) {
+              return;
+            }
+          }
+
           var fixtures = [];
           rows.forEach(function(row) {
             var id = parseInt(row.dataset.fixtureId, 10);
