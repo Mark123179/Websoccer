@@ -1091,10 +1091,30 @@ def creator_league_edit(request, league_id):
                 SeasonFixture.objects
                 .filter(league=league, season=spielplan_selected)
                 .select_related('home_club', 'away_club')
+                .prefetch_related('home_club__tactic_setups', 'away_club__tactic_setups')
                 .order_by('matchday', 'id')
             )
+            # Build lineup status for each club in the fixtures (avoid repeated DB hits)
+            _seen_club_status = {}
+            def _club_status(club):
+                if club.pk in _seen_club_status:
+                    return _seen_club_status[club.pk]
+                setup = None
+                for ts in club.tactic_setups.all():
+                    if ts.squad_scope == SQUAD_PRO:
+                        setup = ts
+                        break
+                if setup and has_valid_lineup(setup, club=club):
+                    status = 'confirmed' if setup.is_confirmed else 'auto'
+                else:
+                    status = 'missing'
+                _seen_club_status[club.pk] = status
+                return status
+
             by_md = defaultdict(list)
             for f in fixtures_qs:
+                f.home_lineup_status = _club_status(f.home_club)
+                f.away_lineup_status = _club_status(f.away_club)
                 by_md[f.matchday].append(f)
             for md in sorted(by_md.keys()):
                 md_fixtures = by_md[md]

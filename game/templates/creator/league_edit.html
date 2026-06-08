@@ -279,6 +279,9 @@
                       <img class="sp-crest" src="{% static f.home_club.crest_static_path %}" alt="">
                     {% endif %}
                     <span>{{ f.home_club.name }}</span>
+                    {% if f.home_lineup_status == 'confirmed' %}<span class="sp-lineup-dot sp-lineup-ok" title="Aufstellung bestätigt"></span>
+                    {% elif f.home_lineup_status == 'auto' %}<span class="sp-lineup-dot sp-lineup-warn" title="Auto-Aufstellung"></span>
+                    {% else %}<span class="sp-lineup-dot sp-lineup-err" title="Keine Aufstellung"></span>{% endif %}
                   </td>
                   <td class="sp-vs">vs</td>
                   <td class="sp-team-cell sp-away">
@@ -286,6 +289,9 @@
                       <img class="sp-crest" src="{% static f.away_club.crest_static_path %}" alt="">
                     {% endif %}
                     <span>{{ f.away_club.name }}</span>
+                    {% if f.away_lineup_status == 'confirmed' %}<span class="sp-lineup-dot sp-lineup-ok" title="Aufstellung bestätigt"></span>
+                    {% elif f.away_lineup_status == 'auto' %}<span class="sp-lineup-dot sp-lineup-warn" title="Auto-Aufstellung"></span>
+                    {% else %}<span class="sp-lineup-dot sp-lineup-err" title="Keine Aufstellung"></span>{% endif %}
                   </td>
                   <td>
                     <input class="sp-input sp-date"
@@ -575,11 +581,15 @@ select.creator-input option { background: #050e1a; }
 .creator-upload-label:hover { background: #00d4ff15; }
 .creator-upload-label input[type="file"] { display: none; }
 
-/* ── Aufstellungs-Status ───────────────────────────────────────── */
+/* ── Aufstellungs-Status (Vereine-Tab & Spielplan-Tab) ─────────── */
 .lineup-status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; cursor: help; }
-.lineup-status-ok { background: #00ff88; box-shadow: 0 0 4px #00ff8866; }
+.lineup-status-ok  { background: #00ff88; box-shadow: 0 0 4px #00ff8866; }
 .lineup-status-warn { background: #ffcc00; box-shadow: 0 0 4px #ffcc0066; }
 .lineup-status-err { background: #ff3344; box-shadow: 0 0 4px #ff334466; }
+.sp-lineup-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; cursor: help; flex-shrink: 0; margin-left: .25rem; }
+.sp-lineup-ok   { background: #00ff88; box-shadow: 0 0 3px #00ff8855; }
+.sp-lineup-warn { background: #ffcc00; box-shadow: 0 0 3px #ffcc0055; }
+.sp-lineup-err  { background: #ff3344; box-shadow: 0 0 3px #ff334455; }
 
 /* ── Spielplan Layout ──────────────────────────────────────────── */
 .sp-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; align-items: start; }
