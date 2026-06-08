@@ -404,8 +404,11 @@ class LeagueAdmin(admin.ModelAdmin):
             )
 
         errors = []
-        if not clubs:
-            errors.append('Diese Liga hat keine Vereine — zuerst Vereine anlegen.')
+        if len(clubs) < 2:
+            errors.append(
+                f'Diese Liga hat nur {len(clubs)} Verein(e) — '
+                f'mindestens 2 Vereine sind für einen Spielplan erforderlich.'
+            )
 
         if request.method == 'POST' and not errors:
             form = SpielplanForm(request.POST)
@@ -427,42 +430,47 @@ class LeagueAdmin(admin.ModelAdmin):
                     )
                 else:
                     team_ids = [c.pk for c in clubs]
-                    schedule = create_round_robin_schedule(team_ids, rounds=rounds)
+                    try:
+                        schedule = create_round_robin_schedule(team_ids, rounds=rounds)
+                    except ValueError as exc:
+                        form.add_error(None, f'Spielplan-Generator: {exc}')
+                        schedule = None
 
-                    n = len(clubs)
-                    matchdays_per_round = n if n % 2 == 1 else n - 1
+                    if schedule is not None:
+                        n = len(clubs)
+                        matchdays_per_round = n if n % 2 == 1 else n - 1
 
-                    fixtures_to_create = []
-                    for spieltag, pairs in sorted(schedule.items()):
-                        match_date = matchday_date(
-                            spieltag, start_date_val, day_interval,
-                            matchdays_per_round, round_break,
+                        fixtures_to_create = []
+                        for spieltag, pairs in sorted(schedule.items()):
+                            match_date = matchday_date(
+                                spieltag, start_date_val, day_interval,
+                                matchdays_per_round, round_break,
+                            )
+                            for home_id, away_id in pairs:
+                                fixtures_to_create.append(SeasonFixture(
+                                    league=league,
+                                    season=season,
+                                    matchday=spieltag,
+                                    home_club_id=home_id,
+                                    away_club_id=away_id,
+                                    scheduled_date=match_date,
+                                    scheduled_time=start_time_val,
+                                ))
+
+                        SeasonFixture.objects.bulk_create(fixtures_to_create)
+
+                        total_matchdays = len(schedule)
+                        total_games = len(fixtures_to_create)
+                        self.message_user(
+                            request,
+                            f'Spielplan für „{league}" Saison {season} generiert: '
+                            f'{total_matchdays} Spieltage, {total_games} Spiele.',
+                            messages.SUCCESS,
                         )
-                        for home_id, away_id in pairs:
-                            fixtures_to_create.append(SeasonFixture(
-                                league=league,
-                                season=season,
-                                matchday=spieltag,
-                                home_club_id=home_id,
-                                away_club_id=away_id,
-                                scheduled_date=match_date,
-                                scheduled_time=start_time_val,
-                            ))
-
-                    SeasonFixture.objects.bulk_create(fixtures_to_create)
-
-                    total_matchdays = len(schedule)
-                    total_games = len(fixtures_to_create)
-                    self.message_user(
-                        request,
-                        f'Spielplan für „{league}" Saison {season} generiert: '
-                        f'{total_matchdays} Spieltage, {total_games} Spiele.',
-                        messages.SUCCESS,
-                    )
-                    return redirect(
-                        reverse('admin:game_seasonfixture_changelist')
-                        + f'?league__id__exact={league_id}&season={season}'
-                    )
+                        return redirect(
+                            reverse('admin:game_seasonfixture_changelist')
+                            + f'?league__id__exact={league_id}&season={season}'
+                        )
         else:
             form = SpielplanForm()
 
