@@ -168,7 +168,10 @@ def build_match(club, opponent_club, kind, links):
             'scorers': [],
         }
 
-    # Fallback: try legacy ClubProfileMatch
+    # Fallback: legacy ClubProfileMatch only for NEXT MATCH (last match shows nothing if no real fixture)
+    if kind == ClubProfileMatch.KIND_LAST:
+        return None
+
     match = club.public_profile_matches.filter(kind=kind).select_related(
         'home_club', 'away_club',
     ).order_by('-id').first()
@@ -186,22 +189,12 @@ def build_match(club, opponent_club, kind, links):
             'awayClub': club_stub(away_club),
             'backgroundImageUrl': stadium_image_for(home_club),
         }
-        if kind == ClubProfileMatch.KIND_NEXT:
-            return {
-                **base,
-                'dateLabel': match.date_label,
-                'timeLabel': match.time_label,
-                'stadiumName': match.stadium_name,
-                'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
-            }
         return {
             **base,
-            'homeGoals': match.home_goals if match.home_goals is not None else 0,
-            'awayGoals': match.away_goals if match.away_goals is not None else 0,
-            'resultLabel': match.result_label or 'UNENTSCHIEDEN',
-            'resultTone': result_tone(match.result_label),
-            'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
-            'scorers': match.scorers[:5],
+            'dateLabel': match.date_label,
+            'timeLabel': match.time_label,
+            'stadiumName': match.stadium_name,
+            'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
         }
 
     # Final fallback: empty state only for next match; last match returns None (no data yet)

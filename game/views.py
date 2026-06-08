@@ -52,7 +52,7 @@ from .models import (
     TacticSetup,
     TacticTemplate,
 )
-from .fixture_display import get_form_rows_with_opponents
+from .fixture_display import get_form_rows, get_form_rows_with_opponents
 from .tactics import (
     HALF_TACTIC_FIELDS,
     OPPONENT_RESULT_FORM,
@@ -1742,13 +1742,7 @@ def home(request):
         ],
         'city_static_path': city_static_path(primary_club),
         'fan_percent': primary_club.fan_popularity if primary_club else 0,
-        'form': [
-            {'label': 'S', 'tone': 'win'},
-            {'label': 'S', 'tone': 'win'},
-            {'label': 'U', 'tone': 'draw'},
-            {'label': 'S', 'tone': 'win'},
-            {'label': 'N', 'tone': 'loss'},
-        ],
+        'form': get_form_rows(primary_club, n=5) if primary_club else [],
     }
 
     # Echte Ligatabelle aus LeagueStandings laden
