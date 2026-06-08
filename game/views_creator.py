@@ -45,24 +45,68 @@ def _save_as_png(file_obj, dest_path):
 
 
 def creator_index(request):
-    leagues = (
-        League.objects
-        .prefetch_related('club_set')
-        .order_by('country', 'name')
-    )
-    countries = {}
-    for league in leagues:
-        country = league.country or 'Unbekannt'
-        clubs = (
-            league.club_set.all()
-            .order_by('name')
-        )
-        if country not in countries:
-            countries[country] = []
-        countries[country].append({'league': league, 'clubs': clubs})
+    country_filter = request.GET.get('country', '').strip()
+    league_filter = request.GET.get('league', '').strip()
 
+    # ── Level 3: Vereine einer Liga ──────────────────────────────────────────
+    if league_filter:
+        league = get_object_or_404(League, id=league_filter)
+        clubs = list(league.club_set.order_by('name'))
+        flag_code = (
+            COUNTRY_FLAG_ASSETS.get(league.country or '', {}).get('code', '').lower()
+        )
+        return render(request, 'creator/index.html', {
+            'level': 3,
+            'league': league,
+            'clubs': clubs,
+            'country': league.country,
+            'flag_code': flag_code,
+        })
+
+    # ── Level 2: Ligen eines Landes ──────────────────────────────────────────
+    if country_filter:
+        leagues_qs = League.objects.filter(country=country_filter).order_by('name')
+        flag_code = (
+            COUNTRY_FLAG_ASSETS.get(country_filter, {}).get('code', '').lower()
+        )
+        leagues_data = []
+        for lg in leagues_qs:
+            from django.contrib.staticfiles import finders
+            logo_exists = bool(
+                lg.logo_static_path and finders.find(lg.logo_static_path)
+            )
+            leagues_data.append({
+                'league': lg,
+                'club_count': lg.club_set.count(),
+                'logo_exists': logo_exists,
+            })
+        return render(request, 'creator/index.html', {
+            'level': 2,
+            'country': country_filter,
+            'flag_code': flag_code,
+            'leagues_data': leagues_data,
+        })
+
+    # ── Level 1: Länder ───────────────────────────────────────────────────────
+    from django.db.models import Count
+    country_rows = (
+        League.objects
+        .values('country')
+        .annotate(league_count=Count('id'))
+        .order_by('country')
+    )
+    countries_data = []
+    for row in country_rows:
+        name = row['country'] or 'Unbekannt'
+        code = COUNTRY_FLAG_ASSETS.get(name, {}).get('code', '').lower()
+        countries_data.append({
+            'name': name,
+            'code': code,
+            'league_count': row['league_count'],
+        })
     return render(request, 'creator/index.html', {
-        'countries': countries,
+        'level': 1,
+        'countries_data': countries_data,
         'total_clubs': Club.objects.count(),
         'total_players': Player.objects.count(),
     })

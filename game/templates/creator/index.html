@@ -4,218 +4,222 @@
 {% block title %}Creator Mode{% endblock %}
 
 {% block content %}
-<section class="creator-section">
-  <div class="creator-header">
-    <div class="creator-header-inner">
-      <div class="creator-header-title">
-        <span class="creator-badge">CREATOR MODE</span>
-        <h1>Datenbank</h1>
-        <p class="creator-subtitle">Land · Wettbewerb · Vereine · Spieler · Manager</p>
-      </div>
-      <div class="creator-stats">
-        <div class="creator-stat">
-          <strong>{{ total_clubs }}</strong>
-          <span>Vereine</span>
-        </div>
-        <div class="creator-stat">
-          <strong>{{ total_players }}</strong>
-          <span>Spieler</span>
-        </div>
-      </div>
+<section class="cm-section">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Datenbank</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill {% if level == 1 %}active{% endif %}" href="{% url 'creator_index' %}">Vereine & Ligen</a>
+      <a class="cm-nav-pill" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
     </div>
   </div>
 
-  <div class="creator-section-nav">
-    <a class="creator-nav-tile creator-nav-tile--active" href="#">
-      <span class="creator-nav-icon">🏟</span>
-      <span>Vereine & Ligen</span>
+  <!-- ── Breadcrumb ─────────────────────────────────────────────────────── -->
+  <nav class="cm-breadcrumb">
+    <a href="{% url 'creator_index' %}" class="cm-bc-item {% if level == 1 %}cm-bc-current{% endif %}">
+      🌍 Länder
     </a>
-    <a class="creator-nav-tile" href="{% url 'creator_manager_list' %}">
-      <span class="creator-nav-icon">🧑‍💼</span>
-      <span>Manager-Profile</span>
+    {% if level >= 2 %}
+    <span class="cm-bc-sep">›</span>
+    <a href="{% url 'creator_index' %}?country={{ country }}" class="cm-bc-item {% if level == 2 %}cm-bc-current{% endif %}">
+      {% if flag_code %}<img class="cm-bc-flag" src="https://flagcdn.com/{{ flag_code }}.svg" alt="">{% endif %}
+      {{ country }}
     </a>
+    {% endif %}
+    {% if level == 3 %}
+    <span class="cm-bc-sep">›</span>
+    <span class="cm-bc-item cm-bc-current">
+      {% if league.logo_static_path %}<img class="cm-bc-logo" src="{% static league.logo_static_path %}" alt="" onerror="this.style.display='none'">{% endif %}
+      {{ league.name }}
+    </span>
+    {% endif %}
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       LEVEL 1 — Länder
+  ═══════════════════════════════════════════════════════════════════════ -->
+  {% if level == 1 %}
+  <div class="cm-level-header">
+    <h2 class="cm-level-title">Länder <span class="cm-level-count">{{ countries_data|length }}</span></h2>
+    <div class="cm-level-stats">
+      <span>{{ total_clubs }} Vereine</span>
+      <span>{{ total_players }} Spieler</span>
+    </div>
   </div>
-
-  <!-- ── Suchfeld ── -->
-  <div class="creator-search-wrap">
-    <div class="creator-search-inner">
-      <span class="creator-search-icon">🔍</span>
-      <input
-        class="creator-search-input"
-        id="creator-search"
-        type="text"
-        placeholder="Verein oder Liga suchen …"
-        autocomplete="off"
-        oninput="filterCreator(this.value)"
-      >
-      <button class="creator-search-clear" id="creator-search-clear" onclick="clearSearch()" style="display:none">✕</button>
-    </div>
-    <span class="creator-search-hint" id="creator-search-hint"></span>
-  </div>
-
-  <div id="creator-country-list">
-  {% for country, leagues in countries.items %}
-  <div class="creator-country-block" data-country="{{ country|lower }}">
-    <div class="creator-country-header">
-      <h2 class="creator-country-name">🌍 {{ country }}</h2>
-    </div>
-
-    {% for entry in leagues %}
-    <div class="creator-league-block" data-league="{{ entry.league.name|lower }}">
-      <div class="creator-league-header">
-        <div class="creator-league-title-group">
-          {% if entry.league.logo_static_path %}
-            <img class="creator-league-logo" src="{% static entry.league.logo_static_path %}" alt="" onerror="this.style.display='none'">
-          {% endif %}
-          <h3 class="creator-league-name">{{ entry.league.name }}</h3>
-        </div>
-        <div class="creator-league-actions">
-          <span class="creator-league-count">{{ entry.clubs|length }} Vereine</span>
-          <a class="creator-league-edit-btn" href="{% url 'creator_league_edit' league_id=entry.league.pk %}" title="Liga bearbeiten">
-            ✎ Liga bearbeiten
-          </a>
-        </div>
+  <div class="cm-countries-grid">
+    {% for c in countries_data %}
+    <a class="cm-country-card" href="{% url 'creator_index' %}?country={{ c.name }}">
+      <div class="cm-country-flag">
+        {% if c.code %}
+          <img src="https://flagcdn.com/{{ c.code }}.svg" alt="{{ c.name }}"
+               onerror="this.parentElement.innerHTML='<span class=cm-flag-fallback>🌍</span>'">
+        {% else %}
+          <span class="cm-flag-fallback">🌍</span>
+        {% endif %}
       </div>
-
-      <div class="creator-clubs-grid">
-        {% for club in entry.clubs %}
-        <a class="creator-club-card" href="{% url 'creator_club_edit' club_id=club.id %}"
-           data-club="{{ club.name|lower }} {{ club.short_name|lower }}">
-          <div class="creator-club-crest">
-            {% if club.crest_static_path %}
-              <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
-            {% else %}
-              <div class="creator-crest-placeholder">{{ club.short_name }}</div>
-            {% endif %}
-          </div>
-          <div class="creator-club-info">
-            <strong>{{ club.name }}</strong>
-            <span>ID {{ club.fm_inside_id }}</span>
-            <span class="creator-player-count">{{ club.player_set.count }} Spieler</span>
-          </div>
-          <div class="creator-club-arrow">›</div>
-        </a>
-        {% empty %}
-        <p class="creator-empty">Keine Vereine vorhanden.</p>
-        {% endfor %}
+      <div class="cm-country-info">
+        <strong>{{ c.name }}</strong>
+        <span>{{ c.league_count }} Liga{{ c.league_count|pluralize:"en" }}</span>
       </div>
-    </div>
+      <span class="cm-card-arrow">›</span>
+    </a>
     {% endfor %}
   </div>
-  {% endfor %}
-  </div>
+  {% endif %}
 
-  <div id="creator-no-results" style="display:none;" class="creator-no-results">
-    Keine Treffer.
+  <!-- ══════════════════════════════════════════════════════════════════════
+       LEVEL 2 — Ligen
+  ═══════════════════════════════════════════════════════════════════════ -->
+  {% if level == 2 %}
+  <div class="cm-level-header">
+    <div class="cm-level-title-group">
+      {% if flag_code %}
+        <img class="cm-level-flag" src="https://flagcdn.com/{{ flag_code }}.svg" alt="">
+      {% endif %}
+      <h2 class="cm-level-title">{{ country }} <span class="cm-level-count">{{ leagues_data|length }}</span></h2>
+    </div>
   </div>
+  <div class="cm-leagues-grid">
+    {% for entry in leagues_data %}
+    <div class="cm-league-card-wrap">
+      <a class="cm-league-card" href="{% url 'creator_index' %}?league={{ entry.league.pk }}">
+        <div class="cm-league-logo-wrap">
+          {% if entry.logo_exists %}
+            <img class="cm-league-logo" src="{% static entry.league.logo_static_path %}" alt="{{ entry.league.name }}">
+          {% else %}
+            <div class="cm-league-logo-placeholder">🏆</div>
+          {% endif %}
+        </div>
+        <div class="cm-league-info">
+          <strong>{{ entry.league.name }}</strong>
+          <span>{{ entry.club_count }} Vereine</span>
+        </div>
+        <span class="cm-card-arrow">›</span>
+      </a>
+      <a class="cm-league-edit-btn" href="{% url 'creator_league_edit' league_id=entry.league.pk %}" title="Liga bearbeiten">✎</a>
+    </div>
+    {% empty %}
+    <p class="cm-empty">Keine Ligen für {{ country }}.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       LEVEL 3 — Vereine
+  ═══════════════════════════════════════════════════════════════════════ -->
+  {% if level == 3 %}
+  <div class="cm-level-header">
+    <div class="cm-level-title-group">
+      {% if league.logo_static_path %}
+        <img class="cm-level-league-logo" src="{% static league.logo_static_path %}" alt="" onerror="this.style.display='none'">
+      {% endif %}
+      <h2 class="cm-level-title">{{ league.name }} <span class="cm-level-count">{{ clubs|length }}</span></h2>
+    </div>
+    <a class="cm-league-edit-full-btn" href="{% url 'creator_league_edit' league_id=league.pk %}">✎ Liga bearbeiten</a>
+  </div>
+  <div class="cm-clubs-grid">
+    {% for club in clubs %}
+    <a class="cm-club-card" href="{% url 'creator_club_edit' club_id=club.pk %}">
+      <div class="cm-club-crest-wrap">
+        {% if club.crest_static_path %}
+          <img class="cm-club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+        {% else %}
+          <div class="cm-crest-placeholder">{{ club.short_name|slice:":3" }}</div>
+        {% endif %}
+      </div>
+      <div class="cm-club-info">
+        <strong>{{ club.name }}</strong>
+        <span>{{ club.player_set.count }} Spieler</span>
+        <span class="cm-club-id">ID {{ club.fm_inside_id }}</span>
+      </div>
+      <span class="cm-card-arrow">›</span>
+    </a>
+    {% empty %}
+    <p class="cm-empty">Keine Vereine in dieser Liga.</p>
+    {% endfor %}
+  </div>
+  {% endif %}
 
 </section>
 
-<script>
-function filterCreator(q) {
-  q = q.trim().toLowerCase();
-  const clearBtn = document.getElementById('creator-search-clear');
-  const hint = document.getElementById('creator-search-hint');
-  clearBtn.style.display = q ? 'flex' : 'none';
-
-  if (!q) {
-    document.querySelectorAll('.creator-country-block, .creator-league-block, .creator-club-card').forEach(el => {
-      el.style.display = '';
-    });
-    document.getElementById('creator-no-results').style.display = 'none';
-    hint.textContent = '';
-    return;
-  }
-
-  let totalVisible = 0;
-
-  document.querySelectorAll('.creator-country-block').forEach(countryBlock => {
-    let countryHasMatch = false;
-
-    countryBlock.querySelectorAll('.creator-league-block').forEach(leagueBlock => {
-      const leagueName = leagueBlock.dataset.league || '';
-      const leagueMatch = leagueName.includes(q);
-      let leagueHasClub = false;
-
-      leagueBlock.querySelectorAll('.creator-club-card').forEach(card => {
-        const clubData = card.dataset.club || '';
-        const show = leagueMatch || clubData.includes(q);
-        card.style.display = show ? '' : 'none';
-        if (show) { leagueHasClub = true; totalVisible++; }
-      });
-
-      const showLeague = leagueMatch || leagueHasClub;
-      leagueBlock.style.display = showLeague ? '' : 'none';
-      if (showLeague) countryHasMatch = true;
-    });
-
-    countryBlock.style.display = countryHasMatch ? '' : 'none';
-  });
-
-  document.getElementById('creator-no-results').style.display = totalVisible === 0 ? 'block' : 'none';
-  hint.textContent = totalVisible > 0 ? `${totalVisible} Treffer` : '';
-}
-
-function clearSearch() {
-  const inp = document.getElementById('creator-search');
-  inp.value = '';
-  filterCreator('');
-  inp.focus();
-}
-</script>
-
 <style>
-.creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
-.creator-section-nav { display: flex; gap: .75rem; margin-bottom: 1.5rem; }
-.creator-nav-tile { display: flex; align-items: center; gap: .6rem; padding: .6rem 1.2rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; text-decoration: none; color: #556677; font-size: .82rem; font-weight: 600; transition: border-color .2s, color .2s; }
-.creator-nav-tile:hover { border-color: #00d4ff44; color: #aabbcc; }
-.creator-nav-tile--active { border-color: #00d4ff33; color: #00d4ff; background: #071525; }
-.creator-nav-icon { font-size: 1rem; }
-.creator-header { background: linear-gradient(135deg, #0a1628 0%, #03070c 100%); border: 1px solid #00d4ff22; border-radius: 12px; margin-bottom: 1.5rem; padding: 2rem; }
-.creator-header-inner { display: flex; justify-content: space-between; align-items: center; }
-.creator-badge { background: #00d4ff; color: #03070c; font-size: .65rem; font-weight: 800; letter-spacing: .12em; padding: .25rem .6rem; border-radius: 4px; display: inline-block; margin-bottom: .5rem; }
-.creator-header-title h1 { color: #fff; font-size: 1.8rem; margin: 0 0 .25rem; }
-.creator-subtitle { color: #00d4ff88; font-size: .85rem; margin: 0; }
-.creator-stats { display: flex; gap: 2rem; }
-.creator-stat { text-align: center; }
-.creator-stat strong { display: block; font-size: 2rem; color: #00d4ff; font-weight: 800; }
-.creator-stat span { color: #8899aa; font-size: .8rem; }
+/* ── Grundstruktur ─────────────────────────────────────────────────────── */
+.cm-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
 
-/* ── Search ── */
-.creator-search-wrap { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-.creator-search-inner { display: flex; align-items: center; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; padding: .45rem .9rem; gap: .5rem; width: 360px; transition: border-color .2s; }
-.creator-search-inner:focus-within { border-color: #00d4ff55; }
-.creator-search-icon { font-size: .9rem; color: #334455; flex-shrink: 0; }
-.creator-search-input { background: transparent; border: none; outline: none; color: #cce8ff; font-size: .85rem; width: 100%; }
-.creator-search-input::placeholder { color: #334455; }
-.creator-search-clear { background: none; border: none; color: #334455; cursor: pointer; font-size: .85rem; padding: 0; display: flex; align-items: center; }
-.creator-search-clear:hover { color: #aabbcc; }
-.creator-search-hint { color: #00d4ff88; font-size: .75rem; font-weight: 600; }
-.creator-no-results { color: #334455; text-align: center; padding: 4rem 1rem; font-size: 1rem; }
+/* ── Header ────────────────────────────────────────────────────────────── */
+.cm-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
+.cm-header-left { display: flex; align-items: center; gap: 1rem; }
+.cm-badge { background: #00d4ff; color: #03070c; font-size: .6rem; font-weight: 900; letter-spacing: .14em; padding: .2rem .55rem; border-radius: 3px; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+.cm-header-right { display: flex; gap: .5rem; }
+.cm-nav-pill { padding: .35rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; text-decoration: none; border: 1px solid #0d2035; color: #556677; background: #050e1a; transition: all .15s; }
+.cm-nav-pill:hover { border-color: #00d4ff44; color: #aabbcc; }
+.cm-nav-pill.active { border-color: #00d4ff55; color: #00d4ff; background: #071525; }
 
-.creator-country-block { margin-bottom: 2.5rem; }
-.creator-country-header { margin-bottom: 1rem; }
-.creator-country-name { color: #cce8ff; font-size: 1rem; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid #00d4ff22; padding-bottom: .5rem; }
-.creator-league-block { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
-.creator-league-header { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
-.creator-league-title-group { display: flex; align-items: center; gap: .6rem; }
-.creator-league-logo { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; }
-.creator-league-name { color: #00d4ff; font-size: .9rem; font-weight: 700; margin: 0; }
-.creator-league-actions { display: flex; align-items: center; gap: .75rem; }
-.creator-league-count { color: #556677; font-size: .78rem; }
-.creator-league-edit-btn { font-size: .75rem; color: #79aec8; text-decoration: none; padding: .25rem .65rem; border: 1px solid #1e3d52; border-radius: 4px; background: #071a28; transition: background .15s, border-color .15s; white-space: nowrap; }
-.creator-league-edit-btn:hover { background: #0d2a40; border-color: #2a5f7f; color: #a8d4f0; }
-.creator-clubs-grid { padding: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: .75rem; }
-.creator-club-card { display: flex; align-items: center; gap: .75rem; background: #071525; border: 1px solid #0d2035; border-radius: 8px; padding: .75rem 1rem; text-decoration: none; transition: border-color .2s, background .2s; cursor: pointer; }
-.creator-club-card:hover { border-color: #00d4ff55; background: #0a1d2e; }
-.creator-club-crest { width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.creator-club-crest img { width: 36px; height: 36px; object-fit: contain; }
-.creator-crest-placeholder { width: 36px; height: 36px; background: #0d2035; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #556677; font-size: .6rem; font-weight: 700; }
-.creator-club-info { flex: 1; min-width: 0; }
-.creator-club-info strong { display: block; color: #cce8ff; font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.creator-club-info span { display: block; color: #556677; font-size: .72rem; }
-.creator-player-count { color: #00d4ff88 !important; }
-.creator-club-arrow { color: #00d4ff55; font-size: 1.2rem; }
-.creator-empty { color: #556677; padding: 1rem; font-size: .85rem; }
+/* ── Breadcrumb ────────────────────────────────────────────────────────── */
+.cm-breadcrumb { display: flex; align-items: center; gap: .5rem; margin-bottom: 1.75rem; padding: .6rem 1rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; }
+.cm-bc-item { display: flex; align-items: center; gap: .35rem; color: #556677; text-decoration: none; font-size: .8rem; font-weight: 600; transition: color .15s; }
+.cm-bc-item:hover { color: #aabbcc; }
+.cm-bc-current { color: #cce8ff; pointer-events: none; }
+.cm-bc-sep { color: #1e3050; font-size: 1rem; }
+.cm-bc-flag { width: 18px; height: 13px; object-fit: cover; border-radius: 2px; }
+.cm-bc-logo { width: 16px; height: 16px; object-fit: contain; }
+
+/* ── Level header ──────────────────────────────────────────────────────── */
+.cm-level-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+.cm-level-title-group { display: flex; align-items: center; gap: .75rem; }
+.cm-level-title { color: #cce8ff; font-size: 1.15rem; font-weight: 800; margin: 0; }
+.cm-level-count { background: #00d4ff22; color: #00d4ff88; font-size: .75rem; padding: .1rem .5rem; border-radius: 10px; margin-left: .35rem; font-weight: 600; }
+.cm-level-stats { display: flex; gap: 1.5rem; }
+.cm-level-stats span { color: #334455; font-size: .78rem; }
+.cm-level-flag { width: 32px; height: 22px; object-fit: cover; border-radius: 3px; box-shadow: 0 1px 4px #00000055; }
+.cm-level-league-logo { width: 32px; height: 32px; object-fit: contain; }
+.cm-empty { color: #334455; font-size: .85rem; padding: 1rem 0; }
+
+/* ── Level 1: Länder-Grid ──────────────────────────────────────────────── */
+.cm-countries-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; }
+.cm-country-card { display: flex; align-items: center; gap: 1rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1rem 1.25rem; text-decoration: none; transition: border-color .2s, background .2s, transform .15s; cursor: pointer; }
+.cm-country-card:hover { border-color: #00d4ff55; background: #071525; transform: translateY(-1px); }
+.cm-country-flag { width: 52px; height: 36px; flex-shrink: 0; overflow: hidden; border-radius: 4px; box-shadow: 0 2px 8px #00000066; display: flex; align-items: center; justify-content: center; }
+.cm-country-flag img { width: 100%; height: 100%; object-fit: cover; }
+.cm-flag-fallback { font-size: 1.6rem; }
+.cm-country-info { flex: 1; min-width: 0; }
+.cm-country-info strong { display: block; color: #cce8ff; font-size: .88rem; font-weight: 700; }
+.cm-country-info span { color: #556677; font-size: .74rem; }
+.cm-card-arrow { color: #00d4ff44; font-size: 1.3rem; flex-shrink: 0; }
+
+/* ── Level 2: Ligen-Grid ───────────────────────────────────────────────── */
+.cm-leagues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }
+.cm-league-card-wrap { position: relative; }
+.cm-league-card { display: flex; align-items: center; gap: 1rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1.1rem 1.25rem; text-decoration: none; transition: border-color .2s, background .2s, transform .15s; cursor: pointer; }
+.cm-league-card:hover { border-color: #00d4ff55; background: #071525; transform: translateY(-1px); }
+.cm-league-logo-wrap { width: 52px; height: 52px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.cm-league-logo { width: 48px; height: 48px; object-fit: contain; }
+.cm-league-logo-placeholder { width: 48px; height: 48px; background: #071525; border: 1px solid #0d2035; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+.cm-league-info { flex: 1; min-width: 0; }
+.cm-league-info strong { display: block; color: #cce8ff; font-size: .9rem; font-weight: 700; }
+.cm-league-info span { color: #556677; font-size: .75rem; }
+.cm-league-edit-btn { position: absolute; top: .55rem; right: .65rem; font-size: .7rem; color: #334455; text-decoration: none; padding: .15rem .45rem; border: 1px solid #0d2035; border-radius: 4px; background: #030a12; transition: all .15s; }
+.cm-league-edit-btn:hover { border-color: #00d4ff44; color: #00d4ff88; background: #071525; }
+
+/* ── Level 2 → Liga full edit button ──────────────────────────────────── */
+.cm-league-edit-full-btn { font-size: .78rem; color: #00d4ff88; text-decoration: none; padding: .35rem .9rem; border: 1px solid #00d4ff33; border-radius: 6px; background: #071525; transition: all .15s; }
+.cm-league-edit-full-btn:hover { background: #00d4ff15; border-color: #00d4ff66; color: #00d4ff; }
+
+/* ── Level 3: Vereine-Grid ─────────────────────────────────────────────── */
+.cm-clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .75rem; }
+.cm-club-card { display: flex; align-items: center; gap: 1rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: .9rem 1.25rem; text-decoration: none; transition: border-color .2s, background .2s, transform .15s; cursor: pointer; }
+.cm-club-card:hover { border-color: #00d4ff55; background: #071525; transform: translateY(-1px); }
+.cm-club-crest-wrap { width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.cm-club-crest { width: 44px; height: 44px; object-fit: contain; }
+.cm-crest-placeholder { width: 44px; height: 44px; background: #071525; border: 1px solid #0d2035; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #556677; font-size: .65rem; font-weight: 800; }
+.cm-club-info { flex: 1; min-width: 0; }
+.cm-club-info strong { display: block; color: #cce8ff; font-size: .88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-club-info span { display: block; color: #556677; font-size: .74rem; }
+.cm-club-id { color: #1e3050 !important; font-family: monospace; font-size: .7rem !important; }
 </style>
 {% endblock %}
