@@ -9,8 +9,8 @@
   <div class="creator-club-topbar">
     <a class="creator-back" href="{% url 'creator_index' %}">← Creator Mode</a>
     <div class="creator-club-identity">
-      {% if logo_exists %}
-        <img class="creator-league-logo-large" src="{% static league.logo_static_path %}" alt="{{ league.name }}">
+      {% if logo_path %}
+        <img class="creator-league-logo-large" src="{% static logo_path %}" alt="{{ league.name }}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=creator-league-logo-placeholder>&#127942;</div>'">
       {% else %}
         <div class="creator-league-logo-placeholder">🏆</div>
       {% endif %}
@@ -75,8 +75,8 @@
       <div class="creator-card">
         <div class="creator-card-head"><h2>Logo-Vorschau</h2></div>
         <div class="creator-card-body" style="display:flex;align-items:center;justify-content:center;min-height:120px;">
-          {% if logo_exists %}
-            <img src="{% static league.logo_static_path %}" alt="Logo" style="max-width:100px;max-height:100px;object-fit:contain;">
+          {% if logo_path %}
+            <img src="{% static logo_path %}" alt="Logo" style="max-width:100px;max-height:100px;object-fit:contain;" onerror="this.parentElement.innerHTML='<div class=creator-no-image style=font-size:.78rem;>Kein Logo gefunden</div>'">
           {% else %}
             <div class="creator-no-image" style="font-size:.78rem;">Kein Logo gefunden</div>
           {% endif %}

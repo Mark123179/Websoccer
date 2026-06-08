@@ -71,13 +71,9 @@ def creator_index(request):
         )
         leagues_data = []
         for lg in leagues_qs:
-            logo_exists = bool(
-                lg.logo_static_path and os.path.exists(os.path.join(STATIC_BASE, lg.logo_static_path))
-            )
             leagues_data.append({
                 'league': lg,
                 'club_count': lg.club_set.count(),
-                'logo_exists': logo_exists,
             })
         return render(request, 'creator/index.html', {
             'level': 2,
@@ -1021,9 +1017,7 @@ def creator_league_edit(request, league_id):
         league.club_set.order_by('name').prefetch_related('tactic_setups')
     )
 
-    logo_exists = bool(
-        league.logo_static_path and finders.find(league.logo_static_path)
-    )
+    logo_path = league.logo_static_path or ''
 
     spielplan_seasons = []
     spielplan_matchdays = []

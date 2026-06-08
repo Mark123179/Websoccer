@@ -88,8 +88,8 @@
     <div class="cm-league-card-wrap">
       <a class="cm-league-card" href="{% url 'creator_index' %}?league={{ entry.league.pk }}">
         <div class="cm-league-logo-wrap">
-          {% if entry.logo_exists %}
-            <img class="cm-league-logo" src="{% static entry.league.logo_static_path %}" alt="{{ entry.league.name }}">
+          {% if entry.league.logo_static_path %}
+            <img class="cm-league-logo" src="{% static entry.league.logo_static_path %}" alt="{{ entry.league.name }}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=cm-league-logo-placeholder>&#127942;</div>'">
           {% else %}
             <div class="cm-league-logo-placeholder">🏆</div>
           {% endif %}
