@@ -2764,8 +2764,8 @@ def club_tactics(request, club_id):
             today = timezone.now().date()
             next_fixture = (
                 SeasonFixture.objects
-                .filter(Q(home_club=club) | Q(away_club=club), is_played=False, date__gte=today)
-                .order_by('date', 'id')
+                .filter(Q(home_club=club) | Q(away_club=club), is_played=False, scheduled_date__gte=today)
+                .order_by('scheduled_date', 'id')
                 .first()
             )
             if next_fixture:
