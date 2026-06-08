@@ -5,13 +5,12 @@ Syncs game-club squads from the CURRENT Transfermarkt squad pages
 (no saison_id → always the latest season).
 
 For each of the 18 game clubs:
-  1. Scrapes /kader/verein/{tm_club_id}  (no saison_id)
+  1. Scrapes /kader/verein/{tm_club_id} (no saison_id) — names & market values only
   2. Matches TM players against DB by transfermarkt_id
   3. Moves existing players to this club (even from Karrierende or other clubs)
   4. Creates new Player records for players not yet in the DB
+     (positions are left empty — populated later via FMI)
   5. Moves ex-players (no longer in TM squad) to Karrierende
-
-Then for every club, salary_per_match is recalculated from market_value.
 
 Usage:
     python manage.py sync_squads_tm                         # all 18 clubs
@@ -59,33 +58,6 @@ SALARY_FACTOR = Decimal("0.006")
 MIN_SALARY = Decimal("500")
 MAX_SALARY = Decimal("2000000")
 
-TM_TO_WS: dict[str, str] = {
-    "Torwart": "TW",
-    "Innenverteidiger": "IV",
-    "Libero": "IV",
-    "Linker Verteidiger": "LV",
-    "Linker Flügelverteidiger": "LV",
-    "Rechter Verteidiger": "RV",
-    "Rechter Flügelverteidiger": "RV",
-    "Defensives Mittelfeld": "DM",
-    "Zentrales Mittelfeld": "ZM",
-    "Linkes Mittelfeld": "LM",
-    "Rechtes Mittelfeld": "RM",
-    "Offensives Mittelfeld": "OM",
-    "Linkes offensives Mittelfeld": "LOM",
-    "Rechtes offensives Mittelfeld": "ROM",
-    "Linker Flügel": "LF",
-    "Linksaußen": "LF",
-    "Rechter Flügel": "RF",
-    "Rechtsaußen": "RF",
-    "Mittelstürmer": "ST",
-    "Hängende Spitze": "ST",
-    "Zweite Spitze": "ST",
-    "Linker Angriff": "LF",
-    "Rechter Angriff": "RF",
-    "Sturm": "ST",
-}
-
 VALID_WS_POSITIONS = {
     "TW", "IV", "LV", "RV", "LOV", "ROV", "DM", "ZM",
     "LM", "RM", "LOM", "ROM", "OM", "LF", "RF", "ST",
@@ -106,17 +78,6 @@ def parse_tm_market_value(text: str) -> Decimal:
     if m_tsd:
         return Decimal(m_tsd.group(1)) * Decimal("1000")
     return Decimal("0")
-
-
-def tm_position_to_ws(label: str) -> str:
-    """Convert TM position label → WS code. Returns 'ZM' as fallback."""
-    label = label.strip()
-    if label in TM_TO_WS:
-        return TM_TO_WS[label]
-    for key, code in TM_TO_WS.items():
-        if key.lower() in label.lower():
-            return code
-    return "ZM"
 
 
 def salary_from_mv(mv: Decimal) -> Decimal:
@@ -143,9 +104,10 @@ def scrape_tm_squad(tm_club_id: int, slug: str, session: requests.Session) -> li
     """
     Scrape the current TM squad page (no saison_id).
 
-    Returns list of dicts: {tm_id, full_name, first_name, last_name,
-                             position_text, ws_position, market_value}
+    Returns list of dicts: {tm_id, full_name, first_name, last_name, market_value}
     Returns [] on failure.
+
+    Note: positions are intentionally left empty — they are populated later via FMI.
     """
     url = f"https://www.transfermarkt.de/{slug}/kader/verein/{tm_club_id}"
     try:
@@ -176,11 +138,6 @@ def scrape_tm_squad(tm_club_id: int, slug: str, session: requests.Session) -> li
         full_name = name_link.get_text(strip=True)
         first_name, last_name = split_name(full_name)
 
-        # Position is in the second <tr> of the inline-table inside td.posrela
-        pos_td = row.select_one("td.posrela table tr:last-child td")
-        pos_text = pos_td.get_text(strip=True) if pos_td else ""
-        ws_pos = tm_position_to_ws(pos_text) if pos_text else "ZM"
-
         mv_td = row.select_one("td.rechts.hauptlink")
         mv_text = mv_td.get_text(strip=True) if mv_td else ""
         market_value = parse_tm_market_value(mv_text)
@@ -190,8 +147,6 @@ def scrape_tm_squad(tm_club_id: int, slug: str, session: requests.Session) -> li
             "full_name": full_name,
             "first_name": first_name,
             "last_name": last_name,
-            "position_text": pos_text,
-            "ws_position": ws_pos,
             "market_value": market_value,
         })
 
@@ -312,7 +267,6 @@ class Command(BaseCommand):
             for entry in squad:
                 tm_id = entry["tm_id"]
                 mv = entry["market_value"]
-                ws_pos = entry["ws_position"]
                 salary = salary_from_mv(mv)
 
                 existing = tm_id_to_player.get(tm_id)
@@ -345,22 +299,15 @@ class Command(BaseCommand):
                             existing.salary_per_match = salary
                         fields_to_update.extend(["market_value", "salary_per_match"])
 
-                    # Update position if player has none
-                    if not existing.position and ws_pos in VALID_WS_POSITIONS:
-                        if not dry_run:
-                            existing.position = ws_pos
-                            existing.main_position_1 = ws_pos
-                        fields_to_update.extend(["position", "main_position_1"])
-
                     if fields_to_update and not dry_run:
                         existing.save(update_fields=list(set(fields_to_update)))
 
                 else:
-                    # New player — create a minimal record
+                    # New player — create a minimal record (positions empty, filled via FMI)
                     created += 1
                     self.stdout.write(
                         f"    + NEW: {entry['full_name']}"
-                        f" (tm:{tm_id}) pos={ws_pos} mv={float(mv)/1e6:.1f}M"
+                        f" (tm:{tm_id}) mv={float(mv)/1e6:.1f}M"
                     )
                     if not dry_run:
                         new_player = Player(
@@ -369,8 +316,6 @@ class Command(BaseCommand):
                             club=club,
                             real_life_club=club,
                             transfermarkt_id=tm_id,
-                            position=ws_pos if ws_pos in VALID_WS_POSITIONS else "",
-                            main_position_1=ws_pos if ws_pos in VALID_WS_POSITIONS else "",
                             market_value=mv,
                             salary_per_match=salary,
                             age=0,
