@@ -58,23 +58,38 @@ echo "" | tee -a "$REPORT_FILE"
   echo "=== Outdated packages ==="
 } | tee -a "$REPORT_FILE"
 
+# Nur auf Pakete in requirements.txt prüfen — transitive Abhängigkeiten
+# (google-cloud-storage, openai, pydantic_core, tqdm...) nicht blockieren.
+REQ_PACKAGES=$(grep -oE '^[a-zA-Z0-9_.-]+' "$REQUIREMENTS")
 OUTDATED=$(pip list --outdated --format=columns 2>/dev/null || true)
 
 if [ -z "$OUTDATED" ]; then
     echo "All packages are up to date." | tee -a "$REPORT_FILE"
 else
-    echo "$OUTDATED" | tee -a "$REPORT_FILE"
-    ISSUES_FOUND=1
-    {
-      echo ""
-      echo "!! OUTDATED PACKAGES DETECTED — review and update $REQUIREMENTS !!"
-      echo ""
-      echo "To upgrade a package:"
-      echo "  1. pip install <package>==<new-version>"
-      echo "  2. Update the pinned version in $REQUIREMENTS"
-      echo "  3. Run: python manage.py check"
-      echo "  4. Run this audit script again to confirm no new CVEs"
-    } | tee -a "$REPORT_FILE"
+    # Filtere auf Pakete die in requirements.txt stehen
+    FILTERED=$(echo "$OUTDATED" | while read -r line; do
+        pkg=$(echo "$line" | awk '{print $1}')
+        if [ -n "$pkg" ] && echo "$REQ_PACKAGES" | grep -i -w "$pkg" > /dev/null; then
+            echo "$line"
+        fi
+    done)
+
+    if [ -z "$FILTERED" ]; then
+        echo "All direct dependencies are up to date." | tee -a "$REPORT_FILE"
+    else
+        echo "$FILTERED" | tee -a "$REPORT_FILE"
+        ISSUES_FOUND=1
+        {
+          echo ""
+          echo "!! OUTDATED PACKAGES DETECTED — review and update $REQUIREMENTS !!"
+          echo ""
+          echo "To upgrade a package:"
+          echo "  1. pip install <package>==<new-version>"
+          echo "  2. Update the pinned version in $REQUIREMENTS"
+          echo "  3. Run: python manage.py check"
+          echo "  4. Run this audit script again to confirm no new CVEs"
+        } | tee -a "$REPORT_FILE"
+    fi
 fi
 
 echo "" | tee -a "$REPORT_FILE"
