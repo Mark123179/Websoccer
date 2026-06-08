@@ -446,12 +446,24 @@ class LeagueAdmin(admin.ModelAdmin):
                             'total': total,
                         })
 
+                total_played = sum(b['played'] for b in spielplan_matchdays)
+                total_fixtures = sum(b['total'] for b in spielplan_matchdays)
+                total_matchdays = len(spielplan_matchdays)
+                current_matchday = 0
+                for b in spielplan_matchdays:
+                    if b['played'] > 0:
+                        current_matchday = b['matchday']
+
                 extra_context.update({
                     'spielplan_seasons': seasons,
                     'spielplan_selected': selected_season,
                     'spielplan_matchdays': spielplan_matchdays,
                     'spielplan_gen_url': reverse('admin:game_league_spielplan', args=[object_id]),
                     'change_object_id': object_id,
+                    'spielplan_total_played': total_played,
+                    'spielplan_total_fixtures': total_fixtures,
+                    'spielplan_total_matchdays': total_matchdays,
+                    'spielplan_current_matchday': current_matchday,
                 })
         return super().changeform_view(request, object_id, form_url, extra_context)
 

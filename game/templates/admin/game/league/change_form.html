@@ -183,6 +183,41 @@
   color: #444;
   font-weight: normal;
 }
+.spielplan-progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #1a2030;
+  border: 1px solid #2a3040;
+  border-radius: 4px;
+  padding: 8px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.spielplan-progress-text {
+  color: #aac4d8;
+  flex: 1;
+}
+.spielplan-progress-text strong {
+  color: #e0e0e0;
+}
+.spielplan-progress-track {
+  flex: 0 0 120px;
+  height: 6px;
+  background: #252525;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.spielplan-progress-fill {
+  height: 100%;
+  background: #417690;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.spielplan-progress-matchday {
+  color: #79aec8;
+  white-space: nowrap;
+}
 </style>
 
 <div class="league-spielplan-section module">
@@ -205,6 +240,21 @@
     </form>
 
     {% if spielplan_matchdays %}
+      {% if spielplan_total_fixtures %}
+        <div class="spielplan-progress-bar">
+          <span class="spielplan-progress-text">
+            <strong>{{ spielplan_total_played }}</strong> von <strong>{{ spielplan_total_fixtures }}</strong> Spielen gespielt
+          </span>
+          <div class="spielplan-progress-track">
+            <div class="spielplan-progress-fill" style="width:{% widthratio spielplan_total_played spielplan_total_fixtures 100 %}%"></div>
+          </div>
+          {% if spielplan_current_matchday %}
+            <span class="spielplan-progress-matchday">Spieltag <strong>{{ spielplan_current_matchday }}</strong> von <strong>{{ spielplan_total_matchdays }}</strong></span>
+          {% else %}
+            <span class="spielplan-progress-matchday">Spieltag <strong>0</strong> von <strong>{{ spielplan_total_matchdays }}</strong></span>
+          {% endif %}
+        </div>
+      {% endif %}
       <div id="spielplan-container">
         {% for md_block in spielplan_matchdays %}
           <div class="spielplan-matchday-block" id="md-block-{{ md_block.matchday }}">
