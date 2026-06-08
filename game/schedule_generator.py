@@ -56,10 +56,19 @@ def create_round_robin_schedule(team_ids, rounds=2):
         circle = [fixed] + rotating
         pairs = []
         for i in range(half):
-            home = circle[i]
-            away = circle[n - 1 - i]
-            if home is not None and away is not None:
-                pairs.append((home, away))
+            left  = circle[i]
+            right = circle[n - 1 - i]
+            if left is None or right is None:
+                # Freirunde (Dummy-Team) — dieses Spiel wird nicht angelegt
+                continue
+            # Heimrecht-Alternierung für die Fixed-Team-Paarung (i == 0):
+            # Auf geraden Spieltagen (0, 2, …) spielt das feste Team zuhause,
+            # auf ungeraden (1, 3, …) auswärts. Das verhindert, dass ein Team
+            # in einer Einfachrunde ausschließlich Heimspiele hat.
+            if i == 0 and md % 2 == 1:
+                pairs.append((right, left))   # fixed = Gast
+            else:
+                pairs.append((left, right))   # standard: links = Heim
         hinrunde[md + 1] = pairs
         # Rotation: letztes Element nach vorne schieben
         rotating = [rotating[-1]] + rotating[:-1]
