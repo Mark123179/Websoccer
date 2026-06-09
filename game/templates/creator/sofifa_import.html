@@ -105,7 +105,7 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
       </div>
     </div>
 
-    {% if stats.updated or stats.new or stats.unmatched or stats.error %}
+    {% if stats.updated or stats.new or stats.error %}
     <div class="si-rows-wrap">
       <table class="si-rows-table">
         <thead>
@@ -119,13 +119,12 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
         </thead>
         <tbody>
           {% for r in row_results %}
-          {% if r.action != 'unchanged' %}
+          {% if r.action != 'unchanged' and r.action != 'unmatched' %}
           <tr class="si-row si-row-{{ r.action }}">
             <td class="si-col-line">{{ r.line_no }}</td>
             <td class="si-col-status">
               {% if r.action == 'new' %}<span class="si-badge si-badge-new">Neu</span>
               {% elif r.action == 'updated' %}<span class="si-badge si-badge-updated">Update</span>
-              {% elif r.action == 'unmatched' %}<span class="si-badge si-badge-unmatched">Kein Match</span>
               {% elif r.action == 'error' %}<span class="si-badge si-badge-error">Fehler</span>
               {% endif %}
             </td>
@@ -142,8 +141,42 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
         </tbody>
       </table>
     </div>
-    {% else %}
+    {% elif not stats.unmatched %}
     <p class="si-no-changes">Keine Änderungen – alle Zeilen sind bereits aktuell.</p>
+    {% endif %}
+
+    {% if stats.unmatched %}
+    <div class="si-unmatched-section">
+      <div class="si-unmatched-head">
+        <span class="si-badge si-badge-unmatched">Nicht gematcht</span>
+        <span class="si-unmatched-count">{{ stats.unmatched }} Zeile{{ stats.unmatched|pluralize:"n" }}</span>
+        <span class="si-unmatched-hint">sofifa_id wurde keinem Spieler in der Datenbank zugeordnet – ExternalId-Verknüpfung prüfen.</span>
+      </div>
+      <div class="si-rows-wrap">
+        <table class="si-rows-table">
+          <thead>
+            <tr>
+              <th class="si-col-line">#</th>
+              <th class="si-col-sofifa">sofifa_id</th>
+              <th class="si-col-player">CSV-Name</th>
+              <th class="si-col-club">CSV-Verein</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in row_results %}
+            {% if r.action == 'unmatched' %}
+            <tr class="si-row si-row-unmatched">
+              <td class="si-col-line">{{ r.line_no }}</td>
+              <td class="si-col-sofifa">{{ r.sofifa_id }}</td>
+              <td class="si-col-player">{{ r.player_name|default:"–" }}</td>
+              <td class="si-col-club">{{ r.club_name|default:"–" }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
     {% endif %}
 
     <div class="si-actions si-actions-preview">
@@ -204,7 +237,7 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
     <p class="si-done-note">Keine Änderungen – Neuberechnung übersprungen.</p>
     {% endif %}
 
-    {% if row_results %}
+    {% if stats.new or stats.updated or stats.error %}
     <div class="si-rows-wrap">
       <table class="si-rows-table">
         <thead>
@@ -218,13 +251,12 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
         </thead>
         <tbody>
           {% for r in row_results %}
-          {% if r.action != 'unchanged' %}
+          {% if r.action != 'unchanged' and r.action != 'unmatched' %}
           <tr class="si-row si-row-{{ r.action }}">
             <td class="si-col-line">{{ r.line_no }}</td>
             <td class="si-col-status">
               {% if r.action == 'new' %}<span class="si-badge si-badge-new">Neu</span>
               {% elif r.action == 'updated' %}<span class="si-badge si-badge-updated">Update</span>
-              {% elif r.action == 'unmatched' %}<span class="si-badge si-badge-unmatched">Kein Match</span>
               {% elif r.action == 'error' %}<span class="si-badge si-badge-error">Fehler</span>
               {% endif %}
             </td>
@@ -240,6 +272,40 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
           {% endfor %}
         </tbody>
       </table>
+    </div>
+    {% endif %}
+
+    {% if stats.unmatched %}
+    <div class="si-unmatched-section">
+      <div class="si-unmatched-head">
+        <span class="si-badge si-badge-unmatched">Nicht gematcht</span>
+        <span class="si-unmatched-count">{{ stats.unmatched }} Zeile{{ stats.unmatched|pluralize:"n" }}</span>
+        <span class="si-unmatched-hint">sofifa_id wurde keinem Spieler in der Datenbank zugeordnet – ExternalId-Verknüpfung prüfen.</span>
+      </div>
+      <div class="si-rows-wrap">
+        <table class="si-rows-table">
+          <thead>
+            <tr>
+              <th class="si-col-line">#</th>
+              <th class="si-col-sofifa">sofifa_id</th>
+              <th class="si-col-player">CSV-Name</th>
+              <th class="si-col-club">CSV-Verein</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in row_results %}
+            {% if r.action == 'unmatched' %}
+            <tr class="si-row si-row-unmatched">
+              <td class="si-col-line">{{ r.line_no }}</td>
+              <td class="si-col-sofifa">{{ r.sofifa_id }}</td>
+              <td class="si-col-player">{{ r.player_name|default:"–" }}</td>
+              <td class="si-col-club">{{ r.club_name|default:"–" }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
     {% endif %}
 
@@ -345,6 +411,13 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
 .si-row-updated td { background: #050a10; }
 .si-row-unmatched td { background: #0f0a04; }
 .si-row-error td { background: #0f0406; }
+
+/* Unmatched section */
+.si-unmatched-section { margin-bottom: 1.25rem; }
+.si-unmatched-head { display: flex; align-items: center; gap: .75rem; margin-bottom: .6rem; flex-wrap: wrap; }
+.si-unmatched-count { color: #e0a030; font-size: .82rem; font-weight: 700; }
+.si-unmatched-hint { color: #556677; font-size: .75rem; }
+.si-col-sofifa { color: #e0a030; font-family: monospace; font-size: .75rem; min-width: 90px; }
 
 /* Misc */
 .si-no-changes { color: #334455; font-size: .85rem; margin: 0 0 1rem; }

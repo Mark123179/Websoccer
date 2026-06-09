@@ -315,11 +315,11 @@ def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
             parsed['attrs'] = _filter_attrs_for_player(player, parsed['attrs'])
         if not player:
             stats['unmatched'] += 1
-            label = parsed.get('name') or f"sofifa_id={parsed['sofifa_id']}"
             row_results.append({
                 'line_no': line_no,
                 'action': 'unmatched',
-                'player_name': label,
+                'sofifa_id': parsed['sofifa_id'],
+                'player_name': parsed.get('name') or '',
                 'club_name': parsed.get('club', ''),
                 'match_mode': '',
                 'diff_lines': [],
