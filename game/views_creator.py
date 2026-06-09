@@ -909,19 +909,16 @@ def creator_player_edit(request, player_id):
             _sr_profile.base_strength = _sr_result['base_strength']
             _sr_profile.save()
 
-        # --- RL-Form-Mapping speichern ---
+        # --- RL-Form-Mapping speichern (immer, auch bei reinen Team-Name/Saison-Edits) ---
         _rl_player_id = request.POST.get('rl_api_player_id', '').strip()
         _rl_team_id   = request.POST.get('rl_api_team_id', '').strip()
         _rl_team_name = request.POST.get('rl_api_team_name', '').strip()
         _rl_season    = request.POST.get('rl_api_season', '').strip()
-        if _rl_player_id or _rl_team_id:
+        if 'rl_api_player_id' in request.POST or 'rl_api_team_id' in request.POST:
             try:
                 _rl_prof = player.rl_form_profile
             except PlayerRLFormProfile.DoesNotExist:
-                _rl_prof = PlayerRLFormProfile(
-                    player=player,
-                    rl_form_status=PlayerRLFormProfile.STATUS_NOT_FETCHED,
-                )
+                _rl_prof = PlayerRLFormProfile(player=player)
             try:
                 _rl_prof.api_football_player_id = int(_rl_player_id) if _rl_player_id else None
             except ValueError:
@@ -935,8 +932,11 @@ def creator_player_edit(request, player_id):
                 _rl_prof.api_football_season = int(_rl_season) if _rl_season else 2024
             except ValueError:
                 pass
-            if _rl_prof.rl_form_status == PlayerRLFormProfile.STATUS_NOT_MAPPED:
+            has_full_mapping = bool(_rl_prof.api_football_player_id and _rl_prof.api_football_team_id)
+            if has_full_mapping and _rl_prof.rl_form_status == PlayerRLFormProfile.STATUS_NOT_MAPPED:
                 _rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_NOT_FETCHED
+            elif not has_full_mapping:
+                _rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_NOT_MAPPED
             _rl_prof.save()
             compute_rl_form_for_player(player)
 

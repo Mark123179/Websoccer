@@ -18,8 +18,13 @@ def _headers():
     }
 
 
-def get_team_fixtures(team_id, last=10):
-    """Letzte `last` abgeschlossene Spiele eines Teams.
+def get_team_fixtures(team_id, last=10, status='FT,AET,PEN'):
+    """Letzte `last` Spiele eines Teams mit dem angegebenen Status.
+
+    Args:
+        team_id:  API-Football-Team-ID.
+        last:     Maximale Anzahl Spiele (default 10).
+        status:   Komma-separierte Fixture-Status-Codes (default 'FT,AET,PEN').
 
     Returns list[dict] – rohe response-Einträge der API.
     Raises requests.HTTPError bei 4xx/5xx.
@@ -30,7 +35,7 @@ def get_team_fixtures(team_id, last=10):
         params={
             'team':   team_id,
             'last':   last,
-            'status': 'FT,AET,PEN',
+            'status': status,
         },
         timeout=DEFAULT_TIMEOUT,
     )

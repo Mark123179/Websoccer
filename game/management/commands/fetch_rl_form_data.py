@@ -8,7 +8,8 @@ Nur Spieler mit gültigem PlayerRLFormProfile-Mapping werden verarbeitet.
 Beispiel-Aufruf:
     python manage.py fetch_rl_form_data --team-api-id 157
     python manage.py fetch_rl_form_data --player-id 123 --dry-run
-    python manage.py fetch_rl_form_data  # alle gemappten Teams
+    python manage.py fetch_rl_form_data --budget 22      # zwei Teams
+    python manage.py fetch_rl_form_data                  # alle gemappten Teams
 """
 
 import time
@@ -22,6 +23,8 @@ from django.utils import timezone
 from game.api_football import get_fixture_player_stats, get_team_fixtures
 from game.models import Player, PlayerFormSnapshot, PlayerRLFormProfile
 from game.strength_service import compute_rl_form_for_player
+
+SNAPSHOTS_PER_PLAYER = 10
 
 
 class Command(BaseCommand):
@@ -41,10 +44,14 @@ class Command(BaseCommand):
             help='Nur diesen Spieler verarbeiten (Django-PK); Team wird automatisch ermittelt.',
         )
         parser.add_argument(
-            '--last-fixtures',
+            '--budget',
             type=int,
-            default=10,
-            help='Anzahl der letzten Spieltage (default: 10).',
+            default=50,
+            help=(
+                'Maximale Anzahl API-Requests (default: 50). '
+                'Entspricht ~4 Teams (à 11 Requests). '
+                'Das Tages-Limit von API-Football liegt bei 100 Requests.'
+            ),
         )
         parser.add_argument(
             '--force',
@@ -65,9 +72,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
-        force = options['force']
-        last = options['last_fixtures']
-        sleep = options['sleep']
+        force   = options['force']
+        budget  = options['budget']
+        sleep   = options['sleep']
 
         profiles_qs = PlayerRLFormProfile.objects.select_related('player').filter(
             api_football_player_id__isnull=False,
@@ -90,51 +97,73 @@ class Command(BaseCommand):
             teams.setdefault(p.api_football_team_id, []).append(p)
 
         self.stdout.write(
-            f'Verarbeite {len(profiles)} Spieler in {len(teams)} Team(s).'
+            f'Budget: {budget} Requests | '
+            f'{len(profiles)} Spieler in {len(teams)} Team(s).'
         )
 
-        total_requests = 0
+        requests_used  = 0
         total_snapshots = 0
 
-        for team_id, team_profiles in teams.items():
-            team_name = team_profiles[0].api_football_team_name or str(team_id)
+        def _use_request(label):
+            """Prüft Budget, erhöht Zähler, schläft. Gibt False zurück wenn Budget aufgebraucht."""
+            nonlocal requests_used
+            if requests_used >= budget:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'  ⚠ Budget erschöpft ({requests_used}/{budget}). '
+                        f'Verbleibende Teams/Fixtures werden übersprungen.'
+                    )
+                )
+                return False
+            requests_used += 1
+            remaining = budget - requests_used
             self.stdout.write(
-                f'\n→ Team {team_name} (ID {team_id}): {len(team_profiles)} Spieler'
+                f'  [{requests_used}/{budget} | {remaining} verbleibend] {label}'
             )
+            if sleep and not dry_run:
+                time.sleep(sleep)
+            return True
+
+        for team_id, team_profiles in teams.items():
+            if requests_used >= budget:
+                self.stdout.write(
+                    self.style.WARNING('Budget aufgebraucht — weitere Teams übersprungen.')
+                )
+                break
+
+            team_name = team_profiles[0].api_football_team_name or str(team_id)
+            self.stdout.write(f'\n→ Team {team_name} (ID {team_id}): {len(team_profiles)} Spieler')
+
+            if not _use_request(f'GET /fixtures?team={team_id}&last=10'):
+                break
 
             try:
-                fixtures = get_team_fixtures(team_id, last=last)
-                total_requests += 1
-                if sleep:
-                    time.sleep(sleep)
+                fixtures = get_team_fixtures(team_id, last=10)
             except requests.HTTPError as exc:
-                self.stdout.write(
-                    self.style.ERROR(f'  Fehler beim Laden der Fixtures: {exc}')
-                )
-                for p in team_profiles:
-                    if not dry_run:
-                        p.rl_form_status = PlayerRLFormProfile.STATUS_API_ERROR
+                self.stdout.write(self.style.ERROR(f'  Fehler beim Laden der Fixtures: {exc}'))
+                if not dry_run:
+                    for p in team_profiles:
+                        p.rl_form_status  = PlayerRLFormProfile.STATUS_API_ERROR
                         p.rl_form_updated_at = timezone.now()
                         p.save(update_fields=['rl_form_status', 'rl_form_updated_at'])
                 continue
 
-            player_map = {
-                p.api_football_player_id: p for p in team_profiles
-            }
+            player_map = {p.api_football_player_id: p for p in team_profiles}
 
             for fixture in fixtures:
-                fix_id = fixture['fixture']['id']
+                if requests_used >= budget:
+                    self.stdout.write(
+                        self.style.WARNING('  Budget erschöpft — restliche Fixtures übersprungen.')
+                    )
+                    break
+
+                fix_id       = fixture['fixture']['id']
                 fix_date_str = fixture['fixture']['date'][:10]
-                fix_date = date.fromisoformat(fix_date_str)
-
-                home = fixture.get('teams', {}).get('home', {})
-                away = fixture.get('teams', {}).get('away', {})
-                if home.get('id') == team_id:
-                    opp_name = away.get('name', '')
-                else:
-                    opp_name = home.get('name', '')
-
-                league_id = fixture.get('league', {}).get('id', 0)
+                fix_date     = date.fromisoformat(fix_date_str)
+                league_id    = fixture.get('league', {}).get('id', 0)
+                home         = fixture.get('teams', {}).get('home', {})
+                away         = fixture.get('teams', {}).get('away', {})
+                opp_name     = away.get('name', '') if home.get('id') == team_id else home.get('name', '')
 
                 existing_check = PlayerFormSnapshot.objects.filter(
                     player__in=[p.player for p in team_profiles],
@@ -142,25 +171,27 @@ class Command(BaseCommand):
                     fixture_id=str(fix_id),
                 )
                 if not force and existing_check.exists():
-                    self.stdout.write(f'  Fixture {fix_id} ({fix_date_str}) — übersprungen (bereits vorhanden)')
+                    self.stdout.write(
+                        f'  Fixture {fix_id} ({fix_date_str}) — übersprungen (bereits vorhanden)'
+                    )
                     continue
+
+                if not _use_request(f'GET /fixtures/players?fixture={fix_id}&team={team_id}'):
+                    break
 
                 try:
                     player_stats_list = get_fixture_player_stats(fix_id, team_id)
-                    total_requests += 1
-                    if sleep:
-                        time.sleep(sleep)
                 except requests.HTTPError as exc:
                     self.stdout.write(
                         self.style.WARNING(f'  Fixture {fix_id}: HTTP-Fehler {exc} — übersprungen')
                     )
                     continue
 
-                stats_by_player_id = {}
-                for entry in player_stats_list:
-                    pid = entry.get('player', {}).get('id')
-                    if pid is not None:
-                        stats_by_player_id[pid] = entry
+                stats_by_player_id = {
+                    entry.get('player', {}).get('id'): entry
+                    for entry in player_stats_list
+                    if entry.get('player', {}).get('id') is not None
+                }
 
                 for api_player_id, profile in player_map.items():
                     entry = stats_by_player_id.get(api_player_id)
@@ -201,7 +232,6 @@ class Command(BaseCommand):
                         'raw_payload':            entry,
                     }
 
-                    name = entry.get('player', {}).get('name', '')
                     if dry_run:
                         self.stdout.write(
                             f'  [dry] {profile.player.last_name} ({api_player_id}): '
@@ -221,15 +251,33 @@ class Command(BaseCommand):
                         )
 
             if not dry_run:
+                # Stale Snapshots bereinigen: nur die neuesten SNAPSHOTS_PER_PLAYER behalten
                 for profile in team_profiles:
-                    compute_rl_form_for_player(profile.player)
+                    player = profile.player
+                    all_snap_ids = list(
+                        PlayerFormSnapshot.objects
+                        .filter(player=player, source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
+                        .order_by('-fixture_date')
+                        .values_list('id', flat=True)
+                    )
+                    stale_ids = all_snap_ids[SNAPSHOTS_PER_PLAYER:]
+                    if stale_ids:
+                        deleted, _ = PlayerFormSnapshot.objects.filter(id__in=stale_ids).delete()
+                        if deleted:
+                            self.stdout.write(f'  🗑 {profile.player.last_name}: {deleted} alte Snapshot(s) entfernt')
+
+                    compute_rl_form_for_player(player)
+                    # Profil neu laden (compute_rl_form_for_player schreibt direkt in DB)
+                    profile.refresh_from_db()
                     self.stdout.write(
                         f'  → RL-Form {profile.player.last_name}: '
                         f'{profile.rl_form_score:+d} (Fit {profile.rl_form_fit})'
                     )
 
+        remaining = max(0, budget - requests_used)
         self.stdout.write(
             self.style.SUCCESS(
-                f'\nFertig: {total_requests} API-Requests, {total_snapshots} Snapshots gespeichert.'
+                f'\nFertig: {requests_used}/{budget} Requests verbraucht '
+                f'({remaining} verbleibend) | {total_snapshots} Snapshot(s) gespeichert.'
             )
         )
