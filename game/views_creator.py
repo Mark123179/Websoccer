@@ -1008,10 +1008,10 @@ def creator_player_fetch_rl_form(request, player_id):
 
     try:
         fixtures = get_team_fixtures(team_id, last=10)
-    except _requests.HTTPError as exc:
+    except _requests.RequestException as exc:
         rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_API_ERROR
         rl_prof.save(update_fields=['rl_form_status'])
-        messages.error(request, f'API-Football Fehler beim Laden der Fixtures: {exc}')
+        messages.error(request, f'API-Football Netzwerkfehler beim Laden der Fixtures: {exc}')
         return redirect(f'/creator/players/{player_id}/?tab=rlform')
 
     saved = 0
@@ -1028,7 +1028,7 @@ def creator_player_fetch_rl_form(request, player_id):
         try:
             player_stats_list = get_fixture_player_stats(fix_id, team_id)
             time.sleep(0.2)
-        except _requests.HTTPError:
+        except _requests.RequestException:
             continue
 
         for entry in player_stats_list:

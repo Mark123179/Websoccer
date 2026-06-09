@@ -139,7 +139,7 @@ class Command(BaseCommand):
 
             try:
                 fixtures = get_team_fixtures(team_id, last=10)
-            except requests.HTTPError as exc:
+            except requests.RequestException as exc:
                 self.stdout.write(self.style.ERROR(f'  Fehler beim Laden der Fixtures: {exc}'))
                 if not dry_run:
                     for p in team_profiles:
@@ -189,9 +189,9 @@ class Command(BaseCommand):
 
                 try:
                     player_stats_list = get_fixture_player_stats(fix_id, team_id)
-                except requests.HTTPError as exc:
+                except requests.RequestException as exc:
                     self.stdout.write(
-                        self.style.WARNING(f'  Fixture {fix_id}: HTTP-Fehler {exc} — übersprungen')
+                        self.style.WARNING(f'  Fixture {fix_id}: Netzwerkfehler {exc} — übersprungen')
                     )
                     if not dry_run:
                         for p in players_missing:

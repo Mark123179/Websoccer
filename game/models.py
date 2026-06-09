@@ -2596,6 +2596,12 @@ class PlayerEditLog(models.Model):
         return self.CATEGORY_ICONS.get(self.category, '•')
 
 
+def _rl_form_season_default():
+    from datetime import date as _d
+    today = _d.today()
+    return today.year if today.month >= 7 else today.year - 1
+
+
 class PlayerRLFormProfile(models.Model):
     """Aggregiertes RL-Form-Profil eines Spielers (API-Football-Quelle)."""
 
@@ -2625,7 +2631,7 @@ class PlayerRLFormProfile(models.Model):
     api_football_player_id  = models.IntegerField(null=True, blank=True)
     api_football_team_id    = models.PositiveIntegerField(null=True, blank=True)
     api_football_team_name  = models.CharField(max_length=120, blank=True)
-    api_football_season     = models.PositiveSmallIntegerField(default=2024)
+    api_football_season     = models.PositiveSmallIntegerField(default=_rl_form_season_default)
 
     rl_form_score         = models.SmallIntegerField(default=0)
     rl_form_fit           = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('1.00'))
