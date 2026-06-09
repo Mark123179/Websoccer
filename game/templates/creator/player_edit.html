@@ -1317,15 +1317,19 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
     filterCount.textContent = visible < total ? `${visible} / ${total} Treffer` : `${total} Treffer`;
   }
 
+  function normalizeStr(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
   function applyFilter() {
-    const q = filterIn.value.trim().toLowerCase();
+    const q = normalizeStr(filterIn.value.trim());
     let visible = 0;
     allRows.forEach(({ tr, r }) => {
       const match = !q
-        || (r.player_name  || '').toLowerCase().includes(q)
-        || (r.team_name    || '').toLowerCase().includes(q)
-        || (r.league_name  || '').toLowerCase().includes(q)
-        || (r.nationality  || '').toLowerCase().includes(q)
+        || normalizeStr(r.player_name  || '').includes(q)
+        || normalizeStr(r.team_name    || '').includes(q)
+        || normalizeStr(r.league_name  || '').includes(q)
+        || normalizeStr(r.nationality  || '').includes(q)
         || String(r.player_id || '').includes(q);
       tr.style.display = match ? '' : 'none';
       if (match) visible++;
