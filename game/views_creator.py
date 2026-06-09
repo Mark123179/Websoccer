@@ -745,7 +745,6 @@ def creator_player_edit(request, player_id):
             'strong_foot':  player.strong_foot or '',
             'market_value': str(player.market_value or ''),
             'salary':       str(player.salary_per_match or ''),
-            'contract':     str(player.contract_until or ''),
             'main_pos':     [player.main_position_1 or '', player.main_position_2 or '', player.main_position_3 or ''],
             'sec_pos':      [player.secondary_position_1 or '', player.secondary_position_2 or '', player.secondary_position_3 or ''],
             'injury_type':  player.ws_injury_type or '',
@@ -813,13 +812,6 @@ def creator_player_edit(request, player_id):
                 except InvalidOperation:
                     pass
 
-        contract = request.POST.get('contract_until', '')
-        if contract:
-            try:
-                from datetime import datetime
-                player.contract_until = datetime.strptime(contract, '%Y-%m-%d').date()
-            except (ValueError, AttributeError):
-                pass
 
         player.ws_injury_type = request.POST.get('ws_injury_type', '').strip()
         try:
@@ -863,8 +855,6 @@ def creator_player_edit(request, player_id):
             _verein_lines.append(f'Marktwert: {_old["market_value"] or "–"} → {player.market_value or "–"} €')
         if str(player.salary_per_match or '') != _old['salary']:
             _verein_lines.append(f'Gehalt: {_old["salary"] or "–"} → {player.salary_per_match or "–"} €')
-        if str(player.contract_until or '') != _old['contract']:
-            _verein_lines.append(f'Vertrag bis: {_old["contract"] or "–"} → {player.contract_until or "–"}')
         if _verein_lines:
             _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_VEREIN, '\n'.join(_verein_lines))
 
