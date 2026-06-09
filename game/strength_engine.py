@@ -99,6 +99,24 @@ RL_FORM_FIT = {
      0: 1.00,  1: 1.01,  2: 1.02,  3: 1.04,  4: 1.05,  5: 1.06,
 }
 
+# Additive Boni/Mali für die finale Stärkeformel
+# final = pre_fit * position_fit + freshness_bonus + rl_form_bonus
+RL_FORM_BONUS = {
+    -5: -8, -4: -6, -3: -5, -2: -3, -1: -1,
+     0:  0,
+     1:  1,  2:  2,  3:  4,  4:  5,  5:  6,
+}
+
+# (lo, hi, bonus) — hi ist exklusiv; < 50 als Fallback
+FRESHNESS_BONUS_TABLE = [
+    (95, 101,   1),
+    (85,  95,   0),
+    (75,  85,  -2),
+    (65,  75,  -5),
+    (50,  65, -10),
+    ( 0,  50, -18),
+]
+
 FRESHNESS_FIT_TABLE = [
     (95, 101,  1.02),
     (85,  95,  1.00),
@@ -320,6 +338,31 @@ def get_freshness_fit(freshness):
     return (0.78, '< 50')
 
 
+def get_freshness_bonus(freshness):
+    """Additiver Frische-Bonus für die finale Stärkeformel.
+
+    freshness: float 0–100 (oder None → 0 neutral)
+    Returns: (bonus: int, range_label: str)
+    """
+    if freshness is None:
+        return (0, '–')
+    f = float(freshness)
+    for lo, hi, bonus in FRESHNESS_BONUS_TABLE:
+        if lo <= f < hi:
+            hi_label = str(hi) if hi <= 100 else '100'
+            return (bonus, f'{lo}–{hi_label}')
+    return (-18, '< 50')
+
+
+def get_rl_form_bonus(score):
+    """Additiver RL-Form-Bonus für die finale Stärkeformel.
+
+    score: int -5..+5
+    Returns: int
+    """
+    return RL_FORM_BONUS.get(score, 0)
+
+
 # ---------------------------------------------------------------------------
 # RL-Form
 # ---------------------------------------------------------------------------
@@ -430,13 +473,17 @@ def calculate_form_modifier(base_200, rl_form_factor):
 # ---------------------------------------------------------------------------
 
 def get_strength_range(base_200, potential_200, profile_100, position_fit,
-                       freshness_fit, rl_form_fit):
+                       freshness_bonus, rl_form_bonus):
     """
-    Berechnet die theoretische Stärke-Range [Minimum, Maximum]
-    ohne echten Match-Roll.
+    Berechnet die theoretische Stärke-Range [Minimum, Maximum].
 
-    pre_fit_strength = base * 0.80 + profile_200 * 0.20
-    final = pre_fit * position_fit * freshness_fit * rl_form_fit
+    Formel (additiv):
+        pre  = match_base × 0.80 + profile_200 × 0.20
+        final = pre × position_fit + freshness_bonus + rl_form_bonus
+
+    Args:
+        freshness_bonus: int  (aus get_freshness_bonus)
+        rl_form_bonus:   int  (aus get_rl_form_bonus)
 
     Returns:
         (min_strength: int, max_strength: int) or (None, None)
@@ -448,7 +495,7 @@ def get_strength_range(base_200, potential_200, profile_100, position_fit,
 
     def calc(match_base):
         pre = match_base * 0.80 + profile_200 * 0.20
-        final = pre * position_fit * freshness_fit * rl_form_fit
+        final = pre * position_fit + freshness_bonus + rl_form_bonus
         return max(1, min(200, round(final)))
 
     return (calc(base_200), calc(potential_200))

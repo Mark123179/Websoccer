@@ -292,6 +292,7 @@ def _build_strength_tab_context(player):
         freshness_val = None
 
     freshness_factor, freshness_range_label = se.get_freshness_fit(freshness_val)
+    freshness_bonus, _freshness_bonus_label = se.get_freshness_bonus(freshness_val)
 
     # ── RL-Form ──────────────────────────────────────────────────────────────
     # no_mapping vs. no_data klar trennen:
@@ -307,6 +308,7 @@ def _build_strength_tab_context(player):
         snapshots_data, no_mapping=not has_api_mapping
     )
     rl_form_factor = se.get_rl_form_fit(rl_form_result['score'])
+    rl_form_bonus  = se.get_rl_form_bonus(rl_form_result['score'])
     rl_form_result['factor'] = rl_form_factor
     rl_form_result['match_count'] = len(snapshots_data)
     rl_form_result['score_label'] = f'{rl_form_result["score"]:+d}'
@@ -338,7 +340,7 @@ def _build_strength_tab_context(player):
         if base_200 is not None and row['score'] is not None:
             r_min, r_max = se.get_strength_range(
                 base_200, potential_200, row['score'],
-                row['fit_factor'], freshness_factor, rl_form_factor,
+                row['fit_factor'], freshness_bonus, rl_form_bonus,
             )
         else:
             r_min, r_max = None, None
@@ -351,8 +353,8 @@ def _build_strength_tab_context(player):
         str_min, str_max = se.get_strength_range(
             base_200, potential_200, played_profile_score,
             pos_fit_factor,
-            freshness_factor,
-            rl_form_factor,
+            freshness_bonus,
+            rl_form_bonus,
         )
     else:
         str_min, str_max = None, None

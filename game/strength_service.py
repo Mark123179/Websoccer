@@ -88,7 +88,7 @@ def compute_strength_for_player(player):
         freshness_val = float(sp.freshness) if sp.freshness is not None else None
     except PlayerStrengthProfile.DoesNotExist:
         freshness_val = None
-    freshness_factor, _ = se.get_freshness_fit(freshness_val)
+    freshness_bonus, _ = se.get_freshness_bonus(freshness_val)
 
     form_snapshots_qs = (
         player.form_snapshots
@@ -100,12 +100,12 @@ def compute_strength_for_player(player):
         for s in form_snapshots_qs
     ]
     rl_form_result = se.calculate_rl_form_from_snapshots(snapshots_data)
-    rl_form_factor = se.get_rl_form_fit(rl_form_result['score'])
+    rl_form_bonus = se.get_rl_form_bonus(rl_form_result['score'])
 
     if pos_fit_factor is not None:
         str_min, str_max = se.get_strength_range(
             base_200, potential_200, played_profile_score,
-            pos_fit_factor, freshness_factor, rl_form_factor,
+            pos_fit_factor, freshness_bonus, rl_form_bonus,
         )
     else:
         str_min, str_max = None, None
