@@ -843,8 +843,22 @@
         <thead>
           <tr>
             <th class="cpe-src-attr">Attribut</th>
-            <th>FMInside</th>
-            <th>SoFIFA</th>
+            <th>
+              FMInside
+              {% if source_meta.fm.source_version or source_meta.fm.checked_at %}
+              <span class="cpe-import-badge">
+                {% if source_meta.fm.source_version %}{{ source_meta.fm.source_version }}{% endif %}{% if source_meta.fm.source_version and source_meta.fm.checked_at %} · {% endif %}{% if source_meta.fm.checked_at %}{{ source_meta.fm.checked_at|date:"d.m.Y" }}{% endif %}
+              </span>
+              {% endif %}
+            </th>
+            <th>
+              SoFIFA
+              {% if source_meta.ea.source_version or source_meta.ea.checked_at %}
+              <span class="cpe-import-badge">
+                {% if source_meta.ea.source_version %}{{ source_meta.ea.source_version }}{% endif %}{% if source_meta.ea.source_version and source_meta.ea.checked_at %} · {% endif %}{% if source_meta.ea.checked_at %}{{ source_meta.ea.checked_at|date:"d.m.Y" }}{% endif %}
+              </span>
+              {% endif %}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -995,6 +1009,7 @@
 .cpe-source-table .cpe-src-meta td { color: #cce8ff; font-weight: 700; }
 .cpe-src-na { color: #334455; }
 .cpe-src-hint { padding: .6rem 1.25rem; }
+.cpe-import-badge { display: block; font-size: .62rem; font-weight: 400; letter-spacing: .03em; text-transform: none; color: #4a8fa8; margin-top: .15rem; }
 .cpe-input-date { width: 150px; }
 .cpe-input-money { width: 160px; }
 .cpe-select { background: #030a12; border: 1px solid #0d2035; border-radius: 4px; color: #cce8ff; padding: .35rem .5rem; font-size: .82rem; }

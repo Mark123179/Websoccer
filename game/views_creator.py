@@ -177,11 +177,15 @@ def _build_source_tab_context(player):
             'rating': fm_row.rating if fm_row else None,
             'potential': fm_row.potential if fm_row else None,
             'url': fm_row.source_url if fm_row else '',
+            'checked_at': fm_row.checked_at if fm_row else None,
+            'source_version': fm_row.source_version if fm_row else '',
         },
         'ea': {
             'rating': ea_row.rating if ea_row else None,
             'potential': ea_row.potential if ea_row else None,
             'url': ea_row.source_url if ea_row else '',
+            'checked_at': ea_row.checked_at if ea_row else None,
+            'source_version': ea_row.source_version if ea_row else '',
         },
     }
     return {
