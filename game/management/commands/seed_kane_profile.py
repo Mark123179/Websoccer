@@ -41,7 +41,7 @@ class Command(BaseCommand):
 
     def _seed_base(self, kane):
         kane.height_cm = 188
-        kane.strong_foot = 'right'
+        kane.strong_foot = 'R'
         kane.shirt_number = 9
         kane.main_position_1 = 'ST'
         kane.secondary_position_1 = 'OM'

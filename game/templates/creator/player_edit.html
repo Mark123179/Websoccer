@@ -175,9 +175,9 @@
         <div>
           <select class="cpe-select" name="strong_foot">
             <option value="" {% if not player or not player.strong_foot %}selected{% endif %}>----------</option>
-            <option value="left" {% if player and player.strong_foot == 'left' %}selected{% endif %}>Links</option>
-            <option value="right" {% if player and player.strong_foot == 'right' %}selected{% endif %}>Rechts</option>
-            <option value="both" {% if player and player.strong_foot == 'both' %}selected{% endif %}>Beidfuss</option>
+            <option value="L" {% if player and player.strong_foot == 'L' %}selected{% endif %}>Links</option>
+            <option value="R" {% if player and player.strong_foot == 'R' %}selected{% endif %}>Rechts</option>
+            <option value="B" {% if player and player.strong_foot == 'B' %}selected{% endif %}>Beidfuss</option>
           </select>
           <div class="cpe-hint">Stärkerer Fuss des Spielers.</div>
         </div>

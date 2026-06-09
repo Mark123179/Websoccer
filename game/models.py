@@ -1322,9 +1322,9 @@ class Player(models.Model):
         max_length=10,
         blank=True,
         choices=[
-            ('left', 'Links'),
-            ('right', 'Rechts'),
-            ('both', 'Beidfuss'),
+            ('L', 'Links'),
+            ('R', 'Rechts'),
+            ('B', 'Beidfuss'),
         ],
         help_text='Staerkerer Fuss des Spielers.',
     )
