@@ -1199,7 +1199,7 @@ class PageSmokeTests(TestCase):
         self.assertEqual(snapshots.count(), 10)
         self.assertEqual(snapshots.first().recorded_at, date(2025, 5, 3))
 
-    def test_recalculate_player_strengths_keeps_existing_base_without_sources(self):
+    def test_calculate_player_strengths_skips_player_without_sources(self):
         player = Player.objects.create(
             first_name='Seeded',
             last_name='Base',
@@ -1220,25 +1220,24 @@ class PageSmokeTests(TestCase):
         )
         output = StringIO()
 
-        call_command('recalculate_player_strengths', stdout=output)
+        call_command('calculate_player_strengths', stdout=output)
         player.refresh_from_db()
         profile = player.strength_profile
-        snapshot = player.strength_snapshots.get(
-            match_reference__startswith='RECALC-',
-        )
 
         self.assertEqual(profile.base_strength, Decimal('76.00'))
-        self.assertEqual(profile.final_strength, Decimal('77.50'))
-        self.assertEqual(snapshot.base_strength, Decimal('76.00'))
-        self.assertEqual(snapshot.final_strength, Decimal('77.50'))
-        self.assertEqual(snapshot.max_strength, Decimal('82.00'))
-        self.assertIn('Spieler berechnet', output.getvalue())
+        self.assertEqual(profile.form_modifier, Decimal('1.50'))
+        self.assertFalse(
+            player.strength_snapshots.filter(
+                match_reference__startswith='ENGINE-',
+            ).exists()
+        )
+        self.assertIn('übersprungen', output.getvalue())
 
-    def test_recalculate_player_strengths_uses_source_ratings_when_available(self):
+    def test_calculate_player_strengths_uses_source_ratings_when_available(self):
         player = Player.objects.get(transfermarkt_id=132098)
         output = StringIO()
 
-        call_command('recalculate_player_strengths', stdout=output)
+        call_command('calculate_player_strengths', stdout=output)
         player.refresh_from_db()
 
         self.assertEqual(player.strength_profile.base_strength, Decimal('184.00'))

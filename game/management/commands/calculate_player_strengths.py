@@ -40,10 +40,16 @@ class Command(BaseCommand):
             default=None,
             help='Nur einen einzelnen Spieler (per ID) neu berechnen.',
         )
+        parser.add_argument(
+            '--verbose',
+            action='store_true',
+            help='Pro Spieler eine Zeile ausgeben (auch ohne --dry-run).',
+        )
 
     def handle(self, *args, **options):
         dry_run   = options['dry_run']
         player_id = options['player_id']
+        verbose   = options['verbose']
         today     = timezone.localdate()
 
         qs = (
@@ -65,7 +71,7 @@ class Command(BaseCommand):
 
             if not result['computable']:
                 skipped += 1
-                if dry_run:
+                if dry_run or verbose:
                     self.stdout.write(
                         f'  SKIP  {player.last_name}, {player.first_name} — '
                         f'keine Quelldaten'
@@ -123,6 +129,13 @@ class Command(BaseCommand):
                         'form_modifier':           profile.form_modifier,
                         'notes': 'Automatisch via calculate_player_strengths (strength_engine).',
                     },
+                )
+
+            if verbose:
+                self.stdout.write(
+                    f'  {"NEW " if is_new else "    "}'
+                    f'{player.last_name}, {player.first_name}: '
+                    f'base={new_base}  final={final}'
                 )
 
             if is_new:

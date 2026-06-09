@@ -221,7 +221,7 @@ class Command(BaseCommand):
                     unmatched_sofifa.append(player.full_name)
 
         if not dry_run and not options['skip_recalculate']:
-            call_command('recalculate_player_strengths')
+            call_command('calculate_player_strengths')
 
         mode = 'DRY RUN' if dry_run else 'OK'
         self.stdout.write(

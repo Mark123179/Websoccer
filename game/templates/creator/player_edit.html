@@ -247,16 +247,16 @@
         {% elif str_sync.status == 'warn' %}
           <span class="cpe-str-sync-icon">△</span>
           Profil leicht veraltet — gespeichert {{ str_sync.stored_base }} / Berechnet {{ str_base.combined }}
-          (Δ {{ str_sync.delta }}) — bitte <code>recalculate_player_strengths</code> ausführen
+          (Δ {{ str_sync.delta }}) — bitte <code>calculate_player_strengths</code> ausführen
           {% if str_sync.stored_at %}<span class="cpe-str-sync-date">Stand: {{ str_sync.stored_at|date:"d.m.Y H:i" }}</span>{% endif %}
         {% elif str_sync.status == 'danger' %}
           <span class="cpe-str-sync-icon">⚠</span>
           Profil veraltet — gespeichert {{ str_sync.stored_base }} / Berechnet {{ str_base.combined }}
-          (Δ {{ str_sync.delta }}) — bitte <code>recalculate_player_strengths</code> ausführen
+          (Δ {{ str_sync.delta }}) — bitte <code>calculate_player_strengths</code> ausführen
           {% if str_sync.stored_at %}<span class="cpe-str-sync-date">Stand: {{ str_sync.stored_at|date:"d.m.Y H:i" }}</span>{% endif %}
         {% elif str_sync.status == 'no_profile' %}
           <span class="cpe-str-sync-icon">○</span>
-          Kein Stärkeprofil in der Datenbank — bitte <code>recalculate_player_strengths</code> ausführen
+          Kein Stärkeprofil in der Datenbank — bitte <code>calculate_player_strengths</code> ausführen
         {% elif str_sync.status == 'no_engine_data' %}
           <span class="cpe-str-sync-icon">–</span>
           Kein Source-Rating → kein Engine-Vergleich möglich
