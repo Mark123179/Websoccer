@@ -368,3 +368,58 @@
     align-self: center;
     width: min(100%, 230px);
 }
+
+.club-no-schedule-state {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 16px;
+    text-align: center;
+    margin: auto 0;
+}
+
+.club-no-schedule-headline {
+    color: rgba(239, 251, 255, 0.9);
+    font-size: clamp(13px, 1vw, 16px);
+    font-weight: 900;
+    margin: 0;
+}
+
+.club-no-schedule-sub {
+    color: rgba(239, 251, 255, 0.52);
+    font-size: 12px;
+    font-weight: 600;
+    margin: 0 0 8px;
+}
+
+.club-profile-button--ghost {
+    background: transparent;
+    border-color: rgba(103, 247, 255, 0.32);
+    box-shadow: none;
+    color: rgba(239, 251, 255, 0.72);
+    padding: 0 16px;
+    width: min(100%, 230px);
+}
+
+.club-profile-button--ghost:hover {
+    background: rgba(35, 228, 245, 0.08);
+    border-color: rgba(103, 247, 255, 0.6);
+    color: #ffffff;
+    filter: none;
+}
+
+.club-profile-button--admin {
+    background: linear-gradient(180deg, #e08b2a, #a05e10);
+    border-color: rgba(255, 180, 60, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 14px rgba(224, 139, 42, 0.2);
+    padding: 0 16px;
+    width: min(100%, 230px);
+}
+
+.club-profile-button--admin:hover {
+    filter: brightness(1.1);
+}

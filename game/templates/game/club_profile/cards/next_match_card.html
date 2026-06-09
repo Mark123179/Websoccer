@@ -58,6 +58,15 @@
     </a>
 
     {% else %}
-    <p class="club-no-next-match">Noch kein Spiel angesetzt.</p>
+    <div class="club-no-schedule-state">
+        <p class="club-no-schedule-headline">Noch kein Spielplan generiert</p>
+        <p class="club-no-schedule-sub">F&uuml;r diese Saison wurden noch keine Spieltermine angelegt.</p>
+        {% if profile.links.leagueScheduleUrl %}
+            <a class="club-profile-button club-profile-button--ghost" href="{{ profile.links.leagueScheduleUrl }}">Zur Liga &amp; Spielplan</a>
+        {% endif %}
+        {% if request.user.is_staff and profile.links.scheduleGeneratorUrl %}
+            <a class="club-profile-button club-profile-button--admin" href="{{ profile.links.scheduleGeneratorUrl }}">&#9881; Spielplan generieren</a>
+        {% endif %}
+    </div>
     {% endif %}
 </article>

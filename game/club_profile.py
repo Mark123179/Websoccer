@@ -64,14 +64,20 @@ def build_club_profile_view_model(club, season=CURRENT_SEASON):
 def build_links(club):
     if club.league_id:
         full_table_url = reverse('league_detail', kwargs={'league_id': club.league_id})
+        schedule_generator_url = reverse('admin:game_league_spielplan', args=[club.league_id])
+        league_schedule_url = full_table_url + '?tab=spielplan'
     else:
         full_table_url = reverse('club_table', kwargs={'club_id': club.id})
+        schedule_generator_url = None
+        league_schedule_url = None
     return {
         'professionalSquadUrl': reverse('club_professional_squad', kwargs={'club_id': club.id}),
         'youthSquadUrl': reverse('club_youth_squad', kwargs={'club_id': club.id}),
         'fullTableUrl': full_table_url,
         'newsUrl': reverse('club_news', kwargs={'club_id': club.id}),
         'profileUrl': reverse('club_detail', kwargs={'club_id': club.id}),
+        'scheduleGeneratorUrl': schedule_generator_url,
+        'leagueScheduleUrl': league_schedule_url,
     }
 
 
@@ -165,20 +171,6 @@ def build_match(club, opponent_club, kind, links):
             'scorers': [],
         }
 
-    # Final fallback: empty state only for next match; last match returns None (no data yet)
-    if kind == ClubProfileMatch.KIND_NEXT:
-        return {
-            'id': 'next-fallback',
-            'competitionName': club.league.name if club.league else 'Liga',
-            'matchdayLabel': 'Nächste Partie',
-            'dateLabel': 'Noch offen',
-            'timeLabel': '',
-            'stadiumName': stadium_name_for(club),
-            'homeClub': club_stub(club),
-            'awayClub': club_stub(opponent_club) if opponent_club else empty_club_stub(),
-            'backgroundImageUrl': stadium_image_for(club),
-            'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
-        }
     return None
 
 

@@ -115,19 +115,24 @@
                     <p class="overview-no-club-headline">Noch kein Verein</p>
                     <p class="overview-no-club-sub">W&auml;hle einen Verein aus, um Spiele zu sehen.</p>
                 </div>
+            {% elif not next_match %}
+                <div class="overview-no-club-state">
+                    <p class="overview-no-club-headline">Kein Spielplan</p>
+                    <p class="overview-no-club-sub">F&uuml;r diese Saison wurden noch keine Spieltermine generiert.</p>
+                    {% if primary_club and primary_club.league %}
+                        <a class="card-action" href="{% url 'league_detail' primary_club.league.id %}?tab=spielplan">Zur Liga</a>
+                    {% endif %}
+                    {% if request.user.is_staff and primary_club and primary_club.league %}
+                        <a class="card-action" href="{% url 'admin:game_league_spielplan' primary_club.league.id %}" style="margin-top: 6px;">&#9881; Spielplan generieren</a>
+                    {% endif %}
+                </div>
             {% else %}
             <p class="overview-fixture-title">
                 {% if competition_logo_static_path %}
                     <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
                 {% endif %}
-                {% if next_match %}
-                    {{ next_match.competition_name }}
-                    {% if next_match.matchday_label %} - {{ next_match.matchday_label }}{% endif %}
-                {% elif primary_club and primary_club.league %}
-                    {{ primary_club.league.name }}
-                {% else %}
-                    Elite Liga
-                {% endif %}
+                {{ next_match.competition_name }}
+                {% if next_match.matchday_label %} - {{ next_match.matchday_label }}{% endif %}
             </p>
 
             <div class="overview-fixture">
@@ -153,9 +158,9 @@
             </div>
 
             <div class="overview-match-meta">
-                <span>{% if next_match and next_match.date_label %}{{ next_match.date_label }}{% else %}–{% endif %}</span>
-                <strong>{% if next_match and next_match.time_label %}{{ next_match.time_label }}{% else %}–{% endif %}</strong>
-                <small>{% if next_match and next_match.stadium_name %}{{ next_match.stadium_name }}{% else %}–{% endif %}</small>
+                <span>{% if next_match.date_label %}{{ next_match.date_label }}{% else %}–{% endif %}</span>
+                <strong>{% if next_match.time_label %}{{ next_match.time_label }}{% else %}–{% endif %}</strong>
+                <small>{% if next_match.stadium_name %}{{ next_match.stadium_name }}{% else %}–{% endif %}</small>
             </div>
 
             <a class="card-action" href="{% if primary_club and primary_club.league %}{% url 'league_detail' primary_club.league.id %}?tab=spielplan{% elif primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielplan anzeigen</a>
