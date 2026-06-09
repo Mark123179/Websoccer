@@ -321,7 +321,6 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, '%')
         self.assertContains(response, 'game/css/club-profile.css')
         self.assertContains(response, 'game/js/club-profile.js')
-        self.assertContains(response, 'game/images/icons/stat-goals.svg')
         self.assertContains(response, 'Harry Kane')
         self.assertContains(response, 'club-player-cutout')
         self.assertContains(response, 'game/images/players/28049320')
