@@ -241,7 +241,63 @@
     </div>
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-source">
       <div class="cpe-section-bar">Source</div>
-      <p class="cpe-placeholder">Source-Verwaltung folgt.</p>
+
+      <div class="cpe-field-row">
+        <div class="cpe-label">Transfermarkt</div>
+        <input class="cpe-input cpe-input-link" type="url" name="tm_url" value="{{ player.transfermarkt_profile_url|default_if_none:'' }}" placeholder="https://www.transfermarkt.de/...">
+      </div>
+      <div class="cpe-field-row">
+        <div class="cpe-label">FMInside</div>
+        <input class="cpe-input cpe-input-link" type="url" name="src_fm_url" value="{{ source_meta.fm.url|default_if_none:'' }}" placeholder="https://fminside.net/...">
+      </div>
+      <div class="cpe-field-row">
+        <div class="cpe-label">SoFIFA</div>
+        <input class="cpe-input cpe-input-link" type="url" name="src_ea_url" value="{{ source_meta.ea.url|default_if_none:'' }}" placeholder="https://sofifa.com/...">
+      </div>
+
+      <hr class="cpe-divider">
+
+      <table class="cpe-source-table">
+        <thead>
+          <tr>
+            <th class="cpe-src-attr">Attribut</th>
+            <th>FMInside</th>
+            <th>SoFIFA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cpe-src-meta">
+            <td class="cpe-src-attr">Rating</td>
+            <td><input class="cpe-input cpe-input-tiny" type="number" min="0" max="100" name="src_fm_rating" value="{{ source_meta.fm.rating|default_if_none:'' }}"></td>
+            <td><input class="cpe-input cpe-input-tiny" type="number" min="0" max="100" name="src_ea_rating" value="{{ source_meta.ea.rating|default_if_none:'' }}"></td>
+          </tr>
+          <tr class="cpe-src-meta">
+            <td class="cpe-src-attr">Potential</td>
+            <td><input class="cpe-input cpe-input-tiny" type="number" min="0" max="100" name="src_fm_potential" value="{{ source_meta.fm.potential|default_if_none:'' }}"></td>
+            <td><input class="cpe-input cpe-input-tiny" type="number" min="0" max="100" name="src_ea_potential" value="{{ source_meta.ea.potential|default_if_none:'' }}"></td>
+          </tr>
+          {% for row in source_attr_rows %}
+          <tr>
+            <td class="cpe-src-attr">{{ row.label }}</td>
+            <td>
+              {% if row.fm_supported %}
+                <input class="cpe-input cpe-input-tiny" type="number" min="0" max="99" name="src_fm_{{ row.col }}" value="{{ row.fm_value|default_if_none:'' }}">
+              {% else %}
+                <span class="cpe-src-na">—</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.ea_supported %}
+                <input class="cpe-input cpe-input-tiny" type="number" min="0" max="99" name="src_ea_{{ row.col }}" value="{{ row.ea_value|default_if_none:'' }}">
+              {% else %}
+                <span class="cpe-src-na">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="cpe-hint cpe-src-hint">{% if source_is_gk %}Torwart-Attribute (Position TW).{% endif %} Leere Felder werden nicht gespeichert. „—" = Quelle liefert dieses Attribut nicht.</p>
     </div>
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-saison">
       <div class="cpe-section-bar">Saison</div>
@@ -303,6 +359,17 @@
 .cpe-input:focus { outline: none; border-color: #00d4ff66; }
 .cpe-input-medium { width: 220px; }
 .cpe-input-small { width: 70px; }
+.cpe-input-link { width: 360px; max-width: 100%; }
+.cpe-input-tiny { width: 64px; text-align: center; }
+
+.cpe-source-table { width: 100%; border-collapse: collapse; }
+.cpe-source-table th, .cpe-source-table td { padding: .4rem 1.25rem; text-align: left; border-bottom: 1px solid #071525; }
+.cpe-source-table th { color: #7fd6ff; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.cpe-source-table td { color: #aabbcc; font-size: .82rem; }
+.cpe-source-table .cpe-src-attr { color: #aabbcc; width: 200px; }
+.cpe-source-table .cpe-src-meta td { color: #cce8ff; font-weight: 700; }
+.cpe-src-na { color: #334455; }
+.cpe-src-hint { padding: .6rem 1.25rem; }
 .cpe-input-date { width: 150px; }
 .cpe-input-money { width: 160px; }
 .cpe-select { background: #030a12; border: 1px solid #0d2035; border-radius: 4px; color: #cce8ff; padding: .35rem .5rem; font-size: .82rem; }

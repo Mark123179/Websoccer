@@ -3362,36 +3362,11 @@ def player_detail(request, player_id):
         or (player.nationalities.split(',')[0].strip() if player.nationalities else None)
     )
 
-    external_urls = {
-        ext.source.code: ext.profile_url
-        for ext in player.external_ids.select_related('source')
-        if ext.profile_url
-    }
-    transfermarkt_url = player.transfermarkt_profile_url or (
-        f'https://www.transfermarkt.de/profil/spieler/{player.transfermarkt_id}'
-        if player.transfermarkt_id
-        else ''
-    )
-    source_links = []
-    if transfermarkt_url:
-        source_links.append(
-            {'label': 'Transfermarkt', 'url': transfermarkt_url, 'css': 'tm'}
-        )
-    if external_urls.get('FM'):
-        source_links.append(
-            {'label': 'FMInside', 'url': external_urls['FM'], 'css': 'fmi'}
-        )
-    if external_urls.get('SOFIFA'):
-        source_links.append(
-            {'label': 'SoFIFA', 'url': external_urls['SOFIFA'], 'css': 'sofifa'}
-        )
-
     return render(
         request,
         'game/player_detail.html',
         {
             'player': player,
-            'source_links': source_links,
             'season_rows': performance_visual_rows(
                 preview_performance_rows(
                     season_table_rows(season_rows, nt_nationality=nt_nationality),

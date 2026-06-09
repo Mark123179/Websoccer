@@ -9,11 +9,159 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from .models import (
-    Club, COUNTRY_FLAG_ASSETS, League, Player,
-    Stadium, ClubPublicProfile, ClubTrophy, ClubSponsor, SeasonGoal,
-    ManagerProfile, ManagerCareerStation, HoenessCoin, CoinTransaction,
-    PresidentSatisfaction, TacticSetup,
+    Club, COUNTRY_FLAG_ASSETS, DataSource, League, Player,
+    PlayerSourceRating, Stadium, ClubPublicProfile, ClubTrophy, ClubSponsor,
+    SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
+    CoinTransaction, PresidentSatisfaction, TacticSetup,
 )
+from .management.commands.import_player_source_ratings import (
+    FMI_ATTR_MAP, FMI_GK_MAP, SOFIFA_ATTR_MAP, SOFIFA_GK_MAP,
+)
+
+# Welche Attributspalten liefert welche Quelle (FMInside vs. SoFIFA)?
+FM_OUTFIELD_COLS = set(FMI_ATTR_MAP.values())
+EA_OUTFIELD_COLS = set(SOFIFA_ATTR_MAP.values())
+FM_GK_COLS = set(FMI_GK_MAP.values())
+EA_GK_COLS = set(SOFIFA_GK_MAP.values())
+
+# Anzeige-Reihenfolge + deutsche Labels der Quell-Attribute.
+SOURCE_OUTFIELD_LABELS = [
+    ('tempo', 'Tempo'),
+    ('ausdauer', 'Ausdauer'),
+    ('kraft', 'Kraft'),
+    ('technik', 'Technik'),
+    ('dribbling', 'Dribbling'),
+    ('passspiel', 'Passspiel'),
+    ('flanken', 'Flanken'),
+    ('abschluss', 'Abschluss'),
+    ('kopfball', 'Kopfball'),
+    ('zweikampf', 'Zweikampf'),
+    ('defensivstellung', 'Defensivstellung'),
+    ('uebersicht', 'Übersicht'),
+    ('teamwork', 'Teamwork'),
+    ('ecken', 'Ecken'),
+    ('freistoss', 'Freistoß'),
+    ('elfmeter', 'Elfmeter'),
+]
+SOURCE_GK_LABELS = [
+    ('tw_reflexe', 'Reflexe'),
+    ('tw_fangsicherheit', 'Fangsicherheit'),
+    ('tw_eins_gegen_eins', '1-gegen-1'),
+    ('tw_stellungsspiel', 'Stellungsspiel'),
+    ('tw_passen', 'Passen'),
+]
+# Quell-Key (PlayerSourceRating.source) -> DataSource-Code fuer ExternalId-Sync.
+SOURCE_DATASOURCE_CODE = {
+    PlayerSourceRating.SOURCE_FM: DataSource.CODE_FMINSIDE,
+    PlayerSourceRating.SOURCE_EA: DataSource.CODE_SOFIFA,
+}
+
+
+def _parse_source_int(raw, hi):
+    """Parse einen Attributwert; '' -> None, sonst auf 0..hi geklemmt."""
+    raw = (raw or '').strip()
+    if raw == '':
+        return None
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return max(0, min(hi, value))
+
+
+def _save_player_source_ratings(request, player):
+    """Speichert die im Creator-Source-Tab editierten Quelldaten."""
+    is_gk = player.position == 'TW'
+    specs = [
+        ('fm', PlayerSourceRating.SOURCE_FM,
+         FM_GK_COLS if is_gk else FM_OUTFIELD_COLS),
+        ('ea', PlayerSourceRating.SOURCE_EA,
+         EA_GK_COLS if is_gk else EA_OUTFIELD_COLS),
+    ]
+    existing = {r.source: r for r in player.source_ratings.all()}
+
+    for prefix, source_key, cols in specs:
+        row = existing.get(source_key)
+        rating = _parse_source_int(request.POST.get(f'src_{prefix}_rating'), 100)
+        if rating is None:
+            # Rating ist Pflichtfeld: ohne vorhandene Zeile nichts anlegen.
+            if row is None:
+                continue
+        else:
+            if row is None:
+                row = PlayerSourceRating(
+                    player=player, source=source_key, rating=rating,
+                )
+            else:
+                row.rating = rating
+
+        row.potential = _parse_source_int(
+            request.POST.get(f'src_{prefix}_potential'), 100,
+        )
+        for col in cols:
+            setattr(
+                row, col,
+                _parse_source_int(request.POST.get(f'src_{prefix}_{col}'), 99),
+            )
+
+        url = (request.POST.get(f'src_{prefix}_url') or '').strip()
+        row.source_url = url
+        row.save()
+
+        # Kanonische externe ID konsistent halten (nur falls schon vorhanden).
+        ext = player.external_ids.filter(
+            source__code=SOURCE_DATASOURCE_CODE[source_key],
+        ).first()
+        if ext and ext.profile_url != url:
+            ext.profile_url = url
+            ext.save(update_fields=['profile_url', 'updated_at'])
+
+    # Transfermarkt-Link direkt am Spieler.
+    player.transfermarkt_profile_url = (
+        request.POST.get('tm_url') or ''
+    ).strip()
+    player.save(update_fields=['transfermarkt_profile_url'])
+
+
+def _build_source_tab_context(player):
+    """Baut die GET-Anzeige fuer den Source-Tab (2 Quellen nebeneinander)."""
+    is_gk = player.position == 'TW'
+    labels = SOURCE_GK_LABELS if is_gk else SOURCE_OUTFIELD_LABELS
+    fm_cols = FM_GK_COLS if is_gk else FM_OUTFIELD_COLS
+    ea_cols = EA_GK_COLS if is_gk else EA_OUTFIELD_COLS
+
+    rows = {r.source: r for r in player.source_ratings.all()}
+    fm_row = rows.get(PlayerSourceRating.SOURCE_FM)
+    ea_row = rows.get(PlayerSourceRating.SOURCE_EA)
+
+    attr_rows = []
+    for col, label in labels:
+        attr_rows.append({
+            'col': col,
+            'label': label,
+            'fm_supported': col in fm_cols,
+            'ea_supported': col in ea_cols,
+            'fm_value': getattr(fm_row, col) if fm_row else None,
+            'ea_value': getattr(ea_row, col) if ea_row else None,
+        })
+
+    source_meta = {
+        'fm': {
+            'rating': fm_row.rating if fm_row else None,
+            'potential': fm_row.potential if fm_row else None,
+            'url': fm_row.source_url if fm_row else '',
+        },
+        'ea': {
+            'rating': ea_row.rating if ea_row else None,
+            'potential': ea_row.potential if ea_row else None,
+            'url': ea_row.source_url if ea_row else '',
+        },
+    }
+    return {
+        'source_attr_rows': attr_rows,
+        'source_meta': source_meta,
+        'source_is_gk': is_gk,
+    }
 
 STATIC_BASE = 'game/static'
 POSITION_CHOICES = [
@@ -342,6 +490,8 @@ def creator_player_edit(request, player_id):
             dest = os.path.join(STATIC_BASE, f'game/images/players/{player.fm_inside_id}.png')
             _save_as_png(portrait_file, dest)
 
+        _save_player_source_ratings(request, player)
+
         action = request.POST.get('action', 'save')
         if action == 'save_new':
             messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')
@@ -359,7 +509,7 @@ def creator_player_edit(request, player_id):
 
     portrait_path = player.portrait_static_path if player.fm_inside_id else ''
 
-    return render(request, 'creator/player_edit.html', {
+    context = {
         'player': player,
         'all_clubs': all_clubs,
         'position_choices': POSITION_CHOICES,
@@ -367,7 +517,9 @@ def creator_player_edit(request, player_id):
         'nat1': nat1,
         'nat2': nat2,
         'portrait_path': portrait_path,
-    })
+    }
+    context.update(_build_source_tab_context(player))
+    return render(request, 'creator/player_edit.html', context)
 
 
 def creator_new_player(request, club_id):
