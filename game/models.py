@@ -1803,6 +1803,104 @@ class PlayerSourceRating(models.Model):
             MaxValueValidator(100),
         ],
     )
+
+    # --- Einzelattribute (0-99) pro Quelle, getrennt gespeichert ---
+    # Feldspieler-Attribute (FMI hat alle; SoFIFA fuellt die meisten,
+    # FMI-only-Felder bleiben bei der EA-Zeile NULL).
+    tempo = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    ausdauer = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    kraft = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    technik = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+        help_text='Nur FMInside.',
+    )
+    dribbling = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    passspiel = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    flanken = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    abschluss = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    kopfball = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    zweikampf = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    defensivstellung = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+        help_text='FMI: Positioning (defensiv) / SoFIFA: Stellungsspiel.',
+    )
+    uebersicht = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    teamwork = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+        help_text='Nur FMInside.',
+    )
+
+    # Standards
+    ecken = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+        help_text='Nur FMInside.',
+    )
+    freistoss = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    elfmeter = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+
+    # Torwart-Attribute
+    tw_reflexe = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    tw_fangsicherheit = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    tw_eins_gegen_eins = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+        help_text='Nur FMInside.',
+    )
+    tw_stellungsspiel = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+    tw_passen = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+
     source_url = models.URLField(blank=True)
     source_version = models.CharField(
         max_length=100,

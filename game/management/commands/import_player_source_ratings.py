@@ -32,6 +32,69 @@ SOURCE_CLUBS = [
     },
 ]
 
+# FMInside-Attribut-IDs (tr id) -> Spalte auf PlayerSourceRating (Feldspieler).
+FMI_ATTR_MAP = {
+    'pace': 'tempo',
+    'stamina': 'ausdauer',
+    'strength': 'kraft',
+    'technique': 'technik',
+    'dribbling': 'dribbling',
+    'passing': 'passspiel',
+    'crossing': 'flanken',
+    'finishing': 'abschluss',
+    'heading': 'kopfball',
+    'tackling': 'zweikampf',
+    'positioning': 'defensivstellung',
+    'vision': 'uebersicht',
+    'teamwork': 'teamwork',
+    'corners': 'ecken',
+    'free-kick-taking': 'freistoss',
+    'penalty-taking': 'elfmeter',
+}
+
+# FMInside-Attribut-IDs -> Spalte (Torwart).
+FMI_GK_MAP = {
+    'reflexes': 'tw_reflexe',
+    'handling': 'tw_fangsicherheit',
+    'one-on-ones': 'tw_eins_gegen_eins',
+    'positioning': 'tw_stellungsspiel',
+    'passing': 'tw_passen',
+}
+
+# SoFIFA-Attributlabel (englisch) -> Spalte (Feldspieler).
+SOFIFA_ATTR_MAP = {
+    'Acceleration': 'tempo',
+    'Stamina': 'ausdauer',
+    'Strength': 'kraft',
+    'Dribbling': 'dribbling',
+    'Short passing': 'passspiel',
+    'Crossing': 'flanken',
+    'Finishing': 'abschluss',
+    'Heading accuracy': 'kopfball',
+    'Standing tackle': 'zweikampf',
+    'Attack position': 'defensivstellung',  # SoFIFA "Stellungsspiel"
+    'Vision': 'uebersicht',
+    'Penalties': 'elfmeter',
+    'FK Accuracy': 'freistoss',
+}
+
+# SoFIFA-Attributlabel -> Spalte (Torwart). Kein SoFIFA-Pendant fuer
+# tw_eins_gegen_eins -> bleibt NULL auf der EA-Zeile.
+SOFIFA_GK_MAP = {
+    'GK Reflexes': 'tw_reflexe',
+    'GK Handling': 'tw_fangsicherheit',
+    'GK Positioning': 'tw_stellungsspiel',
+    'GK Kicking': 'tw_passen',
+}
+
+# Alle Attributspalten (fuer Reset vor dem Schreiben).
+ALL_ATTR_COLUMNS = sorted(
+    set(FMI_ATTR_MAP.values())
+    | set(FMI_GK_MAP.values())
+    | set(SOFIFA_ATTR_MAP.values())
+    | set(SOFIFA_GK_MAP.values())
+)
+
 
 class Command(BaseCommand):
     help = 'Import FMInside and SoFIFA ratings/potentials for reference players.'
@@ -47,9 +110,17 @@ class Command(BaseCommand):
             action='store_true',
             help='Do not recalculate strength profiles after import.',
         )
+        parser.add_argument(
+            '--player-id',
+            type=int,
+            default=None,
+            help='Nur diesen Spieler (Pilot) importieren; Club muss in SOURCE_CLUBS sein.',
+        )
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
+        player_id = options.get('player_id')
+        target_player = Player.objects.get(id=player_id) if player_id else None
         today = timezone.localdate()
         fm_data_source = DataSource.objects.get(code=DataSource.CODE_FMINSIDE)
         sofifa_data_source = DataSource.objects.get(code=DataSource.CODE_SOFIFA)
@@ -61,7 +132,12 @@ class Command(BaseCommand):
 
         for source_club in SOURCE_CLUBS:
             club = Club.objects.get(fm_inside_id=source_club['club_fm_inside_id'])
-            players = list(Player.objects.filter(club=club).order_by('last_name'))
+            if target_player and target_player.club_id != club.id:
+                continue
+            if target_player:
+                players = [target_player]
+            else:
+                players = list(Player.objects.filter(club=club).order_by('last_name'))
             fm_players = self.extract_fm_inside_players(
                 self.fetch_page(source_club['fm_inside_url'])
             )
@@ -70,12 +146,21 @@ class Command(BaseCommand):
             )
 
             for player in players:
+                is_gk = player.position == 'TW'
                 fm_player = self.find_source_player(fm_players, player)
                 sofifa_player = self.find_source_player(sofifa_players, player)
 
                 if fm_player:
+                    fm_player['url'] = self.fm_inside_detail_url(fm_player['url'])
                     fm_player = self.enrich_fm_inside_dynamic_potential(fm_player)
+                    detail_page = self.fetch_page(fm_player['url'])
+                    fm_attrs = self.extract_fm_inside_attributes(detail_page, is_gk)
+                    fm_version = self.extract_fm_inside_version(detail_page)
                     imported_fm += 1
+                    if not fm_attrs:
+                        self.stdout.write(self.style.WARNING(
+                            f'FMI ohne Attribute (Scrape pruefen): {player.full_name}'
+                        ))
                     if not dry_run:
                         self.store_source_rating(
                             player=player,
@@ -83,9 +168,10 @@ class Command(BaseCommand):
                             rating=fm_player['rating'],
                             potential=fm_player['potential'],
                             source_url=fm_player['url'],
-                            source_version='FMInside FM26',
+                            source_version=fm_version,
                             checked_at=today,
                             data_source=fm_data_source,
+                            attributes=fm_attrs,
                         )
                         PlayerExternalId.objects.update_or_create(
                             player=player,
@@ -103,7 +189,13 @@ class Command(BaseCommand):
                     unmatched_fm.append(player.full_name)
 
                 if sofifa_player:
+                    sofifa_page = self.fetch_page(sofifa_player['url'])
+                    sofifa_attrs = self.extract_sofifa_attributes(sofifa_page, is_gk)
                     imported_sofifa += 1
+                    if not sofifa_attrs:
+                        self.stdout.write(self.style.WARNING(
+                            f'SoFIFA ohne Attribute (Scrape pruefen): {player.full_name}'
+                        ))
                     if not dry_run:
                         self.store_source_rating(
                             player=player,
@@ -114,6 +206,7 @@ class Command(BaseCommand):
                             source_version=sofifa_player['source_version'],
                             checked_at=today,
                             data_source=sofifa_data_source,
+                            attributes=sofifa_attrs,
                         )
                         PlayerExternalId.objects.update_or_create(
                             player=player,
@@ -169,6 +262,52 @@ class Command(BaseCommand):
 
         return page
 
+    def fm_inside_detail_url(self, url):
+        """Pinne die FMInside-URL auf die FM26.2-Datenbank (Prefix 7-fm262)."""
+        return re.sub(r'/players/7-fm[^/]+/', '/players/7-fm262/', url)
+
+    def extract_fm_inside_version(self, page):
+        match = re.search(
+            r'<li class="active">.*?>([^<]*FM\s*[\d.]+[^<]*)</a>',
+            page,
+            flags=re.S,
+        )
+        if match:
+            return f'FMInside {self.clean_html(match.group(1))}'
+        return 'FMInside FM26'
+
+    def extract_fm_inside_attributes(self, page, is_gk):
+        rows = dict(
+            re.findall(
+                r'<tr id="([^"]+)">.*?<td class="stat[^"]*">(\d+)</td>',
+                page,
+                flags=re.S,
+            )
+        )
+        mapping = FMI_GK_MAP if is_gk else FMI_ATTR_MAP
+        return {
+            column: int(rows[attr_id])
+            for attr_id, column in mapping.items()
+            if attr_id in rows
+        }
+
+    def extract_sofifa_attributes(self, page, is_gk):
+        pairs = re.findall(
+            r'<em title="(\d+)">\d+</em></span>\s*'
+            r'<span data-tippy-right-start[^>]*>([^<]+)</span>',
+            page,
+        )
+        lookup = {
+            html.unescape(label).strip(): int(value)
+            for value, label in pairs
+        }
+        mapping = SOFIFA_GK_MAP if is_gk else SOFIFA_ATTR_MAP
+        return {
+            column: lookup[label]
+            for label, column in mapping.items()
+            if label in lookup
+        }
+
     def extract_fm_inside_players(self, page):
         if '<h2>Full Squad</h2>' not in page:
             return {}
@@ -180,7 +319,7 @@ class Command(BaseCommand):
 
         for row in rows:
             link = re.search(
-                r'href="(/players/7-fm\d+/(\d+)-[^"]+)"[^>]*>([^<]+)</a>',
+                r'href="(/players/7-fm-?\d+/(\d+)-[^"]+)"[^>]*>([^<]+)</a>',
                 row,
             )
             if not link:
@@ -275,17 +414,23 @@ class Command(BaseCommand):
         source_version,
         checked_at,
         data_source,
+        attributes=None,
     ):
+        defaults = {
+            'rating': rating,
+            'potential': potential,
+            'source_url': source_url,
+            'source_version': source_version,
+            'checked_at': checked_at,
+        }
+        # Attributspalten immer komplett setzen: gemappte Werte schreiben,
+        # nicht gelieferte (quellenfremde) Spalten explizit auf NULL.
+        for column in ALL_ATTR_COLUMNS:
+            defaults[column] = (attributes or {}).get(column)
         PlayerSourceRating.objects.update_or_create(
             player=player,
             source=source,
-            defaults={
-                'rating': rating,
-                'potential': potential,
-                'source_url': source_url,
-                'source_version': source_version,
-                'checked_at': checked_at,
-            },
+            defaults=defaults,
         )
         PlayerSourceRatingSnapshot.objects.update_or_create(
             player=player,
