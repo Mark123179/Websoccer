@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static game_filters %}
 
 {% block title %}Creator · {% if player %}{{ player.first_name }} {{ player.last_name }}{% else %}Neuer Spieler{% endif %}{% endblock %}
 
@@ -35,6 +35,7 @@
   <div class="cpe-tabs">
     <button class="cpe-tab cpe-tab-active" data-tab="profil">Spielerprofil</button>
     <button class="cpe-tab" data-tab="staerke">Stärke</button>
+    <button class="cpe-tab" data-tab="rlform">RL-Form</button>
     <button class="cpe-tab" data-tab="source">Source</button>
     <button class="cpe-tab" data-tab="saison">Saison</button>
     <button class="cpe-tab" data-tab="transfer">Transferhistorie WS</button>
@@ -630,6 +631,179 @@
       </div>
 
     </div>
+
+    {# ===== RL-FORM TAB ===== #}
+    <div class="cpe-tab-panel cpe-tab-hidden" id="tab-rlform">
+
+      {# Mapping-Block #}
+      <div class="cpe-section-bar">API-Football Mapping</div>
+
+      <div class="cpe-field-row">
+        <div class="cpe-label">Player-ID</div>
+        <input class="cpe-input" type="number" name="rl_api_player_id"
+               value="{{ rl_profile.api_football_player_id|default:'' }}"
+               placeholder="z. B. 154713" style="width:140px">
+        <span class="cpe-hint">API-Football Spieler-ID (z. B. aus rapidapi.com)</span>
+      </div>
+      <div class="cpe-field-row">
+        <div class="cpe-label">Team-ID</div>
+        <input class="cpe-input" type="number" name="rl_api_team_id"
+               value="{{ rl_profile.api_football_team_id|default:'' }}"
+               placeholder="z. B. 157" style="width:140px">
+        <span class="cpe-hint">API-Football Team-ID des aktuellen RL-Vereins</span>
+      </div>
+      <div class="cpe-field-row">
+        <div class="cpe-label">Team-Name</div>
+        <input class="cpe-input" type="text" name="rl_api_team_name"
+               value="{{ rl_profile.api_football_team_name|default:'' }}"
+               placeholder="z. B. Bayern Munich" style="width:240px">
+      </div>
+      <div class="cpe-field-row">
+        <div class="cpe-label">Saison</div>
+        <input class="cpe-input" type="number" name="rl_api_season"
+               value="{{ rl_profile.api_football_season|default:'2024' }}"
+               placeholder="2024" style="width:100px">
+        <span class="cpe-hint">Jahr des Saisonbeginns (z. B. 2024 = Saison 2024/25)</span>
+      </div>
+
+      {# Fetch-Button #}
+      <div class="cpe-rlform-actions">
+        {% if rl_profile and rl_profile.api_football_player_id and rl_profile.api_football_team_id %}
+        <form method="post" action="{% url 'creator_player_fetch_rl_form' player.id %}"
+              style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="cpe-btn cpe-btn-fetch">
+            ↻ Daten jetzt abrufen (≤ 11 API-Requests)
+          </button>
+        </form>
+        {% else %}
+        <span class="cpe-hint">Erst speichern um Fetch-Button zu aktivieren.</span>
+        {% endif %}
+        {% if rl_profile and rl_profile.rl_form_updated_at %}
+        <span class="cpe-rlform-updated">
+          Letzter Fetch: {{ rl_profile.rl_form_updated_at|date:"d.m.Y H:i" }}
+        </span>
+        {% endif %}
+      </div>
+
+      {# Status + Score #}
+      <div class="cpe-section-bar">RL-Form-Ergebnis</div>
+
+      {% if rl_breakdown.no_mapping %}
+      <p class="cpe-placeholder">⚠ Kein Mapping gesetzt — Player-ID und Team-ID oben eintragen und speichern.</p>
+      {% else %}
+      <div class="cpe-rlform-score-row">
+        <div class="cpe-rlform-kpi cpe-rlform-kpi--score {% if rl_breakdown.score > 0 %}rl-pos{% elif rl_breakdown.score < 0 %}rl-neg{% else %}rl-neutral{% endif %}">
+          <div class="cpe-rlform-kpi-label">Score</div>
+          <div class="cpe-rlform-kpi-value">{{ rl_breakdown.score|stringformat:"+d" }}</div>
+        </div>
+        <div class="cpe-rlform-kpi">
+          <div class="cpe-rlform-kpi-label">Fit-Faktor</div>
+          <div class="cpe-rlform-kpi-value">{{ rl_fit_factor }}</div>
+        </div>
+        {% if rl_breakdown.avg_rating %}
+        <div class="cpe-rlform-kpi">
+          <div class="cpe-rlform-kpi-label">Ø Note</div>
+          <div class="cpe-rlform-kpi-value">{{ rl_breakdown.avg_rating }}</div>
+        </div>
+        {% endif %}
+        <div class="cpe-rlform-kpi">
+          <div class="cpe-rlform-kpi-label">Minuten</div>
+          <div class="cpe-rlform-kpi-value">{{ rl_breakdown.total_minutes }}</div>
+        </div>
+        {% if rl_profile %}
+        <div class="cpe-rlform-kpi">
+          <div class="cpe-rlform-kpi-label">Status</div>
+          <div class="cpe-rlform-kpi-value cpe-rlform-status">{{ rl_profile.get_rl_form_status_display }}</div>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# Letzte 10 Spiele #}
+      {% if rl_snapshots %}
+      <div class="cpe-section-bar">Letzte {{ rl_snapshots|length }} Spiele</div>
+      <table class="cpe-rlform-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Gegner</th>
+            <th>Min</th>
+            <th>Note</th>
+            <th>🔴</th>
+            <th>🟡</th>
+            <th>⚽</th>
+            <th>🅰</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in rl_snapshots %}
+          <tr class="cpe-rlform-row{% if not s.minutes_played %} cpe-rlform-row--bench{% endif %}">
+            <td>{{ s.fixture_date|date:"d.m.Y" }}</td>
+            <td>{{ s.opponent_name|default:"–" }}</td>
+            <td class="cpe-rlform-min">
+              {{ s.minutes_played }}′
+              {% if s.substituted_in %}<span class="cpe-rlform-sub" title="Eingewechselt">↗</span>{% endif %}
+              {% if s.captain %}<span class="cpe-rlform-cap" title="Kapitän">©</span>{% endif %}
+            </td>
+            <td class="cpe-rlform-rating{% if s.rating %}{% if s.rating >= 7.5 %} rl-pos{% elif s.rating < 6.5 %} rl-neg{% endif %}{% endif %}">
+              {% if s.rating %}{{ s.rating }}{% else %}–{% endif %}
+            </td>
+            <td>{% if s.red_cards %}{{ s.red_cards }}{% else %}–{% endif %}</td>
+            <td>{% if s.yellow_cards %}{{ s.yellow_cards }}{% else %}–{% endif %}</td>
+            <td>{% if s.goals %}{{ s.goals }}{% else %}–{% endif %}</td>
+            <td>{% if s.assists %}{{ s.assists }}{% else %}–{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% elif not rl_breakdown.no_mapping %}
+      <p class="cpe-placeholder">Noch keine Spiel-Snapshots vorhanden — „Daten abrufen" klicken.</p>
+      {% endif %}
+
+      {# Berechnungs-Breakdown #}
+      {% if not rl_breakdown.no_mapping %}
+      <div class="cpe-section-bar">Berechnungs-Breakdown</div>
+      <div class="cpe-rlform-breakdown">
+        <table class="cpe-rlform-scale-table">
+          <thead>
+            <tr><th>Note ≥</th><th>Note &lt;</th><th>Raw-Score</th><th>Fit-Faktor</th></tr>
+          </thead>
+          <tbody>
+            {% for row in rl_form_scale %}
+            <tr class="{% if rl_breakdown.avg_rating and rl_breakdown.avg_rating >= row.0 and rl_breakdown.avg_rating < row.1 %}cpe-rlform-active-row{% endif %}">
+              <td>{{ row.0 }}</td>
+              <td>{% if row.1 != 'inf' %}{{ row.1 }}{% else %}∞{% endif %}</td>
+              <td>{{ row.2|stringformat:"+d" }}</td>
+              <td>{{ rl_form_fit|get_item:row.2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="cpe-rlform-minutes-rules">
+          <div class="cpe-rlform-rule-title">Minuten-Skalierung</div>
+          <div class="cpe-rlform-rule {% if rl_breakdown.total_minutes == 0 %}cpe-rlform-rule--active{% endif %}">
+            = 0 Min → Score = <strong>−2</strong>
+          </div>
+          <div class="cpe-rlform-rule {% if rl_breakdown.total_minutes > 0 and rl_breakdown.total_minutes < 90 %}cpe-rlform-rule--active{% endif %}">
+            1–89 Min → min(0, round(raw × 0.25))
+          </div>
+          <div class="cpe-rlform-rule {% if rl_breakdown.total_minutes >= 90 and rl_breakdown.total_minutes < 270 %}cpe-rlform-rule--active{% endif %}">
+            90–269 Min → clamp(round(raw × 0.50), −3, +2)
+          </div>
+          <div class="cpe-rlform-rule {% if rl_breakdown.total_minutes >= 270 and rl_breakdown.total_minutes < 540 %}cpe-rlform-rule--active{% endif %}">
+            270–539 Min → clamp(round(raw × 0.75), −4, +3)
+          </div>
+          <div class="cpe-rlform-rule {% if rl_breakdown.total_minutes >= 540 %}cpe-rlform-rule--active{% endif %}">
+            ≥ 540 Min → raw (unvermindert)
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+    {# ===== END RL-FORM TAB ===== #}
+
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-source">
       <div class="cpe-section-bar">Source</div>
 
@@ -942,6 +1116,49 @@
 .cpe-btn-sync:hover { background: #00d4ff15; }
 .cpe-btn-sync-stale { border-color: #ff334455; color: #ff8899; background: #ff33440a; }
 .cpe-btn-sync-stale:hover { background: #ff334418; }
+
+/* RL-Form Tab */
+.cpe-rlform-actions { display: flex; align-items: center; gap: 1rem; padding: .9rem 1.25rem; border-bottom: 1px solid #071525; flex-wrap: wrap; }
+.cpe-btn-fetch { background: #07223a; border: 1px solid #00d4ff55; color: #7fd6ff; padding: .4rem 1.2rem; font-size: .82rem; border-radius: 4px; cursor: pointer; transition: background .15s; }
+.cpe-btn-fetch:hover { background: #00d4ff1a; }
+.cpe-rlform-updated { color: #445566; font-size: .72rem; }
+
+.cpe-rlform-score-row { display: flex; gap: 1.5rem; align-items: flex-start; padding: 1rem 1.25rem; flex-wrap: wrap; border-bottom: 1px solid #071525; }
+.cpe-rlform-kpi { background: #071525; border: 1px solid #0d2035; border-radius: 6px; padding: .6rem 1.2rem; min-width: 90px; text-align: center; }
+.cpe-rlform-kpi-label { color: #556677; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+.cpe-rlform-kpi-value { font-size: 1.4rem; font-weight: 700; color: #cce8ff; margin-top: .2rem; }
+.cpe-rlform-kpi--score .cpe-rlform-kpi-value.rl-pos { color: #33cc99; }
+.rl-pos { color: #33cc99; }
+.rl-neg { color: #ff7777; }
+.rl-neutral { color: #7fd6ff; }
+.cpe-rlform-kpi--score.rl-pos .cpe-rlform-kpi-value { color: #33cc99; }
+.cpe-rlform-kpi--score.rl-neg .cpe-rlform-kpi-value { color: #ff7777; }
+.cpe-rlform-kpi--score.rl-neutral .cpe-rlform-kpi-value { color: #7fd6ff; }
+.cpe-rlform-status { font-size: .82rem !important; color: #7fd6ff; }
+
+.cpe-rlform-table { width: 100%; border-collapse: collapse; }
+.cpe-rlform-table thead tr { border-bottom: 2px solid #0d2035; }
+.cpe-rlform-table th { color: #7fd6ff; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .4rem .9rem; text-align: left; }
+.cpe-rlform-row { border-bottom: 1px solid #071525; }
+.cpe-rlform-row:hover { background: #07111c; }
+.cpe-rlform-row td { color: #aabbcc; font-size: .8rem; padding: .45rem .9rem; }
+.cpe-rlform-row--bench td { opacity: .5; }
+.cpe-rlform-min { white-space: nowrap; }
+.cpe-rlform-sub { color: #33cc99; font-size: .7rem; margin-left: .2rem; }
+.cpe-rlform-cap { color: #ffcc44; font-size: .7rem; margin-left: .2rem; }
+.cpe-rlform-rating.rl-pos { color: #33cc99; font-weight: 700; }
+.cpe-rlform-rating.rl-neg { color: #ff7777; font-weight: 700; }
+
+.cpe-rlform-breakdown { display: flex; gap: 2rem; padding: 1rem 1.25rem; flex-wrap: wrap; }
+.cpe-rlform-scale-table { border-collapse: collapse; }
+.cpe-rlform-scale-table th { color: #7fd6ff; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .3rem .7rem; border-bottom: 1px solid #0d2035; }
+.cpe-rlform-scale-table td { color: #aabbcc; font-size: .78rem; padding: .3rem .7rem; border-bottom: 1px solid #071525; }
+.cpe-rlform-active-row td { color: #00d4ff; font-weight: 700; background: #00d4ff0d; }
+.cpe-rlform-minutes-rules { display: flex; flex-direction: column; gap: .5rem; padding-top: .25rem; }
+.cpe-rlform-rule-title { color: #7fd6ff; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .25rem; }
+.cpe-rlform-rule { color: #556677; font-size: .8rem; padding: .3rem .7rem; border-radius: 4px; }
+.cpe-rlform-rule--active { color: #00d4ff; background: #00d4ff0d; font-weight: 600; }
+.cpe-hint { color: #445566; font-size: .72rem; }
 </style>
 
 {% block extra_js %}

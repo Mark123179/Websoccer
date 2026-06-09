@@ -8,8 +8,10 @@ management command and the Creator recalculate view.
 
 from decimal import Decimal
 
+from django.utils import timezone
+
 from . import strength_engine as se
-from .models import PlayerFormSnapshot, PlayerSourceRating, PlayerStrengthProfile
+from .models import PlayerFormSnapshot, PlayerRLFormProfile, PlayerSourceRating, PlayerStrengthProfile
 
 OUTFIELD_ATTR_COLS = [
     'tempo', 'ausdauer', 'kraft', 'technik', 'dribbling', 'passspiel',
@@ -117,4 +119,69 @@ def compute_strength_for_player(player):
         'str_min':       str_min,
         'str_max':       str_max,
         'computable':    base_strength is not None,
+    }
+
+
+def compute_rl_form_for_player(player):
+    """Berechnet RL-Form-Score aus PlayerFormSnapshot-Einträgen und schreibt
+    das Ergebnis in PlayerRLFormProfile. Erstellt das Profil, falls nötig.
+
+    Returns dict:
+        score   — int
+        fit     — float
+        status  — str (PlayerRLFormProfile.STATUS_*)
+    """
+    try:
+        profile = player.rl_form_profile
+        has_mapping = bool(
+            profile.api_football_player_id and profile.api_football_team_id
+        )
+    except PlayerRLFormProfile.DoesNotExist:
+        profile = PlayerRLFormProfile(player=player)
+        has_mapping = False
+
+    form_snapshots_qs = (
+        player.form_snapshots
+        .filter(source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
+        .order_by('-fixture_date')[:10]
+    )
+    snapshots_data = [
+        {'rating': s.rating, 'minutes_played': s.minutes_played}
+        for s in form_snapshots_qs
+    ]
+
+    result = se.calculate_rl_form_from_snapshots(
+        snapshots_data, no_mapping=not has_mapping
+    )
+
+    total_minutes = result.get('total_minutes', 0)
+    games_played  = sum(1 for s in snapshots_data if s.get('minutes_played', 0) > 0)
+
+    profile.rl_form_score         = result['score']
+    profile.rl_form_fit           = Decimal(str(se.get_rl_form_fit(result['score'])))
+    profile.rl_form_avg_rating    = (
+        Decimal(str(result['avg_rating'])) if result.get('avg_rating') is not None else None
+    )
+    profile.rl_form_minutes       = total_minutes
+    profile.rl_form_games_checked = len(snapshots_data)
+    profile.rl_form_games_played  = games_played
+    profile.rl_form_minutes_share = Decimal(str(round(total_minutes / 900 * 100, 2)))
+    profile.rl_form_updated_at    = timezone.now()
+
+    if result.get('no_mapping'):
+        profile.rl_form_status = PlayerRLFormProfile.STATUS_NOT_MAPPED
+    elif result.get('no_data'):
+        profile.rl_form_status = (
+            PlayerRLFormProfile.STATUS_MINUTES_WITHOUT_RATING
+            if snapshots_data else PlayerRLFormProfile.STATUS_NO_MINUTES
+        )
+    else:
+        profile.rl_form_status = PlayerRLFormProfile.STATUS_FETCHED
+
+    profile.save()
+
+    return {
+        'score':  result['score'],
+        'fit':    float(profile.rl_form_fit),
+        'status': profile.rl_form_status,
     }

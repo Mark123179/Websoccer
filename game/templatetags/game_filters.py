@@ -21,3 +21,12 @@ def shorten_name(name, max_len=16):
 @register.filter
 def split(value, arg):
     return value.split(arg)
+
+
+@register.filter
+def get_item(mapping, key):
+    """Ermöglicht {{ dict|get_item:key }} in Templates."""
+    try:
+        return mapping.get(key)
+    except (AttributeError, TypeError):
+        return None

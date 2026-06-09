@@ -2596,6 +2596,60 @@ class PlayerEditLog(models.Model):
         return self.CATEGORY_ICONS.get(self.category, '•')
 
 
+class PlayerRLFormProfile(models.Model):
+    """Aggregiertes RL-Form-Profil eines Spielers (API-Football-Quelle)."""
+
+    STATUS_NOT_MAPPED            = 'not_mapped'
+    STATUS_NOT_FETCHED           = 'not_fetched'
+    STATUS_FETCHED               = 'fetched'
+    STATUS_NO_MINUTES            = 'no_minutes'
+    STATUS_MINUTES_WITHOUT_RATING = 'minutes_without_rating'
+    STATUS_API_ERROR             = 'api_error'
+    STATUS_STALE                 = 'stale'
+
+    STATUS_CHOICES = [
+        (STATUS_NOT_MAPPED,             'Kein Mapping'),
+        (STATUS_NOT_FETCHED,            'Noch nicht abgerufen'),
+        (STATUS_FETCHED,                'Abgerufen'),
+        (STATUS_NO_MINUTES,             'Keine Einsätze'),
+        (STATUS_MINUTES_WITHOUT_RATING, 'Minuten ohne Note'),
+        (STATUS_API_ERROR,              'API-Fehler'),
+        (STATUS_STALE,                  'Veraltet'),
+    ]
+
+    player = models.OneToOneField(
+        'Player',
+        on_delete=models.CASCADE,
+        related_name='rl_form_profile',
+    )
+    api_football_player_id  = models.IntegerField(null=True, blank=True)
+    api_football_team_id    = models.PositiveIntegerField(null=True, blank=True)
+    api_football_team_name  = models.CharField(max_length=120, blank=True)
+    api_football_season     = models.PositiveSmallIntegerField(default=2024)
+
+    rl_form_score         = models.SmallIntegerField(default=0)
+    rl_form_fit           = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal('1.00'))
+    rl_form_avg_rating    = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    rl_form_minutes       = models.IntegerField(default=0)
+    rl_form_minutes_share = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    rl_form_games_checked = models.SmallIntegerField(default=0)
+    rl_form_games_played  = models.SmallIntegerField(default=0)
+    rl_form_status        = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default=STATUS_NOT_MAPPED,
+    )
+    rl_form_updated_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'RL-Form-Profil'
+        verbose_name_plural = 'RL-Form-Profile'
+
+    def __str__(self):
+        sign = '+' if self.rl_form_score >= 0 else ''
+        return f'{self.player} | RL-Form {sign}{self.rl_form_score} ({self.rl_form_status})'
+
+
 class PlayerEditRequest(models.Model):
     FIELD_NATIONALITIES = 'nationalities'
     FIELD_REAL_LIFE_CLUB = 'real_life_club'

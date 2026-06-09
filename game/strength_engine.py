@@ -373,7 +373,11 @@ def calculate_rl_form_from_snapshots(snapshots, *, no_mapping=False):
         raw_score = -5
 
     if total_minutes < 90:
-        raw_score = min(0, raw_score)
+        raw_score = min(0, round(raw_score * 0.25))
+    elif total_minutes < 270:
+        raw_score = max(-3, min(2, round(raw_score * 0.50)))
+    elif total_minutes < 540:
+        raw_score = max(-4, min(3, round(raw_score * 0.75)))
 
     return {
         'score': raw_score,

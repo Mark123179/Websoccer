@@ -157,3 +157,5 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+API_FOOTBALL_KEY = os.environ.get('API_FOOTBALL_KEY', '')

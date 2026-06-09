@@ -14,10 +14,10 @@ from .models import (
     ClubPublicProfile, ClubTrophy, ClubSponsor,
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
-    PlayerEditLog,
+    PlayerEditLog, PlayerRLFormProfile,
 )
 from . import strength_engine as se
-from .strength_service import compute_strength_for_player
+from .strength_service import compute_strength_for_player, compute_rl_form_for_player
 from .management.commands.import_player_source_ratings import (
     FMI_ATTR_MAP, FMI_GK_MAP, SOFIFA_ATTR_MAP, SOFIFA_GK_MAP,
 )
@@ -682,6 +682,44 @@ def _build_geschichte_tab_context(player):
     return {'edit_logs': list(logs)}
 
 
+def _build_rl_form_tab_context(player):
+    """Kontext für den RL-Form-Tab (API-Football-Daten)."""
+    try:
+        rl_profile = player.rl_form_profile
+    except PlayerRLFormProfile.DoesNotExist:
+        rl_profile = None
+
+    snapshots = list(
+        player.form_snapshots
+        .filter(source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
+        .order_by('-fixture_date')[:10]
+    )
+
+    snapshots_data = [
+        {'rating': s.rating, 'minutes_played': s.minutes_played}
+        for s in snapshots
+    ]
+    has_mapping = bool(
+        rl_profile
+        and rl_profile.api_football_player_id
+        and rl_profile.api_football_team_id
+    )
+    breakdown = se.calculate_rl_form_from_snapshots(
+        snapshots_data, no_mapping=not has_mapping
+    )
+
+    fit_factor = se.get_rl_form_fit(breakdown['score'])
+
+    return {
+        'rl_profile':   rl_profile,
+        'rl_snapshots': snapshots,
+        'rl_breakdown': breakdown,
+        'rl_fit_factor': fit_factor,
+        'rl_form_scale': se.RL_FORM_SCALE,
+        'rl_form_fit':   se.RL_FORM_FIT,
+    }
+
+
 def creator_player_edit(request, player_id):
     player = get_object_or_404(Player, id=player_id)
     all_clubs = Club.objects.order_by('name')
@@ -871,6 +909,37 @@ def creator_player_edit(request, player_id):
             _sr_profile.base_strength = _sr_result['base_strength']
             _sr_profile.save()
 
+        # --- RL-Form-Mapping speichern ---
+        _rl_player_id = request.POST.get('rl_api_player_id', '').strip()
+        _rl_team_id   = request.POST.get('rl_api_team_id', '').strip()
+        _rl_team_name = request.POST.get('rl_api_team_name', '').strip()
+        _rl_season    = request.POST.get('rl_api_season', '').strip()
+        if _rl_player_id or _rl_team_id:
+            try:
+                _rl_prof = player.rl_form_profile
+            except PlayerRLFormProfile.DoesNotExist:
+                _rl_prof = PlayerRLFormProfile(
+                    player=player,
+                    rl_form_status=PlayerRLFormProfile.STATUS_NOT_FETCHED,
+                )
+            try:
+                _rl_prof.api_football_player_id = int(_rl_player_id) if _rl_player_id else None
+            except ValueError:
+                pass
+            try:
+                _rl_prof.api_football_team_id = int(_rl_team_id) if _rl_team_id else None
+            except ValueError:
+                pass
+            _rl_prof.api_football_team_name = _rl_team_name
+            try:
+                _rl_prof.api_football_season = int(_rl_season) if _rl_season else 2024
+            except ValueError:
+                pass
+            if _rl_prof.rl_form_status == PlayerRLFormProfile.STATUS_NOT_MAPPED:
+                _rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_NOT_FETCHED
+            _rl_prof.save()
+            compute_rl_form_for_player(player)
+
         action = request.POST.get('action', 'save')
         if action == 'save_new':
             messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')
@@ -899,8 +968,111 @@ def creator_player_edit(request, player_id):
     }
     context.update(_build_source_tab_context(player))
     context.update(_build_strength_tab_context(player))
+    context.update(_build_rl_form_tab_context(player))
     context.update(_build_geschichte_tab_context(player))
     return render(request, 'creator/player_edit.html', context)
+
+
+@require_POST
+@login_required
+def creator_player_fetch_rl_form(request, player_id):
+    """Lädt RL-Form-Daten für einen Spieler aus API-Football (team-basiert)."""
+    import time
+    from decimal import Decimal as _Dec, InvalidOperation
+    from datetime import date as _date
+    import requests as _requests
+    from django.conf import settings as _settings
+
+    player = get_object_or_404(Player, id=player_id)
+
+    try:
+        rl_prof = player.rl_form_profile
+    except PlayerRLFormProfile.DoesNotExist:
+        messages.error(request, 'Kein RL-Form-Mapping vorhanden. Bitte zuerst API-Football-IDs speichern.')
+        return redirect(f'/creator/players/{player_id}/?tab=rlform')
+
+    if not rl_prof.api_football_player_id or not rl_prof.api_football_team_id:
+        messages.error(request, 'Player-ID und Team-ID müssen gesetzt sein.')
+        return redirect(f'/creator/players/{player_id}/?tab=rlform')
+
+    if not _settings.API_FOOTBALL_KEY:
+        messages.error(request, 'API_FOOTBALL_KEY nicht gesetzt. Bitte Env-Secret anlegen.')
+        return redirect(f'/creator/players/{player_id}/?tab=rlform')
+
+    from .api_football import get_team_fixtures, get_fixture_player_stats
+
+    team_id   = rl_prof.api_football_team_id
+    player_id_api = rl_prof.api_football_player_id
+
+    try:
+        fixtures = get_team_fixtures(team_id, last=10)
+    except _requests.HTTPError as exc:
+        rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_API_ERROR
+        rl_prof.save(update_fields=['rl_form_status'])
+        messages.error(request, f'API-Football Fehler beim Laden der Fixtures: {exc}')
+        return redirect(f'/creator/players/{player_id}/?tab=rlform')
+
+    saved = 0
+    for fixture in fixtures:
+        fix_id       = fixture['fixture']['id']
+        fix_date_str = fixture['fixture']['date'][:10]
+        fix_date     = _date.fromisoformat(fix_date_str)
+        league_id    = fixture.get('league', {}).get('id', 0)
+        home         = fixture.get('teams', {}).get('home', {})
+        away         = fixture.get('teams', {}).get('away', {})
+        team_name    = rl_prof.api_football_team_name or str(team_id)
+        opp_name     = away.get('name', '') if home.get('id') == team_id else home.get('name', '')
+
+        try:
+            player_stats_list = get_fixture_player_stats(fix_id, team_id)
+            time.sleep(0.2)
+        except _requests.HTTPError:
+            continue
+
+        for entry in player_stats_list:
+            if entry.get('player', {}).get('id') != player_id_api:
+                continue
+            stats = (entry.get('statistics') or [{}])[0]
+            games = stats.get('games') or {}
+            goals = stats.get('goals') or {}
+            cards = stats.get('cards') or {}
+            minutes = games.get('minutes') or 0
+            raw_rating = games.get('rating')
+            try:
+                rating = _Dec(str(raw_rating)).quantize(_Dec('0.01')) if raw_rating else None
+            except InvalidOperation:
+                rating = None
+            substituted_in = bool(games.get('substitute', False))
+
+            PlayerFormSnapshot.objects.update_or_create(
+                player=player,
+                source=PlayerFormSnapshot.SOURCE_API_FOOTBALL,
+                fixture_id=str(fix_id),
+                defaults={
+                    'fixture_date':           fix_date,
+                    'league_api_football_id': league_id,
+                    'team_api_football_id':   team_id,
+                    'team_name':              team_name,
+                    'opponent_name':          opp_name,
+                    'minutes_played':         minutes,
+                    'possible_minutes':       90,
+                    'started':                minutes > 0 and not substituted_in,
+                    'substituted_in':         substituted_in,
+                    'captain':                bool(games.get('captain', False)),
+                    'position':               games.get('position') or '',
+                    'rating':                 rating,
+                    'goals':                  goals.get('total') or 0,
+                    'assists':                goals.get('assists') or 0,
+                    'yellow_cards':           cards.get('yellow') or 0,
+                    'red_cards':              cards.get('red') or 0,
+                    'raw_payload':            entry,
+                },
+            )
+            saved += 1
+
+    compute_rl_form_for_player(player)
+    messages.success(request, f'RL-Form aktualisiert: {saved} Snapshot(s) gespeichert.')
+    return redirect(f'/creator/players/{player_id}/?tab=rlform')
 
 
 @require_POST
