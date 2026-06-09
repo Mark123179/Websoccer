@@ -283,7 +283,7 @@ class Command(BaseCommand):
                         if deleted:
                             self.stdout.write(f'  🗑 {profile.player.last_name}: {deleted} alte Snapshot(s) entfernt')
 
-                    compute_rl_form_for_player(player)
+                    compute_rl_form_for_player(player, mark_fetched=True)
                     # Profil neu laden (compute_rl_form_for_player schreibt direkt in DB)
                     profile.refresh_from_db()
                     self.stdout.write(

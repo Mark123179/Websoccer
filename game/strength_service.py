@@ -122,9 +122,17 @@ def compute_strength_for_player(player):
     }
 
 
-def compute_rl_form_for_player(player):
+def compute_rl_form_for_player(player, mark_fetched=False):
     """Berechnet RL-Form-Score aus PlayerFormSnapshot-Einträgen und schreibt
     das Ergebnis in PlayerRLFormProfile. Erstellt das Profil, falls nötig.
+
+    mark_fetched=True  → wird von echten API-Fetch-Pfaden gesetzt:
+        rl_form_updated_at wird auf now() gesetzt,
+        Status (NOT_MAPPED/FETCHED/NO_MINUTES/…) wird vollständig überschrieben.
+    mark_fetched=False (default) → reiner Recalc ohne neuen Fetch:
+        rl_form_updated_at bleibt unverändert,
+        Status wird nur bei NOT_MAPPED aktualisiert (Mapping-Konsistenz),
+        alle anderen Status (NOT_FETCHED, FETCHED, …) bleiben erhalten.
 
     Returns dict:
         score   — int
@@ -166,17 +174,20 @@ def compute_rl_form_for_player(player):
     profile.rl_form_games_checked = len(snapshots_data)
     profile.rl_form_games_played  = games_played
     profile.rl_form_minutes_share = Decimal(str(round(total_minutes / 900 * 100, 2)))
-    profile.rl_form_updated_at    = timezone.now()
+    if mark_fetched:
+        profile.rl_form_updated_at = timezone.now()
 
     if result.get('no_mapping'):
         profile.rl_form_status = PlayerRLFormProfile.STATUS_NOT_MAPPED
-    elif result.get('no_data'):
-        profile.rl_form_status = (
-            PlayerRLFormProfile.STATUS_MINUTES_WITHOUT_RATING
-            if snapshots_data else PlayerRLFormProfile.STATUS_NO_MINUTES
-        )
-    else:
-        profile.rl_form_status = PlayerRLFormProfile.STATUS_FETCHED
+    elif mark_fetched:
+        if result.get('no_data'):
+            profile.rl_form_status = (
+                PlayerRLFormProfile.STATUS_MINUTES_WITHOUT_RATING
+                if snapshots_data else PlayerRLFormProfile.STATUS_NO_MINUTES
+            )
+        else:
+            profile.rl_form_status = PlayerRLFormProfile.STATUS_FETCHED
+    # else: mark_fetched=False → aktuellen Status beibehalten
 
     profile.save()
 

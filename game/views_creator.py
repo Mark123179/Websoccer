@@ -1072,7 +1072,7 @@ def creator_player_fetch_rl_form(request, player_id):
             )
             saved += 1
 
-    compute_rl_form_for_player(player)
+    compute_rl_form_for_player(player, mark_fetched=True)
     messages.success(request, f'RL-Form aktualisiert: {saved} Snapshot(s) gespeichert.')
     return redirect(f'/creator/players/{player_id}/?tab=rlform')
 

@@ -746,7 +746,7 @@
               {% if s.substituted_in %}<span class="cpe-rlform-sub" title="Eingewechselt">↗</span>{% endif %}
               {% if s.captain %}<span class="cpe-rlform-cap" title="Kapitän">©</span>{% endif %}
             </td>
-            <td class="cpe-rlform-rating{% if s.rating %}{% if s.rating >= 7.5 %} rl-pos{% elif s.rating < 6.5 %} rl-neg{% endif %}{% endif %}">
+            <td class="cpe-rlform-rating{% if s.rating %}{% if s.rating >= 7 %} rl-pos{% elif s.rating <= 6 %} rl-neg{% endif %}{% endif %}">
               {% if s.rating %}{{ s.rating }}{% else %}–{% endif %}
             </td>
             <td>{% if s.red_cards %}{{ s.red_cards }}{% else %}–{% endif %}</td>
