@@ -45,11 +45,17 @@ class Command(BaseCommand):
             action='store_true',
             help='Pro Spieler eine Zeile ausgeben (auch ohne --dry-run).',
         )
+        parser.add_argument(
+            '--new-only',
+            action='store_true',
+            help='Nur Spieler ohne bestehendes Stärkeprofil berechnen.',
+        )
 
     def handle(self, *args, **options):
         dry_run   = options['dry_run']
         player_id = options['player_id']
         verbose   = options['verbose']
+        new_only  = options['new_only']
         today     = timezone.localdate()
 
         qs = (
@@ -59,6 +65,8 @@ class Command(BaseCommand):
         )
         if player_id:
             qs = qs.filter(pk=player_id)
+        if new_only:
+            qs = qs.filter(strength_profile__isnull=True)
 
         total          = 0
         computed       = 0
