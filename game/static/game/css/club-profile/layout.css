@@ -136,6 +136,11 @@
     grid-row: 2;
 }
 
+.facilities-card {
+    grid-column: 9 / span 2;
+    grid-row: 2;
+}
+
 .compact-table-card {
     grid-column: 11 / span 2;
     grid-row: 2;

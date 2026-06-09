@@ -20,38 +20,42 @@
 }
 
 .facilities-grid {
+    position: relative;
+    z-index: 2;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .facility-item {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 10px 14px;
+    gap: 5px;
+    padding: 8px 10px;
     border: 1px solid rgba(92, 221, 244, 0.18);
     border-radius: 5px;
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(2, 8, 13, 0.48);
 }
 
 .facility-item-label {
-    font-size: clamp(10px, 0.68vw, 12px);
+    font-size: clamp(8px, 0.56vw, 10px);
     font-weight: 900;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     color: rgba(241, 251, 255, 0.9);
     text-transform: uppercase;
+    line-height: 1.2;
 }
 
 .facility-pips {
     display: flex;
-    gap: 5px;
+    gap: 4px;
     align-items: center;
 }
 
 .facility-pip {
-    width: clamp(20px, 1.5vw, 28px);
-    height: 6px;
+    flex: 1;
+    height: 5px;
     border-radius: 3px;
     background: rgba(218, 236, 242, 0.18);
     transition: background 0.2s;
@@ -59,11 +63,11 @@
 
 .facility-pip.is-active {
     background: var(--club-cyan, #23e4f5);
-    box-shadow: 0 0 8px rgba(35, 228, 245, 0.55);
+    box-shadow: 0 0 6px rgba(35, 228, 245, 0.55);
 }
 
 .facility-level-label {
-    font-size: clamp(9px, 0.6vw, 11px);
+    font-size: clamp(8px, 0.54vw, 10px);
     color: var(--club-muted, rgba(218, 236, 242, 0.72));
     font-weight: 600;
 }
