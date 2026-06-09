@@ -66,8 +66,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--sleep',
             type=float,
-            default=0.3,
-            help='Pause (Sekunden) zwischen Requests (default: 0.3).',
+            default=6.0,
+            help='Pause (Sekunden) zwischen Requests (default: 6.0 für Free Plan 10/Min).',
         )
 
     def handle(self, *args, **options):

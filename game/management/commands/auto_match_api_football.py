@@ -188,7 +188,7 @@ class Command(BaseCommand):
             rl_profile.api_football_team_id     = found['api_football_team_id']
             rl_profile.api_football_team_name   = player.real_life_club.name
             rl_profile.api_football_season      = season
-            rl_profile.rl_form_status           = PlayerRLFormProfile.STATUS_PENDING
+            rl_profile.rl_form_status           = PlayerRLFormProfile.STATUS_NOT_FETCHED
             rl_profile.rl_form_updated_at       = timezone.now()
             rl_profile.save()
 
