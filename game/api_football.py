@@ -97,11 +97,12 @@ def get_fixture_player_stats(fixture_id, team_id):
     return []
 
 
-def search_player(name, season=2024):
+def search_player(name, team=None, season=2024):
     """Sucht Spieler bei API-Football per Name (min. 3 Zeichen).
 
     Args:
         name:    Suchbegriff (Spielername, mind. 3 Zeichen).
+        team:    API-Football Team-ID (Free Plan: search erfordert team oder league).
         season:  Saison-Jahr (default 2024 = Saison 2024/25).
 
     Returns list[dict] – rohe response-Einträge der API, je Eintrag:
@@ -111,10 +112,13 @@ def search_player(name, season=2024):
         }
     Raises requests.HTTPError bei 4xx/5xx.
     """
+    params = {'search': name, 'season': season}
+    if team:
+        params['team'] = team
     resp = requests.get(
         f'{API_BASE}/players',
         headers=_headers(),
-        params={'search': name, 'season': season},
+        params=params,
         timeout=DEFAULT_TIMEOUT,
     )
     resp.raise_for_status()
