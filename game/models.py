@@ -1934,6 +1934,26 @@ class PlayerSourceRating(models.Model):
     def __str__(self):
         return f'{self.player} - {self.get_source_display()} {self.rating}'
 
+    @staticmethod
+    def aggregate_attribute(ea_value, fm_value):
+        """Berechnet ein Quell-Attribut aus EA- und FM-Wert.
+
+        Regel:
+            beide vorhanden  → Durchschnitt (gerundet)
+            eine vorhanden   → dieser Wert
+            keine vorhanden  → None
+
+        NULL/0-Unterscheidung: 0 ist ein echter Wert (Quelle liefert 0),
+        None bedeutet „Quelle liefert dieses Attribut nicht".
+        """
+        if ea_value is not None and fm_value is not None:
+            return round((ea_value + fm_value) / 2)
+        if ea_value is not None:
+            return ea_value
+        if fm_value is not None:
+            return fm_value
+        return None
+
 
 class PlayerFormSnapshot(models.Model):
     SOURCE_API_FOOTBALL = 'api_football'
