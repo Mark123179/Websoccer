@@ -1,6 +1,5 @@
 """
 Hilfsfunktionen um SeasonFixture-Daten für Templates aufzubereiten.
-Ersetzt statische ClubProfileMatch/RESULT_FORM-Dummies durch echte Spieldaten.
 """
 from django.db.models import Q
 from django.urls import reverse
@@ -127,8 +126,8 @@ def get_form_rows_with_opponents(club, n=5):
 
 class FixtureDisplay:
     """
-    Wrapper um ein SeasonFixture, das dieselben Template-Attribute
-    wie ClubProfileMatch bereitstellt (competition_name, date_label, …).
+    Wrapper um ein SeasonFixture für Template-Attribute
+    wie competition_name, date_label, usw.
     """
 
     def __init__(self, fixture, club):

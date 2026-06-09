@@ -13,7 +13,6 @@ from .fixture_display import (
 from .models import (
     COUNTRY_FLAG_ASSETS,
     Club,
-    ClubProfileMatch,
     GameSeasonState,
     LeagueStandings,
 )
@@ -46,8 +45,8 @@ def build_club_profile_view_model(club, season=CURRENT_SEASON):
         'club': build_club_identity(club, players),
         'links': links,
         'opponentClub': opponent_club,
-        'nextMatch': build_match(club, opponent_club, ClubProfileMatch.KIND_NEXT, links),
-        'lastMatch': build_match(club, opponent_club, ClubProfileMatch.KIND_LAST, links),
+        'nextMatch': build_match(club, opponent_club, 'next', links),
+        'lastMatch': build_match(club, opponent_club, 'last', links),
         'table': build_table(club, opponent_club),
         'trophyPages': chunk_list(build_trophies(club), 4),
         'proHighlights': build_highlights(club, players, season, is_youth=False),
@@ -129,8 +128,8 @@ def get_public_profile(club):
 
 
 def build_match(club, opponent_club, kind, links):
-    # Prefer real SeasonFixture data; fall back to ClubProfileMatch if no fixture found
-    if kind == ClubProfileMatch.KIND_NEXT:
+    # Use real SeasonFixture data; fall back to empty state if no fixture found
+    if kind == 'next':
         fixture = get_next_fixture(club)
     else:
         fixture = get_last_fixture(club)
@@ -152,7 +151,7 @@ def build_match(club, opponent_club, kind, links):
             'awayClub': club_stub(away_club),
             'backgroundImageUrl': stadium_image_for(home_club),
         }
-        if kind == ClubProfileMatch.KIND_NEXT:
+        if kind == 'next':
             return {
                 **base,
                 'dateLabel': disp.date_label,
@@ -171,6 +170,20 @@ def build_match(club, opponent_club, kind, links):
             'scorers': [],
         }
 
+    # Final fallback: empty state only for next match; last match returns None (no data yet)
+    if kind == 'next':
+        return {
+            'id': 'next-fallback',
+            'competitionName': club.league.name if club.league else 'Liga',
+            'matchdayLabel': 'Nächste Partie',
+            'dateLabel': 'Noch offen',
+            'timeLabel': '',
+            'stadiumName': stadium_name_for(club),
+            'homeClub': club_stub(club),
+            'awayClub': club_stub(opponent_club) if opponent_club else empty_club_stub(),
+            'backgroundImageUrl': stadium_image_for(club),
+            'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
+        }
     return None
 
 

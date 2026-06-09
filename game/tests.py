@@ -18,7 +18,6 @@ from .models import (
     COUNTRY_FLAG_ASSETS,
     Club,
     ClubNewsItem,
-    ClubProfileMatch,
     DataSource,
     League,
     Player,

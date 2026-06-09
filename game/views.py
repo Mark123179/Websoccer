@@ -29,7 +29,6 @@ from .context_processors import CURRENT_MANAGER_PROFILE_IMAGE
 from .models import (
     Club,
     ClubNewsItem,
-    ClubProfileMatch,
     ClubPublicProfile,
     ClubTrophy,
     COUNTRY_FLAG_ASSETS,
@@ -3693,16 +3692,6 @@ def manager_profile(request):
     records_highest_loss = best_loss_str
     records_most_goals = best_goals_str
 
-    # --- Last match from ClubProfileMatch (for display / timeline only) ---
-    if club:
-        finished_matches = list(
-            ClubProfileMatch.objects.filter(club=club)
-            .exclude(result_label='')
-            .select_related('home_club', 'away_club')
-        )
-    else:
-        finished_matches = []
-
     # Transfer records from PlayerTransferHistory
     transfer_in_str = '–'
     transfer_out_str = '–'
@@ -3754,36 +3743,6 @@ def manager_profile(request):
             'body': f'{trophy.count}x gewonnen mit {club_name}',
             'icon': 'trophy',
             'crest': club_crest,
-        })
-
-    # Last match result as timeline event
-    for m in finished_matches:
-        tone_map = {
-            ClubProfileMatch.RESULT_WIN: 'gold',
-            ClubProfileMatch.RESULT_DRAW: 'silver',
-            ClubProfileMatch.RESULT_LOSS: 'red',
-        }
-        result_de = {
-            ClubProfileMatch.RESULT_WIN: 'Sieg',
-            ClubProfileMatch.RESULT_DRAW: 'Unentschieden',
-            ClubProfileMatch.RESULT_LOSS: 'Niederlage',
-        }.get(m.result_label, '')
-        if m.home_club_id == club.id:
-            opponent = m.away_club
-            score = f'{m.home_goals}:{m.away_goals}'
-        else:
-            opponent = m.home_club
-            score = f'{m.away_goals}:{m.home_goals}'
-        opp_name = opponent.name if opponent else 'Unbekannt'
-        opp_crest = opponent.crest_static_path if opponent else ''
-        timeline_events.append({
-            'date': m.date_label or '–',
-            'type': 'liga',
-            'tone': tone_map.get(m.result_label, 'neutral'),
-            'title': f'{result_de} gegen {opp_name}',
-            'body': f'{m.competition_name}: {score}',
-            'icon': 'table',
-            'crest': opp_crest,
         })
 
     # Transfer events from PlayerTransferHistory
