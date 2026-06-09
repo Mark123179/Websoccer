@@ -185,3 +185,9 @@ id = "0fjIy8MDMUxiYa4wzp-4L"
 uri = "file://attached_assets/freiburg_city.png"
 type = "image"
 title = "Freiburg im Breisgau — KI-generiert"
+
+[[outputs]]
+id = "oTNQHcx47_t-rYJiptlYe"
+uri = "file://spieler_export.csv"
+type = "table"
+title = "Alle Spieler — Vollexport (19.237 Spieler)"
