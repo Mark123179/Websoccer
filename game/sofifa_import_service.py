@@ -23,10 +23,21 @@ from .models import (
 from .management.commands.import_sofifa_csv import (
     ALL_ATTR_COLUMNS,
     COLUMN_ALIASES,
+    GK_ATTR_COLUMNS,
+    OUTFIELD_ATTR_COLUMNS,
     name_similarity,
     normalize_header,
     normalize_name,
 )
+
+GK_POSITION_CODES = {'TW', 'GK'}
+
+
+def _filter_attrs_for_player(player, attrs):
+    """Gibt nur die für die Position erlaubten Attribute zurück."""
+    is_gk = (player.position or '').upper() in GK_POSITION_CODES
+    allowed = set(GK_ATTR_COLUMNS if is_gk else OUTFIELD_ATTR_COLUMNS)
+    return {k: v for k, v in attrs.items() if k in allowed}
 
 
 def _build_header_map(header_row):
@@ -74,9 +85,15 @@ def _parse_row(raw_row, header_map):
             if val is not None:
                 attrs[col] = val
 
+    name = cell('name')
+    if not name:
+        first = cell('first_name_raw')
+        last = cell('last_name_raw')
+        name = (first + ' ' + last).strip() if (first or last) else ''
+
     return {
         'sofifa_id': sofifa_id,
-        'name': cell('name'),
+        'name': name,
         'club': cell('club'),
         'rating': rating,
         'potential': potential,
@@ -286,6 +303,8 @@ def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
             continue
 
         player, match_mode = _match_player(parsed, sofifa_ds)
+        if player:
+            parsed['attrs'] = _filter_attrs_for_player(player, parsed['attrs'])
         if not player:
             stats['unmatched'] += 1
             label = parsed.get('name') or f"sofifa_id={parsed['sofifa_id']}"

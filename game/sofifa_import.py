@@ -97,6 +97,36 @@ COLUMN_ALIASES = {
     'goalkeeping_positioning': 'tw_stellungsspiel',
     'gk_positioning': 'tw_stellungsspiel',
     'goalkeeping_kicking': 'tw_passen', 'gk_kicking': 'tw_passen',
+    # ── CMTracker / API-Export-Format (info.* / attributes.* / card_attrs.*) ──
+    # Punkte werden von normalize_header entfernt, daher zusammengezogene Namen.
+    # Identität
+    'infoplayerid': 'sofifa_id',
+    'infonameknownas': 'name',
+    'infoteamsclub_teamname': 'club',
+    'infooverallrating': 'rating',
+    'infopotential': 'potential',
+    # Pace (Karten-Gesamtwert = pace wie auf der SoFIFA-Karte)
+    'card_attrspac': 'tempo',
+    # Feldspieler-Attribute (attributes.*)
+    'attributesstamina': 'ausdauer',
+    'attributesstrength': 'kraft',
+    'attributesballcontrol': 'technik',
+    'attributesdribbling': 'dribbling',
+    'attributesshortpassing': 'passspiel',
+    'attributescrossing': 'flanken',
+    'attributesfinishing': 'abschluss',
+    'attributesheadingaccuracy': 'kopfball',
+    'attributesstandingtackle': 'zweikampf',
+    'attributesmarking': 'defensivstellung',
+    'attributesvision': 'uebersicht',
+    'attributespenalties': 'elfmeter',
+    'attributesfreekickaccuracy': 'freistoss',
+    # Torwart-Attribute (attributes.gk*)
+    'attributesgkreflexes': 'tw_reflexe',
+    'attributesgkhandling': 'tw_fangsicherheit',
+    'attributesgkpositioning': 'tw_stellungsspiel',
+    'attributesgkkicking': 'tw_passen',
+    'attributesgkdiving': 'tw_eins_gegen_eins',
 }
 # Attributspalten duerfen auch unter ihrem eigenen Namen stehen.
 for _col in ALL_ATTR_COLUMNS:
@@ -114,6 +144,9 @@ META_ALIASES = {
     'height_cm': 'height_cm', 'height': 'height_cm',
     'weight_kg': 'weight_kg', 'weight': 'weight_kg',
     'preferred_foot': 'preferred_foot', 'foot': 'preferred_foot',
+    'primary_position': 'positions',
+    'infonamefirstname': 'first_name_raw',
+    'infonamelastname': 'last_name_raw',
 }
 
 SOURCE_SOFIFA = 'sofifa'
@@ -269,9 +302,15 @@ def parse_row(raw_row, header_map):
         if v:
             meta[key] = v
 
+    name = cell('name') or cell('name_short')
+    if not name:
+        first = cell('first_name_raw')
+        last = cell('last_name_raw')
+        name = (first + ' ' + last).strip() if (first or last) else ''
+
     return {
         'sofifa_id': sofifa_id,
-        'name': cell('name') or cell('name_short'),
+        'name': name,
         'club': cell('club'),
         'rating': rating,
         'potential': potential,
