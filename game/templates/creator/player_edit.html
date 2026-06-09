@@ -1279,6 +1279,7 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
     let visible = 0;
     allRows.forEach(({ tr, r }) => {
       const match = !q
+        || (r.player_name|| '').toLowerCase().includes(q)
         || (r.team_name  || '').toLowerCase().includes(q)
         || (r.league_name|| '').toLowerCase().includes(q);
       tr.style.display = match ? '' : 'none';
