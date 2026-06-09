@@ -731,6 +731,19 @@ def creator_player_edit(request, player_id):
 
         _save_player_source_ratings(request, player)
 
+        _sr_result = compute_strength_for_player(player)
+        if _sr_result['computable']:
+            try:
+                _sr_profile = player.strength_profile
+            except PlayerStrengthProfile.DoesNotExist:
+                _sr_profile = PlayerStrengthProfile(
+                    player=player,
+                    form_modifier=Decimal('0.00'),
+                    freshness=Decimal('100.00'),
+                )
+            _sr_profile.base_strength = _sr_result['base_strength']
+            _sr_profile.save()
+
         action = request.POST.get('action', 'save')
         if action == 'save_new':
             messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')
