@@ -188,13 +188,29 @@ def _build_strength_tab_context(player):
     gap = (potential_200 - base_200) if (potential_200 is not None and base_200 is not None) else None
     constancy_label = se.get_constancy_label(gap)
 
-    # ── Kombinierte Attribute ────────────────────────────────────────────────
+    # ── Kombinierte Attribute (nur Berechnungs-relevante Attrs: 13 Feld / 5 TW) ─
+    # Ecken, Freistoß, Elfmeter fließen in kein Positionsprofil ein → nicht hier.
+    STR_OUTFIELD_LABELS = [
+        ('tempo',          'Tempo'),
+        ('ausdauer',       'Ausdauer'),
+        ('kraft',          'Kraft'),
+        ('technik',        'Technik'),
+        ('dribbling',      'Dribbling'),
+        ('passspiel',      'Passspiel'),
+        ('flanken',        'Flanken'),
+        ('abschluss',      'Abschluss'),
+        ('kopfball',       'Kopfball'),
+        ('zweikampf',      'Zweikampf'),
+        ('defensivstellung', 'Defensivstellung'),
+        ('uebersicht',     'Übersicht'),
+        ('teamwork',       'Teamwork'),
+    ]
     if is_gk:
         attr_cols = [col for col, _ in SOURCE_GK_LABELS]
         attr_labels = {col: lbl for col, lbl in SOURCE_GK_LABELS}
     else:
-        attr_cols = [col for col, _ in SOURCE_OUTFIELD_LABELS]
-        attr_labels = {col: lbl for col, lbl in SOURCE_OUTFIELD_LABELS}
+        attr_cols = [col for col, _ in STR_OUTFIELD_LABELS]
+        attr_labels = {col: lbl for col, lbl in STR_OUTFIELD_LABELS}
 
     def _row_attrs(row, cols):
         if row is None:
@@ -213,8 +229,11 @@ def _build_strength_tab_context(player):
     # ── Positionsprofile ────────────────────────────────────────────────────
     main_positions = player.main_positions
     secondary_positions = player.secondary_positions
-    primary_pos = main_positions[0] if main_positions else ''
-    primary_profile_key = se.POSITION_TO_PROFILE.get(primary_pos)
+    # HP1 aus main_positions für Profil-Hervorhebung in der Tabelle
+    hp1 = main_positions[0] if main_positions else ''
+    hp1_profile_key = se.POSITION_TO_PROFILE.get(hp1)
+    # played_pos = registrierte Spielposition (kann von HP1 abweichen)
+    played_pos = player.position or hp1
 
     profile_rows = []
     for pkey in se.PROFILE_KEYS_ORDERED:
@@ -223,18 +242,21 @@ def _build_strength_tab_context(player):
             'key':             pkey,
             'label':           se.PROFILE_LABELS[pkey],
             'score':           round(score, 1) if score is not None else None,
-            'is_primary':      pkey == primary_profile_key,
+            'is_primary':      pkey == hp1_profile_key,
             'is_secondary':    any(
                 se.POSITION_TO_PROFILE.get(p) == pkey
                 for p in secondary_positions
             ),
         })
 
-    primary_profile_score = se.get_position_profile(combined_attrs_dict, primary_profile_key) if primary_profile_key else None
+    # Profil-Score für die Stärke-Range: basiert auf played_pos, nicht HP1
+    played_profile_key = se.POSITION_TO_PROFILE.get(played_pos)
+    played_profile_score = se.get_position_profile(combined_attrs_dict, played_profile_key) if played_profile_key else None
 
     # ── Positions-Fit ────────────────────────────────────────────────────────
+    # Vergleicht registrierte Spielposition mit den natürlichen Positionen
     pos_fit_factor, pos_fit_label, pos_unknown = se.get_position_fit(
-        primary_pos, main_positions, secondary_positions,
+        played_pos, main_positions, secondary_positions,
     )
 
     # ── Frische-Fit ─────────────────────────────────────────────────────────
@@ -263,12 +285,16 @@ def _build_strength_tab_context(player):
     rl_form_result['score_label'] = f'{rl_form_result["score"]:+d}' if not rl_form_result['no_data'] else '–'
 
     # ── Stärke-Range ────────────────────────────────────────────────────────
-    str_min, str_max = se.get_strength_range(
-        base_200, potential_200, primary_profile_score,
-        pos_fit_factor if pos_fit_factor is not None else 0.70,
-        freshness_factor,
-        rl_form_factor,
-    )
+    # Unbekannte Position → kein stilles Fallback; Range explizit nicht berechenbar
+    if pos_fit_factor is not None:
+        str_min, str_max = se.get_strength_range(
+            base_200, potential_200, played_profile_score,
+            pos_fit_factor,
+            freshness_factor,
+            rl_form_factor,
+        )
+    else:
+        str_min, str_max = None, None
 
     return {
         'str_base': {
@@ -286,9 +312,9 @@ def _build_strength_tab_context(player):
         'str_combined_attrs':  combined_attrs,
         'str_profile_rows':    profile_rows,
         'str_position_fit': {
-            'pos':            primary_pos,
-            'profile_key':    primary_profile_key or '?',
-            'profile_label':  se.PROFILE_LABELS.get(primary_profile_key, '?'),
+            'pos':            played_pos,
+            'profile_key':    played_profile_key or '?',
+            'profile_label':  se.PROFILE_LABELS.get(played_profile_key, '?'),
             'factor':         pos_fit_factor,
             'label':          pos_fit_label,
             'unknown':        pos_unknown,

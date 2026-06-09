@@ -160,8 +160,8 @@ def calculate_potential_200(fmi_potential, ea_potential, base_200):
     Potential auf 0–200.
     beide vorhanden → FMI + SoFIFA
     eine vorhanden  → Quelle × 2
-    keine           → base_200 (Fallback = Basis)
-    Immer: max(potential, base_200)
+    keine vorhanden → None  (keine Quelle → nicht berechenbar, kein Fallback)
+    Wenn Potential < Basis: max(potential, base_200)
     """
     if fmi_potential is not None and ea_potential is not None:
         raw = int(fmi_potential) + int(ea_potential)
@@ -170,12 +170,10 @@ def calculate_potential_200(fmi_potential, ea_potential, base_200):
     elif ea_potential is not None:
         raw = int(ea_potential) * 2
     else:
-        raw = base_200  # Kein Potential → Basis ist gleichzeitig Potential
+        return None  # Keine Quelle → explizit None, kein stilles Fallback
 
     if base_200 is None:
         return raw
-    if raw is None:
-        return base_200
     return max(raw, base_200)
 
 
