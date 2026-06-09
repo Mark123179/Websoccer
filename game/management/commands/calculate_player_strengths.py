@@ -114,7 +114,17 @@ class Command(BaseCommand):
                 continue
 
             with transaction.atomic():
-                profile.save()
+                if is_new:
+                    profile, _ = PlayerStrengthProfile.objects.update_or_create(
+                        player=player,
+                        defaults={
+                            'base_strength': new_base,
+                            'form_modifier': profile.form_modifier,
+                            'freshness': profile.freshness,
+                        },
+                    )
+                else:
+                    profile.save()
 
                 PlayerStrengthSnapshot.objects.update_or_create(
                     player=player,
