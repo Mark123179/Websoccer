@@ -2330,3 +2330,42 @@ def creator_import_ratings(request):
         'phase': 'form',
         'recent_runs': SourceImportRun.objects.all()[:10],
     })
+
+
+# ── Globale Creator-Schnellsuche (Vereine + Spieler) ─────────────────────
+def creator_search(request):
+    from django.templatetags.static import static
+    q = request.GET.get('q', '').strip()
+    if len(q) < 2:
+        return JsonResponse({'clubs': [], 'players': []})
+
+    clubs_qs = Club.objects.filter(name__icontains=q).order_by('name')[:8]
+    from django.db.models import Q, Value
+    from django.db.models.functions import Concat
+    players_qs = (
+        Player.objects
+        .filter(Q(first_name__icontains=q) | Q(last_name__icontains=q))
+        .select_related('club')
+        .order_by('last_name', 'first_name')[:10]
+    )
+
+    clubs_out = []
+    for c in clubs_qs:
+        crest_url = static(c.crest_static_path) if c.crest_static_path else None
+        clubs_out.append({
+            'id': c.pk,
+            'name': c.name,
+            'short': c.short_name or '',
+            'crest': crest_url,
+        })
+
+    players_out = []
+    for p in players_qs:
+        players_out.append({
+            'id': p.pk,
+            'name': (p.first_name + ' ' + p.last_name).strip(),
+            'pos': p.position or '',
+            'club': p.club.name if p.club else '',
+        })
+
+    return JsonResponse({'clubs': clubs_out, 'players': players_out})

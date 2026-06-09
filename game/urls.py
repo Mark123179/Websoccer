@@ -44,6 +44,7 @@ from .views_management import (
 )
 from .views_creator import (
     creator_index,
+    creator_search,
     creator_import_ratings,
     creator_club_edit,
     creator_upload_stadium,
@@ -220,6 +221,7 @@ urlpatterns = [
     path('management/halloffame/', management_halloffame, name='management_halloffame'),
 
     path('creator/', creator_index, name='creator_index'),
+    path('creator/search/', creator_search, name='creator_search'),
     path('creator/import-ratings/', creator_import_ratings, name='creator_import_ratings'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),
     path('creator/clubs/<int:club_id>/upload/stadium/', creator_upload_stadium, name='creator_upload_stadium'),
