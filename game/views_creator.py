@@ -2186,3 +2186,52 @@ def creator_player_search_api_football(request, player_id):
     results = results[:20]
     return JsonResponse({'ok': True, 'results': results,
                          'usage_today': _get_today_usage(), 'daily_limit': _DAILY_LIMIT})
+
+
+@login_required
+@require_POST
+def creator_player_save_rl_mapping(request, player_id):
+    """AJAX-Endpoint: Speichert RL-Mapping-Felder direkt nach 'Übernehmen'.
+
+    POST-Parameter: rl_api_player_id, rl_api_team_id, rl_api_team_name, rl_api_season
+    Returns JSON: {ok: true} | {ok: false, error: "..."}
+    """
+    player = get_object_or_404(Player, id=player_id)
+
+    _rl_player_id = request.POST.get('rl_api_player_id', '').strip()
+    _rl_team_id   = request.POST.get('rl_api_team_id', '').strip()
+    _rl_team_name = request.POST.get('rl_api_team_name', '').strip()
+    _rl_season    = request.POST.get('rl_api_season', '').strip()
+
+    try:
+        _rl_prof = player.rl_form_profile
+    except PlayerRLFormProfile.DoesNotExist:
+        _rl_prof = PlayerRLFormProfile(player=player)
+
+    try:
+        _rl_prof.api_football_player_id = int(_rl_player_id) if _rl_player_id else None
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Ungültige Player-ID.'})
+    try:
+        _rl_prof.api_football_team_id = int(_rl_team_id) if _rl_team_id else None
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Ungültige Team-ID.'})
+
+    _rl_prof.api_football_team_name = _rl_team_name
+
+    try:
+        from datetime import date as _date_cls
+        _current_season = _date_cls.today().year if _date_cls.today().month >= 7 else _date_cls.today().year - 1
+        _rl_prof.api_football_season = int(_rl_season) if _rl_season else _current_season
+    except ValueError:
+        pass
+
+    has_full_mapping = bool(_rl_prof.api_football_player_id and _rl_prof.api_football_team_id)
+    if has_full_mapping and _rl_prof.rl_form_status == PlayerRLFormProfile.STATUS_NOT_MAPPED:
+        _rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_NOT_FETCHED
+    elif not has_full_mapping:
+        _rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_NOT_MAPPED
+    _rl_prof.save()
+    compute_rl_form_for_player(player)
+
+    return JsonResponse({'ok': True})
