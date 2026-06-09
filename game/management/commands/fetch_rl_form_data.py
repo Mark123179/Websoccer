@@ -165,16 +165,24 @@ class Command(BaseCommand):
                 away         = fixture.get('teams', {}).get('away', {})
                 opp_name     = away.get('name', '') if home.get('id') == team_id else home.get('name', '')
 
-                existing_check = PlayerFormSnapshot.objects.filter(
-                    player__in=[p.player for p in team_profiles],
-                    source=PlayerFormSnapshot.SOURCE_API_FOOTBALL,
-                    fixture_id=str(fix_id),
-                )
-                if not force and existing_check.exists():
-                    self.stdout.write(
-                        f'  Fixture {fix_id} ({fix_date_str}) — übersprungen (bereits vorhanden)'
-                    )
-                    continue
+                # Per-Player prüfen, nicht per-Fixture: nur wenn ALLE Spieler das Fixture
+                # bereits haben, darf es übersprungen werden.
+                if not force:
+                    players_missing = [
+                        p for p in team_profiles
+                        if not PlayerFormSnapshot.objects.filter(
+                            player=p.player,
+                            source=PlayerFormSnapshot.SOURCE_API_FOOTBALL,
+                            fixture_id=str(fix_id),
+                        ).exists()
+                    ]
+                    if not players_missing:
+                        self.stdout.write(
+                            f'  Fixture {fix_id} ({fix_date_str}) — alle Spieler vorhanden, übersprungen'
+                        )
+                        continue
+                else:
+                    players_missing = list(team_profiles)
 
                 if not _use_request(f'GET /fixtures/players?fixture={fix_id}&team={team_id}'):
                     break
@@ -185,6 +193,11 @@ class Command(BaseCommand):
                     self.stdout.write(
                         self.style.WARNING(f'  Fixture {fix_id}: HTTP-Fehler {exc} — übersprungen')
                     )
+                    if not dry_run:
+                        for p in players_missing:
+                            p.rl_form_status     = PlayerRLFormProfile.STATUS_API_ERROR
+                            p.rl_form_updated_at = timezone.now()
+                            p.save(update_fields=['rl_form_status', 'rl_form_updated_at'])
                     continue
 
                 stats_by_player_id = {
@@ -193,7 +206,11 @@ class Command(BaseCommand):
                     if entry.get('player', {}).get('id') is not None
                 }
 
+                missing_ids = {p.api_football_player_id for p in players_missing}
                 for api_player_id, profile in player_map.items():
+                    # Snapshot nur schreiben wenn dieser Spieler fehlt (oder --force)
+                    if api_player_id not in missing_ids and not force:
+                        continue
                     entry = stats_by_player_id.get(api_player_id)
                     if entry is None:
                         continue

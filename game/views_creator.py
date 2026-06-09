@@ -929,7 +929,9 @@ def creator_player_edit(request, player_id):
                 pass
             _rl_prof.api_football_team_name = _rl_team_name
             try:
-                _rl_prof.api_football_season = int(_rl_season) if _rl_season else 2024
+                from datetime import date as _date_cls
+                _current_season = _date_cls.today().year if _date_cls.today().month >= 7 else _date_cls.today().year - 1
+                _rl_prof.api_football_season = int(_rl_season) if _rl_season else _current_season
             except ValueError:
                 pass
             has_full_mapping = bool(_rl_prof.api_football_player_id and _rl_prof.api_football_team_id)
