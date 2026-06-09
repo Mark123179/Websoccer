@@ -1007,7 +1007,7 @@ def creator_player_fetch_rl_form(request, player_id):
     player_id_api = rl_prof.api_football_player_id
 
     try:
-        fixtures = get_team_fixtures(team_id, last=10)
+        fixtures = get_team_fixtures(team_id, season=rl_prof.api_football_season, last=10)
     except _requests.RequestException as exc:
         rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_API_ERROR
         rl_prof.save(update_fields=['rl_form_status'])

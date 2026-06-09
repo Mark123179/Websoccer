@@ -18,29 +18,39 @@ def _headers():
     }
 
 
-def get_team_fixtures(team_id, last=10, status='FT,AET,PEN'):
-    """Letzte `last` Spiele eines Teams mit dem angegebenen Status.
+_FINISHED_STATUSES = {'FT', 'AET', 'PEN'}
+
+
+def get_team_fixtures(team_id, season, last=10):
+    """Letzte `last` abgeschlossene Spiele eines Teams in einer Saison.
+
+    Der Free-Plan von API-Football unterstützt den `last`-Parameter und
+    komma-separierte `status`-Werte nicht. Stattdessen werden alle Fixtures
+    der Saison abgerufen, clientseitig nach abgeschlossenen Spielen gefiltert
+    und die neuesten `last` Einträge zurückgegeben.
 
     Args:
         team_id:  API-Football-Team-ID.
-        last:     Maximale Anzahl Spiele (default 10).
-        status:   Komma-separierte Fixture-Status-Codes (default 'FT,AET,PEN').
+        season:   Saison-Startjahr (z. B. 2024 für Saison 2024/25).
+        last:     Maximale Anzahl zurückgegebener Spiele (default 10).
 
-    Returns list[dict] – rohe response-Einträge der API.
-    Raises requests.HTTPError bei 4xx/5xx.
+    Returns list[dict] – rohe response-Einträge (neueste zuerst).
+    Raises requests.RequestException bei Netzwerk-/HTTP-Fehlern.
     """
     resp = requests.get(
         f'{API_BASE}/fixtures',
         headers=_headers(),
-        params={
-            'team':   team_id,
-            'last':   last,
-            'status': status,
-        },
+        params={'team': team_id, 'season': season},
         timeout=DEFAULT_TIMEOUT,
     )
     resp.raise_for_status()
-    return resp.json().get('response', [])
+    all_fixtures = resp.json().get('response', [])
+    finished = [
+        f for f in all_fixtures
+        if f.get('fixture', {}).get('status', {}).get('short') in _FINISHED_STATUSES
+    ]
+    finished.sort(key=lambda f: f['fixture']['date'], reverse=True)
+    return finished[:last]
 
 
 def get_fixture_player_stats(fixture_id, team_id):

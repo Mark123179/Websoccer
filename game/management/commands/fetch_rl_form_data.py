@@ -134,11 +134,12 @@ class Command(BaseCommand):
             team_name = team_profiles[0].api_football_team_name or str(team_id)
             self.stdout.write(f'\n→ Team {team_name} (ID {team_id}): {len(team_profiles)} Spieler')
 
-            if not _use_request(f'GET /fixtures?team={team_id}&last=10'):
+            season = team_profiles[0].api_football_season
+            if not _use_request(f'GET /fixtures?team={team_id}&season={season}'):
                 break
 
             try:
-                fixtures = get_team_fixtures(team_id, last=10)
+                fixtures = get_team_fixtures(team_id, season=season, last=10)
             except requests.RequestException as exc:
                 self.stdout.write(self.style.ERROR(f'  Fehler beim Laden der Fixtures: {exc}'))
                 if not dry_run:
