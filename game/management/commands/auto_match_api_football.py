@@ -66,13 +66,18 @@ class Command(BaseCommand):
         parser.add_argument(
             '--sleep',
             type=float,
-            default=3.0,
-            help='Pause zwischen API-Requests (Sekunden, default: 3.0 für Free Plan)',
+            default=6.0,
+            help='Pause zwischen API-Requests (Sekunden, default: 6.0 für Free Plan 10/Min)',
         )
         parser.add_argument(
             '--verbose',
             action='store_true',
             help='Detaillierte Ausgabe',
+        )
+        parser.add_argument(
+            '--all-clubs',
+            action='store_true',
+            help='Alle Clubs mit api_football_id verarbeiten (excl. Karrierende/FC Basel)',
         )
 
     def _get_squad(self, team_api_id, season):
@@ -197,6 +202,43 @@ class Command(BaseCommand):
         season  = options['season']
         sleep   = options['sleep']
         verbose = options['verbose']
+        all_clubs = options['all_clubs']
+
+        if all_clubs:
+            # Alle Clubs mit api_football_id verarbeiten
+            from game.models import Club
+            club_qs = Club.objects.exclude(
+                api_football_id=None
+            ).exclude(
+                name__in=['Karrierende', 'FC Basel']
+            ).order_by('name')
+            
+            total_matched = 0
+            total_unmatched = 0
+            total_errors = 0
+            
+            for club in club_qs:
+                self.stdout.write(f'\n{"="*60}')
+                self.stdout.write(f'→ {club.name} (API-ID: {club.api_football_id})')
+                self.stdout.write(f'{"="*60}')
+                
+                m, u, e = self._process_club(
+                    club, season, sleep, verbose, dry_run
+                )
+                total_matched += m
+                total_unmatched += u
+                total_errors += e
+                
+                if sleep:
+                    time.sleep(sleep)
+            
+            self.stdout.write(
+                f'\n{"="*60}'
+                f'\nGESAMT: {total_matched} gematcht, {total_unmatched} ungematcht, '
+                f'{total_errors} Fehler'
+                f'\n{"="*60}'
+            )
+            return
 
         # Nur Spieler ohne RL-Mapping
         players = Player.objects.select_related('real_life_club').filter(
@@ -290,3 +332,75 @@ class Command(BaseCommand):
             f'\nErgebnis: {matched} gematcht, {unmatched} ungematcht, {errors} Fehler '
             f'von {len(players)} Spielern.'
         )
+
+    def _process_club(self, club, season, sleep, verbose, dry_run):
+        """Verarbeitet einen einzelnen Club. Returns (matched, unmatched, errors)."""
+        from game.models import Player
+        
+        players = Player.objects.select_related('real_life_club').filter(
+            club=club,
+            rl_form_profile__api_football_player_id=None,
+        ).exclude(
+            real_life_club_id=None
+        ).exclude(
+            date_of_birth=None
+        )
+        
+        players = list(players)
+        if not players:
+            self.stdout.write('  Keine Spieler zum Mappen.')
+            return 0, 0, 0
+        
+        self.stdout.write(f'  {len(players)} Spieler zu prüfen')
+        
+        team_api_id = club.api_football_id
+        
+        try:
+            squad = self._get_squad(team_api_id, season)
+        except Exception as exc:
+            self.stdout.write(
+                self.style.ERROR(f'  Fehler beim Squad-Load: {exc}')
+            )
+            return 0, len(players), 0
+        
+        self.stdout.write(f'  Squad geladen: {len(squad)} Spieler')
+        if sleep:
+            time.sleep(sleep)
+        
+        matched = 0
+        unmatched = 0
+        
+        for p in players:
+            found = self._try_match(
+                p, squad,
+                fallback_search=True,
+                team_api_id=team_api_id,
+                season=season,
+                sleep=sleep,
+                verbose=verbose,
+            )
+            
+            if not found:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'    ✗ {p.first_name} {p.last_name}: Kein Match '
+                        f'(DOB={p.date_of_birth})'
+                    )
+                )
+                unmatched += 1
+                continue
+            
+            self._save_match(p, found, season, dry_run)
+            matched += 1
+            
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'    ✓ {p.first_name} {p.last_name} '
+                    f'→ API-ID {found["api_football_player_id"]}'
+                )
+            )
+        
+        self.stdout.write(
+            f'  Ergebnis: {matched} gematcht, {unmatched} ungematcht'
+        )
+        return matched, unmatched, 0

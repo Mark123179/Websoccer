@@ -409,6 +409,7 @@ def _build_strength_tab_context(player):
         'str_freshness': {
             'value':       freshness_val,
             'factor':      freshness_factor,
+            'bonus':       freshness_bonus,
             'range_label': freshness_range_label,
             'no_data':     freshness_val is None,
         },

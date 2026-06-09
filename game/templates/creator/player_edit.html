@@ -454,7 +454,7 @@
         <div class="cpe-str-section-title">⑤⑥⑦ Fit-Faktoren</div>
         <table class="cpe-str-table cpe-str-fit-table">
           <thead>
-            <tr><th>Faktor</th><th>Wert</th><th>Multiplikator</th></tr>
+            <tr><th>Faktor</th><th>Wert</th><th>Modifikator</th></tr>
           </thead>
           <tbody>
             <!-- Positions-Fit -->
@@ -478,9 +478,9 @@
                 {% endif %}
               </td>
             </tr>
-            <!-- Frische-Fit -->
+            <!-- Frische-Mod -->
             <tr>
-              <td>⑥ Frische-Fit
+              <td>⑥ Frische-Mod
                 <span class="cpe-str-fit-detail">
                   {% if str_freshness.no_data %}
                     kein Profil
@@ -498,37 +498,26 @@
                 {% endif %}
               </td>
               <td>
-                <span class="cpe-str-factor {% if str_freshness.factor < 0.90 %}cpe-str-factor-warn{% else %}cpe-str-factor-ok{% endif %}">
-                  ×{{ str_freshness.factor }}
+                <span class="cpe-str-factor {% if str_freshness.bonus < 0 %}cpe-str-factor-warn{% elif str_freshness.bonus > 0 %}cpe-str-factor-ok{% else %}cpe-str-factor-neutral{% endif %}">
+                  {{ str_freshness.bonus|stringformat:"+d" }}
                 </span>
               </td>
             </tr>
-            <!-- RL-Form-Fit -->
+            <!-- RL-Form-Mod -->
             <tr {% if str_rl_form.no_mapping %}class="cpe-str-row-missing"{% endif %}>
-              <td>⑦ RL-Form
+              <td>⑦ RL-Form-Mod
                 <span class="cpe-str-fit-detail">
-                  {% if str_rl_form.no_mapping %}
-                    <span class="cpe-str-missing-label">kein API-Mapping — Daten fehlen</span>
-                  {% elif str_rl_form.no_data %}
-                    keine Einsätze (letzte 10 Spiele)
-                  {% else %}
-                    Ø {{ str_rl_form.avg_rating }} · {{ str_rl_form.total_minutes }} Min. · {{ str_rl_form.match_count }} Spiel{{ str_rl_form.match_count|pluralize:"e" }}
-                  {% endif %}
+                  <span class="cpe-str-hint">MVP: deaktiviert (bis Abo-Modell)</span>
                 </span>
               </td>
               <td>
-                <span class="cpe-str-form-score {% if str_rl_form.no_mapping %}cpe-str-factor-neutral{% elif str_rl_form.score >= 3 %}cpe-str-factor-ok{% elif str_rl_form.score <= -3 %}cpe-str-factor-danger{% elif str_rl_form.score < 0 %}cpe-str-factor-warn{% else %}cpe-str-factor-neutral{% endif %}">
-                  Form {{ str_rl_form.score_label }}
+                <span class="cpe-str-form-score cpe-str-factor-neutral">
+                  +0 (Neutral)
                 </span>
-                {% if str_rl_form.no_mapping %}
-                  <span class="cpe-str-badge cpe-str-badge-danger">kein Mapping</span>
-                {% elif str_rl_form.no_data %}
-                  <span class="cpe-str-badge cpe-str-badge-warn">Fallback −2</span>
-                {% endif %}
               </td>
               <td>
-                <span class="cpe-str-factor {% if str_rl_form.no_mapping %}cpe-str-factor-neutral{% elif str_rl_form.factor < 1.0 %}cpe-str-factor-warn{% elif str_rl_form.factor > 1.0 %}cpe-str-factor-ok{% else %}cpe-str-factor-neutral{% endif %}">
-                  ×{{ str_rl_form.factor }}
+                <span class="cpe-str-factor cpe-str-factor-neutral">
+                  +0
                 </span>
               </td>
             </tr>
@@ -554,7 +543,7 @@
           </div>
         </div>
         <div class="cpe-str-range-formula">
-          pre-fit = Basis×0.80 + Profil×0.20 · PosFit × FrischeFit × RLFormFit
+          final = (Basis×0.80 + Profil×0.20) × PosFit + Frische-Mod + RL-Form-Mod
         </div>
         {% else %}
         <div class="cpe-str-notice">

@@ -357,10 +357,11 @@ def get_freshness_bonus(freshness):
 def get_rl_form_bonus(score):
     """Additiver RL-Form-Bonus für die finale Stärkeformel.
 
-    score: int -5..+5
-    Returns: int
+    MVP: RL-Form deaktiviert (bis Abo-Modell verfügbar) → immer 0.
+    score: int -5..+5  (wird ignoriert)
+    Returns: int (immer 0)
     """
-    return RL_FORM_BONUS.get(score, 0)
+    return 0
 
 
 # ---------------------------------------------------------------------------
