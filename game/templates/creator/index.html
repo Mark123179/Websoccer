@@ -39,6 +39,47 @@
     {% endif %}
   </nav>
 
+  <!-- ── Toolbar: Suche + Import ─────────────────────────────────────────── -->
+  <div class="cm-toolbar">
+    <div class="cm-search-inner">
+      <span class="cm-search-icon">🔍</span>
+      <input
+        class="cm-search-input"
+        id="cm-search"
+        type="text"
+        placeholder="{% if level == 1 %}Land suchen …{% elif level == 2 %}Liga suchen …{% else %}Verein suchen …{% endif %}"
+        autocomplete="off"
+        oninput="filterCreator(this.value)"
+      >
+      <button class="cm-search-clear" id="cm-search-clear" onclick="clearCreatorSearch()" style="display:none">✕</button>
+    </div>
+    <span class="cm-search-hint" id="cm-search-hint"></span>
+    <button type="button" class="cm-import-btn" onclick="toggleImportPanel()">⬆ Ratings importieren</button>
+  </div>
+
+  <!-- ── Import-Hinweis-Panel ────────────────────────────────────────────── -->
+  <div class="cm-import-panel" id="cm-import-panel" style="display:none">
+    <div class="cm-import-panel-head">
+      <strong>EA/SoFIFA-Ratings per CSV importieren</strong>
+      <button type="button" class="cm-import-panel-close" onclick="toggleImportPanel()">✕</button>
+    </div>
+    <p class="cm-import-text">
+      Da SoFIFA das Scraping blockiert, werden Ratings über eine CSV-Datei importiert.
+      Das Matching läuft primär über die <code>sofifa_id</code>; ohne hinterlegte ID
+      greift ein Fallback über Name (+ Verein), der die ID danach dauerhaft verknüpft.
+    </p>
+    <p class="cm-import-label">CSV-Spalten (Header):</p>
+    <pre class="cm-import-code">sofifa_id,name,club,overall,potential,tempo,ausdauer,kraft,technik,dribbling,passspiel,flanken,abschluss,kopfball</pre>
+    <p class="cm-import-label">Vorschau ohne Schreiben (Dry-Run):</p>
+    <pre class="cm-import-code">python manage.py import_sofifa_csv pfad/zur/datei.csv --dry-run</pre>
+    <p class="cm-import-label">Echter Import (mit anschließender Stärke-Neuberechnung):</p>
+    <pre class="cm-import-code">python manage.py import_sofifa_csv pfad/zur/datei.csv</pre>
+    <p class="cm-import-note">
+      Pflichtspalten: <code>sofifa_id</code> und <code>overall</code> (bzw. <code>rating</code>).
+      Nur die in der CSV vorhandenen Attributspalten werden überschrieben.
+    </p>
+  </div>
+
   <!-- ══════════════════════════════════════════════════════════════════════
        LEVEL 1 — Länder
   ═══════════════════════════════════════════════════════════════════════ -->
@@ -52,7 +93,7 @@
   </div>
   <div class="cm-countries-grid">
     {% for c in countries_data %}
-    <a class="cm-country-card" href="{% url 'creator_index' %}?country={{ c.name }}">
+    <a class="cm-country-card" href="{% url 'creator_index' %}?country={{ c.name }}" data-search="{{ c.name|lower }}">
       <div class="cm-country-flag">
         {% if c.code %}
           <img src="https://flagcdn.com/{{ c.code }}.svg" alt="{{ c.name }}"
@@ -85,7 +126,7 @@
   </div>
   <div class="cm-leagues-grid">
     {% for entry in leagues_data %}
-    <div class="cm-league-card-wrap">
+    <div class="cm-league-card-wrap" data-search="{{ entry.league.name|lower }}">
       <a class="cm-league-card" href="{% url 'creator_index' %}?league={{ entry.league.pk }}">
         <div class="cm-league-logo-wrap">
           {% if entry.league.logo_static_path %}
@@ -123,7 +164,7 @@
   </div>
   <div class="cm-clubs-grid">
     {% for club in clubs %}
-    <a class="cm-club-card" href="{% url 'creator_club_edit' club_id=club.pk %}">
+    <a class="cm-club-card" href="{% url 'creator_club_edit' club_id=club.pk %}" data-search="{{ club.name|lower }} {{ club.short_name|lower }} {{ club.fm_inside_id }}">
       <div class="cm-club-crest-wrap">
         {% if club.crest_static_path %}
           <img class="cm-club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
@@ -221,5 +262,80 @@
 .cm-club-info strong { display: block; color: #cce8ff; font-size: .88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cm-club-info span { display: block; color: #556677; font-size: .74rem; }
 .cm-club-id { color: #1e3050 !important; font-family: monospace; font-size: .7rem !important; }
+
+/* ── Toolbar: Suche + Import ───────────────────────────────────────────── */
+.cm-toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.cm-search-inner { display: flex; align-items: center; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; padding: .45rem .9rem; gap: .5rem; width: 360px; transition: border-color .2s; }
+.cm-search-inner:focus-within { border-color: #00d4ff55; }
+.cm-search-icon { font-size: .9rem; color: #334455; flex-shrink: 0; }
+.cm-search-input { background: transparent; border: none; outline: none; color: #cce8ff; font-size: .85rem; width: 100%; }
+.cm-search-input::placeholder { color: #334455; }
+.cm-search-clear { background: none; border: none; color: #334455; cursor: pointer; font-size: .85rem; padding: 0; display: flex; align-items: center; }
+.cm-search-clear:hover { color: #00d4ff; }
+.cm-search-hint { color: #334455; font-size: .75rem; }
+.cm-import-btn { margin-left: auto; font-size: .78rem; font-weight: 600; color: #00d4ff; background: #071525; border: 1px solid #00d4ff44; border-radius: 6px; padding: .45rem 1rem; cursor: pointer; transition: all .15s; }
+.cm-import-btn:hover { background: #00d4ff15; border-color: #00d4ff88; }
+
+/* ── Import-Panel ──────────────────────────────────────────────────────── */
+.cm-import-panel { background: #050e1a; border: 1px solid #00d4ff33; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+.cm-import-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
+.cm-import-panel-head strong { color: #cce8ff; font-size: .95rem; }
+.cm-import-panel-close { background: none; border: none; color: #556677; cursor: pointer; font-size: .9rem; }
+.cm-import-panel-close:hover { color: #00d4ff; }
+.cm-import-text { color: #8aa0b5; font-size: .82rem; line-height: 1.5; margin: 0 0 .9rem; }
+.cm-import-label { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: .8rem 0 .3rem; }
+.cm-import-code { background: #03070c; border: 1px solid #0d2035; border-radius: 6px; padding: .55rem .8rem; color: #6fe3ff; font-family: monospace; font-size: .78rem; overflow-x: auto; margin: 0; white-space: pre-wrap; word-break: break-all; }
+.cm-import-note { color: #556677; font-size: .76rem; margin: .9rem 0 0; }
+.cm-import-panel code, .cm-import-text code, .cm-import-note code { background: #071525; color: #6fe3ff; padding: .05rem .3rem; border-radius: 3px; font-size: .85em; }
+.cm-no-results { color: #334455; font-size: .85rem; padding: 1.5rem 0; }
 </style>
+
+<script>
+function filterCreator(q) {
+  q = (q || '').trim().toLowerCase();
+  var clearBtn = document.getElementById('cm-search-clear');
+  var hint = document.getElementById('cm-search-hint');
+  if (clearBtn) clearBtn.style.display = q ? 'flex' : 'none';
+
+  var cards = document.querySelectorAll('[data-search]');
+  var visible = 0;
+  cards.forEach(function (el) {
+    var hay = el.getAttribute('data-search') || '';
+    var show = !q || hay.indexOf(q) !== -1;
+    el.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  var existing = document.getElementById('cm-no-results');
+  if (q && cards.length && visible === 0) {
+    if (!existing) {
+      existing = document.createElement('p');
+      existing.id = 'cm-no-results';
+      existing.className = 'cm-no-results';
+      existing.textContent = 'Keine Treffer.';
+      var grid = document.querySelector('.cm-countries-grid, .cm-leagues-grid, .cm-clubs-grid');
+      if (grid && grid.parentNode) grid.parentNode.insertBefore(existing, grid.nextSibling);
+    }
+    existing.style.display = '';
+  } else if (existing) {
+    existing.style.display = 'none';
+  }
+
+  if (hint) hint.textContent = q ? (visible + ' Treffer') : '';
+}
+
+function clearCreatorSearch() {
+  var inp = document.getElementById('cm-search');
+  if (!inp) return;
+  inp.value = '';
+  filterCreator('');
+  inp.focus();
+}
+
+function toggleImportPanel() {
+  var panel = document.getElementById('cm-import-panel');
+  if (!panel) return;
+  panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+}
+</script>
 {% endblock %}
