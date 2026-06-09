@@ -1,0 +1,24 @@
+{% load static %}
+
+<article class="club-profile-card facilities-card">
+    <h2 class="club-card-title">VEREINSUMFELD</h2>
+    <div class="facilities-grid">
+        {% for item in profile.facilities %}
+        <div class="facility-item">
+            <span class="facility-item-label">{{ item.fullLabel }}</span>
+            <div class="facility-pips">
+                <span class="facility-pip {% if item.level >= 1 %}is-active{% endif %}"></span>
+                <span class="facility-pip {% if item.level >= 2 %}is-active{% endif %}"></span>
+                <span class="facility-pip {% if item.level >= 3 %}is-active{% endif %}"></span>
+            </div>
+            <span class="facility-level-label">
+                {% if item.level == 0 %}Nicht vorhanden
+                {% elif item.level == 1 %}Basis
+                {% elif item.level == 2 %}Professionell
+                {% else %}Weltklasse
+                {% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</article>
