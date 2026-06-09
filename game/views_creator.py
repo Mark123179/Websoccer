@@ -710,13 +710,19 @@ def _build_rl_form_tab_context(player):
 
     fit_factor = se.get_rl_form_fit(breakdown['score'])
 
+    from .api_football import get_today_usage, DAILY_LIMIT, WARN_THRESHOLD
+    api_usage_today = get_today_usage()
+
     return {
-        'rl_profile':   rl_profile,
-        'rl_snapshots': snapshots,
-        'rl_breakdown': breakdown,
-        'rl_fit_factor': fit_factor,
-        'rl_form_scale': se.RL_FORM_SCALE,
-        'rl_form_fit':   se.RL_FORM_FIT,
+        'rl_profile':       rl_profile,
+        'rl_snapshots':     snapshots,
+        'rl_breakdown':     breakdown,
+        'rl_fit_factor':    fit_factor,
+        'rl_form_scale':    se.RL_FORM_SCALE,
+        'rl_form_fit':      se.RL_FORM_FIT,
+        'api_usage_today':  api_usage_today,
+        'api_daily_limit':  DAILY_LIMIT,
+        'api_warn_threshold': WARN_THRESHOLD,
     }
 
 
@@ -1006,6 +1012,8 @@ def creator_player_fetch_rl_form(request, player_id):
     team_id   = rl_prof.api_football_team_id
     player_id_api = rl_prof.api_football_player_id
 
+    from .api_football import record_api_call as _record_api_call
+    fixtures = None
     try:
         fixtures = get_team_fixtures(team_id, season=rl_prof.api_football_season, last=10)
     except _requests.RequestException as exc:
@@ -1013,6 +1021,8 @@ def creator_player_fetch_rl_form(request, player_id):
         rl_prof.save(update_fields=['rl_form_status'])
         messages.error(request, f'API-Football Netzwerkfehler beim Laden der Fixtures: {exc}')
         return redirect(f'/creator/players/{player_id}/?tab=rlform')
+    finally:
+        _record_api_call(1)
 
     saved = 0
     for fixture in fixtures:
@@ -1025,10 +1035,15 @@ def creator_player_fetch_rl_form(request, player_id):
         team_name    = rl_prof.api_football_team_name or str(team_id)
         opp_name     = away.get('name', '') if home.get('id') == team_id else home.get('name', '')
 
+        player_stats_list = None
         try:
             player_stats_list = get_fixture_player_stats(fix_id, team_id)
             time.sleep(0.2)
         except _requests.RequestException:
+            pass
+        finally:
+            _record_api_call(1)
+        if player_stats_list is None:
             continue
 
         for entry in player_stats_list:
@@ -2131,12 +2146,16 @@ def creator_player_search_api_football(request, player_id):
     if not key:
         return JsonResponse({'ok': False, 'error': 'API_FOOTBALL_KEY nicht gesetzt.'})
 
+    from .api_football import record_api_call as _record_api_call
+    raw = None
     try:
         raw = search_player(name, season=season)
     except _requests.HTTPError as exc:
         return JsonResponse({'ok': False, 'error': f'API-Fehler: {exc}'})
     except _requests.RequestException as exc:
         return JsonResponse({'ok': False, 'error': f'Netzwerkfehler: {exc}'})
+    finally:
+        _record_api_call(1)
 
     results = []
     for entry in raw:
@@ -2158,5 +2177,7 @@ def creator_player_search_api_football(request, player_id):
                 'league_name': league.get('name', ''),
             })
 
+    from .api_football import get_today_usage as _get_today_usage, DAILY_LIMIT as _DAILY_LIMIT
     results = results[:20]
-    return JsonResponse({'ok': True, 'results': results})
+    return JsonResponse({'ok': True, 'results': results,
+                         'usage_today': _get_today_usage(), 'daily_limit': _DAILY_LIMIT})

@@ -651,6 +651,10 @@
           🔍 Suchen
         </button>
         <span class="cpe-hint cpe-afsearch-hint">1 API-Request pro Klick</span>
+        <span class="cpe-af-budget {% if api_usage_today >= api_warn_threshold %}cpe-af-budget--warn{% endif %}">
+          Heute: <strong>{{ api_usage_today }} / {{ api_daily_limit }}</strong>
+          {% if api_usage_today >= api_warn_threshold %} ⚠{% endif %}
+        </span>
       </div>
       <div class="cpe-afsearch-results" id="afsearch-results" style="display:none"></div>
 
@@ -1139,6 +1143,10 @@
 /* RL-Form Tab */
 .cpe-afsearch-bar { display: flex; align-items: center; gap: .6rem; padding: .9rem 1.25rem; flex-wrap: wrap; border-bottom: 1px solid #071525; }
 .cpe-afsearch-hint { color: #334455; font-size: .7rem; font-style: italic; }
+.cpe-af-budget { margin-left: auto; font-size: .72rem; color: #556677; white-space: nowrap; }
+.cpe-af-budget strong { color: #7fd6ff; }
+.cpe-af-budget--warn { color: #ffaa44; }
+.cpe-af-budget--warn strong { color: #ffaa44; }
 .cpe-btn-afsearch { background: #07223a; border: 1px solid #00d4ff55; color: #7fd6ff; padding: .4rem 1rem; font-size: .82rem; border-radius: 4px; cursor: pointer; transition: background .15s; white-space: nowrap; }
 .cpe-btn-afsearch:hover { background: #00d4ff1a; }
 .cpe-btn-afsearch:disabled { opacity: .45; cursor: default; }
@@ -1309,6 +1317,14 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
       const resp = await fetch(url.toString(), {headers: {'X-Requested-With': 'XMLHttpRequest'}});
       const data = await resp.json();
       renderResults(data);
+      if (data.usage_today != null) {
+        const badge = document.querySelector('.cpe-af-budget');
+        if (badge) {
+          const warn = data.usage_today >= {{ api_warn_threshold }};
+          badge.className = 'cpe-af-budget' + (warn ? ' cpe-af-budget--warn' : '');
+          badge.innerHTML = `Heute: <strong>${data.usage_today} / ${data.daily_limit}</strong>${warn ? ' ⚠' : ''}`;
+        }
+      }
     } catch (err) {
       results.style.display = 'block';
       results.innerHTML = `<div class="cpe-afsearch-error">Netzwerkfehler: ${err}</div>`;

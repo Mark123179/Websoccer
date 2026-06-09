@@ -2656,6 +2656,42 @@ class PlayerRLFormProfile(models.Model):
         return f'{self.player} | RL-Form {sign}{self.rl_form_score} ({self.rl_form_status})'
 
 
+class ApiFootballDailyUsage(models.Model):
+    """Zählt API-Football-Requests pro Kalendertag (Tages-Budget: 100)."""
+
+    date         = models.DateField(unique=True)
+    request_count = models.PositiveIntegerField(default=0)
+
+    DAILY_LIMIT = 100
+    WARN_THRESHOLD = 80
+
+    class Meta:
+        verbose_name = 'API-Football Tagesverbrauch'
+        verbose_name_plural = 'API-Football Tagesverbräuche'
+        ordering = ['-date']
+
+    def __str__(self):
+        return f'{self.date}: {self.request_count}/{self.DAILY_LIMIT}'
+
+    @classmethod
+    def record(cls, count=1):
+        """Zählt `count` Requests für heute hoch (atomic)."""
+        from django.db.models import F
+        from datetime import date
+        today = date.today()
+        obj, created = cls.objects.get_or_create(date=today, defaults={'request_count': 0})
+        cls.objects.filter(pk=obj.pk).update(request_count=F('request_count') + count)
+
+    @classmethod
+    def today_count(cls):
+        """Gibt den heutigen Verbrauch zurück (0 falls noch keine Einträge)."""
+        from datetime import date
+        try:
+            return cls.objects.get(date=date.today()).request_count
+        except cls.DoesNotExist:
+            return 0
+
+
 class PlayerEditRequest(models.Model):
     FIELD_NATIONALITIES = 'nationalities'
     FIELD_REAL_LIFE_CLUB = 'real_life_club'

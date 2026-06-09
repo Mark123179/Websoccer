@@ -9,6 +9,8 @@ from django.conf import settings
 
 API_BASE = 'https://v3.football.api-sports.io'
 DEFAULT_TIMEOUT = 15
+DAILY_LIMIT = 100
+WARN_THRESHOLD = 80
 
 
 def _headers():
@@ -16,6 +18,24 @@ def _headers():
         'x-rapidapi-key': settings.API_FOOTBALL_KEY,
         'x-rapidapi-host': 'v3.football.api-sports.io',
     }
+
+
+def record_api_call(count=1):
+    """Zählt `count` verbrauchte Requests für heute in der DB."""
+    try:
+        from .models import ApiFootballDailyUsage
+        ApiFootballDailyUsage.record(count)
+    except Exception:
+        pass
+
+
+def get_today_usage():
+    """Gibt den heutigen Request-Verbrauch zurück (int, 0 falls keine DB-Einträge)."""
+    try:
+        from .models import ApiFootballDailyUsage
+        return ApiFootballDailyUsage.today_count()
+    except Exception:
+        return 0
 
 
 _FINISHED_STATUSES = {'FT', 'AET', 'PEN'}
