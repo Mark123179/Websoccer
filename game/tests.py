@@ -2,6 +2,8 @@
 from datetime import date
 from io import StringIO
 from pathlib import Path
+import tempfile
+import os
 
 from django.contrib.auth import get_user_model
 from django.contrib import admin
@@ -1333,4 +1335,333 @@ class CityMapPctResolverTest(TestCase):
                 self.assertLessEqual(x_pct, 100.0)
                 self.assertGreaterEqual(y_pct, 0.0)
                 self.assertLessEqual(y_pct, 100.0)
+
+
+class SofifaCsvImportTests(TestCase):
+    """Absicherung des import_sofifa_csv-Importers gegen stille Regressionen.
+
+    Abgedeckte Szenarien:
+    - Primär-Matching über vorhandene PlayerExternalId(SOFIFA)
+    - Fallback-Matching über Name+Verein verknüpft sofifa_id dauerhaft
+    - Mehrdeutiger Fallback wird abgelehnt
+    - Fehlende Pflichtspalten (sofifa_id / overall) führen zu CommandError
+    - Zeile mit leerer sofifa_id landet im Fehler-Counter
+    - Re-Run ist idempotent
+    - --dry-run schreibt nichts in die DB
+    """
+
+    def setUp(self):
+        league = League.objects.create(name='Testliga', country='Deutschland')
+        self.club = Club.objects.create(
+            name='FC Testverein',
+            short_name='FCT',
+            founded_year=1900,
+            budget=Decimal('1000000.00'),
+            league=league,
+        )
+        self.second_club = Club.objects.create(
+            name='Zweiter Verein',
+            short_name='ZV',
+            founded_year=1920,
+            budget=Decimal('500000.00'),
+            league=league,
+        )
+        self.sofifa_ds, _ = DataSource.objects.get_or_create(
+            code=DataSource.CODE_SOFIFA,
+            defaults={'name': 'SoFIFA'},
+        )
+        self.player = Player.objects.create(
+            first_name='Thomas',
+            last_name='Mueller',
+            age=34,
+            position='OM',
+            main_position_1='OM',
+            potential=85,
+            market_value=Decimal('20000000.00'),
+            salary_per_match=Decimal('100000.00'),
+            club=self.club,
+        )
+
+    def _tmp_csv(self, content, suffix='.csv'):
+        """Schreibt content in eine temporäre Datei und gibt den Pfad zurück."""
+        fh = tempfile.NamedTemporaryFile(
+            mode='w', suffix=suffix, delete=False, encoding='utf-8',
+        )
+        fh.write(content)
+        fh.close()
+        self.addCleanup(os.unlink, fh.name)
+        return fh.name
+
+    def _run(self, csv_content, extra_args=None):
+        """Hilfsmethode: CSV schreiben, Kommando ausführen, Ausgabe zurückgeben."""
+        path = self._tmp_csv(csv_content)
+        out = StringIO()
+        args = [path]
+        kwargs = {'stdout': out, 'skip_recalculate': True}
+        if extra_args:
+            kwargs.update(extra_args)
+        from django.core.management import call_command
+        call_command('import_sofifa_csv', *args, **kwargs)
+        return out.getvalue()
+
+    # ── 1. Primär-Matching über sofifa_id ────────────────────────────────────
+
+    def test_primary_match_via_external_id_creates_source_rating(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999001',
+        )
+
+        csv = 'sofifa_id,name,overall\n999001,Thomas Mueller,82\n'
+        output = self._run(csv)
+
+        rating = PlayerSourceRating.objects.filter(
+            player=self.player,
+            source=PlayerSourceRating.SOURCE_EA,
+        ).first()
+        self.assertIsNotNone(rating, 'PlayerSourceRating wurde nicht angelegt.')
+        self.assertEqual(rating.rating, 82)
+        self.assertIn('neu', output)
+
+    def test_primary_match_updates_existing_source_rating(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999001',
+        )
+        PlayerSourceRating.objects.create(
+            player=self.player,
+            source=PlayerSourceRating.SOURCE_EA,
+            rating=80,
+        )
+
+        csv = 'sofifa_id,name,overall\n999001,Thomas Mueller,85\n'
+        output = self._run(csv)
+
+        rating = PlayerSourceRating.objects.get(
+            player=self.player,
+            source=PlayerSourceRating.SOURCE_EA,
+        )
+        self.assertEqual(rating.rating, 85)
+        self.assertIn('aktualisiert', output)
+
+    # ── 2. Fallback-Matching über Name verknüpft sofifa_id dauerhaft ─────────
+
+    def test_fallback_name_match_creates_external_id(self):
+        csv = 'sofifa_id,name,club,overall\n999002,Thomas Mueller,FC Testverein,78\n'
+        output = self._run(csv)
+
+        ext = PlayerExternalId.objects.filter(
+            player=self.player,
+            source=self.sofifa_ds,
+        ).first()
+        self.assertIsNotNone(ext, 'PlayerExternalId wurde nicht dauerhaft verknüpft.')
+        self.assertEqual(ext.external_id, '999002')
+        self.assertIn('neu', output)
+
+    def test_fallback_name_match_also_creates_source_rating(self):
+        csv = 'sofifa_id,name,club,overall\n999002,Thomas Mueller,FC Testverein,78\n'
+        self._run(csv)
+
+        rating = PlayerSourceRating.objects.filter(
+            player=self.player,
+            source=PlayerSourceRating.SOURCE_EA,
+        ).first()
+        self.assertIsNotNone(rating)
+        self.assertEqual(rating.rating, 78)
+
+    # ── 3. Mehrdeutiger Fallback wird abgelehnt ───────────────────────────────
+
+    def test_ambiguous_fallback_counts_as_unmatched(self):
+        Player.objects.create(
+            first_name='Thomas',
+            last_name='Mueller',
+            age=28,
+            position='ST',
+            main_position_1='ST',
+            potential=80,
+            market_value=Decimal('5000000.00'),
+            salary_per_match=Decimal('50000.00'),
+            club=self.club,
+        )
+
+        csv = 'sofifa_id,name,club,overall\n999003,Thomas Mueller,FC Testverein,75\n'
+        output = self._run(csv)
+
+        self.assertIn('nicht gematcht', output.lower())
+        self.assertFalse(
+            PlayerExternalId.objects.filter(
+                source=self.sofifa_ds,
+                external_id='999003',
+            ).exists(),
+        )
+
+    # ── 4. Fehlende Pflichtspalten führen zu CommandError ────────────────────
+
+    def test_missing_sofifa_id_column_raises_command_error(self):
+        from django.core.management.base import CommandError
+        path = self._tmp_csv('name,overall\nThomas Mueller,80\n')
+        with self.assertRaises(CommandError):
+            from django.core.management import call_command
+            call_command(
+                'import_sofifa_csv', path,
+                stdout=StringIO(), skip_recalculate=True,
+            )
+
+    def test_missing_rating_column_raises_command_error(self):
+        from django.core.management.base import CommandError
+        path = self._tmp_csv('sofifa_id,name\n999004,Thomas Mueller\n')
+        with self.assertRaises(CommandError):
+            from django.core.management import call_command
+            call_command(
+                'import_sofifa_csv', path,
+                stdout=StringIO(), skip_recalculate=True,
+            )
+
+    # ── 5. Zeile mit fehlender sofifa_id landet im Fehler-Counter ────────────
+
+    def test_row_with_empty_sofifa_id_increments_error_counter(self):
+        csv = 'sofifa_id,name,overall\n,Thomas Mueller,80\n'
+        output = self._run(csv)
+        self.assertRegex(output, r'1 Fehler')
+
+    # ── 6. Re-Run ist idempotent ──────────────────────────────────────────────
+
+    def test_rerun_is_idempotent_unchanged_stat(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999005',
+        )
+        csv = 'sofifa_id,name,overall\n999005,Thomas Mueller,81\n'
+        self._run(csv)
+        output2 = self._run(csv)
+
+        self.assertIn('unveraendert', output2)
+        self.assertRegex(output2, r'0 aktualisiert')
+
+    def test_rerun_does_not_create_duplicate_source_rating(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999005',
+        )
+        csv = 'sofifa_id,name,overall\n999005,Thomas Mueller,81\n'
+        self._run(csv)
+        self._run(csv)
+
+        count = PlayerSourceRating.objects.filter(
+            player=self.player,
+            source=PlayerSourceRating.SOURCE_EA,
+        ).count()
+        self.assertEqual(count, 1, 'Duplikat in PlayerSourceRating nach Re-Run.')
+
+    def test_rerun_does_not_create_duplicate_external_id(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999005',
+        )
+        csv = 'sofifa_id,name,overall\n999005,Thomas Mueller,81\n'
+        self._run(csv)
+        self._run(csv)
+
+        count = PlayerExternalId.objects.filter(
+            player=self.player,
+            source=self.sofifa_ds,
+        ).count()
+        self.assertEqual(count, 1, 'Duplikat in PlayerExternalId nach Re-Run.')
+
+    def test_rerun_does_not_create_duplicate_snapshot(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999005',
+        )
+        csv = 'sofifa_id,name,overall\n999005,Thomas Mueller,81\n'
+        self._run(csv)
+        self._run(csv)
+
+        count = PlayerSourceRatingSnapshot.objects.filter(
+            player=self.player,
+            source=self.sofifa_ds,
+        ).count()
+        self.assertEqual(count, 1, 'Duplikat in PlayerSourceRatingSnapshot nach Re-Run.')
+
+    # ── 7. --dry-run schreibt nichts in die DB ───────────────────────────────
+
+    def test_dry_run_creates_no_source_rating(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999006',
+        )
+        csv = 'sofifa_id,name,overall\n999006,Thomas Mueller,83\n'
+        path = self._tmp_csv(csv)
+        from django.core.management import call_command
+        call_command(
+            'import_sofifa_csv', path,
+            stdout=StringIO(), dry_run=True, skip_recalculate=True,
+        )
+
+        self.assertFalse(
+            PlayerSourceRating.objects.filter(
+                player=self.player,
+                source=PlayerSourceRating.SOURCE_EA,
+            ).exists(),
+        )
+
+    def test_dry_run_creates_no_external_id(self):
+        csv = 'sofifa_id,name,club,overall\n999007,Thomas Mueller,FC Testverein,83\n'
+        path = self._tmp_csv(csv)
+        from django.core.management import call_command
+        call_command(
+            'import_sofifa_csv', path,
+            stdout=StringIO(), dry_run=True, skip_recalculate=True,
+        )
+
+        self.assertFalse(
+            PlayerExternalId.objects.filter(
+                source=self.sofifa_ds,
+                external_id='999007',
+            ).exists(),
+        )
+
+    def test_dry_run_creates_no_snapshot(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999006',
+        )
+        csv = 'sofifa_id,name,overall\n999006,Thomas Mueller,83\n'
+        path = self._tmp_csv(csv)
+        from django.core.management import call_command
+        call_command(
+            'import_sofifa_csv', path,
+            stdout=StringIO(), dry_run=True, skip_recalculate=True,
+        )
+
+        self.assertFalse(
+            PlayerSourceRatingSnapshot.objects.filter(
+                player=self.player,
+                source=self.sofifa_ds,
+            ).exists(),
+        )
+
+    def test_dry_run_output_contains_dry_run_notice(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999006',
+        )
+        csv = 'sofifa_id,name,overall\n999006,Thomas Mueller,83\n'
+        path = self._tmp_csv(csv)
+        out = StringIO()
+        from django.core.management import call_command
+        call_command(
+            'import_sofifa_csv', path,
+            stdout=out, dry_run=True, skip_recalculate=True,
+        )
+        self.assertIn('DRY-RUN', out.getvalue())
 
