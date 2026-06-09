@@ -564,6 +564,71 @@
         {% endif %}
       </div>
 
+      <!-- ⑨ DB-Sync: Gespeicherter vs. berechneter Wert -->
+      <div class="cpe-str-section cpe-str-section-sync">
+        <div class="cpe-str-section-title">⑨ Datenbank-Sync</div>
+
+        {% if str_sync.status != 'no_engine_data' %}
+        <div class="cpe-str-sync-bar cpe-str-sync-{{ str_sync.status }}">
+          <span class="cpe-str-sync-icon">
+            {% if str_sync.status == 'ok' %}✓{% elif str_sync.status == 'warn' %}△{% elif str_sync.status == 'danger' %}⚠{% else %}–{% endif %}
+          </span>
+          {% if str_sync.status == 'ok' %}Gespeicherter Wert stimmt mit Engine überein.
+          {% elif str_sync.status == 'warn' %}Leichte Abweichung: Δ {{ str_sync.delta }} Punkte — Neuberechnung empfohlen.
+          {% elif str_sync.status == 'danger' %}Starke Abweichung: Δ {{ str_sync.delta }} Punkte — Neuberechnung erforderlich.
+          {% elif str_sync.status == 'no_profile' %}Kein Stärkeprofil in der Datenbank — noch nie berechnet.
+          {% endif %}
+          {% if str_sync.stored_at %}<span class="cpe-str-sync-date">Zuletzt gespeichert: {{ str_sync.stored_at|date:"d.m.Y H:i" }}</span>{% endif %}
+        </div>
+        {% endif %}
+
+        <table class="cpe-str-table cpe-str-sync-table">
+          <thead>
+            <tr><th>Wert</th><th>Gespeichert (DB)</th><th>Berechnet (Engine)</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>base_strength</td>
+              <td>
+                {% if str_sync.stored_base is not None %}
+                  <span class="cpe-str-sync-stored {% if str_sync.status == 'danger' or str_sync.status == 'warn' %}cpe-str-sync-stale{% endif %}">{{ str_sync.stored_base }}</span>
+                {% else %}
+                  <span class="cpe-str-null">– (kein Profil)</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if str_range.computable %}
+                  <span class="cpe-str-sync-engine">{{ str_range.min }}</span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td>final_strength</td>
+              <td>
+                {% if str_sync.stored_final is not None %}
+                  <span class="cpe-str-sync-stored">{{ str_sync.stored_final }}</span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+              <td class="cpe-str-null">base + form_modifier</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {% if str_range.computable %}
+        <form method="post" action="{% url 'creator_player_recalculate_strength' player.id %}" class="cpe-str-sync-form">
+          {% csrf_token %}
+          <button type="submit" class="cpe-btn cpe-btn-sync {% if str_sync.status == 'danger' or str_sync.status == 'warn' %}cpe-btn-sync-stale{% endif %}">
+            {% if str_sync.status == 'danger' %}⚠ Jetzt neu berechnen{% elif str_sync.status == 'warn' %}△ Neu berechnen{% else %}Neu berechnen{% endif %}
+          </button>
+          <span class="cpe-str-sync-hint">Schreibt berechnete base_strength in die Datenbank. form_modifier und freshness bleiben unverändert.</span>
+        </form>
+        {% endif %}
+      </div>
+
     </div>
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-source">
       <div class="cpe-section-bar">Source</div>
@@ -821,6 +886,19 @@
 .cpe-str-sync-danger { background: #ff334412; color: #ff8899; border-left: 3px solid #ff3344; }
 .cpe-str-sync-no_profile { background: #0d203520; color: #556677; border-left: 3px solid #0d2035; }
 .cpe-str-sync-no_engine_data { background: #0d203520; color: #556677; border-left: 3px solid #0d2035; }
+
+/* DB-Sync section */
+.cpe-str-section-sync { background: #030c18; }
+.cpe-str-sync-table { max-width: 600px; }
+.cpe-str-sync-stored { color: #7fd6ff; font-weight: 600; font-size: .9rem; }
+.cpe-str-sync-stored.cpe-str-sync-stale { color: #ff8899; }
+.cpe-str-sync-engine { color: #00d4ff; font-weight: 700; font-size: .9rem; }
+.cpe-str-sync-form { display: flex; align-items: center; gap: 1rem; margin-top: .9rem; flex-wrap: wrap; }
+.cpe-str-sync-hint { color: #334455; font-size: .72rem; font-style: italic; }
+.cpe-btn-sync { background: #071d30; border: 1px solid #00d4ff44; color: #7fd6ff; padding: .4rem 1.1rem; font-size: .8rem; border-radius: 4px; cursor: pointer; transition: background .15s; }
+.cpe-btn-sync:hover { background: #00d4ff15; }
+.cpe-btn-sync-stale { border-color: #ff334455; color: #ff8899; background: #ff33440a; }
+.cpe-btn-sync-stale:hover { background: #ff334418; }
 </style>
 
 {% block extra_js %}

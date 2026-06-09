@@ -16,6 +16,7 @@ from .models import (
     CoinTransaction, PresidentSatisfaction, TacticSetup,
 )
 from . import strength_engine as se
+from .strength_service import compute_strength_for_player
 from .management.commands.import_player_source_ratings import (
     FMI_ATTR_MAP, FMI_GK_MAP, SOFIFA_ATTR_MAP, SOFIFA_GK_MAP,
 )
@@ -333,7 +334,6 @@ def _build_strength_tab_context(player):
         str_min, str_max = None, None
 
     # ── Sync-Status: gespeicherter Profilwert vs. Engine-Berechnung ─────────
-    from decimal import Decimal
     stored_profile = getattr(player, 'strength_profile', None)
     if stored_profile is not None:
         stored_base  = float(stored_profile.base_strength)
@@ -760,6 +760,49 @@ def creator_player_edit(request, player_id):
     context.update(_build_source_tab_context(player))
     context.update(_build_strength_tab_context(player))
     return render(request, 'creator/player_edit.html', context)
+
+
+@require_POST
+@login_required
+def creator_player_recalculate_strength(request, player_id):
+    """
+    POST: Berechnet die Stärke eines Spielers via strength_engine neu und
+    schreibt das Ergebnis in PlayerStrengthProfile.base_strength.
+    form_modifier und freshness bleiben unverändert.
+    """
+    from decimal import Decimal
+    from .models import strength_decimal
+
+    player = get_object_or_404(Player, id=player_id)
+    result = compute_strength_for_player(player)
+
+    if not result['computable']:
+        messages.warning(
+            request,
+            f'{player.first_name} {player.last_name}: '
+            'Stärke nicht berechenbar — Quelldaten fehlen.'
+        )
+        return redirect('creator_player_edit', player_id=player.id)
+
+    try:
+        profile = player.strength_profile
+    except PlayerStrengthProfile.DoesNotExist:
+        profile = PlayerStrengthProfile(
+            player=player,
+            form_modifier=Decimal('0.00'),
+            freshness=Decimal('100.00'),
+        )
+
+    profile.base_strength = result['base_strength']
+    profile.save()
+
+    messages.success(
+        request,
+        f'Stärke neu berechnet: {player.first_name} {player.last_name} — '
+        f'base_strength = {result["base_strength"]}, '
+        f'final_strength = {profile.final_strength}'
+    )
+    return redirect('creator_player_edit', player_id=player.id)
 
 
 def creator_new_player(request, club_id):
