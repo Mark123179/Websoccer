@@ -308,7 +308,7 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'TROPHÄENSCHRANK')
         self.assertContains(response, 'PROFI-HIGHLIGHTS')
         self.assertContains(response, 'JUGEND-HIGHLIGHTS')
-        self.assertContains(response, 'VEREINSUMFELD')
+        self.assertContains(response, 'LETZTES SPIEL')
         self.assertContains(response, 'LIGATABELLE')
         self.assertContains(response, 'STADION')
         self.assertContains(response, 'STADT')
