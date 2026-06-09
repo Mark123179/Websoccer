@@ -576,9 +576,13 @@
 }
 
 .liga-fixture--mine {
-    background: #14181f;
-    border-left: 2px solid #22e6ff60;
-    padding-left: 4px;
+    background: #0f2e1a;
+    border-left: 3px solid #30f29c;
+    padding-left: 8px;
+    box-shadow: 0 0 12px rgba(48, 242, 156, 0.12);
+}
+.liga-fixture--mine:hover {
+    background: #143a22;
 }
 
 .liga-fixture__score {
