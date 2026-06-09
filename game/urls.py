@@ -45,7 +45,6 @@ from .views_management import (
 from .views_creator import (
     creator_index,
     creator_search,
-    creator_import_ratings,
     creator_club_edit,
     creator_upload_stadium,
     creator_upload_city,
@@ -83,6 +82,7 @@ from .views_creator import (
     creator_save_coins,
     creator_save_satisfaction,
     creator_add_satisfaction,
+    creator_sofifa_import,
 )
 
 
@@ -222,7 +222,6 @@ urlpatterns = [
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/search/', creator_search, name='creator_search'),
-    path('creator/import-ratings/', creator_import_ratings, name='creator_import_ratings'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),
     path('creator/clubs/<int:club_id>/upload/stadium/', creator_upload_stadium, name='creator_upload_stadium'),
     path('creator/clubs/<int:club_id>/upload/city/', creator_upload_city, name='creator_upload_city'),
@@ -262,4 +261,7 @@ urlpatterns = [
     path('creator/managers/<int:manager_id>/coins/', creator_save_coins, name='creator_save_coins'),
     path('creator/managers/<int:manager_id>/satisfaction/<int:sat_id>/', creator_save_satisfaction, name='creator_save_satisfaction'),
     path('creator/managers/<int:manager_id>/satisfaction/add/', creator_add_satisfaction, name='creator_add_satisfaction'),
+
+    # SoFIFA-CSV-Import
+    path('creator/import/sofifa/', creator_sofifa_import, name='creator_sofifa_import'),
 ]

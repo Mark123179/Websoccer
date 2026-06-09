@@ -2226,110 +2226,95 @@ def creator_player_save_rl_mapping(request, player_id):
         _rl_prof.rl_form_status = PlayerRLFormProfile.STATUS_NOT_MAPPED
     _rl_prof.save()
     compute_rl_form_for_player(player)
-
     return JsonResponse({'ok': True})
 
 
-# ══════════════════════════════════════════════════════════════════════════
-#  SoFIFA-CSV-Import (Creator Mode)
-# ══════════════════════════════════════════════════════════════════════════
-import re as _re
-import uuid as _uuid
-
-from django.conf import settings as _imp_settings
-from . import sofifa_import as _sofifa_import
-from .models import SourceImportRun
-
-_SOFIFA_UPLOAD_DIR = os.path.join(str(_imp_settings.BASE_DIR), '.local', 'tmp', 'sofifa_uploads')
-
-
-def _sofifa_upload_path(token):
-    """Sicherer Pfad zu einem hochgeladenen Token (verhindert Path-Traversal)."""
-    if not _re.fullmatch(r'[a-f0-9]{32}\.csv', token or ''):
-        return None
-    path = os.path.join(_SOFIFA_UPLOAD_DIR, token)
-    if not os.path.isfile(path):
-        return None
-    return path
-
+# ── SoFIFA-CSV-Upload ─────────────────────────────────────────────────────────
 
 @login_required
-def creator_import_ratings(request):
+def creator_sofifa_import(request):
+    """Browser-Upload für den SoFIFA-Rating-Import im Creator-Mode.
+
+    Schritt 1 (GET / POST action=upload):  Formular mit Datei-Auswahl.
+    Schritt 2 (POST action=preview):       Dry-Run; Vorschau im Browser.
+    Schritt 3 (POST action=confirm):       Echter Import inkl. Stärke-Neuberechnung.
+
+    Nur Staff-Nutzer dürfen globale Ratings importieren.
+    """
+    from django.http import HttpResponseForbidden
+    from .sofifa_import_service import run_sofifa_import
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Nur Staff-Nutzer können Ratings importieren.')
+
+    ctx = {'step': 'upload'}
+
     if request.method == 'POST':
-        action = request.POST.get('action', 'preview')
+        action = request.POST.get('action', '')
 
-        # ── Bestätigung: echter Import ───────────────────────────────────────
-        if action == 'commit':
-            token = request.POST.get('token', '')
-            version = request.POST.get('version', '').strip()
-            file_name = request.POST.get('file_name', '').strip()
-            path = _sofifa_upload_path(token)
-            if not path:
-                messages.error(request, 'Upload nicht gefunden oder abgelaufen. Bitte erneut hochladen.')
-                return redirect('creator_import_ratings')
+        # ── Schritt 2: Dry-Run / Vorschau ────────────────────────────────────
+        if action == 'preview':
+            csv_file = request.FILES.get('csv_file')
+            if not csv_file:
+                ctx['upload_error'] = 'Bitte eine CSV-Datei auswählen.'
+                return render(request, 'creator/sofifa_import.html', ctx)
+
+            if csv_file.size > 5 * 1024 * 1024:
+                ctx['upload_error'] = 'Datei zu groß (max. 5 MB).'
+                return render(request, 'creator/sofifa_import.html', ctx)
+
             try:
-                result = _sofifa_import.run_import(
-                    path,
-                    version=version,
-                    file_name=file_name or token,
-                    dry_run=False,
-                    created_by=request.user if request.user.is_authenticated else None,
-                )
-            except _sofifa_import.ImportError_ as exc:
-                messages.error(request, f'Import fehlgeschlagen: {exc}')
-                return redirect('creator_import_ratings')
-            finally:
+                raw_bytes = csv_file.read()
                 try:
-                    os.remove(path)
-                except OSError:
-                    pass
-            return render(request, 'creator/import_ratings.html', {
-                'phase': 'done',
-                'result': result,
-                'rows_preview': [r for r in result['rows']
-                                 if r['action'] in ('new', 'updated')][:300],
+                    csv_text = raw_bytes.decode('utf-8-sig')
+                except UnicodeDecodeError:
+                    csv_text = raw_bytes.decode('latin-1')
+            except Exception as exc:
+                ctx['upload_error'] = f'Datei konnte nicht gelesen werden: {exc}'
+                return render(request, 'creator/sofifa_import.html', ctx)
+
+            result = run_sofifa_import(csv_text, dry_run=True)
+            if result['fatal_error']:
+                ctx['upload_error'] = result['fatal_error']
+                return render(request, 'creator/sofifa_import.html', ctx)
+
+            request.session['sofifa_csv_preview'] = csv_text
+
+            ctx.update({
+                'step': 'preview',
+                'stats': result['stats'],
+                'row_results': result['row_results'],
+                'filename': csv_file.name,
             })
+            return render(request, 'creator/sofifa_import.html', ctx)
 
-        # ── Upload: Dry-Run-Vorschau ─────────────────────────────────────────
-        f = request.FILES.get('csv_file')
-        if not f:
-            messages.error(request, 'Keine CSV-Datei ausgewählt.')
-            return redirect('creator_import_ratings')
+        # ── Schritt 3: Echter Import ─────────────────────────────────────────
+        elif action == 'confirm':
+            csv_text = request.session.pop('sofifa_csv_preview', None)
+            if not csv_text:
+                ctx['upload_error'] = (
+                    'Sitzung abgelaufen – bitte die CSV erneut hochladen.'
+                )
+                return render(request, 'creator/sofifa_import.html', ctx)
 
-        os.makedirs(_SOFIFA_UPLOAD_DIR, exist_ok=True)
-        token = _uuid.uuid4().hex + '.csv'
-        dest = os.path.join(_SOFIFA_UPLOAD_DIR, token)
-        with open(dest, 'wb') as out:
-            for chunk in f.chunks():
-                out.write(chunk)
+            result = run_sofifa_import(csv_text, dry_run=False)
+            if result['fatal_error']:
+                ctx['upload_error'] = result['fatal_error']
+                return render(request, 'creator/sofifa_import.html', ctx)
 
-        version = request.POST.get('version', '').strip()
-        try:
-            result = _sofifa_import.run_import(
-                dest, version=version, file_name=f.name, dry_run=True,
-            )
-        except _sofifa_import.ImportError_ as exc:
-            try:
-                os.remove(dest)
-            except OSError:
-                pass
-            messages.error(request, f'CSV ungültig: {exc}')
-            return redirect('creator_import_ratings')
+            ctx.update({
+                'step': 'done',
+                'stats': result['stats'],
+                'row_results': result['row_results'],
+            })
+            return render(request, 'creator/sofifa_import.html', ctx)
 
-        return render(request, 'creator/import_ratings.html', {
-            'phase': 'preview',
-            'result': result,
-            'rows_preview': [r for r in result['rows']
-                             if r['action'] in ('new', 'updated', 'error')][:300],
-            'token': token,
-            'file_name': f.name,
-        })
+        # ── Abbrechen ────────────────────────────────────────────────────────
+        elif action == 'cancel':
+            request.session.pop('sofifa_csv_preview', None)
+            return redirect('creator_sofifa_import')
 
-    # ── GET: Formular + Verlauf ──────────────────────────────────────────────
-    return render(request, 'creator/import_ratings.html', {
-        'phase': 'form',
-        'recent_runs': SourceImportRun.objects.all()[:10],
-    })
+    return render(request, 'creator/sofifa_import.html', ctx)
 
 
 # ── Globale Creator-Schnellsuche (Vereine + Spieler) ─────────────────────
@@ -2340,8 +2325,7 @@ def creator_search(request):
         return JsonResponse({'clubs': [], 'players': []})
 
     clubs_qs = Club.objects.filter(name__icontains=q).order_by('name')[:8]
-    from django.db.models import Q, Value
-    from django.db.models.functions import Concat
+    from django.db.models import Q
     players_qs = (
         Player.objects
         .filter(Q(first_name__icontains=q) | Q(last_name__icontains=q))

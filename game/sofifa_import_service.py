@@ -1,0 +1,326 @@
+"""SoFIFA-Import-Service.
+
+Kern-Logik des SoFIFA-CSV-Imports als wiederverwendbare Funktion für CLI und
+Browser-Upload. Wird von management/commands/import_sofifa_csv.py UND von
+views_creator.creator_sofifa_import genutzt.
+"""
+import csv
+import io
+
+from django.core.management import call_command
+from django.db import transaction
+from django.utils import timezone
+
+from .models import (
+    Club,
+    DataSource,
+    Player,
+    PlayerEditLog,
+    PlayerExternalId,
+    PlayerSourceRating,
+    PlayerSourceRatingSnapshot,
+)
+from .management.commands.import_sofifa_csv import (
+    ALL_ATTR_COLUMNS,
+    COLUMN_ALIASES,
+    name_similarity,
+    normalize_header,
+    normalize_name,
+)
+
+
+def _build_header_map(header_row):
+    header_map = {}
+    for idx, cell in enumerate(header_row):
+        key = COLUMN_ALIASES.get(normalize_header(cell))
+        if key:
+            header_map[key] = idx
+    return header_map
+
+
+def _parse_int(raw, lo, hi, field, required=False):
+    raw = (raw or '').strip()
+    if not raw:
+        if required:
+            raise ValueError(f'{field} fehlt')
+        return None
+    try:
+        val = int(float(raw))
+    except ValueError:
+        raise ValueError(f'{field} ist keine Zahl: {raw!r}')
+    if not (lo <= val <= hi):
+        raise ValueError(f'{field}={val} außerhalb {lo}–{hi}')
+    return val
+
+
+def _parse_row(raw_row, header_map):
+    def cell(key):
+        idx = header_map.get(key)
+        if idx is None or idx >= len(raw_row):
+            return ''
+        return raw_row[idx].strip()
+
+    sofifa_id = cell('sofifa_id')
+    if not sofifa_id:
+        raise ValueError('sofifa_id fehlt')
+
+    rating = _parse_int(cell('rating'), 0, 100, 'rating', required=True)
+    potential = _parse_int(cell('potential'), 0, 100, 'potential')
+
+    attrs = {}
+    for col in ALL_ATTR_COLUMNS:
+        if col in header_map:
+            val = _parse_int(cell(col), 0, 99, col)
+            if val is not None:
+                attrs[col] = val
+
+    return {
+        'sofifa_id': sofifa_id,
+        'name': cell('name'),
+        'club': cell('club'),
+        'rating': rating,
+        'potential': potential,
+        'profile_url': cell('profile_url'),
+        'attrs': attrs,
+    }
+
+
+def _match_player(parsed, sofifa_ds):
+    ext = (
+        PlayerExternalId.objects
+        .filter(source=sofifa_ds, external_id=parsed['sofifa_id'])
+        .select_related('player', 'player__club')
+        .first()
+    )
+    if ext:
+        return ext.player, 'id'
+
+    name = parsed.get('name')
+    if not name:
+        return None, None
+
+    candidates = Player.objects.select_related('club').all()
+    club_name = parsed.get('club')
+    if club_name:
+        club_norm = normalize_name(club_name)
+        club_ids = [
+            c.id for c in Club.objects.all()
+            if club_norm and (
+                club_norm in normalize_name(c.name)
+                or normalize_name(c.name) in club_norm
+                or club_norm in normalize_name(c.short_name or '')
+            )
+        ]
+        if club_ids:
+            candidates = candidates.filter(club_id__in=club_ids)
+
+    target = normalize_name(name)
+    scored = []
+    for p in candidates:
+        score = name_similarity(target, normalize_name(p.full_name))
+        if score >= 150:
+            scored.append((score, p))
+
+    if not scored:
+        return None, None
+    scored.sort(key=lambda t: t[0], reverse=True)
+    if len(scored) > 1 and scored[0][0] == scored[1][0]:
+        return None, None
+    return scored[0][1], 'name'
+
+
+def _apply_row(player, parsed, sofifa_ds, today, dry_run):
+    existing = player.source_ratings.filter(
+        source=PlayerSourceRating.SOURCE_EA,
+    ).first()
+    is_new = existing is None
+
+    diff_lines = []
+    if is_new:
+        diff_lines.append(
+            f"EA/SoFIFA: Quelldaten erstmals angelegt (Rating {parsed['rating']})"
+        )
+    else:
+        if existing.rating != parsed['rating']:
+            diff_lines.append(
+                f"EA/SoFIFA Rating: {existing.rating} → {parsed['rating']}"
+            )
+        if parsed['potential'] is not None and existing.potential != parsed['potential']:
+            old_p = existing.potential if existing.potential is not None else '–'
+            diff_lines.append(
+                f"EA/SoFIFA Potential: {old_p} → {parsed['potential']}"
+            )
+        for col, val in parsed['attrs'].items():
+            old_val = getattr(existing, col, None)
+            if old_val != val:
+                diff_lines.append(
+                    f"{col}: {old_val if old_val is not None else '–'} → {val}"
+                )
+
+    if not is_new and not diff_lines:
+        return 'unchanged', []
+
+    if dry_run:
+        return ('new' if is_new else 'updated'), diff_lines
+
+    with transaction.atomic():
+        defaults = {
+            'rating': parsed['rating'],
+            'source_url': parsed['profile_url'],
+            'source_version': 'SoFIFA CSV-Import',
+            'checked_at': today,
+        }
+        if parsed['potential'] is not None:
+            defaults['potential'] = parsed['potential']
+        defaults.update(parsed['attrs'])
+
+        PlayerSourceRating.objects.update_or_create(
+            player=player,
+            source=PlayerSourceRating.SOURCE_EA,
+            defaults=defaults,
+        )
+
+        PlayerSourceRatingSnapshot.objects.update_or_create(
+            player=player,
+            source=sofifa_ds,
+            recorded_at=today,
+            defaults={
+                'rating': parsed['rating'],
+                'potential': parsed['potential'],
+                'source_url': parsed['profile_url'],
+                'source_version': 'SoFIFA CSV-Import',
+                'update_current': False,
+                'raw_payload': {
+                    'sofifa_id': parsed['sofifa_id'],
+                    'attrs': parsed['attrs'],
+                },
+            },
+        )
+
+        PlayerExternalId.objects.update_or_create(
+            player=player,
+            source=sofifa_ds,
+            defaults={
+                'external_id': parsed['sofifa_id'],
+                'profile_url': parsed['profile_url'],
+                'is_primary': False,
+            },
+        )
+
+        PlayerEditLog.objects.create(
+            player=player,
+            changed_by=None,
+            category=PlayerEditLog.CATEGORY_SOURCE,
+            summary='\n'.join(diff_lines),
+        )
+
+    return ('new' if is_new else 'updated'), diff_lines
+
+
+def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
+    """Führt den SoFIFA-CSV-Import durch und gibt ein strukturiertes Ergebnis zurück.
+
+    Args:
+        csv_text:          Inhalt der CSV-Datei als String (BOM wird automatisch entfernt).
+        dry_run:           True → nur Vorschau, keine DB-Schreiboperationen.
+        skip_recalculate:  True → Spielstärken nach dem Import NICHT neu berechnen.
+
+    Returns:
+        dict mit:
+          fatal_error  – str oder None (Abbruchfehler, z.B. fehlende Pflichtspalte)
+          stats        – {new, updated, unchanged, unmatched, error}
+          row_results  – Liste von Dicts pro Zeile:
+                           line_no, action, player_name, club_name,
+                           match_mode, diff_lines, error_msg
+    """
+    if csv_text.startswith('\ufeff'):
+        csv_text = csv_text[1:]
+
+    rows = list(csv.reader(io.StringIO(csv_text)))
+
+    if not rows:
+        return {'fatal_error': 'CSV ist leer.', 'stats': {}, 'row_results': []}
+
+    header_map = _build_header_map(rows[0])
+    if 'sofifa_id' not in header_map:
+        return {
+            'fatal_error': (
+                'CSV-Header braucht eine sofifa_id-Spalte (Aliase: sofifa, id).'
+            ),
+            'stats': {}, 'row_results': [],
+        }
+    if 'rating' not in header_map:
+        return {
+            'fatal_error': (
+                'CSV-Header braucht eine rating-Spalte (Aliase: overall, ovr).'
+            ),
+            'stats': {}, 'row_results': [],
+        }
+
+    sofifa_ds, _ = DataSource.objects.get_or_create(
+        code=DataSource.CODE_SOFIFA,
+        defaults={'name': 'SoFIFA'},
+    )
+    today = timezone.localdate()
+
+    stats = {'new': 0, 'updated': 0, 'unchanged': 0, 'unmatched': 0, 'error': 0}
+    row_results = []
+
+    for line_no, raw_row in enumerate(rows[1:], start=2):
+        if not any(cell.strip() for cell in raw_row):
+            continue
+
+        try:
+            parsed = _parse_row(raw_row, header_map)
+        except ValueError as exc:
+            stats['error'] += 1
+            row_results.append({
+                'line_no': line_no,
+                'action': 'error',
+                'player_name': '',
+                'club_name': '',
+                'match_mode': '',
+                'diff_lines': [],
+                'error_msg': str(exc),
+            })
+            continue
+
+        player, match_mode = _match_player(parsed, sofifa_ds)
+        if not player:
+            stats['unmatched'] += 1
+            label = parsed.get('name') or f"sofifa_id={parsed['sofifa_id']}"
+            row_results.append({
+                'line_no': line_no,
+                'action': 'unmatched',
+                'player_name': label,
+                'club_name': parsed.get('club', ''),
+                'match_mode': '',
+                'diff_lines': [],
+                'error_msg': '',
+            })
+            continue
+
+        action, diff_lines = _apply_row(
+            player=player,
+            parsed=parsed,
+            sofifa_ds=sofifa_ds,
+            today=today,
+            dry_run=dry_run,
+        )
+        stats[action] += 1
+        row_results.append({
+            'line_no': line_no,
+            'action': action,
+            'player_name': player.full_name,
+            'club_name': player.club.name if player.club else '',
+            'match_mode': match_mode,
+            'diff_lines': diff_lines,
+            'error_msg': '',
+        })
+
+    if not dry_run and not skip_recalculate:
+        changed = stats['new'] + stats['updated']
+        if changed:
+            call_command('calculate_player_strengths')
+
+    return {'fatal_error': None, 'stats': stats, 'row_results': row_results}
