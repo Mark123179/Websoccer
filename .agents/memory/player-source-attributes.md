@@ -29,7 +29,4 @@ rollout to all 18 BL squads needs more club URLs added there).
   explicit user instruction (by German name). Semantically loose — flag if revisited.
 - **GK vs outfield:** separate maps (FMI_GK_MAP / SOFIFA_GK_MAP) keyed off
   `player.position == 'TW'`. GK rows fill only the 5 tw_* columns.
-
-## Reference (Olise pilot, verified)
-FMInside FM26.2: rating 88 / pot 93, 16 attrs. SoFIFA: 89 / 91, 13 attrs.
-SoFIFA has no one-on-ones → tw_eins_gegen_eins always NULL on EA rows.
+- **SoFIFA has no one-on-ones** → `tw_eins_gegen_eins` is always NULL on the EA row.

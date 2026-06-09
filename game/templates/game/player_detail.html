@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-7">
+    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-8">
     <link rel="stylesheet" href="{% static 'game/css/trophy-cabinet.css' %}?v=gm-4">
 {% endblock %}
 
@@ -104,6 +104,17 @@
                         </div>
                     </div>
                 </div>
+
+                {% if source_links %}
+                    <div class="aaa-source-links">
+                        <span class="aaa-source-links-title">Quellen</span>
+                        <div class="aaa-source-links-row">
+                            {% for link in source_links %}
+                                <a class="aaa-source-link is-{{ link.css }}" href="{{ link.url }}" target="_blank" rel="noopener noreferrer" title="{{ link.label }}-Profil von {{ player.full_name }}">{{ link.label }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
             </article>
         </aside>
 
