@@ -5,7 +5,7 @@ Connected in GameConfig.ready() (game/apps.py).
 """
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 logger = logging.getLogger(__name__)
@@ -115,3 +115,51 @@ def create_manager_profile_on_user_create(sender, instance, created, **kwargs):
             'member_since': member_since,
         },
     )
+
+
+@receiver(post_delete, sender='game.PlayerSourceRating')
+def recalculate_strength_on_source_rating_delete(sender, instance, **kwargs):
+    """Re-evaluates PlayerStrengthProfile.base_strength after a source rating
+    row is deleted (e.g. via Django admin or API).
+
+    - If remaining ratings are still sufficient to compute a strength, the
+      profile is updated with the new value.
+    - If no computable strength remains (base_strength cannot be null in the
+      schema), the profile row is deleted entirely so the UI shows an accurate
+      'not calculable' state instead of a stale number.
+    """
+    player = instance.player
+    try:
+        from .strength_service import compute_strength_for_player
+        from .models import PlayerStrengthProfile
+        from decimal import Decimal
+
+        result = compute_strength_for_player(player)
+
+        try:
+            profile = player.strength_profile
+        except PlayerStrengthProfile.DoesNotExist:
+            profile = None
+
+        if not result['computable']:
+            if profile is not None:
+                profile.delete()
+            return
+
+        if profile is None:
+            profile = PlayerStrengthProfile(
+                player=player,
+                form_modifier=Decimal('0.00'),
+                freshness=Decimal('100.00'),
+            )
+
+        profile.base_strength = result['base_strength']
+        profile.save()
+    except Exception:
+        logger.warning(
+            'recalculate_strength_on_source_rating_delete: '
+            'Stärke für Spieler %s (pk=%s) nach Löschung nicht aktualisiert.',
+            player,
+            player.pk,
+            exc_info=True,
+        )
