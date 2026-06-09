@@ -67,6 +67,30 @@ def get_fixture_player_stats(fixture_id, team_id):
     return []
 
 
+def search_player(name, season=2024):
+    """Sucht Spieler bei API-Football per Name (min. 3 Zeichen).
+
+    Args:
+        name:    Suchbegriff (Spielername, mind. 3 Zeichen).
+        season:  Saison-Jahr (default 2024 = Saison 2024/25).
+
+    Returns list[dict] – rohe response-Einträge der API, je Eintrag:
+        {
+            'player': {'id': int, 'name': str, 'nationality': str, ...},
+            'statistics': [{'team': {'id': int, 'name': str}, 'league': {'season': int, ...}}]
+        }
+    Raises requests.HTTPError bei 4xx/5xx.
+    """
+    resp = requests.get(
+        f'{API_BASE}/players',
+        headers=_headers(),
+        params={'search': name, 'season': season},
+        timeout=DEFAULT_TIMEOUT,
+    )
+    resp.raise_for_status()
+    return resp.json().get('response', [])
+
+
 def extract_player_stats(player_entry):
     """Aus einem get_fixture_player_stats-Eintrag die Kerndaten extrahieren.
 

@@ -2096,3 +2096,67 @@ def creator_league_fixture_save(request, league_id):
             ])
 
     return JsonResponse({'ok': True, 'saved': len(updates)})
+
+
+@login_required
+def creator_player_search_api_football(request, player_id):
+    """AJAX-Endpoint: Sucht API-Football-Spieler-Kandidaten per Name + Team.
+
+    GET-Parameter:
+        name        Spielername (mind. 3 Zeichen)
+        team_name   Team-Name als optionaler Client-seitiger Filter (kein extra API-Call)
+        season      Saison-Jahr (default 2024)
+
+    Returns JSON:
+        {ok: true, results: [{player_id, player_name, team_id, team_name, season, nationality, age}]}
+        {ok: false, error: "..."}
+    """
+    import requests as _requests
+    from django.conf import settings as _settings
+    from .api_football import search_player
+
+    get_object_or_404(Player, id=player_id)
+
+    name = request.GET.get('name', '').strip()
+    team_filter = request.GET.get('team_name', '').strip().lower()
+    try:
+        season = int(request.GET.get('season', 2024))
+    except (TypeError, ValueError):
+        season = 2024
+
+    if len(name) < 3:
+        return JsonResponse({'ok': False, 'error': 'Mindestens 3 Zeichen eingeben.'})
+
+    key = getattr(_settings, 'API_FOOTBALL_KEY', '')
+    if not key:
+        return JsonResponse({'ok': False, 'error': 'API_FOOTBALL_KEY nicht gesetzt.'})
+
+    try:
+        raw = search_player(name, season=season)
+    except _requests.HTTPError as exc:
+        return JsonResponse({'ok': False, 'error': f'API-Fehler: {exc}'})
+    except _requests.RequestException as exc:
+        return JsonResponse({'ok': False, 'error': f'Netzwerkfehler: {exc}'})
+
+    results = []
+    for entry in raw:
+        p = entry.get('player', {})
+        for stat in entry.get('statistics', []):
+            team = stat.get('team', {})
+            league = stat.get('league', {})
+            team_name_api = team.get('name', '')
+            if team_filter and team_filter not in team_name_api.lower():
+                continue
+            results.append({
+                'player_id':   p.get('id'),
+                'player_name': p.get('name', ''),
+                'nationality': p.get('nationality', ''),
+                'age':         p.get('age'),
+                'team_id':     team.get('id'),
+                'team_name':   team_name_api,
+                'season':      league.get('season', season),
+                'league_name': league.get('name', ''),
+            })
+
+    results = results[:20]
+    return JsonResponse({'ok': True, 'results': results})

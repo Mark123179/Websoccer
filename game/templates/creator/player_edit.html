@@ -635,32 +635,51 @@
     {# ===== RL-FORM TAB ===== #}
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-rlform">
 
+      {# ID-Suche #}
+      <div class="cpe-section-bar">API-Football ID-Suche</div>
+      <div class="cpe-afsearch-bar">
+        <input class="cpe-input cpe-afsearch-name" type="text"
+               placeholder="Spielername (mind. 3 Zeichen)"
+               value="{{ player.name }}" style="width:220px">
+        <input class="cpe-input cpe-afsearch-team" type="text"
+               placeholder="Team-Filter (optional)"
+               value="{{ rl_profile.api_football_team_name|default:'' }}" style="width:180px">
+        <input class="cpe-input cpe-afsearch-season" type="number"
+               placeholder="Saison" value="{{ rl_profile.api_football_season|default:'2024' }}"
+               style="width:80px">
+        <button type="button" class="cpe-btn cpe-btn-afsearch" id="afsearch-btn">
+          🔍 Suchen
+        </button>
+        <span class="cpe-hint cpe-afsearch-hint">1 API-Request pro Klick</span>
+      </div>
+      <div class="cpe-afsearch-results" id="afsearch-results" style="display:none"></div>
+
       {# Mapping-Block #}
       <div class="cpe-section-bar">API-Football Mapping</div>
 
       <div class="cpe-field-row">
         <div class="cpe-label">Player-ID</div>
-        <input class="cpe-input" type="number" name="rl_api_player_id"
+        <input class="cpe-input" type="number" name="rl_api_player_id" id="rl_api_player_id"
                value="{{ rl_profile.api_football_player_id|default:'' }}"
                placeholder="z. B. 154713" style="width:140px">
         <span class="cpe-hint">API-Football Spieler-ID (z. B. aus rapidapi.com)</span>
       </div>
       <div class="cpe-field-row">
         <div class="cpe-label">Team-ID</div>
-        <input class="cpe-input" type="number" name="rl_api_team_id"
+        <input class="cpe-input" type="number" name="rl_api_team_id" id="rl_api_team_id"
                value="{{ rl_profile.api_football_team_id|default:'' }}"
                placeholder="z. B. 157" style="width:140px">
         <span class="cpe-hint">API-Football Team-ID des aktuellen RL-Vereins</span>
       </div>
       <div class="cpe-field-row">
         <div class="cpe-label">Team-Name</div>
-        <input class="cpe-input" type="text" name="rl_api_team_name"
+        <input class="cpe-input" type="text" name="rl_api_team_name" id="rl_api_team_name"
                value="{{ rl_profile.api_football_team_name|default:'' }}"
                placeholder="z. B. Bayern Munich" style="width:240px">
       </div>
       <div class="cpe-field-row">
         <div class="cpe-label">Saison</div>
-        <input class="cpe-input" type="number" name="rl_api_season"
+        <input class="cpe-input" type="number" name="rl_api_season" id="rl_api_season"
                value="{{ rl_profile.api_football_season|default:'2024' }}"
                placeholder="2024" style="width:100px">
         <span class="cpe-hint">Jahr des Saisonbeginns (z. B. 2024 = Saison 2024/25)</span>
@@ -1118,6 +1137,23 @@
 .cpe-btn-sync-stale:hover { background: #ff334418; }
 
 /* RL-Form Tab */
+.cpe-afsearch-bar { display: flex; align-items: center; gap: .6rem; padding: .9rem 1.25rem; flex-wrap: wrap; border-bottom: 1px solid #071525; }
+.cpe-afsearch-hint { color: #334455; font-size: .7rem; font-style: italic; }
+.cpe-btn-afsearch { background: #07223a; border: 1px solid #00d4ff55; color: #7fd6ff; padding: .4rem 1rem; font-size: .82rem; border-radius: 4px; cursor: pointer; transition: background .15s; white-space: nowrap; }
+.cpe-btn-afsearch:hover { background: #00d4ff1a; }
+.cpe-btn-afsearch:disabled { opacity: .45; cursor: default; }
+.cpe-afsearch-results { border-bottom: 1px solid #071525; }
+.cpe-afsearch-error { color: #ff8899; font-size: .82rem; padding: .75rem 1.25rem; }
+.cpe-afsearch-empty { color: #445566; font-size: .82rem; padding: .75rem 1.25rem; }
+.cpe-afsearch-table { width: 100%; border-collapse: collapse; }
+.cpe-afsearch-table th { color: #7fd6ff; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .4rem .9rem; border-bottom: 1px solid #0d2035; text-align: left; }
+.cpe-afsearch-row { border-bottom: 1px solid #071525; cursor: pointer; transition: background .12s; }
+.cpe-afsearch-row:hover { background: #07182a; }
+.cpe-afsearch-row td { color: #aabbcc; font-size: .8rem; padding: .45rem .9rem; }
+.cpe-afsearch-pid { font-variant-numeric: tabular-nums; color: #00d4ff; font-weight: 700; }
+.cpe-afsearch-tid { font-variant-numeric: tabular-nums; color: #7fd6ff; }
+.cpe-afsearch-accept { background: #07223a; border: 1px solid #00d4ff44; color: #7fd6ff; padding: .2rem .7rem; font-size: .75rem; border-radius: 3px; cursor: pointer; white-space: nowrap; }
+.cpe-afsearch-accept:hover { background: #00d4ff18; }
 .cpe-rlform-actions { display: flex; align-items: center; gap: 1rem; padding: .9rem 1.25rem; border-bottom: 1px solid #071525; flex-wrap: wrap; }
 .cpe-btn-fetch { background: #07223a; border: 1px solid #00d4ff55; color: #7fd6ff; padding: .4rem 1.2rem; font-size: .82rem; border-radius: 4px; cursor: pointer; transition: background .15s; }
 .cpe-btn-fetch:hover { background: #00d4ff1a; }
@@ -1188,6 +1224,99 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
   if (t && document.querySelector(`.cpe-tab[data-tab="${t}"]`)) {
     activateTab(t);
   }
+})();
+
+// API-Football ID-Suche
+(function() {
+  const btn      = document.getElementById('afsearch-btn');
+  const results  = document.getElementById('afsearch-results');
+  const nameIn   = document.querySelector('.cpe-afsearch-name');
+  const teamIn   = document.querySelector('.cpe-afsearch-team');
+  const seasonIn = document.querySelector('.cpe-afsearch-season');
+
+  if (!btn) return;
+
+  function applyCandidate(row) {
+    document.getElementById('rl_api_player_id').value  = row.player_id  || '';
+    document.getElementById('rl_api_team_id').value    = row.team_id    || '';
+    document.getElementById('rl_api_team_name').value  = row.team_name  || '';
+    document.getElementById('rl_api_season').value     = row.season     || '';
+    results.style.display = 'none';
+    results.innerHTML = '';
+  }
+
+  function renderResults(data) {
+    results.innerHTML = '';
+    results.style.display = 'block';
+    if (!data.ok) {
+      results.innerHTML = `<div class="cpe-afsearch-error">⚠ ${data.error}</div>`;
+      return;
+    }
+    if (!data.results || data.results.length === 0) {
+      results.innerHTML = '<div class="cpe-afsearch-empty">Keine Treffer gefunden.</div>';
+      return;
+    }
+    const table = document.createElement('table');
+    table.className = 'cpe-afsearch-table';
+    table.innerHTML = `<thead><tr>
+      <th>Spieler-ID</th><th>Name</th><th>Team-ID</th><th>Team</th>
+      <th>Liga</th><th>Saison</th><th>Nat.</th><th>Alter</th><th></th>
+    </tr></thead>`;
+    const tbody = document.createElement('tbody');
+    data.results.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.className = 'cpe-afsearch-row';
+      tr.innerHTML = `
+        <td class="cpe-afsearch-pid">${r.player_id}</td>
+        <td>${r.player_name}</td>
+        <td class="cpe-afsearch-tid">${r.team_id}</td>
+        <td>${r.team_name}</td>
+        <td>${r.league_name || '–'}</td>
+        <td>${r.season || '–'}</td>
+        <td>${r.nationality || '–'}</td>
+        <td>${r.age != null ? r.age : '–'}</td>
+        <td><button class="cpe-afsearch-accept" type="button">Übernehmen</button></td>
+      `;
+      tr.querySelector('.cpe-afsearch-accept').addEventListener('click', e => {
+        e.stopPropagation();
+        applyCandidate(r);
+      });
+      tr.addEventListener('click', () => applyCandidate(r));
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    results.appendChild(table);
+  }
+
+  btn.addEventListener('click', async () => {
+    const name   = nameIn.value.trim();
+    const team   = teamIn.value.trim();
+    const season = seasonIn.value.trim() || '2024';
+    if (name.length < 3) {
+      results.style.display = 'block';
+      results.innerHTML = '<div class="cpe-afsearch-error">Mindestens 3 Zeichen für den Spielernamen eingeben.</div>';
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = '…';
+    results.style.display = 'none';
+    results.innerHTML = '';
+    const url = new URL('{% url "creator_player_search_api_football" player.id %}', location.href);
+    url.searchParams.set('name', name);
+    if (team) url.searchParams.set('team_name', team);
+    url.searchParams.set('season', season);
+    try {
+      const resp = await fetch(url.toString(), {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      const data = await resp.json();
+      renderResults(data);
+    } catch (err) {
+      results.style.display = 'block';
+      results.innerHTML = `<div class="cpe-afsearch-error">Netzwerkfehler: ${err}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔍 Suchen';
+    }
+  });
 })();
 
 function previewPortrait(input) {
