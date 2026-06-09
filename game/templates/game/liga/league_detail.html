@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -250,7 +250,6 @@
                             <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
                             {% endif %}
                             <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
-                            <span class="liga-fixture__ha liga-fixture__ha--home">H</span>
                         </div>
                         <div class="liga-fixture__score">
                             {% if f.scheduled_date %}
@@ -263,7 +262,6 @@
                             {% endif %}
                         </div>
                         <div class="liga-fixture__away">
-                            <span class="liga-fixture__ha liga-fixture__ha--away">A</span>
                             <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
                             {% if f.away_club.crest_static_path %}
                             <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
@@ -290,29 +288,6 @@
 
         {% if spielplan_matchdays %}
 
-        <!-- Quick-jump toolbar -->
-        <div class="spielplan-jumpbar">
-            {% if next_matchday_num %}
-            <a class="spielplan-jumpbar__btn spielplan-jumpbar__btn--next"
-               href="#spielplan-md-{{ next_matchday_num }}"
-               onclick="document.getElementById('spielplan-md-{{ next_matchday_num }}').scrollIntoView({behavior:'smooth',block:'start'});return false;">
-                ↓ Nächster Spieltag ({{ next_matchday_num }})
-            </a>
-            {% endif %}
-            {% if my_club_id and next_matchday_num %}
-            <a class="spielplan-jumpbar__btn spielplan-jumpbar__btn--mine"
-               href="#spielplan-md-{{ next_matchday_num }}"
-               onclick="var el=document.querySelector('#spielplan-md-{{ next_matchday_num }} .liga-fixture--mine');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});}else{document.getElementById('spielplan-md-{{ next_matchday_num }}').scrollIntoView({behavior:'smooth',block:'start'});}return false;">
-                Mein nächstes Spiel →
-            </a>
-            {% endif %}
-            {% if my_club_id %}
-            <button class="spielplan-jumpbar__btn spielplan-jumpbar__btn--filter" id="spielplan-filter-toggle" onclick="spToggleFilter()" type="button">
-                Alle Spieltage
-            </button>
-            {% endif %}
-        </div>
-
         <div class="liga-spielplan">
             {% for md in spielplan_matchdays %}
             <div class="liga-spielplan-matchday {% if md.is_current %}is-current{% endif %}"
@@ -336,7 +311,6 @@
                             <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
                             {% endif %}
                             <span class="liga-fixture__name">{{ f.home_club.short_name }}</span>
-                            <span class="liga-fixture__ha liga-fixture__ha--home">H</span>
                         </div>
                         <div class="liga-fixture__score">
                             {% if f.is_played %}
@@ -353,7 +327,6 @@
                             {% endif %}
                         </div>
                         <div class="liga-fixture__away">
-                            <span class="liga-fixture__ha liga-fixture__ha--away">A</span>
                             <span class="liga-fixture__name">{{ f.away_club.short_name }}</span>
                             {% if f.away_club.crest_static_path %}
                             <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
@@ -370,39 +343,6 @@
             <p>Noch kein Spielplan für {{ season_display }} vorhanden.</p>
             <p class="liga-empty-sub">Der Admin kann den Spielplan unter <strong>Liga → Spielplan generieren</strong> erstellen.</p>
         </div>
-        {% endif %}
-
-        {% if my_club_id %}
-        <script>
-        (function(){
-            var spielplan = document.querySelector('.liga-spielplan');
-            if (!spielplan) return;
-            var matchdays = spielplan.querySelectorAll('.liga-spielplan-matchday');
-            matchdays.forEach(function(md){
-                if (md.querySelector('.liga-fixture--mine')) md.classList.add('has-mine');
-            });
-            var btn = document.getElementById('spielplan-filter-toggle');
-            var SK = 'sp-filter-active-{{ league.id }}';
-            function applyFilter(active){
-                if (active){
-                    spielplan.classList.add('liga-spielplan--filtered');
-                    btn.textContent = 'Nur meine Spiele';
-                    btn.classList.add('is-active');
-                } else {
-                    spielplan.classList.remove('liga-spielplan--filtered');
-                    btn.textContent = 'Alle Spieltage';
-                    btn.classList.remove('is-active');
-                }
-            }
-            var stored = sessionStorage.getItem(SK);
-            if (stored === '1') applyFilter(true);
-            window.spToggleFilter = function(){
-                var nowActive = !spielplan.classList.contains('liga-spielplan--filtered');
-                applyFilter(nowActive);
-                sessionStorage.setItem(SK, nowActive ? '1' : '0');
-            };
-        })();
-        </script>
         {% endif %}
 
         {% if next_matchday_num %}

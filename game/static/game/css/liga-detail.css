@@ -508,77 +508,6 @@
     line-height: 1.55;
 }
 
-/* --------------------------------------------------------------------------
-   Spielplan jump toolbar
-   -------------------------------------------------------------------------- */
-.spielplan-jumpbar {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-}
-
-.spielplan-jumpbar__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 14px;
-    border-radius: 5px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.spielplan-jumpbar__btn--next {
-    background: #ffffff0a;
-    color: #7a8299;
-    border: 1px solid #ffffff10;
-}
-
-.spielplan-jumpbar__btn--next:hover {
-    background: #ffffff14;
-    color: #c0c8e0;
-}
-
-.spielplan-jumpbar__btn--mine {
-    background: #22e6ff12;
-    color: #22e6ff;
-    border: 1px solid #22e6ff30;
-}
-
-.spielplan-jumpbar__btn--mine:hover {
-    background: #22e6ff22;
-    border-color: #22e6ff60;
-}
-
-.spielplan-jumpbar__btn--filter {
-    background: #ffffff0a;
-    color: #7a8299;
-    border: 1px solid #ffffff10;
-    cursor: pointer;
-}
-
-.spielplan-jumpbar__btn--filter:hover {
-    background: #ffffff14;
-    color: #c0c8e0;
-}
-
-.spielplan-jumpbar__btn--filter.is-active {
-    background: #22e6ff18;
-    color: #22e6ff;
-    border-color: #22e6ff40;
-}
-
-.spielplan-jumpbar__btn--filter.is-active:hover {
-    background: #22e6ff28;
-    border-color: #22e6ff70;
-}
-
-.liga-spielplan--filtered .liga-spielplan-matchday:not(.has-mine) {
-    display: none;
-}
 
 /* --------------------------------------------------------------------------
    Spielplan (all matchdays)
@@ -677,30 +606,6 @@
     line-height: 1.2;
 }
 
-.liga-fixture__ha {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 14px;
-    height: 14px;
-    border-radius: 2px;
-    font-size: 0.6rem;
-    font-weight: 800;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.liga-fixture__ha--home {
-    background: #1a2e20;
-    color: #30f29c;
-    border: 1px solid #30f29c40;
-}
-
-.liga-fixture__ha--away {
-    background: #1e1e2a;
-    color: #4a5278;
-    border: 1px solid #4a527840;
-}
 
 /* --------------------------------------------------------------------------
    Stub tabs (Statistiken / Historie)
