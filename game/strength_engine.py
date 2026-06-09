@@ -382,6 +382,26 @@ def get_constancy_label(gap):
 
 
 # ---------------------------------------------------------------------------
+# Form-Modifier (additive RL-Form-Delta für PlayerStrengthProfile)
+# ---------------------------------------------------------------------------
+
+def calculate_form_modifier(base_200, rl_form_factor):
+    """
+    Wandelt den multiplikativen RL-Form-Fit in einen additiven Modifier um,
+    der in PlayerStrengthProfile.form_modifier gespeichert wird.
+
+    form_modifier = base_200 * (rl_form_factor - 1.0)
+
+    Beispiel: base=177, factor=0.98 → modifier = 177 * (-0.02) = -3.54
+    """
+    from decimal import Decimal
+    if base_200 is None:
+        return Decimal('0.00')
+    result = Decimal(str(base_200)) * (Decimal(str(rl_form_factor)) - Decimal('1'))
+    return result.quantize(Decimal('0.01'))
+
+
+# ---------------------------------------------------------------------------
 # Finale Stärke-Range
 # ---------------------------------------------------------------------------
 

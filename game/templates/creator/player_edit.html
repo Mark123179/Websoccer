@@ -238,6 +238,31 @@
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-staerke">
       <div class="cpe-section-bar">Stärke — Berechnungsweg</div>
 
+      <!-- Sync-Status-Panel -->
+      <div class="cpe-str-sync-bar cpe-str-sync-{{ str_sync.status }}">
+        {% if str_sync.status == 'ok' %}
+          <span class="cpe-str-sync-icon">✓</span>
+          Profil synchron — gespeichert {{ str_sync.stored_base }} / Berechnet {{ str_base.combined }}
+          {% if str_sync.stored_at %}<span class="cpe-str-sync-date">Stand: {{ str_sync.stored_at|date:"d.m.Y H:i" }}</span>{% endif %}
+        {% elif str_sync.status == 'warn' %}
+          <span class="cpe-str-sync-icon">△</span>
+          Profil leicht veraltet — gespeichert {{ str_sync.stored_base }} / Berechnet {{ str_base.combined }}
+          (Δ {{ str_sync.delta }}) — bitte <code>recalculate_player_strengths</code> ausführen
+          {% if str_sync.stored_at %}<span class="cpe-str-sync-date">Stand: {{ str_sync.stored_at|date:"d.m.Y H:i" }}</span>{% endif %}
+        {% elif str_sync.status == 'danger' %}
+          <span class="cpe-str-sync-icon">⚠</span>
+          Profil veraltet — gespeichert {{ str_sync.stored_base }} / Berechnet {{ str_base.combined }}
+          (Δ {{ str_sync.delta }}) — bitte <code>recalculate_player_strengths</code> ausführen
+          {% if str_sync.stored_at %}<span class="cpe-str-sync-date">Stand: {{ str_sync.stored_at|date:"d.m.Y H:i" }}</span>{% endif %}
+        {% elif str_sync.status == 'no_profile' %}
+          <span class="cpe-str-sync-icon">○</span>
+          Kein Stärkeprofil in der Datenbank — bitte <code>recalculate_player_strengths</code> ausführen
+        {% elif str_sync.status == 'no_engine_data' %}
+          <span class="cpe-str-sync-icon">–</span>
+          Kein Source-Rating → kein Engine-Vergleich möglich
+        {% endif %}
+      </div>
+
       {% if not str_base.fmi and not str_base.ea %}
       <div class="cpe-str-notice">
         Keine Quelldaten vorhanden. Bitte FMInside- und/oder SoFIFA-Rating im Source-Tab eintragen.
@@ -773,6 +798,17 @@
 .cpe-str-range-sub { color: #334455; font-size: .68rem; }
 .cpe-str-range-sep { color: #334455; font-size: 1.5rem; }
 .cpe-str-range-formula { color: #334455; font-size: .7rem; font-style: italic; margin-top: .3rem; }
+
+/* Sync-Status-Bar */
+.cpe-str-sync-bar { display: flex; align-items: center; gap: .5rem; padding: .45rem 1.25rem; font-size: .78rem; border-bottom: 1px solid #071525; }
+.cpe-str-sync-icon { font-size: .9rem; }
+.cpe-str-sync-date { color: #334455; font-size: .7rem; margin-left: .5rem; }
+.cpe-str-sync-bar code { background: #030a12; border: 1px solid #0d2035; border-radius: 3px; padding: .05rem .3rem; font-size: .7rem; color: #7fd6ff; }
+.cpe-str-sync-ok    { background: #00cc8810; color: #00cc88; border-left: 3px solid #00cc88; }
+.cpe-str-sync-warn  { background: #c8840010; color: #ffb347; border-left: 3px solid #c88400; }
+.cpe-str-sync-danger { background: #ff334412; color: #ff8899; border-left: 3px solid #ff3344; }
+.cpe-str-sync-no_profile { background: #0d203520; color: #556677; border-left: 3px solid #0d2035; }
+.cpe-str-sync-no_engine_data { background: #0d203520; color: #556677; border-left: 3px solid #0d2035; }
 </style>
 
 {% block extra_js %}

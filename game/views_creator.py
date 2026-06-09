@@ -296,6 +296,31 @@ def _build_strength_tab_context(player):
     else:
         str_min, str_max = None, None
 
+    # ── Sync-Status: gespeicherter Profilwert vs. Engine-Berechnung ─────────
+    from decimal import Decimal
+    stored_profile = getattr(player, 'strength_profile', None)
+    if stored_profile is not None:
+        stored_base  = float(stored_profile.base_strength)
+        stored_final = float(stored_profile.final_strength)
+        stored_at    = stored_profile.updated_at
+        if base_200 is not None:
+            sync_delta = abs(stored_base - base_200)
+            if sync_delta <= 2:
+                sync_status = 'ok'
+            elif sync_delta <= 10:
+                sync_status = 'warn'
+            else:
+                sync_status = 'danger'
+        else:
+            sync_delta = None
+            sync_status = 'no_engine_data'
+    else:
+        stored_base  = None
+        stored_final = None
+        stored_at    = None
+        sync_delta   = None
+        sync_status  = 'no_profile'
+
     return {
         'str_base': {
             'fmi':      fmi_rating,
@@ -330,6 +355,13 @@ def _build_strength_tab_context(player):
             'min':         str_min,
             'max':         str_max,
             'computable':  str_min is not None,
+        },
+        'str_sync': {
+            'stored_base':  stored_base,
+            'stored_final': stored_final,
+            'stored_at':    stored_at,
+            'delta':        round(sync_delta, 1) if sync_delta is not None else None,
+            'status':       sync_status,
         },
     }
 
