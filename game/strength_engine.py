@@ -109,8 +109,7 @@ RL_FORM_BONUS = {
 
 # (lo, hi, bonus) — hi ist exklusiv; < 50 als Fallback
 FRESHNESS_BONUS_TABLE = [
-    (95, 101,   1),
-    (85,  95,   0),
+    (85, 101,   0),
     (75,  85,  -2),
     (65,  75,  -5),
     (50,  65, -10),

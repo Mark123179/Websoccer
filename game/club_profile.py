@@ -168,10 +168,6 @@ def build_match(club, opponent_club, kind, links):
             'scorers': [],
         }
 
-    # Fallback: legacy ClubProfileMatch only for NEXT MATCH (last match shows nothing if no real fixture)
-    if kind == ClubProfileMatch.KIND_LAST:
-        return None
-
     match = club.public_profile_matches.filter(kind=kind).select_related(
         'home_club', 'away_club',
     ).order_by('-id').first()
@@ -189,6 +185,21 @@ def build_match(club, opponent_club, kind, links):
             'awayClub': club_stub(away_club),
             'backgroundImageUrl': stadium_image_for(home_club),
         }
+        if kind == ClubProfileMatch.KIND_LAST:
+            result_tones = {
+                ClubProfileMatch.RESULT_WIN: 'gold',
+                ClubProfileMatch.RESULT_DRAW: 'silver',
+                ClubProfileMatch.RESULT_LOSS: 'red',
+            }
+            return {
+                **base,
+                'homeGoals': match.home_goals if match.home_goals is not None else 0,
+                'awayGoals': match.away_goals if match.away_goals is not None else 0,
+                'resultLabel': match.result_label or '–',
+                'resultTone': result_tones.get(match.result_label, 'neutral'),
+                'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
+                'scorers': match.scorers or [],
+            }
         return {
             **base,
             'dateLabel': match.date_label,

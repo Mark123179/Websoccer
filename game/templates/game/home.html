@@ -25,6 +25,9 @@
                 <div class="overview-no-club-state">
                     <p class="overview-no-club-headline">Noch kein Verein</p>
                     <p class="overview-no-club-sub">W&auml;hle einen Verein aus, um deine Karriere zu starten.</p>
+                    {% for club in richest_clubs %}
+                        <span class="overview-club-pick">{{ club.name }}</span>
+                    {% endfor %}
                     <a class="card-action" href="/clubs/">Jetzt Verein ausw&auml;hlen</a>
                 </div>
             {% else %}
