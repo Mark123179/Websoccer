@@ -26,7 +26,6 @@
     --club-row-1: clamp(390px, 24vw, 460px);
     --club-row-2: clamp(270px, 16.5vw, 320px);
     --club-row-3: clamp(235px, 14vw, 270px);
-    --club-row-4: clamp(110px, 6.5vw, 138px);
     box-sizing: border-box;
     min-height: 100%;
     /* overflow-x:hidden Fake-Fix entfernt — Layout-Contract verbietet
@@ -63,9 +62,9 @@
 .club-profile-grid {
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: var(--club-row-1) var(--club-row-2) var(--club-row-3) var(--club-row-4);
+    grid-template-rows: var(--club-row-1) var(--club-row-2) var(--club-row-3);
     gap: 8px;
-    min-height: calc(var(--club-row-1) + var(--club-row-2) + var(--club-row-3) + var(--club-row-4) + 24px);
+    min-height: calc(var(--club-row-1) + var(--club-row-2) + var(--club-row-3) + 16px);
     margin-top: 0;
 }
 
@@ -132,7 +131,7 @@
     grid-row: 2;
 }
 
-.last-match-profile-card {
+.facilities-card {
     grid-column: 9 / span 2;
     grid-row: 2;
 }
@@ -167,10 +166,6 @@
     grid-row: 3;
 }
 
-.facilities-card {
-    grid-column: 1 / -1;
-    grid-row: 4;
-}
 
 .club-profile-button,
 .club-card-link {
