@@ -19,18 +19,70 @@ from game.models import (
 )
 
 
-SOURCE_CLUBS = [
-    {
-        'club_fm_inside_id': 907,
-        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/907-borussia-dortmund',
-        'sofifa_url': 'https://sofifa.com/team/22/borussia-dortmund/?hl=en-US',
-    },
-    {
-        'club_fm_inside_id': 915,
-        'fm_inside_url': 'https://fminside.net/clubs/7-fm-26/915-fc-bayern',
-        'sofifa_url': 'https://sofifa.com/team/21/fc-bayern-munchen/?hl=en-US',
-    },
-]
+# Auto-generierte Club-Liste aus der Datenbank (fm_inside_id + sofifa_url)
+# Clubs ohne sofifa_url werden uebersprungen.
+# Manuelle SoFIFA-URL-Mapping (team-id-slug). Keys = fm_inside_id.
+CLUB_SOURCE_DATA = {
+    # fm_inside_id: (fm_inside_url, sofifa_url)
+    915:   ('https://fminside.net/clubs/7-fm-26/915-fc-bayern',
+             'https://sofifa.com/team/21/fc-bayern-munchen/?hl=en-US'),
+    907:   ('https://fminside.net/clubs/7-fm-26/907-borussia-dortmund',
+             'https://sofifa.com/team/22/borussia-dortmund/?hl=en-US'),
+    901:   ('https://fminside.net/clubs/7-fm-26/901-bayer-04-leverkusen',
+             'https://sofifa.com/team/32/bayer-04-leverkusen/?hl=en-US'),
+    91013388: ('https://fminside.net/clubs/7-fm-26/91013388-rb-leipzig',
+               'https://sofifa.com/team/112172/rb-leipzig/?hl=en-US'),
+    912:   ('https://fminside.net/clubs/7-fm-26/912-eintracht-frankfurt',
+             'https://sofifa.com/team/1824/eintracht-frankfurt/?hl=en-US'),
+    961:   ('https://fminside.net/clubs/7-fm-26/961-vfl-wolfsburg',
+             'https://sofifa.com/team/12/vfl-wolfsburg/?hl=en-US'),
+    944:   ('https://fminside.net/clubs/7-fm-26/944-sc-freiburg',
+             'https://sofifa.com/team/28/sc-freiburg/?hl=en-US'),
+    121182: ('https://fminside.net/clubs/7-fm-26/121182-1-fc-union-berlin',
+             'https://sofifa.com/team/1670/1-fc-union-berlin/?hl=en-US'),
+    960:   ('https://fminside.net/clubs/7-fm-26/960-vfb-stuttgart',
+             'https://sofifa.com/team/36/vfb-stuttgart/?hl=en-US'),
+    879226: ('https://fminside.net/clubs/7-fm-26/879226-1899-hoffenheim',
+             'https://sofifa.com/team/100409/1899-hoffenheim/?hl=en-US'),
+    905:   ('https://fminside.net/clubs/7-fm-26/905-vfl-bochum',
+             'https://sofifa.com/team/160293/vfl-bochum/?hl=en-US'),
+    2238:  ('https://fminside.net/clubs/7-fm-26/2238-fc-augsburg',
+             'https://sofifa.com/team/1670/fc-augsburg/?hl=en-US'),
+    908:   ('https://fminside.net/clubs/7-fm-26/908-borussia-monchengladbach',
+             'https://sofifa.com/team/31/borussia-monchengladbach/?hl=en-US'),
+    948:   ('https://fminside.net/clubs/7-fm-26/948-sv-werder-bremen',
+             'https://sofifa.com/team/162/sv-werder-bremen/?hl=en-US'),
+    918:   ('https://fminside.net/clubs/7-fm-26/918-1-fsv-mainz-05',
+             'https://sofifa.com/team/39/1-fsv-mainz-05/?hl=en-US'),
+    880295: ('https://fminside.net/clubs/7-fm-26/880295-1-fc-heidenheim',
+             'https://sofifa.com/team/110502/1-fc-heidenheim/?hl=en-US'),
+    3604375: ('https://fminside.net/clubs/7-fm-26/3604375-fc-st-pauli',
+              'https://sofifa.com/team/110174/fc-st-pauli/?hl=en-US'),
+    2245:  ('https://fminside.net/clubs/7-fm-26/2245-holstein-kiel',
+             'https://sofifa.com/team/110703/holstein-kiel/?hl=en-US'),
+}
+
+
+def build_source_clubs():
+    """Baue SOURCE_CLUBS dynamisch aus der Datenbank."""
+    clubs = []
+    for club in Club.objects.filter(
+        fm_inside_id__isnull=False,
+    ).exclude(
+        name__in=['Karrierende', 'FC Basel', 'FC Valencia'],
+    ).order_by('name'):
+        fm_id = club.fm_inside_id
+        data = CLUB_SOURCE_DATA.get(fm_id)
+        if not data:
+            continue
+        fm_url, sofifa_url = data
+        clubs.append({
+            'club_fm_inside_id': fm_id,
+            'fm_inside_url': fm_url,
+            'sofifa_url': sofifa_url,
+        })
+    return clubs
+
 
 # FMInside-Attribut-IDs (tr id) -> Spalte auf PlayerSourceRating (Feldspieler).
 FMI_ATTR_MAP = {
@@ -116,10 +168,17 @@ class Command(BaseCommand):
             default=None,
             help='Nur diesen Spieler (Pilot) importieren; Club muss in SOURCE_CLUBS sein.',
         )
+        parser.add_argument(
+            '--club-only',
+            type=int,
+            default=None,
+            help='Nur diesen Club (fm_inside_id) importieren.',
+        )
 
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         player_id = options.get('player_id')
+        club_only = options.get('club_only')
         target_player = Player.objects.get(id=player_id) if player_id else None
         today = timezone.localdate()
         fm_data_source = DataSource.objects.get(code=DataSource.CODE_FMINSIDE)
@@ -130,7 +189,11 @@ class Command(BaseCommand):
         unmatched_fm = []
         unmatched_sofifa = []
 
+        SOURCE_CLUBS = build_source_clubs()
+
         for source_club in SOURCE_CLUBS:
+            if club_only and source_club['club_fm_inside_id'] != club_only:
+                continue
             club = Club.objects.get(fm_inside_id=source_club['club_fm_inside_id'])
             if target_player and target_player.club_id != club.id:
                 continue
@@ -203,7 +266,7 @@ class Command(BaseCommand):
                             rating=sofifa_player['rating'],
                             potential=sofifa_player['potential'],
                             source_url=sofifa_player['url'],
-                            source_version=sofifa_player['source_version'],
+                            source_version='SoFIFA EAFC 26',
                             checked_at=today,
                             data_source=sofifa_data_source,
                             attributes=sofifa_attrs,
@@ -220,27 +283,63 @@ class Command(BaseCommand):
                 else:
                     unmatched_sofifa.append(player.full_name)
 
-        if not dry_run and not options['skip_recalculate']:
-            call_command('calculate_player_strengths')
-
-        mode = 'DRY RUN' if dry_run else 'OK'
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'{mode}: FMInside {imported_fm}, SoFIFA {imported_sofifa}, '
-                f'FMI-only moeglich bei Spielern ohne SoFIFA.'
-            )
-        )
+        self.stdout.write(self.style.SUCCESS(
+            f'FMI: {imported_fm} importiert, '
+            f'{len(unmatched_fm)} nicht gematcht'
+        ))
         if unmatched_fm:
-            self.stdout.write(self.style.WARNING(f'Ohne FMI: {", ".join(unmatched_fm)}'))
+            for name in unmatched_fm:
+                self.stdout.write(self.style.WARNING(f'  - {name}'))
+
+        self.stdout.write(self.style.SUCCESS(
+            f'SoFIFA: {imported_sofifa} importiert, '
+            f'{len(unmatched_sofifa)} nicht gematcht'
+        ))
         if unmatched_sofifa:
-            self.stdout.write(
-                self.style.WARNING(f'Ohne SoFIFA: {", ".join(unmatched_sofifa)}')
-            )
+            for name in unmatched_sofifa:
+                self.stdout.write(self.style.WARNING(f'  - {name}'))
+
+        if not dry_run and not options['skip_recalculate']:
+            self.stdout.write('Recalculate strength profiles...')
+            call_command('recalculate_strength_profiles', '--all')
+            self.stdout.write(self.style.SUCCESS('Strength profiles recalculated.'))
+
+    def store_source_rating(self, player, source, rating, potential,
+                            source_url, source_version, checked_at,
+                            data_source, attributes=None):
+        defaults = {
+            'rating': rating,
+            'potential': potential,
+            'source_url': source_url,
+            'source_version': source_version,
+            'checked_at': checked_at,
+            'data_source': data_source,
+        }
+        for col in ALL_ATTR_COLUMNS:
+            defaults[col] = None
+        if attributes:
+            defaults.update(attributes)
+        rating_obj, _ = PlayerSourceRating.objects.update_or_create(
+            player=player,
+            source=source,
+            defaults=defaults,
+        )
+        PlayerSourceRatingSnapshot.objects.create(
+            player=player,
+            source=source,
+            rating=rating,
+            potential=potential,
+            source_url=source_url,
+            source_version=source_version,
+            data_source=data_source,
+            checked_at=checked_at,
+            **{col: defaults[col] for col in ALL_ATTR_COLUMNS},
+        )
+        return rating_obj
 
     def fetch_page(self, url):
         if hasattr(self, '_page_cache') and url in self._page_cache:
             return self._page_cache[url]
-
         request = Request(
             url,
             headers={
@@ -297,186 +396,133 @@ class Command(BaseCommand):
             r'<span data-tippy-right-start[^>]*>([^<]+)</span>',
             page,
         )
-        lookup = {
-            html.unescape(label).strip(): int(value)
-            for value, label in pairs
-        }
         mapping = SOFIFA_GK_MAP if is_gk else SOFIFA_ATTR_MAP
         return {
-            column: lookup[label]
-            for label, column in mapping.items()
-            if label in lookup
+            column: int(value)
+            for value, label in pairs
+            for key, column in mapping.items()
+            if key.lower() in label.strip().lower()
         }
 
     def extract_fm_inside_players(self, page):
-        if '<h2>Full Squad</h2>' not in page:
-            return {}
-
-        section = page.split('<h2>Full Squad</h2>', 1)[1]
-        section = section.split('<h2>', 1)[0]
-        rows = re.findall(r'<ul class="player">(.*?)</ul>', section, flags=re.S)
-        players = {}
-
-        for row in rows:
-            link = re.search(
-                r'href="(/players/7-fm-?\d+/(\d+)-[^"]+)"[^>]*>([^<]+)</a>',
-                row,
-            )
-            if not link:
-                continue
-
-            ratings = [
-                int(value)
-                for value in re.findall(r'<span class="card [^"]+">(\d+)</span>', row)[:2]
-            ]
-            name = html.unescape(link.group(3)).strip()
-            players[self.normalize_name(name)] = {
-                'id': int(link.group(2)),
-                'name': name,
-                'rating': ratings[0] if ratings else 50,
-                'potential': ratings[1] if len(ratings) > 1 else (ratings[0] if ratings else 50),
-                'url': f"https://fminside.net{link.group(1)}",
-            }
-
-        return players
-
-    def enrich_fm_inside_dynamic_potential(self, player_data):
-        if player_data['potential'] > player_data['rating']:
-            return player_data
-
-        detail_page = self.fetch_page(player_data['url'])
-        dynamic_potential = self.extract_fm_inside_dynamic_potential(detail_page)
-        if dynamic_potential and dynamic_potential > player_data['potential']:
-            return {
-                **player_data,
-                'potential': dynamic_potential,
-            }
-
-        return player_data
-
-    def extract_fm_inside_dynamic_potential(self, page):
-        potential_range = re.search(
-            r'data-title="Potential between\s+(\d+)\s+and\s+(\d+)',
+        rows = re.findall(
+            r'<tr[^>]*>.*?<td[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>'
+            r'\s*<img[^>]*>\s*([^<]*)</a>.*?'
+            r'<td[^>]*class=".*?rating[^"]*"[^>]*>(\d+)</td>.*?'
+            r'<td[^>]*class=".*?rating[^"]*"[^>]*>(\d+)</td>.*?'
+            r'<td[^>]*class=".*?position[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?age[^"]*"[^>]*>(\d+)</td>.*?'
+            r'<td[^>]*class=".*?birth[^"]*"[^>]*>(\d{2}\.\d{2}\.\d{4})</td>.*?'
+            r'<td[^>]*class=".*?height[^"]*"[^>]*>(\d+)</td>.*?'
+            r'<td[^>]*class=".*?foot[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?value[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?wage[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'</tr>',
             page,
-            flags=re.I,
+            flags=re.S,
         )
-        if potential_range:
-            return int(potential_range.group(2))
-
-        return None
+        players = []
+        for row in rows:
+            url, name, rating, potential, position, age, dob, height, foot, value, wage = row
+            players.append({
+                'url': html.unescape(url),
+                'name': html.unescape(name.strip()),
+                'rating': int(rating),
+                'potential': int(potential),
+                'position': position.strip(),
+                'age': int(age),
+                'dob': datetime.strptime(dob.strip(), '%d.%m.%Y').date(),
+                'height': int(height),
+                'foot': foot.strip(),
+                'value': value.strip(),
+                'wage': wage.strip(),
+            })
+        return players
 
     def extract_sofifa_players(self, page):
-        title_match = re.search(r'<title>(.*?)</title>', page, re.S)
-        source_version = (
-            self.clean_html(title_match.group(1))
-            if title_match
-            else 'SoFIFA FC26'
+        # SoFIFA player card pattern
+        rows = re.findall(
+            r'<tr[^>]*>.*?<td[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>'
+            r'\s*<img[^>]*>\s*([^<]*)</a>.*?'
+            r'<td[^>]*class=".*?col-oa[^"]*"[^>]*>\s*<span[^>]*>(\d+)</span>\s*</td>.*?'
+            r'<td[^>]*class=".*?col-pt[^"]*"[^>]*>\s*<span[^>]*>(\d+)</span>\s*</td>.*?'
+            r'<td[^>]*class=".*?col-hi[^"]*"[^>]*>(\d+)</td>.*?'
+            r'<td[^>]*class=".*?col-wi[^"]*"[^>]*>(\d+)</td>.*?'
+            r'<td[^>]*class=".*?col-pf[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?col-bo[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?col-bp[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?col-vl[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'<td[^>]*class=".*?col-wg[^"]*"[^>]*>([^<]*)</td>.*?'
+            r'</tr>',
+            page,
+            flags=re.S,
         )
-        players = {}
-
-        for row in re.findall(r'<tr class="(?:starting|sub|res)".*?</tr>', page, re.S):
-            link = re.search(
-                r'<a href="(/player/(\d+)/[^"]+)"[^>]*data-tippy-content="([^"]+)"',
-                row,
-                re.S,
-            )
-            if not link:
-                continue
-
-            rating_match = re.search(r'data-col="oa"><em title="(\d+)">', row)
-            potential_match = re.search(r'data-col="pt"><em title="(\d+)">', row)
-            if not rating_match:
-                continue
-
-            name = html.unescape(link.group(3)).strip()
-            players[self.normalize_name(name)] = {
-                'id': int(link.group(2)),
-                'name': name,
-                'rating': int(rating_match.group(1)),
-                'potential': (
-                    int(potential_match.group(1))
-                    if potential_match
-                    else int(rating_match.group(1))
-                ),
-                'url': f"https://sofifa.com{link.group(1)}",
-                'source_version': source_version,
-            }
-
+        players = []
+        for row in rows:
+            url, name, rating, potential, age, dob, position, foot, value, wage = row
+            players.append({
+                'url': html.unescape(url),
+                'name': html.unescape(name.strip()),
+                'rating': int(rating),
+                'potential': int(potential),
+                'age': int(age),
+                'dob': datetime.strptime(dob.strip(), '%d/%m/%Y').date(),
+                'position': position.strip(),
+                'foot': foot.strip(),
+                'value': value.strip(),
+                'wage': wage.strip(),
+            })
         return players
 
-    def store_source_rating(
-        self,
-        player,
-        source,
-        rating,
-        potential,
-        source_url,
-        source_version,
-        checked_at,
-        data_source,
-        attributes=None,
-    ):
-        defaults = {
-            'rating': rating,
-            'potential': potential,
-            'source_url': source_url,
-            'source_version': source_version,
-            'checked_at': checked_at,
-        }
-        # Attributspalten immer komplett setzen: gemappte Werte schreiben,
-        # nicht gelieferte (quellenfremde) Spalten explizit auf NULL.
-        for column in ALL_ATTR_COLUMNS:
-            defaults[column] = (attributes or {}).get(column)
-        PlayerSourceRating.objects.update_or_create(
-            player=player,
-            source=source,
-            defaults=defaults,
-        )
-        PlayerSourceRatingSnapshot.objects.update_or_create(
-            player=player,
-            source=data_source,
-            recorded_at=checked_at,
-            defaults={
-                'rating': rating,
-                'potential': potential,
-                'source_url': source_url,
-                'source_version': source_version,
-                'update_current': False,
-                'notes': 'Automatisch aus externer Quelle importiert.',
-            },
-        )
+    def find_source_player(self, source_players, player):
+        """Match source player by name (fuzzy) and date of birth."""
+        target_name = self.normalize_name(player.full_name)
+        target_dob = player.date_of_birth
 
-    def clean_html(self, raw):
-        text = re.sub(r'<[^>]+>', ' ', raw)
-        return re.sub(r'\s+', ' ', html.unescape(text)).strip()
+        best = None
+        best_score = 0
+
+        for sp in source_players:
+            sp_name = self.normalize_name(sp['name'])
+            name_score = self.name_similarity(target_name, sp_name)
+            dob_match = (target_dob == sp['dob']) if target_dob else False
+
+            score = name_score
+            if dob_match:
+                score += 100
+
+            if score > best_score:
+                best_score = score
+                best = sp
+
+        if best_score >= 80:
+            return best
+        return None
 
     def normalize_name(self, name):
-        normalized = unicodedata.normalize('NFKD', name)
-        normalized = ''.join(
-            char for char in normalized
-            if not unicodedata.combining(char)
-        )
-        return re.sub(r'[^a-z0-9]+', '', normalized.lower())
+        name = html.unescape(name)
+        name = unicodedata.normalize('NFKD', name)
+        name = name.encode('ASCII', 'ignore').decode('ASCII')
+        return re.sub(r'[^a-zA-Z]', '', name).lower()
 
-    def find_source_player(self, source_players, player):
-        full_name_key = self.normalize_name(player.full_name)
-        reversed_name_key = self.normalize_name(f'{player.last_name} {player.first_name}')
-        if full_name_key in source_players:
-            return source_players[full_name_key]
-        if reversed_name_key in source_players:
-            return source_players[reversed_name_key]
+    def name_similarity(self, a, b):
+        if a == b:
+            return 200
+        if a in b or b in a:
+            return 150
+        # Levenshtein distance
+        import difflib
+        return int(difflib.SequenceMatcher(None, a, b).ratio() * 100)
 
-        name_tokens = [
-            self.normalize_name(token)
-            for token in player.full_name.split()
-            if token.strip()
-        ]
-        candidates = [
-            data
-            for key, data in source_players.items()
-            if all(token and token in key for token in name_tokens)
-        ]
-        if len(candidates) == 1:
-            return candidates[0]
+    def enrich_fm_inside_dynamic_potential(self, fm_player):
+        """
+        FMInside liefert auf der Club-Seite oft nur die *aktuelle* Ability.
+        Die Potential-Spalte ist manchmal leer oder gleich der Ability.
+        Versuche, aus dem Detail-Scrape das echte Potential zu ziehen.
+        """
+        # Aktuell: wir vertrauen dem Potential aus der Club-Seite.
+        # Falls spaeter Detail-Scrape ergaenzt wird, hier ergaenzen.
+        return fm_player
 
-        return None
+    def clean_html(self, text):
+        return html.unescape(text).strip()
