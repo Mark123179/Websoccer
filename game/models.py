@@ -2427,6 +2427,52 @@ class PlayerSourceRatingSnapshot(models.Model):
         return f'{self.player} - {self.source.code} {self.rating}'
 
 
+class SourceImportRun(models.Model):
+    """Import-Log eines CSV-Imports (Quelle/Version/Datei/Bilanz)."""
+
+    SOURCE_SOFIFA = 'sofifa'
+    SOURCE_CHOICES = [
+        (SOURCE_SOFIFA, 'SoFIFA'),
+    ]
+
+    source = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
+        default=SOURCE_SOFIFA,
+    )
+    version = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='z. B. FC26_2025-09-19',
+    )
+    file_name = models.CharField(max_length=255, blank=True)
+    imported_at = models.DateTimeField(auto_now_add=True)
+    dry_run = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_import_runs',
+    )
+    total_rows = models.PositiveIntegerField(default=0)
+    count_new = models.PositiveIntegerField(default=0)
+    count_updated = models.PositiveIntegerField(default=0)
+    count_unchanged = models.PositiveIntegerField(default=0)
+    count_unmatched = models.PositiveIntegerField(default=0)
+    count_error = models.PositiveIntegerField(default=0)
+    unmatched = models.JSONField(default=list, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-imported_at', '-id']
+        verbose_name = 'Import-Lauf'
+        verbose_name_plural = 'Import-Läufe'
+
+    def __str__(self):
+        return f'{self.get_source_display()} {self.version} ({self.imported_at:%Y-%m-%d %H:%M})'
+
+
 class PlayerWeightedRatingSnapshot(models.Model):
     player = models.ForeignKey(
         Player,

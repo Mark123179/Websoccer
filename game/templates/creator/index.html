@@ -54,30 +54,7 @@
       <button class="cm-search-clear" id="cm-search-clear" onclick="clearCreatorSearch()" style="display:none">✕</button>
     </div>
     <span class="cm-search-hint" id="cm-search-hint"></span>
-    <button type="button" class="cm-import-btn" onclick="toggleImportPanel()">⬆ Ratings importieren</button>
-  </div>
-
-  <!-- ── Import-Hinweis-Panel ────────────────────────────────────────────── -->
-  <div class="cm-import-panel" id="cm-import-panel" style="display:none">
-    <div class="cm-import-panel-head">
-      <strong>EA/SoFIFA-Ratings per CSV importieren</strong>
-      <button type="button" class="cm-import-panel-close" onclick="toggleImportPanel()">✕</button>
-    </div>
-    <p class="cm-import-text">
-      Da SoFIFA das Scraping blockiert, werden Ratings über eine CSV-Datei importiert.
-      Das Matching läuft primär über die <code>sofifa_id</code>; ohne hinterlegte ID
-      greift ein Fallback über Name (+ Verein), der die ID danach dauerhaft verknüpft.
-    </p>
-    <p class="cm-import-label">CSV-Spalten (Header):</p>
-    <pre class="cm-import-code">sofifa_id,name,club,overall,potential,tempo,ausdauer,kraft,technik,dribbling,passspiel,flanken,abschluss,kopfball</pre>
-    <p class="cm-import-label">Vorschau ohne Schreiben (Dry-Run):</p>
-    <pre class="cm-import-code">python manage.py import_sofifa_csv pfad/zur/datei.csv --dry-run</pre>
-    <p class="cm-import-label">Echter Import (mit anschließender Stärke-Neuberechnung):</p>
-    <pre class="cm-import-code">python manage.py import_sofifa_csv pfad/zur/datei.csv</pre>
-    <p class="cm-import-note">
-      Pflichtspalten: <code>sofifa_id</code> und <code>overall</code> (bzw. <code>rating</code>).
-      Nur die in der CSV vorhandenen Attributspalten werden überschrieben.
-    </p>
+    <a href="{% url 'creator_import_ratings' %}" class="cm-import-btn">⬆ Ratings importieren</a>
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════════════
@@ -273,20 +250,9 @@
 .cm-search-clear { background: none; border: none; color: #334455; cursor: pointer; font-size: .85rem; padding: 0; display: flex; align-items: center; }
 .cm-search-clear:hover { color: #00d4ff; }
 .cm-search-hint { color: #334455; font-size: .75rem; }
-.cm-import-btn { margin-left: auto; font-size: .78rem; font-weight: 600; color: #00d4ff; background: #071525; border: 1px solid #00d4ff44; border-radius: 6px; padding: .45rem 1rem; cursor: pointer; transition: all .15s; }
+.cm-import-btn { display: inline-block; margin-left: auto; font-size: .78rem; font-weight: 600; color: #00d4ff; background: #071525; border: 1px solid #00d4ff44; border-radius: 6px; padding: .45rem 1rem; cursor: pointer; transition: all .15s; text-decoration: none; }
 .cm-import-btn:hover { background: #00d4ff15; border-color: #00d4ff88; }
 
-/* ── Import-Panel ──────────────────────────────────────────────────────── */
-.cm-import-panel { background: #050e1a; border: 1px solid #00d4ff33; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
-.cm-import-panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
-.cm-import-panel-head strong { color: #cce8ff; font-size: .95rem; }
-.cm-import-panel-close { background: none; border: none; color: #556677; cursor: pointer; font-size: .9rem; }
-.cm-import-panel-close:hover { color: #00d4ff; }
-.cm-import-text { color: #8aa0b5; font-size: .82rem; line-height: 1.5; margin: 0 0 .9rem; }
-.cm-import-label { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: .8rem 0 .3rem; }
-.cm-import-code { background: #03070c; border: 1px solid #0d2035; border-radius: 6px; padding: .55rem .8rem; color: #6fe3ff; font-family: monospace; font-size: .78rem; overflow-x: auto; margin: 0; white-space: pre-wrap; word-break: break-all; }
-.cm-import-note { color: #556677; font-size: .76rem; margin: .9rem 0 0; }
-.cm-import-panel code, .cm-import-text code, .cm-import-note code { background: #071525; color: #6fe3ff; padding: .05rem .3rem; border-radius: 3px; font-size: .85em; }
 .cm-no-results { color: #334455; font-size: .85rem; padding: 1.5rem 0; }
 </style>
 
@@ -330,12 +296,6 @@ function clearCreatorSearch() {
   inp.value = '';
   filterCreator('');
   inp.focus();
-}
-
-function toggleImportPanel() {
-  var panel = document.getElementById('cm-import-panel');
-  if (!panel) return;
-  panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
 }
 </script>
 {% endblock %}

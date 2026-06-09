@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ratings-Import{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1 class="cm-title">SoFIFA-Ratings importieren</h1>
+    </div>
+    <a class="cm-back-link" href="{% url 'creator_index' %}">← Zurück zur Datenbank</a>
+  </div>
+
+  {% if messages %}
+  <div class="ir-messages">
+    {% for m in messages %}
+    <div class="ir-msg ir-msg-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ════════════════════════════════════════════════════════════════════ #}
+  {# PHASE 1 — Upload-Formular                                             #}
+  {# ════════════════════════════════════════════════════════════════════ #}
+  {% if phase == 'form' %}
+  <div class="ir-card">
+    <h2 class="ir-card-title">CSV hochladen</h2>
+    <p class="ir-text">
+      Lade eine SoFIFA-Export-CSV hoch. Das Matching läuft primär über die
+      <code>sofifa_id</code>; ohne hinterlegte ID greift ein Fallback über Name
+      (+ Verein), der die ID danach dauerhaft verknüpft. Vor dem echten Import
+      siehst du eine Vorschau (Dry-Run) mit allen geplanten Änderungen.
+    </p>
+    <form method="post" enctype="multipart/form-data" action="{% url 'creator_import_ratings' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="preview">
+      <div class="ir-field">
+        <label class="ir-label" for="csv_file">CSV-Datei</label>
+        <input class="ir-file" id="csv_file" type="file" name="csv_file" accept=".csv,text/csv" required>
+      </div>
+      <div class="ir-field">
+        <label class="ir-label" for="version">Version <span class="ir-opt">(optional — sonst aus der CSV abgeleitet)</span></label>
+        <input class="ir-input" id="version" type="text" name="version" placeholder="z. B. FC26_2025-09-19" autocomplete="off">
+      </div>
+      <button class="ir-btn ir-btn-primary" type="submit">Vorschau (Dry-Run) →</button>
+    </form>
+  </div>
+
+  <div class="ir-card">
+    <h2 class="ir-card-title">Erwartete Spalten</h2>
+    <p class="ir-text">
+      Pflicht: <code>sofifa_id</code> (bzw. <code>player_id</code>) und
+      <code>overall</code>. Erkannt werden u. a.
+      <code>name</code>/<code>long_name</code>, <code>club_name</code>,
+      <code>potential</code>, <code>pace</code>, <code>power_stamina</code>,
+      <code>attacking_finishing</code>, <code>defending_standing_tackle</code>,
+      <code>goalkeeping_reflexes</code> … — sowohl das volle SoFIFA-Exportformat
+      als auch vereinfachte Namen. Torwart-Stats werden nur Torhütern zugeordnet.
+    </p>
+    <p class="ir-label-sm">Alternativ per Kommandozeile:</p>
+    <pre class="ir-code">python manage.py import_sofifa_csv datei.csv --dry-run
+python manage.py import_sofifa_csv datei.csv</pre>
+  </div>
+
+  {% if recent_runs %}
+  <div class="ir-card">
+    <h2 class="ir-card-title">Letzte Importe</h2>
+    <table class="ir-table">
+      <thead>
+        <tr><th>Zeitpunkt</th><th>Version</th><th>Datei</th><th>Neu</th><th>Akt.</th><th>Unver.</th><th>Nicht gematcht</th></tr>
+      </thead>
+      <tbody>
+        {% for run in recent_runs %}
+        <tr>
+          <td>{{ run.imported_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ run.version|default:"–" }}</td>
+          <td class="ir-file-cell">{{ run.file_name|default:"–" }}</td>
+          <td class="ir-num ir-new">{{ run.count_new }}</td>
+          <td class="ir-num ir-upd">{{ run.count_updated }}</td>
+          <td class="ir-num">{{ run.count_unchanged }}</td>
+          <td class="ir-num ir-unm">{{ run.count_unmatched }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% endif %}
+
+  {# ════════════════════════════════════════════════════════════════════ #}
+  {# PHASE 2 — Dry-Run-Vorschau                                            #}
+  {# ════════════════════════════════════════════════════════════════════ #}
+  {% if phase == 'preview' %}
+  <div class="ir-banner ir-banner-dry">
+    DRY-RUN — es wurde noch <strong>nichts</strong> gespeichert.
+    {% if result.version %}Version: <strong>{{ result.version }}</strong>{% endif %}
+  </div>
+
+  <div class="ir-stats">
+    <div class="ir-stat ir-new"><span class="ir-stat-num">{{ result.stats.new }}</span><span class="ir-stat-lbl">neu</span></div>
+    <div class="ir-stat ir-upd"><span class="ir-stat-num">{{ result.stats.updated }}</span><span class="ir-stat-lbl">aktualisiert</span></div>
+    <div class="ir-stat"><span class="ir-stat-num">{{ result.stats.unchanged }}</span><span class="ir-stat-lbl">unverändert</span></div>
+    <div class="ir-stat ir-unm"><span class="ir-stat-num">{{ result.stats.unmatched }}</span><span class="ir-stat-lbl">nicht gematcht</span></div>
+    <div class="ir-stat ir-err"><span class="ir-stat-num">{{ result.stats.error }}</span><span class="ir-stat-lbl">Fehler</span></div>
+  </div>
+
+  <div class="ir-card">
+    <h2 class="ir-card-title">Geplante Änderungen <span class="ir-count">{{ rows_preview|length }}</span></h2>
+    {% if rows_preview %}
+    <table class="ir-table">
+      <thead><tr><th>Spieler</th><th>Verein</th><th>Match</th><th>Änderung</th></tr></thead>
+      <tbody>
+        {% for row in rows_preview %}
+        <tr class="ir-row-{{ row.action }}">
+          <td>{{ row.name }}</td>
+          <td>{{ row.club }}</td>
+          <td>
+            {% if row.action == 'new' %}<span class="ir-tag ir-tag-new">neu</span>
+            {% elif row.action == 'updated' %}<span class="ir-tag ir-tag-upd">geändert</span>
+            {% elif row.action == 'error' %}<span class="ir-tag ir-tag-err">Fehler</span>{% endif %}
+            {% if row.mode == 'name' %}<span class="ir-tag ir-tag-name">via Name</span>{% endif %}
+          </td>
+          <td class="ir-diff">{% for d in row.diff %}{{ d }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="ir-text">Keine Änderungen — alle gematchten Spieler sind bereits aktuell.</p>
+    {% endif %}
+  </div>
+
+  {% if result.unmatched %}
+  <details class="ir-card ir-details">
+    <summary class="ir-card-title">Nicht gematcht <span class="ir-count">{{ result.unmatched|length }}</span></summary>
+    <ul class="ir-unmatched">
+      {% for u in result.unmatched %}<li>{{ u }}</li>{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+
+  <form method="post" action="{% url 'creator_import_ratings' %}" class="ir-confirm">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="commit">
+    <input type="hidden" name="token" value="{{ token }}">
+    <input type="hidden" name="file_name" value="{{ file_name }}">
+    <div class="ir-field">
+      <label class="ir-label" for="version2">Version</label>
+      <input class="ir-input" id="version2" type="text" name="version" value="{{ result.version }}" autocomplete="off">
+    </div>
+    <div class="ir-confirm-actions">
+      <a class="ir-btn" href="{% url 'creator_import_ratings' %}">Abbrechen</a>
+      <button class="ir-btn ir-btn-primary" type="submit"
+        {% if not result.stats.new and not result.stats.updated %}disabled{% endif %}>
+        ✓ Bestätigen &amp; importieren ({{ result.stats.new|add:result.stats.updated }})
+      </button>
+    </div>
+  </form>
+  {% endif %}
+
+  {# ════════════════════════════════════════════════════════════════════ #}
+  {# PHASE 3 — Ergebnis                                                    #}
+  {# ════════════════════════════════════════════════════════════════════ #}
+  {% if phase == 'done' %}
+  <div class="ir-banner ir-banner-done">
+    ✓ Import abgeschlossen{% if result.version %} — Version <strong>{{ result.version }}</strong>{% endif %}.
+    {% if result.recalculated %}Spielstärken wurden neu berechnet.{% endif %}
+  </div>
+
+  <div class="ir-stats">
+    <div class="ir-stat ir-new"><span class="ir-stat-num">{{ result.stats.new }}</span><span class="ir-stat-lbl">neu</span></div>
+    <div class="ir-stat ir-upd"><span class="ir-stat-num">{{ result.stats.updated }}</span><span class="ir-stat-lbl">aktualisiert</span></div>
+    <div class="ir-stat"><span class="ir-stat-num">{{ result.stats.unchanged }}</span><span class="ir-stat-lbl">unverändert</span></div>
+    <div class="ir-stat ir-unm"><span class="ir-stat-num">{{ result.stats.unmatched }}</span><span class="ir-stat-lbl">nicht gematcht</span></div>
+    <div class="ir-stat ir-err"><span class="ir-stat-num">{{ result.stats.error }}</span><span class="ir-stat-lbl">Fehler</span></div>
+  </div>
+
+  <div class="ir-done-actions">
+    <a class="ir-btn ir-btn-primary" href="{% url 'creator_import_ratings' %}">Weiteren Import starten</a>
+    <a class="ir-btn" href="{% url 'creator_index' %}">Zur Datenbank</a>
+  </div>
+  {% endif %}
+
+</section>
+
+<style>
+.cm-back-link { color: #00d4ff; font-size: .82rem; text-decoration: none; }
+.cm-back-link:hover { text-decoration: underline; }
+.cm-title { color: #cce8ff; font-size: 1.3rem; margin: .3rem 0 0; }
+
+.ir-messages { margin-bottom: 1rem; }
+.ir-msg { padding: .6rem 1rem; border-radius: 6px; font-size: .85rem; margin-bottom: .5rem; }
+.ir-msg-error { background: #2a0d12; border: 1px solid #ff3b5c55; color: #ff9eb0; }
+.ir-msg-success { background: #08231a; border: 1px solid #00d4a055; color: #6fe3c0; }
+
+.ir-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+.ir-card-title { color: #cce8ff; font-size: .95rem; margin: 0 0 .8rem; }
+.ir-text { color: #8aa0b5; font-size: .84rem; line-height: 1.55; margin: 0 0 1rem; }
+.ir-text code, .ir-label code { background: #071525; color: #6fe3ff; padding: .05rem .3rem; border-radius: 3px; font-size: .85em; }
+.ir-label-sm { color: #556677; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: .6rem 0 .3rem; }
+.ir-code { background: #03070c; border: 1px solid #0d2035; border-radius: 6px; padding: .6rem .8rem; color: #6fe3ff; font-family: monospace; font-size: .78rem; margin: 0; white-space: pre-wrap; }
+
+.ir-field { margin-bottom: 1rem; }
+.ir-label { display: block; color: #aac4dd; font-size: .8rem; font-weight: 600; margin-bottom: .35rem; }
+.ir-opt { color: #556677; font-weight: 400; }
+.ir-file, .ir-input { width: 100%; max-width: 420px; background: #03070c; border: 1px solid #0d2035; border-radius: 6px; padding: .5rem .7rem; color: #cce8ff; font-size: .85rem; }
+.ir-input:focus, .ir-file:focus { outline: none; border-color: #00d4ff66; }
+
+.ir-btn { display: inline-block; font-size: .82rem; font-weight: 600; color: #aac4dd; background: #071525; border: 1px solid #1a3350; border-radius: 6px; padding: .55rem 1.2rem; cursor: pointer; text-decoration: none; }
+.ir-btn:hover { border-color: #2a4d70; }
+.ir-btn-primary { color: #001018; background: #00d4ff; border-color: #00d4ff; }
+.ir-btn-primary:hover { background: #2ddfff; }
+.ir-btn-primary:disabled { background: #14303f; color: #4a6577; border-color: #14303f; cursor: not-allowed; }
+
+.ir-banner { padding: .8rem 1.2rem; border-radius: 8px; font-size: .88rem; margin-bottom: 1.25rem; color: #cce8ff; }
+.ir-banner-dry { background: #2a230a; border: 1px solid #d4a00055; color: #f0d28a; }
+.ir-banner-done { background: #08231a; border: 1px solid #00d4a055; color: #6fe3c0; }
+
+.ir-stats { display: flex; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+.ir-stat { flex: 1; min-width: 90px; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; padding: .8rem; text-align: center; }
+.ir-stat-num { display: block; font-size: 1.5rem; font-weight: 800; color: #cce8ff; }
+.ir-stat-lbl { display: block; font-size: .72rem; color: #556677; text-transform: uppercase; letter-spacing: .05em; margin-top: .2rem; }
+.ir-stat.ir-new .ir-stat-num { color: #4ade80; }
+.ir-stat.ir-upd .ir-stat-num { color: #00d4ff; }
+.ir-stat.ir-unm .ir-stat-num { color: #fbbf24; }
+.ir-stat.ir-err .ir-stat-num { color: #ff6b81; }
+
+.ir-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.ir-table th { text-align: left; color: #556677; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; padding: .4rem .6rem; border-bottom: 1px solid #0d2035; }
+.ir-table td { color: #aac4dd; padding: .45rem .6rem; border-bottom: 1px solid #0a1626; vertical-align: top; }
+.ir-num { text-align: center; font-variant-numeric: tabular-nums; }
+.ir-new { color: #4ade80; } .ir-upd { color: #00d4ff; } .ir-unm { color: #fbbf24; }
+.ir-file-cell { color: #6688a5; font-size: .76rem; }
+.ir-count { color: #556677; font-weight: 400; font-size: .8rem; }
+.ir-diff { color: #8aa0b5; font-size: .76rem; line-height: 1.5; }
+
+.ir-tag { display: inline-block; font-size: .68rem; font-weight: 700; padding: .1rem .4rem; border-radius: 4px; margin-right: .3rem; }
+.ir-tag-new { background: #0d3320; color: #4ade80; }
+.ir-tag-upd { background: #062a36; color: #00d4ff; }
+.ir-tag-err { background: #2a0d12; color: #ff6b81; }
+.ir-tag-name { background: #2a230a; color: #f0d28a; }
+
+.ir-details summary { cursor: pointer; list-style: none; }
+.ir-details summary::-webkit-details-marker { display: none; }
+.ir-details summary:before { content: '▸ '; color: #556677; }
+.ir-details[open] summary:before { content: '▾ '; }
+.ir-unmatched { margin: .8rem 0 0; padding-left: 1.2rem; color: #8aa0b5; font-size: .78rem; line-height: 1.6; columns: 2; }
+
+.ir-confirm { background: #050e1a; border: 1px solid #00d4ff33; border-radius: 10px; padding: 1.25rem 1.5rem; }
+.ir-confirm-actions { display: flex; gap: .75rem; align-items: center; margin-top: .5rem; }
+.ir-done-actions { display: flex; gap: .75rem; }
+</style>
+{% endblock %}

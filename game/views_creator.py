@@ -2228,3 +2228,105 @@ def creator_player_save_rl_mapping(request, player_id):
     compute_rl_form_for_player(player)
 
     return JsonResponse({'ok': True})
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  SoFIFA-CSV-Import (Creator Mode)
+# ══════════════════════════════════════════════════════════════════════════
+import re as _re
+import uuid as _uuid
+
+from django.conf import settings as _imp_settings
+from . import sofifa_import as _sofifa_import
+from .models import SourceImportRun
+
+_SOFIFA_UPLOAD_DIR = os.path.join(str(_imp_settings.BASE_DIR), '.local', 'tmp', 'sofifa_uploads')
+
+
+def _sofifa_upload_path(token):
+    """Sicherer Pfad zu einem hochgeladenen Token (verhindert Path-Traversal)."""
+    if not _re.fullmatch(r'[a-f0-9]{32}\.csv', token or ''):
+        return None
+    path = os.path.join(_SOFIFA_UPLOAD_DIR, token)
+    if not os.path.isfile(path):
+        return None
+    return path
+
+
+@login_required
+def creator_import_ratings(request):
+    if request.method == 'POST':
+        action = request.POST.get('action', 'preview')
+
+        # ── Bestätigung: echter Import ───────────────────────────────────────
+        if action == 'commit':
+            token = request.POST.get('token', '')
+            version = request.POST.get('version', '').strip()
+            file_name = request.POST.get('file_name', '').strip()
+            path = _sofifa_upload_path(token)
+            if not path:
+                messages.error(request, 'Upload nicht gefunden oder abgelaufen. Bitte erneut hochladen.')
+                return redirect('creator_import_ratings')
+            try:
+                result = _sofifa_import.run_import(
+                    path,
+                    version=version,
+                    file_name=file_name or token,
+                    dry_run=False,
+                    created_by=request.user if request.user.is_authenticated else None,
+                )
+            except _sofifa_import.ImportError_ as exc:
+                messages.error(request, f'Import fehlgeschlagen: {exc}')
+                return redirect('creator_import_ratings')
+            finally:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+            return render(request, 'creator/import_ratings.html', {
+                'phase': 'done',
+                'result': result,
+                'rows_preview': [r for r in result['rows']
+                                 if r['action'] in ('new', 'updated')][:300],
+            })
+
+        # ── Upload: Dry-Run-Vorschau ─────────────────────────────────────────
+        f = request.FILES.get('csv_file')
+        if not f:
+            messages.error(request, 'Keine CSV-Datei ausgewählt.')
+            return redirect('creator_import_ratings')
+
+        os.makedirs(_SOFIFA_UPLOAD_DIR, exist_ok=True)
+        token = _uuid.uuid4().hex + '.csv'
+        dest = os.path.join(_SOFIFA_UPLOAD_DIR, token)
+        with open(dest, 'wb') as out:
+            for chunk in f.chunks():
+                out.write(chunk)
+
+        version = request.POST.get('version', '').strip()
+        try:
+            result = _sofifa_import.run_import(
+                dest, version=version, file_name=f.name, dry_run=True,
+            )
+        except _sofifa_import.ImportError_ as exc:
+            try:
+                os.remove(dest)
+            except OSError:
+                pass
+            messages.error(request, f'CSV ungültig: {exc}')
+            return redirect('creator_import_ratings')
+
+        return render(request, 'creator/import_ratings.html', {
+            'phase': 'preview',
+            'result': result,
+            'rows_preview': [r for r in result['rows']
+                             if r['action'] in ('new', 'updated', 'error')][:300],
+            'token': token,
+            'file_name': f.name,
+        })
+
+    # ── GET: Formular + Verlauf ──────────────────────────────────────────────
+    return render(request, 'creator/import_ratings.html', {
+        'phase': 'form',
+        'recent_runs': SourceImportRun.objects.all()[:10],
+    })
