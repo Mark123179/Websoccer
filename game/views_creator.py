@@ -241,7 +241,7 @@ def _build_strength_tab_context(player):
         profile_rows.append({
             'key':             pkey,
             'label':           se.PROFILE_LABELS[pkey],
-            'score':           round(score, 1) if score is not None else None,
+            'score':           round(score, 2) if score is not None else None,
             'is_primary':      pkey == hp1_profile_key,
             'is_secondary':    any(
                 se.POSITION_TO_PROFILE.get(p) == pkey
@@ -283,6 +283,40 @@ def _build_strength_tab_context(player):
     rl_form_result['factor'] = rl_form_factor
     rl_form_result['match_count'] = len(snapshots_data)
     rl_form_result['score_label'] = f'{rl_form_result["score"]:+d}' if not rl_form_result['no_data'] else '–'
+
+    # ── Per-Profil Fit + Effektive Range (zweiter Durchlauf, nach allen Fits) ─
+    sec_profile_set = {
+        se.POSITION_TO_PROFILE.get(p)
+        for p in secondary_positions if p
+    } - {None}
+
+    for row in profile_rows:
+        pkey = row['key']
+        if is_gk and pkey != 'TW':
+            row['fit_factor'] = 0.30
+            row['fit_pct'] = '30 %'
+        elif not is_gk and pkey == 'TW':
+            row['fit_factor'] = 0.25
+            row['fit_pct'] = '25 %'
+        elif row['is_primary']:
+            row['fit_factor'] = 1.00
+            row['fit_pct'] = '100 %'
+        elif pkey in sec_profile_set:
+            row['fit_factor'] = 0.90
+            row['fit_pct'] = '90 %'
+        else:
+            row['fit_factor'] = 0.70
+            row['fit_pct'] = '70 %'
+
+        if base_200 is not None and row['score'] is not None:
+            r_min, r_max = se.get_strength_range(
+                base_200, potential_200, row['score'],
+                row['fit_factor'], freshness_factor, rl_form_factor,
+            )
+        else:
+            r_min, r_max = None, None
+        row['range_min'] = r_min
+        row['range_max'] = r_max
 
     # ── Stärke-Range ────────────────────────────────────────────────────────
     # Unbekannte Position → kein stilles Fallback; Range explizit nicht berechenbar

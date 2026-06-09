@@ -400,14 +400,14 @@
 
       <!-- ④ Positionsprofile -->
       <div class="cpe-str-section">
-        <div class="cpe-str-section-title">④ Positionsprofile (0 – 100)</div>
+        <div class="cpe-str-section-title">④ Positionsprofile</div>
         <table class="cpe-str-table cpe-str-profile-table">
           <thead>
             <tr>
               <th>Profil</th>
-              <th>Profil-Score</th>
-              <th>Profil×2 (0–200)</th>
-              <th></th>
+              <th>Profilscore <span class="cpe-str-th-note">ohne Positions-Fit</span></th>
+              <th>Fit</th>
+              <th>Effektive Range</th>
             </tr>
           </thead>
           <tbody>
@@ -421,25 +421,27 @@
                 {% if row.score is not None %}
                   <span class="cpe-str-profile-bar-wrap">
                     <span class="cpe-str-profile-bar" style="width:{{ row.score }}%"></span>
-                    <span class="cpe-str-profile-score">{{ row.score }}</span>
+                    <span class="cpe-str-profile-score">{{ row.score|floatformat:2 }}</span>
                   </span>
                 {% else %}
                   <span class="cpe-str-null">–</span>
                 {% endif %}
               </td>
               <td>
-                {% if row.score is not None %}
-                  {{ row.score|floatformat:0|add:"" }}{% comment %}×2{% endcomment %}
-                  <span class="cpe-str-profile-200">≈ {% widthratio row.score 1 2 %}</span>
-                {% else %}
-                  <span class="cpe-str-null">–</span>
+                <span class="cpe-str-factor {% if row.fit_factor == 1.0 %}cpe-str-factor-ok{% elif row.fit_factor >= 0.85 %}cpe-str-factor-neutral{% elif row.fit_factor >= 0.50 %}cpe-str-factor-warn{% else %}cpe-str-factor-danger{% endif %}">
+                  {{ row.fit_pct }}
+                </span>
+                {% if row.is_primary %}
+                  <span class="cpe-str-badge cpe-str-badge-primary">HP</span>
+                {% elif row.is_secondary %}
+                  <span class="cpe-str-badge cpe-str-badge-secondary">NP</span>
                 {% endif %}
               </td>
               <td>
-                {% if row.is_primary %}
-                  <span class="cpe-str-badge cpe-str-badge-primary">Hauptposition</span>
-                {% elif row.is_secondary %}
-                  <span class="cpe-str-badge cpe-str-badge-secondary">Nebenposition</span>
+                {% if row.range_min is not None %}
+                  <span class="cpe-str-range-inline">{{ row.range_min|floatformat:2 }} – {{ row.range_max|floatformat:2 }}</span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
                 {% endif %}
               </td>
             </tr>
@@ -784,6 +786,8 @@
 .cpe-str-factor-warn { color: #ffb347; }
 .cpe-str-factor-danger { color: #ff8899; }
 .cpe-str-factor-neutral { color: #556677; }
+.cpe-str-th-note { color: #334455; font-size: .65rem; font-weight: 400; font-style: italic; }
+.cpe-str-range-inline { color: #00d4ff; font-variant-numeric: tabular-nums; }
 .cpe-str-form-score { font-weight: 700; font-size: .82rem; }
 
 /* Range */
