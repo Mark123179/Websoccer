@@ -107,14 +107,11 @@ def build_club_identity(club, players):
 
 
 def find_profile_opponent(club):
-    match = club.public_profile_matches.filter(
-        kind=ClubProfileMatch.KIND_NEXT,
-    ).select_related('home_club', 'away_club').first()
-    if match:
-        for candidate in [match.home_club, match.away_club]:
-            if candidate and candidate.id != club.id:
-                return candidate
-
+    fixture = get_next_fixture(club)
+    if fixture:
+        if fixture.home_club_id == club.pk:
+            return fixture.away_club
+        return fixture.home_club
     return None
 
 
@@ -166,46 +163,6 @@ def build_match(club, opponent_club, kind, links):
             'resultTone': disp.result_tone,
             'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
             'scorers': [],
-        }
-
-    match = club.public_profile_matches.filter(kind=kind).select_related(
-        'home_club', 'away_club',
-    ).order_by('-id').first()
-
-    if match:
-        home_club = match.home_club or club
-        away_club = match.away_club or opponent_club or club
-        base = {
-            'id': str(match.id),
-            'competitionName': match.competition_name,
-            'ntNationality': match.nt_nationality,
-            'competitionLogoUrl': competition_logo_static_path(match.competition_name, match.nt_nationality),
-            'matchdayLabel': match.matchday_label,
-            'homeClub': club_stub(home_club),
-            'awayClub': club_stub(away_club),
-            'backgroundImageUrl': stadium_image_for(home_club),
-        }
-        if kind == ClubProfileMatch.KIND_LAST:
-            result_tones = {
-                ClubProfileMatch.RESULT_WIN: 'gold',
-                ClubProfileMatch.RESULT_DRAW: 'silver',
-                ClubProfileMatch.RESULT_LOSS: 'red',
-            }
-            return {
-                **base,
-                'homeGoals': match.home_goals if match.home_goals is not None else 0,
-                'awayGoals': match.away_goals if match.away_goals is not None else 0,
-                'resultLabel': match.result_label or '–',
-                'resultTone': result_tones.get(match.result_label, 'neutral'),
-                'reportUrl': reverse('club_match_report', kwargs={'club_id': club.id}),
-                'scorers': match.scorers or [],
-            }
-        return {
-            **base,
-            'dateLabel': match.date_label,
-            'timeLabel': match.time_label,
-            'stadiumName': match.stadium_name,
-            'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
         }
 
     # Final fallback: empty state only for next match; last match returns None (no data yet)

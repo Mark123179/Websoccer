@@ -208,7 +208,8 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'Borussia Dortmund')
 
     def test_home_dashboard_shows_fixture_data(self):
-        from .models import ManagerProfile
+        from datetime import time as dt_time
+        from .models import ManagerProfile, SeasonFixture
 
         User = get_user_model()
         user = User.objects.create_user(username='testmanager', password='testpass123')
@@ -225,31 +226,26 @@ class PageSmokeTests(TestCase):
             league=self.club.league,
         )
 
-        ClubProfileMatch.objects.create(
-            club=self.club,
-            kind=ClubProfileMatch.KIND_NEXT,
-            competition_name='DFB-Pokal',
-            matchday_label='Viertelfinale',
-            date_label='15. Jun 2026',
-            time_label='20:30 Uhr',
-            stadium_name='Signal Iduna Park',
+        SeasonFixture.objects.create(
+            league=self.club.league,
+            season='2025/26',
+            matchday=5,
             home_club=self.club,
             away_club=opponent,
+            scheduled_date=date(2026, 6, 15),
+            scheduled_time=dt_time(20, 30),
+            is_played=False,
         )
-        ClubProfileMatch.objects.create(
-            club=self.club,
-            kind=ClubProfileMatch.KIND_LAST,
-            competition_name='1. Bundesliga',
-            matchday_label='32. Spieltag',
-            date_label='01. Jun 2026',
+        SeasonFixture.objects.create(
+            league=self.club.league,
+            season='2025/26',
+            matchday=32,
             home_club=self.club,
             away_club=opponent,
+            scheduled_date=date(2026, 6, 1),
             home_goals=3,
             away_goals=1,
-            result_label=ClubProfileMatch.RESULT_WIN,
-            scorers=[
-                {'playerName': 'Testschuetze', 'clubId': str(self.club.id), 'minute': 45},
-            ],
+            is_played=True,
         )
 
         self.client.force_login(user)
@@ -257,16 +253,13 @@ class PageSmokeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        self.assertContains(response, 'DFB-Pokal')
-        self.assertContains(response, 'Viertelfinale')
+        self.assertContains(response, '1. Bundesliga')
+        self.assertContains(response, '5. Spieltag')
         self.assertContains(response, '15. Jun 2026')
         self.assertContains(response, '20:30 Uhr')
-        self.assertContains(response, 'Signal Iduna Park')
 
         self.assertContains(response, '3:1')
         self.assertContains(response, '32. Spieltag')
-        self.assertContains(response, 'Testschuetze')
-        self.assertContains(response, "45'")
 
         self.assertNotContains(response, '25. Mai 2025')
         self.assertNotContains(response, '9-9')
@@ -280,23 +273,25 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, '1. Bundesliga')
 
     def test_club_detail_renders_public_profile(self):
-        ClubProfileMatch.objects.create(
-            club=self.club,
-            kind=ClubProfileMatch.KIND_LAST,
-            competition_name='1. Bundesliga',
-            matchday_label='33. Spieltag',
+        from .models import SeasonFixture
+
+        opponent = Club.objects.create(
+            name='FC Gegner',
+            short_name='FCG',
+            fm_inside_id=9997,
+            founded_year=2000,
+            budget=Decimal('1000000.00'),
+            league=self.club.league,
+        )
+        SeasonFixture.objects.create(
+            league=self.club.league,
+            season='2025/26',
+            matchday=33,
             home_club=self.club,
-            away_club=None,
+            away_club=opponent,
             home_goals=1,
             away_goals=0,
-            result_label=ClubProfileMatch.RESULT_WIN,
-            scorers=[
-                {
-                    'clubId': str(self.club.id),
-                    'playerName': 'Harry Kane',
-                    'minute': 22,
-                },
-            ],
+            is_played=True,
         )
         response = self.client.get(
             reverse('club_detail', kwargs={'club_id': self.club.id})
@@ -321,6 +316,7 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, '%')
         self.assertContains(response, 'game/css/club-profile.css')
         self.assertContains(response, 'game/js/club-profile.js')
+        self.assertContains(response, 'Keine Torsch\u00fctzen erfasst')
         self.assertContains(response, 'Harry Kane')
         self.assertContains(response, 'club-player-cutout')
         self.assertContains(response, 'game/images/players/28049320')

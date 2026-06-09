@@ -12,6 +12,81 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender='game.MatchResult')
+def auto_create_season_fixture_from_match_result(sender, instance, created, **kwargs):
+    """
+    Legt automatisch einen SeasonFixture-Eintrag an, wenn ein MatchResult mit
+    vollständigen Spielergebnis-Daten (Heimverein, Auswärtsverein, Tore) gespeichert
+    wird und für diese Kombination noch kein gespieltes Fixture in der aktuellen Saison
+    existiert.
+
+    Dies stellt sicher, dass Dashboard und Vereinsprofil stets echte SeasonFixture-
+    Daten nutzen können, auch wenn der Spielplan nicht vorab generiert wurde.
+    """
+    if not instance.home_club_id or not instance.away_club_id:
+        return
+    if instance.home_goals is None or instance.away_goals is None:
+        return
+
+    try:
+        from django.db.models import Q
+        from .models import SeasonFixture
+
+        home_club_id = instance.home_club_id
+        away_club_id = instance.away_club_id
+        season = instance.season or '0'
+
+        league = None
+        try:
+            from .models import Club
+            home_club = Club.objects.select_related('league').get(pk=home_club_id)
+            league = home_club.league
+        except Exception:
+            pass
+
+        if league is None:
+            return
+
+        existing = SeasonFixture.objects.filter(
+            home_club_id=home_club_id,
+            away_club_id=away_club_id,
+            league=league,
+            season=season,
+            is_played=True,
+        ).first()
+
+        if existing:
+            return
+
+        last_matchday = (
+            SeasonFixture.objects
+            .filter(league=league, season=season)
+            .order_by('-matchday')
+            .values_list('matchday', flat=True)
+            .first()
+        ) or 0
+
+        SeasonFixture.objects.create(
+            league=league,
+            season=season,
+            matchday=last_matchday + 1,
+            home_club_id=home_club_id,
+            away_club_id=away_club_id,
+            home_goals=instance.home_goals,
+            away_goals=instance.away_goals,
+            is_played=True,
+        )
+        logger.info(
+            'auto_create_season_fixture_from_match_result: Fixture für %s – %s (Saison %s) angelegt.',
+            home_club_id, away_club_id, season,
+        )
+    except Exception as exc:
+        logger.warning(
+            'auto_create_season_fixture_from_match_result: Fixture nicht angelegt: %s',
+            exc,
+        )
+
+
+@receiver(post_save, sender='game.MatchResult')
 def auto_record_matchday_revenue(sender, instance, created, **kwargs):
     """
     Bucht Stadioneinnahmen automatisch nach dem Speichern eines Heimspiel-

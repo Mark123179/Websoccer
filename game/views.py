@@ -1572,18 +1572,9 @@ def home(request):
         next_match_home_club = next_fixture.home_club
         next_match_away_club = next_fixture.away_club
     else:
-        _next_cpm = (
-            ClubProfileMatch.objects.filter(
-                club=primary_club, kind=ClubProfileMatch.KIND_NEXT,
-            ).select_related('home_club', 'away_club').first()
-        ) if primary_club else None
-        next_match_obj = _next_cpm
-        next_match_home_club = (
-            _next_cpm.home_club if _next_cpm and _next_cpm.home_club else primary_club
-        )
-        next_match_away_club = (
-            _next_cpm.away_club if _next_cpm and _next_cpm.away_club else secondary_club
-        )
+        next_match_obj = None
+        next_match_home_club = None
+        next_match_away_club = None
 
     if last_fixture:
         last_match_obj = FD(last_fixture, primary_club)
@@ -1593,22 +1584,10 @@ def home(request):
         ag = last_fixture.away_goals
         last_match_score = f'{hg}:{ag}' if hg is not None and ag is not None else None
     else:
-        _last_cpm = (
-            ClubProfileMatch.objects.filter(
-                club=primary_club, kind=ClubProfileMatch.KIND_LAST,
-            ).select_related('home_club', 'away_club').order_by('-id').first()
-        ) if primary_club else None
-        last_match_obj = _last_cpm
-        last_match_home_club = (
-            _last_cpm.home_club if _last_cpm and _last_cpm.home_club else None
-        )
-        last_match_away_club = _last_cpm.away_club if _last_cpm else None
-        if _last_cpm:
-            hg = _last_cpm.home_goals
-            ag = _last_cpm.away_goals
-            last_match_score = f'{hg}:{ag}' if hg is not None and ag is not None else None
-        else:
-            last_match_score = None
+        last_match_obj = None
+        last_match_home_club = None
+        last_match_away_club = None
+        last_match_score = None
 
     transfer_queryset = Player.objects.select_related(
         'club',
