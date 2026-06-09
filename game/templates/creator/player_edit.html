@@ -894,6 +894,60 @@
         </tbody>
       </table>
       <p class="cpe-hint cpe-src-hint">{% if source_is_gk %}Torwart-Attribute (Position TW).{% endif %} Leere Felder werden nicht gespeichert. „—" = Quelle liefert dieses Attribut nicht.</p>
+
+      {% if source_fm_snapshots or source_ea_snapshots %}
+      <details class="cpe-history-details">
+        <summary class="cpe-history-summary">Rating-Verlauf <span class="cpe-history-count">{% if source_fm_snapshots %}FM {{ source_fm_snapshots|length }}{% endif %}{% if source_fm_snapshots and source_ea_snapshots %} · {% endif %}{% if source_ea_snapshots %}EA {{ source_ea_snapshots|length }}{% endif %} Einträge</span></summary>
+        <div class="cpe-history-body">
+          {% if source_fm_snapshots %}
+          <div class="cpe-history-source-label">FMInside</div>
+          <table class="cpe-history-table">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Version</th>
+                <th>Rating</th>
+                <th>Potential</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for snap in source_fm_snapshots %}
+              <tr>
+                <td>{{ snap.recorded_at|date:"d.m.Y" }}</td>
+                <td>{{ snap.source_version|default:"—" }}</td>
+                <td class="cpe-history-rating">{{ snap.rating }}</td>
+                <td class="cpe-history-pot">{{ snap.potential|default_if_none:"—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+          {% if source_ea_snapshots %}
+          <div class="cpe-history-source-label{% if source_fm_snapshots %} cpe-history-source-label--mt{% endif %}">SoFIFA</div>
+          <table class="cpe-history-table">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Version</th>
+                <th>Rating</th>
+                <th>Potential</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for snap in source_ea_snapshots %}
+              <tr>
+                <td>{{ snap.recorded_at|date:"d.m.Y" }}</td>
+                <td>{{ snap.source_version|default:"—" }}</td>
+                <td class="cpe-history-rating">{{ snap.rating }}</td>
+                <td class="cpe-history-pot">{{ snap.potential|default_if_none:"—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% endif %}
+        </div>
+      </details>
+      {% endif %}
     </div>
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-saison">
       <div class="cpe-section-bar">Saison</div>
@@ -1010,6 +1064,21 @@
 .cpe-src-na { color: #334455; }
 .cpe-src-hint { padding: .6rem 1.25rem; }
 .cpe-import-badge { display: block; font-size: .62rem; font-weight: 400; letter-spacing: .03em; text-transform: none; color: #4a8fa8; margin-top: .15rem; }
+.cpe-history-details { border-top: 1px solid #0d2035; }
+.cpe-history-summary { list-style: none; display: flex; align-items: center; gap: .6rem; padding: .6rem 1.25rem; color: #7fd6ff; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; user-select: none; }
+.cpe-history-summary::-webkit-details-marker { display: none; }
+.cpe-history-summary::before { content: '▶'; font-size: .6rem; color: #334455; transition: transform .15s; }
+details[open] .cpe-history-summary::before { transform: rotate(90deg); }
+.cpe-history-count { color: #334455; font-weight: 400; text-transform: none; font-size: .72rem; }
+.cpe-history-body { padding: 0 0 .75rem; }
+.cpe-history-source-label { padding: .35rem 1.25rem; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #33cc99; }
+.cpe-history-source-label--mt { margin-top: .5rem; }
+.cpe-history-table { width: 100%; border-collapse: collapse; }
+.cpe-history-table th { color: #556677; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .3rem 1.25rem; text-align: left; border-bottom: 1px solid #071525; }
+.cpe-history-table td { color: #aabbcc; font-size: .8rem; padding: .35rem 1.25rem; border-bottom: 1px solid #050e1a; }
+.cpe-history-table tr:hover td { background: #07111c; }
+.cpe-history-rating { color: #cce8ff; font-weight: 700; }
+.cpe-history-pot { color: #aabbcc; }
 .cpe-input-date { width: 150px; }
 .cpe-input-money { width: 160px; }
 .cpe-select { background: #030a12; border: 1px solid #0d2035; border-radius: 4px; color: #cce8ff; padding: .35rem .5rem; font-size: .82rem; }

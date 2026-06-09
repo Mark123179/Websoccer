@@ -11,7 +11,8 @@ from django.views.decorators.http import require_POST
 
 from .models import (
     Club, COUNTRY_FLAG_ASSETS, DataSource, League, Player,
-    PlayerSourceRating, PlayerStrengthProfile, PlayerFormSnapshot, Stadium,
+    PlayerSourceRating, PlayerSourceRatingSnapshot, PlayerStrengthProfile,
+    PlayerFormSnapshot, Stadium,
     ClubPublicProfile, ClubTrophy, ClubSponsor,
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
@@ -196,10 +197,24 @@ def _build_source_tab_context(player):
             'source_version': ea_row.source_version if ea_row else '',
         },
     }
+    fm_snapshots = list(
+        PlayerSourceRatingSnapshot.objects.filter(
+            player=player,
+            source__code=DataSource.CODE_FMINSIDE,
+        ).order_by('-recorded_at', '-id')[:10]
+    )
+    ea_snapshots = list(
+        PlayerSourceRatingSnapshot.objects.filter(
+            player=player,
+            source__code=DataSource.CODE_SOFIFA,
+        ).order_by('-recorded_at', '-id')[:10]
+    )
     return {
         'source_attr_rows': attr_rows,
         'source_meta': source_meta,
         'source_is_gk': is_gk,
+        'source_fm_snapshots': fm_snapshots,
+        'source_ea_snapshots': ea_snapshots,
     }
 
 def _build_strength_tab_context(player):
