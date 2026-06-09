@@ -106,13 +106,19 @@ class Command(BaseCommand):
                 potential_200 = Decimal(str(potential_200))
 
             # ── RL-Form-Modifier ─────────────────────────────────────────────
+            api_snapshots = [
+                s for s in player.form_snapshots.all()
+                if s.source == PlayerFormSnapshot.SOURCE_API_FOOTBALL
+            ]
+            has_api_mapping = len(api_snapshots) > 0
+            api_snapshots.sort(key=lambda s: s.fixture_date, reverse=True)
             snapshots_data = [
                 {'rating': s.rating, 'minutes_played': s.minutes_played}
-                for s in player.form_snapshots
-                    .filter(source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
-                    .order_by('-fixture_date')[:10]
+                for s in api_snapshots[:10]
             ]
-            rl_form_result = se.calculate_rl_form_from_snapshots(snapshots_data)
+            rl_form_result = se.calculate_rl_form_from_snapshots(
+                snapshots_data, no_mapping=not has_api_mapping
+            )
             rl_form_factor = se.get_rl_form_fit(rl_form_result['score'])
             form_modifier  = se.calculate_form_modifier(int(base_200), rl_form_factor)
 

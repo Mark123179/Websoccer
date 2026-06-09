@@ -324,25 +324,44 @@ def get_freshness_fit(freshness):
 # RL-Form
 # ---------------------------------------------------------------------------
 
-def calculate_rl_form_from_snapshots(snapshots):
+def calculate_rl_form_from_snapshots(snapshots, *, no_mapping=False):
     """
     Args:
-        snapshots: list of dicts mit keys 'rating' und 'minutes_played'
-                   (maximal 10 Einträge, bereits nach Datum sortiert)
+        snapshots:   list of dicts mit keys 'rating' und 'minutes_played'
+                     (maximal 10 Einträge, bereits nach Datum sortiert)
+        no_mapping:  True wenn der Spieler überhaupt kein API-Football-Mapping hat.
+                     In diesem Fall wird score=0 (neutral) zurückgegeben, NICHT −2.
+                     Spieler sollen nicht für fehlende Datenqualität bestraft werden.
 
     Returns:
         dict mit:
-            score: int -5..+5
-            avg_rating: float or None
+            score:         int -5..+5
+            avg_rating:    float or None
             total_minutes: int
-            no_data: bool
+            no_data:       bool  – True wenn Mapping vorhanden aber keine Einsätze
+            no_mapping:    bool  – True wenn gar kein API-Mapping existiert
     """
+    if no_mapping:
+        return {
+            'score': 0,
+            'avg_rating': None,
+            'total_minutes': 0,
+            'no_data': False,
+            'no_mapping': True,
+        }
+
     valid = [s for s in snapshots if s.get('minutes_played', 0) > 0 and s.get('rating') is not None]
 
     total_minutes = sum(s['minutes_played'] for s in valid)
 
     if total_minutes == 0:
-        return {'score': -2, 'avg_rating': None, 'total_minutes': 0, 'no_data': True}
+        return {
+            'score': -2,
+            'avg_rating': None,
+            'total_minutes': 0,
+            'no_data': True,
+            'no_mapping': False,
+        }
 
     avg_rating = sum(float(s['rating']) * s['minutes_played'] for s in valid) / total_minutes
 
@@ -361,6 +380,7 @@ def calculate_rl_form_from_snapshots(snapshots):
         'avg_rating': round(avg_rating, 2),
         'total_minutes': total_minutes,
         'no_data': False,
+        'no_mapping': False,
     }
 
 

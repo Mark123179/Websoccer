@@ -505,24 +505,30 @@
               </td>
             </tr>
             <!-- RL-Form-Fit -->
-            <tr>
+            <tr {% if str_rl_form.no_mapping %}class="cpe-str-row-missing"{% endif %}>
               <td>⑦ RL-Form
                 <span class="cpe-str-fit-detail">
-                  {% if str_rl_form.no_data %}
-                    keine Spieldaten
+                  {% if str_rl_form.no_mapping %}
+                    <span class="cpe-str-missing-label">kein API-Mapping — Daten fehlen</span>
+                  {% elif str_rl_form.no_data %}
+                    keine Einsätze (letzte 10 Spiele)
                   {% else %}
                     Ø {{ str_rl_form.avg_rating }} · {{ str_rl_form.total_minutes }} Min. · {{ str_rl_form.match_count }} Spiel{{ str_rl_form.match_count|pluralize:"e" }}
                   {% endif %}
                 </span>
               </td>
               <td>
-                <span class="cpe-str-form-score {% if str_rl_form.score >= 3 %}cpe-str-factor-ok{% elif str_rl_form.score <= -3 %}cpe-str-factor-danger{% elif str_rl_form.score < 0 %}cpe-str-factor-warn{% else %}cpe-str-factor-neutral{% endif %}">
+                <span class="cpe-str-form-score {% if str_rl_form.no_mapping %}cpe-str-factor-neutral{% elif str_rl_form.score >= 3 %}cpe-str-factor-ok{% elif str_rl_form.score <= -3 %}cpe-str-factor-danger{% elif str_rl_form.score < 0 %}cpe-str-factor-warn{% else %}cpe-str-factor-neutral{% endif %}">
                   Form {{ str_rl_form.score_label }}
                 </span>
-                {% if str_rl_form.no_data %}<span class="cpe-str-badge cpe-str-badge-warn">Fallback −2</span>{% endif %}
+                {% if str_rl_form.no_mapping %}
+                  <span class="cpe-str-badge cpe-str-badge-danger">kein Mapping</span>
+                {% elif str_rl_form.no_data %}
+                  <span class="cpe-str-badge cpe-str-badge-warn">Fallback −2</span>
+                {% endif %}
               </td>
               <td>
-                <span class="cpe-str-factor {% if str_rl_form.factor < 1.0 %}cpe-str-factor-warn{% elif str_rl_form.factor > 1.0 %}cpe-str-factor-ok{% else %}cpe-str-factor-neutral{% endif %}">
+                <span class="cpe-str-factor {% if str_rl_form.no_mapping %}cpe-str-factor-neutral{% elif str_rl_form.factor < 1.0 %}cpe-str-factor-warn{% elif str_rl_form.factor > 1.0 %}cpe-str-factor-ok{% else %}cpe-str-factor-neutral{% endif %}">
                   ×{{ str_rl_form.factor }}
                 </span>
               </td>
@@ -743,6 +749,8 @@
 .cpe-str-badge-primary { background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff55; }
 .cpe-str-badge-secondary { background: #00aa6622; color: #00cc88; border: 1px solid #00aa6655; }
 .cpe-str-badge-danger { background: #ff334422; color: #ff8899; border: 1px solid #ff334455; }
+.cpe-str-row-missing { background: #ff334408; }
+.cpe-str-missing-label { color: #ff8899; font-style: italic; }
 .cpe-str-badge-mini { font-size: .62rem; padding: .05rem .25rem; }
 
 /* Attribut-Tabelle */

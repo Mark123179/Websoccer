@@ -269,20 +269,22 @@ def _build_strength_tab_context(player):
     freshness_factor, freshness_range_label = se.get_freshness_fit(freshness_val)
 
     # ── RL-Form ──────────────────────────────────────────────────────────────
-    form_snapshots_qs = (
-        player.form_snapshots
-        .filter(source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
-        .order_by('-fixture_date')[:10]
-    )
+    # no_mapping vs. no_data klar trennen:
+    # no_mapping=True → kein API-Football-Mapping → score=0, factor=1.00 (keine Strafe)
+    # no_data=True    → Mapping vorhanden, keine Einsätze → score=−2 (korrekte Strafe)
+    api_qs = player.form_snapshots.filter(source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
+    has_api_mapping = api_qs.exists()
     snapshots_data = [
         {'rating': s.rating, 'minutes_played': s.minutes_played}
-        for s in form_snapshots_qs
+        for s in api_qs.order_by('-fixture_date')[:10]
     ]
-    rl_form_result = se.calculate_rl_form_from_snapshots(snapshots_data)
+    rl_form_result = se.calculate_rl_form_from_snapshots(
+        snapshots_data, no_mapping=not has_api_mapping
+    )
     rl_form_factor = se.get_rl_form_fit(rl_form_result['score'])
     rl_form_result['factor'] = rl_form_factor
     rl_form_result['match_count'] = len(snapshots_data)
-    rl_form_result['score_label'] = f'{rl_form_result["score"]:+d}' if not rl_form_result['no_data'] else '–'
+    rl_form_result['score_label'] = f'{rl_form_result["score"]:+d}'
 
     # ── Per-Profil Fit + Effektive Range (zweiter Durchlauf, nach allen Fits) ─
     sec_profile_set = {
