@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import (
@@ -115,6 +116,13 @@ def _save_player_source_ratings(request, player):
 
         url = (request.POST.get(f'src_{prefix}_url') or '').strip()
         row.source_url = url
+
+        _version_labels = {
+            'fm': 'FMInside Scraper',
+            'ea': 'SoFIFA Scraper',
+        }
+        row.source_version = _version_labels.get(prefix, prefix)
+        row.checked_at = timezone.now().date()
         row.save()
 
         # --- Geschichte-Log: Source-Ratings ---
