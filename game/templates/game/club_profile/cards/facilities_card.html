@@ -2,10 +2,10 @@
 
 <article class="club-profile-card club-facilities-card last-match-profile-card facilities-card">
     <h2 class="club-card-title">VEREINSUMFELD</h2>
-    <div class="facilities-grid">
+    <div class="facilities-list">
         {% for item in profile.facilities %}
-        <div class="facility-item">
-            <span class="facility-item-label">{{ item.fullLabel }}</span>
+        <div class="facility-row">
+            <span class="facility-short-label" title="{{ item.fullLabel }}">{{ item.shortLabel }}</span>
             <div class="facility-pips">
                 <span class="facility-pip {% if item.level >= 1 %}is-active{% endif %}"></span>
                 <span class="facility-pip {% if item.level >= 2 %}is-active{% endif %}"></span>

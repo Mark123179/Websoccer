@@ -19,32 +19,33 @@
     gap: 12px;
 }
 
-.facilities-grid {
+.facilities-list {
     position: relative;
     z-index: 2;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    margin-top: 4px;
-}
-
-.facility-item {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: 8px 10px;
-    border: 1px solid rgba(92, 221, 244, 0.18);
-    border-radius: 5px;
-    background: rgba(2, 8, 13, 0.48);
+    gap: 7px;
+    margin-top: 6px;
 }
 
-.facility-item-label {
-    font-size: clamp(8px, 0.56vw, 10px);
+.facility-row {
+    display: grid;
+    grid-template-columns: 4.5em 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid rgba(92, 221, 244, 0.15);
+    border-radius: 5px;
+    background: rgba(2, 8, 13, 0.52);
+}
+
+.facility-short-label {
+    font-size: clamp(9px, 0.62vw, 11px);
     font-weight: 900;
-    letter-spacing: 0.05em;
-    color: rgba(241, 251, 255, 0.9);
+    letter-spacing: 0.06em;
+    color: rgba(241, 251, 255, 0.95);
     text-transform: uppercase;
-    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .facility-pips {
@@ -67,7 +68,9 @@
 }
 
 .facility-level-label {
-    font-size: clamp(8px, 0.54vw, 10px);
+    font-size: clamp(9px, 0.6vw, 11px);
     color: var(--club-muted, rgba(218, 236, 242, 0.72));
     font-weight: 600;
+    white-space: nowrap;
+    text-align: right;
 }
