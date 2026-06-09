@@ -174,6 +174,12 @@ uri = "file://game/static/game/images/crests/nt_390.png"
 type = "image"
 title = "generated_image"
 
+[[generated]]
+id = "hgaK4i60akl-NHhcQeHSL"
+uri = "file://game/static/game/images/city/946.jpg"
+type = "image"
+title = "hamburg-city-night"
+
 [[outputs]]
 id = "0fjIy8MDMUxiYa4wzp-4L"
 uri = "file://attached_assets/freiburg_city.png"
