@@ -656,6 +656,12 @@
           {% if api_usage_today >= api_warn_threshold %} ⚠{% endif %}
         </span>
       </div>
+      <div class="cpe-afsearch-filterbar" id="afsearch-filterbar" style="display:none">
+        <label class="cpe-afsearch-filter-label">Filter nach Team/Liga:</label>
+        <input class="cpe-input cpe-afsearch-filter-input" id="afsearch-filter-input"
+               type="text" placeholder="z. B. Bayern, Bundesliga …" style="width:220px">
+        <span class="cpe-afsearch-filter-count" id="afsearch-filter-count"></span>
+      </div>
       <div class="cpe-afsearch-results" id="afsearch-results" style="display:none"></div>
 
       {# Mapping-Block #}
@@ -1142,6 +1148,9 @@
 
 /* RL-Form Tab */
 .cpe-afsearch-bar { display: flex; align-items: center; gap: .6rem; padding: .9rem 1.25rem; flex-wrap: wrap; border-bottom: 1px solid #071525; }
+.cpe-afsearch-filterbar { display: flex; align-items: center; gap: .6rem; padding: .55rem 1.25rem; background: #030c18; border-bottom: 1px solid #071525; flex-wrap: wrap; }
+.cpe-afsearch-filter-label { color: #556677; font-size: .75rem; white-space: nowrap; }
+.cpe-afsearch-filter-count { color: #334455; font-size: .72rem; font-style: italic; margin-left: .2rem; }
 .cpe-afsearch-hint { color: #334455; font-size: .7rem; font-style: italic; }
 .cpe-af-budget { margin-left: auto; font-size: .72rem; color: #556677; white-space: nowrap; }
 .cpe-af-budget strong { color: #7fd6ff; }
@@ -1236,13 +1245,18 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
 
 // API-Football ID-Suche
 (function() {
-  const btn      = document.getElementById('afsearch-btn');
-  const results  = document.getElementById('afsearch-results');
-  const nameIn   = document.querySelector('.cpe-afsearch-name');
-  const teamIn   = document.querySelector('.cpe-afsearch-team');
-  const seasonIn = document.querySelector('.cpe-afsearch-season');
+  const btn        = document.getElementById('afsearch-btn');
+  const results    = document.getElementById('afsearch-results');
+  const filterBar  = document.getElementById('afsearch-filterbar');
+  const filterIn   = document.getElementById('afsearch-filter-input');
+  const filterCount= document.getElementById('afsearch-filter-count');
+  const nameIn     = document.querySelector('.cpe-afsearch-name');
+  const teamIn     = document.querySelector('.cpe-afsearch-team');
+  const seasonIn   = document.querySelector('.cpe-afsearch-season');
 
   if (!btn) return;
+
+  let allRows = [];
 
   function applyCandidate(row) {
     document.getElementById('rl_api_player_id').value  = row.player_id  || '';
@@ -1251,11 +1265,34 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
     document.getElementById('rl_api_season').value     = row.season     || '';
     results.style.display = 'none';
     results.innerHTML = '';
+    filterBar.style.display = 'none';
+    filterIn.value = '';
+    allRows = [];
+  }
+
+  function updateFilterCount(visible, total) {
+    filterCount.textContent = visible < total ? `${visible} / ${total} Treffer` : `${total} Treffer`;
+  }
+
+  function applyFilter() {
+    const q = filterIn.value.trim().toLowerCase();
+    let visible = 0;
+    allRows.forEach(({ tr, r }) => {
+      const match = !q
+        || (r.team_name  || '').toLowerCase().includes(q)
+        || (r.league_name|| '').toLowerCase().includes(q);
+      tr.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    updateFilterCount(visible, allRows.length);
   }
 
   function renderResults(data) {
     results.innerHTML = '';
     results.style.display = 'block';
+    filterBar.style.display = 'none';
+    filterIn.value = '';
+    allRows = [];
     if (!data.ok) {
       results.innerHTML = `<div class="cpe-afsearch-error">⚠ ${data.error}</div>`;
       return;
@@ -1291,10 +1328,15 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
       });
       tr.addEventListener('click', () => applyCandidate(r));
       tbody.appendChild(tr);
+      allRows.push({ tr, r });
     });
     table.appendChild(tbody);
     results.appendChild(table);
+    filterBar.style.display = 'flex';
+    updateFilterCount(allRows.length, allRows.length);
   }
+
+  filterIn.addEventListener('input', applyFilter);
 
   btn.addEventListener('click', async () => {
     const name   = nameIn.value.trim();
@@ -1303,12 +1345,14 @@ document.querySelectorAll('.cpe-tab').forEach(tab => {
     if (name.length < 3) {
       results.style.display = 'block';
       results.innerHTML = '<div class="cpe-afsearch-error">Mindestens 3 Zeichen für den Spielernamen eingeben.</div>';
+      filterBar.style.display = 'none';
       return;
     }
     btn.disabled = true;
     btn.textContent = '…';
     results.style.display = 'none';
     results.innerHTML = '';
+    filterBar.style.display = 'none';
     const url = new URL('{% url "creator_player_search_api_football" player.id %}', location.href);
     url.searchParams.set('name', name);
     if (team) url.searchParams.set('team_name', team);

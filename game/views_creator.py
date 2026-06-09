@@ -2157,6 +2157,7 @@ def creator_player_search_api_football(request, player_id):
     finally:
         _record_api_call(1)
 
+    seen = set()
     results = []
     for entry in raw:
         p = entry.get('player', {})
@@ -2166,6 +2167,10 @@ def creator_player_search_api_football(request, player_id):
             team_name_api = team.get('name', '')
             if team_filter and team_filter not in team_name_api.lower():
                 continue
+            dedup_key = (p.get('id'), team.get('id'))
+            if dedup_key in seen:
+                continue
+            seen.add(dedup_key)
             results.append({
                 'player_id':   p.get('id'),
                 'player_name': p.get('name', ''),
