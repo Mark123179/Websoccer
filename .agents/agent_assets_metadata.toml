@@ -191,3 +191,9 @@ id = "oTNQHcx47_t-rYJiptlYe"
 uri = "file://spieler_export.csv"
 type = "table"
 title = "Alle Spieler — Vollexport (19.237 Spieler)"
+
+[[outputs]]
+id = "Ssnvo6MCmNiNQnzgZOEpr"
+uri = "file://spieler_export_komplett.csv"
+type = "table"
+title = "Vollexport — alle Spieler, alle Daten (116 Spalten)"
