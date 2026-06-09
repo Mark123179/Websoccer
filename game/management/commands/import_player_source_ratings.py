@@ -72,7 +72,7 @@ SOFIFA_ATTR_MAP = {
     'Finishing': 'abschluss',
     'Heading accuracy': 'kopfball',
     'Standing tackle': 'zweikampf',
-    'Attack position': 'defensivstellung',  # SoFIFA "Stellungsspiel"
+    'Defensive awareness': 'defensivstellung',
     'Vision': 'uebersicht',
     'Penalties': 'elfmeter',
     'FK Accuracy': 'freistoss',
