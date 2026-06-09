@@ -497,13 +497,16 @@ def creator_index(request):
         flag_code = (
             COUNTRY_FLAG_ASSETS.get(league.country or '', {}).get('code', '').lower()
         )
-        return render(request, 'creator/index.html', {
+        ctx = {
             'level': 3,
             'league': league,
             'clubs': clubs,
             'country': league.country,
             'flag_code': flag_code,
-        })
+        }
+        if league.id == 1:
+            ctx['vereinslose_count'] = Player.objects.filter(club__isnull=True).count()
+        return render(request, 'creator/index.html', ctx)
 
     # ── Level 2: Ligen eines Landes ──────────────────────────────────────────
     if country_filter:
@@ -546,6 +549,73 @@ def creator_index(request):
         'countries_data': countries_data,
         'total_clubs': Club.objects.count(),
         'total_players': Player.objects.count(),
+    })
+
+
+@login_required
+def creator_vereinslose(request):
+    from django.core.paginator import Paginator
+    from .models import PlayerSourceRating
+
+    q_name  = request.GET.get('name', '').strip()
+    q_pos   = request.GET.get('pos', '').strip()
+    q_nat   = request.GET.get('nat', '').strip()
+    q_min   = request.GET.get('ea_min', '').strip()
+    q_max   = request.GET.get('ea_max', '').strip()
+    page_nr = request.GET.get('page', 1)
+
+    qs = Player.objects.filter(club__isnull=True).order_by('last_name', 'first_name')
+
+    if q_name:
+        from django.db.models import Q
+        qs = qs.filter(Q(first_name__icontains=q_name) | Q(last_name__icontains=q_name))
+    if q_pos:
+        qs = qs.filter(position=q_pos)
+    if q_nat:
+        qs = qs.filter(nationalities__icontains=q_nat)
+
+    if q_min or q_max:
+        ea_ids = PlayerSourceRating.objects.filter(source='EA')
+        if q_min:
+            try:
+                ea_ids = ea_ids.filter(rating__gte=int(q_min))
+            except ValueError:
+                pass
+        if q_max:
+            try:
+                ea_ids = ea_ids.filter(rating__lte=int(q_max))
+            except ValueError:
+                pass
+        qs = qs.filter(id__in=ea_ids.values('player_id'))
+
+    ea_map = {
+        sr.player_id: sr.rating
+        for sr in PlayerSourceRating.objects.filter(
+            source='EA', player_id__in=qs.values('id')
+        )
+    }
+
+    paginator = Paginator(qs, 60)
+    page_obj = paginator.get_page(page_nr)
+
+    players_with_rating = [
+        (p, ea_map.get(p.id, ''))
+        for p in page_obj
+    ]
+
+    POSITIONS = ['TW','IV','LA','RA','DM','ZM','OM','LA','RA','ST']
+    pos_choices = ['TW','IV','LV','RV','LA','RA','DM','ZM','OM','ST']
+
+    return render(request, 'creator/vereinslose.html', {
+        'page_obj': page_obj,
+        'players_with_rating': players_with_rating,
+        'total': qs.count(),
+        'q_name': q_name,
+        'q_pos': q_pos,
+        'q_nat': q_nat,
+        'q_min': q_min,
+        'q_max': q_max,
+        'pos_choices': pos_choices,
     })
 
 

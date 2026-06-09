@@ -83,6 +83,7 @@ from .views_creator import (
     creator_save_satisfaction,
     creator_add_satisfaction,
     creator_sofifa_import,
+    creator_vereinslose,
 )
 
 
@@ -227,6 +228,7 @@ urlpatterns = [
     path('creator/clubs/<int:club_id>/upload/city/', creator_upload_city, name='creator_upload_city'),
     path('creator/clubs/<int:club_id>/upload/kit/<str:kit_type>/', creator_upload_kit, name='creator_upload_kit'),
     path('creator/clubs/<int:club_id>/upload/crest/', creator_upload_crest, name='creator_upload_crest'),
+    path('creator/players/vereinslose/', creator_vereinslose, name='creator_vereinslose'),
     path('creator/players/<int:player_id>/', creator_player_edit, name='creator_player_edit'),
     path('creator/players/<int:player_id>/recalculate-strength/', creator_player_recalculate_strength, name='creator_player_recalculate_strength'),
     path('creator/players/<int:player_id>/fetch-rl-form/', creator_player_fetch_rl_form, name='creator_player_fetch_rl_form'),

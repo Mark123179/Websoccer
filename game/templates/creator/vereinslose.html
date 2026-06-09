@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · Vereinslose Spieler{% endblock %}
+
+{% block content %}
+<section class="creator-section">
+
+  <div class="creator-breadcrumb">
+    <a href="{% url 'creator_index' %}">Creator Mode</a>
+    <span>›</span>
+    <a href="{% url 'creator_index' %}?country=System">System</a>
+    <span>›</span>
+    <a href="{% url 'creator_index' %}?league=1">Sonderstatus</a>
+    <span>›</span>
+    <span>Vereinslose <span class="vl-total-badge">{{ total }}</span></span>
+  </div>
+
+  <div class="vl-header">
+    <h1 class="vl-title">Vereinslose Spieler <span class="vl-count">{{ total }}</span></h1>
+    <p class="vl-subtitle">Transferpool · Kein WS-Club zugewiesen · Direkt bearbeitbar</p>
+  </div>
+
+  <!-- ── Filter ──────────────────────────────────────────────────────────── -->
+  <form method="get" class="vl-filter-bar" id="vl-filter">
+    <div class="vl-filter-group">
+      <input class="vl-filter-input" type="text" name="name" value="{{ q_name }}"
+             placeholder="Name suchen …" autocomplete="off">
+    </div>
+    <div class="vl-filter-group">
+      <select class="vl-filter-select" name="pos">
+        <option value="">Alle Positionen</option>
+        {% for pos in pos_choices %}
+        <option value="{{ pos }}" {% if q_pos == pos %}selected{% endif %}>{{ pos }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="vl-filter-group vl-filter-range">
+      <input class="vl-filter-input vl-short" type="number" name="ea_min" value="{{ q_min }}"
+             placeholder="EA min" min="1" max="99">
+      <span class="vl-range-sep">–</span>
+      <input class="vl-filter-input vl-short" type="number" name="ea_max" value="{{ q_max }}"
+             placeholder="EA max" min="1" max="99">
+    </div>
+    <div class="vl-filter-group">
+      <input class="vl-filter-input" type="text" name="nat" value="{{ q_nat }}"
+             placeholder="Nationalität …" autocomplete="off">
+    </div>
+    <button class="vl-filter-btn" type="submit">Filtern</button>
+    {% if q_name or q_pos or q_nat or q_min or q_max %}
+    <a class="vl-filter-reset" href="{% url 'creator_vereinslose' %}">✕ Reset</a>
+    {% endif %}
+  </form>
+
+  <!-- ── Spieler-Tabelle ─────────────────────────────────────────────────── -->
+  {% if players_with_rating %}
+  <div class="vl-table-wrap">
+    <table class="vl-table">
+      <thead>
+        <tr>
+          <th class="vl-th-pos">Pos</th>
+          <th>Name</th>
+          <th class="vl-th-num">EA</th>
+          <th class="vl-th-num">Alter</th>
+          <th>Nationalität</th>
+          <th class="vl-th-action"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for player, ea_rating in players_with_rating %}
+        <tr class="vl-row">
+          <td><span class="vl-pos-badge">{{ player.position|default:"–" }}</span></td>
+          <td class="vl-name">
+            <a href="{% url 'creator_player_edit' player_id=player.id %}" class="vl-player-link">
+              {{ player.first_name }} {{ player.last_name }}
+            </a>
+          </td>
+          <td class="vl-num">
+            {% if ea_rating %}
+            <span class="vl-rating {% if ea_rating >= 85 %}vl-r-gold{% elif ea_rating >= 75 %}vl-r-silver{% elif ea_rating >= 65 %}vl-r-bronze{% endif %}">{{ ea_rating }}</span>
+            {% else %}–{% endif %}
+          </td>
+          <td class="vl-num vl-age">{{ player.age|default:"–" }}</td>
+          <td class="vl-nat">{{ player.nationalities|default:"–"|truncatechars:20 }}</td>
+          <td class="vl-action">
+            <a href="{% url 'creator_player_edit' player_id=player.id %}" class="vl-edit-btn">✎</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Pagination ──────────────────────────────────────────────────────── -->
+  {% if page_obj.has_other_pages %}
+  <div class="vl-pagination">
+    {% if page_obj.has_previous %}
+    <a class="vl-page-btn" href="?name={{ q_name }}&pos={{ q_pos }}&nat={{ q_nat }}&ea_min={{ q_min }}&ea_max={{ q_max }}&page={{ page_obj.previous_page_number }}">‹ Zurück</a>
+    {% endif %}
+    <span class="vl-page-info">Seite {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a class="vl-page-btn" href="?name={{ q_name }}&pos={{ q_pos }}&nat={{ q_nat }}&ea_min={{ q_min }}&ea_max={{ q_max }}&page={{ page_obj.next_page_number }}">Weiter ›</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="vl-empty">
+    <p>Keine vereinslosen Spieler gefunden{% if q_name or q_pos or q_nat or q_min or q_max %} für diese Filter{% endif %}.</p>
+    {% if q_name or q_pos or q_nat or q_min or q_max %}
+    <a class="vl-filter-reset" href="{% url 'creator_vereinslose' %}">Filter zurücksetzen</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</section>
+
+<style>
+.creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+.creator-breadcrumb { display: flex; align-items: center; gap: .45rem; font-size: .78rem; color: #556677; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.creator-breadcrumb a { color: #556677; text-decoration: none; transition: color .15s; }
+.creator-breadcrumb a:hover { color: #aabbcc; }
+.creator-breadcrumb span { color: #1e3050; }
+.vl-total-badge { background: #00d4ff22; color: #00d4ff88; font-size: .7rem; padding: .1rem .4rem; border-radius: 8px; font-weight: 700; }
+
+.vl-header { margin-bottom: 1.5rem; }
+.vl-title { color: #cce8ff; font-size: 1.3rem; font-weight: 800; margin: 0 0 .25rem; display: flex; align-items: center; gap: .75rem; }
+.vl-count { background: #00d4ff22; color: #00d4ff88; font-size: .8rem; padding: .15rem .6rem; border-radius: 12px; font-weight: 600; }
+.vl-subtitle { color: #334455; font-size: .8rem; margin: 0; }
+
+.vl-filter-bar { display: flex; align-items: center; gap: .6rem; margin-bottom: 1.25rem; flex-wrap: wrap; background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: .75rem 1rem; }
+.vl-filter-group { display: flex; align-items: center; gap: .35rem; }
+.vl-filter-input { background: #03080f; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .82rem; padding: .35rem .7rem; outline: none; transition: border-color .15s; }
+.vl-filter-input:focus { border-color: #00d4ff44; }
+.vl-filter-input.vl-short { width: 62px; }
+.vl-filter-select { background: #03080f; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .82rem; padding: .35rem .7rem; outline: none; cursor: pointer; }
+.vl-range-sep { color: #334455; font-size: .8rem; }
+.vl-filter-btn { background: #071525; border: 1px solid #00d4ff44; border-radius: 6px; color: #00d4ff; font-size: .8rem; font-weight: 600; padding: .35rem .9rem; cursor: pointer; transition: all .15s; }
+.vl-filter-btn:hover { background: #00d4ff15; border-color: #00d4ff88; }
+.vl-filter-reset { color: #556677; font-size: .78rem; text-decoration: none; padding: .25rem .6rem; border: 1px solid #0d2035; border-radius: 5px; transition: all .15s; }
+.vl-filter-reset:hover { color: #aabbcc; border-color: #1e3050; }
+
+.vl-table-wrap { overflow-x: auto; }
+.vl-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+.vl-table thead tr { border-bottom: 1px solid #0d2035; }
+.vl-table th { color: #334455; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: .5rem .75rem; text-align: left; }
+.vl-th-pos { width: 52px; }
+.vl-th-num { width: 56px; text-align: center; }
+.vl-th-action { width: 40px; }
+.vl-row { border-bottom: 1px solid #06111e; transition: background .1s; }
+.vl-row:hover { background: #050e1a; }
+.vl-row td { padding: .45rem .75rem; }
+.vl-pos-badge { display: inline-block; font-size: .65rem; font-weight: 800; background: #071525; border: 1px solid #0d2035; border-radius: 3px; padding: .1rem .35rem; color: #556677; }
+.vl-name { font-weight: 600; }
+.vl-player-link { color: #aabbcc; text-decoration: none; transition: color .15s; }
+.vl-player-link:hover { color: #00d4ff; }
+.vl-num { text-align: center; color: #556677; }
+.vl-age { color: #445566; }
+.vl-rating { display: inline-block; font-weight: 700; font-size: .82rem; min-width: 26px; text-align: center; padding: .1rem .3rem; border-radius: 4px; background: #071525; color: #556677; }
+.vl-r-gold   { background: #1a1200; color: #d4a017; border: 1px solid #3a2800; }
+.vl-r-silver { background: #0d1520; color: #7aaacc; border: 1px solid #1a3048; }
+.vl-r-bronze { background: #0a120a; color: #4a8a5a; border: 1px solid #1a3022; }
+.vl-nat { color: #445566; font-size: .78rem; }
+.vl-edit-btn { color: #334455; text-decoration: none; font-size: .8rem; padding: .2rem .45rem; border: 1px solid #0d2035; border-radius: 4px; transition: all .15s; }
+.vl-edit-btn:hover { color: #00d4ff88; border-color: #00d4ff33; background: #071525; }
+
+.vl-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #0d2035; }
+.vl-page-btn { color: #00d4ff88; text-decoration: none; font-size: .82rem; font-weight: 600; padding: .35rem .9rem; border: 1px solid #00d4ff33; border-radius: 6px; background: #071525; transition: all .15s; }
+.vl-page-btn:hover { background: #00d4ff15; color: #00d4ff; }
+.vl-page-info { color: #334455; font-size: .8rem; }
+
+.vl-empty { padding: 3rem 0; text-align: center; color: #334455; }
+.vl-empty p { margin-bottom: 1rem; }
+</style>
+{% endblock %}

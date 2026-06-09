@@ -162,6 +162,19 @@
     {% empty %}
     <p class="cm-empty">Keine Vereine in dieser Liga.</p>
     {% endfor %}
+    {% if league.id == 1 %}
+    <a class="cm-club-card cm-club-card--pool" href="{% url 'creator_vereinslose' %}">
+      <div class="cm-club-crest-wrap">
+        <div class="cm-crest-placeholder cm-crest-pool">🌐</div>
+      </div>
+      <div class="cm-club-info">
+        <strong>Vereinslose</strong>
+        <span>{{ vereinslose_count }} Spieler</span>
+        <span class="cm-club-id">Transfer-Pool</span>
+      </div>
+      <span class="cm-card-arrow">›</span>
+    </a>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -233,6 +246,9 @@
 
 /* ── Level 3: Vereine-Grid ─────────────────────────────────────────────── */
 .cm-clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .75rem; }
+.cm-club-card--pool { border-color: #0d2535; }
+.cm-club-card--pool:hover { border-color: #00d4ff44; }
+.cm-crest-pool { font-size: 1.4rem; background: #050e1a; border-color: #0d2535; }
 .cm-club-card { display: flex; align-items: center; gap: 1rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: .9rem 1.25rem; text-decoration: none; transition: border-color .2s, background .2s, transform .15s; cursor: pointer; }
 .cm-club-card:hover { border-color: #00d4ff55; background: #071525; transform: translateY(-1px); }
 .cm-club-crest-wrap { width: 48px; height: 48px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
