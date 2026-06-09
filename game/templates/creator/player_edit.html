@@ -10,8 +10,10 @@
     <a href="{% url 'creator_index' %}">Creator Mode</a>
     <span>›</span>
     {% if player %}
+      {% if player.club_id %}
       <a href="{% url 'creator_club_edit' club_id=player.club_id %}">{{ player.club.name }}</a>
       <span>›</span>
+      {% endif %}
       <span>{{ player.first_name }} {{ player.last_name }}</span>
     {% else %}
       <a href="{% url 'creator_club_edit' club_id=club.id %}">{{ club.name }}</a>
