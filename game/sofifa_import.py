@@ -214,7 +214,7 @@ def derive_version(rows, header_map):
     return ''
 
 
-def _parse_int(raw, lo, hi, field, required=False, clip=False):
+def _parse_int(raw, lo, hi, field, required=False, clip=False, clips=None):
     raw = (raw or '').strip()
     if not raw:
         if required:
@@ -232,6 +232,8 @@ def _parse_int(raw, lo, hi, field, required=False, clip=False):
                 'sofifa_import: %s=%d ausserhalb %d-%d, auf %d geclipt',
                 field, val, lo, hi, clipped,
             )
+            if clips is not None:
+                clips.append(f'{field}: {val}→{clipped}')
             return clipped
         raise ValueError(f'{field}={val} ausserhalb {lo}-{hi}')
     return val
@@ -248,13 +250,15 @@ def parse_row(raw_row, header_map):
     if not sofifa_id:
         raise ValueError('sofifa_id fehlt')
 
+    clips = []
+
     rating = _parse_int(cell('rating'), 0, 100, 'rating', required=True)
     potential = _parse_int(cell('potential'), 0, 100, 'potential')
 
     attrs = {}
     for col in ALL_ATTR_COLUMNS:
         if col in header_map:
-            val = _parse_int(cell(col), 0, 99, col, clip=True)
+            val = _parse_int(cell(col), 0, 99, col, clip=True, clips=clips)
             if val is not None:
                 attrs[col] = val
 
@@ -274,6 +278,7 @@ def parse_row(raw_row, header_map):
         'profile_url': cell('profile_url'),
         'attrs': attrs,
         'meta': meta,
+        'clips': clips,
     }
 
 
@@ -474,7 +479,7 @@ def run_import(source, *, version='', file_name='', dry_run=False,
             errors.append(msg)
             result_rows.append({
                 'line': line_no, 'action': 'error', 'mode': None,
-                'name': '', 'club': '', 'diff': [str(exc)],
+                'name': '', 'club': '', 'diff': [str(exc)], 'clips': [],
             })
             continue
 
@@ -488,6 +493,7 @@ def run_import(source, *, version='', file_name='', dry_run=False,
             result_rows.append({
                 'line': line_no, 'action': 'unmatched', 'mode': None,
                 'name': label, 'club': parsed.get('club', ''), 'diff': [],
+                'clips': parsed.get('clips', []),
             })
             continue
 
@@ -508,6 +514,7 @@ def run_import(source, *, version='', file_name='', dry_run=False,
             'name': player.full_name,
             'club': player.club.name if player.club else '',
             'diff': diff_lines,
+            'clips': parsed.get('clips', []),
         })
 
     changed = stats['new'] + stats['updated']

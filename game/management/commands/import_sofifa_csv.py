@@ -170,6 +170,7 @@ class Command(BaseCommand):
             raise CommandError(result['fatal_error'])
 
         stats = result['stats']
+        total_clips = 0
         for r in result['row_results']:
             if r['action'] == 'error':
                 self.stdout.write(self.style.ERROR(
@@ -185,12 +186,18 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f"  {mark} {r['player_name']}{club}{mode_note}: {detail}"
                 )
+                for clip in r.get('clips', []):
+                    total_clips += 1
+                    self.stdout.write(self.style.WARNING(
+                        f"    ⚠ {r['player_name']}: {clip} geclipt"
+                    ))
 
         self.stdout.write('')
+        clip_note = f', {total_clips} Attribute geclipt' if total_clips else ''
         self.stdout.write(self.style.SUCCESS(
             f"Bilanz: {stats['new']} neu, {stats['updated']} aktualisiert, "
             f"{stats['unchanged']} unveraendert, {stats['unmatched']} nicht "
-            f"gematcht, {stats['error']} Fehler."
+            f"gematcht, {stats['error']} Fehler{clip_note}."
         ))
 
         unmatched = [r for r in result['row_results'] if r['action'] == 'unmatched']
