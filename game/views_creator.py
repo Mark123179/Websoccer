@@ -10,10 +10,12 @@ from django.views.decorators.http import require_POST
 
 from .models import (
     Club, COUNTRY_FLAG_ASSETS, DataSource, League, Player,
-    PlayerSourceRating, Stadium, ClubPublicProfile, ClubTrophy, ClubSponsor,
+    PlayerSourceRating, PlayerStrengthProfile, PlayerFormSnapshot, Stadium,
+    ClubPublicProfile, ClubTrophy, ClubSponsor,
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
 )
+from . import strength_engine as se
 from .management.commands.import_player_source_ratings import (
     FMI_ATTR_MAP, FMI_GK_MAP, SOFIFA_ATTR_MAP, SOFIFA_GK_MAP,
 )
@@ -162,6 +164,149 @@ def _build_source_tab_context(player):
         'source_meta': source_meta,
         'source_is_gk': is_gk,
     }
+
+def _build_strength_tab_context(player):
+    """
+    Berechnet den vollständigen Stärke-Berechnungsweg für den Creator-Tab.
+    Nur lesend – keine DB-Schreiboperationen.
+    """
+    is_gk = player.position == 'TW'
+
+    # ── Quell-Ratings abrufen ───────────────────────────────────────────────
+    rows = {r.source: r for r in player.source_ratings.all()}
+    fm_row = rows.get(PlayerSourceRating.SOURCE_FM)
+    ea_row = rows.get(PlayerSourceRating.SOURCE_EA)
+
+    fmi_rating    = fm_row.rating    if fm_row else None
+    fmi_potential = fm_row.potential if fm_row else None
+    ea_rating     = ea_row.rating    if ea_row else None
+    ea_potential  = ea_row.potential if ea_row else None
+
+    # ── Basis & Potential (0–200) ────────────────────────────────────────────
+    base_200 = se.calculate_base_200(fmi_rating, ea_rating)
+    potential_200 = se.calculate_potential_200(fmi_potential, ea_potential, base_200)
+    gap = (potential_200 - base_200) if (potential_200 is not None and base_200 is not None) else None
+    constancy_label = se.get_constancy_label(gap)
+
+    # ── Kombinierte Attribute ────────────────────────────────────────────────
+    if is_gk:
+        attr_cols = [col for col, _ in SOURCE_GK_LABELS]
+        attr_labels = {col: lbl for col, lbl in SOURCE_GK_LABELS}
+    else:
+        attr_cols = [col for col, _ in SOURCE_OUTFIELD_LABELS]
+        attr_labels = {col: lbl for col, lbl in SOURCE_OUTFIELD_LABELS}
+
+    def _row_attrs(row, cols):
+        if row is None:
+            return {c: None for c in cols}
+        return {c: getattr(row, c, None) for c in cols}
+
+    fmi_attrs = _row_attrs(fm_row, attr_cols)
+    ea_attrs  = _row_attrs(ea_row,  attr_cols)
+
+    combined_attrs = se.get_combined_attributes(fmi_attrs, ea_attrs, attr_cols)
+    combined_attrs_dict = {a['col']: a['combined'] for a in combined_attrs}
+
+    for a in combined_attrs:
+        a['label'] = attr_labels.get(a['col'], a['col'])
+
+    # ── Positionsprofile ────────────────────────────────────────────────────
+    main_positions = player.main_positions
+    secondary_positions = player.secondary_positions
+    primary_pos = main_positions[0] if main_positions else ''
+    primary_profile_key = se.POSITION_TO_PROFILE.get(primary_pos)
+
+    profile_rows = []
+    for pkey in se.PROFILE_KEYS_ORDERED:
+        score = se.get_position_profile(combined_attrs_dict, pkey)
+        profile_rows.append({
+            'key':             pkey,
+            'label':           se.PROFILE_LABELS[pkey],
+            'score':           round(score, 1) if score is not None else None,
+            'is_primary':      pkey == primary_profile_key,
+            'is_secondary':    any(
+                se.POSITION_TO_PROFILE.get(p) == pkey
+                for p in secondary_positions
+            ),
+        })
+
+    primary_profile_score = se.get_position_profile(combined_attrs_dict, primary_profile_key) if primary_profile_key else None
+
+    # ── Positions-Fit ────────────────────────────────────────────────────────
+    pos_fit_factor, pos_fit_label, pos_unknown = se.get_position_fit(
+        primary_pos, main_positions, secondary_positions,
+    )
+
+    # ── Frische-Fit ─────────────────────────────────────────────────────────
+    try:
+        sp = player.strength_profile
+        freshness_val = float(sp.freshness) if sp.freshness is not None else None
+    except PlayerStrengthProfile.DoesNotExist:
+        freshness_val = None
+
+    freshness_factor, freshness_range_label = se.get_freshness_fit(freshness_val)
+
+    # ── RL-Form ──────────────────────────────────────────────────────────────
+    form_snapshots_qs = (
+        player.form_snapshots
+        .filter(source=PlayerFormSnapshot.SOURCE_API_FOOTBALL)
+        .order_by('-fixture_date')[:10]
+    )
+    snapshots_data = [
+        {'rating': s.rating, 'minutes_played': s.minutes_played}
+        for s in form_snapshots_qs
+    ]
+    rl_form_result = se.calculate_rl_form_from_snapshots(snapshots_data)
+    rl_form_factor = se.get_rl_form_fit(rl_form_result['score'])
+    rl_form_result['factor'] = rl_form_factor
+    rl_form_result['match_count'] = len(snapshots_data)
+    rl_form_result['score_label'] = f'{rl_form_result["score"]:+d}' if not rl_form_result['no_data'] else '–'
+
+    # ── Stärke-Range ────────────────────────────────────────────────────────
+    str_min, str_max = se.get_strength_range(
+        base_200, potential_200, primary_profile_score,
+        pos_fit_factor if pos_fit_factor is not None else 0.70,
+        freshness_factor,
+        rl_form_factor,
+    )
+
+    return {
+        'str_base': {
+            'fmi':      fmi_rating,
+            'ea':       ea_rating,
+            'combined': base_200,
+        },
+        'str_potential': {
+            'fmi':            fmi_potential,
+            'ea':             ea_potential,
+            'combined':       potential_200,
+            'gap':            gap,
+            'constancy_label': constancy_label,
+        },
+        'str_combined_attrs':  combined_attrs,
+        'str_profile_rows':    profile_rows,
+        'str_position_fit': {
+            'pos':            primary_pos,
+            'profile_key':    primary_profile_key or '?',
+            'profile_label':  se.PROFILE_LABELS.get(primary_profile_key, '?'),
+            'factor':         pos_fit_factor,
+            'label':          pos_fit_label,
+            'unknown':        pos_unknown,
+        },
+        'str_freshness': {
+            'value':       freshness_val,
+            'factor':      freshness_factor,
+            'range_label': freshness_range_label,
+            'no_data':     freshness_val is None,
+        },
+        'str_rl_form':  rl_form_result,
+        'str_range': {
+            'min':         str_min,
+            'max':         str_max,
+            'computable':  str_min is not None,
+        },
+    }
+
 
 STATIC_BASE = 'game/static'
 POSITION_CHOICES = [
@@ -519,6 +664,7 @@ def creator_player_edit(request, player_id):
         'portrait_path': portrait_path,
     }
     context.update(_build_source_tab_context(player))
+    context.update(_build_strength_tab_context(player))
     return render(request, 'creator/player_edit.html', context)
 
 

@@ -236,8 +236,301 @@
     </div>
 
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-staerke">
-      <div class="cpe-section-bar">Stärke</div>
-      <p class="cpe-placeholder">Stärke-Verwaltung folgt.</p>
+      <div class="cpe-section-bar">Stärke — Berechnungsweg</div>
+
+      {% if not str_base.fmi and not str_base.ea %}
+      <div class="cpe-str-notice">
+        Keine Quelldaten vorhanden. Bitte FMInside- und/oder SoFIFA-Rating im Source-Tab eintragen.
+      </div>
+      {% endif %}
+
+      <!-- ① Basisstärke -->
+      <div class="cpe-str-section">
+        <div class="cpe-str-section-title">① Basisstärke (0 – 200)</div>
+        <table class="cpe-str-table cpe-str-formula-table">
+          <thead>
+            <tr><th>Quelle</th><th>Rating</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cpe-str-src">FMInside</td>
+              <td>{% if str_base.fmi is not None %}{{ str_base.fmi }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
+            </tr>
+            <tr>
+              <td class="cpe-str-src">SoFIFA</td>
+              <td>{% if str_base.ea is not None %}{{ str_base.ea }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="cpe-str-result-row">
+              <td>Basisstärke</td>
+              <td>
+                {% if str_base.combined is not None %}
+                  <span class="cpe-str-value">{{ str_base.combined }}</span><span class="cpe-str-max"> / 200</span>
+                  {% if str_base.fmi is None or str_base.ea is None %}
+                  <span class="cpe-str-badge cpe-str-badge-warn" title="Nur eine Quelle vorhanden — Wert ×2">1 Quelle ×2</span>
+                  {% endif %}
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- ② Potential -->
+      <div class="cpe-str-section">
+        <div class="cpe-str-section-title">② Potential (0 – 200)</div>
+        <table class="cpe-str-table cpe-str-formula-table">
+          <thead>
+            <tr><th>Quelle</th><th>Potential</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cpe-str-src">FMInside</td>
+              <td>{% if str_potential.fmi is not None %}{{ str_potential.fmi }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
+            </tr>
+            <tr>
+              <td class="cpe-str-src">SoFIFA</td>
+              <td>{% if str_potential.ea is not None %}{{ str_potential.ea }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="cpe-str-result-row">
+              <td>Potential</td>
+              <td>
+                {% if str_potential.combined is not None %}
+                  <span class="cpe-str-value">{{ str_potential.combined }}</span><span class="cpe-str-max"> / 200</span>
+                  {% if str_potential.fmi is None and str_potential.ea is None %}
+                  <span class="cpe-str-badge cpe-str-badge-info" title="Kein Potential eingetragen — Basis als Fallback">= Basis</span>
+                  {% elif str_potential.fmi is None or str_potential.ea is None %}
+                  <span class="cpe-str-badge cpe-str-badge-warn">1 Quelle ×2</span>
+                  {% endif %}
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr class="cpe-str-gap-row">
+              <td>Δ Entwicklungsspanne</td>
+              <td>
+                {% if str_potential.gap is not None %}
+                  <span class="cpe-str-value">+{{ str_potential.gap }}</span>
+                  <span class="cpe-str-constancy">{{ str_potential.constancy_label }}</span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- ③ Kombinierte Attribute -->
+      <div class="cpe-str-section">
+        <div class="cpe-str-section-title">③ Kombinierte Attribute</div>
+        <table class="cpe-str-table cpe-str-attr-table">
+          <thead>
+            <tr>
+              <th class="cpe-str-attr-name">Attribut</th>
+              <th>FMI</th>
+              <th>SoFIFA</th>
+              <th class="cpe-str-combined-col">Kombiniert</th>
+              <th class="cpe-str-delta-col">Δ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for attr in str_combined_attrs %}
+            <tr class="{% if attr.warning == 'red' %}cpe-str-row-danger{% elif attr.warning == 'yellow' %}cpe-str-row-warn{% endif %}">
+              <td class="cpe-str-attr-name">{{ attr.label }}</td>
+              <td>{% if attr.fmi is not None %}{{ attr.fmi }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
+              <td>{% if attr.ea is not None %}{{ attr.ea }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
+              <td class="cpe-str-combined-col">
+                {% if attr.combined is not None %}
+                  <span class="cpe-str-combined-val">{{ attr.combined }}</span>
+                  {% if attr.fmi is None or attr.ea is None %}
+                  <span class="cpe-str-badge cpe-str-badge-mini cpe-str-badge-info" title="Nur eine Quelle">1Q</span>
+                  {% endif %}
+                {% else %}<span class="cpe-str-null">–</span>{% endif %}
+              </td>
+              <td class="cpe-str-delta-col">
+                {% if attr.delta is not None %}
+                  <span class="{% if attr.warning == 'red' %}cpe-str-delta-danger{% elif attr.warning == 'yellow' %}cpe-str-delta-warn{% else %}cpe-str-delta-ok{% endif %}">
+                    {{ attr.delta }}{% if attr.warning == 'red' %} ⚠{% elif attr.warning == 'yellow' %} △{% endif %}
+                  </span>
+                {% else %}<span class="cpe-str-null">–</span>{% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="cpe-str-empty">Keine Attributdaten</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="cpe-str-legend">
+          <span class="cpe-str-legend-item cpe-str-legend-warn">△ Δ 16–30</span>
+          <span class="cpe-str-legend-item cpe-str-legend-danger">⚠ Δ &gt; 30 — Abweichungswarnung</span>
+        </div>
+      </div>
+
+      <!-- ④ Positionsprofile -->
+      <div class="cpe-str-section">
+        <div class="cpe-str-section-title">④ Positionsprofile (0 – 100)</div>
+        <table class="cpe-str-table cpe-str-profile-table">
+          <thead>
+            <tr>
+              <th>Profil</th>
+              <th>Profil-Score</th>
+              <th>Profil×2 (0–200)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in str_profile_rows %}
+            <tr class="{% if row.is_primary %}cpe-str-profile-primary{% elif row.is_secondary %}cpe-str-profile-secondary{% endif %}">
+              <td>
+                <span class="cpe-str-profile-key">{{ row.key }}</span>
+                <span class="cpe-str-profile-label">{{ row.label }}</span>
+              </td>
+              <td>
+                {% if row.score is not None %}
+                  <span class="cpe-str-profile-bar-wrap">
+                    <span class="cpe-str-profile-bar" style="width:{{ row.score }}%"></span>
+                    <span class="cpe-str-profile-score">{{ row.score }}</span>
+                  </span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.score is not None %}
+                  {{ row.score|floatformat:0|add:"" }}{% comment %}×2{% endcomment %}
+                  <span class="cpe-str-profile-200">≈ {% widthratio row.score 1 2 %}</span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.is_primary %}
+                  <span class="cpe-str-badge cpe-str-badge-primary">Hauptposition</span>
+                {% elif row.is_secondary %}
+                  <span class="cpe-str-badge cpe-str-badge-secondary">Nebenposition</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ⑤⑥⑦ Fit-Faktoren -->
+      <div class="cpe-str-section">
+        <div class="cpe-str-section-title">⑤⑥⑦ Fit-Faktoren</div>
+        <table class="cpe-str-table cpe-str-fit-table">
+          <thead>
+            <tr><th>Faktor</th><th>Wert</th><th>Multiplikator</th></tr>
+          </thead>
+          <tbody>
+            <!-- Positions-Fit -->
+            <tr>
+              <td>⑤ Positions-Fit
+                <span class="cpe-str-fit-detail">
+                  {{ str_position_fit.pos }}
+                  {% if str_position_fit.unknown %}
+                  <span class="cpe-str-badge cpe-str-badge-danger" title="Unbekannter Positionscode">?</span>
+                  {% endif %}
+                </span>
+              </td>
+              <td>{{ str_position_fit.label }}</td>
+              <td>
+                {% if str_position_fit.factor is not None %}
+                  <span class="cpe-str-factor {% if str_position_fit.factor < 0.5 %}cpe-str-factor-danger{% elif str_position_fit.factor < 0.85 %}cpe-str-factor-warn{% else %}cpe-str-factor-ok{% endif %}">
+                    ×{{ str_position_fit.factor }}
+                  </span>
+                {% else %}
+                  <span class="cpe-str-null">–</span>
+                {% endif %}
+              </td>
+            </tr>
+            <!-- Frische-Fit -->
+            <tr>
+              <td>⑥ Frische-Fit
+                <span class="cpe-str-fit-detail">
+                  {% if str_freshness.no_data %}
+                    kein Profil
+                  {% else %}
+                    {{ str_freshness.value|floatformat:1 }} %
+                    <span class="cpe-str-hint">(Bereich {{ str_freshness.range_label }})</span>
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                {% if str_freshness.no_data %}
+                  <span class="cpe-str-null">– (Neutral)</span>
+                {% else %}
+                  {{ str_freshness.range_label }}
+                {% endif %}
+              </td>
+              <td>
+                <span class="cpe-str-factor {% if str_freshness.factor < 0.90 %}cpe-str-factor-warn{% else %}cpe-str-factor-ok{% endif %}">
+                  ×{{ str_freshness.factor }}
+                </span>
+              </td>
+            </tr>
+            <!-- RL-Form-Fit -->
+            <tr>
+              <td>⑦ RL-Form
+                <span class="cpe-str-fit-detail">
+                  {% if str_rl_form.no_data %}
+                    keine Spieldaten
+                  {% else %}
+                    Ø {{ str_rl_form.avg_rating }} · {{ str_rl_form.total_minutes }} Min. · {{ str_rl_form.match_count }} Spiel{{ str_rl_form.match_count|pluralize:"e" }}
+                  {% endif %}
+                </span>
+              </td>
+              <td>
+                <span class="cpe-str-form-score {% if str_rl_form.score >= 3 %}cpe-str-factor-ok{% elif str_rl_form.score <= -3 %}cpe-str-factor-danger{% elif str_rl_form.score < 0 %}cpe-str-factor-warn{% else %}cpe-str-factor-neutral{% endif %}">
+                  Form {{ str_rl_form.score_label }}
+                </span>
+                {% if str_rl_form.no_data %}<span class="cpe-str-badge cpe-str-badge-warn">Fallback −2</span>{% endif %}
+              </td>
+              <td>
+                <span class="cpe-str-factor {% if str_rl_form.factor < 1.0 %}cpe-str-factor-warn{% elif str_rl_form.factor > 1.0 %}cpe-str-factor-ok{% else %}cpe-str-factor-neutral{% endif %}">
+                  ×{{ str_rl_form.factor }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ⑧ Finale Stärke-Range -->
+      <div class="cpe-str-section cpe-str-section-range">
+        <div class="cpe-str-section-title">⑧ Finale Stärke-Range</div>
+        {% if str_range.computable %}
+        <div class="cpe-str-range-display">
+          <div class="cpe-str-range-block cpe-str-range-min">
+            <span class="cpe-str-range-label">Minimum</span>
+            <span class="cpe-str-range-val">{{ str_range.min }}</span>
+            <span class="cpe-str-range-sub">Basis → Fits</span>
+          </div>
+          <div class="cpe-str-range-sep">–</div>
+          <div class="cpe-str-range-block cpe-str-range-max">
+            <span class="cpe-str-range-label">Maximum</span>
+            <span class="cpe-str-range-val">{{ str_range.max }}</span>
+            <span class="cpe-str-range-sub">Potential → Fits</span>
+          </div>
+        </div>
+        <div class="cpe-str-range-formula">
+          pre-fit = Basis×0.80 + Profil×0.20 · PosFit × FrischeFit × RLFormFit
+        </div>
+        {% else %}
+        <div class="cpe-str-notice">
+          Stärke-Range kann erst berechnet werden, wenn Basis-Rating vorhanden.
+        </div>
+        {% endif %}
+      </div>
+
     </div>
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-source">
       <div class="cpe-section-bar">Source</div>
@@ -393,6 +686,93 @@
 .cpe-btn-primary:hover { background: #00bce8; }
 .cpe-btn-secondary { background: #071d30; border: 1px solid #00d4ff33; color: #00d4ff; }
 .cpe-btn-secondary:hover { background: #00d4ff15; }
+
+/* ── Stärke-Tab ──────────────────────────────────────────────────────────── */
+.cpe-str-notice { color: #7fd6ff; background: #00d4ff0a; border: 1px solid #00d4ff22; border-radius: 4px; padding: .6rem 1.25rem; margin: 1rem 1.25rem; font-size: .82rem; }
+
+.cpe-str-section { padding: 1.1rem 1.25rem; border-bottom: 1px solid #071525; }
+.cpe-str-section:last-child { border-bottom: none; }
+.cpe-str-section-title { color: #7fd6ff; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .7rem; }
+
+.cpe-str-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.cpe-str-table th { color: #7fd6ff; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: .35rem .6rem; border-bottom: 1px solid #0d2035; text-align: left; }
+.cpe-str-table td { padding: .35rem .6rem; border-bottom: 1px solid #071525; color: #aabbcc; vertical-align: middle; }
+.cpe-str-table tfoot td { border-bottom: none; border-top: 1px solid #0d2035; }
+
+.cpe-str-formula-table { max-width: 440px; }
+.cpe-str-src { color: #556677; font-size: .75rem; width: 120px; }
+
+.cpe-str-result-row td { color: #cce8ff; font-weight: 700; padding-top: .5rem; }
+.cpe-str-gap-row td { color: #aabbcc; font-size: .8rem; }
+.cpe-str-value { color: #00d4ff; font-size: 1.1rem; font-weight: 700; }
+.cpe-str-max { color: #334455; font-size: .8rem; }
+.cpe-str-null { color: #334455; }
+.cpe-str-constancy { color: #556677; font-size: .75rem; margin-left: .6rem; }
+
+/* Badges */
+.cpe-str-badge { display: inline-block; border-radius: 3px; padding: .1rem .35rem; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-left: .4rem; vertical-align: middle; }
+.cpe-str-badge-warn { background: #c8840022; color: #ffb347; border: 1px solid #c8840055; }
+.cpe-str-badge-info { background: #00d4ff15; color: #7fd6ff; border: 1px solid #00d4ff33; }
+.cpe-str-badge-primary { background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff55; }
+.cpe-str-badge-secondary { background: #00aa6622; color: #00cc88; border: 1px solid #00aa6655; }
+.cpe-str-badge-danger { background: #ff334422; color: #ff8899; border: 1px solid #ff334455; }
+.cpe-str-badge-mini { font-size: .62rem; padding: .05rem .25rem; }
+
+/* Attribut-Tabelle */
+.cpe-str-attr-table { max-width: 640px; }
+.cpe-str-attr-name { width: 160px; color: #aabbcc; }
+.cpe-str-combined-col { color: #cce8ff; font-weight: 600; width: 100px; }
+.cpe-str-delta-col { width: 80px; }
+.cpe-str-combined-val { color: #cce8ff; }
+.cpe-str-row-warn td { background: #c8840008; }
+.cpe-str-row-danger td { background: #ff334410; }
+.cpe-str-delta-ok { color: #556677; }
+.cpe-str-delta-warn { color: #ffb347; font-weight: 600; }
+.cpe-str-delta-danger { color: #ff8899; font-weight: 700; }
+.cpe-str-empty { color: #334455; padding: 1rem; }
+
+/* Legend */
+.cpe-str-legend { display: flex; gap: 1.5rem; margin-top: .5rem; }
+.cpe-str-legend-item { font-size: .7rem; padding: .15rem .5rem; border-radius: 3px; }
+.cpe-str-legend-warn { background: #c8840008; color: #ffb347; border: 1px solid #c8840022; }
+.cpe-str-legend-danger { background: #ff334410; color: #ff8899; border: 1px solid #ff334430; }
+
+/* Positionsprofile */
+.cpe-str-profile-table { max-width: 680px; }
+.cpe-str-profile-primary td { background: #00d4ff0a; }
+.cpe-str-profile-secondary td { background: #00aa660a; }
+.cpe-str-profile-key { color: #00d4ff; font-weight: 700; font-size: .78rem; min-width: 36px; display: inline-block; }
+.cpe-str-profile-label { color: #7b97b0; font-size: .78rem; margin-left: .3rem; }
+.cpe-str-profile-bar-wrap { display: inline-flex; align-items: center; gap: .5rem; width: 180px; }
+.cpe-str-profile-bar { display: inline-block; height: 6px; background: #00d4ff55; border-radius: 3px; min-width: 1px; }
+.cpe-str-profile-primary .cpe-str-profile-bar { background: #00d4ff; }
+.cpe-str-profile-secondary .cpe-str-profile-bar { background: #00cc88; }
+.cpe-str-profile-score { color: #cce8ff; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+.cpe-str-profile-200 { color: #7fd6ff; font-size: .78rem; }
+
+/* Fit-Faktoren */
+.cpe-str-fit-table { max-width: 680px; }
+.cpe-str-fit-detail { color: #556677; font-size: .74rem; margin-left: .5rem; }
+.cpe-str-hint { color: #334455; font-size: .7rem; }
+.cpe-str-factor { font-weight: 700; font-size: .88rem; padding: .1rem .3rem; border-radius: 3px; }
+.cpe-str-factor-ok { color: #00cc88; }
+.cpe-str-factor-warn { color: #ffb347; }
+.cpe-str-factor-danger { color: #ff8899; }
+.cpe-str-factor-neutral { color: #556677; }
+.cpe-str-form-score { font-weight: 700; font-size: .82rem; }
+
+/* Range */
+.cpe-str-section-range { background: #030a12; }
+.cpe-str-range-display { display: flex; align-items: center; gap: 1.5rem; margin-bottom: .7rem; }
+.cpe-str-range-block { display: flex; flex-direction: column; align-items: center; gap: .2rem; background: #071525; border: 1px solid #0d2035; border-radius: 6px; padding: .7rem 1.4rem; min-width: 120px; }
+.cpe-str-range-min { border-color: #0d3055; }
+.cpe-str-range-max { border-color: #00d4ff33; }
+.cpe-str-range-label { color: #556677; font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; }
+.cpe-str-range-val { color: #00d4ff; font-size: 2rem; font-weight: 700; line-height: 1; }
+.cpe-str-range-min .cpe-str-range-val { color: #7fd6ff; font-size: 1.6rem; }
+.cpe-str-range-sub { color: #334455; font-size: .68rem; }
+.cpe-str-range-sep { color: #334455; font-size: 1.5rem; }
+.cpe-str-range-formula { color: #334455; font-size: .7rem; font-style: italic; margin-top: .3rem; }
 </style>
 
 {% block extra_js %}
