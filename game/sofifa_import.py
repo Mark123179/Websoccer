@@ -214,7 +214,7 @@ def derive_version(rows, header_map):
     return ''
 
 
-def _parse_int(raw, lo, hi, field, required=False):
+def _parse_int(raw, lo, hi, field, required=False, clip=False):
     raw = (raw or '').strip()
     if not raw:
         if required:
@@ -225,6 +225,14 @@ def _parse_int(raw, lo, hi, field, required=False):
     except ValueError:
         raise ValueError(f'{field} ist keine Zahl: {raw!r}')
     if not (lo <= val <= hi):
+        if clip:
+            import logging as _logging
+            clipped = max(lo, min(hi, val))
+            _logging.getLogger(__name__).warning(
+                'sofifa_import: %s=%d ausserhalb %d-%d, auf %d geclipt',
+                field, val, lo, hi, clipped,
+            )
+            return clipped
         raise ValueError(f'{field}={val} ausserhalb {lo}-{hi}')
     return val
 
@@ -246,7 +254,7 @@ def parse_row(raw_row, header_map):
     attrs = {}
     for col in ALL_ATTR_COLUMNS:
         if col in header_map:
-            val = _parse_int(cell(col), 0, 99, col)
+            val = _parse_int(cell(col), 0, 99, col, clip=True)
             if val is not None:
                 attrs[col] = val
 

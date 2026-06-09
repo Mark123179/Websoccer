@@ -1526,7 +1526,37 @@ class SofifaCsvImportTests(TestCase):
         output = self._run(csv)
         self.assertRegex(output, r'1 Fehler')
 
-    # ── 6. Re-Run ist idempotent ──────────────────────────────────────────────
+    # ── 6. Ungültiger Attributwert wird geclipt, Zeile gilt nicht als Fehler ──
+
+    def test_out_of_range_attribute_is_clipped_not_error(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999010',
+        )
+        csv = 'sofifa_id,name,overall,tempo\n999010,Thomas Mueller,82,150\n'
+        output = self._run(csv)
+
+        self.assertRegex(output, r'0 Fehler')
+        self.assertNotIn('error', output.lower().replace('fehler', ''))
+
+    def test_out_of_range_attribute_valid_fields_still_written(self):
+        PlayerExternalId.objects.create(
+            player=self.player,
+            source=self.sofifa_ds,
+            external_id='999011',
+        )
+        csv = 'sofifa_id,name,overall,tempo\n999011,Thomas Mueller,82,999\n'
+        self._run(csv)
+
+        rating = PlayerSourceRating.objects.filter(
+            player=self.player,
+            source=PlayerSourceRating.SOURCE_EA,
+        ).first()
+        self.assertIsNotNone(rating, 'PlayerSourceRating wurde trotz ungültigem Attribut nicht angelegt.')
+        self.assertEqual(rating.rating, 82)
+
+    # ── 7. Re-Run ist idempotent ──────────────────────────────────────────────
 
     def test_rerun_is_idempotent_unchanged_stat(self):
         PlayerExternalId.objects.create(
