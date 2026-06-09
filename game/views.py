@@ -2859,11 +2859,12 @@ _ISO2_TO_CODE3 = {
 
 
 def _form_series_map(player_ids, limit=7):
-    """Letzte N echten Bewertungen pro Spieler (chronologisch)."""
+    """Letzte N echte API-Bewertungen pro Spieler (chronologisch, 1-10-Skala)."""
     series = {}
     snapshots = (
         PlayerFormSnapshot.objects
         .filter(player_id__in=player_ids, rating__isnull=False)
+        .exclude(source='dummy_test')
         .order_by('player_id', '-fixture_date', '-fixture_id')
         .values_list('player_id', 'rating')
     )
@@ -2944,15 +2945,15 @@ def _build_player_row(player, stats, form_map):
     hp = hp_all[:3]
     np = np_all[:3]
 
-    # Form-Balkendiagramm (letzte 5 Spiele, Skala 1.00–6.00)
+    # Form-Balkendiagramm (letzte 5 Spiele, API-Football-Skala 1.00–10.00, höher=besser)
     form_values = form_map.get(player.id, [])
     recent = form_values[-5:]
     form_bars = []
     for v in recent:
-        grade = 'good' if v < 3.0 else ('ok' if v < 5.0 else 'weak')
+        grade = 'good' if v >= 7.0 else ('ok' if v >= 5.0 else 'weak')
         form_bars.append({
             'val': round(v, 2),
-            'height_pct': round((6.0 - v) / 5.0 * 100),
+            'height_pct': round(max(0, min(100, (v - 1.0) / 9.0 * 100))),
             'grade': grade,
         })
     form_empty_bars = [None] * (5 - len(form_bars))
