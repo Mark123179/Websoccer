@@ -2532,6 +2532,70 @@ class PlayerStrengthSnapshot(models.Model):
         return f'{self.player} - {self.recorded_at} {self.final_strength:.2f}'
 
 
+class PlayerEditLog(models.Model):
+    """Audit-Log: jede Creator-Änderung an einem Spielerprofil."""
+
+    CATEGORY_PROFIL    = 'profil'
+    CATEGORY_VEREIN    = 'verein'
+    CATEGORY_POSITION  = 'position'
+    CATEGORY_SOURCE    = 'source'
+    CATEGORY_STAERKE   = 'staerke'
+    CATEGORY_BILD      = 'bild'
+    CATEGORY_VERLETZUNG = 'verletzung'
+    CATEGORY_SYSTEM    = 'system'
+
+    CATEGORY_CHOICES = [
+        (CATEGORY_PROFIL,     'Profil'),
+        (CATEGORY_VEREIN,     'Verein & Vertrag'),
+        (CATEGORY_POSITION,   'Positionen'),
+        (CATEGORY_SOURCE,     'Quelldaten'),
+        (CATEGORY_STAERKE,    'Stärke'),
+        (CATEGORY_BILD,       'Bild'),
+        (CATEGORY_VERLETZUNG, 'Verletzung / Sperre'),
+        (CATEGORY_SYSTEM,     'System'),
+    ]
+
+    CATEGORY_ICONS = {
+        'profil':     '👤',
+        'verein':     '🏟',
+        'position':   '📍',
+        'source':     '📊',
+        'staerke':    '⚡',
+        'bild':       '🖼',
+        'verletzung': '🏥',
+        'system':     '⚙',
+    }
+
+    player = models.ForeignKey(
+        'Player',
+        on_delete=models.CASCADE,
+        related_name='edit_logs',
+    )
+    changed_at = models.DateTimeField(auto_now_add=True)
+    changed_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='player_edit_logs',
+    )
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    summary = models.TextField()
+
+    class Meta:
+        ordering = ['-changed_at']
+        verbose_name = 'Spieler-Änderungslog'
+        verbose_name_plural = 'Spieler-Änderungslogs'
+
+    def __str__(self):
+        actor = self.changed_by.username if self.changed_by_id else 'System'
+        return f'{self.player} | {self.category} | {actor} | {self.changed_at:%Y-%m-%d %H:%M}'
+
+    @property
+    def icon(self):
+        return self.CATEGORY_ICONS.get(self.category, '•')
+
+
 class PlayerEditRequest(models.Model):
     FIELD_NATIONALITIES = 'nationalities'
     FIELD_REAL_LIFE_CLUB = 'real_life_club'

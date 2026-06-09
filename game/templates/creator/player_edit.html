@@ -699,8 +699,31 @@
       <p class="cpe-placeholder">Transferhistorie folgt.</p>
     </div>
     <div class="cpe-tab-panel cpe-tab-hidden" id="tab-geschichte">
-      <div class="cpe-section-bar">Geschichte</div>
-      <p class="cpe-placeholder">Spielergeschichte folgt.</p>
+      <div class="cpe-section-bar">Änderungsprotokoll</div>
+      {% if edit_logs %}
+      <table class="cpe-log-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Kategorie</th>
+            <th>Benutzer</th>
+            <th>Änderung</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in edit_logs %}
+          <tr class="cpe-log-row cpe-log-cat-{{ entry.category }}">
+            <td class="cpe-log-date">{{ entry.changed_at|date:"d.m.Y" }}<br><span class="cpe-log-time">{{ entry.changed_at|date:"H:i" }}</span></td>
+            <td class="cpe-log-icon" title="{{ entry.get_category_display }}">{{ entry.icon }}<br><span class="cpe-log-catname">{{ entry.get_category_display }}</span></td>
+            <td class="cpe-log-user">{% if entry.changed_by %}{{ entry.changed_by.username }}{% else %}<span class="cpe-muted">System</span>{% endif %}</td>
+            <td class="cpe-log-summary">{% for line in entry.summary.splitlines %}<span class="cpe-log-line">{{ line }}</span>{% endfor %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="cpe-placeholder">Noch keine Änderungen protokolliert.</p>
+      {% endif %}
     </div>
 
     <div class="cpe-actions">
@@ -735,6 +758,26 @@
 .cpe-tab-hidden { display: none; }
 .cpe-section-bar { background: #00d4ff22; border-left: 3px solid #00d4ff; color: #cce8ff; font-size: .8rem; font-weight: 700; padding: .4rem 1rem; }
 .cpe-placeholder { color: #334455; padding: 2rem; font-size: .85rem; margin: 0; }
+
+.cpe-log-table { width: 100%; border-collapse: collapse; }
+.cpe-log-table thead tr { border-bottom: 2px solid #0d2035; }
+.cpe-log-table th { color: #7fd6ff; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: .45rem 1rem; text-align: left; }
+.cpe-log-row { border-bottom: 1px solid #071525; vertical-align: top; }
+.cpe-log-row:hover { background: #07111c; }
+.cpe-log-date { color: #aabbcc; font-size: .78rem; white-space: nowrap; padding: .6rem 1rem; min-width: 70px; }
+.cpe-log-time { color: #556677; font-size: .7rem; }
+.cpe-log-icon { text-align: center; font-size: 1rem; padding: .5rem .75rem; min-width: 80px; }
+.cpe-log-catname { display: block; color: #556677; font-size: .65rem; text-transform: uppercase; letter-spacing: .04em; margin-top: .2rem; }
+.cpe-log-user { color: #7fd6ff; font-size: .78rem; padding: .6rem .75rem; white-space: nowrap; min-width: 90px; vertical-align: top; }
+.cpe-log-summary { padding: .55rem 1rem .55rem .25rem; }
+.cpe-log-line { display: block; color: #cce8ff; font-size: .8rem; line-height: 1.6; }
+.cpe-log-cat-profil   .cpe-log-icon { color: #aabbcc; }
+.cpe-log-cat-verein   .cpe-log-icon { color: #7fd6ff; }
+.cpe-log-cat-position .cpe-log-icon { color: #00d4ff; }
+.cpe-log-cat-source   .cpe-log-icon { color: #33cc99; }
+.cpe-log-cat-staerke  .cpe-log-icon { color: #ffcc44; }
+.cpe-log-cat-bild     .cpe-log-icon { color: #cc88ff; }
+.cpe-log-cat-verletzung .cpe-log-icon { color: #ff7777; }
 
 .cpe-field-row { display: flex; align-items: flex-start; gap: .75rem; padding: .7rem 1.25rem; border-bottom: 1px solid #071525; }
 .cpe-multi-field { flex-wrap: wrap; align-items: center; }
@@ -903,15 +946,32 @@
 
 {% block extra_js %}
 <script>
+function activateTab(name) {
+  document.querySelectorAll('.cpe-tab').forEach(t => t.classList.remove('cpe-tab-active'));
+  document.querySelectorAll('.cpe-tab-panel').forEach(p => p.classList.add('cpe-tab-hidden'));
+  const tab = document.querySelector(`.cpe-tab[data-tab="${name}"]`);
+  const panel = document.getElementById('tab-' + name);
+  if (tab) tab.classList.add('cpe-tab-active');
+  if (panel) panel.classList.remove('cpe-tab-hidden');
+}
+
 document.querySelectorAll('.cpe-tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.cpe-tab').forEach(t => t.classList.remove('cpe-tab-active'));
-    document.querySelectorAll('.cpe-tab-panel').forEach(p => p.classList.add('cpe-tab-hidden'));
-    tab.classList.add('cpe-tab-active');
-    const panel = document.getElementById('tab-' + tab.dataset.tab);
-    if (panel) panel.classList.remove('cpe-tab-hidden');
+    activateTab(tab.dataset.tab);
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab.dataset.tab);
+    history.replaceState(null, '', url);
   });
 });
+
+// URL-Parameter ?tab= beim Laden auswerten
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get('tab');
+  if (t && document.querySelector(`.cpe-tab[data-tab="${t}"]`)) {
+    activateTab(t);
+  }
+})();
 
 function previewPortrait(input) {
   if (input.files && input.files[0]) {

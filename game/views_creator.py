@@ -14,6 +14,7 @@ from .models import (
     ClubPublicProfile, ClubTrophy, ClubSponsor,
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
+    PlayerEditLog,
 )
 from . import strength_engine as se
 from .strength_service import compute_strength_for_player
@@ -85,6 +86,11 @@ def _save_player_source_ratings(request, player):
 
     for prefix, source_key, cols in specs:
         row = existing.get(source_key)
+        # Snapshot BEFORE any in-place modifications (row object is mutated below)
+        _snap_r = row.rating if row else None
+        _snap_p = row.potential if row else None
+        _is_new = (row is None)
+
         rating = _parse_source_int(request.POST.get(f'src_{prefix}_rating'), 100)
         if rating is None:
             # Rating ist Pflichtfeld: ohne vorhandene Zeile nichts anlegen.
@@ -110,6 +116,24 @@ def _save_player_source_ratings(request, player):
         url = (request.POST.get(f'src_{prefix}_url') or '').strip()
         row.source_url = url
         row.save()
+
+        # --- Geschichte-Log: Source-Ratings ---
+        src_label = 'FM Inside' if source_key == PlayerSourceRating.SOURCE_FM else 'EA FC'
+        src_lines = []
+        if _is_new:
+            src_lines.append(f'{src_label}: Quelldaten erstmals angelegt (Rating {row.rating})')
+        else:
+            if _snap_r != row.rating:
+                src_lines.append(f'{src_label} Rating: {_snap_r if _snap_r is not None else "–"} → {row.rating}')
+            if _snap_p != row.potential:
+                src_lines.append(f'{src_label} Potential: {_snap_p if _snap_p is not None else "–"} → {row.potential}')
+        if src_lines:
+            _log_user = request.user if request.user.is_authenticated else None
+            PlayerEditLog.objects.create(
+                player=player, changed_by=_log_user,
+                category=PlayerEditLog.CATEGORY_SOURCE,
+                summary='\n'.join(src_lines),
+            )
 
         # Kanonische externe ID konsistent halten (nur falls schon vorhanden).
         ext = player.external_ids.filter(
@@ -638,11 +662,52 @@ def creator_upload_league_logo(request, league_id):
     return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
 
 
+def _write_edit_log(player, user, category, summary):
+    """Schreibt einen Eintrag in PlayerEditLog."""
+    PlayerEditLog.objects.create(
+        player=player,
+        changed_by=user if user and user.is_authenticated else None,
+        category=category,
+        summary=summary,
+    )
+
+
+def _build_geschichte_tab_context(player):
+    """Letzte 150 Änderungseinträge für den Geschichte-Tab."""
+    logs = (
+        player.edit_logs
+        .select_related('changed_by')
+        .order_by('-changed_at')[:150]
+    )
+    return {'edit_logs': list(logs)}
+
+
 def creator_player_edit(request, player_id):
     player = get_object_or_404(Player, id=player_id)
     all_clubs = Club.objects.order_by('name')
 
     if request.method == 'POST':
+        # --- Snapshot vor Änderungen (für Geschichte-Log) ---
+        _old = {
+            'first_name':   player.first_name,
+            'last_name':    player.last_name,
+            'club':         player.club.name if player.club_id else '',
+            'rl_club':      player.real_life_club.name if player.real_life_club_id else '',
+            'dob':          str(player.date_of_birth or ''),
+            'height_cm':    str(player.height_cm or ''),
+            'nationalities': player.nationalities or '',
+            'strong_foot':  player.strong_foot or '',
+            'market_value': str(player.market_value or ''),
+            'salary':       str(player.salary_per_match or ''),
+            'contract':     str(player.contract_until or ''),
+            'main_pos':     [player.main_position_1 or '', player.main_position_2 or '', player.main_position_3 or ''],
+            'sec_pos':      [player.secondary_position_1 or '', player.secondary_position_2 or '', player.secondary_position_3 or ''],
+            'injury_type':  player.ws_injury_type or '',
+            'injury_days':  str(player.ws_injury_days_remaining or 0),
+            'suspension':   player.ws_suspension_reason or '',
+            'sus_matches':  str(player.ws_suspension_matches_remaining or 0),
+        }
+
         player.first_name = request.POST.get('first_name', player.first_name).strip()
         player.last_name = request.POST.get('last_name', player.last_name).strip()
 
@@ -724,10 +789,72 @@ def creator_player_edit(request, player_id):
 
         player.save()
 
+        # --- Geschichte-Log: Diff per Kategorie ---
+        _new_name = f'{player.first_name} {player.last_name}'
+        _old_name = f'{_old["first_name"]} {_old["last_name"]}'
+        _profil_lines = []
+        if _new_name != _old_name:
+            _profil_lines.append(f'Name: {_old_name} → {_new_name}')
+        if str(player.date_of_birth or '') != _old['dob']:
+            _profil_lines.append(f'Geburtsdatum: {_old["dob"] or "–"} → {player.date_of_birth or "–"}')
+        if str(player.height_cm or '') != _old['height_cm']:
+            _profil_lines.append(f'Größe: {_old["height_cm"] or "–"} cm → {player.height_cm or "–"} cm')
+        if (player.nationalities or '') != _old['nationalities']:
+            _profil_lines.append(f'Nationalität: {_old["nationalities"] or "–"} → {player.nationalities or "–"}')
+        if (player.strong_foot or '') != _old['strong_foot']:
+            _profil_lines.append(f'Starker Fuß: {_old["strong_foot"] or "–"} → {player.strong_foot or "–"}')
+        if _profil_lines:
+            _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_PROFIL, '\n'.join(_profil_lines))
+
+        _verein_lines = []
+        _new_club = player.club.name if player.club_id else ''
+        _new_rl_club = player.real_life_club.name if player.real_life_club_id else ''
+        if _new_club != _old['club']:
+            _verein_lines.append(f'WS-Verein: {_old["club"] or "–"} → {_new_club or "–"}')
+        if _new_rl_club != _old['rl_club']:
+            _verein_lines.append(f'RL-Verein: {_old["rl_club"] or "–"} → {_new_rl_club or "–"}')
+        if str(player.market_value or '') != _old['market_value']:
+            _verein_lines.append(f'Marktwert: {_old["market_value"] or "–"} → {player.market_value or "–"} €')
+        if str(player.salary_per_match or '') != _old['salary']:
+            _verein_lines.append(f'Gehalt: {_old["salary"] or "–"} → {player.salary_per_match or "–"} €')
+        if str(player.contract_until or '') != _old['contract']:
+            _verein_lines.append(f'Vertrag bis: {_old["contract"] or "–"} → {player.contract_until or "–"}')
+        if _verein_lines:
+            _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_VEREIN, '\n'.join(_verein_lines))
+
+        _new_main = [player.main_position_1 or '', player.main_position_2 or '', player.main_position_3 or '']
+        _new_sec  = [player.secondary_position_1 or '', player.secondary_position_2 or '', player.secondary_position_3 or '']
+        _pos_lines = []
+        if _new_main != _old['main_pos']:
+            _pos_lines.append(
+                f'HP: {"/".join(p for p in _old["main_pos"] if p) or "–"} → '
+                f'{"/".join(p for p in _new_main if p) or "–"}'
+            )
+        if _new_sec != _old['sec_pos']:
+            _pos_lines.append(
+                f'NP: {"/".join(p for p in _old["sec_pos"] if p) or "–"} → '
+                f'{"/".join(p for p in _new_sec if p) or "–"}'
+            )
+        if _pos_lines:
+            _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_POSITION, '\n'.join(_pos_lines))
+
+        _verletzung_lines = []
+        if (player.ws_injury_type or '') != _old['injury_type']:
+            _verletzung_lines.append(f'Verletzung: {_old["injury_type"] or "–"} → {player.ws_injury_type or "–"}')
+        if str(player.ws_injury_days_remaining or 0) != _old['injury_days']:
+            _verletzung_lines.append(f'Verletzungstage: {_old["injury_days"]} → {player.ws_injury_days_remaining}')
+        if (player.ws_suspension_reason or '') != _old['suspension']:
+            _verletzung_lines.append(f'Sperre: {_old["suspension"] or "–"} → {player.ws_suspension_reason or "–"}')
+        if str(player.ws_suspension_matches_remaining or 0) != _old['sus_matches']:
+            _verletzung_lines.append(f'Sperr-Spiele: {_old["sus_matches"]} → {player.ws_suspension_matches_remaining}')
+        if _verletzung_lines:
+            _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_VERLETZUNG, '\n'.join(_verletzung_lines))
+
         portrait_file = request.FILES.get('portrait')
         if portrait_file and player.fm_inside_id:
             dest = os.path.join(STATIC_BASE, f'game/images/players/{player.fm_inside_id}.png')
             _save_as_png(portrait_file, dest)
+            _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_BILD, 'Portraitbild aktualisiert.')
 
         _save_player_source_ratings(request, player)
 
@@ -772,6 +899,7 @@ def creator_player_edit(request, player_id):
     }
     context.update(_build_source_tab_context(player))
     context.update(_build_strength_tab_context(player))
+    context.update(_build_geschichte_tab_context(player))
     return render(request, 'creator/player_edit.html', context)
 
 
@@ -806,8 +934,13 @@ def creator_player_recalculate_strength(request, player_id):
             freshness=Decimal('100.00'),
         )
 
+    _old_base = profile.base_strength if profile.pk else None
     profile.base_strength = result['base_strength']
     profile.save()
+
+    _staerke_lines = [f'base_strength: {_old_base if _old_base is not None else "–"} → {profile.base_strength}']
+    _staerke_lines.append(f'final_strength: {profile.final_strength}')
+    _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_STAERKE, '\n'.join(_staerke_lines))
 
     messages.success(
         request,

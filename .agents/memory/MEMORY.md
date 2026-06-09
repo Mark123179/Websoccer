@@ -12,3 +12,4 @@
 - [Manager Career History Table](manager-career-table.md) — Club.managed_by (OneToOneField) is the live-pointer; ManagerCareerEntry is planned additive history layer for entlassungen/rücktritte/hall-of-fame.
 - [GitHub token workflow scope](github-token-workflow.md) — pushing workflows via PAT requires classic token with 'workflow' scope checked; fine-grained tokens lack this scope silently.
 - [FMI position scraper](fmi-position-scraper.md) — fminside.net URL schema is /players/7-fm-26/{fmi_id}-{name-slug}; parse span.mobile_position for primary, span.desktop_positions for secondaries.
+- [PlayerEditLog snapshot trap](player-edit-log-snapshot.md) — existing={} dict holds live ORM objects; snapshot old values before any in-place mutation or diff will always show no change.
