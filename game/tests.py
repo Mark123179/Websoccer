@@ -1887,3 +1887,108 @@ class ReseedPlayersFromFullCsvTests(TestCase):
         self.assertFalse(
             PlayerTransferHistory.objects.filter(player=without_tr).exists())
 
+    # ── 4. Fehlende Pflichtspalten ───────────────────────────────────────────
+
+    def test_missing_required_column_raises_and_keeps_players(self):
+        from django.core.management.base import CommandError
+
+        existing = Player.objects.create(
+            first_name='Bestand',
+            last_name='Spieler',
+            age=30,
+            position='ST',
+            main_position_1='ST',
+            potential=70,
+            market_value=Decimal('1000000.00'),
+            salary_per_match=Decimal('10000.00'),
+            club=self.club,
+        )
+
+        # Vollstaendige Pflichtspalten ohne ws_club_id bzw. ea_rating.
+        full_columns = [
+            'vorname', 'nachname', 'alter', 'position', 'ws_club_id',
+            'fm_inside_id', 'ea_rating', 'fm_rating', 'marktwert',
+        ]
+
+        for missing in ('ws_club_id', 'ea_rating'):
+            columns = [c for c in full_columns if c != missing]
+            with self.assertRaises(CommandError) as ctx:
+                self._run([self._base_row()], columns=columns)
+            self.assertIn(missing, str(ctx.exception))
+
+            # Bestehender Spieler unveraendert, nichts geloescht/importiert.
+            self.assertEqual(Player.objects.count(), 1)
+            self.assertTrue(Player.objects.filter(pk=existing.pk).exists())
+            self.assertFalse(
+                Player.objects.filter(fm_inside_id=915).exists())
+
+    # ── 5. Abbruch ohne --confirm und ohne --dry-run ─────────────────────────
+
+    def test_without_confirm_raises_and_deletes_nothing(self):
+        from django.core.management.base import CommandError
+
+        existing = Player.objects.create(
+            first_name='Bestand',
+            last_name='Spieler',
+            age=30,
+            position='ST',
+            main_position_1='ST',
+            potential=70,
+            market_value=Decimal('1000000.00'),
+            salary_per_match=Decimal('10000.00'),
+            club=self.club,
+        )
+
+        with self.assertRaises(CommandError):
+            self._run([self._base_row()], confirm=False)
+
+        # Nichts geloescht, nichts importiert.
+        self.assertEqual(Player.objects.count(), 1)
+        self.assertTrue(Player.objects.filter(pk=existing.pk).exists())
+        self.assertFalse(Player.objects.filter(fm_inside_id=915).exists())
+
+    # ── 6. --dry-run schreibt nichts ─────────────────────────────────────────
+
+    def test_dry_run_reports_but_writes_nothing(self):
+        existing = Player.objects.create(
+            first_name='Bestand',
+            last_name='Spieler',
+            age=30,
+            position='ST',
+            main_position_1='ST',
+            potential=70,
+            market_value=Decimal('1000000.00'),
+            salary_per_match=Decimal('10000.00'),
+            club=self.club,
+        )
+
+        rows = [
+            self._base_row(
+                vorname='Mit', fm_inside_id='100',
+                ss_saison='2025/26', ss_spiele='30', ss_tore='12',
+                transfer_datum='2025-07-01',
+                transfer_von='Zweiter Verein',
+                transfer_nach='FC Testverein',
+                transfer_fee_eur='5000000',
+            ),
+        ]
+        output = self._run(rows, columns=[
+            'vorname', 'nachname', 'alter', 'position', 'ws_club_id',
+            'fm_inside_id', 'ea_rating', 'fm_rating', 'marktwert',
+            'ss_saison', 'ss_spiele', 'ss_tore',
+            'transfer_datum', 'transfer_von', 'transfer_nach',
+            'transfer_fee_eur',
+        ], confirm=False, dry_run=True)
+
+        # Bilanz wird ausgegeben.
+        self.assertIn('DRY-RUN', output)
+        self.assertIn('Spieler gesamt: 1', output)
+
+        # Bestehender Spieler bleibt, nichts wurde geloescht ...
+        self.assertEqual(Player.objects.count(), 1)
+        self.assertTrue(Player.objects.filter(pk=existing.pk).exists())
+        # ... und nichts wurde importiert.
+        self.assertFalse(Player.objects.filter(fm_inside_id=100).exists())
+        self.assertFalse(PlayerSeasonStat.objects.exists())
+        self.assertFalse(PlayerTransferHistory.objects.exists())
+
