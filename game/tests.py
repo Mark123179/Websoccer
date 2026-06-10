@@ -1833,6 +1833,39 @@ class ReseedPlayersFromFullCsvTests(TestCase):
         self.assertTrue(Player.objects.filter(pk=existing.pk).exists())
         self.assertFalse(Player.objects.filter(wsc_player_id='WSC-4242').exists())
 
+    def test_row_error_rolls_back_dependent_season_stats_and_transfers(self):
+        """Fehler in einer spaeteren Zeile rollt auch die abhaengigen
+        Saison-Stats und Transfer-Historie bereits verarbeiteter Zeilen
+        vollstaendig zurueck (keine halben Spielerdaten)."""
+        from django.core.management.base import CommandError
+
+        # Zeile 1: vollstaendig befuellte ss_*- und transfer_*-Spalten.
+        # Zeile 2: identische fm_inside_id -> IntegrityError in Zeile 2.
+        rows = [
+            self._base_row(
+                vorname='Erster', fm_inside_id='4242',
+                ss_saison='2025/26', ss_spiele='30', ss_tore='12',
+                transfer_datum='2025-07-01',
+                transfer_von='Zweiter Verein',
+                transfer_nach='FC Testverein',
+                transfer_fee_eur='5000000',
+            ),
+            self._base_row(vorname='Zweiter', fm_inside_id='4242'),
+        ]
+        columns = [
+            'vorname', 'nachname', 'alter', 'position', 'ws_club_id',
+            'fm_inside_id', 'ea_rating', 'fm_rating', 'marktwert',
+            'ss_saison', 'ss_spiele', 'ss_tore',
+            'transfer_datum', 'transfer_von', 'transfer_nach',
+            'transfer_fee_eur',
+        ]
+        with self.assertRaises(CommandError):
+            self._run(rows, columns=columns)
+
+        # Abhaengige Datensaetze der bereits verarbeiteten Zeile 1 sind weg.
+        self.assertEqual(PlayerSeasonStat.objects.count(), 0)
+        self.assertEqual(PlayerTransferHistory.objects.count(), 0)
+
     # ── 3. Bedingte Anlage Saison-Statistik / Transfer-Historie ──────────────
 
     def test_season_stat_created_only_when_csv_has_data(self):
