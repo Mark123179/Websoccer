@@ -2222,3 +2222,56 @@ class ReseedPlayersFromFullCsvTests(TestCase):
         self.assertEqual(template.bench, default_bench())
         self.assertEqual(template.substitutions, default_substitutions())
 
+    def test_reseed_preserves_template_name_club_and_squad_scope(self):
+        """Reseed darf benannte Taktik-Vorlagen weder umbenennen noch loeschen.
+
+        Wenn ein Manager mehrere TacticTemplate-Eintraege mit unterschiedlichen
+        Namen anlegt, muessen name, club und squad_scope nach dem Reseed
+        unveraendert erhalten bleiben — fuer jede einzelne Vorlage.
+        """
+        templates_spec = [
+            {'name': 'Offensiv-Pressing',  'squad_scope': 'pro',   'club': self.club},
+            {'name': 'Defensiv-Block',     'squad_scope': 'pro',   'club': self.club},
+            {'name': 'U21-Konter',         'squad_scope': 'youth', 'club': self.club},
+            {'name': 'Andere-Offensiv',    'squad_scope': 'pro',   'club': self.other_club},
+        ]
+        created = []
+        for spec in templates_spec:
+            t = TacticTemplate.objects.create(
+                club=spec['club'],
+                squad_scope=spec['squad_scope'],
+                name=spec['name'],
+            )
+            created.append(t)
+
+        self._run([self._base_row()])
+
+        # Alle Vorlagen muessen noch in der DB existieren.
+        self.assertEqual(
+            TacticTemplate.objects.filter(
+                pk__in=[t.pk for t in created]
+            ).count(),
+            len(created),
+            'Mindestens eine Taktik-Vorlage wurde durch den Reseed geloescht.',
+        )
+
+        # name, club und squad_scope jeder Vorlage unveraendert.
+        for original, spec in zip(created, templates_spec):
+            original.refresh_from_db()
+            self.assertEqual(
+                original.name,
+                spec['name'],
+                f'Name der Vorlage wurde veraendert: erwartet "{spec["name"]}", '
+                f'gefunden "{original.name}".',
+            )
+            self.assertEqual(
+                original.club_id,
+                spec['club'].pk,
+                f'Club-Zuweisung der Vorlage "{spec["name"]}" wurde veraendert.',
+            )
+            self.assertEqual(
+                original.squad_scope,
+                spec['squad_scope'],
+                f'squad_scope der Vorlage "{spec["name"]}" wurde veraendert.',
+            )
+
