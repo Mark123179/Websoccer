@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from .admin import PlayerNationalityForm
 from .competition_assets import _NATIONALITY_CONFEDERATION
@@ -39,7 +40,12 @@ from .models import (
     TacticSetup,
     TacticTemplate,
 )
-from .tactics import sanitize_assignments
+from .tactics import (
+    default_bench,
+    default_lineup,
+    default_substitutions,
+    sanitize_assignments,
+)
 from .views import CITY_MAP_PCT, city_map_pct
 
 
@@ -2024,4 +2030,47 @@ class ReseedPlayersFromFullCsvTests(TestCase):
         self.assertFalse(Player.objects.filter(fm_inside_id=100).exists())
         self.assertFalse(PlayerSeasonStat.objects.exists())
         self.assertFalse(PlayerTransferHistory.objects.exists())
+
+    # ── 7. Reset der Taktik-Aufstellungen ────────────────────────────────────
+
+    def test_reseed_resets_tactic_lineups_to_defaults(self):
+        """Reseed setzt TacticSetup/TacticTemplate-Aufstellungen zurueck.
+
+        Die in lineup/bench/substitutions gespeicherten Spieler-IDs sind nach
+        dem Loeschen tot, deshalb muss der Importer sie auf die Defaults
+        zuruecksetzen und die Bestaetigung (is_confirmed/confirmed_at) aufheben.
+        """
+        confirmed_at = timezone.now()
+        setup = TacticSetup.objects.create(
+            club=self.club,
+            squad_scope='pro',
+            lineup={'gk': 4242},
+            bench=[1001, 1002],
+            substitutions=[{'in': 1001, 'out': 4242, 'minute': 60}],
+            is_confirmed=True,
+            confirmed_at=confirmed_at,
+        )
+        template = TacticTemplate.objects.create(
+            club=self.club,
+            squad_scope='pro',
+            name='Offensiv',
+            lineup={'gk': 4242},
+            bench=[1001, 1002],
+            substitutions=[{'in': 1001, 'out': 4242, 'minute': 60}],
+        )
+
+        self._run([self._base_row()])
+
+        setup.refresh_from_db()
+        template.refresh_from_db()
+
+        self.assertEqual(setup.lineup, default_lineup())
+        self.assertEqual(setup.bench, default_bench())
+        self.assertEqual(setup.substitutions, default_substitutions())
+        self.assertFalse(setup.is_confirmed)
+        self.assertIsNone(setup.confirmed_at)
+
+        self.assertEqual(template.lineup, default_lineup())
+        self.assertEqual(template.bench, default_bench())
+        self.assertEqual(template.substitutions, default_substitutions())
 
