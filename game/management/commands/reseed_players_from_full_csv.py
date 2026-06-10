@@ -208,13 +208,23 @@ class Command(BaseCommand):
                 f'{deleted} Spieler (+ abhaengige CASCADE-Daten) geloescht.'))
 
             # 2) Taktik-Aufstellungen zuruecksetzen (JSON-IDs sind tot)
+            # Nur fuer Clubs, die im CSV vertreten sind — Vorlagen anderer
+            # Clubs (deren Spieler nicht importiert werden) bleiben unveraendert.
+            club_ids_in_csv = {
+                cid
+                for row in rows
+                for cid in (self._int(cell(row, 'ws_club_id')),)
+                if cid is not None and cid in clubs_by_id
+            }
             for model in (TacticSetup, TacticTemplate):
-                model.objects.all().update(
+                model.objects.filter(club_id__in=club_ids_in_csv).update(
                     lineup=default_lineup(),
                     bench=default_bench(),
                     substitutions=default_substitutions(),
                 )
-            TacticSetup.objects.all().update(is_confirmed=False, confirmed_at=None)
+            TacticSetup.objects.filter(
+                club_id__in=club_ids_in_csv,
+            ).update(is_confirmed=False, confirmed_at=None)
             self.stdout.write('Taktik-Aufstellungen zurueckgesetzt.')
 
             # 3) Import

@@ -2275,3 +2275,57 @@ class ReseedPlayersFromFullCsvTests(TestCase):
                 f'squad_scope der Vorlage "{spec["name"]}" wurde veraendert.',
             )
 
+    def test_reseed_does_not_alter_templates_of_clubs_absent_from_csv(self):
+        """Clubs ohne CSV-Eintraege behalten ihre Vorlagen komplett unveraendert.
+
+        Der Reseed setzt Taktik-Vorlagen nur fuer Clubs zurueck, die im CSV
+        vertreten sind. Vorlagen eines Clubs, dessen Spieler gar nicht im CSV
+        stehen, duerfen in lineup, bench und substitutions NICHT veraendert
+        werden — weder geloescht noch auf die Defaults zurueckgesetzt.
+        """
+        absent_club = Club.objects.create(
+            name='Abwesender Verein',
+            short_name='AV',
+            founded_year=1950,
+            budget=Decimal('200000.00'),
+            league=self.league,
+        )
+
+        custom_lineup = {'gk': 7777, 'def': [7778, 7779]}
+        custom_bench = [7780, 7781]
+        custom_subs = [{'in': 7780, 'out': 7777, 'minute': 75}]
+
+        absent_template = TacticTemplate.objects.create(
+            club=absent_club,
+            squad_scope='pro',
+            name='Abwesend-Offensiv',
+            lineup=custom_lineup,
+            bench=custom_bench,
+            substitutions=custom_subs,
+        )
+
+        # CSV enthaelt nur Spieler von self.club — absent_club ist nicht vertreten.
+        self._run([self._base_row()])
+
+        absent_template.refresh_from_db()
+
+        self.assertEqual(
+            absent_template.lineup,
+            custom_lineup,
+            'lineup der Vorlage eines nicht-CSV-Clubs wurde unveraendert erwartet.',
+        )
+        self.assertEqual(
+            absent_template.bench,
+            custom_bench,
+            'bench der Vorlage eines nicht-CSV-Clubs wurde unveraendert erwartet.',
+        )
+        self.assertEqual(
+            absent_template.substitutions,
+            custom_subs,
+            'substitutions der Vorlage eines nicht-CSV-Clubs wurden unveraendert erwartet.',
+        )
+        self.assertTrue(
+            TacticTemplate.objects.filter(pk=absent_template.pk).exists(),
+            'TacticTemplate des nicht-CSV-Clubs wurde durch den Reseed geloescht.',
+        )
+
