@@ -23,6 +23,19 @@ Erzeugt pro Zeile:
 
 Nach dem Import werden die Spielstaerken ueber calculate_player_strengths neu
 berechnet (form_modifier/freshness bleiben erhalten).
+
+WICHTIG — grosse Datensaetze (~19k Spieler):
+  Die Neuberechnung laeuft NACH dem (committeten) Import und kann mehrere
+  Minuten dauern. In Umgebungen mit Laufzeit-Limit (z. B. 120s) wird der
+  Prozess sonst gekillt; der Import bleibt dann zwar erhalten, die Staerken
+  sind aber unvollstaendig. Darum bei grossen CSVs im Hintergrund starten:
+
+      nohup python manage.py reseed_players_from_full_csv <csv> --confirm \
+          > reseed.log 2>&1 &
+
+  Wird die Neuberechnung dennoch abgebrochen/fehlerhaft, beendet sich der
+  Befehl mit einem Fehler-Exit-Code und dem Hinweis, dass
+  `calculate_player_strengths` separat erneut laufen muss.
 """
 
 from datetime import date
@@ -69,8 +82,10 @@ VALID_LOAN = {'none', 'loaned_in', 'loaned_out'}
 
 class Command(BaseCommand):
     help = (
-        'Loescht alle Spieler und importiert die ~424 Spieler aus dem vollen '
-        '116-Spalten-CSV-Export neu.'
+        'Loescht alle Spieler und importiert sie aus dem vollen '
+        '116-Spalten-CSV-Export neu. Bei grossen Datensaetzen (~19k Spieler) '
+        'im Hintergrund per nohup starten, da die Neuberechnung der '
+        'Spielstaerken nach dem Import laeuft.'
     )
 
     def add_arguments(self, parser):
@@ -221,9 +236,49 @@ class Command(BaseCommand):
         for w in warnings:
             self.stdout.write(self.style.WARNING(f'  ⚠ {w}'))
 
-        if not options['skip_recalculate']:
-            self.stdout.write('Berechne Spielstaerken neu …')
+        if options['skip_recalculate']:
+            self.stdout.write(self.style.WARNING(
+                'Spielstaerken NICHT neu berechnet (--skip-recalculate). '
+                'Bitte separat ausfuehren:\n'
+                '    python manage.py calculate_player_strengths'
+            ))
+            self.stdout.write(self.style.SUCCESS('Fertig (ohne Neuberechnung).'))
+            return
+
+        # Wichtig: Import ist bereits committet. Die Neuberechnung laeuft
+        # NACH dem Commit. Wird sie abgebrochen (z. B. 120s-Limit, SIGKILL,
+        # Strom weg), bleiben die Spieler importiert, aber die Staerken sind
+        # unvollstaendig/veraltet. Darum hier sauber abfangen und mit klarem
+        # Fehler-Exit-Code abbrechen, damit der Abbruch nicht unbemerkt bleibt.
+        self.stdout.write('Berechne Spielstaerken neu …')
+        recalc_hint = (
+            'Die Neuberechnung MUSS separat erneut laufen, sonst sind die '
+            'Spielstaerken unvollstaendig/veraltet:\n'
+            '    python manage.py calculate_player_strengths'
+        )
+        try:
             call_command('calculate_player_strengths')
+        except KeyboardInterrupt:
+            # Manueller Abbruch (Ctrl-C) waehrend der Neuberechnung.
+            self.stderr.write(self.style.ERROR(
+                'Neuberechnung ABGEBROCHEN (KeyboardInterrupt). '
+                'Import ist committet, Staerken aber NICHT fertig berechnet.'
+            ))
+            self.stderr.write(self.style.ERROR(recalc_hint))
+            raise CommandError(
+                'Reseed unvollstaendig: Neuberechnung der Spielstaerken '
+                'abgebrochen.'
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.stderr.write(self.style.ERROR(
+                f'Neuberechnung FEHLGESCHLAGEN: {exc}. '
+                'Import ist committet, Staerken aber NICHT fertig berechnet.'
+            ))
+            self.stderr.write(self.style.ERROR(recalc_hint))
+            raise CommandError(
+                'Reseed unvollstaendig: Neuberechnung der Spielstaerken '
+                f'fehlgeschlagen ({exc}).'
+            )
 
         self.stdout.write(self.style.SUCCESS('Fertig.'))
 
