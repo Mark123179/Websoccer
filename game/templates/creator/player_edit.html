@@ -610,13 +610,13 @@
         </table>
 
         {% if str_range.computable %}
-        <form method="post" action="{% url 'creator_player_recalculate_strength' player.id %}" class="cpe-str-sync-form">
-          {% csrf_token %}
-          <button type="submit" class="cpe-btn cpe-btn-sync {% if str_sync.status == 'danger' or str_sync.status == 'warn' %}cpe-btn-sync-stale{% endif %}">
+        <div class="cpe-str-sync-form">
+          <button type="submit" form="recalc-strength-form"
+                  class="cpe-btn cpe-btn-sync {% if str_sync.status == 'danger' or str_sync.status == 'warn' %}cpe-btn-sync-stale{% endif %}">
             {% if str_sync.status == 'danger' %}⚠ Jetzt neu berechnen{% elif str_sync.status == 'warn' %}△ Neu berechnen{% else %}Neu berechnen{% endif %}
           </button>
           <span class="cpe-str-sync-hint">Schreibt berechnete base_strength in die Datenbank. form_modifier und freshness bleiben unverändert.</span>
-        </form>
+        </div>
         {% endif %}
       </div>
 
@@ -995,6 +995,15 @@
     </div>
 
   </form>
+
+  {# Eigenständiges Form für "Neu berechnen" — NICHT verschachtelt im Haupt-Form #}
+  {% if player %}
+  <form id="recalc-strength-form" method="post"
+        action="{% url 'creator_player_recalculate_strength' player.id %}"
+        style="display:none">
+    {% csrf_token %}
+  </form>
+  {% endif %}
 
 </section>
 
