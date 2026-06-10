@@ -1688,3 +1688,202 @@ class SofifaCsvImportTests(TestCase):
         )
         self.assertIn('DRY-RUN', out.getvalue())
 
+
+class ReseedPlayersFromFullCsvTests(TestCase):
+    """Absicherung des destruktiven Voll-CSV-Reseed-Importers.
+
+    Abgedeckte Szenarien:
+    - Kern-Mapping: ws_club_id -> Verein, generierte wsc_player_id (WSC-<fm>),
+      EA- + FM-Quellen-Ratings
+    - Unbekannte ws_club_id -> Spieler ohne Verein (Warnung, kein Abbruch)
+    - Atomarer Rollback: Fehler in einer Zeile laesst KEINE Teil-Daten zurueck;
+      bereits vorhandene Spieler bleiben unangetastet (Loeschen wird mit
+      zurueckgerollt)
+    - Bedingte Anlage von Saison-Statistik / Transfer-Historie: nur wenn die
+      jeweiligen CSV-Spalten befuellt sind
+    """
+
+    def setUp(self):
+        self.league = League.objects.create(
+            name='Testliga', country='Deutschland',
+        )
+        self.club = Club.objects.create(
+            name='FC Testverein',
+            short_name='FCT',
+            founded_year=1900,
+            budget=Decimal('1000000.00'),
+            league=self.league,
+        )
+        self.other_club = Club.objects.create(
+            name='Zweiter Verein',
+            short_name='ZV',
+            founded_year=1920,
+            budget=Decimal('500000.00'),
+            league=self.league,
+        )
+
+    # ── Hilfsmethoden ────────────────────────────────────────────────────────
+
+    def _build_csv(self, rows, columns=None):
+        """Baut einen Semikolon-getrennten CSV-Text aus einer Liste von Dicts."""
+        if columns is None:
+            columns = []
+            for row in rows:
+                for key in row:
+                    if key not in columns:
+                        columns.append(key)
+        lines = [';'.join(columns)]
+        for row in rows:
+            lines.append(';'.join(str(row.get(c, '')) for c in columns))
+        return '\n'.join(lines) + '\n'
+
+    def _tmp_csv(self, content):
+        fh = tempfile.NamedTemporaryFile(
+            mode='w', suffix='.csv', delete=False, encoding='utf-8-sig',
+        )
+        fh.write(content)
+        fh.close()
+        self.addCleanup(os.unlink, fh.name)
+        return fh.name
+
+    def _run(self, rows, columns=None, **kwargs):
+        """CSV schreiben, Reseed-Kommando ausfuehren, Ausgabe zurueckgeben."""
+        path = self._tmp_csv(self._build_csv(rows, columns))
+        out = StringIO()
+        opts = {'stdout': out, 'confirm': True, 'skip_recalculate': True}
+        opts.update(kwargs)
+        call_command('reseed_players_from_full_csv', path, **opts)
+        return out.getvalue()
+
+    def _base_row(self, **overrides):
+        """Eine Zeile mit allen Pflichtspalten; Felder per overrides ersetzbar."""
+        row = {
+            'vorname': 'Thomas',
+            'nachname': 'Mueller',
+            'alter': '34',
+            'position': 'OM',
+            'ws_club_id': str(self.club.id),
+            'fm_inside_id': '915',
+            'ea_rating': '80',
+            'fm_rating': '82',
+            'marktwert': '20000000',
+        }
+        row.update(overrides)
+        return row
+
+    # ── 1. Kern-Mapping ──────────────────────────────────────────────────────
+
+    def test_core_mapping_club_wsc_id_and_ratings(self):
+        self._run([self._base_row()])
+
+        player = Player.objects.get(fm_inside_id=915)
+        self.assertEqual(player.club, self.club)
+        self.assertEqual(player.wsc_player_id, 'WSC-915')
+
+        ea = PlayerSourceRating.objects.get(
+            player=player, source=PlayerSourceRating.SOURCE_EA)
+        fm = PlayerSourceRating.objects.get(
+            player=player, source=PlayerSourceRating.SOURCE_FM)
+        self.assertEqual(ea.rating, 80)
+        self.assertEqual(fm.rating, 82)
+
+    def test_unknown_ws_club_id_creates_player_without_club(self):
+        output = self._run([self._base_row(ws_club_id='999999')])
+
+        player = Player.objects.get(fm_inside_id=915)
+        self.assertIsNone(player.club)
+        self.assertIn('unbekannt', output)
+
+    def test_wsc_id_falls_back_to_line_number_without_fm_id(self):
+        self._run([self._base_row(fm_inside_id='')])
+
+        player = Player.objects.get(first_name='Thomas', last_name='Mueller')
+        self.assertIsNone(player.fm_inside_id)
+        # Erste Datenzeile -> Zeile 2 in der CSV.
+        self.assertEqual(player.wsc_player_id, 'WSC-L2')
+
+    # ── 2. Atomarer Rollback ─────────────────────────────────────────────────
+
+    def test_row_error_rolls_back_and_keeps_existing_players(self):
+        from django.core.management.base import CommandError
+
+        existing = Player.objects.create(
+            first_name='Bestand',
+            last_name='Spieler',
+            age=30,
+            position='ST',
+            main_position_1='ST',
+            potential=70,
+            market_value=Decimal('1000000.00'),
+            salary_per_match=Decimal('10000.00'),
+            club=self.club,
+        )
+
+        # Zwei Zeilen mit identischer fm_inside_id -> Duplikat auf wsc_player_id
+        # /fm_inside_id -> IntegrityError in Zeile 2.
+        rows = [
+            self._base_row(vorname='Erster', fm_inside_id='4242'),
+            self._base_row(vorname='Zweiter', fm_inside_id='4242'),
+        ]
+        with self.assertRaises(CommandError):
+            self._run(rows)
+
+        # Loeschen + Teil-Import wurden komplett zurueckgerollt.
+        self.assertEqual(Player.objects.count(), 1)
+        self.assertTrue(Player.objects.filter(pk=existing.pk).exists())
+        self.assertFalse(Player.objects.filter(wsc_player_id='WSC-4242').exists())
+
+    # ── 3. Bedingte Anlage Saison-Statistik / Transfer-Historie ──────────────
+
+    def test_season_stat_created_only_when_csv_has_data(self):
+        rows = [
+            self._base_row(
+                vorname='Mit', fm_inside_id='100',
+                ss_saison='2025/26', ss_spiele='30', ss_tore='12',
+            ),
+            self._base_row(vorname='Ohne', fm_inside_id='200'),
+        ]
+        self._run(rows, columns=[
+            'vorname', 'nachname', 'alter', 'position', 'ws_club_id',
+            'fm_inside_id', 'ea_rating', 'fm_rating', 'marktwert',
+            'ss_saison', 'ss_spiele', 'ss_tore',
+        ])
+
+        with_stat = Player.objects.get(fm_inside_id=100)
+        without_stat = Player.objects.get(fm_inside_id=200)
+
+        stat = PlayerSeasonStat.objects.get(player=with_stat)
+        self.assertEqual(stat.season, '2025/26')
+        self.assertEqual(stat.matches, 30)
+        self.assertEqual(stat.goals, 12)
+        self.assertFalse(
+            PlayerSeasonStat.objects.filter(player=without_stat).exists())
+
+    def test_transfer_history_created_only_when_csv_has_data(self):
+        rows = [
+            self._base_row(
+                vorname='Mit', fm_inside_id='300',
+                transfer_datum='2025-07-01',
+                transfer_von='Zweiter Verein',
+                transfer_nach='FC Testverein',
+                transfer_fee_eur='5000000',
+            ),
+            self._base_row(vorname='Ohne', fm_inside_id='400'),
+        ]
+        self._run(rows, columns=[
+            'vorname', 'nachname', 'alter', 'position', 'ws_club_id',
+            'fm_inside_id', 'ea_rating', 'fm_rating', 'marktwert',
+            'transfer_datum', 'transfer_von', 'transfer_nach',
+            'transfer_fee_eur',
+        ])
+
+        with_tr = Player.objects.get(fm_inside_id=300)
+        without_tr = Player.objects.get(fm_inside_id=400)
+
+        transfer = PlayerTransferHistory.objects.get(player=with_tr)
+        self.assertEqual(transfer.from_club, self.other_club)
+        self.assertEqual(transfer.to_club, self.club)
+        self.assertEqual(transfer.fee_eur, Decimal('5000000'))
+        self.assertFalse(
+            PlayerTransferHistory.objects.filter(player=without_tr).exists())
+
