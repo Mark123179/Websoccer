@@ -310,10 +310,14 @@ class Command(BaseCommand):
 
         # Positionen (Spec: position/hauptposition -> main_position_1;
         # pos_neben_1/2/3 -> secondary_position_1/2/3)
+        # HP-Positionen dürfen NIE gleichzeitig NP sein.
         position = self._pos(c('position'))
-        sec_1 = self._pos(c('pos_neben_1'))
-        sec_2 = self._pos(c('pos_neben_2'))
-        sec_3 = self._pos(c('pos_neben_3'))
+        _hp_set = {position} - {''}
+        _raw_sec = [self._pos(c('pos_neben_1')), self._pos(c('pos_neben_2')), self._pos(c('pos_neben_3'))]
+        _deduped = [p for p in _raw_sec if p and p not in _hp_set]
+        sec_1 = _deduped[0] if len(_deduped) > 0 else ''
+        sec_2 = _deduped[1] if len(_deduped) > 1 else ''
+        sec_3 = _deduped[2] if len(_deduped) > 2 else ''
 
         # IDs
         fm_inside_id = self._int(c('fm_inside_id'))

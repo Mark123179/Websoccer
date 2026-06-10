@@ -877,6 +877,16 @@ def creator_player_edit(request, player_id):
             val = request.POST.get(field, '')
             setattr(player, field, val)
 
+        # HP darf nie gleichzeitig NP sein — Duplikate aus NP entfernen
+        _hp_set = {player.main_position_1, player.main_position_2, player.main_position_3} - {''}
+        _raw_sec = [player.secondary_position_1, player.secondary_position_2, player.secondary_position_3]
+        _deduped_sec = [p for p in _raw_sec if p and p not in _hp_set]
+        while len(_deduped_sec) < 3:
+            _deduped_sec.append('')
+        player.secondary_position_1 = _deduped_sec[0]
+        player.secondary_position_2 = _deduped_sec[1]
+        player.secondary_position_3 = _deduped_sec[2]
+
         dob = request.POST.get('date_of_birth', '')
         if dob:
             from datetime import date as date_type
