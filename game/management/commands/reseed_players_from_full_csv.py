@@ -243,11 +243,12 @@ class Command(BaseCommand):
 
         rl_club = clubs_by_name.get(c('echtleben_club')) if c('echtleben_club') else None
 
-        # Positionen
+        # Positionen (Spec: position/hauptposition -> main_position_1;
+        # pos_neben_1/2/3 -> secondary_position_1/2/3)
         position = self._pos(c('position'))
-        main_1 = self._pos(c('pos_neben_1')) or position
-        sec_1 = self._pos(c('pos_neben_2'))
-        sec_2 = self._pos(c('pos_neben_3'))
+        sec_1 = self._pos(c('pos_neben_1'))
+        sec_2 = self._pos(c('pos_neben_2'))
+        sec_3 = self._pos(c('pos_neben_3'))
 
         # IDs
         fm_inside_id = self._int(c('fm_inside_id'))
@@ -278,10 +279,11 @@ class Command(BaseCommand):
             strong_foot=strong_foot,
             shirt_number=self._int(c('trikot_nr')),
             position=position,
-            primary_position=main_1,
-            main_position_1=main_1,
+            primary_position=position,
+            main_position_1=position,
             secondary_position_1=sec_1,
             secondary_position_2=sec_2,
+            secondary_position_3=sec_3,
             potential=pot,
             market_value=self._decimal(c('marktwert')) or Decimal('0'),
             salary_per_match=self._decimal(c('gehalt_pro_spiel')) or Decimal('0'),
