@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -392,8 +393,8 @@ def _build_strength_tab_context(player):
         stored_base  = float(stored_profile.base_strength)
         stored_final = float(stored_profile.final_strength)
         stored_at    = stored_profile.updated_at
-        if base_200 is not None:
-            sync_delta = abs(stored_base - base_200)
+        if str_min is not None:
+            sync_delta = abs(stored_base - str_min)
             if sync_delta <= 2:
                 sync_status = 'ok'
             elif sync_delta <= 10:
@@ -1039,15 +1040,20 @@ def creator_player_edit(request, player_id):
             compute_rl_form_for_player(player)
 
         action = request.POST.get('action', 'save')
+        _tab = request.POST.get('tab', '')
+        _redirect = redirect(
+            reverse('creator_player_edit', args=[player.id])
+            + (f'?tab={_tab}' if _tab else '')
+        )
         if action == 'save_new':
             messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')
-            return redirect('creator_new_player', club_id=player.club_id)
+            return _redirect
         elif action == 'save_continue':
             messages.success(request, 'Gespeichert.')
-            return redirect('creator_player_edit', player_id=player.id)
+            return _redirect
         else:
             messages.success(request, f'{player.first_name} {player.last_name} gespeichert.')
-            return redirect('creator_club_edit', club_id=player.club_id)
+            return _redirect
 
     nats = [n.strip() for n in (player.nationalities or '').split(',') if n.strip()]
     nat1 = nats[0] if len(nats) > 0 else ''
@@ -1227,7 +1233,7 @@ def creator_player_recalculate_strength(request, player_id):
         f'base_strength = {result["base_strength"]}, '
         f'final_strength = {profile.final_strength}'
     )
-    return redirect('creator_player_edit', player_id=player.id)
+    return redirect(reverse('creator_player_edit', args=[player.id]) + '?tab=staerke')
 
 
 def creator_new_player(request, club_id):

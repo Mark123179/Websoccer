@@ -46,6 +46,7 @@
 
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
+    <input type="hidden" name="tab" id="tab-hidden" value="{{ request.GET.tab|default:"profil" }}">
 
     <div class="cpe-tab-panel" id="tab-profil">
 
@@ -1306,6 +1307,8 @@ function activateTab(name) {
 document.querySelectorAll('.cpe-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     activateTab(tab.dataset.tab);
+    const hidden = document.getElementById('tab-hidden');
+    if (hidden) hidden.value = tab.dataset.tab;
     const url = new URL(window.location);
     url.searchParams.set('tab', tab.dataset.tab);
     history.replaceState(null, '', url);
