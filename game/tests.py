@@ -2151,3 +2151,74 @@ class ReseedPlayersFromFullCsvTests(TestCase):
         self.assertFalse(setup.is_confirmed)
         self.assertIsNone(setup.confirmed_at)
 
+    def test_reseed_preserves_player_independent_template_fields(self):
+        """Reseed laesst formation/standards/first_half/second_half auch bei
+        TacticTemplate unangetastet.
+
+        TacticTemplate hat dieselben spielerunabhaengigen Felder wie
+        TacticSetup. Diese Grundausrichtung der Vorlage darf beim Reseed NICHT
+        auf die Defaults zurueckgesetzt werden — nur lineup/bench/substitutions
+        werden zurueckgesetzt, weil sie tote Spieler-IDs enthalten.
+        """
+        custom_formation = {
+            'defense': '3n',
+            'defensive_midfield': '2',
+            'midfield': '2',
+            'offensive_midfield': '1',
+            'attack': '1',
+        }
+        custom_standards = {
+            'captain': '4242',
+            'penalty': '4242',
+            'free_kick': '1001',
+            'corner': '1002',
+        }
+        custom_first_half = {
+            'orientation': 70,
+            'defense': 'standard',
+            'midfield': 'standard',
+            'attack': 'standard',
+            'effort': 'normal',
+        }
+        custom_second_half = {
+            'orientation': 30,
+            'defense': 'standard',
+            'midfield': 'standard',
+            'attack': 'standard',
+            'effort': 'normal',
+        }
+
+        # Sanity-Check: Die Custom-Werte weichen von den Defaults ab.
+        self.assertNotEqual(custom_formation, default_formation())
+        self.assertNotEqual(custom_standards, default_standards())
+        self.assertNotEqual(custom_first_half, default_half_tactic())
+        self.assertNotEqual(custom_second_half, default_half_tactic())
+
+        template = TacticTemplate.objects.create(
+            club=self.club,
+            squad_scope='pro',
+            name='Offensiv',
+            formation=custom_formation,
+            standards=custom_standards,
+            first_half=custom_first_half,
+            second_half=custom_second_half,
+            lineup={'gk': 4242},
+            bench=[1001, 1002],
+            substitutions=[{'in': 1001, 'out': 4242, 'minute': 60}],
+        )
+
+        self._run([self._base_row()])
+
+        template.refresh_from_db()
+
+        # Spielerunabhaengige Grundausrichtung der Vorlage bleibt erhalten.
+        self.assertEqual(template.formation, custom_formation)
+        self.assertEqual(template.standards, custom_standards)
+        self.assertEqual(template.first_half, custom_first_half)
+        self.assertEqual(template.second_half, custom_second_half)
+
+        # Spielerbezogene Felder werden weiterhin zurueckgesetzt.
+        self.assertEqual(template.lineup, default_lineup())
+        self.assertEqual(template.bench, default_bench())
+        self.assertEqual(template.substitutions, default_substitutions())
+
