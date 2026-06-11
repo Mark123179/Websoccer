@@ -13,3 +13,4 @@
 - [GitHub token workflow scope](github-token-workflow.md) — pushing workflows via PAT requires classic token with 'workflow' scope checked; fine-grained tokens lack this scope silently.
 - [FMI position scraper](fmi-position-scraper.md) — fminside.net URL schema is /players/7-fm-26/{fmi_id}-{name-slug}; parse span.mobile_position for primary, span.desktop_positions for secondaries.
 - [PlayerEditLog snapshot trap](player-edit-log-snapshot.md) — existing={} dict holds live ORM objects; snapshot old values before any in-place mutation or diff will always show no change.
+- [Tactics layout media-query trap](tactics-media-query-trap.md) — @media (max-width:1440px) in tactics.css overrides .tactics-template-grid columns; edit BOTH base rule and media block. .tactics-main-grid is dead CSS.
