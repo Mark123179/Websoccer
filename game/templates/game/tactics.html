@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-2">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-3">
 {% endblock %}
 
 {% block content %}
@@ -149,8 +149,8 @@
                                 {% endfor %}
                                 <div class="tactics-roster-form">
                                     {% if option.form_bars %}
-                                        {% for _ in option.form_empty_bars %}<div class="trf-bar trf-bar--empty"></div>{% endfor %}
-                                        {% for bar in option.form_bars %}<div class="trf-bar trf-bar--{{ bar.grade }}" style="height:{{ bar.height_pct }}%" title="Note {{ bar.val }}"></div>{% endfor %}
+                                        {% for _ in option.form_empty_bars %}<div class="trf-slot trf-slot--empty"><div class="trf-bar"></div><span></span></div>{% endfor %}
+                                        {% for bar in option.form_bars %}<div class="trf-slot trf-slot--{{ bar.grade }}"><div class="trf-bar" style="height:{{ bar.height_pct }}%"></div><span>{{ bar.val|floatformat:1 }}</span></div>{% endfor %}
                                     {% else %}
                                         <span class="trf-no-data">–</span>
                                     {% endif %}
