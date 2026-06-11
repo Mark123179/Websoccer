@@ -1808,18 +1808,27 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-tempo {
     display: grid;
-    grid-template-columns: 66px 1fr;
+    grid-template-columns: 1fr auto;
     grid-template-rows: auto auto;
-    align-items: center;
     column-gap: 8px;
-    row-gap: 2px;
+    row-gap: 3px;
+    align-items: center;
     margin-top: auto;
-    padding-top: 4px;
+    padding-top: 6px;
+}
+
+.tactics-tempo .tactics-buildup-label {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    grid-area: auto;
 }
 
 .tactics-tempo input[type="range"] {
     accent-color: var(--tactics-cyan);
+    grid-column: 1;
+    grid-row: 2;
     width: 100%;
+    min-width: 0;
 }
 
 .tactics-tempo-meta {
@@ -1827,6 +1836,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
     display: flex;
     gap: 5px;
     grid-column: 2;
+    grid-row: 2;
+    white-space: nowrap;
 }
 
 .tactics-tempo strong {
@@ -1839,7 +1850,6 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: rgba(244, 251, 255, 0.6);
     font-size: 11px;
     font-style: normal;
-    white-space: nowrap;
 }
 
 /* --- Conditions / Erweiterter Modus --- */
