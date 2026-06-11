@@ -17,8 +17,10 @@ from .tactics import (
     FORMATION_PARTS,
     SQUAD_PRO,
     default_bench,
+    default_conditions,
     default_formation,
     default_half_tactic,
+    default_instructions,
     default_standards,
     default_substitutions,
     formation_slots,
@@ -170,8 +172,21 @@ def ensure_default_tactic(club):
             'substitutions': default_substitutions(),
             'first_half': default_half_tactic(),
             'second_half': default_half_tactic(),
+            'instructions': default_instructions(),
+            'conditions': default_conditions(),
         },
     )
+
+    # Repair: bestehende Taktiken ohne conditions/instructions befüllen
+    repair_fields = []
+    if not tactic.conditions:
+        tactic.conditions = default_conditions()
+        repair_fields.append('conditions')
+    if not tactic.instructions:
+        tactic.instructions = default_instructions()
+        repair_fields.append('instructions')
+    if repair_fields:
+        tactic.save(update_fields=repair_fields)
 
     players = list(
         Player.objects.filter(club=club).select_related('strength_profile')
