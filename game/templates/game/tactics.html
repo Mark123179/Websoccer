@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-3">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-4">
 {% endblock %}
 
 {% block content %}
@@ -579,8 +579,10 @@
                 <label class="tactics-tempo">
                     <span class="tactics-buildup-label" data-tooltip="Grundtempo des Spielaufbaus. Beeinflusst Frischeverbrauch.">Spieltempo</span>
                     <input type="range" min="0" max="100" value="{{ instructions.buildup.tempo }}" name="buildup_tempo" data-tempo>
-                    <strong data-tempo-value>{{ instructions.buildup.tempo }}</strong>
-                    <em data-tempo-label>{{ instructions.buildup.tempo_label }}</em>
+                    <span class="tactics-tempo-meta">
+                        <strong data-tempo-value>{{ instructions.buildup.tempo }}</strong>
+                        <em data-tempo-label>{{ instructions.buildup.tempo_label }}</em>
+                    </span>
                 </label>
             </article>
 
