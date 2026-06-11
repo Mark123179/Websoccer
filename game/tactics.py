@@ -211,11 +211,11 @@ def x_positions(count):
 def line_y(part, code):
     return {
         'goalkeeper': 88,
-        'defense': 75,
-        'defensive_midfield': 62,
-        'midfield': 49,
-        'offensive_midfield': 36,
-        'attack': 20,
+        'defense': 74,
+        'defensive_midfield': 60,
+        'midfield': 46,
+        'offensive_midfield': 32,
+        'attack': 14,
     }[part]
 
 
