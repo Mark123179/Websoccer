@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-2">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-3">
 {% endblock %}
 
 {% block content %}
@@ -511,7 +511,7 @@
                 </header>
                 <div class="tactics-line-rows">
                     {% for row in instructions.pressing %}
-                        <label class="tactics-line-row">
+                        <label class="tactics-line-row"{% if row.name == 'defense' %} data-tooltip="Pressing-Intensität der Abwehrlinie."{% elif row.name == 'midfield' %} data-tooltip="Pressing-Intensität des Mittelfelds."{% elif row.name == 'attack' %} data-tooltip="Pressing-Intensität der Sturmreihe."{% endif %}>
                             <span>{{ row.label }}</span>
                             <select name="pressing_{{ row.name }}">
                                 {% for o in row.options %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
@@ -519,10 +519,10 @@
                         </label>
                     {% endfor %}
                 </div>
-                <h3 class="tactics-tile-section">Pressing Trigger <span class="tactics-trigger-budget" data-trigger-budget>{{ instructions.trigger_budget_used }}/{{ instructions.trigger_budget }}</span></h3>
+                <h3 class="tactics-tile-section">Pressing-Auslöser <span class="tactics-trigger-budget" data-trigger-budget>{{ instructions.trigger_budget_used }}/{{ instructions.trigger_budget }}</span></h3>
                 <div class="tactics-trigger-grid" data-trigger-grid>
                     {% for t in instructions.triggers %}
-                        <button type="button" class="tactics-trigger {% if t.active %}is-on{% endif %}" data-toggle data-target="trigger_{{ t.name }}" data-cost="{{ t.cost }}" aria-pressed="{{ t.active|yesno:'true,false' }}">{{ t.label }}<em class="tactics-trigger-cost">{{ t.cost }}P</em></button>
+                        <button type="button" class="tactics-trigger {% if t.active %}is-on{% endif %}" data-toggle data-target="trigger_{{ t.name }}" data-cost="{{ t.cost }}" aria-pressed="{{ t.active|yesno:'true,false' }}"{% if t.tooltip %} data-tooltip="{{ t.tooltip }}"{% endif %}>{{ t.label }}<em class="tactics-trigger-cost">{{ t.cost }}P</em></button>
                         <input type="hidden" name="trigger_{{ t.name }}" value="{% if t.active %}1{% else %}0{% endif %}">
                     {% endfor %}
                 </div>
@@ -536,7 +536,7 @@
                     <div class="tactics-focus-list" data-focus-list>
                         <input type="hidden" name="attack_focus" value="{{ instructions.attack_focus.selected }}" data-focus-input>
                         {% for o in instructions.attack_focus.options %}
-                            <button type="button" class="tactics-focus-option {% if o.selected %}is-active{% endif %}" data-focus-option data-value="{{ o.value }}">{{ o.label }}</button>
+                            <button type="button" class="tactics-focus-option {% if o.selected %}is-active{% endif %}" data-focus-option data-value="{{ o.value }}"{% if o.tooltip %} data-tooltip="{{ o.tooltip }}"{% endif %}>{{ o.label }}</button>
                         {% endfor %}
                     </div>
                     <div class="tactics-focus-pitch" data-focus-pitch>
@@ -554,30 +554,30 @@
                 </header>
                 <div class="tactics-buildup-rows">
                     <div class="tactics-buildup-row">
-                        <span class="tactics-buildup-label">Abwehr</span>
+                        <span class="tactics-buildup-label" data-tooltip="Art des ersten Spielaufbaus aus der Abwehr heraus.">Abwehr</span>
                         <select name="buildup_defense">
                             {% for o in instructions.buildup.defense %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
                         <div class="tactics-segmented" data-segmented data-target="buildup_defense_height">
-                            {% for o in instructions.buildup.defense_height %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}">{{ o.label }}</button>{% endfor %}
+                            {% for o in instructions.buildup.defense_height %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}"{% if o.tooltip %} data-tooltip="{{ o.tooltip }}"{% endif %}>{{ o.label }}</button>{% endfor %}
                         </div>
                         <input type="hidden" name="buildup_defense_height" value="{{ instructions.buildup.selected.defense_height }}">
                     </div>
                     <div class="tactics-buildup-row">
-                        <span class="tactics-buildup-label">Mittelfeld</span>
+                        <span class="tactics-buildup-label" data-tooltip="Wie das Mittelfeld den Ball weiterspielen soll.">Mittelfeld</span>
                         <select name="buildup_midfield">
                             {% for o in instructions.buildup.midfield %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
                     </div>
                     <div class="tactics-buildup-row">
-                        <span class="tactics-buildup-label">Angriff</span>
+                        <span class="tactics-buildup-label" data-tooltip="Wie der Sturm im letzten Drittel agiert.">Angriff</span>
                         <select name="buildup_attack">
                             {% for o in instructions.buildup.attack %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
                     </div>
                 </div>
                 <label class="tactics-tempo">
-                    <span class="tactics-buildup-label">Spieltempo</span>
+                    <span class="tactics-buildup-label" data-tooltip="Grundtempo des Spielaufbaus. Beeinflusst Frischeverbrauch.">Spieltempo</span>
                     <input type="range" min="0" max="100" value="{{ instructions.buildup.tempo }}" name="buildup_tempo" data-tempo>
                     <strong data-tempo-value>{{ instructions.buildup.tempo }}</strong>
                     <em data-tempo-label>{{ instructions.buildup.tempo_label }}</em>
@@ -589,25 +589,25 @@
                     <h2>Deckung &amp; Zweikämpfe</h2>
                 </header>
                 <div class="tactics-line-rows">
-                    <label class="tactics-line-row">
+                    <label class="tactics-line-row" data-tooltip="Grundprinzip der Verteidigung – Raum halten oder Spieler verfolgen.">
                         <span>Deckung</span>
                         <select name="defending_deckung">
                             {% for o in instructions.defending.deckung %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
                     </label>
-                    <label class="tactics-line-row">
+                    <label class="tactics-line-row" data-tooltip="Aggressivität im direkten Zweikampf und Zweikampfrisiko.">
                         <span>Zweikampfstil</span>
                         <select name="defending_zweikampf">
                             {% for o in instructions.defending.zweikampf %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
                     </label>
-                    <label class="tactics-line-row">
+                    <label class="tactics-line-row" data-tooltip="Wie weit die defensive Grundformation auseinanderzieht.">
                         <span>Breite</span>
                         <select name="defending_breite">
                             {% for o in instructions.defending.breite %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
                     </label>
-                    <label class="tactics-line-row">
+                    <label class="tactics-line-row" data-tooltip="Verhalten direkt nach eigenem Ballgewinn.">
                         <span>Umschalten</span>
                         <select name="defending_umschalten">
                             {% for o in instructions.defending.umschalten %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}

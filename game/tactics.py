@@ -174,10 +174,10 @@ PRESSING_LEVELS = [
 ]
 
 PRESSING_TRIGGERS = [
-    ('ballverlust', 'Ballverlust'),
-    ('langer_ball', 'Langer Ball'),
-    ('schlechter_pass', 'Schlechter Pass'),
-    ('torwart_druck', 'Torwart unter Druck'),
+    ('ballverlust', 'Nach Ballverlust'),
+    ('langer_ball', 'Zweite Bälle attackieren'),
+    ('schlechter_pass', 'Auf Fehler pressen'),
+    ('torwart_druck', 'Torwart anlaufen'),
 ]
 
 PRESSING_TRIGGER_COSTS = {
@@ -187,6 +187,13 @@ PRESSING_TRIGGER_COSTS = {
     'torwart_druck': 1,
 }
 PRESSING_TRIGGER_BUDGET = 3
+
+PRESSING_TRIGGER_TOOLTIPS = {
+    'ballverlust': 'Die Mannschaft versucht nach eigenem Ballverlust sofort den Ball zurückzuerobern. Kostet zusätzliche Frische.',
+    'langer_ball': 'Die Mannschaft rückt bei gegnerischen langen Bällen aggressiv auf zweite Bälle nach.',
+    'schlechter_pass': 'Die Mannschaft nutzt unsaubere Pässe des Gegners für sofortigen Druck.',
+    'torwart_druck': 'Stürmer setzen Torwart und Innenverteidiger im Spielaufbau stärker unter Druck.',
+}
 
 ATTACK_FOCUS_OPTIONS = [
     ('fluegelspiel', 'Flügelspiel'),
@@ -207,6 +214,15 @@ ATTACK_FOCUS_ZONES = {
     'flanke_kopfball': {'left': 40, 'center': 20, 'right': 40},
 }
 
+ATTACK_FOCUS_TOOLTIPS = {
+    'fluegelspiel': 'Angriffe laufen bevorzugt über beide Außenbahnen.',
+    'ueber_halbraeume': 'Läufe und Pässe in die halblinke und halbrechte Zone zwischen Abwehr und Flügel.',
+    'durch_mitte': 'Angriffe durch das Zentrum mit kurzen Kombinationen.',
+    'ueber_rechts': 'Konzentration der Angriffe auf die rechte Außenbahn.',
+    'ueber_links': 'Konzentration der Angriffe auf die linke Außenbahn.',
+    'flanke_kopfball': 'Viele Flanken von außen – Kopfballstärke der Stürmer ist entscheidend.',
+}
+
 BUILDUP_DEFENSE_OPTIONS = [
     ('standard', 'Standard'),
     ('aus_abwehr', 'Aus der Abwehr spielen'),
@@ -219,6 +235,12 @@ BUILDUP_DEFENSE_HEIGHT = [
     ('standard', 'Standard'),
     ('hoeher', 'Höher stehen'),
 ]
+
+BUILDUP_DEFENSE_HEIGHT_TOOLTIPS = {
+    'tief': 'Abwehrlinie steht tief – schützt gegen Steilpässe, gibt Raum davor.',
+    'standard': 'Ausgeglichene Linienhöhe.',
+    'hoeher': 'Abwehrlinie steht höher – erhöht Druck, ermöglicht Abseitsfallen.',
+}
 
 BUILDUP_MIDFIELD_OPTIONS = [
     ('standard', 'Standard'),
@@ -351,6 +373,14 @@ def _choice(value, options, default):
     return value if value in keys else default
 
 
+def _options_list(options, selected, tooltips=None):
+    td = tooltips or {}
+    return [
+        {'value': value, 'label': label, 'selected': value == selected, 'tooltip': td.get(value, '')}
+        for value, label in options
+    ]
+
+
 def normalize_condition_minute(value):
     text = str(value or '').strip()
     match = re.search(r'\d+', text)
@@ -460,11 +490,6 @@ def tempo_label(value):
     return 'Sehr schnell'
 
 
-def _options_list(options, selected):
-    return [
-        {'value': value, 'label': label, 'selected': value == selected}
-        for value, label in options
-    ]
 
 
 def instructions_view(instructions):
@@ -483,6 +508,7 @@ def instructions_view(instructions):
             'label': label,
             'active': instr['pressing_triggers'][key],
             'cost': PRESSING_TRIGGER_COSTS[key],
+            'tooltip': PRESSING_TRIGGER_TOOLTIPS.get(key, ''),
         }
         for key, label in PRESSING_TRIGGERS
     ]
@@ -493,7 +519,7 @@ def instructions_view(instructions):
     )
     attack_focus = {
         'selected': instr['attack_focus'],
-        'options': _options_list(ATTACK_FOCUS_OPTIONS, instr['attack_focus']),
+        'options': _options_list(ATTACK_FOCUS_OPTIONS, instr['attack_focus'], ATTACK_FOCUS_TOOLTIPS),
         'zones': ATTACK_FOCUS_ZONES.get(
             instr['attack_focus'], ATTACK_FOCUS_ZONES['fluegelspiel']
         ),
@@ -501,7 +527,7 @@ def instructions_view(instructions):
     buildup = {
         'defense': _options_list(BUILDUP_DEFENSE_OPTIONS, instr['buildup']['defense']),
         'defense_height': _options_list(
-            BUILDUP_DEFENSE_HEIGHT, instr['buildup']['defense_height']
+            BUILDUP_DEFENSE_HEIGHT, instr['buildup']['defense_height'], BUILDUP_DEFENSE_HEIGHT_TOOLTIPS
         ),
         'midfield': _options_list(BUILDUP_MIDFIELD_OPTIONS, instr['buildup']['midfield']),
         'attack': _options_list(BUILDUP_ATTACK_OPTIONS, instr['buildup']['attack']),
