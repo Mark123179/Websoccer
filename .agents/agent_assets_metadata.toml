@@ -197,3 +197,9 @@ id = "Ssnvo6MCmNiNQnzgZOEpr"
 uri = "file://spieler_export_komplett.csv"
 type = "table"
 title = "Vollexport — alle Spieler, alle Daten (116 Spalten)"
+
+[[outputs]]
+id = "vnERWLPCTfGOrwJeUQenc"
+uri = "file://websoccer_sim_export.zip"
+type = "unspecified"
+title = "Websoccer Simulation Export"
