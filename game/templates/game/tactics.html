@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-1">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-2">
 {% endblock %}
 
 {% block content %}
@@ -147,15 +147,15 @@
                                 {% empty %}
                                     <i class="is-empty">-</i>
                                 {% endfor %}
+                                <div class="tactics-roster-form">
+                                    {% if option.form_bars %}
+                                        {% for _ in option.form_empty_bars %}<div class="trf-bar trf-bar--empty"></div>{% endfor %}
+                                        {% for bar in option.form_bars %}<div class="trf-bar trf-bar--{{ bar.grade }}" style="height:{{ bar.height_pct }}%" title="Note {{ bar.val }}"></div>{% endfor %}
+                                    {% else %}
+                                        <span class="trf-no-data">–</span>
+                                    {% endif %}
+                                </div>
                             </span>
-                            <div class="tactics-roster-form">
-                                {% if option.form_bars %}
-                                    {% for _ in option.form_empty_bars %}<div class="trf-bar trf-bar--empty"></div>{% endfor %}
-                                    {% for bar in option.form_bars %}<div class="trf-bar trf-bar--{{ bar.grade }}" style="height:{{ bar.height_pct }}%" title="Note {{ bar.val }}"></div>{% endfor %}
-                                {% else %}
-                                    <span class="trf-no-data">–</span>
-                                {% endif %}
-                            </div>
                             <small class="tactics-position-line">
                                 <b>NP</b>
                                 {% for position in option.secondary_positions %}

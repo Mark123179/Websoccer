@@ -484,7 +484,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     display: grid;
     gap: 3px 8px;
     grid-template-columns: 42px minmax(0, 1fr) 36px;
-    min-height: 68px;
+    min-height: 58px;
     padding: 5px;
 }
 
@@ -494,14 +494,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-roster-image {
     display: block;
-    grid-row: span 4;
-    height: 58px;
+    grid-row: span 3;
+    height: 48px;
     width: 42px;
 }
 
 .tactics-roster-image img {
     display: block;
-    height: 58px;
+    height: 48px;
     object-fit: contain;
     width: 42px;
 }
@@ -580,7 +580,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
     align-items: center;
     display: flex;
     grid-column: 3;
-    grid-row: 1 / span 4;
+    grid-row: 1 / span 3;
     justify-content: center;
 }
 
@@ -594,8 +594,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-roster-form {
     align-items: flex-end;
     display: flex;
+    flex: 1 1 0;
     gap: 2px;
     height: 14px;
+    min-width: 0;
     overflow: hidden;
 }
 
@@ -2275,13 +2277,13 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-template-grid .tactics-roster-player {
     gap: 4px 8px;
     grid-template-columns: 48px minmax(0, 1fr) 44px;
-    min-height: 88px;
+    min-height: 74px;
     padding: 6px;
 }
 
 .tactics-template-grid .tactics-roster-image,
 .tactics-template-grid .tactics-roster-image img {
-    height: 72px;
+    height: 58px;
     width: 48px;
 }
 
