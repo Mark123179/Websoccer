@@ -233,3 +233,15 @@ id = "Ib5n60ko2C0mHpIZScyvq"
 uri = "file://exports/tactic_test_results_v2_10k.csv"
 type = "table"
 title = "CSV — V2 Balance 10k (mit plan_segment_stats)"
+
+[[outputs]]
+id = "z9-qHGp2uzOv1O54hBJKJ"
+uri = "file://exports/strength_scaling_results_5k.json"
+type = "unspecified"
+title = "strength_scaling_results_5k.json"
+
+[[outputs]]
+id = "cfH6izEgFAcBovON3AB0H"
+uri = "file://exports/strength_scaling_results_5k.csv"
+type = "table"
+title = "strength_scaling_results_5k.csv"
