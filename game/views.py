@@ -3314,7 +3314,7 @@ def club_match_report(request, club_id):
         Q(home_club=club) | Q(away_club=club)
     ).first()
 
-    all_clubs = Club.objects.exclude(pk=club_id).order_by('name')
+    all_clubs = Club.objects.order_by('name')
 
     return render(request, 'game/match_report.html', {
         'club': club,

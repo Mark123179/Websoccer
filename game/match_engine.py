@@ -91,6 +91,23 @@ def _lineup_players(tactic) -> list:
     return result
 
 
+def _pos_factor(player, slot_code: str) -> tuple[float, str | None]:
+    """Gibt (Multiplikator, Label) zurück basierend auf Spielerposition vs. Slot.
+
+    HP  → (1.00, None)   — Hauptposition, kein Malus
+    NP  → (0.90, 'NP')   — Nebenposition, -10 %
+    FP  → (0.80, 'FP')   — Fremdposition, -20 % (= LINEUP_MALUS_FACTOR)
+    """
+    try:
+        if slot_code in player.main_positions:
+            return 1.0, None
+        if slot_code in player.secondary_positions:
+            return 0.90, 'NP'
+    except Exception:
+        pass
+    return 0.80, 'FP'
+
+
 def _player_row(item: dict) -> dict:
     """Lineup-Item → Report-Spielerzeile."""
     p = item['player']
@@ -104,6 +121,9 @@ def _player_row(item: dict) -> dict:
         base = final = 50.0
         freshness = 100.0
 
+    factor, pos_label = _pos_factor(p, slot['code'])
+    effective = round(final * factor, 1)
+
     return {
         'id': p.pk,
         'name': f"{p.first_name} {p.last_name}".strip() or str(p),
@@ -111,7 +131,9 @@ def _player_row(item: dict) -> dict:
         'group': slot['group'],
         'base_strength': round(base, 1),
         'potential': round(_potential(p), 1),
-        'final_strength': round(final, 1),
+        'final_strength': effective,       # positionsbereinigt
+        'final_strength_raw': round(final, 1),  # ohne Malus (für Tooltip)
+        'pos_label': pos_label,            # None | 'NP' | 'FP'
         'freshness': int(round(freshness)),
         'teamwork': _teamwork(p),
         'goals': 0,

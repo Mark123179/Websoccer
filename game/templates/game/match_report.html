@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -221,7 +221,10 @@
                         <td class="mr-player-pos">{{ p.position }}</td>
                         <td class="mr-num">{{ p.base_strength }}</td>
                         <td class="mr-num mr-dim">{{ p.potential }}</td>
-                        <td class="mr-num mr-final">{{ p.final_strength }}</td>
+                        <td class="mr-num mr-final">
+                            {{ p.final_strength }}
+                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Basis {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
+                        </td>
                         <td class="mr-num mr-tw">{{ p.teamwork }}</td>
                         <td class="mr-num">{% if p.goals %}<strong>{{ p.goals }}</strong>{% else %}&ndash;{% endif %}</td>
                         <td class="mr-num">{% if p.assists %}<strong>{{ p.assists }}</strong>{% else %}&ndash;{% endif %}</td>
@@ -258,7 +261,10 @@
                         <td class="mr-player-pos">{{ p.position }}</td>
                         <td class="mr-num">{{ p.base_strength }}</td>
                         <td class="mr-num mr-dim">{{ p.potential }}</td>
-                        <td class="mr-num mr-final">{{ p.final_strength }}</td>
+                        <td class="mr-num mr-final">
+                            {{ p.final_strength }}
+                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Basis {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
+                        </td>
                         <td class="mr-num mr-tw">{{ p.teamwork }}</td>
                         <td class="mr-num">{% if p.goals %}<strong>{{ p.goals }}</strong>{% else %}&ndash;{% endif %}</td>
                         <td class="mr-num">{% if p.assists %}<strong>{{ p.assists }}</strong>{% else %}&ndash;{% endif %}</td>
