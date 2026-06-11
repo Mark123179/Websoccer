@@ -1807,37 +1807,26 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-tempo {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    column-gap: 8px;
-    row-gap: 3px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
     margin-top: auto;
     padding-top: 6px;
 }
 
 .tactics-tempo .tactics-buildup-label {
-    grid-column: 1 / -1;
-    grid-row: 1;
     grid-area: auto;
 }
 
 .tactics-tempo input[type="range"] {
     accent-color: var(--tactics-cyan);
-    grid-column: 1;
-    grid-row: 2;
     width: 100%;
-    min-width: 0;
 }
 
 .tactics-tempo-meta {
     align-items: baseline;
     display: flex;
     gap: 5px;
-    grid-column: 2;
-    grid-row: 2;
-    white-space: nowrap;
 }
 
 .tactics-tempo strong {
