@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-9">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-10">
 {% endblock %}
 
 {% block content %}
@@ -404,19 +404,6 @@
                 </div>
             </article>
 
-            <article class="tactics-panel tactics-opponent-absences">
-                <h2>Ausfälle Gegner</h2>
-                <div class="tactics-opponent-absence-list dashboard-scrollarea">
-                    {% for row in opponent_absences %}
-                        <div class="is-{{ row.tone }}">
-                            <img src="{% static row.portrait %}" alt="{{ row.name }}">
-                            <strong>{{ row.name|shorten_name }}</strong>
-                            <span>{{ row.reason }}</span>
-                            <small>{{ row.duration }}</small>
-                        </div>
-                    {% endfor %}
-                </div>
-            </article>
             </aside>
         </main>
 
@@ -466,6 +453,21 @@
             </article>
         </section>
 
+        <section class="tactics-analysis-grid">
+            <article class="tactics-panel tactics-opponent-absences">
+                <h2>Ausfälle Gegner</h2>
+                <div class="tactics-opponent-absence-list dashboard-scrollarea">
+                    {% for row in opponent_absences %}
+                        <div class="is-{{ row.tone }}">
+                            <img src="{% static row.portrait %}" alt="{{ row.name }}">
+                            <strong>{{ row.name|shorten_name }}</strong>
+                            <span>{{ row.reason }}</span>
+                            <small>{{ row.duration }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
     </form>
 
     {{ formation_slot_data|json_script:"tactics-formation-data" }}

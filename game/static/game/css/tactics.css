@@ -1468,11 +1468,28 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-analysis-grid {
     display: grid;
     gap: 9px;
-    grid-template-columns: 1fr 1fr 1fr 0.95fr 1.75fr;
+    grid-template-columns: 1fr;
 }
 
 .tactics-analysis-grid .tactics-panel {
     min-height: 150px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 9px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list div {
+    flex: 0 0 180px;
+    min-height: 0;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list div:nth-child(n+4) {
+    display: grid;
 }
 
 .tactics-top-list {
@@ -2371,7 +2388,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-side-stack {
     display: grid;
     gap: 9px;
-    grid-template-rows: 264px 180px 80px minmax(0, 1fr);
+    grid-template-rows: 298px 190px minmax(0, 253px);
     min-width: 0;
 }
 
@@ -2420,49 +2437,6 @@ body.tactics-page .nav-menu a:nth-child(5) {
     padding: 6px 10px;
 }
 
-.tactics-side-stack .tactics-opponent-absences {
-    order: 4;
-    overflow: hidden;
-    padding: 8px 10px;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list {
-    gap: 5px;
-    overflow-y: auto;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list div {
-    align-items: center;
-    gap: 0 8px;
-    grid-template-columns: 32px minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
-    min-height: 0;
-    padding: 4px 6px;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list div:nth-child(n+4) {
-    display: grid;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list img {
-    border-radius: 50%;
-    height: 32px;
-    object-fit: cover;
-    width: 32px;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list strong {
-    font-size: 11px;
-    line-height: 1.2;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list span {
-    font-size: 10px;
-}
-
-.tactics-side-stack .tactics-opponent-absence-list small {
-    font-size: 10px;
-}
 
 .tactics-side-stack h2 {
     margin-bottom: 7px;
