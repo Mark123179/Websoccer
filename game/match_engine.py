@@ -187,7 +187,7 @@ def _match_stats(hs: dict, as_: dict, hg: int, ag: int) -> dict:
     a = float(as_['overall'])
     total = h + a or 1.0
 
-    home_poss = int(round(max(30, min(70, 45 + (h - a) / total * 22))))
+    home_poss = int(round(max(30, min(70, 50 + (h - a) / total * 22))))
 
     def shots(goals):
         on_t = goals + random.randint(2, 5)
