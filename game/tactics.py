@@ -332,10 +332,10 @@ DEFAULT_INSTRUCTIONS = {
 }
 
 DEFAULT_CONDITIONS = [
-    {'active': True, 'minute': '01', 'condition': 'rueckstand', 'plan': 'aggressiv_risiko'},
-    {'active': True, 'minute': '60', 'condition': 'unentschieden', 'plan': 'ausgewogen'},
-    {'active': True, 'minute': '80', 'condition': 'fuehrung', 'plan': 'zeitspiel'},
-    {'active': True, 'minute': '90', 'condition': 'knappe_fuehrung', 'plan': 'zeitspiel'},
+    {'active': False, 'minute': '01', 'condition': 'rueckstand', 'plan': 'aggressiv_risiko'},
+    {'active': False, 'minute': '60', 'condition': 'unentschieden', 'plan': 'ausgewogen'},
+    {'active': False, 'minute': '80', 'condition': 'fuehrung', 'plan': 'zeitspiel'},
+    {'active': False, 'minute': '90', 'condition': 'knappe_fuehrung', 'plan': 'zeitspiel'},
 ]
 
 
