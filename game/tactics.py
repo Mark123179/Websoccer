@@ -212,9 +212,9 @@ def line_y(part, code):
     return {
         'goalkeeper': 88,
         'defense': 74,
-        'defensive_midfield': 60,
-        'midfield': 46,
-        'offensive_midfield': 32,
+        'defensive_midfield': 59,
+        'midfield': 44,
+        'offensive_midfield': 29,
         'attack': 14,
     }[part]
 
