@@ -351,10 +351,38 @@ def player_queryset_for_squad(club, squad_scope):
 
 
 def player_options_for_squad(club, squad_scope):
+    from game.models import PlayerFormSnapshot
     players = list(player_queryset_for_squad(club, squad_scope))
+
+    player_ids = [p.id for p in players]
+    snapshots = (
+        PlayerFormSnapshot.objects
+        .filter(player_id__in=player_ids, rating__isnull=False)
+        .order_by('player_id', '-fixture_date', '-fixture_id')
+        .values_list('player_id', 'rating')
+    )
+    form_series: dict = {}
+    for pid, rating in snapshots:
+        bucket = form_series.setdefault(pid, [])
+        if len(bucket) < 5:
+            bucket.append(float(rating))
+    form_map = {pid: list(reversed(vals)) for pid, vals in form_series.items()}
+
     options = []
     for player in players:
         freshness = freshness_value(player)
+
+        recent = form_map.get(player.id, [])
+        form_bars = []
+        for v in recent:
+            grade = 'good' if v < 3.0 else ('ok' if v < 5.0 else 'weak')
+            form_bars.append({
+                'val': round(v, 2),
+                'height_pct': round((6.0 - v) / 5.0 * 100),
+                'grade': grade,
+            })
+        form_empty_bars = [None] * (5 - len(form_bars))
+
         options.append({
             'id': player.id,
             'id_string': str(player.id),
@@ -369,6 +397,8 @@ def player_options_for_squad(club, squad_scope):
             'secondary_positions': player.secondary_positions,
             'main_positions_label': ', '.join(player.main_positions) or '-',
             'secondary_positions_label': ', '.join(player.secondary_positions) or '-',
+            'form_bars': form_bars,
+            'form_empty_bars': form_empty_bars,
         })
     return options
 
