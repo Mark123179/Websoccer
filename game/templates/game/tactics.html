@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-8">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-9">
 {% endblock %}
 
 {% block content %}
@@ -403,6 +403,20 @@
                     {% endfor %}
                 </div>
             </article>
+
+            <article class="tactics-panel tactics-opponent-absences">
+                <h2>Ausfälle Gegner</h2>
+                <div class="tactics-opponent-absence-list dashboard-scrollarea">
+                    {% for row in opponent_absences %}
+                        <div class="is-{{ row.tone }}">
+                            <img src="{% static row.portrait %}" alt="{{ row.name }}">
+                            <strong>{{ row.name|shorten_name }}</strong>
+                            <span>{{ row.reason }}</span>
+                            <small>{{ row.duration }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
             </aside>
         </main>
 
@@ -452,106 +466,6 @@
             </article>
         </section>
 
-        <section class="tactics-analysis-grid">
-            <article class="tactics-panel tactics-top-list tactics-top-scorers">
-                <h2>Torjäger</h2>
-                {% for row in top_goals %}
-                    <div class="ranking-entry">
-                        <div class="rank-badge"><span>{{ forloop.counter }}</span></div>
-                        <div class="player-cutout"><img src="{% static row.portrait %}" alt="{{ row.name }}"></div>
-                        <div class="entry-info">
-                            <strong class="entry-name">{{ row.name|shorten_name }}</strong>
-                            <b class="entry-value">{{ row.value }}</b>
-                        </div>
-                    </div>
-                {% endfor %}
-            </article>
-
-            <article class="tactics-panel tactics-top-list tactics-top-assists">
-                <h2>Vorbereiter</h2>
-                {% for row in top_assists %}
-                    <div class="ranking-entry">
-                        <div class="rank-badge"><span>{{ forloop.counter }}</span></div>
-                        <div class="player-cutout"><img src="{% static row.portrait %}" alt="{{ row.name }}"></div>
-                        <div class="entry-info">
-                            <strong class="entry-name">{{ row.name|shorten_name }}</strong>
-                            <b class="entry-value">{{ row.value }}</b>
-                        </div>
-                    </div>
-                {% endfor %}
-            </article>
-
-            <article class="tactics-panel tactics-top-list tactics-top-grades">
-                <h2>Beste Noten</h2>
-                {% for row in top_grades %}
-                    <div class="ranking-entry">
-                        <div class="rank-badge"><span>{{ forloop.counter }}</span></div>
-                        <div class="player-cutout"><img src="{% static row.portrait %}" alt="{{ row.name }}"></div>
-                        <div class="entry-info">
-                            <strong class="entry-name">{{ row.name|shorten_name }}</strong>
-                            <b class="entry-value">{{ row.value }}</b>
-                        </div>
-                    </div>
-                {% endfor %}
-            </article>
-
-            <article class="tactics-panel tactics-opponent-absences">
-                <h2>Ausfälle Gegner</h2>
-                <div class="tactics-opponent-absence-list dashboard-scrollarea">
-                    {% for row in opponent_absences %}
-                        <div class="is-{{ row.tone }}">
-                            <img src="{% static row.portrait %}" alt="{{ row.name }}">
-                            <strong>{{ row.name|shorten_name }}</strong>
-                            <span>{{ row.reason }}</span>
-                            <small>{{ row.duration }}</small>
-                        </div>
-                    {% endfor %}
-                </div>
-            </article>
-
-            <article class="tactics-panel tactics-manager-duel manager-duel-card">
-                {% if manager_duel.home_avatar %}
-                    <img class="duel-manager-portrait duel-manager-portrait-left" src="{% static manager_duel.home_avatar %}" alt="{{ manager_duel.home }}">
-                {% endif %}
-                {% if manager_duel.away_avatar %}
-                    <img class="duel-manager-portrait duel-manager-portrait-right" src="{% static manager_duel.away_avatar %}" alt="{{ manager_duel.away }}">
-                {% endif %}
-                <div class="manager-duel-overlay">
-                    <div class="duel-header-row">
-                        <header class="duel-header-left">
-                            <img class="duel-header-portrait"
-                                 src="{% if manager_duel.home_avatar %}{% static manager_duel.home_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
-                                 alt="{{ manager_duel.home }}">
-                            <div class="duel-header-info">
-                                <div class="duel-manager-name">{{ manager_duel.home }}</div>
-                                <div class="duel-manager-rank duel-rank-left">{{ manager_duel.home_rank }}</div>
-                            </div>
-                        </header>
-                        <div class="duel-header-center">
-                            <div class="duel-vs">VS.</div>
-                        </div>
-                        <header class="duel-header-right">
-                            <div class="duel-header-info">
-                                <div class="duel-manager-name">{{ manager_duel.away }}</div>
-                                <div class="duel-manager-rank duel-rank-right">{{ manager_duel.away_rank }}</div>
-                            </div>
-                            <img class="duel-header-portrait"
-                                 src="{% if manager_duel.away_avatar %}{% static manager_duel.away_avatar %}{% else %}{% static 'game/images/default_player.svg' %}{% endif %}"
-                                 alt="{{ manager_duel.away }}">
-                        </header>
-                    </div>
-                    <div class="vs-table">
-                        {% for row in manager_duel.rows %}
-                        <div class="vs-row">
-                            <div class="vs-value vs-value-left is-{{ row.left_tone }}">{{ row.left }}</div>
-                            <div class="vs-label">{{ row.label }}</div>
-                            <div class="vs-value vs-value-right is-{{ row.right_tone }}">{{ row.right }}</div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </article>
-        </section>
     </form>
 
     {{ formation_slot_data|json_script:"tactics-formation-data" }}
