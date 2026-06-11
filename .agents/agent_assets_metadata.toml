@@ -203,3 +203,9 @@ id = "vnERWLPCTfGOrwJeUQenc"
 uri = "file://websoccer_sim_export.zip"
 type = "unspecified"
 title = "Websoccer Simulation Export (Standalone)"
+
+[[outputs]]
+id = "A_53K5frN4WvAUkXTZCh0"
+uri = "file://exports/websoccer_sim_export.zip"
+type = "unspecified"
+title = "websoccer_sim_export.zip — Standalone Spielsimulation (8 Dateien, 36 KB)"
