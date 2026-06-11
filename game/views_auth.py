@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Club, Player, League, ManagerProfile
 
@@ -15,6 +16,7 @@ def _live_stats():
     }
 
 
+@csrf_exempt
 def auth_login(request):
     if request.user.is_authenticated:
         return redirect('home')
@@ -40,6 +42,7 @@ def auth_login(request):
     return render(request, 'game/auth/login.html', ctx)
 
 
+@csrf_exempt
 def auth_register(request):
     if request.user.is_authenticated:
         return redirect('home')
