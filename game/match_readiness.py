@@ -13,6 +13,8 @@ from django.utils import timezone
 
 from .tactics import (
     DEFAULT_FORMATION,
+    FORMATION_ORDER,
+    FORMATION_PARTS,
     SQUAD_PRO,
     default_bench,
     default_formation,
@@ -20,6 +22,7 @@ from .tactics import (
     default_standards,
     default_substitutions,
     formation_slots,
+    slot_key_for,
 )
 
 DUMMY_STRENGTH = Decimal('50.00')
@@ -103,21 +106,64 @@ def has_valid_lineup(tactic_setup, club=None):
 
 # ── Kernfunktionen ───────────────────────────────────────────────────────────
 
+def _all_valid_formations():
+    """Alle Formationskombinationen mit genau 10 Feldspielern (ohne TW)."""
+    from itertools import product as iproduct
+    results = []
+    keys = [list(FORMATION_PARTS[p].keys()) for p in FORMATION_ORDER]
+    for combo in iproduct(*keys):
+        total = sum(len(FORMATION_PARTS[FORMATION_ORDER[i]][c]) for i, c in enumerate(combo))
+        if total == 10:
+            results.append(dict(zip(FORMATION_ORDER, combo)))
+    return results
+
+
+def _score_formation(formation_dict, players):
+    """Simuliert gieriges HP→NP-Füllen ohne FP.
+
+    Gibt (filled, hp_count, np_count) zurück — Tupel-Vergleich wählt das Beste.
+    """
+    slots_to_fill = [('TW', 'goalkeeper')]
+    for part in FORMATION_ORDER:
+        code = formation_dict[part]
+        slots_to_fill.extend((pos, part) for pos in FORMATION_PARTS[part][code])
+
+    used = set()
+    filled = hp = np_ = 0
+    for slot_code, _group in slots_to_fill:
+        for p in players:
+            if p.pk not in used and slot_code in p.main_positions:
+                used.add(p.pk)
+                filled += 1
+                hp += 1
+                break
+        else:
+            for p in players:
+                if p.pk not in used and slot_code in p.secondary_positions:
+                    used.add(p.pk)
+                    filled += 1
+                    np_ += 1
+                    break
+    return (filled, hp, np_)
+
+
 def ensure_default_tactic(club):
-    """Legt TacticSetup (Pro-Kader) an oder repariert ihn auf 11 Slots.
+    """Legt TacticSetup (Pro-Kader) an oder repariert ihn.
+
+    Formationsauswahl: alle gültigen 11-Spieler-Formationen werden bewertet.
+    Scoring: maximale HP-Besetzung, dann maximale NP-Besetzung.
+    Positionsfremd (FP) wird nie zugewiesen.
 
     Gibt (tactic_setup, was_changed) zurück.
     Falls der Kader < 11 Spieler hat, wird nichts geändert (was_changed=False).
     """
-    from .models import Player, PlayerStrengthProfile, TacticSetup
+    from .models import Player, TacticSetup
 
-    formation = default_formation()
-
-    tactic, created = TacticSetup.objects.get_or_create(
+    tactic, _created = TacticSetup.objects.get_or_create(
         club=club,
         squad_scope=SQUAD_PRO,
         defaults={
-            'formation': formation,
+            'formation': default_formation(),
             'lineup': {},
             'bench': default_bench(),
             'standards': default_standards(),
@@ -128,75 +174,84 @@ def ensure_default_tactic(club):
     )
 
     players = list(
-        Player.objects.filter(club=club).prefetch_related('strength_profile')
+        Player.objects.filter(club=club).select_related('strength_profile')
     )
-
     if len(players) < 11:
         return tactic, False
 
-    # Spieler nach Stärke sortieren (stärkster zuerst)
     players.sort(key=_player_base_strength, reverse=True)
 
-    slots = formation_slots(formation)  # 11 Slots
-    tw_slots = [s for s in slots if s['code'] == 'TW']
-    field_slots = [s for s in slots if s['code'] != 'TW']
+    # 1. Beste Formation nach HP/NP-Abdeckung wählen
+    best_formation = default_formation()
+    best_score = (-1, -1, -1)
+    for f in _all_valid_formations():
+        score = _score_formation(f, players)
+        if score > best_score:
+            best_score = score
+            best_formation = f
 
+    # 2. Aufstellung mit der besten Formation füllen (HP → NP, nie FP)
+    slots = formation_slots(best_formation)
     assigned = {}
     used = set()
 
-    # 1. Torwart-Slot(s) — bevorzugt echte Torhüter
-    for slot in tw_slots:
-        candidates = [
-            p for p in players
-            if p.pk not in used and 'TW' in (p.main_positions + p.secondary_positions)
-        ]
-        if not candidates:
-            candidates = [p for p in players if p.pk not in used]
-        if candidates:
-            chosen = candidates[0]
-            assigned[slot['key']] = chosen.pk
-            used.add(chosen.pk)
-
-    # 2. Feldspieler — Hauptposition → Nebenposition → beliebiger
-    for slot in field_slots:
+    for slot in slots:
         code = slot['code']
-        candidates = [p for p in players if p.pk not in used and code in p.main_positions]
-        if not candidates:
-            candidates = [p for p in players if p.pk not in used and code in p.secondary_positions]
-        if not candidates:
-            candidates = [p for p in players if p.pk not in used]
-        if candidates:
-            chosen = candidates[0]
+        chosen = None
+        for p in players:
+            if p.pk not in used and code in p.main_positions:
+                chosen = p
+                break
+        if chosen is None:
+            for p in players:
+                if p.pk not in used and code in p.secondary_positions:
+                    chosen = p
+                    break
+        if chosen is not None:
             assigned[slot['key']] = chosen.pk
             used.add(chosen.pk)
 
-    tactic.formation = formation
+    tactic.formation = best_formation
     tactic.lineup = assigned
     tactic.save(update_fields=['formation', 'lineup', 'updated_at'])
     return tactic, True
 
 
 def calculate_lineup_strength(lineup, formation, malus=Decimal('1.0')):
-    """Berechnet Stärken der Startelf nach Linien.
+    """Berechnet Stärken der Startelf nach Linien mit Per-Spieler-Positionsmalus.
+
+    HP  (Hauptposition)  → 100 % der Basisstärke
+    NP  (Nebenposition)  →  90 % der Basisstärke
+    FP  (Fremdposition)  →  80 % der Basisstärke  (= LINEUP_MALUS_FACTOR)
 
     Args:
         lineup:    dict {slot_key: player_id}
         formation: Formation-Dict
-        malus:     Multiplikator (0.80 für -20 %-Strafe)
+        malus:     Zusatz-Multiplikator (z. B. 0.80 für Aufstellungsstrafe)
 
     Returns:
         dict {goalkeeper, defense, midfield, attack, overall}
         Alle Werte gerundet auf 2 Dezimalstellen.
     """
-    from .models import PlayerStrengthProfile
+    from .models import Player, PlayerStrengthProfile
 
     if not lineup:
         return {k: DUMMY_STRENGTH for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
 
     player_ids = [v for v in lineup.values() if v]
+
     profiles = {
         p.player_id: p.base_strength or DUMMY_STRENGTH
         for p in PlayerStrengthProfile.objects.filter(player_id__in=player_ids)
+    }
+
+    players_pos = {
+        p.pk: p
+        for p in Player.objects.filter(pk__in=player_ids).only(
+            'pk',
+            'main_position_1', 'main_position_2', 'main_position_3',
+            'secondary_position_1', 'secondary_position_2', 'secondary_position_3',
+        )
     }
 
     slots = formation_slots(formation)
@@ -204,9 +259,22 @@ def calculate_lineup_strength(lineup, formation, malus=Decimal('1.0')):
 
     for slot in slots:
         player_id = lineup.get(slot['key'])
-        strength = profiles.get(player_id, DUMMY_STRENGTH) if player_id else DUMMY_STRENGTH
+        base = profiles.get(player_id, DUMMY_STRENGTH) if player_id else DUMMY_STRENGTH
+
+        if player_id and player_id in players_pos:
+            p = players_pos[player_id]
+            code = slot['code']
+            if code in p.main_positions:
+                factor = Decimal('1.0')
+            elif code in p.secondary_positions:
+                factor = Decimal('0.90')
+            else:
+                factor = LINEUP_MALUS_FACTOR
+        else:
+            factor = Decimal('1.0')
+
         key = _GROUP_KEY.get(slot['group'], 'midfield')
-        groups[key].append(strength)
+        groups[key].append(base * factor)
 
     def avg(values):
         if not values:

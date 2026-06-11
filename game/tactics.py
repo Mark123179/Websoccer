@@ -196,6 +196,7 @@ PRESSING_TRIGGER_TOOLTIPS = {
 }
 
 ATTACK_FOCUS_OPTIONS = [
+    ('ausgewogen', 'Ausgewogen'),
     ('fluegelspiel', 'Flügelspiel'),
     ('ueber_halbraeume', 'Über Halbräume'),
     ('durch_mitte', 'Durch die Mitte'),
@@ -206,6 +207,7 @@ ATTACK_FOCUS_OPTIONS = [
 
 # Attack focus -> mini-pitch zone intensities (0-100) for left / center / right.
 ATTACK_FOCUS_ZONES = {
+    'ausgewogen': {'left': 33, 'center': 34, 'right': 33},
     'fluegelspiel': {'left': 42, 'center': 16, 'right': 42},
     'ueber_halbraeume': {'left': 34, 'center': 32, 'right': 34},
     'durch_mitte': {'left': 22, 'center': 56, 'right': 22},
@@ -215,6 +217,7 @@ ATTACK_FOCUS_ZONES = {
 }
 
 ATTACK_FOCUS_TOOLTIPS = {
+    'ausgewogen': 'Ausgeglichener Angriffsstil – keine bevorzugte Seite, flexible Spielgestaltung.',
     'fluegelspiel': 'Angriffe laufen bevorzugt über beide Außenbahnen.',
     'ueber_halbraeume': 'Läufe und Pässe in die halblinke und halbrechte Zone zwischen Abwehr und Flügel.',
     'durch_mitte': 'Angriffe durch das Zentrum mit kurzen Kombinationen.',
@@ -305,23 +308,23 @@ CONDITION_PLANS = [
 MAX_CONDITIONS = 8
 
 DEFAULT_INSTRUCTIONS = {
-    'pressing': {'defense': 'intensiv', 'midfield': 'intensiv', 'attack': 'hoch'},
+    'pressing': {'defense': 'normal', 'midfield': 'normal', 'attack': 'normal'},
     'pressing_triggers': {
-        'ballverlust': True,
+        'ballverlust': False,
         'langer_ball': False,
         'schlechter_pass': False,
         'torwart_druck': False,
     },
-    'attack_focus': 'fluegelspiel',
+    'attack_focus': 'ausgewogen',
     'buildup': {
         'defense': 'standard',
         'defense_height': 'standard',
         'midfield': 'standard',
         'attack': 'standard',
-        'tempo': 72,
+        'tempo': 50,
     },
     'defending': {
-        'deckung': 'raum',
+        'deckung': 'hybrid',
         'zweikampf': 'normal',
         'breite': 'standard',
         'umschalten': 'ausgewogen',
