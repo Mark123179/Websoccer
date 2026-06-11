@@ -1,0 +1,468 @@
+# WebSoccer – Taktiksystem V1 Simulationsergebnisse
+
+## Ausgangslage
+
+Getestet wurde die neue Taktikarchitektur mit:
+
+* FC Bayern München vs FC Bayern München
+* identische Aufstellung
+* identische Spielerstärken
+* identische Frische
+* identisches Teamwork
+* identische Formation
+* Default-Taktik
+* Angriffsfokus „Ausgewogen“ (33 / 34 / 33)
+
+Ziel:
+
+Prüfen, ob die Engine fair, symmetrisch und stabil arbeitet und ob die neuen Taktikmodule tatsächlich Auswirkungen erzeugen.
+
+---
+
+# Baseline-Test
+
+## Bayern vs Bayern
+
+100.000 Simulationen
+
+### Ergebnisse
+
+| Ergebnis      | Anteil |
+| ------------- | ------ |
+| Heimsieg      | 37,5 % |
+| Unentschieden | 25,2 % |
+| Auswärtssieg  | 37,3 % |
+
+### Tore
+
+| Kennzahl     | Wert |
+| ------------ | ---- |
+| Heimtore     | 1,39 |
+| Auswärtstore | 1,39 |
+| Tore gesamt  | 2,78 |
+
+### Ballbesitz
+
+| Heim   | Auswärts |
+| ------ | -------- |
+| 50,0 % | 50,0 %   |
+
+### Bewertung
+
+Die Engine verhält sich bei identischen Teams symmetrisch.
+
+Es existiert aktuell kein relevanter Heim- oder Auswärtsbias.
+
+Die durchschnittliche Toranzahl bewegt sich im realistischen Bereich.
+
+---
+
+# Angriffsfokus
+
+## Ziel
+
+Angriffsfokus darf kein direkter Torbonus sein.
+
+Er soll ausschließlich beeinflussen:
+
+* Wo Angriffe entstehen
+* Welche Spieler häufiger eingebunden werden
+* Welche gegnerischen Zonen häufiger attackiert werden
+
+---
+
+## Ausgewogen
+
+| Links | Zentrum | Rechts |
+| ----- | ------- | ------ |
+| 33 %  | 34 %    | 33 %   |
+
+Gemessen:
+
+| Links | Zentrum | Rechts |
+| ----- | ------- | ------ |
+| 9,9   | 10,1    | 9,9    |
+
+---
+
+## Über links
+
+Soll:
+
+50 / 32 / 18
+
+Gemessen:
+
+14,9 / 9,6 / 5,4
+
+Funktioniert korrekt.
+
+---
+
+## Über rechts
+
+Soll:
+
+18 / 32 / 50
+
+Gemessen:
+
+5,4 / 9,5 / 14,9
+
+Funktioniert korrekt.
+
+---
+
+## Durch die Mitte
+
+Soll:
+
+22 / 56 / 22
+
+Gemessen:
+
+6,6 / 16,7 / 6,6
+
+Funktioniert korrekt.
+
+---
+
+## Flügelspiel
+
+Soll:
+
+42 / 16 / 42
+
+Gemessen:
+
+12,5 / 4,8 / 12,6
+
+Funktioniert korrekt.
+
+---
+
+## Flanke & Kopfball
+
+Soll:
+
+43 / 14 / 43
+
+Gemessen:
+
+12,8 / 4,2 / 12,8
+
+Funktioniert korrekt.
+
+---
+
+# Taktiktests (10.000 Simulationen)
+
+## Default
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 36,4 %   | 25,7 % | 37,8 %       |
+
+Referenzwert.
+
+---
+
+## Über links
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 37,2 %   | 25,3 % | 37,5 %       |
+
+Leichter Vorteil durch stärkere linke Bayern-Seite.
+
+---
+
+## Über rechts
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 37,5 %   | 25,5 % | 37,1 %       |
+
+Minimal stärker als links.
+
+---
+
+## Durch die Mitte
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 36,4 %   | 25,9 % | 37,7 %       |
+
+Bei Bayern aktuell schwächer als Flügelspiel.
+
+---
+
+## Flügelspiel
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 37,6 %   | 25,7 % | 36,7 %       |
+
+Leicht stärker.
+
+---
+
+## Flanke & Kopfball
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 37,8 %   | 25,7 % | 36,5 %       |
+
+Aktuell die stärkste Fokus-Variante bei Bayern.
+
+Dies wirkt logisch aufgrund der vorhandenen Spielerprofile.
+
+---
+
+# Pressing
+
+## Default
+
+| Wert          | Ergebnis |
+| ------------- | -------- |
+| Ballgewinne   | 3,7      |
+| Fouls         | 15,0     |
+| Gelbe Karten  | 1,51     |
+| Frischekosten | 1,035    |
+
+---
+
+## Hohes Pressing
+
+| Wert          | Ergebnis |
+| ------------- | -------- |
+| Ballgewinne   | 6,9      |
+| Fouls         | 16,4     |
+| Gelbe Karten  | 1,77     |
+| Frischekosten | 1,085    |
+
+### Bewertung
+
+Hohes Pressing erzeugt:
+
+* mehr Ballgewinne
+* mehr Fouls
+* mehr Karten
+* höhere Frischekosten
+
+Das Verhalten ist plausibel.
+
+---
+
+## Passives Pressing
+
+| Wert          | Ergebnis |
+| ------------- | -------- |
+| Ballgewinne   | 1,5      |
+| Fouls         | 14,0     |
+| Gelbe Karten  | 1,49     |
+| Frischekosten | 1,000    |
+
+### Bewertung
+
+Weniger Druck, dafür geringere Kosten.
+
+---
+
+# Pressing-Auslöser
+
+## Gegenpressing (Nach Ballverlust pressen)
+
+Ergebnis:
+
+| Kennzahl      | Wert  |
+| ------------- | ----- |
+| Ballgewinne   | 4,6   |
+| Fouls         | 14,9  |
+| Gelbe Karten  | 1,50  |
+| Frischekosten | 1,085 |
+
+### Bewertung
+
+Der Trigger wirkt.
+
+Mehr Gegenpressing führt zu:
+
+* mehr Ballrückeroberungen
+* höherem Frischeverbrauch
+
+---
+
+# Zeitspiel
+
+## Ergebnis
+
+| Wert           | Ergebnis |
+| -------------- | -------- |
+| Tore Heim      | 1,33     |
+| Tore Gegner    | 1,33     |
+| Ballbesitz     | 56 %     |
+| Schüsse Heim   | 9,8      |
+| Schüsse Gegner | 10,8     |
+| Remisquote     | 26,6 %   |
+
+### Bewertung
+
+Zeitspiel funktioniert sinnvoll:
+
+* weniger Risiko
+* weniger Tore
+* weniger Tempo
+* mehr Ballbesitzkontrolle
+* höhere Remiswahrscheinlichkeit
+
+---
+
+# Kompakt sichern
+
+## Ergebnis
+
+| Heimtore | Gegentore |
+| -------- | --------- |
+| 1,34     | 1,36      |
+
+### Bewertung
+
+Reduziert die Gesamtanzahl an Toren leicht.
+
+Verhält sich plausibel.
+
+---
+
+# Schlussangriff
+
+## Ergebnis
+
+| Heimtore | Gegentore |
+| -------- | --------- |
+| 1,61     | 1,57      |
+
+### Bewertung
+
+Mehr Risiko auf beiden Seiten.
+
+Mehr eigene Chancen.
+
+Mehr gegnerische Chancen.
+
+Funktioniert wie gewünscht.
+
+---
+
+# Kohärenzsystem
+
+Getestet wurde:
+
+Sehr defensiv + Angriffspressing
+
+Ergebnis:
+
+| Heimsieg | Remis  | Auswärtssieg |
+| -------- | ------ | ------------ |
+| 34,0 %   | 26,9 % | 39,1 %       |
+
+### Bewertung
+
+Widersprüchliche Taktiken werden bestraft.
+
+Wichtig:
+
+Die Taktik wird nicht verboten.
+
+Sie verliert lediglich an Effizienz.
+
+Genau dieses Verhalten war geplant.
+
+---
+
+# Auffälligkeiten
+
+## Positiv
+
+* Angriffsfokus funktioniert.
+* Pressing funktioniert.
+* Pressing-Auslöser funktionieren.
+* Zeitspiel funktioniert.
+* Schlussangriff funktioniert.
+* Kohärenzsystem funktioniert.
+* Symmetrie zwischen identischen Teams ist vorhanden.
+
+---
+
+## Noch zu prüfen
+
+### Tempo
+
+Tempo 90 wirkt aktuell etwas zu negativ.
+
+Aktuell:
+
+* mehr Schüsse
+* höhere Frischekosten
+* geringere Chancenqualität
+
+Möglicherweise wird die Chancenqualität etwas zu stark reduziert.
+
+Empfehlung:
+
+Tempo sollte:
+
+* mehr Aktionen erzeugen
+* mehr Fehler erzeugen
+* mehr Frische kosten
+
+aber nicht automatisch die gesamte Offensivqualität verschlechtern.
+
+---
+
+### Teamwork
+
+Der Effekt ist aktuell noch eher schwach.
+
+Das ist bewusst so gewählt.
+
+Später sollte Teamwork stärker wirken bei:
+
+* hohem Pressing
+* hoher Linie
+* vielen Triggern
+* komplexen Matchplänen
+* vielen taktischen Sonderanweisungen
+
+---
+
+### Bedingungen
+
+Die Vorab-Bedingungen sind technisch vorbereitet.
+
+Sie wurden noch nicht vollständig getestet, da die aktuelle Engine noch keine vollständige Minuten-Simulation verwendet.
+
+Nächster Schritt:
+
+* aktive Bedingungen testen
+* Minutenlogik integrieren
+* Zeitspiel ab Minute 80
+* Aggressiv & Risiko ab Minute 60
+* Schlussangriff ab Minute 85
+
+---
+
+# Fazit
+
+Das Taktiksystem V1 verhält sich bereits überraschend plausibel.
+
+Die wichtigsten Ziele wurden erreicht:
+
+* Angriffsfokus verändert die Angriffszonen.
+* Pressing erzeugt Nutzen und Kosten.
+* Zeitspiel verändert den Spielstil.
+* Schlussangriff erhöht Risiko und Chancen.
+* Widersprüchliche Taktiken werden ineffizient.
+* Identische Teams bleiben fair und symmetrisch.
+
+Die größte Baustelle für die nächste Entwicklungsphase ist die Einführung einer echten Minuten-Simulation mit aktiven Matchplänen und Bedingungen.
