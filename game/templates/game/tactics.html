@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=roster-form-bars-10">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-1">
 {% endblock %}
 
 {% block content %}
@@ -453,9 +453,181 @@
             </article>
         </section>
 
-        <section class="tactics-analysis-grid">
-            <article class="tactics-panel tactics-opponent-absences">
-                <h2>Ausfälle Gegner</h2>
+        <section class="tactics-instructions-grid">
+
+            <article class="tactics-panel tactics-tile tactics-conditions-tile">
+                <header class="tactics-tile-head">
+                    <h2>Erweiterter Modus</h2>
+                    <p class="tactics-tile-sub">Vorab-Bedingungen &amp; Pläne</p>
+                </header>
+                <div class="tactics-conditions" data-conditions data-max="{{ max_conditions }}">
+                    <div class="tactics-conditions-head">
+                        <span>Zeit</span>
+                        <span>Bedingung</span>
+                        <span>Taktik Plan</span>
+                        <span></span>
+                    </div>
+                    <div class="tactics-conditions-body" data-conditions-body>
+                        {% for row in condition_rows %}
+                            <div class="tactics-condition-row" data-condition-row>
+                                <input type="text" class="tactics-minute-input" name="condition_{{ row.index }}_minute" value="{{ row.minute }}" maxlength="3" inputmode="numeric" data-minute>
+                                <select name="condition_{{ row.index }}_condition">
+                                    {% for o in row.condition_options %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                                </select>
+                                <select name="condition_{{ row.index }}_plan">
+                                    {% for o in row.plan_options %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                                </select>
+                                <div class="tactics-condition-actions">
+                                    <button type="button" class="tactics-toggle {% if row.active %}is-on{% endif %}" data-toggle data-target="condition_{{ row.index }}_active" aria-pressed="{{ row.active|yesno:'true,false' }}" aria-label="Bedingung aktiv"></button>
+                                    <input type="hidden" name="condition_{{ row.index }}_active" value="{% if row.active %}1{% else %}0{% endif %}">
+                                    <button type="button" class="tactics-condition-remove" data-condition-remove aria-label="Bedingung entfernen">×</button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="tactics-condition-add" data-condition-add>+ Bedingung hinzufügen</button>
+                    <template data-condition-template>
+                        <div class="tactics-condition-row" data-condition-row>
+                            <input type="text" class="tactics-minute-input" name="condition___INDEX___minute" value="60" maxlength="3" inputmode="numeric" data-minute>
+                            <select name="condition___INDEX___condition">
+                                {% for o in condition_blank.condition_options %}<option value="{{ o.value }}">{{ o.label }}</option>{% endfor %}
+                            </select>
+                            <select name="condition___INDEX___plan">
+                                {% for o in condition_blank.plan_options %}<option value="{{ o.value }}">{{ o.label }}</option>{% endfor %}
+                            </select>
+                            <div class="tactics-condition-actions">
+                                <button type="button" class="tactics-toggle is-on" data-toggle data-target="condition___INDEX___active" aria-pressed="true" aria-label="Bedingung aktiv"></button>
+                                <input type="hidden" name="condition___INDEX___active" value="1">
+                                <button type="button" class="tactics-condition-remove" data-condition-remove aria-label="Bedingung entfernen">×</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-tile tactics-pressing-tile">
+                <header class="tactics-tile-head">
+                    <h2>Pressing je Linie</h2>
+                </header>
+                <div class="tactics-line-rows">
+                    {% for row in instructions.pressing %}
+                        <label class="tactics-line-row">
+                            <span>{{ row.label }}</span>
+                            <select name="pressing_{{ row.name }}">
+                                {% for o in row.options %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                            </select>
+                        </label>
+                    {% endfor %}
+                </div>
+                <h3 class="tactics-tile-section">Pressing Trigger</h3>
+                <div class="tactics-trigger-grid">
+                    {% for t in instructions.triggers %}
+                        <button type="button" class="tactics-trigger {% if t.active %}is-on{% endif %}" data-toggle data-target="trigger_{{ t.name }}" aria-pressed="{{ t.active|yesno:'true,false' }}">{{ t.label }}</button>
+                        <input type="hidden" name="trigger_{{ t.name }}" value="{% if t.active %}1{% else %}0{% endif %}">
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-tile tactics-focus-tile">
+                <header class="tactics-tile-head">
+                    <h2>Angriffsfokus</h2>
+                </header>
+                <div class="tactics-focus-layout">
+                    <div class="tactics-focus-list" data-focus-list>
+                        <input type="hidden" name="attack_focus" value="{{ instructions.attack_focus.selected }}" data-focus-input>
+                        {% for o in instructions.attack_focus.options %}
+                            <button type="button" class="tactics-focus-option {% if o.selected %}is-active{% endif %}" data-focus-option data-value="{{ o.value }}">{{ o.label }}</button>
+                        {% endfor %}
+                    </div>
+                    <div class="tactics-focus-pitch" data-focus-pitch>
+                        <span class="tactics-focus-pitch-markings" aria-hidden="true"></span>
+                        <span class="tactics-focus-zone" data-zone="left" style="--intensity: {{ instructions.attack_focus.zones.left }};"></span>
+                        <span class="tactics-focus-zone" data-zone="center" style="--intensity: {{ instructions.attack_focus.zones.center }};"></span>
+                        <span class="tactics-focus-zone" data-zone="right" style="--intensity: {{ instructions.attack_focus.zones.right }};"></span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-tile tactics-buildup-tile">
+                <header class="tactics-tile-head">
+                    <h2>Spielaufbau &amp; Linie</h2>
+                </header>
+                <div class="tactics-buildup-rows">
+                    <div class="tactics-buildup-row">
+                        <span class="tactics-buildup-label">Abwehr</span>
+                        <select name="buildup_defense">
+                            {% for o in instructions.buildup.defense %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                        <div class="tactics-segmented" data-segmented data-target="buildup_defense_height">
+                            {% for o in instructions.buildup.defense_height %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}">{{ o.label }}</button>{% endfor %}
+                        </div>
+                        <input type="hidden" name="buildup_defense_height" value="{{ instructions.buildup.selected.defense_height }}">
+                    </div>
+                    <div class="tactics-buildup-row">
+                        <span class="tactics-buildup-label">Mittelfeld</span>
+                        <select name="buildup_midfield">
+                            {% for o in instructions.buildup.midfield %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                        <div class="tactics-segmented" data-segmented data-target="buildup_midfield_mode">
+                            {% for o in instructions.buildup.midfield_mode %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}">{{ o.label }}</button>{% endfor %}
+                        </div>
+                        <input type="hidden" name="buildup_midfield_mode" value="{{ instructions.buildup.selected.midfield_mode }}">
+                    </div>
+                    <div class="tactics-buildup-row">
+                        <span class="tactics-buildup-label">Angriff</span>
+                        <select name="buildup_attack">
+                            {% for o in instructions.buildup.attack %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                        <div class="tactics-segmented" data-segmented data-target="buildup_attack_mode">
+                            {% for o in instructions.buildup.attack_mode %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}">{{ o.label }}</button>{% endfor %}
+                        </div>
+                        <input type="hidden" name="buildup_attack_mode" value="{{ instructions.buildup.selected.attack_mode }}">
+                    </div>
+                </div>
+                <label class="tactics-tempo">
+                    <span class="tactics-buildup-label">Spieltempo</span>
+                    <input type="range" min="0" max="100" value="{{ instructions.buildup.tempo }}" name="buildup_tempo" data-tempo>
+                    <strong data-tempo-value>{{ instructions.buildup.tempo }}</strong>
+                    <em data-tempo-label>{{ instructions.buildup.tempo_label }}</em>
+                </label>
+            </article>
+
+            <article class="tactics-panel tactics-tile tactics-defending-tile">
+                <header class="tactics-tile-head">
+                    <h2>Deckung &amp; Zweikämpfe</h2>
+                </header>
+                <div class="tactics-line-rows">
+                    <label class="tactics-line-row">
+                        <span>Deckung</span>
+                        <select name="defending_deckung">
+                            {% for o in instructions.defending.deckung %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="tactics-line-row">
+                        <span>Zweikampfstil</span>
+                        <select name="defending_zweikampf">
+                            {% for o in instructions.defending.zweikampf %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="tactics-line-row">
+                        <span>Breite</span>
+                        <select name="defending_breite">
+                            {% for o in instructions.defending.breite %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="tactics-line-row">
+                        <span>Umschalten</span>
+                        <select name="defending_umschalten">
+                            {% for o in instructions.defending.umschalten %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
+                        </select>
+                    </label>
+                </div>
+            </article>
+
+            <article class="tactics-panel tactics-tile tactics-opponent-absences">
+                <header class="tactics-tile-head">
+                    <h2>Ausfälle Gegner</h2>
+                </header>
                 <div class="tactics-opponent-absence-list dashboard-scrollarea">
                     {% for row in opponent_absences %}
                         <div class="is-{{ row.tone }}">
@@ -467,7 +639,10 @@
                     {% endfor %}
                 </div>
             </article>
+
         </section>
+
+        {{ attack_focus_zones|json_script:"tactics-attack-zones" }}
     </form>
 
     {{ formation_slot_data|json_script:"tactics-formation-data" }}
@@ -476,5 +651,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'game/js/tactics.js' %}?v=tactics-clear-lineup-20260528"></script>
+    <script src="{% static 'game/js/tactics.js' %}?v=instructions-grid-1"></script>
 {% endblock %}

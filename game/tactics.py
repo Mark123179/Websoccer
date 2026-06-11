@@ -1,3 +1,4 @@
+import re
 from copy import deepcopy
 from dataclasses import dataclass
 
@@ -128,6 +129,161 @@ OPPONENT_RESULT_FORM = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Bottom-row tactic instructions (global, shared across both halves)
+# ---------------------------------------------------------------------------
+
+PRESSING_LINES = [
+    ('defense', 'Abwehr'),
+    ('midfield', 'Mittelfeld'),
+    ('attack', 'Angriff'),
+]
+
+PRESSING_LEVELS = [
+    ('passiv', 'Passiv'),
+    ('normal', 'Normales Pressing'),
+    ('intensiv', 'Intensives Pressing'),
+    ('hoch', 'Hohes Pressing'),
+]
+
+PRESSING_TRIGGERS = [
+    ('ballverlust', 'Ballverlust'),
+    ('langer_ball', 'Langer Ball'),
+    ('schlechter_pass', 'Schlechter Pass'),
+    ('torwart_druck', 'Torwart unter Druck'),
+]
+
+ATTACK_FOCUS_OPTIONS = [
+    ('fluegelspiel', 'Flügelspiel'),
+    ('ueber_halbraeume', 'Über Halbräume'),
+    ('durch_mitte', 'Durch die Mitte'),
+    ('ueber_rechts', 'Über rechts'),
+    ('ueber_links', 'Über links'),
+    ('flanke_kopfball', 'Flanke & Kopfball'),
+]
+
+# Attack focus -> mini-pitch zone intensities (0-100) for left / center / right.
+ATTACK_FOCUS_ZONES = {
+    'fluegelspiel': {'left': 42, 'center': 16, 'right': 42},
+    'ueber_halbraeume': {'left': 34, 'center': 32, 'right': 34},
+    'durch_mitte': {'left': 22, 'center': 56, 'right': 22},
+    'ueber_rechts': {'left': 18, 'center': 34, 'right': 48},
+    'ueber_links': {'left': 48, 'center': 34, 'right': 18},
+    'flanke_kopfball': {'left': 40, 'center': 20, 'right': 40},
+}
+
+BUILDUP_DEFENSE_OPTIONS = [
+    ('aus_abwehr', 'Aus der Abwehr spielen'),
+    ('direkt_klaeren', 'Direkt klären'),
+]
+
+BUILDUP_DEFENSE_HEIGHT = [
+    ('tief', 'Tief'),
+    ('standard', 'Standard'),
+    ('hoeher', 'Höher stehen'),
+]
+
+BUILDUP_MIDFIELD_OPTIONS = [
+    ('geduldig', 'Geduldig aufbauen'),
+    ('standard', 'Standard'),
+]
+
+BUILDUP_MIDFIELD_MODE = [
+    ('standard', 'Standard'),
+    ('vertikal', 'Vertikal'),
+]
+
+BUILDUP_ATTACK_OPTIONS = [
+    ('ueber_aussen', 'Über Außen aufbauen'),
+    ('kombinieren', 'Kombinieren'),
+]
+
+BUILDUP_ATTACK_MODE = [
+    ('direkt', 'Direkt'),
+    ('standard', 'Standard'),
+]
+
+DEFENDING_DECKUNG = [
+    ('raum', 'Raumdeckung'),
+    ('mann', 'Manndeckung'),
+    ('hybrid', 'Hybrid'),
+]
+
+DEFENDING_ZWEIKAMPF = [
+    ('vorsichtig', 'Vorsichtig'),
+    ('normal', 'Normal'),
+    ('hart', 'Hart'),
+]
+
+DEFENDING_BREITE = [
+    ('eng', 'Eng'),
+    ('standard', 'Standard'),
+    ('breit', 'Breit'),
+]
+
+DEFENDING_UMSCHALTEN = [
+    ('konter', 'Konter'),
+    ('ausgewogen', 'Ausgewogen'),
+    ('ballbesitz', 'Ballbesitzsicherung'),
+]
+
+CONDITION_OPTIONS = [
+    ('rueckstand', 'Bei Rückstand'),
+    ('rueckstand_2', 'Bei Rückstand 2+'),
+    ('unentschieden', 'Bei Unentschieden'),
+    ('fuehrung', 'Bei Führung'),
+    ('knappe_fuehrung', 'Bei knapper Führung (1 Tor)'),
+    ('eigene_rot', 'Eigene rote Karte'),
+    ('gegner_rot', 'Gegner rote Karte'),
+]
+
+CONDITION_PLANS = [
+    ('ausgewogen', 'Ausgewogen'),
+    ('aggressiv_risiko', 'Aggressiv & Risiko'),
+    ('schlussangriff', 'Schlussangriff'),
+    ('kontrolle_ballbesitz', 'Kontrolle & Ballbesitz'),
+    ('kompakt_sichern', 'Kompakt sichern'),
+    ('zeitspiel', 'Zeitspiel'),
+    ('zeitspiel_sichern', 'Zeitspiel sichern'),
+    ('unterzahl_kompakt', 'Unterzahl kompakt'),
+]
+
+MAX_CONDITIONS = 8
+
+DEFAULT_INSTRUCTIONS = {
+    'pressing': {'defense': 'intensiv', 'midfield': 'intensiv', 'attack': 'hoch'},
+    'pressing_triggers': {
+        'ballverlust': True,
+        'langer_ball': False,
+        'schlechter_pass': False,
+        'torwart_druck': False,
+    },
+    'attack_focus': 'fluegelspiel',
+    'buildup': {
+        'defense': 'aus_abwehr',
+        'defense_height': 'standard',
+        'midfield': 'geduldig',
+        'midfield_mode': 'standard',
+        'attack': 'ueber_aussen',
+        'attack_mode': 'standard',
+        'tempo': 72,
+    },
+    'defending': {
+        'deckung': 'raum',
+        'zweikampf': 'normal',
+        'breite': 'standard',
+        'umschalten': 'ausgewogen',
+    },
+}
+
+DEFAULT_CONDITIONS = [
+    {'active': True, 'minute': '01', 'condition': 'rueckstand', 'plan': 'aggressiv_risiko'},
+    {'active': True, 'minute': '60', 'condition': 'unentschieden', 'plan': 'ausgewogen'},
+    {'active': True, 'minute': '80', 'condition': 'fuehrung', 'plan': 'zeitspiel'},
+    {'active': True, 'minute': '90', 'condition': 'knappe_fuehrung', 'plan': 'zeitspiel_sichern'},
+]
+
+
 def default_formation():
     return deepcopy(DEFAULT_FORMATION)
 
@@ -150,6 +306,202 @@ def default_substitutions():
 
 def default_half_tactic():
     return deepcopy(DEFAULT_HALF_TACTIC)
+
+
+def default_instructions():
+    return deepcopy(DEFAULT_INSTRUCTIONS)
+
+
+def default_conditions():
+    return deepcopy(DEFAULT_CONDITIONS)
+
+
+def _choice(value, options, default):
+    keys = {key for key, _label in options}
+    return value if value in keys else default
+
+
+def normalize_condition_minute(value):
+    text = str(value or '').strip()
+    match = re.search(r'\d+', text)
+    if not match:
+        return '01'
+    minute = max(1, min(120, int(match.group())))
+    return f'{minute:02d}'
+
+
+def normalize_instructions(raw):
+    raw = raw or {}
+    defaults = default_instructions()
+
+    pressing = {}
+    raw_pressing = raw.get('pressing') or {}
+    for line, _label in PRESSING_LINES:
+        pressing[line] = _choice(
+            raw_pressing.get(line), PRESSING_LEVELS, defaults['pressing'][line]
+        )
+
+    triggers = {}
+    raw_triggers = raw.get('pressing_triggers') or {}
+    for key, _label in PRESSING_TRIGGERS:
+        triggers[key] = bool(raw_triggers.get(key, defaults['pressing_triggers'][key]))
+
+    attack_focus = _choice(
+        raw.get('attack_focus'), ATTACK_FOCUS_OPTIONS, defaults['attack_focus']
+    )
+
+    raw_buildup = raw.get('buildup') or {}
+    db = defaults['buildup']
+    try:
+        tempo = int(raw_buildup.get('tempo', db['tempo']))
+    except (TypeError, ValueError):
+        tempo = db['tempo']
+    buildup = {
+        'defense': _choice(raw_buildup.get('defense'), BUILDUP_DEFENSE_OPTIONS, db['defense']),
+        'defense_height': _choice(
+            raw_buildup.get('defense_height'), BUILDUP_DEFENSE_HEIGHT, db['defense_height']
+        ),
+        'midfield': _choice(raw_buildup.get('midfield'), BUILDUP_MIDFIELD_OPTIONS, db['midfield']),
+        'midfield_mode': _choice(
+            raw_buildup.get('midfield_mode'), BUILDUP_MIDFIELD_MODE, db['midfield_mode']
+        ),
+        'attack': _choice(raw_buildup.get('attack'), BUILDUP_ATTACK_OPTIONS, db['attack']),
+        'attack_mode': _choice(raw_buildup.get('attack_mode'), BUILDUP_ATTACK_MODE, db['attack_mode']),
+        'tempo': max(0, min(100, tempo)),
+    }
+
+    raw_def = raw.get('defending') or {}
+    dd = defaults['defending']
+    defending = {
+        'deckung': _choice(raw_def.get('deckung'), DEFENDING_DECKUNG, dd['deckung']),
+        'zweikampf': _choice(raw_def.get('zweikampf'), DEFENDING_ZWEIKAMPF, dd['zweikampf']),
+        'breite': _choice(raw_def.get('breite'), DEFENDING_BREITE, dd['breite']),
+        'umschalten': _choice(raw_def.get('umschalten'), DEFENDING_UMSCHALTEN, dd['umschalten']),
+    }
+
+    return {
+        'pressing': pressing,
+        'pressing_triggers': triggers,
+        'attack_focus': attack_focus,
+        'buildup': buildup,
+        'defending': defending,
+    }
+
+
+def normalize_conditions(raw):
+    raw = raw or []
+    condition_keys = {key for key, _label in CONDITION_OPTIONS}
+    plan_keys = {key for key, _label in CONDITION_PLANS}
+    result = []
+    for item in raw[:MAX_CONDITIONS]:
+        if not isinstance(item, dict):
+            continue
+        condition = item.get('condition')
+        plan = item.get('plan')
+        if condition not in condition_keys or plan not in plan_keys:
+            continue
+        result.append({
+            'active': bool(item.get('active', True)),
+            'minute': normalize_condition_minute(item.get('minute')),
+            'condition': condition,
+            'plan': plan,
+        })
+    return result
+
+
+def tempo_label(value):
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        value = 50
+    if value <= 25:
+        return 'Ruhig'
+    if value <= 49:
+        return 'Kontrolliert'
+    if value == 50:
+        return 'Normal'
+    if value <= 75:
+        return 'Zügig'
+    return 'Sehr schnell'
+
+
+def _options_list(options, selected):
+    return [
+        {'value': value, 'label': label, 'selected': value == selected}
+        for value, label in options
+    ]
+
+
+def instructions_view(instructions):
+    instr = normalize_instructions(instructions)
+    pressing = [
+        {
+            'name': line,
+            'label': label,
+            'options': _options_list(PRESSING_LEVELS, instr['pressing'][line]),
+        }
+        for line, label in PRESSING_LINES
+    ]
+    triggers = [
+        {'name': key, 'label': label, 'active': instr['pressing_triggers'][key]}
+        for key, label in PRESSING_TRIGGERS
+    ]
+    attack_focus = {
+        'selected': instr['attack_focus'],
+        'options': _options_list(ATTACK_FOCUS_OPTIONS, instr['attack_focus']),
+        'zones': ATTACK_FOCUS_ZONES.get(
+            instr['attack_focus'], ATTACK_FOCUS_ZONES['fluegelspiel']
+        ),
+    }
+    buildup = {
+        'defense': _options_list(BUILDUP_DEFENSE_OPTIONS, instr['buildup']['defense']),
+        'defense_height': _options_list(
+            BUILDUP_DEFENSE_HEIGHT, instr['buildup']['defense_height']
+        ),
+        'midfield': _options_list(BUILDUP_MIDFIELD_OPTIONS, instr['buildup']['midfield']),
+        'midfield_mode': _options_list(
+            BUILDUP_MIDFIELD_MODE, instr['buildup']['midfield_mode']
+        ),
+        'attack': _options_list(BUILDUP_ATTACK_OPTIONS, instr['buildup']['attack']),
+        'attack_mode': _options_list(BUILDUP_ATTACK_MODE, instr['buildup']['attack_mode']),
+        'tempo': instr['buildup']['tempo'],
+        'tempo_label': tempo_label(instr['buildup']['tempo']),
+        'selected': instr['buildup'],
+    }
+    defending = {
+        'deckung': _options_list(DEFENDING_DECKUNG, instr['defending']['deckung']),
+        'zweikampf': _options_list(DEFENDING_ZWEIKAMPF, instr['defending']['zweikampf']),
+        'breite': _options_list(DEFENDING_BREITE, instr['defending']['breite']),
+        'umschalten': _options_list(DEFENDING_UMSCHALTEN, instr['defending']['umschalten']),
+    }
+    return {
+        'pressing': pressing,
+        'triggers': triggers,
+        'attack_focus': attack_focus,
+        'buildup': buildup,
+        'defending': defending,
+    }
+
+
+def conditions_view(conditions):
+    conds = normalize_conditions(conditions)
+    return [
+        {
+            'index': index,
+            'active': cond['active'],
+            'minute': cond['minute'],
+            'condition_options': _options_list(CONDITION_OPTIONS, cond['condition']),
+            'plan_options': _options_list(CONDITION_PLANS, cond['plan']),
+        }
+        for index, cond in enumerate(conds)
+    ]
+
+
+def blank_condition_view():
+    return {
+        'condition_options': _options_list(CONDITION_OPTIONS, CONDITION_OPTIONS[0][0]),
+        'plan_options': _options_list(CONDITION_PLANS, CONDITION_PLANS[0][0]),
+    }
 
 
 def normalize_squad_scope(value):
@@ -567,6 +919,8 @@ def sanitize_payload(payload, available_ids):
         'substitutions': substitutions,
         'first_half': {**default_half_tactic(), **(payload.get('first_half') or {})},
         'second_half': {**default_half_tactic(), **(payload.get('second_half') or {})},
+        'instructions': normalize_instructions(payload.get('instructions')),
+        'conditions': normalize_conditions(payload.get('conditions')),
     }
 
 
@@ -579,6 +933,8 @@ def tactic_payload_from_setup(setup):
         'substitutions': setup.substitutions or [],
         'first_half': {**default_half_tactic(), **(setup.first_half or {})},
         'second_half': {**default_half_tactic(), **(setup.second_half or {})},
+        'instructions': normalize_instructions(getattr(setup, 'instructions', None)),
+        'conditions': normalize_conditions(getattr(setup, 'conditions', None)),
     }
 
 
@@ -590,6 +946,8 @@ def copy_payload_to_setup(setup, payload, confirmed=False, confirmed_at=None):
     setup.substitutions = payload.get('substitutions') or []
     setup.first_half = {**default_half_tactic(), **(payload.get('first_half') or {})}
     setup.second_half = {**default_half_tactic(), **(payload.get('second_half') or {})}
+    setup.instructions = normalize_instructions(payload.get('instructions'))
+    setup.conditions = normalize_conditions(payload.get('conditions'))
     setup.is_confirmed = confirmed
     setup.confirmed_at = confirmed_at if confirmed else None
     return setup

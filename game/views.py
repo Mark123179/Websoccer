@@ -58,8 +58,12 @@ from .tactics import (
     RESULT_FORM,
     STANDARD_FIELDS,
     TACTIC_OPTION_GROUPS,
+    ATTACK_FOCUS_ZONES,
     FORMATION_ORDER,
     FORMATION_PARTS,
+    MAX_CONDITIONS,
+    blank_condition_view,
+    conditions_view,
     copy_payload_to_setup,
     default_half_tactic,
     default_standards,
@@ -68,7 +72,10 @@ from .tactics import (
     formation_code,
     formation_part_summaries,
     formation_slots,
+    instructions_view,
+    normalize_conditions,
     normalize_formation,
+    normalize_instructions,
     normalize_squad_scope,
     orientation_label,
     player_match_state,
@@ -2073,6 +2080,54 @@ def parse_half_tactic(post_data, prefix):
     return result
 
 
+def parse_instructions(post_data):
+    raw = {
+        'pressing': {
+            'defense': post_data.get('pressing_defense'),
+            'midfield': post_data.get('pressing_midfield'),
+            'attack': post_data.get('pressing_attack'),
+        },
+        'pressing_triggers': {
+            'ballverlust': post_data.get('trigger_ballverlust') == '1',
+            'langer_ball': post_data.get('trigger_langer_ball') == '1',
+            'schlechter_pass': post_data.get('trigger_schlechter_pass') == '1',
+            'torwart_druck': post_data.get('trigger_torwart_druck') == '1',
+        },
+        'attack_focus': post_data.get('attack_focus'),
+        'buildup': {
+            'defense': post_data.get('buildup_defense'),
+            'defense_height': post_data.get('buildup_defense_height'),
+            'midfield': post_data.get('buildup_midfield'),
+            'midfield_mode': post_data.get('buildup_midfield_mode'),
+            'attack': post_data.get('buildup_attack'),
+            'attack_mode': post_data.get('buildup_attack_mode'),
+            'tempo': post_data.get('buildup_tempo'),
+        },
+        'defending': {
+            'deckung': post_data.get('defending_deckung'),
+            'zweikampf': post_data.get('defending_zweikampf'),
+            'breite': post_data.get('defending_breite'),
+            'umschalten': post_data.get('defending_umschalten'),
+        },
+    }
+    return normalize_instructions(raw)
+
+
+def parse_conditions(post_data):
+    raw = []
+    for index in range(MAX_CONDITIONS):
+        condition = post_data.get(f'condition_{index}_condition')
+        if not condition:
+            continue
+        raw.append({
+            'active': post_data.get(f'condition_{index}_active') == '1',
+            'minute': post_data.get(f'condition_{index}_minute'),
+            'condition': condition,
+            'plan': post_data.get(f'condition_{index}_plan'),
+        })
+    return normalize_conditions(raw)
+
+
 def parse_tactic_payload_from_post(post_data, club, squad_scope):
     errors = []
     raw_formation = {
@@ -2143,6 +2198,8 @@ def parse_tactic_payload_from_post(post_data, club, squad_scope):
             'substitutions': substitution_validation.substitutions,
             'first_half': parse_half_tactic(post_data, 'first_half'),
             'second_half': parse_half_tactic(post_data, 'second_half'),
+            'instructions': parse_instructions(post_data),
+            'conditions': parse_conditions(post_data),
         },
         'errors': errors,
     }
@@ -2539,6 +2596,11 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
         },
         'half_tactic_fields': HALF_TACTIC_FIELDS,
         'tactic_option_groups': TACTIC_OPTION_GROUPS,
+        'instructions': instructions_view(payload['instructions']),
+        'condition_rows': conditions_view(payload['conditions']),
+        'condition_blank': blank_condition_view(),
+        'attack_focus_zones': ATTACK_FOCUS_ZONES,
+        'max_conditions': MAX_CONDITIONS,
         'next_match': next_match,
         'match_date_display': tactic_match_date_display(next_match.get('dateLabel') if next_match else None),
         'competition_logo': competition_logo_static_path(next_match.get('competitionName') if next_match else '', next_match.get('ntNationality') if next_match else None),
@@ -2697,6 +2759,8 @@ def club_tactics(request, club_id):
             template.substitutions = payload['substitutions']
             template.first_half = payload['first_half']
             template.second_half = payload['second_half']
+            template.instructions = payload['instructions']
+            template.conditions = payload['conditions']
             template.full_clean()
             template.save()
             messages.success(request, f'Vorlage "{template.name}" gespeichert.')

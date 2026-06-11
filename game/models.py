@@ -9,8 +9,10 @@ from .tactics import (
     SQUAD_PRO,
     SQUAD_SCOPE_CHOICES,
     default_bench,
+    default_conditions,
     default_formation,
     default_half_tactic,
+    default_instructions,
     default_lineup,
     default_standards,
     default_substitutions,
@@ -900,6 +902,8 @@ class TacticSetup(models.Model):
     substitutions = models.JSONField(default=default_substitutions, blank=True)
     first_half = models.JSONField(default=default_half_tactic, blank=True)
     second_half = models.JSONField(default=default_half_tactic, blank=True)
+    instructions = models.JSONField(default=default_instructions, blank=True)
+    conditions = models.JSONField(default=default_conditions, blank=True)
     is_confirmed = models.BooleanField(default=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -954,6 +958,8 @@ class TacticTemplate(models.Model):
     substitutions = models.JSONField(default=default_substitutions, blank=True)
     first_half = models.JSONField(default=default_half_tactic, blank=True)
     second_half = models.JSONField(default=default_half_tactic, blank=True)
+    instructions = models.JSONField(default=default_instructions, blank=True)
+    conditions = models.JSONField(default=default_conditions, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

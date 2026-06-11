@@ -142,6 +142,188 @@
         });
     }
 
+    const attackZones = readJson('tactics-attack-zones', {});
+
+    function hiddenByName(name) {
+        return form.querySelector(`input[type="hidden"][name="${name}"]`);
+    }
+
+    function setToggle(button, on) {
+        button.classList.toggle('is-on', on);
+        button.setAttribute('aria-pressed', on ? 'true' : 'false');
+        const hidden = hiddenByName(button.dataset.target);
+        if (hidden) {
+            hidden.value = on ? '1' : '0';
+        }
+    }
+
+    function setSegment(button) {
+        const group = button.closest('[data-segmented]');
+        if (!group) {
+            return;
+        }
+        group.querySelectorAll('.tactics-segment').forEach((item) => {
+            item.classList.toggle('is-active', item === button);
+        });
+        const hidden = hiddenByName(group.dataset.target);
+        if (hidden) {
+            hidden.value = button.dataset.value;
+        }
+    }
+
+    function applyAttackFocus(value) {
+        const list = form.querySelector('[data-focus-list]');
+        if (!list) {
+            return;
+        }
+        const hidden = list.querySelector('[data-focus-input]');
+        if (hidden) {
+            hidden.value = value;
+        }
+        list.querySelectorAll('[data-focus-option]').forEach((option) => {
+            option.classList.toggle('is-active', option.dataset.value === value);
+        });
+        const zones = attackZones[value];
+        const pitch = form.querySelector('[data-focus-pitch]');
+        if (zones && pitch) {
+            ['left', 'center', 'right'].forEach((zone) => {
+                const node = pitch.querySelector(`[data-zone="${zone}"]`);
+                if (node) {
+                    node.style.setProperty('--intensity', zones[zone]);
+                }
+            });
+        }
+    }
+
+    function tempoLabel(value) {
+        if (value <= 25) {
+            return 'Ruhig';
+        }
+        if (value <= 49) {
+            return 'Kontrolliert';
+        }
+        if (value === 50) {
+            return 'Normal';
+        }
+        if (value <= 75) {
+            return 'Zügig';
+        }
+        return 'Sehr schnell';
+    }
+
+    function conditionRows() {
+        return Array.from(form.querySelectorAll('[data-conditions-body] [data-condition-row]'));
+    }
+
+    function updateConditionAddState() {
+        const wrap = form.querySelector('[data-conditions]');
+        const addButton = form.querySelector('[data-condition-add]');
+        if (!wrap || !addButton) {
+            return;
+        }
+        const max = parseInt(wrap.dataset.max, 10) || 8;
+        addButton.disabled = conditionRows().length >= max;
+    }
+
+    function reindexConditions() {
+        conditionRows().forEach((row, index) => {
+            row.querySelectorAll('[name]').forEach((field) => {
+                field.name = field.name.replace(/condition_\d+_/, `condition_${index}_`);
+            });
+            const toggle = row.querySelector('[data-toggle]');
+            if (toggle) {
+                toggle.dataset.target = `condition_${index}_active`;
+            }
+        });
+        updateConditionAddState();
+    }
+
+    function addConditionRow() {
+        const wrap = form.querySelector('[data-conditions]');
+        const body = form.querySelector('[data-conditions-body]');
+        const template = form.querySelector('[data-condition-template]');
+        if (!wrap || !body || !template) {
+            return;
+        }
+        const max = parseInt(wrap.dataset.max, 10) || 8;
+        if (conditionRows().length >= max) {
+            return;
+        }
+        const index = conditionRows().length;
+        const markup = template.innerHTML.replace(/__INDEX__/g, String(index)).trim();
+        const holder = document.createElement('div');
+        holder.innerHTML = markup;
+        const row = holder.firstElementChild;
+        if (!row) {
+            return;
+        }
+        body.appendChild(row);
+        reindexConditions();
+    }
+
+    function bindInstructions() {
+        form.addEventListener('click', (event) => {
+            const toggle = event.target.closest('[data-toggle]');
+            if (toggle && form.contains(toggle)) {
+                setToggle(toggle, !toggle.classList.contains('is-on'));
+                return;
+            }
+            const segment = event.target.closest('.tactics-segment');
+            if (segment && form.contains(segment)) {
+                setSegment(segment);
+                return;
+            }
+            const focusOption = event.target.closest('[data-focus-option]');
+            if (focusOption && form.contains(focusOption)) {
+                applyAttackFocus(focusOption.dataset.value);
+                return;
+            }
+            const addButton = event.target.closest('[data-condition-add]');
+            if (addButton && form.contains(addButton)) {
+                addConditionRow();
+                return;
+            }
+            const removeButton = event.target.closest('[data-condition-remove]');
+            if (removeButton && form.contains(removeButton)) {
+                const row = removeButton.closest('[data-condition-row]');
+                if (row) {
+                    row.remove();
+                    reindexConditions();
+                }
+            }
+        });
+
+        form.addEventListener('change', (event) => {
+            const minute = event.target.closest('[data-minute]');
+            if (!minute) {
+                return;
+            }
+            let value = parseInt(String(minute.value).replace(/\D/g, ''), 10);
+            if (!Number.isFinite(value)) {
+                value = 1;
+            }
+            value = Math.max(1, Math.min(120, value));
+            minute.value = String(value).padStart(2, '0');
+        });
+
+        const tempo = form.querySelector('[data-tempo]');
+        if (tempo) {
+            tempo.addEventListener('input', () => {
+                const value = parseInt(tempo.value, 10) || 0;
+                const valueNode = form.querySelector('[data-tempo-value]');
+                const labelNode = form.querySelector('[data-tempo-label]');
+                if (valueNode) {
+                    valueNode.textContent = value;
+                }
+                if (labelNode) {
+                    labelNode.textContent = tempoLabel(value);
+                }
+            });
+        }
+
+        updateConditionAddState();
+    }
+
     function updateSlotCard(slotNode) {
         const select = slotNode.querySelector('select[data-assignment]');
         const player = playerById.get(String(select.value || ''));
@@ -543,6 +725,7 @@
     bindAssignments();
     bindMinuteInputs();
     bindTemplateSave();
+    bindInstructions();
     updateStatusNumbers();
     updateRosterList();
     refreshStandardOptions();

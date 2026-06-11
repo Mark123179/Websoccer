@@ -1465,6 +1465,493 @@ body.tactics-page .nav-menu a:nth-child(5) {
     min-width: 0;
 }
 
+/* ============================================================= */
+/* Tactics instructions grid — 6-tile bottom row (Screen1)        */
+/* ============================================================= */
+
+.tactics-instructions-grid {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 1.5fr 1fr 1.35fr 1.18fr 1fr 1fr;
+    align-items: stretch;
+    margin-top: 9px;
+}
+
+.tactics-instructions-grid .tactics-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: auto;
+    min-height: 0;
+    padding: 14px 14px 16px;
+}
+
+.tactics-tile-head {
+    border-bottom: 1px solid var(--tactics-line);
+    padding-bottom: 8px;
+}
+
+.tactics-instructions-grid .tactics-tile-head h2 {
+    color: var(--tactics-cyan);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.tactics-tile-sub {
+    color: rgba(244, 251, 255, 0.55);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin: 3px 0 0;
+    text-transform: uppercase;
+}
+
+.tactics-tile-section {
+    color: rgba(244, 251, 255, 0.6);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin: 4px 0 0;
+    text-transform: uppercase;
+}
+
+/* --- Label + control rows (pressing / defending) --- */
+
+.tactics-line-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tactics-line-row {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 84px minmax(0, 1fr);
+}
+
+.tactics-line-row span {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    opacity: 0.78;
+    text-transform: uppercase;
+}
+
+/* --- Pressing triggers --- */
+
+.tactics-trigger-grid {
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tactics-trigger {
+    background: rgba(8, 26, 38, 0.7);
+    border: 1px solid var(--tactics-line);
+    border-radius: 7px;
+    color: rgba(244, 251, 255, 0.78);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    min-height: 30px;
+    padding: 5px 6px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tactics-trigger:nth-of-type(4) {
+    grid-column: 1 / -1;
+}
+
+.tactics-trigger:hover {
+    border-color: var(--tactics-line-strong);
+}
+
+.tactics-trigger.is-on {
+    background: linear-gradient(180deg, rgba(22, 207, 255, 0.28), rgba(22, 207, 255, 0.1));
+    border-color: var(--tactics-cyan);
+    box-shadow: 0 0 12px rgba(22, 207, 255, 0.18);
+    color: #ffffff;
+}
+
+/* --- Attack focus tile --- */
+
+.tactics-focus-layout {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) 96px;
+}
+
+.tactics-focus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.tactics-focus-option {
+    background: rgba(8, 26, 38, 0.7);
+    border: 1px solid var(--tactics-line);
+    border-left: 3px solid transparent;
+    border-radius: 7px;
+    color: rgba(244, 251, 255, 0.82);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 7px 9px;
+    text-align: left;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tactics-focus-option:hover {
+    border-color: var(--tactics-line-strong);
+}
+
+.tactics-focus-option.is-active {
+    background: linear-gradient(90deg, rgba(22, 207, 255, 0.26), rgba(22, 207, 255, 0.05));
+    border-color: var(--tactics-line-strong);
+    border-left-color: var(--tactics-cyan);
+    box-shadow: inset 0 0 12px rgba(22, 207, 255, 0.12);
+    color: #ffffff;
+}
+
+.tactics-focus-pitch {
+    align-self: start;
+    aspect-ratio: 3 / 4;
+    background:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 14px, transparent 14px 28px),
+        linear-gradient(180deg, #0b3a24, #062618);
+    border: 1px solid var(--tactics-line-strong);
+    border-radius: 9px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: hidden;
+    position: relative;
+}
+
+.tactics-focus-pitch-markings {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.tactics-focus-pitch-markings::before {
+    background: rgba(255, 255, 255, 0.2);
+    content: "";
+    height: 1px;
+    left: 6%;
+    position: absolute;
+    right: 6%;
+    top: 50%;
+}
+
+.tactics-focus-pitch-markings::after {
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    content: "";
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 34%;
+}
+
+.tactics-focus-zone {
+    position: relative;
+}
+
+.tactics-focus-zone::before {
+    background: radial-gradient(ellipse at center, rgba(22, 207, 255, 0.95), rgba(22, 207, 255, 0) 70%);
+    border-radius: 45%;
+    content: "";
+    inset: 6% 3%;
+    opacity: calc(var(--intensity, 30) / 100);
+    position: absolute;
+    transition: opacity 0.25s ease;
+}
+
+/* --- Spielaufbau & Linie --- */
+
+.tactics-buildup-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.tactics-buildup-row {
+    align-items: center;
+    display: grid;
+    gap: 5px 8px;
+    grid-template-areas:
+        "label select"
+        "label segmented";
+    grid-template-columns: 66px minmax(0, 1fr);
+}
+
+.tactics-buildup-label {
+    font-size: 11px;
+    font-weight: 800;
+    grid-area: label;
+    letter-spacing: 0.04em;
+    opacity: 0.78;
+    text-transform: uppercase;
+}
+
+.tactics-buildup-row select {
+    grid-area: select;
+}
+
+.tactics-segmented {
+    display: grid;
+    gap: 4px;
+    grid-area: segmented;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+}
+
+.tactics-segment {
+    background: rgba(8, 26, 38, 0.6);
+    border: 1px solid var(--tactics-line);
+    border-radius: 6px;
+    color: rgba(244, 251, 255, 0.74);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    min-height: 26px;
+    padding: 4px 4px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tactics-segment:hover {
+    border-color: var(--tactics-line-strong);
+}
+
+.tactics-segment.is-active {
+    background: linear-gradient(180deg, rgba(22, 207, 255, 0.28), rgba(22, 207, 255, 0.1));
+    border-color: var(--tactics-cyan);
+    color: #ffffff;
+}
+
+.tactics-tempo {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 66px minmax(0, 1fr) 28px auto;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.tactics-tempo input[type="range"] {
+    accent-color: var(--tactics-cyan);
+    width: 100%;
+}
+
+.tactics-tempo strong {
+    color: var(--tactics-cyan);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.tactics-tempo em {
+    color: rgba(244, 251, 255, 0.7);
+    font-size: 11px;
+    font-style: normal;
+    white-space: nowrap;
+}
+
+/* --- Conditions / Erweiterter Modus --- */
+
+.tactics-conditions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tactics-conditions-head,
+.tactics-condition-row {
+    align-items: center;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) 48px;
+}
+
+.tactics-conditions-head span {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    opacity: 0.55;
+    text-transform: uppercase;
+}
+
+.tactics-conditions-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tactics-minute-input {
+    text-align: center;
+}
+
+.tactics-condition-actions {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+}
+
+.tactics-toggle {
+    background: rgba(120, 140, 150, 0.3);
+    border: 1px solid var(--tactics-line);
+    border-radius: 999px;
+    cursor: pointer;
+    flex: none;
+    height: 18px;
+    padding: 0;
+    position: relative;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    width: 32px;
+}
+
+.tactics-toggle::after {
+    background: #d7ecf5;
+    border-radius: 50%;
+    content: "";
+    height: 14px;
+    left: 1px;
+    position: absolute;
+    top: 1px;
+    transition: transform 0.15s ease, background 0.15s ease;
+    width: 14px;
+}
+
+.tactics-toggle.is-on {
+    background: var(--tactics-cyan);
+    border-color: var(--tactics-cyan);
+}
+
+.tactics-toggle.is-on::after {
+    background: #ffffff;
+    transform: translateX(14px);
+}
+
+.tactics-condition-remove {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--tactics-line);
+    border-radius: 50%;
+    color: rgba(255, 120, 135, 0.85);
+    cursor: pointer;
+    display: flex;
+    flex: none;
+    font-size: 14px;
+    height: 18px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    width: 18px;
+}
+
+.tactics-condition-remove:hover {
+    border-color: var(--tactics-red);
+    color: var(--tactics-red);
+}
+
+.tactics-condition-add {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px dashed var(--tactics-line-strong);
+    border-radius: 8px;
+    color: var(--tactics-cyan);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 2px;
+    padding: 6px 12px;
+    transition: background 0.15s ease;
+}
+
+.tactics-condition-add:hover {
+    background: rgba(22, 207, 255, 0.1);
+}
+
+.tactics-condition-add:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* --- Opponent absences tile (compact column variant) --- */
+
+.tactics-instructions-grid .tactics-opponent-absences {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 330px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 3px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list div {
+    align-items: center;
+    display: grid;
+    gap: 0 8px;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    min-height: 0;
+    padding: 5px 7px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list div:nth-child(n+4) {
+    display: grid;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list img {
+    grid-row: 1 / span 2;
+    height: 34px;
+    width: 34px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list strong {
+    -webkit-line-clamp: 1;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list span {
+    font-size: 11px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list small {
+    flex-direction: row;
+    font-size: 10px;
+    gap: 4px;
+    padding: 3px 7px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list small::before {
+    font-size: 12px;
+    height: 18px;
+    width: 18px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list .is-injury small::before,
+.tactics-instructions-grid .tactics-opponent-absence-list .is-suspension small::before {
+    height: 20px;
+    width: 20px;
+}
+
 .tactics-analysis-grid {
     display: grid;
     gap: 9px;
