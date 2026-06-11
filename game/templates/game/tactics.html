@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-1">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=instructions-grid-2">
 {% endblock %}
 
 {% block content %}
@@ -519,10 +519,10 @@
                         </label>
                     {% endfor %}
                 </div>
-                <h3 class="tactics-tile-section">Pressing Trigger</h3>
-                <div class="tactics-trigger-grid">
+                <h3 class="tactics-tile-section">Pressing Trigger <span class="tactics-trigger-budget" data-trigger-budget>{{ instructions.trigger_budget_used }}/{{ instructions.trigger_budget }}</span></h3>
+                <div class="tactics-trigger-grid" data-trigger-grid>
                     {% for t in instructions.triggers %}
-                        <button type="button" class="tactics-trigger {% if t.active %}is-on{% endif %}" data-toggle data-target="trigger_{{ t.name }}" aria-pressed="{{ t.active|yesno:'true,false' }}">{{ t.label }}</button>
+                        <button type="button" class="tactics-trigger {% if t.active %}is-on{% endif %}" data-toggle data-target="trigger_{{ t.name }}" data-cost="{{ t.cost }}" aria-pressed="{{ t.active|yesno:'true,false' }}">{{ t.label }}<em class="tactics-trigger-cost">{{ t.cost }}P</em></button>
                         <input type="hidden" name="trigger_{{ t.name }}" value="{% if t.active %}1{% else %}0{% endif %}">
                     {% endfor %}
                 </div>
@@ -568,20 +568,12 @@
                         <select name="buildup_midfield">
                             {% for o in instructions.buildup.midfield %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
-                        <div class="tactics-segmented" data-segmented data-target="buildup_midfield_mode">
-                            {% for o in instructions.buildup.midfield_mode %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}">{{ o.label }}</button>{% endfor %}
-                        </div>
-                        <input type="hidden" name="buildup_midfield_mode" value="{{ instructions.buildup.selected.midfield_mode }}">
                     </div>
                     <div class="tactics-buildup-row">
                         <span class="tactics-buildup-label">Angriff</span>
                         <select name="buildup_attack">
                             {% for o in instructions.buildup.attack %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
-                        <div class="tactics-segmented" data-segmented data-target="buildup_attack_mode">
-                            {% for o in instructions.buildup.attack_mode %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}">{{ o.label }}</button>{% endfor %}
-                        </div>
-                        <input type="hidden" name="buildup_attack_mode" value="{{ instructions.buildup.selected.attack_mode }}">
                     </div>
                 </div>
                 <label class="tactics-tempo">
@@ -651,5 +643,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'game/js/tactics.js' %}?v=instructions-grid-1"></script>
+    <script src="{% static 'game/js/tactics.js' %}?v=instructions-grid-2"></script>
 {% endblock %}

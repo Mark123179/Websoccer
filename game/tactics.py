@@ -106,10 +106,37 @@ HALF_TACTIC_FIELDS = [
 ]
 
 TACTIC_OPTION_GROUPS = {
-    'defense': [('standard', 'Standard')],
-    'midfield': [('standard', 'Standard')],
-    'attack': [('standard', 'Standard')],
-    'effort': [('normal', 'Normal')],
+    'defense': [
+        ('standard', 'Standard'),
+        ('kompakt_stehen', 'Kompakt stehen'),
+        ('tief_stehen', 'Tief stehen'),
+        ('hoeher_stehen', 'Höher stehen'),
+        ('absichern', 'Absichern'),
+        ('frueh_herausruecken', 'Früh herausrücken'),
+    ],
+    'midfield': [
+        ('standard', 'Standard'),
+        ('absichern', 'Absichern'),
+        ('kurzpassspiel', 'Kurzpassspiel'),
+        ('ballbesitz_sichern', 'Ballbesitz sichern'),
+        ('vertikal_spielen', 'Vertikal spielen'),
+        ('gegenpressing', 'Gegenpressing'),
+    ],
+    'attack': [
+        ('standard', 'Standard'),
+        ('anlaufen', 'Anlaufen'),
+        ('kombinieren', 'Kombinieren'),
+        ('tiefenlaeufe', 'Tiefenläufe'),
+        ('zielspieler_suchen', 'Zielspieler suchen'),
+        ('flanke_kopfball', 'Flanke & Kopfball'),
+    ],
+    'effort': [
+        ('schonend', 'Schonend'),
+        ('vorsichtig', 'Vorsichtig'),
+        ('normal', 'Normal'),
+        ('hoch', 'Hoch'),
+        ('sehr_hoch', 'Sehr hoch'),
+    ],
 }
 
 RESULT_FORM = [
@@ -153,6 +180,14 @@ PRESSING_TRIGGERS = [
     ('torwart_druck', 'Torwart unter Druck'),
 ]
 
+PRESSING_TRIGGER_COSTS = {
+    'ballverlust': 2,
+    'langer_ball': 1,
+    'schlechter_pass': 1,
+    'torwart_druck': 1,
+}
+PRESSING_TRIGGER_BUDGET = 3
+
 ATTACK_FOCUS_OPTIONS = [
     ('fluegelspiel', 'Flügelspiel'),
     ('ueber_halbraeume', 'Über Halbräume'),
@@ -173,8 +208,10 @@ ATTACK_FOCUS_ZONES = {
 }
 
 BUILDUP_DEFENSE_OPTIONS = [
+    ('standard', 'Standard'),
     ('aus_abwehr', 'Aus der Abwehr spielen'),
-    ('direkt_klaeren', 'Direkt klären'),
+    ('direkt_vorne', 'Direkt nach vorne'),
+    ('lange_baelle', 'Lange Bälle'),
 ]
 
 BUILDUP_DEFENSE_HEIGHT = [
@@ -184,23 +221,19 @@ BUILDUP_DEFENSE_HEIGHT = [
 ]
 
 BUILDUP_MIDFIELD_OPTIONS = [
+    ('standard', 'Standard'),
     ('geduldig', 'Geduldig aufbauen'),
-    ('standard', 'Standard'),
-]
-
-BUILDUP_MIDFIELD_MODE = [
-    ('standard', 'Standard'),
-    ('vertikal', 'Vertikal'),
+    ('vertikal', 'Vertikal spielen'),
+    ('seiten_verlagern', 'Seiten verlagern'),
 ]
 
 BUILDUP_ATTACK_OPTIONS = [
-    ('ueber_aussen', 'Über Außen aufbauen'),
-    ('kombinieren', 'Kombinieren'),
-]
-
-BUILDUP_ATTACK_MODE = [
-    ('direkt', 'Direkt'),
     ('standard', 'Standard'),
+    ('kombinieren', 'Kombinieren'),
+    ('tiefenlaeufe', 'Tiefenläufe suchen'),
+    ('flanken_suchen', 'Flanken suchen'),
+    ('zielspieler_suchen', 'Zielspieler suchen'),
+    ('frueher_abschluss', 'Früher Abschluss'),
 ]
 
 DEFENDING_DECKUNG = [
@@ -244,7 +277,6 @@ CONDITION_PLANS = [
     ('kontrolle_ballbesitz', 'Kontrolle & Ballbesitz'),
     ('kompakt_sichern', 'Kompakt sichern'),
     ('zeitspiel', 'Zeitspiel'),
-    ('zeitspiel_sichern', 'Zeitspiel sichern'),
     ('unterzahl_kompakt', 'Unterzahl kompakt'),
 ]
 
@@ -260,12 +292,10 @@ DEFAULT_INSTRUCTIONS = {
     },
     'attack_focus': 'fluegelspiel',
     'buildup': {
-        'defense': 'aus_abwehr',
+        'defense': 'standard',
         'defense_height': 'standard',
-        'midfield': 'geduldig',
-        'midfield_mode': 'standard',
-        'attack': 'ueber_aussen',
-        'attack_mode': 'standard',
+        'midfield': 'standard',
+        'attack': 'standard',
         'tempo': 72,
     },
     'defending': {
@@ -280,7 +310,7 @@ DEFAULT_CONDITIONS = [
     {'active': True, 'minute': '01', 'condition': 'rueckstand', 'plan': 'aggressiv_risiko'},
     {'active': True, 'minute': '60', 'condition': 'unentschieden', 'plan': 'ausgewogen'},
     {'active': True, 'minute': '80', 'condition': 'fuehrung', 'plan': 'zeitspiel'},
-    {'active': True, 'minute': '90', 'condition': 'knappe_fuehrung', 'plan': 'zeitspiel_sichern'},
+    {'active': True, 'minute': '90', 'condition': 'knappe_fuehrung', 'plan': 'zeitspiel'},
 ]
 
 
@@ -346,6 +376,15 @@ def normalize_instructions(raw):
     for key, _label in PRESSING_TRIGGERS:
         triggers[key] = bool(raw_triggers.get(key, defaults['pressing_triggers'][key]))
 
+    used_budget = 0
+    for key, _label in PRESSING_TRIGGERS:
+        if triggers[key]:
+            cost = PRESSING_TRIGGER_COSTS[key]
+            if used_budget + cost > PRESSING_TRIGGER_BUDGET:
+                triggers[key] = False
+            else:
+                used_budget += cost
+
     attack_focus = _choice(
         raw.get('attack_focus'), ATTACK_FOCUS_OPTIONS, defaults['attack_focus']
     )
@@ -362,11 +401,7 @@ def normalize_instructions(raw):
             raw_buildup.get('defense_height'), BUILDUP_DEFENSE_HEIGHT, db['defense_height']
         ),
         'midfield': _choice(raw_buildup.get('midfield'), BUILDUP_MIDFIELD_OPTIONS, db['midfield']),
-        'midfield_mode': _choice(
-            raw_buildup.get('midfield_mode'), BUILDUP_MIDFIELD_MODE, db['midfield_mode']
-        ),
         'attack': _choice(raw_buildup.get('attack'), BUILDUP_ATTACK_OPTIONS, db['attack']),
-        'attack_mode': _choice(raw_buildup.get('attack_mode'), BUILDUP_ATTACK_MODE, db['attack_mode']),
         'tempo': max(0, min(100, tempo)),
     }
 
@@ -443,9 +478,19 @@ def instructions_view(instructions):
         for line, label in PRESSING_LINES
     ]
     triggers = [
-        {'name': key, 'label': label, 'active': instr['pressing_triggers'][key]}
+        {
+            'name': key,
+            'label': label,
+            'active': instr['pressing_triggers'][key],
+            'cost': PRESSING_TRIGGER_COSTS[key],
+        }
         for key, label in PRESSING_TRIGGERS
     ]
+    trigger_budget_used = sum(
+        PRESSING_TRIGGER_COSTS[key]
+        for key, _ in PRESSING_TRIGGERS
+        if instr['pressing_triggers'][key]
+    )
     attack_focus = {
         'selected': instr['attack_focus'],
         'options': _options_list(ATTACK_FOCUS_OPTIONS, instr['attack_focus']),
@@ -459,11 +504,7 @@ def instructions_view(instructions):
             BUILDUP_DEFENSE_HEIGHT, instr['buildup']['defense_height']
         ),
         'midfield': _options_list(BUILDUP_MIDFIELD_OPTIONS, instr['buildup']['midfield']),
-        'midfield_mode': _options_list(
-            BUILDUP_MIDFIELD_MODE, instr['buildup']['midfield_mode']
-        ),
         'attack': _options_list(BUILDUP_ATTACK_OPTIONS, instr['buildup']['attack']),
-        'attack_mode': _options_list(BUILDUP_ATTACK_MODE, instr['buildup']['attack_mode']),
         'tempo': instr['buildup']['tempo'],
         'tempo_label': tempo_label(instr['buildup']['tempo']),
         'selected': instr['buildup'],
@@ -477,6 +518,8 @@ def instructions_view(instructions):
     return {
         'pressing': pressing,
         'triggers': triggers,
+        'trigger_budget': PRESSING_TRIGGER_BUDGET,
+        'trigger_budget_used': trigger_budget_used,
         'attack_focus': attack_focus,
         'buildup': buildup,
         'defending': defending,

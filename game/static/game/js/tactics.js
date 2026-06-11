@@ -261,11 +261,49 @@
         reindexConditions();
     }
 
+    const TRIGGER_BUDGET = 3;
+
+    function triggerBudgetUsed() {
+        let used = 0;
+        form.querySelectorAll('[data-trigger-grid] [data-cost].is-on').forEach((btn) => {
+            used += parseInt(btn.dataset.cost, 10) || 0;
+        });
+        return used;
+    }
+
+    function updateTriggerBudget() {
+        const counter = form.querySelector('[data-trigger-budget]');
+        if (!counter) {
+            return;
+        }
+        const used = triggerBudgetUsed();
+        counter.textContent = `${used}/${TRIGGER_BUDGET}`;
+        counter.classList.toggle('is-over', used >= TRIGGER_BUDGET);
+        form.querySelectorAll('[data-trigger-grid] [data-cost]').forEach((btn) => {
+            if (!btn.classList.contains('is-on')) {
+                const cost = parseInt(btn.dataset.cost, 10) || 0;
+                btn.disabled = used + cost > TRIGGER_BUDGET;
+            } else {
+                btn.disabled = false;
+            }
+        });
+    }
+
     function bindInstructions() {
         form.addEventListener('click', (event) => {
             const toggle = event.target.closest('[data-toggle]');
             if (toggle && form.contains(toggle)) {
-                setToggle(toggle, !toggle.classList.contains('is-on'));
+                const turningOn = !toggle.classList.contains('is-on');
+                if (turningOn && toggle.dataset.cost !== undefined) {
+                    const cost = parseInt(toggle.dataset.cost, 10) || 0;
+                    if (triggerBudgetUsed() + cost > TRIGGER_BUDGET) {
+                        return;
+                    }
+                }
+                setToggle(toggle, turningOn);
+                if (toggle.dataset.cost !== undefined) {
+                    updateTriggerBudget();
+                }
                 return;
             }
             const segment = event.target.closest('.tactics-segment');
@@ -322,6 +360,7 @@
         }
 
         updateConditionAddState();
+        updateTriggerBudget();
     }
 
     function updateSlotCard(slotNode) {

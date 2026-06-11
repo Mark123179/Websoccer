@@ -1577,6 +1577,39 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: #ffffff;
 }
 
+.tactics-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+}
+
+.tactics-trigger-budget {
+    color: var(--tactics-cyan);
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+    opacity: 0.85;
+    vertical-align: middle;
+}
+
+.tactics-trigger-budget.is-over {
+    color: #f5a623;
+    opacity: 1;
+}
+
+.tactics-trigger-cost {
+    color: rgba(244, 251, 255, 0.4);
+    display: block;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.tactics-trigger.is-on .tactics-trigger-cost {
+    color: rgba(255, 255, 255, 0.6);
+}
+
 /* --- Attack focus tile --- */
 
 .tactics-focus-layout {

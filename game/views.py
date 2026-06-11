@@ -2098,9 +2098,7 @@ def parse_instructions(post_data):
             'defense': post_data.get('buildup_defense'),
             'defense_height': post_data.get('buildup_defense_height'),
             'midfield': post_data.get('buildup_midfield'),
-            'midfield_mode': post_data.get('buildup_midfield_mode'),
             'attack': post_data.get('buildup_attack'),
-            'attack_mode': post_data.get('buildup_attack_mode'),
             'tempo': post_data.get('buildup_tempo'),
         },
         'defending': {
