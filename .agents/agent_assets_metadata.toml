@@ -208,7 +208,7 @@ title = "Websoccer Simulation Export (Standalone)"
 id = "A_53K5frN4WvAUkXTZCh0"
 uri = "file://exports/websoccer_sim_export.zip"
 type = "unspecified"
-title = "websoccer_sim_export.zip — Tactics-Integrated V1 (9 Dateien, 38 KB)"
+title = "websoccer_sim_export.zip — V2 komplett (balance_matrix.py + V2 tactic_compiler)"
 
 [[outputs]]
 id = "kTGTn3vdFHUKOlZNquOyi"
