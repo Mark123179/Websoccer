@@ -482,8 +482,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
     border: 1px solid rgba(255, 255, 255, 0.095);
     border-radius: 6px;
     display: grid;
-    gap: 3px 8px;
-    grid-template-columns: 42px minmax(0, 1fr) 36px;
+    gap: 3px 6px;
+    grid-template-columns: 42px minmax(0, 1fr) 52px 34px;
     min-height: 58px;
     padding: 5px;
 }
@@ -579,7 +579,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-roster-freshness {
     align-items: center;
     display: flex;
-    grid-column: 3;
+    grid-column: 4;
     grid-row: 1 / span 3;
     justify-content: center;
 }
@@ -592,18 +592,20 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-roster-form {
+    align-self: stretch;
     display: flex;
-    flex: 0 0 46px;
     gap: 2px;
-    height: 24px;
-    margin-left: 4px;
+    grid-column: 3;
+    grid-row: 1 / span 3;
     overflow: hidden;
+    padding: 2px 0;
 }
 
 .trf-slot {
     display: grid;
     flex: 1;
-    grid-template-rows: 1fr 7px;
+    grid-template-rows: 1fr 9px;
+    height: 100%;
 }
 
 .trf-slot .trf-bar {
@@ -614,10 +616,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .trf-slot span {
-    color: rgba(244, 251, 255, .5);
-    font-size: 5.5px;
-    font-weight: 700;
-    line-height: 7px;
+    color: rgba(244, 251, 255, .6);
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 9px;
     overflow: hidden;
     text-align: center;
 }
@@ -628,9 +630,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .trf-slot--empty .trf-bar { background: rgba(255, 255, 255, .12); height: 100%; }
 
 .trf-no-data {
+    align-self: center;
     color: rgba(244, 251, 255, .35);
     font-size: 10px;
-    line-height: 24px;
+    text-align: center;
 }
 
 .tactics-roster-empty {
@@ -2290,8 +2293,8 @@ body.tactics-page .nav-menu a:nth-child(5) {
 }
 
 .tactics-template-grid .tactics-roster-player {
-    gap: 4px 8px;
-    grid-template-columns: 48px minmax(0, 1fr) 44px;
+    gap: 4px 6px;
+    grid-template-columns: 48px minmax(0, 1fr) 58px 44px;
     min-height: 74px;
     padding: 6px;
 }
@@ -2304,6 +2307,10 @@ body.tactics-page .nav-menu a:nth-child(5) {
 
 .tactics-template-grid .tactics-roster-player strong {
     font-size: 12px;
+}
+
+.tactics-template-grid .tactics-roster-freshness {
+    grid-column: 4;
 }
 
 .tactics-template-grid .tactics-roster-freshness .tactics-freshness {
