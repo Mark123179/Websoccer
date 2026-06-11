@@ -3559,3 +3559,36 @@ class ManagerCareerEntry(models.Model):
     def __str__(self):
         end = self.ended_at.strftime('%d.%m.%Y') if self.ended_at else 'heute'
         return f'{self.manager.name} @ {self.club.name} ({self.started_at:%d.%m.%Y} – {end})'
+
+
+class SimulatedMatch(models.Model):
+    """Gespeichertes Ergebnis einer Match-Engine-Simulation (zum Testen)."""
+
+    home_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='simulated_home_matches',
+    )
+    away_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='simulated_away_matches',
+    )
+    home_goals = models.PositiveSmallIntegerField(default=0)
+    away_goals = models.PositiveSmallIntegerField(default=0)
+    report_data = models.JSONField(
+        default=dict,
+        help_text='Vollständiger Spielbericht als JSON (Tore, Stats, Spieler).',
+    )
+    simulated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-simulated_at']
+        verbose_name = 'Simuliertes Spiel'
+        verbose_name_plural = 'Simulierte Spiele'
+
+    def __str__(self):
+        return (
+            f"{self.home_club.short_name} {self.home_goals}:{self.away_goals} "
+            f"{self.away_club.short_name}"
+        )

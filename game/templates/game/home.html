@@ -216,7 +216,7 @@
                 {% endfor %}
             </div>
 
-            <a class="card-action" href="{% if primary_club %}/clubs/{{ primary_club.id }}/{% else %}/clubs/{% endif %}">Spielbericht anzeigen</a>
+            <a class="card-action" href="{% if primary_club %}{% url 'club_match_report' primary_club.id %}{% else %}/clubs/{% endif %}">Spielbericht anzeigen</a>
             {% endif %}
         </article>
 

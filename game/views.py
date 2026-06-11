@@ -48,6 +48,7 @@ from .models import (
     PlayerSuspensionRecord,
     PlayerTransferHistory,
     SeasonFixture,
+    SimulatedMatch,
     TacticSetup,
     TacticTemplate,
 )
@@ -3283,12 +3284,45 @@ def club_match_preview(request, club_id):
 
 
 def club_match_report(request, club_id):
-    return render_public_club_stub(
-        request,
-        club_id,
-        'Spielbericht',
-        'Der öffentliche Spielbericht wird als eigener Matchbereich vorbereitet.',
-    )
+    from django.db.models import Q
+    from .match_engine import simulate_match
+
+    club = get_object_or_404(Club, id=club_id)
+    sim_error = None
+
+    if request.method == 'POST':
+        opponent_id = request.POST.get('opponent_id')
+        try:
+            opponent = Club.objects.get(pk=opponent_id)
+            data = simulate_match(club, opponent)
+            SimulatedMatch.objects.create(
+                home_club=club,
+                away_club=opponent,
+                home_goals=data['home_goals'],
+                away_goals=data['away_goals'],
+                report_data=data,
+            )
+        except Club.DoesNotExist:
+            sim_error = 'Gegner nicht gefunden.'
+        except Exception as exc:
+            sim_error = str(exc)
+        if not sim_error:
+            from django.shortcuts import redirect as _redirect
+            return _redirect('club_match_report', club_id=club_id)
+
+    latest = SimulatedMatch.objects.filter(
+        Q(home_club=club) | Q(away_club=club)
+    ).first()
+
+    all_clubs = Club.objects.exclude(pk=club_id).order_by('name')
+
+    return render(request, 'game/match_report.html', {
+        'club': club,
+        'latest_match': latest,
+        'report': latest.report_data if latest else None,
+        'all_clubs': all_clubs,
+        'sim_error': sim_error,
+    })
 
 
 def club_news(request, club_id):
