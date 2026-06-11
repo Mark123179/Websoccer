@@ -221,3 +221,15 @@ id = "IzdW34De76rsskB7rjtT1"
 uri = "file://exports/tactic_test_results_minutes_10k.csv"
 type = "table"
 title = "CSV — 10k Minuten-Batch (Balancing-Auswertung)"
+
+[[outputs]]
+id = "9NtYaDbxZOsf4d3eIt696"
+uri = "file://exports/tactic_test_results_v2_10k.json"
+type = "unspecified"
+title = "JSON — V2 Balance 10k (50.000 Sims)"
+
+[[outputs]]
+id = "Ib5n60ko2C0mHpIZScyvq"
+uri = "file://exports/tactic_test_results_v2_10k.csv"
+type = "table"
+title = "CSV — V2 Balance 10k (mit plan_segment_stats)"
