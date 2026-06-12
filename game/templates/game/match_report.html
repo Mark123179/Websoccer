@@ -56,12 +56,13 @@
 
         <div class="mr-left">
 
-            {# ── Goal Timeline ──────────────────────────────────────────── #}
+            {# ── Kombinierte Ereignisleiste ─────────────────────────────── #}
             <div class="mr-section">
-                <h3 class="mr-section-title">Spielverlauf &mdash; Tore</h3>
-                {% if report.goal_events %}
+                <h3 class="mr-section-title">Spielverlauf</h3>
+                {% if rc.combined_events %}
                 <div class="mr-timeline">
-                    {% for evt in report.goal_events %}
+                    {% for evt in rc.combined_events %}
+                    {% if evt.type == 'goal' %}
                     <div class="mr-event {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
                         <div class="mr-event-minute">{{ evt.minute }}'</div>
                         <div class="mr-event-detail">
@@ -77,41 +78,24 @@
                             {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
                         </div>
                     </div>
+                    {% else %}
+                    <div class="mr-event mr-event--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-event-minute">{{ evt.minute }}'</div>
+                        <div class="mr-event-detail">
+                            <span class="mr-sub-in">&#x2191; {{ evt.in_name }}</span>
+                            <span class="mr-sub-out">&#x2193; {{ evt.out_name }}</span>
+                        </div>
+                        <div class="mr-event-club">
+                            {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="mr-empty">Kein Tor erzielt &mdash; 0:0.</p>
+                <p class="mr-empty">Keine Ereignisse &mdash; 0:0, keine Wechsel.</p>
                 {% endif %}
             </div>
-
-            {# ── Substitution Timeline ─────────────────────────────────── #}
-            {% if rc.home_substitutions or rc.away_substitutions %}
-            <div class="mr-section">
-                <h3 class="mr-section-title">Einwechslungen</h3>
-                <div class="mr-timeline">
-                    {% for sub in rc.home_substitutions %}
-                    <div class="mr-event mr-event--sub is-home">
-                        <div class="mr-event-minute">{{ sub.minute }}'</div>
-                        <div class="mr-event-detail">
-                            <span class="mr-sub-in">&#x2191; {{ sub.in_name }}</span>
-                            <span class="mr-sub-out">&#x2193; {{ sub.out_name }}</span>
-                        </div>
-                        <div class="mr-event-club">{{ report.home_club_short }}</div>
-                    </div>
-                    {% endfor %}
-                    {% for sub in rc.away_substitutions %}
-                    <div class="mr-event mr-event--sub is-away">
-                        <div class="mr-event-minute">{{ sub.minute }}'</div>
-                        <div class="mr-event-detail">
-                            <span class="mr-sub-in">&#x2191; {{ sub.in_name }}</span>
-                            <span class="mr-sub-out">&#x2193; {{ sub.out_name }}</span>
-                        </div>
-                        <div class="mr-event-club">{{ report.away_club_short }}</div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
 
             {# ── Match Statistics ─────────────────────────────────────── #}
             <div class="mr-section">

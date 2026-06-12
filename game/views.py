@@ -3436,6 +3436,37 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _build_combined_events(data, home_subs_enriched, away_subs_enriched):
+    """Führt Tor- und Einwechslungs-Events zu einer nach Minute sortierten Liste zusammen."""
+    events = []
+    for evt in (data.get('goal_events') or []):
+        events.append({
+            'type':          'goal',
+            'team':          evt.get('team', 'home'),
+            'minute':        evt.get('minute', 0),
+            'scorer_name':   evt.get('scorer_name', ''),
+            'scorer_pos':    evt.get('scorer_pos', ''),
+            'assister_name': evt.get('assister_name', ''),
+        })
+    for sub in (home_subs_enriched or []):
+        events.append({
+            'type':     'sub',
+            'team':     'home',
+            'minute':   sub['minute'],
+            'in_name':  sub['in_name'],
+            'out_name': sub['out_name'],
+        })
+    for sub in (away_subs_enriched or []):
+        events.append({
+            'type':     'sub',
+            'team':     'away',
+            'minute':   sub['minute'],
+            'in_name':  sub['in_name'],
+            'out_name': sub['out_name'],
+        })
+    return sorted(events, key=lambda e: e['minute'])
+
+
 def _enrich_substitutions(subs_raw, name_lookup):
     """Reichert rohe Einwechslungs-Dicts ({minute, in, out} mit Player-IDs)
     mit Spielernamen an und gibt eine Template-fertige Liste zurück."""
@@ -3558,6 +3589,8 @@ def club_match_report(request, club_id):
         ap_away_raw = plan_segs.get('away', {}) if isinstance(plan_segs, dict) else {}
 
         name_lookup, home_subs_raw, away_subs_raw = _build_sub_name_lookup(data)
+        home_subs = _enrich_substitutions(home_subs_raw, name_lookup)
+        away_subs = _enrich_substitutions(away_subs_raw, name_lookup)
 
         rc = {
             'home_xg':      f'{h_xg:.2f}',
@@ -3594,8 +3627,10 @@ def club_match_report(request, club_id):
             'home_cplx':  ms.get('home_tactic_complexity',  0),
             'away_cplx':  ms.get('away_tactic_complexity',  0),
             # Einwechslungen (angereichert mit Spielernamen)
-            'home_substitutions': _enrich_substitutions(home_subs_raw, name_lookup),
-            'away_substitutions': _enrich_substitutions(away_subs_raw, name_lookup),
+            'home_substitutions': home_subs,
+            'away_substitutions': away_subs,
+            # Kombinierte, chronologische Ereignisleiste
+            'combined_events': _build_combined_events(data, home_subs, away_subs),
         }
 
     return render(request, 'game/match_report.html', {
@@ -3650,6 +3685,8 @@ def match_report_by_id(request, sm_id):
         ap_away_raw = plan_segs.get('away', {}) if isinstance(plan_segs, dict) else {}
 
         name_lookup, home_subs_raw, away_subs_raw = _build_sub_name_lookup(data)
+        home_subs = _enrich_substitutions(home_subs_raw, name_lookup)
+        away_subs = _enrich_substitutions(away_subs_raw, name_lookup)
 
         rc = {
             'home_xg':      f'{h_xg:.2f}',
@@ -3685,8 +3722,10 @@ def match_report_by_id(request, sm_id):
             'home_cplx': ms.get('home_tactic_complexity',  0),
             'away_cplx': ms.get('away_tactic_complexity',  0),
             # Einwechslungen (angereichert mit Spielernamen)
-            'home_substitutions': _enrich_substitutions(home_subs_raw, name_lookup),
-            'away_substitutions': _enrich_substitutions(away_subs_raw, name_lookup),
+            'home_substitutions': home_subs,
+            'away_substitutions': away_subs,
+            # Kombinierte, chronologische Ereignisleiste
+            'combined_events': _build_combined_events(data, home_subs, away_subs),
         }
 
     return render(request, 'game/match_report.html', {
