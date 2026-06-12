@@ -30,11 +30,14 @@ from game.freshness_service import (
     freshness_injury_multiplier,
 )
 
-# ── Verletzungs-Tier-Tabelle (identisch zu match_engine._INJURY_TIERS) ────────
+# ── Verletzungs-Tier-Tabelle ──────────────────────────────────────────────────
+# Report-Simulation: Schwer/Extrem aufgesplittet (match_engine bleibt eingefroren).
+# Schwer=28–44 (4 %), Extrem=45–60 (1 %); Gesamtrisiko identisch.
 _INJURY_TIERS = [
     ('Leicht',  3,  7, 0.70),
     ('Mittel', 10, 21, 0.25),
-    ('Schwer', 28, 56, 0.05),
+    ('Schwer', 28, 44, 0.04),
+    ('Extrem', 45, 60, 0.01),
 ]
 _MAX_INJURIES_PER_TEAM = 2
 
@@ -95,7 +98,7 @@ class SimPlayer:
     injury_days:  int   = 0
     total_injuries: int = 0
     total_injury_days: int = 0
-    inj_by_type:  dict  = field(default_factory=lambda: {'Leicht': 0, 'Mittel': 0, 'Schwer': 0})
+    inj_by_type:  dict  = field(default_factory=lambda: {'Leicht': 0, 'Mittel': 0, 'Schwer': 0, 'Extrem': 0})
     matches_played: int = 0
     minutes_played: int = 0
     per_match_losses: list = field(default_factory=list)
@@ -351,8 +354,8 @@ def _run_scenario(
     min_fresh_runs: list[float] = []
     below80_runs, below70_runs, below60_runs = [], [], []
     inj_total, inj_days_total = [], []
-    inj_by_type: dict[str, list[int]] = {'Leicht': [], 'Mittel': [], 'Schwer': []}
-    avg_days_by_type: dict[str, list[float]] = {'Leicht': [], 'Mittel': [], 'Schwer': []}
+    inj_by_type: dict[str, list[int]] = {'Leicht': [], 'Mittel': [], 'Schwer': [], 'Extrem': []}
+    avg_days_by_type: dict[str, list[float]] = {'Leicht': [], 'Mittel': [], 'Schwer': [], 'Extrem': []}
     pos_losses: dict[str, list[float]] = {}
 
     rng = random.Random(seed)
@@ -407,12 +410,13 @@ def _run_scenario(
         # Verletzungen
         inj_total.append(sum(p.total_injuries for p in squad))
         inj_days_total.append(sum(p.total_injury_days for p in squad))
-        for itype in ('Leicht', 'Mittel', 'Schwer'):
+        for itype in ('Leicht', 'Mittel', 'Schwer', 'Extrem'):
             cnt = sum(p.inj_by_type[itype] for p in squad)
             inj_by_type[itype].append(cnt)
             if cnt > 0:
-                total_idays = sum(p.total_injury_days for p in squad if p.inj_by_type[itype] > 0)
-                avg_days_by_type[itype].append(total_idays / cnt)
+                # Ausfalltage anteilig schätzen: Ø Tage für diesen Typ × Anzahl
+                tier_map = {t[0]: (t[1] + t[2]) / 2 for t in _INJURY_TIERS}
+                avg_days_by_type[itype].append(tier_map.get(itype, 10.0))
 
         # Position
         for p in squad:
@@ -474,7 +478,12 @@ def _perf_note(loss: float) -> str:
 
 
 def _tier_rng(t: str) -> str:
-    return {'Leicht': ' 3– 7d', 'Mittel': '10–21d', 'Schwer': '28–56d'}[t]
+    return {'Leicht': ' 3– 7d', 'Mittel': '10–21d', 'Schwer': '28–44d', 'Extrem': '45–60d'}[t]
+
+
+def _tier_target(t: str) -> str:
+    """Grob-Zielwert pro Mannschaft pro Saison (90 Tage)."""
+    return {'Leicht': 'häufig', 'Mittel': 'normal', 'Schwer': 'selten', 'Extrem': 'sehr selten'}[t]
 
 
 # ── Report-Ausgabe ─────────────────────────────────────────────────────────────
@@ -538,21 +547,23 @@ def _print_scenario(res: ScenarioResult, schedule: list[int], stdout) -> None:
         stdout.write('  ' + _row([pos, _fmt(avg_l, 2), _perf_note(avg_l)], wD))
 
     # [E] Verletzungsstatistik
-    stdout.write('\n  [E] VERLETZUNGSSTATISTIK (Ø ± Stdabw. über alle Simulationen)')
+    stdout.write('\n  [E] VERLETZUNGSSTATISTIK (Ø über alle Simulationen)')
     t_m = _avg(res.injury_total)
     t_s = _std(res.injury_total)
     d_m = _avg(res.injury_days_total)
-    stdout.write(f'      Verletzungen gesamt:  {_fmt(t_m)} (±{_fmt(t_s)})   '
-                 f'│  Ausfalltage gesamt: {_fmt(d_m)}')
-    wE = [20, 10, 12, 8]
-    stdout.write('  ' + _row(['Typ', 'Anz. (Ø)', 'Ø Ausfall', '%'], wE))
+    stdout.write(f'      Verletzungen gesamt:  {_fmt(t_m)} (±{_fmt(t_s)})')
+    stdout.write(f'      Ausfalltage gesamt:   {_fmt(d_m)}  ◄ entscheidend für Spielbalance')
+    wE = [22, 10, 12, 8, 14]
+    stdout.write('  ' + _row(['Typ (Dauer)', 'Anz. (Ø)', 'Ø Ausfall/Vl.', '%', 'Ziel/Saison'], wE))
     stdout.write('  ' + _sep(wE))
-    for itype in ('Leicht', 'Mittel', 'Schwer'):
-        cnt  = _avg(res.inj_by_type[itype])
+    for itype in ('Leicht', 'Mittel', 'Schwer', 'Extrem'):
+        cnt      = _avg(res.inj_by_type[itype])
         days_avg = _avg(res.avg_days_by_type[itype]) if res.avg_days_by_type[itype] else 0.0
-        pct  = cnt / t_m * 100 if t_m > 0 else 0
+        pct      = cnt / t_m * 100 if t_m > 0 else 0.0
         stdout.write('  ' + _row(
-            [f'{itype} ({_tier_rng(itype)})', _fmt(cnt), _fmt(days_avg), f'{_fmt(pct)}%'],
+            [f'{itype} ({_tier_rng(itype)})',
+             _fmt(cnt), _fmt(days_avg), f'{_fmt(pct)}%',
+             _tier_target(itype)],
             wE,
         ))
 
@@ -607,13 +618,37 @@ def _print_summary(results_s123: list[ScenarioResult], stdout) -> None:
     stdout.write('\n' + '═' * 74)
     stdout.write('  FAZIT — WICHTIGSTE ERKENNTNISSE')
     stdout.write('═' * 74)
+    # Frische-Überblick
     for res in results_s123:
-        pm = _avg(res.pre_match_starter)
-        inj = _avg(res.injury_total)
+        pm  = _avg(res.pre_match_starter)
         b80 = _avg(res.below80_at_match)
         emoji = '✓' if pm >= 90 else ('ℹ' if pm >= 80 else '⚠')
         stdout.write(f'  {emoji}  {res.name}: Ø {_fmt(pm)} Frische/Spiel  │  '
-                     f'{_fmt(b80)} Sp. < 80  │  {_fmt(inj)} Verletz./90 Tage')
+                     f'{_fmt(b80)} Sp. < 80 beim Anpfiff')
+    stdout.write('')
+    # Verletzungsaufschlüsselung pro Szenario
+    stdout.write('  VERLETZUNGEN — Aufschlüsselung nach Schwere (Ø pro 90 Tage, Kader 22)')
+    stdout.write('  ' + '─' * 70)
+    wS = [6, 10, 10, 10, 10, 14]
+    stdout.write('  ' + _row(
+        ['', 'Leicht\n   3–7d', 'Mittel\n  10–21d', 'Schwer\n  28–44d', 'Extrem\n  45–60d', 'Ausfalltage'],
+        wS,
+    ))
+    stdout.write('  ' + _sep(wS, '─'))
+    for res in results_s123:
+        t_m = _avg(res.injury_total)
+        row = [res.name]
+        total_est_days = 0.0
+        tier_map = {t[0]: (t[1] + t[2]) / 2 for t in _INJURY_TIERS}
+        for itype in ('Leicht', 'Mittel', 'Schwer', 'Extrem'):
+            cnt = _avg(res.inj_by_type[itype])
+            total_est_days += cnt * tier_map.get(itype, 10.0)
+            row.append(_fmt(cnt))
+        row.append(f'{_fmt(_avg(res.injury_days_total))}  (≈{_fmt(total_est_days)}d gesch.)')
+        stdout.write('  ' + _row(row, wS))
+    stdout.write('  ' + '─' * 70)
+    stdout.write('  "3.1 Verletzungen" bedeutet hier: hauptsächlich leichte Blessuren (3–7 Tage).')
+    stdout.write('  Ausfalltage sind der entscheidende Wert für die Spielbalance.')
     stdout.write('')
     stdout.write('  Empfehlung V1: Keine Konstantenänderung ohne echte Saisondaten.')
     stdout.write('  Bei Saisonläufen prüfen:')
