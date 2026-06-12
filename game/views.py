@@ -2361,27 +2361,39 @@ def split_absence_labels(rows):
 
 
 def opponent_absence_rows(opponent_club):
-    players = []
-    if opponent_club:
-        players = list(opponent_club.player_set.order_by('last_name', 'first_name', 'id')[:4])
-
-    fallback_names = ['Spieler X', 'Spieler Y', 'Spieler Z', 'Spieler A']
-    details = [
-        ('injury', 'Muskelverletzung', '12 Tage'),
-        ('injury', 'Knieprobleme', '21 Tage'),
-        ('suspension', 'Gelbsperre', '1 Spiel'),
-        ('suspension', 'Rotsperre', '2 Spiele'),
-    ]
+    """Gibt echte Sperr- und Verletzungsdaten des Gegners zurück."""
+    if not opponent_club:
+        return []
     rows = []
-    for index, (tone, reason, duration) in enumerate(details):
-        player = players[index] if index < len(players) else None
-        rows.append({
-            'tone': tone,
-            'name': player.full_name if player else fallback_names[index],
-            'portrait': player.portrait_static_path if player else 'game/images/default_player.svg',
-            'reason': reason,
-            'duration': duration,
-        })
+    players = list(
+        opponent_club.player_set
+        .order_by('last_name', 'first_name', 'id')
+    )
+    for player in players:
+        if player.is_ws_injured:
+            rows.append({
+                'tone': 'injury',
+                'name': player.full_name,
+                'portrait': player.portrait_static_path,
+                'reason': player.ws_injury_type or 'Verletzt',
+                'duration': (
+                    f'{player.ws_injury_days_remaining}\u00a0Tage'
+                    if player.ws_injury_days_remaining > 0
+                    else ''
+                ),
+            })
+        if player.is_ws_suspended:
+            rows.append({
+                'tone': 'suspension',
+                'name': player.full_name,
+                'portrait': player.portrait_static_path,
+                'reason': player.ws_suspension_reason or 'Gesperrt',
+                'duration': (
+                    f'{player.ws_suspension_matches_remaining}\u00a0Spiel(e)'
+                    if player.ws_suspension_matches_remaining > 0
+                    else ''
+                ),
+            })
     return rows
 
 
@@ -3536,6 +3548,12 @@ def club_match_report(request, club_id):
             match_type = 'freundschaft'
         try:
             opponent = Club.objects.get(pk=opponent_id)
+            # Sperren vor dem Spiel abbauen
+            try:
+                from .season_service import _decrement_suspensions_for_clubs
+                _decrement_suspensions_for_clubs([club.id, opponent.id])
+            except Exception:
+                pass
             data = simulate_match(club, opponent)
             sm = SimulatedMatch.objects.create(
                 home_club=club,

@@ -24,6 +24,106 @@ _COMPETITION_FOR_MATCH_TYPE = {
 }
 
 
+def _apply_match_suspensions(
+    card_data: list,
+    competition: str,
+    season: str,
+) -> None:
+    """Setzt Sperren nach einem Spiel.
+
+    card_data: [{'pid': int, 'yellow': int, 'red': int}, ...]
+    - Rote Karte  → 1-Spiel-Rotsperre (sofort).
+    - 5./10./15. Gelbe Karte der Saison (quer über alle Wettbewerbe) → Gelbsperre.
+    Idempotent: existierende Restsperre bleibt, wenn sie höher ist.
+    """
+    from django.utils import timezone as _tz
+    from .models import Player, PlayerSuspensionRecord, PlayerSeasonStat
+
+    for item in card_data:
+        pid    = item.get('pid')
+        yellow = int(item.get('yellow') or 0)
+        red    = int(item.get('red')    or 0)
+        if not pid or not (red or yellow):
+            continue
+
+        try:
+            player = Player.objects.get(pk=pid)
+        except Player.DoesNotExist:
+            continue
+
+        if red:
+            player.ws_suspension_reason = 'Rotsperre'
+            player.ws_suspension_matches_remaining = max(
+                player.ws_suspension_matches_remaining, 1
+            )
+            player.save(update_fields=[
+                'ws_suspension_reason',
+                'ws_suspension_matches_remaining',
+            ])
+            PlayerSuspensionRecord.objects.create(
+                player_id=pid,
+                reason='Rotsperre',
+                matches_missed=1,
+                competition=competition,
+                is_active=True,
+                start_date=_tz.localdate(),
+            )
+
+        elif yellow:
+            total_yellows = (
+                PlayerSeasonStat.objects
+                .filter(player_id=pid, season=season)
+                .aggregate(total=Sum('yellow_cards'))['total'] or 0
+            )
+            prev_total = total_yellows - yellow
+            for threshold in (5, 10, 15):
+                if prev_total < threshold <= total_yellows:
+                    player.ws_suspension_reason = 'Gelbsperre'
+                    player.ws_suspension_matches_remaining = max(
+                        player.ws_suspension_matches_remaining, 1
+                    )
+                    player.save(update_fields=[
+                        'ws_suspension_reason',
+                        'ws_suspension_matches_remaining',
+                    ])
+                    PlayerSuspensionRecord.objects.create(
+                        player_id=pid,
+                        reason='Gelbsperre',
+                        matches_missed=1,
+                        competition=competition,
+                        is_active=True,
+                        start_date=_tz.localdate(),
+                    )
+                    break
+
+
+def _decrement_suspensions_for_clubs(club_ids: list) -> None:
+    """Reduziert ws_suspension_matches_remaining um 1 vor der Spieltag-Simulation.
+
+    Löscht ws_suspension_reason und setzt is_active=False am Record wenn Zähler 0 erreicht.
+    """
+    from .models import Player, PlayerSuspensionRecord
+
+    qs = Player.objects.filter(
+        club_id__in=club_ids,
+        ws_suspension_matches_remaining__gt=0,
+    )
+    for player in qs:
+        new_val = player.ws_suspension_matches_remaining - 1
+        player.ws_suspension_matches_remaining = new_val
+        if new_val == 0:
+            player.ws_suspension_reason = ''
+        player.save(update_fields=[
+            'ws_suspension_matches_remaining',
+            'ws_suspension_reason',
+        ])
+        if new_val == 0:
+            PlayerSuspensionRecord.objects.filter(
+                player=player,
+                is_active=True,
+            ).update(is_active=False)
+
+
 def _update_player_season_stats(fixture, data: dict) -> None:
     """Schreibt PlayerFormSnapshot + PlayerSeasonStat nach einer Ligasimulation.
 
@@ -152,6 +252,22 @@ def _update_player_season_stats(fixture, data: dict) -> None:
             average_grade=round(avg_grade, 2) if avg_grade is not None else None,
             player_of_match_awards=motm_counts.get(pid, 0),
         )
+
+    # ── Sperren auslösen (Rotsperre / Gelbsperre bei 5/10/15) ────────────────
+    _card_items = [
+        {
+            'pid': p.get('id'),
+            'yellow': int(p.get('yellow_cards', 0) or 0),
+            'red':    int(p.get('red_cards',    0) or 0),
+        }
+        for players, _club_id in sides
+        for p in players
+        if p.get('id')
+    ]
+    try:
+        _apply_match_suspensions(_card_items, competition, _WS_LIGA_SEASON)
+    except Exception:
+        pass
 
 
 _COMPETITION_FOR_SOURCE = {
@@ -389,6 +505,22 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
             substitutions_out=sub_out_counts.get(pid, 0),
         )
 
+    # ── Sperren auslösen (Rotsperre / Gelbsperre bei 5/10/15) ────────────────
+    _card_items = [
+        {
+            'pid': p.get('id'),
+            'yellow': int(p.get('yellow_cards', 0) or 0),
+            'red':    int(p.get('red_cards',    0) or 0),
+        }
+        for players, _team_name, _opp_name in sides
+        for p in players
+        if p.get('id')
+    ]
+    try:
+        _apply_match_suspensions(_card_items, competition, _WS_LIGA_SEASON)
+    except Exception:
+        pass
+
 
 def get_season_state(league, season: str):
     """Gibt den LeagueSeasonState zurück, erstellt ihn bei Bedarf (ST1, offen)."""
@@ -449,6 +581,18 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
     all_fixtures = list(qs)
     to_play  = [f for f in all_fixtures if not f.is_played]
     skipped  = [f for f in all_fixtures if f.is_played]
+
+    # ── Sperren vor dem Spieltag abbauen ─────────────────────────────────────
+    if to_play:
+        _club_ids_to_play = list({
+            cid
+            for f in to_play
+            for cid in (f.home_club_id, f.away_club_id)
+        })
+        try:
+            _decrement_suspensions_for_clubs(_club_ids_to_play)
+        except Exception:
+            pass
 
     results = []
     errors  = []

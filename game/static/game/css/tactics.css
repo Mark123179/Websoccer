@@ -4385,3 +4385,37 @@ body.tactics-page .nav-menu a:nth-child(5) {
     cursor: not-allowed !important;
     opacity: 0.7;
 }
+
+/* --------------------------------------------------------------------------
+   Spieler-Status-Badges (Gesperrt / Verletzt) in Kader + Bank
+   -------------------------------------------------------------------------- */
+.tactics-status-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    line-height: 1.5;
+    vertical-align: middle;
+    margin-left: 3px;
+}
+.tactics-status-badge.is-suspended {
+    background: rgba(220, 53, 69, 0.18);
+    color: #e06070;
+    border: 1px solid rgba(220, 53, 69, 0.35);
+}
+.tactics-status-badge.is-injured {
+    background: rgba(255, 140, 0, 0.14);
+    color: #e09050;
+    border: 1px solid rgba(255, 140, 0, 0.30);
+}
+
+/* Leerer-Ausfälle-Gegner-Hinweis */
+.tactics-opponent-absence-empty {
+    font-size: 0.78rem;
+    color: #666;
+    padding: 8px 0;
+    text-align: center;
+}

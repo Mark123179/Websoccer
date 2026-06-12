@@ -823,6 +823,8 @@ def player_options_for_squad(club, squad_scope):
             'secondary_positions_label': ', '.join(player.secondary_positions) or '-',
             'form_bars': form_bars,
             'form_empty_bars': form_empty_bars,
+            'is_suspended': player.is_ws_suspended,
+            'is_injured': player.is_ws_injured,
         })
     return options
 
