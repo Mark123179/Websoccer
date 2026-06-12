@@ -143,20 +143,34 @@ def _update_player_season_stats(fixture, data: dict) -> None:
         )
 
 
+_COMPETITION_FOR_SOURCE = {
+    'ws_freundschaft': 'Freundschaft',
+    'ws_pokal':        'Pokal',
+}
+
+
 def write_simulated_match_stats(simulated_match, data: dict) -> None:
-    """Schreibt PlayerFormSnapshot für ein SimulatedMatch (Freundschaft oder Pokal).
+    """Schreibt PlayerFormSnapshot + PlayerSeasonStat für ein SimulatedMatch.
 
     Idempotent: Mehrfachaufruf für dasselbe SimulatedMatch überschreibt statt zu duplizieren.
     source wird aus simulated_match.match_type abgeleitet:
         'freundschaft' → 'ws_freundschaft'
         'pokal'        → 'ws_pokal'
+    Schreibt außerdem PlayerSeasonStat für den jeweiligen Wettbewerb.
     """
     from django.utils import timezone
-    from .models import PlayerFormSnapshot
+    from django.db.models import Avg, Sum, Count
+    from .models import PlayerFormSnapshot, PlayerSeasonStat
 
     source = _SOURCE_FOR_MATCH_TYPE.get(simulated_match.match_type, 'ws_freundschaft')
+    competition = _COMPETITION_FOR_SOURCE[source]
     fixture_id_str = f'{source}_{simulated_match.id}'
     fixture_date = simulated_match.simulated_at.date() if simulated_match.simulated_at else timezone.localdate()
+
+    home_club = simulated_match.home_club
+    away_club = simulated_match.away_club
+    home_name = (home_club.short_name or home_club.name) if home_club else ''
+    away_name = (away_club.short_name or away_club.name) if away_club else ''
 
     rating_map: dict[int, float] = {}
     for r in (data.get('home_ratings') or []) + (data.get('away_ratings') or []):
@@ -170,15 +184,17 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
         motm_pid = motm_data.get('id')
 
     sides = [
-        (data.get('home_players') or [], simulated_match.home_club_id),
-        (data.get('away_players') or [], simulated_match.away_club_id),
+        (data.get('home_players') or [], home_name, away_name),
+        (data.get('away_players') or [], away_name, home_name),
     ]
 
-    for players, _club_id in sides:
+    affected_player_ids: list[int] = []
+    for players, team_name, opponent_name in sides:
         for p in players:
             pid = p.get('id')
             if not pid:
                 continue
+            affected_player_ids.append(pid)
 
             goals   = int(p.get('goals',        0) or 0)
             assists = int(p.get('assists',       0) or 0)
@@ -193,6 +209,8 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
                 'possible_minutes': 90,
                 'started':          True,
                 'position':         p.get('position', ''),
+                'team_name':        team_name,
+                'opponent_name':    opponent_name,
                 'goals':            goals,
                 'assists':          assists,
                 'yellow_cards':     yellow,
@@ -208,6 +226,60 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
                 fixture_id=fixture_id_str,
                 defaults=snap_defaults,
             )
+
+    # PlayerSeasonStat aus allen Snapshots dieser Quelle neu berechnen (idempotent)
+    if not affected_player_ids:
+        return
+
+    snap_qs = PlayerFormSnapshot.objects.filter(
+        player_id__in=affected_player_ids,
+        source=source,
+    )
+
+    agg_per_player: dict[int, dict] = {}
+    for row in snap_qs.values('player_id').annotate(
+        total_goals=Sum('goals'),
+        total_assists=Sum('assists'),
+        total_minutes=Sum('minutes_played'),
+        total_matches=Count('id'),
+        total_yellow=Sum('yellow_cards'),
+        total_red=Sum('red_cards'),
+        avg_grade=Avg('rating'),
+    ):
+        agg_per_player[row['player_id']] = row
+
+    motm_counts: dict[int, int] = {}
+    for row in (
+        snap_qs
+        .filter(raw_payload__is_motm=True)
+        .values('player_id')
+        .annotate(c=Count('id'))
+    ):
+        motm_counts[row['player_id']] = row['c']
+
+    for pid in affected_player_ids:
+        agg = agg_per_player.get(pid, {})
+        PlayerSeasonStat.objects.update_or_create(
+            player_id=pid,
+            season=_WS_LIGA_SEASON,
+            competition=competition,
+            defaults={},
+        )
+        avg_grade = agg.get('avg_grade')
+        PlayerSeasonStat.objects.filter(
+            player_id=pid,
+            season=_WS_LIGA_SEASON,
+            competition=competition,
+        ).update(
+            goals=agg.get('total_goals') or 0,
+            assists=agg.get('total_assists') or 0,
+            minutes_played=agg.get('total_minutes') or 0,
+            matches=agg.get('total_matches') or 0,
+            yellow_cards=agg.get('total_yellow') or 0,
+            red_cards=agg.get('total_red') or 0,
+            average_grade=round(avg_grade, 2) if avg_grade is not None else None,
+            player_of_match_awards=motm_counts.get(pid, 0),
+        )
 
 
 def get_season_state(league, season: str):

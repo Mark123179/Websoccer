@@ -2957,43 +2957,85 @@ def _live_grade_map(club, season=CURRENT_SQUAD_SEASON):
 
 
 def _player_match_log(player, season=CURRENT_SQUAD_SEASON):
-    """Spielweise Noten eines Spielers aus SimulatedMatch.report_data.
+    """Spielweise Noten eines Spielers: Liga aus SeasonFixture, Pokal/Freundschaft aus PlayerFormSnapshot.
 
     Gibt eine Liste von Dicts zurück:
-    ``[{matchday, opponent_name, opponent_crest, grade, grade_class}]``
-    in aufsteigender Spieltag-Reihenfolge.
+    ``[{matchday, fixture_date, opponent_name, opponent_crest, grade, grade_class,
+        goals, assists, competition, competition_type}]``
+    Liga-Einträge aufsteigend nach Spieltag, Pokal/Freundschaft nach Datum,
+    insgesamt nach Datum sortiert.
     """
     from django.db.models import Q
-    if not player.club:
-        return []
-    fixtures = (
-        SeasonFixture.objects
-        .filter(season=season, is_played=True, simulated_match__isnull=False)
-        .filter(Q(home_club=player.club) | Q(away_club=player.club))
-        .select_related('simulated_match', 'home_club', 'away_club')
-        .order_by('matchday')
-    )
     log = []
-    for fixture in fixtures:
-        sm = fixture.simulated_match
-        if not sm or not sm.report_data:
-            continue
-        rd = sm.report_data
-        is_home = fixture.home_club_id == player.club_id
-        own_key = 'home_ratings' if is_home else 'away_ratings'
-        opponent = fixture.away_club if is_home else fixture.home_club
-        for entry in rd.get(own_key, []):
-            if entry.get('id') == player.id:
-                rating = entry.get('rating')
-                if rating is not None:
-                    log.append({
-                        'matchday': fixture.matchday,
-                        'opponent_name': opponent.short_name or opponent.name,
-                        'opponent_crest': opponent.crest_static_path or '',
-                        'grade': float(rating),
-                        'grade_class': grade_badge_class(rating),
-                    })
-                break
+
+    # --- Liga-Einträge aus SeasonFixture ---
+    if player.club:
+        fixtures = (
+            SeasonFixture.objects
+            .filter(season=season, is_played=True, simulated_match__isnull=False)
+            .filter(Q(home_club=player.club) | Q(away_club=player.club))
+            .select_related('simulated_match', 'home_club', 'away_club')
+            .order_by('matchday')
+        )
+        for fixture in fixtures:
+            sm = fixture.simulated_match
+            if not sm or not sm.report_data:
+                continue
+            rd = sm.report_data
+            is_home = fixture.home_club_id == player.club_id
+            own_key = 'home_ratings' if is_home else 'away_ratings'
+            opponent = fixture.away_club if is_home else fixture.home_club
+            for entry in rd.get(own_key, []):
+                if entry.get('id') == player.id:
+                    rating = entry.get('rating')
+                    if rating is not None:
+                        log.append({
+                            'matchday': fixture.matchday,
+                            'fixture_date': fixture.scheduled_date,
+                            'opponent_name': opponent.short_name or opponent.name,
+                            'opponent_crest': opponent.crest_static_path or '',
+                            'grade': float(rating),
+                            'grade_class': grade_badge_class(rating),
+                            'goals': 0,
+                            'assists': 0,
+                            'competition': 'Liga',
+                            'competition_type': 'liga',
+                        })
+                    break
+
+    # --- Pokal- und Freundschafts-Einträge aus PlayerFormSnapshot ---
+    pokal_snapshots = (
+        PlayerFormSnapshot.objects
+        .filter(
+            player=player,
+            source__in=('ws_pokal', 'ws_freundschaft'),
+            rating__isnull=False,
+        )
+        .order_by('fixture_date', 'fixture_id')
+    )
+    source_to_competition = {
+        'ws_pokal':        ('Pokal',        'pokal'),
+        'ws_freundschaft': ('Freundschaft', 'freundschaft'),
+    }
+    for snap in pokal_snapshots:
+        competition, competition_type = source_to_competition.get(
+            snap.source, ('Freundschaft', 'freundschaft')
+        )
+        log.append({
+            'matchday': None,
+            'fixture_date': snap.fixture_date,
+            'opponent_name': snap.opponent_name or '–',
+            'opponent_crest': '',
+            'grade': float(snap.rating),
+            'grade_class': grade_badge_class(snap.rating),
+            'goals': snap.goals,
+            'assists': snap.assists,
+            'competition': competition,
+            'competition_type': competition_type,
+        })
+
+    # Sortierung: zuerst nach Datum (None zuletzt), dann Spieltag für Liga
+    log.sort(key=lambda e: (e['fixture_date'] or __import__('datetime').date.min, e['matchday'] or 0))
     return log
 
 
@@ -3784,6 +3826,9 @@ def player_detail(request, player_id):
             'match_log': match_log,
             'match_log_avg': match_log_avg,
             'match_log_avg_class': match_log_avg_class,
+            'match_log_has_liga': any(e['competition_type'] == 'liga' for e in match_log),
+            'match_log_has_pokal': any(e['competition_type'] == 'pokal' for e in match_log),
+            'match_log_has_freundschaft': any(e['competition_type'] == 'freundschaft' for e in match_log),
             'game_header': build_game_header(
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",
