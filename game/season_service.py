@@ -28,9 +28,10 @@ def _update_player_season_stats(fixture, data: dict) -> None:
     from django.utils import timezone
     from .models import PlayerFormSnapshot, PlayerSeasonStat
 
+    from .models import SeasonFixture as _SeasonFixture
     fixture_date = fixture.scheduled_date or timezone.localdate()
     fixture_id_str = f'ws_liga_{fixture.id}'
-    competition = 'Liga'
+    competition = fixture.league.name  # z.B. "1. Bundesliga"
 
     # Rating-Lookup: player_id → rating (aus compute_player_ratings)
     rating_map: dict[int, float] = {}
@@ -87,13 +88,18 @@ def _update_player_season_stats(fixture, data: dict) -> None:
                 defaults=snap_defaults,
             )
 
-    # PlayerSeasonStat neu aus allen ws_liga-Snapshots berechnen (idempotent)
+    # PlayerSeasonStat neu aus allen ws_liga-Snapshots DIESER Liga berechnen (idempotent)
     if not affected_player_ids:
         return
 
+    league_fixture_id_strs = [
+        f'ws_liga_{fid}' for fid in
+        _SeasonFixture.objects.filter(league=fixture.league).values_list('id', flat=True)
+    ]
     snap_qs = PlayerFormSnapshot.objects.filter(
         player_id__in=affected_player_ids,
         source=_WS_LIGA_SOURCE,
+        fixture_id__in=league_fixture_id_strs,
     )
 
     agg_per_player: dict[int, dict] = {}

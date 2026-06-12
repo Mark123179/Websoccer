@@ -2169,7 +2169,7 @@ def creator_league_season_reset(request, league_id):
     club_ids = list(league.club_set.values_list('id', flat=True))
     stat_count = PlayerSeasonStat.objects.filter(
         player__club_id__in=club_ids,
-        competition='Liga',
+        competition=league.name,
     ).delete()[0]
 
     standing_count = LeagueStandings.objects.filter(

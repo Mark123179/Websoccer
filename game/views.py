@@ -2974,7 +2974,7 @@ def _player_match_log(player, season=CURRENT_SQUAD_SEASON):
             SeasonFixture.objects
             .filter(season=season, is_played=True, simulated_match__isnull=False)
             .filter(Q(home_club=player.club) | Q(away_club=player.club))
-            .select_related('simulated_match', 'home_club', 'away_club')
+            .select_related('simulated_match', 'home_club', 'away_club', 'league')
             .order_by('matchday')
         )
         for fixture in fixtures:
@@ -2998,7 +2998,7 @@ def _player_match_log(player, season=CURRENT_SQUAD_SEASON):
                             'grade_class': grade_badge_class(rating),
                             'goals': 0,
                             'assists': 0,
-                            'competition': 'Liga',
+                            'competition': fixture.league.name,
                             'competition_type': 'liga',
                         })
                     break
@@ -5199,7 +5199,7 @@ def league_detail(request, league_id):
         )
         stat_qs = (
             PlayerSeasonStat.objects
-            .filter(player__club_id__in=league_club_ids, competition='Liga')
+            .filter(player__club_id__in=league_club_ids, competition=league.name)
             .select_related('player', 'player__club')
         )
         liga_top_scorers = list(
