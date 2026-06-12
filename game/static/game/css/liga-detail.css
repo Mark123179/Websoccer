@@ -740,6 +740,224 @@
 }
 .liga-st-btn--close:hover { opacity: 0.88; }
 
+/* ==========================================================================
+   TAB: STATISTIKEN
+   ========================================================================== */
+
+.liga-content--statistiken {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 24px 32px;
+}
+
+/* 2-Spalten-Grid für Spielerstatistik-Panels */
+.liga-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Einzelnes Statistik-Panel */
+.liga-stats-panel {
+    background: #13161c;
+    border: 1px solid #ffffff0f;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.liga-stats-panel--wide {
+    grid-column: 1 / -1;
+}
+
+.liga-stats-panel__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #b0b8cc;
+    background: #0d0f12;
+    border-bottom: 1px solid #ffffff0d;
+    padding: 11px 16px;
+    margin: 0;
+}
+.liga-stats-panel__icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+.liga-stats-panel__sub {
+    font-weight: 400;
+    font-size: 0.7rem;
+    color: #5a6278;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-left: 4px;
+}
+
+/* Stat-Liste (ol) */
+.liga-stat-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.liga-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 14px;
+    border-bottom: 1px solid #ffffff07;
+    transition: background 0.1s;
+}
+.liga-stat-row:last-child { border-bottom: none; }
+.liga-stat-row:hover { background: rgba(255,255,255,0.03); }
+
+.liga-stat-rank {
+    min-width: 18px;
+    text-align: right;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #3a4258;
+    flex-shrink: 0;
+}
+
+.liga-stat-portrait {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #1e2330;
+}
+.liga-stat-portrait--placeholder {
+    display: inline-block;
+    background: #1e2330;
+}
+
+.liga-stat-name {
+    flex: 1;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #d8dce8;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.liga-stat-name:hover { color: #22e6ff; }
+
+.liga-stat-crest {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+    opacity: 0.75;
+}
+
+.liga-stat-apps {
+    font-size: 0.68rem;
+    color: #3e4760;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Stat-Werte (Tore, Assists, Note) */
+.liga-stat-value {
+    min-width: 32px;
+    text-align: right;
+    font-size: 1rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+.liga-stat-value--goals   { color: #22e6ff; }
+.liga-stat-value--assists { color: #30f29c; }
+.liga-stat-value--grade   { color: #ffd350; font-size: 0.88rem; }
+
+/* Karten-Badges */
+.liga-stat-cards {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    flex-shrink: 0;
+}
+.liga-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0 4px;
+}
+.liga-card--yellow { background: #e6a817; color: #1a1000; }
+.liga-card--red    { background: #e63030; color: #fff; }
+
+.liga-stat-empty {
+    font-size: 0.8rem;
+    color: #3e4760;
+    padding: 16px;
+    margin: 0;
+    text-align: center;
+}
+
+/* Teamtore-Tabelle */
+.liga-teamstats-wrap { overflow-x: auto; }
+
+.liga-teamstats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+.liga-teamstats-table thead th {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #3e4760;
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid #ffffff0d;
+    white-space: nowrap;
+}
+.liga-teamstats-table .lts-col-club { text-align: left; }
+.lts-col--goals   { color: #22e6ff !important; }
+.lts-col--against { color: #5a6278 !important; }
+
+.lts-row {
+    border-bottom: 1px solid #ffffff06;
+    transition: background 0.1s;
+}
+.lts-row:last-child { border-bottom: none; }
+.lts-row:hover { background: rgba(255,255,255,0.03); }
+.lts-row--mine { background: rgba(34,230,255,0.04); }
+.lts-row--mine .lts-name { color: #22e6ff; }
+
+.lts-row td { padding: 7px 10px; text-align: right; vertical-align: middle; }
+.lts-col-pos { min-width: 28px; color: #3e4760; font-weight: 700; font-size: 0.72rem; }
+.lts-col-club { text-align: left !important; display: flex; align-items: center; gap: 8px; }
+.lts-crest { width: 20px; height: 20px; object-fit: contain; }
+.lts-name { font-weight: 600; color: #d8dce8; white-space: nowrap; }
+.lts-diff--pos { color: #30f29c; font-weight: 700; }
+.lts-diff--neg { color: #ff6060; font-weight: 700; }
+.lts-col-bar { min-width: 80px; padding-right: 14px !important; }
+
+.lts-bar-wrap {
+    height: 6px;
+    background: #1e2330;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.lts-bar--for {
+    height: 100%;
+    background: linear-gradient(90deg, #1ccfff, #089bd2);
+    border-radius: 3px;
+    max-width: 100%;
+}
+
 /* Flash-Meldungen im Spieltag-Tab */
 .liga-messages { margin-bottom: 14px; }
 .liga-flash {

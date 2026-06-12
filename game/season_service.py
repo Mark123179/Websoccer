@@ -7,7 +7,7 @@ Wiederverwendbar aus Web-Views UND Management-Commands.
 """
 
 from django.db import transaction
-from django.db.models import Sum, Count
+from django.db.models import Avg, Sum, Count
 
 
 _WS_LIGA_SOURCE = 'ws_liga'
@@ -18,7 +18,7 @@ def _update_player_season_stats(fixture, data: dict) -> None:
     """Schreibt PlayerFormSnapshot + PlayerSeasonStat nach einer Ligasimulation.
 
     Idempotent: Mehrfachaufruf für dasselbe Fixture überschreibt statt zu duplizieren.
-    Berührt NICHT average_grade (wird von Task #405/#412 gesetzt).
+    Schreibt: Tore, Assists, Karten, Minuten, Spiele, Durchschnittsnote, MOTM.
     """
     from django.utils import timezone
     from .models import PlayerFormSnapshot, PlayerSeasonStat
@@ -33,6 +33,12 @@ def _update_player_season_stats(fixture, data: dict) -> None:
         pid = r.get('id')
         if pid and r.get('rating') is not None:
             rating_map[pid] = float(r['rating'])
+
+    # MOTM: player_id des Spielers des Spiels (aus compute_player_ratings)
+    motm_pid: int | None = None
+    motm_data = data.get('man_of_the_match') or {}
+    if motm_data:
+        motm_pid = motm_data.get('id')
 
     sides = [
         (data.get('home_players') or [], fixture.home_club_id),
@@ -64,6 +70,7 @@ def _update_player_season_stats(fixture, data: dict) -> None:
                 'assists':          assists,
                 'yellow_cards':     yellow,
                 'red_cards':        red,
+                'raw_payload':      {'is_motm': pid == motm_pid},
             }
             if rating is not None:
                 snap_defaults['rating'] = rating
@@ -90,8 +97,21 @@ def _update_player_season_stats(fixture, data: dict) -> None:
         total_assists=Sum('assists'),
         total_minutes=Sum('minutes_played'),
         total_matches=Count('id'),
+        total_yellow=Sum('yellow_cards'),
+        total_red=Sum('red_cards'),
+        avg_grade=Avg('rating'),
     ):
         agg_per_player[row['player_id']] = row
+
+    # MOTM-Zähler: Anzahl Snapshots mit is_motm=True pro Spieler
+    motm_counts: dict[int, int] = {}
+    for row in (
+        snap_qs
+        .filter(raw_payload__is_motm=True)
+        .values('player_id')
+        .annotate(c=Count('id'))
+    ):
+        motm_counts[row['player_id']] = row['c']
 
     for pid in affected_player_ids:
         agg = agg_per_player.get(pid, {})
@@ -101,6 +121,7 @@ def _update_player_season_stats(fixture, data: dict) -> None:
             competition=competition,
             defaults={},
         )
+        avg_grade = agg.get('avg_grade')
         PlayerSeasonStat.objects.filter(
             player_id=pid,
             season=_WS_LIGA_SEASON,
@@ -110,6 +131,10 @@ def _update_player_season_stats(fixture, data: dict) -> None:
             assists=agg.get('total_assists') or 0,
             minutes_played=agg.get('total_minutes') or 0,
             matches=agg.get('total_matches') or 0,
+            yellow_cards=agg.get('total_yellow') or 0,
+            red_cards=agg.get('total_red') or 0,
+            average_grade=round(avg_grade, 2) if avg_grade is not None else None,
+            player_of_match_awards=motm_counts.get(pid, 0),
         )
 
 

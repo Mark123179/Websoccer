@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -452,16 +452,205 @@
     {% endif %}
 
     <!-- =========================================================
-         TAB: STATISTIKEN (Platzhalter)
+         TAB: STATISTIKEN
     ========================================================== -->
     {% if active_tab == 'statistiken' %}
-    <div class="liga-content liga-content--stub">
-        <div class="liga-stub">
-            <span class="liga-stub__icon">📊</span>
-            <h2 class="liga-stub__title">Statistiken</h2>
-            <p class="liga-stub__copy">Torschützen, Vorlagen und weitere Saison-Statistiken folgen in einer späteren Version.</p>
+    <div class="liga-content liga-content--statistiken">
+
+        <!-- Zeile 1: Torschützen + Vorlagengeber -->
+        <div class="liga-stats-grid">
+
+            <div class="liga-stats-panel">
+                <h3 class="liga-stats-panel__head">
+                    <span class="liga-stats-panel__icon">⚽</span>Torschützen
+                </h3>
+                {% if liga_top_scorers %}
+                <ol class="liga-stat-list">
+                    {% for s in liga_top_scorers %}
+                    <li class="liga-stat-row">
+                        <span class="liga-stat-rank">{{ forloop.counter }}</span>
+                        {% if s.player.portrait_static_path %}
+                        <img class="liga-stat-portrait" src="{% static s.player.portrait_static_path %}" alt="{{ s.player.full_name }}">
+                        {% else %}
+                        <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
+                        {% endif %}
+                        <a class="liga-stat-name" href="{% url 'player_detail' s.player.id %}">{{ s.player.full_name }}</a>
+                        {% if s.player.club.crest_static_path %}
+                        <img class="liga-stat-crest" src="{% static s.player.club.crest_static_path %}" alt="{{ s.player.club.short_name }}">
+                        {% endif %}
+                        <span class="liga-stat-apps">{{ s.matches }} Sp.</span>
+                        <span class="liga-stat-value liga-stat-value--goals">{{ s.goals }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="liga-stat-empty">Noch keine Tore in dieser Saison.</p>
+                {% endif %}
+            </div>
+
+            <div class="liga-stats-panel">
+                <h3 class="liga-stats-panel__head">
+                    <span class="liga-stats-panel__icon">🎯</span>Vorlagengeber
+                </h3>
+                {% if liga_top_assists %}
+                <ol class="liga-stat-list">
+                    {% for s in liga_top_assists %}
+                    <li class="liga-stat-row">
+                        <span class="liga-stat-rank">{{ forloop.counter }}</span>
+                        {% if s.player.portrait_static_path %}
+                        <img class="liga-stat-portrait" src="{% static s.player.portrait_static_path %}" alt="{{ s.player.full_name }}">
+                        {% else %}
+                        <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
+                        {% endif %}
+                        <a class="liga-stat-name" href="{% url 'player_detail' s.player.id %}">{{ s.player.full_name }}</a>
+                        {% if s.player.club.crest_static_path %}
+                        <img class="liga-stat-crest" src="{% static s.player.club.crest_static_path %}" alt="{{ s.player.club.short_name }}">
+                        {% endif %}
+                        <span class="liga-stat-apps">{{ s.matches }} Sp.</span>
+                        <span class="liga-stat-value liga-stat-value--assists">{{ s.assists }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="liga-stat-empty">Noch keine Assists in dieser Saison.</p>
+                {% endif %}
+            </div>
+
         </div>
+
+        <!-- Zeile 2: Beste Noten + Meiste Karten -->
+        <div class="liga-stats-grid">
+
+            <div class="liga-stats-panel">
+                <h3 class="liga-stats-panel__head">
+                    <span class="liga-stats-panel__icon">⭐</span>Beste Noten
+                    <span class="liga-stats-panel__sub">(min. 3 Spiele)</span>
+                </h3>
+                {% if liga_best_rated %}
+                <ol class="liga-stat-list">
+                    {% for s in liga_best_rated %}
+                    <li class="liga-stat-row">
+                        <span class="liga-stat-rank">{{ forloop.counter }}</span>
+                        {% if s.player.portrait_static_path %}
+                        <img class="liga-stat-portrait" src="{% static s.player.portrait_static_path %}" alt="{{ s.player.full_name }}">
+                        {% else %}
+                        <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
+                        {% endif %}
+                        <a class="liga-stat-name" href="{% url 'player_detail' s.player.id %}">{{ s.player.full_name }}</a>
+                        {% if s.player.club.crest_static_path %}
+                        <img class="liga-stat-crest" src="{% static s.player.club.crest_static_path %}" alt="{{ s.player.club.short_name }}">
+                        {% endif %}
+                        <span class="liga-stat-apps">{{ s.matches }} Sp.</span>
+                        <span class="liga-stat-value liga-stat-value--grade">{{ s.average_grade }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="liga-stat-empty">Noch keine Noten verfügbar.</p>
+                {% endif %}
+            </div>
+
+            <div class="liga-stats-panel">
+                <h3 class="liga-stats-panel__head">
+                    <span class="liga-stats-panel__icon">🟨</span>Karten
+                </h3>
+                {% if liga_most_cards %}
+                <ol class="liga-stat-list">
+                    {% for s in liga_most_cards %}
+                    <li class="liga-stat-row">
+                        <span class="liga-stat-rank">{{ forloop.counter }}</span>
+                        {% if s.player.portrait_static_path %}
+                        <img class="liga-stat-portrait" src="{% static s.player.portrait_static_path %}" alt="{{ s.player.full_name }}">
+                        {% else %}
+                        <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
+                        {% endif %}
+                        <a class="liga-stat-name" href="{% url 'player_detail' s.player.id %}">{{ s.player.full_name }}</a>
+                        {% if s.player.club.crest_static_path %}
+                        <img class="liga-stat-crest" src="{% static s.player.club.crest_static_path %}" alt="{{ s.player.club.short_name }}">
+                        {% endif %}
+                        <span class="liga-stat-cards">
+                            {% if s.yellow_cards %}<span class="liga-card liga-card--yellow">{{ s.yellow_cards }}</span>{% endif %}
+                            {% if s.red_cards %}<span class="liga-card liga-card--red">{{ s.red_cards }}</span>{% endif %}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ol>
+                {% else %}
+                <p class="liga-stat-empty">Noch keine Karten in dieser Saison.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Zeile 3: Teamtore (volle Breite) -->
+        {% if liga_team_stats %}
+        <div class="liga-stats-panel liga-stats-panel--wide">
+            <h3 class="liga-stats-panel__head">
+                <span class="liga-stats-panel__icon">🏆</span>Teamtore
+            </h3>
+            <div class="liga-teamstats-wrap">
+                <table class="liga-teamstats-table">
+                    <thead>
+                        <tr>
+                            <th class="lts-col-pos">#</th>
+                            <th class="lts-col-club">Verein</th>
+                            <th class="lts-col-num" title="Gespielte Spiele">Sp.</th>
+                            <th class="lts-col-num lts-col--goals" title="Tore">Tore</th>
+                            <th class="lts-col-num lts-col--against" title="Gegentore">Geg.</th>
+                            <th class="lts-col-num" title="Tordifferenz">Diff.</th>
+                            <th class="lts-col-bar"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in liga_team_stats %}
+                        <tr class="lts-row{% if my_club_id and s.club_id == my_club_id %} lts-row--mine{% endif %}">
+                            <td class="lts-col-pos">{{ s.position }}</td>
+                            <td class="lts-col-club">
+                                {% if s.club.crest_static_path %}
+                                <img class="lts-crest" src="{% static s.club.crest_static_path %}" alt="{{ s.club.short_name }}">
+                                {% endif %}
+                                <span class="lts-name">{{ s.club.short_name }}</span>
+                            </td>
+                            <td class="lts-col-num">{{ s.played }}</td>
+                            <td class="lts-col-num lts-col--goals">{{ s.goals_for }}</td>
+                            <td class="lts-col-num lts-col--against">{{ s.goals_against }}</td>
+                            <td class="lts-col-num {% if s.goal_difference > 0 %}lts-diff--pos{% elif s.goal_difference < 0 %}lts-diff--neg{% endif %}">
+                                {% if s.goal_difference > 0 %}+{% endif %}{{ s.goal_difference }}
+                            </td>
+                            <td class="lts-col-bar">
+                                {% if s.goals_for > 0 %}
+                                <div class="lts-bar-wrap">
+                                    <div class="lts-bar lts-bar--for"
+                                         data-goals="{{ s.goals_for }}">
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
     </div>
+    {% endif %}
+
+    {% if active_tab == 'statistiken' %}
+    <script>
+    (function(){
+        var bars = document.querySelectorAll('.lts-bar--for[data-goals]');
+        if (!bars.length) return;
+        var max = 0;
+        bars.forEach(function(b){ max = Math.max(max, parseInt(b.dataset.goals, 10) || 0); });
+        if (!max) return;
+        bars.forEach(function(b){
+            var v = parseInt(b.dataset.goals, 10) || 0;
+            b.style.width = Math.max(4, Math.round(v / max * 100)) + '%';
+        });
+    })();
+    </script>
     {% endif %}
 
     <!-- =========================================================

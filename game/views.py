@@ -4998,6 +4998,47 @@ def league_detail(request, league_id):
                 'date_range': _fmt_date_range(fixtures_list),
             })
 
+    # ---- Statistiken (nur bei aktivem Tab laden) --------------------------
+    liga_top_scorers = []
+    liga_top_assists = []
+    liga_best_rated  = []
+    liga_most_cards  = []
+    liga_team_stats  = []
+
+    if active_tab == 'statistiken':
+        from .models import PlayerSeasonStat
+        league_club_ids = list(
+            LeagueStandings.objects
+            .filter(league=league)
+            .values_list('club_id', flat=True)
+            .distinct()
+        )
+        stat_qs = (
+            PlayerSeasonStat.objects
+            .filter(player__club_id__in=league_club_ids, competition='Liga')
+            .select_related('player', 'player__club')
+        )
+        liga_top_scorers = list(
+            stat_qs.filter(goals__gt=0)
+            .order_by('-goals', '-assists', 'player__last_name')[:15]
+        )
+        liga_top_assists = list(
+            stat_qs.filter(assists__gt=0)
+            .order_by('-assists', '-goals', 'player__last_name')[:15]
+        )
+        liga_best_rated = list(
+            stat_qs
+            .filter(average_grade__isnull=False, matches__gte=3)
+            .order_by('average_grade', '-matches')[:15]
+        )
+        liga_most_cards = list(
+            stat_qs.filter(yellow_cards__gt=0)
+            .order_by('-yellow_cards', '-red_cards', 'player__last_name')[:15]
+        )
+        liga_team_stats = list(
+            standings_qs.order_by('-goals_for', '-goals_against')
+        )
+
     # ---- Bundesliga-Logo --------------------------------------------------
     logo_path = league.logo_static_path
     if not logo_path:
@@ -5025,6 +5066,11 @@ def league_detail(request, league_id):
         'my_club_id': my_club.id if my_club else None,
         'league_season_state': league_season_state,
         'max_matchday': max_matchday,
+        'liga_top_scorers': liga_top_scorers,
+        'liga_top_assists': liga_top_assists,
+        'liga_best_rated':  liga_best_rated,
+        'liga_most_cards':  liga_most_cards,
+        'liga_team_stats':  liga_team_stats,
         'game_header': build_game_header(
             league.name,
             season_display,
