@@ -361,9 +361,9 @@
                     <tr>
                         <th>Spieler</th>
                         <th>Pos</th>
-                        <th>Basis</th>
-                        <th>Pot.</th>
-                        <th>Endst.</th>
+                        <th title="Gespeicherte Basisstärke">Basis</th>
+                        <th title="Potential-Obergrenze (EA + FM)">Pot.</th>
+                        <th title="Zufällig gezogene Matchstärke zwischen Basis und Potential × Positionsfaktor">Matchst.</th>
                         <th>TW</th>
                         <th>T</th>
                         <th>V</th>
@@ -378,7 +378,7 @@
                         <td class="mr-num mr-dim">{{ p.potential }}</td>
                         <td class="mr-num mr-final">
                             {{ p.final_strength }}
-                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Basis {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
+                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Matchstärke {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
                         </td>
                         <td class="mr-num mr-tw">{{ p.teamwork }}</td>
                         <td class="mr-num">{% if p.goals %}<strong>{{ p.goals }}</strong>{% else %}&ndash;{% endif %}</td>
@@ -401,9 +401,9 @@
                     <tr>
                         <th>Spieler</th>
                         <th>Pos</th>
-                        <th>Basis</th>
-                        <th>Pot.</th>
-                        <th>Endst.</th>
+                        <th title="Gespeicherte Basisstärke">Basis</th>
+                        <th title="Potential-Obergrenze (EA + FM)">Pot.</th>
+                        <th title="Zufällig gezogene Matchstärke zwischen Basis und Potential × Positionsfaktor">Matchst.</th>
                         <th>TW</th>
                         <th>T</th>
                         <th>V</th>
@@ -418,7 +418,7 @@
                         <td class="mr-num mr-dim">{{ p.potential }}</td>
                         <td class="mr-num mr-final">
                             {{ p.final_strength }}
-                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Basis {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
+                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Matchstärke {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
                         </td>
                         <td class="mr-num mr-tw">{{ p.teamwork }}</td>
                         <td class="mr-num">{% if p.goals %}<strong>{{ p.goals }}</strong>{% else %}&ndash;{% endif %}</td>

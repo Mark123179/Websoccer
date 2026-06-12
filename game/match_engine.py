@@ -93,6 +93,24 @@ def _potential(player) -> float:
     return float(getattr(player, 'potential', 50) or 50)
 
 
+def _draw_match_strength(player) -> float:
+    """Zieht vor dem Spiel eine zufällige Matchstärke zwischen Basis und Potential.
+
+    Formel: random.uniform(base, potential) + form_modifier, geclamped auf [0, 200].
+    Ein Talent mit hohem Potential kann sein Ceiling abrufen — aber nicht immer.
+    """
+    try:
+        sp = player.strength_profile
+        base = float(sp.base_strength or 50.0)
+        form = float(sp.form_modifier or 0.0)
+    except Exception:
+        return 50.0
+
+    pot = _potential(player)
+    drawn = random.uniform(base, pot) if pot > base else base
+    return round(max(0.0, min(200.0, drawn + form)), 2)
+
+
 def _pos_factor(player, slot_code: str) -> tuple[float, str | None]:
     """Gibt (Multiplikator, Label) zurück basierend auf Spielerposition vs. Slot.
 
@@ -110,19 +128,19 @@ def _pos_factor(player, slot_code: str) -> tuple[float, str | None]:
     return 0.80, 'FP'
 
 
-def _player_row(item: dict, goals: int = 0, assists: int = 0) -> dict:
+def _player_row(item: dict, goals: int = 0, assists: int = 0, match_strength: float | None = None) -> dict:
     """Lineup-Item {'slot': …, 'player': ORM-Player} → Report-Spielerzeile."""
     p = item['player']
     slot = item['slot']
     try:
         sp = p.strength_profile
         base = float(sp.base_strength)
-        final = float(sp.final_strength)
         freshness = float(sp.freshness)
     except Exception:
-        base = final = 50.0
+        base = 50.0
         freshness = 100.0
 
+    final = match_strength if match_strength is not None else base
     factor, pos_label = _pos_factor(p, slot['code'])
     effective = round(final * factor, 1)
 
@@ -169,11 +187,11 @@ def _lineup_players_orm(tactic) -> list[dict]:
 
 # ── ORM → Team-Dict Bridge ────────────────────────────────────────────────────
 
-def _build_team_dict(club, tactic_setup) -> dict:
+def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None) -> dict:
     """Konvertiert Django ORM-Objekte in das Team-Dict-Format des Taktik-Compilers.
 
     Rückgabe-Format entspricht dem Standalone-Format (bayern_fixture.json).
-    Spieler-Stärken werden aus final_strength des PlayerStrengthProfile geladen.
+    match_strengths: vorberechnete {player_id → float} Matchstärken (random(basis, pot) + form).
     """
     from .models import Player
 
@@ -199,11 +217,14 @@ def _build_team_dict(club, tactic_setup) -> dict:
         p = players_by_id.get(pid)
         if not p:
             continue
-        try:
-            sp = p.strength_profile
-            final_strength = float(sp.final_strength or 50.0)
-        except Exception:
-            final_strength = 50.0
+        if match_strengths and pid in match_strengths:
+            final_strength = match_strengths[pid]
+        else:
+            try:
+                sp = p.strength_profile
+                final_strength = float(sp.final_strength or 50.0)
+            except Exception:
+                final_strength = 50.0
         players_list.append({
             'id': p.pk,
             'name': f'{p.first_name} {p.last_name}'.strip() or str(p),
@@ -805,14 +826,33 @@ def simulate_match(home_club, away_club) -> dict:
     home_tactic, _ = ensure_default_tactic(home_club)
     away_tactic, _ = ensure_default_tactic(away_club)
 
-    # 2. ORM → Team-Dicts
-    home_team = _build_team_dict(home_club, home_tactic)
-    away_team = _build_team_dict(away_club, away_tactic)
+    # 2. Pre-compute Matchstärken: random(basis, potential) + form — einmal pro Spieler,
+    #    konsistent für Simulation UND Spielbericht-Display.
+    from .models import Player as _Player
+    _all_pids = list({
+        pid
+        for tactic in (home_tactic, away_tactic)
+        for pid in (tactic.lineup or {}).values()
+        if pid
+    })
+    _players_qs = (
+        _Player.objects
+        .filter(pk__in=_all_pids)
+        .select_related('strength_profile')
+        .prefetch_related('source_ratings')
+    )
+    match_strengths: dict[int, float] = {
+        p.pk: _draw_match_strength(p) for p in _players_qs
+    }
 
-    # 3. Minuten-Simulation
+    # 3. ORM → Team-Dicts (mit vorberechneten Matchstärken)
+    home_team = _build_team_dict(home_club, home_tactic, match_strengths=match_strengths)
+    away_team = _build_team_dict(away_club, away_tactic, match_strengths=match_strengths)
+
+    # 4. Minuten-Simulation
     sim = _simulate_match_minutes(home_team, away_team)
 
-    # 4. Tore/Vorlagen auf ORM-Spieler mappen
+    # 5. Tore/Vorlagen auf ORM-Spieler mappen
     h_goals_map: dict[int, dict] = {}
     a_goals_map: dict[int, dict] = {}
     for evt in sim['goal_events']:
@@ -832,6 +872,7 @@ def simulate_match(home_club, away_club) -> dict:
             item,
             goals=h_goals_map.get(item['player'].pk, {}).get('goals', 0),
             assists=h_goals_map.get(item['player'].pk, {}).get('assists', 0),
+            match_strength=match_strengths.get(item['player'].pk),
         )
         for item in h_lineup_orm
     ]
@@ -840,6 +881,7 @@ def simulate_match(home_club, away_club) -> dict:
             item,
             goals=a_goals_map.get(item['player'].pk, {}).get('goals', 0),
             assists=a_goals_map.get(item['player'].pk, {}).get('assists', 0),
+            match_strength=match_strengths.get(item['player'].pk),
         )
         for item in a_lineup_orm
     ]
