@@ -1,0 +1,99 @@
+1. Vorher Pflichtcheck
+
+Bevor du eine Saison simulierst:
+
+alle 18 Bundesligaclubs vorhanden
+jeder Club mindestens 11 einsatzfähige Spieler
+alle Startelfspieler mit final_strength
+ensure_default_tactic() für alle Clubs
+Spielplan vollständig: 34 Spieltage / 306 Spiele
+keine Fallback-Stärken
+keine fehlenden TacticSetups
+
+Wichtig: Im letzten vollständigen Spieltagstest waren es noch 17 verfügbare Clubs und 8 Spiele. Das reicht für den Spieltagstest, aber für eine echte Saison muss der fehlende 18. Club sauber drin sein.
+
+2. Erste Saison nur als Smoke-Test
+
+Die erste komplette Saison sollte nur beantworten:
+
+„Bricht irgendwas über 306 Spiele?“
+
+Nicht direkt interpretieren, ob Bayern Meister wird oder Bochum absteigt. Eine einzelne Saison ist zu zufällig.
+
+Erwartung für diesen Lauf:
+
+Bereich	Ziel
+Spiele	306/306 erfolgreich
+Fehler	0
+Fallback-Stärken	0
+simulation_mode	überall minutes
+Ø Tore/Spiel	grob 2.6–3.0 okay
+Heimsiege	grob Richtung 36–40 %
+Remis	grob Richtung 25–28 %
+Auswärtssiege	grob Richtung 35–38 %
+extreme Ergebnisse	beobachten, nicht sofort ändern
+Tabelle	plausibel, aber nicht überbewerten
+
+Die Home-Advantage-Zielwerte wurden im 400-Spiele-Test schon sauber getroffen: 2.768 Tore/Spiel, 37.0 % Heimsiege, 26.5 % Remis, 36.5 % Auswärtssiege, 0 Fallbacks und 0 Fehler. Diese Werte sind deine Referenz.
+
+3. Danach nicht nach einer Saison balancen
+
+Wenn die Saison technisch sauber durchläuft, kommt der eigentliche Test:
+
+10 Saisons = erster Stabilitätseindruck
+50 Saisons = gutes Balancing-Gefühl
+100 Saisons = belastbarer Mittelwert
+
+Erst ab 50–100 simulierten Saisons würde ich wieder über Balancing reden.
+
+4. Was du ausgeben lassen solltest
+
+Für die Saison-Simulation direkt als CSV/JSON speichern:
+
+Ligawerte
+Spiele
+Tore gesamt
+Tore pro Spiel
+Heimtore / Auswärtstore
+Heimsiege / Remis / Auswärtssiege
+xG Heim / xG Auswärts
+Schüsse Heim / Auswärts
+Fouls
+Gelbe Karten
+Rote Karten
+Favoritensiege
+Upsets
+Fallbacks
+Fehler
+Tabellenwerte
+Punkte
+Siege / Remis / Niederlagen
+Tore / Gegentore
+Tordifferenz
+xG / xGA
+Abweichung Tore zu xG
+Platzierung nach Teamstärke
+echte Platzierung
+Auffälligkeiten
+höchste Siege
+torreichste Spiele
+Teams mit extrem vielen/wenigen Toren
+Teams mit extrem vielen Karten
+Teams mit sehr starker xG-Abweichung
+Plan-Aktivierungen je Club
+Pressing-Gewinne / Pressing-Durchbrüche je Club
+
+Die neuen Engine-Felder dafür existieren bereits: home_xg, away_xg, plan_activations, Angriffszonen, Pressing-Werte, Fatigue, Coherence und Complexity.
+
+Meine klare Empfehlung
+
+Ja: jetzt eine ganze Saison simulieren.
+
+Aber Reihenfolge:
+
+fehlenden 18. Club / Datencheck fixen
+1 komplette Saison als technischer Smoke-Test
+Ergebnis-CSV auswerten
+wenn sauber: 10–50 Saisons laufen lassen
+erst danach wieder Balancing bewerten
+parallel danach Spielbericht-Integration bauen
