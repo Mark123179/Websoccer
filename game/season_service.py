@@ -270,11 +270,77 @@ def _update_player_season_stats(fixture, data: dict) -> None:
     except Exception:
         pass
 
+    # ── Verletzungen persistieren ────────────────────────────────────────────
+    try:
+        _write_injury_events(
+            data.get('injury_events') or [],
+            fixture_date,
+            competition,
+        )
+    except Exception:
+        pass
+
 
 _COMPETITION_FOR_SOURCE = {
     'ws_freundschaft': 'Freundschaft',
     'ws_pokal':        'Pokal',
 }
+
+
+def _write_injury_events(injury_events: list, fixture_date, competition: str) -> None:
+    """Persistiert Verletzungsereignisse aus einem Match-Report.
+
+    Für jeden Eintrag in injury_events wird:
+    - ws_injury_type + ws_injury_days_remaining auf dem Player gesetzt
+    - Ein aktiver PlayerInjuryRecord angelegt (vorherige aktive Einträge deaktiviert)
+
+    Bestehende aktive Verletzung wird überschrieben, wenn der Spieler erneut verletzt wird.
+    Idempotent wenn injury_events leer ist.
+    """
+    from django.utils import timezone as _tz
+    from .models import Player, PlayerInjuryRecord
+
+    if not injury_events:
+        return
+
+    pid_to_event: dict[int, dict] = {}
+    for evt in injury_events:
+        pid = evt.get('player_id')
+        if pid:
+            pid_to_event[pid] = evt
+
+    if not pid_to_event:
+        return
+
+    players = {p.pk: p for p in Player.objects.filter(pk__in=pid_to_event.keys())}
+
+    for pid, evt in pid_to_event.items():
+        player = players.get(pid)
+        if not player:
+            continue
+
+        injury_type = evt.get('injury_type', 'Leicht')
+        days = int(evt.get('days', 5))
+        end_date = fixture_date + __import__('datetime').timedelta(days=days)
+
+        PlayerInjuryRecord.objects.filter(player=player, is_active=True).update(
+            is_active=False,
+        )
+
+        PlayerInjuryRecord.objects.create(
+            player=player,
+            start_date=fixture_date,
+            end_date=end_date,
+            injury_type=injury_type,
+            days_missed=days,
+            competition=competition,
+            is_active=True,
+        )
+
+        Player.objects.filter(pk=pid).update(
+            ws_injury_type=injury_type,
+            ws_injury_days_remaining=days,
+        )
 
 
 def write_simulated_match_stats(simulated_match, data: dict) -> None:
@@ -522,6 +588,16 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
             _apply_match_suspensions(_card_items, competition, _WS_LIGA_SEASON)
         except Exception:
             pass
+
+    # ── Verletzungen persistieren ────────────────────────────────────────────
+    try:
+        _write_injury_events(
+            data.get('injury_events') or [],
+            fixture_date,
+            competition,
+        )
+    except Exception:
+        pass
 
 
 def get_season_state(league, season: str):

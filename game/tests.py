@@ -2719,3 +2719,229 @@ class SuspensionDecrementTests(TestCase):
             "ws_suspension_matches_remaining darf nicht negativ werden.",
         )
 
+
+class InjuryEngineTests(TestCase):
+    """Testet _generate_injury_events aus match_engine.py."""
+
+    def test_empty_player_list_returns_empty(self):
+        from .match_engine import _generate_injury_events
+        result = _generate_injury_events([], club_side='home')
+        self.assertEqual(result, [])
+
+    def test_event_structure(self):
+        """Jeder Injury-Event muss die Pflichtfelder enthalten."""
+        from .match_engine import _generate_injury_events
+        import random as _rng
+        _rng.seed(42)
+        players = [
+            {'id': i, 'name': f'Spieler {i}', 'fitness': 40}
+            for i in range(1, 20)
+        ]
+        events = _generate_injury_events(players, club_side='away')
+        for evt in events:
+            self.assertIn('player_id',   evt)
+            self.assertIn('player_name', evt)
+            self.assertIn('club_side',   evt)
+            self.assertIn('minute',      evt)
+            self.assertIn('injury_type', evt)
+            self.assertIn('days',        evt)
+            self.assertEqual(evt['club_side'], 'away')
+            self.assertIn(evt['injury_type'], ('Leicht', 'Mittel', 'Schwer'))
+            self.assertGreaterEqual(evt['days'], 3)
+            self.assertLessEqual(evt['days'], 56)
+            self.assertGreaterEqual(evt['minute'], 10)
+            self.assertLessEqual(evt['minute'], 90)
+
+    def test_no_events_with_prob_zero(self):
+        """Bei 0 % Verletzungswahrscheinlichkeit keine Events."""
+        from .match_engine import _generate_injury_events
+        import unittest.mock as mock
+        players = [{'id': i, 'name': f'P{i}', 'fitness': 100} for i in range(11)]
+        with mock.patch('game.match_engine.random.random', return_value=0.99):
+            events = _generate_injury_events(players, club_side='home')
+        self.assertEqual(events, [])
+
+    def test_all_events_with_prob_one(self):
+        """Bei random() = 0.0 (< jede Wahrscheinlichkeit) für alle Spieler Events."""
+        from .match_engine import _generate_injury_events
+        import unittest.mock as mock
+        players = [{'id': i, 'name': f'P{i}', 'fitness': 100} for i in range(5)]
+        with mock.patch('game.match_engine.random.random', return_value=0.0):
+            with mock.patch('game.match_engine.random.randint', return_value=15):
+                events = _generate_injury_events(players, club_side='home')
+        self.assertEqual(len(events), 5)
+
+    def test_low_fitness_increases_events(self):
+        """Spieler mit Fitness < 70 haben höhere Verletzungsrate."""
+        from .match_engine import _generate_injury_events
+        import random as _rng
+        _rng.seed(0)
+        high_fit = [{'id': i, 'name': f'H{i}', 'fitness': 95} for i in range(100)]
+        low_fit  = [{'id': i, 'name': f'L{i}', 'fitness': 40} for i in range(100)]
+        _rng.seed(0)
+        high_events = _generate_injury_events(high_fit, club_side='home')
+        _rng.seed(0)
+        low_events  = _generate_injury_events(low_fit,  club_side='home')
+        self.assertGreaterEqual(
+            len(low_events), len(high_events),
+            "Spieler mit niedriger Fitness sollen häufiger verletzt werden.",
+        )
+
+    def test_injury_type_distribution(self):
+        """Verletzungstypen sollen sich in der richtigen Gewichtung verteilen."""
+        from .match_engine import _generate_injury_events
+        import random as _rng
+        _rng.seed(123)
+        many_players = [{'id': i, 'name': f'P{i}', 'fitness': 40} for i in range(1000)]
+        events = _generate_injury_events(many_players, club_side='home')
+        if not events:
+            self.skipTest("Kein Event generiert – Seed anpassen")
+        types = [e['injury_type'] for e in events]
+        count_leicht = types.count('Leicht')
+        count_schwer = types.count('Schwer')
+        self.assertGreater(count_leicht, count_schwer,
+                           "Leichte Verletzungen sollen häufiger sein als schwere.")
+
+
+class InjuryPersistenceTests(TestCase):
+    """Testet _write_injury_events aus season_service.py."""
+
+    def setUp(self):
+        from decimal import Decimal
+        self.league = League.objects.create(name='InjTestLiga', country='Deutschland')
+        self.club = Club.objects.create(
+            name='InjTestClub',
+            short_name='ITC',
+            fm_inside_id=99991,
+            founded_year=2000,
+            budget=Decimal('1000000.00'),
+            league=self.league,
+        )
+        self.player = Player.objects.create(
+            first_name='Max',
+            last_name='Verletzt',
+            position='ST',
+            age=24,
+            club=self.club,
+        )
+
+    def test_write_injury_sets_player_fields(self):
+        from datetime import date
+        from .season_service import _write_injury_events
+        events = [{
+            'player_id':   self.player.id,
+            'player_name': 'Max Verletzt',
+            'club_side':   'home',
+            'minute':      37,
+            'injury_type': 'Mittel',
+            'days':        14,
+        }]
+        _write_injury_events(events, date(2026, 8, 15), 'Bundesliga')
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.ws_injury_type, 'Mittel')
+        self.assertEqual(self.player.ws_injury_days_remaining, 14)
+        self.assertTrue(self.player.is_ws_injured)
+
+    def test_write_injury_creates_record(self):
+        from datetime import date
+        from .season_service import _write_injury_events
+        events = [{
+            'player_id':   self.player.id,
+            'player_name': 'Max Verletzt',
+            'club_side':   'home',
+            'minute':      55,
+            'injury_type': 'Schwer',
+            'days':        42,
+        }]
+        _write_injury_events(events, date(2026, 8, 15), 'Bundesliga')
+        record = PlayerInjuryRecord.objects.get(player=self.player, is_active=True)
+        self.assertEqual(record.injury_type, 'Schwer')
+        self.assertEqual(record.days_missed, 42)
+        self.assertEqual(record.competition, 'Bundesliga')
+
+    def test_write_injury_deactivates_previous(self):
+        """Vorherige aktive Verletzung wird auf is_active=False gesetzt."""
+        from datetime import date
+        from .season_service import _write_injury_events
+        PlayerInjuryRecord.objects.create(
+            player=self.player,
+            injury_type='Leicht',
+            days_missed=5,
+            is_active=True,
+        )
+        events = [{
+            'player_id':   self.player.id,
+            'player_name': 'Max Verletzt',
+            'club_side':   'away',
+            'minute':      70,
+            'injury_type': 'Mittel',
+            'days':        18,
+        }]
+        _write_injury_events(events, date(2026, 8, 15), 'Bundesliga')
+        active_count = PlayerInjuryRecord.objects.filter(
+            player=self.player, is_active=True,
+        ).count()
+        self.assertEqual(active_count, 1, "Nur ein aktiver Record darf existieren.")
+
+    def test_write_empty_injury_list_noop(self):
+        """Leere Liste verändert den Spieler nicht."""
+        from datetime import date
+        from .season_service import _write_injury_events
+        _write_injury_events([], date(2026, 8, 15), 'Bundesliga')
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.ws_injury_days_remaining, 0)
+        self.assertFalse(self.player.is_ws_injured)
+
+    def test_write_ignores_unknown_player_id(self):
+        """Unbekannte player_id löst keinen Fehler aus."""
+        from datetime import date
+        from .season_service import _write_injury_events
+        events = [{'player_id': 999999, 'injury_type': 'Leicht', 'days': 4}]
+        try:
+            _write_injury_events(events, date(2026, 8, 15), 'Bundesliga')
+        except Exception as exc:
+            self.fail(f"_write_injury_events raised unexpectedly: {exc}")
+
+
+class BuildCombinedEventsInjuryTests(TestCase):
+    """Testet dass injury_events in combined_events erscheinen."""
+
+    def test_injury_event_in_combined(self):
+        from .views import _build_combined_events
+        data = {
+            'goal_events': [],
+            'card_events': [],
+            'injury_events': [{
+                'player_id':   42,
+                'player_name': 'Test Spieler',
+                'club_side':   'home',
+                'minute':      63,
+                'injury_type': 'Leicht',
+                'days':        5,
+            }],
+        }
+        events = _build_combined_events(data, [], [], {42: 'Test Spieler'})
+        self.assertEqual(len(events), 1)
+        e = events[0]
+        self.assertEqual(e['type'],        'injury')
+        self.assertEqual(e['team'],        'home')
+        self.assertEqual(e['minute'],      63)
+        self.assertEqual(e['player_name'], 'Test Spieler')
+        self.assertEqual(e['injury_type'], 'Leicht')
+        self.assertEqual(e['days'],        5)
+
+    def test_combined_events_sorted_by_minute(self):
+        from .views import _build_combined_events
+        data = {
+            'goal_events': [{'team': 'home', 'minute': 80, 'scorer_name': 'Müller',
+                             'scorer_pos': 'ST', 'assister_name': ''}],
+            'card_events': [{'player_id': 1, 'player_name': 'Rote', 'club_side': 'away',
+                             'minute': 45, 'card_type': 'red'}],
+            'injury_events': [{'player_id': 2, 'player_name': 'Verletzt',
+                               'club_side': 'home', 'minute': 30,
+                               'injury_type': 'Mittel', 'days': 14}],
+        }
+        events = _build_combined_events(data, [], [], {1: 'Rote', 2: 'Verletzt'})
+        minutes = [e['minute'] for e in events]
+        self.assertEqual(minutes, sorted(minutes), "Events müssen nach Minute sortiert sein.")
+

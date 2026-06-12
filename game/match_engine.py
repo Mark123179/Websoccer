@@ -851,6 +851,53 @@ def _assign_cards_to_players(
     return players, card_events
 
 
+# ── Verletzungs-Simulation ────────────────────────────────────────────────────
+
+_INJURY_TIERS = [
+    ('Leicht',  3,  7, 0.70),
+    ('Mittel', 10, 21, 0.25),
+    ('Schwer', 28, 56, 0.05),
+]
+_BASE_INJURY_PROB    = 0.04
+_LOW_FITNESS_BONUS   = 0.02
+_LOW_FITNESS_THRESH  = 70
+
+
+def _generate_injury_events(players: list[dict], club_side: str) -> list[dict]:
+    """Zieht zufällige Verletzungsereignisse für einen Spieler-Pool.
+
+    Wahrscheinlichkeit: ~4 % pro Spieler-Slot, +2 % wenn Frische < 70.
+    Verletzungstypen: Leicht (3–7 d), Mittel (10–21 d), Schwer (28–56 d).
+
+    Gibt eine Liste von injury-Event-Dicts zurück::
+        [{player_id, player_name, club_side, minute, injury_type, days}, ...]
+    """
+    events = []
+    for p in players:
+        fitness = p.get('fitness') or p.get('freshness') or 100
+        prob = _BASE_INJURY_PROB + (_LOW_FITNESS_BONUS if fitness < _LOW_FITNESS_THRESH else 0.0)
+        if random.random() >= prob:
+            continue
+        r = random.random()
+        cumulative = 0.0
+        chosen_type, chosen_days = 'Leicht', random.randint(3, 7)
+        for itype, dmin, dmax, weight in _INJURY_TIERS:
+            cumulative += weight
+            if r < cumulative:
+                chosen_type = itype
+                chosen_days = random.randint(dmin, dmax)
+                break
+        events.append({
+            'player_id':   p.get('id'),
+            'player_name': p.get('name', ''),
+            'club_side':   club_side,
+            'minute':      random.randint(10, 90),
+            'injury_type': chosen_type,
+            'days':        chosen_days,
+        })
+    return events
+
+
 def compute_player_ratings(result: dict) -> dict:
     """Berechnet positionsabhängige Spielernoten (1,0–6,0) aus einem Simulations-Dict.
 
@@ -1105,6 +1152,10 @@ def simulate_match(home_club, away_club) -> dict:
         club_side='away',
     )
 
+    # 5c. Verletzungs-Events (post-match Effekt, beeinflusst Spielausgang NICHT)
+    h_injury_events = _generate_injury_events(h_players, club_side='home')
+    a_injury_events = _generate_injury_events(a_players, club_side='away')
+
     h_teamwork = sum(p['teamwork'] for p in h_players)
     a_teamwork = sum(p['teamwork'] for p in a_players)
 
@@ -1148,6 +1199,7 @@ def simulate_match(home_club, away_club) -> dict:
         'home_substitutions':    list(home_tactic.substitutions or []),
         'away_substitutions':    list(away_tactic.substitutions or []),
         'card_events':           h_card_events + a_card_events,
+        'injury_events':         h_injury_events + a_injury_events,
     }
 
     # 6. Spielernoten berechnen und in den Report einbetten

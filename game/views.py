@@ -3486,6 +3486,17 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             'card_type':   ce.get('card_type', 'yellow'),
             'player_name': name,
         })
+    for ie in (data.get('injury_events') or []):
+        pid  = ie.get('player_id')
+        name = ie.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
+        events.append({
+            'type':         'injury',
+            'team':         ie.get('club_side', 'home'),
+            'minute':       ie.get('minute', 0),
+            'player_name':  name,
+            'injury_type':  ie.get('injury_type', 'Leicht'),
+            'days':         ie.get('days', 0),
+        })
     return sorted(events, key=lambda e: e['minute'])
 
 

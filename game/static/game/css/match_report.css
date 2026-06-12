@@ -323,6 +323,38 @@
     font-weight: 700;
 }
 
+/* ── Injury events ───────────────────────────────────────────────────────────── */
+
+.mr-event--injury {
+    opacity: 0.95;
+}
+
+.mr-event--injury .mr-event-minute {
+    color: rgba(255, 140, 0, 0.9);
+}
+
+.mr-event--injury.is-away .mr-event-minute {
+    color: rgba(255, 100, 60, 0.9);
+}
+
+.mr-injury-icon {
+    font-size: 13px;
+    margin-right: 4px;
+}
+
+.mr-injury-player {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.mr-injury-meta {
+    color: rgba(244, 251, 255, 0.50);
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 1px;
+    display: block;
+}
+
 /* ── Statistics ──────────────────────────────────────────────────────────────── */
 
 .mr-stats {
