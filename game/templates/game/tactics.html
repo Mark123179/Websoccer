@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=tempo-slider-v6">
+    <link rel="stylesheet" href="{% static 'game/css/tactics.css' %}?v=tempo-slider-v7-lock">
 {% endblock %}
 
 {% block content %}
@@ -114,6 +114,16 @@
             </header>
         </div>
 
+        {% if tactic_is_locked %}
+        <div class="tactics-locked-banner" role="alert">
+            <span class="tactics-locked-banner__icon">🔒</span>
+            <div class="tactics-locked-banner__text">
+                <strong>Taktik gesperrt</strong>
+                <span>Die Taktik ist für den laufenden Spieltag gesperrt. Nach Abschluss des Spieltags wird sie wieder freigegeben.</span>
+            </div>
+        </div>
+        {% endif %}
+
         {% if messages %}
             <div class="tactics-flashes" aria-live="polite">
                 {% for message in messages %}
@@ -213,7 +223,11 @@
                         </div>
                     </details>
 
-                    <button type="submit" name="action" value="confirm" class="tactics-confirm-button">Taktik bestätigen</button>
+                    <button type="submit" name="action" value="confirm"
+                            class="tactics-confirm-button{% if tactic_is_locked %} is-locked{% endif %}"
+                            {% if tactic_is_locked %}disabled title="Taktik gesperrt — Spieltag läuft"{% endif %}>
+                        {% if tactic_is_locked %}🔒 Gesperrt{% else %}Taktik bestätigen{% endif %}
+                    </button>
                 </div>
 
                 <div class="tactics-pitch" data-pitch>
@@ -331,7 +345,11 @@
                     <button type="submit" name="action" value="save_template" class="tactics-secondary-button">Vorlage speichern</button>
                 </div>
 
-                <button type="submit" name="action" value="confirm" class="tactics-confirm-button">Taktik bestätigen</button>
+                <button type="submit" name="action" value="confirm"
+                        class="tactics-confirm-button{% if tactic_is_locked %} is-locked{% endif %}"
+                        {% if tactic_is_locked %}disabled title="Taktik gesperrt — Spieltag läuft"{% endif %}>
+                    {% if tactic_is_locked %}🔒 Gesperrt{% else %}Taktik bestätigen{% endif %}
+                </button>
                 </fieldset>
             <article class="tactics-panel tactics-bench-panel">
                 <h2>Bank</h2>

@@ -154,6 +154,17 @@ class Command(BaseCommand):
             # 4. Positionen neu berechnen
             _recalculate_positions(league, season)
 
+        # ── LeagueSeasonState synchronisieren ────────────────────────────────
+        if not force:
+            from game.season_service import get_season_state
+            state = get_season_state(league, season)
+            all_played = not SeasonFixture.objects.filter(
+                league=league, season=season, matchday=matchday, is_played=False
+            ).exists()
+            if all_played and not state.is_simulated:
+                state.is_simulated = True
+                state.save(update_fields=['is_simulated', 'updated_at'])
+
         out(self.style.SUCCESS(
             f'\n✓ {len(results)}/{len(to_play)} Spiele gespeichert | '
             f'Tabelle aktualisiert | {len(errors)} Fehler'

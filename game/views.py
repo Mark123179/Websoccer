@@ -36,6 +36,7 @@ from .models import (
     GameSeasonState,
     League,
     LeagueNews,
+    LeagueSeasonState,
     LeagueStandings,
     ManagerProfile,
     MatchResult,
@@ -2562,6 +2563,7 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
         'payload': payload,
         'status_label': status_label,
         'status_tone': 'confirmed' if setup.is_confirmed else 'open',
+        'tactic_is_locked': setup.is_locked,
         'formation': formation,
         'formation_code': formation_code(formation),
         'formation_count': field_player_count(formation),
@@ -4775,6 +4777,69 @@ def update_manager_profile(request):
 # Liga-Seite
 # ---------------------------------------------------------------------------
 
+@require_POST
+@login_required
+def simulate_matchday_view(request, league_id):
+    """POST: Simuliert den aktuellen Spieltag der Liga (nur Staff)."""
+    from .season_service import get_season_state, simulate_matchday as _simulate
+
+    if not request.user.is_staff:
+        messages.error(request, 'Keine Berechtigung.')
+        return redirect('league_detail', league_id=league_id)
+
+    league  = get_object_or_404(League, id=league_id)
+    gss     = GameSeasonState.objects.first()
+    season  = str(gss.current_season) if gss else '0'
+    state   = get_season_state(league, season)
+
+    if state.is_simulated:
+        messages.warning(request, f'Spieltag {state.current_matchday} ist bereits simuliert. Bitte zuerst abschließen.')
+        return redirect(f'{request.META.get("HTTP_REFERER", "/")}')
+
+    try:
+        result = _simulate(league, season, state.current_matchday)
+        n_sim  = len(result['simulated'])
+        n_err  = len(result['errors'])
+        if n_err:
+            messages.warning(request, f'Spieltag {state.current_matchday} simuliert: {n_sim} Spiele, {n_err} Fehler.')
+        else:
+            messages.success(request, f'Spieltag {state.current_matchday} simuliert: {n_sim}/{n_sim + len(result["skipped"])} Spiele.')
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    except Exception as exc:
+        messages.error(request, f'Simulationsfehler: {exc}')
+
+    return redirect(f'/liga/{league_id}/?tab=spieltag')
+
+
+@require_POST
+@login_required
+def close_matchday_view(request, league_id):
+    """POST: Schließt den aktuellen Spieltag ab und schaltet den nächsten frei (nur Staff)."""
+    from .season_service import close_matchday as _close
+
+    if not request.user.is_staff:
+        messages.error(request, 'Keine Berechtigung.')
+        return redirect('league_detail', league_id=league_id)
+
+    league  = get_object_or_404(League, id=league_id)
+    gss     = GameSeasonState.objects.first()
+    season  = str(gss.current_season) if gss else '0'
+
+    try:
+        result = _close(league, season)
+        if result['season_complete']:
+            messages.success(request, f'Spieltag {result["closed"]} abgeschlossen — Saison beendet!')
+        else:
+            messages.success(request, f'Spieltag {result["closed"]} abgeschlossen. Spieltag {result["next"]} ist jetzt offen.')
+    except ValueError as exc:
+        messages.error(request, str(exc))
+    except Exception as exc:
+        messages.error(request, f'Fehler beim Abschließen: {exc}')
+
+    return redirect(f'/liga/{league_id}/?tab=spieltag')
+
+
 def league_detail(request, league_id):
     """Vollständige Liga-Seite: Tabelle, Spieltag, News, Statistiken, Historie."""
     from .models import GameSeasonState
@@ -4839,6 +4904,17 @@ def league_detail(request, league_id):
             'is_winner': is_winner,
             'is_cup': is_cup,
         })
+
+    # ---- Saison-Status (Spieltag-Steuerung) --------------------------------
+    from .season_service import get_season_state
+    league_season_state = get_season_state(league, current_season)
+    max_matchday = (
+        SeasonFixture.objects
+        .filter(league=league, season=current_season)
+        .order_by('-matchday')
+        .values_list('matchday', flat=True)
+        .first()
+    ) or 0
 
     # ---- Spieltag ---------------------------------------------------------
     last_matchday_num = (
@@ -4947,6 +5023,8 @@ def league_detail(request, league_id):
         'league_logo_path': logo_path,
         'spielplan_matchdays': spielplan_matchdays,
         'my_club_id': my_club.id if my_club else None,
+        'league_season_state': league_season_state,
+        'max_matchday': max_matchday,
         'game_header': build_game_header(
             league.name,
             season_display,

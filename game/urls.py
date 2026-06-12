@@ -16,6 +16,8 @@ from .views import (
     squad_move_to_youth,
     home,
     league_detail,
+    simulate_matchday_view,
+    close_matchday_view,
     manager_profile,
     set_trainer_type,
     update_manager_profile,
@@ -209,6 +211,16 @@ urlpatterns = [
         'liga/<int:league_id>/',
         league_detail,
         name='league_detail',
+    ),
+    path(
+        'liga/<int:league_id>/simulate-spieltag/',
+        simulate_matchday_view,
+        name='simulate_matchday',
+    ),
+    path(
+        'liga/<int:league_id>/close-spieltag/',
+        close_matchday_view,
+        name='close_matchday',
     ),
 
     path('management/', management_hub, name='management_hub'),

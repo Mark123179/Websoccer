@@ -906,6 +906,11 @@ class TacticSetup(models.Model):
     conditions = models.JSONField(default=default_conditions, blank=True)
     is_confirmed = models.BooleanField(default=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    is_locked = models.BooleanField(
+        default=False,
+        verbose_name='Gesperrt',
+        help_text='Taktik während laufender Spieltagssimulation gesperrt.',
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -3183,6 +3188,41 @@ class GameSeasonState(models.Model):
     def __str__(self):
         zustand = 'gestartet' if self.is_started else 'nicht gestartet'
         return f'Saison {self.current_season} ({zustand})'
+
+
+class LeagueSeasonState(models.Model):
+    """Saisonfortschritt pro Liga — speichert den aktiven Spieltag.
+
+    Verwaltet den Spieltag-Zyklus: Offen → Simuliert → Abgeschlossen → nächster Spieltag.
+    Singleton pro (Liga, Saison).
+    """
+
+    league = models.ForeignKey(
+        'League',
+        on_delete=models.CASCADE,
+        related_name='season_states',
+        verbose_name='Liga',
+    )
+    season = models.CharField(max_length=20, default='0', verbose_name='Saison')
+    current_matchday = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name='Aktiver Spieltag',
+    )
+    is_simulated = models.BooleanField(
+        default=False,
+        verbose_name='Simuliert',
+        help_text='Alle Spiele des aktiven Spieltags wurden simuliert.',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = [('league', 'season')]
+        verbose_name = 'Liga-Saison-Status'
+        verbose_name_plural = 'Liga-Saison-Status'
+
+    def __str__(self):
+        status = 'simuliert' if self.is_simulated else 'offen'
+        return f'{self.league.name} | Saison {self.season} | ST{self.current_matchday} ({status})'
 
 
 class PresidentSatisfaction(models.Model):

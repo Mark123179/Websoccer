@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -189,6 +189,49 @@
     ========================================================== -->
     {% if active_tab == 'spieltag' %}
     <div class="liga-content liga-content--spieltag">
+
+        {% if messages %}
+        <div class="liga-messages" aria-live="polite">
+            {% for message in messages %}
+            <p class="liga-flash liga-flash--{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Spieltag-Steuerung (nur Staff) -->
+        {% if request.user.is_staff and league_season_state %}
+        <div class="liga-spieltag-control">
+            <div class="liga-spieltag-control__info">
+                <span class="liga-spieltag-control__label">Aktiver Spieltag</span>
+                <strong class="liga-spieltag-control__num">{{ league_season_state.current_matchday }} / {{ max_matchday }}</strong>
+                {% if league_season_state.current_matchday > max_matchday %}
+                    <span class="liga-st-badge liga-st-badge--done">Saison beendet</span>
+                {% elif league_season_state.is_simulated %}
+                    <span class="liga-st-badge liga-st-badge--simulated">Simuliert</span>
+                {% else %}
+                    <span class="liga-st-badge liga-st-badge--open">Offen</span>
+                {% endif %}
+            </div>
+            <div class="liga-spieltag-control__actions">
+                {% if not league_season_state.is_simulated and league_season_state.current_matchday <= max_matchday %}
+                <form method="post" action="{% url 'simulate_matchday' league.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="liga-st-btn liga-st-btn--simulate">
+                        ▶ Spieltag {{ league_season_state.current_matchday }} simulieren
+                    </button>
+                </form>
+                {% endif %}
+                {% if league_season_state.is_simulated %}
+                <form method="post" action="{% url 'close_matchday' league.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="liga-st-btn liga-st-btn--close">
+                        ✓ Spieltag {{ league_season_state.current_matchday }} abschließen
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
 
         <div class="liga-spieltag-columns">
 
