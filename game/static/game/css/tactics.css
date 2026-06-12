@@ -4463,3 +4463,13 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: #888;
     flex-shrink: 0;
 }
+
+/* --------------------------------------------------------------------------
+   Nicht verfügbare Spieler im Roster (gesperrt / verletzt) — disabled state
+   -------------------------------------------------------------------------- */
+.tactics-roster-player.is-unavailable {
+    opacity: 0.45;
+    pointer-events: none;
+    filter: grayscale(0.6);
+    cursor: not-allowed;
+}

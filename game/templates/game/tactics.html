@@ -145,11 +145,12 @@
                 <h2>Spielerkader</h2>
                 <div class="tactics-roster-list dashboard-scrollarea" data-roster-list>
                     {% for option in player_options %}
-                        <article class="tactics-roster-player" data-roster-player="{{ option.id }}">
+                        <article class="tactics-roster-player{% if option.is_suspended or option.is_injured %} is-unavailable{% endif %}" data-roster-player="{{ option.id }}"{% if option.is_suspended or option.is_injured %} data-unavailable="true"{% endif %}>
                             <a class="tactics-roster-image" href="{{ option.profile_url }}">
                                 <img src="{% static option.portrait %}" alt="{{ option.name }}">
                             </a>
                             <strong>{{ option.name }}</strong>
+                            {% if option.is_suspended %}<span class="tactics-status-badge is-suspended">Gesperrt</span>{% elif option.is_injured %}<span class="tactics-status-badge is-injured">Verletzt</span>{% endif %}
                             <span class="tactics-position-line">
                                 <b>HP</b>
                                 {% for position in option.main_positions %}
@@ -377,6 +378,7 @@
                                 <i></i>
                             {% endif %}
                             <strong>{% if row.player %}{{ row.player.name }}{% else %}Leer{% endif %}</strong>
+                            {% if row.player.is_suspended %}<span class="tactics-status-badge is-suspended">Gesperrt</span>{% elif row.player.is_injured %}<span class="tactics-status-badge is-injured">Verletzt</span>{% endif %}
                             <em class="tactics-freshness is-{% if row.player %}{{ row.player.freshness_tone }}{% else %}empty{% endif %}" style="--freshness: {% if row.player.freshness != None %}{{ row.player.freshness }}{% else %}0{% endif %};">{% if row.player %}{{ row.player.freshness_label }}{% else %}-{% endif %}</em>
                             <select name="bench_{{ row.index }}" data-assignment data-area="bench" aria-label="Bankplatz {{ row.index }}">
                                 <option value="">Leer</option>

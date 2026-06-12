@@ -378,12 +378,16 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'name="substitution_1_minute"')
         self.assertContains(response, 'min="1" max="120" step="1"')
         self.assertContains(response, 'data-minute-input')
-        option_ids = {
-            option['id']
+        # Gesperrte/verletzte Spieler erscheinen im Kader sichtbar (mit Badge),
+        # aber als is_suspended/is_injured markiert.
+        options_by_id = {
+            option['id']: option
             for option in response.context['player_options']
         }
-        self.assertNotIn(injured.id, option_ids)
-        self.assertNotIn(suspended.id, option_ids)
+        self.assertIn(injured.id, options_by_id, "Verletzter Spieler muss im Kader sichtbar sein.")
+        self.assertTrue(options_by_id[injured.id]['is_injured'], "is_injured muss True sein.")
+        self.assertIn(suspended.id, options_by_id, "Gesperrter Spieler muss im Kader sichtbar sein.")
+        self.assertTrue(options_by_id[suspended.id]['is_suspended'], "is_suspended muss True sein.")
         self.assertIn('opponent_absences', response.context)
 
     def test_tactics_confirm_persists_complete_starting_eleven(self):
@@ -2505,6 +2509,139 @@ class MatchEngineV2Tests(TestCase):
             mods.get('shot_volume_delta', 0), 0,
             "zeitspiel-Plan muss shot_volume_delta reduzieren.",
         )
+
+
+class SuspensionCreationTests(TestCase):
+    """Sperren werden nach Rot und 5. Gelber Karte korrekt angelegt."""
+
+    def setUp(self):
+        league = League.objects.create(
+            name='Testliga Creation',
+            country='Deutschland',
+        )
+        self.club = Club.objects.create(
+            name='Testclub Creation',
+            short_name='TCC',
+            fm_inside_id=99902,
+            founded_year=1900,
+            budget=Decimal('1000000.00'),
+            league=league,
+        )
+        self.player = Player.objects.create(
+            first_name='Karl',
+            last_name='Rotkarton',
+            position='IV',
+            age=28,
+            club=self.club,
+        )
+
+    def test_red_card_creates_suspension(self):
+        """Rote Karte → Rotsperre mit ws_suspension_matches_remaining=1."""
+        from .season_service import _apply_match_suspensions
+        from .models import PlayerSuspensionRecord
+        _apply_match_suspensions(
+            [{'pid': self.player.id, 'yellow': 0, 'red': 1}],
+            competition='Bundesliga',
+            season='2026/27',
+        )
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.ws_suspension_matches_remaining, 1)
+        self.assertEqual(self.player.ws_suspension_reason, 'Rotsperre')
+        self.assertTrue(
+            PlayerSuspensionRecord.objects.filter(
+                player=self.player, reason='Rotsperre', is_active=True,
+            ).exists(),
+            "PlayerSuspensionRecord(reason='Rotsperre', is_active=True) muss existieren.",
+        )
+
+    def test_fifth_yellow_creates_gelbsperre(self):
+        """5. Gelbe Karte der Saison → Gelbsperre."""
+        from .season_service import _apply_match_suspensions
+        from .models import PlayerSuspensionRecord, PlayerSeasonStat
+        PlayerSeasonStat.objects.create(
+            player=self.player,
+            season='2026/27',
+            competition='Bundesliga',
+            yellow_cards=5,
+        )
+        _apply_match_suspensions(
+            [{'pid': self.player.id, 'yellow': 1, 'red': 0}],
+            competition='Bundesliga',
+            season='2026/27',
+        )
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.ws_suspension_matches_remaining, 1)
+        self.assertEqual(self.player.ws_suspension_reason, 'Gelbsperre')
+        self.assertTrue(
+            PlayerSuspensionRecord.objects.filter(
+                player=self.player, reason='Gelbsperre', is_active=True,
+            ).exists(),
+        )
+
+    def test_yellow_below_threshold_no_suspension(self):
+        """4. Gelbe Karte der Saison → keine Sperre."""
+        from .season_service import _apply_match_suspensions
+        from .models import PlayerSeasonStat
+        PlayerSeasonStat.objects.create(
+            player=self.player,
+            season='2026/27',
+            competition='Bundesliga',
+            yellow_cards=4,
+        )
+        _apply_match_suspensions(
+            [{'pid': self.player.id, 'yellow': 1, 'red': 0}],
+            competition='Bundesliga',
+            season='2026/27',
+        )
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.ws_suspension_matches_remaining, 0)
+        self.assertEqual(self.player.ws_suspension_reason, '')
+
+    def test_friendly_yellows_excluded_from_threshold(self):
+        """Gelbe Karten aus Freundschaft zählen nicht zur Schwelle."""
+        from .season_service import _apply_match_suspensions
+        from .models import PlayerSeasonStat
+        PlayerSeasonStat.objects.create(
+            player=self.player,
+            season='2026/27',
+            competition='Freundschaft',
+            yellow_cards=5,
+        )
+        PlayerSeasonStat.objects.create(
+            player=self.player,
+            season='2026/27',
+            competition='Bundesliga',
+            yellow_cards=4,
+        )
+        _apply_match_suspensions(
+            [{'pid': self.player.id, 'yellow': 1, 'red': 0}],
+            competition='Bundesliga',
+            season='2026/27',
+        )
+        self.player.refresh_from_db()
+        self.assertEqual(
+            self.player.ws_suspension_matches_remaining, 0,
+            "Freundschaftsgelbe dürfen Sperre nicht auslösen.",
+        )
+
+    def test_record_deactivated_after_decrement_to_zero(self):
+        """Nach Decrement auf 0 muss der SuspensionRecord is_active=False sein."""
+        from .season_service import _apply_match_suspensions, _decrement_suspensions_for_clubs
+        from .models import PlayerSuspensionRecord
+        _apply_match_suspensions(
+            [{'pid': self.player.id, 'yellow': 0, 'red': 1}],
+            competition='Bundesliga',
+            season='2026/27',
+        )
+        _decrement_suspensions_for_clubs([self.club.id])
+        self.assertTrue(
+            PlayerSuspensionRecord.objects.filter(
+                player=self.player, is_active=False,
+            ).exists(),
+            "Record muss nach Ablauf is_active=False haben.",
+        )
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.ws_suspension_matches_remaining, 0)
 
 
 class SuspensionDecrementTests(TestCase):

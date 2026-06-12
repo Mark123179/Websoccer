@@ -762,11 +762,6 @@ def player_match_state(player, slot_code):
 def player_queryset_for_squad(club, squad_scope):
     queryset = (
         club.player_set.select_related('strength_profile')
-        .filter(
-            Q(ws_injury_days_remaining=0) | Q(ws_injury_days_remaining__isnull=True),
-            Q(ws_suspension_matches_remaining=0)
-            | Q(ws_suspension_matches_remaining__isnull=True),
-        )
         .order_by('last_name', 'first_name', 'id')
     )
     if normalize_squad_scope(squad_scope) == SQUAD_YOUTH:
