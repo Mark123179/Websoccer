@@ -1,0 +1,87 @@
+Ja, bitte mit der Produktionsintegration der neuen Match-Engine beginnen.
+
+Ziel:
+Die echte Ligaspiel-Simulation soll künftig dieselbe Logik nutzen wie die akzeptierte Standalone-Simulation.
+
+Fixe Baseline:
+- strength_exp = 1.25
+- Matchplan V2 bleibt unverändert
+- Tempo-Fix bleibt unverändert
+- tactic_compiler.py bleibt die zentrale Übersetzungsschicht
+- Minuten-Simulation bleibt aktiv
+- Conditions / Matchpläne bleiben aktiv
+- Full Matchplan darf kein globaler xG-Bonus sein, sondern nur situativ über Bedingungen wirken
+
+Bitte NICHT:
+- keine neuen Taktikoptionen einbauen
+- keine UI ändern
+- keine Matchplan-Werte verändern
+- kein weiteres Balancing vornehmen
+- keine Tests entfernen
+
+Bitte umsetzen:
+
+1. run_match.py-Logik mit match_engine.py abgleichen
+   - Die echte Match-Engine soll die neue Compiler-/Minutenlogik verwenden.
+   - Standalone-Code darf als Referenz dienen, aber nicht einfach unkontrolliert dupliziert werden.
+
+2. tactic_compiler.py in die echte Match-Engine verdrahten
+   - compile_tactic()
+   - calculate_zone_strengths()
+   - select_active_condition_plan()
+   - Matchplan-Modifikatoren
+   - Angriffsfokus-Zonen
+   - Pressing-Werte
+   - Teamwork/Kohärenz/Fatigue
+
+3. Echte Ligaspiele über Minuten-Simulation laufen lassen
+   - 5-Minuten-Segmente wie im akzeptierten Teststand
+   - Spielstand je Segment prüfen
+   - Conditions aktivieren
+   - Tore, Schüsse, Fouls, Karten, Ballbesitz und xG erzeugen
+   - Plan-Aktivierungen speichern
+
+4. Spielbericht/Statistikdaten erweitern
+   Bitte mindestens speichern:
+   - xG Heim / Auswärts
+   - Schüsse Heim / Auswärts
+   - Ballbesitz
+   - Angriffe links / Zentrum / rechts
+   - Pressing-Ballgewinne
+   - Pressing überspielt
+   - Fouls / Gelbe / Rote
+   - Frischekosten
+   - aktive Matchpläne
+   - Plan-Aktivierungen
+   - Tore nach Plan-Aktivierung
+   - Gegentore nach Plan-Aktivierung
+
+5. Rückwärtskompatibilität beachten
+   - Bestehende Tests müssen weiter laufen.
+   - Bestehende Spielberichte dürfen nicht kaputtgehen.
+   - Falls neue Felder fehlen, bitte Defaults verwenden.
+
+6. Tests ergänzen
+   Bitte zusätzlich Tests erstellen für:
+   - Ligaspiel nutzt neue Engine
+   - Default vs Default bleibt symmetrisch
+   - Angriffsfokus wird korrekt gespeichert und genutzt
+   - Conditions feuern im echten Match
+   - Zeitspiel bei Führung ab Minute 80
+   - Aggressiv/Risiko bei Rückstand ab Minute 60
+   - Full Matchplan ist kein globaler xG-Bonus
+   - Spielbericht enthält neue Statistikfelder
+
+7. Nach Umsetzung bitte ausführen:
+   - pytest
+   - python run_match.py bayern_fixture.json 1000
+   - python batch_tactic_tests.py bayern_fixture.json 1000
+   - python batch_tactic_tests.py bayern_fixture.json 1000 --minutes
+   - python balance_matrix.py 1000
+
+Bitte danach eine kurze Zusammenfassung liefern:
+- Welche Dateien geändert wurden
+- Welche Funktionen neu/angepasst wurden
+- Welche alte Engine-Logik ersetzt wurde
+- Welche Tests bestanden haben
+- Ob echte Ligaspiele jetzt über die neue Engine laufen

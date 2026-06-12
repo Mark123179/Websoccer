@@ -2329,3 +2329,180 @@ class ReseedPlayersFromFullCsvTests(TestCase):
             'TacticTemplate des nicht-CSV-Clubs wurde durch den Reseed geloescht.',
         )
 
+
+# ── Match Engine V2 Tests ──────────────────────────────────────────────────────
+
+class MatchEngineV2Tests(TestCase):
+    """Testet match_engine.py V2: Taktik-Compiler + Minuten-Simulation."""
+
+    _POSITIONS_11 = ['TW', 'LV', 'IV', 'IV', 'RV', 'DM', 'ZM', 'ZM', 'OM', 'ST', 'ST']
+
+    def setUp(self):
+        self.league = League.objects.create(name='TestLiga', country='Deutschland')
+
+    def _make_club(self, name, n=11):
+        """Club + n Spieler mit ausgefüllten StrengthProfiles anlegen."""
+        club = Club.objects.create(
+            name=name,
+            short_name=name[:4].upper(),
+            founded_year=2000,
+            budget=Decimal('5000000.00'),
+            league=self.league,
+        )
+        for i in range(n):
+            pos = self._POSITIONS_11[i] if i < len(self._POSITIONS_11) else 'ST'
+            p = Player.objects.create(
+                first_name=f'Sp{i}',
+                last_name=name[:4],
+                wsc_player_id=f'WSC-{name[:3]}-{i}',
+                date_of_birth=date(1995, 1, 1),
+                age=29,
+                position=pos,
+                main_position_1=pos,
+                club=club,
+            )
+            PlayerStrengthProfile.objects.create(
+                player=p,
+                base_strength=Decimal('100.00'),
+                form_modifier=Decimal('0.00'),
+            )
+        return club
+
+    # 1 — Neue Statistikfelder vorhanden
+    def test_new_stat_fields_present(self):
+        """Alle neuen V2-Felder sind im Rückgabe-Dict vorhanden."""
+        from .match_engine import simulate_match
+        home = self._make_club('Heimverein')
+        away = self._make_club('Gastverein')
+        result = simulate_match(home, away)
+
+        for key in ('home_xg', 'away_xg', 'simulation_mode',
+                    'plan_activations', 'condition_debug',
+                    'home_compiled_tactic', 'away_compiled_tactic',
+                    'home_zone_strengths', 'away_zone_strengths'):
+            self.assertIn(key, result, f'V2-Feld fehlt: {key}')
+
+        ms = result['match_stats']
+        for k in ('home_attacks_left', 'home_attacks_center', 'home_attacks_right',
+                  'away_attacks_left', 'away_attacks_center', 'away_attacks_right',
+                  'home_pressing_ball_wins', 'away_pressing_ball_wins',
+                  'home_pressing_bypassed', 'away_pressing_bypassed',
+                  'home_fatigue_cost', 'away_fatigue_cost',
+                  'home_tactic_coherence', 'away_tactic_coherence'):
+            self.assertIn(k, ms, f'Neues match_stats-Feld fehlt: {k}')
+
+    # 2 — simulation_mode == 'minutes'
+    def test_simulation_mode_is_minutes(self):
+        from .match_engine import simulate_match
+        home = self._make_club('AlphaFC')
+        away = self._make_club('BetaFC')
+        result = simulate_match(home, away)
+        self.assertEqual(result['simulation_mode'], 'minutes')
+
+    # 3 — Rückwärtskompatible Pflichtfelder
+    def test_backward_compat_fields(self):
+        from .match_engine import simulate_match
+        home = self._make_club('HomeClub')
+        away = self._make_club('AwayClub')
+        result = simulate_match(home, away)
+        for key in ('home_goals', 'away_goals', 'goal_events', 'match_stats',
+                    'home_players', 'away_players', 'home_strength', 'away_strength',
+                    'home_teamwork', 'away_teamwork', 'home_formation', 'away_formation',
+                    'home_club_id', 'away_club_id', 'home_club_name', 'away_club_name'):
+            self.assertIn(key, result, f'Pflichtfeld fehlt: {key}')
+
+    # 4 — xG-Werte sind positive Floats
+    def test_xg_values_are_positive(self):
+        from .match_engine import simulate_match
+        home = self._make_club('GammaFC')
+        away = self._make_club('DeltaFC')
+        result = simulate_match(home, away)
+        self.assertIsInstance(result['home_xg'], float)
+        self.assertIsInstance(result['away_xg'], float)
+        self.assertGreater(result['home_xg'], 0.0)
+        self.assertGreater(result['away_xg'], 0.0)
+
+    # 5 — attack_focus wird durch den Compiler übernommen
+    def test_attack_focus_stored_in_compiled_tactic(self):
+        from .match_engine import _build_team_dict
+        from .match_readiness import ensure_default_tactic
+        from .tactic_compiler import compile_tactic
+        club = self._make_club('FokusFC')
+        tactic, _ = ensure_default_tactic(club)
+        instr = dict(tactic.instructions or {})
+        instr['attack_focus'] = 'fluegelspiel'
+        tactic.instructions = instr
+        tactic.save(update_fields=['instructions'])
+
+        team = _build_team_dict(club, tactic)
+        compiled = compile_tactic(team, team.get('tactic', {}), half='full')
+        self.assertEqual(compiled['debug'].get('attack_focus'), 'fluegelspiel')
+        zw = compiled.get('zone_weights', {})
+        self.assertGreater(
+            zw.get('left', 0) + zw.get('right', 0),
+            zw.get('center', 0),
+            'fluegelspiel muss mehr Gewicht auf Flügel als auf Mitte legen.',
+        )
+
+    # 6 — Bedingung zeitspiel greift ab Minute 80 bei knappper Führung
+    def test_zeitspiel_condition_fires_at_80_when_leading(self):
+        from .tactic_compiler import select_active_condition_plan
+        tactic = {
+            'conditions': [{
+                'active': True,
+                'minute': '80',
+                'condition': 'knappe_fuehrung',
+                'plan': 'zeitspiel',
+            }]
+        }
+        self.assertIsNone(
+            select_active_condition_plan(tactic, 75, 1, 0, True),
+            'Vor Minute 80 darf zeitspiel nicht aktiv sein.',
+        )
+        self.assertEqual(
+            select_active_condition_plan(tactic, 80, 1, 0, True),
+            'zeitspiel',
+        )
+        self.assertIsNone(
+            select_active_condition_plan(tactic, 82, 0, 0, True),
+            'Bei Unentschieden (kein Vorsprung) darf zeitspiel nicht greifen.',
+        )
+
+    # 7 — Bedingung aggressiv_risiko greift ab Minute 60 bei Rückstand
+    def test_aggressiv_condition_fires_at_60_when_trailing(self):
+        from .tactic_compiler import select_active_condition_plan
+        tactic = {
+            'conditions': [{
+                'active': True,
+                'minute': '60',
+                'condition': 'rueckstand',
+                'plan': 'aggressiv_risiko',
+            }]
+        }
+        self.assertIsNone(
+            select_active_condition_plan(tactic, 59, 0, 1, True),
+            'Vor Minute 60 darf aggressiv_risiko nicht aktiv sein.',
+        )
+        self.assertEqual(
+            select_active_condition_plan(tactic, 60, 0, 1, True),
+            'aggressiv_risiko',
+        )
+        self.assertIsNone(
+            select_active_condition_plan(tactic, 65, 1, 1, True),
+            'Ohne Rückstand darf aggressiv_risiko nicht greifen.',
+        )
+
+    # 8 — Zeitspiel ist kein globaler xG-Bonus (Full-Matchplan-Check)
+    def test_zeitspiel_plan_reduces_not_increases_xg(self):
+        """Plan 'zeitspiel' reduziert xg_for_delta — kein globaler xG-Gewinn."""
+        from .tactic_compiler import CONDITION_PLAN_MODIFIERS
+        mods = CONDITION_PLAN_MODIFIERS.get('zeitspiel', {})
+        self.assertLess(
+            mods.get('xg_for_delta', 0), 0,
+            "zeitspiel-Plan darf keinen positiven xg_for_delta haben (wäre ein Exploit).",
+        )
+        self.assertLess(
+            mods.get('shot_volume_delta', 0), 0,
+            "zeitspiel-Plan muss shot_volume_delta reduzieren.",
+        )
+
