@@ -1,5 +1,67 @@
 /* Player profile component. Loaded only where player_detail renders the AAA profile. */
 
+/* ── Noten-Legende (shared with match_report fragment) ─────────────────── */
+.mr-note {
+    border-radius: 5px;
+    display: inline-block;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    min-width: 36px;
+    padding: 2px 7px;
+    text-align: center;
+}
+
+.note-gut {
+    background: rgba(39, 174, 96, 0.15);
+    border: 1px solid rgba(39, 174, 96, 0.35);
+    color: var(--green, #27ae60);
+}
+
+.note-mittel {
+    background: rgba(22, 207, 255, 0.1);
+    border: 1px solid rgba(22, 207, 255, 0.25);
+    color: var(--cyan, #16cfff);
+}
+
+.note-schwach {
+    background: rgba(224, 112, 0, 0.12);
+    border: 1px solid rgba(224, 112, 0, 0.3);
+    color: #e07000;
+}
+
+.note-schlecht {
+    background: rgba(192, 57, 43, 0.15);
+    border: 1px solid rgba(192, 57, 43, 0.35);
+    color: var(--red, #c0392b);
+}
+
+.mr-ratings-legend {
+    align-items: center;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-bottom: 14px;
+    overflow-x: auto;
+}
+
+.mr-ratings-legend .mr-note {
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 0;
+    padding: 3px 9px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.mr-ratings-legend-sep {
+    color: rgba(244, 251, 255, 0.25);
+    flex-shrink: 0;
+    font-size: 14px;
+    line-height: 1;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 .is-aaa-profile .grade-badge {
     display: inline-grid;
     place-items: center;
