@@ -769,6 +769,15 @@ def player_queryset_for_squad(club, squad_scope):
     return queryset.filter(age__gt=21)
 
 
+def selectable_ids_from_options(options):
+    """IDs der Spieler, die tatsächlich einsetzbar sind (nicht gesperrt / nicht verletzt)."""
+    return {
+        option['id']
+        for option in options
+        if not option.get('is_suspended') and not option.get('is_injured')
+    }
+
+
 def player_options_for_squad(club, squad_scope):
     from game.models import PlayerFormSnapshot
     players = list(player_queryset_for_squad(club, squad_scope))

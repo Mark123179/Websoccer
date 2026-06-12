@@ -383,7 +383,7 @@
                             <select name="bench_{{ row.index }}" data-assignment data-area="bench" aria-label="Bankplatz {{ row.index }}">
                                 <option value="">Leer</option>
                                 {% for option in player_options %}
-                                    <option value="{{ option.id }}" {% if option.id == row.selected_id %}selected{% endif %}>{{ option.name }} · {{ option.position }} · {{ option.freshness_label }}</option>
+                                    <option value="{{ option.id }}" {% if option.id == row.selected_id %}selected{% endif %}{% if option.is_suspended or option.is_injured %} disabled{% endif %}>{{ option.name }} · {{ option.position }} · {{ option.freshness_label }}{% if option.is_suspended %} (Gesperrt){% elif option.is_injured %} (Verletzt){% endif %}</option>
                                 {% endfor %}
                             </select>
                         </article>

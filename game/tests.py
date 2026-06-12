@@ -379,7 +379,7 @@ class PageSmokeTests(TestCase):
         self.assertContains(response, 'min="1" max="120" step="1"')
         self.assertContains(response, 'data-minute-input')
         # Gesperrte/verletzte Spieler erscheinen im Kader sichtbar (mit Badge),
-        # aber als is_suspended/is_injured markiert.
+        # sind aber als is_suspended/is_injured markiert und nicht selektierbar.
         options_by_id = {
             option['id']: option
             for option in response.context['player_options']
@@ -388,6 +388,9 @@ class PageSmokeTests(TestCase):
         self.assertTrue(options_by_id[injured.id]['is_injured'], "is_injured muss True sein.")
         self.assertIn(suspended.id, options_by_id, "Gesperrter Spieler muss im Kader sichtbar sein.")
         self.assertTrue(options_by_id[suspended.id]['is_suspended'], "is_suspended muss True sein.")
+        # Badge-HTML muss im Response enthalten sein
+        self.assertContains(response, 'is-suspended', msg_prefix="Gesperrt-Badge muss im HTML sichtbar sein.")
+        self.assertContains(response, 'is-injured', msg_prefix="Verletzt-Badge muss im HTML sichtbar sein.")
         self.assertIn('opponent_absences', response.context)
 
     def test_tactics_confirm_persists_complete_starting_eleven(self):

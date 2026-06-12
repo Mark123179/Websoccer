@@ -84,6 +84,7 @@ from .tactics import (
     player_options_for_squad,
     sanitize_assignments,
     sanitize_payload,
+    selectable_ids_from_options,
     tactic_payload_from_setup,
     unavailable_players_for_squad,
     validate_formation,
@@ -2142,10 +2143,9 @@ def parse_tactic_payload_from_post(post_data, club, squad_scope):
     except Exception as exc:
         errors.append(str(exc))
 
-    available_ids = {
-        option['id']
-        for option in player_options_for_squad(club, squad_scope)
-    }
+    available_ids = selectable_ids_from_options(
+        player_options_for_squad(club, squad_scope)
+    )
     slots = formation_slots(formation)
     raw_lineup = {
         slot['key']: post_data.get(f"lineup_{slot['key']}", '')
@@ -2452,7 +2452,7 @@ def player_name(player_lookup, player_id):
 def build_tactics_context(request, club, setup, squad_scope, payload=None, form_errors=None):
     payload = payload or tactic_payload_from_setup(setup)
     player_options = player_options_for_squad(club, squad_scope)
-    available_ids = {option['id'] for option in player_options}
+    available_ids = selectable_ids_from_options(player_options)
     payload = sanitize_payload(payload, available_ids)
     player_lookup = player_lookup_from_options(player_options)
     formation = payload['formation']
@@ -2722,10 +2722,9 @@ def club_tactics(request, club_id):
                 club=club,
                 squad_scope=squad_scope,
             )
-            available_ids = {
-                option['id']
-                for option in player_options_for_squad(club, squad_scope)
-            }
+            available_ids = selectable_ids_from_options(
+                player_options_for_squad(club, squad_scope)
+            )
             payload = sanitize_payload(tactic_template_payload(template), available_ids)
             copy_payload_to_setup(setup, payload, confirmed=False)
             setup.full_clean()
