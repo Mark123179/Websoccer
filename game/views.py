@@ -3743,20 +3743,12 @@ def player_detail(request, player_id):
         {
             'player': player,
             'season_rows': performance_visual_rows(
-                preview_performance_rows(
-                    season_table_rows(season_rows, nt_nationality=nt_nationality),
-                    6,
-                    nt_nationality=nt_nationality,
-                )
+                season_table_rows(season_rows, nt_nationality=nt_nationality)
             ),
             'season_summary': career_summary_from_ws_stats(season_rows),
             'career_summary': career_summary_from_ws_stats(all_season_rows),
             'career_rows': performance_visual_rows(
-                preview_performance_rows(
-                    career_rows_from_ws_stats(all_season_rows, nt_nationality=nt_nationality),
-                    8,
-                    nt_nationality=nt_nationality,
-                )
+                career_rows_from_ws_stats(all_season_rows, nt_nationality=nt_nationality)
             ),
             'market_rows': market_rows,
             'market_trend': market_trend,
