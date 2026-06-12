@@ -70,10 +70,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python manage.py test --verbosity=0"
+args = "python manage.py test --verbosity=0 --keepdb"
 
 [workflows.workflow.metadata]
-isValidation = true
+outputType = "console"
 
 [[ports]]
 localPort = 5000
