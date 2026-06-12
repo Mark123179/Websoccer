@@ -3735,10 +3735,22 @@ def player_detail(request, player_id):
             'competition',
         )
     )
-    selected_season_number = max(
-        (row.season_number for row in all_season_rows),
+    distinct_seasons = sorted(
+        {(row.season_number, row.season) for row in all_season_rows},
+        key=lambda x: x[0],
+        reverse=True,
+    )
+    max_season_number = max(
+        (sn for sn, _ in distinct_seasons),
         default=1,
     )
+    try:
+        selected_season_number = int(request.GET.get('season', max_season_number))
+    except (ValueError, TypeError):
+        selected_season_number = max_season_number
+    valid_season_numbers = {sn for sn, _ in distinct_seasons}
+    if selected_season_number not in valid_season_numbers:
+        selected_season_number = max_season_number
     season_rows = [
         row
         for row in all_season_rows
@@ -3788,6 +3800,8 @@ def player_detail(request, player_id):
                 season_table_rows(season_rows, nt_nationality=nt_nationality)
             ),
             'season_summary': career_summary_from_ws_stats(season_rows),
+            'distinct_seasons': distinct_seasons,
+            'selected_season_number': selected_season_number,
             'career_summary': career_summary_from_ws_stats(all_season_rows),
             'career_rows': performance_visual_rows(
                 career_rows_from_ws_stats(all_season_rows, nt_nationality=nt_nationality)

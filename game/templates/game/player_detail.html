@@ -126,7 +126,15 @@
             <article class="aaa-card aaa-season-card">
                 <div class="aaa-card-heading">
                     <h2>Saisonleistungen</h2>
-                    {% if season_rows %}<span>Saison {{ season_rows.0.season_label }}</span>{% endif %}
+                    {% if distinct_seasons|length > 1 %}
+                        <div class="season-switcher">
+                            {% for sn, slabel in distinct_seasons %}
+                                <a href="?season={{ sn }}" class="ml-filter-btn{% if sn == selected_season_number %} is-active{% endif %}">{{ slabel }}</a>
+                            {% endfor %}
+                        </div>
+                    {% elif season_rows %}
+                        <span>Saison {{ season_rows.0.season_label }}</span>
+                    {% endif %}
                 </div>
                 {% if season_rows %}
                     <div class="aaa-kpis-scroll-wrap">

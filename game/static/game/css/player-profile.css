@@ -2332,3 +2332,13 @@ gap: 18px;
     border-color: var(--cyan, #00bcd4);
     color: #001a20;
 }
+a.ml-filter-btn {
+    text-decoration: none;
+    display: inline-block;
+}
+.season-switcher {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
