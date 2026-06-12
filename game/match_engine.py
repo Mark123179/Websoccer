@@ -27,6 +27,13 @@ from .tactic_compiler import (
 
 # ── Konstanten ────────────────────────────────────────────────────────────────
 
+# Home Advantage V1 — minimaler struktureller Heimvorteil
+# Nur xG, Ballbesitz und Pressing-Kontext; keine direkten Karten/Fouls.
+HOME_XG_MULTIPLIER      = 1.030   # Heimteam: +3 % xG
+AWAY_XG_MULTIPLIER      = 0.985   # Auswärtsteam: -1.5 % xG
+HOME_POSSESSION_BONUS   = 0.5     # Prozentpunkte extra Ballbesitz Heim
+HOME_PRESSING_BONUS     = 0.01    # additiver Bonus auf pressing_index Heim
+
 _GROUP_KEY: dict[str, str] = {
     'goalkeeper':         'goalkeeper',
     'defense':            'defense',
@@ -626,14 +633,17 @@ def _simulate_match_minutes(
         h_tactic_seg = _with_active_plan(home_base_tactic, h_plan)
         a_tactic_seg = _with_active_plan(away_base_tactic, a_plan)
         h_comp = compile_tactic(home_team, h_tactic_seg, half=half)
+        h_comp['pressing_index'] = _clamp(
+            h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
+        )
         a_comp = compile_tactic(away_team, a_tactic_seg, half=half)
         h_str  = _calculate_lineup_strength(home_team, h_tactic_seg, h_comp)
         a_str  = _calculate_lineup_strength(away_team, a_tactic_seg, a_comp)
         last_h_comp, last_a_comp = h_comp, a_comp
         last_h_str,  last_a_str  = h_str,  a_str
 
-        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone)
-        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone)
+        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone) * HOME_XG_MULTIPLIER
+        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone) * AWAY_XG_MULTIPLIER
         h_xg_seg   = h_xg_match * seg_len / 90.0
         a_xg_seg   = a_xg_match * seg_len / 90.0
         h_xg_total += h_xg_seg
@@ -666,7 +676,9 @@ def _simulate_match_minutes(
         poss_delta = (h_comp.get('possession_bonus', 0.0) - a_comp.get('possession_bonus', 0.0)) * 35
         build_delta = (h_comp.get('build_control', 0.0) - a_comp.get('build_control', 0.0)) * 10
         home_poss = int(round(_clamp(
-            50 + (h_str['overall'] - a_str['overall']) / total_strength * 22 + poss_delta + build_delta,
+            50 + HOME_POSSESSION_BONUS
+            + (h_str['overall'] - a_str['overall']) / total_strength * 22
+            + poss_delta + build_delta,
             30, 70,
         )))
 
