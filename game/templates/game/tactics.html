@@ -143,7 +143,6 @@
         <main class="tactics-template-grid">
             <aside class="tactics-panel tactics-preview-panel tactics-roster-panel">
                 <h2>Spielerkader</h2>
-                {% include 'game/partials/_ratings_legend.html' %}
                 <div class="tactics-roster-list dashboard-scrollarea" data-roster-list>
                     {% for option in player_options %}
                         <article class="tactics-roster-player" data-roster-player="{{ option.id }}">

@@ -66,60 +66,104 @@ def get_last_fixture(club):
 
 
 def get_form_rows(club, n=5):
-    """Letzte n gespielte Spiele als Form-Liste [{'label','tone','score'}, ...]."""
-    from .models import SeasonFixture
-    fixtures = list(
-        SeasonFixture.objects
-        .filter(Q(home_club=club) | Q(away_club=club), is_played=True)
-        .select_related('home_club', 'away_club')
-        .order_by('-scheduled_date', '-id')[:n]
-    )
-    result = []
-    for f in reversed(fixtures):
+    """Letzte n gespielte Spiele als Form-Liste [{'label','tone','score'}, ...]
+    aus allen Wettbewerben (Liga + Pokal + Freundschaft)."""
+    import datetime
+    from .models import SeasonFixture, SimulatedMatch
+
+    combined = []
+
+    for f in SeasonFixture.objects.filter(
+        Q(home_club=club) | Q(away_club=club), is_played=True
+    ).order_by('-scheduled_date', '-id')[:n]:
         is_home = f.home_club_id == club.pk
-        my_goals = f.home_goals if is_home else f.away_goals
-        opp_goals = f.away_goals if is_home else f.home_goals
-        if my_goals is None or opp_goals is None:
+        my = f.home_goals if is_home else f.away_goals
+        op = f.away_goals if is_home else f.home_goals
+        if my is None or op is None:
             continue
-        label_map = {
-            'SIEG': 'S', 'NIEDERLAGE': 'N', 'UNENTSCHIEDEN': 'U',
-        }
-        rl = _result_label(my_goals, opp_goals)
-        score = f'{my_goals}:{opp_goals}'
-        result.append({
-            'label': label_map[rl],
-            'tone': _result_tone(rl),
-            'score': score,
+        combined.append({
+            'sort_key': (f.scheduled_date or datetime.date.min, f.id),
+            'my': my, 'op': op,
+            'score': f'{my}:{op}',
         })
-    return result
+
+    for m in SimulatedMatch.objects.filter(
+        Q(home_club=club) | Q(away_club=club),
+        match_type__in=['pokal', 'freundschaft'],
+    ).order_by('-simulated_at')[:n]:
+        is_home = m.home_club_id == club.pk
+        my = m.home_goals if is_home else m.away_goals
+        op = m.away_goals if is_home else m.home_goals
+        combined.append({
+            'sort_key': (m.simulated_at.date(), m.id),
+            'my': my, 'op': op,
+            'score': f'{my}:{op}',
+        })
+
+    combined.sort(key=lambda x: x['sort_key'], reverse=True)
+    combined = combined[:n]
+    combined.sort(key=lambda x: x['sort_key'])
+
+    label_map = {'SIEG': 'S', 'NIEDERLAGE': 'N', 'UNENTSCHIEDEN': 'U'}
+    return [
+        {'label': label_map[rl := _result_label(e['my'], e['op'])],
+         'tone': _result_tone(rl),
+         'score': e['score']}
+        for e in combined
+    ]
 
 
 def get_form_rows_with_opponents(club, n=5):
-    """Form-Liste inkl. Gegnerdaten für Taktik-Header."""
+    """Form-Liste inkl. Gegnerdaten für Taktik-Header (alle Wettbewerbe)."""
+    import datetime
     from django.urls import reverse
-    from .models import SeasonFixture
-    fixtures = list(
-        SeasonFixture.objects
-        .filter(Q(home_club=club) | Q(away_club=club), is_played=True)
-        .select_related('home_club', 'away_club')
-        .order_by('-scheduled_date', '-id')[:n]
-    )
-    result = []
-    for f in reversed(fixtures):
+    from .models import SeasonFixture, SimulatedMatch
+
+    combined = []
+
+    for f in SeasonFixture.objects.filter(
+        Q(home_club=club) | Q(away_club=club), is_played=True
+    ).select_related('home_club', 'away_club').order_by('-scheduled_date', '-id')[:n]:
         is_home = f.home_club_id == club.pk
-        my_goals = f.home_goals if is_home else f.away_goals
-        opp_goals = f.away_goals if is_home else f.home_goals
-        opponent = f.away_club if is_home else f.home_club
-        if my_goals is None or opp_goals is None:
+        my = f.home_goals if is_home else f.away_goals
+        op = f.away_goals if is_home else f.home_goals
+        opp = f.away_club if is_home else f.home_club
+        if my is None or op is None:
             continue
-        rl = _result_label(my_goals, opp_goals)
+        combined.append({
+            'sort_key': (f.scheduled_date or datetime.date.min, f.id),
+            'my': my, 'op': op, 'opp': opp,
+        })
+
+    for m in SimulatedMatch.objects.filter(
+        Q(home_club=club) | Q(away_club=club),
+        match_type__in=['pokal', 'freundschaft'],
+    ).select_related('home_club', 'away_club').order_by('-simulated_at')[:n]:
+        is_home = m.home_club_id == club.pk
+        my = m.home_goals if is_home else m.away_goals
+        op = m.away_goals if is_home else m.home_goals
+        opp = m.away_club if is_home else m.home_club
+        combined.append({
+            'sort_key': (m.simulated_at.date(), m.id),
+            'my': my, 'op': op, 'opp': opp,
+        })
+
+    combined.sort(key=lambda x: x['sort_key'], reverse=True)
+    combined = combined[:n]
+    combined.sort(key=lambda x: x['sort_key'])
+
+    label_map = {'SIEG': 'S', 'NIEDERLAGE': 'N', 'UNENTSCHIEDEN': 'U'}
+    result = []
+    for e in combined:
+        rl = _result_label(e['my'], e['op'])
+        opp = e['opp']
         result.append({
-            'label': {'SIEG': 'S', 'NIEDERLAGE': 'N', 'UNENTSCHIEDEN': 'U'}[rl],
+            'label': label_map[rl],
             'tone': _result_tone(rl),
-            'score': f'{my_goals}:{opp_goals}',
-            'opponent_name': opponent.name if opponent else 'Gegner',
-            'opponent_crest': opponent.crest_static_path if opponent else '',
-            'opponent_url': reverse('club_detail', kwargs={'club_id': opponent.id}) if opponent else '#',
+            'score': f"{e['my']}:{e['op']}",
+            'opponent_name': opp.name if opp else 'Gegner',
+            'opponent_crest': opp.crest_static_path if opp else '',
+            'opponent_url': reverse('club_detail', kwargs={'club_id': opp.id}) if opp else '#',
         })
     return result
 
