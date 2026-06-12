@@ -18,7 +18,7 @@ from copy import deepcopy
 from typing import Optional
 
 from .match_readiness import ensure_default_tactic
-from .tactics import default_formation, formation_slots
+from .tactics import default_formation, formation_slots, formation_code
 from .tactic_compiler import (
     calculate_zone_strengths,
     compile_tactic,
@@ -889,7 +889,10 @@ def simulate_match(home_club, away_club) -> dict:
     # 5. Formations-Label
     def _fmt(tactic) -> str:
         f = tactic.formation or {}
-        return f.get('name', '') or '4-4-2'
+        try:
+            return formation_code(f)
+        except Exception:
+            return '?'
 
     h_teamwork = sum(p['teamwork'] for p in h_players)
     a_teamwork = sum(p['teamwork'] for p in a_players)
