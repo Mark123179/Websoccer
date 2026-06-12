@@ -1162,6 +1162,15 @@ class SeasonFixture(models.Model):
         verbose_name='Auswärts-Stärkemalus (-20 %)',
         help_text='Automatisch gesetzt wenn der Auswärts-Manager keine Aufstellung gestellt hat.',
     )
+    simulated_match = models.OneToOneField(
+        'SimulatedMatch',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='season_fixture',
+        verbose_name='Spielbericht (V2)',
+        help_text='Verlinkter SimulatedMatch-Eintrag mit V2-Report-Daten.',
+    )
 
     @property
     def result_display(self):

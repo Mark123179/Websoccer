@@ -5,6 +5,7 @@ from .views import (
     club_list,
     club_match_preview,
     club_match_report,
+    match_report_by_id,
     club_news,
     club_news_detail,
     club_professional_squad,
@@ -146,6 +147,12 @@ urlpatterns = [
         'clubs/<int:club_id>/matches/last/',
         club_match_report,
         name='club_match_report'
+    ),
+
+    path(
+        'matches/<int:sm_id>/report/',
+        match_report_by_id,
+        name='match_report_by_id'
     ),
 
     path(

@@ -3396,6 +3396,92 @@ def club_match_report(request, club_id):
     })
 
 
+def match_report_by_id(request, sm_id):
+    """Spielbericht direkt für einen SimulatedMatch (z. B. aus dem Spielplan)."""
+    from .models import SimulatedMatch as SM
+
+    latest = get_object_or_404(SM.objects.select_related('home_club', 'away_club'), pk=sm_id)
+    club   = latest.home_club
+
+    _PLAN_LABELS = {
+        'ausgewogen':           'Ausgewogen',
+        'aggressiv_risiko':     'Aggressiv / Risiko',
+        'schlussangriff':       'Schlussangriff',
+        'kontrolle_ballbesitz': 'Kontrolle & Ballbesitz',
+        'kompakt_sichern':      'Kompakt & Sichern',
+        'zeitspiel':            'Zeitspiel',
+        'unterzahl_kompakt':    'Unterzahl — Kompakt',
+    }
+
+    rc = {}
+    if latest.report_data:
+        data = latest.report_data
+        ms   = data.get('match_stats', {})
+
+        h_xg    = float(data.get('home_xg') or 0)
+        a_xg    = float(data.get('away_xg') or 0)
+        xg_total = (h_xg + a_xg) or 1
+
+        h_l = ms.get('home_attacks_left',   0) or 0
+        h_c = ms.get('home_attacks_center', 0) or 0
+        h_r = ms.get('home_attacks_right',  0) or 0
+        a_l = ms.get('away_attacks_left',   0) or 0
+        a_c = ms.get('away_attacks_center', 0) or 0
+        a_r = ms.get('away_attacks_right',  0) or 0
+        h_tot = (h_l + h_c + h_r) or 1
+        a_tot = (a_l + a_c + a_r) or 1
+
+        plan_acts  = data.get('plan_activations', []) or []
+        cond_debug = data.get('condition_debug', {}) or {}
+        plan_segs  = cond_debug.get('plan_active_segments', {}) or {}
+        ap_home_raw = plan_segs.get('home', {}) if isinstance(plan_segs, dict) else {}
+        ap_away_raw = plan_segs.get('away', {}) if isinstance(plan_segs, dict) else {}
+
+        rc = {
+            'home_xg':      f'{h_xg:.2f}',
+            'away_xg':      f'{a_xg:.2f}',
+            'home_xg_pct':  round(h_xg / xg_total * 100),
+            'away_xg_pct':  round(a_xg / xg_total * 100),
+            'home_att_l_pct': round(h_l / h_tot * 100),
+            'home_att_c_pct': round(h_c / h_tot * 100),
+            'home_att_r_pct': round(h_r / h_tot * 100),
+            'away_att_l_pct': round(a_l / a_tot * 100),
+            'away_att_c_pct': round(a_c / a_tot * 100),
+            'away_att_r_pct': round(a_r / a_tot * 100),
+            'home_att_total': h_l + h_c + h_r,
+            'away_att_total': a_l + a_c + a_r,
+            'simulation_mode': data.get('simulation_mode') or 'legacy',
+            'plan_count': len(plan_acts),
+            'plan_activations_labeled': [
+                {**act, 'plan_label': _PLAN_LABELS.get(act.get('plan', ''), act.get('plan', ''))}
+                for act in plan_acts
+            ],
+            'active_plans_home': [
+                {'plan': p, 'label': _PLAN_LABELS.get(p, p), 'segments': s}
+                for p, s in sorted(ap_home_raw.items(), key=lambda x: -x[1])
+            ],
+            'active_plans_away': [
+                {'plan': p, 'label': _PLAN_LABELS.get(p, p), 'segments': s}
+                for p, s in sorted(ap_away_raw.items(), key=lambda x: -x[1])
+            ],
+            'home_coh':  ms.get('home_tactic_coherence',  0),
+            'away_coh':  ms.get('away_tactic_coherence',  0),
+            'home_fat':  ms.get('home_fatigue_cost',       0),
+            'away_fat':  ms.get('away_fatigue_cost',       0),
+            'home_cplx': ms.get('home_tactic_complexity',  0),
+            'away_cplx': ms.get('away_tactic_complexity',  0),
+        }
+
+    return render(request, 'game/match_report.html', {
+        'club':         club,
+        'latest_match': latest,
+        'report':       latest.report_data,
+        'all_clubs':    None,
+        'sim_error':    None,
+        'rc':           rc,
+    })
+
+
 def club_news(request, club_id):
     return render_public_club_stub(
         request,
@@ -4773,7 +4859,7 @@ def league_detail(request, league_id):
     last_fixtures = list(
         SeasonFixture.objects
         .filter(league=league, season=current_season, matchday=last_matchday_num)
-        .select_related('home_club', 'away_club')
+        .select_related('home_club', 'away_club', 'simulated_match')
         .order_by('scheduled_date', 'scheduled_time')
     ) if last_matchday_num is not None else []
 
@@ -4796,7 +4882,7 @@ def league_detail(request, league_id):
         all_fixtures = list(
             SeasonFixture.objects
             .filter(league=league, season=current_season)
-            .select_related('home_club', 'away_club')
+            .select_related('home_club', 'away_club', 'simulated_match')
             .order_by('matchday', 'scheduled_date', 'scheduled_time')
         )
         my_club_id = my_club.id if my_club else None

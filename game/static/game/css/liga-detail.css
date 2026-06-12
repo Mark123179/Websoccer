@@ -387,12 +387,30 @@
 
 .liga-fixture {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: 1fr auto 1fr auto;
     align-items: center;
     gap: 8px;
     padding: 8px 6px;
     border-radius: 5px;
     transition: background 0.1s;
+}
+
+.liga-fixture__report-btn {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #00c2ff;
+    text-decoration: none;
+    background: rgba(0,194,255,0.08);
+    border: 1px solid rgba(0,194,255,0.25);
+    border-radius: 3px;
+    padding: 2px 6px;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    transition: background 0.15s, color 0.15s;
+}
+.liga-fixture__report-btn:hover {
+    background: rgba(0,194,255,0.18);
+    color: #fff;
 }
 
 .liga-fixture:hover { background: #181c26; }

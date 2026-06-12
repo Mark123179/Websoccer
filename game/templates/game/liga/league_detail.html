@@ -224,6 +224,9 @@
                             <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
                             {% endif %}
                         </div>
+                        {% if f.simulated_match_id %}
+                        <a class="liga-fixture__report-btn" href="{% url 'match_report_by_id' f.simulated_match_id %}" title="Spielbericht öffnen">Bericht</a>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -332,6 +335,9 @@
                             <img class="liga-fixture__crest" src="{% static f.away_club.crest_static_path %}" alt="{{ f.away_club.name }}">
                             {% endif %}
                         </div>
+                        {% if f.simulated_match_id %}
+                        <a class="liga-fixture__report-btn" href="{% url 'match_report_by_id' f.simulated_match_id %}" title="Spielbericht öffnen">Bericht</a>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
