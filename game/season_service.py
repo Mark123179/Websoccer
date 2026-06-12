@@ -603,29 +603,29 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
         except Exception:
             pass
 
-    # ── Verletzungen persistieren ────────────────────────────────────────────
-    try:
-        _write_injury_events(
-            data.get('injury_events') or [],
-            fixture_date,
-            competition,
-        )
-    except Exception:
-        pass
+    # ── Verletzungen + Frischeverlust: nur Pflichtspiele (Liga + Pokal) ─────────
+    if source != 'ws_freundschaft':
+        try:
+            _write_injury_events(
+                data.get('injury_events') or [],
+                fixture_date,
+                competition,
+            )
+        except Exception:
+            pass
 
-    # ── Frischeverlust nach Spiel schreiben ───────────────────────────────────
-    try:
-        from .freshness_service import apply_match_freshness_losses
-        apply_match_freshness_losses(
-            home_players=data.get('home_players') or [],
-            away_players=data.get('away_players') or [],
-            home_club=home_club,
-            away_club=away_club,
-            fatigue_cost_home=float(data.get('home_fatigue_cost') or 1.0),
-            fatigue_cost_away=float(data.get('away_fatigue_cost') or 1.0),
-        )
-    except Exception:
-        pass
+        try:
+            from .freshness_service import apply_match_freshness_losses
+            apply_match_freshness_losses(
+                home_players=data.get('home_players') or [],
+                away_players=data.get('away_players') or [],
+                home_club=home_club,
+                away_club=away_club,
+                fatigue_cost_home=float(data.get('home_fatigue_cost') or 1.0),
+                fatigue_cost_away=float(data.get('away_fatigue_cost') or 1.0),
+            )
+        except Exception:
+            pass
 
 
 def get_season_state(league, season: str):

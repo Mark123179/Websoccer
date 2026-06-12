@@ -3202,6 +3202,117 @@ class FreshnessDecayIntegrationTests(TestCase):
                            "Trainingsgelände S3 bringt mehr Regeneration")
 
 
+class FreshnessFreundschaftExclusionTests(TestCase):
+    """Freundschaftsspiele dürfen keine Frische-Verluste oder Verletzungen hinterlassen."""
+
+    def _make_club(self):
+        from .models import Club, Stadium, League
+        import uuid
+        slug = uuid.uuid4().hex[:6]
+        league, _ = League.objects.get_or_create(
+            name='TestLiga',
+            defaults={'country': 'DE'},
+        )
+        club = Club.objects.create(
+            name=f'TestClub-{slug}',
+            short_name='TST',
+            founded_year=2000,
+            budget=1000000,
+            league=league,
+        )
+        Stadium.objects.create(
+            club=club,
+            name=f'Stadion-{slug}',
+            city='Teststadt',
+            training_level=0,
+            medizin_level=0,
+        )
+        return club
+
+    def _make_player(self, club, freshness=90):
+        from .models import Player, PlayerStrengthProfile
+        from decimal import Decimal
+        import uuid
+        p = Player.objects.create(
+            club=club,
+            first_name='Test',
+            last_name=uuid.uuid4().hex[:8],
+            age=25,
+            position='ZM',
+        )
+        PlayerStrengthProfile.objects.create(
+            player=p,
+            base_strength=Decimal('70.00'),
+            freshness=Decimal(str(freshness)),
+        )
+        return p
+
+    def _call_write_simulated(self, home_club, away_club, home_player, away_player,
+                               match_type='freundschaft', injury_events=None):
+        """Minimaler SimulatedMatch + write_simulated_match_stats-Aufruf."""
+        from .models import SimulatedMatch
+        from .season_service import write_simulated_match_stats
+        from django.utils import timezone
+        sm = SimulatedMatch.objects.create(
+            home_club=home_club,
+            away_club=away_club,
+            match_type=match_type,
+            home_goals=1,
+            away_goals=1,
+            simulated_at=timezone.now(),
+        )
+        data = {
+            'home_players': [{'id': home_player.pk, 'position': 'ZM',
+                               'minutes_played': 90, 'goals': 0,
+                               'assists': 0, 'yellow_cards': 1, 'red_cards': 0,
+                               'grade': 6.0}],
+            'away_players': [{'id': away_player.pk, 'position': 'ZM',
+                               'minutes_played': 90, 'goals': 0,
+                               'assists': 0, 'yellow_cards': 0, 'red_cards': 0,
+                               'grade': 6.0}],
+            'injury_events': injury_events or [
+                {'player_id': home_player.pk, 'team': 'home',
+                 'minute': 55, 'severity': 14}
+            ],
+            'home_fatigue_cost': 1.0,
+            'away_fatigue_cost': 1.0,
+        }
+        write_simulated_match_stats(sm, data)
+        return sm
+
+    def test_freundschaft_no_freshness_loss(self):
+        """Nach einem Freundschaftsspiel darf die Frische nicht sinken."""
+        from .models import PlayerStrengthProfile
+        home_club = self._make_club()
+        away_club = self._make_club()
+        hp = self._make_player(home_club, freshness=90)
+        ap = self._make_player(away_club, freshness=90)
+
+        self._call_write_simulated(home_club, away_club, hp, ap,
+                                   match_type='freundschaft', injury_events=[])
+
+        sp_h = PlayerStrengthProfile.objects.get(player=hp)
+        sp_a = PlayerStrengthProfile.objects.get(player=ap)
+        self.assertEqual(float(sp_h.freshness), 90.0,
+                         "Heimspieler darf nach Freundschaft keine Frische verlieren")
+        self.assertEqual(float(sp_a.freshness), 90.0,
+                         "Gastspieler darf nach Freundschaft keine Frische verlieren")
+
+    def test_freundschaft_no_injury_persisted(self):
+        """Nach einem Freundschaftsspiel darf keine Verletzung in der DB landen."""
+        from .models import PlayerInjuryRecord
+        home_club = self._make_club()
+        away_club = self._make_club()
+        hp = self._make_player(home_club)
+        ap = self._make_player(away_club)
+        before = PlayerInjuryRecord.objects.filter(player=hp).count()
+        self._call_write_simulated(home_club, away_club, hp, ap,
+                                   match_type='freundschaft')
+        after = PlayerInjuryRecord.objects.filter(player=hp).count()
+        self.assertEqual(before, after,
+                         "Freundschaftsspiel darf keine PlayerInjuryRecord erzeugen")
+
+
 class FreshnessEngineIntegrationTests(TestCase):
     """Prüft, dass Frische die Matchstärke korrekt beeinflusst."""
 
