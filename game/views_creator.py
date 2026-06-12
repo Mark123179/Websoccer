@@ -2135,6 +2135,64 @@ def creator_league_spielplan_generate(request, league_id):
 
 
 @login_required
+@require_POST
+def creator_league_season_reset(request, league_id):
+    """Setzt eine Saison vollständig zurück — Fixtures, Tabelle, Stats, Snapshots."""
+    from game.models import (
+        SeasonFixture, LeagueStandings, PlayerFormSnapshot,
+        PlayerSeasonStat, LeagueSeasonState,
+    )
+
+    league = get_object_or_404(League, id=league_id)
+    season = request.POST.get('season', '').strip()
+
+    if not season:
+        messages.error(request, 'Keine Saison angegeben.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=spielplan')
+
+    fixture_ids = list(
+        SeasonFixture.objects
+        .filter(league=league, season=season)
+        .values_list('id', flat=True)
+    )
+    if not fixture_ids:
+        messages.warning(request, f'Saison „{season}" hat keine Fixtures — nichts zu tun.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=spielplan')
+
+    fixture_id_strs = [f'ws_liga_{fid}' for fid in fixture_ids]
+
+    snap_count = PlayerFormSnapshot.objects.filter(
+        source='ws_liga',
+        fixture_id__in=fixture_id_strs,
+    ).delete()[0]
+
+    club_ids = list(league.club_set.values_list('id', flat=True))
+    stat_count = PlayerSeasonStat.objects.filter(
+        player__club_id__in=club_ids,
+        competition='Liga',
+    ).delete()[0]
+
+    standing_count = LeagueStandings.objects.filter(
+        league=league, season=season,
+    ).delete()[0]
+
+    LeagueSeasonState.objects.filter(league=league, season=season).delete()
+
+    fixture_count = SeasonFixture.objects.filter(
+        league=league, season=season,
+    ).delete()[0]
+
+    messages.success(
+        request,
+        f'Saison „{season}" zurückgesetzt: '
+        f'{fixture_count} Fixtures, {standing_count} Tabelleneinträge, '
+        f'{snap_count} Snapshots, {stat_count} Saisonstatistiken gelöscht. '
+        f'Neuen Spielplan jetzt generieren.',
+    )
+    return redirect(f'/creator/leagues/{league_id}/?tab=spielplan')
+
+
+@login_required
 def creator_league_fixture_save(request, league_id):
     import json
     from django.http import JsonResponse

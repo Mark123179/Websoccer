@@ -72,6 +72,7 @@ from .views_creator import (
     creator_league_edit,
     creator_league_save_stammdaten,
     creator_league_spielplan_generate,
+    creator_league_season_reset,
     creator_league_fixture_save,
     creator_upload_league_logo,
 )
@@ -269,6 +270,7 @@ urlpatterns = [
     path('creator/leagues/<int:league_id>/', creator_league_edit, name='creator_league_edit'),
     path('creator/leagues/<int:league_id>/stammdaten/', creator_league_save_stammdaten, name='creator_league_save_stammdaten'),
     path('creator/leagues/<int:league_id>/spielplan/generate/', creator_league_spielplan_generate, name='creator_league_spielplan_generate'),
+    path('creator/leagues/<int:league_id>/season/reset/', creator_league_season_reset, name='creator_league_season_reset'),
     path('creator/leagues/<int:league_id>/fixtures/save/', creator_league_fixture_save, name='creator_league_fixture_save'),
     path('creator/leagues/<int:league_id>/upload/logo/', creator_upload_league_logo, name='creator_upload_league_logo'),
 

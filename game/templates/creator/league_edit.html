@@ -393,6 +393,41 @@
       </div>
 
       {% if spielplan_selected and spielplan_matchdays %}
+      <div class="creator-card sp-danger-card" style="margin-top:1rem;">
+        <div class="creator-card-head sp-danger-head">
+          <h2>⚠ Saison zurücksetzen</h2>
+        </div>
+        <div class="creator-card-body">
+          <p class="sp-danger-desc">
+            Löscht <strong>alle Fixtures, Tabelle, Saisonstatistiken und Snapshots</strong>
+            für Saison <strong>{{ spielplan_selected }}</strong> —
+            auch gespielte Partien. Nicht rückgängig zu machen.
+          </p>
+          <button type="button" class="creator-btn creator-btn-danger" style="width:100%;"
+                  onclick="spShowResetConfirm()">
+            🗑 Saison zurücksetzen
+          </button>
+          <div id="sp-reset-confirm" style="display:none;margin-top:.75rem;">
+            <p class="sp-danger-confirm-label">Saison „{{ spielplan_selected }}" wirklich löschen?</p>
+            <form method="post" action="{% url 'creator_league_season_reset' league_id=league.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="season" value="{{ spielplan_selected }}">
+              <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+                <button type="submit" class="creator-btn creator-btn-danger" style="flex:1;">
+                  Ja, alles löschen
+                </button>
+                <button type="button" class="creator-btn creator-btn-secondary" style="flex:1;"
+                        onclick="spHideResetConfirm()">
+                  Abbrechen
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if spielplan_selected and spielplan_matchdays %}
       <div class="creator-card" style="margin-top:1rem;">
         <div class="creator-card-head"><h2>Bulk-Datum setzen</h2></div>
         <div class="creator-card-body">
@@ -443,6 +478,15 @@ function markDirty(md) {
   dirtyMds.add(md);
   const btn = document.getElementById('sp-save-' + md);
   if (btn) btn.style.display = '';
+}
+
+function spShowResetConfirm() {
+  const el = document.getElementById('sp-reset-confirm');
+  if (el) el.style.display = '';
+}
+function spHideResetConfirm() {
+  const el = document.getElementById('sp-reset-confirm');
+  if (el) el.style.display = 'none';
 }
 
 function showToast(msg, ok) {
@@ -652,5 +696,11 @@ select.creator-input option { background: #050e1a; }
 .sp-toast { position: fixed; bottom: 1.5rem; right: 1.5rem; padding: .6rem 1.2rem; border-radius: 8px; font-size: .82rem; font-weight: 600; z-index: 9999; }
 .sp-toast-ok { background: #00ff8830; border: 1px solid #00ff8866; color: #30f29c; }
 .sp-toast-err { background: #ff334420; border: 1px solid #ff334455; color: #ff8899; }
+.sp-danger-card { border-color: #ff334430 !important; }
+.sp-danger-head { background: #1a0608 !important; border-bottom-color: #ff334420 !important; }
+.sp-danger-head h2 { color: #ff6677 !important; }
+.sp-danger-desc { color: #885566; font-size: .78rem; margin: 0 0 .75rem; line-height: 1.5; }
+.sp-danger-desc strong { color: #cc8899; }
+.sp-danger-confirm-label { color: #ffcc44; font-size: .78rem; font-weight: 700; margin: 0; }
 </style>
 {% endblock %}
