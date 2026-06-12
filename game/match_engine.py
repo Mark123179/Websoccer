@@ -1059,6 +1059,65 @@ def compute_player_ratings(result: dict) -> dict:
     }
 
 
+# ── Einwechs­lungs-Events ──────────────────────────────────────────────────────
+
+def _generate_substitution_events(tactic_setup, team_dict: dict) -> list[dict]:
+    """Gibt Einwechslungs-Events für den Spielbericht zurück.
+
+    Priorität:
+      1. Geplante Wechsel aus dem Taktik-Setup (Minuten vom Trainer konfiguriert).
+      2. Falls keine geplanten Wechsel: automatisch 2–3 realistische Wechsel
+         aus Bankspieler-IDs + Nicht-TW-Startern an typischen Minuten.
+
+    Rückgabe: [{in: pid, out: pid, minute: int}, …]  — nach Minute aufsteigend.
+    Namen werden später in _build_sub_name_lookup per DB nachgeschlagen.
+    """
+    planned = [s for s in (tactic_setup.substitutions or [])
+               if s.get('in') and s.get('out') and s.get('minute')]
+    if planned:
+        return sorted(planned, key=lambda s: s['minute'])
+
+    bench_ids = list(tactic_setup.bench or [])
+
+    # Fallback: bench nicht befüllt → nicht-aufgestellte Kaderspieler verwenden
+    if not bench_ids:
+        from .models import Player as _Player
+        lineup_pids = {slot['player_id'] for slot in team_dict.get('lineup', []) if slot.get('player_id')}
+        bench_ids = list(
+            _Player.objects.filter(club=tactic_setup.club)
+            .exclude(pk__in=lineup_pids)
+            .order_by('-strength_profile__final_strength')
+            .values_list('pk', flat=True)[:7]
+        )
+
+    if not bench_ids:
+        return []
+
+    # Nicht-TW-Starter als Auswechsel-Kandidaten (bevorzuge mid/att)
+    lineup = team_dict.get('lineup', [])
+    non_gk = [slot['player_id'] for slot in lineup
+               if slot.get('group') != 'gk' and slot.get('player_id')]
+    if not non_gk:
+        return []
+
+    n_subs = random.choice([2, 2, 3])          # meistens 2, manchmal 3
+    n_subs = min(n_subs, len(bench_ids), len(non_gk))
+    if n_subs == 0:
+        return []
+
+    # Typische Wechselminuten — zufällig aus realistischem Pool
+    minute_pool = [45, 56, 57, 58, 60, 62, 63, 65, 68, 70, 72, 75, 78, 80, 82, 84]
+    minutes = sorted(random.sample(minute_pool, min(n_subs, len(minute_pool))))[:n_subs]
+
+    # Einwechslungen: letzte Starters (hinten im lineup = eher Außen/Sturm) raus,
+    # erste Bank-Spieler rein
+    out_ids = non_gk[-n_subs:]
+    in_ids  = bench_ids[:n_subs]
+
+    return [{'in': in_id, 'out': out_id, 'minute': minute}
+            for in_id, out_id, minute in zip(in_ids, out_ids, minutes)]
+
+
 # ── Öffentliche API ───────────────────────────────────────────────────────────
 
 def simulate_match(home_club, away_club) -> dict:
@@ -1229,8 +1288,8 @@ def simulate_match(home_club, away_club) -> dict:
         'away_compiled_tactic':  sim.get('away_compiled_tactic', {}),
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
-        'home_substitutions':    list(home_tactic.substitutions or []),
-        'away_substitutions':    list(away_tactic.substitutions or []),
+        'home_substitutions':    _generate_substitution_events(home_tactic, home_team),
+        'away_substitutions':    _generate_substitution_events(away_tactic, away_team),
         'card_events':           h_card_events + a_card_events,
         'injury_events':         h_injury_events + a_injury_events,
         'home_fatigue_cost':     sim.get('home_fatigue_cost', 1.0),
