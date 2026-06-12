@@ -13,6 +13,11 @@ from django.db.models import Avg, Sum, Count
 _WS_LIGA_SOURCE = 'ws_liga'
 _WS_LIGA_SEASON = '2026/27'
 
+_SOURCE_FOR_MATCH_TYPE = {
+    'freundschaft': 'ws_freundschaft',
+    'pokal':        'ws_pokal',
+}
+
 
 def _update_player_season_stats(fixture, data: dict) -> None:
     """Schreibt PlayerFormSnapshot + PlayerSeasonStat nach einer Ligasimulation.
@@ -136,6 +141,73 @@ def _update_player_season_stats(fixture, data: dict) -> None:
             average_grade=round(avg_grade, 2) if avg_grade is not None else None,
             player_of_match_awards=motm_counts.get(pid, 0),
         )
+
+
+def write_simulated_match_stats(simulated_match, data: dict) -> None:
+    """Schreibt PlayerFormSnapshot für ein SimulatedMatch (Freundschaft oder Pokal).
+
+    Idempotent: Mehrfachaufruf für dasselbe SimulatedMatch überschreibt statt zu duplizieren.
+    source wird aus simulated_match.match_type abgeleitet:
+        'freundschaft' → 'ws_freundschaft'
+        'pokal'        → 'ws_pokal'
+    """
+    from django.utils import timezone
+    from .models import PlayerFormSnapshot
+
+    source = _SOURCE_FOR_MATCH_TYPE.get(simulated_match.match_type, 'ws_freundschaft')
+    fixture_id_str = f'{source}_{simulated_match.id}'
+    fixture_date = simulated_match.simulated_at.date() if simulated_match.simulated_at else timezone.localdate()
+
+    rating_map: dict[int, float] = {}
+    for r in (data.get('home_ratings') or []) + (data.get('away_ratings') or []):
+        pid = r.get('id')
+        if pid and r.get('rating') is not None:
+            rating_map[pid] = float(r['rating'])
+
+    motm_pid: int | None = None
+    motm_data = data.get('man_of_the_match') or {}
+    if motm_data:
+        motm_pid = motm_data.get('id')
+
+    sides = [
+        (data.get('home_players') or [], simulated_match.home_club_id),
+        (data.get('away_players') or [], simulated_match.away_club_id),
+    ]
+
+    for players, _club_id in sides:
+        for p in players:
+            pid = p.get('id')
+            if not pid:
+                continue
+
+            goals   = int(p.get('goals',        0) or 0)
+            assists = int(p.get('assists',       0) or 0)
+            yellow  = int(p.get('yellow_cards',  0) or 0)
+            red     = int(p.get('red_cards',     0) or 0)
+            rating  = rating_map.get(pid)
+
+            snap_defaults = {
+                'source':           source,
+                'fixture_date':     fixture_date,
+                'minutes_played':   90,
+                'possible_minutes': 90,
+                'started':          True,
+                'position':         p.get('position', ''),
+                'goals':            goals,
+                'assists':          assists,
+                'yellow_cards':     yellow,
+                'red_cards':        red,
+                'raw_payload':      {'is_motm': pid == motm_pid},
+            }
+            if rating is not None:
+                snap_defaults['rating'] = rating
+
+            PlayerFormSnapshot.objects.update_or_create(
+                player_id=pid,
+                source=source,
+                fixture_id=fixture_id_str,
+                defaults=snap_defaults,
+            )
 
 
 def get_season_state(league, season: str):

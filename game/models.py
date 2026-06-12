@@ -3613,6 +3613,11 @@ class ManagerCareerEntry(models.Model):
 class SimulatedMatch(models.Model):
     """Gespeichertes Ergebnis einer Match-Engine-Simulation (zum Testen)."""
 
+    MATCH_TYPE_CHOICES = [
+        ('freundschaft', 'Freundschaftsspiel'),
+        ('pokal',        'Pokal'),
+    ]
+
     home_club = models.ForeignKey(
         Club,
         on_delete=models.CASCADE,
@@ -3628,6 +3633,12 @@ class SimulatedMatch(models.Model):
     report_data = models.JSONField(
         default=dict,
         help_text='Vollständiger Spielbericht als JSON (Tore, Stats, Spieler).',
+    )
+    match_type = models.CharField(
+        max_length=20,
+        choices=MATCH_TYPE_CHOICES,
+        default='freundschaft',
+        verbose_name='Spieltyp',
     )
     simulated_at = models.DateTimeField(auto_now_add=True)
 

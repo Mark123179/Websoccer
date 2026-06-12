@@ -570,6 +570,13 @@
                     {% endfor %}
                 </select>
             </div>
+            <div class="mr-simulate-type">
+                <label class="mr-simulate-type-label">Spieltyp:</label>
+                <select name="match_type" class="mr-simulate-select">
+                    <option value="freundschaft">Freundschaftsspiel</option>
+                    <option value="pokal">Pokal</option>
+                </select>
+            </div>
             <button type="submit" class="mr-simulate-btn">&#9654; Spiel simulieren</button>
         </form>
         {% if sim_error %}

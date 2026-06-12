@@ -3401,16 +3401,25 @@ def club_match_report(request, club_id):
 
     if request.method == 'POST':
         opponent_id = request.POST.get('opponent_id')
+        match_type  = request.POST.get('match_type', 'freundschaft')
+        if match_type not in ('freundschaft', 'pokal'):
+            match_type = 'freundschaft'
         try:
             opponent = Club.objects.get(pk=opponent_id)
             data = simulate_match(club, opponent)
-            SimulatedMatch.objects.create(
+            sm = SimulatedMatch.objects.create(
                 home_club=club,
                 away_club=opponent,
                 home_goals=data['home_goals'],
                 away_goals=data['away_goals'],
                 report_data=data,
+                match_type=match_type,
             )
+            try:
+                from .season_service import write_simulated_match_stats
+                write_simulated_match_stats(sm, data)
+            except Exception:
+                pass
         except Club.DoesNotExist:
             sim_error = 'Gegner nicht gefunden.'
         except Exception as exc:
