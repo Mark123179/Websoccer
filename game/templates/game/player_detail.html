@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-7">
+    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-8">
     <link rel="stylesheet" href="{% static 'game/css/trophy-cabinet.css' %}?v=gm-4">
 {% endblock %}
 
@@ -168,6 +168,37 @@
                     </div>
                 {% else %}
                     <p class="empty-copy">Noch keine Websoccer-Saisonstatistik vorhanden.</p>
+                {% endif %}
+            </article>
+            <article class="aaa-card aaa-match-log-card">
+                <div class="aaa-card-heading">
+                    <h2>Spielweise Noten</h2>
+                    {% if match_log_avg is not None %}
+                        <span class="grade-badge {{ match_log_avg_class }}">Ø&nbsp;{{ match_log_avg|floatformat:2 }}</span>
+                    {% endif %}
+                </div>
+                {% if match_log %}
+                    <div class="aaa-match-log-table">
+                        <div class="aaa-match-log-head">
+                            <span>ST</span>
+                            <span>Gegner</span>
+                            <span>Note</span>
+                        </div>
+                        {% for entry in match_log %}
+                        <div class="aaa-match-log-row">
+                            <span class="aaa-match-log-md">{{ entry.matchday }}</span>
+                            <span class="aaa-match-log-opp">
+                                {% if entry.opponent_crest %}
+                                    <img src="{% static entry.opponent_crest %}" alt="" loading="lazy">
+                                {% endif %}
+                                <b>{{ entry.opponent_name }}</b>
+                            </span>
+                            <span class="grade-badge {{ entry.grade_class }}">{{ entry.grade|floatformat:2 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-copy">Noch keine Spielnoten für diese Saison vorhanden.</p>
                 {% endif %}
             </article>
         </main>

@@ -2922,6 +2922,81 @@ _ISO2_TO_CODE3 = {
 }
 
 
+def _live_grade_map(club, season=CURRENT_SQUAD_SEASON):
+    """Berechnet Ø-Note pro Spieler live aus SimulatedMatch.report_data.
+
+    Gibt ``{player_id: avg_grade}`` zurück. Wertet nur Spiele des Clubs aus,
+    in denen der Club als Heim- *oder* Auswärtsmannschaft antrat.
+    """
+    from django.db.models import Q
+    fixtures = (
+        SeasonFixture.objects
+        .filter(season=season, is_played=True, simulated_match__isnull=False)
+        .filter(Q(home_club=club) | Q(away_club=club))
+        .only('home_club_id', 'away_club_id', 'simulated_match_id')
+        .select_related('simulated_match')
+    )
+    grade_acc = {}
+    for fixture in fixtures:
+        sm = fixture.simulated_match
+        if not sm or not sm.report_data:
+            continue
+        rd = sm.report_data
+        is_home = fixture.home_club_id == club.id
+        own_key = 'home_ratings' if is_home else 'away_ratings'
+        for entry in rd.get(own_key, []):
+            pid = entry.get('id')
+            rating = entry.get('rating')
+            if pid is not None and rating is not None:
+                grade_acc.setdefault(pid, []).append(float(rating))
+    return {
+        pid: round(sum(vals) / len(vals), 2)
+        for pid, vals in grade_acc.items()
+        if vals
+    }
+
+
+def _player_match_log(player, season=CURRENT_SQUAD_SEASON):
+    """Spielweise Noten eines Spielers aus SimulatedMatch.report_data.
+
+    Gibt eine Liste von Dicts zurück:
+    ``[{matchday, opponent_name, opponent_crest, grade, grade_class}]``
+    in aufsteigender Spieltag-Reihenfolge.
+    """
+    from django.db.models import Q
+    if not player.club:
+        return []
+    fixtures = (
+        SeasonFixture.objects
+        .filter(season=season, is_played=True, simulated_match__isnull=False)
+        .filter(Q(home_club=player.club) | Q(away_club=player.club))
+        .select_related('simulated_match', 'home_club', 'away_club')
+        .order_by('matchday')
+    )
+    log = []
+    for fixture in fixtures:
+        sm = fixture.simulated_match
+        if not sm or not sm.report_data:
+            continue
+        rd = sm.report_data
+        is_home = fixture.home_club_id == player.club_id
+        own_key = 'home_ratings' if is_home else 'away_ratings'
+        opponent = fixture.away_club if is_home else fixture.home_club
+        for entry in rd.get(own_key, []):
+            if entry.get('id') == player.id:
+                rating = entry.get('rating')
+                if rating is not None:
+                    log.append({
+                        'matchday': fixture.matchday,
+                        'opponent_name': opponent.short_name or opponent.name,
+                        'opponent_crest': opponent.crest_static_path or '',
+                        'grade': float(rating),
+                        'grade_class': grade_badge_class(rating),
+                    })
+                break
+    return log
+
+
 def _form_series_map(player_ids, limit=7):
     """Letzte N Bewertungen pro Spieler aus Sim-Spielen (chronologisch, 1-6-Skala)."""
     series = {}
@@ -3088,6 +3163,12 @@ def _build_squad_context(request, club, squad_title):
 
     all_ids = [p.id for p in all_club_players]
     stats = _aggregate_squad_season_stats(all_ids)
+    live_grades = _live_grade_map(club)
+    for pid, avg in live_grades.items():
+        if pid in stats:
+            stats[pid]['grade'] = avg
+        else:
+            stats[pid] = {'matches': 0, 'goals': 0, 'assists': 0, 'minutes': 0, 'grade': avg}
     form_map = _form_series_map([p.id for p in active_players])
 
     player_rows = [
@@ -3613,6 +3694,14 @@ def player_detail(request, player_id):
         or (player.nationalities.split(',')[0].strip() if player.nationalities else None)
     )
 
+    match_log = _player_match_log(player)
+    if match_log:
+        match_log_avg = round(sum(e['grade'] for e in match_log) / len(match_log), 2)
+        match_log_avg_class = grade_badge_class(match_log_avg)
+    else:
+        match_log_avg = None
+        match_log_avg_class = 'grade-empty'
+
     return render(
         request,
         'game/player_detail.html',
@@ -3665,6 +3754,9 @@ def player_detail(request, player_id):
             'nation_nt_logo': _player_nation_nt_logo(player),
             'nation_nt_name': _player_nation_nt_name(player),
             'nt_confederation_badge_url': nt_confederation_badge(player),
+            'match_log': match_log,
+            'match_log_avg': match_log_avg,
+            'match_log_avg_class': match_log_avg_class,
             'game_header': build_game_header(
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",

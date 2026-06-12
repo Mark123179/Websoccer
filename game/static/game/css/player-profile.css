@@ -2113,3 +2113,92 @@ min-height: 34px;
 gap: 18px;
     }
 }
+
+
+/* ── Match-Log (Spielweise Noten) ──────────────────────────────────────────── */
+
+.aaa-match-log-card .aaa-card-heading {
+    align-items: center;
+}
+
+.aaa-match-log-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.aaa-match-log-head,
+.aaa-match-log-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 72px;
+    align-items: center;
+    gap: 0 12px;
+    padding: 6px 12px;
+}
+
+.aaa-match-log-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--aaa-card-bg, #0d1f27);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    color: var(--aaa-muted, #7fa4b2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.aaa-match-log-row {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    min-height: 36px;
+}
+
+.aaa-match-log-row:last-child {
+    border-bottom: none;
+}
+
+.aaa-match-log-md {
+    color: var(--aaa-muted, #7fa4b2);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.aaa-match-log-opp {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--aaa-text, #e2edf2);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.aaa-match-log-opp img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.aaa-match-log-row .grade-badge {
+    justify-self: end;
+    min-width: 50px;
+    height: 22px;
+    font-size: 12px;
+}
+
+@media (min-width: 1441px) {
+    .aaa-match-log-row .grade-badge {
+        min-width: 58px;
+        height: 24px;
+        font-size: 13px;
+    }
+}
