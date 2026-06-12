@@ -98,17 +98,24 @@ def _draw_match_strength(player) -> float:
 
     Formel: random.uniform(base, potential) + form_modifier, geclamped auf [0, 200].
     Ein Talent mit hohem Potential kann sein Ceiling abrufen — aber nicht immer.
+    Frische unter 80 reduziert das Ergebnis proportional (Frische-Leistungsmalus V1).
     """
     try:
         sp = player.strength_profile
         base = float(sp.base_strength or 50.0)
         form = float(sp.form_modifier or 0.0)
+        freshness = int(round(float(sp.freshness or 100.0)))
     except Exception:
         return 50.0
 
     pot = _potential(player)
     drawn = random.uniform(base, pot) if pot > base else base
-    return round(max(0.0, min(200.0, drawn + form)), 2)
+    raw = drawn + form
+
+    from .freshness_service import freshness_performance_factor
+    perf = freshness_performance_factor(freshness)
+
+    return round(max(0.0, min(200.0, raw * perf)), 2)
 
 
 def _pos_factor(player, slot_code: str) -> tuple[float, str | None]:
@@ -225,6 +232,10 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None) ->
                 final_strength = float(sp.final_strength or 50.0)
             except Exception:
                 final_strength = 50.0
+        try:
+            _freshness = int(round(float(p.strength_profile.freshness or 100.0)))
+        except Exception:
+            _freshness = 100
         players_list.append({
             'id': p.pk,
             'name': f'{p.first_name} {p.last_name}'.strip() or str(p),
@@ -232,6 +243,7 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None) ->
             'main_positions': list(p.main_positions),
             'secondary_positions': list(p.secondary_positions),
             'teamwork': _teamwork(p),
+            'freshness': _freshness,
         })
 
     lineup_list: list[dict] = []
@@ -858,28 +870,31 @@ _INJURY_TIERS = [
     ('Mittel', 10, 21, 0.25),
     ('Schwer', 28, 56, 0.05),
 ]
-_BASE_INJURY_PROB    = 0.04
-_LOW_FITNESS_BONUS   = 0.02
-_LOW_FITNESS_THRESH  = 70
-
 
 _MAX_INJURIES_PER_TEAM = 2
 
 
-def _generate_injury_events(players: list[dict], club_side: str) -> list[dict]:
-    """Zieht zufällige Verletzungsereignisse für einen Spieler-Pool.
+def _generate_injury_events(
+    players: list[dict],
+    club_side: str,
+    medizin_factor: float = 1.0,
+) -> list[dict]:
+    """Zieht zufällige Verletzungsereignisse für einen Spieler-Pool (V1-Formel).
 
-    Wahrscheinlichkeit: ~4 % pro Spieler-Slot, +2 % wenn Frische < 70.
-    Verletzungstypen: Leicht (3–7 d), Mittel (10–21 d), Schwer (28–56 d).
+    Basisrisiko: 0.9 % pro Spieler/90 min (statt pauschal 4 %).
+    Frische-Multiplikator: 1.0 (90–100) bis 2.3 (< 50) → reale Frische fließt ein.
+    Medizin-Multiplikator: 1.0 (Stufe 0) bis 0.8 (Stufe 3).
     Maximum: _MAX_INJURIES_PER_TEAM (2) Verletzungen pro Team.
 
     Gibt eine Liste von injury-Event-Dicts zurück::
         [{player_id, player_name, club_side, minute, injury_type, days}, ...]
     """
+    from .freshness_service import BASE_INJURY_RISK_PER_90, freshness_injury_multiplier
+
     candidates = []
     for p in players:
-        fitness = p.get('fitness') or p.get('freshness') or 100
-        prob = _BASE_INJURY_PROB + (_LOW_FITNESS_BONUS if fitness < _LOW_FITNESS_THRESH else 0.0)
+        freshness = int(p.get('freshness') or 100)
+        prob = BASE_INJURY_RISK_PER_90 * freshness_injury_multiplier(freshness) * medizin_factor
         if random.random() >= prob:
             continue
         r = random.random()
@@ -1160,8 +1175,19 @@ def simulate_match(home_club, away_club) -> dict:
     )
 
     # 5c. Verletzungs-Events (post-match Effekt, beeinflusst Spielausgang NICHT)
-    h_injury_events = _generate_injury_events(h_players, club_side='home')
-    a_injury_events = _generate_injury_events(a_players, club_side='away')
+    from .freshness_service import MEDIZIN_INJURY_FACTOR, _stadium_level
+    home_medizin = _stadium_level(home_club, 'medizin_level')
+    away_medizin = _stadium_level(away_club, 'medizin_level')
+    h_injury_events = _generate_injury_events(
+        h_players,
+        club_side='home',
+        medizin_factor=MEDIZIN_INJURY_FACTOR.get(home_medizin, 1.0),
+    )
+    a_injury_events = _generate_injury_events(
+        a_players,
+        club_side='away',
+        medizin_factor=MEDIZIN_INJURY_FACTOR.get(away_medizin, 1.0),
+    )
 
     h_teamwork = sum(p['teamwork'] for p in h_players)
     a_teamwork = sum(p['teamwork'] for p in a_players)
@@ -1207,6 +1233,8 @@ def simulate_match(home_club, away_club) -> dict:
         'away_substitutions':    list(away_tactic.substitutions or []),
         'card_events':           h_card_events + a_card_events,
         'injury_events':         h_injury_events + a_injury_events,
+        'home_fatigue_cost':     sim.get('home_fatigue_cost', 1.0),
+        'away_fatigue_cost':     sim.get('away_fatigue_cost', 1.0),
     }
 
     # 6. Spielernoten berechnen und in den Report einbetten

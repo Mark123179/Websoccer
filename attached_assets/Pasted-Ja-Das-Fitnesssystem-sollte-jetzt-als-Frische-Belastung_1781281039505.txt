@@ -1,0 +1,606 @@
+Ja. Das Fitnesssystem sollte jetzt als Frische-/Belastungsmodell V1 gebaut werden. Wichtig ist: Es darf Rotation erzwingen, aber nicht so brutal sein, dass Manager aus Angst vor Frische nur noch B-Elfen aufstellen.
+
+Mein Vorschlag:
+
+Frische 0–100
+100 = komplett frisch
+85–99 = problemlos einsetzbar
+75–84 = leicht belastet, aber normal spielbar
+65–74 = sichtbar müde
+55–64 = hohes Risiko
+unter 55 = sollte nur im Notfall spielen
+1. Grundprinzip
+
+Ein Spiel kostet Frische.
+Ein spielfreier Tag regeneriert Frische.
+Der Verlust wird beeinflusst durch:
+
+- Minuten
+- Position
+- Ausdauer
+- Einsatz
+- Pressing
+- Tempo
+- Zweikampfstil
+- Matchplan / Conditions
+- Trainingsgelände
+
+Verletzungsrisiko wird beeinflusst durch:
+
+- Frische
+- Einsatz
+- Zweikampfstil
+- Pressing
+- Minutenbelastung
+- Medizinzentrum
+
+Damit trennst du sauber:
+
+System	Wirkung
+Trainingsgelände	bessere Frischeanzeige, weniger Frischeverlust, bessere Regeneration
+Medizinzentrum	weniger Verletzungen, kürzere Ausfallzeiten
+Ausdauer	Spieler verliert weniger Frische
+Taktik	intensive Spielweise kostet mehr Frische
+Rotation	Spieler erholen sich durch Nicht-Einsatz
+2. Frischeverlust pro Spiel
+Basiswert
+
+Für ein normales 90-Minuten-Spiel:
+
+Basis-Frischeverlust = 9 Punkte
+
+Das ist der zentrale Wert.
+
+Warum 9?
+
+Bei einem Spiel alle 3 Tage hast du meist 2 Regenerationstage. Wenn ein Spieler ca. 9–10 Punkte verliert und pro Tag ca. 4 Punkte regeneriert, verliert er netto nur 1–2 Punkte pro Spiel. Er kann also lange durchspielen, aber irgendwann wird Rotation sinnvoll.
+
+3. Formel V1
+Frischeverlust =
+9
+× Minutenfaktor
+× Positionsfaktor
+× Ausdauerfaktor
+× Taktikfaktor
+− Trainingsgelände-Bonus
+
+Mit Grenzen:
+
+Minimum Feldspieler: 3 Punkte
+Minimum Torwart: 1 Punkt
+Maximum normales Spiel: ca. 18 Punkte
+4. Minutenfaktor
+Einsatzzeit	Faktor
+0 Minuten	kein Verlust, stattdessen Regeneration
+1–15 Minuten	0.20
+16–30 Minuten	0.35
+31–45 Minuten	0.55
+46–60 Minuten	0.70
+61–75 Minuten	0.85
+76–90 Minuten	1.00
+90+ Minuten / Verlängerung später	1.10–1.25
+
+Oder simpel:
+
+Minutenfaktor = gespielte Minuten / 90
+
+Für V1 reicht die simple Formel.
+
+5. Positionsfaktor
+
+Nicht jede Position kostet gleich viel Frische.
+
+Position	Faktor	Begründung
+TW	0.45	weniger Laufbelastung
+IV	0.85	weniger Dauersprints
+LV / RV	1.05	viele Läufe
+LOV / ROV	1.12	höchste Außenbahnlast
+DM	1.00	viele Zweikämpfe, aber stabiler Raum
+ZM	1.08	hohe Laufleistung
+OM	1.08	Pressing + Offensivwege
+LM / RM	1.10	Flügelarbeit
+LF / RF	1.12	Sprints, Tiefenläufe, Pressing
+ST	0.98	Pressing, aber weniger Gesamtwege
+
+Damit werden Außenverteidiger, Wingbacks, Flügel und zentrale Mittelfeldspieler automatisch rotationsanfälliger als IV oder TW.
+
+6. Ausdauer einbinden
+
+Ausdauer sollte Frischeverlust reduzieren, aber nicht komplett dominieren.
+
+Ich würde Ausdauer auf 0–100 nehmen.
+
+Ausdauer	Faktor
+50	1.12
+60	1.06
+70	1.00
+80	0.94
+90	0.89
+100	0.86
+
+Formel:
+
+Ausdauerfaktor = clamp(1 - ((Ausdauer - 70) × 0.005), 0.86, 1.12)
+
+Beispiele:
+
+Spieler	Ausdauer	Wirkung
+schwach konditionell	55	verliert ca. 7–8 % mehr
+normal	70	neutral
+laufstark	85	verliert ca. 7–8 % weniger
+Ausdauermonster	95	verliert ca. 12 % weniger
+
+Ich würde Ausdauer nicht zusätzlich stark auf tägliche Regeneration geben, sonst wirkt sie doppelt. Ausdauer = weniger Verlust. Trainingsgelände = bessere Regeneration.
+
+7. Taktik einbinden
+Einsatz
+
+Der Einsatz ist der wichtigste Taktikfaktor.
+
+Einsatz	Faktor
+Schonend	0.90
+Normal	1.00
+Hoch	1.12
+Sehr hoch	1.25
+
+Wenn du Einsatz numerisch 0–100 nutzt:
+
+Einsatzfaktor = clamp(1 + ((Einsatz - 50) × 0.005), 0.88, 1.25)
+
+Beispiele:
+
+Einsatzwert	Faktor
+25	0.88
+50	1.00
+75	1.12
+100	1.25
+Pressing
+
+Normalpressing soll neutral sein.
+
+Deine Pressingwerte:
+
+passiv = 0.00
+normal = 0.35
+intensiv = 0.65
+hoch = 0.85
+
+Für Fitness:
+
+Pressingfaktor = 1 + ((Pressingwert - 0.35) × 0.18)
+Pressing	Faktor ca.
+passiv	0.94
+normal	1.00
+intensiv	1.05
+hoch	1.09
+
+Wichtig: Pressing sollte zusätzlich positions-/linienbezogen wirken.
+
+Linie	Wirkung
+Angriffspressing hoch	ST, LF, RF, LM, RM stärker betroffen
+Mittelfeldpressing hoch	DM, ZM, OM, LM, RM stärker betroffen
+Abwehrpressing hoch	IV, LV, RV, LOV, ROV stärker betroffen
+
+Also nicht nur ein globaler Teamfaktor, sondern Spieler bekommen den Pressingwert ihrer Linie.
+
+Pressing-Trigger
+
+Trigger kosten extra, aber nur leicht.
+
+Trigger	Zusatzverlust
+Nach Ballverlust pressen	+3 %
+Zweite Bälle attackieren	+2 %
+Fehlpässe attackieren	+2 %
+Torwart anlaufen	+3 % für Angreifer, +1 % Team
+
+Da dein Trigger-Budget maximal 3 Punkte hat, bleibt das kontrolliert.
+
+Beispiel:
+
+Nach Ballverlust pressen + Torwart anlaufen
+= spürbar, aber kein Fitness-Todesurteil
+Tempo
+
+Tempo beeinflusst Laufintensität und Risiko.
+
+Tempo	Faktor
+0–25 sehr ruhig	0.94
+26–49 kontrolliert	0.97
+50 normal	1.00
+51–75 zügig	1.04
+76–100 sehr schnell	1.08
+
+Formel:
+
+Tempofaktor = clamp(1 + ((Tempo - 50) × 0.0016), 0.94, 1.08)
+Zweikampfstil
+Stil	Faktor
+Vorsichtig	0.97
+Normal	1.00
+Hart	1.06
+
+Hart sollte zusätzlich das Verletzungsrisiko erhöhen.
+
+Abwehrlinie
+Linie	Faktor
+Tief	0.98
+Standard	1.00
+Höher stehen	1.03
+
+Höher stehen erzeugt mehr Rückwärtsläufe und mehr Sprintlast.
+
+Matchpläne / Conditions
+
+Nur während der aktiven Minuten.
+
+Matchplan	Frischewirkung
+Ausgewogen	1.00
+Kontrolle & Ballbesitz	0.97
+Kompakt sichern	0.96
+Zeitspiel	0.92
+Aggressiv & Risiko	1.12
+Schlussangriff	1.20
+Unterzahl kompakt	1.08
+
+Wichtig: Der Faktor gilt nur anteilig.
+
+Beispiel:
+
+Schlussangriff ab Minute 80
+= 10 von 90 Minuten × 1.20
+= kleiner Zusatz, kein kompletter Spiel-Malus
+8. Trainingsgelände einbinden
+
+Deine Stufen passen gut. Ich würde sie so technisch umsetzen:
+
+Stufe	Anzeige	Frischeverlust	tägliche Regeneration
+0	nur 5er-Schritte	±0	+0
+1	1–2 Punkte genau	±0	+0
+2	exakt	−1 bis −2 pro Spiel	+0
+3	exakt	−1 bis −2 pro Spiel	+1 bis +2 pro Tag
+
+Für die Engine als stabile Durchschnittswerte:
+
+Stufe	Verlustbonus	Regenerationsbonus
+0	0	0
+1	0	0
+2	−1.5	0
+3	−1.5	+1.5 pro Tag
+
+Ich würde Stufe 3 die Vorteile von Stufe 2 behalten lassen. Sonst wäre Stufe 3 bei Spielbelastung komisch schwächer als Stufe 2.
+
+9. Medizinzentrum einbinden
+
+Medizin sollte nicht primär Frische regenerieren. Sonst überschneidet es sich zu stark mit dem Trainingsgelände.
+
+Medizin wirkt auf:
+
+- Verletzungswahrscheinlichkeit
+- Ausfallzeit
+- Rückfallrisiko
+Stufe	Verletzungsanfälligkeit	Ausfallzeit	Zusatz
+0	normal	normal	—
+1	−5 %	−1 bis −2 Tage	Reha-Center
+2	−10 %	−2 bis −3 Tage	Präventionsprogramm
+3	−20 %	−3 bis −4 Tage	Individualpflege
+
+Für Code:
+
+medizin_factor:
+Stufe 0 = 1.00
+Stufe 1 = 0.95
+Stufe 2 = 0.90
+Stufe 3 = 0.80
+
+Und bei Verletzungsdauer:
+
+Stufe 1: Dauer - random(1,2)
+Stufe 2: Dauer - random(2,3)
+Stufe 3: Dauer - random(3,4)
+Minimum: 1 Tag
+Maximum: 60 Tage
+10. Tägliche Regeneration
+Basis-Regeneration
+Basis-Regeneration = +4 Frische pro spielfreiem Tag
+
+Das ist der zweite zentrale Wert.
+
+Situation	Regeneration
+normaler Kalendertag	+4
+Trainingsgelände Stufe 3	zusätzlich +1 bis +2
+Spieler hatte 0 Minuten am Spieltag	zusätzlicher Restbonus +2
+Spieler hatte ≤30 Minuten	kleiner Restbonus +1
+Spieler verletzt	keine normale Frischeberechnung nötig oder gedeckelt
+
+Ich würde pro Tag einmal nachts regenerieren.
+
+Regenerationsformel
+Tägliche Regeneration =
+4
++ Trainingsgelände-Bonus
++ Restbonus
+
+Mit Cap:
+
+Frische maximal 100
+
+Optional später:
+
+Wenn Frische > 95, Regeneration nur noch halb so stark
+
+Das ist aber für V1 nicht nötig.
+
+11. Zieltest: Ein Wettbewerb
+
+Ein normaler Spieler:
+
+ZM
+90 Minuten
+Ausdauer 75
+normale Taktik
+Trainingsgelände Stufe 0
+
+Rechnung ungefähr:
+
+9 × 1.08 × 0.975 × 1.00 = ca. 9.5 Verlust
+
+Bei Spiel alle 3 Tage:
+
+2 Regenerationstage × 4 = +8
+Netto: ca. -1.5 pro Spiel
+
+Das bedeutet:
+
+Nach Spielen	Frische ungefähr
+Start	100
+5 Spiele	92–93
+10 Spiele	85
+15 Spiele	77–78
+
+Das passt exakt zu deinem Ziel:
+
+Ein Verein mit nur einem Wettbewerb kann fast mit derselben Elf durchspielen, aber irgendwann wird punktuelle Rotation sinnvoll.
+
+Mit Trainingsgelände Stufe 2:
+
+Verlust ca. 8.0
+Regeneration +8
+Netto fast 0
+
+Mit Trainingsgelände Stufe 3:
+
+Verlust ca. 8.0
+Regeneration ca. +11
+Spieler bleibt sehr frisch
+
+Das ist als teures Stadionumfeld-Upgrade okay.
+
+12. Zieltest: Zwei Wettbewerbe
+
+Jetzt ein Team mit zwei Spielen in drei Tagen:
+
+Spiel Montag
+Spiel Mittwoch/Donnerstag
+nur 1 Regenerationstag
+
+Normaler Verlust:
+
+ca. 9.5 Verlust
++4 Regeneration
+= netto -5.5
+
+Nach 4 engen Spielen:
+
+100 → 94.5 → 89 → 83.5 → 78
+
+Das ist noch spielbar, aber nicht endlos.
+
+Mit hoher Intensität:
+
+Verlust 12–14
++4 Regeneration
+= netto -8 bis -10
+
+Dann muss rotiert werden.
+
+Das ist richtig.
+
+13. Zieltest: Drei Wettbewerbe
+
+Bei drei Wettbewerben entstehen Phasen mit:
+
+3 Spiele in 6–7 Tagen
+
+Dann passiert:
+
+Spiel 1: -10
+Regeneration: +4
+Spiel 2: -10
+Regeneration: +4
+Spiel 3: -10
+
+Netto:
+
+ca. -22 in einer Woche
+
+Jetzt braucht man Rotation. Aber nicht zwingend komplette B-Elf.
+
+Der Manager kann:
+
+- 2–4 Spieler rotieren
+- Flügel/AV/ZM eher schonen
+- IV/TW öfter durchspielen lassen
+- Einsatz gegen schwächere Gegner reduzieren
+- Tempo/Pressing dosieren
+
+Genau das willst du.
+
+14. Frischewirkung auf Leistung
+
+Ich würde Frische nicht zu stark machen. Sonst spielt jeder sofort B-Elf.
+
+Vorschlag:
+
+Frische	Leistungswirkung	Verletzungsrisiko
+90–100	kein Malus	normal
+80–89	kein oder minimaler Malus	leicht erhöht
+70–79	−1 % bis −2 %	erhöht
+60–69	−4 %	deutlich erhöht
+50–59	−7 %	hoch
+<50	−12 %	sehr hoch
+
+Wichtig:
+
+Ein Star mit 78 Frische soll meistens noch besser sein als ein schwacher Ersatzspieler mit 100 Frische.
+Ein Star mit 55 Frische sollte aber ein echtes Risiko sein.
+
+Das verhindert die „B-Elf in der Champions League“-Logik.
+
+15. Verletzungsrisiko koppeln
+
+Basis pro Spieler und 90 Minuten:
+
+Basis-Verletzungsrisiko = 0.8 % bis 1.1 %
+
+Ich würde mit 0.9 % starten.
+
+Formel:
+
+Verletzungsrisiko =
+0.9 %
+× Minutenfaktor
+× Frischefaktor
+× Einsatzfaktor
+× Zweikampffaktor
+× Pressingfaktor
+× Medizin-Faktor
+Frischefaktor für Verletzungen
+Frische	Faktor
+90–100	1.00
+80–89	1.05
+70–79	1.15
+60–69	1.35
+50–59	1.70
+<50	2.30
+Zweikampffaktor
+Stil	Faktor
+Vorsichtig	0.92
+Normal	1.00
+Hart	1.18
+Einsatzfaktor
+Einsatz	Faktor
+Schonend	0.90
+Normal	1.00
+Hoch	1.12
+Sehr hoch	1.25
+Medizin-Faktor
+Medizin	Faktor
+Stufe 0	1.00
+Stufe 1	0.95
+Stufe 2	0.90
+Stufe 3	0.80
+
+Damit ist Medizin wertvoll, aber nicht overpowered.
+
+16. Positionsbezogene Verletzungslogik
+
+Die Position sollte auch beeinflussen, welche Art Verletzung gezogen wird.
+
+Außenverteidiger / Flügel
+
+Höheres Risiko für:
+
+- Muskelverletzungen
+- Hamstring
+- Wade
+- Sprunggelenk
+- Adduktoren
+ZM / DM / OM
+
+Höheres Risiko für:
+
+- Muskelverletzungen
+- Adduktoren
+- Knieverdrehungen
+- Prellungen
+IV / ST
+
+Höheres Risiko für:
+
+- Kopfverletzungen
+- Prellungen
+- Knie
+- Sprunggelenk
+- Schulter/Rippen
+Torwart
+
+Höheres Risiko für:
+
+- Finger
+- Handgelenk
+- Schulter
+- Hüfte
+- Knie nach Landung
+- Kopf nach Zusammenprall
+17. Empfohlene Frischeanzeige je Trainingsgelände
+
+Das passt gut zu deinem Stadionumfeld.
+
+Trainingsgelände	Anzeige für Manager
+Stufe 0	100, 95, 90, 85 usw.
+Stufe 1	100, 98, 97, 95 usw., aber mit kleiner Ungenauigkeit
+Stufe 2	exakter Wert
+Stufe 3	exakter Wert + Regenerationsprognose
+
+Beispiel:
+
+Stufe 0:
+Frische: 85
+
+Stufe 1:
+Frische: ca. 86–88
+
+Stufe 2:
+Frische: 87
+
+Stufe 3:
+Frische: 87
+Prognose morgen: 92
+
+Das macht Stadionumfeld spielerisch sichtbar, nicht nur mathematisch.
+
+18. Konkrete V1-Werte zum Einfrieren
+
+Ich würde mit diesen Werten starten:
+
+BASE_MATCH_FITNESS_LOSS = 9.0
+BASE_DAILY_RECOVERY = 4.0
+MATCHDAY_REST_BONUS = 2.0
+SHORT_APPEARANCE_REST_BONUS = 1.0
+TRAINING_GROUND_S2_LOSS_REDUCTION = 1.5
+TRAINING_GROUND_S3_DAILY_RECOVERY = 1.5
+BASE_INJURY_RISK_PER_90 = 0.009
+MIN_FITNESS = 0
+MAX_FITNESS = 100
+Positionsfaktoren
+GK  = 0.45
+IV  = 0.85
+LV  = 1.05
+RV  = 1.05
+LOV = 1.12
+ROV = 1.12
+DM  = 1.00
+ZM  = 1.08
+OM  = 1.08
+LM  = 1.10
+RM  = 1.10
+LF  = 1.12
+RF  = 1.12
+ST  = 0.98
+Frische-Leistungsmalus
+90–100: 0 %
+80–89: 0 %
+70–79: -1 bis -2 %
+60–69: -4 %
+50–59: -7 %
+<50: -12 %

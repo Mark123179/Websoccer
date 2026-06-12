@@ -280,6 +280,20 @@ def _update_player_season_stats(fixture, data: dict) -> None:
     except Exception:
         pass
 
+    # ── Frischeverlust nach Spiel schreiben ───────────────────────────────────
+    try:
+        from .freshness_service import apply_match_freshness_losses
+        apply_match_freshness_losses(
+            home_players=data.get('home_players') or [],
+            away_players=data.get('away_players') or [],
+            home_club=fixture.home_club,
+            away_club=fixture.away_club,
+            fatigue_cost_home=float(data.get('home_fatigue_cost') or 1.0),
+            fatigue_cost_away=float(data.get('away_fatigue_cost') or 1.0),
+        )
+    except Exception:
+        pass
+
 
 _COMPETITION_FOR_SOURCE = {
     'ws_freundschaft': 'Freundschaft',
@@ -595,6 +609,20 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
             data.get('injury_events') or [],
             fixture_date,
             competition,
+        )
+    except Exception:
+        pass
+
+    # ── Frischeverlust nach Spiel schreiben ───────────────────────────────────
+    try:
+        from .freshness_service import apply_match_freshness_losses
+        apply_match_freshness_losses(
+            home_players=data.get('home_players') or [],
+            away_players=data.get('away_players') or [],
+            home_club=home_club,
+            away_club=away_club,
+            fatigue_cost_home=float(data.get('home_fatigue_cost') or 1.0),
+            fatigue_cost_away=float(data.get('away_fatigue_cost') or 1.0),
         )
     except Exception:
         pass

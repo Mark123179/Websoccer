@@ -2959,3 +2959,311 @@ class BuildCombinedEventsInjuryTests(TestCase):
         minutes = [e['minute'] for e in events]
         self.assertEqual(minutes, sorted(minutes), "Events müssen nach Minute sortiert sein.")
 
+
+# ── Frische-/Belastungsmodell V1 ─────────────────────────────────────────────
+
+class FreshnessServiceUnitTests(TestCase):
+    """Unit-Tests für game.freshness_service — keine DB nötig."""
+
+    def test_performance_factor_full_freshness(self):
+        from .freshness_service import freshness_performance_factor
+        self.assertEqual(freshness_performance_factor(100), 1.00)
+        self.assertEqual(freshness_performance_factor(85),  1.00)
+        self.assertEqual(freshness_performance_factor(80),  1.00)
+
+    def test_performance_factor_tired(self):
+        from .freshness_service import freshness_performance_factor
+        f70 = freshness_performance_factor(75)
+        f60 = freshness_performance_factor(65)
+        f50 = freshness_performance_factor(55)
+        f40 = freshness_performance_factor(40)
+        self.assertAlmostEqual(f70, 0.985, places=3)
+        self.assertAlmostEqual(f60, 0.96,  places=3)
+        self.assertAlmostEqual(f50, 0.93,  places=3)
+        self.assertAlmostEqual(f40, 0.88,  places=3)
+        self.assertLess(f70, 1.00)
+        self.assertLess(f60, f70)
+        self.assertLess(f50, f60)
+        self.assertLess(f40, f50)
+
+    def test_injury_multiplier_tiers(self):
+        from .freshness_service import freshness_injury_multiplier
+        self.assertAlmostEqual(freshness_injury_multiplier(100), 1.00)
+        self.assertAlmostEqual(freshness_injury_multiplier(95),  1.00)
+        self.assertAlmostEqual(freshness_injury_multiplier(85),  1.05)
+        self.assertAlmostEqual(freshness_injury_multiplier(75),  1.15)
+        self.assertAlmostEqual(freshness_injury_multiplier(65),  1.35)
+        self.assertAlmostEqual(freshness_injury_multiplier(55),  1.70)
+        self.assertAlmostEqual(freshness_injury_multiplier(40),  2.30)
+
+    def test_ausdauer_factor(self):
+        from .freshness_service import _ausdauer_factor
+        self.assertAlmostEqual(_ausdauer_factor(70),  1.00, places=3)
+        self.assertAlmostEqual(_ausdauer_factor(100), 0.86, places=3)
+        self.assertAlmostEqual(_ausdauer_factor(40),  1.12, places=2)
+        self.assertAlmostEqual(_ausdauer_factor(None), 1.00, places=3)
+        self.assertGreaterEqual(_ausdauer_factor(0), 0.86)
+        self.assertLessEqual(_ausdauer_factor(200), 1.12)
+
+    def test_compute_single_player_loss_gk_min(self):
+        from .freshness_service import compute_single_player_loss
+        loss = compute_single_player_loss('TW', 70, 1.0, 0, minutes=90)
+        self.assertGreaterEqual(loss, 1.0, "TW-Minimum ist 1 Punkt")
+        self.assertLessEqual(loss, 18.0)
+
+    def test_compute_single_player_loss_field_min(self):
+        from .freshness_service import compute_single_player_loss
+        loss = compute_single_player_loss('ZM', 70, 1.0, 0, minutes=90)
+        self.assertGreaterEqual(loss, 3.0, "Feldspieler-Minimum ist 3 Punkte")
+        self.assertLessEqual(loss, 18.0)
+
+    def test_compute_single_player_loss_zero_minutes(self):
+        from .freshness_service import compute_single_player_loss
+        loss = compute_single_player_loss('ZM', 70, 1.0, 0, minutes=0)
+        self.assertEqual(loss, 0.0, "0 Minuten → kein Verlust")
+
+    def test_compute_single_player_loss_training_reduction(self):
+        from .freshness_service import compute_single_player_loss
+        base = compute_single_player_loss('ZM', 70, 1.0, 0, minutes=90)
+        s2   = compute_single_player_loss('ZM', 70, 1.0, 2, minutes=90)
+        self.assertLess(s2, base, "Training-Stufe 2 muss Verlust reduzieren")
+
+    def test_compute_single_player_loss_max_cap(self):
+        from .freshness_service import compute_single_player_loss
+        loss = compute_single_player_loss('LF', 40, 1.5, 0, minutes=120)
+        self.assertLessEqual(loss, 18.0, "Maximum 18 Punkte")
+
+    def test_compute_loss_position_scaling(self):
+        """Flügel/Außenbahn verliert mehr als TW."""
+        from .freshness_service import compute_single_player_loss
+        tw  = compute_single_player_loss('TW',  70, 1.0, 0)
+        lf  = compute_single_player_loss('LF',  70, 1.0, 0)
+        self.assertLess(tw, lf)
+
+    def test_zm_normal_90min_approx_9_5(self):
+        """Spec-Zieltest: ZM, Ausdauer 75, normale Taktik → ~9.5 Verlust."""
+        from .freshness_service import compute_single_player_loss
+        loss = compute_single_player_loss('ZM', 75, 1.0, 0, minutes=90)
+        self.assertGreater(loss, 8.5)
+        self.assertLess(loss, 10.5)
+
+
+class FreshnessDecayIntegrationTests(TestCase):
+    """Integration-Tests für apply_match_freshness_losses und apply_daily_recovery."""
+
+    def _make_club(self, training_level=0, medizin_level=0):
+        from .models import Club, Stadium, League
+        import uuid
+        slug = uuid.uuid4().hex[:6]
+        league, _ = League.objects.get_or_create(
+            name='TestLiga',
+            defaults={'country': 'DE'},
+        )
+        club = Club.objects.create(
+            name=f'TestClub-{slug}',
+            short_name='TST',
+            founded_year=2000,
+            budget=1000000,
+            league=league,
+        )
+        Stadium.objects.create(
+            club=club,
+            name=f'TestStadion-{slug}',
+            city='Teststadt',
+            training_level=training_level,
+            medizin_level=medizin_level,
+        )
+        return club
+
+    def _make_player(self, club, freshness=100):
+        from .models import Player, PlayerStrengthProfile
+        from decimal import Decimal
+        p = Player.objects.create(
+            club=club,
+            first_name='Test',
+            last_name='Spieler',
+            age=25,
+            position='ZM',
+        )
+        PlayerStrengthProfile.objects.create(
+            player=p,
+            base_strength=Decimal('70.00'),
+            freshness=Decimal(str(freshness)),
+        )
+        return p
+
+    def test_apply_match_freshness_reduces_freshness(self):
+        from .freshness_service import apply_match_freshness_losses
+        from .models import PlayerStrengthProfile
+        club = self._make_club()
+        p = self._make_player(club, freshness=100)
+
+        home_players = [{'id': p.pk, 'position': 'ZM'}]
+        apply_match_freshness_losses(
+            home_players=home_players,
+            away_players=[],
+            home_club=club,
+            away_club=club,
+            fatigue_cost_home=1.0,
+        )
+
+        sp = PlayerStrengthProfile.objects.get(player=p)
+        self.assertLess(float(sp.freshness), 100.0, "Frische muss nach Spiel sinken")
+
+    def test_freshness_does_not_go_below_zero(self):
+        from .freshness_service import apply_match_freshness_losses
+        from .models import PlayerStrengthProfile
+        club = self._make_club()
+        p = self._make_player(club, freshness=2)
+
+        home_players = [{'id': p.pk, 'position': 'LF'}]
+        apply_match_freshness_losses(
+            home_players=home_players,
+            away_players=[],
+            home_club=club,
+            away_club=club,
+            fatigue_cost_home=1.5,
+        )
+
+        sp = PlayerStrengthProfile.objects.get(player=p)
+        self.assertGreaterEqual(float(sp.freshness), 0.0, "Frische darf nicht unter 0")
+
+    def test_training_ground_s2_reduces_loss(self):
+        from .freshness_service import apply_match_freshness_losses
+        from .models import PlayerStrengthProfile
+        club_s0 = self._make_club(training_level=0)
+        club_s2 = self._make_club(training_level=2)
+        p0 = self._make_player(club_s0, freshness=100)
+        p2 = self._make_player(club_s2, freshness=100)
+
+        apply_match_freshness_losses(
+            home_players=[{'id': p0.pk, 'position': 'ZM'}],
+            away_players=[{'id': p2.pk, 'position': 'ZM'}],
+            home_club=club_s0,
+            away_club=club_s2,
+        )
+
+        sp0 = PlayerStrengthProfile.objects.get(player=p0)
+        sp2 = PlayerStrengthProfile.objects.get(player=p2)
+        self.assertGreater(float(sp2.freshness), float(sp0.freshness),
+                           "Trainingsgelände S2 soll weniger Verlust haben → mehr Frische danach")
+
+    def test_apply_daily_recovery_increases_freshness(self):
+        from .freshness_service import apply_daily_recovery
+        from .models import PlayerStrengthProfile
+        club = self._make_club()
+        p = self._make_player(club, freshness=80)
+
+        count = apply_daily_recovery()
+        self.assertGreater(count, 0)
+
+        sp = PlayerStrengthProfile.objects.get(player=p)
+        self.assertGreater(float(sp.freshness), 80.0)
+
+    def test_apply_daily_recovery_does_not_exceed_100(self):
+        from .freshness_service import apply_daily_recovery
+        from .models import PlayerStrengthProfile
+        club = self._make_club()
+        p = self._make_player(club, freshness=100)
+
+        apply_daily_recovery()
+
+        sp = PlayerStrengthProfile.objects.get(player=p)
+        self.assertLessEqual(float(sp.freshness), 100.0)
+
+    def test_injured_player_skipped_by_recovery(self):
+        from .freshness_service import apply_daily_recovery
+        from .models import PlayerStrengthProfile
+        club = self._make_club()
+        p = self._make_player(club, freshness=60)
+        p.ws_injury_days_remaining = 10
+        p.ws_injury_type = 'Leicht'
+        p.save(update_fields=['ws_injury_days_remaining', 'ws_injury_type'])
+
+        apply_daily_recovery()
+
+        sp = PlayerStrengthProfile.objects.get(player=p)
+        self.assertAlmostEqual(float(sp.freshness), 60.0, places=1,
+                               msg="Verletzte Spieler sollen nicht regenerieren")
+
+    def test_training_s3_gives_more_recovery(self):
+        from .freshness_service import apply_daily_recovery
+        from .models import PlayerStrengthProfile
+        club_s0 = self._make_club(training_level=0)
+        club_s3 = self._make_club(training_level=3)
+        p0 = self._make_player(club_s0, freshness=80)
+        p3 = self._make_player(club_s3, freshness=80)
+
+        apply_daily_recovery()
+
+        sp0 = PlayerStrengthProfile.objects.get(player=p0)
+        sp3 = PlayerStrengthProfile.objects.get(player=p3)
+        self.assertGreater(float(sp3.freshness), float(sp0.freshness),
+                           "Trainingsgelände S3 bringt mehr Regeneration")
+
+
+class FreshnessEngineIntegrationTests(TestCase):
+    """Prüft, dass Frische die Matchstärke korrekt beeinflusst."""
+
+    def test_low_freshness_reduces_match_strength(self):
+        from .match_engine import _draw_match_strength
+        from .models import Player, PlayerStrengthProfile
+        from decimal import Decimal
+        import statistics
+
+        p = Player(
+            first_name='Fresh',
+            last_name='Star',
+            position='ZM',
+            potential=80,
+        )
+        p.pk = 9999
+
+        sp_fresh = PlayerStrengthProfile(
+            base_strength=Decimal('70.00'),
+            freshness=Decimal('100.00'),
+            form_modifier=Decimal('0.00'),
+        )
+        sp_tired = PlayerStrengthProfile(
+            base_strength=Decimal('70.00'),
+            freshness=Decimal('45.00'),
+            form_modifier=Decimal('0.00'),
+        )
+
+        p.strength_profile = sp_fresh
+        fresh_strengths = [_draw_match_strength(p) for _ in range(200)]
+
+        p.strength_profile = sp_tired
+        tired_strengths = [_draw_match_strength(p) for _ in range(200)]
+
+        self.assertGreater(
+            statistics.mean(fresh_strengths),
+            statistics.mean(tired_strengths),
+            "Frischer Spieler muss im Schnitt stärker sein als müder",
+        )
+
+    def test_generate_injury_events_uses_medizin_factor(self):
+        """Medizin-Stufe 3 muss zu weniger Verletzungen führen als Stufe 0."""
+        from .match_engine import _generate_injury_events
+        import random as _random
+
+        players = [
+            {'id': i, 'name': f'P{i}', 'freshness': 50}  # niedrige Frische → hohe Basisrate
+            for i in range(30)
+        ]
+
+        _random.seed(42)
+        injuries_no_medizin = sum(
+            len(_generate_injury_events(players, 'home', medizin_factor=1.0))
+            for _ in range(100)
+        )
+
+        _random.seed(42)
+        injuries_best_medizin = sum(
+            len(_generate_injury_events(players, 'home', medizin_factor=0.8))
+            for _ in range(100)
+        )
+
+        self.assertLessEqual(injuries_best_medizin, injuries_no_medizin,
+                             "Besseres Medizinzentrum soll weniger Verletzungen produzieren")
+
