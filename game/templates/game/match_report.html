@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -78,12 +78,23 @@
                             {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
                         </div>
                     </div>
-                    {% else %}
+                    {% elif evt.type == 'sub' %}
                     <div class="mr-event mr-event--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
                         <div class="mr-event-minute">{{ evt.minute }}'</div>
                         <div class="mr-event-detail">
                             <span class="mr-sub-in">&#x2191; {{ evt.in_name }}</span>
                             <span class="mr-sub-out">&#x2193; {{ evt.out_name }}</span>
+                        </div>
+                        <div class="mr-event-club">
+                            {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mr-event mr-event--card mr-event--{{ evt.card_type }}-card {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-event-minute">{{ evt.minute }}'</div>
+                        <div class="mr-event-detail">
+                            <span class="mr-card-icon {% if evt.card_type == 'red' %}mr-card-red{% else %}mr-card-yellow{% endif %}">&#9646;</span>
+                            <span class="mr-card-player">{{ evt.player_name }}</span>
                         </div>
                         <div class="mr-event-club">
                             {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}

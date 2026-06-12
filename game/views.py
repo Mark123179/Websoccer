@@ -3436,8 +3436,8 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
-def _build_combined_events(data, home_subs_enriched, away_subs_enriched):
-    """Führt Tor- und Einwechslungs-Events zu einer nach Minute sortierten Liste zusammen."""
+def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lookup=None):
+    """Führt Tor-, Einwechslungs- und Karten-Events zu einer nach Minute sortierten Liste zusammen."""
     events = []
     for evt in (data.get('goal_events') or []):
         events.append({
@@ -3463,6 +3463,16 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched):
             'minute':   sub['minute'],
             'in_name':  sub['in_name'],
             'out_name': sub['out_name'],
+        })
+    for ce in (data.get('card_events') or []):
+        pid  = ce.get('player_id')
+        name = ce.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
+        events.append({
+            'type':        'card',
+            'team':        ce.get('club_side', 'home'),
+            'minute':      ce.get('minute', 0),
+            'card_type':   ce.get('card_type', 'yellow'),
+            'player_name': name,
         })
     return sorted(events, key=lambda e: e['minute'])
 
@@ -3630,7 +3640,7 @@ def club_match_report(request, club_id):
             'home_substitutions': home_subs,
             'away_substitutions': away_subs,
             # Kombinierte, chronologische Ereignisleiste
-            'combined_events': _build_combined_events(data, home_subs, away_subs),
+            'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
         }
 
     return render(request, 'game/match_report.html', {
@@ -3725,7 +3735,7 @@ def match_report_by_id(request, sm_id):
             'home_substitutions': home_subs,
             'away_substitutions': away_subs,
             # Kombinierte, chronologische Ereignisleiste
-            'combined_events': _build_combined_events(data, home_subs, away_subs),
+            'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
         }
 
     return render(request, 'game/match_report.html', {

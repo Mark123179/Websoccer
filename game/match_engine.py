@@ -809,23 +809,46 @@ def _rating_pos_group(position: str, group: str) -> str:
     return 'FWD'
 
 
-def _assign_cards_to_players(players: list[dict], yellow_count: int, red_count: int) -> list[dict]:
+def _assign_cards_to_players(
+    players: list[dict],
+    yellow_count: int,
+    red_count: int,
+    club_side: str = 'home',
+) -> tuple:
     """Verteilt Team-Karten zufällig auf einzelne Spieler als 0/1-Flags (in-place Kopie).
 
     Jeder Spieler erhält maximal 1 Gelbe und 1 Rote Karte (sample without replacement).
     Karten-Anzahl wird auf Spieler-Pool-Größe geclampt.
+
+    Gibt (players, card_events) zurück.
+    card_events: [{player_id, player_name, card_type, minute, club_side}, ...]
     """
     players = [dict(p) for p in players]
     n = len(players)
     if not n:
-        return players
+        return players, []
     y = min(max(0, yellow_count), n)
     r = min(max(0, red_count), n)
+    card_events = []
     for i in random.sample(range(n), y):
         players[i]['yellow_cards'] = 1
+        card_events.append({
+            'player_id':   players[i].get('id'),
+            'player_name': players[i].get('name', ''),
+            'card_type':   'yellow',
+            'minute':      random.randint(1, 90),
+            'club_side':   club_side,
+        })
     for i in random.sample(range(n), r):
         players[i]['red_cards'] = 1
-    return players
+        card_events.append({
+            'player_id':   players[i].get('id'),
+            'player_name': players[i].get('name', ''),
+            'card_type':   'red',
+            'minute':      random.randint(20, 90),
+            'club_side':   club_side,
+        })
+    return players, card_events
 
 
 def compute_player_ratings(result: dict) -> dict:
@@ -1069,15 +1092,17 @@ def simulate_match(home_club, away_club) -> dict:
 
     # 5b. Karten-Flags (0/1) in Spieler-Rows einbetten — persistent im Report
     ms_stats = sim.get('match_stats', {}) or {}
-    h_players = _assign_cards_to_players(
+    h_players, h_card_events = _assign_cards_to_players(
         h_players,
         ms_stats.get('home_yellow', 0) or 0,
         ms_stats.get('home_red', 0) or 0,
+        club_side='home',
     )
-    a_players = _assign_cards_to_players(
+    a_players, a_card_events = _assign_cards_to_players(
         a_players,
         ms_stats.get('away_yellow', 0) or 0,
         ms_stats.get('away_red', 0) or 0,
+        club_side='away',
     )
 
     h_teamwork = sum(p['teamwork'] for p in h_players)
@@ -1122,6 +1147,7 @@ def simulate_match(home_club, away_club) -> dict:
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
         'home_substitutions':    list(home_tactic.substitutions or []),
         'away_substitutions':    list(away_tactic.substitutions or []),
+        'card_events':           h_card_events + a_card_events,
     }
 
     # 6. Spielernoten berechnen und in den Report einbetten

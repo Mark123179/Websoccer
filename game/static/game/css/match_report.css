@@ -290,6 +290,39 @@
     font-weight: 400;
 }
 
+/* ── Card events ─────────────────────────────────────────────────────────────── */
+
+.mr-event--card {
+    opacity: 0.95;
+}
+
+.mr-event--yellow-card .mr-event-minute {
+    color: rgba(245, 197, 24, 0.9);
+}
+
+.mr-event--red-card .mr-event-minute {
+    color: rgba(232, 64, 64, 0.9);
+}
+
+.mr-card-icon {
+    font-size: 13px;
+    font-weight: 900;
+    margin-right: 5px;
+}
+
+.mr-card-yellow {
+    color: #f5c518;
+}
+
+.mr-card-red {
+    color: #e84040;
+}
+
+.mr-card-player {
+    font-size: 13px;
+    font-weight: 700;
+}
+
 /* ── Statistics ──────────────────────────────────────────────────────────────── */
 
 .mr-stats {
