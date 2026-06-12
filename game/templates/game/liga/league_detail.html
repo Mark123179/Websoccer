@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=8">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -247,7 +247,7 @@
                 {% if last_fixtures %}
                 <div class="liga-fixture-list">
                     {% for f in last_fixtures %}
-                    <div class="liga-fixture">
+                    <div class="liga-fixture liga-fixture--with-ratings">
                         <div class="liga-fixture__home">
                             {% if f.home_club.crest_static_path %}
                             <img class="liga-fixture__crest" src="{% static f.home_club.crest_static_path %}" alt="{{ f.home_club.name }}">
@@ -269,6 +269,27 @@
                         </div>
                         {% if f.simulated_match_id %}
                         <a class="liga-fixture__report-btn" href="{% url 'match_report_by_id' f.simulated_match_id %}" title="Spielbericht öffnen">Bericht</a>
+                        {% endif %}
+                        {% if f.home_top3 or f.away_top3 %}
+                        <div class="liga-fixture__ratings">
+                            <div class="liga-fixture__ratings-side liga-fixture__ratings-side--home">
+                                {% for p in f.home_top3 %}
+                                <span class="liga-fixture__rating-entry">
+                                    <span class="liga-fixture__rating-name">{{ p.name }}</span>
+                                    <span class="liga-fixture__rating-grade {{ p.grade_class }}">{{ p.rating }}</span>
+                                </span>
+                                {% endfor %}
+                            </div>
+                            <div class="liga-fixture__ratings-divider"></div>
+                            <div class="liga-fixture__ratings-side liga-fixture__ratings-side--away">
+                                {% for p in f.away_top3 %}
+                                <span class="liga-fixture__rating-entry liga-fixture__rating-entry--away">
+                                    <span class="liga-fixture__rating-grade {{ p.grade_class }}">{{ p.rating }}</span>
+                                    <span class="liga-fixture__rating-name">{{ p.name }}</span>
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}

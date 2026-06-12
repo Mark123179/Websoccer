@@ -5057,6 +5057,24 @@ def league_detail(request, league_id):
         .order_by('scheduled_date', 'scheduled_time')
     ) if last_matchday_num is not None else []
 
+    for _f in last_fixtures:
+        _sm = _f.simulated_match if _f.simulated_match_id else None
+        if _sm and _sm.report_data:
+            _rd = _sm.report_data
+            _h = sorted(_rd.get('home_ratings', []), key=lambda x: x.get('rating', 99))[:3]
+            _a = sorted(_rd.get('away_ratings', []), key=lambda x: x.get('rating', 99))[:3]
+            _f.home_top3 = [
+                {'name': p.get('name', ''), 'rating': p.get('rating'), 'grade_class': grade_badge_class(p.get('rating'))}
+                for p in _h
+            ]
+            _f.away_top3 = [
+                {'name': p.get('name', ''), 'rating': p.get('rating'), 'grade_class': grade_badge_class(p.get('rating'))}
+                for p in _a
+            ]
+        else:
+            _f.home_top3 = []
+            _f.away_top3 = []
+
     next_fixtures = list(
         SeasonFixture.objects
         .filter(league=league, season=current_season, matchday=next_matchday_num)
