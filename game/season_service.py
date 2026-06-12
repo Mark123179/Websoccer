@@ -18,6 +18,11 @@ _SOURCE_FOR_MATCH_TYPE = {
     'pokal':        'ws_pokal',
 }
 
+_COMPETITION_FOR_MATCH_TYPE = {
+    'freundschaft': 'Freundschaft',
+    'pokal':        'Pokal',
+}
+
 
 def _update_player_season_stats(fixture, data: dict) -> None:
     """Schreibt PlayerFormSnapshot + PlayerSeasonStat nach einer Ligasimulation.
