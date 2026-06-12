@@ -194,18 +194,52 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
     if motm_data:
         motm_pid = motm_data.get('id')
 
+    def _safe_int(v) -> int | None:
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    # Einwechslungs-Sets pro Seite aufbauen (Seite bekannt für team_name-Zuordnung)
+    home_sub_in_pids: set[int] = set()
+    home_sub_out_pids: set[int] = set()
+    away_sub_in_pids: set[int] = set()
+    away_sub_out_pids: set[int] = set()
+
+    for sub in (data.get('home_substitutions') or []):
+        pid = _safe_int(sub.get('in'))
+        if pid:
+            home_sub_in_pids.add(pid)
+        pid = _safe_int(sub.get('out'))
+        if pid:
+            home_sub_out_pids.add(pid)
+
+    for sub in (data.get('away_substitutions') or []):
+        pid = _safe_int(sub.get('in'))
+        if pid:
+            away_sub_in_pids.add(pid)
+        pid = _safe_int(sub.get('out'))
+        if pid:
+            away_sub_out_pids.add(pid)
+
+    sub_in_pids  = home_sub_in_pids  | away_sub_in_pids
+    sub_out_pids = home_sub_out_pids | away_sub_out_pids
+
     sides = [
         (data.get('home_players') or [], home_name, away_name),
         (data.get('away_players') or [], away_name, home_name),
     ]
 
     affected_player_ids: list[int] = []
+    seen_pids: set[int] = set()
+
     for players, team_name, opponent_name in sides:
         for p in players:
-            pid = p.get('id')
+            pid = _safe_int(p.get('id'))
             if not pid:
                 continue
             affected_player_ids.append(pid)
+            seen_pids.add(pid)
 
             goals   = int(p.get('goals',        0) or 0)
             assists = int(p.get('assists',       0) or 0)
@@ -226,7 +260,11 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
                 'assists':          assists,
                 'yellow_cards':     yellow,
                 'red_cards':        red,
-                'raw_payload':      {'is_motm': pid == motm_pid},
+                'raw_payload':      {
+                    'is_motm': pid == motm_pid,
+                    'sub_in':  pid in sub_in_pids,
+                    'sub_out': pid in sub_out_pids,
+                },
             }
             if rating is not None:
                 snap_defaults['rating'] = rating
@@ -236,6 +274,45 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
                 source=source,
                 fixture_id=fixture_id_str,
                 defaults=snap_defaults,
+            )
+
+    # Eingewechselte Bankspieler sind nicht in home_players/away_players (nur Starting XI).
+    # Für diese Spieler werden minimale Snapshots erzeugt, damit substitutions_in
+    # korrekt aggregiert werden kann.
+    bench_sides = [
+        (home_sub_in_pids, home_name, away_name),
+        (away_sub_in_pids, away_name, home_name),
+    ]
+    for sub_in_set, team_name, opponent_name in bench_sides:
+        for pid in sub_in_set:
+            if pid in seen_pids:
+                continue
+            affected_player_ids.append(pid)
+            seen_pids.add(pid)
+            PlayerFormSnapshot.objects.update_or_create(
+                player_id=pid,
+                source=source,
+                fixture_id=fixture_id_str,
+                defaults={
+                    'source':           source,
+                    'fixture_date':     fixture_date,
+                    'minutes_played':   0,
+                    'possible_minutes': 90,
+                    'started':          False,
+                    'substituted_in':   True,
+                    'position':         '',
+                    'team_name':        team_name,
+                    'opponent_name':    opponent_name,
+                    'goals':            0,
+                    'assists':          0,
+                    'yellow_cards':     0,
+                    'red_cards':        0,
+                    'raw_payload':      {
+                        'is_motm': False,
+                        'sub_in':  True,
+                        'sub_out': False,
+                    },
+                },
             )
 
     # PlayerSeasonStat aus allen Snapshots dieser Quelle neu berechnen (idempotent)
@@ -268,6 +345,24 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
     ):
         motm_counts[row['player_id']] = row['c']
 
+    sub_in_counts: dict[int, int] = {}
+    for row in (
+        snap_qs
+        .filter(raw_payload__sub_in=True)
+        .values('player_id')
+        .annotate(c=Count('id'))
+    ):
+        sub_in_counts[row['player_id']] = row['c']
+
+    sub_out_counts: dict[int, int] = {}
+    for row in (
+        snap_qs
+        .filter(raw_payload__sub_out=True)
+        .values('player_id')
+        .annotate(c=Count('id'))
+    ):
+        sub_out_counts[row['player_id']] = row['c']
+
     for pid in affected_player_ids:
         agg = agg_per_player.get(pid, {})
         PlayerSeasonStat.objects.update_or_create(
@@ -290,6 +385,8 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
             red_cards=agg.get('total_red') or 0,
             average_grade=round(avg_grade, 2) if avg_grade is not None else None,
             player_of_match_awards=motm_counts.get(pid, 0),
+            substitutions_in=sub_in_counts.get(pid, 0),
+            substitutions_out=sub_out_counts.get(pid, 0),
         )
 
 

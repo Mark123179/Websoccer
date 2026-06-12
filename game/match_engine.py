@@ -1120,6 +1120,8 @@ def simulate_match(home_club, away_club) -> dict:
         'away_compiled_tactic':  sim.get('away_compiled_tactic', {}),
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
+        'home_substitutions':    list(home_tactic.substitutions or []),
+        'away_substitutions':    list(away_tactic.substitutions or []),
     }
 
     # 6. Spielernoten berechnen und in den Report einbetten
