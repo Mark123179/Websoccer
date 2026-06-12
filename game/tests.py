@@ -2761,15 +2761,15 @@ class InjuryEngineTests(TestCase):
             events = _generate_injury_events(players, club_side='home')
         self.assertEqual(events, [])
 
-    def test_all_events_with_prob_one(self):
-        """Bei random() = 0.0 (< jede Wahrscheinlichkeit) für alle Spieler Events."""
-        from .match_engine import _generate_injury_events
+    def test_all_events_capped_at_max(self):
+        """Auch wenn alle Spieler verletzbar wären, gilt das Team-Cap."""
+        from .match_engine import _generate_injury_events, _MAX_INJURIES_PER_TEAM
         import unittest.mock as mock
-        players = [{'id': i, 'name': f'P{i}', 'fitness': 100} for i in range(5)]
+        players = [{'id': i, 'name': f'P{i}', 'fitness': 100} for i in range(11)]
         with mock.patch('game.match_engine.random.random', return_value=0.0):
             with mock.patch('game.match_engine.random.randint', return_value=15):
                 events = _generate_injury_events(players, club_side='home')
-        self.assertEqual(len(events), 5)
+        self.assertLessEqual(len(events), _MAX_INJURIES_PER_TEAM)
 
     def test_low_fitness_increases_events(self):
         """Spieler mit Fitness < 70 haben höhere Verletzungsrate."""
@@ -2785,6 +2785,20 @@ class InjuryEngineTests(TestCase):
         self.assertGreaterEqual(
             len(low_events), len(high_events),
             "Spieler mit niedriger Fitness sollen häufiger verletzt werden.",
+        )
+
+    def test_max_injuries_per_team_capped(self):
+        """Pro Team dürfen maximal _MAX_INJURIES_PER_TEAM (2) Verletzungen entstehen."""
+        from .match_engine import _generate_injury_events, _MAX_INJURIES_PER_TEAM
+        import unittest.mock as mock
+        players = [{'id': i, 'name': f'P{i}', 'fitness': 40} for i in range(11)]
+        with mock.patch('game.match_engine.random.random', return_value=0.0):
+            with mock.patch('game.match_engine.random.randint', return_value=15):
+                with mock.patch('game.match_engine.random.sample', side_effect=lambda seq, k: list(seq)[:k]):
+                    events = _generate_injury_events(players, club_side='home')
+        self.assertLessEqual(
+            len(events), _MAX_INJURIES_PER_TEAM,
+            f"Maximal {_MAX_INJURIES_PER_TEAM} Verletzungen pro Team erlaubt.",
         )
 
     def test_injury_type_distribution(self):

@@ -863,16 +863,20 @@ _LOW_FITNESS_BONUS   = 0.02
 _LOW_FITNESS_THRESH  = 70
 
 
+_MAX_INJURIES_PER_TEAM = 2
+
+
 def _generate_injury_events(players: list[dict], club_side: str) -> list[dict]:
     """Zieht zufällige Verletzungsereignisse für einen Spieler-Pool.
 
     Wahrscheinlichkeit: ~4 % pro Spieler-Slot, +2 % wenn Frische < 70.
     Verletzungstypen: Leicht (3–7 d), Mittel (10–21 d), Schwer (28–56 d).
+    Maximum: _MAX_INJURIES_PER_TEAM (2) Verletzungen pro Team.
 
     Gibt eine Liste von injury-Event-Dicts zurück::
         [{player_id, player_name, club_side, minute, injury_type, days}, ...]
     """
-    events = []
+    candidates = []
     for p in players:
         fitness = p.get('fitness') or p.get('freshness') or 100
         prob = _BASE_INJURY_PROB + (_LOW_FITNESS_BONUS if fitness < _LOW_FITNESS_THRESH else 0.0)
@@ -887,7 +891,7 @@ def _generate_injury_events(players: list[dict], club_side: str) -> list[dict]:
                 chosen_type = itype
                 chosen_days = random.randint(dmin, dmax)
                 break
-        events.append({
+        candidates.append({
             'player_id':   p.get('id'),
             'player_name': p.get('name', ''),
             'club_side':   club_side,
@@ -895,7 +899,10 @@ def _generate_injury_events(players: list[dict], club_side: str) -> list[dict]:
             'injury_type': chosen_type,
             'days':        chosen_days,
         })
-    return events
+
+    if len(candidates) > _MAX_INJURIES_PER_TEAM:
+        candidates = random.sample(candidates, _MAX_INJURIES_PER_TEAM)
+    return candidates
 
 
 def compute_player_ratings(result: dict) -> dict:

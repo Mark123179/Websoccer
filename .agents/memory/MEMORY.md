@@ -19,4 +19,4 @@
 - [Match-day potential draw](match-day-potential-draw.md) — random(base, pot) + form vor jedem Spiel; einmal pre-compute in simulate_match(), gleicher Wert für Simulation und Display.
 - [Season state machine](season-state-machine.md) — LeagueSeasonState (per league+season) steuert Spieltag-Zyklus; season_service.py ist die kanonische Schnittstelle; play_matchday command synct is_simulated.
 - [Liga-Stats-Pipeline](liga-stats-pipeline.md) — _update_player_season_stats() in season_service.py schreibt PlayerFormSnapshot(source='ws_liga') + PlayerSeasonStat nach jeder Ligasimulation; play_matchday.py ruft es ebenfalls auf; average_grade wird NICHT gesetzt (Task #405/#412).
-- [Injury Simulation V1](injury-simulation-v1.md) — _generate_injury_events() post-match in match_engine.py; _write_injury_events() in season_service.py; Player property heißt is_ws_injured (nicht is_injured); Countdown (#450) noch ausstehend.
+- [Injury Simulation V1](injury-simulation-v1.md) — max 2 Verletzungen pro Team; post-match Effekt; Player property is_ws_injured (nicht is_injured); Countdown-Decrement noch ausstehend.
