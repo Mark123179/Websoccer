@@ -878,10 +878,18 @@ def compute_player_ratings(result: dict) -> dict:
 
         rating -= goals * 0.8
         rating -= assists * 0.4
-        if my_win:
-            rating -= 0.2
-        elif opp_win:
-            rating += 0.2
+
+        # Sieg/Niederlage-Bonus skaliert mit Tordifferenz
+        goal_diff = my_goals - opp_goals
+        if goal_diff > 0:
+            rating -= min(0.15 + goal_diff * 0.08, 0.50)
+            if goal_diff >= 3:
+                rating -= 0.10   # Dominant-Sieg-Bonus für alle
+        elif goal_diff < 0:
+            rating += min(0.15 + abs(goal_diff) * 0.08, 0.50)
+            if abs(goal_diff) >= 3:
+                rating += 0.10   # Deutliche Niederlage trifft alle
+
         rating += yellow * 0.3
         rating += red * 1.5
 

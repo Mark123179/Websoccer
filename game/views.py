@@ -1729,7 +1729,7 @@ def home(request):
             {
                 'title': 'Top-Torjaeger',
                 'name': top_scorer_label,
-                'meta': '18 Tore',
+                'meta': f'{getattr(primary_top_scorer, "total_goals", None) or 0} Tore',
                 'portrait': top_scorer_portrait,
                 'player_id': primary_top_scorer.id if primary_top_scorer else None,
             },

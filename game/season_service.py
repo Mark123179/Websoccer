@@ -7,6 +7,110 @@ Wiederverwendbar aus Web-Views UND Management-Commands.
 """
 
 from django.db import transaction
+from django.db.models import Sum, Count
+
+
+_WS_LIGA_SOURCE = 'ws_liga'
+_WS_LIGA_SEASON = '2026/27'
+
+
+def _update_player_season_stats(fixture, data: dict) -> None:
+    """Schreibt PlayerFormSnapshot + PlayerSeasonStat nach einer Ligasimulation.
+
+    Idempotent: Mehrfachaufruf für dasselbe Fixture überschreibt statt zu duplizieren.
+    Berührt NICHT average_grade (wird von Task #405/#412 gesetzt).
+    """
+    from django.utils import timezone
+    from .models import PlayerFormSnapshot, PlayerSeasonStat
+
+    fixture_date = fixture.scheduled_date or timezone.localdate()
+    fixture_id_str = f'ws_liga_{fixture.id}'
+    competition = 'Liga'
+
+    # Rating-Lookup: player_id → rating (aus compute_player_ratings)
+    rating_map: dict[int, float] = {}
+    for r in (data.get('home_ratings') or []) + (data.get('away_ratings') or []):
+        pid = r.get('id')
+        if pid and r.get('rating') is not None:
+            rating_map[pid] = float(r['rating'])
+
+    sides = [
+        (data.get('home_players') or [], fixture.home_club_id),
+        (data.get('away_players') or [], fixture.away_club_id),
+    ]
+
+    affected_player_ids: list[int] = []
+    for players, _club_id in sides:
+        for p in players:
+            pid = p.get('id')
+            if not pid:
+                continue
+            affected_player_ids.append(pid)
+
+            goals   = int(p.get('goals', 0) or 0)
+            assists = int(p.get('assists', 0) or 0)
+            yellow  = int(p.get('yellow_cards', 0) or 0)
+            red     = int(p.get('red_cards', 0) or 0)
+            rating  = rating_map.get(pid)
+
+            snap_defaults = {
+                'source':           _WS_LIGA_SOURCE,
+                'fixture_date':     fixture_date,
+                'minutes_played':   90,
+                'possible_minutes': 90,
+                'started':          True,
+                'position':         p.get('position', ''),
+                'goals':            goals,
+                'assists':          assists,
+                'yellow_cards':     yellow,
+                'red_cards':        red,
+            }
+            if rating is not None:
+                snap_defaults['rating'] = rating
+
+            PlayerFormSnapshot.objects.update_or_create(
+                player_id=pid,
+                source=_WS_LIGA_SOURCE,
+                fixture_id=fixture_id_str,
+                defaults=snap_defaults,
+            )
+
+    # PlayerSeasonStat neu aus allen ws_liga-Snapshots berechnen (idempotent)
+    if not affected_player_ids:
+        return
+
+    snap_qs = PlayerFormSnapshot.objects.filter(
+        player_id__in=affected_player_ids,
+        source=_WS_LIGA_SOURCE,
+    )
+
+    agg_per_player: dict[int, dict] = {}
+    for row in snap_qs.values('player_id').annotate(
+        total_goals=Sum('goals'),
+        total_assists=Sum('assists'),
+        total_minutes=Sum('minutes_played'),
+        total_matches=Count('id'),
+    ):
+        agg_per_player[row['player_id']] = row
+
+    for pid in affected_player_ids:
+        agg = agg_per_player.get(pid, {})
+        PlayerSeasonStat.objects.update_or_create(
+            player_id=pid,
+            season=_WS_LIGA_SEASON,
+            competition=competition,
+            defaults={},
+        )
+        PlayerSeasonStat.objects.filter(
+            player_id=pid,
+            season=_WS_LIGA_SEASON,
+            competition=competition,
+        ).update(
+            goals=agg.get('total_goals') or 0,
+            assists=agg.get('total_assists') or 0,
+            minutes_played=agg.get('total_minutes') or 0,
+            matches=agg.get('total_matches') or 0,
+        )
 
 
 def get_season_state(league, season: str):
@@ -108,6 +212,12 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                               win=(hg > ag), draw=(hg == ag))
             _update_standings(league, season, fixture.away_club, ag, hg,
                               win=(ag > hg), draw=(hg == ag))
+
+            # ── Spieler-Stats + Form-Snapshots schreiben ──────────────────────
+            try:
+                _update_player_season_stats(fixture, data)
+            except Exception:
+                pass  # Stats-Schreibfehler dürfen die Simulation nicht abbrechen
 
         _recalculate_positions(league, season)
 

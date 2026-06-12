@@ -18,3 +18,4 @@
 - [Match Engine V2 Balancing Freeze](match-engine-v2-freeze.md) — FREEZE seit 2026-06-12; alle Konstanten eingefroren; Änderung nur mit ≥50-Saisons-Evidenz + expliziter Nutzer-Freigabe.
 - [Match-day potential draw](match-day-potential-draw.md) — random(base, pot) + form vor jedem Spiel; einmal pre-compute in simulate_match(), gleicher Wert für Simulation und Display.
 - [Season state machine](season-state-machine.md) — LeagueSeasonState (per league+season) steuert Spieltag-Zyklus; season_service.py ist die kanonische Schnittstelle; play_matchday command synct is_simulated.
+- [Liga-Stats-Pipeline](liga-stats-pipeline.md) — _update_player_season_stats() in season_service.py schreibt PlayerFormSnapshot(source='ws_liga') + PlayerSeasonStat nach jeder Ligasimulation; play_matchday.py ruft es ebenfalls auf; average_grade wird NICHT gesetzt (Task #405/#412).

@@ -151,7 +151,14 @@ class Command(BaseCommand):
                 _update_standings(league, season, fixture.home_club, hg, ag, win=(hg > ag), draw=(hg == ag))
                 _update_standings(league, season, fixture.away_club, ag, hg, win=(ag > hg), draw=(hg == ag))
 
-            # 4. Positionen neu berechnen
+                # 4. Spieler-Stats + Form-Snapshots schreiben
+                try:
+                    from game.season_service import _update_player_season_stats
+                    _update_player_season_stats(fixture, data)
+                except Exception:
+                    pass
+
+            # 5. Positionen neu berechnen
             _recalculate_positions(league, season)
 
         # ── LeagueSeasonState synchronisieren ────────────────────────────────
