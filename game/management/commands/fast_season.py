@@ -1,13 +1,20 @@
 """
-fast_season — 10-Saisons-Stabilitätstest mit Match Engine V2.
+fast_season — Mehrsaisons-Stabilitätstest mit Match Engine V2.
 
 Optimierung: Teams werden einmalig als Dicts geladen (ORM-Queries nur 1×),
 dann wird _simulate_match_minutes() direkt aufgerufen — kein DB-Hit pro Spiel.
 Ergebnis: ~10-15 ms/Spiel statt ~164 ms/Spiel.
+
+Exportierte Metriken:
+  - Meisterhäufigkeit, Top-4-, Bottom-3-Häufigkeit
+  - Ø Punkte / Ø Tabellenplatz je Club
+  - Stärke-Rang vs Ø Tabellenplatz / Ø Punkte
+  - xG-Differenz vs Punkte (Pearson r je Saison → Mittel)
+  - Favoritensiege / Upsets
+  - Punkteabstände: Meister↔2., 15.↔16., 16.↔17., 17.↔18.
 """
-import json, os, time, random
+import json, os, time, math
 from collections import defaultdict
-from copy import deepcopy
 
 from django.core.management.base import BaseCommand
 
@@ -15,6 +22,8 @@ from game.models import Club, Player
 from game.match_engine import _build_team_dict, _simulate_match_minutes
 from game.match_readiness import ensure_default_tactic
 
+
+# ─── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
 def _build_schedule(teams):
     """Berger-Algorithmus — 18 Teams, 34 Spieltage, 306 Spiele."""
@@ -32,8 +41,22 @@ def _build_schedule(teams):
     return rounds + second
 
 
+def _pearson_r(xs, ys):
+    """Pearson-Korrelationskoeffizient zweier gleich langer Listen."""
+    n = len(xs)
+    if n < 2:
+        return 0.0
+    mx, my = sum(xs) / n, sum(ys) / n
+    num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    dx  = math.sqrt(sum((x - mx) ** 2 for x in xs))
+    dy  = math.sqrt(sum((y - my) ** 2 for y in ys))
+    return num / (dx * dy) if dx * dy else 0.0
+
+
+# ─── Command ──────────────────────────────────────────────────────────────────
+
 class Command(BaseCommand):
-    help = 'Schneller 10-Saisons-Stabilitätstest (Teams werden einmalig geladen)'
+    help = 'Schneller Mehrsaisons-Stabilitätstest (Teams werden einmalig geladen)'
 
     def add_arguments(self, parser):
         parser.add_argument('--seasons', type=int, default=10)
@@ -51,8 +74,8 @@ class Command(BaseCommand):
         eligible = [c for c in Club.objects.all().order_by('name')
                     if Player.objects.filter(club=c).count() >= 11][:18]
 
-        team_dicts = {}     # name → team_dict
-        strengths  = {}     # name → overall float
+        team_dicts = {}
+        strengths  = {}
         for club in eligible:
             tactic, _ = ensure_default_tactic(club)
             td = _build_team_dict(club, tactic)
@@ -65,13 +88,16 @@ class Command(BaseCommand):
 
         out(f"  {len(team_dicts)} Teams geladen in {time.time()-t_setup:.1f}s")
         out(f"  Stärken:")
-        for name, st in sorted(strengths.items(), key=lambda x: -x[1]):
-            out(f"    {name:<32} {st:.1f}")
+        strength_rank = {}  # name → Stärke-Rang (1 = stärkster)
+        for rank_i, (name, st) in enumerate(
+                sorted(strengths.items(), key=lambda x: -x[1]), 1):
+            strength_rank[name] = rank_i
+            out(f"    {rank_i:>2}. {name:<32} {st:.1f}")
 
         names    = list(team_dicts.keys())
         schedule = _build_schedule(names)
 
-        # Mehrsaisons-Aggregat
+        # ── 2. Mehrsaisons-Aggregate initialisieren ───────────────────────────
         agg = dict(
             total_games=0, total_goals=0,
             goals_h=0, goals_a=0,
@@ -82,14 +108,27 @@ class Command(BaseCommand):
             shots_h=0, shots_a=0,
             plans=0, errors=0,
         )
-        pts1, pts4, pts16, pts18 = [], [], [], []
-        champ_cnt:  dict[str,int] = defaultdict(int)
-        top4_cnt:   dict[str,int] = defaultdict(int)
-        relg_cnt:   dict[str,int] = defaultdict(int)
-        season_rows = []
 
+        # Punkte-Ranglisten je Saison (Platz 1–4 und 15–18)
+        pts_by_pos = {p: [] for p in [1, 2, 4, 15, 16, 17, 18]}
+
+        # Per-Club-Akkumulation über alle Saisons
+        club_pts_acc  = defaultdict(list)   # name → [pts_s1, pts_s2, …]
+        club_rank_acc = defaultdict(list)   # name → [rank_s1, rank_s2, …]
+        club_xgd_acc  = defaultdict(list)   # name → [xgd_s1, xgd_s2, …] (für Korrelation)
+
+        # Häufigkeiten
+        champ_cnt = defaultdict(int)
+        top4_cnt  = defaultdict(int)
+        relg_cnt  = defaultdict(int)
+
+        # xGD-Punkte-Korrelation je Saison
+        xgd_pts_r_list = []
+
+        season_rows = []
         t0_all = time.time()
 
+        # ── 3. Saisons simulieren ─────────────────────────────────────────────
         for season_num in range(1, N_SEASONS + 1):
             t0_s = time.time()
 
@@ -111,9 +150,8 @@ class Command(BaseCommand):
             for matchday in schedule:
                 for hname, aname in matchday:
                     try:
-                        # Frische Kopien der Team-Dicts (deepcopy nur tactic-Teil)
-                        ht = team_dicts[hname]
-                        at = team_dicts[aname]
+                        ht  = team_dicts[hname]
+                        at  = team_dicts[aname]
                         sim = _simulate_match_minutes(ht, at)
 
                         hg  = sim['home_goals']
@@ -121,11 +159,8 @@ class Command(BaseCommand):
                         ms  = sim['match_stats']
                         hxg = sim['home_xg']
                         axg = sim['away_xg']
-                        hs_ = sim['home_strength']['overall']
-                        as_ = sim['away_strength']['overall']
                         plans = len(sim.get('plan_activations', []))
 
-                        # Tabelle
                         hr = table[hname]; ar = table[aname]
                         hr['played'] += 1; hr['gf'] += hg; hr['ga'] += ag
                         ar['played'] += 1; ar['gf'] += ag; ar['ga'] += hg
@@ -160,26 +195,51 @@ class Command(BaseCommand):
                             if fav_won: s_fav += 1
                             else:       s_upset += 1
 
-                        s_games    += 1
-                        s_goals_h  += hg;  s_goals_a  += ag
-                        s_xgh      += hxg; s_xga      += axg
-                        s_fouls    += ms.get('home_fouls',0)+ms.get('away_fouls',0)
-                        s_yellow   += ms.get('home_yellow',0)+ms.get('away_yellow',0)
-                        s_red      += ms.get('home_red',0)+ms.get('away_red',0)
-                        s_shots_h  += ms.get('home_shots',0)
-                        s_shots_a  += ms.get('away_shots',0)
-                        s_plans    += plans
+                        s_games   += 1
+                        s_goals_h += hg;  s_goals_a  += ag
+                        s_xgh     += hxg; s_xga      += axg
+                        s_fouls   += ms.get('home_fouls', 0) + ms.get('away_fouls', 0)
+                        s_yellow  += ms.get('home_yellow', 0) + ms.get('away_yellow', 0)
+                        s_red     += ms.get('home_red', 0) + ms.get('away_red', 0)
+                        s_shots_h += ms.get('home_shots', 0)
+                        s_shots_a += ms.get('away_shots', 0)
+                        s_plans   += plans
 
-                    except Exception as e:
+                    except Exception:
                         s_errors += 1
 
             # Tabelle sortieren
             standings = sorted(
                 table.values(),
-                key=lambda r: (-r['pts'], -(r['gf']-r['ga']), -r['gf'], r['club']),
+                key=lambda r: (-r['pts'], -(r['gf'] - r['ga']), -r['gf'], r['club']),
             )
             for rank, row in enumerate(standings, 1):
                 row['rank'] = rank
+
+            # Per-Club akkumulieren
+            for row in standings:
+                n = row['club']
+                club_pts_acc[n].append(row['pts'])
+                club_rank_acc[n].append(row['rank'])
+                xgd = row['xgf'] - row['xga']
+                club_xgd_acc[n].append(xgd)
+
+            # xGD-Punkte-Korrelation für diese Saison
+            season_xgd  = [row['xgf'] - row['xga'] for row in standings]
+            season_pts  = [row['pts'] for row in standings]
+            r_season    = _pearson_r(season_xgd, season_pts)
+            xgd_pts_r_list.append(r_season)
+
+            # Positionen 1, 2, 4, 15, 16, 17, 18
+            for pos in [1, 2, 4, 15, 16, 17, 18]:
+                pts_by_pos[pos].append(standings[pos - 1]['pts'])
+
+            # Häufigkeiten
+            champ_cnt[standings[0]['club']] += 1
+            for row in standings[:4]:
+                top4_cnt[row['club']] += 1
+            for row in standings[-3:]:
+                relg_cnt[row['club']] += 1
 
             # Aggregat aktualisieren
             G = max(s_games, 1)
@@ -194,121 +254,251 @@ class Command(BaseCommand):
             agg['plans']       += s_plans;    agg['errors']  += s_errors
             agg['total_goals'] += s_goals_h + s_goals_a
 
-            pts1.append(standings[0]['pts'])
-            pts4.append(standings[3]['pts'])
-            pts16.append(standings[15]['pts'])
-            pts18.append(standings[-1]['pts'])
-            champ_cnt[standings[0]['club']] += 1
-            for row in standings[:4]:
-                top4_cnt[row['club']] += 1
-            for row in standings[-3:]:
-                relg_cnt[row['club']] += 1
-
             elapsed_s = time.time() - t0_s
 
-            # Einzelsaison-Tabelle ausgeben
-            out(f"\n{'='*98}")
+            # Einzelsaison-Tabelle
+            out(f"\n{'='*100}")
             out(f"SAISON {season_num:>2}/{N_SEASONS}  —  {G} Spiele  |  "
                 f"Tore: {s_goals_h+s_goals_a}  Ø{(s_goals_h+s_goals_a)/G:.2f}/Sp  |  "
-                f"H:{s_hs}({s_hs/G*100:.0f}%) U:{s_d}({s_d/G*100:.0f}%) A:{s_as_}({s_as_/G*100:.0f}%)  |  "
-                f"{elapsed_s:.0f}s")
-            out('─'*98)
+                f"H:{s_hs}({s_hs/G*100:.0f}%) U:{s_d}({s_d/G*100:.0f}%) "
+                f"A:{s_as_}({s_as_/G*100:.0f}%)  |  r(xGD,Pts)={r_season:.3f}  |  {elapsed_s:.0f}s")
+            out('─' * 100)
             out(f"{'#':>3} {'Club':<30} {'Sp':>3} {'S':>3} {'U':>3} {'N':>3} "
-                f"{'Tore':>7} {'TD':>5} {'Pkt':>4} {'xG':>6} {'xGA':>6} {'Stärke':>8}")
-            out('─'*98)
+                f"{'Tore':>7} {'TD':>5} {'Pkt':>4} {'xGF':>6} {'xGA':>6} "
+                f"{'xGD':>6} {'Stärke':>8}")
+            out('─' * 100)
             for row in standings:
-                td   = row['gf'] - row['ga']
-                name = row['club']
-                out(f"{row['rank']:>3} {name:<30} {row['played']:>3} "
+                td  = row['gf'] - row['ga']
+                xgd = row['xgf'] - row['xga']
+                nm  = row['club']
+                out(f"{row['rank']:>3} {nm:<30} {row['played']:>3} "
                     f"{row['won']:>3} {row['drawn']:>3} {row['lost']:>3} "
                     f"{row['gf']:>3}:{row['ga']:<3} {td:>+5} {row['pts']:>4} "
-                    f"{row['xgf']:>6.1f} {row['xga']:>6.1f} "
-                    f"{strengths.get(name,0):>8.1f}")
+                    f"{row['xgf']:>6.1f} {row['xga']:>6.1f} {xgd:>+6.1f} "
+                    f"{strengths.get(nm, 0):>8.1f}")
 
             season_rows.append(dict(
                 season=season_num,
                 champion=standings[0]['club'],
                 pts_1=standings[0]['pts'],
+                pts_2=standings[1]['pts'],
                 pts_4=standings[3]['pts'],
+                pts_15=standings[14]['pts'],
                 pts_16=standings[15]['pts'],
+                pts_17=standings[16]['pts'],
                 pts_18=standings[-1]['pts'],
-                avg_goals=round((s_goals_h+s_goals_a)/G,3),
-                home_win_pct=round(s_hs/G*100,1),
-                draw_pct=round(s_d/G*100,1),
-                away_win_pct=round(s_as_/G*100,1),
+                gap_1_2=standings[0]['pts'] - standings[1]['pts'],
+                gap_15_16=standings[14]['pts'] - standings[15]['pts'],
+                gap_16_17=standings[15]['pts'] - standings[16]['pts'],
+                gap_17_18=standings[16]['pts'] - standings[-1]['pts'],
+                avg_goals=round((s_goals_h + s_goals_a) / G, 3),
+                home_win_pct=round(s_hs / G * 100, 1),
+                draw_pct=round(s_d / G * 100, 1),
+                away_win_pct=round(s_as_ / G * 100, 1),
+                xgd_pts_r=round(r_season, 4),
                 errors=s_errors,
             ))
 
-        # ── MEHRSAISONS-ZUSAMMENFASSUNG ───────────────────────────────────────
-        TG = max(agg['total_games'], 1)
-        SEP = '=' * 72
+        # ── 4. MEHRSAISONS-ZUSAMMENFASSUNG ────────────────────────────────────
+        TG  = max(agg['total_games'], 1)
+        SEP = '=' * 80
+        decided = agg['fav'] + agg['upset']
 
         out(f"\n\n{SEP}")
         out(f"MEHRSAISONS-AUSWERTUNG  —  {N_SEASONS} Saisons  ({TG} Spiele gesamt)")
         out(SEP)
 
-        out(f"\n── LIGA-MITTELWERTE ─────────────────────────────────────────────")
-        out(f"  Ø Tore/Spiel:          {agg['total_goals']/TG:.3f}")
-        out(f"  Ø xG Heim:             {agg['xgh']/TG:.4f}")
-        out(f"  Ø xG Gast:             {agg['xga']/TG:.4f}")
-        out(f"  Heimsiege:             {agg['hs']/TG*100:.1f}%  ({agg['hs']}/{TG})")
-        out(f"  Remis:                 {agg['d']/TG*100:.1f}%  ({agg['d']}/{TG})")
-        out(f"  Auswärtssiege:         {agg['as_']/TG*100:.1f}%  ({agg['as_']}/{TG})")
-        decided = agg['fav'] + agg['upset']
+        # ── Liga-Mittelwerte ──
+        out(f"\n── LIGA-MITTELWERTE ────────────────────────────────────────────────────")
+        out(f"  Ø Tore/Spiel:           {agg['total_goals']/TG:.3f}")
+        out(f"  Ø xG Heim:              {agg['xgh']/TG:.4f}")
+        out(f"  Ø xG Gast:              {agg['xga']/TG:.4f}")
+        out(f"  Heimsiege:              {agg['hs']/TG*100:.1f}%  ({agg['hs']}/{TG})")
+        out(f"  Remis:                  {agg['d']/TG*100:.1f}%  ({agg['d']}/{TG})")
+        out(f"  Auswärtssiege:          {agg['as_']/TG*100:.1f}%  ({agg['as_']}/{TG})")
         if decided:
-            out(f"  Favoritensiege:        {agg['fav']/decided*100:.1f}%  ({agg['fav']})")
-            out(f"  Upsets:                {agg['upset']/decided*100:.1f}%  ({agg['upset']})")
-        out(f"  Ø Schüsse Heim:        {agg['shots_h']/TG:.2f}")
-        out(f"  Ø Schüsse Gast:        {agg['shots_a']/TG:.2f}")
-        out(f"  Ø Fouls/Spiel:         {agg['fouls']/TG:.2f}")
-        out(f"  Ø Gelbe/Spiel:         {agg['yellow']/TG:.2f}")
-        out(f"  Ø Rote/Spiel:          {agg['red']/TG:.4f}")
-        out(f"  Plan-Aktivierungen:    {agg['plans']}")
-        out(f"  Fehler gesamt:         {agg['errors']}")
-        out(f"  Fallback-Stärken:      0  (dauerhaft 0)")
+            out(f"  Favoritensiege:         {agg['fav']/decided*100:.1f}%  ({agg['fav']}/{decided})")
+            out(f"  Upsets:                 {agg['upset']/decided*100:.1f}%  ({agg['upset']}/{decided})")
+        out(f"  Ø Schüsse Heim/Spiel:   {agg['shots_h']/TG:.2f}")
+        out(f"  Ø Schüsse Gast/Spiel:   {agg['shots_a']/TG:.2f}")
+        out(f"  Ø Fouls/Spiel:          {agg['fouls']/TG:.2f}")
+        out(f"  Ø Gelbe/Spiel:          {agg['yellow']/TG:.2f}")
+        out(f"  Ø Rote/Spiel:           {agg['red']/TG:.4f}")
+        out(f"  Plan-Aktivierungen:     {agg['plans']}")
+        out(f"  Fehler gesamt:          {agg['errors']}")
 
-        out(f"\n── PUNKTE-REFERENZ (Ø / Min / Max über {N_SEASONS} Saisons) ────────────")
-        out(f"  Meister:    Ø {sum(pts1)/N_SEASONS:.1f}  (Min {min(pts1)} / Max {max(pts1)})")
-        out(f"  Platz 4:    Ø {sum(pts4)/N_SEASONS:.1f}  (Min {min(pts4)} / Max {max(pts4)})")
-        out(f"  Platz 16:   Ø {sum(pts16)/N_SEASONS:.1f}  (Min {min(pts16)} / Max {max(pts16)})")
-        out(f"  Platz 18:   Ø {sum(pts18)/N_SEASONS:.1f}  (Min {min(pts18)} / Max {max(pts18)})")
+        # ── Punkte-Referenz ──
+        def _stats(lst):
+            return f"Ø {sum(lst)/len(lst):.1f}  Min {min(lst)}  Max {max(lst)}"
 
-        out(f"\n── MEISTER ({N_SEASONS} Saisons) ─────────────────────────────────────────")
+        out(f"\n── PUNKTE-REFERENZ (Ø / Min / Max über {N_SEASONS} Saisons) ────────────────────")
+        out(f"  Meister  (Platz  1):  {_stats(pts_by_pos[1])}")
+        out(f"  Platz  2:             {_stats(pts_by_pos[2])}")
+        out(f"  Platz  4:             {_stats(pts_by_pos[4])}")
+        out(f"  Platz 15:             {_stats(pts_by_pos[15])}")
+        out(f"  Platz 16:             {_stats(pts_by_pos[16])}")
+        out(f"  Platz 17:             {_stats(pts_by_pos[17])}")
+        out(f"  Platz 18:             {_stats(pts_by_pos[18])}")
+
+        # ── Punkteabstände ──
+        gaps_1_2   = [r['gap_1_2']   for r in season_rows]
+        gaps_15_16 = [r['gap_15_16'] for r in season_rows]
+        gaps_16_17 = [r['gap_16_17'] for r in season_rows]
+        gaps_17_18 = [r['gap_17_18'] for r in season_rows]
+
+        out(f"\n── PUNKTEABSTÄNDE (Ø / Min / Max über {N_SEASONS} Saisons) ──────────────────────")
+        out(f"  Meister ↔ Platz 2:    {_stats(gaps_1_2)}")
+        out(f"  Platz 15 ↔ 16:        {_stats(gaps_15_16)}")
+        out(f"  Platz 16 ↔ 17:        {_stats(gaps_16_17)}")
+        out(f"  Platz 17 ↔ 18:        {_stats(gaps_17_18)}")
+
+        # ── xGD-Punkte-Korrelation ──
+        r_mean = sum(xgd_pts_r_list) / N_SEASONS
+        out(f"\n── xG-DIFFERENZ vs PUNKTE (Pearson r) ──────────────────────────────────")
+        out(f"  Ø r über {N_SEASONS} Saisons:      {r_mean:.4f}")
+        out(f"  Min r:                  {min(xgd_pts_r_list):.4f}")
+        out(f"  Max r:                  {max(xgd_pts_r_list):.4f}")
+        out(f"  (1.0 = perfekte xGD→Punkte-Vorhersage)")
+
+        # ── Per-Club: Ø Punkte / Ø Rang ──
+        out(f"\n── Ø PUNKTE & TABELLENPLATZ je Club ({N_SEASONS} Saisons, sortiert nach Ø Rang) ──")
+        out('─' * 80)
+        out(f"  {'Club':<32} {'Stärke':>7} {'StRg':>5} {'ØPkt':>6} {'ØRang':>6} {'MinRg':>6} {'MaxRg':>6}")
+        out('─' * 80)
+
+        club_summary = []
+        for name in names:
+            ranks = club_rank_acc[name]
+            pts   = club_pts_acc[name]
+            club_summary.append(dict(
+                name=name,
+                strength=strengths[name],
+                str_rank=strength_rank[name],
+                avg_pts=sum(pts) / len(pts),
+                avg_rank=sum(ranks) / len(ranks),
+                min_rank=min(ranks),
+                max_rank=max(ranks),
+                avg_xgd=sum(club_xgd_acc[name]) / len(club_xgd_acc[name]),
+            ))
+        club_summary.sort(key=lambda x: x['avg_rank'])
+
+        for c in club_summary:
+            out(f"  {c['name']:<32} {c['strength']:>7.1f} {c['str_rank']:>5} "
+                f"{c['avg_pts']:>6.1f} {c['avg_rank']:>6.2f} "
+                f"{c['min_rank']:>6} {c['max_rank']:>6}")
+
+        # ── Stärke-Rang vs Ø Tabellenplatz ──
+        out(f"\n── STÄRKE-RANG vs Ø TABELLENPLATZ ({N_SEASONS} Saisons) ──────────────────────")
+        out('─' * 70)
+        out(f"  {'StRg':>5}  {'Club':<32} {'Stärke':>7}  {'ØRang':>6}  {'Delta':>6}")
+        out('─' * 70)
+        for c in sorted(club_summary, key=lambda x: x['str_rank']):
+            delta = c['avg_rank'] - c['str_rank']
+            sign  = '+' if delta >= 0 else ''
+            out(f"  {c['str_rank']:>5}  {c['name']:<32} {c['strength']:>7.1f}  "
+                f"{c['avg_rank']:>6.2f}  {sign}{delta:>5.2f}")
+
+        # Pearson r zwischen Stärke-Rang und Ø Rang
+        str_ranks_list = [c['str_rank']  for c in club_summary]
+        avg_ranks_list = [c['avg_rank']  for c in club_summary]
+        avg_pts_list   = [c['avg_pts']   for c in club_summary]
+        r_rank = _pearson_r(str_ranks_list, avg_ranks_list)
+        r_pts  = _pearson_r(str_ranks_list, avg_pts_list)
+        out(f"\n  Pearson r(Stärke-Rang, Ø Tabellenplatz): {r_rank:.4f}")
+
+        # ── Stärke-Rang vs Ø Punkte ──
+        out(f"\n── STÄRKE-RANG vs Ø PUNKTE ({N_SEASONS} Saisons) ────────────────────────────")
+        out('─' * 70)
+        out(f"  {'StRg':>5}  {'Club':<32} {'Stärke':>7}  {'ØPkt':>6}")
+        out('─' * 70)
+        for c in sorted(club_summary, key=lambda x: x['str_rank']):
+            out(f"  {c['str_rank']:>5}  {c['name']:<32} {c['strength']:>7.1f}  {c['avg_pts']:>6.1f}")
+        out(f"\n  Pearson r(Stärke-Rang, Ø Punkte):         {r_pts:.4f}")
+        out(f"  (negativer Wert = höhere Stärke → weniger Punkte; korrekt da Rang 1=stärkst)")
+
+        # ── Meisterhäufigkeit ──
+        out(f"\n── MEISTERHÄUFIGKEIT ({N_SEASONS} Saisons) ─────────────────────────────────────")
         for club, cnt in sorted(champ_cnt.items(), key=lambda x: -x[1]):
-            out(f"  {club:<35} {cnt:>3}×  {'█'*cnt}")
+            bar = '█' * cnt
+            out(f"  {club:<35} {cnt:>3}×  {bar}")
 
-        out(f"\n── TOP-4-PLATZIERUNGEN ({N_SEASONS} Saisons) ──────────────────────────────")
+        # ── Top-4-Häufigkeit ──
+        out(f"\n── TOP-4-HÄUFIGKEIT ({N_SEASONS} Saisons) ──────────────────────────────────────")
+        out(f"  {'Club':<35} {'T4':>4}×  {'%':>5}  Bar")
+        out('─' * 60)
         for club, cnt in sorted(top4_cnt.items(), key=lambda x: -x[1]):
-            out(f"  {club:<35} {cnt:>3}×  {'█'*cnt}")
+            pct = cnt / N_SEASONS * 100
+            bar = '█' * (cnt // 2)
+            out(f"  {club:<35} {cnt:>4}×  {pct:>4.0f}%  {bar}")
 
-        out(f"\n── ABSTIEGE ({N_SEASONS} Saisons, Plätze 16–18) ───────────────────────────")
+        # ── Bottom-3-Häufigkeit ──
+        out(f"\n── ABSTIEGS-HÄUFIGKEIT Bottom-3 ({N_SEASONS} Saisons) ───────────────────────────")
+        out(f"  {'Club':<35} {'B3':>4}×  {'%':>5}  Bar")
+        out('─' * 60)
         for club, cnt in sorted(relg_cnt.items(), key=lambda x: -x[1]):
-            out(f"  {club:<35} {cnt:>3}×  {'█'*cnt}")
+            pct = cnt / N_SEASONS * 100
+            bar = '█' * (cnt // 2)
+            out(f"  {club:<35} {cnt:>4}×  {pct:>4.0f}%  {bar}")
 
-        # JSON speichern
+        # ── JSON speichern ──
         ts   = time.strftime('%Y%m%d_%H%M%S')
         path = os.path.join(outdir, f'fast_season_{N_SEASONS}x_{ts}.json')
         with open(path, 'w') as f:
             json.dump({
-                'seasons': N_SEASONS, 'total_games': TG,
-                'avg_goals_per_game': round(agg['total_goals']/TG, 3),
-                'avg_xg_home':  round(agg['xgh']/TG, 4),
-                'avg_xg_away':  round(agg['xga']/TG, 4),
-                'home_win_pct': round(agg['hs']/TG*100, 2),
-                'draw_pct':     round(agg['d']/TG*100, 2),
-                'away_win_pct': round(agg['as_']/TG*100, 2),
-                'fav_win_pct':  round(agg['fav']/max(decided,1)*100, 2),
-                'upset_pct':    round(agg['upset']/max(decided,1)*100, 2),
-                'avg_pts_champion': round(sum(pts1)/N_SEASONS, 1),
-                'avg_pts_p4':       round(sum(pts4)/N_SEASONS, 1),
-                'avg_pts_p16':      round(sum(pts16)/N_SEASONS, 1),
-                'avg_pts_p18':      round(sum(pts18)/N_SEASONS, 1),
-                'min_pts_champion': min(pts1), 'max_pts_champion': max(pts1),
+                'seasons':            N_SEASONS,
+                'total_games':        TG,
+                'avg_goals_per_game': round(agg['total_goals'] / TG, 3),
+                'avg_xg_home':        round(agg['xgh'] / TG, 4),
+                'avg_xg_away':        round(agg['xga'] / TG, 4),
+                'home_win_pct':       round(agg['hs'] / TG * 100, 2),
+                'draw_pct':           round(agg['d'] / TG * 100, 2),
+                'away_win_pct':       round(agg['as_'] / TG * 100, 2),
+                'fav_win_pct':        round(agg['fav'] / max(decided, 1) * 100, 2),
+                'upset_pct':          round(agg['upset'] / max(decided, 1) * 100, 2),
+                'xgd_pts_pearson_r':  round(r_mean, 4),
+                'str_rank_vs_avg_rank_r': round(r_rank, 4),
+                'str_rank_vs_avg_pts_r':  round(r_pts, 4),
+                'pts_by_position': {
+                    str(pos): {
+                        'avg': round(sum(pts_by_pos[pos]) / N_SEASONS, 1),
+                        'min': min(pts_by_pos[pos]),
+                        'max': max(pts_by_pos[pos]),
+                    }
+                    for pos in [1, 2, 4, 15, 16, 17, 18]
+                },
+                'gaps': {
+                    '1_2':   {'avg': round(sum(gaps_1_2) / N_SEASONS, 1),
+                              'min': min(gaps_1_2), 'max': max(gaps_1_2)},
+                    '15_16': {'avg': round(sum(gaps_15_16) / N_SEASONS, 1),
+                              'min': min(gaps_15_16), 'max': max(gaps_15_16)},
+                    '16_17': {'avg': round(sum(gaps_16_17) / N_SEASONS, 1),
+                              'min': min(gaps_16_17), 'max': max(gaps_16_17)},
+                    '17_18': {'avg': round(sum(gaps_17_18) / N_SEASONS, 1),
+                              'min': min(gaps_17_18), 'max': max(gaps_17_18)},
+                },
+                'club_stats': [
+                    {
+                        'name':     c['name'],
+                        'strength': round(c['strength'], 1),
+                        'str_rank': c['str_rank'],
+                        'avg_pts':  round(c['avg_pts'], 2),
+                        'avg_rank': round(c['avg_rank'], 2),
+                        'min_rank': c['min_rank'],
+                        'max_rank': c['max_rank'],
+                        'avg_xgd':  round(c['avg_xgd'], 2),
+                        'champion_count': champ_cnt.get(c['name'], 0),
+                        'top4_count':     top4_cnt.get(c['name'], 0),
+                        'relegation_count': relg_cnt.get(c['name'], 0),
+                    }
+                    for c in sorted(club_summary, key=lambda x: x['str_rank'])
+                ],
                 'champion_count':   dict(champ_cnt),
                 'top4_count':       dict(top4_cnt),
                 'relegation_count': dict(relg_cnt),
                 'season_by_season': season_rows,
-                'errors': agg['errors'], 'fallbacks': 0,
+                'errors':   agg['errors'],
+                'fallbacks': 0,
             }, f, indent=2)
+
         out(f"\n  JSON gespeichert: {path}")
         out(f"  Gesamtlaufzeit:   {time.time()-t0_all:.1f}s\n")
