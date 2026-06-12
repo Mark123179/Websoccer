@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -490,6 +490,17 @@
         </div>
         {% endwith %}
         {% endif %}
+
+        {# Farbskala-Legende #}
+        <div class="mr-ratings-legend">
+            <span class="mr-note note-gut">&#8804;&thinsp;2,5 Sehr gut</span>
+            <span class="mr-ratings-legend-sep">&middot;</span>
+            <span class="mr-note note-mittel">2,6&ndash;3,9 Gut</span>
+            <span class="mr-ratings-legend-sep">&middot;</span>
+            <span class="mr-note note-schwach">4,0&ndash;4,9 Schwach</span>
+            <span class="mr-ratings-legend-sep">&middot;</span>
+            <span class="mr-note note-schlecht">&#8805;&thinsp;5,0 Schlecht</span>
+        </div>
 
         {# Zwei Tabellen nebeneinander #}
         <div class="mr-ratings-grid">
