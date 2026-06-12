@@ -3549,12 +3549,13 @@ def club_match_report(request, club_id):
             match_type = 'freundschaft'
         try:
             opponent = Club.objects.get(pk=opponent_id)
-            # Sperren vor dem Spiel abbauen
-            try:
-                from .season_service import _decrement_suspensions_for_clubs
-                _decrement_suspensions_for_clubs([club.id, opponent.id])
-            except Exception:
-                pass
+            # Sperren nur bei Pflichtspielen abbauen (Freundschaft zählt nicht)
+            if match_type == 'pokal':
+                try:
+                    from .season_service import _decrement_suspensions_for_clubs
+                    _decrement_suspensions_for_clubs([club.id, opponent.id])
+                except Exception:
+                    pass
             data = simulate_match(club, opponent)
             sm = SimulatedMatch.objects.create(
                 home_club=club,
