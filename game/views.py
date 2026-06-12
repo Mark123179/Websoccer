@@ -5060,7 +5060,7 @@ def league_detail(request, league_id):
     for _f in last_fixtures:
         _sm = _f.simulated_match if _f.simulated_match_id else None
         if _sm and _sm.report_data:
-            _rd = _sm.report_data
+            _rd = _ensure_ratings_in_report(_sm.report_data)
             _h = sorted(_rd.get('home_ratings', []), key=lambda x: x.get('rating', 99))[:3]
             _a = sorted(_rd.get('away_ratings', []), key=lambda x: x.get('rating', 99))[:3]
             _f.home_top3 = [
@@ -5071,9 +5071,11 @@ def league_detail(request, league_id):
                 {'name': p.get('name', ''), 'rating': p.get('rating'), 'grade_class': grade_badge_class(p.get('rating'))}
                 for p in _a
             ]
+            _f.motm = _rd.get('man_of_the_match')
         else:
             _f.home_top3 = []
             _f.away_top3 = []
+            _f.motm = None
 
     next_fixtures = list(
         SeasonFixture.objects

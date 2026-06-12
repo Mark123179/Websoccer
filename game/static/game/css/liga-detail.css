@@ -467,6 +467,50 @@
     margin: 0;
 }
 
+/* MoTM (Man of the Match) row inside each result fixture */
+.liga-fixture__motm {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 2px 1px;
+    border-top: 1px solid rgba(255,210,0,0.1);
+    margin-top: 2px;
+}
+
+.liga-fixture__motm-star {
+    font-size: 0.6rem;
+    color: #f5c400;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.liga-fixture__motm-crest {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.liga-fixture__motm-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #9aa0b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.liga-fixture__motm-rating {
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #f5c400;
+    flex-shrink: 0;
+}
+
 /* --------------------------------------------------------------------------
    News
    -------------------------------------------------------------------------- */
