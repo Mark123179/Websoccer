@@ -3316,12 +3316,68 @@ def club_match_report(request, club_id):
 
     all_clubs = Club.objects.order_by('name')
 
+    _PLAN_LABELS = {
+        'ausgewogen':          'Ausgewogen',
+        'aggressiv_risiko':    'Aggressiv / Risiko',
+        'schlussangriff':      'Schlussangriff',
+        'kontrolle_ballbesitz':'Kontrolle & Ballbesitz',
+        'kompakt_sichern':     'Kompakt & Sichern',
+        'zeitspiel':           'Zeitspiel',
+        'unterzahl_kompakt':   'Unterzahl — Kompakt',
+    }
+
+    rc = {}
+    if latest and latest.report_data:
+        data = latest.report_data
+        ms   = data.get('match_stats', {})
+
+        h_xg = float(data.get('home_xg') or 0)
+        a_xg = float(data.get('away_xg') or 0)
+        xg_total = (h_xg + a_xg) or 1
+
+        h_l = ms.get('home_attacks_left',   0) or 0
+        h_c = ms.get('home_attacks_center', 0) or 0
+        h_r = ms.get('home_attacks_right',  0) or 0
+        a_l = ms.get('away_attacks_left',   0) or 0
+        a_c = ms.get('away_attacks_center', 0) or 0
+        a_r = ms.get('away_attacks_right',  0) or 0
+        h_tot = (h_l + h_c + h_r) or 1
+        a_tot = (a_l + a_c + a_r) or 1
+
+        plan_acts = data.get('plan_activations', [])
+
+        rc = {
+            'home_xg':      f'{h_xg:.2f}',
+            'away_xg':      f'{a_xg:.2f}',
+            'home_xg_pct':  round(h_xg / xg_total * 100),
+            'home_att_l_pct': round(h_l / h_tot * 100),
+            'home_att_c_pct': round(h_c / h_tot * 100),
+            'home_att_r_pct': round(h_r / h_tot * 100),
+            'away_att_l_pct': round(a_l / a_tot * 100),
+            'away_att_c_pct': round(a_c / a_tot * 100),
+            'away_att_r_pct': round(a_r / a_tot * 100),
+            'home_att_total': h_l + h_c + h_r,
+            'away_att_total': a_l + a_c + a_r,
+            'home_coh':   ms.get('home_tactic_coherence',  0),
+            'away_coh':   ms.get('away_tactic_coherence',  0),
+            'home_fat':   ms.get('home_fatigue_cost',       0),
+            'away_fat':   ms.get('away_fatigue_cost',       0),
+            'home_cplx':  ms.get('home_tactic_complexity',  0),
+            'away_cplx':  ms.get('away_tactic_complexity',  0),
+            'plan_count': len(plan_acts),
+            'plan_activations_labeled': [
+                {**act, 'plan_label': _PLAN_LABELS.get(act.get('plan', ''), act.get('plan', ''))}
+                for act in plan_acts
+            ],
+        }
+
     return render(request, 'game/match_report.html', {
-        'club': club,
+        'club':         club,
         'latest_match': latest,
-        'report': latest.report_data if latest else None,
-        'all_clubs': all_clubs,
-        'sim_error': sim_error,
+        'report':       latest.report_data if latest else None,
+        'all_clubs':    all_clubs,
+        'sim_error':    sim_error,
+        'rc':           rc,
     })
 
 

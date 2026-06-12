@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
 
     <header class="mr-page-header">
         <h1>Spielbericht</h1>
-        <p class="mr-page-sub">Match-Engine Simulation &middot; {{ club.name }}</p>
+        <p class="mr-page-sub">Match-Engine V2 Simulation &middot; {{ club.name }}</p>
     </header>
 
     {% if report %}
@@ -30,7 +30,14 @@
 
         <div class="mr-score-center">
             <span class="mr-score">{{ report.home_goals }}&thinsp;:&thinsp;{{ report.away_goals }}</span>
-            <span class="mr-score-tag">Simulation</span>
+            <div class="mr-score-meta">
+                {% if rc.home_xg %}
+                <span class="mr-xg-pill is-home">xG {{ rc.home_xg }}</span>
+                <span class="mr-xg-sep">&ndash;</span>
+                <span class="mr-xg-pill is-away">xG {{ rc.away_xg }}</span>
+                {% endif %}
+            </div>
+            <span class="mr-score-tag">Simulation V2</span>
         </div>
 
         <div class="mr-team is-away">
@@ -44,7 +51,7 @@
         </div>
     </div>
 
-    {# ── Body: Timeline+Stats left │ Strength right ──────────────────────── #}
+    {# ── Body: Stats left │ Strength + Engine right ──────────────────────── #}
     <div class="mr-body">
 
         <div class="mr-left">
@@ -73,7 +80,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="mr-empty">Kein Tor erzielt — 0:0.</p>
+                <p class="mr-empty">Kein Tor erzielt &mdash; 0:0.</p>
                 {% endif %}
             </div>
 
@@ -93,6 +100,20 @@
                         </div>
                         <span class="mr-stat-away">{{ report.match_stats.away_possession }}%</span>
                     </div>
+
+                    {% if rc.home_xg %}
+                    <div class="mr-stat-row">
+                        <span class="mr-stat-home mr-xg-val">{{ rc.home_xg }}</span>
+                        <div class="mr-stat-label-wrap">
+                            <div class="mr-stat-bar">
+                                <div class="mr-stat-bar-home" style="width: {{ rc.home_xg_pct }}%;"></div>
+                                <div class="mr-stat-bar-away"></div>
+                            </div>
+                            <span class="mr-stat-label">Erw. Tore (xG)</span>
+                        </div>
+                        <span class="mr-stat-away mr-xg-val">{{ rc.away_xg }}</span>
+                    </div>
+                    {% endif %}
 
                     <div class="mr-stat-row">
                         <span class="mr-stat-home">{{ report.match_stats.home_shots }}</span>
@@ -135,10 +156,80 @@
                 </div>
             </div>
 
+            {# ── Pressing ─────────────────────────────────────────────── #}
+            <div class="mr-section">
+                <h3 class="mr-section-title">Pressing</h3>
+                <div class="mr-stats">
+                    <div class="mr-stat-row">
+                        <span class="mr-stat-home mr-press-win">{{ report.match_stats.home_pressing_ball_wins }}</span>
+                        <span class="mr-stat-label">Pressing-Gewinne</span>
+                        <span class="mr-stat-away mr-press-win">{{ report.match_stats.away_pressing_ball_wins }}</span>
+                    </div>
+                    <div class="mr-stat-row">
+                        <span class="mr-stat-home mr-press-bp">{{ report.match_stats.home_pressing_bypassed }}</span>
+                        <span class="mr-stat-label">Pressing überspielt</span>
+                        <span class="mr-stat-away mr-press-bp">{{ report.match_stats.away_pressing_bypassed }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Angriffszonen ─────────────────────────────────────────── #}
+            {% if rc.home_att_total %}
+            <div class="mr-section">
+                <h3 class="mr-section-title">Angriffszonen</h3>
+                <div class="mr-zones-wrap">
+                    <div class="mr-zones-team-label">
+                        <span class="is-home">{{ report.home_club_short }}</span>
+                        <span class="is-away">{{ report.away_club_short }}</span>
+                    </div>
+                    <div class="mr-zones">
+                        <div class="mr-zone">
+                            <div class="mr-zone-bars">
+                                <div class="mr-zone-bar is-home" style="height: {{ rc.home_att_l_pct }}px;"></div>
+                                <div class="mr-zone-bar is-away" style="height: {{ rc.away_att_l_pct }}px;"></div>
+                            </div>
+                            <div class="mr-zone-pcts">
+                                <span class="is-home">{{ rc.home_att_l_pct }}%</span>
+                                <span class="is-away">{{ rc.away_att_l_pct }}%</span>
+                            </div>
+                            <div class="mr-zone-label">Links</div>
+                        </div>
+                        <div class="mr-zone">
+                            <div class="mr-zone-bars">
+                                <div class="mr-zone-bar is-home" style="height: {{ rc.home_att_c_pct }}px;"></div>
+                                <div class="mr-zone-bar is-away" style="height: {{ rc.away_att_c_pct }}px;"></div>
+                            </div>
+                            <div class="mr-zone-pcts">
+                                <span class="is-home">{{ rc.home_att_c_pct }}%</span>
+                                <span class="is-away">{{ rc.away_att_c_pct }}%</span>
+                            </div>
+                            <div class="mr-zone-label">Mitte</div>
+                        </div>
+                        <div class="mr-zone">
+                            <div class="mr-zone-bars">
+                                <div class="mr-zone-bar is-home" style="height: {{ rc.home_att_r_pct }}px;"></div>
+                                <div class="mr-zone-bar is-away" style="height: {{ rc.away_att_r_pct }}px;"></div>
+                            </div>
+                            <div class="mr-zone-pcts">
+                                <span class="is-home">{{ rc.home_att_r_pct }}%</span>
+                                <span class="is-away">{{ rc.away_att_r_pct }}%</span>
+                            </div>
+                            <div class="mr-zone-label">Rechts</div>
+                        </div>
+                    </div>
+                    <div class="mr-zones-legend">
+                        <span class="is-home">&#9632; Heim</span>
+                        <span class="is-away">&#9632; Gast</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
         </div>{# /mr-left #}
 
-        {# ── Right column: Strength + Teamwork ──────────────────────────── #}
+        {# ── Right column: Strength + Engine-Werte ────────────────────────── #}
         <div class="mr-right">
+
             <div class="mr-section">
                 <h3 class="mr-section-title">Teamstärke</h3>
                 <div class="mr-strength-grid">
@@ -187,9 +278,73 @@
                     <strong class="is-away">{{ report.away_teamwork }}</strong>
                 </div>
             </div>
+
+            {# ── Engine-Werte ─────────────────────────────────────────── #}
+            {% if rc %}
+            <div class="mr-section">
+                <h3 class="mr-section-title">Engine-Werte</h3>
+                <div class="mr-ev-grid">
+
+                    <div class="mr-ev-row">
+                        <span class="mr-ev-label">Taktik-Koh&auml;renz</span>
+                        <span class="mr-ev-val is-home">{{ rc.home_coh }}</span>
+                        <span class="mr-ev-sep">/</span>
+                        <span class="mr-ev-val is-away">{{ rc.away_coh }}</span>
+                    </div>
+
+                    <div class="mr-ev-row">
+                        <span class="mr-ev-label">Erm&uuml;dungs-Index</span>
+                        <span class="mr-ev-val is-home">{{ rc.home_fat }}</span>
+                        <span class="mr-ev-sep">/</span>
+                        <span class="mr-ev-val is-away">{{ rc.away_fat }}</span>
+                    </div>
+
+                    <div class="mr-ev-row">
+                        <span class="mr-ev-label">Taktik-Komplexit&auml;t</span>
+                        <span class="mr-ev-val is-home">{{ rc.home_cplx }}</span>
+                        <span class="mr-ev-sep">/</span>
+                        <span class="mr-ev-val is-away">{{ rc.away_cplx }}</span>
+                    </div>
+
+                    <div class="mr-ev-divider"></div>
+
+                    <div class="mr-ev-row mr-ev-row--single">
+                        <span class="mr-ev-label">Plan-Aktivierungen</span>
+                        <span class="mr-ev-single">{{ rc.plan_count }}</span>
+                    </div>
+
+                </div>
+            </div>
+            {% endif %}
+
         </div>{# /mr-right #}
 
     </div>{# /mr-body #}
+
+    {# ── Matchplan-Timeline (full width) ──────────────────────────────────── #}
+    {% if rc.plan_activations_labeled %}
+    <div class="mr-section mr-plan-section">
+        <h3 class="mr-section-title">
+            Matchplan-Timeline
+            <span class="mr-plan-count-badge">{{ rc.plan_count }} Aktivierung{{ rc.plan_count|pluralize:"en" }}</span>
+        </h3>
+        <div class="mr-plan-timeline">
+            {% for act in rc.plan_activations_labeled %}
+            <div class="mr-plan-event {% if act.side == 'home' %}is-home{% else %}is-away{% endif %}">
+                <div class="mr-plan-minute">{{ act.minute }}'</div>
+                <div class="mr-plan-side-dot"></div>
+                <div class="mr-plan-body">
+                    <span class="mr-plan-name">{{ act.plan_label }}</span>
+                    <span class="mr-plan-club">
+                        {% if act.side == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
+                    </span>
+                </div>
+                <div class="mr-plan-score">{{ act.score }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     {# ── Player tables ───────────────────────────────────────────────────── #}
     <div class="mr-squads">
@@ -199,7 +354,7 @@
             <h3 class="mr-squad-title">{{ report.home_club_name }}</h3>
             <div class="mr-squad-meta">
                 <span>Teamst&auml;rke: <strong>{{ report.home_strength.overall }}</strong></span>
-                <span>Team-Teamwork: <strong>{{ report.home_teamwork }}</strong></span>
+                <span>Teamwork: <strong>{{ report.home_teamwork }}</strong></span>
             </div>
             <table class="mr-player-table">
                 <thead>
@@ -239,7 +394,7 @@
             <h3 class="mr-squad-title">{{ report.away_club_name }}</h3>
             <div class="mr-squad-meta">
                 <span>Teamst&auml;rke: <strong>{{ report.away_strength.overall }}</strong></span>
-                <span>Team-Teamwork: <strong>{{ report.away_teamwork }}</strong></span>
+                <span>Teamwork: <strong>{{ report.away_teamwork }}</strong></span>
             </div>
             <table class="mr-player-table">
                 <thead>

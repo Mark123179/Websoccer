@@ -92,7 +92,7 @@
     }
 
     function bindMinuteInputs() {
-        form.querySelectorAll('[data-minute-input]').forEach((input) => {
+        form.querySelectorAll('[data-minute]').forEach((input) => {
             input.addEventListener('keydown', (event) => {
                 if (['e', 'E', '+', '-', '.', ','].includes(event.key)) {
                     event.preventDefault();

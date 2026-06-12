@@ -112,6 +112,38 @@
     text-shadow: 0 0 32px rgba(22, 207, 255, 0.3);
 }
 
+.mr-score-meta {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.mr-xg-pill {
+    border-radius: 20px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 3px 10px;
+}
+
+.mr-xg-pill.is-home {
+    background: rgba(22, 207, 255, 0.12);
+    border: 1px solid rgba(22, 207, 255, 0.28);
+    color: rgba(22, 207, 255, 0.9);
+}
+
+.mr-xg-pill.is-away {
+    background: rgba(255, 165, 50, 0.1);
+    border: 1px solid rgba(255, 165, 50, 0.28);
+    color: rgba(255, 165, 50, 0.9);
+}
+
+.mr-xg-sep {
+    color: rgba(244, 251, 255, 0.25);
+    font-size: 11px;
+}
+
 .mr-score-tag {
     background: rgba(22, 207, 255, 0.12);
     border: 1px solid rgba(22, 207, 255, 0.25);
@@ -129,7 +161,7 @@
 .mr-body {
     display: grid;
     gap: 16px;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: 1fr 300px;
     margin-bottom: 16px;
 }
 
@@ -146,10 +178,13 @@
 }
 
 .mr-section-title {
+    align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     color: rgba(22, 207, 255, 0.9);
+    display: flex;
     font-size: 11px;
     font-weight: 800;
+    gap: 10px;
     letter-spacing: 0.08em;
     margin: 0 0 14px;
     padding-bottom: 8px;
@@ -249,7 +284,7 @@
     align-items: center;
     display: grid;
     gap: 10px;
-    grid-template-columns: 36px 1fr 36px;
+    grid-template-columns: 44px 1fr 44px;
 }
 
 .mr-stat-home,
@@ -300,13 +335,111 @@
     transition: width 0.3s ease;
 }
 
-.mr-yellow {
-    color: #f5c518;
+.mr-yellow { color: #f5c518; }
+.mr-red    { color: #e84040; }
+
+.mr-xg-val {
+    color: rgba(100, 230, 255, 0.95);
+    font-size: 13px;
 }
 
-.mr-red {
-    color: #e84040;
+/* ── Pressing ────────────────────────────────────────────────────────────────── */
+
+.mr-press-win {
+    color: rgba(100, 255, 180, 0.9);
 }
+
+.mr-press-bp {
+    color: rgba(255, 165, 50, 0.85);
+}
+
+/* ── Angriffszonen ───────────────────────────────────────────────────────────── */
+
+.mr-zones-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mr-zones-team-label {
+    display: flex;
+    font-size: 10px;
+    font-weight: 800;
+    gap: 16px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.mr-zones-team-label .is-home { color: rgba(22, 207, 255, 0.8); }
+.mr-zones-team-label .is-away { color: rgba(255, 165, 50, 0.8); }
+
+.mr-zones {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.mr-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.mr-zone-bars {
+    align-items: flex-end;
+    display: flex;
+    gap: 3px;
+    height: 80px;
+    width: 100%;
+    justify-content: center;
+}
+
+.mr-zone-bar {
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+    width: 22px;
+}
+
+.mr-zone-bar.is-home {
+    background: rgba(22, 207, 255, 0.55);
+    border: 1px solid rgba(22, 207, 255, 0.3);
+}
+
+.mr-zone-bar.is-away {
+    background: rgba(255, 165, 50, 0.5);
+    border: 1px solid rgba(255, 165, 50, 0.3);
+}
+
+.mr-zone-pcts {
+    display: flex;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    gap: 4px;
+}
+
+.mr-zone-pcts .is-home { color: rgba(22, 207, 255, 0.85); }
+.mr-zone-pcts .is-away { color: rgba(255, 165, 50, 0.85); }
+
+.mr-zone-label {
+    color: rgba(244, 251, 255, 0.45);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.mr-zones-legend {
+    display: flex;
+    font-size: 10px;
+    font-weight: 700;
+    gap: 14px;
+    letter-spacing: 0.04em;
+}
+
+.mr-zones-legend .is-home { color: rgba(22, 207, 255, 0.7); }
+.mr-zones-legend .is-away { color: rgba(255, 165, 50, 0.7); }
 
 /* ── Strength + Teamwork panel ───────────────────────────────────────────────── */
 
@@ -320,7 +453,7 @@
     align-items: center;
     display: grid;
     gap: 8px;
-    grid-template-columns: 90px 1fr auto 1fr;
+    grid-template-columns: 80px 1fr auto 1fr;
 }
 
 .mr-strength-label {
@@ -370,6 +503,164 @@
     font-size: 14px;
     font-variant-numeric: tabular-nums;
     font-weight: 900;
+}
+
+/* ── Engine-Werte panel ──────────────────────────────────────────────────────── */
+
+.mr-ev-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mr-ev-row {
+    align-items: center;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 1fr auto auto auto;
+}
+
+.mr-ev-row--single {
+    grid-template-columns: 1fr auto;
+}
+
+.mr-ev-label {
+    color: rgba(244, 251, 255, 0.5);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mr-ev-val {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+.mr-ev-val.is-home { color: rgba(22, 207, 255, 0.85); }
+.mr-ev-val.is-away { color: rgba(255, 165, 50, 0.8); }
+
+.mr-ev-sep {
+    color: rgba(244, 251, 255, 0.2);
+    font-size: 11px;
+}
+
+.mr-ev-single {
+    background: rgba(22, 207, 255, 0.1);
+    border: 1px solid rgba(22, 207, 255, 0.2);
+    border-radius: 20px;
+    color: rgba(22, 207, 255, 0.9);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    padding: 2px 12px;
+}
+
+.mr-ev-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin: 4px 0;
+}
+
+/* ── Matchplan-Timeline ──────────────────────────────────────────────────────── */
+
+.mr-plan-section {
+    margin-bottom: 16px;
+}
+
+.mr-plan-count-badge {
+    background: rgba(22, 207, 255, 0.1);
+    border: 1px solid rgba(22, 207, 255, 0.22);
+    border-radius: 20px;
+    color: rgba(22, 207, 255, 0.7);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 2px 8px;
+    text-transform: none;
+}
+
+.mr-plan-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mr-plan-event {
+    align-items: center;
+    border-radius: 7px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 36px 10px 1fr auto;
+    padding: 7px 10px;
+    transition: background 0.12s ease;
+}
+
+.mr-plan-event:hover {
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.mr-plan-event.is-home {
+    border-left: 2px solid rgba(22, 207, 255, 0.5);
+}
+
+.mr-plan-event.is-away {
+    border-left: 2px solid rgba(255, 165, 50, 0.5);
+}
+
+.mr-plan-minute {
+    color: rgba(244, 251, 255, 0.55);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    text-align: right;
+}
+
+.mr-plan-event.is-home .mr-plan-minute { color: rgba(22, 207, 255, 0.75); }
+.mr-plan-event.is-away .mr-plan-minute { color: rgba(255, 165, 50, 0.75); }
+
+.mr-plan-side-dot {
+    background: rgba(244, 251, 255, 0.25);
+    border-radius: 50%;
+    height: 6px;
+    justify-self: center;
+    width: 6px;
+}
+
+.mr-plan-event.is-home .mr-plan-side-dot { background: rgba(22, 207, 255, 0.55); }
+.mr-plan-event.is-away .mr-plan-side-dot { background: rgba(255, 165, 50, 0.55); }
+
+.mr-plan-body {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.mr-plan-name {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.mr-plan-event.is-home .mr-plan-name { color: rgba(22, 207, 255, 0.9); }
+.mr-plan-event.is-away .mr-plan-name { color: rgba(255, 165, 50, 0.9); }
+
+.mr-plan-club {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 4px;
+    color: rgba(244, 251, 255, 0.45);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    text-transform: uppercase;
+}
+
+.mr-plan-score {
+    color: rgba(244, 251, 255, 0.5);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    white-space: nowrap;
 }
 
 /* ── Player tables ───────────────────────────────────────────────────────────── */
@@ -480,18 +771,9 @@
     text-align: right;
 }
 
-.mr-num.mr-dim {
-    color: rgba(244, 251, 255, 0.45);
-}
-
-.mr-num.mr-final {
-    color: rgba(22, 207, 255, 0.9);
-    font-weight: 800;
-}
-
-.mr-num.mr-tw {
-    color: rgba(150, 255, 150, 0.75);
-}
+.mr-num.mr-dim    { color: rgba(244, 251, 255, 0.45); }
+.mr-num.mr-final  { color: rgba(22, 207, 255, 0.9); font-weight: 800; }
+.mr-num.mr-tw     { color: rgba(150, 255, 150, 0.75); }
 
 .mr-player-table td.mr-num strong {
     color: #f4fbff;
@@ -510,11 +792,13 @@
     vertical-align: middle;
     cursor: help;
 }
+
 .mr-pos-malus[title*="NP"] {
     background: rgba(255, 190, 40, 0.18);
     color: #ffbe28;
     border: 1px solid rgba(255, 190, 40, 0.35);
 }
+
 .mr-pos-malus[title*="FP"] {
     background: rgba(232, 64, 64, 0.18);
     color: #e84040;
