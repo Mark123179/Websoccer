@@ -1358,6 +1358,8 @@ def career_rows_from_ws_stats(rows, nt_nationality=None):
 
     career_rows = []
     for bucket in grouped.values():
+        if not bucket['matches']:
+            continue
         average_grade = None
         if bucket['grade_minutes']:
             average_grade = round(
