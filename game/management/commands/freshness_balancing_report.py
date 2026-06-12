@@ -111,25 +111,28 @@ class ScenarioResult:
     total_matches:      int
     training_level:     int
     medizin_level:      int
-    # Pre-match freshness (key insight)
-    pre_match_starter:  list   # alle pre-match Frische-Werte aller Starter aller Runs
+    rotation_count:     int
+    # Pre-match freshness — nominale Starter
+    pre_match_starter:  list
     pre_match_bench:    list
+    # Effektives Lineup (egal ob Stamm oder rotiert) — Kernmetrik bei Rotation
+    pre_match_effective: list
     # Tages-Snapshots (Endtag)
-    starter_snap:       dict   # {day: [values]}
+    starter_snap:       dict
     bench_snap:         dict
-    # Minimum-Frische (worst case)
-    min_freshness_starter: list  # min pro Run
-    # Schwellenwerte (gezählt über alle match-Zeitpunkte)
-    below80_at_match:   list   # [count per run, avg über alle Spieltage]
+    # Minimum-Frische (worst case, alle Spieler im effektiven Lineup)
+    min_freshness_starter: list
+    # Schwellenwerte beim Anpfiff — effektives Lineup
+    below80_at_match:   list
     below70_at_match:   list
     below60_at_match:   list
     # Verletzungen
     injury_total:       list
     injury_days_total:  list
-    inj_by_type:        dict   # {'Leicht': [...], ...}
+    inj_by_type:        dict
     avg_days_by_type:   dict
     # Position
-    pos_loss:           dict   # {pos: [avg_loss_per_match per run]}
+    pos_loss:           dict
 
 
 # ── Spielpläne ────────────────────────────────────────────────────────────────
@@ -231,6 +234,7 @@ def _simulate_once(
     days: int,
     fatigue_cost: float,
     rng: random.Random,
+    rotation_count: int = 0,
 ) -> list[SimPlayer]:
     squad = _fresh_squad()
     medizin_factor = MEDIZIN_INJURY_FACTOR.get(medizin_level, 1.0)
@@ -244,7 +248,7 @@ def _simulate_once(
         #   90–100 → 50 %  │  80–89 → 75 %  │  < 80 → 100 %
         for p in squad:
             if p.injury_days > 0:
-                continue  # Verletzte erholen sich nicht
+                continue
             if p.freshness >= 100.0:
                 continue
             recovery = daily_recovery_amount(p.freshness, training_level)
@@ -254,7 +258,7 @@ def _simulate_once(
         if is_match_day:
             healthy_bench = [p for p in squad if not p.is_starter and p.injury_days == 0]
 
-            # Lineup: Starter oder Ersatz
+            # Schritt 1: Verletzte Stammspieler durch Positionsersatz ersetzen
             lineup: list[SimPlayer] = []
             used_bench: set[int] = set()
             for p in squad:
@@ -263,14 +267,24 @@ def _simulate_once(
                 if p.injury_days == 0:
                     lineup.append(p)
                 else:
-                    # Ersatz suchen
                     available = [b for b in healthy_bench if b.pid not in used_bench]
                     sub = _find_replacement(p.position, available)
                     if sub:
                         lineup.append(sub)
                         used_bench.add(sub.pid)
 
-            # Frische vor dem Spiel aufzeichnen (PRE-MATCH — der entscheidende Wert)
+            # Schritt 2: Rotation — N müdeste Stammspieler ↔ N frischeste Bank
+            if rotation_count > 0:
+                starters_in = [p for p in lineup if p.is_starter]
+                bench_avail = [p for p in healthy_bench if p.pid not in used_bench]
+                n = min(rotation_count, len(bench_avail), len(starters_in))
+                if n > 0:
+                    starters_in.sort(key=lambda p: p.freshness)         # müdeste zuerst
+                    bench_avail.sort(key=lambda p: p.freshness, reverse=True)  # frischeste zuerst
+                    rotate_out = {p.pid for p in starters_in[:n]}
+                    lineup = [p for p in lineup if p.pid not in rotate_out] + bench_avail[:n]
+
+            # Frische vor dem Spiel aufzeichnen (PRE-MATCH)
             for p in lineup:
                 p.pre_match_freshness.append(p.freshness)
 
@@ -323,14 +337,15 @@ def _run_scenario(
     fatigue_cost: float,
     runs: int,
     seed: int,
+    rotation_count: int = 0,
 ) -> ScenarioResult:
-    schedule     = _build_schedule(days, scenario_id)
-    match_set    = set(schedule)
+    schedule      = _build_schedule(days, scenario_id)
+    match_set     = set(schedule)
     total_matches = len(schedule)
 
-    # Aggregatoren
     pre_match_starter_all: list[float] = []
     pre_match_bench_all:   list[float] = []
+    pre_match_effective_all: list[float] = []      # alle Spieler die tatsächlich spielten
     starter_snap:  dict[int, list[float]] = {d: [] for d in _SNAPSHOT_DAYS}
     bench_snap:    dict[int, list[float]] = {d: [] for d in _SNAPSHOT_DAYS}
     min_fresh_runs: list[float] = []
@@ -350,38 +365,40 @@ def _run_scenario(
             days=days,
             fatigue_cost=fatigue_cost,
             rng=rng,
+            rotation_count=rotation_count,
         )
 
-        # Pre-match Frische
+        # Pre-match Frische — nominale Rollen + effektives Lineup
+        effective_all_run: list[float] = []
         for p in squad:
             if p.is_starter:
                 pre_match_starter_all.extend(p.pre_match_freshness)
             else:
                 pre_match_bench_all.extend(p.pre_match_freshness)
+            effective_all_run.extend(p.pre_match_freshness)   # alle die spielten
+        pre_match_effective_all.extend(effective_all_run)
 
         # Tages-Snapshots
         for d in _SNAPSHOT_DAYS:
             starter_snap[d].extend(p.snapshots.get(d, 100.0) for p in squad if p.is_starter)
             bench_snap[d].extend(p.snapshots.get(d, 100.0)   for p in squad if not p.is_starter)
 
-        # Minimum-Frische (Starter)
-        starters = [p for p in squad if p.is_starter]
-        if starters:
-            min_fresh_this = min(
-                min(p.daily_freshness) if p.daily_freshness else 100.0
-                for p in starters
-            )
-            min_fresh_runs.append(min_fresh_this)
+        # Minimum-Frische — alle die gespielt haben (d.h. pre_match_freshness nicht leer)
+        played = [p for p in squad if p.pre_match_freshness]
+        if played:
+            min_fresh_runs.append(min(min(p.daily_freshness) for p in played if p.daily_freshness))
 
-        # Schwellenwerte: zähle pro Pre-Match-Zeitpunkt
-        total_matches_run = sum(len(p.pre_match_freshness) for p in starters)
-        if total_matches_run > 0:
-            b80 = sum(1 for p in starters for f in p.pre_match_freshness if f < 80)
-            b70 = sum(1 for p in starters for f in p.pre_match_freshness if f < 70)
-            b60 = sum(1 for p in starters for f in p.pre_match_freshness if f < 60)
-            below80_runs.append(b80 / total_matches_run * 11)  # Spieler pro Spiel im Schnitt
-            below70_runs.append(b70 / total_matches_run * 11)
-            below60_runs.append(b60 / total_matches_run * 11)
+        # Schwellenwerte beim Anpfiff — effektives Lineup (alle die spielten)
+        total_pm = len(effective_all_run)
+        if total_pm > 0:
+            b80 = sum(1 for f in effective_all_run if f < 80)
+            b70 = sum(1 for f in effective_all_run if f < 70)
+            b60 = sum(1 for f in effective_all_run if f < 60)
+            # Umrechnen auf "Ø Spieler pro Spiel" (11 Spieler pro Spiel)
+            per_match = total_matches or 1
+            below80_runs.append(b80 / per_match)
+            below70_runs.append(b70 / per_match)
+            below60_runs.append(b60 / per_match)
         else:
             below80_runs.append(0.0)
             below70_runs.append(0.0)
@@ -409,8 +426,10 @@ def _run_scenario(
         total_matches=total_matches,
         training_level=training_level,
         medizin_level=medizin_level,
+        rotation_count=rotation_count,
         pre_match_starter=pre_match_starter_all,
         pre_match_bench=pre_match_bench_all,
+        pre_match_effective=pre_match_effective_all,
         starter_snap=starter_snap,
         bench_snap=bench_snap,
         min_freshness_starter=min_fresh_runs,
@@ -604,6 +623,62 @@ def _print_summary(results_s123: list[ScenarioResult], stdout) -> None:
     stdout.write('═' * 74)
 
 
+# ── Rotations-Vergleichstabelle ───────────────────────────────────────────────
+
+def _spielbar_label(eff_avg: float, scenario_id: int) -> str:
+    """Qualitative Bewertung ob die Saison managebar ist."""
+    if scenario_id == 2:
+        if eff_avg >= 85:  return '✔ Gut'
+        if eff_avg >= 78:  return '● Spielbar'
+        if eff_avg >= 65:  return '▲ Grenzwertig'
+        return                     '✘ Katastrophe'
+    else:  # S3
+        if eff_avg >= 75:  return '✔ Hart, aber OK'
+        if eff_avg >= 60:  return '● Spielbar (Minimum)'
+        if eff_avg >= 45:  return '▲ Sehr grenzwertig'
+        return                     '✘ Katastrophe'
+
+
+def _print_rotation_table(
+    title: str,
+    results: list,          # list[ScenarioResult]
+    scenario_id: int,
+    stdout,
+) -> None:
+    W = [10, 20, 10, 10, 12, 10, 10, 20]
+    stdout.write('')
+    stdout.write('─' * 74)
+    stdout.write(f'  {title}')
+    stdout.write('─' * 74)
+    hdr = ['Rotation', 'Ø eff.Frische/Sp', 'b80/Sp', 'b70/Sp',
+           'Min-Frische', 'Verletz.', 'Ausfallt.', 'Bewertung']
+    stdout.write(_row(hdr, W))
+    stdout.write(_sep(W))
+    for res in results:
+        rot  = res.rotation_count
+        eff  = _avg(res.pre_match_effective)
+        b80  = _avg(res.below80_at_match)
+        b70  = _avg(res.below70_at_match)
+        mfr  = _avg(res.min_freshness_starter)
+        inj  = _avg(res.injury_total)
+        idays= _avg(res.injury_days_total)
+        lbl  = _spielbar_label(eff, scenario_id)
+        row = [
+            f'+{rot} Rot.' if rot else '0 Rot. (Basis)',
+            _fmt(eff),
+            _fmt(b80, 1),
+            _fmt(b70, 1),
+            _fmt(mfr, 1),
+            _fmt(inj, 1),
+            _fmt(idays, 0),
+            lbl,
+        ]
+        stdout.write(_row(row, W))
+    stdout.write('─' * 74)
+    stdout.write('  Eff. Frische = Frische aller tatsächlich spielenden Spieler (inkl. Rotierte)')
+    stdout.write('  b80/Sp = Ø Spieler im Lineup mit Frische < 80 pro Spiel')
+
+
 # ── Export ────────────────────────────────────────────────────────────────────
 
 def _to_dict(results: list[ScenarioResult]) -> list[dict]:
@@ -775,6 +850,60 @@ class Command(BaseCommand):
 
         _print_training_display_legend(self.stdout)
         _print_summary(results_s123, self.stdout)
+
+        # ── Szenario 6: Rotations-Test S2 ──────────────────────────────────────
+        self.stdout.write(f'\n  Simuliere Rotations-Test S2 (0/2/3/4 Rotationen, {runs}× je) …')
+        rot_s2_results = []
+        for rot_n in (0, 2, 3, 4):
+            res = _run_scenario(
+                name=f'S2+{rot_n}R',
+                description=f'S2, Training S1, {rot_n} Rotationen/Spiel',
+                scenario_id=2, training_level=1, medizin_level=1,
+                days=days, fatigue_cost=fatigue, runs=runs, seed=seed,
+                rotation_count=rot_n,
+            )
+            rot_s2_results.append(res)
+            all_results.append(res)
+        _print_rotation_table(
+            'SZENARIO 6a — S2 Rotation (0/2/3/4)  Training S1',
+            rot_s2_results, scenario_id=2, stdout=self.stdout,
+        )
+
+        # S2 + Trainingsgelände S2 mit 2–3 Rotationen (kombinierter Effekt)
+        self.stdout.write(f'  Simuliere Rotations-Test S2+Training S2 (0/2/3 Rotationen, {runs}× je) …')
+        rot_s2t2_results = []
+        for rot_n in (0, 2, 3):
+            res = _run_scenario(
+                name=f'S2-T2+{rot_n}R',
+                description=f'S2, Training S2, {rot_n} Rotationen/Spiel',
+                scenario_id=2, training_level=2, medizin_level=1,
+                days=days, fatigue_cost=fatigue, runs=runs, seed=seed,
+                rotation_count=rot_n,
+            )
+            rot_s2t2_results.append(res)
+            all_results.append(res)
+        _print_rotation_table(
+            'SZENARIO 6b — S2 + Trainingsgelände S2  (0/2/3 Rotationen)',
+            rot_s2t2_results, scenario_id=2, stdout=self.stdout,
+        )
+
+        # ── Szenario 7: Rotations-Test S3 ──────────────────────────────────────
+        self.stdout.write(f'\n  Simuliere Rotations-Test S3 (0/3/5 Rotationen, {runs}× je) …')
+        rot_s3_results = []
+        for rot_n in (0, 3, 5):
+            res = _run_scenario(
+                name=f'S3+{rot_n}R',
+                description=f'S3, Training S1, {rot_n} Rotationen/Spiel',
+                scenario_id=3, training_level=1, medizin_level=1,
+                days=days, fatigue_cost=fatigue, runs=runs, seed=seed,
+                rotation_count=rot_n,
+            )
+            rot_s3_results.append(res)
+            all_results.append(res)
+        _print_rotation_table(
+            'SZENARIO 7 — S3 Rotation (0/3/5)  Training S1',
+            rot_s3_results, scenario_id=3, stdout=self.stdout,
+        )
 
         # ── Export ─────────────────────────────────────────────────────────────
         if exp_fmt:
