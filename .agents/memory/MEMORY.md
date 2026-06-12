@@ -15,3 +15,4 @@
 - [PlayerEditLog snapshot trap](player-edit-log-snapshot.md) — existing={} dict holds live ORM objects; snapshot old values before any in-place mutation or diff will always show no change.
 - [Tactics layout media-query trap](tactics-media-query-trap.md) — @media (max-width:1440px) in tactics.css overrides .tactics-template-grid columns; edit BOTH base rule and media block. .tactics-main-grid is dead CSS.
 - [Match Engine V2 Architecture](match-engine-v2-architecture.md) — tactic_compiler.py ist standalone Copy; ORM-Bridge via _build_team_dict(); xG = 1.36*(ratio**1.25); CONDITION_PLAN_MODIFIERS nicht ändern.
+- [Match Engine V2 Balancing Freeze](match-engine-v2-freeze.md) — FREEZE seit 2026-06-12; alle Konstanten eingefroren; Änderung nur mit ≥50-Saisons-Evidenz + expliziter Nutzer-Freigabe.
