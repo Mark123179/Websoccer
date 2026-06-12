@@ -3742,7 +3742,7 @@ def player_detail(request, player_id):
     season_rows = [
         row
         for row in all_season_rows
-        if row.season_number == selected_season_number
+        if row.season_number == selected_season_number and row.matches > 0
     ]
     market_rows = latest_in_chronological_order(
         player.market_value_snapshots.select_related('source')
