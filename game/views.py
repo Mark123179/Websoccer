@@ -2596,6 +2596,7 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
         'substitution_rows': substitution_rows,
         'unavailable_players': display_absences,
         'hero_absences': split_absence_labels(display_absences),
+        'own_absences': unavailable_players_for_squad(club, squad_scope),
         'templates': template_options_for_context(templates),
         'template_count': len(templates),
         'template_limit': 10,

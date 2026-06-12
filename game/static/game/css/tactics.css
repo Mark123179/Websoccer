@@ -4419,3 +4419,47 @@ body.tactics-page .nav-menu a:nth-child(5) {
     padding: 8px 0;
     text-align: center;
 }
+
+/* --------------------------------------------------------------------------
+   Eigene Ausfälle im Roster-Panel (Gesperrt / Verletzt)
+   -------------------------------------------------------------------------- */
+.tactics-own-absences {
+    margin-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding-top: 8px;
+}
+.tactics-own-absences__title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #666;
+    margin: 0 0 6px;
+}
+.tactics-own-absence-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 0.78rem;
+}
+.tactics-own-absence-row img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+.tactics-own-absence-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ccc;
+}
+.tactics-own-absence-reason {
+    font-size: 0.68rem;
+    color: #888;
+    flex-shrink: 0;
+}

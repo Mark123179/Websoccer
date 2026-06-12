@@ -764,6 +764,8 @@ def player_queryset_for_squad(club, squad_scope):
         club.player_set.select_related('strength_profile')
         .filter(
             Q(ws_injury_days_remaining=0) | Q(ws_injury_days_remaining__isnull=True),
+            Q(ws_suspension_matches_remaining=0)
+            | Q(ws_suspension_matches_remaining__isnull=True),
         )
         .order_by('last_name', 'first_name', 'id')
     )
@@ -843,14 +845,16 @@ def unavailable_players_for_squad(club, squad_scope):
         if player.is_ws_injured:
             rows.append({
                 'name': player.full_name,
-                'reason': player.ws_injury_type,
+                'reason': player.ws_injury_type or 'Verletzt',
                 'tone': 'injury',
+                'portrait': player.portrait_static_path,
             })
         if player.is_ws_suspended:
             rows.append({
                 'name': player.full_name,
-                'reason': player.ws_suspension_reason,
+                'reason': player.ws_suspension_reason or 'Gesperrt',
                 'tone': 'suspension',
+                'portrait': player.portrait_static_path,
             })
     return rows
 

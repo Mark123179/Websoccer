@@ -150,8 +150,6 @@
                                 <img src="{% static option.portrait %}" alt="{{ option.name }}">
                             </a>
                             <strong>{{ option.name }}</strong>
-                            {% if option.is_suspended %}<span class="tactics-status-badge is-suspended">Gesperrt</span>{% endif %}
-                            {% if option.is_injured %}<span class="tactics-status-badge is-injured">Verletzt</span>{% endif %}
                             <span class="tactics-position-line">
                                 <b>HP</b>
                                 {% for position in option.main_positions %}
@@ -184,6 +182,19 @@
                         <p class="tactics-roster-empty">Keine verfügbaren Spieler.</p>
                     {% endfor %}
                 </div>
+                {% if own_absences %}
+                <div class="tactics-own-absences">
+                    <h3 class="tactics-own-absences__title">Ausfälle</h3>
+                    {% for row in own_absences %}
+                    <div class="tactics-own-absence-row is-{{ row.tone }}">
+                        <img src="{% static row.portrait %}" alt="{{ row.name }}">
+                        <span class="tactics-own-absence-name">{{ row.name }}</span>
+                        <span class="tactics-status-badge is-{% if row.tone == 'suspension' %}suspended{% else %}injured{% endif %}">{% if row.tone == 'suspension' %}Gesperrt{% else %}Verletzt{% endif %}</span>
+                        <small class="tactics-own-absence-reason">{{ row.reason }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </aside>
 
             <section class="tactics-pitch-panel">
@@ -366,8 +377,6 @@
                                 <i></i>
                             {% endif %}
                             <strong>{% if row.player %}{{ row.player.name }}{% else %}Leer{% endif %}</strong>
-                            {% if row.player.is_suspended %}<span class="tactics-status-badge is-suspended">Gesperrt</span>{% endif %}
-                            {% if row.player.is_injured %}<span class="tactics-status-badge is-injured">Verletzt</span>{% endif %}
                             <em class="tactics-freshness is-{% if row.player %}{{ row.player.freshness_tone }}{% else %}empty{% endif %}" style="--freshness: {% if row.player.freshness != None %}{{ row.player.freshness }}{% else %}0{% endif %};">{% if row.player %}{{ row.player.freshness_label }}{% else %}-{% endif %}</em>
                             <select name="bench_{{ row.index }}" data-assignment data-area="bench" aria-label="Bankplatz {{ row.index }}">
                                 <option value="">Leer</option>
