@@ -136,31 +136,41 @@ class ScenarioResult:
 # ── Spielpläne ────────────────────────────────────────────────────────────────
 
 def _build_schedule(days: int, scenario_id: int) -> list[int]:
-    """Gibt sortierte, eindeutige Spieltage zurück (min. 1 Tag Abstand)."""
+    """Gibt sortierte, eindeutige Spieltage zurück.
+
+    Reale Spielpläne:
+    S1 — Ein Wettbewerb: Spiel alle 3 Tage.
+    S2 — Zwei Wettbewerbe (6-Tage-Zyklus, 3 Spiele):
+         Liga · Frei · Pokal · Liga · Frei · Frei  →  Spieltage 0, 2, 3
+    S3 — Drei Wettbewerbe (6-Tage-Zyklus, 4 Spiele):
+         Liga · Frei · Pokal · Liga · Frei · CL    →  Spieltage 0, 2, 3, 5
+    """
     if scenario_id == 1:
-        # Ein Wettbewerb: alle 3 Tage
         return list(range(0, days, 3))
 
     elif scenario_id == 2:
-        # Zwei Wettbewerbe: Liga alle 3 Tage + Pokal versetzt, min. 1 Tag Abstand
-        liga  = list(range(0, days, 3))     # 0,3,6,9,...  30 Spiele
-        pokal = list(range(2, days, 6))     # 2,8,14,20,... ~15 Spiele
-        merged = sorted(set(liga) | set(pokal))
-        # Min. 1 Tag Abstand einhalten
-        filtered = [merged[0]]
-        for d in merged[1:]:
-            if d - filtered[-1] >= 1:
-                filtered.append(d)
-        return filtered
+        # 6-Tage-Zyklus: 0, 2, 3 (= Liga, Pokal, Liga) → ~45 Spiele/90 Tage
+        matches = []
+        cycle_start = 0
+        while cycle_start < days:
+            for offset in (0, 2, 3):
+                d = cycle_start + offset
+                if d < days:
+                    matches.append(d)
+            cycle_start += 6
+        return sorted(set(matches))
 
     else:
-        # Drei Wettbewerbe: Liga/Pokal/Europa wöchentlich versetzt
-        # → 3 Spiele in ~5 Tagen, dann 2 Tage Pause, nächste Runde
-        liga   = list(range(0, days, 7))   # 0, 7, 14, ...  13 Sp.
-        pokal  = list(range(3, days, 7))   # 3, 10, 17, ... 12 Sp.
-        europa = list(range(5, days, 7))   # 5, 12, 19, ... 12 Sp.
-        merged = sorted(set(liga) | set(pokal) | set(europa))
-        return merged
+        # 6-Tage-Zyklus: 0, 2, 3, 5 (= Liga, Pokal, Liga, CL) → ~60 Spiele/90 Tage
+        matches = []
+        cycle_start = 0
+        while cycle_start < days:
+            for offset in (0, 2, 3, 5):
+                d = cycle_start + offset
+                if d < days:
+                    matches.append(d)
+            cycle_start += 6
+        return sorted(set(matches))
 
 
 def _match_stats(schedule: list[int]) -> str:
@@ -711,9 +721,9 @@ class Command(BaseCommand):
 
         # ── Szenarien 1–3 ──────────────────────────────────────────────────────
         scenarios = [
-            (1, 'S1', 'Ein Wettbewerb   — Spiel alle 3 Tage'),
-            (2, 'S2', 'Zwei Wettbewerbe — Liga alle 3 Tage + Pokal versetzt'),
-            (3, 'S3', 'Drei Wettbewerbe — Liga/Pokal/Europa, 3 Sp. in ~5 Tagen'),
+            (1, 'S1', 'Ein Wettbewerb   — Spiel alle 3 Tage (30 Sp./90d)'),
+            (2, 'S2', 'Zwei Wettbewerbe — Liga·Frei·Pokal·Liga·Frei·Frei (6-Tage-Zyklus, ~45 Sp.)'),
+            (3, 'S3', 'Drei Wettbewerbe — Liga·Frei·Pokal·Liga·Frei·CL  (6-Tage-Zyklus, ~60 Sp.)'),
         ]
         results_s123 = []
         for sid, sname, sdesc in scenarios:
