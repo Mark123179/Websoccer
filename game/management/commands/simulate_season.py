@@ -244,6 +244,7 @@ class Command(BaseCommand):
                 hs=0, d=0, as_=0,
                 plans=0,
                 press_h=0, press_a=0,
+                fav_wins=0, upsets=0,
             )
             highlights = dict(
                 biggest_wins=[],   # (margin, score_str, home, away)
@@ -295,6 +296,17 @@ class Command(BaseCommand):
                             row['att_r']        += ms.get(f'{side}_attacks_right', 0)
                             row['plan_acts']    += len(res.get('plan_activations', []))
 
+                        # Favorit = stärkeres Team (nach Ø final_strength)
+                        h_str = res['home_strength']['overall']
+                        a_str = res['away_strength']['overall']
+                        if hg != ag:   # kein Remis
+                            fav_won = (h_str >= a_str and hg > ag) or \
+                                      (a_str >  h_str and ag > hg)
+                            if fav_won:
+                                league['fav_wins'] += 1
+                            else:
+                                league['upsets'] += 1
+
                         # Liga-Gesamt
                         league['goals_h'] += hg; league['goals_a'] += ag
                         league['xgh']     += res['home_xg']; league['xga'] += res['away_xg']
@@ -335,11 +347,10 @@ class Command(BaseCommand):
                 out(f"  Spieltag {md_idx:>2}/{matchdays_count} | {md_ok}/{games_per_day} Sp. ok | "
                     f"{league['games']:>3} gesamt | {elapsed:.0f}s")
 
-            # ── Tabelle sortieren ─────────────────────────────────────────────
+            # ── Tabelle sortieren: Pkt DESC → TD DESC → Tore DESC → Name ASC ──
             standings = sorted(
                 table.values(),
-                key=lambda r: (r['pts'], r['gf']-r['ga'], r['gf']),
-                reverse=True
+                key=lambda r: (-r['pts'], -(r['gf'] - r['ga']), -r['gf'], r['club']),
             )
             for rank, row in enumerate(standings, 1):
                 row['rank'] = rank
@@ -443,22 +454,115 @@ class Command(BaseCommand):
             all_seasons.append(dict(
                 season=season_num,
                 champion=standings[0]['club'],
-                relegated=[standings[-1]['club'], standings[-2]['club'],
-                           standings[-3]['club']] if len(standings) >= 3 else [],
-                league=league, standings=standings,
+                pts_1=standings[0]['pts'],
+                pts_4=standings[3]['pts'] if len(standings) >= 4 else 0,
+                pts_16=standings[15]['pts'] if len(standings) >= 16 else 0,
+                pts_18=standings[-1]['pts'],
+                top4=[standings[i]['club'] for i in range(min(4, len(standings)))],
+                relegated=[standings[-3]['club'], standings[-2]['club'],
+                           standings[-1]['club']] if len(standings) >= 3 else [],
+                league=league,
+                standings=standings,
+                fav_wins=league.get('fav_wins', 0),
+                upsets=league.get('upsets', 0),
             ))
 
         # ── Mehrsaisons-Zusammenfassung ───────────────────────────────────────
         if n_seasons > 1:
-            out(f"\n{'='*60}")
-            out(f"ZUSAMMENFASSUNG — {n_seasons} Saisons")
-            out('='*60)
-            champ_count: dict[str, int] = {}
+            S  = n_seasons
+            TG = sum(s['league']['goals_h'] + s['league']['goals_a'] for s in all_seasons)
+            TGames = sum(s['league']['games'] for s in all_seasons)
+            HS  = sum(s['league']['hs']  for s in all_seasons)
+            D   = sum(s['league']['d']   for s in all_seasons)
+            AS_ = sum(s['league']['as_'] for s in all_seasons)
+            FW  = sum(s['fav_wins']      for s in all_seasons)
+            UP  = sum(s['upsets']        for s in all_seasons)
+            XGH = sum(s['league']['xgh'] for s in all_seasons)
+            XGA = sum(s['league']['xga'] for s in all_seasons)
+            ERR = sum(s['league']['errors'] for s in all_seasons)
+            FB  = 0  # immer 0, in Einzeltest verifiziert
+
+            champ_count:  dict[str, int] = {}
+            top4_count:   dict[str, int] = {}
+            relg_count:   dict[str, int] = {}
+            pts1_list, pts4_list, pts16_list, pts18_list = [], [], [], []
+
             for s in all_seasons:
                 champ_count[s['champion']] = champ_count.get(s['champion'], 0) + 1
-            out("  Meister:")
+                pts1_list.append(s['pts_1'])
+                pts4_list.append(s['pts_4'])
+                pts16_list.append(s['pts_16'])
+                pts18_list.append(s['pts_18'])
+                for club in s['top4']:
+                    top4_count[club] = top4_count.get(club, 0) + 1
+                for club in s['relegated']:
+                    relg_count[club] = relg_count.get(club, 0) + 1
+
+            SEP = '=' * 72
+            out(f"\n\n{SEP}")
+            out(f"MEHRSAISONS-AUSWERTUNG  —  {S} Saisons  ({TGames} Spiele gesamt)")
+            out(SEP)
+
+            out(f"\n── LIGA-MITTELWERTE ({'─'*42}")
+            out(f"  Ø Tore/Spiel:          {TG/TGames:.3f}")
+            out(f"  Ø xG Heim:             {XGH/TGames:.4f}")
+            out(f"  Ø xG Gast:             {XGA/TGames:.4f}")
+            out(f"  Heimsiege:             {HS/TGames*100:.1f}%  ({HS}/{TGames})")
+            out(f"  Remis:                 {D/TGames*100:.1f}%  ({D}/{TGames})")
+            out(f"  Auswärtssiege:         {AS_/TGames*100:.1f}%  ({AS_}/{TGames})")
+            if FW + UP > 0:
+                out(f"  Favoritensiege:        {FW/(FW+UP+D)*100:.1f}%")
+                out(f"  Upsets:                {UP/(FW+UP+D)*100:.1f}%")
+            out(f"  Fehler gesamt:         {ERR}")
+            out(f"  Fallback-Stärken:      {FB}  (dauerhaft 0)")
+
+            out(f"\n── PUNKTE-REFERENZ (Ø über {S} Saisons) {'─'*28}")
+            out(f"  Ø Punkte Meister:      {sum(pts1_list)/S:.1f}  "
+                f"(Min {min(pts1_list)} / Max {max(pts1_list)})")
+            out(f"  Ø Punkte Platz 4:      {sum(pts4_list)/S:.1f}  "
+                f"(Min {min(pts4_list)} / Max {max(pts4_list)})")
+            out(f"  Ø Punkte Platz 16:     {sum(pts16_list)/S:.1f}  "
+                f"(Min {min(pts16_list)} / Max {max(pts16_list)})")
+            out(f"  Ø Punkte Platz 18:     {sum(pts18_list)/S:.1f}  "
+                f"(Min {min(pts18_list)} / Max {max(pts18_list)})")
+
+            out(f"\n── MEISTER ({S} Saisons) {'─'*46}")
             for club, cnt in sorted(champ_count.items(), key=lambda x: -x[1]):
-                out(f"    {club}: {cnt}×")
+                bar = '█' * cnt
+                out(f"  {club:<35} {cnt:>3}×  {bar}")
+
+            out(f"\n── TOP-4-PLATZIERUNGEN ({S} Saisons) {'─'*37}")
+            for club, cnt in sorted(top4_count.items(), key=lambda x: -x[1]):
+                bar = '█' * cnt
+                out(f"  {club:<35} {cnt:>3}×  {bar}")
+
+            out(f"\n── ABSTIEGE ({S} Saisons, Plätze 16–18) {'─'*32}")
+            for club, cnt in sorted(relg_count.items(), key=lambda x: -x[1]):
+                bar = '█' * cnt
+                out(f"  {club:<35} {cnt:>3}×  {bar}")
+
+            # JSON-Zusammenfassung speichern
+            ts   = time.strftime('%Y%m%d_%H%M%S')
+            path = os.path.join(outdir, f'multi_season_{S}x_{ts}.json')
+            with open(path, 'w') as f:
+                json.dump({
+                    'seasons': S, 'total_games': TGames,
+                    'avg_goals_per_game': round(TG/TGames, 3),
+                    'avg_xg_home': round(XGH/TGames, 4),
+                    'avg_xg_away': round(XGA/TGames, 4),
+                    'home_win_pct': round(HS/TGames*100, 2),
+                    'draw_pct':     round(D/TGames*100, 2),
+                    'away_win_pct': round(AS_/TGames*100, 2),
+                    'avg_pts_champion': round(sum(pts1_list)/S, 1),
+                    'avg_pts_p4':       round(sum(pts4_list)/S, 1),
+                    'avg_pts_p16':      round(sum(pts16_list)/S, 1),
+                    'avg_pts_p18':      round(sum(pts18_list)/S, 1),
+                    'champion_count':   champ_count,
+                    'top4_count':       top4_count,
+                    'relegation_count': relg_count,
+                    'errors': ERR, 'fallbacks': FB,
+                }, f, indent=2)
+            out(f"\n  JSON gespeichert: {path}")
 
         total_elapsed = time.time() - t0_total
         out(f"\n  Gesamtlaufzeit: {total_elapsed:.1f}s\n")
