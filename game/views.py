@@ -3366,6 +3366,32 @@ def club_match_preview(request, club_id):
     )
 
 
+def _ensure_ratings_in_report(report_data: dict) -> dict:
+    """Fügt Spielernoten in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
+
+    simulate_match() bettet Noten seit Version V2 direkt ein. Ältere SimulatedMatch-
+    Einträge (Ligaspiele, die vor dieser Integration gespeichert wurden) enthalten
+    home_players / away_players, aber keine home_ratings. Diese Funktion berechnet
+    die Noten on-the-fly aus den bereits gespeicherten Spieler-Daten nach.
+    """
+    if not report_data:
+        return report_data
+    if report_data.get('home_ratings') and report_data.get('away_ratings'):
+        return report_data
+    if not report_data.get('home_players') and not report_data.get('away_players'):
+        return report_data
+    from .match_engine import compute_player_ratings
+    try:
+        ratings = compute_player_ratings(report_data)
+        report_data = dict(report_data)
+        report_data['home_ratings']     = ratings['home_ratings']
+        report_data['away_ratings']     = ratings['away_ratings']
+        report_data['man_of_the_match'] = ratings['man_of_the_match']
+    except Exception:
+        pass
+    return report_data
+
+
 def club_match_report(request, club_id):
     from django.db.models import Q
     from .match_engine import simulate_match
@@ -3472,7 +3498,7 @@ def club_match_report(request, club_id):
     return render(request, 'game/match_report.html', {
         'club':         club,
         'latest_match': latest,
-        'report':       latest.report_data if latest else None,
+        'report':       _ensure_ratings_in_report(latest.report_data) if latest else None,
         'all_clubs':    all_clubs,
         'sim_error':    sim_error,
         'rc':           rc,
@@ -3558,7 +3584,7 @@ def match_report_by_id(request, sm_id):
     return render(request, 'game/match_report.html', {
         'club':         club,
         'latest_match': latest,
-        'report':       latest.report_data,
+        'report':       _ensure_ratings_in_report(latest.report_data),
         'all_clubs':    None,
         'sim_error':    None,
         'rc':           rc,
