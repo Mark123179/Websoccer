@@ -3436,6 +3436,51 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _enrich_substitutions(subs_raw, name_lookup):
+    """Reichert rohe Einwechslungs-Dicts ({minute, in, out} mit Player-IDs)
+    mit Spielernamen an und gibt eine Template-fertige Liste zurück."""
+    result = []
+    for sub in (subs_raw or []):
+        in_id  = sub.get('in')
+        out_id = sub.get('out')
+        if not sub.get('minute') or not in_id or not out_id:
+            continue
+        result.append({
+            'minute':   sub['minute'],
+            'in_id':    in_id,
+            'out_id':   out_id,
+            'in_name':  name_lookup.get(in_id,  f'#{in_id}'),
+            'out_name': name_lookup.get(out_id, f'#{out_id}'),
+        })
+    return sorted(result, key=lambda s: s['minute'])
+
+
+def _build_sub_name_lookup(data):
+    """Baut ein {player_id: name}-Dict für alle Spieler, die in den
+    Einwechslungs-Listen der report_data auftauchen.
+    Zuerst aus bereits gespeicherten Spieler-Rows (kein DB-Hit nötig),
+    fehlende IDs (Bankbank-Spieler) werden per DB nachgeladen."""
+    name_lookup = {}
+    for p in list(data.get('home_players') or []) + list(data.get('away_players') or []):
+        pid = p.get('id')
+        if pid and p.get('name'):
+            name_lookup[pid] = p['name']
+
+    home_subs_raw = data.get('home_substitutions') or []
+    away_subs_raw = data.get('away_substitutions') or []
+    all_ids = set()
+    for sub in home_subs_raw + away_subs_raw:
+        if sub.get('in'):  all_ids.add(sub['in'])
+        if sub.get('out'): all_ids.add(sub['out'])
+
+    missing = all_ids - set(name_lookup.keys())
+    if missing:
+        from .models import Player as _Player
+        for p in _Player.objects.filter(pk__in=missing).values('id', 'first_name', 'last_name'):
+            name_lookup[p['id']] = f"{p['first_name']} {p['last_name']}".strip()
+    return name_lookup, home_subs_raw, away_subs_raw
+
+
 def club_match_report(request, club_id):
     from django.db.models import Q
     from .match_engine import simulate_match
@@ -3512,6 +3557,8 @@ def club_match_report(request, club_id):
         ap_home_raw = plan_segs.get('home', {}) if isinstance(plan_segs, dict) else {}
         ap_away_raw = plan_segs.get('away', {}) if isinstance(plan_segs, dict) else {}
 
+        name_lookup, home_subs_raw, away_subs_raw = _build_sub_name_lookup(data)
+
         rc = {
             'home_xg':      f'{h_xg:.2f}',
             'away_xg':      f'{a_xg:.2f}',
@@ -3546,6 +3593,9 @@ def club_match_report(request, club_id):
             'away_fat':   ms.get('away_fatigue_cost',       0),
             'home_cplx':  ms.get('home_tactic_complexity',  0),
             'away_cplx':  ms.get('away_tactic_complexity',  0),
+            # Einwechslungen (angereichert mit Spielernamen)
+            'home_substitutions': _enrich_substitutions(home_subs_raw, name_lookup),
+            'away_substitutions': _enrich_substitutions(away_subs_raw, name_lookup),
         }
 
     return render(request, 'game/match_report.html', {
@@ -3599,6 +3649,8 @@ def match_report_by_id(request, sm_id):
         ap_home_raw = plan_segs.get('home', {}) if isinstance(plan_segs, dict) else {}
         ap_away_raw = plan_segs.get('away', {}) if isinstance(plan_segs, dict) else {}
 
+        name_lookup, home_subs_raw, away_subs_raw = _build_sub_name_lookup(data)
+
         rc = {
             'home_xg':      f'{h_xg:.2f}',
             'away_xg':      f'{a_xg:.2f}',
@@ -3632,6 +3684,9 @@ def match_report_by_id(request, sm_id):
             'away_fat':  ms.get('away_fatigue_cost',       0),
             'home_cplx': ms.get('home_tactic_complexity',  0),
             'away_cplx': ms.get('away_tactic_complexity',  0),
+            # Einwechslungen (angereichert mit Spielernamen)
+            'home_substitutions': _enrich_substitutions(home_subs_raw, name_lookup),
+            'away_substitutions': _enrich_substitutions(away_subs_raw, name_lookup),
         }
 
     return render(request, 'game/match_report.html', {

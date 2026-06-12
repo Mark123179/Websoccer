@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -83,6 +83,35 @@
                 <p class="mr-empty">Kein Tor erzielt &mdash; 0:0.</p>
                 {% endif %}
             </div>
+
+            {# ── Substitution Timeline ─────────────────────────────────── #}
+            {% if rc.home_substitutions or rc.away_substitutions %}
+            <div class="mr-section">
+                <h3 class="mr-section-title">Einwechslungen</h3>
+                <div class="mr-timeline">
+                    {% for sub in rc.home_substitutions %}
+                    <div class="mr-event mr-event--sub is-home">
+                        <div class="mr-event-minute">{{ sub.minute }}'</div>
+                        <div class="mr-event-detail">
+                            <span class="mr-sub-in">&#x2191; {{ sub.in_name }}</span>
+                            <span class="mr-sub-out">&#x2193; {{ sub.out_name }}</span>
+                        </div>
+                        <div class="mr-event-club">{{ report.home_club_short }}</div>
+                    </div>
+                    {% endfor %}
+                    {% for sub in rc.away_substitutions %}
+                    <div class="mr-event mr-event--sub is-away">
+                        <div class="mr-event-minute">{{ sub.minute }}'</div>
+                        <div class="mr-event-detail">
+                            <span class="mr-sub-in">&#x2191; {{ sub.in_name }}</span>
+                            <span class="mr-sub-out">&#x2193; {{ sub.out_name }}</span>
+                        </div>
+                        <div class="mr-event-club">{{ report.away_club_short }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             {# ── Match Statistics ─────────────────────────────────────── #}
             <div class="mr-section">

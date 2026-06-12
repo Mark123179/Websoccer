@@ -272,6 +272,24 @@
     padding: 8px 0;
 }
 
+/* ── Substitution events ─────────────────────────────────────────────────── */
+
+.mr-event--sub {
+    opacity: 0.92;
+}
+
+.mr-sub-in {
+    color: rgba(80, 220, 140, 0.95);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.mr-sub-out {
+    color: rgba(244, 251, 255, 0.45);
+    font-size: 12px;
+    font-weight: 400;
+}
+
 /* ── Statistics ──────────────────────────────────────────────────────────────── */
 
 .mr-stats {
