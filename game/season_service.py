@@ -73,6 +73,7 @@ def _apply_match_suspensions(
             total_yellows = (
                 PlayerSeasonStat.objects
                 .filter(player_id=pid, season=season)
+                .exclude(competition='Freundschaft')
                 .aggregate(total=Sum('yellow_cards'))['total'] or 0
             )
             prev_total = total_yellows - yellow
@@ -505,21 +506,22 @@ def write_simulated_match_stats(simulated_match, data: dict) -> None:
             substitutions_out=sub_out_counts.get(pid, 0),
         )
 
-    # ── Sperren auslösen (Rotsperre / Gelbsperre bei 5/10/15) ────────────────
-    _card_items = [
-        {
-            'pid': p.get('id'),
-            'yellow': int(p.get('yellow_cards', 0) or 0),
-            'red':    int(p.get('red_cards',    0) or 0),
-        }
-        for players, _team_name, _opp_name in sides
-        for p in players
-        if p.get('id')
-    ]
-    try:
-        _apply_match_suspensions(_card_items, competition, _WS_LIGA_SEASON)
-    except Exception:
-        pass
+    # ── Sperren auslösen (nur Pflichtspiele: Liga + Pokal) ───────────────────
+    if source != 'ws_freundschaft':
+        _card_items = [
+            {
+                'pid': p.get('id'),
+                'yellow': int(p.get('yellow_cards', 0) or 0),
+                'red':    int(p.get('red_cards',    0) or 0),
+            }
+            for players, _team_name, _opp_name in sides
+            for p in players
+            if p.get('id')
+        ]
+        try:
+            _apply_match_suspensions(_card_items, competition, _WS_LIGA_SEASON)
+        except Exception:
+            pass
 
 
 def get_season_state(league, season: str):
