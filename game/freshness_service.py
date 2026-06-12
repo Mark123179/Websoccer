@@ -232,11 +232,37 @@ def apply_match_freshness_losses(
         PlayerStrengthProfile.objects.bulk_update(updates, ['freshness'])
 
 
+def daily_recovery_amount(current_freshness: float, training_level: int = 0) -> float:
+    """Tägliche Regenerationsmenge abhängig von aktueller Frische.
+
+    Hohe Frische → gedämpfte Regeneration (natürlicher Sättigungseffekt):
+      90–100: 50 % der Basisregeneration
+      80– 89: 75 % der Basisregeneration
+       0– 79: 100 % der Basisregeneration (volle Erholung bei Erschöpfung)
+
+    Trainingsgelände S3 addiert TRAINING_GROUND_S3_DAILY_RECOVERY auf die
+    bereits gedämpfte Menge (Bonus greift immer voll, unabhängig von Frische).
+    """
+    base = BASE_DAILY_RECOVERY
+    if current_freshness >= 90:
+        recovery = base * 0.50
+    elif current_freshness >= 80:
+        recovery = base * 0.75
+    else:
+        recovery = base
+
+    if training_level >= 3:
+        recovery += TRAINING_GROUND_S3_DAILY_RECOVERY
+
+    return round(recovery, 4)
+
+
 def apply_daily_recovery() -> int:
     """Tägliche Frische-Regeneration für alle nicht-verletzten Spieler.
 
     Skippt Spieler mit Frische = 100 (bereits voll).
     Berücksichtigt Club.training_level für den Regenerationsbonus.
+    Verwendet daily_recovery_amount() — gedämpfte Regeneration bei hoher Frische.
 
     Returns:
         Anzahl aktualisierter PlayerStrengthProfile-Einträge.
@@ -255,11 +281,8 @@ def apply_daily_recovery() -> int:
         club = getattr(sp.player, 'club', None)
         t_level = _stadium_level(club, 'training_level') if club else 0
 
-        recovery = Decimal(str(BASE_DAILY_RECOVERY))
-        if t_level >= 3:
-            recovery += Decimal(str(TRAINING_GROUND_S3_DAILY_RECOVERY))
-
         current = sp.freshness if sp.freshness is not None else Decimal('0.00')
+        recovery = Decimal(str(daily_recovery_amount(float(current), t_level)))
         new_freshness = min(Decimal(str(MAX_FRESHNESS)), current + recovery)
         if new_freshness != current:
             sp.freshness = new_freshness

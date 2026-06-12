@@ -16,6 +16,17 @@ description: Architecture decisions and field-location gotchas for the V1 Frisch
 
 Changes require ≥50-season evidence + explicit user sign-off (same freeze rule as Match Engine V2).
 
+## Graduated recovery (daily_recovery_amount)
+Recovery is NOT a flat 4.0/day — it uses `daily_recovery_amount(freshness, training_level)`:
+- Frische 90–100 → 50 % (= 2.0/day)
+- Frische 80–89  → 75 % (= 3.0/day)
+- Frische  0–79  → 100 % (= 4.0/day)
+- Training S3 adds TRAINING_GROUND_S3_DAILY_RECOVERY (1.5) on top regardless of tier.
+
+**Why:** Flat recovery caused single-competition players to always arrive at 100 freshness. Graduated recovery creates a natural equilibrium: S1 teams settle at ~88–96, S3 teams without rotation collapse to ~40.
+
+**How to apply:** Always use `daily_recovery_amount()` in any new simulation or cron logic. Never hard-code 4.0.
+
 ## Test fixture gotchas
 - `Player.objects.create()` requires `age` (NOT NULL, no default).
 - `Stadium.objects.create()` requires `name` and `city`.

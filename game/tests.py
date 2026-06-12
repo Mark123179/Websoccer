@@ -3047,6 +3047,70 @@ class FreshnessServiceUnitTests(TestCase):
         self.assertGreater(loss, 8.5)
         self.assertLess(loss, 10.5)
 
+    def test_daily_recovery_high_freshness_dampened(self):
+        """90–100 Frische → nur 50 % der Basisregeneration."""
+        from .freshness_service import daily_recovery_amount, BASE_DAILY_RECOVERY
+        r100 = daily_recovery_amount(100.0, 0)
+        r95  = daily_recovery_amount(95.0,  0)
+        r90  = daily_recovery_amount(90.0,  0)
+        expected = round(BASE_DAILY_RECOVERY * 0.50, 4)
+        self.assertAlmostEqual(r100, expected, places=3)
+        self.assertAlmostEqual(r95,  expected, places=3)
+        self.assertAlmostEqual(r90,  expected, places=3)
+
+    def test_daily_recovery_medium_freshness_dampened(self):
+        """80–89 Frische → 75 % der Basisregeneration."""
+        from .freshness_service import daily_recovery_amount, BASE_DAILY_RECOVERY
+        r89 = daily_recovery_amount(89.0, 0)
+        r85 = daily_recovery_amount(85.0, 0)
+        r80 = daily_recovery_amount(80.0, 0)
+        expected = round(BASE_DAILY_RECOVERY * 0.75, 4)
+        self.assertAlmostEqual(r89, expected, places=3)
+        self.assertAlmostEqual(r85, expected, places=3)
+        self.assertAlmostEqual(r80, expected, places=3)
+
+    def test_daily_recovery_low_freshness_full(self):
+        """Unter 80 Frische → volle Basisregeneration."""
+        from .freshness_service import daily_recovery_amount, BASE_DAILY_RECOVERY
+        r79 = daily_recovery_amount(79.0, 0)
+        r50 = daily_recovery_amount(50.0, 0)
+        r0  = daily_recovery_amount(0.0,  0)
+        self.assertAlmostEqual(r79, BASE_DAILY_RECOVERY, places=3)
+        self.assertAlmostEqual(r50, BASE_DAILY_RECOVERY, places=3)
+        self.assertAlmostEqual(r0,  BASE_DAILY_RECOVERY, places=3)
+
+    def test_daily_recovery_training_s3_bonus_always_added(self):
+        """Training S3 addiert immer vollen Bonus, unabhängig von Frische."""
+        from .freshness_service import (
+            daily_recovery_amount, BASE_DAILY_RECOVERY,
+            TRAINING_GROUND_S3_DAILY_RECOVERY,
+        )
+        r_high = daily_recovery_amount(95.0, 3)
+        r_mid  = daily_recovery_amount(85.0, 3)
+        r_low  = daily_recovery_amount(50.0, 3)
+        bonus = TRAINING_GROUND_S3_DAILY_RECOVERY
+        self.assertAlmostEqual(r_high, round(BASE_DAILY_RECOVERY * 0.50 + bonus, 4), places=3)
+        self.assertAlmostEqual(r_mid,  round(BASE_DAILY_RECOVERY * 0.75 + bonus, 4), places=3)
+        self.assertAlmostEqual(r_low,  round(BASE_DAILY_RECOVERY + bonus,        4), places=3)
+
+    def test_daily_recovery_ordering(self):
+        """Erschöpfte Spieler regenerieren schneller als erholte."""
+        from .freshness_service import daily_recovery_amount
+        r_full    = daily_recovery_amount(100.0, 0)
+        r_medium  = daily_recovery_amount(85.0,  0)
+        r_tired   = daily_recovery_amount(50.0,  0)
+        self.assertLess(r_full, r_medium)
+        self.assertLess(r_medium, r_tired)
+
+    def test_daily_recovery_no_training_s1_s2_effect(self):
+        """Training S1 und S2 geben keinen Bonus auf Regeneration (nur S3)."""
+        from .freshness_service import daily_recovery_amount
+        r_s0 = daily_recovery_amount(70.0, 0)
+        r_s1 = daily_recovery_amount(70.0, 1)
+        r_s2 = daily_recovery_amount(70.0, 2)
+        self.assertAlmostEqual(r_s0, r_s1, places=3)
+        self.assertAlmostEqual(r_s1, r_s2, places=3)
+
 
 class FreshnessDecayIntegrationTests(TestCase):
     """Integration-Tests für apply_match_freshness_losses und apply_daily_recovery."""

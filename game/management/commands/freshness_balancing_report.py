@@ -3,9 +3,9 @@
 Keine DB-Schreibzugriffe. Nur reine Berechnungsfunktionen aus freshness_service.py.
 
 Szenarien:
-  S1  Ein Wettbewerb    — Spiel alle 3 Tage, 90 Tage  (30 Spiele)
-  S2  Zwei Wettbewerbe  — Liga alle 3 Tage + Pokal alle 4 Tage versetzt  (~50 Spiele)
-  S3  Drei Wettbewerbe  — Liga alle 7 Tage + Pokal Tag+3 + Europa Tag+5  (3 Sp. in 5 Tagen, ~37 Sp.)
+  S1  Ein Wettbewerb    — Spiel alle 3 Tage (30 Spiele/90d)
+  S2  Zwei Wettbewerbe  — Liga·Frei·Pokal·Liga·Frei·Frei (6-Tage-Zyklus, ~45 Sp.)
+  S3  Drei Wettbewerbe  — Liga·Frei·Pokal·Liga·Frei·CL   (6-Tage-Zyklus, ~60 Sp.)
   T   Trainingsgelände  — Szenario S2 mit Training S0–S3 verglichen
   M   Medizin           — Szenario S2 mit Medizin S0–S3 verglichen
 """
@@ -23,11 +23,10 @@ from typing import Optional
 from django.core.management.base import BaseCommand
 
 from game.freshness_service import (
-    BASE_DAILY_RECOVERY,
     BASE_INJURY_RISK_PER_90,
     MEDIZIN_INJURY_FACTOR,
-    TRAINING_GROUND_S3_DAILY_RECOVERY,
     compute_single_player_loss,
+    daily_recovery_amount,
     freshness_injury_multiplier,
 )
 
@@ -241,16 +240,14 @@ def _simulate_once(
 
         # ── Tägliche Regeneration (läuft jeden Tag, auch am Spieltag) ────────
         # Reihenfolge: Regeneration ZUERST, dann Spielbelastung.
-        # So entspricht es dem Spielablauf: Spieler erholt sich morgens,
-        # spielt abends.
+        # Gedämpfte Regeneration bei hoher Frische (daily_recovery_amount):
+        #   90–100 → 50 %  │  80–89 → 75 %  │  < 80 → 100 %
         for p in squad:
             if p.injury_days > 0:
                 continue  # Verletzte erholen sich nicht
             if p.freshness >= 100.0:
                 continue
-            recovery = BASE_DAILY_RECOVERY
-            if training_level >= 3:
-                recovery += TRAINING_GROUND_S3_DAILY_RECOVERY
+            recovery = daily_recovery_amount(p.freshness, training_level)
             p.freshness = min(100.0, p.freshness + recovery)
 
         # ── Spieltag ─────────────────────────────────────────────────────────
