@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -37,7 +37,7 @@
                 <span class="mr-xg-pill is-away">xG {{ rc.away_xg }}</span>
                 {% endif %}
             </div>
-            <span class="mr-score-tag">Simulation V2</span>
+            <span class="mr-score-tag">Simulation V2{% if rc.simulation_mode %}&thinsp;&middot;&thinsp;<em class="mr-sim-mode-label">{{ rc.simulation_mode }}</em>{% endif %}</span>
         </div>
 
         <div class="mr-team is-away">
@@ -279,41 +279,40 @@
                 </div>
             </div>
 
-            {# ── Engine-Werte ─────────────────────────────────────────── #}
+            {# ── Engine-Werte (Admin-Debug, zurückgezogen) ────────────── #}
             {% if rc %}
             <div class="mr-section">
-                <h3 class="mr-section-title">Engine-Werte</h3>
-                <div class="mr-ev-grid">
-
-                    <div class="mr-ev-row">
-                        <span class="mr-ev-label">Taktik-Koh&auml;renz</span>
-                        <span class="mr-ev-val is-home">{{ rc.home_coh }}</span>
-                        <span class="mr-ev-sep">/</span>
-                        <span class="mr-ev-val is-away">{{ rc.away_coh }}</span>
-                    </div>
-
-                    <div class="mr-ev-row">
-                        <span class="mr-ev-label">Erm&uuml;dungs-Index</span>
-                        <span class="mr-ev-val is-home">{{ rc.home_fat }}</span>
-                        <span class="mr-ev-sep">/</span>
-                        <span class="mr-ev-val is-away">{{ rc.away_fat }}</span>
-                    </div>
-
-                    <div class="mr-ev-row">
-                        <span class="mr-ev-label">Taktik-Komplexit&auml;t</span>
-                        <span class="mr-ev-val is-home">{{ rc.home_cplx }}</span>
-                        <span class="mr-ev-sep">/</span>
-                        <span class="mr-ev-val is-away">{{ rc.away_cplx }}</span>
-                    </div>
-
-                    <div class="mr-ev-divider"></div>
-
-                    <div class="mr-ev-row mr-ev-row--single">
-                        <span class="mr-ev-label">Plan-Aktivierungen</span>
-                        <span class="mr-ev-single">{{ rc.plan_count }}</span>
-                    </div>
-
+                <div class="mr-ev-summary-row">
+                    <span class="mr-ev-label">Plan-Aktivierungen</span>
+                    <span class="mr-ev-single">{{ rc.plan_count }}</span>
                 </div>
+                <div class="mr-ev-summary-row">
+                    <span class="mr-ev-label">Simulation</span>
+                    <span class="mr-ev-single mr-ev-mode">{{ rc.simulation_mode }}</span>
+                </div>
+                <details class="mr-debug-details">
+                    <summary class="mr-debug-summary">Taktik-Debug</summary>
+                    <div class="mr-ev-grid mr-ev-grid--debug">
+                        <div class="mr-ev-row">
+                            <span class="mr-ev-label">Koh&auml;renz</span>
+                            <span class="mr-ev-val is-home">{{ rc.home_coh }}</span>
+                            <span class="mr-ev-sep">/</span>
+                            <span class="mr-ev-val is-away">{{ rc.away_coh }}</span>
+                        </div>
+                        <div class="mr-ev-row">
+                            <span class="mr-ev-label">Erm&uuml;dung</span>
+                            <span class="mr-ev-val is-home">{{ rc.home_fat }}</span>
+                            <span class="mr-ev-sep">/</span>
+                            <span class="mr-ev-val is-away">{{ rc.away_fat }}</span>
+                        </div>
+                        <div class="mr-ev-row">
+                            <span class="mr-ev-label">Komplexit&auml;t</span>
+                            <span class="mr-ev-val is-home">{{ rc.home_cplx }}</span>
+                            <span class="mr-ev-sep">/</span>
+                            <span class="mr-ev-val is-away">{{ rc.away_cplx }}</span>
+                        </div>
+                    </div>
+                </details>
             </div>
             {% endif %}
 
@@ -342,6 +341,41 @@
                 <div class="mr-plan-score">{{ act.score }}</div>
             </div>
             {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Aktive Matchpläne Zusammenfassung ──────────────────────────────── #}
+    {% if rc.active_plans_home or rc.active_plans_away %}
+    <div class="mr-section mr-active-plans-section">
+        <h3 class="mr-section-title">Aktive Matchpläne</h3>
+        <div class="mr-active-plans-grid">
+            <div class="mr-active-plans-col is-home">
+                <div class="mr-active-plans-team">{{ report.home_club_short }}</div>
+                {% if rc.active_plans_home %}
+                    {% for ap in rc.active_plans_home %}
+                    <div class="mr-active-plan-row">
+                        <span class="mr-active-plan-label">{{ ap.label }}</span>
+                        <span class="mr-active-plan-segs">{{ ap.segments }}&times;5'</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <span class="mr-active-plans-none">Kein Plan aktiv</span>
+                {% endif %}
+            </div>
+            <div class="mr-active-plans-col is-away">
+                <div class="mr-active-plans-team">{{ report.away_club_short }}</div>
+                {% if rc.active_plans_away %}
+                    {% for ap in rc.active_plans_away %}
+                    <div class="mr-active-plan-row">
+                        <span class="mr-active-plan-label">{{ ap.label }}</span>
+                        <span class="mr-active-plan-segs">{{ ap.segments }}&times;5'</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <span class="mr-active-plans-none">Kein Plan aktiv</span>
+                {% endif %}
+            </div>
         </div>
     </div>
     {% endif %}

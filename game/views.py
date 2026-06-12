@@ -3344,12 +3344,17 @@ def club_match_report(request, club_id):
         h_tot = (h_l + h_c + h_r) or 1
         a_tot = (a_l + a_c + a_r) or 1
 
-        plan_acts = data.get('plan_activations', [])
+        plan_acts  = data.get('plan_activations', []) or []
+        cond_debug = data.get('condition_debug', {}) or {}
+        plan_segs  = cond_debug.get('plan_active_segments', {}) or {}
+        ap_home_raw = plan_segs.get('home', {}) if isinstance(plan_segs, dict) else {}
+        ap_away_raw = plan_segs.get('away', {}) if isinstance(plan_segs, dict) else {}
 
         rc = {
             'home_xg':      f'{h_xg:.2f}',
             'away_xg':      f'{a_xg:.2f}',
             'home_xg_pct':  round(h_xg / xg_total * 100),
+            'away_xg_pct':  round(a_xg / xg_total * 100),
             'home_att_l_pct': round(h_l / h_tot * 100),
             'home_att_c_pct': round(h_c / h_tot * 100),
             'home_att_r_pct': round(h_r / h_tot * 100),
@@ -3358,17 +3363,27 @@ def club_match_report(request, club_id):
             'away_att_r_pct': round(a_r / a_tot * 100),
             'home_att_total': h_l + h_c + h_r,
             'away_att_total': a_l + a_c + a_r,
+            'simulation_mode': data.get('simulation_mode') or 'legacy',
+            'plan_count': len(plan_acts),
+            'plan_activations_labeled': [
+                {**act, 'plan_label': _PLAN_LABELS.get(act.get('plan', ''), act.get('plan', ''))}
+                for act in plan_acts
+            ],
+            'active_plans_home': [
+                {'plan': p, 'label': _PLAN_LABELS.get(p, p), 'segments': s}
+                for p, s in sorted(ap_home_raw.items(), key=lambda x: -x[1])
+            ],
+            'active_plans_away': [
+                {'plan': p, 'label': _PLAN_LABELS.get(p, p), 'segments': s}
+                for p, s in sorted(ap_away_raw.items(), key=lambda x: -x[1])
+            ],
+            # Admin-Debugwerte — vorbereitet, nicht prominent
             'home_coh':   ms.get('home_tactic_coherence',  0),
             'away_coh':   ms.get('away_tactic_coherence',  0),
             'home_fat':   ms.get('home_fatigue_cost',       0),
             'away_fat':   ms.get('away_fatigue_cost',       0),
             'home_cplx':  ms.get('home_tactic_complexity',  0),
             'away_cplx':  ms.get('away_tactic_complexity',  0),
-            'plan_count': len(plan_acts),
-            'plan_activations_labeled': [
-                {**act, 'plan_label': _PLAN_LABELS.get(act.get('plan', ''), act.get('plan', ''))}
-                for act in plan_acts
-            ],
         }
 
     return render(request, 'game/match_report.html', {
