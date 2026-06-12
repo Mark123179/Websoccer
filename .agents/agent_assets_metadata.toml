@@ -208,7 +208,7 @@ title = "Websoccer Simulation Export (Standalone)"
 id = "A_53K5frN4WvAUkXTZCh0"
 uri = "file://exports/websoccer_sim_export.zip"
 type = "unspecified"
-title = "websoccer_sim_export.zip — exp 1.25 als neuer Standard"
+title = "websoccer_sim_export.zip — exp 1.25 Final"
 
 [[outputs]]
 id = "kTGTn3vdFHUKOlZNquOyi"
@@ -245,3 +245,15 @@ id = "cfH6izEgFAcBovON3AB0H"
 uri = "file://exports/strength_scaling_results_5k.csv"
 type = "table"
 title = "strength_scaling_results_5k.csv"
+
+[[outputs]]
+id = "k8EeCQsTfvrgpTAXTb2B7"
+uri = "file://exports/balance_matrix_exp125_10k.json"
+type = "unspecified"
+title = "balance_matrix_exp125_10k.json"
+
+[[outputs]]
+id = "dyHzSJ3KWHL6ASRKv0y-H"
+uri = "file://exports/balance_matrix_exp125_10k.csv"
+type = "table"
+title = "balance_matrix_exp125_10k.csv"
