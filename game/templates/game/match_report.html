@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -464,6 +464,87 @@
         </div>
 
     </div>{# /mr-squads #}
+
+    {# ── Spielerbewertungen ──────────────────────────────────────────────── #}
+    {% if report.home_ratings %}
+    <div class="mr-ratings-wrap">
+        <h3 class="mr-section-title" style="margin-bottom:14px;">Spielerbewertungen</h3>
+
+        {# Spieler des Spiels #}
+        {% if report.man_of_the_match %}
+        {% with motm=report.man_of_the_match %}
+        <div class="mr-motm">
+            <div class="mr-motm-label">&#9733; Spieler des Spiels</div>
+            <div class="mr-motm-body">
+                {% if motm.club_crest %}
+                    <img class="mr-motm-crest" src="{% static motm.club_crest %}" alt="{{ motm.club_short }}">
+                {% else %}
+                    <span class="mr-motm-crest-fallback">{{ motm.club_short }}</span>
+                {% endif %}
+                <div class="mr-motm-info">
+                    <span class="mr-motm-name">{{ motm.name }}</span>
+                    <span class="mr-motm-pos">{{ motm.position }} &middot; {{ motm.club_name }}</span>
+                </div>
+                <div class="mr-motm-rating {% if motm.rating <= 2.5 %}note-gut{% elif motm.rating <= 3.9 %}note-mittel{% elif motm.rating <= 4.9 %}note-schwach{% else %}note-schlecht{% endif %}">{{ motm.rating }}</div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endif %}
+
+        {# Zwei Tabellen nebeneinander #}
+        <div class="mr-ratings-grid">
+
+            <div class="mr-ratings-col">
+                <div class="mr-ratings-col-title">{{ report.home_club_name }}</div>
+                <table class="mr-ratings-table">
+                    <thead>
+                        <tr>
+                            <th>Spieler</th>
+                            <th>Pos</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in report.home_ratings %}
+                        <tr>
+                            <td class="mr-ratings-name">{{ r.name }}</td>
+                            <td class="mr-ratings-pos">{{ r.position }}</td>
+                            <td class="mr-ratings-note">
+                                <span class="mr-note {% if r.rating <= 2.5 %}note-gut{% elif r.rating <= 3.9 %}note-mittel{% elif r.rating <= 4.9 %}note-schwach{% else %}note-schlecht{% endif %}">{{ r.rating }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mr-ratings-col">
+                <div class="mr-ratings-col-title">{{ report.away_club_name }}</div>
+                <table class="mr-ratings-table">
+                    <thead>
+                        <tr>
+                            <th>Spieler</th>
+                            <th>Pos</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in report.away_ratings %}
+                        <tr>
+                            <td class="mr-ratings-name">{{ r.name }}</td>
+                            <td class="mr-ratings-pos">{{ r.position }}</td>
+                            <td class="mr-ratings-note">
+                                <span class="mr-note {% if r.rating <= 2.5 %}note-gut{% elif r.rating <= 3.9 %}note-mittel{% elif r.rating <= 4.9 %}note-schwach{% else %}note-schlecht{% endif %}">{{ r.rating }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>{# /mr-ratings-grid #}
+    </div>{# /mr-ratings-wrap #}
+    {% endif %}
 
     {% else %}
     {# ── No report yet ───────────────────────────────────────────────────── #}

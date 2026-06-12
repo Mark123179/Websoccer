@@ -794,6 +794,171 @@ def _simulate_match_minutes(
     }
 
 
+# ── Spieler-Notensystem ───────────────────────────────────────────────────────
+
+def _rating_pos_group(position: str, group: str) -> str:
+    """Gibt die Notengruppe (GK/DEF/MID/FWD) zurück."""
+    pos = (position or '').upper()
+    grp = (group or '').lower()
+    if pos == 'GK' or grp == 'goalkeeper':
+        return 'GK'
+    if grp == 'defense' or pos in ('CB', 'LB', 'RB', 'WB'):
+        return 'DEF'
+    if grp in ('midfield', 'defensive_midfield', 'offensive_midfield') or pos in ('CM', 'DM', 'AM', 'LM', 'RM'):
+        return 'MID'
+    return 'FWD'
+
+
+def _assign_cards_to_players(players: list[dict], yellow_count: int, red_count: int) -> list[dict]:
+    """Verteilt Team-Karten zufällig auf einzelne Spieler als 0/1-Flags (in-place Kopie).
+
+    Jeder Spieler erhält maximal 1 Gelbe und 1 Rote Karte (sample without replacement).
+    Karten-Anzahl wird auf Spieler-Pool-Größe geclampt.
+    """
+    players = [dict(p) for p in players]
+    n = len(players)
+    if not n:
+        return players
+    y = min(max(0, yellow_count), n)
+    r = min(max(0, red_count), n)
+    for i in random.sample(range(n), y):
+        players[i]['yellow_cards'] = 1
+    for i in random.sample(range(n), r):
+        players[i]['red_cards'] = 1
+    return players
+
+
+def compute_player_ratings(result: dict) -> dict:
+    """Berechnet positionsabhängige Spielernoten (1,0–6,0) aus einem Simulations-Dict.
+
+    Rückgabe::
+        {
+            home_ratings: [{id, name, position, rating}, …],
+            away_ratings: [{id, name, position, rating}, …],
+            man_of_the_match: {id, name, club_id, club_name, club_crest, club_short, rating, position},
+        }
+    """
+    h_goals = result.get('home_goals', 0) or 0
+    a_goals = result.get('away_goals', 0) or 0
+    h_xg    = float(result.get('home_xg') or 0)
+    a_xg    = float(result.get('away_xg') or 0)
+    ms      = result.get('match_stats', {}) or {}
+
+    h_yellow = ms.get('home_yellow', 0) or 0
+    a_yellow = ms.get('away_yellow', 0) or 0
+    h_red    = ms.get('home_red', 0) or 0
+    a_red    = ms.get('away_red', 0) or 0
+    h_press_wins = ms.get('home_pressing_ball_wins', 0) or 0
+    a_press_wins = ms.get('away_pressing_ball_wins', 0) or 0
+    h_press_bp   = ms.get('home_pressing_bypassed', 0) or 0
+    a_press_bp   = ms.get('away_pressing_bypassed', 0) or 0
+
+    h_win = h_goals > a_goals
+    a_win = a_goals > h_goals
+
+    h_players_raw = result.get('home_players', []) or []
+    a_players_raw = result.get('away_players', []) or []
+
+    def _rate(p: dict, is_home: bool) -> float:
+        rating = 3.5
+        pg     = _rating_pos_group(p.get('position', ''), p.get('group', ''))
+        goals   = p.get('goals', 0) or 0
+        assists = p.get('assists', 0) or 0
+        yellow  = p.get('yellow_cards', 0) or 0
+        red     = p.get('red_cards', 0) or 0
+
+        my_goals   = h_goals        if is_home else a_goals
+        opp_goals  = a_goals        if is_home else h_goals
+        my_xg      = h_xg           if is_home else a_xg
+        opp_xg     = a_xg           if is_home else h_xg
+        my_win     = h_win          if is_home else a_win
+        opp_win    = a_win          if is_home else h_win
+        my_pw      = h_press_wins   if is_home else a_press_wins
+        opp_bp     = a_press_bp     if is_home else h_press_bp
+
+        rating -= goals * 0.8
+        rating -= assists * 0.4
+        if my_win:
+            rating -= 0.2
+        elif opp_win:
+            rating += 0.2
+        rating += yellow * 0.3
+        rating += red * 1.5
+
+        if pg == 'GK':
+            rating += opp_goals * 0.4
+            if opp_goals == 0:
+                rating -= 0.5
+            if opp_xg >= 2.0 and opp_goals <= 1:
+                rating -= 0.3
+            if opp_xg <= 0.8 and opp_goals >= 2:
+                rating += 0.5
+        elif pg == 'DEF':
+            rating += opp_goals * 0.2
+            if opp_goals == 0:
+                rating -= 0.3
+            if opp_bp > 3:
+                rating += 0.2
+            if my_win:
+                rating -= 0.1
+        elif pg == 'MID':
+            xg_diff = my_xg - opp_xg
+            if xg_diff > 0.5:
+                rating -= 0.2
+            elif xg_diff < -0.5:
+                rating += 0.2
+            if my_pw > 3:
+                rating -= 0.15
+        elif pg == 'FWD':
+            if goals == 0 and my_xg >= 1.5:
+                rating += 0.3
+
+        if pg in ('GK', 'DEF') and goals > 0:
+            rating -= 0.3 * goals
+
+        return round(_clamp(rating, 1.0, 6.0), 1)
+
+    home_ratings = [
+        {
+            'id':       p.get('id'),
+            'name':     p.get('name', ''),
+            'position': p.get('position', ''),
+            'rating':   _rate(p, True),
+        }
+        for p in h_players_raw
+    ]
+    away_ratings = [
+        {
+            'id':       p.get('id'),
+            'name':     p.get('name', ''),
+            'position': p.get('position', ''),
+            'rating':   _rate(p, False),
+        }
+        for p in a_players_raw
+    ]
+
+    motm = None
+    all_r = [(r, 'home') for r in home_ratings] + [(r, 'away') for r in away_ratings]
+    if all_r:
+        best, side = min(all_r, key=lambda x: x[0]['rating'])
+        motm = {
+            'id':         best['id'],
+            'name':       best['name'],
+            'position':   best['position'],
+            'rating':     best['rating'],
+            'club_id':    result.get('home_club_id')    if side == 'home' else result.get('away_club_id'),
+            'club_name':  result.get('home_club_name')  if side == 'home' else result.get('away_club_name'),
+            'club_crest': result.get('home_club_crest') if side == 'home' else result.get('away_club_crest'),
+            'club_short': result.get('home_club_short') if side == 'home' else result.get('away_club_short'),
+        }
+
+    return {
+        'home_ratings':      home_ratings,
+        'away_ratings':      away_ratings,
+        'man_of_the_match':  motm,
+    }
+
+
 # ── Öffentliche API ───────────────────────────────────────────────────────────
 
 def simulate_match(home_club, away_club) -> dict:
@@ -894,10 +1059,23 @@ def simulate_match(home_club, away_club) -> dict:
         except Exception:
             return '?'
 
+    # 5b. Karten-Flags (0/1) in Spieler-Rows einbetten — persistent im Report
+    ms_stats = sim.get('match_stats', {}) or {}
+    h_players = _assign_cards_to_players(
+        h_players,
+        ms_stats.get('home_yellow', 0) or 0,
+        ms_stats.get('home_red', 0) or 0,
+    )
+    a_players = _assign_cards_to_players(
+        a_players,
+        ms_stats.get('away_yellow', 0) or 0,
+        ms_stats.get('away_red', 0) or 0,
+    )
+
     h_teamwork = sum(p['teamwork'] for p in h_players)
     a_teamwork = sum(p['teamwork'] for p in a_players)
 
-    return {
+    result = {
         # ── Club-Meta ────────────────────────────────────────────────────────
         'home_club_id':    home_club.pk,
         'home_club_name':  home_club.name,
@@ -935,3 +1113,10 @@ def simulate_match(home_club, away_club) -> dict:
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
     }
+
+    # 6. Spielernoten berechnen und in den Report einbetten
+    ratings = compute_player_ratings(result)
+    result['home_ratings']     = ratings['home_ratings']
+    result['away_ratings']     = ratings['away_ratings']
+    result['man_of_the_match'] = ratings['man_of_the_match']
+    return result

@@ -1042,6 +1042,211 @@
     font-style: italic;
 }
 
+/* ── Spielerbewertungen ──────────────────────────────────────────────────────── */
+
+.mr-ratings-wrap {
+    margin-bottom: 20px;
+}
+
+/* Man of the Match card */
+.mr-motm {
+    background: rgba(4, 14, 24, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    padding: 14px 20px;
+}
+
+.mr-motm-label {
+    color: rgba(22, 207, 255, 0.9);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.mr-motm-body {
+    align-items: center;
+    display: flex;
+    gap: 14px;
+}
+
+.mr-motm-crest {
+    height: 40px;
+    object-fit: contain;
+    width: 40px;
+    flex-shrink: 0;
+}
+
+.mr-motm-crest-fallback {
+    align-items: center;
+    background: rgba(22, 207, 255, 0.1);
+    border: 1px solid rgba(22, 207, 255, 0.2);
+    border-radius: 6px;
+    color: rgba(22, 207, 255, 0.9);
+    display: flex;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 900;
+    height: 40px;
+    justify-content: center;
+    letter-spacing: 0.06em;
+    width: 40px;
+}
+
+.mr-motm-info {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.mr-motm-name {
+    color: #f4fbff;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.mr-motm-pos {
+    color: rgba(244, 251, 255, 0.45);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.mr-motm-rating {
+    border-radius: 8px;
+    font-size: 28px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    padding: 4px 14px;
+}
+
+/* Note color classes — used on both motm badge and table cells */
+.note-gut {
+    background: rgba(39, 174, 96, 0.15);
+    border: 1px solid rgba(39, 174, 96, 0.35);
+    color: var(--green, #27ae60);
+}
+
+.note-mittel {
+    background: rgba(22, 207, 255, 0.1);
+    border: 1px solid rgba(22, 207, 255, 0.25);
+    color: var(--cyan, #16cfff);
+}
+
+.note-schwach {
+    background: rgba(224, 112, 0, 0.12);
+    border: 1px solid rgba(224, 112, 0, 0.3);
+    color: #e07000;
+}
+
+.note-schlecht {
+    background: rgba(192, 57, 43, 0.15);
+    border: 1px solid rgba(192, 57, 43, 0.35);
+    color: var(--red, #c0392b);
+}
+
+/* Two-column grid */
+.mr-ratings-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.mr-ratings-col {
+    background: rgba(4, 14, 24, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.mr-ratings-col-title {
+    background: rgba(22, 207, 255, 0.07);
+    border-bottom: 1px solid rgba(22, 207, 255, 0.15);
+    color: rgba(22, 207, 255, 0.9);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    padding: 9px 14px;
+    text-transform: uppercase;
+}
+
+.mr-ratings-table {
+    border-collapse: collapse;
+    font-size: 12px;
+    width: 100%;
+}
+
+.mr-ratings-table thead th {
+    background: rgba(0, 0, 0, 0.18);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(244, 251, 255, 0.42);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 5px 10px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.mr-ratings-table thead th:last-child {
+    text-align: right;
+}
+
+.mr-ratings-table tbody tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.1s ease;
+}
+
+.mr-ratings-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.mr-ratings-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.mr-ratings-table td {
+    padding: 6px 10px;
+    vertical-align: middle;
+}
+
+.mr-ratings-name {
+    font-size: 12px;
+    font-weight: 700;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mr-ratings-pos {
+    color: rgba(244, 251, 255, 0.5);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.mr-ratings-note {
+    text-align: right;
+}
+
+.mr-note {
+    border-radius: 5px;
+    display: inline-block;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    min-width: 36px;
+    padding: 2px 7px;
+    text-align: center;
+}
+
 /* ── Responsive (max 1200px) ─────────────────────────────────────────────────── */
 
 @media (max-width: 1200px) {
@@ -1050,6 +1255,10 @@
     }
 
     .mr-squads {
+        grid-template-columns: 1fr;
+    }
+
+    .mr-ratings-grid {
         grid-template-columns: 1fr;
     }
 
