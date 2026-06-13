@@ -3755,20 +3755,30 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
 
 def _enrich_substitutions(subs_raw, name_lookup):
     """Reichert rohe Einwechslungs-Dicts ({minute, in, out} mit Player-IDs)
-    mit Spielernamen an und gibt eine Template-fertige Liste zurück."""
+    mit Spielernamen an und gibt eine Template-fertige Liste zurück.
+
+    Neue optionale Felder aus ActiveLineupState werden durchgereicht:
+        target_slot       — Position des ausgewechselten Spielers
+        position_relation — 'HP' / 'NP' / 'FP' (Positionsfit des Einwechselspielers)
+        condition         — Wechselbedingung ('immer', 'fuehrung', …)
+    """
     result = []
     for sub in (subs_raw or []):
         in_id  = sub.get('in')
         out_id = sub.get('out')
         if not sub.get('minute') or not in_id or not out_id:
             continue
-        result.append({
+        entry = {
             'minute':   sub['minute'],
             'in_id':    in_id,
             'out_id':   out_id,
             'in_name':  name_lookup.get(in_id,  f'#{in_id}'),
             'out_name': name_lookup.get(out_id, f'#{out_id}'),
-        })
+        }
+        for extra in ('target_slot', 'position_relation', 'condition'):
+            if extra in sub:
+                entry[extra] = sub[extra]
+        result.append(entry)
     return sorted(result, key=lambda s: s['minute'])
 
 

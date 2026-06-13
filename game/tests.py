@@ -2961,6 +2961,240 @@ class BuildCombinedEventsInjuryTests(TestCase):
         self.assertEqual(minutes, sorted(minutes), "Events müssen nach Minute sortiert sein.")
 
 
+# ── Mid-Match-Einwechslung Engine ─────────────────────────────────────────────
+
+class CeilFiveTests(TestCase):
+    """_ceil5(): Spielminuten auf 5er-Vielfaches aufrunden."""
+
+    def test_exact_multiple(self):
+        from .match_engine import _ceil5
+        self.assertEqual(_ceil5(60), 60)
+        self.assertEqual(_ceil5(45), 45)
+        self.assertEqual(_ceil5(5),   5)
+
+    def test_rounds_up(self):
+        from .match_engine import _ceil5
+        self.assertEqual(_ceil5(63), 65)
+        self.assertEqual(_ceil5(61), 65)
+        self.assertEqual(_ceil5(66), 70)
+        self.assertEqual(_ceil5(1),   5)
+
+    def test_zero_clamp(self):
+        from .match_engine import _ceil5
+        self.assertEqual(_ceil5(0), 5)
+
+
+class CheckSubConditionTests(TestCase):
+    """_check_sub_condition(): einmalige Bedingungsprüfung."""
+
+    def test_immer_always_true(self):
+        from .match_engine import _check_sub_condition
+        self.assertTrue(_check_sub_condition('immer', 0, 0))
+        self.assertTrue(_check_sub_condition('immer', 2, 1))
+        self.assertTrue(_check_sub_condition(None,    1, 3))
+        self.assertTrue(_check_sub_condition('',      0, 0))
+
+    def test_fuehrung(self):
+        from .match_engine import _check_sub_condition
+        self.assertTrue(_check_sub_condition('fuehrung',     2, 1))
+        self.assertFalse(_check_sub_condition('fuehrung',    1, 2))
+        self.assertFalse(_check_sub_condition('fuehrung',    0, 0))
+
+    def test_rueckstand(self):
+        from .match_engine import _check_sub_condition
+        self.assertTrue(_check_sub_condition('rueckstand',   0, 1))
+        self.assertFalse(_check_sub_condition('rueckstand',  1, 0))
+        self.assertFalse(_check_sub_condition('rueckstand',  0, 0))
+
+    def test_unentschieden(self):
+        from .match_engine import _check_sub_condition
+        self.assertTrue(_check_sub_condition('unentschieden', 1, 1))
+        self.assertFalse(_check_sub_condition('unentschieden', 2, 1))
+
+    def test_unknown_condition_is_true(self):
+        from .match_engine import _check_sub_condition
+        self.assertTrue(_check_sub_condition('???', 0, 0))
+
+
+def _make_als(
+    lineup=None, players=None, bench=None, subs=None,
+):
+    """Hilfsfunktion: ActiveLineupState mit minimalen Test-Daten."""
+    from .match_engine import ActiveLineupState
+    _lineup = lineup or [
+        {'player_id': 1, 'position': 'striker',     'group': 'attack'},
+        {'player_id': 2, 'position': 'central_mid', 'group': 'midfield'},
+        {'player_id': 3, 'position': 'goalkeeper',  'group': 'goalkeeper'},
+    ]
+    _players = players or {
+        1: {'id': 1, 'name': 'Stürmer',   'final_strength': 70.0, 'main_positions': ['striker'],     'secondary_positions': [], 'teamwork': 3, 'freshness': 100},
+        2: {'id': 2, 'name': 'Mittelfeld', 'final_strength': 65.0, 'main_positions': ['central_mid'], 'secondary_positions': [], 'teamwork': 3, 'freshness': 100},
+        3: {'id': 3, 'name': 'Keeper',    'final_strength': 75.0, 'main_positions': ['goalkeeper'],  'secondary_positions': [], 'teamwork': 3, 'freshness': 100},
+    }
+    _bench = bench or {
+        10: {'id': 10, 'name': 'Bank-A', 'final_strength': 60.0, 'main_positions': ['striker'],     'secondary_positions': [], 'teamwork': 2, 'freshness': 100},
+        11: {'id': 11, 'name': 'Bank-B', 'final_strength': 55.0, 'main_positions': ['central_mid'], 'secondary_positions': [], 'teamwork': 2, 'freshness': 100},
+    }
+    return ActiveLineupState(
+        lineup=_lineup,
+        players_by_id=_players,
+        bench_by_id=_bench,
+        planned_subs=subs or [],
+    )
+
+
+class ActiveLineupStateBasicsTests(TestCase):
+    """ActiveLineupState: Grundverhalten ohne Wechsel."""
+
+    def test_get_active_lineup_full(self):
+        als = _make_als()
+        active = als.get_active_lineup()
+        self.assertEqual(len(active), 3)
+        pids = {s['player_id'] for s in active}
+        self.assertEqual(pids, {1, 2, 3})
+
+    def test_dismissed_pid_excluded(self):
+        als = _make_als()
+        active = als.get_active_lineup(dismissed_pids={1})
+        self.assertEqual(len(active), 2)
+        self.assertNotIn(1, {s['player_id'] for s in active})
+
+    def test_can_substitute_initial(self):
+        als = _make_als()
+        self.assertTrue(als.can_substitute())
+
+    def test_quota_exhausted(self):
+        from .match_engine import ActiveLineupState, MAX_SUBSTITUTIONS
+        als = _make_als()
+        als.used_substitutions = MAX_SUBSTITUTIONS
+        self.assertFalse(als.can_substitute())
+
+
+class ActiveLineupStateSubTests(TestCase):
+    """ActiveLineupState: Wechsel werden korrekt ausgeführt."""
+
+    def _make_sub(self, in_pid, out_pid, minute, condition='immer'):
+        return {'in': in_pid, 'out': out_pid, 'minute': minute, 'condition': condition}
+
+    def test_simple_sub_executes(self):
+        subs = [self._make_sub(10, 1, 60)]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 0)
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertIn(10, active_pids)   # Einwechselspieler auf dem Feld
+        self.assertNotIn(1, active_pids) # Ausgewechselter weg
+        self.assertEqual(als.used_substitutions, 1)
+
+    def test_minute_rounding_to_ceil5(self):
+        subs = [self._make_sub(10, 1, 63)]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 0)
+        self.assertEqual(als.sub_events[0]['minute'], 65)
+
+    def test_sub_not_executed_before_its_segment(self):
+        subs = [self._make_sub(10, 1, 70)]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 0)  # segment 66 < sub_minute 70 → nicht fällig
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(10, active_pids)
+        self.assertEqual(als.used_substitutions, 0)
+
+    def test_condition_fuehrung_not_met_discards(self):
+        subs = [self._make_sub(10, 1, 60, condition='fuehrung')]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 1)  # im Rückstand
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(10, active_pids)  # Bedingung nicht erfüllt → verworfen
+        self.assertEqual(als.used_substitutions, 0)
+
+    def test_condition_not_retried_after_discard(self):
+        """Einmal verworfene Bedingung darf nicht später doch ausgeführt werden."""
+        subs = [self._make_sub(10, 1, 60, condition='fuehrung')]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 1)  # Rückstand → verworfen
+        als.process_planned_subs(76, 2, 1)  # jetzt Führung — darf trotzdem NICHT ausgeführt werden
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(10, active_pids)
+        self.assertEqual(als.used_substitutions, 0)
+
+    def test_quota_prevents_sixth_sub(self):
+        from .match_engine import MAX_SUBSTITUTIONS
+        lineup = [{'player_id': i, 'position': 'striker', 'group': 'attack'} for i in range(1, 12)]
+        players = {i: {'id': i, 'name': f'P{i}', 'final_strength': 60.0,
+                       'main_positions': ['striker'], 'secondary_positions': [],
+                       'teamwork': 2, 'freshness': 100} for i in range(1, 12)}
+        bench   = {i: {'id': i, 'name': f'B{i}', 'final_strength': 55.0,
+                       'main_positions': ['striker'], 'secondary_positions': [],
+                       'teamwork': 2, 'freshness': 100} for i in range(20, 27)}
+        subs    = [{'in': 20+j, 'out': 1+j, 'minute': 10+j*5, 'condition': 'immer'} for j in range(6)]
+        als = _make_als(lineup=lineup, players=players, bench=bench, subs=subs)
+        als.process_planned_subs(91, 0, 0)  # alle fällig
+        self.assertEqual(als.used_substitutions, MAX_SUBSTITUTIONS)
+        self.assertEqual(len(als.sub_events), MAX_SUBSTITUTIONS)
+
+    def test_sub_slot_inherits_position(self):
+        subs = [self._make_sub(10, 1, 60)]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 0)
+        ev = als.sub_events[0]
+        self.assertEqual(ev['target_slot'], 'striker')
+
+    def test_bench_player_removed_from_bench_after_sub(self):
+        subs = [self._make_sub(10, 1, 60)]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 0)
+        self.assertNotIn(10, als._bench_available)
+
+    def test_dismissed_player_cannot_be_subbed_out(self):
+        """Verwiesener Spieler ist bereits weg — Wechsel darf nicht ausgeführt werden."""
+        subs = [self._make_sub(10, 1, 60)]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 0, dismissed_pids={1})
+        active_pids = {s['player_id'] for s in als.get_active_lineup({1})}
+        self.assertNotIn(10, active_pids)
+        self.assertEqual(als.used_substitutions, 0)
+
+
+class ActiveLineupPlayersTests(TestCase):
+    """_active_lineup_players(): korrekte Umwandlung Lineup → Spielerliste."""
+
+    def test_returns_players_with_position(self):
+        from .match_engine import _active_lineup_players
+        lineup = [{'player_id': 1, 'position': 'striker', 'group': 'attack'}]
+        players = {1: {'id': 1, 'name': 'Test', 'final_strength': 70.0}}
+        result = _active_lineup_players(lineup, players)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['position'], 'striker')
+        self.assertEqual(result[0]['group'],    'attack')
+
+    def test_missing_player_skipped(self):
+        from .match_engine import _active_lineup_players
+        lineup = [{'player_id': 99, 'position': 'striker', 'group': 'attack'}]
+        result = _active_lineup_players(lineup, {})
+        self.assertEqual(result, [])
+
+
+class EnrichSubstitutionsExtraFieldsTests(TestCase):
+    """_enrich_substitutions(): optionale Felder werden durchgereicht."""
+
+    def test_target_slot_passed_through(self):
+        from .views import _enrich_substitutions
+        subs = [{'minute': 65, 'in': 10, 'out': 1,
+                 'target_slot': 'striker', 'position_relation': 'HP', 'condition': 'immer'}]
+        result = _enrich_substitutions(subs, {10: 'Neu', 1: 'Alt'})
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['target_slot'],       'striker')
+        self.assertEqual(result[0]['position_relation'], 'HP')
+        self.assertEqual(result[0]['condition'],         'immer')
+
+    def test_missing_extra_fields_ok(self):
+        from .views import _enrich_substitutions
+        subs = [{'minute': 65, 'in': 10, 'out': 1}]
+        result = _enrich_substitutions(subs, {10: 'Neu', 1: 'Alt'})
+        self.assertEqual(len(result), 1)
+        self.assertNotIn('target_slot', result[0])
+
+
 # ── Frische-/Belastungsmodell V1 ─────────────────────────────────────────────
 
 class FreshnessServiceUnitTests(TestCase):

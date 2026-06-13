@@ -1,0 +1,176 @@
+1. Aktive Lineup als veränderlicher Matchzustand
+
+Pro Team:
+
+active_lineup
+available_bench
+used_substitutions
+executed_substitution_ids
+dismissed_players
+injured_players
+
+Zu Beginn entspricht active_lineup der Startelf.
+
+2. Wechsel vor jedem Segment prüfen
+
+Beispielsweise vor dem Segment 60–65:
+
+1. aktuellen Spielstand prüfen
+2. geplante Wechsel für Minute ≤ 60 finden
+3. Bedingung prüfen
+4. Spieler aus aktivem Slot entfernen
+5. Einwechselspieler in denselben Slot setzen
+6. Positionsfit berechnen
+7. Linienstärken neu berechnen
+8. Segment simulieren
+
+Damit wirken auch diese Bedingungen wirklich:
+
+Immer
+Bei Führung
+Bei Rückstand
+Bei Unentschieden
+
+Die Einschränkung aus dem Ticket, dass nur „Immer“-Wechsel die Stärke beeinflussen, wäre dann unnötig.
+
+3. Ausgewechselter Slot bleibt das Ziel
+
+Das ist korrekt:
+
+Kane steht im Slot ST
+Goretzka kommt für Kane
+Goretzka übernimmt ST
+
+Keine automatische taktische Verschiebung.
+
+Ein Manager, der einen ZM für einen ST bringt, akzeptiert also den Fremdpositionsmalus. Spätere Formationswechsel bleiben ein eigenes Feature.
+
+Positionsfit nicht neu erfinden
+
+Hier besteht eine wichtige Inkonsistenz.
+
+Für dein Spielerstärkensystem war bereits vorgesehen:
+
+HP: 100 %
+NP: 90 %
+Fremdposition: bisher etwa 70 % beziehungsweise −30 %
+
+Im Ticket steht nun:
+
+HP: 0 % Malus
+NP: 10 % Malus
+Fremdgruppe: 25 % Malus
+
+Damit hätte die Einwechslung ein anderes Positionssystem als die Startaufstellung.
+
+Das sollte vermieden werden. Es braucht eine zentrale Funktion:
+
+get_position_fit(player, target_slot)
+
+Zum Beispiel:
+
+HP_POSITION_FACTOR = 1.00
+NP_POSITION_FACTOR = 0.90
+FOREIGN_POSITION_FACTOR = 0.70
+
+Oder Fremdposition bewusst auf 0.75 ändern – dann aber zentral für Startelf, Auto-Aufstellung, Verletzungswechsel und geplante Wechsel.
+
+Positionsgruppen nur als zweite Ebene
+
+Nicht allein prüfen:
+
+Goretzka und Kane gehören beide zur Gruppe attack?
+
+Entscheidend ist zuerst die konkrete Position:
+
+Hat Goretzka ST als HP?
+Hat Goretzka ST als NP?
+Nein → Fremdposition
+
+Positionsgruppen können später verschiedene Fremdmalusse ermöglichen:
+
+Wechsel	Beispiel	möglicher Faktor
+gleiche Gruppe, aber keine HP/NP	OM auf ST	0.80
+benachbarte Gruppe	ZM auf OM	0.75
+komplett fremd	IV auf ST	0.65
+
+Für V1 reicht aber die bereits vorhandene HP/NP/Fremd-Logik.
+
+Weitere Fälle, die #463 berücksichtigen muss
+Wechselkette
+60': Kane raus, Goretzka rein
+75': Goretzka raus, Müller rein
+
+Der zweite Wechsel muss den aktuell aktiven Spieler finden können.
+
+Spieler bereits nicht mehr auf dem Platz
+
+Ein geplanter Wechsel entfällt, wenn player_out vorher:
+
+verletzt ausgewechselt wurde
+Rot gesehen hat
+bereits durch einen anderen Wechsel ersetzt wurde
+Einwechselspieler nicht mehr verfügbar
+
+Der Wechsel entfällt, wenn player_in:
+
+bereits eingewechselt wurde
+durch einen Verletzungswechsel benutzt wurde
+nicht mehr auf der Bank verfügbar ist
+Wechselkontingent
+
+Geplante und erzwungene Wechsel müssen dasselbe Kontingent verwenden, sofern deine Regeln das so vorsehen.
+
+Exakte Minute
+
+Da die Engine in 5-Minuten-Segmenten läuft, würde ich geplante Wechsel zunächst auf 5er-Minuten begrenzen:
+
+45, 50, 55, 60, 65, 70, 75, 80, 85
+
+Alternativ wird Minute 63 vor dem Segment 65–70 ausgeführt. Eine klare Regel verhindert uneindeutige Berechnungen.
+
+Angepasster Umfang für #463
+#463 – Dynamische geplante Einwechslungen V1
+
+Ziel:
+Geplante Wechsel verändern ab ihrer Ausführung die aktive Aufstellung,
+Positionsbesetzung und Linienstärke der folgenden Simulationssegmente.
+
+In Scope:
+- Ziel-Slot ist der aktuelle Slot des ausgewechselten Spielers
+- Einwechselspieler übernimmt diesen Slot
+- zentraler HP-/NP-/Fremdpositionsfit
+- Bedingungen Immer/Führung/Rückstand/Unentschieden werden live geprüft
+- Linienstärken werden ab dem Wechsel neu berechnet
+- Wechselkontingent und Bankstatus werden aktualisiert
+- ausgewechselte Spieler können keine späteren Ereignisse mehr erhalten
+- Einsatzminuten und Noten berücksichtigen tatsächliche Spielzeit
+- Ticker zeigt Slot und Positionsrelation
+
+Out of Scope:
+- Formationswechsel
+- Verschiebung anderer Spieler
+- mehrere taktische Alternativaufstellungen
+- Live-Eingriffe durch den Manager
+Empfohlene Tests
+Kane → echter ST: kein Malus ab Wechselminute.
+Kane → Spieler mit ST als NP: 10 % Malus ab Wechselminute.
+Kane → Goretzka ohne ST: Fremdpositionsmalus.
+Bedingung „Bei Führung“ wird bei Führung ausgeführt.
+Dieselbe Bedingung entfällt bei Rückstand.
+Wechsel verändert xG nur in folgenden Segmenten.
+Vor Wechsel erzieltes Tor bleibt mit alter Lineup berechnet.
+Ausgewechselter Spieler erhält danach keine Tore, Karten oder Verletzungen.
+Einwechselspieler erhält korrekte Minuten und Note.
+Wechsel entfällt, wenn Spieler vorher verletzt oder des Feldes verwiesen wurde.
+Einwechselspieler kann nicht doppelt eingesetzt werden.
+Normale Wechsel und Verletzungswechsel respektieren gemeinsam das Wechselkontingent.
+Urteil
+
+Das Feature sollte gebaut werden, aber nicht über zeitgewichtete Durchschnittsstärken vor der Simulation.
+
+Da die Engine bereits segmentiert arbeitet, ist die sauberere Lösung:
+
+Wechsel als echtes Segmentereignis behandeln und die aktive Lineup ab diesem Zeitpunkt verändern.
+
+Das ist präziser, unterstützt auch bedingte Wechsel und verhindert, dass später erneut an dieser Architektur gearbeitet werden muss.

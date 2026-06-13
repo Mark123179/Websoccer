@@ -24,6 +24,10 @@ from .tactic_compiler import (
     compile_tactic,
     select_active_condition_plan,
 )
+from .position_service import (
+    get_position_fit as _get_position_fit,
+    FOREIGN_POSITION_FACTOR as _FP_FACTOR,
+)
 
 # ── Konstanten ────────────────────────────────────────────────────────────────
 
@@ -51,6 +55,35 @@ _GOAL_WEIGHTS: dict[str, float] = {
     'offensive_midfield': 0.22,
     'attack':             0.53,
 }
+
+# ── Wechsel-Konstanten ────────────────────────────────────────────────────────
+MAX_SUBSTITUTIONS = 5  # geteiltes Kontingent: geplante + Verletzungswechsel
+
+
+def _ceil5(minute: int) -> int:
+    """Rundet eine Minute auf das nächste 5er-Vielfaches auf.
+
+    Damit stimmt die angezeigte Wechselminute mit dem Segment-Effekt überein.
+    Beispiel: 63 → 65, 60 → 60, 45 → 45.
+    """
+    return math.ceil(max(1, int(minute)) / 5) * 5
+
+
+def _check_sub_condition(cond: str, own_goals: int, opp_goals: int) -> bool:
+    """Prüft ob eine Wechselbedingung zum aktuellen Spielstand erfüllt ist.
+
+    Wird genau einmal pro geplanten Wechsel aufgerufen. Nicht erfüllte
+    Bedingungen werden endgültig verworfen — kein späteres Nachholen.
+    """
+    if not cond or cond == 'immer':
+        return True
+    if cond == 'fuehrung':
+        return own_goals > opp_goals
+    if cond == 'rueckstand':
+        return own_goals < opp_goals
+    if cond == 'unentschieden':
+        return own_goals == opp_goals
+    return True
 
 
 # ── Statistik-Helpers ─────────────────────────────────────────────────────────
@@ -122,8 +155,8 @@ def _pos_factor(player, slot_code: str) -> tuple[float, str | None]:
     """Gibt (Multiplikator, Label) zurück basierend auf Spielerposition vs. Slot.
 
     HP  → (1.00, None)   — Hauptposition, kein Malus
-    NP  → (0.90, 'NP')   — Nebenposition, -10 %
-    FP  → (0.80, 'FP')   — Fremdposition, -20 %
+    NP  → (0.90, 'NP')   — Nebenposition, −10 %
+    FP  → (0.70, 'FP')   — Fremdposition, −30 % (konsistent mit position_service)
     """
     try:
         if slot_code in player.main_positions:
@@ -132,7 +165,7 @@ def _pos_factor(player, slot_code: str) -> tuple[float, str | None]:
             return 0.90, 'NP'
     except Exception:
         pass
-    return 0.80, 'FP'
+    return _FP_FACTOR, 'FP'
 
 
 def _player_row(item: dict, goals: int = 0, assists: int = 0, match_strength: float | None = None) -> dict:
@@ -190,6 +223,157 @@ def _lineup_players_orm(tactic) -> list[dict]:
         if pid and pid in players_by_id:
             result.append({'slot': slot, 'player': players_by_id[pid]})
     return result
+
+
+def _active_lineup_players(
+    active_lineup: list[dict],
+    players_by_id: dict[int, dict],
+) -> list[dict]:
+    """Aktive Aufstellung → flache Spielerliste mit position/group.
+
+    Entspricht _lineup_players_dict(), aber arbeitet mit der aktuellen
+    (möglicherweise durch Wechsel mutierten) Lineup statt dem statischen
+    Team-Dict.
+    """
+    result = []
+    for slot in active_lineup:
+        pid = slot.get('player_id')
+        p = players_by_id.get(pid)
+        if p:
+            result.append({**p, 'position': slot['position'], 'group': slot.get('group', 'attack')})
+    return result
+
+
+class ActiveLineupState:
+    """Gemeinsamer Zustand für alle Lineup-Veränderungen während eines Spiels.
+
+    Verwaltet: geplante Wechsel, Spielminuten-Tracking.
+    Dismissals werden über h_dismissed_pids-Set behandelt (bestehende Logik),
+    get_active_lineup(dismissed_pids) filtert sie heraus.
+
+    Keine ORM-Abfragen — alle Spielerdaten müssen vorab geladen sein.
+
+    Bedingungsauswertung: jeder geplante Wechsel wird genau EINMAL bewertet
+    (im ersten Segment nach seiner Minute). resolved_sub_idxs markiert alle
+    bewerteten Wechsel — ausgeführte UND verworfene. Späteres Nachholen
+    ist explizit ausgeschlossen.
+    """
+
+    def __init__(
+        self,
+        lineup: list[dict],
+        players_by_id: dict[int, dict],
+        bench_by_id: dict[int, dict],
+        planned_subs: list[dict],
+    ) -> None:
+        """
+        lineup:       [{player_id, position, group}, ...] — Startaufstellung
+        players_by_id: {pid: player_dict} — Stammelf (vorab geladen)
+        bench_by_id:  {pid: player_dict} — Bankspieler (vorab geladen)
+        planned_subs: [{in, out, minute, condition}, ...] aus TacticSetup
+        """
+        self._lineup_slots: list[dict] = [dict(s) for s in lineup]
+        self._pid_to_slot: dict[int, dict] = {
+            s['player_id']: s for s in self._lineup_slots
+        }
+        self.players_by_id: dict[int, dict] = dict(players_by_id)
+        for pid, data in (bench_by_id or {}).items():
+            if pid not in self.players_by_id:
+                self.players_by_id[pid] = dict(data)
+
+        self._bench_available: set[int] = set((bench_by_id or {}).keys())
+        self._planned_subs: list[dict] = list(planned_subs or [])
+
+        self.used_substitutions: int = 0
+        self._resolved_idxs: set[int] = set()
+        self.sub_events: list[dict] = []
+
+        self.player_on_minute: dict[int, int] = {}
+        self.player_off_minute: dict[int, int] = {}
+        for s in lineup:
+            self.player_on_minute[s['player_id']] = 0
+
+    def get_active_lineup(self, dismissed_pids: set | None = None) -> list[dict]:
+        """Aktuelle Lineup exkl. verwiesener Spieler (ausgewechselte sind bereits entfernt)."""
+        excl = dismissed_pids or set()
+        return [dict(s) for s in self._lineup_slots if s['player_id'] not in excl]
+
+    def can_substitute(self) -> bool:
+        return self.used_substitutions < MAX_SUBSTITUTIONS
+
+    def process_planned_subs(
+        self,
+        segment_start: int,
+        own_goals: int,
+        opp_goals: int,
+        dismissed_pids: set | None = None,
+    ) -> None:
+        """Prüft geplante Wechsel genau einmal je Segment.
+
+        Regel: sub_minute < segment_start → dieser Segment ist der erste,
+        in dem der Wechsel hätte wirken sollen.
+
+        Bedingung erfüllt → ausführen.
+        Bedingung NICHT erfüllt → endgültig verwerfen (nie wieder prüfen).
+        """
+        excl = dismissed_pids or set()
+
+        for idx, sub in enumerate(self._planned_subs):
+            if idx in self._resolved_idxs:
+                continue
+            sub_minute = int(sub.get('minute', 999) or 999)
+            if sub_minute >= segment_start:
+                continue
+
+            # Einmalig bewerten — egal ob ausgeführt oder verworfen
+            self._resolved_idxs.add(idx)
+
+            if not self.can_substitute():
+                continue
+
+            in_pid  = sub.get('in')
+            out_pid = sub.get('out')
+            if not in_pid or not out_pid:
+                continue
+            if in_pid not in self._bench_available:
+                continue
+            if out_pid not in self._pid_to_slot or out_pid in excl:
+                continue
+            if in_pid in self._pid_to_slot:
+                continue
+
+            # Bedingung einmalig prüfen — nicht erfüllt → verworfen (resolved bleibt)
+            cond = sub.get('condition', 'immer')
+            if not _check_sub_condition(cond, own_goals, opp_goals):
+                continue
+
+            # ── Wechsel ausführen ────────────────────────────────────────────
+            executed_minute = _ceil5(sub_minute)
+            old_slot = self._pid_to_slot[out_pid]
+            target_slot  = old_slot['position']
+            target_group = old_slot.get('group', 'attack')
+
+            _, relation = _get_position_fit(
+                self.players_by_id.get(in_pid, {}), target_slot
+            )
+
+            old_slot['player_id'] = in_pid
+            del self._pid_to_slot[out_pid]
+            self._pid_to_slot[in_pid] = old_slot
+
+            self._bench_available.discard(in_pid)
+            self.used_substitutions += 1
+            self.player_off_minute[out_pid] = executed_minute
+            self.player_on_minute[in_pid]   = executed_minute
+
+            self.sub_events.append({
+                'in':                in_pid,
+                'out':               out_pid,
+                'minute':            executed_minute,
+                'target_slot':       target_slot,
+                'position_relation': relation,
+                'condition':         cond,
+            })
 
 
 # ── ORM → Team-Dict Bridge ────────────────────────────────────────────────────
@@ -284,11 +468,8 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None, st
 # ── Lineup-Stärke (Compiler-basiert) ─────────────────────────────────────────
 
 def _pos_factor_dict(player_dict: dict, position_code: str) -> tuple[float, str]:
-    if position_code in player_dict.get('main_positions', []):
-        return 1.0, 'HP'
-    if position_code in player_dict.get('secondary_positions', []):
-        return 0.90, 'NP'
-    return 0.80, 'FP'
+    """Delegiert an position_service.get_position_fit() — zentraler Positionsfit."""
+    return _get_position_fit(player_dict, position_code)
 
 
 def _calculate_lineup_strength(
@@ -725,8 +906,20 @@ def _simulate_match_minutes(
     away_base_tactic = deepcopy(away_team.get('tactic', {}))
     h_zone = calculate_zone_strengths(home_team)
     a_zone = calculate_zone_strengths(away_team)
-    h_lineup = _lineup_players_dict(home_team)
-    a_lineup = _lineup_players_dict(away_team)
+
+    # ── Aktive Aufstellung + Wechsel-State (alle Spielerdaten vorab geladen) ──
+    h_als = ActiveLineupState(
+        lineup=home_team.get('lineup', []),
+        players_by_id={p['id']: p for p in home_team.get('players', [])},
+        bench_by_id=home_team.get('bench_player_data') or {},
+        planned_subs=home_team.get('planned_substitutions') or [],
+    )
+    a_als = ActiveLineupState(
+        lineup=away_team.get('lineup', []),
+        players_by_id={p['id']: p for p in away_team.get('players', [])},
+        bench_by_id=away_team.get('bench_player_data') or {},
+        planned_subs=away_team.get('planned_substitutions') or [],
+    )
 
     h_goals = 0
     a_goals = 0
@@ -784,21 +977,33 @@ def _simulate_match_minutes(
                     })
                 last_plan[side] = plan
 
+        # ── Geplante Wechsel vor diesem Segment ausführen ────────────────────
+        h_als.process_planned_subs(minute, h_goals, a_goals, h_dismissed_pids)
+        a_als.process_planned_subs(minute, a_goals, h_goals, a_dismissed_pids)
+
+        # ── Aktuelle Segment-Elf (Wechsel + Platzverweise berücksichtigt) ────
+        _h_active = h_als.get_active_lineup(h_dismissed_pids)
+        _a_active = a_als.get_active_lineup(a_dismissed_pids)
+        _h_cur    = _active_lineup_players(_h_active, h_als.players_by_id)
+        _a_cur    = _active_lineup_players(_a_active, a_als.players_by_id)
+        _h_team_seg = {**home_team, 'lineup': _h_active, 'players': list(h_als.players_by_id.values())}
+        _a_team_seg = {**away_team, 'lineup': _a_active, 'players': list(a_als.players_by_id.values())}
+
         h_tactic_seg = _with_active_plan(home_base_tactic, h_plan)
         a_tactic_seg = _with_active_plan(away_base_tactic, a_plan)
-        h_comp = compile_tactic(home_team, h_tactic_seg, half=half)
+        h_comp = compile_tactic(_h_team_seg, h_tactic_seg, half=half)
         h_comp['pressing_index'] = _clamp(
             h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
         )
-        a_comp = compile_tactic(away_team, a_tactic_seg, half=half)
+        a_comp = compile_tactic(_a_team_seg, a_tactic_seg, half=half)
         h_str  = _calculate_lineup_strength(
-            home_team, h_tactic_seg, h_comp,
-            dismissed_pids=h_dismissed_pids or None,
+            _h_team_seg, h_tactic_seg, h_comp,
+            dismissed_pids=None,           # bereits aus _h_active herausgefiltert
             gk_strength_override=h_gk_str_override,
         )
         a_str  = _calculate_lineup_strength(
-            away_team, a_tactic_seg, a_comp,
-            dismissed_pids=a_dismissed_pids or None,
+            _a_team_seg, a_tactic_seg, a_comp,
+            dismissed_pids=None,
             gk_strength_override=a_gk_str_override,
         )
         last_h_comp, last_a_comp = h_comp, a_comp
@@ -814,11 +1019,9 @@ def _simulate_match_minutes(
         hg = _poisson(h_xg_seg)
         ag = _poisson(a_xg_seg)
         minute_pool = list(range(minute, min(90, end_min) + 1))
-        # Verwiesene Spieler können keine Tore erzielen
-        h_lineup_active = [p for p in h_lineup if p.get('id') not in h_dismissed_pids] or h_lineup
-        a_lineup_active = [p for p in a_lineup if p.get('id') not in a_dismissed_pids] or a_lineup
-        events.extend(_goal_events(hg, 'home', h_lineup_active, minute_pool.copy()))
-        events.extend(_goal_events(ag, 'away', a_lineup_active, minute_pool.copy()))
+        # Tore/Assists nur aus aktiven Spielern (ausgewechselt/verwiesen = nicht im Pool)
+        events.extend(_goal_events(hg, 'home', _h_cur or _active_lineup_players(h_als.get_active_lineup(), h_als.players_by_id), minute_pool.copy()))
+        events.extend(_goal_events(ag, 'away', _a_cur or _active_lineup_players(a_als.get_active_lineup(), a_als.players_by_id), minute_pool.copy()))
 
         if h_plan:
             goals_while_plan['home_for']  += hg
@@ -842,7 +1045,7 @@ def _simulate_match_minutes(
 
         if h_dis:
             ev, gk_ov = _resolve_dismissal(
-                home_team, h_lineup, h_dismissed_pids, end_min, 'home', h_dis_type)
+                home_team, _h_cur, h_dismissed_pids, end_min, 'home', h_dis_type)
             if ev:
                 h_dismissal_events.append(ev)
                 if gk_ov is not None:
@@ -850,7 +1053,7 @@ def _simulate_match_minutes(
 
         if a_dis:
             ev, gk_ov = _resolve_dismissal(
-                away_team, a_lineup, a_dismissed_pids, end_min, 'away', a_dis_type)
+                away_team, _a_cur, a_dismissed_pids, end_min, 'away', a_dis_type)
             if ev:
                 a_dismissal_events.append(ev)
                 if gk_ov is not None:
@@ -955,6 +1158,8 @@ def _simulate_match_minutes(
             'comeback_draw':  comeback_draw,
         },
         'dismissal_events': h_dismissal_events + a_dismissal_events,
+        'h_sim_sub_events': h_als.sub_events,
+        'a_sim_sub_events': a_als.sub_events,
     }
 
 
@@ -1543,26 +1748,64 @@ def simulate_match(
 
     # 2. Pre-compute Matchstärken: random(basis, potential) + form — einmal pro Spieler,
     #    konsistent für Simulation UND Spielbericht-Display.
+    #    Bankspieler werden einbezogen, damit ActiveLineupState Stärken ohne DB-Hit hat.
     from .models import Player as _Player
-    _all_pids = list({
+
+    _lineup_pids: set[int] = {
         pid
         for tactic in (home_tactic, away_tactic)
         for pid in (tactic.lineup or {}).values()
         if pid
-    })
+    }
+    _bench_pids: set[int] = {
+        pid
+        for tactic in (home_tactic, away_tactic)
+        for pid in (getattr(tactic, 'bench', None) or [])
+        if pid
+    }
+    _all_pids = list(_lineup_pids | _bench_pids)
+
     _players_qs = (
         _Player.objects
         .filter(pk__in=_all_pids)
         .select_related('strength_profile')
         .prefetch_related('source_ratings')
     )
+    _all_players_by_id: dict[int, _Player] = {p.pk: p for p in _players_qs}
     match_strengths: dict[int, float] = {
-        p.pk: _draw_match_strength(p) for p in _players_qs
+        pk: _draw_match_strength(p) for pk, p in _all_players_by_id.items()
     }
 
     # 3. ORM → Team-Dicts (mit vorberechneten Matchstärken und optionalem Nichtaufstellungs-Malus)
     home_team = _build_team_dict(home_club, home_tactic, match_strengths=match_strengths, strength_malus=home_strength_malus)
     away_team = _build_team_dict(away_club, away_tactic, match_strengths=match_strengths, strength_malus=away_strength_malus)
+
+    # 3b. Bankspieler-Daten für ActiveLineupState (kein ORM im Simulation-Loop)
+    def _make_bench_data(tactic) -> dict[int, dict]:
+        result: dict[int, dict] = {}
+        for pid in (getattr(tactic, 'bench', None) or []):
+            p = _all_players_by_id.get(pid)
+            if not p:
+                continue
+            try:
+                fresh = int(round(float(p.strength_profile.freshness or 100.0)))
+            except Exception:
+                fresh = 100
+            result[pid] = {
+                'id':                  p.pk,
+                'name':               f'{p.first_name} {p.last_name}'.strip() or str(p),
+                'final_strength':      match_strengths.get(pid, 50.0),
+                'main_positions':      list(getattr(p, 'main_positions', []) or []),
+                'secondary_positions': list(getattr(p, 'secondary_positions', []) or []),
+                'teamwork':            _teamwork(p),
+                'freshness':           fresh,
+            }
+        return result
+
+    home_team['bench_player_data']     = _make_bench_data(home_tactic)
+    home_team['planned_substitutions'] = list(getattr(home_tactic, 'substitutions', None) or [])
+    away_team['bench_player_data']     = _make_bench_data(away_tactic)
+    away_team['planned_substitutions'] = list(getattr(away_tactic, 'substitutions', None) or [])
 
     # 4. Minuten-Simulation
     sim = _simulate_match_minutes(home_team, away_team)
@@ -1692,8 +1935,16 @@ def simulate_match(
         'away_compiled_tactic':  sim.get('away_compiled_tactic', {}),
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
-        'home_substitutions':    _generate_substitution_events(home_tactic, home_team, 'home', sim.get('goal_events', [])),
-        'away_substitutions':    _generate_substitution_events(away_tactic, away_team, 'away', sim.get('goal_events', [])),
+        'home_substitutions': (
+            sim['h_sim_sub_events']
+            if getattr(home_tactic, 'substitutions', None)
+            else _generate_substitution_events(home_tactic, home_team, 'home', sim.get('goal_events', []))
+        ),
+        'away_substitutions': (
+            sim['a_sim_sub_events']
+            if getattr(away_tactic, 'substitutions', None)
+            else _generate_substitution_events(away_tactic, away_team, 'away', sim.get('goal_events', []))
+        ),
         'card_events':           h_card_events + a_card_events,
         'dismissal_events':      sim_dismissals,
         'injury_events':         h_injury_events + a_injury_events,

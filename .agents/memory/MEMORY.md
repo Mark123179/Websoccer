@@ -22,3 +22,4 @@
 - [Injury Simulation V1](injury-simulation-v1.md) — max 2 Verletzungen pro Team; post-match Effekt; Player property is_ws_injured (nicht is_injured); Countdown-Decrement noch ausstehend.
 - [T009 Dismissals V1](t009-dismissals.md) — Rot/Gelb-Rot: dismissed_pids + gk_strength_override in _calculate_lineup_strength; _resolve_dismissal() TW-Sonderlogik; Verletzungs-Aufstellungssperre in ensure_default_tactic.
 - [Freshness Model V1](freshness-model-v1.md) — ausdauer liegt auf PlayerSourceRating (nicht Player); training_level/medizin_level auf Stadium (nicht Club); V1-Konstanten eingefroren.
+- [ActiveLineupState — Mid-Match Substitution Engine](active-lineup-state.md) — one-shot condition eval via resolved_idxs; bench pre-loaded; _ceil5() für Segment-Timing; FP-Faktor jetzt 0.70 auf allen Pfaden.

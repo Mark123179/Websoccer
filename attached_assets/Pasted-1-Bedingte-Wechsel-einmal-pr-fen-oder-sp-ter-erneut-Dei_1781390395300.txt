@@ -1,0 +1,222 @@
+1. Bedingte Wechsel: einmal prüfen oder später erneut?
+
+Dein aktueller Ablauf sagt:
+
+planned_minute <= segment_start
+und noch nicht ausgeführt
+
+Damit würde ein Wechsel „Bei Führung“ in Minute 60 zunächst nicht stattfinden, aber in Minute 75 nach einer späteren Führung doch noch ausgeführt werden.
+
+Das widerspricht der bisherigen Regel:
+
+Die Bedingung wird zum geplanten Wechselzeitpunkt geprüft; ist sie nicht erfüllt, fällt der Wechsel weg.
+
+Dafür brauchst du neben executed_sub_ids auch:
+
+resolved_sub_ids = set()
+
+Ablauf beim ersten zulässigen Segment:
+
+Bedingung erfüllt:
+→ ausführen
+→ als resolved markieren
+
+Bedingung nicht erfüllt:
+→ nicht ausführen
+→ ebenfalls als resolved markieren
+→ später nicht erneut prüfen
+
+Alternativ könntest du bewusst ein späteres Nachholen erlauben. Dann muss die UI aber klar sagen: „ab Minute 60 bei Führung“. Aktuell lautet die Logik eher „in Minute 60 bei Führung“.
+
+2. Position-Fit gehört nicht direkt in match_engine.py
+
+Die Funktion soll auch verwendet werden von:
+
+Startaufstellung
+Auto-Aufstellung
+geplanten Wechseln
+Verletzungswechseln
+möglicherweise später Formationswechseln
+
+Deshalb besser in ein gemeinsames Modul:
+
+game/position_service.py
+
+Zum Beispiel:
+
+def get_position_fit(player, target_slot) -> float:
+    ...
+
+Sonst importiert die Auto-Aufstellung später aus der Match Engine oder es entstehen erneut mehrere Positionssysteme.
+
+Wichtig ist außerdem, nur eure kanonischen Positionen zu verwenden:
+
+TW, IV, LV, RV, LOV, ROV,
+DM, ZM, LM, RM, OM, ROM, LOM,
+LF, RF, ST
+
+MS, LA und RA sollten nicht neu als parallele Slots eingeführt werden, sofern sie in euren Daten nicht kanonisch existieren. Dafür braucht es gegebenenfalls vorher normalize_position().
+
+3. Segmentminute und Tickerminute müssen identisch sein
+
+Du schreibst:
+
+Minute 63 → vor Segment 65–70 ausgeführt
+
+Dann sollte der Wechsel auch als 65' gespeichert und angezeigt werden. Sonst sagt der Ticker 63', während Kane mathematisch bis Minute 65 auf dem Feld bleibt.
+
+Saubere Möglichkeiten:
+
+Wechselminuten in der UI nur in 5er-Schritten anbieten, oder
+executed_minute = ceil(planned_minute / 5) * 5 speichern.
+
+Ich würde die erste Variante nehmen. Das ist transparenter.
+
+4. Ereigniszuweisung muss segmentweise die aktive Elf verwenden
+
+Es reicht nicht, nur _calculate_lineup_strength() auf active_lineup umzustellen.
+
+Auch diese Systeme müssen nach dem Wechsel aus der jeweiligen Segment-Elf ziehen:
+
+Torschützen
+Vorlagengeber
+Kartenempfänger
+Verletzte
+Pressing-Aktionen
+Schüsse beziehungsweise spätere Individualstatistiken
+
+Sonst könnte Kane nach seiner Auswechslung zwar nicht mehr in der Linienstärke stecken, aber trotzdem noch in Minute 82 ein Tor erhalten.
+
+Die Ereignisgenerierung benötigt daher je Segment entweder:
+
+active_players_snapshot
+
+oder direkten Zugriff auf den aktuellen ActiveLineupState.
+
+5. target_slot muss dynamisch ermittelt werden
+
+Bei einer Wechselkette:
+
+60': Kane raus → Goretzka rein auf ST
+75': Goretzka raus → Müller rein
+
+muss der zweite Wechsel den Slot aus der aktuellen Lineup holen:
+
+target_slot = active_lineup.find_slot(player_out_id)
+
+Nicht aus der ursprünglichen tactic_setup.lineup.
+
+Dein Zielbild beschreibt das bereits korrekt; im Step „Ziel-Slot ermitteln“ sollte ausdrücklich stehen, dass zur Ausführungszeit die aktive Lineup maßgeblich ist.
+
+6. Noten nicht einfach nach Spielzeit multiplizieren
+
+Dieser Satz ist problematisch:
+
+Notendurchschnitt gewichtet nach Spielzeit-Anteil.
+
+Eine Note sollte nicht pauschal mit minutes / 90 gewichtet werden. Sonst wird ein Spieler, der in Minute 80 eingewechselt wird und das Siegtor erzielt, mathematisch fast neutralisiert.
+
+Besser:
+
+tatsächliche Minuten korrekt speichern,
+Spieler mit sehr kurzer Einsatzzeit nur bewerten, wenn ein relevantes Ereignis vorliegt,
+Team- und Kontextmodifikatoren bei Kurzeinsätzen abschwächen,
+Tore, Assists und Karten weiterhin voll berücksichtigen.
+
+Für #463 würde ich nur verlangen:
+
+minutes_played wird korrekt gespeichert.
+Das bestehende Rating-System erhält die tatsächlichen Minuten.
+Die konkrete Minutengewichtung bleibt Aufgabe des Notensystems.
+
+Damit vermischst du den Wechsel-Fix nicht erneut mit dem Noten-Balancing.
+
+7. Keine ORM-Abfragen während der Segment-Schleife
+
+Alle Spielerinformationen müssen vor Spielbeginn geladen werden:
+
+team_state = {
+    "active_lineup": ...,
+    "available_bench": ...,
+    "player_data": ...,
+}
+
+Innerhalb der 18 Segmente darf kein Spieler aus der Datenbank nachgeladen werden. Sonst verlierst du einen Teil der bereits erreichten Simulationsgeschwindigkeit.
+
+8. Gemeinsamer Zustand für Rot, Verletzung und geplanten Wechsel
+
+Das ist architektonisch der wichtigste Punkt.
+
+Alle drei Ereignisse müssen dieselbe Struktur mutieren:
+
+Geplanter Wechsel
+Verletzungswechsel
+Platzverweis
+
+Nicht drei getrennte Lineup-Kopien.
+
+Empfohlen:
+
+class ActiveLineupState:
+    lineup_by_slot
+    bench_by_id
+    used_substitutions
+    executed_sub_ids
+    resolved_sub_ids
+    dismissed_player_ids
+    injured_player_ids
+    player_on_minute
+    player_off_minute
+
+Ein Platzverweis entfernt aus lineup_by_slot.
+Ein Verletzungswechsel ersetzt im selben Dict.
+Ein geplanter Wechsel ersetzt ebenfalls im selben Dict.
+
+9. Wechselkontingent präzisieren
+
+Für V1 reicht:
+
+maximal 5 Einwechslungen
+
+Noch nicht nötig:
+
+drei Wechselfenster,
+Halbzeit als separates Fenster,
+zusätzliche Wechsel in Verlängerung.
+
+Aber im Test muss klar sein:
+
+Verletzungswechsel + geplante Wechsel teilen sich dieselben fünf Plätze.
+
+Wenn kein Kontingent mehr vorhanden ist und sich ein Spieler verletzt, muss das Team mit einem Spieler weniger weiterspielen.
+
+Überarbeiteter Done-Stand
+
+Ich würde #463 so freigeben:
+
+Geplante Wechsel werden im ersten zulässigen 5-Minuten-Segment genau einmal bewertet.
+
+Ist die Bedingung erfüllt:
+- Wechsel wird ausgeführt.
+- Spieler übernimmt den aktuell besetzten Slot des Ausgewechselten.
+- Positionsfit 1.00 / 0.90 / 0.70 wirkt ab diesem Segment.
+- aktive Lineup, Bank und Wechselkontingent werden aktualisiert.
+
+Ist die Bedingung nicht erfüllt:
+- Wechsel wird endgültig verworfen und später nicht erneut geprüft.
+
+Ab dem Wechsel:
+- Linienstärken verwenden die neue aktive Elf.
+- Tore, Assists, Karten und Verletzungen können nur noch aktiven Spielern zugeordnet werden.
+- Spielerzeiten werden mit tatsächlicher Ein- und Auswechselminute gespeichert.
+
+Alle Lineup-verändernden Ereignisse verwenden denselben ActiveLineupState.
+Keine ORM-Abfragen innerhalb der Segment-Simulation.
+Ergänzte Pflicht-Tests
+
+Zu deinen zwölf Tests würde ich vier hinzufügen:
+
+Nicht erfüllter bedingter Wechsel wird später nicht nachgeholt.
+Torschütze und Kartenempfänger werden nach einem Wechsel nur aus aktiven Spielern gezogen.
+Minute 63 wird konsistent als Minute 65 ausgeführt und angezeigt.
+Wenn das Wechselkontingent erschöpft ist, führt eine Verletzung zur Unterzahl.
