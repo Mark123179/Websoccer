@@ -287,6 +287,48 @@
     font-size: 12px;
 }
 
+/* ── Narrative Events (Schüsse, Ecken, Fouls, Spielfluss) ── */
+.mr-tk--narrative {
+    opacity: 0.62;
+}
+
+.mr-tk--narrative:hover {
+    opacity: 0.85;
+}
+
+.mr-tk--narrative.is-home {
+    border-left: 2px solid rgba(22, 207, 255, 0.2);
+}
+
+.mr-tk--narrative.is-away {
+    border-left: 2px solid rgba(255, 165, 50, 0.2);
+}
+
+.mr-tk--flow {
+    border-left: none !important;
+    opacity: 0.45;
+}
+
+.mr-tk--narrative .mr-tk-text {
+    color: rgba(244, 251, 255, 0.62);
+    font-size: 11.5px;
+    font-style: italic;
+}
+
+.mr-tk--narrative .mr-tk-min {
+    color: rgba(244, 251, 255, 0.35);
+    font-size: 10.5px;
+}
+
+.mr-tk-icon--narrative {
+    color: rgba(244, 251, 255, 0.22);
+    font-size: 11px;
+}
+
+.mr-tk--narrative .mr-tk-club {
+    color: rgba(244, 251, 255, 0.18);
+}
+
 /* ── Score badge / Club tag ── */
 .mr-tk-badge {
     border-radius: 5px;

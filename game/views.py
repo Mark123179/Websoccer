@@ -89,6 +89,7 @@ from .tactics import (
     unavailable_players_for_squad,
     validate_formation,
     validate_substitutions,
+    SUB_CONDITION_OPTIONS,
 )
 
 
@@ -2183,6 +2184,7 @@ def parse_tactic_payload_from_post(post_data, club, squad_scope):
             'minute': post_data.get(f'substitution_{index}_minute', ''),
             'in': player_in if player_in in available_ids else '',
             'out': player_out if player_out in available_ids else '',
+            'condition': post_data.get(f'substitution_{index}_condition', 'immer'),
         })
     substitution_validation = validate_substitutions(
         raw_substitutions,
@@ -2524,11 +2526,17 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
     substitution_rows = []
     for index in range(1, 6):
         existing = payload['substitutions'][index - 1] if index <= len(payload['substitutions']) else {}
+        sel_cond = existing.get('condition', 'immer')
         substitution_rows.append({
             'index': index,
             'minute': existing.get('minute', ''),
             'out': existing.get('out', ''),
             'in': existing.get('in', ''),
+            'condition': sel_cond,
+            'condition_options': [
+                {'value': k, 'label': v, 'selected': k == sel_cond}
+                for k, v in SUB_CONDITION_OPTIONS
+            ],
         })
 
     profile_context = build_club_profile_context(club)
@@ -3497,15 +3505,166 @@ def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
             f"Verletzung: {player} muss behandelt werden ({days} Tage).",
             f"{player} bleibt nach einem Zweikampf verletzt am Boden. {days} Tage Pause.",
         ]
+    elif evt_type == 'shot':
+        if player:
+            opts = [
+                f"{player} zieht ab — der Ball geht knapp drüber!",
+                f"Schuss von {player}, kein Problem für den Torhüter.",
+                f"{player} versucht es aus der Distanz, der Keeper hält.",
+                f"{player} kommt zum Abschluss — knapp am Pfosten vorbei.",
+                f"Halbchance durch {player} — zu unplatziert.",
+            ]
+        else:
+            opts = [
+                "Schuss aufs Tor — der Keeper ist auf dem Posten.",
+                "Torschuss — knapp drüber.",
+                "Chance! Der Abschluss geht neben das Tor.",
+            ]
+    elif evt_type == 'corner':
+        if player:
+            opts = [
+                f"Eckball — {player} tritt an.",
+                f"Ecke von {player}, die Abwehr klärt.",
+                f"{player} schlägt die Ecke herein — kein Abnehmer.",
+                f"Eckball ausgeführt von {player}.",
+            ]
+        else:
+            opts = [
+                "Eckball — aus der Ecke wird nichts.",
+                "Eckstoß. Der Ball wird weggekopft.",
+            ]
+    elif evt_type == 'foul':
+        if player:
+            opts = [
+                f"Foulspiel — Freistoß für {player}.",
+                f"Pfiff! Freistoß nach Foul an {player}.",
+                f"{player} wird von hinten gefoult — Schiedsrichter pfeift.",
+                f"Unterbrechung: Freistoß nach Foul gegen {player}.",
+            ]
+        else:
+            opts = [
+                "Foulspiel — Freistoß.",
+                "Pfiff! Freistoß.",
+            ]
+    elif evt_type == 'flow':
+        opts = [player] if player else [f"Spielunterbrechung in Minute {minute}."]
     else:
         opts = [f"Spielunterbrechung in Minute {minute}."]
 
     return opts[seed % len(opts)]
 
 
+def _generate_narrative_events(data: dict) -> list[dict]:
+    """Generiert narrative Ticker-Events (Schüsse, Ecken, Fouls, Spielfluss).
+
+    Alle Werte sind deterministisch — gleicher Match-Report erzeugt immer
+    dieselben Ereignisse (Seed aus Vereinsnamen + Torergebnis).
+    """
+    import random as _rng
+
+    ms            = data.get('match_stats', {}) or {}
+    home_name     = data.get('home_club_name', 'Heim')
+    away_name     = data.get('away_club_name', 'Gast')
+    home_goals    = data.get('home_goals', 0) or 0
+    away_goals    = data.get('away_goals', 0) or 0
+    base_seed     = abs(hash(f"{home_name}|{away_name}|{home_goals}|{away_goals}")) % (2 ** 31)
+
+    def _players(key):
+        return [p['name'] for p in (data.get(key) or [])
+                if p.get('name') and p.get('group') not in ('goalkeeper',)]
+
+    h_pl = _players('home_players')
+    a_pl = _players('away_players')
+
+    def _pick(pool, seed_offset):
+        if not pool:
+            return ''
+        return pool[(base_seed + seed_offset) % len(pool)]
+
+    def _distribute(n, lo, hi, seed_offset):
+        if n <= 0:
+            return []
+        r = _rng.Random(base_seed + seed_offset)
+        if n == 1:
+            return [r.randint(lo, hi)]
+        seg = (hi - lo) / n
+        result = []
+        for i in range(n):
+            s = int(lo + i * seg)
+            e = int(lo + (i + 1) * seg)
+            result.append(r.randint(max(lo, s), min(hi, max(s + 1, e))))
+        return sorted(result)
+
+    h_shots   = ms.get('home_shots',   0) or 0
+    a_shots   = ms.get('away_shots',   0) or 0
+    h_corners = ms.get('home_corners', 0) or 0
+    a_corners = ms.get('away_corners', 0) or 0
+    h_fouls   = ms.get('home_fouls',   0) or 0
+    a_fouls   = ms.get('away_fouls',   0) or 0
+
+    events: list[dict] = []
+
+    # ── Schüsse (geblockte + verfehlte — Tore werden im engine-path gesetzt) ──
+    n_h = min(7, max(0, h_shots - home_goals))
+    n_a = min(7, max(0, a_shots - away_goals))
+    for i, minute in enumerate(_distribute(n_h, 3, 88, 101)):
+        events.append({'type': 'shot', 'team': 'home', 'minute': minute,
+                       'commentary': _ticker_comment('shot', minute, _pick(h_pl, 200 + i))})
+    for i, minute in enumerate(_distribute(n_a, 3, 88, 102)):
+        events.append({'type': 'shot', 'team': 'away', 'minute': minute,
+                       'commentary': _ticker_comment('shot', minute, _pick(a_pl, 300 + i))})
+
+    # ── Ecken ─────────────────────────────────────────────────────────────────
+    for i, minute in enumerate(_distribute(min(5, h_corners), 4, 87, 401)):
+        events.append({'type': 'corner', 'team': 'home', 'minute': minute,
+                       'commentary': _ticker_comment('corner', minute, _pick(h_pl, 500 + i))})
+    for i, minute in enumerate(_distribute(min(5, a_corners), 4, 87, 402)):
+        events.append({'type': 'corner', 'team': 'away', 'minute': minute,
+                       'commentary': _ticker_comment('corner', minute, _pick(a_pl, 600 + i))})
+
+    # ── Fouls (1 je ~7 Fouls) ─────────────────────────────────────────────────
+    n_hf = max(0, h_fouls // 7)
+    n_af = max(0, a_fouls // 7)
+    for i, minute in enumerate(_distribute(n_hf, 5, 85, 701)):
+        events.append({'type': 'foul', 'team': 'home', 'minute': minute,
+                       'commentary': _ticker_comment('foul', minute, _pick(h_pl, 800 + i))})
+    for i, minute in enumerate(_distribute(n_af, 5, 85, 702)):
+        events.append({'type': 'foul', 'team': 'away', 'minute': minute,
+                       'commentary': _ticker_comment('foul', minute, _pick(a_pl, 900 + i))})
+
+    # ── Spielfluss-Kommentare (8 gleichmäßig über 90 Min.) ────────────────────
+    h_short = home_name[:9]
+    a_short = away_name[:9]
+    FLOW_POOL = [
+        f"{h_short} kombiniert sich flüssig durch die Reihen.",
+        f"{a_short} versucht es über die Flügel.",
+        f"Intensiver Zweikampf im Mittelfeld — der Ball geht ins Aus.",
+        f"{h_short} hält den Gegner mit langen Bällen in Schach.",
+        f"{a_short} übt Pressing aus, wird aber mehrfach ausgespielt.",
+        f"Ruhigere Spielphase — beide Teams lauern auf ihre Chance.",
+        f"Spielunterbrechung. Das Spiel wird neu angepfiffen.",
+        f"{h_short} dominiert die Spielmitte phasenweise.",
+        f"{a_short} kommt besser in die Partie.",
+        f"Beide Mannschaften spielen sich warm, das Tempo steigt.",
+        f"Das Spiel verläuft ausgeglichen — spannend bleibt es.",
+        f"Starkes Anlaufen von {a_short} in der eigenen Hälfte.",
+        f"Konter von {h_short} läuft ins Leere.",
+        f"{a_short} gewinnt zunehmend Kontrolle im Mittelfeld.",
+        f"Tempowechsel von {h_short} bringt die Abwehr kurz in Not.",
+    ]
+    r_flow = _rng.Random(base_seed + 1001)
+    for minute in _distribute(8, 8, 82, 1001):
+        text = FLOW_POOL[r_flow.randint(0, len(FLOW_POOL) - 1)]
+        events.append({'type': 'flow', 'team': 'home', 'minute': minute,
+                       'commentary': text})
+
+    return events
+
+
 def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lookup=None):
     """Führt alle Spielereignisse zu einer nach Minute sortierten Liste zusammen.
-    Jedes Event enthält Kommentartext (commentary) und Zwischenstand (score_h/score_a)."""
+    Enthält echte Events (Tore, Karten, Wechsel, Verletzungen) PLUS narrative
+    Events (Schüsse, Ecken, Fouls, Spielfluss). Sortiert älteste zuerst."""
     raw = []
 
     for evt in (data.get('goal_events') or []):
@@ -3536,7 +3695,21 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                     'minute': ie.get('minute', 0), 'player_name': name,
                     'injury_type': ie.get('injury_type', 'Leicht'), 'days': ie.get('days', 0)})
 
-    raw.sort(key=lambda e: e['minute'])
+    # ── Narrative Events (Schüsse, Ecken, Fouls, Spielfluss) ─────────────────
+    try:
+        narrative = _generate_narrative_events(data)
+    except Exception:
+        narrative = []
+
+    # Keine Dopplungen bei Minuten mit echten Events (echte Events haben Vorrang)
+    real_minutes = {e['minute'] for e in raw}
+    for ne in narrative:
+        m = ne['minute']
+        if m in real_minutes:
+            ne = dict(ne, minute=m + 1)
+        raw.append(ne)
+
+    raw.sort(key=lambda e: (e['minute'], 0 if e['type'] in ('goal', 'card', 'sub', 'injury') else 1))
 
     score_h = score_a = 0
     events = []
@@ -3571,6 +3744,10 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             evt['commentary'] = _ticker_comment(
                 'injury', evt['minute'], evt['player_name'], days=evt.get('days', 0),
             )
+        else:
+            # shot / corner / foul / flow — commentary already set by _generate_narrative_events
+            evt.setdefault('score_h', score_h)
+            evt.setdefault('score_a', score_a)
         events.append(evt)
 
     return events

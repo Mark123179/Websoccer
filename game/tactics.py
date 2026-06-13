@@ -295,6 +295,14 @@ CONDITION_OPTIONS = [
     ('gegner_rot', 'Gegner rote Karte'),
 ]
 
+SUB_CONDITION_OPTIONS = [
+    ('immer',         'Immer'),
+    ('fuehrung',      'Bei Führung'),
+    ('rueckstand',    'Bei Rückstand'),
+    ('unentschieden', 'Bei Unentschieden'),
+]
+_SUB_COND_KEYS = {k for k, _ in SUB_CONDITION_OPTIONS}
+
 CONDITION_PLANS = [
     ('ausgewogen', 'Ausgewogen'),
     ('aggressiv_risiko', 'Aggressiv & Risiko'),
@@ -959,10 +967,12 @@ def validate_substitutions(raw_rows, lineup, bench):
         field_players.add(player_in)
         bench_players.discard(player_in)
         already_subbed_in.add(player_in)
+        raw_cond = row.get('condition', 'immer')
         cleaned.append({
             'minute': minute,
             'out': player_out,
             'in': player_in,
+            'condition': raw_cond if raw_cond in _SUB_COND_KEYS else 'immer',
         })
 
     return SubstitutionValidation(cleaned, errors)

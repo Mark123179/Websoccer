@@ -1307,7 +1307,36 @@ def compute_player_ratings(result: dict) -> dict:
 
 # ── Einwechs­lungs-Events ──────────────────────────────────────────────────────
 
-def _generate_substitution_events(tactic_setup, team_dict: dict) -> list[dict]:
+def _score_at_minute(minute: int, goal_events: list, side: str) -> tuple[int, int]:
+    """Gibt (eigene, gegnerische) Tore bis einschließlich 'minute' zurück."""
+    h, a = 0, 0
+    for evt in (goal_events or []):
+        if evt.get('minute', 999) <= minute:
+            if evt.get('team') == 'home':
+                h += 1
+            else:
+                a += 1
+    return (h, a) if side == 'home' else (a, h)
+
+
+def _sub_condition_met(condition: str, minute: int,
+                       goal_events: list, side: str) -> bool:
+    """Prüft ob eine Wechselbedingung zum Zeitpunkt 'minute' erfüllt ist."""
+    if condition == 'immer':
+        return True
+    mine, theirs = _score_at_minute(minute, goal_events, side)
+    if condition == 'fuehrung':
+        return mine > theirs
+    if condition == 'rueckstand':
+        return mine < theirs
+    if condition == 'unentschieden':
+        return mine == theirs
+    return True
+
+
+def _generate_substitution_events(tactic_setup, team_dict: dict,
+                                   side: str = 'home',
+                                   goal_events: list | None = None) -> list[dict]:
     """Gibt Einwechslungs-Events für den Spielbericht zurück.
 
     Priorität:
@@ -1321,7 +1350,12 @@ def _generate_substitution_events(tactic_setup, team_dict: dict) -> list[dict]:
     planned = [s for s in (tactic_setup.substitutions or [])
                if s.get('in') and s.get('out') and s.get('minute')]
     if planned:
-        return sorted(planned, key=lambda s: s['minute'])
+        result = []
+        for s in sorted(planned, key=lambda s: s['minute']):
+            cond = s.get('condition', 'immer')
+            if _sub_condition_met(cond, s['minute'], goal_events, side):
+                result.append(s)
+        return result
 
     from .models import Player as _Player
 
@@ -1658,8 +1692,8 @@ def simulate_match(
         'away_compiled_tactic':  sim.get('away_compiled_tactic', {}),
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
-        'home_substitutions':    _generate_substitution_events(home_tactic, home_team),
-        'away_substitutions':    _generate_substitution_events(away_tactic, away_team),
+        'home_substitutions':    _generate_substitution_events(home_tactic, home_team, 'home', sim.get('goal_events', [])),
+        'away_substitutions':    _generate_substitution_events(away_tactic, away_team, 'away', sim.get('goal_events', [])),
         'card_events':           h_card_events + a_card_events,
         'dismissal_events':      sim_dismissals,
         'injury_events':         h_injury_events + a_injury_events,

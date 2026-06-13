@@ -2935,8 +2935,9 @@ class BuildCombinedEventsInjuryTests(TestCase):
             }],
         }
         events = _build_combined_events(data, [], [], {42: 'Test Spieler'})
-        self.assertEqual(len(events), 1)
-        e = events[0]
+        injury_evts = [e for e in events if e['type'] == 'injury']
+        self.assertEqual(len(injury_evts), 1)
+        e = injury_evts[0]
         self.assertEqual(e['type'],        'injury')
         self.assertEqual(e['team'],        'home')
         self.assertEqual(e['minute'],      63)
