@@ -3,6 +3,8 @@ from django.core.management.base import BaseCommand
 from game.models import Club, Player
 from game.match_engine import simulate_match
 
+FALLBACK_STRENGTH = 50.0
+
 
 class Command(BaseCommand):
     help = 'Liga-Massentest: 8 Paarungen × N Läufe mit Match Engine V2'
@@ -27,6 +29,7 @@ class Command(BaseCommand):
             ph=0, pa=0,
             alh=0, amh=0, arh=0, ala=0, ama=0, ara=0,
             plans=0, err=0,
+            injuries=0, fallbacks=0,
         ) for i in range(len(PAIRS))}
 
         t0 = time.time()
@@ -60,6 +63,16 @@ class Command(BaseCommand):
                     s['ama'] += ms.get('away_attacks_center', 0)
                     s['ara'] += ms.get('away_attacks_right',  0)
                     s['plans'] += len(res.get('plan_activations', []))
+
+                    # Verletzungen
+                    s['injuries'] += len(res.get('injury_events', []))
+
+                    # Fallback-Stärken: final_strength == 50.0 in Spielerlisten
+                    for player_list_key in ('home_players', 'away_players'):
+                        for p in res.get(player_list_key, []):
+                            if float(p.get('final_strength', 0)) == FALLBACK_STRENGTH:
+                                s['fallbacks'] += 1
+
                     total += 1
                 except Exception as e:
                     r[idx]['err'] += 1
@@ -82,7 +95,8 @@ class Command(BaseCommand):
 
         tot = dict(wh=0, d=0, wa=0, gh=0, ga=0, xgh=0.0, xga=0.0,
                    sh=0, sa=0, fh=0, fa=0, yh=0, ya=0, rh=0, ra=0,
-                   ph=0, pa=0, plans=0, err=0, fav=0, upsets=0)
+                   ph=0, pa=0, plans=0, err=0, fav=0, upsets=0,
+                   injuries=0, fallbacks=0)
 
         for s in r.values():
             ph_   = s['wh'] / N * 100
@@ -96,7 +110,8 @@ class Command(BaseCommand):
                 f"{s['gh']/N:>5.2f} {s['ga']/N:>5.2f}  "
                 f"{s['xgh']/N:>6.3f} {s['xga']/N:>6.3f}  {upset:>7}")
             for k in ('wh','d','wa','gh','ga','sh','sa','fh','fa',
-                      'yh','ya','rh','ra','ph','pa','plans','err'):
+                      'yh','ya','rh','ra','ph','pa','plans','err',
+                      'injuries','fallbacks'):
                 tot[k] += s[k]
             tot['xgh']   += s['xgh']; tot['xga']    += s['xga']
             tot['fav']   += fav;      tot['upsets']  += upset
@@ -126,6 +141,16 @@ class Command(BaseCommand):
                 f"{s['yh']/N:>6.2f} {s['ya']/N:>6.2f} "
                 f"{s['rh']/N:>6.3f} {s['ra']/N:>6.3f}")
 
+        # ── Tabelle 4: Verletzungen & Fallbacks ───────────────────────────────
+        out(f"\n{'='*80}")
+        out("VERLETZUNGEN & FALLBACKS (Ø/Spiel)")
+        out('=' * 80)
+        out(f"{'Paarung':<48} {'∅Verl':>7} {'Fallb':>7}")
+        out('-' * 80)
+        for s in r.values():
+            lbl = f"{s['home'][:22]} vs {s['away'][:22]}"
+            out(f"{lbl:<48} {s['injuries']/N:>7.3f} {s['fallbacks']:>7}")
+
         # ── Gesamt-Auswertung ─────────────────────────────────────────────────
         out(f"\n{'='*70}")
         out(f"GESAMT-AUSWERTUNG  —  {G} Spiele")
@@ -144,9 +169,10 @@ class Command(BaseCommand):
         out(f"  Ø Fouls/Spiel:            {(tot['fh']+tot['fa'])/G:.2f}")
         out(f"  Ø Gelbe/Spiel:            {(tot['yh']+tot['ya'])/G:.2f}")
         out(f"  Ø Rote/Spiel:             {(tot['rh']+tot['ra'])/G:.5f}")
+        out(f"  Ø Verletzungen/Spiel:     {tot['injuries']/G:.4f}")
+        out(f"  Fallback-Stärken (50.0):  {tot['fallbacks']}{'  ✓' if tot['fallbacks']==0 else '  ⚠ PRÜFEN!'}")
         out(f"  Ø Pressing-Gewinne Heim:  {tot['ph']/G:.2f}")
         out(f"  Ø Pressing-Gewinne Gast:  {tot['pa']/G:.2f}")
         out(f"  Plan-Aktivierungen:       {tot['plans']}")
-        out(f"  Fallback-Stärken (50.0):  0  (in Einzeltest verifiziert)")
-        out(f"  Fehler:                   {tot['err']}")
+        out(f"  Fehler:                   {tot['err']}{'  ✓' if tot['err']==0 else '  ⚠ PRÜFEN!'}")
         out(f"  Laufzeit:                 {elapsed:.1f}s  ({elapsed/G*1000:.1f} ms/Spiel)")
