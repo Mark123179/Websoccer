@@ -1288,19 +1288,58 @@ def _rating_pos_group(position: str, group: str) -> str:
     return 'FWD'
 
 
+def _player_active_window(p: dict) -> tuple[int, int]:
+    """Gibt (on_minute, off_minute) des Spielers zurück.
+
+    is_sub=True:  rein bei 90-minutes_played, raus bei 90.
+    Starter:      rein bei 0, raus bei minutes_played (default 90).
+    """
+    mp = int(p.get('minutes_played', 90) or 90)
+    if p.get('is_sub'):
+        on = max(1, 90 - mp)
+        return (on, 90)
+    return (1, max(1, mp))
+
+
+def _weighted_sample_no_replace(players: list[dict], k: int) -> list[int]:
+    """Sample k einzigartige Spieler-Indizes, gewichtet nach minutes_played.
+
+    Spieler mit mehr Einsatzzeit werden häufiger ausgewählt.
+    Gibt eine Liste von Indizes (ohne Dopplungen) zurück.
+    """
+    pool: list[int] = []
+    for i, p in enumerate(players):
+        mp = max(5, int(p.get('minutes_played', 90) or 90))
+        tickets = max(1, mp // 5)
+        pool.extend([i] * tickets)
+    random.shuffle(pool)
+    result: list[int] = []
+    seen: set[int] = set()
+    for idx in pool:
+        if idx not in seen:
+            result.append(idx)
+            seen.add(idx)
+        if len(result) == k:
+            break
+    # Lücke mit verbliebenen Spielern schließen (falls Pool zu klein)
+    remaining = [i for i in range(len(players)) if i not in seen]
+    random.shuffle(remaining)
+    result.extend(remaining[: max(0, k - len(result))])
+    return result[:k]
+
+
 def _assign_cards_to_players(
     players: list[dict],
     yellow_count: int,
     red_count: int,
     club_side: str = 'home',
 ) -> tuple:
-    """Verteilt Team-Karten zufällig auf einzelne Spieler als 0/1-Flags (in-place Kopie).
+    """Verteilt Team-Karten auf Spieler gewichtet nach Einsatzminuten.
 
-    Jeder Spieler erhält maximal 1 Gelbe und 1 Rote Karte (sample without replacement).
-    Karten-Anzahl wird auf Spieler-Pool-Größe geclampt.
+    Karten-Minuten liegen im aktiven Zeitfenster jedes Spielers (on_minute..off_minute).
+    Jeder Spieler erhält maximal 1 Gelbe und 1 Rote Karte.
 
     Gibt (players, card_events) zurück.
-    card_events: [{player_id, player_name, card_type, minute, club_side}, ...]
     """
     players = [dict(p) for p in players]
     n = len(players)
@@ -1309,22 +1348,24 @@ def _assign_cards_to_players(
     y = min(max(0, yellow_count), n)
     r = min(max(0, red_count), n)
     card_events = []
-    for i in random.sample(range(n), y):
+    for i in _weighted_sample_no_replace(players, y):
         players[i]['yellow_cards'] = 1
+        lo, hi = _player_active_window(players[i])
         card_events.append({
             'player_id':   players[i].get('id'),
             'player_name': players[i].get('name', ''),
             'card_type':   'yellow',
-            'minute':      random.randint(1, 90),
+            'minute':      random.randint(lo, hi),
             'club_side':   club_side,
         })
-    for i in random.sample(range(n), r):
+    for i in _weighted_sample_no_replace(players, r):
         players[i]['red_cards'] = 1
+        lo, hi = _player_active_window(players[i])
         card_events.append({
             'player_id':   players[i].get('id'),
             'player_name': players[i].get('name', ''),
             'card_type':   'red',
-            'minute':      random.randint(20, 90),
+            'minute':      random.randint(max(lo, 20), hi),
             'club_side':   club_side,
         })
     return players, card_events
@@ -1361,7 +1402,9 @@ def _generate_injury_events(
     candidates = []
     for p in players:
         freshness = int(p.get('freshness') or 100)
-        prob = BASE_INJURY_RISK_PER_90 * freshness_injury_multiplier(freshness) * medizin_factor
+        mp = int(p.get('minutes_played', 90) or 90)
+        # Risiko proportional zur Einsatzzeit skalieren
+        prob = BASE_INJURY_RISK_PER_90 * freshness_injury_multiplier(freshness) * medizin_factor * (mp / 90.0)
         if random.random() >= prob:
             continue
         r = random.random()
@@ -1373,11 +1416,12 @@ def _generate_injury_events(
                 chosen_type = itype
                 chosen_days = random.randint(dmin, dmax)
                 break
+        lo, hi = _player_active_window(p)
         candidates.append({
             'player_id':   p.get('id'),
             'player_name': p.get('name', ''),
             'club_side':   club_side,
-            'minute':      random.randint(10, 90),
+            'minute':      random.randint(max(lo, 10), hi),
             'injury_type': chosen_type,
             'days':        chosen_days,
         })
@@ -2095,12 +2139,12 @@ def simulate_match(
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
         'home_substitutions': (
             sim['h_sim_sub_events']
-            if getattr(home_tactic, 'substitutions', None)
+            if sim['h_sim_sub_events']
             else _generate_substitution_events(home_tactic, home_team, 'home', sim.get('goal_events', []))
         ),
         'away_substitutions': (
             sim['a_sim_sub_events']
-            if getattr(away_tactic, 'substitutions', None)
+            if sim['a_sim_sub_events']
             else _generate_substitution_events(away_tactic, away_team, 'away', sim.get('goal_events', []))
         ),
         'card_events':           h_card_events + a_card_events,

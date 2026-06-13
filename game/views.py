@@ -3495,11 +3495,13 @@ def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
                 f"Gelbe Karte für {player}.",
             ]
     elif evt_type == 'sub':
-        _rel_labels = {'HP': 'Stammposition', 'NP': 'Nebenposition', 'FP': 'Fremdposition'}
+        # HP (Stammposition) ist der Normalfall → kein Klammer-Anhang
+        # NP/FP erhalten Positionshinweis im Ticker
+        _rel_labels = {'NP': 'Nebenposition', 'FP': 'Fremdposition'}
         _rel_label = _rel_labels.get(position_relation or '', '')
         _slot_info = (
             f' ({target_slot} \u2014 {_rel_label})' if target_slot and _rel_label
-            else (f' ({target_slot})' if target_slot else '')
+            else ''
         )
         opts = [
             f"Wechsel: {in_name} kommt für {out_name}{_slot_info}.",
