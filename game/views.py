@@ -2942,32 +2942,22 @@ _ISO2_TO_CODE3 = {
 
 
 def _live_grade_map(club, season=CURRENT_SQUAD_SEASON):
-    """Berechnet Ø-Note pro Spieler live aus SimulatedMatch.report_data.
+    """Berechnet Ø-Note pro Spieler aus PlayerFormSnapshot (alle Quellen).
 
-    Gibt ``{player_id: avg_grade}`` zurück. Wertet nur Spiele des Clubs aus,
-    in denen der Club als Heim- *oder* Auswärtsmannschaft antrat.
+    Die V2-Match-Engine schreibt Noten nach PlayerFormSnapshot (source='ws_liga').
+    Gibt ``{player_id: avg_grade}`` zurück.
     """
-    from django.db.models import Q
-    fixtures = (
-        SeasonFixture.objects
-        .filter(season=season, is_played=True, simulated_match__isnull=False)
-        .filter(Q(home_club=club) | Q(away_club=club))
-        .only('home_club_id', 'away_club_id', 'simulated_match_id')
-        .select_related('simulated_match')
+    player_ids = list(
+        Player.objects.filter(club=club).values_list('pk', flat=True)
     )
-    grade_acc = {}
-    for fixture in fixtures:
-        sm = fixture.simulated_match
-        if not sm or not sm.report_data:
-            continue
-        rd = sm.report_data
-        is_home = fixture.home_club_id == club.id
-        own_key = 'home_ratings' if is_home else 'away_ratings'
-        for entry in rd.get(own_key, []):
-            pid = entry.get('id')
-            rating = entry.get('rating')
-            if pid is not None and rating is not None:
-                grade_acc.setdefault(pid, []).append(float(rating))
+    snapshots = (
+        PlayerFormSnapshot.objects
+        .filter(player_id__in=player_ids, rating__isnull=False)
+        .values_list('player_id', 'rating')
+    )
+    grade_acc: dict[int, list[float]] = {}
+    for pid, rating in snapshots:
+        grade_acc.setdefault(pid, []).append(float(rating))
     return {
         pid: round(sum(vals) / len(vals), 2)
         for pid, vals in grade_acc.items()

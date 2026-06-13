@@ -616,10 +616,6 @@ def prepare_matchday_lineups(league, matchday, season):
                 valid = False
 
             if valid:
-                # Gemanagter Verein: Verletzungen/Sperren/Abgänge still patchen (kein Malus).
-                if club.managed_by is not None:
-                    patch_managed_lineup(club, setup)
-
                 setattr(fixture, lineup_attr, True)
                 fixture_dirty = True
 
