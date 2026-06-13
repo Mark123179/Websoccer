@@ -215,6 +215,39 @@ def _slot_to_group(slot_code: str) -> str:
     return 'midfield'
 
 
+def _build_windows_map(sub_events: list[dict]) -> dict[int, tuple[int, int]]:
+    """Aktives Zeitfenster (on_minute, off_minute) pro Spieler aus Wechsel-Events.
+
+    Starter ohne Wechsel: nicht im Dict (Caller nimmt Default (0, 90)).
+    Starter ausgewechselt bei M: (0, M).
+    Eingewechselter rein bei M: (M, 90).
+    Wechselkette (rein M1, raus M2): (M1, M2).
+
+    Wird für korrekte Karten-/Verletzungsminuten-Zuweisung benötigt;
+    minutes_played + is_sub allein kann Ketten-Fenster nicht korrekt rekonstruieren.
+    """
+    on_min: dict[int, int]  = {}
+    off_min: dict[int, int] = {}
+
+    for evt in (sub_events or []):
+        out_pid = evt.get('out')
+        in_pid  = evt.get('in')
+        minute  = int(evt.get('minute', 90) or 90)
+        if out_pid:
+            off_min[out_pid] = minute
+        if in_pid:
+            on_min[in_pid] = minute
+
+    windows: dict[int, tuple[int, int]] = {}
+    for pid, off in off_min.items():
+        start = on_min.get(pid, 0)
+        windows[pid] = (start, off)
+    for pid, on in on_min.items():
+        if pid not in windows:
+            windows[pid] = (on, 90)
+    return windows
+
+
 def _build_minutes_played_map(sub_events: list[dict]) -> dict[int, int]:
     """Einsatzminuten aus Wechsel-Events.
 
@@ -1291,9 +1324,17 @@ def _rating_pos_group(position: str, group: str) -> str:
 def _player_active_window(p: dict) -> tuple[int, int]:
     """Gibt (on_minute, off_minute) des Spielers zurück.
 
-    is_sub=True:  rein bei 90-minutes_played, raus bei 90.
-    Starter:      rein bei 0, raus bei minutes_played (default 90).
+    Priorität:
+    1. Explizite on_minute/off_minute auf dem Player-Row (gesetzt von simulate_match()
+       via _build_windows_map) — korrekt auch für Wechselketten.
+    2. Fallback: Inferenz aus minutes_played + is_sub (funktioniert nur für
+       Nicht-Ketten-Fälle; Starter und Erst-Eingewechselte ohne Folgekette).
     """
+    if 'on_minute' in p and 'off_minute' in p:
+        on  = max(0, int(p['on_minute'] or 0))
+        off = max(on + 1, int(p['off_minute'] or 90))
+        return (max(1, on), off)
+    # Fallback (ohne explizites Zeitfenster)
     mp = int(p.get('minutes_played', 90) or 90)
     if p.get('is_sub'):
         on = max(1, 90 - mp)
@@ -2000,16 +2041,26 @@ def simulate_match(
         for item in a_lineup_orm
     ]
 
-    # 5d. Einsatzminuten aus Wechsel-Events + Eingewechselte als Spieler-Rows
+    # 5d. Einsatzminuten + Zeitfenster aus Wechsel-Events; Eingewechselte als Spieler-Rows
     h_sub_evts = sim.get('h_sim_sub_events', [])
     a_sub_evts = sim.get('a_sim_sub_events', [])
-    h_mmap = _build_minutes_played_map(h_sub_evts)
-    a_mmap = _build_minutes_played_map(a_sub_evts)
+    h_mmap  = _build_minutes_played_map(h_sub_evts)
+    a_mmap  = _build_minutes_played_map(a_sub_evts)
+    h_wmap  = _build_windows_map(h_sub_evts)   # {pid: (on_minute, off_minute)}
+    a_wmap  = _build_windows_map(a_sub_evts)
+
+    def _patch_window(p, mmap, wmap):
+        pid = p.get('id')
+        p['minutes_played'] = mmap.get(pid, 90)
+        if pid in wmap:
+            p['on_minute'],  p['off_minute'] = wmap[pid]
+        else:
+            p['on_minute'],  p['off_minute'] = 0, 90
 
     for p in h_players:
-        p['minutes_played'] = h_mmap.get(p.get('id'), 90)
+        _patch_window(p, h_mmap, h_wmap)
     for p in a_players:
-        p['minutes_played'] = a_mmap.get(p.get('id'), 90)
+        _patch_window(p, a_mmap, a_wmap)
 
     existing_h_pids = {p['id'] for p in h_players}
     existing_a_pids = {p['id'] for p in a_players}
@@ -2028,7 +2079,9 @@ def simulate_match(
             match_strength=match_strengths.get(in_pid),
         )
         row['minutes_played'] = h_mmap.get(in_pid, 0)
-        row['is_sub'] = True
+        row['is_sub']         = True
+        if in_pid in h_wmap:
+            row['on_minute'], row['off_minute'] = h_wmap[in_pid]
         h_players.append(row)
         existing_h_pids.add(in_pid)
     for evt in a_sub_evts:
@@ -2046,7 +2099,9 @@ def simulate_match(
             match_strength=match_strengths.get(in_pid),
         )
         row['minutes_played'] = a_mmap.get(in_pid, 0)
-        row['is_sub'] = True
+        row['is_sub']         = True
+        if in_pid in a_wmap:
+            row['on_minute'], row['off_minute'] = a_wmap[in_pid]
         a_players.append(row)
         existing_a_pids.add(in_pid)
 

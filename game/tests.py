@@ -4204,6 +4204,38 @@ class CardMinuteWindowTests(TestCase):
                 self.assertLessEqual(ev['minute'], 20)
                 self.assertGreaterEqual(ev['minute'], 1)
 
+    def test_chain_player_explicit_window_respected(self):
+        """Kettenspielerin (rein=60, raus=75) → Karten/Verletzung nur zwischen 60 und 75."""
+        from .match_engine import _assign_cards_to_players, _generate_injury_events
+        # Explizite on_minute/off_minute simulieren wie simulate_match() sie setzt
+        player = {
+            'id': 99,
+            'name': 'Goretzka',
+            'minutes_played': 15,
+            'is_sub': True,         # Fallback würde fälschlich (75, 90) ergeben
+            'on_minute':  60,       # Echtes Fenster: 60–75
+            'off_minute': 75,
+            'freshness': 80,
+        }
+        # Karten: Minute muss zwischen 60 und 75 liegen
+        for _ in range(30):
+            _, evts = _assign_cards_to_players([player], yellow_count=1, red_count=1)
+            for ev in evts:
+                self.assertGreaterEqual(ev['minute'], 60,
+                    f"Karte vor on_minute=60: {ev['minute']}")
+                self.assertLessEqual(ev['minute'], 75,
+                    f"Karte nach off_minute=75: {ev['minute']}")
+        # Verletzungen: Minute muss zwischen 60 und 75 liegen
+        import random
+        for seed in range(40):
+            random.seed(seed)
+            evts = _generate_injury_events([player], club_side='home', medizin_factor=5.0)
+            for ev in evts:
+                self.assertGreaterEqual(ev['minute'], 60,
+                    f"Verletzung vor on_minute=60: {ev['minute']}")
+                self.assertLessEqual(ev['minute'], 75,
+                    f"Verletzung nach off_minute=75: {ev['minute']}")
+
 
 class InjuryMinuteWindowTests(TestCase):
     """_generate_injury_events() verletzt nie die randint-Grenzen, auch bei <10 Minuten."""
