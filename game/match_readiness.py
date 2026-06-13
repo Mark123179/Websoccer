@@ -161,12 +161,84 @@ def _score_formation(formation_dict, players):
     return (filled, hp, np_, effective_strength)
 
 
+# ── Positionsgruppen für Bank-Vielfalt ───────────────────────────────────────
+# Primärposition → Vielfalt-Kategorie ('goalkeeper'|'defense'|'midfield'|'attack')
+_POS_CATEGORY = {
+    'TW':  'goalkeeper',
+    'IV':  'defense',  'LV': 'defense',  'RV':  'defense',
+    'LOV': 'defense',  'ROV': 'defense',
+    'DM':  'midfield', 'ZM': 'midfield', 'LM':  'midfield',
+    'RM':  'midfield', 'LA': 'midfield', 'RA':  'midfield',
+    'OM':  'midfield',
+    'ST':  'attack',   'LF': 'attack',   'RF':  'attack',
+    'MS':  'attack',
+}
+
+_DIVERSITY_GROUPS = ('defense', 'midfield', 'attack')
+
+
+def _build_bench(players, used_pks, max_bench=7):
+    """Wählt Bankspieler aus nicht gestarteten Spielern.
+
+    Strategie (Reihenfolge):
+      1. 1 Ersatztorwart (falls vorhanden)
+      2. Je 1 Spieler aus Abwehr, Mittelfeld, Angriff (Positionsvielfalt)
+      3. Restliche Plätze nach Stärke auffüllen (bis max_bench)
+
+    Args:
+        players:   Alle Spieler des Vereins, absteigend nach Stärke sortiert.
+        used_pks:  Menge der PKs, die bereits in der Startelf stehen.
+        max_bench: Maximale Bankgröße (Standard 7).
+
+    Returns:
+        Liste von Player-PKs für die Bank (ohne Duplikate, ohne Starter).
+    """
+    reserves = [p for p in players if p.pk not in used_pks]
+    bench_pks: list[int] = []
+    bench_set: set[int] = set()
+
+    def _add(pk):
+        bench_pks.append(pk)
+        bench_set.add(pk)
+
+    # 1. Ersatztorwart
+    for p in reserves:
+        if len(bench_pks) >= max_bench:
+            break
+        cat = _POS_CATEGORY.get(getattr(p, 'primary_position', '') or '', '')
+        if cat == 'goalkeeper':
+            _add(p.pk)
+            break
+
+    # 2. Positionsvielfalt: je 1 Abwehr, Mittelfeld, Angriff
+    for group in _DIVERSITY_GROUPS:
+        if len(bench_pks) >= max_bench:
+            break
+        for p in reserves:
+            if p.pk in bench_set:
+                continue
+            cat = _POS_CATEGORY.get(getattr(p, 'primary_position', '') or '', '')
+            if cat == group:
+                _add(p.pk)
+                break
+
+    # 3. Restliche Plätze nach Stärke (Reihenfolge der reserves = absteigend)
+    for p in reserves:
+        if len(bench_pks) >= max_bench:
+            break
+        if p.pk not in bench_set:
+            _add(p.pk)
+
+    return bench_pks
+
+
 def ensure_default_tactic(club):
     """Legt TacticSetup (Pro-Kader) an oder repariert ihn.
 
     Formationsauswahl: alle gültigen 11-Spieler-Formationen werden bewertet.
     Scoring: maximale HP-Besetzung, dann maximale NP-Besetzung.
     Positionsfremd (FP) wird nie zugewiesen.
+    Bank: bester Ersatztorwart + je 1 Abwehr/Mittelfeld/Angriff + Stärke-Füller.
 
     Gibt (tactic_setup, was_changed) zurück.
     Falls der Kader < 11 Spieler hat, wird nichts geändert (was_changed=False).
@@ -238,9 +310,13 @@ def ensure_default_tactic(club):
             assigned[slot['key']] = chosen.pk
             used.add(chosen.pk)
 
+    # 3. Bank mit besten Reservespielern füllen (Vielfalt + Stärke)
+    bench = _build_bench(players, used)
+
     tactic.formation = best_formation
     tactic.lineup = assigned
-    tactic.save(update_fields=['formation', 'lineup', 'updated_at'])
+    tactic.bench = bench
+    tactic.save(update_fields=['formation', 'lineup', 'bench', 'updated_at'])
     return tactic, True
 
 
