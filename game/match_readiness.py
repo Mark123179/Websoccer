@@ -177,6 +177,33 @@ _POS_CATEGORY = {
 _DIVERSITY_GROUPS = ('defense', 'midfield', 'attack')
 
 
+def _has_valid_bench(bench, squad_pks, injured_pks):
+    """Prüft ob die Bank noch valide ist.
+
+    Valide wenn:
+    - Nicht leer
+    - Alle PKs gehören noch zum Kader des Vereins
+    - Kein Bankspieler ist verletzt (ws_injured)
+
+    Args:
+        bench:        Liste von Player-PKs (TacticSetup.bench)
+        squad_pks:    Menge aller Spieler-PKs des Vereins
+        injured_pks:  Menge der verletzten Spieler-PKs des Vereins
+
+    Returns:
+        True  → Bank ist gültig, manuell gesetzte Bänke bleiben unberührt
+        False → Bank muss neu aufgebaut werden
+    """
+    if not bench:
+        return False
+    bench_set = set(bench)
+    if not bench_set.issubset(squad_pks):
+        return False
+    if bench_set & injured_pks:
+        return False
+    return True
+
+
 def _build_bench(players, used_pks, max_bench=7):
     """Wählt Bankspieler aus nicht gestarteten Spielern.
 
@@ -458,15 +485,21 @@ def prepare_matchday_lineups(league, matchday, season):
     - InactivityRecord anlegen (Sportgericht)
     - home_lineup_malus / away_lineup_malus auf SeasonFixture setzen
 
+    Zusätzlich wird bei jedem Spieltag die Bank jedes Vereins geprüft:
+    - Leere Bänke oder Bänke mit Spielern, die nicht mehr im Kader sind oder
+      verletzt sind (ws_injured), werden automatisch via _build_bench neu befüllt.
+    - Manuell gesetzte Bänke mit ausschließlich gültigen Spielern bleiben unberührt.
+
     Returns:
         dict {
-          'total':    Anzahl geprüfte Fixtures,
-          'filled':   Anzahl gesamt gefüllte/reparierte Aufstellungen,
-          'penalized': Anzahl bestrafter Manager,
-          'skipped':  Anzahl Vereine mit <11 Spielern (nicht füllbar),
+          'total':         Anzahl geprüfte Fixtures,
+          'filled':        Anzahl gesamt gefüllte/reparierte Aufstellungen,
+          'penalized':     Anzahl bestrafter Manager,
+          'skipped':       Anzahl Vereine mit <11 Spielern (nicht füllbar),
+          'bench_rebuilt': Anzahl Bänke, die automatisch neu aufgebaut wurden,
         }
     """
-    from .models import InactivityRecord, SeasonFixture, TacticSetup
+    from .models import InactivityRecord, Player, SeasonFixture, TacticSetup
 
     fixtures = list(
         SeasonFixture.objects.filter(
@@ -477,7 +510,7 @@ def prepare_matchday_lineups(league, matchday, season):
         ).select_related('home_club__managed_by', 'away_club__managed_by')
     )
 
-    stats = {'total': len(fixtures), 'filled': 0, 'penalized': 0, 'skipped': 0}
+    stats = {'total': len(fixtures), 'filled': 0, 'penalized': 0, 'skipped': 0, 'bench_rebuilt': 0}
 
     for fixture in fixtures:
         fixture_dirty = False
@@ -495,6 +528,30 @@ def prepare_matchday_lineups(league, matchday, season):
             if valid:
                 setattr(fixture, lineup_attr, True)
                 fixture_dirty = True
+
+                # Bank-Validierung: ungültige/leere Bänke automatisch neu aufbauen.
+                # Manuell gesetzte Bänke mit ausschließlich gültigen Spielern bleiben unberührt.
+                squad_qs = Player.objects.filter(club=club)
+                squad_pks = set(squad_qs.values_list('pk', flat=True))
+                injured_pks = set(
+                    squad_qs.filter(
+                        ws_injury_type__isnull=False,
+                        ws_injury_days_remaining__gt=0,
+                    ).exclude(ws_injury_type='').values_list('pk', flat=True)
+                )
+                if not _has_valid_bench(setup.bench or [], squad_pks, injured_pks):
+                    all_players = list(
+                        squad_qs.select_related('strength_profile')
+                    )
+                    all_players.sort(key=_player_base_strength, reverse=True)
+                    # Verletzte Spieler aus dem Kandidaten-Pool ausschließen,
+                    # damit die neu aufgebaute Bank garantiert keine Verletzten enthält.
+                    available_players = [p for p in all_players if p.pk not in injured_pks]
+                    used_pks = set((setup.lineup or {}).values())
+                    setup.bench = _build_bench(available_players, used_pks)
+                    setup.save(update_fields=['bench', 'updated_at'])
+                    stats['bench_rebuilt'] += 1
+
                 continue
 
             # Aufstellung fehlt — auffüllen
