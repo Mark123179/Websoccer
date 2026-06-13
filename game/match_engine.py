@@ -201,6 +201,50 @@ def _player_row(item: dict, goals: int = 0, assists: int = 0, match_strength: fl
     }
 
 
+def _slot_to_group(slot_code: str) -> str:
+    """Positions-Code → Lineup-Gruppenname (für bench-player rows)."""
+    s = (slot_code or '').upper()
+    if s in ('TW', 'GK'):
+        return 'goalkeeper'
+    if s in ('IV', 'LV', 'RV', 'LOV', 'ROV', 'CB', 'LB', 'RB', 'WB'):
+        return 'defense'
+    if s == 'DM':
+        return 'defensive_midfield'
+    if s in ('ST', 'LF', 'RF', 'CF', 'SS'):
+        return 'attack'
+    return 'midfield'
+
+
+def _build_minutes_played_map(sub_events: list[dict]) -> dict[int, int]:
+    """Einsatzminuten aus Wechsel-Events.
+
+    Starter ohne Wechsel: Default 90 Minuten (nicht im Dict → Caller nimmt 90).
+    Starter ausgewechselt bei Minute M: minutes_played = M.
+    Eingewechselter kommt rein bei M: minutes_played = 90 - M.
+    Wechselkette (rein bei M1, raus bei M2): minutes_played = M2 - M1.
+    """
+    on_min: dict[int, int]  = {}   # Minute, ab der Spieler spielt (0 = Starter)
+    off_min: dict[int, int] = {}   # Minute, in der Spieler rauskommt
+
+    for evt in (sub_events or []):
+        out_pid = evt.get('out')
+        in_pid  = evt.get('in')
+        minute  = int(evt.get('minute', 90) or 90)
+        if out_pid:
+            off_min[out_pid] = minute
+        if in_pid:
+            on_min[in_pid] = minute
+
+    minutes: dict[int, int] = {}
+    for pid, off in off_min.items():
+        start = on_min.get(pid, 0)   # 0 → Starter; sonst Einwechselminute
+        minutes[pid] = max(0, off - start)
+    for pid, on in on_min.items():
+        if pid not in minutes:
+            minutes[pid] = max(0, 90 - on)
+    return minutes
+
+
 def _lineup_players_orm(tactic) -> list[dict]:
     """TacticSetup → Liste von {'slot': slot_dict, 'player': Player-ORM}."""
     from .models import Player
@@ -1521,6 +1565,15 @@ def compute_player_ratings(result: dict) -> dict:
                 elif my_xg >= 1.5:
                     rating += 0.20
 
+        # G) Einsatzminuten (kurze Einsatzzeit → Note zum Neutral-Wert ziehen)
+        mp = p.get('minutes_played', 90)
+        if mp < 15:
+            rating = 3.5 + (rating - 3.5) * 0.20
+        elif mp < 30:
+            rating = 3.5 + (rating - 3.5) * 0.50
+        elif mp < 45:
+            rating = 3.5 + (rating - 3.5) * 0.75
+
         return round(_clamp(rating, 1.0, 6.0), 1)
 
     home_ratings = [
@@ -1898,6 +1951,56 @@ def simulate_match(
         )
         for item in a_lineup_orm
     ]
+
+    # 5d. Einsatzminuten aus Wechsel-Events + Eingewechselte als Spieler-Rows
+    h_sub_evts = sim.get('h_sim_sub_events', [])
+    a_sub_evts = sim.get('a_sim_sub_events', [])
+    h_mmap = _build_minutes_played_map(h_sub_evts)
+    a_mmap = _build_minutes_played_map(a_sub_evts)
+
+    for p in h_players:
+        p['minutes_played'] = h_mmap.get(p.get('id'), 90)
+    for p in a_players:
+        p['minutes_played'] = a_mmap.get(p.get('id'), 90)
+
+    existing_h_pids = {p['id'] for p in h_players}
+    existing_a_pids = {p['id'] for p in a_players}
+    for evt in h_sub_evts:
+        in_pid = evt.get('in')
+        if not in_pid or in_pid in existing_h_pids:
+            continue
+        p_orm = _all_players_by_id.get(in_pid)
+        if not p_orm:
+            continue
+        sc = evt.get('target_slot', 'ZM')
+        row = _player_row(
+            {'slot': {'code': sc, 'group': _slot_to_group(sc), 'key': sc}, 'player': p_orm},
+            goals=h_goals_map.get(in_pid, {}).get('goals', 0),
+            assists=h_goals_map.get(in_pid, {}).get('assists', 0),
+            match_strength=match_strengths.get(in_pid),
+        )
+        row['minutes_played'] = h_mmap.get(in_pid, 0)
+        row['is_sub'] = True
+        h_players.append(row)
+        existing_h_pids.add(in_pid)
+    for evt in a_sub_evts:
+        in_pid = evt.get('in')
+        if not in_pid or in_pid in existing_a_pids:
+            continue
+        p_orm = _all_players_by_id.get(in_pid)
+        if not p_orm:
+            continue
+        sc = evt.get('target_slot', 'ZM')
+        row = _player_row(
+            {'slot': {'code': sc, 'group': _slot_to_group(sc), 'key': sc}, 'player': p_orm},
+            goals=a_goals_map.get(in_pid, {}).get('goals', 0),
+            assists=a_goals_map.get(in_pid, {}).get('assists', 0),
+            match_strength=match_strengths.get(in_pid),
+        )
+        row['minutes_played'] = a_mmap.get(in_pid, 0)
+        row['is_sub'] = True
+        a_players.append(row)
+        existing_a_pids.add(in_pid)
 
     # 5. Formations-Label
     def _fmt(tactic) -> str:

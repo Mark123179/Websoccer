@@ -3781,3 +3781,378 @@ class InjurySubTests(TestCase):
         text = _ticker_comment('sub', 60, in_name='Müller', out_name='Kane')
         self.assertNotIn('(', text)
 
+
+# ── Synthethisches Team-Dict-Hilfsfunktion ────────────────────────────────────
+
+def _make_sim_team(
+    base_id: int = 1,
+    strength: float = 70.0,
+    planned_subs: list | None = None,
+    with_injured_starter: bool = False,
+) -> dict:
+    """Minimales Team-Dict für _simulate_match_minutes ohne ORM."""
+    import random as _r
+    rng = _r.Random(base_id)
+    SLOTS = [
+        ('TW', 'goalkeeper'),
+        ('LV', 'defense'), ('IV', 'defense'), ('IV', 'defense'), ('RV', 'defense'),
+        ('LM', 'midfield'), ('ZM', 'midfield'), ('ZM', 'midfield'), ('RM', 'midfield'),
+        ('ST', 'attack'), ('ST', 'attack'),
+    ]
+    BENCH_POS = ['ST', 'ZM', 'LV', 'ZM', 'ST', 'IV', 'LM']
+    pid_base = base_id * 200
+
+    players = []
+    lineup = []
+    for i, (pos, grp) in enumerate(SLOTS):
+        pid = pid_base + i
+        players.append({
+            'id': pid, 'name': f'P{pid}',
+            'final_strength': max(30.0, strength + rng.gauss(0, 4)),
+            'main_positions': [pos], 'secondary_positions': [],
+            'teamwork': 5, 'freshness': 85,
+            'is_ws_injured': (with_injured_starter and i == 10),
+        })
+        lineup.append({'player_id': pid, 'position': pos, 'group': grp})
+
+    bench: dict = {}
+    bench_pids = []
+    for j, pos in enumerate(BENCH_POS):
+        pid = pid_base + 11 + j
+        bench[pid] = {
+            'id': pid, 'name': f'B{pid}',
+            'final_strength': max(30.0, strength - 5 + rng.gauss(0, 4)),
+            'main_positions': [pos], 'secondary_positions': [],
+            'teamwork': 4, 'freshness': 80, 'is_ws_injured': False,
+        }
+        bench_pids.append(pid)
+
+    return {
+        'team': {'name': f'Team-{base_id}', 'id': base_id},
+        'players': players,
+        'lineup': lineup,
+        'tactic': {},
+        'bench_player_data': bench,
+        'planned_substitutions': planned_subs or [],
+    }
+
+
+# ── Verifikationspunkt 1: Nicht erfüllte Bedingung endgültig verworfen ────────
+
+class SubConditionDiscardExplicitTests(TestCase):
+    """Explizite Szenarien: einmal verworfene Bedingung darf nie nachgeholt werden."""
+
+    def test_fuehrung_at_60_discarded_no_late_rescue(self):
+        """'bei Führung' für Minute 60 — kein Rückstand bei 65 → verworfen.
+        Führung bei Minute 75 darf den Wechsel NICHT nachholen."""
+        subs = [{'in': 10, 'out': 1, 'minute': 60, 'condition': 'fuehrung'}]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 1)   # Rückstand 0:1 → Bedingung nicht erfüllt → verworfen
+        als.process_planned_subs(76, 2, 1)   # jetzt Führung 2:1 → darf NICHT ausgeführt werden
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(10, active_pids)
+        self.assertIn(1, active_pids)
+        self.assertEqual(als.used_substitutions, 0)
+
+    def test_rueckstand_discarded_then_stay_trailing(self):
+        """'bei Rückstand' für Minute 60 — Führung bei 65 → verworfen.
+        Echten Rückstand bei Minute 80 darf NICHT nachholen."""
+        subs = [{'in': 10, 'out': 1, 'minute': 60, 'condition': 'rueckstand'}]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 1, 0)   # Führung → Bedingung 'rueckstand' nicht erfüllt → verworfen
+        als.process_planned_subs(81, 1, 3)   # jetzt Rückstand → trotzdem NICHT ausgeführt
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(10, active_pids)
+        self.assertEqual(als.used_substitutions, 0)
+
+    def test_discard_marks_resolved_idx(self):
+        """_resolved_idxs enthält Index des verworfenen Wechsels nach Prüfung."""
+        from .match_engine import ActiveLineupState
+        subs = [{'in': 10, 'out': 1, 'minute': 60, 'condition': 'fuehrung'}]
+        als = _make_als(subs=subs)
+        self.assertNotIn(0, als._resolved_idxs)
+        als.process_planned_subs(66, 0, 1)   # Bedingung nicht erfüllt → resolved
+        self.assertIn(0, als._resolved_idxs)
+
+    def test_multiple_subs_independent_discard(self):
+        """Zwei Wechsel unabhängig: erster verworfen, zweiter normal ausgeführt."""
+        subs = [
+            {'in': 10, 'out': 1, 'minute': 60, 'condition': 'fuehrung'},
+            {'in': 11, 'out': 2, 'minute': 60, 'condition': 'immer'},
+        ]
+        als = _make_als(subs=subs)
+        als.process_planned_subs(66, 0, 1)   # fuehrung → verworfen; immer → ausgeführt
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(10, active_pids)   # verworfen
+        self.assertIn(11, active_pids)      # ausgeführt
+        self.assertEqual(als.used_substitutions, 1)
+
+
+# ── Verifikationspunkt 2: Gemeinsames Wechselkontingent ───────────────────────
+
+class SharedContingentTests(TestCase):
+    """Verletzungswechsel und geplante Wechsel teilen denselben subs_used-Zähler."""
+
+    def _player(self, pid, pos='ZM', injured=False):
+        return {
+            'id': pid, 'name': f'P{pid}',
+            'final_strength': 60.0,
+            'main_positions': [pos], 'secondary_positions': [],
+            'teamwork': 3, 'freshness': 85, 'is_ws_injured': injured,
+        }
+
+    def test_injury_sub_plus_planned_share_counter(self):
+        """1 Verletzungswechsel + 1 geplanter Wechsel = used_substitutions 2."""
+        from .match_engine import ActiveLineupState
+        lineup  = [
+            {'player_id': 1, 'position': 'ST', 'group': 'attack'},
+            {'player_id': 2, 'position': 'ZM', 'group': 'midfield'},
+        ]
+        players = {1: self._player(1, 'ST', injured=True),
+                   2: self._player(2, 'ZM', injured=False)}
+        bench   = {10: self._player(10, 'ST'), 11: self._player(11, 'ZM')}
+        subs    = [{'in': 11, 'out': 2, 'minute': 60, 'condition': 'immer'}]
+        als = ActiveLineupState(lineup=lineup, players_by_id=players,
+                                bench_by_id=bench, planned_subs=subs)
+        als.process_injury_subs()
+        self.assertEqual(als.used_substitutions, 1)   # Verletzung zählt
+        als.process_planned_subs(66, 0, 0)
+        self.assertEqual(als.used_substitutions, 2)   # geplanter Wechsel ebenfalls
+
+    def test_injury_subs_eat_into_quota_for_planned(self):
+        """MAX_SUBSTITUTIONS verletzte Starter → kein Platz mehr für geplante Wechsel."""
+        from .match_engine import ActiveLineupState, MAX_SUBSTITUTIONS
+        n = MAX_SUBSTITUTIONS
+        lineup  = [{'player_id': i, 'position': 'ZM', 'group': 'midfield'}
+                   for i in range(1, n + 2)]
+        players = {i: self._player(i, 'ZM', injured=True) for i in range(1, n + 2)}
+        bench   = {100 + i: self._player(100 + i, 'ZM') for i in range(n + 3)}
+        subs    = [{'in': 200, 'out': 1, 'minute': 50, 'condition': 'immer'}]
+        bench[200] = self._player(200, 'ZM')
+        als = ActiveLineupState(lineup=lineup, players_by_id=players,
+                                bench_by_id=bench, planned_subs=subs)
+        als.process_injury_subs()
+        self.assertGreaterEqual(als.used_substitutions, min(n, n))
+        pre_planned = als.used_substitutions
+        als.process_planned_subs(56, 0, 0)
+        # geplanter Wechsel darf das Kontingent nicht überschreiten
+        self.assertLessEqual(als.used_substitutions, MAX_SUBSTITUTIONS)
+        if pre_planned >= MAX_SUBSTITUTIONS:
+            self.assertEqual(als.used_substitutions, pre_planned)
+
+    def test_total_subs_never_exceed_max(self):
+        """Summe aus Verletzungs- + geplanten Wechseln ≤ MAX_SUBSTITUTIONS."""
+        from .match_engine import ActiveLineupState, MAX_SUBSTITUTIONS
+        lineup  = [{'player_id': i, 'position': 'ZM', 'group': 'midfield'}
+                   for i in range(1, 12)]
+        players = {i: self._player(i, 'ZM', injured=(i <= 3)) for i in range(1, 12)}
+        bench   = {100 + i: self._player(100 + i, 'ZM') for i in range(10)}
+        subs    = [{'in': 100 + i, 'out': 4 + i, 'minute': 60 + i * 5,
+                    'condition': 'immer'} for i in range(5)]
+        als = ActiveLineupState(lineup=lineup, players_by_id=players,
+                                bench_by_id=bench, planned_subs=subs)
+        als.process_injury_subs()
+        for minute in range(65, 96, 5):
+            als.process_planned_subs(minute, 0, 0)
+        self.assertLessEqual(als.used_substitutions, MAX_SUBSTITUTIONS)
+
+
+# ── Verifikationspunkt 3: Einsatzminuten und Noten ────────────────────────────
+
+class MinutesPlayedTests(TestCase):
+    """_build_minutes_played_map() berechnet Einsatzminuten korrekt."""
+
+    def test_kane_65_goretzka_25(self):
+        """Kane (out=65) → 65 Min; Goretzka (in=65) → 25 Min."""
+        from .match_engine import _build_minutes_played_map
+        events = [{'out': 1, 'in': 10, 'minute': 65}]
+        m = _build_minutes_played_map(events)
+        self.assertEqual(m[1], 65)    # Kane: ausgewechselt in Minute 65
+        self.assertEqual(m[10], 25)   # Goretzka: spielt ab 65, also 90-65=25
+
+    def test_starter_without_sub_not_in_map(self):
+        """Starter ohne Wechsel erscheinen NICHT im Dict (Caller nimmt Default 90)."""
+        from .match_engine import _build_minutes_played_map
+        events = [{'out': 1, 'in': 10, 'minute': 65}]
+        m = _build_minutes_played_map(events)
+        self.assertNotIn(3, m)    # pid=3 war nicht betroffen
+        self.assertNotIn(5, m)
+
+    def test_empty_events_empty_map(self):
+        """Keine Wechsel-Events → leeres Dict."""
+        from .match_engine import _build_minutes_played_map
+        self.assertEqual(_build_minutes_played_map([]), {})
+        self.assertEqual(_build_minutes_played_map(None), {})
+
+    def test_chain_out_uses_minimum(self):
+        """Wechselkette: Goretzka rein bei 60, raus bei 75 → 15 Minuten.
+        Kane raus bei 60 → 60 Min. Müller rein bei 75 → 15 Min."""
+        from .match_engine import _build_minutes_played_map
+        events = [
+            {'out': 1,  'in': 10, 'minute': 60},  # Kane → Goretzka
+            {'out': 10, 'in': 11, 'minute': 75},  # Goretzka → Müller
+        ]
+        m = _build_minutes_played_map(events)
+        self.assertEqual(m[1],  60)   # Kane: Starter, raus bei 60
+        self.assertEqual(m[10], 15)   # Goretzka: rein 60, raus 75 → 75-60=15
+        self.assertEqual(m[11], 15)   # Müller: rein 75 → 90-75=15
+
+    def test_injury_sub_at_minute_5(self):
+        """Verletzungswechsel (Minute 5): Starter 5 Min, Ersatz 85 Min."""
+        from .match_engine import _build_minutes_played_map
+        events = [{'out': 1, 'in': 99, 'minute': 5, 'condition': 'verletzung'}]
+        m = _build_minutes_played_map(events)
+        self.assertEqual(m[1],  5)
+        self.assertEqual(m[99], 85)
+
+    def test_rating_modifier_short_appearance(self):
+        """Spieler mit <30 Min Einsatz erhält Note näher an 3.5 als Vollspieler."""
+        from .match_engine import compute_player_ratings
+        def _r(mp, goals=0):
+            return {
+                'home_goals': 3, 'away_goals': 0,
+                'home_xg': 2.5, 'away_xg': 0.8,
+                'match_stats': {
+                    'home_yellow': 0, 'away_yellow': 0,
+                    'home_red': 0, 'away_red': 0,
+                    'home_shots': 10, 'away_shots': 4,
+                    'home_fouls': 8, 'away_fouls': 6,
+                    'home_pressing_ball_wins': 2, 'away_pressing_ball_wins': 1,
+                    'home_pressing_bypassed': 0, 'away_pressing_bypassed': 0,
+                    'home_possession': 60, 'away_possession': 40,
+                },
+                'home_strength': {'overall': 75}, 'away_strength': {'overall': 65},
+                'home_club_id': 1, 'away_club_id': 2,
+                'home_club_name': 'H', 'away_club_name': 'A',
+                'home_club_crest': None, 'away_club_crest': None,
+                'home_club_short': 'H', 'away_club_short': 'A',
+                'home_players': [{'id': 1, 'name': 'X', 'position': 'ZM', 'group': 'midfield',
+                                   'goals': goals, 'assists': 0, 'final_strength': 70,
+                                   'base_strength': 70, 'final_strength_raw': 70,
+                                   'pos_label': 'HP', 'freshness': 85, 'teamwork': 5,
+                                   'potential': 75, 'minutes_played': mp}],
+                'away_players': [],
+            }
+        result_full  = compute_player_ratings(_r(90))
+        result_short = compute_player_ratings(_r(20))
+        full_rating  = result_full['home_ratings'][0]['rating']
+        short_rating = result_short['home_ratings'][0]['rating']
+        # Beide müssen gültig sein; kurzer Einsatz näher an 3.5
+        self.assertTrue(1.0 <= full_rating  <= 6.0)
+        self.assertTrue(1.0 <= short_rating <= 6.0)
+        self.assertLess(abs(short_rating - 3.5), abs(full_rating - 3.5))
+
+
+# ── Verifikationspunkt 4: Wechselkette (Goretzka → Müller findet ST-Slot) ─────
+
+class SubChainTests(TestCase):
+    """Wechselkette: 2. Wechsel findet Goretzkas aktuellen Slot, nicht Kanes."""
+
+    def _make_chain_als(self):
+        """ALS mit Kane (ST, pid=1) → Goretzka (Bank ST, pid=10) → Müller (Bank ST, pid=11)."""
+        from .match_engine import ActiveLineupState
+        lineup = [
+            {'player_id': 1, 'position': 'ST', 'group': 'attack'},
+            {'player_id': 2, 'position': 'ZM', 'group': 'midfield'},
+            {'player_id': 3, 'position': 'TW', 'group': 'goalkeeper'},
+        ]
+        players = {
+            1: {'id': 1,  'name': 'Kane',     'final_strength': 90.0,
+                'main_positions': ['ST'], 'secondary_positions': [], 'teamwork': 5, 'freshness': 90},
+            2: {'id': 2,  'name': 'ZM',       'final_strength': 75.0,
+                'main_positions': ['ZM'], 'secondary_positions': [], 'teamwork': 5, 'freshness': 90},
+            3: {'id': 3,  'name': 'TW',       'final_strength': 80.0,
+                'main_positions': ['TW'], 'secondary_positions': [], 'teamwork': 5, 'freshness': 90},
+        }
+        bench = {
+            10: {'id': 10, 'name': 'Goretzka', 'final_strength': 80.0,
+                 'main_positions': ['ST'], 'secondary_positions': [], 'teamwork': 5, 'freshness': 85},
+            11: {'id': 11, 'name': 'Müller',   'final_strength': 78.0,
+                 'main_positions': ['ST'], 'secondary_positions': [], 'teamwork': 5, 'freshness': 85},
+        }
+        subs = [
+            {'in': 10, 'out': 1,  'minute': 60, 'condition': 'immer'},  # Kane → Goretzka
+            {'in': 11, 'out': 10, 'minute': 75, 'condition': 'immer'},  # Goretzka → Müller
+        ]
+        return ActiveLineupState(lineup=lineup, players_by_id=players,
+                                 bench_by_id=bench, planned_subs=subs)
+
+    def test_first_sub_goretzka_at_st(self):
+        """Nach Sub 1: Goretzka auf dem Feld, Kane weg."""
+        als = self._make_chain_als()
+        als.process_planned_subs(66, 0, 0)
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertIn(10, active_pids)    # Goretzka
+        self.assertNotIn(1, active_pids)  # Kane raus
+
+    def test_second_sub_muller_at_st_goretzka_gone(self):
+        """Nach Sub 1+2: Müller auf dem Feld, Kane + Goretzka weg."""
+        als = self._make_chain_als()
+        als.process_planned_subs(66, 0, 0)   # Kane → Goretzka
+        als.process_planned_subs(76, 0, 0)   # Goretzka → Müller
+        active_pids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertIn(11, active_pids)     # Müller
+        self.assertNotIn(10, active_pids)  # Goretzka raus
+        self.assertNotIn(1, active_pids)   # Kane raus
+
+    def test_second_sub_finds_goretzkas_slot_not_original(self):
+        """_pid_to_slot von Goretzka (pid=10) zeigt nach Sub 1 auf Kanes alten ST-Slot."""
+        als = self._make_chain_als()
+        als.process_planned_subs(66, 0, 0)   # Kane → Goretzka
+        # Goretzka muss jetzt den ST-Slot halten (übernommen von Kane)
+        slot = als._pid_to_slot.get(10)
+        self.assertIsNotNone(slot)
+        self.assertEqual(slot.get('position'), 'ST')
+
+    def test_chain_slot_target_in_sub_events(self):
+        """Beide Sub-Events haben target_slot == 'ST'."""
+        als = self._make_chain_als()
+        als.process_planned_subs(66, 0, 0)
+        als.process_planned_subs(76, 0, 0)
+        targets = [e['target_slot'] for e in als.sub_events]
+        self.assertEqual(targets.count('ST'), 2)
+        self.assertEqual(als.used_substitutions, 2)
+
+
+# ── Verifikationspunkt 5: Keine ORM-Abfragen in der Segment-Schleife ─────────
+
+class NoOrmInSimLoopTests(TestCase):
+    """_simulate_match_minutes() führt während der 18 Segmente keine DB-Abfragen aus."""
+
+    def test_zero_queries_in_segment_loop(self):
+        """Reiner Dict-Aufruf → assertNumQueries(0)."""
+        from .match_engine import _simulate_match_minutes
+        home = _make_sim_team(base_id=1, strength=72.0)
+        away = _make_sim_team(base_id=2, strength=68.0)
+        with self.assertNumQueries(0):
+            sim = _simulate_match_minutes(home, away)
+        self.assertIn('home_goals', sim)
+        self.assertIn('h_sim_sub_events', sim)
+
+    def test_zero_queries_with_planned_subs(self):
+        """Auch mit geplanten Wechseln keine DB-Abfragen."""
+        from .match_engine import _simulate_match_minutes, MAX_SUBSTITUTIONS
+        subs = [
+            {'in': 400 + i, 'out': 200 + i, 'minute': 60 + i * 5, 'condition': 'immer'}
+            for i in range(MAX_SUBSTITUTIONS)
+        ]
+        home = _make_sim_team(base_id=3, strength=70.0, planned_subs=[
+            {'in': 3 * 200 + 11, 'out': 3 * 200 + 9, 'minute': 60, 'condition': 'immer'},
+        ])
+        away = _make_sim_team(base_id=4, strength=70.0)
+        with self.assertNumQueries(0):
+            sim = _simulate_match_minutes(home, away)
+        self.assertIsInstance(sim['h_sim_sub_events'], list)
+
+    def test_zero_queries_with_injured_starter(self):
+        """Verletzungswechsel (process_injury_subs) erzeugt ebenfalls keine Abfragen."""
+        from .match_engine import _simulate_match_minutes
+        home = _make_sim_team(base_id=5, strength=70.0, with_injured_starter=True)
+        away = _make_sim_team(base_id=6, strength=70.0)
+        with self.assertNumQueries(0):
+            sim = _simulate_match_minutes(home, away)
+        # Verletzungswechsel muss stattgefunden haben
+        all_subs = sim.get('h_sim_sub_events', [])
+        injury_subs = [e for e in all_subs if e.get('condition') == 'verletzung']
+        self.assertEqual(len(injury_subs), 1)
+
