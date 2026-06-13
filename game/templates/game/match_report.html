@@ -81,10 +81,14 @@
                     </div>
 
                     {% elif evt.type == 'sub' %}
-                    <div class="mr-tk-entry mr-tk--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                    <div class="mr-tk-entry mr-tk--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}{% if evt.is_injury_sub %} mr-tk--injury-sub{% endif %}">
                         <div class="mr-tk-min">{{ evt.minute }}'</div>
                         <div class="mr-tk-icon mr-tk-icon--sub">&#x21C5;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-text">
+                            {{ evt.commentary }}
+                            {% if evt.is_injury_sub %}<span class="mr-tk-badge mr-tk-badge--inj-sub">Verletzung</span>{% endif %}
+                            {% if evt.position_relation == 'FP' %}<span class="mr-tk-badge mr-tk-badge--fp">FP</span>{% elif evt.position_relation == 'NP' %}<span class="mr-tk-badge mr-tk-badge--np">NP</span>{% endif %}
+                        </div>
                         <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
                     </div>
 

@@ -375,6 +375,55 @@ class ActiveLineupState:
                 'condition':         cond,
             })
 
+    def process_injury_subs(self) -> None:
+        """Wechselt verletzte Startspieler (is_ws_injured=True) automatisch aus.
+
+        Feuert in Minute 5 (früheste sichtbare Wechselminute im Ticker).
+        Zählt zum MAX_SUBSTITUTIONS=5-Kontingent.
+        Bankspiele werden nach bestem Positionsfit für den freiwerdenden Slot
+        ausgewählt. Kein Wechsel wenn kein Bankspiele verfügbar oder Kontingent
+        erschöpft.
+        """
+        injured_slots = [
+            s for s in self._lineup_slots
+            if self.players_by_id.get(s['player_id'], {}).get('is_ws_injured')
+        ]
+        for slot in injured_slots:
+            if not self.can_substitute():
+                break
+            if not self._bench_available:
+                break
+            out_pid = slot['player_id']
+            target_slot = slot['position']
+            best_in_pid: int | None = None
+            best_factor = -1.0
+            for bench_pid in self._bench_available:
+                if bench_pid in self._pid_to_slot:
+                    continue
+                factor, _ = _get_position_fit(self.players_by_id.get(bench_pid, {}), target_slot)
+                if factor > best_factor:
+                    best_factor = factor
+                    best_in_pid = bench_pid
+            if best_in_pid is None:
+                continue
+            _, relation = _get_position_fit(self.players_by_id.get(best_in_pid, {}), target_slot)
+            executed_minute = 5
+            slot['player_id'] = best_in_pid
+            del self._pid_to_slot[out_pid]
+            self._pid_to_slot[best_in_pid] = slot
+            self._bench_available.discard(best_in_pid)
+            self.used_substitutions += 1
+            self.player_off_minute[out_pid] = executed_minute
+            self.player_on_minute[best_in_pid] = executed_minute
+            self.sub_events.append({
+                'in':                best_in_pid,
+                'out':               out_pid,
+                'minute':            executed_minute,
+                'target_slot':       target_slot,
+                'position_relation': relation,
+                'condition':         'verletzung',
+            })
+
 
 # ── ORM → Team-Dict Bridge ────────────────────────────────────────────────────
 
@@ -429,6 +478,7 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None, st
             'secondary_positions': list(p.secondary_positions),
             'teamwork': _teamwork(p),
             'freshness': _freshness,
+            'is_ws_injured': bool(getattr(p, 'ws_injury_days_remaining', 0) or 0),
         })
 
     lineup_list: list[dict] = []
@@ -920,6 +970,10 @@ def _simulate_match_minutes(
         bench_by_id=away_team.get('bench_player_data') or {},
         planned_subs=away_team.get('planned_substitutions') or [],
     )
+
+    # ── Verletzungswechsel vor Anpfiff (Minute 5) ────────────────────────────
+    h_als.process_injury_subs()
+    a_als.process_injury_subs()
 
     h_goals = 0
     a_goals = 0
@@ -1799,6 +1853,7 @@ def simulate_match(
                 'secondary_positions': list(getattr(p, 'secondary_positions', []) or []),
                 'teamwork':            _teamwork(p),
                 'freshness':           fresh,
+                'is_ws_injured':       bool(getattr(p, 'ws_injury_days_remaining', 0) or 0),
             }
         return result
 

@@ -365,6 +365,28 @@
     color: rgba(244, 251, 255, 0.25);
 }
 
+.mr-tk-badge--fp {
+    background: rgba(255, 120, 50, 0.15);
+    border: 1px solid rgba(255, 120, 50, 0.4);
+    color: rgb(255, 140, 60);
+}
+
+.mr-tk-badge--np {
+    background: rgba(255, 210, 50, 0.12);
+    border: 1px solid rgba(255, 210, 50, 0.35);
+    color: rgb(240, 200, 60);
+}
+
+.mr-tk-badge--inj-sub {
+    background: rgba(255, 80, 80, 0.13);
+    border: 1px solid rgba(255, 80, 80, 0.35);
+    color: rgba(255, 100, 100, 0.9);
+}
+
+.mr-tk--injury-sub .mr-tk-icon--sub {
+    color: rgba(255, 100, 100, 0.8);
+}
+
 .mr-tk-club {
     color: rgba(244, 251, 255, 0.3);
     font-size: 10px;

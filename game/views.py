@@ -3452,7 +3452,8 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
 
 
 def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
-                    score_h=0, score_a=0, days=0, in_name='', out_name=''):
+                    score_h=0, score_a=0, days=0, in_name='', out_name='',
+                    target_slot='', position_relation=''):
     """Deterministischer deutscher Kommentartext für ein Ticker-Ereignis."""
     seed = abs(hash(f"{evt_type}|{minute}|{player}|{in_name}"))
     score = f"{score_h}:{score_a}"
@@ -3494,10 +3495,16 @@ def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
                 f"Gelbe Karte für {player}.",
             ]
     elif evt_type == 'sub':
+        _rel_labels = {'HP': 'Stammposition', 'NP': 'Nebenposition', 'FP': 'Fremdposition'}
+        _rel_label = _rel_labels.get(position_relation or '', '')
+        _slot_info = (
+            f' ({target_slot} \u2014 {_rel_label})' if target_slot and _rel_label
+            else (f' ({target_slot})' if target_slot else '')
+        )
         opts = [
-            f"Wechsel: {in_name} kommt für {out_name}.",
-            f"{out_name} verlässt das Feld, {in_name} betritt den Platz.",
-            f"Einwechslung: {in_name} ersetzt {out_name}.",
+            f"Wechsel: {in_name} kommt für {out_name}{_slot_info}.",
+            f"{out_name} verlässt das Feld, {in_name} betritt den Platz{_slot_info}.",
+            f"Einwechslung: {in_name} ersetzt {out_name}{_slot_info}.",
         ]
     elif evt_type == 'injury':
         opts = [
@@ -3678,10 +3685,16 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
         })
     for sub in (home_subs_enriched or []):
         raw.append({'type': 'sub', 'team': 'home', 'minute': sub['minute'],
-                    'in_name': sub['in_name'], 'out_name': sub['out_name']})
+                    'in_name': sub['in_name'], 'out_name': sub['out_name'],
+                    'target_slot': sub.get('target_slot', ''),
+                    'position_relation': sub.get('position_relation', ''),
+                    'is_injury_sub': sub.get('condition') == 'verletzung'})
     for sub in (away_subs_enriched or []):
         raw.append({'type': 'sub', 'team': 'away', 'minute': sub['minute'],
-                    'in_name': sub['in_name'], 'out_name': sub['out_name']})
+                    'in_name': sub['in_name'], 'out_name': sub['out_name'],
+                    'target_slot': sub.get('target_slot', ''),
+                    'position_relation': sub.get('position_relation', ''),
+                    'is_injury_sub': sub.get('condition') == 'verletzung'})
     for ce in (data.get('card_events') or []):
         pid  = ce.get('player_id')
         name = ce.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
@@ -3731,6 +3744,8 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             evt['score_a'] = score_a
             evt['commentary'] = _ticker_comment(
                 'sub', evt['minute'], in_name=evt['in_name'], out_name=evt['out_name'],
+                target_slot=evt.get('target_slot', ''),
+                position_relation=evt.get('position_relation', ''),
             )
         elif t == 'card':
             evt['score_h'] = score_h

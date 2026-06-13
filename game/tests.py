@@ -3677,3 +3677,107 @@ class FreshnessEngineIntegrationTests(TestCase):
         self.assertLessEqual(injuries_best_medizin, injuries_no_medizin,
                              "Besseres Medizinzentrum soll weniger Verletzungen produzieren")
 
+
+class InjurySubTests(TestCase):
+    """process_injury_subs() — Verletzungswechsel vor Anpfiff."""
+
+    def _make_als(self, lineup, players_by_id, bench_by_id, planned_subs=None):
+        from .match_engine import ActiveLineupState
+        return ActiveLineupState(
+            lineup=lineup,
+            players_by_id=players_by_id,
+            bench_by_id=bench_by_id,
+            planned_subs=planned_subs or [],
+        )
+
+    def _player(self, pid, position='ZM', injured=False):
+        return {
+            'id': pid,
+            'name': f'Spieler {pid}',
+            'final_strength': 70.0,
+            'main_positions': [position],
+            'secondary_positions': [],
+            'teamwork': 5,
+            'freshness': 80,
+            'is_ws_injured': injured,
+        }
+
+    def test_no_injured_starters_no_subs(self):
+        """Keine verletzten Starter → keine Wechsel."""
+        lineup = [{'player_id': 1, 'position': 'ZM', 'group': 'midfield'}]
+        players = {1: self._player(1, 'ZM', injured=False)}
+        bench = {2: self._player(2, 'ZM', injured=False)}
+        als = self._make_als(lineup, players, bench)
+        als.process_injury_subs()
+        self.assertEqual(als.used_substitutions, 0)
+        self.assertEqual(als.sub_events, [])
+
+    def test_injured_starter_is_subbed_out(self):
+        """Verletzter Starter wird automatisch ausgewechselt."""
+        lineup = [{'player_id': 1, 'position': 'ZM', 'group': 'midfield'}]
+        players = {1: self._player(1, 'ZM', injured=True)}
+        bench = {2: self._player(2, 'ZM', injured=False)}
+        als = self._make_als(lineup, players, bench)
+        als.process_injury_subs()
+        self.assertEqual(als.used_substitutions, 1)
+        self.assertEqual(len(als.sub_events), 1)
+        evt = als.sub_events[0]
+        self.assertEqual(evt['out'], 1)
+        self.assertEqual(evt['in'], 2)
+        self.assertEqual(evt['minute'], 5)
+        self.assertEqual(evt['condition'], 'verletzung')
+        self.assertEqual(evt['target_slot'], 'ZM')
+
+    def test_injured_starter_removed_from_active_lineup(self):
+        """Nach Verletzungswechsel ist verletzter Spieler nicht mehr aktiv."""
+        lineup = [{'player_id': 1, 'position': 'ST', 'group': 'attack'}]
+        players = {1: self._player(1, 'ST', injured=True)}
+        bench = {2: self._player(2, 'ZM', injured=False)}
+        als = self._make_als(lineup, players, bench)
+        als.process_injury_subs()
+        active_ids = {s['player_id'] for s in als.get_active_lineup()}
+        self.assertNotIn(1, active_ids)
+        self.assertIn(2, active_ids)
+
+    def test_injury_sub_counts_toward_contingent(self):
+        """Verletzungswechsel zählt zum MAX_SUBSTITUTIONS-Kontingent."""
+        from .match_engine import MAX_SUBSTITUTIONS
+        lineup = [{'player_id': i, 'position': 'ZM', 'group': 'midfield'} for i in range(1, MAX_SUBSTITUTIONS + 2)]
+        players = {i: self._player(i, 'ZM', injured=(i <= MAX_SUBSTITUTIONS + 1)) for i in range(1, MAX_SUBSTITUTIONS + 2)}
+        bench = {100 + i: self._player(100 + i, 'ZM') for i in range(MAX_SUBSTITUTIONS + 2)}
+        als = self._make_als(lineup, players, bench)
+        als.process_injury_subs()
+        self.assertLessEqual(als.used_substitutions, MAX_SUBSTITUTIONS)
+
+    def test_no_bench_available_no_sub(self):
+        """Kein Bankspiele → kein Wechsel, kein Absturz."""
+        lineup = [{'player_id': 1, 'position': 'ZM', 'group': 'midfield'}]
+        players = {1: self._player(1, 'ZM', injured=True)}
+        als = self._make_als(lineup, players, bench_by_id={})
+        als.process_injury_subs()
+        self.assertEqual(als.used_substitutions, 0)
+        self.assertEqual(als.sub_events, [])
+
+    def test_injury_sub_position_relation_set(self):
+        """position_relation ist HP wenn Bankspiele gleiche Position hat."""
+        lineup = [{'player_id': 1, 'position': 'ST', 'group': 'attack'}]
+        players = {1: self._player(1, 'ST', injured=True)}
+        bench = {2: self._player(2, 'ST', injured=False)}
+        als = self._make_als(lineup, players, bench)
+        als.process_injury_subs()
+        self.assertEqual(als.sub_events[0]['position_relation'], 'HP')
+
+    def test_ticker_comment_includes_slot_and_relation(self):
+        """_ticker_comment('sub') enthält Slot und Relation im Text."""
+        from .views import _ticker_comment
+        text = _ticker_comment('sub', 5, in_name='Müller', out_name='Kane',
+                               target_slot='ST', position_relation='FP')
+        self.assertIn('ST', text)
+        self.assertIn('Fremdposition', text)
+
+    def test_ticker_comment_sub_no_slot_no_extra_info(self):
+        """_ticker_comment('sub') ohne Slot/Relation → kein Klammer-Anhang."""
+        from .views import _ticker_comment
+        text = _ticker_comment('sub', 60, in_name='Müller', out_name='Kane')
+        self.assertNotIn('(', text)
+
