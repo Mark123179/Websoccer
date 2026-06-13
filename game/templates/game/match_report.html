@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -56,68 +56,68 @@
 
         <div class="mr-left">
 
-            {# ── Kombinierte Ereignisleiste ─────────────────────────────── #}
+            {# ── Live-Ticker ────────────────────────────────────────────── #}
             <div class="mr-section">
-                <h3 class="mr-section-title">Spielverlauf</h3>
-                {% if rc.combined_events %}
-                <div class="mr-timeline">
-                    {% for evt in rc.combined_events %}
+                <h3 class="mr-section-title">Live-Ticker</h3>
+                <div class="mr-ticker">
+
+                    {# Abpfiff #}
+                    <div class="mr-tk-entry mr-tk--whistle">
+                        <div class="mr-tk-min">90'</div>
+                        <div class="mr-tk-icon mr-tk-icon--whistle">&#x25FC;</div>
+                        <div class="mr-tk-text">Abpfiff &mdash; Endstand {{ report.home_goals }}:{{ report.away_goals }}</div>
+                        <div class="mr-tk-badge mr-tk-badge--final">{{ report.home_goals }}:{{ report.away_goals }}</div>
+                    </div>
+
+                    {# Ereignisse: neustes zuerst (reversed) #}
+                    {% for evt in rc.combined_events reversed %}
+
                     {% if evt.type == 'goal' %}
-                    <div class="mr-event {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-event-minute">{{ evt.minute }}'</div>
-                        <div class="mr-event-detail">
-                            <span class="mr-event-scorer">
-                                &#x26BD; {{ evt.scorer_name }}
-                                <em>({{ evt.scorer_pos }})</em>
-                            </span>
-                            {% if evt.assister_name %}
-                                <span class="mr-event-assist">&#x25B8; {{ evt.assister_name }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="mr-event-club">
-                            {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
-                        </div>
+                    <div class="mr-tk-entry mr-tk--goal {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-tk-min">{{ evt.minute }}'</div>
+                        <div class="mr-tk-icon">&#x26BD;</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-badge mr-tk-badge--goal">{{ evt.score_h }}:{{ evt.score_a }}</div>
                     </div>
+
                     {% elif evt.type == 'sub' %}
-                    <div class="mr-event mr-event--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-event-minute">{{ evt.minute }}'</div>
-                        <div class="mr-event-detail">
-                            <span class="mr-sub-in">&#x2191; {{ evt.in_name }}</span>
-                            <span class="mr-sub-out">&#x2193; {{ evt.out_name }}</span>
-                        </div>
-                        <div class="mr-event-club">
-                            {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
-                        </div>
+                    <div class="mr-tk-entry mr-tk--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-tk-min">{{ evt.minute }}'</div>
+                        <div class="mr-tk-icon mr-tk-icon--sub">&#x21C5;</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
                     </div>
+
                     {% elif evt.type == 'card' %}
-                    <div class="mr-event mr-event--card mr-event--{{ evt.card_type }}-card {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-event-minute">{{ evt.minute }}'</div>
-                        <div class="mr-event-detail">
-                            <span class="mr-card-icon {% if evt.card_type == 'red' %}mr-card-red{% else %}mr-card-yellow{% endif %}">&#9646;</span>
-                            <span class="mr-card-player">{{ evt.player_name }}</span>
-                        </div>
-                        <div class="mr-event-club">
-                            {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
-                        </div>
+                    <div class="mr-tk-entry mr-tk--card mr-tk--{{ evt.card_type }} {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-tk-min mr-tk-min--{{ evt.card_type }}">{{ evt.minute }}'</div>
+                        <div class="mr-tk-icon mr-tk-icon--card mr-tk-card--{{ evt.card_type }}">&#9646;</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
                     </div>
+
                     {% else %}
-                    <div class="mr-event mr-event--injury {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-event-minute">{{ evt.minute }}'</div>
-                        <div class="mr-event-detail">
-                            <span class="mr-injury-icon">&#x1FA79;</span>
-                            <span class="mr-injury-player">{{ evt.player_name }}</span>
-                            <span class="mr-injury-meta">{{ evt.injury_type }} &middot; {{ evt.days }}&thinsp;Tage</span>
-                        </div>
-                        <div class="mr-event-club">
-                            {% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
-                        </div>
+                    <div class="mr-tk-entry mr-tk--injury {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-tk-min mr-tk-min--injury">{{ evt.minute }}'</div>
+                        <div class="mr-tk-icon">&#x1FA79;</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
                     </div>
                     {% endif %}
+
+                    {% empty %}
+                    {# kein Eintrag außer Abpfiff nötig #}
                     {% endfor %}
+
+                    {# Anpfiff #}
+                    <div class="mr-tk-entry mr-tk--whistle">
+                        <div class="mr-tk-min">1'</div>
+                        <div class="mr-tk-icon mr-tk-icon--whistle">&#x25FC;</div>
+                        <div class="mr-tk-text">Anpfiff &mdash; {{ report.home_club_name }} vs. {{ report.away_club_name }}</div>
+                        <div class="mr-tk-badge mr-tk-badge--ko">0:0</div>
+                    </div>
+
                 </div>
-                {% else %}
-                <p class="mr-empty">Keine Ereignisse &mdash; 0:0, keine Wechsel.</p>
-                {% endif %}
             </div>
 
             {# ── Match Statistics ─────────────────────────────────────── #}

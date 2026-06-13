@@ -3443,11 +3443,73 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
+                    score_h=0, score_a=0, days=0, in_name='', out_name=''):
+    """Deterministischer deutscher Kommentartext für ein Ticker-Ereignis."""
+    seed = abs(hash(f"{evt_type}|{minute}|{player}|{in_name}"))
+    score = f"{score_h}:{score_a}"
+
+    if evt_type == 'goal':
+        if assister:
+            opts = [
+                f"Tor! {player} trifft nach Vorlage von {assister}. {score}!",
+                f"{player} macht das {score}! Assist: {assister}.",
+                f"Traumkombination! {assister} legt auf — {player} verwertet: {score}!",
+                f"{assister} bedient {player} mustergültig, und der trifft: {score}!",
+                f"{player} vollendet den Assist von {assister}. {score}.",
+            ]
+        else:
+            opts = [
+                f"Tor! {player} trifft zum {score}!",
+                f"{player} erzielt das {score}.",
+                f"Alleingang von {player} — der Ball sitzt. {score}!",
+                f"{player} lässt dem Torwart keine Chance: {score}!",
+                f"Was ein Treffer von {player}! {score}.",
+            ]
+    elif evt_type == 'card':
+        if card_type == 'yellow_red':
+            opts = [
+                f"Zweite Gelbe für {player} — Platzverweis!",
+                f"{player} sieht Gelb-Rot. Unterzahl!",
+                f"Gelb-Rot für {player}! Frühes Ende für ihn.",
+            ]
+        elif card_type == 'red':
+            opts = [
+                f"Platzverweis! {player} sieht die Rote Karte.",
+                f"{player} fliegt vom Platz — Rote Karte!",
+                f"Rot für {player}! Direkte Rote Karte.",
+            ]
+        else:
+            opts = [
+                f"{player} sieht die Gelbe Karte.",
+                f"Schiedsrichter zeigt {player} Gelb.",
+                f"Gelbe Karte für {player}.",
+            ]
+    elif evt_type == 'sub':
+        opts = [
+            f"Wechsel: {in_name} kommt für {out_name}.",
+            f"{out_name} verlässt das Feld, {in_name} betritt den Platz.",
+            f"Einwechslung: {in_name} ersetzt {out_name}.",
+        ]
+    elif evt_type == 'injury':
+        opts = [
+            f"{player} verletzt sich — ca. {days} Tage Ausfall.",
+            f"Verletzung: {player} muss behandelt werden ({days} Tage).",
+            f"{player} bleibt nach einem Zweikampf verletzt am Boden. {days} Tage Pause.",
+        ]
+    else:
+        opts = [f"Spielunterbrechung in Minute {minute}."]
+
+    return opts[seed % len(opts)]
+
+
 def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lookup=None):
-    """Führt Tor-, Einwechslungs- und Karten-Events zu einer nach Minute sortierten Liste zusammen."""
-    events = []
+    """Führt alle Spielereignisse zu einer nach Minute sortierten Liste zusammen.
+    Jedes Event enthält Kommentartext (commentary) und Zwischenstand (score_h/score_a)."""
+    raw = []
+
     for evt in (data.get('goal_events') or []):
-        events.append({
+        raw.append({
             'type':          'goal',
             'team':          evt.get('team', 'home'),
             'minute':        evt.get('minute', 0),
@@ -3456,43 +3518,62 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             'assister_name': evt.get('assister_name', ''),
         })
     for sub in (home_subs_enriched or []):
-        events.append({
-            'type':     'sub',
-            'team':     'home',
-            'minute':   sub['minute'],
-            'in_name':  sub['in_name'],
-            'out_name': sub['out_name'],
-        })
+        raw.append({'type': 'sub', 'team': 'home', 'minute': sub['minute'],
+                    'in_name': sub['in_name'], 'out_name': sub['out_name']})
     for sub in (away_subs_enriched or []):
-        events.append({
-            'type':     'sub',
-            'team':     'away',
-            'minute':   sub['minute'],
-            'in_name':  sub['in_name'],
-            'out_name': sub['out_name'],
-        })
+        raw.append({'type': 'sub', 'team': 'away', 'minute': sub['minute'],
+                    'in_name': sub['in_name'], 'out_name': sub['out_name']})
     for ce in (data.get('card_events') or []):
         pid  = ce.get('player_id')
         name = ce.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
-        events.append({
-            'type':        'card',
-            'team':        ce.get('club_side', 'home'),
-            'minute':      ce.get('minute', 0),
-            'card_type':   ce.get('card_type', 'yellow'),
-            'player_name': name,
-        })
+        raw.append({'type': 'card', 'team': ce.get('club_side', 'home'),
+                    'minute': ce.get('minute', 0), 'card_type': ce.get('card_type', 'yellow'),
+                    'player_name': name})
     for ie in (data.get('injury_events') or []):
         pid  = ie.get('player_id')
         name = ie.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
-        events.append({
-            'type':         'injury',
-            'team':         ie.get('club_side', 'home'),
-            'minute':       ie.get('minute', 0),
-            'player_name':  name,
-            'injury_type':  ie.get('injury_type', 'Leicht'),
-            'days':         ie.get('days', 0),
-        })
-    return sorted(events, key=lambda e: e['minute'])
+        raw.append({'type': 'injury', 'team': ie.get('club_side', 'home'),
+                    'minute': ie.get('minute', 0), 'player_name': name,
+                    'injury_type': ie.get('injury_type', 'Leicht'), 'days': ie.get('days', 0)})
+
+    raw.sort(key=lambda e: e['minute'])
+
+    score_h = score_a = 0
+    events = []
+    for evt in raw:
+        t = evt['type']
+        if t == 'goal':
+            if evt['team'] == 'home':
+                score_h += 1
+            else:
+                score_a += 1
+            evt['score_h'] = score_h
+            evt['score_a'] = score_a
+            evt['commentary'] = _ticker_comment(
+                'goal', evt['minute'], evt['scorer_name'], evt['assister_name'],
+                score_h=score_h, score_a=score_a,
+            )
+        elif t == 'sub':
+            evt['score_h'] = score_h
+            evt['score_a'] = score_a
+            evt['commentary'] = _ticker_comment(
+                'sub', evt['minute'], in_name=evt['in_name'], out_name=evt['out_name'],
+            )
+        elif t == 'card':
+            evt['score_h'] = score_h
+            evt['score_a'] = score_a
+            evt['commentary'] = _ticker_comment(
+                'card', evt['minute'], evt['player_name'], card_type=evt['card_type'],
+            )
+        elif t == 'injury':
+            evt['score_h'] = score_h
+            evt['score_a'] = score_a
+            evt['commentary'] = _ticker_comment(
+                'injury', evt['minute'], evt['player_name'], days=evt.get('days', 0),
+            )
+        events.append(evt)
+
+    return events
 
 
 def _enrich_substitutions(subs_raw, name_lookup):
