@@ -294,8 +294,15 @@ def _calculate_lineup_strength(
     team: dict,
     tactic_override: Optional[dict] = None,
     compiled_tactic: Optional[dict] = None,
+    dismissed_pids: Optional[set] = None,
+    gk_strength_override: Optional[float] = None,
 ) -> dict:
-    """Linienstärken inkl. Taktik-Multiplikatoren (Port aus Standalone)."""
+    """Linienstärken inkl. Taktik-Multiplikatoren (Port aus Standalone).
+
+    dismissed_pids:      Spieler-IDs mit Platzverweis — werden aus der
+                         Stärkeberechnung ausgeschlossen (T009 Dismissals V1).
+    gk_strength_override: Stärke des Ersatz-TW oder Not-TW bei TW-Platzverweis.
+    """
     players_by_id = {p['id']: p for p in team.get('players', [])}
     if compiled_tactic is None:
         compiled_tactic = compile_tactic(
@@ -313,6 +320,8 @@ def _calculate_lineup_strength(
         pid = slot.get('player_id')
         if not pid:
             continue
+        if dismissed_pids and pid in dismissed_pids:
+            continue
         player = players_by_id.get(pid)
         if not player:
             continue
@@ -325,6 +334,10 @@ def _calculate_lineup_strength(
 
     def avg(lst: list[float]) -> float:
         return sum(lst) / len(lst) if lst else 50.0
+
+    # TW-Platzverweis: Bench-TW oder Not-TW-Stärke einsetzen
+    if not lines['goalkeeper'] and gk_strength_override is not None:
+        lines['goalkeeper'] = [gk_strength_override * multipliers.get('goalkeeper', 1.0)]
 
     gk = avg(lines['goalkeeper'])
     de = avg(lines['defense'])
@@ -548,6 +561,106 @@ def _red_card_this_segment(compiled: dict, seg_len: int) -> int:
     return 1 if random.random() < min(0.08, match_prob * seg_len / 90.0) else 0
 
 
+# ── T009 Dismissals V1 ────────────────────────────────────────────────────────
+
+def _find_bench_gk(team_dict: dict, used_pids: set) -> Optional[dict]:
+    """Sucht den ersten TW auf der Bank, der nicht schon in der Lineup ist."""
+    bench_ids = list((team_dict.get('tactic') or {}).get('bench') or [])
+    players_by_id = {p['id']: p for p in team_dict.get('players', [])}
+    for pid in bench_ids:
+        if pid in used_pids:
+            continue
+        p = players_by_id.get(pid)
+        if p and p.get('primary_position') == 'TW':
+            return p
+    return None
+
+
+def _dismissal_this_segment(
+    compiled: dict,
+    seg_len: int,
+    team_yellows_so_far: int,
+) -> tuple[int, str]:
+    """Gibt (anzahl_platzverweise, card_type) zurück. Maximal 1 pro Segment.
+
+    card_type: 'red' | 'yellow_red' | ''
+
+    Direktes Rot: feste Wahrscheinlichkeit (wie bisheriges _red_card_this_segment).
+    Gelb-Rot:     nur möglich wenn Team ≥ 2 Gelbe angesammelt hat;
+                  Wahrscheinlichkeit steigt mit Kartenanzahl.
+    """
+    scale = seg_len / 90.0
+    card_mult = compiled.get('card_multiplier', 1.0)
+    if random.random() < min(0.08, 0.025 * card_mult * scale):
+        return 1, 'red'
+    if team_yellows_so_far >= 2:
+        yr_base = 0.018 * card_mult * min(team_yellows_so_far / 3.0, 1.5) * scale
+        if random.random() < min(0.05, yr_base):
+            return 1, 'yellow_red'
+    return 0, ''
+
+
+def _resolve_dismissal(
+    team_dict: dict,
+    lineup_players: list[dict],
+    dismissed_pids: set,
+    minute: int,
+    club_side: str,
+    card_type: str,
+) -> tuple[Optional[dict], Optional[float]]:
+    """Verarbeitet einen Platzverweis; gibt (event, gk_strength_override) zurück.
+
+    gk_strength_override wird nur gesetzt wenn der TW verwiesen wird:
+    - Bench-TW vorhanden → dessen final_strength
+    - Kein Bench-TW      → schlechtester Outfielder × 0.6 (Not-TW-Malus)
+
+    TW-Sonderlogik V1:
+    - Outfield-Rot:           10-Mann-Stärke ab Folgesegment.
+    - TW-Rot + Bench-TW:      Bench-TW übernimmt GK-Stärke, 1 Outfielder raus.
+    - TW-Rot + kein Bench-TW: Not-TW (schwächster Outfielder × 0.6) als GK.
+    """
+    active = [p for p in lineup_players if p.get('id') not in dismissed_pids]
+    if not active:
+        return None, None
+
+    non_gk = [p for p in active if p.get('group') != 'goalkeeper']
+    gk_active = [p for p in active if p.get('group') == 'goalkeeper']
+    gk_override: Optional[float] = None
+
+    if non_gk:
+        dismissed = random.choice(non_gk)
+    elif gk_active:
+        dismissed = gk_active[0]
+    else:
+        return None, None
+
+    if dismissed.get('group') == 'goalkeeper':
+        all_pids = {p['id'] for p in lineup_players}
+        bench_gk = _find_bench_gk(team_dict, all_pids)
+        if bench_gk:
+            gk_override = float(bench_gk.get('final_strength', 50.0))
+        else:
+            outfield = [
+                p for p in lineup_players
+                if p.get('group') != 'goalkeeper' and p.get('id') not in dismissed_pids
+            ]
+            if outfield:
+                worst = min(outfield, key=lambda p: float(p.get('final_strength', 50.0)))
+                gk_override = float(worst.get('final_strength', 50.0)) * 0.6
+            else:
+                gk_override = 30.0
+
+    pid = dismissed.get('id')
+    dismissed_pids.add(pid)
+    return {
+        'player_id':   pid,
+        'player_name': dismissed.get('name', ''),
+        'club_side':   club_side,
+        'minute':      minute,
+        'card_type':   card_type,
+    }, gk_override
+
+
 def _final_stats(home_total: dict, away_total: dict) -> dict:
     hm = max(1, home_total['minutes_weighted'])
     am = max(1, away_total['minutes_weighted'])
@@ -622,6 +735,13 @@ def _simulate_match_minutes(
     a_red = 0
     events: list[dict] = []
     plan_activations: list[dict] = []
+    # T009 Dismissals V1
+    h_dismissed_pids: set = set()
+    a_dismissed_pids: set = set()
+    h_gk_str_override: Optional[float] = None
+    a_gk_str_override: Optional[float] = None
+    h_dismissal_events: list[dict] = []
+    a_dismissal_events: list[dict] = []
     plan_active_segments: dict[str, dict] = {'home': {}, 'away': {}}
     plan_seg_stats: dict[str, dict] = {'home': {}, 'away': {}}
     last_plan: dict[str, Optional[str]] = {'home': None, 'away': None}
@@ -670,8 +790,16 @@ def _simulate_match_minutes(
             h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
         )
         a_comp = compile_tactic(away_team, a_tactic_seg, half=half)
-        h_str  = _calculate_lineup_strength(home_team, h_tactic_seg, h_comp)
-        a_str  = _calculate_lineup_strength(away_team, a_tactic_seg, a_comp)
+        h_str  = _calculate_lineup_strength(
+            home_team, h_tactic_seg, h_comp,
+            dismissed_pids=h_dismissed_pids or None,
+            gk_strength_override=h_gk_str_override,
+        )
+        a_str  = _calculate_lineup_strength(
+            away_team, a_tactic_seg, a_comp,
+            dismissed_pids=a_dismissed_pids or None,
+            gk_strength_override=a_gk_str_override,
+        )
         last_h_comp, last_a_comp = h_comp, a_comp
         last_h_str,  last_a_str  = h_str,  a_str
 
@@ -685,8 +813,11 @@ def _simulate_match_minutes(
         hg = _poisson(h_xg_seg)
         ag = _poisson(a_xg_seg)
         minute_pool = list(range(minute, min(90, end_min) + 1))
-        events.extend(_goal_events(hg, 'home', h_lineup, minute_pool.copy()))
-        events.extend(_goal_events(ag, 'away', a_lineup, minute_pool.copy()))
+        # Verwiesene Spieler können keine Tore erzielen
+        h_lineup_active = [p for p in h_lineup if p.get('id') not in h_dismissed_pids] or h_lineup
+        a_lineup_active = [p for p in a_lineup if p.get('id') not in a_dismissed_pids] or a_lineup
+        events.extend(_goal_events(hg, 'home', h_lineup_active, minute_pool.copy()))
+        events.extend(_goal_events(ag, 'away', a_lineup_active, minute_pool.copy()))
 
         if h_plan:
             goals_while_plan['home_for']  += hg
@@ -700,10 +831,29 @@ def _simulate_match_minutes(
         h_goals += hg
         a_goals += ag
 
-        h_red_seg = _red_card_this_segment(h_comp, seg_len)
-        a_red_seg = _red_card_this_segment(a_comp, seg_len)
+        # T009 Dismissals V1: Platzverweis (Rot + Gelb-Rot) ──────────────────
+        h_dis, h_dis_type = _dismissal_this_segment(h_comp, seg_len, h_stats_total['yellow'])
+        a_dis, a_dis_type = _dismissal_this_segment(a_comp, seg_len, a_stats_total['yellow'])
+        h_red_seg = h_dis
+        a_red_seg = a_dis
         h_red += h_red_seg
         a_red += a_red_seg
+
+        if h_dis:
+            ev, gk_ov = _resolve_dismissal(
+                home_team, h_lineup, h_dismissed_pids, end_min, 'home', h_dis_type)
+            if ev:
+                h_dismissal_events.append(ev)
+                if gk_ov is not None:
+                    h_gk_str_override = gk_ov
+
+        if a_dis:
+            ev, gk_ov = _resolve_dismissal(
+                away_team, a_lineup, a_dismissed_pids, end_min, 'away', a_dis_type)
+            if ev:
+                a_dismissal_events.append(ev)
+                if gk_ov is not None:
+                    a_gk_str_override = gk_ov
 
         total_strength = h_str['overall'] + a_str['overall'] or 1.0
         poss_delta = (h_comp.get('possession_bonus', 0.0) - a_comp.get('possession_bonus', 0.0)) * 35
@@ -803,6 +953,7 @@ def _simulate_match_minutes(
             'comeback_win':   comeback_win,
             'comeback_draw':  comeback_draw,
         },
+        'dismissal_events': h_dismissal_events + a_dismissal_events,
     }
 
 
@@ -1397,16 +1548,29 @@ def simulate_match(home_club, away_club) -> dict:
 
     # 5b. Karten-Flags (0/1) in Spieler-Rows einbetten — persistent im Report
     ms_stats = sim.get('match_stats', {}) or {}
+    # T009: Verwiesene Spieler aus Sim-Dismissals vormarkieren; restliche Roten
+    # zufällig vergeben (damit kein Spieler doppelt als Rot erscheint).
+    sim_dismissals = sim.get('dismissal_events', [])
+    h_dismissal_pids = {e['player_id'] for e in sim_dismissals if e.get('club_side') == 'home'}
+    a_dismissal_pids = {e['player_id'] for e in sim_dismissals if e.get('club_side') == 'away'}
+    for p in h_players:
+        if p.get('id') in h_dismissal_pids:
+            p['red_cards'] = 1
+    for p in a_players:
+        if p.get('id') in a_dismissal_pids:
+            p['red_cards'] = 1
+    h_red_remaining = max(0, (ms_stats.get('home_red', 0) or 0) - len(h_dismissal_pids))
+    a_red_remaining = max(0, (ms_stats.get('away_red', 0) or 0) - len(a_dismissal_pids))
     h_players, h_card_events = _assign_cards_to_players(
         h_players,
         ms_stats.get('home_yellow', 0) or 0,
-        ms_stats.get('home_red', 0) or 0,
+        h_red_remaining,
         club_side='home',
     )
     a_players, a_card_events = _assign_cards_to_players(
         a_players,
         ms_stats.get('away_yellow', 0) or 0,
-        ms_stats.get('away_red', 0) or 0,
+        a_red_remaining,
         club_side='away',
     )
 
@@ -1468,6 +1632,7 @@ def simulate_match(home_club, away_club) -> dict:
         'home_substitutions':    _generate_substitution_events(home_tactic, home_team),
         'away_substitutions':    _generate_substitution_events(away_tactic, away_team),
         'card_events':           h_card_events + a_card_events,
+        'dismissal_events':      sim_dismissals,
         'injury_events':         h_injury_events + a_injury_events,
         'home_fatigue_cost':     sim.get('home_fatigue_cost', 1.0),
         'away_fatigue_cost':     sim.get('away_fatigue_cost', 1.0),

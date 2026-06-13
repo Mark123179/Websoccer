@@ -1,0 +1,100 @@
+Priorität 1: Rote Karte → 10-Mann-Team
+
+Das ist der wichtigste Fix.
+
+Warum:
+
+Rote Karte ist ein direkt spielentscheidendes Ereignis.
+Wenn die Mannschaft danach trotzdem mit 11-Mann-Stärke weiterspielt, ist die Simulation logisch falsch.
+
+Das sollte zuerst kommen.
+
+Umsetzung V1
+Red-card-Event erzeugen
+betroffenen Spieler aus aktiver Lineup entfernen
+ab Folgesegment neue Lineup-Stärke berechnen
+Formation muss nicht perfekt umgebaut werden
+keine automatische Einwechslung für Rot
+xG-Effekt entsteht automatisch durch schwächere Linie
+
+Wichtig: Bei Rot für TW brauchst du Sonderlogik. Für V1 kann man entweder:
+
+A) Feldspieler raus, Ersatzkeeper rein, falls Bank-TW vorhanden
+B) wenn kein Ersatzkeeper: Not-TW mit starkem Malus
+
+Das ist selten, aber muss abgesichert sein.
+
+Priorität 2: Gelb-Rot
+
+Das hängt logisch direkt an roten Karten.
+
+Wenn du Rotkarten-Stärkemalus gebaut hast, kann Gelb-Rot denselben Pfad nutzen:
+
+yellow_red = dismissal
+zählt ab Minute X wie rote Karte
+
+Also nicht separat als riesiges System, sondern als Erweiterung des Karten-/Dismissal-Systems.
+
+Ich würde Gelb-Rot direkt nach Rot machen, aber im selben kleinen Taskblock:
+
+T009 Dismissals V1
+- direkte Rote
+- Gelb-Rot
+- reduzierte Lineup-Stärke nach Platzverweis
+Priorität 3: Verletzung → erzwungene Einwechslung
+
+Das ist wichtig, aber etwas größer.
+
+Warum später?
+
+Weil Verletzungen aktuell post-match sind. Wenn du sie in den Live-Matchfluss ziehst, musst du mehr beachten:
+
+Zeitpunkt der Verletzung
+verfügbare Bank
+Positionsfit
+Wechselkontingent
+normale Wechsel verdrängen
+kein Ersatzspieler verfügbar
+Verletzung nach bereits 5 Wechseln
+Torwartverletzung
+Spiel mit 10 Mann nach Verletzung, falls kein Wechsel mehr möglich
+
+Das ist deutlich komplexer als Rote Karte.
+
+Ich würde es als eigenen Task machen:
+
+T010 Injury Substitutions V1
+Empfohlene Reihenfolge
+1. T009 Dismissals V1
+   - rote Karte reduziert Lineup
+   - Gelb-Rot existiert
+   - ab Folgesegment mit reduzierter Stärke rechnen
+   - Spielbericht zeigt Platzverweis korrekt
+
+2. Danach Regressionstest
+   - 10.000 Spiele
+   - Tore/Spiel
+   - Heimsiege/Remis/Auswärts
+   - Kartenquote
+   - xG nach Rot
+   - keine Abstürze
+
+3. T010 Injury Substitutions V1
+   - Verletzung im Spiel erzeugen
+   - Zwangswechsel
+   - Bankspieler positionspassend
+   - Wechselkontingent beachten
+   - wenn kein Wechsel möglich: Team spielt reduziert weiter
+
+4. Danach erneuter Regressionstest
+Nicht als Balancing behandeln
+
+Das sind keine Balancing-Anpassungen im engeren Sinn. Das sind Logik-Korrekturen.
+
+Trotzdem können sie Statistikwerte verändern:
+
+Fix	möglicher Effekt
+Rotkarte reduziert Stärke	mehr Tore gegen dezimiertes Team
+Gelb-Rot	minimal mehr Platzverweise
+Verletzungswechsel	schwächere Ersatzspieler beeinflussen Spielausgang
+kein Wechsel mehr möglich	Team spielt in Unterzahl

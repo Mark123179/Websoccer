@@ -272,9 +272,11 @@ def ensure_default_tactic(club):
     if repair_fields:
         tactic.save(update_fields=repair_fields)
 
-    players = list(
+    all_players = list(
         Player.objects.filter(club=club).select_related('strength_profile')
     )
+    # Verletzte Spieler sind nicht aufstellbar
+    players = [p for p in all_players if not p.is_ws_injured]
     if len(players) < 11:
         return tactic, False
 
