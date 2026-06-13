@@ -1361,11 +1361,13 @@ def _assign_cards_to_players(
     for i in _weighted_sample_no_replace(players, r):
         players[i]['red_cards'] = 1
         lo, hi = _player_active_window(players[i])
+        # min(…, hi) verhindert ValueError wenn hi < 20 (Frühauswechslung)
+        red_lo = min(max(lo, 20), hi)
         card_events.append({
             'player_id':   players[i].get('id'),
             'player_name': players[i].get('name', ''),
             'card_type':   'red',
-            'minute':      random.randint(max(lo, 20), hi),
+            'minute':      random.randint(red_lo, hi),
             'club_side':   club_side,
         })
     return players, card_events
@@ -2137,14 +2139,20 @@ def simulate_match(
         'away_compiled_tactic':  sim.get('away_compiled_tactic', {}),
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
+        # Wechsel-Quellen-Priorirät:
+        #   1. Taktik hat geplante Wechsel → immer sim-Events (auch wenn leer, weil
+        #      alle Bedingungen verworfen wurden — kein Phantom-Fallback)
+        #   2. Keine geplanten Wechsel, aber sim liefert Ereignisse (Verletzungswechsel)
+        #      → sim-Events
+        #   3. Keine sim-Events und keine geplanten Wechsel → Fallback-Generator
         'home_substitutions': (
             sim['h_sim_sub_events']
-            if sim['h_sim_sub_events']
+            if getattr(home_tactic, 'substitutions', None) or sim['h_sim_sub_events']
             else _generate_substitution_events(home_tactic, home_team, 'home', sim.get('goal_events', []))
         ),
         'away_substitutions': (
             sim['a_sim_sub_events']
-            if sim['a_sim_sub_events']
+            if getattr(away_tactic, 'substitutions', None) or sim['a_sim_sub_events']
             else _generate_substitution_events(away_tactic, away_team, 'away', sim.get('goal_events', []))
         ),
         'card_events':           h_card_events + a_card_events,

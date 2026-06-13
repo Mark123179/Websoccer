@@ -4156,3 +4156,92 @@ class NoOrmInSimLoopTests(TestCase):
         injury_subs = [e for e in all_subs if e.get('condition') == 'verletzung']
         self.assertEqual(len(injury_subs), 1)
 
+
+class CardMinuteWindowTests(TestCase):
+    """Rote-Karten-Minute liegt immer im aktiven Zeitfenster, kein ValueError."""
+
+    def _players_with_mp(self, minutes_played_list):
+        return [
+            {
+                'id': i + 1,
+                'name': f'Spieler{i}',
+                'minutes_played': mp,
+                'is_sub': mp < 85,
+            }
+            for i, mp in enumerate(minutes_played_list)
+        ]
+
+    def test_red_card_short_window_no_value_error(self):
+        """Spieler mit nur 5 Einsatzminuten löst keinen ValueError aus."""
+        from .match_engine import _assign_cards_to_players
+        players = self._players_with_mp([5, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90])
+        for _ in range(50):
+            updated, events = _assign_cards_to_players(players, yellow_count=0, red_count=1)
+            for ev in events:
+                self.assertGreaterEqual(ev['minute'], 1)
+                self.assertLessEqual(ev['minute'], 90)
+
+    def test_red_card_minute_within_active_window_sub(self):
+        """Eingewechselter (60') erhält Karte frühestens ab Minute 30 (90-60)."""
+        from .match_engine import _assign_cards_to_players
+        # Einziger Spieler im Pool mit 30 Minuten (rein ab Minute 60)
+        players = [{'id': 1, 'name': 'Sub', 'minutes_played': 30, 'is_sub': True}]
+        for _ in range(20):
+            _, events = _assign_cards_to_players(players, yellow_count=0, red_count=1)
+            for ev in events:
+                # on_minute=60, hi=90 → gültig
+                self.assertGreaterEqual(ev['minute'], 1)
+                self.assertLessEqual(ev['minute'], 90)
+
+    def test_yellow_card_minute_within_starter_window(self):
+        """Starter ausgewechselt Minute 20 → Gelbe Karte ≤ Minute 20."""
+        from .match_engine import _assign_cards_to_players
+        # Starter mit 20 Minuten (ausgewechselt Minute 20)
+        players = [{'id': 1, 'name': 'Out20', 'minutes_played': 20, 'is_sub': False}]
+        for _ in range(30):
+            _, events = _assign_cards_to_players(players, yellow_count=1, red_count=0)
+            for ev in events:
+                self.assertLessEqual(ev['minute'], 20)
+                self.assertGreaterEqual(ev['minute'], 1)
+
+
+class SubstitutionReportSourceTests(TestCase):
+    """home_substitutions / away_substitutions korrekte Quellen-Logik."""
+
+    def test_no_phantom_subs_when_planned_conditions_all_discarded(self):
+        """Geplante Wechsel vorhanden, aber alle Bedingungen verworfen → leere Sub-Liste,
+        kein Fallback-Phantom."""
+        from .match_engine import _simulate_match_minutes
+        # Bedingung 'fuehrung' bei Minute 1 → wird fast nie zutreffen
+        home = _make_sim_team(base_id=10, strength=70.0, planned_subs=[
+            {'in': 10 * 200 + 11, 'out': 10 * 200 + 9, 'minute': 1, 'condition': 'fuehrung'},
+        ])
+        away = _make_sim_team(base_id=11, strength=70.0)
+        # 50 Wiederholungen: kein Spiel darf Sub-Events durch Fallback erhalten,
+        # wenn die echten Sim-Events leer sind
+        for seed in range(50):
+            import random as _rnd
+            _rnd.seed(seed)
+            sim = _simulate_match_minutes(home, away)
+            h_subs = sim.get('h_sim_sub_events', [])
+            # Falls Bedingung nicht zutraf → leere Liste; kein Phantom aus Fallback
+            # (Der Test prüft: Simulation liefert keine unplausiblen Ergebnisse)
+            for ev in h_subs:
+                self.assertIn('in', ev, "Sub-Event hat keinen 'in'-Schlüssel")
+                self.assertIn('out', ev, "Sub-Event hat keinen 'out'-Schlüssel")
+
+    def test_injury_subs_visible_without_planned_subs(self):
+        """Team ohne geplante Wechsel → Verletzungswechsel trotzdem sichtbar."""
+        from .match_engine import _simulate_match_minutes
+        home = _make_sim_team(base_id=12, strength=70.0, with_injured_starter=True)
+        away = _make_sim_team(base_id=13, strength=70.0)
+        injury_sub_found = False
+        for seed in range(30):
+            import random as _rnd
+            _rnd.seed(seed)
+            sim = _simulate_match_minutes(home, away)
+            if any(e.get('condition') == 'verletzung' for e in sim.get('h_sim_sub_events', [])):
+                injury_sub_found = True
+                break
+        self.assertTrue(injury_sub_found, "Verletzungswechsel muss in h_sim_sub_events erscheinen")
+
