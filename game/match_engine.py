@@ -1066,8 +1066,8 @@ def _generate_substitution_events(tactic_setup, team_dict: dict) -> list[dict]:
 
     Priorität:
       1. Geplante Wechsel aus dem Taktik-Setup (Minuten vom Trainer konfiguriert).
-      2. Falls keine geplanten Wechsel: automatisch 2–3 realistische Wechsel
-         aus Bankspieler-IDs + Nicht-TW-Startern an typischen Minuten.
+      2. Falls keine geplanten Wechsel: automatisch 2–3 positionspassende Wechsel
+         (att→att, mid→mid, def→def) aus Bankspieler-IDs + Nicht-TW-Startern.
 
     Rückgabe: [{in: pid, out: pid, minute: int}, …]  — nach Minute aufsteigend.
     Namen werden später in _build_sub_name_lookup per DB nachgeschlagen.
@@ -1077,45 +1077,128 @@ def _generate_substitution_events(tactic_setup, team_dict: dict) -> list[dict]:
     if planned:
         return sorted(planned, key=lambda s: s['minute'])
 
-    bench_ids = list(tactic_setup.bench or [])
+    from .models import Player as _Player
 
-    # Fallback: bench nicht befüllt → nicht-aufgestellte Kaderspieler verwenden
+    # ── Auswechselbare Starter nach Priorität sortieren ───────────────────────
+    # Auswechsel-Reihenfolge: attack → offensive_midfield → midfield → defense
+    # 'goalkeeper' wird nie ausgewechselt.
+    _GROUP_ORDER = {
+        'attack':             0,
+        'offensive_midfield': 1,
+        'midfield':           2,
+        'defense':            3,
+    }
+    lineup = team_dict.get('lineup', [])
+    subable = sorted(
+        [s for s in lineup if s.get('group') in _GROUP_ORDER and s.get('player_id')],
+        key=lambda s: _GROUP_ORDER[s['group']],
+    )
+    if not subable:
+        return []
+
+    # ── Bank-Spieler ermitteln ─────────────────────────────────────────────────
+    bench_ids = list(tactic_setup.bench or [])
+    lineup_pids = {s['player_id'] for s in lineup if s.get('player_id')}
+
     if not bench_ids:
-        from .models import Player as _Player
-        lineup_pids = {slot['player_id'] for slot in team_dict.get('lineup', []) if slot.get('player_id')}
         bench_ids = list(
             _Player.objects.filter(club=tactic_setup.club)
             .exclude(pk__in=lineup_pids)
             .order_by('-strength_profile__final_strength')
-            .values_list('pk', flat=True)[:7]
+            .values_list('pk', flat=True)[:8]
         )
-
     if not bench_ids:
         return []
 
-    # Nicht-TW-Starter als Auswechsel-Kandidaten (bevorzuge mid/att)
-    lineup = team_dict.get('lineup', [])
-    non_gk = [slot['player_id'] for slot in lineup
-               if slot.get('group') != 'gk' and slot.get('player_id')]
-    if not non_gk:
+    # Positionen laden: main_position_1/2/3 (HP) + secondary_position_1/2/3 (NP)
+    # TW niemals einwechseln
+    bench_pool = []
+    for row in (
+        _Player.objects.filter(pk__in=bench_ids)
+        .exclude(primary_position='TW')
+        .values('pk',
+                'main_position_1', 'main_position_2', 'main_position_3',
+                'secondary_position_1', 'secondary_position_2', 'secondary_position_3')
+    ):
+        hp = [p for p in (row['main_position_1'], row['main_position_2'], row['main_position_3']) if p]
+        np = [p for p in (row['secondary_position_1'], row['secondary_position_2'], row['secondary_position_3']) if p]
+        bench_pool.append({'pk': row['pk'], 'hp': hp, 'np': np})
+
+    # ── HP → NP → Positionsfremd matching ─────────────────────────────────────
+    n_subs = random.choice([2, 2, 3])
+    pairs:      list[tuple[int, int]] = []
+    used_bench: set[int] = set()
+    used_out:   set[int] = set()
+
+    # Positions-Linien für die linienverwandte Zwischenstufe
+    _LINE_POS = {
+        'attack':             {'ST', 'LF', 'RF', 'MS', 'OM'},
+        'offensive_midfield': {'OM', 'ZM', 'LA', 'RA', 'LF', 'RF'},
+        'midfield':           {'ZM', 'DM', 'LA', 'RA', 'LM', 'RM', 'OM'},
+        'defense':            {'IV', 'LV', 'RV'},
+    }
+
+    for slot in subable:
+        if len(pairs) >= n_subs:
+            break
+        out_pid   = slot['player_id']
+        slot_pos  = slot.get('position', '')    # z.B. 'ST', 'LF', 'ZM', 'IV'
+        slot_grp  = slot.get('group', '')
+        slot_line = _LINE_POS.get(slot_grp, set())
+        if out_pid in used_out:
+            continue
+
+        chosen: int | None = None
+
+        # 1. HP — exakte Hauptposition stimmt überein
+        for bp in bench_pool:
+            if bp['pk'] in used_bench:
+                continue
+            if slot_pos in bp['hp']:
+                chosen = bp['pk']
+                break
+
+        # 2. NP — exakte Nebenposition stimmt überein
+        if chosen is None:
+            for bp in bench_pool:
+                if bp['pk'] in used_bench:
+                    continue
+                if slot_pos in bp['np']:
+                    chosen = bp['pk']
+                    break
+
+        # 2.5 Linienverwandt — HP des Bankspielers liegt in derselben Linie
+        #     (z.B. RF für LF-Slot, DM für ZM-Slot)
+        if chosen is None:
+            for bp in bench_pool:
+                if bp['pk'] in used_bench:
+                    continue
+                if any(p in slot_line for p in bp['hp']):
+                    chosen = bp['pk']
+                    break
+
+        # 3. Positionsfremd — letzter Ausweg, erster verfügbarer Bankspieler
+        if chosen is None:
+            for bp in bench_pool:
+                if bp['pk'] not in used_bench:
+                    chosen = bp['pk']
+                    break
+
+        if chosen is None:
+            continue
+        pairs.append((chosen, out_pid))
+        used_bench.add(chosen)
+        used_out.add(out_pid)
+
+    if not pairs:
         return []
 
-    n_subs = random.choice([2, 2, 3])          # meistens 2, manchmal 3
-    n_subs = min(n_subs, len(bench_ids), len(non_gk))
-    if n_subs == 0:
-        return []
-
-    # Typische Wechselminuten — zufällig aus realistischem Pool
+    # ── Typische Wechselminuten zuweisen ──────────────────────────────────────
     minute_pool = [45, 56, 57, 58, 60, 62, 63, 65, 68, 70, 72, 75, 78, 80, 82, 84]
-    minutes = sorted(random.sample(minute_pool, min(n_subs, len(minute_pool))))[:n_subs]
+    minutes = sorted(random.sample(minute_pool, min(len(pairs), len(minute_pool))))
 
-    # Einwechslungen: letzte Starters (hinten im lineup = eher Außen/Sturm) raus,
-    # erste Bank-Spieler rein
-    out_ids = non_gk[-n_subs:]
-    in_ids  = bench_ids[:n_subs]
-
-    return [{'in': in_id, 'out': out_id, 'minute': minute}
-            for in_id, out_id, minute in zip(in_ids, out_ids, minutes)]
+    return [{'in': in_pid, 'out': out_pid, 'minute': minute}
+            for (in_pid, out_pid), minute in zip(pairs, minutes)]
 
 
 # ── Öffentliche API ───────────────────────────────────────────────────────────
