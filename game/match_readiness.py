@@ -1,8 +1,9 @@
 """Match-Readiness: Taktik & Stärke
 
-Dieses Modul stellt drei Hauptfunktionen bereit:
+Dieses Modul stellt vier Hauptfunktionen bereit:
 
-- ensure_default_tactic(club)       — legt/repariert TacticSetup mit 11 Slots
+- ensure_default_tactic(club)       — legt/repariert TacticSetup mit 11 Slots (nur trainerlose Vereine)
+- patch_managed_lineup(club, setup) — flickt Verletzungen/Sperren/Abgänge in Aufstellung gemanagter Vereine
 - calculate_lineup_strength(...)    — Stärke-Dict {goalkeeper, defense, midfield, attack, overall}
 - prepare_matchday_lineups(...)     — Matchday-Hook: alle Vereine prüfen & auffüllen
 """
@@ -475,15 +476,103 @@ def calculate_team_strength(club, malus=Decimal('1.0')):
     return calculate_lineup_strength(setup.lineup or {}, setup.formation or default_formation(), malus)
 
 
+def patch_managed_lineup(club, setup) -> tuple:
+    """Flickt die Aufstellung eines gemanagten Vereins für den Spieltag.
+
+    Entfernt Spieler die nicht mehr verfügbar sind (Abgang, Verletzung oder
+    Sperre) und ersetzt Lücken mit dem besten verfügbaren Alternativspieler
+    (HP-Priorität → NP-Priorität → Stärkster Verbleibender).
+    Formation und Taktikvorgaben des Trainers bleiben unverändert.
+
+    Wird sowohl für Nichtaufstellungen (mit Stärkemalus) als auch für das
+    stille Patchen gültiger Aufstellungen vor einem Spieltag verwendet.
+
+    Returns (setup, was_patched: bool).
+    """
+    from .models import Player
+
+    all_players = list(
+        Player.objects.filter(club=club).select_related('strength_profile')
+    )
+    squad_pks = {p.pk for p in all_players}
+    unavailable_pks = {
+        p.pk for p in all_players
+        if p.is_ws_injured or p.is_ws_suspended
+    }
+    all_players.sort(key=_player_base_strength, reverse=True)
+    available = [p for p in all_players if p.pk not in unavailable_pks]
+
+    lineup = dict(setup.lineup or {})
+    formation = setup.formation or default_formation()
+    slots = formation_slots(formation)
+
+    # Welche Spieler sind aktuell korrekt im Lineup (im Kader, verfügbar, kein Duplikat)?
+    used: set[int] = set()
+    first_seen: dict[int, str] = {}
+    for slot in slots:
+        key = slot['key']
+        pid = lineup.get(key)
+        if pid and pid in squad_pks and pid not in unavailable_pks and pid not in first_seen:
+            used.add(pid)
+            first_seen[pid] = key
+
+    was_patched = False
+
+    for slot in slots:
+        key = slot['key']
+        code = slot['code']
+        current_pid = lineup.get(key)
+
+        # Spieler gültig (im Kader, verfügbar, nicht doppelt)?
+        if (
+            current_pid
+            and current_pid in squad_pks
+            and current_pid not in unavailable_pks
+            and first_seen.get(current_pid) == key
+        ):
+            continue
+
+        # Ersatz finden: HP → NP → Stärkster
+        chosen = None
+        for p in available:
+            if p.pk not in used and code in p.main_positions:
+                chosen = p
+                break
+        if chosen is None:
+            for p in available:
+                if p.pk not in used and code in p.secondary_positions:
+                    chosen = p
+                    break
+        if chosen is None:
+            for p in available:
+                if p.pk not in used:
+                    chosen = p
+                    break
+
+        new_pid = chosen.pk if chosen else None
+        lineup[key] = new_pid
+        if new_pid:
+            used.add(new_pid)
+            first_seen[new_pid] = key
+        was_patched = True
+
+    if was_patched:
+        setup.lineup = lineup
+        setup.save(update_fields=['lineup', 'updated_at'])
+
+    return setup, was_patched
+
+
 # ── Matchday-Hook ────────────────────────────────────────────────────────────
 
 def prepare_matchday_lineups(league, matchday, season):
-    """Prüft alle Vereine eines Spieltags und füllt fehlende Aufstellungen auf.
+    """Prüft alle Vereine eines Spieltags und stellt Spielbereitschaft her.
 
-    Für Vereine mit Manager aber ohne Aufstellung:
-    - Auto-Aufstellung via ensure_default_tactic
-    - InactivityRecord anlegen (Sportgericht)
-    - home_lineup_malus / away_lineup_malus auf SeasonFixture setzen
+    Regelwerk:
+    - Trainerloser Verein ohne Aufstellung → ensure_default_tactic (automatisch optimal)
+    - Gemanagter Verein mit gültiger Aufstellung → patch_managed_lineup (still, kein Malus)
+    - Gemanagter Verein ohne gültige Aufstellung (Nichtaufstellung) →
+        patch_managed_lineup auf letzte Aufstellung + InactivityRecord + Stärkemalus
 
     Zusätzlich wird bei jedem Spieltag die Bank jedes Vereins geprüft:
     - Leere Bänke oder Bänke mit Spielern, die nicht mehr im Kader sind oder
@@ -494,7 +583,7 @@ def prepare_matchday_lineups(league, matchday, season):
         dict {
           'total':         Anzahl geprüfte Fixtures,
           'filled':        Anzahl gesamt gefüllte/reparierte Aufstellungen,
-          'penalized':     Anzahl bestrafter Manager,
+          'penalized':     Anzahl bestrafter Manager (Nichtaufstellung),
           'skipped':       Anzahl Vereine mit <11 Spielern (nicht füllbar),
           'bench_rebuilt': Anzahl Bänke, die automatisch neu aufgebaut wurden,
         }
@@ -519,6 +608,7 @@ def prepare_matchday_lineups(league, matchday, season):
             ('home', fixture.home_club, 'home_lineup_malus', 'home_lineup_set'),
             ('away', fixture.away_club, 'away_lineup_malus', 'away_lineup_set'),
         ):
+            setup = None
             try:
                 setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
                 valid = has_valid_lineup(setup, club=club)
@@ -526,6 +616,10 @@ def prepare_matchday_lineups(league, matchday, season):
                 valid = False
 
             if valid:
+                # Gemanagter Verein: Verletzungen/Sperren/Abgänge still patchen (kein Malus).
+                if club.managed_by is not None:
+                    patch_managed_lineup(club, setup)
+
                 setattr(fixture, lineup_attr, True)
                 fixture_dirty = True
 
@@ -554,20 +648,31 @@ def prepare_matchday_lineups(league, matchday, season):
 
                 continue
 
-            # Aufstellung fehlt — auffüllen
-            _, changed = ensure_default_tactic(club)
-
-            if not changed:
-                stats['skipped'] += 1
-                continue
-
-            stats['filled'] += 1
-            setattr(fixture, lineup_attr, True)
-            fixture_dirty = True
-
-            # Strafpunkt + Malus nur für gemanagte Vereine
+            # ── Aufstellung fehlt oder ungültig ──────────────────────────────
             manager = club.managed_by
-            if manager is not None:
+
+            if manager is None:
+                # Trainerloser Verein: optimal auto-auffüllen, kein Strafpunkt.
+                _, changed = ensure_default_tactic(club)
+                if not changed:
+                    stats['skipped'] += 1
+                    continue
+            else:
+                # Gemanagter Verein (Nichtaufstellung): letzte Aufstellung patchen.
+                # Kein ensure_default_tactic — Trainer muss selbst aufstellen.
+                if setup is None:
+                    setup, _ = TacticSetup.objects.get_or_create(
+                        club=club,
+                        squad_scope=SQUAD_PRO,
+                        defaults={
+                            'formation': default_formation(),
+                            'lineup': {},
+                            'bench': [],
+                        },
+                    )
+                patch_managed_lineup(club, setup)
+
+                # Sportgericht-Strafpunkt + Stärkemalus (30 %)
                 _, created = InactivityRecord.objects.get_or_create(
                     manager=manager,
                     club=club,
@@ -578,6 +683,10 @@ def prepare_matchday_lineups(league, matchday, season):
                 if created:
                     setattr(fixture, malus_attr, True)
                     stats['penalized'] += 1
+
+            stats['filled'] += 1
+            setattr(fixture, lineup_attr, True)
+            fixture_dirty = True
 
         if fixture_dirty:
             fixture.save(

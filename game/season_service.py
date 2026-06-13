@@ -707,7 +707,11 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
         home = fixture.home_club
         away = fixture.away_club
         try:
-            data = simulate_match(home, away)
+            data = simulate_match(
+                home, away,
+                home_strength_malus=0.70 if fixture.home_lineup_malus else 1.0,
+                away_strength_malus=0.70 if fixture.away_lineup_malus else 1.0,
+            )
             hg   = data['home_goals']
             ag   = data['away_goals']
             results.append((fixture, data, hg, ag))

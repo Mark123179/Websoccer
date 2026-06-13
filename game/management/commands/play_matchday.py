@@ -63,7 +63,7 @@ class Command(BaseCommand):
         qs = (
             SeasonFixture.objects
             .filter(league=league, season=season, matchday=matchday)
-            .select_related('home_club', 'away_club')
+            .select_related('home_club', 'away_club', 'home_club__managed_by', 'away_club__managed_by')
             .order_by('id')
         )
         if not qs.exists():
@@ -94,7 +94,11 @@ class Command(BaseCommand):
             home = fixture.home_club
             away = fixture.away_club
             try:
-                data = simulate_match(home, away)
+                data = simulate_match(
+                    home, away,
+                    home_strength_malus=0.70 if fixture.home_lineup_malus else 1.0,
+                    away_strength_malus=0.70 if fixture.away_lineup_malus else 1.0,
+                )
                 hg   = data['home_goals']
                 ag   = data['away_goals']
                 ms   = data.get('match_stats', {})

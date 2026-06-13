@@ -18,7 +18,7 @@ from copy import deepcopy
 from typing import Optional
 
 from .match_readiness import ensure_default_tactic
-from .tactics import default_formation, formation_slots, formation_code
+from .tactics import default_formation, formation_slots, formation_code, SQUAD_PRO
 from .tactic_compiler import (
     calculate_zone_strengths,
     compile_tactic,
@@ -194,11 +194,12 @@ def _lineup_players_orm(tactic) -> list[dict]:
 
 # ── ORM → Team-Dict Bridge ────────────────────────────────────────────────────
 
-def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None) -> dict:
+def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None, strength_malus: float = 1.0) -> dict:
     """Konvertiert Django ORM-Objekte in das Team-Dict-Format des Taktik-Compilers.
 
     Rückgabe-Format entspricht dem Standalone-Format (bayern_fixture.json).
     match_strengths: vorberechnete {player_id → float} Matchstärken (random(basis, pot) + form).
+    strength_malus:  Multiplikator für Nichtaufstellungs-Strafe (0.70 = 30 % Abzug).
     """
     from .models import Player
 
@@ -225,13 +226,13 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None) ->
         if not p:
             continue
         if match_strengths and pid in match_strengths:
-            final_strength = match_strengths[pid]
+            final_strength = match_strengths[pid] * strength_malus
         else:
             try:
                 sp = p.strength_profile
-                final_strength = float(sp.final_strength or 50.0)
+                final_strength = float(sp.final_strength or 50.0) * strength_malus
             except Exception:
-                final_strength = 50.0
+                final_strength = 50.0 * strength_malus
         try:
             _freshness = int(round(float(p.strength_profile.freshness or 100.0)))
         except Exception:
@@ -1448,7 +1449,12 @@ def _generate_substitution_events(tactic_setup, team_dict: dict) -> list[dict]:
 
 # ── Öffentliche API ───────────────────────────────────────────────────────────
 
-def simulate_match(home_club, away_club) -> dict:
+def simulate_match(
+    home_club,
+    away_club,
+    home_strength_malus: float = 1.0,
+    away_strength_malus: float = 1.0,
+) -> dict:
     """
     Simuliert ein Spiel und gibt ein vollständiges Report-Dict zurück.
 
@@ -1473,10 +1479,33 @@ def simulate_match(home_club, away_club) -> dict:
         condition_debug:  dict
         home_compiled_tactic, away_compiled_tactic: dict
         home_zone_strengths, away_zone_strengths: dict
+
+    home_strength_malus / away_strength_malus:
+        Stärke-Multiplikator für Nichtaufstellung (0.70 = 30 % Abzug).
+        Wird von prepare_matchday_lineups gesetzt und vom Spieltags-Hook übergeben.
     """
     # 1. Aufstellungen sicherstellen
-    home_tactic, _ = ensure_default_tactic(home_club)
-    away_tactic, _ = ensure_default_tactic(away_club)
+    # Trainerlose Vereine: optimal auto-auffüllen via ensure_default_tactic.
+    # Gemanagte Vereine: bestehende Aufstellung verwenden (Trainer ist verantwortlich).
+    from .models import TacticSetup as _TacticSetup
+
+    if home_club.managed_by_id is None:
+        home_tactic, _ = ensure_default_tactic(home_club)
+    else:
+        home_tactic, _ = _TacticSetup.objects.get_or_create(
+            club=home_club,
+            squad_scope=SQUAD_PRO,
+            defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
+        )
+
+    if away_club.managed_by_id is None:
+        away_tactic, _ = ensure_default_tactic(away_club)
+    else:
+        away_tactic, _ = _TacticSetup.objects.get_or_create(
+            club=away_club,
+            squad_scope=SQUAD_PRO,
+            defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
+        )
 
     # 2. Pre-compute Matchstärken: random(basis, potential) + form — einmal pro Spieler,
     #    konsistent für Simulation UND Spielbericht-Display.
@@ -1497,9 +1526,9 @@ def simulate_match(home_club, away_club) -> dict:
         p.pk: _draw_match_strength(p) for p in _players_qs
     }
 
-    # 3. ORM → Team-Dicts (mit vorberechneten Matchstärken)
-    home_team = _build_team_dict(home_club, home_tactic, match_strengths=match_strengths)
-    away_team = _build_team_dict(away_club, away_tactic, match_strengths=match_strengths)
+    # 3. ORM → Team-Dicts (mit vorberechneten Matchstärken und optionalem Nichtaufstellungs-Malus)
+    home_team = _build_team_dict(home_club, home_tactic, match_strengths=match_strengths, strength_malus=home_strength_malus)
+    away_team = _build_team_dict(away_club, away_tactic, match_strengths=match_strengths, strength_malus=away_strength_malus)
 
     # 4. Minuten-Simulation
     sim = _simulate_match_minutes(home_team, away_team)
