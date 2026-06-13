@@ -1193,10 +1193,12 @@ def _simulate_match_minutes(
         total_strength = h_str['overall'] + a_str['overall'] or 1.0
         poss_delta = (h_comp.get('possession_bonus', 0.0) - a_comp.get('possession_bonus', 0.0)) * 35
         build_delta = (h_comp.get('build_control', 0.0) - a_comp.get('build_control', 0.0)) * 10
+        # Realistisches Segmentrauschen ±5 pp — verhindert Fixwert-Ballbesitz über 90 min
+        poss_noise = random.gauss(0.0, 5.0)
         home_poss = int(round(_clamp(
             50 + HOME_POSSESSION_BONUS
             + (h_str['overall'] - a_str['overall']) / total_strength * 22
-            + poss_delta + build_delta,
+            + poss_delta + build_delta + poss_noise,
             30, 70,
         )))
 
@@ -1469,6 +1471,7 @@ def _generate_injury_events(
             'minute':      random.randint(inj_lo, hi),
             'injury_type': chosen_type,
             'days':        chosen_days,
+            'post_match':  True,   # post-Simulation erzeugt → kein Wechsel erfolgt
         })
 
     if len(candidates) > _MAX_INJURIES_PER_TEAM:

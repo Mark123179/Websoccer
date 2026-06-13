@@ -3704,6 +3704,9 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                     'minute': ce.get('minute', 0), 'card_type': ce.get('card_type', 'yellow'),
                     'player_name': name})
     for ie in (data.get('injury_events') or []):
+        # post_match=True: nach Simulation erzeugt, kein Wechsel erfolgt → nicht im Spielticker
+        if ie.get('post_match'):
+            continue
         pid  = ie.get('player_id')
         name = ie.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
         raw.append({'type': 'injury', 'team': ie.get('club_side', 'home'),
