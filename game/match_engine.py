@@ -1419,11 +1419,13 @@ def _generate_injury_events(
                 chosen_days = random.randint(dmin, dmax)
                 break
         lo, hi = _player_active_window(p)
+        # min(…, hi) verhindert ValueError wenn hi < 10 (Frühauswechslung)
+        inj_lo = min(max(lo, 10), hi)
         candidates.append({
             'player_id':   p.get('id'),
             'player_name': p.get('name', ''),
             'club_side':   club_side,
-            'minute':      random.randint(max(lo, 10), hi),
+            'minute':      random.randint(inj_lo, hi),
             'injury_type': chosen_type,
             'days':        chosen_days,
         })

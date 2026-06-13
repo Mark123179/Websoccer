@@ -4205,6 +4205,35 @@ class CardMinuteWindowTests(TestCase):
                 self.assertGreaterEqual(ev['minute'], 1)
 
 
+class InjuryMinuteWindowTests(TestCase):
+    """_generate_injury_events() verletzt nie die randint-Grenzen, auch bei <10 Minuten."""
+
+    def test_no_value_error_for_very_short_player(self):
+        """Spieler mit 5 Einsatzminuten → kein ValueError, gültiger Zeitstempel."""
+        from .match_engine import _generate_injury_events
+        import random
+        # Spieler mit 5 Minuten (Starter, raus Minute 5)
+        players = [{'id': 1, 'name': 'Out5', 'minutes_played': 5, 'is_sub': False, 'freshness': 50}]
+        for seed in range(100):
+            random.seed(seed)
+            events = _generate_injury_events(players, club_side='home', medizin_factor=5.0)
+            for ev in events:
+                self.assertGreaterEqual(ev['minute'], 1)
+                self.assertLessEqual(ev['minute'], 5)
+
+    def test_no_value_error_for_late_sub_player(self):
+        """Eingewechselter Spieler (3 Minuten) → kein ValueError."""
+        from .match_engine import _generate_injury_events
+        import random
+        players = [{'id': 2, 'name': 'Sub87', 'minutes_played': 3, 'is_sub': True, 'freshness': 40}]
+        for seed in range(100):
+            random.seed(seed)
+            events = _generate_injury_events(players, club_side='away', medizin_factor=5.0)
+            for ev in events:
+                self.assertGreaterEqual(ev['minute'], 1)
+                self.assertLessEqual(ev['minute'], 90)
+
+
 class SubstitutionReportSourceTests(TestCase):
     """home_substitutions / away_substitutions korrekte Quellen-Logik."""
 
