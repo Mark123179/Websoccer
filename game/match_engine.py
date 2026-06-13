@@ -809,14 +809,26 @@ def _simulate_match_minutes(
 # ── Spieler-Notensystem ───────────────────────────────────────────────────────
 
 def _rating_pos_group(position: str, group: str) -> str:
-    """Gibt die Notengruppe (GK/DEF/MID/FWD) zurück."""
+    """Gibt die Notengruppe (GK/DEF/DM/MID/FWD) zurück — V1.1.
+
+    Gruppen:
+        GK  = Torwart
+        DEF = IV, LV, RV und Äquivalente
+        DM  = Defensives Mittelfeld (eigene Gruppe, Hybrid DEF/MID)
+        MID = Zentrales/Offensives Mittelfeld, Flügelläufer
+        FWD = Stürmer, Außenstürmer
+    """
     pos = (position or '').upper()
     grp = (group or '').lower()
-    if pos == 'GK' or grp == 'goalkeeper':
+    if pos in ('TW', 'GK') or grp == 'goalkeeper':
         return 'GK'
-    if grp == 'defense' or pos in ('CB', 'LB', 'RB', 'WB'):
+    if pos == 'DM':
+        return 'DM'
+    if grp == 'defense' or pos in ('IV', 'LV', 'RV', 'CB', 'LB', 'RB', 'WB', 'LOV', 'ROV'):
         return 'DEF'
-    if grp in ('midfield', 'defensive_midfield', 'offensive_midfield') or pos in ('CM', 'DM', 'AM', 'LM', 'RM'):
+    if grp in ('midfield', 'defensive_midfield', 'offensive_midfield') or pos in (
+        'ZM', 'OM', 'LM', 'RM', 'LA', 'RA', 'CM', 'AM',
+    ):
         return 'MID'
     return 'FWD'
 
@@ -923,6 +935,14 @@ def _generate_injury_events(
 def compute_player_ratings(result: dict) -> dict:
     """Berechnet positionsabhängige Spielernoten (1,0–6,0) aus einem Simulations-Dict.
 
+    Noten V1.1 — Modifikatoren:
+        A) Team-Ergebnis (gestuft nach Tordifferenz)
+        B) Team-xGD (Dominanzindikator, alle Positionen)
+        C) Gegnerstärke (overall-Differenz, max ±0.18)
+        D) Scorer (positions-differenziert; TW/DEF/DM-MID/FWD; Doppelpack-Boni)
+        E) Karten (Gelb +0.30, Rot +1.50)
+        F) Positionslogik (GK / DEF / DM / MID / FWD)
+
     Rückgabe::
         {
             home_ratings: [{id, name, position, rating}, …],
@@ -936,14 +956,15 @@ def compute_player_ratings(result: dict) -> dict:
     a_xg    = float(result.get('away_xg') or 0)
     ms      = result.get('match_stats', {}) or {}
 
-    h_yellow = ms.get('home_yellow', 0) or 0
-    a_yellow = ms.get('away_yellow', 0) or 0
-    h_red    = ms.get('home_red', 0) or 0
-    a_red    = ms.get('away_red', 0) or 0
     h_press_wins = ms.get('home_pressing_ball_wins', 0) or 0
     a_press_wins = ms.get('away_pressing_ball_wins', 0) or 0
     h_press_bp   = ms.get('home_pressing_bypassed', 0) or 0
     a_press_bp   = ms.get('away_pressing_bypassed', 0) or 0
+    h_poss       = ms.get('home_possession', 50) or 50
+    a_poss       = ms.get('away_possession', 50) or 50
+
+    h_str_overall = float((result.get('home_strength') or {}).get('overall') or 50)
+    a_str_overall = float((result.get('away_strength') or {}).get('overall') or 50)
 
     h_win = h_goals > a_goals
     a_win = a_goals > h_goals
@@ -953,68 +974,141 @@ def compute_player_ratings(result: dict) -> dict:
 
     def _rate(p: dict, is_home: bool) -> float:
         rating = 3.5
-        pg     = _rating_pos_group(p.get('position', ''), p.get('group', ''))
+        pg = _rating_pos_group(p.get('position', ''), p.get('group', ''))
+
         goals   = p.get('goals', 0) or 0
         assists = p.get('assists', 0) or 0
         yellow  = p.get('yellow_cards', 0) or 0
         red     = p.get('red_cards', 0) or 0
 
-        my_goals   = h_goals        if is_home else a_goals
-        opp_goals  = a_goals        if is_home else h_goals
-        my_xg      = h_xg           if is_home else a_xg
-        opp_xg     = a_xg           if is_home else h_xg
-        my_win     = h_win          if is_home else a_win
-        opp_win    = a_win          if is_home else h_win
-        my_pw      = h_press_wins   if is_home else a_press_wins
-        opp_bp     = a_press_bp     if is_home else h_press_bp
+        my_goals  = h_goals        if is_home else a_goals
+        opp_goals = a_goals        if is_home else h_goals
+        my_xg     = h_xg           if is_home else a_xg
+        opp_xg    = a_xg           if is_home else h_xg
+        my_win    = h_win          if is_home else a_win
+        opp_win   = a_win          if is_home else h_win
+        my_pw     = h_press_wins   if is_home else a_press_wins
+        opp_bp    = a_press_bp     if is_home else h_press_bp
+        my_poss   = h_poss         if is_home else a_poss
+        my_str    = h_str_overall  if is_home else a_str_overall
+        opp_str   = a_str_overall  if is_home else h_str_overall
 
-        rating -= goals * 0.8
-        rating -= assists * 0.4
-
-        # Sieg/Niederlage-Bonus skaliert mit Tordifferenz
+        # A) Team-Ergebnis (gestuft nach Tordifferenz)
         goal_diff = my_goals - opp_goals
-        if goal_diff > 0:
-            rating -= min(0.15 + goal_diff * 0.08, 0.50)
-            if goal_diff >= 3:
-                rating -= 0.10   # Dominant-Sieg-Bonus für alle
-        elif goal_diff < 0:
-            rating += min(0.15 + abs(goal_diff) * 0.08, 0.50)
-            if abs(goal_diff) >= 3:
-                rating += 0.10   # Deutliche Niederlage trifft alle
+        if goal_diff == 1:
+            rating -= 0.23
+        elif goal_diff == 2:
+            rating -= 0.31
+        elif goal_diff == 3:
+            rating -= 0.49
+        elif goal_diff >= 4:
+            rating -= 0.55
+        elif goal_diff == -1:
+            rating += 0.23
+        elif goal_diff == -2:
+            rating += 0.31
+        elif goal_diff == -3:
+            rating += 0.49
+        elif goal_diff <= -4:
+            rating += 0.55
 
-        rating += yellow * 0.3
-        rating += red * 1.5
+        # B) Team-xGD (Dominanzindikator, alle Positionen)
+        xg_diff = my_xg - opp_xg
+        if xg_diff >= 1.5:
+            rating -= 0.20
+        elif xg_diff >= 0.5:
+            rating -= 0.10
+        elif xg_diff <= -1.5:
+            rating += 0.20
+        elif xg_diff <= -0.5:
+            rating += 0.10
 
+        # C) Gegnerstärke (str_diff positiv = ich bin stärker als Gegner)
+        str_diff = my_str - opp_str
+        if my_win:
+            if str_diff <= -15:
+                rating -= 0.18   # Sieg gegen viel stärkeren Gegner
+            elif str_diff <= -8:
+                rating -= 0.10   # Sieg gegen etwas stärkeren
+        elif opp_win:
+            if str_diff >= 15:
+                rating += 0.18   # Niederlage gegen viel schwächeren
+            elif str_diff >= 8:
+                rating += 0.10   # Niederlage gegen schwächeren
+
+        # D) Scorer (positions-differenziert)
+        if goals > 0:
+            per_goal = {
+                'GK': 1.50, 'DEF': 1.00, 'DM': 0.85, 'MID': 0.85, 'FWD': 0.70,
+            }.get(pg, 0.70)
+            rating -= goals * per_goal
+            if goals >= 2:
+                rating -= 0.25   # Doppelpack-Bonus
+            if goals >= 3:
+                rating -= 0.20   # Hattrick-Bonus
+
+        if assists > 0:
+            per_assist = {
+                'GK': 0.80, 'DEF': 0.55, 'DM': 0.45, 'MID': 0.45, 'FWD': 0.35,
+            }.get(pg, 0.35)
+            rating -= assists * per_assist
+
+        # E) Karten
+        rating += yellow * 0.30
+        rating += red * 1.50
+
+        # F) Positionslogik
         if pg == 'GK':
-            rating += opp_goals * 0.4
+            rating += opp_goals * 0.40
             if opp_goals == 0:
-                rating -= 0.5
+                rating -= 0.50
             if opp_xg >= 2.0 and opp_goals <= 1:
-                rating -= 0.3
+                rating -= 0.30   # Stark gehalten trotz Druck
             if opp_xg <= 0.8 and opp_goals >= 2:
-                rating += 0.5
+                rating += 0.50   # Vermeidbare Gegentore
+
         elif pg == 'DEF':
-            rating += opp_goals * 0.2
+            rating += opp_goals * 0.20
             if opp_goals == 0:
-                rating -= 0.3
-            if opp_bp > 3:
-                rating += 0.2
+                rating -= 0.30
             if my_win:
-                rating -= 0.1
+                rating -= 0.10
+            if opp_bp > 3:
+                rating += 0.20   # Pressing oft umgangen
+
+        elif pg == 'DM':
+            rating += opp_goals * 0.08
+            if opp_goals == 0:
+                rating -= 0.15
+            if xg_diff >= 0.5:
+                rating -= 0.15
+            elif xg_diff <= -0.5:
+                rating += 0.15
+            if my_pw > 3:
+                rating -= 0.15   # Pressing-Gewinner
+
         elif pg == 'MID':
-            xg_diff = my_xg - opp_xg
-            if xg_diff > 0.5:
-                rating -= 0.2
-            elif xg_diff < -0.5:
-                rating += 0.2
+            if xg_diff >= 0.5:
+                rating -= 0.20
+            elif xg_diff <= -0.5:
+                rating += 0.20
             if my_pw > 3:
                 rating -= 0.15
-        elif pg == 'FWD':
-            if goals == 0 and my_xg >= 1.5:
-                rating += 0.3
+            if my_poss >= 58 and not opp_win:
+                rating -= 0.10   # Ballbesitz-Dominanz ohne Niederlage
 
-        if pg in ('GK', 'DEF') and goals > 0:
-            rating -= 0.3 * goals
+        elif pg == 'FWD':
+            if my_goals >= 3:
+                rating -= 0.20
+            elif my_goals == 2:
+                rating -= 0.10
+            elif my_goals == 0:
+                rating += 0.25
+            if goals == 0 and assists == 0:
+                if my_xg >= 2.0:
+                    rating += 0.30   # Kein Scorer trotz hoher Team-xG
+                elif my_xg >= 1.5:
+                    rating += 0.20
 
         return round(_clamp(rating, 1.0, 6.0), 1)
 
