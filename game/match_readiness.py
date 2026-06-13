@@ -123,7 +123,16 @@ def _all_valid_formations():
 def _score_formation(formation_dict, players):
     """Simuliert gieriges HP→NP-Füllen ohne FP.
 
-    Gibt (filled, hp_count, np_count) zurück — Tupel-Vergleich wählt das Beste.
+    Gibt (filled, hp_count, np_count, effective_strength) zurück.
+    Tupel-Vergleich wählt die beste Formation:
+      1. maximale Slot-Abdeckung
+      2. maximale HP-Besetzung
+      3. maximale NP-Besetzung
+      4. höchste positionsgewichtete Gesamtstärke (Tiebreaker)
+
+    effective_strength: Summe der Spielerstärken gewichtet nach Positions-Match
+        HP-Slot → base_strength × 1.0
+        NP-Slot → base_strength × 0.9
     """
     slots_to_fill = [('TW', 'goalkeeper')]
     for part in FORMATION_ORDER:
@@ -132,12 +141,14 @@ def _score_formation(formation_dict, players):
 
     used = set()
     filled = hp = np_ = 0
+    effective_strength = 0.0
     for slot_code, _group in slots_to_fill:
         for p in players:
             if p.pk not in used and slot_code in p.main_positions:
                 used.add(p.pk)
                 filled += 1
                 hp += 1
+                effective_strength += float(_player_base_strength(p))
                 break
         else:
             for p in players:
@@ -145,8 +156,9 @@ def _score_formation(formation_dict, players):
                     used.add(p.pk)
                     filled += 1
                     np_ += 1
+                    effective_strength += float(_player_base_strength(p)) * 0.9
                     break
-    return (filled, hp, np_)
+    return (filled, hp, np_, effective_strength)
 
 
 def ensure_default_tactic(club):
@@ -196,9 +208,9 @@ def ensure_default_tactic(club):
 
     players.sort(key=_player_base_strength, reverse=True)
 
-    # 1. Beste Formation nach HP/NP-Abdeckung wählen
+    # 1. Beste Formation nach HP/NP-Abdeckung wählen (Tiebreaker: effektive Stärke)
     best_formation = default_formation()
-    best_score = (-1, -1, -1)
+    best_score = (-1, -1, -1, -1.0)
     for f in _all_valid_formations():
         score = _score_formation(f, players)
         if score > best_score:
