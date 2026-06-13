@@ -322,6 +322,45 @@ def ensure_default_tactic(club):
     return tactic, True
 
 
+def ensure_default_bench(setup):
+    """Füllt die Bank automatisch, wenn sie noch leer ist.
+
+    Nutzt die bereits gespeicherte Aufstellung als Basis für die used_pks,
+    damit kein Startelfspieler auf der Bank landet.
+    Berührt die Aufstellung (lineup) nicht.
+
+    Args:
+        setup: TacticSetup-Instanz (wird ggf. in-place geändert und gespeichert)
+
+    Returns:
+        True wenn die Bank neu befüllt wurde, False wenn sie bereits Einträge hat
+        oder keine Spieler verfügbar sind.
+    """
+    if setup.bench:
+        return False
+
+    club = setup.club
+    from .models import Player
+
+    players = list(
+        Player.objects.filter(club=club).select_related('strength_profile')
+    )
+    if not players:
+        return False
+
+    players.sort(key=_player_base_strength, reverse=True)
+
+    used_pks = {pk for pk in (setup.lineup or {}).values() if pk}
+    bench = _build_bench(players, used_pks)
+
+    if not bench:
+        return False
+
+    setup.bench = bench
+    setup.save(update_fields=['bench', 'updated_at'])
+    return True
+
+
 def calculate_lineup_strength(lineup, formation, malus=Decimal('1.0')):
     """Berechnet Stärken der Startelf nach Linien mit Per-Spieler-Positionsmalus.
 

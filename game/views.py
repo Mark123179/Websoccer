@@ -2821,6 +2821,11 @@ def club_tactics(request, club_id):
         messages.success(request, 'Taktik bestätigt und gespeichert.')
         return redirect(tactic_redirect_url(club, squad_scope, confirmed=1))
 
+    # Bank automatisch vorbefüllen, wenn sie noch leer ist
+    if not setup.bench:
+        from .match_readiness import ensure_default_bench
+        ensure_default_bench(setup)
+
     context = build_tactics_context(request, club, setup, squad_scope)
     return render(request, 'game/tactics.html', context)
 
