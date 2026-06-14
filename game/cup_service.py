@@ -354,10 +354,13 @@ def simulate_cup_fixture(fixture) -> object:
     Verletzungen, Karten, Statistiken). Sperren werden vorab
     dekrementiert (Pflichtspiel-Logik).
 
+    Die gesamte Pipeline läuft in einer Datenbank-Transaktion.
+    Schlägt write_simulated_match_stats() fehl, wird kein CupFixture
+    als gespielt markiert.
+
     Gibt das aktualisierte CupFixture-Objekt zurück.
     """
-    from django.utils import timezone
-    from .models import SimulatedMatch
+    from .models import SimulatedMatch, Club as _Club
     from .match_engine import simulate_ko_match
     from .season_service import (
         write_simulated_match_stats,
@@ -371,59 +374,64 @@ def simulate_cup_fixture(fixture) -> object:
     if not fixture.home_club or not fixture.away_club:
         raise CupServiceError('Heim- oder Auswärtsverein fehlt.')
 
-    try:
-        _decrement_suspensions_for_clubs([fixture.home_club_id, fixture.away_club_id])
-    except Exception:
-        pass
+    # Sperr-Countdown vorab dekrementieren (Pflichtspiel-Logik).
+    # Explizit außerhalb der atomaren Pipeline, da _decrement_suspensions_for_clubs
+    # kein Rollback-kritisches Statement ist.
+    _decrement_suspensions_for_clubs([fixture.home_club_id, fixture.away_club_id])
 
+    # Spiel simulieren — außerhalb der atomaren Transaktion, da der Match Engine
+    # keine DB-Schreiboperationen durchführt.
     data = simulate_ko_match(fixture.home_club, fixture.away_club)
-
-    sm = SimulatedMatch.objects.create(
-        home_club=fixture.home_club,
-        away_club=fixture.away_club,
-        home_goals=data['home_goals'],
-        away_goals=data['away_goals'],
-        report_data=data,
-        match_type='pokal',
-    )
-
-    try:
-        write_simulated_match_stats(sm, data)
-    except Exception:
-        pass
 
     winner_id = data.get('winner_club_id')
     decided_by = data.get('decided_by', 'regular_time')
 
     home_goals_et_raw = data.get('home_goals_et', 0) or 0
     away_goals_et_raw = data.get('away_goals_et', 0) or 0
-    home_goals_90 = data.get('home_goals', 0) - (home_goals_et_raw if decided_by != 'regular_time' else 0)
-    away_goals_90 = data.get('away_goals', 0) - (away_goals_et_raw if decided_by != 'regular_time' else 0)
 
     raw_h90 = data.get('home_goals_90')
     raw_a90 = data.get('away_goals_90')
     if raw_h90 is not None:
         home_goals_90 = raw_h90
         away_goals_90 = raw_a90 or 0
+    else:
+        home_goals_90 = data.get('home_goals', 0) - (home_goals_et_raw if decided_by != 'regular_time' else 0)
+        away_goals_90 = data.get('away_goals', 0) - (away_goals_et_raw if decided_by != 'regular_time' else 0)
 
-    fixture.simulated_match = sm
-    fixture.home_goals_90 = home_goals_90
-    fixture.away_goals_90 = away_goals_90
-    fixture.home_goals_et = home_goals_et_raw if decided_by in ('extra_time', 'penalties') else None
-    fixture.away_goals_et = away_goals_et_raw if decided_by in ('extra_time', 'penalties') else None
-    fixture.home_penalties = data.get('home_penalties')
-    fixture.away_penalties = data.get('away_penalties')
-    fixture.decided_by = decided_by
-    fixture.status = fixture.STATUS_PLAYED
+    with transaction.atomic():
+        sm = SimulatedMatch.objects.create(
+            home_club=fixture.home_club,
+            away_club=fixture.away_club,
+            home_goals=data['home_goals'],
+            away_goals=data['away_goals'],
+            report_data=data,
+            match_type='pokal',
+        )
 
-    from .models import Club as _Club
-    if winner_id:
-        try:
-            fixture.winner_club = _Club.objects.get(pk=winner_id)
-        except _Club.DoesNotExist:
-            fixture.winner_club = fixture.home_club
+        # Kanonische Pipeline — Stats, Verletzungen, Frische, Karten.
+        # Fehler hier brechen die Transaktion: kein teilweise-persistierter Zustand.
+        write_simulated_match_stats(sm, data)
 
-    fixture.save()
+        if winner_id:
+            try:
+                winner_club = _Club.objects.get(pk=winner_id)
+            except _Club.DoesNotExist:
+                winner_club = fixture.home_club
+        else:
+            winner_club = fixture.home_club
+
+        fixture.simulated_match = sm
+        fixture.home_goals_90 = home_goals_90
+        fixture.away_goals_90 = away_goals_90
+        fixture.home_goals_et = home_goals_et_raw if decided_by in ('extra_time', 'penalties') else None
+        fixture.away_goals_et = away_goals_et_raw if decided_by in ('extra_time', 'penalties') else None
+        fixture.home_penalties = data.get('home_penalties')
+        fixture.away_penalties = data.get('away_penalties')
+        fixture.decided_by = decided_by
+        fixture.winner_club = winner_club
+        fixture.status = fixture.STATUS_PLAYED
+        fixture.save()
+
     return fixture
 
 
@@ -518,14 +526,17 @@ def schedule_cup_round(cup_round, season: str | None = None) -> object:
     """Setzt cup_round.scheduled_date auf den frühesten konfliktfreien Di/Mi.
 
     Startpunkt:
-    - Runde 1: Saisonbeginn + 14 Tage (oder heute + 14 Tage falls kein Datum)
+    - Runde 1: Saisonbeginn + 14 Tage (saison-relativ aus cup_season.season
+      sofern parsierbar, sonst heute + 14 Tage)
     - Folgerunden: scheduled_date der vorherigen Runde + 7 Tage
 
     Ablehnen wenn:
     - Ein beteiligter Club an dem Tag ein Ligaspiel hat (SeasonFixture)
     - Ein beteiligter Club bereits ein anderes Pokalspiel hat
 
-    Maximales Suchfenster: 90 Tage.
+    Maximales Suchfenster: 60 Tage.
+
+    Wirft CupServiceError wenn kein konfliktfreier Termin gefunden werden kann.
     """
     from .models import CupFixture, SeasonFixture
 
@@ -548,7 +559,8 @@ def schedule_cup_round(cup_round, season: str | None = None) -> object:
     if prev_round and prev_round.scheduled_date:
         start = prev_round.scheduled_date + timedelta(days=7)
     else:
-        start = date.today() + timedelta(days=14)
+        # Saison-relativ: "2025/26" → Startjahr 2025, August (Pokal-Beginn)
+        start = _season_start_date(cup_season.season) + timedelta(days=14)
 
     existing_cup_dates = set(
         cup_season.rounds
@@ -558,25 +570,23 @@ def schedule_cup_round(cup_round, season: str | None = None) -> object:
     )
 
     season_str = season or cup_season.season
-    liga_dates = set(
-        SeasonFixture.objects
-        .filter(
-            home_club_id__in=club_ids,
-            season=season_str,
+    if club_ids:
+        liga_dates = set(
+            SeasonFixture.objects
+            .filter(home_club_id__in=club_ids, season=season_str)
+            .values_list('scheduled_date', flat=True)
+        ) | set(
+            SeasonFixture.objects
+            .filter(away_club_id__in=club_ids, season=season_str)
+            .values_list('scheduled_date', flat=True)
         )
-        .values_list('scheduled_date', flat=True)
-    ) | set(
-        SeasonFixture.objects
-        .filter(
-            away_club_id__in=club_ids,
-            season=season_str,
-        )
-        .values_list('scheduled_date', flat=True)
-    )
+    else:
+        liga_dates = set()
+
     blocked = (liga_dates | existing_cup_dates) - {None}
 
     candidate = start
-    for _ in range(90):
+    for _ in range(60):
         if candidate.weekday() in (1, 2) and candidate not in blocked:
             cup_round.scheduled_date = candidate
             cup_round.status = type(cup_round).STATUS_SCHEDULED
@@ -584,6 +594,15 @@ def schedule_cup_round(cup_round, season: str | None = None) -> object:
             return cup_round
         candidate += timedelta(days=1)
 
-    cup_round.scheduled_date = start
-    cup_round.save(update_fields=['scheduled_date'])
-    return cup_round
+    raise CupServiceError(
+        f'Kein konfliktfreier Di/Mi-Termin in den nächsten 60 Tagen ab {start} gefunden.'
+    )
+
+
+def _season_start_date(season: str) -> date:
+    """Parst 'YYYY/YY' oder 'YYYY' → date(YYYY, 8, 1) als saisonaler Startpunkt."""
+    try:
+        year = int(season.split('/')[0])
+        return date(year, 8, 1)
+    except (ValueError, AttributeError):
+        return date.today()

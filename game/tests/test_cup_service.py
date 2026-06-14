@@ -412,29 +412,37 @@ class AdvanceCupRoundTests(TestCase):
 
 class ScheduleCupRoundTests(TestCase):
 
-    def test_sets_scheduled_date(self):
-        pokal      = _make_league('Pokal Sched', competition_type='cup')
-        cup_season = _make_cup_season(pokal)
+    def _setup(self, season='2025/26'):
+        pokal      = _make_league(f'Pokal Sched {season}', competition_type='cup')
+        cup_season = _make_cup_season(pokal, season=season)
         cup_round  = _make_cup_round(cup_season)
+        return cup_round
+
+    def test_sets_scheduled_date(self):
+        cup_round = self._setup()
         schedule_cup_round(cup_round)
         cup_round.refresh_from_db()
         self.assertIsNotNone(cup_round.scheduled_date)
 
     def test_scheduled_date_is_tuesday_or_wednesday(self):
-        pokal      = _make_league('Pokal TuWe', competition_type='cup')
-        cup_season = _make_cup_season(pokal)
-        cup_round  = _make_cup_round(cup_season)
+        cup_round = self._setup(season='2024/25')
         schedule_cup_round(cup_round)
         cup_round.refresh_from_db()
         self.assertIn(cup_round.scheduled_date.weekday(), (1, 2))
 
     def test_status_set_to_scheduled(self):
-        pokal      = _make_league('Pokal St', competition_type='cup')
-        cup_season = _make_cup_season(pokal)
-        cup_round  = _make_cup_round(cup_season)
+        cup_round = self._setup(season='2023/24')
         schedule_cup_round(cup_round)
         cup_round.refresh_from_db()
         self.assertEqual(cup_round.status, CupRound.STATUS_SCHEDULED)
+
+    def test_season_start_date_parser(self):
+        """_season_start_date gibt saisonalen August-Startpunkt zurück."""
+        from game.cup_service import _season_start_date
+        from datetime import date as d
+        self.assertEqual(_season_start_date('2025/26'), d(2025, 8, 1))
+        self.assertEqual(_season_start_date('2023/24'), d(2023, 8, 1))
+        self.assertEqual(_season_start_date('2030'), d(2030, 8, 1))
 
 
 # ── 8. Fehlerklassen-Hierarchie ───────────────────────────────────────────────

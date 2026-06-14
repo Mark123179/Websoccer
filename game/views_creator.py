@@ -2532,6 +2532,49 @@ def creator_competition_create(request):
     return redirect(f'/creator/leagues/{league.pk}/?tab=stammdaten')
 
 
+# ── Dummy-Clubs generieren ────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_generate_dummies(request, league_id):
+    """Legt Dummy-Clubs idempotent in einer Ziel-Liga (2. Bundesliga) an.
+
+    Wird explizit vom Creator aufgerufen bevor eine Pokalsaison gestartet wird.
+    Idempotent: bestehende Clubs werden nicht dupliziert.
+    """
+    from .cup_service import generate_dummy_clubs
+
+    get_object_or_404(League, id=league_id)
+
+    target_id = request.POST.get('target_league_id', '')
+    try:
+        target_league = League.objects.get(pk=int(target_id))
+    except (League.DoesNotExist, ValueError, TypeError):
+        messages.error(request, 'Ungültige Ziel-Liga.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    try:
+        count = max(2, min(36, int(request.POST.get('count', 18))))
+    except (ValueError, TypeError):
+        count = 18
+
+    try:
+        clubs = generate_dummy_clubs(
+            league=target_league,
+            count=count,
+            name_prefix=f'{target_league.name} Dummy',
+        )
+        messages.success(
+            request,
+            f'{len(clubs)} Dummy-Clubs in „{target_league.name}" bereit '
+            f'(neu oder bereits vorhanden — idempotent).'
+        )
+    except Exception as exc:
+        messages.error(request, f'Fehler beim Anlegen der Dummy-Clubs: {exc}')
+
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
 # ── Pokalsaison anlegen ───────────────────────────────────────────────────────
 
 @login_required

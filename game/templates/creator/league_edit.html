@@ -187,11 +187,41 @@
   <!-- ═══ TAB: POKAL ═══════════════════════════════════════════════════════ -->
   {% if active_tab == 'pokal' and league.is_cup %}
 
+  <!-- Schritt 1: Dummy-Clubs für 2. Bundesliga anlegen (falls weniger als 18 Vereine) -->
+  <div class="creator-card" style="margin-bottom:1rem;">
+    <div class="creator-card-head"><h2>Schritt 1 — 2. Bundesliga vorbereiten</h2></div>
+    <div class="creator-card-body">
+      <p style="color:#556677;font-size:.83rem;margin:0 0 1rem;">
+        Für den Pokal werden 14 Zweitligisten benötigt. Falls die 2. Bundesliga noch keine echten Vereine hat, können hier Dummy-Clubs angelegt werden.
+        <strong style="color:#ffcc44;">Wähle die Ziel-Liga für Dummy-Clubs:</strong>
+      </p>
+      <form method="post" action="{% url 'creator_cup_generate_dummies' league_id=league.pk %}">
+        {% csrf_token %}
+        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <label class="creator-label">Ziel-Liga (2. Bundesliga)</label>
+            <select class="creator-input" name="target_league_id">
+              {% for l in all_leagues %}
+              <option value="{{ l.pk }}" {% if l.competition_type == 'league' %}selected{% endif %}>{{ l.name }} ({{ l.club_set.count }} Vereine)</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="flex:0 0 auto;min-width:100px;">
+            <label class="creator-label">Anzahl</label>
+            <input class="creator-input" name="count" type="number" min="2" max="36" value="18" style="width:80px;">
+          </div>
+          <button type="submit" class="creator-btn creator-btn-icon" style="flex-shrink:0;">🤖 Dummy-Clubs anlegen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Schritt 2: Pokalsaison anlegen -->
   {% if not cup_seasons %}
   <div class="creator-card">
-    <div class="creator-card-head"><h2>Pokalsaison starten</h2></div>
+    <div class="creator-card-head"><h2>Schritt 2 — Pokalsaison anlegen</h2></div>
     <div class="creator-card-body">
-      <p style="color:#556677;font-size:.83rem;margin:0 0 1.25rem;">Noch keine Pokalsaison angelegt. Saison anlegen und Teilnehmer festlegen.</p>
+      <p style="color:#556677;font-size:.83rem;margin:0 0 1.25rem;">Saison anlegen, Teilnehmerquellen auswählen (18 Bundesligisten + 14 Zweitligisten) und erste Runde auslosen.</p>
       <form method="post" action="{% url 'creator_cup_season_create' league_id=league.pk %}">
         {% csrf_token %}
         <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
@@ -200,22 +230,22 @@
             <input class="creator-input" name="season" value="2025/26" required>
           </div>
           <div style="flex:1;min-width:160px;">
-            <label class="creator-label">Bundesliga (Teilnehmer-Quelle)</label>
+            <label class="creator-label">Bundesliga (18 Teilnehmer)</label>
             <select class="creator-input" name="bundesliga_id">
               {% for l in all_leagues %}
-              <option value="{{ l.pk }}" {% if l.competition_type == 'league' %}{% endif %}>{{ l.name }}</option>
+              <option value="{{ l.pk }}">{{ l.name }} ({{ l.club_set.count }} Vereine)</option>
               {% endfor %}
             </select>
           </div>
           <div style="flex:1;min-width:160px;">
-            <label class="creator-label">2. Liga (Teilnehmer-Quelle)</label>
+            <label class="creator-label">2. Liga (14 Teilnehmer)</label>
             <select class="creator-input" name="zweitliga_id">
               {% for l in all_leagues %}
-              <option value="{{ l.pk }}">{{ l.name }}</option>
+              <option value="{{ l.pk }}">{{ l.name }} ({{ l.club_set.count }} Vereine)</option>
               {% endfor %}
             </select>
           </div>
-          <button type="submit" class="creator-btn creator-btn-primary" style="flex-shrink:0;">🏆 Saison anlegen</button>
+          <button type="submit" class="creator-btn creator-btn-primary" style="flex-shrink:0;">🏆 Saison + 1. Runde anlegen</button>
         </div>
       </form>
     </div>
