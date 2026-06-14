@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Job-Angebote{% endblock %}
+
+{% block body_class %}job-offers-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-artboard">
+
+    <div class="jo-header">
+        <div class="jo-header-left">
+            <p class="jo-eyebrow">Management Hub</p>
+            <h1 class="jo-title">Job-<strong>Angebote</strong></h1>
+            <p class="jo-subtitle">Alle Vereine ohne aktiven Trainer — jetzt bewerben.</p>
+        </div>
+        <a href="{% url 'management_hub' %}" style="
+            display:inline-flex; align-items:center; gap:6px;
+            font-family:'Segoe UI',Arial,sans-serif; font-size:12px; font-weight:700;
+            letter-spacing:.08em; text-transform:uppercase; color:rgba(255,255,255,.45);
+            text-decoration:none; border:1px solid rgba(255,255,255,.12);
+            border-radius:6px; padding:8px 16px;
+            transition:color .18s,border-color .18s;
+        ">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;">
+                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+            Zurück zum Hub
+        </a>
+    </div>
+
+    {% if current_club %}
+    <div class="jo-current-club-banner">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        Aktueller Verein: <strong>{{ current_club.name }}</strong> — Du kannst die Liste einsehen, aber nicht bewerben.
+    </div>
+    {% endif %}
+
+    <p class="jo-count">{{ club_rows|length }} freie Stelle{{ club_rows|length|pluralize:"n" }}</p>
+
+    {% if club_rows %}
+    <div class="jo-list">
+        {% for row in club_rows %}
+        <div class="jo-card">
+
+            <!-- Stadium-Banner links -->
+            <div class="jo-card-stadium">
+                <div class="jo-stadium-bg"></div>
+                <div class="jo-stadium-overlay"></div>
+            </div>
+
+            <!-- Vereins-Info Mitte -->
+            <div class="jo-card-info">
+                {% if row.club.fm_inside_id %}
+                <img
+                    src="{% static 'game/images/crests/' %}{{ row.club.fm_inside_id }}.png"
+                    alt="{{ row.club.name }}"
+                    class="jo-crest"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                >
+                <div class="jo-crest-placeholder" style="display:none;"></div>
+                {% else %}
+                <div class="jo-crest-placeholder"></div>
+                {% endif %}
+
+                <div class="jo-club-meta">
+                    <span class="jo-club-name">{{ row.club.name }}</span>
+                    <div class="jo-league-row">
+                        {% if row.flag_code %}
+                        <img
+                            src="https://flagcdn.com/16x12/{{ row.flag_code|lower }}.png"
+                            alt="{{ row.club.league.country }}"
+                            class="jo-flag"
+                            onerror="this.style.display='none';"
+                        >
+                        {% endif %}
+                        <span class="jo-league-name">{{ row.club.league.name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rechte Spalte: Stadioninfo + Button -->
+            <div class="jo-card-right">
+                <div class="jo-stats">
+                    <div class="jo-stat-item">
+                        <span class="jo-stat-label">Stadion</span>
+                        <span class="jo-stat-value">{{ row.stadium_name }}</span>
+                    </div>
+                    {% if row.stadium_capacity %}
+                    <div class="jo-stat-item">
+                        <span class="jo-stat-label">Kapazität</span>
+                        <span class="jo-stat-value">{{ row.stadium_capacity|intcomma }} Plätze</span>
+                    </div>
+                    {% endif %}
+                    {% if row.goal_label %}
+                    <div class="jo-stat-item">
+                        <span class="jo-goal-pill">Ziel: {{ row.goal_label }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if not current_club %}
+                <form method="post" action="{% url 'management_job_offers' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="club_id" value="{{ row.club.pk }}">
+                    <button type="submit" class="jo-apply-btn">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        Bewerben
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="jo-empty">
+        <svg class="jo-empty-icon" viewBox="0 0 24 24">
+            <path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.51 16.49 1 14.64 1 13.74 1 12.95 1.37 12.4 2L12 2.41 11.6 2A2.58 2.58 0 0 0 9.36 1C7.51 1 6 2.51 6 4.64c0 .48.11.92.18 1.36H4C2.9 6 2 6.9 2 8v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5.36-3c.7 0 1.36.66 1.36 1.64 0 1-.56 1.86-1.36 2.36C13.84 6.5 13.18 5.64 13.18 4.64 13.18 3.66 13.84 3 14.64 3zM8 4.64C8 3.66 8.66 3 9.36 3s1.36.66 1.36 1.64c0 1-.56 1.86-1.36 2.36C8.56 6.5 8 5.64 8 4.64zM20 20H4V8h5.93c.74.55 1.55.91 2.07 1 .52-.09 1.33-.45 2.07-1H20v12z"/>
+        </svg>
+        <p class="jo-empty-text">Derzeit sind alle Vereine besetzt. Schau später nochmal vorbei.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,310 @@
+/* =========================================================
+   Job-Angebote  —  /management/job-angebote/
+   Scope: .job-offers-page
+   Dunkler Hintergrund, horizontale Vereinskarten mit Gold-Akzenten
+   ========================================================= */
+
+.job-offers-page .dashboard-artboard {
+    min-height: 100vh;
+    background: #060b12;
+    padding: 0 0 60px 0;
+}
+
+/* ---- Seiten-Header ---- */
+.jo-header {
+    padding: 40px 48px 28px;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.jo-header-left {}
+
+.jo-eyebrow {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.70);
+    margin-bottom: 6px;
+}
+
+.jo-title {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: 0.04em;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.jo-title strong {
+    font-weight: 700;
+    color: #c9a84c;
+}
+
+.jo-subtitle {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 8px 0 0;
+}
+
+/* ---- Aktueller-Verein-Banner ---- */
+.jo-current-club-banner {
+    margin: 24px 48px 0;
+    padding: 12px 18px;
+    background: rgba(201, 168, 76, 0.10);
+    border: 1px solid rgba(201, 168, 76, 0.30);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.80);
+}
+
+.jo-current-club-banner svg {
+    width: 16px;
+    height: 16px;
+    fill: #c9a84c;
+    flex-shrink: 0;
+}
+
+.jo-current-club-banner strong {
+    color: #c9a84c;
+}
+
+/* ---- Ergebnisanzahl ---- */
+.jo-count {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.35);
+    margin: 20px 48px 4px;
+}
+
+/* ---- Karten-Liste ---- */
+.jo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 48px;
+}
+
+/* ---- Einzelne Vereinskarte ---- */
+.jo-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 260px 1fr auto;
+    grid-template-rows: 120px;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: background 0.18s ease;
+}
+
+.jo-card:first-child {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.jo-card:hover {
+    background: rgba(201, 168, 76, 0.04);
+}
+
+/* Stadium-Banner links */
+.jo-card-stadium {
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    margin: 12px 0 12px 0;
+    flex-shrink: 0;
+}
+
+.jo-stadium-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0d1e2e 0%, #0a1520 50%, #071018 100%);
+    background-size: cover;
+    background-position: center;
+}
+
+.jo-stadium-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(6,11,18,0) 0%, rgba(6,11,18,0.75) 100%);
+}
+
+/* Center-Bereich: Vereinsinfo */
+.jo-card-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+}
+
+.jo-crest {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+
+.jo-crest-placeholder {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(201, 168, 76, 0.12);
+    border: 1.5px solid rgba(201, 168, 76, 0.25);
+    flex-shrink: 0;
+}
+
+.jo-club-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.jo-club-name {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.jo-league-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.jo-flag {
+    width: 16px;
+    height: 11px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.jo-league-name {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.50);
+    letter-spacing: 0.05em;
+}
+
+/* Rechter Bereich: Stadioninfo + Ziele + Button */
+.jo-card-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 16px 20px 16px 0;
+    flex-shrink: 0;
+}
+
+.jo-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.jo-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.jo-stat-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.30);
+}
+
+.jo-stat-value {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.02em;
+}
+
+.jo-goal-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(201, 168, 76, 0.15);
+    border: 1px solid rgba(201, 168, 76, 0.30);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #c9a84c;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+/* Bewerben-Button */
+.jo-apply-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 20px;
+    background: rgba(201, 168, 76, 0.15);
+    border: 1.5px solid rgba(201, 168, 76, 0.45);
+    border-radius: 6px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #c9a84c;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    flex-shrink: 0;
+}
+
+.jo-apply-btn:hover {
+    background: rgba(201, 168, 76, 0.28);
+    border-color: rgba(201, 168, 76, 0.75);
+    color: #e0c06a;
+}
+
+.jo-apply-btn svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+}
+
+/* ---- Leer-Zustand ---- */
+.jo-empty {
+    padding: 80px 48px;
+    text-align: center;
+}
+
+.jo-empty-icon {
+    width: 48px;
+    height: 48px;
+    fill: rgba(201, 168, 76, 0.25);
+    margin: 0 auto 16px;
+    display: block;
+}
+
+.jo-empty-text {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.35);
+}

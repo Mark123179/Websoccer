@@ -1100,3 +1100,67 @@ def management_halloffame(request):
     return render(request, 'game/management/halloffame.html', context)
 
 
+# ------------------------------------------------------------------ #
+#  Job-Angebote — freie Vereine ohne Manager                          #
+# ------------------------------------------------------------------ #
+
+@login_required(login_url='/auth/login/')
+def management_job_offers(request):
+    from .models import Club, SeasonGoal, COUNTRY_FLAG_ASSETS
+    from .season_goals import current_season_number
+    from .services import record_club_assignment
+
+    manager_profile = getattr(request.user, 'manager_profile', None)
+    current_club = current_manager_club(user=request.user)
+
+    if request.method == 'POST' and not current_club and manager_profile:
+        try:
+            club_id = int(request.POST.get('club_id', 0))
+            target_club = Club.objects.get(pk=club_id, managed_by__isnull=True)
+            record_club_assignment(manager_profile, target_club)
+            messages.success(request, f'Du hast den Posten bei {target_club.name} angetreten!')
+        except Club.DoesNotExist:
+            messages.error(request, 'Dieser Verein ist nicht mehr verfügbar.')
+        except Exception as exc:
+            messages.error(request, f'Bewerbung fehlgeschlagen: {exc}')
+        return redirect('management_hub')
+
+    free_clubs_qs = (
+        Club.objects
+        .filter(managed_by__isnull=True)
+        .select_related('league', 'stadium', 'public_profile')
+        .order_by('league__country', 'league__name', 'name')
+    )
+
+    season = current_season_number()
+
+    club_rows = []
+    for c in free_clubs_qs:
+        stadium = _get_stadium_or_none(c)
+        stadium_name = stadium.name if stadium else '—'
+        stadium_capacity = stadium.capacity_total if stadium else 0
+
+        goal = SeasonGoal.objects.filter(club=c, season_number=season).first()
+        goal_label = goal.goal_tier_label if goal else None
+
+        flag_code = None
+        try:
+            entry = COUNTRY_FLAG_ASSETS.get(c.league.country, {})
+            flag_code = entry.get('code')
+        except Exception:
+            pass
+
+        club_rows.append({
+            'club': c,
+            'stadium_name': stadium_name,
+            'stadium_capacity': stadium_capacity,
+            'goal_label': goal_label,
+            'flag_code': flag_code,
+        })
+
+    return render(request, 'game/management/job_offers.html', {
+        'current_club': current_club,
+        'club_rows': club_rows,
+    })
+
+

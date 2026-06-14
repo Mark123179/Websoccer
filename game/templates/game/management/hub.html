@@ -7,7 +7,7 @@
 {% block body_class %}management-hub-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-hub.css' %}?v=14">
+<link rel="stylesheet" href="{% static 'game/css/management-hub.css' %}?v=15">
 {% endblock %}
 
 {% block content %}
@@ -36,7 +36,7 @@
                 </div>
             </a>
 
-            <!-- STADION -->
+            <!-- STADION & UMFELD -->
             {% if club %}
             <a href="/management/stadion/" class="mhub-card mhub-card--active mhub-card--stadion">
                 <div class="mhub-card-bg" style="background-image:url('{% if stadium_bg %}{% static stadium_bg %}{% else %}{% static 'game/images/backgrounds/stadium-hero.jpg' %}{% endif %}');"></div>
@@ -47,7 +47,7 @@
                             <path d="M12 2C8 2 4 4.5 4 8v8c0 3.5 4 4 8 4s8-.5 8-4V8c0-3.5-4-6-8-6zm0 2c3.3 0 6 2 6 4s-2.7 4-6 4-6-2-6-4 2.7-4 6-4zm0 14c-3.9 0-6-.8-6-2V9.6C7.5 10.7 9.6 11.5 12 11.5s4.5-.8 6-1.9V16c0 1.2-2.1 2-6 2z"/>
                         </svg>
                     </div>
-                    <h2 class="mhub-card-title">Stadion</h2>
+                    <h2 class="mhub-card-title">Stadion &amp; Umfeld</h2>
                     <p class="mhub-card-sub">Ausbau, Verwaltung &amp; Infrastruktur</p>
                     {% if stadium %}
                     <span class="mhub-stadium-cap">{{ stadium.capacity_total|intcomma }} Plätze</span>
@@ -64,7 +64,7 @@
                             <path d="M12 2C8 2 4 4.5 4 8v8c0 3.5 4 4 8 4s8-.5 8-4V8c0-3.5-4-6-8-6zm0 2c3.3 0 6 2 6 4s-2.7 4-6 4-6-2-6-4 2.7-4 6-4zm0 14c-3.9 0-6-.8-6-2V9.6C7.5 10.7 9.6 11.5 12 11.5s4.5-.8 6-1.9V16c0 1.2-2.1 2-6 2z"/>
                         </svg>
                     </div>
-                    <h2 class="mhub-card-title">Stadion</h2>
+                    <h2 class="mhub-card-title">Stadion &amp; Umfeld</h2>
                     <p class="mhub-card-sub mhub-no-club-hint">Kein Verein zugewiesen</p>
                 </div>
             </div>
@@ -195,6 +195,21 @@
                     <p class="mhub-card-sub">Neuigkeiten &amp; Vereinsinformationen</p>
                 </div>
             </div>
+
+            <!-- JOB-ANGEBOTE — immer zugänglich, Reihe 3 Spalte 1 -->
+            <a href="/management/job-angebote/" class="mhub-card mhub-card--active mhub-card--jobs">
+                <div class="mhub-card-bg"></div>
+                <div class="mhub-card-overlay"></div>
+                <div class="mhub-card-body">
+                    <div class="mhub-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.51 16.49 1 14.64 1 13.74 1 12.95 1.37 12.4 2L12 2.41 11.6 2A2.58 2.58 0 0 0 9.36 1C7.51 1 6 2.51 6 4.64c0 .48.11.92.18 1.36H4C2.9 6 2 6.9 2 8v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5.36-3c.7 0 1.36.66 1.36 1.64 0 1-.56 1.86-1.36 2.36C13.84 6.5 13.18 5.64 13.18 4.64 13.18 3.66 13.84 3 14.64 3zM8 4.64C8 3.66 8.66 3 9.36 3s1.36.66 1.36 1.64c0 1-.56 1.86-1.36 2.36C8.56 6.5 8 5.64 8 4.64zM20 20H4V8h5.93c.74.55 1.55.91 2.07 1 .52-.09 1.33-.45 2.07-1H20v12z"/>
+                        </svg>
+                    </div>
+                    <h2 class="mhub-card-title">Job-Angebote</h2>
+                    <p class="mhub-card-sub">Freie Trainerstellen entdecken</p>
+                </div>
+            </a>
 
         </div>
     </div>
