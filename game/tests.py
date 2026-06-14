@@ -3768,12 +3768,16 @@ class InjurySubTests(TestCase):
         self.assertEqual(als.sub_events[0]['position_relation'], 'HP')
 
     def test_ticker_comment_includes_slot_and_relation(self):
-        """_ticker_comment('sub') enthält Slot und Relation im Text."""
+        """_ticker_comment('sub') FP: enthält Slot und Hinweis auf Fremdposition."""
         from .views import _ticker_comment
         text = _ticker_comment('sub', 5, in_name='Müller', out_name='Kane',
                                target_slot='ST', position_relation='FP')
         self.assertIn('ST', text)
-        self.assertIn('Fremdposition', text)
+        fp_indicators = ['ungewohnte Position', 'Stammposition', 'Notlösung']
+        self.assertTrue(
+            any(ind in text for ind in fp_indicators),
+            f"FP-Text enthält keinen Fremdpositions-Hinweis: {text!r}",
+        )
 
     def test_ticker_comment_sub_no_slot_no_extra_info(self):
         """_ticker_comment('sub') ohne Slot/Relation → kein Klammer-Anhang."""

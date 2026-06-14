@@ -3453,114 +3453,24 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
 
 def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
                     score_h=0, score_a=0, days=0, in_name='', out_name='',
-                    target_slot='', position_relation=''):
-    """Deterministischer deutscher Kommentartext für ein Ticker-Ereignis."""
-    seed = abs(hash(f"{evt_type}|{minute}|{player}|{in_name}"))
-    score = f"{score_h}:{score_a}"
-
-    if evt_type == 'goal':
-        if assister:
-            opts = [
-                f"Tor! {player} trifft nach Vorlage von {assister}. {score}!",
-                f"{player} macht das {score}! Assist: {assister}.",
-                f"Traumkombination! {assister} legt auf — {player} verwertet: {score}!",
-                f"{assister} bedient {player} mustergültig, und der trifft: {score}!",
-                f"{player} vollendet den Assist von {assister}. {score}.",
-            ]
-        else:
-            opts = [
-                f"Tor! {player} trifft zum {score}!",
-                f"{player} erzielt das {score}.",
-                f"Alleingang von {player} — der Ball sitzt. {score}!",
-                f"{player} lässt dem Torwart keine Chance: {score}!",
-                f"Was ein Treffer von {player}! {score}.",
-            ]
-    elif evt_type == 'card':
-        if card_type == 'yellow_red':
-            opts = [
-                f"Zweite Gelbe für {player} — Platzverweis!",
-                f"{player} sieht Gelb-Rot. Unterzahl!",
-                f"Gelb-Rot für {player}! Frühes Ende für ihn.",
-            ]
-        elif card_type == 'red':
-            opts = [
-                f"Platzverweis! {player} sieht die Rote Karte.",
-                f"{player} fliegt vom Platz — Rote Karte!",
-                f"Rot für {player}! Direkte Rote Karte.",
-            ]
-        else:
-            opts = [
-                f"{player} sieht die Gelbe Karte.",
-                f"Schiedsrichter zeigt {player} Gelb.",
-                f"Gelbe Karte für {player}.",
-            ]
-    elif evt_type == 'sub':
-        # HP (Stammposition) ist der Normalfall → kein Klammer-Anhang
-        # NP/FP erhalten Positionshinweis im Ticker
-        _rel_labels = {'NP': 'Nebenposition', 'FP': 'Fremdposition'}
-        _rel_label = _rel_labels.get(position_relation or '', '')
-        _slot_info = (
-            f' ({target_slot} \u2014 {_rel_label})' if target_slot and _rel_label
-            else ''
-        )
-        opts = [
-            f"Wechsel: {in_name} kommt für {out_name}{_slot_info}.",
-            f"{out_name} verlässt das Feld, {in_name} betritt den Platz{_slot_info}.",
-            f"Einwechslung: {in_name} ersetzt {out_name}{_slot_info}.",
-        ]
-    elif evt_type == 'injury':
-        opts = [
-            f"{player} verletzt sich — ca. {days} Tage Ausfall.",
-            f"Verletzung: {player} muss behandelt werden ({days} Tage).",
-            f"{player} bleibt nach einem Zweikampf verletzt am Boden. {days} Tage Pause.",
-        ]
-    elif evt_type == 'shot':
-        if player:
-            opts = [
-                f"{player} zieht ab — der Ball geht knapp drüber!",
-                f"Schuss von {player}, kein Problem für den Torhüter.",
-                f"{player} versucht es aus der Distanz, der Keeper hält.",
-                f"{player} kommt zum Abschluss — knapp am Pfosten vorbei.",
-                f"Halbchance durch {player} — zu unplatziert.",
-            ]
-        else:
-            opts = [
-                "Schuss aufs Tor — der Keeper ist auf dem Posten.",
-                "Torschuss — knapp drüber.",
-                "Chance! Der Abschluss geht neben das Tor.",
-            ]
-    elif evt_type == 'corner':
-        if player:
-            opts = [
-                f"Eckball — {player} tritt an.",
-                f"Ecke von {player}, die Abwehr klärt.",
-                f"{player} schlägt die Ecke herein — kein Abnehmer.",
-                f"Eckball ausgeführt von {player}.",
-            ]
-        else:
-            opts = [
-                "Eckball — aus der Ecke wird nichts.",
-                "Eckstoß. Der Ball wird weggekopft.",
-            ]
-    elif evt_type == 'foul':
-        if player:
-            opts = [
-                f"Foulspiel — Freistoß für {player}.",
-                f"Pfiff! Freistoß nach Foul an {player}.",
-                f"{player} wird von hinten gefoult — Schiedsrichter pfeift.",
-                f"Unterbrechung: Freistoß nach Foul gegen {player}.",
-            ]
-        else:
-            opts = [
-                "Foulspiel — Freistoß.",
-                "Pfiff! Freistoß.",
-            ]
-    elif evt_type == 'flow':
-        opts = [player] if player else [f"Spielunterbrechung in Minute {minute}."]
-    else:
-        opts = [f"Spielunterbrechung in Minute {minute}."]
-
-    return opts[seed % len(opts)]
+                    target_slot='', position_relation='', is_injury_sub=False):
+    """Deterministischer Live-Kommentar — delegiert an game.ticker_commentary."""
+    from game.ticker_commentary import build_ticker_text
+    return build_ticker_text(
+        evt_type,
+        minute=minute,
+        player=player,
+        assister=assister,
+        card_type=card_type,
+        score_h=score_h,
+        score_a=score_a,
+        days=days,
+        in_name=in_name,
+        out_name=out_name,
+        target_slot=target_slot,
+        position_relation=position_relation,
+        is_injury_sub=is_injury_sub,
+    )
 
 
 def _generate_narrative_events(data: dict) -> list[dict]:
@@ -3641,29 +3551,16 @@ def _generate_narrative_events(data: dict) -> list[dict]:
         events.append({'type': 'foul', 'team': 'away', 'minute': minute,
                        'commentary': _ticker_comment('foul', minute, _pick(a_pl, 900 + i))})
 
-    # ── Spielfluss-Kommentare (8 gleichmäßig über 90 Min.) ────────────────────
-    h_short = home_name[:9]
-    a_short = away_name[:9]
-    FLOW_POOL = [
-        f"{h_short} kombiniert sich flüssig durch die Reihen.",
-        f"{a_short} versucht es über die Flügel.",
-        f"Intensiver Zweikampf im Mittelfeld — der Ball geht ins Aus.",
-        f"{h_short} hält den Gegner mit langen Bällen in Schach.",
-        f"{a_short} übt Pressing aus, wird aber mehrfach ausgespielt.",
-        f"Ruhigere Spielphase — beide Teams lauern auf ihre Chance.",
-        f"Spielunterbrechung. Das Spiel wird neu angepfiffen.",
-        f"{h_short} dominiert die Spielmitte phasenweise.",
-        f"{a_short} kommt besser in die Partie.",
-        f"Beide Mannschaften spielen sich warm, das Tempo steigt.",
-        f"Das Spiel verläuft ausgeglichen — spannend bleibt es.",
-        f"Starkes Anlaufen von {a_short} in der eigenen Hälfte.",
-        f"Konter von {h_short} läuft ins Leere.",
-        f"{a_short} gewinnt zunehmend Kontrolle im Mittelfeld.",
-        f"Tempowechsel von {h_short} bringt die Abwehr kurz in Not.",
-    ]
+    # ── Spielfluss-Kommentare (10 gleichmäßig über 90 Min.) ──────────────────
+    from game.ticker_commentary import build_flow_text
     r_flow = _rng.Random(base_seed + 1001)
-    for minute in _distribute(8, 8, 82, 1001):
-        text = FLOW_POOL[r_flow.randint(0, len(FLOW_POOL) - 1)]
+    for minute in _distribute(10, 5, 85, 1001):
+        flow_seed = base_seed + 1001 + minute
+        text = build_flow_text(
+            minute, flow_seed,
+            h_name=home_name, a_name=away_name,
+            h_players=h_pl, a_players=a_pl,
+        )
         events.append({'type': 'flow', 'team': 'home', 'minute': minute,
                        'commentary': text})
 
@@ -3751,6 +3648,7 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 'sub', evt['minute'], in_name=evt['in_name'], out_name=evt['out_name'],
                 target_slot=evt.get('target_slot', ''),
                 position_relation=evt.get('position_relation', ''),
+                is_injury_sub=evt.get('is_injury_sub', False),
             )
         elif t == 'card':
             evt['score_h'] = score_h
