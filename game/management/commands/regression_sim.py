@@ -1320,6 +1320,7 @@ class Command(BaseCommand):
                   f'Quote: {_pct(n_ex, n_in)}')
         if sub_minutes:
             w('\n    Wechsel-Timing:')
+            w(f'      Min: {min(sub_minutes)}\'  Max: {max(sub_minutes)}\'  Median: {_median(sub_minutes):.0f}\'')
             bkts = {'≤55': 0, '56-65': 0, '66-75': 0, '76-85': 0, '86+': 0}
             for m in sub_minutes:
                 if m <= 55:   bkts['≤55']   += 1
@@ -1328,8 +1329,10 @@ class Command(BaseCommand):
                 elif m <= 85: bkts['76-85'] += 1
                 else:         bkts['86+']   += 1
             mx = max(bkts.values()) or 1
+            total_sm = len(sub_minutes)
             for lbl, cnt in bkts.items():
-                w(f'      {lbl} min  {_bar(cnt,0,mx)}  {cnt}×  {_pct(cnt,len(sub_minutes))}')
+                warn = '  ⚠ >30%' if total_sm and cnt / total_sm > 0.30 else ''
+                w(f'      {lbl} min  {_bar(cnt,0,mx)}  {cnt}×  {_pct(cnt,total_sm)}{warn}')
 
         # ── E: VERLETZUNGEN, FRISCHE, TICKER ─────────────────────────────────
         w(f'\n{HR}'); w('  E  VERLETZUNGEN, FRISCHE, TICKER-INTEGRITÄT'); w(HR)
