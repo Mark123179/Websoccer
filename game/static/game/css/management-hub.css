@@ -90,7 +90,7 @@
 .mhub-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 333px) 200px;
+    grid-template-rows: repeat(3, 333px);
     gap: 12px;
     width: 100%;
     max-width: 1016px;
@@ -108,8 +108,8 @@
 .mhub-card--sponsor      { grid-column: 3; grid-row: 2; }
 .mhub-card--news         { grid-column: 4; grid-row: 2; }
 
-/* Reihe 3: Job-Angebote (Spalte 1, volle Breite des Grids) */
-.mhub-card--jobs         { grid-column: 1 / -1; grid-row: 3; }
+/* Reihe 3: Job-Angebote (Spalte 1, gleiche Größe wie alle anderen) */
+.mhub-card--jobs         { grid-column: 1; grid-row: 3; }
 
 /* ---- Einzelne Karte ---- */
 .mhub-card {
