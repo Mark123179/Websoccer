@@ -1207,6 +1207,11 @@
     line-height: 1;
 }
 
+.mxi-chip__rating--count {
+    color: var(--cyan, #22e6ff);
+    text-shadow: 0 0 8px rgba(34, 230, 255, 0.45);
+}
+
 /* Flash-Meldungen im Spieltag-Tab */
 .liga-messages { margin-bottom: 14px; }
 .liga-flash {

@@ -5,7 +5,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'game/css/liga-detail.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -173,6 +173,30 @@
                 <span>Abstieg (Platz {{ relegate_start }}–{{ total_clubs }})</span>
             </div>
         </div>
+
+        {% if season_xi %}
+        <div class="mxi-panel" style="margin-top:24px;">
+            <div class="mxi-panel__head">
+                <span class="mxi-panel__icon">🏆</span>
+                Elf der Saison
+                <span class="mxi-panel__sub">nach {{ season_xi.matchdays_counted }} Spieltagen · {{ season_xi.formation }}</span>
+            </div>
+            <div class="mxi-pitch">
+                {% for slot in season_xi.slots %}
+                <div class="mxi-chip mxi-chip--{{ slot.line }}"
+                     style="left:{{ slot.x }}%;top:{{ slot.y }}%;"
+                     title="{{ slot.name }} · {{ slot.nominations }}× nominiert">
+                    {% if slot.crest %}
+                    <img class="mxi-chip__crest" src="{% static slot.crest %}" alt="{{ slot.club_name }}">
+                    {% endif %}
+                    <span class="mxi-chip__rating mxi-chip__rating--count">{{ slot.nominations }}×</span>
+                    <span class="mxi-chip__name">{{ slot.name }}</span>
+                    <span class="mxi-chip__pos">{{ slot.display_role }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         {% else %}
         <div class="liga-empty">

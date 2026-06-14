@@ -552,6 +552,151 @@ def build_matchday_xi(league, season: str, matchday: int) -> Optional[dict]:
     }
 
 
+def get_season_xi(league, season: str, min_matchdays: int = 5) -> Optional[dict]:
+    """Berechnet die Elf der Saison aus Spieltag-Nominierungen.
+
+    Iteriert alle gespielten Spieltage, ruft build_matchday_xi auf und zählt
+    wie oft jeder Spieler nominiert wurde. Nur Spieltage, für die build_matchday_xi
+    ein Ergebnis liefert, zählen als "vollständig". Wenn weniger als min_matchdays
+    vollständige Spieltage vorliegen, wird None zurückgegeben.
+
+    Returns:
+        {
+          "formation": "4-4-2",
+          "matchdays_counted": int,
+          "slots": [
+            {slot_id, display_role, line, x, y,
+             player_id, name, nominations, club_id, club_name, crest,
+             position, fit_type},
+            ...
+          ]
+        }
+        oder None wenn < min_matchdays vollständige Spieltage.
+    """
+    from .models import SeasonFixture
+
+    played_matchdays = list(
+        SeasonFixture.objects
+        .filter(league=league, season=season, is_played=True)
+        .order_by("matchday")
+        .values_list("matchday", flat=True)
+        .distinct()
+    )
+
+    nominations: dict[int, dict] = {}
+    complete_count = 0
+
+    for matchday in played_matchdays:
+        xi = build_matchday_xi(league, season, matchday)
+        if xi is None:
+            continue
+        complete_count += 1
+        for slot in xi["slots"]:
+            pid = slot["player_id"]
+            if pid not in nominations:
+                nominations[pid] = {
+                    "player_id": pid,
+                    "name":      slot["name"],
+                    "position":  slot["position"],
+                    "club_id":   slot["club_id"],
+                    "club_name": slot["club_name"],
+                    "crest":     slot["crest"],
+                    "count":     0,
+                    "goals":     0,
+                    "assists":   0,
+                    "minutes_played": 90,
+                }
+            nominations[pid]["count"] += 1
+
+    if complete_count < min_matchdays:
+        return None
+
+    if not nominations:
+        return None
+
+    max_count = max(v["count"] for v in nominations.values())
+
+    pool: list[dict] = []
+    for v in nominations.values():
+        pool.append({
+            "player_id":      v["player_id"],
+            "name":           v["name"],
+            "position":       v["position"],
+            "club_id":        v["club_id"],
+            "club_name":      v["club_name"],
+            "crest":          v["crest"],
+            "nominations":    v["count"],
+            "rating":         float(v["count"]),
+            "rating_score":   (max_count + 1 - v["count"]) * 100,
+            "goals":          0,
+            "assists":        0,
+            "minutes_played": 90,
+            "is_sub":         False,
+        })
+
+    formation_priority_idx = {name: i for i, name in enumerate(FORMATION_PRIORITY)}
+    best_result: Optional[dict] = None
+
+    for formation_name in FORMATION_PRIORITY:
+        slots = FORMATION_SLOTS[formation_name]
+
+        if not _validate_formation_constraints(slots):
+            continue
+
+        result = _find_best_lineup(formation_name, slots, pool)
+        if result is None:
+            continue
+        if not result.get("complete"):
+            continue
+
+        f_key = (
+            0,
+            result["eff_sum"],
+            -result["exact_matches"],
+            result["rating_cents"],
+            formation_priority_idx.get(formation_name, 99),
+        )
+        result["_formation_key"] = f_key
+
+        if best_result is None or f_key < best_result["_formation_key"]:
+            best_result = result
+
+    if best_result is None:
+        return None
+
+    formation_name = best_result["formation"]
+    slots          = FORMATION_SLOTS[formation_name]
+    assignment     = best_result["assignment"]
+
+    output_slots: list[dict] = []
+    for slot in slots:
+        sid = slot["slot_id"]
+        if sid not in assignment:
+            return None
+        player, fit_type = assignment[sid]
+        output_slots.append({
+            "slot_id":      sid,
+            "display_role": DISPLAY_ROLE.get(sid, sid),
+            "line":         slot["line"],
+            "x":            slot["x"],
+            "y":            slot["y"],
+            "player_id":    player["player_id"],
+            "name":         player["name"],
+            "nominations":  player["nominations"],
+            "club_id":      player["club_id"],
+            "club_name":    player["club_name"],
+            "crest":        player["crest"],
+            "position":     player["position"],
+            "fit_type":     fit_type,
+        })
+
+    return {
+        "formation":        formation_name,
+        "matchdays_counted": complete_count,
+        "slots":            output_slots,
+    }
+
+
 def get_last_complete_matchday_xi(league, season: str) -> Optional[dict]:
     """Sucht den höchsten vollständig abgeschlossenen Spieltag und berechnet die Elf.
 

@@ -509,5 +509,197 @@ class TestDisplayRole(unittest.TestCase):
                 f"slot_id '{slot_id}' soll nicht roh als display_role erscheinen")
 
 
+# ── T23–T26: get_season_xi ────────────────────────────────────────────────────
+
+class TestGetSeasonXi(unittest.TestCase):
+
+    def _make_xi(self, matchday, slots_data):
+        """Hilfsmethode: baut ein build_matchday_xi-ähnliches Ergebnis."""
+        return {
+            "formation": "4-4-2",
+            "matchday": matchday,
+            "slots": [
+                {
+                    "slot_id": d["slot_id"],
+                    "display_role": d.get("display_role", "ZM"),
+                    "line": d.get("line", "mid"),
+                    "x": 50, "y": 50,
+                    "player_id": d["player_id"],
+                    "name": d.get("name", f"P{d['player_id']}"),
+                    "rating": d.get("rating", 2.5),
+                    "goals": 0, "assists": 0,
+                    "minutes_played": 90,
+                    "club_id": d.get("club_id", 1),
+                    "club_name": d.get("club_name", "FC Test"),
+                    "crest": d.get("crest", ""),
+                    "position": d.get("position", "ZM"),
+                    "fit_type": "exact",
+                }
+                for d in slots_data
+            ],
+        }
+
+    def test_t23_fewer_than_5_matchdays_returns_none(self):
+        """T23: Weniger als 5 vollständige Spieltage → None."""
+        from game.matchday_xi import get_season_xi
+
+        league = MagicMock()
+        league.id = 1
+
+        xi_results = [
+            self._make_xi(i, [{"slot_id": "GK", "line": "gk", "player_id": i*10, "position": "TW", "display_role": "TW"}])
+            for i in range(1, 5)
+        ]
+
+        with patch("game.models.SeasonFixture") as MockSF, \
+             patch("game.matchday_xi.build_matchday_xi", side_effect=xi_results[:4]):
+            MockSF.objects.filter.return_value.order_by.return_value.values_list.return_value.distinct.return_value = [1, 2, 3, 4]
+            result = get_season_xi(league, "1", min_matchdays=5)
+
+        self.assertIsNone(result, "< 5 Spieltage → None")
+
+    def test_t24_skips_incomplete_matchdays(self):
+        """T24: Spieltage mit None (build_matchday_xi) werden übersprungen."""
+        from game.matchday_xi import get_season_xi
+
+        league = MagicMock()
+        league.id = 1
+
+        xi_results = [None, None, None, None, None]
+
+        with patch("game.models.SeasonFixture") as MockSF, \
+             patch("game.matchday_xi.build_matchday_xi", side_effect=xi_results):
+            MockSF.objects.filter.return_value.order_by.return_value.values_list.return_value.distinct.return_value = [1, 2, 3, 4, 5]
+            result = get_season_xi(league, "1", min_matchdays=5)
+
+        self.assertIsNone(result, "Alle None → None")
+
+    def test_t25_nominations_counted_correctly(self):
+        """T25: Spieler der 5× nominiert wird hat nominations=5 im Ergebnis."""
+        from game.matchday_xi import get_season_xi
+
+        league = MagicMock()
+        league.id = 1
+
+        pid_tw = 999
+
+        def _make_full_xi(matchday):
+            tw_pos_map = {
+                "GK": ("TW", "gk"), "LB": ("LV", "def"), "LCB": ("IV", "def"),
+                "RCB": ("IV", "def"), "RB": ("RV", "def"),
+                "LM": ("LM", "mid"), "LCM": ("ZM", "mid"),
+                "RCM": ("ZM", "mid"), "RM": ("RM", "mid"),
+                "LST": ("ST", "att"), "RST": ("LF", "att"),
+            }
+            slots_data = []
+            for i, (sid, (pos, line)) in enumerate(tw_pos_map.items()):
+                player_id = pid_tw if sid == "GK" else (matchday * 100 + i)
+                slots_data.append({
+                    "slot_id": sid, "line": line,
+                    "player_id": player_id,
+                    "position": pos, "display_role": pos,
+                })
+            return {
+                "formation": "4-4-2",
+                "matchday": matchday,
+                "slots": [
+                    {
+                        "slot_id": d["slot_id"],
+                        "display_role": d["display_role"],
+                        "line": d["line"],
+                        "x": 50, "y": 50,
+                        "player_id": d["player_id"],
+                        "name": f"P{d['player_id']}",
+                        "rating": 2.5,
+                        "goals": 0, "assists": 0,
+                        "minutes_played": 90,
+                        "club_id": 1,
+                        "club_name": "FC Test",
+                        "crest": "",
+                        "position": d["position"],
+                        "fit_type": "exact",
+                    }
+                    for d in slots_data
+                ],
+            }
+
+        xi_list = [_make_full_xi(i) for i in range(1, 6)]
+
+        with patch("game.models.SeasonFixture") as MockSF, \
+             patch("game.matchday_xi.build_matchday_xi", side_effect=xi_list):
+            MockSF.objects.filter.return_value.order_by.return_value.values_list.return_value.distinct.return_value = [1, 2, 3, 4, 5]
+            result = get_season_xi(league, "1", min_matchdays=5)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(result["matchdays_counted"], 5)
+        tw_slot = next((s for s in result["slots"] if s["player_id"] == pid_tw), None)
+        self.assertIsNotNone(tw_slot, "TW pid_tw muss in der Elf der Saison sein")
+        self.assertEqual(tw_slot["nominations"], 5, "TW soll 5 Nominierungen haben")
+
+    def test_t26_result_has_11_slots_and_correct_structure(self):
+        """T26: Rückgabe hat genau 11 Slots mit nominations- statt rating-Feld."""
+        from game.matchday_xi import get_season_xi
+
+        league = MagicMock()
+        league.id = 1
+
+        tw_pos_map = {
+            "GK": ("TW", "gk"), "LB": ("LV", "def"), "LCB": ("IV", "def"),
+            "RCB": ("IV", "def"), "RB": ("RV", "def"),
+            "LM": ("LM", "mid"), "LCM": ("ZM", "mid"),
+            "RCM": ("ZM", "mid"), "RM": ("RM", "mid"),
+            "LST": ("ST", "att"), "RST": ("LF", "att"),
+        }
+
+        def _make_xi_md(matchday):
+            slots_data = [
+                {
+                    "slot_id": sid, "line": line,
+                    "player_id": i + matchday * 1000,
+                    "position": pos, "display_role": pos,
+                }
+                for i, (sid, (pos, line)) in enumerate(tw_pos_map.items())
+            ]
+            return {
+                "formation": "4-4-2",
+                "matchday": matchday,
+                "slots": [
+                    {
+                        "slot_id": d["slot_id"],
+                        "display_role": d["display_role"],
+                        "line": d["line"],
+                        "x": 50, "y": 50,
+                        "player_id": d["player_id"],
+                        "name": f"P{d['player_id']}",
+                        "rating": 2.5,
+                        "goals": 0, "assists": 0,
+                        "minutes_played": 90,
+                        "club_id": 1,
+                        "club_name": "FC Test",
+                        "crest": "",
+                        "position": d["position"],
+                        "fit_type": "exact",
+                    }
+                    for d in slots_data
+                ],
+            }
+
+        xi_list = [_make_xi_md(i) for i in range(1, 6)]
+
+        with patch("game.models.SeasonFixture") as MockSF, \
+             patch("game.matchday_xi.build_matchday_xi", side_effect=xi_list):
+            MockSF.objects.filter.return_value.order_by.return_value.values_list.return_value.distinct.return_value = [1, 2, 3, 4, 5]
+            result = get_season_xi(league, "1", min_matchdays=5)
+
+        self.assertIsNotNone(result)
+        self.assertIn("matchdays_counted", result)
+        self.assertIn("formation", result)
+        self.assertIn("slots", result)
+        self.assertEqual(len(result["slots"]), 11, "Genau 11 Slots in der Saison-Elf")
+        for slot in result["slots"]:
+            self.assertIn("nominations", slot, "Jeder Slot braucht 'nominations'-Feld")
+            self.assertNotIn("rating", slot, "Saison-Elf hat kein 'rating'-Feld")
+
+
 if __name__ == "__main__":
     unittest.main()

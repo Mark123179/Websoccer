@@ -5565,6 +5565,20 @@ def league_detail(request, league_id):
                 'date_range': _fmt_date_range(fixtures_list),
             })
 
+    # ---- Elf der Saison (nur bei Tabelle-Tab) -----------------------------
+    season_xi = None
+    if active_tab == 'tabelle':
+        try:
+            from .matchday_xi import get_season_xi
+            season_xi = get_season_xi(league, current_season)
+        except Exception as _sxi_exc:
+            import logging as _logging
+            _logging.getLogger(__name__).exception(
+                'Season XI Fehler für Liga %s Saison %s: %s',
+                league.id, current_season, _sxi_exc,
+            )
+            season_xi = None
+
     # ---- Elf des Spieltags (nur bei Spieltag-Tab) -------------------------
     matchday_xi = None
     if active_tab == 'spieltag':
@@ -5653,6 +5667,7 @@ def league_detail(request, league_id):
         'liga_most_cards':  liga_most_cards,
         'liga_team_stats':  liga_team_stats,
         'matchday_xi':      matchday_xi,
+        'season_xi':        season_xi,
         'game_header': build_game_header(
             league.name,
             season_display,
