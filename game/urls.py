@@ -95,6 +95,8 @@ from .views_creator import (
     creator_cup_draw_first_round,
     creator_cup_simulate_round,
     creator_cup_advance,
+    creator_cup_schedule_preview,
+    creator_cup_schedule_apply,
     cup_tree_view,
 )
 
@@ -306,6 +308,8 @@ urlpatterns = [
     path('creator/leagues/<int:league_id>/cup/season/<int:cup_season_id>/draw/', creator_cup_draw_first_round, name='creator_cup_draw_first_round'),
     path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/simulate/', creator_cup_simulate_round, name='creator_cup_simulate_round'),
     path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/advance/', creator_cup_advance, name='creator_cup_advance'),
+    path('creator/leagues/<int:league_id>/cup/season/<int:cup_season_id>/schedule-preview/', creator_cup_schedule_preview, name='creator_cup_schedule_preview'),
+    path('creator/leagues/<int:league_id>/cup/season/<int:cup_season_id>/schedule-apply/', creator_cup_schedule_apply, name='creator_cup_schedule_apply'),
 
     # Pokalbaum (öffentliche Ansicht)
     path('pokal/<int:league_id>/<path:season>/', cup_tree_view, name='cup_tree'),

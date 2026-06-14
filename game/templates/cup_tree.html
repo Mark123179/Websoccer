@@ -49,7 +49,7 @@
             <div class="cup-tree-team {% if fix.winner_club_id == fix.home_club_id and fix.status == 'played' %}cup-tree-team--winner{% endif %}">
               {% if fix.home_club %}
                 {% if fix.home_club.crest_static_path %}
-                <img class="cup-tree-crest" src="{% static fix.home_club.crest_static_path %}" alt="{{ fix.home_club.short_name }}" onerror="this.style.display='none'">
+                <img class="cup-tree-crest" width="16" height="16" src="{% static fix.home_club.crest_static_path %}" alt="{{ fix.home_club.short_name }}" onerror="this.style.display='none'">
                 {% endif %}
                 <span class="cup-tree-team-name">{{ fix.home_club.name }}</span>
               {% else %}
@@ -73,7 +73,7 @@
             <div class="cup-tree-team cup-tree-team-away {% if fix.winner_club_id == fix.away_club_id and fix.status == 'played' %}cup-tree-team--winner{% endif %}">
               {% if fix.away_club %}
                 {% if fix.away_club.crest_static_path %}
-                <img class="cup-tree-crest" src="{% static fix.away_club.crest_static_path %}" alt="{{ fix.away_club.short_name }}" onerror="this.style.display='none'">
+                <img class="cup-tree-crest" width="16" height="16" src="{% static fix.away_club.crest_static_path %}" alt="{{ fix.away_club.short_name }}" onerror="this.style.display='none'">
                 {% endif %}
                 <span class="cup-tree-team-name">{{ fix.away_club.name }}</span>
               {% else %}

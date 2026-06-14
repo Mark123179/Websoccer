@@ -619,3 +619,164 @@ def _season_start_date(season: str) -> date:
         return date(year, 8, 1)
     except (ValueError, AttributeError):
         return date.today()
+
+
+# ── Intelligente Pokal-Terminplanung ─────────────────────────────────────────
+
+def _schedule_search_order(radius: int):
+    """Gibt 0, +1, -1, +2, -2, … bis radius zurück (für Datumssuche)."""
+    yield 0
+    for i in range(1, radius + 1):
+        yield i
+        yield -i
+
+
+def _find_best_cup_date(target: date, blocked: set[date]) -> date:
+    """Nächster Di/Mi zu `target` der nicht in `blocked` liegt.
+
+    Fallback-Kette:
+    1. Di/Mi im ±21-Tage-Radius
+    2. Mo–Fr im ±21-Tage-Radius
+    3. `target` selbst (Kollision wird vom Aufrufer als Warnung gemeldet)
+    """
+    for delta in _schedule_search_order(21):
+        candidate = target + timedelta(days=delta)
+        if candidate.weekday() in (1, 2) and candidate not in blocked:
+            return candidate
+    for delta in _schedule_search_order(21):
+        candidate = target + timedelta(days=delta)
+        if candidate.weekday() < 5 and candidate not in blocked:
+            return candidate
+    return target
+
+
+def auto_schedule_cup_season(
+    cup_season,
+    liga_dates: list[date],
+    finale_offset_days: int = 5,
+) -> list[dict]:
+    """Berechnet Terminvorschläge für alle Runden einer Pokalsaison.
+
+    Algorithmus:
+    - Aus `liga_dates` werden Lücken zwischen aufeinanderfolgenden Spieltagen
+      berechnet (Mittelpunkt jeder Lücke = Kandidat-Datum).
+    - N Pokalrunden werden gleichmäßig auf die N best-passenden Lücken verteilt
+      (max. eine Pokalrunde pro Lücke).
+    - Finale: letzter Liga-Spieltag + `finale_offset_days` Tage → Di/Mi.
+    - Kein Datum darf auf einen Liga-Spieltag fallen; ±1-Tag-Puffer wird als
+      Soft-Kollision markiert.
+
+    Gibt eine Liste von Dicts zurück (wird NICHT gespeichert):
+        [{'round_id', 'round_number', 'round_code', 'display_name',
+          'proposed_date', 'collisions': [date, …]}, …]
+
+    Falls `liga_dates` leer → wöchentliche Verteilung ab Saisonbeginn.
+    """
+    rounds = list(cup_season.rounds.order_by('round_number'))
+    if not rounds:
+        return []
+
+    n = len(rounds)
+
+    if not liga_dates:
+        start = _season_start_date(cup_season.season) + timedelta(days=14)
+        proposed = []
+        for i, r in enumerate(rounds):
+            target = start + timedelta(days=7 * i)
+            best = _find_best_cup_date(target, set())
+            proposed.append({
+                'round_id': r.pk,
+                'round_number': r.round_number,
+                'round_code': r.round_code,
+                'display_name': _round_display_name(r.round_code),
+                'proposed_date': best,
+                'collisions': [],
+            })
+        return proposed
+
+    liga_sorted = sorted(set(liga_dates))
+    liga_set = set(liga_sorted)
+    liga_last = liga_sorted[-1]
+    finale_target = liga_last + timedelta(days=finale_offset_days)
+
+    # Mittelpunkte aller Lücken zwischen aufeinanderfolgenden Spieltagen
+    gap_midpoints: list[date] = []
+    for j in range(len(liga_sorted) - 1):
+        a, b = liga_sorted[j], liga_sorted[j + 1]
+        mid = a + timedelta(days=(b - a).days // 2)
+        gap_midpoints.append(mid)
+
+    n_regular = n - 1
+    selected_midpoints: list[date] = []
+    if n_regular > 0:
+        if not gap_midpoints:
+            selected_midpoints = [
+                liga_sorted[0] + timedelta(days=7 * (i + 1))
+                for i in range(n_regular)
+            ]
+        elif len(gap_midpoints) <= n_regular:
+            selected_midpoints = gap_midpoints[:]
+            # Wenn es zu wenige Lücken gibt, wiederholen (gleichmäßig verteilt)
+            while len(selected_midpoints) < n_regular:
+                total = (finale_target - liga_sorted[0]).days
+                idx = len(selected_midpoints)
+                fallback = liga_sorted[0] + timedelta(
+                    days=total * idx // n_regular
+                )
+                selected_midpoints.append(fallback)
+        else:
+            # Gleichmäßig aus den Lücken auswählen
+            indices = [
+                int(i * len(gap_midpoints) / n_regular)
+                for i in range(n_regular)
+            ]
+            selected_midpoints = [gap_midpoints[idx] for idx in indices]
+
+    proposed = []
+    used_dates: set[date] = set()
+
+    for i, r in enumerate(rounds):
+        if i == n - 1:
+            target = finale_target
+        elif i < len(selected_midpoints):
+            target = selected_midpoints[i]
+        else:
+            target = liga_sorted[0] + timedelta(days=7 * (i + 1))
+
+        blocked = liga_set | used_dates
+        best = _find_best_cup_date(target, blocked)
+        used_dates.add(best)
+
+        collisions = [d for d in liga_set if abs((d - best).days) <= 1]
+
+        proposed.append({
+            'round_id': r.pk,
+            'round_number': r.round_number,
+            'round_code': r.round_code,
+            'display_name': _round_display_name(r.round_code),
+            'proposed_date': best,
+            'collisions': sorted(collisions),
+        })
+
+    return proposed
+
+
+def apply_cup_schedule(cup_season, round_dates: dict) -> int:
+    """Schreibt die vorgeschlagenen Termine in die Datenbank.
+
+    `round_dates` = {round_id (int | str): date}.
+    Gibt die Anzahl aktualisierter Runden zurück.
+    """
+    from .models import CupRound
+    count = 0
+    with transaction.atomic():
+        for round_id, proposed_date in round_dates.items():
+            updated = CupRound.objects.filter(
+                pk=int(round_id),
+                cup_season=cup_season,
+            ).update(
+                scheduled_date=proposed_date,
+                status=CupRound.STATUS_SCHEDULED,
+            )
+            count += updated
+    return count

@@ -2813,6 +2813,131 @@ def _round_display_name(code: str) -> str:
     return _cs_rdn(code)
 
 
+# ── Pokal-Terminplanung: Vorschau (AJAX / GET) ────────────────────────────────
+
+@login_required
+def creator_cup_schedule_preview(request, league_id, cup_season_id):
+    """Berechnet Terminvorschläge für alle Runden und gibt JSON zurück.
+
+    GET-Parameter (mind. eine Quelle muss übergeben werden):
+      Variante A — realer Liga-Spielplan:
+        reference_league  int   Primär-Liga-ID (Spieltage aus SeasonFixture)
+        season            str   Saison-Bezeichnung (z. B. '2025/26')
+
+      Variante B — manuelle Eingabe:
+        start_date        str   Erster Ligaspieltag (YYYY-MM-DD)
+        matchday_count    int   Anzahl Spieltage
+        interval_days     int   Abstand zwischen zwei Spieltagen (Standard: 7)
+
+      Gemeinsam:
+        finale_offset     int   Tage nach letztem Spieltag → Finale (Standard: 5)
+    """
+    from datetime import date as _date, timedelta as _td
+    from .models import CupSeason, SeasonFixture
+    from .cup_service import auto_schedule_cup_season
+
+    league = get_object_or_404(League, id=league_id)
+    cup_season = get_object_or_404(CupSeason, pk=cup_season_id, competition=league)
+
+    finale_offset = int(request.GET.get('finale_offset', 5))
+
+    liga_dates: list[_date] = []
+
+    # --- Variante A: echter Ligaplan ---
+    ref_id  = request.GET.get('reference_league', '').strip()
+    season_str = request.GET.get('season', '').strip()
+    if ref_id:
+        try:
+            ref_league = League.objects.get(pk=int(ref_id))
+            qs = SeasonFixture.objects.filter(
+                home_club__league=ref_league,
+                scheduled_date__isnull=False,
+            )
+            if season_str:
+                qs = qs.filter(season=season_str)
+            liga_dates = sorted(set(qs.values_list('scheduled_date', flat=True)))
+        except (League.DoesNotExist, ValueError):
+            pass
+
+    # --- Variante B: manuelle Eingabe (wenn Variante A nichts liefert) ---
+    if not liga_dates:
+        start_raw = request.GET.get('start_date', '').strip()
+        count_raw = request.GET.get('matchday_count', '').strip()
+        interval  = int(request.GET.get('interval_days', 7))
+        if start_raw and count_raw:
+            try:
+                start_d = _date.fromisoformat(start_raw)
+                count   = max(2, int(count_raw))
+                liga_dates = [
+                    start_d + _td(days=interval * i) for i in range(count)
+                ]
+            except (ValueError, TypeError):
+                pass
+
+    proposed = auto_schedule_cup_season(
+        cup_season, liga_dates, finale_offset_days=finale_offset
+    )
+
+    # Serialisierung
+    WDAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+    out = []
+    for row in proposed:
+        d = row['proposed_date']
+        out.append({
+            'round_id':     row['round_id'],
+            'round_number': row['round_number'],
+            'display_name': row['display_name'],
+            'proposed_date': d.isoformat(),
+            'weekday':       WDAYS[d.weekday()],
+            'collisions':    [c.isoformat() for c in row['collisions']],
+        })
+
+    liga_info = {
+        'count': len(liga_dates),
+        'first': liga_dates[0].isoformat() if liga_dates else None,
+        'last':  liga_dates[-1].isoformat() if liga_dates else None,
+    }
+    return JsonResponse({'ok': True, 'rounds': out, 'liga': liga_info})
+
+
+# ── Pokal-Terminplanung: Übernehmen (POST) ────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_schedule_apply(request, league_id, cup_season_id):
+    """Schreibt die bestätigten Termine in die Datenbank.
+
+    POST-Body (multipart oder JSON):
+      round_<id>   YYYY-MM-DD   Datum für Runde mit pk=<id>
+    """
+    from datetime import date as _date
+    from .models import CupSeason
+    from .cup_service import apply_cup_schedule
+
+    league = get_object_or_404(League, id=league_id)
+    cup_season = get_object_or_404(CupSeason, pk=cup_season_id, competition=league)
+
+    round_dates: dict[int, _date] = {}
+    for key, val in request.POST.items():
+        if key.startswith('round_') and val:
+            try:
+                rid = int(key[6:])
+                round_dates[rid] = _date.fromisoformat(val)
+            except (ValueError, TypeError):
+                pass
+
+    if not round_dates:
+        messages.error(request, 'Keine gültigen Termine übermittelt.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    updated = apply_cup_schedule(cup_season, round_dates)
+    messages.success(
+        request,
+        f'Pokal-Terminplan übernommen: {updated} Runde(n) terminiert.'
+    )
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
 # ── Globale Creator-Schnellsuche (Vereine + Spieler) ─────────────────────────
 def creator_search(request):
     from django.templatetags.static import static

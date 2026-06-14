@@ -287,6 +287,94 @@
         <span style="color:#556677;font-size:.8rem;">{{ cs.rounds.count }} Runden</span>
       </div>
 
+      <!-- ── Terminplanung ──────────────────────────────────────────────── -->
+      {% if cs.rounds.count %}
+      <details class="cup-sched-details" style="margin-bottom:1rem;">
+        <summary style="cursor:pointer;color:#00d4ff;font-size:.82rem;font-weight:700;padding:.4rem .6rem;background:#050e1a;border:1px solid #0d2035;border-radius:6px;list-style:none;user-select:none;">
+          📅 Terminplanung — Pokalspielplan berechnen
+        </summary>
+        <div style="background:#040c18;border:1px solid #0d2035;border-top:none;border-radius:0 0 6px 6px;padding:1rem;">
+
+          <p style="color:#556677;font-size:.79rem;margin:0 0 .9rem;">
+            Wähle einen Liga-Spielplan als Referenz. Das System verteilt alle
+            {{ cs.rounds.count }} Pokalrunde(n) gleichmäßig in die Lücken zwischen
+            den Ligaspieltagen — max. eine Runde pro Lücke. Das Finale landet
+            automatisch 5 Tage nach dem letzten Ligaspieltag.
+          </p>
+
+          <!-- Quell-Auswahl -->
+          <div style="display:flex;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:1;min-width:180px;">
+              <label class="creator-label">Liga-Quelle</label>
+              <select class="creator-input" id="sched-src-{{ cs.pk }}" style="width:100%;">
+                <option value="">– Manuell eingeben –</option>
+                {% for l in all_leagues %}{% if l.competition_type == 'league' %}
+                <option value="{{ l.pk }}">{{ l.name }} ({{ l.club_set.count }} Vereine)</option>
+                {% endif %}{% endfor %}
+              </select>
+            </div>
+            <div style="flex:1;min-width:130px;" id="sched-season-wrap-{{ cs.pk }}">
+              <label class="creator-label">Saison (Liga)</label>
+              <input class="creator-input" id="sched-season-{{ cs.pk }}" value="{{ cs.season }}" placeholder="2025/26">
+            </div>
+          </div>
+
+          <!-- Manuelle Eingabe (nur sichtbar wenn keine Liga gewählt) -->
+          <div id="sched-manual-{{ cs.pk }}" style="display:flex;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap;align-items:flex-end;">
+            <div style="flex:1;min-width:140px;">
+              <label class="creator-label">Erster Spieltag</label>
+              <input class="creator-input" type="date" id="sched-start-{{ cs.pk }}">
+            </div>
+            <div style="flex:0 0 110px;">
+              <label class="creator-label">Anzahl Spieltage</label>
+              <input class="creator-input" type="number" id="sched-count-{{ cs.pk }}" value="34" min="2" max="100" style="width:90px;">
+            </div>
+            <div style="flex:0 0 110px;">
+              <label class="creator-label">Abstand (Tage)</label>
+              <input class="creator-input" type="number" id="sched-interval-{{ cs.pk }}" value="7" min="1" max="30" style="width:80px;">
+            </div>
+            <div style="flex:0 0 100px;">
+              <label class="creator-label">Finale-Puffer</label>
+              <input class="creator-input" type="number" id="sched-finale-{{ cs.pk }}" value="5" min="1" max="30" style="width:80px;">
+            </div>
+          </div>
+
+          <button type="button" class="creator-btn creator-btn-icon"
+                  style="font-size:.8rem;"
+                  onclick="cupSchedPreview({{ cs.pk }}, {{ league.pk }})">
+            🔍 Vorschau berechnen
+          </button>
+
+          <!-- Ergebnis-Tabelle (wird per AJAX befüllt) -->
+          <div id="sched-result-{{ cs.pk }}" style="display:none;margin-top:1rem;">
+            <p id="sched-liga-info-{{ cs.pk }}" style="color:#556677;font-size:.77rem;margin:0 0 .6rem;"></p>
+            <table style="width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:.75rem;">
+              <thead>
+                <tr style="border-bottom:1px solid #0d2035;">
+                  <th style="color:#334455;text-align:left;padding:.35rem .5rem;">Runde</th>
+                  <th style="color:#334455;text-align:left;padding:.35rem .5rem;">Vorgeschlagenes Datum</th>
+                  <th style="color:#334455;text-align:left;padding:.35rem .5rem;">Tag</th>
+                  <th style="color:#334455;text-align:left;padding:.35rem .5rem;">Kollision?</th>
+                </tr>
+              </thead>
+              <tbody id="sched-tbody-{{ cs.pk }}"></tbody>
+            </table>
+            <form method="post"
+                  action="{% url 'creator_cup_schedule_apply' league_id=league.pk cup_season_id=cs.pk %}"
+                  id="sched-form-{{ cs.pk }}">
+              {% csrf_token %}
+              <div id="sched-hidden-{{ cs.pk }}"></div>
+              <button type="submit" class="creator-btn creator-btn-primary" style="font-size:.8rem;">
+                ✅ Termine übernehmen
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </details>
+      {% endif %}
+      <!-- ────────────────────────────────────────────────────────────────── -->
+
       {% for cr in cs.rounds.all %}
       <div style="background:#050e1a;border:1px solid #0d2035;border-radius:8px;padding:1rem;margin-bottom:.75rem;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
@@ -737,6 +825,114 @@ document.querySelectorAll('.sp-matchday-block').forEach(block => {
   if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
 })();
 {% endif %}
+{% endif %}
+
+{% if active_tab == 'pokal' %}
+// ── Pokal-Terminplanung AJAX ───────────────────────────────────────
+const CUP_CSRF = "{{ csrf_token }}";
+const WEEKDAY_DE = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+function cupSchedToggleManual(csId) {
+  const src = document.getElementById('sched-src-' + csId);
+  const manualDiv = document.getElementById('sched-manual-' + csId);
+  if (!src || !manualDiv) return;
+  manualDiv.style.display = src.value ? 'none' : 'flex';
+}
+
+// Attach change listeners on page load for all season dropdowns
+document.querySelectorAll('[id^="sched-src-"]').forEach(sel => {
+  const csId = sel.id.replace('sched-src-', '');
+  cupSchedToggleManual(csId);
+  sel.addEventListener('change', () => cupSchedToggleManual(csId));
+});
+
+async function cupSchedPreview(csId, leagueId) {
+  const src      = document.getElementById('sched-src-'    + csId)?.value || '';
+  const season   = document.getElementById('sched-season-' + csId)?.value || '';
+  const startD   = document.getElementById('sched-start-'  + csId)?.value || '';
+  const count    = document.getElementById('sched-count-'  + csId)?.value || '34';
+  const interval = document.getElementById('sched-interval-'+ csId)?.value || '7';
+  const finale   = document.getElementById('sched-finale-' + csId)?.value || '5';
+
+  const params = new URLSearchParams({ finale_offset: finale });
+  if (src) {
+    params.set('reference_league', src);
+    if (season) params.set('season', season);
+  } else {
+    if (!startD) { alert('Bitte Startdatum eingeben.'); return; }
+    params.set('start_date', startD);
+    params.set('matchday_count', count);
+    params.set('interval_days', interval);
+  }
+
+  const url = `/creator/leagues/${leagueId}/cup/season/${csId}/schedule-preview/?${params}`;
+  let data;
+  try {
+    const resp = await fetch(url, { headers: { 'X-CSRFToken': CUP_CSRF } });
+    data = await resp.json();
+  } catch(e) {
+    alert('Netzwerkfehler: ' + e.message);
+    return;
+  }
+  if (!data.ok) { alert('Fehler: ' + (data.error || 'Unbekannt')); return; }
+
+  // Liga-Info
+  const infoEl = document.getElementById('sched-liga-info-' + csId);
+  if (infoEl && data.liga.count > 0) {
+    infoEl.textContent =
+      `Liga-Spielplan: ${data.liga.count} Spieltage · ` +
+      `${fmtDate(data.liga.first)} – ${fmtDate(data.liga.last)}`;
+  } else if (infoEl) {
+    infoEl.textContent = 'Manuelle Eingabe ohne echten Liga-Spielplan.';
+  }
+
+  // Tabelle befüllen
+  const tbody  = document.getElementById('sched-tbody-'  + csId);
+  const hidden = document.getElementById('sched-hidden-' + csId);
+  if (!tbody || !hidden) return;
+  tbody.innerHTML = '';
+  hidden.innerHTML = '';
+
+  data.rounds.forEach(r => {
+    const hasCollision = r.collisions.length > 0;
+    const collTxt = hasCollision
+      ? `⚠ ${r.collisions.map(fmtDate).join(', ')}`
+      : '<span style="color:#00ff8870;">✓ OK</span>';
+    const wd = r.weekday;
+    const wdColor = (wd === 'Di' || wd === 'Mi') ? '#00d4ff' : '#ffcc44';
+    tbody.innerHTML += `
+      <tr style="border-bottom:1px solid #0d2035;">
+        <td style="padding:.35rem .5rem;color:#aabbcc;">${r.display_name}</td>
+        <td style="padding:.35rem .5rem;color:#cce8ff;font-weight:700;">
+          <input type="date"
+                 id="sched-date-${csId}-${r.round_id}"
+                 value="${r.proposed_date}"
+                 style="background:#030a12;border:1px solid #0d2035;border-radius:4px;color:#cce8ff;font-size:.78rem;padding:.2rem .4rem;"
+                 onchange="cupSchedUpdateHidden(${csId}, ${r.round_id})">
+        </td>
+        <td style="padding:.35rem .5rem;color:${wdColor};font-weight:700;">${wd}</td>
+        <td style="padding:.35rem .5rem;font-size:.75rem;${hasCollision?'color:#ff8844;':''}">
+          ${collTxt}
+        </td>
+      </tr>`;
+    // Hidden form field
+    hidden.innerHTML += `<input type="hidden" name="round_${r.round_id}" value="${r.proposed_date}" id="sched-hidden-${csId}-${r.round_id}">`;
+  });
+
+  document.getElementById('sched-result-' + csId).style.display = '';
+}
+
+function cupSchedUpdateHidden(csId, roundId) {
+  const dateInput   = document.getElementById(`sched-date-${csId}-${roundId}`);
+  const hiddenInput = document.getElementById(`sched-hidden-${csId}-${roundId}`);
+  if (dateInput && hiddenInput) hiddenInput.value = dateInput.value;
+}
+
+function fmtDate(iso) {
+  if (!iso) return '–';
+  const [y, m, d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
 {% endif %}
 </script>
 
