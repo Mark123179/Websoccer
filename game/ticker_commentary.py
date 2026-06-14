@@ -1,23 +1,37 @@
 """
 Deterministischer Live-Ticker-Kommentar im deutschen Radio-Reportage-Stil.
 
-Aufruf: build_ticker_text(evt_type, *, minute, player, …)
+Aufruf: build_ticker_text(evt_type, *, minute, player, …, match_seed, event_index)
 Rückgabe: ein einzelner String, deterministisch aus Seed gewählt.
 
-Seed-Formel: hash(evt_type | minute | player | in_name | assister)
-→ dasselbe gespeicherte Spiel zeigt bei jedem Reload dieselben Texte.
+Seed: stable_seed() via SHA-256 — prozessübergreifend stabil (kein PYTHONHASHSEED).
+Anti-Repetition: _shuffled_pick() erzeugt pro Spiel + Pool eine stabile Permutation;
+  event_index bestimmt die Position darin → keine Wiederholung bis Pool erschöpft.
 """
 from __future__ import annotations
+import hashlib
+import random as _random
 
 
 # ── Hilfsfunktionen ──────────────────────────────────────────────────────────
 
-def _pick(pool: list[str], seed: int) -> str:
-    return pool[abs(seed) % len(pool)]
+def stable_seed(*parts: object) -> int:
+    """SHA-256 basierter Seed — prozessübergreifend stabil."""
+    raw = "|".join(str(p or "") for p in parts)
+    digest = hashlib.sha256(raw.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big")
 
 
-def _seed(*parts) -> int:
-    return abs(hash('|'.join(str(p) for p in parts)))
+def _shuffled_pick(pool: list[str], match_seed: int, pool_key: str, event_index: int) -> str:
+    """Wählt aus `pool` nach einer spielspezifischen Permutation.
+
+    Garantiert: innerhalb eines Spiels wird jede Variante maximal
+    einmal verwendet bevor Wiederholungen auftreten.
+    """
+    r = _random.Random(stable_seed(match_seed, pool_key))
+    indices = list(range(len(pool)))
+    r.shuffle(indices)
+    return pool[indices[event_index % len(pool)]]
 
 
 # ── Tor-Texte ────────────────────────────────────────────────────────────────
@@ -74,21 +88,17 @@ _SCORE_PHRASES = [
 ]
 
 
-def _goal_with_assist(p: str, a: str, score: str, seed: int) -> str:
-    action  = _pick(_GOAL_ASSIST_ACTIONS,  seed)
-    finish  = _pick(_GOAL_ASSIST_FINISHES, seed + 7)
-    phrase  = _pick(_SCORE_PHRASES,        seed + 13)
-    finish  = finish.format(p=p)
-    phrase  = phrase.format(score=score)
-    return f"{a} {action} {finish} {phrase}"
+def _goal_with_assist(p: str, a: str, score: str, match_seed: int, event_index: int) -> str:
+    action = _shuffled_pick(_GOAL_ASSIST_ACTIONS,  match_seed, 'goal_action',  event_index)
+    finish = _shuffled_pick(_GOAL_ASSIST_FINISHES, match_seed, 'goal_finish',  event_index)
+    phrase = _shuffled_pick(_SCORE_PHRASES,        match_seed, 'score_phrase', event_index)
+    return f"{a} {action} {finish.format(p=p)} {phrase.format(score=score)}"
 
 
-def _goal_no_assist(p: str, score: str, seed: int) -> str:
-    intro  = _pick(_GOAL_SOLO_INTROS, seed)
-    phrase = _pick(_SCORE_PHRASES,    seed + 5)
-    intro  = intro.format(p=p)
-    phrase = phrase.format(score=score)
-    return f"{intro} {phrase}"
+def _goal_no_assist(p: str, score: str, match_seed: int, event_index: int) -> str:
+    intro  = _shuffled_pick(_GOAL_SOLO_INTROS, match_seed, 'goal_solo',    event_index)
+    phrase = _shuffled_pick(_SCORE_PHRASES,    match_seed, 'score_phrase', event_index)
+    return f"{intro.format(p=p)} {phrase.format(score=score)}"
 
 
 # ── Schuss-Texte ─────────────────────────────────────────────────────────────
@@ -288,61 +298,63 @@ def build_ticker_text(
     team_name: str = '',
     opp_name: str = '',
     is_injury_sub: bool = False,
+    match_seed: int = 0,
+    event_index: int = 0,
 ) -> str:
-    base = _seed(evt_type, minute, player or in_name, assister)
     p = player or ''
     a = assister or ''
     score = f'{score_h}:{score_a}'
+    ms = match_seed
+    ei = event_index
 
     if evt_type == 'goal':
         if a:
-            return _goal_with_assist(p, a, score, base)
+            return _goal_with_assist(p, a, score, ms, ei)
         else:
-            return _goal_no_assist(p, score, base)
+            return _goal_no_assist(p, score, ms, ei)
 
     elif evt_type == 'shot':
         if p:
-            return _pick(_SHOT_TEXTS, base).format(p=p)
+            return _shuffled_pick(_SHOT_TEXTS, ms, 'shot', ei).format(p=p)
         return "Schussversuch — der Torwart ist auf dem Posten."
 
     elif evt_type == 'corner':
         if p:
-            return _pick(_CORNER_TEXTS, base).format(p=p)
+            return _shuffled_pick(_CORNER_TEXTS, ms, 'corner', ei).format(p=p)
         return "Eckstoß — die Abwehr klärt."
 
     elif evt_type == 'foul':
         if p:
-            return _pick(_FOUL_TEXTS, base).format(p=p)
+            return _shuffled_pick(_FOUL_TEXTS, ms, 'foul', ei).format(p=p)
         return "Pfiff — Freistoß."
 
     elif evt_type == 'card':
         if card_type == 'yellow_red':
-            return _pick(_CARD_YELLOW_RED, base).format(p=p)
+            return _shuffled_pick(_CARD_YELLOW_RED, ms, 'card_yr', ei).format(p=p)
         elif card_type == 'red':
-            return _pick(_CARD_RED, base).format(p=p)
+            return _shuffled_pick(_CARD_RED, ms, 'card_r', ei).format(p=p)
         else:
-            return _pick(_CARD_YELLOW, base).format(p=p)
+            return _shuffled_pick(_CARD_YELLOW, ms, 'card_y', ei).format(p=p)
 
     elif evt_type == 'sub':
         i = in_name or ''
         o = out_name or ''
         slot = target_slot or ''
         if is_injury_sub:
-            return _pick(_SUB_INJURY, base).format(i=i, o=o)
+            return _shuffled_pick(_SUB_INJURY, ms, 'sub_inj', ei).format(i=i, o=o)
         elif position_relation == 'FP' and slot:
-            return _pick(_SUB_FP, base).format(i=i, o=o, slot=slot)
+            return _shuffled_pick(_SUB_FP, ms, 'sub_fp', ei).format(i=i, o=o, slot=slot)
         elif position_relation == 'NP' and slot:
-            return _pick(_SUB_NP, base).format(i=i, o=o, slot=slot)
+            return _shuffled_pick(_SUB_NP, ms, 'sub_np', ei).format(i=i, o=o, slot=slot)
         else:
-            return _pick(_SUB_HP, base).format(i=i, o=o)
+            return _shuffled_pick(_SUB_HP, ms, 'sub_hp', ei).format(i=i, o=o)
 
     elif evt_type == 'injury':
         if days and days > 7:
-            return _pick(_INJURY_SUB_TEXTS, base).format(p=p)
-        return _pick(_INJURY_TEXTS, base).format(p=p)
+            return _shuffled_pick(_INJURY_SUB_TEXTS, ms, 'inj_sub', ei).format(p=p)
+        return _shuffled_pick(_INJURY_TEXTS, ms, 'injury', ei).format(p=p)
 
     elif evt_type == 'flow':
-        # flow-Texte werden direkt in _generate_narrative_events gesetzt
         return player or f'Spielunterbrechung in Minute {minute}.'
 
     return f'Spielunterbrechung in Minute {minute}.'
@@ -350,24 +362,25 @@ def build_ticker_text(
 
 def build_flow_text(
     minute: int,
-    seed: int,
+    match_seed: int,
+    flow_index: int = 0,
     h_name: str = '',
     a_name: str = '',
     h_players: list[str] | None = None,
     a_players: list[str] | None = None,
-    team_side: str = 'home',
 ) -> str:
-    """Wählt deterministisch einen Spielfluss-Kommentar.
+    """Wählt deterministisch einen Spielfluss-Kommentar (anti-repetition via Permutation).
 
-    Nutzt Spielernamen wenn verfügbar, sonst nur Teamnamen.
+    h_players / a_players sollten nur aktive (nicht ausgewechselte) Spieler enthalten.
     """
     h = h_name or 'Heim'
     a = a_name or 'Gast'
     all_players = (h_players or []) + (a_players or [])
 
-    if all_players and (seed % 3 == 0):
-        p = all_players[seed % len(all_players)]
-        return _pick(_FLOW_WITH_PLAYER, seed).format(p=p, h=h, a=a)
+    if all_players and (match_seed % 3 == 0 or flow_index % 3 == 0):
+        p_idx = stable_seed(match_seed, 'flow_player', flow_index) % len(all_players)
+        p = all_players[p_idx]
+        return _shuffled_pick(_FLOW_WITH_PLAYER, match_seed, 'flow_p', flow_index).format(
+            p=p, h=h, a=a)
     else:
-        text = _pick(_FLOW_TEAM, seed)
-        return text.format(h=h, a=a)
+        return _shuffled_pick(_FLOW_TEAM, match_seed, 'flow_t', flow_index).format(h=h, a=a)

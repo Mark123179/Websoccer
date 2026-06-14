@@ -3453,7 +3453,8 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
 
 def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
                     score_h=0, score_a=0, days=0, in_name='', out_name='',
-                    target_slot='', position_relation='', is_injury_sub=False):
+                    target_slot='', position_relation='', is_injury_sub=False,
+                    match_seed=0, event_index=0):
     """Deterministischer Live-Kommentar — delegiert an game.ticker_commentary."""
     from game.ticker_commentary import build_ticker_text
     return build_ticker_text(
@@ -3470,23 +3471,29 @@ def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
         target_slot=target_slot,
         position_relation=position_relation,
         is_injury_sub=is_injury_sub,
+        match_seed=match_seed,
+        event_index=event_index,
     )
 
 
 def _generate_narrative_events(data: dict) -> list[dict]:
     """Generiert narrative Ticker-Events (Schüsse, Ecken, Fouls, Spielfluss).
 
-    Alle Werte sind deterministisch — gleicher Match-Report erzeugt immer
-    dieselben Ereignisse (Seed aus Vereinsnamen + Torergebnis).
+    Deterministisch — SHA-256 Seed, kein PYTHONHASHSEED.
+    Spielernamen: nur aktive Spieler (ausgewechselte / Platzverweis gefiltert).
+    Anti-Repetition: event_index steuert Permutation in build_ticker_text.
     """
     import random as _rng
+    from game.ticker_commentary import stable_seed, build_flow_text
 
-    ms            = data.get('match_stats', {}) or {}
-    home_name     = data.get('home_club_name', 'Heim')
-    away_name     = data.get('away_club_name', 'Gast')
-    home_goals    = data.get('home_goals', 0) or 0
-    away_goals    = data.get('away_goals', 0) or 0
-    base_seed     = abs(hash(f"{home_name}|{away_name}|{home_goals}|{away_goals}")) % (2 ** 31)
+    ms         = data.get('match_stats', {}) or {}
+    home_name  = data.get('home_club_name', 'Heim')
+    away_name  = data.get('away_club_name', 'Gast')
+    home_goals = data.get('home_goals', 0) or 0
+    away_goals = data.get('away_goals', 0) or 0
+
+    # SHA-256 basierter Seed — prozessübergreifend stabil
+    base_seed = stable_seed(home_name, away_name, home_goals, away_goals)
 
     def _players(key):
         return [p['name'] for p in (data.get(key) or [])
@@ -3495,10 +3502,35 @@ def _generate_narrative_events(data: dict) -> list[dict]:
     h_pl = _players('home_players')
     a_pl = _players('away_players')
 
-    def _pick(pool, seed_offset):
-        if not pool:
+    # ── Aktive Spieler: ausgewechselte + gesperrte rausfiltern ───────────────
+    def _build_removed(players_key: str, subs_key: str, club_side: str) -> dict:
+        id_to_name = {p['id']: p['name'] for p in (data.get(players_key) or [])
+                      if p.get('id') and p.get('name')}
+        removed: dict[str, int] = {}
+        for sub in (data.get(subs_key) or []):
+            out_id = sub.get('out')
+            if out_id and out_id in id_to_name:
+                removed[id_to_name[out_id]] = sub.get('minute', 90)
+        for card in (data.get('card_events') or []):
+            if (card.get('club_side') == club_side
+                    and card.get('card_type') in ('red', 'yellow_red')):
+                pid = card.get('player_id')
+                if pid and pid in id_to_name:
+                    removed[id_to_name[pid]] = card.get('minute', 90)
+        return removed
+
+    removed_home = _build_removed('home_players', 'home_substitutions', 'home')
+    removed_away = _build_removed('away_players', 'away_substitutions', 'away')
+
+    def _active_at(pool: list, removed: dict, minute: int) -> list:
+        active = [name for name in pool if removed.get(name, 91) > minute]
+        return active if active else pool  # Fallback: ganzer Pool
+
+    def _pick_active(pool: list, removed: dict, minute: int, seed_offset: int) -> str:
+        active = _active_at(pool, removed, minute)
+        if not active:
             return ''
-        return pool[(base_seed + seed_offset) % len(pool)]
+        return active[(base_seed + seed_offset) % len(active)]
 
     def _distribute(n, lo, hi, seed_offset):
         if n <= 0:
@@ -3523,43 +3555,54 @@ def _generate_narrative_events(data: dict) -> list[dict]:
 
     events: list[dict] = []
 
-    # ── Schüsse (geblockte + verfehlte — Tore werden im engine-path gesetzt) ──
+    # ── Schüsse ───────────────────────────────────────────────────────────────
     n_h = min(7, max(0, h_shots - home_goals))
     n_a = min(7, max(0, a_shots - away_goals))
     for i, minute in enumerate(_distribute(n_h, 3, 88, 101)):
         events.append({'type': 'shot', 'team': 'home', 'minute': minute,
-                       'commentary': _ticker_comment('shot', minute, _pick(h_pl, 200 + i))})
+                       'commentary': _ticker_comment('shot', minute,
+                           _pick_active(h_pl, removed_home, minute, 200 + i),
+                           match_seed=base_seed, event_index=i)})
     for i, minute in enumerate(_distribute(n_a, 3, 88, 102)):
         events.append({'type': 'shot', 'team': 'away', 'minute': minute,
-                       'commentary': _ticker_comment('shot', minute, _pick(a_pl, 300 + i))})
+                       'commentary': _ticker_comment('shot', minute,
+                           _pick_active(a_pl, removed_away, minute, 300 + i),
+                           match_seed=base_seed, event_index=i)})
 
     # ── Ecken ─────────────────────────────────────────────────────────────────
     for i, minute in enumerate(_distribute(min(5, h_corners), 4, 87, 401)):
         events.append({'type': 'corner', 'team': 'home', 'minute': minute,
-                       'commentary': _ticker_comment('corner', minute, _pick(h_pl, 500 + i))})
+                       'commentary': _ticker_comment('corner', minute,
+                           _pick_active(h_pl, removed_home, minute, 500 + i),
+                           match_seed=base_seed, event_index=i)})
     for i, minute in enumerate(_distribute(min(5, a_corners), 4, 87, 402)):
         events.append({'type': 'corner', 'team': 'away', 'minute': minute,
-                       'commentary': _ticker_comment('corner', minute, _pick(a_pl, 600 + i))})
+                       'commentary': _ticker_comment('corner', minute,
+                           _pick_active(a_pl, removed_away, minute, 600 + i),
+                           match_seed=base_seed, event_index=i)})
 
-    # ── Fouls (1 je ~7 Fouls) ─────────────────────────────────────────────────
+    # ── Fouls ─────────────────────────────────────────────────────────────────
     n_hf = max(0, h_fouls // 7)
     n_af = max(0, a_fouls // 7)
     for i, minute in enumerate(_distribute(n_hf, 5, 85, 701)):
         events.append({'type': 'foul', 'team': 'home', 'minute': minute,
-                       'commentary': _ticker_comment('foul', minute, _pick(h_pl, 800 + i))})
+                       'commentary': _ticker_comment('foul', minute,
+                           _pick_active(h_pl, removed_home, minute, 800 + i),
+                           match_seed=base_seed, event_index=i)})
     for i, minute in enumerate(_distribute(n_af, 5, 85, 702)):
         events.append({'type': 'foul', 'team': 'away', 'minute': minute,
-                       'commentary': _ticker_comment('foul', minute, _pick(a_pl, 900 + i))})
+                       'commentary': _ticker_comment('foul', minute,
+                           _pick_active(a_pl, removed_away, minute, 900 + i),
+                           match_seed=base_seed, event_index=i)})
 
-    # ── Spielfluss-Kommentare (10 gleichmäßig über 90 Min.) ──────────────────
-    from game.ticker_commentary import build_flow_text
-    r_flow = _rng.Random(base_seed + 1001)
-    for minute in _distribute(10, 5, 85, 1001):
-        flow_seed = base_seed + 1001 + minute
+    # ── Spielfluss ────────────────────────────────────────────────────────────
+    for flow_i, minute in enumerate(_distribute(10, 5, 85, 1001)):
+        h_active = _active_at(h_pl, removed_home, minute)
+        a_active = _active_at(a_pl, removed_away, minute)
         text = build_flow_text(
-            minute, flow_seed,
+            minute, base_seed, flow_i,
             h_name=home_name, a_name=away_name,
-            h_players=h_pl, a_players=a_pl,
+            h_players=h_active, a_players=a_active,
         )
         events.append({'type': 'flow', 'team': 'home', 'minute': minute,
                        'commentary': text})
@@ -3571,6 +3614,21 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
     """Führt alle Spielereignisse zu einer nach Minute sortierten Liste zusammen.
     Enthält echte Events (Tore, Karten, Wechsel, Verletzungen) PLUS narrative
     Events (Schüsse, Ecken, Fouls, Spielfluss). Sortiert älteste zuerst."""
+    from game.ticker_commentary import stable_seed as _stable_seed
+    # SHA-256 Seed identisch mit _generate_narrative_events → gleiche Permutationen
+    _match_seed = _stable_seed(
+        data.get('home_club_name', ''),
+        data.get('away_club_name', ''),
+        data.get('home_goals', 0) or 0,
+        data.get('away_goals', 0) or 0,
+    )
+    _type_ctr: dict[str, int] = {}
+
+    def _tc(evt_type, *args, **kwargs):
+        idx = _type_ctr.get(evt_type, 0)
+        _type_ctr[evt_type] = idx + 1
+        return _ticker_comment(evt_type, *args, match_seed=_match_seed, event_index=idx, **kwargs)
+
     raw = []
 
     for evt in (data.get('goal_events') or []):
@@ -3637,14 +3695,14 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 score_a += 1
             evt['score_h'] = score_h
             evt['score_a'] = score_a
-            evt['commentary'] = _ticker_comment(
+            evt['commentary'] = _tc(
                 'goal', evt['minute'], evt['scorer_name'], evt['assister_name'],
                 score_h=score_h, score_a=score_a,
             )
         elif t == 'sub':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
-            evt['commentary'] = _ticker_comment(
+            evt['commentary'] = _tc(
                 'sub', evt['minute'], in_name=evt['in_name'], out_name=evt['out_name'],
                 target_slot=evt.get('target_slot', ''),
                 position_relation=evt.get('position_relation', ''),
@@ -3653,13 +3711,13 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
         elif t == 'card':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
-            evt['commentary'] = _ticker_comment(
+            evt['commentary'] = _tc(
                 'card', evt['minute'], evt['player_name'], card_type=evt['card_type'],
             )
         elif t == 'injury':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
-            evt['commentary'] = _ticker_comment(
+            evt['commentary'] = _tc(
                 'injury', evt['minute'], evt['player_name'], days=evt.get('days', 0),
             )
         else:
