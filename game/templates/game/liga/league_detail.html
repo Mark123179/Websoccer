@@ -354,6 +354,30 @@
 
         </div>
 
+        {% if matchday_xi %}
+        <div class="mxi-panel">
+            <div class="mxi-panel__head">
+                <span class="mxi-panel__icon">⚽</span>
+                Elf des Spieltags
+                <span class="mxi-panel__sub">Spieltag {{ matchday_xi.matchday }} · {{ matchday_xi.formation }}</span>
+            </div>
+            <div class="mxi-pitch">
+                {% for slot in matchday_xi.slots %}
+                <div class="mxi-chip mxi-chip--{{ slot.line }}"
+                     style="left:{{ slot.x }}%;top:{{ slot.y }}%;"
+                     title="{{ slot.name }}{% if slot.goals %} · {{ slot.goals }} Tor{% if slot.goals != 1 %}e{% endif %}{% endif %}{% if slot.assists %} · {{ slot.assists }} Assist{% if slot.assists != 1 %}s{% endif %}{% endif %}">
+                    {% if slot.crest %}
+                    <img class="mxi-chip__crest" src="{% static slot.crest %}" alt="{{ slot.club_name }}">
+                    {% endif %}
+                    <span class="mxi-chip__rating{% if slot.rating <= 1.5 %} mxi-rating--top{% elif slot.rating <= 2.5 %} mxi-rating--great{% endif %}">{{ slot.rating|floatformat:1 }}</span>
+                    <span class="mxi-chip__name">{{ slot.name }}</span>
+                    <span class="mxi-chip__pos">{{ slot.display_role }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
     {% endif %}
 

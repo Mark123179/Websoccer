@@ -5565,6 +5565,15 @@ def league_detail(request, league_id):
                 'date_range': _fmt_date_range(fixtures_list),
             })
 
+    # ---- Elf des Spieltags (nur bei Spieltag-Tab) -------------------------
+    matchday_xi = None
+    if active_tab == 'spieltag':
+        try:
+            from .matchday_xi import get_last_complete_matchday_xi
+            matchday_xi = get_last_complete_matchday_xi(league, current_season)
+        except Exception:
+            matchday_xi = None
+
     # ---- Statistiken (nur bei aktivem Tab laden) --------------------------
     liga_top_scorers = []
     liga_top_assists = []
@@ -5638,6 +5647,7 @@ def league_detail(request, league_id):
         'liga_best_rated':  liga_best_rated,
         'liga_most_cards':  liga_most_cards,
         'liga_team_stats':  liga_team_stats,
+        'matchday_xi':      matchday_xi,
         'game_header': build_game_header(
             league.name,
             season_display,
