@@ -3064,7 +3064,7 @@ class PlayerSeasonStatAdmin(admin.ModelAdmin):
         'rating_count',
         'player_of_match_awards',
     )
-    list_filter = ('season', 'competition', 'club')
+    list_filter = ('season', 'club', 'player__main_position_1')
     search_fields = (
         'player__first_name',
         'player__last_name',
