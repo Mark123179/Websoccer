@@ -1,0 +1,98 @@
+{
+  "seeds": [
+    1,
+    2
+  ],
+  "metrics": {
+    "goals_per_game": [
+      2.712418,
+      2.777778
+    ],
+    "home_pct": [
+      0.375817,
+      0.411765
+    ],
+    "draw_pct": [
+      0.284314,
+      0.248366
+    ],
+    "away_pct": [
+      0.339869,
+      0.339869
+    ],
+    "spearman": [
+      0.783282,
+      0.337461
+    ],
+    "pearson_xgd": [
+      0.732753,
+      0.238966
+    ],
+    "inj_per_game": [
+      0.199346,
+      0.238562
+    ],
+    "yellow_per_game": [
+      2.826797,
+      2.869281
+    ]
+  },
+  "stability": {
+    "goals_per_game": {
+      "min": 2.712418,
+      "max": 2.777778,
+      "delta": 0.065359,
+      "delta_pct": 2.381,
+      "ok": true
+    },
+    "home_pct": {
+      "min": 0.375817,
+      "max": 0.411765,
+      "delta": 0.035948,
+      "delta_pct": 9.129,
+      "ok": false
+    },
+    "draw_pct": {
+      "min": 0.248366,
+      "max": 0.284314,
+      "delta": 0.035948,
+      "delta_pct": 13.497,
+      "ok": false
+    },
+    "away_pct": {
+      "min": 0.339869,
+      "max": 0.339869,
+      "delta": 0.0,
+      "delta_pct": 0.0,
+      "ok": true
+    },
+    "spearman": {
+      "min": 0.337461,
+      "max": 0.783282,
+      "delta": 0.44582,
+      "delta_pct": 79.558,
+      "ok": false
+    },
+    "pearson_xgd": {
+      "min": 0.238966,
+      "max": 0.732753,
+      "delta": 0.493787,
+      "delta_pct": 101.632,
+      "ok": false
+    },
+    "inj_per_game": {
+      "min": 0.199346,
+      "max": 0.238562,
+      "delta": 0.039216,
+      "delta_pct": 17.91,
+      "ok": false
+    },
+    "yellow_per_game": {
+      "min": 2.826797,
+      "max": 2.869281,
+      "delta": 0.042484,
+      "delta_pct": 1.492,
+      "ok": true
+    }
+  }
+}

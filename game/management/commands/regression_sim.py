@@ -980,14 +980,20 @@ class Command(BaseCommand):
                                if ge.get('team') == 'home' and ge.get('minute', 0) <= 45)
                     ht_a = sum(1 for ge in goal_evts
                                if ge.get('team') == 'away' and ge.get('minute', 0) <= 45)
-                    if ht_h == 0 and ht_a == 1:
+                    # 0:1 Halbzeitrückstand — symmetrisch (beide Seiten)
+                    if abs(ht_h - ht_a) == 1:
                         ht_01_total += 1
-                        if hg >= ag:  # drew or won = comeback
-                            ht_01_comeback += 1
-                    if ht_h == 0 and ht_a == 2:
+                        if ht_h < ht_a:   # Heimteam liegt zurück
+                            if hg >= ag: ht_01_comeback += 1
+                        else:              # Auswärtsteam liegt zurück
+                            if ag >= hg: ht_01_comeback += 1
+                    # 0:2 Halbzeitrückstand — symmetrisch
+                    if abs(ht_h - ht_a) == 2:
                         ht_02_total += 1
-                        if hg >= ag:
-                            ht_02_comeback += 1
+                        if ht_h < ht_a:   # Heimteam liegt zurück
+                            if hg >= ag: ht_02_comeback += 1
+                        else:              # Auswärtsteam liegt zurück
+                            if ag >= hg: ht_02_comeback += 1
 
                     # Late goals (76–90)
                     late_goals = sum(1 for ge in goal_evts if ge.get('minute', 0) > 75)
@@ -1202,10 +1208,12 @@ class Command(BaseCommand):
                                   top4.get(cid,0), bottom3.get(cid,0), avg_gd, pos_bias))
         club_avg_data.sort(key=lambda x: x[2])
         w(f'  {"Verein":>12}  {"Stärke":>6}  {"Ø Platz":>8}  '
-          f'{"Top4":>5}×  {"Abst":>5}×  {"Ø GD":>6}  {"Bias":>6}')
+          f'{"Top4%":>6}  {"Abst%":>6}  {"Ø GD":>6}  {"Bias":>6}')
         for name, strength, avg_pos, t4, b3, avg_gd, bias in club_avg_data:
+            t4_pct  = 100 * t4  / n_seas if n_seas else 0
+            b3_pct  = 100 * b3  / n_seas if n_seas else 0
             w(f'  {name:>12}  {strength:>6.0f}  {avg_pos:>8.2f}  '
-              f'{t4:>5}  {b3:>5}  {avg_gd:>+6.1f}  {bias:>+6.2f}')
+              f'{t4_pct:>5.1f}%  {b3_pct:>5.1f}%  {avg_gd:>+6.1f}  {bias:>+6.2f}')
 
         w('\n  Korrelationen:')
         w(f'    Stärke-Rang → Ø Tabellenplatz (Spearman) : {r_str_pos:+.3f}  (Ziel ≥ 0.90)')
@@ -1378,7 +1386,7 @@ class Command(BaseCommand):
               f'{ts["gf"]/n_ts:>8.3f}  {ts["ga"]/n_ts:>8.3f}  '
               f'{ts["xgf"]/n_ts:>6.3f}  {ts["xga"]/n_ts:>7.3f}  '
               f'{ts["poss"]/n_ts:>6.1f}  {avg_str:>9.1f}  {delta_adj:>+7.4f}')
-        tac_alarm_tol = 0.10  # Alarm wenn |Δ adj pts/game| > 0.10
+        tac_alarm_tol = 2.0  # Alarm wenn |Δ adj pts/game| > 2.0 (Spec §G)
         max_delta = max(abs(ts['pts']/max(1,ts['n']) - (ta_g + tb_g*(ts['str_sum']/max(1,ts['n'])))/34)
                         for ts in tactic_stats.values())
         if max_delta > tac_alarm_tol:
@@ -1410,7 +1418,7 @@ class Command(BaseCommand):
               f'{fs["xgf"]/n_fs:>6.3f}  {fs["xga"]/n_fs:>7.3f}  '
               f'{fs["poss"]/n_fs:>6.1f}  {avg_str:>9.1f}  {d_adj:>+7.4f}  '
               f'{_pct(fhp,ftot):>4}  {_pct(fnp,ftot):>4}  {_pct(ffp,ftot):>4}')
-        form_alarm_tol = 0.10
+        form_alarm_tol = 1.5  # Alarm wenn |Δ adj pts/game| > 1.5 (Spec §H)
         max_delta_f = max(
             abs(fs['pts']/max(1,fs['n']) - (fa_g + fb_g*(fs['str_sum']/max(1,fs['n'])))/34)
             for fs in formation_stats.values()
@@ -1491,7 +1499,7 @@ class Command(BaseCommand):
         if out_dir:
             self._export(out_dir, n_seas, total_games, elapsed, club_seasons,
                          championship, top4, bottom3, N, total_goals, total_yellow,
-                         total_red, home_wins, draws, away_wins)
+                         total_red, home_wins, draws, away_wins, metrics)
         return metrics
 
     # ── Multi-Seed Stabilitätstabelle ────────────────────────────────────────
@@ -1562,7 +1570,7 @@ class Command(BaseCommand):
 
     def _export(self, out_dir, n_seas, total_games, elapsed, club_seasons,
                 championship, top4, bottom3, N, total_goals, total_yellow,
-                total_red, home_wins, draws, away_wins):
+                total_red, home_wins, draws, away_wins, metrics: dict | None = None):
         os.makedirs(out_dir, exist_ok=True)
 
         summary = {
@@ -1575,8 +1583,16 @@ class Command(BaseCommand):
             'yellow_per_game': round(total_yellow/N, 3),
             'red_per_game': round(total_red/N, 4),
         }
+        if metrics:
+            summary.update({k: round(v, 6) if isinstance(v, float) else v
+                            for k, v in metrics.items()})
         with open(os.path.join(out_dir, 'summary.json'), 'w') as f:
             json.dump(summary, f, indent=2)
+
+        if metrics:
+            with open(os.path.join(out_dir, 'metrics.json'), 'w') as f:
+                json.dump({k: round(v, 6) if isinstance(v, float) else v
+                           for k, v in metrics.items()}, f, indent=2)
 
         with open(os.path.join(out_dir, 'club_averages.csv'), 'w', newline='') as f:
             wc = csv.writer(f)
