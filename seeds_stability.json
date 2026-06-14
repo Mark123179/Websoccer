@@ -5,79 +5,79 @@
   ],
   "metrics": {
     "goals_per_game": [
-      2.712418,
-      2.777778
+      2.535948,
+      2.781046
     ],
     "home_pct": [
-      0.375817,
-      0.411765
+      0.398693,
+      0.372549
     ],
     "draw_pct": [
-      0.284314,
-      0.248366
+      0.20915,
+      0.267974
     ],
     "away_pct": [
-      0.339869,
-      0.339869
+      0.392157,
+      0.359477
     ],
     "spearman": [
-      0.783282,
-      0.337461
+      0.706914,
+      0.678019
     ],
     "pearson_xgd": [
-      0.732753,
-      0.238966
+      0.795116,
+      0.656812
     ],
     "inj_per_game": [
       0.199346,
       0.238562
     ],
     "yellow_per_game": [
-      2.826797,
-      2.869281
+      2.705882,
+      2.879085
     ]
   },
   "stability": {
     "goals_per_game": {
-      "min": 2.712418,
-      "max": 2.777778,
-      "delta": 0.065359,
-      "delta_pct": 2.381,
-      "ok": true
+      "min": 2.535948,
+      "max": 2.781046,
+      "delta": 0.245098,
+      "delta_pct": 9.219,
+      "ok": false
     },
     "home_pct": {
-      "min": 0.375817,
-      "max": 0.411765,
-      "delta": 0.035948,
-      "delta_pct": 9.129,
+      "min": 0.372549,
+      "max": 0.398693,
+      "delta": 0.026144,
+      "delta_pct": 6.78,
       "ok": false
     },
     "draw_pct": {
-      "min": 0.248366,
-      "max": 0.284314,
-      "delta": 0.035948,
-      "delta_pct": 13.497,
+      "min": 0.20915,
+      "max": 0.267974,
+      "delta": 0.058824,
+      "delta_pct": 24.658,
       "ok": false
     },
     "away_pct": {
-      "min": 0.339869,
-      "max": 0.339869,
-      "delta": 0.0,
-      "delta_pct": 0.0,
-      "ok": true
-    },
-    "spearman": {
-      "min": 0.337461,
-      "max": 0.783282,
-      "delta": 0.44582,
-      "delta_pct": 79.558,
+      "min": 0.359477,
+      "max": 0.392157,
+      "delta": 0.03268,
+      "delta_pct": 8.696,
       "ok": false
     },
+    "spearman": {
+      "min": 0.678019,
+      "max": 0.706914,
+      "delta": 0.028896,
+      "delta_pct": 4.173,
+      "ok": true
+    },
     "pearson_xgd": {
-      "min": 0.238966,
-      "max": 0.732753,
-      "delta": 0.493787,
-      "delta_pct": 101.632,
+      "min": 0.656812,
+      "max": 0.795116,
+      "delta": 0.138304,
+      "delta_pct": 19.051,
       "ok": false
     },
     "inj_per_game": {
@@ -88,11 +88,11 @@
       "ok": false
     },
     "yellow_per_game": {
-      "min": 2.826797,
-      "max": 2.869281,
-      "delta": 0.042484,
-      "delta_pct": 1.492,
-      "ok": true
+      "min": 2.705882,
+      "max": 2.879085,
+      "delta": 0.173203,
+      "delta_pct": 6.202,
+      "ok": false
     }
   }
 }

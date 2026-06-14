@@ -620,9 +620,14 @@ class Command(BaseCommand):
         fr_end_list:   list[float] = []
         fr_by_matchday: list[list[float]] = [[] for _ in range(34)]  # one slot per matchday
 
+        # E: Mehrfach-Verletzungen / Rotationshäufigkeit (Cross-Season)
+        multi_inj_per_season: list[int] = []       # players mit ≥2 Verletz./Saison
+        rotation_frac_per_season: list[float] = [] # Anteil Spieler mit <5 Einsätzen
+
         # G: Taktik-Balance
         _ts_zero = lambda: {'n': 0, 'pts': 0, 'gf': 0, 'ga': 0,
-                            'xgf': 0.0, 'xga': 0.0, 'poss': 0.0, 'str_sum': 0.0}
+                            'xgf': 0.0, 'xga': 0.0, 'poss': 0.0, 'str_sum': 0.0,
+                            'cards': 0, 'press_wins': 0, 'press_tot': 0}
         tactic_stats: dict[str, dict] = {k: _ts_zero() for k in _TACTIC_KEYS}
         # season-level: list of (club_strength, season_pts) per tactic
         tactic_season: dict[str, list[tuple[float, int]]] = {k: [] for k in _TACTIC_KEYS}
@@ -644,6 +649,7 @@ class Command(BaseCommand):
         season_relegation_pts: list[int] = []
         season_title_delta: list[int] = []
         season_max_winless_all: list[int] = []   # max winless streak any club per season
+        season_total_nowins: list[int] = []      # sum(34-won) across all clubs per season
         season_biggest_home_def: list[int] = []  # biggest home defeat (goal diff) per season
 
         # K: game-level records für Spearman-Bootstrap
@@ -669,6 +675,10 @@ class Command(BaseCommand):
             cur_winless: dict[int, int] = {c['id']: 0 for c in CLUBS}
             max_winless: dict[int, int] = {c['id']: 0 for c in CLUBS}
             season_max_home_def = 0
+
+            # E: Per-Spieler-Tracking (Einsätze + Verletzungen)
+            player_apps_season: dict[int, int] = {}   # pid → Einsätze diese Saison
+            player_injs_season: dict[int, int] = {}   # pid → Verletzungen diese Saison
 
             for md_i, matchday in enumerate(SCHEDULE):
                 # Frische-Kurve: Ø Frische aller Stammelf vor Spieltag
@@ -934,6 +944,8 @@ class Command(BaseCommand):
                                 elif fr_val >= 75: inj_fr_bucket['75-89'][0]  += 1
                                 elif fr_val >= 60: inj_fr_bucket['60-74'][0]  += 1
                                 else:              inj_fr_bucket['<60'][0]    += 1
+                                # E: Mehrfach-Verletzungen pro Spieler
+                                player_injs_season[inj_pid] = player_injs_season.get(inj_pid, 0) + 1
 
                     # ── Frische nach Spiel ────────────────────────────────────
                     _update_freshness_after_game(fr_map, h_id, h_evts, game_rng)
@@ -944,26 +956,42 @@ class Command(BaseCommand):
                     # ── G: Taktik ─────────────────────────────────────────────
                     pts_h = 3 if hg > ag else (1 if hg == ag else 0)
                     pts_a = 3 - pts_h if hg != ag else 1
-                    for tk, t_pts, t_gf, t_ga, t_xgf, t_xga, t_poss, t_str in [
-                        (h_tac_key, pts_h, hg, ag, hxg, axg, hp, h_club['strength']),
-                        (a_tac_key, pts_a, ag, hg, axg, hxg, ap, a_club['strength']),
+                    h_cards  = ms_.get('home_yellow', 0) + ms_.get('home_red', 0)
+                    a_cards  = ms_.get('away_yellow', 0) + ms_.get('away_red', 0)
+                    h_pw = ms_.get('home_pressing_ball_wins', 0)
+                    a_pw = ms_.get('away_pressing_ball_wins', 0)
+                    h_pb = ms_.get('home_pressing_bypassed', 0)
+                    a_pb = ms_.get('away_pressing_bypassed', 0)
+                    for tk, t_pts, t_gf, t_ga, t_xgf, t_xga, t_poss, t_str, t_cards, t_pw, t_pb in [
+                        (h_tac_key, pts_h, hg, ag, hxg, axg, hp, h_club['strength'], h_cards, h_pw, h_pb),
+                        (a_tac_key, pts_a, ag, hg, axg, hxg, ap, a_club['strength'], a_cards, a_pw, a_pb),
                     ]:
                         ts = tactic_stats[tk]
                         ts['n'] += 1; ts['pts'] += t_pts
                         ts['gf'] += t_gf; ts['ga'] += t_ga
                         ts['xgf'] += t_xgf; ts['xga'] += t_xga
                         ts['poss'] += t_poss; ts['str_sum'] += t_str
+                        ts['cards'] += t_cards
+                        ts['press_wins'] += t_pw; ts['press_tot'] += t_pw + t_pb
 
                     # ── H: Formation ──────────────────────────────────────────
-                    for fk, f_pts, f_gf, f_ga, f_xgf, f_xga, f_poss, f_str in [
-                        (h_form_key, pts_h, hg, ag, hxg, axg, hp, h_club['strength']),
-                        (a_form_key, pts_a, ag, hg, axg, hxg, ap, a_club['strength']),
+                    for fk, f_pts, f_gf, f_ga, f_xgf, f_xga, f_poss, f_str, f_cards, f_pw, f_pb in [
+                        (h_form_key, pts_h, hg, ag, hxg, axg, hp, h_club['strength'], h_cards, h_pw, h_pb),
+                        (a_form_key, pts_a, ag, hg, axg, hxg, ap, a_club['strength'], a_cards, a_pw, a_pb),
                     ]:
                         fs = formation_stats[fk]
                         fs['n'] += 1; fs['pts'] += f_pts
                         fs['gf'] += f_gf; fs['ga'] += f_ga
                         fs['xgf'] += f_xgf; fs['xga'] += f_xga
                         fs['poss'] += f_poss; fs['str_sum'] += f_str
+                        fs['cards'] += f_cards
+                        fs['press_wins'] += f_pw; fs['press_tot'] += f_pw + f_pb
+
+                    # ── E: Spieler-Einsätze (Starter) ─────────────────────────
+                    for cid_app in (h_id, a_id):
+                        for i in range(N_STARTERS):
+                            pid_app = _player_id(cid_app, i)
+                            player_apps_season[pid_app] = player_apps_season.get(pid_app, 0) + 1
 
                     # ── I: Spielverlauf ───────────────────────────────────────
                     sorted_goals = sorted(goal_evts, key=lambda g: g.get('minute', 99))
@@ -980,19 +1008,19 @@ class Command(BaseCommand):
                                if ge.get('team') == 'home' and ge.get('minute', 0) <= 45)
                     ht_a = sum(1 for ge in goal_evts
                                if ge.get('team') == 'away' and ge.get('minute', 0) <= 45)
-                    # 0:1 Halbzeitrückstand — symmetrisch (beide Seiten)
-                    if abs(ht_h - ht_a) == 1:
+                    # 0:1 HZ — literal: eine Seite 0 Tore, andere genau 1
+                    if min(ht_h, ht_a) == 0 and max(ht_h, ht_a) == 1:
                         ht_01_total += 1
-                        if ht_h < ht_a:   # Heimteam liegt zurück
+                        if ht_h < ht_a:   # Heimteam liegt 0:1 zurück
                             if hg >= ag: ht_01_comeback += 1
-                        else:              # Auswärtsteam liegt zurück
+                        else:              # Auswärtsteam liegt 0:1 zurück
                             if ag >= hg: ht_01_comeback += 1
-                    # 0:2 Halbzeitrückstand — symmetrisch
-                    if abs(ht_h - ht_a) == 2:
+                    # 0:2 HZ — literal: eine Seite 0 Tore, andere genau 2
+                    if min(ht_h, ht_a) == 0 and max(ht_h, ht_a) == 2:
                         ht_02_total += 1
-                        if ht_h < ht_a:   # Heimteam liegt zurück
+                        if ht_h < ht_a:   # Heimteam liegt 0:2 zurück
                             if hg >= ag: ht_02_comeback += 1
-                        else:              # Auswärtsteam liegt zurück
+                        else:              # Auswärtsteam liegt 0:2 zurück
                             if ag >= hg: ht_02_comeback += 1
 
                     # Late goals (76–90)
@@ -1047,7 +1075,17 @@ class Command(BaseCommand):
 
             # J: Saison-Extremwerte speichern
             season_max_winless_all.append(max(max_winless.values()) if max_winless else 0)
+            season_total_nowins.append(sum(34 - standing[cid]['won'] for cid in standing))
             season_biggest_home_def.append(season_max_home_def)
+
+            # E: Mehrfach-Verletzungen und Rotationshäufigkeit
+            multi_count = sum(1 for cnt in player_injs_season.values() if cnt >= 2)
+            multi_inj_per_season.append(multi_count)
+            all_pids_in_season = {_player_id(c['id'], i)
+                                  for c in CLUBS for i in range(N_STARTERS + N_BENCH)}
+            under5 = sum(1 for pid in all_pids_in_season
+                         if player_apps_season.get(pid, 0) < 5)
+            rotation_frac_per_season.append(under5 / max(1, len(all_pids_in_season)))
 
         # ── Ende Simulationsschleife ──────────────────────────────────────────
         elapsed = time.time() - t0
@@ -1333,6 +1371,17 @@ class Command(BaseCommand):
                 bar = ' ' * pos + '●' + ' ' * (30 - pos)
                 w(f'    ST{md+1:>2} [{bar}] {fr_val:.1f}%')
 
+        # Mehrfach-Verletzungen / Rotationshäufigkeit
+        if multi_inj_per_season:
+            w(f'\n  Mehrfach-Verletzungen (Spieler mit ≥2 Verletz./Saison):')
+            w(f'    Ø   : {_mean(multi_inj_per_season):.1f}/Saison')
+            w(f'    Min : {min(multi_inj_per_season)}  Max : {max(multi_inj_per_season)}')
+        if rotation_frac_per_season:
+            w(f'  Rotationshäufigkeit (Anteil Spieler <5 Einsätze/Saison):')
+            w(f'    Ø   : {_mean(rotation_frac_per_season)*100:.1f}%')
+            w(f'    Min : {min(rotation_frac_per_season)*100:.1f}%  '
+              f'Max : {max(rotation_frac_per_season)*100:.1f}%')
+
         # Frische allgemein
         if fr_start_list and fr_end_list:
             avg_start = _mean(fr_start_list); std_start = _std(fr_start_list)
@@ -1374,7 +1423,8 @@ class Command(BaseCommand):
         ta_g, tb_g = _linreg(all_str, all_pts_s)  # pts = ta + tb * strength
 
         w(f'  {"Taktik":>14}  {"N":>6}  {"Pts/Sp":>7}  {"Tore/Sp":>8}  {"GTA/Sp":>8}  '
-          f'{"xG/Sp":>6}  {"xGA/Sp":>7}  {"Poss%":>6}  {"Ø Stärke":>9}  {"Δ adj":>7}')
+          f'{"xG/Sp":>6}  {"xGA/Sp":>7}  {"Poss%":>6}  {"Ø Stärke":>9}  {"Δ adj":>7}  '
+          f'{"Cards/Sp":>9}  {"Press%":>7}')
         for k in _TACTIC_KEYS:
             ts = tactic_stats[k]
             n_ts = ts['n'] or 1
@@ -1382,10 +1432,12 @@ class Command(BaseCommand):
             pts_per_game = ts['pts'] / n_ts
             expected_pts = ta_g + tb_g * avg_str
             delta_adj    = pts_per_game - (expected_pts / 34)  # season→game scale
+            press_pct    = ts['press_wins'] / max(1, ts['press_tot']) * 100
             w(f'  {k:>14}  {ts["n"]:>6}  {ts["pts"]/n_ts:>7.3f}  '
               f'{ts["gf"]/n_ts:>8.3f}  {ts["ga"]/n_ts:>8.3f}  '
               f'{ts["xgf"]/n_ts:>6.3f}  {ts["xga"]/n_ts:>7.3f}  '
-              f'{ts["poss"]/n_ts:>6.1f}  {avg_str:>9.1f}  {delta_adj:>+7.4f}')
+              f'{ts["poss"]/n_ts:>6.1f}  {avg_str:>9.1f}  {delta_adj:>+7.4f}  '
+              f'{ts["cards"]/n_ts:>9.2f}  {press_pct:>7.1f}')
         tac_alarm_tol = 2.0  # Alarm wenn |Δ adj pts/game| > 2.0 (Spec §G)
         max_delta = max(abs(ts['pts']/max(1,ts['n']) - (ta_g + tb_g*(ts['str_sum']/max(1,ts['n'])))/34)
                         for ts in tactic_stats.values())
@@ -1404,7 +1456,7 @@ class Command(BaseCommand):
 
         w(f'  {"Formation":>10}  {"N":>6}  {"Pts/Sp":>7}  {"Tore/Sp":>8}  {"GTA/Sp":>8}  '
           f'{"xG/Sp":>6}  {"xGA/Sp":>7}  {"Poss%":>6}  {"Ø Stärke":>9}  {"Δ adj":>7}  '
-          f'{"HP%":>4}  {"NP%":>4}  {"FP%":>4}')
+          f'{"HP%":>4}  {"NP%":>4}  {"FP%":>4}  {"Cards/Sp":>9}  {"Press%":>7}')
         for k in _FORMATION_KEYS:
             fs = formation_stats[k]; n_fs = fs['n'] or 1
             avg_str = fs['str_sum'] / n_fs
@@ -1413,11 +1465,13 @@ class Command(BaseCommand):
             d_adj   = pts_pg - exp_pg
             fhp = form_hp[k]; fnp = form_np[k]; ffp = form_fp[k]
             ftot = fhp + fnp + ffp or 1
+            f_press_pct = fs['press_wins'] / max(1, fs['press_tot']) * 100
             w(f'  {k:>10}  {fs["n"]:>6}  {fs["pts"]/n_fs:>7.3f}  '
               f'{fs["gf"]/n_fs:>8.3f}  {fs["ga"]/n_fs:>8.3f}  '
               f'{fs["xgf"]/n_fs:>6.3f}  {fs["xga"]/n_fs:>7.3f}  '
               f'{fs["poss"]/n_fs:>6.1f}  {avg_str:>9.1f}  {d_adj:>+7.4f}  '
-              f'{_pct(fhp,ftot):>4}  {_pct(fnp,ftot):>4}  {_pct(ffp,ftot):>4}')
+              f'{_pct(fhp,ftot):>4}  {_pct(fnp,ftot):>4}  {_pct(ffp,ftot):>4}  '
+              f'{fs["cards"]/n_fs:>9.2f}  {f_press_pct:>7.1f}')
         form_alarm_tol = 1.5  # Alarm wenn |Δ adj pts/game| > 1.5 (Spec §H)
         max_delta_f = max(
             abs(fs['pts']/max(1,fs['n']) - (fa_g + fb_g*(fs['str_sum']/max(1,fs['n'])))/34)
@@ -1470,9 +1524,14 @@ class Command(BaseCommand):
               f'{sum(1 for d in season_title_delta if d <= 2)}×  '
               f'({_pct(sum(1 for d in season_title_delta if d <= 2), n_seas)})')
         if season_max_winless_all:
-            w(f'  Spiele ohne Sieg – max. Siegloser-Serie (bester Wert pro Saison):')
+            w(f'  Sieglos-Serie (max. konsekutiv, schlechtester Club/Saison):')
             w(f'    Ø   : {_mean(season_max_winless_all):.1f}')
             w(f'    Min : {min(season_max_winless_all)}  Max : {max(season_max_winless_all)}  σ : {_std(season_max_winless_all):.1f}')
+        if season_total_nowins:
+            w(f'  Spiele ohne Sieg gesamt (Σ 34−Siege aller Clubs/Saison):')
+            w(f'    Ø   : {_mean(season_total_nowins):.1f}')
+            w(f'    Min : {min(season_total_nowins)}  Max : {max(season_total_nowins)}  σ : {_std(season_total_nowins):.1f}')
+            w(f'    (Erwartung: ≈ {N_CLUBS}×17 = {N_CLUBS*17} bei symmetrisch ausgeglichener Liga)')
         if season_biggest_home_def:
             w(f'  Höchste Heimniederlage (Tordifferenz) pro Saison:')
             w(f'    Ø   : {_mean(season_biggest_home_def):.1f}')
