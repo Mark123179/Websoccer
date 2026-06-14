@@ -102,14 +102,14 @@
 .mhub-card--praesident   { grid-column: 3; grid-row: 1; }
 .mhub-card--freundschaft { grid-column: 4; grid-row: 1; }
 
-/* Reihe 2: 4 Kacheln auto-platziert in Spalten 1–4 */
+/* Reihe 2: 4 Kacheln in Spalten 1–4 */
 .mhub-card--sportgericht { grid-column: 1; grid-row: 2; }
 .mhub-card--finanzen     { grid-column: 2; grid-row: 2; }
 .mhub-card--sponsor      { grid-column: 3; grid-row: 2; }
-.mhub-card--news         { grid-column: 4; grid-row: 2; }
+.mhub-card--jobs         { grid-column: 4; grid-row: 2; }
 
-/* Reihe 3: Job-Angebote (Spalte 1, gleiche Größe wie alle anderen) */
-.mhub-card--jobs         { grid-column: 1; grid-row: 3; }
+/* Reihe 3: Vereinsnews (In Entwicklung) */
+.mhub-card--news         { grid-column: 1; grid-row: 3; }
 
 /* ---- Einzelne Karte ---- */
 .mhub-card {
