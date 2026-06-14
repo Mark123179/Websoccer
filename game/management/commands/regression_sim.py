@@ -158,7 +158,6 @@ ALARM = {
     'goals':  0.05,
     'result': 0.015,
     'cards':  0.15,
-    'inj':    0.15,
 }
 
 
@@ -1350,8 +1349,10 @@ class Command(BaseCommand):
                 w(f'    Ø Ausfalltage              : {inj_days_sum/inj_days_n:.1f}')
             if inj_days_list:
                 w(f'    Median Ausfalltage         : {_median(inj_days_list):.1f}')
-        inj_alarm = _alarm('Verletzungen/Spiel', inj_total_sum/N, BASELINE['inj_per_game'], ALARM['inj'])
-        if inj_alarm: w(inj_alarm)
+        _INJ_LO, _INJ_HI = 0.15, 0.22
+        inj_rate = inj_total_sum / N
+        if not (_INJ_LO <= inj_rate <= _INJ_HI):
+            w(f'  ⚠ ALARM  Verletzungen/Spiel: {inj_rate:.4f}  außerhalb Korridor [{_INJ_LO}–{_INJ_HI}]')
 
         # Verletzungen nach Frische-Bucket
         w('\n  Verletzungen nach Frische-Bucket (post-match):')
