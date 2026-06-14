@@ -28,10 +28,11 @@ from game.cup_service import (
     build_cup_participants,
     calculate_opening_round,
     draw_cup_round,
+    generate_dummy_clubs,
     schedule_cup_round,
     simulate_cup_fixture,
 )
-from game.models import Club, CupFixture, CupRound, CupSeason, League
+from game.models import Club, CupFixture, CupRound, CupSeason, League, Player
 
 
 def _make_league(name='Testliga', competition_type='league', country='Deutschland'):
@@ -170,6 +171,49 @@ class BuildCupParticipantsTests(TestCase):
                 self.cup_season, empty_league, empty_league,
                 bl_count=0, zweite_bl_count=0,
             )
+
+
+# ── 3b. generate_dummy_clubs ─────────────────────────────────────────────────
+
+class GenerateDummyClubsTests(TestCase):
+
+    def setUp(self):
+        self.liga = _make_league('2. Bundesliga Test', competition_type='league')
+
+    def test_creates_requested_count(self):
+        clubs = generate_dummy_clubs(self.liga, count=4)
+        self.assertEqual(len(clubs), 4)
+        self.assertEqual(Club.objects.filter(league=self.liga).count(), 4)
+
+    def test_each_club_has_18_players(self):
+        generate_dummy_clubs(self.liga, count=2)
+        for club in Club.objects.filter(league=self.liga):
+            self.assertEqual(
+                Player.objects.filter(club=club).count(),
+                18,
+                msg=f'{club.name} hat nicht 18 Spieler',
+            )
+
+    def test_players_have_valid_age(self):
+        generate_dummy_clubs(self.liga, count=1)
+        for p in Player.objects.filter(club__league=self.liga):
+            self.assertGreater(p.age, 0)
+            self.assertLess(p.age, 60)
+
+    def test_idempotent_on_second_call(self):
+        generate_dummy_clubs(self.liga, count=3)
+        generate_dummy_clubs(self.liga, count=3)
+        self.assertEqual(Club.objects.filter(league=self.liga).count(), 3)
+
+    def test_position_distribution_includes_goalkeeper(self):
+        generate_dummy_clubs(self.liga, count=1)
+        club = Club.objects.filter(league=self.liga).first()
+        gk_count = Player.objects.filter(club=club, position='TW').count()
+        self.assertGreaterEqual(gk_count, 1)
+
+    def test_default_count_is_18(self):
+        clubs = generate_dummy_clubs(self.liga)
+        self.assertEqual(len(clubs), 18)
 
 
 # ── 4. draw_cup_round ────────────────────────────────────────────────────────

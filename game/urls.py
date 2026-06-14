@@ -306,5 +306,5 @@ urlpatterns = [
     path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/advance/', creator_cup_advance, name='creator_cup_advance'),
 
     # Pokalbaum (öffentliche Ansicht)
-    path('pokal/<int:league_id>/<str:season>/', cup_tree_view, name='cup_tree'),
+    path('pokal/<int:league_id>/<path:season>/', cup_tree_view, name='cup_tree'),
 ]

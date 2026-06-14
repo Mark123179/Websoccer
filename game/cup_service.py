@@ -164,13 +164,10 @@ def _create_dummy_squad(club) -> None:
                 first_name='Dummy',
                 last_name=f'{position}{j}',
                 position=position,
+                main_position_1=position,
                 club=club,
-                nationality='Deutschland',
-                birth_year=1998,
-                ws_injury_type='',
-                ws_injury_days_remaining=0,
-                ws_suspension_reason='',
-                ws_suspension_matches_remaining=0,
+                nationalities='Deutschland',
+                age=25 + (slot % 10),
             )
             attr = {
                 'ausdauer':   70,

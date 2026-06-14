@@ -2165,7 +2165,8 @@ def _simulate_penalty_shootout(
     if not a_shooters:
         a_shooters = [{'id': None, 'name': '?', 'elfmeter': 70}]
 
-    rng = random.Random(match_seed ^ 0xE1F3A2B1)
+    from .random_utils import stable_seed as _stable_seed
+    rng = random.Random(_stable_seed("penalty-shootout", match_seed))
 
     h_scored = 0
     a_scored = 0
