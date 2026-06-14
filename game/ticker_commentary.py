@@ -663,6 +663,47 @@ def build_ticker_text(
             return _shuffled_pick(_PENALTY_MISS_TEXTS, ms, 'pen_miss', ei).format(p=p)
         return "Elfmeter verschossen — daneben!"
 
+    elif evt_type == 'extra_time_start':
+        return "Anpfiff zur Verlängerung! 30 weitere Minuten werden gespielt."
+
+    elif evt_type == 'extra_time_end':
+        return "Abpfiff nach der Verlängerung — es bleibt beim Unentschieden! Es kommt zum Elfmeterschießen."
+
+    elif evt_type == 'penalty_shootout_start':
+        return "Das Elfmeterschießen beginnt! Nerven aus Stahl sind jetzt gefragt."
+
+    elif evt_type == 'penalty_scored':
+        rd = minute  # minute field reused as round number
+        if p:
+            phrases = [
+                f"Runde {rd}: {p} tritt an — und verwandelt sicher! {score}",
+                f"Runde {rd}: Eiskalt! {p} schiebt den Ball ins Netz. {score}",
+                f"Runde {rd}: {p} — verwandelt! Kein Problem für den Schützen. {score}",
+                f"Runde {rd}: {p} läuft an und trifft! Der Torwart hat keine Chance. {score}",
+            ]
+            return _shuffled_pick(phrases, ms, 'pen_sd_scored', ei)
+        return f"Runde {rd}: Elfmeter verwandelt! {score}"
+
+    elif evt_type == 'penalty_missed':
+        rd = minute
+        if p:
+            phrases = [
+                f"Runde {rd}: {p} tritt an — aber verschossen! Welch ein Drama. {score}",
+                f"Runde {rd}: Nein! {p} scheitert am Torwart. {score}",
+                f"Runde {rd}: {p} läuft an — der Ball geht am Pfosten vorbei! {score}",
+                f"Runde {rd}: Verschossen! {p} lässt die Chance liegen. {score}",
+            ]
+            return _shuffled_pick(phrases, ms, 'pen_sd_missed', ei)
+        return f"Runde {rd}: Elfmeter verschossen! {score}"
+
+    elif evt_type == 'penalty_shootout_end':
+        home_pen = score_h
+        away_pen = score_a
+        return (
+            f"Das Elfmeterschießen ist beendet! Endstand im Elfmeterschießen: "
+            f"{home_pen}:{away_pen}."
+        )
+
     elif evt_type == 'flow':
         return player or f'Spielunterbrechung in Minute {minute}.'
 

@@ -27,3 +27,4 @@
 - [Ticker commentary seed + anti-repetition](ticker-commentary-seed.md) — stable_seed() via SHA-256 in ticker_commentary.py; _shuffled_pick(pool, match_seed, pool_key, event_index) für Permutation; event_index per Spieltyp in _build_combined_events via _type_ctr; aktive Spieler per Minute via _build_removed()/_active_at() in _generate_narrative_events.
 - [CSS comments inside property values](css-comment-in-value-trap.md) — /* */ comments inside CSS property values (e.g. background:) are invalid; browser parser drops the rule silently, can block all click events on the page.
 - [Matchday XI backtracking limit](matchday-xi-backtracking.md) — _find_best_lineup() hangs with large pools; MAX_CANDIDATES=5 + MAX_NODES=20_000 hard cap required; Bundesliga pools reach 200+ players across 9 fixtures.
+- [KO-Spielmodus V1](ko-match-mode-v1.md) — simulate_ko_match()=simulate_match(is_cup=True); ET 91–120 + Elfmeter; 0xE1FM3TE2 war ungültiges Hex, jetzt 0xE1F3A2B1.

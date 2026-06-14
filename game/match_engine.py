@@ -58,6 +58,12 @@ _GOAL_WEIGHTS: dict[str, float] = {
 
 # ── Wechsel-Konstanten ────────────────────────────────────────────────────────
 MAX_SUBSTITUTIONS = 5  # geteiltes Kontingent: geplante + Verletzungswechsel
+EXTRA_TIME_SUBSTITUTION_BONUS = 1   # +1 Wechsel in der Verlängerung (max 6 gesamt)
+
+# Elfmeterschießen — Wahrscheinlichkeitsformel (V1, eingefroren nach Einführung)
+PENALTY_BASE_PROB     = 0.760   # Basis-Verwandlungsrate (~76 %)
+PENALTY_SHOOTER_COEFF = 0.002   # je Elfmeter-Attributpunkt über/unter 70; Bereich ±0.06
+PENALTY_GK_COEFF      = 0.0015  # je TW-Reflexe-Attributpunkt über/unter 70; Bereich ±0.045
 
 
 def _ceil5(minute: int) -> int:
@@ -219,14 +225,18 @@ def _slot_to_group(slot_code: str) -> str:
     return 'midfield'
 
 
-def _build_windows_map(sub_events: list[dict]) -> dict[int, tuple[int, int]]:
+def _build_windows_map(
+    sub_events: list[dict],
+    game_duration: int = 90,
+) -> dict[int, tuple[int, int]]:
     """Aktives Zeitfenster (on_minute, off_minute) pro Spieler aus Wechsel-Events.
 
-    Starter ohne Wechsel: nicht im Dict (Caller nimmt Default (0, 90)).
+    Starter ohne Wechsel: nicht im Dict (Caller nimmt Default (0, game_duration)).
     Starter ausgewechselt bei M: (0, M).
-    Eingewechselter rein bei M: (M, 90).
+    Eingewechselter rein bei M: (M, game_duration).
     Wechselkette (rein M1, raus M2): (M1, M2).
 
+    game_duration: 90 für Ligaspiele, 120 für Verlängerungsspiele.
     Wird für korrekte Karten-/Verletzungsminuten-Zuweisung benötigt;
     minutes_played + is_sub allein kann Ketten-Fenster nicht korrekt rekonstruieren.
     """
@@ -236,7 +246,7 @@ def _build_windows_map(sub_events: list[dict]) -> dict[int, tuple[int, int]]:
     for evt in (sub_events or []):
         out_pid = evt.get('out')
         in_pid  = evt.get('in')
-        minute  = int(evt.get('minute', 90) or 90)
+        minute  = int(evt.get('minute', game_duration) or game_duration)
         if out_pid:
             off_min[out_pid] = minute
         if in_pid:
@@ -248,17 +258,22 @@ def _build_windows_map(sub_events: list[dict]) -> dict[int, tuple[int, int]]:
         windows[pid] = (start, off)
     for pid, on in on_min.items():
         if pid not in windows:
-            windows[pid] = (on, 90)
+            windows[pid] = (on, game_duration)
     return windows
 
 
-def _build_minutes_played_map(sub_events: list[dict]) -> dict[int, int]:
+def _build_minutes_played_map(
+    sub_events: list[dict],
+    game_duration: int = 90,
+) -> dict[int, int]:
     """Einsatzminuten aus Wechsel-Events.
 
-    Starter ohne Wechsel: Default 90 Minuten (nicht im Dict → Caller nimmt 90).
+    Starter ohne Wechsel: Default game_duration Minuten (nicht im Dict).
     Starter ausgewechselt bei Minute M: minutes_played = M.
-    Eingewechselter kommt rein bei M: minutes_played = 90 - M.
+    Eingewechselter kommt rein bei M: minutes_played = game_duration - M.
     Wechselkette (rein bei M1, raus bei M2): minutes_played = M2 - M1.
+
+    game_duration: 90 für Ligaspiele, 120 für Verlängerungsspiele.
     """
     on_min: dict[int, int]  = {}   # Minute, ab der Spieler spielt (0 = Starter)
     off_min: dict[int, int] = {}   # Minute, in der Spieler rauskommt
@@ -266,7 +281,7 @@ def _build_minutes_played_map(sub_events: list[dict]) -> dict[int, int]:
     for evt in (sub_events or []):
         out_pid = evt.get('out')
         in_pid  = evt.get('in')
-        minute  = int(evt.get('minute', 90) or 90)
+        minute  = int(evt.get('minute', game_duration) or game_duration)
         if out_pid:
             off_min[out_pid] = minute
         if in_pid:
@@ -278,7 +293,7 @@ def _build_minutes_played_map(sub_events: list[dict]) -> dict[int, int]:
         minutes[pid] = max(0, off - start)
     for pid, on in on_min.items():
         if pid not in minutes:
-            minutes[pid] = max(0, 90 - on)
+            minutes[pid] = max(0, game_duration - on)
     return minutes
 
 
@@ -379,8 +394,9 @@ class ActiveLineupState:
         excl = dismissed_pids or set()
         return [dict(s) for s in self._lineup_slots if s['player_id'] not in excl]
 
-    def can_substitute(self) -> bool:
-        return self.used_substitutions < MAX_SUBSTITUTIONS
+    def can_substitute(self, extra_time: bool = False) -> bool:
+        limit = MAX_SUBSTITUTIONS + (EXTRA_TIME_SUBSTITUTION_BONUS if extra_time else 0)
+        return self.used_substitutions < limit
 
     def process_planned_subs(
         self,
@@ -388,6 +404,7 @@ class ActiveLineupState:
         own_goals: int,
         opp_goals: int,
         dismissed_pids: set | None = None,
+        extra_time: bool = False,
     ) -> None:
         """Prüft geplante Wechsel genau einmal je Segment.
 
@@ -396,6 +413,8 @@ class ActiveLineupState:
 
         Bedingung erfüllt → ausführen.
         Bedingung NICHT erfüllt → endgültig verwerfen (nie wieder prüfen).
+
+        extra_time: True in der Verlängerung → +1 Wechsel erlaubt (max 6).
         """
         excl = dismissed_pids or set()
 
@@ -409,7 +428,7 @@ class ActiveLineupState:
             # Einmalig bewerten — egal ob ausgeführt oder verworfen
             self._resolved_idxs.add(idx)
 
-            if not self.can_substitute():
+            if not self.can_substitute(extra_time=extra_time):
                 continue
 
             in_pid  = sub.get('in')
@@ -1027,6 +1046,7 @@ def _simulate_match_minutes(
     home_team: dict,
     away_team: dict,
     segment_minutes: int = 5,
+    _return_als_state: bool = False,
 ) -> dict:
     """Simuliert ein Spiel in 5-Minuten-Segmenten mit Live-Bedingungsauswertung.
 
@@ -1303,6 +1323,15 @@ def _simulate_match_minutes(
         'dismissal_events': h_dismissal_events + a_dismissal_events,
         'h_sim_sub_events': h_als.sub_events,
         'a_sim_sub_events': a_als.sub_events,
+        # Optionaler ALS-Zustand für Verlängerungs-/Elfmeterlogik (nur bei _return_als_state=True)
+        **({
+            'h_als':              h_als,
+            'a_als':              a_als,
+            'h_dismissed_pids':   h_dismissed_pids,
+            'a_dismissed_pids':   a_dismissed_pids,
+            'h_gk_str_override':  h_gk_str_override,
+            'a_gk_str_override':  a_gk_str_override,
+        } if _return_als_state else {}),
     }
 
 
@@ -1554,8 +1583,11 @@ def compute_player_ratings(result: dict) -> dict:
         yellow_red     = p.get('yellow_red_cards', 0) or 0
         red            = p.get('red_cards', 0) or 0
         own_goal       = int(bool(p.get('own_goal', False)))
-        penalty_missed = p.get('penalty_missed', 0) or 0
-        penalty_saved  = p.get('penalty_saved', 0) or 0
+        penalty_scored          = p.get('penalty_scored', 0) or 0
+        penalty_missed          = p.get('penalty_missed', 0) or 0
+        penalty_saved           = p.get('penalty_saved', 0) or 0
+        penalty_decisive_scored = int(bool(p.get('penalty_decisive_scored', False)))
+        penalty_decisive_miss   = int(bool(p.get('penalty_decisive_miss', False)))
 
         my_goals        = h_goals        if is_home else a_goals
         opp_goals       = a_goals        if is_home else h_goals
@@ -1659,9 +1691,12 @@ def compute_player_ratings(result: dict) -> dict:
         event_delta += yellow         * 0.10   # Gelbe Karte
         event_delta += yellow_red     * 0.65   # Gelb-Rote Karte
         event_delta += red            * 0.85   # Direktes Rot
-        event_delta += penalty_missed * 0.50   # Verschossener Elfmeter
+        event_delta -= penalty_scored          * 0.08  # Elfmeter verwandelt → Bonus
+        event_delta += penalty_missed          * 0.25  # Elfmeter verschossen → Malus
+        event_delta += penalty_decisive_miss   * 0.05  # Entscheidend verschossen → Extra
+        event_delta -= penalty_decisive_scored * 0.05  # Entscheidend verwandelt → Extra
         if pg == 'GK':
-            event_delta -= penalty_saved * 0.60  # Gehaltener Elfmeter (TW-Bonus)
+            event_delta -= penalty_saved       * 0.20  # Elfmeter gehalten → TW-Bonus
 
         # ── G) Minutenskalierung — NUR auf team_delta + proxy_delta ───────────
         mp = p.get('minutes_played') or 90
@@ -1903,6 +1938,354 @@ def _generate_substitution_events(tactic_setup, team_dict: dict,
             for (in_pid, out_pid), minute in zip(pairs, minutes)]
 
 
+# ── K.-o.-Simulation: Verlängerung + Elfmeter ─────────────────────────────────
+
+def _simulate_extra_time_minutes(
+    h_als: 'ActiveLineupState',
+    a_als: 'ActiveLineupState',
+    h_dismissed_pids: set,
+    a_dismissed_pids: set,
+    home_team: dict,
+    away_team: dict,
+    h_goals_in: int,
+    a_goals_in: int,
+    home_base_tactic: dict,
+    away_base_tactic: dict,
+    h_gk_str_override: Optional[float],
+    a_gk_str_override: Optional[float],
+    segment_minutes: int = 5,
+) -> dict:
+    """Simuliert die Verlängerung (Minuten 91–120) mit vorhandenem ALS-Zustand.
+
+    Nutzt dieselbe Segment-Logik wie _simulate_match_minutes(), jedoch:
+    - Minuten 91–120 statt 1–90
+    - extra_time=True bei process_planned_subs() → +1 Wechsel erlaubt (max 6)
+    - Kein Possession-Jitter-Reset (h/a_als-Zustand bleibt erhalten)
+    - Rückgabe enthält ET-Tore, -Events und aktualisierte ALS-Referenzen
+
+    h_als / a_als: werden IN-PLACE modifiziert (sub_events ergänzt).
+    """
+    h_zone = calculate_zone_strengths(home_team)
+    a_zone = calculate_zone_strengths(away_team)
+
+    h_goals = h_goals_in
+    a_goals = a_goals_in
+    h_xg_total = 0.0
+    a_xg_total = 0.0
+    events: list[dict] = []
+    h_dismissal_events: list[dict] = []
+    a_dismissal_events: list[dict] = []
+    h_red_et = 0
+    a_red_et = 0
+
+    seg_min = max(1, int(segment_minutes or 5))
+    for minute in range(91, 121, seg_min):
+        seg_len = max(1, min(seg_min, 121 - minute))
+        end_min = minute + seg_len - 1
+
+        h_plan = select_active_condition_plan(
+            home_base_tactic, minute, h_goals, a_goals, True, h_red_et, a_red_et)
+        a_plan = select_active_condition_plan(
+            away_base_tactic, minute, h_goals, a_goals, False, a_red_et, h_red_et)
+
+        h_als.process_planned_subs(minute, h_goals, a_goals, h_dismissed_pids, extra_time=True)
+        a_als.process_planned_subs(minute, a_goals, h_goals, a_dismissed_pids, extra_time=True)
+
+        _h_active = h_als.get_active_lineup(h_dismissed_pids)
+        _a_active = a_als.get_active_lineup(a_dismissed_pids)
+        _h_cur    = _active_lineup_players(_h_active, h_als.players_by_id)
+        _a_cur    = _active_lineup_players(_a_active, a_als.players_by_id)
+        _h_team_seg = {**home_team, 'lineup': _h_active, 'players': list(h_als.players_by_id.values())}
+        _a_team_seg = {**away_team, 'lineup': _a_active, 'players': list(a_als.players_by_id.values())}
+
+        h_tactic_seg = _with_active_plan(home_base_tactic, h_plan)
+        a_tactic_seg = _with_active_plan(away_base_tactic, a_plan)
+        h_comp = compile_tactic(_h_team_seg, h_tactic_seg, half='second')
+        h_comp['pressing_index'] = _clamp(
+            h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
+        )
+        a_comp = compile_tactic(_a_team_seg, a_tactic_seg, half='second')
+
+        h_str = _calculate_lineup_strength(
+            _h_team_seg, h_tactic_seg, h_comp,
+            dismissed_pids=None,
+            gk_strength_override=h_gk_str_override,
+        )
+        a_str = _calculate_lineup_strength(
+            _a_team_seg, a_tactic_seg, a_comp,
+            dismissed_pids=None,
+            gk_strength_override=a_gk_str_override,
+        )
+
+        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone) * HOME_XG_MULTIPLIER
+        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone) * AWAY_XG_MULTIPLIER
+        h_xg_seg   = h_xg_match * seg_len / 90.0
+        a_xg_seg   = a_xg_match * seg_len / 90.0
+        h_xg_total += h_xg_seg
+        a_xg_total += a_xg_seg
+
+        hg = _poisson(h_xg_seg)
+        ag = _poisson(a_xg_seg)
+        minute_pool = list(range(minute, min(120, end_min) + 1))
+        events.extend(_goal_events(hg, 'home', _h_cur, minute_pool.copy()))
+        events.extend(_goal_events(ag, 'away', _a_cur, minute_pool.copy()))
+        h_goals += hg
+        a_goals += ag
+
+        h_dis, h_dis_type = _dismissal_this_segment(h_comp, seg_len, h_red_et)
+        a_dis, a_dis_type = _dismissal_this_segment(a_comp, seg_len, a_red_et)
+        h_red_et += h_dis
+        a_red_et += a_dis
+        if h_dis:
+            ev, gk_ov = _resolve_dismissal(home_team, _h_cur, h_dismissed_pids, end_min, 'home', h_dis_type)
+            if ev:
+                h_dismissal_events.append(ev)
+            if gk_ov is not None:
+                h_gk_str_override = gk_ov
+        if a_dis:
+            ev, gk_ov = _resolve_dismissal(away_team, _a_cur, a_dismissed_pids, end_min, 'away', a_dis_type)
+            if ev:
+                a_dismissal_events.append(ev)
+            if gk_ov is not None:
+                a_gk_str_override = gk_ov
+
+    return {
+        'home_goals':    h_goals,
+        'away_goals':    a_goals,
+        'home_goals_et': h_goals - h_goals_in,
+        'away_goals_et': a_goals - a_goals_in,
+        'home_xg_et':    round(h_xg_total, 4),
+        'away_xg_et':    round(a_xg_total, 4),
+        'goal_events_et': sorted(events, key=lambda e: e['minute']),
+        'et_dismissal_events': h_dismissal_events + a_dismissal_events,
+        'h_gk_str_override': h_gk_str_override,
+        'a_gk_str_override': a_gk_str_override,
+    }
+
+
+def _select_penalty_takers(
+    als: 'ActiveLineupState',
+    dismissed_pids: set,
+    psr_map: dict,
+) -> list[dict]:
+    """Gibt aktive Spieler sortiert nach elfmeter DESC zurück (Elfmeter-Schützen).
+
+    psr_map: {player_id: {'elfmeter': int, 'tw_reflexe': int}}
+    Alle aktiven (nicht verwiesenen) Spieler werden einbezogen.
+    """
+    active = als.get_active_lineup(dismissed_pids)
+    players = _active_lineup_players(active, als.players_by_id)
+    result = []
+    for p in players:
+        pid = p.get('id') or 0
+        psr = psr_map.get(pid, {})
+        result.append({
+            **p,
+            'elfmeter':   int(psr.get('elfmeter', 70) or 70),
+            'tw_reflexe': int(psr.get('tw_reflexe', 70) or 70),
+        })
+    return sorted(result, key=lambda x: -x.get('elfmeter', 70))
+
+
+def _get_active_gk(
+    als: 'ActiveLineupState',
+    dismissed_pids: set,
+    psr_map: dict,
+) -> Optional[dict]:
+    """Gibt den aktuell aktiven Torwart mit Attributen zurück (None wenn nicht vorhanden)."""
+    active = als.get_active_lineup(dismissed_pids)
+    for slot in active:
+        if (slot.get('position', '') or '').upper() == 'TW':
+            pid = slot.get('player_id')
+            p   = als.players_by_id.get(pid, {})
+            psr = psr_map.get(pid or 0, {})
+            return {
+                **p,
+                'elfmeter':   int(psr.get('elfmeter', 70) or 70),
+                'tw_reflexe': int(psr.get('tw_reflexe', 70) or 70),
+            }
+    return None
+
+
+def _simulate_penalty_shootout(
+    h_als: 'ActiveLineupState',
+    a_als: 'ActiveLineupState',
+    h_dismissed_pids: set,
+    a_dismissed_pids: set,
+    home_club_id: int,
+    away_club_id: int,
+    match_seed: int,
+) -> dict:
+    """Elfmeterschießen: Best-of-5, danach plötzlicher Tod bis max. 20 Runden.
+
+    Wahrscheinlichkeitsformel (V1, eingefroren):
+        prob = clamp(PENALTY_BASE_PROB
+                     + (elfmeter - 70) * PENALTY_SHOOTER_COEFF
+                     − (tw_reflexe - 70) * PENALTY_GK_COEFF,
+                     0.55, 0.92)
+
+    Rückgabe:
+        home_penalties, away_penalties: erzielte Treffer
+        winner_club_id, winner_side:    'home' | 'away'
+        penalty_events:                 Ticker-Events
+        h_penalty_flags, a_penalty_flags: {pid: {scored, missed, saved, ...}}
+    """
+    from .models import PlayerSourceRating as _PSR
+
+    # ── Attribut-Abfrage (elfmeter, tw_reflexe) aus PlayerSourceRating ──────
+    h_active_pids = {s['player_id'] for s in h_als.get_active_lineup(h_dismissed_pids)}
+    a_active_pids = {s['player_id'] for s in a_als.get_active_lineup(a_dismissed_pids)}
+    all_pids = h_active_pids | a_active_pids
+
+    psr_qs = (
+        _PSR.objects
+        .filter(player_id__in=all_pids)
+        .values('player_id', 'elfmeter', 'tw_reflexe', 'source')
+        .order_by('player_id', 'source')
+    )
+    psr_map: dict[int, dict] = {}
+    for row in psr_qs:
+        pid = row['player_id']
+        if pid not in psr_map or row['source'] == 'FM':
+            psr_map[pid] = {'elfmeter': row['elfmeter'], 'tw_reflexe': row['tw_reflexe']}
+
+    h_shooters = _select_penalty_takers(h_als, h_dismissed_pids, psr_map)
+    a_shooters = _select_penalty_takers(a_als, a_dismissed_pids, psr_map)
+    h_gk = _get_active_gk(h_als, h_dismissed_pids, psr_map)
+    a_gk = _get_active_gk(a_als, a_dismissed_pids, psr_map)
+
+    # Fallback-Reflexe wenn kein TW auf dem Platz
+    h_gk_reflexe = int((h_gk or {}).get('tw_reflexe', 70) or 70)
+    a_gk_reflexe = int((a_gk or {}).get('tw_reflexe', 70) or 70)
+    h_gk_id      = (h_gk or {}).get('id')
+    a_gk_id      = (a_gk or {}).get('id')
+
+    if not h_shooters:
+        h_shooters = [{'id': None, 'name': '?', 'elfmeter': 70}]
+    if not a_shooters:
+        a_shooters = [{'id': None, 'name': '?', 'elfmeter': 70}]
+
+    rng = random.Random(match_seed ^ 0xE1F3A2B1)
+
+    h_scored = 0
+    a_scored = 0
+    penalty_events: list[dict] = []
+    h_penalty_flags: dict[int, dict] = {}
+    a_penalty_flags: dict[int, dict] = {}
+
+    def _kick(
+        shooter: dict,
+        opp_gk_reflexe: int,
+        opp_gk_id: Optional[int],
+        opp_gk_flags: dict,
+        my_flags: dict,
+        side: str,
+        round_num: int,
+    ) -> bool:
+        pid   = shooter.get('id')
+        name  = shooter.get('name', '?')
+        em    = int(shooter.get('elfmeter', 70) or 70)
+        prob  = _clamp(
+            PENALTY_BASE_PROB
+            + (em - 70) * PENALTY_SHOOTER_COEFF
+            - (opp_gk_reflexe - 70) * PENALTY_GK_COEFF,
+            0.55, 0.92,
+        )
+        scored = rng.random() < prob
+
+        if pid:
+            entry = my_flags.setdefault(pid, {'scored': 0, 'missed': 0, 'saved': 0})
+            if scored:
+                entry['scored'] += 1
+            else:
+                entry['missed'] += 1
+
+        if not scored and opp_gk_id:
+            gk_entry = opp_gk_flags.setdefault(opp_gk_id, {'scored': 0, 'missed': 0, 'saved': 0})
+            gk_entry['saved'] += 1
+
+        penalty_events.append({
+            'type':        'penalty_scored' if scored else 'penalty_missed',
+            'team':        side,
+            'round':       round_num,
+            'scorer_id':   pid,
+            'scorer_name': name,
+        })
+        return scored
+
+    # ── Runden 1–5 (kein Frühabbruch — konsistente Simulation) ──────────────
+    for rd in range(1, 6):
+        h_idx = (rd - 1) % len(h_shooters)
+        a_idx = (rd - 1) % len(a_shooters)
+        if _kick(h_shooters[h_idx], a_gk_reflexe, a_gk_id, a_penalty_flags, h_penalty_flags, 'home', rd):
+            h_scored += 1
+        if _kick(a_shooters[a_idx], h_gk_reflexe, h_gk_id, h_penalty_flags, a_penalty_flags, 'away', rd):
+            a_scored += 1
+
+    # ── Plötzlicher Tod ───────────────────────────────────────────────────────
+    sd_rd = 0
+    while h_scored == a_scored and sd_rd < 20:
+        sd_rd += 1
+        h_idx = (5 + sd_rd - 1) % len(h_shooters)
+        a_idx = (5 + sd_rd - 1) % len(a_shooters)
+        if _kick(h_shooters[h_idx], a_gk_reflexe, a_gk_id, a_penalty_flags, h_penalty_flags, 'home', 5 + sd_rd):
+            h_scored += 1
+        if _kick(a_shooters[a_idx], h_gk_reflexe, h_gk_id, h_penalty_flags, a_penalty_flags, 'away', 5 + sd_rd):
+            a_scored += 1
+
+    # Sicherheits-Tiebreaker (praktisch nie erreicht)
+    if h_scored == a_scored:
+        h_scored += 1
+
+    # Entscheidenden Elfmeter in den Flags markieren
+    _mark_decisive(penalty_events, h_penalty_flags, a_penalty_flags)
+
+    winner_side     = 'home' if h_scored > a_scored else 'away'
+    winner_club_id  = home_club_id if winner_side == 'home' else away_club_id
+
+    penalty_events.append({
+        'type':            'penalty_shootout_end',
+        'home_penalties':  h_scored,
+        'away_penalties':  a_scored,
+        'winner_club_id':  winner_club_id,
+        'winner_side':     winner_side,
+    })
+
+    return {
+        'home_penalties':   h_scored,
+        'away_penalties':   a_scored,
+        'winner_club_id':   winner_club_id,
+        'winner_side':      winner_side,
+        'penalty_events':   penalty_events,
+        'h_penalty_flags':  h_penalty_flags,
+        'a_penalty_flags':  a_penalty_flags,
+    }
+
+
+def _mark_decisive(
+    events: list[dict],
+    h_flags: dict,
+    a_flags: dict,
+) -> None:
+    """Markiert den letzten entscheidenden Elfmeter in den Spieler-Flags."""
+    for evt in reversed(events):
+        if evt.get('type') == 'penalty_shootout_end':
+            continue
+        pid = evt.get('scorer_id')
+        side = evt.get('team')
+        if not pid or not side:
+            continue
+        flags = h_flags if side == 'home' else a_flags
+        entry = flags.get(pid)
+        if not entry:
+            continue
+        if evt['type'] == 'penalty_scored':
+            entry['penalty_decisive_scored'] = True
+        else:
+            entry['penalty_decisive_miss'] = True
+        break
+
+
 # ── Öffentliche API ───────────────────────────────────────────────────────────
 
 def simulate_match(
@@ -1910,9 +2293,16 @@ def simulate_match(
     away_club,
     home_strength_malus: float = 1.0,
     away_strength_malus: float = 1.0,
+    is_cup: bool = False,
 ) -> dict:
     """
     Simuliert ein Spiel und gibt ein vollständiges Report-Dict zurück.
+
+    is_cup=True: K.-o.-Modus — Unentschieden nach 90 Minuten wird durch
+    Verlängerung (91–120 Min.) und ggf. Elfmeterschießen aufgelöst.
+    Zusätzliche Keys im Ergebnis: home_goals_90, away_goals_90, home_goals_et,
+    away_goals_et, home_penalties, away_penalties, winner_club_id, decided_by,
+    penalty_events.
 
     Rückwärtskompatible Schlüssel (identisch zur alten Engine):
         home_club_id, home_club_name, home_club_short, home_club_crest
@@ -2026,7 +2416,7 @@ def simulate_match(
     away_team['planned_substitutions'] = list(getattr(away_tactic, 'substitutions', None) or [])
 
     # 4. Minuten-Simulation
-    sim = _simulate_match_minutes(home_team, away_team)
+    sim = _simulate_match_minutes(home_team, away_team, _return_als_state=is_cup)
 
     # 5. Tore/Vorlagen auf ORM-Spieler mappen
     h_goals_map: dict[int, dict] = {}
@@ -2257,4 +2647,207 @@ def simulate_match(
     result['home_ratings']     = ratings['home_ratings']
     result['away_ratings']     = ratings['away_ratings']
     result['man_of_the_match'] = ratings['man_of_the_match']
+
+    # 7. K.-o.-Modus: Verlängerung + Elfmeter (nur wenn is_cup=True)
+    if is_cup:
+        h_goals_90 = sim['home_goals']
+        a_goals_90 = sim['away_goals']
+        result['home_goals_90'] = h_goals_90
+        result['away_goals_90'] = a_goals_90
+
+        if h_goals_90 != a_goals_90:
+            # Reguläre Spielzeit entschieden — kein ET nötig
+            result['home_goals_et']  = 0
+            result['away_goals_et']  = 0
+            result['home_penalties'] = None
+            result['away_penalties'] = None
+            result['winner_club_id'] = home_club.pk if h_goals_90 > a_goals_90 else away_club.pk
+            result['decided_by']     = 'regular_time'
+            result['penalty_events'] = []
+        else:
+            # ── Verlängerung ─────────────────────────────────────────────────
+            _h_als   = sim['h_als']
+            _a_als   = sim['a_als']
+            _h_dis   = sim['h_dismissed_pids']
+            _a_dis   = sim['a_dismissed_pids']
+            _h_gk_ov = sim['h_gk_str_override']
+            _a_gk_ov = sim['a_gk_str_override']
+
+            et = _simulate_extra_time_minutes(
+                _h_als, _a_als, _h_dis, _a_dis,
+                home_team, away_team,
+                h_goals_90, a_goals_90,
+                deepcopy(home_team.get('tactic', {})),
+                deepcopy(away_team.get('tactic', {})),
+                _h_gk_ov, _a_gk_ov,
+            )
+
+            # Tore/Events aus VL in den Report integrieren
+            result['home_goals']    = et['home_goals']
+            result['away_goals']    = et['away_goals']
+            result['home_goals_et'] = et['home_goals_et']
+            result['away_goals_et'] = et['away_goals_et']
+            result['home_xg']       = round(float(result.get('home_xg') or 0) + et['home_xg_et'], 4)
+            result['away_xg']       = round(float(result.get('away_xg') or 0) + et['away_xg_et'], 4)
+            result['goal_events']   = sorted(
+                result['goal_events'] + et['goal_events_et'],
+                key=lambda e: e['minute'],
+            )
+            result['dismissal_events'] = result.get('dismissal_events', []) + et['et_dismissal_events']
+
+            # Spieler-Zeitfenster auf 120 Minuten aktualisieren
+            h_all_subs   = _h_als.sub_events
+            a_all_subs   = _a_als.sub_events
+            h_mmap_120   = _build_minutes_played_map(h_all_subs, game_duration=120)
+            a_mmap_120   = _build_minutes_played_map(a_all_subs, game_duration=120)
+            h_wmap_120   = _build_windows_map(h_all_subs, game_duration=120)
+            a_wmap_120   = _build_windows_map(a_all_subs, game_duration=120)
+
+            for p in result['home_players']:
+                pid = p.get('id')
+                if not pid:
+                    continue
+                if pid in h_wmap_120:
+                    p['on_minute'], p['off_minute'] = h_wmap_120[pid]
+                elif p.get('off_minute', 90) == 90:
+                    p['off_minute'] = 120
+                p['minutes_played'] = h_mmap_120.get(pid, 120)
+
+            for p in result['away_players']:
+                pid = p.get('id')
+                if not pid:
+                    continue
+                if pid in a_wmap_120:
+                    p['on_minute'], p['off_minute'] = a_wmap_120[pid]
+                elif p.get('off_minute', 90) == 90:
+                    p['off_minute'] = 120
+                p['minutes_played'] = a_mmap_120.get(pid, 120)
+
+            # ET-Tore in bestehende Player-Rows eintragen
+            for evt in et['goal_events_et']:
+                sid = evt.get('scorer_id')
+                aid = evt.get('assister_id')
+                target = result['home_players'] if evt['team'] == 'home' else result['away_players']
+                for p in target:
+                    if sid and p.get('id') == sid:
+                        p['goals'] = p.get('goals', 0) + 1
+                    if aid and p.get('id') == aid:
+                        p['assists'] = p.get('assists', 0) + 1
+
+            # Neu eingewechselte VL-Spieler als Rows ergänzen
+            existing_h_pids = {p['id'] for p in result['home_players']}
+            existing_a_pids = {p['id'] for p in result['away_players']}
+            for evt in h_all_subs:
+                in_pid = evt.get('in')
+                if not in_pid or in_pid in existing_h_pids or int(evt.get('minute', 0) or 0) <= 90:
+                    continue
+                p_orm = _all_players_by_id.get(in_pid)
+                if not p_orm:
+                    continue
+                sc  = evt.get('target_slot', 'ZM')
+                row = _player_row(
+                    {'slot': {'code': sc, 'group': _slot_to_group(sc), 'key': sc}, 'player': p_orm},
+                    goals=0, assists=0, match_strength=match_strengths.get(in_pid),
+                )
+                row['minutes_played'] = h_mmap_120.get(in_pid, 0)
+                row['is_sub'] = True
+                if in_pid in h_wmap_120:
+                    row['on_minute'], row['off_minute'] = h_wmap_120[in_pid]
+                result['home_players'].append(row)
+                existing_h_pids.add(in_pid)
+            for evt in a_all_subs:
+                in_pid = evt.get('in')
+                if not in_pid or in_pid in existing_a_pids or int(evt.get('minute', 0) or 0) <= 90:
+                    continue
+                p_orm = _all_players_by_id.get(in_pid)
+                if not p_orm:
+                    continue
+                sc  = evt.get('target_slot', 'ZM')
+                row = _player_row(
+                    {'slot': {'code': sc, 'group': _slot_to_group(sc), 'key': sc}, 'player': p_orm},
+                    goals=0, assists=0, match_strength=match_strengths.get(in_pid),
+                )
+                row['minutes_played'] = a_mmap_120.get(in_pid, 0)
+                row['is_sub'] = True
+                if in_pid in a_wmap_120:
+                    row['on_minute'], row['off_minute'] = a_wmap_120[in_pid]
+                result['away_players'].append(row)
+                existing_a_pids.add(in_pid)
+
+            # Noten nach VL neu berechnen
+            ratings_et = compute_player_ratings(result)
+            result['home_ratings']     = ratings_et['home_ratings']
+            result['away_ratings']     = ratings_et['away_ratings']
+            result['man_of_the_match'] = ratings_et['man_of_the_match']
+
+            if et['home_goals'] != et['away_goals']:
+                # Verlängerung entschieden
+                result['home_penalties'] = None
+                result['away_penalties'] = None
+                result['winner_club_id'] = (
+                    home_club.pk if et['home_goals'] > et['away_goals'] else away_club.pk
+                )
+                result['decided_by']     = 'extra_time'
+                result['penalty_events'] = []
+            else:
+                # ── Elfmeterschießen ─────────────────────────────────────────
+                _match_seed = (home_club.pk * 2246822519 + away_club.pk * 2654435761) & 0xFFFFFFFF
+                shootout = _simulate_penalty_shootout(
+                    _h_als, _a_als, _h_dis, _a_dis,
+                    home_club.pk, away_club.pk,
+                    _match_seed,
+                )
+
+                # Elfmeter-Flags auf Player-Rows übertragen
+                for p in result['home_players']:
+                    pid = p.get('id')
+                    if pid and pid in shootout['h_penalty_flags']:
+                        fl = shootout['h_penalty_flags'][pid]
+                        p['penalty_scored']          = fl.get('scored', 0)
+                        p['penalty_missed']          = fl.get('missed', 0)
+                        p['penalty_saved']           = fl.get('saved', 0)
+                        p['penalty_decisive_scored'] = fl.get('penalty_decisive_scored', False)
+                        p['penalty_decisive_miss']   = fl.get('penalty_decisive_miss', False)
+                for p in result['away_players']:
+                    pid = p.get('id')
+                    if pid and pid in shootout['a_penalty_flags']:
+                        fl = shootout['a_penalty_flags'][pid]
+                        p['penalty_scored']          = fl.get('scored', 0)
+                        p['penalty_missed']          = fl.get('missed', 0)
+                        p['penalty_saved']           = fl.get('saved', 0)
+                        p['penalty_decisive_scored'] = fl.get('penalty_decisive_scored', False)
+                        p['penalty_decisive_miss']   = fl.get('penalty_decisive_miss', False)
+
+                # Noten nach Elfmeter neu berechnen
+                ratings_pen = compute_player_ratings(result)
+                result['home_ratings']     = ratings_pen['home_ratings']
+                result['away_ratings']     = ratings_pen['away_ratings']
+                result['man_of_the_match'] = ratings_pen['man_of_the_match']
+
+                result['home_penalties']  = shootout['home_penalties']
+                result['away_penalties']  = shootout['away_penalties']
+                result['winner_club_id']  = shootout['winner_club_id']
+                result['decided_by']      = 'penalties'
+                result['penalty_events']  = shootout['penalty_events']
+
     return result
+
+
+def simulate_ko_match(
+    home_club,
+    away_club,
+    home_strength_malus: float = 1.0,
+    away_strength_malus: float = 1.0,
+) -> dict:
+    """Öffentlicher Alias für simulate_match(is_cup=True).
+
+    Löst Unentschieden nach 90 Minuten durch Verlängerung und ggf. Elfmeterschießen auf.
+    Wird von der club_match_report-View für Pokalspiele genutzt.
+    """
+    return simulate_match(
+        home_club,
+        away_club,
+        home_strength_malus=home_strength_malus,
+        away_strength_malus=away_strength_malus,
+        is_cup=True,
+    )

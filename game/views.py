@@ -3792,7 +3792,7 @@ def _build_sub_name_lookup(data):
 
 def club_match_report(request, club_id):
     from django.db.models import Q
-    from .match_engine import simulate_match
+    from .match_engine import simulate_match, simulate_ko_match
 
     club = get_object_or_404(Club, id=club_id)
     sim_error = None
@@ -3811,7 +3811,11 @@ def club_match_report(request, club_id):
                     _decrement_suspensions_for_clubs([club.id, opponent.id])
                 except Exception:
                     pass
-            data = simulate_match(club, opponent)
+            # Pokalspiele: K.-o.-Modus mit Verlängerung und Elfmeterschießen
+            if match_type == 'pokal':
+                data = simulate_ko_match(club, opponent)
+            else:
+                data = simulate_match(club, opponent)
             sm = SimulatedMatch.objects.create(
                 home_club=club,
                 away_club=opponent,
