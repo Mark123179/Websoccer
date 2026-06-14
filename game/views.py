@@ -4111,7 +4111,9 @@ def player_detail(request, player_id):
         id=player_id,
     )
     all_season_rows = list(
-        PlayerSeasonStat.objects.filter(player=player).order_by(
+        PlayerSeasonStat.objects.filter(player=player)
+        .exclude(competition='Freundschaft')
+        .order_by(
             '-season_number',
             'competition',
         )
@@ -4164,14 +4166,6 @@ def player_detail(request, player_id):
         or (player.nationalities.split(',')[0].strip() if player.nationalities else None)
     )
 
-    match_log = _player_match_log(player)
-    if match_log:
-        match_log_avg = round(sum(e['grade'] for e in match_log) / len(match_log), 2)
-        match_log_avg_class = grade_badge_class(match_log_avg)
-    else:
-        match_log_avg = None
-        match_log_avg_class = 'grade-empty'
-
     return render(
         request,
         'game/player_detail.html',
@@ -4218,12 +4212,6 @@ def player_detail(request, player_id):
             'nation_nt_logo': _player_nation_nt_logo(player),
             'nation_nt_name': _player_nation_nt_name(player),
             'nt_confederation_badge_url': nt_confederation_badge(player),
-            'match_log': match_log,
-            'match_log_avg': match_log_avg,
-            'match_log_avg_class': match_log_avg_class,
-            'match_log_has_liga': any(e['competition_type'] == 'liga' for e in match_log),
-            'match_log_has_pokal': any(e['competition_type'] == 'pokal' for e in match_log),
-            'match_log_has_freundschaft': any(e['competition_type'] == 'freundschaft' for e in match_log),
             'game_header': build_game_header(
                 'Spielerprofil',
                 f"{player.full_name} · {player.club.name if player.club else 'ohne Verein'}",
