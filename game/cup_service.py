@@ -494,11 +494,19 @@ def advance_cup_round(cup_round) -> object | None:
         return next_round
 
 
-def simulate_cup_round(cup_round) -> list:
+def simulate_cup_round(cup_round) -> dict:
     """Simuliert alle noch offenen Spiele einer Runde.
 
     Freilose werden übersprungen.
-    Gibt Liste der aktualisierten CupFixtures zurück.
+
+    Gibt ein Dict zurück:
+        {
+            'simulated': [CupFixture, …],   # erfolgreich simulierte Spiele
+            'errors':    [(fixture_id, str), …],  # fehlgeschlagene Spiele mit Grund
+        }
+
+    Wirft CupServiceError wenn kein einziges Spiel erfolgreich simuliert werden konnte
+    und die Runde mindestens ein offenes Spiel hatte.
     """
     from .models import CupFixture
 
@@ -508,13 +516,21 @@ def simulate_cup_round(cup_round) -> list:
             is_bye=False,
         )
     )
-    results = []
+    simulated = []
+    errors = []
     for fixture in fixtures:
         try:
-            results.append(simulate_cup_fixture(fixture))
-        except CupServiceError:
-            pass
-    return results
+            simulated.append(simulate_cup_fixture(fixture))
+        except CupServiceError as exc:
+            errors.append((fixture.pk, str(exc)))
+
+    if fixtures and not simulated:
+        msgs = '; '.join(msg for _, msg in errors)
+        raise CupServiceError(
+            f'Alle {len(fixtures)} Spiel(e) fehlgeschlagen: {msgs}'
+        )
+
+    return {'simulated': simulated, 'errors': errors}
 
 
 # ── Terminplanung ─────────────────────────────────────────────────────────────

@@ -2701,8 +2701,16 @@ def creator_cup_simulate_round(request, league_id, cup_round_id):
     cup_round = get_object_or_404(CupRound, pk=cup_round_id, cup_season__competition=league)
 
     try:
-        results = simulate_cup_round(cup_round)
-        messages.success(request, f'{len(results)} Spiel(e) simuliert.')
+        result = simulate_cup_round(cup_round)
+        n_ok  = len(result['simulated'])
+        n_err = len(result['errors'])
+        if n_err:
+            messages.warning(
+                request,
+                f'{n_ok} Spiel(e) simuliert, {n_err} fehlgeschlagen.'
+            )
+        else:
+            messages.success(request, f'{n_ok} Spiel(e) erfolgreich simuliert.')
     except Exception as exc:
         messages.error(request, f'Simulationsfehler: {exc}')
 
