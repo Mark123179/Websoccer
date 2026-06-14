@@ -1132,9 +1132,7 @@
     position: absolute;
     inset: 0;
     background:
-        /* Mittellinie */
         linear-gradient(transparent 49.5%, rgba(255,255,255,0.07) 49.5%, rgba(255,255,255,0.07) 50.5%, transparent 50.5%),
-        /* Spielfeldrand */
         linear-gradient(transparent 3%, rgba(255,255,255,0.05) 3%, rgba(255,255,255,0.05) 3.5%, transparent 3.5%),
         linear-gradient(transparent 96.5%, rgba(255,255,255,0.05) 96.5%, rgba(255,255,255,0.05) 97%, transparent 97%);
     pointer-events: none;
@@ -1143,7 +1141,6 @@
 .mxi-pitch::after {
     content: '';
     position: absolute;
-    /* Mittelkreis */
     width: 18%;
     padding-bottom: 30%;
     left: 50%;
