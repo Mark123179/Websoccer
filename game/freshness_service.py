@@ -28,6 +28,7 @@ BASE_INJURY_RISK_PER_90: float = 0.009
 
 MIN_FRESHNESS: int = 0
 MAX_FRESHNESS: int = 100
+INJURY_COMEBACK_FRESHNESS: int = 40   # Frische nach Verletzungsende (Mindestwert beim Comeback)
 
 # ── Positionsfaktoren ─────────────────────────────────────────────────────────
 _POSITION_LOSS_FACTOR: dict[str, float] = {
@@ -292,3 +293,60 @@ def apply_daily_recovery() -> int:
         PlayerStrengthProfile.objects.bulk_update(updates, ['freshness'])
 
     return len(updates)
+
+
+def apply_injury_countdown() -> tuple[int, int]:
+    """Täglicher Verletzungs-Countdown: dekrementiert ws_injury_days_remaining.
+
+    Für jeden verletzten Spieler (ws_injury_days_remaining > 0):
+    - ws_injury_days_remaining wird um 1 reduziert.
+    - Erreicht der Wert 0, wird die Verletzung gelöscht (ws_injury_type='')
+      und die Frische auf INJURY_COMEBACK_FRESHNESS gesetzt, sofern sie darunter liegt.
+
+    Returns:
+        (decremented, healed) — Anzahl dekrementierter Spieler, davon genesen.
+    """
+    from .models import Player, PlayerStrengthProfile
+
+    injured_players = list(
+        Player.objects.filter(ws_injury_days_remaining__gt=0)
+        .only('id', 'ws_injury_days_remaining', 'ws_injury_type')
+    )
+
+    if not injured_players:
+        return 0, 0
+
+    decremented = 0
+    healed_ids: list[int] = []
+    player_updates: list[Player] = []
+
+    for player in injured_players:
+        new_days = player.ws_injury_days_remaining - 1
+        player.ws_injury_days_remaining = new_days
+        decremented += 1
+        if new_days <= 0:
+            player.ws_injury_days_remaining = 0
+            player.ws_injury_type = ''
+            healed_ids.append(player.pk)
+        player_updates.append(player)
+
+    Player.objects.bulk_update(
+        player_updates,
+        ['ws_injury_days_remaining', 'ws_injury_type'],
+    )
+
+    if healed_ids:
+        comeback_threshold = Decimal(str(INJURY_COMEBACK_FRESHNESS))
+        profiles = list(
+            PlayerStrengthProfile.objects.filter(player_id__in=healed_ids)
+        )
+        profile_updates: list[PlayerStrengthProfile] = []
+        for sp in profiles:
+            current = sp.freshness if sp.freshness is not None else Decimal('0.00')
+            if current < comeback_threshold:
+                sp.freshness = comeback_threshold
+                profile_updates.append(sp)
+        if profile_updates:
+            PlayerStrengthProfile.objects.bulk_update(profile_updates, ['freshness'])
+
+    return decremented, len(healed_ids)
