@@ -7,6 +7,14 @@ Rückgabe: ein einzelner String, deterministisch aus Seed gewählt.
 Seed: stable_seed() via SHA-256 — prozessübergreifend stabil (kein PYTHONHASHSEED).
 Anti-Repetition: _shuffled_pick() erzeugt pro Spiel + Pool eine stabile Permutation;
   event_index bestimmt die Position darin → keine Wiederholung bis Pool erschöpft.
+
+Platzhalter-Schema:
+  {p}  = Hauptspieler (Torschütze, Kartenempfänger, …)
+  {a}  = zweiter Spieler (Vorlagengeber, Zweikampfgegner, …)
+  {h}  = angreifendes/Heim-Team
+  {o}  = Gegner/Auswärts-Team
+  {i}  = Eingewechselter (Wechsel-Texte)
+  {o}  = Ausgewechselter (Wechsel-Texte — Kontext macht Verwendung eindeutig)
 """
 from __future__ import annotations
 import hashlib
@@ -49,6 +57,13 @@ _GOAL_ASSIST_ACTIONS = [
     "erkämpft sich den Ball im Mittelfeld und schaltet sofort um —",
     "nimmt einen langen Ball mit der Brust ab und legt direkt für —",
     "chippt den Ball elegant hinter die letzte Abwehrlinie auf —",
+    # OWS-Ergänzungen
+    "legt gekonnt ab —",
+    "spielt einen genauen Steilpass —",
+    "schlägt eine scharfe Flanke auf —",
+    "setzt mit einem Kurzpass in Szene —",
+    "spielt den Ball direkt in den Lauf von —",
+    "legt mit der Hacke auf —",
 ]
 
 _GOAL_ASSIST_FINISHES = [
@@ -62,6 +77,12 @@ _GOAL_ASSIST_FINISHES = [
     "{p} legt sich den Ball mit der Hacke zurecht und vollendet.",
     "{p} bleibt vor dem Torwart eiskalt und schiebt ins rechte Eck.",
     "{p} dreht sich schnell und zieht volley ab — kein Halten.",
+    # OWS-Ergänzungen
+    "{p} braucht nur noch einzuschieben.",
+    "{p} nimmt die Flanke direkt ab — der Torhüter hat keine Chance.",
+    "{p} wird in Szene gesetzt und verwandelt eiskalt.",
+    "{p} donnert den Ball in einer Bewegung ins Netz.",
+    "{p} muss nur noch den Fuß hinhalten — drin!",
 ]
 
 _GOAL_SOLO_INTROS = [
@@ -77,6 +98,21 @@ _GOAL_SOLO_INTROS = [
     "{p} nimmt einen langen Ball an der Strafraumgrenze mit der Brust ab, lässt den Gegner aussteigen und vollendet.",
     "{p} scheitert zunächst am Torwart, trifft aber im Nachschuss.",
     "{p} bekommt Raum, weil die Abwehr zu spät rückt, und lässt sich diese Einladung nicht entgehen.",
+    # OWS-Ergänzungen
+    "{p} schießt — TOR! Wunderschön gemacht.",
+    "Knallhart setzt {p} den Ball unter die Latte ins Tor.",
+    "Nach einer Ball-Stafette macht {p} das Tor.",
+    "{p} traut sich was, er zieht aus 26 Metern ab — der Ball schlägt unhaltbar ein.",
+    "{p} stiehlt sich an der Strafraumgrenze eiskalt den Ball und verwandelt nach einer herrlichen Drehung ins untere linke Eck.",
+    "{p} nimmt sich einfach den Mut und drescht das Ding unhaltbar mit voller Wucht in die Mitte des Tores.",
+    "Katastrophaler Fehler des Gegners, der sofort bestraft wird — {p} mit einem klasse Solo, das durch ein TOR belohnt wird.",
+    "{p} schafft es seinen Bewacher auszudribbeln und braucht den Ball nur noch einzuschieben. TOR!",
+    "Da wurde der Gegner gnadenlos ausgekontert! {p} schlägt eiskalt zu und überrascht den Torwart mit einem Lupfer.",
+    "{p} dribbelt sich durch die gegnerische Abwehr und probiert es einfach — drin!",
+    "Ein Stellungsfehler in der Abwehr — {p} nutzt den Schnitzer und schiebt den Ball ins Gehäuse.",
+    "Nach einer guten Kombination steckt er den Ball durch, und {p} verwandelt alleine vorm Keeper sicher.",
+    "{p} kommt zum Kopfball — und da flattert der Ball im Netz!",
+    "Mit dem Heber konnte {p} sein Torkonto bereichern — tolle Szene!",
 ]
 
 _SCORE_PHRASES = [
@@ -119,6 +155,24 @@ _SHOT_TEXTS = [
     "{p} läuft in den Strafraum und schießt — die Abwehr wirft sich dazwischen und lenkt ins Aus.",
     "{p} testet den Torwart mit einem Fernschuss — der reagiert mit einer Glanzparade.",
     "{p} hat freie Schussbahn, trifft den Ball aber mit der Außenseite und schickt ihn am Tor vorbei.",
+    # OWS Torschuss_daneben
+    "{p} hat freie Bahn und schießt — weit über das Tor.",
+    "{p} schießt — daneben.",
+    "Kopfball von {p} — daneben.",
+    "{p} haut mit aller Kraft auf den Ball — Abschlag.",
+    "{p} schießt in die Wolken.",
+    "Knapp vorbei, weil {p} zu genau gezielt hat.",
+    "{p} versucht es mit einem Fallrückzieher — aber doch daneben.",
+    "{p} versucht es mit einem Volleyschuss — knapp drüber.",
+    "Wie Slalomstangen umkurvt {p} seine Gegenspieler und probiert es mit einem Schlenzer — knapp drüber.",
+    # OWS Torschuss_auf_Tor
+    "{p} schießt — Glanzparade des Torwarts!",
+    "{p} schießt auf das Tor — aber der Torwart macht einen Hechtsprung und hat den Ball.",
+    "{p} hat freie Bahn und schießt — aber der Torwart dreht den Ball gerade noch so um den Pfosten.",
+    "{p} kommt zum Kopfball — ganz knapp daneben.",
+    "Ein Heberversuch von {p}, doch der Torhüter bekommt noch den Ball.",
+    "Was für ein Lattenknaller! So bleibt der Spielstand unverändert.",
+    "Unterkante Latte — und doch nicht im Tor. Glück für die Verteidigung.",
 ]
 
 
@@ -135,6 +189,11 @@ _CORNER_TEXTS = [
     "{p} spielt die Ecke kurz ab, spielt sich frei und flankt dann flach herein — geblockt.",
     "Eine weitere Standardsituation. {p} bringt die Ecke herein, doch der Kopfball des angesprungenen Spielers geht über das Tor.",
     "{p} zieht die Ecke mit Effet Richtung kurzer Pfosten — dort klärt die Abwehr in letzter Sekunde.",
+    # OWS-Ergänzungen
+    "{p} schlägt die Ecke zentral in den Strafraum — weit und breit kein Mitspieler.",
+    "Die Flanke von {p} ist etwas zu hoch, um noch irgendwie erreicht zu werden.",
+    "Die Flanke von {p} segelt über den Strafraum und geht ins Seitenaus.",
+    "Kurze Ecke von {p}, doch der Gegner hat den Braten gerochen und unterbindet den Angriff.",
 ]
 
 
@@ -165,6 +224,22 @@ _CARD_YELLOW = [
     "Ungestümes Einsteigen von {p} — der Schiedsrichter pfeift und greift zur Karte.",
     "Gelbe Karte für {p}. Bei einem weiteren Vergehen wäre das Spiel für ihn beendet.",
     "{p} hält den Gegner am Arm fest und kommt damit nicht durch — der Schiedsrichter zeigt Gelb.",
+    # OWS-Ergänzungen
+    "{p} bekommt nach einem Foul die gelbe Karte.",
+    "{p} haut seinen Gegenspieler um und bekommt dafür die gelbe Karte.",
+    "{p} mit einem weiteren Foul — diesmal hagelt es die Gelbe Karte.",
+    "Ein verstecktes Foul bringt {p} nun die gelbe Karte ein.",
+    "{p} wollte die Hand nicht vom Trikot des Gegners lassen und sieht Gelb.",
+    "Für diese Schauspieleinlage bekommt {p} zurecht die Gelbe.",
+    "{p} glaubt es nicht — er bekommt die gelbe Karte zu Unrecht.",
+    "{p} drischt den Ball einfach weg, obwohl der Schiedsrichter das Spiel schon unterbrochen hatte.",
+    "Konsequenterweise bekommt {p} Gelb für diese Unsportlichkeit.",
+    "{p} zettelt einen Streit an und kassiert folglich die gelbe Karte.",
+    "{p} ist nicht einverstanden mit der Auslegung und bekommt fürs Meckern die gelbe Karte.",
+    "Der Gegenspieler krümmt sich vor Schmerzen am Boden, und {p} hat großes Glück, dass er nur gelb bekommen hat.",
+    "{p} hat das Timing für die Grätsche kräftig verpasst und knüppelt seinen Gegenspieler um. Gelb.",
+    "Dieses taktische Foul von {p} zieht nun doch die Karte nach sich.",
+    "Für dieses klare Zeitspiel erhält {p} die gelbe Karte.",
 ]
 
 _CARD_YELLOW_RED = [
@@ -173,6 +248,14 @@ _CARD_YELLOW_RED = [
     "Zweite Gelbe für {p} — damit ist die Partie für ihn vorzeitig beendet. Die Bank ist fassungslos.",
     "Der Schiedsrichter zeigt {p} zunächst die zweite Gelbe, dann direkt die Rote. Unterzahl!",
     "{p} macht ein taktisches Foul, hat dabei aber nicht bedacht, dass er schon verwahnt war. Gelb-Rot — Ende.",
+    # OWS-Ergänzungen
+    "{p} sieht die Gelb-Rote Karte und muss vom Platz.",
+    "{p} haut seinen Gegenspieler um und bekommt dafür die Gelb-Rote Karte.",
+    "Das Foul musste nicht sein — dafür kassiert {p} nun Gelb/Rot.",
+    "{p} hatte ein taktisches Foul zu viel und muss nach der zweiten groben Aktion vom Platz.",
+    "Jetzt reicht es dem Schiedsrichter — {p} sieht nun Gelb/Rot.",
+    "Eine wirklich dumme Aktion: {p} springt von hinten in die Beine seines Gegners. Zweite Gelbe — Ende.",
+    "Kurz vor dem Strafraum verschätzt sich {p} bei einem aufspringenden Ball und hält den Stürmer. Als letzter Mann kassiert er Gelb-Rot.",
 ]
 
 _CARD_RED = [
@@ -181,6 +264,17 @@ _CARD_RED = [
     "{p} trifft den Gegner mit gestrecktem Bein — der Schiedsrichter überlegt keine Sekunde und zeigt Rot.",
     "Tätlichkeit von {p} — der Schiedsrichter greift sofort in die Tasche. Rote Karte, Unterzahl.",
     "{p} fliegt vom Platz. Das war ein Einsteigen, das keine andere Konsequenz haben durfte.",
+    # OWS-Ergänzungen
+    "{p} springt von hinten in die Beine seines Gegenspielers und sieht sofort die Rote Karte.",
+    "{p} haut seinen Gegenspieler um und sieht dafür die Rote Karte.",
+    "{p} bekommt die Rote Karte wegen Tätlichkeit.",
+    "{p} sieht nach einem bösen Foul die Rote Karte und muss vom Platz.",
+    "Klare Notbremse! {p} kann den Angreifer nur noch mit unfairen Mitteln stoppen — zur Folge die Rote Karte!",
+    "Bei {p} reißen die Nerven durch und er schlägt dem Gegner ins Gesicht. Absolut gerechtfertigte Rote Karte.",
+    "{p} springt hoch und trifft seinen Gegenspieler mit dem Ellbogen im Gesicht — der Schiri schickt ihn zum Duschen.",
+    "{p} springt seinem Gegenüber von hinten in die Beine — Rote Karte, und das zurecht.",
+    "Nach einem Gerangel tritt {p} unsportlich nach und erhält umgehend eine Freikarte für die Dusche.",
+    "Laufduell auf der Außenbahn: {p} stoppt den Ball einfach per Hand und kassiert dafür eine klare rote Karte.",
 ]
 
 
@@ -195,6 +289,20 @@ _SUB_HP = [
     "{i} kommt für {o} — der Coach will mit dem Wechsel neue Impulse setzen.",
     "{o} verlässt unter Applaus den Platz, {i} übernimmt seine Aufgaben.",
     "Spielerwechsel: Für {o} kommt {i} neu in die Partie.",
+    # OWS-Ergänzungen
+    "{i} kommt für {o}.",
+    "{i} kommt für {o}. Ist {i} vielleicht der Matchwinner?",
+    "{i} kommt für {o} und soll den Druck verstärken.",
+    "{o} verlässt unter Pfiffen das Feld. Der Trainer hofft, dass {i} seine Sache besser macht.",
+    "{o} verlässt den Platz, ohne seinen Trainer abzuklatschen — {i} ersetzt ihn.",
+    "{o} hat alles versucht und wird nun von {i} ersetzt.",
+    "{i} kommt ins Spiel — ob er Belebung bringen kann? Dafür muss {o} weichen.",
+    "Unter Protest verlässt {o} den Platz, dem der eingewechselte {i} weichen muss.",
+    "{o} macht kein schlechtes Spiel, muss aber trotzdem für {i} das Feld räumen.",
+    "{o} wird mit viel Applaus für seine heutige Leistung von den Fans verabschiedet — {i} will es genauso gut machen.",
+    "Damit ist die Partie für {o} beendet — {i} darf nun sein Glück versuchen.",
+    "Der Trainer gibt letzte Instruktionen an {i}, der nun für {o} in die Partie kommt.",
+    "Wechsel! Für {o} kommt jetzt eine frische Kraft: {i}.",
 ]
 
 _SUB_FP = [
@@ -227,6 +335,19 @@ _INJURY_TEXTS = [
     "{p} klagt über Schmerzen an der Schulter, nachdem er in einem Kopfballduell den Ellbogen abbekommen hat.",
     "{p} humpelt kurz nach einem Zweikampf, schüttelt den Schmerz aber weg. Keine Auswechslung notwendig.",
     "{p} liegt nach einem harten Einsatz am Boden. Der Sanitäter kommt sofort — nach einer kurzen Pause steht er wieder.",
+    # OWS-Ergänzungen
+    "{p} ist verletzt und muss vom Spielfeld getragen werden.",
+    "{p} hat sich verletzt und kann nicht mehr weiterspielen.",
+    "Da hat der Gegenspieler voll zugelangt, so dass {p} vom Platz muss.",
+    "{p} war schon die ganze Zeit angeschlagen und darf nun vom Platz.",
+    "Vorsorglich wird {p} vom Platz genommen.",
+    "{p} verfehlt den Ball und knallt mit dem Kopf gegen den Pfosten!",
+    "Mitten im Sprint knickt {p} weg — mit schmerzverzerrtem Gesicht humpelt er in die Umkleide.",
+    "{p} bekommt einen Ellbogen gegen die Nase und muss blutüberströmt vom Feld.",
+    "Nach diesem unglücklichen Tritt in den Rasen ist für {p} die Partie vorzeitig beendet.",
+    "Eine Muskelverhärtung im Oberschenkel zwingt {p} zur Aufgabe.",
+    "{p} bleibt nach diesem Zweikampf am Boden liegen — nach kurzer Behandlung ist klar, dass er nicht mehr weitermachen kann.",
+    "Mit schmerzverzerrtem Gesicht wird {p} mit der Trage vom Platz getragen. Hoffen wir, dass es nichts Schlimmes ist.",
 ]
 
 _INJURY_SUB_TEXTS = [
@@ -235,6 +356,119 @@ _INJURY_SUB_TEXTS = [
     "Schlechte Nachrichten — {p} verdreht sich das Knie und muss ausgewechselt werden.",
     "{p} greift sich nach einem Zusammenprall an den Oberschenkel und winkt ab. Er kann nicht weiterspielen.",
     "{p} versucht es noch, aber nach wenigen Schritten merkt auch er selbst, dass ein Weiterspielen unmöglich ist.",
+    # OWS-Ergänzungen
+    "Bittere Pille — {p} setzt zum Volley an, wird dabei aber umgegrätscht und muss vom Platz getragen werden.",
+    "Das ist bitter für {p}, der nach einem rüden Foul vom Platz getragen werden muss.",
+    "{p} erhält einen Schubser, der zu einem Zusammenprall mit einem Mannschaftskollegen führt — mit blutender Nase wird er vom Platz geführt.",
+    "Eine unfaire Attacke am Seitenrand — {p} wird mit übermäßigem Einsatz auf den Fuß getreten, und das Spiel ist für ihn hier zu Ende.",
+    "Das sieht nicht gut aus. {p} wird unglücklich getroffen und muss das Spielfeld mit einer Wunde verlassen.",
+]
+
+
+# ── Zweikampf-Texte ──────────────────────────────────────────────────────────
+
+_TACKLE_WIN_TEXTS = [
+    "{p} geht auf seinen Gegenspieler zu und gewinnt den Zweikampf!",
+    "{p} in einem Zweikampf — gewonnen!",
+    "{p} läuft mit dem Ball am Fuß auf seinen Gegenspieler zu und gewinnt den Zweikampf.",
+    "{p} nimmt seinem Gegenspieler gekonnt den Ball von den Füßen.",
+    "{p} steigt energisch ein und nimmt {a} den Ball von den Füßen.",
+    "{a} hatte das Nachsehen, als {p} ihm den Ball weglufte.",
+    "{p} ließ {a} einfach stehen.",
+    "{p} legt den Ball rechts an {a} vorbei und sprintet links an ihm vorbei. Damit hat {a} überhaupt nicht gerechnet.",
+    "{p} tanzt elegant durch das Mittelfeld und entkommt sogar einer Grätsche von {a}.",
+    "{p} läuft alleine auf {a} zu und weicht ihm mit einer schönen Pirouette aus.",
+    "{p} kämpft sich durch die Reihen und entgleitet irgendwie noch dem Bein von {a}.",
+    "Geschickter Ballgewinn von {p} — routiniert spitzelt er {a} den Ball von den Füßen.",
+    "Gut aufgepasst von {p}, der im richtigen Moment die Tür zumacht. {a} wäre sonst durchgestartet.",
+    "{p} macht das in dieser Szene ganz clever — er läuft seinem Gegner einfach den Ball ab.",
+    "{a} setzt zum Tempodribbling an. Doch {p} geht da mit der richtigen Härte rein und gewinnt den Zweikampf.",
+    "Mit dieser präzisen Grätsche gegen {a} unterbindet {p} den schnellen Konter.",
+    "{p} erobert mit einem beherzten Einsteigen den Ball. Alles fair.",
+    "Immer wieder schön zu sehen, wenn {p} den Ball so gekonnt mitnimmt.",
+    "{p} darf man nicht aus den Augen lassen — so hat man keine Chance ihn aufzuhalten.",
+]
+
+_TACKLE_LOSS_TEXTS = [
+    "{p} geht auf {a} zu — und verliert den Zweikampf.",
+    "{p} in einem Zweikampf — und verliert ihn.",
+    "{p} geht mit dem Ball am Fuß auf seinen Gegenspieler zu und verliert ihn.",
+    "{p} sieht seinen Gegenspieler gegenüber und lässt sich den Ball abnehmen.",
+    "{p} begibt sich ins Laufduell mit {a}, kann aber nicht vorbeiziehen.",
+    "{p} macht einfach gar nichts und verliert den Ball.",
+    "{a} spielt Katz und Maus mit {p}.",
+    "{p} versucht mit einem Übersteiger an {a} vorbeizukommen, doch er verliert den Ball.",
+    "Entweder zu sicher oder zu lustlos — jedenfalls verliert {p} schon wieder den Ball an {a}.",
+    "{p} läuft und läuft und scheint {a} gar nicht zu sehen — der Ballbesitz wechselt die Seiten.",
+    "Toller Pass aus der Bedrängnis zu {p}. Der bekommt den Ball aber nicht unter Kontrolle und vertändelt ihn gegen {a}.",
+    "{p} läuft sich in dieser Situation fest — {a} gewinnt den Zweikampf.",
+    "Die schnelle Ballverarbeitung ist nicht seine Stärke. {p} schaut {a} verdutzt hinterher, der den Ball jetzt am Fuß führt.",
+    "{p} dribbelt durch zwei Gegenspieler durch, will auch noch an {a} vorbei — aber das geht nicht!",
+]
+
+
+# ── Fehlpass-Texte ───────────────────────────────────────────────────────────
+
+_PASS_FAIL_TEXTS = [
+    "Flanke von {p} — in die Wolken!",
+    "{p} passt den Ball in die Mitte — genau auf die Füße des Gegners.",
+    "{p} passt den Ball steil nach vorne — Abschlag!",
+    "Pass von {p} — ins Seitenaus.",
+    "Wieder lässt sich {p} unnötig den Ball abnehmen.",
+    "{p} macht einen Querpass, der aber nicht ankommt.",
+    "{p} versucht mit einem weiten Pass das Spiel zu öffnen — aber der Ball kommt nicht an.",
+    "{p} überzeugte mit seinem Passspiel wenig.",
+    "{p}'s Direktabnahme hatte nicht die gewünschte Wirkung.",
+    "{p}'s Pass klebt am Fuß des Gegners.",
+    "Ein schlimmer Fehlpass von {p} vernichtet den Angriff schon in der eigenen Hälfte.",
+    "{p} kommt, schaut sich um — und spielt den Ball ins Aus!",
+    "{p} versucht einen Passversuch über das halbe Spielfeld, der aber schon an der eigenen Unfähigkeit scheitert.",
+]
+
+
+# ── Freistoß-Texte ───────────────────────────────────────────────────────────
+
+_FREEKICK_GOAL_TEXTS = [
+    "{p} legt sich die Kugel bereit und nimmt Anlauf — TOR! Die Mauer sah dabei nicht gut aus.",
+    "Was ein Hammer! {p} haut den Freistoß aus rund 25 Metern ins rechte Eck.",
+    "Ein Tor, das das Prädikat Traumtor verdient hat. Der Freistoß von {p} aus halbrechter Position touchiert die Unterlatte und landet im langen Eck.",
+    "{p} tritt den direkten Freistoß und trifft — wie ein Strich zieht der Ball über die Mauer hinweg ins Netz.",
+    "Ein Freistoß von rechts: {p} entledigt sich seinem Bewacher, gibt einen gezielten Kopfball ab — und der Ball schlägt im kurzen Eck ein.",
+]
+
+_FREEKICK_MISS_TEXTS = [
+    "{p} schlenzt den Freistoß aus halbrechter Position auf das Tor — der Ball prallt von der Querlatte zurück.",
+    "{p} schießt den Freistoß, aber zu ungenau.",
+    "{p} zieht ab — Field Goal! Der Ball nimmt den Weg in den Stadionorbit.",
+    "Da klingelt es fast im Tor. {p} kommt im Luftkampf an den Ball und drückt ihn knapp an der Torlinie vorbei.",
+    "{p} streichelt den Ball noch einmal, bevor er ihn böse tritt — und verfehlt sein Ziel deutlich.",
+]
+
+
+# ── Elfmeter-Texte ───────────────────────────────────────────────────────────
+
+_PENALTY_GOAL_TEXTS = [
+    "{p} schreitet an den Punkt — ruhig, konzentriert. Der Torwart ahnt die Ecke nicht. TOR!",
+    "Ball hinlegen. Anlauf nehmen. Schuss. Tor! So einfach kann man einen Elfmeter verwandeln. {p} hat alles richtig gemacht.",
+    "Ruhig legt sich {p} den Ball hin, guckt sich eine Ecke aus und schickt den Torwart in die andere Richtung — klasse Elfmeter!",
+    "Laute Pfiffe, doch {p} macht das souverän — der Ball landet unten in der Ecke.",
+    "Ein riesen Druck lastet auf ihm — {p} trifft den Pfosten, doch im Nachschuss trifft er. Der Torwart schaut machtlos hinterher.",
+    "Kurioser Elfmeter: {p} rutscht beim Anlauf weg, doch der Ball trudelt langsam unten rechts ins Tor.",
+    "{p} schießt mit voller Gewalt an die Latte. Der Torwart feiert schon, bekommt den Ball aber unglücklich an den Rücken — von dort ins Tor.",
+    "{p} schreitet an den Punkt, wirkt aber sehr nervös. Schwacher Ball — und doch drin! Der Torwart patzt.",
+]
+
+_PENALTY_MISS_TEXTS = [
+    "{p} versucht lässig den Ball in die Mitte zu lupfen — der Keeper riecht den Braten und hält.",
+    "{p} läuft an und schießt den Ball weit über den Kasten.",
+    "{p} läuft an, verzögert kurz — und schießt den Ball an den rechten Pfosten.",
+    "{p} läuft an, verzögert kurz — und schießt den Ball an den linken Pfosten.",
+    "{p} läuft an, verzögert kurz — und trifft die Querlatte.",
+    "{p} läuft an und rutscht unglücklich mit dem Standbein weg. Chance vertan!",
+    "Elfmeter für das angreifende Team. {p} tritt an — Gehalten! Das war zu wenig, der Torhüter lenkt den Ball zur Ecke.",
+    "Ein präziser Schuss von {p}, doch der Keeper bekommt noch die Finger dran und wehrt ihn zur Ecke ab! Was für eine Heldentat!",
+    "Einmal zweiter Stock bitte — dieser Elfmeter von {p} verfehlt sein Ziel um mehrere Meter.",
+    "{p} lässt sich viel Zeit. Verzögerter Anlauf, ein ganz schwacher Schuss in die Mitte des Tores — der Torhüter hält problemlos.",
 ]
 
 
@@ -287,6 +521,7 @@ def build_ticker_text(
     minute: int = 0,
     player: str = '',
     assister: str = '',
+    second_player: str = '',
     card_type: str = '',
     score_h: int = 0,
     score_a: int = 0,
@@ -302,7 +537,9 @@ def build_ticker_text(
     event_index: int = 0,
 ) -> str:
     p = player or ''
-    a = assister or ''
+    a = assister or second_player or ''
+    h = team_name or 'das angreifende Team'
+    o = opp_name or 'der Gegner'
     score = f'{score_h}:{score_a}'
     ms = match_seed
     ei = event_index
@@ -315,7 +552,7 @@ def build_ticker_text(
 
     elif evt_type == 'shot':
         if p:
-            return _shuffled_pick(_SHOT_TEXTS, ms, 'shot', ei).format(p=p)
+            return _shuffled_pick(_SHOT_TEXTS, ms, 'shot', ei).format(p=p, a=a, h=h, o=o)
         return "Schussversuch — der Torwart ist auf dem Posten."
 
     elif evt_type == 'corner':
@@ -338,21 +575,54 @@ def build_ticker_text(
 
     elif evt_type == 'sub':
         i = in_name or ''
-        o = out_name or ''
+        o_sub = out_name or ''
         slot = target_slot or ''
         if is_injury_sub:
-            return _shuffled_pick(_SUB_INJURY, ms, 'sub_inj', ei).format(i=i, o=o)
+            return _shuffled_pick(_SUB_INJURY, ms, 'sub_inj', ei).format(i=i, o=o_sub)
         elif position_relation == 'FP' and slot:
-            return _shuffled_pick(_SUB_FP, ms, 'sub_fp', ei).format(i=i, o=o, slot=slot)
+            return _shuffled_pick(_SUB_FP, ms, 'sub_fp', ei).format(i=i, o=o_sub, slot=slot)
         elif position_relation == 'NP' and slot:
-            return _shuffled_pick(_SUB_NP, ms, 'sub_np', ei).format(i=i, o=o, slot=slot)
+            return _shuffled_pick(_SUB_NP, ms, 'sub_np', ei).format(i=i, o=o_sub, slot=slot)
         else:
-            return _shuffled_pick(_SUB_HP, ms, 'sub_hp', ei).format(i=i, o=o)
+            return _shuffled_pick(_SUB_HP, ms, 'sub_hp', ei).format(i=i, o=o_sub)
 
     elif evt_type == 'injury':
         if days and days > 7:
             return _shuffled_pick(_INJURY_SUB_TEXTS, ms, 'inj_sub', ei).format(p=p)
         return _shuffled_pick(_INJURY_TEXTS, ms, 'injury', ei).format(p=p)
+
+    elif evt_type == 'tackle_win':
+        txt = _shuffled_pick(_TACKLE_WIN_TEXTS, ms, 'tackle_win', ei)
+        return txt.format(p=p, a=a or 'dem Gegner')
+
+    elif evt_type == 'tackle_loss':
+        txt = _shuffled_pick(_TACKLE_LOSS_TEXTS, ms, 'tackle_loss', ei)
+        return txt.format(p=p, a=a or 'dem Gegner')
+
+    elif evt_type == 'pass_fail':
+        if p:
+            return _shuffled_pick(_PASS_FAIL_TEXTS, ms, 'pass_fail', ei).format(p=p)
+        return "Fehlpass — der Gegner übernimmt."
+
+    elif evt_type == 'freekick_goal':
+        if p:
+            return _shuffled_pick(_FREEKICK_GOAL_TEXTS, ms, 'fk_goal', ei).format(p=p, a=a, h=h)
+        return "Freistoß — direkt verwandelt! TOR!"
+
+    elif evt_type == 'freekick_miss':
+        if p:
+            return _shuffled_pick(_FREEKICK_MISS_TEXTS, ms, 'fk_miss', ei).format(p=p)
+        return "Freistoß — knapp vorbei."
+
+    elif evt_type == 'penalty_goal':
+        if p:
+            return _shuffled_pick(_PENALTY_GOAL_TEXTS, ms, 'pen_goal', ei).format(p=p)
+        return "Elfmeter verwandelt! TOR!"
+
+    elif evt_type == 'penalty_miss':
+        if p:
+            return _shuffled_pick(_PENALTY_MISS_TEXTS, ms, 'pen_miss', ei).format(p=p)
+        return "Elfmeter verschossen — daneben!"
 
     elif evt_type == 'flow':
         return player or f'Spielunterbrechung in Minute {minute}.'
