@@ -89,27 +89,25 @@
 
 .mhub-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(3, 333px);
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 333px);
     gap: 12px;
     width: 100%;
-    max-width: 1016px;
+    max-width: 1260px;
 }
 
-/* Reihe 1: alle 4 Spalten belegt */
+/* Reihe 1: Spalten 1–4 belegt, Spalte 5 leer */
 .mhub-card--halloffame   { grid-column: 1; grid-row: 1; }
 .mhub-card--stadion      { grid-column: 2; grid-row: 1; }
 .mhub-card--praesident   { grid-column: 3; grid-row: 1; }
 .mhub-card--freundschaft { grid-column: 4; grid-row: 1; }
 
-/* Reihe 2: 4 Kacheln in Spalten 1–4 */
+/* Reihe 2: alle 5 Spalten belegt */
 .mhub-card--sportgericht { grid-column: 1; grid-row: 2; }
 .mhub-card--finanzen     { grid-column: 2; grid-row: 2; }
 .mhub-card--sponsor      { grid-column: 3; grid-row: 2; }
-.mhub-card--jobs         { grid-column: 4; grid-row: 2; }
-
-/* Reihe 3: Vereinsnews (In Entwicklung) */
-.mhub-card--news         { grid-column: 1; grid-row: 3; }
+.mhub-card--news         { grid-column: 4; grid-row: 2; }
+.mhub-card--jobs         { grid-column: 5; grid-row: 2; }
 
 /* ---- Einzelne Karte ---- */
 .mhub-card {
