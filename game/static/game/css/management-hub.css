@@ -41,7 +41,7 @@
 
 /* ---- Linke Seite: Büroatmosphäre (leer, nur BG) ---- */
 .mhub-left {
-    flex: 0 0 25%;
+    flex: 0 0 8%;
     position: relative;
     z-index: 1;
     display: flex;
@@ -78,7 +78,7 @@
 
 /* ---- Rechte Seite: Karten-Grid ---- */
 .mhub-right {
-    flex: 0 0 75%;
+    flex: 0 0 92%;
     position: relative;
     z-index: 1;
     display: flex;
@@ -102,12 +102,12 @@
 .mhub-card--praesident   { grid-column: 3; grid-row: 1; }
 .mhub-card--freundschaft { grid-column: 4; grid-row: 1; }
 
-/* Reihe 2: alle 5 Spalten belegt */
-.mhub-card--sportgericht { grid-column: 1; grid-row: 2; }
-.mhub-card--finanzen     { grid-column: 2; grid-row: 2; }
-.mhub-card--sponsor      { grid-column: 3; grid-row: 2; }
-.mhub-card--news         { grid-column: 4; grid-row: 2; }
-.mhub-card--jobs         { grid-column: 5; grid-row: 2; }
+/* Reihe 2: Jobs links, dann die anderen 4 */
+.mhub-card--jobs         { grid-column: 1; grid-row: 2; }
+.mhub-card--sportgericht { grid-column: 2; grid-row: 2; }
+.mhub-card--finanzen     { grid-column: 3; grid-row: 2; }
+.mhub-card--sponsor      { grid-column: 4; grid-row: 2; }
+.mhub-card--news         { grid-column: 5; grid-row: 2; }
 
 /* ---- Einzelne Karte ---- */
 .mhub-card {
