@@ -66,6 +66,22 @@ _GOAL_ASSIST_ACTIONS = [
     "legt mit der Hacke auf —",
 ]
 
+# Torhüter als Vorlagengeber — lange Abschläge, schnelle Abwürfe, Verteilung
+_GOAL_GK_ASSIST_ACTIONS = [
+    "schlägt einen langen Abschlag weit nach vorne —",
+    "wirft den Ball blitzschnell ab und leitet den Konter ein —",
+    "spielt einen präzisen Abschlag hinter die Abwehrkette —",
+    "verteilt den Ball mit einem langen Tritt ins Angriffsdrittel —",
+    "hält kurz und schlägt dann einen weiten Ball auf —",
+    "startet den Konter mit einem schnellen Abwurf auf —",
+    "schmeißt den Ball flach ab und findet —",
+    "spielt den Torabstoß direkt auf den startenden —",
+    "schlägt den Ball aus der Hand genau in den Lauf von —",
+    "antizipiert den Gegenpressing und spielt sofort lang auf —",
+    "rollt den Ball schnell aus — perfekte Einladung für —",
+    "tritt den Ball weit nach vorne — und da ist —",
+]
+
 _GOAL_ASSIST_FINISHES = [
     "{p} hat das leere Tor vor sich und schiebt überlegt ein.",
     "{p} kommt aus dem Lauf und verwertet mit links.",
@@ -83,6 +99,14 @@ _GOAL_ASSIST_FINISHES = [
     "{p} wird in Szene gesetzt und verwandelt eiskalt.",
     "{p} donnert den Ball in einer Bewegung ins Netz.",
     "{p} muss nur noch den Fuß hinhalten — drin!",
+]
+
+_GOAL_GK_SOLO_INTROS = [
+    "{p} wagt es aus der Distanz — ein Traumtor des Torhüters! Der Ball schlägt unhaltbar ein.",
+    "Der Torhüter {p} nimmt Anlauf und drischt den Ball aus gut 50 Metern ins Netz — unglaublich!",
+    "{p} sieht den gegnerischen Keeper weit vor dem Tor stehen und lupft ihn eiskalt — Tor!",
+    "Beim Eckstoß rückt {p} auf — und köpft tatsächlich ein. Das gibt es nicht!",
+    "Ein langer Freistoß landet bei {p}, der aus dem Nichts zum Abschluss kommt — drin!",
 ]
 
 _GOAL_SOLO_INTROS = [
@@ -124,16 +148,27 @@ _SCORE_PHRASES = [
 ]
 
 
-def _goal_with_assist(p: str, a: str, score: str, match_seed: int, event_index: int) -> str:
-    action = _shuffled_pick(_GOAL_ASSIST_ACTIONS,  match_seed, 'goal_action',  event_index)
+_GK_POSITIONS = frozenset({'TW', 'GK', 'GOALKEEPER'})
+
+
+def _goal_with_assist(p: str, a: str, score: str, match_seed: int, event_index: int,
+                      *, gk_assist: bool = False) -> str:
+    if gk_assist:
+        action = _shuffled_pick(_GOAL_GK_ASSIST_ACTIONS, match_seed, 'goal_gk_action', event_index)
+    else:
+        action = _shuffled_pick(_GOAL_ASSIST_ACTIONS, match_seed, 'goal_action', event_index)
     finish = _shuffled_pick(_GOAL_ASSIST_FINISHES, match_seed, 'goal_finish',  event_index)
     phrase = _shuffled_pick(_SCORE_PHRASES,        match_seed, 'score_phrase', event_index)
     return f"{a} {action} {finish.format(p=p)} {phrase.format(score=score)}"
 
 
-def _goal_no_assist(p: str, score: str, match_seed: int, event_index: int) -> str:
-    intro  = _shuffled_pick(_GOAL_SOLO_INTROS, match_seed, 'goal_solo',    event_index)
-    phrase = _shuffled_pick(_SCORE_PHRASES,    match_seed, 'score_phrase', event_index)
+def _goal_no_assist(p: str, score: str, match_seed: int, event_index: int,
+                    *, gk_scorer: bool = False) -> str:
+    if gk_scorer:
+        intro = _shuffled_pick(_GOAL_GK_SOLO_INTROS, match_seed, 'goal_gk_solo', event_index)
+    else:
+        intro = _shuffled_pick(_GOAL_SOLO_INTROS, match_seed, 'goal_solo', event_index)
+    phrase = _shuffled_pick(_SCORE_PHRASES, match_seed, 'score_phrase', event_index)
     return f"{intro.format(p=p)} {phrase.format(score=score)}"
 
 
@@ -520,7 +555,9 @@ def build_ticker_text(
     *,
     minute: int = 0,
     player: str = '',
+    player_pos: str = '',
     assister: str = '',
+    assister_pos: str = '',
     second_player: str = '',
     card_type: str = '',
     score_h: int = 0,
@@ -545,10 +582,12 @@ def build_ticker_text(
     ei = event_index
 
     if evt_type == 'goal':
+        is_gk_assister = (assister_pos or '').upper() in _GK_POSITIONS
+        is_gk_scorer   = (player_pos or '').upper() in _GK_POSITIONS
         if a:
-            return _goal_with_assist(p, a, score, ms, ei)
+            return _goal_with_assist(p, a, score, ms, ei, gk_assist=is_gk_assister)
         else:
-            return _goal_no_assist(p, score, ms, ei)
+            return _goal_no_assist(p, score, ms, ei, gk_scorer=is_gk_scorer)
 
     elif evt_type == 'shot':
         if p:

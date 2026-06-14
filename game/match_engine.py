@@ -764,8 +764,9 @@ def _goal_events(
             'scorer_id': scorer['id'],
             'scorer_name': scorer['name'],
             'scorer_pos': scorer.get('position', '?'),
-            'assister_id': assister['id'] if assister else None,
-            'assister_name': assister['name'] if assister else None,
+            'assister_id':   assister['id']                    if assister else None,
+            'assister_name': assister['name']                  if assister else None,
+            'assister_pos':  assister.get('position', '')      if assister else '',
         })
     return events
 

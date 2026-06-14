@@ -3451,8 +3451,8 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
-def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
-                    score_h=0, score_a=0, days=0, in_name='', out_name='',
+def _ticker_comment(evt_type, minute=0, player='', player_pos='', assister='', assister_pos='',
+                    card_type='', score_h=0, score_a=0, days=0, in_name='', out_name='',
                     target_slot='', position_relation='', is_injury_sub=False,
                     match_seed=0, event_index=0):
     """Deterministischer Live-Kommentar — delegiert an game.ticker_commentary."""
@@ -3461,7 +3461,9 @@ def _ticker_comment(evt_type, minute=0, player='', assister='', card_type='',
         evt_type,
         minute=minute,
         player=player,
+        player_pos=player_pos,
         assister=assister,
+        assister_pos=assister_pos,
         card_type=card_type,
         score_h=score_h,
         score_a=score_a,
@@ -3639,6 +3641,7 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             'scorer_name':   evt.get('scorer_name', ''),
             'scorer_pos':    evt.get('scorer_pos', ''),
             'assister_name': evt.get('assister_name', ''),
+            'assister_pos':  evt.get('assister_pos', ''),
         })
     for sub in (home_subs_enriched or []):
         raw.append({'type': 'sub', 'team': 'home', 'minute': sub['minute'],
@@ -3696,7 +3699,10 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             evt['score_h'] = score_h
             evt['score_a'] = score_a
             evt['commentary'] = _tc(
-                'goal', evt['minute'], evt['scorer_name'], evt['assister_name'],
+                'goal', evt['minute'], evt['scorer_name'],
+                player_pos=evt.get('scorer_pos', ''),
+                assister=evt['assister_name'],
+                assister_pos=evt.get('assister_pos', ''),
                 score_h=score_h, score_a=score_a,
             )
         elif t == 'sub':
