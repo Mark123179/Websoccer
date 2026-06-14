@@ -1,0 +1,316 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Regressions-Status{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Start</a>
+  &rsaquo; <a href="{% url 'admin:game_club_changelist' %}">Vereine</a>
+  &rsaquo; Regressions-Status
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .reg-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .reg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 0.03em;
+  }
+  .reg-badge--stabil {
+    background: #1b3a1b;
+    border: 2px solid #4caf50;
+    color: #81c784;
+  }
+  .reg-badge--alarm {
+    background: #3a1b1b;
+    border: 2px solid #f44336;
+    color: #ef9a9a;
+  }
+  .reg-badge--keine_daten,
+  .reg-badge--ein_lauf,
+  .reg-badge--ausstehend {
+    background: #2a2a1a;
+    border: 2px solid #ff9800;
+    color: #ffcc80;
+  }
+  .reg-info-box {
+    background: #1e1e2e;
+    border: 1px solid #3a3a5e;
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #aab;
+  }
+  .reg-info-box dl {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 20px;
+    margin: 0;
+  }
+  .reg-info-box dt {
+    color: #7878aa;
+    font-weight: bold;
+  }
+  .reg-info-box dd {
+    margin: 0;
+    color: #ccd;
+  }
+  .reg-action-bar {
+    margin-bottom: 24px;
+  }
+  .reg-btn {
+    background: #1a3a6a;
+    color: #90caf9;
+    border: 1px solid #1e88e5;
+    border-radius: 3px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .reg-btn:hover {
+    background: #1565c0;
+    color: #fff;
+  }
+  .reg-diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .reg-diff-table th {
+    background: #1a1a2e;
+    color: #9c9cff;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 2px solid #3a3a5e;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .reg-diff-table th.right {
+    text-align: right;
+  }
+  .reg-diff-table td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #2a2a3e;
+    color: #ccd;
+  }
+  .reg-diff-table td.right {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: monospace;
+  }
+  .reg-diff-table tr.alarm-row {
+    background: #2a1010;
+  }
+  .reg-diff-table tr.alarm-row td {
+    color: #ef9a9a;
+  }
+  .reg-diff-table tr.ok-row:hover td {
+    background: #1e1e2e;
+  }
+  .reg-alarm-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f44336;
+    margin-right: 6px;
+  }
+  .reg-ok-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+    margin-right: 6px;
+  }
+  .reg-alarm-list {
+    background: #2a1010;
+    border: 1px solid #f44336;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #ef9a9a;
+    font-size: 13px;
+  }
+  .reg-alarm-list ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+  }
+  .reg-alarm-list li {
+    margin: 4px 0;
+  }
+  .reg-stable-box {
+    background: #1b3a1b;
+    border: 1px solid #4caf50;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #81c784;
+    font-size: 13px;
+  }
+  .reg-warn-box {
+    background: #2a2a1a;
+    border: 1px solid #ff9800;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #ffcc80;
+    font-size: 13px;
+  }
+  .reg-section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #9c9cff;
+    margin: 20px 0 10px;
+    border-bottom: 1px solid #3a3a5e;
+    padding-bottom: 6px;
+  }
+  .reg-run-list {
+    font-size: 12px;
+    color: #7878aa;
+    margin-bottom: 20px;
+  }
+  .reg-hint {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+  }
+</style>
+
+<h1>Regressions-Status</h1>
+
+<div class="reg-header">
+  {% if overall_status == 'stabil' %}
+    <span class="reg-badge reg-badge--stabil">&#10003; STABIL</span>
+    <span style="color:#81c784; font-size:13px;">Alle Metriken innerhalb der 5%-Toleranz.</span>
+  {% elif overall_status == 'alarm' %}
+    <span class="reg-badge reg-badge--alarm">&#9888; REGRESSION ERKANNT</span>
+    <span style="color:#ef9a9a; font-size:13px;">Mindestens eine Metrik überschreitet die 5%-Schwelle.</span>
+  {% elif overall_status == 'ein_lauf' %}
+    <span class="reg-badge reg-badge--ein_lauf">&#9432; NUR EINE REFERENZ</span>
+    <span style="color:#ffcc80; font-size:13px;">Bisher nur ein Lauf — Diff erst ab zwei Läufen möglich.</span>
+  {% elif overall_status == 'ausstehend' %}
+    <span class="reg-badge reg-badge--ausstehend">&#9432; AUSSTEHEND</span>
+    <span style="color:#ffcc80; font-size:13px;">Bitte Diff jetzt ausführen.</span>
+  {% else %}
+    <span class="reg-badge reg-badge--keine_daten">&#8212; KEINE DATEN</span>
+    <span style="color:#ffcc80; font-size:13px;">Noch kein Regressionslauf vorhanden.</span>
+  {% endif %}
+</div>
+
+<div class="reg-info-box">
+  <dl>
+    <dt>Läufe gesamt</dt>
+    <dd>{{ run_count }}</dd>
+    <dt>Letzter Referenz-Lauf</dt>
+    <dd>{% if latest_label %}{{ latest_label }}{% else %}&mdash; kein Lauf vorhanden &mdash;{% endif %}</dd>
+    <dt>Alarm-Schwelle</dt>
+    <dd>5 % Abweichung zwischen zwei Läufen</dd>
+    <dt>Vergleichsgröße</dt>
+    <dd>Median über alle Seeds: goals_per_game, home/draw/away_pct, yellow, inj, spearman, pearson_xgd</dd>
+  </dl>
+</div>
+
+{% if run_count >= 2 %}
+<div class="reg-action-bar">
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="run_diff">
+    <button type="submit" class="reg-btn">&#9654; Diff jetzt ausführen (letzten zwei Läufe vergleichen)</button>
+  </form>
+  <p class="reg-hint">Vergleicht automatisch die beiden neuesten Läufe in <code>.local/regression_history/</code>.</p>
+</div>
+{% elif run_count == 0 %}
+<div class="reg-warn-box">
+  <strong>Kein Regressionslauf vorhanden.</strong><br>
+  Starte einen Lauf im Terminal mit:<br>
+  <code style="display:inline-block; margin-top:6px; background:#1a1a1a; padding:4px 8px; border-radius:3px; color:#ccd;">bash scripts/run_regression_v3.sh --seasons 10</code>
+</div>
+{% else %}
+<div class="reg-warn-box">
+  <strong>Nur ein Lauf vorhanden.</strong> Für einen Diff sind mindestens zwei Läufe notwendig.<br>
+  Starte einen weiteren Lauf im Terminal mit:<br>
+  <code style="display:inline-block; margin-top:6px; background:#1a1a1a; padding:4px 8px; border-radius:3px; color:#ccd;">bash scripts/run_regression_v3.sh --seasons 10</code>
+</div>
+{% endif %}
+
+{% if diff_result %}
+  <p class="reg-section-title">Diff: {{ diff_result.old_label }} &rarr; {{ diff_result.new_label }}</p>
+
+  {% if diff_result.alarms %}
+  <div class="reg-alarm-list">
+    <strong>&#9888; {{ diff_result.alarms|length }} Alarm{{ diff_result.alarms|length|pluralize:"e" }} erkannt:</strong>
+    <ul>
+      {% for msg in diff_result.alarms %}<li>{{ msg }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <div class="reg-stable-box">
+    <strong>&#10003; Stabil</strong> &mdash; alle {{ diff_result.compared }} verglichenen Metriken liegen innerhalb der 5%-Toleranz.
+    {% if diff_result.unstable_new %}
+      <br><span style="color:#ffcc80;">Hinweis: {{ diff_result.unstable_new|length }} Metrik(en) im neuen Lauf selbst instabil (normal bei wenigen Saisons).</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <table class="reg-diff-table">
+    <thead>
+      <tr>
+        <th>Metrik</th>
+        <th class="right">Alt ({{ diff_result.old_label }})</th>
+        <th class="right">Neu ({{ diff_result.new_label }})</th>
+        <th class="right">Δ%</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in diff_result.rows %}
+      <tr class="{% if row.alarm %}alarm-row{% else %}ok-row{% endif %}">
+        <td><code>{{ row.key }}</code></td>
+        {% if row.missing %}
+          <td class="right" colspan="2" style="color:#ffcc80;">n/v in einem Lauf</td>
+          <td class="right">?</td>
+        {% else %}
+          <td class="right">{{ row.old }}</td>
+          <td class="right">{{ row.new }}</td>
+          <td class="right">{{ row.pct }}%</td>
+        {% endif %}
+        <td>
+          {% if row.alarm %}
+            <span class="reg-alarm-dot"></span>ALARM
+          {% else %}
+            <span class="reg-ok-dot"></span>OK
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if diff_result.unstable_new %}
+  <div class="reg-warn-box" style="margin-top:0;">
+    <strong>Instabile Metriken im neuesten Lauf:</strong>
+    {{ diff_result.unstable_new|join:", " }}
+    <br><span style="font-size:12px;">Diese Metriken variieren stark zwischen den Seeds — normal bei wenigen Saisons (&lt;50).</span>
+  </div>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

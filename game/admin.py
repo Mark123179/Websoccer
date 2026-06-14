@@ -911,8 +911,144 @@ class ClubAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.assign_manager_view),
                 name='game_club_assign_manager',
             ),
+            path(
+                'regression-status/',
+                self.admin_site.admin_view(self.regression_status_view),
+                name='game_regression_status',
+            ),
         ]
         return custom + urls
+
+    def regression_status_view(self, request):
+        from pathlib import Path
+        import json as _json
+        from django.shortcuts import render
+
+        HISTORY_DIR = Path('.local/regression_history')
+        ALARM_THRESHOLD = 0.05
+        KEY_METRICS = [
+            'goals_per_game', 'home_pct', 'draw_pct', 'away_pct',
+            'yellow_per_game', 'inj_per_game', 'spearman', 'pearson_xgd',
+        ]
+
+        def _median(values):
+            if not values:
+                return 0.0
+            s = sorted(values)
+            n = len(s)
+            mid = n // 2
+            return (s[mid - 1] + s[mid]) / 2 if n % 2 == 0 else s[mid]
+
+        def _metric_median(data, key):
+            series = data.get('metrics', {}).get(key)
+            if series and isinstance(series, list):
+                return _median([float(v) for v in series])
+            return None
+
+        def _pct_change(old, new):
+            if old == 0.0:
+                return 0.0 if new == 0.0 else float('inf')
+            return abs(new - old) / abs(old)
+
+        def _load_json(path):
+            try:
+                with open(path) as f:
+                    return _json.load(f)
+            except Exception:
+                return None
+
+        runs = []
+        if HISTORY_DIR.is_dir():
+            for d in sorted(HISTORY_DIR.iterdir(), key=lambda x: x.name, reverse=True):
+                if d.is_dir() and (d / 'seeds_stability.json').exists():
+                    runs.append(d)
+
+        diff_result = None
+        run_triggered = request.method == 'POST' and request.POST.get('action') == 'run_diff'
+
+        if run_triggered or (request.method == 'GET' and len(runs) >= 2):
+            if len(runs) >= 2:
+                new_path = runs[0] / 'seeds_stability.json'
+                old_path = runs[1] / 'seeds_stability.json'
+                old_data = _load_json(old_path)
+                new_data = _load_json(new_path)
+                rows = []
+                alarms = []
+                compared = 0
+                if old_data and new_data:
+                    for key in KEY_METRICS:
+                        old_val = _metric_median(old_data, key)
+                        new_val = _metric_median(new_data, key)
+                        if old_val is None and new_val is None:
+                            continue
+                        if old_val is None or new_val is None:
+                            rows.append({
+                                'key': key, 'old': None, 'new': None,
+                                'pct': None, 'alarm': True, 'missing': True,
+                            })
+                            alarms.append(f'{key}: Metrik fehlt in einem Lauf')
+                            continue
+                        compared += 1
+                        pct = _pct_change(old_val, new_val)
+                        is_alarm = pct > ALARM_THRESHOLD
+                        rows.append({
+                            'key': key,
+                            'old': f'{old_val:.5f}',
+                            'new': f'{new_val:.5f}',
+                            'pct': f'{100 * pct:.2f}',
+                            'alarm': is_alarm,
+                            'missing': False,
+                        })
+                        if is_alarm:
+                            alarms.append(
+                                f'{key}: {old_val:.5f} → {new_val:.5f} '
+                                f'(Δ {100 * pct:.2f}% > {100 * ALARM_THRESHOLD:.0f}%)'
+                            )
+                    new_stability = new_data.get('stability', {})
+                    unstable = [k for k, v in new_stability.items()
+                                if isinstance(v, dict) and not v.get('ok', True)]
+                    diff_result = {
+                        'old_label': runs[1].name,
+                        'new_label': runs[0].name,
+                        'rows': rows,
+                        'alarms': alarms,
+                        'compared': compared,
+                        'unstable_new': unstable,
+                        'status': 'alarm' if alarms else 'stabil',
+                    }
+
+        latest_run = runs[0] if runs else None
+        latest_label = latest_run.name if latest_run else None
+        if latest_label:
+            try:
+                from datetime import datetime
+                dt = datetime.strptime(latest_label, '%Y%m%d_%H%M%S')
+                latest_label_fmt = dt.strftime('%-d.%-m.%Y %H:%M:%S UTC')
+            except ValueError:
+                latest_label_fmt = latest_label
+        else:
+            latest_label_fmt = None
+
+        if not runs:
+            overall_status = 'keine_daten'
+        elif len(runs) == 1:
+            overall_status = 'ein_lauf'
+        elif diff_result:
+            overall_status = diff_result['status']
+        else:
+            overall_status = 'ausstehend'
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Regressions-Status',
+            'opts': self.model._meta,
+            'run_count': len(runs),
+            'latest_label': latest_label_fmt,
+            'overall_status': overall_status,
+            'diff_result': diff_result,
+            'run_triggered': run_triggered,
+        }
+        return render(request, 'admin/game/club/regression_status.html', context)
 
     def assign_manager_view(self, request):
         from datetime import date
