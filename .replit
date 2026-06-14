@@ -72,12 +72,12 @@ outputType = "console"
 name = "test"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python manage.py test --verbosity=0 --keepdb"
-
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py test game.tests --verbosity=0 --keepdb"
 
 [[workflows.workflow]]
 name = "regression"

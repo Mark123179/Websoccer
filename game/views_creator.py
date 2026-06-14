@@ -2853,8 +2853,22 @@ def creator_cup_schedule_preview(request, league_id, cup_season_id):
                 home_club__league=ref_league,
                 scheduled_date__isnull=False,
             )
-            if season_str:
-                qs = qs.filter(season=season_str)
+            # liga_season ist optional — wenn angegeben, auf bestimmte Saison filtern;
+            # ansonsten alle Fixtures der Liga (neueste Saison zuerst)
+            liga_season = request.GET.get('liga_season', '').strip()
+            if liga_season:
+                qs = qs.filter(season=liga_season)
+            else:
+                # Automatisch neueste/aktive Saison wählen
+                latest = (
+                    SeasonFixture.objects
+                    .filter(home_club__league=ref_league, scheduled_date__isnull=False)
+                    .order_by('-scheduled_date')
+                    .values_list('season', flat=True)
+                    .first()
+                )
+                if latest is not None:
+                    qs = qs.filter(season=latest)
             liga_dates = sorted(set(qs.values_list('scheduled_date', flat=True)))
         except (League.DoesNotExist, ValueError):
             pass
@@ -2890,6 +2904,7 @@ def creator_cup_schedule_preview(request, league_id, cup_season_id):
             'proposed_date': d.isoformat(),
             'weekday':       WDAYS[d.weekday()],
             'collisions':    [c.isoformat() for c in row['collisions']],
+            'is_future':     row.get('is_future', False),
         })
 
     liga_info = {

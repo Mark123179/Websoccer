@@ -41,7 +41,13 @@ ROUND_DISPLAY_NAMES: dict[str, str] = {
 
 def _round_display_name(code: str) -> str:
     """Gibt den deutschen Anzeigenamen für einen Rundencode zurück."""
-    return ROUND_DISPLAY_NAMES.get(code, code.replace('_', ' ').title())
+    if code in ROUND_DISPLAY_NAMES:
+        return ROUND_DISPLAY_NAMES[code]
+    # Automatischer Fallback für round_of_N → "1. Runde (N)"
+    if code.startswith('round_of_'):
+        n = code[len('round_of_'):]
+        return f'1. Runde ({n})'
+    return code.replace('_', ' ').title()
 
 
 class CupServiceError(Exception):
@@ -650,112 +656,172 @@ def _find_best_cup_date(target: date, blocked: set[date]) -> date:
     return target
 
 
+def _expected_rounds_plan(n_participants: int) -> list[dict]:
+    """Berechnet die erwartete Rundenfolge für n_participants Teilnehmer.
+
+    Gibt eine Liste von Dicts zurück (round_number 1-basiert):
+        [{'round_number': int, 'round_code': str, 'display_name': str}, …]
+
+    Beispiel: 18 Teilnehmer → 5 Runden
+        (round_of_18 → round_of_16 → quarter_final → semi_final → final)
+    """
+    if n_participants < 2:
+        return []
+    # Nächste 2er-Potenz ≥ n_participants
+    target = 1
+    while target < n_participants:
+        target <<= 1
+    # Rundenfolge: erstes Bracket-Feld = n_participants (nicht zwingend 2er-P.)
+    bracket_sizes: list[int] = []
+    first = n_participants
+    bracket_sizes.append(first)
+    current = 1 << (n_participants - 1).bit_length()  # nächste 2er-P. ≥ first nach Runde 1
+    # Nach Runde 1 sind ceil(first/2) Teams übrig (Powers-of-2-Folge)
+    after_r1 = 1 << ((first - 1).bit_length() - 1)
+    if first == after_r1:
+        after_r1 = first // 2
+    remaining = after_r1
+    while remaining >= 2:
+        bracket_sizes.append(remaining)
+        remaining //= 2
+
+    result = []
+    for i, size in enumerate(bracket_sizes):
+        result.append({
+            'round_number': i + 1,
+            'round_code': ROUND_CODES.get(size, f'round_of_{size}'),
+            'display_name': _round_display_name(
+                ROUND_CODES.get(size, f'round_of_{size}')
+            ),
+        })
+    return result
+
+
 def auto_schedule_cup_season(
     cup_season,
     liga_dates: list[date],
     finale_offset_days: int = 5,
 ) -> list[dict]:
-    """Berechnet Terminvorschläge für alle Runden einer Pokalsaison.
+    """Berechnet Terminvorschläge für ALLE Runden einer Pokalsaison.
+
+    Plant sowohl bereits vorhandene DB-Runden als auch noch nicht existierende
+    Runden (z. B. wenn erst Runde 1 ausgelost, aber VF/HF/Finale noch nicht
+    erstellt wurden). Zukünftige Runden erhalten `is_future=True` und
+    `round_id=None` — sie werden von `apply_cup_schedule()` ignoriert.
 
     Algorithmus:
-    - Aus `liga_dates` werden Lücken zwischen aufeinanderfolgenden Spieltagen
-      berechnet (Mittelpunkt jeder Lücke = Kandidat-Datum).
-    - N Pokalrunden werden gleichmäßig auf die N best-passenden Lücken verteilt
-      (max. eine Pokalrunde pro Lücke).
-    - Finale: letzter Liga-Spieltag + `finale_offset_days` Tage → Di/Mi.
-    - Kein Datum darf auf einen Liga-Spieltag fallen; ±1-Tag-Puffer wird als
-      Soft-Kollision markiert.
+    - Lücken zwischen Liga-Spieltagen → Mittelpunkte als Kandidaten.
+    - N Runden gleichmäßig verteilt (max. 1 pro Lücke).
+    - Finale: letzter Spieltag + `finale_offset_days` → nächster Di/Mi.
+    - Soft-Kollision (±1 Tag zu Liga): Warnung in `collisions`.
 
     Gibt eine Liste von Dicts zurück (wird NICHT gespeichert):
-        [{'round_id', 'round_number', 'round_code', 'display_name',
-          'proposed_date', 'collisions': [date, …]}, …]
-
-    Falls `liga_dates` leer → wöchentliche Verteilung ab Saisonbeginn.
+        [{'round_id': int|None, 'round_number': int, 'round_code': str,
+          'display_name': str, 'proposed_date': date,
+          'collisions': [date, …], 'is_future': bool}, …]
     """
-    rounds = list(cup_season.rounds.order_by('round_number'))
-    if not rounds:
+    n_participants = cup_season.participants.count()
+    existing_rounds = {r.round_number: r for r in cup_season.rounds.order_by('round_number')}
+
+    if not existing_rounds:
         return []
 
-    n = len(rounds)
-
-    if not liga_dates:
-        start = _season_start_date(cup_season.season) + timedelta(days=14)
-        proposed = []
-        for i, r in enumerate(rounds):
-            target = start + timedelta(days=7 * i)
-            best = _find_best_cup_date(target, set())
-            proposed.append({
-                'round_id': r.pk,
+    # Vollständige Rundenplanung basierend auf Teilnehmerzahl
+    plan = _expected_rounds_plan(n_participants) if n_participants >= 2 else []
+    if not plan:
+        # Fallback: nur vorhandene Runden
+        plan = [
+            {
                 'round_number': r.round_number,
                 'round_code': r.round_code,
                 'display_name': _round_display_name(r.round_code),
+            }
+            for r in sorted(existing_rounds.values(), key=lambda x: x.round_number)
+        ]
+
+    n = len(plan)
+
+    # ── Keine Liga-Dates: wöchentliche Verteilung ab Saisonbeginn ────────────
+    if not liga_dates:
+        start = _season_start_date(cup_season.season) + timedelta(days=14)
+        proposed = []
+        for i, slot in enumerate(plan):
+            target = start + timedelta(days=7 * i)
+            best = _find_best_cup_date(target, set())
+            db_round = existing_rounds.get(slot['round_number'])
+            proposed.append({
+                'round_id':     db_round.pk if db_round else None,
+                'round_number': slot['round_number'],
+                'round_code':   slot['round_code'],
+                'display_name': slot['display_name'],
                 'proposed_date': best,
-                'collisions': [],
+                'collisions':   [],
+                'is_future':    db_round is None,
             })
         return proposed
 
+    # ── Mit Liga-Dates: Lücken-Algorithmus ───────────────────────────────────
     liga_sorted = sorted(set(liga_dates))
-    liga_set = set(liga_sorted)
-    liga_last = liga_sorted[-1]
+    liga_set    = set(liga_sorted)
+    liga_first  = liga_sorted[0]
+    liga_last   = liga_sorted[-1]
     finale_target = liga_last + timedelta(days=finale_offset_days)
 
-    # Mittelpunkte aller Lücken zwischen aufeinanderfolgenden Spieltagen
+    # Mittelpunkte der Lücken zwischen aufeinanderfolgenden Spieltagen
     gap_midpoints: list[date] = []
     for j in range(len(liga_sorted) - 1):
         a, b = liga_sorted[j], liga_sorted[j + 1]
-        mid = a + timedelta(days=(b - a).days // 2)
-        gap_midpoints.append(mid)
+        gap_midpoints.append(a + timedelta(days=(b - a).days // 2))
 
+    # N-1 reguläre Runden + 1 Finale
     n_regular = n - 1
     selected_midpoints: list[date] = []
     if n_regular > 0:
         if not gap_midpoints:
             selected_midpoints = [
-                liga_sorted[0] + timedelta(days=7 * (i + 1))
+                liga_first + timedelta(days=7 * (i + 1))
                 for i in range(n_regular)
             ]
         elif len(gap_midpoints) <= n_regular:
+            # Alle Lücken + Fallback-Daten gleichmäßig auffüllen
             selected_midpoints = gap_midpoints[:]
-            # Wenn es zu wenige Lücken gibt, wiederholen (gleichmäßig verteilt)
             while len(selected_midpoints) < n_regular:
-                total = (finale_target - liga_sorted[0]).days
+                total = (finale_target - liga_first).days
                 idx = len(selected_midpoints)
-                fallback = liga_sorted[0] + timedelta(
-                    days=total * idx // n_regular
+                selected_midpoints.append(
+                    liga_first + timedelta(days=total * idx // n_regular)
                 )
-                selected_midpoints.append(fallback)
         else:
             # Gleichmäßig aus den Lücken auswählen
-            indices = [
-                int(i * len(gap_midpoints) / n_regular)
-                for i in range(n_regular)
-            ]
+            indices = [int(i * len(gap_midpoints) / n_regular) for i in range(n_regular)]
             selected_midpoints = [gap_midpoints[idx] for idx in indices]
 
     proposed = []
     used_dates: set[date] = set()
 
-    for i, r in enumerate(rounds):
+    for i, slot in enumerate(plan):
         if i == n - 1:
             target = finale_target
         elif i < len(selected_midpoints):
             target = selected_midpoints[i]
         else:
-            target = liga_sorted[0] + timedelta(days=7 * (i + 1))
+            target = liga_first + timedelta(days=7 * (i + 1))
 
         blocked = liga_set | used_dates
         best = _find_best_cup_date(target, blocked)
         used_dates.add(best)
 
         collisions = [d for d in liga_set if abs((d - best).days) <= 1]
+        db_round = existing_rounds.get(slot['round_number'])
 
         proposed.append({
-            'round_id': r.pk,
-            'round_number': r.round_number,
-            'round_code': r.round_code,
-            'display_name': _round_display_name(r.round_code),
+            'round_id':     db_round.pk if db_round else None,
+            'round_number': slot['round_number'],
+            'round_code':   slot['round_code'],
+            'display_name': slot['display_name'],
             'proposed_date': best,
-            'collisions': sorted(collisions),
+            'collisions':   sorted(collisions),
+            'is_future':    db_round is None,
         })
 
     return proposed

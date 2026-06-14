@@ -304,7 +304,7 @@
 
           <!-- Quell-Auswahl -->
           <div style="display:flex;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap;align-items:flex-end;">
-            <div style="flex:1;min-width:180px;">
+            <div style="flex:1;min-width:220px;">
               <label class="creator-label">Liga-Quelle</label>
               <select class="creator-input" id="sched-src-{{ cs.pk }}" style="width:100%;">
                 <option value="">– Manuell eingeben –</option>
@@ -313,9 +313,9 @@
                 {% endif %}{% endfor %}
               </select>
             </div>
-            <div style="flex:1;min-width:130px;" id="sched-season-wrap-{{ cs.pk }}">
-              <label class="creator-label">Saison (Liga)</label>
-              <input class="creator-input" id="sched-season-{{ cs.pk }}" value="{{ cs.season }}" placeholder="2025/26">
+            <div style="flex:0 0 auto;" id="sched-season-wrap-{{ cs.pk }}" title="Leer lassen = aktuellste Saison wird automatisch erkannt">
+              <label class="creator-label">Liga-Saison (optional)</label>
+              <input class="creator-input" id="sched-ligaseason-{{ cs.pk }}" placeholder="leer = auto" style="width:130px;">
             </div>
           </div>
 
@@ -847,17 +847,17 @@ document.querySelectorAll('[id^="sched-src-"]').forEach(sel => {
 });
 
 async function cupSchedPreview(csId, leagueId) {
-  const src      = document.getElementById('sched-src-'    + csId)?.value || '';
-  const season   = document.getElementById('sched-season-' + csId)?.value || '';
-  const startD   = document.getElementById('sched-start-'  + csId)?.value || '';
-  const count    = document.getElementById('sched-count-'  + csId)?.value || '34';
-  const interval = document.getElementById('sched-interval-'+ csId)?.value || '7';
-  const finale   = document.getElementById('sched-finale-' + csId)?.value || '5';
+  const src        = document.getElementById('sched-src-'       + csId)?.value || '';
+  const ligaSeason = document.getElementById('sched-ligaseason-'+ csId)?.value || '';
+  const startD     = document.getElementById('sched-start-'     + csId)?.value || '';
+  const count      = document.getElementById('sched-count-'     + csId)?.value || '34';
+  const interval   = document.getElementById('sched-interval-'  + csId)?.value || '7';
+  const finale     = document.getElementById('sched-finale-'    + csId)?.value || '5';
 
   const params = new URLSearchParams({ finale_offset: finale });
   if (src) {
     params.set('reference_league', src);
-    if (season) params.set('season', season);
+    if (ligaSeason) params.set('liga_season', ligaSeason);
   } else {
     if (!startD) { alert('Bitte Startdatum eingeben.'); return; }
     params.set('start_date', startD);
@@ -895,28 +895,36 @@ async function cupSchedPreview(csId, leagueId) {
 
   data.rounds.forEach(r => {
     const hasCollision = r.collisions.length > 0;
-    const collTxt = hasCollision
-      ? `⚠ ${r.collisions.map(fmtDate).join(', ')}`
-      : '<span style="color:#00ff8870;">✓ OK</span>';
+    const isFuture = !!r.is_future;
+    const collTxt = isFuture
+      ? '<span style="color:#334455;font-style:italic;">noch nicht ausgelost</span>'
+      : (hasCollision
+          ? `⚠ ${r.collisions.map(fmtDate).join(', ')}`
+          : '<span style="color:#00ff8870;">✓ OK</span>');
     const wd = r.weekday;
-    const wdColor = (wd === 'Di' || wd === 'Mi') ? '#00d4ff' : '#ffcc44';
-    tbody.innerHTML += `
-      <tr style="border-bottom:1px solid #0d2035;">
-        <td style="padding:.35rem .5rem;color:#aabbcc;">${r.display_name}</td>
-        <td style="padding:.35rem .5rem;color:#cce8ff;font-weight:700;">
-          <input type="date"
+    const wdColor = isFuture ? '#334455' : ((wd === 'Di' || wd === 'Mi') ? '#00d4ff' : '#ffcc44');
+    const nameColor = isFuture ? '#334455' : '#aabbcc';
+    const futureBadge = isFuture ? ' <span style="font-size:.65rem;color:#334455;background:#050e1a;border:1px solid #0d2035;border-radius:3px;padding:.1rem .3rem;">geplant</span>' : '';
+    const dateCell = isFuture
+      ? `<span style="color:#334455;font-size:.78rem;">${fmtDate(r.proposed_date)}</span>`
+      : `<input type="date"
                  id="sched-date-${csId}-${r.round_id}"
                  value="${r.proposed_date}"
                  style="background:#030a12;border:1px solid #0d2035;border-radius:4px;color:#cce8ff;font-size:.78rem;padding:.2rem .4rem;"
-                 onchange="cupSchedUpdateHidden(${csId}, ${r.round_id})">
-        </td>
-        <td style="padding:.35rem .5rem;color:${wdColor};font-weight:700;">${wd}</td>
-        <td style="padding:.35rem .5rem;font-size:.75rem;${hasCollision?'color:#ff8844;':''}">
+                 onchange="cupSchedUpdateHidden(${csId}, ${r.round_id})">`;
+    tbody.innerHTML += `
+      <tr style="border-bottom:1px solid #0d2035;${isFuture?'opacity:.55;':''}">
+        <td style="padding:.35rem .5rem;color:${nameColor};">${r.display_name}${futureBadge}</td>
+        <td style="padding:.35rem .5rem;color:#cce8ff;font-weight:700;">${dateCell}</td>
+        <td style="padding:.35rem .5rem;color:${wdColor};font-weight:700;">${isFuture ? wd : wd}</td>
+        <td style="padding:.35rem .5rem;font-size:.75rem;${hasCollision&&!isFuture?'color:#ff8844;':''}">
           ${collTxt}
         </td>
       </tr>`;
-    // Hidden form field
-    hidden.innerHTML += `<input type="hidden" name="round_${r.round_id}" value="${r.proposed_date}" id="sched-hidden-${csId}-${r.round_id}">`;
+    // Hidden form field — nur für vorhandene Runden
+    if (!isFuture && r.round_id) {
+      hidden.innerHTML += `<input type="hidden" name="round_${r.round_id}" value="${r.proposed_date}" id="sched-hidden-${csId}-${r.round_id}">`;
+    }
   });
 
   document.getElementById('sched-result-' + csId).style.display = '';
