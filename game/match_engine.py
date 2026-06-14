@@ -1487,13 +1487,16 @@ def _generate_injury_events(
 def compute_player_ratings(result: dict) -> dict:
     """Berechnet positionsabhängige Spielernoten (1,0–6,0) aus einem Simulations-Dict.
 
-    Noten V1.1 — Modifikatoren:
-        A) Team-Ergebnis (gestuft nach Tordifferenz)
-        B) Team-xGD (Dominanzindikator, alle Positionen)
-        C) Gegnerstärke (overall-Differenz, max ±0.18)
+    Noten V2 — Event-Akkumulator nach OWS-Prinzip:
+        A) Team-Ergebnis (gestuft nach Tordifferenz, ×1.5 gegenüber V1)
+        B) Team-xGD (Dominanzindikator, geschärft ±0.30/±0.15)
+        C) Gegnerstärke / Upset-Multiplikator (max ±0.55)
         D) Scorer (positions-differenziert; TW/DEF/DM-MID/FWD; Doppelpack-Boni)
         E) Karten (Gelb +0.30, Rot +1.50)
-        F) Positionslogik (GK / DEF / DM / MID / FWD)
+        F) Positionslogik mit einer Pressing-Metrik (Regel A: ratio, keine Doppelzählung)
+           GK: saves-basiert (opp_shots_on_target − opp_goals)
+        G) Einsatzminuten (kurze Einsatzzeit → Neutralwert 3.0)
+        H) Deterministischer Spieler-Jitter ±0.10 (Regel B: Knuth-Hash auf PID)
 
     Rückgabe::
         {
@@ -1514,6 +1517,12 @@ def compute_player_ratings(result: dict) -> dict:
     a_press_bp   = ms.get('away_pressing_bypassed', 0) or 0
     h_poss       = ms.get('home_possession', 50) or 50
     a_poss       = ms.get('away_possession', 50) or 50
+    h_sot        = ms.get('home_shots_on_target', 0) or 0
+    a_sot        = ms.get('away_shots_on_target', 0) or 0
+
+    # Regel A: eine Pressing-Metrik — Gewinnquote [0,1], vermeidet Doppelzählung
+    h_press_ratio = h_press_wins / max(1, h_press_wins + h_press_bp)
+    a_press_ratio = a_press_wins / max(1, a_press_wins + a_press_bp)
 
     h_str_overall = float((result.get('home_strength') or {}).get('overall') or 50)
     a_str_overall = float((result.get('away_strength') or {}).get('overall') or 50)
@@ -1525,7 +1534,7 @@ def compute_player_ratings(result: dict) -> dict:
     a_players_raw = result.get('away_players', []) or []
 
     def _rate(p: dict, is_home: bool) -> float:
-        rating = 3.5
+        rating = 3.0   # V2: OWS-Basisnote (V1 war 3.5)
         pg = _rating_pos_group(p.get('position', ''), p.get('group', ''))
 
         goals   = p.get('goals', 0) or 0
@@ -1533,60 +1542,65 @@ def compute_player_ratings(result: dict) -> dict:
         yellow  = p.get('yellow_cards', 0) or 0
         red     = p.get('red_cards', 0) or 0
 
-        my_goals  = h_goals        if is_home else a_goals
-        opp_goals = a_goals        if is_home else h_goals
-        my_xg     = h_xg           if is_home else a_xg
-        opp_xg    = a_xg           if is_home else h_xg
-        my_win    = h_win          if is_home else a_win
-        opp_win   = a_win          if is_home else h_win
-        my_pw     = h_press_wins   if is_home else a_press_wins
-        opp_bp    = a_press_bp     if is_home else h_press_bp
-        my_poss   = h_poss         if is_home else a_poss
-        my_str    = h_str_overall  if is_home else a_str_overall
-        opp_str   = a_str_overall  if is_home else h_str_overall
+        my_goals        = h_goals         if is_home else a_goals
+        opp_goals       = a_goals         if is_home else h_goals
+        my_xg           = h_xg            if is_home else a_xg
+        opp_xg          = a_xg            if is_home else h_xg
+        my_win          = h_win           if is_home else a_win
+        opp_win         = a_win           if is_home else h_win
+        my_press_ratio  = h_press_ratio   if is_home else a_press_ratio
+        opp_press_ratio = a_press_ratio   if is_home else h_press_ratio
+        opp_sot         = a_sot           if is_home else h_sot
+        my_poss         = h_poss          if is_home else a_poss
+        my_str          = h_str_overall   if is_home else a_str_overall
+        opp_str         = a_str_overall   if is_home else h_str_overall
 
-        # A) Team-Ergebnis (gestuft nach Tordifferenz)
+        # A) Team-Ergebnis (gestuft nach Tordifferenz — ×1.5 gegenüber V1)
         goal_diff = my_goals - opp_goals
         if goal_diff == 1:
-            rating -= 0.23
+            rating -= 0.35
         elif goal_diff == 2:
-            rating -= 0.31
+            rating -= 0.47
         elif goal_diff == 3:
-            rating -= 0.49
+            rating -= 0.74
         elif goal_diff >= 4:
-            rating -= 0.55
+            rating -= 0.83
         elif goal_diff == -1:
-            rating += 0.23
+            rating += 0.35
         elif goal_diff == -2:
-            rating += 0.31
+            rating += 0.47
         elif goal_diff == -3:
-            rating += 0.49
+            rating += 0.74
         elif goal_diff <= -4:
-            rating += 0.55
+            rating += 0.83
 
-        # B) Team-xGD (Dominanzindikator, alle Positionen)
+        # B) Team-xGD (Dominanzindikator, geschärft)
         xg_diff = my_xg - opp_xg
         if xg_diff >= 1.5:
-            rating -= 0.20
+            rating -= 0.30
         elif xg_diff >= 0.5:
-            rating -= 0.10
+            rating -= 0.15
         elif xg_diff <= -1.5:
-            rating += 0.20
+            rating += 0.30
         elif xg_diff <= -0.5:
-            rating += 0.10
+            rating += 0.15
 
-        # C) Gegnerstärke (str_diff positiv = ich bin stärker als Gegner)
+        # C) Gegnerstärke / Upset-Bonus (str_diff positiv = ich bin stärker)
         str_diff = my_str - opp_str
         if my_win:
-            if str_diff <= -15:
-                rating -= 0.18   # Sieg gegen viel stärkeren Gegner
+            if str_diff <= -25:
+                rating -= 0.55   # Riesiger Upset
+            elif str_diff <= -15:
+                rating -= 0.40   # Klarer Upset
             elif str_diff <= -8:
-                rating -= 0.10   # Sieg gegen etwas stärkeren
+                rating -= 0.25   # Underdog gewinnt
         elif opp_win:
-            if str_diff >= 15:
-                rating += 0.18   # Niederlage gegen viel schwächeren
+            if str_diff >= 25:
+                rating += 0.55   # Blamable Niederlage
+            elif str_diff >= 15:
+                rating += 0.40
             elif str_diff >= 8:
-                rating += 0.10   # Niederlage gegen schwächeren
+                rating += 0.25
 
         # D) Scorer (positions-differenziert)
         if goals > 0:
@@ -1609,15 +1623,17 @@ def compute_player_ratings(result: dict) -> dict:
         rating += yellow * 0.30
         rating += red * 1.50
 
-        # F) Positionslogik
+        # F) Positionslogik — Pressing via ratio (Regel A: keine Doppelzählung)
         if pg == 'GK':
-            rating += opp_goals * 0.40
+            saves = max(0, opp_sot - opp_goals)
+            rating -= saves * 0.12           # jeder Save verbessert die Note
+            rating += opp_goals * 0.40       # jedes Gegentor verschlechtert
             if opp_goals == 0:
-                rating -= 0.50
+                rating -= 0.50               # Zu-Null-Bonus
             if opp_xg >= 2.0 and opp_goals <= 1:
-                rating -= 0.30   # Stark gehalten trotz Druck
+                rating -= 0.30               # Stark gehalten trotz Druck
             if opp_xg <= 0.8 and opp_goals >= 2:
-                rating += 0.50   # Vermeidbare Gegentore
+                rating += 0.50               # Vermeidbare Gegentore
 
         elif pg == 'DEF':
             rating += opp_goals * 0.20
@@ -1625,8 +1641,11 @@ def compute_player_ratings(result: dict) -> dict:
                 rating -= 0.30
             if my_win:
                 rating -= 0.10
-            if opp_bp > 3:
-                rating += 0.20   # Pressing oft umgangen
+            # Pressing-Ratio (eine Metrik, opp_press_ratio = Gegner-Dominanz)
+            if opp_press_ratio > 0.55:
+                rating += (opp_press_ratio - 0.50) * 0.80   # Gegner presst durch
+            elif opp_press_ratio < 0.45:
+                rating -= (0.50 - opp_press_ratio) * 0.40   # Eigene Defensive dominant
 
         elif pg == 'DM':
             rating += opp_goals * 0.08
@@ -1636,16 +1655,20 @@ def compute_player_ratings(result: dict) -> dict:
                 rating -= 0.15
             elif xg_diff <= -0.5:
                 rating += 0.15
-            if my_pw > 3:
-                rating -= 0.15   # Pressing-Gewinner
+            if my_press_ratio > 0.55:
+                rating -= (my_press_ratio - 0.50) * 0.60    # Pressing-Gewinner
+            elif my_press_ratio < 0.45:
+                rating += (0.50 - my_press_ratio) * 0.30
 
         elif pg == 'MID':
             if xg_diff >= 0.5:
                 rating -= 0.20
             elif xg_diff <= -0.5:
                 rating += 0.20
-            if my_pw > 3:
-                rating -= 0.15
+            if my_press_ratio > 0.55:
+                rating -= (my_press_ratio - 0.50) * 0.40
+            elif my_press_ratio < 0.45:
+                rating += (0.50 - my_press_ratio) * 0.20
             if my_poss >= 58 and not opp_win:
                 rating -= 0.10   # Ballbesitz-Dominanz ohne Niederlage
 
@@ -1662,14 +1685,19 @@ def compute_player_ratings(result: dict) -> dict:
                 elif my_xg >= 1.5:
                     rating += 0.20
 
-        # G) Einsatzminuten (kurze Einsatzzeit → Note zum Neutral-Wert ziehen)
+        # G) Einsatzminuten (kurze Einsatzzeit → Note zum Neutralwert 3.0 ziehen)
         mp = p.get('minutes_played', 90)
         if mp < 15:
-            rating = 3.5 + (rating - 3.5) * 0.20
+            rating = 3.0 + (rating - 3.0) * 0.20
         elif mp < 30:
-            rating = 3.5 + (rating - 3.5) * 0.50
+            rating = 3.0 + (rating - 3.0) * 0.50
         elif mp < 45:
-            rating = 3.5 + (rating - 3.5) * 0.75
+            rating = 3.0 + (rating - 3.0) * 0.75
+
+        # H) Deterministischer Spieler-Jitter ±0.10 (Regel B)
+        # Knuth-Multiplikativ-Hash auf PID — stabil, kein hashlib nötig
+        pid = p.get('id') or 0
+        rating += ((pid * 2654435761) & 0xFFFF) / 65535 * 0.20 - 0.10
 
         return round(_clamp(rating, 1.0, 6.0), 1)
 
