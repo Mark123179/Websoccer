@@ -151,8 +151,8 @@ def _build_global_calendar(club, calendar_offset):
                 'lineup_saved':     False,
                 'result':           cup_result,
                 'venue':            cup_venue,
-                'meta':             f'{comp_name} · {round_label}',
-                'match_time':       '',
+                'meta':             f'{comp_name} · {round_label} ({cup_venue})',
+                'match_time':       '18:30',
             }
 
     calendar_days = []
