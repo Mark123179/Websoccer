@@ -1337,7 +1337,7 @@ class Command(BaseCommand):
         w(f'\n{HR}'); w('  E  VERLETZUNGEN, FRISCHE, TICKER-INTEGRITÄT'); w(HR)
 
         inj_total_sum = inj_ingame + inj_postmatch
-        w(f'  Verletzungen gesamt            : {inj_total_sum}  ({inj_total_sum/N:.3f}/Spiel, Ziel 0.15–0.22)')
+        w(f'  Verletzungen gesamt            : {inj_total_sum}  ({inj_total_sum/N:.3f}/Spiel, Ziel 0.15–0.20)')
         w(f'    davon in-game Wechsel        : {inj_ingame}  (V1 = 0 erwartet — nur post-match)')
         w(f'    davon post-match             : {inj_postmatch}  ({inj_postmatch/N:.3f}/Spiel)')
         if inj_total_sum:
@@ -1349,7 +1349,7 @@ class Command(BaseCommand):
                 w(f'    Ø Ausfalltage              : {inj_days_sum/inj_days_n:.1f}')
             if inj_days_list:
                 w(f'    Median Ausfalltage         : {_median(inj_days_list):.1f}')
-        _INJ_LO, _INJ_HI = 0.15, 0.22
+        _INJ_LO, _INJ_HI = 0.15, 0.20
         inj_rate = inj_total_sum / N
         if not (_INJ_LO <= inj_rate <= _INJ_HI):
             w(f'  ⚠ ALARM  Verletzungen/Spiel: {inj_rate:.4f}  außerhalb Korridor [{_INJ_LO}–{_INJ_HI}]')

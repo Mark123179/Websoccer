@@ -9,10 +9,10 @@ description: Architecture decisions and field-location gotchas for the V1 Frisch
 - **training_level / medizin_level** live on `Stadium` (OneToOneField to Club). Access via `_stadium_level(club, 'training_level')` from `freshness_service.py`. Never pass these to `Club.objects.create()`.
 - **PlayerStrengthProfile.freshness** is the canonical store (Decimal 0–100). `apply_match_freshness_losses` and `apply_daily_recovery` update it via `bulk_update`.
 
-## V1 constants (frozen 2026-06-12)
+## V1 constants (frozen 2026-06-12, recalibrated 2026-06-14)
 - `BASE_MATCH_FITNESS_LOSS = 9.0`
 - `BASE_DAILY_RECOVERY = 4.0`
-- `BASE_INJURY_RISK_PER_90 = 0.009`
+- `BASE_INJURY_RISK_PER_90 = 0.008`  ← lowered from 0.009; 50-season sim (seed 42) gives 0.195/Spiel (target 0.15–0.20)
 
 Changes require ≥50-season evidence + explicit user sign-off (same freeze rule as Match Engine V2).
 
