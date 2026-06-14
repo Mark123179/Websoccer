@@ -3,8 +3,18 @@ from datetime import date, timedelta
 from django.db.models import Q
 from django.templatetags.static import static as _static
 
-from .models import Club, ManagerProfile, SeasonFixture
+from .models import Club, CupFixture, ManagerProfile, SeasonFixture
 from .competition_assets import competition_logo_static_path
+
+_CUP_ROUND_LABELS: dict[str, str] = {
+    'round_of_64': '1. Runde',
+    'round_of_32': '1. Runde',
+    'round_of_18': '1. Runde',
+    'round_of_16': '2. Runde',
+    'quarter_final': 'Viertelfinale',
+    'semi_final': 'Halbfinale',
+    'final': 'Finale',
+}
 
 CURRENT_MANAGER_PROFILE_IMAGE = 'game/images/managers/default-manager.png'
 
@@ -88,6 +98,61 @@ def _build_global_calendar(club, calendar_offset):
                 'venue':            venue,
                 'meta':             meta,
                 'match_time':       match_time,
+            }
+
+        # Pokalbegegnungen im Fenster einbeziehen (kein Freilos)
+        cup_qs = (
+            CupFixture.objects
+            .filter(
+                Q(home_club=club) | Q(away_club=club),
+                is_bye=False,
+                cup_round__scheduled_date__range=(window_start, window_end),
+            )
+            .select_related(
+                'home_club', 'away_club',
+                'cup_round__cup_season__competition',
+            )
+        )
+        for cf in cup_qs:
+            scheduled_date = cf.cup_round.scheduled_date
+            if not scheduled_date:
+                continue
+            # Liga-Spieltag hat Vorrang bei gleichem Datum
+            if scheduled_date in fixtures_by_date:
+                continue
+            is_home = (cf.home_club_id == club.pk)
+            cup_opponent = cf.away_club if is_home else cf.home_club
+            cup_venue = 'H' if is_home else 'A'
+            comp_name = cf.cup_round.cup_season.competition.name
+
+            if cf.status == CupFixture.STATUS_PLAYED and cf.home_goals_90 is not None:
+                h = (cf.home_goals_90 or 0) + (cf.home_goals_et or 0)
+                a = (cf.away_goals_90 or 0) + (cf.away_goals_et or 0)
+                suffix = ''
+                if cf.decided_by == CupFixture.DECIDED_BY_ET:
+                    suffix = ' n.V.'
+                elif cf.decided_by == CupFixture.DECIDED_BY_PENALTIES:
+                    suffix = ' n.E.'
+                cup_result = f'{h}:{a}{suffix}'
+            else:
+                cup_result = ''
+
+            round_label = _CUP_ROUND_LABELS.get(
+                cf.cup_round.round_code,
+                cf.cup_round.round_code.replace('_', ' ').title(),
+            )
+
+            fixtures_by_date[scheduled_date] = {
+                'opponent_name':    cup_opponent.name if cup_opponent else 'Freilos',
+                'opponent_crest':   cup_opponent.crest_static_path if cup_opponent else '',
+                'opponent_url':     f'/clubs/{cup_opponent.pk}/' if cup_opponent else '',
+                'stadium':          '',
+                'competition_logo': competition_logo_static_path(comp_name),
+                'lineup_saved':     False,
+                'result':           cup_result,
+                'venue':            cup_venue,
+                'meta':             f'{comp_name} · {round_label}',
+                'match_time':       '',
             }
 
     calendar_days = []
