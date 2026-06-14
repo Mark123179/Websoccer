@@ -1,0 +1,205 @@
+1. 4-3-3 und 5-3-2 verletzen aktuell die eigene Mittelfeldregel
+
+Die Validierung verlangt:
+
+≥ 2 zentrale/defensive MF-Slots
+
+Gezählt werden:
+
+CM, CDM, LDM, RDM
+
+Das aktuelle 4-3-3 enthält jedoch:
+
+LM – CM – RM
+
+Damit hat es nur einen zentralen Slot.
+
+Das 5-3-2 hat ebenfalls:
+
+LM – CM – RM
+
+und würde ebenfalls durch die Validierung fallen.
+
+Korrektur
+
+Neue Slots ergänzen:
+
+"LCM": {
+    "exact": {"ZM"},
+    "compatible": {"DM", "LM"},
+},
+"RCM": {
+    "exact": {"ZM"},
+    "compatible": {"DM", "RM"},
+},
+
+Formationen dann:
+
+4-3-3:
+LCM – CDM/CM – RCM
+
+5-3-2:
+LCM – CM – RCM
+
+4-4-2:
+LM – LCM – RCM – RM
+
+Damit erfüllen alle Formationen die zentrale Mittelfeldregel.
+
+2. Doppelte Slotnamen vermeiden
+
+Im 4-4-2 gibt es aktuell zweimal:
+
+{"slot": "CM", ...}
+
+Das kann später Probleme verursachen, wenn Belegungen, Kandidaten oder Template-Daten nach slot in einem Dictionary gespeichert werden. Der zweite CM könnte den ersten überschreiben.
+
+Besser:
+
+{"slot_id": "LCM", "role": "CM", ...}
+{"slot_id": "RCM", "role": "CM", ...}
+
+Oder direkt LCM und RCM als Slottypen verwenden.
+
+Jeder der elf Slots muss eine eindeutige ID haben.
+
+3. Formationsvergleich widerspricht dem Fit-Penalty-Prinzip
+
+Innerhalb einer Formation wird korrekt gerechnet:
+
+effective_score = rating + fit_penalty
+
+Bei der Auswahl zwischen Formationen wird aber zuerst die Zahl exakter Fits bewertet:
+
+1. complete
+2. exact_matches
+3. compatible_matches
+4. rating_sum
+
+Dadurch könnte eine Formation mit elf mittelmäßigen exakten Spielern eine Formation mit zehn exakten Spielern und einem deutlich besseren kompatiblen Spieler schlagen.
+
+Beispiel:
+
+Formation A:
+11 exakte Fits
+Notensumme 31,0
+
+Formation B:
+10 exakte Fits
+1 kompatibler Fit
+Notensumme 20,0
+
+Nach der aktuellen Logik gewinnt Formation A trotzdem.
+
+Korrekte Reihenfolge
+1. complete
+2. effective_score_sum niedriger
+3. exact_matches höher
+4. rating_sum niedriger
+5. goal_contributions höher
+6. minutes_sum höher
+7. formation_priority niedriger
+
+Dabei gilt:
+
+effective_score_sum = sum(
+    player["rating"] + FIT_PENALTY[fit_type]
+    for player in lineup
+)
+
+So hat der Malus von 0,15 tatsächlich dieselbe Bedeutung bei Slot- und Formationsauswahl.
+
+4. main_position_1-Fallback ist widersprüchlich
+
+Die Spezifikation sagt:
+
+kein Player-ORM-Lookup notwendig,
+gleichzeitig main_position_1 als Fallback verwenden.
+
+Ohne Player-Abfrage ist main_position_1 nicht verfügbar.
+
+Da laut verifizierter Datenstruktur report_data.position immer die tatsächlich gespielte Position enthält, würde ich den Fallback entfernen:
+
+raw_position = rating_data.get("position")
+
+if not raw_position:
+    continue
+
+Optional kann eine Warnung geloggt werden:
+
+logger.warning(
+    "Matchday XI skipped player %s: missing played position",
+    player_id,
+)
+
+Falls später wirklich ein Fallback benötigt wird, sollten alle fehlenden Spieler in einer einzigen Bulk-Abfrage geladen werden, nicht einzeln.
+
+5. simulated_match allein reicht nicht für einen vollständigen Spieltag
+
+Ein Fixture kann theoretisch einen simulated_match besitzen, dessen report_data leer oder unvollständig ist.
+
+Zusätzlich zur Datenbankprüfung sollte der Service daher prüfen:
+
+for fixture in fixtures:
+    report = fixture.simulated_match.report_data
+
+    if not report:
+        return None
+
+    if not report.get("home_ratings"):
+        return None
+
+    if not report.get("away_ratings"):
+        return None
+
+Sonst könnte eine Elf aus nur acht statt neun Bundesligaspielen entstehen.
+
+Empfohlene finale Formationsbewertung
+formation_key = (
+    0 if result["complete"] else 1,
+    result["effective_score_sum"],
+    -result["exact_matches"],
+    result["rating_sum"],
+    -result["goal_contributions"],
+    -result["minutes_sum"],
+    result["formation_priority"],
+)
+
+Da Python aufsteigend sortiert:
+
+0 für vollständig ist besser,
+niedrigere Noten sind besser,
+negative Werte machen höhere Zahlen bevorzugt.
+Backtracking-Optimierung
+
+Die Begrenzung auf 15 Kandidaten pro Slot ist vertretbar. Zusätzlich sollten die Slots aber in der Reihenfolge der geringsten Kandidatenanzahl verarbeitet werden:
+
+ordered_slots = sorted(
+    formation_slots,
+    key=lambda slot: len(candidates_by_slot[slot["slot_id"]]),
+)
+
+Also typischerweise:
+
+Torwart
+Außenverteidiger
+Flügel
+Innenverteidiger
+zentrale Positionen
+
+Das reduziert die Suchmenge erheblich.
+
+Tests noch ergänzen
+
+Zu den vorhandenen Tests würde ich noch vier hinzufügen:
+
+Zentralmittelfeld-Constraint
+4-3-3 und 5-3-2 enthalten jeweils mindestens zwei zentrale/defensive Slots.
+Formationsübergreifender Fit-Test
+Eine deutlich bessere Formation mit einem kompatiblen Spieler schlägt eine
+schlechtere Formation mit ausschließlich exakten Fits.
+Doppelte Rollen
+Zwei CM-Rollen besitzen unterschiedliche slot_ids und werden beide besetzt.
+Fehlende Report-Daten
+Alle Fixtures haben simulated_match, aber eines hat leere report_data:
+Ergebnis ist None.
