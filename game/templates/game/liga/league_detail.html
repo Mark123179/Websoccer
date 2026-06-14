@@ -369,7 +369,7 @@
                     {% if slot.crest %}
                     <img class="mxi-chip__crest" src="{% static slot.crest %}" alt="{{ slot.club_name }}">
                     {% endif %}
-                    <span class="mxi-chip__rating{% if slot.rating <= 1.5 %} mxi-rating--top{% elif slot.rating <= 2.5 %} mxi-rating--great{% endif %}">{{ slot.rating|floatformat:1 }}</span>
+                    <span class="mxi-chip__rating{% if slot.rating <= 1.5 %} mxi-rating--top{% elif slot.rating <= 2.5 %} mxi-rating--great{% endif %}">{{ slot.rating }}</span>
                     <span class="mxi-chip__name">{{ slot.name }}</span>
                     <span class="mxi-chip__pos">{{ slot.display_role }}</span>
                 </div>

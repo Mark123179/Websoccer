@@ -5571,7 +5571,12 @@ def league_detail(request, league_id):
         try:
             from .matchday_xi import get_last_complete_matchday_xi
             matchday_xi = get_last_complete_matchday_xi(league, current_season)
-        except Exception:
+        except Exception as _xi_exc:
+            import logging as _logging
+            _logging.getLogger(__name__).exception(
+                'Matchday XI Fehler für Liga %s Saison %s: %s',
+                league.id, current_season, _xi_exc,
+            )
             matchday_xi = None
 
     # ---- Statistiken (nur bei aktivem Tab laden) --------------------------
