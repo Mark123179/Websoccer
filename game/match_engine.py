@@ -1534,8 +1534,14 @@ def compute_player_ratings(result: dict) -> dict:
     h_players_raw = result.get('home_players', []) or []
     a_players_raw = result.get('away_players', []) or []
 
+    # Jitter-Seed: einmal pro Spiel aus Match-ID (Heim+Gast) berechnen
+    _match_jitter_base = (
+        ((result.get('home_club_id') or 0) * 2246822519
+         + (result.get('away_club_id') or 0) * 2654435761) & 0xFFFFFFFF
+    )
+
     def _rate(p: dict, is_home: bool) -> float:
-        rating = 3.0   # V2: OWS-Basisnote (V1 war 3.5)
+        rating = 3.0   # V2: OWS-Basisnote
         pg = _rating_pos_group(p.get('position', ''), p.get('group', ''))
 
         goals   = p.get('goals', 0) or 0
@@ -1556,52 +1562,52 @@ def compute_player_ratings(result: dict) -> dict:
         my_str          = h_str_overall   if is_home else a_str_overall
         opp_str         = a_str_overall   if is_home else h_str_overall
 
-        # A) Team-Ergebnis (gestuft nach Tordifferenz — ×1.5 gegenüber V1)
+        # A+B+C) Teamkontext — als gemeinsamer Delta, am Ende auf ±0,85 begrenzt
         goal_diff = my_goals - opp_goals
+        xg_diff   = my_xg - opp_xg
+        str_diff  = my_str - opp_str
+
+        team_delta = 0.0
+
+        # A) Team-Ergebnis
         if goal_diff == 1:
-            rating -= 0.35
+            team_delta -= 0.35
         elif goal_diff == 2:
-            rating -= 0.47
-        elif goal_diff == 3:
-            rating -= 0.74
-        elif goal_diff >= 4:
-            rating -= 0.83
+            team_delta -= 0.48
+        elif goal_diff >= 3:
+            team_delta -= 0.62
         elif goal_diff == -1:
-            rating += 0.35
+            team_delta += 0.35
         elif goal_diff == -2:
-            rating += 0.47
-        elif goal_diff == -3:
-            rating += 0.74
-        elif goal_diff <= -4:
-            rating += 0.83
+            team_delta += 0.48
+        elif goal_diff <= -3:
+            team_delta += 0.62
 
-        # B) Team-xGD (Dominanzindikator, geschärft)
-        xg_diff = my_xg - opp_xg
+        # B) Team-xGD (Dominanzindikator)
         if xg_diff >= 1.5:
-            rating -= 0.30
+            team_delta -= 0.30
         elif xg_diff >= 0.5:
-            rating -= 0.15
+            team_delta -= 0.15
         elif xg_diff <= -1.5:
-            rating += 0.30
+            team_delta += 0.30
         elif xg_diff <= -0.5:
-            rating += 0.15
+            team_delta += 0.15
 
-        # C) Gegnerstärke / Upset-Bonus (str_diff positiv = ich bin stärker)
-        str_diff = my_str - opp_str
+        # C) Gegnerstärke / Upset-Bonus
         if my_win:
             if str_diff <= -25:
-                rating -= 0.55   # Riesiger Upset
+                team_delta -= 0.35
             elif str_diff <= -15:
-                rating -= 0.40   # Klarer Upset
-            elif str_diff <= -8:
-                rating -= 0.25   # Underdog gewinnt
+                team_delta -= 0.22
         elif opp_win:
             if str_diff >= 25:
-                rating += 0.55   # Blamable Niederlage
+                team_delta += 0.35
             elif str_diff >= 15:
-                rating += 0.40
-            elif str_diff >= 8:
-                rating += 0.25
+                team_delta += 0.22
+
+        # Teamkontext-Cap: Summe A+B+C auf ±0,85 begrenzen
+        team_delta = max(-0.85, min(0.85, team_delta))
+        rating += team_delta
 
         # D) Scorer (positions-differenziert)
         if goals > 0:
@@ -1627,8 +1633,8 @@ def compute_player_ratings(result: dict) -> dict:
         # F) Positionslogik — Pressing via ratio (Regel A: keine Doppelzählung)
         if pg == 'GK':
             saves = max(0, opp_sot - opp_goals)
-            rating -= saves * 0.12           # jeder Save verbessert die Note
-            rating += opp_goals * 0.40       # jedes Gegentor verschlechtert
+            rating -= min(saves * 0.12, 0.60)   # Save-Bonus, max −0,60
+            rating += opp_goals * 0.40          # jedes Gegentor verschlechtert
             if opp_goals == 0:
                 rating -= 0.50               # Zu-Null-Bonus
             if opp_xg >= 2.0 and opp_goals <= 1:
@@ -1695,10 +1701,10 @@ def compute_player_ratings(result: dict) -> dict:
         elif mp < 45:
             rating = 3.0 + (rating - 3.0) * 0.75
 
-        # H) Deterministischer Spieler-Jitter ±0.10 (Regel B)
-        # Knuth-Multiplikativ-Hash auf PID — stabil, kein hashlib nötig
+        # H) Deterministischer Spieler-Jitter ±0,08 — Seed: Match-ID + Spieler-ID
         pid = p.get('id') or 0
-        rating += ((pid * 2654435761) & 0xFFFF) / 65535 * 0.20 - 0.10
+        jitter_seed = (pid * 2654435761 + _match_jitter_base) & 0xFFFF
+        rating += jitter_seed / 65535 * 0.16 - 0.08
 
         return round(_clamp(rating, 1.0, 6.0), 1)
 
