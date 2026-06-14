@@ -343,7 +343,8 @@ def _find_best_lineup(
 
     Returns dict mit Scoring-Metriken oder None wenn keine vollständige Elf möglich.
     """
-    MAX_CANDIDATES = 15
+    MAX_CANDIDATES = 5    # Pro Slot: Top-5 reichen für gute Qualität
+    MAX_NODES      = 20_000  # Harte Schranke gegen kombinatorische Explosion
 
     candidates_by_slot: dict[str, list[tuple[dict, str, int]]] = {}
     for slot in slots:
@@ -369,6 +370,7 @@ def _find_best_lineup(
     )
 
     best: list[Optional[dict]] = [None]
+    nodes: list[int] = [0]
 
     def _backtrack(
         idx: int,
@@ -376,6 +378,10 @@ def _find_best_lineup(
         assignment: dict[str, tuple[dict, str]],
         eff_sum: int,
     ) -> None:
+        if nodes[0] >= MAX_NODES:
+            return
+        nodes[0] += 1
+
         if idx == len(ordered_slots):
             exact_matches  = sum(1 for _, ft in assignment.values() if ft == "exact")
             rating_cents   = sum(p["rating_score"] for p, _ in assignment.values())
@@ -404,6 +410,8 @@ def _find_best_lineup(
         best_eff = best[0]["eff_sum"] if best[0] is not None else None
 
         for p, fit, eff in cands:
+            if nodes[0] >= MAX_NODES:
+                break
             pid = p["player_id"]
             if pid in used_pids:
                 continue
