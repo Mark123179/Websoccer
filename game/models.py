@@ -2100,16 +2100,33 @@ class PlayerSeasonStat(models.Model):
         on_delete=models.CASCADE,
         related_name='ws_season_stats',
     )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ws_player_season_stats',
+        verbose_name='Verein',
+    )
     season = models.CharField(max_length=20, default='2026/27')
     season_number = models.PositiveSmallIntegerField(default=1)
     competition = models.CharField(max_length=120, default='Liga')
     matches = models.PositiveSmallIntegerField(default=0)
+    starts = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name='Startelf-Einsätze',
+    )
     goals = models.PositiveSmallIntegerField(default=0)
     assists = models.PositiveSmallIntegerField(default=0)
     substitutions_in = models.PositiveSmallIntegerField(default=0)
     substitutions_out = models.PositiveSmallIntegerField(default=0)
     yellow_cards = models.PositiveSmallIntegerField(default=0)
     red_cards = models.PositiveSmallIntegerField(default=0)
+    dismissals = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name='Platzverweise (GelbRot + DirektRot)',
+        help_text='Summe aus Gelb-Rot- und Direktrot-Karten.',
+    )
     player_of_match_awards = models.PositiveSmallIntegerField(default=0)
     minutes_played = models.PositiveIntegerField(default=0)
     average_grade = models.DecimalField(
@@ -2117,7 +2134,36 @@ class PlayerSeasonStat(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        help_text='Websoccer-Note. 1.00 ist sehr gut, 6.00 schwach.',
+        help_text='Websoccer-Note (Durchschnitt). 1.00 ist sehr gut, 6.00 schwach.',
+    )
+    rating_sum = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='Noten-Summe',
+        help_text='Summe aller Einzelnoten für Ø-Berechnung.',
+    )
+    rating_count = models.PositiveSmallIntegerField(
+        default=0,
+        verbose_name='Noten-Anzahl',
+        help_text='Anzahl der gewerteten Einsätze (mit Note).',
+    )
+    rating_best = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='Beste Note',
+        help_text='Niedrigster Notenwert (1.0 = beste mögliche Note).',
+    )
+    rating_worst = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name='Schlechteste Note',
+        help_text='Höchster Notenwert (6.0 = schlechteste mögliche Note).',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

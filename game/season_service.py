@@ -7,7 +7,7 @@ Wiederverwendbar aus Web-Views UND Management-Commands.
 """
 
 from django.db import transaction
-from django.db.models import Avg, Sum, Count
+from django.db.models import Avg, Sum, Count, Min, Max, Q
 
 
 _WS_LIGA_SOURCE = 'ws_liga'
@@ -129,24 +129,25 @@ def _update_player_season_stats(fixture, data: dict) -> None:
     """Schreibt PlayerFormSnapshot + PlayerSeasonStat nach einer Ligasimulation.
 
     Idempotent: Mehrfachaufruf für dasselbe Fixture überschreibt statt zu duplizieren.
-    Schreibt: Tore, Assists, Karten, Minuten, Spiele, Durchschnittsnote, MOTM.
+    Schreibt: Tore, Assists, Karten, Minuten, Spiele, Noten (Summe/Ø/Best/Worst), MOTM,
+              Starts, Platzverweise, Vereinszuordnung.
     """
     from django.utils import timezone
     from .models import PlayerFormSnapshot, PlayerSeasonStat
-
     from .models import SeasonFixture as _SeasonFixture
+
     fixture_date = fixture.scheduled_date or timezone.localdate()
     fixture_id_str = f'ws_liga_{fixture.id}'
     competition = fixture.league.name  # z.B. "1. Bundesliga"
 
-    # Rating-Lookup: player_id → rating (aus compute_player_ratings)
+    # ── Ratings aus compute_player_ratings (bereits im data-Dict) ────────────
     rating_map: dict[int, float] = {}
     for r in (data.get('home_ratings') or []) + (data.get('away_ratings') or []):
         pid = r.get('id')
         if pid and r.get('rating') is not None:
             rating_map[pid] = float(r['rating'])
 
-    # MOTM: player_id des Spielers des Spiels (aus compute_player_ratings)
+    # MOTM: player_id des Spielers des Spiels
     motm_pid: int | None = None
     motm_data = data.get('man_of_the_match') or {}
     if motm_data:
@@ -157,32 +158,41 @@ def _update_player_season_stats(fixture, data: dict) -> None:
         (data.get('away_players') or [], fixture.away_club_id),
     ]
 
+    # pid → club_id Mapping für den Verein-FK
+    pid_to_club_id: dict[int, int] = {}
     affected_player_ids: list[int] = []
-    for players, _club_id in sides:
+
+    for players, club_id in sides:
         for p in players:
             pid = p.get('id')
             if not pid:
                 continue
             affected_player_ids.append(pid)
+            pid_to_club_id[pid] = club_id
 
-            goals   = int(p.get('goals', 0) or 0)
-            assists = int(p.get('assists', 0) or 0)
-            yellow  = int(p.get('yellow_cards', 0) or 0)
-            red     = int(p.get('red_cards', 0) or 0)
-            rating  = rating_map.get(pid)
+            goals       = int(p.get('goals', 0) or 0)
+            assists     = int(p.get('assists', 0) or 0)
+            yellow      = int(p.get('yellow_cards', 0) or 0)
+            red         = int(p.get('red_cards', 0) or 0)
+            yellow_red  = int(p.get('yellow_red_cards', 0) or 0)
+            rating      = rating_map.get(pid)
 
             snap_defaults = {
                 'source':           _WS_LIGA_SOURCE,
                 'fixture_date':     fixture_date,
-                'minutes_played':   90,
+                'minutes_played':   int(p.get('minutes_played') or 90),
                 'possible_minutes': 90,
-                'started':          True,
+                'started':          not bool(p.get('is_sub', False)),
                 'position':         p.get('position', ''),
                 'goals':            goals,
                 'assists':          assists,
                 'yellow_cards':     yellow,
                 'red_cards':        red,
-                'raw_payload':      {'is_motm': pid == motm_pid},
+                'raw_payload': {
+                    'is_motm':        pid == motm_pid,
+                    'yellow_red':     yellow_red,
+                    'dismissal':      int(bool(red or yellow_red)),
+                },
             }
             if rating is not None:
                 snap_defaults['rating'] = rating
@@ -216,7 +226,12 @@ def _update_player_season_stats(fixture, data: dict) -> None:
         total_matches=Count('id'),
         total_yellow=Sum('yellow_cards'),
         total_red=Sum('red_cards'),
+        total_starts=Count('id', filter=Q(started=True)),
         avg_grade=Avg('rating'),
+        r_sum=Sum('rating'),
+        r_count=Count('id', filter=Q(rating__isnull=False)),
+        r_best=Min('rating'),
+        r_worst=Max('rating'),
     ):
         agg_per_player[row['player_id']] = row
 
@@ -230,29 +245,46 @@ def _update_player_season_stats(fixture, data: dict) -> None:
     ):
         motm_counts[row['player_id']] = row['c']
 
-    for pid in affected_player_ids:
-        agg = agg_per_player.get(pid, {})
-        PlayerSeasonStat.objects.update_or_create(
-            player_id=pid,
-            season=_WS_LIGA_SEASON,
-            competition=competition,
-            defaults={},
-        )
-        avg_grade = agg.get('avg_grade')
-        PlayerSeasonStat.objects.filter(
-            player_id=pid,
-            season=_WS_LIGA_SEASON,
-            competition=competition,
-        ).update(
-            goals=agg.get('total_goals') or 0,
-            assists=agg.get('total_assists') or 0,
-            minutes_played=agg.get('total_minutes') or 0,
-            matches=agg.get('total_matches') or 0,
-            yellow_cards=agg.get('total_yellow') or 0,
-            red_cards=agg.get('total_red') or 0,
-            average_grade=round(avg_grade, 2) if avg_grade is not None else None,
-            player_of_match_awards=motm_counts.get(pid, 0),
-        )
+    # Platzverweise (GelbRot + DirektRot) aus raw_payload aggregieren
+    dismissal_counts: dict[int, int] = {}
+    for row in (
+        snap_qs
+        .filter(raw_payload__dismissal=1)
+        .values('player_id')
+        .annotate(c=Count('id'))
+    ):
+        dismissal_counts[row['player_id']] = row['c']
+
+    with transaction.atomic():
+        for pid in affected_player_ids:
+            agg = agg_per_player.get(pid, {})
+            avg_grade = agg.get('avg_grade')
+            r_sum = agg.get('r_sum')
+            r_best = agg.get('r_best')
+            r_worst = agg.get('r_worst')
+
+            PlayerSeasonStat.objects.update_or_create(
+                player_id=pid,
+                season=_WS_LIGA_SEASON,
+                competition=competition,
+                defaults={
+                    'club_id':              pid_to_club_id.get(pid),
+                    'goals':                agg.get('total_goals') or 0,
+                    'assists':              agg.get('total_assists') or 0,
+                    'minutes_played':       agg.get('total_minutes') or 0,
+                    'matches':              agg.get('total_matches') or 0,
+                    'starts':              agg.get('total_starts') or 0,
+                    'yellow_cards':         agg.get('total_yellow') or 0,
+                    'red_cards':            agg.get('total_red') or 0,
+                    'dismissals':           dismissal_counts.get(pid, 0),
+                    'average_grade':        round(avg_grade, 2) if avg_grade is not None else None,
+                    'rating_sum':           round(float(r_sum), 2) if r_sum is not None else None,
+                    'rating_count':         agg.get('r_count') or 0,
+                    'rating_best':          round(float(r_best), 1) if r_best is not None else None,
+                    'rating_worst':         round(float(r_worst), 1) if r_worst is not None else None,
+                    'player_of_match_awards': motm_counts.get(pid, 0),
+                },
+            )
 
     # ── Sperren auslösen (Rotsperre / Gelbsperre bei 5/10/15) ────────────────
     _card_items = [

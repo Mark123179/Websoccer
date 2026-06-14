@@ -3048,20 +3048,31 @@ class PlayerMarketValueSnapshotAdmin(admin.ModelAdmin):
 class PlayerSeasonStatAdmin(admin.ModelAdmin):
     list_display = (
         'player',
-        'season_number',
+        'club',
         'season',
         'competition',
         'matches',
+        'starts',
         'goals',
         'assists',
-        'substitutions_in',
-        'substitutions_out',
         'minutes_played',
-        'player_of_match_awards',
+        'yellow_cards',
+        'dismissals',
         'average_grade',
+        'rating_best',
+        'rating_worst',
+        'rating_count',
+        'player_of_match_awards',
     )
-    list_filter = ('season_number', 'season', 'competition')
-    search_fields = ('player__first_name', 'player__last_name', 'competition')
+    list_filter = ('season', 'competition', 'club')
+    search_fields = (
+        'player__first_name',
+        'player__last_name',
+        'club__name',
+        'competition',
+    )
+    readonly_fields = ('rating_sum', 'rating_count', 'created_at', 'updated_at')
+    ordering = ('-season', 'competition', 'average_grade')
 
 
 @admin.register(PlayerTransferHistory)
