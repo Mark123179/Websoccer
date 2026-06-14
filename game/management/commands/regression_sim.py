@@ -358,8 +358,12 @@ def _make_psubs(cid: int, rng: random.Random) -> list[dict]:
     rng.shuffle(starters); rng.shuffle(bench)
     conditions = ['immer', 'immer', 'rueckstand']
     n = rng.randint(2, 3)
+    min1 = rng.randint(52, 65)
+    min2 = rng.randint(max(min1 + 5, 60), 75)
+    min3 = rng.randint(max(min2 + 5, 70), 83)
+    minutes = [min1, min2, min3]
     return [
-        {'in': bench[k], 'out': starters[k], 'minute': 55 + k * 12,
+        {'in': bench[k], 'out': starters[k], 'minute': minutes[k],
          'condition': conditions[k % len(conditions)]}
         for k in range(min(n, len(starters), len(bench)))
     ]
