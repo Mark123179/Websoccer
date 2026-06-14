@@ -1,0 +1,130 @@
+Task: #502 – Pokalrunden und automatischer Wettbewerbslauf
+
+Die Engine kann jetzt einzelne K.-o.-Spiele entscheiden. Als Nächstes muss daraus ein kompletter Pokalwettbewerb werden.
+
+Ziel
+Teilnehmer für eine Pokalrunde festlegen
+Begegnungen auslosen
+Pokalspiele als Fixtures erzeugen
+Sieger automatisch in die nächste Runde übernehmen
+Finale korrekt abschließen
+Pokalbaum im UI anzeigen
+Benötigte Daten
+
+Eine Pokal-Fixture braucht mindestens:
+
+competition
+season
+round_code
+round_number
+home_club
+away_club
+simulated_match
+winner_club
+next_fixture
+status
+
+Mögliche Runden:
+
+round_of_64
+round_of_32
+round_of_16
+quarter_final
+semi_final
+final
+Wichtige Regeln
+Auslosung
+
+Für V1 würde ich eine einfache, deterministische Zufallsauslosung verwenden:
+
+seed = f"{season_id}:{competition_id}:{round_number}"
+
+Damit erzeugt dieselbe Ausgangslage immer dieselbe Auslosung.
+
+Zunächst ohne:
+
+Setzlisten
+regionale Lostöpfe
+Heimrecht-Regeln
+Wiederholungsspiele
+
+Diese Regeln können später je Wettbewerb ergänzt werden.
+
+Ungerade Teilnehmerzahl
+
+Falls die Teilnehmerzahl keine Zweierpotenz ist:
+
+Freilose erlauben
+Freilose deterministisch vergeben
+Verein direkt in die nächste Runde übernehmen
+kein künstliches 3:0-Ergebnis erzeugen
+Siegerübernahme
+
+Nach Abschluss eines Spiels:
+
+winner_id = result["winner_club_id"]
+
+Dieser Verein wird genau einmal in die nächste Runde geschrieben.
+
+Wichtig:
+
+Simulation erneut aufrufen darf keinen zweiten Eintrag erzeugen
+bereits abgeschlossene Runde darf nicht erneut ausgelost werden
+nächste Runde erst erstellen, wenn alle Spiele der aktuellen Runde abgeschlossen sind
+Transaktion
+
+Rundenfortschritt sollte atomar erfolgen:
+
+with transaction.atomic():
+    lock_current_round()
+    validate_all_matches_complete()
+    collect_winners()
+    create_next_round()
+    mark_round_complete()
+
+Damit entstehen bei parallelen Requests keine doppelten Viertel- oder Halbfinals.
+
+Pokalbaum
+
+Im UI braucht es anschließend:
+
+Runde
+Heimverein
+Auswärtsverein
+Ergebnis nach 90 Minuten
+Kennzeichnung n. V. oder i. E.
+Sieger hervorgehoben
+Link zum Spielbericht
+
+Beispiele:
+
+Bayern München 2:1 Borussia Dortmund n. V.
+Werder Bremen 1:1 RB Leipzig, 5:4 i. E.
+
+Das Elfmeterschießen sollte nicht als reguläres Ergebnis 6:5 dargestellt werden.
+
+Pflichtfelder für die Anzeige
+display_score = "1:1"
+decision_suffix = "i. E."
+penalty_score = "5:4"
+
+UI:
+
+Werder Bremen 1:1 RB Leipzig
+5:4 i. E.
+Pflicht-Tests für #502
+Eine Runde mit 16 Teams erzeugt acht Begegnungen.
+Kein Verein wird zweimal ausgelost.
+Gleicher Seed erzeugt dieselbe Auslosung.
+Sieger nach regulärer Spielzeit kommt weiter.
+Sieger nach Verlängerung kommt weiter.
+Sieger nach Elfmeterschießen kommt weiter.
+Elfmetertore verändern das reguläre Ergebnis nicht.
+Nächste Runde entsteht erst nach allen abgeschlossenen Spielen.
+Erneuter Aufruf erzeugt keine doppelten Fixtures.
+Freilos wird korrekt übernommen.
+Halbfinals erzeugen genau ein Finale.
+Finalsieger wird als Pokalsieger gespeichert.
+Unterlegener Finalist wird nicht erneut weitergeleitet.
+Pokalbaum zeigt n. V. und i. E. korrekt.
+Ligaspielplan bleibt unverändert.

@@ -1,0 +1,277 @@
+1. Größter Fehler: 36 Teilnehmer ergeben nicht 28 Spiele + 8 Freilose
+
+Das ist rechnerisch unmöglich:
+
+28 Spiele = 56 benötigte Mannschaften
++ 8 Freilose
+= 64 Teilnehmer
+
+Bei 36 Teilnehmern muss die erste Runde auf 32 verbleibende Teams reduzieren:
+
+4 Spiele = 8 Mannschaften
+28 Freilose = 28 Mannschaften
+--------------------------------
+36 Teilnehmer → 32 Weiterkommer
+
+Die korrekte erste Runde besteht deshalb aus:
+
+4 echten Spielen
+28 Freilosen
+insgesamt 32 Bracket-Paarungen
+danach reguläre Runde der letzten 32 mit 16 Spielen
+
+Die Done-Bedingung muss also lauten:
+
+Pokalauslosung für 36 Teams erzeugt 4 Erstrundenspiele und 28 Freilose.
+
+Allgemeine Formel:
+
+target_size = 2 ** floor(log2(participant_count))
+matches = participant_count - target_size
+byes = target_size - matches
+
+Für 36:
+
+target_size = 32
+matches = 4
+byes = 28
+2. Freilose nicht nur bei ungerader Teilnehmerzahl
+
+Die aktuelle Beschreibung sagt:
+
+Freilose bei ungerader Teilnehmerzahl
+
+Das reicht nicht. Auch 36 ist gerade und benötigt trotzdem Freilose.
+
+Richtig:
+
+def calculate_opening_round(participant_count):
+    if participant_count < 2:
+        raise ValueError("At least two participants required")
+
+    target_size = 1 << (participant_count.bit_length() - 1)
+
+    if participant_count == target_size:
+        return {
+            "matches": participant_count // 2,
+            "byes": 0,
+        }
+
+    matches = participant_count - target_size
+    byes = target_size - matches
+
+    return {
+        "matches": matches,
+        "byes": byes,
+    }
+
+Außerdem widerspricht sich:
+
+schwächste Teilnehmer nach club.id
+
+Eine Club-ID bildet keine Stärke ab. Da Setzlisten ausdrücklich außerhalb des Scopes liegen, sollten Freilose einfach Teil der deterministischen Zufallsauslosung sein.
+
+3. League.cup_winner ist nicht saisonfähig
+
+Ein Gewinner direkt auf League würde bei der nächsten Saison überschrieben.
+
+DFB-Pokal
+2026: Bayern
+2027: Dortmund
+
+Mit nur League.cup_winner könnte lediglich ein einziger Gewinner gespeichert werden.
+
+Besser ist ein saisonbezogenes Modell:
+
+class CupSeason(models.Model):
+    competition = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name="cup_seasons",
+    )
+    season = models.CharField(max_length=20)
+    winner_club = models.ForeignKey(
+        Club,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="cup_titles",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("setup", "Setup"),
+            ("running", "Running"),
+            ("completed", "Completed"),
+        ],
+        default="setup",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["competition", "season"],
+                name="unique_cup_competition_season",
+            )
+        ]
+
+Die Teilnehmer können ebenfalls an CupSeason gebunden werden:
+
+participants = models.ManyToManyField(Club, blank=True)
+
+Damit bleibt nachvollziehbar, welche Vereine in welcher Saison teilgenommen haben.
+
+4. Es fehlt ein Rundenmodell
+
+Die Spezifikation sagt:
+
+markiert aktuelle Runde als abgeschlossen
+
+CupFixture hat aber nur einen Status pro Spiel. Es gibt kein Objekt für die Runde selbst.
+
+Empfehlung:
+
+class CupRound(models.Model):
+    cup_season = models.ForeignKey(
+        CupSeason,
+        on_delete=models.CASCADE,
+        related_name="rounds",
+    )
+    round_number = models.PositiveSmallIntegerField()
+    round_code = models.CharField(max_length=30)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("scheduled", "Scheduled"),
+            ("completed", "Completed"),
+        ],
+        default="pending",
+    )
+    scheduled_date = models.DateField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["cup_season", "round_number"],
+                name="unique_cup_round",
+            )
+        ]
+
+Vorteile:
+
+Rundenstatus klar gespeichert
+Termin pro Runde
+keine erneute Auslosung
+Pokalbaum einfacher
+Fortschritt atomar steuerbar
+5. CupFixture benötigt eine Bracket-Position
+
+Ohne feste Reihenfolge kann die Darstellung im Pokalbaum instabil werden. Ergänzen:
+
+bracket_position = models.PositiveSmallIntegerField()
+
+Unique Constraint:
+
+models.UniqueConstraint(
+    fields=["cup_round", "bracket_position"],
+    name="unique_cup_round_bracket_position",
+)
+
+Falls next_fixture verwendet wird, sollte zusätzlich definiert werden, auf welcher Seite der Sieger landet:
+
+next_fixture_slot = models.CharField(
+    max_length=4,
+    choices=[("home", "Home"), ("away", "Away")],
+    null=True,
+    blank=True,
+)
+
+Alternativ wird jede Runde neu ausgelost. Dann ist next_fixture bis zur neuen Auslosung nicht bekannt und eher unnötig.
+
+Die Spezifikation muss sich entscheiden:
+
+klassischer fixer Pokalbaum, oder
+Neuauslosung nach jeder Runde
+
+Für den DFB-Pokal ist Neuauslosung pro Runde plausibel. Dann würde ich next_fixture entfernen und erst nach jeder abgeschlossenen Runde neu losen.
+
+6. Ergebnisfelder eindeutig benennen
+
+Die Bedeutung von:
+
+home_goals
+home_goals_et
+
+ist nicht eindeutig.
+
+home_goals_et könnte bedeuten:
+
+nur Tore in der Verlängerung, oder
+Gesamtstand nach Verlängerung.
+
+Besser exakt entsprechend dem Ergebnis von #501:
+
+home_goals_90
+away_goals_90
+
+home_goals_after_et
+away_goals_after_et
+
+home_penalties
+away_penalties
+
+Oder, falls #501 Extra-Time-Tore separat liefert:
+
+home_goals_90
+home_extra_time_goals
+
+Dann:
+
+final_home_goals = home_goals_90 + home_extra_time_goals
+
+Diese Semantik muss vor der Persistenz verbindlich sein, sonst werden Spielbericht und Pokalbaum später widersprüchlich.
+
+7. Pokalspiele nicht direkt nur über simulate_ko_match() speichern
+
+Das ist architektonisch wichtig.
+
+Ein direkter Aufruf aus cup_service.py könnte vorhandene Post-Match-Pipelines umgehen:
+
+Frischeverlust
+Verletzungspersistenz
+Spielersperren
+Spielerstatistiken
+Saisonstatistiken
+Notenpersistenz
+Finanzeffekte
+Event-Speicherung
+
+Besser:
+
+CupFixture
+→ kanonischer Match-Simulationsservice
+→ simulate_ko_match()
+→ SimulatedMatch speichern
+→ Events und Ratings speichern
+→ Verletzungen und Frische anwenden
+→ CupFixture aktualisieren
+
+Falls bereits ein gemeinsamer Service für Liga, Pokal und Freundschaftsspiele existiert, muss simulate_cup_fixture() diesen verwenden. Die Engine-Funktion allein ist nicht die vollständige Produktionspipeline.
+
+8. Terminierungsfeld fehlt
+
+schedule_cup_round() soll einen Termin schreiben, aber CupFixture besitzt im Modellvorschlag kein scheduled_date.
+
+Entweder:
+
+scheduled_date = models.DateField(null=True, blank=True)
+
+auf CupFixture, oder besser einmal auf CupRound, wenn alle Spiele einer Runde am selben Termin stattfinden.
+
+Die Konfliktprüfung sollte mindestens berücksichtigen:
+
+Ligaspiel des Heimvereins am selben Datum
+Ligaspiel des Auswärtsvereins am selben Datum
+bereits angesetztes Pokalspiel
+vorherige Pokalrunde
