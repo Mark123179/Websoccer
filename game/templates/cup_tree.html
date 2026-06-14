@@ -145,21 +145,21 @@
 .cup-tree-badge-scheduled { background: #00d4ff20; color: #00d4ff; }
 .cup-tree-badge-completed { background: #00ff8820; color: #00ff88; }
 
-.cup-tree-fixtures { display: flex; flex-direction: column; gap: .4rem; }
+.cup-tree-fixtures { display: flex; flex-direction: column; gap: .75rem; }
 
 /* ── Single fixture card ─────────────────────────────────────────────────── */
 .cup-tree-fixture {
   background: #071525;
-  border: 1px solid #0d2035;
-  border-radius: 0 0 8px 8px;
-  padding: .45rem .6rem;
+  border: 1px solid #132840;
+  border-radius: 6px;
+  padding: .55rem .75rem;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: .4rem;
   position: relative;
 }
-.cup-tree-fixture--played { border-color: #00d4ff22; }
+.cup-tree-fixture--played { border-color: #00d4ff33; }
 
 .cup-tree-team {
   display: flex;
@@ -204,7 +204,16 @@
   transition: opacity .15s;
 }
 .cup-tree-report-link:hover { opacity: 1; }
-.cup-tree-sep { color: #1e3050; font-size: .72rem; }
+.cup-tree-sep {
+  color: #3a6080;
+  font-size: .70rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 0 .25rem;
+  border: 1px solid #132840;
+  border-radius: 3px;
+  background: #050e1a;
+}
 
 .cup-tree-bye {
   background: #050e1a;
