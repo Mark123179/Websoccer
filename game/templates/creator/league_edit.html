@@ -32,9 +32,10 @@
   <nav class="creator-tabs">
     <a class="creator-tab {% if active_tab == 'stammdaten' %}active{% endif %}" href="?tab=stammdaten">Stammdaten</a>
     <a class="creator-tab {% if active_tab == 'vereine' %}active{% endif %}" href="?tab=vereine">Vereine <span class="creator-tab-badge">{{ clubs|length }}</span></a>
-    <a class="creator-tab {% if active_tab == 'spielplan' %}active{% endif %}" href="?tab=spielplan">Spielplan</a>
     {% if league.is_cup %}
-    <a class="creator-tab {% if active_tab == 'pokal' %}active{% endif %}" href="?tab=pokal">🏆 Pokal</a>
+    <a class="creator-tab {% if active_tab == 'pokal' %}active{% endif %}" href="?tab=pokal">Spielplan</a>
+    {% else %}
+    <a class="creator-tab {% if active_tab == 'spielplan' %}active{% endif %}" href="?tab=spielplan">Spielplan</a>
     {% endif %}
   </nav>
 
