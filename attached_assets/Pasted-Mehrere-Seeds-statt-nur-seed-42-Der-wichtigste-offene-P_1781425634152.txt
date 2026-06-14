@@ -1,0 +1,297 @@
+Mehrere Seeds statt nur seed=42
+
+Der wichtigste offene Punkt.
+
+Aktuell wurden 100 Saisons mit einem festen Seed simuliert. Sinnvoll wären zusätzlich beispielsweise:
+
+Seed 1
+Seed 7
+Seed 21
+Seed 99
+Seed 2026
+
+Jeweils 50 oder 100 Saisons.
+
+Entscheidend ist nicht, dass alle exakt dieselben Werte liefern, sondern dass die Kennzahlen stabil bleiben:
+
+Tore pro Spiel
+Heim-/Auswärtssiege
+Remisquote
+Verletzungen
+Favoritensiege
+Stärke-Korrelationen
+Meisterverteilung
+
+So lässt sich ausschließen, dass seed=42 zufällig besonders gut in die Zielkorridore fällt.
+
+2. Verteilungen statt nur Durchschnittswerte
+
+Durchschnittlich 2,694 Tore sind gut. Trotzdem könnten einzelne Spieltypen auffällig sein.
+
+Ich würde zusätzlich ausgeben:
+
+Ergebnisverteilung
+0:0
+1:0 / 0:1
+1:1
+2:0 / 0:2
+2:1 / 1:2
+2:2
+Spiele mit 5+ Toren
+Spiele mit 7+ Toren
+
+Damit erkennt man, ob die Engine zu viele Standardergebnisse oder zu viele Ausreißer produziert.
+
+Tordifferenzen
+Remis
+Sieg mit 1 Tor
+Sieg mit 2 Toren
+Sieg mit 3 Toren
+Sieg mit 4+ Toren
+
+Wichtig wäre besonders, ob hohe Siege wie 6:0 oder 7:3 seltene Ausnahmen bleiben.
+
+3. Favoritenstärke genauer auswerten
+
+Nicht nur Favoritensieg insgesamt, sondern nach Stärkeabstand.
+
+Zum Beispiel:
+
+Stärkeabstand	Erwartete Auswertung
+0–2	nahezu ausgeglichen
+3–7	leichter Favorit
+8–14	klarer Favorit
+15–24	großer Favorit
+25+	sehr großer Favorit
+
+Je Gruppe:
+
+Siegquote Favorit
+Remisquote
+Niederlagenquote
+durchschnittliche Tordifferenz
+durchschnittliche xG-Differenz
+
+Das zeigt, ob die Stärkeübersetzung sauber skaliert oder ob beispielsweise kleine Unterschiede bereits zu mächtig sind.
+
+4. Club-spezifische Über- und Unterperformance
+
+Über 100 Saisons pro Verein:
+
+Ausgangsstärke
+erwarteter Tabellenplatz
+durchschnittlicher Tabellenplatz
+durchschnittliche Punkte
+durchschnittliche Tordifferenz
+Meisterschaften
+Top-4-Quote
+Abstiegsquote
+Abweichung zwischen Stärke-Rang und Tabellen-Rang
+
+Damit würden wir erkennen, ob einzelne Vereine systematisch zu gut oder zu schlecht abschneiden.
+
+Beispiel:
+
+Union Berlin:
+Stärke-Rang: 9
+Ø Tabellenplatz: 6,2
+Abweichung: +2,8 Plätze
+
+Wenn ein Verein langfristig deutlich abweicht, könnte die Ursache sein:
+
+ungewöhnliche Kaderstruktur
+automatisch bevorzugte Formation
+Positionsverteilung
+hohe Ausdauerwerte
+besondere Taktikkombination
+zu starke oder schwache Torhüterposition
+5. Heimvorteil nach Stärkeverhältnis
+
+Der Heimvorteil sollte nicht nur insgesamt funktionieren.
+
+Zusätzliche Gruppen:
+
+stärkeres Heimteam gegen schwächeres Auswärtsteam
+schwächeres Heimteam gegen stärkeres Auswärtsteam
+gleich starke Teams
+großer Favorit zuhause
+großer Favorit auswärts
+
+Wichtig wäre zu prüfen, ob Heimvorteil nur enge Spiele verschiebt oder auch große Qualitätsunterschiede unnatürlich neutralisiert.
+
+6. Taktik-Balance
+
+Das ist vermutlich die wichtigste fachliche Auswertung nach den Seeds.
+
+Pro Taktik beziehungsweise taktischem Preset:
+
+Nutzungshäufigkeit
+Punkte pro Spiel
+Tore
+Gegentore
+xG
+xGA
+Ballbesitz
+Karten
+Pressing-Erfolg
+Konter-Erfolg
+Stärke der eingesetzten Teams
+
+Wichtig: Nicht einfach die reine Siegquote vergleichen. Starke Vereine könnten eine Taktik häufiger verwenden.
+
+Besser wäre eine bereinigte Auswertung:
+
+Tatsächliche Punkte – erwartete Punkte anhand der Teamstärke
+
+So erkennen wir, ob eine Taktik unabhängig von der Kaderqualität systematisch stärker ist.
+
+7. Formation-Balance
+
+Dasselbe für Formationen:
+
+durchschnittliche Teamstärke der Nutzer
+Punkte pro Spiel
+xG und xGA
+Tore und Gegentore
+Chancenverhältnis
+Positionsfit
+Anzahl HP/NP/FP
+bereinigte Überperformance
+
+Besonders prüfen würde ich:
+
+Dreierkette gegen Viererkette
+Formationen mit nur einem Stürmer
+sehr offensive Systeme
+sehr defensive Systeme
+Auto-Aufstellung gegenüber manueller Idealaufstellung
+
+Hier könnte auch sichtbar werden, ob die frühere 3e-Problematik wirklich vollständig gelöst ist.
+
+8. Verletzungen detaillierter auswerten
+
+Da 0,215 Verletzungen pro Spiel nahe an der Obergrenze liegt, würde ich genauer prüfen:
+
+leichte Verletzungen
+mittlere Verletzungen
+schwere Verletzungen
+durchschnittliche Ausfalltage
+Median der Ausfalltage
+Verletzungen nach Frischebereich
+Verletzungen nach Einsatzintensität
+Verletzungen nach Ausdauerwert
+In-game-Verletzungen
+Post-match-Verletzungen
+Mehrfachverletzungen desselben Spielers
+verletzte Spieler pro Saison und Verein
+
+Wichtig wäre beispielsweise:
+
+Frische 90–100: Verletzungsrate
+Frische 75–89: Verletzungsrate
+Frische 60–74: Verletzungsrate
+Frische unter 60: Verletzungsrate
+
+Die Rate sollte mit sinkender Frische sichtbar und plausibel steigen.
+
+9. Belastung und Frische über komplette Saisons
+
+Die bisherigen Modelltests waren sehr gut. Jetzt wäre eine Liga-Auswertung sinnvoll:
+
+durchschnittliche Frische am Spieltag
+Frische nach Verein
+Frische nach Anzahl Wettbewerbe
+Anteil Spieler unter 80 / 70 / 60 Frische
+Anzahl Einsätze pro Spieler
+Rotationshäufigkeit
+Verletzungsrate bei Vielspielern
+Leistungsabfall durch Frische
+
+Besonders wichtig ist, ob KI-Teams ausreichend rotieren oder sich manche Teams über eine Saison selbst zerstören.
+
+10. Spieler- und Linienwerte
+
+Um versteckte Strukturprobleme zu erkennen:
+
+Einfluss Torwartstärke auf Gegentore
+Einfluss Abwehrstärke auf xGA
+Einfluss Mittelfeldstärke auf Ballbesitz
+Einfluss Offensivstärke auf xG
+Verhältnis zwischen Linienwert und tatsächlicher Leistung
+Positionsfit und Ergebniswirkung
+
+Beispielsweise sollte ein besserer Torwart primär die Torverwertung des Gegners beeinflussen, nicht direkt dessen xG.
+
+11. Spielverlauf und Comebacks
+
+Auswertung nach Spielzustand:
+
+Wie oft gewinnt das Team, das zuerst trifft?
+Comeback nach 0:1
+Comeback nach 0:2
+Führung verspielt
+Tore nach roten Karten
+Tore nach Wechseln
+Tore in den letzten 15 Minuten
+Tore in der Nachspielzeit
+Ergebnisveränderung durch Matchpläne
+
+Das wäre wichtig, um die Dynamik innerhalb eines Spiels zu validieren, nicht nur das Endergebnis.
+
+12. Karten und Platzverweise
+
+Zusätzlich prüfen:
+
+Gelbe Karten pro Spiel
+rote Karten pro Spiel
+Gelb-Rot pro Spiel
+Karten nach Pressingintensität
+Karten nach Aggressivität
+Heimmannschaft gegen Auswärtsmannschaft
+Tore und xG nach Platzverweis
+durchschnittliche Minute eines Platzverweises
+Anteil Spiele, in denen eine rote Karte das Ergebnis beeinflusst
+
+Besonders nach der Mid-Match-Lineup-Integration sollte sichtbar sein, dass Platzverweise einen realistischen Effekt haben.
+
+13. Wechselqualität
+
+Da Wechsel jetzt dynamisch wirken:
+
+durchschnittliche Wechselminute
+Wechsel pro Team
+positionsgleiche Wechsel
+NP-/FP-Einwechslungen
+Verletzungswechsel
+Wechsel nach Rückstand
+Wechsel nach Führung
+Stärkeänderung durch Wechsel
+Tore durch eingewechselte Spieler
+Assists durch eingewechselte Spieler
+gescheiterte Wechselbedingungen
+Bankspieler doppelt eingewechselt: weiterhin 0
+14. Saisonstreuung und Extremwerte
+
+Über 100 Saisons:
+
+niedrigste und höchste Meisterpunktzahl
+niedrigste und höchste Abstiegsgrenze
+größte Punktedifferenz zwischen Platz 1 und 2
+engster Titelkampf
+höchste Tordifferenz
+schlechteste Tordifferenz
+ungeschlagene Saisons
+Saisons ohne Sieg
+höchste Siegesserie
+längste Niederlagenserie
+
+Das dient weniger dem Balancing, sondern der Plausibilitätskontrolle.
+
+15. Statistische Unsicherheit
+
+Für zentrale Kennzahlen könnten Konfidenzintervalle ausgegeben werden:
+
+Tore/Spiel: 2,694
+95%-Konfidenzintervall: 2,680–2,708
+
+Das zeigt, wie stabil die Messung tatsächlich ist. Bei 30.600 Spielen werden die Intervalle bereits relativ eng sein.
