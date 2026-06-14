@@ -8,6 +8,7 @@ Verwendung:
     python manage.py play_matchday --league <id> --matchday <n> --season <s>
     python manage.py play_matchday --league <id> --matchday <n> --force
     python manage.py play_matchday --league <id> --matchday <n> --dry-run
+    python manage.py play_matchday --league <id> --matchday <n> --skip-regression-check
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -28,6 +29,8 @@ class Command(BaseCommand):
                             help='Bereits gespielte Fixtures neu simulieren (V2-Re-Sim)')
         parser.add_argument('--dry-run', action='store_true', default=False,
                             help='Nur anzeigen, nichts speichern')
+        parser.add_argument('--skip-regression-check', action='store_true', default=False,
+                            help='Regressions-Diff-Pre-Check überspringen')
 
     def handle(self, *args, **options):
         from game.models import (
@@ -53,11 +56,16 @@ class Command(BaseCommand):
         matchday = options['matchday']
         force    = options['force']
         dry_run  = options['dry_run']
+        skip_regression = options['skip_regression_check']
 
         out(f"\nLiga: {league.name} | Spieltag {matchday} | Saison {season}"
             + (' [FORCE]' if force else '')
             + (' [DRY-RUN]' if dry_run else ''))
         out('─' * 60)
+
+        # ── Regressions-Diff Pre-Check ────────────────────────────────────────
+        if not skip_regression:
+            _run_regression_check(self)
 
         # ── Fixtures laden ────────────────────────────────────────────────────
         qs = (
@@ -183,6 +191,60 @@ class Command(BaseCommand):
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
+def _run_regression_check(cmd):
+    """Führt den Regressions-Diff als Pre-Check aus.
+
+    Gibt nur eine Warnung aus — kein Hard-Stop.
+    Wird übersprungen, wenn keine History-Dateien vorhanden sind (Exit 2).
+    """
+    import sys
+    from io import StringIO
+    from pathlib import Path
+
+    out = cmd.stdout.write
+
+    try:
+        scripts_dir = Path(__file__).resolve().parent.parent.parent.parent / 'scripts'
+        sys.path.insert(0, str(scripts_dir))
+        import diff_regression as _dr
+
+        old_path, new_path = _dr._find_two_latest()
+
+        captured = StringIO()
+        real_stdout = sys.stdout
+        sys.stdout = captured
+        try:
+            exit_code = _dr.compare(old_path, new_path)
+        finally:
+            sys.stdout = real_stdout
+
+        report = captured.getvalue()
+
+        if exit_code == 0:
+            out('  [Regression-Check] ✓ Engine stabil — kein Diff-Alarm.\n')
+        else:
+            out(cmd.style.WARNING(
+                '\n⚠  REGRESSIONS-WARNUNG: Match Engine weicht vom letzten Referenz-Lauf ab!\n'
+                '   Simulation wird trotzdem fortgesetzt. Bitte prüfen:\n'
+                '     python scripts/diff_regression.py\n'
+            ))
+            for line in report.splitlines():
+                out(f'   {line}')
+            out('')
+
+    except SystemExit:
+        out('  [Regression-Check] Keine History-Daten — Pre-Check übersprungen.\n')
+    except Exception as exc:
+        out(cmd.style.WARNING(
+            f'  [Regression-Check] Fehler beim Pre-Check ({exc}) — wird übersprungen.\n'
+        ))
+    finally:
+        try:
+            sys.path.remove(str(scripts_dir))
+        except (ValueError, UnboundLocalError):
+            pass
+
 
 def _update_standings(league, season, club, gf, ga, win, draw):
     """Aktualisiert oder erstellt einen LeagueStandings-Eintrag für einen Verein."""
