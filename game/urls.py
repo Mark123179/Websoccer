@@ -91,6 +91,7 @@ from .views_creator import (
     creator_competition_create,
     creator_cup_generate_dummies,
     creator_cup_season_create,
+    creator_cup_season_reset,
     creator_cup_draw_first_round,
     creator_cup_simulate_round,
     creator_cup_advance,
@@ -301,6 +302,7 @@ urlpatterns = [
     # Pokal-Saison + Auslosung
     path('creator/leagues/<int:league_id>/cup/generate-dummies/', creator_cup_generate_dummies, name='creator_cup_generate_dummies'),
     path('creator/leagues/<int:league_id>/cup/season/create/', creator_cup_season_create, name='creator_cup_season_create'),
+    path('creator/leagues/<int:league_id>/cup/season/<int:cup_season_id>/reset/', creator_cup_season_reset, name='creator_cup_season_reset'),
     path('creator/leagues/<int:league_id>/cup/season/<int:cup_season_id>/draw/', creator_cup_draw_first_round, name='creator_cup_draw_first_round'),
     path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/simulate/', creator_cup_simulate_round, name='creator_cup_simulate_round'),
     path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/advance/', creator_cup_advance, name='creator_cup_advance'),

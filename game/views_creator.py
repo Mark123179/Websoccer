@@ -2575,6 +2575,45 @@ def creator_cup_generate_dummies(request, league_id):
     return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
 
 
+# ── Pokalsaison zurücksetzen ──────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_season_reset(request, league_id, cup_season_id):
+    """Löscht eine Pokalsaison vollständig (Runden, Fixtures, Teilnehmer).
+
+    Zwei Modi via POST-Parameter 'mode':
+    - 'rounds'  → nur Runden + Fixtures löschen, Saison + Teilnehmer bleiben
+    - 'full'    → gesamte CupSeason inkl. Teilnehmer löschen (Default)
+    """
+    from .models import CupSeason, CupRound, CupFixture
+
+    league     = get_object_or_404(League, id=league_id)
+    cup_season = get_object_or_404(CupSeason, pk=cup_season_id, competition=league)
+    mode       = request.POST.get('mode', 'full')
+
+    if mode == 'rounds':
+        n = CupRound.objects.filter(cup_season=cup_season).count()
+        CupRound.objects.filter(cup_season=cup_season).delete()
+        cup_season.status = CupSeason.STATUS_PENDING
+        cup_season.winner_club = None
+        cup_season.save(update_fields=['status', 'winner_club'])
+        messages.success(
+            request,
+            f'Saison {cup_season.season}: {n} Runde(n) gelöscht — '
+            f'Teilnehmer und Saison bleiben erhalten.'
+        )
+    else:
+        season_label = cup_season.season
+        cup_season.delete()
+        messages.success(
+            request,
+            f'Pokalsaison {season_label} vollständig gelöscht.'
+        )
+
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
 # ── Pokalsaison anlegen ───────────────────────────────────────────────────────
 
 @login_required

@@ -258,11 +258,27 @@
       <h2>Saison {{ cs.season }}
         <span class="creator-tab-badge" style="{% if cs.status == 'completed' %}background:#00ff8820;color:#00ff88;{% elif cs.status == 'running' %}background:#00d4ff20;color:#00d4ff;{% else %}background:#ffcc4420;color:#ffcc44;{% endif %}">{{ cs.get_status_display }}</span>
       </h2>
-      <div style="display:flex;gap:.5rem;align-items:center;">
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
         <a class="creator-btn creator-btn-icon" href="{% url 'cup_tree' league_id=league.pk season=cs.season %}" target="_blank">🌲 Pokalbaum</a>
         {% if cs.winner_club %}
         <span style="color:#ffcc44;font-size:.82rem;">🏆 {{ cs.winner_club.name }}</span>
         {% endif %}
+        <!-- Runden zurücksetzen (Teilnehmer bleiben) -->
+        {% if cs.rounds.count %}
+        <form method="post" action="{% url 'creator_cup_season_reset' league_id=league.pk cup_season_id=cs.pk %}" style="display:inline;"
+              onsubmit="return confirm('Alle Runden und Spiele der Saison {{ cs.season }} löschen?\n\nTeilnehmer bleiben erhalten, die Saison kann neu ausgelost werden.');">
+          {% csrf_token %}
+          <input type="hidden" name="mode" value="rounds">
+          <button type="submit" class="creator-btn creator-btn-icon" style="font-size:.74rem;color:#ffaa44;border-color:#ffaa4440;">↺ Runden zurücksetzen</button>
+        </form>
+        {% endif %}
+        <!-- Saison vollständig löschen -->
+        <form method="post" action="{% url 'creator_cup_season_reset' league_id=league.pk cup_season_id=cs.pk %}" style="display:inline;"
+              onsubmit="return confirm('Pokalsaison {{ cs.season }} VOLLSTÄNDIG löschen?\n\nAlle Runden, Spiele und Teilnehmer werden entfernt.\nDiese Aktion kann nicht rückgängig gemacht werden.');">
+          {% csrf_token %}
+          <input type="hidden" name="mode" value="full">
+          <button type="submit" class="creator-btn creator-btn-icon" style="font-size:.74rem;color:#ff4455;border-color:#ff445540;">🗑 Saison löschen</button>
+        </form>
       </div>
     </div>
     <div class="creator-card-body">
