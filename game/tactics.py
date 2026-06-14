@@ -78,7 +78,6 @@ DEFAULT_FORMATION = {
 
 DEFAULT_HALF_TACTIC = {
     'orientation': 50,
-    'defense': 'standard',
     'midfield': 'standard',
     'attack': 'standard',
     'effort': 'normal',
@@ -99,7 +98,6 @@ STANDARD_FIELDS = [
 ]
 
 HALF_TACTIC_FIELDS = [
-    ('defense', 'Abwehr'),
     ('midfield', 'Mittelfeld'),
     ('attack', 'Angriff'),
     ('effort', 'Einsatz'),
