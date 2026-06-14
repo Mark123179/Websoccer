@@ -2228,20 +2228,21 @@ def simulate_match(
         'away_compiled_tactic':  sim.get('away_compiled_tactic', {}),
         'home_zone_strengths':   sim.get('home_zone_strengths', {}),
         'away_zone_strengths':   sim.get('away_zone_strengths', {}),
-        # Wechsel-Quellen-Priorirät:
+        # Wechsel-Quellen-Priorität:
         #   1. Taktik hat geplante Wechsel → immer sim-Events (auch wenn leer, weil
         #      alle Bedingungen verworfen wurden — kein Phantom-Fallback)
         #   2. Keine geplanten Wechsel, aber sim liefert Ereignisse (Verletzungswechsel)
         #      → sim-Events
-        #   3. Keine sim-Events und keine geplanten Wechsel → Fallback-Generator
+        #   3. Gemanagte Vereine → nur sim-Events (kein KI-Fallback; Trainer ist verantwortlich)
+        #   4. Trainerlose Vereine ohne sim-Events → Fallback-Generator (2–3 KI-Wechsel)
         'home_substitutions': (
             sim['h_sim_sub_events']
-            if getattr(home_tactic, 'substitutions', None) or sim['h_sim_sub_events']
+            if getattr(home_tactic, 'substitutions', None) or sim['h_sim_sub_events'] or home_club.managed_by_id is not None
             else _generate_substitution_events(home_tactic, home_team, 'home', sim.get('goal_events', []))
         ),
         'away_substitutions': (
             sim['a_sim_sub_events']
-            if getattr(away_tactic, 'substitutions', None) or sim['a_sim_sub_events']
+            if getattr(away_tactic, 'substitutions', None) or sim['a_sim_sub_events'] or away_club.managed_by_id is not None
             else _generate_substitution_events(away_tactic, away_team, 'away', sim.get('goal_events', []))
         ),
         'card_events':           h_card_events + a_card_events,
