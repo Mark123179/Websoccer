@@ -31,7 +31,7 @@ from collections import defaultdict
 from django.core.management.base import BaseCommand
 from game.match_engine import (
     _simulate_match_minutes, MAX_SUBSTITUTIONS, _generate_injury_events,
-    compute_player_ratings, _build_minutes_played_map,
+    compute_player_ratings, _build_minutes_played_map, _slot_to_group,
 )
 
 
@@ -493,8 +493,17 @@ def _check_ticker_integrity(n_samples: int = 200) -> dict:
 
 def _build_reg_players(team_dict: dict, goal_evts: list, side: str,
                         sub_evts: list, dis_evts: list) -> list[dict]:
-    """Minimale Spieler-Rows für compute_player_ratings() aus Regressionssimdaten."""
-    from game.match_engine import _rating_pos_group
+    """Minimale Spieler-Rows für compute_player_ratings() aus Regressionssimdaten.
+
+    Liest Positionen aus team_dict['lineup'] (nicht aus 'players', wo sie fehlen).
+    Berücksichtigt auch eingewechselte Bank-Spieler.
+    """
+    # pos_map: pid → (position_code, group_name) — aus 'lineup' lesen
+    pos_map: dict[int, tuple[str, str]] = {}
+    for li in team_dict.get('lineup', []):
+        pos_map[li['player_id']] = (li['position'], li['group'])
+
+    # Tore/Assists
     goal_map: dict[int, dict] = {}
     for e in (goal_evts or []):
         if e.get('team') == side:
@@ -507,25 +516,26 @@ def _build_reg_players(team_dict: dict, goal_evts: list, side: str,
                 goal_map.setdefault(aid, {'goals': 0, 'assists': 0})
                 goal_map[aid]['assists'] += 1
 
-    mmap = _build_minutes_played_map(sub_evts or [])
-    sub_pids = {e['in'] for e in (sub_evts or []) if e.get('in')}
+    mmap    = _build_minutes_played_map(sub_evts or [])
+    sub_pids = {e['in']  for e in (sub_evts or []) if e.get('in')}
 
     dis_pids_yr  = {e['player_id'] for e in (dis_evts or [])
                     if e.get('club_side') == side and e.get('card_type') == 'yellow_red'}
     dis_pids_red = {e['player_id'] for e in (dis_evts or [])
                     if e.get('club_side') == side and e.get('card_type') != 'yellow_red'}
 
-    rows = []
+    bench_data = team_dict.get('bench_player_data', {}) or {}
+    rows: list[dict] = []
+
+    # ── Starter ────────────────────────────────────────────────────────────────
     for p in team_dict.get('players', []):
         pid = p['id']
-        mp_val = mmap.get(pid)
-        if mp_val is None:
-            mp_val = 90
+        pos, grp = pos_map.get(pid, ('ZM', 'midfield'))
         rows.append({
             'id': pid,
             'name': p.get('name', str(pid)),
-            'position': p.get('position', 'ZM'),
-            'group': p.get('group', 'midfield'),
+            'position': pos,
+            'group': grp,
             'goals': goal_map.get(pid, {}).get('goals', 0),
             'assists': goal_map.get(pid, {}).get('assists', 0),
             'yellow_cards': 0,
@@ -534,9 +544,34 @@ def _build_reg_players(team_dict: dict, goal_evts: list, side: str,
             'own_goal': 0,
             'penalty_missed': 0,
             'penalty_saved': 0,
-            'minutes_played': mp_val,
-            'is_sub': pid in sub_pids,
+            'minutes_played': mmap.get(pid, 90),
+            'is_sub': False,
         })
+
+    # ── Eingewechselte Bank-Spieler ────────────────────────────────────────────
+    for pid in sub_pids:
+        bdata = bench_data.get(pid)
+        if bdata is None:
+            continue
+        bpos = (bdata.get('main_positions') or ['ZM'])[0]
+        bgrp = _slot_to_group(bpos)
+        rows.append({
+            'id': pid,
+            'name': bdata.get('name', str(pid)),
+            'position': bpos,
+            'group': bgrp,
+            'goals': goal_map.get(pid, {}).get('goals', 0),
+            'assists': goal_map.get(pid, {}).get('assists', 0),
+            'yellow_cards': 0,
+            'yellow_red_cards': 1 if pid in dis_pids_yr else 0,
+            'red_cards': 1 if pid in dis_pids_red else 0,
+            'own_goal': 0,
+            'penalty_missed': 0,
+            'penalty_saved': 0,
+            'minutes_played': mmap.get(pid, 0),
+            'is_sub': True,
+        })
+
     return rows
 
 
@@ -1668,45 +1703,65 @@ class Command(BaseCommand):
 
         # ── L: SPIELERNOTEN V3 ────────────────────────────────────────────────
         w(f'\n{HR}'); w('  L  SPIELERNOTEN V3'); w(HR)
+        l_failures: list[str] = []
+        l_warnings: list[str] = []
         if rat_all:
             r_mean   = _mean(rat_all)
             r_median = _median(rat_all)
-            rat_all_sorted = sorted(rat_all)
             n_rat = len(rat_all)
             pct_1  = sum(1 for r in rat_all if r <= 1.0) / n_rat * 100
             pct_5  = sum(1 for r in rat_all if r >= 5.0) / n_rat * 100
             r_best = min(rat_all)
             r_worst= max(rat_all)
+
+            mean_ok = 2.9 <= r_mean <= 3.2
+            mean_status = '✓' if mean_ok else '⚠ WARN'
+            if not mean_ok:
+                l_warnings.append(f'Gesamt-Ø {r_mean:.4f} außerhalb 2.9–3.2')
+
+            pct1_ok = pct_1 <= 2.0
+            pct1_status = '✓' if pct1_ok else '⚠ WARN'
+            if not pct1_ok:
+                l_warnings.append(f'Note-1.0-Anteil {pct_1:.2f}% > 2%-Ziel')
+
+            pct5_ok = pct_5 <= 0.5
+            pct5_status = '✓' if pct5_ok else '⚠ WARN'
+            if not pct5_ok:
+                l_warnings.append(f'Note-≥5.0-Anteil {pct_5:.2f}% > 0.5% (Ziel ≈0%)')
+
             w(f'  Datenbasis           : {n_rat} Spieler-Einsätze ({N} Spiele)')
-            w(f'  Gesamt-Ø             : {r_mean:.4f}  (Ziel: 2.9–3.2)')
+            w(f'  Gesamt-Ø             : {r_mean:.4f}  (Ziel 2.9–3.2)  {mean_status}')
             w(f'  Median               : {r_median:.4f}')
             w(f'  Beste Note           : {r_best:.1f}   Schlechteste: {r_worst:.1f}')
-            w(f'  Note 1.0 (≤1.0)      : {pct_1:.2f}%  (Ziel ≤2%)')
-            w(f'  Note ≥5.0            : {pct_5:.2f}%  (Ziel ≈0%)')
+            w(f'  Note ≤1.0            : {pct_1:.2f}%  (Ziel ≤2%)  {pct1_status}')
+            w(f'  Note ≥5.0            : {pct_5:.2f}%  (Ziel ≈0%)  {pct5_status}')
+
             # Sieger vs. Verlierer
             wr_mean = _mean(rat_winner) if rat_winner else float('nan')
             lr_mean = _mean(rat_loser)  if rat_loser  else float('nan')
             dr_mean = _mean(rat_draw)   if rat_draw   else float('nan')
-            diff_wl = wr_mean - lr_mean
-            wl_ok   = diff_wl <= -0.6
-            w(f'\n  Ø nach Spielausgang:')
-            w(f'    Sieger  : {wr_mean:.4f}  ({len(rat_winner)} Eintr.)')
-            w(f'    Verlierer: {lr_mean:.4f}  ({len(rat_loser)} Eintr.)')
-            w(f'    Remis   : {dr_mean:.4f}  ({len(rat_draw)} Eintr.)')
-            w(f'    Δ (Sieger−Verlierer): {diff_wl:+.4f}  '
-              f'(Ziel ≤ −0.6: {"✓" if wl_ok else "⚠ FAIL"})')
+            diff_wl = wr_mean - lr_mean if (rat_winner and rat_loser) else float('nan')
+            wl_ok   = (not math.isnan(diff_wl)) and diff_wl <= -0.6
+            wl_status = '✓' if wl_ok else '⚠ FAIL'
             if not wl_ok:
-                pass  # non-fatal warning already shown above
+                l_failures.append(f'Sieger−Verlierer-Δ {diff_wl:+.4f} > −0.6 (FAIL)')
+            w(f'\n  Ø nach Spielausgang:')
+            w(f'    Sieger   : {wr_mean:.4f}  ({len(rat_winner)} Eintr.)')
+            w(f'    Verlierer: {lr_mean:.4f}  ({len(rat_loser)} Eintr.)')
+            w(f'    Remis    : {dr_mean:.4f}  ({len(rat_draw)} Eintr.)')
+            w(f'    Δ (Sieger−Verlierer): {diff_wl:+.4f}  (Ziel ≤ −0.6)  {wl_status}')
+
             # Scorer / Assister / Subs
             sc_mean = _mean(rat_scorer)   if rat_scorer   else float('nan')
             as_mean = _mean(rat_assister) if rat_assister else float('nan')
             sb_mean = _mean(rat_sub)      if rat_sub      else float('nan')
-            w(f'\n  Scorer-Ø             : {sc_mean:.4f}  ({len(rat_scorer)} Tore)')
-            w(f'  Assistent-Ø          : {as_mean:.4f}  ({len(rat_assister)} Assists)')
-            w(f'  Einwechslung-Ø       : {sb_mean:.4f}  ({len(rat_sub)} Einsätze)')
+            w(f'\n  Scorer-Ø             : {sc_mean:.4f}  ({len(rat_scorer)} Eintr.)')
+            w(f'  Assistent-Ø          : {as_mean:.4f}  ({len(rat_assister)} Eintr.)')
+            w(f'  Einwechslung-Ø       : {sb_mean:.4f}  ({len(rat_sub)} Eintr.)')
+
             # Positionsgruppen
             w(f'\n  Ø nach Positionsgruppe:')
-            pg_means = {}
+            pg_means: dict[str, float] = {}
             for pg_key in ('GK', 'DEF', 'DM', 'MID', 'FWD'):
                 pg_list = rat_by_pos[pg_key]
                 pg_means[pg_key] = _mean(pg_list) if pg_list else float('nan')
@@ -1715,10 +1770,25 @@ class Command(BaseCommand):
             if pg_vals:
                 pg_spread = max(pg_vals) - min(pg_vals)
                 pos_ok = pg_spread <= 0.20
+                pos_status = '✓' if pos_ok else '⚠ WARN'
+                if not pos_ok:
+                    l_warnings.append(f'Positions-Spread {pg_spread:.4f} > 0.20')
                 w(f'    Positionsabweichung max−min : {pg_spread:.4f}  '
-                  f'(Ziel ≤0.20: {"✓" if pos_ok else "⚠"})')
+                  f'(Ziel ≤0.20)  {pos_status}')
+
+            # Gesamtbefund Sektion L
+            w(f'\n  Sektion-L-Befund:')
+            if l_failures:
+                for msg in l_failures:
+                    w(f'    ✗ FAIL  {msg}')
+            if l_warnings:
+                for msg in l_warnings:
+                    w(f'    ⚠ WARN  {msg}')
+            if not l_failures and not l_warnings:
+                w('    ✓ Alle Noten-Ziele erfüllt.')
         else:
             w('  Keine Noten-Daten gesammelt.')
+            l_warnings.append('Keine Noten-Daten (Sektion L leer)')
 
         w(f'\n{HR}\n')
 

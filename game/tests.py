@@ -4476,6 +4476,19 @@ class PlayerRatingsV3Tests(TestCase):
             self.assertEqual(a['rating'], b['rating'],
                              f"Spieler {i}: Note {a['rating']} ≠ {b['rating']} (nicht deterministisch)")
 
+    def test_jitter_neutralitaet_verschiedene_spiele(self):
+        """Gleicher Spieler-PID in verschiedenen Matches → andere Note (match-abhängiger Jitter)."""
+        p = _p(42, 'ZM', 'midfield', mp=90)
+        # Gleiches Spielergebnis, gleiche Stärken — nur Match-IDs verschieden
+        r1 = _make_rating_result(home_goals=0, away_goals=0, home_xg=0.8, away_xg=0.8,
+                                  home_club_id=1, away_club_id=2, home_players=[p], away_players=[])
+        r2 = _make_rating_result(home_goals=0, away_goals=0, home_xg=0.8, away_xg=0.8,
+                                  home_club_id=5, away_club_id=9, home_players=[p], away_players=[])
+        rv1 = r1['home_ratings'][0]['rating']
+        rv2 = r2['home_ratings'][0]['rating']
+        self.assertNotEqual(rv1, rv2,
+                            f"Jitter muss match-abhängig sein: beide Noten = {rv1} (Fehler)")
+
     def test_spiegeltest_symmetrie(self):
         """Heimteam und Auswärtsteam mit gleichen Spielern tauschen → Noten spiegeln sich."""
         h_players = [_p(i, 'ZM', 'midfield') for i in range(1, 6)]
