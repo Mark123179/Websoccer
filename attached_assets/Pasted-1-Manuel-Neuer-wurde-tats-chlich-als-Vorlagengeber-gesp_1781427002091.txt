@@ -1,0 +1,77 @@
+1. Manuel Neuer wurde tatsächlich als Vorlagengeber gespeichert
+
+Dann wählt die Assist-Logik offenbar aus allen aktiven Spielern, einschließlich Torwart. Ein Torwartassist darf zwar vorkommen, aber nur selten und über passende Aktionen:
+
+langer Abschlag
+weiter Abwurf
+langer Pass hinter die Abwehr
+schneller Spielaufbau nach einer Parade
+
+Nicht als:
+
+Hereingabe von der rechten oder linken Seite
+Flanke von der Grundlinie
+Dribbling im Strafraum
+Steckpass aus dem offensiven Mittelfeld
+2. Nur der Kommentar ist falsch
+
+Falls ein anderer Spieler den Assist gegeben hat, hat ticker_commentary.py möglicherweise zufällig Manuel Neuer aus dem aktiven Spielerpool gezogen. Dann ist die aktive Spielerfilterung zwar korrekt, aber es fehlt eine Positionsfilterung nach Aktionsart.
+
+Richtige Lösung
+
+Die Kommentare sollten Spieler nicht mehr nur nach „aktiv oder nicht aktiv“ auswählen, sondern nach ihrer Position.
+
+Beispielsweise:
+
+CROSS_POSITIONS = {
+    "LV", "RV", "LOV", "ROV",
+    "LM", "RM", "LOM", "ROM",
+    "LF", "RF"
+}
+
+CREATIVE_PASS_POSITIONS = {
+    "DM", "ZM", "OM",
+    "LM", "RM", "LOM", "ROM"
+}
+
+GOALKEEPER_POSITIONS = {"TW"}
+
+Bei einer flachen Hereingabe darf der Vorlagengeber nur aus CROSS_POSITIONS stammen.
+
+Für Torhüter braucht es einen eigenen Kommentar-Pool:
+
+Manuel Neuer schaltet schnell und schlägt den Ball weit nach vorne —
+Luis Díaz setzt sich ab und trifft zum 2:0.
+Manuel Neuer eröffnet das Spiel mit einem präzisen langen Pass.
+Luis Díaz läuft frei auf das Tor zu und vollendet.
+Zusätzlich notwendige Absicherung
+
+Vor der Textgenerierung sollte geprüft werden:
+
+if assister_position == "TW":
+    commentary_pool = GOALKEEPER_ASSIST_COMMENTS
+elif event_variant == "cross":
+    commentary_pool = CROSS_ASSIST_COMMENTS
+else:
+    commentary_pool = STANDARD_ASSIST_COMMENTS
+
+Außerdem würde ich einen Regressionstest ergänzen:
+
+def test_goalkeeper_never_uses_cross_commentary():
+    text = build_goal_comment(
+        scorer="Luis Díaz",
+        assister="Manuel Neuer",
+        assister_position="TW",
+    )
+
+    forbidden = [
+        "Hereingabe",
+        "Flanke",
+        "Grundlinie",
+        "von der rechten Seite",
+        "von der linken Seite",
+    ]
+
+    assert not any(term in text for term in forbidden)
+
+Entscheidend ist zunächst zu prüfen, ob Manuel Neuer im gespeicherten Torevent wirklich als assister eingetragen war. Falls ja, müssen Assist-Auswahl und Kommentarlogik korrigiert werden. Falls nein, reicht eine Korrektur der Spieler- und Textauswahl im Ticker.

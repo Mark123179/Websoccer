@@ -247,27 +247,40 @@ def _ci95(lst: list[float]) -> tuple[float, float]:
     return (m - margin, m + margin)
 
 
-def _bootstrap_spearman_ci(
-    str_ranks: list[float],
-    pos_by_str: list[float],
+def _bootstrap_spearman_game_ci(
+    game_records: list[tuple[int, float, float]],
+    club_strengths: dict[int, float],
     n_boot: int = 500,
+    sample_size: int = 5000,
     rng: random.Random | None = None,
 ) -> tuple[float, float]:
-    """Bootstrap-CI für Spearman-Korrelation (500 Stichproben à n//2 Einträge)."""
+    """Bootstrap-CI für Spearman (500× Subsampling à 5000 Spielen, game-level).
+
+    game_records: list of (club_id, pts_this_game, strength)
+    Jede Iteration: ziehe sample_size Spiele, berechne per-Club Ø pts,
+    korreliere mit Stärke-Wert → Spearman.
+    """
     _rng = rng or random.Random(42)
-    n = len(str_ranks)
-    if n < 4:
-        return (0.0, 0.0)
-    k = max(4, n // 2)
+    n = len(game_records)
+    if n < sample_size:
+        sample_size = max(10, n // 2)
+    clubs_by_str = sorted(club_strengths.keys(), key=lambda c: -club_strengths[c])
+    str_vals = [club_strengths[c] for c in clubs_by_str]
     vals = []
-    for _ in range(n_boot):
-        idxs = [_rng.randint(0, n - 1) for _ in range(k)]
-        xs = [str_ranks[i] for i in idxs]
-        ys = [pos_by_str[i] for i in idxs]
-        vals.append(_spearman(xs, ys))
+    for _b in range(n_boot):
+        club_pts: dict[int, list] = {c: [] for c in club_strengths}
+        for _s in range(sample_size):
+            cid, pts, _str = game_records[_rng.randint(0, n - 1)]
+            club_pts[cid].append(pts)
+        avg_pts = [_mean(club_pts[c]) if club_pts[c] else 0.0 for c in clubs_by_str]
+        if all(v == avg_pts[0] for v in avg_pts):
+            continue
+        vals.append(_spearman(str_vals, avg_pts))
+    if not vals:
+        return (0.0, 0.0)
     vals.sort()
-    lo_i = int(0.025 * n_boot)
-    hi_i = int(0.975 * n_boot) - 1
+    lo_i = int(0.025 * len(vals))
+    hi_i = max(lo_i, int(0.975 * len(vals)) - 1)
     return (vals[lo_i], vals[hi_i])
 
 
@@ -513,7 +526,7 @@ class Command(BaseCommand):
             all_metrics.append((seed, metrics))
 
         if len(seeds) > 1:
-            self._print_stability_table(all_metrics)
+            self._print_stability_table(all_metrics, out_dir=out_dir)
 
     # ── Liga-Modus ────────────────────────────────────────────────────────────
 
@@ -630,6 +643,11 @@ class Command(BaseCommand):
         season_champion_pts: list[int] = []
         season_relegation_pts: list[int] = []
         season_title_delta: list[int] = []
+        season_max_winless_all: list[int] = []   # max winless streak any club per season
+        season_biggest_home_def: list[int] = []  # biggest home defeat (goal diff) per season
+
+        # K: game-level records für Spearman-Bootstrap
+        game_records: list[tuple[int, float, float]] = []  # (cid, pts, strength)
 
         # ── Saisonschleife ────────────────────────────────────────────────────
         for season_i in range(n_seas):
@@ -646,6 +664,11 @@ class Command(BaseCommand):
                                 for c in CLUBS}
             formation_assign = {c['id']: _FORMATION_KEYS[season_rng.randint(0, len(_FORMATION_KEYS)-1)]
                                 for c in CLUBS}
+
+            # J: Saison-Streak-Tracker
+            cur_winless: dict[int, int] = {c['id']: 0 for c in CLUBS}
+            max_winless: dict[int, int] = {c['id']: 0 for c in CLUBS}
+            season_max_home_def = 0
 
             for md_i, matchday in enumerate(SCHEDULE):
                 # Frische-Kurve: Ø Frische aller Stammelf vor Spieltag
@@ -814,9 +837,25 @@ class Command(BaseCommand):
                     s_a['gf'] += ag; s_a['ga'] += hg
                     s_h['xgf'] += hxg; s_h['xga'] += axg
                     s_a['xgf'] += axg; s_a['xga'] += hxg
-                    if hg > ag:    s_h['pts'] += 3; s_h['won'] += 1
-                    elif hg == ag: s_h['pts'] += 1; s_a['pts'] += 1
-                    else:          s_a['pts'] += 3; s_a['won'] += 1
+                    if hg > ag:    s_h['pts'] += 3; s_h['won'] += 1; _pts_h = 3; _pts_a = 0
+                    elif hg == ag: s_h['pts'] += 1; s_a['pts'] += 1; _pts_h = 1; _pts_a = 1
+                    else:          s_a['pts'] += 3; s_a['won'] += 1; _pts_h = 0; _pts_a = 3
+
+                    # ── J+K: Winless-Streaks & Game-Records ───────────────────
+                    game_records.append((h_id, float(_pts_h), h_club['strength']))
+                    game_records.append((a_id, float(_pts_a), a_club['strength']))
+                    if _pts_h > 0:  # home won or drew
+                        cur_winless[h_id] = 0
+                    else:
+                        cur_winless[h_id] += 1
+                    if _pts_a > 0:  # away won or drew
+                        cur_winless[a_id] = 0
+                    else:
+                        cur_winless[a_id] += 1
+                    max_winless[h_id] = max(max_winless[h_id], cur_winless[h_id])
+                    max_winless[a_id] = max(max_winless[a_id], cur_winless[a_id])
+                    if ag > hg:
+                        season_max_home_def = max(season_max_home_def, ag - hg)
 
                     # ── D: Wechsel ────────────────────────────────────────────
                     for side_evts, side_team, side_form_key in (
@@ -862,9 +901,9 @@ class Command(BaseCommand):
                                 inj_days_sum += days; inj_days_n += 1
                                 inj_days_list.append(days)
 
-                    for pm_team, pm_fr_arr in (
-                        (home_team, fr_map[h_id]),
-                        (away_team, fr_map[a_id]),
+                    for pm_team, pm_side_key in (
+                        (home_team, 'home'),
+                        (away_team, 'away'),
                     ):
                         # Build freshness map for injury bucket tracking
                         pid_fr_map = {p['id']: p.get('freshness', 80)
@@ -877,7 +916,7 @@ class Command(BaseCommand):
                             elif fr_val >= 60: inj_fr_bucket['60-74'][1] += 1
                             else:              inj_fr_bucket['<60'][1]    += 1
 
-                        pm_evts = _generate_injury_events(pm_team['players'], 'home')
+                        pm_evts = _generate_injury_events(pm_team['players'], pm_side_key)
                         for evt in pm_evts:
                             days = evt.get('days', 5)
                             inj_postmatch += 1
@@ -999,6 +1038,10 @@ class Command(BaseCommand):
                 str_ = CLUBS[CID_INDEX[cid]]['strength']
                 tactic_season[tk].append((str_, ss['pts']))
                 formation_season[fk].append((str_, ss['pts']))
+
+            # J: Saison-Extremwerte speichern
+            season_max_winless_all.append(max(max_winless.values()) if max_winless else 0)
+            season_biggest_home_def.append(season_max_home_def)
 
         # ── Ende Simulationsschleife ──────────────────────────────────────────
         elapsed = time.time() - t0
@@ -1418,6 +1461,14 @@ class Command(BaseCommand):
             w(f'    Knappe Titel (≤2 Pkt Vorsprung): '
               f'{sum(1 for d in season_title_delta if d <= 2)}×  '
               f'({_pct(sum(1 for d in season_title_delta if d <= 2), n_seas)})')
+        if season_max_winless_all:
+            w(f'  Spiele ohne Sieg – max. Siegloser-Serie (bester Wert pro Saison):')
+            w(f'    Ø   : {_mean(season_max_winless_all):.1f}')
+            w(f'    Min : {min(season_max_winless_all)}  Max : {max(season_max_winless_all)}  σ : {_std(season_max_winless_all):.1f}')
+        if season_biggest_home_def:
+            w(f'  Höchste Heimniederlage (Tordifferenz) pro Saison:')
+            w(f'    Ø   : {_mean(season_biggest_home_def):.1f}')
+            w(f'    Min : {min(season_biggest_home_def)}  Max : {max(season_biggest_home_def)}  σ : {_std(season_biggest_home_def):.1f}')
 
         # ── K: KONFIDENZINTERVALLE ────────────────────────────────────────────
         w(f'\n{HR}'); w('  K  KONFIDENZINTERVALLE (95%-KI)'); w(HR)
@@ -1426,12 +1477,13 @@ class Command(BaseCommand):
         ci_inj  = (inj_total_sum/N - 1.96*math.sqrt((inj_total_sum/N)/N),
                    inj_total_sum/N + 1.96*math.sqrt((inj_total_sum/N)/N))
         boot_rng = random.Random(seed0 + 1)
-        ci_spear = _bootstrap_spearman_ci(str_ranks_all, avg_pos_by_str, 500, boot_rng)
+        club_strengths_map = {c['id']: c['strength'] for c in CLUBS}
+        ci_spear = _bootstrap_spearman_game_ci(game_records, club_strengths_map, 500, 5000, boot_rng)
         w(f'  Tore/Spiel     : {gpg:.4f}  95%-KI [{ci_gpg[0]:.4f}, {ci_gpg[1]:.4f}]')
         w(f'  Remis%         : {drw:.4f}  95%-KI [{ci_drw[0]:.4f}, {ci_drw[1]:.4f}]')
         w(f'  Verletz./Spiel : {inj_total_sum/N:.4f}  95%-KI [{ci_inj[0]:.4f}, {ci_inj[1]:.4f}]')
-        w(f'  Spearman(str→pos): {r_str_pos:.4f}  Bootstrap 95%-KI [{ci_spear[0]:.4f}, {ci_spear[1]:.4f}]')
-        w(f'  (n={N} Spiele, Bootstrap 500 Subsampling à {N_CLUBS//2} Clubs)')
+        w(f'  Spearman(str→pts): {r_str_pos:.4f}  Bootstrap 95%-KI [{ci_spear[0]:.4f}, {ci_spear[1]:.4f}]')
+        w(f'  (n={N} Spiele, Bootstrap 500× Subsampling à 5000 Spiele aus {len(game_records)} Einträgen)')
 
         w(f'\n{HR}\n')
 
@@ -1444,7 +1496,8 @@ class Command(BaseCommand):
 
     # ── Multi-Seed Stabilitätstabelle ────────────────────────────────────────
 
-    def _print_stability_table(self, all_metrics: list[tuple[int, dict]]):
+    def _print_stability_table(self, all_metrics: list[tuple[int, dict]],
+                               out_dir: str = ''):
         w  = self.stdout.write
         HR = '─' * 72
         w(f'\n{HR}')
@@ -1466,6 +1519,8 @@ class Command(BaseCommand):
 
         all_ok = True
         STAB_TOL = 0.05  # 5% Abweichung vom Median = ALARM
+        stability_data: dict = {}
+        metrics_series: dict = {}
         for key, lbl in zip(keys, labels):
             vals = [m.get(key, 0.0) for _, m in all_metrics]
             mn = min(vals); mx = max(vals); delta = mx - mn
@@ -1479,9 +1534,29 @@ class Command(BaseCommand):
                 row += f'  {v:>8.4f}'
             row += f'  {mn:>8.4f}  {mx:>8.4f}  {delta:>6.4f}  {100*pct_delta:>6.1f}%  {status}'
             w(row)
+            metrics_series[key] = [round(v, 6) for v in vals]
+            stability_data[key] = {
+                'min': round(mn, 6), 'max': round(mx, 6),
+                'delta': round(delta, 6),
+                'delta_pct': round(100 * pct_delta, 3),
+                'ok': pct_delta <= STAB_TOL,
+            }
 
         w(f'\n  Gesamtbefund: {"✓ STABIL (alle Metriken ≤5% Abweichung)" if all_ok else "⚠ INSTABIL — mindestens eine Metrik > 5%"}')
         w(f'{HR}\n')
+
+        # seeds_stability.json schreiben
+        json_payload = {
+            'seeds': [seed for seed, _ in all_metrics],
+            'metrics': metrics_series,
+            'stability': stability_data,
+        }
+        target_dir = out_dir if out_dir else '.'
+        os.makedirs(target_dir, exist_ok=True)
+        json_path = os.path.join(target_dir, 'seeds_stability.json')
+        with open(json_path, 'w') as _f:
+            json.dump(json_payload, _f, indent=2)
+        w(f'  seeds_stability.json → {json_path}\n')
 
     # ── Export ────────────────────────────────────────────────────────────────
 
