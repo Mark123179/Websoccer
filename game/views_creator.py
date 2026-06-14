@@ -2002,6 +2002,19 @@ def creator_league_edit(request, league_id):
             spielplan_total_played = sum(b['played'] for b in spielplan_matchdays)
             spielplan_total_matchdays = len(spielplan_matchdays)
 
+    cup_seasons = []
+    all_leagues = []
+    if active_tab == 'pokal' and league.is_cup:
+        from .models import CupSeason
+        cup_seasons = list(
+            CupSeason.objects
+            .filter(competition=league)
+            .order_by('-season')
+            .prefetch_related('participants', 'rounds__fixtures__home_club', 'rounds__fixtures__away_club', 'rounds__fixtures__winner_club')
+            .select_related('winner_club')
+        )
+        all_leagues = list(League.objects.order_by('name'))
+
     return render(request, 'creator/league_edit.html', {
         'league': league,
         'clubs': clubs,
@@ -2018,6 +2031,8 @@ def creator_league_edit(request, league_id):
         'confirm_reset_season': confirm_reset_season,
         'confirm_reset_params': confirm_reset_params,
         'today_iso': date.today().isoformat(),
+        'cup_seasons': cup_seasons,
+        'all_leagues': all_leagues,
     })
 
 
@@ -2488,7 +2503,227 @@ def creator_sofifa_import(request):
     return render(request, 'creator/sofifa_import.html', ctx)
 
 
-# ── Globale Creator-Schnellsuche (Vereine + Spieler) ─────────────────────
+# ── Wettbewerb anlegen (Liga oder Pokal) ──────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_competition_create(request):
+    """Legt eine neue League (Liga oder Pokal-Wettbewerb) an."""
+    name             = request.POST.get('name', '').strip()
+    country          = request.POST.get('country', '').strip()
+    competition_type = request.POST.get('competition_type', 'cup')
+    try:
+        max_teams = int(request.POST.get('max_teams', 32))
+    except (ValueError, TypeError):
+        max_teams = 32
+
+    if not name:
+        messages.error(request, 'Name ist erforderlich.')
+        return redirect(request.META.get('HTTP_REFERER', '/creator/'))
+
+    league = League.objects.create(
+        name=name,
+        country=country or 'Deutschland',
+        competition_type=competition_type,
+        max_teams=max_teams,
+        logo_static_path='',
+    )
+    messages.success(request, f'Wettbewerb „{league.name}" angelegt.')
+    return redirect(f'/creator/leagues/{league.pk}/?tab=stammdaten')
+
+
+# ── Pokalsaison anlegen ───────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_season_create(request, league_id):
+    """Legt eine Pokalsaison an, befüllt Teilnehmer und legt die erste Runde aus."""
+    from .models import CupSeason, CupRound
+    from .cup_service import (
+        build_cup_participants,
+        draw_cup_round,
+        generate_dummy_clubs,
+        ROUND_CODES,
+    )
+
+    league = get_object_or_404(League, id=league_id)
+    if not league.is_cup:
+        messages.error(request, 'Dieser Wettbewerb ist keine Pokal-Liga.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    season       = request.POST.get('season', '').strip()
+    bl_id        = request.POST.get('bundesliga_id', '')
+    zweite_bl_id = request.POST.get('zweitliga_id', '')
+
+    if not season:
+        messages.error(request, 'Saison-Bezeichnung ist erforderlich.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    if CupSeason.objects.filter(competition=league, season=season).exists():
+        messages.warning(request, f'Pokalsaison {season} existiert bereits.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    try:
+        bundesliga  = League.objects.get(pk=int(bl_id))
+        zweitliga   = League.objects.get(pk=int(zweite_bl_id))
+    except (League.DoesNotExist, ValueError, TypeError):
+        messages.error(request, 'Ungültige Liga-Auswahl.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    cup_season = CupSeason.objects.create(
+        competition=league,
+        season=season,
+        status=CupSeason.STATUS_SETUP,
+    )
+
+    try:
+        participants = build_cup_participants(
+            cup_season, bundesliga, zweitliga,
+            bl_count=18, zweite_bl_count=14, fallback_by_id=True,
+        )
+    except Exception as exc:
+        cup_season.delete()
+        messages.error(request, f'Teilnehmer-Fehler: {exc}')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    n = len(participants)
+    from .cup_service import calculate_opening_round
+    info = calculate_opening_round(n)
+    round_code = ROUND_CODES.get(n, f'round_of_{n}')
+    first_round = CupRound.objects.create(
+        cup_season=cup_season,
+        round_number=1,
+        round_code=round_code,
+        status=CupRound.STATUS_PENDING,
+    )
+
+    try:
+        draw_cup_round(first_round, participants)
+    except Exception as exc:
+        messages.warning(request, f'Auslosung fehlgeschlagen: {exc}')
+
+    messages.success(
+        request,
+        f'Pokalsaison {season} angelegt: {n} Teilnehmer, '
+        f'{info["matches"]} Spiele + {info["byes"]} Freilose in Runde 1.'
+    )
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
+# ── Erste Runde auslosen ──────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_draw_first_round(request, league_id, cup_season_id):
+    """Löst die erste Runde einer bestehenden, noch nicht ausgelosten Pokalsaison aus."""
+    from .models import CupSeason, CupRound
+    from .cup_service import draw_cup_round, calculate_opening_round, ROUND_CODES
+
+    league     = get_object_or_404(League, id=league_id)
+    cup_season = get_object_or_404(CupSeason, pk=cup_season_id, competition=league)
+
+    participants = list(cup_season.participants.all())
+    if not participants:
+        messages.error(request, 'Keine Teilnehmer in dieser Pokalsaison.')
+        return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+    first_round, _ = CupRound.objects.get_or_create(
+        cup_season=cup_season,
+        round_number=1,
+        defaults={
+            'round_code': ROUND_CODES.get(len(participants), f'round_of_{len(participants)}'),
+            'status': CupRound.STATUS_PENDING,
+        },
+    )
+
+    try:
+        draw_cup_round(first_round, participants)
+        messages.success(request, 'Erste Runde erfolgreich ausgelost.')
+    except Exception as exc:
+        messages.error(request, f'Auslosungsfehler: {exc}')
+
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
+# ── Runde simulieren ──────────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_simulate_round(request, league_id, cup_round_id):
+    """Simuliert alle ausstehenden Spiele einer Pokalrunde."""
+    from .models import CupRound
+    from .cup_service import simulate_cup_round
+
+    league    = get_object_or_404(League, id=league_id)
+    cup_round = get_object_or_404(CupRound, pk=cup_round_id, cup_season__competition=league)
+
+    try:
+        results = simulate_cup_round(cup_round)
+        messages.success(request, f'{len(results)} Spiel(e) simuliert.')
+    except Exception as exc:
+        messages.error(request, f'Simulationsfehler: {exc}')
+
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
+# ── Nächste Runde anlegen ─────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def creator_cup_advance(request, league_id, cup_round_id):
+    """Schließt die aktuelle Pokalrunde ab und legt die nächste an (mit Auslosung)."""
+    from .models import CupRound
+    from .cup_service import advance_cup_round
+
+    league    = get_object_or_404(League, id=league_id)
+    cup_round = get_object_or_404(CupRound, pk=cup_round_id, cup_season__competition=league)
+
+    try:
+        next_round = advance_cup_round(cup_round)
+        if next_round is None:
+            messages.success(request, '🏆 Pokalwettbewerb abgeschlossen! Sieger eingetragen.')
+        else:
+            messages.success(request, f'Runde {next_round.round_number} ausgelost.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect(f'/creator/leagues/{league_id}/?tab=pokal')
+
+
+# ── Pokalbaum (öffentliche Ansicht) ──────────────────────────────────────────
+
+def cup_tree_view(request, league_id, season):
+    """Zeigt den Pokalbaum (Bracket) für eine Pokalsaison."""
+    from .models import CupSeason, CupRound
+
+    league = get_object_or_404(League, id=league_id)
+    cup_season = get_object_or_404(
+        CupSeason.objects.prefetch_related(
+            'rounds__fixtures__home_club',
+            'rounds__fixtures__away_club',
+            'rounds__fixtures__winner_club',
+        ).select_related('winner_club', 'competition'),
+        competition=league,
+        season=season,
+    )
+
+    rounds = list(cup_season.rounds.order_by('round_number'))
+    for r in rounds:
+        r.display_name = _round_display_name(r.round_code)
+
+    return render(request, 'cup_tree.html', {
+        'league': league,
+        'cup_season': cup_season,
+        'rounds': rounds,
+    })
+
+
+def _round_display_name(code: str) -> str:
+    from .cup_service import _round_display_name as _cs_rdn
+    return _cs_rdn(code)
+
+
+# ── Globale Creator-Schnellsuche (Vereine + Spieler) ─────────────────────────
 def creator_search(request):
     from django.templatetags.static import static
     q = request.GET.get('q', '').strip()

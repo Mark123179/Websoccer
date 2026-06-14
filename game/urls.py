@@ -88,6 +88,12 @@ from .views_creator import (
     creator_add_satisfaction,
     creator_sofifa_import,
     creator_vereinslose,
+    creator_competition_create,
+    creator_cup_season_create,
+    creator_cup_draw_first_round,
+    creator_cup_simulate_round,
+    creator_cup_advance,
+    cup_tree_view,
 )
 
 
@@ -287,4 +293,16 @@ urlpatterns = [
 
     # SoFIFA-CSV-Import
     path('creator/import/sofifa/', creator_sofifa_import, name='creator_sofifa_import'),
+
+    # Wettbewerb anlegen (Pokal / Liga)
+    path('creator/competitions/create/', creator_competition_create, name='creator_competition_create'),
+
+    # Pokal-Saison + Auslosung
+    path('creator/leagues/<int:league_id>/cup/season/create/', creator_cup_season_create, name='creator_cup_season_create'),
+    path('creator/leagues/<int:league_id>/cup/season/<int:cup_season_id>/draw/', creator_cup_draw_first_round, name='creator_cup_draw_first_round'),
+    path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/simulate/', creator_cup_simulate_round, name='creator_cup_simulate_round'),
+    path('creator/leagues/<int:league_id>/cup/round/<int:cup_round_id>/advance/', creator_cup_advance, name='creator_cup_advance'),
+
+    # Pokalbaum (öffentliche Ansicht)
+    path('pokal/<int:league_id>/<str:season>/', cup_tree_view, name='cup_tree'),
 ]

@@ -3693,6 +3693,47 @@ class LeagueStandingsAdmin(admin.ModelAdmin):
         return f'{obj.goals_for}:{obj.goals_against}'
 
 
+from .models import CupSeason, CupRound, CupFixture  # noqa: E402
+
+
+@admin.register(CupSeason)
+class CupSeasonAdmin(admin.ModelAdmin):
+    list_display  = ('competition', 'season', 'status', 'winner_club', 'participant_count')
+    list_filter   = ('status', 'competition')
+    search_fields = ('competition__name', 'season', 'winner_club__name')
+    ordering      = ('-season', 'competition')
+    filter_horizontal = ('participants',)
+
+    @admin.display(description='Teilnehmer')
+    def participant_count(self, obj):
+        return obj.participants.count()
+
+
+@admin.register(CupRound)
+class CupRoundAdmin(admin.ModelAdmin):
+    list_display  = ('cup_season', 'round_number', 'round_code', 'status', 'scheduled_date', 'fixture_count')
+    list_filter   = ('status', 'cup_season__competition')
+    search_fields = ('cup_season__competition__name', 'round_code')
+    ordering      = ('cup_season', 'round_number')
+
+    @admin.display(description='Spiele')
+    def fixture_count(self, obj):
+        return obj.fixtures.count()
+
+
+@admin.register(CupFixture)
+class CupFixtureAdmin(admin.ModelAdmin):
+    list_display  = ('cup_round', 'bracket_position', 'home_club', 'away_club', 'score_display', 'winner_club', 'status')
+    list_filter   = ('status', 'decided_by', 'is_bye')
+    search_fields = ('home_club__name', 'away_club__name', 'winner_club__name')
+    ordering      = ('cup_round', 'bracket_position')
+    readonly_fields = ('score_display',)
+
+    @admin.display(description='Ergebnis')
+    def score_display(self, obj):
+        return obj.score_display
+
+
 @admin.register(SeasonFixture)
 class SeasonFixtureAdmin(admin.ModelAdmin):
     list_display   = (

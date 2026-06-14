@@ -420,9 +420,31 @@ class League(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='cup_titles',
-        verbose_name='Pokalsieger (aktuelle Saison)',
+        related_name='cup_titles_legacy',
+        verbose_name='Pokalsieger (Legacy — nicht mehr genutzt)',
     )
+
+    COMPETITION_TYPE_LEAGUE = 'league'
+    COMPETITION_TYPE_CUP = 'cup'
+    COMPETITION_TYPE_CHOICES = [
+        (COMPETITION_TYPE_LEAGUE, 'Liga'),
+        (COMPETITION_TYPE_CUP, 'Pokal'),
+    ]
+    competition_type = models.CharField(
+        max_length=10,
+        choices=COMPETITION_TYPE_CHOICES,
+        default=COMPETITION_TYPE_LEAGUE,
+        verbose_name='Wettbewerbstyp',
+    )
+    max_teams = models.PositiveSmallIntegerField(
+        default=18,
+        verbose_name='Max. Teilnehmer',
+        help_text='Maximale Anzahl Vereine (Liga) bzw. Pokalteilnehmer.',
+    )
+
+    @property
+    def is_cup(self) -> bool:
+        return self.competition_type == self.COMPETITION_TYPE_CUP
 
     def __str__(self):
         return self.name
@@ -3698,3 +3720,254 @@ class SimulatedMatch(models.Model):
             f"{self.home_club.short_name} {self.home_goals}:{self.away_goals} "
             f"{self.away_club.short_name}"
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DFB-POKAL / K.-O.-WETTBEWERB
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class CupSeason(models.Model):
+    """Pokalsaison — verbindet einen Pokalwettbewerb mit einer Saison.
+
+    Speichert die Teilnehmer als M2M-Snapshot (Snapshot bei Saisonstart,
+    spätere Tabellenänderungen verändern den laufenden Pokal nicht).
+    """
+
+    STATUS_SETUP = 'setup'
+    STATUS_RUNNING = 'running'
+    STATUS_COMPLETED = 'completed'
+    STATUS_CHOICES = [
+        (STATUS_SETUP, 'Vorbereitung'),
+        (STATUS_RUNNING, 'Laufend'),
+        (STATUS_COMPLETED, 'Abgeschlossen'),
+    ]
+
+    competition = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        related_name='cup_seasons',
+        limit_choices_to={'competition_type': 'cup'},
+        verbose_name='Wettbewerb',
+    )
+    season = models.CharField(max_length=20, verbose_name='Saison')
+    participants = models.ManyToManyField(
+        'Club',
+        blank=True,
+        related_name='cup_participations',
+        verbose_name='Teilnehmer (Snapshot)',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_SETUP,
+        verbose_name='Status',
+    )
+    winner_club = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_titles',
+        verbose_name='Pokalsieger',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['competition', 'season'],
+                name='unique_cup_competition_season',
+            )
+        ]
+        verbose_name = 'Pokalsaison'
+        verbose_name_plural = 'Pokalsaisons'
+        ordering = ['-season', 'competition']
+
+    def __str__(self):
+        return f'{self.competition.name} {self.season}'
+
+
+class CupRound(models.Model):
+    """Pokalrunde — konkrete Runde innerhalb einer Pokalsaison."""
+
+    STATUS_PENDING = 'pending'
+    STATUS_SCHEDULED = 'scheduled'
+    STATUS_COMPLETED = 'completed'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Ausstehend'),
+        (STATUS_SCHEDULED, 'Angesetzt'),
+        (STATUS_COMPLETED, 'Abgeschlossen'),
+    ]
+
+    cup_season = models.ForeignKey(
+        CupSeason,
+        on_delete=models.CASCADE,
+        related_name='rounds',
+        verbose_name='Pokalsaison',
+    )
+    round_number = models.PositiveSmallIntegerField(verbose_name='Rundennummer')
+    round_code = models.CharField(
+        max_length=30,
+        verbose_name='Rundencode',
+        help_text='z. B. round_of_32, round_of_16, quarter_final, semi_final, final',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+        verbose_name='Status',
+    )
+    scheduled_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='Spieltag',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cup_season', 'round_number'],
+                name='unique_cup_round',
+            )
+        ]
+        verbose_name = 'Pokalrunde'
+        verbose_name_plural = 'Pokalrunden'
+        ordering = ['cup_season', 'round_number']
+
+    def __str__(self):
+        return f'{self.cup_season} — {self.round_code} (R{self.round_number})'
+
+
+class CupFixture(models.Model):
+    """Pokalbegegnung — ein Spiel innerhalb einer Pokalrunde."""
+
+    STATUS_SCHEDULED = 'scheduled'
+    STATUS_PLAYED = 'played'
+    STATUS_BYE = 'bye'
+    STATUS_CHOICES = [
+        (STATUS_SCHEDULED, 'Angesetzt'),
+        (STATUS_PLAYED, 'Gespielt'),
+        (STATUS_BYE, 'Freilos'),
+    ]
+
+    DECIDED_BY_REGULAR = 'regular_time'
+    DECIDED_BY_ET = 'extra_time'
+    DECIDED_BY_PENALTIES = 'penalties'
+    DECIDED_BY_CHOICES = [
+        (DECIDED_BY_REGULAR, 'Reguläre Spielzeit'),
+        (DECIDED_BY_ET, 'Verlängerung'),
+        (DECIDED_BY_PENALTIES, 'Elfmeterschießen'),
+    ]
+
+    cup_round = models.ForeignKey(
+        CupRound,
+        on_delete=models.CASCADE,
+        related_name='fixtures',
+        verbose_name='Pokalrunde',
+    )
+    bracket_position = models.PositiveSmallIntegerField(
+        verbose_name='Bracket-Position',
+        help_text='Aufsteigende Zahl pro Runde — bestimmt die Anzeigereihenfolge im Baum.',
+    )
+    home_club = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_home_fixtures',
+        verbose_name='Heimverein',
+    )
+    away_club = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_away_fixtures',
+        verbose_name='Auswärtsverein',
+    )
+    winner_club = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_wins',
+        verbose_name='Sieger',
+    )
+    simulated_match = models.OneToOneField(
+        SimulatedMatch,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_fixture',
+        verbose_name='Spielbericht',
+    )
+    is_bye = models.BooleanField(default=False, verbose_name='Freilos')
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_SCHEDULED,
+        verbose_name='Status',
+    )
+
+    # Ergebnisfelder — exakt entsprechend simulate_ko_match()-Output
+    home_goals_90 = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Heimtore (90 min)')
+    away_goals_90 = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Auswärtstore (90 min)')
+    home_goals_et = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Heimtore (Verl.)')
+    away_goals_et = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Auswärtstore (Verl.)')
+    home_penalties = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Heim-Elfmeter')
+    away_penalties = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Auswärts-Elfmeter')
+    decided_by = models.CharField(
+        max_length=20,
+        choices=DECIDED_BY_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name='Entschieden durch',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['cup_round', 'bracket_position'],
+                name='unique_cup_round_bracket_position',
+            )
+        ]
+        verbose_name = 'Pokalbegegnung'
+        verbose_name_plural = 'Pokalbegegnungen'
+        ordering = ['cup_round', 'bracket_position']
+
+    @property
+    def final_home_goals(self) -> int | None:
+        """Gesamttore Heim (90 min + Verlängerung)."""
+        if self.home_goals_90 is None:
+            return None
+        return (self.home_goals_90 or 0) + (self.home_goals_et or 0)
+
+    @property
+    def final_away_goals(self) -> int | None:
+        """Gesamttore Auswärts (90 min + Verlängerung)."""
+        if self.away_goals_90 is None:
+            return None
+        return (self.away_goals_90 or 0) + (self.away_goals_et or 0)
+
+    @property
+    def score_display(self) -> str:
+        """Ergebnisanzeige für den Pokalbaum."""
+        if self.is_bye:
+            return 'Freilos'
+        if self.status != self.STATUS_PLAYED:
+            return '–'
+        fh = self.final_home_goals
+        fa = self.final_away_goals
+        base = f'{fh}:{fa}' if fh is not None and fa is not None else '?:?'
+        if self.decided_by == self.DECIDED_BY_ET:
+            return f'{base} n. V.'
+        if self.decided_by == self.DECIDED_BY_PENALTIES:
+            return f'{base} i. E. ({self.home_penalties}:{self.away_penalties})'
+        return base
+
+    def __str__(self):
+        if self.is_bye:
+            club = self.home_club or self.winner_club
+            return f'Freilos: {club}'
+        home = self.home_club.short_name if self.home_club else '?'
+        away = self.away_club.short_name if self.away_club else '?'
+        return f'{self.cup_round} — {home} vs {away}'

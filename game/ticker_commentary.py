@@ -17,17 +17,12 @@ Platzhalter-Schema:
   {o}  = Ausgewechselter (Wechsel-Texte — Kontext macht Verwendung eindeutig)
 """
 from __future__ import annotations
-import hashlib
 import random as _random
+
+from .random_utils import stable_seed  # noqa: F401 — re-exportiert für Abwärtskompatibilität
 
 
 # ── Hilfsfunktionen ──────────────────────────────────────────────────────────
-
-def stable_seed(*parts: object) -> int:
-    """SHA-256 basierter Seed — prozessübergreifend stabil."""
-    raw = "|".join(str(p or "") for p in parts)
-    digest = hashlib.sha256(raw.encode("utf-8")).digest()
-    return int.from_bytes(digest[:8], "big")
 
 
 def _shuffled_pick(pool: list[str], match_seed: int, pool_key: str, event_index: int) -> str:

@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pokalbaum · {{ league.name }} {{ cup_season.season }}{% endblock %}
+
+{% block content %}
+<section class="wide-shell">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+    <div>
+      <a href="javascript:history.back()" style="color:#556677;font-size:.8rem;text-decoration:none;font-weight:600;">← Zurück</a>
+      <h1 style="margin:.35rem 0 .2rem;color:#cce8ff;font-size:1.3rem;font-weight:800;">
+        🏆 {{ league.name }} — Pokalbaum {{ cup_season.season }}
+      </h1>
+      <div style="color:#334455;font-size:.78rem;">
+        {{ cup_season.participants.count }} Teilnehmer ·
+        {% if cup_season.status == 'completed' %}
+          <span style="color:#00ff88;font-weight:700;">Abgeschlossen</span>
+          {% if cup_season.winner_club %} · Sieger: <span style="color:#ffcc44;font-weight:700;">{{ cup_season.winner_club.name }}</span>{% endif %}
+        {% elif cup_season.status == 'running' %}
+          <span style="color:#00d4ff;">Laufend</span>
+        {% else %}
+          <span style="color:#ffcc44;">Vorbereitung</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pokalbaum ──────────────────────────────────────────────────────── -->
+  <div class="cup-tree-scroll">
+    <div class="cup-tree-bracket" style="--round-count: {{ rounds|length }};">
+
+      {% for round in rounds %}
+      <div class="cup-tree-round">
+        <div class="cup-tree-round-header">
+          <span class="cup-tree-round-name">{{ round.display_name }}</span>
+          {% if round.scheduled_date %}
+          <span class="cup-tree-round-date">{{ round.scheduled_date|date:"d.m.Y" }}</span>
+          {% endif %}
+          <span class="cup-tree-round-badge cup-tree-badge-{{ round.status }}">{{ round.get_status_display }}</span>
+        </div>
+
+        <div class="cup-tree-fixtures">
+          {% for fix in round.fixtures.all %}
+          {% if not fix.is_bye %}
+          <div class="cup-tree-fixture {% if fix.status == 'played' %}cup-tree-fixture--played{% endif %}">
+            <!-- Heim -->
+            <div class="cup-tree-team {% if fix.winner_club_id == fix.home_club_id and fix.status == 'played' %}cup-tree-team--winner{% endif %}">
+              {% if fix.home_club %}
+                {% if fix.home_club.crest_static_path %}
+                <img class="cup-tree-crest" src="{% static fix.home_club.crest_static_path %}" alt="{{ fix.home_club.short_name }}" onerror="this.style.display='none'">
+                {% endif %}
+                <span class="cup-tree-team-name">{{ fix.home_club.name }}</span>
+              {% else %}
+                <span class="cup-tree-team-name cup-tree-team--tbd">TBD</span>
+              {% endif %}
+              {% if fix.status == 'played' %}
+              <span class="cup-tree-score cup-tree-score-home">{{ fix.home_goals_90|default:"0" }}{% if fix.home_goals_et is not None %}({{ fix.home_goals_et }}){% endif %}{% if fix.home_penalties is not None %} — {{ fix.home_penalties }}{% endif %}</span>
+              {% endif %}
+            </div>
+
+            <!-- Trennlinie mit Entscheidungs-Indikator -->
+            {% if fix.status == 'played' %}
+            <div class="cup-tree-vs">
+              {% if fix.decided_by == 'extra_time' %}<span class="cup-tree-decided" title="Verlängerung">V</span>
+              {% elif fix.decided_by == 'penalties' %}<span class="cup-tree-decided" title="Elfmeterschießen">E</span>
+              {% else %}<span class="cup-tree-sep">—</span>{% endif %}
+            </div>
+            {% else %}
+            <div class="cup-tree-vs"><span class="cup-tree-sep">vs</span></div>
+            {% endif %}
+
+            <!-- Auswärts -->
+            <div class="cup-tree-team cup-tree-team-away {% if fix.winner_club_id == fix.away_club_id and fix.status == 'played' %}cup-tree-team--winner{% endif %}">
+              {% if fix.away_club %}
+                {% if fix.away_club.crest_static_path %}
+                <img class="cup-tree-crest" src="{% static fix.away_club.crest_static_path %}" alt="{{ fix.away_club.short_name }}" onerror="this.style.display='none'">
+                {% endif %}
+                <span class="cup-tree-team-name">{{ fix.away_club.name }}</span>
+              {% else %}
+                <span class="cup-tree-team-name cup-tree-team--tbd">TBD</span>
+              {% endif %}
+              {% if fix.status == 'played' %}
+              <span class="cup-tree-score cup-tree-score-away">{{ fix.away_goals_90|default:"0" }}{% if fix.away_goals_et is not None %}({{ fix.away_goals_et }}){% endif %}{% if fix.away_penalties is not None %} — {{ fix.away_penalties }}{% endif %}</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+
+          {% comment %}Freilose kompakt anzeigen{% endcomment %}
+          {% with byes=round.fixtures.all|dictsort:"bracket_position" %}
+          {% for fix in byes %}{% if fix.is_bye %}
+          <div class="cup-tree-bye">
+            🎫 Freilos: <strong>{{ fix.winner_club.name|default:fix.home_club.name }}</strong>
+          </div>
+          {% endif %}{% endfor %}
+          {% endwith %}
+        </div>
+      </div>
+      {% empty %}
+      <p style="color:#334455;padding:2rem;">Noch keine Runden ausgelost.</p>
+      {% endfor %}
+
+    </div>
+  </div>
+
+</section>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+/* ── Cup Tree Layout ─────────────────────────────────────────────────────── */
+.cup-tree-scroll { overflow-x: auto; padding-bottom: 1rem; }
+.cup-tree-bracket {
+  display: flex;
+  gap: 1.5rem;
+  min-width: max-content;
+  align-items: flex-start;
+}
+.cup-tree-round {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  min-width: 260px;
+  max-width: 320px;
+  flex-shrink: 0;
+}
+.cup-tree-round-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  background: #050e1a;
+  border: 1px solid #0d2035;
+  border-radius: 8px 8px 0 0;
+  flex-wrap: wrap;
+}
+.cup-tree-round-name { color: #cce8ff; font-size: .82rem; font-weight: 700; flex: 1; }
+.cup-tree-round-date { color: #334455; font-size: .72rem; }
+.cup-tree-round-badge {
+  font-size: .68rem;
+  font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 4px;
+  letter-spacing: .04em;
+}
+.cup-tree-badge-pending   { background: #ffcc4420; color: #ffcc44; }
+.cup-tree-badge-scheduled { background: #00d4ff20; color: #00d4ff; }
+.cup-tree-badge-completed { background: #00ff8820; color: #00ff88; }
+
+.cup-tree-fixtures { display: flex; flex-direction: column; gap: .4rem; }
+
+/* ── Single fixture card ─────────────────────────────────────────────────── */
+.cup-tree-fixture {
+  background: #071525;
+  border: 1px solid #0d2035;
+  border-radius: 0 0 8px 8px;
+  padding: .55rem .7rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  position: relative;
+}
+.cup-tree-fixture--played { border-color: #00d4ff22; }
+
+.cup-tree-team {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.cup-tree-team-away { flex-direction: row-reverse; }
+.cup-tree-team-away .cup-tree-team-name { text-align: right; }
+.cup-tree-crest { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+.cup-tree-team-name { color: #aabbcc; font-size: .78rem; font-weight: 600; flex: 1; }
+.cup-tree-team--tbd .cup-tree-team-name { color: #334455; font-style: italic; }
+.cup-tree-team--winner .cup-tree-team-name { color: #ffcc44; }
+.cup-tree-score {
+  font-size: .78rem;
+  font-weight: 800;
+  color: #00d4ff;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.cup-tree-vs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 14px;
+}
+.cup-tree-sep { color: #1e3050; font-size: .72rem; }
+.cup-tree-decided {
+  font-size: .7rem;
+  font-weight: 800;
+  color: #ff884488;
+  background: #ff884410;
+  border: 1px solid #ff884422;
+  padding: .05rem .3rem;
+  border-radius: 3px;
+}
+
+.cup-tree-bye {
+  background: #050e1a;
+  border: 1px solid #0d2035;
+  border-radius: 6px;
+  padding: .35rem .7rem;
+  color: #334455;
+  font-size: .72rem;
+}
+.cup-tree-bye strong { color: #556677; }
+</style>
+{% endblock %}

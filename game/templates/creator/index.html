@@ -103,6 +103,43 @@
       {% endif %}
       <h2 class="cm-level-title">{{ country }} <span class="cm-level-count">{{ leagues_data|length }}</span></h2>
     </div>
+    <form method="post" action="{% url 'creator_competition_create' %}" style="display:inline;">
+      {% csrf_token %}
+      <input type="hidden" name="country" value="{{ country }}">
+      <button type="button" class="cm-add-competition-btn" onclick="document.getElementById('cm-new-comp-modal').style.display='flex'" title="Neuen Wettbewerb anlegen">+ Wettbewerb</button>
+    </form>
+  </div>
+
+  <!-- ── Modal: Neuer Wettbewerb ─────────────────────────────────────────── -->
+  <div id="cm-new-comp-modal" style="display:none;position:fixed;inset:0;background:#00000099;z-index:9000;align-items:center;justify-content:center;">
+    <div style="background:#071525;border:1px solid #0d2035;border-radius:12px;padding:2rem;min-width:340px;max-width:460px;width:100%;">
+      <h3 style="margin:0 0 1.25rem;color:#cce8ff;font-size:1.05rem;">Neuer Wettbewerb — {{ country }}</h3>
+      <form method="post" action="{% url 'creator_competition_create' %}">
+        {% csrf_token %}
+        <input type="hidden" name="country" value="{{ country }}">
+        <div style="display:flex;flex-direction:column;gap:.85rem;">
+          <div>
+            <label style="color:#556677;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.35rem;">Name</label>
+            <input name="name" required style="width:100%;box-sizing:border-box;background:#050e1a;border:1px solid #0d2035;border-radius:6px;color:#cce8ff;padding:.55rem .75rem;font-size:.85rem;" placeholder="z. B. DFB-Pokal">
+          </div>
+          <div>
+            <label style="color:#556677;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.35rem;">Typ</label>
+            <select name="competition_type" style="width:100%;box-sizing:border-box;background:#050e1a;border:1px solid #0d2035;border-radius:6px;color:#cce8ff;padding:.55rem .75rem;font-size:.85rem;">
+              <option value="league">Liga</option>
+              <option value="cup" selected>Pokal</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:#556677;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.35rem;">Max. Teilnehmer</label>
+            <input name="max_teams" type="number" min="2" value="32" style="width:100%;box-sizing:border-box;background:#050e1a;border:1px solid #0d2035;border-radius:6px;color:#cce8ff;padding:.55rem .75rem;font-size:.85rem;">
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;margin-top:1.5rem;justify-content:flex-end;">
+          <button type="button" onclick="document.getElementById('cm-new-comp-modal').style.display='none'" style="padding:.5rem 1.1rem;border-radius:6px;border:1px solid #0d2035;background:transparent;color:#556677;font-size:.82rem;cursor:pointer;">Abbrechen</button>
+          <button type="submit" style="padding:.5rem 1.25rem;border-radius:6px;border:none;background:#00d4ff;color:#03070c;font-size:.82rem;font-weight:700;cursor:pointer;">Anlegen</button>
+        </div>
+      </form>
+    </div>
   </div>
   <div class="cm-leagues-grid">
     {% for entry in leagues_data %}
@@ -225,6 +262,10 @@
 .cm-country-info strong { display: block; color: #cce8ff; font-size: .88rem; font-weight: 700; }
 .cm-country-info span { color: #556677; font-size: .74rem; }
 .cm-card-arrow { color: #00d4ff44; font-size: 1.3rem; flex-shrink: 0; }
+
+/* ── Level 2: "+ Wettbewerb"-Button ────────────────────────────────────── */
+.cm-add-competition-btn { padding: .38rem .9rem; border-radius: 6px; border: 1px solid #00d4ff44; background: #071525; color: #00d4ff88; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.cm-add-competition-btn:hover { border-color: #00d4ff88; background: #00d4ff15; color: #00d4ff; }
 
 /* ── Level 2: Ligen-Grid ───────────────────────────────────────────────── */
 .cm-leagues-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .75rem; }

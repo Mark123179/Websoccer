@@ -33,6 +33,9 @@
     <a class="creator-tab {% if active_tab == 'stammdaten' %}active{% endif %}" href="?tab=stammdaten">Stammdaten</a>
     <a class="creator-tab {% if active_tab == 'vereine' %}active{% endif %}" href="?tab=vereine">Vereine <span class="creator-tab-badge">{{ clubs|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'spielplan' %}active{% endif %}" href="?tab=spielplan">Spielplan</a>
+    {% if league.is_cup %}
+    <a class="creator-tab {% if active_tab == 'pokal' %}active{% endif %}" href="?tab=pokal">🏆 Pokal</a>
+    {% endif %}
   </nav>
 
   <!-- ═══ TAB: STAMMDATEN ═══════════════════════════════════════════════════ -->
@@ -179,6 +182,123 @@
       </table>
     </div>
   </div>
+  {% endif %}
+
+  <!-- ═══ TAB: POKAL ═══════════════════════════════════════════════════════ -->
+  {% if active_tab == 'pokal' and league.is_cup %}
+
+  {% if not cup_seasons %}
+  <div class="creator-card">
+    <div class="creator-card-head"><h2>Pokalsaison starten</h2></div>
+    <div class="creator-card-body">
+      <p style="color:#556677;font-size:.83rem;margin:0 0 1.25rem;">Noch keine Pokalsaison angelegt. Saison anlegen und Teilnehmer festlegen.</p>
+      <form method="post" action="{% url 'creator_cup_season_create' league_id=league.pk %}">
+        {% csrf_token %}
+        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:160px;">
+            <label class="creator-label">Saison (z. B. 2025/26)</label>
+            <input class="creator-input" name="season" value="2025/26" required>
+          </div>
+          <div style="flex:1;min-width:160px;">
+            <label class="creator-label">Bundesliga (Teilnehmer-Quelle)</label>
+            <select class="creator-input" name="bundesliga_id">
+              {% for l in all_leagues %}
+              <option value="{{ l.pk }}" {% if l.competition_type == 'league' %}{% endif %}>{{ l.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="flex:1;min-width:160px;">
+            <label class="creator-label">2. Liga (Teilnehmer-Quelle)</label>
+            <select class="creator-input" name="zweitliga_id">
+              {% for l in all_leagues %}
+              <option value="{{ l.pk }}">{{ l.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="creator-btn creator-btn-primary" style="flex-shrink:0;">🏆 Saison anlegen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% for cs in cup_seasons %}
+  <div class="creator-card" style="margin-bottom:1.5rem;">
+    <div class="creator-card-head" style="display:flex;align-items:center;justify-content:space-between;">
+      <h2>Saison {{ cs.season }}
+        <span class="creator-tab-badge" style="{% if cs.status == 'completed' %}background:#00ff8820;color:#00ff88;{% elif cs.status == 'running' %}background:#00d4ff20;color:#00d4ff;{% else %}background:#ffcc4420;color:#ffcc44;{% endif %}">{{ cs.get_status_display }}</span>
+      </h2>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <a class="creator-btn creator-btn-icon" href="{% url 'cup_tree' league_id=league.pk season=cs.season %}" target="_blank">🌲 Pokalbaum</a>
+        {% if cs.winner_club %}
+        <span style="color:#ffcc44;font-size:.82rem;">🏆 {{ cs.winner_club.name }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="creator-card-body">
+      <div style="display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;">
+        <span style="color:#556677;font-size:.8rem;">{{ cs.participants.count }} Teilnehmer</span>
+        <span style="color:#556677;font-size:.8rem;">{{ cs.rounds.count }} Runden</span>
+      </div>
+
+      {% for cr in cs.rounds.all %}
+      <div style="background:#050e1a;border:1px solid #0d2035;border-radius:8px;padding:1rem;margin-bottom:.75rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+          <div>
+            <strong style="color:#cce8ff;font-size:.88rem;">{{ cr.get_round_code_display|default:cr.round_code }} (Runde {{ cr.round_number }})</strong>
+            <span style="color:#334455;font-size:.75rem;margin-left:.5rem;">{{ cr.get_status_display }}</span>
+            {% if cr.scheduled_date %}<span style="color:#447799;font-size:.75rem;margin-left:.5rem;">📅 {{ cr.scheduled_date }}</span>{% endif %}
+          </div>
+          <div style="display:flex;gap:.5rem;">
+            {% if cr.status != 'completed' %}
+            <form method="post" action="{% url 'creator_cup_simulate_round' league_id=league.pk cup_round_id=cr.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="creator-btn creator-btn-icon" style="font-size:.75rem;">▶ Runde simulieren</button>
+            </form>
+            <form method="post" action="{% url 'creator_cup_advance' league_id=league.pk cup_round_id=cr.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="creator-btn creator-btn-icon" style="font-size:.75rem;">→ Nächste Runde</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+        <table class="creator-table" style="font-size:.78rem;">
+          <thead>
+            <tr>
+              <th>#</th><th>Heim</th><th>Ergebnis</th><th>Auswärts</th><th>Sieger</th><th>Entschieden durch</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fix in cr.fixtures.all %}
+            <tr>
+              <td class="creator-id-cell">{{ fix.bracket_position }}</td>
+              <td>{{ fix.home_club.name|default:"—" }}</td>
+              <td style="text-align:center;font-weight:700;color:{% if fix.status == 'played' %}#00d4ff{% else %}#334455{% endif %};">
+                {{ fix.score_display }}
+              </td>
+              <td>{{ fix.away_club.name|default:"Freilos" }}</td>
+              <td style="color:#ffcc44;">{{ fix.winner_club.name|default:"—" }}</td>
+              <td style="color:#556677;">{{ fix.get_decided_by_display|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="creator-empty-row">Noch keine Spiele ausgelost.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% empty %}
+      <p style="color:#334455;font-size:.82rem;">Noch keine Runden. Auslosung starten:</p>
+      <form method="post" action="{% url 'creator_cup_draw_first_round' league_id=league.pk cup_season_id=cs.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="creator-btn creator-btn-primary">🎲 Erste Runde auslosen</button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+  {% empty %}
+  {% endfor %}
+
   {% endif %}
 
   <!-- ═══ TAB: SPIELPLAN ════════════════════════════════════════════════════ -->
