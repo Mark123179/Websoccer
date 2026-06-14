@@ -1,0 +1,415 @@
+Ja. Für den endgültigen Regressionstest würde ich einmal alles erfassen, aber klar trennen zwischen:
+
+Engine-Balancing
+Tabellen- und Stärkeverhalten
+neuen dynamischen Funktionen
+Datenintegrität
+Frische, Verletzungen und Sperren
+
+Wichtig: 100 vollständige Bundesliga-Saisons sind 30.600 Spiele. Dabei muss derselbe vollständige Engine-V2-Pfad laufen, nicht die vereinfachte Potential-Schnellsimulation.
+
+Testaufbau
+
+Jede Saison sollte unabhängig mit demselben Ausgangszustand starten:
+
+18 Vereine
+34 Spieltage
+306 Spiele
+Frische zu Saisonbeginn zurückgesetzt
+Verletzungen und Sperren zurückgesetzt
+Statistiken zurückgesetzt
+Kader und Stärken unverändert
+reale gespeicherte Taktiken
+vollständige _simulate_match_minutes()-Engine
+alle Wechsel, Conditions, Verletzungen, Karten und Frische aktiv
+fester Batch-Seed zur Reproduzierbarkeit
+
+Die Engine-Konstanten während des Tests nicht automatisch verändern.
+
+1. Technische Integrität
+
+Hier muss alles bei 0 bleiben:
+
+Prüfung	Ziel
+Exceptions	0
+Fallback-Stärken	0
+doppelt simulierte Spiele	0
+doppelte Einwechslungen	0
+Spieler gleichzeitig in zwei Slots	0
+mehr als 5 Wechsel pro Team	0
+Tore nach Auswechslung/Verletzung/Rot	0
+Karten nach Auswechslung/Rot	0
+Verletzungen nach Auswechslung	0
+Post-Match-Verletzungen im Ticker	0
+ungültige Ballbesitzsummen	0
+NaN-/negative xG-Werte	0
+unvollständige Tabellen	0
+
+Zusätzlich prüfen:
+
+Aktive Spieler pro Team =
+11
+− Platzverweise
+− nicht ersetzte Verletzungen
+
+Die Summe aller Spielerminuten pro Team muss grundsätzlich 990 Minuten ergeben, abzüglich der Minuten echter Unterzahl.
+
+2. Kernwerte der Match Engine
+
+Vergleich mit deiner akzeptierten 100-Saisons-Basis:
+
+Metrik	bisherige Basis	Zielkorridor
+Ø Tore/Spiel	2,707	2,65–2,80
+Heimsiege	38,6 %	37–40 %
+Remis	25,9 %	24–27 %
+Auswärtssiege	35,5 %	34–37 %
+Favoritensiege	58,7 %	57–61 %
+Gelbe/Spiel	ca. 2,82–3,02	2,7–3,2
+Rote/Spiel	ca. 0,05–0,06	0,04–0,08
+Schüsse/Spiel	ca. 21,2	20–23
+Verletzungen/Spiel	ca. 0,18	0,15–0,22
+
+Nicht nur den Korridor prüfen, sondern auch die Veränderung zum letzten Lauf:
+
+Tore: Alarm bei Abweichung > 0,05 pro Spiel
+Ergebnisquoten: Alarm bei Abweichung > 1,5 Prozentpunkte
+Karten/Verletzungen: Alarm bei Veränderung > 15 %
+3. xG und Chancenqualität
+
+Ausgeben:
+
+xG Heim und Gast
+xG pro Spiel
+Tore minus xG je Club
+xG-Differenz je Club
+Korrelation xGD → Punkte
+Schüsse pro Tor
+Tore pro xG
+Spiele mit extrem hoher/niedriger Chancenverwertung
+
+Ziel:
+
+Metrik	Ziel
+r(xGD, Punkte)	ca. 0,58–0,70
+negative xG	0
+unrealistische xG-Ausreißer	prüfen
+dauerhaft extreme Abschlussclubs	keine ohne Datenbegründung
+4. Stärke und Favoritenwirkung
+
+Favoriten nicht nur global betrachten, sondern nach Stärkedifferenz:
+
+Differenz	Kategorie
+3–7	leichter Favorit
+8–14	klarer Favorit
+15–24	großer Favorit
+25+	sehr großer Favorit
+
+Je Gruppe ausgeben:
+
+Favoritensieg
+Remis
+Außenseitersieg
+Ø Tordifferenz
+Ø xG-Differenz
+
+Wichtig: Favoritensiege nicht gegen 50 % vergleichen, sondern direkt mit Außenseitersiegen.
+
+Zusätzlich:
+
+Korrelation	Ziel
+Stärke-Rang → Ø Tabellenplatz	mindestens 0,90
+Stärke-Rang → Ø Punkte	Betrag mindestens 0,88
+xGD → Punkte	etwa 0,58–0,70
+5. Tabelle über 100 Saisons
+
+Ausgeben:
+
+Ø Punkte je Tabellenplatz
+Minimum und Maximum
+Ø Tore und Gegentore je Platz
+Punkteabstände
+Meisterhäufigkeit
+Top-4-Häufigkeit
+Bottom-3-Häufigkeit
+Ø Tabellenplatz je Verein
+beste und schlechteste Platzierung je Verein
+
+Referenzwerte:
+
+Platz	ungefährer Zielbereich
+Meister	62–66 Punkte
+Platz 2	58–62
+Platz 4	53–57
+Platz 15	37–40
+Platz 16	34–38
+Platz 17	31–35
+Platz 18	26–31
+
+Punkteabstände:
+
+Meister zu Platz 2
+Platz 4 zu Platz 5
+Platz 15 zu 16
+Platz 16 zu 17
+Platz 17 zu 18
+
+Meisterverteilung nur beobachten. Bayern sollte häufig Meister werden, aber die Liga darf nicht vollständig deterministisch sein.
+
+6. Heimvorteil
+
+Einfach nur Heimsiege zählen reicht nicht. Zusätzlich ausgeben:
+
+Heimtore-Anteil
+xG Heim gegen xG Gast
+Schüsse Heim gegen Gast
+Ballbesitz Heim gegen Gast
+Heimsiege bei gleich starken Teams
+gespiegelte Paarungen
+
+Besonders wichtig:
+
+Team A zuhause gegen Team B
+Team B zuhause gegen Team A
+
+Nur so lässt sich Heimvorteil von Teamstärke trennen.
+
+7. Ballbesitz
+
+Nach dem neuen spielweiten Offset prüfen:
+
+Metrik	Ziel
+Ø Heim-Ballbesitz	etwa 49–52 %
+Standardabweichung	6,5–8,0
+realistischer Bereich	etwa 25–75 %
+Summe Heim + Gast	immer 100 %
+
+Zusätzlich nach Taktik gruppieren:
+
+Ballbesitzsicherung
+ausgewogen
+Konter
+hohes/niedriges Tempo
+geduldiger Aufbau
+direkte Bälle
+
+Die Zufallsvarianz darf die Taktikwirkung nicht überdecken. Über viele Spiele muss Ballbesitzspiel im Mittel mehr Ballbesitz erzeugen.
+
+8. Dynamische Einwechslungen
+
+Nach #463 besonders wichtig:
+
+Wechsel pro Team/Spiel
+ausgeführte Wechsel
+verworfene Wechsel
+Ausführungsquote je Bedingung
+HP-/NP-/FP-Wechsel
+Wechselketten
+Verletzungswechsel
+Wechsel nach Rot/Verletzung nicht mehr möglich
+Kontingent ausgeschöpft
+Ø Stärkeänderung durch Wechsel
+xG vor und nach Wechsel
+Minuten der Ein- und Auswechselspieler
+
+Erwartungen:
+
+Bedingung	erwartetes Verhalten
+Immer	ca. 90–97 %
+Bei Führung	ungefähr Anteil der Führungen zur Wechselminute
+Bei Rückstand	ungefähr Anteil der Rückstände
+Bei Unentschieden	ungefähr Anteil der Remisstände
+
+Pflichtwerte:
+
+Doppeleinwechslungen = 0
+Wechsel nach endgültigem Verwerfen = 0
+Spielerereignisse außerhalb Einsatzfenster = 0
+Geplante + erzwungene Wechsel > 5 = 0
+9. Rote Karten und Gelb-Rot
+
+Ausgeben:
+
+direkte Rote
+Gelb-Rote
+Minute des Platzverweises
+Stärke vor und nach Platzverweis
+xG-Rate vor und nach Platzverweis
+Gegentore nach Platzverweis
+Spiele mit mehreren Platzverweisen
+Sperren korrekt erzeugt
+
+Wichtig ist nicht nur die Häufigkeit, sondern dass der Effekt tatsächlich sichtbar ist:
+
+Team in Unterzahl:
+niedrigere eigene xG-Rate
+höhere gegnerische xG-Rate
+reduzierte aktive Spielerzahl
+10. Verletzungen
+
+Ausgeben pro Team und Saison:
+
+Verletzungen gesamt
+leicht
+mittel
+schwer
+extrem
+gesamte Ausfalltage
+Ø Ausfalltage
+längste Verletzung
+Verletzungen nach Position
+Verletzungen nach Frischebereich
+Verletzungen während des Spiels
+Post-Match-Verletzungen
+Verletzungen ohne verfügbaren Wechsel
+
+Deine bisherige Ein-Wettbewerb-Referenz:
+
+Kategorie	ungefähr
+leicht	2,0
+mittel	0,9
+schwer	0,2
+extrem	nahe 0
+Ausfalltage gesamt	ca. 31,5
+
+Extremverletzungen dürfen vorkommen, aber über eine Saison sehr selten bleiben.
+
+11. Frische
+
+Für jeden Spieltag und jede Position:
+
+Ø Frische beim Anpfiff
+Ø Frische nach Spiel
+Spieler unter 80
+Spieler unter 70
+Spieler unter 60
+Frische nach Position
+Frische nach Ausdauerwert
+Frischeverlust nach Taktikintensität
+Einfluss Trainingsgelände
+Verletzungsrate je Frischeband
+
+Für eine reine Bundesliga-Saison mit einem Wettbewerb sollte die Stammelf ungefähr im Bereich 88–96 pendeln, nicht permanent bei 100 liegen.
+
+Da Liga-only nicht die Mehrfachbelastung abbildet, bleiben die gesonderten 45-/60-Spiele-Tests für zwei und drei Wettbewerbe weiterhin notwendig.
+
+12. Noten
+
+Da das Notensystem auffällig war, unbedingt erfassen:
+
+Durchschnittsnote aller Spieler
+Standardabweichung
+Siegerteam vs. Verliererteam
+Heim vs. Gast
+nach Position
+Torschützen
+Assistgeber
+Spieler des Spiels
+Spieler mit Rot
+Torwartnoten nach xGA/Gegentoren
+Noten bei Kurzeinsätzen
+
+Plausibilitätsziele:
+
+Siegerteam im Mittel deutlich besser als Verliererteam
+Scorer meist überdurchschnittlich
+klare Niederlagen erzeugen mehrere Noten im Bereich 4,0+
+Zu-null-Abwehr erhält erkennbaren Bonus
+Kurzeinsatz ohne Ereignis nicht automatisch sehr gut oder sehr schlecht
+Spieler des Spiels nicht fast immer nur Torschütze
+13. Spieler- und Saisonstatistiken
+
+Prüfen:
+
+Tore gesamt = Summe aller Spielertore
+Assists ≤ Tore mit Assist
+Karten gesamt = Summe Spielerkarten
+Minuten korrekt
+Einsätze und Startelfeinsätze
+Durchschnittsnote
+Spieler des Spiels
+keine doppelte Aggregation bei bereits simulierten Spielen
+
+Zusätzlich:
+
+Torjägerliste
+Vorlagenliste
+beste Noten
+Kartenrangliste
+Torhüter-Zu-null-Spiele
+14. Taktikverhalten
+
+Nach Einstellungen gruppieren:
+
+Pressingstufe
+Angriffsfokus
+Tempo
+Spielaufbau
+Zweikampfstil
+Matchplan-Aktivierungen
+Pressing-Gewinne
+Pressing überspielt
+Angriffe links/Mitte/rechts
+Frischekosten
+
+Watchpoint RB Leipzig:
+
+7,1 Pressing-Gewinne/Spiel
+stark asymmetrische Angriffszonen
+
+Prüfen, ob das nur eine konkrete Taktik ist oder ob bestimmte Einstellungen systematisch zu stark werden.
+
+15. Live-Ticker-Integrität
+
+Nicht alle 30.600 Berichte manuell prüfen. Automatisch kontrollieren:
+
+gleiche Match-ID erzeugt gleichen Kommentar
+ausgewechselte Spieler erscheinen später nicht
+rote Spieler erscheinen später nicht
+Post-Match-Verletzungen erscheinen nicht
+Varianten wiederholen sich erst nach Pool-Durchlauf
+Tor-Zwischenstände stimmen
+Anpfiff und Abpfiff vorhanden
+Eventreihenfolge stimmt
+
+Eine Stichprobe von etwa 50–100 vollständigen Tickern reicht zusätzlich zur automatischen Prüfung.
+
+16. Laufzeit und Performance
+
+Speichern:
+
+Gesamtlaufzeit
+Millisekunden pro Spiel
+Speicherverbrauch
+ORM-Queries pro Spiel
+langsamste Spiele
+Größe der gespeicherten Matchdaten
+
+Wichtig:
+
+keine ORM-Abfragen innerhalb der Segment-Schleife
+Empfohlener Abschlussbericht
+
+Der Report sollte am Ende fünf Blöcke haben:
+
+A. Stabilität und Integrität
+B. Match- und Ergebnisverteilung
+C. Tabellen- und Stärkeverhalten
+D. Dynamic Lineup, Karten, Verletzungen und Frische
+E. Spielerstatistiken, Noten und Ticker
+
+Zusätzlich alle Daten als:
+
+summary.json
+league_metrics.csv
+club_averages.csv
+player_metrics.csv
+substitution_metrics.csv
+injury_metrics.csv
+integrity_errors.csv
+Klare Empfehlung
+
+Ja, einmal alles kontrollieren. Der Schwerpunkt liegt aber nicht mehr auf der Frage, ob 2,7 oder 2,75 Tore fallen. Der wichtigste Teil dieses 100-Saisons-Tests ist jetzt:
+
+Sind alle neuen Systeme über 30.600 Spiele konsistent miteinander, ohne doppelte Events, falsche Einsatzfenster, unzulässige Spieleraktionen oder statistische Drift?
+
+Wenn alle Integritätswerte bei 0 bleiben und die Kernwerte nahe der letzten 100-Saisons-Basis liegen, kann die Engine als endgültige Saisonbaseline eingefroren werden.
