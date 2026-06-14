@@ -438,6 +438,10 @@ def _make_subs_v1(seed: int, pid_base: int, bench_pids: list, n: int = 3) -> lis
     conditions = ['immer', 'immer', 'fuehrung', 'rueckstand', 'immer']
     targets = [pid_base + i for i in range(7, 11)]
     rng.shuffle(targets)
+    min1 = rng.randint(52, 65)
+    min2 = rng.randint(max(min1 + 5, 60), 75)
+    min3 = rng.randint(max(min2 + 5, 70), 83)
+    minutes = [min1, min2, min3]
     result = []; used_out: set = set()
     for k in range(min(n, len(bench_pids), len(targets))):
         if targets[k] in used_out:
@@ -445,7 +449,7 @@ def _make_subs_v1(seed: int, pid_base: int, bench_pids: list, n: int = 3) -> lis
         used_out.add(targets[k])
         result.append({
             'in': bench_pids[k], 'out': targets[k],
-            'minute': 55 + k * 10, 'condition': conditions[k % len(conditions)],
+            'minute': minutes[k], 'condition': conditions[k % len(conditions)],
         })
     return result
 
