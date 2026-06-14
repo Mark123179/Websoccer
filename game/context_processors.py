@@ -142,11 +142,14 @@ def _build_global_calendar(club, calendar_offset):
                 cf.cup_round.round_code.replace('_', ' ').title(),
             )
 
+            cup_stadium = _STADIUM_ASSETS.get(
+                cf.home_club.fm_inside_id if cf.home_club else None, ''
+            )
             fixtures_by_date[scheduled_date] = {
                 'opponent_name':    cup_opponent.name if cup_opponent else 'Freilos',
                 'opponent_crest':   cup_opponent.crest_static_path if cup_opponent else '',
                 'opponent_url':     f'/clubs/{cup_opponent.pk}/' if cup_opponent else '',
-                'stadium':          '',
+                'stadium':          cup_stadium,
                 'competition_logo': competition_logo_static_path(comp_name),
                 'lineup_saved':     False,
                 'result':           cup_result,
