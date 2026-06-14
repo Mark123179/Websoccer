@@ -1,0 +1,121 @@
+name: Regressionsbericht
+
+on:
+  schedule:
+    # Täglich um 03:00 UTC (nachts, nach möglichen Merges)
+    - cron: "0 3 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "game/match_engine.py"
+      - "game/tactic_compiler.py"
+      - "game/season_service.py"
+      - "game/management/commands/regression_sim.py"
+      - "scripts/run_regression_v3.sh"
+      - "scripts/diff_regression.py"
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "Anzahl Saisons pro Seed"
+        required: false
+        default: "20"
+
+jobs:
+  regression:
+    name: Match-Engine Regressionsbericht
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Abhängigkeiten installieren
+        run: pip install -r requirements.txt
+
+      - name: Django-Setup (SQLite für CI)
+        run: python manage.py migrate --run-syncdb --no-input
+        env:
+          DJANGO_SETTINGS_MODULE: core.settings
+          DATABASE_URL: ""
+
+      # ── History aus Cache wiederherstellen ─────────────────────────────────
+      # restore-keys greift auf den zuletzt gespeicherten Lauf zurück,
+      # damit diff_regression.py einen Vorgänger-Run zum Vergleich hat.
+      - name: Regressions-History aus Cache laden
+        id: cache-history
+        uses: actions/cache/restore@v4
+        with:
+          path: .local/regression_history
+          key: regression-history-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            regression-history-
+
+      - name: Vorherigen Lauf anzeigen (Info)
+        run: |
+          if ls .local/regression_history/ 2>/dev/null | grep -q .; then
+            echo "Gefundene vorherige Läufe:"
+            ls -1 .local/regression_history/ | tail -5
+          else
+            echo "(Kein vorheriger Lauf im Cache — erster Lauf, kein Diff möglich.)"
+          fi
+
+      # ── Regressionsbericht ausführen ───────────────────────────────────────
+      - name: Regressionsbericht ausführen
+        id: regression
+        run: |
+          SEASONS="${{ github.event.inputs.seasons || '20' }}"
+          bash scripts/run_regression_v3.sh --seasons "$SEASONS"
+        env:
+          REGRESSION_SLACK_WEBHOOK: ${{ secrets.REGRESSION_SLACK_WEBHOOK }}
+          DJANGO_SETTINGS_MODULE: core.settings
+          DATABASE_URL: ""
+
+      # ── History in Cache sichern (immer, auch bei Regression) ─────────────
+      - name: Regressions-History in Cache sichern
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .local/regression_history
+          key: regression-history-${{ github.run_id }}-${{ github.run_attempt }}
+
+      # ── Artefakte hochladen ────────────────────────────────────────────────
+      - name: History als Artefakt hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-history-${{ github.run_id }}
+          path: .local/regression_history/
+          retention-days: 90
+
+      - name: Alert-Log hochladen (falls vorhanden)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-alerts-${{ github.run_id }}
+          path: .local/regression_alerts.log
+          if-no-files-found: ignore
+          retention-days: 90
+
+      # ── Zusammenfassung bei Regression ────────────────────────────────────
+      - name: Zusammenfassung bei Regression
+        if: failure() && steps.regression.outcome == 'failure'
+        run: |
+          echo "## ⚠ Regression erkannt" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Der Diff-Vergleich zwischen den letzten beiden Läufen hat eine" >> $GITHUB_STEP_SUMMARY
+          echo "Metrik-Abweichung von **>5%** festgestellt." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ -f .local/regression_alerts.log ]]; then
+            echo "### Alert-Log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -20 .local/regression_alerts.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Artefakte mit den vollständigen JSON-Berichten sind diesem Lauf beigefügt." >> $GITHUB_STEP_SUMMARY
