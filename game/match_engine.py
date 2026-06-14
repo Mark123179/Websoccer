@@ -1084,6 +1084,10 @@ def _simulate_match_minutes(
     last_h_str:  Optional[dict] = None
     last_a_str:  Optional[dict] = None
 
+    # Per-Spiel-Possession-Stil: einmal gezogen, konstant über alle Segmente.
+    # Modelliert "dieses Team dominiert heute das Spiel" (σ=7 → realistischer Bereich 30-70%).
+    _game_poss_offset = random.gauss(0.0, 7.0)
+
     seg_min = max(1, int(segment_minutes or 5))
     for minute in range(1, 91, seg_min):
         seg_len = max(1, min(seg_min, 91 - minute))
@@ -1193,12 +1197,13 @@ def _simulate_match_minutes(
         total_strength = h_str['overall'] + a_str['overall'] or 1.0
         poss_delta = (h_comp.get('possession_bonus', 0.0) - a_comp.get('possession_bonus', 0.0)) * 35
         build_delta = (h_comp.get('build_control', 0.0) - a_comp.get('build_control', 0.0)) * 10
-        # Realistisches Segmentrauschen ±5 pp — verhindert Fixwert-Ballbesitz über 90 min
-        poss_noise = random.gauss(0.0, 5.0)
+        # Ballbesitz = spielweiter Stil-Offset (σ=7, einmalig) + Segmentrauschen (σ=4)
+        # Gibt realistischen Bereich: ~30-70% je nach Spielcharakter
+        poss_noise = random.gauss(0.0, 4.0)
         home_poss = int(round(_clamp(
             50 + HOME_POSSESSION_BONUS
             + (h_str['overall'] - a_str['overall']) / total_strength * 22
-            + poss_delta + build_delta + poss_noise,
+            + poss_delta + build_delta + _game_poss_offset + poss_noise,
             30, 70,
         )))
 
