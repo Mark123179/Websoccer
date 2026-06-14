@@ -96,11 +96,11 @@
     max-width: 1260px;
 }
 
-/* Reihe 1: Spalten 1–4 belegt, Spalte 5 leer */
-.mhub-card--halloffame   { grid-column: 1; grid-row: 1; }
-.mhub-card--stadion      { grid-column: 2; grid-row: 1; }
-.mhub-card--praesident   { grid-column: 3; grid-row: 1; }
-.mhub-card--freundschaft { grid-column: 4; grid-row: 1; }
+/* Reihe 1: Spalten 2–5, Spalte 1 leer (Freiraum über Job-Angebote) */
+.mhub-card--halloffame   { grid-column: 2; grid-row: 1; }
+.mhub-card--stadion      { grid-column: 3; grid-row: 1; }
+.mhub-card--praesident   { grid-column: 4; grid-row: 1; }
+.mhub-card--freundschaft { grid-column: 5; grid-row: 1; }
 
 /* Reihe 2: Jobs links, dann die anderen 4 */
 .mhub-card--jobs         { grid-column: 1; grid-row: 2; }
