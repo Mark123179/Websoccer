@@ -4310,3 +4310,203 @@ class SubstitutionReportSourceTests(TestCase):
                 break
         self.assertTrue(injury_sub_found, "Verletzungswechsel muss in h_sim_sub_events erscheinen")
 
+
+# ── Hilfsfunktion für Spielernoten-Tests ──────────────────────────────────────
+
+def _make_rating_result(home_goals=1, away_goals=0, home_xg=1.2, away_xg=0.5,
+                         home_strength=70, away_strength=70,
+                         home_sot=4, away_sot=2,
+                         home_poss=52, away_poss=48,
+                         home_club_id=1, away_club_id=2,
+                         home_players=None, away_players=None):
+    """Ruft compute_player_ratings() mit minimalen Testdaten auf."""
+    from game.match_engine import compute_player_ratings
+    return compute_player_ratings({
+        'home_goals': home_goals, 'away_goals': away_goals,
+        'home_xg': home_xg, 'away_xg': away_xg,
+        'home_club_id': home_club_id, 'away_club_id': away_club_id,
+        'match_stats': {
+            'home_pressing_ball_wins': 3, 'away_pressing_ball_wins': 2,
+            'home_pressing_bypassed': 2, 'away_pressing_bypassed': 3,
+            'home_possession': home_poss, 'away_possession': away_poss,
+            'home_shots_on_target': home_sot, 'away_shots_on_target': away_sot,
+        },
+        'home_strength': {'overall': home_strength},
+        'away_strength': {'overall': away_strength},
+        'home_players': home_players or [],
+        'away_players': away_players or [],
+    })
+
+
+def _p(pid, pos='ZM', group='midfield', goals=0, assists=0, mp=90,
+       yellow=0, yellow_red=0, red=0, own_goal=0, pen_missed=0, pen_saved=0,
+       is_sub=False):
+    """Minimale Spieler-Zeile für Noten-Tests."""
+    return {
+        'id': pid, 'name': f'Spieler{pid}', 'position': pos, 'group': group,
+        'goals': goals, 'assists': assists, 'minutes_played': mp,
+        'yellow_cards': yellow, 'yellow_red_cards': yellow_red, 'red_cards': red,
+        'own_goal': own_goal, 'penalty_missed': pen_missed, 'penalty_saved': pen_saved,
+        'is_sub': is_sub,
+    }
+
+
+class PlayerRatingsV3Tests(TestCase):
+    """Spielernoten V3 — Verhaltenstests nach Spec §495."""
+
+    def test_underdog_win_besser_als_favorit(self):
+        """Underdog schlägt Favorit 2:1 → Gewinner-Ø deutlich besser als Verlierer-Ø."""
+        # Bremen (68) schlägt Bayern (83)
+        h_players = [_p(i, 'IV', 'defense') for i in range(1, 5)] + \
+                    [_p(5, 'ZM', 'midfield', goals=1)] + \
+                    [_p(6, 'ST', 'attack', goals=1)] + \
+                    [_p(i, 'ZM', 'midfield') for i in range(7, 12)]
+        a_players = [_p(i + 100, 'IV', 'defense') for i in range(1, 12)]
+        result = _make_rating_result(
+            home_goals=2, away_goals=1, home_xg=1.1, away_xg=1.8,
+            home_strength=68, away_strength=83,
+            home_players=h_players, away_players=a_players,
+        )
+        h_avg = sum(r['rating'] for r in result['home_ratings']) / len(result['home_ratings'])
+        a_avg = sum(r['rating'] for r in result['away_ratings']) / len(result['away_ratings'])
+        self.assertLess(h_avg, a_avg,
+                        f"Underdog-Sieger-Ø {h_avg:.2f} muss besser sein als Favorit-Ø {a_avg:.2f}")
+        self.assertGreater(a_avg - h_avg, 0.3,
+                           f"Differenz {a_avg - h_avg:.2f} zu klein (erwartet > 0.3)")
+
+    def test_klare_niederlage_schlechte_noten(self):
+        """0:3-Niederlage → Ø-Note des Verlierers > 3.5."""
+        players = [_p(i, 'IV', 'defense') for i in range(1, 12)]
+        result = _make_rating_result(
+            home_goals=0, away_goals=3, home_xg=0.4, away_xg=3.2,
+            home_sot=1, away_sot=8,
+            home_players=players, away_players=[],
+        )
+        h_avg = sum(r['rating'] for r in result['home_ratings']) / len(result['home_ratings'])
+        self.assertGreater(h_avg, 3.5,
+                           f"0:3-Verlierer-Ø {h_avg:.2f} muss > 3.5 sein")
+
+    def test_neutrales_nullnull_nahe_drei(self):
+        """Ausgeglichenes 0:0 → alle Spieler-Noten nahe 3.0 (2.5–3.8)."""
+        players = [_p(i, 'ZM', 'midfield') for i in range(1, 12)]
+        opp     = [_p(i + 100, 'ZM', 'midfield') for i in range(1, 12)]
+        result = _make_rating_result(
+            home_goals=0, away_goals=0, home_xg=0.8, away_xg=0.8,
+            home_sot=3, away_sot=3, home_poss=50, away_poss=50,
+            home_players=players, away_players=opp,
+        )
+        all_ratings = ([r['rating'] for r in result['home_ratings']] +
+                       [r['rating'] for r in result['away_ratings']])
+        for rv in all_ratings:
+            self.assertGreaterEqual(rv, 2.5, f"0:0-Note {rv} zu niedrig")
+            self.assertLessEqual(rv, 3.8, f"0:0-Note {rv} zu hoch")
+
+    def test_joker_torschuetze_gute_note(self):
+        """Joker: 10 Min Einsatzzeit, 1 Tor → Note ≤ 2.2 (trotz Jitter ±0.08)."""
+        joker = _p(99, 'ST', 'attack', goals=1, mp=10, is_sub=True)
+        result = _make_rating_result(
+            home_goals=1, away_goals=0, home_xg=0.9, away_xg=0.4,
+            home_players=[joker], away_players=[],
+        )
+        rating = result['home_ratings'][0]['rating']
+        self.assertLessEqual(rating, 2.2,
+                             f"Joker-Torschütze (10 Min) Note {rating} muss ≤ 2.2 sein")
+
+    def test_tw_paraden_gut_bewertet(self):
+        """TW mit 6 Paraden (Zu-Null, hoher Gegnerdruck) bei 1:0-Sieg → Note ≤ 2.0."""
+        # opp_sot=6, opp_goals=0 → 6 Paraden + Clean Sheet + hoher xG-Druck
+        gk = _p(1, 'TW', 'goalkeeper', mp=90)
+        result = _make_rating_result(
+            home_goals=1, away_goals=0, home_xg=0.9, away_xg=3.0,
+            home_sot=3, away_sot=6,
+            home_players=[gk], away_players=[],
+        )
+        rating = result['home_ratings'][0]['rating']
+        self.assertLessEqual(rating, 2.0,
+                             f"TW-Paraden+ZuNull Note {rating} muss ≤ 2.0 sein")
+
+    def test_tw_zu_null_bonus(self):
+        """TW hält Zu-Null (0 Gegentore, wenig Beschäftigung) → Note ≤ 2.5."""
+        gk = _p(1, 'TW', 'goalkeeper', mp=90)
+        result = _make_rating_result(
+            home_goals=1, away_goals=0, home_xg=1.0, away_xg=0.3,
+            home_sot=3, away_sot=1,
+            home_players=[gk], away_players=[],
+        )
+        rating = result['home_ratings'][0]['rating']
+        self.assertLessEqual(rating, 2.5,
+                             f"TW-Zu-Null Note {rating} muss ≤ 2.5 sein")
+
+    def test_rote_karte_schlechtere_note(self):
+        """Spieler mit Roter Karte erhält deutlich schlechtere Note als sauberer Mitspieler."""
+        clean = _p(1, 'ZM', 'midfield', mp=90)
+        red   = _p(2, 'ZM', 'midfield', red=1, mp=90)
+        result = _make_rating_result(
+            home_goals=0, away_goals=0,
+            home_players=[clean, red], away_players=[],
+        )
+        r_clean = result['home_ratings'][0]['rating']
+        r_red   = result['home_ratings'][1]['rating']
+        self.assertGreater(r_red - r_clean, 0.5,
+                           f"Rot-Karte-Strafe {r_red - r_clean:.2f} zu klein (> 0.5 erwartet)")
+
+    def test_gelb_rot_zwischen_gelb_und_rot(self):
+        """Gelb-Rot (0.65) liegt zwischen Gelb (0.10) und Direktrot (0.85)."""
+        gelb    = _p(1, 'ZM', 'midfield', yellow=1, mp=90)
+        gelbrot = _p(2, 'ZM', 'midfield', yellow_red=1, mp=90)
+        direktrot = _p(3, 'ZM', 'midfield', red=1, mp=90)
+        result = _make_rating_result(
+            home_goals=0, away_goals=0,
+            home_players=[gelb, gelbrot, direktrot], away_players=[],
+        )
+        r_g  = result['home_ratings'][0]['rating']
+        r_gr = result['home_ratings'][1]['rating']
+        r_r  = result['home_ratings'][2]['rating']
+        self.assertLess(r_g, r_gr,
+                        f"Gelb ({r_g}) muss besser sein als Gelb-Rot ({r_gr})")
+        self.assertLess(r_gr, r_r + 0.2,
+                        f"Gelb-Rot ({r_gr}) muss ähnlich oder schlechter als Direktrot ({r_r})")
+
+    def test_determinismus(self):
+        """Gleiche Eingaben → identische Noten (kein Zufalls-State)."""
+        players = [_p(i, 'ZM', 'midfield', goals=1 if i == 1 else 0) for i in range(1, 6)]
+        r1 = _make_rating_result(home_goals=1, away_goals=0, home_players=players)
+        r2 = _make_rating_result(home_goals=1, away_goals=0, home_players=players)
+        for i, (a, b) in enumerate(zip(r1['home_ratings'], r2['home_ratings'])):
+            self.assertEqual(a['rating'], b['rating'],
+                             f"Spieler {i}: Note {a['rating']} ≠ {b['rating']} (nicht deterministisch)")
+
+    def test_spiegeltest_symmetrie(self):
+        """Heimteam und Auswärtsteam mit gleichen Spielern tauschen → Noten spiegeln sich."""
+        h_players = [_p(i, 'ZM', 'midfield') for i in range(1, 6)]
+        a_players = [_p(i + 100, 'ZM', 'midfield') for i in range(1, 6)]
+        # Heimsieg 1:0
+        r_home_wins = _make_rating_result(
+            home_goals=1, away_goals=0, home_xg=1.0, away_xg=0.5,
+            home_poss=55, away_poss=45,
+            home_sot=4, away_sot=2,
+            home_strength=70, away_strength=70,
+            home_club_id=1, away_club_id=2,
+            home_players=h_players, away_players=a_players,
+        )
+        # Auswärtssieg: identisches Match gespiegelt
+        r_away_wins = _make_rating_result(
+            home_goals=0, away_goals=1, home_xg=0.5, away_xg=1.0,
+            home_poss=45, away_poss=55,
+            home_sot=2, away_sot=4,
+            home_strength=70, away_strength=70,
+            home_club_id=3, away_club_id=4,
+            home_players=[_p(i + 200, 'ZM', 'midfield') for i in range(1, 6)],
+            away_players=[_p(i + 300, 'ZM', 'midfield') for i in range(1, 6)],
+        )
+        # In Heimsieg: Heimmannschaft hat bessere Noten
+        h_avg_win  = sum(r['rating'] for r in r_home_wins['home_ratings']) / 5
+        a_avg_lose = sum(r['rating'] for r in r_home_wins['away_ratings']) / 5
+        self.assertLess(h_avg_win, a_avg_lose,
+                        f"Sieger-Ø {h_avg_win:.2f} muss besser (kleiner) sein als Verlierer-Ø {a_avg_lose:.2f}")
+        # In Auswärtssieg: Auswärtsmannschaft (Sieger) hat bessere Noten
+        h_avg_lose = sum(r['rating'] for r in r_away_wins['home_ratings']) / 5
+        a_avg_win  = sum(r['rating'] for r in r_away_wins['away_ratings']) / 5
+        self.assertLess(a_avg_win, h_avg_lose,
+                        f"Auswärtssieger-Ø {a_avg_win:.2f} muss besser sein als Verlierer-Ø {h_avg_lose:.2f}")
+

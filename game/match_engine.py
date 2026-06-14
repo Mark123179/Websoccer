@@ -198,6 +198,10 @@ def _player_row(item: dict, goals: int = 0, assists: int = 0, match_strength: fl
         'teamwork': _teamwork(p),
         'goals': goals,
         'assists': assists,
+        'own_goal': 0,
+        'yellow_red_cards': 0,
+        'penalty_missed': 0,
+        'penalty_saved': 0,
     }
 
 
@@ -1541,188 +1545,162 @@ def compute_player_ratings(result: dict) -> dict:
     )
 
     def _rate(p: dict, is_home: bool) -> float:
-        rating = 3.0   # V2: OWS-Basisnote
+        """Spielernote V3 — direkte Events (Tore, Karten, Elfmeter) minutenunabhängig."""
         pg = _rating_pos_group(p.get('position', ''), p.get('group', ''))
 
-        goals   = p.get('goals', 0) or 0
-        assists = p.get('assists', 0) or 0
-        yellow  = p.get('yellow_cards', 0) or 0
-        red     = p.get('red_cards', 0) or 0
+        goals          = p.get('goals', 0) or 0
+        assists        = p.get('assists', 0) or 0
+        yellow         = p.get('yellow_cards', 0) or 0
+        yellow_red     = p.get('yellow_red_cards', 0) or 0
+        red            = p.get('red_cards', 0) or 0
+        own_goal       = int(bool(p.get('own_goal', False)))
+        penalty_missed = p.get('penalty_missed', 0) or 0
+        penalty_saved  = p.get('penalty_saved', 0) or 0
 
-        my_goals        = h_goals         if is_home else a_goals
-        opp_goals       = a_goals         if is_home else h_goals
-        my_xg           = h_xg            if is_home else a_xg
-        opp_xg          = a_xg            if is_home else h_xg
-        my_win          = h_win           if is_home else a_win
-        opp_win         = a_win           if is_home else h_win
-        my_press_ratio  = h_press_ratio   if is_home else a_press_ratio
-        opp_press_ratio = a_press_ratio   if is_home else h_press_ratio
-        opp_sot         = a_sot           if is_home else h_sot
-        my_poss         = h_poss          if is_home else a_poss
-        my_str          = h_str_overall   if is_home else a_str_overall
-        opp_str         = a_str_overall   if is_home else h_str_overall
+        my_goals        = h_goals        if is_home else a_goals
+        opp_goals       = a_goals        if is_home else h_goals
+        my_xg           = h_xg           if is_home else a_xg
+        opp_xg          = a_xg           if is_home else h_xg
+        my_win          = h_win          if is_home else a_win
+        opp_win         = a_win          if is_home else h_win
+        my_press_ratio  = h_press_ratio  if is_home else a_press_ratio
+        opp_press_ratio = a_press_ratio  if is_home else h_press_ratio
+        opp_sot         = a_sot          if is_home else h_sot
+        my_poss         = h_poss         if is_home else a_poss
+        my_str          = h_str_overall  if is_home else a_str_overall
+        opp_str         = a_str_overall  if is_home else h_str_overall
 
-        # A+B+C) Teamkontext — als gemeinsamer Delta, am Ende auf ±0,85 begrenzt
+        # ── A+B+C) Teamkontext → team_delta, gekappt ±0,85 ────────────────────
         goal_diff = my_goals - opp_goals
         xg_diff   = my_xg - opp_xg
         str_diff  = my_str - opp_str
 
         team_delta = 0.0
-
-        # A) Team-Ergebnis
-        if goal_diff == 1:
-            team_delta -= 0.35
-        elif goal_diff == 2:
-            team_delta -= 0.48
-        elif goal_diff >= 3:
-            team_delta -= 0.62
-        elif goal_diff == -1:
-            team_delta += 0.35
-        elif goal_diff == -2:
-            team_delta += 0.48
-        elif goal_diff <= -3:
-            team_delta += 0.62
-
-        # B) Team-xGD (Dominanzindikator)
-        if xg_diff >= 1.5:
-            team_delta -= 0.30
-        elif xg_diff >= 0.5:
-            team_delta -= 0.15
-        elif xg_diff <= -1.5:
-            team_delta += 0.30
-        elif xg_diff <= -0.5:
-            team_delta += 0.15
-
+        # A) Ergebnis
+        if goal_diff == 1:    team_delta -= 0.35
+        elif goal_diff == 2:  team_delta -= 0.48
+        elif goal_diff >= 3:  team_delta -= 0.62
+        elif goal_diff == -1: team_delta += 0.35
+        elif goal_diff == -2: team_delta += 0.48
+        elif goal_diff <= -3: team_delta += 0.62
+        # B) xGD
+        if xg_diff >= 1.5:    team_delta -= 0.30
+        elif xg_diff >= 0.5:  team_delta -= 0.15
+        elif xg_diff <= -1.5: team_delta += 0.30
+        elif xg_diff <= -0.5: team_delta += 0.15
         # C) Gegnerstärke / Upset-Bonus
         if my_win:
-            if str_diff <= -25:
-                team_delta -= 0.35
-            elif str_diff <= -15:
-                team_delta -= 0.22
+            if str_diff <= -25:   team_delta -= 0.35
+            elif str_diff <= -15: team_delta -= 0.22
         elif opp_win:
-            if str_diff >= 25:
-                team_delta += 0.35
-            elif str_diff >= 15:
-                team_delta += 0.22
-
-        # Teamkontext-Cap: Summe A+B+C auf ±0,85 begrenzen
+            if str_diff >= 25:    team_delta += 0.35
+            elif str_diff >= 15:  team_delta += 0.22
         team_delta = max(-0.85, min(0.85, team_delta))
-        rating += team_delta
 
-        # D) Scorer (positions-differenziert)
-        if goals > 0:
-            per_goal = {
-                'GK': 1.50, 'DEF': 1.00, 'DM': 0.85, 'MID': 0.85, 'FWD': 0.70,
-            }.get(pg, 0.70)
-            rating -= goals * per_goal
-            if goals >= 2:
-                rating -= 0.25   # Doppelpack-Bonus
-            if goals >= 3:
-                rating -= 0.20   # Hattrick-Bonus
-
-        if assists > 0:
-            per_assist = {
-                'GK': 0.80, 'DEF': 0.55, 'DM': 0.45, 'MID': 0.45, 'FWD': 0.35,
-            }.get(pg, 0.35)
-            rating -= assists * per_assist
-
-        # E) Karten
-        rating += yellow * 0.30
-        rating += red * 1.50
-
-        # F) Positionslogik — Pressing via ratio (Regel A: keine Doppelzählung)
+        # ── F) Positionslogik → proxy_delta (minutenskaliert) ─────────────────
+        proxy_delta = 0.0
         if pg == 'GK':
             saves = max(0, opp_sot - opp_goals)
-            rating -= min(saves * 0.12, 0.60)   # Save-Bonus, max −0,60
-            rating += opp_goals * 0.40          # jedes Gegentor verschlechtert
+            proxy_delta -= min(saves * 0.12, 0.60)
+            proxy_delta += opp_goals * 0.40
             if opp_goals == 0:
-                rating -= 0.50               # Zu-Null-Bonus
+                proxy_delta -= 0.50               # Zu-Null-Bonus
             if opp_xg >= 2.0 and opp_goals <= 1:
-                rating -= 0.30               # Stark gehalten trotz Druck
+                proxy_delta -= 0.30               # Stark gehalten trotz Druck
             if opp_xg <= 0.8 and opp_goals >= 2:
-                rating += 0.50               # Vermeidbare Gegentore
-
+                proxy_delta += 0.50               # Vermeidbare Gegentore
         elif pg == 'DEF':
-            rating += opp_goals * 0.20
+            proxy_delta += opp_goals * 0.20
             if opp_goals == 0:
-                rating -= 0.30
+                proxy_delta -= 0.30
             if my_win:
-                rating -= 0.10
-            # Pressing-Ratio (eine Metrik, opp_press_ratio = Gegner-Dominanz)
+                proxy_delta -= 0.10
             if opp_press_ratio > 0.55:
-                rating += (opp_press_ratio - 0.50) * 0.80   # Gegner presst durch
+                proxy_delta += (opp_press_ratio - 0.50) * 0.80
             elif opp_press_ratio < 0.45:
-                rating -= (0.50 - opp_press_ratio) * 0.40   # Eigene Defensive dominant
-
+                proxy_delta -= (0.50 - opp_press_ratio) * 0.40
         elif pg == 'DM':
-            rating += opp_goals * 0.08
-            if opp_goals == 0:
-                rating -= 0.15
-            if xg_diff >= 0.5:
-                rating -= 0.15
-            elif xg_diff <= -0.5:
-                rating += 0.15
+            proxy_delta += opp_goals * 0.08
+            if opp_goals == 0:    proxy_delta -= 0.15
+            if xg_diff >= 0.5:    proxy_delta -= 0.15
+            elif xg_diff <= -0.5: proxy_delta += 0.15
             if my_press_ratio > 0.55:
-                rating -= (my_press_ratio - 0.50) * 0.60    # Pressing-Gewinner
+                proxy_delta -= (my_press_ratio - 0.50) * 0.60
             elif my_press_ratio < 0.45:
-                rating += (0.50 - my_press_ratio) * 0.30
-
+                proxy_delta += (0.50 - my_press_ratio) * 0.30
         elif pg == 'MID':
-            if xg_diff >= 0.5:
-                rating -= 0.20
-            elif xg_diff <= -0.5:
-                rating += 0.20
+            if xg_diff >= 0.5:    proxy_delta -= 0.20
+            elif xg_diff <= -0.5: proxy_delta += 0.20
             if my_press_ratio > 0.55:
-                rating -= (my_press_ratio - 0.50) * 0.40
+                proxy_delta -= (my_press_ratio - 0.50) * 0.40
             elif my_press_ratio < 0.45:
-                rating += (0.50 - my_press_ratio) * 0.20
+                proxy_delta += (0.50 - my_press_ratio) * 0.20
             if my_poss >= 58 and not opp_win:
-                rating -= 0.10   # Ballbesitz-Dominanz ohne Niederlage
-
+                proxy_delta -= 0.10
         elif pg == 'FWD':
-            if my_goals >= 3:
-                rating -= 0.20
-            elif my_goals == 2:
-                rating -= 0.10
-            elif my_goals == 0:
-                rating += 0.25
+            if my_goals >= 3:    proxy_delta -= 0.20
+            elif my_goals == 2:  proxy_delta -= 0.10
+            elif my_goals == 0:  proxy_delta += 0.25
             if goals == 0 and assists == 0:
-                if my_xg >= 2.0:
-                    rating += 0.30   # Kein Scorer trotz hoher Team-xG
-                elif my_xg >= 1.5:
-                    rating += 0.20
+                if my_xg >= 2.0:   proxy_delta += 0.30
+                elif my_xg >= 1.5: proxy_delta += 0.20
 
-        # G) Einsatzminuten (kurze Einsatzzeit → Note zum Neutralwert 3.0 ziehen)
-        mp = p.get('minutes_played', 90)
-        if mp < 15:
-            rating = 3.0 + (rating - 3.0) * 0.20
-        elif mp < 30:
-            rating = 3.0 + (rating - 3.0) * 0.50
-        elif mp < 45:
-            rating = 3.0 + (rating - 3.0) * 0.75
+        # ── D+E) Direkte Spielerereignisse → event_delta (minutenunabhängig) ──
+        event_delta = 0.0
+        per_goal = {'GK': 1.00, 'DEF': 0.95, 'DM': 0.90, 'MID': 0.90, 'FWD': 0.85}.get(pg, 0.85)
+        event_delta -= goals * per_goal
+        if goals >= 2: event_delta -= 0.25   # Doppelpack-Bonus
+        if goals >= 3: event_delta -= 0.20   # Hattrick-Bonus
 
-        # H) Deterministischer Spieler-Jitter ±0,08 — Seed: Match-ID + Spieler-ID
+        per_assist = {'GK': 0.70, 'DEF': 0.65, 'DM': 0.60, 'MID': 0.60, 'FWD': 0.55}.get(pg, 0.55)
+        event_delta -= assists * per_assist
+
+        event_delta += own_goal       * 0.75   # Eigentor verschlechtert Note
+        event_delta += yellow         * 0.10   # Gelbe Karte
+        event_delta += yellow_red     * 0.65   # Gelb-Rote Karte
+        event_delta += red            * 0.85   # Direktes Rot
+        event_delta += penalty_missed * 0.50   # Verschossener Elfmeter
+        if pg == 'GK':
+            event_delta -= penalty_saved * 0.60  # Gehaltener Elfmeter (TW-Bonus)
+
+        # ── G) Minutenskalierung — NUR auf team_delta + proxy_delta ───────────
+        mp = p.get('minutes_played') or 90
+        if mp >= 45:   scale = 1.00
+        elif mp >= 30: scale = 0.75
+        elif mp >= 15: scale = 0.50
+        else:          scale = 0.20
+
+        # ── H) Deterministischer Spieler-Jitter ±0,08 ─────────────────────────
         pid = p.get('id') or 0
         jitter_seed = (pid * 2654435761 + _match_jitter_base) & 0xFFFF
-        rating += jitter_seed / 65535 * 0.16 - 0.08
+        jitter = jitter_seed / 65535 * 0.16 - 0.08
 
+        rating = 3.0 + (team_delta + proxy_delta) * scale + event_delta + jitter
         return round(_clamp(rating, 1.0, 6.0), 1)
 
     home_ratings = [
         {
-            'id':       p.get('id'),
-            'name':     p.get('name', ''),
-            'position': p.get('position', ''),
-            'rating':   _rate(p, True),
+            'id':        p.get('id'),
+            'name':      p.get('name', ''),
+            'position':  p.get('position', ''),
+            'pos_group': _rating_pos_group(p.get('position', ''), p.get('group', '')),
+            'goals':     p.get('goals', 0) or 0,
+            'assists':   p.get('assists', 0) or 0,
+            'is_sub':    p.get('is_sub', False),
+            'rating':    _rate(p, True),
         }
         for p in h_players_raw
     ]
     away_ratings = [
         {
-            'id':       p.get('id'),
-            'name':     p.get('name', ''),
-            'position': p.get('position', ''),
-            'rating':   _rate(p, False),
+            'id':        p.get('id'),
+            'name':      p.get('name', ''),
+            'position':  p.get('position', ''),
+            'pos_group': _rating_pos_group(p.get('position', ''), p.get('group', '')),
+            'goals':     p.get('goals', 0) or 0,
+            'assists':   p.get('assists', 0) or 0,
+            'is_sub':    p.get('is_sub', False),
+            'rating':    _rate(p, False),
         }
         for p in a_players_raw
     ]
@@ -2163,11 +2141,22 @@ def simulate_match(
     sim_dismissals = sim.get('dismissal_events', [])
     h_dismissal_pids = {e['player_id'] for e in sim_dismissals if e.get('club_side') == 'home'}
     a_dismissal_pids = {e['player_id'] for e in sim_dismissals if e.get('club_side') == 'away'}
+    # yellow_red_cards tracken (separates Feld von red_cards für Notenberechnung)
+    h_yr_pids = {e['player_id'] for e in sim_dismissals
+                 if e.get('club_side') == 'home' and e.get('card_type') == 'yellow_red'}
+    a_yr_pids = {e['player_id'] for e in sim_dismissals
+                 if e.get('club_side') == 'away' and e.get('card_type') == 'yellow_red'}
     for p in h_players:
-        if p.get('id') in h_dismissal_pids:
+        pid = p.get('id')
+        if pid in h_yr_pids:
+            p['yellow_red_cards'] = 1
+        elif pid in h_dismissal_pids:
             p['red_cards'] = 1
     for p in a_players:
-        if p.get('id') in a_dismissal_pids:
+        pid = p.get('id')
+        if pid in a_yr_pids:
+            p['yellow_red_cards'] = 1
+        elif pid in a_dismissal_pids:
             p['red_cards'] = 1
     h_red_remaining = max(0, (ms_stats.get('home_red', 0) or 0) - len(h_dismissal_pids))
     a_red_remaining = max(0, (ms_stats.get('away_red', 0) or 0) - len(a_dismissal_pids))

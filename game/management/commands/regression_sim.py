@@ -31,6 +31,7 @@ from collections import defaultdict
 from django.core.management.base import BaseCommand
 from game.match_engine import (
     _simulate_match_minutes, MAX_SUBSTITUTIONS, _generate_injury_events,
+    compute_player_ratings, _build_minutes_played_map,
 )
 
 
@@ -490,6 +491,55 @@ def _check_ticker_integrity(n_samples: int = 200) -> dict:
     return {'errors': errors, 'ok': len(errors) == 0}
 
 
+def _build_reg_players(team_dict: dict, goal_evts: list, side: str,
+                        sub_evts: list, dis_evts: list) -> list[dict]:
+    """Minimale Spieler-Rows für compute_player_ratings() aus Regressionssimdaten."""
+    from game.match_engine import _rating_pos_group
+    goal_map: dict[int, dict] = {}
+    for e in (goal_evts or []):
+        if e.get('team') == side:
+            sid = e.get('scorer_id')
+            if sid:
+                goal_map.setdefault(sid, {'goals': 0, 'assists': 0})
+                goal_map[sid]['goals'] += 1
+            aid = e.get('assister_id')
+            if aid:
+                goal_map.setdefault(aid, {'goals': 0, 'assists': 0})
+                goal_map[aid]['assists'] += 1
+
+    mmap = _build_minutes_played_map(sub_evts or [])
+    sub_pids = {e['in'] for e in (sub_evts or []) if e.get('in')}
+
+    dis_pids_yr  = {e['player_id'] for e in (dis_evts or [])
+                    if e.get('club_side') == side and e.get('card_type') == 'yellow_red'}
+    dis_pids_red = {e['player_id'] for e in (dis_evts or [])
+                    if e.get('club_side') == side and e.get('card_type') != 'yellow_red'}
+
+    rows = []
+    for p in team_dict.get('players', []):
+        pid = p['id']
+        mp_val = mmap.get(pid)
+        if mp_val is None:
+            mp_val = 90
+        rows.append({
+            'id': pid,
+            'name': p.get('name', str(pid)),
+            'position': p.get('position', 'ZM'),
+            'group': p.get('group', 'midfield'),
+            'goals': goal_map.get(pid, {}).get('goals', 0),
+            'assists': goal_map.get(pid, {}).get('assists', 0),
+            'yellow_cards': 0,
+            'yellow_red_cards': 1 if pid in dis_pids_yr else 0,
+            'red_cards': 1 if pid in dis_pids_red else 0,
+            'own_goal': 0,
+            'penalty_missed': 0,
+            'penalty_saved': 0,
+            'minutes_played': mp_val,
+            'is_sub': pid in sub_pids,
+        })
+    return rows
+
+
 # ── Hauptklasse ───────────────────────────────────────────────────────────────
 
 class Command(BaseCommand):
@@ -661,6 +711,18 @@ class Command(BaseCommand):
 
         # K: game-level records für Spearman-Bootstrap
         game_records: list[tuple[int, float, float]] = []  # (cid, pts, strength)
+
+        # L: Spielernoten-Metriken
+        rat_all:      list[float] = []
+        rat_winner:   list[float] = []
+        rat_loser:    list[float] = []
+        rat_draw:     list[float] = []
+        rat_scorer:   list[float] = []
+        rat_assister: list[float] = []
+        rat_sub:      list[float] = []
+        rat_by_pos:   dict[str, list[float]] = {
+            'GK': [], 'DEF': [], 'DM': [], 'MID': [], 'FWD': [],
+        }
 
         # ── Saisonschleife ────────────────────────────────────────────────────
         for season_i in range(n_seas):
@@ -1047,6 +1109,46 @@ class Command(BaseCommand):
                         after_red = sum(1 for ge in goal_evts
                                         if ge.get('minute', 0) > min_red)
                         goals_after_red += after_red
+
+                    # ── L: Spielernoten ───────────────────────────────────────
+                    try:
+                        h_prows = _build_reg_players(home_team, goal_evts, 'home',
+                                                     h_evts, dis_evts)
+                        a_prows = _build_reg_players(away_team, goal_evts, 'away',
+                                                     a_evts, dis_evts)
+                        rat_result = compute_player_ratings({
+                            'home_goals': hg, 'away_goals': ag,
+                            'home_xg': hxg, 'away_xg': axg,
+                            'home_club_id': h_id, 'away_club_id': a_id,
+                            'match_stats': ms_,
+                            'home_strength': {'overall': h_club['strength']},
+                            'away_strength': {'overall': a_club['strength']},
+                            'home_players': h_prows,
+                            'away_players': a_prows,
+                        })
+                        is_draw = hg == ag
+                        for side_key, is_win in (('home', hg > ag), ('away', ag > hg)):
+                            side_rat = rat_result.get(f'{side_key}_ratings', [])
+                            for rr in side_rat:
+                                rv = rr.get('rating', 3.0)
+                                rat_all.append(rv)
+                                if is_draw:
+                                    rat_draw.append(rv)
+                                elif is_win:
+                                    rat_winner.append(rv)
+                                else:
+                                    rat_loser.append(rv)
+                                if rr.get('goals', 0):
+                                    rat_scorer.append(rv)
+                                if rr.get('assists', 0):
+                                    rat_assister.append(rv)
+                                if rr.get('is_sub'):
+                                    rat_sub.append(rv)
+                                pg = rr.get('pos_group', '')
+                                if pg in rat_by_pos:
+                                    rat_by_pos[pg].append(rv)
+                    except Exception:
+                        pass
 
             # ── Saison auswerten ──────────────────────────────────────────────
             sorted_clubs = sorted(
@@ -1563,6 +1665,60 @@ class Command(BaseCommand):
         w(f'  Verletz./Spiel : {inj_total_sum/N:.4f}  95%-KI [{ci_inj[0]:.4f}, {ci_inj[1]:.4f}]')
         w(f'  Spearman(str→pts): {r_str_pos:.4f}  Bootstrap 95%-KI [{ci_spear[0]:.4f}, {ci_spear[1]:.4f}]')
         w(f'  (n={N} Spiele, Bootstrap 500× Subsampling à 5000 Spiele aus {len(game_records)} Einträgen)')
+
+        # ── L: SPIELERNOTEN V3 ────────────────────────────────────────────────
+        w(f'\n{HR}'); w('  L  SPIELERNOTEN V3'); w(HR)
+        if rat_all:
+            r_mean   = _mean(rat_all)
+            r_median = _median(rat_all)
+            rat_all_sorted = sorted(rat_all)
+            n_rat = len(rat_all)
+            pct_1  = sum(1 for r in rat_all if r <= 1.0) / n_rat * 100
+            pct_5  = sum(1 for r in rat_all if r >= 5.0) / n_rat * 100
+            r_best = min(rat_all)
+            r_worst= max(rat_all)
+            w(f'  Datenbasis           : {n_rat} Spieler-Einsätze ({N} Spiele)')
+            w(f'  Gesamt-Ø             : {r_mean:.4f}  (Ziel: 2.9–3.2)')
+            w(f'  Median               : {r_median:.4f}')
+            w(f'  Beste Note           : {r_best:.1f}   Schlechteste: {r_worst:.1f}')
+            w(f'  Note 1.0 (≤1.0)      : {pct_1:.2f}%  (Ziel ≤2%)')
+            w(f'  Note ≥5.0            : {pct_5:.2f}%  (Ziel ≈0%)')
+            # Sieger vs. Verlierer
+            wr_mean = _mean(rat_winner) if rat_winner else float('nan')
+            lr_mean = _mean(rat_loser)  if rat_loser  else float('nan')
+            dr_mean = _mean(rat_draw)   if rat_draw   else float('nan')
+            diff_wl = wr_mean - lr_mean
+            wl_ok   = diff_wl <= -0.6
+            w(f'\n  Ø nach Spielausgang:')
+            w(f'    Sieger  : {wr_mean:.4f}  ({len(rat_winner)} Eintr.)')
+            w(f'    Verlierer: {lr_mean:.4f}  ({len(rat_loser)} Eintr.)')
+            w(f'    Remis   : {dr_mean:.4f}  ({len(rat_draw)} Eintr.)')
+            w(f'    Δ (Sieger−Verlierer): {diff_wl:+.4f}  '
+              f'(Ziel ≤ −0.6: {"✓" if wl_ok else "⚠ FAIL"})')
+            if not wl_ok:
+                pass  # non-fatal warning already shown above
+            # Scorer / Assister / Subs
+            sc_mean = _mean(rat_scorer)   if rat_scorer   else float('nan')
+            as_mean = _mean(rat_assister) if rat_assister else float('nan')
+            sb_mean = _mean(rat_sub)      if rat_sub      else float('nan')
+            w(f'\n  Scorer-Ø             : {sc_mean:.4f}  ({len(rat_scorer)} Tore)')
+            w(f'  Assistent-Ø          : {as_mean:.4f}  ({len(rat_assister)} Assists)')
+            w(f'  Einwechslung-Ø       : {sb_mean:.4f}  ({len(rat_sub)} Einsätze)')
+            # Positionsgruppen
+            w(f'\n  Ø nach Positionsgruppe:')
+            pg_means = {}
+            for pg_key in ('GK', 'DEF', 'DM', 'MID', 'FWD'):
+                pg_list = rat_by_pos[pg_key]
+                pg_means[pg_key] = _mean(pg_list) if pg_list else float('nan')
+                w(f'    {pg_key:>3}  : {pg_means[pg_key]:.4f}  ({len(pg_list)} Eintr.)')
+            pg_vals = [v for v in pg_means.values() if not math.isnan(v)]
+            if pg_vals:
+                pg_spread = max(pg_vals) - min(pg_vals)
+                pos_ok = pg_spread <= 0.20
+                w(f'    Positionsabweichung max−min : {pg_spread:.4f}  '
+                  f'(Ziel ≤0.20: {"✓" if pos_ok else "⚠"})')
+        else:
+            w('  Keine Noten-Daten gesammelt.')
 
         w(f'\n{HR}\n')
 
