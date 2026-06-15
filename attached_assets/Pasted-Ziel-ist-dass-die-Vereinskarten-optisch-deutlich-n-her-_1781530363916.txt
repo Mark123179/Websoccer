@@ -1,0 +1,491 @@
+Ziel ist, dass die Vereinskarten optisch deutlich näher an der AAA-Vorlage liegen. Die aktuelle Darstellung ist zu flach und wirkt wie eine Tabelle.
+
+1. Inhaltsbereich verbreitern
+
+Der Bereich unterhalb des Kalenders soll die verfügbare Breite deutlich besser nutzen.
+
+Kein schmaler, auf etwa 900px begrenzter Mittelblock.
+Zielbreite auf Desktop ungefähr 1250–1450px.
+Nur den Bereich .jo-artboard beziehungsweise dessen direkten Content-Wrapper verändern.
+Kalender und Sidebar dürfen dadurch nicht beeinflusst werden.
+.job-offers-page .jo-artboard {
+  width: calc(100% - 48px);
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+Prüfe zusätzlich in den Developer Tools, ob ein übergeordneter Wrapper den Inhalt auf etwa 900px begrenzt. Diese Begrenzung ausschließlich innerhalb von .job-offers-page überschreiben.
+
+2. Karten deutlich größer gestalten
+
+Die Karten sollen keine 75px hohen Tabellenzeilen mehr sein.
+
+Desktop-Ziel:
+
+Kartenhöhe: etwa 125–135px
+Abstand zwischen Karten: 12px
+stärkerer Kartenhintergrund
+dezenter Gold- oder Cyan-Hover
+abgerundete Ecken
+klare vertikale Trennlinien
+
+Ersetze die aktuelle Grid-Aufteilung durch:
+
+.jo-card {
+  display: grid;
+  grid-template-columns:
+    minmax(250px, 1.05fr)
+    minmax(320px, 1.35fr)
+    110px
+    minmax(235px, 1fr)
+    220px;
+  min-height: 128px;
+  align-items: stretch;
+
+  background:
+    linear-gradient(110deg, rgba(17, 26, 36, .98), rgba(8, 14, 22, .98));
+  border: 1px solid rgba(255, 255, 255, .09);
+  border-radius: 10px;
+  overflow: hidden;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .025);
+
+  transition:
+    border-color .2s ease,
+    box-shadow .2s ease,
+    transform .2s ease;
+}
+
+.jo-card:hover {
+  border-color: rgba(201, 168, 76, .35);
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, .4),
+    0 0 20px rgba(201, 168, 76, .05);
+  transform: translateY(-1px);
+}
+
+Die letzte Spalte darf nicht mehr auto sein, weil dadurch das Free-Pick-Feld aktuell viel zu breit wird.
+
+3. Vereinswappen vergrößern
+
+Das Wappen soll der visuelle Einstieg jeder Karte sein.
+
+Desktop: etwa 76–84px
+immer vollständig sichtbar
+nie abschneiden
+object-fit: contain
+dezenter Schatten
+bei langen Vereinsnamen Text sauber umbrechen oder kürzen
+.jo-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border-right: 1px solid rgba(255, 255, 255, .07);
+  min-width: 0;
+}
+
+.jo-crest,
+.jo-crest--missing {
+  width: 80px;
+  height: 80px;
+  flex: 0 0 80px;
+}
+
+.jo-crest {
+  object-fit: contain;
+  filter:
+    drop-shadow(0 7px 12px rgba(0, 0, 0, .55))
+    drop-shadow(0 0 8px rgba(255, 255, 255, .04));
+}
+
+.jo-club-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.jo-club-name {
+  font-size: 1.05rem;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #f2f5f7;
+}
+
+.jo-league-name {
+  font-size: .76rem;
+  color: rgba(255, 255, 255, .58);
+}
+
+Unter der Ligazugehörigkeit muss zusätzlich dauerhaft die Jugendinformation erscheinen:
+
+U21-Liga Nord · Platz 4
+
+Falls noch keine Jugenddaten vorhanden sind:
+
+U21-Liga folgt
+
+Dieser Bereich soll später ohne Layoutänderung mit echten Daten befüllt werden können.
+
+4. Stadionbild als echter Bildbereich
+
+Das Stadionbild soll deutlich größer und heller werden.
+
+Aktuell ist es zu klein, zu dunkel und wirkt nur wie ein Thumbnail.
+
+Anforderungen:
+
+mindestens ungefähr 320px breit
+volle Kartenhöhe
+object-fit: cover
+Bild nicht auf opacity: .6 reduzieren
+nur am unteren Rand abdunkeln
+Stadionname und Kapazität unten im Bild
+Bild soll weiterhin gut erkennbar bleiben
+.jo-card-stadium {
+  position: relative;
+  min-height: 128px;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, .07);
+  background: #101821;
+}
+
+.jo-stadium-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .88;
+  transform: scale(1.01);
+}
+
+.jo-stadium-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to top,
+      rgba(4, 8, 13, .98) 0%,
+      rgba(4, 8, 13, .62) 25%,
+      rgba(4, 8, 13, .12) 66%,
+      rgba(4, 8, 13, .04) 100%
+    );
+}
+
+.jo-stadium-caption {
+  position: absolute;
+  left: 16px;
+  right: 14px;
+  bottom: 13px;
+  z-index: 2;
+}
+
+.jo-stadium-name {
+  display: block;
+  font-size: .84rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, .9);
+}
+
+.jo-stadium-cap {
+  display: block;
+  margin-top: 3px;
+  font-size: .7rem;
+  color: rgba(255, 255, 255, .68);
+}
+
+Ausgabe beispielsweise:
+
+Voith-Arena
+15.000 Plätze
+5. Tabellenplatz stärker inszenieren
+
+Der Tabellenplatz soll als eigener kompakter Statusblock erscheinen.
+
+Zahl groß und zentral
+darunter Status wie „Abstiegskampf“, „Mittelfeld“, „Aufstiegsrennen“
+bei noch nicht gestarteter Saison darf weiterhin ein Gedankenstrich stehen
+.jo-card-standing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 8px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, .27));
+  border-right: 1px solid rgba(255, 255, 255, .07);
+}
+
+.jo-stand-label {
+  font-size: .57rem;
+  letter-spacing: .09em;
+  color: rgba(255, 255, 255, .34);
+}
+
+.jo-stand-num {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+}
+6. Aktive Wettbewerbe als vollständige Checkliste
+
+Der Wettbewerbsbereich soll nicht nur aus drei winzigen Textzeilen bestehen.
+
+Jede Karte benötigt eine klar lesbare Liste:
+
+Liga
+Nationaler Pokal
+Ligapokal, sofern im Land vorhanden
+Champions League
+Europa League
+
+Darstellung:
+
+links Wettbewerbssymbol
+mittig Wettbewerbsname
+rechts grüner Haken bei Teilnahme
+grauer Gedankenstrich bei keiner Teilnahme
+keine roten Kreuze für eine normale Nichtteilnahme
+Überschrift in Cyan
+.jo-card-comps {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 15px 18px;
+  border-right: 1px solid rgba(255, 255, 255, .07);
+}
+
+.jo-comps-title {
+  margin-bottom: 8px;
+  font-size: .61rem;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: #20cce8;
+}
+
+.jo-comp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jo-comp-item {
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 7px;
+  min-height: 16px;
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+.jo-comp--yes {
+  color: rgba(255, 255, 255, .82);
+}
+
+.jo-comp--no {
+  color: rgba(255, 255, 255, .28);
+}
+
+.jo-comp-icon {
+  width: 12px;
+  height: 12px;
+  fill: #54d769;
+}
+
+Wichtig: Der grüne Haken muss rechts stehen. Das kleine Wettbewerbssymbol steht links.
+
+7. Bewerbungsbereich vollständig anzeigen
+
+Aktuell wird bei einem Manager mit bestehendem Verein nur der Status „Free Pick“ angezeigt. Der Bereich muss trotzdem vollständig aufgebaut bleiben.
+
+Jede Karte zeigt immer:
+
+Bewerbungsart
+Button „Bewerben“
+Link oder Button „Details“
+
+Hat der Manager bereits einen Verein:
+
+„Bewerben“-Button sichtbar lassen
+Button deaktivieren
+Text beispielsweise „NICHT VERFÜGBAR“
+Tooltip: „Du stehst aktuell bei einem Verein unter Vertrag.“
+Details bleiben anklickbar
+
+Die Spalte darf nicht über die gesamte Restbreite wachsen.
+
+.jo-card-action {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px 16px;
+  min-width: 0;
+}
+
+.jo-badge {
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.jo-badge--free {
+  color: #f1c85a;
+  background:
+    linear-gradient(180deg, rgba(212, 171, 58, .22), rgba(118, 88, 18, .15));
+  border: 1px solid rgba(224, 184, 68, .55);
+  box-shadow:
+    inset 0 0 16px rgba(212, 171, 58, .08),
+    0 0 12px rgba(212, 171, 58, .04);
+}
+
+.jo-badge--normal {
+  color: #d7e2ef;
+  background:
+    linear-gradient(180deg, rgba(146, 164, 185, .22), rgba(63, 78, 96, .18));
+  border: 1px solid rgba(161, 181, 204, .4);
+}
+
+.jo-badge--top {
+  color: #ff8179;
+  background:
+    linear-gradient(180deg, rgba(197, 52, 50, .24), rgba(92, 20, 21, .2));
+  border: 1px solid rgba(238, 75, 70, .58);
+  box-shadow: 0 0 13px rgba(219, 56, 51, .08);
+}
+
+.jo-apply-btn {
+  width: 100%;
+  min-height: 39px;
+  border-radius: 7px;
+  border: 1px solid rgba(34, 217, 239, .72);
+  background:
+    linear-gradient(180deg, #118aa2 0%, #07576c 100%);
+  color: #fff;
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    0 0 13px rgba(16, 193, 220, .08);
+}
+
+.jo-apply-btn:hover:not(:disabled) {
+  border-color: #5deaff;
+  background:
+    linear-gradient(180deg, #18a7c1 0%, #086d85 100%);
+}
+
+.jo-apply-btn:disabled {
+  cursor: not-allowed;
+  opacity: .38;
+  filter: grayscale(.25);
+}
+
+.jo-details-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, .42);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.jo-details-btn:hover {
+  color: rgba(255, 255, 255, .8);
+}
+
+Die drei Statusvarianten müssen klar unterscheidbar sein:
+
+Free Pick: Gold mit Stern
+Normale Bewerbung: Silber beziehungsweise Blaugrau mit Dokument-Icon
+Top-Bewerbung: Rot mit Krone
+8. HTML-Struktur des Aktionsbereichs
+
+Der Aktionsbereich soll unabhängig vom Bewerbungsrecht immer vollständig gerendert werden:
+
+<div class="jo-card-action">
+  <div class="jo-badge jo-badge--free">
+    <span class="jo-badge-icon">★</span>
+    <span>Free Pick</span>
+  </div>
+
+  <button
+    class="jo-apply-btn"
+    disabled
+    title="Du stehst aktuell bei einem Verein unter Vertrag."
+  >
+    Nicht verfügbar
+  </button>
+
+  <a class="jo-details-btn" href="...">
+    Details
+  </a>
+</div>
+
+Wenn sich der Manager bewerben darf:
+
+<button class="jo-apply-btn">
+  Bewerben
+</button>
+
+Der Button darf nicht vollständig aus dem DOM entfernt werden, nur weil der Manager aktuell einen Verein besitzt.
+
+9. Responsive Verhalten
+
+Auf großen Desktopbildschirmen muss die Karte immer in einer Zeile bleiben.
+
+Erst unter ungefähr 1180px darf sie auf zwei Zeilen wechseln:
+
+@media (max-width: 1180px) {
+  .jo-card {
+    grid-template-columns: 250px minmax(300px, 1fr) 100px;
+  }
+
+  .jo-card-comps {
+    grid-column: 1 / 3;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+  }
+
+  .jo-card-action {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+}
+
+Auf dem aktuellen Desktop-Screenshot darf dieser Breakpoint nicht greifen.
+
+Abnahmekriterien
+
+Die Änderung ist fertig, wenn:
+
+Wappen ungefähr 80px groß sind.
+Das Stadionbild den größten visuellen Bereich der Karte bildet.
+Stadionbilder deutlich heller und lesbarer sind.
+Karten mindestens ungefähr 125px hoch sind.
+Wettbewerbe als richtige Checkliste dargestellt werden.
+Free Pick, normale Bewerbung und Top-Bewerbung optisch klar getrennt sind.
+„Bewerben“ beziehungsweise der deaktivierte Bewerbungsbutton immer sichtbar ist.
+„Details“ weiterhin verfügbar ist.
+Die Aktionsspalte nicht mehr unkontrolliert die gesamte Restbreite einnimmt.
+Navigation und Kalender pixelgenau unverändert bleiben.
+Jugendligazugehörigkeit und Jugendtabellenplatz vorbereitet oder angezeigt werden.

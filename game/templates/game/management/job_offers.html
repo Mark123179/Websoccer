@@ -6,13 +6,13 @@
 {% block body_class %}job-offers-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
 <div class="jo-artboard">
 
-  <!-- ── Header ────────────────────────────────────────────────────── -->
+  <!-- ── Header ────────────────────────────────────────────────── -->
   <div class="jo-header">
     <div>
       <p class="jo-eyebrow">Management Hub</p>
@@ -24,7 +24,7 @@
     </a>
   </div>
 
-  <!-- ── Filterleiste ───────────────────────────────────────────────── -->
+  <!-- ── Filterleiste ───────────────────────────────────────────── -->
   <div class="jo-filters" id="jo-filters">
     <div class="jo-filter-group">
       <span class="jo-filter-icon">
@@ -59,7 +59,7 @@
     </button>
   </div>
 
-  <!-- ── Banner: aktueller Verein ──────────────────────────────────── -->
+  <!-- ── Banner: aktueller Verein ──────────────────────────────── -->
   {% if current_club %}
   <div class="jo-notice">
     <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
@@ -67,13 +67,13 @@
   </div>
   {% endif %}
 
-  <!-- ── Ergebniszähler ─────────────────────────────────────────────── -->
+  <!-- ── Ergebniszähler ─────────────────────────────────────────── -->
   <div class="jo-count-bar">
     <span class="jo-count" id="jo-count">{{ club_rows|length }} freie Stelle{{ club_rows|length|pluralize:"n" }}</span>
     <span class="jo-timestamp">Letzte Aktualisierung: Heute</span>
   </div>
 
-  <!-- ── Kartenliste ────────────────────────────────────────────────── -->
+  <!-- ── Kartenliste ────────────────────────────────────────────── -->
   {% if club_rows %}
   <div class="jo-list" id="jo-list">
     {% for row in club_rows %}
@@ -83,13 +83,13 @@
          data-avail="{{ row.availability }}"
          data-name="{{ row.club.name|lower }}">
 
-      <!-- Wappen + Info -->
+      <!-- ① Wappen + Vereinsinfo -->
       <div class="jo-card-identity">
         <a href="{% url 'club_detail' row.club.pk %}" class="jo-crest-link">
           {% if row.club.fm_inside_id %}
           <img src="{% static 'game/images/crests/' %}{{ row.club.fm_inside_id }}.png"
                alt="{{ row.club.name }}" class="jo-crest"
-               onerror="this.src=''; this.className='jo-crest jo-crest--missing';">
+               onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div class=\'jo-crest jo-crest--missing\'></div>');">
           {% else %}
           <div class="jo-crest jo-crest--missing"></div>
           {% endif %}
@@ -104,10 +104,11 @@
             {% endif %}
             <span class="jo-league-name">{{ row.club.league.name }}</span>
           </div>
+          <span class="jo-youth-info">U21-Liga folgt</span>
         </div>
       </div>
 
-      <!-- Stadion-Banner -->
+      <!-- ② Stadion-Banner -->
       <div class="jo-card-stadium">
         {% if row.stadium_img %}
         <img src="{% static row.stadium_img %}" alt="{{ row.stadium_name }}" class="jo-stadium-img"
@@ -122,84 +123,134 @@
         </div>
       </div>
 
-      <!-- Tabellenplatz -->
-      {% if row.table_pos %}
+      <!-- ③ Tabellenplatz -->
       <div class="jo-card-standing">
         <span class="jo-stand-label">Tabellenplatz</span>
+        {% if row.table_pos %}
         <span class="jo-stand-num">{{ row.table_pos }}</span>
         {% if row.situation_label %}
         <span class="jo-situation {{ row.situation_cls }}">{{ row.situation_label }}</span>
         {% endif %}
-      </div>
-      {% else %}
-      <div class="jo-card-standing jo-card-standing--empty">
-        <span class="jo-stand-label">Tabellenplatz</span>
+        {% else %}
         <span class="jo-stand-num jo-stand-num--dash">—</span>
+        {% endif %}
       </div>
-      {% endif %}
 
-      <!-- Aktive Wettbewerbe -->
+      <!-- ④ Wettbewerbe — 3-Spalten-Checkliste -->
       <div class="jo-card-comps">
         <span class="jo-comps-title">Aktive Wettbewerbe</span>
         <ul class="jo-comp-list">
+
+          <!-- Liga (immer aktiv) -->
           <li class="jo-comp-item jo-comp--yes">
-            <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            Liga
+            <span class="jo-comp-sym">
+              <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+            </span>
+            <span>Liga</span>
+            <span class="jo-comp-check">
+              <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </span>
           </li>
+
+          <!-- Nationaler Pokal -->
           <li class="jo-comp-item {% if row.in_national_cup %}jo-comp--yes{% else %}jo-comp--no{% endif %}">
-            {% if row.in_national_cup %}
-            <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            {% else %}
-            <span class="jo-comp-dash">—</span>
-            {% endif %}
-            Nationaler Pokal
+            <span class="jo-comp-sym">
+              <svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H7v2h10v-2h-4v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm7 6c-1.65 0-3-1.35-3-3V5h6v6c0 1.65-1.35 3-3 3zm7-6c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+            </span>
+            <span>Nationaler Pokal</span>
+            <span class="jo-comp-check">
+              {% if row.in_national_cup %}
+              <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              {% else %}
+              <span class="jo-comp-dash">—</span>
+              {% endif %}
+            </span>
           </li>
-          <li class="jo-comp-item {% if row.in_cl %}jo-comp--yes{% elif row.in_el %}jo-comp--yes{% else %}jo-comp--no{% endif %}">
-            {% if row.in_cl %}
-            <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            Champions League
-            {% elif row.in_el %}
-            <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-            Europa League
-            {% else %}
-            <span class="jo-comp-dash">—</span>
-            International
-            {% endif %}
+
+          <!-- Champions League -->
+          <li class="jo-comp-item {% if row.in_cl %}jo-comp--yes{% else %}jo-comp--no{% endif %}">
+            <span class="jo-comp-sym">
+              <svg viewBox="0 0 24 24"><path d="M12 1L9 9H1l7 5-3 8 7-5 7 5-3-8 7-5h-8z"/></svg>
+            </span>
+            <span>Champions League</span>
+            <span class="jo-comp-check">
+              {% if row.in_cl %}
+              <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              {% else %}
+              <span class="jo-comp-dash">—</span>
+              {% endif %}
+            </span>
           </li>
+
+          <!-- Europa League -->
+          <li class="jo-comp-item {% if row.in_el %}jo-comp--yes{% else %}jo-comp--no{% endif %}">
+            <span class="jo-comp-sym">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </span>
+            <span>Europa League</span>
+            <span class="jo-comp-check">
+              {% if row.in_el %}
+              <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              {% else %}
+              <span class="jo-comp-dash">—</span>
+              {% endif %}
+            </span>
+          </li>
+
         </ul>
       </div>
 
-      <!-- Badge + Button -->
+      <!-- ⑤ Aktionsbereich — immer vollständig -->
       <div class="jo-card-action">
+
         {% if row.availability == 'free_pick' %}
         <div class="jo-badge jo-badge--free">
-          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-          FREE PICK
+          <span class="jo-badge-icon">★</span>
+          <span>Free Pick</span>
         </div>
         {% elif row.availability == 'normal' %}
         <div class="jo-badge jo-badge--normal">
-          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-          NORMALE BEWERBUNG
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;flex-shrink:0"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+          <span>Normale Bewerbung</span>
         </div>
         {% elif row.availability == 'top' %}
         <div class="jo-badge jo-badge--top">
-          <svg viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
-          TOP-BEWERBUNG
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor;flex-shrink:0"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+          <span>Top-Bewerbung</span>
         </div>
         {% endif %}
 
-        {% if row.availability in 'normal,top' or row.availability == 'normal' or row.availability == 'top' %}
-          {% if not current_club %}
-          <form method="post" action="{% url 'management_job_offers' %}">
-            {% csrf_token %}
-            <input type="hidden" name="club_id" value="{{ row.club.pk }}">
-            <button type="submit" class="jo-apply-btn">
-              Bewerben
-              <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-            </button>
-          </form>
-          {% endif %}
+        {% if current_club %}
+        {# Manager hat bereits einen Verein — Button sichtbar aber deaktiviert #}
+        <button class="jo-apply-btn" disabled
+                title="Du stehst aktuell bei einem Verein unter Vertrag.">
+          Nicht verfügbar
+        </button>
+        {% elif row.availability == 'normal' or row.availability == 'top' %}
+        <form method="post" action="{% url 'management_job_offers' %}">
+          {% csrf_token %}
+          <input type="hidden" name="club_id" value="{{ row.club.pk }}">
+          <button type="submit" class="jo-apply-btn">
+            Bewerben
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </button>
+        </form>
+        {% else %}
+        {# free_pick: direktes Übernehmen #}
+        <form method="post" action="{% url 'management_job_offers' %}">
+          {% csrf_token %}
+          <input type="hidden" name="club_id" value="{{ row.club.pk }}">
+          <button type="submit" class="jo-apply-btn">
+            Übernehmen
+            <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </button>
+        </form>
         {% endif %}
+
+        <a class="jo-details-btn" href="{% url 'club_detail' row.club.pk %}">
+          <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+          Details
+        </a>
       </div>
 
     </div>
