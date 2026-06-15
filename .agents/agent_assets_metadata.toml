@@ -257,3 +257,9 @@ id = "dyHzSJ3KWHL6ASRKv0y-H"
 uri = "file://exports/balance_matrix_exp125_10k.csv"
 type = "table"
 title = "balance_matrix_exp125_10k.csv"
+
+[[outputs]]
+id = "YfMNDIWldLwP68amDQQjq"
+uri = "file://game/static/game/css/job-angebote-download.txt"
+type = "text"
+title = "job-angebote.css"
