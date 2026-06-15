@@ -87,12 +87,18 @@ def _build_global_calendar(club, calendar_offset):
             opp_crest = opponent.crest_static_path if opponent else ''
             opp_url   = f'/clubs/{opponent.pk}/' if opponent else ''
 
+            # Prefer the DB-stored logo (set by Creator Mode); fall back to name dict
+            comp_logo = (
+                f.league.logo_static_path
+                or competition_logo_static_path(f.league.name)
+            )
+
             fixtures_by_date[f.scheduled_date] = {
                 'opponent_name':    opponent.name if opponent else '',
                 'opponent_crest':   opp_crest,
                 'opponent_url':     opp_url,
                 'stadium':          fixture_stadium,
-                'competition_logo': competition_logo_static_path(f.league.name),
+                'competition_logo': comp_logo,
                 'lineup_saved':     lineup_saved,
                 'result':           result,
                 'venue':            venue,
@@ -123,7 +129,8 @@ def _build_global_calendar(club, calendar_offset):
             is_home = (cf.home_club_id == club.pk)
             cup_opponent = cf.away_club if is_home else cf.home_club
             cup_venue = 'H' if is_home else 'A'
-            comp_name = cf.cup_round.cup_season.competition.name
+            cup_comp   = cf.cup_round.cup_season.competition
+            comp_name  = cup_comp.name
 
             if cf.status == CupFixture.STATUS_PLAYED and cf.home_goals_90 is not None:
                 h = (cf.home_goals_90 or 0) + (cf.home_goals_et or 0)
@@ -145,12 +152,16 @@ def _build_global_calendar(club, calendar_offset):
             cup_stadium = _STADIUM_ASSETS.get(
                 cf.home_club.fm_inside_id if cf.home_club else None, ''
             )
+            cup_comp_logo = (
+                cup_comp.logo_static_path
+                or competition_logo_static_path(comp_name)
+            )
             fixtures_by_date[scheduled_date] = {
                 'opponent_name':    cup_opponent.name if cup_opponent else 'Freilos',
                 'opponent_crest':   cup_opponent.crest_static_path if cup_opponent else '',
                 'opponent_url':     f'/clubs/{cup_opponent.pk}/' if cup_opponent else '',
                 'stadium':          cup_stadium,
-                'competition_logo': competition_logo_static_path(comp_name),
+                'competition_logo': cup_comp_logo,
                 'lineup_saved':     False,
                 'result':           cup_result,
                 'venue':            cup_venue,

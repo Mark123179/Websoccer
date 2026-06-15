@@ -149,15 +149,28 @@
             <label>Fanbeliebtheit (1–100)</label>
             <input type="number" name="fan_popularity" value="{{ club.fan_popularity }}" min="1" max="100">
           </div>
-          <div class="creator-field">
+          <div class="creator-field creator-field-liga">
             <label>Liga</label>
-            <select name="league">
-              {% for league in all_leagues %}
-              <option value="{{ league.id }}" {% if league.id == club.league_id %}selected{% endif %}>
-                {{ league.name }} ({{ league.country }})
-              </option>
-              {% endfor %}
-            </select>
+            <div class="creator-liga-row">
+              <select name="league" id="creator-liga-select">
+                {% for league in all_leagues %}
+                <option value="{{ league.id }}"
+                        data-logo="{% if league.logo_static_path %}{% static league.logo_static_path %}{% endif %}"
+                        {% if league.id == club.league_id %}selected{% endif %}>
+                  {{ league.name }} ({{ league.country }})
+                </option>
+                {% endfor %}
+              </select>
+              <div class="creator-liga-logo-preview" id="creator-liga-logo-preview">
+                {% if club.league.logo_static_path %}
+                <img id="creator-liga-logo-img"
+                     src="{% static club.league.logo_static_path %}"
+                     alt="{{ club.league.name }}">
+                {% else %}
+                <img id="creator-liga-logo-img" src="" alt="" style="display:none;">
+                {% endif %}
+              </div>
+            </div>
           </div>
 
         </div>
@@ -722,6 +735,23 @@
 .creator-status-btn { padding: .25rem .65rem; border-radius: 5px; font-size: .72rem; font-weight: 700; cursor: pointer; border: 1px solid #334455; background: #030a12; color: #556677; }
 .creator-status-btn.active { background: #00d4ff15; border-color: #00d4ff44; color: #00d4ff; }
 
+/* ── Liga-Logo-Vorschau ── */
+.creator-liga-row { display: flex; align-items: center; gap: 10px; }
+.creator-liga-row select { flex: 1; }
+.creator-liga-logo-preview {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: #030a12;
+  border: 1px solid #0d2035;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.creator-liga-logo-preview img {
+  width: 28px; height: 28px;
+  object-fit: contain;
+}
+
 /* ── Status labels ── */
 .creator-status-pending { color: #556677; font-size: .78rem; }
 .creator-status-ok { color: #30f29c; font-size: .78rem; font-weight: 700; }
@@ -751,4 +781,26 @@
   .creator-field-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
+
+<script>
+(function () {
+  const sel = document.getElementById('creator-liga-select');
+  const img = document.getElementById('creator-liga-logo-img');
+  if (!sel || !img) return;
+
+  function updatePreview() {
+    const opt  = sel.options[sel.selectedIndex];
+    const logo = (opt && opt.dataset.logo) ? opt.dataset.logo.trim() : '';
+    if (logo) {
+      img.src = logo;
+      img.style.display = '';
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+    }
+  }
+
+  sel.addEventListener('change', updatePreview);
+})();
+</script>
 {% endblock %}
