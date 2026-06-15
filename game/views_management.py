@@ -1205,37 +1205,39 @@ def management_job_offers(request):
                 situation_label = 'Mittelfeld'
                 situation_cls   = 'sit-mid'
 
-        # Cup participation checklist
+        # Cup participation — collect actual names
         cup_parts = list(c.cup_participations.all())
-        in_national_cup = any(
-            cs.competition.competition_type == 'cup'
-            and cs.competition.country == c.league.country
+        club_country = c.league.country if c.league else ''
+
+        national_cup_names = [
+            cs.competition.name
             for cs in cup_parts
-        )
-        in_cl = any('champions' in cs.competition.name.lower() for cs in cup_parts)
-        in_el = any(
-            'europa' in cs.competition.name.lower()
-            and 'champions' not in cs.competition.name.lower()
-            for cs in cup_parts
-        )
-        in_conf = any('conference' in cs.competition.name.lower() for cs in cup_parts)
+            if cs.competition.competition_type == 'cup'
+            and cs.competition.country == club_country
+        ]
+
+        # First matching international competition name
+        intl_comp_name = ''
+        for cs in cup_parts:
+            n = cs.competition.name.lower()
+            if 'champions' in n or 'europa' in n or 'conference' in n:
+                intl_comp_name = cs.competition.name
+                break
 
         club_rows.append({
-            'club':             c,
-            'stadium_name':     stadium_name,
-            'stadium_capacity': stadium_capacity,
-            'stadium_img':      stadium_img,
-            'flag_code':        flag_code,
-            'table_pos':        table_pos,
-            'table_pts':        table_pts,
-            'situation_label':  situation_label,
-            'situation_cls':    situation_cls,
-            'in_liga':          True,
-            'in_national_cup':  in_national_cup,
-            'in_cl':            in_cl,
-            'in_el':            in_el,
-            'in_conf':          in_conf,
-            'availability':     c.job_availability_type,
+            'club':              c,
+            'stadium_name':      stadium_name,
+            'stadium_capacity':  stadium_capacity,
+            'stadium_img':       stadium_img,
+            'flag_code':         flag_code,
+            'table_pos':         table_pos,
+            'table_pts':         table_pts,
+            'situation_label':   situation_label,
+            'situation_cls':     situation_cls,
+            'league_name':       c.league.name if c.league else '—',
+            'national_cup_names': national_cup_names,
+            'intl_comp_name':    intl_comp_name,
+            'availability':      c.job_availability_type,
         })
 
     return render(request, 'game/management/job_offers.html', {
