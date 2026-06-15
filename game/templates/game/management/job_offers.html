@@ -382,7 +382,11 @@
   });
 
   btnYes.addEventListener('click', function () {
-    if (pendingForm) { closeModal(); pendingForm.submit(); }
+    if (pendingForm) {
+      var form = pendingForm;
+      closeModal();
+      form.submit();
+    }
   });
   btnNo.addEventListener('click', closeModal);
   overlay.addEventListener('click', function (e) {
