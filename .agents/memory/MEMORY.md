@@ -32,4 +32,4 @@
 - [Per-Halbzeit Linien-Delta Design](half-tactic-line-deltas.md) — Mittelfeld/Angriff-Dropdowns nutzen separate line_* Variablen; positive Vorteile gekappt (xG≤0.06, shots≤0.08); Risiko+Frische stapeln vollständig.
 - [Default-Taktik V1 Architektur](default-tactics-v1.md) — game/default_tactics.py (pure Python); apply_default_tactic_settings() in match_readiness.py; Hook in simulate_match Schritt 1b.
 - [game/tests Package-Falle](game-tests-package.md) — game/tests/ ist ein Package; game/tests.py existiert aber wird vom Package überlagert; neue Tests müssen in game/tests/test_*.py.
-- [Default-Taktik V1 Freeze-Stand](default-tactics-v1-freeze.md) — Links/Rechts-Spiegel, Conditions-Matrix, Snapshot-Ansatz eingefroren; alle 13 Pflicht-Tests grün.
+- [Default-Taktik V1 Freeze-Stand](default-tactics-v1-freeze.md) — T=0.02/M=0.015 Angriffsfokus, 14 Tests grün; validate_default_tactic_v1 bestätigt Korridore A–E.

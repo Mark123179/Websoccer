@@ -307,6 +307,39 @@ class DefaultTacticV1Tests(TestCase):
         self.assertEqual(conditions_1, conditions_2,
             'conditions dürfen sich beim zweiten Aufruf nicht ändern.')
 
+    def test_t14_all_zones_negative_stays_ausgewogen(self):
+        """T14 — Alle Zonen negativ → attack_focus bleibt ausgewogen.
+
+        Eigener Angriff (50) deutlich schwächer als gegnerische Abwehr (80)
+        auf allen Seiten → keine Zone hat einen echten Vorteil →
+        generate_default_tactic darf keinen Zonenfokus setzen.
+        """
+        from game.default_tactics import generate_default_tactic
+
+        # Eigener Angriff überall schwach (50), gegnerische Abwehr überall stark (80)
+        # → alle Zonen negativ → kein Fokus erlaubt
+        weak_str  = {'goalkeeper': 65.0, 'defense': 65.0, 'midfield': 65.0,
+                     'attack': 65.0, 'overall': 65.0}
+        strong_str = {'goalkeeper': 75.0, 'defense': 75.0, 'midfield': 75.0,
+                      'attack': 75.0, 'overall': 75.0}
+        own_zones = {
+            'attack':  {'left': 50.0, 'center': 50.0, 'right': 50.0},
+            'defense': {'left': 80.0, 'center': 80.0, 'right': 80.0},
+        }
+        opp_zones = {
+            'attack':  {'left': 80.0, 'center': 80.0, 'right': 80.0},
+            'defense': {'left': 50.0, 'center': 50.0, 'right': 50.0},
+        }
+
+        result = generate_default_tactic(
+            own_strength=weak_str, opp_strength=strong_str,
+            own_zones=own_zones, opp_zones=opp_zones,
+        )
+
+        focus = result['instructions'].get('attack_focus', 'ausgewogen')
+        self.assertEqual(focus, 'ausgewogen',
+            f'Alle Zonen negativ → attack_focus muss ausgewogen sein, ist aber: {focus!r}')
+
     def test_t12_all_profiles_compile_clean(self):
         """Alle 5 Default-Profile müssen compile_tactic fehlerfrei durchlaufen."""
         from game.default_tactics import _PROFILE_BUILDERS

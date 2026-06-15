@@ -42,8 +42,11 @@ DEFAULT_TACTIC_MATCHUP_THRESHOLDS: dict[str, float] = {
 
 # Seitenanalyse: Mindest-Vorteil der eigenen Angriffszone vs. gegnerische
 # Defensivzone, ab dem attack_focus angepasst wird.
-_SIDE_ADJ_THRESHOLD = 0.05    # 5 % rel. Unterschied
-_SIDE_EDGE_MARGIN   = 0.02    # Mindestabstand zur zweitbesten Seite
+#
+# Regel: Eine Zone wird NUR fokussiert, wenn dort ein echter positiver Vorteil
+# besteht (≥ MIN_FOCUS_ADVANTAGE). Alle negativen Zonen → immer ausgewogen.
+_SIDE_ADJ_THRESHOLD = 0.02    # 2 % rel. Mindest-Vorteil für Fokus
+_SIDE_EDGE_MARGIN   = 0.015   # 1.5 % Mindestabstand zur zweitbesten Seite
 
 
 # ══════════════════════════════════════════════════════════════════════════════
