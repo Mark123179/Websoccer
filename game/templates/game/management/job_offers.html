@@ -85,7 +85,7 @@
 
       <!-- Wappen + Info -->
       <div class="jo-card-identity">
-        <a href="{% url 'club_profile' row.club.pk %}" class="jo-crest-link">
+        <a href="{% url 'club_detail' row.club.pk %}" class="jo-crest-link">
           {% if row.club.fm_inside_id %}
           <img src="{% static 'game/images/crests/' %}{{ row.club.fm_inside_id }}.png"
                alt="{{ row.club.name }}" class="jo-crest"
@@ -95,7 +95,7 @@
           {% endif %}
         </a>
         <div class="jo-club-meta">
-          <a href="{% url 'club_profile' row.club.pk %}" class="jo-club-name">{{ row.club.name }}</a>
+          <a href="{% url 'club_detail' row.club.pk %}" class="jo-club-name">{{ row.club.name }}</a>
           <div class="jo-league-row">
             {% if row.flag_code %}
             <img src="https://flagcdn.com/16x12/{{ row.flag_code|lower }}.png"
