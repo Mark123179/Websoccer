@@ -166,13 +166,14 @@
 /* ── Einzelkarte ─────────────────────────────────────────────────────────── */
 .jo-card {
   display: grid;
-  grid-template-columns: 260px 220px 110px 200px auto;
+  grid-template-columns: 215px 165px 88px 185px auto;
   align-items: stretch;
   background: #0c1118;
   border: 1px solid rgba(255,255,255,.07);
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   transition: border-color .2s, box-shadow .2s;
+  min-height: 75px;
 }
 .jo-card:hover {
   border-color: rgba(201,168,76,.25);
@@ -183,27 +184,27 @@
 .jo-card-identity {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
+  gap: 11px;
+  padding: 10px 14px;
   border-right: 1px solid rgba(255,255,255,.06);
 }
 .jo-crest-link { flex-shrink: 0; display: block; }
 .jo-crest {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,.5));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
 }
 .jo-crest--missing {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: rgba(255,255,255,.06);
   border: 2px solid rgba(255,255,255,.1);
 }
-.jo-club-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.jo-club-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .jo-club-name {
-  font-size: .95rem;
+  font-size: .85rem;
   font-weight: 800;
   color: #e8e8e8;
   text-decoration: none;
@@ -213,16 +214,16 @@
   transition: color .15s;
 }
 .jo-club-name:hover { color: #c9a84c; }
-.jo-league-row { display: flex; align-items: center; gap: 6px; }
+.jo-league-row { display: flex; align-items: center; gap: 5px; }
 .jo-flag { vertical-align: middle; border-radius: 2px; }
-.jo-league-name { font-size: .73rem; color: rgba(255,255,255,.4); font-weight: 600; }
+.jo-league-name { font-size: .68rem; color: rgba(255,255,255,.4); font-weight: 600; }
 
 /* Stadion-Banner */
 .jo-card-stadium {
   position: relative;
   overflow: hidden;
   border-right: 1px solid rgba(255,255,255,.06);
-  min-height: 90px;
+  min-height: 75px;
 }
 .jo-stadium-img {
   position: absolute;
@@ -230,7 +231,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: .55;
+  opacity: .6;
 }
 .jo-stadium-overlay {
   position: absolute;
@@ -268,31 +269,31 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 12px 10px;
+  gap: 1px;
+  padding: 8px 6px;
   border-right: 1px solid rgba(255,255,255,.06);
   background: rgba(0,0,0,.15);
 }
 .jo-stand-label {
-  font-size: .6rem;
+  font-size: .55rem;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: rgba(255,255,255,.25);
 }
 .jo-stand-num {
-  font-size: 2rem;
+  font-size: 1.65rem;
   font-weight: 900;
   color: #fff;
   line-height: 1;
 }
-.jo-stand-num--dash { font-size: 1.4rem; color: rgba(255,255,255,.2); }
+.jo-stand-num--dash { font-size: 1.2rem; color: rgba(255,255,255,.2); }
 .jo-situation {
-  font-size: .65rem;
+  font-size: .58rem;
   font-weight: 700;
   text-align: center;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 .sit-cl   { color: #00d4ff; background: rgba(0,212,255,.1); }
 .sit-el   { color: #ff9f00; background: rgba(255,159,0,.1); }
@@ -305,18 +306,18 @@
 .jo-card-comps {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
+  gap: 4px;
+  padding: 10px 12px;
   border-right: 1px solid rgba(255,255,255,.06);
   justify-content: center;
 }
 .jo-comps-title {
-  font-size: .6rem;
+  font-size: .55rem;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: rgba(255,255,255,.25);
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 .jo-comp-list {
   list-style: none;
@@ -324,19 +325,19 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 .jo-comp-item {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: .75rem;
+  gap: 6px;
+  font-size: .7rem;
   font-weight: 600;
 }
 .jo-comp--yes { color: rgba(255,255,255,.75); }
 .jo-comp--no  { color: rgba(255,255,255,.25); }
-.jo-comp-icon { width: 12px; height: 12px; fill: #4caf50; flex-shrink: 0; }
-.jo-comp-dash { display: inline-block; width: 12px; text-align: center; color: rgba(255,255,255,.2); font-size: .8rem; }
+.jo-comp-icon { width: 11px; height: 11px; fill: #4caf50; flex-shrink: 0; }
+.jo-comp-dash { display: inline-block; width: 11px; text-align: center; color: rgba(255,255,255,.2); font-size: .75rem; }
 
 /* Badge + Button */
 .jo-card-action {
@@ -344,23 +345,23 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
-  gap: 8px;
-  padding: 16px 20px;
-  min-width: 160px;
+  gap: 6px;
+  padding: 10px 14px;
+  min-width: 148px;
 }
 .jo-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  border-radius: 6px;
-  font-size: .72rem;
+  gap: 6px;
+  border-radius: 5px;
+  font-size: .68rem;
   font-weight: 900;
   letter-spacing: .07em;
-  padding: 9px 12px;
+  padding: 8px 10px;
   text-align: center;
 }
-.jo-badge svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+.jo-badge svg { width: 13px; height: 13px; fill: currentColor; flex-shrink: 0; }
 
 .jo-badge--free {
   background: rgba(201,168,76,.15);
