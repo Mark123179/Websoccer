@@ -1,0 +1,90 @@
+Hauptnachtest
+python manage.py test_line_tactics \
+  --mode matrix \
+  --matches 20000
+
+Besser wäre allerdings ein eigener Filterlauf nur für die betroffenen Kombinationen, damit nicht erneut die ganze Matrix simuliert werden muss.
+
+Nachtesten:
+
+kompakt_stehen + nachruecken + strafraum_besetzen
+
+gegen:
+
+standard + nachruecken + strafraum_besetzen
+
+Jeweils 20.000 gespiegelte Spiele.
+
+Zusätzlich drei Kontrollkombinationen
+Verdacht 1
+kompakt_stehen
++ offensiv_besetzen
++ abwehrkette_binden
+
+10.000 bis 20.000 Spiele.
+
+Verdacht 2
+kompakt_stehen
++ absichern
++ strafraum_besetzen
+
+10.000 bis 20.000 Spiele.
+
+Kontrollgruppe
+kompakt_stehen
++ standard
++ standard
+
+gegen:
+
+standard
++ standard
++ standard
+
+Mindestens 20.000 Spiele.
+
+Dieser Kontrolltest ist besonders wichtig. Er zeigt, ob kompakt_stehen bereits isoliert zu viel PPG erzeugt oder erst in Kombination mit offensiven Rollen problematisch wird.
+
+Welche Kennzahlen jetzt entscheidend sind
+
+Für jede Kombination brauchst du mindestens:
+
+Kennzahl	Zweck
+PPG-Delta	tatsächlicher Ergebnisvorteil
+xGF-Delta	offensiver Nutzen
+xGA-Delta	defensive Wirkung
+xGD-Delta	Gesamtwirkung
+Schüsse für/gegen	Volumeneffekt
+Tore für/gegen	Realisierung
+Remisquote	defensive Optionen können über Remis profitieren
+Risk	eingegangene Gefahr
+Fatigue	langfristiger Preis
+Coherence	taktische Passung
+
+Besonders wichtig ist der direkte Vergleich:
+
+Erwartete xGA aus Compiler
+gegen
+tatsächliche xGA aus Matchsimulation
+
+Du hast bereits erkannt:
+
+erwartete xGA-Kosten ungefähr +0.051
+tatsächlich nur ungefähr +0.023
+
+Diese Differenz sollte im Nachtest erneut ausgewiesen werden.
+
+Mögliche Ursachen im Code
+
+Bevor Werte geändert werden, sollte Replit prüfen, wo kompakt_stehen zusätzlich wirkt.
+
+Mögliche Doppelwirkung:
+
+kompakt_stehen reduziert direkt xg_against.
+Es senkt zusätzlich Schüsse des Gegners.
+Es verändert Zonenstärken.
+Es reduziert Risiko oder Pressing-Durchbrüche.
+Es beeinflusst defense_strength und danach nochmals den xG-Multiplikator.
+Der Effekt wird einmal im Compiler und später erneut in _simulate_match_minutes() angewendet.
+
+Gerade Punkt 6 wäre ein technischer Fehler und kein Balancingproblem.

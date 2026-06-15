@@ -28,4 +28,5 @@
 - [CSS comments inside property values](css-comment-in-value-trap.md) — /* */ comments inside CSS property values (e.g. background:) are invalid; browser parser drops the rule silently, can block all click events on the page.
 - [Matchday XI backtracking limit](matchday-xi-backtracking.md) — _find_best_lineup() hangs with large pools; MAX_CANDIDATES=5 + MAX_NODES=20_000 hard cap required; Bundesliga pools reach 200+ players across 9 fixtures.
 - [KO-Spielmodus V1](ko-match-mode-v1.md) — simulate_ko_match()=simulate_match(is_cup=True); ET 91–120 + Elfmeter; 0xE1FM3TE2 war ungültiges Hex, jetzt 0xE1F3A2B1.
+- [kompakt_stehen dual xGA path](kompakt-stehen-dual-xga-path.md) — defense_delta→line_multipliers gibt ~−0.028 xGA-Reduktion die compiler nicht sieht; erzeugt [ALARM] mit offensiven Linienoptionen; Freeze gilt.
 - [Per-Halbzeit Linien-Delta Design](half-tactic-line-deltas.md) — Mittelfeld/Angriff-Dropdowns nutzen separate line_* Variablen; positive Vorteile gekappt (xG≤0.06, shots≤0.08); Risiko+Frische stapeln vollständig.
