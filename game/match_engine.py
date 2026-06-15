@@ -2360,10 +2360,16 @@ def simulate_match(
 
     # 1b. Default-Taktik V1: Taktik-Einstellungen anhand des konkreten Matchups setzen.
     #     Nur für trainerlose Vereine — gemanagte Vereine behalten Trainer-Vorgaben.
-    if home_club.managed_by_id is None:
-        apply_default_tactic_settings(home_tactic, away_tactic)
-    if away_club.managed_by_id is None:
-        apply_default_tactic_settings(away_tactic, home_tactic)
+    #     Snapshots VOR jeder Modifikation berechnen → reihenfolgeunabhängig,
+    #     auch wenn beide Vereine trainerlos sind.
+    if home_club.managed_by_id is None or away_club.managed_by_id is None:
+        from .match_readiness import _make_default_tactic_snapshot
+        _home_snap = _make_default_tactic_snapshot(home_tactic)
+        _away_snap = _make_default_tactic_snapshot(away_tactic)
+        if home_club.managed_by_id is None:
+            apply_default_tactic_settings(home_tactic, away_tactic, _home_snap, _away_snap)
+        if away_club.managed_by_id is None:
+            apply_default_tactic_settings(away_tactic, home_tactic, _away_snap, _home_snap)
 
     # 2. Pre-compute Matchstärken: random(basis, potential) + form — einmal pro Spieler,
     #    konsistent für Simulation UND Spielbericht-Display.

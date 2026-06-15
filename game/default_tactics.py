@@ -106,6 +106,9 @@ def analyze_line_matchups(own: dict, opp: dict) -> dict:
 def analyze_side_matchups(own_zones: dict, opp_zones: dict) -> dict:
     """Angriffsvorteil je Seite: eigene Angriffszone vs. gegnerische Defensivzone.
 
+    Korrekte Spiegelung: eigener linker Angriff trifft auf die RECHTE Seite der
+    gegnerischen Abwehr (gespiegelte Formation) und umgekehrt.
+
     Args:
         own_zones: {attack: {left, center, right}, defense: {left, center, right}}
         opp_zones: dasselbe für den Gegner
@@ -116,8 +119,9 @@ def analyze_side_matchups(own_zones: dict, opp_zones: dict) -> dict:
     own_atk = own_zones.get("attack",  {})
     opp_def = opp_zones.get("defense", {})
     return {
-        z: _rel(float(own_atk.get(z, 0.0)), float(opp_def.get(z, 0.0)))
-        for z in ("left", "center", "right")
+        "left":   _rel(float(own_atk.get("left",   0.0)), float(opp_def.get("right",  0.0))),
+        "center": _rel(float(own_atk.get("center", 0.0)), float(opp_def.get("center", 0.0))),
+        "right":  _rel(float(own_atk.get("right",  0.0)), float(opp_def.get("left",   0.0))),
     }
 
 
@@ -165,10 +169,12 @@ def _profile_clear_underdog() -> dict:
             },
         },
         "conditions": [
-            {"active": True,  "minute": "55", "condition": "rueckstand",      "plan": "aggressiv_risiko"},
+            # spezifischer zuerst: 2+ Tore Rückstand ab 80' → Schlussangriff
+            {"active": True,  "minute": "80", "condition": "rueckstand_2",    "plan": "schlussangriff"},
+            # jeder Rückstand ab 65' → kontrolliert öffnen
+            {"active": True,  "minute": "65", "condition": "rueckstand",      "plan": "aggressiv_risiko"},
             {"active": True,  "minute": "70", "condition": "fuehrung",        "plan": "zeitspiel"},
             {"active": True,  "minute": "85", "condition": "knappe_fuehrung", "plan": "zeitspiel"},
-            {"active": False, "minute": "90", "condition": "rueckstand_2",    "plan": "schlussangriff"},
         ],
     }
 
@@ -262,8 +268,8 @@ def _profile_balanced() -> dict:
         },
         "conditions": [
             {"active": True,  "minute": "60", "condition": "rueckstand",      "plan": "aggressiv_risiko"},
-            {"active": True,  "minute": "80", "condition": "fuehrung",        "plan": "zeitspiel"},
-            {"active": False, "minute": "90", "condition": "knappe_fuehrung", "plan": "zeitspiel"},
+            {"active": True,  "minute": "75", "condition": "fuehrung",        "plan": "zeitspiel"},
+            {"active": True,  "minute": "85", "condition": "knappe_fuehrung", "plan": "zeitspiel"},
             {"active": False, "minute": "90", "condition": "rueckstand_2",    "plan": "schlussangriff"},
         ],
     }
@@ -309,7 +315,7 @@ def _profile_favorite() -> dict:
             },
         },
         "conditions": [
-            {"active": True,  "minute": "45", "condition": "rueckstand",      "plan": "aggressiv_risiko"},
+            {"active": True,  "minute": "55", "condition": "rueckstand",      "plan": "aggressiv_risiko"},
             {"active": True,  "minute": "75", "condition": "fuehrung",        "plan": "kontrolle_ballbesitz"},
             {"active": True,  "minute": "85", "condition": "knappe_fuehrung", "plan": "kompakt_sichern"},
             {"active": False, "minute": "90", "condition": "rueckstand_2",    "plan": "schlussangriff"},
@@ -357,10 +363,12 @@ def _profile_clear_favorite() -> dict:
             },
         },
         "conditions": [
-            {"active": True,  "minute": "60", "condition": "rueckstand_2",    "plan": "schlussangriff"},
-            {"active": True,  "minute": "80", "condition": "fuehrung",        "plan": "kompakt_sichern"},
+            # spezifischer zuerst: 2+ Tore Rückstand ab 75' → Schlussangriff
+            {"active": True,  "minute": "75", "condition": "rueckstand_2",    "plan": "schlussangriff"},
+            # jeder Rückstand ab 50' → sofort aggressiv
+            {"active": True,  "minute": "50", "condition": "rueckstand",      "plan": "aggressiv_risiko"},
+            {"active": True,  "minute": "70", "condition": "fuehrung",        "plan": "kompakt_sichern"},
             {"active": True,  "minute": "85", "condition": "knappe_fuehrung", "plan": "zeitspiel"},
-            {"active": False, "minute": "90", "condition": "eigene_rot",      "plan": "unterzahl_kompakt"},
         ],
     }
 
@@ -491,12 +499,20 @@ def generate_default_tactic(
 
     adjusted = _apply_line_adjustments(profile, line_matchups, side_matchups)
 
+    own_overall = float(own_strength.get("overall", 50))
+    opp_overall = float(opp_strength.get("overall", 50))
+    relative_diff = _rel(own_overall, opp_overall)
+
     return {
-        "category":      category,
-        "first_half":    adjusted["first_half"],
-        "second_half":   adjusted["second_half"],
-        "instructions":  adjusted["instructions"],
-        "conditions":    adjusted["conditions"],
-        "line_matchups": line_matchups,
-        "side_matchups": side_matchups,
+        "category":        category,
+        "first_half":      adjusted["first_half"],
+        "second_half":     adjusted["second_half"],
+        "instructions":    adjusted["instructions"],
+        "conditions":      adjusted["conditions"],
+        "line_matchups":   line_matchups,
+        "side_matchups":   side_matchups,
+        # Debug-Felder: Rohwerte für Logging und Tests
+        "own_overall":     own_overall,
+        "opp_overall":     opp_overall,
+        "relative_diff":   relative_diff,
     }

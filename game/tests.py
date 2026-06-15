@@ -4523,3 +4523,325 @@ class PlayerRatingsV3Tests(TestCase):
         self.assertLess(a_avg_win, h_avg_lose,
                         f"Auswärtssieger-Ø {a_avg_win:.2f} muss besser sein als Verlierer-Ø {h_avg_lose:.2f}")
 
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Default-Taktik V1 — Pflicht-Tests (12 + Idempotenz + Debug-Felder)
+# ══════════════════════════════════════════════════════════════════════════════
+class DefaultTacticV1Tests(TestCase):
+    """Alle Pflicht-Tests für Default-Taktik V1.
+
+    Deckt ab:
+    T01 — Reihenfolgeunabhängigkeit (beide trainerlos)
+    T02 — Nur Heim trainerlos → Away unberührt
+    T03 — Nur Away trainerlos → Home unberührt
+    T04 — Beide mit Trainer → simulate_match ändert nichts
+    T05 — Idempotenz (kein kumulativer Drift)
+    T06 — 69 vs 74 → underdog
+    T07 — 69 vs 75 → clear_underdog
+    T08 — Links/Rechts-Spiegel in analyze_side_matchups
+    T09 — Kein Zonenvorteil → attack_focus ausgewogen
+    T10 — Beide Außenbahnen stark → fluegelspiel
+    T11 — Fehlende Zonenwerte → kein Fehler
+    T12 — compile_tactic für alle 5 Profile fehlerfrei
+    T13 — Debug-Felder (own_overall, opp_overall, relative_diff) vorhanden
+    """
+
+    _POSITIONS_11 = ['TW', 'LV', 'IV', 'IV', 'RV', 'DM', 'ZM', 'ZM', 'OM', 'ST', 'ST']
+
+    def setUp(self):
+        self.league = League.objects.create(name='DTaktikLiga', country='Deutschland')
+
+    def _make_club(self, name, strength=70, managed=False):
+        """Verein + 11 Spieler mit einheitlicher base_strength anlegen."""
+        club = Club.objects.create(
+            name=name,
+            short_name=name[:4].upper(),
+            founded_year=2000,
+            budget=Decimal('5000000.00'),
+            league=self.league,
+        )
+        for i, pos in enumerate(self._POSITIONS_11):
+            p = Player.objects.create(
+                first_name=f'Sp{i}',
+                last_name=name[:4],
+                wsc_player_id=f'WSC-{name[:3]}-{i}',
+                date_of_birth=date(1995, 1, 1),
+                age=29,
+                position=pos,
+                main_position_1=pos,
+                club=club,
+            )
+            PlayerStrengthProfile.objects.create(
+                player=p,
+                base_strength=Decimal(str(strength)),
+                form_modifier=Decimal('0.00'),
+            )
+        if managed:
+            from .models import ManagerProfile
+            mgr = ManagerProfile.objects.create(name=f'Mgr-{name[:8]}')
+            club.managed_by = mgr
+            club.save(update_fields=['managed_by'])
+        return club
+
+    # ── T06 / T07 — Kategorisierung ─────────────────────────────────────────
+
+    def test_t06_69_vs_74_is_underdog(self):
+        """69 gegen 74: relative_diff ≈ −6.99 % → underdog, NICHT clear_underdog."""
+        from .default_tactics import categorize_matchup
+        diff_pct = (69 - 74) / 71.5 * 100
+        cat = categorize_matchup(69.0, 74.0)
+        self.assertEqual(
+            cat, 'underdog',
+            f'69 vs 74 muss underdog sein (Diff = {diff_pct:.4f}%). Erhalten: {cat}',
+        )
+
+    def test_t07_69_vs_75_is_clear_underdog(self):
+        """69 gegen 75: relative_diff ≈ −8.33 % → clear_underdog."""
+        from .default_tactics import categorize_matchup
+        diff_pct = (69 - 75) / 72.0 * 100
+        cat = categorize_matchup(69.0, 75.0)
+        self.assertEqual(
+            cat, 'clear_underdog',
+            f'69 vs 75 muss clear_underdog sein (Diff = {diff_pct:.4f}%). Erhalten: {cat}',
+        )
+
+    # ── T08 — Links/Rechts-Spiegel ──────────────────────────────────────────
+
+    def test_t08_left_right_mirror_mapping(self):
+        """Rechter Angriff muss gegen gegnerische LINKE Abwehr geprüft werden."""
+        from .default_tactics import analyze_side_matchups
+
+        own_zones = {
+            'attack':  {'left': 50.0, 'center': 50.0, 'right': 100.0},
+            'defense': {'left': 50.0, 'center': 50.0, 'right': 50.0},
+        }
+        # Gegnerische LINKE Abwehr (opp_def['left']) ist schwach
+        opp_zones = {
+            'attack':  {'left': 50.0, 'center': 50.0, 'right': 50.0},
+            'defense': {'left': 20.0, 'center': 80.0, 'right': 80.0},
+        }
+        result = analyze_side_matchups(own_zones, opp_zones)
+
+        # Eigener rechter Angriff (100) trifft opp['defense']['left'] (20) → großer Vorteil
+        self.assertGreater(
+            result['right'], 0.4,
+            f"Rechter Angriff gegen schwache gegnerische linke Abwehr muss Vorteil zeigen. "
+            f"Erhalten: {result['right']:.4f}",
+        )
+        # Eigener linker Angriff (50) trifft opp['defense']['right'] (80) → Nachteil
+        self.assertLess(
+            result['left'], 0.0,
+            f"Linker Angriff gegen starke gegnerische rechte Abwehr muss Nachteil zeigen. "
+            f"Erhalten: {result['left']:.4f}",
+        )
+
+    # ── T09 / T10 — Angriffsfokus ────────────────────────────────────────────
+
+    def test_t09_no_zone_advantage_stays_ausgewogen(self):
+        """Keine klare Schwäche des Gegners → attack_focus bleibt ausgewogen."""
+        from .default_tactics import generate_default_tactic
+
+        even_str = {k: 70.0 for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
+        uniform  = {'attack':  {'left': 60.0, 'center': 60.0, 'right': 60.0},
+                    'defense': {'left': 60.0, 'center': 60.0, 'right': 60.0}}
+
+        result = generate_default_tactic(even_str, even_str, uniform, uniform)
+        self.assertEqual(
+            result['instructions']['attack_focus'], 'ausgewogen',
+            'Ausgeglichene Zonen dürfen keinen Fokus setzen.',
+        )
+
+    def test_t10_both_wings_advantage_gives_fluegelspiel(self):
+        """Beide Außenbahnen mit klarem Vorteil → fluegelspiel."""
+        from .default_tactics import generate_default_tactic
+
+        even_str = {k: 70.0 for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
+        # Eigene Außenangriffe stark; gegnerische LINKE + RECHTE Abwehr schwach
+        own_zones = {'attack':  {'left': 120.0, 'center':  60.0, 'right': 120.0},
+                     'defense': {'left':  60.0, 'center':  60.0, 'right':  60.0}}
+        opp_zones = {'attack':  {'left':  60.0, 'center':  60.0, 'right':  60.0},
+                     'defense': {'left':  25.0, 'center': 100.0, 'right':  25.0}}
+
+        result = generate_default_tactic(even_str, even_str, own_zones, opp_zones)
+        self.assertEqual(
+            result['instructions']['attack_focus'], 'fluegelspiel',
+            'Beide Außenbahnen im klaren Vorteil müssen fluegelspiel ergeben.',
+        )
+
+    # ── T11 — Fehlende Zonenwerte ────────────────────────────────────────────
+
+    def test_t11_missing_zone_values_no_error(self):
+        """None-Zonen (kein Lineup vorhanden) verursachen keinen Fehler."""
+        from .default_tactics import generate_default_tactic
+
+        even_str = {k: 70.0 for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
+        try:
+            result = generate_default_tactic(even_str, even_str, None, None)
+        except Exception as exc:
+            self.fail(f'generate_default_tactic mit None-Zonen soll nicht werfen: {exc}')
+        self.assertIn('category', result)
+        self.assertIn('instructions', result)
+
+    # ── T13 — Debug-Felder ──────────────────────────────────────────────────
+
+    def test_t13_debug_fields_present_and_correct(self):
+        """own_overall, opp_overall und relative_diff (Rohwert) im Ergebnis."""
+        from .default_tactics import generate_default_tactic
+
+        own_str = {k: 69.0 for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
+        opp_str = {k: 74.0 for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
+        result = generate_default_tactic(own_str, opp_str)
+
+        self.assertIn('own_overall',   result, 'own_overall fehlt.')
+        self.assertIn('opp_overall',   result, 'opp_overall fehlt.')
+        self.assertIn('relative_diff', result, 'relative_diff fehlt.')
+        self.assertAlmostEqual(result['own_overall'], 69.0, places=4)
+        self.assertAlmostEqual(result['opp_overall'], 74.0, places=4)
+        expected_diff = (69.0 - 74.0) / ((69.0 + 74.0) / 2.0)
+        self.assertAlmostEqual(result['relative_diff'], expected_diff, places=8)
+        self.assertEqual(result['category'], 'underdog')
+
+    # ── DB-Integration ───────────────────────────────────────────────────────
+
+    def test_t01_order_independence_both_unmanaged(self):
+        """Beide trainerlos: Taktik-Ergebnis unabhängig von Aufrufreihenfolge."""
+        from .match_readiness import (
+            apply_default_tactic_settings,
+            _make_default_tactic_snapshot,
+            ensure_default_tactic,
+        )
+
+        # Paar A: home zuerst
+        h_A = self._make_club('HomeA', strength=65)
+        a_A = self._make_club('AwayA', strength=80)
+        h_tac_A, _ = ensure_default_tactic(h_A)
+        a_tac_A, _ = ensure_default_tactic(a_A)
+        hs_A = _make_default_tactic_snapshot(h_tac_A)
+        as_A = _make_default_tactic_snapshot(a_tac_A)
+        apply_default_tactic_settings(h_tac_A, a_tac_A, hs_A, as_A)
+        apply_default_tactic_settings(a_tac_A, h_tac_A, as_A, hs_A)
+
+        # Paar B: away zuerst (identische Stärken)
+        h_B = self._make_club('HomeB', strength=65)
+        a_B = self._make_club('AwayB', strength=80)
+        h_tac_B, _ = ensure_default_tactic(h_B)
+        a_tac_B, _ = ensure_default_tactic(a_B)
+        hs_B = _make_default_tactic_snapshot(h_tac_B)
+        as_B = _make_default_tactic_snapshot(a_tac_B)
+        apply_default_tactic_settings(a_tac_B, h_tac_B, as_B, hs_B)  # away zuerst!
+        apply_default_tactic_settings(h_tac_B, a_tac_B, hs_B, as_B)
+
+        self.assertEqual(
+            h_tac_A.first_half, h_tac_B.first_half,
+            'Home-first_half muss reihenfolgeunabhängig identisch sein.',
+        )
+        self.assertEqual(
+            a_tac_A.first_half, a_tac_B.first_half,
+            'Away-first_half muss reihenfolgeunabhängig identisch sein.',
+        )
+
+    def test_t02_only_home_unmanaged_away_unchanged(self):
+        """Nur Heimteam trainerlos: Auswärtstaktik (managed) bleibt unberührt."""
+        from .match_readiness import apply_default_tactic_settings, ensure_default_tactic
+
+        home = self._make_club('HomeFrei', strength=70)
+        away = self._make_club('AwayMgd',  strength=70, managed=True)
+        h_tac, _ = ensure_default_tactic(home)
+        a_tac, _ = ensure_default_tactic(away)
+        initial_away_first_half = a_tac.first_half
+
+        apply_default_tactic_settings(h_tac, a_tac)
+
+        a_tac.refresh_from_db()
+        self.assertEqual(
+            a_tac.first_half, initial_away_first_half,
+            'apply_default_tactic_settings auf Home darf Away-Taktik nicht ändern.',
+        )
+
+    def test_t03_only_away_unmanaged_home_unchanged(self):
+        """Nur Auswärtsteam trainerlos: Heimtaktik (managed) bleibt unberührt."""
+        from .match_readiness import apply_default_tactic_settings, ensure_default_tactic
+
+        home = self._make_club('HomeMgd2', strength=70, managed=True)
+        away = self._make_club('AwayFrei', strength=70)
+        h_tac, _ = ensure_default_tactic(home)
+        a_tac, _ = ensure_default_tactic(away)
+        initial_home_first_half = h_tac.first_half
+
+        apply_default_tactic_settings(a_tac, h_tac)
+
+        h_tac.refresh_from_db()
+        self.assertEqual(
+            h_tac.first_half, initial_home_first_half,
+            'apply_default_tactic_settings auf Away darf Home-Taktik nicht ändern.',
+        )
+
+    def test_t04_both_managed_simulate_match_leaves_tactic_unset(self):
+        """Beide Vereine mit Trainer: simulate_match setzt first_half nicht."""
+        from .match_engine import simulate_match
+        from .match_readiness import ensure_default_tactic
+
+        home = self._make_club('MgdHome', strength=70, managed=True)
+        away = self._make_club('MgdAway', strength=70, managed=True)
+        h_tac, _ = ensure_default_tactic(home)
+        a_tac, _ = ensure_default_tactic(away)
+
+        simulate_match(home, away)
+
+        h_tac.refresh_from_db()
+        a_tac.refresh_from_db()
+        self.assertIsNone(h_tac.first_half,
+            'first_half eines gemanagten Heimvereins darf nicht gesetzt werden.')
+        self.assertIsNone(a_tac.first_half,
+            'first_half eines gemanagten Auswärtsvereins darf nicht gesetzt werden.')
+
+    def test_t05_idempotency(self):
+        """Wiederholter Aufruf erzeugt keine kumulative Verschärfung."""
+        from .match_readiness import apply_default_tactic_settings, ensure_default_tactic
+
+        home = self._make_club('IdemHome', strength=70)
+        away = self._make_club('IdemAway', strength=70)
+        h_tac, _ = ensure_default_tactic(home)
+        a_tac, _ = ensure_default_tactic(away)
+
+        apply_default_tactic_settings(h_tac, a_tac)
+        first_half_1  = dict(h_tac.first_half  or {})
+        conditions_1  = list(h_tac.conditions  or [])
+
+        apply_default_tactic_settings(h_tac, a_tac)
+        first_half_2  = dict(h_tac.first_half  or {})
+        conditions_2  = list(h_tac.conditions  or [])
+
+        self.assertEqual(first_half_1, first_half_2,
+            'first_half darf sich beim zweiten Aufruf nicht ändern.')
+        self.assertEqual(conditions_1, conditions_2,
+            'conditions dürfen sich beim zweiten Aufruf nicht ändern.')
+
+    def test_t12_all_profiles_compile_clean(self):
+        """Alle 5 Default-Profile müssen compile_tactic fehlerfrei durchlaufen."""
+        from .default_tactics import _PROFILE_BUILDERS
+        from .match_engine import _build_team_dict
+        from .match_readiness import ensure_default_tactic
+        from .tactic_compiler import compile_tactic
+
+        club = self._make_club('CompileFC', strength=70)
+        tac, _ = ensure_default_tactic(club)
+
+        for cat, builder in _PROFILE_BUILDERS.items():
+            profile = builder()
+            tac.first_half   = profile['first_half']
+            tac.second_half  = profile['second_half']
+            tac.instructions = profile['instructions']
+            tac.conditions   = profile['conditions']
+            tac.save(update_fields=[
+                'first_half', 'second_half', 'instructions', 'conditions', 'updated_at'
+            ])
+            team_dict   = _build_team_dict(club, tac)
+            tactic_dict = team_dict.get('tactic', {})
+            try:
+                result = compile_tactic(team_dict, tactic_dict, half='first')
+            except Exception as exc:
+                self.fail(f'compile_tactic für Profil "{cat}" fehlgeschlagen: {exc}')
+            self.assertIn('line_multipliers', result,
+                f'Profil "{cat}": compile_tactic liefert kein line_multipliers.')
+

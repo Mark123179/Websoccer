@@ -510,7 +510,31 @@ def _compute_zone_strengths_for_setup(tactic_setup) -> dict:
     return calculate_zone_strengths({'players': players_list, 'lineup': lineup_list})
 
 
-def apply_default_tactic_settings(own_setup, opp_setup) -> str:
+def _make_default_tactic_snapshot(tactic_setup) -> tuple:
+    """Berechnet einen unveränderlichen Stärke-Snapshot aus einem TacticSetup.
+
+    Liest nur lineup, formation und base_strength der Spieler — keine Taktik-
+    Einstellungen (first_half/second_half/instructions/conditions). Damit ist der
+    Snapshot unabhängig von der Reihenfolge späterer apply_default_tactic_settings()-
+    Aufrufe. Beide Snapshots VOR jeder Modifikation berechnen.
+
+    Returns:
+        (strength_dict, zone_dict) — (calculate_lineup_strength, calculate_zone_strengths)
+    """
+    str_dict  = calculate_lineup_strength(
+        tactic_setup.lineup   or {},
+        tactic_setup.formation or default_formation(),
+    )
+    zone_dict = _compute_zone_strengths_for_setup(tactic_setup)
+    return str_dict, zone_dict
+
+
+def apply_default_tactic_settings(
+    own_setup,
+    opp_setup,
+    own_snap: tuple | None = None,
+    opp_snap: tuple | None = None,
+) -> str:
     """Setzt first_half, second_half, instructions, conditions via Default-Taktik V1.
 
     Nur für trainerlose Vereine aufzurufen (nach ensure_default_tactic).
@@ -519,20 +543,31 @@ def apply_default_tactic_settings(own_setup, opp_setup) -> str:
     Args:
         own_setup: TacticSetup-Instanz des eigenen Vereins (wird gespeichert)
         opp_setup: TacticSetup-Instanz des Gegners (nur gelesen)
+        own_snap:  optionaler Snapshot (str_dict, zone_dict) — für Reihenfolge-
+                   unabhängigkeit bei beidseitig trainerlosen Vereinen.  Wenn None,
+                   wird on-demand berechnet.
+        opp_snap:  optionaler Snapshot des Gegners (analog).
     """
     from .default_tactics import generate_default_tactic
 
-    own_str_raw = calculate_lineup_strength(
-        own_setup.lineup or {}, own_setup.formation or default_formation()
-    )
-    opp_str_raw = calculate_lineup_strength(
-        opp_setup.lineup or {}, opp_setup.formation or default_formation()
-    )
+    if own_snap is not None:
+        own_str_raw, own_zones = own_snap
+    else:
+        own_str_raw = calculate_lineup_strength(
+            own_setup.lineup or {}, own_setup.formation or default_formation()
+        )
+        own_zones = _compute_zone_strengths_for_setup(own_setup)
+
+    if opp_snap is not None:
+        opp_str_raw, opp_zones = opp_snap
+    else:
+        opp_str_raw = calculate_lineup_strength(
+            opp_setup.lineup or {}, opp_setup.formation or default_formation()
+        )
+        opp_zones = _compute_zone_strengths_for_setup(opp_setup)
+
     own_str = {k: float(v) for k, v in own_str_raw.items()}
     opp_str = {k: float(v) for k, v in opp_str_raw.items()}
-
-    own_zones = _compute_zone_strengths_for_setup(own_setup)
-    opp_zones = _compute_zone_strengths_for_setup(opp_setup)
 
     result = generate_default_tactic(own_str, opp_str, own_zones, opp_zones)
 
