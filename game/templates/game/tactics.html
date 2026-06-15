@@ -596,10 +596,6 @@
                         <select name="buildup_defense">
                             {% for o in instructions.buildup.defense %}<option value="{{ o.value }}" {% if o.selected %}selected{% endif %}>{{ o.label }}</option>{% endfor %}
                         </select>
-                        <div class="tactics-segmented" data-segmented data-target="buildup_defense_height">
-                            {% for o in instructions.buildup.defense_height %}<button type="button" class="tactics-segment {% if o.selected %}is-active{% endif %}" data-value="{{ o.value }}"{% if o.tooltip %} data-tooltip="{{ o.tooltip }}"{% endif %}>{{ o.label }}</button>{% endfor %}
-                        </div>
-                        <input type="hidden" name="buildup_defense_height" value="{{ instructions.buildup.selected.defense_height }}">
                     </div>
                     <div class="tactics-buildup-row">
                         <span class="tactics-buildup-label" data-tooltip="Wie das Mittelfeld den Ball weiterspielen soll.">Mittelfeld</span>

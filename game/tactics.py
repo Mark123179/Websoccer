@@ -78,6 +78,7 @@ DEFAULT_FORMATION = {
 
 DEFAULT_HALF_TACTIC = {
     'orientation': 50,
+    'defense': 'standard',
     'midfield': 'standard',
     'attack': 'standard',
     'effort': 'normal',
@@ -98,6 +99,7 @@ STANDARD_FIELDS = [
 ]
 
 HALF_TACTIC_FIELDS = [
+    ('defense', 'Abwehr'),
     ('midfield', 'Mittelfeld'),
     ('attack', 'Angriff'),
     ('effort', 'Einsatz'),
@@ -324,7 +326,6 @@ DEFAULT_INSTRUCTIONS = {
     'attack_focus': 'ausgewogen',
     'buildup': {
         'defense': 'standard',
-        'defense_height': 'standard',
         'midfield': 'standard',
         'attack': 'standard',
         'tempo': 50,
@@ -436,9 +437,6 @@ def normalize_instructions(raw):
         tempo = db['tempo']
     buildup = {
         'defense': _choice(raw_buildup.get('defense'), BUILDUP_DEFENSE_OPTIONS, db['defense']),
-        'defense_height': _choice(
-            raw_buildup.get('defense_height'), BUILDUP_DEFENSE_HEIGHT, db['defense_height']
-        ),
         'midfield': _choice(raw_buildup.get('midfield'), BUILDUP_MIDFIELD_OPTIONS, db['midfield']),
         'attack': _choice(raw_buildup.get('attack'), BUILDUP_ATTACK_OPTIONS, db['attack']),
         'tempo': max(0, min(100, tempo)),
@@ -535,9 +533,6 @@ def instructions_view(instructions):
     }
     buildup = {
         'defense': _options_list(BUILDUP_DEFENSE_OPTIONS, instr['buildup']['defense']),
-        'defense_height': _options_list(
-            BUILDUP_DEFENSE_HEIGHT, instr['buildup']['defense_height'], BUILDUP_DEFENSE_HEIGHT_TOOLTIPS
-        ),
         'midfield': _options_list(BUILDUP_MIDFIELD_OPTIONS, instr['buildup']['midfield']),
         'attack': _options_list(BUILDUP_ATTACK_OPTIONS, instr['buildup']['attack']),
         'tempo': instr['buildup']['tempo'],

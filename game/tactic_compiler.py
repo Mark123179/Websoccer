@@ -484,20 +484,35 @@ def compile_tactic(
         s["possession_bonus"] -= 0.08
         s["complexity"]     += 6
 
-    # buildup.defense_height
-    bh = buildup.get("defense_height", "standard") or "standard"
-    if bh == "tief":
+    # Abwehrlinie-Verhalten aus Halbzeit-Dropdown
+    hd = _half_val("defense", "standard") or "standard"
+    if hd == "tief_stehen":
         s["defense_delta"]  += 0.04
         s["pressing_index"] -= 0.05
         s["attack_delta"]   -= 0.03
         s["risk"]           -= 0.04
         s["complexity"]     += 8
-    elif bh == "hoeher":
+    elif hd == "hoeher_stehen":
         s["pressing_index"] += 0.05
         s["attack_delta"]   += 0.03
         s["defense_delta"]  -= 0.03
         s["risk"]           += 0.04
         s["pressing_bypassed_risk"] += 0.02
+        s["complexity"]     += 8
+    elif hd == "kompakt_stehen":
+        s["defense_delta"]  += 0.03
+        s["pressing_index"] -= 0.03
+        s["risk"]           -= 0.03
+        s["complexity"]     += 6
+    elif hd == "absichern":
+        s["defense_delta"]  += 0.02
+        s["risk"]           -= 0.02
+        s["complexity"]     += 4
+    elif hd == "frueh_herausruecken":
+        s["pressing_index"] += 0.07
+        s["attack_delta"]   += 0.02
+        s["risk"]           += 0.05
+        s["pressing_bypassed_risk"] += 0.03
         s["complexity"]     += 8
 
     # buildup.midfield
@@ -616,7 +631,7 @@ def compile_tactic(
         s["coherence"] -= 0.04
     if s["orientation"] < 30 and pi > 0.60:
         s["coherence"] -= 0.05
-    if s["orientation"] > 70 and bh == "tief":
+    if s["orientation"] > 70 and hd == "tief_stehen":
         s["coherence"] -= 0.03
 
     # ── 8. Teamwork ───────────────────────────────────────────────────────────
