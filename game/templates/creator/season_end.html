@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · Saisonverwaltung{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Saisonverwaltung</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
+      <a class="cm-nav-pill" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
+      <a class="cm-nav-pill active" href="{% url 'creator_season_end' %}">Saison</a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="cm-messages">
+    {% for msg in messages %}
+    <div class="cm-msg cm-msg--{{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="sv-grid">
+
+    <!-- ── Statusübersicht ─────────────────────────────────────────────── -->
+    <div class="sv-card sv-card--status">
+      <h2 class="sv-card-title">Aktueller Status</h2>
+      <div class="sv-stat-row">
+        <div class="sv-stat">
+          <span class="sv-stat-num">{{ total_players }}</span>
+          <span class="sv-stat-lbl">Spieler gesamt</span>
+        </div>
+        <div class="sv-stat sv-stat--warn">
+          <span class="sv-stat-num">{{ injured_count }}</span>
+          <span class="sv-stat-lbl">Verletzt</span>
+        </div>
+        <div class="sv-stat sv-stat--warn">
+          <span class="sv-stat-num">{{ suspended_count }}</span>
+          <span class="sv-stat-lbl">Gesperrt</span>
+        </div>
+        <div class="sv-stat">
+          <span class="sv-stat-num">{{ season_stat_count }}</span>
+          <span class="sv-stat-lbl">Saisonleistungen</span>
+        </div>
+      </div>
+      {% if season_state %}
+      <p class="sv-season-label">Saison {{ season_state.current_season }}{% if season_state.is_started %} · gestartet{% else %} · nicht gestartet{% endif %}</p>
+      {% endif %}
+    </div>
+
+    <!-- ── Saison als beendet erklären ────────────────────────────────── -->
+    <div class="sv-card sv-card--main">
+      <h2 class="sv-card-title">Saison als beendet erklären</h2>
+      <p class="sv-card-sub">
+        Bestätige, dass alle Wettbewerbe abgeschlossen sind, bevor du die Saison beendest.
+        Danach werden Frische, Verletzungen, Sperren und Saisonleistungen zurückgesetzt.
+      </p>
+
+      <form method="post" id="form-declare">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="declare_end">
+
+        <div class="sv-checklist">
+          <label class="sv-check-item">
+            <input type="checkbox" name="leagues_done" class="sv-checkbox" id="cb-leagues">
+            <span class="sv-check-box"></span>
+            <span class="sv-check-text">
+              <strong>Alle Ligen</strong> haben ihren letzten Spieltag gespielt
+            </span>
+          </label>
+
+          <label class="sv-check-item">
+            <input type="checkbox" name="nat_cups_done" class="sv-checkbox" id="cb-nat">
+            <span class="sv-check-box"></span>
+            <span class="sv-check-text">
+              <strong>Alle nationalen Pokal-Finals</strong> wurden ausgetragen
+            </span>
+          </label>
+
+          <label class="sv-check-item">
+            <input type="checkbox" name="int_cups_done" class="sv-checkbox" id="cb-int">
+            <span class="sv-check-box"></span>
+            <span class="sv-check-text">
+              <strong>Alle internationalen Pokal-Finals</strong> wurden ausgetragen
+            </span>
+          </label>
+        </div>
+
+        <div class="sv-effects">
+          <span class="sv-effect-label">Effekte beim Beenden:</span>
+          <ul class="sv-effect-list">
+            <li>🌿 Alle Spieler: Frische → 100 %</li>
+            <li>🩹 Alle Verletzungen aufgehoben</li>
+            <li>🚫 Alle Sperren aufgehoben</li>
+            <li>📊 Alle Saisonleistungen zurückgesetzt</li>
+          </ul>
+        </div>
+
+        <button type="submit" class="sv-btn sv-btn--end" id="btn-declare" disabled>
+          Saison jetzt beenden
+        </button>
+      </form>
+    </div>
+
+    <!-- ── Sofort-Reset ────────────────────────────────────────────────── -->
+    <div class="sv-card sv-card--emergency">
+      <h2 class="sv-card-title">Sofort-Reset</h2>
+      <p class="sv-card-sub">
+        Setzt Frische, Verletzungen, Sperren und Saisonleistungen <em>sofort</em> zurück —
+        ohne Saison-Abschlusserklärung. Nützlich für manuelle Korrekturen.
+      </p>
+      <form method="post" onsubmit="return confirm('Sofort-Reset ausführen? Alle Saisonleistungen werden gelöscht.');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="sofort_reset">
+        <button type="submit" class="sv-btn sv-btn--emergency">
+          Sofort zurücksetzen
+        </button>
+      </form>
+    </div>
+
+  </div><!-- /sv-grid -->
+</section>
+
+<script>
+(function () {
+  const cbs  = document.querySelectorAll('.sv-checkbox');
+  const btn  = document.getElementById('btn-declare');
+  function update() {
+    const allChecked = Array.from(cbs).every(c => c.checked);
+    btn.disabled = !allChecked;
+  }
+  cbs.forEach(c => c.addEventListener('change', update));
+})();
+</script>
+
+<style>
+/* ── Basis ─────────────────────────────────────────────────────────────── */
+.cm-section { max-width: 1080px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+.cm-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; }
+.cm-header-left { display: flex; flex-direction: column; gap: .35rem; }
+.cm-badge { display: inline-block; font-size: .65rem; font-weight: 800; letter-spacing: .08em; padding: .2rem .55rem; border-radius: 4px; background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff44; text-transform: uppercase; width: fit-content; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+.cm-header-right { display: flex; gap: .5rem; }
+.cm-nav-pill { padding: .35rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; text-decoration: none; border: 1px solid #0d2035; color: #556677; background: #050e1a; transition: all .15s; }
+.cm-nav-pill:hover { border-color: #00d4ff44; color: #aabbcc; }
+.cm-nav-pill.active { border-color: #00d4ff55; color: #00d4ff; background: #071525; }
+
+/* ── Messages ──────────────────────────────────────────────────────────── */
+.cm-messages { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.cm-msg { padding: .65rem 1rem; border-radius: 6px; font-size: .85rem; font-weight: 500; }
+.cm-msg--success { background: #002a0e; border: 1px solid #00c85244; color: #00c852; }
+.cm-msg--error   { background: #2a0000; border: 1px solid #ff444444; color: #ff8888; }
+
+/* ── Grid ──────────────────────────────────────────────────────────────── */
+.sv-grid { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+
+/* ── Cards ─────────────────────────────────────────────────────────────── */
+.sv-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1.5rem; }
+.sv-card--main { border-color: #0d2a3f; }
+.sv-card--emergency { border-color: #2a1a0d; }
+.sv-card-title { font-size: 1rem; font-weight: 700; color: #cce8ff; margin: 0 0 .5rem; }
+.sv-card-sub { font-size: .82rem; color: #556677; margin: 0 0 1.25rem; line-height: 1.55; }
+
+/* ── Status ────────────────────────────────────────────────────────────── */
+.sv-stat-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.sv-stat { display: flex; flex-direction: column; gap: .15rem; }
+.sv-stat-num { font-size: 1.6rem; font-weight: 800; color: #00d4ff; line-height: 1; }
+.sv-stat--warn .sv-stat-num { color: #ffaa00; }
+.sv-stat-lbl { font-size: .72rem; color: #556677; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.sv-season-label { font-size: .78rem; color: #334455; margin: .5rem 0 0; }
+
+/* ── Checklist ─────────────────────────────────────────────────────────── */
+.sv-checklist { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
+.sv-check-item { display: flex; align-items: flex-start; gap: .75rem; cursor: pointer; }
+.sv-checkbox { display: none; }
+.sv-check-box {
+  flex-shrink: 0;
+  width: 1.1rem; height: 1.1rem; margin-top: .1rem;
+  border: 2px solid #1a3a55; border-radius: 4px;
+  background: #020810;
+  transition: border-color .15s, background .15s;
+  position: relative;
+}
+.sv-checkbox:checked + .sv-check-box {
+  border-color: #00d4ff;
+  background: #00d4ff22;
+}
+.sv-checkbox:checked + .sv-check-box::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .7rem;
+  font-weight: 900;
+  color: #00d4ff;
+}
+.sv-check-text { font-size: .85rem; color: #8899aa; line-height: 1.45; }
+.sv-check-text strong { color: #aabbcc; }
+
+/* ── Effekte ───────────────────────────────────────────────────────────── */
+.sv-effects { background: #020810; border: 1px solid #0a1e30; border-radius: 6px; padding: .75rem 1rem; margin-bottom: 1.5rem; }
+.sv-effect-label { font-size: .72rem; color: #334455; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; display: block; margin-bottom: .5rem; }
+.sv-effect-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .3rem; }
+.sv-effect-list li { font-size: .8rem; color: #556677; }
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.sv-btn { display: inline-block; padding: .6rem 1.4rem; border-radius: 6px; font-size: .85rem; font-weight: 700; border: none; cursor: pointer; transition: all .15s; }
+.sv-btn--end {
+  background: #00d4ff22;
+  border: 1px solid #00d4ff55;
+  color: #00d4ff;
+}
+.sv-btn--end:hover:not(:disabled) {
+  background: #00d4ff33;
+  border-color: #00d4ff;
+}
+.sv-btn--end:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.sv-btn--emergency {
+  background: #2a0d0022;
+  border: 1px solid #ff550044;
+  color: #cc5533;
+}
+.sv-btn--emergency:hover {
+  background: #ff550015;
+  border-color: #ff5500aa;
+  color: #ff7755;
+}
+</style>
+{% endblock %}

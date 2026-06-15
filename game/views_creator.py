@@ -13,11 +13,11 @@ from django.views.decorators.http import require_POST
 from .models import (
     Club, COUNTRY_FLAG_ASSETS, DataSource, League, Player,
     PlayerSourceRating, PlayerSourceRatingSnapshot, PlayerStrengthProfile,
-    PlayerFormSnapshot, Stadium,
+    PlayerFormSnapshot, PlayerSeasonStat, Stadium,
     ClubPublicProfile, ClubTrophy, ClubSponsor,
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
-    PlayerEditLog, PlayerRLFormProfile,
+    PlayerEditLog, PlayerRLFormProfile, GameSeasonState,
 )
 from . import strength_engine as se
 from .strength_service import compute_strength_for_player, compute_rl_form_for_player
@@ -2989,3 +2989,92 @@ def creator_search(request):
         })
 
     return JsonResponse({'clubs': clubs_out, 'players': players_out})
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Saisonverwaltung — Saison beenden
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _perform_season_reset():
+    """Setzt Frische, Verletzungen, Sperren und Saisonleistungen für alle Spieler zurück.
+
+    Reihenfolge:
+        1. PlayerStrengthProfile.freshness → 100
+        2. Player.ws_injury_* → leer / 0
+        3. Player.ws_suspension_* → leer / 0
+        4. PlayerSeasonStat → alle gelöscht (werden im neuen Spielbetrieb neu aufgebaut)
+        5. PlayerFormSnapshot → alle gelöscht
+    """
+    from decimal import Decimal as D
+    PlayerStrengthProfile.objects.all().update(freshness=D('100.00'))
+    Player.objects.all().update(
+        ws_injury_type='',
+        ws_injury_days_remaining=0,
+        ws_suspension_reason='',
+        ws_suspension_matches_remaining=0,
+    )
+    deleted_stats, _ = PlayerSeasonStat.objects.all().delete()
+    deleted_snaps, _ = PlayerFormSnapshot.objects.filter(
+        source__in=['ws_liga', 'ws_cup']
+    ).delete()
+    return deleted_stats, deleted_snaps
+
+
+def creator_season_end(request):
+    """GET: Saisonverwaltungs-Screen.  POST: Saison als beendet erklären."""
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden()
+
+    season_state = GameSeasonState.objects.first()
+    ctx = {
+        'season_state': season_state,
+        'page': 'season',
+    }
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'sofort_reset':
+            deleted_stats, deleted_snaps = _perform_season_reset()
+            messages.success(
+                request,
+                f'Sofort-Reset abgeschlossen: Frische 100 %, alle Verletzungen & Sperren aufgehoben, '
+                f'{deleted_stats} Saisonleistungen & {deleted_snaps} Snapshots gelöscht.',
+            )
+            return redirect('creator_season_end')
+
+        if action == 'declare_end':
+            leagues_done   = request.POST.get('leagues_done')   == 'on'
+            nat_cups_done  = request.POST.get('nat_cups_done')  == 'on'
+            int_cups_done  = request.POST.get('int_cups_done')  == 'on'
+
+            if not (leagues_done and nat_cups_done and int_cups_done):
+                messages.error(
+                    request,
+                    'Bitte alle drei Bestätigungs-Checkboxen setzen, bevor die Saison als beendet erklärt wird.',
+                )
+                return render(request, 'creator/season_end.html', ctx)
+
+            deleted_stats, deleted_snaps = _perform_season_reset()
+            messages.success(
+                request,
+                f'Saison als beendet erklärt. '
+                f'Frische 100 %, alle Verletzungen & Sperren aufgehoben, '
+                f'{deleted_stats} Saisonleistungen & {deleted_snaps} Snapshots gelöscht.',
+            )
+            return redirect('creator_season_end')
+
+    # Statistiken für die Anzeige
+    total_players     = Player.objects.count()
+    injured_count     = Player.objects.filter(ws_injury_days_remaining__gt=0).count()
+    suspended_count   = Player.objects.filter(ws_suspension_matches_remaining__gt=0).count()
+    season_stat_count = PlayerSeasonStat.objects.count()
+
+    ctx.update({
+        'total_players':     total_players,
+        'injured_count':     injured_count,
+        'suspended_count':   suspended_count,
+        'season_stat_count': season_stat_count,
+    })
+    return render(request, 'creator/season_end.html', ctx)

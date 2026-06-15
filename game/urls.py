@@ -99,6 +99,7 @@ from .views_creator import (
     creator_cup_schedule_preview,
     creator_cup_schedule_apply,
     cup_tree_view,
+    creator_season_end,
 )
 
 
@@ -315,4 +316,7 @@ urlpatterns = [
 
     # Pokalbaum (öffentliche Ansicht)
     path('pokal/<int:league_id>/<path:season>/', cup_tree_view, name='cup_tree'),
+
+    # Saisonverwaltung
+    path('creator/season-end/', creator_season_end, name='creator_season_end'),
 ]
