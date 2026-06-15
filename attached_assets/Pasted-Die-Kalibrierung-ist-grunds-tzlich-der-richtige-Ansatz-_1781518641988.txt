@@ -1,0 +1,253 @@
+Die Kalibrierung ist grundsätzlich der richtige Ansatz. Die Schlussfolgerung ist aber noch nicht vollständig belastbar. Im Ergebnis stecken drei wichtige Widersprüche.
+
+1. Die vorgeschlagenen Grenzen werden durch die Daten nicht vollständig bestätigt
+
+Die Auswertung sagt:
+
+bis etwa −2,8 %: weitgehend ausgeglichen
+ab etwa −4,2 %: erkennbarer Außenseiter
+ab etwa −7,0 %: klarer Außenseiter
+
+Anschließend wird trotzdem wieder diese Einteilung empfohlen:
+
+relative_diff <= -0.045  # clear_underdog
+
+Das widerspricht der eigenen Interpretation. Bei ungefähr −4,5 % wäre das Team laut Tabelle eher ein normaler Außenseiter, noch kein klarer Außenseiter.
+
+Aus den derzeitigen Ergebnissen wäre eher diese vorläufige Einteilung abzuleiten:
+
+if relative_diff <= -0.070:
+    category = "clear_underdog"
+elif relative_diff <= -0.042:
+    category = "underdog"
+elif relative_diff <= -0.025:
+    category = "slight_underdog"
+elif relative_diff < 0.025:
+    category = "balanced"
+elif relative_diff < 0.042:
+    category = "slight_favorite"
+elif relative_diff < 0.070:
+    category = "favorite"
+else:
+    category = "clear_favorite"
+
+Das würde die gemessenen Daten direkter abbilden.
+
+Was diese Grenzen bei 1.650 Punkten bedeuten
+Relative Differenz	Ungefährer Abstand
+2,5 %	41 Punkte
+4,2 %	69 Punkte
+7,0 %	116 Punkte
+
+Damit wäre ein Vergleich von 1.650 gegen 1.750:
+
+Differenz: −100
+Durchschnitt: 1.700
+Relative Differenz: −5,88 %
+
+Das Team wäre ein Außenseiter, aber noch nicht zwingend ein klarer Außenseiter. Das erscheint für eine durchschnittliche Mannschaft gegen eine Topmannschaft plausibel: Bayern ist deutlich stärker, aber nicht so stark, dass der Gegner zwangsläufig nur noch maximal mauern sollte.
+
+Ein klarer Außenseiter wäre eher:
+
+1.630 gegen 1.760
+Differenz: −130
+Relative Differenz: ungefähr −7,7 %
+2. Die Kommentare hinter den empfohlenen Schwellen stimmen nicht mit der Tabelle überein
+
+Im vorgeschlagenen Code steht:
+
+if relative_diff <= -0.045:
+    category = "clear_underdog"   # EPG -0.08+, xGD < -0.21
+
+Die gemessenen Werte zeigen jedoch:
+
+bei −4,20 %: xGD −0,144
+bei −5,56 %: xGD −0,190
+bei −6,90 %: xGD −0,236
+
+Ein xGD unter −0,21 wird erst ungefähr bei −6 bis −7 % erreicht, nicht bei −4,5 %.
+
+Die Kommentare und die Kategorien müssen deshalb korrigiert werden. Andernfalls dokumentiert der Code eine Wirkung, die an dieser Stelle nicht existiert.
+
+3. Der angebliche ID- oder Home-Bias muss vor der endgültigen Festlegung untersucht werden
+
+Diese Erklärung ist problematisch:
+
+Die id_offset=0/100-Konstruktion erzeugt eine systematische Verzerrung.
+
+Wenn die Paarungen wirklich gespiegelt wurden, sollte der Heimvorteil weitgehend herausgerechnet werden:
+
+Spiel 1: Team A zuhause gegen Team B
+Spiel 2: Team B zuhause gegen Team A
+
+Dass bei gleicher Stärke trotzdem entsteht:
+
+W: 35,2 %
+L: 38,9 %
+
+kann zwar bei 3.000 Spielen noch statistische Streuung sein. Es sollte aber nicht vorschnell als ID-Bias erklärt werden.
+
+Falls IDs tatsächlich die Ergebnisse beeinflussen, wäre das möglicherweise ein Problem im Testaufbau oder bei der deterministischen Zufallserzeugung:
+
+Seeds könnten direkt oder indirekt von Team-IDs abhängen.
+Die gespiegelten Spiele könnten nicht exakt dieselben sonstigen Einstellungen verwenden.
+Die Team-Dictionaries könnten außer der Stärke weitere unterschiedliche Werte enthalten.
+Heim- und Auswärtspaarungen könnten nicht gleich häufig oder nicht vollständig symmetrisch erzeugt werden.
+Das Zurücksetzen beziehungsweise Fortschreiben des Zufalls-Seeds könnte asymmetrisch sein.
+
+Die Abweichung bei Stärke 71 bestätigt das Problem:
+
+Team ist 1,42 % schwächer
+W: 38,3 %
+L: 36,6 %
+EPG: 1,400
+
+Das schwächere Team schneidet dort besser ab als bei gleicher Stärke. Das ist eindeutig Rauschen oder ein Testartefakt. Deshalb ist die Aussage „kein Rauschen“ beim xGD ebenfalls zu stark formuliert. Der xGD-Trend ist sehr sauber, aber natürlich trotzdem stichprobenbehaftet.
+
+Bessere Kalibrierungsmethode
+
+Der nächste Test sollte nicht nur mehr Spiele verwenden, sondern strukturell sauberer aufgebaut werden.
+
+Paarungen
+70 gegen 70
+70 gegen 71
+70 gegen 72
+70 gegen 73
+70 gegen 74
+70 gegen 75
+70 gegen 76
+70 gegen 77
+70 gegen 78
+70 gegen 79
+70 gegen 80
+
+Damit werden auch Unterschiede über 10 % abgedeckt.
+
+Pro Stufe
+
+Mindestens:
+
+10.000 gespiegelte Paare
+= 20.000 Einzelspiele
+
+Falls der vollständige Minutenmotor zu viel Speicher benötigt:
+
+Ergebnisse laufend aggregieren
+einzelne Matchresultate nicht in Listen behalten
+keine vollständigen Event- oder Tickerobjekte sammeln
+nach jedem Spiel nur Tore, xG und Punkte addieren
+Garbage Collection nicht als Hauptlösung verwenden, sondern Speicherhaltung vermeiden
+Spiegelung
+
+Für jeden Seed exakt:
+
+simulate(
+    home=base_team,
+    away=opponent_team,
+    seed=seed,
+)
+
+simulate(
+    home=opponent_team,
+    away=base_team,
+    seed=seed,
+)
+
+Idealerweise werden sogar Team-IDs zwischen weiteren Durchläufen getauscht:
+
+Test A:
+Base ID 1, Gegner ID 2
+
+Test B:
+Base ID 2, Gegner ID 1
+
+So lässt sich feststellen, ob IDs unerwartet Einfluss haben.
+
+Echte Teams sind sinnvoll, aber nicht als Ersatz für den synthetischen Test
+
+Bayern gegen Mainz ist ein guter Realitätscheck. Er sollte aber erst danach kommen.
+
+Bei echten Mannschaften unterscheiden sich zusätzlich:
+
+Formation
+Positions-Fit
+Spielerverteilung
+Potential
+Torwart
+Linienprofile
+Taktiken
+Frische
+möglicherweise Attribute und Pressingqualität
+
+Damit lässt sich nicht mehr sauber feststellen, ob eine Abweichung aus der Gesamtstärke oder aus der Kaderstruktur stammt.
+
+Die sinnvolle Reihenfolge ist:
+
+Synthetischer Test mit ausschließlich veränderter Stärke
+Test auf ID- und Seed-Symmetrie
+Festlegung der relativen Kategorien
+Echte Bundesliga-Paarungen als Plausibilitätsprüfung
+Danach Linienkalibrierung
+Linien dürfen nicht automatisch dieselben Schwellen erhalten
+
+Diese Aussage ist noch nicht belegt:
+
+defense_matchup = (
+    own_defense - opponent_attack
+) / average
+
+Die Formel ist richtig. Daraus folgt aber nicht, dass auch dieselben Prozentgrenzen gelten.
+
+Ein Unterschied von −5 % zwischen eigener Abwehr und gegnerischem Angriff kann einen anderen Engine-Effekt haben als −5 % bei der gesamten Mannschaftsstärke. Die Match Engine verarbeitet Linien möglicherweise über:
+
+unterschiedliche Multiplikatoren,
+Stärkeverhältnisse,
+Zonen,
+xG-Modifikatoren,
+Ballbesitz,
+Chancenanzahl.
+
+Deshalb braucht jede Linienart mindestens einen eigenen isolierten Test:
+
+Gesamtstärke identisch
+nur eigene Abwehr gegen gegnerischen Angriff verändern
+
+Danach:
+
+Gesamtstärke identisch
+nur Mittelfeldverhältnis verändern
+
+Und anschließend:
+
+Gesamtstärke identisch
+nur eigener Angriff gegen gegnerische Abwehr verändern
+
+Erst dann kann entschieden werden, ob beispielsweise −4 % auf allen Linien dieselbe taktische Bedeutung besitzt.
+
+Aktuell sinnvoller Zwischenstand
+
+Die Kalibrierung zeigt bereits zuverlässig:
+
+±1,25 % ist wahrscheinlich zu eng für eine echte Kategoriegrenze.
+Unterschiede bis ungefähr 2–2,5 % wirken weitgehend ausgeglichen.
+Ab ungefähr 4 % entsteht ein erkennbarer Außenseiterstatus.
+Ein klarer Außenseiter beginnt nach den jetzigen Daten eher bei ungefähr 7 %.
+Relative Werte sind klar besser als absolute Stärkepunkte.
+xGD eignet sich besser zur Schwellenkalibrierung als einzelne Siegquoten.
+
+Für die Default-Taktik würde ich deshalb vorläufig mit fünf statt sieben Profilen beginnen:
+
+if relative_diff <= -0.070:
+    category = "clear_underdog"
+elif relative_diff <= -0.035:
+    category = "underdog"
+elif relative_diff < 0.035:
+    category = "balanced"
+elif relative_diff < 0.070:
+    category = "favorite"
+else:
+    category = "clear_favorite"
+
+Die feineren Kategorien „leichter Außenseiter“ und „leichter Favorit“ sind für die Taktikerzeugung vermutlich zunächst gar nicht notwendig. Innerhalb des ausgeglichenen Profils können kleine Unterschiede bereits kontinuierlich auf Pressing, Tempo oder Linienhöhe wirken, ohne direkt ein neues Grundprofil auszulösen.
+
+Der derzeitige Test bestätigt damit die Richtung, aber nicht die ursprünglich empfohlenen Schwellen von 1,25 / 2,75 / 4,5 %. Besonders die Grenze für den klaren Außenseiter sollte nach den eigenen Messwerten eher bei ungefähr 7 % liegen.
