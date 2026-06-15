@@ -1620,13 +1620,17 @@ def compute_player_ratings(result: dict) -> dict:
         elif xg_diff >= 0.5:  team_delta -= 0.15
         elif xg_diff <= -1.5: team_delta += 0.30
         elif xg_diff <= -0.5: team_delta += 0.15
-        # C) Gegnerstärke / Upset-Bonus
+        # C) Gegnerstärke / Upset-Bonus (relative Stärkendifferenz)
+        # Kalibriert gegen Simulation: ab ~3.5 % Nachteil erkennbarer Außenseiter,
+        # ab ~7.0 % klarer Außenseiter (EPG-Δ ≈ −0.19, L% ≈ 44 %).
+        _avg_str = (my_str + opp_str) / 2.0 if (my_str + opp_str) > 0 else 1.0
+        _rel_diff = (my_str - opp_str) / _avg_str   # negativ = ich war schwächer
         if my_win:
-            if str_diff <= -25:   team_delta -= 0.35
-            elif str_diff <= -15: team_delta -= 0.22
+            if _rel_diff <= -0.070:   team_delta -= 0.35   # klarer Außenseiter gewinnt
+            elif _rel_diff <= -0.035: team_delta -= 0.22   # Außenseiter gewinnt
         elif opp_win:
-            if str_diff >= 25:    team_delta += 0.35
-            elif str_diff >= 15:  team_delta += 0.22
+            if _rel_diff >= 0.070:    team_delta += 0.35   # klarer Favorit verliert
+            elif _rel_diff >= 0.035:  team_delta += 0.22   # Favorit verliert
         team_delta = max(-0.85, min(0.85, team_delta))
 
         # ── F) Positionslogik → proxy_delta (minutenskaliert) ─────────────────
