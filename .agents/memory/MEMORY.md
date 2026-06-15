@@ -30,3 +30,4 @@
 - [KO-Spielmodus V1](ko-match-mode-v1.md) — simulate_ko_match()=simulate_match(is_cup=True); ET 91–120 + Elfmeter; 0xE1FM3TE2 war ungültiges Hex, jetzt 0xE1F3A2B1.
 - [kompakt_stehen dual xGA path](kompakt-stehen-dual-xga-path.md) — defense_delta→line_multipliers gibt ~−0.028 xGA-Reduktion die compiler nicht sieht; erzeugt [ALARM] mit offensiven Linienoptionen; Freeze gilt.
 - [Per-Halbzeit Linien-Delta Design](half-tactic-line-deltas.md) — Mittelfeld/Angriff-Dropdowns nutzen separate line_* Variablen; positive Vorteile gekappt (xG≤0.06, shots≤0.08); Risiko+Frische stapeln vollständig.
+- [Default-Taktik V1 Architektur](default-tactics-v1.md) — game/default_tactics.py (pure Python); apply_default_tactic_settings() in match_readiness.py; Hook in simulate_match Schritt 1b.

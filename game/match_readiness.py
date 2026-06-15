@@ -476,6 +476,75 @@ def calculate_team_strength(club, malus=Decimal('1.0')):
     return calculate_lineup_strength(setup.lineup or {}, setup.formation or default_formation(), malus)
 
 
+def _compute_zone_strengths_for_setup(tactic_setup) -> dict:
+    """Baut ein minimales Team-Dict und berechnet Zonenstärken (links/mitte/rechts).
+
+    Verwendet base_strength als Annäherung an final_strength (keine Tagesform).
+    Gibt das Resultat von calculate_zone_strengths zurück.
+    """
+    from .models import PlayerStrengthProfile
+    from .tactic_compiler import calculate_zone_strengths
+
+    lineup_map = tactic_setup.lineup or {}
+    formation  = tactic_setup.formation or default_formation()
+    slots      = formation_slots(formation)
+
+    player_ids = [lineup_map.get(s['key']) for s in slots if lineup_map.get(s['key'])]
+
+    profiles: dict = {}
+    if player_ids:
+        for sp in PlayerStrengthProfile.objects.filter(
+            player_id__in=player_ids
+        ).only('player_id', 'base_strength'):
+            profiles[sp.player_id] = float(sp.base_strength or 50.0)
+
+    players_list = [
+        {'id': pid, 'final_strength': profiles.get(pid, 50.0)}
+        for pid in dict.fromkeys(player_ids)   # preserves order, deduplicates
+        if pid
+    ]
+    lineup_list = [
+        {'player_id': lineup_map.get(s['key']), 'position': s['code']}
+        for s in slots if lineup_map.get(s['key'])
+    ]
+    return calculate_zone_strengths({'players': players_list, 'lineup': lineup_list})
+
+
+def apply_default_tactic_settings(own_setup, opp_setup) -> str:
+    """Setzt first_half, second_half, instructions, conditions via Default-Taktik V1.
+
+    Nur für trainerlose Vereine aufzurufen (nach ensure_default_tactic).
+    Gibt die ermittelte Kategorie zurück ('clear_underdog' … 'clear_favorite').
+
+    Args:
+        own_setup: TacticSetup-Instanz des eigenen Vereins (wird gespeichert)
+        opp_setup: TacticSetup-Instanz des Gegners (nur gelesen)
+    """
+    from .default_tactics import generate_default_tactic
+
+    own_str_raw = calculate_lineup_strength(
+        own_setup.lineup or {}, own_setup.formation or default_formation()
+    )
+    opp_str_raw = calculate_lineup_strength(
+        opp_setup.lineup or {}, opp_setup.formation or default_formation()
+    )
+    own_str = {k: float(v) for k, v in own_str_raw.items()}
+    opp_str = {k: float(v) for k, v in opp_str_raw.items()}
+
+    own_zones = _compute_zone_strengths_for_setup(own_setup)
+    opp_zones = _compute_zone_strengths_for_setup(opp_setup)
+
+    result = generate_default_tactic(own_str, opp_str, own_zones, opp_zones)
+
+    own_setup.first_half   = result['first_half']
+    own_setup.second_half  = result['second_half']
+    own_setup.instructions = result['instructions']
+    own_setup.conditions   = result['conditions']
+    own_setup.save(update_fields=['first_half', 'second_half', 'instructions', 'conditions', 'updated_at'])
+
+    return result['category']
+
+
 def patch_managed_lineup(club, setup) -> tuple:
     """Flickt die Aufstellung eines gemanagten Vereins für den Spieltag.
 

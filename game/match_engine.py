@@ -17,7 +17,7 @@ import random
 from copy import deepcopy
 from typing import Optional
 
-from .match_readiness import ensure_default_tactic
+from .match_readiness import apply_default_tactic_settings, ensure_default_tactic
 from .tactics import default_formation, formation_slots, formation_code, SQUAD_PRO
 from .tactic_compiler import (
     calculate_zone_strengths,
@@ -2357,6 +2357,13 @@ def simulate_match(
             squad_scope=SQUAD_PRO,
             defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
         )
+
+    # 1b. Default-Taktik V1: Taktik-Einstellungen anhand des konkreten Matchups setzen.
+    #     Nur für trainerlose Vereine — gemanagte Vereine behalten Trainer-Vorgaben.
+    if home_club.managed_by_id is None:
+        apply_default_tactic_settings(home_tactic, away_tactic)
+    if away_club.managed_by_id is None:
+        apply_default_tactic_settings(away_tactic, home_tactic)
 
     # 2. Pre-compute Matchstärken: random(basis, potential) + form — einmal pro Spieler,
     #    konsistent für Simulation UND Spielbericht-Display.

@@ -1,0 +1,177 @@
+Das Ergebnis ist jetzt deutlich belastbarer. Die fünf Kategorien können für Default-Taktik V1 verwendet werden. Zwei Aussagen und die Änderung am Upset-Bonus müssen aber noch sauber eingeordnet werden.
+
+1. Die Schwellen sind plausibel
+relative_diff = (own_strength - opponent_strength) / (
+    (own_strength + opponent_strength) / 2
+)
+
+if relative_diff <= -0.070:
+    category = "clear_underdog"
+elif relative_diff <= -0.035:
+    category = "underdog"
+elif relative_diff < 0.035:
+    category = "balanced"
+elif relative_diff < 0.070:
+    category = "favorite"
+else:
+    category = "clear_favorite"
+
+Auf der angenommenen realen Mannschaftsskala ergibt das ungefähr:
+
+Begegnung	Relative Differenz	Kategorie
+1.650 gegen 1.650	0,00 %	ausgeglichen
+1.650 gegen 1.700	−2,99 %	ausgeglichen
+1.650 gegen 1.725	−4,44 %	Außenseiter
+1.650 gegen 1.750	−5,88 %	Außenseiter
+1.630 gegen 1.760	−7,67 %	klarer Außenseiter
+
+Damit würde Mainz gegen Bayern normalerweise als Außenseiter, aber nicht automatisch als extremer Außenseiter eingestuft. Das ist sinnvoll: Mainz sollte defensiver reagieren, aber nicht zwingend mit der maximal defensiven Kombination antreten.
+
+2. „Perfekt linear“ ist zu stark formuliert
+
+Die xGD-Reihe ist sehr sauber und nahezu linear:
+
+−1,42 %  → −0,049
+−2,82 %  → −0,097
+−4,20 %  → −0,144
+−5,56 %  → −0,190
+−6,90 %  → −0,236
+
+Das entspricht ungefähr:
+
+−0,034 xGD je einem Prozentpunkt relativer Unterlegenheit
+
+Besser wäre die Formulierung:
+
+Im getesteten Bereich zeigt sich eine nahezu lineare Beziehung zwischen relativer Stärke und xGD.
+
+„Perfekt linear“ suggeriert eine mathematische Garantie, obwohl Ergebnisse, Tore und Punkte weiterhin stochastisch erzeugt werden.
+
+3. Der angebliche EPG-Knick bei −7 % ist kein klarer statistischer Knick
+
+Die Werte:
+
+−5,56 % → EPG 1,233
+−6,90 % → EPG 1,175
+−8,22 % → EPG 1,175
+−9,52 % → EPG 1,164
+
+zeigen keinen eindeutigen strukturellen Sprung. Der Wert von −7 % ist trotzdem eine gute Designgrenze, weil dort ungefähr folgende Merkmale erreicht werden:
+
+Siegquote nur noch rund 31 %
+Niederlagenquote über 44 %
+xGD ungefähr −0,24
+EPG-Abstand zur Baseline ungefähr −0,19
+
+Die Schwelle sollte daher nicht als mathematisch bewiesener Knick dokumentiert werden, sondern als empirisch begründete Kategoriegrenze.
+
+4. Entscheidender Punkt: Was macht der Upset-Bonus?
+
+Hier muss technisch unterschieden werden.
+
+Falls der Upset-Bonus nur Spielernoten oder nachträgliche Auszeichnungen beeinflusst
+
+Dann ist die Umstellung auf relative Werte sinnvoll:
+
+if winner_relative_diff <= -0.070:
+    # großer Upset-Bonus
+elif winner_relative_diff <= -0.035:
+    # normaler Upset-Bonus
+
+Ein Sieg eines um 5,9 % schwächeren Teams wäre dann ein normaler Upset. Ein Sieg eines um mehr als 7 % schwächeren Teams wäre ein großer Upset.
+
+Falls der Upset-Bonus Tore, xG oder das eigentliche Spielergebnis beeinflusst
+
+Dann wäre die Änderung problematisch.
+
+Ein Upset darf erst nach dem Ergebnis erkannt und belohnt werden. Die Engine darf einem Außenseiter nicht vor oder während des Spiels einen Bonus geben, nur damit häufiger ein Upset entsteht. Das würde:
+
+den vorher kalibrierten Stärkeeinfluss verändern,
+die neue Kalibrierung teilweise ungültig machen,
+eine künstliche Gummibandmechanik erzeugen,
+Favoriten systematisch abschwächen.
+
+In diesem Fall müsste die 70–80-Kalibrierung nach der Änderung vollständig wiederholt werden.
+
+Die sichere Regel lautet:
+
+upset = winner_pre_match_strength < loser_pre_match_strength
+
+Der daraus entstehende Bonus darf nur nachträgliche Elemente beeinflussen, etwa:
+
+Spielernoten
+Tickertext
+Manager-Auszeichnung
+Pressebericht
+Erfolgsstatistik
+
+Nicht das Matchresultat selbst.
+
+5. Welche Stärke die Default-Taktik verwenden muss
+
+Die Default-KI sollte nicht einfach den gesamten Kader oder einen gespeicherten Vereinswert vergleichen. Verwendet werden muss die effektive Stärke der konkreten Startelf.
+
+Also:
+
+own_strength = calculate_lineup_strength(
+    own_starting_eleven,
+    positions=True,
+    fitness=True,
+    potential=False_or_deterministic=True,
+)
+
+Wichtige Anforderungen:
+
+HP/NP/FP berücksichtigen
+gesperrte und verletzte Spieler ausschließen
+tatsächliche Startelf verwenden
+keine zufällige Potential-Tagesform vorwegnehmen
+keine Match-Ereignisse oder versteckten Rolls verwenden
+beim Gegner dessen eingereichte beziehungsweise automatisch erzeugte Startelf verwenden
+
+Andernfalls könnte beispielsweise Bayern auf dem Papier klarer Favorit sein, obwohl mehrere Schlüsselspieler fehlen und die tatsächlich aufgestellte Mannschaft nur noch einen kleinen Vorteil besitzt.
+
+6. Kategorien nur für das Grundprofil verwenden
+
+Die Kategorie sollte nicht jede Einstellung hart vorgeben.
+
+Beispiel underdog bei ungefähr −5,9 %:
+
+Grundprofil:
+- etwas tiefere oder kompakte Abwehr
+- Mittelfeld eher absichern
+- Angriff unterstützen
+- moderates Pressing
+- Umschalten bevorzugen
+
+Danach werden Linien-Matchups geprüft:
+
+defense_vs_attack
+midfield_vs_midfield
+attack_vs_defense
+left_vs_right
+center_vs_center
+right_vs_left
+
+So kann ein insgesamt schwächeres Team trotzdem eine offensive Schwachstelle des Gegners ausnutzen.
+
+Mainz gegen Bayern könnte beispielsweise insgesamt Außenseiter sein, aber auf der eigenen rechten Angriffsseite nur leicht unterlegen. Dann wäre die sinnvolle Default-Taktik:
+
+grundsätzlich kontrolliert und kompakt,
+aber gezielter Angriff über rechts,
+nicht pauschal zehn Spieler hinter dem Ball.
+7. Empfohlene Dokumentation
+DEFAULT_TACTIC_MATCHUP_THRESHOLDS = {
+    "clear_underdog": -0.070,
+    "underdog": -0.035,
+    "balanced_upper": 0.035,
+    "favorite_upper": 0.070,
+}
+
+Dazu ein Kommentar:
+
+# Empirically calibrated using mirrored synthetic matches.
+# Around -3.5% relative strength difference marks a meaningful
+# underdog matchup. Around -7.0% marks a clear underdog matchup
+# with approximately 31% wins, 44% losses and -0.24 xGD per match
+# in the calibration sample.
