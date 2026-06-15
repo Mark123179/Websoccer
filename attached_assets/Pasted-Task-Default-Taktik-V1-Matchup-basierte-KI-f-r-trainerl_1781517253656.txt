@@ -1,0 +1,604 @@
+Task: Default-Taktik V1 – Matchup-basierte KI für trainerlose Vereine
+What & Why
+
+Trainerlose Vereine erhalten aktuell automatisch eine Aufstellung. Die taktischen Einstellungen werden jedoch nicht sinnvoll an den Gegner angepasst.
+
+Die Default-Taktik soll künftig vor jedem Spiel anhand der eigenen Mannschaft, der gegnerischen Mannschaft und des konkreten Stärkeverhältnisses automatisch erstellt werden.
+
+Beispiel:
+
+Mainz gegen Bayern: Mainz erkennt die klare Unterlegenheit und spielt kontrollierter, kompakter und mit geringerem Risiko.
+Bayern gegen Mainz: Bayern übernimmt mehr Initiative, steht höher und besetzt offensivere Räume.
+Mainz gegen einen gleich starken Gegner: ausgeglichene Grundeinstellung ohne unnötiges Mauern.
+Starkes Angriffsteam gegen schwache gegnerische Außenverteidigung: Angriffsfokus wird gezielt auf diese Schwachstelle gelegt.
+
+Ziel ist keine perfekte KI. Die Default-Taktik soll nachvollziehbare, konkurrenzfähige und abwechslungsreiche Entscheidungen treffen, ohne menschliche Manager systematisch zu übertreffen.
+
+1. Technische Grundidee
+
+Die automatische Taktik wird erst erzeugt, nachdem die automatische Startelf feststeht.
+
+Reihenfolge:
+
+1. Automatische Aufstellung des eigenen Teams erstellen
+2. Gegnerische Aufstellung laden oder prognostizieren
+3. Effektive Mannschafts- und Linienstärken berechnen
+4. Matchup kategorisieren
+5. Taktik-Grundprofil auswählen
+6. Einzelne Einstellungen anhand der Linien-Matchups anpassen
+7. Halbzeit- und Ergebnispläne erstellen
+8. Taktik über compile_tactic() validieren
+9. Taktik für das konkrete Spiel speichern
+
+Die KI verwendet keine zufällig ausgewürfelte Tagesform und keinen versteckten Potential-Roll. Sie entscheidet anhand stabiler, vor dem Spiel verfügbarer Werte.
+
+2. Verwendete Eingangsdaten
+Eigene Mannschaft
+
+Berechnung auf Grundlage der tatsächlich automatisch aufgestellten Startelf:
+
+Gesamtstärke der Startelf
+Torwartstärke
+Abwehrstärke
+Mittelfeldstärke
+Angriffsstärke
+Stärke der linken Seite
+Stärke des Zentrums
+Stärke der rechten Seite
+Positions-Fit HP/NP/FP
+Formation
+verfügbare Ersatzspieler
+Frische der Spieler
+Heim- oder Auswärtsspiel
+Gegner
+
+Priorität:
+
+Bereits gespeicherte gegnerische Aufstellung
+Prognostizierte automatische Bestelf
+Kaderbasierte Ersatzberechnung, falls keine Aufstellung erzeugt werden kann
+
+Auch beim Gegner werden Gesamt-, Linien- und Seitenstärken berechnet.
+
+3. Matchup-Bewertung
+
+Die Gesamtstärke allein reicht nicht. Es werden mehrere Unterschiede berechnet.
+
+overall_diff = own_total_strength - opponent_total_strength
+
+defense_matchup = own_defense_strength - opponent_attack_strength
+midfield_matchup = own_midfield_strength - opponent_midfield_strength
+attack_matchup = own_attack_strength - opponent_defense_strength
+
+Zusätzlich:
+
+left_attack_matchup = own_left_attack - opponent_right_defense
+center_attack_matchup = own_center_attack - opponent_center_defense
+right_attack_matchup = own_right_attack - opponent_left_defense
+
+Die Stärke sollte möglichst auf derselben Skala liegen, die bereits für die Match Engine verwendet wird.
+
+Matchup-Kategorien
+
+Vorläufige Schwellenwerte:
+
+Stärkeunterschied	Kategorie
+kleiner als −18	klarer Außenseiter
+−18 bis −8	Außenseiter
+−8 bis +8	ausgeglichen
++8 bis +18	Favorit
+größer als +18	klarer Favorit
+
+Die Schwellenwerte müssen später über Simulationen validiert werden.
+
+Heimvorteil darf bei der Einordnung leicht berücksichtigt werden, beispielsweise:
+
+adjusted_diff = overall_diff + 2.0 if home_team else overall_diff - 1.0
+
+Die Default-KI darf den tatsächlichen Engine-Heimbonus nicht doppelt anwenden. Der kleine Wert dient nur der taktischen Entscheidungsfindung.
+
+4. Fünf Default-Grundprofile
+A. Klarer Außenseiter
+
+Ziel: Niederlage nicht durch übermäßiges Risiko wahrscheinlicher machen, aber weiterhin eigene Torchancen erzeugen.
+
+Mögliche Grundeinstellungen:
+
+Abwehr: tiefer stehen oder kompakt stehen
+Mittelfeld: absichern
+Angriff: unterstützen oder Standard
+Pressing: niedrig bis moderat
+Tempo: niedrig bis mittel
+Aufbau Abwehr: eher weit oder situationsabhängig
+Aufbau Mittelfeld: standard
+Deckung: eher Raumdeckung
+Zweikämpfe: normal
+Umschalten: bevorzugt schnell nach Ballgewinn
+Angriffsfokus: gegnerische Schwachstelle, sonst ausgewogen
+kein dauerhaftes extremes Zeitspiel
+kein vollständiger Verzicht auf Offensive
+
+Wichtig: Die KI soll nicht automatisch die maximal defensivste Kombination aus allen verfügbaren Einstellungen wählen.
+
+B. Außenseiter
+
+Ziel: kontrollierte Defensive mit gezielten Offensivphasen.
+
+Mögliche Grundeinstellungen:
+
+Abwehr: kompakt stehen
+Mittelfeld: absichern oder Standard
+Angriff: unterstützen
+Pressing: moderat
+Tempo: mittel
+Umschalten: aktiviert
+Angriffsfokus: stärkstes eigenes Matchup
+etwas geringere Linie
+keine extrem aggressiven Rollen
+C. Ausgeglichenes Spiel
+
+Ziel: neutrale und flexible Taktik.
+
+Mögliche Grundeinstellungen:
+
+Abwehr: Standard
+Mittelfeld: Standard
+Angriff: Standard
+Pressing: mittel
+Tempo: circa 50
+Aufbau: Standard
+Deckung: Standard
+Zweikämpfe: normal
+Angriffsfokus: ausgewogen oder klare gegnerische Schwachstelle
+keine starken Risiko- oder Defensivmodifikatoren
+
+Dieses Profil ist auch der technische Fallback.
+
+D. Favorit
+
+Ziel: Spiel kontrollieren, ohne unnötig offen zu stehen.
+
+Mögliche Grundeinstellungen:
+
+Abwehr: höher stehen oder Standard
+Mittelfeld: nachrücken
+Angriff: Abwehrkette binden oder Standard
+Pressing: mittel bis hoch
+Tempo: mittel bis erhöht
+Aufbau: geduldig oder Standard
+Angriffsfokus: gegnerische Schwachstelle
+stärkere Besetzung offensiver Räume
+kein automatischer Schlussangriff von Beginn an
+E. Klarer Favorit
+
+Ziel: deutliche Überlegenheit in Ballbesitz und Chancen umsetzen.
+
+Mögliche Grundeinstellungen:
+
+Abwehr: höher stehen
+Mittelfeld: offensiv besetzen
+Angriff: Strafraum besetzen oder Abwehrkette binden
+Pressing: hoch
+Tempo: mittel bis hoch
+Aufbau: geduldig
+Angriffsfokus: schwächste gegnerische Zone
+aggressiveres Nachrücken
+höheres Risiko akzeptieren
+
+Auch ein klarer Favorit darf nicht automatisch alle maximal offensiven Einstellungen gleichzeitig erhalten. Die bestehenden lokalen Caps und Kompaktheitsregeln bleiben aktiv.
+
+5. Anpassung anhand der Linienstärken
+
+Nach Auswahl des Grundprofils wird die Taktik gezielt modifiziert.
+
+Eigene Abwehr deutlich schwächer als gegnerischer Angriff
+defense_matchup <= -10
+
+Mögliche Anpassungen:
+
+Abwehrlinie eine Stufe tiefer
+weniger Angriffspressing
+Mittelfeld absichern
+bevorzugt kompakt stehen
+keine Kombination aus hoher Linie und maximalem Pressing
+Eigenes Mittelfeld deutlich schwächer
+midfield_matchup <= -8
+
+Mögliche Anpassungen:
+
+kein extrem geduldiger Spielaufbau
+weniger Risiko im Zentrum
+schnellerer Weg über Außen oder lange Bälle
+Mittelfeld absichern
+Pressing im Mittelfeld nur moderat
+Eigenes Mittelfeld deutlich stärker
+midfield_matchup >= 8
+
+Mögliche Anpassungen:
+
+geduldiger Aufbau
+mehr Ballbesitzorientierung
+Mittelfeld nachrücken
+höheres Mittelfeldpressing
+Angriff über das Zentrum, sofern dort ebenfalls kein Nachteil besteht
+Eigener Angriff deutlich schwächer als gegnerische Abwehr
+attack_matchup <= -10
+
+Mögliche Anpassungen:
+
+nicht dauerhaft durch das gegnerische Zentrum spielen
+Umschaltangriffe bevorzugen
+stärkste eigene Seite nutzen
+Angriff unterstützen statt Strafraum maximal besetzen
+Standards und Flanken stärker gewichten, sofern die eigenen Attribute dazu passen
+Eigener Angriff deutlich stärker
+attack_matchup >= 10
+
+Mögliche Anpassungen:
+
+höhere Angriffsbesetzung
+Abwehrkette binden
+Strafraum besetzen
+höheres Tempo nur, wenn die eigene Pass- und Ballkontrollqualität ausreichend ist
+6. Automatischer Angriffsfokus
+
+Der Angriffsfokus soll nicht allein aus der Gesamtstärke entstehen.
+
+Für jede Zone wird ein Vorteil berechnet:
+
+left_score = own_left_attack - opponent_right_defense
+center_score = own_center_attack - opponent_center_defense
+right_score = own_right_attack - opponent_left_defense
+
+Regeln:
+
+Beste Zone mindestens 4 Punkte besser als die anderen: gezielter Fokus
+Linke und rechte Seite ähnlich stark und beide besser als das Zentrum: Flügelspiel
+Keine klare Schwachstelle: ausgewogen
+Eigene Zone personell schwach oder falsch besetzt: diese Zone nicht auswählen
+Bei klarem Außenseiter nur dann einseitiger Fokus, wenn ein tatsächlicher Vorteil existiert
+
+Beispiel:
+
+Mainz links:       136
+Bayern rechts:     151
+Differenz:         -15
+
+Mainz Zentrum:     142
+Bayern Zentrum:    158
+Differenz:         -16
+
+Mainz rechts:      144
+Bayern links:      147
+Differenz:          -3
+
+Ergebnis: Mainz greift bevorzugt über rechts an, obwohl es insgesamt deutlich schwächer ist.
+
+7. Pressing-Logik
+
+Pressing wird aus drei Faktoren bestimmt:
+
+Matchup-Kategorie
+Frische der eigenen Startelf
+technische Qualität des Gegners
+
+Beispiel:
+
+pressing_score = matchup_pressing_base
+pressing_score += freshness_modifier
+pressing_score += opponent_build_up_weakness
+
+Regeln:
+
+klare Außenseiter: kein pauschales Hochpressing
+Favoriten: mehr Pressing, besonders gegen technisch schwächere Gegner
+geringe Mannschaftsfrische: Pressing reduzieren
+schwacher gegnerischer Torwart oder schwache Innenverteidiger im Passspiel: Trigger Torwart oder IV-Fehlpass
+schwaches gegnerisches Mittelfeld: Trigger Mittelfeld-Fehlpass
+maximal vorhandenes Trigger-Budget weiterhin beachten
+
+Die KI muss dieselben Pressing-Regeln und Budgets wie menschliche Manager verwenden.
+
+8. Formation nicht automatisch verändern
+
+Default-Taktik V1 soll zunächst mit der automatisch gewählten Formation arbeiten.
+
+Keine automatische Formationsänderung allein aufgrund des Gegners, solange nicht bestätigt ist, dass:
+
+die automatische Aufstellung tatsächlich zuverlässig die beste Elf findet,
+alle Positionen korrekt besetzt werden,
+Neben- und Fremdpositionen sinnvoll gewichtet werden,
+Formation und Spielermaterial korrekt zusammenpassen.
+
+Die spätere automatische Formationswahl sollte eine eigene Task werden.
+
+Damit wird verhindert, dass zwei noch nicht vollständig geprüfte Systeme gleichzeitig Fehler erzeugen.
+
+9. Halbzeit- und Ergebnispläne
+
+Trainerlose Vereine sollen nicht 90 Minuten unverändert spielen.
+
+Außenseiter
+Bei Führung ab Minute 60
+Linie eine Stufe tiefer
+Mittelfeld absichern
+Tempo reduzieren
+Pressing reduzieren
+Angriff unterstützen
+kein maximales Zeitspiel vor Minute 75
+Bei Rückstand ab Minute 65
+Linie eine Stufe höher
+Mittelfeld nachrücken
+Angriff Abwehrkette binden
+Tempo erhöhen
+Pressing leicht erhöhen
+Bei Rückstand ab Minute 80
+offensiver Plan
+Strafraum besetzen
+Schlussangriff
+höheres Risiko akzeptieren
+Favorit
+Bei Führung ab Minute 70
+Risiko leicht reduzieren
+Ballbesitz sichern
+Tempo etwas reduzieren
+keine vollständige defensive Umstellung
+Bei Unentschieden ab Minute 65
+Mittelfeld nachrücken
+Angriff offensiver besetzen
+Pressing erhöhen
+Bei Rückstand ab Minute 55 oder 60
+offensiver Plan früher aktivieren
+höhere Linie
+mehr Pressing
+stärkerer Angriffsfokus
+
+Die Default-KI soll hierfür dieselben Condition-Pläne verwenden wie menschliche Manager.
+
+10. Kontrollierte Variation
+
+Trainerlose Teams dürfen nicht jedes Spiel exakt dieselbe Taktik verwenden. Die Entscheidungen sollen trotzdem reproduzierbar bleiben.
+
+Dafür wird ein stabiler SHA-256-Seed verwendet:
+
+seed = stable_seed(
+    season_id,
+    fixture_id,
+    own_club_id,
+    opponent_club_id,
+    "default_tactic_v1",
+)
+
+Variation nur innerhalb sinnvoller Alternativen:
+
+Außenseiter:
+- 60 % kompakt stehen
+- 25 % tiefer stehen
+- 15 % Standard
+
+Angriff:
+- Unterstützen oder Standard
+- niemals zufällig maximale Offensive
+
+Keine vollständig zufällige Auswahl aller Taktikfelder.
+
+Das Ergebnis bleibt bei erneutem Laden oder erneuter Simulation desselben Spiels identisch.
+
+11. Sicherheitsregeln
+
+Die Default-Taktik muss folgende Regeln einhalten:
+
+keine ungültigen Taktikwerte
+keine Überschreitung des Pressing-Trigger-Budgets
+keine verbotenen Kombinationen
+bestehende lokale Caps bleiben aktiv
+bestehende Regel zur abnehmenden Kompaktheit bleibt aktiv
+kein Zugriff auf versteckte Match-Rolls
+keine Kenntnis zukünftiger Ereignisse
+keine bessere Informationsbasis als menschliche Manager
+bei fehlenden Daten immer neutrales Standardprofil
+keine Taktik darf zu None, Fehlern oder Match-Abbruch führen
+12. Vorgeschlagene Struktur
+# game/default_tactics.py
+
+@dataclass
+class TeamTacticalProfile:
+    total_strength: float
+    goalkeeper_strength: float
+    defense_strength: float
+    midfield_strength: float
+    attack_strength: float
+    left_attack_strength: float
+    center_attack_strength: float
+    right_attack_strength: float
+    left_defense_strength: float
+    center_defense_strength: float
+    right_defense_strength: float
+    average_freshness: float
+    formation: str
+
+
+@dataclass
+class MatchupAnalysis:
+    adjusted_strength_diff: float
+    category: str
+    defense_matchup: float
+    midfield_matchup: float
+    attack_matchup: float
+    left_matchup: float
+    center_matchup: float
+    right_matchup: float
+
+
+def build_team_tactical_profile(lineup, club) -> TeamTacticalProfile:
+    ...
+
+
+def analyze_matchup(
+    own_profile,
+    opponent_profile,
+    is_home,
+) -> MatchupAnalysis:
+    ...
+
+
+def select_default_archetype(matchup) -> str:
+    ...
+
+
+def generate_default_tactic(
+    fixture,
+    own_lineup,
+    opponent_lineup,
+) -> dict:
+    ...
+
+
+def generate_default_condition_plans(
+    archetype,
+    matchup,
+) -> list[dict]:
+    ...
+
+Die Funktion sollte am Ende ein normales Taktikobjekt erzeugen, das ohne Sonderbehandlung durch den bestehenden compile_tactic() läuft.
+
+13. Debug-Ausgabe
+
+Für jedes Spiel eines trainerlosen Vereins soll optional nachvollziehbar sein, warum die Taktik gewählt wurde.
+
+Beispiel:
+
+{
+  "default_tactic_version": "v1",
+  "own_strength": 139.4,
+  "opponent_strength": 157.8,
+  "adjusted_strength_diff": -19.4,
+  "matchup_category": "clear_underdog",
+  "defense_matchup": -14.2,
+  "midfield_matchup": -17.6,
+  "attack_matchup": -21.1,
+  "best_attack_zone": "right",
+  "selected_archetype": "compact_counter",
+  "selected_attack_focus": "right",
+  "selected_pressing": "low",
+  "average_freshness": 91.7,
+  "fallback_used": false
+}
+
+Das ist wichtig, um später überprüfen zu können, ob Mainz gegen Bayern tatsächlich wegen der Stärkeverhältnisse defensiver spielt und nicht nur zufällig.
+
+14. Tests
+Unit-Tests
+
+Mindestens folgende Fälle:
+
+1. Klarer Außenseiter
+Eigenes Team: 135
+Gegner: 160
+
+Erwartung:
+
+Kategorie clear_underdog
+keine maximal offensive Grundeinstellung
+keine hohe Linie plus maximales Pressing
+defensivere Linienrollen als Standard
+2. Klarer Favorit
+Eigenes Team: 160
+Gegner: 135
+
+Erwartung:
+
+Kategorie clear_favorite
+mehr Initiative
+kein tiefes Mauern
+mindestens eine offensive Linienanpassung
+3. Gleich starke Teams
+Eigenes Team: 148
+Gegner: 147
+
+Erwartung:
+
+Kategorie balanced
+weitgehend neutrale Taktik
+kein extremes Risiko
+4. Klare Schwäche auf einer Gegnerseite
+
+Erwartung:
+
+Angriffsfokus wählt die schwache Seite
+nur bei ausreichendem eigenen Personal
+5. Geringe Frische
+
+Erwartung:
+
+Pressing und Tempo werden reduziert
+keine intensive 90-Minuten-Taktik
+6. Fehlende Gegneraufstellung
+
+Erwartung:
+
+Gegnerprofil wird prognostiziert
+kein Fehler
+Debug-Feld zeigt Prognose oder Fallback
+7. Unvollständiger Kader
+
+Erwartung:
+
+Standardtaktik wird erzeugt
+Simulation bleibt lauffähig
+8. Determinismus
+
+Erwartung:
+
+gleiche Fixture-ID und gleiche Daten erzeugen exakt dieselbe Taktik
+15. Simulationsvalidierung
+
+Nach den Unit-Tests sollte ein gespiegelter Massentest folgen.
+
+Testgruppen
+
+Jeweils mindestens 5.000 bis 10.000 Spiele:
+
+klarer Außenseiter gegen klaren Favoriten
+Außenseiter gegen Favoriten
+gleich stark gegen gleich stark
+Favorit gegen Außenseiter
+Default-KI gegen neutrale Standardtaktik
+Default-KI gegen zufällig erzeugte gültige Taktiken
+Erwartung
+
+Die Default-KI soll:
+
+als Außenseiter weniger hohe Niederlagen kassieren als mit einer offensiven Standardtaktik,
+dafür nicht plötzlich zu stark werden,
+als Favorit mehr Initiative zeigen als mit einer defensiven Einheitstaktik,
+bei ausgeglichenen Spielen keine extremen Vorteile erzeugen,
+keine einzelne Taktikkombination dauerhaft bevorzugen,
+keine Exploit-Kombinationen erzeugen.
+
+Mögliche Alarmgrenzen:
+
+Default-KI gegen neutrale Standardtaktik bei gleichem Team:
+PPG-Vorteil maximal etwa +0.03 bis +0.04
+
+Keine einzelne generierte Kombination:
+xGD-Vorteil über +0.05 ohne entsprechenden Risiko- oder Frischepreis
+
+Keine Matchup-Kategorie:
+mehr als 70 % identische vollständige Taktikkombination
+16. Abnahmekriterien
+
+Die Task ist abgeschlossen, wenn:
+
+trainerlose Vereine vor jedem Spiel automatisch eine vollständige Taktik erhalten,
+die Taktik auf der tatsächlich eingesetzten Startelf basiert,
+eigene und gegnerische Linien getrennt bewertet werden,
+mindestens fünf Stärkeprofile existieren,
+Angriffsfokus gegnerische Schwachstellen berücksichtigen kann,
+Frische das Pressing beeinflusst,
+Ergebnispläne für Führung und Rückstand erstellt werden,
+die Taktik deterministisch erzeugt wird,
+sämtliche Werte durch den normalen Taktik-Compiler laufen,
+Debug-Daten die Entscheidung nachvollziehbar machen,
+alle bisherigen Tests grün bleiben,
+neue Unit- und Simulationstests keine relevanten Exploits zeigen.

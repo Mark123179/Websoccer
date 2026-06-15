@@ -1,0 +1,95 @@
+Aber: Auch diese Schwellen sollten nicht geraten werden
+
+Die endgültigen Kategorien sollten aus der Match Engine abgeleitet werden. Entscheidend ist nicht, ob 50 oder 100 Punkte optisch viel wirken, sondern welchen tatsächlichen Einfluss sie auf:
+
+Siegquote
+Remisquote
+xG-Differenz
+erwartete Punkte
+Höhe der Niederlagen
+
+haben.
+
+Dafür würde ich einen Kalibrierungstest durchführen:
+
+1.650 gegen 1.650
+1.650 gegen 1.675
+1.650 gegen 1.700
+1.650 gegen 1.725
+1.650 gegen 1.750
+1.650 gegen 1.775
+
+Jeweils gespiegelt als Heim- und Auswärtsteam und beispielsweise 10.000 Simulationen pro Paarung.
+
+Dann könnten die Kategorien anhand der echten Ergebnisse definiert werden:
+
+Kategorie	Mögliche empirische Definition
+ausgeglichen	beide Teams nahezu gleiche Expected Points
+leichter Außenseiter	etwa 5–10 Prozentpunkte geringere Siegchance
+Außenseiter	etwa 10–18 Prozentpunkte geringere Siegchance
+klarer Außenseiter	mehr als 18 Prozentpunkte geringere Siegchance
+
+Das wäre viel belastbarer als eine willkürliche Punkteschwelle.
+
+Mannschaftsstärke und Linien dürfen nicht vermischt werden
+
+Eine Differenz von 60 Gesamtpunkten kann sehr unterschiedlich verteilt sein:
+
+Fall A
+Abwehr:      -5
+Mittelfeld: -10
+Angriff:    -45
+
+Das Team ist vor allem offensiv unterlegen. Es muss nicht zwingend extrem tief stehen, sondern sollte eher kontrolliert spielen und Chancen über Umschalten oder Standards suchen.
+
+Fall B
+Abwehr:     -35
+Mittelfeld: -20
+Angriff:     -5
+
+Hier wäre eine defensive Anpassung viel nachvollziehbarer, weil der eigene Abwehrverbund dem gegnerischen Angriff deutlich unterlegen ist.
+
+Deshalb sollte die Gesamtstärke lediglich das Grundprofil bestimmen. Die Linienvergleiche bestimmen anschließend, wie dieses Profil konkret aussieht.
+
+Heimvorteil nicht einfach als Stärke addieren
+
+Ich würde nicht pauschal +2 Punkte oder Ähnliches zur Teamstärke addieren. Bei Gesamtwerten um 1.650 wäre das nahezu wirkungslos und außerdem nicht sauber an den bereits bestehenden Heimvorteil gekoppelt.
+
+Besser:
+
+matchup_score = relative_strength_diff
+matchup_score += tactical_home_adjustment
+
+Der taktische Heimfaktor könnte beispielsweise eine Kategorie nur an einer Grenzstelle leicht verschieben, aber niemals einen klaren Außenseiter zu einem ausgeglichenen Team machen.
+
+Beispiel:
+
+Auswärtsdifferenz: -2,9 %
+→ Außenseiter
+
+Heimdifferenz: -2,9 %
+→ eventuell leichter Außenseiter
+Meine korrigierte Empfehlung
+
+Für die erste Umsetzung:
+
+if relative_diff <= -0.045:
+    category = "clear_underdog"
+elif relative_diff <= -0.0275:
+    category = "underdog"
+elif relative_diff <= -0.0125:
+    category = "slight_underdog"
+elif relative_diff < 0.0125:
+    category = "balanced"
+elif relative_diff < 0.0275:
+    category = "slight_favorite"
+elif relative_diff < 0.045:
+    category = "favorite"
+else:
+    category = "clear_favorite"
+
+Diese Werte sind immer noch vorläufig, aber sie passen deutlich besser zu einer Liga, in der normale Teams ungefähr 1.650 und absolute Topteams ungefähr 1.750 erreichen.
+
+Der wichtigste Punkt für die Task sollte daher lauten:
+
+Die Matchup-Kategorien werden nicht über feste absolute Punktedifferenzen definiert. Grundlage ist der relative Stärkeunterschied. Die vorläufigen Schwellen werden anschließend durch gespiegelte Massensimulationen gegen die tatsächlichen Siegquoten und Expected Points der Match Engine kalibriert.
