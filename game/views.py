@@ -4525,19 +4525,63 @@ def manager_profile(request):
             date_fmt = best_out.transfer_date.strftime('%d.%m.%Y') if best_out.transfer_date else '–'
             transfer_out_str = f'{fee_fmt} – {best_out.player.full_name} ({date_fmt})'
 
+    # --- Manager profile + career stations (real career history) ---
+    from .models import ManagerProfile, ManagerCareerStation, COUNTRY_FLAG_ASSETS
+    from django.db.models import Sum as _Sum
+    if request.user.is_authenticated:
+        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+            user=request.user,
+            defaults={'name': request.user.username},
+        )
+    else:
+        manager_profile_obj = ManagerProfile.objects.first()
+
+    db_stations = list(
+        ManagerCareerStation.objects.filter(manager=manager_profile_obj)
+        .select_related('club', 'club__public_profile')
+        .order_by('order')
+    )
+
     # --- Timeline events built from real DB data ---
     timeline_events = []
 
-    # Club join event
-    timeline_events.append({
-        'date': '15. Aug. 2023',
-        'type': 'verein',
-        'tone': 'neutral',
-        'title': 'Willkommen an Bord',
-        'body': f'Übernahme von {club_name} (1. Saison)',
-        'icon': 'join',
-        'crest': club_crest,
-    })
+    # Club join events — one per career station, so past clubs (e.g. ein
+    # früherer Verein nach einem Wechsel) bleiben in der Timeline sichtbar.
+    _de_mon = ['Jan.', 'Feb.', 'Mär.', 'Apr.', 'Mai', 'Jun.',
+               'Jul.', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.']
+
+    def _fmt_de(d):
+        return f'{d.day}. {_de_mon[d.month - 1]} {d.year}' if d else '–'
+
+    if db_stations:
+        for _st in db_stations:
+            _st_name = _st.custom_club_name or (_st.club.name if _st.club else _st.city_name)
+            _st_crest = _st.club.crest_static_path if _st.club else club_crest
+            _is_active = _st.ended_at is None
+            if _is_active:
+                _body = f'Übernahme von {_st_name} — aktuell im Amt'
+            else:
+                _body = f'Übernahme von {_st_name} — bis {_fmt_de(_st.ended_at)}'
+            timeline_events.append({
+                'date': _fmt_de(_st.started_at),
+                'type': 'verein',
+                'tone': 'neutral',
+                'title': 'Amtsantritt',
+                'body': _body,
+                'icon': 'join',
+                'crest': _st_crest,
+            })
+    else:
+        # Fallback: noch keine Karriere-Stationen erfasst
+        timeline_events.append({
+            'date': '–',
+            'type': 'verein',
+            'tone': 'neutral',
+            'title': 'Willkommen an Bord',
+            'body': f'Übernahme von {club_name}',
+            'icon': 'join',
+            'crest': club_crest,
+        })
 
     # Trophy events from ClubTrophy
     for trophy in db_trophies:
@@ -4571,23 +4615,8 @@ def manager_profile(request):
                 'icon': 'transfer',
             })
 
-    # --- Manager profile (needed for career stations and trainer types) ---
-    from .models import ManagerProfile, ManagerCareerStation, COUNTRY_FLAG_ASSETS
-    from django.db.models import Sum as _Sum
-    if request.user.is_authenticated:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'name': request.user.username},
-        )
-    else:
-        manager_profile_obj = ManagerProfile.objects.first()
-
     # --- Map stations from ManagerCareerStation (real career history) ---
-    db_stations = list(
-        ManagerCareerStation.objects.filter(manager=manager_profile_obj)
-        .select_related('club', 'club__public_profile')
-        .order_by('order')
-    )
+    # manager_profile_obj + db_stations werden bereits oben aufgelöst.
 
     map_stations = []
     if db_stations:

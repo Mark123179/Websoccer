@@ -32,3 +32,11 @@ class ManagerCareerEntry(models.Model):
 **Why:** `Club.managed_by` stays as the fast live-pointer; `ManagerCareerEntry` is the history layer added on top without breaking anything.
 
 **How to apply:** On claim → create entry (active=True, started_at=today). On release/fire → set ended_at, active=False, club.managed_by=None. Migration is additive — no changes to existing Club model needed.
+
+## Timeline build trap (manager_profile view)
+
+The "Karriere Timeline" Verein-events must be derived from `ManagerCareerStation` history (the additive layer), never from the live `club`/`current_manager_club` pointer.
+
+**Why:** the live pointer only knows the *current* club, so any timeline built from it silently drops every past tenure the moment a manager switches clubs. `record_club_assignment` already persists correct stations (closes old with ended_at, opens new) — the history exists; the trap is reading the wrong source.
+
+**How to apply:** iterate stations for any career-history display; reserve the live pointer for "current club" facts only.
