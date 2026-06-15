@@ -68,29 +68,38 @@
         <input type="hidden" name="action" value="declare_end">
 
         <div class="sv-checklist">
-          <label class="sv-check-item">
-            <input type="checkbox" name="leagues_done" class="sv-checkbox" id="cb-leagues">
+          <div class="sv-check-item sv-check-item--auto">
+            <input type="checkbox" class="sv-checkbox" id="cb-leagues"
+                   {% if leagues_done %}checked{% endif %}
+                   onclick="return false;" tabindex="-1">
             <span class="sv-check-box"></span>
             <span class="sv-check-text">
               <strong>Alle Ligen</strong> haben ihren letzten Spieltag gespielt
+              {% if not leagues_done %}<span class="sv-check-hint">— noch nicht abgeschlossen</span>{% endif %}
             </span>
-          </label>
+          </div>
 
-          <label class="sv-check-item">
-            <input type="checkbox" name="nat_cups_done" class="sv-checkbox" id="cb-nat">
+          <div class="sv-check-item sv-check-item--auto">
+            <input type="checkbox" class="sv-checkbox" id="cb-nat"
+                   {% if nat_cups_done %}checked{% endif %}
+                   onclick="return false;" tabindex="-1">
             <span class="sv-check-box"></span>
             <span class="sv-check-text">
               <strong>Alle nationalen Pokal-Finals</strong> wurden ausgetragen
+              {% if not nat_cups_done %}<span class="sv-check-hint">— noch nicht abgeschlossen</span>{% endif %}
             </span>
-          </label>
+          </div>
 
-          <label class="sv-check-item">
-            <input type="checkbox" name="int_cups_done" class="sv-checkbox" id="cb-int">
+          <div class="sv-check-item sv-check-item--auto">
+            <input type="checkbox" class="sv-checkbox" id="cb-int"
+                   {% if int_cups_done %}checked{% endif %}
+                   onclick="return false;" tabindex="-1">
             <span class="sv-check-box"></span>
             <span class="sv-check-text">
               <strong>Alle internationalen Pokal-Finals</strong> wurden ausgetragen
+              {% if not int_cups_done %}<span class="sv-check-hint">— noch nicht abgeschlossen</span>{% endif %}
             </span>
-          </label>
+          </div>
         </div>
 
         <div class="sv-effects">
@@ -103,7 +112,8 @@
           </ul>
         </div>
 
-        <button type="submit" class="sv-btn sv-btn--end" id="btn-declare" disabled>
+        <button type="submit" class="sv-btn sv-btn--end" id="btn-declare"
+                {% if not all_done %}disabled{% endif %}>
           Saison jetzt beenden
         </button>
       </form>
@@ -129,15 +139,7 @@
 </section>
 
 <script>
-(function () {
-  const cbs  = document.querySelectorAll('.sv-checkbox');
-  const btn  = document.getElementById('btn-declare');
-  function update() {
-    const allChecked = Array.from(cbs).every(c => c.checked);
-    btn.disabled = !allChecked;
-  }
-  cbs.forEach(c => c.addEventListener('change', update));
-})();
+/* Checkboxen sind read-only — Status kommt vom Server, kein manuelles Setzen möglich */
 </script>
 
 <style>
@@ -178,7 +180,9 @@
 
 /* ── Checklist ─────────────────────────────────────────────────────────── */
 .sv-checklist { display: flex; flex-direction: column; gap: .75rem; margin-bottom: 1.5rem; }
-.sv-check-item { display: flex; align-items: flex-start; gap: .75rem; cursor: pointer; }
+.sv-check-item { display: flex; align-items: flex-start; gap: .75rem; cursor: default; }
+.sv-check-item--auto { cursor: default; user-select: none; }
+.sv-check-hint { color: #ff8844; font-size: .75rem; margin-left: .25rem; }
 .sv-checkbox { display: none; }
 .sv-check-box {
   flex-shrink: 0;

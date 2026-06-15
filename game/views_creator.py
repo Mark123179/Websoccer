@@ -3020,6 +3020,38 @@ def _perform_season_reset():
     return deleted_stats, deleted_snaps
 
 
+def _compute_season_end_checks(season: str):
+    """Prüft ob alle drei Bedingungen zum Saisonabschluss erfüllt sind.
+
+    Returns (leagues_done, nat_cups_done, int_cups_done) als bool-Tupel.
+    """
+    from .models import SeasonFixture, CupSeason
+
+    # ── Liga: kein ungestpieltes Fixture mehr in echten Ligen (nicht Sonderstatus) ──
+    real_fixtures_qs = SeasonFixture.objects.filter(
+        season=season,
+        league__competition_type='league',
+    ).exclude(league__country='System')
+
+    leagues_done = (
+        real_fixtures_qs.exists()
+        and not real_fixtures_qs.filter(home_goals__isnull=True).exists()
+    )
+
+    # ── Cups: getrennt nach national (hat Land) und international (kein Land / "International") ──
+    INTL_COUNTRIES = {'', 'International', 'Europa', 'Europe'}
+    cup_seasons = CupSeason.objects.filter(season=season, competition__competition_type='cup')
+
+    nat_qs  = cup_seasons.exclude(competition__country__in=INTL_COUNTRIES)
+    intl_qs = cup_seasons.filter(competition__country__in=INTL_COUNTRIES)
+
+    # Bedingung erfüllt wenn: keine solchen Cups existieren ODER alle sind completed
+    nat_cups_done  = not nat_qs.exclude(status=CupSeason.STATUS_COMPLETED).exists()
+    int_cups_done  = not intl_qs.exclude(status=CupSeason.STATUS_COMPLETED).exists()
+
+    return leagues_done, nat_cups_done, int_cups_done
+
+
 def creator_season_end(request):
     """GET: Saisonverwaltungs-Screen.  POST: Saison als beendet erklären."""
     if not request.user.is_staff:
@@ -3045,14 +3077,16 @@ def creator_season_end(request):
             return redirect('creator_season_end')
 
         if action == 'declare_end':
-            leagues_done   = request.POST.get('leagues_done')   == 'on'
-            nat_cups_done  = request.POST.get('nat_cups_done')  == 'on'
-            int_cups_done  = request.POST.get('int_cups_done')  == 'on'
+            # Server-seitig prüfen — POST-Werte werden ignoriert
+            from django.db.models import Max
+            from .models import SeasonFixture, CupSeason as _CupSeason
+            _season = season_state.current_season if season_state else '0'
+            leagues_done, nat_cups_done, int_cups_done = _compute_season_end_checks(_season)
 
             if not (leagues_done and nat_cups_done and int_cups_done):
                 messages.error(
                     request,
-                    'Bitte alle drei Bestätigungs-Checkboxen setzen, bevor die Saison als beendet erklärt wird.',
+                    'Nicht alle Bedingungen sind erfüllt. Bitte erst alle Wettbewerbe abschließen.',
                 )
                 return render(request, 'creator/season_end.html', ctx)
 
@@ -3071,11 +3105,19 @@ def creator_season_end(request):
     suspended_count   = Player.objects.filter(ws_suspension_matches_remaining__gt=0).count()
     season_stat_count = PlayerSeasonStat.objects.count()
 
+    _season = season_state.current_season if season_state else '0'
+    leagues_done, nat_cups_done, int_cups_done = _compute_season_end_checks(_season)
+    all_done = leagues_done and nat_cups_done and int_cups_done
+
     ctx.update({
         'total_players':     total_players,
         'injured_count':     injured_count,
         'suspended_count':   suspended_count,
         'season_stat_count': season_stat_count,
+        'leagues_done':      leagues_done,
+        'nat_cups_done':     nat_cups_done,
+        'int_cups_done':     int_cups_done,
+        'all_done':          all_done,
     })
     return render(request, 'creator/season_end.html', ctx)
 
