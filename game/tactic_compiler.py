@@ -564,6 +564,10 @@ def compile_tactic(
         line_risk    += 0.05;   line_fatigue += 0.030
         s["complexity"] += 8
 
+    # Rohwerte vor Cap für Debug speichern
+    _line_xg_for_raw = line_xg_for
+    _line_shots_raw  = line_shots
+
     # Positive Linienvorteile kappen; Nachteile stapeln sich vollständig
     line_xg_for = min(line_xg_for, 0.06)
     line_shots  = min(line_shots,  0.08)
@@ -574,6 +578,16 @@ def compile_tactic(
     s["risk"]             += line_risk
     s["fatigue_delta"]    += line_fatigue
     s["possession_bonus"] += line_poss
+
+    # Debug: Linien-Deltas (raw = vor Cap, applied = nach Cap)
+    dbg["line_xg_for_raw"]    = round(_line_xg_for_raw, 5)
+    dbg["line_xg_for_applied"]= round(line_xg_for, 5)
+    dbg["line_shots_raw"]     = round(_line_shots_raw, 5)
+    dbg["line_shots_applied"] = round(line_shots, 5)
+    dbg["line_xg_against"]    = round(line_xg_ag, 5)
+    dbg["line_risk"]          = round(line_risk, 5)
+    dbg["line_fatigue"]       = round(line_fatigue, 5)
+    dbg["line_possession"]    = round(line_poss, 5)
 
     # buildup.midfield
     bm = buildup.get("midfield", "standard") or "standard"

@@ -1,0 +1,511 @@
+1. Testumgebung vollständig neutralisieren
+
+Für alle Basistests bleiben sämtliche anderen Einstellungen identisch:
+
+Grundausrichtung: 50
+Einsatz: Standard
+Pressing: alle Linien normal
+Pressing-Trigger: keine
+Angriffsfokus: ausgewogen
+Spielaufbau: überall Standard
+Tempo: 50
+Deckung/Zweikampf/Breite/Umschalten: Standard
+Conditions: leer
+Ausfälle Gegner: keine
+gleiche Spielerstärke
+gleiche Formation
+gleiche Frische
+gleiche Teamwork-Werte
+
+Nur diese drei Halbzeitfelder ändern:
+
+Abwehr
+Mittelfeld
+Angriff
+
+So weißt du hinterher, dass Unterschiede wirklich aus den neuen Linienoptionen kommen.
+
+2. Heimvorteil durch gespiegelte Spiele entfernen
+
+Da Home Advantage V1 aktiv ist, darfst du nicht nur Folgendes simulieren:
+
+Taktik A zuhause gegen Standard
+
+Du brauchst immer zwei Richtungen:
+
+Taktik A zuhause gegen Standard
+Standard zuhause gegen Taktik A
+
+Beim zweiten Spiel wertest du das Ergebnis aus Sicht von Taktik A aus.
+
+Beispiel:
+
+Spiel 1:
+Taktik A 2:1 Standard
+→ Sieg für Taktik A
+
+Spiel 2:
+Standard 1:1 Taktik A
+→ Remis für Taktik A
+
+Beide Läufe werden anschließend zusammengefasst.
+
+Damit wird verhindert, dass eine Taktik nur deshalb besser aussieht, weil sie immer Heimteam war.
+
+3. Zuerst Compiler-Checks ohne Simulation
+
+Bevor du Hunderttausende Matches simulierst, sollten alle Kombinationen einmal direkt durch compile_tactic() laufen.
+
+Für jede Kombination aus:
+
+alle Abwehrwerte
+× 5 Mittelfeldwerte
+× 4 Angriffswerte
+
+müssen diese Felder ausgegeben werden:
+
+line_xg_for_raw
+line_xg_for_applied
+line_shots_raw
+line_shots_applied
+line_xg_against
+line_risk
+line_fatigue
+coherence
+Harte technische Checks
+Positive Caps
+line_xg_for_applied <= 0.06
+line_shots_applied <= 0.08
+
+Kein Rundungswert darf darüber liegen:
+
+assert line_xg_for_applied <= 0.060001
+assert line_shots_applied <= 0.080001
+Nachteile dürfen nicht verschwinden
+
+Beim maximal offensiven Stack:
+
+hoeher_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+
+müssen die vollständigen Werte erhalten bleiben:
+
+line_risk ungefähr +0.14
+line_fatigue vollständig
+line_xg_against vollständig
+
+Sie dürfen nicht durch denselben positiven Cap reduziert werden.
+
+Kohärenz
+tief_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+→ coherence = 0.96
+
+Dagegen:
+
+hoeher_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+→ coherence = 1.00
+Standard muss neutral sein
+standard
++ standard
++ standard
+
+muss ergeben:
+
+line_xg_for = 0
+line_shots = 0
+line_xg_against = 0
+line_risk = 0
+line_fatigue = 0
+coherence = 1.00
+4. Einzeloptionen isoliert testen
+
+Zuerst jede neue Option einzeln gegen Standard.
+
+Mittelfeld
+Absichern
+Ballbesitz sichern
+Nachrücken
+Offensiv besetzen
+
+Dabei bleiben Abwehr und Angriff auf Standard.
+
+Angriff
+Unterstützen
+Abwehrkette binden
+Strafraum besetzen
+
+Dabei bleiben Abwehr und Mittelfeld auf Standard.
+
+Abwehrwerte ebenfalls einzeln testen.
+
+Anzahl
+
+Pro Einstellung:
+
+10.000 gespiegelte Spiele
+
+Das können sein:
+
+5.000 Taktik zuhause
+5.000 Taktik auswärts
+
+Als erstes reicht ein gleichstarkes Mittelfeld-Szenario:
+
+Mid 150 gegen Mid 150
+Erwartung
+
+Keine Einzeloption sollte gleichzeitig:
+
+xGF erhöhen,
+xGA senken,
+Risiko senken,
+Frischekosten senken.
+
+Das wäre ein klarer Gratisvorteil.
+
+5. Vollständige Kombinationsmatrix
+
+Danach alle Kombinationen testen:
+
+Abwehr × Mittelfeld × Angriff
+
+Wenn die Abwehr beispielsweise vier Optionen hat:
+
+4 × 5 × 4 = 80 Kombinationen
+
+Pro Kombination:
+
+5.000 gespiegelte Spiele
+
+Gesamt:
+
+80 × 5.000 = 400.000 Simulationen
+
+Das ist der wichtigste Exploit-Test.
+
+Zunächst nur:
+
+EQ_Mid gegen EQ_Mid
+
+Danach werden nur auffällige Kombinationen größer nachgetestet.
+
+6. Diese Extremkombinationen separat prüfen
+A. Maximal kohärent offensiv
+hoeher_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+
+Erwartung:
+
+xGF steigt
+Schüsse steigen
+xGA steigt
+Risiko steigt stark
+Frischekosten steigen stark
+Coherence bleibt 1.00
+
+Sie darf offensiv stark sein, aber nicht ohne Preis.
+
+B. Inkohärent offensiv
+tief_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+
+Erwartung:
+
+Coherence 0.96
+positive Wirkung geringer als bei der kohärenten offensiven Kombination
+Risiko und Frischekosten bleiben bestehen
+
+Diese Kombination darf nicht besser sein als die kohärente Offensivvariante.
+
+C. Maximal defensiv
+
+Nutze die defensivste vorhandene Abwehrvariante:
+
+defensivste Abwehr
++ absichern
++ unterstützen
+
+Erwartung:
+
+xGA sinkt
+eigene xGF sinkt
+eigene Schüsse sinken
+Remisquote steigt möglicherweise
+kein kostenloser PPG-Gewinn
+
+Gerade dieser Test ist wichtig, weil aktuell vor allem positive Offensivwerte gecappt sind. Ein defensives Stack könnte sonst unbemerkt zu stark werden.
+
+D. Ballkontrolle
+Standard-Abwehr
++ ballbesitz_sichern
++ unterstützen
+
+Erwartung:
+
+Ballbesitz steigt
+Ereignisdichte sinkt leicht
+xGF sinkt etwas
+xGA sinkt etwas
+kein massiver Ergebnisbonus
+E. Moderat offensiv
+hoeher_stehen
++ nachruecken
++ abwehrkette_binden
+
+Diese Variante dient als Vergleich zwischen neutral und maximal offensiv.
+
+7. Unterschiedliche Stärkestufen testen
+
+Die vollständige Matrix muss nicht sofort überall laufen.
+
+Stufe 1: volle Matrix
+EQ_Mid gegen EQ_Mid
+Stufe 2: auffällige Top- und Bottom-Kombinationen
+
+Nimm anschließend:
+
+die fünf besten Kombinationen nach PPG
+die fünf besten nach xGD
+die fünf defensivsten Kombinationen
+die fünf höchsten Risiko-/Fatigue-Kombinationen
+
+Diese jeweils testen in:
+
+EQ_Top gegen EQ_Top
+EQ_Mid gegen EQ_Mid
+EQ_Low gegen EQ_Low
+Top gegen Low
+Low gegen Top
+
+Pro Kombination und Szenario:
+
+10.000 gespiegelte Spiele
+
+Wenn eine mögliche Meta-Kombination gefunden wird:
+
+20.000 gespiegelte Spiele zur Bestätigung
+8. Erste und zweite Halbzeit separat testen
+
+Da die Optionen pro Halbzeit gewählt werden, muss geprüft werden, ob sie korrekt nur in der jeweiligen Hälfte wirken.
+
+Für jede Nicht-Standard-Option:
+
+Test A
+1. Halbzeit: Option aktiv
+2. Halbzeit: Standard
+Test B
+1. Halbzeit: Standard
+2. Halbzeit: Option aktiv
+Test C
+beide Halbzeiten: Option aktiv
+
+Pro Test:
+
+5.000 gespiegelte Spiele
+
+Ausgabe getrennt nach Halbzeiten:
+
+xGF 1. Halbzeit
+xGA 1. Halbzeit
+Schüsse 1. Halbzeit
+Fatigue 1. Halbzeit
+
+xGF 2. Halbzeit
+xGA 2. Halbzeit
+Schüsse 2. Halbzeit
+Fatigue 2. Halbzeit
+
+Wichtig:
+
+Bei Test A muss der Compiler in der zweiten Halbzeit wieder exakt Standardwerte liefern. Die Ergebnisse können wegen Spielständen oder Platzverweisen leicht abweichen, aber das kompilierte Linienprofil darf nicht in die zweite Halbzeit durchbluten.
+
+9. Diese Kennzahlen brauchst du
+Kernergebnisse
+Kennzahl	Bedeutung
+Siegquote	direkte Ergebniswirkung
+Remisquote	wichtig bei defensiven Varianten
+Niederlagenquote	Risiko sichtbar
+Punkte pro Spiel	beste zusammenfassende Ergebnismetrik
+Tore für	tatsächlicher Ertrag
+Tore gegen	tatsächliches Risiko
+Tordifferenz	Ergebnisbalance
+
+Punkte pro Spiel:
+
+ppg = win_pct * 3 + draw_pct
+
+Bei Prozentwerten vorher durch 100 teilen.
+
+Erwartungswerte
+Kennzahl	Bedeutung
+xGF	erzeugte Chancenqualität
+xGA	zugelassene Chancenqualität
+xGD	wichtigste Engine-Balance
+Schüsse für	Volumen
+Schüsse gegen	defensive Belastung
+xG pro Schuss	Chancenqualität
+xgd = xgf - xga
+xg_per_shot = xgf / shots_for
+Kosten und Nachteile
+durchschnittliches Risiko
+durchschnittliche Fatigue-Cost
+xG-gegen-Multiplikator
+Kohärenz
+Ballbesitz
+Pressing-Gewinne
+Pressing überspielt
+Gelbe Karten
+Rote Karten
+
+Pressingwerte sollten durch diese Linienfelder nicht unerwartet stark verändert werden.
+
+Compiler-Debugwerte
+
+Unbedingt speichern:
+
+line_xg_for_raw
+line_xg_for_applied
+line_shots_raw
+line_shots_applied
+line_xg_against
+line_risk
+line_fatigue
+coherence
+
+Ohne diese Werte siehst du zwar Ergebnisse, aber nicht, ob der Cap technisch korrekt arbeitet.
+
+10. Empfohlene CSV-Spalten
+scenario
+half_mode
+defense_option
+midfield_option
+attack_option
+matches
+
+wins
+draws
+losses
+win_pct
+draw_pct
+loss_pct
+ppg
+
+avg_goals_for
+avg_goals_against
+avg_goal_difference
+
+avg_xg_for
+avg_xg_against
+avg_xg_difference
+delta_xgf_vs_baseline_pct
+delta_xga_vs_baseline_pct
+
+avg_shots_for
+avg_shots_against
+xg_per_shot_for
+
+avg_possession
+avg_risk
+avg_fatigue
+avg_coherence
+
+line_xg_for_raw
+line_xg_for_applied
+line_shots_raw
+line_shots_applied
+line_xg_against
+line_risk
+line_fatigue
+
+first_half_xgf
+first_half_xga
+first_half_shots
+second_half_xgf
+second_half_xga
+second_half_shots
+
+yellow_cards
+red_cards
+plan_activations
+fallbacks
+errors
+11. Wann ist eine Kombination ein Exploit?
+Harter technischer Exploit
+
+Sofortiger Fehler, wenn:
+
+line_xg_for_applied > +0.06
+line_shots_applied > +0.08
+
+oder Risiko/Fatigue durch den Vorteilscap reduziert werden.
+
+Gratisvorteil
+
+Eine Kombination ist klar verdächtig, wenn sie gleichzeitig:
+
+xGF erhöht,
+xGA senkt,
+PPG erhöht,
+Risiko nicht erhöht,
+Fatigue nicht erhöht.
+
+Das wäre eine Pareto-Dominanz gegenüber Standard.
+
+Ergebnis-Exploit
+
+Nach mindestens 20.000 gespiegelten Spielen verdächtig:
+
+PPG-Vorteil > +0.05
+und
+xGD-Vorteil > +0.05
+
+über mehrere gleichstarke Szenarien.
+
+Sehr klarer Exploit:
+
+Siegquote mehr als etwa +2 Prozentpunkte
+
+gegenüber Standard, konsistent bei EQ_Top, EQ_Mid und EQ_Low, ohne entsprechend höhere Nachteile.
+
+Offensiv-Exploit
+
+Verdächtig:
+
+xGF-Steigerung deutlich über +6 %
+oder
+Schusssteigerung deutlich über +8 %
+
+wenn nur die drei Halbzeit-Linienfelder verändert wurden.
+
+Defensiv-Exploit
+
+Verdächtig:
+
+xGA fällt sehr stark,
+die eigene xGF sinkt kaum,
+PPG steigt,
+das Team wird gleichzeitig nicht nennenswert müder oder offensiv schwächer.
+
+Besonders kritisch wäre beispielsweise:
+
+xGA −7 %
+xGF nur −1 %
+PPG deutlich höher
+Kohärenzfehler
+
+Verdächtig:
+
+tief_stehen + offensiv_besetzen + strafraum_besetzen
+
+ist gleich stark oder stärker als:
+
+hoeher_stehen + offensiv_besetzen + strafraum_besetzen
+
+obwohl ersteres coherence = 0.96 besitzt und ähnliche Kosten trägt.
