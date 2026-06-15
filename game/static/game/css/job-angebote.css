@@ -175,6 +175,7 @@
     minmax(320px, 1.35fr)
     110px
     minmax(235px, 1fr)
+    130px
     220px;
   min-height: 128px;
   align-items: stretch;
@@ -427,6 +428,61 @@
   font-size: .8rem;
 }
 
+/* ── Top-Spieler ─────────────────────────────────────────────────────────── */
+.jo-card-toplayer {
+  position: relative;
+  overflow: hidden;
+  border-left: 1px solid rgba(255,255,255,.06);
+  min-height: 128px;
+}
+.jo-toplayer-label {
+  position: absolute;
+  top: 9px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.32);
+  z-index: 3;
+  pointer-events: none;
+}
+.jo-toplayer-name {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  padding: 28px 6px 7px;
+  background: linear-gradient(to top, rgba(6,9,15,.96) 40%, transparent);
+  text-align: center;
+  font-size: .67rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.88);
+  z-index: 3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.jo-toplayer-portrait {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.jo-toplayer-noimg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,.2);
+  font-size: 1.1rem;
+}
+
 /* ── Aktionsbereich ──────────────────────────────────────────────────────── */
 .jo-card-action {
   display: flex;
@@ -551,6 +607,7 @@
   .jo-card {
     grid-template-columns: 250px minmax(300px, 1fr) 100px;
   }
+  .jo-card-toplayer { display: none; }
   .jo-card-comps {
     grid-column: 1 / 3;
     border-top: 1px solid rgba(255,255,255,.07);

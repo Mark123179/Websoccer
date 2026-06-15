@@ -1129,6 +1129,7 @@ def management_job_offers(request):
             messages.error(request, f'Bewerbung fehlgeschlagen: {exc}')
         return redirect('management_hub')
 
+    from .models import Player as _Player
     free_clubs_qs = (
         Club.objects
         .filter(
@@ -1141,6 +1142,17 @@ def management_job_offers(request):
     )
 
     season = str(current_season_number())
+
+    # Build top-player map: {club_id: Player} — single query, best base_strength per club
+    _club_ids = list(free_clubs_qs.values_list('pk', flat=True))
+    _top_player_map = {}
+    for _p in (
+        _Player.objects
+        .filter(club_id__in=_club_ids, strength_profile__isnull=False)
+        .select_related('strength_profile')
+        .order_by('club_id', '-strength_profile__base_strength')
+    ):
+        _top_player_map.setdefault(_p.club_id, _p)
 
     # Build standings lookup: {club_id: standing_row}
     standing_map = {}
@@ -1226,6 +1238,7 @@ def management_job_offers(request):
                 intl_comp_logo = cs.competition.logo_static_path or ''
                 break
 
+        _tp = _top_player_map.get(c.pk)
         club_rows.append({
             'club':              c,
             'stadium_name':      stadium_name,
@@ -1243,6 +1256,8 @@ def management_job_offers(request):
             'intl_comp_name':    intl_comp_name,
             'intl_comp_logo':    intl_comp_logo,
             'availability':      c.job_availability_type,
+            'top_player_name':    _tp.full_name if _tp else '',
+            'top_player_portrait': _tp.portrait_static_path if _tp else '',
         })
 
     return render(request, 'game/management/job_offers.html', {

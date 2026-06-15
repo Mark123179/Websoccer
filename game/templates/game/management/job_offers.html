@@ -6,7 +6,7 @@
 {% block body_class %}job-offers-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=12">
+<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=13">
 {% endblock %}
 
 {% block content %}
@@ -205,7 +205,23 @@
         </ul>
       </div>
 
-      <!-- ⑤ Aktionsbereich — immer vollständig -->
+      <!-- ⑤ Top-Spieler -->
+      <div class="jo-card-toplayer">
+        <span class="jo-toplayer-label">Top-Spieler</span>
+        {% if row.top_player_name %}
+        <span class="jo-toplayer-name">{{ row.top_player_name }}</span>
+        {% endif %}
+        {% if row.top_player_portrait %}
+        <img class="jo-toplayer-portrait"
+             src="{% static row.top_player_portrait %}"
+             alt="{{ row.top_player_name }}"
+             onerror="this.style.display='none'">
+        {% else %}
+        <span class="jo-toplayer-noimg">—</span>
+        {% endif %}
+      </div>
+
+      <!-- ⑥ Aktionsbereich — immer vollständig -->
       <div class="jo-card-action">
 
         {% if row.availability == 'free_pick' %}
