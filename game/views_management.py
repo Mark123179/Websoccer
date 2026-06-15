@@ -1106,7 +1106,7 @@ def management_halloffame(request):
 
 @login_required(login_url='/auth/login/')
 def management_job_offers(request):
-    from .models import Club, SeasonGoal, COUNTRY_FLAG_ASSETS
+    from .models import Club, SeasonGoal, COUNTRY_FLAG_ASSETS, LeagueStandings, CupSeason
     from .season_goals import current_season_number
     from .services import record_club_assignment
 
@@ -1116,7 +1116,11 @@ def management_job_offers(request):
     if request.method == 'POST' and not current_club and manager_profile:
         try:
             club_id = int(request.POST.get('club_id', 0))
-            target_club = Club.objects.get(pk=club_id, managed_by__isnull=True)
+            target_club = Club.objects.get(
+                pk=club_id,
+                managed_by__isnull=True,
+                job_availability_type__in=[Club.JOB_FREE_PICK, Club.JOB_NORMAL, Club.JOB_TOP],
+            )
             record_club_assignment(manager_profile, target_club)
             messages.success(request, f'Du hast den Posten bei {target_club.name} angetreten!')
         except Club.DoesNotExist:
@@ -1127,21 +1131,41 @@ def management_job_offers(request):
 
     free_clubs_qs = (
         Club.objects
-        .filter(managed_by__isnull=True)
+        .filter(
+            managed_by__isnull=True,
+            job_availability_type__in=[Club.JOB_FREE_PICK, Club.JOB_NORMAL, Club.JOB_TOP],
+        )
         .select_related('league', 'stadium', 'public_profile')
+        .prefetch_related('cup_participations__competition')
         .order_by('league__country', 'league__name', 'name')
     )
 
-    season = current_season_number()
+    season = str(current_season_number())
+
+    # Build standings lookup: {club_id: standing_row}
+    standing_map = {}
+    standing_qs = LeagueStandings.objects.filter(
+        season=season,
+        club__in=free_clubs_qs,
+    ).select_related('league')
+    for s in standing_qs:
+        standing_map[s.club_id] = s
+
+    # Collect unique countries and leagues for filter dropdowns
+    countries = sorted({c.league.country for c in free_clubs_qs if c.league})
+    leagues   = sorted({c.league.name   for c in free_clubs_qs if c.league})
 
     club_rows = []
     for c in free_clubs_qs:
         stadium = _get_stadium_or_none(c)
-        stadium_name = stadium.name if stadium else '—'
+        stadium_name     = stadium.name           if stadium else '—'
         stadium_capacity = stadium.capacity_total if stadium else 0
 
-        goal = SeasonGoal.objects.filter(club=c, season_number=season).first()
-        goal_label = goal.goal_tier_label if goal else None
+        stadium_img = ''
+        try:
+            stadium_img = c.public_profile.stadium_image_static_path or ''
+        except Exception:
+            pass
 
         flag_code = None
         try:
@@ -1150,17 +1174,75 @@ def management_job_offers(request):
         except Exception:
             pass
 
+        standing = standing_map.get(c.pk)
+        table_pos = standing.position if standing else None
+        table_pts = standing.points   if standing else None
+
+        # Determine situation label from table position
+        situation_label = ''
+        situation_cls   = ''
+        if standing and c.league:
+            total_teams = c.league.max_teams or 18
+            rel = c.league.relegation_spots or 2
+            cl  = c.league.cl_spots or 1
+            pos = standing.position
+            if pos <= cl:
+                situation_label = 'Champions League'
+                situation_cls   = 'sit-cl'
+            elif pos <= (cl + (c.league.el_spots or 1)):
+                situation_label = 'Europa League'
+                situation_cls   = 'sit-el'
+            elif pos >= total_teams - rel + 1:
+                situation_label = 'Abstiegskampf'
+                situation_cls   = 'sit-rel'
+            elif pos >= total_teams - rel - 1:
+                situation_label = 'Gefährdete Zone'
+                situation_cls   = 'sit-warn'
+            elif pos <= 5:
+                situation_label = 'Spitzengruppe'
+                situation_cls   = 'sit-top'
+            else:
+                situation_label = 'Mittelfeld'
+                situation_cls   = 'sit-mid'
+
+        # Cup participation checklist
+        cup_parts = list(c.cup_participations.all())
+        in_national_cup = any(
+            cs.competition.competition_type == 'cup'
+            and cs.competition.country == c.league.country
+            for cs in cup_parts
+        )
+        in_cl = any('champions' in cs.competition.name.lower() for cs in cup_parts)
+        in_el = any(
+            'europa' in cs.competition.name.lower()
+            and 'champions' not in cs.competition.name.lower()
+            for cs in cup_parts
+        )
+        in_conf = any('conference' in cs.competition.name.lower() for cs in cup_parts)
+
         club_rows.append({
-            'club': c,
-            'stadium_name': stadium_name,
+            'club':             c,
+            'stadium_name':     stadium_name,
             'stadium_capacity': stadium_capacity,
-            'goal_label': goal_label,
-            'flag_code': flag_code,
+            'stadium_img':      stadium_img,
+            'flag_code':        flag_code,
+            'table_pos':        table_pos,
+            'table_pts':        table_pts,
+            'situation_label':  situation_label,
+            'situation_cls':    situation_cls,
+            'in_liga':          True,
+            'in_national_cup':  in_national_cup,
+            'in_cl':            in_cl,
+            'in_el':            in_el,
+            'in_conf':          in_conf,
+            'availability':     c.job_availability_type,
         })
 
     return render(request, 'game/management/job_offers.html', {
         'current_club': current_club,
-        'club_rows': club_rows,
+        'club_rows':    club_rows,
+        'countries':    countries,
+        'leagues':      leagues,
     })
 
 

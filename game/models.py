@@ -498,6 +498,29 @@ class Club(models.Model):
         ),
     )
 
+    JOB_NONE = 'none'
+    JOB_FREE_PICK = 'free_pick'
+    JOB_NORMAL = 'normal'
+    JOB_TOP = 'top'
+    JOB_AVAILABILITY_CHOICES = [
+        (JOB_NONE,      'Nicht freigegeben'),
+        (JOB_FREE_PICK, 'Free Pick'),
+        (JOB_NORMAL,    'Normale Bewerbung'),
+        (JOB_TOP,       'Top-Bewerbung'),
+    ]
+
+    job_availability_type = models.CharField(
+        max_length=20,
+        choices=JOB_AVAILABILITY_CHOICES,
+        default=JOB_FREE_PICK,
+        verbose_name='Job-Freigabe',
+        help_text=(
+            'Legt fest, ob und mit welcher Bewerbungsart der Verein '
+            'auf der Job-Angebote-Liste erscheint. '
+            'Wird vom Creator nach einer Trainer-Entlassung manuell gesetzt.'
+        ),
+    )
+
     def __str__(self):
         return self.name
 

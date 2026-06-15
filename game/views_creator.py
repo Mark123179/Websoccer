@@ -3078,3 +3078,73 @@ def creator_season_end(request):
         'season_stat_count': season_stat_count,
     })
     return render(request, 'creator/season_end.html', ctx)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# System — Freie Vereine (Job-Availability)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def creator_freie_vereine(request):
+    """Creator: Freie Vereine verwalten — Job-Availability-Typ setzen."""
+    from .models import Club, LeagueStandings, COUNTRY_FLAG_ASSETS
+    from .season_goals import current_season_number
+
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        club_id  = request.POST.get('club_id')
+        new_type = request.POST.get('job_availability_type', '')
+        valid    = [c for c, _ in Club.JOB_AVAILABILITY_CHOICES]
+        if club_id and new_type in valid:
+            try:
+                club = Club.objects.get(pk=club_id)
+                old  = club.get_job_availability_type_display()
+                club.job_availability_type = new_type
+                club.save(update_fields=['job_availability_type'])
+                messages.success(
+                    request,
+                    f'{club.name}: Freigabe → {club.get_job_availability_type_display()} (war: {old})',
+                )
+            except Club.DoesNotExist:
+                messages.error(request, 'Verein nicht gefunden.')
+        else:
+            messages.error(request, 'Ungültige Eingabe.')
+        return redirect('creator_freie_vereine')
+
+    season = str(current_season_number())
+
+    clubs_qs = (
+        Club.objects
+        .select_related('league')
+        .order_by('league__country', 'league__name', 'name')
+    )
+
+    standing_map = {}
+    for s in LeagueStandings.objects.filter(season=season):
+        standing_map[s.club_id] = s.position
+
+    rows = []
+    for c in clubs_qs:
+        flag_code = None
+        try:
+            entry = COUNTRY_FLAG_ASSETS.get(c.league.country, {})
+            flag_code = entry.get('code')
+        except Exception:
+            pass
+        rows.append({
+            'club':        c,
+            'position':    standing_map.get(c.pk),
+            'has_manager': c.managed_by_id is not None,
+            'flag_code':   flag_code,
+        })
+
+    ctx = {
+        'rows':         rows,
+        'type_choices': Club.JOB_AVAILABILITY_CHOICES,
+        'total':        len(rows),
+        'free_count':   sum(1 for r in rows if not r['has_manager']),
+        'page':         'system',
+    }
+    return render(request, 'creator/freie_vereine.html', ctx)

@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · System · Freie Vereine{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>System — Freie Vereine</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
+      <a class="cm-nav-pill" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
+      <a class="cm-nav-pill" href="{% url 'creator_season_end' %}">Saison</a>
+      <a class="cm-nav-pill active" href="{% url 'creator_freie_vereine' %}">System</a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="cm-messages">
+    {% for msg in messages %}
+    <div class="cm-msg cm-msg--{{ msg.tags }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Stat-Zeile -->
+  <div class="fv-stats">
+    <div class="fv-stat">
+      <span class="fv-stat-num">{{ total }}</span>
+      <span class="fv-stat-lbl">Vereine gesamt</span>
+    </div>
+    <div class="fv-stat fv-stat--free">
+      <span class="fv-stat-num">{{ free_count }}</span>
+      <span class="fv-stat-lbl">Ohne Manager</span>
+    </div>
+  </div>
+
+  <!-- Legende -->
+  <div class="fv-legend">
+    <span class="fv-leg-item fv-leg--none">Nicht freigegeben</span>
+    <span class="fv-leg-item fv-leg--free">Free Pick</span>
+    <span class="fv-leg-item fv-leg--normal">Normale Bewerbung</span>
+    <span class="fv-leg-item fv-leg--top">Top-Bewerbung</span>
+  </div>
+
+  <!-- Tabelle -->
+  <div class="fv-table-wrap">
+    <table class="fv-table">
+      <thead>
+        <tr>
+          <th>Wappen</th>
+          <th>Verein</th>
+          <th>Liga</th>
+          <th>Platz</th>
+          <th>Trainer</th>
+          <th>Freigabe</th>
+          <th>Speichern</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr class="fv-row {% if row.has_manager %}fv-row--managed{% endif %}">
+          <td class="fv-td-crest">
+            {% if row.club.fm_inside_id %}
+            <img src="{% static 'game/images/crests/' %}{{ row.club.fm_inside_id }}.png"
+                 alt="{{ row.club.name }}" class="fv-crest"
+                 onerror="this.style.opacity='.15';">
+            {% else %}
+            <div class="fv-crest fv-crest--missing"></div>
+            {% endif %}
+          </td>
+          <td class="fv-td-name">
+            <a href="{% url 'creator_club_edit' row.club.pk %}" class="fv-club-link">{{ row.club.name }}</a>
+          </td>
+          <td class="fv-td-league">
+            {% if row.flag_code %}
+            <img src="https://flagcdn.com/16x12/{{ row.flag_code|lower }}.png"
+                 alt="" class="fv-flag" onerror="this.style.display='none';">
+            {% endif %}
+            {{ row.club.league.name }}
+          </td>
+          <td class="fv-td-pos">
+            {% if row.position %}{{ row.position }}{% else %}—{% endif %}
+          </td>
+          <td class="fv-td-manager">
+            {% if row.has_manager %}
+            <span class="fv-badge-manager">belegt</span>
+            {% else %}
+            <span class="fv-badge-free">frei</span>
+            {% endif %}
+          </td>
+          <td class="fv-td-type">
+            <form method="post" action="{% url 'creator_freie_vereine' %}" class="fv-form">
+              {% csrf_token %}
+              <input type="hidden" name="club_id" value="{{ row.club.pk }}">
+              <select name="job_availability_type" class="fv-select fv-select--{{ row.club.job_availability_type }}">
+                {% for val, label in type_choices %}
+                <option value="{{ val }}" {% if row.club.job_availability_type == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+          </td>
+          <td class="fv-td-save">
+              <button type="submit" class="fv-save-btn" title="Speichern">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<style>
+.cm-section { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+.cm-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+.cm-header-left { display: flex; flex-direction: column; gap: .35rem; }
+.cm-badge { display: inline-block; font-size: .65rem; font-weight: 800; letter-spacing: .08em; padding: .2rem .55rem; border-radius: 4px; background: #00d4ff22; color: #00d4ff; border: 1px solid #00d4ff44; text-transform: uppercase; width: fit-content; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+.cm-header-right { display: flex; gap: .5rem; }
+.cm-nav-pill { padding: .35rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; text-decoration: none; border: 1px solid #0d2035; color: #556677; background: #050e1a; transition: all .15s; }
+.cm-nav-pill:hover { border-color: #00d4ff44; color: #aabbcc; }
+.cm-nav-pill.active { border-color: #00d4ff55; color: #00d4ff; background: #071525; }
+.cm-messages { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.cm-msg { padding: .65rem 1rem; border-radius: 6px; font-size: .85rem; font-weight: 500; }
+.cm-msg--success { background: #002a0e; border: 1px solid #00c85244; color: #00c852; }
+.cm-msg--error   { background: #2a0000; border: 1px solid #ff444444; color: #ff8888; }
+
+/* Stats */
+.fv-stats { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
+.fv-stat { display: flex; flex-direction: column; gap: .1rem; }
+.fv-stat-num { font-size: 1.5rem; font-weight: 800; color: #00d4ff; line-height: 1; }
+.fv-stat--free .fv-stat-num { color: #ffaa00; }
+.fv-stat-lbl { font-size: .7rem; color: #556677; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Legende */
+.fv-legend { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.fv-leg-item { font-size: .7rem; font-weight: 700; padding: .25rem .65rem; border-radius: 12px; }
+.fv-leg--none   { background: #1a1a1a; color: #556677; border: 1px solid #222; }
+.fv-leg--free   { background: rgba(201,168,76,.1); color: #c9a84c; border: 1px solid rgba(201,168,76,.3); }
+.fv-leg--normal { background: rgba(100,130,200,.1); color: #8aabdd; border: 1px solid rgba(100,130,200,.25); }
+.fv-leg--top    { background: rgba(220,60,60,.1); color: #e06666; border: 1px solid rgba(220,60,60,.3); }
+
+/* Tabelle */
+.fv-table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #0d2035; }
+.fv-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.fv-table thead tr { background: #030a14; }
+.fv-table th { padding: .6rem 1rem; text-align: left; font-size: .67rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #334455; border-bottom: 1px solid #0d2035; }
+.fv-row { border-bottom: 1px solid #0a1a28; transition: background .1s; }
+.fv-row:hover { background: #080f1a; }
+.fv-row--managed { opacity: .6; }
+.fv-table td { padding: .55rem 1rem; vertical-align: middle; }
+
+.fv-td-crest { width: 52px; text-align: center; }
+.fv-crest { width: 32px; height: 32px; object-fit: contain; }
+.fv-crest--missing { display: inline-block; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); }
+
+.fv-club-link { color: #aabbcc; text-decoration: none; font-weight: 600; }
+.fv-club-link:hover { color: #00d4ff; }
+
+.fv-td-league { color: #556677; font-size: .78rem; }
+.fv-flag { vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+.fv-td-pos { color: #556677; font-weight: 700; text-align: center; width: 50px; }
+
+.fv-badge-manager { font-size: .65rem; font-weight: 700; padding: .15rem .5rem; border-radius: 4px; background: #1a2a1a; color: #556655; border: 1px solid #223322; }
+.fv-badge-free    { font-size: .65rem; font-weight: 700; padding: .15rem .5rem; border-radius: 4px; background: rgba(255,170,0,.08); color: #ffaa00; border: 1px solid rgba(255,170,0,.25); }
+
+.fv-form { display: flex; align-items: center; gap: .5rem; }
+.fv-select {
+  appearance: none;
+  background: #030a14;
+  border: 1px solid #0d2035;
+  border-radius: 5px;
+  color: #aabbcc;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: .3rem 1.8rem .3rem .65rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23556677' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 14px;
+  transition: border-color .15s;
+}
+.fv-select:focus { outline: none; border-color: #00d4ff44; }
+.fv-select--none   { color: #556677; }
+.fv-select--free_pick { color: #c9a84c; }
+.fv-select--normal { color: #8aabdd; }
+.fv-select--top    { color: #e06666; }
+
+.fv-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border: 1px solid #0d2035;
+  border-radius: 5px;
+  background: #030a14;
+  color: #556677;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  flex-shrink: 0;
+}
+.fv-save-btn svg { width: 14px; height: 14px; fill: currentColor; }
+.fv-save-btn:hover { border-color: #00c85244; color: #00c852; }
+</style>
+{% endblock %}

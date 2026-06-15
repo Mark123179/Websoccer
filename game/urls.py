@@ -100,6 +100,7 @@ from .views_creator import (
     creator_cup_schedule_apply,
     cup_tree_view,
     creator_season_end,
+    creator_freie_vereine,
 )
 
 
@@ -319,4 +320,7 @@ urlpatterns = [
 
     # Saisonverwaltung
     path('creator/season-end/', creator_season_end, name='creator_season_end'),
+
+    # System — Freie Vereine
+    path('creator/system/freie-vereine/', creator_freie_vereine, name='creator_freie_vereine'),
 ]
