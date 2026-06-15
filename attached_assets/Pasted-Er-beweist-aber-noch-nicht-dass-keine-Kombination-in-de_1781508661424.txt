@@ -1,0 +1,217 @@
+Er beweist aber noch nicht, dass keine Kombination in der Matchsimulation zu stark ist. Dafür sind die anderen Modi notwendig.
+
+Empfohlene Testreihenfolge
+1. Halbzeit-Isolation
+
+Zuerst alle neuen Mittelfeld- und Angriffsoptionen im halves-Modus prüfen.
+
+python manage.py test_line_tactics --mode halves --field midfield --option absichern
+python manage.py test_line_tactics --mode halves --field midfield --option ballbesitz_sichern
+python manage.py test_line_tactics --mode halves --field midfield --option nachruecken
+python manage.py test_line_tactics --mode halves --field midfield --option offensiv_besetzen
+
+python manage.py test_line_tactics --mode halves --field attack --option unterstuetzen
+python manage.py test_line_tactics --mode halves --field attack --option abwehrkette_binden
+python manage.py test_line_tactics --mode halves --field attack --option strafraum_besetzen
+
+Dabei muss gelten:
+
+nur erste Halbzeit aktiv → Compilerwirkung nur in Halbzeit eins,
+nur zweite Halbzeit aktiv → Compilerwirkung nur in Halbzeit zwei,
+beide Halbzeiten aktiv → Wirkung in beiden,
+keine Werte dürfen in die jeweils andere Halbzeit „durchbluten“.
+
+Die Ergebniswerte müssen nicht exakt additiv sein, weil Spielstand, Karten und Bedingungen die zweite Hälfte beeinflussen. Die Compilerwerte müssen aber exakt zur gewählten Halbzeit passen.
+
+2. Einzeloptionen isoliert
+
+Danach:
+
+python manage.py test_line_tactics --mode single --matches 10000
+
+10.000 gespiegelte Spiele pro Option sind für die finale Einzelprüfung besser als 5.000.
+
+Pro Option sollten mindestens diese Werte gegenüber Standard ausgegeben werden:
+
+PPG-Delta
+xGF-Delta
+xGA-Delta
+xGD-Delta
+Schüsse für/gegen
+Ballbesitz
+Risiko
+Frische
+Kohärenz
+Erwartete Richtungen
+Option	xGF	xGA	Schüsse	Ballbesitz	Risiko	Frische
+Absichern	↓	↓↓	↓	leicht ↓	↓	leicht ↓
+Ballbesitz sichern	etwa neutral/leicht ↓	↓	↓	↑	↓	neutral
+Nachrücken	↑	leicht ↑	↑	leicht ↑	↑	↑
+Offensiv besetzen	↑↑	↑↑	↑↑	neutral/leicht ↓	↑↑	↑↑
+Unterstützen	↓	↓	↓↓	↑	↓	leicht ↓
+Abwehrkette binden	leicht ↑	leicht ↑	leicht ↑	leicht ↓	↑	leicht ↑
+Strafraum besetzen	↑↑	↑↑	↑↑	↓	↑↑	↑↑
+
+Eine Option ist verdächtig, wenn sie gleichzeitig:
+
+mehr PPG,
+mehr xGF,
+weniger xGA,
+weniger Risiko,
+weniger Frischekosten
+
+liefert. Das wäre ein echter Gratisvorteil.
+
+3. Extreme Kombinationen
+
+Danach:
+
+python manage.py test_line_tactics --mode extreme --matches 10000
+
+Die sechs Szenarien sollten getrennt betrachtet werden.
+
+Kohärent maximal offensiv
+hoeher_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+
+Erwartung:
+
+line_xg_for_raw über dem Cap möglich,
+line_xg_for_applied <= 0.06,
+line_shots_applied <= 0.08,
+xGF steigt,
+Schüsse steigen,
+xGA steigt,
+Risiko und Frische steigen deutlich,
+Kohärenz bleibt 1.00.
+Inkohärent offensiv
+tief_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+
+Erwartung:
+
+Kohärenz 0.96,
+gleiche oder ähnliche Kosten,
+geringere positive Wirksamkeit als die kohärente Variante,
+darf die kohärente Offensivvariante langfristig nicht übertreffen.
+Maximal defensiv
+defensivste Abwehr
++ absichern
++ unterstuetzen
+
+Erwartung:
+
+xGA deutlich niedriger,
+aber auch xGF und Schüsse niedriger,
+Remisquote steigt,
+darf Standard nicht kostenlos im PPG dominieren.
+Ballkontrolle
+Standard
++ ballbesitz_sichern
++ unterstuetzen
+
+Erwartung:
+
+Ballbesitz höher,
+xGF und xGA leicht niedriger,
+weniger Schüsse und Ereignisse,
+keine automatische Ergebnisverbesserung.
+4. Vollständige Matrix
+
+Wenn Einzel- und Extremtests plausibel sind:
+
+python manage.py test_line_tactics \
+  --mode matrix \
+  --matches 2000 \
+  --output .local/line_tactic_test/
+
+Das ist ein Screeninglauf. 2.000 Spiele je Kombination reichen, um grobe Ausreißer zu finden, aber nicht für endgültige Urteile.
+
+Danach die auffälligen Kombinationen erneut mit mindestens 20.000 gespiegelten Spielen testen.
+
+Auffällig sind insbesondere
+fünf höchste PPG-Werte,
+fünf höchste xGD-Werte,
+fünf niedrigste xGA-Werte,
+Kombinationen mit positiverem PPG und gleichzeitig geringeren Kosten,
+Kombinationen, die den lokalen Cap erreichen,
+die inkohärente Kombination,
+maximal offensive und maximal defensive Kombinationen.
+Alarmgrenzen
+Technischer Fehler
+
+Sofortiger Fehler:
+
+line_xg_for_applied > 0.060001
+line_shots_applied > 0.080001
+
+oder wenn Risiko/Frische durch den positiven Cap reduziert werden.
+
+Möglicher Match-Exploit
+
+Nach mindestens 10.000 gespiegelten Spielen verdächtig:
+
+PPG-Delta > +0.04
+und
+xGD-Delta > +0.04
+
+ohne deutliche zusätzliche Kosten.
+
+Klarer Alarm:
+
+PPG-Delta > +0.06
+und
+xGD-Delta > +0.06
+
+über mehrere Stärkeklassen hinweg.
+
+Defensiver Exploit
+
+Verdächtig wäre beispielsweise:
+
+xGA -7 %
+xGF nur -1 %
+PPG deutlich höher
+Risiko und Frische nicht höher
+Kohärenzfehler
+
+Die inkohärente Variante ist auffällig, wenn sie trotz coherence = 0.96:
+
+gleiches oder höheres xGD,
+gleiches oder höheres PPG
+
+als die vergleichbare kohärente Variante erreicht.
+
+Wichtige Einschränkung des Testtools
+
+Der aktuelle Test prüft überwiegend Einzelspiele. Frischekosten werden zwar ausgewiesen, aber vermutlich nicht über mehrere Begegnungen auf den Kader übertragen.
+
+Das bedeutet:
+
+Offensiv besetzen erzielt mehr PPG,
+kostet aber deutlich mehr Frische.
+
+Im Einzelspiel kann es wie die beste Taktik aussehen. Der eigentliche Preis würde erst im nächsten Spiel entstehen.
+
+Deshalb sind zwei Arten von Exploits zu unterscheiden:
+
+Match-Exploit
+
+Eine Taktik ist bereits innerhalb eines Spiels zu stark und hat kaum Nachteile.
+
+Das deckt test_line_tactics gut ab.
+
+Saison-Exploit
+
+Eine Taktik ist über mehrere Spiele zu stark, obwohl ihre Frischekosten eigentlich Rotation erzwingen sollten.
+
+Dafür wird später zusätzlich ein Test mit beispielsweise zehn aufeinanderfolgenden Spielen und echter Frischefortschreibung benötigt.
+
+Konkreter nächster Lauf
+python manage.py test_line_tactics --mode single --matches 10000
+python manage.py test_line_tactics --mode extreme --matches 10000
+python manage.py test_line_tactics --mode matrix --matches 2000 --output .local/line_tactic_test/
+
+Danach sollten nicht sofort Werte verändert werden. Zuerst die Ergebnisse nach PPG, xGD, xGF/xGA und Kosten sortieren und nur die auffälligsten Kombinationen größer nachtesten.
