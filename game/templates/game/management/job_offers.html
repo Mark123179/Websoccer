@@ -355,6 +355,8 @@
 /* Free-Pick Bestätigungsdialog — Custom Modal */
 (function () {
   const overlay  = document.getElementById('jo-confirm-overlay');
+  /* An body hängen damit position:fixed nicht durch Ancestor-transforms bricht */
+  document.body.appendChild(overlay);
   const oldSpan  = document.getElementById('jo-confirm-old');
   const newSpan  = document.getElementById('jo-confirm-new');
   const btnYes   = document.getElementById('jo-confirm-yes');
