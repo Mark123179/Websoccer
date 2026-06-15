@@ -1,0 +1,131 @@
+ie Trennung sinnvoller:
+
+Halbzeitkachel: Verhalten und Risiko der drei Mannschaftsteile.
+Bodenzeile: konkrete Passwege, Aufbauformen, Pressing, Angriffsfokus und defensive Organisation.
+
+Damit bleiben Abwehr, Mittelfeld und Sturm pro Halbzeit, ohne dass dieselben Einstellungen doppelt vorkommen.
+
+Klare Systemtrennung
+Halbzeitkachel
+
+Beantwortet die Frage:
+
+Wie offensiv, absichernd oder unterstützend verhält sich dieser Mannschaftsteil?
+
+Spielaufbau unten
+
+Beantwortet die Frage:
+
+Wie soll der Ball durch diesen Mannschaftsteil transportiert werden?
+
+Beispiele:
+
+Mittelfeld „Absichern“ sagt, wie viele Spieler hinter dem Ball bleiben.
+Mittelfeld „Vertikal spielen“ sagt, wie der Ball weitergeleitet wird.
+Sturm „Strafraum besetzen“ sagt, wie stark die Offensive nach vorne bindet.
+Sturm „Zielspieler suchen“ sagt, wohin die Pässe gespielt werden.
+
+Das sind unterschiedliche Ebenen und können kombiniert werden.
+
+1. Mittelfeld in der Halbzeitkachel
+
+Die bisherigen Optionen kurzpassspiel und vertikal_spielen sollten dort entfernt werden. Das gehört eindeutig zum Spielaufbau.
+
+Ich würde fünf Optionen verwenden:
+
+Wert	Anzeige
+standard	Standard
+absichern	Absichern
+ballbesitz_sichern	Ballbesitz sichern
+nachruecken	Nachrücken
+offensiv_besetzen	Offensiv besetzen
+Zahlenwirkung Mittelfeld
+
+Die Werte gelten zusätzlich zur Grundausrichtung, aber bewusst nur moderat.
+
+Einstellung	xG für	xG gegen	Ballbesitz	Schüsse	Risiko	Frische
+Standard	×1,000	×1,000	±0,0 PP	×1,000	±0,00	×1,000
+Absichern	×0,985	×0,970	−0,5 PP	×0,980	−0,04	×0,990
+Ballbesitz sichern	×0,995	×0,985	+1,5 PP	×0,970	−0,02	×1,000
+Nachrücken	×1,020	×1,012	+0,3 PP	×1,030	+0,03	×1,020
+Offensiv besetzen	×1,030	×1,025	−0,3 PP	×1,050	+0,05	×1,040
+Bedeutung
+
+Absichern
+
+Mittelfeldspieler bleiben häufiger hinter dem Ball.
+Weniger Unterstützung im Angriff.
+Deutlich bessere Absicherung gegen Konter.
+Leicht weniger Ballbesitz, weil weniger Spieler nachrücken.
+
+Ballbesitz sichern
+
+Mehr sichere Anspielstationen.
+Weniger schnelle Abschlüsse.
+Weniger Ballverluste.
+Kein offensiver Bonus, aber mehr Kontrolle.
+
+Nachrücken
+
+Mittelfeld unterstützt häufiger den Strafraum.
+Mehr Abschlüsse aus der zweiten Reihe.
+Leicht anfälliger bei Ballverlusten.
+
+Offensiv besetzen
+
+Mehr Mittelfeldspieler schieben dauerhaft nach vorne.
+Spürbarer offensiver Effekt.
+Gleichzeitig größere Räume nach Ballverlusten.
+Höhere Frischekosten.
+2. Sturm in der Halbzeitkachel
+
+Hier sollten keine Passarten und kein Pressing stehen.
+
+Damit fallen diese bisherigen Optionen weg:
+
+anlaufen → gehört zum Pressing
+kombinieren → gehört zum Spielaufbau
+tiefenlaeufe → gehört zum Spielaufbau
+zielspieler_suchen → gehört zum Spielaufbau
+flanke_kopfball → gehört zu Spielaufbau und Angriffsfokus
+
+Der Sturm-Regler sollte ausschließlich festlegen, wie stark und wie hoch die Angriffsreihe gebunden wird.
+
+Ich würde zunächst nur vier klare Optionen verwenden:
+
+Wert	Anzeige
+unterstuetzen	Unterstützen
+standard	Standard
+abwehrkette_binden	Abwehrkette binden
+strafraum_besetzen	Strafraum besetzen
+
+Mehr Optionen sind nicht automatisch besser. Vier klar unterscheidbare Rollen sind besser als sechs teilweise doppelte.
+
+Zahlenwirkung Sturm
+Einstellung	xG für	xG gegen	Ballbesitz	Schüsse	Risiko	Frische
+Unterstützen	×0,985	×0,985	+0,8 PP	×0,960	−0,03	×0,990
+Standard	×1,000	×1,000	±0,0 PP	×1,000	±0,00	×1,000
+Abwehrkette binden	×1,015	×1,010	−0,3 PP	×1,010	+0,02	×1,010
+Strafraum besetzen	×1,030	×1,025	−0,5 PP	×1,040	+0,05	×1,030
+Bedeutung
+
+Unterstützen
+
+Angreifer lassen sich häufiger fallen.
+Mehr Verbindungen zum Mittelfeld.
+Mehr Ballbesitz und bessere defensive Unterstützung.
+Weniger Strafraumbesetzung und weniger Abschlüsse.
+
+Abwehrkette binden
+
+Angreifer bleiben höher.
+Gegenspieler werden hinten gebunden.
+Mehr Raum für nachrückende Mittelfeldspieler.
+Leicht höhere Konteranfälligkeit.
+
+Strafraum besetzen
+
+Mehr Spieler halten sich konsequent in Abschlusspositionen auf.
+Mehr Schüsse und höheres xG.
+Weniger Unterstützung im Aufbau.
+Größere Räume bei Ballverlusten.

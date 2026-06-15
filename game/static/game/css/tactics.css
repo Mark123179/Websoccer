@@ -1269,7 +1269,7 @@ body.tactics-page .nav-menu a:nth-child(5) {
 .tactics-bench-list {
     display: grid;
     gap: 7px;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .tactics-bench-card {

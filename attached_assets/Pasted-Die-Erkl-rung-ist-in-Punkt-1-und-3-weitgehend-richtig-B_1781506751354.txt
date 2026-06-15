@@ -1,0 +1,234 @@
+Die Erklärung ist in Punkt 1 und 3 weitgehend richtig. Bei Punkt 2 würde ich widersprechen.
+
+1. Risk-Cap: richtig, aber mit technischer Absicherung
+
+Der Grundsatz passt:
+
+Positive Effekte sättigen sich, negative Folgen bleiben weitgehend vollständig bestehen.
+
+Bei maximal offensiver Einstellung:
+
+Abwehr: höher stehen
+Mittelfeld: offensiv besetzen
+Angriff: Strafraum besetzen
+
+könnte der Rohwert etwa sein:
+
+Variable	Rohwert	Nach Linienbegrenzung
+xG für	+9 %	+6 %
+Schussvolumen	+12 %	+6 oder +8 %
+xG gegen	+7 %	+7 %
+Risiko	+0,14	+0,14
+Frischekosten	+9 %	+9 %
+
+Das ist korrekt.
+
+„Kein Cap“ sollte technisch aber nicht wörtlich unendlich bedeuten. Es gibt zwei unterschiedliche Grenzen:
+
+Gameplay-Cap
+
+Begrenzt bewusst den Nutzen:
+
+line_xg_for_delta = min(line_xg_for_delta, 0.06)
+line_shots_delta = min(line_shots_delta, 0.08)
+Sicherheits-Clamp
+
+Verhindert nur kaputte Extremwerte, falls später weitere Module dazukommen:
+
+final_risk = clamp(final_risk, -0.30, 0.40)
+final_fatigue_multiplier = clamp(final_fatigue_multiplier, 0.75, 1.40)
+
+Der Sicherheits-Clamp sollte im normalen Spiel praktisch nie erreicht werden.
+
+Für dein Beispiel bleibt risk +0.14 also vollständig bestehen.
+
+2. Kohärenz: Das konkrete Beispiel ist nicht zwingend widersprüchlich
+
+Die Aussage:
+
+Höhere Abwehrlinie + Strafraum besetzen erzeugt automatisch eine große Lücke.
+
+ist so nicht korrekt.
+
+Eine hohe Abwehrlinie und viele Spieler im Strafraum können sogar sehr gut zusammenpassen:
+
+Mannschaft steht insgesamt hoch.
+Spielfeld wird kompakt gemacht.
+Gegner wird eingeschnürt.
+Restverteidigung steht nahe an der Mittellinie.
+
+Das ist eine kohärente offensive Taktik, nur mit hohem Risiko für Tiefenläufe und Konter.
+
+Dafür braucht es keinen Kohärenz-Malus. Die Nachteile entstehen bereits durch:
+
+höheres xG gegen,
+mehr Risiko,
+höhere Frischekosten,
+höhere Anfälligkeit hinter der Abwehr.
+Wann wäre die Linienkombination wirklich inkohärent?
+
+Zum Beispiel:
+
+Abwehr steht tief
+Mittelfeld besetzt offensiv
+Sturm besetzt den Strafraum
+
+Dann kann zwischen tiefer Abwehr und offensivem Mittelfeld eine große Lücke entstehen.
+
+Oder:
+
+Abwehr zieht sich zurück
+Angriff soll hoch die Abwehrkette binden
+Mittelfeld sichert extrem tief ab
+
+Dann fehlen Verbindungen zwischen den Mannschaftsteilen.
+
+Kohärenz sollte daher nicht einfach einzelne offensive Optionen bestrafen, sondern echte Widersprüche zwischen den gewählten Rollen.
+
+Beispiel:
+
+if (
+    defense_setting == "tief_stehen"
+    and midfield_setting == "offensiv_besetzen"
+    and attack_setting == "strafraum_besetzen"
+):
+    coherence -= 0.04
+
+Dagegen wäre:
+
+hoeher_stehen
++ offensiv_besetzen
++ strafraum_besetzen
+
+konsequent offensiv, nicht inkohärent.
+
+3. Clamp-Phase: Der Marker-Ansatz funktioniert
+
+Die Beschreibung mit Marker vor und nach dem Block ist technisch möglich.
+
+Ausgangslage vor den drei Linienfeldern
+
+Nach Grundausrichtung könnten bereits Werte vorhanden sein:
+
+xg_for_delta = 0.06
+shots_delta = 0.05
+risk_delta = 0.07
+
+Jetzt wird der aktuelle Stand gemerkt:
+
+before_line_xg = xg_for_delta
+before_line_shots = shots_delta
+before_line_risk = risk_delta
+
+Danach werden Abwehr, Mittelfeld und Sturm verarbeitet:
+
+xg_for_delta += defense_mod["xg_for"]
+xg_for_delta += midfield_mod["xg_for"]
+xg_for_delta += attack_mod["xg_for"]
+
+shots_delta += defense_mod["shots"]
+shots_delta += midfield_mod["shots"]
+shots_delta += attack_mod["shots"]
+
+risk_delta += defense_mod["risk"]
+risk_delta += midfield_mod["risk"]
+risk_delta += attack_mod["risk"]
+
+Angenommen, danach steht:
+
+xg_for_delta = 0.15
+shots_delta = 0.17
+risk_delta = 0.21
+
+Dann wird nur die Veränderung durch die drei Linien berechnet:
+
+line_xg_delta = xg_for_delta - before_line_xg
+line_shots_delta = shots_delta - before_line_shots
+line_risk_delta = risk_delta - before_line_risk
+
+Ergebnis:
+
+line_xg_delta = 0.09
+line_shots_delta = 0.12
+line_risk_delta = 0.14
+
+Jetzt werden nur die positiven Linienvorteile begrenzt:
+
+line_xg_delta = min(line_xg_delta, 0.06)
+line_shots_delta = min(line_shots_delta, 0.08)
+
+Das Risiko bleibt unverändert:
+
+line_risk_delta = 0.14
+
+Danach setzt man die Gesamtwerte neu zusammen:
+
+xg_for_delta = before_line_xg + line_xg_delta
+shots_delta = before_line_shots + line_shots_delta
+risk_delta = before_line_risk + line_risk_delta
+
+Endergebnis:
+
+xg_for_delta = 0.12
+shots_delta = 0.13
+risk_delta = 0.21
+
+Davon stammen:
+
++0.06 xG aus der Grundausrichtung
+maximal +0.06 xG aus den drei Linienfeldern
+das gesamte Risiko bleibt bestehen
+Warum nicht nur ein globaler Cap am Ende?
+
+Bei einem globalen Cap:
+
+final_xg = clamp(1.0 + xg_for_delta, 0.90, 1.10)
+
+würden alle Quellen zusammen begrenzt:
+
+Grundausrichtung
+Abwehr
+Mittelfeld
+Angriff
+Spielaufbau
+Pressing
+Matchplan
+
+Dann könnte ein später aktivierter Matchplan wirkungslos werden, weil der Wert bereits am Maximum liegt.
+
+Beispiel:
+
+Grundausrichtung + Linien = bereits +10 %
+Schlussangriff gibt weitere +8 %
+Globaler Cap bleibt trotzdem bei +10 %
+
+Der Schlussangriff hätte dann keinen offensiven Nutzen mehr.
+
+Deshalb ist die lokale Linienbegrenzung besser:
+
+Grundausrichtung berechnen.
+Abwehr, Mittelfeld und Sturm separat sammeln.
+Nur deren positive Vorteile begrenzen.
+Danach Spielaufbau, Pressing und Matchpläne weiterverarbeiten.
+Ganz am Ende nur einen großzügigen technischen Sicherheits-Clamp anwenden.
+Noch sauberer als Marker
+
+Technisch verständlicher wäre, die Linienwerte direkt separat zu sammeln:
+
+line_xg_for = 0.0
+line_xg_against = 0.0
+line_shots = 0.0
+line_risk = 0.0
+line_fatigue = 0.0
+
+Dann alle drei Dropdowns dort addieren, begrenzen und anschließend ins Gesamtprofil übertragen.
+
+Das ist leichter zu testen und später weniger fehleranfällig als das Berechnen über Vorher-/Nachher-Marker.
+
+Fazit
+Vorteile der drei Linienfelder begrenzen: ja.
+Risiko und Frische vollständig stapeln: ja.
+Großzügige technische Sicherheitsgrenzen: trotzdem ja.
+Hohe Abwehr + hohe offensive Präsenz automatisch als inkohärent bewerten: nein.
+Lokale Linien-Clamp vor Pressing, Spielaufbau und Matchplänen: ja.
+Separate Linien-Deltas sind sauberer als Marker-Differenzen.

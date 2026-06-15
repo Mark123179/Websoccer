@@ -2494,7 +2494,7 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
     )
 
     bench_rows = []
-    for index in range(1, 8):
+    for index in range(1, 9):
         selected_id = payload['bench'][index - 1] if index <= len(payload['bench']) else ''
         bench_rows.append({
             'index': index,

@@ -515,6 +515,66 @@ def compile_tactic(
         s["pressing_bypassed_risk"] += 0.03
         s["complexity"]     += 8
 
+    # ── Per-Halbzeit: Mittelfeld & Angriff ────────────────────────────────────
+    # Separate line-Deltas sammeln. Positive Linienvorteile werden unten gekappt;
+    # Risiko und Frische stapeln sich vollständig (Strafe für Offensivstacking).
+    line_xg_for  = 0.0
+    line_xg_ag   = 0.0
+    line_shots   = 0.0
+    line_risk    = 0.0
+    line_fatigue = 0.0
+    line_poss    = 0.0
+
+    hm = _half_val("midfield", "standard") or "standard"
+    if hm == "absichern":
+        line_xg_for  -= 0.015;  line_xg_ag   -= 0.030
+        line_poss    -= 0.005;  line_shots   -= 0.020
+        line_risk    -= 0.04;   line_fatigue -= 0.010
+        s["complexity"] += 5
+    elif hm == "ballbesitz_sichern":
+        line_xg_for  -= 0.005;  line_xg_ag   -= 0.015
+        line_poss    += 0.015;  line_shots   -= 0.030
+        line_risk    -= 0.02
+        s["complexity"] += 5
+    elif hm == "nachruecken":
+        line_xg_for  += 0.020;  line_xg_ag   += 0.012
+        line_poss    += 0.003;  line_shots   += 0.030
+        line_risk    += 0.03;   line_fatigue += 0.020
+        s["complexity"] += 6
+    elif hm == "offensiv_besetzen":
+        line_xg_for  += 0.030;  line_xg_ag   += 0.025
+        line_poss    -= 0.003;  line_shots   += 0.050
+        line_risk    += 0.05;   line_fatigue += 0.040
+        s["complexity"] += 8
+
+    ha = _half_val("attack", "standard") or "standard"
+    if ha == "unterstuetzen":
+        line_xg_for  -= 0.015;  line_xg_ag   -= 0.015
+        line_poss    += 0.008;  line_shots   -= 0.040
+        line_risk    -= 0.03;   line_fatigue -= 0.010
+        s["complexity"] += 5
+    elif ha == "abwehrkette_binden":
+        line_xg_for  += 0.015;  line_xg_ag   += 0.010
+        line_poss    -= 0.003;  line_shots   += 0.010
+        line_risk    += 0.02;   line_fatigue += 0.010
+        s["complexity"] += 6
+    elif ha == "strafraum_besetzen":
+        line_xg_for  += 0.030;  line_xg_ag   += 0.025
+        line_poss    -= 0.005;  line_shots   += 0.040
+        line_risk    += 0.05;   line_fatigue += 0.030
+        s["complexity"] += 8
+
+    # Positive Linienvorteile kappen; Nachteile stapeln sich vollständig
+    line_xg_for = min(line_xg_for, 0.06)
+    line_shots  = min(line_shots,  0.08)
+
+    s["xg_for_delta"]     += line_xg_for
+    s["xg_against_delta"] += line_xg_ag
+    s["shot_volume_delta"]+= line_shots
+    s["risk"]             += line_risk
+    s["fatigue_delta"]    += line_fatigue
+    s["possession_bonus"] += line_poss
+
     # buildup.midfield
     bm = buildup.get("midfield", "standard") or "standard"
     if bm == "geduldig":
@@ -633,6 +693,8 @@ def compile_tactic(
         s["coherence"] -= 0.05
     if s["orientation"] > 70 and hd == "tief_stehen":
         s["coherence"] -= 0.03
+    if hd == "tief_stehen" and hm == "offensiv_besetzen" and ha == "strafraum_besetzen":
+        s["coherence"] -= 0.04
 
     # ── 8. Teamwork ───────────────────────────────────────────────────────────
     pid_map = {p["id"]: p for p in team.get("players", [])}

@@ -117,18 +117,15 @@ TACTIC_OPTION_GROUPS = {
     'midfield': [
         ('standard', 'Standard'),
         ('absichern', 'Absichern'),
-        ('kurzpassspiel', 'Kurzpassspiel'),
         ('ballbesitz_sichern', 'Ballbesitz sichern'),
-        ('vertikal_spielen', 'Vertikal spielen'),
-        ('gegenpressing', 'Gegenpressing'),
+        ('nachruecken', 'Nachrücken'),
+        ('offensiv_besetzen', 'Offensiv besetzen'),
     ],
     'attack': [
+        ('unterstuetzen', 'Unterstützen'),
         ('standard', 'Standard'),
-        ('anlaufen', 'Anlaufen'),
-        ('kombinieren', 'Kombinieren'),
-        ('tiefenlaeufe', 'Tiefenläufe'),
-        ('zielspieler_suchen', 'Zielspieler suchen'),
-        ('flanke_kopfball', 'Flanke & Kopfball'),
+        ('abwehrkette_binden', 'Abwehrkette binden'),
+        ('strafraum_besetzen', 'Strafraum besetzen'),
     ],
     'effort': [
         ('schonend', 'Schonend'),
@@ -893,7 +890,7 @@ def sanitize_assignments(lineup, bench, available_ids):
         assigned[player_id] = ('lineup', slot_key)
         sanitized_lineup[slot_key] = player_id
 
-    for index, raw_player_id in enumerate(bench[:7]):
+    for index, raw_player_id in enumerate(bench[:8]):
         player_id = clean_player_id(raw_player_id, available_ids)
         if not player_id:
             sanitized_bench.append('')
@@ -907,7 +904,7 @@ def sanitize_assignments(lineup, bench, available_ids):
         assigned[player_id] = ('bench', index)
         sanitized_bench.append(player_id)
 
-    while len(sanitized_bench) < 7:
+    while len(sanitized_bench) < 8:
         sanitized_bench.append('')
 
     return sanitized_lineup, sanitized_bench
