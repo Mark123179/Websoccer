@@ -1,0 +1,174 @@
+Der Befund ist sauber. Ich würde nur bei der vorgeschlagenen Lösung widersprechen:
+
+Eine zusätzliche Kohärenzstrafe wäre wahrscheinlich nicht der beste erste Eingriff.
+
+kompakt_stehen + offensive Rollen ist nicht automatisch widersprüchlich. Eine Mannschaft kann kompakt bleiben und trotzdem mit Mittelfeld und Sturm nachrücken. Das Problem ist eher, dass der defensive Bonus von kompakt_stehen zu unabhängig von den übrigen Linienentscheidungen erhalten bleibt.
+
+Was genau passiert
+
+kompakt_stehen wirkt nicht über:
+
+xg_against_delta
+
+sondern über:
+
+defense_delta += 0.03
+
+Daraus wird:
+
+defense_multiplier = 1.03
+
+Die Engine erhöht damit die reale Defensivstärke. Wegen des Strength-Exponenten 1.25 sinkt der gegnerische xG-Wert indirekt.
+
+Der Compiler zeigt bisher nur den direkten xGA-Pfad:
+
+line_xg_against
+
+Er zeigt nicht vollständig:
+
+Defensivstärke +3 %
+→ geändertes Stärkenverhältnis
+→ weniger gegnerisches xG
+
+Deshalb ist die Konfiguration technisch korrekt, aber im Debugbild unvollständig.
+
+Wichtigster nächster Isolationstest
+
+Bevor etwas geändert wird, fehlt noch der reine Einzeltest:
+
+kompakt_stehen + standard + standard
+gegen
+standard + standard + standard
+
+Mit mindestens 20.000 gespiegelten Spielen.
+
+Du brauchst außerdem die marginalen Vergleiche:
+
+Vergleich	Fragestellung
+kompakt + Standard + Standard vs. Standard ×3	Ist kompakt isoliert schon zu stark?
+kompakt + nachrücken + Strafraum vs. Standard + nachrücken + Strafraum	Wie viel bringt kompakt innerhalb derselben Offensivtaktik?
+kompakt + offensiv + Abwehrkette vs. Standard + offensiv + Abwehrkette	Wiederholt sich der Marginaleffekt?
+kompakt + absichern + Strafraum vs. Standard + absichern + Strafraum	Entsteht hier ein Gratisprofil?
+Entscheidungsregel
+Fall A: kompakt_stehen isoliert ist bereits zu stark
+
+Wenn beispielsweise:
+
+PPG-Delta > +0.03
+xGD-Delta > +0.04
+
+dann ist die Option grundsätzlich zu effizient.
+
+Dann sollte kompakt_stehen selbst angepasst werden.
+
+Fall B: isoliert sauber, aber mit offensiven Linien zu stark
+
+Dann liegt ein Interaktionseffekt vor.
+
+In diesem Fall würde ich nicht die Kohärenz reduzieren, sondern den Verteidigungsbonus abhängig von der offensiven Linienbesetzung abschwächen.
+
+Empfohlene Lösung: abnehmende Kompaktheit
+
+Grundidee:
+
+compact_defense_bonus = 0.03
+
+Dann prüfen, wie viele offensive Linienrollen aktiv sind.
+
+Beispiel:
+
+aggressive_lines = 0
+
+if midfield in {"nachruecken", "offensiv_besetzen"}:
+    aggressive_lines += 1
+
+if attack in {"abwehrkette_binden", "strafraum_besetzen"}:
+    aggressive_lines += 1
+
+Danach:
+
+if aggressive_lines == 0:
+    compact_defense_bonus = 0.03
+elif aggressive_lines == 1:
+    compact_defense_bonus = 0.0225
+else:
+    compact_defense_bonus = 0.015
+
+Also:
+
+Offensive Rollen	Kompakt-Bonus
+0	+3,0 % Defensive
+1	+2,25 %
+2	+1,5 %
+
+Das ist taktisch nachvollziehbar:
+
+Eine zurückhaltende Mannschaft kann sehr kompakt stehen.
+Wenn eine Linie nachrückt, bleibt die Kompaktheit teilweise erhalten.
+Wenn Mittelfeld und Sturm offensiv gebunden sind, kann die Defensive nicht weiterhin den vollen Kompaktheitsbonus erhalten.
+Warum besser als Kohärenz?
+
+Eine Kohärenzstrafe würde pauschal alle positiven Effekte reduzieren:
+
+xGF
+Schüsse
+Ballbesitz
+Pressing
+
+Das eigentliche Problem ist aber sehr konkret:
+
+zu viel versteckte defensive Wirkung
+
+Daher sollte auch genau dieser Wert angepasst werden.
+
+Zusätzliche Debugwerte
+
+Der Compiler sollte künftig ergänzen:
+
+line_defense_delta
+line_defense_multiplier
+effective_xga_from_defense
+effective_total_xga_multiplier
+
+Zum Beispiel:
+
+effective_xga_from_defense = defense_multiplier ** -STRENGTH_EXP
+
+Bei:
+
+defense_multiplier = 1.03
+strength_exp = 1.25
+
+ergibt das grob einen zusätzlichen gegnerischen xG-Multiplikator von etwa:
+
+0.964
+
+also rund −3,6 %, bevor weitere Engineeffekte wirken.
+
+So wäre der aktuell versteckte Pfad im Compiler sichtbar.
+
+Bewertung der drei Kombinationen
+kompakt + offensiv_besetzen + abwehrkette_binden
+PPG +0.065
+xGD +0.063
+klarer Alarm
+
+Hier neutralisiert Kompaktheit zu viel des offensiven Risikos.
+
+kompakt + nachruecken + strafraum_besetzen
+PPG +0.044
+xGD +0.069
+bestätigter Verdacht
+
+Nicht katastrophal, aber stark genug für eine spätere Meta.
+
+kompakt + absichern + strafraum_besetzen
+
+Das ist die auffälligste Konstruktion:
+
+eigenes xGF steigt
+gegnerisches xGF sinkt
+Risiko nur +0.01
+Fatigue nur +0.02
+
+Das ist sehr nah an einem Gratisvorteil.

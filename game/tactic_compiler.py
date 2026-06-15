@@ -500,10 +500,27 @@ def compile_tactic(
         s["pressing_bypassed_risk"] += 0.02
         s["complexity"]     += 8
     elif hd == "kompakt_stehen":
-        s["defense_delta"]  += 0.03
+        # Abnehmende Kompaktheit: Defensivbonus sinkt, wenn offensive Linien aktiv sind.
+        # Grund: Wenn MF/Sturm offensiv gebunden, kann die Defensive nicht vollständig
+        # kompakt stehen — der Stärke-Multiplikator wird schrittweise reduziert.
+        _hm_check = _half_val("midfield", "standard") or "standard"
+        _ha_check  = _half_val("attack",  "standard") or "standard"
+        _aggressive_lines = (
+            (1 if _hm_check in {"nachruecken", "offensiv_besetzen"} else 0) +
+            (1 if _ha_check  in {"abwehrkette_binden", "strafraum_besetzen"} else 0)
+        )
+        if _aggressive_lines == 0:
+            _compact_bonus = 0.030   # volle Kompaktheit
+        elif _aggressive_lines == 1:
+            _compact_bonus = 0.0225  # eine offensive Linie — teilweise Kompaktheit
+        else:
+            _compact_bonus = 0.015   # beide Linien offensiv — reduzierte Kompaktheit
+        s["defense_delta"]  += _compact_bonus
         s["pressing_index"] -= 0.03
         s["risk"]           -= 0.03
         s["complexity"]     += 6
+        dbg["compact_defense_bonus"]    = _compact_bonus
+        dbg["compact_aggressive_lines"] = _aggressive_lines
     elif hd == "absichern":
         s["defense_delta"]  += 0.02
         s["risk"]           -= 0.02
@@ -737,6 +754,18 @@ def compile_tactic(
         "attack":     _clamp(1.0 + s["attack_delta"],      0.90, 1.10),
         "overall":    _clamp(teamwork_factor * coherence,  0.87, 1.10),
     }
+
+    # ── 10a. Debug: Defensiver Stärke-Pfad (Pfad B) ──────────────────────────
+    # line_multipliers["defense"] wirkt in match_engine via strength ** STRENGTH_EXP.
+    # Das erzeugt eine xGA-Reduktion, die im Compiler-Output bisher unsichtbar war.
+    _STRENGTH_EXP   = 1.25   # Exponent aus match_engine._expected_goals (eingefroren)
+    _eff_def_mult   = line_multipliers["defense"]
+    dbg["line_defense_delta"]         = round(s["defense_delta"], 5)
+    dbg["line_defense_multiplier"]    = round(_eff_def_mult, 5)
+    dbg["effective_xga_from_defense"] = round(_eff_def_mult ** (-_STRENGTH_EXP), 5)
+    dbg["effective_total_xga_mult"]   = round(
+        _eff_def_mult ** (-_STRENGTH_EXP) * (1.0 + s["xg_against_delta"]), 5
+    )
 
     # ── 11. Konditions-Plan (falls übergeben) ─────────────────────────────────
     # Wenn ein aktiver Plan als tactic["_active_plan"] übergeben wird, dessen
