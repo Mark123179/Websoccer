@@ -293,6 +293,24 @@
 
 </div>
 
+<!-- Free-Pick Bestätigungs-Modal -->
+<div id="jo-confirm-overlay" class="jo-confirm-overlay">
+  <div class="jo-confirm-modal">
+    <div class="jo-confirm-icon">
+      <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 1 0 0 18A9 9 0 0 0 13 3zm1 14h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    </div>
+    <h3 class="jo-confirm-title">Vereinswechsel bestätigen</h3>
+    <p class="jo-confirm-body">
+      Möchtest du <strong id="jo-confirm-old"></strong> wirklich verlassen,<br>
+      um den Posten bei <strong id="jo-confirm-new"></strong> anzutreten?
+    </p>
+    <div class="jo-confirm-actions">
+      <button id="jo-confirm-no"  class="jo-confirm-btn jo-confirm-btn--cancel">Abbrechen</button>
+      <button id="jo-confirm-yes" class="jo-confirm-btn jo-confirm-btn--confirm">Ja, Verein wechseln</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   const cards  = Array.from(document.querySelectorAll('.jo-card'));
@@ -334,16 +352,92 @@
   });
 })();
 
-/* Free-Pick Bestätigungsdialog bei bestehendem Verein */
-document.querySelectorAll('form[data-confirm-leave]').forEach(function (form) {
-  form.addEventListener('submit', function (e) {
-    const oldClub  = form.dataset.confirmLeave;
-    const newClub  = form.dataset.takeClub;
-    const msg = 'Möchtest du ' + oldClub + ' wirklich verlassen\num den Posten bei ' + newClub + ' anzutreten?';
-    if (!window.confirm(msg)) {
+/* Free-Pick Bestätigungsdialog — Custom Modal */
+(function () {
+  const overlay  = document.getElementById('jo-confirm-overlay');
+  const oldSpan  = document.getElementById('jo-confirm-old');
+  const newSpan  = document.getElementById('jo-confirm-new');
+  const btnYes   = document.getElementById('jo-confirm-yes');
+  const btnNo    = document.getElementById('jo-confirm-no');
+  let pendingForm = null;
+
+  function openModal(form) {
+    pendingForm = form;
+    oldSpan.textContent = form.dataset.confirmLeave;
+    newSpan.textContent = form.dataset.takeClub;
+    overlay.classList.add('jo-confirm--visible');
+  }
+  function closeModal() {
+    overlay.classList.remove('jo-confirm--visible');
+    pendingForm = null;
+  }
+
+  document.querySelectorAll('form[data-confirm-leave]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
       e.preventDefault();
-    }
+      openModal(form);
+    });
   });
-});
+
+  btnYes.addEventListener('click', function () {
+    if (pendingForm) { closeModal(); pendingForm.submit(); }
+  });
+  btnNo.addEventListener('click', closeModal);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+})();
 </script>
+
+<style>
+.jo-confirm-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center;
+}
+.jo-confirm-overlay.jo-confirm--visible { display: flex; }
+.jo-confirm-modal {
+  background: #06111e;
+  border: 1px solid #0d2a3f;
+  border-radius: 12px;
+  padding: 2rem 2.25rem 1.75rem;
+  max-width: 420px; width: 90%;
+  box-shadow: 0 24px 80px rgba(0,0,0,.7);
+  text-align: center;
+  animation: jo-modal-in .18s ease;
+}
+@keyframes jo-modal-in {
+  from { opacity: 0; transform: translateY(-14px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)     scale(1); }
+}
+.jo-confirm-icon { margin-bottom: 1rem; }
+.jo-confirm-icon svg { width: 36px; height: 36px; fill: #ffaa00; }
+.jo-confirm-title {
+  font-size: 1rem; font-weight: 800; color: #cce8ff;
+  margin: 0 0 .75rem;
+}
+.jo-confirm-body {
+  font-size: .88rem; color: #7a98b4; line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+.jo-confirm-body strong { color: #cce8ff; }
+.jo-confirm-actions { display: flex; gap: .75rem; justify-content: center; }
+.jo-confirm-btn {
+  padding: .55rem 1.3rem; border-radius: 6px; font-size: .85rem;
+  font-weight: 700; border: none; cursor: pointer; transition: all .15s;
+}
+.jo-confirm-btn--cancel {
+  background: #0d1e2e; border: 1px solid #1a3a55; color: #556677;
+}
+.jo-confirm-btn--cancel:hover { border-color: #2a5070; color: #8899aa; }
+.jo-confirm-btn--confirm {
+  background: #00d4ff22; border: 1px solid #00d4ff55; color: #00d4ff;
+}
+.jo-confirm-btn--confirm:hover { background: #00d4ff33; border-color: #00d4ff; }
+</style>
 {% endblock %}
