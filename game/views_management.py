@@ -1180,9 +1180,13 @@ def management_job_offers(request):
             pass
 
         flag_code = None
+        flag_asset_path = ''
         try:
             entry = COUNTRY_FLAG_ASSETS.get(c.league.country, {})
             flag_code = entry.get('code')
+            _aid = entry.get('asset_id', '')
+            if _aid:
+                flag_asset_path = f'game/images/flags/{_aid}.png'
         except Exception:
             pass
 
@@ -1245,6 +1249,7 @@ def management_job_offers(request):
             'stadium_capacity':  stadium_capacity,
             'stadium_img':       stadium_img,
             'flag_code':         flag_code,
+            'flag_asset_path':   flag_asset_path,
             'table_pos':         table_pos,
             'table_pts':         table_pts,
             'situation_label':   situation_label,

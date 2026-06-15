@@ -97,7 +97,10 @@
         <div class="jo-club-meta">
           <a href="{% url 'club_detail' row.club.pk %}" class="jo-club-name">{{ row.club.name }}</a>
           <div class="jo-league-row">
-            {% if row.flag_code %}
+            {% if row.flag_asset_path %}
+            <img src="{% static row.flag_asset_path %}"
+                 alt="{{ row.club.league.country }}" class="jo-flag">
+            {% elif row.flag_code %}
             <img src="https://flagcdn.com/16x12/{{ row.flag_code|lower }}.png"
                  alt="{{ row.club.league.country }}" class="jo-flag"
                  onerror="this.style.display='none';">
