@@ -6,7 +6,7 @@
 {% block body_class %}job-offers-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'game/css/job-angebote.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -141,10 +141,14 @@
         <span class="jo-comps-title">Aktive Wettbewerbe</span>
         <ul class="jo-comp-list">
 
-          <!-- Liga — echter Name -->
+          <!-- Liga — Logo + echter Name -->
           <li class="jo-comp-item jo-comp--yes">
             <span class="jo-comp-sym">
+              {% if row.league_logo %}
+              <img class="jo-comp-logo" src="{% static row.league_logo %}" alt="{{ row.league_name }}">
+              {% else %}
               <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+              {% endif %}
             </span>
             <span>{{ row.league_name }}</span>
             <span class="jo-comp-check">
@@ -152,14 +156,18 @@
             </span>
           </li>
 
-          <!-- Nationale Pokale — echter Name(n) oder Strich -->
-          {% if row.national_cup_names %}
-            {% for cup_name in row.national_cup_names %}
+          <!-- Nationale Pokale — Logo + echter Name(n) oder Strich -->
+          {% if row.national_cups %}
+            {% for cup in row.national_cups %}
             <li class="jo-comp-item jo-comp--yes">
               <span class="jo-comp-sym">
+                {% if cup.logo %}
+                <img class="jo-comp-logo" src="{% static cup.logo %}" alt="{{ cup.name }}">
+                {% else %}
                 <svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V18H7v2h10v-2h-4v-2.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm7 6c-1.65 0-3-1.35-3-3V5h6v6c0 1.65-1.35 3-3 3zm7-6c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+                {% endif %}
               </span>
-              <span>{{ cup_name }}</span>
+              <span>{{ cup.name }}</span>
               <span class="jo-comp-check">
                 <svg class="jo-comp-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
               </span>
@@ -175,10 +183,14 @@
           </li>
           {% endif %}
 
-          <!-- Internationaler Wettbewerb — echter Name oder Fallback -->
+          <!-- Internationaler Wettbewerb — Logo + echter Name oder Fallback -->
           <li class="jo-comp-item {% if row.intl_comp_name %}jo-comp--yes{% else %}jo-comp--no{% endif %}">
             <span class="jo-comp-sym">
+              {% if row.intl_comp_logo %}
+              <img class="jo-comp-logo" src="{% static row.intl_comp_logo %}" alt="{{ row.intl_comp_name }}">
+              {% else %}
               <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              {% endif %}
             </span>
             <span>{% if row.intl_comp_name %}{{ row.intl_comp_name }}{% else %}Internationaler Wettbewerb{% endif %}</span>
             <span class="jo-comp-check">

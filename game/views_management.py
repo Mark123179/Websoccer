@@ -1209,19 +1209,21 @@ def management_job_offers(request):
         cup_parts = list(c.cup_participations.all())
         club_country = c.league.country if c.league else ''
 
-        national_cup_names = [
-            cs.competition.name
+        national_cups = [
+            {'name': cs.competition.name, 'logo': cs.competition.logo_static_path or ''}
             for cs in cup_parts
             if cs.competition.competition_type == 'cup'
             and cs.competition.country == club_country
         ]
 
-        # First matching international competition name
+        # First matching international competition name + logo
         intl_comp_name = ''
+        intl_comp_logo = ''
         for cs in cup_parts:
             n = cs.competition.name.lower()
             if 'champions' in n or 'europa' in n or 'conference' in n:
                 intl_comp_name = cs.competition.name
+                intl_comp_logo = cs.competition.logo_static_path or ''
                 break
 
         club_rows.append({
@@ -1235,8 +1237,11 @@ def management_job_offers(request):
             'situation_label':   situation_label,
             'situation_cls':     situation_cls,
             'league_name':       c.league.name if c.league else '—',
-            'national_cup_names': national_cup_names,
+            'league_logo':       c.league.logo_static_path if c.league else '',
+            'national_cups':     national_cups,
+            'national_cup_names': [x['name'] for x in national_cups],
             'intl_comp_name':    intl_comp_name,
+            'intl_comp_logo':    intl_comp_logo,
             'availability':      c.job_availability_type,
         })
 

@@ -402,6 +402,13 @@
 .jo-comp-sym svg { width: 12px; height: 12px; fill: currentColor; }
 .jo-comp--yes .jo-comp-sym svg { fill: rgba(255,255,255,.55); }
 .jo-comp--no  .jo-comp-sym svg { fill: rgba(255,255,255,.18); }
+.jo-comp-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 2px rgba(0,0,0,.6));
+}
 
 /* Right check/dash */
 .jo-comp-check {
