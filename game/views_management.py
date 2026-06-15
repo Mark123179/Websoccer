@@ -1113,7 +1113,7 @@ def management_job_offers(request):
     manager_profile = getattr(request.user, 'manager_profile', None)
     current_club = current_manager_club(user=request.user)
 
-    if request.method == 'POST' and not current_club and manager_profile:
+    if request.method == 'POST' and manager_profile:
         try:
             club_id = int(request.POST.get('club_id', 0))
             target_club = Club.objects.get(

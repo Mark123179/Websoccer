@@ -244,13 +244,7 @@
         </div>
         {% endif %}
 
-        {% if current_club %}
-        {# Manager hat bereits einen Verein — Button sichtbar aber deaktiviert #}
-        <button class="jo-apply-btn" disabled
-                title="Du stehst aktuell bei einem Verein unter Vertrag.">
-          Nicht verfügbar
-        </button>
-        {% elif row.availability == 'normal' or row.availability == 'top' %}
+        {% if row.availability == 'normal' or row.availability == 'top' %}
         <form method="post" action="{% url 'management_job_offers' %}">
           {% csrf_token %}
           <input type="hidden" name="club_id" value="{{ row.club.pk }}">
@@ -260,8 +254,12 @@
           </button>
         </form>
         {% else %}
-        {# free_pick: direktes Übernehmen #}
-        <form method="post" action="{% url 'management_job_offers' %}">
+        {# free_pick: direktes Übernehmen — bei bestehendem Verein JS-Bestätigung #}
+        <form method="post" action="{% url 'management_job_offers' %}"
+          {% if current_club %}
+          data-confirm-leave="{{ current_club.name }}"
+          data-take-club="{{ row.club.name }}"
+          {% endif %}>
           {% csrf_token %}
           <input type="hidden" name="club_id" value="{{ row.club.pk }}">
           <button type="submit" class="jo-apply-btn">
@@ -335,5 +333,17 @@
     apply();
   });
 })();
+
+/* Free-Pick Bestätigungsdialog bei bestehendem Verein */
+document.querySelectorAll('form[data-confirm-leave]').forEach(function (form) {
+  form.addEventListener('submit', function (e) {
+    const oldClub  = form.dataset.confirmLeave;
+    const newClub  = form.dataset.takeClub;
+    const msg = 'Möchtest du ' + oldClub + ' wirklich verlassen\num den Posten bei ' + newClub + ' anzutreten?';
+    if (!window.confirm(msg)) {
+      e.preventDefault();
+    }
+  });
+});
 </script>
 {% endblock %}
