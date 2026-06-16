@@ -1,0 +1,18 @@
+{
+  "api_base_url": "https://DEIN-REPL.example.replit.app",
+  "api_token": "HIER-DEN-CFM_IMPORTER_TOKEN-EINTRAGEN",
+  "browser_channel": "msedge",
+  "headless": false,
+  "user_data_dir": "edge_import_profile",
+  "heartbeat_seconds": 25,
+  "pauses": {
+    "page_load_ms": 1500,
+    "between_actions_ms": 800,
+    "between_players_ms": 2500
+  },
+  "request": {
+    "timeout_seconds": 30,
+    "max_retries": 4,
+    "backoff_base_seconds": 2
+  }
+}

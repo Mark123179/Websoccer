@@ -1,0 +1,8 @@
+# Lokale Laufzeit-Artefakte des CFM-Importers — niemals einchecken.
+config.json
+edge_import_profile/
+logs/
+state/
+.venv/
+__pycache__/
+*.pyc
