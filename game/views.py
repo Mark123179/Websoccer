@@ -3648,13 +3648,15 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                     'in_name': sub['in_name'], 'out_name': sub['out_name'],
                     'target_slot': sub.get('target_slot', ''),
                     'position_relation': sub.get('position_relation', ''),
-                    'is_injury_sub': sub.get('condition') == 'verletzung'})
+                    'is_injury_sub': sub.get('condition') == 'verletzung',
+                    'is_gk_red_sub': sub.get('condition') == 'gk_red'})
     for sub in (away_subs_enriched or []):
         raw.append({'type': 'sub', 'team': 'away', 'minute': sub['minute'],
                     'in_name': sub['in_name'], 'out_name': sub['out_name'],
                     'target_slot': sub.get('target_slot', ''),
                     'position_relation': sub.get('position_relation', ''),
-                    'is_injury_sub': sub.get('condition') == 'verletzung'})
+                    'is_injury_sub': sub.get('condition') == 'verletzung',
+                    'is_gk_red_sub': sub.get('condition') == 'gk_red'})
     for ce in (data.get('card_events') or []):
         pid  = ce.get('player_id')
         name = ce.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
@@ -3713,6 +3715,7 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 target_slot=evt.get('target_slot', ''),
                 position_relation=evt.get('position_relation', ''),
                 is_injury_sub=evt.get('is_injury_sub', False),
+                is_gk_red_sub=evt.get('is_gk_red_sub', False),
             )
         elif t == 'card':
             evt['score_h'] = score_h

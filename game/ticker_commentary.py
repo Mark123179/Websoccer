@@ -355,6 +355,15 @@ _SUB_INJURY = [
     "{o} wird gestützt vom Feld geführt. {i} bereitet sich hastig vor und betritt jetzt den Platz.",
 ]
 
+_SUB_GK_RED = [
+    "Pflicht-Einwechslung: Der Torwart wurde des Feldes verwiesen — {i} übernimmt das Tor. {o} muss dafür weichen.",
+    "Regelkonformer Tausch nach dem Platzverweis des Keepers: {i} ins Tor, {o} vom Platz.",
+    "{i} muss das Trikot wechseln — er übernimmt das Tor nach dem Rot für den Keeper. {o} verlässt das Spielfeld.",
+    "Erzwungener Wechsel: {i} wird als Ersatztorwart eingewechselt. {o} muss das Feld freimachen.",
+    "Nach dem Platzverweis des Torwarts greift der Trainer zur einzigen Option — {i} ins Tor, {o} raus.",
+    "{o} muss für {i} den Platz räumen: Pflicht-Einwechslung nach Torhüter-Rot.",
+]
+
 
 # ── Verletzungs-Texte ────────────────────────────────────────────────────────
 
@@ -565,6 +574,7 @@ def build_ticker_text(
     team_name: str = '',
     opp_name: str = '',
     is_injury_sub: bool = False,
+    is_gk_red_sub: bool = False,
     match_seed: int = 0,
     event_index: int = 0,
 ) -> str:
@@ -611,7 +621,9 @@ def build_ticker_text(
         i = in_name or ''
         o_sub = out_name or ''
         slot = target_slot or ''
-        if is_injury_sub:
+        if is_gk_red_sub:
+            return _shuffled_pick(_SUB_GK_RED, ms, 'sub_gk_red', ei).format(i=i, o=o_sub)
+        elif is_injury_sub:
             return _shuffled_pick(_SUB_INJURY, ms, 'sub_inj', ei).format(i=i, o=o_sub)
         elif position_relation == 'FP' and slot:
             return _shuffled_pick(_SUB_FP, ms, 'sub_fp', ei).format(i=i, o=o_sub, slot=slot)

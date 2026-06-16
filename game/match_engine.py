@@ -475,6 +475,60 @@ class ActiveLineupState:
                 'condition':         cond,
             })
 
+    def apply_emergency_gk_sub(
+        self,
+        incoming_pid: int,
+        outfield_off_pid: Optional[int],
+        minute: int,
+    ) -> Optional[dict]:
+        """Führt eine Pflicht-Einwechslung nach TW-Rot aus (Szenarien A und B).
+
+        Übernimmt den GK-Slot des verwiesenen Torwarts für incoming_pid.
+        Entfernt outfield_off_pid aus der Aufstellung (kein Wechselkontingent-Skip:
+        der Wechselzähler wird inkrementiert, weil ein echter Spieler vom Platz geht).
+
+        Gibt ein sub_event-Dict zurück (reason='gk_red'), das automatisch an
+        sub_events angehängt wird und im Ticker als Pflicht-Einwechslung erscheint.
+        """
+        gk_slot = next(
+            (s for s in self._lineup_slots if s.get('group') == 'goalkeeper'),
+            None,
+        )
+        if gk_slot is None:
+            return None
+
+        old_gk_pid = gk_slot['player_id']
+
+        gk_slot['player_id'] = incoming_pid
+        if old_gk_pid in self._pid_to_slot:
+            del self._pid_to_slot[old_gk_pid]
+        self._pid_to_slot[incoming_pid] = gk_slot
+
+        self._bench_available.discard(incoming_pid)
+        self.player_on_minute[incoming_pid] = minute
+
+        if outfield_off_pid and outfield_off_pid in self._pid_to_slot:
+            outfield_slot = self._pid_to_slot.pop(outfield_off_pid)
+            try:
+                self._lineup_slots.remove(outfield_slot)
+            except ValueError:
+                pass
+            self.player_off_minute[outfield_off_pid] = minute
+
+        self.used_substitutions += 1
+
+        sub_event = {
+            'in':                incoming_pid,
+            'out':               outfield_off_pid,
+            'minute':            minute,
+            'target_slot':       gk_slot.get('position', 'TW'),
+            'position_relation': 'exact',
+            'condition':         'gk_red',
+            'reason':            'gk_red',
+        }
+        self.sub_events.append(sub_event)
+        return sub_event
+
     def process_injury_subs(self) -> None:
         """Wechselt verletzte Startspieler (is_ws_injured=True) automatisch aus.
 
@@ -909,6 +963,28 @@ def _find_bench_gk(team_dict: dict, used_pids: set) -> Optional[dict]:
     return None
 
 
+def _find_bench_strongest(team_dict: dict, used_pids: set) -> Optional[dict]:
+    """Sucht den stärksten Bankspieler (beliebige Position) für Notfall-TW (Szenario B).
+
+    Gibt den Bankspieler mit dem höchsten final_strength zurück, der nicht in used_pids ist.
+    Szenario B: kein Bench-TW vorhanden, aber freier Bankspieler.
+    """
+    bench_ids = list((team_dict.get('tactic') or {}).get('bench') or [])
+    players_by_id = {p['id']: p for p in team_dict.get('players', [])}
+    best: Optional[dict] = None
+    best_str = -1.0
+    for pid in bench_ids:
+        if pid in used_pids:
+            continue
+        p = players_by_id.get(pid)
+        if p:
+            s = float(p.get('final_strength', 0.0))
+            if s > best_str:
+                best_str = s
+                best = p
+    return best
+
+
 def _dismissal_this_segment(
     compiled: dict,
     seg_len: int,
@@ -940,58 +1016,69 @@ def _resolve_dismissal(
     minute: int,
     club_side: str,
     card_type: str,
-) -> tuple[Optional[dict], Optional[float]]:
-    """Verarbeitet einen Platzverweis; gibt (event, gk_strength_override) zurück.
+) -> tuple[Optional[dict], Optional[float], Optional[int], Optional[int]]:
+    """Verarbeitet einen Platzverweis.
 
-    gk_strength_override wird nur gesetzt wenn der TW verwiesen wird:
-    - Bench-TW vorhanden → dessen final_strength
-    - Kein Bench-TW      → schlechtester Outfielder × 0.6 (Not-TW-Malus)
+    Rückgabe: (event, gk_override, incoming_pid, outfield_off_pid)
 
-    TW-Sonderlogik V1:
-    - Outfield-Rot:           10-Mann-Stärke ab Folgesegment.
-    - TW-Rot + Bench-TW:      Bench-TW übernimmt GK-Stärke, 1 Outfielder raus.
-    - TW-Rot + kein Bench-TW: Not-TW (schwächster Outfielder × 0.6) als GK.
+    - event:           Platzverweis-Event-Dict oder None.
+    - gk_override:     30.0 wenn TW verwiesen wird (Fallback für Szenario C); None bei Outfield-Rot.
+    - incoming_pid:    PID des einzuwechselnden Spielers (Bench-TW oder stärkster Bankspieler);
+                       None wenn Bank leer oder kein Wechsel nötig.
+    - outfield_off_pid: PID des schwächsten Feldspielers der vom Platz muss; None wenn nicht anwendbar.
+
+    TW-Sonderlogik V2 (drei Szenarien — Entscheidung liegt beim Aufrufer):
+    - Szenario A: Bench-TW vorhanden           → incoming_pid=bench_gk, outfield_off_pid=schwächster Outfielder.
+    - Szenario B: kein Bench-TW, Bankspieler   → incoming_pid=stärkster Bank, outfield_off_pid=schwächster Outfielder.
+    - Szenario C: kein Wechsel möglich/Bank leer → incoming_pid=None, gk_override=30.0.
+    Der Aufrufer prüft can_substitute() und führt apply_emergency_gk_sub() aus (A/B) oder
+    setzt nur den gk_override (C) und fügt outfield_off_pid zu dismissed_pids hinzu.
     """
     active = [p for p in lineup_players if p.get('id') not in dismissed_pids]
     if not active:
-        return None, None
+        return None, None, None, None
 
     non_gk = [p for p in active if p.get('group') != 'goalkeeper']
     gk_active = [p for p in active if p.get('group') == 'goalkeeper']
-    gk_override: Optional[float] = None
 
     if non_gk:
         dismissed = random.choice(non_gk)
     elif gk_active:
         dismissed = gk_active[0]
     else:
-        return None, None
-
-    if dismissed.get('group') == 'goalkeeper':
-        all_pids = {p['id'] for p in lineup_players}
-        bench_gk = _find_bench_gk(team_dict, all_pids)
-        if bench_gk:
-            gk_override = float(bench_gk.get('final_strength', 50.0))
-        else:
-            outfield = [
-                p for p in lineup_players
-                if p.get('group') != 'goalkeeper' and p.get('id') not in dismissed_pids
-            ]
-            if outfield:
-                worst = min(outfield, key=lambda p: float(p.get('final_strength', 50.0)))
-                gk_override = float(worst.get('final_strength', 50.0)) * 0.6
-            else:
-                gk_override = 30.0
+        return None, None, None, None
 
     pid = dismissed.get('id')
     dismissed_pids.add(pid)
-    return {
+    event = {
         'player_id':   pid,
         'player_name': dismissed.get('name', ''),
         'club_side':   club_side,
         'minute':      minute,
         'card_type':   card_type,
-    }, gk_override
+    }
+
+    if dismissed.get('group') != 'goalkeeper':
+        return event, None, None, None
+
+    all_pids = {p['id'] for p in lineup_players}
+    outfield_active = [
+        p for p in lineup_players
+        if p.get('group') != 'goalkeeper' and p.get('id') not in dismissed_pids
+    ]
+    outfield_off_pid: Optional[int] = None
+    if outfield_active:
+        worst = min(outfield_active, key=lambda p: float(p.get('final_strength', 50.0)))
+        outfield_off_pid = worst.get('id')
+
+    bench_gk = _find_bench_gk(team_dict, all_pids)
+    if bench_gk:
+        incoming_pid: Optional[int] = bench_gk.get('id')
+    else:
+        bench_best = _find_bench_strongest(team_dict, all_pids)
+        incoming_pid = bench_best.get('id') if bench_best else None
+
+    return event, 30.0, incoming_pid, outfield_off_pid
 
 
 def _final_stats(home_total: dict, away_total: dict) -> dict:
@@ -1204,20 +1291,32 @@ def _simulate_match_minutes(
         a_red += a_red_seg
 
         if h_dis:
-            ev, gk_ov = _resolve_dismissal(
+            ev, gk_ov, h_incoming, h_off_out = _resolve_dismissal(
                 home_team, _h_cur, h_dismissed_pids, end_min, 'home', h_dis_type)
             if ev:
                 h_dismissal_events.append(ev)
                 if gk_ov is not None:
-                    h_gk_str_override = gk_ov
+                    if h_incoming and h_als.can_substitute():
+                        h_als.apply_emergency_gk_sub(h_incoming, h_off_out, end_min)
+                        h_gk_str_override = None
+                    else:
+                        h_gk_str_override = gk_ov
+                        if h_off_out:
+                            h_dismissed_pids.add(h_off_out)
 
         if a_dis:
-            ev, gk_ov = _resolve_dismissal(
+            ev, gk_ov, a_incoming, a_off_out = _resolve_dismissal(
                 away_team, _a_cur, a_dismissed_pids, end_min, 'away', a_dis_type)
             if ev:
                 a_dismissal_events.append(ev)
                 if gk_ov is not None:
-                    a_gk_str_override = gk_ov
+                    if a_incoming and a_als.can_substitute():
+                        a_als.apply_emergency_gk_sub(a_incoming, a_off_out, end_min)
+                        a_gk_str_override = None
+                    else:
+                        a_gk_str_override = gk_ov
+                        if a_off_out:
+                            a_dismissed_pids.add(a_off_out)
 
         total_strength = h_str['overall'] + a_str['overall'] or 1.0
         poss_delta = (h_comp.get('possession_bonus', 0.0) - a_comp.get('possession_bonus', 0.0)) * 35
@@ -2041,17 +2140,31 @@ def _simulate_extra_time_minutes(
         h_red_et += h_dis
         a_red_et += a_dis
         if h_dis:
-            ev, gk_ov = _resolve_dismissal(home_team, _h_cur, h_dismissed_pids, end_min, 'home', h_dis_type)
+            ev, gk_ov, h_incoming, h_off_out = _resolve_dismissal(
+                home_team, _h_cur, h_dismissed_pids, end_min, 'home', h_dis_type)
             if ev:
                 h_dismissal_events.append(ev)
             if gk_ov is not None:
-                h_gk_str_override = gk_ov
+                if h_incoming and h_als.can_substitute(extra_time=True):
+                    h_als.apply_emergency_gk_sub(h_incoming, h_off_out, end_min)
+                    h_gk_str_override = None
+                else:
+                    h_gk_str_override = gk_ov
+                    if h_off_out:
+                        h_dismissed_pids.add(h_off_out)
         if a_dis:
-            ev, gk_ov = _resolve_dismissal(away_team, _a_cur, a_dismissed_pids, end_min, 'away', a_dis_type)
+            ev, gk_ov, a_incoming, a_off_out = _resolve_dismissal(
+                away_team, _a_cur, a_dismissed_pids, end_min, 'away', a_dis_type)
             if ev:
                 a_dismissal_events.append(ev)
             if gk_ov is not None:
-                a_gk_str_override = gk_ov
+                if a_incoming and a_als.can_substitute(extra_time=True):
+                    a_als.apply_emergency_gk_sub(a_incoming, a_off_out, end_min)
+                    a_gk_str_override = None
+                else:
+                    a_gk_str_override = gk_ov
+                    if a_off_out:
+                        a_dismissed_pids.add(a_off_out)
 
     return {
         'home_goals':    h_goals,
