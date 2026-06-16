@@ -60,6 +60,12 @@ _GOAL_WEIGHTS: dict[str, float] = {
 MAX_SUBSTITUTIONS = 5  # geteiltes Kontingent: geplante + Verletzungswechsel
 EXTRA_TIME_SUBSTITUTION_BONUS = 1   # +1 Wechsel in der Verlängerung (max 6 gesamt)
 
+# ── Platzverweis-Konstanten ───────────────────────────────────────────────────
+# Anteil der Platzverweise, die den Torwart treffen (z.B. Notbremse als letzter Mann).
+# Ändert nicht die Gesamtrate (bleibt durch _dismissal_this_segment bestimmt),
+# sondern nur die Verteilung Outfield vs. TW.
+GK_RED_CARD_PROBABILITY = 0.10
+
 # Elfmeterschießen — Wahrscheinlichkeitsformel (V1, eingefroren nach Einführung)
 PENALTY_BASE_PROB     = 0.760   # Basis-Verwandlungsrate (~76 %)
 PENALTY_SHOOTER_COEFF = 0.002   # je Elfmeter-Attributpunkt über/unter 70; Bereich ±0.06
@@ -389,9 +395,14 @@ class ActiveLineupState:
         for s in lineup:
             self.player_on_minute[s['player_id']] = 0
 
+        # PIDs von Spielern, die nach TW-Rot (Szenario C) ins Tor rücken —
+        # sie verlassen die Feldspieler-Linie, sind aber NICHT in dismissed_pids
+        # (kein Platzverweis; bleiben auf dem Platz als Not-TW).
+        self._scenario_c_pids: set[int] = set()
+
     def get_active_lineup(self, dismissed_pids: set | None = None) -> list[dict]:
-        """Aktuelle Lineup exkl. verwiesener Spieler (ausgewechselte sind bereits entfernt)."""
-        excl = dismissed_pids or set()
+        """Aktuelle Lineup exkl. verwiesener + Szenario-C-Notfall-TW-Spieler."""
+        excl = (dismissed_pids or set()) | self._scenario_c_pids
         return [dict(s) for s in self._lineup_slots if s['player_id'] not in excl]
 
     def can_substitute(self, extra_time: bool = False) -> bool:
@@ -528,6 +539,17 @@ class ActiveLineupState:
         }
         self.sub_events.append(sub_event)
         return sub_event
+
+    def promote_scenario_c_gk(self, outfield_off_pid: int) -> None:
+        """Szenario C: Schwächster Feldspieler rückt nach TW-Rot als Not-TW ins Tor.
+
+        Kein Wechsel, kein Ticker-Event, kein sub_events-Eintrag.
+        Der Spieler verlässt nur die Feldspieler-Linie (via _scenario_c_pids),
+        bleibt aber auf dem Platz — er ist NICHT in dismissed_pids.
+        gk_str_override = 30.0 muss der Aufrufer setzen (GK-Slot bleibt leer →
+        Override greift in _calculate_lineup_strength).
+        """
+        self._scenario_c_pids.add(outfield_off_pid)
 
     def process_injury_subs(self) -> None:
         """Wechselt verletzte Startspieler (is_ws_injured=True) automatisch aus.
@@ -1041,7 +1063,13 @@ def _resolve_dismissal(
     non_gk = [p for p in active if p.get('group') != 'goalkeeper']
     gk_active = [p for p in active if p.get('group') == 'goalkeeper']
 
-    if non_gk:
+    if non_gk and gk_active:
+        # TW kann direkt Rot sehen (Notbremse als letzter Mann, Tätlichkeit, …)
+        if random.random() < GK_RED_CARD_PROBABILITY:
+            dismissed = gk_active[0]
+        else:
+            dismissed = random.choice(non_gk)
+    elif non_gk:
         dismissed = random.choice(non_gk)
     elif gk_active:
         dismissed = gk_active[0]
@@ -1297,12 +1325,14 @@ def _simulate_match_minutes(
                 h_dismissal_events.append(ev)
                 if gk_ov is not None:
                     if h_incoming and h_als.can_substitute():
+                        # Szenario A/B: echter Einwechslung (Bench-TW oder stärkster Bankspieler)
                         h_als.apply_emergency_gk_sub(h_incoming, h_off_out, end_min)
                         h_gk_str_override = None
                     else:
+                        # Szenario C: schwächster Feldspieler rückt ins Tor, kein Wechsel
                         h_gk_str_override = gk_ov
                         if h_off_out:
-                            h_dismissed_pids.add(h_off_out)
+                            h_als.promote_scenario_c_gk(h_off_out)
 
         if a_dis:
             ev, gk_ov, a_incoming, a_off_out = _resolve_dismissal(
@@ -1311,12 +1341,14 @@ def _simulate_match_minutes(
                 a_dismissal_events.append(ev)
                 if gk_ov is not None:
                     if a_incoming and a_als.can_substitute():
+                        # Szenario A/B: echter Einwechslung (Bench-TW oder stärkster Bankspieler)
                         a_als.apply_emergency_gk_sub(a_incoming, a_off_out, end_min)
                         a_gk_str_override = None
                     else:
+                        # Szenario C: schwächster Feldspieler rückt ins Tor, kein Wechsel
                         a_gk_str_override = gk_ov
                         if a_off_out:
-                            a_dismissed_pids.add(a_off_out)
+                            a_als.promote_scenario_c_gk(a_off_out)
 
         total_strength = h_str['overall'] + a_str['overall'] or 1.0
         poss_delta = (h_comp.get('possession_bonus', 0.0) - a_comp.get('possession_bonus', 0.0)) * 35
@@ -2151,7 +2183,7 @@ def _simulate_extra_time_minutes(
                 else:
                     h_gk_str_override = gk_ov
                     if h_off_out:
-                        h_dismissed_pids.add(h_off_out)
+                        h_als.promote_scenario_c_gk(h_off_out)
         if a_dis:
             ev, gk_ov, a_incoming, a_off_out = _resolve_dismissal(
                 away_team, _a_cur, a_dismissed_pids, end_min, 'away', a_dis_type)
@@ -2164,7 +2196,7 @@ def _simulate_extra_time_minutes(
                 else:
                     a_gk_str_override = gk_ov
                     if a_off_out:
-                        a_dismissed_pids.add(a_off_out)
+                        a_als.promote_scenario_c_gk(a_off_out)
 
     return {
         'home_goals':    h_goals,
