@@ -116,11 +116,19 @@ def _sanitize_rating(value):
 
 # ── Hilfsfunktionen ─────────────────────────────────────────────────────────
 
-def _tokens_equal(a, b):
-    """Konstant-zeit-Vergleich zweier Tokens (auch mit Nicht-ASCII-Zeichen)."""
-    if not a or not b:
+def _tokens_equal(provided, expected):
+    """Konstant-zeit-Vergleich zweier Tokens.
+
+    Der Token MUSS ein reiner ASCII-Wert sein (z. B. Hex aus
+    ``secrets.token_hex``). HTTP-Bearer-Header können Nicht-ASCII-Zeichen nicht
+    verlässlich transportieren: WSGI dekodiert Header als latin-1, während
+    ``os.environ`` UTF-8 verwendet — derselbe Token käme dann je nach Pfad als
+    unterschiedliche Zeichenkette an. Wir vergleichen die UTF-8-Bytes konstant
+    in der Zeit; ein Nicht-ASCII-Token führt dadurch zu 401 statt zu 500.
+    """
+    if not provided or not expected:
         return False
-    return hmac.compare_digest(a.encode('utf-8'), b.encode('utf-8'))
+    return hmac.compare_digest(provided.encode('utf-8'), expected.encode('utf-8'))
 
 
 def _json_error(message, status):
