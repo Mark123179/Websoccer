@@ -33,6 +33,7 @@
 - [Default-Taktik V1 Architektur](default-tactics-v1.md) — game/default_tactics.py (pure Python); apply_default_tactic_settings() in match_readiness.py; Hook in simulate_match Schritt 1b.
 - [game/tests Package-Falle](game-tests-package.md) — game/tests/ ist ein Package; game/tests.py existiert aber wird vom Package überlagert; neue Tests müssen in game/tests/test_*.py.
 - [Default-Taktik V1 Freeze-Stand](default-tactics-v1-freeze.md) — T=0.02/M=0.015 Angriffsfokus, 14 Tests grün; validate_default_tactic_v1 bestätigt Korridore A–E.
+- [FM-ID-/Identitäts-CSV-Import](fmid-csv-import.md) — per-Verein Moneyball-CSV setzt nur Identität+fm_inside_id; Verein≠Ziel→Vereinslos; name_dob-Backfill kollisionsfrei; NULL bleibt NULL.
 - [Club import name confirmation](club-import-name-confirmation.md) — Neuverein-Name ist vorläufig (import_name_provisional); TM-Name via complete(tm_club_name) bestätigt ihn; Befüll-Modus nie umbenennen; fehlender Name = no-op.
 - [Importer-Diff Decimal-Falle](club-import-diff-decimal-trap.md) — DB-Decimal vs. roher int erzeugt Phantom-Diffs + JSONField-Crash; _jsonable() in _norm UND beim Speichern nötig; mit DB-Roundtrip testen.
 - [Bearer-Token ASCII + Secret-Propagation](bearer-token-ascii-and-secret-propagation.md) — API-Bearer-Tokens MÜSSEN ASCII/Hex sein (WSGI latin-1 vs os.environ UTF-8); Secret-Wechsel braucht Neustart NACH Propagation; nie Token in Logs printen.

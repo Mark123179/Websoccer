@@ -2516,6 +2516,107 @@ def creator_sofifa_import(request):
     return render(request, 'creator/sofifa_import.html', ctx)
 
 
+def creator_fmid_csv_import(request):
+    """Browser-Upload für die FM-ID-/Identitäts-CSV (eine CSV pro Verein).
+
+    Schritt 1 (GET / action=upload):  Verein wählen + Datei auswählen.
+    Schritt 2 (action=preview):       Dry-Run; Vorschau im Browser.
+    Schritt 3 (action=confirm):       Echter Import (Identität + FM-ID).
+
+    Die CSV setzt nur Identität + ``fm_inside_id`` — keine Stärke/Attribute.
+    Verliehene Spieler (Verein ≠ Zielverein) landen im Vereinslos-Pool.
+    Nur Staff-Nutzer dürfen importieren.
+    """
+    from django.http import HttpResponseForbidden
+    from .club_import.fmid_csv_service import run_fmid_csv_import
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Nur Staff-Nutzer können importieren.')
+
+    clubs = (
+        Club.objects.filter(is_import_placeholder=False)
+        .order_by('name')
+        .values('id', 'name')
+    )
+    ctx = {'step': 'upload', 'clubs': list(clubs)}
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'cancel':
+            request.session.pop('fmid_csv_preview', None)
+            request.session.pop('fmid_csv_club', None)
+            return redirect('creator_fmid_csv_import')
+
+        # ── Schritt 2: Dry-Run / Vorschau ───────────────────────────────────
+        if action == 'preview':
+            club_id = request.POST.get('club_id', '').strip()
+            target = Club.objects.filter(id=club_id).first() if club_id else None
+            if target is None:
+                ctx['upload_error'] = 'Bitte einen Zielverein auswählen.'
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+
+            csv_file = request.FILES.get('csv_file')
+            if not csv_file:
+                ctx['upload_error'] = 'Bitte eine CSV-Datei auswählen.'
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+            if csv_file.size > 5 * 1024 * 1024:
+                ctx['upload_error'] = 'Datei zu groß (max. 5 MB).'
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+
+            try:
+                raw_bytes = csv_file.read()
+                try:
+                    csv_text = raw_bytes.decode('utf-8-sig')
+                except UnicodeDecodeError:
+                    csv_text = raw_bytes.decode('latin-1')
+            except Exception as exc:  # noqa: BLE001
+                ctx['upload_error'] = f'Datei konnte nicht gelesen werden: {exc}'
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+
+            result = run_fmid_csv_import(csv_text, target, dry_run=True)
+            if result['fatal_error']:
+                ctx['upload_error'] = result['fatal_error']
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+
+            request.session['fmid_csv_preview'] = csv_text
+            request.session['fmid_csv_club'] = target.id
+            ctx.update({
+                'step': 'preview',
+                'stats': result['stats'],
+                'row_results': result['row_results'],
+                'filename': csv_file.name,
+                'target_club': target,
+            })
+            return render(request, 'creator/fmid_csv_import.html', ctx)
+
+        # ── Schritt 3: Echter Import ────────────────────────────────────────
+        elif action == 'confirm':
+            csv_text = request.session.pop('fmid_csv_preview', None)
+            club_id = request.session.pop('fmid_csv_club', None)
+            target = Club.objects.filter(id=club_id).first() if club_id else None
+            if not csv_text or target is None:
+                ctx['upload_error'] = (
+                    'Sitzung abgelaufen – bitte die CSV erneut hochladen.'
+                )
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+
+            result = run_fmid_csv_import(csv_text, target, dry_run=False)
+            if result['fatal_error']:
+                ctx['upload_error'] = result['fatal_error']
+                return render(request, 'creator/fmid_csv_import.html', ctx)
+
+            ctx.update({
+                'step': 'done',
+                'stats': result['stats'],
+                'row_results': result['row_results'],
+                'target_club': target,
+            })
+            return render(request, 'creator/fmid_csv_import.html', ctx)
+
+    return render(request, 'creator/fmid_csv_import.html', ctx)
+
+
 # ── Vereins-/Spielerimport — Creator-Mode Oberfläche ──────────────────────────
 
 _IMPORT_RESULT_SESSION_KEY = 'cfm_import_results'

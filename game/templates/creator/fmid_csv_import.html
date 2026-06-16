@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FM-ID-Import – Creator Mode{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>FM-ID-Import (Identität)</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
+      <a class="cm-nav-pill" href="{% url 'creator_vereinslose' %}">Vereinslose</a>
+      <a class="cm-nav-pill" href="{% url 'creator_sofifa_import' %}">Ratings-Import</a>
+    </div>
+  </div>
+
+  <!-- ── Breadcrumb ─────────────────────────────────────────────────────── -->
+  <nav class="cm-breadcrumb">
+    <a href="{% url 'creator_index' %}" class="cm-bc-item">🌍 Länder</a>
+    <span class="cm-bc-sep">›</span>
+    <span class="cm-bc-item cm-bc-current">⬆ FM-IDs importieren</span>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCHRITT 1 — Upload
+  ═══════════════════════════════════════════════════════════════════════ -->
+  {% if step == 'upload' %}
+  <div class="si-card">
+    <div class="si-card-head">
+      <strong>FM-IDs &amp; Identität per CSV importieren</strong>
+    </div>
+
+    {% if upload_error %}
+    <div class="si-alert si-alert-error">{{ upload_error }}</div>
+    {% endif %}
+
+    <p class="si-desc">
+      Eine CSV pro Verein. Sie sichert nur die <strong>Identität</strong>
+      (Name, Geburtsdatum, Nationalität) und stempelt vor allem die
+      <code>fm_inside_id</code> (Spalte „Unique ID"). <strong>Keine</strong>
+      Stärke/Attribute — diese bleiben leer und werden später vom lokalen
+      Importer per FM-ID nachgeladen. Spieler, deren Verein in der CSV
+      <strong>nicht</strong> dem Zielverein entspricht, gelten als verliehen und
+      landen im <strong>Vereinslos-Pool</strong>.
+    </p>
+
+    <div class="si-format-block">
+      <p class="si-label">Spalten-Mapping (immer gleich, <code>;</code>-getrennt):</p>
+      <pre class="si-code">Verein      → aktueller Verein (≠ Zielverein ⇒ verliehen → Vereinslos)
+Unique ID   → fm_inside_id (Pflicht)
+Spieler     → Name
+2. Nation   → zweite Nationalität
+Nation      → Haupt-Nationalität
+Geb.        → Geburtsdatum (T.M.JJJJ)</pre>
+      <p class="si-hint">Spalten „Ansässig in", „Liga" und „Aufgestellt" werden ignoriert.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="si-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="preview">
+      <div class="si-file-row">
+        <label class="si-file-label" for="club_id">Zielverein</label>
+        <select id="club_id" name="club_id" class="si-file-input" required>
+          <option value="">— Verein wählen —</option>
+          {% for c in clubs %}
+          <option value="{{ c.id }}">{{ c.name }} (#{{ c.id }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="si-file-row">
+        <label class="si-file-label" for="csv_file">CSV-Datei</label>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv,.txt" class="si-file-input" required>
+        <span class="si-file-hint">max. 5 MB · UTF-8 oder Latin-1</span>
+      </div>
+      <div class="si-actions">
+        <button type="submit" class="si-btn si-btn-primary">Vorschau erstellen (Dry-Run)</button>
+        <a href="{% url 'creator_index' %}" class="si-btn si-btn-ghost">Abbrechen</a>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCHRITT 2 / 3 — Vorschau bzw. Fertig
+  ═══════════════════════════════════════════════════════════════════════ -->
+  {% if step == 'preview' or step == 'done' %}
+  <div class="si-card">
+    <div class="si-card-head {% if step == 'done' %}si-card-head-done{% endif %}">
+      <strong>{% if step == 'done' %}Import abgeschlossen{% else %}Vorschau (kein Schreiben){% endif %}</strong>
+      {% if target_club %}<span class="si-filename">{{ target_club.name }}</span>{% endif %}
+      {% if filename %}<span class="si-filename">{{ filename }}</span>{% endif %}
+    </div>
+
+    {% if upload_error %}
+    <div class="si-alert si-alert-error">{{ upload_error }}</div>
+    {% endif %}
+
+    <div class="si-stats-row">
+      <div class="si-stat si-stat-new">
+        <span class="si-stat-num">{{ stats.new }}</span>
+        <span class="si-stat-lbl">Neu</span>
+      </div>
+      <div class="si-stat si-stat-updated">
+        <span class="si-stat-num">{{ stats.updated }}</span>
+        <span class="si-stat-lbl">Aktualisiert</span>
+      </div>
+      <div class="si-stat si-stat-unchanged">
+        <span class="si-stat-num">{{ stats.unchanged }}</span>
+        <span class="si-stat-lbl">Unverändert</span>
+      </div>
+      <div class="si-stat si-stat-unmatched">
+        <span class="si-stat-num">{{ stats.loaned }}</span>
+        <span class="si-stat-lbl">Verliehen</span>
+      </div>
+      <div class="si-stat si-stat-error">
+        <span class="si-stat-num">{{ stats.error }}</span>
+        <span class="si-stat-lbl">Fehler</span>
+      </div>
+    </div>
+
+    <div class="si-rows-wrap">
+      <table class="si-rows-table">
+        <thead>
+          <tr>
+            <th class="si-col-line">#</th>
+            <th class="si-col-status">Status</th>
+            <th class="si-col-sofifa">FM-ID</th>
+            <th class="si-col-player">Spieler</th>
+            <th class="si-col-club">CSV-Verein</th>
+            <th class="si-col-diff">Änderungen / Info</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in row_results %}
+          <tr class="si-row si-row-{{ r.action }}">
+            <td class="si-col-line">{{ r.line_no }}</td>
+            <td class="si-col-status">
+              {% if r.action == 'new' %}<span class="si-badge si-badge-new">Neu</span>
+              {% elif r.action == 'updated' %}<span class="si-badge si-badge-updated">Update</span>
+              {% elif r.action == 'error' %}<span class="si-badge si-badge-error">Fehler</span>
+              {% else %}<span class="si-badge si-badge-unmatched">–</span>{% endif %}
+            </td>
+            <td class="si-col-sofifa">{{ r.fm_id|default:"–" }}</td>
+            <td class="si-col-player">{{ r.player_name }}{% if r.match_mode == 'name' %}<span class="si-match-mode" title="Treffer über Name + Geburtsdatum (Backfill)">~</span>{% endif %}</td>
+            <td class="si-col-club">{{ r.club_name|default:"–" }}</td>
+            <td class="si-col-diff">
+              {% if r.error_msg %}{{ r.error_msg }}
+              {% elif r.diff_lines %}{{ r.diff_lines|join:", " }}
+              {% else %}–{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if step == 'preview' %}
+    <div class="si-actions si-actions-preview">
+      <form method="post" style="display:inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="confirm">
+        <button type="submit" class="si-btn si-btn-primary"
+          {% if not stats.new and not stats.updated %}disabled title="Keine Änderungen vorhanden"{% endif %}>
+          Import bestätigen ({{ stats.new|add:stats.updated }} Zeile{{ stats.new|add:stats.updated|pluralize:"n" }})
+        </button>
+      </form>
+      <form method="post" style="display:inline">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <button type="submit" class="si-btn si-btn-ghost">Abbrechen</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="si-actions">
+      <a href="{% url 'creator_fmid_csv_import' %}" class="si-btn si-btn-primary">Neue CSV importieren</a>
+      <a href="{% url 'creator_vereinslose' %}" class="si-btn si-btn-ghost">Vereinslose ansehen</a>
+      <a href="{% url 'creator_index' %}" class="si-btn si-btn-ghost">Zurück zum Creator</a>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</section>
+
+<style>
+.cm-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.cm-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
+.cm-header-left { display: flex; align-items: center; gap: 1rem; }
+.cm-badge { background: #00d4ff; color: #03070c; font-size: .6rem; font-weight: 900; letter-spacing: .14em; padding: .2rem .55rem; border-radius: 3px; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+.cm-header-right { display: flex; gap: .5rem; }
+.cm-nav-pill { padding: .35rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; text-decoration: none; border: 1px solid #0d2035; color: #556677; background: #050e1a; transition: all .15s; }
+.cm-nav-pill:hover { border-color: #00d4ff44; color: #aabbcc; }
+.cm-breadcrumb { display: flex; align-items: center; gap: .5rem; margin-bottom: 1.75rem; padding: .6rem 1rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; }
+.cm-bc-item { display: flex; align-items: center; gap: .35rem; color: #556677; text-decoration: none; font-size: .8rem; font-weight: 600; transition: color .15s; }
+.cm-bc-item:hover { color: #aabbcc; }
+.cm-bc-current { color: #cce8ff; pointer-events: none; }
+.cm-bc-sep { color: #1e3050; font-size: 1rem; }
+
+.si-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 12px; padding: 1.5rem 1.75rem; max-width: 1100px; }
+.si-card-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; padding-bottom: .9rem; border-bottom: 1px solid #0d2035; flex-wrap: wrap; }
+.si-card-head strong { color: #cce8ff; font-size: 1rem; font-weight: 800; }
+.si-card-head-done strong { color: #30e08a; }
+.si-filename { color: #556677; font-size: .78rem; font-family: monospace; background: #03070c; padding: .15rem .5rem; border-radius: 4px; border: 1px solid #0d2035; }
+
+.si-alert { padding: .7rem 1rem; border-radius: 7px; font-size: .83rem; margin-bottom: 1rem; }
+.si-alert-error { background: #1a050a; border: 1px solid #6633334d; color: #ff6b6b; }
+
+.si-desc { color: #8aa0b5; font-size: .83rem; line-height: 1.55; margin: 0 0 1.25rem; }
+.si-format-block { background: #03070c; border: 1px solid #0d2035; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.si-label { color: #556677; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .3rem; }
+.si-code { color: #6fe3ff; font-family: monospace; font-size: .78rem; margin: 0 0 .4rem; white-space: pre-wrap; word-break: break-word; }
+.si-hint { color: #334455; font-size: .74rem; margin: .6rem 0 0; }
+
+.si-form { margin-top: .25rem; }
+.si-file-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.si-file-label { font-size: .78rem; font-weight: 700; color: #aabbcc; text-transform: uppercase; letter-spacing: .06em; flex-shrink: 0; width: 110px; }
+.si-file-input { background: #03070c; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .82rem; padding: .35rem .6rem; cursor: pointer; flex: 1; min-width: 200px; }
+.si-file-input::-webkit-file-upload-button { background: #071525; border: 1px solid #00d4ff44; border-radius: 4px; color: #00d4ff; font-size: .78rem; padding: .25rem .7rem; cursor: pointer; margin-right: .5rem; }
+.si-file-hint { color: #334455; font-size: .74rem; flex-shrink: 0; }
+
+.si-actions { display: flex; gap: .75rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
+.si-actions-preview { padding-top: 1rem; border-top: 1px solid #0d2035; }
+.si-btn { display: inline-flex; align-items: center; font-size: .82rem; font-weight: 700; padding: .5rem 1.25rem; border-radius: 6px; cursor: pointer; text-decoration: none; border: 1px solid transparent; transition: all .15s; }
+.si-btn-primary { background: #00d4ff22; border-color: #00d4ff55; color: #00d4ff; }
+.si-btn-primary:hover:not([disabled]) { background: #00d4ff33; border-color: #00d4ffaa; }
+.si-btn-primary[disabled] { opacity: .35; cursor: not-allowed; }
+.si-btn-ghost { background: #03070c; border-color: #0d2035; color: #556677; }
+.si-btn-ghost:hover { border-color: #00d4ff33; color: #aabbcc; }
+
+.si-stats-row { display: flex; gap: .75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.si-stat { display: flex; flex-direction: column; align-items: center; min-width: 80px; background: #03070c; border: 1px solid #0d2035; border-radius: 8px; padding: .7rem 1rem; }
+.si-stat-num { font-size: 1.5rem; font-weight: 900; line-height: 1; }
+.si-stat-lbl { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #556677; margin-top: .3rem; }
+.si-stat-new .si-stat-num { color: #30e08a; }
+.si-stat-updated .si-stat-num { color: #00d4ff; }
+.si-stat-unchanged .si-stat-num { color: #334455; }
+.si-stat-unmatched .si-stat-num { color: #e0a030; }
+.si-stat-error .si-stat-num { color: #ff6b6b; }
+
+.si-rows-wrap { overflow-x: auto; margin-bottom: 1.25rem; border: 1px solid #0d2035; border-radius: 8px; max-height: 560px; }
+.si-rows-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.si-rows-table thead tr { border-bottom: 1px solid #0d2035; }
+.si-rows-table th { color: #556677; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .55rem .75rem; text-align: left; white-space: nowrap; position: sticky; top: 0; background: #050e1a; }
+.si-rows-table td { padding: .5rem .75rem; border-bottom: 1px solid #071525; vertical-align: top; }
+.si-rows-table tbody tr:last-child td { border-bottom: none; }
+.si-col-line { color: #334455; width: 42px; font-family: monospace; font-size: .75rem; }
+.si-col-status { width: 90px; }
+.si-col-sofifa { color: #e0a030; font-family: monospace; font-size: .75rem; min-width: 90px; }
+.si-col-player { color: #cce8ff; min-width: 140px; }
+.si-col-club { color: #556677; min-width: 120px; }
+.si-col-diff { color: #8aa0b5; font-size: .77rem; word-break: break-word; }
+.si-match-mode { color: #e0a030; margin-left: .25rem; font-size: .75rem; cursor: default; }
+
+.si-badge { display: inline-block; font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: .15rem .4rem; border-radius: 4px; }
+.si-badge-new { background: #0d3020; color: #30e08a; border: 1px solid #30e08a44; }
+.si-badge-updated { background: #071525; color: #00d4ff; border: 1px solid #00d4ff44; }
+.si-badge-unmatched { background: #0a0f16; color: #556677; border: 1px solid #1e3050; }
+.si-badge-error { background: #1a050a; color: #ff6b6b; border: 1px solid #ff6b6b44; }
+
+.si-row-new td { background: #050f08; }
+.si-row-updated td { background: #050a10; }
+.si-row-error td { background: #0f0406; }
+</style>
+{% endblock %}
