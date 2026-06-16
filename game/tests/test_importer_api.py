@@ -294,6 +294,50 @@ class ImporterApiTests(TestCase):
         self.assertEqual(job.status, ClubPlayerImportJob.STATUS_REVIEW)
         self.assertEqual(job.lease_token, '')
 
+    def test_complete_confirms_provisional_club_name(self):
+        # Manuell benannter Neuverein wird per TM-Name aktualisiert.
+        self.ws_club.name = 'Mein Verein'
+        self.ws_club.short_name = 'MV'
+        self.ws_club.import_name_provisional = True
+        self.ws_club.save()
+        job = self._job()
+        token = self._claim(job)
+        resp = self._post('importer_complete', args=[job.id], lease=token,
+                          payload={'tm_club_name': 'Hamburger SV'})
+        self.assertEqual(resp.status_code, 200)
+        job.refresh_from_db()
+        self.ws_club.refresh_from_db()
+        self.assertEqual(job.tm_club_name, 'Hamburger SV')
+        self.assertEqual(self.ws_club.name, 'Hamburger SV')
+        self.assertEqual(self.ws_club.short_name, 'Hamburger SV'[:20])
+        self.assertFalse(self.ws_club.import_name_provisional)
+
+    def test_complete_keeps_established_club_name(self):
+        # Nicht-vorläufiger (bestehender) Verein wird NICHT umbenannt.
+        self.ws_club.name = 'FC API'
+        self.ws_club.import_name_provisional = False
+        self.ws_club.save()
+        job = self._job()
+        token = self._claim(job)
+        resp = self._post('importer_complete', args=[job.id], lease=token,
+                          payload={'tm_club_name': 'Hamburger SV'})
+        self.assertEqual(resp.status_code, 200)
+        job.refresh_from_db()
+        self.ws_club.refresh_from_db()
+        self.assertEqual(job.tm_club_name, 'Hamburger SV')
+        self.assertEqual(self.ws_club.name, 'FC API')
+
+    def test_complete_without_tm_name_leaves_provisional_flag(self):
+        # Ohne TM-Name bleibt der vorläufige Verein unverändert.
+        self.ws_club.import_name_provisional = True
+        self.ws_club.save()
+        job = self._job()
+        token = self._claim(job)
+        resp = self._post('importer_complete', args=[job.id], lease=token)
+        self.assertEqual(resp.status_code, 200)
+        self.ws_club.refresh_from_db()
+        self.assertTrue(self.ws_club.import_name_provisional)
+
     def test_fail_sets_failed_with_message(self):
         job = self._job()
         token = self._claim(job)

@@ -517,6 +517,7 @@ def importer_complete(request, job_id):
     data, err = _load_json(request)
     if err:
         return err
+    tm_club_name = str(data.get('tm_club_name') or '').strip()[:100]
     with transaction.atomic():
         job, err = _get_leased_job(request, job_id, data)
         if err:
@@ -527,10 +528,23 @@ def importer_complete(request, job_id):
         job.current_step = 'Übertragung abgeschlossen'
         job.lease_token = ''
         job.lease_expires_at = None
-        job.save(update_fields=[
+        job_fields = [
             'status', 'heartbeat_at', 'current_step',
             'lease_token', 'lease_expires_at', 'updated_at',
-        ])
+        ]
+        if tm_club_name:
+            job.tm_club_name = tm_club_name
+            job_fields.append('tm_club_name')
+            # Vorläufig benannte (neu angelegte) Vereine per TM-Name bestätigen.
+            club = job.ws_club
+            if club.import_name_provisional:
+                club.name = tm_club_name
+                club.short_name = tm_club_name[:20]
+                club.import_name_provisional = False
+                club.save(update_fields=[
+                    'name', 'short_name', 'import_name_provisional',
+                ])
+        job.save(update_fields=job_fields)
     return JsonResponse({
         'id': job.id,
         'status': job.status,

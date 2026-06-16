@@ -153,8 +153,13 @@ class ImporterApiClient:
             'POST', f'creator-api/import-jobs/{job_id}/candidates/',
             json_body={'candidate': candidate})
 
-    def complete(self, job_id):
-        return self._request('POST', f'creator-api/import-jobs/{job_id}/complete/')
+    def complete(self, job_id, tm_club_name=''):
+        body = {}
+        if tm_club_name:
+            body['tm_club_name'] = tm_club_name
+        return self._request(
+            'POST', f'creator-api/import-jobs/{job_id}/complete/',
+            json_body=body or None)
 
     def fail(self, job_id, error):
         return self._request(

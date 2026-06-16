@@ -39,6 +39,22 @@ class CreateOrPromoteTargetClubTests(TestCase):
         self.assertEqual(club.league, self.league)
         self.assertEqual(club.transfermarkt_id, NEW_TM_CLUB_ID)
         self.assertEqual(club.name, NEW_CLUB_NAME)
+        # Manuell eingegebener Name → vorläufig bis zur TM-Bestätigung.
+        self.assertTrue(club.import_name_provisional)
+
+    def test_promote_marks_name_provisional(self):
+        placeholder_league = League.objects.create(
+            name='Platzhalter (Import)', country='Unbekannt')
+        placeholder = Club.objects.create(
+            name='HSV', short_name='HSV', founded_year=0,
+            budget=Decimal('0'), league=placeholder_league,
+            transfermarkt_id=NEW_TM_CLUB_ID, is_import_placeholder=True,
+        )
+        club, status = create_or_promote_target_club(
+            tm_club_id=NEW_TM_CLUB_ID, name=NEW_CLUB_NAME, league=self.league)
+        self.assertEqual(status, 'promoted')
+        self.assertEqual(club.pk, placeholder.pk)
+        self.assertTrue(club.import_name_provisional)
 
     def test_promotes_existing_placeholder_without_duplicate(self):
         placeholder_league = League.objects.create(

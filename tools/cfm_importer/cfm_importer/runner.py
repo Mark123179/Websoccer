@@ -138,7 +138,8 @@ class Runner:
 
                 self._progress(job_id, current=total, total=total,
                                step='Übertragung abgeschlossen')
-                self.api.complete(job_id)
+                self.api.complete(job_id, tm_club_name=getattr(
+                    tm, 'squad_club_name', ''))
                 state.clear()
                 self.log.info('Auftrag #%s abgeschlossen — bereit zur Kontrolle.', job_id)
                 return 0

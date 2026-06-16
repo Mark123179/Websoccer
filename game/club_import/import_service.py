@@ -158,6 +158,8 @@ def create_or_promote_target_club(tm_club_id, name, league, profile_url=''):
             existing.transfermarkt_id = tm_club_id
         if profile_url and not existing.transfermarkt_profile_url:
             existing.transfermarkt_profile_url = profile_url
+        # Manuell eingegebener Name → später per TM-Name bestätigen/aktualisieren.
+        existing.import_name_provisional = True
         existing.save()
         return existing
 
@@ -180,6 +182,7 @@ def create_or_promote_target_club(tm_club_id, name, league, profile_url=''):
                 transfermarkt_id=tm_club_id or None,
                 transfermarkt_profile_url=profile_url or '',
                 is_import_placeholder=False,
+                import_name_provisional=True,
                 name=name,
                 short_name=name[:20],
                 founded_year=0,

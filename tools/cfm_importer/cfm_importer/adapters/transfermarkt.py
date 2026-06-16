@@ -41,8 +41,13 @@ class TransfermarktAdapter:
 
     # ── Kaderseite ──────────────────────────────────────────────────────────
     def collect_squad(self, club_id, season_id):
-        """Sammelt alle Spieler der aktuellen Kaderseite (dedupliziert über TM-ID)."""
+        """Sammelt alle Spieler der aktuellen Kaderseite (dedupliziert über TM-ID).
+
+        Erfasst zusätzlich den auf der Kaderseite angezeigten Vereinsnamen in
+        ``self.squad_club_name`` (zur Bestätigung neu angelegter WS-Vereine).
+        """
         self._goto(self.squad_url(club_id, season_id))
+        self.squad_club_name = self._club_headline()
         rows = self.page.locator('table.items > tbody > tr')
         try:
             count = rows.count()
@@ -106,6 +111,14 @@ class TransfermarktAdapter:
             'warnings': warnings,
             'errors': errors,
         }
+
+    def _club_headline(self):
+        """Vereinsname aus dem Kaderseiten-Kopf (best effort, sonst '')."""
+        try:
+            h1 = self.page.locator('h1.data-header__headline-wrapper')
+            return ' '.join(text_or_empty(h1).split())
+        except Exception:
+            return ''
 
     # ── Einzelfelder (Selektoren gekapselt) ─────────────────────────────────
     def _headline(self):

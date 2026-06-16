@@ -128,7 +128,7 @@ Alle Endpunkte unter `creator-api/import-jobs/` (siehe `game/urls.py`).
 | `POST …/<id>/heartbeat/` | `importer_heartbeat` | Lease verlängern. |
 | `POST …/<id>/progress/` | `importer_progress` | `progress_current/total`, `current_step`. |
 | `POST …/<id>/candidates/` | `importer_candidates` | Kandidaten (Upsert je TM-ID). |
-| `POST …/<id>/complete/` | `importer_complete` | Auftrag auf `review` setzen. |
+| `POST …/<id>/complete/` | `importer_complete` | Auftrag auf `review` setzen; optional `tm_club_name` (bestätigt Neuverein-Namen). |
 | `POST …/<id>/fail/` | `importer_fail` | Auftrag als `failed` markieren. |
 
 **Authentifizierung & Lease:**
@@ -235,10 +235,25 @@ existierenden WS-Liga. Dedup-Priorität wie bei `get_or_create_club`:
 - **exists** — es existiert bereits ein **echter** Verein; der Auftrag wird mit
   Hinweis abgelehnt (stattdessen Modus „Bestehenden Verein befüllen" nutzen).
 
-Es ist **keine** Datenbankmigration nötig: `ClubPlayerImportJob.ws_club` bleibt
-ein Pflicht-Fremdschlüssel und zeigt auf den frisch angelegten/hochgestuften
-Verein. Die gesamte nachgelagerte Pipeline (Importer, Kontrolle, DB-Import)
-bleibt unverändert.
+`ClubPlayerImportJob.ws_club` bleibt ein Pflicht-Fremdschlüssel und zeigt auf den
+frisch angelegten/hochgestuften Verein. Die gesamte nachgelagerte Pipeline
+(Importer, Kontrolle, DB-Import) bleibt unverändert.
+
+#### Vorläufiger Name & TM-Bestätigung
+
+Der beim Anlegen **manuell eingegebene** Vereinsname ist zunächst nur ein
+Platzhalter: `created`/`promoted` setzen daher `Club.import_name_provisional =
+True`. Sobald der lokale Importer die Kaderseite gelesen hat, überträgt er den
+dort angezeigten Vereinsnamen beim `complete`-Aufruf als `tm_club_name`. Der
+Server speichert ihn auf `ClubPlayerImportJob.tm_club_name` und — **nur** wenn
+`import_name_provisional` gesetzt ist — bestätigt/aktualisiert er damit
+`Club.name`/`short_name` und löscht das Flag.
+
+So bleibt ein vom Administrator gewählter **bestehender** Verein (Modus
+„befüllen", `import_name_provisional = False`) garantiert unverändert, während ein
+neu angelegter Verein automatisch den echten Transfermarkt-Namen erhält. Fehlt
+der Name (älterer Importer, Header nicht lesbar), bleibt der manuelle Name samt
+Flag erhalten — der Schritt ist vollständig rückwärtskompatibel.
 
 ---
 

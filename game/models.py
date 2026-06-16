@@ -481,6 +481,15 @@ class Club(models.Model):
             '(realer Stammverein / Leihgeber). Ohne Liga, Stadion, Finanzen.'
         ),
     )
+    import_name_provisional = models.BooleanField(
+        default=False,
+        verbose_name='Vereinsname vorläufig (Import)',
+        help_text=(
+            'Beim Anlegen eines neuen Vereins per Spielerimport wurde der Name '
+            'manuell eingegeben und soll noch durch den von Transfermarkt '
+            'erkannten Namen bestätigt/aktualisiert werden.'
+        ),
+    )
 
     name = models.CharField(max_length=100)
     short_name = models.CharField(max_length=20)
@@ -4064,6 +4073,15 @@ class ClubPlayerImportJob(models.Model):
     )
     tm_club_id = models.PositiveBigIntegerField(
         help_text='Transfermarkt-Vereins-ID der zu importierenden Kaderseite.',
+    )
+    tm_club_name = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text=(
+            'Vom lokalen Importer aus der Kaderseite erkannter Vereinsname. '
+            'Dient zur Bestätigung/Aktualisierung neu angelegter Vereine.'
+        ),
     )
     tm_season_id = models.PositiveIntegerField(
         help_text='Bei Erstellung eingefrorene Transfermarkt-Saison-ID.',
