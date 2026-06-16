@@ -2661,6 +2661,9 @@ def _candidate_display(candidate):
         'sofifa_id': nd.get('sofifa_id'),
         'sofifa_url': nd.get('sofifa_profile_url') or '',
         'fmi_missing': not bool(fmi.get('rating')),
+        # Prüfbedürftig: keine FM-ID aufgelöst — muss manuell nachgetragen werden
+        # (Importer meldet hierfür „prüfbedürftig (FM-ID manuell setzen)").
+        'fmi_needs_manual': not nd.get('fm_inside_id'),
         'sofifa_missing': not bool(sofifa.get('rating')),
         'changes': detected.get('items') or [],
         'match_type': detected.get('match_type'),
@@ -2829,6 +2832,7 @@ def creator_import_detail(request, job_id):
             'invalid': sum(1 for c in candidates if c['status'] == 'invalid'),
             'selected': sum(1 for c in candidates if c['selected']),
             'fmi_missing': sum(1 for c in candidates if c['fmi_missing']),
+            'fmi_needs_manual': sum(1 for c in candidates if c['fmi_needs_manual']),
         }
         ctx.update({'candidates': candidates, 'counts': counts})
 

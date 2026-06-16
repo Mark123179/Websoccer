@@ -264,6 +264,26 @@ class ImportUiViewTests(TestCase):
         self.assertNotEqual(cand.normalized_data, {})
         self.assertEqual(cand.status, PlayerImportCandidate.STATUS_NEW)
 
+    def test_review_flags_missing_fmid_for_manual_entry(self):
+        job = self._job()
+        # Kandidat ohne FM-ID (Importer konnte FMInside nicht auflösen).
+        self._cand(job, fmi_raw={}, sofifa_raw={})
+        self.client.force_login(self.staff)
+        resp = self.client.get(reverse('creator_import_detail', args=[job.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'FM-ID manuell setzen')
+        self.assertContains(resp, 'FM-ID prüfbedürftig')
+        self.assertEqual(resp.context['counts']['fmi_needs_manual'], 1)
+
+    def test_review_does_not_flag_when_fmid_present(self):
+        job = self._job()
+        self._cand(job)  # hat eine FM-ID
+        self.client.force_login(self.staff)
+        resp = self.client.get(reverse('creator_import_detail', args=[job.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.context['counts']['fmi_needs_manual'], 0)
+        self.assertNotContains(resp, 'FM-ID manuell setzen')
+
     def test_status_endpoint_json(self):
         job = self._job(status=ClubPlayerImportJob.STATUS_RUNNING)
         self.client.force_login(self.staff)
