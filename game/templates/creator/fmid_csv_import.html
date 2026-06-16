@@ -177,9 +177,9 @@ Geb.        → Geburtsdatum (T.M.JJJJ)</pre>
     </div>
     {% else %}
     <div class="si-actions">
-      <a href="{% url 'creator_fmid_csv_import' %}" class="si-btn si-btn-primary">Neue CSV importieren</a>
-      <a href="{% url 'creator_vereinslose' %}" class="si-btn si-btn-ghost">Vereinslose ansehen</a>
-      <a href="{% url 'creator_index' %}" class="si-btn si-btn-ghost">Zurück zum Creator</a>
+      <a href="{% url 'creator_sofifa_import' %}" class="si-btn si-btn-primary">Weiter zu Schritt 3: CMTracker-CSV ›</a>
+      <a href="{% url 'creator_fmid_csv_import' %}" class="si-btn si-btn-ghost">Neue CSV importieren</a>
+      <a href="{% url 'creator_import_hub' %}" class="si-btn si-btn-ghost">Zum Import-Hub</a>
     </div>
     {% endif %}
   </div>

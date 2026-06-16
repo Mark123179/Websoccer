@@ -87,6 +87,7 @@ from .views_creator import (
     creator_save_coins,
     creator_save_satisfaction,
     creator_add_satisfaction,
+    creator_import_hub,
     creator_sofifa_import,
     creator_fmid_csv_import,
     creator_vereinslose,
@@ -315,6 +316,9 @@ urlpatterns = [
     path('creator/managers/<int:manager_id>/coins/', creator_save_coins, name='creator_save_coins'),
     path('creator/managers/<int:manager_id>/satisfaction/<int:sat_id>/', creator_save_satisfaction, name='creator_save_satisfaction'),
     path('creator/managers/<int:manager_id>/satisfaction/add/', creator_add_satisfaction, name='creator_add_satisfaction'),
+
+    # Geführter Import-Hub
+    path('creator/import/hub/', creator_import_hub, name='creator_import_hub'),
 
     # SoFIFA-CSV-Import
     path('creator/import/sofifa/', creator_sofifa_import, name='creator_sofifa_import'),

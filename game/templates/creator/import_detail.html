@@ -313,8 +313,9 @@
     {% endif %}
 
     <div class="si-actions">
-      <a href="{% url 'creator_import_index' %}" class="si-btn si-btn-ghost">Zu den Aufträgen</a>
-      <a href="{% url 'creator_club_edit' club_id=job.ws_club.pk %}" class="si-btn si-btn-primary">Verein öffnen ›</a>
+      <a href="{% url 'creator_fmid_csv_import' %}" class="si-btn si-btn-primary">Weiter zu Schritt 2: FMI-CSV ›</a>
+      <a href="{% url 'creator_club_edit' club_id=job.ws_club.pk %}" class="si-btn si-btn-ghost">Verein öffnen</a>
+      <a href="{% url 'creator_import_hub' %}" class="si-btn si-btn-ghost">Zum Import-Hub</a>
     </div>
   </div>
   {% endif %}

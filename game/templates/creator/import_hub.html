@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR</span>
+      <h1>Import-Hub</h1>
+    </div>
+    <a href="{% url 'creator_index' %}" class="si-btn si-btn-ghost">Zurück zum Creator</a>
+  </div>
+
+  <p class="hub-intro">
+    Importiere einen Verein in <strong>drei Schritten</strong>. Halte die Reihenfolge ein:
+    Erst die Spieler von <strong>tm.de</strong> (legt die Identität samt Geburtsdatum an),
+    dann die <strong>FMI</strong>-CSV (FM-IDs) und zuletzt die <strong>CMTracker</strong>-CSV
+    (Ratings). Das Rating-Matching läuft über das Geburtsdatum – darum muss tm.de zuerst laufen.
+  </p>
+
+  <ol class="hub-steps">
+
+    <li class="hub-step">
+      <div class="hub-step-num">1</div>
+      <div class="hub-step-body">
+        <div class="hub-step-head">
+          <h2 class="hub-step-title">tm.de — Verein &amp; Spieler</h2>
+          <span class="hub-step-tag hub-tag-tm">Transfermarkt</span>
+        </div>
+        <p class="hub-step-desc">
+          Vereins-ID von Transfermarkt eingeben. Der Importer holt Kader, Namen,
+          Positionen und <strong>Geburtsdaten</strong>. Spieler anschließend im
+          Review bestätigen.
+        </p>
+        <a href="{% url 'creator_import_index' %}" class="si-btn si-btn-primary">Schritt 1 starten ›</a>
+      </div>
+    </li>
+
+    <li class="hub-step">
+      <div class="hub-step-num">2</div>
+      <div class="hub-step-body">
+        <div class="hub-step-head">
+          <h2 class="hub-step-title">FMI — FM-IDs (CSV)</h2>
+          <span class="hub-step-tag hub-tag-fmi">FMInside</span>
+        </div>
+        <p class="hub-step-desc">
+          FMInside-CSV hochladen. Setzt die FM-IDs und schärft die Identität
+          (Name, Geburtsdatum, Nationalität) je Verein.
+        </p>
+        <a href="{% url 'creator_fmid_csv_import' %}" class="si-btn si-btn-primary">Schritt 2 starten ›</a>
+      </div>
+    </li>
+
+    <li class="hub-step">
+      <div class="hub-step-num">3</div>
+      <div class="hub-step-body">
+        <div class="hub-step-head">
+          <h2 class="hub-step-title">CMTracker — Ratings (CSV)</h2>
+          <span class="hub-step-tag hub-tag-cm">SoFIFA / CMTracker</span>
+        </div>
+        <p class="hub-step-desc">
+          CMTracker-CSV hochladen. Matcht die Spieler über das
+          <strong>Geburtsdatum</strong> (Namen dürfen abweichen) und schreibt die
+          Ratings inkl. Stärke-Neuberechnung.
+        </p>
+        <a href="{% url 'creator_sofifa_import' %}" class="si-btn si-btn-primary">Schritt 3 starten ›</a>
+      </div>
+    </li>
+
+  </ol>
+
+</section>
+
+<style>
+.cm-section { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+.cm-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
+.cm-header-left { display: flex; align-items: center; gap: 1rem; }
+.cm-badge { background: #00d4ff; color: #03070c; font-size: .6rem; font-weight: 900; letter-spacing: .14em; padding: .2rem .55rem; border-radius: 3px; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+
+.hub-intro {
+  color: #9fb6cc; font-size: .9rem; line-height: 1.6;
+  background: rgba(0, 20, 36, .45); border: 1px solid rgba(0, 212, 255, .15);
+  border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.75rem; max-width: 820px;
+}
+.hub-intro strong { color: #cce8ff; }
+
+.hub-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+.hub-step {
+  display: flex; gap: 1.1rem; align-items: stretch;
+  background: rgba(0, 16, 30, .55); border: 1px solid rgba(0, 212, 255, .18);
+  border-radius: 10px; padding: 1.25rem 1.4rem;
+}
+.hub-step-num {
+  flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 900; color: #03070c; background: #00d4ff;
+}
+.hub-step-body { flex: 1 1 auto; }
+.hub-step-head { display: flex; align-items: center; gap: .65rem; margin-bottom: .35rem; }
+.hub-step-title { color: #cce8ff; font-size: 1.05rem; font-weight: 800; margin: 0; }
+.hub-step-tag {
+  font-size: .58rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+  padding: .2rem .5rem; border-radius: 3px;
+}
+.hub-tag-tm { background: rgba(0, 212, 255, .15); color: #6fd3ff; }
+.hub-tag-fmi { background: rgba(70, 200, 120, .15); color: #6fe0a0; }
+.hub-tag-cm { background: rgba(180, 140, 255, .15); color: #c4a8ff; }
+.hub-step-desc { color: #9fb6cc; font-size: .85rem; line-height: 1.55; margin: 0 0 .85rem; }
+</style>
+{% endblock %}

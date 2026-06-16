@@ -2428,6 +2428,19 @@ def creator_player_save_rl_mapping(request, player_id):
     return JsonResponse({'ok': True})
 
 
+# ── Geführter Import-Hub ──────────────────────────────────────────────────────
+
+@login_required
+def creator_import_hub(request):
+    """Geführter Einstieg für die drei Import-Quellen in der richtigen Reihenfolge.
+
+    Schritt 1: tm.de (Verein + Spieler inkl. Geburtsdatum)
+    Schritt 2: FMI-CSV (FM-IDs + Identität)
+    Schritt 3: CMTracker-CSV (Ratings, Matching über Geburtsdatum)
+    """
+    return render(request, 'creator/import_hub.html')
+
+
 # ── SoFIFA-CSV-Upload ─────────────────────────────────────────────────────────
 
 @login_required
