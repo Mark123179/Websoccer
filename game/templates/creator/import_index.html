@@ -43,10 +43,23 @@
 
     <form method="post" action="{% url 'creator_import_create' %}" class="si-form">
       {% csrf_token %}
-      <div class="imp-form-grid">
+
+      <div class="imp-mode-toggle" role="radiogroup" aria-label="Importziel">
+        <label class="imp-mode-opt">
+          <input type="radio" name="import_mode" value="existing" checked>
+          <span>Bestehenden Verein befüllen</span>
+        </label>
+        <label class="imp-mode-opt">
+          <input type="radio" name="import_mode" value="new">
+          <span>Neuen Verein anlegen</span>
+        </label>
+      </div>
+
+      <!-- Modus: bestehenden Verein befüllen -->
+      <div class="imp-form-grid" data-mode-panel="existing">
         <div>
           <label class="si-label" for="ws_club">WS-Verein (Ziel)</label>
-          <select id="ws_club" name="ws_club" class="imp-input" required>
+          <select id="ws_club" name="ws_club" class="imp-input">
             <option value="">— Verein wählen —</option>
             {% for club in clubs %}
             <option value="{{ club.pk }}">{{ club.name }}</option>
@@ -62,6 +75,33 @@
           <div class="imp-season-pill">{{ season_label }} <span>· ID {{ season_id }}</span></div>
         </div>
       </div>
+
+      <!-- Modus: neuen Verein anlegen -->
+      <div class="imp-form-grid" data-mode-panel="new" hidden>
+        <div>
+          <label class="si-label" for="club_name">Vereinsname (neu)</label>
+          <input id="club_name" name="club_name" type="text" maxlength="100" class="imp-input" placeholder="z. B. Hamburger SV">
+        </div>
+        <div>
+          <label class="si-label" for="league">Liga (Ziel)</label>
+          <select id="league" name="league" class="imp-input">
+            <option value="">— Liga wählen —</option>
+            {% for league in leagues %}
+            <option value="{{ league.pk }}">{{ league.name }} ({{ league.country }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="si-label">Saison (automatisch)</label>
+          <div class="imp-season-pill">{{ season_label }} <span>· ID {{ season_id }}</span></div>
+        </div>
+      </div>
+      <p class="si-desc" data-mode-panel="new" hidden>
+        Gründungsjahr und Budget werden mit neutralen Startwerten angelegt und
+        lassen sich anschließend im Vereins-Admin feinjustieren. Die
+        Transfermarkt-Vereins-ID gibst du oben im selben Feld an.
+      </p>
+
       <div class="si-actions">
         <button type="submit" class="si-btn si-btn-primary">Auftrag anlegen</button>
         <a href="{% url 'creator_index' %}" class="si-btn si-btn-ghost">Zurück</a>
@@ -104,4 +144,31 @@
 </section>
 
 {% include 'creator/_import_styles.html' %}
+
+<script>
+  (function () {
+    var radios = document.querySelectorAll('input[name="import_mode"]');
+    var panels = document.querySelectorAll('[data-mode-panel]');
+    var clubSel = document.getElementById('ws_club');
+    var nameInp = document.getElementById('club_name');
+    var leagueSel = document.getElementById('league');
+
+    function apply(mode) {
+      panels.forEach(function (el) {
+        el.hidden = el.getAttribute('data-mode-panel') !== mode;
+      });
+      // Pflichtfelder je Modus setzen (verhindert leere Browser-Validierung).
+      if (clubSel) clubSel.required = (mode === 'existing');
+      if (nameInp) nameInp.required = (mode === 'new');
+      if (leagueSel) leagueSel.required = (mode === 'new');
+    }
+
+    radios.forEach(function (r) {
+      r.addEventListener('change', function () { if (r.checked) apply(r.value); });
+    });
+
+    var checked = document.querySelector('input[name="import_mode"]:checked');
+    apply(checked ? checked.value : 'existing');
+  })();
+</script>
 {% endblock %}

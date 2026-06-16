@@ -2595,8 +2595,11 @@ def creator_import_index(request):
             'imported': sum(1 for c in cands if c.status == 'imported'),
         })
 
+    from .models import League
+
     return render(request, 'creator/import_index.html', {
         'clubs': Club.objects.order_by('name'),
+        'leagues': League.objects.order_by('country', 'name'),
         'season_id': season_id,
         'season_label': season_label(season_id),
         'job_rows': job_rows,
@@ -2611,16 +2614,13 @@ def creator_import_create(request):
     if forbidden:
         return forbidden
 
-    from .models import ClubPlayerImportJob
+    from django.db import transaction
+    from .models import ClubPlayerImportJob, League
     from .club_import import get_current_tm_season_id, season_label
+    from .club_import.import_service import create_or_promote_target_club
 
-    club_id = request.POST.get('ws_club')
+    mode = (request.POST.get('import_mode') or 'existing').strip()
     tm_club_id_raw = (request.POST.get('tm_club_id') or '').strip()
-
-    club = Club.objects.filter(pk=club_id).first()
-    if not club:
-        messages.error(request, 'Bitte einen gültigen WS-Verein auswählen.')
-        return redirect('creator_import_index')
 
     try:
         tm_club_id = int(tm_club_id_raw)
@@ -2631,13 +2631,64 @@ def creator_import_create(request):
         return redirect('creator_import_index')
 
     season_id = get_current_tm_season_id()
-    job = ClubPlayerImportJob.objects.create(
-        created_by=request.user,
-        ws_club=club,
-        tm_club_id=tm_club_id,
-        tm_season_id=season_id,
-        season_label=season_label(season_id),
-    )
+
+    def _make_job(club):
+        return ClubPlayerImportJob.objects.create(
+            created_by=request.user,
+            ws_club=club,
+            tm_club_id=tm_club_id,
+            tm_season_id=season_id,
+            season_label=season_label(season_id),
+        )
+
+    if mode == 'new':
+        club_name = (request.POST.get('club_name') or '').strip()
+        league_id = request.POST.get('league')
+        league = League.objects.filter(pk=league_id).first()
+        if not club_name:
+            messages.error(request, 'Bitte einen Vereinsnamen für den neuen Verein eingeben.')
+            return redirect('creator_import_index')
+        if not league:
+            messages.error(request, 'Bitte eine gültige Liga für den neuen Verein auswählen.')
+            return redirect('creator_import_index')
+
+        # Vereinsanlage/-hochstufung und Auftrag müssen gemeinsam committen,
+        # damit kein verwaister Verein ohne Auftrag zurückbleibt.
+        with transaction.atomic():
+            club, status = create_or_promote_target_club(
+                tm_club_id=tm_club_id, name=club_name, league=league)
+            if status == 'exists':
+                transaction.set_rollback(True)
+                messages.error(
+                    request,
+                    f'„{club.name}" existiert bereits als WS-Verein — bitte den '
+                    'Modus „Bestehenden Verein befüllen" verwenden.',
+                )
+                return redirect('creator_import_index')
+            if status == 'conflict':
+                transaction.set_rollback(True)
+                messages.error(
+                    request,
+                    f'Ein Verein namens „{club.name}" existiert bereits mit einer '
+                    'anderen Transfermarkt-ID. Bitte Name/ID prüfen oder den Modus '
+                    '„Bestehenden Verein befüllen" verwenden.',
+                )
+                return redirect('creator_import_index')
+            if status == 'promoted':
+                messages.info(
+                    request,
+                    f'Vorhandener Platzhalterverein „{club.name}" wurde zum echten '
+                    'Verein hochgestuft.',
+                )
+            job = _make_job(club)
+    else:
+        club_id = request.POST.get('ws_club')
+        club = Club.objects.filter(pk=club_id).first()
+        if not club:
+            messages.error(request, 'Bitte einen gültigen WS-Verein auswählen.')
+            return redirect('creator_import_index')
+        job = _make_job(club)
+
     messages.success(
         request,
         f'Importauftrag #{job.pk} angelegt — wartet auf den lokalen Importer.',

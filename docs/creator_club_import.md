@@ -57,10 +57,20 @@ JSON-API zusammenspielen:
 
 ## 2. Datenfluss (Ende zu Ende)
 
-1. **Auftrag anlegen** — Im Creator-Mode wählt der Administrator einen WS-Verein
-   und gibt die **Transfermarkt-Vereins-ID** an. Die **Saison-ID** wird
-   automatisch bestimmt und im Auftrag eingefroren
-   (`creator_import_create` → `ClubPlayerImportJob`, Status `pending`).
+1. **Auftrag anlegen** — Im Creator-Mode legt der Administrator einen Auftrag in
+   einem von zwei Modi an (`creator_import_create` → `ClubPlayerImportJob`,
+   Status `pending`); die **Saison-ID** wird automatisch bestimmt und
+   eingefroren:
+   * **Bestehenden Verein befüllen:** ein vorhandener WS-Verein wird als Ziel
+     gewählt und die **Transfermarkt-Vereins-ID** angegeben.
+   * **Neuen Verein anlegen:** für einen im WS noch nicht existierenden Verein
+     gibt der Administrator **Vereinsname + Ziel-Liga + Transfermarkt-Vereins-ID**
+     an. Der WS-Verein wird sofort als **echter** Verein
+     (`is_import_placeholder=False`) in der gewählten, real existierenden Liga
+     angelegt; der Auftrag zeigt direkt darauf. Existiert bereits ein
+     Platzhalterverein mit gleicher TM-ID (z. B. früher als Leihgeber erzeugt),
+     wird dieser **hochgestuft** statt dupliziert; ein bereits vorhandener
+     **echter** Verein wird abgelehnt (siehe Abschnitt 5.7).
 2. **Übernahme** — Der lokale Importer holt den nächsten offenen Auftrag
    (`next`), übernimmt ihn exklusiv (`claim`, erhält ein **Lease-Token**) und
    öffnet die Kaderseite über **Vereins-ID + Saison-ID**.
@@ -208,6 +218,28 @@ automatische „FMInside/SoFIFA fehlt"-Warnung auf Serverseite; entsprechende
 Hinweise liefert der lokale Importer im `warnings`-Feld der Rohdaten. Einzelne
 Parser-/Seitenfehler überspringen nur den betroffenen Spieler.
 
+### 5.7 Neuen Zielverein anlegen (`import_service.create_or_promote_target_club`)
+Beim Modus „Neuen Verein anlegen" (Abschnitt 2) entsteht — anders als bei den
+Platzhaltervereinen aus 5.4 — ein **echter** Verein
+(`is_import_placeholder=False`) in einer vom Administrator gewählten, real
+existierenden WS-Liga. Dedup-Priorität wie bei `get_or_create_club`:
+`transfermarkt_id`, danach normalisierter Name. Ergebnis (`created` / `promoted`
+/ `exists`):
+
+- **created** — kein Treffer; neuer echter Verein wird angelegt
+  (Gründungsjahr/Budget mit neutralen Startwerten, später im Vereins-Admin
+  editierbar).
+- **promoted** — es existiert bereits ein **Platzhalterverein** mit gleicher
+  TM-ID/Name; er wird zum echten Verein hochgestuft (Liga gesetzt,
+  Platzhalter-Flag entfernt) — **kein Duplikat**.
+- **exists** — es existiert bereits ein **echter** Verein; der Auftrag wird mit
+  Hinweis abgelehnt (stattdessen Modus „Bestehenden Verein befüllen" nutzen).
+
+Es ist **keine** Datenbankmigration nötig: `ClubPlayerImportJob.ws_club` bleibt
+ein Pflicht-Fremdschlüssel und zeigt auf den frisch angelegten/hochgestuften
+Verein. Die gesamte nachgelagerte Pipeline (Importer, Kontrolle, DB-Import)
+bleibt unverändert.
+
 ---
 
 ## 6. Sicherheit (Härtung)
@@ -254,6 +286,7 @@ Belegte Fälle:
 | **NULL-Erhalt** | fehlende Werte bleiben `None`/`''` | Engine-Tests + E2E |
 | **Importbestätigung** | korrekte Zusammenfassung (created/updated/…); Endstatus „importiert" | dito |
 | **Ohne Auswahl** | vorhandener Spieler bleibt unangetastet | `test_unselected_existing_player_is_not_overwritten` |
+| **Neuer Verein** | wird als echter Verein in der gewählten Liga angelegt; Platzhalter wird hochgestuft statt dupliziert; echter Bestandsverein wird abgelehnt | `test_club_import_new_club.py` |
 
 **Reproduktion:**
 
@@ -271,6 +304,7 @@ python manage.py test game.tests.test_club_import_e2e --verbosity=2 --keepdb
 | Token-API (Auth, Lease, Sanitizing, Limits) | `game/tests/test_importer_api.py` |
 | Creator-Oberfläche (Kontrollansicht, Auswahl, Bestätigung) | `game/tests/test_club_import_ui.py` |
 | End-to-End-Abnahme (HSV/Vušković-Referenzfall) | `game/tests/test_club_import_e2e.py` |
+| Neuen Verein anlegen (Helfer + Auftrags-Erstellung) | `game/tests/test_club_import_new_club.py` |
 
 Gesamten Import-Bereich ausführen:
 
@@ -280,6 +314,7 @@ python manage.py test \
   game.tests.test_importer_api \
   game.tests.test_club_import_ui \
   game.tests.test_club_import_e2e \
+  game.tests.test_club_import_new_club \
   --keepdb
 ```
 

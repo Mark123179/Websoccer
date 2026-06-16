@@ -99,4 +99,11 @@
 .imp-link-ext { color: #00d4ff; text-decoration: none; font-size: .72rem; }
 .imp-link-ext:hover { text-decoration: underline; }
 .imp-weak { color: #e0a030; font-size: .7rem; font-weight: 700; }
+
+/* ── Importziel-Umschalter (bestehend / neu) ───────────────────────────── */
+.imp-mode-toggle { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.imp-mode-opt { display: flex; align-items: center; gap: .45rem; font-size: .8rem; font-weight: 600; color: #8aa0b5; padding: .4rem .85rem; border: 1px solid #0d2035; border-radius: 18px; background: #050e1a; cursor: pointer; transition: all .15s; }
+.imp-mode-opt:hover { border-color: #00d4ff44; color: #cce8ff; }
+.imp-mode-opt:has(input:checked) { border-color: #00d4ff; color: #00d4ff; background: #071e2a; }
+.imp-mode-opt input { accent-color: #00d4ff; }
 </style>

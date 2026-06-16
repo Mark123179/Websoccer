@@ -110,6 +110,91 @@ def get_or_create_club(club_ref):
     )
 
 
+def create_or_promote_target_club(tm_club_id, name, league, profile_url=''):
+    """Legt einen echten WS-Zielverein für einen Import an (oder stuft ihn hoch).
+
+    Wird beim Anlegen eines Importauftrags für einen im WS noch nicht
+    existierenden Verein verwendet. Im Gegensatz zu :func:`get_or_create_club`
+    entsteht ein **echter** Verein (``is_import_placeholder=False``) in der
+    angegebenen, real existierenden Liga.
+
+    Dedup-Priorität: ``Club.transfermarkt_id``, danach normalisierter Name.
+
+    Rückgabe: ``(club, status)`` mit ``status`` ∈
+    ``{'created', 'promoted', 'exists', 'conflict'}``. ``'promoted'`` bedeutet,
+    dass ein bereits vorhandener Platzhalterverein (z. B. früher als Leihgeber
+    angelegt) zum echten Verein hochgestuft wurde. ``'exists'`` bedeutet, dass
+    bereits ein echter (nicht-Platzhalter-)Verein existiert. ``'conflict'``
+    bedeutet, dass ein Namenstreffer eine **abweichende** Transfermarkt-ID
+    trägt (Identitätskonflikt). In beiden Fällen soll der Aufrufer mit einem
+    Hinweis abbrechen, statt ein Duplikat oder einen widersprüchlichen Verein zu
+    erzeugen.
+    """
+    from django.db import IntegrityError, transaction
+    from ..models import Club
+
+    name = (name or '').strip()
+
+    def _resolve_existing():
+        """Gibt ``(club, matched_by)`` zurück, ``matched_by`` ∈ {'tm','name',None}."""
+        if tm_club_id:
+            club = Club.objects.filter(transfermarkt_id=tm_club_id).first()
+            if club:
+                return club, 'tm'
+        target = normalize_name(name)
+        if target:
+            for club in Club.objects.all():
+                if normalize_name(club.name) == target:
+                    return club, 'name'
+        return None, None
+
+    def _promote(existing):
+        existing.is_import_placeholder = False
+        existing.league = league
+        if name:
+            existing.name = name
+            existing.short_name = name[:20]
+        if tm_club_id and not existing.transfermarkt_id:
+            existing.transfermarkt_id = tm_club_id
+        if profile_url and not existing.transfermarkt_profile_url:
+            existing.transfermarkt_profile_url = profile_url
+        existing.save()
+        return existing
+
+    def _classify(existing, matched_by):
+        # Namenstreffer mit gesetzter, abweichender TM-ID → Identitätskonflikt.
+        if (matched_by == 'name' and existing.transfermarkt_id
+                and tm_club_id and existing.transfermarkt_id != tm_club_id):
+            return existing, 'conflict'
+        if not existing.is_import_placeholder:
+            return existing, 'exists'
+        return _promote(existing), 'promoted'
+
+    existing, matched_by = _resolve_existing()
+    if existing is not None:
+        return _classify(existing, matched_by)
+
+    try:
+        with transaction.atomic():
+            club = Club.objects.create(
+                transfermarkt_id=tm_club_id or None,
+                transfermarkt_profile_url=profile_url or '',
+                is_import_placeholder=False,
+                name=name,
+                short_name=name[:20],
+                founded_year=0,
+                budget=Decimal('0'),
+                league=league,
+            )
+        return club, 'created'
+    except IntegrityError:
+        # Nebenläufiger Insert mit gleicher TM-ID — erneut auflösen statt 500.
+        existing, matched_by = _resolve_existing()
+        if existing is None:
+            raise
+        return _classify(existing, matched_by)
+
+
 def _write_source_rating(player, source, ratings):
     """Schreibt eine PlayerSourceRating-Zeile (Quelle FM/EA) oder löscht sie.
 
