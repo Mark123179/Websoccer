@@ -3,6 +3,7 @@
   "api_token": "HIER-DEN-CFM_IMPORTER_TOKEN-EINTRAGEN",
   "browser_channel": "msedge",
   "headless": false,
+  "manual_unblock": true,
   "user_data_dir": "edge_import_profile",
   "heartbeat_seconds": 25,
   "pauses": {
@@ -13,6 +14,8 @@
   "request": {
     "timeout_seconds": 30,
     "max_retries": 4,
-    "backoff_base_seconds": 2
+    "backoff_base_seconds": 2,
+    "nav_retries": 2,
+    "challenge_wait_seconds": 25
   }
 }

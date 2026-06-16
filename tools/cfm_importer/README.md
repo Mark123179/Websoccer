@@ -68,11 +68,20 @@ Bei weiteren Starts genügt ein Doppelklick auf die BAT.
 
 ## 5. Robustheit
 
-- **Fehlendes SoFIFA** blockiert nicht (kein Eintrag wird übertragen).
-- **Fehlendes/uneindeutiges FMInside** wird als *prüfbedürftig* gemeldet.
 - Einzelne **Parser-/Seitenfehler** überspringen den Spieler mit konkreter
   Meldung — es werden **keine Leerwerte erfunden**.
-- **Blockaden** (403/429/Captcha) halten den Lauf an und melden `fail`.
+- **Navigation** wird bei Timeout, HTTP 5xx und Blockaden (403/429) bis zu
+  `request.nav_retries`-mal mit exponentiellem Backoff wiederholt; HTTP 404/410
+  überspringt den Spieler sofort (kein Raten).
+- **Cloudflare-/Captcha-Challenges** werden erkannt. Das Tool wartet zunächst bis
+  zu `request.challenge_wait_seconds` auf die automatische Auflösung. Gelingt das
+  nicht und läuft ein **sichtbarer** Browser (`headless: false`) mit
+  `manual_unblock: true`, kann die Challenge **im Fenster von Hand gelöst** und
+  der Lauf per **ENTER** fortgesetzt werden. Erst danach gilt eine Quelle als
+  blockiert. Tipp: einmalig im selben Edge-Profil `https://sofifa.com` öffnen und
+  die Challenge lösen — der Freigabe-Cookie bleibt im Profil erhalten.
+- **Fehlendes SoFIFA/FMInside** bleibt unkritisch und wird zur **manuellen
+  Nachpflege** in der Kontrollphase markiert.
 - **API-Probleme** werden mit exponentiellem Backoff erneut versucht;
   Auth-/Lease-Fehler brechen sofort ab.
 

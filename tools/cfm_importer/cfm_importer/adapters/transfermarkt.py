@@ -12,12 +12,11 @@ der Spieler übersprungen, statt Leerwerte zu erfinden.
 
 from .. import positions
 from .base import (
-    BlockedError,
     PageError,
     attr_or_empty,
-    detect_block,
     first_int,
     id_from_url,
+    safe_goto,
     text_or_empty,
 )
 
@@ -32,9 +31,7 @@ class TransfermarktAdapter:
 
     # ── Navigation ──────────────────────────────────────────────────────────
     def _goto(self, url):
-        self.page.goto(url, wait_until='domcontentloaded')
-        self.page.wait_for_timeout(int(self.config.pause('page_load_ms', 1500) * 1000))
-        detect_block(self.page)
+        safe_goto(self.page, url, self.config, self.log)
 
     def squad_url(self, club_id, season_id):
         return f'{BASE}/-/kader/verein/{int(club_id)}/saison_id/{int(season_id)}/plus/1'

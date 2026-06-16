@@ -88,6 +88,21 @@ class Config:
     def backoff_base(self):
         return self._request('backoff_base_seconds', 2)
 
+    @property
+    def nav_retries(self):
+        """Wiederholungen einer Seitennavigation bei 5xx/Timeout/Blockade."""
+        return self._request('nav_retries', 2)
+
+    @property
+    def challenge_wait_seconds(self):
+        """Maximale Wartezeit auf automatische Auflösung einer Challenge."""
+        return self._request('challenge_wait_seconds', 25)
+
+    @property
+    def manual_unblock(self):
+        """Bei sichtbarem Browser: Nutzer die Challenge manuell lösen lassen."""
+        return bool(self._data.get('manual_unblock', True))
+
 
 def load_config(path=None):
     """Lädt und prüft die Konfiguration. Wirft ``ConfigError`` bei Problemen."""
