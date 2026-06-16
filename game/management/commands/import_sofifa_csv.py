@@ -25,6 +25,7 @@ und wird auch vom Browser-Upload im Creator-Mode genutzt.
 import re
 import unicodedata
 import html
+from datetime import date
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -103,6 +104,12 @@ COLUMN_ALIASES = {
     'attributesgkpositioning': 'tw_stellungsspiel',
     'attributesgkkicking': 'tw_passen',
     'attributesgkdiving': 'tw_eins_gegen_eins',
+    # ── Geburtsdatum (fuer DOB-Matching) ─────────────────────────────────────
+    # CMTracker info.birthdate + generische/deutsche Spaltennamen.
+    'infobirthdate': 'dob',
+    'dob': 'dob', 'birthdate': 'dob', 'birth_date': 'dob',
+    'date_of_birth': 'dob', 'birthday': 'dob',
+    'geburtsdatum': 'dob', 'geburtstag': 'dob',
 }
 for _col in ALL_ATTR_COLUMNS:
     COLUMN_ALIASES.setdefault(_col, _col)
@@ -114,6 +121,26 @@ def normalize_header(raw):
     raw = re.sub(r'[^a-z0-9_]', '', raw)
     raw = re.sub(r'_+', '_', raw).strip('_')
     return raw
+
+
+def parse_dob(raw):
+    """Parst ein Geburtsdatum aus ISO- (auch mit Uhrzeit/Z), JJJJ-MM-TT- oder
+    deutschem (TT.MM.JJJJ) Format. Gibt ``date`` oder ``None`` zurueck."""
+    raw = (raw or '').strip()
+    if not raw:
+        return None
+    m = re.match(r'(\d{4})\D(\d{1,2})\D(\d{1,2})', raw)
+    if m:
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    else:
+        m = re.match(r'(\d{1,2})\.(\d{1,2})\.(\d{4})', raw)
+        if not m:
+            return None
+        d, mo, y = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    try:
+        return date(y, mo, d)
+    except ValueError:
+        return None
 
 
 def normalize_name(name):

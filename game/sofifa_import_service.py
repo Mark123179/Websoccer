@@ -28,6 +28,7 @@ from .management.commands.import_sofifa_csv import (
     name_similarity,
     normalize_header,
     normalize_name,
+    parse_dob,
 )
 
 GK_POSITION_CODES = {'TW', 'GK'}
@@ -99,6 +100,8 @@ def _parse_row(raw_row, header_map):
         last = cell('last_name_raw')
         name = (first + ' ' + last).strip() if (first or last) else ''
 
+    dob = parse_dob(cell('dob'))
+
     return {
         'sofifa_id': sofifa_id,
         'name': name,
@@ -106,6 +109,7 @@ def _parse_row(raw_row, header_map):
         'rating': rating,
         'potential': potential,
         'profile_url': cell('profile_url'),
+        'dob': dob,
         'attrs': attrs,
     }
 
@@ -119,6 +123,29 @@ def _match_player(parsed, sofifa_ds):
     )
     if ext:
         return ext.player, 'id'
+
+    # ── DOB-Matching (vereinsuebergreifend, Name egal) ───────────────────────
+    # Greift auch bei Leihspielern (CSV nennt Stammverein) und abweichenden
+    # Namen aus Transfermarkt. Bei gleichem DOB entscheidet die Namensaehnlichkeit.
+    dob = parsed.get('dob')
+    if dob:
+        dob_matches = list(
+            Player.objects.select_related('club').filter(date_of_birth=dob)
+        )
+        if len(dob_matches) == 1:
+            return dob_matches[0], 'dob'
+        if len(dob_matches) > 1:
+            dob_name = parsed.get('name')
+            if dob_name:
+                target_dob = normalize_name(dob_name)
+                scored_dob = sorted(
+                    ((name_similarity(target_dob, normalize_name(p.full_name)), p)
+                     for p in dob_matches),
+                    key=lambda t: t[0], reverse=True,
+                )
+                if scored_dob[0][0] > scored_dob[1][0]:
+                    return scored_dob[0][1], 'dob'
+            # Mehrdeutig: weiter mit dem Namens-Fallback unten.
 
     name = parsed.get('name')
     if not name:
