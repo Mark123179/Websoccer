@@ -364,6 +364,15 @@ _SUB_GK_RED = [
     "{o} muss für {i} den Platz räumen: Pflicht-Einwechslung nach Torhüter-Rot.",
 ]
 
+_OUTFIELD_GK_RED_OFF = [
+    "Pflicht-Auswechslung: {o} muss das Feld räumen — sein Team braucht den Wechselslot für den Ersatztorwart.",
+    "{o} verlässt den Platz ohne Karte — die Situation lässt dem Trainer keine Wahl.",
+    "Bitterer Moment für {o}: Er muss runter, damit der Wechselslot für den Notfall-Keeper frei wird.",
+    "{o} ist das Opfer des Regeltausches — kein Verschulden, aber er muss das Spielfeld verlassen.",
+    "Der Schiedsrichter signalisiert: {o} verlässt das Feld im Rahmen der Pflicht-Einwechslung des Torwarts.",
+    "Pflicht-Auswechslung erzwungen: {o} geht vom Platz, damit ein neuer Torwart ins Tor kann.",
+]
+
 
 # ── Verletzungs-Texte ────────────────────────────────────────────────────────
 
@@ -636,6 +645,10 @@ def build_ticker_text(
         if days and days > 7:
             return _shuffled_pick(_INJURY_SUB_TEXTS, ms, 'inj_sub', ei).format(p=p)
         return _shuffled_pick(_INJURY_TEXTS, ms, 'injury', ei).format(p=p)
+
+    elif evt_type == 'gk_red_off':
+        o_sub = out_name or p or ''
+        return _shuffled_pick(_OUTFIELD_GK_RED_OFF, ms, 'gk_red_off', ei).format(o=o_sub)
 
     elif evt_type == 'tackle_win':
         txt = _shuffled_pick(_TACKLE_WIN_TEXTS, ms, 'tackle_win', ei)

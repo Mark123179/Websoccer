@@ -3454,7 +3454,7 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
 def _ticker_comment(evt_type, minute=0, player='', player_pos='', assister='', assister_pos='',
                     card_type='', score_h=0, score_a=0, days=0, in_name='', out_name='',
                     target_slot='', position_relation='', is_injury_sub=False,
-                    match_seed=0, event_index=0):
+                    is_gk_red_sub=False, match_seed=0, event_index=0):
     """Deterministischer Live-Kommentar — delegiert an game.ticker_commentary."""
     from game.ticker_commentary import build_ticker_text
     return build_ticker_text(
@@ -3473,6 +3473,7 @@ def _ticker_comment(evt_type, minute=0, player='', player_pos='', assister='', a
         target_slot=target_slot,
         position_relation=position_relation,
         is_injury_sub=is_injury_sub,
+        is_gk_red_sub=is_gk_red_sub,
         match_seed=match_seed,
         event_index=event_index,
     )
@@ -3644,19 +3645,27 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             'assister_pos':  evt.get('assister_pos', ''),
         })
     for sub in (home_subs_enriched or []):
+        is_gk_red = sub.get('condition') == 'gk_red'
         raw.append({'type': 'sub', 'team': 'home', 'minute': sub['minute'],
                     'in_name': sub['in_name'], 'out_name': sub['out_name'],
                     'target_slot': sub.get('target_slot', ''),
                     'position_relation': sub.get('position_relation', ''),
                     'is_injury_sub': sub.get('condition') == 'verletzung',
-                    'is_gk_red_sub': sub.get('condition') == 'gk_red'})
+                    'is_gk_red_sub': is_gk_red})
+        if is_gk_red and sub.get('out_name'):
+            raw.append({'type': 'gk_red_off', 'team': 'home', 'minute': sub['minute'],
+                        'out_name': sub['out_name']})
     for sub in (away_subs_enriched or []):
+        is_gk_red = sub.get('condition') == 'gk_red'
         raw.append({'type': 'sub', 'team': 'away', 'minute': sub['minute'],
                     'in_name': sub['in_name'], 'out_name': sub['out_name'],
                     'target_slot': sub.get('target_slot', ''),
                     'position_relation': sub.get('position_relation', ''),
                     'is_injury_sub': sub.get('condition') == 'verletzung',
-                    'is_gk_red_sub': sub.get('condition') == 'gk_red'})
+                    'is_gk_red_sub': is_gk_red})
+        if is_gk_red and sub.get('out_name'):
+            raw.append({'type': 'gk_red_off', 'team': 'away', 'minute': sub['minute'],
+                        'out_name': sub['out_name']})
     for ce in (data.get('card_events') or []):
         pid  = ce.get('player_id')
         name = ce.get('player_name') or (name_lookup or {}).get(pid, f'#{pid}')
@@ -3687,7 +3696,8 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             ne = dict(ne, minute=m + 1)
         raw.append(ne)
 
-    raw.sort(key=lambda e: (e['minute'], 0 if e['type'] in ('goal', 'card', 'sub', 'injury') else 1))
+    _EVT_PRIORITY = {'goal': 0, 'card': 1, 'sub': 2, 'gk_red_off': 3, 'injury': 4}
+    raw.sort(key=lambda e: (e['minute'], _EVT_PRIORITY.get(e['type'], 5)))
 
     score_h = score_a = 0
     events = []
@@ -3728,6 +3738,12 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             evt['score_a'] = score_a
             evt['commentary'] = _tc(
                 'injury', evt['minute'], evt['player_name'], days=evt.get('days', 0),
+            )
+        elif t == 'gk_red_off':
+            evt['score_h'] = score_h
+            evt['score_a'] = score_a
+            evt['commentary'] = _tc(
+                'gk_red_off', evt['minute'], out_name=evt.get('out_name', ''),
             )
         else:
             # shot / corner / foul / flow — commentary already set by _generate_narrative_events

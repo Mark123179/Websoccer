@@ -383,6 +383,16 @@
     color: rgba(255, 100, 100, 0.9);
 }
 
+.mr-tk-badge--gk-red-off {
+    background: rgba(255, 140, 0, 0.13);
+    border: 1px solid rgba(255, 140, 0, 0.35);
+    color: rgba(255, 160, 40, 0.9);
+}
+
+.mr-tk--gk-red-off .mr-tk-icon--sub {
+    color: rgba(255, 160, 40, 0.85);
+}
+
 .mr-tk--injury-sub .mr-tk-icon--sub {
     color: rgba(255, 100, 100, 0.8);
 }
