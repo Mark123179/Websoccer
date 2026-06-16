@@ -3765,16 +3765,19 @@ def _enrich_substitutions(subs_raw, name_lookup):
     """
     result = []
     for sub in (subs_raw or []):
-        in_id  = sub.get('in')
-        out_id = sub.get('out')
-        if not sub.get('minute') or not in_id or not out_id:
+        in_id    = sub.get('in')
+        out_id   = sub.get('out')
+        is_gk_red = sub.get('condition') == 'gk_red'
+        if not sub.get('minute') or not in_id:
+            continue
+        if not out_id and not is_gk_red:
             continue
         entry = {
             'minute':   sub['minute'],
             'in_id':    in_id,
-            'out_id':   out_id,
+            'out_id':   out_id or '',
             'in_name':  name_lookup.get(in_id,  f'#{in_id}'),
-            'out_name': name_lookup.get(out_id, f'#{out_id}'),
+            'out_name': name_lookup.get(out_id, f'#{out_id}') if out_id else '',
         }
         for extra in ('target_slot', 'position_relation', 'condition'):
             if extra in sub:

@@ -1477,9 +1477,11 @@ def _simulate_match_minutes(
             'comeback_win':   comeback_win,
             'comeback_draw':  comeback_draw,
         },
-        'dismissal_events': h_dismissal_events + a_dismissal_events,
-        'h_sim_sub_events': h_als.sub_events,
-        'a_sim_sub_events': a_als.sub_events,
+        'dismissal_events':    h_dismissal_events + a_dismissal_events,
+        'h_sim_sub_events':    h_als.sub_events,
+        'a_sim_sub_events':    a_als.sub_events,
+        'h_scenario_c_pids':   list(h_als._scenario_c_pids),
+        'a_scenario_c_pids':   list(a_als._scenario_c_pids),
         # Optionaler ALS-Zustand für Verlängerungs-/Elfmeterlogik (nur bei _return_als_state=True)
         **({
             'h_als':              h_als,
@@ -2721,6 +2723,21 @@ def simulate_match(
         a_players.append(row)
         existing_a_pids.add(in_pid)
 
+    # 5a. Szenario-C Not-TW-Spieler: Position in Spieler-Rows korrigieren.
+    #     promote_scenario_c_gk() erstellt keinen sub_event, daher erscheint der
+    #     Spieler noch mit seiner Original-Position in h_players/a_players.
+    #     position → 'Not-TW', group → 'goalkeeper' kennzeichnet ihn korrekt.
+    _h_sc = set(sim.get('h_scenario_c_pids') or [])
+    _a_sc = set(sim.get('a_scenario_c_pids') or [])
+    for _p in h_players:
+        if _p.get('id') in _h_sc:
+            _p['position'] = 'Not-TW'
+            _p['group']    = 'goalkeeper'
+    for _p in a_players:
+        if _p.get('id') in _a_sc:
+            _p['position'] = 'Not-TW'
+            _p['group']    = 'goalkeeper'
+
     # 5. Formations-Label
     def _fmt(tactic) -> str:
         f = tactic.formation or {}
@@ -2978,6 +2995,19 @@ def simulate_match(
                     row['on_minute'], row['off_minute'] = a_wmap_120[in_pid]
                 result['away_players'].append(row)
                 existing_a_pids.add(in_pid)
+
+            # Szenario-C Not-TW aus VL-Phase korrigieren (inkl. etwaiger
+            # neuer Szenario-C-Ereignisse während der Verlängerung).
+            _h_sc_et = _h_als._scenario_c_pids
+            _a_sc_et = _a_als._scenario_c_pids
+            for _p in result['home_players']:
+                if _p.get('id') in _h_sc_et:
+                    _p['position'] = 'Not-TW'
+                    _p['group']    = 'goalkeeper'
+            for _p in result['away_players']:
+                if _p.get('id') in _a_sc_et:
+                    _p['position'] = 'Not-TW'
+                    _p['group']    = 'goalkeeper'
 
             # Noten nach VL neu berechnen
             ratings_et = compute_player_ratings(result)
