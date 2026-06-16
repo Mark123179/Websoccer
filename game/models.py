@@ -1,4 +1,6 @@
-﻿from django.contrib.staticfiles import finders
+﻿import secrets
+
+from django.contrib.staticfiles import finders
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.conf import settings
@@ -460,6 +462,24 @@ class Club(models.Model):
         unique=True,
         null=True,
         blank=True,
+    )
+    transfermarkt_id = models.PositiveBigIntegerField(
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='Transfermarkt-Vereins-ID. Eindeutige Erkennung beim Import.',
+    )
+    transfermarkt_profile_url = models.URLField(
+        blank=True,
+        help_text='Kanonischer Transfermarkt-Vereinslink.',
+    )
+    is_import_placeholder = models.BooleanField(
+        default=False,
+        verbose_name='Platzhalterverein',
+        help_text=(
+            'Automatisch beim Spielerimport angelegter Minimal-Verein '
+            '(realer Stammverein / Leihgeber). Ohne Liga, Stadion, Finanzen.'
+        ),
     )
 
     name = models.CharField(max_length=100)
@@ -1381,7 +1401,12 @@ class Player(models.Model):
     market_value = models.DecimalField(
         max_digits=15,
         decimal_places=2,
-        default=0
+        null=True,
+        blank=True,
+        help_text=(
+            'Marktwert in Euro. NULL bedeutet "unbekannt" — nie automatisch '
+            'auf 0 setzen, da 0 ein echter Wert wäre.'
+        ),
     )
     salary_per_match = models.DecimalField(
         max_digits=12,
@@ -3994,3 +4019,184 @@ class CupFixture(models.Model):
         home = self.home_club.short_name if self.home_club else '?'
         away = self.away_club.short_name if self.away_club else '?'
         return f'{self.cup_round} — {home} vs {away}'
+
+
+class ClubPlayerImportJob(models.Model):
+    """Importauftrag für den lokalen Vereins-/Spielerimporter (Creator-Mode).
+
+    Der Auftrag verbindet einen WS-Verein mit einer Transfermarkt-Vereins-ID
+    und einer (bei Erstellung eingefrorenen) Saison-ID. Der lokale Importer
+    übernimmt den Auftrag per Lease-Token und füllt Kandidaten.
+    """
+
+    STATUS_PENDING = 'pending'
+    STATUS_CLAIMED = 'claimed'
+    STATUS_RUNNING = 'running'
+    STATUS_REVIEW = 'review'
+    STATUS_IMPORTING = 'importing'
+    STATUS_COMPLETED = 'completed'
+    STATUS_FAILED = 'failed'
+    STATUS_CANCELLED = 'cancelled'
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Wartet auf lokalen Importer'),
+        (STATUS_CLAIMED, 'Vom lokalen Importer übernommen'),
+        (STATUS_RUNNING, 'Import läuft'),
+        (STATUS_REVIEW, 'Zur Kontrolle bereit'),
+        (STATUS_IMPORTING, 'Datenbankimport läuft'),
+        (STATUS_COMPLETED, 'Abgeschlossen'),
+        (STATUS_FAILED, 'Fehlgeschlagen'),
+        (STATUS_CANCELLED, 'Abgebrochen'),
+    ]
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='club_player_import_jobs',
+    )
+    ws_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='player_import_jobs',
+        help_text='Der bei Auftragserstellung gewählte WS-Verein.',
+    )
+    tm_club_id = models.PositiveBigIntegerField(
+        help_text='Transfermarkt-Vereins-ID der zu importierenden Kaderseite.',
+    )
+    tm_season_id = models.PositiveIntegerField(
+        help_text='Bei Erstellung eingefrorene Transfermarkt-Saison-ID.',
+    )
+    season_label = models.CharField(
+        max_length=20,
+        help_text='Anzeige der Saison, z. B. "2025/26".',
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+    )
+    progress_current = models.PositiveIntegerField(default=0)
+    progress_total = models.PositiveIntegerField(default=0)
+    current_step = models.CharField(max_length=200, blank=True)
+    error_message = models.TextField(blank=True)
+
+    # Lease / Heartbeat — bindet genau einen lokalen Importer an den Auftrag.
+    lease_token = models.CharField(
+        max_length=64,
+        blank=True,
+        default='',
+        help_text='Pro Claim zufällig erzeugtes Geheimnis; bindet einen Importer.',
+    )
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    lease_expires_at = models.DateTimeField(null=True, blank=True)
+    heartbeat_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Spielerimport-Auftrag'
+        verbose_name_plural = 'Spielerimport-Aufträge'
+
+    def __str__(self):
+        return (
+            f'Import #{self.pk} {self.ws_club_id} '
+            f'(TM {self.tm_club_id}, {self.season_label}) — {self.status}'
+        )
+
+    @staticmethod
+    def new_lease_token():
+        """Erzeugt ein neues zufälliges Lease-Token für einen Claim."""
+        return secrets.token_hex(32)
+
+
+class PlayerImportCandidate(models.Model):
+    """Temporärer Spielerkandidat eines Importauftrags.
+
+    Hält die getrennten Rohdaten (Transfermarkt / FMInside / SoFIFA) sowie das
+    daraus normalisierte Ergebnis, bis der Administrator den Import bestätigt.
+    """
+
+    STATUS_NEW = 'new'
+    STATUS_EXISTING_CHANGED = 'existing_changed'
+    STATUS_EXISTING_UNCHANGED = 'existing_unchanged'
+    STATUS_MISSING_FMI = 'missing_fmi'
+    STATUS_MISSING_SOFIFA = 'missing_sofifa'
+    STATUS_AMBIGUOUS_FMI = 'ambiguous_fmi'
+    STATUS_AMBIGUOUS_SOFIFA = 'ambiguous_sofifa'
+    STATUS_INVALID = 'invalid'
+    STATUS_SOURCE_ERROR = 'source_error'
+    STATUS_READY = 'ready'
+    STATUS_IMPORTED = 'imported'
+    STATUS_SKIPPED = 'skipped'
+
+    STATUS_CHOICES = [
+        (STATUS_NEW, 'Neuer Spieler'),
+        (STATUS_EXISTING_CHANGED, 'Vorhanden — geändert'),
+        (STATUS_EXISTING_UNCHANGED, 'Vorhanden — unverändert'),
+        (STATUS_MISSING_FMI, 'FMInside fehlt'),
+        (STATUS_MISSING_SOFIFA, 'SoFIFA fehlt'),
+        (STATUS_AMBIGUOUS_FMI, 'FMInside mehrdeutig'),
+        (STATUS_AMBIGUOUS_SOFIFA, 'SoFIFA mehrdeutig'),
+        (STATUS_INVALID, 'Ungültig'),
+        (STATUS_SOURCE_ERROR, 'Quellenfehler'),
+        (STATUS_READY, 'Importbereit'),
+        (STATUS_IMPORTED, 'Importiert'),
+        (STATUS_SKIPPED, 'Übersprungen'),
+    ]
+
+    job = models.ForeignKey(
+        ClubPlayerImportJob,
+        related_name='candidates',
+        on_delete=models.CASCADE,
+    )
+
+    tm_player_id = models.PositiveBigIntegerField()
+    existing_player = models.ForeignKey(
+        Player,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='import_candidates',
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_NEW,
+    )
+    selected_for_import = models.BooleanField(default=False)
+    overwrite_existing = models.BooleanField(default=False)
+
+    # Getrennte Rohdaten je Quelle — keine finalen Attribute hier berechnen.
+    tm_raw = models.JSONField(default=dict, blank=True)
+    position_raw = models.JSONField(default=dict, blank=True)
+    fmi_raw = models.JSONField(default=dict, blank=True)
+    sofifa_raw = models.JSONField(default=dict, blank=True)
+
+    normalized_data = models.JSONField(default=dict, blank=True)
+    detected_changes = models.JSONField(default=dict, blank=True)
+    validation_errors = models.JSONField(default=list, blank=True)
+    source_warnings = models.JSONField(default=list, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['job', 'tm_player_id']
+        verbose_name = 'Spielerimport-Kandidat'
+        verbose_name_plural = 'Spielerimport-Kandidaten'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['job', 'tm_player_id'],
+                name='unique_candidate_per_job_tm_player',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Kandidat TM {self.tm_player_id} (Job #{self.job_id}) — {self.status}'
