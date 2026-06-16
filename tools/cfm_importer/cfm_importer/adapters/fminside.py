@@ -8,10 +8,12 @@ gültig, wenn das **Geburtsdatum** auf der Detailseite übereinstimmt. Ist eine
 gemeldet — niemals wird ein falscher Treffer erzwungen. Fehlendes FMInside
 blockiert den Import NICHT.
 
-URL-Schema: ``/players/{db-version}/{fmi_id}-{name-slug}`` (z. B.
-``/players/7-fm-26/28049320-harry-kane``). Der DB-Versions-Pfad ist Pflicht
-(``7-fm-26`` = FM26.2); der Slug ist kosmetisch, muss aber vorhanden sein — ohne
-Slug liefert die Seite 404. Maßgeblich ist die ID im Pfad.
+URL-Schema: Die einsegmentige URL ``/players/{fmi_id}-{slug}`` wird von FMInside
+automatisch auf die **neueste** kanonische DB-Version umgeleitet (z. B.
+``/players/7-fm262/28049320-harry-kane``). So muss keine Version hartkodiert
+werden — es gilt stets die aktuellste. Der Slug ist kosmetisch (irgendein
+nicht-leerer Wert genügt); ohne Slug landet man auf der Spielerliste. Maßgeblich
+ist die ID in der **finalen** (umgeleiteten) URL.
 """
 
 import re
@@ -30,11 +32,6 @@ BASE = 'https://fminside.net'
 
 # Höchstzahl an Detailseiten, die zur Geburtsdatums-Bestätigung geöffnet werden.
 MAX_DETAIL_CHECKS = 5
-
-# DB-Versions-Pfade für die kanonische Spieler-URL. ``7-fm-26`` = FM26.2 (aktuelle
-# Standardversion). Wird der Reihe nach probiert, falls eine ID in einer älteren
-# Datenbank liegt (mirror von populate_positions_fmi).
-FM_VERSIONS = ('7-fm-26', '7-fm-25', '7-fm-27', '7-fm-28')
 
 
 def _first_dob(text):
@@ -184,10 +181,11 @@ class FMInsideAdapter:
     def _lookup_by_id(self, fmi_id, display_name, warnings):
         """Öffnet die kanonische Seite zur bekannten FM-ID — eindeutig, kein Raten.
 
-        Probiert die DB-Versions-Pfade der Reihe nach (FM26 zuerst). Der Slug ist
-        kosmetisch (irgendein nicht-leerer Wert genügt), entscheidend ist die ID
-        im Pfad. Nach dem Laden wird geprüft, dass die Nummer in der geöffneten
-        URL mit der gesuchten FM-ID übereinstimmt.
+        Nutzt die einsegmentige URL ``/players/{id}-{slug}``; FMInside leitet
+        automatisch auf die **neueste** DB-Version um (keine Version hartkodiert).
+        Der Slug ist kosmetisch (irgendein nicht-leerer Wert genügt). Nach dem
+        Laden wird geprüft, dass die Nummer in der **finalen** URL mit der
+        gesuchten FM-ID übereinstimmt — sonst gilt der Treffer als prüfbedürftig.
         """
         try:
             uid = self._clean_fm_id(fmi_id)
@@ -196,28 +194,28 @@ class FMInsideAdapter:
             return None
 
         slug = _name_slug(display_name) or 'player'
+        url = f'{BASE}/players/{uid}-{slug}'
+        try:
+            self._goto(url)
+        except PageError as exc:
+            warnings.append(
+                f'FMInside: Spielerseite zu FM-ID {uid} nicht lesbar ({exc}).')
+            return None
+
         target = int(uid)
-        last_exc = None
-        for version in FM_VERSIONS:
-            url = f'{BASE}/players/{version}/{uid}-{slug}'
-            try:
-                self._goto(url)
-            except PageError as exc:
-                last_exc = exc
-                continue  # 404 → nächste DB-Version probieren
-
-            opened = (self._id_from_player_url(getattr(self.page, 'url', ''))
-                      or self._id_from_player_url(url))
-            if opened != target:
-                warnings.append(
-                    f'FMInside: FM-ID-Abweichung (gesucht {uid}, Seite {opened}) '
-                    '— prüfbedürftig.')
-                return None
-            return self._scrape_player({'id': target, 'url': url})
-
-        warnings.append(
-            f'FMInside: keine Seite zu FM-ID {uid} gefunden ({last_exc}).')
-        return None
+        final_url = getattr(self.page, 'url', '') or url
+        opened = self._id_from_player_url(final_url)
+        if opened is None:
+            warnings.append(
+                f'FMInside: keine Spielerseite zu FM-ID {uid} '
+                '(Weiterleitung auf Liste) — prüfbedürftig.')
+            return None
+        if opened != target:
+            warnings.append(
+                f'FMInside: FM-ID-Abweichung (gesucht {uid}, Seite {opened}) '
+                '— prüfbedürftig.')
+            return None
+        return self._scrape_player({'id': target, 'url': final_url})
 
     def _open_and_scrape(self, cand, warnings):
         """Öffnet einen Suchtreffer und liefert dessen Rohwerte (inkl. DOB)."""
