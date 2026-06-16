@@ -20,6 +20,13 @@ sichtbaren Microsoft Edge öffnet (Playwright, persistentes Profil),
 - **Python 3.10 oder neuer** — beim Setup „Add Python to PATH" aktivieren
 - Internetzugang zum Server und zu den Quellseiten
 
+> **Vor dem Start alle normalen Edge-Fenster schließen.** Das Tool steuert einen
+> eigenen Edge mit separatem Profil. Ein parallel geöffnetes normales Edge kann
+> dazu führen, dass der gesteuerte Browser mitten im Lauf beendet wird
+> („Browser has been closed"). Das Tool startet ihn dann zwar automatisch neu
+> und nimmt den Lauf wieder auf, ein geschlossenes Edge vermeidet die
+> Unterbrechung aber von vornherein.
+
 ## 2. Installation & Start
 
 1. Diesen Ordner (`tools/cfm_importer/`) auf den Windows-PC kopieren.
@@ -81,7 +88,12 @@ Bei weiteren Starts genügt ein Doppelklick auf die BAT.
   blockiert. Tipp: einmalig im selben Edge-Profil `https://sofifa.com` öffnen und
   die Challenge lösen — der Freigabe-Cookie bleibt im Profil erhalten.
 - **Fehlendes SoFIFA/FMInside** bleibt unkritisch und wird zur **manuellen
-  Nachpflege** in der Kontrollphase markiert.
+  Nachpflege** in der Kontrollphase markiert. SoFIFA-Treffer werden über Name
+  **und** Geburtsdatum bestätigt; lässt sich das Geburtsdatum nicht lesen, wird
+  ein eindeutiger Namenstreffer mit dem Hinweis „bitte prüfen" übernommen.
+- **Browser-Verlust** (Absturz/externes Schließen) wird erkannt: Das Tool
+  startet Edge neu und nimmt den Lauf über den lokalen State wieder auf, statt
+  eine tote Seite endlos neu zu laden.
 - **API-Probleme** werden mit exponentiellem Backoff erneut versucht;
   Auth-/Lease-Fehler brechen sofort ab.
 

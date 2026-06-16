@@ -36,10 +36,42 @@ class Browser:
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        self._teardown()
+        return False
+
+    def _teardown(self):
+        """Schließt Kontext und Playwright defensiv (Fehler werden geschluckt)."""
         try:
             if self.context is not None:
                 self.context.close()
-        finally:
+        except Exception:
+            pass
+        try:
             if self._pw is not None:
                 self._pw.stop()
-        return False
+        except Exception:
+            pass
+        self.context = None
+        self.page = None
+        self._pw = None
+
+    def is_alive(self):
+        """True, solange Page und Kontext noch ansprechbar sind."""
+        if self.page is None or self.context is None:
+            return False
+        try:
+            return not self.page.is_closed()
+        except Exception:
+            return False
+
+    def restart(self):
+        """Startet den Browser neu (nach Absturz/externem Schließen).
+
+        Räumt den alten Kontext defensiv ab und baut einen frischen
+        persistenten Kontext auf. Cookies/Logins bleiben über das persistente
+        Profil erhalten, sodass eine zuvor gelöste Cloudflare-Freigabe weiter
+        gilt.
+        """
+        self.log.warning('Browser neu starten (vorheriger Kontext verloren) ...')
+        self._teardown()
+        return self.__enter__()

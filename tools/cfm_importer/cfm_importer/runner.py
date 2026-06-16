@@ -14,7 +14,7 @@ Robustheit:
 import time
 
 from .api_client import ApiError, FatalApiError, ImporterApiClient, NoJobAvailable
-from .adapters.base import BlockedError, PageError
+from .adapters.base import BlockedError, PageError, is_closed_error
 from .adapters.fminside import FMInsideAdapter
 from .adapters.sofifa import SoFIFAAdapter
 from .adapters.transfermarkt import TransfermarktAdapter
@@ -23,7 +23,15 @@ from .roster_match import RosterMatcher
 from .state import JobState
 
 
+class _BrowserGone(Exception):
+    """Interner Signalfehler: Browser/Kontext/Page verloren — Neustart nötig."""
+
+
 class Runner:
+    # Wie oft der Browser nach Verlust (Absturz/externes Schließen) neu
+    # gestartet wird, bevor der Lauf endgültig abgebrochen wird.
+    MAX_BROWSER_RELAUNCH = 3
+
     def __init__(self, config, logger):
         self.config = config
         self.log = logger
@@ -88,67 +96,7 @@ class Runner:
         self._last_heartbeat = time.time()
 
         try:
-            with Browser(self.config, self.log) as browser:
-                tm = TransfermarktAdapter(browser.page, self.config, self.log)
-                fmi = FMInsideAdapter(browser.page, self.config, self.log)
-                sofifa = SoFIFAAdapter(browser.page, self.config, self.log)
-
-                self._progress(job_id, step='Lese Kaderseite ...')
-                squad = tm.collect_squad(claimed['tm_club_id'], claimed['tm_season_id'])
-                total = len(squad)
-                state.set_total(total)
-                self.log.info('%d Spieler im Kader gefunden.', total)
-                self._progress(job_id, current=0, total=total,
-                               step=f'{total} Spieler gefunden')
-
-                done = 0
-                for entry in squad:
-                    done += 1
-                    pid = entry['tm_player_id']
-                    if state.is_sent(pid):
-                        self.log.info('[%d/%d] %s bereits übertragen — überspringe.',
-                                      done, total, entry.get('display_name'))
-                        self._progress(job_id, current=done, total=total)
-                        continue
-
-                    self._heartbeat_if_due(job_id)
-                    self._progress(job_id, current=done, total=total,
-                                   step=f'Spieler {done}/{total}: '
-                                        f'{entry.get("display_name", "")}')
-                    try:
-                        candidate = self._build_candidate(tm, fmi, sofifa, entry)
-                    except BlockedError as exc:
-                        self.log.error('Quelle blockiert — Lauf wird angehalten: %s', exc)
-                        self.api.fail(job_id, f'Blockiert: {exc}')
-                        return 1
-                    except PageError as exc:
-                        self.log.warning('[%d/%d] Übersprungen (%s): %s',
-                                         done, total, entry.get('display_name'), exc)
-                        continue
-                    except Exception as exc:  # robust gegen einzelne Parserfehler
-                        self.log.warning('[%d/%d] Übersprungen (Fehler): %s',
-                                         done, total, exc)
-                        continue
-
-                    try:
-                        self.api.send_candidate(job_id, candidate)
-                        state.mark_sent(pid)
-                        self.log.info('[%d/%d] %s übertragen.',
-                                      done, total, entry.get('display_name'))
-                    except FatalApiError as exc:
-                        self.log.error('Lease/Authentifizierung verloren: %s', exc)
-                        return 2
-
-                    self.page_pause()
-
-                self._progress(job_id, current=total, total=total,
-                               step='Übertragung abgeschlossen')
-                self.api.complete(job_id, tm_club_name=getattr(
-                    tm, 'squad_club_name', ''))
-                state.clear()
-                self.log.info('Auftrag #%s abgeschlossen — bereit zur Kontrolle.', job_id)
-                return 0
-
+            return self._run_job(job_id, claimed, state)
         except FatalApiError as exc:
             self.log.error('Abbruch (Auth/Lease): %s', exc)
             return 2
@@ -160,6 +108,115 @@ class Runner:
             self.log.exception('Unerwarteter Fehler: %s', exc)
             self._safe_fail(job_id, f'Unerwarteter Fehler: {exc}')
             return 1
+
+    def _run_job(self, job_id, claimed, state):
+        """Führt den Auftrag aus und nimmt bei Browser-Verlust den Lauf neu auf.
+
+        Stirbt der gesteuerte Edge mitten im Lauf (Absturz oder externes
+        Schließen, z. B. weil parallel ein normales Edge offen ist), wird der
+        Browser neu gestartet und über den lokalen State (bereits übertragene
+        Spieler) fortgesetzt — statt eine tote Seite endlos neu zu laden.
+        """
+        relaunches = 0
+        browser = Browser(self.config, self.log)
+        browser.__enter__()
+        try:
+            while True:
+                try:
+                    return self._scrape_squad(job_id, claimed, state, browser)
+                except _BrowserGone as exc:
+                    if relaunches >= self.MAX_BROWSER_RELAUNCH:
+                        self.log.error('Browser wiederholt verloren — Abbruch.')
+                        self._safe_fail(job_id, 'Browser wiederholt verloren.')
+                        return 1
+                    relaunches += 1
+                    self.log.warning(
+                        'Browser verloren (%s) — Neustart %d/%d, Wiederaufnahme '
+                        'über lokalen State.', exc, relaunches,
+                        self.MAX_BROWSER_RELAUNCH)
+                    browser.restart()
+        finally:
+            browser.__exit__(None, None, None)
+
+    def _scrape_squad(self, job_id, claimed, state, browser):
+        """Liest den Kader und überträgt jeden Spieler einzeln.
+
+        Wird nach einem Browser-Neustart erneut aufgerufen; die Adapter werden
+        deshalb hier (mit der aktuellen ``browser.page``) gebildet und der Kader
+        wird erneut gelesen. Bereits übertragene Spieler überspringt der State.
+        """
+        tm = TransfermarktAdapter(browser.page, self.config, self.log)
+        fmi = FMInsideAdapter(browser.page, self.config, self.log)
+        sofifa = SoFIFAAdapter(browser.page, self.config, self.log)
+
+        self._progress(job_id, step='Lese Kaderseite ...')
+        try:
+            squad = tm.collect_squad(claimed['tm_club_id'], claimed['tm_season_id'])
+        except Exception as exc:
+            if is_closed_error(exc):
+                raise _BrowserGone(exc)
+            raise
+        total = len(squad)
+        state.set_total(total)
+        self.log.info('%d Spieler im Kader gefunden.', total)
+        self._progress(job_id, current=0, total=total,
+                       step=f'{total} Spieler gefunden')
+
+        done = 0
+        for entry in squad:
+            done += 1
+            pid = entry['tm_player_id']
+            if state.is_sent(pid):
+                self.log.info('[%d/%d] %s bereits übertragen — überspringe.',
+                              done, total, entry.get('display_name'))
+                self._progress(job_id, current=done, total=total)
+                continue
+
+            self._heartbeat_if_due(job_id)
+            self._progress(job_id, current=done, total=total,
+                           step=f'Spieler {done}/{total}: '
+                                f'{entry.get("display_name", "")}')
+            try:
+                candidate = self._build_candidate(tm, fmi, sofifa, entry)
+            except BlockedError as exc:
+                self.log.error('Quelle blockiert — Lauf wird angehalten: %s', exc)
+                self.api.fail(job_id, f'Blockiert: {exc}')
+                return 1
+            except PageError as exc:
+                # ``safe_goto`` verpackt auch Navigationsfehler eines toten
+                # Browsers als PageError — diese dürfen NICHT als „Spieler
+                # überspringen" gewertet werden, sonst würde jeder Spieler an
+                # einer toten Seite scheitern. Stattdessen Neustart auslösen.
+                if is_closed_error(exc):
+                    raise _BrowserGone(exc)
+                self.log.warning('[%d/%d] Übersprungen (%s): %s',
+                                 done, total, entry.get('display_name'), exc)
+                continue
+            except Exception as exc:  # robust gegen einzelne Parserfehler
+                if is_closed_error(exc):
+                    raise _BrowserGone(exc)
+                self.log.warning('[%d/%d] Übersprungen (Fehler): %s',
+                                 done, total, exc)
+                continue
+
+            try:
+                self.api.send_candidate(job_id, candidate)
+                state.mark_sent(pid)
+                self.log.info('[%d/%d] %s übertragen.',
+                              done, total, entry.get('display_name'))
+            except FatalApiError as exc:
+                self.log.error('Lease/Authentifizierung verloren: %s', exc)
+                return 2
+
+            self.page_pause()
+
+        self._progress(job_id, current=total, total=total,
+                       step='Übertragung abgeschlossen')
+        self.api.complete(job_id, tm_club_name=getattr(
+            tm, 'squad_club_name', ''))
+        state.clear()
+        self.log.info('Auftrag #%s abgeschlossen — bereit zur Kontrolle.', job_id)
+        return 0
 
     # ── Kandidatenaufbau ────────────────────────────────────────────────────
     def _build_candidate(self, tm, fmi, sofifa, entry):

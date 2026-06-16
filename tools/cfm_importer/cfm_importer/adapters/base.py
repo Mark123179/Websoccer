@@ -74,6 +74,24 @@ def detect_block(page):
         raise BlockedError(f'Quelle blockiert den Zugriff (Titel: {title!r}).')
 
 
+_CLOSED_MARKERS = (
+    'has been closed', 'target closed', 'target page, context or browser',
+    'browser has been closed', 'connection closed',
+)
+
+
+def is_closed_error(exc):
+    """True, wenn ein Fehler auf einen geschlossenen Page/Kontext/Browser deutet.
+
+    Tritt z. B. auf, wenn der gesteuerte Edge abstürzt oder extern beendet wird
+    (etwa weil parallel ein normales Edge geöffnet ist). Solche Fehler sind
+    **nicht** durch erneutes Navigieren auf dieselbe tote Seite behebbar — der
+    Browser muss neu gestartet werden.
+    """
+    msg = str(exc or '').lower()
+    return any(m in msg for m in _CLOSED_MARKERS)
+
+
 def _backoff_sleep(config, attempt, log, reason):
     """Wartet mit exponentiellem Backoff vor dem nächsten Versuch."""
     delay = float(config.backoff_base) * (2 ** (attempt - 1))
