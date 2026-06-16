@@ -838,6 +838,7 @@ def creator_player_edit(request, player_id):
             'last_name':    player.last_name,
             'club':         player.club.name if player.club_id else '',
             'rl_club':      player.real_life_club.name if player.real_life_club_id else '',
+            'loan_club':    player.loan_partner_club.name if player.loan_partner_club_id else '',
             'dob':          str(player.date_of_birth or ''),
             'height_cm':    str(player.height_cm or ''),
             'nationalities': player.nationalities or '',
@@ -870,6 +871,15 @@ def creator_player_edit(request, player_id):
                 pass
         elif rl_club_id == '':
             player.real_life_club = None
+
+        loan_club_id = request.POST.get('loan_partner_club')
+        if loan_club_id:
+            try:
+                player.loan_partner_club = Club.objects.get(id=int(loan_club_id))
+            except Club.DoesNotExist:
+                pass
+        elif loan_club_id == '':
+            player.loan_partner_club = None
 
         for field in ['main_position_1', 'main_position_2', 'main_position_3',
                       'secondary_position_1', 'secondary_position_2', 'secondary_position_3',
@@ -956,10 +966,13 @@ def creator_player_edit(request, player_id):
         _verein_lines = []
         _new_club = player.club.name if player.club_id else ''
         _new_rl_club = player.real_life_club.name if player.real_life_club_id else ''
+        _new_loan_club = player.loan_partner_club.name if player.loan_partner_club_id else ''
         if _new_club != _old['club']:
             _verein_lines.append(f'WS-Verein: {_old["club"] or "–"} → {_new_club or "–"}')
         if _new_rl_club != _old['rl_club']:
             _verein_lines.append(f'RL-Verein: {_old["rl_club"] or "–"} → {_new_rl_club or "–"}')
+        if _new_loan_club != _old['loan_club']:
+            _verein_lines.append(f'Leihverein: {_old["loan_club"] or "–"} → {_new_loan_club or "–"}')
         if str(player.market_value or '') != _old['market_value']:
             _verein_lines.append(f'Marktwert: {_old["market_value"] or "–"} → {player.market_value or "–"} €')
         if str(player.salary_per_match or '') != _old['salary']:

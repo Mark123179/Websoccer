@@ -110,6 +110,15 @@
             {% endfor %}
           </select>
         </div>
+        <div class="cpe-label cpe-label-inline">Leihverein:</div>
+        <div class="cpe-field">
+          <select class="cpe-select" name="loan_partner_club">
+            <option value="">----------</option>
+            {% for c in all_clubs %}
+            <option value="{{ c.id }}" {% if player and player.loan_partner_club_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
 
       <div class="cpe-divider"></div>
