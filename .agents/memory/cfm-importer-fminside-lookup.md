@@ -38,6 +38,16 @@ returns the target club's roster (only players that already carry an
 a name+DOB index from that roster and resolves each Transfermarkt player to an
 `fm_inside_id`, which then drives the unique-ID FMInside lookup.
 
+**Name-search path is now fully removed (do not re-add).** The adapter's
+`lookup()` is strictly FM-ID-only: with an `fmi_id` it calls `_lookup_by_id`;
+without one it appends a "FM-ID manuell setzen" warning and returns `None`
+**without navigating anywhere**. There is no `/search?q=` call, no
+`_search_results`, no `_open_and_scrape` — so the 404 can no longer occur even
+when the roster match yields no FM-ID. **Why:** FMInside has no reliably usable
+public name search; navigating to a non-existent page only produced a 404 that
+aborted the import. This is the deliberate, consistent endpoint of the ID-first
+philosophy — do not reintroduce a name-search fallback.
+
 **Matching safety rule (do not regress):** the roster matcher prefers exact
 name+DOB, falls back to a unique-name match only when DOBs don't contradict, and
 returns *no match* for any ambiguity — duplicate names without DOB, conflicting

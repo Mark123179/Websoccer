@@ -1,12 +1,13 @@
-"""FMInside-Adapter — eindeutige Zuordnung über FM-ID bzw. Name + Geburtsdatum.
+"""FMInside-Adapter — eindeutige Zuordnung ausschließlich über die FM-ID.
 
-Selektoren sind hier gekapselt. **Namen sind nicht eindeutig** und werden daher
-niemals allein akzeptiert: Ein per Namenssuche gefundener Treffer gilt nur als
-gültig, wenn das **Geburtsdatum** auf der Detailseite übereinstimmt. Ist eine
-**FM-ID** bekannt, wird direkt die kanonische Spielerseite geöffnet (kein Raten
-über den Namen). Mehrdeutige oder unbestätigte Fälle werden als *prüfbedürftig*
-gemeldet — niemals wird ein falscher Treffer erzwungen. Fehlendes FMInside
-blockiert den Import NICHT.
+Selektoren sind hier gekapselt. **Namen sind nicht eindeutig**, und FMInside
+bietet keine zuverlässig nutzbare öffentliche Namenssuche (die frühere Route
+``/search?q=`` existiert nicht mehr und liefert **404**). Daher gilt strikt:
+ist eine **FM-ID** bekannt, wird direkt die kanonische Spielerseite geöffnet
+(kein Raten über den Namen); fehlt die FM-ID, wird der Fall sauber als
+*prüfbedürftig* gemeldet (FM-ID manuell setzen) — es wird **nicht** zu einer
+nicht existierenden Suchseite navigiert. Fehlendes FMInside blockiert den
+Import NICHT.
 
 URL-Schema: Die einsegmentige URL ``/players/{fmi_id}-{slug}`` wird von FMInside
 automatisch auf die **neueste** kanonische DB-Version umgeleitet (z. B.
@@ -18,20 +19,14 @@ ist die ID in der **finalen** (umgeleiteten) URL.
 
 import re
 
-from .. import normalize
 from .base import (
     PageError,
-    attr_or_empty,
     first_int,
-    id_from_url,
     safe_goto,
     text_or_empty,
 )
 
 BASE = 'https://fminside.net'
-
-# Höchstzahl an Detailseiten, die zur Geburtsdatums-Bestätigung geöffnet werden.
-MAX_DETAIL_CHECKS = 5
 
 # Platzhalter-Slug für die einsegmentige Spieler-URL. Die ID ist bereits
 # eindeutig; FMInside verlangt aber technisch ein nicht-leeres Segment nach dem
@@ -73,75 +68,22 @@ class FMInsideAdapter:
                fmi_id=None):
         """Liefert FMInside-Rohwerte oder ``None`` (mit Warnung).
 
-        Reihenfolge: bekannte **FM-ID** → direkter, eindeutiger Aufruf. Sonst
-        **Namenssuche**, deren Treffer erst über das **Geburtsdatum** auf der
-        Detailseite bestätigt werden muss — Namen sind nicht eindeutig und
-        werden nie allein akzeptiert.
+        Ausschließlich über die bekannte **FM-ID** (direkter, eindeutiger
+        Aufruf der kanonischen Spielerseite). Fehlt die FM-ID, gibt es keinen
+        zuverlässigen öffentlichen Suchweg — FMInside bietet keine nutzbare
+        Namens-Such-URL (die frühere ``/search?q=``-Route liefert 404). Statt
+        auf eine nicht existierende Seite zu navigieren, wird der Fall sauber
+        als prüfbedürftig gemeldet (FM-ID manuell setzen).
         """
         if fmi_id:
             return self._lookup_by_id(fmi_id, warnings)
 
-        target_name = normalize.normalize_name(display_name)
-        target_dob = normalize.normalize_dob(date_of_birth)
-        if not target_name:
-            warnings.append('FMInside: kein Name für die Suche vorhanden.')
-            return None
-        if not target_dob:
-            warnings.append('FMInside: kein Geburtsdatum vorhanden — keine '
-                            'eindeutige Zuordnung möglich (FM-ID manuell setzen).')
-            return None
-
-        try:
-            self._goto(f'{BASE}/search?q={display_name.replace(" ", "+")}')
-        except PageError:
-            warnings.append('FMInside: Suchseite nicht erreichbar.')
-            return None
-
-        name_hits = [c for c in self._search_results()
-                     if normalize.normalize_name(c['name']) == target_name]
-        if not name_hits:
-            warnings.append('FMInside: kein Namenstreffer — prüfbedürftig.')
-            return None
-
-        if len(name_hits) > MAX_DETAIL_CHECKS:
-            warnings.append(
-                f'FMInside: {len(name_hits)} Namenstreffer — nur die ersten '
-                f'{MAX_DETAIL_CHECKS} werden per Geburtsdatum geprüft.')
-
-        # Namen sind nicht eindeutig: jeden Treffer per Geburtsdatum bestätigen.
-        confirmed = []
-        for cand in name_hits[:MAX_DETAIL_CHECKS]:
-            raw = self._open_and_scrape(cand, warnings)
-            if raw and raw.get('dob') and raw['dob'] == target_dob:
-                confirmed.append(raw)
-
-        if not confirmed:
-            warnings.append('FMInside: kein per Geburtsdatum bestätigter Treffer '
-                            '— prüfbedürftig (FM-ID manuell setzen).')
-            return None
-        if len(confirmed) > 1:
-            warnings.append('FMInside: mehrere per Geburtsdatum bestätigte '
-                            'Treffer — uneindeutig.')
-            return None
-        return confirmed[0]
+        warnings.append('FMInside: keine FM-ID bekannt — keine zuverlässige '
+                        'Namenssuche verfügbar; prüfbedürftig (FM-ID manuell '
+                        'setzen).')
+        return None
 
     # ── Selektoren ──────────────────────────────────────────────────────────
-    def _search_results(self):
-        links = self.page.locator('a[href*="/players/"]')
-        out = []
-        try:
-            for i in range(min(links.count(), 25)):
-                href = attr_or_empty(links.nth(i), 'href')
-                name = text_or_empty(links.nth(i))
-                fmi_id = self._id_from_player_url(href)
-                if fmi_id and name:
-                    out.append({
-                        'id': fmi_id, 'name': name,
-                        'url': href if href.startswith('http') else f'{BASE}{href}'})
-        except Exception:
-            pass
-        return out
-
     @staticmethod
     def _id_from_player_url(href):
         """Extrahiert die FM-ID aus beiden URL-Schemata.
@@ -215,15 +157,6 @@ class FMInsideAdapter:
                 '— prüfbedürftig.')
             return None
         return self._scrape_player({'id': target, 'url': final_url})
-
-    def _open_and_scrape(self, cand, warnings):
-        """Öffnet einen Suchtreffer und liefert dessen Rohwerte (inkl. DOB)."""
-        try:
-            self._goto(cand['url'])
-        except PageError as exc:
-            warnings.append(f'FMInside: Detailseite nicht lesbar ({exc}).')
-            return None
-        return self._scrape_player(cand)
 
     def _scrape_player(self, match):
         rating = first_int(text_or_empty(self.page.locator('.player-ca, .current-ability')))
