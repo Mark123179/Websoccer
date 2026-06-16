@@ -3,13 +3,15 @@
 Selektoren sind hier gekapselt. **Namen sind nicht eindeutig** und werden daher
 niemals allein akzeptiert: Ein per Namenssuche gefundener Treffer gilt nur als
 gültig, wenn das **Geburtsdatum** auf der Detailseite übereinstimmt. Ist eine
-**FM-ID** bekannt, wird direkt ``/players/{fmi_id}-{name-slug}`` geöffnet (kein
-Raten über den Namen). Mehrdeutige oder unbestätigte Fälle werden als
-*prüfbedürftig* gemeldet — niemals wird ein falscher Treffer erzwungen.
-Fehlendes FMInside blockiert den Import NICHT.
+**FM-ID** bekannt, wird direkt die kanonische Spielerseite geöffnet (kein Raten
+über den Namen). Mehrdeutige oder unbestätigte Fälle werden als *prüfbedürftig*
+gemeldet — niemals wird ein falscher Treffer erzwungen. Fehlendes FMInside
+blockiert den Import NICHT.
 
-URL-Schema: ``/players/{fmi_id}-{name-slug}`` (Slug ist kosmetisch, die ID ist
-maßgeblich).
+URL-Schema: ``/players/{db-version}/{fmi_id}-{name-slug}`` (z. B.
+``/players/7-fm-26/28049320-harry-kane``). Der DB-Versions-Pfad ist Pflicht
+(``7-fm-26`` = FM26.2); der Slug ist kosmetisch, muss aber vorhanden sein — ohne
+Slug liefert die Seite 404. Maßgeblich ist die ID im Pfad.
 """
 
 import re
@@ -28,6 +30,11 @@ BASE = 'https://fminside.net'
 
 # Höchstzahl an Detailseiten, die zur Geburtsdatums-Bestätigung geöffnet werden.
 MAX_DETAIL_CHECKS = 5
+
+# DB-Versions-Pfade für die kanonische Spieler-URL. ``7-fm-26`` = FM26.2 (aktuelle
+# Standardversion). Wird der Reihe nach probiert, falls eine ID in einer älteren
+# Datenbank liegt (mirror von populate_positions_fmi).
+FM_VERSIONS = ('7-fm-26', '7-fm-25', '7-fm-27', '7-fm-28')
 
 
 def _first_dob(text):
@@ -131,7 +138,7 @@ class FMInsideAdapter:
             for i in range(min(links.count(), 25)):
                 href = attr_or_empty(links.nth(i), 'href')
                 name = text_or_empty(links.nth(i))
-                fmi_id = id_from_url(href, 'players') or self._id_from_player_url(href)
+                fmi_id = self._id_from_player_url(href)
                 if fmi_id and name:
                     out.append({
                         'id': fmi_id, 'name': name,
@@ -142,34 +149,75 @@ class FMInsideAdapter:
 
     @staticmethod
     def _id_from_player_url(href):
-        # /players/7-fm-26/{id}-{slug}
-        import re
-        m = re.search(r'/players/[^/]+/(\d+)-', href or '')
+        """Extrahiert die FM-ID aus beiden URL-Schemata.
+
+        Neu: ``/players/7-fm-26/{id}-{slug}`` → ``{id}``
+        Alt: ``/players/{id}-{slug}``         → ``{id}``
+
+        Wichtig: zuerst das zweisegmentige Schema prüfen, sonst würde das
+        einsegmentige Muster fälschlich die DB-Version (z. B. ``7``) greifen.
+        """
+        href = href or ''
+        m = re.search(r'/players/[^/]+/(\d+)-', href)
+        if m:
+            return int(m.group(1))
+        m = re.search(r'/players/(\d+)-', href)
         return int(m.group(1)) if m else None
 
     # ── Direkter Zugriff über bekannte FM-ID ────────────────────────────────
-    def _lookup_by_id(self, fmi_id, display_name, warnings):
-        """Öffnet ``/players/{fmi_id}-{slug}`` direkt — eindeutig, kein Raten."""
-        url = self._player_url(fmi_id, display_name)
-        try:
-            self._goto(url)
-        except PageError as exc:
-            warnings.append(
-                f'FMInside: Spielerseite zu FM-ID {fmi_id} nicht lesbar ({exc}).')
-            return None
-        try:
-            ident = int(str(fmi_id).strip())
-        except (TypeError, ValueError):
-            ident = fmi_id
-        return self._scrape_player({'id': ident, 'url': url})
-
     @staticmethod
-    def _player_url(fmi_id, display_name):
-        slug = _name_slug(display_name)
-        ident = str(fmi_id).strip()
-        if slug:
-            return f'{BASE}/players/{ident}-{slug}'
-        return f'{BASE}/players/{ident}'
+    def _clean_fm_id(raw):
+        """Bereinigt eine FM-ID zu reinen Ziffern.
+
+        Entfernt BOM/Leerzeichen und einen ``.0``-Suffix (Float-Export aus
+        Tabellen), damit Werte wie ``"2000262919.0"``, ``" 2000262919 "`` oder
+        ``"\ufeff2000262919"`` korrekt verarbeitet werden. Wirft ``ValueError``
+        bei leerem oder nicht-numerischem Wert.
+        """
+        fm_id = str(raw or '').replace('\ufeff', '').strip()
+        if fm_id.endswith('.0'):
+            fm_id = fm_id[:-2]
+        if not fm_id.isdigit():
+            raise ValueError(f'Ungültige FM-ID: {raw!r}')
+        return fm_id
+
+    def _lookup_by_id(self, fmi_id, display_name, warnings):
+        """Öffnet die kanonische Seite zur bekannten FM-ID — eindeutig, kein Raten.
+
+        Probiert die DB-Versions-Pfade der Reihe nach (FM26 zuerst). Der Slug ist
+        kosmetisch (irgendein nicht-leerer Wert genügt), entscheidend ist die ID
+        im Pfad. Nach dem Laden wird geprüft, dass die Nummer in der geöffneten
+        URL mit der gesuchten FM-ID übereinstimmt.
+        """
+        try:
+            uid = self._clean_fm_id(fmi_id)
+        except ValueError:
+            warnings.append(f'FMInside: ungültige FM-ID {fmi_id!r} — übersprungen.')
+            return None
+
+        slug = _name_slug(display_name) or 'player'
+        target = int(uid)
+        last_exc = None
+        for version in FM_VERSIONS:
+            url = f'{BASE}/players/{version}/{uid}-{slug}'
+            try:
+                self._goto(url)
+            except PageError as exc:
+                last_exc = exc
+                continue  # 404 → nächste DB-Version probieren
+
+            opened = (self._id_from_player_url(getattr(self.page, 'url', ''))
+                      or self._id_from_player_url(url))
+            if opened != target:
+                warnings.append(
+                    f'FMInside: FM-ID-Abweichung (gesucht {uid}, Seite {opened}) '
+                    '— prüfbedürftig.')
+                return None
+            return self._scrape_player({'id': target, 'url': url})
+
+        warnings.append(
+            f'FMInside: keine Seite zu FM-ID {uid} gefunden ({last_exc}).')
+        return None
 
     def _open_and_scrape(self, cand, warnings):
         """Öffnet einen Suchtreffer und liefert dessen Rohwerte (inkl. DOB)."""

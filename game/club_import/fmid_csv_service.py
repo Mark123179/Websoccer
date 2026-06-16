@@ -63,6 +63,25 @@ def _norm_header(value):
     return (value or '').replace('\ufeff', '').strip().lower()
 
 
+def clean_fm_id(raw_fm_id):
+    """Bereinigt eine FM-ID aus der CSV zu reinen Ziffern.
+
+    Behebt typische Tabellen-/Encoding-Artefakte:
+        ``"2000262919.0"`` (Float-Export) → ``"2000262919"``
+        ``" 2000262919 "`` (Leerzeichen)  → ``"2000262919"``
+        ``"\ufeff2000262919"`` (BOM)      → ``"2000262919"``
+
+    Returns die bereinigte ID als ``str``. Wirft ``ValueError`` bei ungültigem
+    Wert (leer oder nicht-numerisch).
+    """
+    fm_id = str(raw_fm_id or '').replace('\ufeff', '').strip()
+    if fm_id.endswith('.0'):
+        fm_id = fm_id[:-2]
+    if not fm_id.isdigit():
+        raise ValueError(f'Ungültige FM-ID: {raw_fm_id!r}')
+    return fm_id
+
+
 def _parse_german_date(value):
     """Parst ``T.M.JJJJ`` (auch einstellig) → ``date`` oder ``None``."""
     text = (value or '').strip()
@@ -153,7 +172,7 @@ def parse_fmid_csv(csv_text):
             parse_error = 'Keine Unique ID.'
         else:
             try:
-                fm_id = int(raw_id)
+                fm_id = int(clean_fm_id(raw_id))
             except ValueError:
                 parse_error = f'Unique ID „{raw_id}" ist keine Zahl.'
 
