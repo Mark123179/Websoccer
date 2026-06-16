@@ -147,6 +147,7 @@
       <thead>
         <tr>
           <th>Import</th><th>Status</th><th>Spieler</th><th>Positionen</th>
+          <th>Stammdaten</th>
           <th>Verein / Leihe</th><th>FMInside</th><th>SoFIFA</th><th>Diff / Hinweise</th>
         </tr>
       </thead>
@@ -186,6 +187,11 @@
             {% for p in c.main_positions %}<span class="imp-pos">{{ p }}</span>{% endfor %}
             {% for p in c.secondary_positions %}<span class="imp-pos imp-pos-sec">{{ p }}</span>{% endfor %}
             {% if not c.main_positions %}<span class="imp-err">keine</span>{% endif %}
+          </td>
+          <td class="imp-col-stamm">
+            <div class="imp-dim">Größe: {% if c.height_cm %}{{ c.height_cm }} cm{% else %}<span class="imp-missing">—</span>{% endif %}</div>
+            <div class="imp-dim">Fuß: {% if c.strong_foot_label %}{{ c.strong_foot_label }}{% else %}<span class="imp-missing">— ⚠</span>{% endif %}</div>
+            <div class="imp-dim">Marktwert: {% if c.market_value_label %}{{ c.market_value_label }}{% else %}<span class="imp-missing">—</span>{% endif %}</div>
           </td>
           <td>
             {% if c.loaned_from %}<div class="imp-dim">Leihe von: {{ c.loaned_from }}</div>{% endif %}
@@ -231,7 +237,7 @@
           </td>
         </tr>
         {% empty %}
-        <tr><td colspan="8" class="imp-dim">Keine Kandidaten in diesem Auftrag.</td></tr>
+        <tr><td colspan="9" class="imp-dim">Keine Kandidaten in diesem Auftrag.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -294,14 +300,18 @@
     {% if candidates %}
     <div style="overflow-x:auto;">
     <table class="imp-cand-table">
-      <thead><tr><th>Status</th><th>Spieler</th><th>Positionen</th><th>Spieler-Datensatz</th></tr></thead>
+      <thead><tr><th>Status</th><th>Spieler</th><th>Positionen</th><th>Stammdaten</th><th>Spieler-Datensatz</th></tr></thead>
       <tbody>
         {% for c in candidates %}
         <tr>
           <td><span class="imp-badge imp-st-{{ c.status }}">{{ c.status_label }}</span></td>
           <td><div style="color:#cce8ff;font-weight:600;">{{ c.name }}</div>
               <div class="imp-dim">TM {{ c.tm_player_id }}</div></td>
-          <td>{% for p in c.main_positions %}<span class="imp-pos">{{ p }}</span>{% endfor %}</td>
+          <td>{% for p in c.main_positions %}<span class="imp-pos">{{ p }}</span>{% endfor %}{% for p in c.secondary_positions %}<span class="imp-pos imp-pos-sec">{{ p }}</span>{% endfor %}</td>
+          <td class="imp-col-stamm">
+            <div class="imp-dim">{% if c.height_cm %}{{ c.height_cm }} cm{% else %}—{% endif %} · {% if c.strong_foot_label %}{{ c.strong_foot_label }}{% else %}—{% endif %}</div>
+            <div class="imp-dim">{% if c.market_value_label %}{{ c.market_value_label }}{% else %}—{% endif %}</div>
+          </td>
           <td>
             {% if c.existing_player %}
               <a class="imp-link-ext" href="{% url 'creator_player_edit' player_id=c.existing_player.pk %}">{{ c.existing_player }} ›</a>

@@ -236,6 +236,17 @@ class ImportUiViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, 'Importauftrag')
 
+    def test_detail_renders_stammdaten_values(self):
+        job = self._job()
+        self._cand(job)
+        self.client.force_login(self.staff)
+        resp = self.client.get(reverse('creator_import_detail', args=[job.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'Stammdaten')
+        self.assertContains(resp, '188 cm')
+        self.assertContains(resp, 'rechts')
+        self.assertContains(resp, '100,00 Mio. €')
+
     def test_create_job(self):
         self.client.force_login(self.staff)
         resp = self.client.post(reverse('creator_import_create'), {
@@ -379,3 +390,50 @@ class ImportUiViewTests(TestCase):
             reverse('creator_import_confirm', args=[job.pk]))
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(Player.objects.filter(transfermarkt_id=28049320).exists())
+
+
+class CandidateDisplayStammdatenTests(TestCase):
+    """Größe/Fuß/Marktwert müssen in der Kontrolltabelle sichtbar sein.
+
+    Regressionsschutz: die Werte werden importiert, waren aber zuvor nicht im
+    Template-Kontext (``_candidate_display``) enthalten und damit unsichtbar.
+    """
+
+    def setUp(self):
+        from game.views_creator import _candidate_display, _format_import_eur
+        self._display = staticmethod(_candidate_display).__func__
+        self._fmt = staticmethod(_format_import_eur).__func__
+        self.league = League.objects.create(name='L', country='DE')
+        self.club = Club.objects.create(
+            name='C', short_name='C', founded_year=2000,
+            budget=Decimal('0'), league=self.league)
+        self.job = ClubPlayerImportJob.objects.create(
+            ws_club=self.club, tm_club_id=27, tm_season_id=2025,
+            season_label='2025/26')
+
+    def _cand(self, **over):
+        c = PlayerImportCandidate.objects.create(
+            job=self.job, tm_player_id=28049320, tm_raw=_tm_raw(**over),
+            position_raw={'main_positions': ['ST'],
+                          'secondary_positions': ['LA']})
+        refresh_candidate(c, reset_selection=True)
+        return c
+
+    def test_format_eur_variants(self):
+        self.assertEqual(self._fmt(3_000_000), '3,00 Mio. €')
+        self.assertEqual(self._fmt(1_200_000), '1,20 Mio. €')
+        self.assertEqual(self._fmt(800_000), '800 Tsd. €')
+        self.assertEqual(self._fmt(None), '')
+        self.assertEqual(self._fmt(0), '')
+
+    def test_display_exposes_stammdaten(self):
+        d = self._display(self._cand())
+        self.assertEqual(d['height_cm'], 188)
+        self.assertEqual(d['strong_foot_label'], 'rechts')
+        self.assertEqual(d['market_value_label'], '100,00 Mio. €')
+        self.assertEqual(d['main_positions'], ['ST'])
+        self.assertEqual(d['secondary_positions'], ['LA'])
+
+    def test_display_empty_foot_has_no_label(self):
+        d = self._display(self._cand(preferred_foot=''))
+        self.assertEqual(d['strong_foot_label'], '')

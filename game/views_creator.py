@@ -2643,6 +2643,24 @@ def _import_access(request):
     return None
 
 
+def _format_import_eur(value):
+    """Marktwert (Euro-Ganzzahl) als kurze deutsche Anzeige, z. B. „3,00 Mio. €"."""
+    if not value:
+        return ''
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return ''
+    if value >= 1_000_000:
+        return f"{value / 1_000_000:.2f}".replace('.', ',') + ' Mio. €'
+    if value >= 1_000:
+        return f"{value // 1_000} Tsd. €"
+    return f"{value} €"
+
+
+_FOOT_LABELS = {'L': 'links', 'R': 'rechts', 'B': 'beidfüßig'}
+
+
 def _candidate_display(candidate):
     """Template-freundliche Aufbereitung eines Kandidaten für die Kontrolltabelle."""
     nd = candidate.normalized_data or {}
@@ -2666,6 +2684,9 @@ def _candidate_display(candidate):
         'overwrite': candidate.overwrite_existing,
         'main_positions': nd.get('main_positions') or [],
         'secondary_positions': nd.get('secondary_positions') or [],
+        'height_cm': nd.get('height_cm'),
+        'strong_foot_label': _FOOT_LABELS.get(nd.get('strong_foot'), ''),
+        'market_value_label': _format_import_eur(nd.get('market_value')),
         'real_club': real_club.get('name') or '',
         'loaned_from': loaned_from.get('name') or '',
         'tm_url': nd.get('transfermarkt_profile_url') or '',
