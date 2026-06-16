@@ -33,6 +33,12 @@ BASE = 'https://fminside.net'
 # Höchstzahl an Detailseiten, die zur Geburtsdatums-Bestätigung geöffnet werden.
 MAX_DETAIL_CHECKS = 5
 
+# Platzhalter-Slug für die einsegmentige Spieler-URL. Die ID ist bereits
+# eindeutig; FMInside verlangt aber technisch ein nicht-leeres Segment nach dem
+# Bindestrich (``/players/{id}`` ohne Slug leitet auf die Spielerliste um). Der
+# Inhalt ist irrelevant — die Seite leitet ohnehin auf den kanonischen Slug um.
+PLACEHOLDER_SLUG = 'player'
+
 
 def _first_dob(text):
     """Erstes plausibles Datum aus Text auf ``YYYY-MM-DD`` normalisiert.
@@ -54,14 +60,6 @@ def _first_dob(text):
     return ''
 
 
-def _name_slug(display_name):
-    """Baut einen URL-Slug ``vorname-name`` aus dem Anzeigenamen."""
-    import unicodedata
-    value = unicodedata.normalize('NFKD', display_name or '')
-    value = value.encode('ASCII', 'ignore').decode('ASCII').lower()
-    return re.sub(r'[^a-z0-9]+', '-', value).strip('-')
-
-
 class FMInsideAdapter:
     def __init__(self, page, config, logger):
         self.page = page
@@ -81,7 +79,7 @@ class FMInsideAdapter:
         werden nie allein akzeptiert.
         """
         if fmi_id:
-            return self._lookup_by_id(fmi_id, display_name, warnings)
+            return self._lookup_by_id(fmi_id, warnings)
 
         target_name = normalize.normalize_name(display_name)
         target_dob = normalize.normalize_dob(date_of_birth)
@@ -178,14 +176,16 @@ class FMInsideAdapter:
             raise ValueError(f'Ungültige FM-ID: {raw!r}')
         return fm_id
 
-    def _lookup_by_id(self, fmi_id, display_name, warnings):
+    def _lookup_by_id(self, fmi_id, warnings):
         """Öffnet die kanonische Seite zur bekannten FM-ID — eindeutig, kein Raten.
 
         Nutzt die einsegmentige URL ``/players/{id}-{slug}``; FMInside leitet
         automatisch auf die **neueste** DB-Version um (keine Version hartkodiert).
-        Der Slug ist kosmetisch (irgendein nicht-leerer Wert genügt). Nach dem
-        Laden wird geprüft, dass die Nummer in der **finalen** URL mit der
-        gesuchten FM-ID übereinstimmt — sonst gilt der Treffer als prüfbedürftig.
+        Die ID ist bereits eindeutig — der Slug ist nur ein Platzhalter
+        (``PLACEHOLDER_SLUG``), den die Route technisch verlangt; sein Inhalt ist
+        irrelevant. Nach dem Laden wird geprüft, dass die Nummer in der
+        **finalen** URL mit der gesuchten FM-ID übereinstimmt — sonst gilt der
+        Treffer als prüfbedürftig.
         """
         try:
             uid = self._clean_fm_id(fmi_id)
@@ -193,8 +193,7 @@ class FMInsideAdapter:
             warnings.append(f'FMInside: ungültige FM-ID {fmi_id!r} — übersprungen.')
             return None
 
-        slug = _name_slug(display_name) or 'player'
-        url = f'{BASE}/players/{uid}-{slug}'
+        url = f'{BASE}/players/{uid}-{PLACEHOLDER_SLUG}'
         try:
             self._goto(url)
         except PageError as exc:
