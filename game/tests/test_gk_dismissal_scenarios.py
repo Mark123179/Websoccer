@@ -24,6 +24,9 @@ Abgedeckte Bereiche:
   T17: _find_bench_gk — None wenn Spieler nicht in available_pids
   T18: _find_bench_strongest — wählt höchsten final_strength
   T19: _find_bench_strongest — None bei leerer Bank
+  T20: Szenario C per Limit — Bank-TW vorhanden, Wechselkontingent erschöpft → gk_override == 30.0
+  T21: can_substitute() → False wenn used_substitutions == MAX_SUBSTITUTIONS
+  T22: can_substitute(extra_time=True) → True bei used_substitutions == MAX_SUBSTITUTIONS
 
 Hinweise zur Spec-Implementierungs-Abweichung:
   Die Task-Spec nennt für Szenario B "gk_str_override is None".
@@ -53,6 +56,8 @@ except Exception:
 
 from game.match_engine import (
     ActiveLineupState,
+    EXTRA_TIME_SUBSTITUTION_BONUS,
+    MAX_SUBSTITUTIONS,
     _find_bench_gk,
     _find_bench_strongest,
     _resolve_dismissal,
@@ -381,6 +386,114 @@ class TestFindBenchHelpers(unittest.TestCase):
     def test_T19_find_bench_strongest_none_for_empty_bench(self):
         """T19: _find_bench_strongest → None wenn bank leer."""
         self.assertIsNone(_find_bench_strongest(_make_team_dict(), {99}))
+
+
+# ── Szenario C per Wechsellimit ───────────────────────────────────────────────
+
+class TestSzenarioCPerLimit(unittest.TestCase):
+    """Szenario C ausgelöst durch erschöpftes Wechselkontingent (nicht leere Bank).
+
+    Wichtig: _resolve_dismissal gibt incoming_pid != None zurück (Bank-TW wird gefunden),
+    weil available_bench_pids den Bank-TW enthält. Die Szenario-C-Entscheidung trifft
+    der Aufrufer (Zeile 1342 match_engine.py):
+
+        if incoming_pid and als.can_substitute():   ← schlägt fehl: used_subs == MAX
+            apply_emergency_gk_sub(...)             ← Szenario A/B
+        else:
+            gk_str_override = gk_ov  (= 30.0)      ← Szenario C
+            als.promote_scenario_c_gk(outfield_off)
+
+    Der Test repliziert diese Caller-Logik explizit.
+    """
+
+    def _setup_als_with_exhausted_subs(self):
+        """ALS mit erschöpftem Wechselkontingent und Bank-TW."""
+        als = _make_als(
+            lineup_slots=_base_lineup_slots(),
+            bench_by_id={
+                _BENCH_GK_PID: {
+                    'id': _BENCH_GK_PID, 'name': 'BankTW',
+                    'final_strength': 68.0, 'main_positions': ['TW'],
+                },
+            },
+        )
+        als.used_substitutions = MAX_SUBSTITUTIONS
+        return als
+
+    def _resolve_with_bench_gk_in_available_pids(self):
+        """_resolve_dismissal mit Bank-TW in available_bench_pids (TW verwiesen)."""
+        team_dict = _make_team_dict(
+            bench_player_data={
+                _BENCH_GK_PID: {
+                    'id': _BENCH_GK_PID, 'name': 'BankTW',
+                    'final_strength': 68.0, 'main_positions': ['TW'],
+                },
+            },
+        )
+        dismissed_pids: set = set()
+        lineup_players = _lineup_players_with_gk()
+        gk_player = next(p for p in lineup_players if p['group'] == 'goalkeeper')
+        with patch('game.match_engine.random.choice', return_value=gk_player):
+            result = _resolve_dismissal(
+                team_dict, lineup_players, dismissed_pids,
+                minute=75, club_side='home', card_type='red',
+                available_bench_pids={_BENCH_GK_PID},
+            )
+        return result, dismissed_pids
+
+    def test_T20_szenario_c_via_limit_bench_gk_found_but_no_sub_possible(self):
+        """T20: Bank-TW vorhanden + Kontingent erschöpft → Szenario C (gk_override == 30.0).
+
+        _resolve_dismissal findet den Bank-TW → incoming_pid != None.
+        Caller prüft `incoming_pid and als.can_substitute()` → False wegen Limit.
+        Caller-else-Zweig: gk_str_override = gk_ov = 30.0; promote_scenario_c_gk() aufgerufen.
+        """
+        (_, gk_ov, incoming_pid, outfield_off_pid), _ = (
+            self._resolve_with_bench_gk_in_available_pids()
+        )
+        als = self._setup_als_with_exhausted_subs()
+
+        # _resolve_dismissal findet den Bank-TW
+        self.assertIsNotNone(incoming_pid)
+        self.assertEqual(incoming_pid, _BENCH_GK_PID)
+
+        # Caller-Entscheidungslogik: Limit ist erschöpft
+        self.assertFalse(als.can_substitute())
+
+        # Caller-else-Zweig: gk_str_override = gk_ov (= 30.0)
+        gk_str_override = gk_ov
+        self.assertEqual(gk_str_override, 30.0)
+
+        # promote_scenario_c_gk wird aufgerufen; outfield_off_pid landet in _scenario_c_pids
+        self.assertIsNotNone(outfield_off_pid)
+        als.promote_scenario_c_gk(outfield_off_pid)
+        self.assertIn(outfield_off_pid, als._scenario_c_pids)
+
+
+# ── can_substitute Grenztests ─────────────────────────────────────────────────
+
+class TestCanSubstitute(unittest.TestCase):
+    """Direkte Tests für ActiveLineupState.can_substitute()."""
+
+    def _make_als_with_subs_used(self, n: int) -> ActiveLineupState:
+        als = _make_als(lineup_slots=_base_lineup_slots())
+        als.used_substitutions = n
+        return als
+
+    def test_T21_can_substitute_false_when_limit_reached(self):
+        """T21: can_substitute() → False wenn used_substitutions == MAX_SUBSTITUTIONS."""
+        als = self._make_als_with_subs_used(MAX_SUBSTITUTIONS)
+        self.assertFalse(als.can_substitute())
+
+    def test_T22_can_substitute_true_in_extra_time_when_normal_limit_reached(self):
+        """T22: can_substitute(extra_time=True) → True bei used_substitutions == MAX_SUBSTITUTIONS.
+
+        In der Verlängerung gilt MAX_SUBSTITUTIONS + EXTRA_TIME_SUBSTITUTION_BONUS als Limit.
+        Mit used_substitutions == MAX_SUBSTITUTIONS (z. B. 5) ist noch 1 Wechsel frei.
+        """
+        als = self._make_als_with_subs_used(MAX_SUBSTITUTIONS)
+        self.assertTrue(als.can_substitute(extra_time=True))
+        self.assertEqual(EXTRA_TIME_SUBSTITUTION_BONUS, 1)
 
 
 if __name__ == '__main__':
