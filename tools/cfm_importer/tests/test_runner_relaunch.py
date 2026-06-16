@@ -143,22 +143,21 @@ def _make_runner(build_candidate):
 class RelaunchTests(unittest.TestCase):
     def setUp(self):
         self._orig = (runner_mod.Browser, runner_mod.TransfermarktAdapter,
-                      runner_mod.FMInsideAdapter, runner_mod.SoFIFAAdapter)
+                      runner_mod.FMInsideAdapter)
         self.browser = _FakeBrowser()
         runner_mod.Browser = lambda *_a, **_k: self.browser
         runner_mod.TransfermarktAdapter = _FakeTM
         runner_mod.FMInsideAdapter = _FakeAdapter
-        runner_mod.SoFIFAAdapter = _FakeAdapter
 
     def tearDown(self):
         (runner_mod.Browser, runner_mod.TransfermarktAdapter,
-         runner_mod.FMInsideAdapter, runner_mod.SoFIFAAdapter) = self._orig
+         runner_mod.FMInsideAdapter) = self._orig
 
     def test_closed_pageerror_relaunches_and_resumes(self):
         """Geschlossener Browser (als PageError) → Neustart + Wiederaufnahme."""
         raised = {'done': False}
 
-        def build_candidate(_tm, _fmi, _sofifa, entry):
+        def build_candidate(_tm, _fmi, entry):
             if entry['tm_player_id'] == 2 and not raised['done']:
                 raised['done'] = True
                 raise PageError(CLOSED_MSG)
@@ -178,7 +177,7 @@ class RelaunchTests(unittest.TestCase):
 
     def test_repeated_browser_loss_aborts(self):
         """Wiederholter Verlust → Abbruch nach MAX_BROWSER_RELAUNCH (Rückgabe 1)."""
-        def build_candidate(_tm, _fmi, _sofifa, _entry):
+        def build_candidate(_tm, _fmi, _entry):
             raise PageError(CLOSED_MSG)
 
         runner = _make_runner(build_candidate)

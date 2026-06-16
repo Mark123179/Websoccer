@@ -1,8 +1,13 @@
 """Ablaufsteuerung des Importers.
 
 Flow: Verbindung prüfen → offenen Auftrag holen → Rückfrage → Auftrag claimen →
-Kaderseite öffnen → alle Spieler sammeln → je Spieler TM/FMInside/SoFIFA
+Kaderseite öffnen → alle Spieler sammeln → je Spieler TM/FMInside
 erfassen und an die API übertragen → Auftrag abschließen.
+
+SoFIFA-/EA-Ratings (Stärke/Potenzial/Attribute) werden hier **nicht** live
+ausgelesen — SoFIFA und cmtracker.net sind Cloudflare-geschützt und serverseitig
+nicht verifizierbar. Diese Werte kommen stattdessen zuverlässig über den
+CMTracker-/SoFIFA-CSV-Export (``game/sofifa_import.py``) in die Datenbank.
 
 Robustheit:
     * Heartbeats halten die Lease während langer Schritte aufrecht.
@@ -16,7 +21,6 @@ import time
 from .api_client import ApiError, FatalApiError, ImporterApiClient, NoJobAvailable
 from .adapters.base import BlockedError, PageError, is_closed_error
 from .adapters.fminside import FMInsideAdapter
-from .adapters.sofifa import SoFIFAAdapter
 from .adapters.transfermarkt import TransfermarktAdapter
 from .browser import Browser
 from .roster_match import RosterMatcher
@@ -147,7 +151,6 @@ class Runner:
         """
         tm = TransfermarktAdapter(browser.page, self.config, self.log)
         fmi = FMInsideAdapter(browser.page, self.config, self.log)
-        sofifa = SoFIFAAdapter(browser.page, self.config, self.log)
 
         self._progress(job_id, step='Lese Kaderseite ...')
         try:
@@ -177,7 +180,7 @@ class Runner:
                            step=f'Spieler {done}/{total}: '
                                 f'{entry.get("display_name", "")}')
             try:
-                candidate = self._build_candidate(tm, fmi, sofifa, entry)
+                candidate = self._build_candidate(tm, fmi, entry)
             except BlockedError as exc:
                 self.log.error('Quelle blockiert — Lauf wird angehalten: %s', exc)
                 self.api.fail(job_id, f'Blockiert: {exc}')
@@ -219,7 +222,7 @@ class Runner:
         return 0
 
     # ── Kandidatenaufbau ────────────────────────────────────────────────────
-    def _build_candidate(self, tm, fmi, sofifa, entry):
+    def _build_candidate(self, tm, fmi, entry):
         details = tm.player_details(entry)
         tm_data = details['tm']
         warnings = list(details.get('warnings', []))
@@ -239,11 +242,6 @@ class Runner:
             nationality=tm_data.get('primary_nationality', ''),
             fmi_id=tm_data.get('fmi_id') or entry.get('fmi_id') or matched_id,
             warnings=warnings)
-        sofifa_raw = sofifa.lookup(
-            display_name=tm_data.get('display_name', ''),
-            date_of_birth=tm_data.get('date_of_birth', ''),
-            nationality=tm_data.get('primary_nationality', ''),
-            warnings=warnings)
 
         candidate = {
             'tm_player_id': entry['tm_player_id'],
@@ -255,8 +253,6 @@ class Runner:
         }
         if fmi_raw:
             candidate['fmi'] = fmi_raw
-        if sofifa_raw:
-            candidate['sofifa'] = sofifa_raw
         return candidate
 
     # ── Heartbeat / Fortschritt ─────────────────────────────────────────────

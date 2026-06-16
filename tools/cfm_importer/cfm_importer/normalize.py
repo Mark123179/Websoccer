@@ -1,6 +1,6 @@
 """Namensnormalisierung für das Quell-Matching (Spiegel der Server-Engine).
 
-Identisch zu ``game/club_import/normalization.py``, damit FMInside/SoFIFA-Treffer
+Identisch zu ``game/club_import/normalization.py``, damit FMInside-Treffer
 nach denselben Regeln wie serverseitig verglichen werden.
 """
 

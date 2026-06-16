@@ -2,9 +2,16 @@
 
 Eigenständiges Werkzeug, das **lokal auf einem Windows-PC** läuft, einen
 sichtbaren Microsoft Edge öffnet (Playwright, persistentes Profil),
-**Transfermarkt**, **FMInside** und **SoFIFA** ausliest und die **Rohdaten**
+**Transfermarkt** und **FMInside** ausliest und die **Rohdaten**
 über die geschützte Token-API an den Creator-Mode des Websoccer-Servers
 überträgt.
+
+> **SoFIFA-/EA-Ratings (Stärke, Potenzial, Attribute) liest dieses Tool NICHT.**
+> SoFIFA und cmtracker.net sind Cloudflare-geschützt und lassen sich nicht
+> zuverlässig/verifizierbar scrapen. Diese Werte kommen stattdessen über den
+> **CMTracker-/SoFIFA-CSV-Export** in die Datenbank — siehe
+> `manage.py import_sofifa_csv` bzw. den Import-Button im Creator-Mode
+> (`game/sofifa_import.py`).
 
 > Es findet **kein Scraping auf dem Server** statt. Das Tool berechnet **keine
 > finalen Attribute** und importiert **keine Bilder** — das übernimmt die
@@ -68,8 +75,9 @@ Bei weiteren Starts genügt ein Doppelklick auf die BAT.
    verdrahteter Slug). Alle Spieler werden gesammelt (dedupliziert über die
    TM-ID), die Gesamtzahl gemeldet.
 5. Pro Spieler werden **Stammdaten**, **Positionsdaten**, **Leihsituation** sowie
-   **FMInside-** und **SoFIFA-Rohwerte** erfasst und **nach jedem Spieler**
-   übertragen. Fortschritt/Heartbeats gehen laufend an den Server.
+   **FMInside-Rohwerte** erfasst und **nach jedem Spieler** übertragen.
+   Fortschritt/Heartbeats gehen laufend an den Server. (SoFIFA-/EA-Ratings
+   liefert separat der CSV-Import, siehe Hinweis oben.)
 6. Nach dem letzten Spieler wird der Auftrag **abgeschlossen** und steht im
    Creator-Mode **zur Kontrolle** bereit.
 
@@ -85,12 +93,9 @@ Bei weiteren Starts genügt ein Doppelklick auf die BAT.
   nicht und läuft ein **sichtbarer** Browser (`headless: false`) mit
   `manual_unblock: true`, kann die Challenge **im Fenster von Hand gelöst** und
   der Lauf per **ENTER** fortgesetzt werden. Erst danach gilt eine Quelle als
-  blockiert. Tipp: einmalig im selben Edge-Profil `https://sofifa.com` öffnen und
-  die Challenge lösen — der Freigabe-Cookie bleibt im Profil erhalten.
-- **Fehlendes SoFIFA/FMInside** bleibt unkritisch und wird zur **manuellen
-  Nachpflege** in der Kontrollphase markiert. SoFIFA-Treffer werden über Name
-  **und** Geburtsdatum bestätigt; lässt sich das Geburtsdatum nicht lesen, wird
-  ein eindeutiger Namenstreffer mit dem Hinweis „bitte prüfen" übernommen.
+  blockiert.
+- **Fehlendes FMInside** bleibt unkritisch und wird zur **manuellen Nachpflege**
+  in der Kontrollphase markiert.
 - **Browser-Verlust** (Absturz/externes Schließen) wird erkannt: Das Tool
   startet Edge neu und nimmt den Lauf über den lokalen State wieder auf, statt
   eine tote Seite endlos neu zu laden.
@@ -143,6 +148,5 @@ tools/cfm_importer/
    └─ adapters/
       ├─ base.py              # gemeinsame Helfer
       ├─ transfermarkt.py     # Kader, Stammdaten, Positionen, Leihe
-      ├─ fminside.py          # FMInside-Match + Rohwerte
-      └─ sofifa.py            # SoFIFA-Match + Rohwerte
+      └─ fminside.py          # FMInside-Match + Rohwerte
 ```

@@ -1,25 +1,28 @@
 ---
-name: SoFIFA matching + importer browser resilience
-description: Why SoFIFA extracted nothing and how the CFM importer recovers from a dead browser.
+name: SoFIFA-Werte kommen per CSV, nicht per Live-Scraping + Importer-Resilience
+description: Warum der CFM-Importer SoFIFA NICHT mehr live ausliest, und wie er einen toten Browser übersteht.
 ---
 
-# SoFIFA-Matching im CFM-Importer
+# SoFIFA-/EA-Ratings: nur noch per CSV-Export
 
-SoFIFA-Trefferlisten zeigen oft **Kurz-/Abkürzungsnamen** (z. B. „L. Messi").
-`normalize.normalize_name` reduziert auf reine Buchstaben (Spiegel der
-Server-Engine) — wichtig: **Umlaute werden zu u, nicht zu ue** (ü→u, NFKD-ASCII).
-Ein reiner Gleichheitsvergleich scheitert daher an Kurznamen → das Profil wird
-nie geöffnet → für ALLE Spieler bleibt SoFIFA leer.
+**Entscheidung (Nutzer-bestätigt):** Der CFM-Importer liest SoFIFA/EA-Ratings
+(Stärke/Potenzial/Attribute) **NICHT mehr live**. Der frühere Live-Adapter
+(`adapters/sofifa.py`) inkl. zweistufigem Namens-/DOB-Matching wurde entfernt.
+Diese Werte kommen ausschließlich über den **CMTracker-/SoFIFA-CSV-Export** in
+die DB: `game/sofifa_import.py` (Voll-Export `.local/tmp/sofifa_uploads/*.csv`
+und CMTracker-API-Export) → `PlayerSourceRating(source=SOURCE_EA)`.
 
-**Lösung/Regel:** zweistufig matchen — toleranter Namens-Vorfilter (gleicher
-Nachname + verträglicher Vorname/Initiale; Einzeltoken/Mononyme matchen gegen
-Vor- ODER Nachnamen) und danach **Bestätigung über das Geburtsdatum**. Lesbares,
-aber abweichendes DOB → verwerfen (kein Raten). DOB nicht lesbar + genau ein
-Namenstreffer → mit Warnung „bitte prüfen" übernehmen (SoFIFA ist optional und
-wird in der Kontrollphase gesichtet).
+**Why:** Sowohl `sofifa.com` ALS AUCH `cmtracker.net` liefern serverseitig
+Cloudflare-403 — nicht verifizierbar/zuverlässig scrapebar. Live-Scraping im
+Importer war fragil und konnte leere Werte übertragen.
 
-**Why:** kein Raten, aber SoFIFA als optionale Quelle darf nicht an reiner
-Namensstrenge scheitern; die Kontrollphase fängt Restunsicherheit ab.
+**How to apply:** Server-Ingestion bleibt tolerant — `candidate.sofifa_raw` ist
+`JSONField(default=dict, blank=True)`, `_store_candidate` nutzt
+`raw.get('sofifa')` (→ None wenn fehlt), `review.py`/`import_service.py` nutzen
+`... or {}`. Ein Candidate ohne `sofifa`-Key ist also unkritisch; die
+serverseitige `sofifa_raw`/`sofifa_id`-Verarbeitung NICHT entfernen (würde nur
+eine Migration/Risiko ohne Nutzen bringen). SoFIFA-Werte immer über den
+CSV-Pfad nachpflegen.
 
 # safe_goto verpackt Browser-Tod als PageError
 

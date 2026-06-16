@@ -19,7 +19,7 @@ from .runner import Runner
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog='cfm_importer',
-        description='Lokaler Vereins-/Spielerimporter (Transfermarkt/FMInside/SoFIFA).')
+        description='Lokaler Vereins-/Spielerimporter (Transfermarkt/FMInside).')
     parser.add_argument('--yes', action='store_true',
                         help='Rückfrage überspringen und Auftrag direkt starten.')
     parser.add_argument('--version', action='version',
