@@ -116,6 +116,13 @@ def _sanitize_rating(value):
 
 # ── Hilfsfunktionen ─────────────────────────────────────────────────────────
 
+def _tokens_equal(a, b):
+    """Konstant-zeit-Vergleich zweier Tokens (auch mit Nicht-ASCII-Zeichen)."""
+    if not a or not b:
+        return False
+    return hmac.compare_digest(a.encode('utf-8'), b.encode('utf-8'))
+
+
 def _json_error(message, status):
     return JsonResponse({'error': message}, status=status)
 
@@ -172,7 +179,7 @@ def importer_api(view):
             return _json_error('Importer-API ist serverseitig nicht konfiguriert.', 503)
 
         provided = _extract_bearer(request)
-        if not provided or not hmac.compare_digest(provided, expected):
+        if not _tokens_equal(provided, expected):
             return _json_error('Ungültiger oder fehlender Token.', 401)
 
         if not _check_rate_limit(request):
@@ -248,7 +255,7 @@ def _get_leased_job(request, job_id, data):
         return None, _json_error('Auftrag nicht gefunden.', 404)
 
     token = _provided_lease_token(request, data)
-    if not token or not job.lease_token or not hmac.compare_digest(token, job.lease_token):
+    if not _tokens_equal(token, job.lease_token):
         return None, _json_error('Ungültiges oder fehlendes Lease-Token.', 403)
     if not _lease_active(job, now):
         return None, _json_error('Lease abgelaufen — Auftrag erneut übernehmen.', 409)

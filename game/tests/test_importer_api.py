@@ -71,6 +71,16 @@ class ImporterApiTests(TestCase):
         resp = self.client.get(reverse('importer_next_job'), **self._auth())
         self.assertEqual(resp.status_code, 200)
 
+    def test_non_ascii_token_accepted(self):
+        # Tokens dürfen Nicht-ASCII-Zeichen enthalten (bytes-Vergleich).
+        self._job()
+        special = 'gehäim-tökén-äöü-🔐'
+        with mock.patch.dict(os.environ, {'CFM_IMPORTER_TOKEN': special}):
+            ok = self.client.get(reverse('importer_next_job'), **self._auth(special))
+            bad = self.client.get(reverse('importer_next_job'), **self._auth('falsch'))
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(bad.status_code, 401)
+
     def test_unconfigured_token_returns_503(self):
         with mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop('CFM_IMPORTER_TOKEN', None)
