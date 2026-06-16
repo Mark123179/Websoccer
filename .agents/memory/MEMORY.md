@@ -33,5 +33,6 @@
 - [Default-Taktik V1 Architektur](default-tactics-v1.md) — game/default_tactics.py (pure Python); apply_default_tactic_settings() in match_readiness.py; Hook in simulate_match Schritt 1b.
 - [game/tests Package-Falle](game-tests-package.md) — game/tests/ ist ein Package; game/tests.py existiert aber wird vom Package überlagert; neue Tests müssen in game/tests/test_*.py.
 - [Default-Taktik V1 Freeze-Stand](default-tactics-v1-freeze.md) — T=0.02/M=0.015 Angriffsfokus, 14 Tests grün; validate_default_tactic_v1 bestätigt Korridore A–E.
+- [Importer-Diff Decimal-Falle](club-import-diff-decimal-trap.md) — DB-Decimal vs. roher int erzeugt Phantom-Diffs + JSONField-Crash; _jsonable() in _norm UND beim Speichern nötig; mit DB-Roundtrip testen.
 - [Bearer-Token ASCII + Secret-Propagation](bearer-token-ascii-and-secret-propagation.md) — API-Bearer-Tokens MÜSSEN ASCII/Hex sein (WSGI latin-1 vs os.environ UTF-8); Secret-Wechsel braucht Neustart NACH Propagation; nie Token in Logs printen.
 - [Club/Player Import Engine](club-import-engine.md) — Creator-Mode-Importer (game/club_import/); NULL-never-0 (market_value jetzt nullable), Platzhalter-Liga, Matching-Priorität, HP/NP-Regeln, Stärke-Persistenz-Falle.

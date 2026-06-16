@@ -101,6 +101,13 @@ from .views_creator import (
     cup_tree_view,
     creator_season_end,
     creator_freie_vereine,
+    creator_import_index,
+    creator_import_create,
+    creator_import_detail,
+    creator_import_status,
+    creator_import_candidate_update,
+    creator_import_bulk,
+    creator_import_confirm,
 )
 from .views_importer_api import (
     importer_next_job,
@@ -310,6 +317,15 @@ urlpatterns = [
 
     # SoFIFA-CSV-Import
     path('creator/import/sofifa/', creator_sofifa_import, name='creator_sofifa_import'),
+
+    # Vereins-/Spielerimport (Creator-Mode Oberfläche)
+    path('creator/import/', creator_import_index, name='creator_import_index'),
+    path('creator/import/create/', creator_import_create, name='creator_import_create'),
+    path('creator/import/<int:job_id>/', creator_import_detail, name='creator_import_detail'),
+    path('creator/import/<int:job_id>/status/', creator_import_status, name='creator_import_status'),
+    path('creator/import/<int:job_id>/candidate/<int:candidate_id>/', creator_import_candidate_update, name='creator_import_candidate_update'),
+    path('creator/import/<int:job_id>/bulk/', creator_import_bulk, name='creator_import_bulk'),
+    path('creator/import/<int:job_id>/confirm/', creator_import_confirm, name='creator_import_confirm'),
 
     # Wettbewerb anlegen (Pokal / Liga)
     path('creator/competitions/create/', creator_competition_create, name='creator_competition_create'),

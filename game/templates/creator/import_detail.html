@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import #{{ job.pk }} – Creator Mode{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Import #{{ job.pk }} — {{ job.ws_club.name }}</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_import_index' %}">‹ Aufträge</a>
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
+    </div>
+  </div>
+
+  <!-- ── Breadcrumb ─────────────────────────────────────────────────────── -->
+  <nav class="cm-breadcrumb">
+    <a href="{% url 'creator_index' %}" class="cm-bc-item">🌍 Länder</a>
+    <span class="cm-bc-sep">›</span>
+    <a href="{% url 'creator_import_index' %}" class="cm-bc-item">⬇ Spieler importieren</a>
+    <span class="cm-bc-sep">›</span>
+    <span class="cm-bc-item cm-bc-current">#{{ job.pk }} · TM {{ job.tm_club_id }} · {{ job.season_label }}</span>
+  </nav>
+
+  {% if messages %}
+    {% for m in messages %}
+    <div class="si-alert {% if m.tags == 'error' %}si-alert-error{% else %}si-alert-ok{% endif %}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════════
+     ZUSTAND A — Wartet / läuft (Polling)
+  ═══════════════════════════════════════════════════════════════════════ #}
+  {% if job.status == 'pending' or job.status == 'claimed' or job.status == 'running' or job.status == 'importing' %}
+  <div class="si-card" id="imp-progress-card">
+    <div class="si-card-head">
+      <strong><span class="imp-spinner"></span>
+        <span id="imp-status-label">{{ job.get_status_display }}</span>
+      </strong>
+      <span class="imp-badge imp-st-{{ job.status }}" id="imp-status-badge">{{ job.status }}</span>
+    </div>
+    <p class="si-desc">
+      Der Auftrag wartet auf den lokalen Importer bzw. wird gerade verarbeitet.
+      Diese Seite aktualisiert sich automatisch, sobald die Kandidaten zur
+      Kontrolle bereitstehen.
+    </p>
+    <div class="imp-progress-wrap">
+      <div class="imp-progress-bar">
+        <div class="imp-progress-fill" id="imp-progress-fill"
+             style="width: {% if job.progress_total %}{% widthratio job.progress_current job.progress_total 100 %}{% else %}0{% endif %}%"></div>
+      </div>
+      <div class="imp-progress-text">
+        <span id="imp-progress-step">{{ job.current_step|default:"—" }}</span>
+        · <span id="imp-progress-count">{{ job.progress_current }}/{{ job.progress_total }}</span>
+      </div>
+    </div>
+    <div class="si-actions">
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}"
+            onsubmit="return confirm('Auftrag wirklich abbrechen?');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <button type="submit" class="si-btn si-btn-danger">Auftrag abbrechen</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var STATUS_URL = "{% url 'creator_import_status' job_id=job.pk %}";
+    function poll() {
+      fetch(STATUS_URL, {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          document.getElementById('imp-status-label').textContent = d.status_label;
+          var badge = document.getElementById('imp-status-badge');
+          badge.textContent = d.status;
+          badge.className = 'imp-badge imp-st-' + d.status;
+          document.getElementById('imp-progress-step').textContent = d.current_step || '—';
+          document.getElementById('imp-progress-count').textContent =
+            d.progress_current + '/' + d.progress_total;
+          if (d.progress_total > 0) {
+            document.getElementById('imp-progress-fill').style.width =
+              Math.round(d.progress_current / d.progress_total * 100) + '%';
+          }
+          if (['review', 'completed', 'failed', 'cancelled'].indexOf(d.status) !== -1) {
+            window.location.reload();
+            return;
+          }
+          setTimeout(poll, 3000);
+        })
+        .catch(function () { setTimeout(poll, 5000); });
+    }
+    setTimeout(poll, 3000);
+  })();
+  </script>
+  {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════════
+     ZUSTAND B — Fehlgeschlagen
+  ═══════════════════════════════════════════════════════════════════════ #}
+  {% if job.status == 'failed' %}
+  <div class="si-card">
+    <div class="si-card-head"><strong>Import fehlgeschlagen</strong>
+      <span class="imp-badge imp-st-failed">failed</span>
+    </div>
+    <div class="si-alert si-alert-error">{{ job.error_message|default:"Unbekannter Fehler." }}</div>
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════════
+     ZUSTAND C — Kontrolle / Vorschau (review)
+  ═══════════════════════════════════════════════════════════════════════ #}
+  {% if job.status == 'review' %}
+  <div class="si-card">
+    <div class="si-card-head">
+      <strong>Kontrolle — {{ counts.total }} Kandidat{{ counts.total|pluralize:"en" }}</strong>
+      <span class="imp-badge imp-st-review">review</span>
+    </div>
+
+    <div class="imp-counts">
+      <span class="imp-count">Neu: <b>{{ counts.new }}</b></span>
+      <span class="imp-count">Geändert: <b>{{ counts.changed }}</b></span>
+      <span class="imp-count">Unverändert: <b>{{ counts.unchanged }}</b></span>
+      <span class="imp-count">Ungültig: <b>{{ counts.invalid }}</b></span>
+      <span class="imp-count">FMInside fehlt: <b>{{ counts.fmi_missing }}</b></span>
+      <span class="imp-count">Ausgewählt: <b>{{ counts.selected }}</b></span>
+    </div>
+
+    <div class="imp-toolbar">
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="select_new_changed"><button class="imp-chip-btn">Neu + geändert wählen</button></form>
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="overwrite_existing"><button class="imp-chip-btn">Vorhandene überschreiben</button></form>
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="deselect_unchanged"><button class="imp-chip-btn">Unveränderte abwählen</button></form>
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reeval"><button class="imp-chip-btn">Neu auswerten</button></form>
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reset"><button class="imp-chip-btn">Auswahl zurücksetzen</button></form>
+    </div>
+
+    <div style="overflow-x:auto;">
+    <table class="imp-cand-table">
+      <thead>
+        <tr>
+          <th>Import</th><th>Status</th><th>Spieler</th><th>Positionen</th>
+          <th>Verein / Leihe</th><th>FMInside</th><th>SoFIFA</th><th>Diff / Hinweise</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in candidates %}
+        <tr>
+          <td>
+            <form method="post" action="{% url 'creator_import_candidate_update' job_id=job.pk candidate_id=c.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_select">
+              <button type="submit" class="imp-mini-btn" title="Auswahl umschalten">
+                {% if c.selected %}☑{% else %}☐{% endif %}
+              </button>
+            </form>
+            {% if c.existing_player %}
+            <form method="post" action="{% url 'creator_import_candidate_update' job_id=job.pk candidate_id=c.id %}" style="margin-top:.25rem;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="toggle_overwrite">
+              <button type="submit" class="imp-mini-btn" title="Überschreiben umschalten"
+                      style="{% if not c.overwrite %}opacity:.4;{% endif %}">⟳ überschr.</button>
+            </form>
+            {% endif %}
+          </td>
+          <td>
+            <span class="imp-badge imp-st-{{ c.status }}">{{ c.status_label }}</span>
+            {% if c.is_weak_match %}<div class="imp-weak">⚠ schwacher Treffer ({{ c.match_type }})</div>{% endif %}
+          </td>
+          <td>
+            <div style="color:#cce8ff;font-weight:600;">{{ c.name }}</div>
+            <div class="imp-dim">TM
+              {% if c.tm_url %}<a class="imp-link-ext" href="{{ c.tm_url }}" target="_blank" rel="noopener">{{ c.tm_player_id }}</a>{% else %}{{ c.tm_player_id }}{% endif %}
+            </div>
+          </td>
+          <td>
+            {% for p in c.main_positions %}<span class="imp-pos">{{ p }}</span>{% endfor %}
+            {% for p in c.secondary_positions %}<span class="imp-pos imp-pos-sec">{{ p }}</span>{% endfor %}
+            {% if not c.main_positions %}<span class="imp-err">keine</span>{% endif %}
+          </td>
+          <td>
+            {% if c.loaned_from %}<div class="imp-dim">Leihe von: {{ c.loaned_from }}</div>{% endif %}
+            {% if c.real_club %}<div class="imp-dim">Real: {{ c.real_club }}</div>{% endif %}
+            {% if not c.loaned_from and not c.real_club %}<span class="imp-dim">—</span>{% endif %}
+          </td>
+          <td>
+            {% if c.fmi_missing %}<span class="imp-missing">fehlt ⚠</span>
+            {% else %}<span class="imp-ok-src">{{ c.fmi_id }}</span>
+              {% if c.fmi_url %} <a class="imp-link-ext" href="{{ c.fmi_url }}" target="_blank" rel="noopener">↗</a>{% endif %}
+            {% endif %}
+            <form class="imp-src-edit" method="post" action="{% url 'creator_import_candidate_update' job_id=job.pk candidate_id=c.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="set_source_ids">
+              <input type="text" name="fm_inside_id" value="{{ c.fmi_id|default_if_none:'' }}" placeholder="FMI-ID">
+              <input type="text" name="sofifa_id" value="{{ c.sofifa_id|default_if_none:'' }}" placeholder="SoFIFA">
+              <button type="submit" class="imp-mini-btn" title="Quellen-IDs setzen">✓</button>
+            </form>
+          </td>
+          <td>
+            {% if c.sofifa_missing %}<span class="imp-missing">fehlt ⚠</span>
+            {% else %}<span class="imp-ok-src">{{ c.sofifa_id }}</span>
+              {% if c.sofifa_url %} <a class="imp-link-ext" href="{{ c.sofifa_url }}" target="_blank" rel="noopener">↗</a>{% endif %}
+            {% endif %}
+          </td>
+          <td class="imp-col-diff">
+            {% for e in c.errors %}<div class="imp-err">✕ {{ e }}</div>{% endfor %}
+            {% for w in c.warnings %}<div class="imp-warn">⚠ {{ w }}</div>{% endfor %}
+            {% if c.changes %}
+            <div class="imp-diff">
+              {% for ch in c.changes %}
+              <div class="imp-diff-row {% if ch.cleared %}imp-cleared{% endif %}">
+                {{ ch.label }}:
+                <span class="imp-old">{{ ch.old|default_if_none:"—" }}</span> →
+                <span class="imp-new">{{ ch.new|default_if_none:"—" }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% elif c.existing_player %}
+            <span class="imp-dim">keine Änderungen</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="imp-dim">Keine Kandidaten in diesem Auftrag.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    <div class="si-actions">
+      <form method="post" action="{% url 'creator_import_confirm' job_id=job.pk %}"
+            onsubmit="return confirm('{{ counts.selected }} ausgewählte Kandidaten verbindlich importieren?');">
+        {% csrf_token %}
+        <button type="submit" class="si-btn si-btn-primary"
+                {% if not counts.selected %}disabled{% endif %}>
+          ✓ {{ counts.selected }} Kandidat{{ counts.selected|pluralize:"en" }} importieren
+        </button>
+      </form>
+      <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}"
+            onsubmit="return confirm('Auftrag wirklich abbrechen?');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="cancel">
+        <button type="submit" class="si-btn si-btn-danger">Abbrechen</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ══════════════════════════════════════════════════════════════════════
+     ZUSTAND D — Abgeschlossen
+  ═══════════════════════════════════════════════════════════════════════ #}
+  {% if job.status == 'completed' or job.status == 'cancelled' %}
+  <div class="si-card">
+    <div class="si-card-head">
+      <strong>{% if job.status == 'completed' %}Import abgeschlossen{% else %}Auftrag abgebrochen{% endif %}</strong>
+      <span class="imp-badge imp-st-{{ job.status }}">{{ job.status }}</span>
+    </div>
+
+    {% if result_stats %}
+    <div class="imp-counts">
+      <span class="imp-count">Erstellt: <b>{{ result_stats.created }}</b></span>
+      <span class="imp-count">Aktualisiert: <b>{{ result_stats.updated }}</b></span>
+      <span class="imp-count">Übersprungen: <b>{{ result_stats.skipped }}</b></span>
+      <span class="imp-count">Fehlgeschlagen: <b>{{ result_stats.failed }}</b></span>
+    </div>
+    {% endif %}
+
+    {% if candidates %}
+    <div style="overflow-x:auto;">
+    <table class="imp-cand-table">
+      <thead><tr><th>Status</th><th>Spieler</th><th>Positionen</th><th>Spieler-Datensatz</th></tr></thead>
+      <tbody>
+        {% for c in candidates %}
+        <tr>
+          <td><span class="imp-badge imp-st-{{ c.status }}">{{ c.status_label }}</span></td>
+          <td><div style="color:#cce8ff;font-weight:600;">{{ c.name }}</div>
+              <div class="imp-dim">TM {{ c.tm_player_id }}</div></td>
+          <td>{% for p in c.main_positions %}<span class="imp-pos">{{ p }}</span>{% endfor %}</td>
+          <td>
+            {% if c.existing_player %}
+              <a class="imp-link-ext" href="{% url 'creator_player_edit' player_id=c.existing_player.pk %}">{{ c.existing_player }} ›</a>
+            {% else %}<span class="imp-dim">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% endif %}
+
+    <div class="si-actions">
+      <a href="{% url 'creator_import_index' %}" class="si-btn si-btn-ghost">Zu den Aufträgen</a>
+      <a href="{% url 'creator_club_edit' club_id=job.ws_club.pk %}" class="si-btn si-btn-primary">Verein öffnen ›</a>
+    </div>
+  </div>
+  {% endif %}
+
+</section>
+
+{% include 'creator/_import_styles.html' %}
+{% endblock %}

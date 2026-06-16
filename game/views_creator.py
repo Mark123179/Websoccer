@@ -2516,6 +2516,364 @@ def creator_sofifa_import(request):
     return render(request, 'creator/sofifa_import.html', ctx)
 
 
+# ── Vereins-/Spielerimport — Creator-Mode Oberfläche ──────────────────────────
+
+_IMPORT_RESULT_SESSION_KEY = 'cfm_import_results'
+
+
+def _import_access(request):
+    """Zugriffsprüfung: nur Staff/Admin. Gibt ``HttpResponseForbidden`` oder ``None``."""
+    from django.http import HttpResponseForbidden
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Nur Staff-Nutzer können importieren.')
+    return None
+
+
+def _candidate_display(candidate):
+    """Template-freundliche Aufbereitung eines Kandidaten für die Kontrolltabelle."""
+    nd = candidate.normalized_data or {}
+    detected = candidate.detected_changes or {}
+    fmi = candidate.fmi_raw or {}
+    sofifa = candidate.sofifa_raw or {}
+    tm = candidate.tm_raw or {}
+
+    real_club = nd.get('real_club') or {}
+    loaned_from = nd.get('loaned_from') or {}
+
+    return {
+        'obj': candidate,
+        'id': candidate.id,
+        'tm_player_id': candidate.tm_player_id,
+        'name': f"{nd.get('first_name', '')} {nd.get('last_name', '')}".strip()
+                or tm.get('display_name') or f'TM {candidate.tm_player_id}',
+        'status': candidate.status,
+        'status_label': candidate.get_status_display(),
+        'selected': candidate.selected_for_import,
+        'overwrite': candidate.overwrite_existing,
+        'main_positions': nd.get('main_positions') or [],
+        'secondary_positions': nd.get('secondary_positions') or [],
+        'real_club': real_club.get('name') or '',
+        'loaned_from': loaned_from.get('name') or '',
+        'tm_url': nd.get('transfermarkt_profile_url') or '',
+        'fmi_id': nd.get('fm_inside_id'),
+        'fmi_url': fmi.get('url') or '',
+        'sofifa_id': nd.get('sofifa_id'),
+        'sofifa_url': nd.get('sofifa_profile_url') or '',
+        'fmi_missing': not bool(fmi.get('rating')),
+        'sofifa_missing': not bool(sofifa.get('rating')),
+        'changes': detected.get('items') or [],
+        'match_type': detected.get('match_type'),
+        'is_weak_match': bool(detected.get('match_type')) and not detected.get('is_strong'),
+        'warnings': candidate.source_warnings or [],
+        'errors': candidate.validation_errors or [],
+        'existing_player': candidate.existing_player,
+    }
+
+
+@login_required
+def creator_import_index(request):
+    """Übersicht: neuen Importauftrag anlegen + Historie früherer Aufträge."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from .models import ClubPlayerImportJob
+    from .club_import import get_current_tm_season_id, season_label
+
+    season_id = get_current_tm_season_id()
+    jobs = (
+        ClubPlayerImportJob.objects
+        .select_related('ws_club', 'created_by')
+        .all()[:100]
+    )
+    job_rows = []
+    for job in jobs:
+        cands = job.candidates.all()
+        job_rows.append({
+            'job': job,
+            'total': len(cands),
+            'imported': sum(1 for c in cands if c.status == 'imported'),
+        })
+
+    return render(request, 'creator/import_index.html', {
+        'clubs': Club.objects.order_by('name'),
+        'season_id': season_id,
+        'season_label': season_label(season_id),
+        'job_rows': job_rows,
+    })
+
+
+@login_required
+@require_POST
+def creator_import_create(request):
+    """Legt einen neuen Importauftrag mit eingefrorener Saison-ID an."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from .models import ClubPlayerImportJob
+    from .club_import import get_current_tm_season_id, season_label
+
+    club_id = request.POST.get('ws_club')
+    tm_club_id_raw = (request.POST.get('tm_club_id') or '').strip()
+
+    club = Club.objects.filter(pk=club_id).first()
+    if not club:
+        messages.error(request, 'Bitte einen gültigen WS-Verein auswählen.')
+        return redirect('creator_import_index')
+
+    try:
+        tm_club_id = int(tm_club_id_raw)
+        if tm_club_id <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        messages.error(request, 'Bitte eine gültige Transfermarkt-Vereins-ID eingeben.')
+        return redirect('creator_import_index')
+
+    season_id = get_current_tm_season_id()
+    job = ClubPlayerImportJob.objects.create(
+        created_by=request.user,
+        ws_club=club,
+        tm_club_id=tm_club_id,
+        tm_season_id=season_id,
+        season_label=season_label(season_id),
+    )
+    messages.success(
+        request,
+        f'Importauftrag #{job.pk} angelegt — wartet auf den lokalen Importer.',
+    )
+    return redirect('creator_import_detail', job_id=job.pk)
+
+
+@login_required
+def creator_import_detail(request, job_id):
+    """Status/Fortschritt, Kontrolltabelle oder Ergebnis — je nach Auftragsstatus."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from .models import ClubPlayerImportJob
+    from .club_import.review import refresh_job_candidates
+
+    job = get_object_or_404(
+        ClubPlayerImportJob.objects.select_related('ws_club', 'created_by'),
+        pk=job_id,
+    )
+
+    ctx = {'job': job}
+
+    if job.status == ClubPlayerImportJob.STATUS_REVIEW:
+        # Beim ersten Betreten auswerten (Kandidaten ohne normalisierte Daten).
+        needs_build = job.candidates.filter(normalized_data={}).exists()
+        if needs_build or request.GET.get('reeval'):
+            refresh_job_candidates(job, reset_selection=needs_build)
+
+        candidates = [_candidate_display(c) for c in job.candidates.all()]
+        counts = {
+            'total': len(candidates),
+            'new': sum(1 for c in candidates if c['status'] == 'new'),
+            'changed': sum(1 for c in candidates if c['status'] == 'existing_changed'),
+            'unchanged': sum(1 for c in candidates if c['status'] == 'existing_unchanged'),
+            'invalid': sum(1 for c in candidates if c['status'] == 'invalid'),
+            'selected': sum(1 for c in candidates if c['selected']),
+            'fmi_missing': sum(1 for c in candidates if c['fmi_missing']),
+        }
+        ctx.update({'candidates': candidates, 'counts': counts})
+
+    elif job.status in (
+        ClubPlayerImportJob.STATUS_COMPLETED,
+        ClubPlayerImportJob.STATUS_IMPORTING,
+        ClubPlayerImportJob.STATUS_CANCELLED,
+    ):
+        results = request.session.get(_IMPORT_RESULT_SESSION_KEY, {}).get(str(job.pk))
+        candidates = [_candidate_display(c) for c in job.candidates.all()]
+        ctx.update({'candidates': candidates, 'result_stats': results})
+
+    return render(request, 'creator/import_detail.html', ctx)
+
+
+@login_required
+def creator_import_status(request, job_id):
+    """Leichter JSON-Status-Endpunkt für das Polling der Fortschrittsansicht."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from .models import ClubPlayerImportJob
+
+    job = get_object_or_404(ClubPlayerImportJob, pk=job_id)
+    return JsonResponse({
+        'id': job.id,
+        'status': job.status,
+        'status_label': job.get_status_display(),
+        'current_step': job.current_step,
+        'progress_current': job.progress_current,
+        'progress_total': job.progress_total,
+        'heartbeat_at': job.heartbeat_at.isoformat() if job.heartbeat_at else None,
+        'error_message': job.error_message,
+        'total_candidates': job.candidates.count(),
+    })
+
+
+@login_required
+@require_POST
+def creator_import_candidate_update(request, job_id, candidate_id):
+    """Manuelle Quellenkorrektur / Auswahl eines einzelnen Kandidaten."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from .models import ClubPlayerImportJob, PlayerImportCandidate
+    from .club_import.review import refresh_candidate
+
+    job = get_object_or_404(ClubPlayerImportJob, pk=job_id)
+    candidate = get_object_or_404(
+        PlayerImportCandidate, pk=candidate_id, job=job,
+    )
+
+    if job.status != ClubPlayerImportJob.STATUS_REVIEW:
+        msg = 'Kandidaten können nur in der Kontrollphase bearbeitet werden.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'ok': False, 'error': msg}, status=409)
+        messages.error(request, msg)
+        return redirect('creator_import_detail', job_id=job.pk)
+
+    action = request.POST.get('action', '')
+
+    if action == 'toggle_select':
+        candidate.selected_for_import = not candidate.selected_for_import
+        candidate.save(update_fields=['selected_for_import', 'updated_at'])
+    elif action == 'toggle_overwrite':
+        candidate.overwrite_existing = not candidate.overwrite_existing
+        candidate.save(update_fields=['overwrite_existing', 'updated_at'])
+    elif action == 'set_source_ids':
+        fmi_id = (request.POST.get('fm_inside_id') or '').strip()
+        sofifa_id = (request.POST.get('sofifa_id') or '').strip()
+        fmi_raw = dict(candidate.fmi_raw or {})
+        sofifa_raw = dict(candidate.sofifa_raw or {})
+        fmi_raw['id'] = int(fmi_id) if fmi_id.isdigit() else (fmi_id or None)
+        sofifa_raw['id'] = sofifa_id or None
+        candidate.fmi_raw = fmi_raw
+        candidate.sofifa_raw = sofifa_raw
+        candidate.save(update_fields=['fmi_raw', 'sofifa_raw', 'updated_at'])
+        refresh_candidate(candidate)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'status': candidate.status,
+                             'selected': candidate.selected_for_import,
+                             'overwrite': candidate.overwrite_existing})
+    return redirect('creator_import_detail', job_id=job.pk)
+
+
+@login_required
+@require_POST
+def creator_import_bulk(request, job_id):
+    """Sammelaktionen auf den Kandidaten eines Auftrags."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from .models import ClubPlayerImportJob, PlayerImportCandidate as PC
+    from .club_import.review import refresh_job_candidates
+
+    job = get_object_or_404(ClubPlayerImportJob, pk=job_id)
+    action = request.POST.get('action', '')
+    qs = job.candidates.all()
+
+    _active = (
+        ClubPlayerImportJob.STATUS_PENDING,
+        ClubPlayerImportJob.STATUS_RUNNING,
+        ClubPlayerImportJob.STATUS_REVIEW,
+        ClubPlayerImportJob.STATUS_IMPORTING,
+    )
+    if action == 'cancel':
+        if job.status not in _active:
+            messages.error(request, 'Dieser Auftrag kann nicht abgebrochen werden.')
+            return redirect('creator_import_detail', job_id=job.pk)
+    elif job.status != ClubPlayerImportJob.STATUS_REVIEW:
+        messages.error(
+            request, 'Kandidaten können nur in der Kontrollphase bearbeitet werden.')
+        return redirect('creator_import_detail', job_id=job.pk)
+
+    if action == 'select_new_changed':
+        qs.filter(status__in=[PC.STATUS_NEW, PC.STATUS_EXISTING_CHANGED]).update(
+            selected_for_import=True)
+    elif action == 'overwrite_existing':
+        qs.filter(existing_player__isnull=False).update(
+            overwrite_existing=True, selected_for_import=True)
+    elif action == 'deselect_unchanged':
+        qs.filter(status=PC.STATUS_EXISTING_UNCHANGED).update(
+            selected_for_import=False)
+    elif action == 'select_ready':
+        qs.filter(status__in=[PC.STATUS_NEW, PC.STATUS_EXISTING_CHANGED]).update(
+            selected_for_import=True)
+        qs.filter(status=PC.STATUS_INVALID).update(selected_for_import=False)
+    elif action == 'reset':
+        refresh_job_candidates(job, reset_selection=True)
+    elif action == 'reeval':
+        refresh_job_candidates(job, reset_selection=False)
+    elif action == 'cancel':
+        job.status = ClubPlayerImportJob.STATUS_CANCELLED
+        job.lease_token = ''
+        job.lease_expires_at = None
+        job.save(update_fields=[
+            'status', 'lease_token', 'lease_expires_at', 'updated_at',
+        ])
+        messages.info(request, f'Importauftrag #{job.pk} abgebrochen.')
+        return redirect('creator_import_index')
+
+    return redirect('creator_import_detail', job_id=job.pk)
+
+
+@login_required
+@require_POST
+def creator_import_confirm(request, job_id):
+    """Löst den verbindlichen serverseitigen Import der gewählten Kandidaten aus."""
+    forbidden = _import_access(request)
+    if forbidden:
+        return forbidden
+
+    from django.utils import timezone
+    from .models import ClubPlayerImportJob
+    from .club_import.import_service import import_selected_candidates
+
+    job = get_object_or_404(ClubPlayerImportJob, pk=job_id)
+
+    if job.status not in (
+        ClubPlayerImportJob.STATUS_REVIEW,
+        ClubPlayerImportJob.STATUS_IMPORTING,
+    ):
+        messages.error(request, 'Dieser Auftrag ist nicht zur Bestätigung bereit.')
+        return redirect('creator_import_detail', job_id=job.pk)
+
+    outcome = import_selected_candidates(job, user=request.user)
+    stats = outcome['stats']
+
+    job.status = ClubPlayerImportJob.STATUS_COMPLETED
+    job.completed_at = timezone.now()
+    job.current_step = 'Import abgeschlossen'
+    job.progress_total = sum(stats.values())
+    job.progress_current = job.progress_total
+    job.save(update_fields=[
+        'status', 'completed_at', 'current_step',
+        'progress_total', 'progress_current', 'updated_at',
+    ])
+
+    results = request.session.get(_IMPORT_RESULT_SESSION_KEY, {})
+    results[str(job.pk)] = stats
+    request.session[_IMPORT_RESULT_SESSION_KEY] = results
+
+    messages.success(
+        request,
+        'Import abgeschlossen — '
+        f"erstellt {stats.get('created', 0)}, "
+        f"aktualisiert {stats.get('updated', 0)}, "
+        f"übersprungen {stats.get('skipped', 0)}, "
+        f"fehlgeschlagen {stats.get('failed', 0)}.",
+    )
+    return redirect('creator_import_detail', job_id=job.pk)
+
+
 # ── Wettbewerb anlegen (Liga oder Pokal) ──────────────────────────────────────
 
 @login_required

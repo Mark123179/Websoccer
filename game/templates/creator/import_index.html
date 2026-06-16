@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Spielerimport – Creator Mode{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Vereins-/Spielerimport</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
+      <a class="cm-nav-pill" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
+      <a class="cm-nav-pill" href="{% url 'creator_season_end' %}">Saison</a>
+    </div>
+  </div>
+
+  <!-- ── Breadcrumb ─────────────────────────────────────────────────────── -->
+  <nav class="cm-breadcrumb">
+    <a href="{% url 'creator_index' %}" class="cm-bc-item">🌍 Länder</a>
+    <span class="cm-bc-sep">›</span>
+    <span class="cm-bc-item cm-bc-current">⬇ Spieler importieren</span>
+  </nav>
+
+  {% if messages %}
+    {% for m in messages %}
+    <div class="si-alert {% if m.tags == 'error' %}si-alert-error{% else %}si-alert-ok{% endif %}">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ── Neuer Auftrag ──────────────────────────────────────────────────── -->
+  <div class="si-card">
+    <div class="si-card-head"><strong>Neuen Importauftrag anlegen</strong></div>
+    <p class="si-desc">
+      Wähle den WS-Verein, in den importiert werden soll, und gib die
+      Transfermarkt-Vereins-ID der Kaderseite an. Die Saison wird automatisch
+      eingefroren. Ein lokaler Importer übernimmt den Auftrag anschließend.
+    </p>
+
+    <form method="post" action="{% url 'creator_import_create' %}" class="si-form">
+      {% csrf_token %}
+      <div class="imp-form-grid">
+        <div>
+          <label class="si-label" for="ws_club">WS-Verein (Ziel)</label>
+          <select id="ws_club" name="ws_club" class="imp-input" required>
+            <option value="">— Verein wählen —</option>
+            {% for club in clubs %}
+            <option value="{{ club.pk }}">{{ club.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="si-label" for="tm_club_id">Transfermarkt-Vereins-ID</label>
+          <input id="tm_club_id" name="tm_club_id" type="number" min="1" class="imp-input" placeholder="z. B. 27" required>
+        </div>
+        <div>
+          <label class="si-label">Saison (automatisch)</label>
+          <div class="imp-season-pill">{{ season_label }} <span>· ID {{ season_id }}</span></div>
+        </div>
+      </div>
+      <div class="si-actions">
+        <button type="submit" class="si-btn si-btn-primary">Auftrag anlegen</button>
+        <a href="{% url 'creator_index' %}" class="si-btn si-btn-ghost">Zurück</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── Historie ───────────────────────────────────────────────────────── -->
+  <div class="si-card">
+    <div class="si-card-head"><strong>Aufträge</strong></div>
+    {% if job_rows %}
+    <table class="imp-table">
+      <thead>
+        <tr>
+          <th>#</th><th>Verein</th><th>TM-ID</th><th>Saison</th>
+          <th>Status</th><th>Kandidaten</th><th>Importiert</th><th>Angelegt</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in job_rows %}
+        <tr>
+          <td class="imp-mono">{{ row.job.pk }}</td>
+          <td>{{ row.job.ws_club.name }}</td>
+          <td class="imp-mono">{{ row.job.tm_club_id }}</td>
+          <td>{{ row.job.season_label }}</td>
+          <td><span class="imp-badge imp-st-{{ row.job.status }}">{{ row.job.get_status_display }}</span></td>
+          <td class="imp-mono">{{ row.total }}</td>
+          <td class="imp-mono">{{ row.imported }}</td>
+          <td class="imp-dim">{{ row.job.created_at|date:"d.m.Y H:i" }}</td>
+          <td><a class="imp-link" href="{% url 'creator_import_detail' job_id=row.job.pk %}">Öffnen ›</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="si-desc">Noch keine Importaufträge vorhanden.</p>
+    {% endif %}
+  </div>
+
+</section>
+
+{% include 'creator/_import_styles.html' %}
+{% endblock %}
