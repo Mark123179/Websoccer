@@ -167,6 +167,7 @@ class Runner:
             display_name=tm_data.get('display_name', ''),
             date_of_birth=tm_data.get('date_of_birth', ''),
             nationality=tm_data.get('primary_nationality', ''),
+            fmi_id=tm_data.get('fmi_id') or entry.get('fmi_id'),
             warnings=warnings)
         sofifa_raw = sofifa.lookup(
             display_name=tm_data.get('display_name', ''),

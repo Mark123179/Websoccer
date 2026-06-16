@@ -4,11 +4,12 @@ description: How to scrape fminside.net for FM player positions and convert to W
 ---
 
 ## URL Schema
-`https://fminside.net/players/7-fm-26/{fm_inside_id}-{name-slug}`
+Two forms exist in the codebase:
+- `populate_positions_fmi` command: `https://fminside.net/players/7-fm-26/{fm_inside_id}-{name-slug}` (`7-fm-26` = FM26 category; fallback fm-26 → fm-25 → fm-27 → fm-28)
+- cfm_importer adapter (`_lookup_by_id`): `https://fminside.net/players/{fm_inside_id}-{name-slug}` (per user; slug cosmetic, ID maßgeblich)
 
-- `7-fm-26` = FM26 category; fallback order: fm-26 → fm-25 → fm-27 → fm-28
 - slug = firstname+lastname, lowercased, unicode-normalized to ASCII, spaces→hyphens
-- Only players with `fm_inside_id` set in DB can be scraped (76 total: Bayern 24, BVB 24, Gladbach 27, Frankfurt 1)
+- Only players with `fm_inside_id` set in DB can be scraped by the command (76 total: Bayern 24, BVB 24, Gladbach 27, Frankfurt 1)
 
 ## HTML Structure
 ```html

@@ -150,8 +150,12 @@ def safe_goto(page, url, config, log):
         if status in (404, 410):
             raise PageError(f'Seite nicht vorhanden (HTTP {status}): {url}')
 
-        if status in (403, 429) or is_blocked(page):
-            if _resolve_block(page, config, log):
+        challenge = is_blocked(page)
+        if challenge or status in (403, 429):
+            # Nur eine echte Challenge-Seite (am Titel erkennbar) lässt sich
+            # automatisch/manuell auflösen. Ein reiner 403/429 ohne Challenge
+            # wird sonst fälschlich als „frei" gewertet — daher hier getrennt.
+            if challenge and _resolve_block(page, config, log):
                 return
             last_reason = f'Blockiert (HTTP {status or "?"})'
             if attempt < attempts:

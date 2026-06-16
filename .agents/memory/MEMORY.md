@@ -37,3 +37,4 @@
 - [Importer-Diff Decimal-Falle](club-import-diff-decimal-trap.md) — DB-Decimal vs. roher int erzeugt Phantom-Diffs + JSONField-Crash; _jsonable() in _norm UND beim Speichern nötig; mit DB-Roundtrip testen.
 - [Bearer-Token ASCII + Secret-Propagation](bearer-token-ascii-and-secret-propagation.md) — API-Bearer-Tokens MÜSSEN ASCII/Hex sein (WSGI latin-1 vs os.environ UTF-8); Secret-Wechsel braucht Neustart NACH Propagation; nie Token in Logs printen.
 - [Club/Player Import Engine](club-import-engine.md) — Creator-Mode-Importer (game/club_import/); NULL-never-0 (market_value jetzt nullable), Platzhalter-Liga, Matching-Priorität, HP/NP-Regeln, Stärke-Persistenz-Falle.
+- [CFM-Importer enrichment & resilience](cfm-importer-enrichment.md) — only the local importer scrapes (server can't); manual FMI/SoFIFA-ID entry stores ID only; FMInside is ID-first/DOB-strict; safe_goto resilience.
