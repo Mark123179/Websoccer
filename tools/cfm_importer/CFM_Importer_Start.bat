@@ -13,16 +13,30 @@ pushd "%~dp0"
 set "VENV_DIR=.venv"
 set "VENV_PY=%VENV_DIR%\Scripts\python.exe"
 
-rem --- System-Python suchen (python oder py-Launcher) -------------------------
+rem --- System-Python suchen ---------------------------------------------------
+rem  Zuerst den offiziellen py-Launcher versuchen (trifft NIE den Microsoft-
+rem  Store-Platzhalter). Danach echtes python.exe, wobei der Store-Stub unter
+rem  ...\WindowsApps\ ausdruecklich ignoriert wird.
 set "SYS_PY="
-where python >nul 2>nul && set "SYS_PY=python"
+where py >nul 2>nul && set "SYS_PY=py -3"
 if not defined SYS_PY (
-  where py >nul 2>nul && set "SYS_PY=py -3"
+  for /f "delims=" %%P in ('where python 2^>nul') do (
+    echo %%P | find /i "\WindowsApps\" >nul || (
+      if not defined SYS_PY set "SYS_PY=%%P"
+    )
+  )
+)
+rem  Gefundenen Interpreter pruefen (faengt den Store-Platzhalter ab, falls er
+rem  trotzdem antwortet).
+if defined SYS_PY (
+  %SYS_PY% -c "import sys" >nul 2>nul || set "SYS_PY="
 )
 if not defined SYS_PY (
-  echo [FEHLER] Python wurde nicht gefunden.
-  echo          Bitte Python 3.10 oder neuer installieren und beim Setup
-  echo          die Option "Add Python to PATH" aktivieren.
+  echo [FEHLER] Es wurde kein funktionierendes Python gefunden.
+  echo          1^) Python 3.10 oder neuer von python.org installieren und beim
+  echo             Setup "Add python.exe to PATH" aktivieren.
+  echo          2^) Windows-Einstellungen ^> Apps ^> Erweiterte App-Einstellungen ^>
+  echo             App-Ausfuehrungsaliase: "python.exe"/"python3.exe" auf AUS.
   goto :ende
 )
 
