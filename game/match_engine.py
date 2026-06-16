@@ -984,40 +984,37 @@ def _red_card_this_segment(compiled: dict, seg_len: int) -> int:
 # ── T009 Dismissals V1 ────────────────────────────────────────────────────────
 
 def _find_bench_gk(team_dict: dict, available_pids: set) -> Optional[dict]:
-    """Sucht den ersten TW auf der Bank, der noch im verfügbaren Wechsel-Kontingent ist.
+    """Erster verfügbarer Bank-TW (main_positions enthält 'TW').
 
-    available_pids: ALS._bench_available — nur noch nicht eingewechselte Bankspieler.
+    Liest bench_player_data (dict[pid → player_dict]) — nicht tactic.bench,
+    das im Laufzeit-team_dict kein 'bench'-Schlüssel enthält.
+    available_pids: ALS._bench_available — nur noch nicht eingewechselte Spieler.
     """
-    bench_ids = list((team_dict.get('tactic') or {}).get('bench') or [])
-    players_by_id = {p['id']: p for p in team_dict.get('players', [])}
-    for pid in bench_ids:
+    bench_data: dict = team_dict.get('bench_player_data') or {}
+    for pid, p in bench_data.items():
         if pid not in available_pids:
             continue
-        p = players_by_id.get(pid)
-        if p and p.get('primary_position') == 'TW':
+        if 'TW' in (p.get('main_positions') or []):
             return p
     return None
 
 
 def _find_bench_strongest(team_dict: dict, available_pids: set) -> Optional[dict]:
-    """Stärksten verfügbaren Bankspieler für Notfall-TW (Szenario B).
+    """Stärkster verfügbarer Bankspieler (beliebige Position) für Notfall-TW (Szenario B).
 
-    available_pids: ALS._bench_available — schließt bereits eingewechselte und
-    verwiesene Spieler aus.
+    Liest bench_player_data — analog zu _find_bench_gk.
+    available_pids: ALS._bench_available — schließt bereits eingewechselte Spieler aus.
     """
-    bench_ids = list((team_dict.get('tactic') or {}).get('bench') or [])
-    players_by_id = {p['id']: p for p in team_dict.get('players', [])}
+    bench_data: dict = team_dict.get('bench_player_data') or {}
     best: Optional[dict] = None
     best_str = -1.0
-    for pid in bench_ids:
+    for pid, p in bench_data.items():
         if pid not in available_pids:
             continue
-        p = players_by_id.get(pid)
-        if p:
-            s = float(p.get('final_strength', 0.0))
-            if s > best_str:
-                best_str = s
-                best = p
+        s = float(p.get('final_strength', 0.0))
+        if s > best_str:
+            best_str = s
+            best = p
     return best
 
 
@@ -1344,7 +1341,7 @@ def _simulate_match_minutes(
                 if gk_ov is not None:
                     if h_incoming and h_als.can_substitute():
                         h_in_data = h_als.players_by_id.get(h_incoming, {})
-                        h_is_real_gk = h_in_data.get('primary_position') == 'TW'
+                        h_is_real_gk = 'TW' in (h_in_data.get('main_positions') or [])
                         h_in_str = float(h_in_data.get('final_strength', 30.0))
                         _, returned_ov = h_als.apply_emergency_gk_sub(
                             h_incoming, h_off_out, end_min,
@@ -1366,7 +1363,7 @@ def _simulate_match_minutes(
                 if gk_ov is not None:
                     if a_incoming and a_als.can_substitute():
                         a_in_data = a_als.players_by_id.get(a_incoming, {})
-                        a_is_real_gk = a_in_data.get('primary_position') == 'TW'
+                        a_is_real_gk = 'TW' in (a_in_data.get('main_positions') or [])
                         a_in_str = float(a_in_data.get('final_strength', 30.0))
                         _, returned_ov = a_als.apply_emergency_gk_sub(
                             a_incoming, a_off_out, end_min,
@@ -2209,7 +2206,7 @@ def _simulate_extra_time_minutes(
             if gk_ov is not None:
                 if h_incoming and h_als.can_substitute(extra_time=True):
                     h_in_data = h_als.players_by_id.get(h_incoming, {})
-                    h_is_real_gk = h_in_data.get('primary_position') == 'TW'
+                    h_is_real_gk = 'TW' in (h_in_data.get('main_positions') or [])
                     h_in_str = float(h_in_data.get('final_strength', 30.0))
                     _, returned_ov = h_als.apply_emergency_gk_sub(
                         h_incoming, h_off_out, end_min,
@@ -2230,7 +2227,7 @@ def _simulate_extra_time_minutes(
             if gk_ov is not None:
                 if a_incoming and a_als.can_substitute(extra_time=True):
                     a_in_data = a_als.players_by_id.get(a_incoming, {})
-                    a_is_real_gk = a_in_data.get('primary_position') == 'TW'
+                    a_is_real_gk = 'TW' in (a_in_data.get('main_positions') or [])
                     a_in_str = float(a_in_data.get('final_strength', 30.0))
                     _, returned_ov = a_als.apply_emergency_gk_sub(
                         a_incoming, a_off_out, end_min,
