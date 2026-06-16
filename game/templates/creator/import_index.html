@@ -26,6 +26,8 @@
     <span class="cm-bc-item cm-bc-current">⬇ Spieler importieren</span>
   </nav>
 
+  {% include 'creator/_import_steps.html' with active=1 %}
+
   {% if messages %}
     {% for m in messages %}
     <div class="si-alert {% if m.tags == 'error' %}si-alert-error{% else %}si-alert-ok{% endif %}">{{ m }}</div>

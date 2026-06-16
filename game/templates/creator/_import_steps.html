@@ -1,0 +1,60 @@
+<nav class="imp-stepper" aria-label="Geführter Import">
+  <a href="{% url 'creator_import_hub' %}" class="imp-stepper-hub">☰ Import-Hub</a>
+  <ol class="imp-stepper-track">
+    <li class="imp-stepper-step{% if active == 1 %} is-active{% elif active > 1 %} is-done{% endif %}">
+      <a href="{% url 'creator_import_index' %}">
+        <span class="imp-stepper-num">{% if active > 1 %}✓{% else %}1{% endif %}</span>
+        <span class="imp-stepper-label">tm.de · Verein &amp; Spieler</span>
+      </a>
+    </li>
+    <li class="imp-stepper-step{% if active == 2 %} is-active{% elif active > 2 %} is-done{% endif %}">
+      <a href="{% url 'creator_fmid_csv_import' %}">
+        <span class="imp-stepper-num">{% if active > 2 %}✓{% else %}2{% endif %}</span>
+        <span class="imp-stepper-label">FMI · FM-IDs</span>
+      </a>
+    </li>
+    <li class="imp-stepper-step{% if active == 3 %} is-active{% endif %}">
+      <a href="{% url 'creator_sofifa_import' %}">
+        <span class="imp-stepper-num">3</span>
+        <span class="imp-stepper-label">CMTracker · Ratings</span>
+      </a>
+    </li>
+  </ol>
+</nav>
+
+<style>
+.imp-stepper {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  background: rgba(0, 16, 30, .55); border: 1px solid rgba(0, 212, 255, .18);
+  border-radius: 10px; padding: .7rem 1rem; margin: 0 0 1.5rem;
+}
+.imp-stepper-hub {
+  flex: 0 0 auto; font-size: .72rem; font-weight: 800; letter-spacing: .04em;
+  color: #6fd3ff; text-decoration: none; padding: .35rem .7rem;
+  border: 1px solid rgba(0, 212, 255, .3); border-radius: 6px; white-space: nowrap;
+}
+.imp-stepper-hub:hover { background: rgba(0, 212, 255, .12); }
+.imp-stepper-track {
+  list-style: none; margin: 0; padding: 0; display: flex; align-items: center;
+  gap: .4rem; flex: 1 1 auto; flex-wrap: wrap;
+}
+.imp-stepper-step { display: flex; align-items: center; }
+.imp-stepper-step:not(:last-child)::after {
+  content: "›"; color: #3a5872; margin: 0 .4rem; font-size: 1rem;
+}
+.imp-stepper-step > a {
+  display: flex; align-items: center; gap: .5rem; text-decoration: none;
+  padding: .3rem .6rem; border-radius: 6px;
+}
+.imp-stepper-num {
+  width: 22px; height: 22px; border-radius: 50%; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 900;
+  background: #0d2233; color: #6f8aa3; border: 1px solid #2a4459;
+}
+.imp-stepper-label { font-size: .78rem; font-weight: 600; color: #6f8aa3; white-space: nowrap; }
+.imp-stepper-step.is-active .imp-stepper-num { background: #00d4ff; color: #03070c; border-color: #00d4ff; }
+.imp-stepper-step.is-active .imp-stepper-label { color: #cce8ff; }
+.imp-stepper-step.is-done .imp-stepper-num { background: rgba(70, 200, 120, .25); color: #6fe0a0; border-color: rgba(70, 200, 120, .5); }
+.imp-stepper-step.is-done .imp-stepper-label { color: #8fb0a0; }
+</style>
