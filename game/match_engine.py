@@ -503,31 +503,28 @@ class ActiveLineupState:
         Gibt (sub_event, gk_str_override) zurück.  sub_event wird automatisch an
         sub_events angehängt.
         """
+        # Szenario A + B: incoming_pid übernimmt immer den GK-Slot.
+        # Szenario A (Bench-TW):    is_real_gk=True  → gk_str_override=None
+        #                           (normaler GK-Positionsfit, kein Malus).
+        # Szenario B (Feldspieler): is_real_gk=False → gk_str_override=incoming_final_strength
+        #                           → _calculate_lineup_strength überschreibt Slot-Inhalt,
+        #                           sodass der 0.70-Positionsmalus nicht greift.
+        gk_slot = next(
+            (s for s in self._lineup_slots if s.get('group') == 'goalkeeper'),
+            None,
+        )
+        if gk_slot is None:
+            return None, None
+
+        old_gk_pid = gk_slot['player_id']
+        gk_slot['player_id'] = incoming_pid
+        if old_gk_pid in self._pid_to_slot:
+            del self._pid_to_slot[old_gk_pid]
+        self._pid_to_slot[incoming_pid] = gk_slot
+
         self._bench_available.discard(incoming_pid)
         self.player_on_minute[incoming_pid] = minute
         self.used_substitutions += 1
-
-        if is_real_gk:
-            # Szenario A: Bench-TW in den GK-Slot eintragen
-            gk_slot = next(
-                (s for s in self._lineup_slots if s.get('group') == 'goalkeeper'),
-                None,
-            )
-            if gk_slot is None:
-                return None, None
-            old_gk_pid = gk_slot['player_id']
-            gk_slot['player_id'] = incoming_pid
-            if old_gk_pid in self._pid_to_slot:
-                del self._pid_to_slot[old_gk_pid]
-            self._pid_to_slot[incoming_pid] = gk_slot
-            target_pos = gk_slot.get('position', 'TW')
-            gk_str_override: Optional[float] = None
-        else:
-            # Szenario B: Feldspieler als Not-TW — GK-Slot bleibt leer (dismissed
-            # GK's PID weiterhin im Slot → von dismissed_pids ausgefiltert).
-            # incoming_pid bekommt keinen eigenen Slot; Stärke fließt über Override.
-            target_pos = 'TW'
-            gk_str_override = incoming_final_strength
 
         if outfield_off_pid and outfield_off_pid in self._pid_to_slot:
             outfield_slot = self._pid_to_slot.pop(outfield_off_pid)
@@ -541,12 +538,13 @@ class ActiveLineupState:
             'in':                incoming_pid,
             'out':               outfield_off_pid,
             'minute':            minute,
-            'target_slot':       target_pos,
+            'target_slot':       gk_slot.get('position', 'TW'),
             'position_relation': 'exact',
             'condition':         'gk_red',
             'reason':            'gk_red',
         }
         self.sub_events.append(sub_event)
+        gk_str_override: Optional[float] = None if is_real_gk else incoming_final_strength
         return sub_event, gk_str_override
 
     def promote_scenario_c_gk(self, outfield_off_pid: int) -> None:
@@ -752,8 +750,12 @@ def _calculate_lineup_strength(
     def avg(lst: list[float]) -> float:
         return sum(lst) / len(lst) if lst else 50.0
 
-    # TW-Platzverweis: Bench-TW oder Not-TW-Stärke einsetzen
-    if not lines['goalkeeper'] and gk_strength_override is not None:
+    # TW-Platzverweis: Override hat Vorrang vor Slot-Inhalt.
+    # Szenario A (Bench-TW): override=None → normaler Positionsfit (1.0).
+    # Szenario B (Not-TW Feldspieler): override=final_strength → ersetzt den
+    #   0.70-Positionsmalus, den ein Feldspieler im GK-Slot bekäme.
+    # Szenario C (kein Wechsel): override=30.0 → leerer Slot wird befüllt.
+    if gk_strength_override is not None:
         lines['goalkeeper'] = [gk_strength_override * multipliers.get('goalkeeper', 1.0)]
 
     gk = avg(lines['goalkeeper'])
