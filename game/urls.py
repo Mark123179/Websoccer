@@ -102,6 +102,15 @@ from .views_creator import (
     creator_season_end,
     creator_freie_vereine,
 )
+from .views_importer_api import (
+    importer_next_job,
+    importer_claim_job,
+    importer_heartbeat,
+    importer_progress,
+    importer_candidates,
+    importer_complete,
+    importer_fail,
+)
 
 
 urlpatterns = [
@@ -323,4 +332,13 @@ urlpatterns = [
 
     # System — Freie Vereine
     path('creator/system/freie-vereine/', creator_freie_vereine, name='creator_freie_vereine'),
+
+    # Geschützte Importer-API (Bearer-Token, kein CSRF; Spec §28)
+    path('creator-api/import-jobs/next/', importer_next_job, name='importer_next_job'),
+    path('creator-api/import-jobs/<int:job_id>/claim/', importer_claim_job, name='importer_claim_job'),
+    path('creator-api/import-jobs/<int:job_id>/heartbeat/', importer_heartbeat, name='importer_heartbeat'),
+    path('creator-api/import-jobs/<int:job_id>/progress/', importer_progress, name='importer_progress'),
+    path('creator-api/import-jobs/<int:job_id>/candidates/', importer_candidates, name='importer_candidates'),
+    path('creator-api/import-jobs/<int:job_id>/complete/', importer_complete, name='importer_complete'),
+    path('creator-api/import-jobs/<int:job_id>/fail/', importer_fail, name='importer_fail'),
 ]
