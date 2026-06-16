@@ -26,20 +26,24 @@ FMInside adapter (`tools/cfm_importer/cfm_importer/adapters/fminside.py`):
   `#player_table` HTML. Search form fields: `uid` (Unique ID), `name`,
   `database_version` (value `7` = FM26.2, the default/newest option).
 
-## The real 404 cause + open gap
+## The real 404 cause (root) + the chosen fix
 
-The importer **never receives an FM-ID**: `runner._build_candidate` sets
-`fmi_id=tm_data.get('fmi_id') or entry.get('fmi_id')`, both sourced from
-Transfermarkt, which has no FMInside IDs. So `_lookup_by_id` never runs and every
-player falls to the (now-dead) name path → the user's observed FMI 404.
+The 404 root cause was that the importer **never received an FM-ID**: candidate
+building sourced `fmi_id` only from Transfermarkt data, which has no FMInside IDs,
+so the ID-first lookup never ran and every player fell to the dead name path.
 
-**Unresolved design decision (ask the user):** how should the importer obtain
-each player's FM-ID so the Unique-ID lookup actually triggers?
-- Option A: server includes the club roster (incl. `fm_inside_id` from the CSV
-  import) in the claim/next response; importer matches its TM squad by
-  name+DOB to get the FM-ID. (consistent with server-owns-data architecture)
-- Option B: importer reads the Moneyball CSV locally and maps FM-IDs.
+**Resolved via Option A (server-owns-data):** at job *claim*, the Django app
+returns the target club's roster (only players that already carry an
+`fm_inside_id`, set by the CSV import) in the response. The local importer builds
+a name+DOB index from that roster and resolves each Transfermarkt player to an
+`fm_inside_id`, which then drives the unique-ID FMInside lookup.
 
-FM-ID cleaning (BOM, trailing `.0`, whitespace) lives in BOTH
-`game/club_import/fmid_csv_service.py:clean_fm_id` (CSV import → DB) and the
-importer adapter's `_clean_fm_id`.
+**Matching safety rule (do not regress):** the roster matcher prefers exact
+name+DOB, falls back to a unique-name match only when DOBs don't contradict, and
+returns *no match* for any ambiguity — duplicate names without DOB, conflicting
+DOBs, OR the same name+DOB mapping to different IDs. Never last-write-wins; a
+wrong `fm_inside_id` would make the ID-first lookup scrape the wrong player
+without a DOB recheck.
+
+FM-ID cleaning (BOM, trailing `.0`, whitespace) is duplicated by design on both
+sides of the wire (CSV-import path and the importer adapter).

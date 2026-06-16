@@ -19,6 +19,7 @@ from .adapters.fminside import FMInsideAdapter
 from .adapters.sofifa import SoFIFAAdapter
 from .adapters.transfermarkt import TransfermarktAdapter
 from .browser import Browser
+from .roster_match import RosterMatcher
 from .state import JobState
 
 
@@ -32,6 +33,7 @@ class Runner:
             max_retries=config.max_retries,
             backoff_base=config.backoff_base)
         self._last_heartbeat = 0.0
+        self._roster_matcher = None
 
     # ── Verbindungs- und Auswahlphase ───────────────────────────────────────
     def run(self, auto_yes=False):
@@ -79,6 +81,9 @@ class Runner:
             return 1
 
         self.log.info('Auftrag #%s übernommen.', job_id)
+        self._roster_matcher = RosterMatcher(claimed.get('roster', []))
+        self.log.info('%d Vereinsspieler mit FM-ID für das Matching erhalten.',
+                      len(self._roster_matcher))
         state = JobState(job_id)
         self._last_heartbeat = time.time()
 
@@ -163,11 +168,19 @@ class Runner:
         warnings = list(details.get('warnings', []))
         errors = list(details.get('errors', []))
 
+        # FM-ID-Quelle: direkt vorhandene ID, sonst Zuordnung über den vom Server
+        # gelieferten Vereinskader (Name + Geburtsdatum). Erst diese ID aktiviert
+        # den eindeutigen FMInside-Lookup per Unique ID.
+        matched_id = None
+        if self._roster_matcher is not None:
+            matched_id = self._roster_matcher.match(
+                tm_data.get('display_name', ''),
+                tm_data.get('date_of_birth', ''))
         fmi_raw = fmi.lookup(
             display_name=tm_data.get('display_name', ''),
             date_of_birth=tm_data.get('date_of_birth', ''),
             nationality=tm_data.get('primary_nationality', ''),
-            fmi_id=tm_data.get('fmi_id') or entry.get('fmi_id'),
+            fmi_id=tm_data.get('fmi_id') or entry.get('fmi_id') or matched_id,
             warnings=warnings)
         sofifa_raw = sofifa.lookup(
             display_name=tm_data.get('display_name', ''),

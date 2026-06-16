@@ -26,7 +26,7 @@ from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 
-from .models import ClubPlayerImportJob, PlayerImportCandidate
+from .models import ClubPlayerImportJob, Player, PlayerImportCandidate
 
 # ── Konfiguration ───────────────────────────────────────────────────────────
 
@@ -220,6 +220,32 @@ def _job_claimable(job, now):
     return False
 
 
+def _club_roster(club):
+    """Kader des Ziel-Vereins mit FMInside-ID für das Matching im Importer.
+
+    Transfermarkt kennt keine FMInside-IDs. Damit der eindeutige FMInside-Lookup
+    per Unique ID überhaupt greift, liefert der Server beim Claim den bereits im
+    Verein hinterlegten Kader (FM-IDs stammen aus dem CSV-Import). Der Importer
+    ordnet seinen TM-Kader per **Name + Geburtsdatum** zu und nutzt die
+    ``fm_inside_id`` für FMInside. Nur Spieler MIT ``fm_inside_id`` sind nützlich.
+    """
+    qs = (
+        Player.objects
+        .filter(club=club, fm_inside_id__isnull=False)
+        .only('fm_inside_id', 'first_name', 'last_name', 'date_of_birth')
+        .order_by('last_name', 'first_name')
+    )
+    return [
+        {
+            'fm_inside_id': p.fm_inside_id,
+            'first_name': p.first_name,
+            'last_name': p.last_name,
+            'date_of_birth': p.date_of_birth.isoformat() if p.date_of_birth else '',
+        }
+        for p in qs
+    ]
+
+
 def _job_payload(job):
     return {
         'id': job.id,
@@ -340,6 +366,7 @@ def importer_claim_job(request, job_id):
     payload = _job_payload(job)
     payload['lease_token'] = job.lease_token
     payload['lease_expires_at'] = job.lease_expires_at.isoformat()
+    payload['roster'] = _club_roster(job.ws_club)
     return JsonResponse(payload)
 
 

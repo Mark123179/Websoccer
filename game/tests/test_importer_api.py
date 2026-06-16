@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from game.models import (
-    Club, League, ClubPlayerImportJob, PlayerImportCandidate,
+    Club, League, ClubPlayerImportJob, Player, PlayerImportCandidate,
 )
 
 TOKEN = 'test-importer-token-0123456789'
@@ -133,6 +133,29 @@ class ImporterApiTests(TestCase):
     def test_claim_unknown_job_404(self):
         resp = self._post('importer_claim_job', args=[999999])
         self.assertEqual(resp.status_code, 404)
+
+    def test_claim_returns_club_roster_with_fm_ids(self):
+        # Nur Spieler MIT fm_inside_id des Ziel-Vereins gehören in den Kader.
+        Player.objects.create(
+            club=self.ws_club, first_name='Harry', last_name='Kane',
+            age=32, fm_inside_id=28049320, date_of_birth='1993-07-28')
+        Player.objects.create(
+            club=self.ws_club, first_name='Ohne', last_name='Id', age=25)
+        other_club = Club.objects.create(
+            name='Anderer FC', short_name='AFC', founded_year=2002,
+            budget=Decimal('500000'), league=self.league)
+        Player.objects.create(
+            club=other_club, first_name='Fremd', last_name='Spieler',
+            age=28, fm_inside_id=999001, date_of_birth='1996-01-01')
+
+        job = self._job()
+        resp = self._post('importer_claim_job', args=[job.id])
+        self.assertEqual(resp.status_code, 200)
+        roster = resp.json()['roster']
+        self.assertEqual(len(roster), 1)
+        self.assertEqual(roster[0]['fm_inside_id'], 28049320)
+        self.assertEqual(roster[0]['last_name'], 'Kane')
+        self.assertEqual(roster[0]['date_of_birth'], '1993-07-28')
 
     # ── Heartbeat ───────────────────────────────────────────────────────
     def test_heartbeat_renews_lease(self):

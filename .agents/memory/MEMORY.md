@@ -39,4 +39,4 @@
 - [Bearer-Token ASCII + Secret-Propagation](bearer-token-ascii-and-secret-propagation.md) — API-Bearer-Tokens MÜSSEN ASCII/Hex sein (WSGI latin-1 vs os.environ UTF-8); Secret-Wechsel braucht Neustart NACH Propagation; nie Token in Logs printen.
 - [Club/Player Import Engine](club-import-engine.md) — Creator-Mode-Importer (game/club_import/); NULL-never-0 (market_value jetzt nullable), Platzhalter-Liga, Matching-Priorität, HP/NP-Regeln, Stärke-Persistenz-Falle.
 - [CFM-Importer enrichment & resilience](cfm-importer-enrichment.md) — only the local importer scrapes (server can't); manual FMI/SoFIFA-ID entry stores ID only; FMInside is ID-first/DOB-strict; safe_goto resilience.
-- [CFM-Importer FMInside lookup](cfm-importer-fminside-lookup.md) — one-segment URL auto-redirects to NEWEST DB version (never hardcode); verify id in final URL; importer never gets fmi_id = the real 404.
+- [CFM-Importer FMInside lookup](cfm-importer-fminside-lookup.md) — one-segment URL auto-redirects to NEWEST DB version (never hardcode); verify id in final URL; FM-ID comes from server roster matched by name+DOB (Option A) — matcher must never guess.
