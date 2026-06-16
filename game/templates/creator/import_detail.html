@@ -33,9 +33,7 @@
     {% endfor %}
   {% endif %}
 
-  {# ══════════════════════════════════════════════════════════════════════
-     ZUSTAND A — Wartet / läuft (Polling)
-  ═══════════════════════════════════════════════════════════════════════ #}
+  {# ZUSTAND A — Wartet / läuft (Polling) #}
   {% if job.status == 'pending' or job.status == 'claimed' or job.status == 'running' or job.status == 'importing' %}
   <div class="si-card" id="imp-progress-card">
     <div class="si-card-head">
@@ -100,9 +98,7 @@
   </script>
   {% endif %}
 
-  {# ══════════════════════════════════════════════════════════════════════
-     ZUSTAND B — Fehlgeschlagen
-  ═══════════════════════════════════════════════════════════════════════ #}
+  {# ZUSTAND B — Fehlgeschlagen #}
   {% if job.status == 'failed' %}
   <div class="si-card">
     <div class="si-card-head"><strong>Import fehlgeschlagen</strong>
@@ -112,9 +108,7 @@
   </div>
   {% endif %}
 
-  {# ══════════════════════════════════════════════════════════════════════
-     ZUSTAND C — Kontrolle / Vorschau (review)
-  ═══════════════════════════════════════════════════════════════════════ #}
+  {# ZUSTAND C — Kontrolle / Vorschau (review) #}
   {% if job.status == 'review' %}
   <div class="si-card">
     <div class="si-card-head">
@@ -250,9 +244,7 @@
   </div>
   {% endif %}
 
-  {# ══════════════════════════════════════════════════════════════════════
-     ZUSTAND D — Abgeschlossen
-  ═══════════════════════════════════════════════════════════════════════ #}
+  {# ZUSTAND D — Abgeschlossen #}
   {% if job.status == 'completed' or job.status == 'cancelled' %}
   <div class="si-card">
     <div class="si-card-head">
