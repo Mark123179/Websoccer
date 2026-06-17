@@ -200,12 +200,17 @@ def _attr_block(row, prefix, attr_map):
         val = _to_int(row.get(f'{prefix}_{suffix}'))
         if val is not None:
             attrs[field] = val
-    return {
+    raw_pot = _clean(row.get(f'{prefix}_potential'))
+    parsed_pot = _to_int(raw_pot)
+    block = {
         'rating': rating,
-        'potential': _to_int(row.get(f'{prefix}_potential')),
+        'potential': parsed_pot,
         'attrs': attrs,
         'source_version': _clean(row.get(f'{prefix}_source_version')),
     }
+    if raw_pot and parsed_pot is None:
+        block['potential_raw'] = raw_pot
+    return block
 
 
 def _club_ref(name, url=''):

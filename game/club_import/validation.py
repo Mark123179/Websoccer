@@ -54,6 +54,21 @@ def check_foot(strong_foot, ref=''):
     return None
 
 
+def check_potential_raw(raw_value, ref=''):
+    """Warnung wenn Potential ein nicht-numerischer Sonderwert ist (z.B. 'DYNAMIC').
+
+    FM verwendet 'DYNAMIC' für Spieler mit Bereichs-Potential (z.B. 75–90).
+    FMInside exportiert diesen Wert als Text. Der Import fällt auf Rating als
+    Fallback zurück — das Upside-Potenzial geht verloren. Diese Warnung macht
+    den stillen Datenverlust sichtbar.
+    """
+    if not raw_value:
+        return None
+    return _issue(LEVEL_WARNING, 'potential_dynamic',
+                  f"Potential '{raw_value}' ist nicht numerisch (FM-Sonderwert, "
+                  f"z.B. Bereichs-Potential). Fallback: Potential = Rating.", ref)
+
+
 def check_potential(rating, potential, ref='', allow_missing=False):
     """Potential muss bei vorhandenem Rating ≥ Rating sein.
 
@@ -177,6 +192,9 @@ def validate_parsed_player(nd):
         attrs = check_attrs(rating, has_attrs, rref)
         if attrs:
             issues.append(attrs)
+        pot_raw = check_potential_raw(block.get('potential_raw'), rref)
+        if pot_raw:
+            issues.append(pot_raw)
         pot = check_potential(rating, block.get('potential'), rref, allow_missing=True)
         if pot:
             issues.append(pot)

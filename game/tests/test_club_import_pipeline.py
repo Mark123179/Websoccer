@@ -130,6 +130,29 @@ class ValidationRuleTests(SimpleTestCase):
         self.assertIsNone(validation.check_potential(80, 85))
         self.assertIsNone(validation.check_potential(80, 80))
 
+    def test_potential_dynamic_warning(self):
+        issue = validation.check_potential_raw('DYNAMIC', 'Vušković [FM]')
+        self.assertIsNotNone(issue)
+        self.assertEqual(issue['level'], validation.LEVEL_WARNING)
+        self.assertEqual(issue['code'], 'potential_dynamic')
+        self.assertIsNone(validation.check_potential_raw('', 'X'))
+        self.assertIsNone(validation.check_potential_raw(None, 'X'))
+
+    def test_validate_parsed_player_flags_dynamic_potential(self):
+        nd = {
+            'first_name': 'Luka', 'last_name': 'Vušković', 'strong_foot': 'R',
+            'fmi_ratings': {
+                'rating': 70, 'potential': None,
+                'potential_raw': 'DYNAMIC',
+                'attrs': {'tempo': 55},
+            },
+            'sofifa_ratings': None,
+        }
+        codes = [i['code'] for i in validation.validate_parsed_player(nd)]
+        self.assertIn('potential_dynamic', codes)
+        levels = [i['level'] for i in validation.validate_parsed_player(nd)]
+        self.assertNotIn(validation.LEVEL_ERROR, levels)
+
     def test_attrs_rule(self):
         self.assertEqual(validation.check_attrs(80, False)['code'], 'rating_without_attrs')
         self.assertIsNone(validation.check_attrs(80, True))
