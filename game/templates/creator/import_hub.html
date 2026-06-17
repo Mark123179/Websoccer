@@ -68,6 +68,16 @@
 
   </ol>
 
+  <div class="hub-alt">
+    <h2 class="hub-alt-title">Alternative: Verein per fertiger CSV anlegen/aktualisieren</h2>
+    <p class="hub-alt-desc">
+      Hast du bereits eine <strong>import_ready</strong>-CSV (Vereinsprofil + Spieler
+      in einer Datei)? Lade sie direkt hoch – mit Modus-Auswahl
+      (Vollanlage/Aktualisierung), Dry-Run und Validierungsbericht.
+    </p>
+    <a href="{% url 'creator_club_csv_import' %}" class="si-btn si-btn-ghost">Vereins-CSV importieren ›</a>
+  </div>
+
 </section>
 
 <style>
@@ -106,5 +116,17 @@
 .hub-tag-fmi { background: rgba(70, 200, 120, .15); color: #6fe0a0; }
 .hub-tag-cm { background: rgba(180, 140, 255, .15); color: #c4a8ff; }
 .hub-step-desc { color: #9fb6cc; font-size: .85rem; line-height: 1.55; margin: 0 0 .85rem; }
+
+.hub-alt {
+  margin-top: 1.75rem; padding: 1.25rem 1.4rem;
+  background: rgba(0, 16, 30, .35); border: 1px dashed rgba(0, 212, 255, .22);
+  border-radius: 10px;
+}
+.hub-alt-title { color: #cce8ff; font-size: .98rem; font-weight: 800; margin: 0 0 .45rem; }
+.hub-alt-desc { color: #9fb6cc; font-size: .85rem; line-height: 1.55; margin: 0 0 .9rem; }
+.hub-alt strong { color: #cce8ff; }
+.si-btn { display: inline-flex; align-items: center; font-size: .82rem; font-weight: 700; padding: .5rem 1.25rem; border-radius: 6px; cursor: pointer; text-decoration: none; border: 1px solid transparent; transition: all .15s; }
+.si-btn-ghost { background: #03070c; border-color: #0d2035; color: #556677; }
+.si-btn-ghost:hover { border-color: #00d4ff33; color: #aabbcc; }
 </style>
 {% endblock %}

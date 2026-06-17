@@ -2671,6 +2671,125 @@ def creator_fmid_csv_import(request):
     return render(request, 'creator/fmid_csv_import.html', ctx)
 
 
+# ── Kanonischer Vereins-CSV-Import (Vollanlage / Aktualisierung) ──────────────
+
+@login_required
+def creator_club_csv_import(request):
+    """Browser-Upload für den kanonischen Vereins-CSV-Import (import_ready).
+
+    Schritt 1 (GET / action=upload):  Datei + Modus (full/update) + Dry-Run wählen.
+    Schritt 2 (action=preview):       Dry-Run; Validierungsbericht + Zielverein.
+    Schritt 3 (action=confirm):       Echter Import inkl. Zähler
+                                      (neu/aktualisiert/übersprungen/fehlgeschlagen).
+
+    Spiegelt den CLI-Wrapper ``import_club_ready_csv`` im Browser. Spielstand/
+    Ökonomie wird in keinem Modus angefasst. Nur Staff-Nutzer dürfen importieren.
+    """
+    from django.http import HttpResponseForbidden
+    from .club_import import validation
+    from .club_import.club_csv_import import (
+        MODE_FULL, MODE_UPDATE, ClubImportError, import_club_csv,
+    )
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden('Nur Staff-Nutzer können importieren.')
+
+    ctx = {'step': 'upload', 'mode': MODE_FULL}
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'cancel':
+            request.session.pop('club_csv_preview', None)
+            request.session.pop('club_csv_mode', None)
+            return redirect('creator_club_csv_import')
+
+        # ── Schritt 2: Dry-Run / Validierungsbericht ─────────────────────────
+        if action == 'preview':
+            mode = request.POST.get('mode', MODE_FULL)
+            if mode not in (MODE_FULL, MODE_UPDATE):
+                mode = MODE_FULL
+            ctx['mode'] = mode
+            dry_run_only = request.POST.get('dry_run_only') == 'on'
+            ctx['dry_run_only'] = dry_run_only
+
+            csv_file = request.FILES.get('csv_file')
+            if not csv_file:
+                ctx['upload_error'] = 'Bitte eine CSV-Datei auswählen.'
+                return render(request, 'creator/club_csv_import.html', ctx)
+            if csv_file.size > 5 * 1024 * 1024:
+                ctx['upload_error'] = 'Datei zu groß (max. 5 MB).'
+                return render(request, 'creator/club_csv_import.html', ctx)
+
+            try:
+                raw_bytes = csv_file.read()
+                try:
+                    csv_text = raw_bytes.decode('utf-8-sig')
+                except UnicodeDecodeError:
+                    csv_text = raw_bytes.decode('latin-1')
+            except Exception as exc:  # noqa: BLE001
+                ctx['upload_error'] = f'Datei konnte nicht gelesen werden: {exc}'
+                return render(request, 'creator/club_csv_import.html', ctx)
+
+            try:
+                result = import_club_csv(csv_text, mode=mode, dry_run=True)
+            except (ClubImportError, ValueError) as exc:
+                ctx['upload_error'] = str(exc)
+                return render(request, 'creator/club_csv_import.html', ctx)
+
+            errors, warnings = validation.count_levels(result['validation_issues'])
+            request.session['club_csv_preview'] = csv_text
+            request.session['club_csv_mode'] = mode
+            ctx.update({
+                'step': 'preview',
+                'club': result['club'],
+                'validation_issues': result['validation_issues'],
+                'error_count': errors,
+                'warning_count': warnings,
+                'parse_warnings': result['parse_warnings'],
+                'player_count': len(result['players']),
+                'filename': csv_file.name,
+                'dry_run_only': dry_run_only,
+            })
+            return render(request, 'creator/club_csv_import.html', ctx)
+
+        # ── Schritt 3: Echter Import ─────────────────────────────────────────
+        elif action == 'confirm':
+            csv_text = request.session.pop('club_csv_preview', None)
+            mode = request.session.pop('club_csv_mode', None) or MODE_FULL
+            ctx['mode'] = mode
+            if not csv_text:
+                ctx['upload_error'] = (
+                    'Sitzung abgelaufen – bitte die CSV erneut hochladen.'
+                )
+                return render(request, 'creator/club_csv_import.html', ctx)
+
+            try:
+                result = import_club_csv(
+                    csv_text, mode=mode, dry_run=False, user=request.user,
+                )
+            except (ClubImportError, ValueError) as exc:
+                ctx['upload_error'] = str(exc)
+                return render(request, 'creator/club_csv_import.html', ctx)
+
+            errors, warnings = validation.count_levels(result['validation_issues'])
+            ctx.update({
+                'step': 'done',
+                'club': result['club'],
+                'stats': result['stats'],
+                'skipped_players': result['skipped_players'],
+                'validation_issues': result['validation_issues'],
+                'error_count': errors,
+                'warning_count': warnings,
+                'parse_warnings': result['parse_warnings'],
+                'reconcile_notes': result['reconcile_notes'],
+                'reconcile_warnings': result['reconcile_warnings'],
+            })
+            return render(request, 'creator/club_csv_import.html', ctx)
+
+    return render(request, 'creator/club_csv_import.html', ctx)
+
+
 # ── Vereins-/Spielerimport — Creator-Mode Oberfläche ──────────────────────────
 
 _IMPORT_RESULT_SESSION_KEY = 'cfm_import_results'

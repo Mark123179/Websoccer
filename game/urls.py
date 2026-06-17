@@ -91,6 +91,7 @@ from .views_creator import (
     creator_import_hub,
     creator_sofifa_import,
     creator_fmid_csv_import,
+    creator_club_csv_import,
     creator_vereinslose,
     creator_competition_create,
     creator_cup_generate_dummies,
@@ -325,6 +326,7 @@ urlpatterns = [
     # SoFIFA-CSV-Import
     path('creator/import/sofifa/', creator_sofifa_import, name='creator_sofifa_import'),
     path('creator/import/fmids/', creator_fmid_csv_import, name='creator_fmid_csv_import'),
+    path('creator/import/club-csv/', creator_club_csv_import, name='creator_club_csv_import'),
 
     # Vereins-/Spielerimport (Creator-Mode Oberfläche)
     path('creator/import/', creator_import_index, name='creator_import_index'),
