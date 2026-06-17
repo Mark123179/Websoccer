@@ -1,0 +1,65 @@
+name: Temporary Elversberg data probe
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp_elversberg_probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Capture public CMTracker network responses
+        run: |
+          cat > /tmp/probe.mjs <<'JS'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          const out = [];
+          const browser = await chromium.launch({headless: true});
+          const context = await browser.newContext({
+            locale: 'en-US',
+            viewport: {width: 1440, height: 1200},
+          });
+          const page = await context.newPage();
+          page.on('response', async (response) => {
+            const url = response.url();
+            const type = response.request().resourceType();
+            const ct = (response.headers()['content-type'] || '').toLowerCase();
+            if (url.includes('cmtracker') && (type === 'xhr' || type === 'fetch' || ct.includes('json'))) {
+              let body = '';
+              try { body = await response.text(); } catch (e) { body = `BODY_ERROR: ${e}`; }
+              out.push({url, status: response.status(), type, contentType: ct, body: body.slice(0, 20000000)});
+            }
+          });
+          const res = await page.goto('https://www.cmtracker.net/players', {waitUntil: 'domcontentloaded', timeout: 120000});
+          await page.waitForTimeout(30000);
+          fs.writeFileSync('cmtracker_probe.json', JSON.stringify({navigationStatus: res?.status(), finalUrl: page.url(), responses: out}, null, 2));
+          fs.writeFileSync('cmtracker_page.html', await page.content());
+          await page.screenshot({path: 'cmtracker_page.png', fullPage: true});
+          await browser.close();
+          console.log(`Captured ${out.length} responses`);
+          console.log(out.map(x => `${x.status} ${x.type} ${x.url}`).join('\n'));
+          JS
+          node /tmp/probe.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cmtracker-probe
+          path: |
+            cmtracker_probe.json
+            cmtracker_page.html
+            cmtracker_page.png
+          retention-days: 1
