@@ -215,8 +215,20 @@ def _club_ref(name, url=''):
     return {'tm_id': None, 'name': name, 'profile_url': _clean(url)}
 
 
+EA_NOT_IN_DB_STATUS = 'NOT_IN_ACTIVE_EA_FC26_DATABASE'
+
+
+def _is_ea_unavailable(row) -> bool:
+    """True wenn ea_availability_status anzeigt, dass kein EA-FC-26-Datensatz existiert."""
+    return _clean(row.get('ea_availability_status')).upper() == EA_NOT_IN_DB_STATUS
+
+
 def row_to_normalized(row):
     """Wandelt eine Spielerzeile in ``normalized_data`` + Warnungen.
+
+    Spieler mit ``ea_availability_status = NOT_IN_ACTIVE_EA_FC26_DATABASE``
+    erhalten ``sofifa_ratings = None`` — alle sofifa_*-Felder werden ignoriert.
+    FMI-only-Gewichtung (×2) greift automatisch, wenn kein EA-Datensatz vorhanden.
 
     Returns:
         (normalized_data: dict, warnings: list[str])
@@ -253,6 +265,14 @@ def row_to_normalized(row):
     else:
         loan_status = 'none'
 
+    ea_unavailable = _is_ea_unavailable(row)
+    if ea_unavailable:
+        warnings.append(
+            f"{_clean(row.get('display_name'))}: "
+            f"ea_availability_status={EA_NOT_IN_DB_STATUS} — "
+            f'EA-Daten werden ignoriert, FMI-only-Gewichtung greift.'
+        )
+
     nd = {
         'tm_player_id': _to_int(row.get('tm_player_id')),
         'transfermarkt_profile_url': _clean(row.get('tm_url')),
@@ -269,13 +289,13 @@ def row_to_normalized(row):
         'main_positions': mains,
         'secondary_positions': secs,
         'fm_inside_id': _to_int(row.get('fm_unique_id')),
-        'sofifa_id': _clean(row.get('sofifa_id')) or None,
-        'sofifa_profile_url': _clean(row.get('sofifa_url')),
+        'sofifa_id': None if ea_unavailable else (_clean(row.get('sofifa_id')) or None),
+        'sofifa_profile_url': '' if ea_unavailable else _clean(row.get('sofifa_url')),
         'real_club': real_club,
         'loaned_from': loaned_from,
         'loan_status': loan_status,
         'fmi_ratings': _attr_block(row, 'fmi', FMI_ATTR_MAP),
-        'sofifa_ratings': _attr_block(row, 'sofifa', SOFIFA_ATTR_MAP),
+        'sofifa_ratings': None if ea_unavailable else _attr_block(row, 'sofifa', SOFIFA_ATTR_MAP),
     }
     return nd, warnings
 

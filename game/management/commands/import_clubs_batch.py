@@ -1,12 +1,17 @@
-"""Stapel-Import mehrerer import_ready-CSVs aus einem Ordner.
+"""Stapel-Import mehrerer import_ready-CSVs und/oder WS_CLUB_IMPORT_V2-ZIPs
+aus einem Ordner.
 
 Jede Datei wird isoliert in einer eigenen Transaktion verarbeitet: ein Fehler
 (nicht auflösbarer Verein, kaputte CSV …) bricht den Stapel **nicht** ab, sondern
 wird im Abschlussbericht protokolliert. Modi wie beim Einzelimport.
 
-Beispiel:
+Mischbetrieb im selben Ordner: *.csv und *.zip werden gemeinsam gefunden und
+jeweils über den passenden Reader verarbeitet.
+
+Beispiele:
     python manage.py import_clubs_batch --dir attached_assets/imports
     python manage.py import_clubs_batch --dir imports --mode update
+    python manage.py import_clubs_batch --dir imports --pattern *.zip
 """
 
 import glob
@@ -16,20 +21,40 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from game.club_import.club_csv_import import (
-    MODE_FULL, MODE_UPDATE, import_club_csv,
+    MODE_FULL, MODE_UPDATE, ClubImportError, import_club_csv,
 )
 from game.club_import import validation
+from game.club_import.zip_import import read_zip
+
+
+def _collect_paths(directory, pattern):
+    """Sammelt Dateipfade passend zum Muster.
+
+    Ist das Muster ``*.csv`` (Standard), werden *zusätzlich* alle ``*.zip``-
+    Dateien im selben Ordner mitgenommen (Mischbetrieb). Bei einem anderen
+    expliziten Muster werden nur die passenden Dateien geliefert.
+    """
+    matched = sorted(glob.glob(os.path.join(directory, pattern)))
+    if pattern == '*.csv':
+        zips = sorted(glob.glob(os.path.join(directory, '*.zip')))
+        all_paths = sorted(set(matched) | set(zips))
+    else:
+        all_paths = matched
+    return all_paths
 
 
 class Command(BaseCommand):
     help = (
-        'Importiert alle import_ready-CSVs eines Ordners nicht-destruktiv. '
-        'Fehler einzelner Dateien isolieren den Rest des Stapels nicht.'
+        'Importiert alle import_ready-CSVs und WS_CLUB_IMPORT_V2-ZIPs eines '
+        'Ordners nicht-destruktiv. Fehler einzelner Dateien isolieren den Rest.'
     )
 
     def add_arguments(self, parser):
-        parser.add_argument('--dir', required=True, help='Ordner mit CSV-Dateien.')
-        parser.add_argument('--pattern', default='*.csv', help='Glob-Muster (Standard *.csv).')
+        parser.add_argument('--dir', required=True, help='Ordner mit Dateien.')
+        parser.add_argument(
+            '--pattern', default='*.csv',
+            help='Glob-Muster (Standard *.csv; *.zip ergänzt automatisch).',
+        )
         parser.add_argument(
             '--mode', choices=[MODE_FULL, MODE_UPDATE], default=MODE_FULL,
             help='full = Vollanlage (Standard), update = nur volatile Daten.',
@@ -46,10 +71,10 @@ class Command(BaseCommand):
         if not os.path.isdir(directory):
             raise CommandError(f'Ordner nicht gefunden: {directory}')
 
-        paths = sorted(glob.glob(os.path.join(directory, options['pattern'])))
+        paths = _collect_paths(directory, options['pattern'])
         if not paths:
             raise CommandError(
-                f'Keine Dateien zu „{options["pattern"]}" in {directory}.'
+                f'Keine Dateien zu „{options["pattern"]}" (inkl. *.zip) in {directory}.'
             )
 
         report = []
@@ -70,12 +95,24 @@ class Command(BaseCommand):
         if options['strict'] and has_val_warning:
             raise SystemExit(validation.EXIT_WARNINGS)
 
+    def _read_file(self, path):
+        """Gibt ``(csv_text, file_label)`` zurück — unterstützt CSV und ZIP."""
+        if path.lower().endswith('.zip'):
+            csv_text, manifest = read_zip(path)
+            label = (
+                f'{os.path.basename(path)} '
+                f'[ZIP: {manifest.club}, {manifest.season}, '
+                f'{manifest.player_count} Spieler]'
+            )
+            return csv_text, label
+        with open(path, encoding='utf-8-sig') as fh:
+            return fh.read(), os.path.basename(path)
+
     def _process_one(self, path, options):
         name = os.path.basename(path)
         try:
-            with open(path, encoding='utf-8-sig') as fh:
-                text = fh.read()
-        except OSError as exc:
+            text, file_label = self._read_file(path)
+        except (ClubImportError, OSError) as exc:
             return {'file': name, 'status': 'error', 'detail': str(exc)}
 
         try:
@@ -94,7 +131,7 @@ class Command(BaseCommand):
 
         errors, warnings = validation.count_levels(result['validation_issues'])
         return {
-            'file': name,
+            'file': file_label,
             'status': 'ok',
             'club': result['club'].name,
             'stats': result['stats'],

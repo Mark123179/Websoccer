@@ -69,13 +69,17 @@
   </ol>
 
   <div class="hub-alt">
-    <h2 class="hub-alt-title">Alternative: Verein per fertiger CSV anlegen/aktualisieren</h2>
+    <h2 class="hub-alt-title">Alternative: Verein per fertigem CSV oder ZIP anlegen/aktualisieren</h2>
     <p class="hub-alt-desc">
-      Hast du bereits eine <strong>import_ready</strong>-CSV (Vereinsprofil + Spieler
-      in einer Datei)? Lade sie direkt hoch – mit Modus-Auswahl
-      (Vollanlage/Aktualisierung), Dry-Run und Validierungsbericht.
+      Hast du bereits eine <strong>import_ready</strong>-CSV oder ein
+      <strong>WS_CLUB_IMPORT_V2</strong>-ZIP (Vereinsprofil + Spieler in einer Datei)?
+      Lade es direkt hoch – mit Modus-Auswahl (Vollanlage/Aktualisierung),
+      Dry-Run und Validierungsbericht. ZIPs zeigen vor dem Import eine
+      Manifest-Vorschau (Vereinsname, Saison, Spieleranzahl, import_ready-Status).
+      Spieler mit <code>NOT_IN_ACTIVE_EA_FC26_DATABASE</code> erhalten automatisch
+      FMI-only-Gewichtung.
     </p>
-    <a href="{% url 'creator_club_csv_import' %}" class="si-btn si-btn-ghost">Vereins-CSV importieren ›</a>
+    <a href="{% url 'creator_club_csv_import' %}" class="si-btn si-btn-ghost">CSV oder ZIP importieren ›</a>
   </div>
 
 </section>

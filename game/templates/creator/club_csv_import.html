@@ -31,7 +31,7 @@
   {% if step == 'upload' %}
   <div class="si-card">
     <div class="si-card-head">
-      <strong>import_ready-CSV hochladen (Vereinsprofil + Spieler)</strong>
+      <strong>import_ready-CSV oder WS_CLUB_IMPORT_V2-ZIP hochladen</strong>
     </div>
 
     {% if upload_error %}
@@ -39,10 +39,14 @@
     {% endif %}
 
     <p class="si-desc">
-      Importiert eine <code>import_ready</code>-CSV nicht-destruktiv in einen
-      bereits existierenden Verein. Spielstand und Ökonomie bleiben unberührt.
+      Importiert eine <code>import_ready</code>-CSV <em>oder</em> ein
+      <code>WS_CLUB_IMPORT_V2</code>-ZIP nicht-destruktiv in einen bereits
+      existierenden Verein. Spielstand und Ökonomie bleiben unberührt.
       Der Zielverein wird über die <code>tm_club_id</code> bzw. den Vereinsnamen
-      aus der CSV aufgelöst – neue Vereine werden <strong>nicht</strong> angelegt.
+      aus der Datei aufgelöst – neue Vereine werden <strong>nicht</strong> angelegt.
+      ZIPs werden auf <code>import_ready=true</code> geprüft; bei
+      <code>NOT_IN_ACTIVE_EA_FC26_DATABASE</code>-Spielern greift automatisch
+      FMI-only-Gewichtung.
     </p>
 
     <div class="si-mode-block">
@@ -63,9 +67,9 @@
       {% csrf_token %}
       <input type="hidden" name="action" value="preview">
       <div class="si-file-row">
-        <label class="si-file-label" for="csv_file">CSV-Datei auswählen</label>
-        <input type="file" id="csv_file" name="csv_file" accept=".csv,.txt" class="si-file-input" required>
-        <span class="si-file-hint">max. 5 MB · UTF-8 oder Latin-1</span>
+        <label class="si-file-label" for="csv_file">Datei auswählen</label>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv,.txt,.zip" class="si-file-input" required>
+        <span class="si-file-hint">CSV oder ZIP · max. 20 MB · UTF-8 oder Latin-1</span>
       </div>
       <label class="si-check-row">
         <input type="checkbox" name="dry_run_only">
@@ -87,10 +91,35 @@
     <div class="si-card-head">
       <strong>Vorschau &amp; Validierung (kein Schreiben)</strong>
       {% if filename %}<span class="si-filename">{{ filename }}</span>{% endif %}
+      {% if is_zip %}<span class="si-zip-badge">ZIP</span>{% endif %}
     </div>
 
     {% if upload_error %}
     <div class="si-alert si-alert-error">{{ upload_error }}</div>
+    {% endif %}
+
+    {% if manifest_info %}
+    <div class="si-manifest">
+      <p class="si-label">Manifest (WS_CLUB_IMPORT_V2)</p>
+      <div class="si-manifest-grid">
+        <span class="si-manifest-k">Verein</span>
+        <span class="si-manifest-v">{{ manifest_info.club }}</span>
+        <span class="si-manifest-k">Saison</span>
+        <span class="si-manifest-v">{{ manifest_info.season }}</span>
+        <span class="si-manifest-k">Spieler</span>
+        <span class="si-manifest-v">{{ manifest_info.player_count }}</span>
+        <span class="si-manifest-k">Datenstand</span>
+        <span class="si-manifest-v">{{ manifest_info.source_as_of|default:"–" }}</span>
+        <span class="si-manifest-k">import_ready</span>
+        <span class="si-manifest-v">
+          {% if manifest_info.import_ready %}
+          <span class="si-manifest-ok">✓ true</span>
+          {% else %}
+          <span class="si-manifest-err">✗ false</span>
+          {% endif %}
+        </span>
+      </div>
+    </div>
     {% endif %}
 
     <div class="si-target">
@@ -487,6 +516,17 @@
 .si-badge { display: inline-block; font-size: .65rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: .15rem .4rem; border-radius: 4px; }
 .si-badge-unmatched { background: #1a1205; color: #e0a030; border: 1px solid #e0a03044; }
 .si-badge-error { background: #1a050a; color: #ff6b6b; border: 1px solid #ff6b6b44; }
+
+/* ZIP badge */
+.si-zip-badge { font-size: .6rem; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; padding: .15rem .45rem; border-radius: 3px; background: #0d1a30; color: #6fd3ff; border: 1px solid #00d4ff44; }
+
+/* ZIP manifest block */
+.si-manifest { background: #03070c; border: 1px solid #00d4ff22; border-radius: 8px; padding: .8rem 1.1rem; margin-bottom: 1.25rem; }
+.si-manifest-grid { display: grid; grid-template-columns: 120px 1fr; gap: .3rem .75rem; margin-top: .4rem; }
+.si-manifest-k { color: #556677; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; align-self: center; }
+.si-manifest-v { color: #cce8ff; font-size: .83rem; align-self: center; }
+.si-manifest-ok { color: #30e08a; font-weight: 700; }
+.si-manifest-err { color: #ff6b6b; font-weight: 700; }
 
 /* Row color tints */
 .si-row-unmatched td { background: #0f0a04; }

@@ -2687,21 +2687,25 @@ def creator_fmid_csv_import(request):
 
 @login_required
 def creator_club_csv_import(request):
-    """Browser-Upload für den kanonischen Vereins-CSV-Import (import_ready).
+    """Browser-Upload für den kanonischen Vereins-CSV- und ZIP-Import (import_ready).
 
-    Schritt 1 (GET / action=upload):  Datei + Modus (full/update) + Dry-Run wählen.
-    Schritt 2 (action=preview):       Dry-Run; Validierungsbericht + Zielverein.
-    Schritt 3 (action=confirm):       Echter Import inkl. Zähler
-                                      (neu/aktualisiert/übersprungen/fehlgeschlagen).
+    Akzeptiert sowohl flache import_ready-CSVs als auch WS_CLUB_IMPORT_V2-ZIPs.
+    Bei ZIPs wird das Manifest (Vereinsname, Spieleranzahl, Saison, import_ready)
+    in der Vorschau angezeigt, bevor der Import gestartet wird.
 
-    Spiegelt den CLI-Wrapper ``import_club_ready_csv`` im Browser. Spielstand/
-    Ökonomie wird in keinem Modus angefasst. Nur Staff-Nutzer dürfen importieren.
+    Schritt 1 (GET / action=upload):  Datei (CSV oder ZIP) + Modus + Dry-Run.
+    Schritt 2 (action=preview):       Dry-Run; Validierungsbericht + Zielverein
+                                      + Manifest-Info bei ZIPs.
+    Schritt 3 (action=confirm):       Echter Import inkl. Zähler.
+
+    Spielstand/Ökonomie wird in keinem Modus angefasst. Nur Staff-Nutzer.
     """
     from django.http import HttpResponseForbidden
     from .club_import import validation
     from .club_import.club_csv_import import (
         MODE_FULL, MODE_UPDATE, ClubImportError, import_club_csv,
     )
+    from .club_import.zip_import import read_zip
 
     if not request.user.is_staff:
         return HttpResponseForbidden('Nur Staff-Nutzer können importieren.')
@@ -2725,20 +2729,38 @@ def creator_club_csv_import(request):
             dry_run_only = request.POST.get('dry_run_only') == 'on'
             ctx['dry_run_only'] = dry_run_only
 
-            csv_file = request.FILES.get('csv_file')
-            if not csv_file:
-                ctx['upload_error'] = 'Bitte eine CSV-Datei auswählen.'
+            upload_file = request.FILES.get('csv_file')
+            if not upload_file:
+                ctx['upload_error'] = 'Bitte eine CSV- oder ZIP-Datei auswählen.'
                 return render(request, 'creator/club_csv_import.html', ctx)
-            if csv_file.size > 5 * 1024 * 1024:
-                ctx['upload_error'] = 'Datei zu groß (max. 5 MB).'
+            if upload_file.size > 20 * 1024 * 1024:
+                ctx['upload_error'] = 'Datei zu groß (max. 20 MB).'
                 return render(request, 'creator/club_csv_import.html', ctx)
 
+            raw_bytes = upload_file.read()
+            filename = upload_file.name
+            manifest_info = None
+
+            is_zip = filename.lower().endswith('.zip')
             try:
-                raw_bytes = csv_file.read()
-                try:
-                    csv_text = raw_bytes.decode('utf-8-sig')
-                except UnicodeDecodeError:
-                    csv_text = raw_bytes.decode('latin-1')
+                if is_zip:
+                    csv_text, manifest = read_zip(raw_bytes)
+                    manifest_info = {
+                        'club': manifest.club,
+                        'season': manifest.season,
+                        'player_count': manifest.player_count,
+                        'import_ready': manifest.import_ready,
+                        'package_name': manifest.package_name,
+                        'source_as_of': manifest.source_as_of,
+                    }
+                else:
+                    try:
+                        csv_text = raw_bytes.decode('utf-8-sig')
+                    except UnicodeDecodeError:
+                        csv_text = raw_bytes.decode('latin-1')
+            except ClubImportError as exc:
+                ctx['upload_error'] = str(exc)
+                return render(request, 'creator/club_csv_import.html', ctx)
             except Exception as exc:  # noqa: BLE001
                 ctx['upload_error'] = f'Datei konnte nicht gelesen werden: {exc}'
                 return render(request, 'creator/club_csv_import.html', ctx)
@@ -2760,7 +2782,9 @@ def creator_club_csv_import(request):
                 'warning_count': warnings,
                 'parse_warnings': result['parse_warnings'],
                 'player_count': len(result['players']),
-                'filename': csv_file.name,
+                'filename': filename,
+                'is_zip': is_zip,
+                'manifest_info': manifest_info,
                 'dry_run_only': dry_run_only,
             })
             return render(request, 'creator/club_csv_import.html', ctx)
@@ -2772,7 +2796,7 @@ def creator_club_csv_import(request):
             ctx['mode'] = mode
             if not csv_text:
                 ctx['upload_error'] = (
-                    'Sitzung abgelaufen – bitte die CSV erneut hochladen.'
+                    'Sitzung abgelaufen – bitte die Datei erneut hochladen.'
                 )
                 return render(request, 'creator/club_csv_import.html', ctx)
 
