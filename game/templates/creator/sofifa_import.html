@@ -108,7 +108,7 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
       </div>
     </div>
 
-    {% if stats.updated or stats.new or stats.error %}
+    {% if stats.new or stats.updated %}
     <div class="si-rows-wrap">
       <table class="si-rows-table">
         <thead>
@@ -122,21 +122,18 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
         </thead>
         <tbody>
           {% for r in row_results %}
-          {% if r.action != 'unchanged' and r.action != 'unmatched' %}
+          {% if r.action == 'new' or r.action == 'updated' %}
           <tr class="si-row si-row-{{ r.action }}">
             <td class="si-col-line">{{ r.line_no }}</td>
             <td class="si-col-status">
               {% if r.action == 'new' %}<span class="si-badge si-badge-new">Neu</span>
               {% elif r.action == 'updated' %}<span class="si-badge si-badge-updated">Update</span>
-              {% elif r.action == 'error' %}<span class="si-badge si-badge-error">Fehler</span>
               {% endif %}
             </td>
             <td class="si-col-player">{{ r.player_name }}{% if r.match_mode == 'name' %}<span class="si-match-mode" title="Fallback über Name">~</span>{% endif %}</td>
             <td class="si-col-club">{{ r.club_name }}</td>
             <td class="si-col-diff">
-              {% if r.error_msg %}{{ r.error_msg }}
-              {% elif r.diff_lines %}{{ r.diff_lines|join:", " }}
-              {% else %}–{% endif %}
+              {% if r.diff_lines %}{{ r.diff_lines|join:", " }}{% else %}–{% endif %}
             </td>
           </tr>
           {% endif %}
@@ -144,18 +141,48 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
         </tbody>
       </table>
     </div>
-    {% elif not stats.unmatched %}
+    {% elif not stats.error and not stats.unmatched %}
     <p class="si-no-changes">Keine Änderungen – alle Zeilen sind bereits aktuell.</p>
     {% endif %}
 
-    {% if stats.unmatched %}
-    <div class="si-unmatched-section">
-      <div class="si-unmatched-head">
-        <span class="si-badge si-badge-unmatched">Nicht gematcht</span>
-        <span class="si-unmatched-count">{{ stats.unmatched }} Zeile{{ stats.unmatched|pluralize:"n" }}</span>
-        <span class="si-unmatched-hint">sofifa_id wurde keinem Spieler in der Datenbank zugeordnet – ExternalId-Verknüpfung prüfen.</span>
+    {% if stats.error %}
+    <div class="si-defect-section">
+      <p class="si-defect-head si-defect-head-error">
+        <span class="si-defect-icon">✕</span>
+        Fehler ({{ stats.error }}) – Zeilen konnten nicht verarbeitet werden
+      </p>
+      <div class="si-rows-wrap si-rows-wrap-inner">
+        <table class="si-rows-table">
+          <thead>
+            <tr>
+              <th class="si-col-line">#</th>
+              <th class="si-col-sofifa">sofifa_id</th>
+              <th class="si-col-diff">Fehlerursache</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in row_results %}
+            {% if r.action == 'error' %}
+            <tr class="si-row si-row-error">
+              <td class="si-col-line">{{ r.line_no }}</td>
+              <td class="si-col-sofifa">{{ r.sofifa_id|default:"–" }}</td>
+              <td class="si-col-diff">{{ r.error_msg|default:"–" }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      <div class="si-rows-wrap">
+    </div>
+    {% endif %}
+
+    {% if stats.unmatched %}
+    <div class="si-defect-section">
+      <p class="si-defect-head si-defect-head-warn">
+        <span class="si-defect-icon">⚠</span>
+        Nicht gematcht ({{ stats.unmatched }}) – sofifa_id keinem Spieler zugeordnet; ExternalId-Verknüpfung prüfen
+      </p>
+      <div class="si-rows-wrap si-rows-wrap-inner">
         <table class="si-rows-table">
           <thead>
             <tr>
