@@ -4100,6 +4100,14 @@ class ClubPlayerImportJob(models.Model):
     progress_total = models.PositiveIntegerField(default=0)
     current_step = models.CharField(max_length=200, blank=True)
     error_message = models.TextField(blank=True)
+    validation_issues = models.JSONField(
+        default=list,
+        blank=True,
+        help_text=(
+            'Validierungsprobleme aus dem letzten Import-Lauf '
+            '(Liste von {level, code, message, ref}-Dicts).'
+        ),
+    )
 
     # Lease / Heartbeat — bindet genau einen lokalen Importer an den Auftrag.
     lease_token = models.CharField(

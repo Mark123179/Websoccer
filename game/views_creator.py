@@ -3039,9 +3039,18 @@ def creator_import_detail(request, job_id):
         ClubPlayerImportJob.STATUS_IMPORTING,
         ClubPlayerImportJob.STATUS_CANCELLED,
     ):
+        from .club_import import validation as _val
         results = request.session.get(_IMPORT_RESULT_SESSION_KEY, {}).get(str(job.pk))
         candidates = [_candidate_display(c) for c in job.candidates.all()]
-        ctx.update({'candidates': candidates, 'result_stats': results})
+        vi = job.validation_issues or []
+        errors, warnings = _val.count_levels(vi)
+        ctx.update({
+            'candidates': candidates,
+            'result_stats': results,
+            'validation_issues': vi,
+            'error_count': errors,
+            'warning_count': warnings,
+        })
 
     return render(request, 'creator/import_detail.html', ctx)
 

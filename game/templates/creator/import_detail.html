@@ -297,6 +297,71 @@
     </div>
     {% endif %}
 
+    {% if validation_issues %}
+    <div class="si-stats-row">
+      <div class="si-stat si-stat-error">
+        <span class="si-stat-num">{{ error_count }}</span>
+        <span class="si-stat-lbl">Fehler</span>
+      </div>
+      <div class="si-stat si-stat-unmatched">
+        <span class="si-stat-num">{{ warning_count }}</span>
+        <span class="si-stat-lbl">Warnungen</span>
+      </div>
+    </div>
+
+    {% if error_count %}
+    <div class="si-defect-section">
+      <p class="si-defect-head si-defect-head-error">
+        <span class="si-defect-icon">✕</span>
+        Fehler ({{ error_count }}) – Rohattribute fehlen; Spieler wurden trotzdem geschrieben
+      </p>
+      <div class="si-rows-wrap si-rows-wrap-inner">
+        <table class="si-rows-table">
+          <thead><tr><th class="si-col-player">Spieler / Quelle</th><th class="si-col-diff">Defekt</th></tr></thead>
+          <tbody>
+            {% for issue in validation_issues %}{% if issue.level == 'error' %}
+            <tr class="si-row si-row-error">
+              <td class="si-col-player">{{ issue.ref|default:"–" }}</td>
+              <td class="si-col-diff">{{ issue.message }}</td>
+            </tr>
+            {% endif %}{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if warning_count %}
+    <div class="si-defect-section">
+      <p class="si-defect-head si-defect-head-warn">
+        <span class="si-defect-icon">⚠</span>
+        Warnungen ({{ warning_count }}) – keine Blockierung, aber prüfenswert
+      </p>
+      <div class="si-rows-wrap si-rows-wrap-inner">
+        <table class="si-rows-table">
+          <thead><tr><th class="si-col-player">Spieler / Quelle</th><th class="si-col-diff">Hinweis</th></tr></thead>
+          <tbody>
+            {% for issue in validation_issues %}{% if issue.level != 'error' %}
+            <tr class="si-row si-row-unmatched">
+              <td class="si-col-player">{{ issue.ref|default:"–" }}</td>
+              <td class="si-col-diff">{{ issue.message }}</td>
+            </tr>
+            {% endif %}{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if error_count %}
+    <div class="si-alert si-alert-warn">
+      <strong>Nicht-blockierend:</strong> Alle fehlerfreien Spieler wurden erfolgreich
+      geschrieben. Spieler mit Defekten (z.&nbsp;B. Rating ohne Attribute) sind in der
+      Datenbank angelegt – die fehlenden Rohattribute lassen sich gezielt nachpflegen.
+    </div>
+    {% endif %}
+    {% endif %}
+
     {% if candidates %}
     <div style="overflow-x:auto;">
     <table class="imp-cand-table">

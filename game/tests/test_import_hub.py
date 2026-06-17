@@ -222,3 +222,63 @@ class ClubCsvImportDefectsUITest(TestCase):
             'Fehler übersprungen', html,
             'Der Zähler „Fehler übersprungen" muss im done-Schritt erscheinen.',
         )
+
+
+# ── Persistenz: validation_issues am Job-Objekt ───────────────────────────────
+
+class ValidationIssuesPersistenceTest(TestCase):
+    """Prüft, dass validation_issues nach dem Import dauerhaft am Job stehen."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='persist_user', password='pw12345', is_staff=True,
+        )
+        self.client.force_login(self.user)
+        league = League.objects.create(name='Persistenzliga', country='DE')
+        self.club = Club.objects.create(
+            name='Persist FC', short_name='PFC', founded_year=1999,
+            budget=Decimal('0'), league=league,
+        )
+
+    def _run_import(self, club_name):
+        url = reverse('creator_club_csv_import')
+        csv_text = _build_defect_csv(club_name)
+        csv_file = SimpleUploadedFile(
+            'persist.csv', csv_text.encode('utf-8'), content_type='text/csv',
+        )
+        self.client.post(url, {'action': 'preview', 'mode': 'full', 'csv_file': csv_file})
+        return self.client.post(url, {'action': 'confirm', 'mode': 'full'})
+
+    def test_validation_issues_saved_on_job(self):
+        """Nach dem Import muss validation_issues am Job-Objekt gesetzt sein."""
+        from game.models import ClubPlayerImportJob
+        self._run_import('Persist FC')
+        job = ClubPlayerImportJob.objects.filter(ws_club=self.club).latest('created_at')
+        self.assertIsInstance(job.validation_issues, list)
+        self.assertGreater(
+            len(job.validation_issues), 0,
+            'Job muss nach Import mit Defekt-CSV mindestens ein Issue gespeichert haben.',
+        )
+        levels = {i['level'] for i in job.validation_issues}
+        self.assertIn('error', levels, 'Mindestens ein LEVEL_ERROR muss im Job stehen.')
+
+    def test_import_detail_shows_saved_issues(self):
+        """creator_import_detail zeigt gespeicherte Issues für abgeschlossene Jobs."""
+        from game.models import ClubPlayerImportJob
+        self._run_import('Persist FC')
+        job = ClubPlayerImportJob.objects.filter(ws_club=self.club).latest('created_at')
+
+        resp = self.client.get(
+            reverse('creator_import_detail', args=[job.pk])
+        )
+        self.assertEqual(resp.status_code, 200)
+        html = resp.content.decode('utf-8')
+        self.assertIn(
+            'Defekt Spieler', html,
+            'import_detail muss Spielernamen aus gespeicherten Issues anzeigen.',
+        )
+        self.assertIn(
+            'Nicht-blockierend', html,
+            'import_detail muss den nicht-blockierenden Hinweis rendern.',
+        )

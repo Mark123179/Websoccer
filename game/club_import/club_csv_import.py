@@ -166,5 +166,6 @@ def import_club_csv(text, *, mode=MODE_FULL, tm_override=None, name_override=Non
     result['stats'] = import_result['stats']
 
     job.status = job.STATUS_COMPLETED
-    job.save(update_fields=['status', 'updated_at'])
+    job.validation_issues = issues
+    job.save(update_fields=['status', 'validation_issues', 'updated_at'])
     return result
