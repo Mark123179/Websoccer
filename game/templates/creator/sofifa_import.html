@@ -145,6 +145,10 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
     <p class="si-no-changes">Keine Änderungen – alle Zeilen sind bereits aktuell.</p>
     {% endif %}
 
+    {% if not stats.new and not stats.updated and stats.error or not stats.new and not stats.updated and stats.unmatched %}
+    <p class="si-no-importable">Keine importierbaren Zeilen gefunden – prüfe die Defektliste unten.</p>
+    {% endif %}
+
     {% if stats.error %}
     <div class="si-defect-section">
       <p class="si-defect-head si-defect-head-error">
@@ -487,6 +491,7 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
 
 /* Misc */
 .si-no-changes { color: #334455; font-size: .85rem; margin: 0 0 1rem; }
+.si-no-importable { color: #c0832a; font-size: .85rem; font-weight: 600; margin: 0 0 1rem; }
 .si-done-note { color: #30e08a88; font-size: .83rem; margin: 0 0 1.25rem; }
 </style>
 {% endblock %}
