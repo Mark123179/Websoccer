@@ -673,9 +673,10 @@ def creator_club_edit(request, club_id):
         .first()
     )
     import_error_count = 0
+    import_warning_count = 0
     if latest_import_job:
         vi = latest_import_job.validation_issues or []
-        import_error_count, _ = _val.count_levels(vi)
+        import_error_count, import_warning_count = _val.count_levels(vi)
 
     return render(request, 'creator/club_edit.html', {
         'club': club,
@@ -697,6 +698,7 @@ def creator_club_edit(request, club_id):
         'import_defekte': import_defekte,
         'latest_import_job': latest_import_job,
         'import_error_count': import_error_count,
+        'import_warning_count': import_warning_count,
     })
 
 
