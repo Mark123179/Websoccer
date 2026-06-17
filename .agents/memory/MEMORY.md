@@ -42,3 +42,4 @@
 - [Club/Player Import Engine](club-import-engine.md) — Creator-Mode-Importer (game/club_import/); NULL-never-0 (market_value jetzt nullable), Platzhalter-Liga, Matching-Priorität, HP/NP-Regeln, Stärke-Persistenz-Falle.
 - [CFM-Importer enrichment & resilience](cfm-importer-enrichment.md) — only the local importer scrapes (server can't); manual FMI/SoFIFA-ID entry stores ID only; FMInside is ID-first/DOB-strict; safe_goto resilience.
 - [CFM-Importer FMInside lookup](cfm-importer-fminside-lookup.md) — one-segment URL auto-redirects to NEWEST DB version (never hardcode); verify id in final URL; FM-ID comes from server roster matched by name+DOB (Option A) — matcher must never guess.
+- [Club import split-identity collision](club-import-split-identity-collision.md) — one import source_error on fm_inside_id/tm_id unique key = pre-existing split duplicate (two rows, complementary IDs); merge+delete orphan, then re-run.

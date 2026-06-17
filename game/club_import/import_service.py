@@ -362,19 +362,34 @@ def import_candidate(candidate, user=None, recalculate=True):
             player.primary_position = mains[0]
 
         # Vereins-/Leihlogik (Spec §10).
+        # ``loan_status`` ist optional (rückwärtskompatibel): ist es nicht
+        # gesetzt, ergibt sich der Status implizit aus loaned_from/real_club.
         loan_ref = nd.get('loaned_from')
         real_ref = nd.get('real_club')
-        player.club = ws_club
-        if loan_ref:
+        loan_status = nd.get('loan_status')
+        if loan_status == 'loaned_out':
+            # Eigentum des Auftragsvereins, spielt aber anderswo → im Spiel
+            # vereinslos (club=None), Eigentümer = real_life_club.
+            player.club = None
+            player.real_life_club = get_or_create_club(real_ref) if real_ref else ws_club
+            player.loan_partner_club = None
+            player.loan_status = 'loaned_out'
+        elif loan_ref:
             parent = get_or_create_club(loan_ref)
+            player.club = ws_club
             player.real_life_club = parent
             player.loan_partner_club = parent
+            player.loan_status = 'loaned_in'
         elif real_ref:
+            player.club = ws_club
             player.real_life_club = get_or_create_club(real_ref)
             player.loan_partner_club = None
+            player.loan_status = 'none'
         else:
+            player.club = ws_club
             player.real_life_club = ws_club
             player.loan_partner_club = None
+            player.loan_status = 'none'
 
         player.save()
 
