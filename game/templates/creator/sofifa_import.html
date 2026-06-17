@@ -146,7 +146,7 @@ tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen<
     {% endif %}
 
     {% if not stats.new and not stats.updated and stats.error or not stats.new and not stats.updated and stats.unmatched %}
-    <p class="si-no-importable">Keine importierbaren Zeilen gefunden – prüfe die Defektliste unten.</p>
+    <p class="si-no-importable">Keine importierbaren Zeilen gefunden –{% if stats.error %} {{ stats.error }} Fehler{% endif %}{% if stats.error and stats.unmatched %},{% endif %}{% if stats.unmatched %} {{ stats.unmatched }} nicht gematcht{% endif %}{% if stats.error or stats.unmatched %};{% endif %} prüfe die Defektliste unten.</p>
     {% endif %}
 
     {% if stats.error %}
