@@ -20,4 +20,10 @@ constraint on `fm_inside_id`/`transfermarkt_id`, suspect a pre-existing split
 duplicate, not an adapter bug. Resolve by merging: keep the actively-used row (the
 one with edit_logs / import_candidates / stats), verify the orphan has zero cascade
 (NestedObjects collector), delete the orphan, then re-run the idempotent import.
-A general dedup/merge command is the proper fix (see follow-up task).
+
+**General fix exists:** `manage.py merge_split_players` (dry-run default, `--apply`)
+auto-merges twins by normalized name + DOB + complementary, conflict-free external
+IDs. It reassigns dependents generically via `Player._meta.related_objects` with a
+per-row savepoint: on a unique-constraint collision the canonical row wins and the
+twin's row is dropped. Skips >2-member groups (manual review) and same-ID-kind
+pairs (= different people). Use it instead of hand-merging.
