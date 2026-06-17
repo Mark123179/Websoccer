@@ -88,6 +88,14 @@ Bei weiteren Starts genügt ein Doppelklick auf die BAT.
 - **Navigation** wird bei Timeout, HTTP 5xx und Blockaden (403/429) bis zu
   `request.nav_retries`-mal mit exponentiellem Backoff wiederholt; HTTP 404/410
   überspringt den Spieler sofort (kein Raten).
+- **Bot-Erkennung reduziert** durch zwei Maßnahmen beim Start:
+  `--disable-blink-features=AutomationControlled` entfernt das auffälligste
+  Chrome-Automations-Flag; `playwright-stealth` patcht weitere typische
+  Playwright-Fingerprints (u. a. `navigator.webdriver`, Plugin-Liste,
+  Spracheinstellungen), die Cloudflare und ähnliche Systeme zur Erkennung
+  nutzen. Kombiniert mit dem persistenten Profil (gespeicherte Cookies/
+  Cloudflare-Freigaben) ist die Blockierrate deutlich niedriger als ohne diese
+  Maßnahmen.
 - **Cloudflare-/Captcha-Challenges** werden erkannt. Das Tool wartet zunächst bis
   zu `request.challenge_wait_seconds` auf die automatische Auflösung. Gelingt das
   nicht und läuft ein **sichtbarer** Browser (`headless: false`) mit

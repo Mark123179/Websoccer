@@ -7,6 +7,7 @@ bestätigt werden müssen. Der Browser läuft standardmäßig sichtbar
 """
 
 from playwright.sync_api import sync_playwright
+from playwright_stealth import stealth_sync
 
 
 class Browser:
@@ -29,8 +30,17 @@ class Browser:
             headless=self.config.headless,
             viewport={'width': 1440, 'height': 900},
             locale='de-DE',
+            # Entfernt das AutomationControlled-Flag — eines der
+            # zuverlässigsten Erkennungsmerkmale für Bot-Erkennung.
+            args=['--disable-blink-features=AutomationControlled'],
         )
         self.context.set_default_timeout(30_000)
+        # Stealth-Patches auf den gesamten Kontext anwenden: entfernt
+        # navigator.webdriver, täuscht Plugins/Sprachen vor und behebt
+        # weitere typische Playwright-Fingerprints, die Cloudflare und
+        # ähnliche Systeme zur Bot-Erkennung nutzen. Gilt für alle
+        # Seiten, die in diesem Kontext geladen werden.
+        stealth_sync(self.context)
         self.page = (self.context.pages[0]
                      if self.context.pages else self.context.new_page())
         return self
