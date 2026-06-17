@@ -186,14 +186,22 @@
       <strong>Nicht-blockierend:</strong> Die guten Daten werden trotz der Fehler geschrieben.
       Spieler mit Defekten (z.&nbsp;B. Rating ohne Attribute) werden gespeichert –
       die fehlenden Rohattribute lassen sich danach gezielt nachpflegen.
+      Alternativ: „Bei Fehlern überspringen" aktivieren, damit fehlerhafte Spieler
+      gar nicht erst importiert werden.
     </div>
     {% endif %}
 
     <div class="si-actions si-actions-preview">
       {% if not dry_run_only %}
-      <form method="post" style="display:inline">
+      <form method="post" style="display:inline-block">
         {% csrf_token %}
         <input type="hidden" name="action" value="confirm">
+        {% if error_count %}
+        <label class="si-check-row si-check-skip">
+          <input type="checkbox" name="skip_error_players">
+          <span>Bei Fehlern überspringen (fehlerhafte Spieler nicht importieren)</span>
+        </label>
+        {% endif %}
         <button type="submit" class="si-btn si-btn-primary">Import schreiben</button>
       </form>
       {% else %}
@@ -243,6 +251,12 @@
         <span class="si-stat-num">{{ stats.skipped }}</span>
         <span class="si-stat-lbl">Übersprungen</span>
       </div>
+      {% if error_skipped_players %}
+      <div class="si-stat si-stat-unmatched">
+        <span class="si-stat-num">{{ error_skipped_players|length }}</span>
+        <span class="si-stat-lbl">Fehler übersprungen</span>
+      </div>
+      {% endif %}
       <div class="si-stat si-stat-error">
         <span class="si-stat-num">{{ stats.failed }}</span>
         <span class="si-stat-lbl">Fehlgeschlagen</span>
@@ -272,6 +286,15 @@
       <p class="si-label">Übersprungene Spieler (fehlende/doppelte TM-ID)</p>
       <ul class="si-parse-list">
         {% for name in skipped_players %}<li>{{ name }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if error_skipped_players %}
+    <div class="si-parse-warn si-parse-warn-error-skip">
+      <p class="si-label">Übersprungene Spieler (Fehler – nicht importiert)</p>
+      <ul class="si-parse-list">
+        {% for name in error_skipped_players %}<li>{{ name }}</li>{% endfor %}
       </ul>
     </div>
     {% endif %}
@@ -477,6 +500,14 @@
 .si-defect-icon { font-size: .85rem; flex-shrink: 0; }
 .si-rows-wrap-inner { margin-bottom: 0; }
 .si-col-player { color: #8aa0b5; min-width: 180px; font-size: .78rem; font-family: monospace; }
+
+/* Skip-Fehler-Checkbox im Preview */
+.si-check-skip { margin-bottom: .75rem; display: flex; }
+
+/* Fehler-übersprungen-Panel im done-Schritt */
+.si-parse-warn-error-skip { border-color: #ff6b6b33; }
+.si-parse-warn-error-skip .si-label { color: #ff6b6b; }
+.si-parse-warn-error-skip .si-parse-list { color: #d08080; }
 
 /* Misc */
 .si-no-changes { color: #30e08a88; font-size: .85rem; margin: 0 0 1rem; }

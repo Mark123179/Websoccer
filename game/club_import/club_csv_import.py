@@ -95,12 +95,19 @@ def _create_job_with_candidates(club, profile, players):
 
 
 def import_club_csv(text, *, mode=MODE_FULL, tm_override=None, name_override=None,
-                    recalculate=True, dry_run=False, strict=False, user=None):
+                    recalculate=True, dry_run=False, strict=False, user=None,
+                    skip_error_players=False):
     """Importiert eine import_ready-CSV in einem der beiden Modi.
+
+    Args:
+        skip_error_players: Wenn True, werden Spieler mit mindestens einem
+            LEVEL_ERROR-Validierungsproblem vor dem Import herausgefiltert und
+            in ``error_skipped_players`` zurückgegeben (statt importiert).
 
     Returns:
         dict mit Schlüsseln club, parse_warnings, validation_issues, exit_code,
-        reconcile_notes, reconcile_warnings, stats, skipped_players, players.
+        reconcile_notes, reconcile_warnings, stats, skipped_players,
+        error_skipped_players, players.
     """
     if mode not in (MODE_FULL, MODE_UPDATE):
         raise ClubImportError(f'Unbekannter Modus: {mode!r}.')
@@ -114,6 +121,18 @@ def import_club_csv(text, *, mode=MODE_FULL, tm_override=None, name_override=Non
     issues = validation.validate_parsed(profile, players)
     code = validation.exit_code(issues, strict=strict)
 
+    error_skipped = []
+    if skip_error_players and not dry_run:
+        good_players = []
+        for p in players:
+            nd = p['normalized_data'] if 'normalized_data' in p else p
+            player_issues = validation.validate_parsed_player(nd)
+            if any(i['level'] == validation.LEVEL_ERROR for i in player_issues):
+                error_skipped.append(p.get('display_name') or '')
+            else:
+                good_players.append(p)
+        players = good_players
+
     result = {
         'club': club,
         'mode': mode,
@@ -124,6 +143,7 @@ def import_club_csv(text, *, mode=MODE_FULL, tm_override=None, name_override=Non
         'reconcile_warnings': [],
         'stats': None,
         'skipped_players': [],
+        'error_skipped_players': error_skipped,
         'players': players,
     }
 

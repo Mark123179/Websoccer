@@ -161,3 +161,64 @@ class ClubCsvImportDefectsUITest(TestCase):
             'Nicht-blockierend', html,
             'Der nicht-blockierende Hinweis muss bei error_count > 0 angezeigt werden.',
         )
+
+        # Kein error_skipped_players ohne Checkbox
+        self.assertEqual(
+            ctx.get('error_skipped_players', []), [],
+            'Ohne skip-Checkbox darf error_skipped_players leer sein.',
+        )
+
+    def test_skip_error_players_excludes_defect_from_import(self):
+        """Mit skip_error_players=on werden fehlerhafte Spieler nicht importiert,
+        tauchen aber in error_skipped_players auf; error_count bleibt > 0."""
+        url = reverse('creator_club_csv_import')
+        csv_text = _build_defect_csv('Test FC')
+
+        # Schritt 1: Preview – legt CSV in der Session ab
+        preview_resp = self._do_preview(url, csv_text)
+        self.assertEqual(preview_resp.status_code, 200,
+                         'Preview-Schritt muss HTTP 200 zurückgeben.')
+        self.assertNotIn('upload_error', preview_resp.context or {},
+                         'Preview darf keinen upload_error setzen.')
+
+        # Schritt 2: Import mit aktivierter Skip-Checkbox
+        resp = self.client.post(url, {
+            'action': 'confirm',
+            'mode': 'full',
+            'skip_error_players': 'on',
+        })
+        self.assertEqual(resp.status_code, 200)
+
+        ctx = resp.context
+        html = resp.content.decode('utf-8')
+
+        self.assertEqual(ctx['step'], 'done',
+                         'Nach dem Confirm muss step="done" im Kontext stehen.')
+
+        # Validierungsfehler bleiben sichtbar (error_count > 0)
+        self.assertGreater(
+            ctx['error_count'], 0,
+            'error_count muss auch beim Überspringen > 0 bleiben (Validierung unberührt).',
+        )
+
+        # Spieler muss in error_skipped_players auftauchen
+        self.assertIn(
+            'Defekt Spieler', ctx.get('error_skipped_players', []),
+            'Der übersprungene Spieler muss in error_skipped_players stehen.',
+        )
+
+        # Spieler muss in der übersprungenen-Liste im HTML erscheinen
+        self.assertIn(
+            'Übersprungene Spieler (Fehler', html,
+            'Der Fehler-übersprungen-Abschnitt muss im HTML erscheinen.',
+        )
+        self.assertIn(
+            'Defekt Spieler', html,
+            'Der Spielername muss in der Fehler-übersprungen-Liste erscheinen.',
+        )
+
+        # Und der separate Counter (Fehler übersprungen) muss vorhanden sein
+        self.assertIn(
+            'Fehler übersprungen', html,
+            'Der Zähler „Fehler übersprungen" muss im done-Schritt erscheinen.',
+        )

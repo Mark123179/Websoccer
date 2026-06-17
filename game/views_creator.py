@@ -2764,9 +2764,12 @@ def creator_club_csv_import(request):
                 )
                 return render(request, 'creator/club_csv_import.html', ctx)
 
+            skip_errors = request.POST.get('skip_error_players') == 'on'
+
             try:
                 result = import_club_csv(
                     csv_text, mode=mode, dry_run=False, user=request.user,
+                    skip_error_players=skip_errors,
                 )
             except (ClubImportError, ValueError) as exc:
                 ctx['upload_error'] = str(exc)
@@ -2778,6 +2781,7 @@ def creator_club_csv_import(request):
                 'club': result['club'],
                 'stats': result['stats'],
                 'skipped_players': result['skipped_players'],
+                'error_skipped_players': result.get('error_skipped_players', []),
                 'validation_issues': result['validation_issues'],
                 'error_count': errors,
                 'warning_count': warnings,
