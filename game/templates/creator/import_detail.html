@@ -128,6 +128,13 @@
       <span class="imp-count">Ausgewählt: <b>{{ counts.selected }}</b></span>
     </div>
 
+    {% if cand_error_count or cand_warning_count %}
+    <div class="imp-issue-summary">
+      {% if cand_error_count %}<span class="imp-issue-summary-error">✕ {{ cand_error_count }} Fehler</span>{% endif %}
+      {% if cand_warning_count %}<span class="imp-issue-summary-warn">⚠ {{ cand_warning_count }} Warnungen</span>{% endif %}
+    </div>
+    {% endif %}
+
     <div class="imp-toolbar">
       <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="select_new_changed"><button class="imp-chip-btn">Neu + geändert wählen</button></form>
       <form method="post" action="{% url 'creator_import_bulk' job_id=job.pk %}">{% csrf_token %}<input type="hidden" name="action" value="overwrite_existing"><button class="imp-chip-btn">Vorhandene überschreiben</button></form>

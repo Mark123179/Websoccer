@@ -3089,7 +3089,14 @@ def creator_import_detail(request, job_id):
             'fmi_missing': sum(1 for c in candidates if c['fmi_missing']),
             'fmi_needs_manual': sum(1 for c in candidates if c['fmi_needs_manual']),
         }
-        ctx.update({'candidates': candidates, 'counts': counts})
+        cand_error_count = sum(len(c['errors']) for c in candidates)
+        cand_warning_count = sum(len(c['warnings']) for c in candidates)
+        ctx.update({
+            'candidates': candidates,
+            'counts': counts,
+            'cand_error_count': cand_error_count,
+            'cand_warning_count': cand_warning_count,
+        })
 
     elif job.status in (
         ClubPlayerImportJob.STATUS_COMPLETED,
