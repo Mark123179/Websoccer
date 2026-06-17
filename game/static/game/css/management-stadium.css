@@ -121,23 +121,20 @@
    ============================================================ */
 .st-body {
     display: grid;
-    grid-template-columns: 1fr 380px;
-    grid-template-rows: auto auto;
+    grid-template-columns: repeat(3, 1fr);
     gap: 18px;
     padding: 20px 24px 24px;
+    align-items: start;
     flex: 1;
 }
 
-/* linke breite Spalte */
-.st-main {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    min-width: 0;
+/* Element über die volle Breite (Tribünen, Stadionumfeld) */
+.st-col-full {
+    grid-column: 1 / -1;
 }
 
-/* rechte schmale Spalte */
-.st-sidebar {
+/* eine der drei Spalten — stapelt ihre Panels vertikal */
+.st-col {
     display: flex;
     flex-direction: column;
     gap: 18px;

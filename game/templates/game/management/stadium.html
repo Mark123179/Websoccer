@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=21">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=22">
 {% endblock %}
 
 {% block content %}
@@ -49,11 +49,8 @@
          ======================================================== -->
     <div class="st-body">
 
-        <!-- ---- Linke Hauptspalte ---- -->
-        <div class="st-main">
-
-            <!-- TRIBÜNEN -->
-            <div class="st-panel">
+            <!-- TRIBÜNEN (volle Breite) -->
+            <div class="st-panel st-col-full">
                 <p class="st-section-title">Tribünen &amp; Kapazität</p>
                 <div class="st-stands-grid">
                     {% for s in stands %}
@@ -101,6 +98,9 @@
                     {% endfor %}
                 </div>
             </div>
+
+            <!-- SPALTE 1: Preise & Ausbau -->
+            <div class="st-col">
 
             <!-- TICKETPREISE -->
             <div class="st-panel">
@@ -182,8 +182,121 @@
 
             </div>
 
-            <!-- STADIONUMFELD -->
-            <div class="st-panel st-panel--umfeld">
+            </div>
+            <!-- /SPALTE 1 -->
+
+            <!-- SPALTE 2: Finanzübersicht -->
+            <div class="st-col">
+
+            <!-- FINANZÜBERSICHT -->
+            <div class="st-panel">
+                <p class="st-section-title">Finanzübersicht</p>
+                <div class="st-finance-rows">
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">
+                            Einnahmen
+                            <span class="st-info-icon" data-tip="Bei Vollauslastung / Ausverkauf">ⓘ</span>
+                        </span>
+                        <span class="st-finance-value">{{ einnahmen_vollauslastung|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">Stehplätze + Sitzplätze + VIP × Preis</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Saisoneinnahmen</span>
+                        <span class="st-finance-value" style="font-size:20px; color:#4ade80;">{{ saisoneinnahmen|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">{{ games_played }} Heimspiel{{ games_played|pluralize:"e" }} verbucht</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Stadionkosten</span>
+                        <span class="st-finance-value" style="font-size:20px; color:#d9534f;">{{ stadionkosten_saison|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-sub">Betriebskosten laufende Saison</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Stehplatz-Preis</span>
+                        <div class="st-finance-price-row">
+                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_standing }} €</span>
+                            <span class="st-liga-avg">Ø Liga {{ liga_avg_standing }} €</span>
+                        </div>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Sitzplatz-Preis</span>
+                        <div class="st-finance-price-row">
+                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_seating }} €</span>
+                            <span class="st-liga-avg">Ø Liga {{ liga_avg_seating }} €</span>
+                        </div>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">VIP-Preis</span>
+                        <div class="st-finance-price-row">
+                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_vip }} €</span>
+                            <span class="st-liga-avg">Ø Liga {{ liga_avg_vip }} €</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+            <!-- /SPALTE 2 -->
+
+            <!-- SPALTE 3: Kapazität & Fan-Erlebnis -->
+            <div class="st-col">
+
+            <!-- KAPAZITÄTS-ÜBERSICHT -->
+            <div class="st-panel">
+                <p class="st-section-title">Kapazitätsverteilung</p>
+                <div class="st-finance-rows">
+                    <div class="st-finance-row">
+                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
+                            <span class="st-stand-row-dot st-stand-row-dot--steh"></span>Stehplätze
+                        </span>
+                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_standing|intcomma }}</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
+                            <span class="st-stand-row-dot st-stand-row-dot--sitz"></span>Sitzplätze
+                        </span>
+                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_seating|intcomma }}</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
+                            <span class="st-stand-row-dot st-stand-row-dot--vip"></span>VIP
+                        </span>
+                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_vip|intcomma }}</span>
+                    </div>
+                    <div class="st-finance-row">
+                        <span class="st-finance-label">Max. Kapazität</span>
+                        <span class="st-finance-value" style="font-size:18px;color:rgba(255,255,255,0.45);">
+                            {{ max_kapazitaet|intcomma }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAN-ERLEBNIS GAUGES -->
+            <div class="st-panel">
+                <p class="st-section-title">Fan-Erlebnis</p>
+                <div class="st-gauges">
+                    <div class="st-gauge-item">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ club.fan_popularity }}; --gauge-color:#4ade80;">
+                            <span class="st-gauge-val">{{ club.fan_popularity }}</span>
+                        </div>
+                        <span class="st-gauge-label">Fanbeliebtheit</span>
+                        <span class="st-gauge-sub">{% if club.fan_popularity >= 85 %}Hervorragend{% elif club.fan_popularity >= 70 %}Sehr gut{% elif club.fan_popularity >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
+                    </div>
+                    <div class="st-gauge-item">
+                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_auslastung }}; --gauge-color:#22d3ee;">
+                            <span class="st-gauge-val">{{ gauge_auslastung }}</span>
+                        </div>
+                        <span class="st-gauge-label">Auslastung</span>
+                        <span class="st-gauge-sub">{% if gauge_auslastung >= 85 %}Sehr gut{% elif gauge_auslastung >= 70 %}Gut{% elif gauge_auslastung >= 50 %}Befriedigend{% else %}Gering{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+            <!-- /SPALTE 3 -->
+
+            <!-- STADIONUMFELD (volle Breite) -->
+            <div class="st-panel st-panel--umfeld st-col-full">
                 <!-- Linke Foto-Hälfte -->
                 <div class="sf-photo">
                     <img src="{% static 'game/images/backgrounds/stadium-grounds.jpg' %}" alt="Stadionumfeld" class="sf-bg-img">
@@ -240,110 +353,6 @@
                 </div>
             </div>
 
-        </div>
-
-        <!-- ---- Rechte Sidebar ---- -->
-        <div class="st-sidebar">
-
-            <!-- FAN-ERLEBNIS GAUGES -->
-            <div class="st-panel">
-                <p class="st-section-title">Fan-Erlebnis</p>
-                <div class="st-gauges">
-                    <div class="st-gauge-item">
-                        <div class="st-gauge-ring" style="--gauge-pct:{{ club.fan_popularity }}; --gauge-color:#4ade80;">
-                            <span class="st-gauge-val">{{ club.fan_popularity }}</span>
-                        </div>
-                        <span class="st-gauge-label">Fanbeliebtheit</span>
-                        <span class="st-gauge-sub">{% if club.fan_popularity >= 85 %}Hervorragend{% elif club.fan_popularity >= 70 %}Sehr gut{% elif club.fan_popularity >= 50 %}Gut{% else %}Ausbaufähig{% endif %}</span>
-                    </div>
-                    <div class="st-gauge-item">
-                        <div class="st-gauge-ring" style="--gauge-pct:{{ gauge_auslastung }}; --gauge-color:#22d3ee;">
-                            <span class="st-gauge-val">{{ gauge_auslastung }}</span>
-                        </div>
-                        <span class="st-gauge-label">Auslastung</span>
-                        <span class="st-gauge-sub">{% if gauge_auslastung >= 85 %}Sehr gut{% elif gauge_auslastung >= 70 %}Gut{% elif gauge_auslastung >= 50 %}Befriedigend{% else %}Gering{% endif %}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FINANZÜBERSICHT -->
-            <div class="st-panel">
-                <p class="st-section-title">Finanzübersicht</p>
-                <div class="st-finance-rows">
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">
-                            Einnahmen
-                            <span class="st-info-icon" data-tip="Bei Vollauslastung / Ausverkauf">ⓘ</span>
-                        </span>
-                        <span class="st-finance-value">{{ einnahmen_vollauslastung|floatformat:0|intcomma }} €</span>
-                        <span class="st-finance-sub">Stehplätze + Sitzplätze + VIP × Preis</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">Saisoneinnahmen</span>
-                        <span class="st-finance-value" style="font-size:20px; color:#4ade80;">{{ saisoneinnahmen|floatformat:0|intcomma }} €</span>
-                        <span class="st-finance-sub">{{ games_played }} Heimspiel{{ games_played|pluralize:"e" }} verbucht</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">Stadionkosten</span>
-                        <span class="st-finance-value" style="font-size:20px; color:#d9534f;">{{ stadionkosten_saison|floatformat:0|intcomma }} €</span>
-                        <span class="st-finance-sub">Betriebskosten laufende Saison</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">Stehplatz-Preis</span>
-                        <div class="st-finance-price-row">
-                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_standing }} €</span>
-                            <span class="st-liga-avg">Ø Liga {{ liga_avg_standing }} €</span>
-                        </div>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">Sitzplatz-Preis</span>
-                        <div class="st-finance-price-row">
-                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_seating }} €</span>
-                            <span class="st-liga-avg">Ø Liga {{ liga_avg_seating }} €</span>
-                        </div>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">VIP-Preis</span>
-                        <div class="st-finance-price-row">
-                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_vip }} €</span>
-                            <span class="st-liga-avg">Ø Liga {{ liga_avg_vip }} €</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KAPAZITÄTS-ÜBERSICHT -->
-            <div class="st-panel">
-                <p class="st-section-title">Kapazitätsverteilung</p>
-                <div class="st-finance-rows">
-                    <div class="st-finance-row">
-                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
-                            <span class="st-stand-row-dot st-stand-row-dot--steh"></span>Stehplätze
-                        </span>
-                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_standing|intcomma }}</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
-                            <span class="st-stand-row-dot st-stand-row-dot--sitz"></span>Sitzplätze
-                        </span>
-                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_seating|intcomma }}</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
-                            <span class="st-stand-row-dot st-stand-row-dot--vip"></span>VIP
-                        </span>
-                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_vip|intcomma }}</span>
-                    </div>
-                    <div class="st-finance-row">
-                        <span class="st-finance-label">Max. Kapazität</span>
-                        <span class="st-finance-value" style="font-size:18px;color:rgba(255,255,255,0.45);">
-                            {{ max_kapazitaet|intcomma }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
     </div>
 </div>
 
