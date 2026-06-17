@@ -32,6 +32,13 @@
 
   <div class="cpe-header">
     <h1 class="cpe-title">{% if player %}{{ player.first_name }} {{ player.last_name }}{% else %}Neuer Spieler{% endif %}</h1>
+    {% if player %}
+    <form method="post" action="{% url 'creator_player_delete' player.id %}" class="cpe-delete-form"
+          onsubmit="return confirm('Spieler „{{ player.first_name }} {{ player.last_name }}“ und alle zugehörigen Daten endgültig löschen? Das kann nicht rückgängig gemacht werden.');">
+      {% csrf_token %}
+      <button type="submit" class="cpe-btn cpe-btn-delete">Spieler löschen</button>
+    </form>
+    {% endif %}
   </div>
 
   <div class="cpe-tabs">
@@ -1026,8 +1033,11 @@
 .creator-msg-success { background: #00d4ff15; border: 1px solid #00d4ff44; color: #00d4ff; }
 .creator-msg-error { background: #ff334415; border: 1px solid #ff334444; color: #ff8899; }
 
-.cpe-header { margin-bottom: 1rem; }
+.cpe-header { margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .cpe-title { color: #fff; font-size: 1.5rem; margin: 0; }
+.cpe-delete-form { margin: 0; }
+.cpe-btn-delete { background: #ff334415; border: 1px solid #ff334466; border-radius: 4px; padding: .4rem .9rem; color: #ff8899; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.cpe-btn-delete:hover { background: #ff3344; border-color: #ff3344; color: #fff; }
 
 .cpe-tabs { display: flex; gap: 0; border-bottom: 2px solid #0d2035; margin-bottom: 0; }
 .cpe-tab { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; padding: .6rem 1.1rem; color: #556677; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; cursor: pointer; transition: color .2s, border-color .2s; }

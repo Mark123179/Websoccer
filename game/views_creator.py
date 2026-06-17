@@ -1339,6 +1339,29 @@ def creator_new_player(request, club_id):
     })
 
 
+@require_POST
+@login_required
+def creator_player_delete(request, player_id):
+    """
+    POST: Löscht einen Spieler endgültig samt aller abhängigen Datensätze
+    (alle Relationen sind on_delete=CASCADE; PlayerImportCandidate wird per
+    SET_NULL entkoppelt). Danach Umleitung auf die Kaderseite des bisherigen
+    Vereins, sonst auf die Spielersuche.
+    """
+    from django.db import transaction
+    player = get_object_or_404(Player, id=player_id)
+    club_id = player.club_id
+    name = f'{player.first_name} {player.last_name}'.strip() or 'Spieler'
+
+    with transaction.atomic():
+        player.delete()
+
+    messages.success(request, f'{name} gelöscht.')
+    if club_id:
+        return _redirect_tab(club_id, 'kader')
+    return redirect('creator_search')
+
+
 def _redirect_tab(club_id, tab):
     from django.urls import reverse
     return redirect(reverse('creator_club_edit', args=[club_id]) + f'?tab={tab}')
