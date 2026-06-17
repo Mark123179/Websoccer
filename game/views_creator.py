@@ -2935,6 +2935,7 @@ def creator_import_index(request):
 
     from .models import ClubPlayerImportJob
     from .club_import import get_current_tm_season_id, season_label
+    from .club_import.validation import count_levels as _count_levels
 
     season_id = get_current_tm_season_id()
     jobs = (
@@ -2945,10 +2946,12 @@ def creator_import_index(request):
     job_rows = []
     for job in jobs:
         cands = job.candidates.all()
+        errors, _warnings = _count_levels(job.validation_issues or [])
         job_rows.append({
             'job': job,
             'total': len(cands),
             'imported': sum(1 for c in cands if c.status == 'imported'),
+            'error_count': errors,
         })
 
     from .models import League
