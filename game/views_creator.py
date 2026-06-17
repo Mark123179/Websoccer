@@ -2946,12 +2946,13 @@ def creator_import_index(request):
     job_rows = []
     for job in jobs:
         cands = job.candidates.all()
-        errors, _warnings = _count_levels(job.validation_issues or [])
+        errors, warnings = _count_levels(job.validation_issues or [])
         job_rows.append({
             'job': job,
             'total': len(cands),
             'imported': sum(1 for c in cands if c.status == 'imported'),
             'error_count': errors,
+            'warning_count': warnings,
         })
 
     from .models import League
