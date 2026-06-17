@@ -121,7 +121,7 @@
    ============================================================ */
 .st-body {
     display: grid;
-    grid-template-columns: 1fr 280px;
+    grid-template-columns: 1fr 380px;
     grid-template-rows: auto auto;
     gap: 18px;
     padding: 20px 24px 24px;
@@ -693,7 +693,7 @@
 .st-finance-row:last-child { border-bottom: none; padding-bottom: 0; }
 
 .st-finance-label {
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     color: rgba(255,255,255,0.52);
     text-transform: uppercase;
@@ -701,14 +701,14 @@
 }
 
 .st-finance-value {
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 700;
     color: #c9a84c;
     line-height: 1.1;
 }
 
 .st-finance-sub {
-    font-size: 11px;
+    font-size: 13px;
     color: rgba(255,255,255,0.42);
 }
 
@@ -748,7 +748,7 @@
     gap: 10px;
 }
 .st-liga-avg {
-    font-size: 10px;
+    font-size: 12px;
     color: rgba(255,255,255,0.30);
     letter-spacing: 0.04em;
 }

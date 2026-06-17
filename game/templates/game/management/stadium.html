@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=20">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=21">
 {% endblock %}
 
 {% block content %}
@@ -280,32 +280,32 @@
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Saisoneinnahmen</span>
-                        <span class="st-finance-value" style="font-size:15px; color:#4ade80;">{{ saisoneinnahmen|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-value" style="font-size:20px; color:#4ade80;">{{ saisoneinnahmen|floatformat:0|intcomma }} €</span>
                         <span class="st-finance-sub">{{ games_played }} Heimspiel{{ games_played|pluralize:"e" }} verbucht</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Stadionkosten</span>
-                        <span class="st-finance-value" style="font-size:15px; color:#d9534f;">{{ stadionkosten_saison|floatformat:0|intcomma }} €</span>
+                        <span class="st-finance-value" style="font-size:20px; color:#d9534f;">{{ stadionkosten_saison|floatformat:0|intcomma }} €</span>
                         <span class="st-finance-sub">Betriebskosten laufende Saison</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Stehplatz-Preis</span>
                         <div class="st-finance-price-row">
-                            <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_standing }} €</span>
+                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_standing }} €</span>
                             <span class="st-liga-avg">Ø Liga {{ liga_avg_standing }} €</span>
                         </div>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Sitzplatz-Preis</span>
                         <div class="st-finance-price-row">
-                            <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_seating }} €</span>
+                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_seating }} €</span>
                             <span class="st-liga-avg">Ø Liga {{ liga_avg_seating }} €</span>
                         </div>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">VIP-Preis</span>
                         <div class="st-finance-price-row">
-                            <span class="st-finance-value" style="font-size:14px;">{{ stadium.price_vip }} €</span>
+                            <span class="st-finance-value" style="font-size:20px;">{{ stadium.price_vip }} €</span>
                             <span class="st-liga-avg">Ø Liga {{ liga_avg_vip }} €</span>
                         </div>
                     </div>
@@ -320,23 +320,23 @@
                         <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
                             <span class="st-stand-row-dot st-stand-row-dot--steh"></span>Stehplätze
                         </span>
-                        <span class="st-finance-value" style="font-size:16px;">{{ stadium.capacity_standing|intcomma }}</span>
+                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_standing|intcomma }}</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
                             <span class="st-stand-row-dot st-stand-row-dot--sitz"></span>Sitzplätze
                         </span>
-                        <span class="st-finance-value" style="font-size:16px;">{{ stadium.capacity_seating|intcomma }}</span>
+                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_seating|intcomma }}</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label" style="display:flex;align-items:center;gap:5px;">
                             <span class="st-stand-row-dot st-stand-row-dot--vip"></span>VIP
                         </span>
-                        <span class="st-finance-value" style="font-size:16px;">{{ stadium.capacity_vip|intcomma }}</span>
+                        <span class="st-finance-value" style="font-size:21px;">{{ stadium.capacity_vip|intcomma }}</span>
                     </div>
                     <div class="st-finance-row">
                         <span class="st-finance-label">Max. Kapazität</span>
-                        <span class="st-finance-value" style="font-size:13px;color:rgba(255,255,255,0.45);">
+                        <span class="st-finance-value" style="font-size:18px;color:rgba(255,255,255,0.45);">
                             {{ max_kapazitaet|intcomma }}
                         </span>
                     </div>
