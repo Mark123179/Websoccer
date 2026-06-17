@@ -124,37 +124,68 @@
     {% endif %}
 
     {% if validation_issues %}
-    <div class="si-rows-wrap">
-      <table class="si-rows-table">
-        <thead>
-          <tr>
-            <th class="si-col-status">Schwere</th>
-            <th class="si-col-diff">Meldung</th>
-            <th class="si-col-club">Referenz</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for issue in validation_issues %}
-          <tr class="si-row si-row-{% if issue.level == 'error' %}error{% else %}unmatched{% endif %}">
-            <td class="si-col-status">
-              {% if issue.level == 'error' %}<span class="si-badge si-badge-error">Fehler</span>
-              {% else %}<span class="si-badge si-badge-unmatched">Warnung</span>{% endif %}
-            </td>
-            <td class="si-col-diff">{{ issue.message }}</td>
-            <td class="si-col-club">{{ issue.ref|default:"–" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+      {% if error_count %}
+      <div class="si-defect-section">
+        <p class="si-defect-head si-defect-head-error">
+          <span class="si-defect-icon">✕</span>
+          Fehler ({{ error_count }}) – werden nach dem Import in der Datenbank sichtbar bleiben
+        </p>
+        <div class="si-rows-wrap si-rows-wrap-inner">
+          <table class="si-rows-table">
+            <thead>
+              <tr>
+                <th class="si-col-player">Spieler / Quelle</th>
+                <th class="si-col-diff">Defekt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in validation_issues %}{% if issue.level == 'error' %}
+              <tr class="si-row si-row-error">
+                <td class="si-col-player">{{ issue.ref|default:"–" }}</td>
+                <td class="si-col-diff">{{ issue.message }}</td>
+              </tr>
+              {% endif %}{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if warning_count %}
+      <div class="si-defect-section">
+        <p class="si-defect-head si-defect-head-warn">
+          <span class="si-defect-icon">⚠</span>
+          Warnungen ({{ warning_count }}) – Hinweise, die keinen Import blockieren
+        </p>
+        <div class="si-rows-wrap si-rows-wrap-inner">
+          <table class="si-rows-table">
+            <thead>
+              <tr>
+                <th class="si-col-player">Spieler / Quelle</th>
+                <th class="si-col-diff">Hinweis</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in validation_issues %}{% if issue.level != 'error' %}
+              <tr class="si-row si-row-unmatched">
+                <td class="si-col-player">{{ issue.ref|default:"–" }}</td>
+                <td class="si-col-diff">{{ issue.message }}</td>
+              </tr>
+              {% endif %}{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
     {% else %}
     <p class="si-no-changes">Keine Validierungsprobleme gefunden – die CSV ist sauber.</p>
     {% endif %}
 
     {% if error_count %}
     <div class="si-alert si-alert-warn">
-      Es liegen harte Fehler vor. Der Import bleibt nicht-blockierend: gute Daten
-      werden geschrieben, Defekte gemeldet. Prüfe die CSV vor dem Schreiben.
+      <strong>Nicht-blockierend:</strong> Die guten Daten werden trotz der Fehler geschrieben.
+      Spieler mit Defekten (z.&nbsp;B. Rating ohne Attribute) werden gespeichert –
+      die fehlenden Rohattribute lassen sich danach gezielt nachpflegen.
     </div>
     {% endif %}
 
@@ -246,29 +277,78 @@
     {% endif %}
 
     {% if validation_issues %}
-    <div class="si-rows-wrap">
-      <table class="si-rows-table">
-        <thead>
-          <tr>
-            <th class="si-col-status">Schwere</th>
-            <th class="si-col-diff">Meldung</th>
-            <th class="si-col-club">Referenz</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for issue in validation_issues %}
-          <tr class="si-row si-row-{% if issue.level == 'error' %}error{% else %}unmatched{% endif %}">
-            <td class="si-col-status">
-              {% if issue.level == 'error' %}<span class="si-badge si-badge-error">Fehler</span>
-              {% else %}<span class="si-badge si-badge-unmatched">Warnung</span>{% endif %}
-            </td>
-            <td class="si-col-diff">{{ issue.message }}</td>
-            <td class="si-col-club">{{ issue.ref|default:"–" }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="si-stats-row">
+      <div class="si-stat si-stat-error">
+        <span class="si-stat-num">{{ error_count }}</span>
+        <span class="si-stat-lbl">Fehler</span>
+      </div>
+      <div class="si-stat si-stat-unmatched">
+        <span class="si-stat-num">{{ warning_count }}</span>
+        <span class="si-stat-lbl">Warnungen</span>
+      </div>
     </div>
+
+      {% if error_count %}
+      <div class="si-defect-section">
+        <p class="si-defect-head si-defect-head-error">
+          <span class="si-defect-icon">✕</span>
+          Fehler ({{ error_count }}) – Rohattribute fehlen; Spieler wurden trotzdem geschrieben
+        </p>
+        <div class="si-rows-wrap si-rows-wrap-inner">
+          <table class="si-rows-table">
+            <thead>
+              <tr>
+                <th class="si-col-player">Spieler / Quelle</th>
+                <th class="si-col-diff">Defekt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in validation_issues %}{% if issue.level == 'error' %}
+              <tr class="si-row si-row-error">
+                <td class="si-col-player">{{ issue.ref|default:"–" }}</td>
+                <td class="si-col-diff">{{ issue.message }}</td>
+              </tr>
+              {% endif %}{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if warning_count %}
+      <div class="si-defect-section">
+        <p class="si-defect-head si-defect-head-warn">
+          <span class="si-defect-icon">⚠</span>
+          Warnungen ({{ warning_count }}) – keine Blockierung, aber prüfenswert
+        </p>
+        <div class="si-rows-wrap si-rows-wrap-inner">
+          <table class="si-rows-table">
+            <thead>
+              <tr>
+                <th class="si-col-player">Spieler / Quelle</th>
+                <th class="si-col-diff">Hinweis</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in validation_issues %}{% if issue.level != 'error' %}
+              <tr class="si-row si-row-unmatched">
+                <td class="si-col-player">{{ issue.ref|default:"–" }}</td>
+                <td class="si-col-diff">{{ issue.message }}</td>
+              </tr>
+              {% endif %}{% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if error_count %}
+      <div class="si-alert si-alert-warn">
+        <strong>Nicht-blockierend:</strong> Alle fehlerfreien Spieler wurden erfolgreich
+        geschrieben. Spieler mit Defekten (z.&nbsp;B. Rating ohne Attribute) sind in der
+        Datenbank angelegt – die fehlenden Rohattribute lassen sich gezielt nachpflegen.
+      </div>
+      {% endif %}
     {% endif %}
 
     <div class="si-actions">
@@ -388,6 +468,15 @@
 /* Row color tints */
 .si-row-unmatched td { background: #0f0a04; }
 .si-row-error td { background: #0f0406; }
+
+/* Defect sections (separated Fehler / Warnungen) */
+.si-defect-section { margin-bottom: 1.1rem; }
+.si-defect-head { display: flex; align-items: center; gap: .5rem; margin: 0 0 .5rem; font-size: .78rem; font-weight: 700; letter-spacing: .04em; }
+.si-defect-head-error { color: #ff6b6b; }
+.si-defect-head-warn { color: #e0a030; }
+.si-defect-icon { font-size: .85rem; flex-shrink: 0; }
+.si-rows-wrap-inner { margin-bottom: 0; }
+.si-col-player { color: #8aa0b5; min-width: 180px; font-size: .78rem; font-family: monospace; }
 
 /* Misc */
 .si-no-changes { color: #30e08a88; font-size: .85rem; margin: 0 0 1rem; }
