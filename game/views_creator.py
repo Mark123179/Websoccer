@@ -681,7 +681,8 @@ def creator_upload_stadium(request, club_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
-    rel = f'game/images/stadiums/germany/{club.fm_inside_id}.jpg'
+    stem = club._asset_stem()
+    rel = f'game/images/stadiums/germany/{stem}.jpg'
     _save_as_jpg(f, os.path.join(STATIC_BASE, rel))
     profile.stadium_image_static_path = rel
     profile.save(update_fields=['stadium_image_static_path'])
@@ -698,7 +699,8 @@ def creator_upload_city(request, club_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
-    rel = f'game/images/city/{club.fm_inside_id}.jpg'
+    stem = club._asset_stem()
+    rel = f'game/images/city/{stem}.jpg'
     _save_as_jpg(f, os.path.join(STATIC_BASE, rel))
     profile.city_image_static_path = rel
     profile.save(update_fields=['city_image_static_path'])
@@ -716,11 +718,12 @@ def creator_upload_kit(request, club_id, kit_type):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
+    stem = club._asset_stem()
     for ext in ['png', 'svg', 'jpg', 'webp']:
-        old = os.path.join(STATIC_BASE, f'game/images/kits/{club.fm_inside_id}_{kit_type}.{ext}')
+        old = os.path.join(STATIC_BASE, f'game/images/kits/{stem}_{kit_type}.{ext}')
         if os.path.exists(old):
             os.remove(old)
-    dest = os.path.join(STATIC_BASE, f'game/images/kits/{club.fm_inside_id}_{kit_type}.png')
+    dest = os.path.join(STATIC_BASE, f'game/images/kits/{stem}_{kit_type}.png')
     _save_as_png(f, dest)
     messages.success(request, f'Trikot ({kit_type}) gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)
@@ -733,11 +736,12 @@ def creator_upload_crest(request, club_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
+    stem = club._asset_stem()
     for ext in ['png', 'svg', 'jpg', 'webp']:
-        old = os.path.join(STATIC_BASE, f'game/images/crests/{club.fm_inside_id}.{ext}')
+        old = os.path.join(STATIC_BASE, f'game/images/crests/{stem}.{ext}')
         if os.path.exists(old):
             os.remove(old)
-    dest = os.path.join(STATIC_BASE, f'game/images/crests/{club.fm_inside_id}.png')
+    dest = os.path.join(STATIC_BASE, f'game/images/crests/{stem}.png')
     _save_as_png(f, dest)
     messages.success(request, 'Vereinswappen gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)

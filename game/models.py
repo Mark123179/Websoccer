@@ -553,27 +553,27 @@ class Club(models.Model):
     def __str__(self):
         return self.name
 
+    def _asset_stem(self):
+        """Dateinamen-Präfix für Club-Assets: FMI-ID wenn vorhanden, sonst ws_<pk>."""
+        return str(self.fm_inside_id) if self.fm_inside_id else f'ws_{self.pk}'
+
     @property
     def crest_static_path(self):
-        if not self.fm_inside_id:
-            return ''
-
+        stem = self._asset_stem()
         for ext in ('png', 'svg'):
-            path = f'game/images/crests/{self.fm_inside_id}.{ext}'
+            path = f'game/images/crests/{stem}.{ext}'
             if finders.find(path):
                 return path
         return ''
 
     @property
     def kit_static_paths(self):
-        if not self.fm_inside_id:
-            return []
-
+        stem = self._asset_stem()
         kits = []
         for label, suffix in (('Heim', 'home'), ('Auswärts', 'away'), ('Third', 'third')):
             path = ''
             for ext in ('svg', 'png'):
-                candidate = f'game/images/kits/{self.fm_inside_id}_{suffix}.{ext}'
+                candidate = f'game/images/kits/{stem}_{suffix}.{ext}'
                 if finders.find(candidate):
                     path = candidate
                     break

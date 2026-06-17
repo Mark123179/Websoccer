@@ -47,9 +47,6 @@
           {% if crest_path %}<img src="{% static crest_path %}" alt="Wappen">
           {% else %}<div class="creator-no-image">Kein Wappen</div>{% endif %}
         </div>
-        {% if not club.fm_inside_id %}
-        <p class="creator-hint creator-hint-warn">⚠ Keine fm_inside_id — Bild kann nicht gespeichert werden.</p>
-        {% else %}
         <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_crest' club_id=club.id %}">
           {% csrf_token %}
           <label class="creator-upload-label">
@@ -57,7 +54,6 @@
             <span>📁 Wappen hochladen</span>
           </label>
         </form>
-        {% endif %}
       </div>
     </div>
 
