@@ -663,6 +663,20 @@ def creator_club_edit(request, club_id):
 
     active_tab = request.GET.get('tab', 'bilder')
 
+    from .models import ClubPlayerImportJob
+    from .club_import import validation as _val
+
+    latest_import_job = (
+        ClubPlayerImportJob.objects
+        .filter(ws_club=club, status=ClubPlayerImportJob.STATUS_COMPLETED)
+        .order_by('-updated_at')
+        .first()
+    )
+    import_error_count = 0
+    if latest_import_job:
+        vi = latest_import_job.validation_issues or []
+        import_error_count, _ = _val.count_levels(vi)
+
     return render(request, 'creator/club_edit.html', {
         'club': club,
         'profile': profile,
@@ -681,6 +695,8 @@ def creator_club_edit(request, club_id):
         'sponsor_type_choices': ClubSponsor.TYPE_CHOICES,
         'goal_tier_choices': SeasonGoal.TIER_CHOICES,
         'import_defekte': import_defekte,
+        'latest_import_job': latest_import_job,
+        'import_error_count': import_error_count,
     })
 
 
