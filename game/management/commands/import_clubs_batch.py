@@ -1,0 +1,127 @@
+"""Stapel-Import mehrerer import_ready-CSVs aus einem Ordner.
+
+Jede Datei wird isoliert in einer eigenen Transaktion verarbeitet: ein Fehler
+(nicht auflösbarer Verein, kaputte CSV …) bricht den Stapel **nicht** ab, sondern
+wird im Abschlussbericht protokolliert. Modi wie beim Einzelimport.
+
+Beispiel:
+    python manage.py import_clubs_batch --dir attached_assets/imports
+    python manage.py import_clubs_batch --dir imports --mode update
+"""
+
+import glob
+import os
+
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+
+from game.club_import.club_csv_import import (
+    MODE_FULL, MODE_UPDATE, import_club_csv,
+)
+from game.club_import import validation
+
+
+class Command(BaseCommand):
+    help = (
+        'Importiert alle import_ready-CSVs eines Ordners nicht-destruktiv. '
+        'Fehler einzelner Dateien isolieren den Rest des Stapels nicht.'
+    )
+
+    def add_arguments(self, parser):
+        parser.add_argument('--dir', required=True, help='Ordner mit CSV-Dateien.')
+        parser.add_argument('--pattern', default='*.csv', help='Glob-Muster (Standard *.csv).')
+        parser.add_argument(
+            '--mode', choices=[MODE_FULL, MODE_UPDATE], default=MODE_FULL,
+            help='full = Vollanlage (Standard), update = nur volatile Daten.',
+        )
+        parser.add_argument('--dry-run', action='store_true', help='Nichts schreiben.')
+        parser.add_argument('--strict', action='store_true', help='Warnungen → Exit-Code 2.')
+        parser.add_argument(
+            '--no-recalculate', action='store_true',
+            help='Stärkeprofile nach dem Import NICHT neu berechnen.',
+        )
+
+    def handle(self, *args, **options):
+        directory = options['dir']
+        if not os.path.isdir(directory):
+            raise CommandError(f'Ordner nicht gefunden: {directory}')
+
+        paths = sorted(glob.glob(os.path.join(directory, options['pattern'])))
+        if not paths:
+            raise CommandError(
+                f'Keine Dateien zu „{options["pattern"]}" in {directory}.'
+            )
+
+        report = []
+        for path in paths:
+            report.append(self._process_one(path, options))
+
+        self._print_report(report)
+
+        # Exit-Code aggregiert über alle Dateien gemäß Validierungs-Kontrakt:
+        # Datei-Ausnahme ODER Validierungsfehler → 1; nur Warnungen unter
+        # --strict → 2; sonst 0. Die Fehlerisolierung bleibt erhalten — jede
+        # Datei läuft eigenständig, der Exit-Code spiegelt nur das Gesamtbild.
+        has_file_error = any(r['status'] == 'error' for r in report)
+        has_val_error = any(r.get('val_errors') for r in report)
+        has_val_warning = any(r.get('val_warnings') for r in report)
+        if has_file_error or has_val_error:
+            raise SystemExit(validation.EXIT_ERRORS)
+        if options['strict'] and has_val_warning:
+            raise SystemExit(validation.EXIT_WARNINGS)
+
+    def _process_one(self, path, options):
+        name = os.path.basename(path)
+        try:
+            with open(path, encoding='utf-8-sig') as fh:
+                text = fh.read()
+        except OSError as exc:
+            return {'file': name, 'status': 'error', 'detail': str(exc)}
+
+        try:
+            with transaction.atomic():
+                result = import_club_csv(
+                    text,
+                    mode=options['mode'],
+                    recalculate=not options['no_recalculate'],
+                    dry_run=options['dry_run'],
+                    strict=options['strict'],
+                )
+                if options['dry_run']:
+                    transaction.set_rollback(True)
+        except Exception as exc:  # noqa: BLE001 — Fehler isolieren, Stapel läuft weiter
+            return {'file': name, 'status': 'error', 'detail': str(exc)}
+
+        errors, warnings = validation.count_levels(result['validation_issues'])
+        return {
+            'file': name,
+            'status': 'ok',
+            'club': result['club'].name,
+            'stats': result['stats'],
+            'val_errors': errors,
+            'val_warnings': warnings,
+        }
+
+    def _print_report(self, report):
+        self.stdout.write('── Stapel-Bericht ───────────────────────────')
+        ok = err = 0
+        for r in report:
+            if r['status'] == 'error':
+                err += 1
+                self.stdout.write(self.style.ERROR(
+                    f"  ✗ {r['file']}: {r['detail']}"
+                ))
+                continue
+            ok += 1
+            stats = r['stats']
+            stat_txt = (
+                'DRY-RUN' if stats is None
+                else '{created}+/{updated}~/{skipped}>/{failed}!'.format(**stats)
+            )
+            self.stdout.write(self.style.SUCCESS(
+                f"  ✓ {r['file']}: {r['club']} [{stat_txt}] "
+                f"(Val: {r['val_errors']}E/{r['val_warnings']}W)"
+            ))
+        self.stdout.write(
+            f'Gesamt: {ok} ok, {err} fehlgeschlagen, {len(report)} Dateien.'
+        )

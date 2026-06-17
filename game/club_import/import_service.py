@@ -212,10 +212,22 @@ def _write_source_rating(player, source, ratings):
         return False
 
     attrs = ratings.get('attrs') or {}
+    # Potential-Fallback/Klemme (zentral): Liegt ein Rating vor, wird Potential
+    # auf mindestens Rating angehoben — sowohl bei fehlendem (None) als auch bei
+    # zu kleinem Potential (< Rating). So gilt die Invariante „Potential ≥ Rating"
+    # auf JEDEM Schreibpfad, und der Stärke-Rechner liefert nie „nicht
+    # berechenbar" wegen fehlendem/zu kleinem Potential.
+    rating = ratings['rating']
+    potential = ratings.get('potential')
+    if potential is None or potential < rating:
+        potential = rating
     defaults = {
-        'rating': ratings['rating'],
-        'potential': ratings.get('potential'),
+        'rating': rating,
+        'potential': potential,
     }
+    source_version = ratings.get('source_version')
+    if source_version:
+        defaults['source_version'] = source_version
     for field in PSR_ATTR_FIELDS:
         defaults[field] = attrs.get(field)
 
@@ -280,8 +292,15 @@ def validate_candidate(nd):
     return errors
 
 
-def import_candidate(candidate, user=None, recalculate=True):
+def import_candidate(candidate, user=None, recalculate=True, update_only=False):
     """Importiert genau einen Kandidaten in einer eigenen Transaktion.
+
+    Args:
+        update_only: Aktualisierungs-Modus. Es werden nur volatile Echtweltdaten
+            geschrieben (Ratings/Potential/Attribute, Marktwert, Positionen,
+            aktueller Verein/Leihstatus). Stammdaten-Identität (Name, Geburtsdatum,
+            Größe, Fuß, Nationalitäten, externe IDs) bleibt unangetastet. Neue
+            (noch nicht vorhandene) Spieler werden in diesem Modus übersprungen.
 
     Returns:
         dict {candidate, action, player, errors}
@@ -311,6 +330,16 @@ def import_candidate(candidate, user=None, recalculate=True):
     )
     existing = match['player'] if match['is_strong'] else None
 
+    if update_only and existing is None:
+        # Aktualisierungs-Modus legt keine neuen Spieler an — nur vorhandene,
+        # eindeutig zugeordnete Spieler werden aufgefrischt.
+        candidate.existing_player = match['player']
+        candidate.status = candidate.STATUS_SKIPPED
+        candidate.save(update_fields=['existing_player', 'status', 'updated_at'])
+        return {'candidate': candidate.pk, 'action': ACTION_SKIPPED,
+                'player': match['player'].pk if match['player'] else None,
+                'errors': []}
+
     if existing is None and match['player'] is not None and not candidate.overwrite_existing:
         # Schwache Namens-/Geburtsdatum-Dublette ohne ausdrückliches Überschreiben.
         candidate.existing_player = match['player']
@@ -330,24 +359,33 @@ def import_candidate(candidate, user=None, recalculate=True):
         is_new = existing is None
         player = existing if existing is not None else Player()
 
-        player.first_name = (nd.get('first_name') or '').strip()
-        player.last_name = (nd.get('last_name') or '').strip()
-        player.date_of_birth = dob
+        # Stammdaten-Identität: nur in der Vollanlage geschrieben. Im
+        # Aktualisierungs-Modus bleibt sie unangetastet.
+        if not update_only:
+            player.first_name = (nd.get('first_name') or '').strip()
+            player.last_name = (nd.get('last_name') or '').strip()
+            player.date_of_birth = dob
 
-        age = _compute_age(dob)
-        if age is not None:
-            player.age = age
-        elif is_new:
-            player.age = 0
+            age = _compute_age(dob)
+            if age is not None:
+                player.age = age
+            elif is_new:
+                player.age = 0
 
-        player.height_cm = nd.get('height_cm')
-        player.strong_foot = nd.get('strong_foot') or ''
-        player.nationalities = nd.get('nationalities') or ''
+            player.height_cm = nd.get('height_cm')
+            player.strong_foot = nd.get('strong_foot') or ''
+            player.nationalities = nd.get('nationalities') or ''
+            if nd.get('nt_nationality'):
+                player.nt_nationality = nd.get('nt_nationality')
+
+            player.transfermarkt_id = nd.get('tm_player_id') or None
+            player.transfermarkt_profile_url = nd.get('transfermarkt_profile_url') or ''
+            if nd.get('transfermarkt_market_value_url'):
+                player.transfermarkt_market_value_url = nd.get('transfermarkt_market_value_url')
+            player.fm_inside_id = nd.get('fm_inside_id') or None
+
+        # Volatile Echtweltdaten: in beiden Modi geschrieben.
         player.market_value = nd.get('market_value')
-
-        player.transfermarkt_id = nd.get('tm_player_id') or None
-        player.transfermarkt_profile_url = nd.get('transfermarkt_profile_url') or ''
-        player.fm_inside_id = nd.get('fm_inside_id') or None
 
         mains = nd.get('main_positions') or []
         secs = nd.get('secondary_positions') or []
@@ -393,20 +431,28 @@ def import_candidate(candidate, user=None, recalculate=True):
 
         player.save()
 
-        _apply_sofifa_external_id(
-            player, nd.get('sofifa_id'), nd.get('sofifa_profile_url'),
-        )
+        # Externe SoFIFA-ID ist Stammdaten-Identität → nur in der Vollanlage.
+        if not update_only:
+            _apply_sofifa_external_id(
+                player, nd.get('sofifa_id'), nd.get('sofifa_profile_url'),
+            )
 
         _write_source_rating(player, PlayerSourceRating.SOURCE_FM, nd.get('fmi_ratings'))
         _write_source_rating(player, PlayerSourceRating.SOURCE_EA, nd.get('sofifa_ratings'))
 
         action = ACTION_CREATED if is_new else ACTION_UPDATED
+        if update_only:
+            mode_label = 'Update'
+        elif is_new:
+            mode_label = 'neu'
+        else:
+            mode_label = 'aktualisiert'
         PlayerEditLog.objects.create(
             player=player,
             changed_by=(user if (user is not None and getattr(user, 'is_authenticated', False)) else None),
             category=PlayerEditLog.CATEGORY_SYSTEM,
             summary=(
-                f'Spielerimport ({"neu" if is_new else "aktualisiert"}) — '
+                f'Spielerimport ({mode_label}) — '
                 f'Auftrag #{job.pk}, TM {nd.get("tm_player_id")}.'
             ),
         )
@@ -423,11 +469,14 @@ def import_candidate(candidate, user=None, recalculate=True):
             'player': player.pk, 'errors': []}
 
 
-def import_selected_candidates(job, user=None, recalculate=True):
+def import_selected_candidates(job, user=None, recalculate=True, update_only=False):
     """Importiert alle ausgewählten Kandidaten eines Auftrags.
 
     Jeder Kandidat läuft in eigener Transaktion; ein einzelner Fehler bricht den
     Stapel nicht ab (er wird als ``failed`` protokolliert).
+
+    Args:
+        update_only: Aktualisierungs-Modus (siehe :func:`import_candidate`).
 
     Returns:
         dict {stats:{created,updated,skipped,failed}, results:[...]}
@@ -439,7 +488,10 @@ def import_selected_candidates(job, user=None, recalculate=True):
     candidates = job.candidates.filter(selected_for_import=True)
     for candidate in candidates:
         try:
-            result = import_candidate(candidate, user=user, recalculate=recalculate)
+            result = import_candidate(
+                candidate, user=user, recalculate=recalculate,
+                update_only=update_only,
+            )
         except Exception as exc:  # noqa: BLE001 — ein Fehler darf den Stapel nicht abbrechen
             candidate.status = candidate.STATUS_SOURCE_ERROR
             candidate.validation_errors = list(candidate.validation_errors or []) + [str(exc)]

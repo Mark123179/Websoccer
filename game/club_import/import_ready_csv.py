@@ -204,6 +204,7 @@ def _attr_block(row, prefix, attr_map):
         'rating': rating,
         'potential': _to_int(row.get(f'{prefix}_potential')),
         'attrs': attrs,
+        'source_version': _clean(row.get(f'{prefix}_source_version')),
     }
 
 
@@ -255,6 +256,7 @@ def row_to_normalized(row):
     nd = {
         'tm_player_id': _to_int(row.get('tm_player_id')),
         'transfermarkt_profile_url': _clean(row.get('tm_url')),
+        'transfermarkt_market_value_url': _clean(row.get('tm_market_value_url')),
         'first_name': _clean(row.get('first_name')),
         'last_name': _clean(row.get('last_name')),
         'date_of_birth': _clean(row.get('date_of_birth')) or None,
@@ -262,6 +264,7 @@ def row_to_normalized(row):
         'strong_foot': parse_foot(row.get('preferred_foot')),
         'primary_nationality': primary_nat,
         'nationalities': joined_nat,
+        'nt_nationality': translate_country(row.get('nt_nationality')),
         'market_value': parse_market_value(row.get('tm_market_value_eur')),
         'main_positions': mains,
         'secondary_positions': secs,
@@ -294,6 +297,11 @@ def parse_club_profile(row):
         'stadium_capacity': _to_int(row.get('stadium_capacity')),
         'season_id': _to_int(row.get('season_id')),
         'season_label': _clean(row.get('season_label')),
+        # Optionale (im aktuellen Export noch fehlende) Stammdatenspalten —
+        # werden tolerant gelesen, falls vorhanden.
+        'club_tm_url': _clean(row.get('club_tm_url')),
+        'stadium_image_static_path': _clean(row.get('stadium_image_static_path')),
+        'city_image_static_path': _clean(row.get('city_image_static_path')),
     }
 
 
