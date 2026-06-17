@@ -34,6 +34,10 @@ args = "test"
 task = "workflow.run"
 args = "regression"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "datenqualitaet-check"
+
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -86,6 +90,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "bash scripts/run_regression_v3.sh --seasons 20"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "datenqualitaet-check"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py revalidate_clubs --strict"
 
 [workflows.workflow.metadata]
 outputType = "console"
