@@ -292,7 +292,11 @@
   <div class="si-card">
     <div class="si-card-head">
       <strong>{% if job.status == 'completed' %}Import abgeschlossen{% else %}Auftrag abgebrochen{% endif %}</strong>
-      <span class="imp-badge imp-st-{{ job.status }}">{{ job.status }}</span>
+      <span>
+        <span class="imp-badge imp-st-{{ job.status }}">{{ job.status }}</span>
+        {% if error_count %}<span class="imp-badge imp-badge-err">{{ error_count }} Fehler</span>{% endif %}
+        {% if warning_count %}<span class="imp-badge imp-badge-warn">{{ warning_count }} Warnung{{ warning_count|pluralize:"en" }}</span>{% endif %}
+      </span>
     </div>
 
     {% if result_stats %}
