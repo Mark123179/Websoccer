@@ -131,7 +131,7 @@
           <td>{{ row.job.season_label }}</td>
           <td>
             <span class="imp-badge imp-st-{{ row.job.status }}">{{ row.job.get_status_display }}</span>
-            {% if row.error_count %}<span class="imp-badge imp-badge-err">{{ row.error_count }} Fehler</span>{% endif %}
+            {% if row.error_count %}<a class="imp-badge imp-badge-err" href="{% url 'creator_import_detail' job_id=row.job.pk %}#validation-issues">{{ row.error_count }} Fehler</a>{% endif %}
           </td>
           <td class="imp-mono">{{ row.total }}</td>
           <td class="imp-mono">{{ row.imported }}</td>
