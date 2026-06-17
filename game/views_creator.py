@@ -21,6 +21,7 @@ from .models import (
 )
 from . import strength_engine as se
 from .strength_service import compute_strength_for_player, compute_rl_form_for_player
+from .club_import.validation import validate_db_player, LEVEL_ERROR as VALIDATION_LEVEL_ERROR
 from .management.commands.import_player_source_ratings import (
     FMI_ATTR_MAP, FMI_GK_MAP, SOFIFA_ATTR_MAP, SOFIFA_GK_MAP,
 )
@@ -624,7 +625,17 @@ def creator_club_edit(request, club_id):
     club = get_object_or_404(Club, id=club_id)
     profile, _ = ClubPublicProfile.objects.get_or_create(club=club)
 
-    players = Player.objects.filter(club=club).order_by('last_name', 'first_name')
+    players = list(
+        Player.objects.filter(club=club)
+        .prefetch_related('source_ratings')
+        .order_by('last_name', 'first_name')
+    )
+
+    import_defekte = []
+    for _p in players:
+        _errs = [i for i in validate_db_player(_p) if i['level'] == VALIDATION_LEVEL_ERROR]
+        if _errs:
+            import_defekte.append({'player': _p, 'errors': _errs})
 
     kits = []
     for kit_type, label in [('home', 'Heim'), ('away', 'Auswärts'), ('third', 'Third')]:
@@ -669,6 +680,7 @@ def creator_club_edit(request, club_id):
         'all_leagues': League.objects.order_by('name'),
         'sponsor_type_choices': ClubSponsor.TYPE_CHOICES,
         'goal_tier_choices': SeasonGoal.TIER_CHOICES,
+        'import_defekte': import_defekte,
     })
 
 

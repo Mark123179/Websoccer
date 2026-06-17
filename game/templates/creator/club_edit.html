@@ -35,6 +35,7 @@
     <a class="creator-tab {% if active_tab == 'sponsoring' %}active{% endif %}" href="?tab=sponsoring">Sponsoring <span class="creator-tab-badge">{{ sponsors|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'saisonziele' %}active{% endif %}" href="?tab=saisonziele">Saisonziele</a>
     <a class="creator-tab {% if active_tab == 'kader' %}active{% endif %}" href="?tab=kader">Kader <span class="creator-tab-badge">{{ players|length }}</span></a>
+    <a class="creator-tab {% if active_tab == 'import_defekte' %}active{% endif %} {% if import_defekte %}creator-tab-has-errors{% endif %}" href="?tab=import_defekte">Import-Defekte{% if import_defekte %} <span class="creator-tab-badge creator-tab-badge-error">{{ import_defekte|length }}</span>{% endif %}</a>
   </nav>
 
   <!-- ═══ TAB: BILDER ═══════════════════════════════════════════════════════ -->
@@ -683,6 +684,53 @@
   </div>
   {% endif %}
 
+  <!-- ═══ TAB: IMPORT-DEFEKTE ════════════════════════════════════════════════ -->
+  {% if active_tab == 'import_defekte' %}
+  <div class="creator-card">
+    <div class="creator-card-head">
+      <h2>Import-Defekte <span class="creator-count-badge {% if import_defekte %}creator-count-badge-error{% endif %}">{{ import_defekte|length }}</span></h2>
+    </div>
+    <div class="creator-card-body">
+      {% if import_defekte %}
+      <p class="creator-hint creator-hint-warn">Diese Spieler haben harte Importfehler (fehlende Attribute, Potential &lt; Rating). Direkt zum Editor springen und korrigieren.</p>
+      <table class="creator-table creator-defekte-table">
+        <thead>
+          <tr>
+            <th>Spieler</th>
+            <th>Fehler</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in import_defekte %}
+          <tr class="creator-defekt-row">
+            <td class="creator-name-cell">
+              <strong>{{ entry.player.last_name }}</strong>, {{ entry.player.first_name }}
+              <span class="creator-defekt-pid"> · ID {{ entry.player.fm_inside_id|default:"—" }}</span>
+            </td>
+            <td class="creator-defekt-errors">
+              {% for err in entry.errors %}
+              <div class="creator-defekt-issue">
+                <span class="creator-defekt-code">{{ err.code }}</span>
+                <span class="creator-defekt-msg">{{ err.message }}</span>
+                {% if err.ref %}<span class="creator-defekt-ref">[{{ err.ref }}]</span>{% endif %}
+              </div>
+              {% endfor %}
+            </td>
+            <td class="creator-defekt-action">
+              <a class="creator-edit-link" href="{% url 'creator_player_edit' player_id=entry.player.id %}">Bearbeiten →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="creator-empty">Keine Import-Defekte gefunden — alle Spieler sind valide.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
 </section>
 
 <style>
@@ -818,6 +866,20 @@
 .creator-empty-row { color: #334455; text-align: center; padding: 2rem !important; }
 .creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
 .creator-players-card { margin-top: 0; }
+
+/* ── Import-Defekte Tab ── */
+.creator-tab-has-errors { color: #ff8899 !important; }
+.creator-tab-has-errors:hover { color: #ffaabb !important; }
+.creator-tab-badge-error { background: #ff334422; color: #ff8899; }
+.creator-count-badge-error { background: #ff334422; color: #ff8899; }
+.creator-defekte-table td { vertical-align: top; }
+.creator-defekt-errors { display: flex; flex-direction: column; gap: .3rem; }
+.creator-defekt-issue { display: flex; gap: .5rem; align-items: baseline; flex-wrap: wrap; }
+.creator-defekt-code { font-family: monospace; font-size: .72rem; font-weight: 700; background: #ff334420; color: #ff8899; padding: .1rem .4rem; border-radius: 4px; white-space: nowrap; }
+.creator-defekt-msg { color: #aabbcc; font-size: .8rem; }
+.creator-defekt-ref { color: #556677; font-size: .72rem; font-family: monospace; }
+.creator-defekt-pid { color: #556677; font-size: .75rem; font-family: monospace; }
+.creator-defekt-action { white-space: nowrap; }
 
 @media (max-width: 900px) {
   .creator-assets-grid { grid-template-columns: 1fr 1fr; }
