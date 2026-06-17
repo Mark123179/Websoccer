@@ -238,12 +238,45 @@
           </div>
           <div class="creator-field">
             <label>Gesamtkapazität</label>
-            <div class="creator-stat-display">{{ stadium.capacity_total|default:"0" }}</div>
+            <div class="creator-stat-display" id="creator-cap-total">{{ stadium.capacity_total|default:"0" }}</div>
           </div>
           <div class="creator-field">
             <label>Rasenqualität</label>
             <div class="creator-stat-display">{{ stadium.lawn_quality }}/100</div>
           </div>
+        </div>
+      </div>
+
+      <div class="creator-card creator-card-full">
+        <div class="creator-card-head"><h2>Tribünenkapazität</h2></div>
+        <div class="creator-card-body">
+          <div class="creator-cap-grid">
+            <div class="creator-cap-stand">
+              <h3 class="creator-cap-stand-head">Nordtribüne</h3>
+              <div class="creator-field"><label>Stehplätze</label><input type="number" min="0" name="nord_standing" value="{{ stadium.nord_standing }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>Sitzplätze</label><input type="number" min="0" name="nord_seating" value="{{ stadium.nord_seating }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>VIP-Plätze</label><input type="number" min="0" name="nord_vip" value="{{ stadium.nord_vip }}" class="creator-cap-input"></div>
+            </div>
+            <div class="creator-cap-stand">
+              <h3 class="creator-cap-stand-head">Osttribüne</h3>
+              <div class="creator-field"><label>Stehplätze</label><input type="number" min="0" name="ost_standing" value="{{ stadium.ost_standing }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>Sitzplätze</label><input type="number" min="0" name="ost_seating" value="{{ stadium.ost_seating }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>VIP-Plätze</label><input type="number" min="0" name="ost_vip" value="{{ stadium.ost_vip }}" class="creator-cap-input"></div>
+            </div>
+            <div class="creator-cap-stand">
+              <h3 class="creator-cap-stand-head">Südtribüne</h3>
+              <div class="creator-field"><label>Stehplätze</label><input type="number" min="0" name="sued_standing" value="{{ stadium.sued_standing }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>Sitzplätze</label><input type="number" min="0" name="sued_seating" value="{{ stadium.sued_seating }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>VIP-Plätze</label><input type="number" min="0" name="sued_vip" value="{{ stadium.sued_vip }}" class="creator-cap-input"></div>
+            </div>
+            <div class="creator-cap-stand">
+              <h3 class="creator-cap-stand-head">Westtribüne</h3>
+              <div class="creator-field"><label>Stehplätze</label><input type="number" min="0" name="west_standing" value="{{ stadium.west_standing }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>Sitzplätze</label><input type="number" min="0" name="west_seating" value="{{ stadium.west_seating }}" class="creator-cap-input"></div>
+              <div class="creator-field"><label>VIP-Plätze</label><input type="number" min="0" name="west_vip" value="{{ stadium.west_vip }}" class="creator-cap-input"></div>
+            </div>
+          </div>
+          <p class="creator-hint">Die Gesamtkapazität ergibt sich aus der Summe aller Plätze (Steh + Sitz + VIP über alle vier Tribünen).</p>
         </div>
       </div>
 
@@ -703,6 +736,9 @@
 .creator-field input:focus, .creator-field select:focus { border-color: #00d4ff55; }
 .creator-field select option { background: #071525; }
 .creator-stat-display { background: #030a12; border: 1px solid #0d2035; border-radius: 6px; color: #00d4ff; font-size: .9rem; font-weight: 700; padding: .4rem .65rem; }
+.creator-cap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.creator-cap-stand { display: flex; flex-direction: column; gap: .5rem; background: #030a12; border: 1px solid #0d2035; border-radius: 6px; padding: .65rem; }
+.creator-cap-stand-head { color: #00d4ff; font-size: .76rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 .25rem; }
 .creator-hint { color: #334455; font-size: .78rem; margin-top: .5rem; }
 .creator-hint-warn { color: #ffd166; background: #ffd16615; border: 1px solid #ffd16633; border-radius: 5px; padding: .4rem .75rem; font-size: .78rem; margin-top: .5rem; }
 .creator-form-actions { display: flex; justify-content: flex-end; padding-top: .5rem; }
@@ -779,6 +815,7 @@
   .creator-assets-grid { grid-template-columns: 1fr 1fr; }
   .creator-card-kits, .creator-card-crest { grid-column: 1 / -1; }
   .creator-field-grid { grid-template-columns: 1fr 1fr; }
+  .creator-cap-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
 
@@ -801,6 +838,24 @@
   }
 
   sel.addEventListener('change', updatePreview);
+})();
+
+(function () {
+  const total = document.getElementById('creator-cap-total');
+  const inputs = document.querySelectorAll('.creator-cap-input');
+  if (!total || !inputs.length) return;
+
+  function recompute() {
+    let sum = 0;
+    inputs.forEach(function (el) {
+      const v = parseInt(el.value, 10);
+      if (!isNaN(v) && v > 0) sum += v;
+    });
+    total.textContent = sum.toLocaleString('de-DE');
+  }
+
+  inputs.forEach(function (el) { el.addEventListener('input', recompute); });
+  recompute();
 })();
 </script>
 {% endblock %}

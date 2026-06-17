@@ -1434,6 +1434,20 @@ def creator_save_infrastruktur(request, club_id):
             except ValueError:
                 pass
 
+    capacity_fields = [
+        'nord_standing', 'nord_seating', 'nord_vip',
+        'ost_standing', 'ost_seating', 'ost_vip',
+        'sued_standing', 'sued_seating', 'sued_vip',
+        'west_standing', 'west_seating', 'west_vip',
+    ]
+    for field in capacity_fields:
+        val = request.POST.get(field, '').strip()
+        if val != '':
+            try:
+                setattr(stadium, field, max(0, min(500_000, int(val))))
+            except ValueError:
+                pass
+
     stadium.save()
     messages.success(request, 'Infrastruktur gespeichert.')
     return _redirect_tab(club_id, 'infrastruktur')
