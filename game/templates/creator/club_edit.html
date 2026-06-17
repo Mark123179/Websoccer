@@ -647,6 +647,7 @@
             <th>Alter</th>
             <th>Stärke</th>
             <th></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -669,9 +670,16 @@
               {% else %}—{% endif %}
             </td>
             <td><a class="creator-edit-link" href="{% url 'creator_player_edit' player_id=player.id %}">Bearbeiten →</a></td>
+            <td class="creator-delete-cell">
+              <form method="post" action="{% url 'creator_player_delete' player.id %}" class="creator-delete-form"
+                    onsubmit="return confirm('Spieler „{{ player.first_name }} {{ player.last_name }}“ und alle zugehörigen Daten endgültig löschen? Das kann nicht rückgängig gemacht werden.');">
+                {% csrf_token %}
+                <button type="submit" class="creator-delete-btn" title="Spieler löschen">Löschen</button>
+              </form>
+            </td>
           </tr>
           {% empty %}
-          <tr><td colspan="7" class="creator-empty-row">Noch keine Spieler vorhanden.</td></tr>
+          <tr><td colspan="8" class="creator-empty-row">Noch keine Spieler vorhanden.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -806,6 +814,10 @@
 .creator-position-badge { background: #071d30; border: 1px solid #00d4ff22; color: #00d4ff88; padding: .15rem .4rem; border-radius: 4px; font-size: .72rem; font-weight: 700; }
 .creator-edit-link { color: #00d4ff88; text-decoration: none; font-size: .75rem; }
 .creator-edit-link:hover { color: #00d4ff; }
+.creator-delete-cell { text-align: right; white-space: nowrap; }
+.creator-delete-form { display: inline; margin: 0; }
+.creator-delete-btn { background: #ff334415; border: 1px solid #ff334466; border-radius: 4px; padding: .25rem .6rem; color: #ff8899; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.creator-delete-btn:hover { background: #ff3344; border-color: #ff3344; color: #fff; }
 .creator-empty { color: #334455; font-size: .85rem; padding: .5rem 0; }
 .creator-empty-row { color: #334455; text-align: center; padding: 2rem !important; }
 .creator-count-badge { background: #00d4ff22; color: #00d4ff; font-size: .72rem; padding: .15rem .5rem; border-radius: 10px; margin-left: .4rem; }
