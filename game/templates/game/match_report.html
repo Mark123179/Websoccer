@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=11">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -320,9 +320,21 @@
 
                     <div class="mr-strength-row">
                         <span class="mr-strength-label">Gesamt</span>
-                        <span class="mr-strength-val is-home">{{ report.home_strength.overall }}</span>
+                        <span class="mr-strength-val is-home">
+                            {% if report.home_not_fielded %}
+                                <span class="mr-strength-raw-val" title="Originalstärke vor Nichtaufstellungs-Strafabzug">{{ report.home_strength_raw_overall }}</span>
+                                <span class="mr-not-fielded-badge" title="Nichtaufstellung: −{{ report.home_strength_malus_pct }}% Strafabzug">−{{ report.home_strength_malus_pct }}%</span>
+                            {% endif %}
+                            {{ report.home_strength.overall }}
+                        </span>
                         <span class="mr-strength-sep">/</span>
-                        <span class="mr-strength-val is-away">{{ report.away_strength.overall }}</span>
+                        <span class="mr-strength-val is-away">
+                            {{ report.away_strength.overall }}
+                            {% if report.away_not_fielded %}
+                                <span class="mr-not-fielded-badge" title="Nichtaufstellung: −{{ report.away_strength_malus_pct }}% Strafabzug">−{{ report.away_strength_malus_pct }}%</span>
+                                <span class="mr-strength-raw-val" title="Originalstärke vor Nichtaufstellungs-Strafabzug">{{ report.away_strength_raw_overall }}</span>
+                            {% endif %}
+                        </span>
                     </div>
 
                     <div class="mr-strength-row">
@@ -471,7 +483,15 @@
         <div class="mr-squad">
             <h3 class="mr-squad-title">{{ report.home_club_name }}</h3>
             <div class="mr-squad-meta">
-                <span>Teamst&auml;rke: <strong>{{ report.home_strength.overall }}</strong></span>
+                <span>Teamst&auml;rke:
+                    {% if report.home_not_fielded %}
+                        <span class="mr-strength-raw-val mr-strength-raw-sm">{{ report.home_strength_raw_overall }}</span>
+                        <strong class="mr-malus-strength">{{ report.home_strength.overall }}</strong>
+                        <span class="mr-not-fielded-badge mr-not-fielded-badge--sm" title="Nichtaufstellung: −{{ report.home_strength_malus_pct }}% Strafabzug">−{{ report.home_strength_malus_pct }}%</span>
+                    {% else %}
+                        <strong>{{ report.home_strength.overall }}</strong>
+                    {% endif %}
+                </span>
                 <span>Teamwork: <strong>{{ report.home_teamwork }}</strong></span>
             </div>
             <table class="mr-player-table">
@@ -511,7 +531,15 @@
         <div class="mr-squad">
             <h3 class="mr-squad-title">{{ report.away_club_name }}</h3>
             <div class="mr-squad-meta">
-                <span>Teamst&auml;rke: <strong>{{ report.away_strength.overall }}</strong></span>
+                <span>Teamst&auml;rke:
+                    {% if report.away_not_fielded %}
+                        <span class="mr-strength-raw-val mr-strength-raw-sm">{{ report.away_strength_raw_overall }}</span>
+                        <strong class="mr-malus-strength">{{ report.away_strength.overall }}</strong>
+                        <span class="mr-not-fielded-badge mr-not-fielded-badge--sm" title="Nichtaufstellung: −{{ report.away_strength_malus_pct }}% Strafabzug">−{{ report.away_strength_malus_pct }}%</span>
+                    {% else %}
+                        <strong>{{ report.away_strength.overall }}</strong>
+                    {% endif %}
+                </span>
                 <span>Teamwork: <strong>{{ report.away_teamwork }}</strong></span>
             </div>
             <table class="mr-player-table">

@@ -2965,6 +2965,19 @@ def simulate_match(
         'away_strength':  sim['away_strength'],
         'home_teamwork':  h_teamwork,
         'away_teamwork':  a_teamwork,
+        # ── Nichtaufstellungs-Malus Metadaten (für Spielbericht-Anzeige) ─────
+        'home_not_fielded': home_strength_malus < 1.0,
+        'away_not_fielded': away_strength_malus < 1.0,
+        'home_strength_malus_pct': round((1.0 - home_strength_malus) * 100) if home_strength_malus < 1.0 else 0,
+        'away_strength_malus_pct': round((1.0 - away_strength_malus) * 100) if away_strength_malus < 1.0 else 0,
+        'home_strength_raw_overall': (
+            round((sim['home_strength'] or {}).get('overall', 0) / home_strength_malus)
+            if home_strength_malus < 1.0 else None
+        ),
+        'away_strength_raw_overall': (
+            round((sim['away_strength'] or {}).get('overall', 0) / away_strength_malus)
+            if away_strength_malus < 1.0 else None
+        ),
         # ── Formationen ───────────────────────────────────────────────────────
         'home_formation': _fmt(home_tactic),
         'away_formation': _fmt(away_tactic),
