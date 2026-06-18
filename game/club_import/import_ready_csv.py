@@ -361,3 +361,157 @@ def parse_import_ready_csv(text):
         })
 
     return {'club': club, 'players': players, 'warnings': warnings}
+
+
+# ── Moneyball-Format (Semikolon, deutsche Header, DD.MM.YYYY-Datum) ──────────
+
+def _parse_date_de(value):
+    """'20.12.1999' → '1999-12-20' (ISO). Sonst None."""
+    value = _clean(value)
+    if not value:
+        return None
+    parts = value.split('.')
+    if len(parts) == 3:
+        try:
+            day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
+            return f'{year:04d}-{month:02d}-{day:02d}'
+        except ValueError:
+            pass
+    return None
+
+
+# CSV-Spaltenname → interner Schlüssel (None = ignorieren).
+MONEYBALL_COLUMN_MAP = {
+    'Verein':           'verein',
+    'Spieler':          'display_name',
+    'Unique ID':        'fm_unique_id',
+    'Fähigkeit':        'fmi_rating',
+    'Pot':              'fmi_potential',
+    'Starker Fuß':      'preferred_foot',
+    'Nation':           'primary_nationality',
+    '2. Nation':        'second_nationality',
+    'Geb.':             'date_of_birth',
+    'Größe':            'height_cm',
+    # FM-Attribute
+    'Halten':           'mb_gk_handling',
+    'Eins gegen Eins':  'mb_gk_one_on_ones',
+    'Reflexe':          'mb_gk_reflexes',
+    'Technik':          'mb_technique',
+    'Tackling':         'mb_tackling',
+    'Elfmeter':         'mb_penalty_taking',
+    'Passen':           'mb_passing',
+    'Weitschüsse':      None,   # kein Gegenstück im Schema → ignoriert
+    'Kopfballtechnik':  'mb_heading',
+    'Freistöße':        'mb_free_kick_taking',
+    'Abschluss':        'mb_finishing',
+    'Dribbling':        'mb_dribbling',
+    'Flanken':          'mb_crossing',
+    'Ecken':            'mb_corners',
+    'Kraft':            'mb_strength',
+    'Ausdauer':         'mb_stamina',
+    'Schnelligkeit':    'mb_pace',
+    'Übersicht':        'mb_vision',
+    'Teamwork':         'mb_teamwork',
+    'Stellungsspiel':   'mb_positioning',
+}
+
+
+def _moneyball_fmi_block(row):
+    """Baut den fmi_ratings-Block aus einer (bereits gemappten) Moneyball-Zeile.
+
+    Besonderheit TW-Attribute ohne GK-Präfix:
+    ``Passen`` → passspiel UND tw_passen (FM-Torhüter haben denselben Wert).
+    ``Stellungsspiel`` → defensivstellung UND tw_stellungsspiel.
+    Für Feldspieler sind die tw_*-Felder irrelevant; der Match-Engine ignoriert
+    sie positionsabhängig.
+    ``Weitschüsse`` ist in MONEYBALL_COLUMN_MAP auf None gemappt und fehlt hier.
+    """
+    rating = _to_int(row.get('fmi_rating'))
+    if rating is None:
+        return None
+
+    raw_pot = _clean(row.get('fmi_potential'))
+    parsed_pot = _to_int(raw_pot)
+    block = {
+        'rating':         rating,
+        'potential':      parsed_pot,
+        'attrs':          {},
+        'source_version': '',
+    }
+    if raw_pot and parsed_pot is None:
+        block['potential_raw'] = raw_pot
+
+    def _a(key):
+        return _to_int(row.get(key))
+
+    a = block['attrs']
+    if (v := _a('mb_pace'))            is not None: a['tempo']               = v
+    if (v := _a('mb_stamina'))         is not None: a['ausdauer']            = v
+    if (v := _a('mb_strength'))        is not None: a['kraft']               = v
+    if (v := _a('mb_technique'))       is not None: a['technik']             = v
+    if (v := _a('mb_dribbling'))       is not None: a['dribbling']           = v
+    if (v := _a('mb_passing'))         is not None:
+        a['passspiel']       = v
+        a['tw_passen']       = v   # TW: Passen = GK-Passing
+    if (v := _a('mb_crossing'))        is not None: a['flanken']             = v
+    if (v := _a('mb_tackling'))        is not None: a['zweikampf']           = v
+    if (v := _a('mb_positioning'))     is not None:
+        a['defensivstellung']  = v
+        a['tw_stellungsspiel'] = v   # TW: Stellungsspiel = GK-Positioning
+    if (v := _a('mb_finishing'))       is not None: a['abschluss']           = v
+    if (v := _a('mb_heading'))         is not None: a['kopfball']            = v
+    if (v := _a('mb_vision'))          is not None: a['uebersicht']          = v
+    if (v := _a('mb_teamwork'))        is not None: a['teamwork']            = v
+    if (v := _a('mb_corners'))         is not None: a['ecken']               = v
+    if (v := _a('mb_free_kick_taking'))is not None: a['freistoss']           = v
+    if (v := _a('mb_penalty_taking'))  is not None: a['elfmeter']            = v
+    if (v := _a('mb_gk_reflexes'))     is not None: a['tw_reflexe']          = v
+    if (v := _a('mb_gk_handling'))     is not None: a['tw_fangsicherheit']   = v
+    if (v := _a('mb_gk_one_on_ones'))  is not None: a['tw_eins_gegen_eins']  = v
+    return block
+
+
+def parse_moneyball_rows(fileobj):
+    """Liest eine Moneyball-CSV (Semikolon, deutsche Header).
+
+    Gibt eine Liste von Roh-Dicts zurück — noch keine vollständige
+    ``normalized_data``-Struktur, da Vereins- und Positionsdaten fehlen.
+    Die Weiterverarbeitung (Matching, DB-Schreiben) erfolgt in einem
+    späteren Schritt.
+
+    Args:
+        fileobj: Text-Dateiobj oder ``io.StringIO``.
+
+    Returns:
+        list[dict] mit den Schlüsseln:
+            display_name, fm_unique_id, verein,
+            height_cm, strong_foot,
+            primary_nationality, nationalities,
+            date_of_birth, fmi_ratings.
+    """
+    reader = csv.DictReader(fileobj, delimiter=';')
+    rows = []
+    for raw in reader:
+        mapped = {}
+        for col, val in raw.items():
+            internal = MONEYBALL_COLUMN_MAP.get(col)
+            if internal is not None:
+                mapped[internal] = val
+
+        primary, joined = normalize_nationalities(
+            mapped.get('primary_nationality'),
+            mapped.get('second_nationality'),
+        )
+
+        rows.append({
+            'display_name':        _clean(mapped.get('display_name')),
+            'fm_unique_id':        _to_int(mapped.get('fm_unique_id')),
+            'verein':              _clean(mapped.get('verein')),
+            'height_cm':           parse_height(mapped.get('height_cm')),
+            'strong_foot':         parse_foot(mapped.get('preferred_foot')),
+            'primary_nationality': primary,
+            'nationalities':       joined,
+            'date_of_birth':       _parse_date_de(mapped.get('date_of_birth')),
+            'fmi_ratings':         _moneyball_fmi_block(mapped),
+        })
+    return rows

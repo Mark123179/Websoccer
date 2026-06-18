@@ -26,8 +26,10 @@ from game.models import (
 from game.club_import.import_ready_csv import (
     normalize_nationalities,
     parse_import_ready_csv,
+    parse_moneyball_rows,
     row_to_normalized,
     translate_country,
+    _parse_date_de,
 )
 from game.club_import.import_service import import_candidate
 
@@ -217,3 +219,92 @@ class ImportServiceLoanStatusTests(TestCase):
         fm = PlayerSourceRating.objects.get(
             player=p, source=PlayerSourceRating.SOURCE_FM)
         self.assertEqual(fm.tempo, 70)
+
+
+# ── Moneyball-Parser ─────────────────────────────────────────────────────────
+
+class ParseDateDeTests(TestCase):
+    def test_normal(self):
+        self.assertEqual(_parse_date_de('20.12.1999'), '1999-12-20')
+        self.assertEqual(_parse_date_de('1.1.2000'), '2000-01-01')
+        self.assertEqual(_parse_date_de('18.4.2008'), '2008-04-18')
+
+    def test_empty(self):
+        self.assertIsNone(_parse_date_de(''))
+        self.assertIsNone(_parse_date_de(None))
+
+    def test_invalid(self):
+        self.assertIsNone(_parse_date_de('kein-datum'))
+        self.assertIsNone(_parse_date_de('1999-12-20'))  # ISO → kein De-Format
+
+
+MONEYBALL_CSV = """\
+Verein;Halten;Eins gegen Eins;Reflexe;Technik;Tackling;Elfmeter;Passen;Weitschüsse;Kopfballtechnik;Freistöße;Abschluss;Dribbling;Flanken;Ecken;Kraft;Ausdauer;Schnelligkeit;Übersicht;Teamwork;Stellungsspiel;Starker Fuß;Fähigkeit;Pot;Unique ID;Größe;Spieler;2. Nation;Nation;Geb.
+SV Elversberg;13;15;15;11;1;2;11;3;5;7;1;3;2;5;13;10;9;11;12;14;Rechts;122;130;16175067;185 cm;Nicolas Kristof;Deutschland;Österreich;20.12.1999
+SV Elversberg;13;11;13;4;3;3;4;3;1;5;1;1;1;3;5;2;10;5;6;7;Rechts;60;96;2000433415;186 cm;Blero Kuqi;;Deutschland;18.4.2008
+"""
+
+
+class ParseMoneyballRowsTests(TestCase):
+    def setUp(self):
+        import io
+        self.rows = parse_moneyball_rows(io.StringIO(MONEYBALL_CSV))
+
+    def test_row_count(self):
+        self.assertEqual(len(self.rows), 2)
+
+    def test_basic_fields(self):
+        r = self.rows[0]
+        self.assertEqual(r['display_name'], 'Nicolas Kristof')
+        self.assertEqual(r['fm_unique_id'], 16175067)
+        self.assertEqual(r['verein'], 'SV Elversberg')
+        self.assertEqual(r['height_cm'], 185)
+        self.assertEqual(r['strong_foot'], 'R')
+        self.assertEqual(r['date_of_birth'], '1999-12-20')
+
+    def test_nationalities(self):
+        r = self.rows[0]
+        self.assertIn('Österreich', r['primary_nationality'])
+        self.assertIn('Deutschland', r['nationalities'])
+
+    def test_fmi_block_rating_potential(self):
+        r = self.rows[0]
+        self.assertEqual(r['fmi_ratings']['rating'], 122)
+        self.assertEqual(r['fmi_ratings']['potential'], 130)
+
+    def test_weitschuesse_ignored(self):
+        r = self.rows[0]
+        attrs = r['fmi_ratings']['attrs']
+        self.assertNotIn('weitschuesse', attrs)
+
+    def test_passing_doubles_to_gk_fields(self):
+        r = self.rows[0]
+        attrs = r['fmi_ratings']['attrs']
+        self.assertEqual(attrs.get('passspiel'), 11)
+        self.assertEqual(attrs.get('tw_passen'), 11)
+
+    def test_positioning_doubles_to_gk_fields(self):
+        r = self.rows[0]
+        attrs = r['fmi_ratings']['attrs']
+        self.assertEqual(attrs.get('defensivstellung'), 14)
+        self.assertEqual(attrs.get('tw_stellungsspiel'), 14)
+
+    def test_gk_attrs(self):
+        r = self.rows[0]
+        attrs = r['fmi_ratings']['attrs']
+        self.assertEqual(attrs.get('tw_fangsicherheit'), 13)
+        self.assertEqual(attrs.get('tw_eins_gegen_eins'), 15)
+        self.assertEqual(attrs.get('tw_reflexe'), 15)
+
+    def test_no_rating_returns_none_block(self):
+        import io
+        csv_no_rating = (
+            'Verein;Halten;Eins gegen Eins;Reflexe;Technik;Tackling;Elfmeter;'
+            'Passen;Weitschüsse;Kopfballtechnik;Freistöße;Abschluss;Dribbling;'
+            'Flanken;Ecken;Kraft;Ausdauer;Schnelligkeit;Übersicht;Teamwork;'
+            'Stellungsspiel;Starker Fuß;Fähigkeit;Pot;Unique ID;Größe;Spieler;'
+            '2. Nation;Nation;Geb.\n'
+            'FC Test;;;;;;;;;;;;;;;;;;;;;;;Rechts;;100;99999;180 cm;Test Player;;Deutschland;01.01.2000\n'
+        )
+        rows = parse_moneyball_rows(io.StringIO(csv_no_rating))
+        self.assertIsNone(rows[0]['fmi_ratings'])
