@@ -3451,6 +3451,47 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _ensure_not_fielded_in_report(report_data: dict, sm=None) -> dict:
+    """Fügt Nichtaufstellungs-Malus-Felder in report_data ein, falls sie fehlen.
+
+    Neue simulate_match()-Aufrufe speichern home_not_fielded etc. direkt.
+    Für ältere gespeicherte SimulatedMatch-Einträge lesen wir das Flag aus dem
+    verknüpften SeasonFixture (season_fixture reverse accessor).
+    """
+    if not report_data:
+        return report_data
+    if 'home_not_fielded' in report_data:
+        return report_data
+    h_malus = False
+    a_malus = False
+    try:
+        if sm is not None:
+            fixture = sm.season_fixture
+            h_malus = bool(fixture.home_lineup_malus)
+            a_malus = bool(fixture.away_lineup_malus)
+    except Exception:
+        pass
+    if not h_malus and not a_malus:
+        return report_data
+    report_data = dict(report_data)
+    _MALUS_FACTOR = 0.70
+    _MALUS_PCT    = 30
+
+    def _raw_overall(strength_dict, malus):
+        if not malus or not strength_dict:
+            return None
+        overall = strength_dict.get('overall', 0) or 0
+        return round(float(overall) / _MALUS_FACTOR) if overall else None
+
+    report_data['home_not_fielded']        = h_malus
+    report_data['away_not_fielded']        = a_malus
+    report_data['home_strength_malus_pct'] = _MALUS_PCT if h_malus else 0
+    report_data['away_strength_malus_pct'] = _MALUS_PCT if a_malus else 0
+    report_data['home_strength_raw_overall'] = _raw_overall(report_data.get('home_strength'), h_malus)
+    report_data['away_strength_raw_overall'] = _raw_overall(report_data.get('away_strength'), a_malus)
+    return report_data
+
+
 def _ticker_comment(evt_type, minute=0, player='', player_pos='', assister='', assister_pos='',
                     card_type='', score_h=0, score_a=0, days=0, in_name='', out_name='',
                     target_slot='', position_relation='', is_injury_sub=False,
@@ -3951,10 +3992,12 @@ def club_match_report(request, club_id):
             'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
         }
 
+    _report_data = _ensure_ratings_in_report(latest.report_data) if latest else None
+    _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest) if _report_data else _report_data
     return render(request, 'game/match_report.html', {
         'club':         club,
         'latest_match': latest,
-        'report':       _ensure_ratings_in_report(latest.report_data) if latest else None,
+        'report':       _report_data,
         'all_clubs':    all_clubs,
         'sim_error':    sim_error,
         'rc':           rc,
@@ -4046,10 +4089,12 @@ def match_report_by_id(request, sm_id):
             'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
         }
 
+    _report_data = _ensure_ratings_in_report(latest.report_data)
+    _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest)
     return render(request, 'game/match_report.html', {
         'club':         club,
         'latest_match': latest,
-        'report':       _ensure_ratings_in_report(latest.report_data),
+        'report':       _report_data,
         'all_clubs':    None,
         'sim_error':    None,
         'rc':           rc,
