@@ -4757,7 +4757,8 @@ def manager_profile(request):
         else '–'
     )
     _raw_image = manager_profile_obj.profile_image or ''
-    if _raw_image and not _raw_image.startswith('game/'):
+    _has_custom_avatar = bool(_raw_image and not _raw_image.startswith('game/'))
+    if _has_custom_avatar:
         from django.conf import settings as _settings
         profile_image_url = request.build_absolute_uri(_settings.MEDIA_URL + _raw_image)
     else:
@@ -4930,6 +4931,7 @@ def manager_profile(request):
             'club_season': _club_season_str,
             'member_since': member_since_display,
             'profile_image_url': profile_image_url,
+            'has_custom_avatar': _has_custom_avatar,
             'level': manager_profile_obj.level,
             'xp': manager_profile_obj.xp,
             'xp_max': manager_profile_obj.xp_max,
