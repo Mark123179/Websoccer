@@ -41,12 +41,22 @@ def _find_manifest_path(namelist: list[str]) -> str | None:
 
 
 def _find_master_csv_path(namelist: list[str]) -> str | None:
-    """Gibt den ZIP-internen Pfad zur *_master_complete.csv zurück."""
+    """Gibt den ZIP-internen Pfad zur Master-CSV zurück.
+
+    Akzeptiert zwei Namenskonventionen:
+    * ``*_master_complete.csv``  — ältere Pakete
+    * ``*_import_ready_*.csv``   — neuere Exporter (z.B. Moneyball-Pipeline)
+    """
+    candidates = []
     for name in namelist:
+        if name.startswith('__MACOSX'):
+            continue
         basename = name.rsplit('/', 1)[-1]
-        if basename.endswith('_master_complete.csv') and not name.startswith('__MACOSX'):
-            return name
-    return None
+        if basename.endswith('_master_complete.csv'):
+            return name  # Exakter Match, sofort zurückgeben
+        if '_import_ready_' in basename and basename.endswith('.csv'):
+            candidates.append(name)
+    return candidates[0] if candidates else None
 
 
 def read_zip(path_or_bytes) -> tuple[str, ZipManifest]:
