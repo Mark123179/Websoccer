@@ -474,6 +474,26 @@ _PASS_FAIL_TEXTS = [
 ]
 
 
+# ── Ecken-Tor-Texte ──────────────────────────────────────────────────────────
+
+_CORNER_GOAL_TEXTS = [
+    "{p} bringt die Ecke scharf herein — und {a} köpft unhaltbar ins lange Eck! TOR!",
+    "Was für ein Eckball von {p}! {a} steigt am höchsten und nickt den Ball ins Netz.",
+    "Eine geschwungene Ecke von {p} — direkt ins Tor! Der Torwart war machtlos.",
+    "{p} tritt die Ecke kurz, {a} spielt zurück — Schuss — TOR! Ein perfektes Kombinationsspiel.",
+    "Ecke von {p}, schön auf den zweiten Pfosten geflankt — {a} staubt ab! Der Ball ist drin.",
+    "Ein Eckball wie aus dem Lehrbuch: {p} findet {a} am Fünfmeterraum — Kopfball — TOR!",
+]
+
+_FREEKICK_CROSS_GOAL_TEXTS = [
+    "{p} schlägt die Freistoßflanke auf {a} — Kopfball — TOR! Meisterhaft vorbereitet.",
+    "Der Freistoß von {p} landet direkt vor den Füßen von {a} — abgefälscht — TOR!",
+    "{p} bringt die Kugel scharf vor das Tor, {a} kommt aus dem Hintergrund — und köpft ein!",
+    "Freistoß von der rechten Seite: {p} findet {a} im Strafraum — Direktabnahme — TOR!",
+    "{p} tritt den Freistoß flach herein, {a} lässt sich nicht zweimal bitten — TOR!",
+]
+
+
 # ── Freistoß-Texte ───────────────────────────────────────────────────────────
 
 _FREEKICK_GOAL_TEXTS = [
@@ -662,6 +682,20 @@ def build_ticker_text(
         if p:
             return _shuffled_pick(_PASS_FAIL_TEXTS, ms, 'pass_fail', ei).format(p=p)
         return "Fehlpass — der Gegner übernimmt."
+
+    elif evt_type == 'corner_goal':
+        if p and a:
+            return _shuffled_pick(_CORNER_GOAL_TEXTS, ms, 'corner_goal', ei).format(p=p, a=a)
+        elif p:
+            return f"Eckball von {p} — direkt ins Netz! TOR!"
+        return "Ecke — direkt verwandelt! TOR!"
+
+    elif evt_type == 'freekick_cross_goal':
+        if p and a:
+            return _shuffled_pick(_FREEKICK_CROSS_GOAL_TEXTS, ms, 'fk_cross_goal', ei).format(p=p, a=a)
+        elif p:
+            return f"Freistoßflanke von {p} — Kopfball — TOR!"
+        return "Freistoß — Kopfball — TOR!"
 
     elif evt_type == 'freekick_goal':
         if p:

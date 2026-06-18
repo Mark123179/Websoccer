@@ -66,6 +66,18 @@ PENALTY_BASE_PROB     = 0.760   # Basis-Verwandlungsrate (~76 %)
 PENALTY_SHOOTER_COEFF = 0.002   # je Elfmeter-Attributpunkt über/unter 70; Bereich ±0.06
 PENALTY_GK_COEFF      = 0.0015  # je TW-Reflexe-Attributpunkt über/unter 70; Bereich ±0.045
 
+# Set-Piece xG-Pfade (V1, eingefroren nach Einführung — Nutzer-Freigabe 2026-06-18)
+# Kalibrierung: +0.28 xG/Team/Spiel bei Ø-Attributen (70); ~20 % über Open-Play-Basis.
+# Erwartete Goals/Spiel insgesamt: ~3.3 statt ~2.8 (Ligastart-Richtwert nach Balancing).
+SET_PIECE_CORNER_BASE_XG    = 0.025   # xG pro Ecke
+SET_PIECE_FK_DIRECT_BASE_XG = 0.045   # xG pro direktem Freistoß
+SET_PIECE_FK_CROSS_BASE_XG  = 0.028   # xG pro Flanken-Freistoß + Kopfball-Abnehmer
+SET_PIECE_FK_RATE            = 0.120   # Anteil Fouls → gefährlicher Freistoß
+SET_PIECE_FK_DIRECT_PROB    = 0.380   # Wahrsch. direkter Schuss vs. Flanke/Kopfball
+SET_PIECE_PENALTY_RATE       = 0.012   # Anteil Fouls → Strafstoß im Spielverlauf
+SET_PIECE_PENALTY_BASE_XG   = 0.730   # xG pro Strafstoß (Basis ohne Attribute)
+SET_PIECE_ATTR_COEFF         = 0.005   # Attribut-Einfluss je Punkt über/unter 70
+
 
 def _ceil5(minute: int) -> int:
     """Rundet eine Minute auf das nächste 5er-Vielfaches auf.
@@ -120,6 +132,52 @@ def _teamwork(player) -> int:
     except Exception:
         pass
     return 50
+
+
+def _best_sp_attrs(
+    player_ids: list,
+    lineup_list: list,
+    players_by_id: dict,
+) -> dict:
+    """Bestes Set-Piece-Attribut aus der Startelf; TW-Reflexe des Torhüters.
+
+    Nutzt bereits geladene source_ratings (prefetch_related) — kein extra DB-Query.
+    Fallback für fehlende Attribute: 70 (Ø-Spieler).
+    """
+    gk_pid: Optional[int] = None
+    for slot in lineup_list:
+        if (slot.get('position') or '').upper() == 'TW':
+            gk_pid = slot.get('player_id')
+            break
+
+    best = {'ecken': 70, 'freistoss': 70, 'kopfball': 70, 'elfmeter': 70}
+    gk_tw_reflexe = 70
+
+    for pid in player_ids:
+        p = players_by_id.get(pid)
+        if not p:
+            continue
+        try:
+            for sr in p.source_ratings.all():
+                for attr in ('ecken', 'freistoss', 'kopfball', 'elfmeter'):
+                    val = getattr(sr, attr, None)
+                    if val is not None and int(val) > best[attr]:
+                        best[attr] = int(val)
+                if pid == gk_pid:
+                    tw_r = getattr(sr, 'tw_reflexe', None)
+                    if tw_r is not None:
+                        if int(tw_r) > gk_tw_reflexe:
+                            gk_tw_reflexe = int(tw_r)
+        except Exception:
+            pass
+
+    return {
+        'best_ecken':    best['ecken'],
+        'best_freistoss': best['freistoss'],
+        'best_kopfball': best['kopfball'],
+        'best_elfmeter': best['elfmeter'],
+        'gk_tw_reflexe': gk_tw_reflexe,
+    }
 
 
 def _potential(player) -> float:
@@ -695,6 +753,7 @@ def _build_team_dict(club, tactic_setup, match_strengths: dict | None = None, st
         'players': players_list,
         'lineup': lineup_list,
         'tactic': tactic_dict,
+        'set_piece_attrs': _best_sp_attrs(player_ids, lineup_list, players_by_id),
     }
 
 
@@ -848,8 +907,12 @@ def _goal_events(
     team_key: str,
     lineup_players: list[dict],
     minute_pool: list[int],
+    goal_type: str = 'goal',
 ) -> list[dict]:
-    """n Tor-Events mit Schütze + optionaler Vorlage erzeugen (dict-basiert)."""
+    """n Tor-Events mit Schütze + optionaler Vorlage erzeugen (dict-basiert).
+
+    goal_type: 'goal' (Spielzug) | 'corner' | 'fk_direct' | 'fk_cross' | 'penalty_sp'
+    """
     if not lineup_players:
         return []
     weights = [_GOAL_WEIGHTS.get(p.get('group', 'attack'), 0.05) for p in lineup_players]
@@ -871,6 +934,7 @@ def _goal_events(
         events.append({
             'minute': minute,
             'team': team_key,
+            'goal_type': goal_type,
             'scorer_id': scorer['id'],
             'scorer_name': scorer['name'],
             'scorer_pos': scorer.get('position', '?'),
@@ -930,6 +994,46 @@ def _segment_team_stats(goals: int, comp: dict, seg_len: int) -> dict:
         'attacks_left':    zones['left'],
         'attacks_center':  zones['center'],
         'attacks_right':   zones['right'],
+    }
+
+
+def _set_piece_xg(
+    n_corners: int,
+    n_fouls: int,
+    own_sp: dict,
+    opp_sp: dict,
+) -> dict:
+    """xG aus Standardsituationen: Ecken, Freistöße (direkt + Flanke/Kopfball), Foulelfmeter.
+
+    Rückgabe: {corner_xg, fk_direct_xg, fk_cross_xg, penalty_xg} — alle ≥ 0.
+    Alle Konstanten eingefroren (SET_PIECE_* Blocke, Nutzer-Freigabe 2026-06-18).
+    """
+    c = SET_PIECE_ATTR_COEFF
+
+    # Ecken: Ausführer-Qualität × Kopfball-Abnehmer-Qualität ─────────────────
+    ecken_f    = 1.0 + (own_sp.get('best_ecken',    70) - 70) * c
+    kopfball_f  = 1.0 + (own_sp.get('best_kopfball', 70) - 70) * c
+    corner_xg   = max(0.0, n_corners * SET_PIECE_CORNER_BASE_XG * ecken_f * kopfball_f)
+
+    # Freistöße: gefährliche FK aus Fouls, aufgeteilt direkt / Flanke+Kopfball ──
+    n_fk        = n_fouls * SET_PIECE_FK_RATE
+    freistoss_f = 1.0 + (own_sp.get('best_freistoss', 70) - 70) * c
+    n_direct    = n_fk * SET_PIECE_FK_DIRECT_PROB
+    n_cross     = n_fk * (1.0 - SET_PIECE_FK_DIRECT_PROB)
+    fk_direct_xg = max(0.0, n_direct * SET_PIECE_FK_DIRECT_BASE_XG * freistoss_f)
+    fk_cross_xg  = max(0.0, n_cross  * SET_PIECE_FK_CROSS_BASE_XG  * freistoss_f * kopfball_f)
+
+    # Foulelfmeter: Schützen-Attribut vs. gegnerischer TW-Reflexe ─────────────
+    n_penalties  = n_fouls * SET_PIECE_PENALTY_RATE
+    elfmeter_f   = 1.0 + (own_sp.get('best_elfmeter',  70) - 70) * c
+    gk_f         = 1.0 - (opp_sp.get('gk_tw_reflexe', 70) - 70) * c * 0.75
+    penalty_xg   = max(0.0, n_penalties * SET_PIECE_PENALTY_BASE_XG * elfmeter_f * gk_f)
+
+    return {
+        'corner_xg':    corner_xg,
+        'fk_direct_xg': fk_direct_xg,
+        'fk_cross_xg':  fk_cross_xg,
+        'penalty_xg':   penalty_xg,
     }
 
 
@@ -1393,6 +1497,38 @@ def _simulate_match_minutes(
         a_seg_stats = _segment_team_stats(ag, a_comp, seg_len)
         _add_segment_stats(h_stats_total, h_seg_stats, h_comp, home_poss,       seg_len, h_red_seg)
         _add_segment_stats(a_stats_total, a_seg_stats, a_comp, 100 - home_poss, seg_len, a_red_seg)
+
+        # ── Set-Piece xG-Pfade (Ecken · Freistöße · Foulelfmeter) ────────────
+        _h_sp = home_team.get('set_piece_attrs') or {}
+        _a_sp = away_team.get('set_piece_attrs') or {}
+        _h_sp_xg = _set_piece_xg(h_seg_stats['corners'], h_seg_stats['fouls'], _h_sp, _a_sp)
+        _a_sp_xg = _set_piece_xg(a_seg_stats['corners'], a_seg_stats['fouls'], _a_sp, _h_sp)
+        _h_sp_pool = _h_cur or _active_lineup_players(h_als.get_active_lineup(), h_als.players_by_id)
+        _a_sp_pool = _a_cur or _active_lineup_players(a_als.get_active_lineup(), a_als.players_by_id)
+
+        for _sp_type, _sp_xg_val, _sp_team, _sp_pool, _sp_xg_side in (
+            ('corner',     _h_sp_xg['corner_xg'],    'home', _h_sp_pool, 'h'),
+            ('fk_direct',  _h_sp_xg['fk_direct_xg'], 'home', _h_sp_pool, 'h'),
+            ('fk_cross',   _h_sp_xg['fk_cross_xg'],  'home', _h_sp_pool, 'h'),
+            ('penalty_sp', _h_sp_xg['penalty_xg'],   'home', _h_sp_pool, 'h'),
+            ('corner',     _a_sp_xg['corner_xg'],    'away', _a_sp_pool, 'a'),
+            ('fk_direct',  _a_sp_xg['fk_direct_xg'], 'away', _a_sp_pool, 'a'),
+            ('fk_cross',   _a_sp_xg['fk_cross_xg'],  'away', _a_sp_pool, 'a'),
+            ('penalty_sp', _a_sp_xg['penalty_xg'],   'away', _a_sp_pool, 'a'),
+        ):
+            _sp_goals = _poisson(_sp_xg_val)
+            if _sp_goals:
+                events.extend(_goal_events(
+                    _sp_goals, _sp_team, _sp_pool,
+                    list(range(minute, min(90, end_min) + 1)),
+                    goal_type=_sp_type,
+                ))
+                if _sp_xg_side == 'h':
+                    h_goals    += _sp_goals
+                    h_xg_total += _sp_xg_val
+                else:
+                    a_goals    += _sp_goals
+                    a_xg_total += _sp_xg_val
 
         for _side, _plan, _my_seg, _opp_seg, _my_xg, _opp_xg, _my_goals, _opp_goals, _my_comp in [
             ('home', h_plan, h_seg_stats, a_seg_stats, h_xg_seg, a_xg_seg, hg, ag, h_comp),

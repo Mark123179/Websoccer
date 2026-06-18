@@ -3710,8 +3710,15 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 score_a += 1
             evt['score_h'] = score_h
             evt['score_a'] = score_a
+            _goal_type = evt.get('goal_type', 'goal')
+            _tc_type = {
+                'corner':     'corner_goal',
+                'fk_direct':  'freekick_goal',
+                'fk_cross':   'freekick_cross_goal',
+                'penalty_sp': 'penalty_goal',
+            }.get(_goal_type, 'goal')
             evt['commentary'] = _tc(
-                'goal', evt['minute'], evt['scorer_name'],
+                _tc_type, evt['minute'], evt['scorer_name'],
                 player_pos=evt.get('scorer_pos', ''),
                 assister=evt['assister_name'],
                 assister_pos=evt.get('assister_pos', ''),

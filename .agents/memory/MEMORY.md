@@ -34,6 +34,7 @@
 - [Default-Taktik V1 Architektur](default-tactics-v1.md) — game/default_tactics.py (pure Python); apply_default_tactic_settings() in match_readiness.py; Hook in simulate_match Schritt 1b.
 - [game/tests Package-Falle](game-tests-package.md) — game/tests/ ist ein Package; game/tests.py existiert aber wird vom Package überlagert; neue Tests müssen in game/tests/test_*.py.
 - [Default-Taktik V1 Freeze-Stand](default-tactics-v1-freeze.md) — T=0.02/M=0.015 Angriffsfokus, 14 Tests grün; validate_default_tactic_v1 bestätigt Korridore A–E.
+- [Set-Piece xG-Pfade V1](set-piece-xg-v1.md) — Ecken/FK/Elfmeter als eigene Poisson-Pfade; goal_type in jedem Tor-Event; SET_PIECE_* Konstanten eingefroren (2026-06-18).
 - [Club CSV import pipeline](club-csv-import-pipeline.md) — two modes (Vollanlage/Aktualisierung); potential clamped to ≥rating at WRITE time; parsed vs DB validation differ on missing potential; non-blocking exit-code contract 0/1/2.
 - [SoFIFA-CSV-Importer Live-Pfad](sofifa-importer-live-path.md) — produktiver Import = sofifa_import_service.py; game/sofifa_import.py ist toter Zwilling; Matching DOB-first.
 - [FM-ID-/Identitäts-CSV-Import](fmid-csv-import.md) — per-Verein Moneyball-CSV setzt nur Identität+fm_inside_id; Verein≠Ziel→Vereinslos; name_dob-Backfill kollisionsfrei; NULL bleibt NULL.
