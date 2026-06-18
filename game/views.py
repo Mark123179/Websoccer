@@ -5234,14 +5234,27 @@ def upload_profile_image(request):
 
     import uuid as _uuid
     from django.conf import settings as _settings
-    from replit.object_storage import Client as _ObjClient
 
     version = _uuid.uuid4().hex[:12]
     rel_path = f'managers/{request.user.id}/avatar_{version}{ext}'
 
     data = b''.join(file.chunks())
-    obj_client = _ObjClient()
-    obj_client.upload_from_bytes(rel_path, data)
+
+    _saved_to_obj_storage = False
+    try:
+        from replit.object_storage import Client as _ObjClient
+        _obj_client = _ObjClient()
+        _obj_client.upload_from_bytes(rel_path, data)
+        _saved_to_obj_storage = True
+    except Exception:
+        pass
+
+    if not _saved_to_obj_storage:
+        import os as _os
+        _dest = _os.path.join(_settings.MEDIA_ROOT, rel_path)
+        _os.makedirs(_os.path.dirname(_dest), exist_ok=True)
+        with open(_dest, 'wb') as _fh:
+            _fh.write(data)
 
     from .models import ManagerProfile
     profile, _ = ManagerProfile.objects.get_or_create(
@@ -5251,10 +5264,18 @@ def upload_profile_image(request):
 
     old_path = profile.profile_image or ''
     if old_path and not old_path.startswith('game/'):
-        try:
-            obj_client.delete(old_path, ignore_not_found=True)
-        except Exception:
-            pass
+        if _saved_to_obj_storage:
+            try:
+                _obj_client.delete(old_path, ignore_not_found=True)
+            except Exception:
+                pass
+        else:
+            import os as _os
+            _old_dest = _os.path.join(_settings.MEDIA_ROOT, old_path)
+            try:
+                _os.remove(_old_dest)
+            except Exception:
+                pass
 
     profile.profile_image = rel_path
     profile.save(update_fields=['profile_image'])
@@ -5280,11 +5301,20 @@ def reset_profile_image(request):
 
     old_path = profile.profile_image or ''
     if old_path and not old_path.startswith('game/'):
+        _deleted_from_obj = False
         try:
             from replit.object_storage import Client as _ObjClient
             _ObjClient().delete(old_path, ignore_not_found=True)
+            _deleted_from_obj = True
         except Exception:
             pass
+        if not _deleted_from_obj:
+            import os as _os
+            _old_local = _os.path.join(_settings.MEDIA_ROOT, old_path)
+            try:
+                _os.remove(_old_local)
+            except Exception:
+                pass
 
     profile.profile_image = ''
     profile.save(update_fields=['profile_image'])
