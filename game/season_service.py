@@ -720,6 +720,25 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
     to_play  = [f for f in all_fixtures if not f.is_played]
     skipped  = [f for f in all_fixtures if f.is_played]
 
+    # ── Aufstellungen vorbereiten + Malus-Flags setzen ───────────────────────
+    # Muss VOR der Simulationsschleife passieren, damit fixture.home/away_lineup_malus
+    # korrekt gesetzt ist. Wird auch vom prepare_matchday-CLI-Befehl aufgerufen;
+    # ein doppelter Aufruf ist idempotent (InactivityRecord via get_or_create).
+    if to_play:
+        try:
+            from .match_readiness import prepare_matchday_lineups
+            prepare_matchday_lineups(league, matchday, season)
+            # Fixtures neu laden damit die gesetzten Malus-Flags sichtbar sind
+            _ids = {f.pk for f in to_play}
+            _fresh = {
+                f.pk: f
+                for f in SeasonFixture.objects.filter(pk__in=_ids)
+                .select_related('home_club', 'away_club')
+            }
+            to_play = [_fresh.get(f.pk, f) for f in to_play]
+        except Exception:
+            pass  # Kein hard-fail: Simulation läuft ohne Malus weiter
+
     # ── Sperren vor dem Spieltag abbauen ─────────────────────────────────────
     if to_play:
         _club_ids_to_play = list({
