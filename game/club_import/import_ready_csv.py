@@ -191,7 +191,13 @@ def _positions(value):
 
 
 def _attr_block(row, prefix, attr_map):
-    """Ratingblock ``{rating, potential, attrs}`` oder ``None`` aus CSV-Zeile."""
+    """Ratingblock ``{rating, potential, source_url, checked_at, attrs}`` oder ``None``.
+
+    Liest zusätzlich zu Rating/Potential/Attrs:
+    * ``source_url``  — Profillink der Quelle (``{prefix}_url``-Spalte)
+    * ``checked_at``  — Datum der Quellprüfung (gemeinsame Spalte ``source_checked_at``)
+    * ``notes``       — optionale Freitext-Notizen (``{prefix}_notes``-Spalte, falls vorhanden)
+    """
     rating = _to_int(row.get(f'{prefix}_rating'))
     if rating is None:
         return None
@@ -207,6 +213,9 @@ def _attr_block(row, prefix, attr_map):
         'potential': parsed_pot,
         'attrs': attrs,
         'source_version': _clean(row.get(f'{prefix}_source_version')),
+        'source_url': _clean(row.get(f'{prefix}_url')),
+        'checked_at': _clean(row.get('source_checked_at')),
+        'notes': _clean(row.get(f'{prefix}_notes')),
     }
     if raw_pot and parsed_pot is None:
         block['potential_raw'] = raw_pot

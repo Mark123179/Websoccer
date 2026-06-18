@@ -82,12 +82,16 @@ PLAYER_VOLATILE_COLUMN_MAP = {
 
 # Quell-Ratings (je eine Zeile FM bzw. EA in PlayerSourceRating).
 RATING_COLUMN_MAP = {
-    'fmi_rating':       ('PlayerSourceRating[FM]', 'rating', 'FMInside-Rating.'),
-    'fmi_potential':    ('PlayerSourceRating[FM]', 'potential', 'Fehlt → Fallback = rating.'),
-    'fmi_source_version': ('PlayerSourceRating[FM]', 'source_version', 'Optional: Quellversion.'),
-    'sofifa_rating':    ('PlayerSourceRating[EA]', 'rating', 'SoFIFA-Rating.'),
-    'sofifa_potential': ('PlayerSourceRating[EA]', 'potential', 'Fehlt → Fallback = rating.'),
-    'sofifa_source_version': ('PlayerSourceRating[EA]', 'source_version', 'Optional: Quellversion.'),
+    'fmi_rating':        ('PlayerSourceRating[FM]', 'rating', 'FMInside-Rating.'),
+    'fmi_potential':     ('PlayerSourceRating[FM]', 'potential', 'Fehlt → Fallback = rating.'),
+    'fmi_source_version': ('PlayerSourceRating[FM]', 'source_version', 'Quellversion.'),
+    'fmi_url':           ('PlayerSourceRating[FM]', 'source_url', 'FMInside-Profillink der Quelle.'),
+    'sofifa_rating':     ('PlayerSourceRating[EA]', 'rating', 'SoFIFA-Rating.'),
+    'sofifa_potential':  ('PlayerSourceRating[EA]', 'potential', 'Fehlt → Fallback = rating.'),
+    'sofifa_source_version': ('PlayerSourceRating[EA]', 'source_version', 'Quellversion.'),
+    'sofifa_url':        ('PlayerSourceRating[EA]', 'source_url', 'SoFIFA-Profillink der Quelle.'),
+    # Gemeinsames Prüfdatum für beide Quellen — eine Zeile, beide PSR-Zeilen bekommen denselben Wert.
+    'source_checked_at': ('PlayerSourceRating[FM+EA]', 'checked_at', 'Datum der letzten Quellprüfung.'),
 }
 
 
@@ -142,6 +146,7 @@ PRESENT_COLUMNS = [
     'sofifa_penalties', 'sofifa_gk_reflexes', 'sofifa_gk_handling',
     'sofifa_gk_positioning', 'sofifa_gk_passing',
     'fmi_source_version', 'sofifa_source_version',
+    'source_checked_at',
     'data_status', 'validation_warning',
 ]
 

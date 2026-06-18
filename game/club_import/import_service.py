@@ -201,9 +201,10 @@ def create_or_promote_target_club(tm_club_id, name, league, profile_url=''):
 def _write_source_rating(player, source, ratings):
     """Schreibt eine PlayerSourceRating-Zeile (Quelle FM/EA) oder löscht sie.
 
-    ``ratings`` = {rating, potential, attrs:{feld:wert}} oder ``None``/leer.
-    Bei vorhandenem Rating werden ALLE Attributfelder gesetzt (fehlende → None),
-    sodass keine Altwerte zurückbleiben. Ohne neue Daten wird die Zeile gelöscht.
+    ``ratings`` = {rating, potential, attrs:{feld:wert}, source_url, checked_at,
+    notes, source_version} oder ``None``/leer. Bei vorhandenem Rating werden ALLE
+    Attributfelder gesetzt (fehlende → None), sodass keine Altwerte zurückbleiben.
+    Ohne neue Daten wird die Zeile gelöscht.
     """
     from ..models import PlayerSourceRating
 
@@ -224,10 +225,19 @@ def _write_source_rating(player, source, ratings):
     defaults = {
         'rating': rating,
         'potential': potential,
+        'source_url': (ratings.get('source_url') or ''),
+        'notes': (ratings.get('notes') or ''),
     }
     source_version = ratings.get('source_version')
     if source_version:
         defaults['source_version'] = source_version
+    # checked_at: ISO-Datum-String → date-Objekt (tolerant, No-Op bei leerem Wert).
+    checked_at_raw = ratings.get('checked_at') or ''
+    if checked_at_raw:
+        try:
+            defaults['checked_at'] = date.fromisoformat(checked_at_raw)
+        except ValueError:
+            pass  # Ungültiges Datum wird ignoriert, Altwert bleibt
     for field in PSR_ATTR_FIELDS:
         defaults[field] = attrs.get(field)
 
