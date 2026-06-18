@@ -728,14 +728,18 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
         try:
             from .match_readiness import prepare_matchday_lineups
             prepare_matchday_lineups(league, matchday, season)
-            # Fixtures neu laden damit die gesetzten Malus-Flags sichtbar sind
-            _ids = {f.pk for f in to_play}
-            _fresh = {
+            # Fixtures neu laden damit die gesetzten Malus-Flags sichtbar sind.
+            # all_fixtures ebenfalls aktualisieren — der all_played-Check am Ende
+            # liest is_played von diesen Objekten; alte In-Memory-Refs würden False liefern.
+            _all_ids = {f.pk for f in all_fixtures}
+            _fresh_map = {
                 f.pk: f
-                for f in SeasonFixture.objects.filter(pk__in=_ids)
+                for f in SeasonFixture.objects.filter(pk__in=_all_ids)
                 .select_related('home_club', 'away_club')
             }
-            to_play = [_fresh.get(f.pk, f) for f in to_play]
+            all_fixtures = [_fresh_map.get(f.pk, f) for f in all_fixtures]
+            to_play  = [f for f in all_fixtures if not f.is_played]
+            skipped  = [f for f in all_fixtures if f.is_played]
         except Exception:
             pass  # Kein hard-fail: Simulation läuft ohne Malus weiter
 
