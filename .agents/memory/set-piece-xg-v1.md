@@ -36,6 +36,6 @@ SET_PIECE_ATTR_COEFF         = 0.005
 
 Erwartete Inflation: +0.28 xG/Team/Spiel bei Ø-Attributen.
 
-**Why:** `ecken` und `freistoss` hatten zuvor null Engine-Einfluss (Audit Task #584 bestätigt).
+**Why:** `ecken` und `freistoss` hatten zuvor null Engine-Einfluss (Attribut-Audit ergab: beide Felder waren im Engine-Code ungenutzt).
 
 **How to apply:** Konstantenänderung nur mit ≥50-Saisons-Evidenz + expliziter Nutzer-Freigabe. Ticker-Texte in `_CORNER_GOAL_TEXTS` + `_FREEKICK_CROSS_GOAL_TEXTS` pools.
