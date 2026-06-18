@@ -113,7 +113,9 @@ def _clamp(v: float, lo: float, hi: float) -> float:
 
 def _poisson(lam: float) -> int:
     """Poisson-Zufallsvariable (Knuth-Algorithmus)."""
-    L = math.exp(-max(lam, 0.0))
+    if lam <= 0.0:
+        return 0
+    L = math.exp(-lam)
     k, p = 0, 1.0
     while p > L:
         k += 1
@@ -1517,7 +1519,7 @@ def _simulate_match_minutes(
             ('penalty_sp', _a_sp_xg['penalty_xg'],   'away', _a_sp_pool, 'a'),
         ):
             _sp_goals = _poisson(_sp_xg_val)
-            if _sp_goals:
+            if _sp_goals > 0:
                 events.extend(_goal_events(
                     _sp_goals, _sp_team, _sp_pool,
                     list(range(minute, min(90, end_min) + 1)),
