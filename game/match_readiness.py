@@ -715,11 +715,25 @@ def prepare_matchday_lineups(league, matchday, season):
             setup = None
             try:
                 setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
-                valid = has_valid_lineup(setup, club=club)
+                lineup_valid = has_valid_lineup(setup, club=club)
             except TacticSetup.DoesNotExist:
-                valid = False
+                lineup_valid = False
 
-            if valid:
+            manager = club.managed_by
+
+            # Für gemanagte Vereine gilt die Aufstellung nur als "abgegeben",
+            # wenn sie gültig IST und für diesen Spieltag bestätigt wurde.
+            # Trainerlose Vereine werden separat behandelt (ensure_default_tactic).
+            if manager is not None:
+                confirmed_for_matchday = (
+                    lineup_valid
+                    and setup is not None
+                    and setup.lineup_confirmed_matchday == matchday
+                )
+            else:
+                confirmed_for_matchday = lineup_valid  # trainerlos: nur Gültigkeit zählt
+
+            if confirmed_for_matchday:
                 setattr(fixture, lineup_attr, True)
                 fixture_dirty = True
 
@@ -738,8 +752,6 @@ def prepare_matchday_lineups(league, matchday, season):
                         squad_qs.select_related('strength_profile')
                     )
                     all_players.sort(key=_player_base_strength, reverse=True)
-                    # Verletzte Spieler aus dem Kandidaten-Pool ausschließen,
-                    # damit die neu aufgebaute Bank garantiert keine Verletzten enthält.
                     available_players = [p for p in all_players if p.pk not in injured_pks]
                     used_pks = set((setup.lineup or {}).values())
                     setup.bench = _build_bench(available_players, used_pks)
@@ -748,9 +760,7 @@ def prepare_matchday_lineups(league, matchday, season):
 
                 continue
 
-            # ── Aufstellung fehlt oder ungültig ──────────────────────────────
-            manager = club.managed_by
-
+            # ── Aufstellung nicht (korrekt) abgegeben ────────────────────────
             if manager is None:
                 # Trainerloser Verein: optimal auto-auffüllen, kein Strafpunkt.
                 _, changed = ensure_default_tactic(club)
@@ -758,8 +768,7 @@ def prepare_matchday_lineups(league, matchday, season):
                     stats['skipped'] += 1
                     continue
             else:
-                # Gemanagter Verein (Nichtaufstellung): letzte Aufstellung patchen.
-                # Kein ensure_default_tactic — Trainer muss selbst aufstellen.
+                # Gemanagter Verein ohne gültige oder bestätigte Aufstellung.
                 if setup is None:
                     setup, _ = TacticSetup.objects.get_or_create(
                         club=club,
@@ -770,7 +779,11 @@ def prepare_matchday_lineups(league, matchday, season):
                             'bench': [],
                         },
                     )
-                patch_managed_lineup(club, setup)
+                if not lineup_valid:
+                    # Lineup fehlt oder ist ungültig → aus letztem Stand patchen.
+                    patch_managed_lineup(club, setup)
+                # Bei gültigem aber unbestätigtem Lineup: vorhandene Aufstellung bleibt,
+                # nur der Malus wird angewendet.
 
                 # Sportgericht-Strafpunkt + Stärkemalus (30 %)
                 _, created = InactivityRecord.objects.get_or_create(

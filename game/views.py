@@ -2801,16 +2801,8 @@ def club_tactics(request, club_id):
             )
             return render(request, 'game/tactics.html', context)
 
-        copy_payload_to_setup(
-            setup,
-            payload,
-            confirmed=True,
-            confirmed_at=timezone.now(),
-        )
-        setup.full_clean()
-        setup.save()
-
-        # Mark lineup as set on the next upcoming (unplayed) fixture for this club
+        # Spieltagnummer der nächsten Partie ermitteln (für Bestätigungs-Tracking)
+        _next_matchday_nr = None
         if squad_scope == 'pro':
             from django.db.models import Q
             today = timezone.now().date()
@@ -2821,10 +2813,21 @@ def club_tactics(request, club_id):
                 .first()
             )
             if next_fixture:
+                _next_matchday_nr = next_fixture.matchday
                 is_home = next_fixture.home_club_id == club.pk
                 field = 'home_lineup_set' if is_home else 'away_lineup_set'
                 setattr(next_fixture, field, True)
                 next_fixture.save(update_fields=[field])
+
+        copy_payload_to_setup(
+            setup,
+            payload,
+            confirmed=True,
+            confirmed_at=timezone.now(),
+            lineup_confirmed_matchday=_next_matchday_nr,
+        )
+        setup.full_clean()
+        setup.save()
 
         messages.success(request, 'Taktik bestätigt und gespeichert.')
         return redirect(tactic_redirect_url(club, squad_scope, confirmed=1))

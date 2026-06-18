@@ -1018,7 +1018,8 @@ def tactic_payload_from_setup(setup):
     }
 
 
-def copy_payload_to_setup(setup, payload, confirmed=False, confirmed_at=None):
+def copy_payload_to_setup(setup, payload, confirmed=False, confirmed_at=None,
+                          lineup_confirmed_matchday=None):
     setup.formation = normalize_formation(payload.get('formation'))
     setup.lineup = payload.get('lineup') or {}
     setup.bench = payload.get('bench') or []
@@ -1030,4 +1031,6 @@ def copy_payload_to_setup(setup, payload, confirmed=False, confirmed_at=None):
     setup.conditions = normalize_conditions(payload.get('conditions'))
     setup.is_confirmed = confirmed
     setup.confirmed_at = confirmed_at if confirmed else None
+    # Spieltag-Bestätigung: beim Laden einer Vorlage oder Speichern ohne confirm → zurücksetzen
+    setup.lineup_confirmed_matchday = lineup_confirmed_matchday if confirmed else None
     return setup

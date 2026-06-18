@@ -980,6 +980,12 @@ class TacticSetup(models.Model):
     conditions = models.JSONField(default=default_conditions, blank=True)
     is_confirmed = models.BooleanField(default=False)
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    lineup_confirmed_matchday = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Bestätigt für Spieltag',
+        help_text='Spieltagnummer, für die der Manager die Aufstellung zuletzt bestätigt hat.',
+    )
     is_locked = models.BooleanField(
         default=False,
         verbose_name='Gesperrt',
