@@ -58,7 +58,7 @@ PLAYER_IDENTITY_COLUMN_MAP = {
     'last_name':        ('Player', 'last_name', 'Nachname.'),
     'date_of_birth':    ('Player', 'date_of_birth', 'ISO YYYY-MM-DD; age wird daraus berechnet.'),
     'height_cm':        ('Player', 'height_cm', 'Körpergröße in cm.'),
-    'preferred_foot':   ('Player', 'strong_foot', 'links/rechts/beidfüßig → L/R/B.'),
+    'preferred_foot':   ('Player', 'strong_foot', 'links/rechts/beidfüßig oder left/right/both → L/R/B.'),
     'primary_nationality': ('Player', 'nationalities (führend)', 'Erste Nationalität.'),
     'nationalities':    ('Player', 'nationalities', '|-getrennt; ins Deutsche normalisiert.'),
     'nt_nationality':   ('Player', 'nt_nationality', 'Optional: NT-Nation fürs Badge.'),

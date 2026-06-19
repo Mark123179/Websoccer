@@ -81,15 +81,19 @@ def parse_market_value(value):
 
 
 def parse_foot(value):
-    """Normalisiert die Fußangabe auf 'L' / 'R' / 'B'. Sonst ''."""
+    """Normalisiert die Fußangabe auf 'L' / 'R' / 'B'. Sonst ''.
+
+    Akzeptiert deutsch (links/rechts/beidfüßig) und englisch (left/right/both)
+    sowie Rohwerte 'L', 'R', 'B'.
+    """
     if not value:
         return ''
     s = str(value).strip().lower()
-    if 'beid' in s:
+    if s in ('b', 'both') or 'beid' in s:
         return 'B'
-    if 'link' in s:
+    if s in ('l', 'left') or 'link' in s:
         return 'L'
-    if 'recht' in s:
+    if s in ('r', 'right') or 'recht' in s:
         return 'R'
     return ''
 
