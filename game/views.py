@@ -1850,10 +1850,10 @@ def home(request):
             {
                 'time': _f.scheduled_time.strftime('%H:%M') if _f.scheduled_time else '–',
                 'competition_logo': competition_logo_static_path(_f.league.name),
-                'home':       _f.home_club.name,
+                'home':       _f.home_club.short_name,
                 'home_crest': _f.home_club.crest_static_path,
                 'home_url':   f'/clubs/{_f.home_club.id}/',
-                'away':       _f.away_club.name,
+                'away':       _f.away_club.short_name,
                 'away_crest': _f.away_club.crest_static_path,
                 'away_url':   f'/clubs/{_f.away_club.id}/',
             }
