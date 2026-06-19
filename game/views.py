@@ -1841,7 +1841,7 @@ def home(request):
                 .filter(season=_live_season, is_played=False)
                 .filter(_q)
                 .select_related('home_club', 'away_club', 'league')
-                .order_by('league__name', 'scheduled_time')
+                .order_by('scheduled_time', 'league__name')
             )
         else:
             _live_fixtures_qs = SF.objects.none()
