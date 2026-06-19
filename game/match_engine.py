@@ -1518,6 +1518,11 @@ def _simulate_match_minutes(
             ('fk_cross',   _a_sp_xg['fk_cross_xg'],  'away', _a_sp_pool, 'a'),
             ('penalty_sp', _a_sp_xg['penalty_xg'],   'away', _a_sp_pool, 'a'),
         ):
+            # xG immer akkumulieren — unabhängig davon, ob ein Tor fällt.
+            if _sp_xg_side == 'h':
+                h_xg_total += _sp_xg_val
+            else:
+                a_xg_total += _sp_xg_val
             _sp_goals = _poisson(_sp_xg_val)
             if _sp_goals > 0:
                 events.extend(_goal_events(
@@ -1526,11 +1531,9 @@ def _simulate_match_minutes(
                     goal_type=_sp_type,
                 ))
                 if _sp_xg_side == 'h':
-                    h_goals    += _sp_goals
-                    h_xg_total += _sp_xg_val
+                    h_goals += _sp_goals
                 else:
-                    a_goals    += _sp_goals
-                    a_xg_total += _sp_xg_val
+                    a_goals += _sp_goals
 
         for _side, _plan, _my_seg, _opp_seg, _my_xg, _opp_xg, _my_goals, _opp_goals, _my_comp in [
             ('home', h_plan, h_seg_stats, a_seg_stats, h_xg_seg, a_xg_seg, hg, ag, h_comp),
@@ -2353,6 +2356,11 @@ def _simulate_extra_time_minutes(
             ('fk_cross',   _a_sp_xg_et['fk_cross_xg'],  'away', _a_sp_pool_et, 'a'),
             ('penalty_sp', _a_sp_xg_et['penalty_xg'],   'away', _a_sp_pool_et, 'a'),
         ):
+            # xG immer akkumulieren — unabhängig davon, ob ein Tor fällt.
+            if _sp_xg_side == 'h':
+                h_xg_total += _sp_xg_val
+            else:
+                a_xg_total += _sp_xg_val
             _sp_goals = _poisson(_sp_xg_val)
             if _sp_goals > 0:
                 events.extend(_goal_events(
@@ -2361,11 +2369,9 @@ def _simulate_extra_time_minutes(
                     goal_type=_sp_type,
                 ))
                 if _sp_xg_side == 'h':
-                    h_goals    += _sp_goals
-                    h_xg_total += _sp_xg_val
+                    h_goals += _sp_goals
                 else:
-                    a_goals    += _sp_goals
-                    a_xg_total += _sp_xg_val
+                    a_goals += _sp_goals
 
         h_dis, h_dis_type = _dismissal_this_segment(h_comp, seg_len, h_red_et)
         a_dis, a_dis_type = _dismissal_this_segment(a_comp, seg_len, a_red_et)

@@ -132,6 +132,44 @@ class TestBestSpAttrsFallback(SimpleTestCase):
         self.assertEqual(result['gk_tw_reflexe'], 70)
 
 
+# ── xG-Akkumulation unabhängig von Tor-Konvertierung ─────────────────────────
+
+class TestSetPieceXgAlwaysAccumulated(SimpleTestCase):
+    """xG muss auch dann akkumuliert werden, wenn kein Tor fällt.
+
+    Sicherstellung, dass _set_piece_xg() positive Werte zurückgibt
+    auch bei Eingaben, die statistisch selten zu Toren führen —
+    Poisson-Würfel ist davon unabhängig.
+    """
+
+    def test_corner_xg_positive_with_corners(self):
+        """Auch ohne Torkonvertierung liefert corner_xg > 0 bei n_corners > 0."""
+        res = _set_piece_xg(8, 0, _avg_sp(), _avg_sp())
+        self.assertGreater(res['corner_xg'], 0.0)
+
+    def test_fk_xg_positive_with_fouls(self):
+        """fk_direct_xg > 0 bei n_fouls > 0, unabhängig vom Tor-Poisson-Ergebnis."""
+        res = _set_piece_xg(0, 15, _avg_sp(), _avg_sp())
+        self.assertGreater(res['fk_direct_xg'], 0.0)
+        self.assertGreater(res['fk_cross_xg'],  0.0)
+
+    def test_penalty_xg_positive_with_fouls(self):
+        """penalty_xg > 0 bei n_fouls > 0."""
+        res = _set_piece_xg(0, 15, _avg_sp(), _avg_sp())
+        self.assertGreater(res['penalty_xg'], 0.0)
+
+    def test_xg_sum_equals_parts(self):
+        """Gesamtes Set-Piece-xG entspricht der Summe der Einzelpfade."""
+        res = _set_piece_xg(6, 12, _avg_sp(), _avg_sp())
+        total = res['corner_xg'] + res['fk_direct_xg'] + res['fk_cross_xg'] + res['penalty_xg']
+        self.assertAlmostEqual(
+            total,
+            res['corner_xg'] + res['fk_direct_xg'] + res['fk_cross_xg'] + res['penalty_xg'],
+            places=10,
+        )
+        self.assertGreater(total, 0.0)
+
+
 # ── _goal_events: goal_type-Weitergabe ───────────────────────────────────────
 
 class TestGoalEventsGoalType(SimpleTestCase):
