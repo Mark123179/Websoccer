@@ -4031,13 +4031,27 @@ def club_match_report(request, club_id):
 
     _report_data = _ensure_ratings_in_report(latest.report_data) if latest else None
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest) if _report_data else _report_data
+
+    _comp_name = ''
+    if latest:
+        if latest.match_type == 'pokal':
+            _comp_name = 'DFB-Pokal'
+        else:
+            try:
+                _comp_name = club.league.name if getattr(club, 'league_id', None) else ''
+            except Exception:
+                _comp_name = ''
+    _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
+
     return render(request, 'game/match_report.html', {
-        'club':         club,
-        'latest_match': latest,
-        'report':       _report_data,
-        'all_clubs':    all_clubs,
-        'sim_error':    sim_error,
-        'rc':           rc,
+        'club':             club,
+        'latest_match':     latest,
+        'report':           _report_data,
+        'all_clubs':        all_clubs,
+        'sim_error':        sim_error,
+        'rc':               rc,
+        'competition_name': _comp_name,
+        'competition_logo': _comp_logo,
     })
 
 
@@ -4139,13 +4153,26 @@ def match_report_by_id(request, sm_id):
 
     _report_data = _ensure_ratings_in_report(latest.report_data)
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest)
+
+    _comp_name = ''
+    if latest.match_type == 'pokal':
+        _comp_name = 'DFB-Pokal'
+    else:
+        try:
+            _comp_name = club.league.name if getattr(club, 'league_id', None) else ''
+        except Exception:
+            _comp_name = ''
+    _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
+
     return render(request, 'game/match_report.html', {
-        'club':         club,
-        'latest_match': latest,
-        'report':       _report_data,
-        'all_clubs':    None,
-        'sim_error':    None,
-        'rc':           rc,
+        'club':             club,
+        'latest_match':     latest,
+        'report':           _report_data,
+        'all_clubs':        None,
+        'sim_error':        None,
+        'rc':               rc,
+        'competition_name': _comp_name,
+        'competition_logo': _comp_logo,
     })
 
 

@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=12">
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
 {% endblock %}
 
 {% block content %}
@@ -29,6 +29,16 @@
         </div>
 
         <div class="mr-score-center">
+            {% if competition_logo %}
+            <div class="mr-competition-badge">
+                <img src="{% static competition_logo %}" alt="{{ competition_name }}">
+                <span>{{ competition_name }}</span>
+            </div>
+            {% elif competition_name %}
+            <div class="mr-competition-badge mr-competition-badge--text">
+                <span>{{ competition_name }}</span>
+            </div>
+            {% endif %}
             <span class="mr-score">{{ report.home_goals }}&thinsp;:&thinsp;{{ report.away_goals }}</span>
             <div class="mr-score-meta">
                 {% if rc.home_xg %}
