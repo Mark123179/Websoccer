@@ -1814,6 +1814,38 @@ def home(request):
     sim_news = ClubNewsItem.objects.all()[:5]
     home_stadium_static_path = stadium_static_path(next_match_home_club)
     last_match_home_stadium_static_path = stadium_static_path(last_match_home_club)
+
+    # ── Livespiele: aktueller Spieltag aller Ligen ───────────────────────────
+    try:
+        from .models import LeagueSeasonState, SeasonFixture as SF
+        _gss = GameSeasonState.objects.only('current_season').first()
+        _live_season = str(_gss.current_season) if _gss else '0'
+        _states = (
+            LeagueSeasonState.objects
+            .filter(season=_live_season, is_simulated=False)
+            .select_related('league')
+        )
+        _live_fixtures = []
+        for _st in _states:
+            for _f in (
+                SF.objects
+                .filter(league=_st.league, season=_live_season, matchday=_st.current_matchday)
+                .select_related('home_club', 'away_club', 'league')
+                .order_by('scheduled_time')
+            ):
+                _live_fixtures.append({
+                    'time': _f.scheduled_time.strftime('%H:%M') if _f.scheduled_time else '–',
+                    'competition_logo': competition_logo_static_path(_f.league.name),
+                    'home':       _f.home_club.name,
+                    'home_crest': _f.home_club.crest_static_path,
+                    'home_url':   f'/clubs/{_f.home_club.id}/',
+                    'away':       _f.away_club.name,
+                    'away_crest': _f.away_club.crest_static_path,
+                    'away_url':   f'/clubs/{_f.away_club.id}/',
+                })
+        live_matches_data = _live_fixtures
+    except Exception:
+        live_matches_data = []
     competition_logo_static_path_value = competition_logo_static_path(
         primary_club.league.name
         if primary_club and primary_club.league
@@ -1898,7 +1930,7 @@ def home(request):
             'last_match_away_club': last_match_away_club,
             'last_match_score': last_match_score,
             'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
-            'live_matches': [],
+            'live_matches': live_matches_data,
             'overview_stats': [
                 {'value': str(totals['manager_count']), 'label': 'registrierte Manager'},
                 {
