@@ -3727,6 +3727,22 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                     'minute': ie.get('minute', 0), 'player_name': name,
                     'injury_type': ie.get('injury_type', 'Leicht'), 'days': ie.get('days', 0)})
 
+    # ── Set-Piece Near-Miss Events (Ecken ohne Tor, FK-Abwehren) ─────────────
+    for nm in (data.get('sp_near_miss_events') or []):
+        nm_type = nm.get('type', 'corner_miss')
+        nm_minute = nm.get('minute', 0)
+        idx = _type_ctr.get(nm_type, 0)
+        _type_ctr[nm_type] = idx + 1
+        raw.append({
+            'type': nm_type,
+            'team': nm.get('team', 'home'),
+            'minute': nm_minute,
+            'commentary': _ticker_comment(
+                nm_type, nm_minute, nm.get('player_name', ''),
+                match_seed=_match_seed, event_index=idx,
+            ),
+        })
+
     # ── Narrative Events (Schüsse, Ecken, Fouls, Spielfluss) ─────────────────
     try:
         narrative = _generate_narrative_events(data)

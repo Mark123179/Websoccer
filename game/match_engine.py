@@ -1319,6 +1319,7 @@ def _simulate_match_minutes(
     h_red = 0
     a_red = 0
     events: list[dict] = []
+    sp_near_miss_events: list[dict] = []
     plan_activations: list[dict] = []
     # T009 Dismissals V1
     h_dismissed_pids: set = set()
@@ -1534,6 +1535,19 @@ def _simulate_match_minutes(
                     h_goals += _sp_goals
                 else:
                     a_goals += _sp_goals
+            elif _sp_type in ('corner', 'fk_direct', 'fk_cross') and _sp_xg_val > 0.01:
+                # Vergebene Standardsituation: Chance war real, aber kein Tor
+                _nm_prob = min(0.75, _sp_xg_val * 6.0)
+                if random.random() < _nm_prob and _sp_pool:
+                    _nm_player = random.choice(_sp_pool)
+                    _nm_minute = random.randint(minute, min(89, end_min))
+                    _nm_type = 'corner_miss' if _sp_type == 'corner' else 'fk_saved'
+                    sp_near_miss_events.append({
+                        'type': _nm_type,
+                        'team': _sp_team,
+                        'minute': _nm_minute,
+                        'player_name': _nm_player.get('name', ''),
+                    })
 
         for _side, _plan, _my_seg, _opp_seg, _my_xg, _opp_xg, _my_goals, _opp_goals, _my_comp in [
             ('home', h_plan, h_seg_stats, a_seg_stats, h_xg_seg, a_xg_seg, hg, ag, h_comp),
@@ -1585,7 +1599,8 @@ def _simulate_match_minutes(
         'away_goals':    a_goals,
         'home_xg':       round(h_xg_total, 4),
         'away_xg':       round(a_xg_total, 4),
-        'goal_events':   events,
+        'goal_events':          events,
+        'sp_near_miss_events':  sp_near_miss_events,
         'match_stats':   match_stats,
         'home_strength': last_h_str or {},
         'away_strength': last_a_str or {},
@@ -2277,6 +2292,7 @@ def _simulate_extra_time_minutes(
     h_xg_total = 0.0
     a_xg_total = 0.0
     events: list[dict] = []
+    sp_near_miss_events: list[dict] = []
     h_dismissal_events: list[dict] = []
     a_dismissal_events: list[dict] = []
     h_red_et = 0
@@ -2372,6 +2388,18 @@ def _simulate_extra_time_minutes(
                     h_goals += _sp_goals
                 else:
                     a_goals += _sp_goals
+            elif _sp_type in ('corner', 'fk_direct', 'fk_cross') and _sp_xg_val > 0.01:
+                _nm_prob = min(0.75, _sp_xg_val * 6.0)
+                if random.random() < _nm_prob and _sp_pool:
+                    _nm_player = random.choice(_sp_pool)
+                    _nm_minute = random.randint(minute, min(119, end_min))
+                    _nm_type = 'corner_miss' if _sp_type == 'corner' else 'fk_saved'
+                    sp_near_miss_events.append({
+                        'type': _nm_type,
+                        'team': _sp_team,
+                        'minute': _nm_minute,
+                        'player_name': _nm_player.get('name', ''),
+                    })
 
         h_dis, h_dis_type = _dismissal_this_segment(h_comp, seg_len, h_red_et)
         a_dis, a_dis_type = _dismissal_this_segment(a_comp, seg_len, a_red_et)
@@ -2427,10 +2455,11 @@ def _simulate_extra_time_minutes(
         'away_goals_et': a_goals - a_goals_in,
         'home_xg_et':    round(h_xg_total, 4),
         'away_xg_et':    round(a_xg_total, 4),
-        'goal_events_et': sorted(events, key=lambda e: e['minute']),
-        'et_dismissal_events': h_dismissal_events + a_dismissal_events,
-        'h_gk_str_override': h_gk_str_override,
-        'a_gk_str_override': a_gk_str_override,
+        'goal_events_et':       sorted(events, key=lambda e: e['minute']),
+        'sp_near_miss_events_et': sp_near_miss_events,
+        'et_dismissal_events':  h_dismissal_events + a_dismissal_events,
+        'h_gk_str_override':    h_gk_str_override,
+        'a_gk_str_override':    a_gk_str_override,
     }
 
 
@@ -2995,8 +3024,9 @@ def simulate_match(
         'home_goals': sim['home_goals'],
         'away_goals': sim['away_goals'],
         # ── Ereignisse & Statistiken ──────────────────────────────────────────
-        'goal_events':  sim['goal_events'],
-        'match_stats':  sim['match_stats'],
+        'goal_events':          sim['goal_events'],
+        'sp_near_miss_events':  list(sim.get('sp_near_miss_events', [])),
+        'match_stats':          sim['match_stats'],
         # ── Spieler-Rows (reich angereichert, ORM-Daten) ─────────────────────
         'home_players': h_players,
         'away_players': a_players,
@@ -3105,6 +3135,9 @@ def simulate_match(
             result['goal_events']   = sorted(
                 result['goal_events'] + et['goal_events_et'],
                 key=lambda e: e['minute'],
+            )
+            result['sp_near_miss_events'] = (
+                result.get('sp_near_miss_events', []) + et.get('sp_near_miss_events_et', [])
             )
             result['dismissal_events'] = result.get('dismissal_events', []) + et['et_dismissal_events']
 

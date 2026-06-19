@@ -513,6 +513,35 @@ _FREEKICK_MISS_TEXTS = [
 ]
 
 
+# ── Vergebene Standardsituations-Chancen ────────────────────────────────────
+
+_CORNER_MISS_TEXTS = [
+    "{p} bringt die Ecke scharf auf den ersten Pfosten — der Kopfball geht knapp am langen Eck vorbei!",
+    "Gefährliche Ecke von {p}! Der Ball trudelt durch den Fünfmeterraum, kein Angreifer kommt entscheidend ran.",
+    "{p} schlägt die Ecke mit Effet auf den zweiten Pfosten — der Torhüter greift in letzter Sekunde zu.",
+    "Fast! {p} tritt die Ecke direkt auf den Kopf eines Mitspielers — der Ball kracht gegen die Latte.",
+    "Heiße Zone vor dem Tor! Die Ecke von {p} landet im Gewühl, doch die Abwehr klärt mit der letzten Kraft.",
+    "{p} chippt die Ecke auf den zweiten Pfosten — aus spitzem Winkel geht der Anschlussversuch über das Tor.",
+    "Eine perfekte Ecke von {p} — aber der Kopfball des eingelaufenen Spielers geht knapp am Pfosten vorbei.",
+    "Kurze Ecke von {p}, Hereinnahme, Flanke — der Torwart wirft sich in den Schuss und lenkt gerade noch ab!",
+    "{p} tritt die Ecke, der Ball segelt scharf in die Mitte — ein Verteidiger klärt mit dem Kopf auf der Linie.",
+    "Ecke für das angreifende Team. {p} bringt den Ball in den Strafraum — Kopfball, aber drüber!",
+]
+
+_FK_SAVED_TEXTS = [
+    "{p} nimmt Anlauf und hämmert den Freistoß auf das Tor — der Torwart hält sensationell mit beiden Händen!",
+    "Direkter Freistoß von {p} — die Mauer springt, der Torwart reagiert und pariert sicher.",
+    "{p} zieht aus rund 22 Metern ab — der Keeper lenkt den Ball mit den Fingerspitzen über die Latte.",
+    "Gefährlicher Freistoß von {p}! Der Ball täuscht — prallt aber an den Pfosten. Keine Gefahr mehr.",
+    "{p} schlenzt den Freistoß knapp rechts am Pfosten vorbei — eine Ausführung, die die Kurve zum Stöhnen bringt.",
+    "Die Mauer steht! {p} versucht es mit einem Schlenzer, doch die Mauer lenkt den Ball ins Seitenaus.",
+    "{p} bringt den Freistoß gefährlich in den Fünfmeterraum — der Keeper schlägt den Ball mit der Faust weg.",
+    "Freistoß an der Strafraumgrenze. {p} legt sich den Ball hin, tritt — und der Keeper hält sicher unten rechts.",
+    "{p} tritt den Freistoß als Flanke in den Strafraum — Kopfball, der Torwart greift sicher zu.",
+    "Der Freistoß von {p} prallt von der Mauer ab und landet wieder bei der angreifenden Mannschaft — doch die Chance ist weg.",
+]
+
+
 # ── Elfmeter-Texte ───────────────────────────────────────────────────────────
 
 _PENALTY_GOAL_TEXTS = [
@@ -706,6 +735,16 @@ def build_ticker_text(
         if p:
             return _shuffled_pick(_FREEKICK_MISS_TEXTS, ms, 'fk_miss', ei).format(p=p)
         return "Freistoß — knapp vorbei."
+
+    elif evt_type == 'corner_miss':
+        if p:
+            return _shuffled_pick(_CORNER_MISS_TEXTS, ms, 'corner_miss', ei).format(p=p)
+        return "Ecke — der Ball streicht knapp am Tor vorbei!"
+
+    elif evt_type == 'fk_saved':
+        if p:
+            return _shuffled_pick(_FK_SAVED_TEXTS, ms, 'fk_saved', ei).format(p=p)
+        return "Freistoß — der Torwart pariert!"
 
     elif evt_type == 'penalty_goal':
         if p:

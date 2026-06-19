@@ -135,6 +135,22 @@
                         <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
                     </div>
 
+                    {% elif evt.type == 'corner_miss' %}
+                    <div class="mr-tk-entry mr-tk--narrative mr-tk--corner {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-tk-min">{{ evt.minute }}'</div>
+                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x2690;</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
+                    </div>
+
+                    {% elif evt.type == 'fk_saved' %}
+                    <div class="mr-tk-entry mr-tk--narrative mr-tk--corner {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
+                        <div class="mr-tk-min">{{ evt.minute }}'</div>
+                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x2690;</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
+                    </div>
+
                     {% elif evt.type == 'foul' %}
                     <div class="mr-tk-entry mr-tk--narrative mr-tk--foul {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
                         <div class="mr-tk-min">{{ evt.minute }}'</div>
