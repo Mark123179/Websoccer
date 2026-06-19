@@ -49,10 +49,21 @@ def _parse_date(value):
         return None
     if isinstance(value, date):
         return value
+    s = str(value).strip()
+    # ISO-Format: YYYY-MM-DD
     try:
-        return date.fromisoformat(str(value))
+        return date.fromisoformat(s)
     except ValueError:
-        return None
+        pass
+    # Deutsches Format: DD.MM.YYYY oder DD.MM.YYYY (Alter), z.B. "07.09.2005 (20)"
+    parts = s.split('(')[0].strip().split('.')
+    if len(parts) == 3:
+        try:
+            day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
+            return date(year, month, day)
+        except ValueError:
+            pass
+    return None
 
 
 def _compute_age(dob):

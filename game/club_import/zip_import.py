@@ -43,9 +43,10 @@ def _find_manifest_path(namelist: list[str]) -> str | None:
 def _find_master_csv_path(namelist: list[str]) -> str | None:
     """Gibt den ZIP-internen Pfad zur Master-CSV zurück.
 
-    Akzeptiert zwei Namenskonventionen:
+    Akzeptiert drei Namenskonventionen:
     * ``*_master_complete.csv``  — ältere Pakete
-    * ``*_import_ready_*.csv``   — neuere Exporter (z.B. Moneyball-Pipeline)
+    * ``import_ready.csv``       — neue Moneyball-Pipeline (plain name)
+    * ``*_import_ready_*.csv`` oder ``import_ready_*.csv`` — variante Namen
     """
     candidates = []
     for name in namelist:
@@ -54,7 +55,12 @@ def _find_master_csv_path(namelist: list[str]) -> str | None:
         basename = name.rsplit('/', 1)[-1]
         if basename.endswith('_master_complete.csv'):
             return name  # Exakter Match, sofort zurückgeben
-        if '_import_ready_' in basename and basename.endswith('.csv'):
+        b_lower = basename.lower()
+        if b_lower == 'import_ready.csv':
+            return name  # Exakter Match, sofort zurückgeben
+        if b_lower.startswith('import_ready') and b_lower.endswith('.csv'):
+            candidates.append(name)
+        elif '_import_ready_' in b_lower and b_lower.endswith('.csv'):
             candidates.append(name)
     return candidates[0] if candidates else None
 
