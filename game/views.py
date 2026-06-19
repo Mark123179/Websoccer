@@ -1815,35 +1815,50 @@ def home(request):
     home_stadium_static_path = stadium_static_path(next_match_home_club)
     last_match_home_stadium_static_path = stadium_static_path(last_match_home_club)
 
-    # ── Livespiele: aktueller Spieltag aller Ligen ───────────────────────────
+    # ── Livespiele: nächster offener Spieltag je Liga ───────────────────────
     try:
-        from .models import LeagueSeasonState, SeasonFixture as SF
+        from django.db.models import Min, Q
+        from .models import SeasonFixture as SF
         _gss = GameSeasonState.objects.only('current_season').first()
         _live_season = str(_gss.current_season) if _gss else '0'
-        _states = (
-            LeagueSeasonState.objects
-            .filter(season=_live_season, is_simulated=False)
-            .select_related('league')
+
+        # Schritt 1: kleinsten ungespielen Spieltag pro Liga (2 DB-Queries gesamt)
+        _league_next = dict(
+            SF.objects
+            .filter(season=_live_season, is_played=False)
+            .values('league_id')
+            .annotate(_min_md=Min('matchday'))
+            .values_list('league_id', '_min_md')
         )
-        _live_fixtures = []
-        for _st in _states:
-            for _f in (
+
+        # Schritt 2: die konkreten Fixtures dafür laden
+        if _league_next:
+            _q = Q()
+            for _lid, _md in _league_next.items():
+                _q |= Q(league_id=_lid, matchday=_md)
+            _live_fixtures_qs = (
                 SF.objects
-                .filter(league=_st.league, season=_live_season, matchday=_st.current_matchday)
+                .filter(season=_live_season, is_played=False)
+                .filter(_q)
                 .select_related('home_club', 'away_club', 'league')
-                .order_by('scheduled_time')
-            ):
-                _live_fixtures.append({
-                    'time': _f.scheduled_time.strftime('%H:%M') if _f.scheduled_time else '–',
-                    'competition_logo': competition_logo_static_path(_f.league.name),
-                    'home':       _f.home_club.name,
-                    'home_crest': _f.home_club.crest_static_path,
-                    'home_url':   f'/clubs/{_f.home_club.id}/',
-                    'away':       _f.away_club.name,
-                    'away_crest': _f.away_club.crest_static_path,
-                    'away_url':   f'/clubs/{_f.away_club.id}/',
-                })
-        live_matches_data = _live_fixtures
+                .order_by('league__name', 'scheduled_time')
+            )
+        else:
+            _live_fixtures_qs = SF.objects.none()
+
+        live_matches_data = [
+            {
+                'time': _f.scheduled_time.strftime('%H:%M') if _f.scheduled_time else '–',
+                'competition_logo': competition_logo_static_path(_f.league.name),
+                'home':       _f.home_club.name,
+                'home_crest': _f.home_club.crest_static_path,
+                'home_url':   f'/clubs/{_f.home_club.id}/',
+                'away':       _f.away_club.name,
+                'away_crest': _f.away_club.crest_static_path,
+                'away_url':   f'/clubs/{_f.away_club.id}/',
+            }
+            for _f in _live_fixtures_qs
+        ]
     except Exception:
         live_matches_data = []
     competition_logo_static_path_value = competition_logo_static_path(
