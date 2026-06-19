@@ -3687,6 +3687,7 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
             'scorer_pos':    evt.get('scorer_pos', ''),
             'assister_name': evt.get('assister_name', ''),
             'assister_pos':  evt.get('assister_pos', ''),
+            'goal_type':     evt.get('goal_type', 'goal'),
         })
     for sub in (home_subs_enriched or []):
         is_gk_red = sub.get('condition') == 'gk_red'
@@ -3761,6 +3762,12 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 'fk_cross':   'freekick_cross_goal',
                 'penalty_sp': 'penalty_goal',
             }.get(_goal_type, 'goal')
+            evt['goal_label'] = {
+                'corner':     'Ecke',
+                'fk_direct':  'Freistoß',
+                'fk_cross':   'Freistoß',
+                'penalty_sp': 'Elfmeter',
+            }.get(_goal_type, '')
             evt['commentary'] = _tc(
                 _tc_type, evt['minute'], evt['scorer_name'],
                 player_pos=evt.get('scorer_pos', ''),
@@ -3994,6 +4001,17 @@ def club_match_report(request, club_id):
             # Kombinierte, chronologische Ereignisleiste
             'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
         }
+        _sp_types = {'corner', 'fk_direct', 'fk_cross', 'penalty_sp'}
+        rc['home_sp_goals'] = sum(
+            1 for e in rc['combined_events']
+            if e.get('type') == 'goal' and e.get('team') == 'home'
+            and e.get('goal_type') in _sp_types
+        )
+        rc['away_sp_goals'] = sum(
+            1 for e in rc['combined_events']
+            if e.get('type') == 'goal' and e.get('team') == 'away'
+            and e.get('goal_type') in _sp_types
+        )
 
     _report_data = _ensure_ratings_in_report(latest.report_data) if latest else None
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest) if _report_data else _report_data
@@ -4091,6 +4109,17 @@ def match_report_by_id(request, sm_id):
             # Kombinierte, chronologische Ereignisleiste
             'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
         }
+        _sp_types = {'corner', 'fk_direct', 'fk_cross', 'penalty_sp'}
+        rc['home_sp_goals'] = sum(
+            1 for e in rc['combined_events']
+            if e.get('type') == 'goal' and e.get('team') == 'home'
+            and e.get('goal_type') in _sp_types
+        )
+        rc['away_sp_goals'] = sum(
+            1 for e in rc['combined_events']
+            if e.get('type') == 'goal' and e.get('team') == 'away'
+            and e.get('goal_type') in _sp_types
+        )
 
     _report_data = _ensure_ratings_in_report(latest.report_data)
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest)

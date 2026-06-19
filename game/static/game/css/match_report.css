@@ -383,6 +383,13 @@
     color: rgba(255, 100, 100, 0.9);
 }
 
+.mr-tk-badge--sp {
+    background: rgba(180, 100, 255, 0.13);
+    border: 1px solid rgba(180, 100, 255, 0.35);
+    color: rgba(200, 140, 255, 0.9);
+    margin-left: 6px;
+}
+
 .mr-tk-badge--gk-red-off {
     background: rgba(255, 140, 0, 0.13);
     border: 1px solid rgba(255, 140, 0, 0.35);
@@ -485,8 +492,9 @@
     transition: width 0.3s ease;
 }
 
-.mr-yellow { color: #f5c518; }
-.mr-red    { color: #e84040; }
+.mr-yellow   { color: #f5c518; }
+.mr-red      { color: #e84040; }
+.mr-sp-goals { color: rgba(200, 140, 255, 0.9); }
 
 .mr-xg-val {
     color: rgba(100, 230, 255, 0.95);

@@ -76,7 +76,7 @@
                     <div class="mr-tk-entry mr-tk--goal {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
                         <div class="mr-tk-min">{{ evt.minute }}'</div>
                         <div class="mr-tk-icon">&#x26BD;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
+                        <div class="mr-tk-text">{{ evt.commentary }}{% if evt.goal_label %}<span class="mr-tk-badge mr-tk-badge--sp">{{ evt.goal_label }}</span>{% endif %}</div>
                         <div class="mr-tk-badge mr-tk-badge--goal">{{ evt.score_h }}:{{ evt.score_a }}</div>
                     </div>
 
@@ -234,6 +234,14 @@
                         <span class="mr-stat-home mr-red">{{ report.match_stats.home_red }}</span>
                         <span class="mr-stat-label">Rote Karten</span>
                         <span class="mr-stat-away mr-red">{{ report.match_stats.away_red }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if rc.home_sp_goals or rc.away_sp_goals %}
+                    <div class="mr-stat-row">
+                        <span class="mr-stat-home mr-sp-goals">{{ rc.home_sp_goals }}</span>
+                        <span class="mr-stat-label">Tore aus Standards</span>
+                        <span class="mr-stat-away mr-sp-goals">{{ rc.away_sp_goals }}</span>
                     </div>
                     {% endif %}
 
