@@ -1475,7 +1475,7 @@ body.overview-home-page {
     display: grid;
     font-size: 12px;
     gap: 3px;
-    grid-template-columns: 28px 16px auto 20px 34px 20px 1fr;
+    grid-template-columns: 28px 16px auto 20px 1fr 20px auto;
     margin-bottom: 4px;
     overflow: hidden;
     min-height: 28px;
