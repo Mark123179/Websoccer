@@ -1465,52 +1465,88 @@ body.overview-home-page {
     min-height: 200px;
 }
 
-.overview-live-widget div {
+/* ── Livespiele-Zeile ──────────────────────────────────────────────────────── */
+/* Symmetrisches Grid: Zeit | Logo | [Name→][Wappen] | Score | [Wappen][←Name] */
+.overview-live-row {
     align-items: center;
     background: rgba(255, 255, 255, 0.028);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 5px;
-    color: var(--muted);
     display: grid;
     font-size: 12px;
     gap: 4px;
-    grid-template-columns: 34px 19px 22px minmax(0, 1fr) 8px 22px minmax(0, 1fr);
+    grid-template-columns: 30px 18px minmax(0, 1fr) 22px 38px 22px minmax(0, 1fr);
     margin-bottom: 4px;
     min-height: 28px;
-    padding: 3px 5px;
+    padding: 3px 6px;
 }
 
-.overview-live-competition,
-.overview-live-crest {
-    height: 20px;
-    object-fit: contain;
-    width: 20px;
+.olr-time {
+    color: var(--muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-.overview-live-crest.is-empty {
+.olr-comp {
     display: block;
-    height: 20px;
-    width: 20px;
-}
-
-.overview-live-competition {
+    height: 18px;
+    object-fit: contain;
     opacity: 0.88;
+    width: 18px;
 }
 
-.overview-live-widget strong {
+.olr-home-name {
     color: var(--text);
     font-size: 12px;
+    font-weight: 600;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.olr-away-name {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
     overflow: hidden;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.overview-live-widget b {
-    color: var(--muted);
+.olr-crest {
+    align-items: center;
+    display: flex;
+    height: 22px;
+    justify-content: center;
+    width: 22px;
 }
 
-.overview-live-widget a {
+.olr-crest img {
+    height: 20px;
+    object-fit: contain;
+    width: 20px;
+}
+
+.olr-crest.is-empty {
+    display: block;
+    height: 22px;
+    width: 22px;
+}
+
+.olr-score {
+    color: var(--text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.overview-live-widget a.olr-footer {
     align-items: center;
     background: rgba(34, 230, 255, 0.09);
     border: 1px solid rgba(34, 230, 255, 0.18);

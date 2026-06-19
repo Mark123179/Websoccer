@@ -454,34 +454,36 @@
             <aside class="dashboard-card overview-card overview-live-widget" aria-label="Livespiele Profis">
                 <h2 class="card-title">Livespiele Profis</h2>
                 {% for match in live_matches|slice:":8" %}
-                    <div>
-                        <span>{{ match.time }}</span>
+                    <div class="overview-live-row">
+                        <span class="olr-time">{{ match.time }}</span>
                         {% if match.competition_logo %}
-                            <img class="overview-live-competition" src="{% static match.competition_logo %}" alt="">
+                            <img class="olr-comp" src="{% static match.competition_logo %}" alt="">
+                        {% else %}
+                            <span class="olr-comp"></span>
                         {% endif %}
+                        <strong class="olr-home-name">{{ match.home }}</strong>
                         {% if match.home_crest %}
-                            <a class="img-link" href="{{ match.home_url }}" aria-label="{{ match.home }} Vereinsprofil">
-                                <img class="overview-live-crest" src="{% static match.home_crest %}" alt="{{ match.home }}">
+                            <a class="olr-crest" href="{{ match.home_url }}" aria-label="{{ match.home }} Vereinsprofil">
+                                <img src="{% static match.home_crest %}" alt="{{ match.home }}">
                             </a>
                         {% else %}
-                            <span class="overview-live-crest is-empty"></span>
+                            <span class="olr-crest is-empty"></span>
                         {% endif %}
-                        <strong>{{ match.home }}</strong>
-                        <b>-</b>
+                        <span class="olr-score">–:–</span>
                         {% if match.away_crest %}
-                            <a class="img-link" href="{{ match.away_url }}" aria-label="{{ match.away }} Vereinsprofil">
-                                <img class="overview-live-crest" src="{% static match.away_crest %}" alt="{{ match.away }}">
+                            <a class="olr-crest" href="{{ match.away_url }}" aria-label="{{ match.away }} Vereinsprofil">
+                                <img src="{% static match.away_crest %}" alt="{{ match.away }}">
                             </a>
                         {% else %}
-                            <span class="overview-live-crest is-empty"></span>
+                            <span class="olr-crest is-empty"></span>
                         {% endif %}
-                        <strong>{{ match.away }}</strong>
+                        <strong class="olr-away-name">{{ match.away }}</strong>
                     </div>
                 {% empty %}
                     <p class="overview-no-club-headline">Kein Spielbetrieb</p>
                     <p class="overview-no-club-copy">Noch kein Spielplan hinterlegt.</p>
                 {% endfor %}
-                <a href="/clubs/">Alle Live-Spiele</a>
+                <a class="olr-footer" href="/clubs/">Alle Live-Spiele</a>
             </aside>
 
             <aside class="dashboard-card overview-card overview-stats-widget" aria-label="Statistiken">
