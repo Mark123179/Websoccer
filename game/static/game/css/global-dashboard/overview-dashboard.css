@@ -1511,16 +1511,20 @@ body.overview-home-page {
     font-size: 12px;
     font-weight: 600;
     overflow: hidden;
-    text-align: left;
+    text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .olr-crest {
     align-items: center;
+    background: none;
+    border: none;
     display: flex;
     height: 22px;
     justify-content: center;
+    outline: none;
+    padding: 0;
     width: 22px;
 }
 
