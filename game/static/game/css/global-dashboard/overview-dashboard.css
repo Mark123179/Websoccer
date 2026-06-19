@@ -1474,8 +1474,8 @@ body.overview-home-page {
     border-radius: 5px;
     display: grid;
     font-size: 12px;
-    gap: 4px;
-    grid-template-columns: 30px 18px minmax(0, 1fr) 22px 38px 22px minmax(0, 1fr);
+    gap: 3px;
+    grid-template-columns: 28px 16px auto 20px 34px 20px auto;
     margin-bottom: 4px;
     min-height: 28px;
     padding: 3px 6px;
@@ -1500,9 +1500,7 @@ body.overview-home-page {
     color: var(--text);
     font-size: 12px;
     font-weight: 600;
-    overflow: hidden;
     text-align: right;
-    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
@@ -1510,22 +1508,21 @@ body.overview-home-page {
     color: var(--text);
     font-size: 12px;
     font-weight: 600;
-    overflow: hidden;
     text-align: right;
-    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .olr-crest {
     align-items: center;
-    background: none;
-    border: none;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
     display: flex;
-    height: 22px;
+    height: 20px;
     justify-content: center;
-    outline: none;
-    padding: 0;
-    width: 22px;
+    outline: none !important;
+    padding: 0 !important;
+    width: 20px;
 }
 
 .olr-crest img {
