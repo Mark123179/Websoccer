@@ -2333,6 +2333,40 @@ def _simulate_extra_time_minutes(
         h_goals += hg
         a_goals += ag
 
+        # ── Set-Piece xG-Pfade in der Verlängerung (Ecken · Freistöße · Foulelfmeter) ─
+        h_et_seg_stats = _segment_team_stats(hg, h_comp, seg_len)
+        a_et_seg_stats = _segment_team_stats(ag, a_comp, seg_len)
+        _h_sp_et = home_team.get('set_piece_attrs') or {}
+        _a_sp_et = away_team.get('set_piece_attrs') or {}
+        _h_sp_xg_et = _set_piece_xg(h_et_seg_stats['corners'], h_et_seg_stats['fouls'], _h_sp_et, _a_sp_et)
+        _a_sp_xg_et = _set_piece_xg(a_et_seg_stats['corners'], a_et_seg_stats['fouls'], _a_sp_et, _h_sp_et)
+        _h_sp_pool_et = _h_cur or _active_lineup_players(h_als.get_active_lineup(h_dismissed_pids), h_als.players_by_id)
+        _a_sp_pool_et = _a_cur or _active_lineup_players(a_als.get_active_lineup(a_dismissed_pids), a_als.players_by_id)
+
+        for _sp_type, _sp_xg_val, _sp_team, _sp_pool, _sp_xg_side in (
+            ('corner',     _h_sp_xg_et['corner_xg'],    'home', _h_sp_pool_et, 'h'),
+            ('fk_direct',  _h_sp_xg_et['fk_direct_xg'], 'home', _h_sp_pool_et, 'h'),
+            ('fk_cross',   _h_sp_xg_et['fk_cross_xg'],  'home', _h_sp_pool_et, 'h'),
+            ('penalty_sp', _h_sp_xg_et['penalty_xg'],   'home', _h_sp_pool_et, 'h'),
+            ('corner',     _a_sp_xg_et['corner_xg'],    'away', _a_sp_pool_et, 'a'),
+            ('fk_direct',  _a_sp_xg_et['fk_direct_xg'], 'away', _a_sp_pool_et, 'a'),
+            ('fk_cross',   _a_sp_xg_et['fk_cross_xg'],  'away', _a_sp_pool_et, 'a'),
+            ('penalty_sp', _a_sp_xg_et['penalty_xg'],   'away', _a_sp_pool_et, 'a'),
+        ):
+            _sp_goals = _poisson(_sp_xg_val)
+            if _sp_goals > 0:
+                events.extend(_goal_events(
+                    _sp_goals, _sp_team, _sp_pool,
+                    list(range(minute, min(120, end_min) + 1)),
+                    goal_type=_sp_type,
+                ))
+                if _sp_xg_side == 'h':
+                    h_goals    += _sp_goals
+                    h_xg_total += _sp_xg_val
+                else:
+                    a_goals    += _sp_goals
+                    a_xg_total += _sp_xg_val
+
         h_dis, h_dis_type = _dismissal_this_segment(h_comp, seg_len, h_red_et)
         a_dis, a_dis_type = _dismissal_this_segment(a_comp, seg_len, a_red_et)
         h_red_et += h_dis
