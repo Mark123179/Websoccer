@@ -38,3 +38,14 @@ task for the whole namespace.
 ## Never expose base_strength / potential
 Coverage map contract to the frontend = iso2/name/continent/region/status/coverage_percent/coverage_label/
 hint ONLY (never pool_count). Find/bid/result rendering must never leak `base_strength` or `potential`.
+
+## Interaktive Weltkarte: Status aus Backend-Vertrag, Kontinent-viewBoxes hand-justiert
+Die Karte ist ein statisches, generiertes world.svg (echte Länder-Geometrie, festes Koordinaten-
+raster). Das JS injiziert das SVG, liest den Coverage-Vertrag und setzt pro Land `is-<status>`
+bzw. `is-out` (nur Kulisse, inert) für Länder ohne Vertrag — nur die kuratierten Länder bekommen
+Status. Klick auf gesperrt/aufbau zeigt ausschließlich den `hint` (NIE Poolzahlen); Kontinent-Fokus
+= viewBox des `<svg>` setzen.
+
+**Why/How to apply:** Die Kontinent-viewBoxes im JS sind **hand-justiert** auf das exakte
+SVG-Koordinatenraster. Wird world.svg je neu generiert, brechen sie → neu kalibrieren. CSS/JS-Edits
+brauchen einen `?v=`-Bump in scouting.html.

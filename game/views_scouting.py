@@ -26,23 +26,6 @@ from .models import (
 from .scouting import coverage, department, geo, service
 
 
-# Ungefähre Weltkoordinaten (x%, y%) auf der stilisierten Karte (1000×460).
-MARKER_COORDS = {
-    'DE': (53.7, 20.8), 'FR': (50.6, 22.8), 'ES': (49.0, 27.6), 'IT': (53.5, 26.7),
-    'GB': (50.0, 21.4), 'PT': (47.5, 28.5), 'NL': (51.4, 20.9), 'BE': (51.2, 21.8),
-    'AT': (54.5, 23.2), 'CH': (52.1, 23.9), 'TR': (59.1, 27.8), 'BG': (56.5, 26.3),
-    'HR': (54.4, 24.5), 'RS': (55.7, 25.1), 'PL': (55.8, 21.0), 'CZ': (54.0, 22.2),
-    'GR': (56.6, 28.9), 'UA': (58.5, 22.0), 'RO': (57.2, 25.3), 'DK': (53.5, 19.1),
-    'SE': (55.0, 17.0), 'NO': (53.0, 16.7),
-    'BR': (36.7, 58.8), 'AR': (33.8, 69.2), 'UY': (34.4, 69.4), 'CO': (29.4, 47.4),
-    'CL': (30.4, 68.6), 'PE': (28.6, 56.7), 'EC': (28.2, 50.1), 'PY': (34.0, 64.0),
-    'NG': (52.1, 45.0), 'GH': (49.9, 46.9), 'SN': (45.2, 41.8), 'CI': (48.9, 47.0),
-    'MA': (48.1, 31.1), 'EG': (58.7, 33.3), 'DZ': (50.9, 29.6), 'CM': (53.2, 47.9),
-    'TN': (52.8, 29.6),
-    'JP': (88.8, 30.2), 'KR': (85.3, 29.1), 'SA': (63.0, 36.3), 'QA': (64.3, 36.0),
-    'IR': (64.3, 30.2), 'CN': (82.3, 27.8), 'AU': (91.4, 69.6),
-}
-
 POSITION_OPTIONS = ['IV', 'RV', 'LV', 'DM', 'ZM', 'OM', 'RF', 'LF', 'ST']
 PROFILE_OPTIONS = [
     ('backup', 'Back-up'),
@@ -99,8 +82,11 @@ def _find_card(find, watched_ids):
         'nat': primary_nat,
         'hp': hp,
         'np': ', '.join(np_list) if np_list else '—',
-        'rl_club': p.club.name if p.club_id else '—',
-        'rl_liga': (p.club.league.name if (p.club_id and p.club.league_id) else '—'),
+        'rl_club': p.real_life_club.name if p.real_life_club_id else '—',
+        'rl_liga': (
+            p.real_life_club.league.name
+            if (p.real_life_club_id and p.real_life_club.league_id) else '—'
+        ),
         'market_value_fmt': _euro(p.market_value),
         'min_bid': int(find.min_bid),
         'min_bid_fmt': _euro(find.min_bid),
@@ -146,26 +132,13 @@ def transfer_scouting(request):
     mapdata = coverage.map_data()
     countries = mapdata['countries']
     selected_continent = request.GET.get('kontinent', 'europa')
-    cont_countries = [c for c in countries if c['continent'] == selected_continent]
-    scope_tiles = cont_countries or countries
-    region_options = [r for r in mapdata['regions'] if r['continent'] == selected_continent]
+    region_options = mapdata['regions']
 
-    for c in scope_tiles:
-        c['flag'] = _flag_emoji(c['iso2'])
-
-    map_markers = []
+    scope_tiles = []
     for c in countries:
-        coord = MARKER_COORDS.get(c['iso2'])
-        if not coord:
-            continue
-        map_markers.append({
-            'iso2': c['iso2'],
-            'name': c['name'],
-            'status': c['status'],
-            'x': coord[0],
-            'y': coord[1],
-            'in_continent': c['continent'] == selected_continent,
-        })
+        tile = dict(c)
+        tile['flag'] = _flag_emoji(c['iso2'])
+        scope_tiles.append(tile)
 
     watched_ids = set(
         WatchlistEntry.objects.filter(manager=manager).values_list('player_id', flat=True)
@@ -175,7 +148,9 @@ def transfer_scouting(request):
     if active and active.finds_generated:
         offered = active.finds.exclude(
             status=ScoutingFind.STATUS_EXPIRED
-        ).select_related('player', 'player__club', 'player__club__league').order_by('order')
+        ).select_related(
+            'player', 'player__real_life_club', 'player__real_life_club__league'
+        ).order_by('order')
         finds = [_find_card(f, watched_ids) for f in offered]
 
     today = date.today()
@@ -193,7 +168,7 @@ def transfer_scouting(request):
             'days': max((b.window_date - today).days, 0),
         })
 
-    pcts = [c['coverage_percent'] for c in cont_countries] or [c['coverage_percent'] for c in countries]
+    pcts = [c['coverage_percent'] for c in countries]
     coverage_pct = round(sum(pcts) / len(pcts)) if pcts else 0
 
     context = {
@@ -202,7 +177,7 @@ def transfer_scouting(request):
         'club': club,
         'dept': dept_info,
         'scope_tiles': scope_tiles,
-        'map_markers': map_markers,
+        'map_countries': countries,
         'region_options': region_options,
         'continents': mapdata['continents'],
         'selected_continent': selected_continent,
@@ -286,6 +261,40 @@ def scouting_withdraw(request):
         messages.success(request, 'Gebot zurückgezogen.')
     except service.ScoutingError as exc:
         messages.error(request, str(exc))
+    return redirect('transfer_scouting')
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def scouting_upgrade(request):
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    try:
+        service.upgrade_department(club)
+        messages.success(request, 'Scoutingabteilung wurde ausgebaut.')
+    except service.ScoutingError as exc:
+        messages.error(request, str(exc))
+    return redirect('transfer_scouting')
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def scouting_reject(request):
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    active = club.scouting_assignments.filter(
+        status=club.scouting_assignments.model.STATUS_ACTIVE
+    ).first()
+    if active:
+        try:
+            service.reject_all_finds(active)
+            messages.success(request, 'Alle Funde abgelehnt – der Auftrag wurde beendet.')
+        except service.ScoutingError as exc:
+            messages.error(request, str(exc))
+    else:
+        messages.error(request, 'Kein aktiver Scoutauftrag vorhanden.')
     return redirect('transfer_scouting')
 
 

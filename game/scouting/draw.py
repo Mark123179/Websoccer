@@ -9,12 +9,15 @@ import math
 import random
 
 from .constants import (
+    COUNTRIES,
+    REGIONS,
     PROFILE_STRENGTH_BANDS,
     PROFILE_TALENT_MAX_AGE,
     TOP_STAR_STRENGTH,
     TOP_TALENT_POTENTIAL,
     TOP_TALENT_MAX_AGE,
     region_iso_codes,
+    continent_iso_codes,
 )
 from .geo import player_country_iso2
 
@@ -65,10 +68,9 @@ def scope_iso_set(scope_type, scope_key):
     return {(scope_key or '').upper()}
 
 
-def eligible_players(scope_type, scope_key):
-    """Scoutbare Poolspieler im Suchgebiet, ohne Top-Stars/Top-Talente."""
+def _eligible_in_isos(isos):
+    """Scoutbare Poolspieler in einer ISO2-Menge, ohne Top-Stars/Top-Talente."""
     from game.models import Player
-    isos = scope_iso_set(scope_type, scope_key)
     qs = (
         Player.objects
         .filter(club__isnull=True, pool_status=Player.POOL_STATUS_SCOUTABLE)
@@ -82,6 +84,50 @@ def eligible_players(scope_type, scope_key):
             continue
         out.append(player)
     out.sort(key=lambda p: p.id)
+    return out
+
+
+def eligible_players(scope_type, scope_key):
+    """Scoutbare Poolspieler im Suchgebiet, ohne Top-Stars/Top-Talente."""
+    return _eligible_in_isos(scope_iso_set(scope_type, scope_key))
+
+
+def widen_iso_levels(scope_type, scope_key):
+    """Progressiv weiter werdende ISO2-Mengen (Suchgebiet → Region → Kontinent → Welt).
+
+    Dient als Fallback, um auch bei dünnem Suchgebiet die geforderten genau
+    drei Funde garantieren zu können (Aufweitung erst, wenn nötig).
+    """
+    levels = [scope_iso_set(scope_type, scope_key)]
+    if scope_type == 'region':
+        cont = (REGIONS.get(scope_key) or {}).get('continent')
+        if cont:
+            levels.append(set(continent_iso_codes(cont)))
+    else:
+        rec = COUNTRIES.get((scope_key or '').upper())
+        if rec:
+            levels.append(set(region_iso_codes(rec['region'])))
+            levels.append(set(continent_iso_codes(rec['continent'])))
+    levels.append(set(COUNTRIES.keys()))
+    return levels
+
+
+def eligible_players_filled(scope_type, scope_key, min_count):
+    """Wie ``eligible_players``, weitet das Gebiet aber bis ``min_count`` auf.
+
+    Solange das Suchgebiet selbst genug Kandidaten liefert, ist das Ergebnis
+    identisch zu ``eligible_players``; erst bei Unterdeckung werden Region,
+    Kontinent und schließlich die Welt hinzugezogen (Garantie für genau 3 Funde).
+    """
+    seen = set()
+    out = []
+    for isos in widen_iso_levels(scope_type, scope_key):
+        for player in _eligible_in_isos(isos):
+            if player.id not in seen:
+                seen.add(player.id)
+                out.append(player)
+        if len(out) >= min_count:
+            break
     return out
 
 

@@ -38,3 +38,16 @@ from game.match_engine import simulate_match
 2. `from django.test import TestCase` für DB-Tests
 3. `from game.models import ...` für Modell-Imports
 4. Für ORM-freie Tests: minimaler Django-Setup wie in `test_ko_match.py`
+
+## Falle: User-Anlage erzeugt automatisch eine ManagerProfile
+
+Ein `post_save`-Signal auf `auth.User` (`create_manager_profile_on_user_create` in
+`game/signals.py`) legt bei JEDER neuen User-Anlage automatisch eine `ManagerProfile`
+(OneToOne, `name=username`) an. In Tests deshalb **nie** zusätzlich
+`ManagerProfile.objects.create(user=...)` aufrufen — das verletzt die OneToOne-Unique
+auf `user_id`. Stattdessen die automatisch erzeugte Profilzeile über
+`user.manager_profile` weiterverwenden (ggf. umbenennen) und an `Club.managed_by` hängen.
+
+**Wie testet man eine `@login_required`-View mit Vereins-Eigentum:** User anlegen →
+`user.manager_profile` holen → `Club(managed_by=profile)` → `client.force_login(user)`.
+`current_manager_club(user=request.user)` löst dann den Verein korrekt auf (kein Bayern-Fallback).

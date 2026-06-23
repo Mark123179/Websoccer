@@ -338,3 +338,71 @@ class CommunityTests(ScoutingServiceBase):
         self.assertGreaterEqual(after, before)
         sub.refresh_from_db()
         self.assertEqual(sub.status, CommunitySubmission.STATUS_APPROVED)
+
+
+class DepartmentUpgradeTests(ScoutingServiceBase):
+    def test_upgrade_charges_levels_up_and_logs(self):
+        before = self.club.budget
+        dept = service.upgrade_department(self.club, today=self.today)
+        self.club.refresh_from_db()
+        cost = Decimal(department.upgrade_cost(0))
+        self.assertEqual(dept.level, 1)
+        self.assertEqual(self.club.budget, before - cost)
+        self.assertTrue(ClubFinancialTransaction.objects.filter(
+            club=self.club, category='sonstige_ausgabe',
+            description__icontains='Scoutingabteilung').exists())
+
+    def test_upgrade_blocked_without_budget(self):
+        self.club.budget = Decimal('0.00')
+        self.club.save(update_fields=['budget'])
+        with self.assertRaises(service.ScoutingError):
+            service.upgrade_department(self.club, today=self.today)
+
+    def test_upgrade_blocked_at_max_level(self):
+        from game.scouting.constants import MAX_DEPARTMENT_LEVEL
+        dept = department.get_or_create_department(self.club)
+        dept.level = MAX_DEPARTMENT_LEVEL
+        dept.save(update_fields=['level'])
+        with self.assertRaises(service.ScoutingError):
+            service.upgrade_department(self.club, today=self.today)
+
+
+class RejectAllFindsTests(ScoutingServiceBase):
+    def test_reject_completes_assignment_and_marks_finds(self):
+        a, find = self._active_assignment_with_find(self.pool[0])
+        other = ScoutingFind.objects.create(
+            assignment=a, player=self.pool[1], order=1,
+            min_bid=Decimal('5000000'), status=ScoutingFind.STATUS_OFFERED)
+        service.reject_all_finds(a)
+        a.refresh_from_db(); find.refresh_from_db(); other.refresh_from_db()
+        self.assertEqual(a.status, ScoutingAssignment.STATUS_COMPLETED)
+        self.assertEqual(find.status, ScoutingFind.STATUS_REJECTED)
+        self.assertEqual(other.status, ScoutingFind.STATUS_REJECTED)
+
+    def test_reject_inactive_assignment_raises(self):
+        a, _ = self._active_assignment_with_find(self.pool[0])
+        a.status = ScoutingAssignment.STATUS_COMPLETED
+        a.save(update_fields=['status'])
+        with self.assertRaises(service.ScoutingError):
+            service.reject_all_finds(a)
+
+
+class EligiblePlayersFilledTests(ScoutingServiceBase):
+    def test_backfill_guarantees_minimum_from_wider_levels(self):
+        from game.scouting import draw
+        # Land mit nur einem eigenen Kandidaten, aber Region/Kontinent liefern mehr.
+        only = _pool_player(nat='Portugal', last='PTone')
+        narrow = draw.eligible_players('country', 'PT')
+        self.assertIn(only.id, [p.id for p in narrow])
+        self.assertLess(len(narrow), 3)
+        filled = draw.eligible_players_filled('country', 'PT', 3)
+        self.assertGreaterEqual(len(filled), 3)
+        # Der eigene Landeskandidat steht weiterhin an erster Stelle (Vorrang).
+        self.assertEqual(filled[0].id, only.id)
+
+    def test_no_widening_when_scope_already_sufficient(self):
+        from game.scouting import draw
+        base = draw.eligible_players('country', 'TR')
+        filled = draw.eligible_players_filled('country', 'TR', 3)
+        self.assertGreaterEqual(len(base), 3)
+        self.assertEqual([p.id for p in base], [p.id for p in filled])

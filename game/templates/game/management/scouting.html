@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -36,6 +36,16 @@
         <p class="scout-dept-line">Scoutingabteilung Stufe {{ dept.level }}</p>
         <p class="scout-dept-sub">Dauer: {{ dept.duration }} Tage</p>
         <p class="scout-dept-sub">Kosten: {{ dept.cost_fmt }}</p>
+        {% if dept.can_upgrade %}
+        <form method="post" action="{% url 'scouting_upgrade' %}" class="scout-dept-upgrade">
+          {% csrf_token %}
+          <button type="submit" class="scout-upgrade-btn" title="Verkürzt die Suchdauer und schärft die Trefferpräzision.">
+            ⬆ Abteilung ausbauen · {{ dept.upgrade_cost_fmt }}
+          </button>
+        </form>
+        {% else %}
+        <p class="scout-dept-max">Maximale Ausbaustufe erreicht.</p>
+        {% endif %}
       </div>
 
       <form method="post" action="{% url 'scouting_start' %}" id="scout-order-form">
@@ -100,29 +110,23 @@
       <section class="scouting-map-panel">
         <div class="scout-panel-head">
           <h2 class="scout-panel-title">SCOUTINGNETZWERK <span class="scout-info" title="Deine weltweite Scouting-Abdeckung.">ⓘ</span></h2>
-          <form method="get" id="continent-form" class="continent-picker">
+          <div class="continent-picker">
             <span>Kontinent:</span>
-            <select name="kontinent" onchange="document.getElementById('continent-form').submit()">
+            <select id="continent-select" aria-label="Kartenausschnitt fokussieren">
+              <option value="welt" {% if selected_continent == 'welt' %}selected{% endif %}>Welt</option>
               {% for cont in continents %}
               <option value="{{ cont.key }}" {% if cont.key == selected_continent %}selected{% endif %}>{{ cont.name }}</option>
               {% endfor %}
             </select>
-          </form>
+          </div>
         </div>
 
         <div class="scout-map-stage">
           {% include 'game/management/_scouting_map_svg.html' %}
-          <div class="scout-markers">
-            {% for mk in map_markers %}
-            <button type="button"
-                    class="scout-marker scout-marker--{{ mk.status }} {% if mk.in_continent %}is-focus{% endif %}"
-                    style="left:{{ mk.x }}%;top:{{ mk.y }}%;"
-                    data-scope-type="country" data-scope-key="{{ mk.iso2 }}"
-                    data-scoutable="{% if mk.status == 'scoutable' %}1{% else %}0{% endif %}"
-                    title="{{ mk.name }}"></button>
-            {% endfor %}
-          </div>
+          <div class="scout-map-tooltip" id="scout-map-tooltip" hidden></div>
         </div>
+        <p class="scout-map-hint" id="scout-map-hint">Wähle ein scoutbares Land direkt auf der Karte als Suchgebiet.</p>
+        {{ map_countries|json_script:"scout-map-data" }}
 
         <div class="scout-coverage">
           <div class="scout-coverage-head">
@@ -209,6 +213,10 @@
         </div>
       </article>
       {% endfor %}
+      <form method="post" action="{% url 'scouting_reject' %}" class="scout-reject-all">
+        {% csrf_token %}
+        <button type="submit" class="result-btn result-btn--ghost">Alle Funde ablehnen</button>
+      </form>
       {% else %}
       <div class="result-empty">
         <p class="result-empty-icon">🔭</p>
@@ -239,5 +247,5 @@
   </div>
 </div>
 
-<script src="{% static 'game/js/scouting.js' %}?v=2"></script>
+<script src="{% static 'game/js/scouting.js' %}?v=3"></script>
 {% endblock %}

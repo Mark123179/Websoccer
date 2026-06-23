@@ -198,7 +198,9 @@ def generate_finds(assignment, today=None, seed=None):
     if assignment.finds_generated:
         return list(assignment.finds.all())
 
-    candidates = draw.eligible_players(assignment.scope_type, assignment.scope_key)
+    candidates = draw.eligible_players_filled(
+        assignment.scope_type, assignment.scope_key, FINDS_PER_ASSIGNMENT
+    )
     team_avg = draw.team_average_strength(assignment.club)
     precision = _assignment_precision(assignment)
     draw_seed = assignment.id if seed is None else seed

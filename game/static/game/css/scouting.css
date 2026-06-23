@@ -142,23 +142,59 @@
   position: relative; flex: 1; min-height: 320px; border-radius: 12px;
   overflow: hidden; border: 1px solid var(--sc-border); margin: 10px 0;
   box-shadow: inset 0 0 60px rgba(0, 215, 239, 0.08);
+  background: #031018;
 }
-.scout-world-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scout-map-canvas { position: absolute; inset: 0; }
+.scout-world-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  transition: none;
+}
+.scout-ocean { fill: #04141d; }
 
-.scout-markers { position: absolute; inset: 0; }
-.scout-marker {
-  position: absolute; width: 13px; height: 13px; border-radius: 50%;
-  transform: translate(-50%, -50%); cursor: pointer; padding: 0;
-  border: 1px solid rgba(255,255,255,0.7); background: var(--sc-muted);
-  transition: transform .12s; opacity: 0.45;
+/* Jedes Land = ein klickbarer Pfad. Status-Klassen kommen aus dem Backend. */
+.sc-c {
+  fill: rgba(12, 52, 70, 0.85);
+  stroke: rgba(0, 210, 235, 0.18);
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
+  transition: fill .14s, stroke .14s;
 }
-.scout-marker.is-focus { opacity: 1; }
-.scout-marker:hover { transform: translate(-50%, -50%) scale(1.5); }
-.scout-marker--scoutable { background: var(--sc-green); box-shadow: 0 0 8px rgba(40,232,120,0.8); }
-.scout-marker--building { background: var(--sc-cyan); box-shadow: 0 0 8px rgba(0,215,239,0.7); }
-.scout-marker--locked,
-.scout-marker--unavailable { background: var(--sc-muted); }
-.scout-marker.is-selected { transform: translate(-50%, -50%) scale(1.7); border-color: var(--sc-cyan); }
+/* Länder außerhalb des Datenvertrags: nur Kulisse, nicht interaktiv. */
+.sc-c.is-out { fill: rgba(9, 34, 46, 0.7); stroke: rgba(0,210,235,0.08); pointer-events: none; }
+
+.sc-c.is-scoutable {
+  fill: rgba(40, 232, 120, 0.55); stroke: rgba(40, 232, 120, 0.85); cursor: pointer;
+}
+.sc-c.is-scoutable:hover { fill: rgba(40, 232, 120, 0.8); }
+.sc-c.is-building {
+  fill: rgba(0, 215, 239, 0.42); stroke: rgba(0, 215, 239, 0.7); cursor: help;
+}
+.sc-c.is-building:hover { fill: rgba(0, 215, 239, 0.6); }
+.sc-c.is-locked,
+.sc-c.is-unavailable {
+  fill: rgba(90, 110, 120, 0.45); stroke: rgba(141, 168, 179, 0.5); cursor: help;
+}
+.sc-c.is-locked:hover,
+.sc-c.is-unavailable:hover { fill: rgba(110, 130, 140, 0.6); }
+.sc-c.is-selected {
+  fill: var(--sc-cyan); stroke: #ffffff; stroke-width: 0.9;
+  filter: drop-shadow(0 0 6px rgba(0, 215, 239, 0.9));
+}
+
+/* Hover-Tooltip (Name + Suchgüte, NIE Poolzahlen) */
+.scout-map-tooltip {
+  position: absolute; z-index: 30; pointer-events: none;
+  background: rgba(2, 16, 24, 0.95); border: 1px solid var(--sc-cyan);
+  border-radius: 8px; padding: 6px 10px; font-size: 12px; line-height: 1.4;
+  box-shadow: 0 0 16px rgba(0, 215, 239, 0.3); max-width: 200px;
+}
+.scout-map-tooltip[hidden] { display: none; }
+.scout-map-tooltip strong { display: block; color: var(--sc-text); font-size: 12.5px; }
+.scout-map-tooltip span { color: var(--sc-muted); font-size: 11px; }
+
+.scout-map-hint {
+  margin: 0 0 8px; font-size: 11.5px; color: var(--sc-muted); min-height: 16px;
+}
 
 /* ── Abdeckung ────────────────────────────────────────────────────────── */
 .scout-coverage { margin-bottom: 8px; }
