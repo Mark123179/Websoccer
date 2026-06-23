@@ -12,6 +12,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -19,6 +20,7 @@ from .views import build_game_header, current_manager_club
 from .models import (
     CommunitySubmission,
     CountryNetwork,
+    Player,
     ScoutingBid,
     ScoutingFind,
     WatchlistEntry,
@@ -98,6 +100,73 @@ def _find_card(find, watched_ids):
 
 def _manager_of(club):
     return getattr(club, 'managed_by', None)
+
+
+def _manager_of_user(request):
+    """Manager-Profil direkt am User – funktioniert auch ohne Verein."""
+    return getattr(getattr(request, 'user', None), 'manager_profile', None)
+
+
+def _watchlist_redirect(request):
+    nxt = request.POST.get('next') or ''
+    if nxt.startswith('/transfers/beobachtungsliste/'):
+        return redirect(nxt)
+    return redirect('transfer_watchlist')
+
+
+def _post_player(request):
+    """Spieler aus POST['player_id'] – robust gegen fehlende/ungültige IDs (kein 500)."""
+    try:
+        pk = int(request.POST.get('player_id'))
+    except (TypeError, ValueError):
+        return None
+    return Player.objects.filter(pk=pk).first()
+
+
+def _search_players(search, watched_ids):
+    """Öffentliche Spielersuche für die Beobachtungsliste.
+
+    Liefert nur öffentliche Felder (Name/Alter/Position/Marktwert/Flagge),
+    niemals base_strength/potential. Cappt auf 40 Treffer.
+    """
+    qs = Player.objects.select_related('real_life_club')
+    if search['q']:
+        qs = qs.filter(
+            Q(first_name__icontains=search['q']) | Q(last_name__icontains=search['q'])
+        )
+    if search['pos']:
+        qs = qs.filter(
+            Q(main_position_1=search['pos'])
+            | Q(main_position_2=search['pos'])
+            | Q(main_position_3=search['pos'])
+        )
+    if watched_ids:
+        qs = qs.exclude(id__in=watched_ids)
+
+    if search['sort'] == 'name':
+        qs = qs.order_by('last_name', 'first_name')
+    elif search['sort'] == 'age':
+        qs = qs.order_by('age')
+    else:
+        qs = qs.order_by(F('market_value').desc(nulls_last=True))
+
+    land = search['land']
+    results = []
+    for p in qs.iterator():
+        iso2 = geo.player_country_iso2(p) or ''
+        if land and iso2.upper() != land:
+            continue
+        results.append({
+            'player_id': p.id,
+            'name': p.full_name,
+            'age': p.age,
+            'flag': _flag_emoji(iso2),
+            'hp': p.main_position_1 or '—',
+            'market_value_fmt': _euro(p.market_value),
+        })
+        if len(results) >= 40:
+            break
+    return results
 
 
 # ── Hauptscreen ───────────────────────────────────────────────────────────────
@@ -301,17 +370,20 @@ def scouting_reject(request):
 # ── Beobachtungsliste + Community ─────────────────────────────────────────────
 @login_required(login_url='/auth/login/')
 def transfer_watchlist(request):
-    club = current_manager_club(user=request.user)
-    if not club:
+    # Die Beobachtungsliste ist managergebunden → auch ohne Verein voll nutzbar.
+    manager = _manager_of_user(request)
+    if manager is None:
         return redirect('management_hub')
-    manager = _manager_of(club)
+    club = current_manager_club(user=request.user)
 
     entries = []
+    watched_ids = set()
     qs = WatchlistEntry.objects.filter(manager=manager).select_related(
         'player', 'player__club'
-    ).order_by('-updated_at') if manager else []
+    ).order_by('-updated_at')
     for w in qs:
         p = w.player
+        watched_ids.add(p.id)
         iso2 = geo.player_country_iso2(p) or ''
         entries.append({
             'player_id': p.id,
@@ -324,27 +396,38 @@ def transfer_watchlist(request):
             'status_label': w.get_status_display(),
         })
 
+    # Spielersuche zum direkten Hinzufügen (mit Filter + Sortierung).
+    search = {
+        'q': (request.GET.get('q') or '').strip(),
+        'pos': (request.GET.get('pos') or '').strip(),
+        'land': (request.GET.get('land') or '').strip().upper(),
+        'sort': (request.GET.get('sort') or 'market_value').strip(),
+    }
+    search_results = _search_players(search, watched_ids)
+
     mapdata = coverage.map_data()
     submit_countries = [
         {'iso2': c['iso2'], 'name': c['name'], 'flag': _flag_emoji(c['iso2'])}
         for c in mapdata['countries']
     ]
     my_subs = []
-    if manager:
-        for s in manager.community_submissions.order_by('-created_at')[:20]:
-            my_subs.append({
-                'iso2': s.iso2,
-                'flag': _flag_emoji(s.iso2),
-                'player_name': s.player_name or '—',
-                'status_label': s.get_status_display(),
-                'created': s.created_at,
-            })
+    for s in manager.community_submissions.order_by('-created_at')[:20]:
+        my_subs.append({
+            'iso2': s.iso2,
+            'flag': _flag_emoji(s.iso2),
+            'player_name': s.player_name or '—',
+            'status_label': s.get_status_display(),
+            'created': s.created_at,
+        })
 
     context = {
         'game_header': build_game_header('Beobachtungsliste', 'Transfers · Scouting', back_url='/'),
         'active_tab': 'watchlist',
         'club': club,
         'entries': entries,
+        'search': search,
+        'search_results': search_results,
+        'positions': POSITION_OPTIONS,
         'submit_countries': submit_countries,
         'my_subs': my_subs,
     }
@@ -353,11 +436,49 @@ def transfer_watchlist(request):
 
 @login_required(login_url='/auth/login/')
 @require_POST
-def scouting_community_submit(request):
-    club = current_manager_club(user=request.user)
-    if not club:
+def scouting_watchlist_add(request):
+    """Beliebigen Spieler zur (managergebundenen) Beobachtungsliste hinzufügen."""
+    manager = _manager_of_user(request)
+    if manager is None:
         return redirect('management_hub')
-    manager = _manager_of(club)
+    player = _post_player(request)
+    if player is None:
+        messages.error(request, 'Spieler nicht gefunden.')
+        return _watchlist_redirect(request)
+    try:
+        service.add_to_watchlist(manager, player)
+        messages.success(request, f'{player.full_name} zur Beobachtungsliste hinzugefügt.')
+    except service.ScoutingError as exc:
+        messages.error(request, str(exc))
+    return _watchlist_redirect(request)
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def scouting_watchlist_remove(request):
+    """Spieler aus der Beobachtungsliste entfernen."""
+    manager = _manager_of_user(request)
+    if manager is None:
+        return redirect('management_hub')
+    player = _post_player(request)
+    if player is None:
+        messages.error(request, 'Spieler nicht gefunden.')
+        return _watchlist_redirect(request)
+    try:
+        service.remove_from_watchlist(manager, player)
+        messages.success(request, f'{player.full_name} von der Beobachtungsliste entfernt.')
+    except service.ScoutingError as exc:
+        messages.error(request, str(exc))
+    return _watchlist_redirect(request)
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def scouting_community_submit(request):
+    # Community-Einreichung ist managerseitig → auch ohne Verein möglich.
+    manager = _manager_of_user(request)
+    if manager is None:
+        return redirect('management_hub')
     iso2 = (request.POST.get('iso2') or '').strip().upper()
     tm_url = (request.POST.get('tm_url') or '').strip()
     player_name = (request.POST.get('player_name') or '').strip()

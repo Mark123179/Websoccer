@@ -565,3 +565,36 @@ class EligiblePlayersFilledTests(ScoutingServiceBase):
         filled = draw.eligible_players_filled('country', 'TR', 3)
         self.assertGreaterEqual(len(base), 3)
         self.assertEqual([p.id for p in base], [p.id for p in filled])
+
+
+class WatchlistAddRemoveTests(ScoutingServiceBase):
+    """Manuelles Hinzufügen/Entfernen auf der managergebundenen Beobachtungsliste."""
+
+    def test_add_to_watchlist_creates_watched(self):
+        player = self.pool[0]
+        entry = service.add_to_watchlist(self.manager, player)
+        self.assertEqual(entry.status, 'watched')
+        self.assertTrue(
+            WatchlistEntry.objects.filter(
+                manager=self.manager, player=player).exists())
+
+    def test_add_to_watchlist_keeps_existing_status(self):
+        player = self.pool[0]
+        WatchlistEntry.objects.create(
+            manager=self.manager, player=player, status='bid')
+        service.add_to_watchlist(self.manager, player)
+        entry = WatchlistEntry.objects.get(manager=self.manager, player=player)
+        self.assertEqual(entry.status, 'bid')
+
+    def test_remove_from_watchlist_deletes(self):
+        player = self.pool[0]
+        WatchlistEntry.objects.create(
+            manager=self.manager, player=player, status='watched')
+        service.remove_from_watchlist(self.manager, player)
+        self.assertFalse(
+            WatchlistEntry.objects.filter(
+                manager=self.manager, player=player).exists())
+
+    def test_add_to_watchlist_requires_manager(self):
+        with self.assertRaises(service.ScoutingError):
+            service.add_to_watchlist(None, self.pool[0])

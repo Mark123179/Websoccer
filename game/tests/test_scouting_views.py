@@ -336,3 +336,105 @@ class FindCardConfidentialityTests(ScoutingViewsBase):
         # Und keine verräterischen Attribut-Labels (gesamter Screen).
         for label in ('base_strength', 'pool_count', 'Stärke', 'Potential', 'Potenzial'):
             self.assertNotIn(label, html)
+
+
+# ── Vereinslose Beobachtungsliste (managergebunden) ───────────────────────────
+class ClublessWatchlistTests(ScoutingViewsBase):
+    def setUp(self):
+        super().setUp()
+        # Eingeloggter Manager OHNE Verein – die Liste muss trotzdem nutzbar sein.
+        self.clubless_user = User.objects.create_user(
+            username='vereinslos', password='pw12345')
+        self.clubless_manager = self.clubless_user.manager_profile
+        self.cl_client = Client()
+        self.cl_client.force_login(self.clubless_user)
+
+    def test_clubless_can_view_watchlist(self):
+        resp = self.cl_client.get(reverse('transfer_watchlist'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsNone(resp.context['club'])
+
+    def test_clubless_can_add_player(self):
+        player = self.pool[0]
+        resp = self.cl_client.post(
+            reverse('scouting_watchlist_add'), {'player_id': player.id})
+        self.assertEqual(resp.status_code, 302)
+        entry = WatchlistEntry.objects.get(
+            manager=self.clubless_manager, player=player)
+        self.assertEqual(entry.status, 'watched')
+
+    def test_clubless_can_remove_player(self):
+        player = self.pool[1]
+        WatchlistEntry.objects.create(
+            manager=self.clubless_manager, player=player, status='watched')
+        resp = self.cl_client.post(
+            reverse('scouting_watchlist_remove'), {'player_id': player.id})
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(
+            WatchlistEntry.objects.filter(
+                manager=self.clubless_manager, player=player).exists())
+
+    def test_add_does_not_downgrade_existing_status(self):
+        player = self.pool[2]
+        WatchlistEntry.objects.create(
+            manager=self.clubless_manager, player=player, status='bid')
+        self.cl_client.post(
+            reverse('scouting_watchlist_add'), {'player_id': player.id})
+        entry = WatchlistEntry.objects.get(
+            manager=self.clubless_manager, player=player)
+        self.assertEqual(entry.status, 'bid')
+
+    def test_add_remove_require_post(self):
+        for name in ('scouting_watchlist_add', 'scouting_watchlist_remove'):
+            resp = self.cl_client.get(reverse(name))
+            self.assertEqual(resp.status_code, 405, name)
+
+    def test_add_remove_require_login(self):
+        self.cl_client.logout()
+        for name in ('scouting_watchlist_add', 'scouting_watchlist_remove'):
+            resp = self.cl_client.post(
+                reverse(name), {'player_id': self.pool[0].id})
+            self.assertEqual(resp.status_code, 302, name)
+            self.assertIn('/auth/login/', resp.url, name)
+
+    def test_search_filters_by_name(self):
+        resp = self.cl_client.get(reverse('transfer_watchlist'), {'q': 'P0'})
+        ids = [r['player_id'] for r in resp.context['search_results']]
+        self.assertIn(self.pool[0].id, ids)
+        self.assertNotIn(self.pool[1].id, ids)
+
+    def test_search_filters_by_position(self):
+        resp = self.cl_client.get(reverse('transfer_watchlist'), {'pos': 'ST'})
+        ids = [r['player_id'] for r in resp.context['search_results']]
+        self.assertIn(self.pool[0].id, ids)
+        resp2 = self.cl_client.get(reverse('transfer_watchlist'), {'pos': 'IV'})
+        ids2 = [r['player_id'] for r in resp2.context['search_results']]
+        self.assertNotIn(self.pool[0].id, ids2)
+
+    def test_search_excludes_already_watched(self):
+        player = self.pool[0]
+        WatchlistEntry.objects.create(
+            manager=self.clubless_manager, player=player, status='watched')
+        resp = self.cl_client.get(reverse('transfer_watchlist'), {'q': 'P0'})
+        ids = [r['player_id'] for r in resp.context['search_results']]
+        self.assertNotIn(player.id, ids)
+
+    def test_search_results_never_leak_strength_or_potential(self):
+        resp = self.cl_client.get(reverse('transfer_watchlist'), {'q': 'Pool'})
+        allowed = {'player_id', 'name', 'age', 'flag', 'hp', 'market_value_fmt'}
+        self.assertTrue(resp.context['search_results'])
+        for r in resp.context['search_results']:
+            self.assertEqual(set(r.keys()), allowed)
+
+    def test_add_with_invalid_player_id_does_not_crash(self):
+        for bad in ('abc', '', '999999'):
+            resp = self.cl_client.post(
+                reverse('scouting_watchlist_add'), {'player_id': bad})
+            self.assertEqual(resp.status_code, 302, bad)
+        self.assertFalse(
+            WatchlistEntry.objects.filter(manager=self.clubless_manager).exists())
+
+    def test_remove_with_invalid_player_id_does_not_crash(self):
+        resp = self.cl_client.post(
+            reverse('scouting_watchlist_remove'), {'player_id': 'not-a-number'})
+        self.assertEqual(resp.status_code, 302)

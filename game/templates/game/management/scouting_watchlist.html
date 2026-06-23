@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -25,28 +25,99 @@
     <a class="transfer-tab is-active" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
   </div>
 
+  {% if not club %}
+  <div class="watch-clubless-note">
+    Du hast aktuell keinen Verein. Deine Beobachtungsliste ist managergebunden – du kannst sie
+    jederzeit ansehen und bearbeiten. Scoutaufträge und Gebote sind erst mit einem Verein möglich.
+  </div>
+  {% endif %}
+
   <div class="watchlist-layout">
-    <section class="watchlist-panel">
-      <h2 class="scout-panel-title">BEOBACHTUNGSLISTE ({{ entries|length }})</h2>
-      {% if entries %}
-      <div class="watch-table">
-        <div class="watch-row watch-head">
-          <span>Spieler</span><span>Alter</span><span>Position</span><span>Marktwert</span><span>Status</span>
+    <div class="watchlist-col-main">
+
+      <section class="watch-add-panel">
+        <h2 class="scout-panel-title">SPIELER HINZUFÜGEN</h2>
+        <form method="get" action="{% url 'transfer_watchlist' %}" class="watch-search-form">
+          <input type="text" name="q" value="{{ search.q }}" class="bid-modal-input watch-search-input"
+                 placeholder="Spieler suchen …" autocomplete="off">
+          <select name="pos" class="scout-select">
+            <option value="">Alle Positionen</option>
+            {% for p in positions %}
+            <option value="{{ p }}"{% if p == search.pos %} selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+          <select name="land" class="scout-select">
+            <option value="">Alle Länder</option>
+            {% for c in submit_countries %}
+            <option value="{{ c.iso2 }}"{% if c.iso2 == search.land %} selected{% endif %}>{{ c.flag }} {{ c.name }}</option>
+            {% endfor %}
+          </select>
+          <select name="sort" class="scout-select">
+            <option value="market_value"{% if search.sort == 'market_value' %} selected{% endif %}>Marktwert ↓</option>
+            <option value="age"{% if search.sort == 'age' %} selected{% endif %}>Jüngste zuerst</option>
+            <option value="name"{% if search.sort == 'name' %} selected{% endif %}>Name A–Z</option>
+          </select>
+          <button type="submit" class="scout-go-btn">Suchen</button>
+        </form>
+
+        {% if search_results %}
+        <div class="watch-table watch-search-results">
+          <div class="watch-row watch-search-row watch-head">
+            <span>Spieler</span><span>Alter</span><span>Position</span><span>Marktwert</span><span></span>
+          </div>
+          {% for r in search_results %}
+          <div class="watch-row watch-search-row">
+            <span class="watch-player"><span class="watch-flag">{{ r.flag }}</span>{{ r.name }}</span>
+            <span>{{ r.age }}</span>
+            <span>{{ r.hp }}</span>
+            <span>{{ r.market_value_fmt }}</span>
+            <span class="watch-row-action">
+              <form method="post" action="{% url 'scouting_watchlist_add' %}">
+                {% csrf_token %}
+                <input type="hidden" name="player_id" value="{{ r.player_id }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="watch-add-btn" title="Zur Beobachtungsliste hinzufügen">+ Merken</button>
+              </form>
+            </span>
+          </div>
+          {% endfor %}
         </div>
-        {% for e in entries %}
-        <div class="watch-row">
-          <span class="watch-player"><span class="watch-flag">{{ e.flag }}</span>{{ e.name }}</span>
-          <span>{{ e.age }}</span>
-          <span>{{ e.hp }}</span>
-          <span>{{ e.market_value_fmt }}</span>
-          <span class="watch-status watch-status--{{ e.status }}">{{ e.status_label }}</span>
+        {% else %}
+        <p class="bids-empty">Keine passenden Spieler gefunden.</p>
+        {% endif %}
+      </section>
+
+      <section class="watchlist-panel">
+        <h2 class="scout-panel-title">BEOBACHTUNGSLISTE ({{ entries|length }})</h2>
+        {% if entries %}
+        <div class="watch-table">
+          <div class="watch-row watch-row--entry watch-head">
+            <span>Spieler</span><span>Alter</span><span>Position</span><span>Marktwert</span><span>Status</span><span></span>
+          </div>
+          {% for e in entries %}
+          <div class="watch-row watch-row--entry">
+            <span class="watch-player"><span class="watch-flag">{{ e.flag }}</span>{{ e.name }}</span>
+            <span>{{ e.age }}</span>
+            <span>{{ e.hp }}</span>
+            <span>{{ e.market_value_fmt }}</span>
+            <span class="watch-status watch-status--{{ e.status }}">{{ e.status_label }}</span>
+            <span class="watch-row-action">
+              <form method="post" action="{% url 'scouting_watchlist_remove' %}">
+                {% csrf_token %}
+                <input type="hidden" name="player_id" value="{{ e.player_id }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="watch-remove-btn" title="Von der Liste entfernen">✕</button>
+              </form>
+            </span>
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <p class="bids-empty">Noch keine beobachteten Spieler. Beobachte Spieler über die Scout-Ergebnisse.</p>
-      {% endif %}
-    </section>
+        {% else %}
+        <p class="bids-empty">Noch keine beobachteten Spieler. Nutze die Suche oben oder beobachte Spieler über die Scout-Ergebnisse.</p>
+        {% endif %}
+      </section>
+
+    </div>
 
     <aside class="community-panel">
       <h2 class="scout-panel-title">COMMUNITY-PROFIL EINREICHEN <span class="scout-info" title="Reiche reale Spielerprofile ein und erhöhe so die Community-Abdeckung eines Landes.">ⓘ</span></h2>

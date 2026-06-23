@@ -261,6 +261,24 @@ def watch_find(club, manager, find):
     return _upsert_watchlist(manager, find.player, 'watched', only_if_absent=True)
 
 
+def add_to_watchlist(manager, player):
+    """Manuelles Hinzufügen eines beliebigen Spielers (managerseitig, kein Verein nötig).
+
+    only_if_absent=True: ein bestehender Status ('bid'/'won') wird nicht überschrieben.
+    """
+    if manager is None:
+        raise ScoutingError('Kein Manager-Profil vorhanden.')
+    return _upsert_watchlist(manager, player, 'watched', only_if_absent=True)
+
+
+def remove_from_watchlist(manager, player):
+    """Entfernt einen Spieler aus der managergebundenen Beobachtungsliste."""
+    from game.models import WatchlistEntry
+    if manager is None:
+        raise ScoutingError('Kein Manager-Profil vorhanden.')
+    WatchlistEntry.objects.filter(manager=manager, player=player).delete()
+
+
 # ── Gebot abgeben ────────────────────────────────────────────────────────────
 def place_bid(club, manager, find, amount, today=None):
     from game.models import (
