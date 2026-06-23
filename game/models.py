@@ -3376,6 +3376,39 @@ class GameSeasonState(models.Model):
         zustand = 'gestartet' if self.is_started else 'nicht gestartet'
         return f'Saison {self.current_season} ({zustand})'
 
+    def save(self, *args, **kwargs):
+        """Speichert den Saison-Status und löst beim Saisonwechsel/-start
+        fällige Scouting-Zuschlagstermine auf.
+
+        Hintergrund: Die reguläre Auflösung fälliger Fenster hängt an
+        ``close_matchday()``. Ist die letzte Saison abgeschlossen
+        (season_complete) und wird kein weiterer Spieltag mehr geschlossen,
+        bleiben Gebote mit einem Zuschlagstermin in der Sommerpause sonst
+        dauerhaft ACTIVE. Beim Vorrücken der Saisonnummer oder beim
+        offiziellen Start einer Saison schließen wir diese Lücke.
+        """
+        is_transition = False
+        if self.pk:
+            previous = type(self).objects.filter(pk=self.pk).only(
+                'current_season', 'is_started'
+            ).first()
+            if previous is not None:
+                advanced = self.current_season != previous.current_season
+                started = self.is_started and not previous.is_started
+                is_transition = advanced or started
+
+        super().save(*args, **kwargs)
+
+        # Fällige Zuschlagstermine beim Saisonübergang/-start auflösen. Läuft
+        # in eigener Transaktion (innerhalb von resolve_due_windows) und darf
+        # das Speichern des Saison-Status nie blockieren.
+        if is_transition:
+            try:
+                from game.scouting import service as _scouting_service
+                _scouting_service.resolve_due_windows()
+            except Exception:
+                pass
+
 
 class LeagueSeasonState(models.Model):
     """Saisonfortschritt pro Liga — speichert den aktiven Spieltag.

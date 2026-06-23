@@ -370,6 +370,89 @@ class AutoResolveOnMatchdayTests(ScoutingServiceBase):
         self.assertIsNone(player.club_id)
 
 
+class AutoResolveOnSeasonTransitionTests(ScoutingServiceBase):
+    """GameSeasonState muss fällige Zuschlagstermine beim Saisonwechsel/-start
+    auflösen — schließt die Lücke in der Sommerpause, wenn kein Spieltag mehr
+    geschlossen wird."""
+
+    def _make_due_bid(self, wd):
+        player = self.pool[0]
+        bid = ScoutingBid.objects.create(
+            club=self.club, manager=self.manager, player=player,
+            amount=Decimal('6000000'), min_bid=Decimal('5000000'),
+            window_date=wd, season_id=self.season_id,
+            status=ScoutingBid.STATUS_ACTIVE,
+        )
+        return bid, player
+
+    def test_season_advance_resolves_due_window(self):
+        from game.models import GameSeasonState
+
+        wd = date(2026, 7, 3)
+        bid, player = self._make_due_bid(wd)
+        state = GameSeasonState.objects.create(current_season=0, is_started=True)
+
+        with mock.patch('game.scouting.service.timezone') as tz:
+            tz.localdate.return_value = wd
+            state.current_season = 1
+            state.save()
+
+        bid.refresh_from_db()
+        player.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_WON)
+        self.assertEqual(player.club_id, self.club.id)
+
+    def test_season_start_resolves_due_window(self):
+        from game.models import GameSeasonState
+
+        wd = date(2026, 7, 3)
+        bid, player = self._make_due_bid(wd)
+        state = GameSeasonState.objects.create(current_season=0, is_started=False)
+
+        with mock.patch('game.scouting.service.timezone') as tz:
+            tz.localdate.return_value = wd
+            state.is_started = True
+            state.save()
+
+        bid.refresh_from_db()
+        player.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_WON)
+        self.assertEqual(player.club_id, self.club.id)
+
+    def test_season_advance_leaves_future_window_untouched(self):
+        from game.models import GameSeasonState
+
+        bid, player = self._make_due_bid(date(2027, 1, 15))
+        state = GameSeasonState.objects.create(current_season=0, is_started=True)
+
+        with mock.patch('game.scouting.service.timezone') as tz:
+            tz.localdate.return_value = date(2026, 7, 3)
+            state.current_season = 1
+            state.save()
+
+        bid.refresh_from_db()
+        player.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_ACTIVE)
+        self.assertIsNone(player.club_id)
+
+    def test_unchanged_save_does_not_resolve(self):
+        from game.models import GameSeasonState
+
+        wd = date(2026, 7, 3)
+        bid, player = self._make_due_bid(wd)
+        state = GameSeasonState.objects.create(current_season=1, is_started=True)
+
+        with mock.patch('game.scouting.service.timezone') as tz:
+            tz.localdate.return_value = wd
+            # Kein Saisonwechsel/-start → kein Auflösen.
+            state.save()
+
+        bid.refresh_from_db()
+        player.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_ACTIVE)
+        self.assertIsNone(player.club_id)
+
+
 class CommunityTests(ScoutingServiceBase):
     def test_submission_raises_activity_and_enforces_limits(self):
         for i in range(constants.COMMUNITY_COUNTRY_WEEK_CAP):
