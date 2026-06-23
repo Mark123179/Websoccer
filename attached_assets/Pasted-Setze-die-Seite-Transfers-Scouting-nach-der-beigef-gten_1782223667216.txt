@@ -1,0 +1,356 @@
+Setze die Seite **Transfers → Scouting** nach der beigefügten Mockup-Vorlage um.
+
+Wichtig: Die bestehende App-Shell bleibt unverändert.
+
+Nicht neu bauen:
+
+* linke Navigationsbar
+* Manager-Kachel
+* Suchfeld
+* Top-Kalender / Spieltagsleiste
+* globale 1440/900-Skalierung
+* bestehendes Dark-/Cyan-Design
+
+Nur der mittlere Content-Bereich unterhalb des Kalenders wird für den neuen Transfer-Scouting-Screen umgesetzt.
+
+## Grundlayout
+
+Im Transferbereich oben eine Tab-Leiste:
+
+* Transfers
+* Scouting aktiv
+* Auktionen
+* Beobachtungsliste
+
+Der aktive Tab **Scouting** bekommt die cyanfarbene Unterstreichung.
+
+Darunter ein 3-Spalten-Layout:
+
+```css
+grid-template-columns: 280px 1fr 430px;
+gap: 12px;
+```
+
+Links und rechts sollen schmaler bleiben, dafür fast die komplette Höhe nutzen. Die Weltkarte in der Mitte soll der dominante Bereich sein.
+
+## Hauptstruktur
+
+```html
+<div class="transfer-scouting-page">
+  <div class="transfer-tabs">
+    ...
+  </div>
+
+  <div class="scouting-layout">
+    <aside class="scout-order-panel">
+      ...
+    </aside>
+
+    <main class="scouting-center">
+      <section class="scouting-map-panel">
+        ...
+      </section>
+
+      <section class="running-bids-panel">
+        ...
+      </section>
+    </main>
+
+    <aside class="scout-results-panel">
+      ...
+    </aside>
+  </div>
+</div>
+```
+
+## Linke Spalte: Scoutauftrag
+
+Panel-Titel:
+
+```text
+SCOUTAUFTRAG  ⓘ
+```
+
+Inhalt:
+
+```text
+Scoutingabteilung Stufe 2
+Dauer: 12 Tage
+Kosten: 750.000 €
+```
+
+Danach Formularbereiche:
+
+### Suchgebiet ⓘ
+
+Buttons:
+
+```text
+🇹🇷 Türkei
+🇧🇪 Belgien
+🇧🇷 Brasilien
+```
+
+Darunter ein Dropdown:
+
+```text
+Region wählen
+```
+
+### Position ⓘ
+
+Buttons:
+
+```text
+RF
+ST
+IV
+Keine Vorgabe
+```
+
+RF ist aktiv markiert.
+
+### Spielerprofil ⓘ
+
+Buttons:
+
+```text
+Back-up
+Ergänzung
+Rotation
+Stammkraft
+Jugendspieler
+```
+
+Ergänzung ist aktiv markiert.
+
+### Statuszeilen
+
+```text
+✓ Land freigeschaltet
+👤 1 aktiver Scout
+⚠ Max. 2 Verpflichtungen / Saison
+```
+
+Unten ein großer cyanfarbener Button:
+
+```text
+Scout losschicken
+```
+
+## Mitte: Scoutingnetzwerk
+
+Panel-Titel:
+
+```text
+SCOUTINGNETZWERK  ⓘ
+```
+
+Rechts oben im Panel:
+
+```text
+Kontinent: Europa ▼
+```
+
+Der Weltkartenbereich soll groß sein und optisch im Vordergrund stehen.
+
+Darstellung:
+
+* dunkle Weltkarte
+* Europa cyan/blau hervorgehoben
+* Türkei grünlich hervorgehoben
+* leichte Glow-Kanten
+* dezente Grid-/Tech-Textur im Hintergrund
+* keine helle Standardkarte
+
+Unter der Karte:
+
+```text
+Community-Abdeckung: 72 %
+```
+
+Dazu ein cyanfarbener Fortschrittsbalken.
+
+Darunter Hinweistext:
+
+```text
+Hinweis: Einige Länder werden erst nach weiterem Ausbau freigeschaltet. ⓘ
+```
+
+Dann Länder-Kacheln:
+
+```text
+🇹🇷 Türkei       scoutbar
+🇧🇪 Belgien      scoutbar
+🇧🇬 Bulgarien    scoutbar
+🇧🇷 Brasilien    scoutbar
+🇦🇷 Argentinien  Netzwerk im Aufbau
+```
+
+Die Länder-Kacheln sitzen am unteren Rand des Kartenpanels.
+
+## Unter der Karte: Laufende Gebote
+
+Keine Beobachtungsliste an dieser Stelle. Die gibt es bereits als eigenen Tab.
+
+Stattdessen eine kompakte Kachel:
+
+```text
+LAUFENDE GEBOTE  ⓘ
+```
+
+Tabellen-/Listenzeilen:
+
+Spalten:
+
+```text
+Spieler
+Eigenes Gebot
+Mindestgebot
+Entscheidung
+```
+
+Beispielzeilen:
+
+```text
+Emir Yılmaz       9.000.000 €   9.000.000 €    Entscheidung zur SP in 2 Tagen
+Lennert De Smet   6.000.000 €   6.500.000 €    Entscheidung zur WP in 3 Tagen
+João Victor       9.500.000 €   10.000.000 €   Entscheidung zur WP in 4 Tagen
+```
+
+Wenn das eigene Gebot unter Mindestgebot liegt, optisch gelb/orange markieren.
+
+Rechts pro Zeile ein kleines Auge-Icon.
+
+## Rechte Spalte: Scout-Ergebnisse
+
+Panel-Titel:
+
+```text
+SCOUT-ERGEBNISSE (3)  ⓘ
+```
+
+Genau drei vertikale Spieler-Karten.
+
+Jede Karte enthält:
+
+* großes Spielerbild links
+* Name
+* Alter
+* Nationalität mit Flagge
+* HP / NP
+* RL-Klub
+* RL-Liga
+* Marktwert
+* Mindestgebot
+* Auge + Beobachterzahl
+* Button „Beobachten“
+* Button „Angebot“
+
+Kein dritter Button.
+
+Keine Stärke anzeigen.
+Kein Potential anzeigen.
+Keine versteckten Attribute anzeigen.
+
+Beispiel Karte 1:
+
+```text
+Emir Yılmaz
+22 Jahre 🇹🇷 TUR
+HP: RF
+NP: RM, LF
+
+RL-Klub: Galatasaray SK
+RL-Liga: Süper Lig
+
+Marktwert: 4.500.000 €
+Mindestgebot: 9.000.000 €
+
+👁 24
+
+[Beobachten] [Angebot]
+```
+
+Beispiel Karte 2:
+
+```text
+Lennert De Smet
+19 Jahre 🇧🇪 BEL
+HP: ST
+NP: RF, LF
+
+RL-Klub: Club Brugge KV
+RL-Liga: Jupiler Pro League
+
+Marktwert: 3.200.000 €
+Mindestgebot: 6.500.000 €
+
+👁 18
+
+[Beobachten] [Angebot]
+```
+
+Beispiel Karte 3:
+
+```text
+João Victor
+21 Jahre 🇧🇷 BRA
+HP: IV
+NP: RV
+
+RL-Klub: Palmeiras
+RL-Liga: Brasileirão Série A
+
+Marktwert: 5.800.000 €
+Mindestgebot: 10.000.000 €
+
+👁 31
+
+[Beobachten] [Angebot]
+```
+
+## Designvorgaben
+
+Optik exakt im Stil der vorhandenen MatchEngine-Seiten:
+
+* dunkler Navy-/Petrol-Hintergrund
+* Glas-Kacheln
+* cyanfarbene Rahmen
+* leichte Neon-Highlights
+* abgerundete Panels
+* dezente Stadium-/Tech-Textur
+* kleine Info-Icons bei erklärungsbedürftigen Feldern
+* aktive Buttons cyan
+* inaktive Buttons dunkel-transparent
+* Status „scoutbar“ grün
+* Warnungen/Entscheidung orange-gelb
+
+## CSS-Tokens verwenden
+
+Falls noch nicht vorhanden, diese Werte als Orientierung nutzen:
+
+```css
+--bg-main: #031018;
+--panel-bg: rgba(5, 30, 42, 0.88);
+--panel-bg-soft: rgba(8, 42, 56, 0.72);
+--panel-border: rgba(0, 210, 235, 0.28);
+--cyan: #00d7ef;
+--cyan-soft: rgba(0, 215, 239, 0.18);
+--green: #28e878;
+--warning: #f5c542;
+--text-main: #f3fbff;
+--text-muted: #8da8b3;
+```
+
+## Wichtige Umsetzungsregeln
+
+* Keine neue Hauptnavigation erstellen.
+* Keine zweite Beobachtungsliste unten einbauen.
+* Keine Scouting-Info-Kachel unten rechts einbauen.
+* Die Weltkarte muss größer und dominanter sein als in der ersten Version.
+* Links und rechts schmaler, Mitte größer.
+* Spieler-Karten rechts bleiben vollständig sichtbar.
+* Die Seite muss innerhalb des bestehenden 1440/900-Locks sauber wirken.
+* Kein responsives Umbrechen, nur vorhandene Skalierung der App nutzen.
+* Mockdaten erstmal statisch einbauen, später dynamisch anbinden.

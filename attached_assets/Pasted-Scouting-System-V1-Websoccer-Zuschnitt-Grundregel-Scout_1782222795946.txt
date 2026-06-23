@@ -1,0 +1,824 @@
+Scouting-System V1 — Websoccer-Zuschnitt
+Grundregel
+Scouting findet Spieler.
+Gebote sichern nur eine Chance.
+Transfers passieren erst zur Winterpause oder Sommerpause.
+
+Kein Sofortkauf.
+Keine Leihen.
+Keine gezielte Vereinssuche.
+Keine sichtbaren Stärken/Potentiale.
+Keine aktiven Interessenten, nur Beobachter.
+
+1. Ablauf eines Scoutingauftrags
+Manager wählt Suchgebiet
+↓
+Manager wählt Suchprofil
+↓
+optional Position wählen
+↓
+Scout wird losgeschickt
+↓
+Kosten werden sofort abgezogen
+↓
+nach X Tagen erscheinen 3 Spieler
+↓
+Manager kann genau einen auswählen
+↓
+Manager gibt ein verbindliches Gebot ab
+↓
+Gebotssumme wird reserviert
+↓
+Kaderplatz wird reserviert
+↓
+Spieler landet auf Beobachtungsliste
+↓
+Scoutingauftrag ist beendet
+↓
+zur WP/SP gewinnt das höchste gültige Gebot
+
+Wenn der Manager keinen der drei Spieler möchte:
+
+ablehnen
+↓
+Scoutingauftrag beendet
+↓
+neuer Auftrag möglich
+
+Die drei gefundenen Spieler bleiben nicht dauerhaft verfügbar.
+Kein Angebot = weg.
+
+2. Scoutingausbau
+
+Hier würde ich mit deiner Logik gehen: Es gibt immer nur einen Scout und immer nur einen aktiven Auftrag.
+
+Der Ausbau verbessert nur:
+
+Dauer
+Kosten
+Trefferpräzision
+
+Nicht:
+
+mehr Scouts
+mehr parallele Aufträge
+höhere Wonderkid-Chance
+mehr Verpflichtungen
+Vorschlag Stufen
+Stufe	Ausbaukosten	Auftragkosten	Dauer	Funde	Effekt
+0	0 €	—	—	—	nur Beobachtungsliste
+1	3 Mio €	1.000.000 €	14 Tage	3	normale Streuung
+2	12 Mio €	750.000 €	12 Tage	3	bessere Passung
+3	17 Mio €	500.000 €	10 Tage	3	beste Passung
+
+Das ist fair, weil Stufe 3 pro 12 Suchen gegenüber Stufe 1 etwa 6 Mio € spart und zusätzlich Zeit spart. Es erzeugt aber keine stärkeren Spieler.
+
+3. Was bedeutet „Trefferpräzision“?
+
+Nicht:
+
+Stufe 3 findet bessere Spieler.
+
+Sondern:
+
+Stufe 3 findet eher Spieler, die zum Suchprofil passen.
+
+Beispiel:
+
+Ein Verein hat 22 Profis mit zusammen 2.800 Stärke.
+
+Teamdurchschnitt: 127,3
+gerundet: 130
+
+Der Manager sucht:
+
+Land: Türkei
+Position: RF
+Profil: Stammkraft
+
+Dann baut das System intern einen Kandidatenpool.
+
+Beispielhafte Rollenbereiche bei Teamdurchschnitt 130:
+
+Suchprofil	interner Stärkebereich
+Back-up	85–105
+Ergänzungsspieler	100–120
+Rotationsspieler	110–130
+Stammkraft	120–140
+Jugendspieler/Talent	U21, unterhalb Top-Talent-Grenze
+
+Die Zahlen sind nur Beispielwerte. Am Ende müssen sie aus deiner echten Datenbank kalibriert werden.
+
+Unterschied je Ausbaustufe
+
+Bei Stufe 1 kann das System stärker streuen:
+
+gesucht: Stammkraft 120–140
+mögliche Treffer: 112–142
+
+Bei Stufe 2 enger:
+
+gesucht: Stammkraft 120–140
+mögliche Treffer: 116–142
+
+Bei Stufe 3 am genauesten:
+
+gesucht: Stammkraft 120–140
+mögliche Treffer: 120–140
+
+Aber: Der beste Spieler im Pool bleibt trotzdem schwerer zu finden.
+
+4. Suchprofile V1
+
+Ich würde die Profile deutlich reduzieren.
+
+Sinnvolle Profile
+Back-up
+Ergänzungsspieler
+Rotationsspieler
+Stammkraft
+Jugendspieler/Talent
+Weglassen
+Top-Talent
+Starspieler
+Schnäppchen
+Vertragslos
+Positionssuche
+
+Begründung:
+
+Top-Talent → gehört in Auktionen
+Starspieler → besser als Stammkraft behandeln oder Auktion
+Schnäppchen → definiert keinen Spielertyp
+Vertragslos → eigenes Transfermodul, aktuell unnötig
+Positionssuche → Position ist Filter, kein Profil
+
+Position bleibt also separat:
+
+Suchprofil: Stammkraft
+Position: RF
+Suchgebiet: Türkei
+
+Oder:
+
+Suchprofil: Jugendspieler/Talent
+Position: IV
+Suchgebiet: Belgien
+5. Top-Talente und Top-Stars
+
+Die sollten nicht normal im Scoutingpool verpflichtbar sein.
+
+Sie dürfen im Pool existieren, aber mit Sonderstatus:
+
+auction_reserved = true
+
+Das bedeutet:
+
+kann durch Scouting eventuell als Gerücht/Beobachtung auftauchen
+aber nicht über normales Scouting-Gebot verpflichtet werden
+
+Für V1 würde ich sogar noch härter sein:
+
+Top-Talent / Top-Star wird gar nicht als normaler Scoutingfund ausgespielt.
+
+Diese Spieler laufen später über:
+
+Auktionen
+Spezialauktionen
+Hoeneß-Coin-Auktionen
+Community-Events
+
+Im Creator-Mode brauchst du dafür klare Labels:
+
+Poolfähig
+Scoutingpool
+Auktionsreserviert
+Nicht verfügbar
+Bereits WSC-Spieler
+Einberufbar
+6. Länder und Regionen
+
+Das gefällt mir so:
+
+Land scoutbar ab 50 Poolspielern
+Region scoutbar ab 100 Poolspielern
+
+Aber die echte Anzahl wird nie angezeigt.
+
+Anzeige nach außen
+
+Nicht:
+
+Türkei: 47/50 Spieler
+
+Sondern:
+
+Türkei
+Status: Netzwerk im Aufbau
+Hinweis: Es fehlen noch einige bestätigte Spielerprofile.
+
+Oder:
+
+Brasilien
+Status: kurz vor Freischaltung
+Hinweis: Das Netzwerk ist fast vollständig.
+
+Oder:
+
+Belgien
+Status: scoutbar
+Wichtig
+
+Ein Land kann auch wieder geschlossen werden:
+
+Pool fällt unter 50
+↓
+Land nicht mehr scoutbar
+
+Das verhindert, dass ein Land nach 20 Transfers leergefischt wird.
+
+7. Keine Sofortprüfung nach Suchprofil
+
+Ich gehe mit dir mit: Das System soll nicht vorab sagen:
+
+Es gibt keinen RF-Stammspieler in der Türkei.
+
+Das wäre zu viel Datenbank-Feedback.
+
+Stattdessen:
+
+Land/Region ist scoutbar oder nicht scoutbar.
+
+Wenn scoutbar, darf gesucht werden.
+
+Falls das exakte Profil intern zu dünn ist, erweitert das System die Suche leicht:
+
+RF → RF/RM/RA
+Stammkraft → Stammkraft/Rotation
+Jugendspieler → U21/U23
+
+Je niedriger Abdeckung und Ausbaustufe, desto breiter wird diese Streuung.
+
+Das ist dann „grob“.
+
+8. Abdeckung sinnvoll definieren
+
+Abdeckung sollte nicht einfach die Poolgröße sein. Sonst kann man sie ausrechnen.
+
+Besser:
+
+Abdeckung = Community-Fortschritt + Poolqualität + Scoutingaktivität
+
+Intern kann sie aus mehreren Punkten entstehen:
+
+gültige tm.de-Einreichungen
+abgeschlossene Scoutingaufträge
+Transfers aus der Region
+Beobachtungen aus der Region
+Community-Ziele
+Ausbau von Scoutingabteilungen
+Admin-Freigaben
+Wirkung der Abdeckung
+
+Nicht:
+
+mehr Topspieler
+
+Sondern:
+
+präzisere Suche
+bessere Positionspassung
+bessere Rollenpassung
+weniger Streuverluste
+
+Beispiel:
+
+Abdeckung	Wirkung
+0–49 %	nicht scoutbar
+50–64 %	grobe Suche
+65–79 %	normale Suche
+80–94 %	gute Suche
+95–100 %	sehr genaue Suche
+Beispiel „grob“
+
+Manager sucht:
+
+Türkei
+RF
+Stammkraft
+
+Bei 55 % Abdeckung kann herauskommen:
+
+RF-Stammkraft
+RM-Stammkraft
+RF-Rotationsspieler
+RA-Stammkraft
+
+Bei 95 % Abdeckung eher:
+
+RF-Stammkraft
+RF-Stammkraft
+RM/RF-Stammkraft
+
+Der Manager merkt nur: Je besser das Netzwerk, desto passender die Treffer.
+
+9. Fundwahrscheinlichkeit innerhalb des Kandidatenpools
+
+Dein Ansatz ist richtig: Nicht pauschal „Topspieler 1 %“, sondern abhängig vom Pool.
+
+Ablauf intern:
+
+1. Filter nach Suchgebiet
+2. Filter nach WSC-Verfügbarkeit
+3. Filter nach Suchprofil
+4. Filter nach Position oder Positionsnähe
+5. Kandidaten bekommen Gewichtung
+6. drei Spieler werden gewichtet gezogen
+Gewichtung
+
+Jeder Kandidat bekommt intern einen Score:
+
+Treffergewicht =
+Profilpassung
+× Positionspassung
+× Abdeckungsfaktor
+× Ausbaustufenfaktor
+× Seltenheitsfaktor
+
+Der Seltenheitsfaktor senkt die Chance für die besten Spieler.
+
+Beispiel bei 20 Kandidaten:
+
+Top 10 % nach Stärke:
+stark reduzierte Fundchance
+
+Top 10 % nach Potential:
+stark reduzierte Fundchance
+
+mittlere Kandidaten:
+normale Fundchance
+
+schwächere Kandidaten:
+leicht erhöhte Fundchance
+
+Damit kann Sané theoretisch gefunden werden, aber nicht ständig.
+
+10. Relativ und absolut prüfen
+
+Du brauchst beides.
+
+Relativ
+
+Damit das Suchprofil zum Verein passt:
+
+FC Bayern sucht Stammkraft → sehr hohe Stärke
+FC Luzern sucht Stammkraft → niedrigere Stärke
+Absolut
+
+Damit das System Top-Stars und Top-Talente erkennt:
+
+Spieler über absoluter Stärke X → Auktionsreserviert
+Spieler über Potential X → Auktionsreserviert
+
+So kann ein Spieler für Luzern zwar eine extreme Verstärkung sein, aber wenn er global kein Top-Star ist, bleibt er poolfähig.
+
+11. Verpflichtungslimit
+
+Ich würde für V1 hart starten:
+
+max. 2 Scoutingpool-Verpflichtungen pro Verein und Saison
+
+Mit Hoeneß-Coin:
+
++1 zusätzliche Scoutingpool-Verpflichtung
+
+Also maximal:
+
+2 normal
+3 mit Coin
+
+Nicht mehr.
+
+Der Coin darf nicht die Fundchance erhöhen und nicht das Gebot verbessern. Er öffnet nur einen zusätzlichen Verpflichtungsslot.
+
+Wichtig:
+
+Coin wird erst verbraucht, wenn der Transfer wirklich klappt.
+
+Wenn der Manager bietet, aber verliert:
+
+Coin bleibt erhalten.
+
+Wenn der Transfer gewinnt:
+
+Coin wird verbraucht.
+12. Gebotslogik
+
+Der Manager sieht:
+
+Marktwert
+Mindestgebot
+Beobachter
+
+Er sieht nicht:
+
+Stärke
+Potential
+versteckte Kategorie
+andere Gebote
+aktive Interessenten
+
+Beispiel:
+
+Leroy Sané
+Marktwert: 20 Mio €
+Mindestgebot: 40 Mio €
+Beobachter: 8
+
+Manager bietet:
+
+45 Mio €
+
+Dann:
+
+45 Mio € werden reserviert
+Kaderplatz wird reserviert
+Spieler kommt auf Beobachtungsliste
+Gebot ist verbindlich
+Scoutauftrag ist beendet
+
+Zur WP/SP:
+
+höchstes Gebot gewinnt
+
+Bei Gleichstand:
+
+früheres Gebot gewinnt
+
+Das ist simpel, nachvollziehbar und ohne Prestige-Sonderregeln.
+
+13. Budget- und Kaderplatz-Reservierung
+
+Sehr wichtig. Das würde ich exakt so machen, wie du es beschreibst.
+
+Beim Scoutauftrag
+
+Prüfung:
+
+hat Verein genug Kontostand für Scoutkosten?
+
+Wenn ja:
+
+Scoutkosten sofort abziehen
+Beim Gebot
+
+Prüfung:
+
+hat Verein genug freies Budget für Gebot?
+hat Verein freien Kaderplatz?
+hat Verein Scouting-Verpflichtungslimit frei?
+ist Spieler noch verfügbar?
+
+Wenn ja:
+
+Gebot wird reserviert
+Kaderplatz wird reserviert
+Verpflichtungsslot wird vorgemerkt
+
+Damit kann niemand 5 Spieler bieten und später sagen:
+
+Ups, Kader voll.
+
+Oder:
+
+Ups, Geld schon ausgegeben.
+Wenn Gebot verliert
+Geld zurück
+Kaderplatz frei
+Verpflichtungsslot frei
+Wenn Gebot gewinnt
+Geld endgültig weg
+Spieler kommt zum Verein
+reservierter Kaderplatz wird echter Kaderplatz
+Verpflichtungslimit wird verbraucht
+14. Transferfenster-Regel
+
+Hier brauchst du eine klare Stichtagslogik, sonst gibt es den von dir beschriebenen Sommerpausen-Exploit.
+
+Regelvorschlag
+Ein Scouting-Gebot kann nur in einem Transferfenster verarbeitet werden,
+wenn es mindestens 7 RL-Tage vor dem Zuschlagstichtag abgegeben wurde.
+
+Beispiel:
+
+Sommerpause beginnt am 01.07.
+Scouting-Zuschlagstag ist 03.07.
+Gebote müssen bis 26.06. eingegangen sein.
+
+Gebote, die danach abgegeben werden:
+
+werden nicht sofort verarbeitet
+laufen bis zum nächsten Zuschlagstermin weiter
+
+Also:
+
+Scout findet Spieler während der Sommerpause
+Manager bietet
+kein Sofortwechsel
+Entscheidung erst zur Winterpause
+
+Damit bleibt die Regel sauber:
+
+kein Sofort-Kauf
+immer Wartezeit
+immer Konkurrenzchance
+15. Admin-Kontrolle / Gerüchteprüfung
+
+Deine manuelle Kontrolle ist sinnvoll.
+
+Im Creator-Mode sollte vor dem Transferabschluss stehen:
+
+Admin-Prüfung erforderlich
+
+Du prüfst dann zum Beispiel tm.de-Gerüchte oder offensichtliche RL-Entwicklungen.
+
+Wenn Konflikt vorhanden:
+
+Transfer ablehnen
+alle Gebote erstatten
+Kaderplätze freigeben
+Spielerstatus anpassen
+
+User sieht dann nicht zwingend jedes Detail, sondern z. B.:
+
+Der Transfer konnte aufgrund externer Entwicklungen nicht abgeschlossen werden.
+Das reservierte Budget wurde freigegeben.
+
+Das schützt dich vor Fällen wie:
+
+Spieler steht real kurz vor Tottenham
+User will ihn billig abgreifen
+16. Beobachtungsliste
+
+Managergebunden, nicht vereinsgebunden. Bleibt bei Vereinswechsel.
+
+Spalten:
+
+Bild
+Name
+Alter
+Nationalität
+HP/NP
+Marktwert
+aktueller WSC-Verein
+aktueller RL-Verein
+RL-Liga
+Saisonspiele
+Tore
+Vorlagen
+Durchschnittsnote
+Beobachter
+Status
+Kontakt
+Beobachter
+
+Nur ein Wert:
+
+Auge + Zahl
+
+Keine Trennung zwischen:
+
+Beobachter
+aktive Interessenten
+Bieter
+
+Das reicht. Manager können interpretieren, aber sie wissen nichts sicher.
+
+Briefsymbol
+
+Nur anzeigen, wenn:
+
+Spieler hat WSC-Verein
+und WSC-Verein hat Manager
+
+Dann kann man direkt Kontakt aufnehmen.
+
+Bei Poolspielern ohne WSC-Verein:
+
+kein Briefsymbol
+17. Was passiert mit normalen WSC-Spielern?
+
+Die Beobachtungsliste darf alle Spieler enthalten:
+
+WSC-Spieler
+Pool-Spieler, sofern entdeckt/angeboten
+eigene Spieler
+fremde Vereinsspieler
+
+Aber Scouting betrifft nur:
+
+hidden_pool_player
+
+Ein Spieler mit aktivem WSC-Verein darf nicht im Scoutingpool erscheinen.
+
+18. Spieler wechselt real zu aktivem WSC-Verein
+
+Späteres Thema, aber die Richtung ist klar:
+
+RL-Spieler aus Türkei wechselt real zum HSV
+HSV existiert aktiv im WSC
+↓
+Spieler kann einberufen/importiert werden
+↓
+Spieler wird aus Scoutingpool entfernt
+
+Im Creator-Mode brauchst du dafür später:
+
+einberufbar
+Quelle: RL-Wechsel
+Zielverein: HSV
+Poolstatus beenden
+19. Creator-Mode braucht diese Felder
+
+Für jeden Poolspieler:
+
+Name
+tm.de-Link
+tm.de-ID
+Alter
+Nationalität
+Positionen HP/NP
+RL-Verein
+RL-Liga
+Land des RL-Vereins
+Marktwert
+interne Stärke
+internes Potential
+Poolstatus
+Scouting-Kategorie
+Auktionsreserviert ja/nein
+WSC-Konflikt ja/nein
+Einberufbar ja/nein
+Admin geprüft ja/nein
+
+Zusätzlich für Scouting:
+
+Anzahl Beobachter
+laufende Gebote
+höchstes Gebot
+reservierte Budgets
+reservierte Kaderplätze
+nächster Zuschlagstermin
+Admin-Prüfung offen
+20. Preisformel
+
+Konkrete Zahlen später, aber die Struktur kann stehen.
+
+Mindestgebot =
+Marktwert
+× Altersfaktor
+× Stärkefaktor
+× Potentialfaktor
+× optional Ligafaktor
+
+Keine offenen Mindestpreise wie:
+
+Top-Talent mindestens 35 Mio €
+
+Das würde zu viel verraten.
+
+Besser:
+
+Der Mindestpreis entsteht aus mehreren Faktoren.
+
+Dann weiß der Manager nicht, ob der hohe Preis wegen Alter, Stärke, Potential oder Marktwertdynamik kommt.
+
+Beispiel-Faktoren
+Faktor	Wirkung
+Altersfaktor	jünger = teurer
+Stärkefaktor	stärker = teurer
+Potentialfaktor	mehr Entwicklung = teurer
+Ligafaktor	große RL-Liga leicht teurer
+
+Beispiel Sané-artiger Spieler:
+
+MW: 20 Mio €
+Alter/Stärke-Profil führt zu Faktor 2.0
+Mindestgebot: 40 Mio €
+
+Beispiel junger Spieler:
+
+MW: 6 Mio €
+jung + gutes Potential + ordentliche Stärke
+Faktor 2.5–3.2
+Mindestgebot: 15–19,2 Mio €
+
+Damit kostet ein 6-Mio-Talent nicht automatisch nur 7 oder 8 Mio.
+
+21. Gehalt
+
+Für V1 würde ich Gehalt wirklich statisch an Marktwert koppeln.
+
+Marktwert → Gehaltsklasse
+
+Nicht direkt an Scoutinggebot.
+
+Sonst bestraft ein überhöhtes Gebot doppelt.
+
+Beispiel:
+
+MW 5–10 Mio → Gehaltsklasse X
+MW 10–20 Mio → Gehaltsklasse Y
+MW 20–40 Mio → Gehaltsklasse Z
+
+Das ist einfacher zu balancen und verhindert Chaos.
+
+22. Community-Ziele
+
+Das passt gut als Meta-System.
+
+Länderfreischaltung
+
+Beispiel Türkei:
+
+Ziel: Türkei scoutbar machen
+
+Community-Fortschritt:
+gültige Spielerprofile einreichen
+Scoutingabteilungen ausbauen
+Transfers aus türkischen Vereinen abschließen
+Spieler aus Türkei beobachten
+Community-Aufträge erfüllen
+Keine exakten Poolzahlen
+
+Anzeige:
+
+Türkei-Netzwerk: 72 %
+Status: kurz vor Freischaltung
+
+Aber nicht:
+
+43/50 Spieler
+Einreichungs-Cap
+
+Unbedingt.
+
+Beispiel:
+
+pro Manager: 3 Einreichungen pro Woche
+pro Land: maximal X offene Einreichungen
+Admin kann Einreichungen pausieren
+
+Sonst bekommst du 12.000 Links und der Creator-Mode wird zur Müllhalde.
+
+23. i-Symbole / Erklärtexte
+
+Die brauchst du wirklich. Vorschläge:
+
+Suchgebiet
+Du scoutest immer ein Land oder eine Region, niemals einen bestimmten Verein.
+Geschlossene Länder
+Dieses Land ist noch nicht ausreichend erschlossen. Die genaue Anzahl der Poolspieler bleibt verborgen.
+Suchprofil
+Das Suchprofil beschreibt die gewünschte Rolle im Verhältnis zur aktuellen Teamstärke deines Vereins.
+Position
+Die Position erhöht die Trefferwahrscheinlichkeit für passende Spieler, garantiert aber keinen exakten Treffer.
+Treffer
+Scouting zeigt keine Stärke, kein Potential und keine versteckten Attribute.
+Beobachter
+Die Zahl zeigt, wie viele Manager diesen Spieler auf ihrer Beobachtungsliste haben. Sie zeigt nicht die Anzahl der Gebote.
+Mindestgebot
+Das Mindestgebot ist die niedrigste zulässige Ablöseforderung. Höhere Gebote erhöhen die Chance auf den Zuschlag.
+Gebot
+Ein abgegebenes Gebot ist verbindlich und kann nicht geändert werden.
+Reserviertes Budget
+Das Gebot wird bis zur Entscheidung reserviert und kann nicht anderweitig ausgegeben werden.
+Kaderplatz
+Ein Scoutinggebot reserviert bereits einen Kaderplatz, damit der Verein beim Zuschlag nicht über dem Kaderlimit liegt.
+Transferzeitpunkt
+Scoutingtransfers werden nur zu festgelegten Zuschlagsterminen in der Winter- oder Sommerpause abgeschlossen.
+Hoeneß-Coin
+Ein Hoeneß-Coin kann einen zusätzlichen Scoutingtransfer in dieser Saison erlauben. Er verbessert keine Fundchance und kein Gebot.
+24. Meine klare V1-Empfehlung
+
+So würde ich es festziehen:
+
+1 Scout pro Verein
+1 aktiver Suchauftrag
+3 Treffer pro Auftrag
+10–14 Tage je nach Scoutingausbau
+Kosten 1 Mio / 750k / 500k
+Land ab 50 Poolspielern scoutbar
+Region ab 100 Poolspielern scoutbar
+Poolzahlen verborgen
+keine Suche nach RL-Verein
+keine Suche nach Marktwert
+Suchprofile: Back-up, Ergänzung, Rotation, Stammkraft, Jugendspieler
+Top-Talente und Top-Stars auktionsreserviert
+max. 2 Scouting-Verpflichtungen pro Saison
++1 per Hoeneß-Coin
+Gebote verbindlich
+Budget und Kaderplatz werden reserviert
+höchstes Gebot gewinnt zur WP/SP
+Gebote müssen mindestens 7 RL-Tage vor Zuschlagstermin liegen
+Admin-Prüfung vor finalem Transfer
