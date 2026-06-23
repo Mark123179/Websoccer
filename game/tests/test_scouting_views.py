@@ -255,3 +255,84 @@ class CreatorScoutingEndpointTests(ScoutingViewsBase):
         resp = self.client.get(
             reverse('creator_moderate_submission', args=[sub.id]))
         self.assertEqual(resp.status_code, 405)
+
+
+# ── Öffentliche Sicht leakt keine Stärke/Potential/Pool (Task #600) ───────────
+class FindCardConfidentialityTests(ScoutingViewsBase):
+    """Das zentrale Design-Versprechen: Fund-Karten verraten weder
+    base_strength/potential noch observer-Pool/pool_count.
+
+    Der Test setzt bewusst unverwechselbare Sentinel-Werte für Stärke und
+    Potential, damit ein versehentliches Durchsickern ins Template oder den
+    Context sofort auffällt.
+    """
+
+    # Sentinel-Werte, die sonst nirgends auf dem Screen vorkommen dürfen.
+    SENTINEL_STRENGTH = 87
+    SENTINEL_POTENTIAL = 93
+
+    # Schlüssel, die im finds-Context niemals auftauchen dürfen.
+    FORBIDDEN_KEYS = (
+        'strength', 'base_strength', 'potential',
+        'pool_count', 'pool_status', 'attributes',
+    )
+
+    # Genau diese Schlüssel darf eine öffentliche Fund-Karte enthalten.
+    ALLOWED_KEYS = {
+        'find_id', 'player_id', 'name', 'age', 'flag', 'nat', 'hp', 'np',
+        'rl_club', 'rl_liga', 'market_value_fmt', 'min_bid', 'min_bid_fmt',
+        'observer_count', 'portrait', 'watched',
+    }
+
+    def _sentinel_find(self):
+        player = _pool_player(
+            last='Geheim', strength=self.SENTINEL_STRENGTH,
+            potential=self.SENTINEL_POTENTIAL, age=24,
+            market_value='4000000',
+        )
+        return self._assignment_with_find(player, self.club, self.manager)
+
+    def test_finds_context_has_no_strength_or_potential_keys(self):
+        self._sentinel_find()
+        resp = self.client.get(reverse('transfer_scouting'))
+        self.assertEqual(resp.status_code, 200)
+        finds = resp.context['finds']
+        self.assertEqual(len(finds), 1)
+        card = finds[0]
+        # Keine verbotenen Schlüssel.
+        for key in self.FORBIDDEN_KEYS:
+            self.assertNotIn(key, card, f'Fund-Karte verrät {key!r}')
+        # Whitelist: ausschließlich erlaubte Schlüssel.
+        self.assertEqual(set(card), self.ALLOWED_KEYS)
+
+    def test_finds_context_values_do_not_contain_sentinels(self):
+        """Auch die Werte (nicht nur Schlüssel) dürfen Stärke/Potential nicht
+        durchreichen — z. B. als String oder in einer verschachtelten Struktur."""
+        self._sentinel_find()
+        resp = self.client.get(reverse('transfer_scouting'))
+        card = resp.context['finds'][0]
+        for value in card.values():
+            self.assertNotIn(self.SENTINEL_STRENGTH, (value,))
+            self.assertNotIn(self.SENTINEL_POTENTIAL, (value,))
+
+    def test_rendered_html_hides_strength_and_potential(self):
+        self._sentinel_find()
+        resp = self.client.get(reverse('transfer_scouting'))
+        html = resp.content.decode('utf-8')
+        # Die Fund-Karte wird gerendert (Name als Anker).
+        self.assertIn('Pool Geheim', html)
+
+        # Auf dem Gesamtscreen kommen Zahlen wie Sentinels zufällig in Karten-
+        # Daten/Prozenten vor; deshalb wird nur das Ergebnis-Panel geprüft, das
+        # ausschließlich die öffentlichen Fund-Karten enthält.
+        start = html.index('<aside class="scout-results-panel">')
+        end = html.index('</aside>', start)
+        panel = html[start:end]
+        self.assertIn('Pool Geheim', panel)
+
+        # Sentinel-Werte tauchen im Fund-Panel nicht auf.
+        self.assertNotIn(str(self.SENTINEL_STRENGTH), panel)
+        self.assertNotIn(str(self.SENTINEL_POTENTIAL), panel)
+        # Und keine verräterischen Attribut-Labels (gesamter Screen).
+        for label in ('base_strength', 'pool_count', 'Stärke', 'Potential', 'Potenzial'):
+            self.assertNotIn(label, html)
