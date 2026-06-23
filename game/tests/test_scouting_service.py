@@ -313,6 +313,63 @@ class CommitmentCoinTests(ScoutingServiceBase):
         self.assertEqual(target.pool_status, Player.POOL_STATUS_SCOUTABLE)
 
 
+class AutoResolveOnMatchdayTests(ScoutingServiceBase):
+    """close_matchday muss fällige Zuschlagstermine automatisch auflösen."""
+
+    def test_close_matchday_resolves_due_window(self):
+        from game.models import LeagueSeasonState
+        from game.season_service import close_matchday
+
+        player = self.pool[0]
+        wd = date(2026, 7, 3)
+        bid = ScoutingBid.objects.create(
+            club=self.club, manager=self.manager, player=player,
+            amount=Decimal('6000000'), min_bid=Decimal('5000000'),
+            window_date=wd, season_id=self.season_id,
+            status=ScoutingBid.STATUS_ACTIVE,
+        )
+        # Spieltag-Zustand: simuliert, bereit zum Abschluss.
+        LeagueSeasonState.objects.create(
+            league=self.league, season='0',
+            current_matchday=1, is_simulated=True,
+        )
+
+        # Heute liegt am/nach dem Zuschlagstermin → Fenster ist fällig.
+        with mock.patch('game.scouting.service.timezone') as tz:
+            tz.localdate.return_value = wd
+            close_matchday(self.league, '0')
+
+        bid.refresh_from_db()
+        player.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_WON)
+        self.assertEqual(player.club_id, self.club.id)
+
+    def test_close_matchday_leaves_future_window_untouched(self):
+        from game.models import LeagueSeasonState
+        from game.season_service import close_matchday
+
+        player = self.pool[0]
+        bid = ScoutingBid.objects.create(
+            club=self.club, manager=self.manager, player=player,
+            amount=Decimal('6000000'), min_bid=Decimal('5000000'),
+            window_date=date(2027, 1, 15), season_id=self.season_id,
+            status=ScoutingBid.STATUS_ACTIVE,
+        )
+        LeagueSeasonState.objects.create(
+            league=self.league, season='0',
+            current_matchday=1, is_simulated=True,
+        )
+
+        with mock.patch('game.scouting.service.timezone') as tz:
+            tz.localdate.return_value = date(2026, 7, 3)
+            close_matchday(self.league, '0')
+
+        bid.refresh_from_db()
+        player.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_ACTIVE)
+        self.assertIsNone(player.club_id)
+
+
 class CommunityTests(ScoutingServiceBase):
     def test_submission_raises_activity_and_enforces_limits(self):
         for i in range(constants.COMMUNITY_COUNTRY_WEEK_CAP):

@@ -869,6 +869,17 @@ def close_matchday(league, season: str) -> dict:
         )
         TacticSetup.objects.filter(club_id__in=club_ids, squad_scope='pro').update(is_locked=False)
 
+    # ── Fällige Scouting-Zuschlagstermine automatisch auflösen ───────────────
+    # Beim Vorrücken des Spieltags entscheiden sich überfällige Gebote ohne
+    # manuellen Eingriff (höchstes Gebot gewinnt; Verlierer geben Budget/Coin
+    # frei). Läuft in eigener Transaktion und darf den Spieltag-Abschluss nie
+    # blockieren — der manuelle Befehl bleibt als Notfallpfad erhalten.
+    try:
+        from game.scouting import service as _scouting_service
+        _scouting_service.resolve_due_windows()
+    except Exception:
+        pass
+
     return {
         'closed': closed_matchday,
         'next': state.current_matchday if not season_complete else None,
