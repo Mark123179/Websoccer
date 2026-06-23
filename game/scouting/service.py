@@ -348,12 +348,39 @@ def withdraw_bid(bid):
 
 
 # ── Zuschlagstermin auflösen ─────────────────────────────────────────────────
+def _format_eur(amount):
+    try:
+        v = int(round(float(amount)))
+    except (TypeError, ValueError):
+        return '—'
+    return f'{v:,}'.replace(',', '.') + ' €'
+
+
+def _emit_settlement_news(bid, player, won, today):
+    """Erzeugt eine Vereinsnews-Meldung über das aufgelöste Scouting-Gebot."""
+    from game.models import ClubNewsItem
+    if not bid.club_id:
+        return
+    name = _player_name(player)
+    amount = _format_eur(bid.amount)
+    if won:
+        title = f'Scouting-Coup: {name} für {amount} verpflichtet'
+    else:
+        title = f'Scouting-Gebot für {name} ({amount}) nicht erfolgreich'
+    ClubNewsItem.objects.create(
+        club_id=bid.club_id,
+        title=title[:160],
+        published_at=today,
+    )
+
+
 def _settle_loss(bid, today):
     from game.models import ScoutingBid
     bid.status = ScoutingBid.STATUS_LOST
     bid.settled_on = today
     bid.save(update_fields=['status', 'settled_on'])
     _upsert_watchlist(bid.manager, bid.player, 'lost')
+    _emit_settlement_news(bid, bid.player, won=False, today=today)
 
 
 def _settle_win(bid, today):
@@ -407,6 +434,7 @@ def _settle_win(bid, today):
     bid.settled_on = today
     bid.save(update_fields=['status', 'coin_used', 'settled_on'])
     _upsert_watchlist(bid.manager, player, 'won')
+    _emit_settlement_news(bid, player, won=True, today=today)
     return True
 
 

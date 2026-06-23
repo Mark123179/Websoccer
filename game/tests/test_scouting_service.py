@@ -16,7 +16,7 @@ from game.club_import.season import get_current_tm_season_id
 from game.models import (
     League, Club, Player, PlayerStrengthProfile, ManagerProfile, HoenessCoin,
     ScoutingAssignment, ScoutingFind, ScoutingBid, WatchlistEntry,
-    CountryNetwork, CommunitySubmission, ClubFinancialTransaction,
+    CountryNetwork, CommunitySubmission, ClubFinancialTransaction, ClubNewsItem,
 )
 from game.scouting import service, coverage, department, constants
 
@@ -227,6 +227,25 @@ class ResolutionTests(ScoutingServiceBase):
         self.assertEqual(summary['won'], 0)
         player.refresh_from_db()
         self.assertIsNone(player.club_id)
+
+    def test_settlement_emits_news_for_winner_and_loser(self):
+        player = self.pool[0]
+        club2 = Club.objects.create(name='BVB', short_name='BVB', founded_year=1909,
+                                    budget=Decimal('200000000'), league=self.league)
+        mgr2 = ManagerProfile.objects.create(name='Manager 2')
+        wd = date(2026, 7, 3)
+        self._make_bid(self.club, self.manager, player, '6000000', wd)
+        self._make_bid(club2, mgr2, player, '8000000', wd)
+
+        service.resolve_due_windows(today=wd)
+
+        win_news = ClubNewsItem.objects.filter(club=club2)
+        loss_news = ClubNewsItem.objects.filter(club=self.club)
+        self.assertEqual(win_news.count(), 1)
+        self.assertEqual(loss_news.count(), 1)
+        self.assertIn('verpflichtet', win_news.first().title)
+        self.assertIn('nicht erfolgreich', loss_news.first().title)
+        self.assertEqual(win_news.first().published_at, wd)
 
 
 class CommitmentCoinTests(ScoutingServiceBase):
