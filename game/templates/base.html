@@ -91,7 +91,7 @@
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-taktik.png' %}" alt=""></span>
                 Taktik
             </a>
-            <a href="{{ current_manager.club_url }}">
+            <a href="{% url 'transfer_scouting' %}"{% if url_name == 'transfer_scouting' or url_name == 'transfer_watchlist' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-transfers.png' %}" alt=""></span>
                 Transfers
             </a>

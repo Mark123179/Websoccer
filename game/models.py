@@ -1496,6 +1496,62 @@ class Player(models.Model):
         default=False,
     )
 
+    # ── Scouting-Pool (Task #594) ──────────────────────────────────────────
+    POOL_STATUS_NONE = 'none'
+    POOL_STATUS_SCOUTABLE = 'scoutable'
+    POOL_STATUS_AUCTION_RESERVED = 'auction_reserved'
+    POOL_STATUS_UNAVAILABLE = 'unavailable'
+    POOL_STATUS_CHOICES = [
+        (POOL_STATUS_NONE, 'WSC-Spieler (kein Pool)'),
+        (POOL_STATUS_SCOUTABLE, 'Scoutbar (Pool)'),
+        (POOL_STATUS_AUCTION_RESERVED, 'Auktion reserviert'),
+        (POOL_STATUS_UNAVAILABLE, 'Nicht verfügbar'),
+    ]
+    pool_status = models.CharField(
+        'Pool-Status',
+        max_length=20,
+        choices=POOL_STATUS_CHOICES,
+        default=POOL_STATUS_NONE,
+        help_text=(
+            'Steuert die Scouting-Verfügbarkeit. Scoutbar ist nur erlaubt, '
+            'wenn der Spieler keinen WSC-Verein hat (club=None). '
+            'Auktion reserviert = Top-Star/Top-Talent, nie über Scouting.'
+        ),
+    )
+    SCOUTING_CATEGORY_CHOICES = [
+        ('', '– keine –'),
+        ('backup', 'Back-up'),
+        ('ergaenzung', 'Ergänzungsspieler'),
+        ('rotation', 'Rotationsspieler'),
+        ('stammkraft', 'Stammkraft'),
+        ('talent', 'Jugendspieler / Talent'),
+        ('topstar', 'Top-Star'),
+        ('toptalent', 'Top-Talent'),
+    ]
+    scouting_category = models.CharField(
+        'Scouting-Kategorie',
+        max_length=20,
+        choices=SCOUTING_CATEGORY_CHOICES,
+        blank=True,
+        default='',
+        help_text='Absolute Klassifizierung für die Scouting-Suche (Creator-Pflege).',
+    )
+    wsc_conflict = models.BooleanField(
+        'WSC-Konflikt',
+        default=False,
+        help_text='Markiert einen ungeklärten Konflikt mit einer WSC-Vereinszuordnung.',
+    )
+    is_callable = models.BooleanField(
+        'Einberufbar',
+        default=False,
+        help_text='Spieler darf bei dünnem Pool ergänzend einberufen werden.',
+    )
+    admin_reviewed = models.BooleanField(
+        'Admin-geprüft',
+        default=False,
+        help_text='Poolspieler wurde von einem Admin freigegeben.',
+    )
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
@@ -4232,3 +4288,350 @@ class PlayerImportCandidate(models.Model):
 
     def __str__(self):
         return f'Kandidat TM {self.tm_player_id} (Job #{self.job_id}) — {self.status}'
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  Scouting-System V1 (Task #594)
+# ════════════════════════════════════════════════════════════════════════════
+
+
+class ScoutingDepartment(models.Model):
+    """Pro Verein: Ausbaustufe der Scoutingabteilung (0–3).
+
+    Die Stufe beeinflusst nur Dauer, Auftragskosten und Trefferpräzision –
+    niemals die Qualität der gefundenen Spieler.
+    """
+    club = models.OneToOneField(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='scouting_department',
+        verbose_name='Verein',
+    )
+    level = models.PositiveSmallIntegerField(
+        'Ausbaustufe',
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(3)],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Scoutingabteilung'
+        verbose_name_plural = 'Scoutingabteilungen'
+
+    def __str__(self):
+        return f'{self.club} – Scouting Stufe {self.level}'
+
+
+class ScoutingAssignment(models.Model):
+    """Ein Scoutingauftrag. Es gibt pro Verein immer nur einen aktiven Auftrag."""
+
+    SCOPE_COUNTRY = 'country'
+    SCOPE_REGION = 'region'
+    SCOPE_CHOICES = [
+        (SCOPE_COUNTRY, 'Land'),
+        (SCOPE_REGION, 'Region'),
+    ]
+
+    PROFILE_BACKUP = 'backup'
+    PROFILE_ERGAENZUNG = 'ergaenzung'
+    PROFILE_ROTATION = 'rotation'
+    PROFILE_STAMMKRAFT = 'stammkraft'
+    PROFILE_TALENT = 'talent'
+    PROFILE_CHOICES = [
+        (PROFILE_BACKUP, 'Back-up'),
+        (PROFILE_ERGAENZUNG, 'Ergänzungsspieler'),
+        (PROFILE_ROTATION, 'Rotationsspieler'),
+        (PROFILE_STAMMKRAFT, 'Stammkraft'),
+        (PROFILE_TALENT, 'Jugendspieler / Talent'),
+    ]
+
+    STATUS_ACTIVE = 'active'
+    STATUS_COMPLETED = 'completed'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'Aktiv'),
+        (STATUS_COMPLETED, 'Abgeschlossen'),
+        (STATUS_CANCELLED, 'Abgebrochen'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='scouting_assignments',
+        verbose_name='Verein',
+    )
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='scouting_assignments',
+        verbose_name='Manager',
+    )
+    scope_type = models.CharField(max_length=10, choices=SCOPE_CHOICES, default=SCOPE_COUNTRY)
+    scope_key = models.CharField(
+        max_length=20,
+        help_text='ISO2-Ländercode (Großbuchstaben) oder Regions-Schlüssel.',
+    )
+    position = models.CharField(
+        max_length=10,
+        blank=True,
+        default='',
+        help_text='Zielposition (leer = keine Vorgabe).',
+    )
+    profile = models.CharField(max_length=20, choices=PROFILE_CHOICES, default=PROFILE_ERGAENZUNG)
+    department_level = models.PositiveSmallIntegerField(default=0)
+    cost = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    duration_days = models.PositiveSmallIntegerField(default=0)
+    started_on = models.DateField(default=timezone.localdate)
+    completes_on = models.DateField()
+    season_id = models.IntegerField(help_text='Eingefrorene Transfermarkt-Saison-ID bei Auftragsstart.')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    finds_generated = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Scoutingauftrag'
+        verbose_name_plural = 'Scoutingaufträge'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club'],
+                condition=models.Q(status='active'),
+                name='unique_active_assignment_per_club',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Scoutingauftrag {self.club} → {self.scope_key} ({self.get_status_display()})'
+
+    @property
+    def is_ready(self):
+        return self.status == self.STATUS_ACTIVE and timezone.localdate() >= self.completes_on
+
+
+class ScoutingFind(models.Model):
+    """Ein anonymer Fund eines Auftrags. Pro Auftrag genau 3 Funde."""
+
+    STATUS_OFFERED = 'offered'
+    STATUS_CHOSEN = 'chosen'
+    STATUS_REJECTED = 'rejected'
+    STATUS_EXPIRED = 'expired'
+    STATUS_CHOICES = [
+        (STATUS_OFFERED, 'Vorgeschlagen'),
+        (STATUS_CHOSEN, 'Ausgewählt'),
+        (STATUS_REJECTED, 'Abgelehnt'),
+        (STATUS_EXPIRED, 'Verfallen'),
+    ]
+
+    assignment = models.ForeignKey(
+        ScoutingAssignment,
+        on_delete=models.CASCADE,
+        related_name='finds',
+    )
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='scouting_finds',
+    )
+    order = models.PositiveSmallIntegerField(default=0, help_text='Anzeigereihenfolge 0–2.')
+    observer_count = models.PositiveIntegerField(default=0, help_text='Anzahl beobachtender Manager.')
+    min_bid = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_OFFERED)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['assignment', 'order']
+        verbose_name = 'Scouting-Fund'
+        verbose_name_plural = 'Scouting-Funde'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['assignment', 'order'],
+                name='unique_find_order_per_assignment',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Fund #{self.order} → {self.player} (Auftrag {self.assignment_id})'
+
+
+class ScoutingBid(models.Model):
+    """Verbindliches Gebot auf einen Poolspieler, gewertet zum Zuschlagstermin."""
+
+    STATUS_ACTIVE = 'active'
+    STATUS_WON = 'won'
+    STATUS_LOST = 'lost'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'Aktiv'),
+        (STATUS_WON, 'Gewonnen'),
+        (STATUS_LOST, 'Verloren'),
+        (STATUS_CANCELLED, 'Zurückgezogen'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='scouting_bids',
+        verbose_name='Verein',
+    )
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='scouting_bids',
+        verbose_name='Manager',
+    )
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='scouting_bids',
+    )
+    find = models.ForeignKey(
+        ScoutingFind,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bids',
+    )
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    min_bid = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    window_date = models.DateField(help_text='Fester Zuschlagstermin, zu dem dieses Gebot gewertet wird.')
+    season_id = models.IntegerField(help_text='Eingefrorene Saison-ID bei Gebotsabgabe.')
+    coin_earmarked = models.BooleanField(
+        default=False,
+        help_text='Gebot benötigt einen Hoeneß-Coin-Slot (3.+ Verpflichtung). Coin wird erst bei Gewinn verbraucht.',
+    )
+    coin_used = models.BooleanField(
+        default=False,
+        help_text='True, wenn ein gewonnenes Gebot tatsächlich einen Coin verbraucht hat.',
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    settled_on = models.DateField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Scouting-Gebot'
+        verbose_name_plural = 'Scouting-Gebote'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'player', 'window_date'],
+                condition=models.Q(status='active'),
+                name='unique_active_bid_per_club_player_window',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Gebot {self.club} → {self.player} ({self.amount} €, {self.get_status_display()})'
+
+
+class WatchlistEntry(models.Model):
+    """Managergebundene Beobachtungsliste (bleibt bei Vereinswechsel bestehen)."""
+
+    STATUS_WATCHED = 'watched'
+    STATUS_BID = 'bid'
+    STATUS_WON = 'won'
+    STATUS_LOST = 'lost'
+    STATUS_CHOICES = [
+        (STATUS_WATCHED, 'Beobachtet'),
+        (STATUS_BID, 'Gebot abgegeben'),
+        (STATUS_WON, 'Gewonnen'),
+        (STATUS_LOST, 'Verloren'),
+    ]
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='watchlist_entries',
+        verbose_name='Manager',
+    )
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='watchlist_entries',
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_WATCHED)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = 'Beobachtungslisten-Eintrag'
+        verbose_name_plural = 'Beobachtungslisten-Einträge'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager', 'player'],
+                name='unique_watchlist_manager_player',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.manager} beobachtet {self.player} ({self.get_status_display()})'
+
+
+class CountryNetwork(models.Model):
+    """Persistente Community-/Aktivitätsdaten je Land.
+
+    Die echte Poolgröße wird NIE gespeichert oder ans Frontend gegeben –
+    sie wird serverseitig live gezählt. ``coverage_percent`` wird nur aus
+    Community- und Aktivitätspunkten abgeleitet, damit die verborgene
+    Spielerzahl nicht rückgerechnet werden kann.
+    """
+    iso2 = models.CharField(max_length=2, unique=True, help_text='ISO2-Ländercode (Großbuchstaben).')
+    name = models.CharField(max_length=100)
+    continent = models.CharField(max_length=40, blank=True, default='')
+    region = models.CharField(max_length=40, blank=True, default='')
+    community_points = models.PositiveIntegerField(default=0)
+    activity_points = models.PositiveIntegerField(default=0)
+    is_paused = models.BooleanField(default=False, help_text='Admin-Sperre: Land wird als gesperrt angezeigt.')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Länder-Netzwerk'
+        verbose_name_plural = 'Länder-Netzwerke'
+
+    def __str__(self):
+        return f'{self.name} ({self.iso2})'
+
+
+class CommunitySubmission(models.Model):
+    """Community-Einreichung eines tm.de-Profils zur Erhöhung der Abdeckung."""
+
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Offen'),
+        (STATUS_APPROVED, 'Angenommen'),
+        (STATUS_REJECTED, 'Abgelehnt'),
+    ]
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='community_submissions',
+        verbose_name='Manager',
+    )
+    iso2 = models.CharField(max_length=2, help_text='ISO2-Ländercode des eingereichten Spielers.')
+    tm_url = models.URLField('Transfermarkt-URL')
+    player_name = models.CharField(max_length=120, blank=True, default='')
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    week_key = models.CharField(
+        max_length=8,
+        help_text='ISO-Jahr-Woche (z. B. 2026-W26), eingefroren bei Einreichung – für das Wochenlimit.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Community-Einreichung'
+        verbose_name_plural = 'Community-Einreichungen'
+
+    def __str__(self):
+        return f'{self.manager} → {self.iso2} ({self.get_status_display()})'

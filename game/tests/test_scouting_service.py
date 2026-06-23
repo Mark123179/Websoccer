@@ -1,0 +1,340 @@
+"""Service-Tests für das Scouting-System (Task #594).
+
+Deckt ab: Auftragsstart (Kosten + Sperre), Fund-Erzeugung (genau 3, idempotent),
+Gebot (Budget-Reservierung, Watchlist, Auftragsabschluss), Rückzug (Freigabe),
+Zuschlags-Auflösung (höchstes Gebot, Gleichstand), Verpflichtungslimit + Coin
+sowie Community-Einreichungen.
+"""
+
+from datetime import date, timedelta
+from decimal import Decimal
+from unittest import mock
+
+from django.test import TestCase
+
+from game.club_import.season import get_current_tm_season_id
+from game.models import (
+    League, Club, Player, PlayerStrengthProfile, ManagerProfile, HoenessCoin,
+    ScoutingAssignment, ScoutingFind, ScoutingBid, WatchlistEntry,
+    CountryNetwork, CommunitySubmission, ClubFinancialTransaction,
+)
+from game.scouting import service, coverage, department, constants
+
+
+def _pool_player(nat='Türkei', strength=70, potential=75, age=22, pos='ST',
+                 market_value='4000000', last='Spieler',
+                 pool_status=Player.POOL_STATUS_SCOUTABLE, scouting_category=''):
+    player = Player.objects.create(
+        first_name='Pool', last_name=last, age=age,
+        position='Sturm', main_position_1=pos, nationalities=nat,
+        market_value=(Decimal(market_value) if market_value is not None else None),
+        potential=potential, pool_status=pool_status, scouting_category=scouting_category,
+    )
+    PlayerStrengthProfile.objects.create(player=player, base_strength=Decimal(strength))
+    return player
+
+
+class ScoutingServiceBase(TestCase):
+    def setUp(self):
+        self.today = date(2026, 6, 23)
+        self.season_id = get_current_tm_season_id(self.today)
+        self.league = League.objects.create(name='Testliga', country='Deutschland')
+        self.club = Club.objects.create(
+            name='Bayern', short_name='FCB', founded_year=1900,
+            budget=Decimal('200000000.00'), league=self.league,
+        )
+        self.manager = ManagerProfile.objects.create(name='Test-Manager')
+        # Threshold künstlich klein, damit wenige Poolspieler scoutbar machen.
+        patcher = mock.patch.object(coverage, 'COUNTRY_THRESHOLD', 2)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        # Genug TR-Poolspieler für Scoutbarkeit + Auswahl.
+        self.pool = [_pool_player(last=f'P{i}', strength=68 + (i % 6)) for i in range(6)]
+
+    def _active_assignment_with_find(self, player, club=None, manager=None):
+        """Erzeugt direkt einen aktiven Auftrag + Fund (ORM) für volle Kontrolle."""
+        club = club or self.club
+        manager = manager if manager is not None else self.manager
+        assignment = ScoutingAssignment.objects.create(
+            club=club, manager=manager, scope_type='country', scope_key='TR',
+            position='ST', profile='ergaenzung', department_level=0,
+            cost=Decimal('250000'), duration_days=18,
+            started_on=self.today, completes_on=self.today,
+            season_id=self.season_id, status=ScoutingAssignment.STATUS_ACTIVE,
+            finds_generated=True,
+        )
+        find = ScoutingFind.objects.create(
+            assignment=assignment, player=player, order=0,
+            observer_count=10, min_bid=Decimal('5000000'),
+            status=ScoutingFind.STATUS_OFFERED,
+        )
+        return assignment, find
+
+
+class StartAssignmentTests(ScoutingServiceBase):
+    def test_start_debits_cost_and_logs_transaction(self):
+        before = self.club.budget
+        a = service.start_assignment(self.club, self.manager, 'country', 'TR',
+                                     'ergaenzung', 'ST', today=self.today)
+        self.club.refresh_from_db()
+        cost = Decimal(department.order_cost(0))
+        self.assertEqual(self.club.budget, before - cost)
+        self.assertEqual(a.status, ScoutingAssignment.STATUS_ACTIVE)
+        self.assertTrue(ClubFinancialTransaction.objects.filter(
+            club=self.club, category='sonstige_ausgabe').exists())
+
+    def test_only_one_active_assignment(self):
+        service.start_assignment(self.club, self.manager, 'country', 'TR',
+                                 'ergaenzung', 'ST', today=self.today)
+        with self.assertRaises(service.ScoutingError):
+            service.start_assignment(self.club, self.manager, 'country', 'TR',
+                                     'ergaenzung', 'ST', today=self.today)
+
+    def test_non_scoutable_scope_rejected(self):
+        with self.assertRaises(service.ScoutingError):
+            service.start_assignment(self.club, self.manager, 'country', 'BR',
+                                     'ergaenzung', 'ST', today=self.today)
+
+
+class FindsTests(ScoutingServiceBase):
+    def test_generate_finds_requires_completion(self):
+        a = service.start_assignment(self.club, self.manager, 'country', 'TR',
+                                     'ergaenzung', 'ST', today=self.today)
+        with self.assertRaises(service.ScoutingError):
+            service.generate_finds(a, today=self.today)
+
+    def test_generate_exactly_three_idempotent(self):
+        a = service.start_assignment(self.club, self.manager, 'country', 'TR',
+                                     'ergaenzung', 'ST', today=self.today)
+        done = a.completes_on
+        finds = service.generate_finds(a, today=done)
+        self.assertEqual(len(finds), 3)
+        for f in finds:
+            self.assertGreater(f.min_bid, Decimal('0'))
+        again = service.generate_finds(a, today=done)
+        self.assertEqual([f.player_id for f in finds], [f.player_id for f in again])
+
+    def test_top_star_never_found(self):
+        star = _pool_player(last='Star', strength=constants.TOP_STAR_STRENGTH + 3)
+        a = service.start_assignment(self.club, self.manager, 'country', 'TR',
+                                     'ergaenzung', 'ST', today=self.today)
+        finds = service.generate_finds(a, today=a.completes_on)
+        self.assertNotIn(star.id, [f.player_id for f in finds])
+
+
+class BidTests(ScoutingServiceBase):
+    def test_place_bid_reserves_budget_and_completes_assignment(self):
+        player = self.pool[0]
+        a, find = self._active_assignment_with_find(player)
+        # zweiter Fund, der danach verfallen muss
+        other = ScoutingFind.objects.create(assignment=a, player=self.pool[1],
+                                            order=1, min_bid=Decimal('5000000'),
+                                            status=ScoutingFind.STATUS_OFFERED)
+        budget_before = self.club.budget
+        bid = service.place_bid(self.club, self.manager, find,
+                                Decimal('6000000'), today=self.today)
+        self.club.refresh_from_db()
+        # Budget noch NICHT belastet, aber reserviert
+        self.assertEqual(self.club.budget, budget_before)
+        self.assertEqual(service.reserved_budget(self.club), Decimal('6000000'))
+        self.assertEqual(service.available_budget(self.club),
+                         budget_before - Decimal('6000000'))
+        find.refresh_from_db(); other.refresh_from_db(); a.refresh_from_db()
+        self.assertEqual(find.status, ScoutingFind.STATUS_CHOSEN)
+        self.assertEqual(other.status, ScoutingFind.STATUS_EXPIRED)
+        self.assertEqual(a.status, ScoutingAssignment.STATUS_COMPLETED)
+        self.assertTrue(WatchlistEntry.objects.filter(
+            manager=self.manager, player=player, status='bid').exists())
+        self.assertEqual(bid.window_date, date(2026, 7, 3))
+
+    def test_bid_below_min_rejected(self):
+        player = self.pool[0]
+        _, find = self._active_assignment_with_find(player)
+        with self.assertRaises(service.ScoutingError):
+            service.place_bid(self.club, self.manager, find,
+                              Decimal('1000000'), today=self.today)
+
+    def test_withdraw_releases_reservation(self):
+        player = self.pool[0]
+        _, find = self._active_assignment_with_find(player)
+        bid = service.place_bid(self.club, self.manager, find,
+                                Decimal('6000000'), today=self.today)
+        self.assertEqual(service.reserved_budget(self.club), Decimal('6000000'))
+        service.withdraw_bid(bid)
+        self.assertEqual(service.reserved_budget(self.club), Decimal('0.00'))
+        self.assertTrue(WatchlistEntry.objects.filter(
+            manager=self.manager, player=player, status='watched').exists())
+
+    def test_watch_find_rejects_foreign_club(self):
+        """Ein fremder Fund darf nicht beobachtet werden (kein Cross-Club-Leak)."""
+        player = self.pool[0]
+        club2 = Club.objects.create(name='BVB', short_name='BVB', founded_year=1909,
+                                    budget=Decimal('200000000'), league=self.league)
+        mgr2 = ManagerProfile.objects.create(name='Manager 2')
+        _, foreign_find = self._active_assignment_with_find(player, club=club2, manager=mgr2)
+        with self.assertRaises(service.ScoutingError):
+            service.watch_find(self.club, self.manager, foreign_find)
+        self.assertFalse(WatchlistEntry.objects.filter(
+            manager=self.manager, player=player).exists())
+
+
+class ResolutionTests(ScoutingServiceBase):
+    def _make_bid(self, club, manager, player, amount, window_date,
+                  coin_earmarked=False):
+        return ScoutingBid.objects.create(
+            club=club, manager=manager, player=player, amount=Decimal(amount),
+            min_bid=Decimal('5000000'), window_date=window_date,
+            season_id=self.season_id, coin_earmarked=coin_earmarked,
+            status=ScoutingBid.STATUS_ACTIVE,
+        )
+
+    def test_highest_bid_wins_and_charges(self):
+        player = self.pool[0]
+        club2 = Club.objects.create(name='BVB', short_name='BVB', founded_year=1909,
+                                    budget=Decimal('200000000'), league=self.league)
+        mgr2 = ManagerProfile.objects.create(name='Manager 2')
+        wd = date(2026, 7, 3)
+        self._make_bid(self.club, self.manager, player, '6000000', wd)
+        self._make_bid(club2, mgr2, player, '8000000', wd)
+
+        summary = service.resolve_due_windows(today=wd)
+        self.assertEqual(summary['won'], 1)
+        self.assertEqual(summary['lost'], 1)
+        player.refresh_from_db()
+        self.assertEqual(player.club_id, club2.id)
+        self.assertEqual(player.pool_status, Player.POOL_STATUS_NONE)
+        club2.refresh_from_db()
+        self.assertEqual(club2.budget, Decimal('192000000'))
+        self.assertTrue(ClubFinancialTransaction.objects.filter(
+            club=club2, category='transfer_ausgabe').exists())
+
+    def test_tie_breaks_to_earlier_bid(self):
+        player = self.pool[0]
+        club2 = Club.objects.create(name='BVB', short_name='BVB', founded_year=1909,
+                                    budget=Decimal('200000000'), league=self.league)
+        mgr2 = ManagerProfile.objects.create(name='Manager 2')
+        wd = date(2026, 7, 3)
+        first = self._make_bid(self.club, self.manager, player, '7000000', wd)
+        self._make_bid(club2, mgr2, player, '7000000', wd)
+        service.resolve_due_windows(today=wd)
+        player.refresh_from_db()
+        self.assertEqual(player.club_id, first.club_id)
+
+    def test_future_window_not_resolved(self):
+        player = self.pool[0]
+        self._make_bid(self.club, self.manager, player, '6000000', date(2027, 1, 15))
+        summary = service.resolve_due_windows(today=date(2026, 7, 3))
+        self.assertEqual(summary['won'], 0)
+        player.refresh_from_db()
+        self.assertIsNone(player.club_id)
+
+
+class CommitmentCoinTests(ScoutingServiceBase):
+    def _seed_active_bids(self, n):
+        wd = date(2026, 7, 3)
+        for i in range(n):
+            ScoutingBid.objects.create(
+                club=self.club, manager=self.manager, player=self.pool[i],
+                amount=Decimal('5000000'), min_bid=Decimal('5000000'),
+                window_date=wd, season_id=self.season_id,
+                status=ScoutingBid.STATUS_ACTIVE,
+            )
+
+    def test_third_bid_requires_coin(self):
+        self._seed_active_bids(constants.BASE_COMMITMENT_SLOTS)
+        target = self.pool[constants.BASE_COMMITMENT_SLOTS]
+        _, find = self._active_assignment_with_find(target)
+        # ohne Coin → Fehler
+        with self.assertRaises(service.ScoutingError):
+            service.place_bid(self.club, self.manager, find,
+                              Decimal('6000000'), today=self.today)
+        # mit Coin → erlaubt + earmarked
+        HoenessCoin.objects.create(manager=self.manager, amount=1)
+        bid = service.place_bid(self.club, self.manager, find,
+                                Decimal('6000000'), today=self.today)
+        self.assertTrue(bid.coin_earmarked)
+
+    def test_coin_consumed_on_win(self):
+        HoenessCoin.objects.create(manager=self.manager, amount=1)
+        self._seed_active_bids(constants.BASE_COMMITMENT_SLOTS)
+        target = self.pool[constants.BASE_COMMITMENT_SLOTS]
+        _, find = self._active_assignment_with_find(target)
+        bid = service.place_bid(self.club, self.manager, find,
+                                Decimal('6000000'), today=self.today)
+        service.resolve_due_windows(today=bid.window_date)
+        bid.refresh_from_db()
+        coin = HoenessCoin.objects.get(manager=self.manager)
+        self.assertEqual(bid.status, ScoutingBid.STATUS_WON)
+        self.assertTrue(bid.coin_used)
+        self.assertEqual(coin.amount, 0)
+
+    def test_coin_released_on_loss(self):
+        HoenessCoin.objects.create(manager=self.manager, amount=1)
+        self._seed_active_bids(constants.BASE_COMMITMENT_SLOTS)
+        target = self.pool[constants.BASE_COMMITMENT_SLOTS]
+        _, find = self._active_assignment_with_find(target)
+        bid = service.place_bid(self.club, self.manager, find,
+                                Decimal('6000000'), today=self.today)
+        # Konkurrenzgebot gewinnt
+        club2 = Club.objects.create(name='BVB', short_name='BVB', founded_year=1909,
+                                    budget=Decimal('200000000'), league=self.league)
+        ScoutingBid.objects.create(
+            club=club2, manager=ManagerProfile.objects.create(name='M2'),
+            player=target, amount=Decimal('9000000'), min_bid=Decimal('5000000'),
+            window_date=bid.window_date, season_id=self.season_id,
+            status=ScoutingBid.STATUS_ACTIVE,
+        )
+        service.resolve_due_windows(today=bid.window_date)
+        bid.refresh_from_db()
+        coin = HoenessCoin.objects.get(manager=self.manager)
+        self.assertEqual(bid.status, ScoutingBid.STATUS_LOST)
+        self.assertFalse(bid.coin_used)
+        self.assertEqual(coin.amount, 1)
+
+    def test_earmarked_bid_loses_without_coin_at_settlement(self):
+        """Coin-belegtes Gebot gewinnt NICHT, wenn beim Zuschlag kein Coin da ist."""
+        coin = HoenessCoin.objects.create(manager=self.manager, amount=1)
+        self._seed_active_bids(constants.BASE_COMMITMENT_SLOTS)
+        target = self.pool[constants.BASE_COMMITMENT_SLOTS]
+        _, find = self._active_assignment_with_find(target)
+        bid = service.place_bid(self.club, self.manager, find,
+                                Decimal('6000000'), today=self.today)
+        self.assertTrue(bid.coin_earmarked)
+        # Coin wird zwischenzeitlich anderweitig aufgebraucht.
+        coin.amount = 0
+        coin.save(update_fields=['amount'])
+        service.resolve_due_windows(today=bid.window_date)
+        bid.refresh_from_db()
+        target.refresh_from_db()
+        self.assertEqual(bid.status, ScoutingBid.STATUS_LOST)
+        self.assertFalse(bid.coin_used)
+        # Spieler wurde NICHT verpflichtet (kein Gratis-Transfer am Limit).
+        self.assertIsNone(target.club_id)
+        self.assertEqual(target.pool_status, Player.POOL_STATUS_SCOUTABLE)
+
+
+class CommunityTests(ScoutingServiceBase):
+    def test_submission_raises_activity_and_enforces_limits(self):
+        for i in range(constants.COMMUNITY_COUNTRY_WEEK_CAP):
+            service.submit_community_profile(self.manager, 'TR',
+                                             f'https://www.transfermarkt.de/x/{i}',
+                                             today=self.today)
+        net = CountryNetwork.objects.get(iso2='TR')
+        self.assertEqual(net.activity_points,
+                         constants.COMMUNITY_COUNTRY_WEEK_CAP * constants.COMMUNITY_ACTIVITY_POINTS)
+        # Länder-Wochenlimit erreicht
+        with self.assertRaises(service.ScoutingError):
+            service.submit_community_profile(self.manager, 'TR',
+                                             'https://www.transfermarkt.de/x/over',
+                                             today=self.today)
+
+    def test_moderation_approve_adds_community_points(self):
+        sub = service.submit_community_profile(self.manager, 'TR',
+                                               'https://www.transfermarkt.de/x/1',
+                                               today=self.today)
+        before = coverage.coverage_percent(CountryNetwork.objects.get(iso2='TR'))
+        service.moderate_submission(sub, approve=True)
+        after = coverage.coverage_percent(CountryNetwork.objects.get(iso2='TR'))
+        self.assertGreaterEqual(after, before)
+        sub.refresh_from_db()
+        self.assertEqual(sub.status, CommunitySubmission.STATUS_APPROVED)

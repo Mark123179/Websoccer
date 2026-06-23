@@ -1,0 +1,40 @@
+{% comment %}Stilisierte, dunkle Tech-Weltkarte. Europa cyan, Türkei grünlich.{% endcomment %}
+<svg class="scout-world-svg" viewBox="0 0 1000 460" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs>
+    <radialGradient id="scoutEuropeGlow" cx="54%" cy="24%" r="34%">
+      <stop offset="0%" stop-color="rgba(0,215,239,0.30)"/>
+      <stop offset="100%" stop-color="rgba(0,215,239,0)"/>
+    </radialGradient>
+    <pattern id="scoutGrid" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M34 0H0V34" fill="none" stroke="rgba(0,210,235,0.06)" stroke-width="1"/>
+    </pattern>
+    <linearGradient id="scoutLand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(10,70,92,0.92)"/>
+      <stop offset="100%" stop-color="rgba(6,40,56,0.92)"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="460" fill="#031018"/>
+  <rect x="0" y="0" width="1000" height="460" fill="url(#scoutGrid)"/>
+  <rect x="0" y="0" width="1000" height="460" fill="url(#scoutEuropeGlow)"/>
+
+  <g fill="url(#scoutLand)" stroke="rgba(0,210,235,0.22)" stroke-width="1.2">
+    <!-- Nordamerika -->
+    <path d="M120 70 Q200 50 290 80 L300 140 Q260 175 220 185 L180 210 Q140 200 130 160 Z"/>
+    <!-- Südamerika -->
+    <path d="M300 235 Q345 225 360 260 L355 320 Q345 380 320 405 Q300 380 295 330 L290 285 Z"/>
+    <!-- Afrika -->
+    <path d="M470 175 Q540 165 575 195 L570 270 Q555 320 520 340 Q490 320 485 275 L478 225 Z"/>
+    <!-- Asien -->
+    <path d="M585 70 Q720 55 885 95 L880 175 Q800 210 720 195 L640 200 Q600 175 590 130 Z"/>
+    <!-- Ozeanien -->
+    <path d="M820 305 Q880 295 920 320 L910 360 Q865 375 835 360 Q815 340 818 320 Z"/>
+  </g>
+
+  <!-- Europa hervorgehoben (cyan) -->
+  <path d="M470 90 Q520 72 580 92 L585 130 Q560 158 520 160 L485 150 Q470 130 468 110 Z"
+        fill="rgba(0,215,239,0.20)" stroke="var(--cyan,#00d7ef)" stroke-width="1.6"/>
+  <!-- Türkei grünlich -->
+  <path d="M580 130 Q605 124 625 134 L622 152 Q606 162 588 156 Z"
+        fill="rgba(40,232,120,0.22)" stroke="var(--green,#28e878)" stroke-width="1.4"/>
+</svg>

@@ -1747,6 +1747,7 @@ class PlayerAdmin(admin.ModelAdmin):
         'club',
         'real_life_club',
         'main_position_1',
+        'pool_status',
         'wsc_player_id',
         'api_football_id',
         'source_strength_badge',
@@ -1773,6 +1774,8 @@ class PlayerAdmin(admin.ModelAdmin):
         'club',
         'real_life_club',
         'main_position_1',
+        'pool_status',
+        'scouting_category',
     )
     readonly_fields = (
         'portrait_preview',
@@ -1860,6 +1863,22 @@ class PlayerAdmin(admin.ModelAdmin):
                     'transfermarkt_profile_url',
                     'transfermarkt_market_value_url',
                     'market_value_chart_preview',
+                ),
+            },
+        ),
+        (
+            'Scouting-Pool',
+            {
+                'fields': (
+                    (
+                        'pool_status',
+                        'scouting_category',
+                    ),
+                    (
+                        'wsc_conflict',
+                        'is_callable',
+                        'admin_reviewed',
+                    ),
                 ),
             },
         ),
@@ -3758,3 +3777,65 @@ class SeasonFixtureAdmin(admin.ModelAdmin):
         if obj.is_played and obj.home_goals is not None and obj.away_goals is not None:
             return f'{obj.home_goals}:{obj.away_goals}'
         return '—'
+
+
+# ── Scouting-System (Task #594) ───────────────────────────────────────────────
+from .models import (
+    ScoutingDepartment,
+    ScoutingAssignment,
+    ScoutingFind,
+    ScoutingBid,
+    WatchlistEntry,
+    CountryNetwork,
+    CommunitySubmission,
+)
+
+
+@admin.register(ScoutingDepartment)
+class ScoutingDepartmentAdmin(admin.ModelAdmin):
+    list_display = ('club', 'level')
+    search_fields = ('club__name',)
+
+
+@admin.register(ScoutingAssignment)
+class ScoutingAssignmentAdmin(admin.ModelAdmin):
+    list_display = (
+        'club', 'scope_type', 'scope_key', 'profile', 'position',
+        'status', 'finds_generated', 'started_on', 'completes_on', 'season_id',
+    )
+    list_filter = ('status', 'scope_type', 'finds_generated')
+    search_fields = ('club__name', 'scope_key')
+
+
+@admin.register(ScoutingFind)
+class ScoutingFindAdmin(admin.ModelAdmin):
+    list_display = ('assignment', 'order', 'player', 'min_bid', 'observer_count', 'status')
+    list_filter = ('status',)
+    search_fields = ('player__first_name', 'player__last_name')
+
+
+@admin.register(ScoutingBid)
+class ScoutingBidAdmin(admin.ModelAdmin):
+    list_display = ('club', 'player', 'amount', 'min_bid', 'window_date', 'status', 'season_id')
+    list_filter = ('status',)
+    search_fields = ('club__name', 'player__first_name', 'player__last_name')
+
+
+@admin.register(WatchlistEntry)
+class WatchlistEntryAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'player', 'status', 'updated_at')
+    list_filter = ('status',)
+    search_fields = ('player__first_name', 'player__last_name')
+
+
+@admin.register(CountryNetwork)
+class CountryNetworkAdmin(admin.ModelAdmin):
+    list_display = ('iso2', 'name', 'community_points', 'activity_points')
+    search_fields = ('iso2', 'name')
+
+
+@admin.register(CommunitySubmission)
+class CommunitySubmissionAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'iso2', 'player_name', 'status', 'week_key', 'created_at')
+    list_filter = ('status', 'iso2')
+    search_fields = ('player_name', 'manager__name')

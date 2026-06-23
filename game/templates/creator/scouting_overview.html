@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="transfer-scouting-page">
+
+  {% if messages %}
+  <div class="scouting-flash">
+    {% for m in messages %}
+    <div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="watchlist-layout">
+    <section class="watchlist-panel">
+      <h2 class="scout-panel-title">OFFENE EINREICHUNGEN ({{ pending|length }})</h2>
+      {% if pending %}
+      <div class="watch-table">
+        <div class="watch-row watch-head moderate-head">
+          <span>Manager</span><span>Land</span><span>Spieler</span><span>TM-URL</span><span>Aktion</span>
+        </div>
+        {% for s in pending %}
+        <div class="watch-row moderate-row">
+          <span>{{ s.manager }}</span>
+          <span>{{ s.iso2 }}</span>
+          <span>{{ s.player_name|default:'—' }}</span>
+          <span class="moderate-url"><a href="{{ s.tm_url }}" target="_blank" rel="noopener">Link ↗</a></span>
+          <span class="moderate-actions">
+            <form method="post" action="{% url 'creator_moderate_submission' s.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="result-btn result-btn--cyan">Annehmen</button>
+            </form>
+            <form method="post" action="{% url 'creator_moderate_submission' s.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="result-btn">Ablehnen</button>
+            </form>
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="bids-empty">Keine offenen Einreichungen.</p>
+      {% endif %}
+    </section>
+
+    <aside class="community-panel">
+      <h2 class="scout-panel-title">LÄNDER-NETZWERKE</h2>
+      <div class="community-list">
+        {% for n in networks %}
+        <div class="community-item">
+          <span>{{ n.iso2 }} · {{ n.name }}</span>
+          <span class="community-status">{{ n.community_points }} P</span>
+        </div>
+        {% empty %}
+        <p class="bids-empty">Noch keine Netzwerke angelegt.</p>
+        {% endfor %}
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

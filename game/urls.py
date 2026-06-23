@@ -30,6 +30,17 @@ from .views import (
 )
 from .views_auth import auth_login, auth_register, auth_logout
 from .views_ai import ai_chat
+from .views_scouting import (
+    transfer_scouting,
+    scouting_start,
+    scouting_bid,
+    scouting_watch,
+    scouting_withdraw,
+    transfer_watchlist,
+    scouting_community_submit,
+    creator_scouting_overview,
+    creator_moderate_submission,
+)
 from .views_management import (
     management_hub,
     stadium_detail,
@@ -274,6 +285,17 @@ urlpatterns = [
     path('management/finanzen/', management_finanzen, name='management_finanzen'),
     path('management/halloffame/', management_halloffame, name='management_halloffame'),
     path('management/job-angebote/', management_job_offers, name='management_job_offers'),
+
+    # Scouting-System (Task #594)
+    path('transfers/scouting/', transfer_scouting, name='transfer_scouting'),
+    path('transfers/scouting/auftrag/', scouting_start, name='scouting_start'),
+    path('transfers/scouting/gebot/', scouting_bid, name='scouting_bid'),
+    path('transfers/scouting/beobachten/', scouting_watch, name='scouting_watch'),
+    path('transfers/scouting/zurueckziehen/', scouting_withdraw, name='scouting_withdraw'),
+    path('transfers/beobachtungsliste/', transfer_watchlist, name='transfer_watchlist'),
+    path('transfers/scouting/community/', scouting_community_submit, name='scouting_community_submit'),
+    path('creator/scouting/', creator_scouting_overview, name='creator_scouting_overview'),
+    path('creator/scouting/<int:submission_id>/moderieren/', creator_moderate_submission, name='creator_moderate_submission'),
 
     path('creator/', creator_index, name='creator_index'),
     path('creator/search/', creator_search, name='creator_search'),

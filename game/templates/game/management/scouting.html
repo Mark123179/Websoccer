@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="transfer-scouting-page">
+
+  {% if messages %}
+  <div class="scouting-flash">
+    {% for m in messages %}
+    <div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── Tab-Leiste ───────────────────────────────────────────────── -->
+  <div class="transfer-tabs">
+    <a class="transfer-tab" href="{% url 'transfer_scouting' %}">Transfers</a>
+    <a class="transfer-tab is-active" href="{% url 'transfer_scouting' %}">Scouting aktiv</a>
+    <a class="transfer-tab" href="{% url 'transfer_scouting' %}">Auktionen</a>
+    <a class="transfer-tab" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
+  </div>
+
+  <div class="scouting-layout">
+
+    <!-- ── Links: Scoutauftrag ───────────────────────────────────── -->
+    <aside class="scout-order-panel">
+      <h2 class="scout-panel-title">SCOUTAUFTRAG <span class="scout-info" title="Lege Suchgebiet, Position und Spielerprofil fest und schicke einen Scout los.">ⓘ</span></h2>
+
+      <div class="scout-dept-box">
+        <p class="scout-dept-line">Scoutingabteilung Stufe {{ dept.level }}</p>
+        <p class="scout-dept-sub">Dauer: {{ dept.duration }} Tage</p>
+        <p class="scout-dept-sub">Kosten: {{ dept.cost_fmt }}</p>
+      </div>
+
+      <form method="post" action="{% url 'scouting_start' %}" id="scout-order-form">
+        {% csrf_token %}
+        <input type="hidden" name="scope_type" id="scope_type" value="country">
+        <input type="hidden" name="scope_key" id="scope_key" value="">
+        <input type="hidden" name="position" id="position_field" value="">
+        <input type="hidden" name="profile" id="profile_field" value="ergaenzung">
+
+        <div class="scout-field">
+          <label class="scout-field-label">Suchgebiet <span class="scout-info" title="Wähle ein freigeschaltetes Land oder eine Region.">ⓘ</span></label>
+          <div class="scout-btn-row" id="scope-country-row">
+            {% for c in scope_tiles %}
+              {% if c.status == 'scoutable' %}
+              <button type="button" class="scout-chip scope-chip" data-scope-type="country" data-scope-key="{{ c.iso2 }}">
+                <span class="chip-flag">{{ c.flag }}</span>{{ c.name }}
+              </button>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <select class="scout-select" id="region-select">
+            <option value="">Region wählen</option>
+            {% for r in region_options %}
+            <option value="{{ r.key }}">{{ r.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="scout-field">
+          <label class="scout-field-label">Position <span class="scout-info" title="Optionaler Positionsfokus für die Suche.">ⓘ</span></label>
+          <div class="scout-btn-row" id="position-row">
+            {% for pos in positions %}
+            <button type="button" class="scout-chip pos-chip" data-pos="{{ pos }}">{{ pos }}</button>
+            {% endfor %}
+            <button type="button" class="scout-chip pos-chip is-active" data-pos="">Keine Vorgabe</button>
+          </div>
+        </div>
+
+        <div class="scout-field">
+          <label class="scout-field-label">Spielerprofil <span class="scout-info" title="Steuert, welcher Spielertyp gesucht wird.">ⓘ</span></label>
+          <div class="scout-btn-row" id="profile-row">
+            {% for value, label in profiles %}
+            <button type="button" class="scout-chip profile-chip {% if value == 'ergaenzung' %}is-active{% endif %}" data-profile="{{ value }}">{{ label }}</button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="scout-status-lines">
+          <p class="scout-status ok" id="scope-status">✓ Land/Region wählen</p>
+          <p class="scout-status">👤 {% if active_assignment %}1 aktiver Scout{% else %}Kein aktiver Scout{% endif %}</p>
+          <p class="scout-status warn">⚠ Max. 2 Verpflichtungen / Saison</p>
+        </div>
+
+        <button type="submit" class="scout-go-btn" {% if active_assignment %}disabled{% endif %}>
+          {% if active_assignment %}Scout unterwegs …{% else %}Scout losschicken{% endif %}
+        </button>
+      </form>
+    </aside>
+
+    <!-- ── Mitte: Scoutingnetzwerk ───────────────────────────────── -->
+    <main class="scouting-center">
+      <section class="scouting-map-panel">
+        <div class="scout-panel-head">
+          <h2 class="scout-panel-title">SCOUTINGNETZWERK <span class="scout-info" title="Deine weltweite Scouting-Abdeckung.">ⓘ</span></h2>
+          <form method="get" id="continent-form" class="continent-picker">
+            <span>Kontinent:</span>
+            <select name="kontinent" onchange="document.getElementById('continent-form').submit()">
+              {% for cont in continents %}
+              <option value="{{ cont.key }}" {% if cont.key == selected_continent %}selected{% endif %}>{{ cont.name }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+
+        <div class="scout-map-stage">
+          {% include 'game/management/_scouting_map_svg.html' %}
+          <div class="scout-markers">
+            {% for mk in map_markers %}
+            <button type="button"
+                    class="scout-marker scout-marker--{{ mk.status }} {% if mk.in_continent %}is-focus{% endif %}"
+                    style="left:{{ mk.x }}%;top:{{ mk.y }}%;"
+                    data-scope-type="country" data-scope-key="{{ mk.iso2 }}"
+                    data-scoutable="{% if mk.status == 'scoutable' %}1{% else %}0{% endif %}"
+                    title="{{ mk.name }}"></button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="scout-coverage">
+          <div class="scout-coverage-head">
+            <span>Community-Abdeckung</span>
+            <span class="scout-coverage-pct">{{ coverage_pct }} %</span>
+          </div>
+          <div class="scout-coverage-bar"><span style="width:{{ coverage_pct }}%"></span></div>
+          <p class="scout-coverage-hint">Hinweis: Einige Länder werden erst nach weiterem Ausbau freigeschaltet. <span class="scout-info" title="Sammle Community-Punkte, um neue Länder freizuschalten.">ⓘ</span></p>
+        </div>
+
+        <div class="scout-country-tiles">
+          {% for c in scope_tiles %}
+          <div class="scout-country-tile">
+            <span class="tile-flag">{{ c.flag }}</span>
+            <span class="tile-name">{{ c.name }}</span>
+            <span class="tile-status tile-status--{{ c.status }}">{{ c.coverage_label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="running-bids-panel">
+        <h2 class="scout-panel-title">LAUFENDE GEBOTE <span class="scout-info" title="Aktive Gebote, die zum nächsten Transferfenster entschieden werden.">ⓘ</span></h2>
+        {% if bids %}
+        <div class="bids-table">
+          <div class="bids-row bids-head">
+            <span>Spieler</span><span>Eigenes Gebot</span><span>Mindestgebot</span><span>Entscheidung</span><span></span>
+          </div>
+          {% for b in bids %}
+          <div class="bids-row">
+            <span class="bid-player">{{ b.name }}</span>
+            <span class="{% if b.under_min %}bid-under{% endif %}">{{ b.amount_fmt }}</span>
+            <span>{{ b.min_bid_fmt }}</span>
+            <span class="bid-decision">Entscheidung zur {{ b.window_label }} in {{ b.days }} Tagen</span>
+            <span class="bid-actions">
+              <form method="post" action="{% url 'scouting_withdraw' %}">
+                {% csrf_token %}
+                <input type="hidden" name="bid_id" value="{{ b.id }}">
+                <button type="submit" class="bid-eye" title="Gebot zurückziehen">👁</button>
+              </form>
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="bids-empty">Noch keine laufenden Gebote.</p>
+        {% endif %}
+      </section>
+    </main>
+
+    <!-- ── Rechts: Scout-Ergebnisse ──────────────────────────────── -->
+    <aside class="scout-results-panel">
+      <h2 class="scout-panel-title">SCOUT-ERGEBNISSE ({{ finds|length }}) <span class="scout-info" title="Gefundene Spieler aus dem abgeschlossenen Scoutauftrag.">ⓘ</span></h2>
+
+      {% if finds %}
+      {% for f in finds %}
+      <article class="result-card">
+        <div class="result-photo">
+          <img src="{% static f.portrait %}" alt="{{ f.name }}" onerror="this.style.visibility='hidden'">
+        </div>
+        <div class="result-body">
+          <p class="result-name">{{ f.name }}</p>
+          <p class="result-meta">{{ f.age }} Jahre <span class="result-flag">{{ f.flag }}</span> {{ f.nat }}</p>
+          <p class="result-pos">HP: {{ f.hp }}</p>
+          <p class="result-pos">NP: {{ f.np }}</p>
+          <p class="result-rl">RL-Klub: {{ f.rl_club }}</p>
+          <p class="result-rl">RL-Liga: {{ f.rl_liga }}</p>
+          <p class="result-money">Marktwert: <strong>{{ f.market_value_fmt }}</strong></p>
+          <p class="result-money">Mindestgebot: <strong>{{ f.min_bid_fmt }}</strong></p>
+          <p class="result-watch">👁 {{ f.observer_count }}</p>
+          <div class="result-actions">
+            {% if f.watched %}
+            <button type="button" class="result-btn is-watched" disabled>Beobachtet</button>
+            {% else %}
+            <form method="post" action="{% url 'scouting_watch' %}">
+              {% csrf_token %}
+              <input type="hidden" name="find_id" value="{{ f.find_id }}">
+              <button type="submit" class="result-btn">Beobachten</button>
+            </form>
+            {% endif %}
+            <button type="button" class="result-btn result-btn--cyan js-open-bid"
+                    data-find="{{ f.find_id }}" data-name="{{ f.name }}" data-min="{{ f.min_bid }}">Angebot</button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+      {% else %}
+      <div class="result-empty">
+        <p class="result-empty-icon">🔭</p>
+        <p class="result-empty-title">Noch keine Ergebnisse</p>
+        <p class="result-empty-text">Schicke links einen Scout los. Nach Abschluss des Auftrags erscheinen hier genau drei Spielerkarten.</p>
+      </div>
+      {% endif %}
+    </aside>
+
+  </div>
+</div>
+
+<!-- ── Gebots-Dialog ─────────────────────────────────────────────── -->
+<div class="bid-modal" id="bid-modal" hidden>
+  <div class="bid-modal-card">
+    <h3 id="bid-modal-title">Angebot abgeben</h3>
+    <form method="post" action="{% url 'scouting_bid' %}">
+      {% csrf_token %}
+      <input type="hidden" name="find_id" id="bid-find-id">
+      <label class="bid-modal-label">Gebot (€)</label>
+      <input type="text" name="amount" id="bid-amount" class="bid-modal-input" inputmode="numeric">
+      <p class="bid-modal-hint" id="bid-min-hint"></p>
+      <div class="bid-modal-actions">
+        <button type="button" class="result-btn js-close-bid">Abbrechen</button>
+        <button type="submit" class="result-btn result-btn--cyan">Gebot abgeben</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="{% static 'game/js/scouting.js' %}?v=2"></script>
+{% endblock %}
