@@ -14,7 +14,9 @@ Replit (Entwicklung/Test)  →  GitHub (Source of Truth)  →  Hetzner (Produkti
 |---------|----------------------|----------------------------------------------------|
 | web     | (Build aus Dockerfile) | Django + Gunicorn, intern Port 8000              |
 | db      | postgres:16          | PostgreSQL, persistentes Volume `pg_data`          |
-| redis   | redis:7-alpine       | Cache/Celery-Vorbereitung (in V1 nicht aktiv)      |
+| redis   | redis:7-alpine       | Celery-Broker + Result-Backend (`REDIS_URL`)       |
+| celeryworker | (Build aus Dockerfile) | Celery-Worker, führt Hintergrund-Jobs aus     |
+| celerybeat   | (Build aus Dockerfile) | Celery-Beat, plant wiederkehrende Jobs        |
 | nginx   | nginx:1.27-alpine    | Reverse Proxy auf `web:8000` (Port 80/443), TLS-Terminierung, Static/Media |
 | certbot | certbot/certbot      | Let's-Encrypt-Zertifikate ausstellen & automatisch erneuern |
 
@@ -224,6 +226,97 @@ docker compose up -d
   Entrypoint beim Start automatisch `migrate` + `collectstatic` ausführen.
   Nur für einfache, non-breaking Änderungen sinnvoll. Standard ist `0` (aus).
 
+## Hintergrund-Jobs (Celery-Worker & Beat)
+
+Wiederkehrende Aufgaben laufen über **Celery** auf dem vorhandenen
+Redis-Broker. Zwei Services aus `docker-compose.yml`:
+
+- **celeryworker** — führt die Tasks aus (`celery -A core worker`).
+- **celerybeat** — plant die wiederkehrenden Jobs (`celery -A core beat`) und
+  legt die Task-Nachrichten in Redis ab, von wo der Worker sie abholt.
+
+Beide nutzen dasselbe Image wie `web`, überspringen aber den Gunicorn-Entrypoint
+(`entrypoint: []`) und starten direkt Celery. Sie kommen mit
+`restart: unless-stopped` automatisch mit dem Stack hoch und erholen sich nach
+Abstürzen/Neustarts selbst.
+
+### Start & Stopp
+
+Die Services starten zusammen mit dem übrigen Stack:
+
+```bash
+docker compose up -d                 # startet auch celeryworker + celerybeat
+docker compose up -d celeryworker celerybeat   # nur die Worker-Dienste
+docker compose restart celeryworker celerybeat # nach Code-/Schedule-Änderungen
+```
+
+> Nach Änderungen an Tasks (`game/tasks.py`) oder am Zeitplan
+> (`CELERY_BEAT_SCHEDULE` in `core/settings.py`) müssen die Images neu gebaut
+> (`docker compose build`) und die beiden Dienste neu gestartet werden —
+> `deploy.sh` erledigt Build + Hochfahren bereits mit.
+
+### Logs & Überwachung
+
+```bash
+docker compose logs -f celeryworker   # Worker-Logs (Task-Ausführung)
+docker compose logs -f celerybeat     # Beat-Logs (geplante Auslösungen)
+
+# Lebt der Worker? Pingt alle laufenden Worker:
+docker compose exec celeryworker celery -A core inspect ping
+
+# Aktuell laufende bzw. registrierte Tasks und der aktive Zeitplan:
+docker compose exec celeryworker celery -A core inspect active
+docker compose exec celeryworker celery -A core inspect registered
+docker compose exec celeryworker celery -A core inspect scheduled
+```
+
+Der Worker selbst hat einen Healthcheck (`celery inspect ping`); `docker compose
+ps` zeigt ihn als `healthy`, sobald er Tasks annimmt.
+
+### Geplanter Job (V1)
+
+In V1 ist ein Job eingebunden: der **City-Pin-Check**
+(`manage.py check_city_pins`, ein leseseitiger Datenqualitäts-/Golden-Master-
+Check). Er läuft standardmäßig **täglich**. Das Intervall ist per Env steuerbar:
+
+```dotenv
+# In der .env, Sekunden; Standard 86400 (täglich):
+CELERY_CITY_PIN_CHECK_INTERVAL=86400
+```
+
+Der Job wird vom generischen Task `game.tasks.run_management_command`
+ausgeführt. Dieser fängt das `SystemExit` der Commands ab, loggt deren Ausgabe
+und meldet einen Nicht-Null-Exit-Code als fehlgeschlagenen Task (im Worker-Log
+und Result-Backend sichtbar).
+
+### Weitere Jobs einbinden
+
+Neue wiederkehrende Jobs werden als Einträge in `CELERY_BEAT_SCHEDULE`
+(`core/settings.py`) ergänzt — sie rufen denselben Task mit anderem
+Command/Argumenten auf, z. B.:
+
+```python
+CELERY_BEAT_SCHEDULE = {
+    'datenqualitaet-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': 24 * 60 * 60,
+        'args': ('revalidate_clubs',),
+    },
+}
+```
+
+### Task manuell anstoßen (Test/Debug)
+
+```bash
+# debug_task (Worker-Anbindung prüfen):
+docker compose exec celeryworker \
+  celery -A core call core.celery.debug_task
+
+# Ein Management-Command sofort über den Worker laufen lassen:
+docker compose exec celeryworker \
+  celery -A core call game.tasks.run_management_command --args='["check_city_pins"]'
+```
+
 ## Rollback
 
 Auf einen vorherigen Stand zurückgehen:
@@ -275,6 +368,8 @@ docker compose logs -f web         # Web-Logs verfolgen
 docker compose logs -f nginx       # nginx-Logs
 docker compose down                # Stack stoppen (Volumes bleiben erhalten)
 docker compose restart web         # nur web neu starten
+docker compose logs -f celeryworker # Celery-Worker-Logs (Hintergrund-Jobs)
+docker compose logs -f celerybeat   # Celery-Beat-Logs (geplante Auslösungen)
 ```
 
 ## Offene Folgeaufgaben (nicht Teil von V1)
@@ -282,7 +377,6 @@ docker compose restart web         # nur web neu starten
 - **Domain-Setup:** DNS auf `49.13.5.151` zeigen lassen, Domain in
   `ALLOWED_HOSTS` und `CSRF_TRUSTED_ORIGINS` eintragen (Voraussetzung für HTTPS,
   siehe Abschnitt „HTTPS/TLS aktivieren").
-- **Celery:** Worker-Service ergänzen; Redis ist bereits als Broker vorbereitet.
 - **CMTracker Live:** Hetzner-IP `49.13.5.151` direkt bei CMTracker für den
   Live-Import registrieren.
 - **Datenmigration:** Falls produktive Daten von Replit übernommen werden

@@ -247,3 +247,42 @@ STORAGES = {
 }
 
 API_FOOTBALL_KEY = os.environ.get('API_FOOTBALL_KEY', '')
+
+
+# Celery / Hintergrund-Jobs
+# https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html
+#
+# Broker und Result-Backend laufen über denselben Redis wie der restliche
+# Stack. REDIS_URL zeigt im Compose-Stack auf den Service "redis"; lokal
+# (Replit dev) kann es per Env überschrieben werden (z. B. localhost).
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+
+# Zeitzone für Beat-Zeitpläne (deckungsgleich mit Django).
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Robustheit:
+#  - Tasks erst nach erfolgreichem Lauf bestätigen (überlebt Worker-Neustart).
+#  - Broker-Verbindung beim Start abwarten (Worker kommt mit dem Stack hoch).
+#  - Laufzeit begrenzen und Worker-Kinder regelmäßig recyceln (gegen Leaks).
+CELERY_TASK_ACKS_LATE = True
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_TASK_TIME_LIMIT = 30 * 60          # harte Obergrenze: 30 min
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60     # vorher SoftTimeLimitExceeded
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 200
+CELERY_RESULT_EXPIRES = 60 * 60 * 24      # Ergebnisse 24 h aufbewahren
+
+# Beat-Zeitplan: wiederkehrende Jobs. Intervall (Sekunden) per Env steuerbar,
+# Standard täglich. Der Job führt ein bestehendes Management-Command über den
+# generischen Task game.tasks.run_management_command aus.
+_CITY_PIN_CHECK_INTERVAL = float(
+    os.environ.get('CELERY_CITY_PIN_CHECK_INTERVAL', 24 * 60 * 60)
+)
+CELERY_BEAT_SCHEDULE = {
+    'city-pin-check-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': _CITY_PIN_CHECK_INTERVAL,
+        'args': ('check_city_pins',),
+    },
+}
