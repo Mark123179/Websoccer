@@ -108,7 +108,7 @@ html, body {
     text-shadow: 0 0 20px rgba(34,230,255,0.35);
 }
 .intro-topbar__wordmark {
-    height: 56px;
+    height: 168px;
     width: auto;
     display: block;
     filter: drop-shadow(0 0 12px rgba(34,230,255,0.45));
