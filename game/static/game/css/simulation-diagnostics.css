@@ -1,0 +1,164 @@
+/* Simulation-Diagnose (Creator Mode) — read-only Diagnose-Ansicht.
+   Dunkles Cyan-Theme, konsistent mit den übrigen cm-Seiten. 1440×900-Lock. */
+
+.cm-diag {
+  color: #cce8ff;
+}
+
+.cm-diag-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0 .9rem;
+  display: inline-block;
+  letter-spacing: .02em;
+}
+
+.cm-diag-intro {
+  color: #7d97b0;
+  font-size: .85rem;
+  margin: .2rem 0 1.4rem;
+}
+
+.cm-diag-card {
+  background: #071525;
+  border: 1px solid #0d2035;
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem 1.3rem;
+  margin-bottom: 1.1rem;
+}
+
+.cm-diag-h2 {
+  font-size: 1.02rem;
+  font-weight: 650;
+  color: #00d4ff;
+  margin: 0 0 .7rem;
+  letter-spacing: .01em;
+}
+
+.cm-diag-sub {
+  font-size: .82rem;
+  color: #93acc4;
+  margin: .1rem 0 .7rem;
+}
+
+.cm-diag-nv {
+  font-size: .85rem;
+  color: #8aa0b6;
+  background: #050e1a;
+  border: 1px dashed #1b324a;
+  border-radius: 8px;
+  padding: .6rem .8rem;
+  margin: .3rem 0;
+}
+
+/* ── KPI-Kacheln ───────────────────────────────────────────────────────── */
+.cm-diag-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .7rem;
+  margin: .2rem 0 1rem;
+}
+
+.cm-diag-kpi {
+  background: #050e1a;
+  border: 1px solid #0d2035;
+  border-radius: 10px;
+  padding: .7rem 1rem;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.cm-diag-kpi-val {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.cm-diag-kpi-lbl {
+  font-size: .72rem;
+  color: #7d97b0;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+/* ── Tabellen ──────────────────────────────────────────────────────────── */
+.cm-diag-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+
+.cm-diag-table th,
+.cm-diag-table td {
+  text-align: left;
+  padding: .5rem .6rem;
+  border-bottom: 1px solid #0d2035;
+  vertical-align: top;
+}
+
+.cm-diag-table th {
+  color: #7d97b0;
+  font-weight: 600;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.cm-diag-table tbody tr:hover {
+  background: #0a1a2c;
+}
+
+.cm-diag-hint {
+  color: #7d97b0;
+  font-size: .76rem;
+}
+
+.cm-diag-inc {
+  margin: 0;
+  padding-left: 1rem;
+  color: #ffb547;
+}
+
+.cm-diag-inc li {
+  margin: .1rem 0;
+}
+
+/* ── Ampel-Badges ──────────────────────────────────────────────────────── */
+.cm-diag-badge {
+  display: inline-block;
+  padding: .12rem .55rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  color: #04121f;
+}
+
+.cm-diag-green,
+.cm-diag-ok   { background: #28c76f; }
+.cm-diag-yellow,
+.cm-diag-warn { background: #ffb547; }
+.cm-diag-red,
+.cm-diag-bad  { background: #ff5b5b; color: #fff; }
+.cm-diag-na   { background: #5a6b7a; color: #e6eef6; }
+
+.cm-diag-ok-text   { color: #28c76f; font-weight: 600; }
+.cm-diag-warn-text { color: #ffb547; font-weight: 600; }
+.cm-diag-muted     { color: #5a6b7a; }
+
+/* ── Stabilitäts-Flags ─────────────────────────────────────────────────── */
+.cm-diag-flag {
+  display: inline-block;
+  padding: .1rem .5rem;
+  border-radius: 6px;
+  font-size: .72rem;
+  margin: 0 .3rem .3rem 0;
+  border: 1px solid #0d2035;
+}
+
+.cm-diag-flag-ok  { color: #28c76f; border-color: #15402a; }
+.cm-diag-flag-bad { color: #ff5b5b; border-color: #4a1c1c; }

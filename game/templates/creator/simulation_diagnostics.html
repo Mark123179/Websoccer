@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Simulation-Diagnose · Creator Mode{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/simulation-diagnostics.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<!-- sim-diag-start -->
+<section class="cm-section cm-diag">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1 class="cm-diag-title">Simulation-Diagnose</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">‹ Zurück zum Creator</a>
+    </div>
+  </div>
+
+  <p class="cm-diag-intro">
+    Read-only-Auswertung der MatchEngine. Kennzahlen aus Bestandsdaten
+    (SimulatedMatch, SeasonFixture, PlayerFormSnapshot). Keine Schreibaktionen.
+  </p>
+
+  {# ── 1. Spieltag- & Saison-Status ─────────────────────────────────────── #}
+  {% with s=report.season_status %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">1 · {{ s.title }}</h2>
+    {% if s.global_season %}
+      <p class="cm-diag-sub">
+        Globale Saison: <strong>{{ s.global_season.current_season }}</strong>
+        ({% if s.global_season.is_started %}gestartet{% else %}nicht gestartet{% endif %})
+        · Inkonsistenzen gesamt:
+        <strong class="{% if s.inconsistency_count %}cm-diag-warn-text{% endif %}">{{ s.inconsistency_count }}</strong>
+      </p>
+    {% endif %}
+    {% if not s.available %}
+      <p class="cm-diag-nv">{{ s.note }}</p>
+    {% else %}
+      <table class="cm-diag-table">
+        <thead>
+          <tr><th>Liga</th><th>Saison</th><th>Spieltag</th><th>Simuliert</th>
+              <th>Gespielt</th><th>Offen</th><th>Gesamt</th><th>Inkonsistenzen</th></tr>
+        </thead>
+        <tbody>
+        {% for lg in s.leagues %}
+          <tr>
+            <td>{{ lg.league }}</td>
+            <td>{{ lg.season }}</td>
+            <td>{{ lg.matchday|default:'–' }}</td>
+            <td>{% if lg.is_simulated == True %}ja{% elif lg.is_simulated == False %}nein{% else %}–{% endif %}</td>
+            <td>{{ lg.played }}</td>
+            <td>{{ lg.open }}</td>
+            <td>{{ lg.total }}</td>
+            <td>
+              {% if lg.inconsistencies %}
+                <ul class="cm-diag-inc">{% for inc in lg.inconsistencies %}<li>{{ inc }}</li>{% endfor %}</ul>
+              {% else %}<span class="cm-diag-ok-text">keine</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {# ── 2. Letzte Spiele ─────────────────────────────────────────────────── #}
+  {% with s=report.recent_matches %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">2 · {{ s.title }}</h2>
+    {% if not s.available %}
+      <p class="cm-diag-nv">{{ s.note }}</p>
+    {% else %}
+      <p class="cm-diag-sub">Stichprobe: letzte <strong>{{ s.sample_size }}</strong> Spiele</p>
+      <div class="cm-diag-kpis">
+        <div class="cm-diag-kpi"><span class="cm-diag-kpi-val">{{ s.display.goals_per_game }}</span><span class="cm-diag-kpi-lbl">Tore/Spiel</span></div>
+        <div class="cm-diag-kpi"><span class="cm-diag-kpi-val">{{ s.display.home_pct }}</span><span class="cm-diag-kpi-lbl">Heimsiege</span></div>
+        <div class="cm-diag-kpi"><span class="cm-diag-kpi-val">{{ s.display.draw_pct }}</span><span class="cm-diag-kpi-lbl">Unentschieden</span></div>
+        <div class="cm-diag-kpi"><span class="cm-diag-kpi-val">{{ s.display.away_pct }}</span><span class="cm-diag-kpi-lbl">Auswärtssiege</span></div>
+        <div class="cm-diag-kpi"><span class="cm-diag-kpi-val">{{ s.display.avg_xg }}</span><span class="cm-diag-kpi-lbl">Ø xG/Spiel</span></div>
+      </div>
+      {% if not s.xg_available %}<p class="cm-diag-nv">Ø xG: n/v — xG nicht in report_data vorhanden.</p>{% endif %}
+      <table class="cm-diag-table">
+        <thead><tr><th>Heim</th><th>Gast</th><th>Ergebnis</th><th>xG (gesamt)</th></tr></thead>
+        <tbody>
+        {% for r in s.rows %}
+          <tr><td>{{ r.home }}</td><td>{{ r.away }}</td><td>{{ r.hg }}:{{ r.ag }}</td><td>{{ r.xg }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {# ── 3. Balance-KPIs ──────────────────────────────────────────────────── #}
+  {% with s=report.balance %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">3 · {{ s.title }}</h2>
+    {% if s.note %}<p class="cm-diag-nv">{{ s.note }}</p>{% endif %}
+    <table class="cm-diag-table">
+      <thead><tr><th>Kennzahl</th><th>Wert</th><th>Status</th><th>Korridor</th><th>Hinweis</th></tr></thead>
+      <tbody>
+      {% for row in s.rows %}
+        <tr>
+          <td>{{ row.label }}</td>
+          <td>{{ row.value }}</td>
+          <td>{% include 'creator/_diag_badge.html' with status=row.status %}</td>
+          <td>{{ row.corridor_label }}</td>
+          <td>{{ row.reason }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endwith %}
+
+  {# ── 4. Feature-Ampel ─────────────────────────────────────────────────── #}
+  {% with s=report.features %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">4 · {{ s.title }}</h2>
+    {% if s.note %}<p class="cm-diag-nv">{{ s.note }}</p>{% endif %}
+    <table class="cm-diag-table">
+      <thead><tr><th>Feature</th><th>Status</th><th>Beleg</th><th>Hinweis</th></tr></thead>
+      <tbody>
+      {% for row in s.rows %}
+        <tr>
+          <td>{{ row.feature }}</td>
+          <td>{% include 'creator/_diag_badge.html' with status=row.status %}</td>
+          <td>{{ row.evidence }}</td>
+          <td class="cm-diag-hint">{{ row.hint }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endwith %}
+
+  {# ── 5. Positionsmatrix ───────────────────────────────────────────────── #}
+  {% with s=report.positions %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">5 · {{ s.title }}</h2>
+    {% if not s.available %}
+      <p class="cm-diag-nv">{{ s.note }}</p>
+    {% else %}
+      <p class="cm-diag-sub">
+        Liga-Baseline Ø-Note: <strong>{{ s.baseline_note|floatformat:2|default:'n/v' }}</strong>
+        · Ampel = Abweichung der Position von der Baseline
+      </p>
+      <table class="cm-diag-table">
+        <thead>
+          <tr><th>Position</th><th>n</th><th>Ø-Note</th><th>Status</th><th>Δ Baseline</th>
+              <th>Tore/Spiel</th><th>Vorlagen/Spiel</th><th>Ø Minuten</th></tr>
+        </thead>
+        <tbody>
+        {% for row in s.rows %}
+          <tr>
+            <td>{{ row.position }}</td>
+            <td>{{ row.sample }}</td>
+            <td>{{ row.avg_note|floatformat:2|default:'n/v' }}</td>
+            <td>{% include 'creator/_diag_badge.html' with status=row.note_status %}</td>
+            <td>{% if row.note_delta != None %}{{ row.note_delta|floatformat:2 }}{% else %}–{% endif %}</td>
+            <td>{{ row.goals_per_match|floatformat:2|default:'n/v' }}</td>
+            <td>{{ row.assists_per_match|floatformat:2|default:'n/v' }}</td>
+            <td>{{ row.avg_minutes|floatformat:0|default:'n/v' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {# ── 6. Taktik-Wirkung ────────────────────────────────────────────────── #}
+  {% with s=report.tactics %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">6 · {{ s.title }}</h2>
+    {% if not s.available %}
+      <p class="cm-diag-nv">{{ s.note }}</p>
+    {% else %}
+      <p class="cm-diag-sub">Gruppierung nach: <strong>{{ s.dimension }}</strong></p>
+      <table class="cm-diag-table">
+        <thead><tr><th>{{ s.dimension }}</th><th>Einsätze</th><th>Tore +</th><th>Tore −</th><th>Siegquote</th></tr></thead>
+        <tbody>
+        {% for row in s.rows %}
+          <tr>
+            <td>{{ row.formation }}</td>
+            <td>{{ row.sample }}</td>
+            <td>{{ row.goals_for|floatformat:2 }}</td>
+            <td>{{ row.goals_against|floatformat:2 }}</td>
+            <td>{{ row.win_pct|floatformat:0 }}%</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {# ── 7. Liveticker-Abdeckung ──────────────────────────────────────────── #}
+  {% with s=report.ticker %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">7 · {{ s.title }}</h2>
+    {% if not s.available %}
+      <p class="cm-diag-nv">{{ s.note }}</p>
+    {% else %}
+      <p class="cm-diag-sub">
+        Abdeckungsgrad: <strong>{{ s.coverage_percent|floatformat:0 }}%</strong>
+        ({{ s.occurred_count }}/{{ s.supported_count }} Familien in der Stichprobe aufgetreten)
+      </p>
+      <table class="cm-diag-table">
+        <thead><tr><th>Familie</th><th>Aufgetreten</th><th>Spiele</th><th>Ticker-Signale</th></tr></thead>
+        <tbody>
+        {% for row in s.rows %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td>{% if row.occurred %}<span class="cm-diag-ok-text">✓</span>{% else %}<span class="cm-diag-muted">–</span>{% endif %}</td>
+            <td>{{ row.match_count }}</td>
+            <td class="cm-diag-hint">{{ row.evt_types }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if s.never_triggered %}
+        <p class="cm-diag-sub">Nie ausgelöst (in Stichprobe): {{ s.never_triggered|join:', ' }}</p>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  {# ── 8. Regression gegen Golden-Master ────────────────────────────────── #}
+  {% with s=report.regression %}
+  <div class="cm-diag-card">
+    <h2 class="cm-diag-h2">8 · {{ s.title }}</h2>
+    {% if not s.available %}
+      <p class="cm-diag-nv">{{ s.note }}</p>
+    {% else %}
+      <p class="cm-diag-sub">Jüngster Lauf: <strong>{{ s.run_label }}</strong> (nur Anzeige, kein neuer Lauf)</p>
+      <table class="cm-diag-table">
+        <thead><tr><th>Metrik</th><th>Median</th><th>Korridor</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for row in s.rows %}
+          <tr>
+            <td>{{ row.label }}</td>
+            <td>{{ row.median }}</td>
+            <td>{{ row.corridor_label }}</td>
+            <td>{% include 'creator/_diag_badge.html' with status=row.status %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if s.stability_flags %}
+        <p class="cm-diag-sub">Stabilität:
+          {% for f in s.stability_flags %}<span class="cm-diag-flag {% if f.ok %}cm-diag-flag-ok{% else %}cm-diag-flag-bad{% endif %}">{{ f.key }}</span>{% endfor %}
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+  {% endwith %}
+
+</section>
+<!-- sim-diag-end -->
+{% endblock %}

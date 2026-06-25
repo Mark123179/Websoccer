@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 from django.apps import apps
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -552,6 +553,18 @@ def creator_index(request):
         'total_clubs': Club.objects.count(),
         'total_players': Player.objects.count(),
     })
+
+
+@staff_member_required
+def creator_simulation_diagnostics(request):
+    """Read-only Simulation-Diagnose (Creator Mode, nur Staff-Nutzer).
+
+    Liest ausschließlich Bestandsdaten und ruft das reine Diagnose-Paket auf;
+    keine Schreibaktionen, keine Simulation, keine Management Commands.
+    """
+    from .simulation_diagnostics import build_simulation_diagnostics_report
+    report = build_simulation_diagnostics_report()
+    return render(request, 'creator/simulation_diagnostics.html', {'report': report})
 
 
 @login_required
