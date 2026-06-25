@@ -3,8 +3,8 @@
 Technische Dokumentation der cmtracker-Anbindung: vom API-Abruf über das
 Abflachen der JSON-Antwort bis zur Übergabe an den bestehenden CMTracker-Importer.
 Beschreibt Architektur, Feldmapping, das geprüfte Dry-Run-Ergebnis, die
-Sandbox-Einschränkung, die Matching-/ID-Strategie sowie den Plan für den
-Live-Modus.
+Sandbox-Einschränkung, die Matching-/ID-Strategie sowie den Live-Ablauf auf dem
+Produktionsserver (feste IP).
 
 > **Leitprinzip:** cmtracker liefert nur Rohwerte. Der bestehende Importer
 > (`game/sofifa_import_service.py`) bleibt die **einzige** Schreibstelle —
@@ -163,21 +163,78 @@ der Schlüsselname ein reines Implementierungsdetail.
 
 ---
 
-## 6. Nächste Aufgabe — Live-Modus-Vorbereitung (Proxy / feste IP)
+## 6. Live-Modus auf dem Produktionsserver (feste IP)
 
-**Problem:** Live-Keys funktionieren nur von **registrierten IP-Adressen**. Die
-Replit-Ausgangs-IP ist nicht stabil → ein vorgelagerter Proxy/Gateway mit
-**fester IP** ist nötig.
+Seit der HTTPS-Produktivstellung läuft Websoccer auf dem Hetzner-Server
+(`/opt/websoccer`) mit der **festen IP `49.13.5.151`**. Damit entfällt der
+ursprünglich geplante Proxy: Die feste Server-IP ist selbst die IP, die bei
+CMTracker für den Live-Key freigeschaltet wird. Der Live-Import läuft deshalb
+**direkt auf dem Server** (im `web`-Container), **nicht** aus der Replit-Dev-
+Umgebung.
 
-Geplante Schritte:
+**Voraussetzungen**
 
-1. **Feste IP bereitstellen:** Proxy/Gateway mit statischer Ausgangs-IP
-   einrichten und diese IP bei cmtracker für den Live-Key registrieren.
-2. **Proxy-Support im Client:** in `CmtrackerClient` HTTP(S)-Proxy-Nutzung
-   ergänzen (`requests` `proxies=`), Proxy-URL als Secret hinterlegen.
-3. **Live-Key als separates Secret** führen (getrennt vom Sandbox-Key).
-4. **Live-Abruf testen** (`--sandbox` weglassen): FC26-DB-Slug `26062400`,
-   Filter `--team/--league/--min-overall`, Pagination `--max-pages` prüfen.
-5. **Erst-Import (voller Ligaabgleich):** danach greift automatisch das
-   ID-Matching (§5); Folgeimporte sind robust gegen Namens-/Vereinswechsel.
-6. **Optional:** Auslöse-Button im Creator-Mode (bisher bewusst nur CLI).
+- Produktions-Stack läuft (Docker Compose) und ist über HTTPS erreichbar.
+- Der **Live**-`CMTRACKER_API_KEY` liegt ausschließlich in der server-lokalen
+  `/opt/websoccer/.env` (gitignored). Nie committen, nie loggen.
+
+**Schritt 1 — IP-Freischaltung (manuell beim CMTracker-Anbieter)**
+
+Die feste Hetzner-IP `49.13.5.151` im CMTracker-Konto für den Live-Key
+registrieren/freischalten. Verifizieren mit einem einfachen Abruf **vom Server**:
+
+```bash
+docker compose run --rm web python manage.py import_cmtracker --list-dbs
+```
+
+Läuft das ohne `401/403` durch, ist die IP freigeschaltet.
+
+> **Erwartetes Verhalten:** Von **nicht** registrierten IP-Adressen (z. B. der
+> Replit-Dev-Umgebung) antwortet die API bewusst mit **HTTP 401** — das ist
+> kein Bug, sondern der IP-Schutz des Live-Keys. Ein Live-Test ist daher nur
+> auf dem Server möglich.
+
+**Schritt 2 — Kontrollierter Probelauf (Dry-Run auf dem Server)**
+
+Klein und gefiltert starten, damit nichts geschrieben wird und der Umfang
+überschaubar bleibt (valide Liga-/Team-IDs liefert `--list-dbs`):
+
+```bash
+docker compose run --rm web python manage.py import_cmtracker \
+    --dry-run --league <cmtracker-liga-id> --max-pages 1
+```
+
+Erwartung: Bilanz mit gematchten Spielern, `0 Fehler`, **keine** DB-Schreibaktion.
+
+**Schritt 3 — Echter Live-Import (schreibt in die DB)**
+
+`--sandbox` und `--dry-run` weglassen. Für den ersten echten Lauf weiterhin
+gezielt filtern (`--league`/`--team`) bzw. `--min-overall`/`--max-pages` setzen,
+statt ungefiltert die komplette FC-DB zu ziehen (Sicherheits-Cap: 500 Seiten):
+
+```bash
+docker compose run --rm web python manage.py import_cmtracker \
+    --league <cmtracker-liga-id>
+```
+
+- **Quelle:** Ratings werden unter `CMTRACKER` geschrieben (§5).
+- **IDs:** Beim ersten echten Import persistiert `_apply_row` die externe ID;
+  Folgeimporte matchen dann per ID (DOB/Name nur noch Fallback).
+
+**Schritt 4 — Verifikation**
+
+- Bilanz prüfen (`neu / aktualisiert / unverändert / nicht gematcht / Fehler`).
+- Stichprobe: Ein bekannter Bundesliga-Spieler (z. B. Harry Kane) trägt
+  aktualisierte CMTracker-Ratings.
+
+**Secret-Handling (bestätigt)**
+
+- Der Key wird **ausschließlich** aus `os.environ['CMTRACKER_API_KEY']` gelesen
+  (`CmtrackerClient.__init__`).
+- Er erscheint **nie** in Logs: Fehlermeldungen nennen nur den Variablennamen,
+  der Wert geht ausschließlich in den `X-API-Key`-Header.
+- Im Repo steht nur der leere Platzhalter in `.env.example`; `.env`/`.env.*`
+  sind gitignored.
+
+**Optional (separate Folgeaufgabe):** wiederkehrende, automatisierte Ausführung
+über Celery.
