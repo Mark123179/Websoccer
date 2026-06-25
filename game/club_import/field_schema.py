@@ -66,8 +66,8 @@ PLAYER_IDENTITY_COLUMN_MAP = {
     'tm_player_id':     ('Player', 'transfermarkt_id', 'Transfermarkt-Spieler-ID (unique).'),
     'tm_url':           ('Player', 'transfermarkt_profile_url', 'TM-Profillink.'),
     'tm_market_value_url': ('Player', 'transfermarkt_market_value_url', 'Optional: TM-Marktwertlink.'),
-    'sofifa_id':        ('PlayerExternalId', 'external_id (SoFIFA)', 'SoFIFA-ID.'),
-    'sofifa_url':       ('PlayerExternalId', 'profile_url (SoFIFA)', 'SoFIFA-Profillink.'),
+    'sofifa_id':        ('PlayerExternalId', 'external_id (CMTracker)', 'CMTracker-ID.'),
+    'sofifa_url':       ('PlayerExternalId', 'profile_url (CMTracker)', 'CMTracker-Profillink.'),
 }
 
 # Volatile Felder (Vollanlage UND Aktualisierung).
@@ -86,10 +86,10 @@ RATING_COLUMN_MAP = {
     'fmi_potential':     ('PlayerSourceRating[FM]', 'potential', 'Fehlt → Fallback = rating.'),
     'fmi_source_version': ('PlayerSourceRating[FM]', 'source_version', 'Quellversion.'),
     'fmi_url':           ('PlayerSourceRating[FM]', 'source_url', 'FMInside-Profillink der Quelle.'),
-    'sofifa_rating':     ('PlayerSourceRating[EA]', 'rating', 'SoFIFA-Rating.'),
-    'sofifa_potential':  ('PlayerSourceRating[EA]', 'potential', 'Fehlt → Fallback = rating.'),
-    'sofifa_source_version': ('PlayerSourceRating[EA]', 'source_version', 'Quellversion.'),
-    'sofifa_url':        ('PlayerSourceRating[EA]', 'source_url', 'SoFIFA-Profillink der Quelle.'),
+    'sofifa_rating':     ('PlayerSourceRating[CMTRACKER]', 'rating', 'CMTracker-Rating.'),
+    'sofifa_potential':  ('PlayerSourceRating[CMTRACKER]', 'potential', 'Fehlt → Fallback = rating.'),
+    'sofifa_source_version': ('PlayerSourceRating[CMTRACKER]', 'source_version', 'Quellversion.'),
+    'sofifa_url':        ('PlayerSourceRating[CMTRACKER]', 'source_url', 'CMTracker-Profillink der Quelle.'),
     # Gemeinsames Prüfdatum für beide Quellen — eine Zeile, beide PSR-Zeilen bekommen denselben Wert.
     'source_checked_at': ('PlayerSourceRating[FM+EA]', 'checked_at', 'Datum der letzten Quellprüfung.'),
 }
@@ -121,7 +121,7 @@ PROTECTED_GAME_STATE_FIELDS = {
 
 
 # ── Kanonische Template-Spaltenreihenfolge ───────────────────────────────────
-# Entspricht dem bestätigten 83-Spalten-Export; die FMI-/SoFIFA-Attribute werden
+# Entspricht dem bestätigten 83-Spalten-Export; die FMI-/CMTracker-Attribute werden
 # aus den Maps abgeleitet (keine Duplikation). Optionale, im aktuellen Export
 # noch fehlende Spalten sind klar als solche markiert.
 _FMI_ATTR_COLUMNS = [f'fmi_{suffix}' for suffix in FMI_ATTR_MAP]

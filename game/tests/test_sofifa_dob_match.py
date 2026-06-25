@@ -1,4 +1,4 @@
-"""DOB-basiertes Matching im SoFIFA/CMTracker-CSV-Import.
+"""DOB-basiertes Matching im CMTracker/CMTracker-CSV-Import.
 
 Hintergrund: Namen aus Transfermarkt und CMTracker weichen oft ab (Zweitnamen,
 Schreibweise), und ausgeliehene Spieler werden in der CSV unter ihrem
@@ -51,7 +51,7 @@ class SofifaDobMatchTests(TestCase):
             name='FC Basel', short_name='FCB', founded_year=1893,
             budget=Decimal('1000000.00'), league=league)
         DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA, defaults={'name': 'SoFIFA'})
+            code=DataSource.CODE_CMTRACKER, defaults={'name': 'CMTracker'})
 
     def _player(self, first, last, dob, club, **extra):
         return Player.objects.create(
@@ -63,7 +63,7 @@ class SofifaDobMatchTests(TestCase):
 
     def _rating(self, player):
         return PlayerSourceRating.objects.filter(
-            player=player, source=PlayerSourceRating.SOURCE_EA).first()
+            player=player, source=PlayerSourceRating.SOURCE_CMTRACKER).first()
 
     def _run(self, csv_text):
         return run_sofifa_import(csv_text, dry_run=False, skip_recalculate=True)

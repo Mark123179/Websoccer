@@ -175,7 +175,7 @@ def apply_match_freshness_losses(
         pids = [p['id'] for p in players if p.get('id')]
         if not pids:
             return {}
-        # Ausdauer aus PlayerSourceRating (EA bevorzugt, FM als Fallback, None = 70 neutral)
+        # Ausdauer aus PlayerSourceRating (CMTracker bevorzugt, FM als Fallback, None = 70 neutral)
         ausdauer_qs = (
             PlayerSourceRating.objects
             .filter(player_id__in=pids, ausdauer__isnull=False)
@@ -184,7 +184,7 @@ def apply_match_freshness_losses(
         ausdauer_map: dict[int, int] = {}
         for row in ausdauer_qs:
             pid = row['player_id']
-            if pid not in ausdauer_map or row['source'] == 'EA':
+            if pid not in ausdauer_map or row['source'] == PlayerSourceRating.SOURCE_CMTRACKER:
                 ausdauer_map[pid] = int(row['ausdauer'])
 
         losses: dict[int, float] = {}

@@ -17,7 +17,7 @@ Eingabedaten durch die generische Pipeline.
 Abgedeckte Definition-of-Done-Punkte:
     * neuer Spieler (Vušković) wird angelegt,
     * vorhandener Spieler wird gezielt überschrieben,
-    * fehlendes SoFIFA blockiert nicht (kein externer SoFIFA-Eintrag),
+    * fehlendes CMTracker blockiert nicht (kein externer CMTracker-Eintrag),
     * Platzhalterverein (Leihgeber) wird automatisch erzeugt,
     * NULL-Erhalt (fehlende Werte bleiben None/''),
     * Importbestätigung liefert eine korrekte Zusammenfassung.
@@ -83,7 +83,7 @@ class ClubImportEndToEndTests(TestCase):
 
     # ── Hilfen für die Roh-Payloads des lokalen Importers ────────────────────
     def _vuskovic_payload(self):
-        """Neuer Spieler, Leihe von Tottenham, FMInside vorhanden, SoFIFA fehlt."""
+        """Neuer Spieler, Leihe von Tottenham, FMInside vorhanden, CMTracker fehlt."""
         return {
             'tm_player_id': VUSKOVIC_TM_ID,
             'tm': {
@@ -118,8 +118,8 @@ class ClubImportEndToEndTests(TestCase):
                 'potential': 90,
                 'attrs': {'zweikampf': 16, 'kopfball': 15},
             },
-            # Kein 'sofifa'-Block → fehlendes SoFIFA darf NICHT blockieren.
-            'warnings': ['SoFIFA: kein eindeutiger Treffer (optional).'],
+            # Kein 'sofifa'-Block → fehlendes CMTracker darf NICHT blockieren.
+            'warnings': ['CMTracker: kein eindeutiger Treffer (optional).'],
             'errors': [],
         }
 
@@ -220,7 +220,7 @@ class ClubImportEndToEndTests(TestCase):
         vusko = job.candidates.get(tm_player_id=VUSKOVIC_TM_ID)
         existing_cand = job.candidates.get(tm_player_id=EXISTING_TM_ID)
 
-        # Neuer Spieler korrekt erkannt, fehlendes SoFIFA als Hinweis (nicht Fehler).
+        # Neuer Spieler korrekt erkannt, fehlendes CMTracker als Hinweis (nicht Fehler).
         self.assertEqual(vusko.status, PlayerImportCandidate.STATUS_NEW)
         self.assertEqual(vusko.validation_errors, [])
         self.assertTrue(vusko.selected_for_import)
@@ -261,9 +261,9 @@ class ClubImportEndToEndTests(TestCase):
         self.assertEqual(parent.transfermarkt_id, TOTTENHAM_TM_CLUB_ID)
         self.assertEqual(new_player.real_life_club, parent)
 
-        # 8c) Fehlendes SoFIFA: kein externer SoFIFA-Eintrag, aber FMInside-Rating.
+        # 8c) Fehlendes CMTracker: kein externer CMTracker-Eintrag, aber FMInside-Rating.
         sofifa_source = DataSource.objects.filter(
-            code=DataSource.CODE_SOFIFA).first()
+            code=DataSource.CODE_CMTRACKER).first()
         if sofifa_source:
             self.assertFalse(
                 PlayerExternalId.objects.filter(
@@ -273,7 +273,7 @@ class ClubImportEndToEndTests(TestCase):
                 player=new_player, source=PlayerSourceRating.SOURCE_FM).exists())
         self.assertFalse(
             PlayerSourceRating.objects.filter(
-                player=new_player, source=PlayerSourceRating.SOURCE_EA).exists())
+                player=new_player, source=PlayerSourceRating.SOURCE_CMTRACKER).exists())
 
         # 8d) Vorhandener Spieler wurde überschrieben (kein Duplikat).
         self.assertEqual(

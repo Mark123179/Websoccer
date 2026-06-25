@@ -21,7 +21,7 @@ from game.models import (
 
 # Auto-generierte Club-Liste aus der Datenbank (fm_inside_id + sofifa_url)
 # Clubs ohne sofifa_url werden uebersprungen.
-# Manuelle SoFIFA-URL-Mapping (team-id-slug). Keys = fm_inside_id.
+# Manuelle CMTracker-URL-Mapping (team-id-slug). Keys = fm_inside_id.
 CLUB_SOURCE_DATA = {
     # fm_inside_id: (fm_inside_url, sofifa_url)
     915:   ('https://fminside.net/clubs/7-fm-26/915-fc-bayern',
@@ -113,7 +113,7 @@ FMI_GK_MAP = {
     'passing': 'tw_passen',
 }
 
-# SoFIFA-Attributlabel (englisch) -> Spalte (Feldspieler).
+# CMTracker-Attributlabel (englisch) -> Spalte (Feldspieler).
 SOFIFA_ATTR_MAP = {
     'Acceleration': 'tempo',
     'Stamina': 'ausdauer',
@@ -130,7 +130,7 @@ SOFIFA_ATTR_MAP = {
     'FK Accuracy': 'freistoss',
 }
 
-# SoFIFA-Attributlabel -> Spalte (Torwart). Kein SoFIFA-Pendant fuer
+# CMTracker-Attributlabel -> Spalte (Torwart). Kein CMTracker-Pendant fuer
 # tw_eins_gegen_eins -> bleibt NULL auf der EA-Zeile.
 SOFIFA_GK_MAP = {
     'GK Reflexes': 'tw_reflexe',
@@ -149,7 +149,7 @@ ALL_ATTR_COLUMNS = sorted(
 
 
 class Command(BaseCommand):
-    help = 'Import FMInside and SoFIFA ratings/potentials for reference players.'
+    help = 'Import FMInside and CMTracker ratings/potentials for reference players.'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -182,7 +182,7 @@ class Command(BaseCommand):
         target_player = Player.objects.get(id=player_id) if player_id else None
         today = timezone.localdate()
         fm_data_source = DataSource.objects.get(code=DataSource.CODE_FMINSIDE)
-        sofifa_data_source = DataSource.objects.get(code=DataSource.CODE_SOFIFA)
+        sofifa_data_source = DataSource.objects.get(code=DataSource.CODE_CMTRACKER)
         self._page_cache = {}
         imported_fm = 0
         imported_sofifa = 0
@@ -257,16 +257,16 @@ class Command(BaseCommand):
                     imported_sofifa += 1
                     if not sofifa_attrs:
                         self.stdout.write(self.style.WARNING(
-                            f'SoFIFA ohne Attribute (Scrape pruefen): {player.full_name}'
+                            f'CMTracker ohne Attribute (Scrape pruefen): {player.full_name}'
                         ))
                     if not dry_run:
                         self.store_source_rating(
                             player=player,
-                            source=PlayerSourceRating.SOURCE_EA,
+                            source=PlayerSourceRating.SOURCE_CMTRACKER,
                             rating=sofifa_player['rating'],
                             potential=sofifa_player['potential'],
                             source_url=sofifa_player['url'],
-                            source_version='SoFIFA EAFC 26',
+                            source_version='CMTracker EAFC 26',
                             checked_at=today,
                             data_source=sofifa_data_source,
                             attributes=sofifa_attrs,
@@ -292,7 +292,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f'  - {name}'))
 
         self.stdout.write(self.style.SUCCESS(
-            f'SoFIFA: {imported_sofifa} importiert, '
+            f'CMTracker: {imported_sofifa} importiert, '
             f'{len(unmatched_sofifa)} nicht gematcht'
         ))
         if unmatched_sofifa:
@@ -440,7 +440,7 @@ class Command(BaseCommand):
         return players
 
     def extract_sofifa_players(self, page):
-        # SoFIFA player card pattern
+        # CMTracker player card pattern
         rows = re.findall(
             r'<tr[^>]*>.*?<td[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>'
             r'\s*<img[^>]*>\s*([^<]*)</a>.*?'

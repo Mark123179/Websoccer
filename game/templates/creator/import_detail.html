@@ -155,7 +155,7 @@
         <tr>
           <th>Import</th><th>Status</th><th>Spieler</th><th>Positionen</th>
           <th>Stammdaten</th>
-          <th>Verein / Leihe</th><th>FMInside</th><th>SoFIFA</th><th>Diff / Hinweise</th>
+          <th>Verein / Leihe</th><th>FMInside</th><th>CMTracker</th><th>Diff / Hinweise</th>
         </tr>
       </thead>
       <tbody>
@@ -215,7 +215,7 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="set_source_ids">
               <input type="text" name="fm_inside_id" value="{{ c.fmi_id|default_if_none:'' }}" placeholder="FM-ID setzen"{% if c.fmi_needs_manual %} class="imp-input-alert" autocomplete="off"{% endif %}>
-              <input type="text" name="sofifa_id" value="{{ c.sofifa_id|default_if_none:'' }}" placeholder="SoFIFA">
+              <input type="text" name="sofifa_id" value="{{ c.sofifa_id|default_if_none:'' }}" placeholder="CMTracker">
               <button type="submit" class="imp-mini-btn" title="Quellen-IDs setzen">✓</button>
             </form>
           </td>

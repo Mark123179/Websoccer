@@ -4446,8 +4446,8 @@ def player_graph_data(request, player_id):
     }
     source_to_series = {
         DataSource.CODE_FMINSIDE: ('fm_rating', 'fm_potential'),
-        DataSource.CODE_SOFIFA: ('sofifa_rating', 'sofifa_potential'),
-        PlayerSourceRating.SOURCE_EA: ('sofifa_rating', 'sofifa_potential'),
+        DataSource.CODE_CMTRACKER: ('sofifa_rating', 'sofifa_potential'),
+        PlayerSourceRating.SOURCE_CMTRACKER: ('sofifa_rating', 'sofifa_potential'),
     }
 
     for row in rating_rows:

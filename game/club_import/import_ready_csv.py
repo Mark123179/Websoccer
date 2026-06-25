@@ -114,7 +114,7 @@ FMI_ATTR_MAP = {
     'gk_passing': 'tw_passen',
 }
 
-# SoFIFA (Spaltenpräfix ``sofifa_``). Hat kein technik/teamwork/ecken/
+# CMTracker (Spaltenpräfix ``sofifa_``). Hat kein technik/teamwork/ecken/
 # tw_eins_gegen_eins → bleiben None. ``long_passing`` wird verworfen.
 SOFIFA_ATTR_MAP = {
     'pace': 'tempo',

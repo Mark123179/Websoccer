@@ -254,13 +254,13 @@ def prune_snapshot_history(model, filters, limit=SNAPSHOT_HISTORY_LIMIT):
 class DataSource(models.Model):
     CODE_TRANSFERMARKT = 'TM'
     CODE_FMINSIDE = 'FM'
-    CODE_SOFIFA = 'SOFIFA'
+    CODE_CMTRACKER = 'CMTRACKER'
     CODE_API_FOOTBALL = 'API_FOOTBALL'
     CODE_WEBSOCCER = 'WSC'
     CODE_CHOICES = [
         (CODE_TRANSFERMARKT, 'Transfermarkt'),
         (CODE_FMINSIDE, 'FMInside'),
-        (CODE_SOFIFA, 'SoFIFA'),
+        (CODE_CMTRACKER, 'CMTracker'),
         (CODE_API_FOOTBALL, 'API-Football'),
         (CODE_WEBSOCCER, 'Websoccer'),
     ]
@@ -1692,8 +1692,8 @@ class Player(models.Model):
         return self.source_ratings.filter(source=source).first()
 
     @property
-    def ea_source_rating(self):
-        return self.get_source_rating(PlayerSourceRating.SOURCE_EA)
+    def cmtracker_source_rating(self):
+        return self.get_source_rating(PlayerSourceRating.SOURCE_CMTRACKER)
 
     @property
     def fm_source_rating(self):
@@ -1703,7 +1703,7 @@ class Player(models.Model):
     def source_rating_count(self):
         return sum(
             1
-            for rating in [self.ea_source_rating, self.fm_source_rating]
+            for rating in [self.cmtracker_source_rating, self.fm_source_rating]
             if rating
         )
 
@@ -1732,7 +1732,7 @@ class Player(models.Model):
 
     @property
     def calculated_base_strength(self):
-        ea_rating = self.ea_source_rating
+        ea_rating = self.cmtracker_source_rating
         fm_rating = self.fm_source_rating
 
         if ea_rating and fm_rating:
@@ -1748,7 +1748,7 @@ class Player(models.Model):
 
     @property
     def calculated_potential_strength(self):
-        ea_rating = self.ea_source_rating
+        ea_rating = self.cmtracker_source_rating
         fm_rating = self.fm_source_rating
 
         ea_potential = ea_rating.potential if ea_rating else None
@@ -1770,7 +1770,7 @@ class Player(models.Model):
 
     @property
     def source_strength_explanation(self):
-        ea_rating = self.ea_source_rating
+        ea_rating = self.cmtracker_source_rating
         fm_rating = self.fm_source_rating
         lines = []
 
@@ -1859,10 +1859,10 @@ class PlayerExternalId(models.Model):
 
 
 class PlayerSourceRating(models.Model):
-    SOURCE_EA = 'EA'
+    SOURCE_CMTRACKER = 'CMTRACKER'
     SOURCE_FM = 'FM'
     SOURCE_CHOICES = [
-        (SOURCE_EA, 'EA / SoFIFA / FIFAIndex'),
+        (SOURCE_CMTRACKER, 'CMTracker'),
         (SOURCE_FM, 'FMInside'),
     ]
 
@@ -1891,7 +1891,7 @@ class PlayerSourceRating(models.Model):
     )
 
     # --- Einzelattribute (0-99) pro Quelle, getrennt gespeichert ---
-    # Feldspieler-Attribute (FMI hat alle; SoFIFA fuellt die meisten,
+    # Feldspieler-Attribute (FMI hat alle; CMTracker fuellt die meisten,
     # FMI-only-Felder bleiben bei der EA-Zeile NULL).
     tempo = models.PositiveSmallIntegerField(
         null=True, blank=True,
@@ -1937,7 +1937,7 @@ class PlayerSourceRating(models.Model):
     defensivstellung = models.PositiveSmallIntegerField(
         null=True, blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(99)],
-        help_text='FMI: Positioning (defensiv) / SoFIFA: Stellungsspiel.',
+        help_text='FMI: Positioning (defensiv) / CMTracker: Stellungsspiel.',
     )
     uebersicht = models.PositiveSmallIntegerField(
         null=True, blank=True,
@@ -2532,7 +2532,7 @@ class PlayerSourceRatingSnapshot(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if self.update_current and self.source.code in {
-            PlayerSourceRating.SOURCE_EA,
+            PlayerSourceRating.SOURCE_CMTRACKER,
             PlayerSourceRating.SOURCE_FM,
         }:
             PlayerSourceRating.objects.update_or_create(
@@ -2562,15 +2562,15 @@ class PlayerSourceRatingSnapshot(models.Model):
 class SourceImportRun(models.Model):
     """Import-Log eines CSV-Imports (Quelle/Version/Datei/Bilanz)."""
 
-    SOURCE_SOFIFA = 'sofifa'
+    SOURCE_CMTRACKER = 'cmtracker'
     SOURCE_CHOICES = [
-        (SOURCE_SOFIFA, 'SoFIFA'),
+        (SOURCE_CMTRACKER, 'CMTracker'),
     ]
 
     source = models.CharField(
         max_length=20,
         choices=SOURCE_CHOICES,
-        default=SOURCE_SOFIFA,
+        default=SOURCE_CMTRACKER,
     )
     version = models.CharField(
         max_length=100,
@@ -4239,7 +4239,7 @@ class ClubPlayerImportJob(models.Model):
 class PlayerImportCandidate(models.Model):
     """Temporärer Spielerkandidat eines Importauftrags.
 
-    Hält die getrennten Rohdaten (Transfermarkt / FMInside / SoFIFA) sowie das
+    Hält die getrennten Rohdaten (Transfermarkt / FMInside / CMTracker) sowie das
     daraus normalisierte Ergebnis, bis der Administrator den Import bestätigt.
     """
 
@@ -4261,9 +4261,9 @@ class PlayerImportCandidate(models.Model):
         (STATUS_EXISTING_CHANGED, 'Vorhanden — geändert'),
         (STATUS_EXISTING_UNCHANGED, 'Vorhanden — unverändert'),
         (STATUS_MISSING_FMI, 'FMInside fehlt'),
-        (STATUS_MISSING_SOFIFA, 'SoFIFA fehlt'),
+        (STATUS_MISSING_SOFIFA, 'CMTracker fehlt'),
         (STATUS_AMBIGUOUS_FMI, 'FMInside mehrdeutig'),
-        (STATUS_AMBIGUOUS_SOFIFA, 'SoFIFA mehrdeutig'),
+        (STATUS_AMBIGUOUS_SOFIFA, 'CMTracker mehrdeutig'),
         (STATUS_INVALID, 'Ungültig'),
         (STATUS_SOURCE_ERROR, 'Quellenfehler'),
         (STATUS_READY, 'Importbereit'),

@@ -283,7 +283,7 @@
 
       {% if not str_base.fmi and not str_base.ea %}
       <div class="cpe-str-notice">
-        Keine Quelldaten vorhanden. Bitte FMInside- und/oder SoFIFA-Rating im Source-Tab eintragen.
+        Keine Quelldaten vorhanden. Bitte FMInside- und/oder CMTracker-Rating im Source-Tab eintragen.
       </div>
       {% endif %}
 
@@ -300,7 +300,7 @@
               <td>{% if str_base.fmi is not None %}{{ str_base.fmi }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
             </tr>
             <tr>
-              <td class="cpe-str-src">SoFIFA</td>
+              <td class="cpe-str-src">CMTracker</td>
               <td>{% if str_base.ea is not None %}{{ str_base.ea }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
             </tr>
           </tbody>
@@ -335,7 +335,7 @@
               <td>{% if str_potential.fmi is not None %}{{ str_potential.fmi }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
             </tr>
             <tr>
-              <td class="cpe-str-src">SoFIFA</td>
+              <td class="cpe-str-src">CMTracker</td>
               <td>{% if str_potential.ea is not None %}{{ str_potential.ea }}{% else %}<span class="cpe-str-null">–</span>{% endif %}</td>
             </tr>
           </tbody>
@@ -378,7 +378,7 @@
             <tr>
               <th class="cpe-str-attr-name">Attribut</th>
               <th>FMI</th>
-              <th>SoFIFA</th>
+              <th>CMTracker</th>
               <th class="cpe-str-combined-col">Kombiniert</th>
               <th class="cpe-str-delta-col">Δ</th>
             </tr>
@@ -852,8 +852,8 @@
         <input class="cpe-input cpe-input-link" type="url" name="src_fm_url" value="{{ source_meta.fm.url|default_if_none:'' }}" placeholder="https://fminside.net/...">
       </div>
       <div class="cpe-field-row">
-        <div class="cpe-label">SoFIFA</div>
-        <input class="cpe-input cpe-input-link" type="url" name="src_ea_url" value="{{ source_meta.ea.url|default_if_none:'' }}" placeholder="https://sofifa.com/...">
+        <div class="cpe-label">CMTracker</div>
+        <input class="cpe-input cpe-input-link" type="url" name="src_ea_url" value="{{ source_meta.ea.url|default_if_none:'' }}" placeholder="https://www.cmtracker.net/...">
       </div>
 
       <hr class="cpe-divider">
@@ -871,7 +871,7 @@
               {% endif %}
             </th>
             <th>
-              SoFIFA
+              CMTracker
               {% if source_meta.ea.source_version or source_meta.ea.checked_at %}
               <span class="cpe-import-badge">
                 {% if source_meta.ea.source_version %}{{ source_meta.ea.source_version }}{% endif %}{% if source_meta.ea.source_version and source_meta.ea.checked_at %} · {% endif %}{% if source_meta.ea.checked_at %}{{ source_meta.ea.checked_at|date:"d.m.Y" }}{% endif %}
@@ -942,7 +942,7 @@
           </table>
           {% endif %}
           {% if source_ea_snapshots %}
-          <div class="cpe-history-source-label{% if source_fm_snapshots %} cpe-history-source-label--mt{% endif %}">SoFIFA</div>
+          <div class="cpe-history-source-label{% if source_fm_snapshots %} cpe-history-source-label--mt{% endif %}">CMTracker</div>
           <table class="cpe-history-table">
             <thead>
               <tr>

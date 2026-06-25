@@ -183,10 +183,10 @@ class RefreshClassifyTests(TestCase):
         PlayerSourceRating.objects.create(
             player=p, source=PlayerSourceRating.SOURCE_FM, rating=88)
         PlayerSourceRating.objects.create(
-            player=p, source=PlayerSourceRating.SOURCE_EA, rating=90)
+            player=p, source=PlayerSourceRating.SOURCE_CMTRACKER, rating=90)
         from game.models import DataSource, PlayerExternalId
         src, _ = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA, defaults={'name': 'SoFIFA'})
+            code=DataSource.CODE_CMTRACKER, defaults={'name': 'CMTracker'})
         PlayerExternalId.objects.create(player=p, source=src, external_id='202126')
 
         cand = refresh_candidate(self._cand(), reset_selection=True)

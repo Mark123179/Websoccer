@@ -1562,7 +1562,7 @@ class SourceBaseQualityFilter(admin.SimpleListFilter):
         queryset = queryset.annotate(
             ea_source_count=models.Count(
                 'source_ratings',
-                filter=models.Q(source_ratings__source=PlayerSourceRating.SOURCE_EA),
+                filter=models.Q(source_ratings__source=PlayerSourceRating.SOURCE_CMTRACKER),
                 distinct=True,
             ),
             fm_source_count=models.Count(
@@ -1594,7 +1594,7 @@ class PlayerDataQualityFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return (
             ('complete_sources', 'Vollstaendig EA + FM'),
-            ('fmi_only', 'Nur FMI / ohne SoFIFA'),
+            ('fmi_only', 'Nur FMI / ohne CMTracker'),
             ('default_strength', 'Default-Staerke'),
             ('missing_api_id', 'Ohne API-ID'),
             ('missing_image', 'Ohne Spielerbild'),
@@ -1613,7 +1613,7 @@ class PlayerDataQualityFilter(admin.SimpleListFilter):
         queryset = queryset.annotate(
             ea_source_count=models.Count(
                 'source_ratings',
-                filter=models.Q(source_ratings__source=PlayerSourceRating.SOURCE_EA),
+                filter=models.Q(source_ratings__source=PlayerSourceRating.SOURCE_CMTRACKER),
                 distinct=True,
             ),
             fm_source_count=models.Count(
@@ -3404,7 +3404,7 @@ class PlayerDataReviewAdmin(admin.ModelAdmin):
         queryset = queryset.annotate(
             ea_source_count=models.Count(
                 'source_ratings',
-                filter=models.Q(source_ratings__source=PlayerSourceRating.SOURCE_EA),
+                filter=models.Q(source_ratings__source=PlayerSourceRating.SOURCE_CMTRACKER),
                 distinct=True,
             ),
             fm_source_count=models.Count(

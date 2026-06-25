@@ -56,7 +56,7 @@ def _identity_set(player):
     """Menge externer IDs eines Spielers als ``(kind, value)``-Tupel.
 
     Enthält die Skalar-IDs (fm/tm/af) sowie alle ``PlayerExternalId``-Einträge
-    (z. B. SoFIFA) über deren Quell-Code.
+    (z. B. CMTracker) über deren Quell-Code.
     """
     ids = set()
     for kind, field in [

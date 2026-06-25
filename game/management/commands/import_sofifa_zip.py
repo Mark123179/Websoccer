@@ -1,5 +1,5 @@
 """
-SoFIFA-Importer: ZIP-Archiv (Erstimport) oder einzelne CSV (Update).
+CMTracker-Importer: ZIP-Archiv (Erstimport) oder einzelne CSV (Update).
 
 Befehl:
     python manage.py import_sofifa_zip pfad/zur/datei.zip
@@ -8,9 +8,9 @@ Befehl:
 
 Workflow:
   1. Lesen + Deduplizieren nach info.playerid
-  2. Bestehende Spieler via PlayerExternalId (SOFIFA) matchen
+  2. Bestehende Spieler via PlayerExternalId (CMTracker) matchen
   3. Fallback: exakter Namens-Match
-  4. Matched  → PlayerSourceRating (source='EA') anlegen/aktualisieren
+  4. Matched  → PlayerSourceRating (source=CMTRACKER) anlegen/aktualisieren
   5. Neu      → Player + PlayerSourceRating + PlayerExternalId anlegen
   6. Stärken neu berechnen (es sei denn --skip-strengths)
 """
@@ -140,7 +140,7 @@ def _parse_other_positions(raw):
 
 
 class Command(BaseCommand):
-    help = 'Importiert SoFIFA-CSV (ZIP oder einzelne Datei): Attribute + neue Spieler.'
+    help = 'Importiert CMTracker-CSV (ZIP oder einzelne Datei): Attribute + neue Spieler.'
 
     def add_arguments(self, parser):
         parser.add_argument('file', help='Pfad zur .zip oder .csv Datei')
@@ -183,7 +183,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def _run_import(self, rows, dry):
-        sofifa_src = DataSource.objects.get(code='SOFIFA')
+        sofifa_src = DataSource.objects.get(code=DataSource.CODE_CMTRACKER)
 
         # ── Lookups aufbauen ─────────────────────────────────────────────────
         ext_map = {
@@ -196,7 +196,7 @@ class Command(BaseCommand):
         }
         rating_map = {
             sr.player_id: sr
-            for sr in PlayerSourceRating.objects.filter(source='EA')
+            for sr in PlayerSourceRating.objects.filter(source=PlayerSourceRating.SOURCE_CMTRACKER)
         }
         club_map = {
             c.name.lower(): c
@@ -258,7 +258,7 @@ class Command(BaseCommand):
                     rating_updates.append(sr)
                 else:
                     rating_creates.append(PlayerSourceRating(
-                        player=player, source='EA', **update_fields
+                        player=player, source=PlayerSourceRating.SOURCE_CMTRACKER, **update_fields
                     ))
                     rating_map[player.id] = None
 
@@ -353,7 +353,7 @@ class Command(BaseCommand):
                     if headshot:
                         update_fields['source_url'] = headshot
                     new_ratings.append(PlayerSourceRating(
-                        player=p, source='EA', **update_fields
+                        player=p, source=PlayerSourceRating.SOURCE_CMTRACKER, **update_fields
                     ))
                     new_ext.append(PlayerExternalId(
                         player=p,

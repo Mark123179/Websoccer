@@ -46,7 +46,7 @@ def compute_strength_for_player(player):
     """
     rows = {r.source: r for r in player.source_ratings.all()}
     fm_row = rows.get(PlayerSourceRating.SOURCE_FM)
-    ea_row = rows.get(PlayerSourceRating.SOURCE_EA)
+    ea_row = rows.get(PlayerSourceRating.SOURCE_CMTRACKER)
 
     fmi_rating    = fm_row.rating    if fm_row else None
     fmi_potential = fm_row.potential if fm_row else None

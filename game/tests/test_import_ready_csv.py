@@ -6,7 +6,7 @@ Leihstatus-Logik im Importdienst.
 Abgedeckte Bereiche:
   - Nationalitäten-Normalisierung (Englisch→Deutsch, Dedup, ``|``-Trennung)
   - Positions-Parsing (interne Codes, keine TM-Übersetzung)
-  - FMI-/SoFIFA-Attribut-Mapping inkl. NULL-Erhalt
+  - FMI-/CMTracker-Attribut-Mapping inkl. NULL-Erhalt
   - Leihstatus-Ableitung im Adapter (loaned_in/loaned_out/none)
   - Importdienst: loaned_out → vereinslos + Eigentümer; loaned_in → Leihgeber
 """

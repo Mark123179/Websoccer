@@ -1,4 +1,4 @@
-"""SoFIFA-CSV-Importer (CLI-Wrapper).
+"""CMTracker-CSV-Importer (CLI-Wrapper).
 
 Duenner Wrapper um ``game.sofifa_import_service``; die eigentliche Importlogik
 (Header-Mapping, Matching, Schreiben, Change-/Import-Log, Neuberechnung) liegt
@@ -11,7 +11,7 @@ CSV-Format (Header, Gross-/Kleinschreibung egal, Trennzeichen via --delimiter):
 Pflichtspalten: ``sofifa_id`` und ``rating`` (bzw. ``overall``).
 Optionale Spalten: ``name``, ``club``/``verein``, ``potential``, ``profile_url``
 sowie beliebige Attributspalten (deutsche Feldnamen wie ``tempo``, ``ausdauer``,
-``kraft`` ... bzw. Torwart ``tw_reflexe`` ...). Englische SoFIFA-Labels werden
+``kraft`` ... bzw. Torwart ``tw_reflexe`` ...). Englische CMTracker-Labels werden
 als Aliase erkannt.
 
 Nur die in der CSV vorhandenen Spalten werden geschrieben; nicht gelistete
@@ -162,10 +162,10 @@ def name_similarity(a, b):
 
 
 class Command(BaseCommand):
-    help = 'Importiert EA/SoFIFA-Ratings aus einer CSV (Matching ueber sofifa_id).'
+    help = 'Importiert CMTracker-Ratings aus einer CSV (Matching ueber sofifa_id).'
 
     def add_arguments(self, parser):
-        parser.add_argument('csv_path', help='Pfad zur SoFIFA-CSV-Datei.')
+        parser.add_argument('csv_path', help='Pfad zur CMTracker-CSV-Datei.')
         parser.add_argument(
             '--dry-run', action='store_true',
             help='Zeigt geplante Aenderungen, ohne in die DB zu schreiben.',

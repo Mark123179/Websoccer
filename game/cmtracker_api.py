@@ -1,8 +1,8 @@
 """cmtracker-API-Client.
 
-Holt EA/SoFIFA-Style-Spielerdaten von der cmtracker-API
+Holt CMTracker-Style-Spielerdaten von der cmtracker-API
 (``https://api.cmtracker.net/api/v1``) und ueberfuehrt sie in das CSV-Format,
-das der bestehende SoFIFA-Importer
+das der bestehende CMTracker-Importer
 (``game.sofifa_import_service.run_sofifa_import``) versteht. Dadurch laeuft der
 API-Import durch dieselbe Parsing-, Matching- (DOB-first), Logging- und
 Spielstaerke-Neuberechnungs-Pipeline wie der CSV-Upload im Creator-Mode.
@@ -41,7 +41,7 @@ CSV_COLUMNS = [
     'info.overallrating',
     'info.potential',
     'info.birthdate',
-    # Karten-Pace (= tempo wie auf der SoFIFA-Karte)
+    # Karten-Pace (= tempo wie auf der CMTracker-Karte)
     'card_attrs.pac',
     # Feldspieler-Attribute
     'attributes.stamina',

@@ -1,7 +1,7 @@
 """Aufbereitung der Kontroll-/Vorschauansicht (Creator-Mode Import-UI).
 
 Diese Schicht verbindet die getrennten Rohdaten eines ``PlayerImportCandidate``
-(Transfermarkt / Positionen / FMInside / SoFIFA) zu dem von
+(Transfermarkt / Positionen / FMInside / CMTracker) zu dem von
 ``import_service.import_candidate`` erwarteten ``normalized_data``-Schema und
 berechnet die Alt→Neu-Diffs gegen einen ggf. bereits vorhandenen Spieler.
 
@@ -190,7 +190,7 @@ def _existing_sofifa_id(player):
     from ..models import DataSource, PlayerExternalId
     ext = (
         PlayerExternalId.objects
-        .filter(player=player, source__code=DataSource.CODE_SOFIFA)
+        .filter(player=player, source__code=DataSource.CODE_CMTRACKER)
         .first()
     )
     return ext.external_id if ext else None
@@ -230,7 +230,7 @@ def compute_detected_changes(player, nd):
     from ..models import PlayerSourceRating
 
     fm = _existing_source(player, PlayerSourceRating.SOURCE_FM)
-    ea = _existing_source(player, PlayerSourceRating.SOURCE_EA)
+    ea = _existing_source(player, PlayerSourceRating.SOURCE_CMTRACKER)
 
     rows = [
         ('name', 'Name',
@@ -253,12 +253,12 @@ def compute_detected_changes(player, nd):
          nd.get('secondary_positions') or []),
         ('fm_inside_id', 'FMInside-ID',
          player.fm_inside_id, nd.get('fm_inside_id')),
-        ('sofifa_id', 'SoFIFA-ID',
+        ('sofifa_id', 'CMTracker-ID',
          _existing_sofifa_id(player), nd.get('sofifa_id')),
         ('fmi_rating', 'FMInside-Rating',
          fm.rating if fm else None,
          (nd.get('fmi_ratings') or {}).get('rating') if nd.get('fmi_ratings') else None),
-        ('sofifa_rating', 'SoFIFA-Rating',
+        ('sofifa_rating', 'CMTracker-Rating',
          ea.rating if ea else None,
          (nd.get('sofifa_ratings') or {}).get('rating') if nd.get('sofifa_ratings') else None),
         ('real_club', 'Real-Verein',

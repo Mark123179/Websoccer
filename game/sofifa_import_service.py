@@ -1,6 +1,6 @@
-"""SoFIFA-Import-Service.
+"""CMTracker-Import-Service.
 
-Kern-Logik des SoFIFA-CSV-Imports als wiederverwendbare Funktion für CLI und
+Kern-Logik des CMTracker-CSV-Imports als wiederverwendbare Funktion für CLI und
 Browser-Upload. Wird von management/commands/import_sofifa_csv.py UND von
 views_creator.creator_sofifa_import genutzt.
 """
@@ -183,24 +183,24 @@ def _match_player(parsed, sofifa_ds):
 
 def _apply_row(player, parsed, sofifa_ds, today, dry_run):
     existing = player.source_ratings.filter(
-        source=PlayerSourceRating.SOURCE_EA,
+        source=PlayerSourceRating.SOURCE_CMTRACKER,
     ).first()
     is_new = existing is None
 
     diff_lines = []
     if is_new:
         diff_lines.append(
-            f"EA/SoFIFA: Quelldaten erstmals angelegt (Rating {parsed['rating']})"
+            f"CMTracker: Quelldaten erstmals angelegt (Rating {parsed['rating']})"
         )
     else:
         if existing.rating != parsed['rating']:
             diff_lines.append(
-                f"EA/SoFIFA Rating: {existing.rating} → {parsed['rating']}"
+                f"CMTracker Rating: {existing.rating} → {parsed['rating']}"
             )
         if parsed['potential'] is not None and existing.potential != parsed['potential']:
             old_p = existing.potential if existing.potential is not None else '–'
             diff_lines.append(
-                f"EA/SoFIFA Potential: {old_p} → {parsed['potential']}"
+                f"CMTracker Potential: {old_p} → {parsed['potential']}"
             )
         for col, val in parsed['attrs'].items():
             old_val = getattr(existing, col, None)
@@ -219,7 +219,7 @@ def _apply_row(player, parsed, sofifa_ds, today, dry_run):
         defaults = {
             'rating': parsed['rating'],
             'source_url': parsed['profile_url'],
-            'source_version': 'SoFIFA CSV-Import',
+            'source_version': 'CMTracker-Import',
             'checked_at': today,
         }
         if parsed['potential'] is not None:
@@ -228,7 +228,7 @@ def _apply_row(player, parsed, sofifa_ds, today, dry_run):
 
         PlayerSourceRating.objects.update_or_create(
             player=player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
             defaults=defaults,
         )
 
@@ -240,7 +240,7 @@ def _apply_row(player, parsed, sofifa_ds, today, dry_run):
                 'rating': parsed['rating'],
                 'potential': parsed['potential'],
                 'source_url': parsed['profile_url'],
-                'source_version': 'SoFIFA CSV-Import',
+                'source_version': 'CMTracker-Import',
                 'update_current': False,
                 'raw_payload': {
                     'sofifa_id': parsed['sofifa_id'],
@@ -270,7 +270,7 @@ def _apply_row(player, parsed, sofifa_ds, today, dry_run):
 
 
 def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
-    """Führt den SoFIFA-CSV-Import durch und gibt ein strukturiertes Ergebnis zurück.
+    """Führt den CMTracker-CSV-Import durch und gibt ein strukturiertes Ergebnis zurück.
 
     Args:
         csv_text:          Inhalt der CSV-Datei als String (BOM wird automatisch entfernt).
@@ -310,8 +310,8 @@ def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
         }
 
     sofifa_ds, _ = DataSource.objects.get_or_create(
-        code=DataSource.CODE_SOFIFA,
-        defaults={'name': 'SoFIFA'},
+        code=DataSource.CODE_CMTRACKER,
+        defaults={'name': 'CMTracker'},
     )
     today = timezone.localdate()
 

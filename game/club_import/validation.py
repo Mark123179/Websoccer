@@ -182,7 +182,7 @@ def validate_parsed_player(nd):
     if foot:
         issues.append(foot)
 
-    for key, label in (('fmi_ratings', 'FM'), ('sofifa_ratings', 'EA')):
+    for key, label in (('fmi_ratings', 'FM'), ('sofifa_ratings', 'CMTracker')):
         block = nd.get(key)
         if not block:
             continue

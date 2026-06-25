@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}SoFIFA-Import – Creator Mode{% endblock %}
+{% block title %}CMTracker-Import – Creator Mode{% endblock %}
 
 {% block content %}
 <section class="cm-section">
@@ -10,7 +10,7 @@
   <div class="cm-header">
     <div class="cm-header-left">
       <span class="cm-badge">CREATOR MODE</span>
-      <h1>EA/SoFIFA-Import</h1>
+      <h1>CMTracker-Import</h1>
     </div>
     <div class="cm-header-right">
       <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
@@ -34,7 +34,7 @@
   {% if step == 'upload' %}
   <div class="si-card">
     <div class="si-card-head">
-      <strong>EA/SoFIFA-Ratings per CSV importieren</strong>
+      <strong>CMTracker-Ratings per CSV importieren</strong>
     </div>
 
     {% if upload_error %}
@@ -42,7 +42,7 @@
     {% endif %}
 
     <p class="si-desc">
-      Da SoFIFA das Scraping blockiert, werden Ratings über eine lokale CSV-Datei importiert.
+      Da Live-Scraping blockiert wird, werden Ratings über eine lokale CSV-Datei importiert.
       Das Matching läuft primär über die <code>sofifa_id</code>; fehlt eine verknüpfte ID,
       greift ein Fallback über Name + Verein und speichert die ID dauerhaft.
     </p>
@@ -56,7 +56,7 @@ tempo, ausdauer, kraft, technik, dribbling, passspiel, flanken,
 abschluss, kopfball, zweikampf, defensivstellung, uebersicht, teamwork,
 ecken, freistoss, elfmeter,
 tw_reflexe, tw_fangsicherheit, tw_eins_gegen_eins, tw_stellungsspiel, tw_passen</pre>
-      <p class="si-hint">Englische SoFIFA-Labels (acceleration, stamina, finishing …) werden automatisch erkannt.</p>
+      <p class="si-hint">Englische CMTracker-Labels (acceleration, stamina, finishing …) werden automatisch erkannt.</p>
     </div>
 
     <form method="post" enctype="multipart/form-data" class="si-form">

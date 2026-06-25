@@ -1,7 +1,7 @@
-# cmtracker-Integration — EA/SoFIFA-Ratings importieren
+# cmtracker-Integration — CMTracker-Ratings importieren
 
 Technische Dokumentation der cmtracker-Anbindung: vom API-Abruf über das
-Abflachen der JSON-Antwort bis zur Übergabe an den bestehenden SoFIFA-Importer.
+Abflachen der JSON-Antwort bis zur Übergabe an den bestehenden CMTracker-Importer.
 Beschreibt Architektur, Feldmapping, das geprüfte Dry-Run-Ergebnis, die
 Sandbox-Einschränkung, die Matching-/ID-Strategie sowie den Plan für den
 Live-Modus.
@@ -134,22 +134,26 @@ Import durchgeführt.
 
 `_match_player` matcht in fester Priorität:
 
-1. **ID** — `PlayerExternalId(source=SOFIFA, external_id=info.playerid)` → `match_mode='id'`
+1. **ID** — `PlayerExternalId(source=CMTRACKER, external_id=info.playerid)` → `match_mode='id'`
 2. **DOB** — über `date_of_birth`, bei Mehrdeutigkeit Namensähnlichkeit als Tiebreak → `match_mode='dob'`
 3. **Name** — vereins-gescoptes Fuzzy-Matching → `match_mode='name'`
 
 **Befund zu Punkt „ID dauerhaft speichern, DOB nur Fallback":** Bereits erfüllt.
 Beim **echten** Import schreibt `_apply_row` die externe ID via
-`PlayerExternalId.update_or_create(source=SOFIFA, external_id=info.playerid)`.
+`PlayerExternalId.update_or_create(source=CMTRACKER, external_id=info.playerid)`.
 Ab dem ersten echten Import greift damit automatisch das **ID-Matching**; DOB
 und Name sind nur noch Fallback. Im **Dry-Run** wird die ID bewusst **nicht**
 geschrieben — deshalb liefen Kane/Olise dort über DOB.
 
-Offener Designpunkt für später: `info.playerid` wird aktuell als `sofifa_id`
-unter der DataSource `SOFIFA` abgelegt. Das ist konsistent, solange cmtracker
-und SoFIFA dieselbe EA-ID verwenden. Sollte cmtracker eine **eigene**, davon
-abweichende ID führen, wäre eine separate DataSource (z. B. `CMTRACKER`)
-sinnvoll, damit beide IDs unabhängig persistiert werden können.
+**Quellen-Konsolidierung (erledigt):** Die DataSource heißt jetzt `CMTRACKER`
+(Label „CMTracker"); die Rating-Quelle (`PlayerSourceRating.source`) und die
+Import-Läufe (`SourceImportRun.source`) wurden per Datenmigration von
+`EA`/`SOFIFA`/`sofifa` auf `CMTRACKER`/`cmtracker` überführt — eine reine
+Identitäts-Umbenennung, die Spielstärken bleiben unverändert. Die externe ID
+wird aus Rückwärtskompatibilität weiterhin unter dem CSV-/Feldschlüssel
+`sofifa_id` geführt, liegt aber unter der DataSource `CMTRACKER`. Sollte
+cmtracker künftig eine **eigene**, von der EA-ID abweichende ID führen, bleibt
+der Schlüsselname ein reines Implementierungsdetail.
 
 ---
 

@@ -263,8 +263,8 @@ def _apply_sofifa_external_id(player, sofifa_id, profile_url):
 
     if sofifa_id:
         source, _ = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA,
-            defaults={'name': 'SoFIFA'},
+            code=DataSource.CODE_CMTRACKER,
+            defaults={'name': 'CMTracker'},
         )
         PlayerExternalId.objects.update_or_create(
             player=player, source=source,
@@ -274,7 +274,7 @@ def _apply_sofifa_external_id(player, sofifa_id, profile_url):
             },
         )
     else:
-        source = DataSource.objects.filter(code=DataSource.CODE_SOFIFA).first()
+        source = DataSource.objects.filter(code=DataSource.CODE_CMTRACKER).first()
         if source:
             PlayerExternalId.objects.filter(player=player, source=source).delete()
 
@@ -452,14 +452,14 @@ def import_candidate(candidate, user=None, recalculate=True, update_only=False):
 
         player.save()
 
-        # Externe SoFIFA-ID ist Stammdaten-Identität → nur in der Vollanlage.
+        # Externe CMTracker-ID ist Stammdaten-Identität → nur in der Vollanlage.
         if not update_only:
             _apply_sofifa_external_id(
                 player, nd.get('sofifa_id'), nd.get('sofifa_profile_url'),
             )
 
         _write_source_rating(player, PlayerSourceRating.SOURCE_FM, nd.get('fmi_ratings'))
-        _write_source_rating(player, PlayerSourceRating.SOURCE_EA, nd.get('sofifa_ratings'))
+        _write_source_rating(player, PlayerSourceRating.SOURCE_CMTRACKER, nd.get('sofifa_ratings'))
 
         action = ACTION_CREATED if is_new else ACTION_UPDATED
         if update_only:

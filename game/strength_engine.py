@@ -159,7 +159,7 @@ def combine_source_values(*values):
 def calculate_base_200(fmi_rating, ea_rating):
     """
     Basisstärke auf 0–200.
-    beide vorhanden → FMI + SoFIFA
+    beide vorhanden → FMI + CMTracker
     eine vorhanden  → Quelle × 2
     keine vorhanden → None
     """
@@ -175,7 +175,7 @@ def calculate_base_200(fmi_rating, ea_rating):
 def calculate_potential_200(fmi_potential, ea_potential, base_200):
     """
     Potential auf 0–200.
-    beide vorhanden → FMI + SoFIFA
+    beide vorhanden → FMI + CMTracker
     eine vorhanden  → Quelle × 2
     keine vorhanden → None  (keine Quelle → nicht berechenbar, kein Fallback)
     Wenn Potential < Basis: max(potential, base_200)

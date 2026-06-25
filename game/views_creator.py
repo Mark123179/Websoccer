@@ -27,7 +27,7 @@ from .management.commands.import_player_source_ratings import (
     FMI_ATTR_MAP, FMI_GK_MAP, SOFIFA_ATTR_MAP, SOFIFA_GK_MAP,
 )
 
-# Welche Attributspalten liefert welche Quelle (FMInside vs. SoFIFA)?
+# Welche Attributspalten liefert welche Quelle (FMInside vs. CMTracker)?
 FM_OUTFIELD_COLS = set(FMI_ATTR_MAP.values())
 EA_OUTFIELD_COLS = set(SOFIFA_ATTR_MAP.values())
 FM_GK_COLS = set(FMI_GK_MAP.values())
@@ -62,7 +62,7 @@ SOURCE_GK_LABELS = [
 # Quell-Key (PlayerSourceRating.source) -> DataSource-Code fuer ExternalId-Sync.
 SOURCE_DATASOURCE_CODE = {
     PlayerSourceRating.SOURCE_FM: DataSource.CODE_FMINSIDE,
-    PlayerSourceRating.SOURCE_EA: DataSource.CODE_SOFIFA,
+    PlayerSourceRating.SOURCE_CMTRACKER: DataSource.CODE_CMTRACKER,
 }
 
 
@@ -84,7 +84,7 @@ def _save_player_source_ratings(request, player):
     specs = [
         ('fm', PlayerSourceRating.SOURCE_FM,
          FM_GK_COLS if is_gk else FM_OUTFIELD_COLS),
-        ('ea', PlayerSourceRating.SOURCE_EA,
+        ('ea', PlayerSourceRating.SOURCE_CMTRACKER,
          EA_GK_COLS if is_gk else EA_OUTFIELD_COLS),
     ]
     existing = {r.source: r for r in player.source_ratings.all()}
@@ -123,14 +123,14 @@ def _save_player_source_ratings(request, player):
 
         _version_labels = {
             'fm': 'FMInside Scraper',
-            'ea': 'SoFIFA Scraper',
+            'ea': 'CMTracker',
         }
         row.source_version = _version_labels.get(prefix, prefix)
         row.checked_at = timezone.now().date()
         row.save()
 
         # --- Geschichte-Log: Source-Ratings ---
-        src_label = 'FM Inside' if source_key == PlayerSourceRating.SOURCE_FM else 'EA FC'
+        src_label = 'FM Inside' if source_key == PlayerSourceRating.SOURCE_FM else 'CMTracker'
         src_lines = []
         if _is_new:
             src_lines.append(f'{src_label}: Quelldaten erstmals angelegt (Rating {row.rating})')
@@ -171,7 +171,7 @@ def _build_source_tab_context(player):
 
     rows = {r.source: r for r in player.source_ratings.all()}
     fm_row = rows.get(PlayerSourceRating.SOURCE_FM)
-    ea_row = rows.get(PlayerSourceRating.SOURCE_EA)
+    ea_row = rows.get(PlayerSourceRating.SOURCE_CMTRACKER)
 
     attr_rows = []
     for col, label in labels:
@@ -209,7 +209,7 @@ def _build_source_tab_context(player):
     ea_snapshots = list(
         PlayerSourceRatingSnapshot.objects.filter(
             player=player,
-            source__code=DataSource.CODE_SOFIFA,
+            source__code=DataSource.CODE_CMTRACKER,
         ).order_by('-recorded_at', '-id')[:10]
     )
     return {
@@ -230,7 +230,7 @@ def _build_strength_tab_context(player):
     # ── Quell-Ratings abrufen ───────────────────────────────────────────────
     rows = {r.source: r for r in player.source_ratings.all()}
     fm_row = rows.get(PlayerSourceRating.SOURCE_FM)
-    ea_row = rows.get(PlayerSourceRating.SOURCE_EA)
+    ea_row = rows.get(PlayerSourceRating.SOURCE_CMTRACKER)
 
     fmi_rating    = fm_row.rating    if fm_row else None
     fmi_potential = fm_row.potential if fm_row else None
@@ -590,7 +590,7 @@ def creator_vereinslose(request):
         qs = qs.filter(nationalities__icontains=q_nat)
 
     if q_min or q_max:
-        ea_ids = PlayerSourceRating.objects.filter(source='EA')
+        ea_ids = PlayerSourceRating.objects.filter(source=PlayerSourceRating.SOURCE_CMTRACKER)
         if q_min:
             try:
                 ea_ids = ea_ids.filter(rating__gte=int(q_min))
@@ -606,7 +606,7 @@ def creator_vereinslose(request):
     ea_map = {
         sr.player_id: sr.rating
         for sr in PlayerSourceRating.objects.filter(
-            source='EA', player_id__in=qs.values('id')
+            source=PlayerSourceRating.SOURCE_CMTRACKER, player_id__in=qs.values('id')
         )
     }
 
@@ -2525,11 +2525,11 @@ def creator_import_hub(request):
     return render(request, 'creator/import_hub.html')
 
 
-# ── SoFIFA-CSV-Upload ─────────────────────────────────────────────────────────
+# ── CMTracker-CSV-Upload ─────────────────────────────────────────────────────────
 
 @login_required
 def creator_sofifa_import(request):
-    """Browser-Upload für den SoFIFA-Rating-Import im Creator-Mode.
+    """Browser-Upload für den CMTracker-Rating-Import im Creator-Mode.
 
     Schritt 1 (GET / POST action=upload):  Formular mit Datei-Auswahl.
     Schritt 2 (POST action=preview):       Dry-Run; Vorschau im Browser.

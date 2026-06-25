@@ -13,7 +13,7 @@ Erzeugt pro Zeile:
     Vertrag, Leihe, Verletzung/Sperre, IDs, generierte wsc_player_id)
   - PlayerSourceRating EA  (aus ea_*)
   - PlayerSourceRating FM  (aus fm_*)
-  - PlayerExternalId(SoFIFA) (sofern sofifa_id vorhanden)
+  - PlayerExternalId(CMTracker) (sofern sofifa_id vorhanden)
   - PlayerStrengthProfile  (base aus basis_staerke, form_modifier 0 = neutral,
     freshness aus frische) -> base wird danach per Engine neu berechnet
   - PlayerMarketValueSnapshot (aus marktwert, update_current=False)
@@ -195,7 +195,7 @@ class Command(BaseCommand):
             return
 
         sofifa_ds, _ = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA, defaults={'name': 'SoFIFA'})
+            code=DataSource.CODE_CMTRACKER, defaults={'name': 'CMTracker'})
         tm_ds, _ = DataSource.objects.get_or_create(
             code=DataSource.CODE_TRANSFERMARKT, defaults={'name': 'Transfermarkt'})
         today = timezone.localdate()
@@ -370,10 +370,10 @@ class Command(BaseCommand):
         )
 
         # Quellen-Ratings EA + FM
-        self._create_source_rating(player, c, 'ea', PlayerSourceRating.SOURCE_EA)
+        self._create_source_rating(player, c, 'ea', PlayerSourceRating.SOURCE_CMTRACKER)
         self._create_source_rating(player, c, 'fm', PlayerSourceRating.SOURCE_FM)
 
-        # Externe SoFIFA-ID
+        # Externe CMTracker-ID
         sofifa_id = c('sofifa_id')
         if sofifa_id:
             PlayerExternalId.objects.create(

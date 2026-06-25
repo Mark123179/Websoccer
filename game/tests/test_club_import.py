@@ -7,7 +7,7 @@ Abgedeckte Bereiche:
   - Positions-Mapping + HP/NP-Algorithmus (§12–§14)
   - Namens-/Vereinsnormalisierung (§15)
   - Wert-Parsing (Höhe, Marktwert, Fuß, Nationalitäten) inkl. NULL-statt-0
-  - Bestehende-Spieler-Erkennung (TM / FMI / SoFIFA / Name+Geburtsdatum)
+  - Bestehende-Spieler-Erkennung (TM / FMI / CMTracker / Name+Geburtsdatum)
   - Verbindlicher Datenbankimport (Anlegen, Überschreiben, Platzhalter, Leihe,
     Quell-Ratings ersetzen/löschen, NULL-Erhalt, Stapel-Robustheit)
   - Lease-Token-Zufälligkeit
@@ -232,7 +232,7 @@ class MatchingTests(TestCase):
     def test_match_by_sofifa_id_is_strong(self):
         p = self._player()
         source, _ = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA, defaults={'name': 'SoFIFA'})
+            code=DataSource.CODE_CMTRACKER, defaults={'name': 'CMTracker'})
         PlayerExternalId.objects.create(player=p, source=source, external_id='9001')
         match = find_existing_player(sofifa_id='9001')
         self.assertEqual(match['player'], p)
@@ -319,10 +319,10 @@ class ImportServiceTests(TestCase):
         self.assertEqual(fm.abschluss, 95)
         self.assertEqual(fm.kopfball, 90)
         self.assertIsNone(fm.tempo)  # nicht gesetzt → NULL
-        ea = PlayerSourceRating.objects.get(player=player, source=PlayerSourceRating.SOURCE_EA)
+        ea = PlayerSourceRating.objects.get(player=player, source=PlayerSourceRating.SOURCE_CMTRACKER)
         self.assertEqual(ea.abschluss, 93)
 
-        ext = PlayerExternalId.objects.get(player=player, source__code=DataSource.CODE_SOFIFA)
+        ext = PlayerExternalId.objects.get(player=player, source__code=DataSource.CODE_CMTRACKER)
         self.assertEqual(ext.external_id, '202126')
 
         cand.refresh_from_db()
@@ -361,11 +361,11 @@ class ImportServiceTests(TestCase):
         self.assertIsNone(fm.abschluss)  # Altwert vollständig gelöscht
         self.assertFalse(
             PlayerSourceRating.objects.filter(
-                player=player, source=PlayerSourceRating.SOURCE_EA).exists()
+                player=player, source=PlayerSourceRating.SOURCE_CMTRACKER).exists()
         )
         self.assertFalse(
             PlayerExternalId.objects.filter(
-                player=player, source__code=DataSource.CODE_SOFIFA).exists()
+                player=player, source__code=DataSource.CODE_CMTRACKER).exists()
         )
 
     def test_existing_without_overwrite_is_skipped(self):

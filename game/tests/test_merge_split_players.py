@@ -31,7 +31,7 @@ class MergeSplitPlayersTests(TestCase):
             name='Hamburger SV', short_name='HSV', founded_year=1887,
             budget=Decimal('1000000.00'), league=league)
         self.sofifa, _ = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA, defaults={'name': 'SoFIFA'})
+            code=DataSource.CODE_CMTRACKER, defaults={'name': 'CMTracker'})
 
     def _player(self, first, last, dob, **extra):
         defaults = dict(
@@ -94,7 +94,7 @@ class MergeSplitPlayersTests(TestCase):
                 player=a, category=PlayerEditLog.CATEGORY_SYSTEM, summary='x')
         # Quell-Rating und externe ID hängen am Zwilling b und müssen wandern.
         PlayerSourceRating.objects.create(
-            player=b, source=PlayerSourceRating.SOURCE_EA, rating=75)
+            player=b, source=PlayerSourceRating.SOURCE_CMTRACKER, rating=75)
         PlayerExternalId.objects.create(
             player=b, source=self.sofifa, external_id='99999')
 
@@ -103,7 +103,7 @@ class MergeSplitPlayersTests(TestCase):
         a.refresh_from_db()
         self.assertEqual(Player.objects.count(), 1)
         self.assertTrue(PlayerSourceRating.objects.filter(
-            player=a, source=PlayerSourceRating.SOURCE_EA).exists())
+            player=a, source=PlayerSourceRating.SOURCE_CMTRACKER).exists())
         self.assertTrue(PlayerExternalId.objects.filter(
             player=a, external_id='99999').exists())
 
@@ -115,15 +115,15 @@ class MergeSplitPlayersTests(TestCase):
                          transfermarkt_id=600)
         # Beide haben ein EA-Rating → (player, source) kollidiert beim Umhängen.
         PlayerSourceRating.objects.create(
-            player=a, source=PlayerSourceRating.SOURCE_EA, rating=70)
+            player=a, source=PlayerSourceRating.SOURCE_CMTRACKER, rating=70)
         PlayerSourceRating.objects.create(
-            player=b, source=PlayerSourceRating.SOURCE_EA, rating=88)
+            player=b, source=PlayerSourceRating.SOURCE_CMTRACKER, rating=88)
 
         self._run('--apply')
 
         a.refresh_from_db()
         ratings = PlayerSourceRating.objects.filter(
-            player=a, source=PlayerSourceRating.SOURCE_EA)
+            player=a, source=PlayerSourceRating.SOURCE_CMTRACKER)
         self.assertEqual(ratings.count(), 1)
         self.assertEqual(ratings.first().rating, 70)  # kanonische Zeile bleibt
 

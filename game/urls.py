@@ -355,7 +355,7 @@ urlpatterns = [
     # Geführter Import-Hub
     path('creator/import/hub/', creator_import_hub, name='creator_import_hub'),
 
-    # SoFIFA-CSV-Import
+    # CMTracker-CSV-Import
     path('creator/import/sofifa/', creator_sofifa_import, name='creator_sofifa_import'),
     path('creator/import/fmids/', creator_fmid_csv_import, name='creator_fmid_csv_import'),
     path('creator/import/club-csv/', creator_club_csv_import, name='creator_club_csv_import'),

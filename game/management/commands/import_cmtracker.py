@@ -1,6 +1,6 @@
 """cmtracker-API-Importer (CLI).
 
-Holt EA/SoFIFA-Ratings direkt von der cmtracker-API und speist sie durch
+Holt CMTracker-Ratings direkt von der cmtracker-API und speist sie durch
 denselben Service wie der CSV-Upload im Creator-Mode
 (``game.sofifa_import_service.run_sofifa_import``). Matching laeuft DOB-first;
 es werden ausschliesslich bereits existierende Spieler aktualisiert, nicht
@@ -33,7 +33,7 @@ from game.sofifa_import_service import run_sofifa_import
 
 
 class Command(BaseCommand):
-    help = 'Importiert EA/SoFIFA-Ratings direkt von der cmtracker-API.'
+    help = 'Importiert CMTracker-Ratings direkt von der cmtracker-API.'
 
     def add_arguments(self, parser):
         parser.add_argument(

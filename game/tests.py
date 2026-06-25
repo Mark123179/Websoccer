@@ -94,7 +94,7 @@ class PageSmokeTests(TestCase):
         )
         PlayerSourceRating.objects.create(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
             rating=90,
             potential=90,
             source_version='FC 26 Testdaten',
@@ -126,9 +126,9 @@ class PageSmokeTests(TestCase):
             },
         )
         self.sofifa_source, _created = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA,
+            code=DataSource.CODE_CMTRACKER,
             defaults={
-                'name': 'SoFIFA',
+                'name': 'CMTracker',
                 'base_url': 'https://sofifa.com/',
             },
         )
@@ -766,7 +766,7 @@ class PageSmokeTests(TestCase):
         )
         PlayerSourceRating.objects.create(
             player=ea_only_player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
             rating=72,
             potential=80,
         )
@@ -1057,7 +1057,7 @@ class PageSmokeTests(TestCase):
                 recorded_at=date(2025, 2, index + 1),
                 rating=70 + index,
                 potential=80 + index,
-                source_version='SoFIFA FC26',
+                source_version='CMTracker FC26',
             )
 
         snapshots = self.player.source_rating_snapshots.filter(
@@ -1106,7 +1106,7 @@ class PageSmokeTests(TestCase):
             recorded_at=date(2025, 4, 1),
             rating=90,
             potential=91,
-            source_version='SoFIFA FC26',
+            source_version='CMTracker FC26',
         )
         PlayerStrengthSnapshot.objects.create(
             player=self.player,
@@ -1350,7 +1350,7 @@ class SofifaCsvImportTests(TestCase):
     """Absicherung des import_sofifa_csv-Importers gegen stille Regressionen.
 
     Abgedeckte Szenarien:
-    - Primär-Matching über vorhandene PlayerExternalId(SOFIFA)
+    - Primär-Matching über vorhandene PlayerExternalId(CMTRACKER)
     - Fallback-Matching über Name+Verein verknüpft sofifa_id dauerhaft
     - Mehrdeutiger Fallback wird abgelehnt
     - Fehlende Pflichtspalten (sofifa_id / overall) führen zu CommandError
@@ -1376,8 +1376,8 @@ class SofifaCsvImportTests(TestCase):
             league=league,
         )
         self.sofifa_ds, _ = DataSource.objects.get_or_create(
-            code=DataSource.CODE_SOFIFA,
-            defaults={'name': 'SoFIFA'},
+            code=DataSource.CODE_CMTRACKER,
+            defaults={'name': 'CMTracker'},
         )
         self.player = Player.objects.create(
             first_name='Thomas',
@@ -1427,7 +1427,7 @@ class SofifaCsvImportTests(TestCase):
 
         rating = PlayerSourceRating.objects.filter(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
         ).first()
         self.assertIsNotNone(rating, 'PlayerSourceRating wurde nicht angelegt.')
         self.assertEqual(rating.rating, 82)
@@ -1441,7 +1441,7 @@ class SofifaCsvImportTests(TestCase):
         )
         PlayerSourceRating.objects.create(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
             rating=80,
         )
 
@@ -1450,7 +1450,7 @@ class SofifaCsvImportTests(TestCase):
 
         rating = PlayerSourceRating.objects.get(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
         )
         self.assertEqual(rating.rating, 85)
         self.assertIn('aktualisiert', output)
@@ -1475,7 +1475,7 @@ class SofifaCsvImportTests(TestCase):
 
         rating = PlayerSourceRating.objects.filter(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
         ).first()
         self.assertIsNotNone(rating)
         self.assertEqual(rating.rating, 78)
@@ -1560,7 +1560,7 @@ class SofifaCsvImportTests(TestCase):
 
         rating = PlayerSourceRating.objects.filter(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
         ).first()
         self.assertIsNotNone(rating, 'PlayerSourceRating wurde trotz ungültigem Attribut nicht angelegt.')
         self.assertEqual(rating.rating, 82)
@@ -1592,7 +1592,7 @@ class SofifaCsvImportTests(TestCase):
 
         count = PlayerSourceRating.objects.filter(
             player=self.player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
         ).count()
         self.assertEqual(count, 1, 'Duplikat in PlayerSourceRating nach Re-Run.')
 
@@ -1647,7 +1647,7 @@ class SofifaCsvImportTests(TestCase):
         self.assertFalse(
             PlayerSourceRating.objects.filter(
                 player=self.player,
-                source=PlayerSourceRating.SOURCE_EA,
+                source=PlayerSourceRating.SOURCE_CMTRACKER,
             ).exists(),
         )
 
@@ -1797,7 +1797,7 @@ class ReseedPlayersFromFullCsvTests(TestCase):
         self.assertEqual(player.wsc_player_id, 'WSC-915')
 
         ea = PlayerSourceRating.objects.get(
-            player=player, source=PlayerSourceRating.SOURCE_EA)
+            player=player, source=PlayerSourceRating.SOURCE_CMTRACKER)
         fm = PlayerSourceRating.objects.get(
             player=player, source=PlayerSourceRating.SOURCE_FM)
         self.assertEqual(ea.rating, 80)

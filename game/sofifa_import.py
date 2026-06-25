@@ -1,17 +1,17 @@
-"""SoFIFA-CSV-Import-Service.
+"""CMTracker-CSV-Import-Service.
 
 Gemeinsam genutzte Importlogik fuer den CLI-Command
 (``manage.py import_sofifa_csv``) und den Creator-Mode-Upload
 (``creator_import_ratings``).
 
-Statt SoFIFA live zu scrapen (Cloudflare blockiert das) werden EA/SoFIFA-
+Statt CMTracker live zu scrapen (Cloudflare blockiert das) werden CMTracker-
 Ratings aus einer CSV importiert. Das Matching laeuft primaer ueber die
-SoFIFA-ID (gespeichert als ``PlayerExternalId`` mit SOFIFA-DataSource); ohne
+CMTracker-ID (gespeichert als ``PlayerExternalId`` mit CMTRACKER-DataSource); ohne
 verknuepfte ID greift ein Fallback ueber Name (+ optional Verein), der die
-SoFIFA-ID anschliessend dauerhaft verknuepft.
+CMTracker-ID anschliessend dauerhaft verknuepft.
 
 Akzeptiert sowohl die vereinfachten deutschen/englischen Spaltennamen als auch
-das vollstaendige SoFIFA-Export-Format (``player_id``, ``attacking_finishing``,
+das vollstaendige CMTracker-Export-Format (``player_id``, ``attacking_finishing``,
 ``goalkeeping_reflexes`` …). Nur die in der CSV vorhandenen Attributspalten
 werden geschrieben; nicht gelistete Attribute bleiben unveraendert.
 
@@ -56,9 +56,9 @@ GK_ATTR_COLUMNS = [
 ALL_ATTR_COLUMNS = OUTFIELD_ATTR_COLUMNS + GK_ATTR_COLUMNS
 
 # Header-Alias -> kanonischer Schluessel (Rating + Attribute).
-# Deckt sowohl vereinfachte Namen als auch das volle SoFIFA-Export-Format ab.
+# Deckt sowohl vereinfachte Namen als auch das volle CMTracker-Export-Format ab.
 # Es ist bewusst nur EINE Quellspalte je Zielattribut gemappt, damit beim vollen
-# SoFIFA-Export keine Spalte eine andere ueberschreibt (z. B. nur ``pace`` -> tempo,
+# CMTracker-Export keine Spalte eine andere ueberschreibt (z. B. nur ``pace`` -> tempo,
 # nicht zusaetzlich movement_*).
 COLUMN_ALIASES = {
     # Identitaet
@@ -105,7 +105,7 @@ COLUMN_ALIASES = {
     'infoteamsclub_teamname': 'club',
     'infooverallrating': 'rating',
     'infopotential': 'potential',
-    # Pace (Karten-Gesamtwert = pace wie auf der SoFIFA-Karte)
+    # Pace (Karten-Gesamtwert = pace wie auf der CMTracker-Karte)
     'card_attrspac': 'tempo',
     # Feldspieler-Attribute (attributes.*)
     'attributesstamina': 'ausdauer',
@@ -149,9 +149,9 @@ META_ALIASES = {
     'infonamelastname': 'last_name_raw',
 }
 
-SOURCE_SOFIFA = 'sofifa'
+SOURCE_CMTRACKER = 'cmtracker'
 
-# Torwart-Positionscode (SoFIFA liefert GK-Stats fuer ALLE Spieler; Feldspieler
+# Torwart-Positionscode (CMTracker liefert GK-Stats fuer ALLE Spieler; Feldspieler
 # sollen aber keine tw_*-Werte und Torwarte keine Feldspieler-Attribute bekommen).
 GK_POSITION_CODES = {'TW', 'GK'}
 
@@ -370,23 +370,23 @@ def match_player(parsed, sofifa_ds):
 def diff_row(player, parsed):
     """Berechnet die Aenderungsliste ohne zu schreiben."""
     existing = player.source_ratings.filter(
-        source=PlayerSourceRating.SOURCE_EA,
+        source=PlayerSourceRating.SOURCE_CMTRACKER,
     ).first()
     is_new = existing is None
 
     diff_lines = []
     if is_new:
         diff_lines.append(
-            f"EA/SoFIFA: Quelldaten erstmals angelegt (Rating {parsed['rating']})"
+            f"CMTracker: Quelldaten erstmals angelegt (Rating {parsed['rating']})"
         )
     else:
         if existing.rating != parsed['rating']:
             diff_lines.append(
-                f"EA/SoFIFA Rating: {existing.rating} → {parsed['rating']}"
+                f"CMTracker Rating: {existing.rating} → {parsed['rating']}"
             )
         if parsed['potential'] is not None and existing.potential != parsed['potential']:
             old_p = existing.potential if existing.potential is not None else '–'
-            diff_lines.append(f"EA/SoFIFA Potential: {old_p} → {parsed['potential']}")
+            diff_lines.append(f"CMTracker Potential: {old_p} → {parsed['potential']}")
         for col, val in parsed['attrs'].items():
             old_val = getattr(existing, col, None)
             if old_val != val:
@@ -409,7 +409,7 @@ def apply_row(player, parsed, sofifa_ds, today, version):
         defaults = {
             'rating': parsed['rating'],
             'source_url': parsed['profile_url'],
-            'source_version': version or 'SoFIFA CSV-Import',
+            'source_version': version or 'CMTracker-Import',
             'checked_at': today,
         }
         if parsed['potential'] is not None:
@@ -418,7 +418,7 @@ def apply_row(player, parsed, sofifa_ds, today, version):
 
         PlayerSourceRating.objects.update_or_create(
             player=player,
-            source=PlayerSourceRating.SOURCE_EA,
+            source=PlayerSourceRating.SOURCE_CMTRACKER,
             defaults=defaults,
         )
 
@@ -430,7 +430,7 @@ def apply_row(player, parsed, sofifa_ds, today, version):
                 'rating': parsed['rating'],
                 'potential': parsed['potential'],
                 'source_url': parsed['profile_url'],
-                'source_version': version or 'SoFIFA CSV-Import',
+                'source_version': version or 'CMTracker-Import',
                 'update_current': False,
                 'raw_payload': {
                     'sofifa_id': parsed['sofifa_id'],
@@ -490,13 +490,13 @@ def run_import(source, *, version='', file_name='', dry_run=False,
 
     # DataSource (Lookup-Tabelle): im Dry-Run nicht anlegen.
     try:
-        sofifa_ds = DataSource.objects.get(code=DataSource.CODE_SOFIFA)
+        sofifa_ds = DataSource.objects.get(code=DataSource.CODE_CMTRACKER)
     except DataSource.DoesNotExist:
         if dry_run:
             sofifa_ds = None
         else:
             sofifa_ds = DataSource.objects.create(
-                code=DataSource.CODE_SOFIFA, name='SoFIFA',
+                code=DataSource.CODE_CMTRACKER, name='CMTracker',
             )
 
     today = timezone.localdate()
@@ -562,7 +562,7 @@ def run_import(source, *, version='', file_name='', dry_run=False,
 
     if not dry_run:
         run = SourceImportRun.objects.create(
-            source=SOURCE_SOFIFA,
+            source=SOURCE_CMTRACKER,
             version=version,
             file_name=file_name or '',
             dry_run=False,

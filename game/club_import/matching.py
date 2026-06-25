@@ -3,7 +3,7 @@
 Priorität:
     1. Transfermarkt-Spieler-ID
     2. FMInside-ID
-    3. SoFIFA-ID (über PlayerExternalId)
+    3. CMTracker-ID (über PlayerExternalId)
     4. normalisierter Name + identisches Geburtsdatum → nur Dublettenwarnung
 
 Ein Treffer allein über Name+Geburtsdatum führt NICHT zu automatischem
@@ -51,7 +51,7 @@ def find_existing_player(tm_player_id=None, fm_inside_id=None,
     if sofifa_id:
         ext = (
             PlayerExternalId.objects
-            .filter(source__code=DataSource.CODE_SOFIFA,
+            .filter(source__code=DataSource.CODE_CMTRACKER,
                     external_id=str(sofifa_id))
             .select_related('player')
             .first()

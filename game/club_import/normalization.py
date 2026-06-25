@@ -3,7 +3,7 @@
 Berücksichtigt Groß-/Kleinschreibung, überflüssige Leerzeichen, Bindestriche,
 Apostrophe, Akzente/diakritische Zeichen und unterschiedliche Unicode-Formen.
 
-Konsistent mit der bestehenden SoFIFA-Import-Normalisierung, damit Spieler über
+Konsistent mit der bestehenden CMTracker-Import-Normalisierung, damit Spieler über
 beide Importwege gleich erkannt werden.
 """
 
