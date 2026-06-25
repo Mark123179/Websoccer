@@ -1,0 +1,250 @@
+"""cmtracker-API-Client.
+
+Holt EA/SoFIFA-Style-Spielerdaten von der cmtracker-API
+(``https://api.cmtracker.net/api/v1``) und ueberfuehrt sie in das CSV-Format,
+das der bestehende SoFIFA-Importer
+(``game.sofifa_import_service.run_sofifa_import``) versteht. Dadurch laeuft der
+API-Import durch dieselbe Parsing-, Matching- (DOB-first), Logging- und
+Spielstaerke-Neuberechnungs-Pipeline wie der CSV-Upload im Creator-Mode.
+
+Auth: API-Key im Header ``X-API-Key`` (Secret ``CMTRACKER_API_KEY``).
+Optionaler Override der Basis-URL via ``CMTRACKER_BASE_URL``.
+
+Die ``CSV_COLUMNS`` sind JSON-Pfade in die cmtracker-Antwort. Ihre
+Punkt-Schreibweise ist bewusst so gewaehlt, dass der Importer sie ueber
+``COLUMN_ALIASES`` erkennt (``normalize_header`` entfernt die Punkte, z. B.
+``info.playerid`` -> ``infoplayerid`` -> ``sofifa_id``). Jede Spalte mappt auf
+genau ein Zielattribut, damit keine Spalte eine andere ueberschreibt.
+"""
+
+import csv
+import io
+import os
+import time
+
+import requests
+
+
+DEFAULT_BASE_URL = 'https://api.cmtracker.net/api/v1'
+API_KEY_ENV = 'CMTRACKER_API_KEY'
+BASE_URL_ENV = 'CMTRACKER_BASE_URL'
+
+# Dotted-Key-Spalten -> der Importer mappt sie ueber COLUMN_ALIASES.
+# Reihenfolge: Identitaet, Stammdaten, Karten-Pace, Feldspieler, Torwart.
+CSV_COLUMNS = [
+    # Identitaet / Stammdaten
+    'info.playerid',
+    'info.name.knownas',
+    'info.name.firstname',
+    'info.name.lastname',
+    'info.teams.club_team.name',
+    'info.overallrating',
+    'info.potential',
+    'info.birthdate',
+    # Karten-Pace (= tempo wie auf der SoFIFA-Karte)
+    'card_attrs.pac',
+    # Feldspieler-Attribute
+    'attributes.stamina',
+    'attributes.strength',
+    'attributes.ballcontrol',
+    'attributes.dribbling',
+    'attributes.shortpassing',
+    'attributes.crossing',
+    'attributes.finishing',
+    'attributes.headingaccuracy',
+    'attributes.standingtackle',
+    'attributes.marking',
+    'attributes.vision',
+    'attributes.penalties',
+    'attributes.freekickaccuracy',
+    # Torwart-Attribute
+    'attributes.gkreflexes',
+    'attributes.gkhandling',
+    'attributes.gkpositioning',
+    'attributes.gkkicking',
+    'attributes.gkdiving',
+]
+
+# Hard-Cap gegen Endlosschleifen, falls der Server ``page`` ignoriert.
+_SAFETY_PAGE_CAP = 500
+
+
+class CmtrackerError(Exception):
+    """Fehler beim Abruf oder der Verarbeitung der cmtracker-API."""
+
+
+def _extract_list(payload):
+    """Holt die eigentliche Liste aus moeglichen Antwort-Huellen.
+
+    Die API kann entweder direkt eine Liste oder ein Objekt mit einem
+    Listen-Feld (``data``/``results`` …) zurueckgeben.
+    """
+    if isinstance(payload, list):
+        return payload
+    if isinstance(payload, dict):
+        for key in ('data', 'results', 'players', 'items', 'rows', 'docs'):
+            val = payload.get(key)
+            if isinstance(val, list):
+                return val
+    return []
+
+
+def _dig(obj, path):
+    """Liest einen Wert per Punktpfad.
+
+    Unterstuetzt sowohl verschachtelte Dicts (``{'info': {'playerid': 1}}``)
+    als auch bereits abgeflachte Punktschluessel (``{'info.playerid': 1}``).
+    Gibt ``None`` zurueck, wenn der Pfad nicht existiert.
+    """
+    if not isinstance(obj, dict):
+        return None
+    if path in obj:
+        return obj[path]
+    cur = obj
+    for part in path.split('.'):
+        if isinstance(cur, dict) and part in cur:
+            cur = cur[part]
+        else:
+            return None
+    return cur
+
+
+def _cell(value):
+    """Formatiert einen JSON-Wert als CSV-Zelle."""
+    if value is None:
+        return ''
+    if isinstance(value, bool):
+        return '1' if value else '0'
+    return str(value)
+
+
+def player_to_row(player):
+    """Eine cmtracker-Spielerantwort -> Zeilenliste passend zu ``CSV_COLUMNS``."""
+    return [_cell(_dig(player, col)) for col in CSV_COLUMNS]
+
+
+def players_to_csv(players):
+    """Erzeugt den CSV-Text fuer ``run_sofifa_import`` aus Spieler-Objekten."""
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(CSV_COLUMNS)
+    for p in players:
+        writer.writerow(player_to_row(p))
+    return buf.getvalue()
+
+
+class CmtrackerClient:
+    """Duenner HTTP-Client fuer die cmtracker-API (nur Lesezugriffe)."""
+
+    def __init__(self, api_key=None, base_url=None, timeout=30):
+        self.api_key = api_key or os.environ.get(API_KEY_ENV) or ''
+        if not self.api_key:
+            raise CmtrackerError(
+                f'Kein API-Key gesetzt. Bitte Secret {API_KEY_ENV} hinterlegen.'
+            )
+        self.base_url = (
+            base_url or os.environ.get(BASE_URL_ENV) or DEFAULT_BASE_URL
+        ).rstrip('/')
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.session.headers.update({
+            'X-API-Key': self.api_key,
+            'Accept': 'application/json',
+        })
+
+    def _get(self, path, params=None):
+        url = f'{self.base_url}/{path.lstrip("/")}'
+        try:
+            resp = self.session.get(url, params=params, timeout=self.timeout)
+        except requests.RequestException as exc:
+            raise CmtrackerError(f'Netzwerkfehler bei {url}: {exc}') from exc
+
+        if resp.status_code in (401, 403):
+            raise CmtrackerError(
+                f'Authentifizierung fehlgeschlagen ({resp.status_code}). '
+                f'API-Key ({API_KEY_ENV}) pruefen.'
+            )
+        if resp.status_code == 429:
+            raise CmtrackerError(
+                'Rate-Limit erreicht (429). Bitte spaeter erneut versuchen.'
+            )
+        if resp.status_code >= 400:
+            raise CmtrackerError(
+                f'API-Fehler {resp.status_code} bei {url}: {resp.text[:300]}'
+            )
+        try:
+            return resp.json()
+        except ValueError as exc:
+            raise CmtrackerError(
+                f'Ungueltige JSON-Antwort von {url}.'
+            ) from exc
+
+    # ── Endpoints ────────────────────────────────────────────────────────────
+    def list_dbs(self):
+        """``GET /dbs`` — verfuegbare FIFA/FC-Datenbanken."""
+        return self._get('dbs')
+
+    def get_db_filters(self, dbslug):
+        """``GET /dbs/filters/{dbslug}`` — Filterwerte (Ligen, Teams, Nationen)."""
+        return self._get(f'dbs/filters/{dbslug}')
+
+    def list_players(self, db=None, page=0, limit=25, sort=None, filters=None):
+        """``GET /players`` — eine Seite Spieler."""
+        params = {'page': page, 'limit': limit}
+        if db:
+            params['db'] = db
+        if sort:
+            params['sort'] = sort
+        if filters:
+            params.update(filters)
+        return self._get('players', params=params)
+
+    def get_player(self, playerid, db=None):
+        """``GET /players/{playerid}`` — einzelner Spieler."""
+        params = {'db': db} if db else None
+        return self._get(f'players/{playerid}', params=params)
+
+    def list_teams(self, db=None, page=0, limit=25, sort=None, filters=None):
+        """``GET /teams`` — eine Seite Teams."""
+        params = {'page': page, 'limit': limit}
+        if db:
+            params['db'] = db
+        if sort:
+            params['sort'] = sort
+        if filters:
+            params.update(filters)
+        return self._get('teams', params=params)
+
+    def iter_players(self, db=None, limit=100, max_pages=None, sort=None,
+                     filters=None, sleep=0.0):
+        """Iteriert paginiert ueber alle passenden Spieler.
+
+        Terminiert bei leerer Seite, erreichter ``max_pages``, dem Sicherheits-
+        Cap oder wenn der Server dieselbe Seite erneut liefert (ignoriert
+        ``page``). Liefert die rohen Spieler-Objekte.
+        """
+        page = 0
+        seen_first = object()  # Sentinel: noch keine Seite gesehen
+        while True:
+            payload = self.list_players(
+                db=db, page=page, limit=limit, sort=sort, filters=filters,
+            )
+            batch = _extract_list(payload)
+            if not batch:
+                break
+
+            first_id = _dig(batch[0], 'info.playerid')
+            if first_id is not None and first_id == seen_first:
+                break  # Server paginiert nicht — Schutz vor Endlosschleife
+            seen_first = first_id
+
+            for item in batch:
+                yield item
+
+            page += 1
+            if max_pages is not None and page >= max_pages:
+                break
+            if page >= _SAFETY_PAGE_CAP:
+                break
+            if sleep:
+                time.sleep(sleep)
