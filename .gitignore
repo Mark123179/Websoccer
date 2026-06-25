@@ -27,3 +27,8 @@ logs/
 secrets.json
 credentials.json
 *.secret
+
+# --- Datenbank-Backups (niemals committen) ---
+backups/
+*.sql.gz
+*.dump

@@ -330,24 +330,87 @@ docker compose up -d
 ```
 
 > Datenbank-Migrationen sind nicht automatisch reversibel. Vor riskanten
-> Deployments immer zuerst ein Backup ziehen (siehe nächster Abschnitt).
-> Ein eingespieltes Backup kann mit `pg_restore` wiederhergestellt werden.
+> Deployments immer zuerst ein Backup ziehen (siehe nächster Abschnitt
+> „Backups", inkl. Restore-Anleitung).
 
 ## Backups
 
-**PostgreSQL** (vor jedem riskanten Deployment):
+### PostgreSQL — automatisiert (empfohlen)
+
+Das Skript `scripts/backup_postgres.sh` zieht einen `pg_dump` der laufenden
+Datenbank, komprimiert ihn mit gzip und räumt alte Backups auf (behält die
+neuesten N). Der Dump läuft **im** db-Container (`docker compose exec`), daher
+wird kein DB-Passwort auf dem Host benötigt und nichts Geheimes geloggt.
 
 ```bash
 cd /opt/websoccer
-docker compose exec -T db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" \
-  > backup_$(date +%F_%H%M).sql
+./scripts/backup_postgres.sh
 ```
 
-Wiederherstellen:
+- Zielverzeichnis: `/opt/websoccer/backups/postgres` (per `BACKUP_DIR`
+  überschreibbar). Liegt unter `backups/` und ist **gitignored** — echte Dumps
+  werden nie committet.
+- Dateiname mit Zeitstempel: `websoccer-<db>-YYYYmmdd-HHMMSS.sql.gz`.
+- Aufbewahrung: standardmäßig die **letzten 14** Backups (per `BACKUP_KEEP`
+  überschreibbar). Ältere werden automatisch gelöscht.
+
+**Täglich per Cron** (z. B. 03:30 Uhr) — `crontab -e` auf dem Server:
+
+```cron
+30 3 * * * cd /opt/websoccer && mkdir -p backups/postgres && ./scripts/backup_postgres.sh >> backups/postgres/backup.log 2>&1
+```
+
+**Oder als systemd-Timer** (Dateien unter `/etc/systemd/system/`):
+
+```ini
+# websoccer-backup.service
+[Unit]
+Description=Websoccer PostgreSQL backup
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/websoccer
+ExecStart=/opt/websoccer/scripts/backup_postgres.sh
+
+# websoccer-backup.timer
+[Unit]
+Description=Daily Websoccer PostgreSQL backup
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+[Install]
+WantedBy=timers.target
+```
+
+Aktivieren: `systemctl enable --now websoccer-backup.timer`.
+
+### PostgreSQL — Restore
+
+> Achtung: Der Restore überschreibt die aktuelle Datenbank. Vorher idealerweise
+> Web-/Celery-Dienste stoppen, damit währenddessen nichts schreibt.
 
 ```bash
-cat backup_DATEI.sql | docker compose exec -T db \
-  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+cd /opt/websoccer
+# DB-Name/-User (nicht geheim) aus der .env in die Host-Shell laden:
+export POSTGRES_USER="$(sed -n 's/^POSTGRES_USER=//p' .env | tr -d ' "')"
+export POSTGRES_DB="$(sed -n 's/^POSTGRES_DB=//p' .env | tr -d ' "')"
+docker compose stop web celeryworker celerybeat          # Schreibzugriffe pausieren
+gunzip -c backups/postgres/websoccer-<db>-<ts>.sql.gz \
+  | docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+docker compose start web celeryworker celerybeat
+```
+
+Die Dumps enthalten `--clean --if-exists`, d. h. bestehende Objekte werden vor
+dem Wiedereinspielen sauber entfernt — der Restore ist damit wiederholbar.
+
+### PostgreSQL — manueller Einzel-Dump (ad hoc)
+
+```bash
+cd /opt/websoccer
+export POSTGRES_USER="$(sed -n 's/^POSTGRES_USER=//p' .env | tr -d ' "')"
+export POSTGRES_DB="$(sed -n 's/^POSTGRES_DB=//p' .env | tr -d ' "')"
+mkdir -p backups/postgres
+docker compose exec -T db pg_dump --clean --if-exists -U "$POSTGRES_USER" "$POSTGRES_DB" \
+  | gzip > backups/postgres/manual_$(date +%F_%H%M).sql.gz
 ```
 
 **Media-Dateien** (Volume `media_data`):
@@ -370,6 +433,7 @@ docker compose down                # Stack stoppen (Volumes bleiben erhalten)
 docker compose restart web         # nur web neu starten
 docker compose logs -f celeryworker # Celery-Worker-Logs (Hintergrund-Jobs)
 docker compose logs -f celerybeat   # Celery-Beat-Logs (geplante Auslösungen)
+./scripts/backup_postgres.sh        # DB-Backup ziehen (gzip + Rotation)
 ```
 
 ## Offene Folgeaufgaben (nicht Teil von V1)

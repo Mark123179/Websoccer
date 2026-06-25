@@ -58,13 +58,23 @@ if not SECRET_KEY:
             "SECRET_KEY must be set as an environment variable when DEBUG=False."
         )
 
-# ALLOWED_HOSTS — comma-separated env var. Defaults to '*' so Replit dev keeps
-# working; production should pin it to the server IP / domain in its .env.
+# ALLOWED_HOSTS — fully env-driven (comma-separated). The fixed Hetzner server
+# IP is ALWAYS accepted, so the box stays reachable directly even before a
+# domain exists; the final domain is just added to the ALLOWED_HOSTS env var
+# later — no code change required. Without an explicit list we fall back to '*'
+# ONLY inside Replit dev (rotating iframe hostnames); a self-hosted production
+# box defaults to the server IP instead of the unsafe wildcard.
+HETZNER_SERVER_IP = '49.13.5.151'
 _allowed_hosts = os.environ.get('ALLOWED_HOSTS')
 if _allowed_hosts:
     ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
-else:
+elif _REPLIT_DETECTED or DEBUG:
     ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [HETZNER_SERVER_IP]
+# Guarantee the server IP is valid even when the env var only lists a domain.
+if '*' not in ALLOWED_HOSTS and HETZNER_SERVER_IP not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(HETZNER_SERVER_IP)
 
 # Base trusted origins for the Replit dev environment. Production hosts can be
 # appended via the CSRF_TRUSTED_ORIGINS env var (comma-separated, full scheme).
@@ -73,6 +83,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.repl.co',
     'http://localhost:5000',
     'http://0.0.0.0:5000',
+    # Fixed Hetzner server IP so direct-IP access works out of the box (HTTP
+    # today, HTTPS once TLS is active). The domain is appended via the env var.
+    f'http://{HETZNER_SERVER_IP}',
+    f'https://{HETZNER_SERVER_IP}',
 ]
 _extra_csrf = os.environ.get('CSRF_TRUSTED_ORIGINS')
 if _extra_csrf:
