@@ -61,6 +61,11 @@ class Command(BaseCommand):
             help='Maximale Anzahl Seiten (Standard: alle).',
         )
         parser.add_argument(
+            '--sandbox', action='store_true',
+            help='Sandbox-API-Key: ein parameterfreier Abruf (Filter und '
+                 'Pagination sind serverseitig deaktiviert).',
+        )
+        parser.add_argument(
             '--dry-run', action='store_true',
             help='Zeigt geplante Aenderungen, ohne in die DB zu schreiben.',
         )
@@ -87,6 +92,7 @@ class Command(BaseCommand):
             self._print_dbs(dbs)
             return
 
+        sandbox = opts['sandbox']
         filters = {}
         if opts['team']:
             filters['team__in'] = opts['team']
@@ -94,6 +100,13 @@ class Command(BaseCommand):
             filters['league__in'] = opts['league']
         if opts['min_overall'] is not None:
             filters['overallrating__gte'] = opts['min_overall']
+
+        if sandbox and (filters or opts['max_pages']):
+            self.stdout.write(self.style.WARNING(
+                'Sandbox-Modus aktiv: Filter (--team/--league/--min-overall) '
+                'und Pagination (--max-pages) sind serverseitig deaktiviert '
+                'und werden ignoriert.'
+            ))
 
         self.stdout.write('Hole Spieler von cmtracker …')
         try:
@@ -104,6 +117,7 @@ class Command(BaseCommand):
                 sort='overallrating:desc',
                 filters=filters or None,
                 sleep=0.2,
+                sandbox=sandbox,
             ))
         except CmtrackerError as exc:
             raise CommandError(str(exc))

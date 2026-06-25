@@ -188,16 +188,24 @@ class CmtrackerClient:
         """``GET /dbs/filters/{dbslug}`` — Filterwerte (Ligen, Teams, Nationen)."""
         return self._get(f'dbs/filters/{dbslug}')
 
-    def list_players(self, db=None, page=0, limit=25, sort=None, filters=None):
-        """``GET /players`` — eine Seite Spieler."""
-        params = {'page': page, 'limit': limit}
+    def list_players(self, db=None, page=0, limit=25, sort=None, filters=None,
+                     paginate=True):
+        """``GET /players`` — eine Seite Spieler.
+
+        Im Sandbox-Modus (``paginate=False``) werden ``page``/``limit`` nicht
+        gesendet, da Pagination und Filter dort serverseitig deaktiviert sind.
+        """
+        params = {}
+        if paginate:
+            params['page'] = page
+            params['limit'] = limit
         if db:
             params['db'] = db
         if sort:
             params['sort'] = sort
         if filters:
             params.update(filters)
-        return self._get('players', params=params)
+        return self._get('players', params=params or None)
 
     def get_player(self, playerid, db=None):
         """``GET /players/{playerid}`` — einzelner Spieler."""
@@ -216,13 +224,25 @@ class CmtrackerClient:
         return self._get('teams', params=params)
 
     def iter_players(self, db=None, limit=100, max_pages=None, sort=None,
-                     filters=None, sleep=0.0):
+                     filters=None, sleep=0.0, sandbox=False):
         """Iteriert paginiert ueber alle passenden Spieler.
 
         Terminiert bei leerer Seite, erreichter ``max_pages``, dem Sicherheits-
         Cap oder wenn der Server dieselbe Seite erneut liefert (ignoriert
         ``page``). Liefert die rohen Spieler-Objekte.
+
+        Im Sandbox-Modus (``sandbox=True``) sind Pagination und Filter
+        serverseitig deaktiviert: es wird genau ein parameterfreier
+        ``GET /players`` ausgefuehrt und dessen Spieler werden geliefert.
         """
+        if sandbox:
+            payload = self.list_players(
+                db=db, sort=None, filters=None, paginate=False,
+            )
+            for item in _extract_list(payload):
+                yield item
+            return
+
         page = 0
         seen_first = object()  # Sentinel: noch keine Seite gesehen
         while True:
