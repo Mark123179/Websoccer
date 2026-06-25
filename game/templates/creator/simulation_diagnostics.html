@@ -209,16 +209,17 @@
       <p class="cm-diag-nv">{{ s.note }}</p>
     {% else %}
       <p class="cm-diag-sub">
-        Abdeckungsgrad: <strong>{{ s.coverage_percent|floatformat:0 }}%</strong>
-        ({{ s.occurred_count }}/{{ s.supported_count }} Familien in der Stichprobe aufgetreten)
+        Abdeckungsgrad (messbare Familien): <strong>{{ s.coverage_percent|floatformat:0 }}%</strong>
+        ({{ s.occurred_count }}/{{ s.supported_count }} messbare Familien in der Stichprobe aufgetreten;
+        {{ s.unmeasurable_count }} weitere Familien n/v — nicht aus report_data messbar)
       </p>
       <table class="cm-diag-table">
-        <thead><tr><th>Familie</th><th>Aufgetreten</th><th>Spiele</th><th>Ticker-Signale</th></tr></thead>
+        <thead><tr><th>Familie</th><th>Status</th><th>Spiele</th><th>Ticker-Signale</th></tr></thead>
         <tbody>
         {% for row in s.rows %}
           <tr>
-            <td>{{ row.label }}</td>
-            <td>{% if row.occurred %}<span class="cm-diag-ok-text">✓</span>{% else %}<span class="cm-diag-muted">–</span>{% endif %}</td>
+            <td>{{ row.label }}{% if row.na_reason %}<br><span class="cm-diag-hint">{{ row.na_reason }}</span>{% endif %}</td>
+            <td>{% include 'creator/_diag_badge.html' with status=row.status %}</td>
             <td>{{ row.match_count }}</td>
             <td class="cm-diag-hint">{{ row.evt_types }}</td>
           </tr>
@@ -226,7 +227,7 @@
         </tbody>
       </table>
       {% if s.never_triggered %}
-        <p class="cm-diag-sub">Nie ausgelöst (in Stichprobe): {{ s.never_triggered|join:', ' }}</p>
+        <p class="cm-diag-sub">Nie ausgelöst (messbar, aber nicht in Stichprobe): {{ s.never_triggered|join:', ' }}</p>
       {% endif %}
     {% endif %}
   </div>

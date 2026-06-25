@@ -6,7 +6,9 @@ from django.test import TestCase
 from game.simulation_diagnostics.report import (
     build_simulation_diagnostics_report, SECTION_KEYS,
 )
-from game.simulation_diagnostics.constants import DIAGNOSTIC_CORRIDORS
+from game.simulation_diagnostics.constants import (
+    DIAGNOSTIC_CORRIDORS, EVENT_FAMILY_MAP, EVENT_FAMILY_UNMEASURABLE,
+)
 from game.simulation_diagnostics.utils import evaluate_corridor
 from game.simulation_diagnostics.balance import build_balance
 from game.simulation_diagnostics.features import build_features
@@ -89,6 +91,28 @@ class FeatureTests(TestCase):
         self.assertEqual(by_feature['Karten & Platzverweise'], 'ok')
         self.assertEqual(by_feature['Verletzungen'], 'warn')
 
+    def test_freshness_internal_is_na_not_warn(self):
+        # fatigue_cost == 1.0 (Default) → intern wirkend, also na statt warn.
+        reports = [{
+            'home_goals': 1, 'away_goals': 0,
+            'report': {
+                'goal_events': [{'goal_type': 'goal'}],
+                'home_fatigue_cost': 1.0, 'away_fatigue_cost': 1.0,
+            },
+        }]
+        rows = {r['feature']: r for r in build_features(reports)['rows']}
+        self.assertEqual(rows['Frische / Ermüdung']['status'], 'na')
+        self.assertIn('intern', rows['Frische / Ermüdung']['evidence'].lower())
+
+    def test_freshness_ok_when_fatigue_deviates(self):
+        # Weicht fatigue_cost von 1.0 ab (z. B. aggressive Taktik) → ok.
+        reports = [{
+            'home_goals': 0, 'away_goals': 0,
+            'report': {'home_fatigue_cost': 1.2, 'away_fatigue_cost': 1.0},
+        }]
+        rows = {r['feature']: r['status'] for r in build_features(reports)['rows']}
+        self.assertEqual(rows['Frische / Ermüdung'], 'ok')
+
 
 class PositionTests(TestCase):
     def test_baseline_relative_ampel(self):
@@ -133,6 +157,24 @@ class TickerTests(TestCase):
         self.assertEqual(section['occurred_count'], 1)
         # Auswechslungen kamen nicht vor → in 'never_triggered'.
         self.assertIn('Auswechslungen', section['never_triggered'])
+
+    def test_unmeasurable_families_are_nv_not_failures(self):
+        reports = [{'report': {'goal_events': [{'goal_type': 'goal'}]}}]
+        section = build_ticker_coverage(reports)
+        by_family = {r['family']: r for r in section['rows']}
+        # Paraden (nur fk_saved), Anstoß/Abpfiff (nur K.-o.) → n/v statt warn.
+        for fam in ('save', 'kickoff', 'fulltime'):
+            self.assertEqual(by_family[fam]['status'], 'na')
+            self.assertFalse(by_family[fam]['measurable'])
+            self.assertTrue(by_family[fam]['na_reason'])
+            # n/v-Familien tauchen NICHT als Fehlschlag in never_triggered auf.
+            self.assertNotIn(by_family[fam]['label'], section['never_triggered'])
+        # Abdeckungsnenner zählt nur messbare Familien.
+        self.assertEqual(
+            section['supported_count'],
+            len(EVENT_FAMILY_MAP) - len(EVENT_FAMILY_UNMEASURABLE),
+        )
+        self.assertEqual(section['unmeasurable_count'], len(EVENT_FAMILY_UNMEASURABLE))
 
 
 class TacticsTests(TestCase):

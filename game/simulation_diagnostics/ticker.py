@@ -5,7 +5,9 @@ der Stichprobe tatsächlich aufgetretenen Familien (aus report_data abgeleitet).
 """
 from __future__ import annotations
 
-from .constants import EVENT_FAMILY_MAP, EVENT_FAMILY_LABELS
+from .constants import (
+    EVENT_FAMILY_MAP, EVENT_FAMILY_LABELS, EVENT_FAMILY_UNMEASURABLE,
+)
 from .utils import safe_dict, safe_list
 
 
@@ -51,25 +53,46 @@ def build_ticker_coverage(reports):
     for rd in sample:
         for fam in detect_occurred_families(rd):
             match_counts[fam] += 1
-    occurred = {fam for fam, c in match_counts.items() if c > 0}
-    coverage = (len(occurred) / len(supported)) if supported else None
+    # Messbare Familien (Nicht-Auftreten = echtes Signal) von n/v-Familien
+    # trennen. Die Abdeckungsquote zählt NUR messbare Familien — sonst würden
+    # K.-o.-only- bzw. nicht persistierte Familien sie künstlich drücken.
+    measurable = [f for f in supported if f not in EVENT_FAMILY_UNMEASURABLE]
+    occurred = {f for f in measurable if match_counts[f] > 0}
+    coverage = (len(occurred) / len(measurable)) if measurable else None
     rows = []
     for fam in supported:
+        unmeasurable = fam in EVENT_FAMILY_UNMEASURABLE
+        if unmeasurable:
+            status = 'na'
+        elif match_counts[fam] > 0:
+            status = 'ok'
+        elif n == 0:
+            status = 'na'
+        else:
+            status = 'warn'
         rows.append({
             'family': fam,
             'label': EVENT_FAMILY_LABELS.get(fam, fam),
             'occurred': fam in occurred,
+            'measurable': not unmeasurable,
+            'status': status,
+            'na_reason': EVENT_FAMILY_UNMEASURABLE.get(fam, ''),
             'match_count': match_counts[fam],
             'evt_types': ', '.join(EVENT_FAMILY_MAP[fam]),
         })
-    never = [EVENT_FAMILY_LABELS.get(f, f) for f in supported if f not in occurred]
+    # „Nie ausgelöst" nur für messbare Familien — n/v-Familien sind kein Fehler.
+    never = [
+        EVENT_FAMILY_LABELS.get(f, f)
+        for f in measurable if f not in occurred
+    ]
     return {
         'title': 'Liveticker-Abdeckung',
         'available': n > 0,
         'note': '' if n > 0 else 'Leere Stichprobe: keine Ereignis-Familien nachweisbar.',
         'coverage_percent': (coverage * 100) if coverage is not None else None,
-        'supported_count': len(supported),
+        'supported_count': len(measurable),
         'occurred_count': len(occurred),
+        'unmeasurable_count': len(EVENT_FAMILY_UNMEASURABLE),
         'rows': rows,
         'never_triggered': never,
     }

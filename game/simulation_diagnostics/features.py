@@ -4,7 +4,9 @@ Status:
   ok   — Feature im Code vorhanden UND in der Stichprobe messbar aufgetreten.
   warn — Code vorhanden, in der (nicht leeren) Stichprobe aber nicht aufgetreten.
   bad  — Code/Struktur fehlt.
-  na   — aus den Daten nicht prüfbar (z. B. leere Stichprobe).
+  na   — aus den Daten nicht prüfbar (leere Stichprobe) ODER intern wirkendes
+         Feature, dessen Nicht-Auftreten kein Fehlsignal ist (z. B. Frische:
+         fatigue_cost ist ein Taktik-Multiplikator, Default 1.0).
 
 Es wird KEINE Simulation und KEIN Management Command ausgelöst — nur sichere
 Imports/Attributprüfungen ohne Seiteneffekte.
@@ -128,7 +130,13 @@ _FEATURES = [
         'label': 'Frische / Ermüdung',
         'code': lambda: _model_attr('PlayerStrengthProfile', 'freshness'),
         'detect': _has_freshness,
-        'hint': 'Frische wirkt als Ermüdungskosten (fatigue_cost).',
+        'internal': True,
+        'na_evidence': (
+            'Wirkt intern als Kondition; fatigue_cost ist ein '
+            'Taktik-Multiplikator (Default 1.0). Nicht-Auftreten ist kein '
+            'Fehler — in V1 nicht als Ereignis aus report_data messbar.'
+        ),
+        'hint': 'Frische wirkt intern als Kondition (fatigue_cost = Taktik-Multiplikator).',
     },
     {
         'label': 'Liveticker-Kommentar',
@@ -150,12 +158,18 @@ def build_features(reports):
         except Exception:
             code_present = False
         match_count = sum(1 for rd in sample if feat['detect'](rd)) if n else 0
+        internal = feat.get('internal', False)
         if not code_present:
             status, evidence = 'bad', 'Code/Struktur nicht gefunden'
         elif n == 0:
             status, evidence = 'na', 'Leere Stichprobe — Nutzung nicht prüfbar'
         elif match_count > 0:
             status, evidence = 'ok', f'in {match_count}/{n} Spielen aufgetreten'
+        elif internal:
+            status, evidence = 'na', feat.get(
+                'na_evidence',
+                'Wirkt intern — nicht als report_data-Ereignis messbar',
+            )
         else:
             status, evidence = 'warn', f'Code vorhanden, in {n} Spielen nicht aufgetreten'
         rows.append({

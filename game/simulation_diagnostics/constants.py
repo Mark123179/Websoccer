@@ -96,7 +96,26 @@ EVENT_FAMILY_LABELS = {
     'corner': 'Ecken',
     'foul': 'Fouls/Zweikämpfe',
     'chance': 'Chancen',
-    'save': 'Paraden',
-    'kickoff': 'Anstoß/Phasenstart',
-    'fulltime': 'Abpfiff/Phasenende',
+    'save': 'Paraden (Freistöße)',
+    'kickoff': 'Anstoß/Phasenstart (K.-o.)',
+    'fulltime': 'Abpfiff/Phasenende (K.-o.)',
+}
+
+# Familien, deren Nicht-Auftreten KEIN Fehlsignal ist, weil sie aus dem
+# normalen Liga-report_data nicht (vollständig) als eigenes Ereignis messbar
+# sind. Sie werden als n/v geführt, aus der Abdeckungsquote ausgenommen und
+# tauchen NICHT unter „nie ausgelöst" auf.
+EVENT_FAMILY_UNMEASURABLE = {
+    'save': (
+        'Nur Freistoß-Paraden (fk_saved) werden persistiert; normale '
+        'Keeper-Paraden sind kein eigenes report_data-Ereignis.'
+    ),
+    'kickoff': (
+        'Nur im K.-o.-Modus (Verlängerung/Elfmeterschießen) als Ereignis; '
+        'der normale Anstoß wird nicht in report_data persistiert.'
+    ),
+    'fulltime': (
+        'Nur im K.-o.-Modus als Ereignis; der normale Abpfiff wird nicht '
+        'in report_data persistiert.'
+    ),
 }

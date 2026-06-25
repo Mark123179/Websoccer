@@ -48,3 +48,4 @@
 - [CFM-Importer FMInside lookup](cfm-importer-fminside-lookup.md) — one-segment URL auto-redirects to NEWEST DB version (never hardcode); verify id in final URL; FM-ID comes from server roster matched by name+DOB (Option A) — matcher must never guess.
 - [Club import split-identity collision](club-import-split-identity-collision.md) — one import source_error on fm_inside_id/tm_id unique key = pre-existing split duplicate (two rows, complementary IDs); merge+delete orphan, then re-run.
 - [Clubless watchlist access](clubless-watchlist-access.md) — watchlist + community submit are manager-bound (resolve via user.manager_profile, club may be None); rest of scouting stays club-gated; never leak strength/potential in search.
+- [Simulation-Diagnose Status](simulation-diagnostics-classification.md) — warn=messbar aber ausgeblieben; na/n/v=nicht aus report_data messbar; Abdeckung zählt nur messbare Familien.
