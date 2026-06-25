@@ -269,3 +269,9 @@ id = "6GUgtq_BODla5gvfVMkH3"
 uri = "file://attached_assets/ws_import_overview.zip"
 type = "unspecified"
 title = "WS Import — komplette Übersicht (Code + Templates + Tests)"
+
+[[outputs]]
+id = "WqkQYkw2HSejUh_jdXsRY"
+uri = "file://docs/cmtracker_integration.md"
+type = "text"
+title = "cmtracker-Integration — Doku, Feldmapping & Live-Modus-Plan"
