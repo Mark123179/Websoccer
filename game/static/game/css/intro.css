@@ -107,6 +107,16 @@ html, body {
     color: var(--text);
     text-shadow: 0 0 20px rgba(34,230,255,0.35);
 }
+.intro-topbar__wordmark {
+    height: 40px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(34,230,255,0.45));
+    transition: filter 0.18s;
+}
+.intro-topbar__brand:hover .intro-topbar__wordmark {
+    filter: drop-shadow(0 0 20px rgba(34,230,255,0.75));
+}
 
 /* ===================== PARTNER CORNER ===================== */
 .intro-partner {
