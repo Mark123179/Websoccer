@@ -49,3 +49,4 @@
 - [Club import split-identity collision](club-import-split-identity-collision.md) — one import source_error on fm_inside_id/tm_id unique key = pre-existing split duplicate (two rows, complementary IDs); merge+delete orphan, then re-run.
 - [Clubless watchlist access](clubless-watchlist-access.md) — watchlist + community submit are manager-bound (resolve via user.manager_profile, club may be None); rest of scouting stays club-gated; never leak strength/potential in search.
 - [Simulation-Diagnose Status](simulation-diagnostics-classification.md) — warn=messbar aber ausgeblieben; na/n/v=nicht aus report_data messbar; Abdeckung zählt nur messbare Familien.
+- [Secret rotation & leaked-dump cleanup](secret-rotation-leak.md) — SECRET_KEY now env+random fallback; agent can request SECRET_KEY but CANNOT rotate platform DB creds or rewrite git history.
