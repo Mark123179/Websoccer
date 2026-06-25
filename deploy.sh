@@ -38,6 +38,23 @@ docker compose run --rm web python manage.py migrate --noinput
 echo "==> Collecting static files"
 docker compose run --rm web python manage.py collectstatic --noinput
 
+# HTTPS guard — nginx terminates TLS and needs a certificate to start. Refuse to
+# (re)create the stack without one, so a premature deploy never crash-loops nginx
+# and takes a running site down. Issue certs once with ./init-letsencrypt.sh.
+DOMAIN="$(sed -n 's/^DOMAIN=//p' .env | head -n1 | tr -d ' "\r')"
+if [ -z "$DOMAIN" ]; then
+    echo "ERROR: DOMAIN is not set in .env — HTTPS requires a real domain."
+    echo "Set DOMAIN and CERTBOT_EMAIL, then run ./init-letsencrypt.sh once."
+    exit 1
+fi
+if ! docker compose run --rm --entrypoint sh certbot \
+        -c "test -s /etc/letsencrypt/live/$DOMAIN/fullchain.pem" >/dev/null 2>&1; then
+    echo "ERROR: No TLS certificate found for $DOMAIN."
+    echo "Run ./init-letsencrypt.sh once to issue the Let's Encrypt certificate,"
+    echo "then re-run ./deploy.sh."
+    exit 1
+fi
+
 echo "==> Starting the full stack"
 docker compose up -d
 

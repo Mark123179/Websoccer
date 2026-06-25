@@ -15,10 +15,12 @@ Replit (Entwicklung/Test)  →  GitHub (Source of Truth)  →  Hetzner (Produkti
 | web     | (Build aus Dockerfile) | Django + Gunicorn, intern Port 8000              |
 | db      | postgres:16          | PostgreSQL, persistentes Volume `pg_data`          |
 | redis   | redis:7-alpine       | Cache/Celery-Vorbereitung (in V1 nicht aktiv)      |
-| nginx   | nginx:1.27-alpine    | Reverse Proxy auf `web:8000`, liefert Static/Media |
+| nginx   | nginx:1.27-alpine    | Reverse Proxy auf `web:8000` (Port 80/443), TLS-Terminierung, Static/Media |
+| certbot | certbot/certbot      | Let's-Encrypt-Zertifikate ausstellen & automatisch erneuern |
 
 Static- und Media-Dateien liegen in den Volumes `static_data` bzw. `media_data`
-und werden von nginx direkt ausgeliefert.
+und werden von nginx direkt ausgeliefert. TLS-Zertifikate liegen im Volume
+`certbot_certs`, die ACME-Challenge im Volume `certbot_www`.
 
 ## Voraussetzungen auf dem Server (bereits erfüllt)
 
@@ -49,7 +51,9 @@ Mindestens zu setzen:
   ```
 - `DEBUG=False`
 - `ALLOWED_HOSTS=49.13.5.151` (plus spätere Domain)
-- `COOKIE_SECURE=False` (solange noch kein HTTPS aktiv ist — sonst geht der Login nicht)
+- `COOKIE_SECURE=False` (solange noch kein HTTPS aktiv ist — sonst geht der Login nicht;
+  mit HTTPS auf `True`, siehe Abschnitt „HTTPS/TLS aktivieren")
+- `DOMAIN`, `CERTBOT_EMAIL`, `ENABLE_HTTPS` — nur für HTTPS nötig (siehe Abschnitt „HTTPS/TLS aktivieren")
 - `DATABASE_URL`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (konsistent halten)
 - `REDIS_URL=redis://redis:6379/0`
 - `REPLIT_OBJECT_STORAGE=0`
@@ -72,15 +76,24 @@ docker compose run --rm web python manage.py migrate
 
 # Static-Dateien einsammeln
 docker compose run --rm web python manage.py collectstatic --noinput
+```
 
-# Komplette Anwendung starten (web + nginx)
-docker compose up -d
+> **Wichtig:** Der nginx-Reverse-Proxy terminiert TLS und benötigt deshalb ein
+> Zertifikat, bevor der vollständige Stack startet. Führe beim ersten Start
+> direkt **Abschnitt 3 (HTTPS/TLS aktivieren)** aus — `./init-letsencrypt.sh`
+> fährt `web` + `nginx` mit einem Zertifikat hoch. `deploy.sh` bricht bewusst
+> ab, solange kein Zertifikat vorhanden ist, damit ein laufender Server nicht
+> ausfällt — ein nacktes `docker compose up -d` darf vor `./init-letsencrypt.sh`
+> nicht verwendet werden (nginx würde ohne Zertifikat crashen).
 
-# Logs verfolgen
+Logs nach dem Start verfolgen:
+
+```bash
 docker compose logs -f web
 ```
 
-Danach ist die App unter `http://49.13.5.151/` erreichbar.
+Danach ist die App unter `https://deine-domain.de/` erreichbar; Port 80 leitet
+automatisch auf 443 um.
 
 Optional vorab prüfen:
 
@@ -107,7 +120,79 @@ einbettbar) bewusst akzeptiert:
 Die Warnung `security.W009` (schwacher SECRET_KEY) darf **nicht** auftreten,
 wenn in der `.env` ein langer, zufälliger `SECRET_KEY` gesetzt ist.
 
-## 3. Reguläres Re-Deployment
+> Mit aktiviertem HTTPS (`ENABLE_HTTPS=True` **und** `COOKIE_SECURE=True`)
+> verschwinden W004, W008, W012 und W016. Es bleibt nur `security.W019`
+> (`X_FRAME_OPTIONS=SAMEORIGIN`, bewusst gewählt, damit die iframe-Einbettung
+> erlaubt bleibt).
+
+## 3. HTTPS/TLS aktivieren (Let's Encrypt)
+
+HTTPS wird über nginx (TLS-Terminierung) und Certbot (Zertifikate) abgewickelt.
+Die Zertifikate liegen im persistenten Volume `certbot_certs`, die
+ACME-Challenge im Volume `certbot_www`.
+
+### Voraussetzungen
+
+- Eine **echte Domain**, deren DNS-A-Record auf `49.13.5.151` zeigt.
+  Let's Encrypt stellt **keine** Zertifikate für eine nackte IP aus.
+- In der `.env` gesetzt:
+  - `DOMAIN=deine-domain.de`
+  - `CERTBOT_EMAIL=you@example.com`
+  - `ALLOWED_HOSTS=49.13.5.151,deine-domain.de`
+  - `CSRF_TRUSTED_ORIGINS=https://deine-domain.de`
+  - `CERTBOT_STAGING=1` für die ersten Testläufe (verhindert Rate-Limits),
+    danach `0` für das echte Zertifikat.
+
+### Erstausstellung der Zertifikate
+
+```bash
+cd /opt/websoccer
+chmod +x init-letsencrypt.sh   # einmalig
+./init-letsencrypt.sh
+```
+
+Das Skript löst das Henne-Ei-Problem (nginx braucht ein Zertifikat zum Start,
+Certbot braucht nginx auf Port 80 für die ACME-Challenge): Es legt ein
+temporäres Self-signed-Zertifikat an, startet nginx, fordert das echte
+Zertifikat an und lädt nginx neu.
+
+> Tipp: Erst mit `CERTBOT_STAGING=1` testen. Klappt alles, `CERTBOT_STAGING=0`
+> setzen und das Skript erneut ausführen, um das produktive Zertifikat zu holen.
+
+### Django-HTTPS-Härtung einschalten
+
+Sobald das echte Zertifikat aktiv ist, in der `.env` setzen:
+
+```dotenv
+ENABLE_HTTPS=True
+COOKIE_SECURE=True
+```
+
+und neu ausrollen:
+
+```bash
+./deploy.sh
+```
+
+`ENABLE_HTTPS=True` aktiviert SSL-Redirect, HSTS und wertet den von nginx
+gesetzten `X-Forwarded-Proto`-Header aus (nginx terminiert TLS).
+`COOKIE_SECURE=True` sorgt für Secure-Cookies. Danach schließt
+`manage.py check --deploy` die Warnungen W004/W008/W012/W016.
+
+### Automatische Erneuerung
+
+- Der **certbot**-Service versucht alle 12 h `certbot renew` (erneuert nur bei
+  nahender Ablauffrist).
+- Der **nginx**-Service lädt alle 6 h neu, damit erneuerte Zertifikate ohne
+  Downtime übernommen werden.
+
+Erneuerung testen, ohne ein Zertifikat zu verbrauchen:
+
+```bash
+docker compose run --rm --entrypoint certbot certbot renew --dry-run
+```
+
+## 4. Reguläres Re-Deployment
 
 Bequem per Skript:
 
@@ -194,11 +279,9 @@ docker compose restart web         # nur web neu starten
 
 ## Offene Folgeaufgaben (nicht Teil von V1)
 
-- **HTTPS / Let's Encrypt:** 443-Server-Block in nginx ergänzen, Certbot/
-  Zertifikate mounten, Port 80 → 443 umleiten, danach `COOKIE_SECURE=True`
-  setzen.
 - **Domain-Setup:** DNS auf `49.13.5.151` zeigen lassen, Domain in
-  `ALLOWED_HOSTS` und `CSRF_TRUSTED_ORIGINS` eintragen.
+  `ALLOWED_HOSTS` und `CSRF_TRUSTED_ORIGINS` eintragen (Voraussetzung für HTTPS,
+  siehe Abschnitt „HTTPS/TLS aktivieren").
 - **Celery:** Worker-Service ergänzen; Redis ist bereits als Broker vorbereitet.
 - **CMTracker Live:** Hetzner-IP `49.13.5.151` direkt bei CMTracker für den
   Live-Import registrieren.

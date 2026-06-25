@@ -97,6 +97,21 @@ else:
     CSRF_COOKIE_SECURE = False
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
+# Full HTTPS hardening — only on a real TLS deploy (Hetzner behind nginx +
+# Let's Encrypt). Kept OFF in Replit dev: the dev proxy is HTTPS, but runserver
+# must not force SSL redirects or send HSTS (that would interfere with the dev
+# iframe). Enable ENABLE_HTTPS=True in the production .env once certificates are
+# active (and also COOKIE_SECURE=True for Secure cookies).
+ENABLE_HTTPS = _env_bool('ENABLE_HTTPS', default=False)
+if ENABLE_HTTPS:
+    # nginx terminates TLS and forwards the original scheme in this header, so
+    # Django correctly treats proxied requests as secure (no redirect loops).
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
 
 # Application definition
 
