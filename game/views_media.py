@@ -12,8 +12,11 @@ def serve_media(request, name):
     blob = None
     data = None
 
-    # ── 1. Try Replit Object Storage ────────────────────────────────────────
+    # ── 1. Try Replit Object Storage (only when enabled) ─────────────────────
     try:
+        if not getattr(settings, 'USE_REPLIT_OBJECT_STORAGE', False):
+            raise RuntimeError("Object Storage disabled — using local FS")
+
         from replit.object_storage import Client
         client = Client()
 

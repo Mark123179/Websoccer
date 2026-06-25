@@ -13,37 +13,88 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _env_bool(key, default=False):
+    """Parse a truthy environment flag (1/true/yes/on)."""
+    val = os.environ.get(key)
+    if val is None:
+        return default
+    return val.strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+# Detect whether we run inside the Replit dev environment. On Replit these
+# variables are always present; on a self-hosted server (Hetzner) they are not.
+_REPLIT_DETECTED = bool(
+    os.environ.get('REPL_ID') or os.environ.get('REPLIT_DEV_DOMAIN')
+)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# Read from the environment. In production SECRET_KEY MUST be set (as a Secret);
-# otherwise a fresh random key is generated per process (fine for local dev,
-# but it invalidates existing sessions on every restart).
-SECRET_KEY = os.environ.get('SECRET_KEY') or get_random_secret_key()
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Steerable via the DEBUG env var. Defaults to True so the Replit dev workflow
+# (runserver serving static files) keeps working unchanged. Production sets
+# DEBUG=False in its .env.
+DEBUG = _env_bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: keep the secret key used in production secret!
+# Read from the environment. In production (DEBUG=False) SECRET_KEY MUST be set
+# explicitly — we never silently fall back to a random key there, because that
+# would invalidate every session on each restart. In dev a per-process random
+# key is fine.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = get_random_secret_key()
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY must be set as an environment variable when DEBUG=False."
+        )
 
+# ALLOWED_HOSTS — comma-separated env var. Defaults to '*' so Replit dev keeps
+# working; production should pin it to the server IP / domain in its .env.
+_allowed_hosts = os.environ.get('ALLOWED_HOSTS')
+if _allowed_hosts:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
+else:
+    ALLOWED_HOSTS = ['*']
+
+# Base trusted origins for the Replit dev environment. Production hosts can be
+# appended via the CSRF_TRUSTED_ORIGINS env var (comma-separated, full scheme).
 CSRF_TRUSTED_ORIGINS = [
     'https://*.replit.dev',
     'https://*.repl.co',
     'http://localhost:5000',
     'http://0.0.0.0:5000',
 ]
+_extra_csrf = os.environ.get('CSRF_TRUSTED_ORIGINS')
+if _extra_csrf:
+    CSRF_TRUSTED_ORIGINS += [
+        o.strip() for o in _extra_csrf.split(',') if o.strip()
+    ]
 
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+# Cookie security. Replit runs over HTTPS inside an iframe and therefore needs
+# Secure cookies with SameSite=None. A plain-HTTP production deploy (V1, before
+# HTTPS) must NOT use Secure cookies or the browser will drop them and login
+# breaks. Steer via COOKIE_SECURE (default True keeps Replit dev intact).
+COOKIE_SECURE = _env_bool('COOKIE_SECURE', default=True)
+if COOKIE_SECURE:
+    SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SECURE = True
+else:
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SECURE = False
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
@@ -149,15 +200,32 @@ THOUSAND_SEPARATOR = '.'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+# STATIC_ROOT is where `collectstatic` gathers files for production serving
+# (nginx). Harmless in Replit dev where runserver serves from app dirs.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-STORAGES = {
-    "default": {
+# Media storage backend. Replit dev uses the Object Storage bucket; a
+# self-hosted deploy uses the local filesystem (MEDIA_ROOT, served by nginx
+# in production). Steer via REPLIT_OBJECT_STORAGE; defaults to on only when the
+# Replit environment is detected, so Hetzner falls back to the filesystem.
+USE_REPLIT_OBJECT_STORAGE = _env_bool(
+    'REPLIT_OBJECT_STORAGE', default=_REPLIT_DETECTED
+)
+if USE_REPLIT_OBJECT_STORAGE:
+    _default_storage = {
         "BACKEND": "game.object_storage_backend.ReplitObjectStorage",
-    },
+    }
+else:
+    _default_storage = {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
+
+STORAGES = {
+    "default": _default_storage,
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },

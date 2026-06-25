@@ -1,0 +1,45 @@
+# Version control
+.git
+.gitignore
+
+# Secrets / environment — NEVER copy into the image
+.env
+.env.*
+!.env.example
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Local dev database
+db.sqlite3
+
+# Collected/generated artifacts (regenerated in the container)
+staticfiles/
+media/
+output/
+
+# Logs & audit dumps
+*.log
+logs/
+security-audit.log
+
+# Editor / OS cruft
+.vscode/
+.idea/
+.DS_Store
+
+# Replit-specific & agent state (not needed in production image)
+.local/
+.agents/
+.upm/
+.config/
+.replit
+replit.nix
+attached_assets/
+
+# Offline tooling not needed for the server
+tools/cfm_importer/

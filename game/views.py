@@ -5408,13 +5408,14 @@ def upload_profile_image(request):
     data = b''.join(file.chunks())
 
     _saved_to_obj_storage = False
-    try:
-        from replit.object_storage import Client as _ObjClient
-        _obj_client = _ObjClient()
-        _obj_client.upload_from_bytes(rel_path, data)
-        _saved_to_obj_storage = True
-    except Exception:
-        pass
+    if getattr(_settings, 'USE_REPLIT_OBJECT_STORAGE', False):
+        try:
+            from replit.object_storage import Client as _ObjClient
+            _obj_client = _ObjClient()
+            _obj_client.upload_from_bytes(rel_path, data)
+            _saved_to_obj_storage = True
+        except Exception:
+            pass
 
     if not _saved_to_obj_storage:
         import os as _os
@@ -5469,12 +5470,13 @@ def reset_profile_image(request):
     old_path = profile.profile_image or ''
     if old_path and not old_path.startswith('game/'):
         _deleted_from_obj = False
-        try:
-            from replit.object_storage import Client as _ObjClient
-            _ObjClient().delete(old_path, ignore_not_found=True)
-            _deleted_from_obj = True
-        except Exception:
-            pass
+        if getattr(_settings, 'USE_REPLIT_OBJECT_STORAGE', False):
+            try:
+                from replit.object_storage import Client as _ObjClient
+                _ObjClient().delete(old_path, ignore_not_found=True)
+                _deleted_from_obj = True
+            except Exception:
+                pass
         if not _deleted_from_obj:
             import os as _os
             _old_local = _os.path.join(_settings.MEDIA_ROOT, old_path)
