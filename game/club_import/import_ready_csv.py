@@ -193,29 +193,43 @@ def _positions(value):
 def _attr_block(row, prefix, attr_map):
     """Ratingblock ``{rating, potential, source_url, checked_at, attrs}`` oder ``None``.
 
+    ``prefix`` ist ein Spaltenpräfix (z. B. ``'fmi'``) oder eine Präferenzliste
+    von Präfixen. Bei mehreren wird das erste belegte Vorkommen genutzt — so
+    werden ``cmtracker_*``-Header bevorzugt, ``sofifa_*`` bleibt rückwärts-
+    kompatibler Alias.
+
     Liest zusätzlich zu Rating/Potential/Attrs:
     * ``source_url``  — Profillink der Quelle (``{prefix}_url``-Spalte)
     * ``checked_at``  — Datum der Quellprüfung (gemeinsame Spalte ``source_checked_at``)
     * ``notes``       — optionale Freitext-Notizen (``{prefix}_notes``-Spalte, falls vorhanden)
     """
-    rating = _to_int(row.get(f'{prefix}_rating'))
+    prefixes = (prefix,) if isinstance(prefix, str) else tuple(prefix)
+
+    def _col(suffix):
+        for pfx in prefixes:
+            val = row.get(f'{pfx}_{suffix}')
+            if val is not None and str(val).strip() != '':
+                return val
+        return None
+
+    rating = _to_int(_col('rating'))
     if rating is None:
         return None
     attrs = {}
     for suffix, field in attr_map.items():
-        val = _to_int(row.get(f'{prefix}_{suffix}'))
+        val = _to_int(_col(suffix))
         if val is not None:
             attrs[field] = val
-    raw_pot = _clean(row.get(f'{prefix}_potential'))
+    raw_pot = _clean(_col('potential'))
     parsed_pot = _to_int(raw_pot)
     block = {
         'rating': rating,
         'potential': parsed_pot,
         'attrs': attrs,
-        'source_version': _clean(row.get(f'{prefix}_source_version')),
-        'source_url': _clean(row.get(f'{prefix}_url')),
+        'source_version': _clean(_col('source_version')),
+        'source_url': _clean(_col('url')),
         'checked_at': _clean(row.get('source_checked_at')),
-        'notes': _clean(row.get(f'{prefix}_notes')),
+        'notes': _clean(_col('notes')),
     }
     if raw_pot and parsed_pot is None:
         block['potential_raw'] = raw_pot
@@ -242,7 +256,7 @@ def row_to_normalized(row):
 
     Spieler mit ``ea_availability_status = NOT_IN_ACTIVE_EA_FC26_DATABASE``
     erhalten ``sofifa_ratings = None`` — alle sofifa_*-Felder werden ignoriert.
-    FMI-only-Gewichtung (×2) greift automatisch, wenn kein EA-Datensatz vorhanden.
+    FMI-only-Gewichtung (×2) greift automatisch, wenn kein CMTracker-Datensatz vorhanden.
 
     Returns:
         (normalized_data: dict, warnings: list[str])
@@ -284,7 +298,7 @@ def row_to_normalized(row):
         warnings.append(
             f"{_clean(row.get('display_name'))}: "
             f"ea_availability_status={EA_NOT_IN_DB_STATUS} — "
-            f'EA-Daten werden ignoriert, FMI-only-Gewichtung greift.'
+            f'CMTracker-Daten werden ignoriert, FMI-only-Gewichtung greift.'
         )
 
     nd = {
@@ -303,13 +317,13 @@ def row_to_normalized(row):
         'main_positions': mains,
         'secondary_positions': secs,
         'fm_inside_id': _to_int(row.get('fm_unique_id')),
-        'sofifa_id': None if ea_unavailable else (_clean(row.get('sofifa_id')) or None),
-        'sofifa_profile_url': '' if ea_unavailable else _clean(row.get('sofifa_url')),
+        'sofifa_id': None if ea_unavailable else (_clean(row.get('cmtracker_id') or row.get('sofifa_id')) or None),
+        'sofifa_profile_url': '' if ea_unavailable else _clean(row.get('cmtracker_url') or row.get('sofifa_url')),
         'real_club': real_club,
         'loaned_from': loaned_from,
         'loan_status': loan_status,
         'fmi_ratings': _attr_block(row, 'fmi', FMI_ATTR_MAP),
-        'sofifa_ratings': None if ea_unavailable else _attr_block(row, 'sofifa', SOFIFA_ATTR_MAP),
+        'sofifa_ratings': None if ea_unavailable else _attr_block(row, ('cmtracker', 'sofifa'), SOFIFA_ATTR_MAP),
     }
     return nd, warnings
 

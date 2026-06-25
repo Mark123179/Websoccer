@@ -131,7 +131,7 @@ SOFIFA_ATTR_MAP = {
 }
 
 # CMTracker-Attributlabel -> Spalte (Torwart). Kein CMTracker-Pendant fuer
-# tw_eins_gegen_eins -> bleibt NULL auf der EA-Zeile.
+# tw_eins_gegen_eins -> bleibt NULL auf der CMTracker-Zeile.
 SOFIFA_GK_MAP = {
     'GK Reflexes': 'tw_reflexe',
     'GK Handling': 'tw_fangsicherheit',

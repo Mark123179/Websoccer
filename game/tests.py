@@ -747,7 +747,7 @@ class PageSmokeTests(TestCase):
         self.assertEqual(player.calculated_base_strength, Decimal('184.00'))
         self.assertEqual(player.calculated_potential_strength, Decimal('185.00'))
         self.assertIn(
-            'Base = EA + FM = 184.00',
+            'Base = CMTracker + FM = 184.00',
             player.source_strength_explanation,
         )
 
@@ -1710,7 +1710,7 @@ class ReseedPlayersFromFullCsvTests(TestCase):
 
     Abgedeckte Szenarien:
     - Kern-Mapping: ws_club_id -> Verein, generierte wsc_player_id (WSC-<fm>),
-      EA- + FM-Quellen-Ratings
+      CMTracker- + FM-Quellen-Ratings
     - Unbekannte ws_club_id -> Spieler ohne Verein (Warnung, kein Abbruch)
     - Atomarer Rollback: Fehler in einer Zeile laesst KEINE Teil-Daten zurueck;
       bereits vorhandene Spieler bleiben unangetastet (Loeschen wird mit

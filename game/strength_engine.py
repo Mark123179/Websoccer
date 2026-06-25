@@ -200,7 +200,7 @@ def calculate_potential_200(fmi_potential, ea_potential, base_200):
 
 def get_combined_attributes(fmi_attrs, ea_attrs, attr_cols):
     """
-    Berechnet kombinierte Attributwerte aus FMI- und EA-Dictionaries.
+    Berechnet kombinierte Attributwerte aus FMI- und CMTracker-Dictionaries.
 
     Args:
         fmi_attrs: dict {col: value_or_None}

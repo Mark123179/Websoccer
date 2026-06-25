@@ -1720,7 +1720,7 @@ class Player(models.Model):
     @property
     def source_base_quality_label(self):
         labels = {
-            'complete': 'EA + FM',
+            'complete': 'CMTracker + FM',
             'partial': 'nur eine Quelle',
             'default': 'Default 40.00',
         }
@@ -1775,9 +1775,9 @@ class Player(models.Model):
         lines = []
 
         if ea_rating:
-            lines.append(f'EA Staerke: {ea_rating.rating}')
+            lines.append(f'CMTracker Staerke: {ea_rating.rating}')
         else:
-            lines.append('EA Staerke fehlt')
+            lines.append('CMTracker Staerke fehlt')
 
         if fm_rating:
             lines.append(f'FM Staerke: {fm_rating.rating}')
@@ -1787,11 +1787,11 @@ class Player(models.Model):
         if self.calculated_base_strength is not None:
             if ea_rating and fm_rating:
                 lines.append(
-                    f'Base = EA + FM = {self.calculated_base_strength:.2f}'
+                    f'Base = CMTracker + FM = {self.calculated_base_strength:.2f}'
                 )
             elif ea_rating:
                 lines.append(
-                    f'Base = EA * 2 = {self.calculated_base_strength:.2f}'
+                    f'Base = CMTracker * 2 = {self.calculated_base_strength:.2f}'
                 )
             elif fm_rating:
                 lines.append(
@@ -1800,12 +1800,12 @@ class Player(models.Model):
             else:
                 lines.append('Base = Default = 40.00')
         else:
-            lines.append('Base kann erst mit EA- und FM-Wert berechnet werden')
+            lines.append('Base kann erst mit CMTracker- und FM-Wert berechnet werden')
 
         if ea_rating and ea_rating.potential is not None:
-            lines.append(f'EA Potential: {ea_rating.potential}')
+            lines.append(f'CMTracker Potential: {ea_rating.potential}')
         else:
-            lines.append('EA Potential fehlt')
+            lines.append('CMTracker Potential fehlt')
 
         if fm_rating and fm_rating.potential is not None:
             lines.append(f'FM Potential: {fm_rating.potential}')
@@ -1892,7 +1892,7 @@ class PlayerSourceRating(models.Model):
 
     # --- Einzelattribute (0-99) pro Quelle, getrennt gespeichert ---
     # Feldspieler-Attribute (FMI hat alle; CMTracker fuellt die meisten,
-    # FMI-only-Felder bleiben bei der EA-Zeile NULL).
+    # FMI-only-Felder bleiben bei der CMTracker-Zeile NULL).
     tempo = models.PositiveSmallIntegerField(
         null=True, blank=True,
         validators=[MinValueValidator(0), MaxValueValidator(99)],
@@ -2022,7 +2022,7 @@ class PlayerSourceRating(models.Model):
 
     @staticmethod
     def aggregate_attribute(ea_value, fm_value):
-        """Berechnet ein Quell-Attribut aus EA- und FM-Wert.
+        """Berechnet ein Quell-Attribut aus CMTracker- und FM-Wert.
 
         Regel:
             beide vorhanden  → Durchschnitt (gerundet)

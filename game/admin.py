@@ -1553,7 +1553,7 @@ class SourceBaseQualityFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('complete', 'EA + FM'),
+            ('complete', 'CMTracker + FM'),
             ('partial', 'nur eine Quelle'),
             ('default', 'Default 40.00'),
         )
@@ -1593,7 +1593,7 @@ class PlayerDataQualityFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            ('complete_sources', 'Vollstaendig EA + FM'),
+            ('complete_sources', 'Vollstaendig CMTracker + FM'),
             ('fmi_only', 'Nur FMI / ohne CMTracker'),
             ('default_strength', 'Default-Staerke'),
             ('missing_api_id', 'Ohne API-ID'),

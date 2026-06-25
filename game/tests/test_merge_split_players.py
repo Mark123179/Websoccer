@@ -113,7 +113,7 @@ class MergeSplitPlayersTests(TestCase):
                          fm_inside_id=500, club=self.hsv)
         b = self._player('Konflikt', 'Spieler', date(1998, 3, 3),
                          transfermarkt_id=600)
-        # Beide haben ein EA-Rating → (player, source) kollidiert beim Umhängen.
+        # Beide haben ein CMTracker-Rating → (player, source) kollidiert beim Umhängen.
         PlayerSourceRating.objects.create(
             player=a, source=PlayerSourceRating.SOURCE_CMTRACKER, rating=70)
         PlayerSourceRating.objects.create(

@@ -11,7 +11,7 @@ Header-Namen-Map angesprochen, nicht ueber feste Indizes.
 Erzeugt pro Zeile:
   - Player (Stammdaten, Positionen, WS-Verein + RL-Verein, Marktwert, Gehalt,
     Vertrag, Leihe, Verletzung/Sperre, IDs, generierte wsc_player_id)
-  - PlayerSourceRating EA  (aus ea_*)
+  - PlayerSourceRating CMTracker (aus ea_*)
   - PlayerSourceRating FM  (aus fm_*)
   - PlayerExternalId(CMTracker) (sofern sofifa_id vorhanden)
   - PlayerStrengthProfile  (base aus basis_staerke, form_modifier 0 = neutral,
@@ -323,7 +323,7 @@ class Command(BaseCommand):
         fm_inside_id = self._int(c('fm_inside_id'))
         wsc_id = f'WSC-{fm_inside_id}' if fm_inside_id else f'WSC-L{line_no}'
 
-        # potential (Player.potential): bevorzugt FM, sonst EA, sonst Default
+        # potential (Player.potential): bevorzugt FM, sonst CMTracker, sonst Default
         pot = self._int(c('fm_potential'), 0, 100)
         if pot is None:
             pot = self._int(c('ea_potential'), 0, 100)
@@ -369,7 +369,7 @@ class Command(BaseCommand):
             is_on_loan_list=self._bool(c('auf_leihliste')),
         )
 
-        # Quellen-Ratings EA + FM
+        # Quellen-Ratings CMTracker + FM
         self._create_source_rating(player, c, 'ea', PlayerSourceRating.SOURCE_CMTRACKER)
         self._create_source_rating(player, c, 'fm', PlayerSourceRating.SOURCE_FM)
 
@@ -464,7 +464,7 @@ class Command(BaseCommand):
                 tr += 1
         self.stdout.write(self.style.WARNING('── DRY-RUN: nichts geschrieben ──'))
         self.stdout.write(f'Spieler gesamt: {len(rows)}')
-        self.stdout.write(f'EA-Ratings: {ea} | FM-Ratings: {fm} | '
+        self.stdout.write(f'CMTracker-Ratings: {ea} | FM-Ratings: {fm} | '
                           f'Saison-Stats: {ss} | Transfers: {tr}')
         if bad_club:
             self.stdout.write(self.style.ERROR(

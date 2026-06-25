@@ -916,7 +916,7 @@
 
       {% if source_fm_snapshots or source_ea_snapshots %}
       <details class="cpe-history-details">
-        <summary class="cpe-history-summary">Rating-Verlauf <span class="cpe-history-count">{% if source_fm_snapshots %}FM {{ source_fm_snapshots|length }}{% endif %}{% if source_fm_snapshots and source_ea_snapshots %} · {% endif %}{% if source_ea_snapshots %}EA {{ source_ea_snapshots|length }}{% endif %} Einträge</span></summary>
+        <summary class="cpe-history-summary">Rating-Verlauf <span class="cpe-history-count">{% if source_fm_snapshots %}FM {{ source_fm_snapshots|length }}{% endif %}{% if source_fm_snapshots and source_ea_snapshots %} · {% endif %}{% if source_ea_snapshots %}CMTracker {{ source_ea_snapshots|length }}{% endif %} Einträge</span></summary>
         <div class="cpe-history-body">
           {% if source_fm_snapshots %}
           <div class="cpe-history-source-label">FMInside</div>

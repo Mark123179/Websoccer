@@ -73,6 +73,9 @@ COLUMN_ALIASES = {
     'potential': 'potential', 'pot': 'potential',
     'player_url': 'profile_url', 'profile_url': 'profile_url',
     'url': 'profile_url', 'sofifa_url': 'profile_url',
+    # CMTracker-bevorzugte Identitaets-Aliase (sofifa_* bleibt rueckwaertskompatibel)
+    'cmtracker_id': 'sofifa_id', 'cmtrackerid': 'sofifa_id', 'cmtracker': 'sofifa_id',
+    'cmtracker_url': 'profile_url',
     # Feldspieler-Attribute
     'pace': 'tempo',
     'power_stamina': 'ausdauer', 'stamina': 'ausdauer',

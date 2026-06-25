@@ -45,6 +45,12 @@ Live-Modus.
   `--limit/--max-pages`, `--skip-recalculate`.
 - **Brücke:** Die gepunkteten Header (`info.overallrating` …) werden über
   `COLUMN_ALIASES` aufgelöst, weil `normalize_header` die Punkte entfernt.
+- **CSV-Header (cmtracker_* bevorzugt):** Beide CSV-Importpfade akzeptieren die
+  kanonischen `cmtracker_*`-Spaltennamen; die alten `sofifa_*`-Header bleiben
+  rückwärtskompatibler Alias. Der eigenständige Importer kennt `cmtracker_id`/
+  `cmtracker_url`; die Club-Import-„ready"-CSV bevorzugt `cmtracker_id`/
+  `cmtracker_url`/`cmtracker_<attr>` und fällt sonst auf `sofifa_*` zurück.
+  Interne Schlüssel/Feldnamen (`sofifa_id`, `sofifa_ratings`) bleiben unverändert.
 - **Konfiguration:** Basis-URL überschreibbar via `CMTRACKER_BASE_URL`.
   Der API-Key liegt ausschließlich im Secret `CMTRACKER_API_KEY`.
 

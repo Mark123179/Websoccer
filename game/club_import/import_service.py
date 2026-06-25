@@ -210,7 +210,7 @@ def create_or_promote_target_club(tm_club_id, name, league, profile_url=''):
 
 
 def _write_source_rating(player, source, ratings):
-    """Schreibt eine PlayerSourceRating-Zeile (Quelle FM/EA) oder löscht sie.
+    """Schreibt eine PlayerSourceRating-Zeile (Quelle FM/CMTracker) oder löscht sie.
 
     ``ratings`` = {rating, potential, attrs:{feld:wert}, source_url, checked_at,
     notes, source_version} oder ``None``/leer. Bei vorhandenem Rating werden ALLE

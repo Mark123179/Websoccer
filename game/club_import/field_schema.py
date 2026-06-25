@@ -80,7 +80,7 @@ PLAYER_VOLATILE_COLUMN_MAP = {
     'loaned_from':      ('Player', 'loan_partner_club', 'Leihgeber (bei loaned_in).'),
 }
 
-# Quell-Ratings (je eine Zeile FM bzw. EA in PlayerSourceRating).
+# Quell-Ratings (je eine Zeile FM bzw. CMTracker in PlayerSourceRating).
 RATING_COLUMN_MAP = {
     'fmi_rating':        ('PlayerSourceRating[FM]', 'rating', 'FMInside-Rating.'),
     'fmi_potential':     ('PlayerSourceRating[FM]', 'potential', 'Fehlt → Fallback = rating.'),
@@ -91,7 +91,7 @@ RATING_COLUMN_MAP = {
     'sofifa_source_version': ('PlayerSourceRating[CMTRACKER]', 'source_version', 'Quellversion.'),
     'sofifa_url':        ('PlayerSourceRating[CMTRACKER]', 'source_url', 'CMTracker-Profillink der Quelle.'),
     # Gemeinsames Prüfdatum für beide Quellen — eine Zeile, beide PSR-Zeilen bekommen denselben Wert.
-    'source_checked_at': ('PlayerSourceRating[FM+EA]', 'checked_at', 'Datum der letzten Quellprüfung.'),
+    'source_checked_at': ('PlayerSourceRating[FM+CMTRACKER]', 'checked_at', 'Datum der letzten Quellprüfung.'),
 }
 
 

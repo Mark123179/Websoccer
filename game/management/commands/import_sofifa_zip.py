@@ -332,11 +332,11 @@ class Command(BaseCommand):
                 )
                 self.stdout.write(f'  {len(rating_updates)} Ratings aktualisiert')
 
-            # PlayerSourceRating Creates (bestehende Spieler ohne EA-Zeile)
+            # PlayerSourceRating Creates (bestehende Spieler ohne CMTracker-Zeile)
             if rating_creates:
                 PlayerSourceRating.objects.bulk_create(rating_creates, batch_size=500,
                                                        ignore_conflicts=True)
-                self.stdout.write(f'  {len(rating_creates)} neue EA-Ratings (bestehende Spieler)')
+                self.stdout.write(f'  {len(rating_creates)} neue CMTracker-Ratings (bestehende Spieler)')
 
             # Neue Spieler anlegen
             if new_players:
@@ -366,7 +366,7 @@ class Command(BaseCommand):
                                                        ignore_conflicts=True)
                 PlayerExternalId.objects.bulk_create(new_ext, batch_size=500,
                                                      ignore_conflicts=True)
-                self.stdout.write(f'  {len(new_ext)} PlayerExternalIds (SOFIFA) angelegt')
+                self.stdout.write(f'  {len(new_ext)} PlayerExternalIds (CMTracker) angelegt')
 
             # ExternalIds für bestehende Spieler ohne ID
             if ext_creates:
