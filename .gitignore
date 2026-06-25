@@ -8,3 +8,22 @@ output/
 game/static/game/images/player_composites/
 game/static/game/images/trophies/
 security-audit.log
+
+# --- Secrets, Logs & Debug-Dumps (niemals committen) ---
+# Eingefügte Django-DEBUG-Fehlerseiten / Konsolen-Pastes in attached_assets
+attached_assets/Pasted-*.txt
+attached_assets/Pasted-*.html
+# Umgebungsdateien (zusätzlich zu .env oben)
+.env.*
+!.env.example
+# Lokale Logs
+*.log
+logs/
+# Secret-/Credential-Dateien
+*.pem
+*.key
+*.pfx
+*.p12
+secrets.json
+credentials.json
+*.secret
