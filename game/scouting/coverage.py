@@ -38,6 +38,7 @@ def pool_counts_by_country():
     qs = (
         Player.objects
         .filter(club__isnull=True, pool_status=Player.POOL_STATUS_SCOUTABLE)
+        .exclude(loan_status='extern_loan')
         .values_list('nationalities', flat=True)
     )
     for nats in qs:
