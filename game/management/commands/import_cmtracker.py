@@ -504,7 +504,7 @@ class Command(BaseCommand):
             )
             self.stdout.write('  ' + '─' * 126)
 
-        created = skipped = errors = 0
+        created = skipped = errors = blocked = 0
         for row in candidates:
             cmt_id = str(row.get('sofifa_id', '')).strip()
             raw = raw_by_cmt_id.get(cmt_id)
@@ -515,21 +515,33 @@ class Command(BaseCommand):
                 errors += 1
                 continue
 
+            # tm_position ist hier immer None — TM.de-Positionen kommen aus dem
+            # TM-Import/CSV, nicht aus dem CMT-Auto-Create-Pfad.
+            # Fehlende TM-Position → status='blocked' (kein aktiver Spieler).
             r = create_player_from_cmt_raw(
-                raw, db_slug=db_slug, ws_club=ws_club, dry_run=dry_run
+                raw, db_slug=db_slug, ws_club=ws_club, dry_run=dry_run,
+                tm_position=None,
             )
-            pos         = r.get('position', '?')
             cmt_pos_raw = r.get('cmt_pos_raw', '') or ''
             overall     = r.get('overall', '?')
 
-            if r['status'] == 'created':
-                icon          = '(dry)' if dry_run else '✓'
-                club_team     = r.get('club_team_name') or ''
-                loan_team     = r.get('loan_team_name') or ''
-                status_str    = r.get('decided_status', '?')
-                target        = r.get('target_club')
-                target_name   = target.name if target else 'vereinslos'
-                reason_short  = r.get('decision_reason', '')
+            if r['status'] == 'blocked':
+                # Kein aktiver Kaderspieler ohne TM-Position — nur Diagnose ausgeben
+                self.stdout.write(
+                    f'  ⊘ {r["name"]:<28}  '
+                    f'CMT-Pos: {cmt_pos_raw or "?":<20}  OVR {overall}  '
+                    f'→ BLOCKIERT: TM-Position fehlt → kein aktiver Auto-Create'
+                )
+                blocked += 1
+            elif r['status'] == 'created':
+                pos         = r.get('position', '?')
+                club_team   = r.get('club_team_name') or ''
+                loan_team   = r.get('loan_team_name') or ''
+                status_str  = r.get('decided_status', '?')
+                target      = r.get('target_club')
+                target_name = target.name if target else 'vereinslos'
+                reason_short = r.get('decision_reason', '')
+                icon         = '(dry)' if dry_run else '✓'
 
                 if dry_run:
                     self.stdout.write(
@@ -558,9 +570,14 @@ class Command(BaseCommand):
                 )
                 errors += 1
 
-        summary = f'Auto-Create abgeschlossen: {created} angelegt'
         if dry_run:
-            summary = f'Auto-Create (DRY-RUN): {created} würden angelegt'
+            summary = f'Auto-Create (DRY-RUN): {blocked} blockiert (TM-Position fehlt)'
+            if created:
+                summary += f', {created} würden angelegt'
+        else:
+            summary = f'Auto-Create abgeschlossen: {created} angelegt'
+            if blocked:
+                summary += f', {blocked} blockiert (TM-Position fehlt → via TM-Import anlegen)'
         if skipped:
             summary += f', {skipped} übersprungen'
         if errors:
