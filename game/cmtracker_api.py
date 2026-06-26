@@ -289,26 +289,80 @@ class CmtrackerClient:
             params.update(filters)
         return self._get('teams', params=params)
 
+    def iter_teams(self, db=None, limit=100, max_pages=30, sleep=0.1):
+        """Paginiert ``GET /teams?db={db}&limit={limit}&page=N`` und liefert Team-Objekte.
+
+        Terminiert bei leerer Seite, ``max_pages`` oder wenn der Server
+        dieselbe erste Team-ID wie auf der Vorseite zurueckgibt.
+        """
+        page = 0
+        seen_first = object()
+        while True:
+            payload = self.list_teams(db=db, page=page, limit=limit)
+            batch = _extract_list(payload)
+            if not batch:
+                break
+            first_id = (
+                batch[0].get('teamid') or
+                _dig(batch[0], 'info.teamid') or
+                batch[0].get('id')
+            )
+            if first_id is not None and first_id == seen_first:
+                break
+            seen_first = first_id
+            for item in batch:
+                yield item
+            page += 1
+            if page >= max_pages:
+                break
+            if sleep:
+                time.sleep(sleep)
+
     def find_team_id(self, dbslug, team_name_or_id):
         """Loest einen Team-Namen oder eine Team-ID auf.
 
         Ist ``team_name_or_id`` bereits numerisch, wird er unveraendert
         zurueckgegeben (Strings wie ``'12345'`` werden akzeptiert).
 
-        Andernfalls wird ``GET /dbs/filters/{dbslug}`` abgefragt und der
-        erste Eintrag zurueckgegeben, dessen Name (case-insensitiv) dem
-        Suchbegriff entspricht oder ihn enthaelt.
+        Suchreihenfolge:
+          1. ``GET /teams?db={dbslug}`` paginiert — sucht in
+             ``info.teamname`` (und Fallback-Feldern); teamid aus
+             Top-Level ``teamid`` oder ``info.teamid``.
+          2. ``GET /dbs/filters/{dbslug}`` — Fallback (liefert manchmal
+             eine vorberechnete Teamliste).
 
         Gibt ``None`` zurueck, wenn kein Treffer gefunden wurde.
         """
         if str(team_name_or_id).lstrip('-').isdigit():
             return str(team_name_or_id)
 
-        filters = self.get_db_filters(dbslug)
         search = team_name_or_id.lower()
 
-        # Die API liefert Filter entweder als Dict mit Listen oder direkt
-        # als Liste. Wir suchen in allen team-artigen Schluessel.
+        # ── 1. Primär: /teams paginiert ──────────────────────────────────────
+        try:
+            for team in self.iter_teams(db=dbslug, limit=100, max_pages=30):
+                name = (
+                    _dig(team, 'info.teamname') or
+                    team.get('name') or team.get('title') or
+                    team.get('club_name') or ''
+                ).lower()
+                team_id = (
+                    team.get('teamid') or
+                    _dig(team, 'info.teamid') or
+                    team.get('id') or
+                    team.get('clubid')
+                )
+                if team_id is not None and search in name:
+                    return str(team_id)
+        except CmtrackerError:
+            pass  # Fallback unten
+
+        # ── 2. Fallback: /dbs/filters/{dbslug} ───────────────────────────────
+        try:
+            filters = self.get_db_filters(dbslug)
+        except CmtrackerError:
+            return None
+
         candidates = []
         if isinstance(filters, dict):
             for key in ('teams', 'clubs', 'club_teams', 'team_list', 'team'):
@@ -317,7 +371,6 @@ class CmtrackerClient:
                     candidates = val
                     break
             if not candidates:
-                # Fallback: alle Listen-Werte durchsuchen
                 for val in filters.values():
                     if isinstance(val, list) and val:
                         candidates = val

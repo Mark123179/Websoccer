@@ -115,25 +115,43 @@ def _parse_row(raw_row, header_map):
 
 
 def _match_player(parsed, sofifa_ds):
+    """Sucht den passenden Player-Datensatz fuer eine CMT-Zeile.
+
+    Rueckgabe: ``(player_or_None, match_type_or_None, reason_or_None)``
+
+    ``reason`` ist gesetzt wenn ``player`` ``None`` ist und erklaert warum
+    kein Match gefunden wurde:
+
+    * ``'no_cmt_id'``       – CMT-ID fehlt in den Rohdaten
+    * ``'no_dob'``          – Geburtsdatum fehlt (DOB-Matching nicht moeglich)
+    * ``'not_in_ws'``       – Spieler existiert nicht in der WS-DB
+    * ``'no_name'``         – Name fehlt (kein Namens-Fallback moeglich)
+    * ``'dob_ambiguous'``   – DOB trifft mehrere Spieler, Namenstrennung schlaegt fehl
+    * ``'name_ambiguous'``  – Namens-Score gleichauf (kein eindeutiger Treffer)
+    * ``'name_no_match'``   – Kein Kandidat ueber Aehnlichkeitsschwelle 150
+    """
+    sofifa_id = parsed.get('sofifa_id') or ''
+    if not sofifa_id:
+        return None, None, 'no_cmt_id'
+
     ext = (
         PlayerExternalId.objects
-        .filter(source=sofifa_ds, external_id=parsed['sofifa_id'])
+        .filter(source=sofifa_ds, external_id=sofifa_id)
         .select_related('player', 'player__club')
         .first()
     )
     if ext:
-        return ext.player, 'id'
+        return ext.player, 'id', None
 
     # ── DOB-Matching (vereinsuebergreifend, Name egal) ───────────────────────
-    # Greift auch bei Leihspielern (CSV nennt Stammverein) und abweichenden
-    # Namen aus Transfermarkt. Bei gleichem DOB entscheidet die Namensaehnlichkeit.
     dob = parsed.get('dob')
+    _dob_ambiguous = False
     if dob:
         dob_matches = list(
             Player.objects.select_related('club').filter(date_of_birth=dob)
         )
         if len(dob_matches) == 1:
-            return dob_matches[0], 'dob'
+            return dob_matches[0], 'dob', None
         if len(dob_matches) > 1:
             dob_name = parsed.get('name')
             if dob_name:
@@ -144,12 +162,16 @@ def _match_player(parsed, sofifa_ds):
                     key=lambda t: t[0], reverse=True,
                 )
                 if scored_dob[0][0] > scored_dob[1][0]:
-                    return scored_dob[0][1], 'dob'
+                    return scored_dob[0][1], 'dob', None
+            _dob_ambiguous = True
             # Mehrdeutig: weiter mit dem Namens-Fallback unten.
 
+    # ── Name-Fallback ────────────────────────────────────────────────────────
     name = parsed.get('name')
     if not name:
-        return None, None
+        if not dob:
+            return None, None, 'no_dob'
+        return None, None, 'no_name'
 
     candidates = Player.objects.select_related('club').all()
     club_name = parsed.get('club')
@@ -174,11 +196,12 @@ def _match_player(parsed, sofifa_ds):
             scored.append((score, p))
 
     if not scored:
-        return None, None
+        reason = 'dob_ambiguous' if _dob_ambiguous else 'not_in_ws'
+        return None, None, reason
     scored.sort(key=lambda t: t[0], reverse=True)
     if len(scored) > 1 and scored[0][0] == scored[1][0]:
-        return None, None
-    return scored[0][1], 'name'
+        return None, None, 'name_ambiguous'
+    return scored[0][1], 'name', None
 
 
 def _apply_row(player, parsed, sofifa_ds, today, dry_run):
@@ -337,7 +360,7 @@ def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
             })
             continue
 
-        player, match_mode = _match_player(parsed, sofifa_ds)
+        player, match_mode, unmatch_reason = _match_player(parsed, sofifa_ds)
         if player:
             parsed['attrs'] = _filter_attrs_for_player(player, parsed['attrs'])
         if not player:
@@ -345,10 +368,11 @@ def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
             row_results.append({
                 'line_no': line_no,
                 'action': 'unmatched',
-                'sofifa_id': parsed['sofifa_id'],
+                'sofifa_id': parsed.get('sofifa_id') or '',
                 'player_name': parsed.get('name') or '',
                 'club_name': parsed.get('club', ''),
                 'match_mode': '',
+                'unmatch_reason': unmatch_reason or 'unknown',
                 'diff_lines': [],
                 'error_msg': '',
             })
