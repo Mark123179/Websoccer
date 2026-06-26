@@ -580,8 +580,17 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
     overall   = _int(_dig(raw, 'info.overallrating')) or 50
     potential = _int(_dig(raw, 'info.potential')) or overall
 
-    # CMT-Position NUR als Diagnose — niemals für WS-Positionsfelder verwenden
-    _, cmt_pos_raw = _cmt_position_to_ws(raw)
+    # CMT-Position NUR als Diagnose — niemals für WS-Positionsfelder verwenden.
+    # Primärquelle: roles[0].pos (EA-FC-Rollenarray).
+    # Fallback:     info.preferredposition (shortlabel / label).
+    _, pref_pos_raw = _cmt_position_to_ws(raw)
+    _roles = _list(_dig(raw, 'roles'))
+    _roles_pos = (
+        _str(_roles[0].get('pos', ''))
+        if _roles and isinstance(_roles[0], dict)
+        else ''
+    )
+    cmt_pos_raw = _roles_pos or pref_pos_raw
 
     # ── CMT Leih-Semantik ────────────────────────────────────────────────────
     club_team_name = _str(_dig(raw, 'info.teams.club_team.name') or '')
