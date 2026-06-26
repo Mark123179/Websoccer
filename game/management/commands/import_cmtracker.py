@@ -384,14 +384,38 @@ class Command(BaseCommand):
         ))
 
         if unmatched:
-            preview = unmatched[:15]
+            # Gruppieren nach Grund
+            _REASON_LABEL = {
+                'not_in_ws':      'Spieler fehlt in Websoccer-DB',
+                'no_cmt_id':      'CMT-ID fehlt in Rohdaten',
+                'no_dob':         'Geburtsdatum fehlt (kein DOB-Match moeglich)',
+                'no_name':        'Name fehlt (kein Namens-Fallback moeglich)',
+                'dob_ambiguous':  'DOB mehrdeutig (mehrere Treffer, keine Namenstrennung)',
+                'name_ambiguous': 'Namens-Score gleichauf (mehrdeutig)',
+                'name_no_match':  'Namensaehnlichkeit unter Schwelle 150',
+                'unknown':        'Unbekannter Grund',
+            }
+            by_reason = {}
+            for r in unmatched:
+                reason = r.get('unmatch_reason') or 'unknown'
+                by_reason.setdefault(reason, []).append(r)
+
             self.stdout.write(self.style.WARNING(
-                f'Nicht gematcht ({len(unmatched)}), erste {len(preview)}:'
+                f'Nicht gematcht ({len(unmatched)}) — Gruppen:'
             ))
-            for r in preview:
-                label = r.get('player_name') or r.get('sofifa_id') or '?'
-                club = f" ({r['club_name']})" if r.get('club_name') else ''
-                self.stdout.write(self.style.WARNING(f'  - {label}{club}'))
+            for reason, rows in sorted(by_reason.items(),
+                                       key=lambda x: -len(x[1])):
+                label = _REASON_LABEL.get(reason, reason)
+                self.stdout.write(self.style.WARNING(
+                    f'  [{len(rows):>3}]  {label}'
+                ))
+                for r in rows[:8]:
+                    name = r.get('player_name') or r.get('sofifa_id') or '?'
+                    club = f" ({r['club_name']})" if r.get('club_name') else ''
+                    cmt_id = f" [CMT:{r['sofifa_id']}]" if r.get('sofifa_id') else ''
+                    self.stdout.write(f'          • {name}{club}{cmt_id}')
+                if len(rows) > 8:
+                    self.stdout.write(f'          … und {len(rows) - 8} weitere')
 
         if dry_run:
             self.stdout.write(self.style.WARNING(
