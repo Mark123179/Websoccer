@@ -234,17 +234,53 @@ class Command(BaseCommand):
         if opts['auto_create']:
             self.stdout.write('')
             ws_club = None
-            if opts.get('team') and team_id and db_slug:
-                ws_club = self._resolve_ws_club(team_id, db_slug, opts['team'])
-                if ws_club:
-                    self.stdout.write(f'Auto-Create: WS-Club aufgelöst → {ws_club.name}')
-                else:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f'Auto-Create: kein WS-Club für "{opts["team"]}" gefunden '
-                            f'→ Spieler werden vereinslos (extern_loan wenn Leihe).'
+            cmt_team_name_for_resolve = ''
+
+            if opts.get('team') and db_slug:
+                raw_team_arg = opts['team']
+                if str(raw_team_arg).lstrip('-').isdigit():
+                    # Numerische ID → echten Namen aus CMT-API holen
+                    try:
+                        cmt_team_name_for_resolve = (
+                            client.find_team_name(db_slug, team_id) or ''
                         )
+                        if cmt_team_name_for_resolve:
+                            self.stdout.write(
+                                f'Auto-Create: CMT-Teamname für ID {team_id}'
+                                f' → "{cmt_team_name_for_resolve}"'
+                            )
+                    except Exception:
+                        pass
+                else:
+                    cmt_team_name_for_resolve = raw_team_arg
+
+                ws_club = self._resolve_ws_club(
+                    team_id, db_slug, cmt_team_name_for_resolve
+                )
+                if ws_club:
+                    self.stdout.write(
+                        f'Auto-Create: WS-Club aufgelöst → {ws_club.name}'
                     )
+                else:
+                    _no_club_msg = (
+                        f'Auto-Create: kein WS-Club für "{raw_team_arg}"'
+                        + (f' / "{cmt_team_name_for_resolve}"'
+                           if cmt_team_name_for_resolve != raw_team_arg else '')
+                        + ' gefunden.\n'
+                        + f'  Tipp: ClubExternalId(CMTRACKER, {team_id}, {db_slug})'
+                        + ' in der DB anlegen oder den Club zuerst importieren.'
+                    )
+                    if not opts['dry_run']:
+                        raise CommandError(
+                            _no_club_msg +
+                            '\n  Im Dry-Run (--dry-run) wird die Vorschau'
+                            ' trotzdem angezeigt.'
+                        )
+                    self.stdout.write(self.style.ERROR(_no_club_msg))
+                    self.stdout.write(self.style.WARNING(
+                        '── Dry-Run-Vorschau mit club=None ──'
+                    ))
+
             self._auto_create_players(
                 result=result,
                 players=players,
@@ -394,12 +430,15 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'  {d}')
 
-    def _resolve_ws_club(self, cmt_team_id, db_slug, team_name_raw):
-        """Löst den WS-Club aus CMT-Team-ID oder Teamname auf.
+    def _resolve_ws_club(self, cmt_team_id, db_slug, cmt_team_name):
+        """Löst den WS-Club aus CMT-Team-ID oder CMT-Teamname auf.
 
         Strategie:
-          1. ClubExternalId(CMTRACKER, external_id=team_id, db_slug) → direkt
-          2. Club.name enthält letztes Wort des Teamnamens (case-insensitive)
+          1. ClubExternalId(CMTRACKER, external_id=cmt_team_id, db_slug) → direkt
+          2. Name-Suche: jedes Wort des cmt_team_name (≥ 3 Zeichen, längste zuerst)
+             → Club.name__icontains
+        Der cmt_team_name muss der echte Teamname aus der CMT-API sein,
+        keine rohe numerische Team-ID.
         """
         from game.models import Club, ClubExternalId, DataSource
         try:
@@ -414,11 +453,15 @@ class Command(BaseCommand):
         except Exception:
             pass
 
-        if team_name_raw:
-            keyword = team_name_raw.split()[-1]
-            club = Club.objects.filter(name__icontains=keyword).first()
-            if club:
-                return club
+        if cmt_team_name and not str(cmt_team_name).lstrip('-').isdigit():
+            words = sorted(
+                [w for w in cmt_team_name.split() if len(w) >= 3],
+                key=len, reverse=True,
+            )
+            for keyword in words:
+                club = Club.objects.filter(name__icontains=keyword).first()
+                if club:
+                    return club
         return None
 
     def _auto_create_players(self, result, players, db_slug, ws_club, dry_run):
@@ -455,11 +498,11 @@ class Command(BaseCommand):
         )
         if dry_run:
             self.stdout.write(
-                f'  {"Name":<28}  {"Pos":>3}  {"OVR":>3}  '
+                f'  {"Name":<28}  {"WS":>3}  {"CMT-Pos":<24}  {"OVR":>3}  '
                 f'{"CMT-Verein":<22}  {"Leihgeber":<18}  '
                 f'{"Status":<12}  {"Ziel-WS-Club / Grund"}'
             )
-            self.stdout.write('  ' + '─' * 110)
+            self.stdout.write('  ' + '─' * 126)
 
         created = skipped = errors = 0
         for row in candidates:
@@ -475,8 +518,9 @@ class Command(BaseCommand):
             r = create_player_from_cmt_raw(
                 raw, db_slug=db_slug, ws_club=ws_club, dry_run=dry_run
             )
-            pos     = r.get('position', '?')
-            overall = r.get('overall', '?')
+            pos         = r.get('position', '?')
+            cmt_pos_raw = r.get('cmt_pos_raw', '') or ''
+            overall     = r.get('overall', '?')
 
             if r['status'] == 'created':
                 icon          = '(dry)' if dry_run else '✓'
@@ -489,7 +533,8 @@ class Command(BaseCommand):
 
                 if dry_run:
                     self.stdout.write(
-                        f'  {icon} {r["name"]:<28}  {pos:>3}  {overall:>3}  '
+                        f'  {icon} {r["name"]:<28}  {pos:>3}  {cmt_pos_raw:<24}  '
+                        f'{overall:>3}  '
                         f'{club_team:<22}  {loan_team:<18}  '
                         f'{status_str:<12}  {target_name} — {reason_short}'
                     )

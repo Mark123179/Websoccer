@@ -278,6 +278,32 @@ class CmtrackerClient:
         params = {'db': db} if db else None
         return self._get(f'players/{playerid}', params=params)
 
+    def find_team_name(self, dbslug, team_id):
+        """Gibt den Teamnamen für eine numerische Team-ID zurück (leer = nicht gefunden).
+
+        Paginiert GET /teams?db={dbslug} und gibt den Namen des ersten Treffers
+        zurück, dessen teamid mit ``team_id`` übereinstimmt.
+        """
+        team_id_str = str(team_id)
+        try:
+            for team in self.iter_teams(db=dbslug, limit=100, max_pages=30):
+                tid = str(
+                    team.get('teamid') or
+                    _dig(team, 'info.teamid') or
+                    team.get('id') or
+                    team.get('clubid') or ''
+                )
+                if tid == team_id_str:
+                    return (
+                        _dig(team, 'info.teamname') or
+                        team.get('name') or
+                        team.get('title') or
+                        team.get('club_name') or ''
+                    )
+        except CmtrackerError:
+            pass
+        return ''
+
     def list_teams(self, db=None, page=0, limit=25, sort=None, filters=None):
         """``GET /teams`` — eine Seite Teams."""
         params = {'page': page, 'limit': limit}

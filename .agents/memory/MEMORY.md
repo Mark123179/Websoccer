@@ -51,6 +51,7 @@
 - [HTTPS/certbot on Compose](https-certbot-deployment.md) — certbot entrypoint=renew-loop, so one-shot certonly/renew need `--entrypoint certbot`; nginx HTTPS config requires certs first (init-letsencrypt before any `up -d`).
 - [CMTracker source consolidation](cmtracker-source-consolidation.md) — canonical source = CMTRACKER (TM/FM/CMTRACKER); many sofifa_/EA aliases KEPT on purpose; identity-only rename, strengths unchanged.
 - [cmtracker API integration](cmtracker-api-integration.md) — X-API-Key bridge flattens JSON→CSV→existing SoFIFA importer; demo session ≠ API key; sandbox disables filters/pagination; live key is IP-locked to the fixed Hetzner server IP (runs on server, no proxy; 401 from dev is expected).
+- [CMT position mapping + team resolve](cmt-position-resolve.md) — _cmt_position_to_ws returns tuple (ws,raw); try shortlabel/abbr before label; numeric cmt_team_name silently fails WS name-lookup; find_team_name() needed when --team is numeric.
 - [Simulation-Diagnose Status](simulation-diagnostics-classification.md) — warn=messbar aber ausgeblieben; na/n/v=nicht aus report_data messbar; Abdeckung zählt nur messbare Familien.
 - [Secret rotation & leaked-dump cleanup](secret-rotation-leak.md) — SECRET_KEY now env+random fallback; agent can request SECRET_KEY but CANNOT rotate platform DB creds or rewrite git history.
 - [Celery production setup](celery-production-setup.md) — celery compose services need entrypoint:[] (Dockerfile execs gunicorn); call_command in tasks MUST catch SystemExit (mgmt cmds raise it even on success).
