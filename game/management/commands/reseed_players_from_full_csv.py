@@ -297,14 +297,20 @@ class Command(BaseCommand):
                     sofifa_ds, tm_ds, today, warnings):
         c = lambda name: cell(row, name)  # noqa: E731
 
-        # Verein (per ID, am verlaesslichsten)
+        # Verein: erst per ID (Replit-Dev-DB-PK), dann per Name als Fallback.
+        # Der Name-Fallback ist noetig, wenn die CSV auf einem frischen
+        # Produktionsserver eingespielt wird, auf dem die Vereine andere PKs
+        # haben als in der Dev-DB (z. B. Bayern: Dev-PK=2, Prod-PK=1).
         club = None
         club_id = self._int(c('ws_club_id'))
         if club_id is not None:
             club = clubs_by_id.get(club_id)
-            if club is None:
-                warnings.append(
-                    f'Zeile {line_no}: ws_club_id {club_id} unbekannt — ohne Verein.')
+        if club is None and c('ws_club'):
+            club = clubs_by_name.get(c('ws_club'))
+        if club is None and club_id is not None:
+            warnings.append(
+                f'Zeile {line_no}: ws_club_id {club_id} / Name "{c("ws_club")}" '
+                f'unbekannt — ohne Verein.')
 
         rl_club = clubs_by_name.get(c('echtleben_club')) if c('echtleben_club') else None
 
