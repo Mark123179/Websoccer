@@ -188,6 +188,72 @@ class CmtrackerClient:
         """``GET /dbs/filters/{dbslug}`` — Filterwerte (Ligen, Teams, Nationen)."""
         return self._get(f'dbs/filters/{dbslug}')
 
+    def probe_players_endpoint(self, db=None):
+        """Testet alle bekannten Endpoint-Kandidaten fuer Spielerabruf.
+
+        Gibt eine Liste von Dicts zurueck::
+
+            [{
+                'path':         str,   # relativer Pfad
+                'params':       dict,  # Query-Parameter
+                'full_url':     str,   # vollstaendige URL (KEIN Key)
+                'status':       int,   # HTTP-Status (-1 = Netzwerkfehler)
+                'body_preview': str,   # erste 300 Zeichen der Antwort
+                'ok':           bool,  # True wenn 200
+            }, ...]
+
+        Der API-Key wird NICHT in den Rueckgabewerten ausgegeben.
+        """
+        import requests  # noqa: PLC0415
+
+        slug = db or ''
+        candidates = [
+            # (path, params)
+            ('players',                 {}),
+            ('players',                 {'limit': 1}),
+            ('players',                 {'limit': 1, 'db': slug} if slug else {'limit': 1}),
+            ('player',                  {}),
+            ('player',                  {'limit': 1}),
+            (f'dbs/{slug}/players',     {})                        if slug else None,
+            (f'dbs/{slug}/players',     {'limit': 1, 'page': 0})   if slug else None,
+            (f'dbs/{slug}/player',      {})                        if slug else None,
+            ('dbs/players',             {}),
+            ('dbs/players',             {'limit': 1}),
+        ]
+
+        # Auch alternative Base-URLs pruefen
+        alt_bases = []
+        if '/api/v1' in self.base_url:
+            alt_bases.append(self.base_url.replace('/api/v1', '/v1'))
+            alt_bases.append(self.base_url.replace('/api/v1', ''))
+        bases = [(self.base_url, False)] + [(b, True) for b in alt_bases if b]
+
+        results = []
+        for base, is_alt in bases:
+            for entry in candidates:
+                if entry is None:
+                    continue
+                path, params = entry
+                url = f'{base.rstrip("/")}/{path.lstrip("/")}'
+                try:
+                    resp = self.session.get(url, params=params, timeout=self.timeout)
+                    status = resp.status_code
+                    body = resp.text[:300]
+                except requests.RequestException as exc:
+                    status = -1
+                    body = str(exc)[:200]
+                results.append({
+                    'base':         base,
+                    'base_is_alt':  is_alt,
+                    'path':         path,
+                    'params':       params,
+                    'full_url':     url,
+                    'status':       status,
+                    'body_preview': body,
+                    'ok':           status == 200,
+                })
+        return results
+
     def list_players(self, db=None, page=0, limit=25, sort=None, filters=None,
                      paginate=True):
         """``GET /players`` — eine Seite Spieler.

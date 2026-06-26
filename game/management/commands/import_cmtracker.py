@@ -77,6 +77,12 @@ class Command(BaseCommand):
             '--list-dbs', action='store_true',
             help='Listet verfuegbare Datenbanken auf und beendet.',
         )
+        parser.add_argument(
+            '--probe-players', action='store_true',
+            help='Testet alle bekannten Spieler-Endpoint-Kandidaten und '
+                 'zeigt Status-Codes + gekuerzte Antworten. Kein Import. '
+                 'API-Key wird nicht ausgegeben.',
+        )
 
     def handle(self, *args, **opts):
         try:
@@ -90,6 +96,10 @@ class Command(BaseCommand):
             except CmtrackerError as exc:
                 raise CommandError(str(exc))
             self._print_dbs(dbs)
+            return
+
+        if opts['probe_players']:
+            self._probe_players(client, opts.get('db'))
             return
 
         sandbox = opts['sandbox']
@@ -143,6 +153,72 @@ class Command(BaseCommand):
             raise CommandError(result['fatal_error'])
 
         self._print_result(result, opts['dry_run'])
+
+    def _probe_players(self, client, db=None):
+        """Testet alle Spieler-Endpoint-Kandidaten und gibt Diagnose aus."""
+        import urllib.parse  # noqa: PLC0415
+
+        self.stdout.write(self.style.SUCCESS(
+            f'Base-URL: {client.base_url}'
+        ))
+        if db:
+            self.stdout.write(f'DB-Slug:  {db}')
+        else:
+            self.stdout.write('DB-Slug:  (keiner angegeben — teste auch DB-lose Pfade)')
+        self.stdout.write('')
+
+        results = client.probe_players_endpoint(db=db)
+        ok_found = False
+        last_base = None
+
+        for r in results:
+            if r['base'] != last_base:
+                marker = ' [ALT-BASE]' if r['base_is_alt'] else ''
+                self.stdout.write(self.style.WARNING(
+                    f'── Base: {r["base"]}{marker} ─────────────────────'
+                ))
+                last_base = r['base']
+
+            qs = ('?' + urllib.parse.urlencode(r['params'])) if r['params'] else ''
+            status = r['status']
+
+            if r['ok']:
+                style = self.style.SUCCESS
+                ok_found = True
+            elif status in (401, 403):
+                style = self.style.ERROR
+            elif status == 404:
+                style = self.style.WARNING
+            elif status == -1:
+                style = self.style.ERROR
+            else:
+                style = self.style.NOTICE
+
+            self.stdout.write(style(
+                f'  [{status:>4}]  /{r["path"]}{qs}'
+            ))
+            if r['body_preview'] and status not in (200,):
+                preview = r['body_preview'].replace('\n', ' ')[:200]
+                self.stdout.write(f'           {preview}')
+
+        self.stdout.write('')
+        if ok_found:
+            winning = [r for r in results if r['ok']]
+            self.stdout.write(self.style.SUCCESS(
+                '✓ Funktionierende Pfade gefunden:'
+            ))
+            for r in winning:
+                import urllib.parse as _up  # noqa: PLC0415
+                qs = ('?' + _up.urlencode(r['params'])) if r['params'] else ''
+                self.stdout.write(self.style.SUCCESS(
+                    f'  {r["base"]}/{r["path"]}{qs}'
+                ))
+        else:
+            self.stdout.write(self.style.ERROR(
+                '✗ Kein Endpunkt lieferte HTTP 200. '
+                'Bitte CMTracker-Doku / Support fragen welcher /players-Pfad '
+                'fuer diesen API-Plan aktiv ist.'
+            ))
 
     def _print_dbs(self, dbs):
         rows = _extract_list(dbs)
