@@ -55,9 +55,15 @@ def _make_cmt_source():
 
 def _raw_payload(player_id='99001', firstname='Max', lastname='Mustermann',
                  overall=75, potential=80, dob='1998-05-15',
-                 club_team='FC Ausland', loan_team=''):
-    """Minimaler CMT-Rohpayload."""
-    return {
+                 club_team='FC Ausland', loan_team='',
+                 roles=None):
+    """Minimaler CMT-Rohpayload.
+
+    roles: Liste von Rollen-Dicts, z. B. [{'pos': 'CDM', 'ovr': 82}].
+           Wenn None → kein roles-Schlüssel im Payload (Fallback auf
+           info.preferredposition für cmt_pos_raw).
+    """
+    payload = {
         'info': {
             'playerid': player_id,
             'name': {'firstname': firstname, 'lastname': lastname, 'knownas': ''},
@@ -72,6 +78,9 @@ def _raw_payload(player_id='99001', firstname='Max', lastname='Mustermann',
         'attributes': {},
         'card_attrs': {},
     }
+    if roles is not None:
+        payload['roles'] = roles
+    return payload
 
 
 def _auto_create(raw, db_slug='26062400', ws_club=None, dry_run=False,
@@ -265,16 +274,18 @@ class NoTmPositionBlockTest(TestCase):
 
     def setUp(self):
         _make_cmt_source()
-        # Payload mit klar identifizierbarer CMT-Position (CDM → DM)
+        # Payload mit klar identifizierbarer CMT-Position via roles[0].pos
+        # (Primärquelle für cmt_pos_raw) + preferredposition als Fallback.
         self.raw = _raw_payload(
             player_id='88001',
             overall=80,
+            roles=[{'pos': 'CDM', 'ovr': 80, 'rle': 'Destroyer'}],
         )
-        # CMT liefert CDM — das darf NICHT als WS-Position landen
+        # preferredposition absichtlich anders als roles[0].pos → Priorität testbar
         self.raw['info']['preferredposition'] = {
-            'shortlabel': 'CDM',
-            'label': 'Centre Defensive Midfield',
-            'abbr': 'CDM',
+            'shortlabel': 'CM',
+            'label': 'Central Midfield',
+            'abbr': 'CM',
         }
 
     # ── Kern: Blockade ohne TM-Position ──────────────────────────────────────
@@ -328,6 +339,42 @@ class NoTmPositionBlockTest(TestCase):
         self.assertEqual(r['position'], 'IV')
         # CMT-Diagnose ist separat
         self.assertNotEqual(r.get('cmt_pos_raw'), r['position'])
+
+    # ── roles[0].pos als primäre Diagnosequelle ───────────────────────────────
+
+    def test_cmt_pos_raw_prefers_roles_pos_over_preferredposition(self):
+        """roles[0].pos hat Vorrang vor info.preferredposition für cmt_pos_raw.
+
+        setUp setzt roles[0].pos='CDM' und preferredposition.shortlabel='CM'.
+        cmt_pos_raw muss 'CDM' (aus roles) sein, nicht 'CM' (aus preferredposition).
+        """
+        r = _auto_create(self.raw)  # status=blocked, aber cmt_pos_raw ist gesetzt
+        self.assertEqual(r['cmt_pos_raw'], 'CDM',
+                         'roles[0].pos soll Vorrang vor preferredposition haben.')
+
+    def test_cmt_pos_raw_falls_back_to_preferredposition_when_no_roles(self):
+        """Ohne roles-Schlüssel → Fallback auf info.preferredposition.shortlabel."""
+        raw_no_roles = _raw_payload(player_id='88099', overall=70)
+        raw_no_roles['info']['preferredposition'] = {
+            'shortlabel': 'RB', 'label': 'Right Back', 'abbr': 'RB',
+        }
+        # kein roles-Schlüssel im Payload
+        r = _auto_create(raw_no_roles)
+        self.assertEqual(r['cmt_pos_raw'], 'RB',
+                         'Fallback auf preferredposition.shortlabel wenn roles fehlt.')
+
+    def test_cmt_pos_raw_empty_roles_pos_falls_back(self):
+        """roles[0].pos='' → Fallback auf preferredposition."""
+        raw = _raw_payload(
+            player_id='88098', overall=70,
+            roles=[{'pos': '', 'ovr': 70}],
+        )
+        raw['info']['preferredposition'] = {
+            'shortlabel': 'ST', 'label': 'Striker', 'abbr': 'ST',
+        }
+        r = _auto_create(raw)
+        self.assertEqual(r['cmt_pos_raw'], 'ST',
+                         'Leeres roles[0].pos soll auf preferredposition zurückfallen.')
 
     # ── Spielbarkeit / Transfermarkt ─────────────────────────────────────────
 
