@@ -45,12 +45,74 @@ _FILTER_KEYS_LEAGUE = ('leagues', 'competitions', 'league_list', 'league')
 # Schlüssel immer lowercase (Normalisierung vor Lookup).
 # Erweitern wenn weitere CMT-Sonderschreibweisen auftauchen.
 _CMT_CLUB_NAME_ALIASES: dict[str, str] = {
+    # ── Borussia Mönchengladbach ─────────────────────────────────────────────
     "borussia m'gladbach":       "Borussia Mönchengladbach",
     "bor. m'gladbach":           "Borussia Mönchengladbach",
     "m'gladbach":                "Borussia Mönchengladbach",
     "b. monchengladbach":        "Borussia Mönchengladbach",
     "b. mönchengladbach":        "Borussia Mönchengladbach",
     "borussia monchengladbach":  "Borussia Mönchengladbach",
+
+    # ── RB Leipzig ───────────────────────────────────────────────────────────
+    # CMT verwendet teils den vollen Vereinsnamen (eingetragene Marke).
+    "rasenballsport leipzig":    "RB Leipzig",
+    "rb leipzig":                "RB Leipzig",
+    "red bull leipzig":          "RB Leipzig",
+    "rbl":                       "RB Leipzig",
+
+    # ── 1. FC Union Berlin ───────────────────────────────────────────────────
+    # "berlin" allein wäre mehrdeutig (Hertha BSC Berlin), daher Alias.
+    "1. fc union berlin":        "1. FC Union Berlin",
+    "union berlin":              "1. FC Union Berlin",
+    "fc union berlin":           "1. FC Union Berlin",
+
+    # ── FC St. Pauli ─────────────────────────────────────────────────────────
+    # CMT hängt oft die Gründungszahl 1910 an.
+    "fc st. pauli 1910":         "FC St. Pauli",
+    "st. pauli 1910":            "FC St. Pauli",
+    "fc st. pauli":              "FC St. Pauli",
+    "st. pauli":                 "FC St. Pauli",
+
+    # ── TSG Hoffenheim ───────────────────────────────────────────────────────
+    # WS-Name enthält nicht die Jahreszahl; CMT-Varianten tun es teils.
+    "tsg 1899 hoffenheim":       "TSG Hoffenheim",
+    "1899 hoffenheim":           "TSG Hoffenheim",
+    "tsg hoffenheim":            "TSG Hoffenheim",
+
+    # ── Bayer Leverkusen ─────────────────────────────────────────────────────
+    # CMT schreibt manchmal mit Jahreszahl "04".
+    "bayer 04 leverkusen":       "Bayer Leverkusen",
+
+    # ── 1. FSV Mainz 05 ──────────────────────────────────────────────────────
+    # CMT lässt den "1." Präfix weg oder schreibt nur "Mainz 05".
+    "1. fsv mainz 05":           "1. FSV Mainz 05",
+    "fsv mainz 05":              "1. FSV Mainz 05",
+    "mainz 05":                  "1. FSV Mainz 05",
+
+    # ── 1. FC Heidenheim 1846 ────────────────────────────────────────────────
+    # Jahreszahl 1846 oder fehlender "1." Präfix.
+    "1. fc heidenheim 1846":     "1. FC Heidenheim 1846",
+    "fc heidenheim 1846":        "1. FC Heidenheim 1846",
+    "heidenheim 1846":           "1. FC Heidenheim 1846",
+
+    # ── 1. FC Köln ───────────────────────────────────────────────────────────
+    # CMT-Exports nutzen teils ASCII-Transliteration "Koeln".
+    "1. fc koeln":               "1. FC Köln",
+    "1. fc köln":                "1. FC Köln",
+    "fc koeln":                  "1. FC Köln",
+
+    # ── Hamburger SV ─────────────────────────────────────────────────────────
+    # Abkürzung "HSV" taucht im CMT-Feed auf.
+    "hamburger sv":              "Hamburger SV",
+    "hsv":                       "Hamburger SV",
+
+    # ── SC Paderborn ─────────────────────────────────────────────────────────
+    "sc paderborn 07":           "SC Paderborn",
+    "paderborn 07":              "SC Paderborn",
+
+    # ── Holstein Kiel ─────────────────────────────────────────────────────────
+    "holstein kiel":             "Holstein Kiel",
+    "ksh kiel":                  "Holstein Kiel",
 }
 
 

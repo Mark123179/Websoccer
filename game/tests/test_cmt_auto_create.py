@@ -702,3 +702,278 @@ class SafetyGuardAutoCreateTest(TestCase):
             self._run_handle_with_mocked_client(dry_run=True)
         except CommandError as exc:
             self.fail(f'Dry-Run darf keinen CommandError werfen, aber: {exc}')
+
+
+# ── RB Leipzig Alias-Tests ────────────────────────────────────────────────────
+
+class RbLeipzigAliasResolveTest(TestCase):
+    """CMT-Sonderschreibweisen für RB Leipzig werden korrekt aufgelöst.
+
+    Hintergrund: CMT verwendet teils den eingetragenen Vereinsnamen
+    "RasenBallsport Leipzig" statt der Kurzform "RB Leipzig". Auch
+    "Red Bull Leipzig" taucht in älteren DB-Exporten auf.
+    """
+
+    def setUp(self):
+        league = _make_league()
+        self.club = _make_club(league, name='RB Leipzig')
+        _make_cmt_source()
+
+    def _resolve(self, cmt_team_name, cmt_team_id='35'):
+        from game.management.commands.import_cmtracker import Command
+        return Command()._resolve_ws_club(cmt_team_id, '26062400', cmt_team_name)
+
+    def test_rasenballsport_leipzig_resolves(self):
+        """'RasenBallsport Leipzig' → RB Leipzig."""
+        result = self._resolve('RasenBallsport Leipzig')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+    def test_rb_leipzig_lowercase_resolves(self):
+        """'rb leipzig' (Kleinschreibung) → RB Leipzig."""
+        result = self._resolve('rb leipzig')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+    def test_red_bull_leipzig_resolves(self):
+        """'Red Bull Leipzig' → RB Leipzig."""
+        result = self._resolve('Red Bull Leipzig')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+    def test_rbl_abbreviation_resolves(self):
+        """Abkürzung 'RBL' → RB Leipzig."""
+        result = self._resolve('RBL')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+
+# ── 1. FC Union Berlin Alias-Tests ───────────────────────────────────────────
+
+class UnionBerlinAliasResolveTest(TestCase):
+    """CMT-Sonderschreibweisen für 1. FC Union Berlin werden korrekt aufgelöst.
+
+    Hintergrund: 'berlin' als Token wäre bei Anwesenheit von Hertha BSC Berlin
+    mehrdeutig → Alias-Lookup schlägt Token-Match und verhindert Verwechslung.
+    """
+
+    def setUp(self):
+        league = _make_league()
+        self.union = _make_club(league, name='1. FC Union Berlin')
+        self.hertha = _make_club(league, name='Hertha BSC Berlin')
+        _make_cmt_source()
+
+    def _resolve(self, cmt_team_name, cmt_team_id='28'):
+        from game.management.commands.import_cmtracker import Command
+        return Command()._resolve_ws_club(cmt_team_id, '26062400', cmt_team_name)
+
+    def test_one_fc_union_berlin_resolves(self):
+        """'1. FC Union Berlin' → 1. FC Union Berlin (nicht Hertha)."""
+        result = self._resolve('1. FC Union Berlin')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.union.pk)
+
+    def test_union_berlin_resolves(self):
+        """'Union Berlin' → 1. FC Union Berlin."""
+        result = self._resolve('Union Berlin')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.union.pk)
+
+    def test_fc_union_berlin_resolves(self):
+        """'FC Union Berlin' → 1. FC Union Berlin."""
+        result = self._resolve('FC Union Berlin')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.union.pk)
+
+    def test_berlin_alone_ambiguous_returns_none(self):
+        """'Berlin' allein → None (Hertha + Union = mehrdeutig)."""
+        result = self._resolve('Berlin')
+        self.assertIsNone(result,
+                          '"Berlin" allein darf keinen Club liefern (mehrdeutig).')
+
+    def test_hertha_not_returned_for_union_alias(self):
+        """Hertha darf bei Union-Aliases nie zurückkommen."""
+        for alias in ('1. FC Union Berlin', 'Union Berlin', 'FC Union Berlin'):
+            with self.subTest(alias=alias):
+                result = self._resolve(alias)
+                if result is not None:
+                    self.assertNotEqual(result.pk, self.hertha.pk,
+                                        f'Hertha darf für "{alias}" nicht matchen.')
+
+
+# ── FC St. Pauli Alias-Tests ──────────────────────────────────────────────────
+
+class StPauliAliasResolveTest(TestCase):
+    """CMT-Sonderschreibweisen für FC St. Pauli werden korrekt aufgelöst.
+
+    Hintergrund: CMT hängt die Gründungszahl 1910 an oder lässt "FC" weg.
+    Da "St." auf 2 Zeichen bereinigt wird und unter der Mindestlänge 4 liegt,
+    kann der Token-Match nur über "Pauli" oder "1910" gehen — Alias ist sicherer.
+    """
+
+    def setUp(self):
+        league = _make_league()
+        self.club = _make_club(league, name='FC St. Pauli')
+        _make_cmt_source()
+
+    def _resolve(self, cmt_team_name, cmt_team_id='65'):
+        from game.management.commands.import_cmtracker import Command
+        return Command()._resolve_ws_club(cmt_team_id, '26062400', cmt_team_name)
+
+    def test_fc_st_pauli_1910_resolves(self):
+        """'FC St. Pauli 1910' → FC St. Pauli."""
+        result = self._resolve('FC St. Pauli 1910')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+    def test_st_pauli_1910_resolves(self):
+        """'St. Pauli 1910' → FC St. Pauli."""
+        result = self._resolve('St. Pauli 1910')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+    def test_fc_st_pauli_resolves(self):
+        """'FC St. Pauli' (ohne Jahreszahl) → FC St. Pauli."""
+        result = self._resolve('FC St. Pauli')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+    def test_st_pauli_short_resolves(self):
+        """'St. Pauli' (Kurzform) → FC St. Pauli."""
+        result = self._resolve('St. Pauli')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.club.pk)
+
+
+# ── Weitere Bundesliga-Alias-Tests ────────────────────────────────────────────
+
+class WeitereAliasResolveTest(TestCase):
+    """Alias-Lookups für weitere Bundesliga-Clubs mit CMT-Sonderschreibweisen.
+
+    Jede setUp-Methode ist per-Klasse geteilt; einzelne Clubs werden als
+    Fixtures erzeugt und jeder Alias mit genau einem Test abgedeckt.
+    """
+
+    def setUp(self):
+        league = _make_league()
+        self.hoffenheim = _make_club(league, name='TSG Hoffenheim')
+        self.leverkusen = _make_club(league, name='Bayer Leverkusen')
+        self.mainz      = _make_club(league, name='1. FSV Mainz 05')
+        self.heidenheim = _make_club(league, name='1. FC Heidenheim 1846')
+        self.koeln      = _make_club(league, name='1. FC Köln')
+        self.hsv        = _make_club(league, name='Hamburger SV')
+        self.paderborn  = _make_club(league, name='SC Paderborn')
+        self.kiel       = _make_club(league, name='Holstein Kiel')
+        _make_cmt_source()
+
+    def _resolve(self, cmt_team_name, cmt_team_id='99'):
+        from game.management.commands.import_cmtracker import Command
+        return Command()._resolve_ws_club(cmt_team_id, '26062400', cmt_team_name)
+
+    # Hoffenheim
+    def test_tsg_1899_hoffenheim_resolves(self):
+        result = self._resolve('TSG 1899 Hoffenheim')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.hoffenheim.pk)
+
+    def test_1899_hoffenheim_resolves(self):
+        result = self._resolve('1899 Hoffenheim')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.hoffenheim.pk)
+
+    def test_tsg_hoffenheim_resolves(self):
+        result = self._resolve('TSG Hoffenheim')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.hoffenheim.pk)
+
+    # Leverkusen
+    def test_bayer_04_leverkusen_resolves(self):
+        result = self._resolve('Bayer 04 Leverkusen')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.leverkusen.pk)
+
+    # Mainz
+    def test_1_fsv_mainz_05_resolves(self):
+        result = self._resolve('1. FSV Mainz 05')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.mainz.pk)
+
+    def test_fsv_mainz_05_resolves(self):
+        result = self._resolve('FSV Mainz 05')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.mainz.pk)
+
+    def test_mainz_05_resolves(self):
+        result = self._resolve('Mainz 05')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.mainz.pk)
+
+    # Heidenheim
+    def test_1_fc_heidenheim_1846_resolves(self):
+        result = self._resolve('1. FC Heidenheim 1846')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.heidenheim.pk)
+
+    def test_fc_heidenheim_1846_resolves(self):
+        result = self._resolve('FC Heidenheim 1846')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.heidenheim.pk)
+
+    def test_heidenheim_1846_resolves(self):
+        result = self._resolve('Heidenheim 1846')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.heidenheim.pk)
+
+    # Köln
+    def test_1_fc_koeln_ascii_resolves(self):
+        """ASCII-Transliteration 'Koeln' (CMT-Export) → 1. FC Köln."""
+        result = self._resolve('1. FC Koeln')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.koeln.pk)
+
+    def test_1_fc_koeln_umlaut_resolves(self):
+        """'1. FC Köln' (Umlaut-Variante) → 1. FC Köln."""
+        result = self._resolve('1. FC Köln')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.koeln.pk)
+
+    def test_fc_koeln_ascii_resolves(self):
+        """'FC Koeln' (ohne Präfix) → 1. FC Köln."""
+        result = self._resolve('FC Koeln')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.koeln.pk)
+
+    # Hamburger SV
+    def test_hamburger_sv_resolves(self):
+        result = self._resolve('Hamburger SV')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.hsv.pk)
+
+    def test_hsv_abbreviation_resolves(self):
+        """Abkürzung 'HSV' → Hamburger SV."""
+        result = self._resolve('HSV')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.hsv.pk)
+
+    # SC Paderborn
+    def test_sc_paderborn_07_resolves(self):
+        result = self._resolve('SC Paderborn 07')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.paderborn.pk)
+
+    def test_paderborn_07_resolves(self):
+        result = self._resolve('Paderborn 07')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.paderborn.pk)
+
+    # Holstein Kiel
+    def test_holstein_kiel_resolves(self):
+        result = self._resolve('Holstein Kiel')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.kiel.pk)
+
+    def test_ksh_kiel_resolves(self):
+        """'KSH Kiel' (seltene CMT-Abkürzung) → Holstein Kiel."""
+        result = self._resolve('KSH Kiel')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.kiel.pk)
