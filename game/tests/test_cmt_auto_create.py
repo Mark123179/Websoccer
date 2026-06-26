@@ -74,12 +74,19 @@ def _raw_payload(player_id='99001', firstname='Max', lastname='Mustermann',
     }
 
 
-def _auto_create(raw, db_slug='26062400', ws_club=None, dry_run=False):
-    """Wrapper um store_player_profiles zu mocken."""
+def _auto_create(raw, db_slug='26062400', ws_club=None, dry_run=False,
+                 tm_position=None):
+    """Wrapper um store_player_profiles zu mocken.
+
+    tm_position muss explizit angegeben werden (WS-Positionscode aus TM-Import).
+    Ohne tm_position gibt create_player_from_cmt_raw status='blocked' zurück —
+    so wie es im echten Auto-Create-Pfad passiert.
+    """
     from game.cmt_profile_service import create_player_from_cmt_raw
     with mock.patch('game.cmt_profile_service.store_player_profiles'):
         return create_player_from_cmt_raw(
-            raw, db_slug=db_slug, ws_club=ws_club, dry_run=dry_run
+            raw, db_slug=db_slug, ws_club=ws_club, dry_run=dry_run,
+            tm_position=tm_position,
         )
 
 
@@ -97,7 +104,7 @@ class ExternLoanFreeAgentPoolTest(TestCase):
         )
 
     def test_extern_loan_excluded_from_free_agent_qs(self):
-        result = _auto_create(self.raw)
+        result = _auto_create(self.raw, tm_position='ZM')
         self.assertEqual(result['status'], 'created')
 
         player = result['player']
@@ -110,7 +117,7 @@ class ExternLoanFreeAgentPoolTest(TestCase):
 
     def test_extern_loan_excluded_from_vereinslose_view_qs(self):
         """Entspricht der Abfrage in views_creator.creator_vereinslose."""
-        result = _auto_create(self.raw)
+        result = _auto_create(self.raw, tm_position='ZM')
         player = result['player']
 
         creator_qs = Player.objects.filter(club__isnull=True).exclude(
@@ -123,7 +130,7 @@ class ExternLoanFreeAgentPoolTest(TestCase):
         raw_no_loan = _raw_payload(
             player_id='99002', loan_team='',
         )
-        result = _auto_create(raw_no_loan)
+        result = _auto_create(raw_no_loan, tm_position='ZM')
         player = result['player']
         self.assertEqual(player.loan_status, 'none')
 
@@ -139,8 +146,8 @@ class AutoCreateIdempotencyTest(TestCase):
         self.raw = _raw_payload(player_id='99010')
 
     def test_double_create_no_duplicate(self):
-        r1 = _auto_create(self.raw)
-        r2 = _auto_create(self.raw)
+        r1 = _auto_create(self.raw, tm_position='ZM')
+        r2 = _auto_create(self.raw, tm_position='ZM')
 
         self.assertEqual(r1['status'], 'created')
         self.assertEqual(r2['status'], 'skipped')
@@ -150,8 +157,8 @@ class AutoCreateIdempotencyTest(TestCase):
         self.assertEqual(count, 1)
 
     def test_double_create_preserves_player_id(self):
-        r1 = _auto_create(self.raw)
-        r2 = _auto_create(self.raw)
+        r1 = _auto_create(self.raw, tm_position='ZM')
+        r2 = _auto_create(self.raw, tm_position='ZM')
         self.assertEqual(r1['player'].pk, r2['player'].pk)
 
 
@@ -167,7 +174,7 @@ class WsClubDecisionMatrixTest(TestCase):
         raw = _raw_payload(
             player_id='99020', club_team='FC Bayern', loan_team='FC Leihgeber'
         )
-        r = _auto_create(raw, ws_club=self.ws_club)
+        r = _auto_create(raw, ws_club=self.ws_club, tm_position='ZM')
         self.assertEqual(r['status'], 'created')
         p = r['player']
         self.assertEqual(p.loan_status, 'loaned_in')
@@ -177,7 +184,7 @@ class WsClubDecisionMatrixTest(TestCase):
         raw = _raw_payload(
             player_id='99021', club_team='FC Bayern', loan_team=''
         )
-        r = _auto_create(raw, ws_club=self.ws_club)
+        r = _auto_create(raw, ws_club=self.ws_club, tm_position='ZM')
         p = r['player']
         self.assertEqual(p.loan_status, 'none')
         self.assertEqual(p.club, self.ws_club)
@@ -186,7 +193,7 @@ class WsClubDecisionMatrixTest(TestCase):
         raw = _raw_payload(
             player_id='99022', club_team='FC Ausland', loan_team='FC Leihgeber'
         )
-        r = _auto_create(raw, ws_club=None)
+        r = _auto_create(raw, ws_club=None, tm_position='ZM')
         p = r['player']
         self.assertEqual(p.loan_status, 'extern_loan')
         self.assertIsNone(p.club)
@@ -195,7 +202,7 @@ class WsClubDecisionMatrixTest(TestCase):
         raw = _raw_payload(
             player_id='99023', club_team='FC Ausland', loan_team=''
         )
-        r = _auto_create(raw, ws_club=None)
+        r = _auto_create(raw, ws_club=None, tm_position='ZM')
         p = r['player']
         self.assertEqual(p.loan_status, 'none')
         self.assertIsNone(p.club)
@@ -211,18 +218,18 @@ class CmtIdMatchExistingPlayerTest(TestCase):
         )
 
     def test_cmt_id_match_finds_existing_extern_loan(self):
-        # Erst anlegen
-        r1 = _auto_create(self.raw)
+        # Erst anlegen (mit TM-Position, da Pflicht)
+        r1 = _auto_create(self.raw, tm_position='ZM')
         self.assertEqual(r1['status'], 'created')
         created_pk = r1['player'].pk
 
         # Nochmals: Idempotenz-Check gibt den existierenden Spieler zurück
-        r2 = _auto_create(self.raw)
+        r2 = _auto_create(self.raw, tm_position='ZM')
         self.assertEqual(r2['status'], 'skipped')
         self.assertEqual(r2['player'].pk, created_pk)
 
     def test_player_external_id_exists_after_create(self):
-        _auto_create(self.raw)
+        _auto_create(self.raw, tm_position='ZM')
         cmt_source = DataSource.objects.get(code='CMTRACKER')
         exists = PlayerExternalId.objects.filter(
             source=cmt_source, external_id='99030'
@@ -230,7 +237,7 @@ class CmtIdMatchExistingPlayerTest(TestCase):
         self.assertTrue(exists)
 
     def test_strength_profile_created(self):
-        r = _auto_create(self.raw)
+        r = _auto_create(self.raw, tm_position='ZM')
         player = r['player']
         self.assertTrue(
             PlayerStrengthProfile.objects.filter(player=player).exists()
@@ -239,10 +246,111 @@ class CmtIdMatchExistingPlayerTest(TestCase):
         self.assertEqual(int(sp.base_strength), 75)  # overall aus _raw_payload
 
     def test_dry_run_does_not_create_player(self):
-        r = _auto_create(self.raw, dry_run=True)
+        r = _auto_create(self.raw, dry_run=True, tm_position='ZM')
         self.assertEqual(r['status'], 'created')
         self.assertIsNone(r['player'])
         self.assertEqual(Player.objects.filter(wsc_player_id='CMT99030').count(), 0)
+
+
+# ── TM-Positions-Sperre ──────────────────────────────────────────────────────
+
+class NoTmPositionBlockTest(TestCase):
+    """Ohne TM-Position darf kein aktiver Kaderspieler angelegt werden.
+
+    Fachliche Regel: TM.de ist ausschließliche Quelle für WS-Positionen.
+    CMT-Positionsdaten (info.positions, roles[*].pos) sind nur Diagnose und
+    dürfen NICHT in Player.position / main_position_1 / secondary_position_*
+    geschrieben werden.
+    """
+
+    def setUp(self):
+        _make_cmt_source()
+        # Payload mit klar identifizierbarer CMT-Position (CDM → DM)
+        self.raw = _raw_payload(
+            player_id='88001',
+            overall=80,
+        )
+        # CMT liefert CDM — das darf NICHT als WS-Position landen
+        self.raw['info']['preferredposition'] = {
+            'shortlabel': 'CDM',
+            'label': 'Centre Defensive Midfield',
+            'abbr': 'CDM',
+        }
+
+    # ── Kern: Blockade ohne TM-Position ──────────────────────────────────────
+
+    def test_no_tm_position_returns_blocked(self):
+        """Ohne tm_position → status='blocked', kein Player angelegt."""
+        r = _auto_create(self.raw)  # tm_position=None (Standard)
+        self.assertEqual(r['status'], 'blocked')
+        self.assertIn('TM-Position fehlt', r['reason'])
+
+    def test_blocked_player_not_created_in_db(self):
+        """Blocked → kein Player-Datensatz in der Datenbank."""
+        _auto_create(self.raw)  # kein tm_position
+        self.assertEqual(
+            Player.objects.filter(wsc_player_id='CMT88001').count(), 0,
+            'Spieler darf bei blocked nicht angelegt werden.',
+        )
+
+    def test_dry_run_also_returns_blocked_without_tm_position(self):
+        """Dry-Run ohne tm_position → ebenfalls blocked (keine ST-Vorschau)."""
+        r = _auto_create(self.raw, dry_run=True)
+        self.assertEqual(r['status'], 'blocked')
+        self.assertIsNone(r['player'])
+
+    def test_blocked_result_contains_cmt_pos_raw_for_diagnostics(self):
+        """Blocked-Ergebnis enthält cmt_pos_raw als Diagnose-Information."""
+        r = _auto_create(self.raw)
+        # cmt_pos_raw muss gesetzt sein (CDM, nicht DM — das ist der CMT-Rohwert)
+        self.assertIn('cmt_pos_raw', r)
+        self.assertTrue(r['cmt_pos_raw'], 'cmt_pos_raw sollte nicht leer sein.')
+
+    # ── CMT-Position nicht in WS-Feldern ─────────────────────────────────────
+
+    def test_cmt_position_not_written_to_player_position_field(self):
+        """Auch mit tm_position='RV': Player.position ist 'RV', nicht CDM/DM."""
+        r = _auto_create(self.raw, tm_position='RV')
+        self.assertEqual(r['status'], 'created')
+        player = r['player']
+        # TM-Position korrekt gesetzt
+        self.assertEqual(player.position, 'RV')
+        self.assertEqual(player.main_position_1, 'RV')
+        # CMT-Position (CDM→DM) darf NICHT in WS-Feldern stehen
+        self.assertNotEqual(player.position, 'DM',
+                            'CMT-Position CDM→DM darf nicht in Player.position stehen.')
+        self.assertNotEqual(player.position, 'ST',
+                            'ST-Fallback aus CMT darf nicht vorkommen.')
+
+    def test_result_position_matches_tm_position_not_cmt(self):
+        """result['position'] entspricht tm_position, nicht CMT-Rohposition."""
+        r = _auto_create(self.raw, tm_position='IV')
+        self.assertEqual(r['position'], 'IV')
+        # CMT-Diagnose ist separat
+        self.assertNotEqual(r.get('cmt_pos_raw'), r['position'])
+
+    # ── Spielbarkeit / Transfermarkt ─────────────────────────────────────────
+
+    def test_blocked_player_has_no_player_external_id(self):
+        """Blocked → kein PlayerExternalId-Eintrag (Spieler existiert ja nicht)."""
+        from game.models import DataSource, PlayerExternalId
+        _auto_create(self.raw)
+        cmt_source = DataSource.objects.get(code='CMTRACKER')
+        self.assertFalse(
+            PlayerExternalId.objects.filter(
+                source=cmt_source, external_id='88001'
+            ).exists(),
+            'PlayerExternalId darf bei blocked nicht angelegt werden.',
+        )
+
+    def test_blocked_player_not_in_free_agent_pool(self):
+        """Blocked → kein Spieler im Free-Agent-Pool (club=None, loan_status=none)."""
+        _auto_create(self.raw)
+        free_agents = Player.objects.filter(club__isnull=True, loan_status='none')
+        self.assertEqual(
+            free_agents.filter(wsc_player_id='CMT88001').count(), 0,
+            'Blockierter Spieler darf nicht im Free-Agent-Pool erscheinen.',
+        )
 
 
 # ── Positionsmapping ─────────────────────────────────────────────────────────
