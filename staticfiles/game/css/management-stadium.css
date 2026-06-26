@@ -1,0 +1,1248 @@
+/* =========================================================
+   Stadion-Detailseite  —  /management/stadion/
+   Scope: .stadium-detail-page
+   Dunkel-blaues Theme, goldene Akzente
+   ========================================================= */
+
+/* ---- Root-Artboard ---- */
+.stadium-detail-page .dashboard-artboard {
+    background: #0a0e17;
+    min-height: 860px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+}
+
+/* Kalender bleibt über dem Hero-Bild */
+.stadium-detail-page .ws-game-header {
+    position: relative;
+    z-index: 2;
+}
+
+/* ============================================================
+   HERO-BEREICH
+   ============================================================ */
+.st-hero {
+    position: relative;
+    height: 394px;        /* 260px Inhalt + 134px hinter Kalender (112px + 22px) */
+    margin-top: -134px;   /* rutscht hinter ws-game-header */
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    z-index: 1;
+}
+
+.st-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
+}
+
+.st-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(10, 14, 23, 0.10) 0%,
+        rgba(10, 14, 23, 0.55) 60%,
+        rgba(10, 14, 23, 0.92) 100%
+    );
+}
+
+.st-hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 36px 28px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.st-hero-left {}
+
+.st-breadcrumb {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.st-breadcrumb a { color: rgba(255,255,255,0.45); text-decoration: none; }
+.st-breadcrumb a:hover { color: rgba(201,168,76,0.80); }
+.st-breadcrumb span { color: rgba(255,255,255,0.25); margin: 0 6px; }
+
+.st-stadium-name {
+    font-size: 36px;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: 0.03em;
+    margin: 0 0 4px;
+    line-height: 1.1;
+}
+
+.st-stadium-name strong { font-weight: 800; }
+
+.st-hero-capacity {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    padding-bottom: 4px;
+}
+
+.st-hero-capacity-value {
+    font-size: 48px;
+    font-weight: 800;
+    color: #c9a84c;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-shadow:
+        0 0 30px rgba(201,168,76,0.45),
+        0 0 60px rgba(201,168,76,0.20);
+}
+
+.st-hero-capacity-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.40);
+}
+
+/* ============================================================
+   HAUPTBEREICH (3-Spalten-Layout)
+   ============================================================ */
+.st-body {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    padding: 20px 24px 24px;
+    align-items: stretch;
+    flex: 1;
+}
+
+/* Element über die volle Breite (Tribünen, Stadionumfeld) */
+.st-col-full {
+    grid-column: 1 / -1;
+}
+
+/* eine der drei Spalten — stapelt ihre Panels vertikal,
+   füllt die volle Zeilenhöhe (gleich hohe, unten bündige Spalten) */
+.st-col {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+    height: 100%;
+}
+
+/* letztes Panel jeder Spalte dehnt sich, damit alle Spalten
+   unten bündig auf gleicher Höhe abschließen */
+.st-col > .st-panel:last-child {
+    flex: 1 1 auto;
+}
+
+/* ---- Section-Titel ---- */
+.st-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.50);
+    margin: 0 0 14px;
+}
+
+/* ---- Panel (generisch) ---- */
+.st-panel {
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 18px 20px;
+}
+
+/* ============================================================
+   TRIBÜNEN-GRID
+   ============================================================ */
+.st-stands-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.st-stand-card {
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s;
+    overflow: hidden;
+    background-image: url('../images/backgrounds/stand-atmosphere.jpg');
+    background-size: cover;
+    background-position: center 30%;
+}
+
+.st-stand-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 11, 22, 0.72);
+    border-radius: 9px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.st-stand-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.st-stand-card:hover {
+    border-color: rgba(201,168,76,0.35);
+}
+
+.st-stand-card:hover::before {
+    background: rgba(6, 11, 22, 0.62);
+}
+
+.st-stand-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.st-stand-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #c9a84c;
+}
+
+.st-stand-total {
+    font-size: 19px;
+    font-weight: 800;
+    color: #fff;
+    text-align: right;
+    line-height: 1;
+}
+
+.st-stand-total-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.40);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.st-stand-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.st-stand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+}
+
+.st-stand-row-label {
+    color: rgba(255,255,255,0.45);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.st-stand-row-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.st-stand-row-dot--steh { background: #4a90d9; }
+.st-stand-row-dot--sitz { background: #5cb85c; }
+.st-stand-row-dot--vip  { background: #c9a84c; }
+
+.st-stand-row-value {
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+}
+
+/* ============================================================
+   STAND-BARS (Auslastungs-Balken in den Tribünen-Kacheln)
+   ============================================================ */
+.st-stand-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-bar-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 44px 8px 44px;
+    align-items: center;
+    gap: 4px;
+}
+
+.st-bar-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.50);
+}
+
+.st-bar-track {
+    height: 5px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.st-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.st-bar-fill--steh {
+    background: linear-gradient(90deg, #22d3ee, #38bdf8);
+    box-shadow: 0 0 6px rgba(34,211,238,0.6);
+}
+
+.st-bar-fill--sitz {
+    background: linear-gradient(90deg, #4ade80, #22d3ee);
+    box-shadow: 0 0 6px rgba(74,222,128,0.5);
+}
+
+.st-bar-fill--vip {
+    background: linear-gradient(90deg, #c9a84c, #f0d070);
+    box-shadow: 0 0 6px rgba(201,168,76,0.55);
+}
+
+.st-bar-num {
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.st-bar-num--left  { color: rgba(255,255,255,0.90); text-align: right; }
+.st-bar-num--right { color: rgba(255,255,255,0.40); text-align: left; }
+
+.st-bar-sep {
+    font-size: 9px;
+    color: rgba(255,255,255,0.20);
+    text-align: center;
+}
+
+/* ============================================================
+   TICKETPREISE-FORMULAR
+   ============================================================ */
+.st-prices-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.st-price-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.st-price-field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.st-price-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.st-price-dot--steh { background: #4a90d9; }
+.st-price-dot--sitz { background: #5cb85c; }
+.st-price-dot--vip  { background: #c9a84c; }
+
+.st-price-input-wrap {
+    position: relative;
+}
+
+.st-price-input-wrap::before {
+    content: '€';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    pointer-events: none;
+}
+
+.st-price-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 9px 10px 9px 24px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 7px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.st-price-input:focus {
+    border-color: rgba(201,168,76,0.55);
+    background: rgba(201,168,76,0.06);
+}
+
+/* ============================================================
+   AUSBAU-FORMULAR
+   ============================================================ */
+.st-expand-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 14px;
+}
+
+.st-expand-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.st-expand-field label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+}
+
+.st-select,
+.st-input {
+    padding: 9px 11px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 7px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.st-select {
+    cursor: pointer;
+    padding-right: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.45)' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+}
+
+.st-select option {
+    background: #161c2d;
+    color: #e8e8e8;
+}
+
+.st-select:focus,
+.st-input:focus {
+    border-color: rgba(201,168,76,0.55);
+    background: rgba(201,168,76,0.06);
+}
+
+/* Tribüne Button-Picker */
+.st-stand-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+
+.st-stand-btn {
+    padding: 9px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.11);
+    border-radius: 7px;
+    color: rgba(255,255,255,0.55);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.st-stand-btn:hover {
+    background: rgba(201,168,76,0.12);
+    border-color: rgba(201,168,76,0.3);
+    color: #c9a84c;
+}
+
+.st-stand-btn.active {
+    background: rgba(201,168,76,0.18);
+    border-color: rgba(201,168,76,0.6);
+    color: #c9a84c;
+    font-weight: 700;
+}
+
+.st-stand-card[data-stand="ost"] {
+    background-image: url('../images/backgrounds/stand-east.jpg');
+}
+
+.st-stand-card[data-stand="sued"] {
+    background-image: url('../images/backgrounds/stand-south.jpg');
+}
+
+.st-stand-card[data-stand="west"] {
+    background-image: url('../images/backgrounds/stand-west.jpg');
+}
+
+.st-stand-card--selected {
+    border-color: rgba(201,168,76,0.7) !important;
+    box-shadow: 0 0 0 2px rgba(201,168,76,0.25);
+}
+
+.st-expand-stand-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(201,168,76,0.07);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+}
+
+.st-expand-stand-hint {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+}
+
+.st-expand-stand-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #c9a84c;
+    flex: 1;
+}
+
+/* Kosten-Vorschau */
+.st-expand-cost-preview {
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.20);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+}
+
+.st-expand-cost-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.st-expand-cost-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #c9a84c;
+    transition: opacity 0.2s;
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.st-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s, opacity 0.2s;
+    white-space: nowrap;
+}
+
+.st-btn--gold {
+    background: #c9a84c;
+    color: #0a0e17;
+}
+
+.st-btn--gold:hover { background: #dbb95e; }
+
+.st-btn--ghost {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.75);
+    border: 1px solid rgba(255,255,255,0.14);
+}
+
+.st-btn--ghost:hover { background: rgba(255,255,255,0.14); }
+
+/* ============================================================
+   AUSBAU-HISTORIE
+   ============================================================ */
+.st-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-history-empty {
+    text-align: center;
+    color: rgba(255,255,255,0.25);
+    font-size: 12px;
+    padding: 18px 0;
+}
+
+.st-history-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.05);
+    font-size: 12px;
+}
+
+.st-history-badge {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+}
+
+.st-history-badge--steh { background: rgba(74,144,217,0.20); color: #4a90d9; }
+.st-history-badge--sitz { background: rgba(92,184,92,0.20);  color: #5cb85c; }
+.st-history-badge--vip  { background: rgba(201,168,76,0.20); color: #c9a84c; }
+
+.st-history-desc {
+    color: rgba(255,255,255,0.65);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.st-history-seats {
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.st-history-cost {
+    color: rgba(201,168,76,0.80);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   SIDEBAR: FINANZÜBERSICHT & RASEN
+   ============================================================ */
+.st-finance-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.st-finance-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.st-finance-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.st-finance-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.52);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.st-finance-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #c9a84c;
+    line-height: 1.1;
+}
+
+.st-finance-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.42);
+}
+
+/* Info-Icon mit Tooltip */
+.st-info-icon {
+    cursor: default;
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    position: relative;
+    margin-left: 4px;
+}
+.st-info-icon::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e2636;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.80);
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.st-info-icon:hover::after { opacity: 1; }
+
+/* Preis-Zeile mit Liga-Durchschnitt */
+.st-finance-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+.st-liga-avg {
+    font-size: 12px;
+    color: rgba(255,255,255,0.30);
+    letter-spacing: 0.04em;
+}
+
+/* Rasenqualitäts-Balken */
+.st-lawn-bar-wrap {
+    margin-top: 8px;
+    height: 6px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.st-lawn-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.st-lawn-bar--good   { background: #5cb85c; }
+.st-lawn-bar--ok     { background: #e6a817; }
+.st-lawn-bar--poor   { background: #d9534f; }
+
+/* ============================================================
+   DJANGO-MESSAGES
+   ============================================================ */
+.st-messages {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-message {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.st-message--success { background: rgba(92,184,92,0.15); border: 1px solid rgba(92,184,92,0.30); color: #7ed47e; }
+.st-message--error   { background: rgba(217,83,79,0.15); border: 1px solid rgba(217,83,79,0.30); color: #e87c7c; }
+.st-message--warning { background: rgba(230,168,23,0.15); border: 1px solid rgba(230,168,23,0.30); color: #e6c84c; }
+.st-message--info    { background: rgba(74,144,217,0.15); border: 1px solid rgba(74,144,217,0.30); color: #7ab8e8; }
+
+/* ============================================================
+   FAN-ERLEBNIS GAUGE-RINGE
+   ============================================================ */
+.st-gauges {
+    display: flex;
+    justify-content: space-around;
+    gap: 16px;
+    padding: 10px 0 6px;
+}
+
+.st-gauge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Ring via conic-gradient — CSS custom props: --gauge-pct (0-100), --gauge-color */
+.st-gauge-ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(
+        var(--gauge-color) calc(var(--gauge-pct) * 3.6deg),
+        rgba(255,255,255,0.07) 0deg
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px color-mix(in srgb, var(--gauge-color) 35%, transparent);
+}
+
+/* Inner dark circle to make it a ring */
+.st-gauge-ring::after {
+    content: '';
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background: #111827;
+}
+
+.st-gauge-val {
+    position: relative;
+    z-index: 1;
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.st-gauge-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.65);
+    text-align: center;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+}
+
+.st-gauge-sub {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gauge-color, rgba(255,255,255,0.30));
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: -4px;
+}
+
+/* ============================================================
+   STADIONUMFELD
+   ============================================================ */
+/* ---- Umfeld-Panel: Foto links, Kacheln rechts ---- */
+.st-panel--umfeld {
+    padding: 0;
+    overflow: visible;
+    display: flex;
+    flex: 1;
+    min-height: 200px;
+}
+
+/* Linke Foto-Hälfte */
+.sf-photo {
+    position: relative;
+    flex: 0 0 52%;
+    overflow: hidden;
+}
+
+/* Foto füllt die Foto-Hälfte vollständig */
+.sf-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Rechte Kante des Fotos fließt in die Kachel-Hälfte über */
+.sf-photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 50%,
+        rgba(13,18,30,0.70) 80%,
+        rgba(13,18,30,1.00) 100%
+    );
+    pointer-events: none;
+}
+
+/* Titel oben links über dem Foto */
+.sf-photo-title {
+    position: absolute;
+    top: 16px;
+    left: 18px;
+    z-index: 2;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.70);
+}
+
+/* Pins auf dem Foto */
+.sf-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.sf-pin-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(22, 104, 220, 0.90);
+    border: 3px solid rgba(255,255,255,0.85);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.50);
+}
+
+/* Rechte Kachel-Hälfte — dunkel, nahtlos an Gradient */
+.sf-cards {
+    flex: 1;
+    background: rgba(13,18,30,1.00);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    padding: 14px;
+}
+
+.sf-card {
+    background: rgba(10,15,28,0.72);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 9px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.sf-card:hover {
+    border-color: rgba(201,168,76,0.30);
+    background-color: rgba(10,15,28,0.85);
+}
+
+.sf-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sf-card-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(22, 104, 220, 0.70);
+    border: 1.5px solid rgba(255,255,255,0.30);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.sf-card-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.95);
+    flex: 1;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+}
+
+.sf-card-sub {
+    font-size: 10px;
+    color: rgba(255,255,255,0.42);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Level-Pips */
+.sf-level-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.sf-level-pip {
+    width: 22px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.12);
+    transition: background 0.2s;
+}
+
+.sf-level-pip--active {
+    background: #c9a84c;
+    box-shadow: 0 0 5px rgba(201,168,76,0.50);
+}
+
+.sf-level-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.50);
+    margin-left: 4px;
+    white-space: nowrap;
+}
+
+/* ---- Beschreibung aktuelle Stufe ---- */
+.sf-card-desc {
+    font-size: 10px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.4;
+    margin-top: 1px;
+}
+
+/* ---- Inline-Stufen (ersetzt ⓘ-Tooltip) ---- */
+.sf-levels-inline {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    margin: 4px -12px 0;
+    overflow: hidden;
+}
+
+.sf-levels-inline .sf-tt-row {
+    padding: 5px 12px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.sf-levels-inline .sf-tt-row--current {
+    background: rgba(201,168,76,0.07);
+    border-top: 1px solid rgba(201,168,76,0.15);
+    padding: 5px 12px;
+    margin: 0;
+}
+
+/* ---- ⓘ Tooltip (veraltet, bleibt für Rückwärtskompatibilität) ---- */
+.sf-info {
+    position: relative;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.sf-info-icon {
+    cursor: default;
+    font-size: 13px;
+    color: rgba(255,255,255,0.30);
+    line-height: 1;
+    display: block;
+    transition: color 0.15s;
+    user-select: none;
+}
+
+.sf-info:hover .sf-info-icon {
+    color: rgba(201,168,76,0.85);
+}
+
+.sf-info-tooltip {
+    display: none;
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    width: 240px;
+    background: rgba(12,17,32,0.98);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 9px;
+    padding: 10px 12px;
+    z-index: 200;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.70);
+    pointer-events: none;
+}
+
+.sf-info:hover .sf-info-tooltip {
+    display: block;
+}
+
+.sf-tt-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 8px;
+}
+
+.sf-tt-row {
+    padding: 6px 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.sf-tt-row--current {
+    background: rgba(201,168,76,0.06);
+    margin: 0 -12px;
+    padding: 6px 12px;
+    border-top: 1px solid rgba(201,168,76,0.15);
+}
+
+.sf-tt-row-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 3px;
+}
+
+.sf-tt-badge {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.60);
+    background: rgba(255,255,255,0.09);
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+.sf-tt-row--current .sf-tt-badge {
+    color: #c9a84c;
+    background: rgba(201,168,76,0.18);
+}
+
+.sf-tt-cost {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(201,168,76,0.80);
+    margin-left: auto;
+}
+
+.sf-tt-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.45;
+}
+
+.sf-tt-row--current .sf-tt-desc {
+    color: rgba(255,255,255,0.85);
+}
+
+/* ---- Ausbau-Button ---- */
+.sf-upgrade-btn {
+    margin-top: auto;
+    width: 100%;
+    padding: 7px 8px;
+    background: rgba(201,168,76,0.12);
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 6px;
+    color: #c9a84c;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    text-align: center;
+}
+
+.sf-upgrade-btn:hover {
+    background: rgba(201,168,76,0.22);
+    border-color: rgba(201,168,76,0.60);
+}
+
+/* ---- NLZ-Kachel: Hintergrundbild (kein overflow:hidden → Tooltip bleibt sichtbar) ---- */
+.sf-card--nlz {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-nlz.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    transition: background 0.25s;
+}
+
+
+/* ---- Medizin-Kachel: Hintergrundbild ---- */
+.sf-card--medizin {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-medizin.jpg');
+    background-size: cover;
+    background-position: center 40%;
+    transition: background 0.25s;
+}
+
+
+/* ---- Geschäftsstelle-Kachel: Hintergrundbild ---- */
+.sf-card--office {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-office.jpg');
+    background-size: cover;
+    background-position: center 40%;
+}
+
+/* ---- Trainingsgelände-Kachel: Hintergrundbild ---- */
+.sf-card--training {
+    background-image:
+        linear-gradient(160deg, rgba(10,15,28,0.78) 0%, rgba(10,15,28,0.92) 100%),
+        url('../images/backgrounds/facility-training.jpg');
+    background-size: cover;
+    background-position: center 35%;
+}
+
+/* ---- Maximalstufe ---- */
+.sf-maxed {
+    margin-top: auto;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.25);
+    text-align: center;
+    padding: 4px 0 2px;
+}

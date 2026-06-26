@@ -1,0 +1,30 @@
+<record>
+	<!-- resource manager options -->
+
+	<!-- dont preload anything in this folder -->
+	<boolean id="preload" value="false"/>
+
+	<!-- logo mappings -->
+	<!-- the following XML maps pictures inside this folder into other positions
+		 in the resource system, which allows this folder to be dropped into any
+		 place in the graphics folder and still have the game pick up the graphics
+		 files from the correct places
+	-->
+	
+	<list id="maps">
+	
+		<record from="default" to="graphics/pictures/comp/trophy/0"/>
+		<record from="international cup 1" to="graphics/pictures/comp/trophy/1"/>
+		<record from="international cup 2" to="graphics/pictures/comp/trophy/2"/>
+		<record from="continental cup 1" to="graphics/pictures/comp/trophy/3"/>
+		<record from="continental cup 2" to="graphics/pictures/comp/trophy/4"/>
+		<record from="national championship 1" to="graphics/pictures/comp/trophy/5"/>
+		<record from="national championship 2" to="graphics/pictures/comp/trophy/6"/>
+		<record from="national championship 3" to="graphics/pictures/comp/trophy/7"/>
+		<record from="national cup 1" to="graphics/pictures/comp/trophy/8"/>
+		<record from="national cup 2" to="graphics/pictures/comp/trophy/9"/>
+		<record from="national cup 3" to="graphics/pictures/comp/trophy/10"/>
+		<record from="silver plate" to="graphics/pictures/comp/trophy/11"/>
+		
+	</list>
+</record>

@@ -1,0 +1,429 @@
+/* ── FINANZEN PAGE ─────────────────────────────────────────────────────── */
+
+.finanzen-page .gameViewport {
+    background-image: url('../images/backgrounds/finanzen-bg.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+.finanzen-page .gameViewport::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(4, 8, 16, 0.82);
+    pointer-events: none;
+    z-index: 0;
+}
+.finanzen-page .dashboard-artboard {
+    position: relative;
+    z-index: 1;
+    padding: 18px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+/* ── KPI CARDS ROW ─────────────────────────────────────────────────────── */
+.fn-kpi-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 12px;
+}
+.fn-kpi {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    padding: 14px 18px 14px;
+    position: relative;
+    overflow: hidden;
+}
+/* Primary – Vereinsvermögen: gold */
+.fn-kpi--primary {
+    background: linear-gradient(135deg, rgba(201,168,76,0.20) 0%, rgba(255,200,50,0.06) 100%);
+    border-color: rgba(201,168,76,0.38);
+    box-shadow: 0 0 18px rgba(201,168,76,0.08);
+}
+/* Einnahmen: green tint */
+.fn-kpi--income {
+    background: linear-gradient(135deg, rgba(34,197,94,0.14) 0%, rgba(255,255,255,0.03) 100%);
+    border-color: rgba(34,197,94,0.28);
+}
+/* Ausgaben: red tint */
+.fn-kpi--expense {
+    background: linear-gradient(135deg, rgba(248,113,113,0.14) 0%, rgba(255,255,255,0.03) 100%);
+    border-color: rgba(248,113,113,0.28);
+}
+/* Gewinn/Verlust: blue tint */
+.fn-kpi--net {
+    background: linear-gradient(135deg, rgba(96,165,250,0.12) 0%, rgba(255,255,255,0.03) 100%);
+    border-color: rgba(96,165,250,0.22);
+}
+
+.fn-kpi-label {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.40);
+    margin: 0 0 6px;
+}
+.fn-kpi--primary .fn-kpi-label { color: rgba(201,168,76,0.85); }
+.fn-kpi--income  .fn-kpi-label { color: rgba(34,197,94,0.80); }
+.fn-kpi--expense .fn-kpi-label { color: rgba(248,113,113,0.80); }
+.fn-kpi--net     .fn-kpi-label { color: rgba(96,165,250,0.80); }
+
+.fn-kpi-value {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin: 0 0 5px;
+    line-height: 1;
+}
+.fn-kpi--primary .fn-kpi-value { font-size: 34px; color: #f0d98a; }
+.fn-kpi--income  .fn-kpi-value { color: #86efac; }
+.fn-kpi--expense .fn-kpi-value { color: #fca5a5; }
+.fn-kpi--net     .fn-kpi-value { color: #93c5fd; }
+
+.fn-kpi-sub {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.38);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.fn-kpi-sub .fn-delta { font-weight: 600; font-size: 11px; }
+.fn-delta--pos { color: #4ade80; }
+.fn-delta--neg { color: #f87171; }
+.fn-kpi-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.13;
+}
+
+/* ── MIDDLE ROW: CHART + SPONSORS ──────────────────────────────────────── */
+.fn-mid-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+    min-height: 250px;
+}
+
+.fn-panel {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+.fn-panel-title {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201,168,76,0.90);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Chart panel */
+.fn-chart-wrap {
+    position: relative;
+    height: 170px;
+}
+.fn-chart-select {
+    background: rgba(34,197,94,0.10);
+    border: 1px solid rgba(34,197,94,0.25);
+    border-radius: 5px;
+    color: #86efac;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    outline: none;
+}
+.fn-chart-select option { background: #0e1521; color: #fff; }
+
+/* Sponsor grid */
+.fn-sponsor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+.fn-sponsor-card {
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 9px;
+    padding: 13px 15px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background 0.15s, border-color 0.15s;
+}
+.fn-sponsor-card:hover {
+    background: rgba(255,255,255,0.085);
+    border-color: rgba(255,255,255,0.15);
+}
+
+.fn-sponsor-icon {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.fn-sponsor-icon--nobg { background: transparent; }
+
+.fn-sponsor-logo {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 14px rgba(201,168,76,0.60));
+}
+
+.fn-sponsor-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.fn-sponsor-type {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.38);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fn-sponsor-amount {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+.fn-sponsor-name {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.32);
+    margin: 0;
+}
+.fn-sponsor-saison {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 9.5px;
+    color: rgba(255,255,255,0.26);
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.fn-sponsor-full {
+    grid-column: 1 / -1;
+}
+.fn-sponsors-empty {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    color: rgba(255,255,255,0.28);
+    text-align: center;
+    padding: 20px 0;
+}
+
+/* ── BOTTOM ROW: EINNAHMEN + AUSGABEN + KOSTENSTRUKTUR + BUCHUNGEN ──────── */
+.fn-bot-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 190px 1.6fr;
+    gap: 12px;
+    align-items: start;
+}
+
+.fn-cat-list { list-style: none; margin: 0; padding: 0; }
+.fn-cat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11.5px;
+}
+.fn-cat-item:last-child { border-bottom: none; }
+.fn-cat-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+}
+.fn-cat-name { color: rgba(255,255,255,0.72); flex: 1; }
+.fn-cat-amount { font-weight: 700; color: #fff; white-space: nowrap; }
+.fn-cat-pct {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    min-width: 36px;
+    text-align: right;
+}
+.fn-cat-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.10);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+}
+.fn-cat-total-row span:first-child { color: rgba(255,255,255,0.42); font-weight: 400; }
+
+/* Donut chart panel */
+.fn-donut-wrap {
+    position: relative;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.fn-donut-legend {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.fn-donut-legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.68);
+}
+.fn-donut-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.fn-donut-pct { margin-left: auto; color: rgba(255,255,255,0.42); font-size: 10px; }
+
+/* ── BUCHUNGEN COLUMN (4th panel in bot-row) ────────────────────────────── */
+.fn-buchungen-col {
+    overflow: hidden;
+}
+.fn-buchungen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.fn-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+}
+.fn-table th {
+    text-align: left;
+    padding: 0 8px 7px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.28);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.fn-table th:last-child { text-align: right; }
+.fn-table td {
+    padding: 7px 8px;
+    color: rgba(255,255,255,0.78);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+}
+.fn-table tr:last-child td { border-bottom: none; }
+.fn-table tr:hover td { background: rgba(255,255,255,0.025); }
+.fn-table td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
+.fn-amount--pos { color: #4ade80 !important; }
+.fn-amount--neg { color: #f87171 !important; }
+.fn-td-date { color: rgba(255,255,255,0.38) !important; white-space: nowrap; font-size: 10px; }
+.fn-td-desc { max-width: 0; width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fn-table-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+}
+.fn-empty {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255,255,255,0.28);
+    text-align: center;
+    padding: 24px 0;
+}
+
+/* Pagination */
+.fn-pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+.fn-page-btn {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.11);
+    border-radius: 4px;
+    color: rgba(255,255,255,0.55);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 11px;
+    padding: 3px 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.fn-page-btn:hover { background: rgba(255,255,255,0.14); color: #fff; }
+.fn-page-btn--active {
+    background: rgba(34,197,94,0.18);
+    border-color: rgba(34,197,94,0.40);
+    color: #86efac;
+}
+
+/* Icon color helpers */
+.fn-icon-green  { background: rgba(74,222,128,0.15);  color: #4ade80; }
+.fn-icon-blue   { background: rgba(96,165,250,0.15);  color: #60a5fa; }
+.fn-icon-amber  { background: rgba(251,191,36,0.15);  color: #fbbf24; }
+.fn-icon-violet { background: rgba(167,139,250,0.15); color: #a78bfa; }
+.fn-icon-teal   { background: rgba(45,212,191,0.15);  color: #2dd4bf; }
+.fn-icon-rose   { background: rgba(251,113,133,0.15); color: #fb7185; }
+.fn-icon-orange { background: rgba(251,146,60,0.15);  color: #fb923c; }
+.fn-icon-gray   { background: rgba(148,163,184,0.15); color: #94a3b8; }

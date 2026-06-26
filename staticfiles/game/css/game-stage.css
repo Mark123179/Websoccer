@@ -1,0 +1,69 @@
+/* ============================================================
+   GAME STAGE — Aeusserer Scaler (Ersatz fuer alten CSS-Scaler)
+   Logische Buehne 1884 x 1177.5 px. JS skaliert .dashboard-scaler
+   per transform:scale. Innere Layout-Geometrie bleibt unveraendert.
+   ============================================================ */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.gameViewport {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #03070c;
+    z-index: 0;
+}
+
+.gameScroll {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-color: rgba(0, 240, 255, 0.35) rgba(255, 255, 255, 0.04);
+    scrollbar-width: thin;
+}
+
+.gameScroll::-webkit-scrollbar { width: 6px; }
+.gameScroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+}
+.gameScroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 240, 255, 0.35);
+    border-radius: 999px;
+}
+.gameScroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 240, 255, 0.55);
+}
+
+.gameStageSpacer {
+    position: relative;
+    margin-inline: auto;
+}
+
+/* Die logische Buehne — Breite ist DYNAMISCH (Wide-Shell):
+   JS setzt --dashboard-shell-width und transform:scale inline.
+   Baseline 1884px bleibt der Fallback und bei 16:10-aehnlichen
+   Viewports der echte Wert; auf breiteren Viewports (1920x1080,
+   2K, 4K) waechst die logische Buehne (~2093px), damit der ueber-
+   schuessige horizontale Platz im Layout nutzbar wird statt als
+   leerer Seitengutter zu verfallen. Hoehe bleibt fix bei 1177.5. */
+.dashboard-scaler {
+    visibility: hidden;
+    width: var(--dashboard-shell-width, 1884px);
+    min-height: 1177.5px;
+    transform-origin: top left;
+}
+
+/* Navbar fuellt die volle logische Buehnenhoehe (statt 100vh, was
+   sich auf das echte Viewport bezieht und nicht auf die Buehne) */
+.dashboard-scaler .navbar {
+    height: 1177.5px;
+}

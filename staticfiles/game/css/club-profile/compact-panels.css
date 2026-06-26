@@ -1,0 +1,414 @@
+.club-profile-table {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    margin-top: 8px;
+    border-collapse: collapse;
+}
+
+.club-profile-table th {
+    color: var(--club-faint);
+    font-size: 12px;
+    font-weight: 900;
+    text-align: right;
+}
+
+.club-profile-table th:nth-child(2),
+.club-profile-table td:nth-child(2) {
+    text-align: left;
+}
+
+.club-profile-table td {
+    height: 26px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--club-muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.club-profile-table tr.is-current td {
+    color: #ffffff;
+    background: rgba(5, 112, 63, 0.88);
+}
+
+.club-profile-table tr.is-current td:first-child {
+    color: #ffffff;
+    border-radius: 3px 0 0 3px;
+}
+
+.club-profile-table tr.is-current td:last-child {
+    border-radius: 0 3px 3px 0;
+}
+
+.club-profile-table td:nth-child(2) {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.club-profile-table img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+.club-profile-table .club-crest-link {
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+}
+
+.compact-table-card .club-card-link,
+.news-profile-card .club-card-link {
+    position: absolute;
+    right: 12px;
+    bottom: 10px;
+    left: 12px;
+    min-height: 26px;
+    border: 0;
+    justify-content: flex-end;
+    color: var(--club-cyan);
+    background: transparent;
+    box-shadow: none;
+    font-size: 12px;
+}
+
+.compact-table-card {
+    background:
+        linear-gradient(180deg, rgba(1, 7, 13, 0.18), rgba(1, 7, 13, 0.34)),
+        url("../../images/backgrounds/club-table-profile.png") center / 100% 100% no-repeat,
+        var(--club-card-bg-strong);
+}
+
+.image-profile-card {
+    padding: 0;
+}
+
+.image-profile-card > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.06) brightness(0.78);
+}
+
+.image-profile-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+        linear-gradient(180deg, rgba(1, 7, 13, 0.03) 0%, rgba(1, 7, 13, 0.28) 42%, rgba(0, 0, 0, 0.75) 78%, rgba(0, 0, 0, 0.96) 100%),
+        linear-gradient(90deg, rgba(1, 7, 13, 0.76), transparent 58%);
+}
+
+.image-card-top,
+.stadium-card-metrics,
+.city-card-location {
+    position: absolute;
+    z-index: 2;
+}
+
+.image-card-top {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.image-card-top strong {
+    max-width: 62%;
+    overflow: hidden;
+    color: #ffffff;
+    font-size: clamp(12px, 0.9vw, 16px);
+    font-weight: 900;
+    text-align: right;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.78);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stadium-card-metrics {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 62px;
+    padding: 10px 14px 12px;
+    border-top: 1px solid rgba(110, 198, 230, 0.2);
+    background: linear-gradient(180deg, rgba(2, 10, 17, 0.7), rgba(1, 6, 11, 0.96));
+}
+
+.club-image-metric,
+.city-card-location {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(244, 251, 255, 0.78);
+    font-size: clamp(12px, 0.82vw, 14px);
+    font-weight: 900;
+    text-shadow: 0 2px 9px rgba(0, 0, 0, 0.78);
+}
+
+.club-image-metric span {
+    display: grid;
+    gap: 2px;
+}
+
+.club-image-metric small {
+    color: rgba(244, 251, 255, 0.62);
+    font-size: clamp(12px, 0.78vw, 13px);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.club-image-metric strong {
+    color: #ffffff;
+    font-size: clamp(13px, 1.0vw, 18px);
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+.club-image-metric svg,
+.city-card-location svg {
+    flex: 0 0 19px;
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: var(--club-cyan);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgba(35, 228, 245, 0.24));
+}
+
+.city-card-location {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    min-height: 58px;
+    padding: 10px 14px 11px;
+    border-top: 1px solid rgba(110, 198, 230, 0.2);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.48) 72%, transparent);
+}
+
+.city-card-location span {
+    display: grid;
+    gap: 1px;
+}
+
+.city-card-location strong,
+.city-card-location small {
+    color: #ffffff;
+    font-size: clamp(13px, 1.0vw, 18px);
+    font-weight: 900;
+    line-height: 1.05;
+}
+
+.city-card-location small {
+    color: rgba(244, 251, 255, 0.78);
+    font-size: clamp(12px, 0.78vw, 13px);
+}
+
+.club-kits-row {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    align-items: center;
+    height: calc(100% - 22px);
+    margin-top: 4px;
+}
+
+.kits-profile-card {
+    background:
+        linear-gradient(180deg, rgba(1, 7, 13, 0.06), rgba(1, 7, 13, 0.16)),
+        url("../../images/backgrounds/club-kits-profile.png") center / 100% 100% no-repeat,
+        var(--club-card-bg-strong);
+}
+
+.club-kits-row figure {
+    display: grid;
+    gap: 5px;
+    justify-items: center;
+    min-width: 0;
+    margin: 0;
+}
+
+.club-kits-row img {
+    width: min(148px, 116%);
+    height: min(190px, calc(100% - 32px));
+    object-fit: contain;
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.42));
+}
+
+.club-kits-row figcaption {
+    display: grid;
+    place-items: center;
+    min-width: 64px;
+    min-height: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.club-kits-row figure:nth-child(1) figcaption {
+    background: linear-gradient(180deg, #f52734, #9e0711);
+}
+
+.club-kits-row figure:nth-child(2) figcaption {
+    color: #061014;
+    background: linear-gradient(180deg, #ffffff, #d9dde1);
+}
+
+.club-kits-row figure:nth-child(3) figcaption {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(1, 6, 10, 0.72);
+}
+
+.partner-profile-card {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    background:
+        linear-gradient(180deg, rgba(1, 7, 13, 0.02), rgba(1, 7, 13, 0.1)),
+        url("../../images/backgrounds/club-partner-profile.png") center / 100% 100% no-repeat,
+        var(--club-card-bg-strong);
+}
+
+.partner-profile-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: url("../../images/backgrounds/club-partner-profile.png") center / 100% 100% no-repeat;
+    filter: brightness(1.28) contrast(1.16);
+    opacity: 0.42;
+    pointer-events: none;
+}
+
+.partner-profile-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+.partner-profile-card .club-card-title {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    justify-self: start;
+}
+
+.partner-profile-card img {
+    width: 72px;
+    height: 72px;
+    margin-top: 8px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(35, 228, 245, 0.2));
+}
+
+.partner-profile-card .club-crest-link {
+    width: 72px;
+    height: 72px;
+    margin-top: 8px;
+}
+
+.partner-profile-card .club-crest-link img {
+    margin-top: 0;
+}
+
+.partner-profile-card strong {
+    margin-top: 6px;
+    color: #ffffff;
+    font-size: 12px;
+}
+
+.partner-profile-card span,
+.partner-profile-card small,
+.club-empty-state {
+    color: var(--club-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.club-empty-state {
+    display: grid;
+    place-items: center;
+    height: 116px;
+    padding: 0 16px;
+    color: rgba(221, 239, 245, 0.78);
+    text-align: center;
+}
+
+.club-empty-state strong {
+    max-width: 150px;
+    color: rgba(232, 248, 252, 0.84);
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.25;
+}
+
+.news-profile-card {
+    background:
+        linear-gradient(180deg, rgba(1, 7, 13, 0.06), rgba(1, 7, 13, 0.24)),
+        url("../../images/backgrounds/club-news-profile.png") center / 100% 100% no-repeat,
+        var(--club-card-bg-strong);
+}
+
+.club-news-list {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    gap: 7px;
+    margin-top: 10px;
+}
+
+.club-news-list a {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 2px 8px;
+    min-width: 0;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.club-news-list img,
+.club-news-list span {
+    grid-row: 1 / span 2;
+    width: 34px;
+    height: 34px;
+    border-radius: 4px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.club-news-list strong {
+    overflow: hidden;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1.18;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.club-news-list small {
+    color: var(--club-muted);
+    font-size: 12px;
+    font-weight: 800;
+}

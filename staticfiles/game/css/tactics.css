@@ -1,0 +1,4480 @@
+body.tactics-page .nav-menu a:first-child {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--muted);
+}
+
+body.tactics-page .nav-menu a:nth-child(5) {
+    background: linear-gradient(90deg, rgba(34, 230, 255, 0.24), rgba(34, 230, 255, 0.08));
+    border-color: var(--line-strong);
+    box-shadow: inset 3px 0 0 var(--cyan), 0 0 20px rgba(34, 230, 255, 0.14);
+    color: var(--text);
+}
+
+.tactics-dashboard {
+    --tactics-panel: rgba(5, 19, 30, 0.84);
+    --tactics-panel-strong: rgba(6, 23, 36, 0.94);
+    --tactics-line: rgba(62, 220, 255, 0.22);
+    --tactics-line-strong: rgba(62, 220, 255, 0.42);
+    --tactics-green: #17df53;
+    --tactics-yellow: #ffd21f;
+    --tactics-red: #ff4258;
+    --tactics-cyan: #16cfff;
+    background:
+        linear-gradient(rgba(2, 8, 14, 0.78), rgba(2, 8, 14, 0.96)),
+        url("../images/backgrounds/player-profile-stadium-atmosphere.svg") center top / cover no-repeat;
+    min-height: 100%;
+    padding: 24px;
+    position: relative;
+}
+
+.tactics-dashboard::before {
+    background:
+        radial-gradient(ellipse at 52% 0%, rgba(255, 255, 255, 0.18), transparent 7%),
+        linear-gradient(180deg, rgba(0, 184, 255, 0.1), transparent 38%);
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.tactics-dashboard > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Artboard-Breite erbt --dashboard-content-width aus :root
+   (Websoccer Layout Contract — siehe layout-nav.css). */
+
+.tactics-dashboard > .ws-game-header,
+.tactics-form {
+    margin-left: auto;
+    margin-right: auto;
+    width: min(100%, var(--dashboard-artboard-width));
+}
+
+.tactics-form {
+    display: grid;
+    gap: 9px;
+    margin-top: 22px;
+}
+
+.tactics-flashes,
+.tactics-errors {
+    display: grid;
+    gap: 7px;
+}
+
+.tactics-flash,
+.tactics-errors p {
+    background: rgba(5, 19, 30, 0.9);
+    border: 1px solid var(--tactics-line);
+    border-radius: 6px;
+    color: var(--text);
+    margin: 0;
+    padding: 8px 12px;
+}
+
+.tactics-errors p {
+    border-color: rgba(255, 66, 88, 0.42);
+    color: #ffd8df;
+}
+
+.tactics-top-row {
+    display: grid;
+}
+
+.tactics-match-hero {
+    background:
+        linear-gradient(90deg, rgba(1, 7, 13, 0.62), rgba(3, 17, 28, 0.26), rgba(1, 7, 13, 0.66)),
+        var(--tactic-header-bg, url("../images/backgrounds/tactics-banner-stadium-bg.png?v=tactics-stadium-hero-20260519")) center / 100% 100% no-repeat;
+    border: 1px solid rgba(107, 201, 232, 0.3);
+    border-radius: 8px;
+    box-shadow:
+        inset 0 0 40px rgba(0, 0, 0, 0.24),
+        0 16px 48px rgba(0, 0, 0, 0.28);
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) 96px minmax(320px, 1fr);
+    grid-template-rows: 112px 54px;
+    min-height: 186px;
+    overflow: hidden;
+    padding: 10px 14px 9px;
+    position: relative;
+}
+
+.tactics-team-block {
+    align-items: center;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 86px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.tactics-team-block.is-away {
+    grid-template-columns: minmax(0, 1fr) 86px;
+    justify-items: end;
+    text-align: right;
+}
+
+.tactics-team-block.is-away > div {
+    min-width: 0;
+    width: 100%;
+}
+
+.tactics-team-block img {
+    height: 82px;
+    object-fit: contain;
+    width: 82px;
+}
+
+.tactics-crest-link {
+    display: block;
+    height: 82px;
+    width: 82px;
+}
+
+.tactics-crest-link img {
+    display: block;
+}
+
+.tactics-team-block strong {
+    color: #f7fbff;
+    display: block;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.05;
+    overflow-wrap: normal;
+}
+
+.tactics-team-block span {
+    color: #ffffff;
+    display: block;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.tactics-hero-form {
+    display: flex;
+    font-size: 25px;
+    gap: 7px;
+    margin-left: 60px;
+    margin-top: -5px;
+}
+
+.tactics-team-block.is-away .tactics-hero-form {
+    justify-content: flex-end;
+    margin-left: 0;
+    margin-right: 60px;
+}
+
+.tactics-hero-form i {
+    align-items: center;
+    background: rgba(5, 19, 30, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #f7fbff;
+    display: inline-flex;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 900;
+    gap: 8px;
+    min-height: 46px;
+    padding: 0 12px;
+}
+
+.tactics-hero-form img {
+    height: 32px;
+    object-fit: contain;
+    width: 32px;
+}
+
+.tactics-hero-form a {
+    display: inline-flex;
+}
+
+.tactics-hero-form b {
+    align-items: center;
+    border-radius: 50%;
+    display: inline-flex;
+    font-size: 12px;
+    height: 20px;
+    justify-content: center;
+    width: 20px;
+}
+
+.tactics-hero-form .is-win b {
+    background: rgba(23, 223, 83, 0.22);
+    color: var(--tactics-green);
+}
+
+.tactics-hero-form .is-draw b {
+    background: rgba(255, 210, 31, 0.22);
+    color: var(--tactics-yellow);
+}
+
+.tactics-hero-form .is-loss b {
+    background: rgba(255, 66, 88, 0.22);
+    color: var(--tactics-red);
+}
+
+.tactics-vs {
+    align-self: center;
+    color: #f6fbff;
+    font-size: 30px;
+    font-weight: 900;
+    justify-self: center;
+    letter-spacing: 0;
+}
+
+.tactics-status {
+    align-items: center;
+    background: rgba(255, 66, 88, 0.08);
+    border: 1px solid rgba(255, 66, 88, 0.74);
+    border-radius: 5px;
+    color: #ff4b62;
+    display: inline-flex;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
+    gap: 7px;
+    height: 26px;
+    justify-content: center;
+    min-width: 150px;
+    padding: 0 10px;
+}
+
+.tactics-status::before {
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    content: "!";
+    display: grid;
+    font-size: 10px;
+    height: 15px;
+    place-items: center;
+    width: 15px;
+}
+
+.tactics-status.is-confirmed {
+    background: rgba(23, 223, 83, 0.1);
+    border-color: rgba(23, 223, 83, 0.72);
+    color: var(--tactics-green);
+}
+
+.tactics-status.is-confirmed::before {
+    content: "✓";
+}
+
+.tactics-match-meta {
+    align-self: end;
+    display: flex;
+    grid-column: 1 / -1;
+    height: 54px;
+    justify-self: start;
+    min-width: 0;
+}
+
+.tactics-meta-item {
+    align-items: center;
+    background: rgba(5, 18, 28, 0.38);
+    display: flex;
+    flex: 0 1 220px;
+    gap: 12px;
+    height: 54px;
+    min-width: 180px;
+    padding: 12px 16px;
+}
+
+.tactics-meta-item + .tactics-meta-item {
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.tactics-meta-copy {
+    display: grid;
+    gap: 2px;
+    justify-content: center;
+    min-width: 0;
+}
+
+.tactics-meta-copy b,
+.tactics-meta-copy small {
+    display: block;
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tactics-meta-copy b {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.05;
+}
+
+.tactics-meta-copy small {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 11px;
+    line-height: 1.05;
+}
+
+.tactics-hero-actions {
+    align-items: center;
+    bottom: 9px;
+    display: flex;
+    gap: 16px;
+    height: 54px;
+    position: absolute;
+    right: 14px;
+}
+
+.tactics-hero-actions a {
+    color: var(--tactics-cyan);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.tactics-meta-icon {
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.85);
+    display: block;
+    height: 20px;
+    opacity: 1;
+    position: relative;
+    flex: 0 0 20px;
+    width: 20px;
+}
+
+.tactics-meta-icon::after {
+    background: currentColor;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.85);
+    content: "";
+    height: 6px;
+    left: 6px;
+    position: absolute;
+    top: 6px;
+    width: 6px;
+}
+
+.tactics-meta-logo,
+.tactics-meta-asset,
+.tactics-meta-svg {
+    color: rgba(255, 255, 255, 0.85);
+    flex: 0 0 20px;
+    height: 22px;
+    object-fit: contain;
+    opacity: 1;
+    width: 22px;
+}
+
+.tactics-meta-svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.tactics-stadium-asset {
+    flex-basis: 30px;
+    height: 24px;
+    width: 30px;
+}
+
+/* Stadion-Kachel: nie abschneiden — breite passt sich dem Namen an */
+.tactics-meta-item:has(.tactics-stadium-asset) {
+    flex: 0 0 auto;
+    max-width: 340px;
+    min-width: 180px;
+}
+
+.tactics-meta-item:has(.tactics-stadium-asset) .tactics-meta-copy b {
+    overflow: visible;
+    text-overflow: unset;
+    white-space: nowrap;
+}
+
+.tactics-hero-actions .tactics-status {
+    height: 29px;
+    min-width: 174px;
+}
+
+.tactics-main-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 30% minmax(0, 1fr) 29.5%;
+}
+
+.tactics-panel,
+.tactics-pitch-panel {
+    background:
+        linear-gradient(180deg, rgba(8, 29, 44, 0.88), rgba(3, 14, 24, 0.9));
+    border: 1px solid rgba(107, 201, 232, 0.24);
+    border-radius: 6px;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.2), 0 14px 38px rgba(0, 0, 0, 0.24);
+    min-width: 0;
+    overflow: hidden;
+    padding: 10px 12px;
+}
+
+.tactics-preview-panel,
+.tactics-status-panel,
+.tactics-pitch-panel {
+    height: 660px;
+}
+
+.tactics-status-panel {
+    align-self: start;
+    height: auto;
+    overflow: visible;
+    position: relative;
+    z-index: 30;
+}
+
+.tactics-panel h2,
+.tactics-pitch-panel h2 {
+    color: #f7fbff;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.15;
+    margin: 0 0 9px;
+}
+
+.tactics-pitch-panel {
+    padding: 8px;
+}
+
+.tactics-pitch-panel h2 {
+    color: var(--tactics-cyan);
+    font-size: 16px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.tactics-preview-panel p {
+    color: #e7f2f8;
+    font-size: 12px;
+    line-height: 1.38;
+    margin: 0 0 9px;
+}
+
+.tactics-roster-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+.tactics-roster-list {
+    display: grid;
+    gap: 7px;
+    min-height: 0;
+    overflow: auto;
+    padding-right: 7px;
+}
+
+.tactics-roster-player {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.095);
+    border-radius: 6px;
+    display: grid;
+    gap: 3px 6px;
+    grid-template-columns: 42px minmax(0, 1fr) 52px 34px;
+    min-height: 58px;
+    padding: 5px;
+}
+
+.tactics-roster-player.is-on-pitch {
+    display: none;
+}
+
+.tactics-roster-image {
+    display: block;
+    grid-row: span 3;
+    height: 48px;
+    width: 42px;
+}
+
+.tactics-roster-image img {
+    display: block;
+    height: 48px;
+    object-fit: contain;
+    width: 42px;
+}
+
+.tactics-roster-player strong {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tactics-roster-player .tactics-position-line {
+    align-items: center;
+    color: rgba(244, 251, 255, 0.72);
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 4px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tactics-position-line b {
+    align-items: center;
+    background: rgba(22, 207, 255, 0.12);
+    border: 1px solid rgba(22, 207, 255, 0.34);
+    border-radius: 3px;
+    color: var(--tactics-cyan);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 9px;
+    font-weight: 900;
+    height: 15px;
+    justify-content: center;
+    width: 22px;
+}
+
+.tactics-position-line i {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 900;
+    height: 16px;
+    justify-content: center;
+    min-width: 22px;
+    padding: 0 5px;
+}
+
+.tactics-position-line .is-main {
+    background: rgba(114, 242, 60, 0.18);
+    border: 1px solid rgba(114, 242, 60, 0.42);
+    color: #72f23c;
+}
+
+.tactics-position-line .is-secondary {
+    background: rgba(255, 210, 31, 0.15);
+    border: 1px solid rgba(255, 210, 31, 0.42);
+    color: var(--tactics-yellow);
+}
+
+.tactics-position-line .is-empty {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(244, 251, 255, 0.46);
+}
+
+.tactics-roster-freshness {
+    align-items: center;
+    display: flex;
+    grid-column: 4;
+    grid-row: 1 / span 3;
+    justify-content: center;
+}
+
+.tactics-roster-freshness .tactics-freshness {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--freshness-color, #72f23c) 48%, transparent), 0 0 22px color-mix(in srgb, var(--freshness-color, #72f23c) 55%, transparent);
+    font-size: 8px;
+    height: 34px;
+    width: 34px;
+}
+
+.tactics-roster-form {
+    align-self: stretch;
+    display: flex;
+    gap: 2px;
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    overflow: hidden;
+    padding: 2px 0;
+}
+
+.trf-slot {
+    display: grid;
+    flex: 1;
+    grid-template-rows: 1fr 9px;
+    height: 100%;
+}
+
+.trf-slot .trf-bar {
+    align-self: end;
+    border-radius: 1px 1px 0 0;
+    min-height: 2px;
+    width: 100%;
+}
+
+.trf-slot span {
+    color: rgba(244, 251, 255, .6);
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 9px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.trf-slot--good .trf-bar  { background: #35d978; box-shadow: 0 0 4px rgba(53, 217, 120, .5); }
+.trf-slot--ok .trf-bar    { background: #f0c044; box-shadow: 0 0 4px rgba(240, 192, 68, .4); }
+.trf-slot--weak .trf-bar  { background: #ec5265; box-shadow: 0 0 4px rgba(236, 82, 101, .4); }
+.trf-slot--empty .trf-bar { background: rgba(255, 255, 255, .12); height: 100%; }
+
+.trf-no-data {
+    align-self: center;
+    color: rgba(244, 251, 255, .35);
+    font-size: 10px;
+    text-align: center;
+}
+
+.tactics-roster-empty {
+    color: rgba(244, 251, 255, 0.7);
+    font-size: 12px;
+    margin: 0;
+}
+
+.tactics-mini-section {
+    display: grid;
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.tactics-mini-section h3 {
+    color: #f7fbff;
+    font-size: 13px;
+    font-weight: 900;
+    margin: 0;
+}
+
+.tactics-form-strip {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.tactics-form-strip span {
+    background: rgba(255, 255, 255, 0.055);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    display: grid;
+    grid-template-rows: 30px auto 16px;
+    justify-items: center;
+    min-height: 58px;
+    padding: 4px;
+}
+
+.tactics-form-strip img {
+    height: 28px;
+    object-fit: contain;
+    width: 28px;
+}
+
+.tactics-form-strip b {
+    color: #f7fbff;
+    font-size: 11px;
+}
+
+.tactics-form-strip em {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 900;
+    height: 14px;
+    justify-content: center;
+    width: 14px;
+}
+
+.tactics-form-strip .is-win em,
+.tactics-absence-list i {
+    background: rgba(23, 223, 83, 0.18);
+    color: var(--tactics-green);
+}
+
+.tactics-form-strip .is-draw em {
+    background: rgba(255, 210, 31, 0.18);
+    color: var(--tactics-yellow);
+}
+
+.tactics-form-strip .is-loss em {
+    background: rgba(255, 66, 88, 0.18);
+    color: var(--tactics-red);
+}
+
+.tactics-absence-list {
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.tactics-absence-list span {
+    align-items: center;
+    color: #f2f7fb;
+    display: grid;
+    font-size: 10px;
+    gap: 6px;
+    grid-template-columns: 12px minmax(0, 1fr);
+    min-width: 0;
+}
+
+.tactics-absence-list i {
+    border-radius: 2px;
+    height: 10px;
+    width: 10px;
+}
+
+.tactics-absence-list b {
+    color: rgba(244, 251, 255, 0.68);
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tactics-pitch {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.1)),
+        url("../images/backgrounds/spielfeld.png") center / cover no-repeat;
+    border: 1px solid rgba(44, 255, 94, 0.28);
+    border-radius: 6px;
+    box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.26);
+    height: 397px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tactics-slots-layer {
+    inset: 0;
+    position: absolute;
+}
+
+.tactics-slot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 82px;
+    z-index: 2;
+}
+
+.tactics-slot-card {
+    background: linear-gradient(180deg, rgba(13, 52, 26, 0.9), rgba(2, 12, 8, 0.92));
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.38);
+    height: 75px;
+    overflow: hidden;
+    padding: 4px 5px 5px;
+    position: relative;
+}
+
+.tactics-slot.is-main .tactics-slot-card {
+    border-color: var(--tactics-green);
+    box-shadow: 0 0 14px rgba(23, 223, 83, 0.62), inset 0 0 14px rgba(23, 223, 83, 0.12), 0 10px 18px rgba(0, 0, 0, 0.38);
+}
+
+.tactics-slot.is-secondary .tactics-slot-card {
+    border-color: var(--tactics-yellow);
+    box-shadow: 0 0 14px rgba(255, 210, 31, 0.58), inset 0 0 14px rgba(255, 210, 31, 0.1), 0 10px 18px rgba(0, 0, 0, 0.38);
+}
+
+.tactics-slot.is-foreign .tactics-slot-card {
+    border-color: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.34), 0 10px 18px rgba(0, 0, 0, 0.38);
+}
+
+.tactics-slot-position {
+    color: #f7fbff;
+    font-size: 11px;
+    font-weight: 900;
+    left: 6px;
+    position: absolute;
+    top: 4px;
+}
+
+.tactics-captain-badge {
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.72));
+    height: 16px;
+    object-fit: contain;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 3px;
+    top: 4px;
+    transform: scale(0.88);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    width: 24px;
+    z-index: 3;
+}
+
+.tactics-captain-badge.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.tactics-slot-portrait {
+    bottom: 20px;
+    height: 54px;
+    left: 15px;
+    overflow: hidden;
+    position: absolute;
+    width: 52px;
+}
+
+.tactics-slot-portrait img {
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.55));
+    height: 62px;
+    object-fit: contain;
+    width: 52px;
+}
+
+.tactics-slot-portrait span {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: block;
+    height: 32px;
+    margin: 12px auto 0;
+    width: 32px;
+}
+
+.tactics-slot-name {
+    bottom: 18px;
+    color: #ffffff;
+    display: -webkit-box;
+    font-size: 9px;
+    font-weight: 900;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    left: 5px;
+    line-height: 1;
+    max-height: 18px;
+    overflow: hidden;
+    overflow-wrap: normal;
+    position: absolute;
+    right: 34px;
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.88);
+    white-space: normal;
+    z-index: 2;
+}
+
+.tactics-freshness {
+    background:
+        radial-gradient(circle, rgba(3, 20, 26, 0.98) 0 56%, transparent 57%),
+        conic-gradient(var(--freshness-color, #72f23c) calc(var(--freshness, 0) * 1%), rgba(255, 255, 255, 0.16) 0);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--freshness-color, #72f23c) 35%, transparent), 0 0 16px color-mix(in srgb, var(--freshness-color, #72f23c) 32%, transparent);
+    color: #ffffff;
+    display: grid;
+    font-size: 8px;
+    font-style: normal;
+    font-weight: 900;
+    height: 24px;
+    place-items: center;
+    width: 24px;
+}
+
+.tactics-slot .tactics-freshness {
+    bottom: 5px;
+    position: absolute;
+    right: 5px;
+}
+
+.tactics-freshness.is-empty {
+    --freshness-color: rgba(255, 255, 255, 0.24);
+}
+
+.tactics-freshness.is-fresh {
+    --freshness-color: #72f23c;
+}
+
+.tactics-freshness.is-ok {
+    --freshness-color: var(--tactics-yellow);
+}
+
+.tactics-freshness.is-warn {
+    --freshness-color: #ff9f43;
+}
+
+.tactics-freshness.is-bad {
+    --freshness-color: var(--tactics-red);
+}
+
+.tactics-pitch .tactics-slot select {
+    cursor: pointer;
+    height: 100%;
+    inset: 0;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    z-index: 5;
+}
+
+.tactics-bench-card select {
+    cursor: pointer;
+    height: 100%;
+    inset: 0;
+    opacity: 0;
+    padding: 0;
+    position: absolute;
+    width: 100%;
+    z-index: 6;
+}
+
+.tactics-pitch-legend {
+    bottom: 8px;
+    color: rgba(244, 251, 255, 0.78);
+    display: grid;
+    font-size: 11px;
+    gap: 5px;
+    left: 16px;
+    position: absolute;
+    z-index: 3;
+}
+
+.tactics-pitch-legend span {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.tactics-pitch-legend i {
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.tactics-pitch-legend .is-main {
+    color: var(--tactics-green);
+}
+
+.tactics-pitch-legend .is-secondary {
+    color: var(--tactics-yellow);
+}
+
+.tactics-average-freshness {
+    align-items: center;
+    bottom: 10px;
+    color: #f7fbff;
+    display: flex;
+    gap: 8px;
+    position: absolute;
+    right: 15px;
+    z-index: 3;
+}
+
+.tactics-average-freshness span {
+    font-size: 11px;
+}
+
+.tactics-average-freshness strong {
+    background: rgba(4, 24, 18, 0.88);
+    border: 2px solid var(--tactics-green);
+    border-radius: 50%;
+    display: grid;
+    font-size: 11px;
+    height: 35px;
+    place-items: center;
+    width: 35px;
+}
+
+.tactics-status-panel h2 {
+    margin-bottom: 14px;
+}
+
+.tactics-status-line {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto 1fr auto;
+    margin-bottom: 10px;
+}
+
+.tactics-status-line span,
+.tactics-field-count,
+.tactics-status-line strong {
+    color: #f7fbff;
+    font-size: 13px;
+}
+
+.tactics-status-line strong,
+.tactics-field-count strong {
+    font-weight: 800;
+}
+
+.tactics-formation-editor {
+    position: relative;
+    z-index: 80;
+}
+
+.tactics-formation-editor summary {
+    align-items: center;
+    border: 1px solid var(--tactics-cyan);
+    border-radius: 5px;
+    color: var(--tactics-cyan);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 800;
+    height: 30px;
+    justify-content: center;
+    list-style: none;
+    min-width: 94px;
+}
+
+.tactics-formation-editor summary::-webkit-details-marker {
+    display: none;
+}
+
+.tactics-formation-controls {
+    background: rgba(4, 15, 24, 0.98);
+    border: 1px solid var(--tactics-line-strong);
+    border-radius: 6px;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42);
+    display: grid;
+    gap: 8px;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: 36px;
+    width: 270px;
+    z-index: 1000;
+}
+
+.tactics-formation-controls label,
+.tactics-standard-list label,
+.tactics-half-fields label,
+.tactics-template-actions label {
+    display: grid;
+    gap: 4px;
+}
+
+.tactics-formation-controls span,
+.tactics-standard-list span,
+.tactics-half-fields span,
+.tactics-template-actions span {
+    color: rgba(244, 251, 255, 0.7);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    opacity: 0.82;
+}
+
+.tactics-dashboard select,
+.tactics-dashboard input[type="text"],
+.tactics-dashboard input[type="number"] {
+    background: rgba(3, 13, 22, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    color: #f7fbff;
+    font: inherit;
+    font-size: 12px;
+    height: 28px;
+    line-height: 1.2;
+    min-width: 0;
+    outline: none;
+    padding: 0 9px;
+    width: 100%;
+}
+
+.tactics-dashboard select:focus,
+.tactics-dashboard input:focus {
+    border-color: var(--tactics-cyan);
+    box-shadow: 0 0 0 2px rgba(22, 207, 255, 0.14);
+}
+
+.tactics-operations-grid select,
+.tactics-operations-grid input[type="number"] {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 6px;
+}
+
+.tactics-builder-summary {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    margin: 9px 0 12px;
+    overflow: hidden;
+}
+
+.tactics-builder-summary header {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #f7fbff;
+    display: flex;
+    font-size: 12px;
+    font-weight: 900;
+    justify-content: space-between;
+    min-height: 35px;
+    padding: 0 12px;
+}
+
+.tactics-builder-body {
+    align-items: stretch;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(154px, 42%) 1fr;
+    min-height: 118px;
+    padding: 8px 12px 0;
+}
+
+.tactics-mini-pitch {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.12)),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 32px),
+        rgba(4, 19, 24, 0.74);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    height: 100%;
+    min-height: 110px;
+    position: relative;
+}
+
+.tactics-mini-pitch i {
+    background: var(--tactics-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(23, 223, 83, 0.54);
+    height: 9px;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 9px;
+}
+
+.tactics-mini-pitch .is-goalkeeper {
+    background: rgba(255, 210, 31, 0.28);
+}
+
+.tactics-count-summary {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.tactics-count-summary div {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
+
+.tactics-count-summary dt,
+.tactics-count-summary dd {
+    color: #f7fbff;
+    font-size: 12px;
+    margin: 0;
+}
+
+.tactics-count-summary dt {
+    color: rgba(244, 251, 255, 0.74);
+}
+
+.tactics-field-count {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 0;
+    padding: 9px 0 10px;
+}
+
+.tactics-field-count span {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: inline-block;
+    height: 14px;
+    margin-left: 5px;
+    vertical-align: -2px;
+    width: 14px;
+}
+
+.tactics-field-count span.is-complete {
+    border-color: var(--tactics-green);
+    position: relative;
+}
+
+.tactics-field-count span.is-complete::after {
+    color: var(--tactics-green);
+    content: "✓";
+    font-size: 10px;
+    left: 2px;
+    position: absolute;
+    top: -2px;
+}
+
+.tactics-template-actions {
+    display: grid;
+    gap: 8px 10px;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 10px;
+}
+
+.tactics-template-actions label {
+    display: none;
+}
+
+.tactics-template-actions button,
+.tactics-secondary-button,
+.tactics-confirm-button {
+    align-items: center;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 900;
+    height: 36px;
+    justify-content: center;
+    padding: 0 12px;
+    width: 100%;
+}
+
+.tactics-secondary-button {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #f7fbff;
+}
+
+.tactics-confirm-button {
+    background: linear-gradient(180deg, #1ccfff, #089bd2);
+    border: 1px solid rgba(99, 232, 255, 0.65);
+    box-shadow: 0 0 20px rgba(22, 207, 255, 0.22);
+    color: #ffffff;
+    grid-column: 1 / -1;
+    height: 42px;
+    margin-top: 3px;
+}
+
+.tactics-operations-grid {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 38% 24% 1fr;
+}
+
+.tactics-operations-grid .tactics-panel {
+    height: 145px;
+    padding: 6px 10px;
+}
+
+.tactics-operations-grid .tactics-panel h2 {
+    margin-bottom: 6px;
+}
+
+.tactics-bench-list {
+    display: grid;
+    gap: 7px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tactics-bench-card {
+    background: linear-gradient(180deg, rgba(18, 32, 43, 0.96), rgba(6, 18, 28, 0.96));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    display: block;
+    height: 103px;
+    overflow: hidden;
+    padding: 4px;
+    position: relative;
+}
+
+.tactics-bench-number {
+    color: #f7fbff;
+    font-size: 11px;
+    font-weight: 900;
+    position: absolute;
+    right: 5px;
+    top: 4px;
+}
+
+.tactics-bench-position {
+    color: var(--tactics-cyan);
+    display: block;
+    font-size: 11px;
+    font-weight: 900;
+    left: 5px;
+    line-height: 1;
+    max-width: calc(100% - 30px);
+    overflow: hidden;
+    position: absolute;
+    text-overflow: ellipsis;
+    top: 4px;
+    white-space: nowrap;
+}
+
+.tactics-bench-card img,
+.tactics-bench-card i {
+    display: block;
+    height: 45px;
+    margin: 15px auto 0;
+    object-fit: contain;
+    width: 42px;
+}
+
+.tactics-bench-card i {
+    background: rgba(255, 255, 255, 0.09);
+    border-radius: 50%;
+    height: 30px;
+    margin-top: 22px;
+    width: 30px;
+}
+
+.tactics-bench-card strong {
+    color: #ffffff;
+    display: -webkit-box;
+    font-size: 10px;
+    line-height: 1.05;
+    margin-top: 2px;
+    max-height: 20px;
+    overflow: hidden;
+    text-align: center;
+    overflow-wrap: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+}
+
+.tactics-bench-card .tactics-freshness {
+    bottom: 4px;
+    height: 22px;
+    position: absolute;
+    right: 4px;
+    width: 22px;
+}
+
+.tactics-dashboard .tactics-bench-card select {
+    height: 100%;
+    inset: 0;
+    min-width: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.tactics-standard-list {
+    display: grid;
+    gap: 6px;
+}
+
+.tactics-standard-list label {
+    align-items: center;
+    grid-template-columns: 76px minmax(0, 1fr);
+    min-height: 24px;
+}
+
+.tactics-standards-panel .tactics-standard-list select {
+    height: 24px;
+}
+
+.tactics-substitution-list {
+    display: grid;
+    gap: 2px;
+}
+
+.tactics-substitution-row {
+    align-items: center;
+    display: grid;
+    gap: 4px;
+    grid-template-columns: 16px 54px minmax(0, 1fr) 14px minmax(0, 1fr) 106px;
+}
+
+.tactics-sub-condition {
+    font-size: 10.5px;
+    padding: 3px 4px;
+}
+
+.tactics-substitution-row > span,
+.tactics-substitution-row b {
+    color: #f7fbff;
+    font-size: 12px;
+    text-align: center;
+}
+
+.tactics-halves-grid {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.tactics-half-panel {
+    height: auto;
+    padding: 16px 16px 18px;
+}
+
+.tactics-half-panel h2 {
+    color: var(--tactics-cyan);
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.tactics-orientation {
+    align-items: center;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 126px minmax(0, 1fr) 38px 150px;
+}
+
+.tactics-orientation span {
+    color: #f7fbff;
+    font-size: 14px;
+    font-style: normal;
+}
+
+.tactics-orientation em {
+    color: rgba(244, 251, 255, 0.7);
+    font-size: 13px;
+    font-style: normal;
+}
+
+.tactics-orientation strong {
+    color: var(--tactics-cyan);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.tactics-orientation input[type="range"] {
+    accent-color: var(--tactics-cyan);
+    width: 100%;
+}
+
+.tactics-half-fields {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 14px;
+}
+
+.tactics-half-fields label {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+    min-height: 34px;
+}
+
+.tactics-half-fields label span {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.78;
+}
+
+.tactics-half-fields label select {
+    flex: 1 1 0;
+    font-size: 13px;
+    height: 34px;
+    min-width: 0;
+}
+
+/* ============================================================= */
+/* Tactics instructions grid — 6-tile bottom row (Screen1)        */
+/* ============================================================= */
+
+.tactics-instructions-grid {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 1.5fr 1fr 1.35fr 1.18fr 1fr 1fr;
+    align-items: stretch;
+    margin-top: 9px;
+}
+
+.tactics-instructions-grid .tactics-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: auto;
+    min-height: 0;
+    padding: 14px 14px 16px;
+}
+
+.tactics-tile-head {
+    border-bottom: 1px solid var(--tactics-line);
+    padding-bottom: 8px;
+}
+
+.tactics-instructions-grid .tactics-tile-head h2 {
+    color: var(--tactics-cyan);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.tactics-tile-sub {
+    color: rgba(244, 251, 255, 0.55);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin: 3px 0 0;
+    text-transform: uppercase;
+}
+
+.tactics-tile-section {
+    color: rgba(244, 251, 255, 0.6);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin: 4px 0 0;
+    text-transform: uppercase;
+}
+
+/* --- Label + control rows (pressing / defending) --- */
+
+.tactics-line-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tactics-line-row {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 84px minmax(0, 1fr);
+}
+
+.tactics-line-row span {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    opacity: 0.78;
+    text-transform: uppercase;
+}
+
+/* --- Pressing triggers --- */
+
+.tactics-trigger-grid {
+    display: grid;
+    gap: 5px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tactics-trigger {
+    background: rgba(8, 26, 38, 0.7);
+    border: 1px solid var(--tactics-line);
+    border-radius: 7px;
+    color: rgba(244, 251, 255, 0.78);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    min-height: 30px;
+    padding: 5px 6px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tactics-trigger:nth-of-type(4) {
+    grid-column: 1 / -1;
+}
+
+.tactics-trigger:hover {
+    border-color: var(--tactics-line-strong);
+}
+
+.tactics-trigger.is-on {
+    background: linear-gradient(180deg, rgba(22, 207, 255, 0.28), rgba(22, 207, 255, 0.1));
+    border-color: var(--tactics-cyan);
+    box-shadow: 0 0 12px rgba(22, 207, 255, 0.18);
+    color: #ffffff;
+}
+
+.tactics-trigger:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+}
+
+.tactics-trigger-budget {
+    color: var(--tactics-cyan);
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+    opacity: 0.85;
+    vertical-align: middle;
+}
+
+.tactics-trigger-budget.is-over {
+    color: #f5a623;
+    opacity: 1;
+}
+
+.tactics-trigger-cost {
+    color: rgba(244, 251, 255, 0.4);
+    display: block;
+    font-size: 9px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.tactics-trigger.is-on .tactics-trigger-cost {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Tooltip system --- */
+
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::after {
+    background: rgba(6, 16, 24, 0.97);
+    border: 1px solid rgba(22, 207, 255, 0.3);
+    border-radius: 8px;
+    bottom: calc(100% + 7px);
+    color: rgba(244, 251, 255, 0.88);
+    content: attr(data-tooltip);
+    font-size: 11px;
+    font-weight: 400;
+    left: 50%;
+    line-height: 1.5;
+    max-width: 210px;
+    opacity: 0;
+    padding: 8px 11px;
+    pointer-events: none;
+    position: absolute;
+    text-align: left;
+    transform: translateX(-50%);
+    transition: opacity 0.15s ease;
+    white-space: normal;
+    width: max-content;
+    z-index: 300;
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+}
+
+.tactics-tile {
+    overflow: visible;
+}
+
+/* --- Attack focus tile --- */
+
+.tactics-focus-layout {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) 96px;
+}
+
+.tactics-focus-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.tactics-focus-option {
+    background: rgba(8, 26, 38, 0.7);
+    border: 1px solid var(--tactics-line);
+    border-left: 3px solid transparent;
+    border-radius: 7px;
+    color: rgba(244, 251, 255, 0.82);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 7px 9px;
+    text-align: left;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tactics-focus-option:hover {
+    border-color: var(--tactics-line-strong);
+}
+
+.tactics-focus-option.is-active {
+    background: linear-gradient(90deg, rgba(22, 207, 255, 0.26), rgba(22, 207, 255, 0.05));
+    border-color: var(--tactics-line-strong);
+    border-left-color: var(--tactics-cyan);
+    box-shadow: inset 0 0 12px rgba(22, 207, 255, 0.12);
+    color: #ffffff;
+}
+
+.tactics-focus-pitch {
+    align-self: start;
+    aspect-ratio: 3 / 4;
+    background:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 14px, transparent 14px 28px),
+        linear-gradient(180deg, #0b3a24, #062618);
+    border: 1px solid var(--tactics-line-strong);
+    border-radius: 9px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    overflow: hidden;
+    position: relative;
+}
+
+.tactics-focus-pitch-markings {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.tactics-focus-pitch-markings::before {
+    background: rgba(255, 255, 255, 0.2);
+    content: "";
+    height: 1px;
+    left: 6%;
+    position: absolute;
+    right: 6%;
+    top: 50%;
+}
+
+.tactics-focus-pitch-markings::after {
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    content: "";
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 34%;
+}
+
+.tactics-focus-zone {
+    position: relative;
+}
+
+.tactics-focus-zone::before {
+    background: radial-gradient(ellipse at center, rgba(22, 207, 255, 0.95), rgba(22, 207, 255, 0) 70%);
+    border-radius: 45%;
+    content: "";
+    inset: 6% 3%;
+    opacity: calc(var(--intensity, 30) / 100);
+    position: absolute;
+    transition: opacity 0.25s ease;
+}
+
+/* --- Spielaufbau & Linie --- */
+
+.tactics-buildup-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.tactics-buildup-row {
+    align-items: center;
+    display: grid;
+    gap: 5px 8px;
+    grid-template-areas:
+        "label select"
+        "label segmented";
+    grid-template-columns: 66px minmax(0, 1fr);
+}
+
+.tactics-buildup-label {
+    font-size: 11px;
+    font-weight: 800;
+    grid-area: label;
+    letter-spacing: 0.04em;
+    opacity: 0.78;
+    text-transform: uppercase;
+}
+
+.tactics-buildup-row select {
+    grid-area: select;
+}
+
+.tactics-segmented {
+    display: grid;
+    gap: 4px;
+    grid-area: segmented;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+}
+
+.tactics-segment {
+    background: rgba(8, 26, 38, 0.6);
+    border: 1px solid var(--tactics-line);
+    border-radius: 6px;
+    color: rgba(244, 251, 255, 0.74);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    min-height: 26px;
+    padding: 4px 4px;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tactics-segment:hover {
+    border-color: var(--tactics-line-strong);
+}
+
+.tactics-segment.is-active {
+    background: linear-gradient(180deg, rgba(22, 207, 255, 0.28), rgba(22, 207, 255, 0.1));
+    border-color: var(--tactics-cyan);
+    color: #ffffff;
+}
+
+.tactics-tempo {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: auto;
+    padding-top: 6px;
+}
+
+.tactics-tempo .tactics-buildup-label {
+    grid-area: auto;
+}
+
+.tactics-tempo input[type="range"] {
+    accent-color: var(--tactics-cyan);
+    width: 100%;
+}
+
+.tactics-tempo-meta {
+    align-items: baseline;
+    display: flex;
+    gap: 5px;
+}
+
+.tactics-tempo strong {
+    color: var(--tactics-cyan);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.tactics-tempo em {
+    color: rgba(244, 251, 255, 0.6);
+    font-size: 11px;
+    font-style: normal;
+}
+
+/* --- Conditions / Erweiterter Modus --- */
+
+.tactics-conditions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tactics-conditions-head,
+.tactics-condition-row {
+    align-items: center;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) 48px;
+}
+
+.tactics-conditions-head span {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    opacity: 0.55;
+    text-transform: uppercase;
+}
+
+.tactics-conditions-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tactics-minute-input {
+    text-align: center;
+}
+
+.tactics-condition-actions {
+    align-items: center;
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+}
+
+.tactics-toggle {
+    background: rgba(120, 140, 150, 0.3);
+    border: 1px solid var(--tactics-line);
+    border-radius: 999px;
+    cursor: pointer;
+    flex: none;
+    height: 18px;
+    padding: 0;
+    position: relative;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    width: 32px;
+}
+
+.tactics-toggle::after {
+    background: #d7ecf5;
+    border-radius: 50%;
+    content: "";
+    height: 14px;
+    left: 1px;
+    position: absolute;
+    top: 1px;
+    transition: transform 0.15s ease, background 0.15s ease;
+    width: 14px;
+}
+
+.tactics-toggle.is-on {
+    background: var(--tactics-cyan);
+    border-color: var(--tactics-cyan);
+}
+
+.tactics-toggle.is-on::after {
+    background: #ffffff;
+    transform: translateX(14px);
+}
+
+.tactics-condition-remove {
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--tactics-line);
+    border-radius: 50%;
+    color: rgba(255, 120, 135, 0.85);
+    cursor: pointer;
+    display: flex;
+    flex: none;
+    font-size: 14px;
+    height: 18px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    width: 18px;
+}
+
+.tactics-condition-remove:hover {
+    border-color: var(--tactics-red);
+    color: var(--tactics-red);
+}
+
+.tactics-condition-add {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px dashed var(--tactics-line-strong);
+    border-radius: 8px;
+    color: var(--tactics-cyan);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 2px;
+    padding: 6px 12px;
+    transition: background 0.15s ease;
+}
+
+.tactics-condition-add:hover {
+    background: rgba(22, 207, 255, 0.1);
+}
+
+.tactics-condition-add:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+/* --- Opponent absences tile (compact column variant) --- */
+
+.tactics-instructions-grid .tactics-opponent-absences {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 330px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-right: 3px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list div {
+    align-items: center;
+    display: grid;
+    gap: 0 8px;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    min-height: 0;
+    padding: 5px 7px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list div:nth-child(n+4) {
+    display: grid;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list img {
+    grid-row: 1 / span 2;
+    height: 34px;
+    width: 34px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list strong {
+    -webkit-line-clamp: 1;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list span {
+    font-size: 11px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list small {
+    flex-direction: row;
+    font-size: 10px;
+    gap: 4px;
+    padding: 3px 7px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list small::before {
+    font-size: 12px;
+    height: 18px;
+    width: 18px;
+}
+
+.tactics-instructions-grid .tactics-opponent-absence-list .is-injury small::before,
+.tactics-instructions-grid .tactics-opponent-absence-list .is-suspension small::before {
+    height: 20px;
+    width: 20px;
+}
+
+.tactics-analysis-grid {
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 1fr;
+}
+
+.tactics-analysis-grid .tactics-panel {
+    min-height: 150px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 9px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list div {
+    flex: 0 0 180px;
+    min-height: 0;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list div:nth-child(n+4) {
+    display: grid;
+}
+
+.tactics-top-list {
+    display: grid;
+    gap: 6px;
+}
+
+.tactics-top-scorers,
+.tactics-analysis-grid > .tactics-top-list:first-child {
+    background:
+        linear-gradient(180deg, rgba(1, 10, 23, 0.46), rgba(1, 8, 19, 0.72)),
+        url("../images/backgrounds/tactics-top-scorers-bg.png") center / 100% 100% no-repeat;
+    border-color: rgba(61, 200, 255, 0.38);
+    box-shadow:
+        inset 0 0 34px rgba(0, 104, 188, 0.22),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+.tactics-top-list > div {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: grid;
+    gap: 1px 6px;
+    grid-template-columns: 12px 92px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    min-height: 100px;
+    padding: 5px 2px;
+}
+
+.tactics-top-list > div span {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+
+.tactics-top-list > div img {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+}
+
+.tactics-top-list > div strong {
+    align-self: end;
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.tactics-top-list > div b {
+    align-self: start;
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.tactics-top-list span {
+    color: rgba(244, 251, 255, 0.55);
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 1;
+    text-align: center;
+}
+
+.tactics-top-list strong {
+    color: #f7fbff;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.tactics-top-list b {
+    color: var(--tactics-cyan);
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(22, 207, 255, 0.45);
+}
+
+.tactics-top-list img {
+    height: 92px;
+    object-fit: contain;
+    width: 92px;
+}
+
+.tactics-top-list strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tactics-top-list > div:last-child {
+    border-bottom: 0;
+}
+
+.tactics-opponent-absences {
+    display: grid;
+    gap: 7px;
+    grid-template-rows: auto 1fr;
+    min-height: 0;
+}
+
+.tactics-opponent-absence-list {
+    display: grid;
+    gap: 7px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.tactics-opponent-absence-list div {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    display: grid;
+    gap: 1px 7px;
+    grid-template-columns: 100px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    min-height: 110px;
+    padding: 5px 7px 5px 4px;
+}
+
+.tactics-opponent-absence-list div:nth-child(n+4) {
+    display: none;
+}
+
+.tactics-opponent-absence-list img {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+}
+
+.tactics-opponent-absence-list strong {
+    align-self: end;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.tactics-opponent-absence-list span {
+    align-self: start;
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.tactics-opponent-absence-list small {
+    align-self: center;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+}
+
+.tactics-opponent-absence-list img {
+    height: 100px;
+    object-fit: contain;
+    width: 100px;
+}
+
+.tactics-opponent-absence-list span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tactics-opponent-absence-list strong {
+    color: #ffffff;
+    display: -webkit-box;
+    font-size: 20px;
+    font-weight: 900;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
+.tactics-opponent-absence-list span {
+    color: rgba(244, 251, 255, 0.72);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.tactics-opponent-absence-list small {
+    align-items: center;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    font-weight: 900;
+    gap: 5px;
+    justify-content: center;
+    padding: 8px 10px;
+}
+
+.tactics-opponent-absence-list small::before {
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    content: "!";
+    display: grid;
+    font-size: 22px;
+    height: 44px;
+    place-items: center;
+    width: 44px;
+}
+
+.tactics-opponent-absence-list .is-injury small {
+    background: rgba(255, 66, 88, 0.14);
+    color: #ffd9df;
+}
+
+.tactics-opponent-absence-list .is-injury small::before {
+    background: url("../images/icons/injury-cross.png?v=injury-20260519") center / contain no-repeat;
+    border: 0;
+    border-radius: 0;
+    content: "";
+    flex: none;
+    height: 48px;
+    width: 48px;
+}
+
+.tactics-opponent-absence-list .is-suspension small {
+    background: rgba(255, 66, 88, 0.14);
+    color: #ffd9df;
+}
+
+.tactics-opponent-absence-list .is-suspension small::before {
+    background: url("../images/icons/suspension-ban.png?v=suspension-20260519") center / contain no-repeat;
+    border: 0;
+    border-radius: 0;
+    content: "";
+    flex: none;
+    height: 48px;
+    width: 48px;
+}
+
+.manager-duel-card {
+    background:
+        linear-gradient(180deg, rgba(0, 7, 16, 0.08), rgba(0, 5, 12, 0.18)),
+        url("../images/backgrounds/tactics-manager-duel-bg.png") center / 100% 100% no-repeat;
+    border: 0;
+    border-radius: 8px;
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.45),
+        inset 0 0 40px rgba(0, 217, 255, 0.04);
+    min-height: 220px;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+    width: 100%;
+}
+
+.manager-duel-overlay {
+    display: grid;
+    font-family: var(--font-primary, "Inter", "Segoe UI", Arial, sans-serif);
+    grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr);
+    inset: 0;
+    padding: 14px 12px 16px;
+    pointer-events: auto;
+    position: absolute;
+    z-index: 2;
+}
+
+.duel-manager-portrait {
+    background: rgba(2, 16, 29, 0.68);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 50%;
+    bottom: 11px;
+    box-sizing: border-box;
+    height: 62px;
+    object-fit: contain;
+    opacity: 0.74;
+    padding: 6px;
+    pointer-events: none;
+    position: absolute;
+    width: 62px;
+    z-index: 1;
+}
+
+.duel-manager-portrait-left {
+    filter: drop-shadow(0 0 18px rgba(0, 217, 255, 0.36));
+    left: 14px;
+    object-fit: cover;
+    object-position: center top;
+    opacity: 0.88;
+    padding: 0;
+}
+
+.duel-manager-portrait-right {
+    filter: drop-shadow(0 0 18px rgba(255, 201, 40, 0.36));
+    right: 14px;
+}
+
+.duel-side {
+    display: grid;
+    grid-template-rows: 42px minmax(0, 1fr);
+    min-width: 0;
+    position: relative;
+}
+
+.duel-side-left {
+    transform: translateX(-4px);
+}
+
+.duel-manager-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: flex-start;
+}
+
+.duel-side-left .duel-manager-header {
+    align-items: center;
+    padding-left: 8%;
+    padding-right: 0;
+}
+
+.duel-side-right .duel-manager-header {
+    align-items: center;
+    padding-left: 0;
+    padding-right: 8%;
+}
+
+.duel-manager-name {
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-shadow: 0 4px 16px rgba(0, 0, 0, 0.85);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.duel-manager-rank {
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    padding: 3px 10px 4px;
+    transform: translateY(3px);
+}
+
+.duel-rank-left {
+    background: rgba(0, 217, 255, 0.12);
+    color: #00d9ff;
+    box-shadow: inset 0 0 0 1px rgba(0, 217, 255, 0.18);
+    text-shadow: 0 0 14px rgba(0, 217, 255, 0.45);
+}
+
+.duel-rank-right {
+    background: rgba(255, 201, 40, 0.12);
+    color: #ffc928;
+    box-shadow: inset 0 0 0 1px rgba(255, 201, 40, 0.18);
+    text-shadow: 0 0 14px rgba(255, 201, 40, 0.45);
+}
+
+.duel-values {
+    align-items: center;
+    color: #f9fbff;
+    display: grid;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    grid-template-rows: repeat(8, 1fr);
+    letter-spacing: 0;
+    line-height: 1.2;
+    min-height: 0;
+}
+
+.duel-values > div {
+    align-items: center;
+    display: flex;
+    min-height: 0;
+}
+
+.duel-values-left {
+    padding-left: 32%;
+    padding-right: 4%;
+    text-align: center;
+}
+
+.duel-values-left > div {
+    justify-content: center;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.7),
+        0 0 8px rgba(0, 217, 255, 0.2);
+}
+
+.duel-values-left > div:nth-child(3) {
+    transform: translateX(5px);
+}
+
+.duel-values-right {
+    padding-left: 4%;
+    padding-right: 32%;
+    text-align: center;
+}
+
+.duel-values-right > div {
+    color: #fff8df;
+    justify-content: center;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.7),
+        0 0 8px rgba(255, 201, 40, 0.24);
+}
+
+.duel-values .is-lead {
+    color: #fff8df;
+}
+
+.duel-values-left .is-lead {
+    color: #67e9ff;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.75),
+        0 0 10px rgba(0, 217, 255, 0.36);
+}
+
+.duel-values-right .is-lead {
+    color: #ffe784;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.75),
+        0 0 10px rgba(255, 201, 40, 0.34);
+}
+
+.duel-values .is-trail {
+    color: #ff6579;
+    text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.76),
+        0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+.duel-center {
+    display: grid;
+    grid-template-rows: 42px minmax(0, 1fr);
+    justify-items: center;
+    min-width: 0;
+    position: relative;
+}
+
+.duel-vs {
+    color: #ffffff;
+    font-size: 29px;
+    font-weight: 850;
+    letter-spacing: 0.01em;
+    line-height: 0.95;
+    text-shadow:
+        0 0 16px rgba(0, 217, 255, 0.38),
+        0 5px 18px rgba(0, 0, 0, 0.9);
+}
+
+.duel-labels {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.92);
+    display: grid;
+    font-size: 12px;
+    font-weight: 700;
+    grid-template-rows: repeat(8, 1fr);
+    justify-items: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+    width: 100%;
+}
+
+.duel-labels > div {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 0;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.tactics-template-grid {
+    align-items: stretch;
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 19% minmax(0, 1fr) 22.9%;
+}
+
+.tactics-template-grid .tactics-preview-panel,
+.tactics-template-grid .tactics-pitch-panel,
+.tactics-template-grid .tactics-side-stack {
+    height: 700px;
+}
+
+.tactics-template-grid .tactics-preview-panel {
+    padding: 10px 12px;
+}
+
+.tactics-pitch-panel {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    display: grid;
+    gap: 0;
+    grid-template-rows: 44px minmax(0, 1fr);
+    overflow: visible;
+    padding: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.tactics-template-toolbar {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.42fr) 92px minmax(110px, 0.58fr);
+    height: 44px;
+    min-width: 0;
+    position: relative;
+    z-index: 40;
+}
+
+.tactics-template-toolbar .tactics-template-actions {
+    align-items: stretch;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 1fr) minmax(0, 0.82fr);
+    height: 44px;
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* hide only the span labels, not the whole label elements */
+.tactics-template-toolbar .tactics-template-actions label span {
+    display: none;
+}
+
+/* show the load label as a block to expose the select */
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load {
+    align-self: stretch;
+    display: block;
+    height: 44px;
+    min-width: 0;
+    position: relative;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #d45c00;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fff'/%3E%3C/svg%3E");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    background-size: 10px 6px;
+    border: 1px solid #ff8c20;
+    border-radius: 5px;
+    box-shadow: 0 0 12px rgba(255, 120, 0, 0.22);
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    height: 44px;
+    outline: none;
+    padding: 0 28px 0 10px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    width: 100%;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load select:hover {
+    background-color: #c05000;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load select:focus {
+    border-color: #ffad5c;
+    box-shadow: 0 0 0 2px rgba(255, 120, 0, 0.3);
+    outline: none;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-load select option {
+    background-color: #1a1f2e;
+    color: #e8f4ff;
+    font-weight: 600;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-save {
+    display: block;
+    height: 44px;
+    min-width: 0;
+    position: relative;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-save span {
+    clip: rect(0 0 0 0);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-save input {
+    font-size: 13px;
+    height: 44px;
+    padding: 0 12px;
+}
+
+.tactics-template-toolbar .tactics-template-actions .tactics-template-save input.is-attention {
+    border-color: var(--tactics-yellow);
+    box-shadow: 0 0 0 2px rgba(255, 209, 102, 0.18);
+}
+
+.tactics-template-toolbar :where(.tactics-secondary-button, .tactics-confirm-button),
+.tactics-template-toolbar .tactics-formation-editor summary {
+    align-items: center;
+    align-self: stretch;
+    border-radius: 5px;
+    display: inline-flex;
+    font-size: 13px;
+    height: auto;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
+    min-width: 0;
+    padding: 0 14px;
+}
+
+.tactics-template-toolbar .tactics-template-actions > .tactics-secondary-button {
+    font-size: 13px;
+    height: auto;
+    line-height: 1;
+    padding: 0 14px;
+}
+
+/* Vorlage laden → Gelb */
+.tactics-template-toolbar button[value="load_template"] {
+    background: linear-gradient(180deg, #ffe066, #e6a800);
+    border-color: rgba(255, 200, 0, 0.5);
+    color: #1a0a00;
+}
+.tactics-template-toolbar button[value="load_template"]:hover {
+    background: linear-gradient(180deg, #ffd633, #cc9500);
+}
+
+/* Vorlage speichern → Grün */
+.tactics-template-toolbar button[value="save_template"] {
+    background: linear-gradient(180deg, #2edb7a, #18a050);
+    border-color: rgba(46, 219, 122, 0.45);
+    color: #ffffff;
+}
+.tactics-template-toolbar button[value="save_template"]:hover {
+    background: linear-gradient(180deg, #24c46b, #13883f);
+}
+
+/* Ändern → Orange */
+.tactics-template-toolbar .tactics-formation-editor summary {
+    background: linear-gradient(180deg, #ff9c42, #e05b00);
+    border: 1px solid rgba(255, 140, 30, 0.5);
+    box-shadow: 0 0 12px rgba(255, 120, 0, 0.18);
+    color: #ffffff;
+    cursor: pointer;
+    list-style: none;
+    width: 100%;
+}
+.tactics-template-toolbar .tactics-formation-editor summary:hover {
+    background: linear-gradient(180deg, #ffad5c, #cc5200);
+}
+.tactics-template-toolbar .tactics-formation-editor summary::-webkit-details-marker {
+    display: none;
+}
+
+.tactics-template-toolbar .tactics-confirm-button {
+    grid-column: auto;
+}
+
+.tactics-toolbar-formation {
+    align-items: center;
+    align-self: stretch;
+    background: linear-gradient(180deg, rgba(0, 14, 26, 0.92) 0%, rgba(1, 22, 38, 0.80) 100%);
+    border: 0;
+    border-radius: 5px;
+    border-top: 2px solid rgba(22, 207, 255, 0.7);
+    box-shadow: inset 0 -1px 0 rgba(22, 207, 255, 0.10), 0 2px 8px rgba(0,0,0,0.35);
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    font-size: 17px;
+    font-weight: 950;
+    gap: 1px;
+    height: auto;
+    justify-content: center;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    min-width: 0;
+    padding: 0 12px;
+    position: relative;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.tactics-toolbar-formation::before {
+    color: rgba(22, 207, 255, 0.7);
+    content: "FORMATION";
+    display: block;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.tactics-template-toolbar .tactics-formation-editor {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+}
+
+.tactics-template-toolbar .tactics-formation-editor summary {
+    flex: 1;
+}
+
+.tactics-template-toolbar .tactics-formation-controls {
+    top: 47px;
+}
+
+.tactics-template-grid .tactics-pitch {
+    border-radius: 3px;
+    height: 100%;
+}
+
+.tactics-clear-lineup-button {
+    align-items: center;
+    background: rgba(5, 18, 28, 0.18);
+    border: 0;
+    border-radius: 50%;
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.34),
+        0 0 18px rgba(255, 66, 88, 0.14);
+    cursor: pointer;
+    display: inline-flex;
+    height: 76px;
+    justify-content: center;
+    left: 10px;
+    padding: 0;
+    position: absolute;
+    top: 8px;
+    width: 76px;
+    z-index: 7;
+}
+
+.tactics-clear-lineup-button img {
+    display: block;
+    height: 76px;
+    object-fit: contain;
+    pointer-events: none;
+    width: 76px;
+}
+
+.tactics-clear-lineup-button:hover,
+.tactics-clear-lineup-button:focus-visible {
+    background: rgba(255, 66, 88, 0.08);
+    box-shadow:
+        0 0 20px rgba(255, 66, 88, 0.32),
+        0 10px 24px rgba(0, 0, 0, 0.34);
+    outline: none;
+    transform: scale(1.04);
+}
+
+.tactics-clear-lineup-button.is-confirming {
+    animation: tactics-clear-lineup-pulse 0.6s ease-in-out infinite alternate;
+    background: rgba(255, 66, 88, 0.18);
+    border-radius: 20px;
+    box-shadow:
+        0 0 24px rgba(255, 66, 88, 0.55),
+        0 10px 24px rgba(0, 0, 0, 0.34);
+    height: 32px;
+    padding: 0 12px;
+    width: auto;
+}
+
+.tactics-clear-lineup-confirm-label {
+    color: #ff4258;
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    text-shadow: 0 0 8px rgba(255, 66, 88, 0.7);
+    white-space: nowrap;
+}
+
+@keyframes tactics-clear-lineup-pulse {
+    from {
+        box-shadow:
+            0 0 16px rgba(255, 66, 88, 0.45),
+            0 10px 24px rgba(0, 0, 0, 0.34);
+    }
+    to {
+        box-shadow:
+            0 0 32px rgba(255, 66, 88, 0.75),
+            0 10px 24px rgba(0, 0, 0, 0.34);
+    }
+}
+
+.tactics-pitch > .tactics-field-count {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #f7fbff;
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    min-height: 0;
+    padding: 11px 13px 0;
+    position: absolute;
+    right: 0;
+    text-shadow: 0 2px 7px rgba(0, 0, 0, 0.9);
+    top: 0;
+    z-index: 5;
+}
+
+.tactics-pitch > .tactics-field-count strong {
+    font-size: 15px;
+}
+
+.tactics-template-grid .tactics-roster-list {
+    gap: 9px;
+}
+
+.tactics-template-grid .tactics-roster-player {
+    gap: 4px 6px;
+    grid-template-columns: 48px minmax(0, 1fr) 58px 44px;
+    min-height: 74px;
+    padding: 6px;
+}
+
+.tactics-template-grid .tactics-roster-image,
+.tactics-template-grid .tactics-roster-image img {
+    height: 58px;
+    width: 48px;
+}
+
+.tactics-template-grid .tactics-roster-player strong {
+    font-size: 12px;
+}
+
+.tactics-template-grid .tactics-roster-freshness {
+    grid-column: 4;
+}
+
+.tactics-template-grid .tactics-roster-freshness .tactics-freshness {
+    font-size: 9px;
+    height: 38px;
+    width: 38px;
+}
+
+.tactics-template-grid .tactics-slot {
+    width: 108px;
+}
+
+.tactics-template-grid .tactics-slot-card {
+    border-width: 4px;
+    height: 101px;
+    padding: 6px 7px 7px;
+}
+
+.tactics-template-grid .tactics-slot-position {
+    font-size: 13px;
+    left: 8px;
+    top: 6px;
+}
+
+.tactics-template-grid .tactics-slot-portrait {
+    bottom: 28px;
+    height: 68px;
+    left: 21px;
+    width: 62px;
+}
+
+.tactics-template-grid .tactics-slot-portrait img {
+    height: 76px;
+    width: 62px;
+}
+
+.tactics-template-grid .tactics-slot-portrait span {
+    height: 44px;
+    margin-top: 12px;
+    width: 44px;
+}
+
+.tactics-template-grid .tactics-slot-name {
+    bottom: 18px;
+    font-size: 10px;
+    left: 7px;
+    max-height: 20px;
+    right: 40px;
+}
+
+.tactics-template-grid .tactics-slot .tactics-freshness {
+    bottom: 8px;
+    height: 29px;
+    right: 8px;
+    width: 29px;
+}
+
+.tactics-side-stack {
+    display: grid;
+    gap: 9px;
+    grid-template-rows: 298px 190px minmax(0, 253px);
+    min-width: 0;
+}
+
+.tactics-side-stack .tactics-legacy-status {
+    display: none;
+}
+
+.tactics-side-stack > .tactics-panel {
+    height: auto;
+    min-height: 0;
+    padding: 8px 10px;
+}
+
+.tactics-side-stack .tactics-bench-panel {
+    background:
+        linear-gradient(180deg, rgba(2, 14, 26, 0.5), rgba(1, 10, 20, 0.68)),
+        url("../images/backgrounds/tactics-bench-bg.png") center / 100% 100% no-repeat;
+    border-color: rgba(30, 213, 255, 0.34);
+    box-shadow:
+        inset 0 0 30px rgba(0, 137, 184, 0.16),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+    order: 1;
+}
+
+.tactics-side-stack .tactics-subs-panel {
+    background:
+        linear-gradient(180deg, rgba(2, 14, 27, 0.42), rgba(1, 10, 22, 0.66)),
+        url("../images/backgrounds/tactics-substitutions-bg.png") center / 100% 100% no-repeat;
+    border-color: rgba(30, 213, 255, 0.34);
+    box-shadow:
+        inset 0 0 28px rgba(0, 137, 184, 0.14),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+    order: 2;
+}
+
+.tactics-side-stack .tactics-standards-panel {
+    background:
+        linear-gradient(180deg, rgba(3, 16, 31, 0.58), rgba(2, 10, 22, 0.74)),
+        url("../images/backgrounds/tactics-standards-bg.png") center / 100% 100% no-repeat;
+    border-color: rgba(28, 174, 255, 0.34);
+    box-shadow:
+        inset 0 0 28px rgba(0, 92, 165, 0.2),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+    order: 3;
+    overflow: hidden;
+    padding: 6px 10px;
+}
+
+
+.tactics-side-stack h2 {
+    margin-bottom: 7px;
+}
+
+.tactics-side-stack select,
+.tactics-side-stack input[type="number"] {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 7px;
+}
+
+.tactics-side-stack .tactics-bench-list {
+    gap: 8px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tactics-side-stack .tactics-bench-card {
+    height: 119px;
+}
+
+.tactics-side-stack .tactics-bench-card img,
+.tactics-side-stack .tactics-bench-card i {
+    height: 54px;
+    margin-top: 11px;
+    width: 50px;
+}
+
+.tactics-side-stack .tactics-bench-card i {
+    height: 44px;
+    margin-top: 16px;
+    width: 44px;
+}
+
+.tactics-side-stack .tactics-bench-card strong {
+    font-size: 12px;
+    line-height: 1.1;
+    margin-top: 2px;
+    max-height: 26px;
+}
+
+.tactics-side-stack .tactics-bench-position,
+.tactics-side-stack .tactics-bench-number {
+    font-size: 10px;
+}
+
+.tactics-side-stack .tactics-bench-card .tactics-freshness {
+    height: 24px;
+    width: 24px;
+}
+
+.tactics-dashboard .tactics-side-stack .tactics-bench-card select {
+    height: 100%;
+    inset: 0;
+    width: 100%;
+}
+
+.tactics-side-stack .tactics-substitution-list {
+    gap: 2px;
+}
+
+.tactics-side-stack .tactics-substitution-row {
+    gap: 4px;
+    grid-template-columns: 14px 48px minmax(0, 1fr) 10px minmax(0, 1fr) 98px;
+}
+
+.tactics-side-stack .tactics-subs-panel {
+    padding-bottom: 6px;
+    padding-top: 6px;
+}
+
+.tactics-side-stack .tactics-subs-panel h2 {
+    margin-bottom: 5px;
+}
+
+.tactics-side-stack .tactics-subs-panel select,
+.tactics-side-stack .tactics-subs-panel input[type="number"] {
+    font-size: 12px;
+    height: 28px;
+    padding: 0 5px;
+}
+
+.tactics-side-stack .tactics-subs-panel .tactics-substitution-row > span,
+.tactics-side-stack .tactics-subs-panel .tactics-substitution-row b {
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.tactics-side-stack .tactics-standard-list {
+    gap: 7px;
+}
+
+.tactics-side-stack .tactics-standard-list label {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-height: 34px;
+}
+
+.tactics-side-stack .tactics-standards-panel h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.tactics-side-stack .tactics-standards-panel .tactics-standard-list span {
+    flex: 0 0 62px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    opacity: 0.75;
+    text-transform: uppercase;
+}
+
+.tactics-side-stack .tactics-standards-panel .tactics-standard-list select {
+    font-size: 12px;
+    height: 34px;
+    padding: 0 7px;
+}
+
+.tactics-analysis-grid .tactics-panel {
+    min-height: 360px;
+}
+
+@media (max-width: 1440px) {
+    .tactics-dashboard {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .tactics-main-grid {
+        grid-template-columns: 29% minmax(0, 1fr) 28%;
+    }
+
+    .tactics-template-grid {
+        grid-template-columns: 19% minmax(0, 1fr) 22.9%;
+    }
+
+    .tactics-match-hero {
+        grid-template-columns: minmax(260px, 1fr) 74px minmax(260px, 1fr);
+    }
+}
+
+@media (max-width: 1180px) {
+    .tactics-template-grid,
+    .tactics-halves-grid,
+    .tactics-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tactics-template-grid .tactics-preview-panel,
+    .tactics-template-grid .tactics-pitch-panel,
+    .tactics-template-grid .tactics-side-stack {
+        height: auto;
+    }
+
+    .tactics-template-grid .tactics-pitch {
+        aspect-ratio: 16 / 10;
+        height: auto;
+        min-height: 480px;
+    }
+
+    .tactics-template-toolbar {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .tactics-side-stack {
+        grid-template-rows: auto;
+    }
+
+    .tactics-analysis-grid .tactics-top-list {
+        aspect-ratio: auto;
+        height: 420px;
+    }
+}
+
+/* ============================================================
+   ANALYSIS ROW — Premium polish, hierarchy, consistency
+   ============================================================ */
+
+/* Section divider above the analysis row */
+.tactics-analysis-grid {
+    margin-top: 14px;
+    padding-top: 14px;
+    position: relative;
+}
+
+.tactics-analysis-grid::before {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(22, 207, 255, 0.45) 50%,
+        transparent 100%);
+    content: "";
+    height: 1px;
+    left: 8%;
+    position: absolute;
+    right: 8%;
+    top: 0;
+}
+
+/* Consistent premium treatment for ALL 3 top-list panels */
+.tactics-analysis-grid .tactics-top-list {
+    background:
+        linear-gradient(180deg, rgba(1, 10, 23, 0.46), rgba(1, 8, 19, 0.72)),
+        url("../images/backgrounds/tactics-top-scorers-bg.png") center / 100% 100% no-repeat;
+    border-color: rgba(61, 200, 255, 0.38);
+    box-shadow:
+        inset 0 0 34px rgba(0, 104, 188, 0.22),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+/* Cyan uppercase headers with bottom divider — across all analysis panels */
+.tactics-analysis-grid > .tactics-panel > h2 {
+    border-bottom: 1px solid rgba(62, 220, 255, 0.22);
+    color: var(--tactics-cyan);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    margin: 0 0 8px;
+    padding-bottom: 7px;
+    text-transform: uppercase;
+}
+
+/* Manager-duel keeps its own centered header style — opt out */
+.tactics-analysis-grid > .tactics-manager-duel > h2 {
+    border-bottom: 0;
+    text-align: center;
+}
+
+/* Subtle row hover for interactivity */
+.tactics-top-list > div {
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+}
+
+.tactics-top-list > div:hover {
+    background-color: rgba(22, 207, 255, 0.06);
+}
+
+/* Ausfälle Gegner — warning-tinted border + soft red inner glow */
+.tactics-analysis-grid .tactics-opponent-absences {
+    border-color: rgba(255, 100, 120, 0.32);
+    box-shadow:
+        inset 0 0 34px rgba(180, 22, 44, 0.10),
+        0 14px 38px rgba(0, 0, 0, 0.24);
+}
+
+/* Absence cards: hover lift + clearer separation */
+.tactics-opponent-absence-list div {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.tactics-opponent-absence-list div:hover {
+    background: rgba(255, 100, 120, 0.08);
+    border-color: rgba(255, 100, 120, 0.30);
+}
+
+/* ============================================================
+   RANKING ENTRIES — futuristic staggered composition v2
+   rank-badge (polygon) → player-cutout (polygon) → entry-info
+   Badge shifts right to overlap portrait; portrait shifts left.
+   ============================================================ */
+
+.tactics-top-list {
+    position: relative;
+}
+
+.tactics-top-list .ranking-entry {
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 220, 255, 0.08);
+    column-gap: clamp(8px, 0.8vw, 14px);
+    display: grid;
+    grid-template-columns: clamp(46px, 3vw, 68px) clamp(78px, 5vw, 112px) 1fr;
+    min-height: clamp(92px, 6.5vw, 130px);
+    padding: 5px 6px 5px 4px;
+    position: relative;
+    transition: background-color 0.14s ease;
+    z-index: 1;
+}
+
+.tactics-top-list .ranking-entry:last-child {
+    border-bottom: 0;
+}
+
+.tactics-top-list .ranking-entry:hover {
+    background-color: rgba(0, 220, 255, 0.05);
+    border-radius: 4px;
+}
+
+/* rank badge — angular polygon chip, shifts right into portrait */
+.rank-badge {
+    align-items: center;
+    background: linear-gradient(135deg, rgba(0, 220, 255, 0.22), rgba(0, 110, 155, 0.12));
+    border: 1px solid rgba(0, 240, 255, 0.55);
+    box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.16), 0 0 14px rgba(0, 240, 255, 0.14);
+    clip-path: polygon(0 14%, 70% 14%, 100% 42%, 100% 100%, 24% 100%, 0 78%);
+    color: #28f4ff;
+    display: flex;
+    font-size: clamp(16px, 1.3vw, 24px);
+    font-weight: 900;
+    height: clamp(62px, 4.8vw, 88px);
+    justify-content: center;
+    position: relative;
+    text-shadow: 0 0 12px rgba(0, 240, 255, 0.65);
+    transform: translateX(clamp(4px, 0.4vw, 8px));
+    width: clamp(46px, 3vw, 68px);
+    z-index: 3;
+}
+
+.rank-badge span {
+    color: inherit !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+    line-height: 1;
+    text-shadow: inherit !important;
+}
+
+/* player portrait — angled octagonal frame, shifts left to tighten against text */
+.player-cutout {
+    background: rgba(0, 18, 28, 0.65);
+    border: 1px solid rgba(0, 240, 255, 0.30);
+    box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.45), 0 0 8px rgba(0, 200, 240, 0.08);
+    clip-path: polygon(10% 0, 88% 0, 100% 14%, 100% 86%, 88% 100%, 10% 100%, 0 86%, 0 14%);
+    height: clamp(74px, 5.8vw, 108px);
+    overflow: hidden;
+    position: relative;
+    transform: translateX(clamp(-10px, -0.5vw, -5px));
+    width: clamp(78px, 5vw, 112px);
+    z-index: 2;
+}
+
+.player-cutout img {
+    height: 100%;
+    object-fit: contain;
+    object-position: top center;
+    width: 100%;
+}
+
+/* text / value block */
+.entry-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    justify-content: center;
+    min-width: 0;
+    padding-left: 2px;
+}
+
+.entry-name {
+    color: rgba(210, 238, 255, 0.78);
+    display: block;
+    font-size: clamp(9px, 0.72vw, 12px);
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.entry-value {
+    color: #25f4ff;
+    display: block;
+    font-size: clamp(24px, 1.7vw, 42px);
+    font-weight: 900;
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(37, 244, 255, 0.45), 0 0 30px rgba(0, 200, 255, 0.20);
+}
+
+/* subtle HUD scan-lines in the empty lower area of each ranking card */
+.tactics-top-list::after {
+    background:
+        linear-gradient(90deg, transparent 12%, rgba(0, 220, 255, 0.05) 50%, transparent 88%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 20px,
+            rgba(0, 220, 255, 0.032) 20px,
+            rgba(0, 220, 255, 0.032) 21px
+        );
+    bottom: 0;
+    content: "";
+    height: 26%;
+    left: 6%;
+    pointer-events: none;
+    position: absolute;
+    right: 6%;
+    z-index: 0;
+}
+
+/* ============================================================
+   ABSENCE CARD — refined glass entries (less harsh, more premium)
+   ============================================================ */
+
+.tactics-analysis-grid .tactics-opponent-absence-list div {
+    background: rgba(6, 14, 24, 0.74);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    grid-template-columns: 72px minmax(0, 1fr) auto;
+    min-height: 86px;
+    padding: 6px 8px 6px 5px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list img {
+    height: 68px;
+    object-fit: contain;
+    object-position: top center;
+    width: 68px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list strong {
+    font-size: 14px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list span {
+    font-size: 12px;
+}
+
+/* ============================================================
+   MANAGER DUEL — stronger VS presence + elegant row rhythm
+   ============================================================ */
+
+.duel-vs {
+    font-size: 34px;
+    letter-spacing: 0.04em;
+    text-shadow:
+        0 0 20px rgba(0, 217, 255, 0.50),
+        0 0 42px rgba(0, 217, 255, 0.22),
+        0 5px 20px rgba(0, 0, 0, 0.9);
+}
+
+/* subtle row separators for clean broadcast-style comparison rhythm */
+.duel-values > div,
+.duel-labels > div {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.duel-values > div:last-child,
+.duel-labels > div:last-child {
+    border-bottom: 0;
+}
+
+/* ============================================================
+   ROW POLISH v3 — compact block, larger portraits, stronger values
+   Minimal overrides only — structure unchanged.
+   ============================================================ */
+
+/* Tighter composition: badge deeper into portrait, portrait closer to text */
+.tactics-top-list .ranking-entry {
+    column-gap: clamp(4px, 0.38vw, 7px);
+    grid-template-columns: clamp(46px, 3vw, 68px) clamp(86px, 5.5vw, 124px) 1fr;
+}
+
+.rank-badge {
+    transform: translateX(clamp(6px, 0.5vw, 10px));
+}
+
+/* portraits ~10% bigger + cover crop for premium feel */
+.player-cutout {
+    height: clamp(82px, 6.4vw, 118px);
+    transform: translateX(clamp(-12px, -0.6vw, -6px));
+    width: clamp(86px, 5.5vw, 124px);
+}
+
+.player-cutout img {
+    object-fit: cover;
+    object-position: top center;
+}
+
+.entry-info {
+    padding-left: 0;
+}
+
+/* values: slightly larger, stronger cyan glow */
+.entry-value {
+    font-size: clamp(26px, 1.85vw, 46px);
+    text-shadow:
+        0 0 14px rgba(37, 244, 255, 0.52),
+        0 0 34px rgba(0, 200, 255, 0.24);
+}
+
+/* absence entries — subtle gradient depth, softer borders */
+.tactics-analysis-grid .tactics-opponent-absence-list div {
+    background: linear-gradient(160deg, rgba(8, 18, 30, 0.78), rgba(5, 12, 22, 0.84));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 2px 10px rgba(0, 0, 0, 0.30);
+    gap: 3px 8px;
+}
+
+.tactics-analysis-grid .tactics-opponent-absence-list small {
+    align-self: center;
+}
+
+/* duel labels — calmer, more broadcast atmosphere */
+.duel-labels {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 11px;
+}
+
+/* duel row separators — even more subtle */
+.duel-values > div,
+.duel-labels > div {
+    border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+   MANAGER DUEL — unified flat grid (1 grid, 3 cols × 9 rows)
+   Header row + 8 data rows, all columns share exact row heights.
+   ============================================================ */
+
+.manager-duel-overlay {
+    grid-template-columns: minmax(0, 1fr) 80px minmax(0, 1fr);
+    grid-template-rows: 42px repeat(8, 1fr);
+}
+
+/* header cells */
+.duel-header-left {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    padding-left: 8%;
+    transform: translateX(-4px);
+}
+
+.duel-header-center {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.duel-header-right {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: center;
+    padding-right: 8%;
+}
+
+/* stat row — left value (cyan theme) */
+.duel-stat-left {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: rgba(144, 228, 255, 0.80);
+    display: flex;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    padding-left: 28%;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(0, 217, 255, 0.18);
+}
+
+.duel-stat-left.is-lead {
+    color: #67e9ff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 217, 255, 0.36);
+}
+
+.duel-stat-left.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* stat row — center label */
+.duel-stat-label {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: rgba(255, 255, 255, 0.62);
+    display: flex;
+    font-size: 11px;
+    font-weight: 700;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
+}
+
+/* stat row — right value (gold theme) */
+.duel-stat-right {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    color: rgba(255, 230, 150, 0.80);
+    display: flex;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: center;
+    letter-spacing: 0;
+    line-height: 1.2;
+    padding-right: 28%;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(255, 201, 40, 0.22);
+}
+
+.duel-stat-right.is-lead {
+    color: #ffe784;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 201, 40, 0.34);
+}
+
+.duel-stat-right.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* ============================================================
+   ABSENCE LIST — show 4, scrollbar from 5th
+   Entry height: min-height 86px + 2px border = 88px; gap: 7px
+   4 entries: 4×88 + 3×7 = 352 + 21 = 373px → +4px breathing room
+   ============================================================ */
+
+/* cancel the old hide-from-4th rule */
+.tactics-opponent-absence-list div:nth-child(n+4) {
+    display: grid;
+}
+
+/* 4 entries visible, scroll from 5th */
+.tactics-opponent-absence-list {
+    max-height: calc(4 * 88px + 3 * 7px + 4px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+/* thin dark scrollbar — cyan accent */
+.tactics-opponent-absence-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tactics-opponent-absence-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 4px;
+}
+
+.tactics-opponent-absence-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 200, 255, 0.28);
+    border-radius: 4px;
+}
+
+.tactics-opponent-absence-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 200, 255, 0.55);
+}
+
+/* ============================================================
+   LIGHTING & DEPTH PASS — finer inner glow, layered shadows,
+   softer card-in-card depth. Layout untouched.
+   ============================================================ */
+
+/* top-list panels: add top-edge highlight, layer the outer shadow */
+.tactics-analysis-grid .tactics-top-list {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        inset 0 0 22px rgba(0, 104, 188, 0.13),
+        0 2px 10px rgba(0, 0, 0, 0.20),
+        0 18px 50px rgba(0, 0, 0, 0.17);
+}
+
+/* absence outer panel: softer directional red bloom + top highlight */
+.tactics-analysis-grid .tactics-opponent-absences {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 22px rgba(160, 16, 36, 0.07),
+        0 2px 10px rgba(0, 0, 0, 0.20),
+        0 18px 50px rgba(0, 0, 0, 0.15);
+}
+
+/* duel card: top-edge glow strip + layered outer shadow */
+.manager-duel-card {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        inset 0 0 30px rgba(0, 217, 255, 0.05),
+        0 4px 14px rgba(0, 0, 0, 0.26),
+        0 20px 54px rgba(0, 0, 0, 0.32);
+}
+
+/* absence inner entries — softer card-in-card depth */
+.tactics-analysis-grid .tactics-opponent-absence-list div {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.20),
+        0 1px 5px rgba(0, 0, 0, 0.13),
+        0 5px 18px rgba(0, 0, 0, 0.16);
+}
+
+/* ranking entries — hairline top-edge light */
+.tactics-top-list .ranking-entry {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ============================================================
+   RANKING STAGGER v3 — glow/brightness/opacity hierarchy only.
+   No portrait scaling. Portraits all same base size.
+   Rank 1 vs. 2/3 distinction through visual loudness, not size.
+   ============================================================ */
+
+/* ── Rank 1: full presence, subtle tint ─────────────────── */
+.tactics-top-list .ranking-entry:nth-child(1) {
+    background: rgba(0, 220, 255, 0.035);
+}
+
+.tactics-top-list .ranking-entry:nth-child(1) .player-cutout {
+    filter: brightness(1.08);
+    opacity: 1;
+}
+
+.tactics-top-list .ranking-entry:nth-child(1) .rank-badge {
+    box-shadow:
+        inset 0 0 14px rgba(0, 240, 255, 0.30),
+        0 0 22px rgba(0, 240, 255, 0.24);
+}
+
+.tactics-top-list .ranking-entry:nth-child(1) .entry-value {
+    color: #25f4ff;
+    font-size: clamp(26px, 1.88vw, 46px);
+    text-shadow:
+        0 0 14px rgba(37, 244, 255, 0.62),
+        0 0 34px rgba(0, 200, 255, 0.28);
+}
+
+.tactics-top-list .ranking-entry:nth-child(1) .entry-name {
+    color: rgba(210, 238, 255, 0.84);
+}
+
+/* ── Rank 2: slightly dimmed, same layout ────────────────── */
+.tactics-top-list .ranking-entry:nth-child(2) .player-cutout {
+    filter: brightness(0.95);
+    opacity: 0.92;
+    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.96);
+}
+
+.tactics-top-list .ranking-entry:nth-child(2) .rank-badge {
+    border-color: rgba(0, 240, 255, 0.40);
+    box-shadow:
+        inset 0 0 9px rgba(0, 240, 255, 0.14),
+        0 0 12px rgba(0, 240, 255, 0.11);
+    color: rgba(40, 244, 255, 0.80);
+    transform: translateX(clamp(6px, 0.5vw, 10px));
+}
+
+.tactics-top-list .ranking-entry:nth-child(2) .entry-value {
+    color: rgba(37, 244, 255, 0.78);
+    font-size: clamp(24px, 1.72vw, 42px);
+    text-shadow:
+        0 0 11px rgba(37, 244, 255, 0.42),
+        0 0 26px rgba(0, 200, 255, 0.18);
+}
+
+.tactics-top-list .ranking-entry:nth-child(2) .entry-name {
+    color: rgba(210, 238, 255, 0.66);
+}
+
+/* ── Rank 3: calm background presence ───────────────────── */
+.tactics-top-list .ranking-entry:nth-child(3) .player-cutout {
+    filter: brightness(0.88);
+    opacity: 0.82;
+    transform: translateX(clamp(-12px, -0.6vw, -6px)) scale(0.96);
+}
+
+.tactics-top-list .ranking-entry:nth-child(3) .rank-badge {
+    border-color: rgba(0, 240, 255, 0.28);
+    box-shadow:
+        inset 0 0 6px rgba(0, 240, 255, 0.08),
+        0 0 7px rgba(0, 240, 255, 0.07);
+    color: rgba(40, 244, 255, 0.62);
+    transform: translateX(clamp(6px, 0.5vw, 10px));
+}
+
+.tactics-top-list .ranking-entry:nth-child(3) .entry-value {
+    color: rgba(37, 244, 255, 0.58);
+    font-size: clamp(22px, 1.58vw, 38px);
+    text-shadow:
+        0 0 9px rgba(37, 244, 255, 0.28),
+        0 0 20px rgba(0, 200, 255, 0.12);
+}
+
+.tactics-top-list .ranking-entry:nth-child(3) .entry-name {
+    color: rgba(210, 238, 255, 0.50);
+}
+
+/* ============================================================
+   DUEL STATS — outer-edge alignment (symmetric mirror)
+   Left: flush-left, numbers grow rightward (inward toward center)
+   Right: flush-right, numbers grow leftward (inward toward center)
+   ============================================================ */
+
+.duel-stat-left {
+    justify-content: flex-start;
+    padding-left: 10px;
+    padding-right: 0;
+}
+
+.duel-stat-right {
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 10px;
+}
+
+/* ============================================================
+   DUEL CARD v2 — inner-boundary alignment + header portrait
+   ============================================================ */
+
+/* Values flush to inner boundary (toward center labels) */
+.duel-stat-left {
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 8px;
+}
+
+.duel-stat-right {
+    justify-content: flex-start;
+    padding-left: 8px;
+    padding-right: 0;
+}
+
+/* Narrower center column — brings both sides closer together */
+.manager-duel-overlay {
+    grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr);
+}
+
+/* Manager portrait in header cell */
+.duel-header-portrait {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.55),
+        0 0 0 2px rgba(0, 200, 255, 0.14);
+    flex-shrink: 0;
+    height: 50px;
+    object-fit: cover;
+    object-position: top center;
+    width: 50px;
+}
+
+/* Header cells: row = portrait | name + badge */
+.duel-header-left,
+.duel-header-right {
+    align-items: center;
+    column-gap: 8px;
+    flex-direction: row;
+    padding-left: 0;
+    padding-right: 0;
+    transform: none;
+}
+
+.duel-header-left {
+    justify-content: flex-start;
+    padding-left: 10px;
+}
+
+.duel-header-right {
+    justify-content: flex-end;
+    padding-right: 10px;
+}
+
+/* Name + rank stacked within the header row */
+.duel-header-left .duel-manager-name,
+.duel-header-right .duel-manager-name {
+    margin: 0;
+}
+
+.duel-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+/* VS: slight upward pull for visual centering with portrait */
+.duel-header-center .duel-vs {
+    margin-top: -8px;
+}
+
+/* ============================================================
+   DUEL CARD v2.1 — hide old bottom portraits, enlarge header portrait
+   ============================================================ */
+
+/* Old bottom-corner portraits ausblenden (jetzt im Header) */
+.duel-manager-portrait {
+    display: none;
+}
+
+/* Header-Portrait vergrößert, füllt den grauen Rahmen */
+.duel-header-portrait {
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    border-radius: 50%;
+    box-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.60),
+        0 0 0 2px rgba(0, 200, 255, 0.16);
+    flex-shrink: 0;
+    height: 74px;
+    object-fit: cover;
+    object-position: top center;
+    width: 74px;
+}
+
+/* ============================================================
+   VS-TABLE v1 — rigid 3-column comparison axis
+   Overlay → flex-column: header-row (fixed) + vs-table (flex-fill)
+   Each vs-row: fixed grid, left values RIGHT-aligned, right LEFT-aligned
+   ============================================================ */
+
+/* Overlay: no longer a grid, now flex-column */
+.manager-duel-overlay {
+    display: flex !important;
+    flex-direction: column;
+    grid-template-columns: unset;
+    grid-template-rows: unset;
+    padding: 10px 0 10px;
+}
+
+/* Header row: 3-col grid with same column proportions as vs-rows */
+.duel-header-row {
+    display: grid;
+    flex-shrink: 0;
+    grid-template-columns: minmax(0, 1fr) 180px minmax(0, 1fr);
+    height: 82px;
+}
+
+/* vs-table fills all remaining height */
+.vs-table {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Each vs-row: rigid 3-col grid, equal share of remaining height */
+.vs-row {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.048);
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr) 180px minmax(0, 1fr);
+    min-height: 0;
+}
+
+/* Last row: no divider */
+.vs-row:last-child {
+    border-bottom: none;
+}
+
+/* Left value cell: right-aligned, flush to label column edge */
+.vs-value-left {
+    align-items: center;
+    color: rgba(144, 228, 255, 0.82);
+    display: flex;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: flex-end;
+    letter-spacing: 0;
+    line-height: 1.2;
+    min-width: 0;
+    padding-right: 12px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(0, 217, 255, 0.18);
+}
+
+.vs-value-left.is-lead {
+    color: #67e9ff;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(0, 217, 255, 0.36);
+}
+
+.vs-value-left.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* Center label cell: fixed width, exact center, channel style */
+.vs-label {
+    align-items: center;
+    border-left: 1px solid rgba(0, 200, 255, 0.20);
+    border-right: 1px solid rgba(255, 201, 40, 0.20);
+    color: rgba(255, 255, 255, 0.58);
+    display: flex;
+    font-size: 11px;
+    font-weight: 700;
+    justify-content: center;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    text-align: center;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
+}
+
+/* Right value cell: left-aligned, flush to label column edge */
+.vs-value-right {
+    align-items: center;
+    color: rgba(255, 230, 150, 0.82);
+    display: flex;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    justify-content: flex-start;
+    letter-spacing: 0;
+    line-height: 1.2;
+    min-width: 0;
+    padding-left: 12px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.70), 0 0 8px rgba(255, 201, 40, 0.22);
+}
+
+.vs-value-right.is-lead {
+    color: #ffe784;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75), 0 0 10px rgba(255, 201, 40, 0.34);
+}
+
+.vs-value-right.is-trail {
+    color: #ff6579;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.76), 0 0 8px rgba(255, 66, 88, 0.28);
+}
+
+/* Header cells now live inside .duel-header-row, adjust accordingly */
+.duel-header-row .duel-header-left {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-start;
+    padding-left: 12px;
+    transform: none;
+}
+
+.duel-header-row .duel-header-right {
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-right: 12px;
+    transform: none;
+}
+
+.duel-header-row .duel-header-center {
+    align-items: center;
+    border-left: 1px solid rgba(0, 200, 255, 0.20);
+    border-right: 1px solid rgba(255, 201, 40, 0.20);
+    display: flex;
+    justify-content: center;
+}
+
+/* ============================================================
+   MANAGER DUEL FINAL ALIGNMENT
+   One shared axis for header and stat rows.
+   ============================================================ */
+
+.manager-duel-card {
+    --duel-center-width: 118px;
+    --duel-row-line: rgba(255, 255, 255, 0.07);
+    --duel-axis-blue: rgba(0, 217, 255, 0.24);
+    --duel-axis-gold: rgba(255, 201, 40, 0.24);
+}
+
+.manager-duel-overlay {
+    background:
+        linear-gradient(90deg, transparent calc(50% - 69px), rgba(0, 217, 255, 0.07) calc(50% - 68px), transparent calc(50% - 67px)),
+        linear-gradient(90deg, transparent calc(50% + 67px), rgba(255, 201, 40, 0.07) calc(50% + 68px), transparent calc(50% + 69px));
+    gap: 6px;
+    padding: 12px 14px 13px;
+}
+
+.duel-header-row,
+.vs-row {
+    grid-template-columns: minmax(0, 1fr) var(--duel-center-width) minmax(0, 1fr);
+}
+
+.duel-header-row {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    height: 86px;
+    padding-bottom: 7px;
+}
+
+.duel-header-row .duel-header-left,
+.duel-header-row .duel-header-right {
+    min-width: 0;
+}
+
+.duel-header-row .duel-header-left {
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 14px;
+    text-align: right;
+}
+
+.duel-header-row .duel-header-right {
+    justify-content: flex-start;
+    padding-left: 14px;
+    padding-right: 0;
+    text-align: left;
+}
+
+.duel-header-row .duel-header-center {
+    border-left: 1px solid var(--duel-axis-blue);
+    border-right: 1px solid var(--duel-axis-gold);
+    height: 100%;
+}
+
+.duel-header-info {
+    align-items: inherit;
+}
+
+.duel-header-left .duel-header-info {
+    align-items: flex-end;
+}
+
+.duel-header-right .duel-header-info {
+    align-items: flex-start;
+}
+
+.duel-manager-name {
+    font-size: 14px;
+    max-width: 116px;
+}
+
+.duel-manager-rank {
+    transform: none;
+}
+
+.duel-header-portrait {
+    height: 48px;
+    width: 48px;
+}
+
+.duel-vs {
+    font-size: 28px;
+    margin-top: 0;
+}
+
+.vs-table {
+    gap: 0;
+}
+
+.vs-row {
+    border-bottom-color: var(--duel-row-line);
+    min-height: 28px;
+    position: relative;
+}
+
+.vs-row::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.035), transparent);
+    content: "";
+    height: 1px;
+    left: 8px;
+    pointer-events: none;
+    position: absolute;
+    right: 8px;
+    top: 0;
+}
+
+.vs-value-left,
+.vs-value-right,
+.vs-label {
+    min-height: 28px;
+}
+
+.vs-value-left {
+    font-size: 14px;
+    justify-content: flex-end;
+    padding-left: 0;
+    padding-right: 16px;
+    text-align: right;
+}
+
+.vs-value-right {
+    font-size: 14px;
+    justify-content: flex-start;
+    padding-left: 16px;
+    padding-right: 0;
+    text-align: left;
+}
+
+.vs-label {
+    border-left: 1px solid var(--duel-axis-blue);
+    border-right: 1px solid var(--duel-axis-gold);
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 10px;
+    letter-spacing: 0;
+    padding: 0 6px;
+}
+
+/* ============================================================
+   RANKING PANELS WITH PROVIDED BACKGROUNDS
+   Background assets include title, rank numbers and panel frames.
+   ============================================================ */
+
+.tactics-analysis-grid .tactics-top-list {
+    aspect-ratio: 2 / 3;
+    background-color: #020b17;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border: 0;
+    box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.34),
+        0 0 26px rgba(0, 190, 255, 0.12);
+    display: grid;
+    grid-template-rows: 17% 27.66% 27.66% 27.66%;
+    overflow: hidden;
+    padding: 0;
+    position: relative;
+}
+
+.tactics-analysis-grid > .tactics-top-list.tactics-top-scorers {
+    background: #020b17 url("../images/backgrounds/ranking-top-scorers.png") center / 100% 100% no-repeat;
+}
+
+.tactics-analysis-grid > .tactics-top-list.tactics-top-assists {
+    background: #020b17 url("../images/backgrounds/ranking-assists.png") center / 100% 100% no-repeat;
+}
+
+.tactics-analysis-grid > .tactics-top-list.tactics-top-grades {
+    background: #020b17 url("../images/backgrounds/ranking-grades.png") center / 100% 100% no-repeat;
+}
+
+.tactics-analysis-grid .tactics-top-list h2,
+.tactics-analysis-grid .tactics-top-list::after {
+    display: none;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    column-gap: 0;
+    display: grid;
+    grid-template-columns: 25% 27% 27% 21%;
+    min-height: 0;
+    padding: 0;
+    position: relative;
+    transform: none;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:hover {
+    background: transparent;
+    border-radius: 0;
+}
+
+.tactics-analysis-grid .tactics-top-list .rank-badge {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    clip-path: none;
+    height: auto;
+    opacity: 0;
+    pointer-events: none;
+    transform: none;
+    width: auto;
+}
+
+.tactics-analysis-grid .tactics-top-list .player-cutout {
+    align-self: center;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    clip-path: none;
+    grid-column: 2;
+    height: 82%;
+    justify-self: start;
+    overflow: visible;
+    transform: translateX(-4%);
+    width: 104%;
+    z-index: 2;
+}
+
+.tactics-analysis-grid .tactics-top-list .player-cutout img {
+    display: block;
+    filter:
+        drop-shadow(0 8px 18px rgba(0, 0, 0, 0.75))
+        drop-shadow(0 0 16px rgba(0, 210, 255, 0.18));
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    width: 100%;
+}
+
+.tactics-analysis-grid .tactics-top-list .entry-info {
+    align-self: center;
+    display: grid;
+    align-items: center;
+    gap: 2px;
+    grid-column: 3 / 5;
+    grid-template-columns: minmax(58px, 1fr) minmax(48px, auto);
+    justify-items: stretch;
+    padding: 0 13% 0 0;
+    text-align: initial;
+    z-index: 3;
+}
+
+.tactics-analysis-grid .tactics-top-list .entry-name {
+    color: rgba(235, 248, 255, 0.88);
+    font-size: clamp(10px, 0.72vw, 13px);
+    font-weight: 900;
+    grid-column: 1;
+    line-height: 1.06;
+    max-width: 100%;
+    justify-self: center;
+    text-align: center;
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.88);
+    white-space: normal;
+}
+
+.tactics-analysis-grid .tactics-top-list .entry-value {
+    color: #28eaff;
+    font-size: clamp(26px, 2.1vw, 48px);
+    font-weight: 950;
+    grid-column: 2;
+    justify-self: center;
+    line-height: 0.9;
+    text-shadow:
+        0 0 14px rgba(40, 234, 255, 0.66),
+        0 0 34px rgba(0, 180, 255, 0.28),
+        0 4px 16px rgba(0, 0, 0, 0.8);
+}
+
+.tactics-analysis-grid .tactics-top-grades .entry-value {
+    font-size: clamp(22px, 1.65vw, 38px);
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) {
+    background: transparent;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .rank-badge {
+    border: 0;
+    box-shadow: none;
+    color: transparent;
+    transform: none;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .player-cutout {
+    filter: none;
+    opacity: 1;
+    transform: translateX(-4%);
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .entry-name {
+    color: rgba(235, 248, 255, 0.88);
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-child(n) .entry-value {
+    color: #28eaff;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-of-type(1) {
+    grid-row: 2;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-of-type(2) {
+    grid-row: 3;
+}
+
+.tactics-analysis-grid .tactics-top-list .ranking-entry:nth-of-type(3) {
+    grid-row: 4;
+}
+
+/* --------------------------------------------------------------------------
+   Taktik-Lock-Banner
+   -------------------------------------------------------------------------- */
+.tactics-locked-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(255,140,0,0.08);
+    border: 1px solid rgba(255,140,0,0.3);
+    border-radius: 7px;
+    padding: 12px 16px;
+    margin: 0 0 14px;
+}
+.tactics-locked-banner__icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1.2; }
+.tactics-locked-banner__text { display: flex; flex-direction: column; gap: 2px; }
+.tactics-locked-banner__text strong { font-size: 0.9rem; font-weight: 700; color: #ffb040; }
+.tactics-locked-banner__text span { font-size: 0.8rem; color: #aa8050; line-height: 1.4; }
+
+.tactics-confirm-button.is-locked {
+    background: rgba(255,140,0,0.12) !important;
+    border-color: rgba(255,140,0,0.3) !important;
+    box-shadow: none !important;
+    color: #aa8050 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+}
+
+/* --------------------------------------------------------------------------
+   Spieler-Status-Badges (Gesperrt / Verletzt) in Kader + Bank
+   -------------------------------------------------------------------------- */
+.tactics-status-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    line-height: 1.5;
+    vertical-align: middle;
+    margin-left: 3px;
+}
+.tactics-status-badge.is-suspended {
+    background: rgba(220, 53, 69, 0.18);
+    color: #e06070;
+    border: 1px solid rgba(220, 53, 69, 0.35);
+}
+.tactics-status-badge.is-injured {
+    background: rgba(255, 140, 0, 0.14);
+    color: #e09050;
+    border: 1px solid rgba(255, 140, 0, 0.30);
+}
+
+/* Leerer-Ausfälle-Gegner-Hinweis */
+.tactics-opponent-absence-empty {
+    font-size: 0.78rem;
+    color: #666;
+    padding: 8px 0;
+    text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Eigene Ausfälle im Roster-Panel (Gesperrt / Verletzt)
+   -------------------------------------------------------------------------- */
+.tactics-own-absences {
+    margin-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding-top: 8px;
+}
+.tactics-own-absences__title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #666;
+    margin: 0 0 6px;
+}
+.tactics-own-absence-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    font-size: 0.78rem;
+}
+.tactics-own-absence-row img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+.tactics-own-absence-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ccc;
+}
+.tactics-own-absence-reason {
+    font-size: 0.68rem;
+    color: #888;
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Nicht verfügbare Spieler im Roster (gesperrt / verletzt) — disabled state
+   -------------------------------------------------------------------------- */
+.tactics-roster-player.is-unavailable {
+    opacity: 0.45;
+    pointer-events: none;
+    filter: grayscale(0.6);
+    cursor: not-allowed;
+}
