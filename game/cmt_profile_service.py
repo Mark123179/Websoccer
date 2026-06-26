@@ -29,7 +29,68 @@ from game.models import (
     PlayerCMTAttributeProfile,
     PlayerCMTProfile,
     PlayerExternalId,
+    PlayerStrengthProfile,
 )
+
+# ── CMT-Position → WS-Positionscode ─────────────────────────────────────────
+# CMT liefert EA-typische Strings (GK, CB, LB, CDM, CM, CAM, LW, ST …).
+# Groß/Kleinschreibung wird beim Lookup normalisiert.
+_CMT_TO_WS_POSITION = {
+    'gk': 'TW', 'gkp': 'TW', 'goalkeeper': 'TW',
+    'cb': 'IV', 'dc': 'IV', 'centreback': 'IV', 'center-back': 'IV',
+    'lb': 'LV', 'lwb': 'LV', 'leftback': 'LV', 'left-back': 'LV',
+    'rb': 'RV', 'rwb': 'RV', 'rightback': 'RV', 'right-back': 'RV',
+    'cdm': 'DM', 'dm': 'DM', 'defensivemidfield': 'DM',
+    'cm': 'ZM', 'mc': 'ZM', 'centralmidfield': 'ZM',
+    'cam': 'OM', 'am': 'OM', 'attackingmidfield': 'OM',
+    'lm': 'LM', 'lw': 'LM', 'leftmidfield': 'LM', 'leftwing': 'LM',
+    'rm': 'RM', 'rw': 'RM', 'rightmidfield': 'RM', 'rightwing': 'RM',
+    'lf': 'LF', 'leftwingforward': 'LF',
+    'rf': 'RF', 'rightwingforward': 'RF',
+    'cf': 'ST', 'ss': 'ST', 'centreforward': 'ST',
+    'st': 'ST', 'fw': 'ST', 'striker': 'ST',
+}
+
+
+def _cmt_position_to_ws(raw, attributes=None):
+    """Mappt CMT-Positionsstring auf WS-Positionscode.
+
+    Probiert mehrere bekannte Pfade im Rohpayload. Wenn der CMT-String nicht
+    erkannt wird, wird GK-Erkennung via Attributwerte versucht (gkreflexes +
+    gkdiving > 60). Standard-Fallback: 'ST'.
+    """
+    pos_raw = (
+        _dig(raw, 'info.preferredposition.label') or
+        _dig(raw, 'info.preferredposition.shortlabel') or
+        _dig(raw, 'info.mainposition.label') or
+        _dig(raw, 'info.position.label') or
+        _dig(raw, 'info.preferredposition') or
+        _dig(raw, 'info.position') or
+        ''
+    )
+    pos_key = str(pos_raw).lower().replace(' ', '').replace('_', '')
+    ws = _CMT_TO_WS_POSITION.get(pos_key)
+    if ws:
+        return ws
+
+    # GK-Erkennung via Attributwerte als letzter Ausweg
+    attrs = attributes or raw.get('attributes') or {}
+    gk_ref = _int(_dig(raw, 'attributes.gkreflexes') or attrs.get('gkreflexes'))
+    gk_div = _int(_dig(raw, 'attributes.gkdiving') or attrs.get('gkdiving'))
+    if gk_ref is not None and gk_div is not None and gk_ref > 60 and gk_div > 60:
+        return 'TW'
+
+    return 'ST'  # sicherer Default
+
+
+def _compute_age(dob):
+    """Berechnet das aktuelle Alter aus dem Geburtsdatum."""
+    if not dob:
+        return 25  # Plausibles Default falls DOB fehlt
+    today = date.today()
+    return today.year - dob.year - (
+        (today.month, today.day) < (dob.month, dob.day)
+    )
 
 
 def _hash(payload):
@@ -375,3 +436,124 @@ def _upsert_club_external_id(club, cmt_source, team_id, db_slug, now):
             'last_seen_at': now,
         },
     )
+
+
+# ── Auto-Create: Spieler aus CMT-Rohdaten anlegen ───────────────────────────
+
+def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
+    """Legt einen neuen vereinslosen Spieler aus CMT-Rohdaten an.
+
+    Wird aufgerufen wenn ein CMT-Spieler nicht in der WS-DB gefunden wurde
+    (reason='not_in_ws'). Leihe-Spieler, die nur bei importierten Vereinen
+    auftauchen würden, werden so trotzdem erfasst.
+
+    Erstellt:
+      - Player (club=None, vereinslos)
+      - PlayerExternalId (source=CMTRACKER, external_id=<cmt_player_id>)
+      - PlayerStrengthProfile (base_strength aus overallrating)
+
+    Returns dict:
+      status: 'created' | 'skipped' | 'error'
+      player: Player-Instanz (None bei dry_run oder Fehler)
+      cmt_id: str
+      name: str
+      reason: str (nur bei 'error'/'skipped')
+    """
+    cmt_id = _str(_dig(raw, 'info.playerid'))
+    if not cmt_id:
+        return {'status': 'error', 'cmt_id': None, 'player': None,
+                'name': '?', 'reason': 'Kein CMT-playerid im Payload'}
+
+    first_name = _str(_dig(raw, 'info.name.firstname') or
+                      _dig(raw, 'info.name.knownas') or '') or '?'
+    last_name  = _str(_dig(raw, 'info.name.lastname')  or
+                      _dig(raw, 'info.name.knownas') or '') or '?'
+    display_name = (
+        _str(_dig(raw, 'info.name.knownas')) or
+        f'{first_name} {last_name}'.strip()
+    )
+
+    # Geburtsdatum
+    dob = None
+    dob_raw = _dig(raw, 'info.birthdate')
+    if dob_raw:
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%d.%m.%Y'):
+            try:
+                dob = datetime.strptime(str(dob_raw), fmt).date()
+                break
+            except ValueError:
+                continue
+
+    overall = _int(_dig(raw, 'info.overallrating')) or 50
+    potential = _int(_dig(raw, 'info.potential')) or overall
+    position = _cmt_position_to_ws(raw)
+
+    wsc_id = f'CMT{cmt_id}'
+
+    # ── Idempotenz-Check ────────────────────────────────────────────────────
+    if not dry_run:
+        try:
+            cmt_source = DataSource.objects.get(code='CMTRACKER')
+        except DataSource.DoesNotExist:
+            return {'status': 'error', 'cmt_id': cmt_id, 'player': None,
+                    'name': display_name, 'reason': 'DataSource CMTRACKER fehlt'}
+
+        existing_ext = PlayerExternalId.objects.filter(
+            source=cmt_source, external_id=cmt_id
+        ).first()
+        if existing_ext:
+            return {'status': 'skipped', 'cmt_id': cmt_id,
+                    'player': existing_ext.player, 'name': display_name,
+                    'reason': 'PlayerExternalId bereits vorhanden'}
+
+        if Player.objects.filter(wsc_player_id=wsc_id).exists():
+            return {'status': 'skipped', 'cmt_id': cmt_id, 'player': None,
+                    'name': display_name, 'reason': 'wsc_player_id bereits vergeben'}
+
+    if dry_run:
+        return {
+            'status': 'created',
+            'cmt_id': cmt_id,
+            'player': None,
+            'name': display_name,
+            'position': position,
+            'overall': overall,
+            'dob': dob,
+        }
+
+    # ── Anlegen ─────────────────────────────────────────────────────────────
+    with transaction.atomic():
+        player = Player.objects.create(
+            first_name=first_name,
+            last_name=last_name,
+            wsc_player_id=wsc_id,
+            date_of_birth=dob,
+            age=_compute_age(dob),
+            main_position_1=position,
+            position=position,
+            potential=max(potential, overall),
+            club=None,
+        )
+
+        PlayerExternalId.objects.create(
+            player=player,
+            source=cmt_source,
+            external_id=cmt_id,
+            db_slug=db_slug,
+            last_seen_at=timezone.now(),
+        )
+
+        PlayerStrengthProfile.objects.create(
+            player=player,
+            base_strength=overall,
+        )
+
+    return {
+        'status': 'created',
+        'cmt_id': cmt_id,
+        'player': player,
+        'name': display_name,
+        'position': position,
+        'overall': overall,
+        'dob': dob,
+    }
