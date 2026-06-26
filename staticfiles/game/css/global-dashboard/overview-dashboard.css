@@ -1,0 +1,1878 @@
+/* ============================================================
+   OVERVIEW DASHBOARD — AAA Premium Layout
+   Skaliert: 1080p / 1440p / 2K / 4K via clamp() + CSS Grid
+   ============================================================ */
+
+body.overview-home-page {
+    background: #02070d;
+}
+
+.overview-home-page .navbar {
+    background:
+        linear-gradient(180deg, rgba(2, 10, 16, 0.32), rgba(2, 8, 14, 0.64)),
+        #02070d;
+}
+
+.overview-home-page .start-dashboard {
+    background:
+        radial-gradient(circle at 58% 0%, rgba(255, 255, 255, 0.09), transparent 22%),
+        radial-gradient(circle at 22% 18%, rgba(37, 244, 238, 0.10), transparent 28%),
+        linear-gradient(90deg, rgba(1, 8, 14, 0.88), rgba(1, 10, 16, 0.42), rgba(1, 8, 14, 0.88)),
+        linear-gradient(180deg, rgba(1, 8, 14, 0.14), rgba(1, 8, 14, 0.92)),
+        url("../../images/backgrounds/player-profile-stadium-atmosphere.svg") center / cover no-repeat,
+        #02070d;
+    /* overflow-x:hidden Fake-Fix entfernt — Layout-Contract verbietet
+       das Verstecken horizontaler Überläufe auf Haupt-Wrappern. */
+    padding: 22px 22px 30px;
+}
+
+/* ============================================================
+   GRID SYSTEM
+   ============================================================ */
+
+.overview-dashboard > .ws-game-header,
+.overview-grid {
+    margin-left: auto;
+    margin-right: auto;
+    width: min(100%, var(--dashboard-artboard-width));
+}
+
+.overview-grid {
+    display: grid;
+    row-gap: 20px;
+    column-gap: 20px;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    grid-template-rows:
+        430px
+        390px
+        355px;
+}
+
+/* ============================================================
+   SHARED CARD BASE
+   ============================================================ */
+
+.overview-card,
+.overview-chat-card,
+.overview-transfer-card,
+.overview-table-card,
+.overview-news-card,
+.overview-social-card,
+.overview-manager-widget,
+.overview-live-widget,
+.overview-stats-widget {
+    border-radius: 8px;
+    min-width: 0;
+    position: relative;
+}
+
+.overview-card,
+.overview-chat-card,
+.overview-transfer-card,
+.overview-table-card,
+.overview-news-card,
+.overview-social-card,
+.overview-manager-widget,
+.overview-live-widget,
+.overview-stats-widget {
+    background:
+        linear-gradient(180deg, rgba(10, 28, 42, 0.90), rgba(4, 14, 22, 0.96)),
+        radial-gradient(circle at 86% 8%, rgba(255, 255, 255, 0.13), transparent 24%);
+    border: 1px solid rgba(34, 230, 255, 0.14);
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.44),
+        inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    padding: 22px;
+}
+
+/* Background image overlay on cards */
+.overview-card::before,
+.overview-chat-card::before,
+.overview-transfer-card::before,
+.overview-table-card::before,
+.overview-news-card::before,
+.overview-social-card::before,
+.overview-manager-widget::before,
+.overview-live-widget::before,
+.overview-stats-widget::before {
+    background:
+        linear-gradient(
+            90deg,
+            var(--overview-card-shade-left, rgba(3, 10, 16, 0.92)),
+            var(--overview-card-shade-right, rgba(3, 10, 16, 0.38))
+        ),
+        var(--overview-card-bg, none)
+            var(--overview-card-bg-position, center) / cover no-repeat;
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    opacity: var(--overview-card-bg-opacity, 0.42);
+    pointer-events: none;
+    position: absolute;
+}
+
+.overview-card > *,
+.overview-chat-card > *,
+.overview-transfer-card > *,
+.overview-table-card > *,
+.overview-news-card > *,
+.overview-social-card > *,
+.overview-manager-widget > *,
+.overview-live-widget > *,
+.overview-stats-widget > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Cyan top accent line on cards */
+.overview-card::after,
+.overview-chat-card::after,
+.overview-transfer-card::after,
+.overview-table-card::after,
+.overview-news-card::after {
+    background: linear-gradient(90deg, var(--cyan), transparent 60%);
+    border-radius: 8px 8px 0 0;
+    content: "";
+    height: 2px;
+    left: 0;
+    opacity: 0.6;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 2;
+}
+
+/* ============================================================
+   CARD TITLE
+   ============================================================ */
+
+.overview-dashboard .card-title {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+}
+
+/* ============================================================
+   ROW 1 — COLUMN PLACEMENT
+   ============================================================ */
+
+.overview-club-card {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1 / span 8;
+    grid-row: 1;
+    overflow: hidden;
+    padding-bottom: 0;
+}
+
+.overview-next-match-card {
+    display: flex;
+    flex-direction: column;
+    grid-column: 9 / span 8;
+    grid-row: 1;
+}
+
+.overview-last-match-card {
+    display: flex;
+    flex-direction: column;
+    grid-column: 17 / span 4;
+    grid-row: 1;
+}
+
+.overview-manager-widget {
+    grid-column: 21 / span 4;
+    grid-row: 1;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-manager.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.82;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.28);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.18);
+}
+
+/* ============================================================
+   ROW 2 — COLUMN PLACEMENT
+   ============================================================ */
+
+.overview-chat-card {
+    grid-column: 1 / span 12;
+    grid-row: 2;
+    z-index: 3;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-chat.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.70;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.40);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.20);
+}
+
+.overview-transfer-card {
+    overflow: visible;
+    grid-column: 13 / span 6;
+    grid-row: 2;
+    z-index: 8;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-transfer.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.70;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.36);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.20);
+}
+
+.overview-table-card {
+    grid-column: 19 / span 6;
+    grid-row: 2;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-table.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.78;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.40);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.18);
+}
+
+/* ============================================================
+   ROW 3 — COLUMN PLACEMENT
+   ============================================================ */
+
+.overview-club-news-card {
+    grid-column: 1 / span 7;
+    grid-row: 3;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-news.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.74;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.36);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.20);
+}
+
+.overview-sim-news-card {
+    grid-column: 8 / span 6;
+    grid-row: 3;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-sim-news.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.76;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.38);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.18);
+}
+
+.overview-social-card {
+    grid-column: 14 / span 4;
+    grid-row: 3;
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-social.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.80;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.30);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.14);
+}
+
+.overview-legacy-stack {
+    display: grid;
+    gap: 8px;
+    grid-column: 18 / span 7;
+    grid-row: 3;
+    grid-template-columns: minmax(0, 1.65fr) minmax(92px, 0.75fr);
+    min-width: 0;
+}
+
+.overview-live-widget {
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-live.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.72;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.36);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.18);
+}
+
+.overview-stats-widget {
+    --overview-card-bg: url("../../images/backgrounds/overview/overview-stats.png");
+    --overview-card-bg-position: center;
+    --overview-card-bg-opacity: 0.76;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.34);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.16);
+}
+
+/* ============================================================
+   VEREINS-CARD (ROW 1 LEFT)
+   ============================================================ */
+
+.overview-club-main {
+    align-items: center;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 148px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+}
+
+.overview-club-crest {
+    filter: drop-shadow(0 0 20px rgba(34, 230, 255, 0.28));
+    grid-row: 1 / span 2;
+    height: 136px;
+    object-fit: contain;
+    width: 136px;
+}
+
+.overview-club-identity {
+    align-self: end;
+    border-left: 1px solid rgba(255, 255, 255, 0.10);
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    padding-left: 20px;
+}
+
+.overview-club-identity h1 {
+    color: var(--text);
+    font-size: 23px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 0 0 7px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-club-identity span,
+.overview-club-identity small,
+.overview-card-kicker span,
+.overview-result-competition {
+    color: var(--muted);
+    display: block;
+    font-size: 14px;
+}
+
+.overview-league-line,
+.overview-fixture-title {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+}
+
+.overview-league-line {
+    justify-content: flex-start;
+}
+
+.overview-league-line img,
+.overview-fixture-title img {
+    flex: 0 0 18px;
+    height: 18px;
+    max-height: 18px;
+    max-width: 18px;
+    object-fit: contain;
+    width: 18px !important;
+}
+
+.overview-club-identity small {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    margin-top: 7px;
+}
+
+.flag-de {
+    background: linear-gradient(180deg, #000 0 33%, #dd0000 33% 66%, #ffce00 66% 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24);
+    display: inline-block;
+    height: 12px;
+    width: 18px;
+}
+
+.overview-club-pulse {
+    align-self: start;
+    display: grid;
+    gap: 7px;
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    padding-left: 20px;
+    width: min(100%, 260px);
+}
+
+.overview-club-pulse > div:first-child {
+    align-items: center;
+    column-gap: 8px;
+    display: flex;
+    width: 100%;
+}
+
+.overview-club-pulse > div:first-child > span {
+    flex: 0 0 auto;
+}
+
+.overview-club-pulse span,
+.overview-club-pulse strong {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.overview-club-pulse strong {
+    color: var(--cyan);
+    flex: 0 0 auto;
+    min-width: 34px;
+    text-align: right;
+}
+
+.fan-meter {
+    background: linear-gradient(90deg, #ff251d, #ffe900 48%, #34f36a 82%, rgba(255, 255, 255, 0.7) 82%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    display: block;
+    flex: 1 1 auto;
+    height: 11px;
+    min-width: 80px;
+    overflow: hidden;
+    position: relative;
+}
+
+.fan-meter::after {
+    background: rgba(0, 0, 0, 0.54);
+    content: "";
+    inset: 0 0 0 var(--fan-value);
+    position: absolute;
+}
+
+.form-strip {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.form-strip b {
+    align-items: center;
+    border-radius: 4px;
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 900;
+    height: 18px;
+    justify-content: center;
+    width: 18px;
+}
+
+.form-win    { background: #17bf63; }
+.form-draw   { background: #d4a017; }
+.form-loss   { background: #e33b3b; }
+
+/* Club facts bottom strip */
+.overview-club-facts {
+    border-top: 0;
+    display: grid;
+    flex: 1 1 0;
+    gap: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 6px;
+    min-height: 120px;
+    padding-bottom: 8px;
+    padding-top: 10px;
+    width: 100%;
+}
+
+.overview-club-facts div {
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+    height: 100%;
+    min-width: 0;
+    padding: 0 11px;
+    text-align: center;
+}
+
+.overview-club-facts div:first-child {
+    border-left: 0;
+}
+
+.overview-club-metrics p {
+    margin: 0 0 6px;
+}
+
+.overview-club-metrics p:last-child {
+    margin-bottom: 0;
+}
+
+.overview-club-facts span,
+.overview-match-meta small,
+.overview-transfer-player small,
+.overview-transfer-player em,
+.overview-news-list span {
+    color: var(--muted);
+    display: block;
+    font-size: 16px;
+}
+
+.overview-club-facts strong {
+    color: var(--text);
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: 3px;
+    white-space: nowrap;
+}
+
+/* Player spotlight (Torjäger / Wertvollster etc.) */
+.overview-player-spotlight {
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: flex-start;
+    overflow: hidden;
+    padding: 0 8px 78px;
+    position: relative;
+}
+
+.overview-club-facts .overview-player-spotlight strong {
+    font-size: 16px;
+    line-height: 1.2;
+    margin-top: 4px;
+}
+
+.overview-club-facts .overview-player-spotlight small {
+    color: var(--cyan);
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 4px;
+}
+
+.overview-player-spotlight > span,
+.overview-player-spotlight > strong,
+.overview-player-spotlight > small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-club-facts .overview-player-spotlight > span {
+    font-size: 13px;
+    line-height: 1.05;
+}
+
+.overview-player-spotlight img {
+    border-radius: 4px;
+    bottom: 0;
+    height: 125px;
+    left: 50%;
+    margin-bottom: 0;
+    margin-top: 0;
+    object-fit: cover;
+    object-position: center top;
+    padding-bottom: 0;
+    padding-top: 0;
+    position: absolute;
+    transform: translateX(-50%);
+    width: 125px;
+}
+
+.overview-club-facts small {
+    color: var(--muted);
+    display: block;
+    font-size: 14px;
+    margin-top: 3px;
+}
+
+/* ============================================================
+   NÄCHSTES SPIEL (ROW 1 MID)
+   ============================================================ */
+
+.overview-fixture-title {
+    color: var(--muted);
+    font-size: 14px;
+    justify-content: center;
+    margin: 2px 0 14px;
+    text-align: center;
+}
+
+.overview-fixture,
+.overview-result {
+    align-items: center;
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 1fr auto 1fr;
+    text-align: center;
+}
+
+.overview-team {
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    min-width: 0;
+}
+
+.overview-team img {
+    filter: drop-shadow(0 0 18px rgba(34, 230, 255, 0.28));
+    height: 124px;
+    object-fit: contain;
+    width: 124px;
+}
+
+.overview-team.compact img {
+    height: 80px;
+    width: 80px;
+}
+
+.overview-team strong {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-vs {
+    color: var(--text);
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+.overview-match-meta {
+    color: var(--muted);
+    display: grid;
+    font-size: 14px;
+    gap: 3px;
+    justify-items: center;
+    left: 50%;
+    margin-top: 0;
+    position: absolute;
+    top: 200px;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.overview-match-meta strong {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.overview-next-match-card .card-action {
+    align-self: center;
+    margin: 0;
+    margin-top: auto;
+    max-width: 300px;
+    min-height: 40px;
+    position: relative;
+    width: min(100%, 300px);
+}
+
+/* ============================================================
+   LETZTES SPIEL (ROW 1 RIGHT-MID)
+   ============================================================ */
+
+.overview-card-kicker {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.overview-card-kicker strong,
+.overview-section-head span {
+    color: #ff2d2d;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.overview-result {
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.overview-result > span {
+    color: var(--text);
+    font-size: 30px;
+    font-weight: 900;
+    min-width: 72px;
+    white-space: nowrap;
+}
+
+.overview-result-competition {
+    margin: 8px 0 12px;
+    text-align: center;
+}
+
+.overview-scorers {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--muted);
+    display: grid;
+    font-size: 13px;
+    gap: 4px 10px;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    max-height: 52px;
+    overflow: auto;
+    padding-top: 9px;
+    scrollbar-width: thin;
+}
+
+.overview-scorers span {
+    align-items: center;
+    display: flex;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.overview-scorers img {
+    background: transparent;
+    display: block;
+    flex: 0 0 13px;
+    height: 13px;
+    margin-right: 5px;
+    object-fit: contain;
+    width: 13px;
+}
+
+.overview-last-match-card .card-action {
+    align-self: center;
+    margin: 0;
+    margin-top: auto;
+    max-width: 300px;
+    min-height: 40px;
+    position: relative;
+    width: min(100%, 300px);
+    z-index: 2;
+}
+
+/* ============================================================
+   VEREINSUMFELD FACILITY ROWS (overview-last-match-card repurposed)
+   ============================================================ */
+
+.overview-facilities {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.overview-facility-row {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    padding: 10px 14px;
+}
+
+.overview-facility-label {
+    color: var(--text);
+    flex: 1 1 0;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-facility-pips {
+    display: flex;
+    gap: 5px;
+}
+
+.overview-facility-pip {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.overview-facility-pip--active {
+    background: var(--accent, #c8a84b);
+    box-shadow: 0 0 6px rgba(200, 168, 75, 0.55);
+}
+
+.overview-facility-level {
+    color: var(--muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   AKTIVE MANAGER (ROW 1 FAR RIGHT)
+   ============================================================ */
+
+.overview-manager-widget,
+.overview-social-card,
+.overview-live-widget,
+.overview-stats-widget {
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    font-family: inherit;
+    overflow: hidden;
+    padding: 16px;
+}
+
+.overview-manager-widget .card-title,
+.overview-social-card .card-title,
+.overview-live-widget .card-title,
+.overview-stats-widget .card-title {
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    letter-spacing: 0.7px;
+    margin: 0 0 10px;
+    padding: 0;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.overview-manager-widget p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0 0 8px;
+    text-align: left;
+}
+
+.overview-manager-widget p strong {
+    color: var(--cyan);
+}
+
+/* Online indicator bar */
+.overview-manager-online-bar {
+    align-items: center;
+    background: rgba(48, 242, 156, 0.08);
+    border: 1px solid rgba(48, 242, 156, 0.22);
+    border-radius: 5px;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 5px 8px;
+}
+
+.overview-manager-online-dot {
+    animation: pulse-green 2s ease infinite;
+    background: var(--green);
+    border-radius: 50%;
+    flex: 0 0 7px;
+    height: 7px;
+    width: 7px;
+}
+
+@keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(48, 242, 156, 0.5); }
+    50%       { box-shadow: 0 0 0 4px rgba(48, 242, 156, 0); }
+}
+
+.overview-manager-online-bar span {
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.overview-manager-list {
+    display: grid;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.overview-manager-list div {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.028);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 5px;
+    display: grid;
+    gap: 5px;
+    grid-template-columns: 20px minmax(0, 1fr) 8px 14px;
+    min-height: 24px;
+    padding: 3px 6px;
+    transition: background 120ms ease, border-color 120ms ease;
+}
+
+.overview-manager-list div:hover {
+    background: rgba(34, 230, 255, 0.06);
+    border-color: rgba(34, 230, 255, 0.18);
+}
+
+.overview-manager-crest {
+    height: 18px;
+    object-fit: contain;
+    width: 18px;
+}
+
+.overview-manager-crest.is-empty {
+    display: block;
+}
+
+.overview-manager-list strong {
+    color: var(--text);
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-manager-list i {
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(48, 242, 156, 0.20);
+    display: block;
+    height: 7px;
+    width: 7px;
+}
+
+.overview-manager-msg {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.35);
+    display: flex;
+    justify-content: center;
+    opacity: 0.6;
+    transition: color 150ms ease, opacity 150ms ease;
+}
+
+.overview-manager-msg:hover {
+    color: var(--cyan);
+    opacity: 1;
+}
+
+.overview-manager-msg svg {
+    fill: none;
+    height: 13px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    width: 13px;
+}
+
+/* ============================================================
+   CHAT (ROW 2 LEFT)
+   ============================================================ */
+
+.overview-chat-card {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+}
+
+/* Chat / Transfer / Freundschaftsspiel Tabs */
+.overview-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.overview-tabs button {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(44, 231, 255, 0.14);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    min-height: 30px;
+    padding: 0 12px;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.overview-tabs button:hover {
+    background: rgba(34, 230, 255, 0.08);
+    border-color: rgba(34, 230, 255, 0.28);
+    color: var(--text);
+}
+
+.overview-tabs .is-active {
+    background: linear-gradient(180deg, rgba(34, 230, 255, 0.22), rgba(34, 230, 255, 0.08));
+    border-color: rgba(34, 230, 255, 0.5);
+    color: var(--cyan);
+}
+
+.overview-chat-log {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: auto;
+    padding-top: 10px;
+    scrollbar-width: thin;
+}
+
+.overview-chat-log p {
+    margin: 0 0 5px;
+}
+
+.overview-chat-log span {
+    color: var(--muted);
+}
+
+.overview-chat-log .chat-author   { color: rgba(255,255,255,0.88); }
+.overview-chat-log .chat-author-1 { color: #3be7ff; }
+.overview-chat-log .chat-author-2 { color: #ffcf52; }
+.overview-chat-log .chat-author-3 { color: #56f39a; }
+.overview-chat-log .chat-author-4 { color: #ff8fff; }
+.overview-chat-log .chat-author-5 { color: #ff9a50; }
+.overview-chat-log .chat-author-self { color: #ff8a2a; }
+
+.overview-chat-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(44, 231, 255, 0.16);
+    border-radius: 5px;
+    display: grid;
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr) 88px;
+    margin-top: 10px;
+}
+
+.overview-chat-input:focus-within {
+    border-color: rgba(34, 230, 255, 0.38);
+    box-shadow: 0 0 14px rgba(34, 230, 255, 0.08);
+}
+
+.overview-chat-input input {
+    background: transparent;
+    border: 0;
+    color: var(--text);
+    font-size: 13px;
+    height: 38px;
+    outline: 0;
+    padding: 0 10px;
+    width: 100%;
+}
+
+.overview-chat-input button {
+    background: linear-gradient(180deg, rgba(34, 230, 255, 0.78), rgba(5, 148, 172, 0.90));
+    border: 0;
+    border-left: 1px solid rgba(44, 231, 255, 0.18);
+    border-radius: 0 5px 5px 0;
+    color: #ffffff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    height: 38px;
+    padding: 0 11px;
+    transition: opacity 120ms ease;
+}
+
+.overview-chat-input button:hover {
+    opacity: 0.88;
+}
+
+.overview-section-head {
+    align-items: start;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.overview-section-head .card-title {
+    margin: 0;
+}
+
+/* ============================================================
+   TRANSFERMARKT (ROW 2 MID)
+   ============================================================ */
+
+.overview-transfer-list {
+    display: grid;
+    gap: 8px;
+    overflow: visible;
+    position: relative;
+    z-index: 6;
+}
+
+.overview-transfer-row {
+    color: var(--text);
+    font-size: 14px;
+    min-height: 54px;
+    min-width: 0;
+    position: relative;
+}
+
+.overview-transfer-row summary {
+    align-items: center;
+    background: linear-gradient(90deg, rgba(6, 28, 40, 0.72), rgba(3, 12, 20, 0.52));
+    border: 1px solid rgba(34, 230, 255, 0.12);
+    border-radius: 7px;
+    cursor: pointer;
+    display: grid;
+    gap: 6px;
+    grid-template-columns: 44px minmax(0, 1fr) 88px 22px;
+    list-style: none;
+    min-height: 54px;
+    padding: 5px 7px;
+    transition: background 130ms ease, border-color 130ms ease;
+}
+
+.overview-transfer-row summary::-webkit-details-marker {
+    display: none;
+}
+
+.overview-transfer-row summary:hover,
+.overview-transfer-row[open] summary {
+    background: linear-gradient(90deg, rgba(8, 44, 62, 0.90), rgba(5, 20, 30, 0.68));
+    border-color: rgba(34, 230, 255, 0.32);
+}
+
+.overview-transfer-row summary > * {
+    min-width: 0;
+}
+
+.overview-transfer-avatar {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(34, 230, 255, 0.14);
+    border-radius: 5px;
+    display: grid;
+    height: 44px;
+    overflow: hidden;
+    place-items: center;
+    width: 44px;
+}
+
+.overview-transfer-avatar img {
+    height: 44px;
+    object-fit: cover;
+    width: 44px;
+}
+
+.overview-transfer-player {
+    min-width: 0;
+}
+
+.overview-transfer-player strong {
+    color: var(--text);
+    display: block;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-transfer-player em {
+    align-items: center;
+    display: flex;
+    font-style: normal;
+    gap: 5px;
+    margin-top: 3px;
+}
+
+.overview-transfer-player em img {
+    height: 12px;
+    object-fit: contain;
+    width: 18px;
+}
+
+.overview-transfer-clubs {
+    align-items: center;
+    display: grid;
+    gap: 5px;
+    grid-template-columns: 32px 12px 32px;
+    justify-content: center;
+    min-width: 0;
+}
+
+.overview-transfer-crest {
+    display: grid;
+    height: 32px;
+    place-items: center;
+    width: 32px;
+}
+
+.overview-transfer-crest img {
+    height: 30px;
+    object-fit: contain;
+    width: 30px;
+}
+
+.overview-transfer-crest em {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 50%;
+    color: var(--muted);
+    display: grid;
+    font-style: normal;
+    font-weight: 900;
+    height: 26px;
+    place-items: center;
+    width: 26px;
+}
+
+.overview-transfer-clubs b {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.overview-transfer-expand {
+    align-items: center;
+    background: rgba(34, 230, 255, 0.10);
+    border-radius: 5px;
+    color: var(--cyan);
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 900;
+    height: 20px;
+    justify-content: center;
+    transition: transform 130ms ease;
+    width: 20px;
+}
+
+.overview-transfer-row[open] {
+    z-index: 80;
+}
+
+.overview-transfer-row[open] .overview-transfer-expand {
+    transform: rotate(45deg);
+}
+
+.overview-transfer-detail {
+    background:
+        radial-gradient(circle at 18% 0%, rgba(34, 230, 255, 0.14), transparent 44%),
+        linear-gradient(180deg, rgba(6, 26, 40, 0.98), rgba(2, 9, 16, 0.98));
+    border: 1px solid rgba(34, 230, 255, 0.24);
+    border-radius: 9px;
+    box-shadow: 0 20px 36px rgba(0, 0, 0, 0.48);
+    display: grid;
+    gap: 8px;
+    left: 0;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 90;
+}
+
+.overview-transfer-detail-grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.overview-transfer-detail section {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.overview-transfer-detail section > span:first-child,
+.overview-transfer-fee span {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.overview-transfer-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(34, 230, 255, 0.09);
+    border-radius: 5px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 650;
+    overflow: hidden;
+    padding: 4px 6px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-transfer-fee {
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr);
+    margin-top: 6px;
+    padding-top: 8px;
+}
+
+.overview-transfer-fee strong {
+    background: rgba(112, 78, 22, 0.42);
+    border-radius: 99px;
+    color: #fff0bd;
+    font-size: 12px;
+    justify-self: end;
+    max-width: 100%;
+    overflow: hidden;
+    padding: 3px 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-transfer-card .card-action {
+    bottom: 12px;
+    left: 18px;
+    margin: 0;
+    position: absolute;
+    width: calc(100% - 36px);
+    z-index: 2;
+}
+
+/* ============================================================
+   LIGATABELLE (ROW 2 RIGHT)
+   ============================================================ */
+
+.overview-table-card {
+    padding-bottom: 50px;
+}
+
+.overview-league-table th,
+.overview-league-table td {
+    font-size: 12px;
+    padding: 10px 8px;
+    white-space: nowrap;
+}
+
+.overview-league-table td:nth-child(2) {
+    align-items: center;
+    color: var(--text);
+    display: flex;
+    gap: 7px;
+    min-width: 0;
+}
+
+.overview-league-table td:nth-child(2) img {
+    height: 22px;
+    object-fit: contain;
+    width: 22px;
+}
+
+.overview-league-table td:nth-child(2) span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-link {
+    align-items: center;
+    bottom: 16px;
+    color: var(--cyan);
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 8px;
+    left: 18px;
+    position: absolute;
+    z-index: 2;
+}
+
+.table-link:hover {
+    color: var(--text);
+}
+
+/* ============================================================
+   NEWS (ROW 3)
+   ============================================================ */
+
+.overview-news-card {
+    padding: 18px 18px 48px;
+}
+
+.overview-news-list {
+    display: grid;
+    gap: 0;
+}
+
+.overview-news-list a {
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    color: var(--text);
+    display: grid;
+    gap: 9px;
+    grid-template-columns: 22px minmax(0, 1fr) 68px;
+    min-height: 40px;
+    transition: background 120ms ease;
+}
+
+.overview-news-list a:hover {
+    background: rgba(34, 230, 255, 0.04);
+}
+
+.overview-news-crest {
+    height: 18px;
+    object-fit: contain;
+    width: 18px;
+}
+
+.overview-news-list i {
+    border: 1px solid rgba(34, 230, 255, 0.38);
+    border-radius: 50%;
+    height: 12px;
+    position: relative;
+    width: 12px;
+}
+
+.overview-news-list i::after {
+    background: var(--cyan);
+    border-radius: 50%;
+    content: "";
+    height: 4px;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+}
+
+.overview-news-list strong {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overview-news-list span {
+    font-size: 12px;
+    text-align: right;
+}
+
+/* ============================================================
+   SOCIAL FEED (ROW 3)
+   ============================================================ */
+
+.overview-social-card article {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+    margin-bottom: 7px;
+    padding: 7px 8px;
+}
+
+.overview-social-card strong {
+    color: var(--cyan);
+    display: block;
+    font-size: 12px;
+}
+
+.overview-social-card span,
+.overview-social-card small {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+}
+
+.overview-social-card p {
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 4px 0;
+}
+
+/* ============================================================
+   LIVE SPIELE (ROW 3 BOTTOM LEFT)
+   ============================================================ */
+
+.overview-live-widget,
+.overview-stats-widget {
+    min-height: 200px;
+}
+
+/* ── Livespiele-Zeile ──────────────────────────────────────────────────────── */
+/* Symmetrisches Grid: Zeit | Logo | [Name→][Wappen] | Score | [Wappen][←Name] */
+.overview-live-row {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.028);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 5px;
+    display: grid;
+    font-size: 12px;
+    gap: 3px;
+    grid-template-columns: 28px 16px auto 20px 1fr 20px auto;
+    margin-bottom: 4px;
+    overflow: hidden;
+    min-height: 28px;
+    padding: 3px 6px;
+}
+
+.olr-time {
+    color: var(--muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.olr-comp {
+    display: block;
+    height: 18px;
+    object-fit: contain;
+    opacity: 0.88;
+    width: 18px;
+}
+
+.olr-home-name {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.olr-away-name {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.olr-crest {
+    align-items: center;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: flex;
+    height: 20px;
+    justify-content: center;
+    outline: none !important;
+    padding: 0 !important;
+    width: 20px;
+}
+
+.olr-crest img {
+    height: 20px;
+    object-fit: contain;
+    width: 20px;
+}
+
+.olr-crest.is-empty {
+    display: block;
+    height: 22px;
+    width: 22px;
+}
+
+.olr-score {
+    color: var(--text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.overview-live-widget a.olr-footer {
+    align-items: center;
+    background: rgba(34, 230, 255, 0.09);
+    border: 1px solid rgba(34, 230, 255, 0.18);
+    border-radius: 5px;
+    color: var(--cyan);
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    justify-content: center;
+    margin-top: auto;
+    min-height: 27px;
+    padding: 4px;
+}
+
+/* ============================================================
+   STATISTIKEN (ROW 3 BOTTOM RIGHT)
+   ============================================================ */
+
+.overview-stats-widget p {
+    align-items: flex-start;
+    color: var(--muted);
+    display: flex !important;
+    flex-direction: column;
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 8px 0;
+}
+
+.overview-stats-widget strong {
+    color: var(--text);
+    display: block;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.overview-stats-widget p span {
+    display: block !important;
+    line-height: 1.12;
+    margin-top: 3px;
+    max-width: 100%;
+}
+
+/* ============================================================
+   SHARED UTILITIES
+   ============================================================ */
+
+.sr-only {
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+/* ============================================================
+   LEAGUE TABLE BASE STYLES
+   ============================================================ */
+
+.league-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.league-table th {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    padding-bottom: 8px;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.league-table td {
+    color: var(--muted);
+}
+
+.league-table tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.league-table tr:last-child {
+    border-bottom: 0;
+}
+
+.league-table .current-row td {
+    color: var(--cyan);
+}
+
+.league-table .current-row td:last-child {
+    color: var(--cyan);
+    font-weight: 900;
+}
+
+.points-cell {
+    color: var(--text) !important;
+    font-weight: 800 !important;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+
+/* Single-column Mobile-Fallback (Scaler ist hier inaktiv, da <900px) */
+@media (max-width: 899px) {
+    .overview-grid {
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-template-rows: none;
+        min-height: 0;
+    }
+
+    .overview-club-card,
+    .overview-next-match-card,
+    .overview-last-match-card,
+    .overview-manager-widget,
+    .overview-chat-card,
+    .overview-transfer-card,
+    .overview-table-card,
+    .overview-club-news-card,
+    .overview-sim-news-card,
+    .overview-social-card,
+    .overview-legacy-stack {
+        grid-column: 1 / -1;
+        grid-row: auto;
+        min-height: 220px;
+    }
+
+    .overview-manager-widget {
+        min-height: 160px;
+    }
+
+    .overview-club-main {
+        grid-template-columns: 120px minmax(0, 1fr);
+    }
+
+    .overview-club-pulse {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 720px) {
+    .overview-home-page .start-dashboard {
+        padding: 10px;
+    }
+
+    .overview-grid {
+        gap: 9px;
+    }
+
+    .overview-club-main,
+    .overview-club-facts,
+    .overview-fixture,
+    .overview-result,
+    .overview-legacy-stack {
+        grid-template-columns: 1fr;
+    }
+
+    .overview-club-main {
+        grid-template-rows: none;
+    }
+
+    .overview-club-card {
+        padding-bottom: 16px;
+    }
+
+    .overview-club-crest,
+    .overview-club-identity,
+    .overview-club-pulse {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .overview-club-pulse {
+        justify-self: center;
+        padding-left: 0;
+    }
+
+    .overview-club-identity {
+        border-left: 0;
+        justify-items: center;
+        padding-left: 0;
+        text-align: center;
+    }
+
+    .overview-club-identity small,
+    .overview-club-main {
+        justify-items: center;
+    }
+
+    .overview-club-facts div {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 10px 0;
+    }
+
+    .overview-club-facts {
+        flex: 0 0 auto;
+        margin-top: 12px;
+        min-height: 0;
+        padding-top: 0;
+    }
+
+    .overview-player-spotlight {
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        padding: 10px 0 0;
+    }
+
+    .overview-player-spotlight img {
+        bottom: auto;
+        left: auto;
+        margin-top: 6px;
+        position: static;
+        transform: none;
+    }
+
+    .overview-transfer-row {
+        grid-template-columns: 48px minmax(0, 1fr);
+    }
+
+    .overview-transfer-clubs {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Frueherer 2x2-Breakpoint entfernt — wird durch Dashboard-Scaler abgeloest */
+
+/* ============================================================
+   WIDE-SCREEN BOOST ≥ 2400 px (2K / 4K)
+   Slightly larger row heights, padding, and font sizes so the
+   overview grid uses the extra real-estate gracefully.
+   ============================================================ */
+
+@media (min-width: 2400px) {
+    .overview-home-page .start-dashboard {
+        padding: 28px 28px 38px;
+    }
+
+    .overview-dashboard .card-title {
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .overview-club-identity h1 {
+        font-size: 27px;
+    }
+
+    .overview-club-facts strong {
+        font-size: 13px;
+    }
+
+    .overview-team img {
+        height: 144px;
+        width: 144px;
+    }
+
+    .overview-team.compact img {
+        height: 96px;
+        width: 96px;
+    }
+
+    .overview-vs {
+        font-size: 40px;
+    }
+
+    .overview-result > span {
+        font-size: 36px;
+    }
+}
+
+
+/* ── Global img-link utility ─────────────────────────────────────────────
+   Wraps any crest or player-portrait img in a transparent <a> so the img
+   is clickable without disrupting the surrounding layout.
+   Hover: subtle cyan outline + pointer cursor on the child image.
+────────────────────────────────────────────────────────────────────────── */
+a.img-link {
+    display: contents;
+}
+a.img-link > img {
+    cursor: pointer;
+    transition: filter 0.12s ease;
+}
+a.img-link:hover > img,
+a.img-link:focus-visible > img {
+    filter: brightness(1.12);
+}
+
+
+/* ── No-club empty state ─────────────────────────────────────────────────
+   Shown inside .overview-club-card when the logged-in user has no club
+   assignment yet. Centred column layout with a CTA button.
+────────────────────────────────────────────────────────────────────────── */
+.overview-no-club-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex: 1;
+    padding: 24px 16px 20px;
+    text-align: center;
+}
+
+.overview-no-club-headline {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary, #fff);
+    margin: 0;
+}
+
+.overview-no-club-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary, rgba(255,255,255,0.65));
+    margin: 0;
+    max-width: 220px;
+}
+
+.overview-no-club-state .card-action {
+    margin-top: 8px;
+}

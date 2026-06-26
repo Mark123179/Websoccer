@@ -1,0 +1,60 @@
+/* Desktop-Breakpoints 1600/1450/1280 entfernt — Dashboard-Scaler
+   uebernimmt die Anpassung als einzige Mechanik fuer Desktop-Viewports.
+   Mobile-Fallbacks (<=1100px, <=760px) bleiben unten erhalten. */
+        @media (max-width: 1100px) {
+            .dashboard-grid-main,
+            .dashboard-grid-mid,
+            .dashboard-grid-bottom,
+            .start-grid-main,
+            .start-kpi-grid,
+            .home-grid-two,
+            .home-grid-bottom,
+            .app-topbar,
+            .home-topbar,
+            .page-topbar,
+            .clubs-kpi-grid,
+            .player-kpi-grid,
+            .clubs-layout-grid,
+            .player-layout-grid {
+                grid-template-columns: 1fr;
+            }
+            .app-topbar .primary-action,
+            .home-topbar .primary-action,
+            .page-topbar .primary-action {
+                grid-column: auto;
+                justify-self: stretch;
+                width: 100%;
+            }
+}
+        @media (max-width: 760px) {
+            :root {
+                --sidebar: 0px;
+            }
+            .navbar {
+                height: auto;
+                position: static;
+                width: 100%;
+            }
+            .container {
+                margin-left: 0;
+            }
+            .club-dashboard {
+                padding: 16px;
+            }
+            .start-dashboard {
+                padding: 16px;
+            }
+            .list-dashboard,
+            .player-dashboard {
+                padding: 16px;
+            }
+            .overview-content,
+            .overview-stats,
+            .finance-body,
+            .player-identity {
+                grid-template-columns: 1fr;
+            }
+            .kits-row {
+                grid-template-columns: 1fr;
+            }
+        }

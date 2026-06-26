@@ -1,0 +1,612 @@
+/* Trophy cabinet component. Loaded only where the awards stage is rendered. */
+
+.aaa-trophy-stage.awards-card {
+    position: relative;
+    isolation: isolate;
+    min-height: 460px;
+    padding: 29px;
+    overflow: hidden;
+    border-radius: 19px;
+    background: #02070d;
+}
+
+.aaa-profile-showcase > .aaa-trophy-stage.awards-card,
+.aaa-profile-showcase > .aaa-career-card {
+    height: var(--aaa-profile-showcase-height, 528px);
+    min-height: var(--aaa-profile-showcase-height, 528px);
+}
+
+.aaa-profile-showcase > .aaa-trophy-stage.awards-card {
+    container-type: inline-size;
+}
+
+.aaa-trophy-stage::before {
+    content: none;
+}
+
+.aaa-awards-background,
+.aaa-awards-lighting {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.aaa-awards-background {
+    z-index: 0;
+    background:
+url("../images/backgrounds/trophy-stage.png") center bottom / cover no-repeat;
+}
+
+.aaa-awards-lighting {
+    z-index: 1;
+    background:
+linear-gradient(180deg, transparent 0 55%, rgba(1, 5, 8, 0.55) 72%, rgba(1, 5, 8, 0.92) 88%, rgba(1, 5, 8, 1) 100%),
+linear-gradient(90deg, rgba(0, 0, 0, 0.18), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.18));
+}
+
+.aaa-trophy-stage .awards-header,
+.aaa-awards-stage,
+.aaa-award-pagination {
+    position: relative;
+    z-index: 2;
+}
+
+.aaa-trophy-stage .awards-header {
+    position: absolute;
+    top: 28px;
+    right: 34px;
+    left: 34px;
+    z-index: 4;
+    align-items: flex-start;
+}
+
+.aaa-trophy-stage .aaa-card-heading h2 {
+    padding-right: 170px;
+}
+
+.aaa-trophy-stage .aaa-card-heading h2::before {
+    content: none;
+}
+
+.aaa-trophy-title {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 113px;
+    min-width: 0;
+}
+
+.aaa-trophy-title img {
+    width: 79px;
+    height: 79px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.aaa-trophy-title span {
+    max-width: 100%;
+    font-size: 12px;
+    line-height: 1.05;
+    text-align: center;
+}
+
+.aaa-award-total {
+    display: grid;
+    grid-template-columns: 57px auto;
+    grid-template-areas:
+"label label"
+"icon value"
+"icon unit";
+    align-items: center;
+    justify-content: end;
+    column-gap: 11px;
+    min-width: 132px;
+    margin-left: auto;
+    color: #ffffff;
+    text-align: left;
+    text-shadow: 0 6px 16px rgba(0, 0, 0, 0.72);
+}
+
+.aaa-award-total span {
+    grid-area: label;
+    justify-self: end;
+    margin-bottom: 5px;
+    color: rgba(255, 255, 255, 0.9);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    font-size: clamp(12px, 1.0vw, 18px);
+    font-weight: 900;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.aaa-award-total img {
+    grid-area: icon;
+    width: 41px;
+    height: 41px;
+    object-fit: contain;
+}
+
+.aaa-award-total strong {
+    grid-area: value;
+    color: #ffffff;
+    font-size: clamp(32px, 2.6vw, 48px);
+    font-weight: 900;
+    line-height: 0.96;
+}
+
+.aaa-award-total small {
+    grid-area: unit;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: clamp(12px, 1.0vw, 18px);
+    font-weight: 700;
+}
+
+.aaa-awards-stage {
+    position: absolute;
+    right: 29px;
+    bottom: 43px;
+    left: 29px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 33px;
+    align-items: end;
+    height: 374px;
+    overflow: visible;
+}
+
+.aaa-trophy-stage.has-award-pages .aaa-awards-stage {
+    bottom: 72px;
+}
+
+.trophy-slot {
+    --podium-bottom: 58px;
+    --podium-height: 0px;
+    --trophy-overlap: 0px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 0;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.trophy-slot::before,
+.trophy-slot::after {
+    content: none;
+}
+
+.trophy-slot.trophy-rank-1.is-tall {
+    margin-top: 28px;
+    margin-bottom: 36px;
+    margin-left: 17px;
+    margin-right: 0;
+    padding: 0;
+}
+
+.trophy-slot.trophy-rank-2.is-default {
+    margin-top: 35px;
+    margin-bottom: 36px;
+    margin-left: 5px;
+    margin-right: 0;
+}
+
+.trophy-slot.trophy-rank-3.is-wide {
+    margin-top: 35px;
+    margin-bottom: 36px;
+    margin-left: -17px;
+    margin-right: 0;
+    padding-left: 0;
+}
+
+.trophy-slot.trophy-rank-4.is-default {
+    margin-top: 35px;
+    margin-bottom: 36px;
+    margin-left: -17px;
+}
+
+.trophy-slot.trophy-rank-1.is-season-award {
+    margin-top: 35px;
+    margin-bottom: 35px;
+    margin-left: 30px;
+    margin-right: 9px;
+}
+
+.trophy-slot.trophy-rank-2.is-small {
+    margin-top: 35px;
+    margin-bottom: 35px;
+    margin-left: 17px;
+    margin-right: 9px;
+}
+
+.trophy-slot.trophy-rank-3.is-placeholder {
+    margin-top: 35px;
+    margin-bottom: 35px;
+    margin-left: 9px;
+    margin-right: 22px;
+}
+
+.trophy-slot.trophy-rank-4.is-placeholder {
+    margin-top: 35px;
+    margin-bottom: 35px;
+    margin-left: -2px;
+    margin-right: 22px;
+}
+
+.trophy-slot.is-small {
+    --trophy-overlap: 0px;
+}
+
+.trophy-slot.is-season-award {
+    --trophy-overlap: 0px;
+}
+
+.aaa-awards-stage .podium {
+    display: none;
+}
+
+.trophy-slot.is-placeholder .podium {
+    opacity: 0.3;
+    filter: brightness(0.55) grayscale(0.5);
+}
+
+.trophy-slot.is-placeholder .trophy-img {
+    opacity: 0.28;
+    filter: grayscale(1) brightness(0.6);
+}
+
+.aaa-awards-stage .trophy-img {
+    position: absolute;
+    bottom: calc(var(--podium-bottom) + var(--podium-height) - var(--trophy-overlap));
+    left: 50%;
+    z-index: 2;
+    width: auto;
+    height: 173px;
+    max-width: min(90%, 230px);
+    object-fit: contain;
+    object-position: center bottom;
+    transform: translateX(-50%) translateY(-8.5px);
+    pointer-events: none;
+    user-select: none;
+}
+
+.aaa-awards-stage .trophy-img.is-wide {
+    height: 151px;
+    max-width: min(94%, 209px);
+}
+
+.aaa-awards-stage .trophy-img.is-tall {
+    height: 223px;
+    max-width: min(82%, 187px);
+}
+
+.aaa-awards-stage .trophy-img.is-season-award {
+    height: 223px;
+    max-width: min(82%, 187px);
+}
+
+.aaa-awards-stage .trophy-img.is-small {
+    height: 216px;
+    max-width: min(94%, 259px);
+}
+
+.aaa-profile-showcase .aaa-trophy-stage .awards-header {
+    top: clamp(10px, 1.45cqw, 16px);
+    right: clamp(10px, 1.5cqw, 16px);
+    left: clamp(10px, 1.5cqw, 16px);
+}
+
+.aaa-profile-showcase .aaa-trophy-stage .aaa-card-heading h2 {
+    padding-right: 0;
+}
+
+.aaa-profile-showcase .aaa-trophy-title {
+    width: clamp(72px, 8.6cqw, 92px);
+    gap: clamp(2px, 0.3cqw, 4px);
+}
+
+.aaa-profile-showcase .aaa-trophy-title img {
+    width: clamp(46px, 6cqw, 62px);
+    height: clamp(46px, 6cqw, 62px);
+}
+
+.aaa-profile-showcase .aaa-trophy-title span {
+    font-size: clamp(9px, 1.05cqw, 11px);
+    line-height: 1.05;
+}
+
+.aaa-profile-showcase .aaa-award-total {
+    grid-template-columns: clamp(30px, 4cqw, 38px) auto;
+    column-gap: clamp(5px, 0.7cqw, 8px);
+    min-width: clamp(78px, 9cqw, 96px);
+}
+
+.aaa-profile-showcase .aaa-award-total span {
+    margin-bottom: 1px;
+    font-size: clamp(9px, 1.1cqw, 12px);
+}
+
+.aaa-profile-showcase .aaa-award-total img {
+    width: clamp(30px, 4cqw, 38px);
+    height: clamp(30px, 4cqw, 38px);
+}
+
+.aaa-profile-showcase .aaa-award-total strong {
+    font-size: clamp(27px, 4cqw, 36px);
+}
+
+.aaa-profile-showcase .aaa-award-total small {
+    font-size: clamp(9px, 1.1cqw, 12px);
+}
+
+.aaa-profile-showcase .aaa-awards-stage {
+    right: clamp(10px, 1.6cqw, 18px);
+    bottom: clamp(69px, 8.0cqw, 87px);
+    left: clamp(10px, 1.6cqw, 18px);
+    gap: clamp(8px, 1.2cqw, 16px);
+    height: clamp(300px, 36cqw, 370px);
+}
+
+.aaa-profile-showcase .aaa-trophy-stage.has-award-pages .aaa-awards-stage {
+    bottom: clamp(85px, 9.2cqw, 103px);
+}
+
+.aaa-profile-showcase .trophy-slot {
+    --podium-bottom: clamp(68px, 8.4cqw, 106px);
+    --podium-height: 0px;
+    --trophy-overlap: 0px;
+}
+
+.aaa-profile-showcase .trophy-slot.is-small {
+    --trophy-overlap: 0px;
+}
+
+.aaa-profile-showcase .trophy-slot.is-season-award {
+    --trophy-overlap: 0px;
+}
+
+.aaa-profile-showcase .aaa-awards-stage .podium {
+    display: none;
+}
+
+.aaa-profile-showcase .aaa-awards-stage .trophy-img {
+    height: clamp(154px, 19.5cqw, 246px);
+    max-width: min(94%, clamp(154px, 20cqw, 256px));
+}
+
+.aaa-profile-showcase .aaa-awards-stage .trophy-img.is-wide {
+    height: clamp(142px, 17.2cqw, 224px);
+    max-width: min(95%, clamp(168px, 21cqw, 264px));
+}
+
+.aaa-profile-showcase .aaa-awards-stage .trophy-img.is-tall,
+.aaa-profile-showcase .aaa-awards-stage .trophy-img.is-season-award {
+    height: clamp(172px, 21.5cqw, 278px);
+    max-width: min(84%, clamp(138px, 17cqw, 222px));
+}
+
+.aaa-profile-showcase .aaa-awards-stage .trophy-img.is-small {
+    height: clamp(172px, 21cqw, 268px);
+    max-width: min(96%, clamp(180px, 22cqw, 280px));
+}
+
+.aaa-profile-showcase .trophy-name {
+    font-size: clamp(10px, 1.2cqw, 13px);
+}
+
+.aaa-profile-showcase .aaa-awards-labels {
+    right: clamp(10px, 1.6cqw, 18px);
+    bottom: clamp(10px, 1.0cqw, 16px);
+    left: clamp(10px, 1.6cqw, 18px);
+    gap: clamp(8px, 1.2cqw, 16px);
+}
+
+.aaa-profile-showcase .aaa-trophy-stage.has-award-pages .aaa-awards-labels {
+    bottom: clamp(38px, 4.4cqw, 54px);
+}
+
+.aaa-profile-showcase .trophy-slot.trophy-rank-1.is-tall,
+.aaa-profile-showcase .trophy-slot.trophy-rank-2.is-default,
+.aaa-profile-showcase .trophy-slot.trophy-rank-3.is-wide,
+.aaa-profile-showcase .trophy-slot.trophy-rank-4.is-default,
+.aaa-profile-showcase .trophy-slot.trophy-rank-1.is-season-award,
+.aaa-profile-showcase .trophy-slot.trophy-rank-2.is-small,
+.aaa-profile-showcase .trophy-slot.trophy-rank-3.is-placeholder,
+.aaa-profile-showcase .trophy-slot.trophy-rank-4.is-placeholder {
+    margin-top: clamp(18px, 2.4cqw, 32px);
+    margin-bottom: clamp(18px, 2.4cqw, 32px);
+}
+
+.aaa-profile-showcase .trophy-slot.trophy-rank-1.is-tall { margin-left: clamp(10px, 1.5cqw, 20px); margin-right: 0; }
+.aaa-profile-showcase .trophy-slot.trophy-rank-2.is-default { margin-left: clamp(3px, 0.37cqw, 6px); margin-right: 0; }
+.aaa-profile-showcase .trophy-slot.trophy-rank-3.is-wide { margin-left: clamp(-18px, -1.2cqw, -10px); margin-right: 0; }
+.aaa-profile-showcase .trophy-slot.trophy-rank-4.is-default { margin-left: clamp(-18px, -1.2cqw, -10px); }
+.aaa-profile-showcase .trophy-slot.trophy-rank-1.is-season-award { margin-left: clamp(14px, 2.1cqw, 28px); margin-right: clamp(4px, 0.6cqw, 9px); }
+.aaa-profile-showcase .trophy-slot.trophy-rank-2.is-small { margin-left: clamp(8px, 1.2cqw, 17px); margin-right: clamp(4px, 0.6cqw, 9px); }
+.aaa-profile-showcase .trophy-slot.trophy-rank-3.is-placeholder { margin-left: clamp(4px, 0.6cqw, 9px); margin-right: clamp(10px, 1.5cqw, 20px); }
+.aaa-profile-showcase .trophy-slot.trophy-rank-4.is-placeholder { margin-left: clamp(-3px, -0.12cqw, -1px); margin-right: clamp(10px, 1.5cqw, 20px); }
+
+.aaa-awards-labels {
+    position: absolute;
+    right: 29px;
+    bottom: 17px;
+    left: 29px;
+    z-index: 4;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 33px;
+    pointer-events: none;
+}
+
+.aaa-trophy-stage.has-award-pages .aaa-awards-labels {
+    bottom: 84px;
+}
+
+.trophy-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 2px;
+    color: #ffffff;
+    text-align: center;
+    text-shadow: 0 6px 16px rgba(0, 0, 0, 0.82);
+}
+
+.trophy-name {
+    align-self: center;
+    overflow-wrap: anywhere;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.82));
+    font-size: clamp(12px, 1.0vw, 18px);
+    font-weight: 750;
+    letter-spacing: 0;
+    line-height: 1.08;
+    text-transform: uppercase;
+}
+
+.trophy-count {
+    margin-top: 6px;
+    color: rgba(244, 251, 255, 0.9);
+    font-size: clamp(22px, 1.8vw, 34px);
+    font-weight: 850;
+    line-height: 1;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.72);
+}
+
+.trophy-placeholder-label {
+    visibility: hidden;
+}
+
+.aaa-award-pagination {
+    position: absolute;
+    right: 0;
+    bottom: 22px;
+    left: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    min-height: 57px;
+    margin: 0;
+}
+
+.aaa-award-pagination a,
+.aaa-award-pagination span {
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 53px;
+    border: 1px solid rgba(113, 203, 218, 0.16);
+    border-radius: 6px;
+    color: rgba(230, 250, 255, 0.78);
+    background: rgba(2, 14, 22, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 28px rgba(0, 0, 0, 0.2);
+    font-size: 17px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.aaa-award-pagination a:hover,
+.aaa-award-pagination .is-active {
+    border-color: rgba(42, 229, 246, 0.55);
+    color: #ffffff;
+    background: linear-gradient(180deg, rgba(5, 79, 91, 0.94), rgba(3, 44, 58, 0.94));
+    box-shadow: inset 0 1px 0 rgba(120, 250, 255, 0.24), 0 0 18px rgba(28, 225, 242, 0.22);
+}
+
+.aaa-award-pagination .is-disabled {
+    opacity: 0.38;
+}
+
+.aaa-profile-showcase .aaa-award-pagination {
+    bottom: clamp(10px, 1.45cqw, 16px);
+    gap: clamp(5px, 0.7cqw, 8px);
+    min-height: clamp(30px, 4.2cqw, 38px);
+}
+
+.aaa-profile-showcase .aaa-award-pagination a,
+.aaa-profile-showcase .aaa-award-pagination span {
+    width: clamp(34px, 4.8cqw, 42px);
+    height: clamp(30px, 4.2cqw, 38px);
+    border-radius: 5px;
+    font-size: clamp(12px, 1.5cqw, 15px);
+}
+
+@media (max-width: 1180px) {
+    .aaa-awards-stage {
+right: clamp(14px, 2.4vw, 28px);
+left: clamp(14px, 2.4vw, 28px);
+gap: clamp(12px, 2.0vw, 24px);
+    }
+
+    .aaa-trophy-stage .aaa-card-heading h2 {
+padding-right: 0;
+    }
+
+    .aaa-award-total {
+min-width: clamp(72px, 8.1vw, 96px);
+grid-template-columns: clamp(28px, 3.2vw, 38px) auto;
+column-gap: clamp(5px, 0.7vw, 8px);
+    }
+
+    .aaa-award-total img {
+width: clamp(28px, 3.6vw, 42px);
+height: clamp(28px, 3.6vw, 42px);
+    }
+
+    .aaa-award-total strong {
+font-size: clamp(20px, 2.6vw, 31px);
+    }
+}
+
+@media (max-width: 900px) {
+    .aaa-trophy-stage.awards-card {
+min-height: clamp(580px, 109vw, 980px);
+    }
+
+    .aaa-trophy-stage .awards-header {
+position: relative;
+top: auto;
+right: auto;
+left: auto;
+z-index: 4;
+margin-bottom: clamp(14px, 3.1vw, 28px);
+    }
+
+    .aaa-trophy-stage .aaa-card-heading h2 {
+padding-right: 0;
+    }
+
+    .aaa-awards-stage,
+    .aaa-trophy-stage.has-award-pages .aaa-awards-stage {
+position: relative;
+right: auto;
+bottom: auto;
+left: auto;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+grid-template-rows: repeat(2, minmax(clamp(280px, 45.5vw, 410px), 1fr));
+height: auto;
+min-height: clamp(460px, 95.5vw, 860px);
+gap: clamp(14px, 3.1vw, 28px);
+    }
+
+    .trophy-slot {
+min-height: clamp(280px, 45.5vw, 410px);
+    }
+
+    .aaa-award-pagination {
+position: relative;
+right: auto;
+bottom: auto;
+left: auto;
+margin-top: clamp(14px, 3.1vw, 28px);
+    }
+}

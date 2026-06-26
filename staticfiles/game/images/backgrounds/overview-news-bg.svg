@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" preserveAspectRatio="none">
+  <defs>
+    <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="3" cy="3" r="1.2" fill="#17dfff" opacity=".16"/>
+    </pattern>
+    <pattern id="hex" width="60" height="52" patternUnits="userSpaceOnUse">
+      <path d="M15 1h30l15 25-15 25H15L0 26Z" fill="none" stroke="#12cce8" stroke-opacity=".14"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="500" fill="#03101a"/>
+  <rect x="0" y="0" width="300" height="500" fill="url(#hex)"/>
+  <path d="M0 500C220 390 690 580 1200 310v190Z" fill="#0b3244" opacity=".34"/>
+  <path d="M650 30C820 75 980 55 1200 130" stroke="#45edff" stroke-opacity=".1" stroke-width="8" fill="none"/>
+  <rect x="0" y="0" width="1200" height="500" fill="url(#dots)" opacity=".28"/>
+  <rect x="14" y="14" width="1172" height="472" rx="18" fill="none" stroke="#1fe5ff" stroke-opacity=".5" stroke-width="2"/>
+</svg>
