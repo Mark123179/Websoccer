@@ -289,9 +289,66 @@ class CmtrackerClient:
             params.update(filters)
         return self._get('teams', params=params)
 
+    def find_team_id(self, dbslug, team_name_or_id):
+        """Loest einen Team-Namen oder eine Team-ID auf.
+
+        Ist ``team_name_or_id`` bereits numerisch, wird er unveraendert
+        zurueckgegeben (Strings wie ``'12345'`` werden akzeptiert).
+
+        Andernfalls wird ``GET /dbs/filters/{dbslug}`` abgefragt und der
+        erste Eintrag zurueckgegeben, dessen Name (case-insensitiv) dem
+        Suchbegriff entspricht oder ihn enthaelt.
+
+        Gibt ``None`` zurueck, wenn kein Treffer gefunden wurde.
+        """
+        if str(team_name_or_id).lstrip('-').isdigit():
+            return str(team_name_or_id)
+
+        filters = self.get_db_filters(dbslug)
+        search = team_name_or_id.lower()
+
+        # Die API liefert Filter entweder als Dict mit Listen oder direkt
+        # als Liste. Wir suchen in allen team-artigen Schluessel.
+        candidates = []
+        if isinstance(filters, dict):
+            for key in ('teams', 'clubs', 'club_teams', 'team_list', 'team'):
+                val = filters.get(key)
+                if isinstance(val, list):
+                    candidates = val
+                    break
+            if not candidates:
+                # Fallback: alle Listen-Werte durchsuchen
+                for val in filters.values():
+                    if isinstance(val, list) and val:
+                        candidates = val
+                        break
+        elif isinstance(filters, list):
+            candidates = filters
+
+        for entry in candidates:
+            if isinstance(entry, dict):
+                name = (
+                    entry.get('name') or entry.get('title') or
+                    entry.get('label') or entry.get('club_name') or ''
+                ).lower()
+                team_id = (
+                    entry.get('id') or entry.get('teamid') or
+                    entry.get('team_id') or entry.get('clubid') or
+                    entry.get('value')
+                )
+                if search in name and team_id is not None:
+                    return str(team_id)
+            elif isinstance(entry, (int, str)):
+                if search == str(entry).lower():
+                    return str(entry)
+        return None
+
     def iter_players(self, db=None, limit=100, max_pages=None, sort=None,
                      filters=None, sleep=0.0, sandbox=False):
         """Iteriert paginiert ueber alle passenden Spieler.
+
+        ``db`` (DB-Slug) ist im Live-Modus Pflicht. Fehlt er, wird ein
+        ``CmtrackerError`` mit einem Hinweis auf ``--list-dbs`` ausgeloest.
 
         Terminiert bei leerer Seite, erreichter ``max_pages``, dem Sicherheits-
         Cap oder wenn der Server dieselbe Seite erneut liefert (ignoriert
@@ -301,6 +358,12 @@ class CmtrackerClient:
         serverseitig deaktiviert: es wird genau ein parameterfreier
         ``GET /players`` ausgefuehrt und dessen Spieler werden geliefert.
         """
+        if not db and not sandbox:
+            raise CmtrackerError(
+                'DB-Slug fehlt. Bitte --db <slug> angeben, z. B. --db 26062400. '
+                'Verfuegbare Datenbanken: python manage.py import_cmtracker --list-dbs'
+            )
+
         if sandbox:
             payload = self.list_players(
                 db=db, sort=None, filters=None, paginate=False,
