@@ -41,6 +41,18 @@ from game.sofifa_import_service import run_sofifa_import
 _FILTER_KEYS_TEAM = ('teams', 'clubs', 'club_teams', 'team_list', 'team')
 _FILTER_KEYS_LEAGUE = ('leagues', 'competitions', 'league_list', 'league')
 
+# Kanonische Alias-Tabelle: CMT-Teamnamen → exakter WS-Clubname.
+# Schlüssel immer lowercase (Normalisierung vor Lookup).
+# Erweitern wenn weitere CMT-Sonderschreibweisen auftauchen.
+_CMT_CLUB_NAME_ALIASES: dict[str, str] = {
+    "borussia m'gladbach":       "Borussia Mönchengladbach",
+    "bor. m'gladbach":           "Borussia Mönchengladbach",
+    "m'gladbach":                "Borussia Mönchengladbach",
+    "b. monchengladbach":        "Borussia Mönchengladbach",
+    "b. mönchengladbach":        "Borussia Mönchengladbach",
+    "borussia monchengladbach":  "Borussia Mönchengladbach",
+}
+
 
 class Command(BaseCommand):
     help = 'Importiert CMTracker-Ratings direkt von der cmtracker-API.'
@@ -458,14 +470,21 @@ class Command(BaseCommand):
     def _resolve_ws_club(self, cmt_team_id, db_slug, cmt_team_name):
         """Löst den WS-Club aus CMT-Team-ID oder CMT-Teamname auf.
 
-        Strategie:
+        Strategie (in Reihenfolge):
           1. ClubExternalId(CMTRACKER, external_id=cmt_team_id, db_slug) → direkt
-          2. Name-Suche: jedes Wort des cmt_team_name (≥ 3 Zeichen, längste zuerst)
-             → Club.name__icontains
+          2. Alias-Tabelle (_CMT_CLUB_NAME_ALIASES) → kanonischer Name
+             → Club.name__iexact
+          3. Exakter iexact-Match auf cmt_team_name
+          4. Token-Match: jedes Wort (≥ 4 Zeichen) → Club.name__icontains
+             nur wenn GENAU EIN Club matcht (Eindeutigkeitsprüfung verhindert
+             Borussia-Dortmund-statt-Mönchengladbach-Fehler)
+
         Der cmt_team_name muss der echte Teamname aus der CMT-API sein,
         keine rohe numerische Team-ID.
         """
         from game.models import Club, ClubExternalId, DataSource
+
+        # ── Schritt 1: ClubExternalId-Direktzuordnung ──────────────────────
         try:
             cmt_source = DataSource.objects.get(code='CMTRACKER')
             ext = ClubExternalId.objects.filter(
@@ -478,15 +497,40 @@ class Command(BaseCommand):
         except Exception:
             pass
 
-        if cmt_team_name and not str(cmt_team_name).lstrip('-').isdigit():
-            words = sorted(
-                [w for w in cmt_team_name.split() if len(w) >= 3],
-                key=len, reverse=True,
-            )
-            for keyword in words:
-                club = Club.objects.filter(name__icontains=keyword).first()
-                if club:
-                    return club
+        if not cmt_team_name or str(cmt_team_name).lstrip('-').isdigit():
+            return None
+
+        # ── Schritt 2: Alias-Tabelle → exakter iexact-Match ───────────────
+        canonical = _CMT_CLUB_NAME_ALIASES.get(cmt_team_name.strip().lower())
+        if canonical:
+            club = Club.objects.filter(name__iexact=canonical).first()
+            if club:
+                return club
+
+        # ── Schritt 3: Exakter iexact-Match auf Rohname ───────────────────
+        club = Club.objects.filter(name__iexact=cmt_team_name.strip()).first()
+        if club:
+            return club
+
+        # ── Schritt 4: Token-Match — nur bei eindeutigem Treffer ──────────
+        # Mindestlänge 4 Zeichen; Sonderzeichen-Token (Apostrophe etc.)
+        # werden bereinigt. Liefert nur dann ein Ergebnis, wenn genau ein
+        # Club den Token enthält — verhindert Borussia→BVB-statt-BMG-Fehler.
+        words = sorted(
+            [w for w in cmt_team_name.split() if len(w) >= 4],
+            key=len, reverse=True,
+        )
+        for keyword in words:
+            # Apostroph/Punkt aus Token entfernen, damit "M'gladbach" kein
+            # false-positive gegen "Mönchengladbach" erzeugt.
+            clean = keyword.replace("'", '').replace('.', '').strip()
+            if len(clean) < 4:
+                continue
+            qs = Club.objects.filter(name__icontains=clean)
+            count = qs.count()
+            if count == 1:
+                return qs.first()
+            # count > 1 → mehrdeutig → überspringen
         return None
 
     def _auto_create_players(self, result, players, db_slug, ws_club, dry_run):

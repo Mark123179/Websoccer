@@ -549,6 +549,65 @@ class WsClubResolveTest(TestCase):
         self.assertEqual(result.pk, other_club.pk)
 
 
+class BorussiaMgladbachResolveTest(TestCase):
+    """Alias-Lookup + Eindeutigkeitsprüfung verhindert Borussia-Verwechslung.
+
+    Reproduziert den Bug: team_id=23 / CMT-Name "Borussia M'gladbach" wurde
+    fälschlich auf Borussia Dortmund aufgelöst, weil Token "Borussia"
+    mehrdeutig war und icontains den DB-ersten Treffer (BVB) zurückgab.
+    """
+
+    def setUp(self):
+        league = _make_league()
+        self.bvb = _make_club(league, name='Borussia Dortmund')
+        self.bmg = _make_club(league, name='Borussia Mönchengladbach')
+        _make_cmt_source()
+
+    def _resolve(self, cmt_team_id, cmt_team_name, db_slug='26062400'):
+        from game.management.commands.import_cmtracker import Command
+        return Command()._resolve_ws_club(cmt_team_id, db_slug, cmt_team_name)
+
+    # ── Kern: Alias schlägt mehrdeutigen Token-Match ──────────────────────
+
+    def test_mgladbach_apostrophe_resolves_to_bmg(self):
+        """CMT-Name "Borussia M'gladbach" → Borussia Mönchengladbach (nicht BVB)."""
+        result = self._resolve('23', "Borussia M'gladbach")
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.bmg.pk,
+                         f'Erwartet BMG ({self.bmg.pk}), bekam {result}')
+
+    def test_mgladbach_short_alias_resolves_to_bmg(self):
+        """Alias "M'gladbach" allein → Borussia Mönchengladbach."""
+        result = self._resolve('23', "M'gladbach")
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.bmg.pk)
+
+    def test_bor_mgladbach_alias_resolves_to_bmg(self):
+        """Alias "Bor. M'gladbach" → Borussia Mönchengladbach."""
+        result = self._resolve('23', "Bor. M'gladbach")
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.bmg.pk)
+
+    def test_borussia_alone_returns_none_when_ambiguous(self):
+        """Token "Borussia" allein → None (mehrdeutig: BVB + BMG vorhanden)."""
+        result = self._resolve('23', 'Borussia')
+        self.assertIsNone(result,
+                          'Mehrdeutiger Token "Borussia" darf keinen Club liefern.')
+
+    def test_bvb_still_resolves_correctly(self):
+        """BVB-Name matcht weiterhin korrekt auf Borussia Dortmund."""
+        result = self._resolve('9', 'Borussia Dortmund')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.bvb.pk)
+
+    def test_borussia_dortmund_not_returned_for_mgladbach(self):
+        """Sanity-Check: BVB darf beim M'gladbach-Alias nie zurückkommen."""
+        result = self._resolve('23', "Borussia M'gladbach")
+        if result is not None:
+            self.assertNotEqual(result.pk, self.bvb.pk,
+                                'BVB darf für "Borussia M\'gladbach" nicht matchen.')
+
+
 # ── Safety-Guard ─────────────────────────────────────────────────────────────
 
 class SafetyGuardAutoCreateTest(TestCase):
