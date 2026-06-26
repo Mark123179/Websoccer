@@ -103,10 +103,19 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # Injected into the nginx template (server_name + certificate paths).
+      # Passed into docker-entrypoint.sh for envsubst + cert path check.
       DOMAIN: ${DOMAIN}
+    # Custom entrypoint (nginx/docker-entrypoint.sh):
+    #   • cert present  → renders HTTPS template via envsubst → full HTTPS mode
+    #   • no cert yet   → copies bootstrap.conf → HTTP-only (ACME challenge works)
+    # Also starts a 6-h background reload loop for automatic cert pickup.
+    # NOTE: do NOT use `command:` here — the official nginx entrypoint only runs
+    # its template-rendering scripts when $1 == "nginx", so overriding CMD with
+    # /bin/sh silently skips template rendering and leaves the default config.
+    entrypoint: ["sh", "/etc/nginx/docker-entrypoint.sh"]
     volumes:
-      # Template is rendered by the nginx image (envsubst) into conf.d at start.
+      - ./nginx/docker-entrypoint.sh:/etc/nginx/docker-entrypoint.sh:ro
+      - ./nginx/bootstrap.conf:/etc/nginx/bootstrap.conf:ro
       - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       # nginx serves static & media directly from the shared volumes (read-only).
       - static_data:/app/staticfiles:ro
@@ -114,9 +123,6 @@ services:
       # Let's Encrypt certificates + ACME webroot (written by the certbot service).
       - certbot_certs:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro
-    # Reload every 6h so renewed certificates are picked up without downtime.
-    command: >-
-      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done & exec nginx -g 'daemon off;'"
     depends_on:
       - web
 
