@@ -608,6 +608,95 @@ class BorussiaMgladbachResolveTest(TestCase):
                                 'BVB darf für "Borussia M\'gladbach" nicht matchen.')
 
 
+# ── ClubExternalId-basierte Bundesliga-Auflösung ──────────────────────────────
+
+class ClubExternalIdBundesligaTest(TestCase):
+    """ClubExternalId schlägt immer Alias- und Token-Fallback.
+
+    Abgedeckt:
+      • Team 23 → BMG (nicht BVB), auch mit ClubExternalId statt nur Alias
+      • Team 111235 → 1. FC Heidenheim via ClubExternalId
+      • Doppelter external_id-Eintrag für dieselbe Source ist verboten
+    """
+
+    def setUp(self):
+        league = _make_league()
+        self.bvb = _make_club(league, name='Borussia Dortmund')
+        self.bmg = _make_club(league, name='Borussia Mönchengladbach')
+        self.heidenheim = _make_club(league, name='1. FC Heidenheim')
+        self.cmt_source = _make_cmt_source()
+
+    def _resolve(self, cmt_team_id, cmt_team_name, db_slug='26062400'):
+        from game.management.commands.import_cmtracker import Command
+        return Command()._resolve_ws_club(cmt_team_id, db_slug, cmt_team_name)
+
+    def _make_ext_id(self, club, external_id, db_slug='26062400'):
+        from game.models import ClubExternalId
+        return ClubExternalId.objects.create(
+            club=club,
+            source=self.cmt_source,
+            external_id=external_id,
+            db_slug=db_slug,
+        )
+
+    def test_team23_with_external_id_resolves_to_bmg_not_bvb(self):
+        """ClubExternalId(23 → BMG) verhindert Verwechslung mit BVB."""
+        self._make_ext_id(self.bmg, '23')
+        result = self._resolve('23', "Borussia M'gladbach")
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.bmg.pk,
+                         f'Erwartet BMG ({self.bmg.pk}), bekam {result}')
+        self.assertNotEqual(result.pk, self.bvb.pk,
+                            'BVB darf für team_id=23 nie zurückkommen.')
+
+    def test_team23_external_id_overrides_name_match_to_bvb(self):
+        """Selbst wenn der Name BVB ergäbe, gewinnt ClubExternalId (BMG)."""
+        self._make_ext_id(self.bmg, '23')
+        result = self._resolve('23', 'Borussia Dortmund')
+        self.assertEqual(result.pk, self.bmg.pk,
+                         'ClubExternalId muss Name-Match überschreiben.')
+
+    def test_team111235_resolves_to_heidenheim_via_external_id(self):
+        """ClubExternalId(111235 → Heidenheim) löst korrekt auf."""
+        self._make_ext_id(self.heidenheim, '111235')
+        result = self._resolve('111235', '1. FC Heidenheim 1846')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.heidenheim.pk)
+
+    def test_team111235_without_external_id_falls_back_to_token(self):
+        """Ohne ClubExternalId greift Token-Fallback (Heidenheim eindeutig)."""
+        result = self._resolve('111235', '1. FC Heidenheim')
+        self.assertIsNotNone(result)
+        self.assertEqual(result.pk, self.heidenheim.pk)
+
+    def test_all_bundesliga_external_ids_unique_per_source(self):
+        """Keine zwei Clubs dürfen dieselbe CMT-ID für dieselbe Source haben."""
+        from django.db import IntegrityError
+        self._make_ext_id(self.bmg, '23')
+        with self.assertRaises(IntegrityError):
+            self._make_ext_id(self.bvb, '23')
+
+    def test_external_id_without_db_slug_match_is_bypassed(self):
+        """ClubExternalId mit anderem db_slug aktiviert NICHT Schritt 1.
+
+        Ein Club, den man ausschließlich per ClubExternalId (falschem db_slug)
+        finden würde, darf nicht zurückkommen. Name-Fallback liefert hier None,
+        weil der Clubname kein Alias/Token-Match hat.
+        """
+        from game.models import ClubExternalId
+        obscure_league = _make_league()
+        obscure_club = _make_club(obscure_league, 'Unbekannter Testclub XYZZY')
+        ClubExternalId.objects.create(
+            club=obscure_club,
+            source=self.cmt_source,
+            external_id='77777',
+            db_slug='99999999',
+        )
+        result = self._resolve('77777', '', db_slug='26062400')
+        self.assertIsNone(result,
+                          'Falscher db_slug + leerer Name muss None liefern.')
+
+
 # ── Safety-Guard ─────────────────────────────────────────────────────────────
 
 class SafetyGuardAutoCreateTest(TestCase):

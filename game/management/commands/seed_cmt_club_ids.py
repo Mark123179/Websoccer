@@ -1,21 +1,46 @@
-"""seed_cmt_club_ids — legt ClubExternalId(CMTRACKER)-Einträge für alle Teams
-einer CMTracker-DB an.
+"""seed_cmt_club_ids — legt ClubExternalId(CMTRACKER)-Einträge an.
 
-Ablauf:
-  1. GET /dbs/filters/{db}  → Teamliste (ID + Name)
-     Fallback: GET /teams?db={db} paginiert (falls filters keinen Team-Block hat)
-  2. Jedes Team wird per _resolve_ws_club-Logik (Alias-Tabelle → iexact → Token)
-     auf einen WS-Club gemappt.
-  3. Bei eindeutigem Match: ClubExternalId(CMTRACKER, external_id=team_id,
-     db_slug=db_slug) anlegen oder aktualisieren.
+Zwei Modi:
+
+1. Hardcoded-Modus (Standard, kein --db):
+   Trägt alle 18 Bundesliga-Clubs der Saison 2024/25 mit bestätigten
+   CMTracker-Team-IDs (DB 26062400) deterministisch ein.
+   Kein API-Key nötig.
+
+2. API-Modus (--db <slug>):
+   Liest alle Teams aus GET /dbs/filters/{db} (Fallback: /teams paginiert),
+   matcht sie per Alias-Tabelle auf WS-Clubs und legt ClubExternalId-Einträge an.
+   Benötigt CMTRACKER_API_KEY.
 
 Beispiele::
 
-    # Alle Teams der DB 26062400 einsehen (--dry-run)
-    python manage.py seed_cmt_club_ids --db 26062400 --dry-run
+    # 18 Bundesliga-Clubs offline eintragen (empfohlen für erste Inbetriebnahme)
+    python manage.py seed_cmt_club_ids --dry-run
+    python manage.py seed_cmt_club_ids
 
-    # Tatsächlich schreiben
+    # Alle Teams einer DB via API laden und matchen
+    python manage.py seed_cmt_club_ids --db 26062400 --dry-run
     python manage.py seed_cmt_club_ids --db 26062400
+
+Bekannte CMTracker-Team-IDs (DB 26062400, Saison 2024/25):
+    21     FC Bayern München
+    22     Borussia Dortmund
+    32     Bayer 04 Leverkusen
+    36     VfB Stuttgart
+    112172 RB Leipzig
+    1824   Eintracht Frankfurt
+    175    VfL Wolfsburg
+    38     SV Werder Bremen
+    23     Borussia Mönchengladbach
+    25     SC Freiburg
+    169    1. FSV Mainz 05
+    10029  TSG 1899 Hoffenheim
+    100409 FC Augsburg
+    110329 FC St. Pauli
+    111235 1. FC Heidenheim
+    576    Holstein Kiel
+    160    VfL Bochum
+    1831   1. FC Union Berlin  ← Männer; 132589 = Frauen-Bundesliga (nicht verwenden)
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -24,6 +49,29 @@ from django.utils import timezone
 from game.cmtracker_api import CmtrackerClient, CmtrackerError, _dig, _extract_list
 
 _FILTER_KEYS_TEAM = ('teams', 'clubs', 'club_teams', 'team_list', 'team')
+
+DB_SLUG = '26062400'
+
+BUNDESLIGA_CMT_IDS: list[tuple[str, str]] = [
+    ('21',     'FC Bayern München'),
+    ('22',     'Borussia Dortmund'),
+    ('32',     'Bayer 04 Leverkusen'),
+    ('36',     'VfB Stuttgart'),
+    ('112172', 'RB Leipzig'),
+    ('1824',   'Eintracht Frankfurt'),
+    ('175',    'VfL Wolfsburg'),
+    ('38',     'SV Werder Bremen'),
+    ('23',     'Borussia Mönchengladbach'),
+    ('25',     'SC Freiburg'),
+    ('169',    '1. FSV Mainz 05'),
+    ('10029',  'TSG 1899 Hoffenheim'),
+    ('100409', 'FC Augsburg'),
+    ('110329', 'FC St. Pauli'),
+    ('111235', '1. FC Heidenheim'),
+    ('576',    'Holstein Kiel'),
+    ('160',    'VfL Bochum'),
+    ('1831',   '1. FC Union Berlin'),
+]
 
 _CMT_CLUB_NAME_ALIASES: dict[str, str] = {
     "borussia m'gladbach":       "Borussia Mönchengladbach",
@@ -97,11 +145,11 @@ def _team_name_from_entry(entry) -> str:
     )
 
 
-def _resolve_ws_club(cmt_team_name: str):
-    """Löst einen CMT-Teamnamen (nur Alias→iexact→Token, ohne DB-Lookup) auf.
+def _resolve_ws_club_by_name(cmt_team_name: str):
+    """Löst einen CMT-Teamnamen (Alias→iexact→Token) auf einen WS-Club auf.
 
-    Gibt einen Club oder None zurück.  Der ClubExternalId-Schritt 1 entfällt
-    absichtlich — dieser Command legt die Einträge ja erst an.
+    Der ClubExternalId-Schritt 1 entfällt absichtlich — dieser Command legt
+    die Einträge ja erst an.
     """
     from game.models import Club
 
@@ -134,19 +182,21 @@ def _resolve_ws_club(cmt_team_name: str):
 
 class Command(BaseCommand):
     help = (
-        'Legt ClubExternalId(CMTRACKER)-Einträge für alle Teams einer CMT-DB an. '
-        'Liest Team-IDs aus /dbs/filters/{db} und matcht via Alias-Tabelle auf WS-Clubs.'
+        'Legt ClubExternalId(CMTRACKER)-Einträge an. '
+        'Ohne --db: hardcoded 18 Bundesliga-Clubs (kein API-Key nötig). '
+        'Mit --db: alle Teams einer CMT-DB via API laden und matchen.'
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--db', required=True,
+            '--db', default=None,
             help='Datenbank-Slug (z.B. 26062400). '
+                 'Ohne --db werden die 18 Bundesliga-Clubs hardcoded eingetragen. '
                  'Verfügbare DBs: python manage.py import_cmtracker --list-dbs',
         )
         parser.add_argument(
             '--dry-run', action='store_true',
-            help='Zeigt geplante Einträge, ohne in die DB zu schreiben.',
+            help='Zeigt geplante Änderungen, ohne in die DB zu schreiben.',
         )
         parser.add_argument(
             '--force', action='store_true',
@@ -155,30 +205,146 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **opts):
-        from game.models import Club, ClubExternalId, DataSource
+        from game.models import ClubExternalId, DataSource
 
-        db_slug = opts['db']
         dry_run = opts['dry_run']
         force = opts['force']
+        db_slug = opts.get('db')
+
+        try:
+            cmt_source = DataSource.objects.get(code='CMTRACKER')
+        except DataSource.DoesNotExist:
+            self.stderr.write(self.style.ERROR(
+                'DataSource "CMTRACKER" existiert nicht in der DB.\n'
+                'Bitte einmalig anlegen:\n'
+                '  python manage.py shell -c "'
+                'from game.models import DataSource; '
+                'DataSource.objects.get_or_create(code=\'CMTRACKER\', '
+                'defaults={\'name\': \'CMTracker\', '
+                '\'url\': \'https://cmtracker.net\'})"'
+            ))
+            return
+
+        if dry_run:
+            self.stdout.write(self.style.WARNING(
+                '── DRY-RUN: keine Änderungen werden in die DB geschrieben ──'
+            ))
+
+        if db_slug:
+            self._handle_api_mode(cmt_source, db_slug, dry_run, force)
+        else:
+            self._handle_hardcoded_mode(cmt_source, dry_run, force)
+
+    def _handle_hardcoded_mode(self, cmt_source, dry_run, force):
+        """Trägt alle 18 Bundesliga-Clubs mit bestätigten CMT-IDs ein."""
+        from game.models import Club, ClubExternalId
+
+        self.stdout.write(
+            f'Hardcoded-Modus: {len(BUNDESLIGA_CMT_IDS)} Bundesliga-Clubs '
+            f'(DB {DB_SLUG})'
+        )
+
+        created = updated = skipped = not_found = 0
+
+        for cmt_id, ws_name in BUNDESLIGA_CMT_IDS:
+            club = Club.objects.filter(name__iexact=ws_name).first()
+            if club is None:
+                self.stdout.write(self.style.ERROR(
+                    f'  ✗ WS-Club nicht gefunden: "{ws_name}" '
+                    f'(CMT-ID {cmt_id}) – übersprungen'
+                ))
+                not_found += 1
+                continue
+
+            conflict = ClubExternalId.objects.filter(
+                source=cmt_source,
+                external_id=cmt_id,
+            ).exclude(club=club).select_related('club').first()
+            if conflict:
+                self.stdout.write(self.style.ERROR(
+                    f'  ✗ CMT-ID {cmt_id} bereits für '
+                    f'"{conflict.club.name}" eingetragen '
+                    f'(Konflikt mit "{ws_name}") – übersprungen'
+                ))
+                not_found += 1
+                continue
+
+            existing = ClubExternalId.objects.filter(
+                source=cmt_source, club=club
+            ).first()
+
+            if existing:
+                if existing.external_id == cmt_id and existing.db_slug == DB_SLUG:
+                    self.stdout.write(
+                        f'  = {club.name} → CMT {cmt_id} (bereits vorhanden)'
+                    )
+                    skipped += 1
+                elif force:
+                    old = existing.external_id
+                    if not dry_run:
+                        existing.external_id = cmt_id
+                        existing.db_slug = DB_SLUG
+                        existing.last_seen_at = timezone.now()
+                        existing.save(update_fields=[
+                            'external_id', 'db_slug', 'last_seen_at', 'updated_at',
+                        ])
+                    pfx = '(dry)' if dry_run else '↻'
+                    self.stdout.write(self.style.WARNING(
+                        f'  {pfx} {club.name} → CMT {cmt_id} '
+                        f'(aktualisiert, war: {old})'
+                    ))
+                    updated += 1
+                else:
+                    old = existing.external_id
+                    self.stdout.write(self.style.WARNING(
+                        f'  ≠ {club.name}: vorhanden id={old}, neu={cmt_id} '
+                        f'(--force zum Überschreiben)'
+                    ))
+                    skipped += 1
+            else:
+                if not dry_run:
+                    ClubExternalId.objects.create(
+                        club=club,
+                        source=cmt_source,
+                        external_id=cmt_id,
+                        db_slug=DB_SLUG,
+                        last_seen_at=timezone.now(),
+                    )
+                pfx = '(dry)' if dry_run else '✓'
+                self.stdout.write(self.style.SUCCESS(
+                    f'  {pfx} {club.name} → CMT {cmt_id}'
+                ))
+                created += 1
+
+        self.stdout.write('')
+        if dry_run:
+            self.stdout.write(
+                f'Vorschau: {created} würden angelegt, '
+                f'{updated} aktualisiert, '
+                f'{skipped} bereits vorhanden / Konflikt, '
+                f'{not_found} WS-Club nicht gefunden.'
+            )
+        else:
+            self.stdout.write(self.style.SUCCESS(
+                f'Fertig: {created} neu angelegt, '
+                f'{updated} aktualisiert, '
+                f'{skipped} bereits vorhanden / Konflikt, '
+                f'{not_found} WS-Club nicht gefunden.'
+            ))
+
+    def _handle_api_mode(self, cmt_source, db_slug, dry_run, force):
+        """Lädt alle Teams via CMT-API und trägt Matches ein."""
+        from game.models import ClubExternalId
 
         try:
             client = CmtrackerClient()
         except CmtrackerError as exc:
             raise CommandError(str(exc))
 
-        try:
-            cmt_source = DataSource.objects.get(code=DataSource.CODE_CMTRACKER)
-        except DataSource.DoesNotExist:
-            raise CommandError(
-                f'DataSource mit code="{DataSource.CODE_CMTRACKER}" nicht in der DB gefunden. '
-                'Bitte zuerst Fixtures/Migrations ausführen.'
-            )
-
         self.stdout.write(self.style.SUCCESS(
-            f'{"[DRY-RUN] " if dry_run else ""}seed_cmt_club_ids — DB: {db_slug}'
+            f'{"[DRY-RUN] " if dry_run else ""}API-Modus — DB: {db_slug}'
         ))
 
-        # ── Schritt 1: Teams aus /dbs/filters/{db} laden ──────────────────────
         teams = self._load_teams(client, db_slug)
         if not teams:
             raise CommandError(
@@ -188,7 +354,6 @@ class Command(BaseCommand):
 
         self.stdout.write(f'  {len(teams)} Teams aus CMT-API geladen.')
 
-        # ── Schritt 2: Matching + Schreiben ────────────────────────────────────
         created = updated = skipped = unmatched = 0
 
         for entry in teams:
@@ -202,7 +367,7 @@ class Command(BaseCommand):
                 skipped += 1
                 continue
 
-            ws_club = _resolve_ws_club(team_name)
+            ws_club = _resolve_ws_club_by_name(team_name)
 
             if ws_club is None:
                 self.stdout.write(
@@ -211,10 +376,9 @@ class Command(BaseCommand):
                 unmatched += 1
                 continue
 
-            existing_qs = ClubExternalId.objects.filter(
+            existing = ClubExternalId.objects.filter(
                 club=ws_club, source=cmt_source,
-            )
-            existing = existing_qs.first()
+            ).first()
 
             if existing:
                 if existing.external_id == str(team_id) and existing.db_slug == db_slug:
@@ -228,7 +392,9 @@ class Command(BaseCommand):
                         existing.external_id = str(team_id)
                         existing.db_slug = db_slug
                         existing.last_seen_at = timezone.now()
-                        existing.save(update_fields=['external_id', 'db_slug', 'last_seen_at', 'updated_at'])
+                        existing.save(update_fields=[
+                            'external_id', 'db_slug', 'last_seen_at', 'updated_at',
+                        ])
                     self.stdout.write(self.style.WARNING(
                         f'  UPDATED  id={team_id:<8}  {team_name!r} → {ws_club.name}'
                     ))
@@ -256,7 +422,6 @@ class Command(BaseCommand):
                 ))
                 created += 1
 
-        # ── Zusammenfassung ────────────────────────────────────────────────────
         self.stdout.write('')
         prefix = '[DRY-RUN] ' if dry_run else ''
         self.stdout.write(self.style.SUCCESS(
@@ -268,8 +433,8 @@ class Command(BaseCommand):
         ))
         if unmatched:
             self.stdout.write(
-                '  Tipp: Nicht gematchte Teams manuell in _CMT_CLUB_NAME_ALIASES '
-                'in import_cmtracker.py ergänzen, dann erneut ausführen.'
+                '  Tipp: Nicht gematchte Teams in _CMT_CLUB_NAME_ALIASES ergänzen, '
+                'dann erneut ausführen.'
             )
 
     def _load_teams(self, client: CmtrackerClient, db_slug: str) -> list[dict]:
@@ -277,7 +442,6 @@ class Command(BaseCommand):
         seen_ids: set[str] = set()
         teams: list[dict] = []
 
-        # ── Primär: /dbs/filters/{db} ─────────────────────────────────────────
         try:
             data = client.get_db_filters(db_slug)
             for entry in _extract_teams_from_filters(data):
@@ -290,7 +454,6 @@ class Command(BaseCommand):
                 f'  /dbs/filters/{db_slug} nicht verfügbar: {exc}'
             ))
 
-        # ── Fallback: /teams paginiert ─────────────────────────────────────────
         if not teams:
             self.stdout.write(
                 '  /dbs/filters lieferte keine Teams — versuche /teams paginiert …'
