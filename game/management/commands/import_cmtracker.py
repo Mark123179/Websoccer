@@ -35,7 +35,7 @@ from game.cmtracker_api import (
     _extract_list,
     players_to_csv,
 )
-from game.cmt_profile_service import store_player_profiles
+from game.cmt_profile_service import create_player_from_cmt_raw, store_player_profiles
 from game.sofifa_import_service import run_sofifa_import
 
 _FILTER_KEYS_TEAM = ('teams', 'clubs', 'club_teams', 'team_list', 'team')
@@ -87,6 +87,13 @@ class Command(BaseCommand):
             help='Normalisierte CMT-Spielerprofile speichern/aktualisieren '
                  '(PlayerCMTProfile, PlayerCMTAttributeProfile). '
                  'Laeuft nach dem regulaeren Rating-Import. '
+                 'Im Dry-Run wird nur die Vorschau ausgegeben.',
+        )
+        parser.add_argument(
+            '--auto-create', action='store_true',
+            help='Legt vereinslose Spieler an, die nicht in der WS-DB '
+                 'gefunden wurden (reason=not_in_ws). Nützlich für '
+                 'Leihspieler, deren Stammverein noch nicht importiert wurde. '
                  'Im Dry-Run wird nur die Vorschau ausgegeben.',
         )
         parser.add_argument(
@@ -222,6 +229,16 @@ class Command(BaseCommand):
             raise CommandError(result['fatal_error'])
 
         self._print_result(result, opts['dry_run'])
+
+        # ── Auto-Create (optional, --auto-create) ────────────────────────────
+        if opts['auto_create']:
+            self.stdout.write('')
+            self._auto_create_players(
+                result=result,
+                players=players,
+                db_slug=db_slug or '',
+                dry_run=opts['dry_run'],
+            )
 
         # ── Profil-Import (optional, --profiles) ─────────────────────────────
         if opts['profiles']:
@@ -363,6 +380,74 @@ class Command(BaseCommand):
                 self.stdout.write(f'  {slug}  {name}')
             else:
                 self.stdout.write(f'  {d}')
+
+    def _auto_create_players(self, result, players, db_slug, dry_run):
+        """Legt vereinslose Spieler für alle CMT-Einträge mit reason=not_in_ws an."""
+        # Baue Index: CMT-playerid → Rohpayload
+        raw_by_cmt_id = {}
+        for raw in players:
+            pid = str(_dig(raw, 'info.playerid') or '').strip()
+            if pid:
+                raw_by_cmt_id[pid] = raw
+
+        # Filtere ungematchte Spieler mit reason=not_in_ws
+        candidates = [
+            r for r in result.get('row_results', [])
+            if r.get('action') == 'unmatched'
+            and r.get('unmatch_reason') == 'not_in_ws'
+        ]
+
+        if not candidates:
+            self.stdout.write('Auto-Create: keine not_in_ws-Kandidaten.')
+            return
+
+        mode = 'DRY-RUN' if dry_run else 'Anlegen'
+        self.stdout.write(
+            self.style.WARNING(
+                f'Auto-Create ({mode}): {len(candidates)} Spieler ohne WS-Eintrag …'
+            )
+        )
+
+        created = skipped = errors = 0
+        for row in candidates:
+            cmt_id = str(row.get('sofifa_id', '')).strip()
+            raw = raw_by_cmt_id.get(cmt_id)
+            if raw is None:
+                self.stdout.write(
+                    self.style.ERROR(f'  CMT-ID {cmt_id}: kein Rohpayload gefunden')
+                )
+                errors += 1
+                continue
+
+            r = create_player_from_cmt_raw(raw, db_slug=db_slug, dry_run=dry_run)
+            pos = r.get('position', '?')
+            overall = r.get('overall', '?')
+
+            if r['status'] == 'created':
+                icon = '(dry)' if dry_run else '✓'
+                self.stdout.write(
+                    f'  {icon} {r["name"]:30s}  [{pos}]  OVR {overall}'
+                )
+                created += 1
+            elif r['status'] == 'skipped':
+                self.stdout.write(
+                    f'  –  {r["name"]:30s}  bereits vorhanden: {r["reason"]}'
+                )
+                skipped += 1
+            else:
+                self.stdout.write(
+                    self.style.ERROR(f'  ✗  {r["name"]}: {r["reason"]}')
+                )
+                errors += 1
+
+        summary = f'Auto-Create abgeschlossen: {created} angelegt'
+        if dry_run:
+            summary = f'Auto-Create (DRY-RUN): {created} würden angelegt'
+        if skipped:
+            summary += f', {skipped} übersprungen'
+        if errors:
+            summary += f', {errors} Fehler'
+        self.stdout.write(self.style.SUCCESS(summary))
 
     def _print_result(self, result, dry_run):
         stats = result['stats']
