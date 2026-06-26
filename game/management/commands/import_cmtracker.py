@@ -233,10 +233,23 @@ class Command(BaseCommand):
         # ── Auto-Create (optional, --auto-create) ────────────────────────────
         if opts['auto_create']:
             self.stdout.write('')
+            ws_club = None
+            if opts.get('team') and team_id and db_slug:
+                ws_club = self._resolve_ws_club(team_id, db_slug, opts['team'])
+                if ws_club:
+                    self.stdout.write(f'Auto-Create: WS-Club aufgelöst → {ws_club.name}')
+                else:
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f'Auto-Create: kein WS-Club für "{opts["team"]}" gefunden '
+                            f'→ Spieler werden vereinslos (extern_loan wenn Leihe).'
+                        )
+                    )
             self._auto_create_players(
                 result=result,
                 players=players,
                 db_slug=db_slug or '',
+                ws_club=ws_club,
                 dry_run=opts['dry_run'],
             )
 
@@ -381,16 +394,49 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f'  {d}')
 
-    def _auto_create_players(self, result, players, db_slug, dry_run):
-        """Legt vereinslose Spieler für alle CMT-Einträge mit reason=not_in_ws an."""
-        # Baue Index: CMT-playerid → Rohpayload
+    def _resolve_ws_club(self, cmt_team_id, db_slug, team_name_raw):
+        """Löst den WS-Club aus CMT-Team-ID oder Teamname auf.
+
+        Strategie:
+          1. ClubExternalId(CMTRACKER, external_id=team_id, db_slug) → direkt
+          2. Club.name enthält letztes Wort des Teamnamens (case-insensitive)
+        """
+        from game.models import Club, ClubExternalId, DataSource
+        try:
+            cmt_source = DataSource.objects.get(code='CMTRACKER')
+            ext = ClubExternalId.objects.filter(
+                source=cmt_source,
+                external_id=str(cmt_team_id),
+                db_slug=db_slug,
+            ).select_related('club').first()
+            if ext:
+                return ext.club
+        except Exception:
+            pass
+
+        if team_name_raw:
+            keyword = team_name_raw.split()[-1]
+            club = Club.objects.filter(name__icontains=keyword).first()
+            if club:
+                return club
+        return None
+
+    def _auto_create_players(self, result, players, db_slug, ws_club, dry_run):
+        """Legt Spieler für alle CMT-Einträge mit reason=not_in_ws an.
+
+        Entscheidungsmatrix (siehe create_player_from_cmt_raw):
+          ws_club + loan_team → club=ws_club, loaned_in
+          ws_club + kein loan → club=ws_club, none
+          None    + loan_team → club=None,    extern_loan
+          None    + kein loan → club=None,    none
+        """
+        # Index: CMT-playerid → Rohpayload
         raw_by_cmt_id = {}
         for raw in players:
             pid = str(_dig(raw, 'info.playerid') or '').strip()
             if pid:
                 raw_by_cmt_id[pid] = raw
 
-        # Filtere ungematchte Spieler mit reason=not_in_ws
         candidates = [
             r for r in result.get('row_results', [])
             if r.get('action') == 'unmatched'
@@ -404,9 +450,16 @@ class Command(BaseCommand):
         mode = 'DRY-RUN' if dry_run else 'Anlegen'
         self.stdout.write(
             self.style.WARNING(
-                f'Auto-Create ({mode}): {len(candidates)} Spieler ohne WS-Eintrag …'
+                f'Auto-Create ({mode}): {len(candidates)} Kandidaten …'
             )
         )
+        if dry_run:
+            self.stdout.write(
+                f'  {"Name":<28}  {"Pos":>3}  {"OVR":>3}  '
+                f'{"CMT-Verein":<22}  {"Leihgeber":<18}  '
+                f'{"Status":<12}  {"Ziel-WS-Club / Grund"}'
+            )
+            self.stdout.write('  ' + '─' * 110)
 
         created = skipped = errors = 0
         for row in candidates:
@@ -419,23 +472,39 @@ class Command(BaseCommand):
                 errors += 1
                 continue
 
-            r = create_player_from_cmt_raw(raw, db_slug=db_slug, dry_run=dry_run)
-            pos = r.get('position', '?')
+            r = create_player_from_cmt_raw(
+                raw, db_slug=db_slug, ws_club=ws_club, dry_run=dry_run
+            )
+            pos     = r.get('position', '?')
             overall = r.get('overall', '?')
 
             if r['status'] == 'created':
-                icon = '(dry)' if dry_run else '✓'
-                loan_tag = ''
-                if r.get('is_extern_loan'):
-                    loan_from = r.get('loan_team_name') or '?'
-                    loan_tag = f'  ↩ Leihe von {loan_from}'
-                self.stdout.write(
-                    f'  {icon} {r["name"]:30s}  [{pos}]  OVR {overall}{loan_tag}'
-                )
+                icon          = '(dry)' if dry_run else '✓'
+                club_team     = r.get('club_team_name') or ''
+                loan_team     = r.get('loan_team_name') or ''
+                status_str    = r.get('decided_status', '?')
+                target        = r.get('target_club')
+                target_name   = target.name if target else 'vereinslos'
+                reason_short  = r.get('decision_reason', '')
+
+                if dry_run:
+                    self.stdout.write(
+                        f'  {icon} {r["name"]:<28}  {pos:>3}  {overall:>3}  '
+                        f'{club_team:<22}  {loan_team:<18}  '
+                        f'{status_str:<12}  {target_name} — {reason_short}'
+                    )
+                else:
+                    loan_tag = (
+                        f'  ↩ Leihe von {loan_team}' if loan_team else ''
+                    )
+                    self.stdout.write(
+                        f'  ✓ {r["name"]:<28}  [{pos}]  OVR {overall}'
+                        f'  → {target_name}  [{status_str}]{loan_tag}'
+                    )
                 created += 1
             elif r['status'] == 'skipped':
                 self.stdout.write(
-                    f'  –  {r["name"]:30s}  bereits vorhanden: {r["reason"]}'
+                    f'  –  {r["name"]:<28}  bereits vorhanden: {r["reason"]}'
                 )
                 skipped += 1
             else:
