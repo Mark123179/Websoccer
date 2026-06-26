@@ -508,7 +508,9 @@ def creator_index(request):
             'flag_code': flag_code,
         }
         if league.id == 1:
-            ctx['vereinslose_count'] = Player.objects.filter(club__isnull=True).count()
+            ctx['vereinslose_count'] = Player.objects.filter(
+                club__isnull=True
+            ).exclude(loan_status='extern_loan').count()
         return render(request, 'creator/index.html', ctx)
 
     # ── Level 2: Ligen eines Landes ──────────────────────────────────────────
@@ -579,7 +581,9 @@ def creator_vereinslose(request):
     q_max   = request.GET.get('ea_max', '').strip()
     page_nr = request.GET.get('page', 1)
 
-    qs = Player.objects.filter(club__isnull=True).order_by('last_name', 'first_name')
+    qs = Player.objects.filter(club__isnull=True).exclude(
+        loan_status='extern_loan'
+    ).order_by('last_name', 'first_name')
 
     if q_name:
         from django.db.models import Q

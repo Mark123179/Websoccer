@@ -1464,6 +1464,7 @@ class Player(models.Model):
         ('none', 'Kein Leihverhältnis'),
         ('loaned_in', 'Geliehen'),
         ('loaned_out', 'Verliehen'),
+        ('extern_loan', 'Extern verliehen'),
     ]
     loan_status = models.CharField(
         'Leihstatus',
