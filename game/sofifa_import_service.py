@@ -114,7 +114,7 @@ def _parse_row(raw_row, header_map):
     }
 
 
-def _match_player(parsed, sofifa_ds):
+def _match_player(parsed, sofifa_ds, club_scope=None):
     """Sucht den passenden Player-Datensatz fuer eine CMT-Zeile.
 
     Rueckgabe: ``(player_or_None, match_type_or_None, reason_or_None)``
@@ -129,6 +129,15 @@ def _match_player(parsed, sofifa_ds):
     * ``'dob_ambiguous'``   – DOB trifft mehrere Spieler, Namenstrennung schlaegt fehl
     * ``'name_ambiguous'``  – Namens-Score gleichauf (kein eindeutiger Treffer)
     * ``'name_no_match'``   – Kein Kandidat ueber Aehnlichkeitsschwelle 150
+    * ``'out_of_scope'``    – Spieler gefunden, aber nicht im erwarteten WS-Club
+                              (nur wenn club_scope gesetzt)
+
+    Parameters
+    ----------
+    club_scope : Club | None
+        Wenn gesetzt, werden ausschliesslich Spieler dieses WS-Clubs als
+        Matching-Kandidaten beruecksichtigt. Verhindert globalen
+        Name/DOB-Match ueber fremde Vereine.
     """
     sofifa_id = parsed.get('sofifa_id') or ''
     if not sofifa_id:
@@ -141,15 +150,20 @@ def _match_player(parsed, sofifa_ds):
         .first()
     )
     if ext:
+        # Club-Scope-Check: ID-Match trumpft grundsätzlich, aber bei
+        # gesetztem club_scope darf nur der erwartete Verein gematcht werden.
+        if club_scope is not None and ext.player.club_id != club_scope.id:
+            return None, None, 'out_of_scope'
         return ext.player, 'id', None
 
-    # ── DOB-Matching (vereinsuebergreifend, Name egal) ───────────────────────
+    # ── DOB-Matching (club-scoped wenn club_scope gesetzt) ───────────────────
     dob = parsed.get('dob')
     _dob_ambiguous = False
     if dob:
-        dob_matches = list(
-            Player.objects.select_related('club').filter(date_of_birth=dob)
-        )
+        dob_qs = Player.objects.select_related('club')
+        if club_scope is not None:
+            dob_qs = dob_qs.filter(club=club_scope)
+        dob_matches = list(dob_qs.filter(date_of_birth=dob))
         if len(dob_matches) == 1:
             return dob_matches[0], 'dob', None
         if len(dob_matches) > 1:
@@ -166,27 +180,32 @@ def _match_player(parsed, sofifa_ds):
             _dob_ambiguous = True
             # Mehrdeutig: weiter mit dem Namens-Fallback unten.
 
-    # ── Name-Fallback ────────────────────────────────────────────────────────
+    # ── Name-Fallback (club-scoped wenn club_scope gesetzt) ──────────────────
     name = parsed.get('name')
     if not name:
         if not dob:
             return None, None, 'no_dob'
         return None, None, 'no_name'
 
-    candidates = Player.objects.select_related('club').all()
-    club_name = parsed.get('club')
-    if club_name:
-        club_norm = normalize_name(club_name)
-        club_ids = [
-            c.id for c in Club.objects.all()
-            if club_norm and (
-                club_norm in normalize_name(c.name)
-                or normalize_name(c.name) in club_norm
-                or club_norm in normalize_name(c.short_name or '')
-            )
-        ]
-        if club_ids:
-            candidates = candidates.filter(club_id__in=club_ids)
+    if club_scope is not None:
+        # Strikt auf den WS-Club beschränkt — CSV-Clubname wird ignoriert
+        candidates = Player.objects.select_related('club').filter(club=club_scope)
+    else:
+        # Globales Matching mit optionalem CSV-Clubname-Filter (Legacy-Pfad)
+        candidates = Player.objects.select_related('club').all()
+        club_name = parsed.get('club')
+        if club_name:
+            club_norm = normalize_name(club_name)
+            club_ids = [
+                c.id for c in Club.objects.all()
+                if club_norm and (
+                    club_norm in normalize_name(c.name)
+                    or normalize_name(c.name) in club_norm
+                    or club_norm in normalize_name(c.short_name or '')
+                )
+            ]
+            if club_ids:
+                candidates = candidates.filter(club_id__in=club_ids)
 
     target = normalize_name(name)
     scored = []
@@ -292,13 +311,17 @@ def _apply_row(player, parsed, sofifa_ds, today, dry_run):
     return ('new' if is_new else 'updated'), diff_lines
 
 
-def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
+def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False,
+                       club_scope=None):
     """Führt den CMTracker-CSV-Import durch und gibt ein strukturiertes Ergebnis zurück.
 
     Args:
         csv_text:          Inhalt der CSV-Datei als String (BOM wird automatisch entfernt).
         dry_run:           True → nur Vorschau, keine DB-Schreiboperationen.
         skip_recalculate:  True → Spielstärken nach dem Import NICHT neu berechnen.
+        club_scope:        Club | None — wenn gesetzt, werden ausschliesslich Spieler
+                           dieses WS-Clubs als Matching-Kandidaten beruecksichtigt.
+                           Verhindert globalen Name/DOB-Match ueber fremde Vereine.
 
     Returns:
         dict mit:
@@ -360,7 +383,8 @@ def run_sofifa_import(csv_text, dry_run=False, skip_recalculate=False):
             })
             continue
 
-        player, match_mode, unmatch_reason = _match_player(parsed, sofifa_ds)
+        player, match_mode, unmatch_reason = _match_player(parsed, sofifa_ds,
+                                                              club_scope=club_scope)
         if player:
             parsed['attrs'] = _filter_attrs_for_player(player, parsed['attrs'])
         if not player:

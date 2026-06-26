@@ -256,7 +256,8 @@ _CARD_MAP = {
 
 # ── Haupt-Funktion: Spielerprofile speichern ─────────────────────────────────
 
-def store_player_profiles(players, db_slug, dry_run=False, fetched_at=None):
+def store_player_profiles(players, db_slug, dry_run=False, fetched_at=None,
+                           ws_club=None):
     """Speichert/aktualisiert PlayerCMTProfile + PlayerCMTAttributeProfile.
 
     Parameters
@@ -269,12 +270,17 @@ def store_player_profiles(players, db_slug, dry_run=False, fetched_at=None):
         Wenn True, werden keine Änderungen in die DB geschrieben.
     fetched_at : datetime | None
         Zeitpunkt des API-Abrufs; Standard: jetzt.
+    ws_club : Club | None
+        Wenn gesetzt, werden nur Profile für Spieler dieses WS-Clubs geschrieben.
+        Spieler anderer Vereine werden übersprungen (out_of_scope).
+        Verhindert club-übergreifende Profil-Kontamination bei Team-Import.
 
     Returns
     -------
     dict
         stats: {'matched': int, 'new': int, 'updated': int,
                 'unchanged': int, 'unmatched': int,
+                'out_of_scope': int,
                 'unmatched_ids': list[str]}
     """
     if fetched_at is None:
@@ -290,7 +296,10 @@ def store_player_profiles(players, db_slug, dry_run=False, fetched_at=None):
             'error': 'DataSource CMTRACKER nicht gefunden — bitte Migrationen prüfen.',
         }
 
-    stats = {'matched': 0, 'new': 0, 'updated': 0, 'unchanged': 0, 'unmatched': 0}
+    stats = {
+        'matched': 0, 'new': 0, 'updated': 0, 'unchanged': 0,
+        'unmatched': 0, 'out_of_scope': 0,
+    }
     unmatched_ids = []
     now = timezone.now()
 
@@ -304,6 +313,13 @@ def store_player_profiles(players, db_slug, dry_run=False, fetched_at=None):
         if player is None:
             stats['unmatched'] += 1
             unmatched_ids.append(cmt_id)
+            continue
+
+        # Club-Scope-Check: bei Team-Import nur Spieler des WS-Clubs bearbeiten.
+        # Spieler anderer Vereine (z. B. Freiburg-Profil bei Leverkusen-Import)
+        # werden übersprungen — kein Profil, kein Attribut-Update.
+        if ws_club is not None and player.club_id != ws_club.id:
+            stats['out_of_scope'] += 1
             continue
 
         stats['matched'] += 1

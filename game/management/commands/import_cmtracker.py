@@ -155,6 +155,7 @@ class Command(BaseCommand):
         # ── Filter aufloesen: Namen → IDs via /dbs/filters/{db} ──────────────
         filters = {}
         db_slug = opts['db']
+        team_id = None  # wird im --team-Block gesetzt; hier vorinitialisiert
 
         if opts['team'] and db_slug:
             raw = opts['team']
@@ -213,6 +214,50 @@ class Command(BaseCommand):
             return
         self.stdout.write(f'{len(players)} Spieler erhalten.')
 
+        # ── WS-Club ermitteln (für alle Importpfade: Rating, Auto-Create, Profile) ──
+        # Wenn --team gesetzt: Club-scoped Matching; ws_club=None = globales Matching.
+        ws_club = None
+        cmt_team_name_for_resolve = ''
+        if opts.get('team') and db_slug and team_id:
+            raw_team_arg = opts['team']
+            if str(raw_team_arg).lstrip('-').isdigit():
+                try:
+                    cmt_team_name_for_resolve = (
+                        client.find_team_name(db_slug, team_id) or ''
+                    )
+                    if cmt_team_name_for_resolve:
+                        self.stdout.write(
+                            f'WS-Club: CMT-Teamname für ID {team_id}'
+                            f' → "{cmt_team_name_for_resolve}"'
+                        )
+                except Exception:
+                    pass
+            else:
+                cmt_team_name_for_resolve = raw_team_arg
+
+            ws_club = self._resolve_ws_club(
+                team_id, db_slug, cmt_team_name_for_resolve
+            )
+            if ws_club:
+                from game.models import Player as _PlayerModel
+                ws_player_count = _PlayerModel.objects.filter(club=ws_club).count()
+                self.stdout.write(
+                    f'WS-Club: {ws_club.name} | WS-Spieler im Club: {ws_player_count}'
+                )
+                if ws_player_count == 0:
+                    _zero_msg = (
+                        f'{ws_club.name} hat 0 WS-Spieler – CMT-Teamimport blockiert. '
+                        f'Spieler bitte zuerst via TM-Import anlegen.'
+                    )
+                    if opts['dry_run']:
+                        self.stdout.write(self.style.WARNING(f'⚠ {_zero_msg}'))
+                        return
+                    raise CommandError(_zero_msg)
+            else:
+                self.stdout.write(
+                    f'WS-Club für "{raw_team_arg}" nicht gefunden – globales Matching.'
+                )
+
         if opts['dry_run']:
             self.stdout.write(self.style.WARNING(
                 '── DRY-RUN: es werden KEINE Aenderungen geschrieben ──'
@@ -224,6 +269,7 @@ class Command(BaseCommand):
             csv_text,
             dry_run=opts['dry_run'],
             skip_recalculate=opts['skip_recalculate'],
+            club_scope=ws_club,
         )
         if result['fatal_error']:
             raise CommandError(result['fatal_error'])
@@ -233,53 +279,31 @@ class Command(BaseCommand):
         # ── Auto-Create (optional, --auto-create) ────────────────────────────
         if opts['auto_create']:
             self.stdout.write('')
-            ws_club = None
-            cmt_team_name_for_resolve = ''
-
-            if opts.get('team') and db_slug:
+            # ws_club wurde bereits oben aufgelöst (oder ist None, falls nicht auffindbar).
+            if opts.get('team') and ws_club is None:
                 raw_team_arg = opts['team']
-                if str(raw_team_arg).lstrip('-').isdigit():
-                    # Numerische ID → echten Namen aus CMT-API holen
-                    try:
-                        cmt_team_name_for_resolve = (
-                            client.find_team_name(db_slug, team_id) or ''
-                        )
-                        if cmt_team_name_for_resolve:
-                            self.stdout.write(
-                                f'Auto-Create: CMT-Teamname für ID {team_id}'
-                                f' → "{cmt_team_name_for_resolve}"'
-                            )
-                    except Exception:
-                        pass
-                else:
-                    cmt_team_name_for_resolve = raw_team_arg
-
-                ws_club = self._resolve_ws_club(
-                    team_id, db_slug, cmt_team_name_for_resolve
+                _no_club_msg = (
+                    f'Auto-Create: kein WS-Club für "{raw_team_arg}"'
+                    + (f' / "{cmt_team_name_for_resolve}"'
+                       if cmt_team_name_for_resolve and
+                          cmt_team_name_for_resolve != raw_team_arg else '')
+                    + ' gefunden.\n'
+                    + (f'  Tipp: ClubExternalId(CMTRACKER, {team_id}, {db_slug})'
+                       + ' in der DB anlegen oder den Club zuerst importieren.'
+                       if team_id else '')
                 )
-                if ws_club:
-                    self.stdout.write(
-                        f'Auto-Create: WS-Club aufgelöst → {ws_club.name}'
+                if not opts['dry_run']:
+                    raise CommandError(
+                        _no_club_msg + '\n  kein WS-Club'
                     )
-                else:
-                    _no_club_msg = (
-                        f'Auto-Create: kein WS-Club für "{raw_team_arg}"'
-                        + (f' / "{cmt_team_name_for_resolve}"'
-                           if cmt_team_name_for_resolve != raw_team_arg else '')
-                        + ' gefunden.\n'
-                        + f'  Tipp: ClubExternalId(CMTRACKER, {team_id}, {db_slug})'
-                        + ' in der DB anlegen oder den Club zuerst importieren.'
-                    )
-                    if not opts['dry_run']:
-                        raise CommandError(
-                            _no_club_msg +
-                            '\n  Im Dry-Run (--dry-run) wird die Vorschau'
-                            ' trotzdem angezeigt.'
-                        )
-                    self.stdout.write(self.style.ERROR(_no_club_msg))
-                    self.stdout.write(self.style.WARNING(
-                        '── Dry-Run-Vorschau mit club=None ──'
-                    ))
+                self.stdout.write(self.style.ERROR(_no_club_msg))
+                self.stdout.write(self.style.WARNING(
+                    '── Dry-Run-Vorschau mit club=None ──'
+                ))
+            elif ws_club:
+                self.stdout.write(
+                    f'Auto-Create: WS-Club → {ws_club.name}'
+                )
 
             self._auto_create_players(
                 result=result,
@@ -297,6 +321,7 @@ class Command(BaseCommand):
                 players=players,
                 db_slug=db_slug or '',
                 dry_run=opts['dry_run'],
+                ws_club=ws_club,
             )
             self._print_profile_result(profile_stats, opts['dry_run'])
 
