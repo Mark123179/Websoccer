@@ -31,6 +31,9 @@ from game.cmtracker_api import (
 )
 from game.sofifa_import_service import run_sofifa_import
 
+_FILTER_KEYS_TEAM = ('teams', 'clubs', 'club_teams', 'team_list', 'team')
+_FILTER_KEYS_LEAGUE = ('leagues', 'competitions', 'league_list', 'league')
+
 
 class Command(BaseCommand):
     help = 'Importiert CMTracker-Ratings direkt von der cmtracker-API.'
@@ -42,11 +45,14 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--team', default=None,
-            help='cmtracker-Club-Team-ID (filtert auf einen Verein).',
+            help='Team-Name oder Team-ID (cmtracker). Bei einem Namen wird '
+                 'zunaechst GET /dbs/filters/{db} abgefragt, um die ID zu '
+                 'ermitteln. Beispiel: --team "FC Bayern" oder --team 21.',
         )
         parser.add_argument(
             '--league', default=None,
-            help='cmtracker-Liga-ID (filtert auf eine Liga).',
+            help='Liga-Name oder Liga-ID (cmtracker). Wird wie --team '
+                 'ueber /dbs/filters aufgeloest.',
         )
         parser.add_argument(
             '--min-overall', type=int, default=None,
@@ -78,6 +84,11 @@ class Command(BaseCommand):
             help='Listet verfuegbare Datenbanken auf und beendet.',
         )
         parser.add_argument(
+            '--list-filters', action='store_true',
+            help='Zeigt Teams und Ligen der gewaehlten DB (--db Pflicht). '
+                 'Gibt Team-/Liga-IDs fuer --team / --league aus. Kein Import.',
+        )
+        parser.add_argument(
             '--probe-players', action='store_true',
             help='Testet alle bekannten Spieler-Endpoint-Kandidaten und '
                  'zeigt Status-Codes + gekuerzte Antworten. Kein Import. '
@@ -102,12 +113,56 @@ class Command(BaseCommand):
             self._probe_players(client, opts.get('db'))
             return
 
+        if opts['list_filters']:
+            if not opts['db']:
+                raise CommandError(
+                    '--list-filters benoetigt --db. '
+                    'Verfuegbare DBs: python manage.py import_cmtracker --list-dbs'
+                )
+            self._print_filters(client, opts['db'])
+            return
+
+        # ── Player-Import: --db ist Pflicht ──────────────────────────────────
         sandbox = opts['sandbox']
+        if not opts['db'] and not sandbox:
+            raise CommandError(
+                'Bitte DB-Slug angeben: --db 26062400\n'
+                'Verfuegbare DBs:  python manage.py import_cmtracker --list-dbs\n'
+                'Teams in einer DB: python manage.py import_cmtracker --list-filters --db 26062400'
+            )
+
+        # ── Filter aufloesen: Namen → IDs via /dbs/filters/{db} ──────────────
         filters = {}
-        if opts['team']:
-            filters['team__in'] = opts['team']
-        if opts['league']:
-            filters['league__in'] = opts['league']
+        db_slug = opts['db']
+
+        if opts['team'] and db_slug:
+            raw = opts['team']
+            try:
+                team_id = client.find_team_id(db_slug, raw)
+            except CmtrackerError as exc:
+                raise CommandError(f'Filter-Abfrage fuer --team fehlgeschlagen: {exc}')
+            if team_id is None:
+                raise CommandError(
+                    f'Team "{raw}" nicht in /dbs/filters/{db_slug} gefunden. '
+                    f'Tipp: python manage.py import_cmtracker --list-filters --db {db_slug}'
+                )
+            self.stdout.write(f'Team "{raw}" → ID {team_id}')
+            filters['team__in'] = team_id
+
+        if opts['league'] and db_slug:
+            raw = opts['league']
+            try:
+                league_id = client.find_team_id(db_slug, raw)  # selbe Logik
+            except CmtrackerError as exc:
+                raise CommandError(f'Filter-Abfrage fuer --league fehlgeschlagen: {exc}')
+            if league_id is None:
+                raise CommandError(
+                    f'Liga "{raw}" nicht in /dbs/filters/{db_slug} gefunden. '
+                    f'Tipp: python manage.py import_cmtracker --list-filters --db {db_slug}'
+                )
+            self.stdout.write(f'Liga "{raw}" → ID {league_id}')
+            filters['league__in'] = league_id
+
         if opts['min_overall'] is not None:
             filters['overallrating__gte'] = opts['min_overall']
 
@@ -121,7 +176,7 @@ class Command(BaseCommand):
         self.stdout.write('Hole Spieler von cmtracker …')
         try:
             players = list(client.iter_players(
-                db=opts['db'],
+                db=db_slug,
                 limit=opts['limit'],
                 max_pages=opts['max_pages'],
                 sort='overallrating:desc',
@@ -153,6 +208,55 @@ class Command(BaseCommand):
             raise CommandError(result['fatal_error'])
 
         self._print_result(result, opts['dry_run'])
+
+    def _print_filters(self, client, dbslug):
+        """Zeigt Teams und Ligen der gewaehlten DB (fuer --list-filters)."""
+        try:
+            data = client.get_db_filters(dbslug)
+        except CmtrackerError as exc:
+            raise Exception(str(exc))  # wird im handle() als CommandError behandelt
+
+        self.stdout.write(self.style.SUCCESS(f'Filter fuer DB: {dbslug}'))
+
+        def _show_section(label, keys):
+            items = []
+            if isinstance(data, dict):
+                for k in keys:
+                    val = data.get(k)
+                    if isinstance(val, list) and val:
+                        items = val
+                        break
+            elif isinstance(data, list):
+                items = data
+            if not items:
+                self.stdout.write(f'  {label}: (keine Daten)')
+                return
+            self.stdout.write(self.style.WARNING(f'  {label} ({len(items)}):'))
+            for entry in items[:80]:
+                if isinstance(entry, dict):
+                    eid = (entry.get('id') or entry.get('teamid') or
+                           entry.get('team_id') or entry.get('clubid') or
+                           entry.get('value') or '?')
+                    name = (entry.get('name') or entry.get('title') or
+                            entry.get('label') or entry.get('club_name') or '?')
+                    self.stdout.write(f'    {eid:>8}  {name}')
+                else:
+                    self.stdout.write(f'    {entry}')
+
+        _show_section('Teams', _FILTER_KEYS_TEAM)
+        _show_section('Ligen', _FILTER_KEYS_LEAGUE)
+
+        # Rohdaten-Fallback: zeige alle Schluessel wenn keine Teams/Ligen gefunden
+        if isinstance(data, dict):
+            known = set(_FILTER_KEYS_TEAM) | set(_FILTER_KEYS_LEAGUE)
+            extra = [k for k in data if k not in known]
+            if extra:
+                self.stdout.write('')
+                self.stdout.write('  Weitere Schluessel in der Antwort:')
+                for k in extra:
+                    val = data[k]
+                    preview = repr(val)[:120]
+                    self.stdout.write(f'    {k}: {preview}')
 
     def _probe_players(self, client, db=None):
         """Testet alle Spieler-Endpoint-Kandidaten und gibt Diagnose aus."""
