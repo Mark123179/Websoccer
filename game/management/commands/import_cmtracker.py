@@ -6,6 +6,9 @@ denselben Service wie der CSV-Upload im Creator-Mode
 es werden ausschliesslich bereits existierende Spieler aktualisiert, nicht
 gematchte Spieler werden nur gezaehlt.
 
+Optional (--profiles) werden normalisierte CMT-Spielerprofile
+(PlayerCMTProfile, PlayerCMTAttributeProfile) gespeichert.
+
 Der API-Key kommt aus dem Secret ``CMTRACKER_API_KEY``.
 
 Beispiele::
@@ -13,11 +16,14 @@ Beispiele::
     # Verfuegbare Datenbanken auflisten
     python manage.py import_cmtracker --list-dbs
 
-    # Vorschau: Top-Spieler der neuesten Datenbank (eine Seite)
-    python manage.py import_cmtracker --dry-run --limit 25 --max-pages 1
+    # Teams und Ligen einer DB anzeigen
+    python manage.py import_cmtracker --list-filters --db 26062400
 
-    # Alle Spieler eines Vereins (cmtracker-Team-ID)
-    python manage.py import_cmtracker --team 21 --dry-run
+    # Dry-Run: Bayern-Spieler mit Profil-Vorschau
+    python manage.py import_cmtracker --dry-run --db 26062400 --team "FC Bayern"
+
+    # Echter Import inkl. Profilspeicherung
+    python manage.py import_cmtracker --db 26062400 --team "FC Bayern" --profiles
 """
 
 from django.core.management.base import BaseCommand, CommandError
@@ -29,6 +35,7 @@ from game.cmtracker_api import (
     _extract_list,
     players_to_csv,
 )
+from game.cmt_profile_service import store_player_profiles
 from game.sofifa_import_service import run_sofifa_import
 
 _FILTER_KEYS_TEAM = ('teams', 'clubs', 'club_teams', 'team_list', 'team')
@@ -74,6 +81,13 @@ class Command(BaseCommand):
         parser.add_argument(
             '--dry-run', action='store_true',
             help='Zeigt geplante Aenderungen, ohne in die DB zu schreiben.',
+        )
+        parser.add_argument(
+            '--profiles', action='store_true',
+            help='Normalisierte CMT-Spielerprofile speichern/aktualisieren '
+                 '(PlayerCMTProfile, PlayerCMTAttributeProfile). '
+                 'Laeuft nach dem regulaeren Rating-Import. '
+                 'Im Dry-Run wird nur die Vorschau ausgegeben.',
         )
         parser.add_argument(
             '--skip-recalculate', action='store_true',
@@ -192,13 +206,13 @@ class Command(BaseCommand):
             return
         self.stdout.write(f'{len(players)} Spieler erhalten.')
 
-        csv_text = players_to_csv(players)
-
         if opts['dry_run']:
             self.stdout.write(self.style.WARNING(
                 '── DRY-RUN: es werden KEINE Aenderungen geschrieben ──'
             ))
 
+        # ── Rating-Import (bestehender Pfad via sofifa_import_service) ───────
+        csv_text = players_to_csv(players)
         result = run_sofifa_import(
             csv_text,
             dry_run=opts['dry_run'],
@@ -209,12 +223,23 @@ class Command(BaseCommand):
 
         self._print_result(result, opts['dry_run'])
 
+        # ── Profil-Import (optional, --profiles) ─────────────────────────────
+        if opts['profiles']:
+            self.stdout.write('')
+            self.stdout.write('Profil-Import (PlayerCMTProfile) …')
+            profile_stats = store_player_profiles(
+                players=players,
+                db_slug=db_slug or '',
+                dry_run=opts['dry_run'],
+            )
+            self._print_profile_result(profile_stats, opts['dry_run'])
+
     def _print_filters(self, client, dbslug):
         """Zeigt Teams und Ligen der gewaehlten DB (fuer --list-filters)."""
         try:
             data = client.get_db_filters(dbslug)
         except CmtrackerError as exc:
-            raise Exception(str(exc))  # wird im handle() als CommandError behandelt
+            raise Exception(str(exc))
 
         self.stdout.write(self.style.SUCCESS(f'Filter fuer DB: {dbslug}'))
 
@@ -246,7 +271,6 @@ class Command(BaseCommand):
         _show_section('Teams', _FILTER_KEYS_TEAM)
         _show_section('Ligen', _FILTER_KEYS_LEAGUE)
 
-        # Rohdaten-Fallback: zeige alle Schluessel wenn keine Teams/Ligen gefunden
         if isinstance(data, dict):
             known = set(_FILTER_KEYS_TEAM) | set(_FILTER_KEYS_LEAGUE)
             extra = [k for k in data if k not in known]
@@ -352,7 +376,7 @@ class Command(BaseCommand):
 
         self.stdout.write('')
         self.stdout.write(self.style.SUCCESS(
-            f"Bilanz: {stats.get('new', 0)} neu, "
+            f"Rating-Import: {stats.get('new', 0)} neu, "
             f"{stats.get('updated', 0)} aktualisiert, "
             f"{stats.get('unchanged', 0)} unveraendert, "
             f"{stats.get('unmatched', 0)} nicht gematcht, "
@@ -372,4 +396,37 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING(
                 'DRY-RUN beendet — nichts geschrieben.'
+            ))
+
+    def _print_profile_result(self, stats, dry_run):
+        """Gibt Profil-Import-Statistiken aus."""
+        error = stats.get('error')
+        if error:
+            self.stdout.write(self.style.ERROR(f'  Fehler: {error}'))
+            return
+
+        mode = '[DRY-RUN] ' if dry_run else ''
+        self.stdout.write(self.style.SUCCESS(
+            f'{mode}Profil-Import: '
+            f"{stats.get('matched', 0)} gematcht, "
+            f"{stats.get('new', 0)} neu, "
+            f"{stats.get('updated', 0)} aktualisierbar, "
+            f"{stats.get('unchanged', 0)} unveraendert, "
+            f"{stats.get('unmatched', 0)} nicht gematcht."
+        ))
+
+        unmatched_ids = stats.get('unmatched_ids', [])
+        if unmatched_ids:
+            self.stdout.write(self.style.WARNING(
+                f'  Nicht gematcht (CMT-IDs, erste {len(unmatched_ids)}): '
+                + ', '.join(unmatched_ids[:20])
+            ))
+            if stats.get('unmatched', 0) > len(unmatched_ids):
+                self.stdout.write(self.style.WARNING(
+                    f'  … und {stats["unmatched"] - len(unmatched_ids)} weitere.'
+                ))
+
+        if dry_run:
+            self.stdout.write(self.style.WARNING(
+                'DRY-RUN: keine Profile gespeichert.'
             ))

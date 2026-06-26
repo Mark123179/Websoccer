@@ -1836,8 +1836,19 @@ class PlayerExternalId(models.Model):
     profile_url = models.URLField(blank=True)
     is_primary = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
+    db_slug = models.CharField(
+        max_length=50, blank=True, default='',
+        verbose_name='DB-Slug',
+        help_text='Optionaler Datenbank-Slug der Quell-DB (z. B. 26062400 für FC26).',
+    )
+    source_url = models.URLField(blank=True, verbose_name='Quell-URL')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_seen_at = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Zuletzt gesehen',
+        help_text='Letzter Import-Zeitpunkt, bei dem diese ID in der Quelle vorhanden war.',
+    )
 
     class Meta:
         ordering = ['player__last_name', 'player__first_name', 'source__name']
@@ -1856,6 +1867,315 @@ class PlayerExternalId(models.Model):
 
     def __str__(self):
         return f'{self.player} - {self.source.code}: {self.external_id}'
+
+
+class ClubExternalId(models.Model):
+    """Externe IDs pro Verein (CMT, TM, FMI …) getrennt gespeichert."""
+
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='external_ids',
+    )
+    source = models.ForeignKey(
+        DataSource,
+        on_delete=models.CASCADE,
+        related_name='club_external_ids',
+    )
+    external_id = models.CharField(max_length=120)
+    db_slug = models.CharField(
+        max_length=50, blank=True, default='',
+        verbose_name='DB-Slug',
+    )
+    source_url = models.URLField(blank=True, verbose_name='Quell-URL')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_seen_at = models.DateTimeField(null=True, blank=True, verbose_name='Zuletzt gesehen')
+
+    class Meta:
+        ordering = ['club__name', 'source__name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source', 'external_id'],
+                name='unique_external_club_id_per_source',
+            ),
+            models.UniqueConstraint(
+                fields=['club', 'source'],
+                name='unique_club_external_id_per_source',
+            ),
+        ]
+        verbose_name = 'Vereins-ID'
+        verbose_name_plural = 'Vereins-IDs'
+
+    def __str__(self):
+        return f'{self.club} - {self.source.code}: {self.external_id}'
+
+
+class PlayerCMTProfile(models.Model):
+    """Normalisiertes CMTracker-Spielerprofil (FC26, db=26062400).
+
+    Wird bei jedem Import aus derselben oder neuerer CMT-DB vollständig
+    überschrieben. Kein manueller Override-Schutz in V1.
+    """
+
+    player = models.OneToOneField(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='cmt_profile',
+    )
+    db_slug = models.CharField(max_length=50, verbose_name='DB-Slug')
+    database_version = models.CharField(max_length=50, blank=True, verbose_name='DB-Version')
+    cmt_player_id = models.CharField(max_length=40, db_index=True, verbose_name='CMT-Spieler-ID')
+
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    known_as = models.CharField(max_length=100, blank=True, verbose_name='Bekannt als')
+    display_name = models.CharField(max_length=100, blank=True, verbose_name='Anzeigename')
+    nationality = models.CharField(max_length=60, blank=True, verbose_name='Nationalität')
+    second_nationality = models.CharField(max_length=60, blank=True, verbose_name='2. Nationalität')
+    date_of_birth = models.DateField(null=True, blank=True, verbose_name='Geburtsdatum')
+
+    overall = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Overall')
+    potential = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Potential')
+    height_cm = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Größe (cm)')
+    weight_kg = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Gewicht (kg)')
+    preferred_foot = models.CharField(max_length=10, blank=True, verbose_name='Starker Fuß')
+    body_type = models.CharField(max_length=30, blank=True, verbose_name='Körpertyp')
+    emotion = models.CharField(max_length=30, blank=True, verbose_name='Emotion')
+
+    real_life_club = models.CharField(max_length=120, blank=True, verbose_name='Echtleben-Verein')
+    on_loan_from_club = models.CharField(max_length=120, blank=True, verbose_name='Leihgeber')
+
+    playstyles = models.JSONField(default=list, blank=True, verbose_name='PlayStyles')
+    playstyles_plus = models.JSONField(default=list, blank=True, verbose_name='PlayStyles+')
+    roles = models.JSONField(default=list, blank=True, verbose_name='Rollen')
+    role_plus = models.JSONField(default=list, blank=True, verbose_name='Rolle+')
+    role_plus_plus = models.JSONField(default=list, blank=True, verbose_name='Rolle++')
+
+    player_image_url = models.URLField(blank=True, verbose_name='Spielerbild-URL')
+    player_image_cached_path = models.CharField(max_length=255, blank=True, verbose_name='Spielerbild (lokal)')
+
+    raw_payload = models.JSONField(default=dict, verbose_name='Rohpayload')
+    payload_hash = models.CharField(max_length=64, blank=True, verbose_name='Payload-Hash')
+    imported_at = models.DateTimeField(auto_now_add=True, verbose_name='Erstimport')
+    fetched_at = models.DateTimeField(null=True, blank=True, verbose_name='Abgerufen')
+    last_imported_at = models.DateTimeField(null=True, blank=True, verbose_name='Letzter Import')
+    last_verified_at = models.DateTimeField(null=True, blank=True, verbose_name='Letzte Prüfung')
+    source_priority = models.PositiveSmallIntegerField(default=10, verbose_name='Quell-Priorität')
+    data_quality_flags = models.JSONField(default=dict, blank=True, verbose_name='Qualitäts-Flags')
+    missing_required_fields = models.JSONField(default=list, blank=True, verbose_name='Fehlende Pflichtfelder')
+
+    class Meta:
+        verbose_name = 'CMT-Spielerprofil'
+        verbose_name_plural = 'CMT-Spielerprofile'
+
+    def __str__(self):
+        return f'CMT {self.cmt_player_id} → {self.player}'
+
+
+class PlayerCMTAttributeProfile(models.Model):
+    """Vollständige CMTracker-Attribute eines Spielers (FC26).
+
+    Wird bei jedem Import überschrieben.
+    """
+
+    player = models.OneToOneField(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='cmt_attribute_profile',
+    )
+    db_slug = models.CharField(max_length=50, verbose_name='DB-Slug')
+
+    pac = models.PositiveSmallIntegerField(null=True, blank=True)
+    sho = models.PositiveSmallIntegerField(null=True, blank=True)
+    pas = models.PositiveSmallIntegerField(null=True, blank=True)
+    dri = models.PositiveSmallIntegerField(null=True, blank=True)
+    def_rating = models.PositiveSmallIntegerField(null=True, blank=True, db_column='def_rating', verbose_name='def')
+    phy = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    acceleration = models.PositiveSmallIntegerField(null=True, blank=True)
+    sprint_speed = models.PositiveSmallIntegerField(null=True, blank=True)
+    agility = models.PositiveSmallIntegerField(null=True, blank=True)
+    balance = models.PositiveSmallIntegerField(null=True, blank=True)
+    jumping = models.PositiveSmallIntegerField(null=True, blank=True)
+    stamina = models.PositiveSmallIntegerField(null=True, blank=True)
+    strength = models.PositiveSmallIntegerField(null=True, blank=True)
+    reactions = models.PositiveSmallIntegerField(null=True, blank=True)
+    aggression = models.PositiveSmallIntegerField(null=True, blank=True)
+    composure = models.PositiveSmallIntegerField(null=True, blank=True)
+    interceptions = models.PositiveSmallIntegerField(null=True, blank=True)
+    positioning = models.PositiveSmallIntegerField(null=True, blank=True)
+    vision = models.PositiveSmallIntegerField(null=True, blank=True)
+    ball_control = models.PositiveSmallIntegerField(null=True, blank=True)
+    crossing = models.PositiveSmallIntegerField(null=True, blank=True)
+    dribbling = models.PositiveSmallIntegerField(null=True, blank=True)
+    finishing = models.PositiveSmallIntegerField(null=True, blank=True)
+    freekick_accuracy = models.PositiveSmallIntegerField(null=True, blank=True)
+    heading_accuracy = models.PositiveSmallIntegerField(null=True, blank=True)
+    long_passing = models.PositiveSmallIntegerField(null=True, blank=True)
+    short_passing = models.PositiveSmallIntegerField(null=True, blank=True)
+    marking = models.PositiveSmallIntegerField(null=True, blank=True)
+    shot_power = models.PositiveSmallIntegerField(null=True, blank=True)
+    long_shots = models.PositiveSmallIntegerField(null=True, blank=True)
+    standing_tackle = models.PositiveSmallIntegerField(null=True, blank=True)
+    sliding_tackle = models.PositiveSmallIntegerField(null=True, blank=True)
+    volleys = models.PositiveSmallIntegerField(null=True, blank=True)
+    curve = models.PositiveSmallIntegerField(null=True, blank=True)
+    penalties = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    gk_diving = models.PositiveSmallIntegerField(null=True, blank=True)
+    gk_handling = models.PositiveSmallIntegerField(null=True, blank=True)
+    gk_kicking = models.PositiveSmallIntegerField(null=True, blank=True)
+    gk_reflexes = models.PositiveSmallIntegerField(null=True, blank=True)
+    gk_positioning = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    raw_attributes = models.JSONField(default=dict, verbose_name='Rohdaten')
+    imported_at = models.DateTimeField(auto_now_add=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+    payload_hash = models.CharField(max_length=64, blank=True)
+
+    class Meta:
+        verbose_name = 'CMT-Attributprofil'
+        verbose_name_plural = 'CMT-Attributprofile'
+
+    def __str__(self):
+        return f'CMT-Attr → {self.player}'
+
+
+class PlayerTMProfile(models.Model):
+    """Transfermarkt-Profil eines Spielers (Marktwert, Position, Kader-Quelle)."""
+
+    player = models.OneToOneField(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='tm_profile',
+    )
+    tm_player_id = models.CharField(max_length=40, blank=True, verbose_name='TM-Spieler-ID')
+    tm_club_id = models.CharField(max_length=40, blank=True, verbose_name='TM-Vereins-ID')
+    market_value = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        null=True, blank=True,
+        verbose_name='Marktwert (€)',
+    )
+    market_value_date = models.DateField(null=True, blank=True, verbose_name='Marktwert-Datum')
+    tm_position_raw = models.CharField(max_length=80, blank=True, verbose_name='TM-Position (Rohtext)')
+    tm_position_calculated_websoccer = models.CharField(
+        max_length=10, blank=True,
+        verbose_name='WS-Position (berechnet)',
+    )
+    source_url = models.URLField(blank=True, verbose_name='TM-URL')
+    imported_at = models.DateTimeField(auto_now_add=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+    last_imported_at = models.DateTimeField(null=True, blank=True)
+    last_verified_at = models.DateTimeField(null=True, blank=True)
+    data_quality_flags = models.JSONField(default=dict, blank=True)
+    missing_required_fields = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        verbose_name = 'TM-Spielerprofil'
+        verbose_name_plural = 'TM-Spielerprofile'
+
+    def __str__(self):
+        return f'TM {self.tm_player_id} → {self.player}'
+
+
+class PlayerFMIProfile(models.Model):
+    """FMInside-Profil eines Spielers (Stärke, Potential, Attribute aus FM26)."""
+
+    player = models.OneToOneField(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='fmi_profile',
+    )
+    fmi_id = models.CharField(max_length=40, blank=True, verbose_name='FMI-ID')
+    fmi_overall = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Overall (FMI)')
+    fmi_potential = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Potential (FMI)')
+    fmi_attributes = models.JSONField(default=dict, blank=True, verbose_name='FMI-Attribute')
+    fmi_version = models.CharField(max_length=20, blank=True, verbose_name='FMI-Version (z. B. FM26)')
+    imported_at = models.DateTimeField(auto_now_add=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+    last_imported_at = models.DateTimeField(null=True, blank=True)
+    last_verified_at = models.DateTimeField(null=True, blank=True)
+    data_quality_flags = models.JSONField(default=dict, blank=True)
+    missing_required_fields = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        verbose_name = 'FMI-Spielerprofil'
+        verbose_name_plural = 'FMI-Spielerprofile'
+
+    def __str__(self):
+        return f'FMI {self.fmi_id} → {self.player}'
+
+
+class ClubCMTProfile(models.Model):
+    """Normalisiertes CMTracker-Vereinsprofil."""
+
+    club = models.OneToOneField(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='cmt_profile',
+    )
+    db_slug = models.CharField(max_length=50, verbose_name='DB-Slug')
+    team_id = models.CharField(max_length=40, blank=True, verbose_name='CMT-Team-ID')
+    league_id = models.CharField(max_length=40, blank=True, verbose_name='CMT-Liga-ID')
+
+    name = models.CharField(max_length=120, blank=True, verbose_name='CMT-Name')
+    league_name = models.CharField(max_length=120, blank=True, verbose_name='Liga (CMT)')
+    nation = models.CharField(max_length=80, blank=True, verbose_name='Nation')
+    country = models.CharField(max_length=80, blank=True, verbose_name='Land')
+
+    foundation_year = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Gründungsjahr')
+    popularity = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Popularität')
+    domestic_prestige = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Nationales Prestige')
+    international_prestige = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Int. Prestige')
+    profitability = models.SmallIntegerField(null=True, blank=True, verbose_name='Profitabilität')
+
+    home_kit = models.JSONField(default=dict, blank=True, verbose_name='Heimtrikot')
+    away_kit = models.JSONField(default=dict, blank=True, verbose_name='Auswärtstrikot')
+    third_kit = models.JSONField(default=dict, blank=True, verbose_name='3. Trikot')
+
+    raw_payload = models.JSONField(default=dict, verbose_name='Rohpayload')
+    payload_hash = models.CharField(max_length=64, blank=True)
+    imported_at = models.DateTimeField(auto_now_add=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+    last_imported_at = models.DateTimeField(null=True, blank=True)
+    last_verified_at = models.DateTimeField(null=True, blank=True)
+    source_priority = models.PositiveSmallIntegerField(default=10)
+    data_quality_flags = models.JSONField(default=dict, blank=True)
+    missing_required_fields = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        verbose_name = 'CMT-Vereinsprofil'
+        verbose_name_plural = 'CMT-Vereinsprofile'
+
+    def __str__(self):
+        return f'CMT-Club {self.team_id} → {self.club}'
+
+
+class ClubTMProfile(models.Model):
+    """Transfermarkt-Vereinsprofil (Kader-/Kaderwert-Quelle)."""
+
+    club = models.OneToOneField(
+        'Club',
+        on_delete=models.CASCADE,
+        related_name='tm_profile',
+    )
+    tm_club_id = models.CharField(max_length=40, blank=True, verbose_name='TM-Vereins-ID')
+    tm_club_url = models.URLField(blank=True, verbose_name='TM-Vereinsseite')
+    squad_source_url = models.URLField(blank=True, verbose_name='Kaderseite (TM)')
+    imported_at = models.DateTimeField(auto_now_add=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+    last_imported_at = models.DateTimeField(null=True, blank=True)
+    last_verified_at = models.DateTimeField(null=True, blank=True)
+    data_quality_flags = models.JSONField(default=dict, blank=True)
+    missing_required_fields = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        verbose_name = 'TM-Vereinsprofil'
+        verbose_name_plural = 'TM-Vereinsprofile'
+
+    def __str__(self):
+        return f'TM-Club {self.tm_club_id} → {self.club}'
 
 
 class PlayerSourceRating(models.Model):
