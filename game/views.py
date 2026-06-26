@@ -3165,11 +3165,18 @@ def _build_player_row(player, stats, form_map):
         fitness = int(round(float(profile.freshness)))
 
     # Nation: flagcdn-URL + 3-Buchstaben-Code
+    # Prio: Player.nationalities → CMT nationality (Fallback bei leer)
     nat_code = ''
     flag_url = ''
     nation_name = ''
-    if player.nationalities:
-        country = player.nationalities.split(',')[0].strip()
+    _raw_nat = player.nationalities or ''
+    if not _raw_nat:
+        try:
+            _raw_nat = player.cmt_profile.nationality or ''
+        except Exception:
+            pass
+    if _raw_nat:
+        country = _raw_nat.split(',')[0].strip()
         nation_name = country
         asset = COUNTRY_FLAG_ASSETS.get(country, {})
         iso2 = asset.get('code', '')
@@ -3210,7 +3217,7 @@ def _build_player_row(player, stats, form_map):
         'id': player.id,
         'shirt': player.shirt_number,
         'name': player.full_name,
-        'portrait': player.portrait_static_path,
+        'portrait': player.portrait_url,
         'age': player.age,
         'nation_name': nation_name,
         'flag_url': flag_url,
@@ -3246,7 +3253,7 @@ def _build_loan_card(player, stats):
     return {
         'id': player.id,
         'name': player.full_name,
-        'portrait': player.portrait_static_path,
+        'portrait': player.portrait_url,
         'hp': hp[0] if hp else '—',
         'matches': season.get('matches', 0),
         'grade': season.get('grade'),
@@ -3259,7 +3266,7 @@ def _build_loan_card(player, stats):
 def _build_squad_context(request, club, squad_title):
     is_youth = squad_title == 'Jugendkader'
     qs = Player.objects.filter(club=club).select_related(
-        'strength_profile', 'loan_partner_club')
+        'strength_profile', 'loan_partner_club', 'cmt_profile')
     if is_youth:
         qs = qs.filter(age__lte=YOUTH_AGE_LIMIT)
     all_club_players = list(qs)

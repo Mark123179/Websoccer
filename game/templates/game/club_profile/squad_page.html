@@ -112,7 +112,7 @@
                             <td class="col-player">
                                 <a class="squad-player" href="{{ p.detail_url }}">
                                     <span class="squad-player__avatar">
-                                        <img src="{% static p.portrait %}" alt="{{ p.name }}" loading="lazy">
+                                        <img src="{{ p.portrait }}" alt="{{ p.name }}" loading="lazy">
                                     </span>
                                     <span class="squad-player__meta">
                                         <span class="squad-player__name">
@@ -216,14 +216,14 @@
                 <div class="squad-status-list">
                     {% for p in injured %}
                     <a class="status-item status-item--injured" href="{{ p.detail_url }}">
-                        <img src="{% static p.portrait %}" alt="{{ p.name }}" loading="lazy">
+                        <img src="{{ p.portrait }}" alt="{{ p.name }}" loading="lazy">
                         <span class="status-item__name">{{ p.name }}</span>
                         <span class="status-item__tag">Verletzt</span>
                     </a>
                     {% endfor %}
                     {% for p in suspended %}
                     <a class="status-item status-item--suspended" href="{{ p.detail_url }}">
-                        <img src="{% static p.portrait %}" alt="{{ p.name }}" loading="lazy">
+                        <img src="{{ p.portrait }}" alt="{{ p.name }}" loading="lazy">
                         <span class="status-item__name">{{ p.name }}</span>
                         <span class="status-item__tag">Gesperrt</span>
                     </a>

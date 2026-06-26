@@ -379,8 +379,16 @@ def _fill_player_profile(profile, raw, cmt_id, db_slug, new_hash, fetched_at, no
     profile.last_name = _str(_dig(raw, 'info.name.lastname'))
     profile.known_as = _str(_dig(raw, 'info.name.knownas'))
     profile.display_name = _str(_dig(raw, 'info.name.displayname') or _dig(raw, 'info.name.knownas'))
-    profile.nationality = _str(_dig(raw, 'info.nationality.label') or _dig(raw, 'info.nationality'))
-    profile.second_nationality = _str(_dig(raw, 'info.secondnationality.label') or _dig(raw, 'info.secondnationality'))
+    profile.nationality = _str(
+        _dig(raw, 'info.nation.name') or
+        _dig(raw, 'info.nationality.label') or
+        _dig(raw, 'info.nationality')
+    )
+    profile.second_nationality = _str(
+        _dig(raw, 'info.secondNation.name') or
+        _dig(raw, 'info.secondnationality.label') or
+        _dig(raw, 'info.secondnationality')
+    )
     profile.date_of_birth = _dob(_dig(raw, 'info.birthdate'))
     profile.overall = _int(_dig(raw, 'info.overallrating'))
     profile.potential = _int(_dig(raw, 'info.potential'))
@@ -399,7 +407,11 @@ def _fill_player_profile(profile, raw, cmt_id, db_slug, new_hash, fetched_at, no
     profile.roles = _list(_dig(raw, 'info.roles'))
     profile.role_plus = _list(_dig(raw, 'info.roleplus'))
     profile.role_plus_plus = _list(_dig(raw, 'info.roleplusplus'))
-    profile.player_image_url = _str(_dig(raw, 'info.imageurl') or _dig(raw, 'info.image_url') or '')
+    profile.player_image_url = _str(
+        _dig(raw, 'info.headshot') or
+        _dig(raw, 'info.imageurl') or
+        _dig(raw, 'info.image_url') or ''
+    )
     profile.raw_payload = raw
     profile.payload_hash = new_hash
     profile.fetched_at = fetched_at

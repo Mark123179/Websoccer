@@ -1581,6 +1581,31 @@ class Player(models.Model):
         return 'game/images/default_player.svg'
 
     @property
+    def cmt_headshot_url(self):
+        """Beste CMT-Headshot-URL: cached-media > CDN-URL > ''."""
+        try:
+            prof = self.cmt_profile
+        except Exception:
+            return ''
+        if prof.player_image_cached_path:
+            from django.conf import settings
+            return settings.MEDIA_URL + prof.player_image_cached_path
+        return prof.player_image_url or ''
+
+    @property
+    def portrait_url(self):
+        """Vollständige Portrait-URL für Templates: CMT > FM-Static > Default.
+
+        Gibt immer eine gültige URL zurück (nie leer).
+        CMT cached > CMT CDN > FM-Static (fm_inside_id) > Default-SVG.
+        """
+        cmt = self.cmt_headshot_url
+        if cmt:
+            return cmt
+        from django.templatetags.static import static
+        return static(self.portrait_static_path)
+
+    @property
     def profile_portrait_static_path(self):
         from .player_assets import get_cached_profile_portrait_static_path
 
@@ -1600,6 +1625,16 @@ class Player(models.Model):
             for country in self.nationalities.split(',')
             if country.strip()
         ]
+
+        if not countries:
+            try:
+                cmt = self.cmt_profile
+                if cmt.nationality:
+                    countries = [cmt.nationality]
+                if cmt.second_nationality and cmt.second_nationality not in countries:
+                    countries.append(cmt.second_nationality)
+            except Exception:
+                pass
 
         return [
             {

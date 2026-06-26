@@ -31,7 +31,11 @@
                     {% if nt_confederation_badge_url %}
                         <img class="aaa-poster-confederation" src="{% static nt_confederation_badge_url %}" alt="" title="{{ nation_nt_name }}">
                     {% endif %}
+                    {% if player.cmt_headshot_url %}
+                    <img class="aaa-player-portrait" src="{{ player.cmt_headshot_url }}" alt="{{ player.full_name }}">
+                    {% else %}
                     <img class="aaa-player-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                    {% endif %}
                     <div class="aaa-player-nameplate">
                         <h2>{{ player.full_name }}</h2>
                     </div>
