@@ -205,7 +205,7 @@ class IterPlayersRequestTests(SimpleTestCase):
             return pages[params['page']]
 
         client._get = fake_get
-        out = list(client.iter_players(limit=2))
+        out = list(client.iter_players(db='26062400', limit=2))
         self.assertEqual([_dig(p, 'info.playerid') for p in out], [1, 2, 3])
         self.assertEqual([p['page'] for p in seen], [0, 1, 2])
 
@@ -217,5 +217,5 @@ class IterPlayersRequestTests(SimpleTestCase):
             return [{'info': {'playerid': 7}}, {'info': {'playerid': 8}}]
 
         client._get = fake_get
-        out = list(client.iter_players(limit=2, max_pages=10))
+        out = list(client.iter_players(db='26062400', limit=2, max_pages=10))
         self.assertEqual(len(out), 2)
