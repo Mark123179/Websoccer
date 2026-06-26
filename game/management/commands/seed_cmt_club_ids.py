@@ -1,5 +1,8 @@
 """seed_cmt_club_ids — legt ClubExternalId(CMTRACKER)-Einträge an.
 
+Standard-Aufruf (kein --apply): reiner Dry-Run, keine DB-Schreibzugriffe.
+Mit --apply werden die Einträge tatsächlich geschrieben.
+
 Zwei Modi:
 
 1. Hardcoded-Modus (Standard, kein --db):
@@ -14,13 +17,20 @@ Zwei Modi:
 
 Beispiele::
 
-    # 18 Bundesliga-Clubs offline eintragen (empfohlen für erste Inbetriebnahme)
-    python manage.py seed_cmt_club_ids --dry-run
+    # Dry-Run: zeigt was getan würde (kein Schreibzugriff)
     python manage.py seed_cmt_club_ids
 
-    # Alle Teams einer DB via API laden und matchen
-    python manage.py seed_cmt_club_ids --db 26062400 --dry-run
+    # Tatsächlich in DB schreiben
+    python manage.py seed_cmt_club_ids --apply
+
+    # Mit Überschreiben vorhandener Einträge
+    python manage.py seed_cmt_club_ids --apply --force
+
+    # Alle Teams einer DB via API laden und matchen (Dry-Run)
     python manage.py seed_cmt_club_ids --db 26062400
+
+    # … und tatsächlich schreiben
+    python manage.py seed_cmt_club_ids --db 26062400 --apply
 
 Bekannte CMTracker-Team-IDs (DB 26062400, Saison 2024/25):
     21     FC Bayern München
@@ -183,33 +193,46 @@ def _resolve_ws_club_by_name(cmt_team_name: str):
 class Command(BaseCommand):
     help = (
         'Legt ClubExternalId(CMTRACKER)-Einträge an. '
+        'Ohne --apply: reiner Dry-Run (keine DB-Schreibzugriffe). '
+        'Mit --apply: Einträge werden tatsächlich geschrieben. '
         'Ohne --db: hardcoded 18 Bundesliga-Clubs (kein API-Key nötig). '
         'Mit --db: alle Teams einer CMT-DB via API laden und matchen.'
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--db', default=None,
-            help='Datenbank-Slug (z.B. 26062400). '
-                 'Ohne --db werden die 18 Bundesliga-Clubs hardcoded eingetragen. '
-                 'Verfügbare DBs: python manage.py import_cmtracker --list-dbs',
+            '--apply', action='store_true', default=False,
+            help='Schreibt Einträge in die DB. Ohne --apply: reiner Dry-Run.',
         )
         parser.add_argument(
-            '--dry-run', action='store_true',
-            help='Zeigt geplante Änderungen, ohne in die DB zu schreiben.',
+            '--db', default=None,
+            help=(
+                f'Datenbank-Slug (Standard: {DB_SLUG}). '
+                'Ohne --db werden die 18 Bundesliga-Clubs hardcoded eingetragen. '
+                'Verfügbare DBs: python manage.py import_cmtracker --list-dbs'
+            ),
         )
         parser.add_argument(
             '--force', action='store_true',
             help='Überschreibt vorhandene ClubExternalId-Einträge (ändert die '
-                 'externe ID falls sich die CMT-Team-ID geändert hat).',
+                 'externe ID falls sich die CMT-Team-ID geändert hat). '
+                 'Nur wirksam zusammen mit --apply.',
         )
 
     def handle(self, *args, **opts):
         from game.models import ClubExternalId, DataSource
 
-        dry_run = opts['dry_run']
+        apply_mode = opts['apply']
         force = opts['force']
         db_slug = opts.get('db')
+
+        if not apply_mode:
+            self.stdout.write(self.style.WARNING(
+                '── DRY-RUN: keine Änderungen werden in die DB geschrieben ──\n'
+                '   (mit --apply tatsächlich schreiben)'
+            ))
+        else:
+            self.stdout.write(self.style.SUCCESS('── APPLY-MODUS: Schreibzugriffe aktiv ──'))
 
         try:
             cmt_source = DataSource.objects.get(code='CMTRACKER')
@@ -225,26 +248,21 @@ class Command(BaseCommand):
             ))
             return
 
-        if dry_run:
-            self.stdout.write(self.style.WARNING(
-                '── DRY-RUN: keine Änderungen werden in die DB geschrieben ──'
-            ))
-
         if db_slug:
-            self._handle_api_mode(cmt_source, db_slug, dry_run, force)
+            self._handle_api_mode(cmt_source, db_slug, apply_mode, force)
         else:
-            self._handle_hardcoded_mode(cmt_source, dry_run, force)
+            self._handle_hardcoded_mode(cmt_source, apply_mode, force)
 
-    def _handle_hardcoded_mode(self, cmt_source, dry_run, force):
+    def _handle_hardcoded_mode(self, cmt_source, apply_mode: bool, force: bool):
         """Trägt alle 18 Bundesliga-Clubs mit bestätigten CMT-IDs ein."""
         from game.models import Club, ClubExternalId
 
         self.stdout.write(
-            f'Hardcoded-Modus: {len(BUNDESLIGA_CMT_IDS)} Bundesliga-Clubs '
+            f'\nHardcoded-Modus: {len(BUNDESLIGA_CMT_IDS)} Bundesliga-Clubs '
             f'(DB {DB_SLUG})'
         )
 
-        created = updated = skipped = not_found = 0
+        created = unchanged = conflicts = not_found = 0
 
         for cmt_id, ws_name in BUNDESLIGA_CMT_IDS:
             club = Club.objects.filter(name__iexact=ws_name).first()
@@ -266,7 +284,7 @@ class Command(BaseCommand):
                     f'"{conflict.club.name}" eingetragen '
                     f'(Konflikt mit "{ws_name}") – übersprungen'
                 ))
-                not_found += 1
+                conflicts += 1
                 continue
 
             existing = ClubExternalId.objects.filter(
@@ -276,33 +294,38 @@ class Command(BaseCommand):
             if existing:
                 if existing.external_id == cmt_id and existing.db_slug == DB_SLUG:
                     self.stdout.write(
-                        f'  = {club.name} → CMT {cmt_id} (bereits vorhanden)'
+                        f'  = {club.name} → CMT {cmt_id} (unverändert)'
                     )
-                    skipped += 1
-                elif force:
+                    unchanged += 1
+                elif force and apply_mode:
                     old = existing.external_id
-                    if not dry_run:
-                        existing.external_id = cmt_id
-                        existing.db_slug = DB_SLUG
-                        existing.last_seen_at = timezone.now()
-                        existing.save(update_fields=[
-                            'external_id', 'db_slug', 'last_seen_at', 'updated_at',
-                        ])
-                    pfx = '(dry)' if dry_run else '↻'
+                    existing.external_id = cmt_id
+                    existing.db_slug = DB_SLUG
+                    existing.last_seen_at = timezone.now()
+                    existing.save(update_fields=[
+                        'external_id', 'db_slug', 'last_seen_at', 'updated_at',
+                    ])
                     self.stdout.write(self.style.WARNING(
-                        f'  {pfx} {club.name} → CMT {cmt_id} '
+                        f'  ↻ {club.name} → CMT {cmt_id} '
                         f'(aktualisiert, war: {old})'
                     ))
-                    updated += 1
+                    created += 1
+                elif force and not apply_mode:
+                    old = existing.external_id
+                    self.stdout.write(self.style.WARNING(
+                        f'  [DRY] ↻ {club.name} → CMT {cmt_id} '
+                        f'(würde aktualisiert, war: {old})'
+                    ))
+                    created += 1
                 else:
                     old = existing.external_id
                     self.stdout.write(self.style.WARNING(
-                        f'  ≠ {club.name}: vorhanden id={old}, neu={cmt_id} '
-                        f'(--force zum Überschreiben)'
+                        f'  ⚠ KONFLIKT {club.name}: vorhanden id={old}, neu={cmt_id} '
+                        f'(--force --apply zum Überschreiben)'
                     ))
-                    skipped += 1
+                    conflicts += 1
             else:
-                if not dry_run:
+                if apply_mode:
                     ClubExternalId.objects.create(
                         club=club,
                         source=cmt_source,
@@ -310,29 +333,28 @@ class Command(BaseCommand):
                         db_slug=DB_SLUG,
                         last_seen_at=timezone.now(),
                     )
-                pfx = '(dry)' if dry_run else '✓'
-                self.stdout.write(self.style.SUCCESS(
-                    f'  {pfx} {club.name} → CMT {cmt_id}'
-                ))
+                    self.stdout.write(self.style.SUCCESS(
+                        f'  ✓ {club.name} → CMT {cmt_id} (neu angelegt)'
+                    ))
+                else:
+                    self.stdout.write(
+                        f'  [DRY] ✓ {club.name} → CMT {cmt_id} (würde angelegt)'
+                    )
                 created += 1
 
-        self.stdout.write('')
-        if dry_run:
-            self.stdout.write(
-                f'Vorschau: {created} würden angelegt, '
-                f'{updated} aktualisiert, '
-                f'{skipped} bereits vorhanden / Konflikt, '
-                f'{not_found} WS-Club nicht gefunden.'
-            )
-        else:
-            self.stdout.write(self.style.SUCCESS(
-                f'Fertig: {created} neu angelegt, '
-                f'{updated} aktualisiert, '
-                f'{skipped} bereits vorhanden / Konflikt, '
-                f'{not_found} WS-Club nicht gefunden.'
-            ))
+        self._print_summary(apply_mode, created, unchanged, conflicts, not_found)
 
-    def _handle_api_mode(self, cmt_source, db_slug, dry_run, force):
+        if not_found > 0:
+            self.stdout.write(self.style.WARNING(
+                '  Hinweis: Nicht gefundene Clubs sind ggf. unter anderem Namen in '
+                'der DB eingetragen. WS-Clubnamen prüfen.'
+            ))
+        self.stdout.write(
+            '  Hinweis: Union Berlin Männer = CMT-ID 1831 '
+            '(132589 = Frauen-Bundesliga, nicht verwenden).'
+        )
+
+    def _handle_api_mode(self, cmt_source, db_slug, apply_mode: bool, force: bool):
         """Lädt alle Teams via CMT-API und trägt Matches ein."""
         from game.models import ClubExternalId
 
@@ -341,8 +363,9 @@ class Command(BaseCommand):
         except CmtrackerError as exc:
             raise CommandError(str(exc))
 
+        prefix = '[DRY-RUN] ' if not apply_mode else ''
         self.stdout.write(self.style.SUCCESS(
-            f'{"[DRY-RUN] " if dry_run else ""}API-Modus — DB: {db_slug}'
+            f'\n{prefix}API-Modus — DB: {db_slug}'
         ))
 
         teams = self._load_teams(client, db_slug)
@@ -354,7 +377,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f'  {len(teams)} Teams aus CMT-API geladen.')
 
-        created = updated = skipped = unmatched = 0
+        created = unchanged = conflicts = unmatched = 0
 
         for entry in teams:
             team_id = _team_id_from_entry(entry)
@@ -364,7 +387,6 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(
                     f'  SKIP (keine ID): {entry!r:.120}'
                 ))
-                skipped += 1
                 continue
 
             ws_club = _resolve_ws_club_by_name(team_name)
@@ -383,32 +405,39 @@ class Command(BaseCommand):
             if existing:
                 if existing.external_id == str(team_id) and existing.db_slug == db_slug:
                     self.stdout.write(
-                        f'  OK (bereits vorhanden)  '
+                        f'  = (unverändert)  '
                         f'id={team_id:<8}  {team_name!r} → {ws_club.name}'
                     )
-                    skipped += 1
+                    unchanged += 1
                 elif force:
-                    if not dry_run:
+                    old_id = existing.external_id
+                    if apply_mode:
                         existing.external_id = str(team_id)
                         existing.db_slug = db_slug
                         existing.last_seen_at = timezone.now()
                         existing.save(update_fields=[
                             'external_id', 'db_slug', 'last_seen_at', 'updated_at',
                         ])
-                    self.stdout.write(self.style.WARNING(
-                        f'  UPDATED  id={team_id:<8}  {team_name!r} → {ws_club.name}'
-                    ))
-                    updated += 1
+                        self.stdout.write(self.style.WARNING(
+                            f'  ↻ UPDATED  id={team_id:<8}  '
+                            f'{team_name!r} → {ws_club.name}  (war: {old_id})'
+                        ))
+                    else:
+                        self.stdout.write(self.style.WARNING(
+                            f'  [DRY] ↻ UPDATE  id={team_id:<8}  '
+                            f'{team_name!r} → {ws_club.name}  (war: {old_id})'
+                        ))
+                    created += 1
                 else:
                     self.stdout.write(self.style.WARNING(
-                        f'  CONFLICT (--force zum Überschreiben)  '
+                        f'  ⚠ KONFLIKT  '
                         f'vorhanden: id={existing.external_id}  '
                         f'neu: id={team_id}  '
-                        f'{ws_club.name}'
+                        f'{ws_club.name}  (--force --apply zum Überschreiben)'
                     ))
-                    skipped += 1
+                    conflicts += 1
             else:
-                if not dry_run:
+                if apply_mode:
                     ClubExternalId.objects.create(
                         club=ws_club,
                         source=cmt_source,
@@ -416,26 +445,46 @@ class Command(BaseCommand):
                         db_slug=db_slug,
                         last_seen_at=timezone.now(),
                     )
-                self.stdout.write(self.style.SUCCESS(
-                    f'  {"[DRY] " if dry_run else ""}CREATED  '
-                    f'id={team_id:<8}  {team_name!r} → {ws_club.name}'
-                ))
+                    self.stdout.write(self.style.SUCCESS(
+                        f'  ✓ CREATED  id={team_id:<8}  {team_name!r} → {ws_club.name}'
+                    ))
+                else:
+                    self.stdout.write(
+                        f'  [DRY] ✓ CREATE  id={team_id:<8}  {team_name!r} → {ws_club.name}'
+                    )
                 created += 1
 
-        self.stdout.write('')
-        prefix = '[DRY-RUN] ' if dry_run else ''
-        self.stdout.write(self.style.SUCCESS(
-            f'{prefix}Fertig: '
-            f'{created} angelegt, '
-            f'{updated} aktualisiert, '
-            f'{skipped} übersprungen, '
-            f'{unmatched} kein WS-Match.'
-        ))
+        self._print_summary(apply_mode, created, unchanged, conflicts, unmatched)
+
         if unmatched:
             self.stdout.write(
                 '  Tipp: Nicht gematchte Teams in _CMT_CLUB_NAME_ALIASES ergänzen, '
                 'dann erneut ausführen.'
             )
+
+    def _print_summary(
+        self,
+        apply_mode: bool,
+        created: int,
+        unchanged: int,
+        conflicts: int,
+        not_found_or_unmatched: int,
+    ):
+        mode_label = 'Fertig' if apply_mode else 'Dry-Run Vorschau'
+        created_label = 'angelegt' if apply_mode else 'würden angelegt'
+        self.stdout.write('')
+        summary = (
+            f'{mode_label}: '
+            f'{created} {created_label} / '
+            f'{unchanged} unverändert / '
+            f'{conflicts} Konflikte'
+        )
+        if not_found_or_unmatched:
+            summary += f' / {not_found_or_unmatched} nicht gefunden'
+        if conflicts > 0:
+            self.stdout.write(self.style.WARNING(summary))
+        else:
+            self.stdout.write(self.style.SUCCESS(summary))
 
     def _load_teams(self, client: CmtrackerClient, db_slug: str) -> list[dict]:
         """Kombiniert Teams aus /dbs/filters und /teams (Deduplizierung per team_id)."""
