@@ -34,116 +34,53 @@ from game.models import (
 
 # ── CMT-Position → WS-Positionscode ─────────────────────────────────────────
 # CMT liefert EA-typische Strings (GK, CB, LB, CDM, CM, CAM, LW, ST …).
-# Normalisierung: lowercase, Leerzeichen/Unterstriche/Bindestriche entfernt.
-# Kurzformen (CDM, CM, RB …) haben Vorrang gegenüber langen Labels.
+# Groß/Kleinschreibung wird beim Lookup normalisiert.
 _CMT_TO_WS_POSITION = {
-    # Torwart
     'gk': 'TW', 'gkp': 'TW', 'goalkeeper': 'TW',
-    # Innenverteidiger
-    'cb': 'IV', 'dc': 'IV',
-    'centreback': 'IV', 'centerback': 'IV', 'centrebackdefender': 'IV',
-    # Linker Verteidiger / Wing Back
-    'lb': 'LV', 'lwb': 'LV',
-    'leftback': 'LV', 'leftwingback': 'LV',
-    # Rechter Verteidiger / Wing Back
-    'rb': 'RV', 'rwb': 'RV',
-    'rightback': 'RV', 'rightwingback': 'RV',
-    # Defensives Mittelfeld — kurze UND lange Formen
-    'cdm': 'DM', 'dm': 'DM',
-    'defensivemidfield': 'DM',
-    'centredefensivemidfield': 'DM',
-    'centraldefensivemidfield': 'DM',
-    'defensivemid': 'DM',
-    # Zentrales Mittelfeld
-    'cm': 'ZM', 'mc': 'ZM',
-    'centralmidfield': 'ZM', 'centremidfield': 'ZM', 'centralmid': 'ZM',
-    # Offensives Mittelfeld
-    'cam': 'OM', 'am': 'OM',
-    'attackingmidfield': 'OM', 'attackingmid': 'OM',
-    # Linkes Mittelfeld / Flügel
-    'lm': 'LM', 'lw': 'LM',
-    'leftmidfield': 'LM', 'leftwing': 'LM', 'leftmid': 'LM',
-    # Rechtes Mittelfeld / Flügel
-    'rm': 'RM', 'rw': 'RM',
-    'rightmidfield': 'RM', 'rightwing': 'RM', 'rightmid': 'RM',
-    # Linker Flügel-Stürmer
-    'lf': 'LF', 'leftwingforward': 'LF', 'leftforward': 'LF',
-    # Rechter Flügel-Stürmer
-    'rf': 'RF', 'rightwingforward': 'RF', 'rightforward': 'RF',
-    # Stürmer / Mittelstürmer
-    'cf': 'ST', 'ss': 'ST',
-    'centreforward': 'ST', 'centerforward': 'ST',
-    'st': 'ST', 'fw': 'ST', 'striker': 'ST', 'forward': 'ST',
+    'cb': 'IV', 'dc': 'IV', 'centreback': 'IV', 'center-back': 'IV',
+    'lb': 'LV', 'lwb': 'LV', 'leftback': 'LV', 'left-back': 'LV',
+    'rb': 'RV', 'rwb': 'RV', 'rightback': 'RV', 'right-back': 'RV',
+    'cdm': 'DM', 'dm': 'DM', 'defensivemidfield': 'DM',
+    'cm': 'ZM', 'mc': 'ZM', 'centralmidfield': 'ZM',
+    'cam': 'OM', 'am': 'OM', 'attackingmidfield': 'OM',
+    'lm': 'LM', 'lw': 'LM', 'leftmidfield': 'LM', 'leftwing': 'LM',
+    'rm': 'RM', 'rw': 'RM', 'rightmidfield': 'RM', 'rightwing': 'RM',
+    'lf': 'LF', 'leftwingforward': 'LF',
+    'rf': 'RF', 'rightwingforward': 'RF',
+    'cf': 'ST', 'ss': 'ST', 'centreforward': 'ST',
+    'st': 'ST', 'fw': 'ST', 'striker': 'ST',
 }
 
 
-def _normalize_pos_key(s):
-    """Normalisiert eine Positionsbezeichnung für den Map-Lookup."""
-    return str(s).lower().replace(' ', '').replace('_', '').replace('-', '')
-
-
-def _cmt_position_to_ws(raw):
+def _cmt_position_to_ws(raw, attributes=None):
     """Mappt CMT-Positionsstring auf WS-Positionscode.
 
-    Probiert mehrere bekannte Pfade. Kurzformen (shortlabel, abbr, short)
-    haben Vorrang vor langen Labels um Fehlmappings zu vermeiden.
-
-    Returns
-    -------
-    tuple[str, str]
-        (ws_code, raw_label) — ws_code ist der WS-Positionscode (z. B. 'DM'),
-        raw_label ist der unverarbeitete CMT-String für Diagnose-Ausgaben.
-        Standard-Fallback: ('ST', '').
+    Probiert mehrere bekannte Pfade im Rohpayload. Wenn der CMT-String nicht
+    erkannt wird, wird GK-Erkennung via Attributwerte versucht (gkreflexes +
+    gkdiving > 60). Standard-Fallback: 'ST'.
     """
-    def _lookup(candidate):
-        """Gibt (ws_code, candidate) zurück oder (None, None) wenn kein Treffer."""
-        if not candidate or not isinstance(candidate, str):
-            return None, None
-        ws = _CMT_TO_WS_POSITION.get(_normalize_pos_key(candidate))
-        return (ws, candidate) if ws else (None, None)
-
-    for path in ('info.preferredposition', 'info.mainposition', 'info.position'):
-        val = _dig(raw, path)
-        if val is None:
-            continue
-
-        if isinstance(val, dict):
-            # Kurzformen zuerst — viele EA-Antworten haben 'shortlabel' oder 'abbr'
-            for key in ('shortlabel', 'abbr', 'short', 'label', 'name', 'title'):
-                ws, raw_label = _lookup(val.get(key))
-                if ws:
-                    return ws, raw_label
-            # Dict aber kein bekannter Kurzform-Key → ersten String-Wert probieren
-            for v in val.values():
-                if isinstance(v, str) and v:
-                    ws, raw_label = _lookup(v)
-                    if ws:
-                        return ws, raw_label
-            # Dict-Rohdarstellung für Diagnose merken, weiter mit nächstem Pfad
-            continue
-
-        if isinstance(val, str) and val:
-            ws, raw_label = _lookup(val)
-            if ws:
-                return ws, raw_label
+    pos_raw = (
+        _dig(raw, 'info.preferredposition.label') or
+        _dig(raw, 'info.preferredposition.shortlabel') or
+        _dig(raw, 'info.mainposition.label') or
+        _dig(raw, 'info.position.label') or
+        _dig(raw, 'info.preferredposition') or
+        _dig(raw, 'info.position') or
+        ''
+    )
+    pos_key = str(pos_raw).lower().replace(' ', '').replace('_', '')
+    ws = _CMT_TO_WS_POSITION.get(pos_key)
+    if ws:
+        return ws
 
     # GK-Erkennung via Attributwerte als letzter Ausweg
-    gk_ref = _int(_dig(raw, 'attributes.gkreflexes'))
-    gk_div = _int(_dig(raw, 'attributes.gkdiving'))
-    if (gk_ref is not None and gk_div is not None
-            and gk_ref > 60 and gk_div > 60):
-        return 'TW', 'gk_attrs'
+    attrs = attributes or raw.get('attributes') or {}
+    gk_ref = _int(_dig(raw, 'attributes.gkreflexes') or attrs.get('gkreflexes'))
+    gk_div = _int(_dig(raw, 'attributes.gkdiving') or attrs.get('gkdiving'))
+    if gk_ref is not None and gk_div is not None and gk_ref > 60 and gk_div > 60:
+        return 'TW'
 
-    # Rohwert für Diagnose sammeln (wird im Dry-Run angezeigt)
-    for path in ('info.preferredposition', 'info.mainposition', 'info.position'):
-        val = _dig(raw, path)
-        if isinstance(val, dict):
-            raw_label = str(next(iter(val.values()), ''))[:30]
-            return 'ST', raw_label
-        if val:
-            return 'ST', str(val)[:30]
-
-    return 'ST', ''  # sicherer Default
+    return 'ST'  # sicherer Default
 
 
 def _compute_age(dob):
@@ -503,46 +440,32 @@ def _upsert_club_external_id(club, cmt_source, team_id, db_slug, now):
 
 # ── Auto-Create: Spieler aus CMT-Rohdaten anlegen ───────────────────────────
 
-def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
-                                tm_position=None):
+def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
     """Legt einen Spieler aus CMT-Rohdaten an (Auto-Create bei not_in_ws).
-
-    Positionsquellen-Regel:
-      TM.de ist die ausschließliche Quelle für WS-Positionen (Player.position,
-      main_position_1, secondary_position_*). CMT-Positionsdaten werden NUR
-      als Diagnose (cmt_pos_raw) gespeichert und NIEMALS in WS-Positionsfelder
-      geschrieben.
-
-      Ohne ``tm_position`` (Pflichtparameter aus einem TM-Import) wird
-      status='blocked' zurückgegeben und kein aktiver Spieler angelegt.
 
     CMT-Semantik (EA FC):
       info.teams.club_team.name  — aktiver Verein des Spielers (wo er spielt)
       info.teams.loan_team.name  — Leihgeber (von dem er geliehen ist;
                                    leer = kein aktives Leihverhältnis)
 
-    Entscheidungsmatrix (Verein/Leihstatus):
+    Entscheidungsmatrix:
       ws_club gegeben + loan_team.name → club=ws_club,  loan_status='loaned_in'
       ws_club gegeben + kein loan_team → club=ws_club,  loan_status='none'
       ws_club=None   + loan_team.name  → club=None,     loan_status='extern_loan'
       ws_club=None   + kein loan_team  → club=None,     loan_status='none'
 
     Args:
-      raw:          Rohpayload aus CMT-API (dict).
-      db_slug:      CMT-DB-Bezeichner, z. B. '26062400'.
-      ws_club:      Websoccer-Club-Instanz des importierten Teams (oder None).
-      dry_run:      Wenn True, werden keine DB-Änderungen geschrieben.
-      tm_position:  WS-Positionscode aus TM-Import (z. B. 'DM', 'RV', 'TW').
-                    Pflicht für aktive Spieleranlage. Fehlt dieser Wert, wird
-                    status='blocked' zurückgegeben.
+      raw:      Rohpayload aus CMT-API (dict).
+      db_slug:  CMT-DB-Bezeichner, z. B. '26062400'.
+      ws_club:  Websoccer-Club-Instanz des importierten Teams (oder None).
+      dry_run:  Wenn True, werden keine DB-Änderungen geschrieben.
 
     Returns dict mit:
-      status            'created' | 'blocked' | 'skipped' | 'error'
-      player            Player-Instanz (None bei blocked/dry_run/Fehler)
+      status            'created' | 'skipped' | 'error'
+      player            Player-Instanz (None bei dry_run/Fehler)
       cmt_id            str
       name              str
-      cmt_pos_raw       str  — CMT-Rohpositionslabel (nur Diagnose, kein WS-Feld)
-      position          str  — WS-Positionscode (= tm_position, nur wenn not blocked)
+      position          WS-Positionscode
       overall           int
       dob               date | None
       club_team_name    str — CMT aktiver Verein
@@ -550,7 +473,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
       decided_status    'loaned_in' | 'extern_loan' | 'none'
       target_club       Club-Instanz | None
       decision_reason   str — menschenlesbare Begründung
-      reason            str (nur bei 'blocked'/'skipped'/'error')
+      reason            str (nur bei 'skipped'/'error')
     """
     cmt_id = _str(_dig(raw, 'info.playerid'))
     if not cmt_id:
@@ -579,25 +502,16 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
 
     overall   = _int(_dig(raw, 'info.overallrating')) or 50
     potential = _int(_dig(raw, 'info.potential')) or overall
-
-    # CMT-Position NUR als Diagnose — niemals für WS-Positionsfelder verwenden.
-    # Primärquelle: roles[0].pos (EA-FC-Rollenarray).
-    # Fallback:     info.preferredposition (shortlabel / label).
-    _, pref_pos_raw = _cmt_position_to_ws(raw)
-    _roles = _list(_dig(raw, 'roles'))
-    _roles_pos = (
-        _str(_roles[0].get('pos', ''))
-        if _roles and isinstance(_roles[0], dict)
-        else ''
-    )
-    cmt_pos_raw = _roles_pos or pref_pos_raw
+    position  = _cmt_position_to_ws(raw)
 
     # ── CMT Leih-Semantik ────────────────────────────────────────────────────
+    # club_team = aktiver Verein (wo der Spieler spielt)
+    # loan_team = Leihgeber    (leer wenn kein Leihverhältnis)
     club_team_name = _str(_dig(raw, 'info.teams.club_team.name') or '')
     loan_team_name = _str(_dig(raw, 'info.teams.loan_team.name') or '')
     is_on_loan     = bool(loan_team_name)
 
-    # ── Entscheidungsmatrix (Verein/Leihstatus) ──────────────────────────────
+    # ── Entscheidungsmatrix ──────────────────────────────────────────────────
     if ws_club is not None:
         target_club = ws_club
         if is_on_loan:
@@ -626,32 +540,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
 
     wsc_id = f'CMT{cmt_id}'
 
-    # ── Sicherheitssperre: kein aktiver Auto-Create ohne TM-Position ─────────
-    # Positionen kommen ausschließlich aus TM.de (CSV/Import). CMT liefert nur
-    # Ratings, Attribute und Diagnose-Daten. Ohne TM-Quelle darf kein aktiver
-    # Kaderspieler angelegt werden.
-    if tm_position is None:
-        return {
-            'status': 'blocked',
-            'player': None,
-            'cmt_id': cmt_id,
-            'name': display_name,
-            'cmt_pos_raw': cmt_pos_raw,
-            'overall': overall,
-            'dob': dob,
-            'club_team_name': club_team_name,
-            'loan_team_name': loan_team_name,
-            'decided_status': decided_status,
-            'target_club': target_club,
-            'decision_reason': decision_reason,
-            'reason': (
-                'TM-Position fehlt → kein aktiver Auto-Create möglich. '
-                'Spieler bitte zuerst via TM-Import/CSV anlegen '
-                f'(CMT-Diagnose: {cmt_pos_raw or "unbekannt"}).'
-            ),
-        }
-
-    # ── Idempotenz-Check ─────────────────────────────────────────────────────
+    # ── Idempotenz-Check ────────────────────────────────────────────────────
     if not dry_run:
         try:
             cmt_source = DataSource.objects.get(code='CMTRACKER')
@@ -665,8 +554,6 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
         if existing_ext:
             return {'status': 'skipped', 'cmt_id': cmt_id,
                     'player': existing_ext.player, 'name': display_name,
-                    'cmt_pos_raw': cmt_pos_raw,
-                    'position': tm_position,
                     'club_team_name': club_team_name,
                     'loan_team_name': loan_team_name,
                     'decided_status': decided_status,
@@ -677,8 +564,6 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
         if Player.objects.filter(wsc_player_id=wsc_id).exists():
             return {'status': 'skipped', 'cmt_id': cmt_id, 'player': None,
                     'name': display_name,
-                    'cmt_pos_raw': cmt_pos_raw,
-                    'position': tm_position,
                     'club_team_name': club_team_name,
                     'loan_team_name': loan_team_name,
                     'decided_status': decided_status,
@@ -689,8 +574,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
     _base_result = {
         'cmt_id': cmt_id,
         'name': display_name,
-        'position': tm_position,       # WS-Position aus TM-Quelle
-        'cmt_pos_raw': cmt_pos_raw,    # CMT-Diagnose, kein WS-Feld
+        'position': position,
         'overall': overall,
         'dob': dob,
         'club_team_name': club_team_name,
@@ -703,7 +587,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
     if dry_run:
         return {'status': 'created', 'player': None, **_base_result}
 
-    # ── Anlegen mit TM-Position ──────────────────────────────────────────────
+    # ── Anlegen ─────────────────────────────────────────────────────────────
     with transaction.atomic():
         player = Player.objects.create(
             first_name=first_name,
@@ -711,8 +595,8 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
             wsc_player_id=wsc_id,
             date_of_birth=dob,
             age=_compute_age(dob),
-            main_position_1=tm_position,   # TM-Quelle, niemals CMT
-            position=tm_position,           # TM-Quelle, niemals CMT
+            main_position_1=position,
+            position=position,
             potential=max(potential, overall),
             loan_status=decided_status,
             club=target_club,
@@ -732,6 +616,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
         )
 
     # PlayerCMTProfile + Attribute automatisch speichern
+    # (on_loan_from_club = loan_team.name = Leihgeber, raw_payload vollständig)
     try:
         store_player_profiles(players=[raw], db_slug=db_slug, dry_run=False)
     except Exception:
