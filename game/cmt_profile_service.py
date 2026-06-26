@@ -503,32 +503,46 @@ def _upsert_club_external_id(club, cmt_source, team_id, db_slug, now):
 
 # ── Auto-Create: Spieler aus CMT-Rohdaten anlegen ───────────────────────────
 
-def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
+def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False,
+                                tm_position=None):
     """Legt einen Spieler aus CMT-Rohdaten an (Auto-Create bei not_in_ws).
+
+    Positionsquellen-Regel:
+      TM.de ist die ausschließliche Quelle für WS-Positionen (Player.position,
+      main_position_1, secondary_position_*). CMT-Positionsdaten werden NUR
+      als Diagnose (cmt_pos_raw) gespeichert und NIEMALS in WS-Positionsfelder
+      geschrieben.
+
+      Ohne ``tm_position`` (Pflichtparameter aus einem TM-Import) wird
+      status='blocked' zurückgegeben und kein aktiver Spieler angelegt.
 
     CMT-Semantik (EA FC):
       info.teams.club_team.name  — aktiver Verein des Spielers (wo er spielt)
       info.teams.loan_team.name  — Leihgeber (von dem er geliehen ist;
                                    leer = kein aktives Leihverhältnis)
 
-    Entscheidungsmatrix:
+    Entscheidungsmatrix (Verein/Leihstatus):
       ws_club gegeben + loan_team.name → club=ws_club,  loan_status='loaned_in'
       ws_club gegeben + kein loan_team → club=ws_club,  loan_status='none'
       ws_club=None   + loan_team.name  → club=None,     loan_status='extern_loan'
       ws_club=None   + kein loan_team  → club=None,     loan_status='none'
 
     Args:
-      raw:      Rohpayload aus CMT-API (dict).
-      db_slug:  CMT-DB-Bezeichner, z. B. '26062400'.
-      ws_club:  Websoccer-Club-Instanz des importierten Teams (oder None).
-      dry_run:  Wenn True, werden keine DB-Änderungen geschrieben.
+      raw:          Rohpayload aus CMT-API (dict).
+      db_slug:      CMT-DB-Bezeichner, z. B. '26062400'.
+      ws_club:      Websoccer-Club-Instanz des importierten Teams (oder None).
+      dry_run:      Wenn True, werden keine DB-Änderungen geschrieben.
+      tm_position:  WS-Positionscode aus TM-Import (z. B. 'DM', 'RV', 'TW').
+                    Pflicht für aktive Spieleranlage. Fehlt dieser Wert, wird
+                    status='blocked' zurückgegeben.
 
     Returns dict mit:
-      status            'created' | 'skipped' | 'error'
-      player            Player-Instanz (None bei dry_run/Fehler)
+      status            'created' | 'blocked' | 'skipped' | 'error'
+      player            Player-Instanz (None bei blocked/dry_run/Fehler)
       cmt_id            str
       name              str
-      position          WS-Positionscode
+      cmt_pos_raw       str  — CMT-Rohpositionslabel (nur Diagnose, kein WS-Feld)
+      position          str  — WS-Positionscode (= tm_position, nur wenn not blocked)
       overall           int
       dob               date | None
       club_team_name    str — CMT aktiver Verein
@@ -536,7 +550,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
       decided_status    'loaned_in' | 'extern_loan' | 'none'
       target_club       Club-Instanz | None
       decision_reason   str — menschenlesbare Begründung
-      reason            str (nur bei 'skipped'/'error')
+      reason            str (nur bei 'blocked'/'skipped'/'error')
     """
     cmt_id = _str(_dig(raw, 'info.playerid'))
     if not cmt_id:
@@ -565,16 +579,16 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
 
     overall   = _int(_dig(raw, 'info.overallrating')) or 50
     potential = _int(_dig(raw, 'info.potential')) or overall
-    position, cmt_pos_raw = _cmt_position_to_ws(raw)
+
+    # CMT-Position NUR als Diagnose — niemals für WS-Positionsfelder verwenden
+    _, cmt_pos_raw = _cmt_position_to_ws(raw)
 
     # ── CMT Leih-Semantik ────────────────────────────────────────────────────
-    # club_team = aktiver Verein (wo der Spieler spielt)
-    # loan_team = Leihgeber    (leer wenn kein Leihverhältnis)
     club_team_name = _str(_dig(raw, 'info.teams.club_team.name') or '')
     loan_team_name = _str(_dig(raw, 'info.teams.loan_team.name') or '')
     is_on_loan     = bool(loan_team_name)
 
-    # ── Entscheidungsmatrix ──────────────────────────────────────────────────
+    # ── Entscheidungsmatrix (Verein/Leihstatus) ──────────────────────────────
     if ws_club is not None:
         target_club = ws_club
         if is_on_loan:
@@ -603,7 +617,32 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
 
     wsc_id = f'CMT{cmt_id}'
 
-    # ── Idempotenz-Check ────────────────────────────────────────────────────
+    # ── Sicherheitssperre: kein aktiver Auto-Create ohne TM-Position ─────────
+    # Positionen kommen ausschließlich aus TM.de (CSV/Import). CMT liefert nur
+    # Ratings, Attribute und Diagnose-Daten. Ohne TM-Quelle darf kein aktiver
+    # Kaderspieler angelegt werden.
+    if tm_position is None:
+        return {
+            'status': 'blocked',
+            'player': None,
+            'cmt_id': cmt_id,
+            'name': display_name,
+            'cmt_pos_raw': cmt_pos_raw,
+            'overall': overall,
+            'dob': dob,
+            'club_team_name': club_team_name,
+            'loan_team_name': loan_team_name,
+            'decided_status': decided_status,
+            'target_club': target_club,
+            'decision_reason': decision_reason,
+            'reason': (
+                'TM-Position fehlt → kein aktiver Auto-Create möglich. '
+                'Spieler bitte zuerst via TM-Import/CSV anlegen '
+                f'(CMT-Diagnose: {cmt_pos_raw or "unbekannt"}).'
+            ),
+        }
+
+    # ── Idempotenz-Check ─────────────────────────────────────────────────────
     if not dry_run:
         try:
             cmt_source = DataSource.objects.get(code='CMTRACKER')
@@ -617,6 +656,8 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
         if existing_ext:
             return {'status': 'skipped', 'cmt_id': cmt_id,
                     'player': existing_ext.player, 'name': display_name,
+                    'cmt_pos_raw': cmt_pos_raw,
+                    'position': tm_position,
                     'club_team_name': club_team_name,
                     'loan_team_name': loan_team_name,
                     'decided_status': decided_status,
@@ -627,6 +668,8 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
         if Player.objects.filter(wsc_player_id=wsc_id).exists():
             return {'status': 'skipped', 'cmt_id': cmt_id, 'player': None,
                     'name': display_name,
+                    'cmt_pos_raw': cmt_pos_raw,
+                    'position': tm_position,
                     'club_team_name': club_team_name,
                     'loan_team_name': loan_team_name,
                     'decided_status': decided_status,
@@ -637,8 +680,8 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
     _base_result = {
         'cmt_id': cmt_id,
         'name': display_name,
-        'position': position,
-        'cmt_pos_raw': cmt_pos_raw,
+        'position': tm_position,       # WS-Position aus TM-Quelle
+        'cmt_pos_raw': cmt_pos_raw,    # CMT-Diagnose, kein WS-Feld
         'overall': overall,
         'dob': dob,
         'club_team_name': club_team_name,
@@ -651,7 +694,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
     if dry_run:
         return {'status': 'created', 'player': None, **_base_result}
 
-    # ── Anlegen ─────────────────────────────────────────────────────────────
+    # ── Anlegen mit TM-Position ──────────────────────────────────────────────
     with transaction.atomic():
         player = Player.objects.create(
             first_name=first_name,
@@ -659,8 +702,8 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
             wsc_player_id=wsc_id,
             date_of_birth=dob,
             age=_compute_age(dob),
-            main_position_1=position,
-            position=position,
+            main_position_1=tm_position,   # TM-Quelle, niemals CMT
+            position=tm_position,           # TM-Quelle, niemals CMT
             potential=max(potential, overall),
             loan_status=decided_status,
             club=target_club,
@@ -680,7 +723,6 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
         )
 
     # PlayerCMTProfile + Attribute automatisch speichern
-    # (on_loan_from_club = loan_team.name = Leihgeber, raw_payload vollständig)
     try:
         store_player_profiles(players=[raw], db_slug=db_slug, dry_run=False)
     except Exception:
