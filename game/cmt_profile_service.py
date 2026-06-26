@@ -488,6 +488,11 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
     potential = _int(_dig(raw, 'info.potential')) or overall
     position = _cmt_position_to_ws(raw)
 
+    # Leihstatus: loan_team = Verein, von dem er geliehen wurde (Leihgeber)
+    loan_team_name = _str(_dig(raw, 'info.teams.loan_team.name') or '')
+    is_extern_loan = bool(loan_team_name)
+    p_loan_status = 'extern_loan' if is_extern_loan else 'none'
+
     wsc_id = f'CMT{cmt_id}'
 
     # ── Idempotenz-Check ────────────────────────────────────────────────────
@@ -519,6 +524,8 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
             'position': position,
             'overall': overall,
             'dob': dob,
+            'is_extern_loan': is_extern_loan,
+            'loan_team_name': loan_team_name,
         }
 
     # ── Anlegen ─────────────────────────────────────────────────────────────
@@ -532,6 +539,7 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
             main_position_1=position,
             position=position,
             potential=max(potential, overall),
+            loan_status=p_loan_status,
             club=None,
         )
 
@@ -548,6 +556,13 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
             base_strength=overall,
         )
 
+    # PlayerCMTProfile + Attribute immer speichern (nicht nur bei --profiles),
+    # damit on_loan_from_club und raw_payload vorhanden sind.
+    try:
+        store_player_profiles(players=[raw], db_slug=db_slug, dry_run=False)
+    except Exception:
+        pass  # Profil ist optional — Player-Anlage bleibt gültig
+
     return {
         'status': 'created',
         'cmt_id': cmt_id,
@@ -556,4 +571,6 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
         'position': position,
         'overall': overall,
         'dob': dob,
+        'is_extern_loan': is_extern_loan,
+        'loan_team_name': loan_team_name,
     }

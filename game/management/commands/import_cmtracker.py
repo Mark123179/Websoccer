@@ -425,8 +425,12 @@ class Command(BaseCommand):
 
             if r['status'] == 'created':
                 icon = '(dry)' if dry_run else '✓'
+                loan_tag = ''
+                if r.get('is_extern_loan'):
+                    loan_from = r.get('loan_team_name') or '?'
+                    loan_tag = f'  ↩ Leihe von {loan_from}'
                 self.stdout.write(
-                    f'  {icon} {r["name"]:30s}  [{pos}]  OVR {overall}'
+                    f'  {icon} {r["name"]:30s}  [{pos}]  OVR {overall}{loan_tag}'
                 )
                 created += 1
             elif r['status'] == 'skipped':
