@@ -34,53 +34,116 @@ from game.models import (
 
 # ── CMT-Position → WS-Positionscode ─────────────────────────────────────────
 # CMT liefert EA-typische Strings (GK, CB, LB, CDM, CM, CAM, LW, ST …).
-# Groß/Kleinschreibung wird beim Lookup normalisiert.
+# Normalisierung: lowercase, Leerzeichen/Unterstriche/Bindestriche entfernt.
+# Kurzformen (CDM, CM, RB …) haben Vorrang gegenüber langen Labels.
 _CMT_TO_WS_POSITION = {
+    # Torwart
     'gk': 'TW', 'gkp': 'TW', 'goalkeeper': 'TW',
-    'cb': 'IV', 'dc': 'IV', 'centreback': 'IV', 'center-back': 'IV',
-    'lb': 'LV', 'lwb': 'LV', 'leftback': 'LV', 'left-back': 'LV',
-    'rb': 'RV', 'rwb': 'RV', 'rightback': 'RV', 'right-back': 'RV',
-    'cdm': 'DM', 'dm': 'DM', 'defensivemidfield': 'DM',
-    'cm': 'ZM', 'mc': 'ZM', 'centralmidfield': 'ZM',
-    'cam': 'OM', 'am': 'OM', 'attackingmidfield': 'OM',
-    'lm': 'LM', 'lw': 'LM', 'leftmidfield': 'LM', 'leftwing': 'LM',
-    'rm': 'RM', 'rw': 'RM', 'rightmidfield': 'RM', 'rightwing': 'RM',
-    'lf': 'LF', 'leftwingforward': 'LF',
-    'rf': 'RF', 'rightwingforward': 'RF',
-    'cf': 'ST', 'ss': 'ST', 'centreforward': 'ST',
-    'st': 'ST', 'fw': 'ST', 'striker': 'ST',
+    # Innenverteidiger
+    'cb': 'IV', 'dc': 'IV',
+    'centreback': 'IV', 'centerback': 'IV', 'centrebackdefender': 'IV',
+    # Linker Verteidiger / Wing Back
+    'lb': 'LV', 'lwb': 'LV',
+    'leftback': 'LV', 'leftwingback': 'LV',
+    # Rechter Verteidiger / Wing Back
+    'rb': 'RV', 'rwb': 'RV',
+    'rightback': 'RV', 'rightwingback': 'RV',
+    # Defensives Mittelfeld — kurze UND lange Formen
+    'cdm': 'DM', 'dm': 'DM',
+    'defensivemidfield': 'DM',
+    'centredefensivemidfield': 'DM',
+    'centraldefensivemidfield': 'DM',
+    'defensivemid': 'DM',
+    # Zentrales Mittelfeld
+    'cm': 'ZM', 'mc': 'ZM',
+    'centralmidfield': 'ZM', 'centremidfield': 'ZM', 'centralmid': 'ZM',
+    # Offensives Mittelfeld
+    'cam': 'OM', 'am': 'OM',
+    'attackingmidfield': 'OM', 'attackingmid': 'OM',
+    # Linkes Mittelfeld / Flügel
+    'lm': 'LM', 'lw': 'LM',
+    'leftmidfield': 'LM', 'leftwing': 'LM', 'leftmid': 'LM',
+    # Rechtes Mittelfeld / Flügel
+    'rm': 'RM', 'rw': 'RM',
+    'rightmidfield': 'RM', 'rightwing': 'RM', 'rightmid': 'RM',
+    # Linker Flügel-Stürmer
+    'lf': 'LF', 'leftwingforward': 'LF', 'leftforward': 'LF',
+    # Rechter Flügel-Stürmer
+    'rf': 'RF', 'rightwingforward': 'RF', 'rightforward': 'RF',
+    # Stürmer / Mittelstürmer
+    'cf': 'ST', 'ss': 'ST',
+    'centreforward': 'ST', 'centerforward': 'ST',
+    'st': 'ST', 'fw': 'ST', 'striker': 'ST', 'forward': 'ST',
 }
 
 
-def _cmt_position_to_ws(raw, attributes=None):
+def _normalize_pos_key(s):
+    """Normalisiert eine Positionsbezeichnung für den Map-Lookup."""
+    return str(s).lower().replace(' ', '').replace('_', '').replace('-', '')
+
+
+def _cmt_position_to_ws(raw):
     """Mappt CMT-Positionsstring auf WS-Positionscode.
 
-    Probiert mehrere bekannte Pfade im Rohpayload. Wenn der CMT-String nicht
-    erkannt wird, wird GK-Erkennung via Attributwerte versucht (gkreflexes +
-    gkdiving > 60). Standard-Fallback: 'ST'.
+    Probiert mehrere bekannte Pfade. Kurzformen (shortlabel, abbr, short)
+    haben Vorrang vor langen Labels um Fehlmappings zu vermeiden.
+
+    Returns
+    -------
+    tuple[str, str]
+        (ws_code, raw_label) — ws_code ist der WS-Positionscode (z. B. 'DM'),
+        raw_label ist der unverarbeitete CMT-String für Diagnose-Ausgaben.
+        Standard-Fallback: ('ST', '').
     """
-    pos_raw = (
-        _dig(raw, 'info.preferredposition.label') or
-        _dig(raw, 'info.preferredposition.shortlabel') or
-        _dig(raw, 'info.mainposition.label') or
-        _dig(raw, 'info.position.label') or
-        _dig(raw, 'info.preferredposition') or
-        _dig(raw, 'info.position') or
-        ''
-    )
-    pos_key = str(pos_raw).lower().replace(' ', '').replace('_', '')
-    ws = _CMT_TO_WS_POSITION.get(pos_key)
-    if ws:
-        return ws
+    def _lookup(candidate):
+        """Gibt (ws_code, candidate) zurück oder (None, None) wenn kein Treffer."""
+        if not candidate or not isinstance(candidate, str):
+            return None, None
+        ws = _CMT_TO_WS_POSITION.get(_normalize_pos_key(candidate))
+        return (ws, candidate) if ws else (None, None)
+
+    for path in ('info.preferredposition', 'info.mainposition', 'info.position'):
+        val = _dig(raw, path)
+        if val is None:
+            continue
+
+        if isinstance(val, dict):
+            # Kurzformen zuerst — viele EA-Antworten haben 'shortlabel' oder 'abbr'
+            for key in ('shortlabel', 'abbr', 'short', 'label', 'name', 'title'):
+                ws, raw_label = _lookup(val.get(key))
+                if ws:
+                    return ws, raw_label
+            # Dict aber kein bekannter Kurzform-Key → ersten String-Wert probieren
+            for v in val.values():
+                if isinstance(v, str) and v:
+                    ws, raw_label = _lookup(v)
+                    if ws:
+                        return ws, raw_label
+            # Dict-Rohdarstellung für Diagnose merken, weiter mit nächstem Pfad
+            continue
+
+        if isinstance(val, str) and val:
+            ws, raw_label = _lookup(val)
+            if ws:
+                return ws, raw_label
 
     # GK-Erkennung via Attributwerte als letzter Ausweg
-    attrs = attributes or raw.get('attributes') or {}
-    gk_ref = _int(_dig(raw, 'attributes.gkreflexes') or attrs.get('gkreflexes'))
-    gk_div = _int(_dig(raw, 'attributes.gkdiving') or attrs.get('gkdiving'))
-    if gk_ref is not None and gk_div is not None and gk_ref > 60 and gk_div > 60:
-        return 'TW'
+    gk_ref = _int(_dig(raw, 'attributes.gkreflexes'))
+    gk_div = _int(_dig(raw, 'attributes.gkdiving'))
+    if (gk_ref is not None and gk_div is not None
+            and gk_ref > 60 and gk_div > 60):
+        return 'TW', 'gk_attrs'
 
-    return 'ST'  # sicherer Default
+    # Rohwert für Diagnose sammeln (wird im Dry-Run angezeigt)
+    for path in ('info.preferredposition', 'info.mainposition', 'info.position'):
+        val = _dig(raw, path)
+        if isinstance(val, dict):
+            raw_label = str(next(iter(val.values()), ''))[:30]
+            return 'ST', raw_label
+        if val:
+            return 'ST', str(val)[:30]
+
+    return 'ST', ''  # sicherer Default
 
 
 def _compute_age(dob):
@@ -502,7 +565,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
 
     overall   = _int(_dig(raw, 'info.overallrating')) or 50
     potential = _int(_dig(raw, 'info.potential')) or overall
-    position  = _cmt_position_to_ws(raw)
+    position, cmt_pos_raw = _cmt_position_to_ws(raw)
 
     # ── CMT Leih-Semantik ────────────────────────────────────────────────────
     # club_team = aktiver Verein (wo der Spieler spielt)
@@ -575,6 +638,7 @@ def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
         'cmt_id': cmt_id,
         'name': display_name,
         'position': position,
+        'cmt_pos_raw': cmt_pos_raw,
         'overall': overall,
         'dob': dob,
         'club_team_name': club_team_name,
