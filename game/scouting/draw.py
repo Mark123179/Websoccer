@@ -74,6 +74,7 @@ def _eligible_in_isos(isos):
     qs = (
         Player.objects
         .filter(club__isnull=True, pool_status=Player.POOL_STATUS_SCOUTABLE)
+        .exclude(loan_status='extern_loan')
         .select_related('strength_profile')
     )
     out = []
