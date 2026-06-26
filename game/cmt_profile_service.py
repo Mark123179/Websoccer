@@ -440,24 +440,40 @@ def _upsert_club_external_id(club, cmt_source, team_id, db_slug, now):
 
 # ── Auto-Create: Spieler aus CMT-Rohdaten anlegen ───────────────────────────
 
-def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
-    """Legt einen neuen vereinslosen Spieler aus CMT-Rohdaten an.
+def create_player_from_cmt_raw(raw, db_slug, ws_club=None, dry_run=False):
+    """Legt einen Spieler aus CMT-Rohdaten an (Auto-Create bei not_in_ws).
 
-    Wird aufgerufen wenn ein CMT-Spieler nicht in der WS-DB gefunden wurde
-    (reason='not_in_ws'). Leihe-Spieler, die nur bei importierten Vereinen
-    auftauchen würden, werden so trotzdem erfasst.
+    CMT-Semantik (EA FC):
+      info.teams.club_team.name  — aktiver Verein des Spielers (wo er spielt)
+      info.teams.loan_team.name  — Leihgeber (von dem er geliehen ist;
+                                   leer = kein aktives Leihverhältnis)
 
-    Erstellt:
-      - Player (club=None, vereinslos)
-      - PlayerExternalId (source=CMTRACKER, external_id=<cmt_player_id>)
-      - PlayerStrengthProfile (base_strength aus overallrating)
+    Entscheidungsmatrix:
+      ws_club gegeben + loan_team.name → club=ws_club,  loan_status='loaned_in'
+      ws_club gegeben + kein loan_team → club=ws_club,  loan_status='none'
+      ws_club=None   + loan_team.name  → club=None,     loan_status='extern_loan'
+      ws_club=None   + kein loan_team  → club=None,     loan_status='none'
 
-    Returns dict:
-      status: 'created' | 'skipped' | 'error'
-      player: Player-Instanz (None bei dry_run oder Fehler)
-      cmt_id: str
-      name: str
-      reason: str (nur bei 'error'/'skipped')
+    Args:
+      raw:      Rohpayload aus CMT-API (dict).
+      db_slug:  CMT-DB-Bezeichner, z. B. '26062400'.
+      ws_club:  Websoccer-Club-Instanz des importierten Teams (oder None).
+      dry_run:  Wenn True, werden keine DB-Änderungen geschrieben.
+
+    Returns dict mit:
+      status            'created' | 'skipped' | 'error'
+      player            Player-Instanz (None bei dry_run/Fehler)
+      cmt_id            str
+      name              str
+      position          WS-Positionscode
+      overall           int
+      dob               date | None
+      club_team_name    str — CMT aktiver Verein
+      loan_team_name    str — CMT Leihgeber (leer = kein Leihverhältnis)
+      decided_status    'loaned_in' | 'extern_loan' | 'none'
+      target_club       Club-Instanz | None
+      decision_reason   str — menschenlesbare Begründung
+      reason            str (nur bei 'skipped'/'error')
     """
     cmt_id = _str(_dig(raw, 'info.playerid'))
     if not cmt_id:
@@ -484,14 +500,43 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
             except ValueError:
                 continue
 
-    overall = _int(_dig(raw, 'info.overallrating')) or 50
+    overall   = _int(_dig(raw, 'info.overallrating')) or 50
     potential = _int(_dig(raw, 'info.potential')) or overall
-    position = _cmt_position_to_ws(raw)
+    position  = _cmt_position_to_ws(raw)
 
-    # Leihstatus: loan_team = Verein, von dem er geliehen wurde (Leihgeber)
+    # ── CMT Leih-Semantik ────────────────────────────────────────────────────
+    # club_team = aktiver Verein (wo der Spieler spielt)
+    # loan_team = Leihgeber    (leer wenn kein Leihverhältnis)
+    club_team_name = _str(_dig(raw, 'info.teams.club_team.name') or '')
     loan_team_name = _str(_dig(raw, 'info.teams.loan_team.name') or '')
-    is_extern_loan = bool(loan_team_name)
-    p_loan_status = 'extern_loan' if is_extern_loan else 'none'
+    is_on_loan     = bool(loan_team_name)
+
+    # ── Entscheidungsmatrix ──────────────────────────────────────────────────
+    if ws_club is not None:
+        target_club = ws_club
+        if is_on_loan:
+            decided_status  = 'loaned_in'
+            decision_reason = (
+                f'Leihspieler im WS-Verein "{ws_club.name}" '
+                f'(Leihgeber: {loan_team_name})'
+            )
+        else:
+            decided_status  = 'none'
+            decision_reason = f'Stammspieler im WS-Verein "{ws_club.name}"'
+    else:
+        target_club = None
+        if is_on_loan:
+            decided_status  = 'extern_loan'
+            decision_reason = (
+                f'Leihspieler, Zielverein außerhalb WS '
+                f'(Leihgeber: {loan_team_name}; '
+                f'aktiver Verein: {club_team_name or "?"})'
+            )
+        else:
+            decided_status  = 'none'
+            decision_reason = (
+                'Kein WS-Club-Kontext, kein Leihverhältnis → vereinslos'
+            )
 
     wsc_id = f'CMT{cmt_id}'
 
@@ -509,24 +554,38 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
         if existing_ext:
             return {'status': 'skipped', 'cmt_id': cmt_id,
                     'player': existing_ext.player, 'name': display_name,
+                    'club_team_name': club_team_name,
+                    'loan_team_name': loan_team_name,
+                    'decided_status': decided_status,
+                    'target_club': target_club,
+                    'decision_reason': decision_reason,
                     'reason': 'PlayerExternalId bereits vorhanden'}
 
         if Player.objects.filter(wsc_player_id=wsc_id).exists():
             return {'status': 'skipped', 'cmt_id': cmt_id, 'player': None,
-                    'name': display_name, 'reason': 'wsc_player_id bereits vergeben'}
+                    'name': display_name,
+                    'club_team_name': club_team_name,
+                    'loan_team_name': loan_team_name,
+                    'decided_status': decided_status,
+                    'target_club': target_club,
+                    'decision_reason': decision_reason,
+                    'reason': 'wsc_player_id bereits vergeben'}
+
+    _base_result = {
+        'cmt_id': cmt_id,
+        'name': display_name,
+        'position': position,
+        'overall': overall,
+        'dob': dob,
+        'club_team_name': club_team_name,
+        'loan_team_name': loan_team_name,
+        'decided_status': decided_status,
+        'target_club': target_club,
+        'decision_reason': decision_reason,
+    }
 
     if dry_run:
-        return {
-            'status': 'created',
-            'cmt_id': cmt_id,
-            'player': None,
-            'name': display_name,
-            'position': position,
-            'overall': overall,
-            'dob': dob,
-            'is_extern_loan': is_extern_loan,
-            'loan_team_name': loan_team_name,
-        }
+        return {'status': 'created', 'player': None, **_base_result}
 
     # ── Anlegen ─────────────────────────────────────────────────────────────
     with transaction.atomic():
@@ -539,8 +598,8 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
             main_position_1=position,
             position=position,
             potential=max(potential, overall),
-            loan_status=p_loan_status,
-            club=None,
+            loan_status=decided_status,
+            club=target_club,
         )
 
         PlayerExternalId.objects.create(
@@ -556,21 +615,11 @@ def create_player_from_cmt_raw(raw, db_slug, dry_run=False):
             base_strength=overall,
         )
 
-    # PlayerCMTProfile + Attribute immer speichern (nicht nur bei --profiles),
-    # damit on_loan_from_club und raw_payload vorhanden sind.
+    # PlayerCMTProfile + Attribute automatisch speichern
+    # (on_loan_from_club = loan_team.name = Leihgeber, raw_payload vollständig)
     try:
         store_player_profiles(players=[raw], db_slug=db_slug, dry_run=False)
     except Exception:
         pass  # Profil ist optional — Player-Anlage bleibt gültig
 
-    return {
-        'status': 'created',
-        'cmt_id': cmt_id,
-        'player': player,
-        'name': display_name,
-        'position': position,
-        'overall': overall,
-        'dob': dob,
-        'is_extern_loan': is_extern_loan,
-        'loan_team_name': loan_team_name,
-    }
+    return {'status': 'created', 'player': player, **_base_result}
