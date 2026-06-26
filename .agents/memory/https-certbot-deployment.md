@@ -31,6 +31,12 @@ the template and temporarily swap `server web:8000;` for `server 127.0.0.1:8000;
 then `nginx -t` passes. The official nginx image renders `*.template` via envsubst on
 startup, so `${DOMAIN}` is substituted while runtime vars like `$host` survive.
 
+## Production domain: playwebsoccer.de
+The confirmed production domain is **playwebsoccer.de**. Set `DOMAIN=playwebsoccer.de`
+in `/opt/websoccer/.env` on the Hetzner server before running `init-letsencrypt.sh`.
+ALLOWED_HOSTS and CSRF_TRUSTED_ORIGINS accept it automatically via the env-var append
+logic in core/settings.py (no code change needed — just add to ALLOWED_HOSTS env var).
+
 ## ENABLE_HTTPS is opt-in (default off)
 `ENABLE_HTTPS` gates `SECURE_PROXY_SSL_HEADER` + `SECURE_SSL_REDIRECT` + HSTS. Default
 False keeps Replit dev (runserver behind the iframe proxy) working unchanged. Prod

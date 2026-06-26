@@ -12,7 +12,7 @@
 - [Economy / Balancing design principles](economy-design-principles.md) — checklist for any money-touching feature; salary > transfer fee long-term; hard no-gos to prevent inflation/exploit loops.
 - [Design system tokens & rules](design-tokens.md) — canonical CSS custom properties (--cyan, --green etc.) and visual rules; cyan=functional, green=fitness, no bright backgrounds, no nested cards.
 - [Manager Career History Table](manager-career-table.md) — Club.managed_by (OneToOneField) is the live-pointer; ManagerCareerEntry is planned additive history layer for entlassungen/rücktritte/hall-of-fame.
-- [GitHub token workflow scope](github-token-workflow.md) — pushing workflows via PAT requires classic token with 'workflow' scope checked; fine-grained tokens lack this scope silently.
+- [GitHub push workflow](github-token-workflow.md) — classic PAT only (fine-grained = 401); agent bash blocks .git/config → use Shell tab with $GITHUB_TOKEN; new secrets need fresh process.
 - [FMI position scraper](fmi-position-scraper.md) — fminside.net URL schema is /players/7-fm-26/{fmi_id}-{name-slug}; parse span.mobile_position for primary, span.desktop_positions for secondaries.
 - [SoFIFA per CSV statt Live-Scraping + importer resilience](sofifa-matching-and-resilience.md) — CFM-Importer scrapt SoFIFA NICHT mehr (sofifa.com UND cmtracker.net = Cloudflare-403); Werte nur via game/sofifa_import.py CSV; safe_goto verpackt Browser-Tod als PageError → is_closed_error in BEIDEN except-Zweigen prüfen.
 - [PlayerEditLog snapshot trap](player-edit-log-snapshot.md) — existing={} dict holds live ORM objects; snapshot old values before any in-place mutation or diff will always show no change.
