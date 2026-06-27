@@ -107,7 +107,9 @@ def country_status(iso2, counts=None, network=None):
     counts = pool_counts_by_country() if counts is None else counts
     if counts.get(iso2, 0) >= COUNTRY_THRESHOLD:
         return STATUS_SCOUTABLE
-    return STATUS_BUILDING
+    if network is not None:
+        return STATUS_BUILDING
+    return STATUS_UNAVAILABLE
 
 
 def coverage_label(status, percent):

@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -327,10 +327,117 @@
         </form>
       </div>
       {% else %}
-      <div class="sc-empty-block">
-        <div class="sc-empty-icon">🔭</div>
-        <div class="sc-empty-title">Noch keine Ergebnisse</div>
-        <div class="sc-empty-text">Schicke links einen Scout los. Nach Abschluss des Auftrags erscheinen hier genau drei Spielerkarten.</div>
+      <div class="sc-results-list sc-results-list--mock">
+        <!-- V1 Mock-Spieler (werden durch echte Funde ersetzt) -->
+        <article class="sc-result-card sc-result-card--mock">
+          <div class="sc-result-top">
+            <div class="sc-result-photo sc-result-photo--mock">
+              <div class="sc-mock-avatar">EM</div>
+            </div>
+            <div class="sc-result-cols">
+              <div class="sc-result-col-left">
+                <div class="sc-result-name">Emir Yılmaz</div>
+                <div class="sc-result-age">22 Jahre</div>
+                <div class="sc-result-flag-row">🇹🇷</div>
+                <div class="sc-result-pos-block">
+                  <span class="sc-result-pos-label">HP: <strong class="sc-result-hp">ZM</strong></span>
+                  <span class="sc-result-pos-label">NP: OM</span>
+                </div>
+              </div>
+              <div class="sc-result-col-right">
+                <div class="sc-result-meta-label">RL-Klub</div>
+                <div class="sc-result-club-row">
+                  <div class="sc-result-crest sc-result-crest--empty">G</div>
+                  <span class="sc-result-club-name">Galatasaray</span>
+                </div>
+                <div class="sc-result-meta-label sc-mt8">RL-Liga</div>
+                <div class="sc-result-liga">Süper Lig</div>
+                <div class="sc-result-meta-label sc-mt8">Marktwert</div>
+                <div class="sc-result-mw">4.200.000 €</div>
+                <div class="sc-result-minbid">Mindestgebot: <strong>2.100.000 €</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="sc-result-actions">
+            <button type="button" class="sc-result-btn" disabled>Beobachten</button>
+            <button type="button" class="sc-result-btn sc-result-btn--cyan" disabled>Angebot</button>
+          </div>
+        </article>
+
+        <article class="sc-result-card sc-result-card--mock">
+          <div class="sc-result-top">
+            <div class="sc-result-photo sc-result-photo--mock">
+              <div class="sc-mock-avatar">LD</div>
+            </div>
+            <div class="sc-result-cols">
+              <div class="sc-result-col-left">
+                <div class="sc-result-name">Lennert De Smet</div>
+                <div class="sc-result-age">20 Jahre</div>
+                <div class="sc-result-flag-row">🇧🇪</div>
+                <div class="sc-result-pos-block">
+                  <span class="sc-result-pos-label">HP: <strong class="sc-result-hp">LM</strong></span>
+                  <span class="sc-result-pos-label">NP: LOM</span>
+                </div>
+              </div>
+              <div class="sc-result-col-right">
+                <div class="sc-result-meta-label">RL-Klub</div>
+                <div class="sc-result-club-row">
+                  <div class="sc-result-crest sc-result-crest--empty">B</div>
+                  <span class="sc-result-club-name">Club Brugge</span>
+                </div>
+                <div class="sc-result-meta-label sc-mt8">RL-Liga</div>
+                <div class="sc-result-liga">Jupiler Pro League</div>
+                <div class="sc-result-meta-label sc-mt8">Marktwert</div>
+                <div class="sc-result-mw">6.500.000 €</div>
+                <div class="sc-result-minbid">Mindestgebot: <strong>3.250.000 €</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="sc-result-actions">
+            <button type="button" class="sc-result-btn" disabled>Beobachten</button>
+            <button type="button" class="sc-result-btn sc-result-btn--cyan" disabled>Angebot</button>
+          </div>
+        </article>
+
+        <article class="sc-result-card sc-result-card--mock">
+          <div class="sc-result-top">
+            <div class="sc-result-photo sc-result-photo--mock">
+              <div class="sc-mock-avatar">JV</div>
+            </div>
+            <div class="sc-result-cols">
+              <div class="sc-result-col-left">
+                <div class="sc-result-name">João Victor</div>
+                <div class="sc-result-age">21 Jahre</div>
+                <div class="sc-result-flag-row">🇧🇷</div>
+                <div class="sc-result-pos-block">
+                  <span class="sc-result-pos-label">HP: <strong class="sc-result-hp">ST</strong></span>
+                  <span class="sc-result-pos-label">NP: RF</span>
+                </div>
+              </div>
+              <div class="sc-result-col-right">
+                <div class="sc-result-meta-label">RL-Klub</div>
+                <div class="sc-result-club-row">
+                  <div class="sc-result-crest sc-result-crest--empty">F</div>
+                  <span class="sc-result-club-name">Flamengo</span>
+                </div>
+                <div class="sc-result-meta-label sc-mt8">RL-Liga</div>
+                <div class="sc-result-liga">Série A</div>
+                <div class="sc-result-meta-label sc-mt8">Marktwert</div>
+                <div class="sc-result-mw">8.000.000 €</div>
+                <div class="sc-result-minbid">Mindestgebot: <strong>4.000.000 €</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="sc-result-actions">
+            <button type="button" class="sc-result-btn" disabled>Beobachten</button>
+            <button type="button" class="sc-result-btn sc-result-btn--cyan" disabled>Angebot</button>
+          </div>
+        </article>
+
+        <div class="sc-mock-hint">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+          Scout losschicken — nach Rückkehr erscheinen hier echte Ergebnisse.
+        </div>
       </div>
       {% endif %}
     </aside>

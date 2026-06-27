@@ -451,6 +451,23 @@
 .sc-empty-title { font-size: 15px; font-weight: 700; color: var(--sc-text); margin: 0 0 6px; }
 .sc-empty-text  { font-size: 12.5px; line-height: 1.5; margin: 0; }
 
+/* ── Mock-Ergebnisse (V1-Platzhalter) ──────────────────────────────────── */
+.sc-results-list--mock { opacity: .54; pointer-events: none; user-select: none; }
+.sc-result-card--mock  { border-style: dashed; }
+.sc-result-photo--mock {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(34,230,255,.06); border: 1px dashed rgba(34,230,255,.25);
+}
+.sc-mock-avatar {
+  font-size: 22px; font-weight: 900; letter-spacing: 1px;
+  color: rgba(34,230,255,.4);
+}
+.sc-mock-hint {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 600; color: var(--sc-muted);
+  padding: 6px 2px 2px; pointer-events: none;
+}
+
 /* ── Gebots-Dialog ───────────────────────────────────────────────────────── */
 .sc-bid-modal {
   position: fixed; inset: 0; z-index: 4000;
