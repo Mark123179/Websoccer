@@ -4,48 +4,59 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
-<div class="transfer-scouting-page">
+<div class="sc-wrap">
 
   {% if messages %}
-  <div class="scouting-flash">
+  <div class="sc-flash-bar">
     {% for m in messages %}
-    <div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>
+    <div class="sc-flash sc-flash--{{ m.tags }}">{{ m }}</div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- ── Tab-Leiste ───────────────────────────────────────────────── -->
-  <div class="transfer-tabs">
-    <a class="transfer-tab" href="{% url 'transfer_scouting' %}">Transfers</a>
-    <a class="transfer-tab is-active" href="{% url 'transfer_scouting' %}">Scouting aktiv</a>
-    <a class="transfer-tab" href="{% url 'transfer_scouting' %}">Auktionen</a>
-    <a class="transfer-tab" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
+  <!-- ── TABS ────────────────────────────────────────────────────────── -->
+  <div class="sc-tabs">
+    <a class="sc-tab" href="{% url 'transfer_scouting' %}">Transfers</a>
+    <a class="sc-tab is-active" href="{% url 'transfer_scouting' %}">Scouting</a>
+    <a class="sc-tab" href="{% url 'transfer_scouting' %}">Auktionen</a>
+    <a class="sc-tab" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
   </div>
 
-  <div class="scouting-layout">
+  <!-- ── 3-SPALTEN-GRID ──────────────────────────────────────────────── -->
+  <div class="sc-grid">
 
-    <!-- ── Links: Scoutauftrag ───────────────────────────────────── -->
-    <aside class="scout-order-panel">
-      <h2 class="scout-panel-title">SCOUTAUFTRAG <span class="scout-info" title="Lege Suchgebiet, Position und Spielerprofil fest und schicke einen Scout los.">ⓘ</span></h2>
+    <!-- ══ LINKS: SCOUTAUFTRAG ══════════════════════════════════════════ -->
+    <aside class="sc-panel sc-order-panel">
 
-      <div class="scout-dept-box">
-        <p class="scout-dept-line">Scoutingabteilung Stufe {{ dept.level }}</p>
-        <p class="scout-dept-sub">Dauer: {{ dept.duration }} Tage</p>
-        <p class="scout-dept-sub">Kosten: {{ dept.cost_fmt }}</p>
-        {% if dept.can_upgrade %}
-        <form method="post" action="{% url 'scouting_upgrade' %}" class="scout-dept-upgrade">
-          {% csrf_token %}
-          <button type="submit" class="scout-upgrade-btn" title="Verkürzt die Suchdauer und schärft die Trefferpräzision.">
-            ⬆ Abteilung ausbauen · {{ dept.upgrade_cost_fmt }}
-          </button>
-        </form>
-        {% else %}
-        <p class="scout-dept-max">Maximale Ausbaustufe erreicht.</p>
-        {% endif %}
+      <div class="sc-panel-title-row">
+        <span class="sc-panel-title">Scoutauftrag</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Lege Suchgebiet, Position und Spielerprofil fest und schicke einen Scout los."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+      </div>
+
+      <!-- Abteilung -->
+      <div class="sc-dept-box">
+        <div class="sc-dept-icon">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="3.5" cy="12" r="1.5"></circle><circle cx="20.5" cy="12" r="1.5"></circle><path d="M5 12h4m6 0h4"></path><path d="M9 9.5C9 8.1 9.9 7 11 7h2c1.1 0 2 1.1 2 2.5v5C15 15.9 14.1 17 13 17h-2c-1.1 0-2-1.1-2-2.5V9.5z"></path><path d="M3.5 10.5C3.5 9 4.5 8 6 8h3M15 8h3c1.5 0 2.5 1 2.5 2.5"></path></svg>
+        </div>
+        <div class="sc-dept-info">
+          <div class="sc-dept-name">Scoutingbüro Stufe {{ dept.level }}</div>
+          <div class="sc-dept-meta">Dauer: {{ dept.duration }} Tage &middot; Kosten: {{ dept.cost_fmt }}</div>
+          {% if dept.can_upgrade %}
+          <form method="post" action="{% url 'scouting_upgrade' %}" class="sc-upgrade-form">
+            {% csrf_token %}
+            <button type="submit" class="sc-upgrade-btn" title="Verkürzt die Suchdauer und schärft die Trefferpräzision.">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
+              Ausbauen &middot; {{ dept.upgrade_cost_fmt }}
+            </button>
+          </form>
+          {% else %}
+          <span class="sc-dept-max">Max. Ausbaustufe erreicht</span>
+          {% endif %}
+        </div>
       </div>
 
       <form method="post" action="{% url 'scouting_start' %}" id="scout-order-form">
@@ -55,173 +66,271 @@
         <input type="hidden" name="position" id="position_field" value="">
         <input type="hidden" name="profile" id="profile_field" value="ergaenzung">
 
-        <div class="scout-field">
-          <label class="scout-field-label">Suchgebiet <span class="scout-info" title="Wähle ein freigeschaltetes Land oder eine Region.">ⓘ</span></label>
-          <div class="scout-btn-row" id="scope-country-row">
+        <!-- Suchgebiet -->
+        <div class="sc-field">
+          <div class="sc-field-label-row">
+            <span class="sc-field-label">Suchgebiet</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Wähle ein freigeschaltetes Land oder eine Region."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+          </div>
+          <div class="sc-chip-row" id="scope-country-row">
             {% for c in scope_tiles %}
               {% if c.status == 'scoutable' %}
-              <button type="button" class="scout-chip scope-chip" data-scope-type="country" data-scope-key="{{ c.iso2 }}">
-                <span class="chip-flag">{{ c.flag }}</span>{{ c.name }}
+              <button type="button" class="sc-chip scope-chip" data-scope-type="country" data-scope-key="{{ c.iso2 }}">
+                <span class="sc-chip-flag">{{ c.flag }}</span>{{ c.name }}
               </button>
               {% endif %}
             {% endfor %}
           </div>
-          <select class="scout-select" id="region-select">
-            <option value="">Region wählen</option>
-            {% for r in region_options %}
-            <option value="{{ r.key }}">{{ r.name }}</option>
-            {% endfor %}
-          </select>
+          <div class="sc-select-wrap">
+            <select class="sc-select" id="region-select">
+              <option value="">Region wählen</option>
+              {% for r in region_options %}
+              <option value="{{ r.key }}">{{ r.name }}</option>
+              {% endfor %}
+            </select>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" class="sc-select-arrow"><path d="M6 9l6 6 6-6"></path></svg>
+          </div>
         </div>
 
-        <div class="scout-field">
-          <label class="scout-field-label">Position <span class="scout-info" title="Optionaler Positionsfokus für die Suche.">ⓘ</span></label>
-          <div class="scout-btn-row" id="position-row">
+        <!-- Position -->
+        <div class="sc-field">
+          <div class="sc-field-label-row">
+            <span class="sc-field-label">Position</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Optionaler Positionsfokus für die Suche."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+          </div>
+          <div class="sc-chip-row" id="position-row">
             {% for pos in positions %}
-            <button type="button" class="scout-chip pos-chip" data-pos="{{ pos }}">{{ pos }}</button>
+            <button type="button" class="sc-chip pos-chip" data-pos="{{ pos }}">{{ pos }}</button>
             {% endfor %}
-            <button type="button" class="scout-chip pos-chip is-active" data-pos="">Keine Vorgabe</button>
+            <button type="button" class="sc-chip pos-chip is-active" data-pos="">Keine Vorgabe</button>
           </div>
         </div>
 
-        <div class="scout-field">
-          <label class="scout-field-label">Spielerprofil <span class="scout-info" title="Steuert, welcher Spielertyp gesucht wird.">ⓘ</span></label>
-          <div class="scout-btn-row" id="profile-row">
+        <!-- Spielerprofil -->
+        <div class="sc-field">
+          <div class="sc-field-label-row">
+            <span class="sc-field-label">Spielerprofil</span>
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Steuert, welcher Spielertyp gesucht wird."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+          </div>
+          <div class="sc-profile-grid" id="profile-row">
             {% for value, label in profiles %}
-            <button type="button" class="scout-chip profile-chip {% if value == 'ergaenzung' %}is-active{% endif %}" data-profile="{{ value }}">{{ label }}</button>
+            <button type="button" class="sc-chip profile-chip {% if value == 'ergaenzung' %}is-active{% endif %}" data-profile="{{ value }}">{{ label }}</button>
             {% endfor %}
           </div>
         </div>
 
-        <div class="scout-status-lines">
-          <p class="scout-status ok" id="scope-status">✓ Land/Region wählen</p>
-          <p class="scout-status">👤 {% if active_assignment %}1 aktiver Scout{% else %}Kein aktiver Scout{% endif %}</p>
-          <p class="scout-status warn">⚠ Max. 2 Verpflichtungen / Saison</p>
+        <!-- Status-Inset -->
+        <div class="sc-status-inset">
+          <div class="sc-status-row">
+            <span class="sc-status-icon sc-status-icon--ok">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>
+            </span>
+            <span id="scope-status" class="sc-status-text">Land / Region wählen</span>
+          </div>
+          <div class="sc-status-row">
+            <span class="sc-status-icon sc-status-icon--blue">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"></circle><path d="M6 19c.6-3 2.8-4.6 6-4.6s5.4 1.6 6 4.6"></path></svg>
+            </span>
+            <span class="sc-status-text">{% if active_assignment %}1 aktiver Scout{% else %}Kein aktiver Scout{% endif %}</span>
+          </div>
+          <div class="sc-status-row">
+            <span class="sc-status-icon sc-status-icon--blue">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4.5" r="1.6"></circle><path d="M6 21l3-5 2.5 1.5L10 21M9 16l2-3 3 1 2 2 3 .5M5 9l3.5-1 3 1.2"></path></svg>
+            </span>
+            <span class="sc-status-text">Max. 2 Verpflichtungen / Saison</span>
+          </div>
         </div>
 
-        <button type="submit" class="scout-go-btn" {% if active_assignment %}disabled{% endif %}>
+        <button type="submit" class="sc-send-btn" {% if active_assignment %}disabled{% endif %}>
           {% if active_assignment %}Scout unterwegs …{% else %}Scout losschicken{% endif %}
         </button>
       </form>
     </aside>
 
-    <!-- ── Mitte: Scoutingnetzwerk ───────────────────────────────── -->
-    <main class="scouting-center">
-      <section class="scouting-map-panel">
-        <div class="scout-panel-head">
-          <h2 class="scout-panel-title">SCOUTINGNETZWERK <span class="scout-info" title="Deine weltweite Scouting-Abdeckung.">ⓘ</span></h2>
-          <div class="continent-picker">
-            <span>Kontinent:</span>
-            <select id="continent-select" aria-label="Kartenausschnitt fokussieren">
-              <option value="welt" {% if selected_continent == 'welt' %}selected{% endif %}>Welt</option>
+    <!-- ══ MITTE: NETZWERK + GEBOTE ═════════════════════════════════════ -->
+    <main class="sc-center">
+
+      <!-- Scoutingnetzwerk -->
+      <section class="sc-panel sc-map-panel">
+        <div class="sc-map-head">
+          <div class="sc-panel-title-row">
+            <span class="sc-panel-title">Scoutingnetzwerk</span>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Deine weltweite Scouting-Abdeckung."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+          </div>
+          <div class="sc-cont-picker">
+            <select id="continent-select" class="sc-select sc-select--inline">
+              <option value="welt" {% if selected_continent == 'welt' %}selected{% endif %}>Kontinent: Weltweit</option>
               {% for cont in continents %}
-              <option value="{{ cont.key }}" {% if cont.key == selected_continent %}selected{% endif %}>{{ cont.name }}</option>
+              <option value="{{ cont.key }}" {% if cont.key == selected_continent %}selected{% endif %}>Kontinent: {{ cont.name }}</option>
               {% endfor %}
             </select>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" class="sc-select-arrow sc-select-arrow--inline"><path d="M6 9l6 6 6-6"></path></svg>
           </div>
         </div>
 
-        <div class="scout-map-stage">
+        <div class="sc-map-stage">
           {% include 'game/management/_scouting_map_svg.html' %}
-          <div class="scout-map-tooltip" id="scout-map-tooltip" hidden></div>
+          <div class="sc-map-tooltip" id="scout-map-tooltip" hidden></div>
         </div>
-        <p class="scout-map-hint" id="scout-map-hint">Wähle ein scoutbares Land direkt auf der Karte als Suchgebiet.</p>
+        <p class="sc-map-hint" id="scout-map-hint">Wähle ein scoutbares Land direkt auf der Karte als Suchgebiet.</p>
         {{ map_countries|json_script:"scout-map-data" }}
 
-        <div class="scout-coverage">
-          <div class="scout-coverage-head">
-            <span>Community-Abdeckung</span>
-            <span class="scout-coverage-pct">{{ coverage_pct }} %</span>
-          </div>
-          <div class="scout-coverage-bar"><span style="width:{{ coverage_pct }}%"></span></div>
-          <p class="scout-coverage-hint">Hinweis: Einige Länder werden erst nach weiterem Ausbau freigeschaltet. <span class="scout-info" title="Sammle Community-Punkte, um neue Länder freizuschalten.">ⓘ</span></p>
+        <!-- Coverage -->
+        <div class="sc-coverage">
+          <div class="sc-coverage-label">Community-Abdeckung: <span class="sc-coverage-pct">{{ coverage_pct }}%</span></div>
+          <div class="sc-coverage-bar"><span style="width:{{ coverage_pct }}%"></span></div>
+        </div>
+        <div class="sc-coverage-hint">
+          <span>Hinweis: Einige Länder werden erst nach weiterem Ausbau freigeschaltet.</span>
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
         </div>
 
-        <div class="scout-country-tiles">
+        <!-- Country tiles grid -->
+        <div class="sc-country-grid">
           {% for c in scope_tiles %}
-          <div class="scout-country-tile">
-            <span class="tile-flag">{{ c.flag }}</span>
-            <span class="tile-name">{{ c.name }}</span>
-            <span class="tile-status tile-status--{{ c.status }}">{{ c.coverage_label }}</span>
+          <div class="sc-country-tile sc-country-tile--{{ c.status }}" data-iso="{{ c.iso2 }}">
+            <span class="sc-tile-flag">{{ c.flag }}</span>
+            <span class="sc-tile-name">{{ c.name }}</span>
+            <span class="sc-tile-status">{{ c.coverage_label }}</span>
           </div>
           {% endfor %}
         </div>
       </section>
 
-      <section class="running-bids-panel">
-        <h2 class="scout-panel-title">LAUFENDE GEBOTE <span class="scout-info" title="Aktive Gebote, die zum nächsten Transferfenster entschieden werden.">ⓘ</span></h2>
+      <!-- Laufende Gebote -->
+      <section class="sc-panel sc-bids-panel">
+        <div class="sc-panel-title-row">
+          <span class="sc-panel-title">Laufende Gebote</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Aktive Gebote, die zum nächsten Transferfenster entschieden werden."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+        </div>
         {% if bids %}
-        <div class="bids-table">
-          <div class="bids-row bids-head">
-            <span>Spieler</span><span>Eigenes Gebot</span><span>Mindestgebot</span><span>Entscheidung</span><span></span>
+        <div class="sc-bids-table">
+          <div class="sc-bids-head">
+            <span></span>
+            <span class="sc-bids-col-r">Eigenes Gebot</span>
+            <span class="sc-bids-col-r">Mindestgebot</span>
+            <span>Entscheidung</span>
+            <span></span>
           </div>
           {% for b in bids %}
-          <div class="bids-row">
-            <span class="bid-player">{{ b.name }}</span>
-            <span class="{% if b.under_min %}bid-under{% endif %}">{{ b.amount_fmt }}</span>
-            <span>{{ b.min_bid_fmt }}</span>
-            <span class="bid-decision">Entscheidung zur {{ b.window_label }} in {{ b.days }} Tagen</span>
-            <span class="bid-actions">
+          <div class="sc-bid-row">
+            <div class="sc-bid-player">
+              {% if b.portrait %}
+              <img src="{% static b.portrait %}" alt="{{ b.name }}" class="sc-bid-thumb" onerror="this.style.display='none'">
+              {% else %}
+              <div class="sc-bid-thumb sc-bid-thumb--empty"></div>
+              {% endif %}
+              {% if b.rl_club_crest %}
+              <img src="{% static b.rl_club_crest %}" alt="{{ b.rl_club }}" class="sc-bid-crest" onerror="this.style.display='none'">
+              {% else %}
+              <div class="sc-bid-crest sc-bid-crest--empty" title="{{ b.rl_club }}">{{ b.rl_club|slice:":1" }}</div>
+              {% endif %}
+              <div class="sc-bid-name-block">
+                <div class="sc-bid-name">{{ b.name }}</div>
+                <div class="sc-bid-club">{{ b.rl_club }}</div>
+              </div>
+            </div>
+            <div class="sc-bids-col-r {% if b.under_min %}sc-bid-under{% endif %}">{{ b.amount_fmt }}</div>
+            <div class="sc-bids-col-r sc-bid-min">{{ b.min_bid_fmt }}</div>
+            <div class="sc-bid-decision">
+              <div class="sc-bid-window">Entscheidung zur {{ b.window_label }}</div>
+              <div class="sc-bid-days">in {{ b.days }} Tagen</div>
+            </div>
+            <div class="sc-bid-action">
               <form method="post" action="{% url 'scouting_withdraw' %}">
                 {% csrf_token %}
                 <input type="hidden" name="bid_id" value="{{ b.id }}">
-                <button type="submit" class="bid-eye" title="Gebot zurückziehen">👁</button>
+                <button type="submit" class="sc-icon-btn" title="Gebot zurückziehen">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+                </button>
               </form>
-            </span>
+            </div>
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <p class="bids-empty">Noch keine laufenden Gebote.</p>
+        <p class="sc-empty-hint">Noch keine laufenden Gebote.</p>
         {% endif %}
       </section>
+
     </main>
 
-    <!-- ── Rechts: Scout-Ergebnisse ──────────────────────────────── -->
-    <aside class="scout-results-panel">
-      <h2 class="scout-panel-title">SCOUT-ERGEBNISSE ({{ finds|length }}) <span class="scout-info" title="Gefundene Spieler aus dem abgeschlossenen Scoutauftrag.">ⓘ</span></h2>
+    <!-- ══ RECHTS: SCOUT-ERGEBNISSE ════════════════════════════════════ -->
+    <aside class="sc-panel sc-results-panel">
+      <div class="sc-panel-title-row">
+        <span class="sc-panel-title">Scout-Ergebnisse ({{ finds|length }})</span>
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Gefundene Spieler aus dem abgeschlossenen Scoutauftrag."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+      </div>
 
       {% if finds %}
-      {% for f in finds %}
-      <article class="result-card">
-        <div class="result-photo">
-          <img src="{% static f.portrait %}" alt="{{ f.name }}" onerror="this.style.visibility='hidden'">
-        </div>
-        <div class="result-body">
-          <p class="result-name">{{ f.name }}</p>
-          <p class="result-meta">{{ f.age }} Jahre <span class="result-flag">{{ f.flag }}</span> {{ f.nat }}</p>
-          <p class="result-pos">HP: {{ f.hp }}</p>
-          <p class="result-pos">NP: {{ f.np }}</p>
-          <p class="result-rl">RL-Klub: {{ f.rl_club }}</p>
-          <p class="result-rl">RL-Liga: {{ f.rl_liga }}</p>
-          <p class="result-money">Marktwert: <strong>{{ f.market_value_fmt }}</strong></p>
-          <p class="result-money">Mindestgebot: <strong>{{ f.min_bid_fmt }}</strong></p>
-          <p class="result-watch">👁 {{ f.observer_count }}</p>
-          <div class="result-actions">
+      <div class="sc-results-list">
+        {% for f in finds %}
+        <article class="sc-result-card">
+          <div class="sc-result-top">
+            <div class="sc-result-photo">
+              <img src="{% static f.portrait %}" alt="{{ f.name }}" onerror="this.style.visibility='hidden'">
+            </div>
+            <div class="sc-result-cols">
+            <!-- linke Info-Spalte -->
+            <div class="sc-result-col-left">
+              <div class="sc-result-name">{{ f.name }}</div>
+              <div class="sc-result-age">{{ f.age }} Jahre</div>
+              <div class="sc-result-flag-row">{{ f.flag }}</div>
+              <div class="sc-result-pos-block">
+                <span class="sc-result-pos-label">HP: <strong class="sc-result-hp">{{ f.hp }}</strong></span>
+                <span class="sc-result-pos-label">NP: {{ f.np }}</span>
+              </div>
+            </div>
+            <!-- rechte Info-Spalte -->
+            <div class="sc-result-col-right">
+              <div class="sc-result-meta-label">RL-Klub
+                <span class="sc-result-observers">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+                  {{ f.observer_count }}
+                </span>
+              </div>
+              <div class="sc-result-club-row">
+                {% if f.rl_club_crest %}
+                <img src="{% static f.rl_club_crest %}" alt="{{ f.rl_club }}" class="sc-result-crest" onerror="this.style.display='none'">
+                {% else %}
+                <div class="sc-result-crest sc-result-crest--empty">{{ f.rl_club|slice:":1" }}</div>
+                {% endif %}
+                <span class="sc-result-club-name">{{ f.rl_club }}</span>
+              </div>
+              <div class="sc-result-meta-label sc-mt8">RL-Liga</div>
+              <div class="sc-result-liga">{{ f.rl_liga }}</div>
+              <div class="sc-result-meta-label sc-mt8">Marktwert</div>
+              <div class="sc-result-mw">{{ f.market_value_fmt }}</div>
+              <div class="sc-result-minbid">Mindestgebot: <strong>{{ f.min_bid_fmt }}</strong></div>
+            </div>
+            </div>
+          </div>
+          <!-- Aktions-Buttons -->
+          <div class="sc-result-actions">
             {% if f.watched %}
-            <button type="button" class="result-btn is-watched" disabled>Beobachtet</button>
+            <button type="button" class="sc-result-btn is-watched" disabled>Beobachtet</button>
             {% else %}
-            <form method="post" action="{% url 'scouting_watch' %}">
+            <form method="post" action="{% url 'scouting_watch' %}" style="flex:1;display:flex;">
               {% csrf_token %}
               <input type="hidden" name="find_id" value="{{ f.find_id }}">
-              <button type="submit" class="result-btn">Beobachten</button>
+              <button type="submit" class="sc-result-btn" style="flex:1;">Beobachten</button>
             </form>
             {% endif %}
-            <button type="button" class="result-btn result-btn--cyan js-open-bid"
+            <button type="button" class="sc-result-btn sc-result-btn--cyan js-open-bid"
                     data-find="{{ f.find_id }}" data-name="{{ f.name }}" data-min="{{ f.min_bid }}">Angebot</button>
           </div>
-        </div>
-      </article>
-      {% endfor %}
-      <form method="post" action="{% url 'scouting_reject' %}" class="scout-reject-all">
-        {% csrf_token %}
-        <button type="submit" class="result-btn result-btn--ghost">Alle Funde ablehnen</button>
-      </form>
+        </article>
+        {% endfor %}
+        <form method="post" action="{% url 'scouting_reject' %}" class="sc-reject-all">
+          {% csrf_token %}
+          <button type="submit" class="sc-result-btn sc-result-btn--ghost">Alle Funde ablehnen</button>
+        </form>
+      </div>
       {% else %}
-      <div class="result-empty">
-        <p class="result-empty-icon">🔭</p>
-        <p class="result-empty-title">Noch keine Ergebnisse</p>
-        <p class="result-empty-text">Schicke links einen Scout los. Nach Abschluss des Auftrags erscheinen hier genau drei Spielerkarten.</p>
+      <div class="sc-empty-block">
+        <div class="sc-empty-icon">🔭</div>
+        <div class="sc-empty-title">Noch keine Ergebnisse</div>
+        <div class="sc-empty-text">Schicke links einen Scout los. Nach Abschluss des Auftrags erscheinen hier genau drei Spielerkarten.</div>
       </div>
       {% endif %}
     </aside>
@@ -229,23 +338,24 @@
   </div>
 </div>
 
-<!-- ── Gebots-Dialog ─────────────────────────────────────────────── -->
-<div class="bid-modal" id="bid-modal" hidden>
-  <div class="bid-modal-card">
-    <h3 id="bid-modal-title">Angebot abgeben</h3>
+<!-- ── GEBOTS-DIALOG ──────────────────────────────────────────────────── -->
+<div class="sc-bid-modal" id="bid-modal" hidden>
+  <div class="sc-bid-modal-card">
+    <h3 class="sc-bid-modal-title" id="bid-modal-title">Angebot abgeben</h3>
     <form method="post" action="{% url 'scouting_bid' %}">
       {% csrf_token %}
       <input type="hidden" name="find_id" id="bid-find-id">
-      <label class="bid-modal-label">Gebot (€)</label>
-      <input type="text" name="amount" id="bid-amount" class="bid-modal-input" inputmode="numeric">
-      <p class="bid-modal-hint" id="bid-min-hint"></p>
-      <div class="bid-modal-actions">
-        <button type="button" class="result-btn js-close-bid">Abbrechen</button>
-        <button type="submit" class="result-btn result-btn--cyan">Gebot abgeben</button>
+      <label class="sc-bid-modal-label">Gebot (€)</label>
+      <input type="text" name="amount" id="bid-amount" class="sc-bid-modal-input" inputmode="numeric">
+      <p class="sc-bid-modal-hint" id="bid-min-hint"></p>
+      <div class="sc-bid-modal-actions">
+        <button type="button" class="sc-result-btn js-close-bid">Abbrechen</button>
+        <button type="submit" class="sc-result-btn sc-result-btn--cyan">Gebot abgeben</button>
       </div>
     </form>
   </div>
 </div>
 
-<script src="{% static 'game/js/scouting.js' %}?v=3"></script>
+<script>window.SCOUTING_STATIC_BASE = "{% static 'game/' %}";</script>
+<script src="{% static 'game/js/scouting.js' %}?v=4"></script>
 {% endblock %}

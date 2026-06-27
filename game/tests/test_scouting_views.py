@@ -268,8 +268,9 @@ class FindCardConfidentialityTests(ScoutingViewsBase):
     """
 
     # Sentinel-Werte, die sonst nirgends auf dem Screen vorkommen dürfen.
-    SENTINEL_STRENGTH = 87
-    SENTINEL_POTENTIAL = 93
+    # Domain-invalid (>100) und vierstellig → kein Substring-Kollision mit kleinen PKs.
+    SENTINEL_STRENGTH = 9873
+    SENTINEL_POTENTIAL = 9937
 
     # Schlüssel, die im finds-Context niemals auftauchen dürfen.
     FORBIDDEN_KEYS = (
@@ -280,7 +281,7 @@ class FindCardConfidentialityTests(ScoutingViewsBase):
     # Genau diese Schlüssel darf eine öffentliche Fund-Karte enthalten.
     ALLOWED_KEYS = {
         'find_id', 'player_id', 'name', 'age', 'flag', 'nat', 'hp', 'np',
-        'rl_club', 'rl_liga', 'market_value_fmt', 'min_bid', 'min_bid_fmt',
+        'rl_club', 'rl_club_crest', 'rl_liga', 'market_value_fmt', 'min_bid', 'min_bid_fmt',
         'observer_count', 'portrait', 'watched',
     }
 
@@ -325,7 +326,7 @@ class FindCardConfidentialityTests(ScoutingViewsBase):
         # Auf dem Gesamtscreen kommen Zahlen wie Sentinels zufällig in Karten-
         # Daten/Prozenten vor; deshalb wird nur das Ergebnis-Panel geprüft, das
         # ausschließlich die öffentlichen Fund-Karten enthält.
-        start = html.index('<aside class="scout-results-panel">')
+        start = html.index('<aside class="sc-panel sc-results-panel">')
         end = html.index('</aside>', start)
         panel = html[start:end]
         self.assertIn('Pool Geheim', panel)

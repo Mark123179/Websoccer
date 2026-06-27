@@ -1,15 +1,43 @@
 (function () {
   'use strict';
 
-  // Hand-justierte Fokus-Ausschnitte (viewBox) je Kontinent. Insel-Territorien
-  // (Kanaren, Galápagos, Spitzbergen) bleiben bewusst außen vor, damit der
-  // Ausschnitt auf das Festland zentriert ist. viewBox des Welt-SVG: 0 0 1010 666.
+  /* Kontinent-Fokus-ViewBoxen (SVG-Koordinaten: 0 0 1010 666). */
   var CONTINENT_VIEW = {
     welt:        '0 0 1010 666',
     europa:      '440 200 188 200',
+    nordamerika: '27 120 330 220',
     suedamerika: '250 415 165 250',
     afrika:      '430 345 165 315',
-    asien:       '565 275 370 385'
+    asien:       '565 275 370 385',
+    ozeanien:    '750 440 220 180'
+  };
+
+  /* Region-Fokus-ViewBoxen – Unterabschnitte der Kontinente. */
+  var REGION_VIEW = {
+    west:         '450 210 80 90',
+    central:      '500 215 70 80',
+    south:        '460 250 110 90',
+    east:         '560 200 90 100',
+    north:        '490 175 85 80',
+    balkan:       '540 255 60 65',
+    britain:      '445 205 50 60',
+    iberia:       '448 260 55 55',
+    brasil:       '285 395 130 135',
+    laplata:      '285 455 90 130',
+    maghreb:      '440 310 110 60',
+    westafrica:   '430 370 115 80',
+    westasia:     '565 265 110 100',
+    centralasia:  '620 240 130 90',
+    southasia:    '640 300 120 110',
+    southeastasia:'740 335 145 120',
+    eastasia:     '760 235 135 120',
+    russia:       '560 165 200 120',
+    australia:    '755 430 155 130',
+    newzealand:   '900 490 80 80',
+    usa:          '55 200 235 115',
+    canada:       '55 120 325 120',
+    mexico:       '110 280 165 115',
+    caribbean:    '230 285 120 80'
   };
 
   function fmtEuro(n) {
@@ -31,35 +59,64 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    var scopeKey = document.getElementById('scope_key');
-    var scopeType = document.getElementById('scope_type');
+    var scopeKey      = document.getElementById('scope_key');
+    var scopeType     = document.getElementById('scope_type');
     var positionField = document.getElementById('position_field');
-    var profileField = document.getElementById('profile_field');
-    var regionSelect = document.getElementById('region-select');
-    var scopeStatus = document.getElementById('scope-status');
+    var profileField  = document.getElementById('profile_field');
+    var regionSelect  = document.getElementById('region-select');
+    var scopeStatus   = document.getElementById('scope-status');
     var continentSelect = document.getElementById('continent-select');
-    var mapCanvas = document.getElementById('scout-map-canvas');
-    var tooltip = document.getElementById('scout-map-tooltip');
-    var mapHint = document.getElementById('scout-map-hint');
-    var mapStage = mapCanvas ? mapCanvas.closest('.scout-map-stage') : null;
+    var mapCanvas     = document.getElementById('scout-map-canvas');
+    var tooltip       = document.getElementById('scout-map-tooltip');
+    var mapHint       = document.getElementById('scout-map-hint');
+    var mapStage      = mapCanvas ? mapCanvas.closest('.sc-map-stage') : null;
 
-    var contract = readContract();
-    var scopeChips = Array.prototype.slice.call(document.querySelectorAll('.scope-chip'));
-    var posChips = Array.prototype.slice.call(document.querySelectorAll('.pos-chip'));
-    var profileChips = Array.prototype.slice.call(document.querySelectorAll('.profile-chip'));
+    var contract      = readContract();
+    var scopeChips    = Array.prototype.slice.call(document.querySelectorAll('.scope-chip'));
+    var posChips      = Array.prototype.slice.call(document.querySelectorAll('.pos-chip'));
+    var profileChips  = Array.prototype.slice.call(document.querySelectorAll('.profile-chip'));
 
-    var svgEl = null;            // injiziertes Welt-SVG
-    var countryPaths = {};       // ISO2 → <path>
+    var svgEl         = null;
+    var countryPaths  = {};
 
+    /* ── ViewBox-Animation ────────────────────────────────────────────── */
+    var vbRAF;
+    function zoomTo(targetStr, instant) {
+      if (!svgEl || !targetStr) return;
+      var target = targetStr.split(/\s+/).map(Number);
+      var start  = (svgEl.getAttribute('viewBox') || CONTINENT_VIEW.welt).split(/\s+/).map(Number);
+      cancelAnimationFrame(vbRAF);
+      if (instant) { svgEl.setAttribute('viewBox', targetStr); return; }
+      var t0  = performance.now(), dur = 580;
+      function ease(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+      function frame(now) {
+        var k = Math.min(1, (now - t0) / dur), e = ease(k);
+        svgEl.setAttribute('viewBox', target.map(function(v, i){ return (start[i]+(v-start[i])*e).toFixed(2); }).join(' '));
+        if (k < 1) vbRAF = requestAnimationFrame(frame);
+        else svgEl.setAttribute('viewBox', targetStr);
+      }
+      vbRAF = requestAnimationFrame(frame);
+    }
+
+    function focusContinent(key, instant) {
+      zoomTo(CONTINENT_VIEW[key] || CONTINENT_VIEW.welt, instant);
+    }
+
+    function focusRegion(key) {
+      zoomTo(REGION_VIEW[key] || CONTINENT_VIEW.welt, false);
+    }
+
+    /* ── Land hervorheben ─────────────────────────────────────────────── */
     function highlightCountry(key) {
       Object.keys(countryPaths).forEach(function (iso) {
         countryPaths[iso].classList.toggle('is-selected', iso === key);
       });
     }
 
+    /* ── Suchgebiet wählen ────────────────────────────────────────────── */
     function selectScope(type, key, label) {
       if (scopeType) scopeType.value = type;
-      if (scopeKey) scopeKey.value = key;
+      if (scopeKey)  scopeKey.value  = key;
       clearActive(scopeChips);
       if (type === 'country') {
         scopeChips.forEach(function (c) {
@@ -72,30 +129,33 @@
       }
       if (scopeStatus) {
         scopeStatus.textContent = '\u2713 ' + (label || key) + ' gew\u00e4hlt';
-        scopeStatus.classList.add('ok');
       }
       if (mapHint) mapHint.textContent = (label || key) + ' als Suchgebiet \u00fcbernommen.';
     }
 
-    // ── Tooltip ──────────────────────────────────────────────────────────
+    /* ── Tooltip ──────────────────────────────────────────────────────── */
     function showTooltip(evt, data) {
       if (!tooltip || !mapStage) return;
-      tooltip.innerHTML = '<strong>' + data.name + '</strong><span>' + data.coverage_label + '</span>';
+      var ok = data.status === 'scoutable';
+      tooltip.innerHTML = '<strong>' + data.name + '</strong>'
+        + '<span style="color:' + (ok ? 'var(--sc-green)' : 'var(--sc-yellow)') + '">Status: '
+        + data.coverage_label + '</span>';
       tooltip.hidden = false;
       var rect = mapStage.getBoundingClientRect();
-      var x = evt.clientX - rect.left + 12;
-      var y = evt.clientY - rect.top + 12;
-      x = Math.min(x, rect.width - tooltip.offsetWidth - 8);
+      var x = evt.clientX - rect.left + 14;
+      var y = evt.clientY - rect.top  + 14;
+      x = Math.min(x, rect.width  - tooltip.offsetWidth  - 8);
+      y = Math.min(y, rect.height - tooltip.offsetHeight - 8);
       tooltip.style.left = Math.max(4, x) + 'px';
-      tooltip.style.top = Math.max(4, y) + 'px';
+      tooltip.style.top  = Math.max(4, y) + 'px';
     }
     function hideTooltip() { if (tooltip) tooltip.hidden = true; }
 
-    // ── Welt-SVG laden und verdrahten ───────────────────────────────────
+    /* ── SVG laden & verdrahten ───────────────────────────────────────── */
     function wirePaths() {
       var paths = svgEl.querySelectorAll('path[data-iso2]');
       Array.prototype.forEach.call(paths, function (p) {
-        var iso = p.getAttribute('data-iso2');
+        var iso  = p.getAttribute('data-iso2');
         var data = contract[iso];
         if (!data) { p.classList.add('is-out'); return; }
         countryPaths[iso] = p;
@@ -107,22 +167,13 @@
           if (data.status === 'scoutable') {
             selectScope('country', iso, data.name);
           } else {
-            // Gesperrt/​im Aufbau/​nicht verfügbar: wählt nichts, nur Hinweis
-            // (ohne jede Poolzahl – kommt direkt aus dem Backend-Vertrag).
             if (mapHint) mapHint.textContent = data.hint;
           }
         });
       });
-      // Bereits gewähltes Land (z. B. nach Reload) markieren.
       if (scopeKey && scopeKey.value && countryPaths[scopeKey.value]) {
         highlightCountry(scopeKey.value);
       }
-    }
-
-    function focusContinent(key) {
-      if (!svgEl) return;
-      var vb = CONTINENT_VIEW[key] || CONTINENT_VIEW.welt;
-      svgEl.setAttribute('viewBox', vb);
     }
 
     if (mapCanvas && mapCanvas.getAttribute('data-svg-url')) {
@@ -133,14 +184,14 @@
           svgEl = mapCanvas.querySelector('svg');
           if (!svgEl) return;
           wirePaths();
-          focusContinent(continentSelect ? continentSelect.value : 'welt');
+          focusContinent(continentSelect ? continentSelect.value : 'welt', true);
         })
         .catch(function () {
           if (mapHint) mapHint.textContent = 'Karte konnte nicht geladen werden.';
         });
     }
 
-    // ── Bedienelemente ──────────────────────────────────────────────────
+    /* ── Bedienelemente ───────────────────────────────────────────────── */
     scopeChips.forEach(function (chip) {
       chip.addEventListener('click', function () {
         selectScope('country', chip.getAttribute('data-scope-key'), chip.textContent.trim());
@@ -149,17 +200,32 @@
 
     if (continentSelect) {
       continentSelect.addEventListener('change', function () {
-        focusContinent(continentSelect.value);
+        if (regionSelect) regionSelect.value = '';
+        focusContinent(continentSelect.value, false);
       });
     }
 
     if (regionSelect) {
       regionSelect.addEventListener('change', function () {
-        if (!regionSelect.value) return;
+        if (!regionSelect.value) {
+          focusContinent(continentSelect ? continentSelect.value : 'welt', false);
+          return;
+        }
         var label = regionSelect.options[regionSelect.selectedIndex].text;
         selectScope('region', regionSelect.value, label);
+        focusRegion(regionSelect.value);
       });
     }
+
+    /* Scoutable country-tiles unterhalb der Karte */
+    document.querySelectorAll('.sc-country-tile--scoutable').forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        var iso = tile.getAttribute('data-iso');
+        if (iso && contract[iso] && contract[iso].status === 'scoutable') {
+          selectScope('country', iso, contract[iso].name);
+        }
+      });
+    });
 
     posChips.forEach(function (chip) {
       chip.addEventListener('click', function () {
@@ -177,19 +243,19 @@
       });
     });
 
-    // ── Gebots-Dialog ──────────────────────────────────────────────────
-    var modal = document.getElementById('bid-modal');
-    var bidFindId = document.getElementById('bid-find-id');
-    var bidAmount = document.getElementById('bid-amount');
+    /* ── Gebots-Dialog ────────────────────────────────────────────────── */
+    var modal    = document.getElementById('bid-modal');
+    var bidFindId= document.getElementById('bid-find-id');
+    var bidAmount= document.getElementById('bid-amount');
     var bidTitle = document.getElementById('bid-modal-title');
-    var bidHint = document.getElementById('bid-min-hint');
+    var bidHint  = document.getElementById('bid-min-hint');
 
     function openBid(find, name, min) {
       if (!modal) return;
       bidFindId.value = find;
       bidAmount.value = min;
       bidTitle.textContent = 'Angebot f\u00fcr ' + name;
-      bidHint.textContent = 'Mindestgebot: ' + fmtEuro(min);
+      bidHint.textContent  = 'Mindestgebot: ' + fmtEuro(min);
       modal.hidden = false;
     }
     function closeBid() { if (modal) modal.hidden = true; }

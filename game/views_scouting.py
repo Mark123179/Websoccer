@@ -75,6 +75,7 @@ def _find_card(find, watched_ids):
     np_list = [x for x in (mains[1:] + p.secondary_positions) if x]
     iso2 = geo.player_country_iso2(p) or ''
     primary_nat = p.nationalities.split(',')[0].strip() if p.nationalities else ''
+    rl_club = p.real_life_club if p.real_life_club_id else None
     return {
         'find_id': find.id,
         'player_id': p.id,
@@ -84,10 +85,11 @@ def _find_card(find, watched_ids):
         'nat': primary_nat,
         'hp': hp,
         'np': ', '.join(np_list) if np_list else '—',
-        'rl_club': p.real_life_club.name if p.real_life_club_id else '—',
+        'rl_club': rl_club.name if rl_club else '—',
+        'rl_club_crest': rl_club.crest_static_path if rl_club else '',
         'rl_liga': (
-            p.real_life_club.league.name
-            if (p.real_life_club_id and p.real_life_club.league_id) else '—'
+            rl_club.league.name
+            if (rl_club and rl_club.league_id) else '—'
         ),
         'market_value_fmt': _euro(p.market_value),
         'min_bid': int(find.min_bid),
@@ -226,10 +228,15 @@ def transfer_scouting(request):
     bids = []
     for b in club.scouting_bids.filter(
         status=ScoutingBid.STATUS_ACTIVE
-    ).select_related('player').order_by('window_date'):
+    ).select_related('player', 'player__real_life_club').order_by('window_date'):
+        p = b.player
+        rl_club = p.real_life_club if p.real_life_club_id else None
         bids.append({
             'id': b.id,
-            'name': b.player.full_name,
+            'name': p.full_name,
+            'portrait': p.profile_portrait_static_path,
+            'rl_club': rl_club.name if rl_club else '—',
+            'rl_club_crest': rl_club.crest_static_path if rl_club else '',
             'amount_fmt': _euro(b.amount),
             'min_bid_fmt': _euro(b.min_bid),
             'under_min': b.amount < b.min_bid,
@@ -341,7 +348,7 @@ def scouting_upgrade(request):
         return redirect('management_hub')
     try:
         service.upgrade_department(club)
-        messages.success(request, 'Scoutingabteilung wurde ausgebaut.')
+        messages.success(request, 'Scoutingbüro wurde ausgebaut.')
     except service.ScoutingError as exc:
         messages.error(request, str(exc))
     return redirect('transfer_scouting')

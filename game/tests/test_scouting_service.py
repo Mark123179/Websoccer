@@ -509,7 +509,7 @@ class DepartmentUpgradeTests(ScoutingServiceBase):
         self.assertEqual(self.club.budget, before - cost)
         self.assertTrue(ClubFinancialTransaction.objects.filter(
             club=self.club, category='sonstige_ausgabe',
-            description__icontains='Scoutingabteilung').exists())
+            description__icontains='Scoutingbüro').exists())
 
     def test_upgrade_blocked_without_budget(self):
         self.club.budget = Decimal('0.00')

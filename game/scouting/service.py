@@ -114,7 +114,7 @@ def upgrade_department(club, today=None):
         club = Club.objects.select_for_update().get(pk=club.pk)
         dept = department.get_or_create_department(club)
         if not department.can_upgrade(dept.level):
-            raise ScoutingError('Die Scoutingabteilung ist bereits maximal ausgebaut.')
+            raise ScoutingError('Das Scoutingbüro ist bereits maximal ausgebaut.')
         cost = Decimal(department.upgrade_cost(dept.level))
         if available_budget(club) < cost:
             raise ScoutingError('Das verfügbare Budget reicht für den Ausbau nicht aus.')
@@ -127,7 +127,7 @@ def upgrade_department(club, today=None):
         ClubFinancialTransaction.objects.create(
             club=club, date=today, season=season_label(season_id),
             category='sonstige_ausgabe',
-            description=f'Ausbau Scoutingabteilung auf Stufe {new_level}',
+            description=f'Ausbau Scoutingbüro auf Stufe {new_level}',
             amount=-cost,
         )
     return dept

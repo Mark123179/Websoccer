@@ -32,7 +32,7 @@ WINDOW_DATES = [(7, 3), (1, 15)]
 DEPARTMENT_LEVELS = {
     0: {
         'label': 'Regional-Scout',
-        'desc': 'Einfache Scoutingabteilung. Lange Suchdauer, grobe Trefferpräzision.',
+        'desc': 'Einfaches Scoutingbüro. Lange Suchdauer, grobe Trefferpräzision.',
         'upgrade_cost': 0,
         'order_cost': 250_000,
         'duration_days': 18,

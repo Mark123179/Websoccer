@@ -4705,8 +4705,8 @@ class ScoutingDepartment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Scoutingabteilung'
-        verbose_name_plural = 'Scoutingabteilungen'
+        verbose_name = 'Scoutingbüro'
+        verbose_name_plural = 'Scoutingbüros'
 
     def __str__(self):
         return f'{self.club} – Scouting Stufe {self.level}'
