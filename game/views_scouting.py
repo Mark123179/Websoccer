@@ -205,25 +205,6 @@ def transfer_scouting(request):
     selected_continent = request.GET.get('kontinent', 'europa')
     region_options = mapdata['regions']
 
-    # Fallback NUR für leere DBs: sind echte CountryNetwork-Einträge angelegt
-    # (siehe `manage.py seed_country_networks`), liefert map_data() bereits
-    # scoutbare/im-Aufbau-Länder und diese Demo-Injektion bleibt inaktiv.
-    _DEMO_OVERRIDES = {
-        'TR': ('scoutable', 'Demo: scoutbar'),
-        'BE': ('scoutable', 'Demo: scoutbar'),
-        'BG': ('scoutable', 'Demo: scoutbar'),
-        'BR': ('scoutable', 'Demo: scoutbar'),
-        'AR': ('building', 'Demo: im Aufbau'),
-    }
-    if not any(c['status'] in ('scoutable', 'building') for c in countries):
-        countries = [
-            dict(c, status=_DEMO_OVERRIDES[c['iso2']][0],
-                 coverage_label=_DEMO_OVERRIDES[c['iso2']][1],
-                 coverage_percent=50)
-            if c['iso2'] in _DEMO_OVERRIDES else c
-            for c in countries
-        ]
-
     scope_tiles = []
     for c in countries:
         if c['status'] == 'unavailable':

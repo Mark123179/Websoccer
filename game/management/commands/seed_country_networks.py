@@ -1,8 +1,7 @@
 """Management Command: seed_country_networks
 
 Legt die ersten echten ``CountryNetwork``-Einträge an, damit die Scouting-Karte
-nicht mehr auf die Demo-Injektion (siehe ``views_scouting._DEMO_OVERRIDES``)
-zurückfällt, sondern die echte Business-Logik greift:
+echte scoutbare/im-Aufbau-Länder anzeigt. Die echte Business-Logik greift:
 
     - Land mit Netzwerk + Pool >= COUNTRY_THRESHOLD  -> ``scoutable``
     - Land mit Netzwerk, Pool darunter               -> ``building``
