@@ -3828,8 +3828,26 @@ class WatchlistEntryAdmin(admin.ModelAdmin):
     search_fields = ('player__first_name', 'player__last_name')
 
 
+class CountryNetworkAdminForm(forms.ModelForm):
+    class Meta:
+        model = CountryNetwork
+        fields = '__all__'
+
+    def clean_iso2(self):
+        value = (self.cleaned_data.get('iso2') or '').strip().upper()
+        if not (len(value) == 2 and value.isalpha() and value.isascii()):
+            raise ValidationError('Der ISO2-Code muss aus genau 2 Buchstaben (A–Z) bestehen.')
+        qs = CountryNetwork.objects.filter(iso2=value)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError(f'Ein Land mit dem ISO2-Code „{value}" existiert bereits.')
+        return value
+
+
 @admin.register(CountryNetwork)
 class CountryNetworkAdmin(admin.ModelAdmin):
+    form = CountryNetworkAdminForm
     list_display = (
         'iso2', 'name', 'continent', 'region',
         'community_points', 'activity_points', 'is_paused',

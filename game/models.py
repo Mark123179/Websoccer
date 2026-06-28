@@ -4984,6 +4984,28 @@ class CountryNetwork(models.Model):
         verbose_name = 'Länder-Netzwerk'
         verbose_name_plural = 'Länder-Netzwerke'
 
+    def clean(self):
+        super().clean()
+        if self.iso2:
+            normalized = self.iso2.strip().upper()
+            self.iso2 = normalized
+            if not (len(normalized) == 2 and normalized.isalpha() and normalized.isascii()):
+                raise ValidationError(
+                    {'iso2': 'Der ISO2-Code muss aus genau 2 Buchstaben (A–Z) bestehen.'}
+                )
+            qs = CountryNetwork.objects.filter(iso2=normalized)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise ValidationError(
+                    {'iso2': f'Ein Land mit dem ISO2-Code „{normalized}" existiert bereits.'}
+                )
+
+    def save(self, *args, **kwargs):
+        if self.iso2:
+            self.iso2 = self.iso2.strip().upper()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f'{self.name} ({self.iso2})'
 
