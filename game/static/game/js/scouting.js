@@ -18,7 +18,8 @@
   /* Regionen gehören zu einem Mutterkontinent (steuert das Dimming). */
   var REGION_CONT = {
     eu_west: 'europa', eu_east: 'europa', eu_north: 'europa',
-    sa_all: 'suedamerika', af_all: 'afrika', as_all: 'asien'
+    sa_all: 'suedamerika', af_all: 'afrika', as_all: 'asien',
+    oc_all: 'ozeanien'
   };
 
   /* Eigene Zoom-Ausschnitte je Region, damit benachbarte Regionen sichtbar

@@ -100,9 +100,11 @@ COMMUNITY_APPROVE_POINTS = 2      # zusätzliche Punkte bei Freigabe (Community)
 # ── Continents (Karten-Fokus-Dropdown) ───────────────────────────────────────
 CONTINENTS = {
     'europa': 'Europa',
+    'nordamerika': 'Nordamerika',
     'suedamerika': 'Südamerika',
     'afrika': 'Afrika',
     'asien': 'Asien',
+    'ozeanien': 'Australien & Ozeanien',
 }
 
 # ── Regionen (Suchgebiet "Region") ───────────────────────────────────────────
@@ -113,6 +115,7 @@ REGIONS = {
     'sa_all':    {'name': 'Südamerika', 'continent': 'suedamerika'},
     'af_all':    {'name': 'Afrika', 'continent': 'afrika'},
     'as_all':    {'name': 'Asien', 'continent': 'asien'},
+    'oc_all':    {'name': 'Australien & Ozeanien', 'continent': 'ozeanien'},
 }
 
 # ── Länder-Stammdaten: ISO2 → (deutscher Name, Kontinent, Region) ─────────────
@@ -168,7 +171,8 @@ COUNTRIES = {
     'QA': {'name': 'Katar',         'continent': 'asien', 'region': 'as_all'},
     'IR': {'name': 'Iran',          'continent': 'asien', 'region': 'as_all'},
     'CN': {'name': 'China',         'continent': 'asien', 'region': 'as_all'},
-    'AU': {'name': 'Australien',    'continent': 'asien', 'region': 'as_all'},
+    # Australien & Ozeanien
+    'AU': {'name': 'Australien',    'continent': 'ozeanien', 'region': 'oc_all'},
 }
 
 

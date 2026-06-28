@@ -57,4 +57,5 @@
 - [Simulation-Diagnose Status](simulation-diagnostics-classification.md) — warn=messbar aber ausgeblieben; na/n/v=nicht aus report_data messbar; Abdeckung zählt nur messbare Familien.
 - [Secret rotation & leaked-dump cleanup](secret-rotation-leak.md) — SECRET_KEY now env+random fallback; agent can request SECRET_KEY but CANNOT rotate platform DB creds or rewrite git history.
 - [Celery production setup](celery-production-setup.md) — celery compose services need entrypoint:[] (Dockerfile execs gunicorn); call_command in tasks MUST catch SystemExit (mgmt cmds raise it even on success).
+- [Scouting continent/country wiring](scouting-continent-country-wiring.md) — CONTINENTS drives the map dropdown; COUNTRIES.continent MUST match SVG data-continent; a catalog country w/o CountryNetwork renders nowhere (status unavailable filtered out).
 - [Scouting-Pool seeding](scouting-pool-seeding.md) — seed_scouting_pool fills clubless SCOUTABLE pool players (POOLSEED-<ISO>- prefix) so Pool>=COUNTRY_THRESHOLD(50) flips a country to scoutable; needs own PlayerStrengthProfile + keep base<84/pot<=85; GB catalog name "England" maps to GB-ENG not GB.
