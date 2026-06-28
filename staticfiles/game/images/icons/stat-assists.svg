@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Vorlagen">
+  <defs>
+    <linearGradient id="boot-silver" x1="18" x2="76" y1="20" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".46" stop-color="#e3e8ed"/>
+      <stop offset="1" stop-color="#8b969f"/>
+    </linearGradient>
+    <filter id="boot-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#000000" flood-opacity=".58"/>
+    </filter>
+  </defs>
+  <path d="M18 65c16-4 31-14 44-31l10-14 11 8-5 18c-2 8-8 14-16 16L25 74c-6 2-10-2-7-9Z" fill="url(#boot-silver)" filter="url(#boot-shadow)"/>
+  <path d="M49 38l-10-8M43 45l-10-8M36 52l-9-7" fill="none" stroke="#101923" stroke-width="4" stroke-linecap="round"/>
+  <path d="M71 21l4 14M80 29l-15 6" fill="none" stroke="#f4f8fb" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+  <path d="M21 78h24M55 72h16M64 63h18" fill="none" stroke="#cfd7dd" stroke-width="4" stroke-linecap="round" opacity=".72"/>
+  <path d="M38 75l-4 8M51 71l-3 8M64 66l-3 8" stroke="#e8edf1" stroke-width="4" stroke-linecap="round"/>
+</svg>
