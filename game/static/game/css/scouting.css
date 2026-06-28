@@ -55,6 +55,16 @@
 }
 .sc-tab:hover { color: var(--sc-text); }
 .sc-tab.is-active { color: var(--sc-cyan); border-bottom-color: var(--sc-cyan); font-weight: 800; }
+.sc-tab.is-disabled {
+  color: var(--sc-muted); opacity: .45; cursor: not-allowed;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.sc-tab.is-disabled:hover { color: var(--sc-muted); }
+.sc-tab-soon {
+  font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--sc-muted); border: 1px solid var(--sc-line);
+  border-radius: 999px; padding: 1px 6px; line-height: 1.4;
+}
 
 /* ── 3-Spalten-Grid ──────────────────────────────────────────────────────── */
 .sc-grid {

@@ -19,12 +19,7 @@
   {% endif %}
 
   <!-- ── TABS ────────────────────────────────────────────────────────── -->
-  <div class="sc-tabs">
-    <a class="sc-tab" href="{% url 'transfer_scouting' %}">Transfers</a>
-    <a class="sc-tab is-active" href="{% url 'transfer_scouting' %}">Scouting</a>
-    <a class="sc-tab" href="{% url 'transfer_scouting' %}">Auktionen</a>
-    <a class="sc-tab" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
-  </div>
+  {% include 'game/management/_scouting_tabs.html' %}
 
   <!-- ── 3-SPALTEN-GRID ──────────────────────────────────────────────── -->
   <div class="sc-grid">

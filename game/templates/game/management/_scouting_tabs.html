@@ -1,0 +1,8 @@
+{% with active=request.resolver_match.url_name %}
+<div class="sc-tabs">
+  <span class="sc-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Transfers<span class="sc-tab-soon">bald</span></span>
+  <a class="sc-tab{% if active == 'transfer_scouting' %} is-active{% endif %}" href="{% url 'transfer_scouting' %}">Scouting</a>
+  <span class="sc-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Auktionen<span class="sc-tab-soon">bald</span></span>
+  <a class="sc-tab{% if active == 'transfer_watchlist' %} is-active{% endif %}" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
+</div>
+{% endwith %}
