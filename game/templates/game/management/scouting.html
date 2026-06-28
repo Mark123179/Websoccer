@@ -39,13 +39,12 @@
         </div>
         <div class="sc-dept-info">
           <div class="sc-dept-name">Scoutingbüro Stufe {{ dept.level }}</div>
-          <div class="sc-dept-meta">Dauer: {{ dept.duration }} Tage &middot; Kosten: {{ dept.cost_fmt }}</div>
           {% if dept.can_upgrade %}
           <form method="post" action="{% url 'scouting_upgrade' %}" class="sc-upgrade-form">
             {% csrf_token %}
             <button type="submit" class="sc-upgrade-btn" title="Verkürzt die Suchdauer und schärft die Trefferpräzision.">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
-              Ausbauen &middot; {{ dept.upgrade_cost_fmt }}
+              Ausbauen
             </button>
           </form>
           {% else %}
@@ -462,5 +461,5 @@
 </div>
 
 <script>window.SCOUTING_STATIC_BASE = "{% static 'game/' %}";</script>
-<script src="{% static 'game/js/scouting.js' %}?v=5"></script>
+<script src="{% static 'game/js/scouting.js' %}?v=6"></script>
 {% endblock %}

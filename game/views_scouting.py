@@ -28,7 +28,12 @@ from .models import (
 from .scouting import coverage, department, geo, service
 
 
-POSITION_OPTIONS = ['IV', 'RV', 'LV', 'DM', 'ZM', 'OM', 'RF', 'LF', 'ST']
+POSITION_OPTIONS = [
+    'TW',
+    'IV', 'LV', 'RV', 'LOV', 'ROV',
+    'DM', 'ZM', 'LM', 'RM',
+    'LOM', 'ROM', 'OM', 'LF', 'RF', 'ST',
+]
 PROFILE_OPTIONS = [
     ('backup', 'Back-up'),
     ('ergaenzung', 'Ergänzung'),

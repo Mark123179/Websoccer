@@ -15,10 +15,19 @@
     ozeanien:    '800 266.7 200 122.2'
   };
 
-  /* Regionen zoomen auf ihren Mutterkontinent (Vorlage kennt keine Sub-Regionen). */
+  /* Regionen gehören zu einem Mutterkontinent (steuert das Dimming). */
   var REGION_CONT = {
     eu_west: 'europa', eu_east: 'europa', eu_north: 'europa',
     sa_all: 'suedamerika', af_all: 'afrika', as_all: 'asien'
+  };
+
+  /* Eigene Zoom-Ausschnitte je Region, damit benachbarte Regionen sichtbar
+     unterschiedlich heranzoomen (sonst zoomen alle EU-Regionen identisch auf
+     Europa). Regionen ohne Eintrag fallen auf ihren Mutterkontinent zurück. */
+  var REGION_VIEW = {
+    eu_west:  '463.9 78 96 74',
+    eu_east:  '527 68 92 86',
+    eu_north: '476 50 108 66'
   };
 
   function fmtEuro(n) {
@@ -95,7 +104,7 @@
 
     function focusRegion(key) {
       var cont = REGION_CONT[key] || 'welt';
-      zoomTo(CONTINENT_VIEW[cont] || CONTINENT_VIEW.welt, false);
+      zoomTo(REGION_VIEW[key] || CONTINENT_VIEW[cont] || CONTINENT_VIEW.welt, false);
       applyDimming(cont);
     }
 
@@ -252,11 +261,25 @@
       });
     });
 
+    /* Positionen: Mehrfachauswahl. "Keine Vorgabe" (leeres data-pos) setzt zurück. */
+    var posNone = posChips.filter(function (c) { return !(c.getAttribute('data-pos') || ''); })[0];
+    function syncPositions() {
+      var vals = posChips
+        .filter(function (c) { return c.classList.contains('is-active') && (c.getAttribute('data-pos') || ''); })
+        .map(function (c) { return c.getAttribute('data-pos'); });
+      if (positionField) positionField.value = vals.join(',');
+      if (posNone) posNone.classList.toggle('is-active', vals.length === 0);
+    }
     posChips.forEach(function (chip) {
       chip.addEventListener('click', function () {
-        clearActive(posChips);
-        chip.classList.add('is-active');
-        if (positionField) positionField.value = chip.getAttribute('data-pos') || '';
+        if (!(chip.getAttribute('data-pos') || '')) {   /* "Keine Vorgabe" → alles abwählen */
+          clearActive(posChips);
+          chip.classList.add('is-active');
+          if (positionField) positionField.value = '';
+          return;
+        }
+        chip.classList.toggle('is-active');              /* einzelne Position umschalten */
+        syncPositions();
       });
     });
 

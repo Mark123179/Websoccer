@@ -161,6 +161,20 @@ class DrawTests(TestCase):
         self.assertNotIn('base_strength', field_names)
         self.assertNotIn('potential', field_names)
 
+    def test_position_factor_multi_select_uses_best_match(self):
+        # Mehrfachauswahl: kommagetrennte Positionen → bester Treffer zählt.
+        st = make_pool_player(last='Stuermer', pos='ST')
+        # Leere Vorgabe → neutral.
+        self.assertEqual(draw._position_factor(st, ''), 1.0)
+        # Einzelvorgabe bleibt rückwärtskompatibel.
+        self.assertEqual(draw._position_factor(st, 'ST'), 1.0)
+        # Mehrfachauswahl mit Volltreffer (ST) schlägt Fehlpassung (TW).
+        self.assertEqual(draw._position_factor(st, 'TW,ST'), 1.0)
+        # Mehrfachauswahl ohne Haupt-/Nebenposition, aber gleiche Gruppe (LF/RF=att).
+        self.assertEqual(draw._position_factor(st, 'LF,RF'), 0.4)
+        # Komplett fremde Gruppe (TW=gk) → Mindestfaktor.
+        self.assertEqual(draw._position_factor(st, 'TW'), 0.2)
+
 
 class SeedCountryNetworksTests(TestCase):
     """Management-Command legt echte CountryNetwork-Einträge an (Task #642)."""

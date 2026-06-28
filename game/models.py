@@ -4764,10 +4764,10 @@ class ScoutingAssignment(models.Model):
         help_text='ISO2-Ländercode (Großbuchstaben) oder Regions-Schlüssel.',
     )
     position = models.CharField(
-        max_length=10,
+        max_length=80,
         blank=True,
         default='',
-        help_text='Zielposition (leer = keine Vorgabe).',
+        help_text='Zielposition(en), kommagetrennt bei Mehrfachauswahl (leer = keine Vorgabe).',
     )
     profile = models.CharField(max_length=20, choices=PROFILE_CHOICES, default=PROFILE_ERGAENZUNG)
     department_level = models.PositiveSmallIntegerField(default=0)

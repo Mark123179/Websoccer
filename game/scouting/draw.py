@@ -145,9 +145,7 @@ def team_average_strength(club):
     return float(agg['avg']) if agg['avg'] is not None else 65.0
 
 
-def _position_factor(player, position):
-    if not position:
-        return 1.0
+def _single_position_factor(player, position):
     if position in player_main_positions(player):
         return 1.0
     if position in player_secondary_positions(player):
@@ -157,6 +155,15 @@ def _position_factor(player, position):
         if POSITION_GROUP.get(p) == target_group:
             return 0.4
     return 0.2
+
+
+def _position_factor(player, position):
+    """``position`` darf mehrere kommagetrennte Positionen enthalten
+    (Mehrfachauswahl). Es zählt die bestpassende Position."""
+    wanted = [p.strip() for p in (position or '').split(',') if p.strip()]
+    if not wanted:
+        return 1.0
+    return max(_single_position_factor(player, p) for p in wanted)
 
 
 def _profile_factor(player, team_avg, profile):
