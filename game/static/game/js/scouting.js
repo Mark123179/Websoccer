@@ -17,18 +17,44 @@
 
   /* Regionen gehören zu einem Mutterkontinent (steuert das Dimming). */
   var REGION_CONT = {
-    eu_west: 'europa', eu_east: 'europa', eu_north: 'europa',
-    sa_all: 'suedamerika', af_all: 'afrika', as_all: 'asien',
-    oc_all: 'ozeanien'
+    eu_west: 'europa', eu_central: 'europa', eu_south: 'europa', eu_east: 'europa',
+    eu_north: 'europa', eu_balkan: 'europa', eu_britain: 'europa', eu_iberia: 'europa',
+    na_usa: 'nordamerika', na_canada: 'nordamerika', na_mexico: 'nordamerika', na_caribbean: 'nordamerika',
+    sa_brasil: 'suedamerika', sa_laplata: 'suedamerika',
+    af_maghreb: 'afrika', af_west: 'afrika',
+    as_west: 'asien', as_central: 'asien', as_south: 'asien',
+    as_southeast: 'asien', as_east: 'asien', as_russia: 'asien',
+    oc_australia: 'ozeanien', oc_newzealand: 'ozeanien'
   };
 
-  /* Eigene Zoom-Ausschnitte je Region, damit benachbarte Regionen sichtbar
-     unterschiedlich heranzoomen (sonst zoomen alle EU-Regionen identisch auf
-     Europa). Regionen ohne Eintrag fallen auf ihren Mutterkontinent zurück. */
+  /* Eigene Zoom-Ausschnitte je Region (exakt aus der Vorlage), damit jede Region
+     auf ihr Gebiet heranzoomt. Regionen ohne Eintrag fallen auf ihren
+     Mutterkontinent zurück. */
   var REGION_VIEW = {
-    eu_west:  '463.9 78 96 74',
-    eu_east:  '527 68 92 86',
-    eu_north: '476 50 108 66'
+    eu_west:       '472.2 97.2 69.5 38.9',
+    eu_central:    '513.9 97.2 58.3 27.8',
+    eu_south:      '472.2 119.4 105.6 33.3',
+    eu_east:       '544.4 83.3 83.3 44.4',
+    eu_north:      '511.1 52.8 77.8 47.2',
+    eu_balkan:     '536.1 116.7 47.2 27.8',
+    eu_britain:    '469.4 80.6 38.9 33.3',
+    eu_iberia:     '472.2 127.8 36.1 25',
+    na_usa:        '152.8 113.9 163.9 69.4',
+    na_canada:     '108.3 55.6 247.2 77.8',
+    na_mexico:     '172.2 158.3 113.9 72.2',
+    na_caribbean:  '250 175 86.1 50',
+    sa_brasil:     '291.7 233.3 113.9 111.1',
+    sa_laplata:    '291.7 305.6 69.4 100',
+    af_maghreb:    '475 144.4 91.7 33.3',
+    af_west:       '450 200 94.4 41.7',
+    as_west:       '572.2 133.3 102.8 83.3',
+    as_central:    '627.8 94.4 116.7 58.3',
+    as_south:      '666.7 147.2 105.6 88.9',
+    as_southeast:  '755.6 186.1 138.9 94.4',
+    as_east:       '777.8 100 127.8 94.4',
+    as_russia:     '577.8 61.1 116.7 69.5',
+    oc_australia:  '811.1 277.8 119.4 94.4',
+    oc_newzealand: '944.4 338.9 55.6 50'
   };
 
   function fmtEuro(n) {

@@ -26,8 +26,10 @@ With `meet`, mismatched aspect just letterboxes (here = ocean), which is the int
 a shared aspect ratio is the trap that broke fidelity before.
 
 **How to apply:**
-- Regions have no Vorlage sub-views; map each region key to its parent continent
-  (`REGION_CONT`: eu_*→europa, sa_all→suedamerika, af_all→afrika, as_all→asien) and zoom to that.
+- Regions DO have their own Vorlage sub-views now: `REGION_VIEW` carries the exact per-region
+  viewBox for all 24 granular keys (copied 1:1 from the Vorlage), and `REGION_CONT` maps each
+  key to its parent continent only for dimming. A region missing from `REGION_VIEW` falls back
+  to its continent zoom.
 - Country/chip jumps resolve via `contract[key].continent` (slug) → `CONTINENT_VIEW[slug]`; the SVG's
   `data-continent` must use the same slugs (europa/nordamerika/suedamerika/afrika/asien/ozeanien).
 - Focus dimming: toggle `.is-dimmed` on paths whose `data-continent` ≠ focused key (welt clears all).

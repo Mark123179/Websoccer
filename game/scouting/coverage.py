@@ -172,7 +172,12 @@ def map_data():
     countries = [map_country_contract(iso, counts=counts, networks=networks) for iso in COUNTRIES]
     countries.sort(key=lambda c: c['name'])
     regions = [
-        {'key': key, 'name': rec['name'], 'continent': rec['continent']}
+        {
+            'key': key,
+            'name': rec['name'],
+            'continent': rec['continent'],
+            'continent_name': CONTINENTS.get(rec['continent'], rec['continent']),
+        }
         for key, rec in REGIONS.items()
     ]
     return {

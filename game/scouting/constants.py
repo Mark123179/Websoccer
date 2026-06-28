@@ -108,71 +108,104 @@ CONTINENTS = {
 }
 
 # ── Regionen (Suchgebiet "Region") ───────────────────────────────────────────
+# Feine Gliederung wie in der Vorlage. Reihenfolge = Kontinent-Reihenfolge oben,
+# damit das Region-Dropdown sauber nach Kontinent in <optgroup> gruppiert.
 REGIONS = {
-    'eu_west':   {'name': 'West-/Südeuropa', 'continent': 'europa'},
-    'eu_east':   {'name': 'Ost-/Südosteuropa', 'continent': 'europa'},
-    'eu_north':  {'name': 'Nordeuropa', 'continent': 'europa'},
-    'sa_all':    {'name': 'Südamerika', 'continent': 'suedamerika'},
-    'af_all':    {'name': 'Afrika', 'continent': 'afrika'},
-    'as_all':    {'name': 'Asien', 'continent': 'asien'},
-    'oc_all':    {'name': 'Australien & Ozeanien', 'continent': 'ozeanien'},
+    # Europa
+    'eu_west':    {'name': 'Westeuropa', 'continent': 'europa'},
+    'eu_central': {'name': 'Mitteleuropa', 'continent': 'europa'},
+    'eu_south':   {'name': 'Südeuropa', 'continent': 'europa'},
+    'eu_east':    {'name': 'Osteuropa', 'continent': 'europa'},
+    'eu_north':   {'name': 'Skandinavien', 'continent': 'europa'},
+    'eu_balkan':  {'name': 'Balkan', 'continent': 'europa'},
+    'eu_britain': {'name': 'Britische Inseln', 'continent': 'europa'},
+    'eu_iberia':  {'name': 'Iberische Halbinsel', 'continent': 'europa'},
+    # Nordamerika
+    'na_usa':       {'name': 'USA', 'continent': 'nordamerika'},
+    'na_canada':    {'name': 'Kanada', 'continent': 'nordamerika'},
+    'na_mexico':    {'name': 'Mexiko & Mittelamerika', 'continent': 'nordamerika'},
+    'na_caribbean': {'name': 'Karibik', 'continent': 'nordamerika'},
+    # Südamerika
+    'sa_brasil':  {'name': 'Brasilien & Umgebung', 'continent': 'suedamerika'},
+    'sa_laplata': {'name': 'Südkegel (La Plata)', 'continent': 'suedamerika'},
+    # Afrika
+    'af_maghreb': {'name': 'Maghreb', 'continent': 'afrika'},
+    'af_west':    {'name': 'Westafrika', 'continent': 'afrika'},
+    # Asien
+    'as_west':      {'name': 'Westasien', 'continent': 'asien'},
+    'as_central':   {'name': 'Zentralasien', 'continent': 'asien'},
+    'as_south':     {'name': 'Südasien', 'continent': 'asien'},
+    'as_southeast': {'name': 'Südostasien', 'continent': 'asien'},
+    'as_east':      {'name': 'Ostasien', 'continent': 'asien'},
+    'as_russia':    {'name': 'Russland', 'continent': 'asien'},
+    # Australien & Ozeanien
+    'oc_australia':  {'name': 'Australien', 'continent': 'ozeanien'},
+    'oc_newzealand': {'name': 'Neuseeland', 'continent': 'ozeanien'},
 }
 
 # ── Länder-Stammdaten: ISO2 → (deutscher Name, Kontinent, Region) ─────────────
 COUNTRIES = {
-    # West-/Südeuropa
-    'DE': {'name': 'Deutschland',   'continent': 'europa', 'region': 'eu_west'},
+    # Westeuropa
     'FR': {'name': 'Frankreich',    'continent': 'europa', 'region': 'eu_west'},
-    'ES': {'name': 'Spanien',       'continent': 'europa', 'region': 'eu_west'},
-    'IT': {'name': 'Italien',       'continent': 'europa', 'region': 'eu_west'},
-    'GB': {'name': 'England',       'continent': 'europa', 'region': 'eu_west'},
-    'PT': {'name': 'Portugal',      'continent': 'europa', 'region': 'eu_west'},
     'NL': {'name': 'Niederlande',   'continent': 'europa', 'region': 'eu_west'},
     'BE': {'name': 'Belgien',       'continent': 'europa', 'region': 'eu_west'},
-    'AT': {'name': 'Österreich',    'continent': 'europa', 'region': 'eu_west'},
-    'CH': {'name': 'Schweiz',       'continent': 'europa', 'region': 'eu_west'},
-    # Ost-/Südosteuropa
-    'TR': {'name': 'Türkei',        'continent': 'europa', 'region': 'eu_east'},
-    'BG': {'name': 'Bulgarien',     'continent': 'europa', 'region': 'eu_east'},
-    'HR': {'name': 'Kroatien',      'continent': 'europa', 'region': 'eu_east'},
-    'RS': {'name': 'Serbien',       'continent': 'europa', 'region': 'eu_east'},
+    # Mitteleuropa
+    'DE': {'name': 'Deutschland',   'continent': 'europa', 'region': 'eu_central'},
+    'AT': {'name': 'Österreich',    'continent': 'europa', 'region': 'eu_central'},
+    'CH': {'name': 'Schweiz',       'continent': 'europa', 'region': 'eu_central'},
+    # Südeuropa
+    'IT': {'name': 'Italien',       'continent': 'europa', 'region': 'eu_south'},
+    # Britische Inseln
+    'GB': {'name': 'England',       'continent': 'europa', 'region': 'eu_britain'},
+    # Iberische Halbinsel
+    'ES': {'name': 'Spanien',       'continent': 'europa', 'region': 'eu_iberia'},
+    'PT': {'name': 'Portugal',      'continent': 'europa', 'region': 'eu_iberia'},
+    # Osteuropa
     'PL': {'name': 'Polen',         'continent': 'europa', 'region': 'eu_east'},
     'CZ': {'name': 'Tschechien',    'continent': 'europa', 'region': 'eu_east'},
-    'GR': {'name': 'Griechenland',  'continent': 'europa', 'region': 'eu_east'},
     'UA': {'name': 'Ukraine',       'continent': 'europa', 'region': 'eu_east'},
-    'RO': {'name': 'Rumänien',      'continent': 'europa', 'region': 'eu_east'},
-    # Nordeuropa
+    # Balkan
+    'HR': {'name': 'Kroatien',      'continent': 'europa', 'region': 'eu_balkan'},
+    'RS': {'name': 'Serbien',       'continent': 'europa', 'region': 'eu_balkan'},
+    'GR': {'name': 'Griechenland',  'continent': 'europa', 'region': 'eu_balkan'},
+    'BG': {'name': 'Bulgarien',     'continent': 'europa', 'region': 'eu_balkan'},
+    'RO': {'name': 'Rumänien',      'continent': 'europa', 'region': 'eu_balkan'},
+    'TR': {'name': 'Türkei',        'continent': 'europa', 'region': 'eu_balkan'},
+    # Skandinavien
     'DK': {'name': 'Dänemark',      'continent': 'europa', 'region': 'eu_north'},
     'SE': {'name': 'Schweden',      'continent': 'europa', 'region': 'eu_north'},
     'NO': {'name': 'Norwegen',      'continent': 'europa', 'region': 'eu_north'},
-    # Südamerika
-    'BR': {'name': 'Brasilien',     'continent': 'suedamerika', 'region': 'sa_all'},
-    'AR': {'name': 'Argentinien',   'continent': 'suedamerika', 'region': 'sa_all'},
-    'UY': {'name': 'Uruguay',       'continent': 'suedamerika', 'region': 'sa_all'},
-    'CO': {'name': 'Kolumbien',     'continent': 'suedamerika', 'region': 'sa_all'},
-    'CL': {'name': 'Chile',         'continent': 'suedamerika', 'region': 'sa_all'},
-    'PE': {'name': 'Peru',          'continent': 'suedamerika', 'region': 'sa_all'},
-    'EC': {'name': 'Ecuador',       'continent': 'suedamerika', 'region': 'sa_all'},
-    'PY': {'name': 'Paraguay',      'continent': 'suedamerika', 'region': 'sa_all'},
-    # Afrika
-    'NG': {'name': 'Nigeria',       'continent': 'afrika', 'region': 'af_all'},
-    'GH': {'name': 'Ghana',         'continent': 'afrika', 'region': 'af_all'},
-    'SN': {'name': 'Senegal',       'continent': 'afrika', 'region': 'af_all'},
-    'CI': {'name': 'Elfenbeinküste','continent': 'afrika', 'region': 'af_all'},
-    'MA': {'name': 'Marokko',       'continent': 'afrika', 'region': 'af_all'},
-    'EG': {'name': 'Ägypten',       'continent': 'afrika', 'region': 'af_all'},
-    'DZ': {'name': 'Algerien',      'continent': 'afrika', 'region': 'af_all'},
-    'CM': {'name': 'Kamerun',       'continent': 'afrika', 'region': 'af_all'},
-    'TN': {'name': 'Tunesien',      'continent': 'afrika', 'region': 'af_all'},
-    # Asien
-    'JP': {'name': 'Japan',         'continent': 'asien', 'region': 'as_all'},
-    'KR': {'name': 'Südkorea',      'continent': 'asien', 'region': 'as_all'},
-    'SA': {'name': 'Saudi-Arabien', 'continent': 'asien', 'region': 'as_all'},
-    'QA': {'name': 'Katar',         'continent': 'asien', 'region': 'as_all'},
-    'IR': {'name': 'Iran',          'continent': 'asien', 'region': 'as_all'},
-    'CN': {'name': 'China',         'continent': 'asien', 'region': 'as_all'},
+    # Brasilien & Umgebung
+    'BR': {'name': 'Brasilien',     'continent': 'suedamerika', 'region': 'sa_brasil'},
+    'CO': {'name': 'Kolumbien',     'continent': 'suedamerika', 'region': 'sa_brasil'},
+    'PE': {'name': 'Peru',          'continent': 'suedamerika', 'region': 'sa_brasil'},
+    'EC': {'name': 'Ecuador',       'continent': 'suedamerika', 'region': 'sa_brasil'},
+    # Südkegel (La Plata)
+    'AR': {'name': 'Argentinien',   'continent': 'suedamerika', 'region': 'sa_laplata'},
+    'UY': {'name': 'Uruguay',       'continent': 'suedamerika', 'region': 'sa_laplata'},
+    'CL': {'name': 'Chile',         'continent': 'suedamerika', 'region': 'sa_laplata'},
+    'PY': {'name': 'Paraguay',      'continent': 'suedamerika', 'region': 'sa_laplata'},
+    # Maghreb / Nordafrika
+    'MA': {'name': 'Marokko',       'continent': 'afrika', 'region': 'af_maghreb'},
+    'DZ': {'name': 'Algerien',      'continent': 'afrika', 'region': 'af_maghreb'},
+    'TN': {'name': 'Tunesien',      'continent': 'afrika', 'region': 'af_maghreb'},
+    'EG': {'name': 'Ägypten',       'continent': 'afrika', 'region': 'af_maghreb'},
+    # Westafrika
+    'NG': {'name': 'Nigeria',       'continent': 'afrika', 'region': 'af_west'},
+    'GH': {'name': 'Ghana',         'continent': 'afrika', 'region': 'af_west'},
+    'SN': {'name': 'Senegal',       'continent': 'afrika', 'region': 'af_west'},
+    'CI': {'name': 'Elfenbeinküste','continent': 'afrika', 'region': 'af_west'},
+    'CM': {'name': 'Kamerun',       'continent': 'afrika', 'region': 'af_west'},
+    # Westasien
+    'SA': {'name': 'Saudi-Arabien', 'continent': 'asien', 'region': 'as_west'},
+    'QA': {'name': 'Katar',         'continent': 'asien', 'region': 'as_west'},
+    'IR': {'name': 'Iran',          'continent': 'asien', 'region': 'as_west'},
+    # Ostasien
+    'JP': {'name': 'Japan',         'continent': 'asien', 'region': 'as_east'},
+    'KR': {'name': 'Südkorea',      'continent': 'asien', 'region': 'as_east'},
+    'CN': {'name': 'China',         'continent': 'asien', 'region': 'as_east'},
     # Australien & Ozeanien
-    'AU': {'name': 'Australien',    'continent': 'ozeanien', 'region': 'oc_all'},
+    'AU': {'name': 'Australien',    'continent': 'ozeanien', 'region': 'oc_australia'},
 }
 
 

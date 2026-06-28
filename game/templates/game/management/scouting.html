@@ -78,8 +78,13 @@
           <div class="sc-select-wrap">
             <select class="sc-select" id="region-select">
               <option value="">Region wählen</option>
-              {% for r in region_options %}
-              <option value="{{ r.key }}">{{ r.name }}</option>
+              {% regroup region_options by continent_name as region_groups %}
+              {% for group in region_groups %}
+              <optgroup label="{{ group.grouper }}">
+                {% for r in group.list %}
+                <option value="{{ r.key }}">{{ r.name }}</option>
+                {% endfor %}
+              </optgroup>
               {% endfor %}
             </select>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" class="sc-select-arrow"><path d="M6 9l6 6 6-6"></path></svg>
@@ -461,5 +466,5 @@
 </div>
 
 <script>window.SCOUTING_STATIC_BASE = "{% static 'game/' %}";</script>
-<script src="{% static 'game/js/scouting.js' %}?v=7"></script>
+<script src="{% static 'game/js/scouting.js' %}?v=8"></script>
 {% endblock %}

@@ -11,10 +11,22 @@ cross-validated, so keep them consistent by hand:
 - `CONTINENTS` → the only thing that drives the `#continent-select` map-focus dropdown
   (via `coverage.map_data()['continents']`). Adding a continent here is enough to make it
   appear and let the map zoom/dim to it.
-- `REGIONS` → the "Region wählen" dropdown. Only add a region that actually has ≥1 country,
-  or it renders an empty/broken scope option.
+- `REGIONS` → the "Region wählen" dropdown (granular Vorlage set, 24 keys; ordered by
+  continent so Django `{% regroup region_options by continent_name %}` produces stable
+  `<optgroup>`s). A region WITHOUT countries is intentional and NOT broken: it stays
+  selectable as a map-zoom preset / future scaffolding (na_*, as_central/south/southeast,
+  as_russia, oc_newzealand currently have no catalog countries). Selecting+scouting such a
+  region is rejected cleanly by `is_region_scoutable()` (<100 pool players → `ScoutingError`).
+  Region selection does NOT filter the country grid/chips — it only sets the scope + zooms.
 - `COUNTRIES` → scoutable catalog. The country grid and scope chips are **not** filtered by
   the selected continent; the continent dropdown only controls map zoom/dimming.
+
+**Hand-kept key parity (footgun):** every `REGIONS` key MUST appear in BOTH `scouting.js`
+`REGION_CONT` (region→continent dimming) and `REGION_VIEW` (region→viewBox zoom), and every
+`COUNTRIES[x]['region']` must exist in `REGIONS` with a matching continent. Nothing validates
+this at runtime; a missing JS key silently falls back to the continent zoom. Verify after any
+edit. `map_data()['regions']` carries `continent_name` (from `CONTINENTS`) purely for the
+optgroup grouping.
 
 Map focus is purely frontend: `scouting.js` `CONTINENT_VIEW` (per-continent viewBox),
 `REGION_CONT` (region→continent for dimming), optional `REGION_VIEW`. `world.svg` paths carry
@@ -34,5 +46,5 @@ only appears as the static SVG landmass. Don't add catalog countries just for ma
 
 **Why:** world.svg was pre-tagged and `CONTINENT_VIEW` pre-calibrated for `nordamerika` and
 `ozeanien` long before they were exposed, so enabling them was a `CONTINENTS` one-liner (+ AU
-re-tag + `oc_all` region). Remember to bump the `scouting.js` `?v=` cache-bust in
+re-tag + an Ozeanien region). Remember to bump the `scouting.js` `?v=` cache-bust in
 `scouting.html` on any JS edit.
