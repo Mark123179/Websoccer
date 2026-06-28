@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -169,6 +169,9 @@
         </div>
 
         <div class="sc-map-stage">
+          <div class="sc-map-grid"></div>
+          <div class="sc-map-radar"><span class="r1"></span><span class="r2"></span><span class="r3"></span></div>
+          <div class="sc-map-particles" id="sc-map-particles"></div>
           {% include 'game/management/_scouting_map_svg.html' %}
           <div class="sc-map-tooltip" id="scout-map-tooltip" hidden></div>
         </div>
@@ -464,5 +467,5 @@
 </div>
 
 <script>window.SCOUTING_STATIC_BASE = "{% static 'game/' %}";</script>
-<script src="{% static 'game/js/scouting.js' %}?v=4"></script>
+<script src="{% static 'game/js/scouting.js' %}?v=5"></script>
 {% endblock %}

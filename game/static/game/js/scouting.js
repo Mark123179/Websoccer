@@ -1,26 +1,24 @@
 (function () {
   'use strict';
 
-  /* Kontinent-Fokus-ViewBoxen (SVG-Koordinaten: 0 0 1010 666).
-     Aus den echten Pfad-Bounding-Boxen der world.svg berechnet und auf das
-     Stage-Seitenverhältnis (1006/654) angepasst, damit jeder Kontinent
-     vollständig und ohne Letterbox/Scroll in die Karte passt. */
+  /* Kontinent-Fokus-ViewBoxen – exakt aus der Vorlage übernommen
+     (projizierte Natural-Earth-Pixel des world.svg, viewBox 5.6 19.4 988.8 386.2).
+     preserveAspectRatio="xMidYMid meet" lässt jeden Kontinent vollständig in die
+     Stage einpassen; Letterbox-Ränder zeigen nur Ozean/Radar. */
   var CONTINENT_VIEW = {
-    welt:        '2 6 1006 654',
-    europa:      '312.1 160.6 363.9 236.6',
-    suedamerika: '77 413.4 391 254.2',
-    afrika:      '407.7 343.2 188.9 122.8',
-    asien:       '429.4 259.8 633.7 412'
+    welt:        '5.6 19.4 988.8 386.2',
+    europa:      '463.9 50 155.5 108.3',
+    nordamerika: '27.8 44.4 333.3 191.7',
+    suedamerika: '269.4 211.1 138.9 194.5',
+    afrika:      '444.4 141.7 202.8 211.1',
+    asien:       '572.2 77.8 344.5 202.8',
+    ozeanien:    '800 266.7 200 122.2'
   };
 
-  /* Region-Fokus-ViewBoxen – Unterabschnitte der Kontinente (echte Region-Keys). */
-  var REGION_VIEW = {
-    eu_west:  '338.6 238 236.9 154',
-    eu_east:  '484.7 273.6 140.1 91.1',
-    eu_north: '433.6 167.8 184 119.6',
-    sa_all:   '77 413.4 391 254.2',
-    af_all:   '407.7 343.2 188.9 122.8',
-    as_all:   '429.4 259.8 633.7 412'
+  /* Regionen zoomen auf ihren Mutterkontinent (Vorlage kennt keine Sub-Regionen). */
+  var REGION_CONT = {
+    eu_west: 'europa', eu_east: 'europa', eu_north: 'europa',
+    sa_all: 'suedamerika', af_all: 'afrika', as_all: 'asien'
   };
 
   function fmtEuro(n) {
@@ -81,12 +79,24 @@
       vbRAF = requestAnimationFrame(frame);
     }
 
+    function applyDimming(key) {
+      if (!svgEl) return;
+      var all = svgEl.querySelectorAll('path[data-iso2]');
+      Array.prototype.forEach.call(all, function (p) {
+        if (!key || key === 'welt') { p.classList.remove('is-dimmed'); }
+        else { p.classList.toggle('is-dimmed', p.getAttribute('data-continent') !== key); }
+      });
+    }
+
     function focusContinent(key, instant) {
       zoomTo(CONTINENT_VIEW[key] || CONTINENT_VIEW.welt, instant);
+      applyDimming(key);
     }
 
     function focusRegion(key) {
-      zoomTo(REGION_VIEW[key] || CONTINENT_VIEW.welt, false);
+      var cont = REGION_CONT[key] || 'welt';
+      zoomTo(CONTINENT_VIEW[cont] || CONTINENT_VIEW.welt, false);
+      applyDimming(cont);
     }
 
     /* ── Land hervorheben ─────────────────────────────────────────────── */
@@ -124,10 +134,13 @@
     /* ── Tooltip ──────────────────────────────────────────────────────── */
     function showTooltip(evt, data) {
       if (!tooltip || !mapStage) return;
-      var ok = data.status === 'scoutable';
-      tooltip.innerHTML = '<strong>' + data.name + '</strong>'
-        + '<span style="color:' + (ok ? 'var(--sc-green)' : 'var(--sc-yellow)') + '">Status: '
-        + data.coverage_label + '</span>';
+      var statusLine = '';
+      if (data.status) {
+        var ok = data.status === 'scoutable' || data.status === 'selected';
+        statusLine = '<span style="color:' + (ok ? 'var(--sc-green)' : 'var(--sc-yellow)') + '">Status: '
+          + (data.coverage_label || '') + '</span>';
+      }
+      tooltip.innerHTML = '<strong>' + data.name + '</strong>' + statusLine;
       tooltip.hidden = false;
       var rect = mapStage.getBoundingClientRect();
       var x = evt.clientX - rect.left + 14;
@@ -139,26 +152,49 @@
     }
     function hideTooltip() { if (tooltip) tooltip.hidden = true; }
 
+    /* ── Deko-Partikel (wie Vorlage) ──────────────────────────────────── */
+    function buildParticles() {
+      var host = document.getElementById('sc-map-particles');
+      if (!host) return;
+      var html = '';
+      for (var i = 0; i < 26; i++) {
+        var x = (Math.random() * 100).toFixed(2);
+        var y = (Math.random() * 100).toFixed(2);
+        var o = (0.12 + Math.random() * 0.3).toFixed(2);
+        html += '<i style="left:' + x + '%;top:' + y + '%;opacity:' + o + '"></i>';
+      }
+      host.innerHTML = html;
+    }
+
     /* ── SVG laden & verdrahten ───────────────────────────────────────── */
     function wirePaths() {
       var paths = svgEl.querySelectorAll('path[data-iso2]');
       Array.prototype.forEach.call(paths, function (p) {
         var iso  = p.getAttribute('data-iso2');
         var data = contract[iso];
-        if (!data) { p.classList.add('is-out'); return; }
+        if (!data) return;            /* neutrales Land bleibt sichtbar, nicht interaktiv */
         countryPaths[iso] = p;
-        p.classList.add('is-' + data.status);
-
-        p.addEventListener('mousemove', function (e) { showTooltip(e, data); });
-        p.addEventListener('mouseleave', hideTooltip);
-        p.addEventListener('click', function () {
-          if (data.status === 'scoutable') {
-            selectScope('country', iso, data.name);
-          } else {
-            if (mapHint) mapHint.textContent = data.hint;
-          }
-        });
+        p.classList.add('is-' + data.status, 'is-interactive');
       });
+
+      /* Delegierte Hover/Klick-Logik (ein Listener für alle Länder, wie Vorlage). */
+      svgEl.addEventListener('mousemove', function (e) {
+        var p = e.target.closest ? e.target.closest('path[data-iso2]') : null;
+        if (!p) { hideTooltip(); return; }
+        var iso = p.getAttribute('data-iso2');
+        showTooltip(e, contract[iso] || { name: p.getAttribute('data-name') || iso });
+      });
+      svgEl.addEventListener('mouseleave', hideTooltip);
+      svgEl.addEventListener('click', function (e) {
+        var p = e.target.closest ? e.target.closest('path[data-iso2]') : null;
+        if (!p) return;
+        var iso = p.getAttribute('data-iso2');
+        var data = contract[iso];
+        if (!data) return;            /* neutrales Land: keine Auswahl */
+        if (data.status === 'scoutable') selectScope('country', iso, data.name);
+        else if (mapHint) mapHint.textContent = data.hint;
+      });
+
       if (scopeKey && scopeKey.value && countryPaths[scopeKey.value]) {
         highlightCountry(scopeKey.value);
       }
@@ -171,6 +207,7 @@
           mapCanvas.innerHTML = txt;
           svgEl = mapCanvas.querySelector('svg');
           if (!svgEl) return;
+          buildParticles();
           wirePaths();
           focusContinent(continentSelect ? continentSelect.value : 'welt', true);
         })

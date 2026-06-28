@@ -211,38 +211,81 @@
 
 .sc-map-stage {
   position: relative; border-radius: 8px; overflow: hidden;
-  aspect-ratio: 1006 / 654;
+  aspect-ratio: 1006 / 654; max-height: 360px;
   border: 1px solid rgba(34,230,255,.1); margin: 12px 0 6px;
-  background: radial-gradient(circle at 52% 18%, rgba(34,230,255,.07), transparent 46%),
-              linear-gradient(180deg, #0a1622, #070f18);
+  background: radial-gradient(circle at 52% 30%, rgba(34,230,255,.10), transparent 52%),
+              linear-gradient(180deg, #0a1622, #060d15);
 }
-.scout-map-canvas { position: absolute; inset: 0; }
-.sc-map-stage .scout-map-canvas { position: absolute; inset: 0; }
+/* Deko-Ebenen hinter der Karte (Vorlage): Gitter, Radar, Partikel */
+.sc-map-grid {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5;
+  background-image:
+    linear-gradient(rgba(34,230,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,230,255,.05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 52% 38%, #000 0%, transparent 78%);
+}
+.sc-map-radar {
+  position: absolute; left: 52%; top: 38%; transform: translate(-50%, -50%);
+  width: 78%; aspect-ratio: 1; z-index: 1; pointer-events: none;
+}
+.sc-map-radar span {
+  position: absolute; inset: 0; margin: auto; border-radius: 50%;
+  border: 1px solid rgba(34,230,255,.12);
+}
+.sc-map-radar .r1 { width: 34%; height: 34%; }
+.sc-map-radar .r2 { width: 64%; height: 64%; border-color: rgba(34,230,255,.09); }
+.sc-map-radar .r3 { width: 96%; height: 96%; border-color: rgba(34,230,255,.06); }
+.sc-map-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.sc-map-particles i {
+  position: absolute; width: 2px; height: 2px; border-radius: 50%;
+  background: rgba(120,235,255,.9); box-shadow: 0 0 5px rgba(34,230,255,.8);
+}
+.scout-map-canvas { position: absolute; inset: 0; z-index: 2; }
+.sc-map-stage .scout-map-canvas { position: absolute; inset: 0; z-index: 2; }
 .sc-map-stage .scout-map-canvas svg {
   width: 100%; height: 100%; display: block;
 }
+.sc-map-stage .map-graticule line { stroke: rgba(120,180,210,.05); stroke-width: .4; }
+.sc-map-stage #map-countries { filter: drop-shadow(0 0 1.5px rgba(0,215,239,.32)); }
 
-/* Country path styles */
+/* Country path styles – exakt aus der Vorlage (kein Rot, dezent) */
 .sc-c {
-  fill: rgba(12, 52, 70, 0.85); stroke: rgba(0, 210, 235, 0.18); stroke-width: 0.4;
-  vector-effect: non-scaling-stroke; transition: fill .15s, filter .2s;
+  fill: rgba(55,85,100,.55); stroke: rgba(130,190,210,.35); stroke-width: .4;
+  vector-effect: non-scaling-stroke;
+  transition: fill .18s ease, opacity .35s ease, filter .2s ease;
 }
-.sc-c.is-out        { fill: rgba(9,34,46,.7); stroke: rgba(0,210,235,.08); pointer-events: none; }
+/* Europa leicht hervorgehoben (wie Vorlage) */
+.sc-c[data-continent="europa"] { fill: rgba(38,112,150,.5); stroke: rgba(120,200,225,.4); }
+/* neutrale Länder: dezenter Hover */
+.sc-c.is-interactive { cursor: default; }
+.sc-c:not(.is-scoutable):not(.is-building):not(.is-locked):not(.is-unavailable):not(.is-selected):hover {
+  fill: rgba(60,140,175,.9); stroke: rgba(150,225,250,.85);
+}
 .sc-c.is-scoutable  {
-  fill: rgba(34,230,255,.62); stroke: rgba(150,235,255,.75); cursor: pointer;
-  filter: drop-shadow(0 0 4px rgba(34,230,255,.55));
+  fill: rgba(0,210,235,.55); stroke: rgba(120,235,255,.7); stroke-width: .6; cursor: pointer;
+  filter: drop-shadow(0 0 3px rgba(0,210,235,.55));
 }
-.sc-c.is-scoutable:hover { fill: rgba(34,230,255,.85); filter: drop-shadow(0 0 7px rgba(34,230,255,.95)); }
-.sc-c.is-building   { fill: rgba(255,209,102,.55); stroke: rgba(255,209,102,.8); cursor: not-allowed; }
-.sc-c.is-building:hover { filter: drop-shadow(0 0 7px rgba(255,209,102,.95)); }
+.sc-c.is-scoutable:hover { filter: drop-shadow(0 0 8px rgba(0,215,239,.95)); }
+.sc-c.is-building   {
+  fill: rgba(245,197,66,.55); stroke: rgba(255,220,130,.85); stroke-width: .6; cursor: help;
+  filter: drop-shadow(0 0 4px rgba(245,197,66,.6));
+}
+.sc-c.is-building:hover { filter: drop-shadow(0 0 8px rgba(245,197,66,.95)); }
+/* gesperrt / nicht verfügbar – dezent, kein Rot */
 .sc-c.is-locked,
-.sc-c.is-unavailable { fill: rgba(255,85,112,.14); stroke: rgba(255,85,112,.32); cursor: help; }
+.sc-c.is-unavailable { fill: rgba(35,55,65,.45); stroke: rgba(120,160,180,.18); cursor: help; }
 .sc-c.is-locked:hover,
-.sc-c.is-unavailable:hover { fill: rgba(255,85,112,.22); stroke: rgba(255,85,112,.45); }
+.sc-c.is-unavailable:hover { fill: rgba(72,112,132,.95); stroke: rgba(150,225,250,.7); }
 .sc-c.is-selected {
-  fill: var(--sc-green); stroke: #eafdff; stroke-width: .7;
-  filter: drop-shadow(0 0 9px rgba(48,242,156,.95));
+  fill: rgba(40,232,120,.85); stroke: #dafff0; stroke-width: .75;
+  filter: drop-shadow(0 0 7px rgba(40,232,120,.95));
 }
+/* Fokus-Dimming der nicht-fokussierten Kontinente */
+.sc-c.is-dimmed { opacity: .22; }
+.sc-c.is-selected.is-dimmed,
+.sc-c.is-scoutable.is-dimmed,
+.sc-c.is-building.is-dimmed { opacity: .6; }
 
 /* Tooltip */
 .sc-map-tooltip {

@@ -1,26 +1,38 @@
 ---
 name: Scouting world-map viewBox calibration
-description: How CONTINENT_VIEW/REGION_VIEW viewBoxes relate to the map stage aspect ratio in the scouting screen.
+description: The scouting map must use the reference Natural Earth SVG + its exact projected continent viewBoxes, not self-computed ones.
 ---
 
 # Scouting world-map viewBox calibration
 
-The scouting world map (`game/static/game/scouting/world.svg`, intrinsic viewBox `0 0 1010 666`)
-is rendered with `preserveAspectRatio="xMidYMid meet"`. `meet` NEVER crops — it only
-letterboxes. So any black bars / "too much empty space" / "continent off-frame" bug is an
-aspect-ratio mismatch between the chosen viewBox and the `.sc-map-stage` box, not a pan/zoom bug.
+The scouting world map (`game/static/game/scouting/world.svg`) is the user's reference
+("Vorlage") Natural Earth equirectangular projection, intrinsic viewBox
+`5.6 19.4 988.8 386.2` (~1000×500 projected px), rendered with
+`preserveAspectRatio="xMidYMid meet"`. `meet` NEVER crops — it only letterboxes, and the
+letterbox bands are intentionally ocean/radar, not a bug.
 
-**Rule:** Every viewBox in `CONTINENT_VIEW` / `REGION_VIEW` (in `scouting.js`) and the
-`.sc-map-stage { aspect-ratio }` (in `scouting.css`) must share the SAME width/height ratio
-(currently ≈ `1006/654 ≈ 1.538`). If they match, the landmass fills the frame with no
-letterboxing.
+**Rule:** Use the Vorlage's EXACT projected continent viewBoxes verbatim in `CONTINENT_VIEW`
+(in `scouting.js`). Do NOT self-compute viewBoxes, and do NOT try to force every viewBox to
+match the `.sc-map-stage` aspect ratio. The reference viewBoxes (keyed by continent slug):
+welt `5.6 19.4 988.8 386.2`; europa `463.9 50 155.5 108.3`; nordamerika `27.8 44.4 333.3 191.7`;
+suedamerika `269.4 211.1 138.9 194.5`; afrika `444.4 141.7 202.8 211.1`;
+asien `572.2 77.8 344.5 202.8`; ozeanien `800 266.7 200 122.2`.
 
-**Why:** With `meet`, the rendered scale = min(stageW/vbW, stageH/vbH). If the viewBox ratio
-differs from the stage ratio, one axis under-fills → visible empty bands and the user reports
-"continent doesn't fit" or "too much sea at the bottom".
+**Why:** The old map used a DIFFERENT SVG (intrinsic `0 0 1010 666`, data-iso2 from a non-Natural-Earth
+source) with viewBoxes hand-padded to the stage aspect. That projection did not match the Vorlage,
+so zoom/shape looked wrong and the user explicitly said "everything needed was already provided".
+Regenerating world.svg straight from the reference + copying its viewBoxes is what makes it 1:1.
+With `meet`, mismatched aspect just letterboxes (here = ocean), which is the intended look — chasing
+a shared aspect ratio is the trap that broke fidelity before.
 
-**How to apply:** If you resize the stage, change the SVG, or add continents/regions, recompute
-each viewBox to the stage aspect (pad the real landmass bbox out to the target ratio, centered).
-Verify visually per continent — the screenshot browser is logged out, so temporarily disable
-`@login_required` on `transfer_scouting` (or use `?kontinent=<key>`), screenshot, then restore.
-Region keys must match `game/scouting/constants.py` (eu_west/eu_east/eu_north/sa_all/af_all/as_all).
+**How to apply:**
+- Regions have no Vorlage sub-views; map each region key to its parent continent
+  (`REGION_CONT`: eu_*→europa, sa_all→suedamerika, af_all→afrika, as_all→asien) and zoom to that.
+- Country/chip jumps resolve via `contract[key].continent` (slug) → `CONTINENT_VIEW[slug]`; the SVG's
+  `data-continent` must use the same slugs (europa/nordamerika/suedamerika/afrika/asien/ozeanien).
+- Focus dimming: toggle `.is-dimmed` on paths whose `data-continent` ≠ focused key (welt clears all).
+- Stage is capped (`.sc-map-stage { max-height }`) so the coverage bar + country chips below the map
+  are not pushed off the 1440×900 fold — that was the "abgeschnitten" complaint, not SVG cropping.
+- Colors are dezent, NO red: locked/unavailable = slate `rgba(35,55,65,.45)`.
+- Verify visually per continent — the screenshot browser is logged out, so temporarily remove
+  `@login_required` on `transfer_scouting`, screenshot `?kontinent=<slug>`, then RESTORE it.
