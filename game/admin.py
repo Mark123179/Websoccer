@@ -3830,8 +3830,15 @@ class WatchlistEntryAdmin(admin.ModelAdmin):
 
 @admin.register(CountryNetwork)
 class CountryNetworkAdmin(admin.ModelAdmin):
-    list_display = ('iso2', 'name', 'community_points', 'activity_points')
-    search_fields = ('iso2', 'name')
+    list_display = (
+        'iso2', 'name', 'continent', 'region',
+        'community_points', 'activity_points', 'is_paused',
+    )
+    list_filter = ('is_paused', 'continent', 'region')
+    list_editable = ('community_points', 'activity_points', 'is_paused')
+    search_fields = ('iso2', 'name', 'continent', 'region')
+    ordering = ('name',)
+    list_per_page = 50
 
 
 @admin.register(CommunitySubmission)
