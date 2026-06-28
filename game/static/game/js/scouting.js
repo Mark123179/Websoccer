@@ -1,43 +1,26 @@
 (function () {
   'use strict';
 
-  /* Kontinent-Fokus-ViewBoxen (SVG-Koordinaten: 0 0 1010 666). */
+  /* Kontinent-Fokus-ViewBoxen (SVG-Koordinaten: 0 0 1010 666).
+     Aus den echten Pfad-Bounding-Boxen der world.svg berechnet und auf das
+     Stage-Seitenverhältnis (1006/654) angepasst, damit jeder Kontinent
+     vollständig und ohne Letterbox/Scroll in die Karte passt. */
   var CONTINENT_VIEW = {
-    welt:        '0 0 1010 666',
-    europa:      '440 200 188 200',
-    nordamerika: '27 120 330 220',
-    suedamerika: '250 415 165 250',
-    afrika:      '430 345 165 315',
-    asien:       '565 275 370 385',
-    ozeanien:    '750 440 220 180'
+    welt:        '2 6 1006 654',
+    europa:      '312.1 160.6 363.9 236.6',
+    suedamerika: '77 413.4 391 254.2',
+    afrika:      '407.7 343.2 188.9 122.8',
+    asien:       '429.4 259.8 633.7 412'
   };
 
-  /* Region-Fokus-ViewBoxen – Unterabschnitte der Kontinente. */
+  /* Region-Fokus-ViewBoxen – Unterabschnitte der Kontinente (echte Region-Keys). */
   var REGION_VIEW = {
-    west:         '450 210 80 90',
-    central:      '500 215 70 80',
-    south:        '460 250 110 90',
-    east:         '560 200 90 100',
-    north:        '490 175 85 80',
-    balkan:       '540 255 60 65',
-    britain:      '445 205 50 60',
-    iberia:       '448 260 55 55',
-    brasil:       '285 395 130 135',
-    laplata:      '285 455 90 130',
-    maghreb:      '440 310 110 60',
-    westafrica:   '430 370 115 80',
-    westasia:     '565 265 110 100',
-    centralasia:  '620 240 130 90',
-    southasia:    '640 300 120 110',
-    southeastasia:'740 335 145 120',
-    eastasia:     '760 235 135 120',
-    russia:       '560 165 200 120',
-    australia:    '755 430 155 130',
-    newzealand:   '900 490 80 80',
-    usa:          '55 200 235 115',
-    canada:       '55 120 325 120',
-    mexico:       '110 280 165 115',
-    caribbean:    '230 285 120 80'
+    eu_west:  '338.6 238 236.9 154',
+    eu_east:  '484.7 273.6 140.1 91.1',
+    eu_north: '433.6 167.8 184 119.6',
+    sa_all:   '77 413.4 391 254.2',
+    af_all:   '407.7 343.2 188.9 122.8',
+    as_all:   '429.4 259.8 633.7 412'
   };
 
   function fmtEuro(n) {
@@ -124,6 +107,11 @@
         });
         highlightCountry(key);
         if (regionSelect) regionSelect.value = '';
+        var cont = (contract[key] || {}).continent;
+        if (cont && CONTINENT_VIEW[cont]) {
+          if (continentSelect) continentSelect.value = cont;
+          focusContinent(cont, false);
+        }
       } else {
         highlightCountry(null);
       }

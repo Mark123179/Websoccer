@@ -264,6 +264,8 @@ def transfer_scouting(request):
 
     pcts = [c['coverage_percent'] for c in countries]
     coverage_pct = round(sum(pcts) / len(pcts)) if pcts else 0
+    scoutable_count = sum(1 for c in countries if c['status'] == 'scoutable')
+    building_count = sum(1 for c in countries if c['status'] == 'building')
 
     context = {
         'game_header': build_game_header('Scouting', 'Transfers · Scoutingnetzwerk', back_url='/'),
@@ -281,6 +283,8 @@ def transfer_scouting(request):
         'finds': finds,
         'bids': bids,
         'coverage_pct': coverage_pct,
+        'scoutable_count': scoutable_count,
+        'building_count': building_count,
         'available_budget_fmt': _euro(service.available_budget(club)),
         'reserved_budget_fmt': _euro(service.reserved_budget(club)),
     }
