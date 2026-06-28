@@ -160,3 +160,32 @@ class DrawTests(TestCase):
         field_names = {f.name for f in ScoutingFind._meta.get_fields()}
         self.assertNotIn('base_strength', field_names)
         self.assertNotIn('potential', field_names)
+
+
+class SeedCountryNetworksTests(TestCase):
+    """Management-Command legt echte CountryNetwork-Einträge an (Task #642)."""
+
+    def test_seed_creates_networks_and_is_idempotent(self):
+        from django.core.management import call_command
+        call_command('seed_country_networks', verbosity=0)
+        first_count = CountryNetwork.objects.count()
+        self.assertGreaterEqual(first_count, 3)
+        for net in CountryNetwork.objects.all():
+            self.assertIn(net.iso2, constants.COUNTRIES)
+            self.assertEqual(net.name, constants.COUNTRIES[net.iso2]['name'])
+        # Erneuter Lauf legt keine Duplikate an.
+        call_command('seed_country_networks', verbosity=0)
+        self.assertEqual(CountryNetwork.objects.count(), first_count)
+
+    def test_seed_makes_countries_building_without_pool(self):
+        from django.core.management import call_command
+        call_command('seed_country_networks', verbosity=0)
+        # Ohne Poolspieler ist jedes Netzwerk-Land mindestens "im Aufbau".
+        building = [c for c in coverage.map_data()['countries']
+                    if c['status'] == coverage.STATUS_BUILDING]
+        self.assertGreaterEqual(len(building), 3)
+
+    def test_dry_run_writes_nothing(self):
+        from django.core.management import call_command
+        call_command('seed_country_networks', '--dry-run', verbosity=0)
+        self.assertEqual(CountryNetwork.objects.count(), 0)

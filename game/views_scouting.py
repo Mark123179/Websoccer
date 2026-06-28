@@ -205,6 +205,9 @@ def transfer_scouting(request):
     selected_continent = request.GET.get('kontinent', 'europa')
     region_options = mapdata['regions']
 
+    # Fallback NUR für leere DBs: sind echte CountryNetwork-Einträge angelegt
+    # (siehe `manage.py seed_country_networks`), liefert map_data() bereits
+    # scoutbare/im-Aufbau-Länder und diese Demo-Injektion bleibt inaktiv.
     _DEMO_OVERRIDES = {
         'TR': ('scoutable', 'Demo: scoutbar'),
         'BE': ('scoutable', 'Demo: scoutbar'),
