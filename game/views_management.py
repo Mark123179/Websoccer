@@ -53,6 +53,39 @@ def _get_stadium_or_none(club):
         return None
 
 
+def build_facility_cards(stadium):
+    """Baut die 4 echten Einrichtungs-Karten (NLZ, Trainingsgelände, Medizin,
+    Geschäftsstelle) aus dem Stadium-Modell und teilt sie in linke/rechte Spalte
+    fürs Stadionumfeld. ``num`` entspricht der Baufeld-Badge-Nummer in der Szene."""
+    if not stadium:
+        return [], []
+    conf = [
+        ('nlz',      2, 'NLZ',              'Nachwuchsleistungszentrum', stadium.nlz_level,      'left'),
+        ('training', 1, 'Trainingsgelände', 'Trainingsgelände',          stadium.training_level, 'left'),
+        ('medizin',  3, 'Medizin',          'Medizinische Abteilung',    stadium.medizin_level,  'right'),
+        ('office',   4, 'Geschäftsstelle',  'Geschäftsstelle',           stadium.office_level,   'right'),
+    ]
+    left, right = [], []
+    for key, num, label, sublabel, lvl, side in conf:
+        levels_data = FACILITY_DATA[key]
+        tooltip_levels = [
+            {'level': i, 'desc': d['desc'], 'cost_fmt': _fmt_euro(d['cost']), 'days': d['days']}
+            for i, d in enumerate(levels_data)
+        ]
+        card = {
+            'num':              num,
+            'key':              key,
+            'label':            label,
+            'sublabel':         sublabel,
+            'level':            lvl,
+            'upgrade_cost_fmt': _fmt_euro(levels_data[lvl + 1]['cost']) if lvl < 3 else '',
+            'upgrade_days':     levels_data[lvl + 1]['days'] if lvl < 3 else 0,
+            'tooltip_levels':   tooltip_levels,
+        }
+        (left if side == 'left' else right).append(card)
+    return left, right
+
+
 # ------------------------------------------------------------------ #
 #  Management Hub                                                      #
 # ------------------------------------------------------------------ #
@@ -211,34 +244,6 @@ def stadium_detail(request):
     gauge_atmosphaere = min(100, round(standing_ratio * 65 + lawn * 0.35))
     gauge_komfort     = min(100, round(seating_vip_ratio * 70 + lawn * 0.30))
 
-    # Stadionumfeld-Einrichtungen
-    _raw_facilities = [
-        ('nlz',      1, 'NLZ',             'Nachwuchsleistungszentrum', stadium.nlz_level,      22, 18),
-        ('medizin',  2, 'Medizin',         'Medizinische Abteilung',    stadium.medizin_level,  78, 42),
-        ('training', 3, 'Trainingsgelände','Trainingsgelände',           stadium.training_level, 50, 76),
-        ('office',   4, 'Geschäftsstelle', 'Geschäftsstelle',            stadium.office_level,   20, 64),
-    ]
-    facilities = []
-    for key, num, label, sublabel, lvl, px, py in _raw_facilities:
-        levels_data = FACILITY_DATA[key]
-        tooltip_levels = [
-            {'level': i, 'desc': d['desc'], 'cost_fmt': _fmt_euro(d['cost']), 'days': d['days']}
-            for i, d in enumerate(levels_data)
-        ]
-        facilities.append({
-            'num':             num,
-            'key':             key,
-            'label':           label,
-            'sublabel':        sublabel,
-            'level':           lvl,
-            'pin_x':           px,
-            'pin_y':           py,
-            'desc':            levels_data[lvl]['desc'],
-            'upgrade_cost_fmt': _fmt_euro(levels_data[lvl + 1]['cost']) if lvl < 3 else '',
-            'upgrade_days':    levels_data[lvl + 1]['days'] if lvl < 3 else 0,
-            'tooltip_levels':  tooltip_levels,
-        })
-
     return render(request, 'game/management/stadium.html', {
         'club':                  club,
         'stadium':               stadium,
@@ -246,7 +251,6 @@ def stadium_detail(request):
         'expansions':            expansions,
         'revenue_entries':       revenue_entries,
         'kostenmatrix_json':     json.dumps(kostenmatrix),
-        'facilities':            facilities,
         'max_kapazitaet':        MAX_KAPAZITAET,
         'einnahmen_vollauslastung': einnahmen_vollauslastung,
         'saisoneinnahmen':          saisoneinnahmen_aktuell,
@@ -493,14 +497,14 @@ def facility_upgrade(request):
     }
     if key not in field_map:
         messages.error(request, 'Unbekannte Einrichtung.')
-        return redirect('stadium_detail')
+        return redirect('management_stadionumfeld')
 
     field   = field_map[key]
     current = getattr(stadium, field)
 
     if current >= 3:
         messages.error(request, 'Einrichtung ist bereits auf Maximalstufe.')
-        return redirect('stadium_detail')
+        return redirect('management_stadionumfeld')
 
     kosten = Decimal(FACILITY_DATA[key][current + 1]['cost'])
 
@@ -510,7 +514,7 @@ def facility_upgrade(request):
             f'Budget reicht nicht. Benötigt: {kosten:,.0f} € — '
             f'Verfügbar: {club.budget:,.0f} €'
         )
-        return redirect('stadium_detail')
+        return redirect('management_stadionumfeld')
 
     club.budget -= kosten
     club.save(update_fields=['budget'])
@@ -527,7 +531,7 @@ def facility_upgrade(request):
         f'{label_map[key]} auf Stufe {current + 1} ausgebaut. '
         f'{kosten:,.0f} € abgebucht.'
     )
-    return redirect('stadium_detail')
+    return redirect('management_stadionumfeld')
 
 
 # ------------------------------------------------------------------ #
@@ -1286,11 +1290,16 @@ STADIONUMFELD_ALLOWED_KEYS = {
 @login_required(login_url='/auth/login/')
 def management_stadionumfeld(request):
     club = current_manager_club(user=request.user)
+    stadium = _get_stadium_or_none(club)
     config = StadionumfeldConfig.get_solo()
+    facilities_left, facilities_right = build_facility_cards(stadium)
     return render(request, 'game/management/stadionumfeld.html', {
-        'club':        club,
-        'is_admin':    request.user.is_superuser,
-        'vu_state':    config.state or {},
+        'club':             club,
+        'stadium':          stadium,
+        'is_admin':         request.user.is_superuser,
+        'vu_state':         config.state or {},
+        'facilities_left':  facilities_left,
+        'facilities_right': facilities_right,
         'game_header': build_game_header(
             'Stadionumfeld',
             'Vereinsgelände · 6 Baufelder + Stadion',

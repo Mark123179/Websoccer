@@ -5,11 +5,30 @@
 {% block body_class %}stadionumfeld-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
-<div class="vu-page" id="vu-app"></div>
+{% if messages %}
+<ul class="vu-flash">
+  {% for m in messages %}
+  <li class="vu-flash-item vu-flash-item--{{ m.tags }}">{{ m }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+<div class="vu-shell{% if not facilities_left and not facilities_right %} vu-shell--solo{% endif %}">
+  {% if facilities_left %}
+  <aside class="vu-flank vu-flank--left">
+    {% for f in facilities_left %}{% include 'game/management/_facility_card.html' %}{% endfor %}
+  </aside>
+  {% endif %}
+  <div class="vu-page" id="vu-app"></div>
+  {% if facilities_right %}
+  <aside class="vu-flank vu-flank--right">
+    {% for f in facilities_right %}{% include 'game/management/_facility_card.html' %}{% endfor %}
+  </aside>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -21,5 +40,5 @@
   window.__VU_SAVE_URL__   = "{% url 'stadionumfeld_save' %}";
   window.__VU_CSRF__       = "{{ csrf_token }}";
 </script>
-<script src="{% static 'game/js/stadionumfeld.js' %}?v=2"></script>
+<script src="{% static 'game/js/stadionumfeld.js' %}?v=3"></script>
 {% endblock %}

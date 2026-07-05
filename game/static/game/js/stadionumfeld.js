@@ -453,22 +453,25 @@
       this._slX=this._slY=this._slScale=this._slRz=this._slCap=null;
       this._elReadout=this._elRz=this._capNumEl=this._capTierEl=null;
       this.mount.innerHTML='';
-      this.mount.appendChild(this.buildHeader(V));
-      var body=h('div',{style:{flex:'1',display:'flex',minHeight:'0'}});
       if(V.isOverview){
-        var cell=h('div',{style:{flex:'1',minWidth:'0',display:'flex',alignItems:'center',justifyContent:'center',padding:'6px'}});
+        // Manager-Ansicht: nur die Szene (die 4 echten Karten liegen serverseitig
+        // links/rechts). Der interne Kopf entfällt (globaler ws-game-header zeigt
+        // Titel bereits); der Admin-Editor rutscht UNTER die Szene.
+        var cell=h('div',{style:{flex:'1',minWidth:'0',minHeight:'0',display:'flex',alignItems:'center',justifyContent:'center',padding:'6px'}});
         this._stageCell=cell;
         cell.appendChild(this.buildOverviewStage(V));
-        body.appendChild(cell);
-        if(IS_ADMIN) body.appendChild(this.buildOverviewRail(V));
+        this.mount.appendChild(cell);
+        if(IS_ADMIN) this.mount.appendChild(this.buildOverviewRail(V));
       } else {
+        this.mount.appendChild(this.buildHeader(V));
+        var body=h('div',{style:{flex:'1',display:'flex',minHeight:'0'}});
         var cell2=h('div',{style:{flex:'1',minWidth:'0',display:'flex',alignItems:'center',justifyContent:'center',padding:'18px'}});
         this._stageCell=cell2;
         cell2.appendChild(this.buildDetailStage(V));
         body.appendChild(cell2);
         if(IS_ADMIN) body.appendChild(this.buildDetailRail(V));
+        this.mount.appendChild(body);
       }
-      this.mount.appendChild(body);
     }
     refreshScene(){
       if(!this._stageCell){ this.render(); return; }
@@ -593,7 +596,7 @@
       if(V.adjust){ edKids.push(this.buildEditorControls(V)); }
       panels.push(h('div',{style:V.S.panel},edKids));
 
-      return h('aside',{'class':'vu-rail',style:{flex:'0 0 318px',borderLeft:'1px solid var(--line)',background:'rgba(5,14,22,.5)',overflowY:'auto',padding:'13px',display:'flex',flexDirection:'column',gap:'13px'}},panels);
+      return h('aside',{'class':'vu-rail vu-rail--below',style:{flex:'0 0 auto',borderTop:'1px solid var(--line)',background:'rgba(5,14,22,.5)',padding:'13px',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:'13px',alignItems:'start'}},panels);
     }
 
     buildEditorControls(V){
