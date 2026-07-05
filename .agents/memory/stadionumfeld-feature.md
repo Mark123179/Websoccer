@@ -1,6 +1,6 @@
 ---
 name: Stadionumfeld (Vereinsumfeld & Stadion-Szene)
-description: Non-obvious gotchas for the Management-Hub "Stadionumfeld" 1:1 design-import scene (global singleton, admin rail, missing source assets, save whitelist).
+description: Non-obvious gotchas for the Management-Hub "Stadionumfeld" scene — global layout singleton vs. real per-club levels, REAL wall-clock facility construction (FacilityConstruction), admin rail vs. manager rail, missing source assets, save whitelist.
 ---
 
 # Stadionumfeld — 1:1 Design-Import-Szene
@@ -12,20 +12,41 @@ Management-Hub-Kachel `/management/stadionumfeld/`. Portierung des Replit-Design
 ## Zwei Datenquellen: globaler Singleton (Layout) + Pro-Club-Override (Levels)
 - `StadionumfeldConfig.get_solo()` hält NUR NOCH Layout/Deko (badgePos, positions, day,
   heimspiel, tod, wetter, selected). Superuser-Edits im Rail gelten dafür global.
-- `levels`/`capacity`/`building` sind KEIN Singleton-State mehr: `_build_club_scene_state(stadium)`
+- `levels`/`capacity`/`building`/`budget`/`facilities` sind KEIN Singleton-State: `_build_club_scene_state(club, stadium)`
   in `views_management.py` liefert echte Pro-Verein-Werte (nlz/training, geschaeft=office_level,
-  medizin, scouting=`ScoutingDepartment.level`, frei=0, capacity=capacity_total). Injektion via
-  `{{ club_state|json_script:"vu-club-state-data" }}` → `window.__VU_CLUB_STATE__`; die `VU`-Klasse
-  ÜBERSCHREIBT im Konstruktor `state.levels/building/capacity` hart aus diesem Objekt (nach dem
-  Singleton-Merge, damit Club-Daten gewinnen). Diese Keys wurden aus `STADIONUMFELD_ALLOWED_KEYS`
-  UND aus dem `_doSave()`-Payload entfernt → sie sind read-only, die Szene kann sie nicht mehr
-  in den Singleton zurückschreiben.
-- **Why:** Layout soll global/admin-kuratiert bleiben, aber die Facility-Stufen + Kapazität müssen
-  die REALEN Daten des eingeloggten Vereins zeigen (Anforderung „alles verknüpfen").
+  medizin, scouting=`ScoutingDepartment.level`, frei=0, capacity=capacity_total, budget, plus je
+  Einrichtung eine `facilities`-Meta mit Kosten/Bauzeit/affordable/can_upgrade/is_building/tiers).
+  Injektion via `{{ club_state|json_script:"vu-club-state-data" }}` → `window.__VU_CLUB_STATE__`; die
+  `VU`-Klasse ÜBERSCHREIBT im Konstruktor `state.levels/building/capacity` hart aus diesem Objekt und
+  legt `clubFacilities/clubBudget(_fmt)` für die Manager-Rail an. Diese Keys sind NICHT in
+  `STADIONUMFELD_ALLOWED_KEYS`/`_doSave()` → read-only, die Szene schreibt sie nie in den Singleton.
+- **Why:** Layout global/admin-kuratiert; Stufen/Kapazität/Budget/Ausbau müssen die REALEN Daten des
+  eingeloggten Vereins zeigen (Anforderung „alles verknüpfen").
 - **How to apply:** Neue facility-/kapazitätsbezogene Werte in `_build_club_scene_state` ergänzen,
-  NICHT in den Singleton/Save-Payload. Admin-Rail-Buttons (startBuild/finishBuild/advanceDay/
-  setLevel) sind seitdem rein session-lokale Vorschau (persistieren nichts) — kein Bug, sondern
-  Folge des entfernten Save-Pfads.
+  NICHT in den Singleton/Save-Payload. WICHTIG: Der ADMIN-Rail (startBuild/finishBuild/advanceDay/
+  setLevel) ist rein session-lokale Vorschau (persistiert nichts). Der MANAGER-Rail (Nicht-Admin,
+  `buildManagerRail`/`doUpgrade`) ist der ECHTE Ausbau-Pfad → siehe „Echter Ausbau" unten.
+
+## Echter Ausbau (Wanduhr-Bauzeit) — FacilityConstruction
+- Manager-Ausbau (`facility_upgrade`, POST `/management/stadion/einrichtung-ausbauen/`): Geld wird
+  SOFORT abgebucht + ein `FacilityConstruction`-Auftrag (status=active, started_at/completes_at)
+  angelegt; die Stufe bleibt ALT während der Bauzeit (Szene zeigt „+"-Zustand). Stufe steigt + Boni
+  greifen ERST bei Ablauf via `resolve_due_constructions(club)`.
+- `resolve_due_constructions()` läuft lazy am Anfang von `management_hub`, `management_stadionumfeld`
+  UND `facility_upgrade`. Es „claimt" jeden fälligen Auftrag per bedingtem UPDATE (active→done) und
+  hebt `Stadium.<facility>_level` nur bei erfolgreichem Claim + `aktuell < target_level` (absoluter
+  Set, kein Increment → idempotent, kein Doppelhochstufen bei parallelen Requests).
+- Concurrency-Invariante: Geld über `Club.select_for_update()` als EINZIGE Serialisierungsstelle;
+  „bereits im Bau" NACH dem Lock via `exists()`; partielle Unique-Constraint
+  `(club, facility) WHERE status='active'` + `IntegrityError`-catch als Backstop. Der Resolver nimmt
+  BEWUSST keinen Row-Lock (Lock-Reihenfolge). PFLICHT: `stadium.refresh_from_db()` NACH dem Club-Lock
+  (der lock-freie Resolver kann zwischen Refresh und Lock die Stufe angehoben haben → sonst stiller
+  Geldverlust).
+- Frontend rechnet NIE mit Geld: `affordable`/Kosten kommen serverseitig; der „Ausbauen"-Button postet
+  nur `facility` (+ CSRF). Scouting/frei/stadion sind `upgradeable:false` → `meta.note` („folgt noch"),
+  aber generisch designt (`FacilityConstruction.facility` ist ein freier Key).
+- FACILITY_MAX_LEVEL=3; `FACILITY_FIELD_MAP` (js-id→Stadium-Feld) und `FACILITY_SRV_TO_JS`
+  (server→js, office→geschaeft) sind Modul-Konstanten in `views_management.py`.
 
 ## Admin-Gate: Server ist die echte Grenze, Client nur kosmetisch
 - `management_stadionumfeld` liefert `is_admin=request.user.is_superuser`; `stadionumfeld_save`

@@ -32,13 +32,43 @@ FACILITY_DATA = {
     ],
 }
 
+# Serverseitiger Einrichtungs-Key (FACILITY_DATA) → Stadium-Feld / Szenen-ID / Label.
+# ``geschaeft`` (Szenen-ID der JS-Szene) entspricht serverseitig ``office``.
+FACILITY_FIELD_MAP = {
+    'nlz':      'nlz_level',
+    'medizin':  'medizin_level',
+    'training': 'training_level',
+    'office':   'office_level',
+}
+FACILITY_SRV_TO_JS = {
+    'nlz':      'nlz',
+    'medizin':  'medizin',
+    'training': 'training',
+    'office':   'geschaeft',
+}
+FACILITY_LABELS = {
+    'nlz':      'NLZ',
+    'medizin':  'Medizin',
+    'training': 'Trainingsgelände',
+    'office':   'Geschäftsstelle',
+}
+FACILITY_MAX_LEVEL = 3
+
+import math
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction as db_transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import MatchdayRevenue, StadiumExpansion, StadionumfeldConfig
+from .models import (
+    Club, FacilityConstruction, MatchdayRevenue,
+    StadiumExpansion, StadionumfeldConfig,
+)
 from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
 from .stadium_revenue import record_matchday_revenue
 from .views import current_manager_club, build_game_header
@@ -53,37 +83,37 @@ def _get_stadium_or_none(club):
         return None
 
 
-def build_facility_cards(stadium):
-    """Baut die 4 echten Einrichtungs-Karten (NLZ, Trainingsgelände, Medizin,
-    Geschäftsstelle) aus dem Stadium-Modell und teilt sie in linke/rechte Spalte
-    fürs Stadionumfeld. ``num`` entspricht der Baufeld-Badge-Nummer in der Szene."""
-    if not stadium:
-        return [], []
-    conf = [
-        ('nlz',      2, 'NLZ',              'Nachwuchsleistungszentrum', stadium.nlz_level,      'left'),
-        ('training', 1, 'Trainingsgelände', 'Trainingsgelände',          stadium.training_level, 'left'),
-        ('medizin',  3, 'Medizin',          'Medizinische Abteilung',    stadium.medizin_level,  'right'),
-        ('office',   4, 'Geschäftsstelle',  'Geschäftsstelle',           stadium.office_level,   'right'),
-    ]
-    left, right = [], []
-    for key, num, label, sublabel, lvl, side in conf:
-        levels_data = FACILITY_DATA[key]
-        tooltip_levels = [
-            {'level': i, 'desc': d['desc'], 'cost_fmt': _fmt_euro(d['cost']), 'days': d['days']}
-            for i, d in enumerate(levels_data)
-        ]
-        card = {
-            'num':              num,
-            'key':              key,
-            'label':            label,
-            'sublabel':         sublabel,
-            'level':            lvl,
-            'upgrade_cost_fmt': _fmt_euro(levels_data[lvl + 1]['cost']) if lvl < 3 else '',
-            'upgrade_days':     levels_data[lvl + 1]['days'] if lvl < 3 else 0,
-            'tooltip_levels':   tooltip_levels,
-        }
-        (left if side == 'left' else right).append(card)
-    return left, right
+def resolve_due_constructions(club):
+    """Wendet abgelaufene Einrichtungs-Ausbauten an (echte Wanduhr-Bauzeit):
+    erhöht JETZT die Stufe der Einrichtung und markiert den Auftrag als
+    abgeschlossen. Boni/Attribute greifen also erst NACH Ablauf der Bauzeit.
+
+    Idempotent + rennsicher: jeder Auftrag wird per bedingtem UPDATE „geclaimt"
+    (active → done); nur wenn der Claim gelingt UND die Zielstufe höher als die
+    aktuelle ist, wird das Stadium-Feld hochgesetzt. So können parallele
+    Seitenaufrufe nicht doppelt hochstufen. Bewusst OHNE zusätzliche Row-Locks
+    (siehe Lock-Reihenfolge im Scouting-System)."""
+    if not club:
+        return
+    stadium = _get_stadium_or_none(club)
+    now = timezone.now()
+    due = FacilityConstruction.objects.filter(
+        club=club,
+        status=FacilityConstruction.STATUS_ACTIVE,
+        completes_at__lte=now,
+    )
+    for c in due:
+        with db_transaction.atomic():
+            claimed = FacilityConstruction.objects.filter(
+                pk=c.pk,
+                status=FacilityConstruction.STATUS_ACTIVE,
+            ).update(status=FacilityConstruction.STATUS_DONE)
+            if not claimed:
+                continue
+            field = FACILITY_FIELD_MAP.get(c.facility)
+            if stadium and field and getattr(stadium, field) < c.target_level:
+                setattr(stadium, field, c.target_level)
+                stadium.save(update_fields=[field])
 
 
 # ------------------------------------------------------------------ #
@@ -94,6 +124,10 @@ def build_facility_cards(stadium):
 def management_hub(request):
     club    = current_manager_club(user=request.user)
     stadium = _get_stadium_or_none(club)
+
+    # Abgelaufene Einrichtungs-Ausbauten anwenden (greift auch abseits der
+    # Stadionumfeld-Seite, damit fertige Boni nicht „hängen bleiben").
+    resolve_due_constructions(club)
 
     # Stadionbild: aus PublicProfile des Clubs oder generisches Fallback
     stadium_bg = None
@@ -480,57 +514,98 @@ def stadium_cost_api(request):
     })
 
 
-@login_required
+@login_required(login_url='/auth/login/')
 @require_POST
 def facility_upgrade(request):
+    """Startet einen ECHTEN Ausbau (Wanduhr-Bauzeit): Geld wird sofort
+    abgebucht und ein FacilityConstruction-Auftrag angelegt. Die Stufe bleibt
+    unverändert (Szene zeigt „+"-Zustand) und wird erst nach Ablauf der Bauzeit
+    über resolve_due_constructions() erhöht."""
     club    = current_manager_club(user=request.user)
     stadium = _get_stadium_or_none(club)
     if not stadium or not club:
         return redirect('management_hub')
 
+    # Zuerst abgelaufene Bauten anwenden (Stufe könnte sich geändert haben).
+    resolve_due_constructions(club)
+    stadium.refresh_from_db()
+
     key = request.POST.get('facility', '')
-    field_map = {
-        'nlz':      'nlz_level',
-        'medizin':  'medizin_level',
-        'training': 'training_level',
-        'office':   'office_level',
-    }
-    if key not in field_map:
+    if key not in FACILITY_FIELD_MAP:
         messages.error(request, 'Unbekannte Einrichtung.')
         return redirect('management_stadionumfeld')
 
-    field   = field_map[key]
-    current = getattr(stadium, field)
+    field = FACILITY_FIELD_MAP[key]
 
-    if current >= 3:
-        messages.error(request, 'Einrichtung ist bereits auf Maximalstufe.')
+    try:
+        with db_transaction.atomic():
+            # Club-Row als einzige Serialisierungsstelle sperren (Geld).
+            locked  = Club.objects.select_for_update().get(pk=club.pk)
+            # Stufe NACH dem Lock frisch lesen: der Resolver läuft OHNE Club-Lock
+            # und könnte zwischen dem Refresh oben und diesem Punkt eine fällige
+            # Stufe angehoben haben — sonst droht stiller Geldverlust.
+            stadium.refresh_from_db()
+            current = getattr(stadium, field)
+
+            if current >= FACILITY_MAX_LEVEL:
+                messages.error(request, 'Einrichtung ist bereits auf Maximalstufe.')
+                return redirect('management_stadionumfeld')
+
+            # „Bereits im Bau" NACH dem Lock prüfen (Doppelklick-Schutz).
+            already = FacilityConstruction.objects.filter(
+                club=locked,
+                facility=key,
+                status=FacilityConstruction.STATUS_ACTIVE,
+            ).exists()
+            if already:
+                messages.error(request, f'{FACILITY_LABELS[key]} wird bereits ausgebaut.')
+                return redirect('management_stadionumfeld')
+
+            target = current + 1
+            step   = FACILITY_DATA[key][target]
+            kosten = Decimal(step['cost'])
+            days   = int(step['days'])
+
+            if locked.budget < kosten:
+                messages.error(
+                    request,
+                    f'Budget reicht nicht. Benötigt: {_fmt_euro(int(kosten))} € — '
+                    f'Verfügbar: {_fmt_euro(int(locked.budget))} €'
+                )
+                return redirect('management_stadionumfeld')
+
+            locked.budget -= kosten
+            locked.save(update_fields=['budget'])
+
+            now = timezone.now()
+            FacilityConstruction.objects.create(
+                club=locked,
+                facility=key,
+                target_level=target,
+                cost_paid=kosten,
+                started_at=now,
+                completes_at=now + timedelta(days=days),
+                status=FacilityConstruction.STATUS_ACTIVE,
+            )
+    except IntegrityError:
+        messages.error(request, f'{FACILITY_LABELS[key]} wird bereits ausgebaut.')
         return redirect('management_stadionumfeld')
 
-    kosten = Decimal(FACILITY_DATA[key][current + 1]['cost'])
-
-    if club.budget < kosten:
-        messages.error(
+    if days <= 0:
+        # Sofortausbau (Stufe 0→1 kann days=0 haben) — direkt anwenden.
+        resolve_due_constructions(club)
+        messages.success(
             request,
-            f'Budget reicht nicht. Benötigt: {kosten:,.0f} € — '
-            f'Verfügbar: {club.budget:,.0f} €'
+            f'{FACILITY_LABELS[key]} auf Stufe {target} ausgebaut. '
+            f'{_fmt_euro(int(kosten))} € abgebucht.'
         )
-        return redirect('management_stadionumfeld')
-
-    club.budget -= kosten
-    club.save(update_fields=['budget'])
-
-    setattr(stadium, field, current + 1)
-    stadium.save(update_fields=[field])
-
-    label_map = {
-        'nlz': 'NLZ', 'medizin': 'Medizin',
-        'training': 'Trainingsgelände', 'office': 'Geschäftsstelle',
-    }
-    messages.success(
-        request,
-        f'{label_map[key]} auf Stufe {current + 1} ausgebaut. '
-        f'{kosten:,.0f} € abgebucht.'
-    )
+    else:
+        messages.success(
+            request,
+            f'{FACILITY_LABELS[key]} → Stufe {target}: Ausbau gestartet. '
+            f'{_fmt_euro(int(kosten))} € abgebucht · Bauzeit {days} Tage. '
+            f'Die neue Stufe wird nach Ablauf der Bauzeit automatisch aktiv.'
+        )
     return redirect('management_stadionumfeld')
 
 
@@ -1288,30 +1363,111 @@ STADIONUMFELD_ALLOWED_KEYS = {
 
 
 def _build_club_scene_state(club, stadium):
-    """Reale Pro-Verein-Daten für die Stadionumfeld-Szene: Stufen (Stadium +
-    ScoutingDepartment), Kapazität und (noch) leerer Bau-Status. Das Layout
-    (positions/badgePos) bleibt global im StadionumfeldConfig-Singleton."""
+    """Reale Pro-Verein-Daten für die Stadionumfeld-Szene:
+      * ``levels``      – aktuelle Stufen (Stadium + ScoutingDepartment),
+      * ``capacity``    – Zuschauerkapazität,
+      * ``building``    – laufende Ausbauten (Wanduhr) je Szenen-ID,
+      * ``facilities``  – pro Einrichtung Ausbau-Metadaten für das Manager-Panel
+                          (Kosten, Bauzeit, Machbarkeit, Ausbaustufen-Ladder),
+      * ``budget``      – Vereinsbudget (nur Anzeige; alle Geldprüfungen laufen
+                          serverseitig, das Frontend rechnet NICHT mit Geld).
+
+    Das Layout (positions/badgePos) bleibt global im StadionumfeldConfig.
+    Voraussetzung: resolve_due_constructions() lief zuvor, d. h. alle noch
+    aktiven Ausbauten sind garantiert in der Zukunft fällig."""
     if not stadium:
         return None
+
     scouting_level = 0
     if club is not None:
         sd = getattr(club, 'scouting_department', None)
         if sd is not None:
             scouting_level = sd.level
+
+    now = timezone.now()
+    active = {}
+    if club is not None:
+        for c in FacilityConstruction.objects.filter(
+            club=club,
+            status=FacilityConstruction.STATUS_ACTIVE,
+        ):
+            active[c.facility] = c
+
+    budget = int(club.budget) if (club is not None and club.budget is not None) else 0
+
+    levels = {
+        'nlz':       stadium.nlz_level,
+        'training':  stadium.training_level,
+        'geschaeft': stadium.office_level,
+        'medizin':   stadium.medizin_level,
+        'scouting':  scouting_level,
+        'frei':      0,
+    }
+    building = {
+        'nlz': None, 'training': None, 'geschaeft': None,
+        'medizin': None, 'scouting': None, 'frei': None,
+    }
+    facilities = {}
+
+    for srv, jsid in FACILITY_SRV_TO_JS.items():
+        lvl = getattr(stadium, FACILITY_FIELD_MAP[srv])
+        c   = active.get(srv)
+        if c is not None:
+            total_days = int(FACILITY_DATA[srv][c.target_level]['days']) or 1
+            secs_left  = (c.completes_at - now).total_seconds()
+            left       = max(0, math.ceil(secs_left / 86400.0))
+            building[jsid] = {
+                'target': c.target_level,
+                'total':  total_days,
+                'left':   left,
+            }
+        next_cost = FACILITY_DATA[srv][lvl + 1]['cost'] if lvl < FACILITY_MAX_LEVEL else None
+        next_days = FACILITY_DATA[srv][lvl + 1]['days'] if lvl < FACILITY_MAX_LEVEL else None
+        facilities[jsid] = {
+            'upgradeable':   True,
+            'upgrade_key':   srv,
+            'label':         FACILITY_LABELS[srv],
+            'level':         lvl,
+            'max':           FACILITY_MAX_LEVEL,
+            'is_building':   c is not None,
+            'can_upgrade':   (lvl < FACILITY_MAX_LEVEL) and (c is None),
+            'next_cost_fmt': _fmt_euro(next_cost) if next_cost is not None else '',
+            'next_days':     next_days,
+            'affordable':    (next_cost is not None and budget >= next_cost),
+            'tiers': [
+                {'level': i, 'desc': d['desc'],
+                 'cost_fmt': _fmt_euro(d['cost']), 'days': d['days']}
+                for i, d in enumerate(FACILITY_DATA[srv])
+            ],
+        }
+
+    facilities['scouting'] = {
+        'upgradeable': False,
+        'label':       'Scoutingabteilung',
+        'level':       scouting_level,
+        'max':         3,
+        'note':        'Der Ausbau der Scoutingabteilung (3 Stufen) folgt in Kürze.',
+    }
+    facilities['frei'] = {
+        'upgradeable': False,
+        'label':       'Freies Baufeld',
+        'level':       0,
+        'max':         1,
+        'note':        'Reserviert für einen künftigen Ausbau — aktuell keiner Einrichtung zugeordnet.',
+    }
+    facilities['stadion'] = {
+        'upgradeable': False,
+        'label':       'Stadion',
+        'note':        'Die Zuschauerkapazität wird über den Stadionausbau verwaltet.',
+    }
+
     return {
-        'levels': {
-            'nlz':       stadium.nlz_level,
-            'training':  stadium.training_level,
-            'geschaeft': stadium.office_level,
-            'medizin':   stadium.medizin_level,
-            'scouting':  scouting_level,
-            'frei':      0,
-        },
-        'capacity': stadium.capacity_total,
-        'building': {
-            'nlz': None, 'training': None, 'geschaeft': None,
-            'medizin': None, 'scouting': None, 'frei': None,
-        },
+        'levels':     levels,
+        'capacity':   stadium.capacity_total,
+        'building':   building,
+        'budget':     budget,
+        'budget_fmt': _fmt_euro(budget),
+        'facilities': facilities,
     }
 
 
@@ -1319,16 +1475,17 @@ def _build_club_scene_state(club, stadium):
 def management_stadionumfeld(request):
     club = current_manager_club(user=request.user)
     stadium = _get_stadium_or_none(club)
+    # Abgelaufene Ausbauten anwenden, BEVOR der Szenen-Zustand gebaut wird.
+    resolve_due_constructions(club)
+    if stadium is not None:
+        stadium.refresh_from_db()
     config = StadionumfeldConfig.get_solo()
-    facilities_left, facilities_right = build_facility_cards(stadium)
     return render(request, 'game/management/stadionumfeld.html', {
-        'club':             club,
-        'stadium':          stadium,
-        'is_admin':         request.user.is_superuser,
-        'vu_state':         config.state or {},
-        'club_state':       _build_club_scene_state(club, stadium),
-        'facilities_left':  facilities_left,
-        'facilities_right': facilities_right,
+        'club':       club,
+        'stadium':    stadium,
+        'is_admin':   request.user.is_superuser,
+        'vu_state':   config.state or {},
+        'club_state': _build_club_scene_state(club, stadium),
         'game_header': build_game_header(
             'Stadionumfeld',
             'Vereinsgelände · 6 Baufelder + Stadion',

@@ -5,7 +5,7 @@
 {% block body_class %}stadionumfeld-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -16,18 +16,8 @@
   {% endfor %}
 </ul>
 {% endif %}
-<div class="vu-shell{% if not facilities_left and not facilities_right %} vu-shell--solo{% endif %}">
-  {% if facilities_left %}
-  <aside class="vu-flank vu-flank--left">
-    {% for f in facilities_left %}{% include 'game/management/_facility_card.html' %}{% endfor %}
-  </aside>
-  {% endif %}
+<div class="vu-shell vu-shell--solo">
   <div class="vu-page" id="vu-app"></div>
-  {% if facilities_right %}
-  <aside class="vu-flank vu-flank--right">
-    {% for f in facilities_right %}{% include 'game/management/_facility_card.html' %}{% endfor %}
-  </aside>
-  {% endif %}
 </div>
 {% endblock %}
 
@@ -40,7 +30,8 @@
   window.__VU_IS_ADMIN__    = {% if is_admin %}true{% else %}false{% endif %};
   window.__VU_ASSET_BASE__  = "{% static 'game/images/stadionumfeld/' %}";
   window.__VU_SAVE_URL__    = "{% url 'stadionumfeld_save' %}";
+  window.__VU_UPGRADE_URL__ = "{% url 'facility_upgrade' %}";
   window.__VU_CSRF__        = "{{ csrf_token }}";
 </script>
-<script src="{% static 'game/js/stadionumfeld.js' %}?v=4"></script>
+<script src="{% static 'game/js/stadionumfeld.js' %}?v=5"></script>
 {% endblock %}

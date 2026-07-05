@@ -19,6 +19,7 @@
   var IS_ADMIN   = !!window.__VU_IS_ADMIN__;
   var SAVE_URL   = window.__VU_SAVE_URL__ || '';
   var CSRF       = window.__VU_CSRF__ || '';
+  var UPGRADE_URL= window.__VU_UPGRADE_URL__ || '';
 
   /* ---- tiny hyperscript ------------------------------------------- */
   function camel(k){ return k.replace(/[A-Z]/g, function(m){ return '-' + m.toLowerCase(); }); }
@@ -108,10 +109,17 @@
       this.state.badgePos = Object.assign(JSON.parse(JSON.stringify(this.BAKED_BADGES)), (saved&&saved.badgePos)||{});
       // Reale Pro-Verein-Daten überschreiben die globalen Demo-Stufen/-Kapazität.
       var club = (typeof window!=='undefined' && window.__VU_CLUB_STATE__) || null;
+      // Manager-Ausbau-Metadaten (Kosten/Bauzeit/Machbarkeit) aus club_state.
+      this.clubFacilities = {};
+      this.clubBudget     = null;
+      this.clubBudgetFmt  = '';
       if (club){
         if (club.levels)   this.state.levels   = Object.assign({}, this.state.levels, club.levels);
         if (club.building) this.state.building = Object.assign({}, this.state.building, club.building);
         if (typeof club.capacity === 'number') this.state.capacity = club.capacity;
+        if (club.facilities) this.clubFacilities = club.facilities;
+        if (typeof club.budget === 'number') this.clubBudget = club.budget;
+        if (club.budget_fmt) this.clubBudgetFmt = club.budget_fmt;
       }
       if (!IS_ADMIN){ this.state.adjust = false; this.state.screen = 'overview'; }
 
@@ -338,7 +346,7 @@
         var rz=pos.rz||0;
         var warped=!!(pos.c4&&pos.c4.length===4);
         var halfW=pos.s/2, hPct=pos.s/ratio*(1672/941), halfH=hPct/2;
-        ov.wrapStyle={position:'absolute',left:pos.x+'%',top:pos.y+'%',width:pos.s+'%',aspectRatio:String(ratio),transform:warped?'translate(-50%,-50%)':('translate(-50%,-50%) rotate('+rz+'deg)'),zIndex:editSel?320:(Math.round(pos.y)+5),pointerEvents:(s.adjust&&hasImg&&!warped)?'auto':'none',cursor:s.adjust?'grab':'default',outline:(editSel&&!warped)?'2px solid var(--cyan)':((s.adjust&&hasImg&&!warped)?'1px dashed rgba(34,230,255,.45)':'none'),outlineOffset:'2px',borderRadius:'8px',transition:(self.drag||self.dragCorner)?'none':'left .12s ease,top .12s ease,width .12s ease,transform .12s ease'};
+        ov.wrapStyle={position:'absolute',left:pos.x+'%',top:pos.y+'%',width:pos.s+'%',aspectRatio:String(ratio),transform:warped?'translate(-50%,-50%)':('translate(-50%,-50%) rotate('+rz+'deg)'),zIndex:editSel?320:(Math.round(pos.y)+5),pointerEvents:(((s.adjust||!IS_ADMIN)&&hasImg&&!warped))?'auto':'none',cursor:s.adjust?'grab':(IS_ADMIN?'default':'pointer'),outline:(editSel&&!warped)?'2px solid var(--cyan)':((s.adjust&&hasImg&&!warped)?'1px dashed rgba(34,230,255,.45)':'none'),outlineOffset:'2px',borderRadius:'8px',transition:(self.drag||self.dragCorner)?'none':'left .12s ease,top .12s ease,width .12s ease,transform .12s ease'};
         var imgBase={position:'absolute',inset:0,backgroundImage:src?("url('"+src+"')"):'none',backgroundRepeat:'no-repeat',pointerEvents:'none',filter:'drop-shadow(0 14px 20px rgba(0,0,0,.5))'};
         if(warped){ var wbox={lx:pos.x-halfW,ty:pos.y-halfH,w:pos.s,h:hPct}; imgBase.transform=self.warpCSS(pos.c4,wbox,self.stagePx()); imgBase.transformOrigin='0 0'; imgBase.backgroundSize='100% 100%'; imgBase.backgroundPosition='center'; }
         else { imgBase.backgroundSize='contain'; imgBase.backgroundPosition='center bottom'; }
@@ -477,6 +485,7 @@
         cell2.appendChild(this.buildDetailStage(V));
         body.appendChild(cell2);
         if(IS_ADMIN) body.appendChild(this.buildDetailRail(V));
+        else body.appendChild(this.buildManagerRail(V));
         this.mount.appendChild(body);
       }
     }
@@ -532,14 +541,14 @@
           h('div',{style:{fontSize:'10.5px',fontWeight:'700',color:'var(--muted)',marginTop:'3px'},text:ov.cardSub})
         ])); }
         if(ov.hasImg){ inner.push(h('div',{style:ov.imgStyle})); }
-        scene.appendChild(h('div',{style:ov.wrapStyle,onClick:IS_ADMIN?ov.onClick:null,onDown:IS_ADMIN?ov.onDown:null},inner));
+        scene.appendChild(h('div',{style:ov.wrapStyle,onClick:ov.onClick,onDown:IS_ADMIN?ov.onDown:null},inner));
       });
       if(V.heimspiel){ scene.appendChild(h('div',{style:V.fansDivStyle})); }
       var stageKids=[scene, h('div',{style:V.envTintStyle})];
       if(V.isNight) stageKids.push(h('div',{style:V.nightLightsStyle}));
       if(V.isSnow) stageKids.push(h('div',{style:V.snowStyle}));
       V.overlays.forEach(function(ov){
-        stageKids.push(h('div',{style:ov.badgeStyle,onClick:IS_ADMIN?ov.onClick:null,onDown:IS_ADMIN?ov.onBadgeDown:null},[
+        stageKids.push(h('div',{style:ov.badgeStyle,onClick:ov.onClick,onDown:IS_ADMIN?ov.onBadgeDown:null},[
           h('div',{style:{display:'flex',flexDirection:'column',alignItems:'center',gap:'3px'}},[
             h('div',{style:ov.numStyle,text:ov.numText}),
             h('div',{style:ov.chipStyle,text:ov.chipText})
@@ -719,6 +728,87 @@
       panels.push(h('div',{style:V.S.panel},verKids));
 
       return h('aside',{'class':'vu-rail',style:{flex:'0 0 408px',borderLeft:'1px solid var(--line)',background:'rgba(5,14,22,.5)',overflowY:'auto',padding:'18px',display:'flex',flexDirection:'column',gap:'13px'}},panels);
+    }
+
+    /* ---- Manager-Detailleiste (Nicht-Admin: echter Ausbau) ---------- */
+    buildManagerRail(V){
+      var self=this, sel=V.sel;
+      var meta=this.clubFacilities[sel.id]||{};
+      var panels=[];
+
+      // Kopf: Name / Zweck / Status
+      panels.push(h('div',{style:V.S.panel},[
+        h('div',{style:{fontSize:'21px',fontWeight:'900',letterSpacing:'.3px'},text:sel.name}),
+        h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginTop:'3px'},text:sel.purpose}),
+        h('div',{style:{marginTop:'11px'}},[ h('span',{style:sel.statusBadge,text:sel.statusText}) ])
+      ]));
+
+      // Ausbau-Panel
+      var head=[ h('span',{},sel.buildHeading) ];
+      if(meta.level!=null && meta.max!=null){ head.push(h('span',{style:{fontSize:'10px',color:'var(--faint)'}},'Stufe '+meta.level+' / '+meta.max)); }
+      var buildKids=[ h('div',{style:V.S.title},head) ];
+
+      if(sel.isBuilding){
+        buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--yellow)',fontWeight:'800',marginBottom:'9px'},text:sel.buildingText}));
+        buildKids.push(h('div',{style:sel.progTrack},[ h('div',{style:sel.progFill}) ]));
+        buildKids.push(h('div',{style:{marginTop:'12px',fontSize:'11.5px',color:'var(--muted)',fontWeight:'700',lineHeight:'1.45'}},'Der Ausbau läuft in Echtzeit. Sobald die Bauzeit abgelaufen ist, wird die neue Stufe automatisch aktiv — die Boni greifen erst dann.'));
+      } else if(meta.upgradeable && meta.can_upgrade){
+        buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginBottom:'8px',lineHeight:'1.45'}},'Ausbau auf Stufe '+(meta.level+1)+'. Das Geld wird sofort abgebucht, danach läuft die Bauzeit in Echtzeit.'));
+        buildKids.push(h('div',{style:{display:'flex',gap:'20px',marginBottom:'12px'}},[
+          h('div',{},[
+            h('div',{style:{fontSize:'10px',color:'var(--faint)',fontWeight:'800',textTransform:'uppercase',letterSpacing:'.4px'}},'Kosten'),
+            h('div',{style:{fontSize:'15px',fontWeight:'900',color:'var(--cyan)'},text:meta.next_cost_fmt+' €'})
+          ]),
+          h('div',{},[
+            h('div',{style:{fontSize:'10px',color:'var(--faint)',fontWeight:'800',textTransform:'uppercase',letterSpacing:'.4px'}},'Bauzeit'),
+            h('div',{style:{fontSize:'15px',fontWeight:'900',color:'var(--text)'},text:meta.next_days+' Tage'})
+          ])
+        ]));
+        buildKids.push(h('div',{style:{fontSize:'11px',color:'var(--faint)',fontWeight:'700',marginBottom:'11px'}},'Budget: '+this.clubBudgetFmt+' €'));
+        if(meta.affordable){
+          buildKids.push(h('button',{style:V.S.primaryBtnFull,onClick:function(){ self.doUpgrade(meta.upgrade_key); },text:'Auf Stufe '+(meta.level+1)+' ausbauen'}));
+        } else {
+          var dis=Object.assign({},V.S.primaryBtnFull,{background:'rgba(255,255,255,.05)',border:'1px solid var(--line)',color:'var(--faint)',cursor:'not-allowed'});
+          buildKids.push(h('button',{style:dis,disabled:'disabled',text:'Budget reicht nicht'}));
+        }
+      } else if(meta.upgradeable && meta.level!=null && meta.level>=meta.max){
+        buildKids.push(h('div',{style:{fontSize:'12.5px',color:'var(--green)',fontWeight:'800'},text:'Maximalstufe erreicht · '+sel.maxName}));
+      } else {
+        buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',lineHeight:'1.5'},text:meta.note||'Für diese Einrichtung ist der Ausbau hier noch nicht verfügbar.'}));
+      }
+      panels.push(h('div',{style:V.S.panel},buildKids));
+
+      // Ausbaustufen-Übersicht (informativ)
+      if(meta.tiers && meta.tiers.length){
+        var rows=meta.tiers.map(function(t){
+          var isCur=(meta.level===t.level);
+          var right=(t.level>0)?h('span',{style:{marginLeft:'auto',fontSize:'10px',fontWeight:'700',color:'var(--green)'},text:t.cost_fmt+' € · '+t.days+' T'}):null;
+          return h('div',{style:{padding:'9px 11px',borderRadius:'9px',border:'1px solid '+(isCur?'var(--line-strong)':'var(--line)'),background:isCur?'rgba(34,230,255,.07)':'rgba(255,255,255,.025)'}},[
+            h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'3px'}},[
+              h('span',{style:{fontSize:'10.5px',fontWeight:'900',letterSpacing:'.3px',color:isCur?'var(--cyan)':'var(--muted)'},text:'Stufe '+t.level}),
+              right
+            ]),
+            h('div',{style:{fontSize:'11px',color:isCur?'var(--text)':'var(--muted)',fontWeight:'700',lineHeight:'1.45'},text:t.desc})
+          ]);
+        });
+        panels.push(h('div',{style:V.S.panel},[
+          h('div',{style:V.S.title},[ h('span',{},'Ausbaustufen') ]),
+          h('div',{style:{display:'flex',flexDirection:'column',gap:'7px'}},rows)
+        ]));
+      }
+
+      return h('aside',{'class':'vu-rail',style:{flex:'0 0 380px',borderLeft:'1px solid var(--line)',background:'rgba(5,14,22,.5)',overflowY:'auto',padding:'18px',display:'flex',flexDirection:'column',gap:'13px'}},panels);
+    }
+
+    doUpgrade(serverKey){
+      if(!serverKey || !UPGRADE_URL) return;
+      var form=document.createElement('form');
+      form.method='POST'; form.action=UPGRADE_URL; form.style.display='none';
+      var mk=function(n,v){ var i=document.createElement('input'); i.type='hidden'; i.name=n; i.value=v; return i; };
+      form.appendChild(mk('csrfmiddlewaretoken', CSRF));
+      form.appendChild(mk('facility', serverKey));
+      document.body.appendChild(form);
+      form.submit();
     }
   }
 

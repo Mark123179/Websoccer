@@ -5075,3 +5075,72 @@ class StadionumfeldConfig(models.Model):
         if obj is None:
             obj = cls.objects.create(state={})
         return obj
+
+
+class FacilityConstruction(models.Model):
+    """Aktiver Ausbau einer Vereinseinrichtung mit echter Wanduhr-Bauzeit.
+
+    Beim Start wird das Geld sofort abgebucht und dieser Auftrag angelegt; die
+    Stufe der Einrichtung (Stadium.<facility>_level) wird ERST beim Ablauf von
+    ``completes_at`` erhöht (lazy resolve über resolve_due_constructions()). So
+    greifen Boni/Attribute erst NACH Ablauf der Bauzeit, nicht schon beim Start.
+
+    Generisch gehalten: ``facility`` nimmt die serverseitigen Keys aus
+    FACILITY_DATA (nlz/medizin/training/office). Weitere Einrichtungen
+    (z. B. Scouting mit 3 Stufen) lassen sich später ohne Schemaänderung
+    ergänzen.
+    """
+    STATUS_ACTIVE = 'active'
+    STATUS_DONE = 'done'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'Im Bau'),
+        (STATUS_DONE, 'Abgeschlossen'),
+        (STATUS_CANCELLED, 'Abgebrochen'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='facility_constructions',
+        verbose_name='Verein',
+    )
+    facility = models.CharField(
+        'Einrichtung',
+        max_length=32,
+        help_text='Serverseitiger Einrichtungs-Key (z. B. nlz, medizin, training, office).',
+    )
+    target_level = models.PositiveSmallIntegerField('Zielstufe')
+    cost_paid = models.DecimalField(
+        'Bezahlte Baukosten',
+        max_digits=15,
+        decimal_places=2,
+        default=Decimal('0'),
+    )
+    started_at = models.DateTimeField('Baubeginn', default=timezone.now)
+    completes_at = models.DateTimeField('Fertigstellung')
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Einrichtungs-Ausbau'
+        verbose_name_plural = 'Einrichtungs-Ausbauten'
+        ordering = ['-started_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'facility'],
+                condition=models.Q(status='active'),
+                name='uniq_active_facility_construction_per_club',
+            ),
+        ]
+
+    def __str__(self):
+        return (
+            f'{self.club} – {self.facility} → Stufe {self.target_level} '
+            f'({self.status})'
+        )
