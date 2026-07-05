@@ -1,0 +1,46 @@
+/* ============================================================
+   STADIONUMFELD — 1:1-Port des Replit-Design-Exports
+   "Vereinsumfeld & Stadion".
+   Nur Größenanpassung an die 1440-Basis; Design & Texte
+   bleiben unverändert. Alle Tokens sind auf .vu-page gescoped
+   (Werte 1:1 aus dem mitgelieferten Design-System).
+   ============================================================ */
+
+@keyframes vu-snow { to { background-position: 0 700px, 40px 620px, -30px 540px; } }
+@keyframes vu-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes vu-rise { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.vu-page {
+    --panel:       rgba(9, 23, 34, 0.82);
+    --cyan:        #22e6ff;
+    --line:        rgba(44, 231, 255, 0.18);
+    --line-strong: rgba(44, 231, 255, 0.38);
+    --green:       #30f29c;
+    --yellow:      #ffd166;
+    --text:        #f4fbff;
+    --shadow:      0 18px 70px rgba(0, 0, 0, 0.46);
+    --muted:       rgba(244, 251, 255, 0.64);
+    --faint:       rgba(244, 251, 255, 0.38);
+
+    position: relative;
+    height: 1040px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    background:
+        radial-gradient(120% 80% at 90% -10%, rgba(34, 230, 255, .10), transparent 45%),
+        radial-gradient(120% 90% at 0% 110%, rgba(48, 242, 156, .07), transparent 50%),
+        linear-gradient(160deg, #04090f, #070f18 60%, #04090f);
+}
+
+.vu-page * { box-sizing: border-box; }
+.vu-page input[type=range] { accent-color: #22e6ff; width: 100%; }
+.vu-page button { font-family: inherit; }
+
+.vu-rail::-webkit-scrollbar { width: 10px; }
+.vu-rail::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, .3); border-radius: 8px; }
+.vu-rail::-webkit-scrollbar-track { background: rgba(255, 255, 255, .03); }

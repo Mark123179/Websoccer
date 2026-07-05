@@ -60,6 +60,8 @@ from .views_management import (
     management_finanzen,
     management_halloffame,
     management_job_offers,
+    management_stadionumfeld,
+    stadionumfeld_save,
 )
 from .views_creator import (
     creator_index,
@@ -274,6 +276,8 @@ urlpatterns = [
     ),
 
     path('management/', management_hub, name='management_hub'),
+    path('management/stadionumfeld/', management_stadionumfeld, name='management_stadionumfeld'),
+    path('management/stadionumfeld/speichern/', stadionumfeld_save, name='stadionumfeld_save'),
     path('management/stadion/', stadium_detail, name='stadium_detail'),
     path('management/stadion/preise/', stadium_set_prices, name='stadium_set_prices'),
     path('management/stadion/ausbau/', stadium_expand, name='stadium_expand'),

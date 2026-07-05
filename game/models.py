@@ -5046,3 +5046,32 @@ class CommunitySubmission(models.Model):
 
     def __str__(self):
         return f'{self.manager} → {self.iso2} ({self.get_status_display()})'
+
+
+class StadionumfeldConfig(models.Model):
+    """Globaler Einzelsatz (Singleton) für die Stadionumfeld-Szene.
+
+    Speichert den kompletten Editor-Zustand aus dem Replit-Design-Export
+    (heimspiel, tod, wetter, day, capacity, levels, building, positions,
+    badgePos, selected). Nur Superuser dürfen schreiben; die Szene gilt
+    global für ALLE Vereine. Kalibrierungs-Defaults (defPos/BAKED_POS/
+    BAKED_BADGES) leben clientseitig — hier werden nur die Overrides und
+    der Umgebungs-/Ausbauzustand persistiert.
+    """
+
+    state = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Stadionumfeld-Konfiguration'
+        verbose_name_plural = 'Stadionumfeld-Konfiguration'
+
+    def __str__(self):
+        return f'Stadionumfeld-Konfiguration (aktualisiert {self.updated_at:%Y-%m-%d %H:%M})'
+
+    @classmethod
+    def get_solo(cls):
+        obj = cls.objects.order_by('id').first()
+        if obj is None:
+            obj = cls.objects.create(state={})
+        return obj

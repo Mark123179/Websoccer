@@ -38,10 +38,10 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import MatchdayRevenue, StadiumExpansion
+from .models import MatchdayRevenue, StadiumExpansion, StadionumfeldConfig
 from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
 from .stadium_revenue import record_matchday_revenue
-from .views import current_manager_club
+from .views import current_manager_club, build_game_header
 
 
 def _get_stadium_or_none(club):
@@ -1271,5 +1271,49 @@ def management_job_offers(request):
         'countries':    countries,
         'leagues':      leagues,
     })
+
+
+# ── Stadionumfeld (Vereinsumfeld & Stadion-Szene) ─────────────────────────────
+# Globale Szene aus dem Replit-Design-Export. Superuser sehen die rechte
+# Editor-Leiste (Ecken ziehen, Fans, Tag/Nacht, Slider); ihre Änderungen gelten
+# global für ALLE Vereine (ein Singleton). Alle anderen sehen die Szene ohne Leiste.
+STADIONUMFELD_ALLOWED_KEYS = {
+    'heimspiel', 'tod', 'wetter', 'day', 'capacity',
+    'levels', 'building', 'positions', 'badgePos', 'selected',
+}
+
+
+@login_required(login_url='/auth/login/')
+def management_stadionumfeld(request):
+    club = current_manager_club(user=request.user)
+    config = StadionumfeldConfig.get_solo()
+    return render(request, 'game/management/stadionumfeld.html', {
+        'club':        club,
+        'is_admin':    request.user.is_superuser,
+        'state_json':  json.dumps(config.state or {}),
+        'game_header': build_game_header(
+            'Stadionumfeld',
+            'Vereinsgelände · 6 Baufelder + Stadion',
+            back_url='/management/',
+        ),
+    })
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def stadionumfeld_save(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'forbidden'}, status=403)
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'error': 'invalid json'}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({'error': 'invalid payload'}, status=400)
+    clean = {k: v for k, v in payload.items() if k in STADIONUMFELD_ALLOWED_KEYS}
+    config = StadionumfeldConfig.get_solo()
+    config.state = clean
+    config.save(update_fields=['state', 'updated_at'])
+    return JsonResponse({'ok': True})
 
 
