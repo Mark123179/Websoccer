@@ -33,12 +33,14 @@
 
 {% block extra_js %}
 {{ vu_state|json_script:"vu-state-data" }}
+{{ club_state|json_script:"vu-club-state-data" }}
 <script>
-  window.__VU_STATE__      = JSON.parse(document.getElementById('vu-state-data').textContent);
-  window.__VU_IS_ADMIN__   = {% if is_admin %}true{% else %}false{% endif %};
-  window.__VU_ASSET_BASE__ = "{% static 'game/images/stadionumfeld/' %}";
-  window.__VU_SAVE_URL__   = "{% url 'stadionumfeld_save' %}";
-  window.__VU_CSRF__       = "{{ csrf_token }}";
+  window.__VU_STATE__       = JSON.parse(document.getElementById('vu-state-data').textContent);
+  window.__VU_CLUB_STATE__  = JSON.parse(document.getElementById('vu-club-state-data').textContent);
+  window.__VU_IS_ADMIN__    = {% if is_admin %}true{% else %}false{% endif %};
+  window.__VU_ASSET_BASE__  = "{% static 'game/images/stadionumfeld/' %}";
+  window.__VU_SAVE_URL__    = "{% url 'stadionumfeld_save' %}";
+  window.__VU_CSRF__        = "{{ csrf_token }}";
 </script>
-<script src="{% static 'game/js/stadionumfeld.js' %}?v=3"></script>
+<script src="{% static 'game/js/stadionumfeld.js' %}?v=4"></script>
 {% endblock %}

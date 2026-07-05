@@ -9,10 +9,23 @@ Management-Hub-Kachel `/management/stadionumfeld/`. Portierung des Replit-Design
 "Vereinsumfeld und Stadion-UI" nach Django (vanilla JS class `VU` in
 `game/static/game/js/stadionumfeld.js`, gescoptes CSS auf `.vu-page`).
 
-## Globaler Singleton, nicht pro Verein
-- Persistenz über `StadionumfeldConfig.get_solo()` (ein Datensatz für ALLE Vereine).
-  Superuser-Edits im rechten Rail gelten global. Es gibt bewusst KEINEN Pro-Club-State.
-- **Why:** Anforderung war eine globale, vom Admin kuratierte Szene, kein per-Manager-Zustand.
+## Zwei Datenquellen: globaler Singleton (Layout) + Pro-Club-Override (Levels)
+- `StadionumfeldConfig.get_solo()` hält NUR NOCH Layout/Deko (badgePos, positions, day,
+  heimspiel, tod, wetter, selected). Superuser-Edits im Rail gelten dafür global.
+- `levels`/`capacity`/`building` sind KEIN Singleton-State mehr: `_build_club_scene_state(stadium)`
+  in `views_management.py` liefert echte Pro-Verein-Werte (nlz/training, geschaeft=office_level,
+  medizin, scouting=`ScoutingDepartment.level`, frei=0, capacity=capacity_total). Injektion via
+  `{{ club_state|json_script:"vu-club-state-data" }}` → `window.__VU_CLUB_STATE__`; die `VU`-Klasse
+  ÜBERSCHREIBT im Konstruktor `state.levels/building/capacity` hart aus diesem Objekt (nach dem
+  Singleton-Merge, damit Club-Daten gewinnen). Diese Keys wurden aus `STADIONUMFELD_ALLOWED_KEYS`
+  UND aus dem `_doSave()`-Payload entfernt → sie sind read-only, die Szene kann sie nicht mehr
+  in den Singleton zurückschreiben.
+- **Why:** Layout soll global/admin-kuratiert bleiben, aber die Facility-Stufen + Kapazität müssen
+  die REALEN Daten des eingeloggten Vereins zeigen (Anforderung „alles verknüpfen").
+- **How to apply:** Neue facility-/kapazitätsbezogene Werte in `_build_club_scene_state` ergänzen,
+  NICHT in den Singleton/Save-Payload. Admin-Rail-Buttons (startBuild/finishBuild/advanceDay/
+  setLevel) sind seitdem rein session-lokale Vorschau (persistieren nichts) — kein Bug, sondern
+  Folge des entfernten Save-Pfads.
 
 ## Admin-Gate: Server ist die echte Grenze, Client nur kosmetisch
 - `management_stadionumfeld` liefert `is_admin=request.user.is_superuser`; `stadionumfeld_save`
@@ -28,7 +41,9 @@ Management-Hub-Kachel `/management/stadionumfeld/`. Portierung des Replit-Design
 ## Fehlende Quell-Assets sind ABSICHT (1:1-Import, nicht erfinden)
 - `baufeld1.png` fehlt im Design-Export selbst (nur baufeld2–6 existieren). Das HTML referenziert
   es für die NLZ-Bauansicht → **404 beim JS-Preload ist erwartet/harmlos**, nur sichtbar wenn NLZ
-  im Bau-Zustand ist (nicht Default). Ebenso: Medizin nur Stufe-1-Bild vorhanden (1+/2/2+/3 folgen).
+  im Bau-Zustand/Stufe 0 ist (nicht Default). Alle übrigen Facility-Bilder (nlz/training/geschaeft/
+  medizin/scouting/stadion inkl. Stufen 1–3 + „+"-Bauzustände) EXISTIEREN inzwischen — die frühere
+  Notiz „Medizin nur Stufe-1" ist überholt (per 2026-07 alle medizin1/2/3 + plus-Varianten da).
 - **Why:** 1:1-Import — fehlende Vorlage-Assets NICHT fabrizieren; als echte Content-Lücke behandeln.
 
 ## JS-Class-Falle: Instanz-Property darf Methodennamen nicht überschatten

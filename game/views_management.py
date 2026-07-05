@@ -1282,9 +1282,37 @@ def management_job_offers(request):
 # Editor-Leiste (Ecken ziehen, Fans, Tag/Nacht, Slider); ihre Änderungen gelten
 # global für ALLE Vereine (ein Singleton). Alle anderen sehen die Szene ohne Leiste.
 STADIONUMFELD_ALLOWED_KEYS = {
-    'heimspiel', 'tod', 'wetter', 'day', 'capacity',
-    'levels', 'building', 'positions', 'badgePos', 'selected',
+    'heimspiel', 'tod', 'wetter', 'day',
+    'positions', 'badgePos', 'selected',
 }
+
+
+def _build_club_scene_state(club, stadium):
+    """Reale Pro-Verein-Daten für die Stadionumfeld-Szene: Stufen (Stadium +
+    ScoutingDepartment), Kapazität und (noch) leerer Bau-Status. Das Layout
+    (positions/badgePos) bleibt global im StadionumfeldConfig-Singleton."""
+    if not stadium:
+        return None
+    scouting_level = 0
+    if club is not None:
+        sd = getattr(club, 'scouting_department', None)
+        if sd is not None:
+            scouting_level = sd.level
+    return {
+        'levels': {
+            'nlz':       stadium.nlz_level,
+            'training':  stadium.training_level,
+            'geschaeft': stadium.office_level,
+            'medizin':   stadium.medizin_level,
+            'scouting':  scouting_level,
+            'frei':      0,
+        },
+        'capacity': stadium.capacity_total,
+        'building': {
+            'nlz': None, 'training': None, 'geschaeft': None,
+            'medizin': None, 'scouting': None, 'frei': None,
+        },
+    }
 
 
 @login_required(login_url='/auth/login/')
@@ -1298,6 +1326,7 @@ def management_stadionumfeld(request):
         'stadium':          stadium,
         'is_admin':         request.user.is_superuser,
         'vu_state':         config.state or {},
+        'club_state':       _build_club_scene_state(club, stadium),
         'facilities_left':  facilities_left,
         'facilities_right': facilities_right,
         'game_header': build_game_header(

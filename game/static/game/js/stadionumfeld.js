@@ -106,6 +106,13 @@
       }, saved||{});
       this.state.positions = Object.assign(JSON.parse(JSON.stringify(this.defPos)), JSON.parse(JSON.stringify(this.BAKED_POS)), (saved&&saved.positions)||{});
       this.state.badgePos = Object.assign(JSON.parse(JSON.stringify(this.BAKED_BADGES)), (saved&&saved.badgePos)||{});
+      // Reale Pro-Verein-Daten überschreiben die globalen Demo-Stufen/-Kapazität.
+      var club = (typeof window!=='undefined' && window.__VU_CLUB_STATE__) || null;
+      if (club){
+        if (club.levels)   this.state.levels   = Object.assign({}, this.state.levels, club.levels);
+        if (club.building) this.state.building = Object.assign({}, this.state.building, club.building);
+        if (typeof club.capacity === 'number') this.state.capacity = club.capacity;
+      }
       if (!IS_ADMIN){ this.state.adjust = false; this.state.screen = 'overview'; }
 
       this.onMove = this.onMove.bind(this);
@@ -133,7 +140,7 @@
     }
     _doSave(){
       var s=this.state;
-      var payload={ heimspiel:s.heimspiel, tod:s.tod, wetter:s.wetter, day:s.day, capacity:s.capacity, levels:s.levels, building:s.building, positions:s.positions, badgePos:s.badgePos, selected:s.selected };
+      var payload={ heimspiel:s.heimspiel, tod:s.tod, wetter:s.wetter, day:s.day, positions:s.positions, badgePos:s.badgePos, selected:s.selected };
       try{ fetch(SAVE_URL, { method:'POST', headers:{ 'Content-Type':'application/json', 'X-CSRFToken':CSRF }, credentials:'same-origin', body:JSON.stringify(payload) }).catch(function(){}); }catch(e){}
     }
     setState(patch, cb, mode){
