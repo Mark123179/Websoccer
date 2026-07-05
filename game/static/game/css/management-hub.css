@@ -266,6 +266,8 @@
 
 .mhub-card--jobs .mhub-card-bg { background-image: url('../images/backgrounds/job-angebote-tile.png'); background-size: cover; background-position: center 30%; }
 
+.mhub-card--stadionumfeld .mhub-card-bg { background-image: url('../images/backgrounds/stadionumfeld-tile.png'); background-size: cover; background-position: center 20%; }
+
 /* "Kein Verein" Hinweis auf gesperrten Karten */
 .mhub-no-club-hint {
     color: rgba(255, 200, 100, 0.70);
