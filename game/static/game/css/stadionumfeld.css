@@ -64,23 +64,28 @@
 
     display: grid;
     grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(240px, 300px);
+    grid-template-rows: 1fr 1fr;
     gap: 14px;
     align-items: stretch;
     color: var(--text);
     font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
 }
 .vu-shell * { box-sizing: border-box; }
-.vu-shell--solo { grid-template-columns: 1fr; }
+.vu-shell--solo { grid-template-columns: 1fr; grid-template-rows: auto; }
 
-.vu-flank {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-width: 0;
-}
+/* Karten sind über display:contents direkte Grid-Items der .vu-shell,
+   damit alle 4 Kacheln über beide Spalten dieselben Zeilentracks
+   (1fr 1fr) teilen → exakt gleich hoch und unten bündig. */
+.vu-flank { display: contents; }
+.vu-shell .vu-page { grid-column: 2; grid-row: 1 / span 2; min-width: 0; }
+.vu-shell--solo .vu-page { grid-column: auto; grid-row: auto; }
+.vu-flank--left  .sf-card:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.vu-flank--left  .sf-card:nth-of-type(2) { grid-column: 1; grid-row: 2; }
+.vu-flank--right .sf-card:nth-of-type(1) { grid-column: 3; grid-row: 1; }
+.vu-flank--right .sf-card:nth-of-type(2) { grid-column: 3; grid-row: 2; }
 
 .vu-flank .sf-card {
-    flex: 0 0 auto;
+    min-width: 0;
     background: rgba(10, 15, 28, 0.72);
     border: 1px solid var(--line);
     border-radius: 12px;
@@ -123,14 +128,15 @@
 
 .vu-flank form { margin-top: auto; }
 .vu-flank .sf-upgrade-btn {
-    margin-top: 10px; width: 100%; padding: 9px 8px;
-    background: rgba(48, 242, 156, .12);
-    border: 1px solid rgba(48, 242, 156, .4);
-    border-radius: 8px; color: var(--green);
-    font-size: 12px; font-weight: 800; letter-spacing: .04em;
-    cursor: pointer; transition: background .2s, border-color .2s; text-align: center;
+    margin-top: 10px; width: 100%; min-height: 42px; padding: 0 15px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: linear-gradient(180deg, #1bd9ee, #06879a);
+    border: 1px solid rgba(93, 249, 255, .46);
+    border-radius: 8px; color: #fff;
+    font-size: 13px; font-weight: 800; letter-spacing: .04em;
+    cursor: pointer; transition: filter .2s, box-shadow .2s; text-align: center;
 }
-.vu-flank .sf-upgrade-btn:hover { background: rgba(48, 242, 156, .22); border-color: rgba(48, 242, 156, .65); }
+.vu-flank .sf-upgrade-btn:hover { filter: brightness(1.08); box-shadow: 0 0 16px rgba(34, 230, 255, .4); }
 .vu-flank .sf-maxed { margin-top: auto; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--faint); text-align: center; padding: 8px 0 2px; }
 
 .vu-flank .sf-card--nlz {
