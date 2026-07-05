@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Stadionumfeld{% endblock %}
+{% block body_class %}stadionumfeld-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="vu-page" id="vu-app"></div>
+{% endblock %}
+
+{% block extra_js %}
+{{ vu_state|json_script:"vu-state-data" }}
+<script>
+  window.__VU_STATE__      = JSON.parse(document.getElementById('vu-state-data').textContent);
+  window.__VU_IS_ADMIN__   = {% if is_admin %}true{% else %}false{% endif %};
+  window.__VU_ASSET_BASE__ = "{% static 'game/images/stadionumfeld/' %}";
+  window.__VU_SAVE_URL__   = "{% url 'stadionumfeld_save' %}";
+  window.__VU_CSRF__       = "{{ csrf_token }}";
+</script>
+<script src="{% static 'game/js/stadionumfeld.js' %}?v=2"></script>
+{% endblock %}

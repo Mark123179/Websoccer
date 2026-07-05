@@ -1290,7 +1290,7 @@ def management_stadionumfeld(request):
     return render(request, 'game/management/stadionumfeld.html', {
         'club':        club,
         'is_admin':    request.user.is_superuser,
-        'state_json':  json.dumps(config.state or {}),
+        'vu_state':    config.state or {},
         'game_header': build_game_header(
             'Stadionumfeld',
             'Vereinsgelände · 6 Baufelder + Stadion',

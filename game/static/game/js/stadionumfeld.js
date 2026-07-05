@@ -115,7 +115,7 @@
     }
 
     /* ---- lifecycle -------------------------------------------------- */
-    mount(){
+    init(){
       window.addEventListener('pointermove', this.onMove);
       window.addEventListener('pointerup', this.onUp);
       this.render();
@@ -717,7 +717,7 @@
     var mount=document.getElementById('vu-app');
     if(!mount) return;
     var app=new VU(mount);
-    app.mount();
+    app.init();
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); }
   else { boot(); }
