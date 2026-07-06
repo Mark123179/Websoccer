@@ -244,6 +244,16 @@
   padding: 0;
 }
 
+/* ── Systemanalyse: Neu-laden-Button ────────────────────────────────────── */
+.cm-sysdiag-reload {
+  border-color: #00d4ff55 !important;
+  color: #00d4ff !important;
+}
+.cm-sysdiag-reload:hover {
+  background: #071525 !important;
+  border-color: #00d4ff99 !important;
+}
+
 /* ── cm-muted Hilfsklasse ────────────────────────────────────────────────── */
 .cm-muted {
   color: #7d97b0;
