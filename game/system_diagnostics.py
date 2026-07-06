@@ -180,6 +180,13 @@ def _model_field_column(model, field_name: str) -> str | None:
         return None
 
 
+def _first_existing_field(model, candidates: Iterable[str]) -> str | None:
+    for candidate in candidates:
+        if _model_has_field(model, candidate):
+            return candidate
+    return None
+
+
 def _all_table_names() -> set[str]:
     try:
         with connection.cursor() as cursor:
@@ -304,10 +311,15 @@ FEATURE_SPECS: list[dict[str, Any]] = [
     {
         "name": "Saisonlogik",
         "models": [
-            {"candidates": ["GameSeasonState", "LeagueSeasonState"], "fields": ["season", "is_active", "current_matchday"]},
+            # Globaler Saison-Singleton: current_season/is_started, nicht season/is_active.
+            {"candidates": ["GameSeasonState"], "fields": ["current_season", "is_started", "updated_at"]},
+            # Liga-Saisonstatus: per Liga/Saison mit aktuellem Spieltag.
+            {"candidates": ["LeagueSeasonState"], "fields": ["league", "season", "current_matchday", "is_simulated", "updated_at"]},
             {"candidates": ["LeagueStandings"], "fields": ["league", "club", "season"]},
-            {"candidates": ["SeasonGoal"], "fields": ["club", "season"]},
-            {"candidates": ["SeasonFixture"], "fields": ["league", "home_club", "away_club", "scheduled_date", "is_simulated"], "optional": True},
+            # Ziele nutzen season_number statt season.
+            {"candidates": ["SeasonGoal"], "fields": ["club", "season_number", "goal_tier", "achieved"]},
+            # SeasonFixture darf status/simulated_match statt is_simulated nutzen; die Queue-Auswertung prueft Alternativen separat.
+            {"candidates": ["SeasonFixture"], "fields": ["league", "home_club", "away_club", "scheduled_date"], "optional": True},
         ],
         "urls": ["creator_season_end"],
     },
@@ -317,7 +329,7 @@ FEATURE_SPECS: list[dict[str, Any]] = [
             {"candidates": ["TacticSetup"], "fields": ["club", "squad_scope", "formation", "lineup", "bench", "instructions", "is_locked"]},
             {"candidates": ["TacticTemplate"], "fields": ["club", "squad_scope", "name", "formation", "lineup", "bench"]},
         ],
-        "urls": ["club_tactics"],
+        "urls": [{"name": "club_tactics", "kwargs": {"club_id": 1}}],
     },
     {
         "name": "KO-Modus / Pokal",
@@ -326,7 +338,7 @@ FEATURE_SPECS: list[dict[str, Any]] = [
             {"candidates": ["CupRound"], "fields": ["cup_season", "round_number", "round_code", "status", "scheduled_date"]},
             {"candidates": ["CupFixture"], "fields": ["cup_round", "home_club", "away_club", "winner_club", "status", "bracket_position"]},
         ],
-        "urls": ["cup_tree"],
+        "urls": [{"name": "cup_tree", "kwargs": {"league_id": 1, "season": "2026/27"}}],
     },
     {
         "name": "Liveticker / Spielbericht",
@@ -383,12 +395,24 @@ def _feature_status_item(feature: dict[str, Any], table_names: set[str]) -> dict
         if missing_columns:
             warnings.append(f"DB-Spalten fehlen in {table_name}: {', '.join(missing_columns)}")
 
-    for url_name in feature.get("urls", []):
+    for url_spec in feature.get("urls", []):
+        if isinstance(url_spec, dict):
+            url_name = url_spec.get("name", "")
+            args = url_spec.get("args") or []
+            kwargs = url_spec.get("kwargs") or None
+        else:
+            url_name = str(url_spec)
+            args = []
+            kwargs = None
+
         try:
-            reverse(url_name)
+            reverse(url_name, args=args, kwargs=kwargs)
             ok.append(f"URL-Name vorhanden: {url_name}")
         except NoReverseMatch:
-            warnings.append(f"URL-Name nicht auflösbar: {url_name}")
+            suffix = ""
+            if args or kwargs:
+                suffix = f" mit Beispielparametern args={args}, kwargs={kwargs}"
+            warnings.append(f"URL-Name nicht auflösbar: {url_name}{suffix}")
         except Exception as exc:
             warnings.append(f"URL-Check fehlgeschlagen ({url_name}): {exc}")
 
@@ -440,36 +464,59 @@ def section_season_and_simulation() -> dict[str, Any]:
 
 def _season_fixture_items(model) -> list[dict[str, str]]:
     items: list[dict[str, str]] = []
-    if not all(_model_has_field(model, field) for field in ["is_simulated", "scheduled_date"]):
-        missing = [field for field in ["is_simulated", "scheduled_date"] if not _model_has_field(model, field)]
-        return [_item("warn", "SeasonFixture-Felder", f"Fehlende Felder: {', '.join(missing)}")]
+    date_field = _first_existing_field(model, ["scheduled_date", "scheduled_at", "kickoff_at", "match_date", "date"])
+    if not date_field:
+        return [_item("warn", "SeasonFixture-Felder", "Kein Datumsfeld scheduled_date/scheduled_at/kickoff_at/match_date/date gefunden.")]
 
-    today_or_now = _date_value_for_field(model, "scheduled_date")
-    open_count, err = _safe_count(model, is_simulated=False)
-    if err:
-        items.append(_item("error", "Offene Fixtures", err))
-    else:
-        items.append(_item("ok" if open_count == 0 else "info", "Offene SeasonFixture", f"{open_count} Fixture(s) mit is_simulated=False."))
+    today_or_now = _date_value_for_field(model, date_field)
+    open_qs = None
+    open_descriptor = ""
 
-    due_count, err = _safe_count(model, is_simulated=False, scheduled_date__lt=today_or_now)
-    if err:
-        items.append(_item("error", "Vergangene offene Fixtures", err))
-    else:
-        items.append(_item("warn" if due_count else "ok", "Vergangene offene Fixtures", f"{due_count} offene Fixture(s) mit scheduled_date < heute/jetzt."))
+    bool_field = _first_existing_field(model, ["is_simulated", "simulated", "is_played", "played", "is_completed", "completed"])
+    status_field = _first_existing_field(model, ["status", "state"])
+    result_link_field = _first_existing_field(model, ["simulated_match", "match_result", "result", "simulation"])
 
-    league_field = "league" if _model_has_field(model, "league") else None
-    if league_field:
-        try:
+    try:
+        if bool_field:
+            open_qs = model.objects.filter(**{bool_field: False})
+            open_descriptor = f"{bool_field}=False"
+        elif status_field:
+            terminal_values = {"played", "completed", "done", "simulated", "closed", "finished", "bye"}
+            status_counts = Counter(model.objects.values_list(status_field, flat=True))
+            open_statuses = [
+                status for status in status_counts
+                if str(status or "").strip().lower() not in terminal_values
+            ]
+            open_qs = model.objects.filter(**{f"{status_field}__in": open_statuses}) if open_statuses else model.objects.none()
+            status_detail = ", ".join(f"{key or 'leer'}: {count}" for key, count in sorted(status_counts.items(), key=lambda pair: str(pair[0]))) or "keine Einträge"
+            open_descriptor = f"{status_field} nicht final ({status_detail})"
+        elif result_link_field:
+            open_qs = model.objects.filter(**{f"{result_link_field}__isnull": True})
+            open_descriptor = f"{result_link_field} IS NULL"
+        else:
+            items.append(_item("warn", "SeasonFixture-Status", "Kein is_simulated/status/simulated_match-Äquivalent gefunden; offene Queue nicht sicher bestimmbar."))
+            open_qs = model.objects.all()
+            open_descriptor = "alle Fixtures (Fallback)"
+
+        open_count = open_qs.count()
+        items.append(_item("ok" if open_count == 0 else "info", "Offene SeasonFixture", f"{open_count} Fixture(s) nach Regel: {open_descriptor}."))
+
+        due_qs = open_qs.filter(**{f"{date_field}__lt": today_or_now})
+        due_count = due_qs.count()
+        items.append(_item("warn" if due_count else "ok", "Vergangene offene Fixtures", f"{due_count} offene Fixture(s) mit {date_field} < heute/jetzt."))
+
+        league_field = "league" if _model_has_field(model, "league") else None
+        if league_field:
             rows = (
-                model.objects.filter(is_simulated=False, scheduled_date__lt=today_or_now)
+                due_qs
                 .values(f"{league_field}_id")
                 .annotate(count=Count("id"))
                 .order_by("-count")[:10]
             )
             lines = [f"Liga {row[f'{league_field}_id']}: {row['count']} hängend" for row in rows]
             items.append(_item("warn" if lines else "ok", "Hängende Fixtures pro Liga", lines or "Keine hängenden fälligen Fixtures."))
-        except Exception as exc:
-            items.append(_item("warn", "Hängende Fixtures pro Liga", f"Nicht auswertbar: {exc}"))
+    except Exception as exc:
+        items.append(_item("error", "SeasonFixture-Auswertung", f"{exc.__class__.__name__}: {exc}"))
 
     return items
 
