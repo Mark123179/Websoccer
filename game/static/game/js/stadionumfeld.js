@@ -431,7 +431,7 @@
         isSnow:s.wetter==='schnee', day:s.day, envLabel:envLabel,
         titleText:isOverview?'VEREINSUMFELD':p.name.toUpperCase(),
         subText:isOverview?'Vereinsgelände · 6 Baufelder + Stadion':p.purpose,
-        bgSrc:this.url('umfeld0.png'), fansSrc:this.url('stadtfans.png'), bgDivStyle:{position:'absolute',inset:0,backgroundImage:"url('"+this.url('umfeld0.png')+"')",backgroundSize:'cover',backgroundPosition:'center'}, fansDivStyle:{position:'absolute',inset:0,backgroundImage:"url('"+this.url('stadtfans.png')+"')",backgroundSize:'cover',backgroundPosition:'center',zIndex:1,pointerEvents:'none'},
+        bgSrc:this.url('umfeld0.png'), fansSrc:this.url('stadtfans.png'), bgDivStyle:{position:'absolute',inset:0,backgroundImage:"url('"+this.url('umfeld0.png')+"')",backgroundSize:'contain',backgroundPosition:'center',backgroundRepeat:'no-repeat'}, fansDivStyle:{position:'absolute',inset:0,backgroundImage:"url('"+this.url('stadtfans.png')+"')",backgroundSize:'contain',backgroundPosition:'center',backgroundRepeat:'no-repeat',zIndex:1,pointerEvents:'none'},
         sceneStyle:sceneStyle, envTintStyle:envTintStyle, snowStyle:snowStyle, isNight:isNight, nightLightsStyle:nightLightsStyle, detailNightStyle:detailNightStyle,
         overlays:overlays, railRows:railRows, sel:sel, tierLadder:tierLadder,
         todOptions:todOptions, wetterOptions:wetterOptions, buildSummary:buildSummary,
