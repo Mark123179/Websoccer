@@ -703,14 +703,19 @@
       if(sel.isBuilding){
         buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--yellow)',fontWeight:'800',marginBottom:'9px'},text:sel.buildingText}));
         buildKids.push(h('div',{style:sel.progTrack},[ h('div',{style:sel.progFill}) ]));
-        buildKids.push(h('div',{style:{display:'flex',gap:'8px',marginTop:'13px'}},[
-          h('button',{style:V.S.primaryBtn,onClick:sel.finishFn},'Bau abschließen'),
-          h('button',{style:V.S.ghostBtn,onClick:sel.cancelFn},'Abbrechen')
-        ]));
+        if(IS_ADMIN){
+          buildKids.push(h('div',{style:{display:'flex',gap:'8px',marginTop:'13px'}},[
+            h('button',{style:V.S.primaryBtn,onClick:sel.finishFn},'Vorschau: fertig'),
+            h('button',{style:V.S.ghostBtn,onClick:sel.cancelFn},'Abbrechen')
+          ]));
+          buildKids.push(h('div',{style:{fontSize:'10px',color:'var(--faint)',marginTop:'6px',lineHeight:'1.4'}},'Admin-Vorschau · kein echter Abschluss'));
+        } else {
+          buildKids.push(h('div',{style:{fontSize:'11px',color:'var(--muted)',fontWeight:'700',marginTop:'11px',lineHeight:'1.5'}},'Der Ausbau läuft – Fertigstellung nach Ablauf der Bauzeit.'));
+        }
       }
       if(sel.canBuild){
         buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginBottom:'11px',lineHeight:'1.4'},text:sel.buildHint}));
-        buildKids.push(h('button',{style:V.S.primaryBtnFull,onClick:sel.buildFn,text:sel.buildLabel}));
+        if(IS_ADMIN){ buildKids.push(h('button',{style:V.S.primaryBtnFull,onClick:sel.buildFn,text:sel.buildLabel})); }
       }
       if(sel.isMax){ buildKids.push(h('div',{style:{fontSize:'12.5px',color:'var(--green)',fontWeight:'800'},text:'Maximalstufe erreicht · '+sel.maxName})); }
       panels.push(h('div',{style:V.S.panel},buildKids));
