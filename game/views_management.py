@@ -66,8 +66,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import (
-    Club, FacilityConstruction, MatchdayRevenue,
-    StadiumExpansion, StadionumfeldConfig,
+    Club, CupFixture, FacilityConstruction, MatchdayRevenue,
+    SeasonFixture, StadiumExpansion, StadionumfeldConfig,
 )
 from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
 from .stadium_revenue import record_matchday_revenue
@@ -1461,13 +1461,29 @@ def _build_club_scene_state(club, stadium):
         'note':        'Die Zuschauerkapazität wird über den Stadionausbau verwaltet.',
     }
 
+    # Heimspiel heute? → Liga + Pokal prüfen (Stadtfans-Layer)
+    today = timezone.localdate()
+    heimspiel_today = False
+    if club is not None:
+        heimspiel_today = SeasonFixture.objects.filter(
+            home_club=club,
+            scheduled_date=today,
+        ).exists()
+        if not heimspiel_today:
+            heimspiel_today = CupFixture.objects.filter(
+                home_club=club,
+                is_bye=False,
+                cup_round__scheduled_date=today,
+            ).exists()
+
     return {
-        'levels':     levels,
-        'capacity':   stadium.capacity_total,
-        'building':   building,
-        'budget':     budget,
-        'budget_fmt': _fmt_euro(budget),
-        'facilities': facilities,
+        'levels':          levels,
+        'capacity':        stadium.capacity_total,
+        'building':        building,
+        'budget':          budget,
+        'budget_fmt':      _fmt_euro(budget),
+        'facilities':      facilities,
+        'heimspiel_today': heimspiel_today,
     }
 
 
