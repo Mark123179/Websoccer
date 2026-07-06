@@ -120,7 +120,7 @@
         if (club.facilities) this.clubFacilities = club.facilities;
         if (typeof club.budget === 'number') this.clubBudget = club.budget;
         if (club.budget_fmt) this.clubBudgetFmt = club.budget_fmt;
-        if (!IS_ADMIN && typeof club.heimspiel_today === 'boolean') this.state.heimspiel = club.heimspiel_today;
+        if (typeof club.heimspiel_today === 'boolean') this.state.heimspiel = club.heimspiel_today;
       }
       if (!IS_ADMIN){ this.state.adjust = false; this.state.screen = 'overview'; }
 

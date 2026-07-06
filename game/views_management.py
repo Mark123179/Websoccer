@@ -1362,7 +1362,7 @@ STADIONUMFELD_ALLOWED_KEYS = {
 }
 
 
-def _build_club_scene_state(club, stadium):
+def _build_club_scene_state(club, stadium, game_date=None):
     """Reale Pro-Verein-Daten für die Stadionumfeld-Szene:
       * ``levels``      – aktuelle Stufen (Stadium + ScoutingDepartment),
       * ``capacity``    – Zuschauerkapazität,
@@ -1461,19 +1461,21 @@ def _build_club_scene_state(club, stadium):
         'note':        'Die Zuschauerkapazität wird über den Stadionausbau verwaltet.',
     }
 
-    # Heimspiel heute? → Liga + Pokal prüfen (Stadtfans-Layer)
-    today = timezone.localdate()
+    # Heimspiel am aktuellen Kalendertag? → Liga + Pokal prüfen (Stadtfans-Layer)
+    # game_date = Datum, das der Kalender-Header gerade zeigt
+    # (= date.today() + calendar_offset); stimmt mit dem hervorgehobenen Tag überein.
+    check_date = game_date if game_date is not None else timezone.localdate()
     heimspiel_today = False
     if club is not None:
         heimspiel_today = SeasonFixture.objects.filter(
             home_club=club,
-            scheduled_date=today,
+            scheduled_date=check_date,
         ).exists()
         if not heimspiel_today:
             heimspiel_today = CupFixture.objects.filter(
                 home_club=club,
                 is_bye=False,
-                cup_round__scheduled_date=today,
+                cup_round__scheduled_date=check_date,
             ).exists()
 
     return {
@@ -1496,12 +1498,19 @@ def management_stadionumfeld(request):
     if stadium is not None:
         stadium.refresh_from_db()
     config = StadionumfeldConfig.get_solo()
+    # Selbes Datum wie der Kalender-Header (date.today() + calendar_offset).
+    try:
+        _offset = int(request.GET.get('calendar_offset', 0))
+    except (TypeError, ValueError):
+        _offset = 0
+    from datetime import date as _date
+    _game_date = _date.today() + timedelta(days=_offset)
     return render(request, 'game/management/stadionumfeld.html', {
         'club':       club,
         'stadium':    stadium,
         'is_admin':   request.user.is_superuser,
         'vu_state':   config.state or {},
-        'club_state': _build_club_scene_state(club, stadium),
+        'club_state': _build_club_scene_state(club, stadium, game_date=_game_date),
         'game_header': build_game_header(
             'Stadionumfeld',
             'Vereinsgelände · 6 Baufelder + Stadion',
