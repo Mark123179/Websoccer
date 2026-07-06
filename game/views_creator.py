@@ -569,6 +569,14 @@ def creator_simulation_diagnostics(request):
     return render(request, 'creator/simulation_diagnostics.html', {'report': report})
 
 
+@staff_member_required
+def creator_system_diagnostics(request):
+    """Read-only Systemanalyse (Creator Mode, nur Staff-Nutzer)."""
+    from .system_diagnostics import build_system_diagnostics_report
+    report = build_system_diagnostics_report()
+    return render(request, 'creator/system_diagnostics.html', {'report': report})
+
+
 @login_required
 def creator_vereinslose(request):
     from django.core.paginator import Paginator

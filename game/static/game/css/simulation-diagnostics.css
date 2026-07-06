@@ -162,3 +162,91 @@
 
 .cm-diag-flag-ok  { color: #28c76f; border-color: #15402a; }
 .cm-diag-flag-bad { color: #ff5b5b; border-color: #4a1c1c; }
+
+/* ── Badge-Erweiterungen für Systemanalyse (error / info) ──────────────── */
+.cm-diag-error { background: #ff5b5b; color: #fff; }
+.cm-diag-info  { background: #3a6ea8; color: #e6eef6; }
+
+/* ── Systemanalyse: Zusammenfassungsleiste ─────────────────────────────── */
+.cm-sysdiag-summary {
+  display: flex;
+  gap: .7rem;
+  margin: 0 0 1.4rem;
+  flex-wrap: wrap;
+}
+
+.cm-sysdiag-kpi {
+  flex: 1 1 110px;
+  background: #050e1a;
+  border: 1px solid #0d2035;
+  border-radius: 10px;
+  padding: .75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  min-width: 90px;
+}
+
+.cm-sysdiag-kpi strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cm-sysdiag-kpi span {
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: #7d97b0;
+}
+
+.cm-sysdiag-kpi-error strong { color: #ff5b5b; }
+.cm-sysdiag-kpi-warn  strong { color: #ffb547; }
+.cm-sysdiag-kpi-ok    strong { color: #28c76f; }
+.cm-sysdiag-kpi-info  strong { color: #3a9ae8; }
+
+/* ── Systemanalyse: Card-Seitenstreifen je Severity ───────────────────── */
+.cm-sysdiag-card-error { border-left: 3px solid #ff5b5b; }
+.cm-sysdiag-card-warn  { border-left: 3px solid #ffb547; }
+.cm-sysdiag-card-ok    { border-left: 3px solid #28c76f; }
+.cm-sysdiag-card-info  { border-left: 3px solid #3a6ea8; }
+
+/* ── Systemanalyse: Card-Kopfzeile ─────────────────────────────────────── */
+.cm-sysdiag-card-head {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin-bottom: .5rem;
+}
+
+.cm-sysdiag-card-head .cm-diag-h2 {
+  margin: 0;
+}
+
+/* ── Systemanalyse: Tabellenzeilen-Tint je Level ───────────────────────── */
+.cm-sysdiag-row-error { background: rgba(255, 91, 91, .05); }
+.cm-sysdiag-row-warn  { background: rgba(255, 181, 71, .04); }
+.cm-sysdiag-row-ok    {}
+.cm-sysdiag-row-info  {}
+
+/* ── Systemanalyse: Detail-Preformatted ─────────────────────────────────── */
+.cm-sysdiag-pre {
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: .75rem;
+  color: #a8c4dd;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 14rem;
+  overflow-y: auto;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* ── cm-muted Hilfsklasse ────────────────────────────────────────────────── */
+.cm-muted {
+  color: #7d97b0;
+  font-size: .85rem;
+  margin: .2rem 0 1.4rem;
+}

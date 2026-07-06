@@ -66,6 +66,7 @@ from .views_management import (
 from .views_creator import (
     creator_index,
     creator_simulation_diagnostics,
+    creator_system_diagnostics,
     creator_search,
     creator_club_edit,
     creator_upload_stadium,
@@ -311,6 +312,7 @@ urlpatterns = [
     path('creator/scouting/<int:submission_id>/moderieren/', creator_moderate_submission, name='creator_moderate_submission'),
 
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),
+    path('creator/system-diagnostics/', creator_system_diagnostics, name='creator_system_diagnostics'),
     path('creator/', creator_index, name='creator_index'),
     path('creator/search/', creator_search, name='creator_search'),
     path('creator/clubs/<int:club_id>/', creator_club_edit, name='creator_club_edit'),

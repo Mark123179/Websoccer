@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Systemanalyse · Creator Mode{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/simulation-diagnostics.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<section class="cm-section cm-diag">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1 class="cm-diag-title">Systemanalyse</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">‹ Zurück zum Creator</a>
+    </div>
+  </div>
+
+  <p class="cm-diag-intro">
+    Read-only-Überblick über Feature-Ampel, Saison-Queue, Economy, Datenbank, Umgebung, Logs und Settings.
+    Keine Schreibaktionen.
+  </p>
+
+  <div class="cm-sysdiag-summary">
+    <div class="cm-sysdiag-kpi cm-sysdiag-kpi-error">
+      <strong>{{ report.summary.error|default:0 }}</strong><span>Fehler</span>
+    </div>
+    <div class="cm-sysdiag-kpi cm-sysdiag-kpi-warn">
+      <strong>{{ report.summary.warn|default:0 }}</strong><span>Warnungen</span>
+    </div>
+    <div class="cm-sysdiag-kpi cm-sysdiag-kpi-ok">
+      <strong>{{ report.summary.ok|default:0 }}</strong><span>OK</span>
+    </div>
+    <div class="cm-sysdiag-kpi cm-sysdiag-kpi-info">
+      <strong>{{ report.summary.info|default:0 }}</strong><span>Info</span>
+    </div>
+  </div>
+
+  {% for section in report.sections %}
+    <div class="cm-diag-card cm-sysdiag-card-{{ section.severity }}" id="diag-{{ section.id }}">
+      <div class="cm-sysdiag-card-head">
+        <h2 class="cm-diag-h2">{{ forloop.counter }} · {{ section.title }}</h2>
+        {% include 'creator/_diag_badge.html' with status=section.severity %}
+      </div>
+
+      <table class="cm-diag-table">
+        <thead>
+          <tr>
+            <th style="width:7rem">Status</th>
+            <th style="width:18rem">Thema</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in section.items %}
+            <tr class="cm-sysdiag-row-{{ item.level }}">
+              <td>{% include 'creator/_diag_badge.html' with status=item.level %}</td>
+              <td>{{ item.title }}</td>
+              <td><pre class="cm-sysdiag-pre">{{ item.detail }}</pre></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3" class="cm-diag-nv">Keine Diagnosepunkte.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% empty %}
+    <div class="cm-diag-card">
+      <p class="cm-diag-nv">Keine Sektionen im Report.</p>
+    </div>
+  {% endfor %}
+
+</section>
+{% endblock %}
