@@ -1,6 +1,6 @@
 ---
-name: manager-profile CSS cache-bust gotcha
-description: Why CSS edits to manager_profile must bump the ?v= version or the user sees stale CSS
+name: Static asset cache-bust gotcha (CSS + JS)
+description: Why any edit to a templated CSS/JS asset must bump its ?v= version, including JS not just CSS, or the user sees stale code
 ---
 
 Every edit to `game/static/game/css/manager-profile.css` MUST be accompanied by bumping
@@ -21,3 +21,11 @@ a missing cache-bust bump before re-deriving any math.
 CITY_MAP_PCT, so perceived drift comes from the anchor transform + stale CSS, never from a broken
 bg/marker link. (Verified once by a user hand-placing a city dot that landed exactly on the marker's
 rendered anchor — the pixel was already right.)
+
+**This applies to JS too, not just CSS.** On match_report.html, the CSS `?v=` was diligently bumped
+on every edit but the paired `<script src="match_report_v2.js">` tag's `?v=` was left stale across
+several edits — the browser kept serving old JS while the CSS updates landed fine, producing a
+confusing "half the fix works" symptom (new styles present, but the new JS behavior wiring absent).
+**How to apply generally:** whenever a template links a versioned CSS file AND a versioned JS file
+for the same feature, bump BOTH `?v=` query strings together on every edit to either, even if you
+only touched one of the two files this time.

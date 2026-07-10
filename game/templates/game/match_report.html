@@ -4,14 +4,13 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=14">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
 {% endblock %}
 
 {% block content %}
-<style>body{outline:12px solid red}</style>
 <section class="spb-report">
 <div class="report">
 
@@ -100,7 +99,7 @@
     <div id="panels">
 
         {# ══════════════════════════════ ÜBERSICHT ══════════════════════ #}
-        <section class="panel" data-tab="uebersicht" hidden>
+        <section class="panel" data-tab="uebersicht">
             <div class="ov-grid">
 
                 <section class="card mod-momentum">
@@ -241,14 +240,14 @@
 
         {# ══════════════════════════════ TICKER ══════════════════════════ #}
         <section class="panel" data-tab="ticker" hidden>
-            <section class="card">
+            <section class="card ticker-card">
                 <div class="filter-row" id="tickerFilter">
                     <button class="chip active" data-f="alle">Alle</button>
                     <button class="chip" data-f="tore">Tore</button>
                     <button class="chip" data-f="karten">Karten</button>
                     <button class="chip" data-f="wechsel">Wechsel</button>
                 </div>
-                <div id="tickerFull">
+                <div id="tickerFull" class="ticker-scroll">
                     <div class="ev-row t-n" data-type="whistle">
                         <span class="ev-ico">&#x25FC;</span><span class="ev-min">1'</span>
                         <span class="ev-club neutral"><b>KO</b></span>
@@ -265,6 +264,8 @@
                         <span class="ev-score">{{ report.home_goals }}:{{ report.away_goals }}</span>
                     </div>
                 </div>
+                <div class="ticker-fade" id="tickerFade" hidden></div>
+                <button type="button" id="tickerScrollBtn" class="ticker-scroll-btn" aria-label="Weitere Ereignisse anzeigen" hidden>&#8595;</button>
             </section>
         </section>
 
@@ -387,7 +388,7 @@
         </section>
 
         {# ══════════════════════════════ AUFSTELLUNGEN ═══════════════════ #}
-        <section class="panel" data-tab="aufstellungen">
+        <section class="panel" data-tab="aufstellungen" hidden>
             <div class="lineup-layout">
                 <div class="bench-column">
                 <aside class="card bench-col">
@@ -396,7 +397,7 @@
                     <div class="bench-list">
                         {% for b in rc.home_bench_display %}
                         {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8646;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
                             {% if b.came_on %}
@@ -408,6 +409,22 @@
                         {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
                     </div>
                 </aside>
+
+                <div class="card subs-card">
+                    <p class="card-title">Auswechslungen</p>
+                    <div class="bench-subs">
+                        {% for sub in rc.home_substitutions %}
+                        <div class="bsub">
+                            <span class="min">{{ sub.minute }}'</span>
+                            <span class="sub-badge inline" title="Wechsel">&#8646;</span>
+                            <div class="sw">
+                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
+                    </div>
+                </div>
                 </div>
 
                 <div class="lineup-center">
@@ -432,7 +449,7 @@
                             {% for p in rc.home_pitch_players %}
                             <div class="pnode home" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
                                 {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
-                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8646;</span>{% endif %}</div>
+                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
                                 <span class="nm">{{ p.name }}</span>
                                 {% if p.id %}</a>{% endif %}
                             </div>
@@ -459,7 +476,7 @@
                             {% for p in rc.away_pitch_players %}
                             <div class="pnode away" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
                                 {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
-                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8646;</span>{% endif %}</div>
+                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
                                 <span class="nm">{{ p.name }}</span>
                                 {% if p.id %}</a>{% endif %}
                             </div>
@@ -468,42 +485,6 @@
                             {% endfor %}
                         </div>
                     </div>
-                        </div>
-                    </div>
-
-                    <div class="card subs-card">
-                        <p class="card-title">Auswechslungen</p>
-                        <div class="subs-combined">
-                            <div class="subs-side">
-                                <div class="subhead">{{ report.home_club_short }}</div>
-                                <div class="bench-subs">
-                                    {% for sub in rc.home_substitutions %}
-                                    <div class="bsub">
-                                        <span class="min">{{ sub.minute }}'</span>
-                                        <span class="sub-badge inline" title="Wechsel">&#8646;</span>
-                                        <div class="sw">
-                                            <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
-                                            {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
-                                        </div>
-                                    </div>
-                                    {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
-                                </div>
-                            </div>
-                            <div class="subs-side">
-                                <div class="subhead">{{ report.away_club_short }}</div>
-                                <div class="bench-subs">
-                                    {% for sub in rc.away_substitutions %}
-                                    <div class="bsub">
-                                        <span class="min">{{ sub.minute }}'</span>
-                                        <span class="sub-badge inline" title="Wechsel">&#8646;</span>
-                                        <div class="sw">
-                                            <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
-                                            {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
-                                        </div>
-                                    </div>
-                                    {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -516,7 +497,7 @@
                     <div class="bench-list">
                         {% for b in rc.away_bench_display %}
                         {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8646;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
                             {% if b.came_on %}
@@ -528,6 +509,22 @@
                         {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
                     </div>
                 </aside>
+
+                <div class="card subs-card">
+                    <p class="card-title">Auswechslungen</p>
+                    <div class="bench-subs">
+                        {% for sub in rc.away_substitutions %}
+                        <div class="bsub">
+                            <span class="min">{{ sub.minute }}'</span>
+                            <span class="sub-badge inline" title="Wechsel">&#8646;</span>
+                            <div class="sw">
+                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
+                    </div>
+                </div>
                 </div>
             </div>
         </section>
@@ -540,10 +537,10 @@
                 {% if report.man_of_the_match %}
                 {% with motm=report.man_of_the_match %}
                 <div class="motm-card">
-                    <div class="badge">&#9733; Spieler des Spiels</div>
                     {% if motm.id %}<a class="crest-link motm-link" href="{% url 'player_detail' motm.id %}">{% endif %}
                     {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="">{% elif motm.club_crest %}<img class="por" src="{% static motm.club_crest %}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
                     {% if motm.id %}</a>{% endif %}
+                    <div class="badge">&#9733; Spieler des Spiels</div>
                     <h3>{% if motm.id %}<a class="plink" href="{% url 'player_detail' motm.id %}">{{ motm.name }}</a>{% else %}{{ motm.name }}{% endif %}</h3>
                     <div class="pos">{{ motm.position }} &middot; {{ motm.club_name }}</div>
                     <div class="bignote">{{ motm.rating }}</div>
@@ -572,7 +569,7 @@
                     <div class="pl-list">
                         {% for r in report.home_ratings %}{% if not r.is_sub %}
                         {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}{% if r.id in rc.home_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8646;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}{% if r.id in rc.home_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
                             <div class="pl-badges">
@@ -589,7 +586,7 @@
                     <div class="pl-list">
                         {% for b in rc.home_bench_display %}
                         {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8646;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
                             <div class="pl-badges">
@@ -619,7 +616,7 @@
                     <div class="pl-list">
                         {% for r in report.away_ratings %}{% if not r.is_sub %}
                         {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}{% if r.id in rc.away_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8646;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}{% if r.id in rc.away_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
                             <div class="pl-badges">
@@ -636,7 +633,7 @@
                     <div class="pl-list">
                         {% for b in rc.away_bench_display %}
                         {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8646;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
                             <div class="pl-badges">
@@ -704,5 +701,5 @@
 </div>{# /report #}
 </section>{# /spb-report #}
 
-<script src="{% static 'game/js/match_report_v2.js' %}?v=2"></script>
+<script src="{% static 'game/js/match_report_v2.js' %}?v=4"></script>
 {% endblock %}
