@@ -55,6 +55,20 @@
     <span></span>
 </div>
 
+{% elif evt.team == 'home' or evt.team == 'away' %}
+<div class="ev-row {% if evt.team == 'home' %}t-h{% else %}t-a{% endif %}" data-type="flow">
+    <span class="ev-ico">&#8213;</span><span class="ev-min">{{ evt.minute }}'</span>
+    <span class="ev-club">
+        {% if evt.team == 'home' %}
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<b>{{ report.home_club_short }}</b>
+        {% else %}
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<b>{{ report.away_club_short }}</b>
+        {% endif %}
+    </span>
+    <span class="ev-txt"><span class="tag tag-neu"></span>{{ evt.commentary }}</span>
+    <span></span>
+</div>
+
 {% else %}
 <div class="ev-row t-n" data-type="flow">
     <span class="ev-ico">&#8213;</span><span class="ev-min">{{ evt.minute }}'</span>

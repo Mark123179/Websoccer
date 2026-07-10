@@ -251,9 +251,15 @@ def _player_row(item: dict, goals: int = 0, assists: int = 0, match_strength: fl
     factor, pos_label = _pos_factor(p, slot['code'])
     effective = round(final * factor, 1)
 
+    try:
+        portrait_url = p.portrait_url
+    except Exception:
+        portrait_url = ''
+
     return {
         'id': p.pk,
         'name': f"{p.first_name} {p.last_name}".strip() or str(p),
+        'portrait_url': portrait_url,
         'position': slot['code'],
         'group': slot['group'],
         'base_strength': round(base, 1),
@@ -2034,27 +2040,29 @@ def compute_player_ratings(result: dict) -> dict:
 
     home_ratings = [
         {
-            'id':        p.get('id'),
-            'name':      p.get('name', ''),
-            'position':  p.get('position', ''),
-            'pos_group': _rating_pos_group(p.get('position', ''), p.get('group', '')),
-            'goals':     p.get('goals', 0) or 0,
-            'assists':   p.get('assists', 0) or 0,
-            'is_sub':    p.get('is_sub', False),
-            'rating':    _rate(p, True),
+            'id':           p.get('id'),
+            'name':         p.get('name', ''),
+            'position':     p.get('position', ''),
+            'pos_group':    _rating_pos_group(p.get('position', ''), p.get('group', '')),
+            'goals':        p.get('goals', 0) or 0,
+            'assists':      p.get('assists', 0) or 0,
+            'is_sub':       p.get('is_sub', False),
+            'portrait_url': p.get('portrait_url', ''),
+            'rating':       _rate(p, True),
         }
         for p in h_players_raw
     ]
     away_ratings = [
         {
-            'id':        p.get('id'),
-            'name':      p.get('name', ''),
-            'position':  p.get('position', ''),
-            'pos_group': _rating_pos_group(p.get('position', ''), p.get('group', '')),
-            'goals':     p.get('goals', 0) or 0,
-            'assists':   p.get('assists', 0) or 0,
-            'is_sub':    p.get('is_sub', False),
-            'rating':    _rate(p, False),
+            'id':           p.get('id'),
+            'name':         p.get('name', ''),
+            'position':     p.get('position', ''),
+            'pos_group':    _rating_pos_group(p.get('position', ''), p.get('group', '')),
+            'goals':        p.get('goals', 0) or 0,
+            'assists':      p.get('assists', 0) or 0,
+            'is_sub':       p.get('is_sub', False),
+            'portrait_url': p.get('portrait_url', ''),
+            'rating':       _rate(p, False),
         }
         for p in a_players_raw
     ]
@@ -2064,10 +2072,11 @@ def compute_player_ratings(result: dict) -> dict:
     if all_r:
         best, side = min(all_r, key=lambda x: x[0]['rating'])
         motm = {
-            'id':         best['id'],
-            'name':       best['name'],
-            'position':   best['position'],
-            'rating':     best['rating'],
+            'id':           best['id'],
+            'name':         best['name'],
+            'position':     best['position'],
+            'portrait_url': best.get('portrait_url', ''),
+            'rating':       best['rating'],
             'club_id':    result.get('home_club_id')    if side == 'home' else result.get('away_club_id'),
             'club_name':  result.get('home_club_name')  if side == 'home' else result.get('away_club_name'),
             'club_crest': result.get('home_club_crest') if side == 'home' else result.get('away_club_crest'),

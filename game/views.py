@@ -3508,6 +3508,58 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _ensure_portraits_in_report(report_data: dict) -> dict:
+    """Fügt Portrait-URLs in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
+
+    Neue Simulationen betten portrait_url direkt in home_players/away_players/
+    home_ratings/away_ratings/man_of_the_match ein. Ältere gespeicherte
+    SimulatedMatch-Einträge enthalten dieses Feld noch nicht — hier per
+    DB-Lookup (fm_inside_id / CMT) nachgerüstet.
+    """
+    if not report_data:
+        return report_data
+
+    lists_to_check = ('home_players', 'away_players', 'home_ratings', 'away_ratings')
+    ids = set()
+    needs_backfill = False
+    for key in lists_to_check:
+        for row in (report_data.get(key) or []):
+            if row.get('id') and not row.get('portrait_url'):
+                needs_backfill = True
+                ids.add(row['id'])
+    motm = report_data.get('man_of_the_match')
+    if motm and motm.get('id') and not motm.get('portrait_url'):
+        needs_backfill = True
+        ids.add(motm['id'])
+
+    if not needs_backfill:
+        return report_data
+
+    from .models import Player as _Player
+    portrait_map = {}
+    for p in _Player.objects.filter(pk__in=ids):
+        try:
+            portrait_map[p.pk] = p.portrait_url
+        except Exception:
+            portrait_map[p.pk] = ''
+
+    report_data = dict(report_data)
+    for key in lists_to_check:
+        rows = report_data.get(key)
+        if not rows:
+            continue
+        report_data[key] = [
+            {**row, 'portrait_url': row.get('portrait_url') or portrait_map.get(row.get('id'), '')}
+            for row in rows
+        ]
+    if motm and motm.get('id'):
+        report_data['man_of_the_match'] = {
+            **motm,
+            'portrait_url': motm.get('portrait_url') or portrait_map.get(motm['id'], ''),
+        }
+    return report_data
+
+
 def _ensure_not_fielded_in_report(report_data: dict, sm=None) -> dict:
     """Fügt Nichtaufstellungs-Malus-Felder in report_data ein, falls sie fehlen.
 
@@ -4068,11 +4120,66 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
         'home_initial': (home_short or '?')[:1],
         'away_initial': (away_short or '?')[:1],
     }
+    # ── Halbzeitstand (aus goal_events, Minute <= 45) ────────────────────
+    home_ht = sum(1 for e in (report_data.get('goal_events') or [])
+                  if e.get('team') == 'home' and (e.get('minute') or 0) <= 45)
+    away_ht = sum(1 for e in (report_data.get('goal_events') or [])
+                  if e.get('team') == 'away' and (e.get('minute') or 0) <= 45)
+    ht_score = f'{home_ht}:{away_ht}'
+
+    # ── Erweiterte Statistik-Platzhalter ──────────────────────────────────
+    # Diese Felder existieren in der aktuellen Match-Engine noch nicht.
+    # Nutzeranweisung: fehlende Werte NIEMALS raten — als 0 (Zahl) bzw. "–"
+    # (Text) ausweisen, mit sprechenden Feldnamen für spätere Engine-Anbindung.
+    extended_stats = {
+        'home_great_chances': 0,   'away_great_chances': 0,
+        'home_offsides':      0,   'away_offsides':      0,
+        'home_free_kicks':    0,   'away_free_kicks':    0,
+        'home_penalties':     0,   'away_penalties':     0,
+        'home_duels_won_pct': 0,   'away_duels_won_pct': 0,
+        'home_passes':        0,   'away_passes':        0,
+        'home_pass_accuracy': 0,   'away_pass_accuracy': 0,
+        'home_distance_km':   0,   'away_distance_km':   0,
+        'home_saves':         0,   'away_saves':         0,
+        'home_ball_touches':  0,   'away_ball_touches':  0,
+    }
+
     return {
         'momentum': momentum,
         'dominant_phase': _dominant_phase_label(momentum, home_short, away_short),
         'story': _build_match_story(report_data, rc, home_name, away_name),
         'momentum_payload': momentum_payload,
+        'ht_score': ht_score,
+        'extended_stats': extended_stats,
+    }
+
+
+def _build_stadium_capacity_extras(club) -> dict:
+    """Kapazit&auml;t/Auslastung f&uuml;r den Hero-Header.
+
+    Nutzt Stadium.capacity_total (Heimverein) und ClubPublicProfile.average_attendance
+    als Auslastungs-Proxy. Fehlt eine dieser Quellen, wird "&ndash;" (im Template)
+    statt eines geratenen Werts angezeigt.
+    """
+    capacity = 0
+    attendance_pct = 0
+    try:
+        stadium = getattr(club, 'stadium', None)
+        if stadium:
+            capacity = stadium.capacity_total
+    except Exception:
+        capacity = 0
+    try:
+        profile = getattr(club, 'public_profile', None)
+        if profile and capacity:
+            avg_att = profile.average_attendance or 0
+            if avg_att:
+                attendance_pct = round(min(avg_att, capacity) / capacity * 100)
+    except Exception:
+        attendance_pct = 0
+    return {
+        'stadium_capacity': capacity,
+        'attendance_pct':   attendance_pct,
     }
 
 
@@ -4221,6 +4328,7 @@ def club_match_report(request, club_id):
 
     _report_data = _ensure_ratings_in_report(latest.report_data) if latest else None
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest) if _report_data else _report_data
+    _report_data = _ensure_portraits_in_report(_report_data) if _report_data else _report_data
 
     _comp_name = ''
     if latest:
@@ -4233,6 +4341,7 @@ def club_match_report(request, club_id):
                 _comp_name = ''
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
     rc.update(_build_v2_report_extras(_report_data, rc))
+    rc.update(_build_stadium_capacity_extras(club))
 
     return render(request, 'game/match_report.html', {
         'club':             club,
@@ -4345,6 +4454,7 @@ def match_report_by_id(request, sm_id):
 
     _report_data = _ensure_ratings_in_report(latest.report_data)
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest)
+    _report_data = _ensure_portraits_in_report(_report_data)
 
     _comp_name = ''
     if latest.match_type == 'pokal':
@@ -4356,6 +4466,7 @@ def match_report_by_id(request, sm_id):
             _comp_name = ''
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
     rc.update(_build_v2_report_extras(_report_data, rc))
+    rc.update(_build_stadium_capacity_extras(club))
 
     return render(request, 'game/match_report.html', {
         'club':             club,

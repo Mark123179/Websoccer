@@ -16,7 +16,7 @@
         <div class="pline" style="top:{% if is_home %}76%{% else %}4%{% endif %};">
             {% for p in team_players %}{% if not p.is_sub and p.group == 'goalkeeper' %}
             <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
-                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% else %}{{ p.name|slice:":1" }}{% endif %}</div>
                 <div class="nm">{{ p.name }}</div>
             </div>
             {% endif %}{% endfor %}
@@ -25,7 +25,7 @@
         <div class="pline" style="top:{% if is_home %}58%{% else %}26%{% endif %};">
             {% for p in team_players %}{% if not p.is_sub and p.group == 'defense' %}
             <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
-                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% else %}{{ p.name|slice:":1" }}{% endif %}</div>
                 <div class="nm">{{ p.name }}</div>
             </div>
             {% endif %}{% endfor %}
@@ -34,7 +34,7 @@
         <div class="pline" style="top:{% if is_home %}40%{% else %}50%{% endif %};">
             {% for p in team_players %}{% if not p.is_sub and p.group == 'defensive_midfield' or not p.is_sub and p.group == 'midfield' or not p.is_sub and p.group == 'offensive_midfield' %}
             <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
-                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% else %}{{ p.name|slice:":1" }}{% endif %}</div>
                 <div class="nm">{{ p.name }}</div>
             </div>
             {% endif %}{% endfor %}
@@ -43,7 +43,7 @@
         <div class="pline" style="top:{% if is_home %}14%{% else %}68%{% endif %};">
             {% for p in team_players %}{% if not p.is_sub and p.group == 'attack' %}
             <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
-                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% else %}{{ p.name|slice:":1" }}{% endif %}</div>
                 <div class="nm">{{ p.name }}</div>
             </div>
             {% endif %}{% endfor %}

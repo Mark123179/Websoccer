@@ -158,7 +158,8 @@ button{font-family:inherit}
 .pm.six.bot{bottom:-1px;border-bottom:none}
 .pline{position:absolute;left:6%;right:6%;display:flex;justify-content:space-evenly;align-items:flex-start}
 .pnode{position:relative;transform:none;display:grid;justify-items:center;gap:8px;width:82px}
-.pnode .ph{position:relative;width:52px;height:52px;border-radius:13px;border:2px solid #fff;overflow:visible;background:linear-gradient(180deg,#125f3b,#082a1c);display:grid;place-items:center;color:#fff;font-weight:900;font-size:15px}
+.pnode .ph{position:relative;width:52px;height:52px;border-radius:13px;border:2px solid #fff;overflow:hidden;background:linear-gradient(180deg,#125f3b,#082a1c);display:grid;place-items:center;color:#fff;font-weight:900;font-size:15px}
+.pnode .ph img{width:100%;height:100%;object-fit:cover;object-position:top center}
 .pnode.home .ph{border-color:#e2001a;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 16px rgba(226,0,26,.42)}
 .pnode.away .ph{border-color:#fde100;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 16px rgba(253,225,0,.36)}
 .pnode .num{position:absolute;left:-8px;bottom:-8px;min-width:22px;height:22px;padding:0 4px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900;border:2px solid rgba(3,16,24,.9);z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.55)}
@@ -246,6 +247,7 @@ button{font-family:inherit}
 .pl-row{display:grid;grid-template-columns:26px 1fr auto auto;align-items:center;gap:10px;padding:9px 6px;border-top:1px solid rgba(255,255,255,.055);border-radius:6px;transition:background .15s}
 .pl-row:hover{background:rgba(34,230,255,.05)}
 .pl-row .n{font-family:var(--mono);font-size:12px;font-weight:900;color:var(--faint);text-align:center}
+.pl-por{width:26px;height:26px;border-radius:50%;object-fit:cover;object-position:top center;border:1px solid var(--line-strong);background:rgba(255,255,255,.05)}
 .pl-row .who b{font-size:13.5px;font-weight:800;color:var(--text)}
 .pl-row .who small{font-size:11px;color:var(--faint);font-weight:800;display:block;margin-top:1px}
 .pl-badges{display:flex;gap:5px;align-items:center}

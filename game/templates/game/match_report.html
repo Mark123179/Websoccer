@@ -41,6 +41,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
                     <span>Wetter: &ndash; &middot; Schiedsrichter: &ndash;</span>
                 </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Kapazit&auml;t: {% if rc.stadium_capacity %}{{ rc.stadium_capacity }}{% else %}&ndash;{% endif %} &middot; Auslastung: {% if rc.attendance_pct %}{{ rc.attendance_pct }}%{% else %}&ndash;{% endif %}</span>
+                </div>
             </div>
         </div>
 
@@ -58,6 +62,9 @@
 
         <div class="hero-score">
             <div class="hs-nums"><b>{{ report.home_goals }}</b><i>:</i><b>{{ report.away_goals }}</b></div>
+            {% if rc.ht_score %}
+            <div class="hs-ht">Halbzeit {{ rc.ht_score }}</div>
+            {% endif %}
             {% if rc.home_xg %}
             <div class="hs-goals">xG {{ rc.home_xg }} &ndash; {{ rc.away_xg }}</div>
             {% endif %}
@@ -230,7 +237,7 @@
                 </div>
 
                 <div class="stat-group">
-                    <h4>Spielverlauf</h4>
+                    <h4>Angriff</h4>
                     <div class="stat-list">
                         <div class="stat-row"><span class="hv">{{ report.match_stats.home_possession }}%</span><div class="mid"><div class="lab">Ballbesitz</div><div class="stat-bar"><i class="h" style="width:{{ report.match_stats.home_possession }}%"></i><i class="a" style="width:{{ report.match_stats.away_possession }}%"></i></div></div><span class="av">{{ report.match_stats.away_possession }}%</span></div>
                         <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots }}</span><div class="mid"><div class="lab">Sch&uuml;sse gesamt</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div></div><span class="av">{{ report.match_stats.away_shots }}</span></div>
@@ -238,12 +245,17 @@
                         {% if rc.home_xg %}
                         <div class="stat-row"><span class="hv">{{ rc.home_xg }}</span><div class="mid"><div class="lab">xG</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:0 }}%"></i></div></div><span class="av">{{ rc.away_xg }}</span></div>
                         {% endif %}
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_great_chances }}</span><div class="mid"><div class="lab">Gro&szlig;chancen</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_great_chances }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_offsides }}</span><div class="mid"><div class="lab">Abseits</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_offsides }}</span></div>
+                    </div>
+                </div>
+
+                <div class="stat-group">
+                    <h4>Standards &amp; Ecken</h4>
+                    <div class="stat-list">
                         <div class="stat-row"><span class="hv">{{ report.match_stats.home_corners }}</span><div class="mid"><div class="lab">Ecken</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_corners }}</span></div>
-                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_fouls }}</span><div class="mid"><div class="lab">Fouls</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_fouls }}</span></div>
-                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_yellow }}</span><div class="mid"><div class="lab">Gelbe Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_yellow }}</span></div>
-                        {% if report.match_stats.home_red or report.match_stats.away_red %}
-                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_red }}</span><div class="mid"><div class="lab">Rote Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_red }}</span></div>
-                        {% endif %}
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_free_kicks }}</span><div class="mid"><div class="lab">Freist&ouml;&szlig;e</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_free_kicks }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_penalties }}</span><div class="mid"><div class="lab">Elfmeter</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_penalties }}</span></div>
                         {% if rc.home_sp_goals or rc.away_sp_goals %}
                         <div class="stat-row"><span class="hv">{{ rc.home_sp_goals }}</span><div class="mid"><div class="lab">Tore aus Standards</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.away_sp_goals }}</span></div>
                         {% endif %}
@@ -251,10 +263,25 @@
                 </div>
 
                 <div class="stat-group">
-                    <h4>Pressing</h4>
+                    <h4>Zweikampf &amp; Disziplin</h4>
                     <div class="stat-list">
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_duels_won_pct }}%</span><div class="mid"><div class="lab">Zweik&auml;mpfe gewonnen</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_duels_won_pct }}%</span></div>
                         <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_ball_wins }}</span><div class="mid"><div class="lab">Pressing-Gewinne</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_ball_wins }}</span></div>
                         <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_bypassed }}</span><div class="mid"><div class="lab">Pressing &uuml;berspielt</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_bypassed }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_fouls }}</span><div class="mid"><div class="lab">Fouls</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_fouls }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_yellow }}</span><div class="mid"><div class="lab">Gelbe Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_yellow }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_red }}</span><div class="mid"><div class="lab">Rote Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_red }}</span></div>
+                    </div>
+                </div>
+
+                <div class="stat-group">
+                    <h4>Passspiel &amp; Physis</h4>
+                    <div class="stat-list">
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_passes }}</span><div class="mid"><div class="lab">Erfolgreiche P&auml;sse</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_passes }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_pass_accuracy }}%</span><div class="mid"><div class="lab">Passquote</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_pass_accuracy }}%</span></div>
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_distance_km }}</span><div class="mid"><div class="lab">Laufleistung (km)</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_distance_km }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_saves }}</span><div class="mid"><div class="lab">Paraden</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_saves }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_ball_touches }}</span><div class="mid"><div class="lab">Ballkontakte</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_ball_touches }}</span></div>
                     </div>
                 </div>
 
@@ -281,10 +308,22 @@
                 {% endif %}
 
                 <div class="stat-group">
+                    <h4>Formation &amp; Taktik</h4>
+                    <div class="spielinfo">
+                        <div class="info-cell"><div class="l">{{ report.home_club_short }} &middot; System</div><div class="v">{{ report.home_formation|default:"&ndash;" }}</div></div>
+                        <div class="info-cell"><div class="l">{{ report.away_club_short }} &middot; System</div><div class="v">{{ report.away_formation|default:"&ndash;" }}</div></div>
+                        <div class="info-cell"><div class="l">{{ report.home_club_short }} &middot; Kohärenz</div><div class="v">{{ rc.home_coh|default:0 }}</div></div>
+                        <div class="info-cell"><div class="l">{{ report.away_club_short }} &middot; Kohärenz</div><div class="v">{{ rc.away_coh|default:0 }}</div></div>
+                    </div>
+                </div>
+
+                <div class="stat-group">
                     <h4>Spielinfo</h4>
                     <div class="spielinfo">
                         <div class="info-cell"><div class="l">Datum</div><div class="v">{{ latest_match.simulated_at|date:"d.m.Y H:i" }}</div></div>
                         <div class="info-cell"><div class="l">Stadion</div><div class="v">{% if club.stadium %}{{ club.stadium.name }}{% else %}&ndash;{% endif %}</div></div>
+                        <div class="info-cell"><div class="l">Kapazit&auml;t</div><div class="v">{% if rc.stadium_capacity %}{{ rc.stadium_capacity }}{% else %}&ndash;{% endif %}</div></div>
+                        <div class="info-cell"><div class="l">Auslastung</div><div class="v">{% if rc.attendance_pct %}{{ rc.attendance_pct }}%{% else %}&ndash;{% endif %}</div></div>
                         <div class="info-cell"><div class="l">Wetter</div><div class="v">&ndash;</div></div>
                         <div class="info-cell"><div class="l">Schiedsrichter</div><div class="v">&ndash;</div></div>
                     </div>
@@ -342,7 +381,7 @@
                 {% with motm=report.man_of_the_match %}
                 <div class="motm-card">
                     <div class="badge">&#9733; Spieler des Spiels</div>
-                    {% if motm.club_crest %}<img class="por" src="{% static motm.club_crest %}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
+                    {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="">{% elif motm.club_crest %}<img class="por" src="{% static motm.club_crest %}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
                     <h3>{{ motm.name }}</h3>
                     <div class="pos">{{ motm.position }} &middot; {{ motm.club_name }}</div>
                     <div class="bignote">{{ motm.rating }}</div>
@@ -361,7 +400,7 @@
                     <div class="pl-list">
                         {% for r in report.home_ratings %}
                         <div class="pl-row">
-                            <span class="n">{{ forloop.counter }}</span>
+                            {% if r.portrait_url %}<img class="pl-por" src="{{ r.portrait_url }}" alt="">{% else %}<span class="n">{{ forloop.counter }}</span>{% endif %}
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
                             <div class="pl-badges"></div>
                             <span class="rnote {% if r.rating <= 2.5 %}n1{% elif r.rating <= 3.9 %}n2{% elif r.rating <= 4.9 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
@@ -378,7 +417,7 @@
                     <div class="pl-list">
                         {% for r in report.away_ratings %}
                         <div class="pl-row">
-                            <span class="n">{{ forloop.counter }}</span>
+                            {% if r.portrait_url %}<img class="pl-por" src="{{ r.portrait_url }}" alt="">{% else %}<span class="n">{{ forloop.counter }}</span>{% endif %}
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
                             <div class="pl-badges"></div>
                             <span class="rnote {% if r.rating <= 2.5 %}n1{% elif r.rating <= 3.9 %}n2{% elif r.rating <= 4.9 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
