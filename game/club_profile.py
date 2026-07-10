@@ -306,6 +306,18 @@ def build_facilities(club):
             'shortLabel': short_label,
             'level': level,
         })
+
+    # Scoutingabteilung ist kein Stadium-Feld, sondern ein eigenes Modell
+    # (ScoutingDepartment.level, dieselbe reale Quelle wie im Stadionumfeld-
+    # Manager-Panel). Kein Stadium-Level, sondern club-gebunden.
+    scouting_department = getattr(club, 'scouting_department', None)
+    scouting_level = scouting_department.level if scouting_department else 0
+    result.append({
+        'fullLabel': 'Scoutingabteilung',
+        'shortLabel': 'Scouting',
+        'level': scouting_level,
+    })
+
     return result
 
 
