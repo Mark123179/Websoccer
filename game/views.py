@@ -4312,33 +4312,73 @@ def _linkify_commentary(events, name_lookup):
     return events
 
 
-_MOMENTUM_WEIGHTS = {
-    'goal':   16.0,
-    'shot':    3.0,
-    'corner':  1.5,
-    'sub':     1.0,
-    'foul':   -1.2,
-    'injury': -1.5,
+# ── Druckkurve: reine Spielanteile, KEIN Tor-Grundgewicht ────────────────
+# Basis = Schüsse, Ecken, Strafraum-/Standard-Chancen (Ecken-/Freistoß-
+# Abwehren) und Ballbesitz. Tore verfälschen diese Basis nicht mehr — sie
+# lösen stattdessen einen separaten kurzen Impuls aus (siehe _GOAL_PULSE).
+_PRESSURE_WEIGHTS = {
+    'shot':        2.2,   # Schuss
+    'corner':      1.6,   # Ecke
+    'corner_miss': 3.0,   # Strafraumaktion: Ecke ohne Torerfolg (echte Chance)
+    'fk_saved':    3.0,   # Freistoß im Angriffsdrittel, abgewehrt (echte Chance)
 }
+# Zusätzliches Gewicht, wenn ein Schuss aufs Tor ging (Wahrscheinlichkeit aus
+# den Team-Aggregatwerten home/away_shots_on_target abgeleitet).
+_PRESSURE_ON_TARGET_BONUS = 2.0
 _MOMENTUM_CARD_WEIGHTS = {'yellow': -4.0, 'red': -10.0, 'yellow_red': -9.0}
+_MOMENTUM_FOUL_WEIGHT = -1.2
+_MOMENTUM_INJURY_WEIGHT = -1.5
+# Sanfter, konstanter Beitrag aus dem Ballbesitz-Übergewicht (±50 % Basis),
+# wirkt über die gesamte Spielzeit statt an diskreten Events.
+_POSSESSION_DRIFT_WEIGHT = 0.35
+
+# Tor-Impuls: kein Verfälschen der Basiskurve, sondern ein kurzer, klar
+# erkennbarer Boost an der Torminute mit leichtem Nachklingen in den beiden
+# Folgeminuten — danach greift wieder der normale Druckverlauf.
+_GOAL_PULSE = {0: 0.50, 1: 0.28, 2: 0.12}
 
 
-# Anteile des Torgewichts, die als "Drangphase" VOR dem Tor wirken
-# (Minute −3, −2, −1 relativ zur Torminute). Ein Tor fällt fast immer aus
-# einer Druckphase des schießenden Teams — ohne diesen Anlauf läge die
-# Kurve zur Torminute noch beim Gegner (siehe Nutzerfeedback).
-_MOMENTUM_GOAL_BUILDUP = (0.20, 0.35, 0.55)
-# Mindestwert (nach Normalisierung), den die Kurve an der Torminute auf der
-# Seite des Torschützen haben muss, damit der Tor-Marker visuell konsistent ist.
-_MOMENTUM_GOAL_SIDE_MARGIN = 0.15
+def _build_match_momentum(combined_events, match_stats=None, rc=None):
+    """Leitet eine Druckkurve (−1..1 je Minute) aus den echten Ticker-Events
+    ab (Ableitung, kein separates Datenmodell vorhanden). Positiv = Heimteam-
+    Druck, negativ = Auswärtsteam-Druck.
 
+    Basis-Kurve = reine Spielanteile (Schüsse/Schüsse aufs Tor, Ecken,
+    Freistöße im Angriffsdrittel, Ballbesitzphasen, Strafraumaktionen/
+    Chancen, xG/Chancequalität). Tore wirken NICHT auf diese Basis, sondern
+    setzen zusätzlich einen kurzen Momentum-Impuls (siehe _GOAL_PULSE)."""
+    ms = match_stats or {}
+    rc = rc or {}
 
-def _build_match_momentum(combined_events):
-    """Leitet eine einfache Momentum-Kurve (−1..1 je Minute) aus den echten
-    Ticker-Ereignissen ab (Ableitung, kein separates Datenmodell vorhanden).
-    Positiv = Heimteam-Druck, negativ = Auswärtsteam-Druck."""
-    impulse = [0.0] * 91
-    goal_points = []  # [(minute, sign)] für den Konsistenz-Durchlauf unten
+    def _num(v, default=0.0):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return default
+
+    h_shots = _num(ms.get('home_shots'))
+    a_shots = _num(ms.get('away_shots'))
+    h_sot = _num(ms.get('home_shots_on_target'))
+    a_sot = _num(ms.get('away_shots_on_target'))
+    h_on_target_ratio = (h_sot / h_shots) if h_shots > 0 else 0.45
+    a_on_target_ratio = (a_sot / a_shots) if a_shots > 0 else 0.45
+
+    # xG/Chancequalität: Team mit dem besseren xG-je-Schuss-Wert bekommt einen
+    # moderaten Aufschlag auf seine Druck-Events (kein harter Umbruch).
+    h_xg = _num(rc.get('home_xg'))
+    a_xg = _num(rc.get('away_xg'))
+    h_xg_per_shot = (h_xg / h_shots) if h_shots > 0 else 0.0
+    a_xg_per_shot = (a_xg / a_shots) if a_shots > 0 else 0.0
+    quality_diff = h_xg_per_shot - a_xg_per_shot
+    h_quality_mult = 1.0 + max(-0.25, min(0.25, quality_diff * 2.5))
+    a_quality_mult = 1.0 + max(-0.25, min(0.25, -quality_diff * 2.5))
+
+    h_poss = _num(ms.get('home_possession'), 50.0)
+    a_poss = _num(ms.get('away_possession'), 100.0 - h_poss)
+    possession_drift = ((h_poss - a_poss) / 100.0) * _POSSESSION_DRIFT_WEIGHT
+
+    impulse = [possession_drift] * 91
+    goal_points = []  # [(minute, sign)] für den Tor-Impuls unten
     for evt in (combined_events or []):
         team = evt.get('team')
         if team not in ('home', 'away'):
@@ -4347,26 +4387,28 @@ def _build_match_momentum(combined_events):
         sign = 1.0 if team == 'home' else -1.0
         etype = evt.get('type')
         if etype == 'goal':
-            w = _MOMENTUM_WEIGHTS['goal']
+            # Kein Beitrag zur Basiskurve — nur als Marker für den Impuls
+            # nach der Normalisierung gemerkt.
             goal_points.append((minute, sign))
-            # Drangphase: Teil des Torgewichts wirkt bereits in den Minuten
-            # vor dem Tor (aufsteigend), damit die Kurve zur Torminute schon
-            # auf der Seite des schießenden Teams liegt.
-            for back, frac in enumerate(reversed(_MOMENTUM_GOAL_BUILDUP), start=1):
-                idx = minute - back
-                if idx >= 0:
-                    impulse[idx] += sign * w * frac
+            continue
         elif etype == 'card':
             w = _MOMENTUM_CARD_WEIGHTS.get(evt.get('card_type'), -4.0)
             sign = -sign  # eine Karte schadet dem eigenen Momentum
         elif etype == 'foul':
-            w = _MOMENTUM_WEIGHTS['foul']
+            w = _MOMENTUM_FOUL_WEIGHT
             sign = -sign
         elif etype == 'injury':
-            w = _MOMENTUM_WEIGHTS['injury']
+            w = _MOMENTUM_INJURY_WEIGHT
             sign = -sign
-        elif etype in _MOMENTUM_WEIGHTS:
-            w = _MOMENTUM_WEIGHTS[etype]
+        elif etype in _PRESSURE_WEIGHTS:
+            w = _PRESSURE_WEIGHTS[etype]
+            if etype == 'shot':
+                ratio = h_on_target_ratio if team == 'home' else a_on_target_ratio
+                # deterministischer, stabiler "Zufalls"-Wert je Minute/Team
+                roll = ((minute * 7 + (11 if team == 'home' else 37)) % 100) / 100.0
+                if roll < ratio:
+                    w += _PRESSURE_ON_TARGET_BONUS
+            w *= h_quality_mult if team == 'home' else a_quality_mult
         else:
             continue
         impulse[minute] += sign * w
@@ -4390,33 +4432,18 @@ def _build_match_momentum(combined_events):
     peak = max(1.0, max(abs(v) for v in smoothed))
     norm = [max(-1.0, min(1.0, v / peak)) for v in smoothed]
 
-    # Konsistenz-Durchlauf: An jeder Torminute MUSS die Kurve auf der Seite
-    # des Torschützen liegen (sonst wirkt der Marker widersprüchlich, z. B.
-    # Auswärtstor bei Heim-Momentum). Falls die geglättete Kurve das durch
-    # dicht aufeinanderfolgende Ereignisse verletzt, wird lokal mit einem
-    # kleinen Dreieckskern (±2 Minuten) nachkorrigiert — zwei Durchläufe,
-    # damit sich nahe Tore beider Teams nicht gegenseitig aushebeln.
-    # Sonderfall: Treffen BEIDE Teams in derselben Minute, ist keine Seite
-    # erzwingbar — diese Minute wird übersprungen (Kurve bleibt, wo sie ist).
-    sides_per_minute = {}
+    # Momentum-Impuls durch Tore: die Basiskurve bleibt unverändert (reiner
+    # Druckverlauf), aber an der Torminute wird ein kurzer, klar sichtbarer
+    # Boost aufaddiert — mit leichtem Nachklingen in den beiden Folgeminuten.
+    # Danach greift wieder der normale Druckverlauf.
     for gm, gsign in goal_points:
-        sides_per_minute.setdefault(gm, set()).add(gsign)
-    tied_minutes = {m for m, signs in sides_per_minute.items() if len(signs) > 1}
-    for _ in range(2):
-        for gm, gsign in goal_points:
-            if gm in tied_minutes or norm[gm] * gsign >= _MOMENTUM_GOAL_SIDE_MARGIN:
+        for offset, frac in _GOAL_PULSE.items():
+            idx = gm + offset
+            if idx > 90:
                 continue
-            delta = _MOMENTUM_GOAL_SIDE_MARGIN * gsign - norm[gm]
-            for off in range(-2, 3):
-                i = gm + off
-                if 0 <= i <= 90:
-                    norm[i] += delta * (1.0 - abs(off) / 3.0)
-    # Direkte Absicherung der exakten Torminute (letztes Wort hat das Tor)
-    for gm, gsign in goal_points:
-        if gm not in tied_minutes and norm[gm] * gsign < _MOMENTUM_GOAL_SIDE_MARGIN:
-            norm[gm] = _MOMENTUM_GOAL_SIDE_MARGIN * gsign
+            norm[idx] = max(-1.0, min(1.0, norm[idx] + gsign * frac))
 
-    return [round(max(-1.0, min(1.0, v)), 3) for v in norm]
+    return [round(v, 3) for v in norm]
 
 
 def _build_momentum_markers(combined_events):
@@ -4513,7 +4540,9 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
     away_name = report_data.get('away_club_name', '')
     home_short = report_data.get('home_club_short', home_name)
     away_short = report_data.get('away_club_short', away_name)
-    momentum = _build_match_momentum(rc.get('combined_events'))
+    momentum = _build_match_momentum(
+        rc.get('combined_events'), report_data.get('match_stats'), rc,
+    )
     momentum_markers = _build_momentum_markers(rc.get('combined_events'))
 
     home_crest = report_data.get('home_club_crest')
