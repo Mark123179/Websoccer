@@ -204,6 +204,8 @@ button{font-family:inherit}
 /* ── Aufstellungen tab ───────────────────────────────── */
 .lineup-layout{display:grid;grid-template-columns:225px minmax(0,1fr) 225px;gap:14px;align-items:start}
 .lineup-center{display:grid;gap:14px;min-width:0}
+.bench-column{display:grid;gap:14px;min-width:0}
+.subs-card{padding:14px 14px 10px}
 .bench-col{padding:14px 14px 10px}
 .bench-col .subhead{margin-top:2px}
 .bench-col .bench-list{margin-top:8px}
@@ -230,14 +232,23 @@ button{font-family:inherit}
 .bench-row .in{font-size:11px;font-weight:800;color:var(--green);display:inline-flex;align-items:center;gap:4px}
 .subhead{display:flex;align-items:center;gap:8px;margin:2px 0 10px;color:var(--faint);font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}
 .subhead.subhead-gap{margin-top:16px}
-/* Auswechslungen kompakt unter der jeweiligen Ersatzbank */
-.bench-subs-head{margin-top:14px}
+/* Auswechslungen — eigene Kachel direkt unter der Ersatzbank */
 .bench-subs{display:grid;gap:2px;margin-top:6px}
 .bench-subs .bsub{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.055)}
+.bench-subs .bsub:first-child{border-top:none}
 .bench-subs .min{font-family:var(--mono);font-weight:900;color:var(--cyan);font-size:11px;flex-shrink:0;margin-top:1px}
+.bench-subs .sub-badge.inline{position:static;flex-shrink:0;margin-top:1px}
 .bench-subs .sw{display:flex;flex-direction:column;gap:2px;font-size:11.5px;min-width:0}
 .bench-subs .on{color:var(--green);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bench-subs .off{color:var(--red);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Auswechslungs-Icon (⇆) — auf Bank-Portrait (grün=eingewechselt), Pitch-Portrait (rot=ausgewechselt), inline in der Auswechslungen-Kachel */
+.ph-slot{position:relative;display:inline-block}
+.sub-badge{display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;line-height:1;border-radius:50%;width:14px;height:14px;color:#04140f;box-shadow:0 0 0 2px var(--bg-hero,#0b1310)}
+.sub-badge.on{position:absolute;right:-3px;bottom:-3px;background:var(--green)}
+.sub-badge.off{position:absolute;right:-3px;bottom:-3px;background:var(--red);color:#fff}
+.sub-badge.inline{width:16px;height:16px;font-size:10px;background:rgba(255,255,255,.08);color:var(--cyan);box-shadow:none;border:1px solid var(--line-strong)}
+.ph .sub-badge.off{right:-4px;bottom:-4px}
 
 /* ── Spieler tab ─────────────────────────────────────── */
 .players-grid{display:grid;grid-template-columns:320px 1fr 1fr;gap:16px;align-items:start}

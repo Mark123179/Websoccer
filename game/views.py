@@ -3651,7 +3651,7 @@ def _ensure_cards_in_report(report_data: dict) -> dict:
     return report_data
 
 
-def _build_pitch_positions(report_data: dict) -> dict:
+def _build_pitch_positions(report_data: dict, rc: dict) -> dict:
     """Berechnet Pitch-Koordinaten (x/y in %) für die Startelf-Darstellung.
 
     Nutzt tactics.formation_slots(), das die Slot-Reihenfolge (TW → Abwehr →
@@ -3677,7 +3677,7 @@ def _build_pitch_positions(report_data: dict) -> dict:
                 return {}
         return parsed
 
-    def _side(players_key, formation_key):
+    def _side(players_key, formation_key, subs_key):
         players = report_data.get(players_key) or []
         starters = [p for p in players if not p.get('is_sub')]
         formation = _parse_formation_code(report_data.get(formation_key))
@@ -3687,14 +3687,25 @@ def _build_pitch_positions(report_data: dict) -> dict:
             slots = []
         if not slots or len(slots) != len(starters):
             return []
+        sub_off_minute = {
+            s['out_id']: s['minute']
+            for s in (rc.get(subs_key) or [])
+            if s.get('out_id')
+        }
         return [
-            {**p, 'pitch_x': slot['x'], 'pitch_y': slot['y']}
+            {
+                **p,
+                'pitch_x': slot['x'],
+                'pitch_y': slot['y'],
+                'sub_off': p.get('id') in sub_off_minute,
+                'sub_off_minute': sub_off_minute.get(p.get('id')),
+            }
             for p, slot in zip(starters, slots)
         ]
 
     return {
-        'home_pitch_players': _side('home_players', 'home_formation'),
-        'away_pitch_players': _side('away_players', 'away_formation'),
+        'home_pitch_players': _side('home_players', 'home_formation', 'home_substitutions'),
+        'away_pitch_players': _side('away_players', 'away_formation', 'away_substitutions'),
     }
 
 
@@ -3737,9 +3748,14 @@ def _build_bench_with_status(report_data: dict, rc: dict) -> dict:
             display.append(entry)
         return display
 
+    def _out_ids(subs_key):
+        return {s['out_id'] for s in (rc.get(subs_key) or []) if s.get('out_id')}
+
     return {
         'home_bench_display': _side('home_bench', 'home_ratings', 'home_substitutions'),
         'away_bench_display': _side('away_bench', 'away_ratings', 'away_substitutions'),
+        'home_sub_out_ids': _out_ids('home_substitutions'),
+        'away_sub_out_ids': _out_ids('away_substitutions'),
     }
 
 
@@ -4519,7 +4535,7 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
         'motm_assists': motm_assists,
         'motm_card_type': motm_card_type,
     }
-    extras.update(_build_pitch_positions(report_data))
+    extras.update(_build_pitch_positions(report_data, rc))
     extras.update(_build_bench_with_status(report_data, rc))
     return extras
 
