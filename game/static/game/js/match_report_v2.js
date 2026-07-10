@@ -2,21 +2,40 @@
     "use strict";
     var FONT = "Inter, sans-serif";
 
-    function drawMomentum(box, momentum, homeCrestUrl, awayCrestUrl, homeInitial, awayInitial) {
+    function smoothPath(pts) {
+        if (pts.length < 2) return "";
+        var d = "M " + pts[0][0].toFixed(1) + " " + pts[0][1].toFixed(1);
+        if (pts.length === 2) {
+            return d + " L " + pts[1][0].toFixed(1) + " " + pts[1][1].toFixed(1);
+        }
+        var i, xc, yc;
+        for (i = 1; i < pts.length - 1; i++) {
+            xc = (pts[i][0] + pts[i + 1][0]) / 2;
+            yc = (pts[i][1] + pts[i + 1][1]) / 2;
+            d += " Q " + pts[i][0].toFixed(1) + " " + pts[i][1].toFixed(1) + " " + xc.toFixed(1) + " " + yc.toFixed(1);
+        }
+        var last = pts[pts.length - 1];
+        d += " L " + last[0].toFixed(1) + " " + last[1].toFixed(1);
+        return d;
+    }
+
+    function drawMomentum(box, momentum, homeCrestUrl, awayCrestUrl, homeInitial, awayInitial, markers) {
         if (!momentum || !momentum.length) { box.innerHTML = ''; return; }
         var W = 1000, H = 330, L = 76, R = 980, T = 52, B = 292, mid = (T + B) / 2, amp = (B - T) / 2 - 8;
         var s = momentum;
         function xF(m) { return L + (m / (s.length - 1)) * (R - L); }
         function yF(v) { return mid - v * amp; }
-        var hp = "M " + L + " " + mid, ap = "M " + L + " " + mid, m, x, y;
+        var homePts = [[L, mid]], awayPts = [[L, mid]], m, x, y;
         for (m = 0; m < s.length; m++) {
-            x = xF(m).toFixed(1);
+            x = xF(m);
             y = yF(s[m]);
-            hp += " L " + x + " " + Math.min(y, mid).toFixed(1);
-            ap += " L " + x + " " + Math.max(y, mid).toFixed(1);
+            homePts.push([x, Math.min(y, mid)]);
+            awayPts.push([x, Math.max(y, mid)]);
         }
-        hp += " L " + R + " " + mid + " Z";
-        ap += " L " + R + " " + mid + " Z";
+        homePts.push([R, mid]);
+        awayPts.push([R, mid]);
+        var hp = smoothPath(homePts) + " Z";
+        var ap = smoothPath(awayPts) + " Z";
 
         var gx = [0, 15, 30, 45, 60, 75, 90], vlines = "", hlines = "", xlabels = "", hh = [-0.66, -0.33, 0.33, 0.66];
         var scaleX = function (minute) { return xF(Math.min(s.length - 1, minute)); };
@@ -37,6 +56,35 @@
             return '<text x="16" y="' + (cy + 19) + '" fill="rgba(244,251,255,.7)" font-size="13" font-weight="900" text-anchor="middle" font-family="' + FONT + '">' + initial + '</text>';
         };
 
+        var esc = function (str) {
+            return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        };
+
+        var markerSvg = "";
+        if (markers) {
+            (markers.goals || []).forEach(function (gEvt) {
+                var mx = scaleX(gEvt.minute);
+                var my = yF(s[Math.min(s.length - 1, gEvt.minute)]);
+                var color = gEvt.team === "home" ? "#22e6ff" : "#ffd166";
+                markerSvg +=
+                    '<g>' +
+                    '<circle cx="' + mx + '" cy="' + my.toFixed(1) + '" r="7" fill="' + color + '" stroke="#0b141c" stroke-width="2"/>' +
+                    '<text x="' + mx + '" y="' + (my + 3.5).toFixed(1) + '" fill="#0b141c" font-size="9" text-anchor="middle" font-family="' + FONT + '">\u26BD</text>' +
+                    '<title>' + esc(gEvt.label) + " \u00b7 " + gEvt.minute + "'" + '</title>' +
+                    '</g>';
+            });
+            (markers.subs || []).forEach(function (sEvt) {
+                var mx = scaleX(sEvt.minute);
+                var baseY = sEvt.team === "home" ? T + 6 : B - 6;
+                var color = sEvt.team === "home" ? "#22e6ff" : "#ffd166";
+                markerSvg +=
+                    '<g>' +
+                    '<path d="M ' + mx + ' ' + (baseY - 5) + ' L ' + (mx + 4.5) + ' ' + (baseY + 4) + ' L ' + (mx - 4.5) + ' ' + (baseY + 4) + ' Z" fill="' + color + '" stroke="#0b141c" stroke-width="1" opacity="0.9"/>' +
+                    '<title>' + esc(sEvt.label) + " \u00b7 " + sEvt.minute + "'" + '</title>' +
+                    '</g>';
+            });
+        }
+
         box.innerHTML =
             '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">' +
             '<defs>' +
@@ -49,6 +97,7 @@
             '<path d="' + hp + '" fill="url(#spbGH)" stroke="#22e6ff" stroke-width="1.4"/>' +
             '<path d="' + ap + '" fill="url(#spbGA)" stroke="#ffd166" stroke-width="1.4"/>' +
             xlabels +
+            markerSvg +
             crestOrInitial(homeCrestUrl, homeInitial, T - 2) +
             '<text x="16" y="' + (mid + 4) + '" fill="rgba(244,251,255,.5)" font-size="10" font-weight="900" text-anchor="middle" font-family="' + FONT + '">0</text>' +
             crestOrInitial(awayCrestUrl, awayInitial, B - 24) +
@@ -97,7 +146,7 @@
                 var payload = JSON.parse(dataEl.textContent);
                 var boxes = document.querySelectorAll(".spb-momentum-box");
                 Array.prototype.forEach.call(boxes, function (box) {
-                    drawMomentum(box, payload.momentum, payload.home_crest, payload.away_crest, payload.home_initial, payload.away_initial);
+                    drawMomentum(box, payload.momentum, payload.home_crest, payload.away_crest, payload.home_initial, payload.away_initial, payload.markers);
                 });
             } catch (e) { /* keine Momentumdaten verfügbar */ }
         }

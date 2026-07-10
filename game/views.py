@@ -4219,8 +4219,45 @@ def _build_match_momentum(combined_events):
     for m in range(91):
         val = val * 0.90 + impulse[m]
         curve[m] = val
-    peak = max(1.0, max(abs(v) for v in curve))
-    return [round(max(-1.0, min(1.0, v / peak)), 3) for v in curve]
+
+    # Glättungsdurchlauf (symmetrisches gleitendes Mittel): verhindert den
+    # sägezahnartigen Minuten-zu-Minuten-Sprung der Rohkurve, damit der
+    # Kurvenverlauf im Chart "fließend" statt sprunghaft wirkt. Ändert nicht
+    # die dominante Richtung, glättet nur die Übergänge dazwischen.
+    win = 3
+    smoothed = []
+    for i in range(len(curve)):
+        lo, hi = max(0, i - win), min(len(curve), i + win + 1)
+        window_vals = curve[lo:hi]
+        smoothed.append(sum(window_vals) / len(window_vals))
+
+    peak = max(1.0, max(abs(v) for v in smoothed))
+    return [round(max(-1.0, min(1.0, v / peak)), 3) for v in smoothed]
+
+
+def _build_momentum_markers(combined_events):
+    """Extrahiert Kennpunkte (Tore, Wechsel) für die Momentum-Kurve.
+    Halbzeit wird bereits als eigene gestrichelte Linie im Chart gezeichnet."""
+    markers = {'goals': [], 'subs': []}
+    for evt in (combined_events or []):
+        team = evt.get('team')
+        if team not in ('home', 'away'):
+            continue
+        minute = max(0, min(90, int(evt.get('minute') or 0)))
+        etype = evt.get('type')
+        if etype == 'goal':
+            markers['goals'].append({
+                'minute': minute,
+                'team': team,
+                'label': evt.get('scorer_name') or '',
+            })
+        elif etype == 'sub':
+            markers['subs'].append({
+                'minute': minute,
+                'team': team,
+                'label': evt.get('in_name') or '',
+            })
+    return markers
 
 
 def _dominant_phase_label(curve, home_short, away_short):
@@ -4293,11 +4330,13 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
     home_short = report_data.get('home_club_short', home_name)
     away_short = report_data.get('away_club_short', away_name)
     momentum = _build_match_momentum(rc.get('combined_events'))
+    momentum_markers = _build_momentum_markers(rc.get('combined_events'))
 
     home_crest = report_data.get('home_club_crest')
     away_crest = report_data.get('away_club_crest')
     momentum_payload = {
         'momentum': momentum,
+        'markers': momentum_markers,
         'home_crest': _static(home_crest) if home_crest else None,
         'away_crest': _static(away_crest) if away_crest else None,
         'home_initial': (home_short or '?')[:1],

@@ -495,9 +495,9 @@
                         {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
                         <b>{{ report.home_club_name }}</b>
                     </div>
-                    <div class="subhead">Startelf &middot; nach Note</div>
+                    <div class="subhead">Startelf &middot; nach Position</div>
                     <div class="pl-list">
-                        {% for r in report.home_ratings|dictsortreversed:"rating" %}{% if not r.is_sub %}
+                        {% for r in report.home_ratings %}{% if not r.is_sub %}
                         <div class="pl-row">
                             <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
@@ -540,9 +540,9 @@
                         {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
                         <b>{{ report.away_club_name }}</b>
                     </div>
-                    <div class="subhead">Startelf &middot; nach Note</div>
+                    <div class="subhead">Startelf &middot; nach Position</div>
                     <div class="pl-list">
-                        {% for r in report.away_ratings|dictsortreversed:"rating" %}{% if not r.is_sub %}
+                        {% for r in report.away_ratings %}{% if not r.is_sub %}
                         <div class="pl-row">
                             <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
@@ -627,5 +627,5 @@
 </div>{# /report #}
 </section>{# /spb-report #}
 
-<script src="{% static 'game/js/match_report_v2.js' %}?v=1"></script>
+<script src="{% static 'game/js/match_report_v2.js' %}?v=2"></script>
 {% endblock %}
