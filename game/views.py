@@ -3613,6 +3613,71 @@ def _ensure_shirt_numbers_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _ensure_bench_in_report(report_data: dict) -> dict:
+    """Fügt Ersatzbank-Daten in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
+
+    Neue Simulationen betten home_bench/away_bench direkt ein (Snapshot aus
+    TacticSetup.bench zum Simulationszeitpunkt). Ältere gespeicherte
+    SimulatedMatch-Einträge kennen dieses Feld noch nicht — hier per
+    DB-Lookup der AKTUELLEN Kader-Bank des jeweiligen Vereins nachgerüstet
+    (bestes verfügbares Äquivalent, analog zu den anderen _ensure_*-
+    Backfills, die ebenfalls aktuelle Spielerdaten für Altdaten verwenden).
+    Spieler, die bereits in der Startelf stehen, werden ausgeschlossen, um
+    Duplikate zu vermeiden. Ohne aktuelle Bank-Auswahl bleibt das Feld
+    leer — es wird NICHTS erfunden.
+    """
+    if not report_data:
+        return report_data
+    if report_data.get('home_bench') and report_data.get('away_bench'):
+        return report_data
+
+    from .models import TacticSetup as _TacticSetup, Player as _Player
+    from .tactics import SQUAD_PRO as _SQUAD_PRO
+
+    def _bench_for(club_id, starters_key):
+        if not club_id:
+            return []
+        starter_ids = {
+            row.get('id') for row in (report_data.get(starters_key) or []) if row.get('id')
+        }
+        tactic = (
+            _TacticSetup.objects
+            .filter(club_id=club_id, squad_scope=_SQUAD_PRO)
+            .first()
+        )
+        bench_ids = [
+            pid for pid in (getattr(tactic, 'bench', None) or [])
+            if pid and pid not in starter_ids
+        ]
+        if not bench_ids:
+            return []
+        players_by_id = {p.pk: p for p in _Player.objects.filter(pk__in=bench_ids)}
+        result = []
+        for pid in bench_ids:
+            p = players_by_id.get(pid)
+            if not p:
+                continue
+            try:
+                portrait = p.portrait_url
+            except Exception:
+                portrait = ''
+            result.append({
+                'id': p.pk,
+                'name': f'{p.first_name} {p.last_name}'.strip() or str(p),
+                'portrait_url': portrait,
+                'shirt_number': p.shirt_number,
+                'position': getattr(p, 'main_position_1', '') or '',
+            })
+        return result
+
+    report_data = dict(report_data)
+    if not report_data.get('home_bench'):
+        report_data['home_bench'] = _bench_for(report_data.get('home_club_id'), 'home_players')
+    if not report_data.get('away_bench'):
+        report_data['away_bench'] = _bench_for(report_data.get('away_club_id'), 'away_players')
+    return report_data
+
+
 def _ensure_cards_in_report(report_data: dict) -> dict:
     """Ordnet Karten (Gelb/Rot) den Spieler-Notenzeilen zu.
 
@@ -4732,6 +4797,7 @@ def club_match_report(request, club_id):
     _report_data = _ensure_portraits_in_report(_report_data) if _report_data else _report_data
     _report_data = _ensure_shirt_numbers_in_report(_report_data) if _report_data else _report_data
     _report_data = _ensure_cards_in_report(_report_data) if _report_data else _report_data
+    _report_data = _ensure_bench_in_report(_report_data) if _report_data else _report_data
 
     _comp_name = ''
     if latest:
@@ -4871,6 +4937,7 @@ def match_report_by_id(request, sm_id):
     _report_data = _ensure_portraits_in_report(_report_data)
     _report_data = _ensure_shirt_numbers_in_report(_report_data)
     _report_data = _ensure_cards_in_report(_report_data)
+    _report_data = _ensure_bench_in_report(_report_data)
 
     _comp_name = ''
     if latest.match_type == 'pokal':
