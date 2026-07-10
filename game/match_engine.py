@@ -256,10 +256,16 @@ def _player_row(item: dict, goals: int = 0, assists: int = 0, match_strength: fl
     except Exception:
         portrait_url = ''
 
+    try:
+        shirt_number = p.shirt_number
+    except Exception:
+        shirt_number = None
+
     return {
         'id': p.pk,
         'name': f"{p.first_name} {p.last_name}".strip() or str(p),
         'portrait_url': portrait_url,
+        'shirt_number': shirt_number,
         'position': slot['code'],
         'group': slot['group'],
         'base_strength': round(base, 1),
@@ -2821,9 +2827,16 @@ def simulate_match(
                 fresh = int(round(float(p.strength_profile.freshness or 100.0)))
             except Exception:
                 fresh = 100
+            try:
+                bench_portrait_url = p.portrait_url
+            except Exception:
+                bench_portrait_url = ''
             result[pid] = {
                 'id':                  p.pk,
                 'name':               f'{p.first_name} {p.last_name}'.strip() or str(p),
+                'portrait_url':        bench_portrait_url,
+                'shirt_number':        p.shirt_number,
+                'position':            getattr(p, 'main_position_1', '') or '',
                 'final_strength':      match_strengths.get(pid, 50.0),
                 'main_positions':      list(getattr(p, 'main_positions', []) or []),
                 'secondary_positions': list(getattr(p, 'secondary_positions', []) or []),
@@ -3039,6 +3052,9 @@ def simulate_match(
         # ── Spieler-Rows (reich angereichert, ORM-Daten) ─────────────────────
         'home_players': h_players,
         'away_players': a_players,
+        # ── Ersatzbank (voll, für Spielbericht "Ersatzbank"-Karte) ───────────
+        'home_bench': list((home_team.get('bench_player_data') or {}).values()),
+        'away_bench': list((away_team.get('bench_player_data') or {}).values()),
         # ── Stärken & Teamwork ────────────────────────────────────────────────
         'home_strength':  sim['home_strength'],
         'away_strength':  sim['away_strength'],

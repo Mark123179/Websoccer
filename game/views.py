@@ -3560,6 +3560,189 @@ def _ensure_portraits_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _ensure_shirt_numbers_in_report(report_data: dict) -> dict:
+    """Fügt Rückennummern in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
+
+    Neue Simulationen betten shirt_number direkt in home_players/away_players/
+    home_ratings/away_ratings/home_bench/away_bench/man_of_the_match ein. Ältere
+    gespeicherte SimulatedMatch-Einträge enthalten dieses Feld noch nicht — hier
+    per DB-Lookup nachgerüstet.
+    """
+    if not report_data:
+        return report_data
+
+    lists_to_check = ('home_players', 'away_players', 'home_ratings', 'away_ratings',
+                       'home_bench', 'away_bench')
+    ids = set()
+    needs_backfill = False
+    for key in lists_to_check:
+        for row in (report_data.get(key) or []):
+            if row.get('id') and not row.get('shirt_number'):
+                needs_backfill = True
+                ids.add(row['id'])
+    motm = report_data.get('man_of_the_match')
+    if motm and motm.get('id') and not motm.get('shirt_number'):
+        needs_backfill = True
+        ids.add(motm['id'])
+
+    if not needs_backfill:
+        return report_data
+
+    from .models import Player as _Player
+    number_map = {}
+    for p in _Player.objects.filter(pk__in=ids):
+        try:
+            number_map[p.pk] = p.shirt_number
+        except Exception:
+            number_map[p.pk] = None
+
+    report_data = dict(report_data)
+    for key in lists_to_check:
+        rows = report_data.get(key)
+        if not rows:
+            continue
+        report_data[key] = [
+            {**row, 'shirt_number': row.get('shirt_number') or number_map.get(row.get('id'))}
+            for row in rows
+        ]
+    if motm and motm.get('id'):
+        report_data['man_of_the_match'] = {
+            **motm,
+            'shirt_number': motm.get('shirt_number') or number_map.get(motm['id']),
+        }
+    return report_data
+
+
+def _ensure_cards_in_report(report_data: dict) -> dict:
+    """Ordnet Karten (Gelb/Rot) den Spieler-Notenzeilen zu.
+
+    card_events (nur bei neuen Simulationen im report_data vorhanden) trägt
+    player_id + card_type ('yellow'|'red'). Bei Doppelzuordnung gewinnt Rot.
+    Fehlt card_events (Altdaten), bleibt card_type schlicht unbesetzt — Karten
+    werden NIEMALS erraten.
+    """
+    if not report_data:
+        return report_data
+    card_events = report_data.get('card_events')
+    if not card_events:
+        return report_data
+
+    card_by_pid = {}
+    for evt in card_events:
+        pid = evt.get('player_id')
+        if not pid:
+            continue
+        ctype = evt.get('card_type')
+        if pid not in card_by_pid or ctype == 'red':
+            card_by_pid[pid] = ctype
+
+    if not card_by_pid:
+        return report_data
+
+    report_data = dict(report_data)
+    for key in ('home_ratings', 'away_ratings'):
+        rows = report_data.get(key)
+        if not rows:
+            continue
+        report_data[key] = [
+            {**row, 'card_type': card_by_pid.get(row.get('id'))}
+            for row in rows
+        ]
+    return report_data
+
+
+def _build_pitch_positions(report_data: dict) -> dict:
+    """Berechnet Pitch-Koordinaten (x/y in %) für die Startelf-Darstellung.
+
+    Nutzt tactics.formation_slots(), das die Slot-Reihenfolge (TW → Abwehr →
+    Defensives MF → Mittelfeld → Offensives MF → Sturm) exakt in der
+    Reihenfolge liefert, in der auch die Startelf-Spielerliste aufgebaut ist.
+    Bei Unstimmigkeit (z. B. Sonderfälle) wird NICHT geraten — leere Liste,
+    Template zeigt dann keine Startelf-Pins.
+    """
+    if not report_data:
+        return {}
+    from . import tactics as _tactics
+
+    def _parse_formation_code(code):
+        """Wandelt den im Report gespeicherten Bindestrich-Code (z. B. '4n-0-4-0-2',
+        erzeugt von tactics.formation_code()) zurück in das von formation_slots()
+        erwartete Teil-Dict. Passt Länge/Codes nicht, wird nichts geraten (leeres Dict)."""
+        parts = (code or '').split('-')
+        if len(parts) != len(_tactics.FORMATION_ORDER):
+            return {}
+        parsed = dict(zip(_tactics.FORMATION_ORDER, parts))
+        for part in _tactics.FORMATION_ORDER:
+            if parsed[part] not in _tactics.FORMATION_PARTS[part]:
+                return {}
+        return parsed
+
+    def _side(players_key, formation_key):
+        players = report_data.get(players_key) or []
+        starters = [p for p in players if not p.get('is_sub')]
+        formation = _parse_formation_code(report_data.get(formation_key))
+        try:
+            slots = _tactics.formation_slots(formation) if formation else []
+        except Exception:
+            slots = []
+        if not slots or len(slots) != len(starters):
+            return []
+        return [
+            {**p, 'pitch_x': slot['x'], 'pitch_y': slot['y']}
+            for p, slot in zip(starters, slots)
+        ]
+
+    return {
+        'home_pitch_players': _side('home_players', 'home_formation'),
+        'away_pitch_players': _side('away_players', 'away_formation'),
+    }
+
+
+def _build_bench_with_status(report_data: dict, rc: dict) -> dict:
+    """Baut die vollständige Ersatzbank-Anzeige (alle Bankspieler, nicht nur Eingewechselte).
+
+    Nutzeranweisung: KEINE Erfindung von Daten — Spieler ohne Einsatz zeigen
+    lediglich ihren Kaderstatus ("Bank"), keine erfundene Note oder Einsatzzeit.
+    """
+    if not report_data:
+        return {}
+
+    def _side(bench_key, ratings_key, subs_key):
+        bench_list = report_data.get(bench_key) or []
+        ratings_by_id = {r['id']: r for r in (report_data.get(ratings_key) or []) if r.get('id')}
+        sub_on_minute = {
+            s['in_id']: s['minute']
+            for s in (rc.get(subs_key) or [])
+            if s.get('in_id')
+        }
+        display = []
+        for p in bench_list:
+            pid = p.get('id')
+            rating_row = ratings_by_id.get(pid)
+            entry = {
+                'id':            pid,
+                'name':          p.get('name', ''),
+                'portrait_url':  p.get('portrait_url', ''),
+                'shirt_number':  p.get('shirt_number'),
+                'position':      p.get('position', ''),
+                'came_on':       False,
+            }
+            if rating_row and rating_row.get('is_sub'):
+                entry['came_on']    = True
+                entry['on_minute']  = sub_on_minute.get(pid)
+                entry['rating']     = rating_row.get('rating')
+                entry['card_type']  = rating_row.get('card_type')
+                entry['goals']      = rating_row.get('goals', 0)
+                entry['assists']    = rating_row.get('assists', 0)
+            display.append(entry)
+        return display
+
+    return {
+        'home_bench_display': _side('home_bench', 'home_ratings', 'home_substitutions'),
+        'away_bench_display': _side('away_bench', 'away_ratings', 'away_substitutions'),
+    }
+
+
 def _ensure_not_fielded_in_report(report_data: dict, sm=None) -> dict:
     """Fügt Nichtaufstellungs-Malus-Felder in report_data ein, falls sie fehlen.
 
@@ -4144,14 +4327,35 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
         'home_ball_touches':  0,   'away_ball_touches':  0,
     }
 
-    return {
+    # ── MOTM-Zusatzwerte (Tore/Vorlagen/Karte) ─────────────────────────────
+    # motm-Dict selbst kennt weder goals/assists/card_type — per id in den
+    # bereits mit card_type angereicherten ratings-Listen nachschlagen.
+    # NIEMALS erraten: fehlt der Treffer, bleiben die Werte 0/None.
+    motm = report_data.get('man_of_the_match')
+    motm_goals = motm_assists = 0
+    motm_card_type = None
+    if motm and motm.get('id'):
+        for row in (report_data.get('home_ratings') or []) + (report_data.get('away_ratings') or []):
+            if row.get('id') == motm['id']:
+                motm_goals = row.get('goals', 0) or 0
+                motm_assists = row.get('assists', 0) or 0
+                motm_card_type = row.get('card_type')
+                break
+
+    extras = {
         'momentum': momentum,
         'dominant_phase': _dominant_phase_label(momentum, home_short, away_short),
         'story': _build_match_story(report_data, rc, home_name, away_name),
         'momentum_payload': momentum_payload,
         'ht_score': ht_score,
         'extended_stats': extended_stats,
+        'motm_goals': motm_goals,
+        'motm_assists': motm_assists,
+        'motm_card_type': motm_card_type,
     }
+    extras.update(_build_pitch_positions(report_data))
+    extras.update(_build_bench_with_status(report_data, rc))
+    return extras
 
 
 def _build_stadium_capacity_extras(club) -> dict:
@@ -4287,6 +4491,14 @@ def club_match_report(request, club_id):
             'away_att_r_pct': round(a_r / a_tot * 100),
             'home_att_total': h_l + h_c + h_r,
             'away_att_total': a_l + a_c + a_r,
+            'home_att_max_zone': (
+                max((('l', h_l), ('c', h_c), ('r', h_r)), key=lambda x: x[1])[0]
+                if (h_l + h_c + h_r) else None
+            ),
+            'away_att_max_zone': (
+                max((('l', a_l), ('c', a_c), ('r', a_r)), key=lambda x: x[1])[0]
+                if (a_l + a_c + a_r) else None
+            ),
             'simulation_mode': data.get('simulation_mode') or 'legacy',
             'plan_count': len(plan_acts),
             'plan_activations_labeled': [
@@ -4329,6 +4541,8 @@ def club_match_report(request, club_id):
     _report_data = _ensure_ratings_in_report(latest.report_data) if latest else None
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest) if _report_data else _report_data
     _report_data = _ensure_portraits_in_report(_report_data) if _report_data else _report_data
+    _report_data = _ensure_shirt_numbers_in_report(_report_data) if _report_data else _report_data
+    _report_data = _ensure_cards_in_report(_report_data) if _report_data else _report_data
 
     _comp_name = ''
     if latest:
@@ -4414,6 +4628,14 @@ def match_report_by_id(request, sm_id):
             'away_att_r_pct': round(a_r / a_tot * 100),
             'home_att_total': h_l + h_c + h_r,
             'away_att_total': a_l + a_c + a_r,
+            'home_att_max_zone': (
+                max((('l', h_l), ('c', h_c), ('r', h_r)), key=lambda x: x[1])[0]
+                if (h_l + h_c + h_r) else None
+            ),
+            'away_att_max_zone': (
+                max((('l', a_l), ('c', a_c), ('r', a_r)), key=lambda x: x[1])[0]
+                if (a_l + a_c + a_r) else None
+            ),
             'simulation_mode': data.get('simulation_mode') or 'legacy',
             'plan_count': len(plan_acts),
             'plan_activations_labeled': [
@@ -4455,6 +4677,8 @@ def match_report_by_id(request, sm_id):
     _report_data = _ensure_ratings_in_report(latest.report_data)
     _report_data = _ensure_not_fielded_in_report(_report_data, sm=latest)
     _report_data = _ensure_portraits_in_report(_report_data)
+    _report_data = _ensure_shirt_numbers_in_report(_report_data)
+    _report_data = _ensure_cards_in_report(_report_data)
 
     _comp_name = ''
     if latest.match_type == 'pokal':
