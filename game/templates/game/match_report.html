@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=3">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -63,7 +63,7 @@
         <div class="hero-score">
             <div class="hs-nums"><b>{{ report.home_goals }}</b><i>:</i><b>{{ report.away_goals }}</b></div>
             {% if rc.ht_score %}
-            <div class="hs-ht">Halbzeit {{ rc.ht_score }}</div>
+            <div class="hs-ht">HZ {{ rc.ht_score }}</div>
             {% endif %}
         </div>
 
@@ -266,14 +266,15 @@
         {# ══════════════════════════════ STATISTIK ═══════════════════════ #}
         <section class="panel" data-tab="statistik" hidden>
             <section class="card">
+                <p class="card-title">Teamstatistiken</p>
                 <div class="stat-teamhead">
                     <div class="tm">
                         {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
-                        {{ report.home_club_short }}
+                        {{ report.home_club_name }}
                     </div>
-                    <div class="vs">vs.</div>
+                    <div class="vs">{{ report.home_goals }}&nbsp;:&nbsp;{{ report.away_goals }}</div>
                     <div class="tm away">
-                        {{ report.away_club_short }}
+                        {{ report.away_club_name }}
                         {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
                     </div>
                 </div>
@@ -283,13 +284,10 @@
                         <h4>Angriff</h4>
                         <div class="stat-list">
                             <div class="stat-row"><span class="hv">{{ report.match_stats.home_possession }}%</span><div class="mid"><div class="lab">Ballbesitz</div><div class="stat-bar"><i class="h" style="width:{{ report.match_stats.home_possession }}%"></i><i class="a" style="width:{{ report.match_stats.away_possession }}%"></i></div></div><span class="av">{{ report.match_stats.away_possession }}%</span></div>
-                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots }}</span><div class="mid"><div class="lab">Sch&uuml;sse gesamt</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div></div><span class="av">{{ report.match_stats.away_shots }}</span></div>
-                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots_on_target }}</span><div class="mid"><div class="lab">Auf Tor</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_shots_on_target }}</span></div>
-                            {% if rc.home_xg %}
-                            <div class="stat-row"><span class="hv">{{ rc.home_xg }}</span><div class="mid"><div class="lab">xG</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:0 }}%"></i></div></div><span class="av">{{ rc.away_xg }}</span></div>
-                            {% endif %}
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots }}</span><div class="mid"><div class="lab">Torsch&uuml;sse</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div></div><span class="av">{{ report.match_stats.away_shots }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots_on_target }}</span><div class="mid"><div class="lab">Sch&uuml;sse aufs Tor</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_shots_on_target }}</span></div>
                             <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_great_chances }}</span><div class="mid"><div class="lab">Gro&szlig;chancen</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_great_chances }}</span></div>
-                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_offsides }}</span><div class="mid"><div class="lab">Abseits</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_offsides }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.home_xg|default:0 }}</span><div class="mid"><div class="lab">xG (Expected Goals)</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:50 }}%"></i></div></div><span class="av">{{ rc.away_xg|default:0 }}</span></div>
                         </div>
                     </div>
 
@@ -299,9 +297,7 @@
                             <div class="stat-row"><span class="hv">{{ report.match_stats.home_corners }}</span><div class="mid"><div class="lab">Ecken</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_corners }}</span></div>
                             <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_free_kicks }}</span><div class="mid"><div class="lab">Freist&ouml;&szlig;e</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_free_kicks }}</span></div>
                             <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_penalties }}</span><div class="mid"><div class="lab">Elfmeter</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_penalties }}</span></div>
-                            {% if rc.home_sp_goals or rc.away_sp_goals %}
-                            <div class="stat-row"><span class="hv">{{ rc.home_sp_goals }}</span><div class="mid"><div class="lab">Tore aus Standards</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.away_sp_goals }}</span></div>
-                            {% endif %}
+                            <div class="stat-row"><span class="hv">{{ rc.home_sp_goals|default:0 }}</span><div class="mid"><div class="lab">Tore aus Standards</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.away_sp_goals|default:0 }}</span></div>
                         </div>
                     </div>
 
@@ -309,11 +305,12 @@
                         <h4>Zweikampf &amp; Disziplin</h4>
                         <div class="stat-list">
                             <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_duels_won_pct }}%</span><div class="mid"><div class="lab">Zweik&auml;mpfe gewonnen</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_duels_won_pct }}%</span></div>
-                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_ball_wins }}</span><div class="mid"><div class="lab">Pressing-Gewinne</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_ball_wins }}</span></div>
-                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_bypassed }}</span><div class="mid"><div class="lab">Pressing &uuml;berspielt</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_bypassed }}</span></div>
                             <div class="stat-row"><span class="hv">{{ report.match_stats.home_fouls }}</span><div class="mid"><div class="lab">Fouls</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_fouls }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_offsides }}</span><div class="mid"><div class="lab">Abseits</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_offsides }}</span></div>
                             <div class="stat-row"><span class="hv">{{ report.match_stats.home_yellow }}</span><div class="mid"><div class="lab">Gelbe Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_yellow }}</span></div>
                             <div class="stat-row"><span class="hv">{{ report.match_stats.home_red }}</span><div class="mid"><div class="lab">Rote Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_red }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_ball_wins }}</span><div class="mid"><div class="lab">Pressing-Gewinne</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_ball_wins }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_bypassed }}</span><div class="mid"><div class="lab">Pressing &uuml;berspielt</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_bypassed }}</span></div>
                         </div>
                     </div>
 
@@ -328,12 +325,27 @@
                         </div>
                     </div>
 
-                    <div class="stat-group">
-                        <h4>Formation &amp; Taktik</h4>
-                        <div class="spielinfo">
-                            <div class="info-cell"><div class="l">{{ report.home_club_short }} &middot; System</div><div class="v">{{ report.home_formation|default:"&ndash;" }}</div></div>
-                            <div class="info-cell"><div class="l">{{ report.away_club_short }} &middot; System</div><div class="v">{{ report.away_formation|default:"&ndash;" }}</div></div>
+                </div>
+            </section>
+
+            <section class="card" style="margin-top:14px;">
+                <p class="card-title">Formation &amp; Taktik pro Halbzeit</p>
+                <div class="htt-grid">
+                    <div class="htt-team">
+                        <div class="htt-head">
+                            <span class="tm">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}</span>
+                            <span class="htt-einsatz">Einsatz: {{ rc.half_tactics.home.effort_label }}</span>
                         </div>
+                        <div class="htt-row"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.home.ht1_formation }}</span><span class="txt">{{ rc.half_tactics.home.ht1_text }}</span></div>
+                        <div class="htt-row"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.home.ht2_formation }}</span><span class="txt">{{ rc.half_tactics.home.ht2_text }}</span></div>
+                    </div>
+                    <div class="htt-team">
+                        <div class="htt-head">
+                            <span class="tm">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}</span>
+                            <span class="htt-einsatz">Einsatz: {{ rc.half_tactics.away.effort_label }}</span>
+                        </div>
+                        <div class="htt-row"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.away.ht1_formation }}</span><span class="txt">{{ rc.half_tactics.away.ht1_text }}</span></div>
+                        <div class="htt-row"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.away.ht2_formation }}</span><span class="txt">{{ rc.half_tactics.away.ht2_text }}</span></div>
                     </div>
                 </div>
             </section>

@@ -4186,11 +4186,22 @@ _MOMENTUM_WEIGHTS = {
 _MOMENTUM_CARD_WEIGHTS = {'yellow': -4.0, 'red': -10.0, 'yellow_red': -9.0}
 
 
+# Anteile des Torgewichts, die als "Drangphase" VOR dem Tor wirken
+# (Minute −3, −2, −1 relativ zur Torminute). Ein Tor fällt fast immer aus
+# einer Druckphase des schießenden Teams — ohne diesen Anlauf läge die
+# Kurve zur Torminute noch beim Gegner (siehe Nutzerfeedback).
+_MOMENTUM_GOAL_BUILDUP = (0.20, 0.35, 0.55)
+# Mindestwert (nach Normalisierung), den die Kurve an der Torminute auf der
+# Seite des Torschützen haben muss, damit der Tor-Marker visuell konsistent ist.
+_MOMENTUM_GOAL_SIDE_MARGIN = 0.15
+
+
 def _build_match_momentum(combined_events):
     """Leitet eine einfache Momentum-Kurve (−1..1 je Minute) aus den echten
     Ticker-Ereignissen ab (Ableitung, kein separates Datenmodell vorhanden).
     Positiv = Heimteam-Druck, negativ = Auswärtsteam-Druck."""
     impulse = [0.0] * 91
+    goal_points = []  # [(minute, sign)] für den Konsistenz-Durchlauf unten
     for evt in (combined_events or []):
         team = evt.get('team')
         if team not in ('home', 'away'):
@@ -4200,6 +4211,14 @@ def _build_match_momentum(combined_events):
         etype = evt.get('type')
         if etype == 'goal':
             w = _MOMENTUM_WEIGHTS['goal']
+            goal_points.append((minute, sign))
+            # Drangphase: Teil des Torgewichts wirkt bereits in den Minuten
+            # vor dem Tor (aufsteigend), damit die Kurve zur Torminute schon
+            # auf der Seite des schießenden Teams liegt.
+            for back, frac in enumerate(reversed(_MOMENTUM_GOAL_BUILDUP), start=1):
+                idx = minute - back
+                if idx >= 0:
+                    impulse[idx] += sign * w * frac
         elif etype == 'card':
             w = _MOMENTUM_CARD_WEIGHTS.get(evt.get('card_type'), -4.0)
             sign = -sign  # eine Karte schadet dem eigenen Momentum
@@ -4224,7 +4243,7 @@ def _build_match_momentum(combined_events):
     # sägezahnartigen Minuten-zu-Minuten-Sprung der Rohkurve, damit der
     # Kurvenverlauf im Chart "fließend" statt sprunghaft wirkt. Ändert nicht
     # die dominante Richtung, glättet nur die Übergänge dazwischen.
-    win = 3
+    win = 2
     smoothed = []
     for i in range(len(curve)):
         lo, hi = max(0, i - win), min(len(curve), i + win + 1)
@@ -4232,7 +4251,35 @@ def _build_match_momentum(combined_events):
         smoothed.append(sum(window_vals) / len(window_vals))
 
     peak = max(1.0, max(abs(v) for v in smoothed))
-    return [round(max(-1.0, min(1.0, v / peak)), 3) for v in smoothed]
+    norm = [max(-1.0, min(1.0, v / peak)) for v in smoothed]
+
+    # Konsistenz-Durchlauf: An jeder Torminute MUSS die Kurve auf der Seite
+    # des Torschützen liegen (sonst wirkt der Marker widersprüchlich, z. B.
+    # Auswärtstor bei Heim-Momentum). Falls die geglättete Kurve das durch
+    # dicht aufeinanderfolgende Ereignisse verletzt, wird lokal mit einem
+    # kleinen Dreieckskern (±2 Minuten) nachkorrigiert — zwei Durchläufe,
+    # damit sich nahe Tore beider Teams nicht gegenseitig aushebeln.
+    # Sonderfall: Treffen BEIDE Teams in derselben Minute, ist keine Seite
+    # erzwingbar — diese Minute wird übersprungen (Kurve bleibt, wo sie ist).
+    sides_per_minute = {}
+    for gm, gsign in goal_points:
+        sides_per_minute.setdefault(gm, set()).add(gsign)
+    tied_minutes = {m for m, signs in sides_per_minute.items() if len(signs) > 1}
+    for _ in range(2):
+        for gm, gsign in goal_points:
+            if gm in tied_minutes or norm[gm] * gsign >= _MOMENTUM_GOAL_SIDE_MARGIN:
+                continue
+            delta = _MOMENTUM_GOAL_SIDE_MARGIN * gsign - norm[gm]
+            for off in range(-2, 3):
+                i = gm + off
+                if 0 <= i <= 90:
+                    norm[i] += delta * (1.0 - abs(off) / 3.0)
+    # Direkte Absicherung der exakten Torminute (letztes Wort hat das Tor)
+    for gm, gsign in goal_points:
+        if gm not in tied_minutes and norm[gm] * gsign < _MOMENTUM_GOAL_SIDE_MARGIN:
+            norm[gm] = _MOMENTUM_GOAL_SIDE_MARGIN * gsign
+
+    return [round(max(-1.0, min(1.0, v)), 3) for v in norm]
 
 
 def _build_momentum_markers(combined_events):
@@ -4381,6 +4428,30 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
                 motm_card_type = row.get('card_type')
                 break
 
+    # ── Formation & Taktik pro Halbzeit ───────────────────────────────────
+    # Die Engine speichert aktuell KEINE Formations-/Taktikwechsel zur Pause
+    # und keine rohen Taktik-Stichworte im report_data-Snapshot (nur die
+    # kompilierten Multiplikatoren). Reale Daten: die Formation (für beide
+    # Halbzeiten identisch, da kein HZ-Wechsel-Mechanismus existiert).
+    # Taktik-Stichworte + Einsatz-Level: "–"-Platzhalter gemäß Nutzervorgabe
+    # (niemals raten), Feldnamen für spätere Engine-Anbindung vorbereitet.
+    half_tactics = {
+        'home': {
+            'ht1_formation': report_data.get('home_formation') or '–',
+            'ht2_formation': report_data.get('home_formation') or '–',
+            'ht1_text': '–',
+            'ht2_text': '–',
+            'effort_label': '–',
+        },
+        'away': {
+            'ht1_formation': report_data.get('away_formation') or '–',
+            'ht2_formation': report_data.get('away_formation') or '–',
+            'ht1_text': '–',
+            'ht2_text': '–',
+            'effort_label': '–',
+        },
+    }
+
     extras = {
         'momentum': momentum,
         'dominant_phase': _dominant_phase_label(momentum, home_short, away_short),
@@ -4388,6 +4459,7 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
         'momentum_payload': momentum_payload,
         'ht_score': ht_score,
         'extended_stats': extended_stats,
+        'half_tactics': half_tactics,
         'motm_goals': motm_goals,
         'motm_assists': motm_assists,
         'motm_card_type': motm_card_type,
