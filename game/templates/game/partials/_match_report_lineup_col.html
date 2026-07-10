@@ -1,0 +1,67 @@
+{% load static %}
+<div>
+    <div class="lu-head">
+        <div class="tm">
+            {% if club_crest %}<img src="{% static club_crest %}" alt="">{% endif %}
+            <div><b>{{ club_short }}</b><small>Startaufstellung</small></div>
+        </div>
+        <span class="lu-form">{{ formation }}</span>
+    </div>
+
+    <div class="pitch mini">
+        <div class="pm line"></div><div class="pm circle"></div><div class="pm spot"></div>
+        <div class="pm box top"></div><div class="pm box bot"></div>
+        <div class="pm six top"></div><div class="pm six bot"></div>
+
+        <div class="pline" style="top:{% if is_home %}76%{% else %}4%{% endif %};">
+            {% for p in team_players %}{% if not p.is_sub and p.group == 'goalkeeper' %}
+            <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
+                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="nm">{{ p.name }}</div>
+            </div>
+            {% endif %}{% endfor %}
+        </div>
+
+        <div class="pline" style="top:{% if is_home %}58%{% else %}26%{% endif %};">
+            {% for p in team_players %}{% if not p.is_sub and p.group == 'defense' %}
+            <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
+                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="nm">{{ p.name }}</div>
+            </div>
+            {% endif %}{% endfor %}
+        </div>
+
+        <div class="pline" style="top:{% if is_home %}40%{% else %}50%{% endif %};">
+            {% for p in team_players %}{% if not p.is_sub and p.group == 'defensive_midfield' or not p.is_sub and p.group == 'midfield' or not p.is_sub and p.group == 'offensive_midfield' %}
+            <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
+                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="nm">{{ p.name }}</div>
+            </div>
+            {% endif %}{% endfor %}
+        </div>
+
+        <div class="pline" style="top:{% if is_home %}14%{% else %}68%{% endif %};">
+            {% for p in team_players %}{% if not p.is_sub and p.group == 'attack' %}
+            <div class="pnode {% if is_home %}home{% else %}away{% endif %}">
+                <div class="ph">{{ p.name|slice:":1" }}</div>
+                <div class="nm">{{ p.name }}</div>
+            </div>
+            {% endif %}{% endfor %}
+        </div>
+    </div>
+
+    <div class="subhead">Bank</div>
+    <div class="bench-list">
+        {% for p in team_players %}
+            {% if p.is_sub %}
+            <div class="bench-row">
+                <span class="n">&#8593;{{ p.on_minute }}'</span>
+                <span class="nm">{{ p.name }} <small>{{ p.position }}</small></span>
+                <span class="in">eingewechselt</span>
+            </div>
+            {% endif %}
+        {% empty %}
+            <span style="color:var(--muted);font-size:12px;">Keine Einwechslungen</span>
+        {% endfor %}
+    </div>
+</div>

@@ -4,731 +4,435 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=1">
+    {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
+    {% endif %}
 {% endblock %}
 
 {% block content %}
-<section class="mr-page">
-
-    <header class="mr-page-header">
-        <h1>Spielbericht</h1>
-        <p class="mr-page-sub">Match-Engine V2 Simulation &middot; {{ club.name }}</p>
-    </header>
+<section class="spb-report">
+<div class="report">
 
     {% if report %}
-    {# ── Scoreboard ──────────────────────────────────────────────────────── #}
-    <div class="mr-scoreboard">
-        <div class="mr-team">
+
+    {# ── Hero-Header ──────────────────────────────────────────────────── #}
+    <section class="hero">
+        <div class="hero-info">
+            <div class="hero-comp">
+                {% if competition_logo %}
+                    <img src="{% static competition_logo %}" alt="{{ competition_name }}">
+                {% endif %}
+                <div>
+                    <b>{{ competition_name|default:"Freundschaftsspiel"|upper }}</b>
+                    <span>{{ latest_match.match_type|default:"freundschaft"|capfirst }}</span>
+                </div>
+            </div>
+            <div class="hero-meta">
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v3M16 3v3"></path></svg>
+                    <span>{{ latest_match.simulated_at|date:"D, d. M." }} &middot; <strong>{{ latest_match.simulated_at|date:"H:i" }}</strong></span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                    <span>{% if club.stadium %}{{ club.stadium.name }}, {{ club.stadium.city }}{% else %}Stadion nicht erfasst{% endif %}</span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
+                    <span>Wetter: &ndash; &middot; Schiedsrichter: &ndash;</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-team home">
+            <div class="nm">
+                <b>{{ report.home_club_name }}</b>
+                <small>{{ report.home_formation }}</small>
+            </div>
             {% if report.home_club_crest %}
-                <img class="mr-crest" src="{% static report.home_club_crest %}" alt="{{ report.home_club_name }}">
+                <img class="hero-crest home" src="{% static report.home_club_crest %}" alt="{{ report.home_club_name }}">
             {% else %}
-                <span class="mr-crest-fallback">{{ report.home_club_short }}</span>
+                <span class="hero-crest-fallback">{{ report.home_club_short }}</span>
             {% endif %}
-            <span class="mr-team-name">{{ report.home_club_name }}</span>
-            <span class="mr-formation-badge">{{ report.home_formation }}</span>
         </div>
 
-        <div class="mr-score-center">
-            {% if competition_logo %}
-            <div class="mr-competition-badge">
-                <img src="{% static competition_logo %}" alt="{{ competition_name }}">
-                <span>{{ competition_name }}</span>
-            </div>
-            {% elif competition_name %}
-            <div class="mr-competition-badge mr-competition-badge--text">
-                <span>{{ competition_name }}</span>
+        <div class="hero-score">
+            <div class="hs-nums"><b>{{ report.home_goals }}</b><i>:</i><b>{{ report.away_goals }}</b></div>
+            {% if rc.home_xg %}
+            <div class="hs-goals">xG {{ rc.home_xg }} &ndash; {{ rc.away_xg }}</div>
+            {% endif %}
+            {% if report.man_of_the_match %}
+            <div class="hs-motm">
+                <span class="lbl">&#9733; {{ report.man_of_the_match.name }}</span>
+                <span class="note">{{ report.man_of_the_match.rating }}</span>
             </div>
             {% endif %}
-            <span class="mr-score">{{ report.home_goals }}&thinsp;:&thinsp;{{ report.away_goals }}</span>
-            <div class="mr-score-meta">
-                {% if rc.home_xg %}
-                <span class="mr-xg-pill is-home">xG {{ rc.home_xg }}</span>
-                <span class="mr-xg-sep">&ndash;</span>
-                <span class="mr-xg-pill is-away">xG {{ rc.away_xg }}</span>
-                {% endif %}
-            </div>
-            <span class="mr-score-tag">Simulation V2{% if rc.simulation_mode %}&thinsp;&middot;&thinsp;<em class="mr-sim-mode-label">{{ rc.simulation_mode }}</em>{% endif %}</span>
         </div>
 
-        <div class="mr-team is-away">
+        <div class="hero-team away">
             {% if report.away_club_crest %}
-                <img class="mr-crest" src="{% static report.away_club_crest %}" alt="{{ report.away_club_name }}">
+                <img class="hero-crest away" src="{% static report.away_club_crest %}" alt="{{ report.away_club_name }}">
             {% else %}
-                <span class="mr-crest-fallback">{{ report.away_club_short }}</span>
+                <span class="hero-crest-fallback">{{ report.away_club_short }}</span>
             {% endif %}
-            <span class="mr-team-name">{{ report.away_club_name }}</span>
-            <span class="mr-formation-badge">{{ report.away_formation }}</span>
+            <div class="nm">
+                <b>{{ report.away_club_name }}</b>
+                <small>{{ report.away_formation }}</small>
+            </div>
         </div>
-    </div>
+    </section>
 
-    {# ── Body: Stats left │ Strength + Engine right ──────────────────────── #}
-    <div class="mr-body">
+    {# ── Tabs ─────────────────────────────────────────────────────────── #}
+    <nav class="tabs" id="tabbar">
+        <button class="tab active" data-tab="uebersicht">&Uuml;bersicht</button>
+        <button class="tab" data-tab="ticker">Ticker</button>
+        <button class="tab" data-tab="statistik">Statistik</button>
+        <button class="tab" data-tab="aufstellungen">Aufstellungen</button>
+        <button class="tab" data-tab="spieler">Spieler</button>
+        {% if is_admin %}
+        <button class="tab" data-tab="admin-bericht">Admin-Bericht</button>
+        {% endif %}
+    </nav>
 
-        <div class="mr-left">
+    <div id="panels">
 
-            {# ── Live-Ticker ────────────────────────────────────────────── #}
-            <div class="mr-section">
-                <h3 class="mr-section-title">Live-Ticker</h3>
-                <div class="mr-ticker">
+        {# ══════════════════════════════ ÜBERSICHT ══════════════════════ #}
+        <section class="panel" data-tab="uebersicht">
+            <div class="ov-grid">
 
-                    {# Anpfiff — älteste Einträge oben (wie OWS-Ticker) #}
-                    <div class="mr-tk-entry mr-tk--whistle">
-                        <div class="mr-tk-min">1'</div>
-                        <div class="mr-tk-icon mr-tk-icon--whistle">&#x25FC;</div>
-                        <div class="mr-tk-text">Anpfiff &mdash; {{ report.home_club_name }} vs. {{ report.away_club_name }}</div>
-                        <div class="mr-tk-badge mr-tk-badge--ko">0:0</div>
+                <section class="card mod-momentum">
+                    <div class="card-title ttl-i">Match Momentum</div>
+                    <div class="momentum-box spb-momentum-box" id="momentumBox"></div>
+                    <div class="mom-cap">Dominante Phase: <span>{{ rc.dominant_phase }}</span></div>
+                </section>
+
+                <section class="card mod-keystats">
+                    <p class="card-title">Key Stats</p>
+                    <div class="stat-list">
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_possession }}%</span>
+                            <div class="mid"><div class="lab">Ballbesitz</div>
+                                <div class="stat-bar"><i class="h" style="width:{{ report.match_stats.home_possession }}%"></i><i class="a" style="width:{{ report.match_stats.away_possession }}%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_possession }}%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_shots }}</span>
+                            <div class="mid"><div class="lab">Sch&uuml;sse</div>
+                                <div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_shots }}</span>
+                        </div>
+                        {% if rc.home_xg %}
+                        <div class="stat-row">
+                            <span class="hv">{{ rc.home_xg }}</span>
+                            <div class="mid"><div class="lab">xG</div>
+                                <div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:0 }}%"></i></div>
+                            </div>
+                            <span class="av">{{ rc.away_xg }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_yellow }}</span>
+                            <div class="mid"><div class="lab">Gelbe Karten</div>
+                                <div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_yellow }}</span>
+                        </div>
                     </div>
+                </section>
 
-                    {# Ereignisse: ältestes zuerst #}
+                <section class="card mod-story">
+                    <p class="card-title">Match Story</p>
+                    <p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.62">{{ rc.story }}</p>
+                </section>
+
+                <section class="card mod-ticker">
+                    <div class="card-head"><p class="card-title">Live-Ticker</p><button class="linklike" id="toTicker">Alle Ereignisse</button></div>
+                    <div class="ov-ticker-list" id="ovTickerList">
+                        {% for evt in rc.combined_events|slice:":8" %}
+                            {% include 'game/partials/_match_report_ev_row.html' with evt=evt report=report %}
+                        {% empty %}
+                            <p style="color:var(--muted);font-size:13px;">Keine nennenswerten Ereignisse.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="card mod-lineups">
+                    <p class="card-title">Aufstellungen</p>
+                    <div class="stat-teamhead" style="margin-bottom:10px;">
+                        <div class="tm">{{ report.home_club_short }}</div>
+                        <div class="vs">{{ report.home_formation }} &ndash; {{ report.away_formation }}</div>
+                        <div class="tm away">{{ report.away_club_short }}</div>
+                    </div>
+                    <p style="color:var(--muted);font-size:12px;margin:0;">Details in der Aufstellungen-Ansicht.</p>
+                </section>
+
+                <section class="card mod-zones">
+                    <p class="card-title">Angriffszonen</p>
+                    {% if rc.home_att_total %}
+                    <div class="zone-grid">
+                        <div class="zone {% if rc.home_att_l_pct >= rc.away_att_l_pct %}hi{% endif %}"><div class="zp">{{ rc.home_att_l_pct }}%</div><div class="zl">Links</div></div>
+                        <div class="zone {% if rc.home_att_c_pct >= rc.away_att_c_pct %}hi{% endif %}"><div class="zp">{{ rc.home_att_c_pct }}%</div><div class="zl">Mitte</div></div>
+                        <div class="zone {% if rc.home_att_r_pct >= rc.away_att_r_pct %}hi{% endif %}"><div class="zp">{{ rc.home_att_r_pct }}%</div><div class="zl">Rechts</div></div>
+                    </div>
+                    <div class="zone-note">Heimteam-Anteil je Zone</div>
+                    {% else %}
+                    <p style="color:var(--muted);font-size:12px;">Keine Zonendaten.</p>
+                    {% endif %}
+                </section>
+
+            </div>
+        </section>
+
+        {# ══════════════════════════════ TICKER ══════════════════════════ #}
+        <section class="panel" data-tab="ticker" hidden>
+            <section class="card">
+                <div class="filter-row" id="tickerFilter">
+                    <button class="chip active" data-f="alle">Alle</button>
+                    <button class="chip" data-f="tore">Tore</button>
+                    <button class="chip" data-f="karten">Karten</button>
+                    <button class="chip" data-f="wechsel">Wechsel</button>
+                </div>
+                <div id="tickerFull">
+                    <div class="ev-row t-n" data-type="whistle">
+                        <span class="ev-ico">&#x25FC;</span><span class="ev-min">1'</span>
+                        <span class="ev-club neutral"><b>KO</b></span>
+                        <span class="ev-txt">Anpfiff &mdash; {{ report.home_club_name }} vs. {{ report.away_club_name }}</span>
+                        <span class="ev-score">0:0</span>
+                    </div>
                     {% for evt in rc.combined_events %}
-
-                    {% if evt.type == 'goal' %}
-                    <div class="mr-tk-entry mr-tk--goal {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon">&#x26BD;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}{% if evt.goal_label %}<span class="mr-tk-badge mr-tk-badge--sp">{{ evt.goal_label }}</span>{% endif %}</div>
-                        <div class="mr-tk-badge mr-tk-badge--goal">{{ evt.score_h }}:{{ evt.score_a }}</div>
-                    </div>
-
-                    {% elif evt.type == 'sub' %}
-                    <div class="mr-tk-entry mr-tk--sub {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}{% if evt.is_injury_sub %} mr-tk--injury-sub{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--sub">&#x21C5;</div>
-                        <div class="mr-tk-text">
-                            {{ evt.commentary }}
-                            {% if evt.is_injury_sub %}<span class="mr-tk-badge mr-tk-badge--inj-sub">Verletzung</span>{% endif %}
-                            {% if evt.position_relation == 'FP' %}<span class="mr-tk-badge mr-tk-badge--fp">FP</span>{% elif evt.position_relation == 'NP' %}<span class="mr-tk-badge mr-tk-badge--np">NP</span>{% endif %}
-                        </div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'card' %}
-                    <div class="mr-tk-entry mr-tk--card mr-tk--{{ evt.card_type }} {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min mr-tk-min--{{ evt.card_type }}">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--card mr-tk-card--{{ evt.card_type }}">&#9646;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'injury' %}
-                    <div class="mr-tk-entry mr-tk--injury {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min mr-tk-min--injury">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon">&#x1FA79;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'gk_red_off' %}
-                    <div class="mr-tk-entry mr-tk--sub mr-tk--gk-red-off {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--sub">&#x21A9;</div>
-                        <div class="mr-tk-text">
-                            {{ evt.commentary }}
-                            <span class="mr-tk-badge mr-tk-badge--gk-red-off">Pflicht-Auswechslung</span>
-                        </div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'shot' %}
-                    <div class="mr-tk-entry mr-tk--narrative mr-tk--shot {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x26BE;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'corner' %}
-                    <div class="mr-tk-entry mr-tk--narrative mr-tk--corner {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x2690;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'corner_miss' %}
-                    <div class="mr-tk-entry mr-tk--narrative mr-tk--corner {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x2690;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'fk_saved' %}
-                    <div class="mr-tk-entry mr-tk--narrative mr-tk--corner {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x2690;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% elif evt.type == 'foul' %}
-                    <div class="mr-tk-entry mr-tk--narrative mr-tk--foul {% if evt.team == 'home' %}is-home{% else %}is-away{% endif %}">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x270B;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div class="mr-tk-club">{% if evt.team == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}</div>
-                    </div>
-
-                    {% else %}
-                    {# flow + sonstige narrative Events #}
-                    <div class="mr-tk-entry mr-tk--narrative mr-tk--flow">
-                        <div class="mr-tk-min">{{ evt.minute }}'</div>
-                        <div class="mr-tk-icon mr-tk-icon--narrative">&#x2500;</div>
-                        <div class="mr-tk-text">{{ evt.commentary }}</div>
-                        <div></div>
-                    </div>
-                    {% endif %}
-
-                    {% empty %}
-                    {# kein Eintrag außer Anpfiff/Abpfiff nötig #}
+                        {% include 'game/partials/_match_report_ev_row.html' with evt=evt report=report %}
                     {% endfor %}
-
-                    {# Abpfiff #}
-                    <div class="mr-tk-entry mr-tk--whistle">
-                        <div class="mr-tk-min">90'</div>
-                        <div class="mr-tk-icon mr-tk-icon--whistle">&#x25FC;</div>
-                        <div class="mr-tk-text">Abpfiff &mdash; Endstand {{ report.home_goals }}:{{ report.away_goals }}</div>
-                        <div class="mr-tk-badge mr-tk-badge--final">{{ report.home_goals }}:{{ report.away_goals }}</div>
-                    </div>
-
-                </div>
-            </div>
-
-            {# ── Match Statistics ─────────────────────────────────────── #}
-            <div class="mr-section">
-                <h3 class="mr-section-title">Spielstatistiken</h3>
-                <div class="mr-stats">
-
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home">{{ report.match_stats.home_possession }}%</span>
-                        <div class="mr-stat-label-wrap">
-                            <div class="mr-stat-bar">
-                                <div class="mr-stat-bar-home" style="width: {{ report.match_stats.home_possession }}%;"></div>
-                                <div class="mr-stat-bar-away"></div>
-                            </div>
-                            <span class="mr-stat-label">Ballbesitz</span>
-                        </div>
-                        <span class="mr-stat-away">{{ report.match_stats.away_possession }}%</span>
-                    </div>
-
-                    {% if rc.home_xg %}
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home mr-xg-val">{{ rc.home_xg }}</span>
-                        <div class="mr-stat-label-wrap">
-                            <div class="mr-stat-bar">
-                                <div class="mr-stat-bar-home" style="width: {{ rc.home_xg_pct }}%;"></div>
-                                <div class="mr-stat-bar-away"></div>
-                            </div>
-                            <span class="mr-stat-label">Erw. Tore (xG)</span>
-                        </div>
-                        <span class="mr-stat-away mr-xg-val">{{ rc.away_xg }}</span>
-                    </div>
-                    {% endif %}
-
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home">{{ report.match_stats.home_shots }}</span>
-                        <span class="mr-stat-label">Schüsse gesamt</span>
-                        <span class="mr-stat-away">{{ report.match_stats.away_shots }}</span>
-                    </div>
-
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home">{{ report.match_stats.home_shots_on_target }}</span>
-                        <span class="mr-stat-label">Auf Tor</span>
-                        <span class="mr-stat-away">{{ report.match_stats.away_shots_on_target }}</span>
-                    </div>
-
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home">{{ report.match_stats.home_corners }}</span>
-                        <span class="mr-stat-label">Ecken</span>
-                        <span class="mr-stat-away">{{ report.match_stats.away_corners }}</span>
-                    </div>
-
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home">{{ report.match_stats.home_fouls }}</span>
-                        <span class="mr-stat-label">Fouls</span>
-                        <span class="mr-stat-away">{{ report.match_stats.away_fouls }}</span>
-                    </div>
-
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home mr-yellow">{{ report.match_stats.home_yellow }}</span>
-                        <span class="mr-stat-label">Gelbe Karten</span>
-                        <span class="mr-stat-away mr-yellow">{{ report.match_stats.away_yellow }}</span>
-                    </div>
-
-                    {% if report.match_stats.home_red or report.match_stats.away_red %}
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home mr-red">{{ report.match_stats.home_red }}</span>
-                        <span class="mr-stat-label">Rote Karten</span>
-                        <span class="mr-stat-away mr-red">{{ report.match_stats.away_red }}</span>
-                    </div>
-                    {% endif %}
-
-                    {% if rc.home_sp_goals or rc.away_sp_goals %}
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home mr-sp-goals">{{ rc.home_sp_goals }}</span>
-                        <span class="mr-stat-label">Tore aus Standards</span>
-                        <span class="mr-stat-away mr-sp-goals">{{ rc.away_sp_goals }}</span>
-                    </div>
-                    {% endif %}
-
-                </div>
-            </div>
-
-            {# ── Pressing ─────────────────────────────────────────────── #}
-            <div class="mr-section">
-                <h3 class="mr-section-title">Pressing</h3>
-                <div class="mr-stats">
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home mr-press-win">{{ report.match_stats.home_pressing_ball_wins }}</span>
-                        <span class="mr-stat-label">Pressing-Gewinne</span>
-                        <span class="mr-stat-away mr-press-win">{{ report.match_stats.away_pressing_ball_wins }}</span>
-                    </div>
-                    <div class="mr-stat-row">
-                        <span class="mr-stat-home mr-press-bp">{{ report.match_stats.home_pressing_bypassed }}</span>
-                        <span class="mr-stat-label">Pressing überspielt</span>
-                        <span class="mr-stat-away mr-press-bp">{{ report.match_stats.away_pressing_bypassed }}</span>
+                    <div class="ev-row t-n" data-type="whistle">
+                        <span class="ev-ico">&#x25FC;</span><span class="ev-min">90'</span>
+                        <span class="ev-club neutral"><b>SK</b></span>
+                        <span class="ev-txt">Abpfiff &mdash; Endstand {{ report.home_goals }}:{{ report.away_goals }}</span>
+                        <span class="ev-score">{{ report.home_goals }}:{{ report.away_goals }}</span>
                     </div>
                 </div>
-            </div>
+            </section>
+        </section>
 
-            {# ── Angriffszonen ─────────────────────────────────────────── #}
-            {% if rc.home_att_total %}
-            <div class="mr-section">
-                <h3 class="mr-section-title">Angriffszonen</h3>
-                <div class="mr-zones-wrap">
-                    <div class="mr-zones-team-label">
-                        <span class="is-home">{{ report.home_club_short }}</span>
-                        <span class="is-away">{{ report.away_club_short }}</span>
+        {# ══════════════════════════════ STATISTIK ═══════════════════════ #}
+        <section class="panel" data-tab="statistik" hidden>
+            <section class="card">
+                <div class="stat-teamhead">
+                    <div class="tm">
+                        {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+                        {{ report.home_club_short }}
                     </div>
-                    <div class="mr-zones">
-                        <div class="mr-zone">
-                            <div class="mr-zone-bars">
-                                <div class="mr-zone-bar is-home" style="height: {{ rc.home_att_l_pct }}px;"></div>
-                                <div class="mr-zone-bar is-away" style="height: {{ rc.away_att_l_pct }}px;"></div>
-                            </div>
-                            <div class="mr-zone-pcts">
-                                <span class="is-home">{{ rc.home_att_l_pct }}%</span>
-                                <span class="is-away">{{ rc.away_att_l_pct }}%</span>
-                            </div>
-                            <div class="mr-zone-label">Links</div>
-                        </div>
-                        <div class="mr-zone">
-                            <div class="mr-zone-bars">
-                                <div class="mr-zone-bar is-home" style="height: {{ rc.home_att_c_pct }}px;"></div>
-                                <div class="mr-zone-bar is-away" style="height: {{ rc.away_att_c_pct }}px;"></div>
-                            </div>
-                            <div class="mr-zone-pcts">
-                                <span class="is-home">{{ rc.home_att_c_pct }}%</span>
-                                <span class="is-away">{{ rc.away_att_c_pct }}%</span>
-                            </div>
-                            <div class="mr-zone-label">Mitte</div>
-                        </div>
-                        <div class="mr-zone">
-                            <div class="mr-zone-bars">
-                                <div class="mr-zone-bar is-home" style="height: {{ rc.home_att_r_pct }}px;"></div>
-                                <div class="mr-zone-bar is-away" style="height: {{ rc.away_att_r_pct }}px;"></div>
-                            </div>
-                            <div class="mr-zone-pcts">
-                                <span class="is-home">{{ rc.home_att_r_pct }}%</span>
-                                <span class="is-away">{{ rc.away_att_r_pct }}%</span>
-                            </div>
-                            <div class="mr-zone-label">Rechts</div>
-                        </div>
-                    </div>
-                    <div class="mr-zones-legend">
-                        <span class="is-home">&#9632; Heim</span>
-                        <span class="is-away">&#9632; Gast</span>
+                    <div class="vs">vs.</div>
+                    <div class="tm away">
+                        {{ report.away_club_short }}
+                        {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
                     </div>
                 </div>
+
+                <div class="stat-group">
+                    <h4>Spielverlauf</h4>
+                    <div class="stat-list">
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_possession }}%</span><div class="mid"><div class="lab">Ballbesitz</div><div class="stat-bar"><i class="h" style="width:{{ report.match_stats.home_possession }}%"></i><i class="a" style="width:{{ report.match_stats.away_possession }}%"></i></div></div><span class="av">{{ report.match_stats.away_possession }}%</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots }}</span><div class="mid"><div class="lab">Sch&uuml;sse gesamt</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div></div><span class="av">{{ report.match_stats.away_shots }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots_on_target }}</span><div class="mid"><div class="lab">Auf Tor</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_shots_on_target }}</span></div>
+                        {% if rc.home_xg %}
+                        <div class="stat-row"><span class="hv">{{ rc.home_xg }}</span><div class="mid"><div class="lab">xG</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:0 }}%"></i></div></div><span class="av">{{ rc.away_xg }}</span></div>
+                        {% endif %}
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_corners }}</span><div class="mid"><div class="lab">Ecken</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_corners }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_fouls }}</span><div class="mid"><div class="lab">Fouls</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_fouls }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_yellow }}</span><div class="mid"><div class="lab">Gelbe Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_yellow }}</span></div>
+                        {% if report.match_stats.home_red or report.match_stats.away_red %}
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_red }}</span><div class="mid"><div class="lab">Rote Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_red }}</span></div>
+                        {% endif %}
+                        {% if rc.home_sp_goals or rc.away_sp_goals %}
+                        <div class="stat-row"><span class="hv">{{ rc.home_sp_goals }}</span><div class="mid"><div class="lab">Tore aus Standards</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.away_sp_goals }}</span></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="stat-group">
+                    <h4>Pressing</h4>
+                    <div class="stat-list">
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_ball_wins }}</span><div class="mid"><div class="lab">Pressing-Gewinne</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_ball_wins }}</span></div>
+                        <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_bypassed }}</span><div class="mid"><div class="lab">Pressing &uuml;berspielt</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_bypassed }}</span></div>
+                    </div>
+                </div>
+
+                {% if rc.home_att_total %}
+                <div class="stat-group">
+                    <h4>Angriffszonen</h4>
+                    <div class="zone-team home">
+                        <div class="zt-head">{{ report.home_club_short }}</div>
+                        <div class="zone-grid">
+                            <div class="zone {% if rc.home_att_l_pct >= rc.away_att_l_pct %}hi{% endif %}"><div class="zp">{{ rc.home_att_l_pct }}%</div><div class="zl">Links</div></div>
+                            <div class="zone {% if rc.home_att_c_pct >= rc.away_att_c_pct %}hi{% endif %}"><div class="zp">{{ rc.home_att_c_pct }}%</div><div class="zl">Mitte</div></div>
+                            <div class="zone {% if rc.home_att_r_pct >= rc.away_att_r_pct %}hi{% endif %}"><div class="zp">{{ rc.home_att_r_pct }}%</div><div class="zl">Rechts</div></div>
+                        </div>
+                    </div>
+                    <div class="zone-team away">
+                        <div class="zt-head">{{ report.away_club_short }}</div>
+                        <div class="zone-grid">
+                            <div class="zone {% if rc.away_att_l_pct > rc.home_att_l_pct %}hi{% endif %}"><div class="zp">{{ rc.away_att_l_pct }}%</div><div class="zl">Links</div></div>
+                            <div class="zone {% if rc.away_att_c_pct > rc.home_att_c_pct %}hi{% endif %}"><div class="zp">{{ rc.away_att_c_pct }}%</div><div class="zl">Mitte</div></div>
+                            <div class="zone {% if rc.away_att_r_pct > rc.home_att_r_pct %}hi{% endif %}"><div class="zp">{{ rc.away_att_r_pct }}%</div><div class="zl">Rechts</div></div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="stat-group">
+                    <h4>Spielinfo</h4>
+                    <div class="spielinfo">
+                        <div class="info-cell"><div class="l">Datum</div><div class="v">{{ latest_match.simulated_at|date:"d.m.Y H:i" }}</div></div>
+                        <div class="info-cell"><div class="l">Stadion</div><div class="v">{% if club.stadium %}{{ club.stadium.name }}{% else %}&ndash;{% endif %}</div></div>
+                        <div class="info-cell"><div class="l">Wetter</div><div class="v">&ndash;</div></div>
+                        <div class="info-cell"><div class="l">Schiedsrichter</div><div class="v">&ndash;</div></div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        {# ══════════════════════════════ AUFSTELLUNGEN ═══════════════════ #}
+        <section class="panel" data-tab="aufstellungen" hidden>
+            <div class="lineup-grid">
+
+                {% for side in 'ha' %}
+                {% with team_players=report.home_players club_short=report.home_club_short club_crest=report.home_club_crest formation=report.home_formation is_home=True %}
+                {% if side == 'a' %}{% with team_players=report.away_players club_short=report.away_club_short club_crest=report.away_club_crest formation=report.away_formation is_home=False %}
+                {% include 'game/partials/_match_report_lineup_col.html' %}
+                {% endwith %}{% else %}
+                {% include 'game/partials/_match_report_lineup_col.html' %}
+                {% endif %}
+                {% endwith %}
+                {% endfor %}
+
             </div>
+
+            {% if rc.home_substitutions or rc.away_substitutions %}
+            <section class="card" style="margin-top:16px;">
+                <p class="card-title">Wechsel</p>
+                <div class="subhead">{{ report.home_club_short }}</div>
+                <div class="subs-grid">
+                    {% for sub in rc.home_substitutions %}
+                    <div class="sub-item">
+                        <span class="min">{{ sub.minute }}'</span>
+                        <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
+                    </div>
+                    {% empty %}<span style="color:var(--muted);font-size:12px;">Keine Wechsel</span>{% endfor %}
+                </div>
+                <div class="subhead" style="margin-top:14px;">{{ report.away_club_short }}</div>
+                <div class="subs-grid">
+                    {% for sub in rc.away_substitutions %}
+                    <div class="sub-item">
+                        <span class="min">{{ sub.minute }}'</span>
+                        <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
+                    </div>
+                    {% empty %}<span style="color:var(--muted);font-size:12px;">Keine Wechsel</span>{% endfor %}
+                </div>
+            </section>
             {% endif %}
+        </section>
 
-        </div>{# /mr-left #}
+        {# ══════════════════════════════ SPIELER ══════════════════════════ #}
+        <section class="panel" data-tab="spieler" hidden>
+            <div class="players-grid">
 
-        {# ── Right column: Strength + Engine-Werte ────────────────────────── #}
-        <div class="mr-right">
-
-            <div class="mr-section">
-                <h3 class="mr-section-title">Teamstärke</h3>
-                <div class="mr-strength-grid">
-
-                    <div class="mr-strength-row">
-                        <span class="mr-strength-label">Gesamt</span>
-                        <span class="mr-strength-val is-home">
-                            {% if report.home_not_fielded %}
-                                <span class="mr-strength-raw-val" title="Originalstärke vor Nichtaufstellungs-Strafabzug">{{ report.home_strength_raw_overall }}</span>
-                                <span class="mr-not-fielded-badge" title="Nichtaufstellung: −{{ report.home_strength_malus_pct }}% Strafabzug">−{{ report.home_strength_malus_pct }}%</span>
-                            {% endif %}
-                            {{ report.home_strength.overall }}
-                        </span>
-                        <span class="mr-strength-sep">/</span>
-                        <span class="mr-strength-val is-away">
-                            {{ report.away_strength.overall }}
-                            {% if report.away_not_fielded %}
-                                <span class="mr-not-fielded-badge" title="Nichtaufstellung: −{{ report.away_strength_malus_pct }}% Strafabzug">−{{ report.away_strength_malus_pct }}%</span>
-                                <span class="mr-strength-raw-val" title="Originalstärke vor Nichtaufstellungs-Strafabzug">{{ report.away_strength_raw_overall }}</span>
-                            {% endif %}
-                        </span>
-                    </div>
-
-                    <div class="mr-strength-row">
-                        <span class="mr-strength-label">Tor</span>
-                        <span class="mr-strength-val is-home">{{ report.home_strength.goalkeeper }}</span>
-                        <span class="mr-strength-sep">/</span>
-                        <span class="mr-strength-val is-away">{{ report.away_strength.goalkeeper }}</span>
-                    </div>
-
-                    <div class="mr-strength-row">
-                        <span class="mr-strength-label">Abwehr</span>
-                        <span class="mr-strength-val is-home">{{ report.home_strength.defense }}</span>
-                        <span class="mr-strength-sep">/</span>
-                        <span class="mr-strength-val is-away">{{ report.away_strength.defense }}</span>
-                    </div>
-
-                    <div class="mr-strength-row">
-                        <span class="mr-strength-label">Mittelfeld</span>
-                        <span class="mr-strength-val is-home">{{ report.home_strength.midfield }}</span>
-                        <span class="mr-strength-sep">/</span>
-                        <span class="mr-strength-val is-away">{{ report.away_strength.midfield }}</span>
-                    </div>
-
-                    <div class="mr-strength-row">
-                        <span class="mr-strength-label">Angriff</span>
-                        <span class="mr-strength-val is-home">{{ report.home_strength.attack }}</span>
-                        <span class="mr-strength-sep">/</span>
-                        <span class="mr-strength-val is-away">{{ report.away_strength.attack }}</span>
-                    </div>
-
+                <div>
+                {% if report.man_of_the_match %}
+                {% with motm=report.man_of_the_match %}
+                <div class="motm-card">
+                    <div class="badge">&#9733; Spieler des Spiels</div>
+                    {% if motm.club_crest %}<img class="por" src="{% static motm.club_crest %}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
+                    <h3>{{ motm.name }}</h3>
+                    <div class="pos">{{ motm.position }} &middot; {{ motm.club_name }}</div>
+                    <div class="bignote">{{ motm.rating }}</div>
                 </div>
-
-                <div class="mr-teamwork-row">
-                    <span>Team&shy;work:</span>
-                    <strong class="is-home">{{ report.home_teamwork }}</strong>
-                    <span>/</span>
-                    <strong class="is-away">{{ report.away_teamwork }}</strong>
-                </div>
-            </div>
-
-            {# ── Engine-Werte (Admin-Debug, zurückgezogen) ────────────── #}
-            {% if rc %}
-            <div class="mr-section">
-                <div class="mr-ev-summary-row">
-                    <span class="mr-ev-label">Plan-Aktivierungen</span>
-                    <span class="mr-ev-single">{{ rc.plan_count }}</span>
-                </div>
-                <div class="mr-ev-summary-row">
-                    <span class="mr-ev-label">Simulation</span>
-                    <span class="mr-ev-single mr-ev-mode">{{ rc.simulation_mode }}</span>
-                </div>
-                <details class="mr-debug-details">
-                    <summary class="mr-debug-summary">Taktik-Debug</summary>
-                    <div class="mr-ev-grid mr-ev-grid--debug">
-                        <div class="mr-ev-row">
-                            <span class="mr-ev-label">Koh&auml;renz</span>
-                            <span class="mr-ev-val is-home">{{ rc.home_coh }}</span>
-                            <span class="mr-ev-sep">/</span>
-                            <span class="mr-ev-val is-away">{{ rc.away_coh }}</span>
-                        </div>
-                        <div class="mr-ev-row">
-                            <span class="mr-ev-label">Erm&uuml;dung</span>
-                            <span class="mr-ev-val is-home">{{ rc.home_fat }}</span>
-                            <span class="mr-ev-sep">/</span>
-                            <span class="mr-ev-val is-away">{{ rc.away_fat }}</span>
-                        </div>
-                        <div class="mr-ev-row">
-                            <span class="mr-ev-label">Komplexit&auml;t</span>
-                            <span class="mr-ev-val is-home">{{ rc.home_cplx }}</span>
-                            <span class="mr-ev-sep">/</span>
-                            <span class="mr-ev-val is-away">{{ rc.away_cplx }}</span>
-                        </div>
-                    </div>
-                </details>
-            </div>
-            {% endif %}
-
-        </div>{# /mr-right #}
-
-    </div>{# /mr-body #}
-
-    {# ── Matchplan-Timeline (full width) ──────────────────────────────────── #}
-    {% if rc.plan_activations_labeled %}
-    <div class="mr-section mr-plan-section">
-        <h3 class="mr-section-title">
-            Matchplan-Timeline
-            <span class="mr-plan-count-badge">{{ rc.plan_count }} Aktivierung{{ rc.plan_count|pluralize:"en" }}</span>
-        </h3>
-        <div class="mr-plan-timeline">
-            {% for act in rc.plan_activations_labeled %}
-            <div class="mr-plan-event {% if act.side == 'home' %}is-home{% else %}is-away{% endif %}">
-                <div class="mr-plan-minute">{{ act.minute }}'</div>
-                <div class="mr-plan-side-dot"></div>
-                <div class="mr-plan-body">
-                    <span class="mr-plan-name">{{ act.plan_label }}</span>
-                    <span class="mr-plan-club">
-                        {% if act.side == 'home' %}{{ report.home_club_short }}{% else %}{{ report.away_club_short }}{% endif %}
-                    </span>
-                </div>
-                <div class="mr-plan-score">{{ act.score }}</div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    {# ── Aktive Matchpläne Zusammenfassung ──────────────────────────────── #}
-    {% if rc.active_plans_home or rc.active_plans_away %}
-    <div class="mr-section mr-active-plans-section">
-        <h3 class="mr-section-title">Aktive Matchpläne</h3>
-        <div class="mr-active-plans-grid">
-            <div class="mr-active-plans-col is-home">
-                <div class="mr-active-plans-team">{{ report.home_club_short }}</div>
-                {% if rc.active_plans_home %}
-                    {% for ap in rc.active_plans_home %}
-                    <div class="mr-active-plan-row">
-                        <span class="mr-active-plan-label">{{ ap.label }}</span>
-                        <span class="mr-active-plan-segs">{{ ap.segments }}&times;5'</span>
-                    </div>
-                    {% endfor %}
+                {% endwith %}
                 {% else %}
-                    <span class="mr-active-plans-none">Kein Plan aktiv</span>
+                <section class="card"><p class="card-title">Spieler des Spiels</p><p style="color:var(--muted);font-size:12px;">Nicht ermittelt.</p></section>
                 {% endif %}
-            </div>
-            <div class="mr-active-plans-col is-away">
-                <div class="mr-active-plans-team">{{ report.away_club_short }}</div>
-                {% if rc.active_plans_away %}
-                    {% for ap in rc.active_plans_away %}
-                    <div class="mr-active-plan-row">
-                        <span class="mr-active-plan-label">{{ ap.label }}</span>
-                        <span class="mr-active-plan-segs">{{ ap.segments }}&times;5'</span>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <span class="mr-active-plans-none">Kein Plan aktiv</span>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    {# ── Player tables ───────────────────────────────────────────────────── #}
-    <div class="mr-squads">
-
-        {# Home squad #}
-        <div class="mr-squad">
-            <h3 class="mr-squad-title">{{ report.home_club_name }}</h3>
-            <div class="mr-squad-meta">
-                <span>Teamst&auml;rke:
-                    {% if report.home_not_fielded %}
-                        <span class="mr-strength-raw-val mr-strength-raw-sm">{{ report.home_strength_raw_overall }}</span>
-                        <strong class="mr-malus-strength">{{ report.home_strength.overall }}</strong>
-                        <span class="mr-not-fielded-badge mr-not-fielded-badge--sm" title="Nichtaufstellung: −{{ report.home_strength_malus_pct }}% Strafabzug">−{{ report.home_strength_malus_pct }}%</span>
-                    {% else %}
-                        <strong>{{ report.home_strength.overall }}</strong>
-                    {% endif %}
-                </span>
-                <span>Teamwork: <strong>{{ report.home_teamwork }}</strong></span>
-            </div>
-            <table class="mr-player-table">
-                <thead>
-                    <tr>
-                        <th>Spieler</th>
-                        <th>Pos</th>
-                        <th title="Gespeicherte Basisstärke">Basis</th>
-                        <th title="Potential-Obergrenze (CMTracker + FM)">Pot.</th>
-                        <th title="Zufällig gezogene Matchstärke zwischen Basis und Potential × Positionsfaktor">Matchst.</th>
-                        <th>TW</th>
-                        <th>T</th>
-                        <th>V</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in report.home_players %}
-                    <tr {% if p.goals %}class="mr-scorer"{% endif %}>
-                        <td class="mr-player-name">{{ p.name }}</td>
-                        <td class="mr-player-pos">{{ p.position }}</td>
-                        <td class="mr-num">{{ p.base_strength }}</td>
-                        <td class="mr-num mr-dim">{{ p.potential }}</td>
-                        <td class="mr-num mr-final">
-                            {{ p.final_strength }}
-                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Matchstärke {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
-                        </td>
-                        <td class="mr-num mr-tw">{{ p.teamwork }}</td>
-                        <td class="mr-num">{% if p.goals %}<strong>{{ p.goals }}</strong>{% else %}&ndash;{% endif %}</td>
-                        <td class="mr-num">{% if p.assists %}<strong>{{ p.assists }}</strong>{% else %}&ndash;{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {# Away squad #}
-        <div class="mr-squad">
-            <h3 class="mr-squad-title">{{ report.away_club_name }}</h3>
-            <div class="mr-squad-meta">
-                <span>Teamst&auml;rke:
-                    {% if report.away_not_fielded %}
-                        <span class="mr-strength-raw-val mr-strength-raw-sm">{{ report.away_strength_raw_overall }}</span>
-                        <strong class="mr-malus-strength">{{ report.away_strength.overall }}</strong>
-                        <span class="mr-not-fielded-badge mr-not-fielded-badge--sm" title="Nichtaufstellung: −{{ report.away_strength_malus_pct }}% Strafabzug">−{{ report.away_strength_malus_pct }}%</span>
-                    {% else %}
-                        <strong>{{ report.away_strength.overall }}</strong>
-                    {% endif %}
-                </span>
-                <span>Teamwork: <strong>{{ report.away_teamwork }}</strong></span>
-            </div>
-            <table class="mr-player-table">
-                <thead>
-                    <tr>
-                        <th>Spieler</th>
-                        <th>Pos</th>
-                        <th title="Gespeicherte Basisstärke">Basis</th>
-                        <th title="Potential-Obergrenze (CMTracker + FM)">Pot.</th>
-                        <th title="Zufällig gezogene Matchstärke zwischen Basis und Potential × Positionsfaktor">Matchst.</th>
-                        <th>TW</th>
-                        <th>T</th>
-                        <th>V</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in report.away_players %}
-                    <tr {% if p.goals %}class="mr-scorer"{% endif %}>
-                        <td class="mr-player-name">{{ p.name }}</td>
-                        <td class="mr-player-pos">{{ p.position }}</td>
-                        <td class="mr-num">{{ p.base_strength }}</td>
-                        <td class="mr-num mr-dim">{{ p.potential }}</td>
-                        <td class="mr-num mr-final">
-                            {{ p.final_strength }}
-                            {% if p.pos_label %}<span class="mr-pos-malus" title="Positionsmalus ({{ p.pos_label }}): Matchstärke {{ p.final_strength_raw }}">{{ p.pos_label }}</span>{% endif %}
-                        </td>
-                        <td class="mr-num mr-tw">{{ p.teamwork }}</td>
-                        <td class="mr-num">{% if p.goals %}<strong>{{ p.goals }}</strong>{% else %}&ndash;{% endif %}</td>
-                        <td class="mr-num">{% if p.assists %}<strong>{{ p.assists }}</strong>{% else %}&ndash;{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-    </div>{# /mr-squads #}
-
-    {# ── Spielerbewertungen ──────────────────────────────────────────────── #}
-    {% if report.home_ratings %}
-    <div class="mr-ratings-wrap">
-        <h3 class="mr-section-title" style="margin-bottom:14px;">Spielerbewertungen</h3>
-
-        {# Spieler des Spiels #}
-        {% if report.man_of_the_match %}
-        {% with motm=report.man_of_the_match %}
-        <div class="mr-motm">
-            <div class="mr-motm-label">&#9733; Spieler des Spiels</div>
-            <div class="mr-motm-body">
-                {% if motm.club_crest %}
-                    <img class="mr-motm-crest" src="{% static motm.club_crest %}" alt="{{ motm.club_short }}">
-                {% else %}
-                    <span class="mr-motm-crest-fallback">{{ motm.club_short }}</span>
-                {% endif %}
-                <div class="mr-motm-info">
-                    <span class="mr-motm-name">{{ motm.name }}</span>
-                    <span class="mr-motm-pos">{{ motm.position }} &middot; {{ motm.club_name }}</span>
                 </div>
-                <div class="mr-motm-rating {% if motm.rating <= 2.5 %}note-gut{% elif motm.rating <= 3.9 %}note-mittel{% elif motm.rating <= 4.9 %}note-schwach{% else %}note-schlecht{% endif %}">{{ motm.rating }}</div>
+
+                <section class="card">
+                    <div class="pl-team-head">
+                        {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="" style="width:26px;height:26px;object-fit:contain;">{% endif %}
+                        <b>{{ report.home_club_name }}</b>
+                    </div>
+                    <div class="pl-list">
+                        {% for r in report.home_ratings %}
+                        <div class="pl-row">
+                            <span class="n">{{ forloop.counter }}</span>
+                            <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
+                            <div class="pl-badges"></div>
+                            <span class="rnote {% if r.rating <= 2.5 %}n1{% elif r.rating <= 3.9 %}n2{% elif r.rating <= 4.9 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bewertungen.</p>{% endfor %}
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="pl-team-head">
+                        {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="" style="width:26px;height:26px;object-fit:contain;">{% endif %}
+                        <b>{{ report.away_club_name }}</b>
+                    </div>
+                    <div class="pl-list">
+                        {% for r in report.away_ratings %}
+                        <div class="pl-row">
+                            <span class="n">{{ forloop.counter }}</span>
+                            <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
+                            <div class="pl-badges"></div>
+                            <span class="rnote {% if r.rating <= 2.5 %}n1{% elif r.rating <= 3.9 %}n2{% elif r.rating <= 4.9 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bewertungen.</p>{% endfor %}
+                    </div>
+                </section>
+
             </div>
-        </div>
-        {% endwith %}
+        </section>
+
+        {# ══════════════════════════════ ADMIN-BERICHT (nur Superuser) ═══ #}
+        {% if is_admin %}
+        <section class="panel" data-tab="admin-bericht" hidden>
+            <div class="admin-note"><b>Admin-Bericht:</b> Vollst&auml;ndiger Engine-Debug-Bericht (ohne Live-Ticker) &mdash; nur f&uuml;r Administratoren sichtbar.</div>
+            {% include 'game/partials/_match_report_admin.html' %}
+        </section>
         {% endif %}
 
-        {# Farbskala-Legende #}
-        {% include 'game/partials/_ratings_legend.html' %}
+    </div>{# /panels #}
 
-        {# Zwei Tabellen nebeneinander #}
-        <div class="mr-ratings-grid">
-
-            <div class="mr-ratings-col">
-                <div class="mr-ratings-col-title">{{ report.home_club_name }}</div>
-                <table class="mr-ratings-table">
-                    <thead>
-                        <tr>
-                            <th>Spieler</th>
-                            <th>Pos</th>
-                            <th>Note</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in report.home_ratings %}
-                        <tr>
-                            <td class="mr-ratings-name">{{ r.name }}</td>
-                            <td class="mr-ratings-pos">{{ r.position }}</td>
-                            <td class="mr-ratings-note">
-                                <span class="mr-note {% if r.rating <= 2.5 %}note-gut{% elif r.rating <= 3.9 %}note-mittel{% elif r.rating <= 4.9 %}note-schwach{% else %}note-schlecht{% endif %}">{{ r.rating }}</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="mr-ratings-col">
-                <div class="mr-ratings-col-title">{{ report.away_club_name }}</div>
-                <table class="mr-ratings-table">
-                    <thead>
-                        <tr>
-                            <th>Spieler</th>
-                            <th>Pos</th>
-                            <th>Note</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for r in report.away_ratings %}
-                        <tr>
-                            <td class="mr-ratings-name">{{ r.name }}</td>
-                            <td class="mr-ratings-pos">{{ r.position }}</td>
-                            <td class="mr-ratings-note">
-                                <span class="mr-note {% if r.rating <= 2.5 %}note-gut{% elif r.rating <= 3.9 %}note-mittel{% elif r.rating <= 4.9 %}note-schwach{% else %}note-schlecht{% endif %}">{{ r.rating }}</span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-        </div>{# /mr-ratings-grid #}
-    </div>{# /mr-ratings-wrap #}
-    {% endif %}
+    {{ rc.momentum_payload|json_script:"spb-momentum-data" }}
 
     {% else %}
-    {# ── No report yet ───────────────────────────────────────────────────── #}
-    <div class="mr-empty-state">
+    <div class="spb-empty">
         <p>Noch kein Spiel simuliert &mdash; w&auml;hle unten einen Gegner und starte die Simulation.</p>
     </div>
     {% endif %}
 
-    {# ── Simulate Form ───────────────────────────────────────────────────── #}
-    <div class="mr-simulate-panel">
-        <h3 class="mr-simulate-title">Neues Spiel simulieren</h3>
-        <form class="mr-simulate-form" method="post" action="{% url 'club_match_report' club.id %}">
+    {# ── Simulate Form ───────────────────────────────────────────────── #}
+    <section class="card" style="margin-top:20px;">
+        <p class="card-title">Neues Spiel simulieren</p>
+        <form method="post" action="{% url 'club_match_report' club.id %}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
             {% csrf_token %}
-            <div class="mr-simulate-teams">
-                <span class="mr-simulate-home">{{ club.name }} <em style="opacity:.55;font-style:normal;">(Heim)</em></span>
-                <span class="mr-simulate-vs">vs.</span>
-                <select name="opponent_id" class="mr-simulate-select">
-                    {% for opp in all_clubs %}
-                        <option value="{{ opp.id }}">{{ opp.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mr-simulate-type">
-                <label class="mr-simulate-type-label">Spieltyp:</label>
-                <select name="match_type" class="mr-simulate-select">
-                    <option value="freundschaft">Freundschaftsspiel</option>
-                    <option value="pokal">Pokal</option>
-                </select>
-            </div>
-            <button type="submit" class="mr-simulate-btn">&#9654; Spiel simulieren</button>
+            <span style="font-weight:800;">{{ club.name }} <em style="opacity:.55;font-style:normal;">(Heim)</em></span>
+            <span style="color:var(--muted);">vs.</span>
+            <select name="opponent_id" class="chip" style="cursor:pointer;">
+                {% for opp in all_clubs %}
+                    <option value="{{ opp.id }}">{{ opp.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="match_type" class="chip" style="cursor:pointer;">
+                <option value="freundschaft">Freundschaftsspiel</option>
+                <option value="pokal">Pokal</option>
+            </select>
+            <button type="submit" class="chip active" style="border:0;">&#9654; Spiel simulieren</button>
         </form>
         {% if sim_error %}
-        <p style="color:#e84040;font-size:12px;margin-top:10px;">Fehler: {{ sim_error }}</p>
+        <p style="color:var(--red);font-size:12px;margin-top:10px;">Fehler: {{ sim_error }}</p>
         {% endif %}
-    </div>
+    </section>
 
-</section>
+</div>{# /report #}
+</section>{# /spb-report #}
+
+<script src="{% static 'game/js/match_report_v2.js' %}?v=1"></script>
 {% endblock %}

@@ -3940,6 +3940,142 @@ def _build_sub_name_lookup(data):
     return name_lookup, home_subs_raw, away_subs_raw
 
 
+_MOMENTUM_WEIGHTS = {
+    'goal':   16.0,
+    'shot':    3.0,
+    'corner':  1.5,
+    'sub':     1.0,
+    'foul':   -1.2,
+    'injury': -1.5,
+}
+_MOMENTUM_CARD_WEIGHTS = {'yellow': -4.0, 'red': -10.0, 'yellow_red': -9.0}
+
+
+def _build_match_momentum(combined_events):
+    """Leitet eine einfache Momentum-Kurve (−1..1 je Minute) aus den echten
+    Ticker-Ereignissen ab (Ableitung, kein separates Datenmodell vorhanden).
+    Positiv = Heimteam-Druck, negativ = Auswärtsteam-Druck."""
+    impulse = [0.0] * 91
+    for evt in (combined_events or []):
+        team = evt.get('team')
+        if team not in ('home', 'away'):
+            continue
+        minute = max(0, min(90, int(evt.get('minute') or 0)))
+        sign = 1.0 if team == 'home' else -1.0
+        etype = evt.get('type')
+        if etype == 'goal':
+            w = _MOMENTUM_WEIGHTS['goal']
+        elif etype == 'card':
+            w = _MOMENTUM_CARD_WEIGHTS.get(evt.get('card_type'), -4.0)
+            sign = -sign  # eine Karte schadet dem eigenen Momentum
+        elif etype == 'foul':
+            w = _MOMENTUM_WEIGHTS['foul']
+            sign = -sign
+        elif etype == 'injury':
+            w = _MOMENTUM_WEIGHTS['injury']
+            sign = -sign
+        elif etype in _MOMENTUM_WEIGHTS:
+            w = _MOMENTUM_WEIGHTS[etype]
+        else:
+            continue
+        impulse[minute] += sign * w
+
+    curve, val = [0.0] * 91, 0.0
+    for m in range(91):
+        val = val * 0.90 + impulse[m]
+        curve[m] = val
+    peak = max(1.0, max(abs(v) for v in curve))
+    return [round(max(-1.0, min(1.0, v / peak)), 3) for v in curve]
+
+
+def _dominant_phase_label(curve, home_short, away_short):
+    if not curve:
+        return 'Ausgeglichene Partie'
+    window = 15
+    best_start, best_val = 0, 0.0
+    for start in range(0, max(1, 91 - window), 5):
+        seg = curve[start:start + window]
+        if not seg:
+            continue
+        avg = sum(seg) / len(seg)
+        if abs(avg) > abs(best_val):
+            best_val, best_start = avg, start
+    if abs(best_val) < 0.08:
+        return 'Ausgeglichene Partie'
+    team = home_short if best_val > 0 else away_short
+    return f"{team} {best_start}\u2013{best_start + window}'"
+
+
+def _build_match_story(report_data, rc, home_name, away_name):
+    """Erzeugt eine einfache, aus echten Match-Daten abgeleitete Zusammenfassung
+    (keine KI-generierte Erzählung — reine Statistik-Synthese)."""
+    if not report_data:
+        return ''
+    h_goals = report_data.get('home_goals', 0) or 0
+    a_goals = report_data.get('away_goals', 0) or 0
+    ms = report_data.get('match_stats', {}) or {}
+    h_poss = ms.get('home_possession', 50) or 50
+    a_poss = ms.get('away_possession', 100 - h_poss) or (100 - h_poss)
+
+    parts = []
+    if h_goals > a_goals:
+        parts.append(f"{home_name} setzte sich mit {h_goals}:{a_goals} gegen {away_name} durch.")
+    elif a_goals > h_goals:
+        parts.append(f"{away_name} gewann bei {home_name} mit {a_goals}:{h_goals}.")
+    else:
+        parts.append(f"{home_name} und {away_name} trennten sich {h_goals}:{a_goals} unentschieden.")
+
+    poss_leader = home_name if h_poss >= a_poss else away_name
+    poss_val = h_poss if h_poss >= a_poss else a_poss
+    parts.append(f"{poss_leader} kontrollierte mit {poss_val}% Ballbesitz weite Strecken der Partie.")
+
+    scorers = []
+    for evt in (rc.get('combined_events') or []):
+        if evt.get('type') == 'goal' and evt.get('scorer_name') and evt['scorer_name'] not in scorers:
+            scorers.append(evt['scorer_name'])
+    if scorers:
+        parts.append('Torsch\u00fctzen: ' + ', '.join(scorers) + '.')
+
+    try:
+        h_xg, a_xg = float(rc.get('home_xg') or 0), float(rc.get('away_xg') or 0)
+        if h_xg or a_xg:
+            xg_leader = home_name if h_xg >= a_xg else away_name
+            parts.append(f"Nach erwartbaren Toren lag {xg_leader} vorn ({rc.get('home_xg')} zu {rc.get('away_xg')} xG).")
+    except (TypeError, ValueError):
+        pass
+
+    return ' '.join(parts)
+
+
+def _build_v2_report_extras(report_data, rc, club_home_id=None):
+    """Bündelt die Zusatzwerte für das neue Spielbericht-Design (Übersicht-Tab)."""
+    if not report_data:
+        return {}
+    from django.templatetags.static import static as _static
+
+    home_name = report_data.get('home_club_name', '')
+    away_name = report_data.get('away_club_name', '')
+    home_short = report_data.get('home_club_short', home_name)
+    away_short = report_data.get('away_club_short', away_name)
+    momentum = _build_match_momentum(rc.get('combined_events'))
+
+    home_crest = report_data.get('home_club_crest')
+    away_crest = report_data.get('away_club_crest')
+    momentum_payload = {
+        'momentum': momentum,
+        'home_crest': _static(home_crest) if home_crest else None,
+        'away_crest': _static(away_crest) if away_crest else None,
+        'home_initial': (home_short or '?')[:1],
+        'away_initial': (away_short or '?')[:1],
+    }
+    return {
+        'momentum': momentum,
+        'dominant_phase': _dominant_phase_label(momentum, home_short, away_short),
+        'story': _build_match_story(report_data, rc, home_name, away_name),
+        'momentum_payload': momentum_payload,
+    }
+
+
 def club_match_report(request, club_id):
     from django.db.models import Q
     from .match_engine import simulate_match, simulate_ko_match
@@ -4096,6 +4232,7 @@ def club_match_report(request, club_id):
             except Exception:
                 _comp_name = ''
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
+    rc.update(_build_v2_report_extras(_report_data, rc))
 
     return render(request, 'game/match_report.html', {
         'club':             club,
@@ -4106,6 +4243,7 @@ def club_match_report(request, club_id):
         'rc':               rc,
         'competition_name': _comp_name,
         'competition_logo': _comp_logo,
+        'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
     })
 
 
@@ -4217,6 +4355,7 @@ def match_report_by_id(request, sm_id):
         except Exception:
             _comp_name = ''
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
+    rc.update(_build_v2_report_extras(_report_data, rc))
 
     return render(request, 'game/match_report.html', {
         'club':             club,
@@ -4227,6 +4366,7 @@ def match_report_by_id(request, sm_id):
         'rc':               rc,
         'competition_name': _comp_name,
         'competition_logo': _comp_logo,
+        'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
     })
 
 

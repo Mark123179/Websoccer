@@ -1,0 +1,65 @@
+{% load static %}
+{% if evt.type == 'goal' %}
+<div class="ev-row {% if evt.team == 'home' %}t-h{% else %}t-a{% endif %}" data-type="goal">
+    <span class="ev-ico">&#9917;</span><span class="ev-min">{{ evt.minute }}'</span>
+    <span class="ev-club">
+        {% if evt.team == 'home' %}
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<b>{{ report.home_club_short }}</b>
+        {% else %}
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<b>{{ report.away_club_short }}</b>
+        {% endif %}
+    </span>
+    <span class="ev-txt"><span class="tag tag-tor">TOR</span>{{ evt.commentary }}</span>
+    <span class="ev-score">{{ evt.score_h }}:{{ evt.score_a }}</span>
+</div>
+
+{% elif evt.type == 'card' %}
+<div class="ev-row {% if evt.team == 'home' %}t-h{% else %}t-a{% endif %}" data-type="card">
+    <span class="ev-ico">&#9646;</span><span class="ev-min">{{ evt.minute }}'</span>
+    <span class="ev-club">
+        {% if evt.team == 'home' %}
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<b>{{ report.home_club_short }}</b>
+        {% else %}
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<b>{{ report.away_club_short }}</b>
+        {% endif %}
+    </span>
+    <span class="ev-txt"><span class="tag {% if evt.card_type == 'rot' or evt.card_type == 'gelbrot' %}tag-rot{% else %}tag-gelb{% endif %}">{% if evt.card_type == 'rot' %}ROT{% elif evt.card_type == 'gelbrot' %}GELB-ROT{% else %}GELB{% endif %}</span>{{ evt.commentary }}</span>
+    <span></span>
+</div>
+
+{% elif evt.type == 'sub' or evt.type == 'gk_red_off' %}
+<div class="ev-row {% if evt.team == 'home' %}t-h{% else %}t-a{% endif %}" data-type="sub">
+    <span class="ev-ico">&#8645;</span><span class="ev-min">{{ evt.minute }}'</span>
+    <span class="ev-club">
+        {% if evt.team == 'home' %}
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<b>{{ report.home_club_short }}</b>
+        {% else %}
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<b>{{ report.away_club_short }}</b>
+        {% endif %}
+    </span>
+    <span class="ev-txt"><span class="tag tag-sub">WECHSEL</span>{{ evt.commentary }}</span>
+    <span></span>
+</div>
+
+{% elif evt.type == 'injury' %}
+<div class="ev-row {% if evt.team == 'home' %}t-h{% else %}t-a{% endif %}" data-type="injury">
+    <span class="ev-ico">&#129497;</span><span class="ev-min">{{ evt.minute }}'</span>
+    <span class="ev-club">
+        {% if evt.team == 'home' %}
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<b>{{ report.home_club_short }}</b>
+        {% else %}
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<b>{{ report.away_club_short }}</b>
+        {% endif %}
+    </span>
+    <span class="ev-txt"><span class="tag tag-rot">VERLETZUNG</span>{{ evt.commentary }}</span>
+    <span></span>
+</div>
+
+{% else %}
+<div class="ev-row t-n" data-type="flow">
+    <span class="ev-ico">&#8213;</span><span class="ev-min">{{ evt.minute }}'</span>
+    <span class="ev-club neutral"><b>&middot;</b></span>
+    <span class="ev-txt"><span class="tag tag-neu"></span>{{ evt.commentary }}</span>
+    <span></span>
+</div>
+{% endif %}
