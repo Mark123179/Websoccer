@@ -202,6 +202,17 @@ button{font-family:inherit}
 .info-cell .v{color:var(--text);font-size:15px;font-weight:900;margin-top:6px;display:flex;align-items:center;gap:8px}
 
 /* ── Aufstellungen tab ───────────────────────────────── */
+.lineup-layout{display:grid;grid-template-columns:225px minmax(0,1fr) 225px;gap:14px;align-items:start}
+.lineup-center{display:grid;gap:14px;min-width:0}
+.bench-col{padding:14px 14px 10px}
+.bench-col .subhead{margin-top:2px}
+.bench-col .bench-list{margin-top:8px}
+.bench-col .bench-row{grid-template-columns:30px 20px minmax(0,1fr) auto;gap:7px;padding:7px 0}
+.bench-col .bench-row .ph-slot img{width:28px;height:28px}
+.bench-col .bench-row .nm{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bench-col .bench-row .nm small{display:block;margin-left:0;font-size:10px}
+.bench-row .bnk{font-size:11px;color:var(--faint);font-weight:700}
+.lineup-grid .pitch.big .pnode .nm{max-width:88px;overflow:hidden;text-overflow:ellipsis}
 .lineup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .lu-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .lu-head .tm{display:flex;align-items:center;gap:10px}
@@ -265,7 +276,7 @@ button{font-family:inherit}
 .pl-team-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .pl-team-head img{width:26px;height:26px;object-fit:contain}
 .pl-team-head b{font-size:14px;font-weight:900;color:#fff}
-@media(max-width:1080px){.players-grid{grid-template-columns:1fr}.lineup-grid,.subs-grid,.grid-2{grid-template-columns:1fr}}
+@media(max-width:1080px){.players-grid{grid-template-columns:1fr}.lineup-grid,.subs-grid,.grid-2,.lineup-layout{grid-template-columns:1fr}}
 
 /* ── Admin-Bericht Tab (bestehendes mr-* Design bleibt unangetastet) ─── */
 .admin-note{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(255,85,112,.08);border:1px solid rgba(255,85,112,.32);color:var(--muted);font-size:12px;font-weight:700}

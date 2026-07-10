@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=7">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -375,9 +375,30 @@
 
         {# ══════════════════════════════ AUFSTELLUNGEN ═══════════════════ #}
         <section class="panel" data-tab="aufstellungen" hidden>
-            <div class="card">
-                <p class="card-title">Startaufstellungen</p>
-                <div class="lineup-grid">
+            <div class="lineup-layout">
+                <aside class="card bench-col">
+                    <p class="card-title">Ersatzbank</p>
+                    <div class="subhead">{{ report.home_club_short }}</div>
+                    <div class="bench-list">
+                        {% for b in rc.home_bench_display %}
+                        <div class="bench-row">
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
+                            <span class="n">{{ b.shirt_number|default:"" }}</span>
+                            <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
+                            {% if b.came_on %}
+                            <span class="in">&#8593; {{ b.on_minute }}'</span>
+                            {% else %}
+                            <span class="bnk">Bank</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
+                    </div>
+                </aside>
+
+                <div class="lineup-center">
+                    <div class="card">
+                        <p class="card-title">Startaufstellungen</p>
+                        <div class="lineup-grid">
                     <div>
                         <div class="lu-head">
                             <div class="tm">
@@ -424,77 +445,54 @@
                             {% endfor %}
                         </div>
                     </div>
-                </div>
-            </div>
-
-            {% if rc.home_bench_display or rc.away_bench_display %}
-            <div class="card" style="margin-top:14px;">
-                <p class="card-title">Ersatzbank</p>
-                <div class="lineup-grid">
-                    <div>
-                        <div class="subhead">{{ report.home_club_short }}</div>
-                        <div class="bench-list">
-                            {% for b in rc.home_bench_display %}
-                            <div class="bench-row">
-                                <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
-                                <span class="n">{{ b.shirt_number|default:"" }}</span>
-                                <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
-                                {% if b.came_on %}
-                                <span class="in">&#8593; {{ b.on_minute }}'</span>
-                                {% else %}
-                                <span style="font-size:11px;color:var(--faint);font-weight:700;">Bank</span>
-                                {% endif %}
-                            </div>
-                            {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
                         </div>
                     </div>
-                    <div>
-                        <div class="subhead">{{ report.away_club_short }}</div>
-                        <div class="bench-list">
-                            {% for b in rc.away_bench_display %}
-                            <div class="bench-row">
-                                <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
-                                <span class="n">{{ b.shirt_number|default:"" }}</span>
-                                <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
-                                {% if b.came_on %}
-                                <span class="in">&#8593; {{ b.on_minute }}'</span>
-                                {% else %}
-                                <span style="font-size:11px;color:var(--faint);font-weight:700;">Bank</span>
-                                {% endif %}
+
+                    <div class="card">
+                        <p class="card-title">Auswechslungen</p>
+                        <div class="subs-grid">
+                            {% for sub in rc.home_substitutions %}
+                            <div class="sub-item">
+                                <span class="min">{{ sub.minute }}'</span>
+                                {% if report.home_club_crest %}<img class="sub-crest" src="{% static report.home_club_crest %}" alt="">{% endif %}
+                                <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
+                                <span class="tm">{{ report.home_club_short }}</span>
                             </div>
-                            {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
+                            {% endfor %}
+                            {% for sub in rc.away_substitutions %}
+                            <div class="sub-item">
+                                <span class="min">{{ sub.minute }}'</span>
+                                {% if report.away_club_crest %}<img class="sub-crest" src="{% static report.away_club_crest %}" alt="">{% endif %}
+                                <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
+                                <span class="tm">{{ report.away_club_short }}</span>
+                            </div>
+                            {% endfor %}
+                            {% if not rc.home_substitutions and not rc.away_substitutions %}
+                            <span style="color:var(--muted);font-size:12px;">Keine Wechsel</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endif %}
 
-            {% if rc.home_substitutions or rc.away_substitutions %}
-            <div class="card" style="margin-top:14px;">
-                <p class="card-title">Auswechslungen</p>
-                <div class="subs-grid">
-                    {% for sub in rc.home_substitutions %}
-                    <div class="sub-item">
-                        <span class="min">{{ sub.minute }}'</span>
-                        {% if report.home_club_crest %}<img class="sub-crest" src="{% static report.home_club_crest %}" alt="">{% endif %}
-                        <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
-                        <span class="tm">{{ report.home_club_short }}</span>
+                <aside class="card bench-col">
+                    <p class="card-title">Ersatzbank</p>
+                    <div class="subhead">{{ report.away_club_short }}</div>
+                    <div class="bench-list">
+                        {% for b in rc.away_bench_display %}
+                        <div class="bench-row">
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
+                            <span class="n">{{ b.shirt_number|default:"" }}</span>
+                            <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
+                            {% if b.came_on %}
+                            <span class="in">&#8593; {{ b.on_minute }}'</span>
+                            {% else %}
+                            <span class="bnk">Bank</span>
+                            {% endif %}
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
                     </div>
-                    {% endfor %}
-                    {% for sub in rc.away_substitutions %}
-                    <div class="sub-item">
-                        <span class="min">{{ sub.minute }}'</span>
-                        {% if report.away_club_crest %}<img class="sub-crest" src="{% static report.away_club_crest %}" alt="">{% endif %}
-                        <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
-                        <span class="tm">{{ report.away_club_short }}</span>
-                    </div>
-                    {% endfor %}
-                    {% if not rc.home_substitutions and not rc.away_substitutions %}
-                    <span style="color:var(--muted);font-size:12px;">Keine Wechsel</span>
-                    {% endif %}
-                </div>
+                </aside>
             </div>
-            {% endif %}
         </section>
 
         {# ══════════════════════════════ SPIELER ══════════════════════════ #}
