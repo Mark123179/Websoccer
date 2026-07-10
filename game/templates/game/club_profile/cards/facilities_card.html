@@ -11,13 +11,11 @@
                 <span class="facility-pip {% if item.level >= 2 %}is-active{% endif %}"></span>
                 <span class="facility-pip {% if item.level >= 3 %}is-active{% endif %}"></span>
             </div>
-            <span class="facility-level-label">
-                {% if item.level == 0 %}Nicht vorhanden
-                {% elif item.level == 1 %}Basis
-                {% elif item.level == 2 %}Professionell
-                {% else %}Weltklasse
-                {% endif %}
-            </span>
+            {% if item.level == 0 %}
+            <span class="facility-level-label">Nicht vorhanden</span>
+            {% else %}
+            <span class="facility-level-label facility-level-label--gold">Stufe {{ item.level }}</span>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
