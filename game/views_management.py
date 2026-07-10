@@ -1,6 +1,8 @@
 import json
 from decimal import Decimal
 
+from game.stadium_brightness import get_stadium_tile_filter
+
 # ── Stadionumfeld: Einrichtungsdaten ──────────────────────────────────────────
 def _fmt_euro(amount):
     return f"{amount:,}".replace(",", ".")
@@ -136,10 +138,16 @@ def management_hub(request):
         if pp and pp.stadium_image_static_path:
             stadium_bg = pp.stadium_image_static_path
 
+    # Automatische Helligkeits-Normalisierung: jedes Vereinsstadion hat ein
+    # anderes, unterschiedlich belichtetes Foto — der Filter gleicht das auf
+    # das Helligkeitsniveau der übrigen Hub-Kacheln an.
+    stadium_bg_filter = get_stadium_tile_filter(stadium_bg)
+
     return render(request, 'game/management/hub.html', {
-        'club':       club,
-        'stadium':    stadium,
-        'stadium_bg': stadium_bg,
+        'club':              club,
+        'stadium':           stadium,
+        'stadium_bg':        stadium_bg,
+        'stadium_bg_filter': stadium_bg_filter,
     })
 
 
