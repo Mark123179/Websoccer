@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=7">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=8">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -53,11 +53,13 @@
                 <b>{{ report.home_club_name }}</b>
                 <small>{{ report.home_formation }}</small>
             </div>
+            {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
             {% if report.home_club_crest %}
                 <img class="hero-crest home" src="{% static report.home_club_crest %}" alt="{{ report.home_club_name }}">
             {% else %}
                 <span class="hero-crest-fallback">{{ report.home_club_short }}</span>
             {% endif %}
+            {% if report.home_club_id %}</a>{% endif %}
         </div>
 
         <div class="hero-score">
@@ -68,11 +70,13 @@
         </div>
 
         <div class="hero-team away">
+            {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
             {% if report.away_club_crest %}
                 <img class="hero-crest away" src="{% static report.away_club_crest %}" alt="{{ report.away_club_name }}">
             {% else %}
                 <span class="hero-crest-fallback">{{ report.away_club_short }}</span>
             {% endif %}
+            {% if report.away_club_id %}</a>{% endif %}
             <div class="nm">
                 <b>{{ report.away_club_name }}</b>
                 <small>{{ report.away_formation }}</small>
@@ -175,7 +179,7 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
-                                <span class="legend-team">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}</span>
+                                <span class="legend-team">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}{% endif %}</span>
                                 <span style="font-size:11px;font-weight:800;color:var(--muted);">{{ report.home_formation }}</span>
                             </div>
                             <div class="pitch mini">
@@ -189,7 +193,7 @@
                         </div>
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
-                                <span class="legend-team">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}</span>
+                                <span class="legend-team">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}{% endif %}</span>
                                 <span style="font-size:11px;font-weight:800;color:var(--muted);">{{ report.away_formation }}</span>
                             </div>
                             <div class="pitch mini">
@@ -211,7 +215,7 @@
                     <p class="card-title">Angriffszonen</p>
                     {% if rc.home_att_total %}
                     <div class="zone-team">
-                        <div class="zt-head">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_short }}</div>
+                        <div class="zt-head">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_short }}{% endif %}</div>
                         <div class="zone-grid">
                             <div class="zone {% if rc.home_att_max_zone == 'l' %}hi{% endif %}"><div class="p">{{ rc.home_att_l_pct }}%</div><div class="l">Links</div></div>
                             <div class="zone {% if rc.home_att_max_zone == 'c' %}hi{% endif %}"><div class="p">{{ rc.home_att_c_pct }}%</div><div class="l">Zentrum</div></div>
@@ -219,7 +223,7 @@
                         </div>
                     </div>
                     <div class="zone-team away">
-                        <div class="zt-head">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_short }}</div>
+                        <div class="zt-head">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_short }}{% endif %}</div>
                         <div class="zone-grid">
                             <div class="zone {% if rc.away_att_max_zone == 'l' %}hi{% endif %}"><div class="p">{{ rc.away_att_l_pct }}%</div><div class="l">Links</div></div>
                             <div class="zone {% if rc.away_att_max_zone == 'c' %}hi{% endif %}"><div class="p">{{ rc.away_att_c_pct }}%</div><div class="l">Zentrum</div></div>
@@ -269,13 +273,17 @@
                 <p class="card-title">Teamstatistiken</p>
                 <div class="stat-teamhead">
                     <div class="tm">
+                        {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
                         {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
                         {{ report.home_club_name }}
+                        {% if report.home_club_id %}</a>{% endif %}
                     </div>
                     <div class="vs">{{ report.home_goals }}&nbsp;:&nbsp;{{ report.away_goals }}</div>
                     <div class="tm away">
+                        {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
                         {{ report.away_club_name }}
                         {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+                        {% if report.away_club_id %}</a>{% endif %}
                     </div>
                 </div>
 
@@ -333,8 +341,9 @@
                 <div class="htt-grid">
                     <div class="htt-team">
                         <div class="htt-head">
-                            <span class="tm">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}</span>
+                            <span class="tm">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}</a>{% else %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}{% endif %}</span>
                         </div>
+                        <div class="htt-halves">
                         <div class="htt-half">
                             <div class="htt-half-title"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.home.ht1_formation }}</span></div>
                             <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.home.ht1_lines.defense }}</span></div>
@@ -349,11 +358,13 @@
                             <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.home.ht2_lines.attack }}</span></div>
                             <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.home.ht2_lines.effort }}</span></div>
                         </div>
+                        </div>
                     </div>
                     <div class="htt-team">
                         <div class="htt-head">
-                            <span class="tm">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}</span>
+                            <span class="tm">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}</a>{% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}{% endif %}</span>
                         </div>
+                        <div class="htt-halves">
                         <div class="htt-half">
                             <div class="htt-half-title"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.away.ht1_formation }}</span></div>
                             <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.away.ht1_lines.defense }}</span></div>
@@ -368,6 +379,7 @@
                             <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.away.ht2_lines.attack }}</span></div>
                             <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.away.ht2_lines.effort }}</span></div>
                         </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -381,7 +393,7 @@
                     <div class="subhead">{{ report.home_club_short }}</div>
                     <div class="bench-list">
                         {% for b in rc.home_bench_display %}
-                        <div class="bench-row">
+                        {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
                             <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
@@ -390,8 +402,20 @@
                             {% else %}
                             <span class="bnk">Bank</span>
                             {% endif %}
-                        </div>
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
                         {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
+                    </div>
+                    <div class="subhead bench-subs-head">Auswechslungen</div>
+                    <div class="bench-subs">
+                        {% for sub in rc.home_substitutions %}
+                        <div class="bsub">
+                            <span class="min">{{ sub.minute }}'</span>
+                            <div class="sw">
+                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
                     </div>
                 </aside>
 
@@ -402,8 +426,10 @@
                     <div>
                         <div class="lu-head">
                             <div class="tm">
+                                {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
                                 {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
                                 <div><b>{{ report.home_club_name }}</b></div>
+                                {% if report.home_club_id %}</a>{% endif %}
                             </div>
                             <span class="lu-form">{{ report.home_formation|default:"&ndash;" }}</span>
                         </div>
@@ -414,8 +440,10 @@
                             <div class="pm arc tl"></div><div class="pm arc tr"></div><div class="pm arc bl"></div><div class="pm arc br"></div>
                             {% for p in rc.home_pitch_players %}
                             <div class="pnode home" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
+                                {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
                                 <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span></div>
                                 <span class="nm">{{ p.name }}</span>
+                                {% if p.id %}</a>{% endif %}
                             </div>
                             {% empty %}
                             <p style="color:var(--muted);font-size:12px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">Keine Aufstellungsdaten.</p>
@@ -425,8 +453,10 @@
                     <div>
                         <div class="lu-head">
                             <div class="tm">
+                                {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
                                 {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
                                 <div><b>{{ report.away_club_name }}</b></div>
+                                {% if report.away_club_id %}</a>{% endif %}
                             </div>
                             <span class="lu-form">{{ report.away_formation|default:"&ndash;" }}</span>
                         </div>
@@ -437,8 +467,10 @@
                             <div class="pm arc tl"></div><div class="pm arc tr"></div><div class="pm arc bl"></div><div class="pm arc br"></div>
                             {% for p in rc.away_pitch_players %}
                             <div class="pnode away" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
+                                {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
                                 <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span></div>
                                 <span class="nm">{{ p.name }}</span>
+                                {% if p.id %}</a>{% endif %}
                             </div>
                             {% empty %}
                             <p style="color:var(--muted);font-size:12px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">Keine Aufstellungsdaten.</p>
@@ -448,30 +480,6 @@
                         </div>
                     </div>
 
-                    <div class="card">
-                        <p class="card-title">Auswechslungen</p>
-                        <div class="subs-grid">
-                            {% for sub in rc.home_substitutions %}
-                            <div class="sub-item">
-                                <span class="min">{{ sub.minute }}'</span>
-                                {% if report.home_club_crest %}<img class="sub-crest" src="{% static report.home_club_crest %}" alt="">{% endif %}
-                                <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
-                                <span class="tm">{{ report.home_club_short }}</span>
-                            </div>
-                            {% endfor %}
-                            {% for sub in rc.away_substitutions %}
-                            <div class="sub-item">
-                                <span class="min">{{ sub.minute }}'</span>
-                                {% if report.away_club_crest %}<img class="sub-crest" src="{% static report.away_club_crest %}" alt="">{% endif %}
-                                <div class="sw"><span class="on">&#8593; {{ sub.in_name }}</span><span class="off">&#8595; {{ sub.out_name }}</span></div>
-                                <span class="tm">{{ report.away_club_short }}</span>
-                            </div>
-                            {% endfor %}
-                            {% if not rc.home_substitutions and not rc.away_substitutions %}
-                            <span style="color:var(--muted);font-size:12px;">Keine Wechsel</span>
-                            {% endif %}
-                        </div>
-                    </div>
                 </div>
 
                 <aside class="card bench-col">
@@ -479,7 +487,7 @@
                     <div class="subhead">{{ report.away_club_short }}</div>
                     <div class="bench-list">
                         {% for b in rc.away_bench_display %}
-                        <div class="bench-row">
+                        {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
                             <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
@@ -488,8 +496,20 @@
                             {% else %}
                             <span class="bnk">Bank</span>
                             {% endif %}
-                        </div>
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
                         {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
+                    </div>
+                    <div class="subhead bench-subs-head">Auswechslungen</div>
+                    <div class="bench-subs">
+                        {% for sub in rc.away_substitutions %}
+                        <div class="bsub">
+                            <span class="min">{{ sub.minute }}'</span>
+                            <div class="sw">
+                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
                     </div>
                 </aside>
             </div>
@@ -504,8 +524,10 @@
                 {% with motm=report.man_of_the_match %}
                 <div class="motm-card">
                     <div class="badge">&#9733; Spieler des Spiels</div>
+                    {% if motm.id %}<a class="crest-link motm-link" href="{% url 'player_detail' motm.id %}">{% endif %}
                     {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="">{% elif motm.club_crest %}<img class="por" src="{% static motm.club_crest %}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
-                    <h3>{{ motm.name }}</h3>
+                    {% if motm.id %}</a>{% endif %}
+                    <h3>{% if motm.id %}<a class="plink" href="{% url 'player_detail' motm.id %}">{{ motm.name }}</a>{% else %}{{ motm.name }}{% endif %}</h3>
                     <div class="pos">{{ motm.position }} &middot; {{ motm.club_name }}</div>
                     <div class="bignote">{{ motm.rating }}</div>
                     {% if rc.motm_goals or rc.motm_assists or rc.motm_card_type %}
@@ -524,13 +546,15 @@
 
                 <section class="card">
                     <div class="pl-team-head">
+                        {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
                         {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
                         <b>{{ report.home_club_name }}</b>
+                        {% if report.home_club_id %}</a>{% endif %}
                     </div>
                     <div class="subhead">Startelf &middot; nach Position</div>
                     <div class="pl-list">
                         {% for r in report.home_ratings %}{% if not r.is_sub %}
-                        <div class="pl-row">
+                        {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
                             <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
@@ -540,14 +564,14 @@
                                 {% if r.card_type == 'yellow' %}<span class="card-yel"></span>{% elif r.card_type == 'red' %}<span class="card-red"></span>{% endif %}
                             </div>
                             <span class="note {% if r.rating <= 2.0 %}n1{% elif r.rating <= 3.0 %}n2{% elif r.rating <= 4.0 %}n3{% elif r.rating <= 5.0 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
-                        </div>
+                        {% if r.id %}</a>{% else %}</div>{% endif %}
                         {% endif %}{% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bewertungen.</p>{% endfor %}
                     </div>
                     {% if rc.home_bench_display %}
                     <div class="subhead subhead-gap">Ersatzbank</div>
                     <div class="pl-list">
                         {% for b in rc.home_bench_display %}
-                        <div class="pl-row">
+                        {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
                             <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
@@ -561,7 +585,7 @@
                             {% else %}
                             <span class="note-dash">&ndash;</span>
                             {% endif %}
-                        </div>
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -569,13 +593,15 @@
 
                 <section class="card">
                     <div class="pl-team-head">
+                        {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
                         {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
                         <b>{{ report.away_club_name }}</b>
+                        {% if report.away_club_id %}</a>{% endif %}
                     </div>
                     <div class="subhead">Startelf &middot; nach Position</div>
                     <div class="pl-list">
                         {% for r in report.away_ratings %}{% if not r.is_sub %}
-                        <div class="pl-row">
+                        {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
                             <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
@@ -585,14 +611,14 @@
                                 {% if r.card_type == 'yellow' %}<span class="card-yel"></span>{% elif r.card_type == 'red' %}<span class="card-red"></span>{% endif %}
                             </div>
                             <span class="note {% if r.rating <= 2.0 %}n1{% elif r.rating <= 3.0 %}n2{% elif r.rating <= 4.0 %}n3{% elif r.rating <= 5.0 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
-                        </div>
+                        {% if r.id %}</a>{% else %}</div>{% endif %}
                         {% endif %}{% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bewertungen.</p>{% endfor %}
                     </div>
                     {% if rc.away_bench_display %}
                     <div class="subhead subhead-gap">Ersatzbank</div>
                     <div class="pl-list">
                         {% for b in rc.away_bench_display %}
-                        <div class="pl-row">
+                        {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
                             <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="">{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
@@ -606,7 +632,7 @@
                             {% else %}
                             <span class="note-dash">&ndash;</span>
                             {% endif %}
-                        </div>
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -633,7 +659,8 @@
     </div>
     {% endif %}
 
-    {# ── Simulate Form ───────────────────────────────────────────────── #}
+    {# ── Simulate Form (nur Admin) ──────────────────────────────────── #}
+    {% if is_admin and all_clubs %}
     <section class="card" style="margin-top:20px;">
         <p class="card-title">Neues Spiel simulieren</p>
         <form method="post" action="{% url 'club_match_report' club.id %}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
@@ -655,6 +682,7 @@
         <p style="color:var(--red);font-size:12px;margin-top:10px;">Fehler: {{ sim_error }}</p>
         {% endif %}
     </section>
+    {% endif %}
 
 </div>{# /report #}
 </section>{# /spb-report #}

@@ -4175,6 +4175,49 @@ def _build_sub_name_lookup(data):
     return name_lookup, home_subs_raw, away_subs_raw
 
 
+def _linkify_commentary(events, name_lookup):
+    """Verlinkt Spielernamen in Ticker-Kommentaren zum jeweiligen Spielerprofil.
+
+    Arbeitet ausschließlich auf HTML-escaptem Text: Der Kommentar wird zuerst
+    escaped, danach werden bekannte (ebenfalls escapte) Spielernamen durch
+    <a>-Tags ersetzt. Längere Namen haben Vorrang (kein Teil-Match kürzerer
+    Namen). Unbekannte Namen bleiben unverändert — es wird nichts geraten.
+    """
+    import re as _re
+    from django.utils.html import escape as _escape
+    from django.utils.safestring import mark_safe as _mark_safe
+
+    if not events or not name_lookup:
+        return events
+
+    pairs = sorted(
+        (
+            (_escape(name), pid)
+            for pid, name in name_lookup.items()
+            if pid and name and len(name.strip()) >= 3
+        ),
+        key=lambda x: -len(x[0]),
+    )
+    if not pairs:
+        return events
+    esc_to_pid = dict(pairs)
+    pattern = _re.compile(
+        r'(?<!\w)(' + '|'.join(_re.escape(esc_name) for esc_name, _ in pairs) + r')(?!\w)'
+    )
+
+    def _repl(m):
+        pid = esc_to_pid.get(m.group(0))
+        if not pid:
+            return m.group(0)
+        return f'<a class="plink" href="{reverse("player_detail", args=[pid])}">{m.group(0)}</a>'
+
+    for evt in events:
+        commentary = evt.get('commentary')
+        if commentary:
+            evt['commentary_html'] = _mark_safe(pattern.sub(_repl, _escape(commentary)))
+    return events
+
+
 _MOMENTUM_WEIGHTS = {
     'goal':   16.0,
     'shot':    3.0,
@@ -4518,6 +4561,10 @@ def club_match_report(request, club_id):
     sim_error = None
 
     if request.method == 'POST':
+        # Simulation manuell anstoßen dürfen nur Administratoren
+        if not getattr(request.user, 'is_superuser', False):
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden('Nur Administratoren dürfen Spiele simulieren.')
         opponent_id = request.POST.get('opponent_id')
         match_type  = request.POST.get('match_type', 'freundschaft')
         if match_type not in ('freundschaft', 'pokal'):
@@ -4646,8 +4693,11 @@ def club_match_report(request, club_id):
             # Einwechslungen (angereichert mit Spielernamen)
             'home_substitutions': home_subs,
             'away_substitutions': away_subs,
-            # Kombinierte, chronologische Ereignisleiste
-            'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
+            # Kombinierte, chronologische Ereignisleiste (Namen → Profil-Links)
+            'combined_events': _linkify_commentary(
+                _build_combined_events(data, home_subs, away_subs, name_lookup),
+                name_lookup,
+            ),
         }
         _sp_types = {'corner', 'fk_direct', 'fk_cross', 'penalty_sp'}
         rc['home_sp_goals'] = sum(
@@ -4782,8 +4832,11 @@ def match_report_by_id(request, sm_id):
             # Einwechslungen (angereichert mit Spielernamen)
             'home_substitutions': home_subs,
             'away_substitutions': away_subs,
-            # Kombinierte, chronologische Ereignisleiste
-            'combined_events': _build_combined_events(data, home_subs, away_subs, name_lookup),
+            # Kombinierte, chronologische Ereignisleiste (Namen → Profil-Links)
+            'combined_events': _linkify_commentary(
+                _build_combined_events(data, home_subs, away_subs, name_lookup),
+                name_lookup,
+            ),
         }
         _sp_types = {'corner', 'fk_direct', 'fk_cross', 'penalty_sp'}
         rc['home_sp_goals'] = sum(
