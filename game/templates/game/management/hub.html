@@ -7,7 +7,7 @@
 {% block body_class %}management-hub-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-hub.css' %}?v=22">
+<link rel="stylesheet" href="{% static 'game/css/management-hub.css' %}?v=24">
 {% endblock %}
 
 {% block content %}
@@ -23,7 +23,7 @@
 
             <!-- HALL OF FAME -->
             <a href="{% url 'management_halloffame' %}" class="mhub-card mhub-card--active mhub-card--halloffame" style="text-decoration:none;">
-                <div class="mhub-card-bg" style="background-image:url('{% static 'game/images/backgrounds/halloffame-tile.jpg' %}');"></div>
+                <div class="mhub-card-bg" style="background-image:url('{% static 'game/images/backgrounds/halloffame-tile.jpg' %}'); filter: brightness(1.6) contrast(1.05);"></div>
                 <div class="mhub-card-overlay"></div>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">
@@ -79,7 +79,7 @@
             <!-- PRÄSIDENT -->
             {% if club %}
             <a href="/management/praesident/" class="mhub-card mhub-card--active mhub-card--praesident">
-                <div class="mhub-card-bg" style="background-image:url('{% static 'game/images/backgrounds/praesident-office-bg.jpg' %}');"></div>
+                <div class="mhub-card-bg" style="background-image:url('{% static 'game/images/backgrounds/praesident-office-bg.jpg' %}'); filter: brightness(1.25) contrast(1.05);"></div>
                 <div class="mhub-card-overlay"></div>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">

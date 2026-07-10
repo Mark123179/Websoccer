@@ -19,15 +19,17 @@ from functools import lru_cache
 
 from django.conf import settings
 
-# Ziel-Luminanz (0-255, Graustufen-Mittelwert), kalibriert auf die
-# bestehenden kuratierten Hub-Kacheln (sportvorstand/finanzen/sponsoring/...
-# liegen im Bereich ~28-48).
-TARGET_LUMINANCE = 34.0
+# Ziel-Luminanz (0-255, Graustufen-Mittelwert). Bewusst höher als die reinen
+# Bild-Rohwerte der kuratierten Hub-Kacheln (~28-48), weil der jetzt hellere
+# .mhub-card-overlay-Gradient (siehe management-hub.css) selbst noch Helligkeit
+# abzieht — Ziel ist ein insgesamt helles, "aktives" Kachelgefühl, klar
+# abgesetzt von den dunkel abgedunkelten "In Entwicklung"-Kacheln.
+TARGET_LUMINANCE = 60.0
 
 # Grenzen für den Helligkeits-Faktor, damit extrem dunkle/helle Fotos nicht
 # zu Artefakten (komplett schwarz / ausgewaschen) führen.
-MIN_FACTOR = 0.45
-MAX_FACTOR = 1.30
+MIN_FACTOR = 0.55
+MAX_FACTOR = 1.60
 
 BRIGHTNESS_MAP_PATH = os.path.join(
     settings.BASE_DIR, 'game', 'static', 'game', 'data', 'stadium_brightness_map.json'
