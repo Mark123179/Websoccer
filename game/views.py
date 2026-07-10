@@ -3634,21 +3634,29 @@ def _ensure_bench_in_report(report_data: dict) -> dict:
     from .models import TacticSetup as _TacticSetup, Player as _Player
     from .tactics import SQUAD_PRO as _SQUAD_PRO
 
-    def _bench_for(club_id, starters_key):
+    def _bench_for(club_id, starters_key, subs_key):
         if not club_id:
             return []
         starter_ids = {
             row.get('id') for row in (report_data.get(starters_key) or []) if row.get('id')
+        }
+        # Echte Einwechsel-Events (bereits gespeichert) haben Vorrang: sie
+        # belegen zweifelsfrei, wer tatsächlich eingewechselt wurde — auch
+        # falls dieser Spieler inzwischen nicht mehr auf der aktuellen
+        # Kader-Bank steht.
+        sub_in_ids = {
+            s.get('in') for s in (report_data.get(subs_key) or []) if s.get('in')
         }
         tactic = (
             _TacticSetup.objects
             .filter(club_id=club_id, squad_scope=_SQUAD_PRO)
             .first()
         )
-        bench_ids = [
-            pid for pid in (getattr(tactic, 'bench', None) or [])
-            if pid and pid not in starter_ids
-        ]
+        current_bench_ids = list(getattr(tactic, 'bench', None) or [])
+        bench_ids = []
+        for pid in current_bench_ids + list(sub_in_ids):
+            if pid and pid not in starter_ids and pid not in bench_ids:
+                bench_ids.append(pid)
         if not bench_ids:
             return []
         players_by_id = {p.pk: p for p in _Player.objects.filter(pk__in=bench_ids)}
@@ -3672,9 +3680,9 @@ def _ensure_bench_in_report(report_data: dict) -> dict:
 
     report_data = dict(report_data)
     if not report_data.get('home_bench'):
-        report_data['home_bench'] = _bench_for(report_data.get('home_club_id'), 'home_players')
+        report_data['home_bench'] = _bench_for(report_data.get('home_club_id'), 'home_players', 'home_substitutions')
     if not report_data.get('away_bench'):
-        report_data['away_bench'] = _bench_for(report_data.get('away_club_id'), 'away_players')
+        report_data['away_bench'] = _bench_for(report_data.get('away_club_id'), 'away_players', 'away_substitutions')
     return report_data
 
 
@@ -3803,13 +3811,18 @@ def _build_bench_with_status(report_data: dict, rc: dict) -> dict:
                 'position':      p.get('position', ''),
                 'came_on':       False,
             }
-            if rating_row and rating_row.get('is_sub'):
+            # Ein tatsächlich gespeichertes Einwechsel-Event (sub_on_minute)
+            # ist maßgeblich — auch wenn (bei älteren Datensätzen) keine
+            # eigene Noten-Zeile für den Spieler existiert. Die Note selbst
+            # wird dabei nie erfunden: ohne rating_row bleibt sie leer.
+            if pid in sub_on_minute or (rating_row and rating_row.get('is_sub')):
                 entry['came_on']    = True
-                entry['on_minute']  = sub_on_minute.get(pid)
-                entry['rating']     = rating_row.get('rating')
-                entry['card_type']  = rating_row.get('card_type')
-                entry['goals']      = rating_row.get('goals', 0)
-                entry['assists']    = rating_row.get('assists', 0)
+                entry['on_minute']  = sub_on_minute.get(pid, rating_row.get('minute') if rating_row else None)
+                if rating_row:
+                    entry['rating']     = rating_row.get('rating')
+                    entry['card_type']  = rating_row.get('card_type')
+                    entry['goals']      = rating_row.get('goals', 0)
+                    entry['assists']    = rating_row.get('assists', 0)
             display.append(entry)
         return display
 
