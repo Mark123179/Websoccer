@@ -18,7 +18,7 @@ from copy import deepcopy
 from typing import Optional
 
 from .match_readiness import apply_default_tactic_settings, ensure_default_tactic
-from .tactics import default_formation, formation_slots, formation_code, SQUAD_PRO
+from .tactics import default_formation, formation_slots, formation_code, SQUAD_PRO, default_half_tactic
 from .tactic_compiler import (
     calculate_zone_strengths,
     compile_tactic,
@@ -2975,6 +2975,22 @@ def simulate_match(
         except Exception:
             return '?'
 
+    def _snapshot_tactic_halves(tactic) -> dict:
+        """Halbzeit-Taktik-Snapshot (Abwehr/Mittelfeld/Angriff/Einsatz) fuer
+        die Spielbericht-Anzeige. Reiner Daten-Snapshot ohne Einfluss auf die
+        Simulation; Fallback auf Standardwerte statt fehlender Keys."""
+        defaults = default_half_tactic()
+        fields = ('defense', 'midfield', 'attack', 'effort')
+
+        def _half(raw):
+            raw = raw or {}
+            return {k: raw.get(k, defaults[k]) for k in fields}
+
+        return {
+            'first_half': _half(getattr(tactic, 'first_half', None)),
+            'second_half': _half(getattr(tactic, 'second_half', None)),
+        }
+
     # 5b. Karten-Flags (0/1) in Spieler-Rows einbetten — persistent im Report
     ms_stats = sim.get('match_stats', {}) or {}
     # T009: Verwiesene Spieler aus Sim-Dismissals vormarkieren; restliche Roten
@@ -3076,6 +3092,9 @@ def simulate_match(
         # ── Formationen ───────────────────────────────────────────────────────
         'home_formation': _fmt(home_tactic),
         'away_formation': _fmt(away_tactic),
+        # ── Halbzeit-Taktik-Snapshot (Abwehr/Mittelfeld/Angriff/Einsatz je HZ) ──
+        'home_tactic_halves': _snapshot_tactic_halves(home_tactic),
+        'away_tactic_halves': _snapshot_tactic_halves(away_tactic),
         # ── Neue V2-Felder ────────────────────────────────────────────────────
         'home_xg': sim['home_xg'],
         'away_xg': sim['away_xg'],

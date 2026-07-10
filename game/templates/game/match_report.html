@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=4">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -334,18 +334,40 @@
                     <div class="htt-team">
                         <div class="htt-head">
                             <span class="tm">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}</span>
-                            <span class="htt-einsatz">Einsatz: {{ rc.half_tactics.home.effort_label }}</span>
                         </div>
-                        <div class="htt-row"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.home.ht1_formation }}</span><span class="txt">{{ rc.half_tactics.home.ht1_text }}</span></div>
-                        <div class="htt-row"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.home.ht2_formation }}</span><span class="txt">{{ rc.half_tactics.home.ht2_text }}</span></div>
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.home.ht1_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.home.ht1_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.home.ht1_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.home.ht1_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.home.ht1_lines.effort }}</span></div>
+                        </div>
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.home.ht2_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.home.ht2_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.home.ht2_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.home.ht2_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.home.ht2_lines.effort }}</span></div>
+                        </div>
                     </div>
                     <div class="htt-team">
                         <div class="htt-head">
                             <span class="tm">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}</span>
-                            <span class="htt-einsatz">Einsatz: {{ rc.half_tactics.away.effort_label }}</span>
                         </div>
-                        <div class="htt-row"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.away.ht1_formation }}</span><span class="txt">{{ rc.half_tactics.away.ht1_text }}</span></div>
-                        <div class="htt-row"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.away.ht2_formation }}</span><span class="txt">{{ rc.half_tactics.away.ht2_text }}</span></div>
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.away.ht1_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.away.ht1_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.away.ht1_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.away.ht1_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.away.ht1_lines.effort }}</span></div>
+                        </div>
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.away.ht2_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.away.ht2_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.away.ht2_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.away.ht2_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.away.ht2_lines.effort }}</span></div>
+                        </div>
                     </div>
                 </div>
             </section>

@@ -4429,26 +4429,38 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
                 break
 
     # ── Formation & Taktik pro Halbzeit ───────────────────────────────────
-    # Die Engine speichert aktuell KEINE Formations-/Taktikwechsel zur Pause
-    # und keine rohen Taktik-Stichworte im report_data-Snapshot (nur die
-    # kompilierten Multiplikatoren). Reale Daten: die Formation (für beide
-    # Halbzeiten identisch, da kein HZ-Wechsel-Mechanismus existiert).
-    # Taktik-Stichworte + Einsatz-Level: "–"-Platzhalter gemäß Nutzervorgabe
-    # (niemals raten), Feldnamen für spätere Engine-Anbindung vorbereitet.
+    # Formation: für beide Halbzeiten identisch, da kein HZ-Wechsel-
+    # Mechanismus existiert. Abwehr/Mittelfeld/Angriff/Einsatz: echter
+    # Snapshot aus report_data['home_tactic_halves']/['away_tactic_halves']
+    # (Match Engine V2, additiv). Grundausrichtung wird nie angezeigt.
+    # Fehlt der Snapshot (Altdaten vor diesem Feature): "–"-Fallback statt
+    # Fehler, niemals raten.
+    _tactic_option_labels = {
+        field: dict(TACTIC_OPTION_GROUPS[field]) for field in ('defense', 'midfield', 'attack', 'effort')
+    }
+
+    def _half_tactic_labels(halves, half_key):
+        half = (halves or {}).get(half_key) or {}
+        result = {}
+        for field in ('defense', 'midfield', 'attack', 'effort'):
+            raw_value = half.get(field)
+            result[field] = _tactic_option_labels[field].get(raw_value, '–') if raw_value else '–'
+        return result
+
+    home_tactic_halves = report_data.get('home_tactic_halves')
+    away_tactic_halves = report_data.get('away_tactic_halves')
     half_tactics = {
         'home': {
             'ht1_formation': report_data.get('home_formation') or '–',
             'ht2_formation': report_data.get('home_formation') or '–',
-            'ht1_text': '–',
-            'ht2_text': '–',
-            'effort_label': '–',
+            'ht1_lines': _half_tactic_labels(home_tactic_halves, 'first_half'),
+            'ht2_lines': _half_tactic_labels(home_tactic_halves, 'second_half'),
         },
         'away': {
             'ht1_formation': report_data.get('away_formation') or '–',
             'ht2_formation': report_data.get('away_formation') or '–',
-            'ht1_text': '–',
-            'ht2_text': '–',
-            'effort_label': '–',
+            'ht1_lines': _half_tactic_labels(away_tactic_halves, 'first_half'),
+            'ht2_lines': _half_tactic_labels(away_tactic_halves, 'second_half'),
         },
     }
 
