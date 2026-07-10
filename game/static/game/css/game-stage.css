@@ -17,7 +17,10 @@ body {
     position: fixed;
     inset: 0;
     overflow: hidden;
-    background: #03070c;
+    background:
+        linear-gradient(rgba(3, 7, 12, 0.55), rgba(3, 7, 12, 0.72)),
+        url("../images/backgrounds/umkleidekabine.png") center / cover no-repeat fixed;
+    background-color: #03070c;
     z-index: 0;
 }
 
