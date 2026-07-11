@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=18">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=19">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -278,6 +278,7 @@
         <span><span class="sw-gelb"></span>Gelb</span>
         <span><span class="sw-rot"></span>Rot</span>
         <span><svg width="12" height="12"><use href="#i-wechsel"/></svg>Wechsel</span>
+        <span><span class="sw-verletzung"></span>Verletzung</span>
       </div>
     </div>
     <div class="tk-verlauf-body">
@@ -470,7 +471,7 @@
             {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
           </span>
           {% endif %}
-          <p>{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+          <p>{% if evt.type == 'corner_miss' %}<span class="tk-tag tk-t-ecke">ECKE</span> &mdash; {% elif evt.type == 'fk_direct_miss' or evt.type == 'fk_cross_miss' %}<span class="tk-tag tk-t-ecke">FREISTOSS</span> &mdash; {% elif evt.type == 'alu' or evt.type == 'near_miss' %}<span class="tk-tag tk-t-alu">ALU / PFOSTEN</span> &mdash; {% elif evt.type == 'var' %}<span class="tk-tag tk-t-var">VAR</span> &mdash; {% elif evt.type == 'penalty' or evt.type == 'elfmeter_pfiff' %}<span class="tk-tag tk-t-elfmeter">ELFMETER</span> &mdash; {% elif evt.type == 'offside' %}<span class="tk-tag tk-t-abseits">ABSEITS</span> &mdash; {% endif %}{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
         </div>
       </div>
       {% endif %}

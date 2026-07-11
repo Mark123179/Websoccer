@@ -339,6 +339,7 @@ button{font-family:inherit}
 .tk-legend>span{display:flex;align-items:center;gap:5px;font:800 10px Inter,sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
 .sw-gelb{width:6px;height:9px;border-radius:2px;background:var(--yellow)}
 .sw-rot{width:6px;height:9px;border-radius:2px;background:var(--red)}
+.sw-verletzung{width:9px;height:9px;border-radius:999px;background:rgba(255,85,112,.18);border:1.5px solid rgba(255,85,112,.7)}
 .tk-verlauf-body{position:relative;height:64px}
 .tk-lane-crest{position:absolute;left:0;width:17px;height:17px;object-fit:contain}
 .tk-lane-crest.top{top:6px}
@@ -360,7 +361,7 @@ button{font-family:inherit}
 .tk-marker.m-tor{background:var(--cyan-soft);border:1.5px solid rgba(44,231,255,.65);box-shadow:0 0 10px rgba(34,230,255,.45);color:var(--cyan)}
 .tk-marker.m-tor.own{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.65);box-shadow:0 0 10px rgba(48,242,156,.45);color:var(--green)}
 .tk-marker.m-wechsel{border:1.5px solid rgba(48,242,156,.55)}
-.tk-marker.m-verletzung{border:1.5px solid rgba(255,85,112,.6)}
+.tk-marker.m-verletzung{background:rgba(255,85,112,.15);border:1.5px solid rgba(255,85,112,.7);box-shadow:0 0 8px rgba(255,85,112,.35);color:#ff5570}
 .tk-marker.m-gelb,.tk-marker.m-rot{width:7px;height:11px;border-radius:2px;border:none}
 .tk-marker.m-gelb{background:var(--yellow)}
 .tk-marker.m-rot{background:var(--red);box-shadow:0 0 10px rgba(255,85,112,.5)}
@@ -402,6 +403,8 @@ button{font-family:inherit}
 .tk-t-rot,.tk-t-verletzung{color:var(--red)}
 .tk-t-wechsel{color:var(--green)}
 .tk-t-var,.tk-t-elfmeter{color:var(--cyan)}
+.tk-t-ecke{color:rgba(244,251,255,.9)}
+.tk-t-alu{color:#ffa040}
 
 /* Team-Chip */
 .tk-teamchip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 4px;border-radius:999px;flex-shrink:0}

@@ -4114,14 +4114,16 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
     for nm in (data.get('sp_near_miss_events') or []):
         nm_type = nm.get('type', 'corner_miss')
         nm_minute = nm.get('minute', 0)
+        nm_player = nm.get('player_name', '')
         idx = _type_ctr.get(nm_type, 0)
         _type_ctr[nm_type] = idx + 1
         raw.append({
             'type': nm_type,
             'team': nm.get('team', 'home'),
             'minute': nm_minute,
+            'player_name': nm_player,
             'commentary': _ticker_comment(
-                nm_type, nm_minute, nm.get('player_name', ''),
+                nm_type, nm_minute, nm_player,
                 match_seed=_match_seed, event_index=idx,
             ),
         })
@@ -4142,6 +4144,18 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
 
     _EVT_PRIORITY = {'goal': 0, 'card': 1, 'sub': 2, 'gk_red_off': 3, 'injury': 4}
     raw.sort(key=lambda e: (e['minute'], _EVT_PRIORITY.get(e['type'], 5)))
+
+    from django.utils.html import escape as _esc, mark_safe as _ms
+
+    def _bold_names(text, *names):
+        """Gibt den Text als mark_safe zurück, mit jedem Namensvorkommnis in <strong>."""
+        html = _esc(text)
+        for name in names:
+            if name:
+                sn = _esc(name)
+                if sn in html:
+                    html = html.replace(sn, f'<strong>{sn}</strong>', 1)
+        return _ms(html)
 
     score_h = score_a = 0
     events = []
@@ -4174,6 +4188,7 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 assister_pos=evt.get('assister_pos', ''),
                 score_h=score_h, score_a=score_a,
             )
+            evt['commentary_html'] = _bold_names(evt['commentary'], evt.get('scorer_name', ''), evt.get('assister_name', ''))
         elif t == 'sub':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
@@ -4184,28 +4199,34 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
                 is_injury_sub=evt.get('is_injury_sub', False),
                 is_gk_red_sub=evt.get('is_gk_red_sub', False),
             )
+            evt['commentary_html'] = _bold_names(evt['commentary'], evt.get('in_name', ''), evt.get('out_name', ''))
         elif t == 'card':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
             evt['commentary'] = _tc(
                 'card', evt['minute'], evt['player_name'], card_type=evt['card_type'],
             )
+            evt['commentary_html'] = _bold_names(evt['commentary'], evt.get('player_name', ''))
         elif t == 'injury':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
             evt['commentary'] = _tc(
                 'injury', evt['minute'], evt['player_name'], days=evt.get('days', 0),
             )
+            evt['commentary_html'] = _bold_names(evt['commentary'], evt.get('player_name', ''))
         elif t == 'gk_red_off':
             evt['score_h'] = score_h
             evt['score_a'] = score_a
             evt['commentary'] = _tc(
                 'gk_red_off', evt['minute'], out_name=evt.get('out_name', ''),
             )
+            evt['commentary_html'] = _bold_names(evt['commentary'], evt.get('out_name', ''))
         else:
             # shot / corner / foul / flow — commentary already set by _generate_narrative_events
             evt.setdefault('score_h', score_h)
             evt.setdefault('score_a', score_a)
+            if evt.get('player_name') and evt.get('commentary'):
+                evt['commentary_html'] = _bold_names(evt['commentary'], evt['player_name'])
         events.append(evt)
 
     return events
