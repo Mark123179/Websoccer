@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=16">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=17">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -442,10 +442,6 @@
                             <span class="lu-form">{{ report.home_formation|default:"&ndash;" }}</span>
                         </div>
                         <div class="pitch big">
-                            <div class="pm line"></div><div class="pm circle"></div><div class="pm spot"></div>
-                            <div class="pm box top"></div><div class="pm six top"></div><div class="pm pspot top"></div>
-                            <div class="pm box bot"></div><div class="pm six bot"></div><div class="pm pspot bot"></div>
-                            <div class="pm arc tl"></div><div class="pm arc tr"></div><div class="pm arc bl"></div><div class="pm arc br"></div>
                             {% for p in rc.home_pitch_players %}
                             <div class="pnode home" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
                                 {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
@@ -469,10 +465,6 @@
                             <span class="lu-form">{{ report.away_formation|default:"&ndash;" }}</span>
                         </div>
                         <div class="pitch big">
-                            <div class="pm line"></div><div class="pm circle"></div><div class="pm spot"></div>
-                            <div class="pm box top"></div><div class="pm six top"></div><div class="pm pspot top"></div>
-                            <div class="pm box bot"></div><div class="pm six bot"></div><div class="pm pspot bot"></div>
-                            <div class="pm arc tl"></div><div class="pm arc tr"></div><div class="pm arc bl"></div><div class="pm arc br"></div>
                             {% for p in rc.away_pitch_players %}
                             <div class="pnode away" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
                                 {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
