@@ -118,24 +118,6 @@
             url.hash = name;
             history.replaceState(null, "", url);
         }
-        if (name === "ticker") sizeTicker();
-    }
-
-    function sizeTicker() {
-        var list = document.getElementById("tickerFull"), btn = document.getElementById("tickerScrollBtn");
-        if (!list) return;
-        var top = list.getBoundingClientRect().top;
-        var maxH = Math.max(220, window.innerHeight - top - 24);
-        list.style.maxHeight = maxH + "px";
-        updateTickerBtn();
-    }
-
-    function updateTickerBtn() {
-        var list = document.getElementById("tickerFull"), btn = document.getElementById("tickerScrollBtn"), fade = document.getElementById("tickerFade");
-        if (!list || !btn) return;
-        var hasMore = list.scrollHeight - list.scrollTop - list.clientHeight > 12;
-        btn.hidden = !hasMore;
-        if (fade) fade.hidden = !hasMore;
     }
 
     function wireFilter(filterId, listId) {
@@ -149,6 +131,20 @@
                 Array.prototype.forEach.call(chips, function (x) { x.classList.toggle("active", x === c); });
                 Array.prototype.forEach.call(list.querySelectorAll(".ev-row"), function (r) {
                     r.style.display = (f === "alle" || r.getAttribute("data-type") === want) ? "" : "none";
+                });
+            });
+        });
+    }
+
+    function wireTicker() {
+        var wrap = document.getElementById("ticker");
+        if (!wrap) return;
+        var chips = wrap.querySelectorAll(".tk-chip");
+        Array.prototype.forEach.call(chips, function (chip) {
+            chip.addEventListener("click", function () {
+                wrap.dataset.flt = chip.dataset.flt || "alle";
+                Array.prototype.forEach.call(chips, function (c) {
+                    c.classList.toggle("active", c === chip);
                 });
             });
         });
@@ -173,21 +169,11 @@
             t.addEventListener("click", function () { switchTab(t.getAttribute("data-tab")); });
         });
 
-        wireFilter("tickerFilter", "tickerFull");
+        wireTicker();
         wireFilter("ovTickerFilter", "ovTickerList");
 
         var tt = document.getElementById("toTicker");
         if (tt) tt.addEventListener("click", function () { switchTab("ticker"); });
-
-        var tickerList = document.getElementById("tickerFull"), tickerBtn = document.getElementById("tickerScrollBtn");
-        if (tickerList) tickerList.addEventListener("scroll", updateTickerBtn);
-        if (tickerBtn) tickerBtn.addEventListener("click", function () {
-            tickerList.scrollBy({ top: Math.round(tickerList.clientHeight * 0.85), behavior: "smooth" });
-        });
-        window.addEventListener("resize", function () {
-            var tickerPanel = document.querySelector('.spb-report .panel[data-tab="ticker"]');
-            if (tickerPanel && !tickerPanel.hidden) sizeTicker();
-        });
 
         var initialTab = (window.location.hash || '').replace('#', '');
         if (initialTab && document.querySelector('.spb-report .tab[data-tab="' + initialTab + '"]')) {

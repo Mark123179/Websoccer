@@ -4211,6 +4211,150 @@ def _build_combined_events(data, home_subs_enriched, away_subs_enriched, name_lo
     return events
 
 
+def _enrich_ticker_events(combined_events, manager_side, home_goals=0, away_goals=0):
+    """Reichert combined_events für das neue Ticker-Design an.
+    Fügt ticker_id, ticker_delay, ticker_own, group_role hinzu.
+    Fügt synthetische Anpfiff/Halbzeit/Abpfiff-Divider ein.
+    Gibt (enriched_events, verlauf_markers, extra_time) zurück.
+    """
+    real = [e for e in (combined_events or [])
+            if e.get('type') not in ('divider_anpfiff', 'divider_halbzeit', 'divider_abpfiff')]
+
+    all_mins = [int(e.get('minute') or 0) for e in real]
+    extra_time = max(94, max(all_mins)) if all_mins else 94
+
+    ht_h = sum(1 for e in real if e.get('type') == 'goal' and e.get('team') == 'home'
+               and int(e.get('minute') or 0) <= 45)
+    ht_a = sum(1 for e in real if e.get('type') == 'goal' and e.get('team') == 'away'
+               and int(e.get('minute') or 0) <= 45)
+    ht_mins = [int(e.get('minute') or 0) for e in real if int(e.get('minute') or 0) <= 48]
+    ht_display = max(ht_mins) if ht_mins else 45
+    abpfiff_min = max(all_mins) if all_mins else 90
+
+    # Gruppe: Verletzung → Wechsel desselben Teams ≤4 Minuten später
+    n = len(real)
+    group_role = [''] * n
+    for i in range(n - 1):
+        a, b = real[i], real[i + 1]
+        if (a.get('type') == 'injury' and b.get('type') == 'sub'
+                and a.get('team') == b.get('team')
+                and abs(int(b.get('minute') or 0) - int(a.get('minute') or 0)) <= 4):
+            group_role[i] = 'start'
+            group_role[i + 1] = 'end'
+
+    id_ctr: dict[str, int] = {}
+
+    def _next_id(pfx, minute):
+        key = f'ev-{pfx}{minute}'
+        id_ctr[key] = id_ctr.get(key, 0) + 1
+        n2 = id_ctr[key]
+        return key if n2 == 1 else f'{key}-{n2}'
+
+    enriched: list[dict] = []
+    verlauf_markers: list[dict] = []
+    slot = [1]
+
+    def _delay(extra=0):
+        d = min(1.2, 0.1 + slot[0] * 0.06)
+        slot[0] += 1 + extra
+        return f'{d:.2f}s'
+
+    enriched.append({
+        'type': 'divider_anpfiff', 'minute': 1,
+        'ticker_id': None, 'ticker_delay': '0.1s',
+        'ticker_own': False, 'group_role': '',
+    })
+
+    ht_inserted = False
+    for i, evt in enumerate(real):
+        minute = int(evt.get('minute') or 0)
+        t = evt.get('type', '')
+
+        if not ht_inserted and minute > 45:
+            ht_inserted = True
+            enriched.append({
+                'type': 'divider_halbzeit', 'minute': ht_display,
+                'ticker_id': None, 'ticker_delay': _delay(),
+                'ticker_own': False, 'group_role': '',
+                'score_h': ht_h, 'score_a': ht_a,
+            })
+
+        own = (evt.get('team') == manager_side) if manager_side else False
+        is_goal = (t == 'goal')
+
+        if t == 'goal':
+            tid = _next_id('t', minute)
+        elif t == 'card':
+            ct = evt.get('card_type', 'yellow')
+            tid = _next_id('r' if ct in ('rot', 'gelbrot') else 'y', minute)
+        elif t == 'sub':
+            tid = _next_id('s', minute)
+        elif t == 'injury':
+            tid = _next_id('i', minute)
+        elif t == 'gk_red_off':
+            tid = _next_id('rko', minute)
+        else:
+            tid = None
+
+        d = _delay(extra=1 if is_goal else 0)
+        enriched.append(dict(evt,
+            ticker_id=tid, ticker_delay=d,
+            ticker_own=own, group_role=group_role[i],
+        ))
+
+        left = round(minute / extra_time * 100, 2)
+        own_lane = 'top' if own else 'bottom'
+        if t == 'goal':
+            verlauf_markers.append({
+                'marker_class': 'm-tor own' if own else 'm-tor',
+                'lane': own_lane, 'inner': False,
+                'left_pct': left, 'event_id': tid,
+                'title': f"{minute}' Tor {evt.get('scorer_name', '')} {evt.get('score_h', 0)}:{evt.get('score_a', 0)}",
+                'icon': 'i-ball-solid', 'has_icon': True,
+            })
+        elif t == 'card':
+            ct2 = evt.get('card_type', 'yellow')
+            mc = 'm-rot' if ct2 in ('rot', 'gelbrot') else 'm-gelb'
+            lbl = 'GELB-ROT' if ct2 == 'gelbrot' else ('ROT' if ct2 == 'rot' else 'GELB')
+            verlauf_markers.append({
+                'marker_class': mc, 'lane': own_lane, 'inner': False,
+                'left_pct': left, 'event_id': tid,
+                'title': f"{minute}' {lbl} {evt.get('player_name', '')}",
+                'icon': None, 'has_icon': False,
+            })
+        elif t == 'sub':
+            verlauf_markers.append({
+                'marker_class': 'm-wechsel', 'lane': own_lane, 'inner': True,
+                'left_pct': left, 'event_id': tid,
+                'title': f"{minute}' Wechsel {evt.get('in_name', '')}",
+                'icon': 'i-wechsel', 'has_icon': True,
+            })
+        elif t == 'injury':
+            verlauf_markers.append({
+                'marker_class': 'm-verletzung', 'lane': own_lane, 'inner': False,
+                'left_pct': left, 'event_id': tid,
+                'title': f"{minute}' Verletzung {evt.get('player_name', '')}",
+                'icon': 'i-kreuz', 'has_icon': True,
+            })
+
+    if not ht_inserted:
+        enriched.append({
+            'type': 'divider_halbzeit', 'minute': ht_display,
+            'ticker_id': None, 'ticker_delay': _delay(),
+            'ticker_own': False, 'group_role': '',
+            'score_h': ht_h, 'score_a': ht_a,
+        })
+
+    enriched.append({
+        'type': 'divider_abpfiff', 'minute': abpfiff_min,
+        'ticker_id': None, 'ticker_delay': _delay(),
+        'ticker_own': False, 'group_role': '',
+        'score_h': home_goals, 'score_a': away_goals,
+    })
+
+    return enriched, verlauf_markers, extra_time
+
+
 def _enrich_substitutions(subs_raw, name_lookup):
     """Reichert rohe Einwechslungs-Dicts ({minute, in, out} mit Player-IDs)
     mit Spielernamen an und gibt eine Template-fertige Liste zurück.
@@ -4853,6 +4997,22 @@ def club_match_report(request, club_id):
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
     rc.update(_build_v2_report_extras(_report_data, rc))
     rc.update(_build_stadium_capacity_extras(club))
+    # ── Ticker-Anreicherung ───────────────────────────────────────────────
+    if rc.get('combined_events') and latest:
+        _mgr_side = None
+        if getattr(latest, 'home_club_id', None) == club.id:
+            _mgr_side = 'home'
+        elif getattr(latest, 'away_club_id', None) == club.id:
+            _mgr_side = 'away'
+        _ev, _vm, _et = _enrich_ticker_events(
+            rc['combined_events'], _mgr_side,
+            home_goals=latest.home_goals or 0,
+            away_goals=latest.away_goals or 0,
+        )
+        rc['combined_events'] = _ev
+        rc['ticker_verlauf_markers'] = _vm
+        rc['ticker_extra_time'] = _et
+        rc['ticker_manager_side'] = _mgr_side
 
     return render(request, 'game/match_report.html', {
         'club':             club,
@@ -4992,6 +5152,24 @@ def match_report_by_id(request, sm_id):
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
     rc.update(_build_v2_report_extras(_report_data, rc))
     rc.update(_build_stadium_capacity_extras(club))
+    # ── Ticker-Anreicherung ───────────────────────────────────────────────
+    if rc.get('combined_events') and latest:
+        _m_club = current_manager_club(user=request.user)
+        _mgr_side2 = None
+        if _m_club:
+            if getattr(latest, 'home_club_id', None) == _m_club.id:
+                _mgr_side2 = 'home'
+            elif getattr(latest, 'away_club_id', None) == _m_club.id:
+                _mgr_side2 = 'away'
+        _ev2, _vm2, _et2 = _enrich_ticker_events(
+            rc['combined_events'], _mgr_side2,
+            home_goals=latest.home_goals or 0,
+            away_goals=latest.away_goals or 0,
+        )
+        rc['combined_events'] = _ev2
+        rc['ticker_verlauf_markers'] = _vm2
+        rc['ticker_extra_time'] = _et2
+        rc['ticker_manager_side'] = _mgr_side2
 
     return render(request, 'game/match_report.html', {
         'club':             club,

@@ -28,6 +28,16 @@
 
 @keyframes tabin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes crestpop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+/* ── Ticker-Animationen ─────────────────────────────────────────────── */
+@keyframes tkEvIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes tkGoalPing{0%{box-shadow:0 0 0 0 var(--tk-ping,rgba(34,230,255,.55)),0 0 18px var(--tk-ping2,rgba(34,230,255,.35))}100%{box-shadow:0 0 0 24px transparent,0 0 18px var(--tk-ping2,rgba(34,230,255,.35))}}
+@keyframes tkScorePop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+@keyframes tkSweep{from{transform:translateX(-130%) skewX(-18deg)}to{transform:translateX(260%) skewX(-18deg)}}
+@keyframes tkCardRise{0%{transform:translateY(7px) rotate(-16deg);opacity:0}60%{transform:translateY(-1px) rotate(11deg)}100%{transform:none;opacity:1}}
+@keyframes tkFlashY{0%,100%{background:transparent}35%{background:rgba(255,209,102,.16)}}
+@keyframes tkFlashR{0%,100%{background:transparent}35%{background:rgba(255,85,112,.14)}}
+@keyframes tkSubIn{from{transform:translateX(-7px);opacity:0}to{transform:none;opacity:1}}
+@keyframes tkInjury{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
 
 @scope (.spb-report) {
 
@@ -303,6 +313,147 @@ button{font-family:inherit}
 /* ── Admin-Bericht Tab (bestehendes mr-* Design bleibt unangetastet) ─── */
 .admin-note{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(255,85,112,.08);border:1px solid rgba(255,85,112,.32);color:var(--muted);font-size:12px;font-weight:700}
 .admin-note b{color:var(--red)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SPIELBERICHT-TICKER V2  (tk- Präfix, alle Selektoren im @scope)
+   ═══════════════════════════════════════════════════════════════════════ */
+.tk-wrap{--own-tint-bg:rgba(48,242,156,.08);--own-tint-border:rgba(48,242,156,.28);--own-tint-text:#7df5c4;--opp-tint-bg:rgba(255,85,112,.08);--opp-tint-border:rgba(255,85,112,.28);--opp-tint-text:#ff9aae}
+
+/* Filter-Chips */
+.tk-chips{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.tk-chip{padding:7px 16px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line);color:var(--muted);font:700 12.5px Inter,sans-serif;cursor:pointer;transition:border-color .15s,color .15s,background .15s;user-select:none}
+.tk-chip:hover{border-color:var(--line-strong);color:var(--text)}
+.tk-chip.active{background:var(--cyan-soft);border-color:var(--line-strong);color:var(--cyan);font-weight:800}
+.tk-context{margin-left:auto;font:900 11px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}
+
+/* Filter-Logik: data-flt am Container schaltet Events aus */
+.tk-wrap[data-flt="tore"] .tk-ev:not(.tk-k-tor){display:none}
+.tk-wrap[data-flt="karten"] .tk-ev:not(.tk-k-karte){display:none}
+.tk-wrap[data-flt="wechsel"] .tk-ev:not(.tk-k-wechsel){display:none}
+
+/* Spielverlauf-Leiste */
+.tk-verlauf{border-radius:var(--radius);border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);padding:13px 18px 15px;margin-bottom:16px}
+.tk-verlauf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tk-label{font:900 11px Inter,sans-serif;letter-spacing:.7px;text-transform:uppercase;color:var(--faint)}
+.tk-legend{display:flex;align-items:center;gap:14px}
+.tk-legend>span{display:flex;align-items:center;gap:5px;font:800 10px Inter,sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+.sw-gelb{width:6px;height:9px;border-radius:2px;background:var(--yellow)}
+.sw-rot{width:6px;height:9px;border-radius:2px;background:var(--red)}
+.tk-verlauf-body{position:relative;height:64px}
+.tk-lane-crest{position:absolute;left:0;width:17px;height:17px;object-fit:contain}
+.tk-lane-crest.top{top:6px}
+.tk-lane-crest.bottom{bottom:6px}
+.tk-verlauf-track{position:absolute;left:30px;right:0;top:0;bottom:0}
+.tk-baseline{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,rgba(44,231,255,.08),rgba(44,231,255,.30) 8%,rgba(44,231,255,.30) 92%,rgba(44,231,255,.08))}
+.tk-hz-tick{position:absolute;left:47%;top:14px;bottom:14px;width:1px;background:rgba(44,231,255,.25)}
+.tk-hz-label{position:absolute;left:47%;top:50%;transform:translate(-50%,-50%);padding:1px 6px;border-radius:999px;background:var(--stadium-bg,#07111a);border:1px solid rgba(44,231,255,.25);font:900 9px Inter,sans-serif;letter-spacing:.6px;color:var(--faint)}
+.tk-t-start{position:absolute;left:0;bottom:-4px;font:800 9.5px Inter,sans-serif;color:rgba(244,251,255,.28)}
+.tk-t-end{position:absolute;right:0;bottom:-4px;font:800 9.5px Inter,sans-serif;color:rgba(244,251,255,.28)}
+
+/* Verlaufs-Marker */
+.tk-marker{position:absolute;width:18px;height:18px;border-radius:999px;display:flex;align-items:center;justify-content:center;transform:translateX(-50%);transition:transform .15s;background:var(--stadium-bg,#07111a);text-decoration:none}
+.tk-marker:hover{transform:translateX(-50%) scale(1.3)}
+.tk-marker.top{top:5px}
+.tk-marker.bottom{bottom:5px}
+.tk-marker.top.inner{top:18px}
+.tk-marker.bottom.inner{bottom:18px}
+.tk-marker.m-tor{background:var(--cyan-soft);border:1.5px solid rgba(44,231,255,.65);box-shadow:0 0 10px rgba(34,230,255,.45);color:var(--cyan)}
+.tk-marker.m-tor.own{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.65);box-shadow:0 0 10px rgba(48,242,156,.45);color:var(--green)}
+.tk-marker.m-wechsel{border:1.5px solid rgba(48,242,156,.55)}
+.tk-marker.m-verletzung{border:1.5px solid rgba(255,85,112,.6)}
+.tk-marker.m-gelb,.tk-marker.m-rot{width:7px;height:11px;border-radius:2px;border:none}
+.tk-marker.m-gelb{background:var(--yellow)}
+.tk-marker.m-rot{background:var(--red);box-shadow:0 0 10px rgba(255,85,112,.5)}
+
+/* Timeline */
+.tk-timeline{position:relative;padding-left:38px}
+.tk-spine{position:absolute;left:13px;top:14px;bottom:14px;width:2px;background:linear-gradient(180deg,rgba(44,231,255,.05),rgba(44,231,255,.32) 8%,rgba(44,231,255,.32) 92%,rgba(44,231,255,.05))}
+.tk-events{display:flex;flex-direction:column;gap:15px}
+
+/* Zeilen-Animation */
+.tk-row{position:relative;animation:tkEvIn .45s ease var(--d,0s) both;scroll-margin-top:16px}
+.tk-row.tk-flash-y{animation:tkEvIn .45s ease var(--d,0s) both,tkFlashY 1.4s ease calc(var(--d,0s) + .2s)}
+.tk-row.tk-flash-r{animation:tkEvIn .45s ease var(--d,0s) both,tkFlashR 1.4s ease calc(var(--d,0s) + .2s)}
+@media(prefers-reduced-motion:reduce){.tk-row,.tk-row.tk-flash-y,.tk-row.tk-flash-r{animation:none}}
+
+/* Knoten auf der Spine */
+.tk-node{position:absolute;left:-34px;top:0;width:18px;height:18px;border-radius:999px;background:var(--panel-strong);border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center}
+.tk-c-yellow{border-color:rgba(255,209,102,.5)}
+.tk-c-red{border-color:rgba(255,85,112,.55)}
+.tk-c-red-glow{border-color:rgba(255,85,112,.6);box-shadow:0 0 12px rgba(255,85,112,.35)}
+.tk-c-green{border-color:rgba(48,242,156,.5)}
+.tk-c-neutral{border-color:rgba(44,231,255,.3)}
+.tk-node-goal{left:-39px;top:8px;width:28px;height:28px;background:var(--cyan-soft);border:1.5px solid rgba(44,231,255,.55);--tk-ping:rgba(34,230,255,.55);--tk-ping2:rgba(34,230,255,.35);animation:tkGoalPing 1s ease-out calc(var(--d,0s) + .35s) 2 both;color:var(--cyan)}
+.own .tk-node-goal{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.55);--tk-ping:rgba(48,242,156,.55);--tk-ping2:rgba(48,242,156,.35);color:var(--green)}
+.tk-node-big{left:-36px;top:9px;width:22px;height:22px;border-color:rgba(44,231,255,.45);color:var(--cyan)}
+.tk-final.tk-node-big{background:var(--cyan-soft);border-color:rgba(44,231,255,.55);box-shadow:0 0 14px rgba(34,230,255,.3)}
+.tk-anim-card{animation:tkCardRise .55s ease calc(var(--d,0s) + .25s) both}
+.tk-anim-injury{animation:tkInjury .6s ease calc(var(--d,0s) + .3s) 3 both}
+
+/* Textzeile kleine Events */
+.tk-ev-line{display:flex;align-items:flex-start;gap:10px;padding:2px 4px;border-radius:6px;transition:background .15s}
+.tk-row:hover .tk-ev-line{background:rgba(34,230,255,.05)}
+.tk-ev-line .tk-min{font:800 13px Inter,sans-serif;color:var(--muted);min-width:30px;margin-top:2px;flex-shrink:0}
+.tk-ev-line p{margin:2px 0 0;font:600 13.5px/1.5 Inter,sans-serif;color:var(--muted)}
+.tk-ev-line p strong{color:var(--text);font-weight:800}
+.tk-ev-line p .in{color:var(--green);font-weight:800}
+.tk-tag{font-weight:900;letter-spacing:.5px}
+.tk-t-gelb,.tk-t-abseits{color:var(--yellow)}
+.tk-t-rot,.tk-t-verletzung{color:var(--red)}
+.tk-t-wechsel{color:var(--green)}
+.tk-t-var,.tk-t-elfmeter{color:var(--cyan)}
+
+/* Team-Chip */
+.tk-teamchip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 4px;border-radius:999px;flex-shrink:0}
+.tk-teamchip img{width:14px;height:14px;object-fit:contain}
+.tk-teamchip span{font:900 9.5px Inter,sans-serif;letter-spacing:.5px}
+.tk-teamchip.own{background:var(--own-tint-bg);border:1px solid var(--own-tint-border)}
+.tk-teamchip.own span{color:var(--own-tint-text)}
+.tk-teamchip.opp{background:var(--opp-tint-bg);border:1px solid var(--opp-tint-border)}
+.tk-teamchip.opp span{color:var(--opp-tint-text)}
+
+/* Tor-Karte */
+.tk-goal-card{position:relative;overflow:hidden;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--panel-strong);padding:16px 20px;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
+.tk-goal-card:hover{border-color:rgba(44,231,255,.65);box-shadow:var(--shadow),0 0 24px rgba(34,230,255,.18)}
+.own .tk-goal-card{border-color:rgba(48,242,156,.35)}
+.own .tk-goal-card:hover{border-color:rgba(48,242,156,.6);box-shadow:var(--shadow),0 0 24px rgba(48,242,156,.15)}
+.tk-sweep{position:absolute;top:0;bottom:0;left:0;width:38%;background:linear-gradient(90deg,transparent,rgba(34,230,255,.10),transparent);animation:tkSweep .9s ease-out calc(var(--d,0s) + .3s) both;pointer-events:none}
+.own .tk-sweep{background:linear-gradient(90deg,transparent,rgba(48,242,156,.10),transparent)}
+.tk-goal-head{position:relative;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.tk-goal-head .tk-min{font:900 15px Inter,sans-serif;color:var(--cyan)}
+.own .tk-goal-head .tk-min{color:var(--green)}
+.tk-goal-head img{width:24px;height:24px;object-fit:contain}
+.tk-name{font:900 15px Inter,sans-serif;color:var(--text)}
+.tk-badge{padding:2px 9px;border-radius:999px;font:900 10px Inter,sans-serif;letter-spacing:.8px}
+.tk-b-tor{background:var(--cyan);color:var(--dark-text,#061018)}
+.own .tk-b-tor{background:var(--green)}
+.tk-b-extra{background:var(--cyan-soft);border:1px solid var(--line-strong);color:var(--cyan)}
+.own .tk-b-extra{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.38);color:var(--green)}
+.tk-score{margin-left:auto;font:900 18px Inter,sans-serif;color:var(--cyan);animation:tkScorePop .55s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0s) + .4s) both}
+.own .tk-score{color:var(--green)}
+.tk-goal-card>p{position:relative;margin:0;font:600 13.5px/1.5 Inter,sans-serif;color:var(--muted)}
+
+/* Trennkarten */
+.tk-divider-card{border-radius:var(--radius);border:1px solid rgba(44,231,255,.28);background:linear-gradient(90deg,var(--panel-strong),rgba(9,23,34,.7));padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tk-divider-card.tk-final{border-color:var(--line-strong);padding:12px 16px;box-shadow:0 0 24px rgba(34,230,255,.08)}
+.tk-dlabel{font:900 12px Inter,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:var(--cyan)}
+.tk-dmin{font:900 12px Inter,sans-serif;color:var(--faint)}
+.tk-dline{flex:1;height:1px;background:linear-gradient(90deg,rgba(44,231,255,.28),transparent)}
+.tk-dinfo{display:flex;align-items:center;gap:8px;font:700 12px Inter,sans-serif;color:var(--muted)}
+.tk-dinfo img{width:18px;height:18px;object-fit:contain}
+.tk-dvs{font:900 11px Inter,sans-serif;color:var(--faint)}
+.tk-dfaint{font:900 11px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}
+.tk-own-tag{padding:2px 7px;border-radius:999px;background:rgba(48,242,156,.12);border:1px solid rgba(48,242,156,.35);font:900 9px Inter,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:var(--green)}
+.tk-score-pill{display:flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:rgba(3,7,12,.6);border:1px solid rgba(44,231,255,.28)}
+.tk-score-pill img{width:16px;height:16px;object-fit:contain}
+.tk-score-pill b{font:900 13px Inter,sans-serif;color:var(--text)}
+.tk-divider-card.tk-final .tk-score-pill{border-color:var(--line-strong);animation:tkScorePop .55s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0s) + .4s) both}
+.tk-divider-card.tk-final .tk-score-pill img{width:18px;height:18px}
+.tk-divider-card.tk-final .tk-score-pill b{font-size:14px}
+
+/* Verbundene Events */
+.tk-group{position:relative;display:flex;flex-direction:column;gap:7px}
+.tk-group-link{position:absolute;left:-26px;top:16px;bottom:14px;width:2px;border-radius:2px;background:linear-gradient(180deg,var(--red),var(--green));box-shadow:0 0 8px rgba(48,242,156,.3)}
 
 .spb-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
 

@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=17">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=18">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -240,33 +240,247 @@
 
         {# ══════════════════════════════ TICKER ══════════════════════════ #}
         <section class="panel" data-tab="ticker" hidden>
-            <section class="card ticker-card">
-                <div class="filter-row" id="tickerFilter">
-                    <button class="chip active" data-f="alle">Alle</button>
-                    <button class="chip" data-f="tore">Tore</button>
-                    <button class="chip" data-f="karten">Karten</button>
-                    <button class="chip" data-f="wechsel">Wechsel</button>
-                </div>
-                <div id="tickerFull" class="ticker-scroll">
-                    <div class="ev-row t-n" data-type="whistle">
-                        <span class="ev-ico">&#x25FC;</span><span class="ev-min">1'</span>
-                        <span class="ev-club neutral"><b>KO</b></span>
-                        <span class="ev-txt">Anpfiff &mdash; {{ report.home_club_name }} vs. {{ report.away_club_name }}</span>
-                        <span class="ev-score">0:0</span>
-                    </div>
-                    {% for evt in rc.combined_events %}
-                        {% include 'game/partials/_match_report_ev_row.html' with evt=evt report=report %}
-                    {% endfor %}
-                    <div class="ev-row t-n" data-type="whistle">
-                        <span class="ev-ico">&#x25FC;</span><span class="ev-min">90'</span>
-                        <span class="ev-club neutral"><b>SK</b></span>
-                        <span class="ev-txt">Abpfiff &mdash; Endstand {{ report.home_goals }}:{{ report.away_goals }}</span>
-                        <span class="ev-score">{{ report.home_goals }}:{{ report.away_goals }}</span>
-                    </div>
-                </div>
-                <div class="ticker-fade" id="tickerFade" hidden></div>
-                <button type="button" id="tickerScrollBtn" class="ticker-scroll-btn" aria-label="Weitere Ereignisse anzeigen" hidden>&#8595;</button>
-            </section>
+<!-- ── SVG-Sprite ─────────────────────────────────────────────────────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ball" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M12 8.4l3.1 2.3-1.2 3.6h-3.8L8.9 10.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 3.5v4.9M15.1 10.7l4.7-1.9M13.9 14.3l3.4 4.2M10.1 14.3l-3.4 4.2M8.9 10.7L4.2 8.8" stroke="currentColor" stroke-width="1.3"/></symbol>
+  <symbol id="i-ball-solid" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/><path d="M12 8.4l3.1 2.3-1.2 3.6h-3.8L8.9 10.7z" fill="currentColor"/></symbol>
+  <symbol id="i-karte" viewBox="0 0 24 24" fill="none"><rect x="8" y="4.5" width="8.5" height="13.5" rx="1.6" transform="rotate(9 12 12)" fill="currentColor"/></symbol>
+  <symbol id="i-wechsel" viewBox="0 0 24 24" fill="none"><g class="arrow-in"><path d="M5 8.2h10.5" stroke="#30f29c" stroke-width="2.2" stroke-linecap="round"/><path d="M12.7 5.4l2.8 2.8-2.8 2.8" stroke="#30f29c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g><g class="arrow-out"><path d="M19 15.8H8.5" stroke="#ff5570" stroke-width="2.2" stroke-linecap="round"/><path d="M11.3 13l-2.8 2.8 2.8 2.8" stroke="#ff5570" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g></symbol>
+  <symbol id="i-kreuz" viewBox="0 0 24 24" fill="none"><path d="M10.2 4.5h3.6v5.7h5.7v3.6h-5.7v5.7h-3.6v-5.7H4.5v-3.6h5.7z" fill="#ff5570"/></symbol>
+  <symbol id="i-ecke" viewBox="0 0 24 24" fill="none"><path d="M6.5 20.5v-16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M6.5 4.5l9 2.7-9 2.7z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 20.5h8.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-pfeife" viewBox="0 0 24 24" fill="none"><circle cx="9.5" cy="14" r="4.6" stroke="currentColor" stroke-width="1.9"/><path d="M9.5 9.4h5.8l5.2-1.6v3.5l-6.2 1.9" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-alu" viewBox="0 0 24 24" fill="none"><path d="M4 19.5V6.5h16v13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 13l5-4M14.5 13l-5-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-var" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.9"/><path d="M10.5 8.3l4 2.2-4 2.2z" fill="currentColor"/><path d="M9.5 20h5M12 16v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-elfmeter" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="4.2" stroke="currentColor" stroke-width="1.9"/><path d="M4.5 20c2.5-3.4 12.5-3.4 15 0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-abseits" viewBox="0 0 24 24" fill="none"><path d="M7 21V3.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M7 4.5h10l-2.5 3 2.5 3H7" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="none"><path d="M9 5v14M15 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="tk-wrap" id="ticker" data-flt="alle">
+
+  <!-- Filter-Chips -->
+  <div class="tk-chips">
+    <div class="tk-chip active" data-flt="alle">Alle</div>
+    <div class="tk-chip" data-flt="tore">Tore</div>
+    <div class="tk-chip" data-flt="karten">Karten</div>
+    <div class="tk-chip" data-flt="wechsel">Wechsel</div>
+    <span class="tk-context">Spielbericht &middot; Analyse nach Abpfiff</span>
+  </div>
+
+  <!-- Spielverlauf-Leiste -->
+  {% if rc.ticker_verlauf_markers %}
+  <div class="tk-verlauf">
+    <div class="tk-verlauf-head">
+      <span class="tk-label">Spielverlauf</span>
+      <div class="tk-legend">
+        <span><svg width="12" height="12" style="color:var(--cyan)"><use href="#i-ball-solid"/></svg>Tor Gegner</span>
+        <span><svg width="12" height="12" style="color:var(--green)"><use href="#i-ball-solid"/></svg>Dein Tor</span>
+        <span><span class="sw-gelb"></span>Gelb</span>
+        <span><span class="sw-rot"></span>Rot</span>
+        <span><svg width="12" height="12"><use href="#i-wechsel"/></svg>Wechsel</span>
+      </div>
+    </div>
+    <div class="tk-verlauf-body">
+      {% if rc.ticker_manager_side == 'home' %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+      {% elif rc.ticker_manager_side == 'away' %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest top" src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest bottom" src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+      {% else %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+      {% endif %}
+      <div class="tk-verlauf-track">
+        <div class="tk-baseline"></div>
+        <div class="tk-hz-tick"></div><span class="tk-hz-label">HZ</span>
+        <span class="tk-t-start">1'</span><span class="tk-t-end">90+'</span>
+        {% for m in rc.ticker_verlauf_markers %}
+        <a class="tk-marker {{ m.marker_class }} {{ m.lane }}{% if m.inner %} inner{% endif %}"
+           style="left:{{ m.left_pct }}%"
+           {% if m.event_id %}href="#{{ m.event_id }}"{% endif %}
+           title="{{ m.title }}">
+          {% if m.has_icon and m.icon %}<svg width="{% if m.marker_class == 'm-wechsel' %}10{% else %}11{% endif %}" height="{% if m.marker_class == 'm-wechsel' %}10{% else %}11{% endif %}"><use href="#{{ m.icon }}"/></svg>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Timeline -->
+  <div class="tk-timeline">
+    <div class="tk-spine"></div>
+    <div class="tk-events">
+
+      {% for evt in rc.combined_events %}
+
+      {% if evt.type == 'divider_anpfiff' %}
+      <div class="tk-row" style="--d:0.1s">
+        <div class="tk-node tk-node-big"><svg width="12" height="12"><use href="#i-pfeife"/></svg></div>
+        <div class="tk-divider-card">
+          <span class="tk-dlabel">Anpfiff</span><span class="tk-dmin">1'</span>
+          <div class="tk-dline"></div>
+          <span class="tk-dinfo">
+            {% if rc.ticker_manager_side == 'home' %}
+              {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+              {{ report.home_club_name }}<span class="tk-own-tag">Dein Verein</span>
+              <span class="tk-dvs">vs.</span>
+              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+            {% elif rc.ticker_manager_side == 'away' %}
+              {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+              {{ report.home_club_name }}<span class="tk-dvs">vs.</span>
+              {{ report.away_club_name }}<span class="tk-own-tag">Dein Verein</span>{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+            {% else %}
+              {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+              {{ report.home_club_name }}<span class="tk-dvs">vs.</span>
+              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% elif evt.type == 'divider_halbzeit' %}
+      <div class="tk-row" style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-node-big"><svg width="11" height="11"><use href="#i-pause"/></svg></div>
+        <div class="tk-divider-card">
+          <span class="tk-dlabel">Halbzeit</span><span class="tk-dmin">{{ evt.minute }}'</span>
+          <div class="tk-dline"></div>
+          <span class="tk-score-pill">
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+            <b>{{ evt.score_h }}:{{ evt.score_a }}</b>
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% elif evt.type == 'divider_abpfiff' %}
+      <div class="tk-row" style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-node-big tk-final"><svg width="12" height="12"><use href="#i-pfeife"/></svg></div>
+        <div class="tk-divider-card tk-final">
+          <span class="tk-dlabel">Abpfiff</span><span class="tk-dmin">{{ evt.minute }}'</span>
+          <div class="tk-dline"></div>
+          <span class="tk-dfaint">Endstand</span>
+          <span class="tk-score-pill">
+            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+            <b>{{ evt.score_h }}:{{ evt.score_a }}</b>
+            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% elif evt.type == 'goal' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-tor{% if evt.ticker_own %} own{% endif %}"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-node-goal"><svg width="16" height="16"><use href="#i-ball"/></svg></div>
+        <div class="tk-goal-card">
+          <div class="tk-sweep"></div>
+          <div class="tk-goal-head">
+            <span class="tk-min">{{ evt.minute }}'</span>
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{% endif %}
+            <span class="tk-name">{{ evt.scorer_name }}</span>
+            <span class="tk-badge tk-b-tor">TOR</span>
+            {% if evt.goal_label %}<span class="tk-badge tk-b-extra">{{ evt.goal_label|upper }}</span>{% endif %}
+            <span class="tk-score">{{ evt.score_h }}:{{ evt.score_a }}</span>
+          </div>
+          <p>{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% elif evt.type == 'card' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-karte{% if evt.card_type == 'rot' or evt.card_type == 'gelbrot' %} tk-flash-r{% else %} tk-flash-y{% endif %}"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        {% if evt.card_type == 'rot' or evt.card_type == 'gelbrot' %}
+        <div class="tk-node tk-c-red-glow"><svg width="10" height="10" class="tk-anim-card" style="color:var(--red)"><use href="#i-karte"/></svg></div>
+        {% else %}
+        <div class="tk-node tk-c-yellow"><svg width="10" height="10" class="tk-anim-card" style="color:var(--yellow)"><use href="#i-karte"/></svg></div>
+        {% endif %}
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          <p>{% if evt.card_type == 'rot' %}<span class="tk-tag tk-t-rot">ROTE KARTE</span>{% elif evt.card_type == 'gelbrot' %}<span class="tk-tag tk-t-rot">GELB-ROT</span>{% else %}<span class="tk-tag tk-t-gelb">GELBE KARTE</span>{% endif %} &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% elif evt.type == 'sub' or evt.type == 'gk_red_off' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-wechsel"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-c-green"><svg width="11" height="11"><use href="#i-wechsel"/></svg></div>
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          <p><span class="tk-tag tk-t-wechsel">WECHSEL</span> &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% elif evt.type == 'injury' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-wechsel"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-c-red"><svg width="9" height="9" class="tk-anim-injury"><use href="#i-kreuz"/></svg></div>
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          <p><span class="tk-tag tk-t-verletzung">VERLETZUNG</span> &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% else %}
+      {# Narrative: Ecke, Alu, Chance, Parade, Foul, Spielfluss, VAR, Elfmeter-Pfiff, Abseits #}
+      <div class="tk-row tk-ev" style="--d:{{ evt.ticker_delay|default:'0.3s' }}">
+        {% if evt.type == 'alu' or evt.type == 'near_miss' or evt.type == 'fk_cross_miss' or evt.type == 'fk_direct_miss' %}
+        <div class="tk-node tk-c-neutral"><svg width="11" height="11" style="color:rgba(244,251,255,.7)"><use href="#i-alu"/></svg></div>
+        {% elif evt.type == 'corner_miss' %}
+        <div class="tk-node tk-c-neutral"><svg width="11" height="11" style="color:rgba(244,251,255,.7)"><use href="#i-ecke"/></svg></div>
+        {% elif evt.type == 'var' %}
+        <div class="tk-node"><svg width="11" height="11" style="color:var(--cyan)"><use href="#i-var"/></svg></div>
+        {% elif evt.type == 'penalty' or evt.type == 'elfmeter_pfiff' %}
+        <div class="tk-node"><svg width="11" height="11" style="color:var(--cyan)"><use href="#i-elfmeter"/></svg></div>
+        {% elif evt.type == 'offside' %}
+        <div class="tk-node tk-c-yellow"><svg width="11" height="11" style="color:var(--yellow)"><use href="#i-abseits"/></svg></div>
+        {% else %}
+        <div class="tk-node tk-c-neutral"><svg width="8" height="8" style="color:rgba(244,251,255,.45)"><use href="#i-ball-solid"/></svg></div>
+        {% endif %}
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          {% if evt.team == 'home' or evt.team == 'away' %}
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          {% endif %}
+          <p>{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% endfor %}
+
+    </div>
+  </div>
+
+</div>
         </section>
 
         {# ══════════════════════════════ STATISTIK ═══════════════════════ #}
@@ -693,5 +907,5 @@
 </div>{# /report #}
 </section>{# /spb-report #}
 
-<script src="{% static 'game/js/match_report_v2.js' %}?v=4"></script>
+<script src="{% static 'game/js/match_report_v2.js' %}?v=5"></script>
 {% endblock %}
