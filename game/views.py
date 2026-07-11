@@ -4302,7 +4302,7 @@ def _enrich_ticker_events(combined_events, manager_side, home_goals=0, away_goal
             ticker_own=own, group_role=group_role[i],
         ))
 
-        left = round(minute / extra_time * 100, 2)
+        left = f"{minute / extra_time * 100:.2f}"  # Punkt als Dezimaltrennzeichen (CSS-kompatibel)
         own_lane = 'top' if own else 'bottom'
         if t == 'goal':
             verlauf_markers.append({
