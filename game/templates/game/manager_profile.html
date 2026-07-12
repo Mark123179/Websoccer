@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-80">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-81">
 {% endblock %}
 
 {% block content %}
@@ -761,7 +761,30 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
 
     /* ── Haupt-Render ── */
     function render() {
-        var range = getRange();
+        /* ── Alle Post-T0 Events für Kompakt-Breite + Saison-Filter ── */
+        var allPostT0 = (MP_TL_EVENTS||[]).filter(function(ev) {
+            if (!ev.title || !ev.date_iso) return false;
+            var ts = Date.parse(ev.date_iso);
+            return !isNaN(ts) && ts >= T0_MS;
+        });
+        var allTs = allPostT0.map(function(ev){ return Date.parse(ev.date_iso); }).sort(function(a,b){return a-b;});
+
+        /* ── Kompakte Zeitdomäne (Gesamtansicht): T0 → max(letzter Event, HEUTE) + 45 Tage ── */
+        var range;
+        if (zoomSeason) {
+            range = getRange();
+        } else {
+            var domainEnd = allTs.length
+                ? Math.max(allTs[allTs.length-1], today.getTime()) + 45*86400000
+                : today.getTime() + 90*86400000;
+            var spanDays  = (domainEnd - T0_MS) / 86400000;
+            /* Breite: genug für Karten-Anti-Kollision ODER proportional (min 900, max 2900) */
+            var minForCards = PAD_L + PAD_R + allPostT0.length * (CARD_W + GAP);
+            var propW       = PAD_L + PAD_R + Math.round(spanDays * 0.70);
+            var compactW    = Math.min(2900, Math.max(900, minForCards, propW));
+            range = { t0: T0_MS, t1: domainEnd, W: compactW };
+        }
+
         track.innerHTML = '';
         track.style.cssText = 'width:'+range.W+'px;height:'+TRACK_H+'px;position:relative;flex-shrink:0;';
 
@@ -803,7 +826,12 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
                 track.appendChild(mlbl);
             }
         } else {
+            /* Saison-Labels nur anzeigen wenn: Events in dieser Saison ODER HEUTE liegt darin */
             SEASONS.forEach(function(s) {
+                if (s.t1 < range.t0 || s.t0 > range.t1) return; /* außerhalb Domäne */
+                var hasEvent = allTs.some(function(ts){ return ts >= s.t0 && ts <= s.t1; });
+                var hasHeute = today.getTime() >= s.t0 && today.getTime() <= s.t1;
+                if (!hasEvent && !hasHeute) return; /* leere Saison überspringen */
                 var sx = X(s.mid, range);
                 var slbl = document.createElement('span');
                 slbl.textContent = s.label;
@@ -811,19 +839,19 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
                     'transform:translateX(-50%);font:700 10px/1.1 Inter,system-ui,sans-serif;'+
                     'letter-spacing:.01em;color:rgba(244,251,255,.5);white-space:nowrap;'+
                     'cursor:pointer;transition:color .15s;';
-                slbl.addEventListener('mouseenter', function() { slbl.style.color='#22e6ff'; });
-                slbl.addEventListener('mouseleave', function() { slbl.style.color='rgba(244,251,255,.5)'; });
-                slbl.addEventListener('click', function() { setZoom(s.label); });
+                (function(seasonLabel) {
+                    slbl.addEventListener('mouseenter', function() { slbl.style.color='#22e6ff'; });
+                    slbl.addEventListener('mouseleave', function() { slbl.style.color='rgba(244,251,255,.5)'; });
+                    slbl.addEventListener('click', function() { setZoom(seasonLabel); });
+                })(s.label);
                 track.appendChild(slbl);
             });
         }
 
-        /* Events filtern + sortieren (nur Events ab T0) */
-        var domainT0 = zoomSeason ? getRange().t0 : T0_MS;
-        var events = (MP_TL_EVENTS||[]).filter(function(ev) {
-            if (!ev.title || !ev.date_iso) return false;
+        /* Events filtern + sortieren (nur Events ab T0, innerhalb Domäne) */
+        var events = allPostT0.filter(function(ev) {
             var ts = Date.parse(ev.date_iso);
-            if (isNaN(ts) || ts < T0_MS) return false;
+            if (ts < range.t0 || ts > range.t1) return false;
             return activeFilter==='alle' || ev.type===activeFilter;
         }).slice().sort(function(a,b) {
             return Date.parse(a.date_iso) - Date.parse(b.date_iso);
@@ -852,9 +880,7 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
 
             /* Stiel */
             var stem = document.createElement('div');
-            var stemTop = isTop
-                ? 'bottom:50%;margin-bottom:0;'
-                : 'top:50%;margin-top:0;';
+            var stemTop = isTop ? 'bottom:50%;margin-bottom:0;' : 'top:50%;margin-top:0;';
             stem.style.cssText = 'position:absolute;left:'+(rawX+25)+'px;'+stemTop+
                 'width:2px;height:20px;background:'+C.dot+';opacity:.55;';
             track.appendChild(stem);
@@ -871,9 +897,7 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
 
             /* Karte */
             var card = document.createElement('div');
-            var cardTop = isTop
-                ? 'bottom:50%;margin-bottom:20px;'
-                : 'top:50%;margin-top:20px;';
+            var cardTop = isTop ? 'bottom:50%;margin-bottom:20px;' : 'top:50%;margin-top:20px;';
             card.style.cssText = 'position:absolute;left:'+rawX+'px;'+cardTop+
                 'width:'+CARD_W+'px;border-radius:8px;padding:10px 12px 12px;'+
                 'background:'+C.grad+';border:1px solid rgba(6,16,24,.16);'+

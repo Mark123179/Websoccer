@@ -443,7 +443,7 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 .mp-photo-map-bg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover; object-position: center;
+    object-fit: cover; object-position: 36% center;
     transition: width .4s ease, height .4s ease, left .4s ease, top .4s ease;
 }
 .mp-photo-marker {
