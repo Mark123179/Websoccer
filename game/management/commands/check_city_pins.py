@@ -145,6 +145,7 @@ _CITY_REF_LATLNG = {
     'luzern':                (47.05,   8.31),
     'st. gallen':            (47.42,   9.37),
     'winterthur':            (47.50,   8.72),
+    'fc winterthur':         (47.50,   8.72),
     'sion':                  (46.23,   7.36),
     # Scandinavia
     'kopenhagen':            (55.68,  12.57),
