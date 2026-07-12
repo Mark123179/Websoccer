@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-81">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-82">
 {% endblock %}
 
 {% block content %}
@@ -253,10 +253,10 @@
 <!-- ══════════════════════════════════════════════════════════════
      GRID REIHE 1 — 336px | 684px | 1fr
 ══════════════════════════════════════════════════════════════ -->
-<div class="mp-grid-r1">
+<div class="mp-profil-grid">
 
-    <!-- Spalte 1: Trophäen + Login -->
-    <div class="mp-grid-r1-col1">
+    <!-- Spalte 1: Trophäen + Login + Rekordbuch -->
+    <div class="mp-profil-col-left">
         <article class="mp-card2">
             <header class="mp-card2-header">
                 <h3>TROPHÄENSAMMLUNG</h3>
@@ -296,6 +296,18 @@
                 {% endfor %}
                 <span class="mp-login2-pip">14</span>
                 <span class="mp-login2-pip">30</span>
+            </div>
+        </article>
+
+        <article class="mp-card2">
+            <header class="mp-card2-header"><h3>REKORDBUCH</h3></header>
+            <div class="mp-records2-grid">
+                <div class="mp-record2"><span>HÖCHSTER SIEG</span><strong class="mp-s2-win">{{ records.highest_win }}</strong></div>
+                <div class="mp-record2"><span>MEISTE SIEGE IN FOLGE</span><strong>{{ records.wins_in_row }}</strong></div>
+                <div class="mp-record2"><span>HÖCHSTE NIEDERLAGE</span><strong class="mp-s2-loss">{{ records.highest_loss }}</strong></div>
+                <div class="mp-record2"><span>MEISTE TORE (SPIEL)</span><strong>{{ records.most_goals }}</strong></div>
+                <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_out }}</strong></div>
+                <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_in }}</strong></div>
             </div>
         </article>
     </div>
@@ -421,6 +433,8 @@
         {% endif %}
     </article>
 
+    <div class="mp-profil-col-right">
+
     <!-- Spalte 3: Statistik -->
     <article class="mp-card2 mp-stats2" id="mpStatsCard">
         <header class="mp-card2-header">
@@ -442,25 +456,6 @@
             <div class="mp-stat2-row"><span>Gegentore pro Spiel</span><strong id="mss-gapg">{{ club_stats.goals_against_per_game }}</strong></div>
             <div class="mp-stat2-row"><span>Siegesserie (max.)</span><strong id="mss-ws">{{ club_stats.win_streak }}</strong></div>
             <div class="mp-stat2-row"><span>Niederlagenserie (max.)</span><strong id="mss-ls">{{ club_stats.loss_streak }}</strong></div>
-        </div>
-    </article>
-
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════
-     GRID REIHE 2 — 1fr | 336px
-══════════════════════════════════════════════════════════════ -->
-<div class="mp-grid-r2">
-
-    <article class="mp-card2">
-        <header class="mp-card2-header"><h3>REKORDBUCH</h3></header>
-        <div class="mp-records2-grid">
-            <div class="mp-record2"><span>HÖCHSTER SIEG</span><strong class="mp-s2-win">{{ records.highest_win }}</strong></div>
-            <div class="mp-record2"><span>MEISTE SIEGE IN FOLGE</span><strong>{{ records.wins_in_row }}</strong></div>
-            <div class="mp-record2"><span>HÖCHSTE NIEDERLAGE</span><strong class="mp-s2-loss">{{ records.highest_loss }}</strong></div>
-            <div class="mp-record2"><span>MEISTE TORE (SPIEL)</span><strong>{{ records.most_goals }}</strong></div>
-            <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_out }}</strong></div>
-            <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_in }}</strong></div>
         </div>
     </article>
 
@@ -501,6 +496,8 @@
             {% endfor %}
         </div>
     </article>
+
+    </div>
 
 </div>
 

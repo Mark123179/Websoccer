@@ -379,12 +379,10 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-vbar-stat strong { font-size: 16px; font-weight: 700; color: rgba(244,251,255,.95); }
 .mp-vbar-gold { color: var(--mp-gold); }
 
-/* ─── GRID ROW 1 ─────────────────────────────────────────────── */
-.mp-grid-r1 { display: grid; grid-template-columns: 300px 1fr 280px; gap: 12px; align-items: start; }
-.mp-grid-r1-col1 { display: flex; flex-direction: column; gap: 12px; }
-
-/* ─── GRID ROW 2 ─────────────────────────────────────────────── */
-.mp-grid-r2 { display: grid; grid-template-columns: 1fr 300px; gap: 12px; align-items: start; }
+/* ─── PROFIL GRID (3 Spalten, unified) ───────────────────────── */
+.mp-profil-grid { display: grid; grid-template-columns: 200px 1fr 300px; gap: 12px; align-items: start; }
+.mp-profil-col-left  { display: flex; flex-direction: column; gap: 12px; }
+.mp-profil-col-right { display: flex; flex-direction: column; gap: 12px; }
 
 /* ─── CARD v2 ────────────────────────────────────────────────── */
 .mp-card2 { background: var(--mp-panel); border: 1px solid var(--mp-border); border-radius: var(--mp-r); padding: 14px; }
@@ -438,7 +436,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 /* Photo Map */
 .mp-photo-map {
-    position: relative; width: 100%; height: 300px;
+    position: relative; width: 100%; height: 380px;
     overflow: hidden; background: #021622;
 }
 .mp-photo-map-bg {
