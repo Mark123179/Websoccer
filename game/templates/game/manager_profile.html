@@ -3,1110 +3,1034 @@
 
 {% block body_class %}manager-profile-page{% endblock %}
 
-{% block title %}Manager · Kirschgutzje{% endblock %}
+{% block title %}Manager · {{ manager.name }}{% endblock %}
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-60">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-70">
 {% endblock %}
 
 {% block content %}
 <div class="mp-dashboard">
 
-    <header class="mp-header">
-        <div class="mp-header-identity">
+<!-- ══════════════════════════════════════════════════════════════
+     HEADER  —  Identity Left  +  KPI v2 Right
+══════════════════════════════════════════════════════════════ -->
+<header class="mp-header">
+    <div class="mp-header-identity">
+        <div class="mp-avatar-col">
             <div class="mp-avatar-wrap">
                 <img src="{{ manager.profile_image_url }}" alt="{{ manager.name }}" id="mpAvatarHeaderImg">
                 {% if can_edit_profile %}
                 <button class="mp-avatar-edit" id="mpAvatarEditBtn" title="Profilbild ändern" type="button">
-                    <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-                        <path d="M7 3L9 5" stroke="currentColor" stroke-width="1.4"/>
-                    </svg>
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"/><path d="M7 3L9 5"/></svg>
                 </button>
-                <button class="mp-avatar-reset" id="mpAvatarResetBtn" title="Standard-Avatar wiederherstellen" type="button"
+                <button class="mp-avatar-reset" id="mpAvatarResetBtn" title="Standard-Avatar" type="button"
                     {% if not manager.has_custom_avatar %}style="display:none"{% endif %}>
-                    <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    </svg>
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 2L10 10M10 2L2 10"/></svg>
                 </button>
                 {% endif %}
             </div>
-            <div class="mp-identity-block">
-                <div class="mp-name-row">
-                    <h1>{{ manager.name }}</h1>
-                </div>
-                <div class="mp-flag-row">
-                    {% if manager.flag_url %}
-                    <img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img">
-                    {% endif %}
-                    {% if manager.flag_name %}<span>{{ manager.flag_name }}</span>{% endif %}
-                </div>
-                <div class="mp-type-badge-row">
-                    <span class="mp-type-badge">{{ manager.active_type }}</span>
-                </div>
-                <a class="mp-club-row" href="{{ manager.club_url }}">
-                    {% if manager.club_crest %}<img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-club-crest">{% endif %}
-                    <div>
-                        <strong>{{ manager.club_name }}</strong>
-                        <small>Seit {{ manager.club_since }} ({{ manager.club_season }})</small>
-                        <small>Mitglied seit: {{ manager.member_since }}</small>
-                    </div>
-                </a>
-            </div>
+            {% if manager.club_crest %}
+            <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-header-crest" id="mpAvatarBadgeImg">
+            {% endif %}
         </div>
-
-        <div class="mp-kpi-bar">
-            <div class="mp-kpi mp-kpi-level">
-                <span class="mp-kpi-label">Managerlevel</span>
-                <strong class="mp-kpi-big mp-kpi-level-num">{{ manager.level }}</strong>
-                <div class="mp-xp-track"><div class="mp-xp-fill" style="width: {{ manager.xp_pct }}%;"></div></div>
-                <small class="mp-kpi-sub">{{ manager.xp_label }}</small>
+        <div class="mp-identity-block">
+            <h1 class="mp-manager-name">{{ manager.name }}</h1>
+            <div class="mp-flag-row">
+                {% if manager.flag_url %}<img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img" id="mpSidebarFlagImg">{% endif %}
+                {% if manager.flag_name %}<span>{{ manager.flag_name }}</span>{% endif %}
             </div>
-            <div class="mp-kpi">
-                <span class="mp-kpi-label">Highscore</span>
-                <strong class="mp-kpi-big mp-kpi-gold">{{ manager.highscore }}</strong>
-                <small class="mp-kpi-sub">{{ manager.highscore_rank }}</small>
-            </div>
-            <div class="mp-kpi mp-kpi-trophies">
-                <span class="mp-kpi-label">Trophäen</span>
-                <strong class="mp-kpi-big mp-kpi-trophy">{{ manager.trophies }}</strong>
-                <small class="mp-kpi-sub"><a href="?tab=profil">Alle ansehen</a></small>
-            </div>
-            <div class="mp-kpi">
-                <span class="mp-kpi-label">Spiele Gesamt</span>
-                <strong class="mp-kpi-big">{{ manager.games_total }}</strong>
-            </div>
-            <div class="mp-kpi mp-kpi-wide">
-                <span class="mp-kpi-label">Siegquote</span>
-                <strong class="mp-kpi-big">{{ manager.win_rate }}</strong>
-                <small class="mp-kpi-sub">{{ manager.win_rate_detail }}</small>
-            </div>
-            <div class="mp-kpi">
-                <span class="mp-kpi-label">Nicht aufgestellte Spiele</span>
-                <strong class="mp-kpi-big">{{ manager.not_fielded }}</strong>
-            </div>
-            <div class="mp-kpi">
-                <span class="mp-kpi-label">Transfersperre</span>
-                <strong class="mp-kpi-big">{{ manager.transfer_ban }}</strong>
-            </div>
-            <div class="mp-kpi">
-                <span class="mp-kpi-label">Letzte Anmeldung</span>
-                <strong class="mp-kpi-medium">{{ manager.last_login }}</strong>
-            </div>
-            <div class="mp-kpi">
-                <span class="mp-kpi-label">Registriert am</span>
-                <strong class="mp-kpi-medium">{{ manager.registered }}</strong>
-            </div>
+            <span class="mp-type-badge" id="mpSidebarRole">{{ manager.active_type }}</span>
+            <a class="mp-club-row" href="{{ manager.club_url }}">
+                <strong>{{ manager.club_name }}</strong>
+                <small>Seit {{ manager.club_since }} ({{ manager.club_season }})</small>
+                <small>Mitglied seit: {{ manager.member_since }}</small>
+            </a>
+            {% if can_edit_profile %}
+            <button class="mp-edit-profile-btn" type="button" data-open-edit-profile>
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"/><path d="M7 3L9 5"/></svg>
+                Profil bearbeiten
+            </button>
+            {% endif %}
         </div>
-    </header>
-
-    {% if not name_confirmed and can_edit_profile %}
-    <div class="mp-onboarding-banner" id="mpOnboardingBanner">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 7h.01"/></svg>
-        <span>Willkommen! Lege jetzt deinen <strong>Managernamen</strong> fest – er wird in der Sidebar und auf deinem Profil angezeigt.</span>
-        <button class="mp-onboarding-cta" type="button" data-open-edit-profile>Namen festlegen</button>
     </div>
-    {% endif %}
 
-    <nav class="mp-tabs" aria-label="Manager-Bereiche">
-        <a href="?tab=profil" class="mp-tab {% if tab == 'profil' %}is-active{% endif %}">
-            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-            Profil
-        </a>
-        <a href="?tab=einstellungen" class="mp-tab {% if tab == 'einstellungen' %}is-active{% endif %}">
-            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="2"/><path d="M9 1v2m0 12v2M1 9h2m12 0h2M3.2 3.2l1.4 1.4m8.8 8.8 1.4 1.4M3.2 14.8l1.4-1.4m8.8-8.8 1.4-1.4"/></svg>
-            Sicherheit &amp; Einstellungen
-        </a>
-    </nav>
+    <div class="mp-kpi-v2">
+        <!-- 1: Level -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2L3 4v4c0 3.5 2.2 6 5 7 2.8-1 5-3.5 5-7V4L8 2z"/></svg>
+                MANAGERLEVEL
+            </span>
+            <div class="mp-kpi-level-row">
+                <strong class="mp-kpi-level-box">{{ manager.level }}</strong>
+                <small>NÄCHSTES<br>LEVEL {{ manager.level|add:1 }}</small>
+            </div>
+            <div class="mp-xp-track"><div class="mp-xp-fill" style="width:{{ manager.xp_pct }}%"></div></div>
+            <small class="mp-kpi-sub">{{ manager.xp_label }}</small>
+        </div>
+        <!-- 2: Highscore -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="rgba(255,209,102,.85)"><path d="M8 2l1.5 3 3.2.5-2.3 2.2.5 3.3L8 9.5l-2.9 1.5.5-3.3-2.3-2.2 3.2-.5z"/></svg>
+                HIGHSCORE
+            </span>
+            <strong class="mp-kpi-big mp-kpi-gold">{{ manager.highscore }}</strong>
+            <small class="mp-kpi-sub">{{ manager.highscore_rank }}</small>
+        </div>
+        <!-- 3: Trophäen -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M4 3h8v3a4 4 0 0 1-8 0V3z"/><path d="M8 10v2M5 14h6M4 3H2v2a3 3 0 0 0 2.8 3M12 3h2v2a3 3 0 0 1-2.8 3"/></svg>
+                TROPHÄEN
+            </span>
+            <strong class="mp-kpi-big">{{ manager.trophies }}</strong>
+            <small class="mp-kpi-sub"><a href="?tab=profil">Alle ansehen</a></small>
+        </div>
+        <!-- 4: Spiele -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
+                SPIELE GESAMT
+            </span>
+            <strong class="mp-kpi-big">{{ manager.games_total }}</strong>
+        </div>
+        <!-- 5: Siegquote -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M2 12l4-5 3 3 3-5 4 4"/></svg>
+                SIEGQUOTE
+            </span>
+            <strong class="mp-kpi-big mp-kpi-green">{{ manager.win_rate }}</strong>
+            <div class="mp-win-bar">
+                <span style="width:{{ club_stats.win_pct }}%; background:#30f29c;"></span>
+                <span style="width:{{ club_stats.draw_pct }}%; background:rgba(244,251,255,.28);"></span>
+                <span style="width:{{ club_stats.loss_pct }}%; background:#ff5570;"></span>
+            </div>
+            <small class="mp-kpi-sub">{{ manager.win_rate_detail }}</small>
+        </div>
+        <!-- 6: Nicht aufgestellt -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,209,102,.85)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2.5L14.5 14h-13L8 2.5z"/><path d="M8 7v3M8 12.2v.01" stroke-linecap="round"/></svg>
+                NICHT AUFGESTELLT
+            </span>
+            <strong class="mp-kpi-big">{{ manager.not_fielded }}</strong>
+            <div class="mp-nf-pips">
+                <span class="mp-nf-pip is-used"></span>
+                <span class="mp-nf-pip"></span>
+                <span class="mp-nf-pip"></span>
+            </div>
+            <small class="mp-kpi-sub">ab 3: Transfersperre</small>
+        </div>
+        <!-- 7: Transfersperre -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>
+                TRANSFERSPERRE
+            </span>
+            {% if manager.transfer_ban == 'Keine' %}
+            <strong class="mp-kpi-ban-ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                Keine
+            </strong>
+            <small class="mp-kpi-sub">Konto in gutem Stand</small>
+            {% else %}
+            <strong class="mp-kpi-big mp-kpi-red">{{ manager.transfer_ban }}</strong>
+            {% endif %}
+        </div>
+        <!-- 8: Letzte Anmeldung -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
+                LETZTE ANMELDUNG
+            </span>
+            <strong class="mp-kpi-medium">{{ manager.last_login }}</strong>
+        </div>
+        <!-- 9: Registriert -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
+                REGISTRIERT AM
+            </span>
+            <strong class="mp-kpi-medium">{{ manager.registered }}</strong>
+            <small class="mp-kpi-sub">Gründungsmitglied</small>
+        </div>
+    </div>
+</header>
 
-    {% if tab == 'profil' %}
-    <section class="mp-tab-content">
+<!-- Onboarding Banner -->
+{% if not name_confirmed and can_edit_profile %}
+<div class="mp-onboarding-banner" id="mpOnboardingBanner">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 7h.01"/></svg>
+    <span>Willkommen! Lege jetzt deinen <strong>Managernamen</strong> fest.</span>
+    <button class="mp-onboarding-cta" type="button" data-open-edit-profile>Namen festlegen</button>
+</div>
+{% endif %}
 
-        <div class="mp-timeline-section">
-            <div class="mp-timeline-header">
-                <h2>Karriere Timeline</h2>
-                <div class="mp-timeline-filters" role="group" aria-label="Timeline filtern">
-                    {% for f in "ALLE,VEREIN,TITEL,FINALE,LIGA,TRANSFERS,PROFIL,STATUS"|split:"," %}
-                    <button type="button" class="mp-tl-filter {% if forloop.first %}is-active{% endif %}" data-filter="{{ f|lower }}">{{ f }}</button>
-                    {% endfor %}
+<!-- Tabs -->
+<nav class="mp-tabs" aria-label="Manager-Bereiche">
+    <a href="?tab=profil" class="mp-tab {% if tab == 'profil' %}is-active{% endif %}">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+        Profil
+    </a>
+    <a href="?tab=einstellungen" class="mp-tab {% if tab == 'einstellungen' %}is-active{% endif %}">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="2"/><path d="M9 1v2m0 12v2M1 9h2m12 0h2M3.2 3.2l1.4 1.4m8.8 8.8 1.4 1.4M3.2 14.8l1.4-1.4m8.8-8.8 1.4-1.4"/></svg>
+        Sicherheit &amp; Einstellungen
+    </a>
+</nav>
+
+{% if tab == 'profil' %}
+<section class="mp-tab-content">
+
+<!-- ══════════════════════════════════════════════════════════════
+     KARRIERE TIMELINE v2
+══════════════════════════════════════════════════════════════ -->
+<div class="mp-tl2">
+    <div class="mp-tl2-header">
+        <h2 class="mp-tl2-heading">KARRIERE TIMELINE</h2>
+        <div class="mp-tl2-filters" id="mpTl2Filters">
+            <button class="mp-tl2-filter is-active" data-filter="alle">ALLE</button>
+            <button class="mp-tl2-filter" data-filter="verein">VEREIN</button>
+            <button class="mp-tl2-filter" data-filter="titel">TITEL</button>
+            <button class="mp-tl2-filter" data-filter="finale">FINALE</button>
+            <button class="mp-tl2-filter" data-filter="transfers">TRANSFERS</button>
+            <button class="mp-tl2-filter" data-filter="jugend">JUGEND</button>
+            <button class="mp-tl2-filter" data-filter="status">STATUS</button>
+        </div>
+        <div class="mp-tl2-actions">
+            <button class="mp-tl2-einreichen" id="mpTl2Einreichen" type="button">EINTRAG EINREICHEN</button>
+            {% if request.user.is_superuser %}
+            <span class="mp-tl2-admin-badge">ADMIN</span>
+            <button class="mp-tl2-antraege" id="mpTl2Antraege" type="button">ANTRÄGE</button>
+            <button class="mp-tl2-manuell" id="mpTl2Manuell" type="button">+ EREIGNIS</button>
+            {% endif %}
+            <button class="mp-tl2-nav-btn" id="mpTl2NavL" aria-label="Zurück">‹</button>
+            <button class="mp-tl2-nav-btn" id="mpTl2NavR" aria-label="Weiter">›</button>
+            <button class="mp-tl2-today-btn" id="mpTl2Today">HEUTE</button>
+        </div>
+    </div>
+    <div class="mp-tl2-scroll" id="mpTl2Scroll">
+        <div class="mp-tl2-track" id="mpTl2Track"></div>
+    </div>
+    <div class="mp-tl2-farbcode">
+        <span class="mp-tl2-fc-label">FARBCODE</span>
+        <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#ffd166;"></span>Titel · Historie</span>
+        <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#22e6ff;"></span>Verein · Liga</span>
+        <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#30f29c;"></span>Jugend · Aktuelles Amt</span>
+        <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#ff5570;"></span>Finale verloren · Entlassung</span>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     VEREINS-LEISTE
+══════════════════════════════════════════════════════════════ -->
+<div class="mp-vbar" id="mpVbar">
+    <div class="mp-vbar-crest" id="mpVbarCrest"></div>
+    <div class="mp-vbar-info">
+        <div class="mp-vbar-toggle-wrap">
+            <button class="mp-vbar-toggle" id="mpVbarToggle" type="button">
+                <span class="mp-vbar-name" id="mpVbarName">–</span>
+                <svg class="mp-vbar-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+            </button>
+            <small class="mp-vbar-period" id="mpVbarPeriod"></small>
+        </div>
+        <div class="mp-vbar-dropdown" id="mpVbarDropdown" aria-hidden="true">
+            <p class="mp-vbar-dropdown-label">DEINE TRAINERSTATIONEN</p>
+            <div id="mpVbarDropdownList"></div>
+        </div>
+    </div>
+    <div class="mp-vbar-stats">
+        <div class="mp-vbar-stat"><span>ZEIT ALS TRAINER</span><strong id="mpVbarZeit">–</strong></div>
+        <div class="mp-vbar-stat"><span>SPIELE GESAMT</span><strong id="mpVbarSpiele">0</strong></div>
+        <div class="mp-vbar-stat"><span>TITEL GEWONNEN</span><strong class="mp-vbar-gold" id="mpVbarTitel">0</strong></div>
+        <div class="mp-vbar-stat"><span>FINALE VERLOREN</span><strong id="mpVbarFinale">0</strong></div>
+        <div class="mp-vbar-stat"><span>BESTE PLATZIERUNG</span><strong id="mpVbarPlatz">–</strong></div>
+        <div class="mp-vbar-stat"><span>PUNKTE / SPIEL</span><strong id="mpVbarPps">0,00</strong></div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     GRID REIHE 1 — 336px | 684px | 1fr
+══════════════════════════════════════════════════════════════ -->
+<div class="mp-grid-r1">
+
+    <!-- Spalte 1: Trophäen + Login -->
+    <div class="mp-grid-r1-col1">
+        <article class="mp-card2">
+            <header class="mp-card2-header">
+                <h3>TROPHÄENSAMMLUNG</h3>
+                <a href="?tab=profil">Alle ansehen</a>
+            </header>
+            {% if trophies_list %}
+            <div class="mp-trophies2-grid">
+                {% for trophy in trophies_list %}
+                <div class="mp-trophy2-slot">
+                    <img src="{% static trophy.icon %}" alt="{{ trophy.name }}">
+                    <span class="mp-trophy2-count">{{ trophy.count }}×</span>
+                    <small>{{ trophy.name }}</small>
                 </div>
-                <div class="mp-timeline-nav">
-                    <button type="button" class="mp-tl-nav-btn" aria-label="Zurück">&#8249;</button>
-                    <button type="button" class="mp-tl-nav-btn" aria-label="Weiter">&#8250;</button>
-                    <button type="button" class="mp-tl-today-btn">HEUTE</button>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="mp-card2-empty">Noch keine Trophäen.</p>
+            {% endif %}
+        </article>
+
+        <article class="mp-card2 mp-login2">
+            <header class="mp-card2-header">
+                <h3>LOGIN BELOHNUNGEN</h3>
+            </header>
+            <div class="mp-login2-reward">
+                <span class="mp-login2-check">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                </span>
+                <div>
+                    <strong>+{{ login_points_today }} <small>+1 Bonus</small></strong>
+                    <small>Streak: {{ login_streak }} Tage · nächste Belohnung in {{ next_reward_days }} Tagen</small>
                 </div>
             </div>
+            <div class="mp-login2-track">
+                {% for i in "1234567"|make_list %}
+                <span class="mp-login2-pip{% if forloop.counter <= login_streak %} is-done{% elif forloop.counter == login_streak|add:1 %} is-next{% endif %}">{{ forloop.counter }}</span>
+                {% endfor %}
+                <span class="mp-login2-pip">14</span>
+                <span class="mp-login2-pip">30</span>
+            </div>
+        </article>
+    </div>
 
-            <div class="mp-timeline-scroll" data-timeline-scroll>
-                <div class="mp-timeline-events" data-timeline-events>
-                    {% for event in timeline_events %}
-                    <div class="mp-tl-event is-{{ event.tone }}" data-type="{{ event.type }}">
-                        <div class="mp-tl-card">
-                            <time class="mp-tl-date">{{ event.date }}</time>
-                            <strong class="mp-tl-title">{{ event.title }}</strong>
-                            <p class="mp-tl-body">{{ event.body }}</p>
-                            {% if event.crest %}
-                            <img class="mp-tl-crest" src="{% static event.crest %}" alt="">
-                            {% endif %}
-                            <div class="mp-tl-icon is-{{ event.icon }}">
-                                {% if event.icon == 'trophy' %}
-                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M5 2v4a5 5 0 0 0 10 0V2H5zm5 13a3 3 0 0 1-3-3h6a3 3 0 0 1-3 3zm-1 1h2v2H9v-2z"/></svg>
-                                {% elif event.icon == 'join' %}
-                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                                {% elif event.icon == 'cup' %}
-                                <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 14a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm-1 2h2v2H9v-2zm-3 2h8v2H6v-2z"/></svg>
-                                {% elif event.icon == 'transfer' %}
-                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h12M4 13h12"/><path d="M14 4l3 3-3 3M6 16l-3-3 3-3"/></svg>
-                                {% elif event.icon == 'profile' %}
-                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                                {% else %}
-                                <svg viewBox="0 0 20 20" fill="currentColor"><rect x="3" y="4" width="14" height="13" rx="1.5"/><path d="M3 8h14" fill="none" stroke="white" stroke-width="1.5"/></svg>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <div class="mp-timeline-axis">
-                    <div class="mp-tl-axis-line"></div>
-                    <div class="mp-tl-axis-labels">
-                        <span>Jul. 2023</span>
-                        <span>2023/24</span>
-                        <span>2024/25</span>
-                        <span>2025/26</span>
-                        <span class="mp-tl-today-marker">HEUTE</span>
+    <!-- Spalte 2: Europa-Karte -->
+    <article class="mp-card2 mp-card2-map">
+        <header class="mp-card2-header">
+            <h3>TRAINERSTATIONEN · EUROPA</h3>
+            {% if can_edit_profile %}
+            <button class="mp-btn mp-btn-ghost mp-stations-edit-toggle" id="mpStationEditToggle" type="button">Bearbeiten</button>
+            {% endif %}
+        </header>
+        <div class="mp-photo-map" id="mpPhotoMap">
+            <img class="mp-photo-map-bg" id="mpPhotoMapBg" src="{% static 'game/images/backgrounds/europe-night.png' %}" alt="Europa Karte">
+            {% for m in photo_map_markers %}
+            <div class="mp-photo-marker{% if m.is_active %} is-active{% endif %}"
+                 tabindex="0"
+                 role="button"
+                 data-x="{{ m.x_pct }}" data-y="{{ m.y_pct }}"
+                 data-station-key="{{ m.station_key|default:'' }}"
+                 data-club="{{ m.club }}"
+                 data-city="{{ m.city }}"
+                 data-crest="{{ m.crest_url }}"
+                 data-active="{% if m.is_active %}1{% else %}0{% endif %}"
+                 style="left:{{ m.x_pct }}%;top:{{ m.y_pct }}%">
+                <img class="mp-photo-marker-crest" src="{{ m.crest_url }}" alt="{{ m.club }}">
+                <span class="mp-photo-marker-label">{{ m.city }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Station Panel (map click → fills this) -->
+        <div class="mp-station-panel" id="mpStationPanel" aria-hidden="true">
+            <div class="mp-station-panel-header">
+                <div class="mp-station-panel-identity">
+                    <img class="mp-station-panel-crest" src="" alt="">
+                    <div>
+                        <strong class="mp-station-panel-club"></strong>
+                        <span class="mp-station-panel-location"></span>
                     </div>
                 </div>
+                <div class="mp-station-panel-meta">
+                    <span class="mp-station-panel-period"></span>
+                    <a class="mp-station-panel-link" href="#">Vereinsprofil öffnen ›</a>
+                </div>
+                <button class="mp-station-panel-close" id="mpStationPanelClose" aria-label="Schließen">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+                </button>
+            </div>
+            <div class="mp-station-panel-body">
+                <div class="mp-station-panel-totals">
+                    <div>
+                        <strong class="mp-station-panel-total-games"></strong>
+                        <span>Spiele gesamt</span>
+                    </div>
+                    <div>
+                        <strong class="mp-station-panel-total-titles"></strong>
+                        <span>Titel gewonnen</span>
+                    </div>
+                </div>
+                <div class="mp-station-panel-seasons" id="mpStationPanelSeasons"></div>
             </div>
         </div>
 
-        <div class="mp-current-club-bar">
-            <a class="mp-ccb-crest-link" href="{{ current_club_summary.url }}">
-                {% if current_club_summary.crest %}
-                    <img src="{% static current_club_summary.crest %}" alt="{{ current_club_summary.name }}">
-                {% else %}
-                    <svg class="mp-ccb-no-crest" viewBox="0 0 40 46" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 2L4 8v14c0 10 7.2 19.3 16 22 8.8-2.7 16-12 16-22V8L20 2z" stroke="rgba(255,255,255,0.25)" stroke-width="2" fill="rgba(255,255,255,0.05)"/>
-                        <path d="M14 23l4 4 8-8" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                {% endif %}
-            </a>
-            <div class="mp-ccb-info">
-                <strong>{{ current_club_summary.name }}</strong>
-                <small>Zeitraum: {{ current_club_summary.period }}</small>
+        {% if can_edit_profile %}
+        <!-- Career Edit Drawer -->
+        <div class="mp-career-edit-drawer" id="mpCareerEditDrawer" aria-hidden="true">
+            <div class="mp-career-edit-header">
+                <strong>Karrierestationen bearbeiten</strong>
+                <button class="mp-career-edit-close" id="mpCareerEditClose" aria-label="Schließen">
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
+                </button>
             </div>
-            <a href="{{ current_club_summary.url }}" class="mp-ccb-switch-btn">
-                VEREIN WECHSELN
-                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 6h8m-3-3 3 3-3 3"/></svg>
-            </a>
-            <div class="mp-ccb-stats">
-                <div>
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
-                    <span>Zeit als Trainer</span>
-                    <strong>{{ current_club_summary.time_label }}</strong>
+            <div class="mp-career-edit-list" id="mpCareerEditList">
+                {% for station in map_stations %}
+                <div class="mp-career-edit-row" data-station-id="{{ station.id }}">
+                    <div class="mp-career-edit-row-info">
+                        <strong>{{ station.club }}</strong>
+                        <small>{{ station.city }}, {{ station.country }}{% if station.started_year %} · {{ station.started_year }}–{% if station.ended_year %}{{ station.ended_year }}{% else %}heute{% endif %}{% endif %}</small>
+                    </div>
+                    <div class="mp-career-edit-row-actions">
+                        <button class="mp-btn mp-btn-secondary mp-career-edit-btn" type="button"
+                                data-station-id="{{ station.id }}" data-club="{{ station.club }}"
+                                data-city="{{ station.city }}" data-country="{{ station.country }}"
+                                data-started="{{ station.started_year }}" data-ended="{{ station.ended_year }}"
+                                data-games="{{ station.games }}" data-x="{{ station.x }}" data-y="{{ station.y }}">Bearbeiten</button>
+                        <button class="mp-btn mp-btn-danger mp-career-delete-btn" type="button" data-station-id="{{ station.id }}">Löschen</button>
+                    </div>
                 </div>
-                <div>
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M6 8h4M8 6v4"/></svg>
-                    <span>Spiele Gesamt</span>
-                    <strong>{{ current_club_summary.games }}</strong>
+                {% empty %}
+                <p class="mp-career-edit-empty">Noch keine Stationen eingetragen.</p>
+                {% endfor %}
+            </div>
+            <button class="mp-btn mp-btn-ghost mp-career-add-btn" id="mpCareerAddBtn" type="button">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
+                Station hinzufügen
+            </button>
+            <div class="mp-career-form" id="mpCareerForm" aria-hidden="true">
+                <div class="mp-career-form-header"><strong id="mpCareerFormTitle">Neue Station</strong></div>
+                <input type="hidden" id="mpCareerFormStationId" value="">
+                <div class="mp-career-form-grid">
+                    <label class="mp-edit-label"><span>Vereinsname *</span><input type="text" class="mp-edit-input" id="mpCareerClubName" placeholder="z.B. FC Bayern München" autocomplete="off"></label>
+                    <label class="mp-edit-label"><span>Stadt *</span><div style="position:relative"><input type="text" class="mp-edit-input" id="mpCareerCityName" placeholder="z.B. München" autocomplete="off"><div class="mp-city-suggestions" id="mpCitySuggestions"></div></div></label>
+                    <label class="mp-edit-label"><span>Land</span><input type="text" class="mp-edit-input" id="mpCareerCityCountry" placeholder="z.B. Deutschland" autocomplete="off"></label>
+                    <div class="mp-career-form-row">
+                        <label class="mp-edit-label"><span>Von (Jahr)</span><input type="number" class="mp-edit-input" id="mpCareerStartYear" placeholder="2020" min="1900" max="2100"></label>
+                        <label class="mp-edit-label"><span>Bis (leer = heute)</span><input type="number" class="mp-edit-input" id="mpCareerEndYear" placeholder="heute" min="1900" max="2100"></label>
+                    </div>
+                    <label class="mp-edit-label"><span>Spiele</span><input type="number" class="mp-edit-input" id="mpCareerGames" placeholder="0" min="0"></label>
                 </div>
-                <div>
-                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l1.5 3 3.2.5-2.3 2.2.5 3.3L8 9.5l-2.9 1.5.5-3.3-2.3-2.2 3.2-.5z"/></svg>
-                    <span>Titel gewonnen</span>
-                    <strong>{{ current_club_summary.titles }}</strong>
+                <input type="hidden" id="mpCareerMapX" value="271">
+                <input type="hidden" id="mpCareerMapY" value="214">
+                <div class="mp-career-form-hint" id="mpCareerCoordHint"></div>
+                <div class="mp-edit-modal-actions">
+                    <button class="mp-btn mp-btn-ghost" type="button" id="mpCareerFormCancel">Abbrechen</button>
+                    <button class="mp-btn mp-btn-primary" type="button" id="mpCareerFormSave" style="width:auto">Speichern</button>
                 </div>
-                <div>
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 2v5a4 4 0 0 0 8 0V2"/><path d="M2 2h12"/></svg>
-                    <span>Finale verloren</span>
-                    <strong>{{ current_club_summary.finals_lost }}</strong>
-                </div>
-                <div>
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 12l4-5 3 3 3-5 4 4"/></svg>
-                    <span>Beste Platzierung</span>
-                    <strong>{{ current_club_summary.best_position }}</strong>
-                </div>
-                <div>
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 2v2m0 8v2M2 8h2m8 0h2"/></svg>
-                    <span>Punkte/Spiel</span>
-                    <strong>{{ current_club_summary.points_per_game }}</strong>
-                </div>
+                <div class="mp-career-form-error" id="mpCareerFormError" style="display:none"></div>
             </div>
         </div>
+        {% endif %}
+    </article>
 
-        <div class="mp-profile-grid">
+    <!-- Spalte 3: Statistik -->
+    <article class="mp-card2 mp-stats2" id="mpStatsCard">
+        <header class="mp-card2-header">
+            <h3 id="mpStatsTitle">STATISTIK</h3>
+            <a href="#">Details</a>
+        </header>
+        <div class="mp-stats2-rows">
+            <div class="mp-stat2-row"><span>Spiele gesamt</span><strong id="mss-games">{{ club_stats.games }}</strong></div>
+            <div class="mp-stat2-row"><span>Siege</span><strong class="mp-s2-win" id="mss-wins">{{ club_stats.wins }} ({{ club_stats.win_pct }}%)</strong></div>
+            <div class="mp-stat2-row"><span>Unentschieden</span><strong id="mss-draws">{{ club_stats.draws }} ({{ club_stats.draw_pct }}%)</strong></div>
+            <div class="mp-stat2-row"><span>Niederlagen</span><strong class="mp-s2-loss" id="mss-losses">{{ club_stats.losses }} ({{ club_stats.loss_pct }}%)</strong></div>
+            <div class="mp-stat2-row"><span>Tore</span><strong id="mss-goals">{{ club_stats.goals }}</strong></div>
+            <div class="mp-stat2-row"><span>Gegentore</span><strong id="mss-ga">{{ club_stats.goals_against }}</strong></div>
+            <div class="mp-stat2-sep"></div>
+            <div class="mp-stat2-row"><span>Punkte</span><strong class="mp-s2-cyan" id="mss-pts">{{ club_stats.points }}</strong></div>
+            <div class="mp-stat2-row"><span>Punkte pro Spiel</span><strong id="mss-ppg">{{ club_stats.points_per_game }}</strong></div>
+            <div class="mp-stat2-row"><span>Tore pro Spiel</span><strong id="mss-gpg">{{ club_stats.goals_per_game }}</strong></div>
+            <div class="mp-stat2-row"><span>Gegentore pro Spiel</span><strong id="mss-gapg">{{ club_stats.goals_against_per_game }}</strong></div>
+            <div class="mp-stat2-row"><span>Siegesserie (max.)</span><strong id="mss-ws">{{ club_stats.win_streak }}</strong></div>
+            <div class="mp-stat2-row"><span>Niederlagenserie (max.)</span><strong id="mss-ls">{{ club_stats.loss_streak }}</strong></div>
+        </div>
+    </article>
 
-            <article class="mp-card mp-card-trophies">
-                <header class="mp-card-header">
-                    <h3>Trophäensammlung</h3>
-                    <a href="#" class="mp-card-link">Alle ansehen ▾</a>
-                </header>
-                <div class="mp-trophies-row">
-                    {% for trophy in trophies_list %}
-                    <div class="mp-trophy-slot">
-                        <img src="{% static trophy.icon %}" alt="{{ trophy.name }}">
-                        {% if trophy.count > 1 %}<span class="mp-trophy-count">{{ trophy.count }}x</span>{% endif %}
-                        <small>{{ trophy.name }}</small>
-                    </div>
-                    {% endfor %}
-                </div>
-            </article>
+</div>
 
-            <article class="mp-card mp-card-login">
-                <h3>Login Belohnungen</h3>
-                <div class="mp-login-grid">
-                    <div class="mp-login-col">
-                        <span class="mp-login-label">Täglicher Login</span>
-                        <div class="mp-login-check">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
-                        </div>
-                    </div>
-                    <div class="mp-login-col">
-                        <span class="mp-login-label">Login Streak</span>
-                        <span class="mp-login-streak-label">{{ login_streak }} Tage</span>
-                        <strong class="mp-login-points">+{{ login_points_today }}</strong>
-                        <small>+1 Bonus</small>
-                    </div>
-                    <div class="mp-login-col">
-                        <span class="mp-login-label">Nächste Belohnung</span>
-                        <span class="mp-login-next-days">in {{ next_reward_days }} Tagen</span>
-                        <div class="mp-login-reward-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
-                        </div>
-                    </div>
-                </div>
-                <div class="mp-login-track">
-                    {% for i in "1234567"|make_list %}
-                    <div class="mp-login-pip {% if forloop.counter <= login_streak %}is-done{% endif %}">{{ forloop.counter }}</div>
-                    {% endfor %}
-                    <div class="mp-login-pip">14</div>
-                    <div class="mp-login-pip">30</div>
-                </div>
-            </article>
+<!-- ══════════════════════════════════════════════════════════════
+     GRID REIHE 2 — 1fr | 336px
+══════════════════════════════════════════════════════════════ -->
+<div class="mp-grid-r2">
 
-            <article class="mp-card mp-card-stats">
-                <header class="mp-card-header">
-                    <h3>Statistik ({{ current_club_summary.name }})</h3>
-                    <a href="#" class="mp-card-link">Detaillierte Statistiken</a>
-                </header>
-                <div class="mp-stats-grid">
-                    <div class="mp-stat-row"><span>Spiele gesamt</span><strong>{{ club_stats.games }}</strong></div>
-                    <div class="mp-stat-row"><span>Siege</span><strong>{{ club_stats.wins }} ({{ club_stats.win_pct }}%)</strong></div>
-                    <div class="mp-stat-row"><span>Unentschieden</span><strong>{{ club_stats.draws }} ({{ club_stats.draw_pct }}%)</strong></div>
-                    <div class="mp-stat-row"><span>Niederlagen</span><strong>{{ club_stats.losses }} ({{ club_stats.loss_pct }}%)</strong></div>
-                    <div class="mp-stat-row"><span>Tore</span><strong>{{ club_stats.goals }}</strong></div>
-                    <div class="mp-stat-row"><span>Gegentore</span><strong>{{ club_stats.goals_against }}</strong></div>
-                    <div class="mp-stat-sep"></div>
-                    <div class="mp-stat-row is-right"><span>Punkte</span><strong>{{ club_stats.points }}</strong></div>
-                    <div class="mp-stat-row is-right"><span>Punkte pro Spiel</span><strong>{{ club_stats.points_per_game }}</strong></div>
-                    <div class="mp-stat-row is-right"><span>Tore pro Spiel</span><strong>{{ club_stats.goals_per_game }}</strong></div>
-                    <div class="mp-stat-row is-right"><span>Gegentore pro Spiel</span><strong>{{ club_stats.goals_against_per_game }}</strong></div>
-                    <div class="mp-stat-row is-right"><span>Siegesserie (max.)</span><strong>{{ club_stats.win_streak }}</strong></div>
-                    <div class="mp-stat-row is-right"><span>Niederlagenserie (max.)</span><strong>{{ club_stats.loss_streak }}</strong></div>
-                </div>
-            </article>
+    <article class="mp-card2">
+        <header class="mp-card2-header"><h3>REKORDBUCH</h3></header>
+        <div class="mp-records2-grid">
+            <div class="mp-record2"><span>HÖCHSTER SIEG</span><strong class="mp-s2-win">{{ records.highest_win }}</strong></div>
+            <div class="mp-record2"><span>MEISTE SIEGE IN FOLGE</span><strong>{{ records.wins_in_row }}</strong></div>
+            <div class="mp-record2"><span>HÖCHSTE NIEDERLAGE</span><strong class="mp-s2-loss">{{ records.highest_loss }}</strong></div>
+            <div class="mp-record2"><span>MEISTE TORE (SPIEL)</span><strong>{{ records.most_goals }}</strong></div>
+            <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_out }}</strong></div>
+            <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_in }}</strong></div>
+        </div>
+    </article>
 
-            <article class="mp-card mp-card-records">
-                <h3>Rekordbuch</h3>
-                <div class="mp-records-grid">
-                    <div class="mp-record-row">
-                        <span>Höchster Sieg</span><strong>{{ records.highest_win }}</strong>
-                    </div>
-                    <div class="mp-record-row">
-                        <span>Meiste Siege in Folge</span><strong>{{ records.wins_in_row }}</strong>
-                    </div>
-                    <div class="mp-record-row">
-                        <span>Höchste Niederlage</span><strong>{{ records.highest_loss }}</strong>
-                    </div>
-                    <div class="mp-record-row">
-                        <span>Meiste Tore in einem Spiel</span><strong>{{ records.most_goals }}</strong>
-                    </div>
-                    <div class="mp-record-row">
-                        <span>Teuerster Transfer (Ausgabe)</span><strong>{{ records.transfer_out }}</strong>
-                    </div>
-                    <div class="mp-record-row">
-                        <span>Teuerster Transfer (Einnahme)</span><strong>{{ records.transfer_in }}</strong>
-                    </div>
-                </div>
-            </article>
+    <article class="mp-card2 mp-badges2">
+        <header class="mp-card2-header">
+            <h3>BADGES &amp; AUSZEICHNUNGEN</h3>
+            <a href="?tab=auszeichnungen">Alle ansehen</a>
+        </header>
+        <p class="mp-badges2-lbl">DIREKT WÄHLBAR</p>
+        <div class="mp-types2-grid">
+            {% for t in trainer_types_selectable %}
+            <form method="post" action="{% url 'set_trainer_type' %}">
+                {% csrf_token %}
+                <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
+                <button type="submit" class="mp-type2-tile{% if t.active %} is-active{% endif %}">{{ t.label }}</button>
+            </form>
+            {% endfor %}
+        </div>
+        <p class="mp-badges2-lbl" style="margin-top:12px;">FREISCHALTBARE TITEL</p>
+        <div class="mp-unlock2-list">
+            {% for t in trainer_types_unlockable %}
+            {% if t.unlocked %}
+            <form method="post" action="{% url 'set_trainer_type' %}">
+                {% csrf_token %}
+                <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
+                <button type="submit" class="mp-unlock2 is-unlocked">
+                    <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span class="mp-unlock2-check">✓</span></div>
+                    <small>{{ t.condition }}</small>
+                </button>
+            </form>
+            {% else %}
+            <div class="mp-unlock2">
+                <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span class="mp-unlock2-prog">{{ t.progress }}/{{ t.max }}</span></div>
+                <small>{{ t.condition }}</small>
+                <div class="mp-unlock2-bar"><div class="mp-unlock2-fill" style="width:{% widthratio t.progress t.max 100 %}%"></div></div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </article>
 
-            <article class="mp-card mp-card-euromap">
-                <header class="mp-card-header">
-                    <h3>Trainerstationen · Europa</h3>
-                </header>
-                <div class="mp-photo-map" id="mpPhotoMap">
-                    <img class="mp-photo-map-bg" id="mpPhotoMapBg" src="{% static 'game/images/backgrounds/europe-night.png' %}" alt="Europa Karte">
-                    {% for m in photo_map_markers %}
-                    <div class="mp-photo-marker{% if m.is_active %} is-active{% endif %}"
-                         data-x="{{ m.x_pct }}" data-y="{{ m.y_pct }}"
-                         style="left:{{ m.x_pct }}%;top:{{ m.y_pct }}%">
-                        <img class="mp-photo-marker-crest" src="{{ m.crest_url }}" alt="{{ m.club }}">
-                        <img class="mp-photo-marker-ring" src="{% static 'game/images/icons/marker-ring.svg' %}" alt="">
-                        <span class="mp-photo-marker-label">{{ m.city }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
+</div>
 
-                <div class="mp-station-panel" id="mpStationPanel" aria-hidden="true">
-                    <div class="mp-station-panel-header">
-                        <div class="mp-station-panel-identity">
-                            <img class="mp-station-panel-crest" src="" alt="">
-                            <div>
-                                <strong class="mp-station-panel-club"></strong>
-                                <span class="mp-station-panel-location"></span>
-                            </div>
-                        </div>
-                        <div class="mp-station-panel-meta">
-                            <span class="mp-station-panel-period"></span>
-                            <a class="mp-station-panel-link" href="#">Vereinsprofil öffnen ›</a>
-                        </div>
-                        <button class="mp-station-panel-close" id="mpStationPanelClose" aria-label="Schließen">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-                        </button>
-                    </div>
-                    <div class="mp-station-panel-body">
-                        <div class="mp-station-panel-totals">
-                            <div>
-                                <strong class="mp-station-panel-total-games"></strong>
-                                <span>Spiele gesamt</span>
-                            </div>
-                            <div>
-                                <strong class="mp-station-panel-total-titles"></strong>
-                                <span>Titel gewonnen</span>
-                            </div>
-                        </div>
-                        <div class="mp-station-panel-seasons" id="mpStationPanelSeasons"></div>
-                    </div>
-                </div>
+</section>
 
-                {% if can_edit_profile %}
-                <div class="mp-career-edit-drawer" id="mpCareerEditDrawer" aria-hidden="true">
-                    <div class="mp-career-edit-header">
-                        <strong>Karrierestationen bearbeiten</strong>
-                        <button class="mp-career-edit-close" id="mpCareerEditClose" aria-label="Schließen">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-                        </button>
-                    </div>
+{% elif tab == 'einstellungen' %}
+<section class="mp-tab-content mp-settings-content">
+    <div class="mp-settings-grid">
 
-                    <div class="mp-career-edit-list" id="mpCareerEditList">
-                        {% for station in map_stations %}
-                        <div class="mp-career-edit-row" data-station-id="{{ station.id }}">
-                            <div class="mp-career-edit-row-info">
-                                <strong>{{ station.club }}</strong>
-                                <small>{{ station.city }}, {{ station.country }}{% if station.started_year %} · {{ station.started_year }}–{% if station.ended_year %}{{ station.ended_year }}{% else %}heute{% endif %}{% endif %}</small>
-                            </div>
-                            <div class="mp-career-edit-row-actions">
-                                <button class="mp-btn mp-btn-secondary mp-career-edit-btn"
-                                        type="button"
-                                        data-station-id="{{ station.id }}"
-                                        data-club="{{ station.club }}"
-                                        data-city="{{ station.city }}"
-                                        data-country="{{ station.country }}"
-                                        data-started="{{ station.started_year }}"
-                                        data-ended="{{ station.ended_year }}"
-                                        data-games="{{ station.games }}"
-                                        data-x="{{ station.x }}"
-                                        data-y="{{ station.y }}">
-                                    Bearbeiten
-                                </button>
-                                <button class="mp-btn mp-btn-danger mp-career-delete-btn" type="button" data-station-id="{{ station.id }}">
-                                    Löschen
-                                </button>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <p class="mp-career-edit-empty">Noch keine Stationen eingetragen.</p>
-                        {% endfor %}
+        <div class="mp-settings-col">
+            <article class="mp-card mp-card-account">
+                <h3>Kontodaten</h3>
+                <div class="mp-account-fields">
+                    <div class="mp-account-row">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                        <span>Nickname</span><strong>{{ manager.name }}</strong>
                     </div>
-
-                    <button class="mp-btn mp-btn-ghost mp-career-add-btn" id="mpCareerAddBtn" type="button">
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-                        Station hinzufügen
-                    </button>
-
-                    <div class="mp-career-form" id="mpCareerForm" aria-hidden="true">
-                        <div class="mp-career-form-header">
-                            <strong id="mpCareerFormTitle">Neue Station</strong>
-                        </div>
-                        <input type="hidden" id="mpCareerFormStationId" value="">
-                        <div class="mp-career-form-grid">
-                            <label class="mp-edit-label">
-                                <span>Vereinsname *</span>
-                                <input type="text" class="mp-edit-input" id="mpCareerClubName" placeholder="z.B. FC Bayern München" autocomplete="off">
-                            </label>
-                            <label class="mp-edit-label">
-                                <span>Stadt *</span>
-                                <div style="position:relative">
-                                    <input type="text" class="mp-edit-input" id="mpCareerCityName" placeholder="z.B. München" autocomplete="off">
-                                    <div class="mp-city-suggestions" id="mpCitySuggestions"></div>
-                                </div>
-                            </label>
-                            <label class="mp-edit-label">
-                                <span>Land</span>
-                                <input type="text" class="mp-edit-input" id="mpCareerCityCountry" placeholder="z.B. Deutschland" autocomplete="off">
-                            </label>
-                            <div class="mp-career-form-row">
-                                <label class="mp-edit-label">
-                                    <span>Von (Jahr)</span>
-                                    <input type="number" class="mp-edit-input" id="mpCareerStartYear" placeholder="2020" min="1900" max="2100">
-                                </label>
-                                <label class="mp-edit-label">
-                                    <span>Bis (Jahr, leer = heute)</span>
-                                    <input type="number" class="mp-edit-input" id="mpCareerEndYear" placeholder="heute" min="1900" max="2100">
-                                </label>
-                            </div>
-                            <label class="mp-edit-label">
-                                <span>Spiele</span>
-                                <input type="number" class="mp-edit-input" id="mpCareerGames" placeholder="0" min="0">
-                            </label>
-                        </div>
-                        <input type="hidden" id="mpCareerMapX" value="271">
-                        <input type="hidden" id="mpCareerMapY" value="214">
-                        <div class="mp-career-form-hint" id="mpCareerCoordHint"></div>
-                        <div class="mp-edit-modal-actions">
-                            <button class="mp-btn mp-btn-ghost" type="button" id="mpCareerFormCancel">Abbrechen</button>
-                            <button class="mp-btn mp-btn-primary" type="button" id="mpCareerFormSave" style="width:auto">Speichern</button>
-                        </div>
-                        <div class="mp-career-form-error" id="mpCareerFormError" style="display:none"></div>
+                    <div class="mp-account-row">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="9" rx="1"/><path d="M2 5l6 5 6-5"/></svg>
+                        <span>E-Mail-Adresse</span>
+                        {% if request.user.is_authenticated %}<strong>{{ request.user.email }}</strong>{% else %}<strong>–</strong>{% endif %}
+                        <span class="mp-verified-badge">Verifiziert</span>
                     </div>
-                </div>
-                {% endif %}
-            </article>
-
-            <article class="mp-card mp-card-trainertypes">
-                <header class="mp-card-header">
-                    <h3>Badges &amp; Auszeichnungen</h3>
-                    <a href="?tab=auszeichnungen" class="mp-card-link">Alle ansehen</a>
-                </header>
-                <div class="mp-types-section">
-                    <p class="mp-types-section-label">Direkt wählbar</p>
-                    <div class="mp-types-grid">
-                        {% for t in trainer_types_selectable %}
-                        <form method="post" action="{% url 'set_trainer_type' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
-                            <button type="submit" class="mp-type-tile {% if t.active %}is-active{% endif %}">{{ t.label }}</button>
-                        </form>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="mp-types-section">
-                    <p class="mp-types-section-label">Freischaltbare Titel</p>
-                    <div class="mp-types-unlock-list">
-                        {% for t in trainer_types_unlockable %}
-                        {% if t.unlocked %}
-                        <form method="post" action="{% url 'set_trainer_type' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
-                            <button type="submit" class="mp-type-unlock is-unlocked">
-                                <div class="mp-type-unlock-header">
-                                    <span class="mp-type-unlock-name">{{ t.label }}</span>
-                                    <span class="mp-type-unlock-badge">✓</span>
-                                </div>
-                                <small class="mp-type-unlock-cond">{{ t.condition }}</small>
+                    <div class="mp-account-row">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
+                        <span>Land</span>
+                        <div class="mp-csel" data-mp-csel data-mp-csel-id="land">
+                            <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
+                                {% if manager.flag_url %}<img class="mp-csel-img" src="{{ manager.flag_url }}" alt="">{% endif %}
+                                <span class="mp-csel-label">{{ manager.flag_name|default:"– wählen –" }}</span>
+                                <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
                             </button>
-                        </form>
-                        {% else %}
-                        <div class="mp-type-unlock">
-                            <div class="mp-type-unlock-header">
-                                <span class="mp-type-unlock-name">{{ t.label }}</span>
-                                <span class="mp-type-unlock-pct">{{ t.progress }}/{{ t.max }}</span>
-                            </div>
-                            <small class="mp-type-unlock-cond">{{ t.condition }}</small>
-                            <div class="mp-type-unlock-bar">
-                                <div class="mp-type-unlock-fill" style="width: {% widthratio t.progress t.max 100 %}%;"></div>
-                            </div>
+                            <ul class="mp-csel-list" role="listbox">
+                                {% for c in country_choices_with_flags %}
+                                <li class="mp-csel-opt{% if c.name == manager.flag_name %} is-selected{% endif %}" data-value="{{ c.name }}" data-img="https://flagcdn.com/{{ c.code }}.svg">
+                                    <img src="https://flagcdn.com/{{ c.code }}.svg" alt=""><span>{{ c.name }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
                         </div>
-                        {% endif %}
-                        {% endfor %}
+                    </div>
+                    <div class="mp-account-row">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
+                        <span>Lieblingsverein</span>
+                        <div class="mp-csel" data-mp-csel data-mp-csel-id="club">
+                            <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
+                                {% with fav=manager_favourite_club_id %}{% for c in all_clubs %}{% if c.id == fav %}{% if c.crest_url %}<img class="mp-csel-img" src="{{ c.crest_url }}" alt="">{% endif %}{% endif %}{% endfor %}
+                                <span class="mp-csel-label">{% for c in all_clubs %}{% if c.id == fav %}{{ c.name }}{% endif %}{% endfor %}{% if not manager_favourite_club_id %}– kein –{% endif %}</span>
+                                {% endwith %}
+                                <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+                            </button>
+                            <ul class="mp-csel-list" role="listbox">
+                                <li class="mp-csel-opt{% if not manager_favourite_club_id %} is-selected{% endif %}" data-value=""><span>– kein –</span></li>
+                                {% for c in all_clubs %}
+                                <li class="mp-csel-opt{% if c.id == manager_favourite_club_id %} is-selected{% endif %}" data-value="{{ c.id }}"{% if c.crest_url %} data-img="{{ c.crest_url }}"{% endif %}>
+                                    {% if c.crest_url %}<img src="{{ c.crest_url }}" alt="">{% endif %}<span>{{ c.name }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mp-account-row">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                        <span>Trainer-Typ</span>
+                        <div class="mp-csel" data-mp-csel data-mp-csel-id="type">
+                            <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
+                                <span class="mp-csel-label">{{ manager.active_type }}</span>
+                                <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+                            </button>
+                            <ul class="mp-csel-list" role="listbox">
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'laptoptrainer' %} is-selected{% endif %}" data-value="laptoptrainer"><span>Laptoptrainer</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'taktikfuchs' %} is-selected{% endif %}" data-value="taktikfuchs"><span>Taktikfuchs</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'motivator' %} is-selected{% endif %}" data-value="motivator"><span>Motivator</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'talentschmied' %} is-selected{% endif %}" data-value="talentschmied"><span>Talentschmied</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'transferstratege' %} is-selected{% endif %}" data-value="transferstratege"><span>Transferstratege</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'pokaljager' %} is-selected{% endif %}" data-value="pokaljager"><span>Pokaljäger</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'offensivarchitekt' %} is-selected{% endif %}" data-value="offensivarchitekt"><span>Offensivarchitekt</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'underdog' %} is-selected{% endif %}" data-value="underdog"><span>Underdog-Flüsterer</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'aufstiegsheld' %} is-selected{% endif %}" data-value="aufstiegsheld"><span>Aufstiegsheld</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'defensivmeister' %} is-selected{% endif %}" data-value="defensivmeister"><span>Defensivmeister</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'weltenbummler' %} is-selected{% endif %}" data-value="weltenbummler"><span>Weltenbummler</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'serienmeister' %} is-selected{% endif %}" data-value="serienmeister"><span>Serienmeister</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'feuerwehrmann' %} is-selected{% endif %}" data-value="feuerwehrmann"><span>Feuerwehrmann</span></li>
+                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'vereinslegende' %} is-selected{% endif %}" data-value="vereinslegende"><span>Vereinslegende</span></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
+                <button class="mp-btn mp-btn-primary" type="button" id="mpAccountSaveBtn">Speichern</button>
             </article>
 
-        </div>
-    </section>
-
-    {% elif tab == 'einstellungen' %}
-    <section class="mp-tab-content mp-settings-content">
-        <div class="mp-settings-grid">
-
-            <div class="mp-settings-col">
-                <article class="mp-card mp-card-account">
-                    <h3>Kontodaten</h3>
-                    <div class="mp-account-fields">
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                            <span>Nickname</span><strong>Kirschgutzje</strong>
-                        </div>
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="9" rx="1"/><path d="M2 5l6 5 6-5"/></svg>
-                            <span>E-Mail-Adresse</span>
-                            <strong>kirschgutzje@mail.com</strong>
-                            <span class="mp-verified-badge">Verifiziert</span>
-                        </div>
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M2 6h12M5 2v4M11 2v4"/></svg>
-                            <span>Geburtstag</span><strong>12.04.1990 (35)</strong>
-                        </div>
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 2C5.8 2 4 3.8 4 6c0 3.3 4 8 4 8s4-4.7 4-8c0-2.2-1.8-4-4-4z"/><circle cx="8" cy="6" r="1.5"/></svg>
-                            <span>Wohnort</span><strong>Köln, Deutschland</strong>
-                        </div>
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
-                            <span>Land</span>
-                            <div class="mp-csel" data-mp-csel data-mp-csel-id="land">
-                                <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
-                                    {% if manager.flag_url %}<img class="mp-csel-img" src="{{ manager.flag_url }}" alt="">{% endif %}
-                                    <span class="mp-csel-label">{{ manager.flag_name|default:"– wählen –" }}</span>
-                                    <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
-                                </button>
-                                <ul class="mp-csel-list" role="listbox">
-                                    {% for c in country_choices_with_flags %}
-                                    <li class="mp-csel-opt{% if c.name == manager.flag_name %} is-selected{% endif %}" data-value="{{ c.name }}" data-img="https://flagcdn.com/{{ c.code }}.svg">
-                                        <img src="https://flagcdn.com/{{ c.code }}.svg" alt="">
-                                        <span>{{ c.name }}</span>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
-                            <span>Lieblingsverein</span>
-                            <div class="mp-csel" data-mp-csel data-mp-csel-id="club">
-                                <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
-                                    {% with fav=manager_favourite_club_id %}
-                                    {% for club in all_clubs %}{% if club.id == fav %}{% if club.crest_url %}<img class="mp-csel-img" src="{{ club.crest_url }}" alt="">{% endif %}{% endif %}{% endfor %}
-                                    <span class="mp-csel-label">{% for club in all_clubs %}{% if club.id == fav %}{{ club.name }}{% endif %}{% endfor %}{% if not manager_favourite_club_id %}– kein –{% endif %}</span>
-                                    {% endwith %}
-                                    <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
-                                </button>
-                                <ul class="mp-csel-list" role="listbox">
-                                    <li class="mp-csel-opt{% if not manager_favourite_club_id %} is-selected{% endif %}" data-value=""><span>– kein –</span></li>
-                                    {% for club in all_clubs %}
-                                    <li class="mp-csel-opt{% if club.id == manager_favourite_club_id %} is-selected{% endif %}" data-value="{{ club.id }}"{% if club.crest_url %} data-img="{{ club.crest_url }}"{% endif %}>
-                                        {% if club.crest_url %}<img src="{{ club.crest_url }}" alt="">{% endif %}
-                                        <span>{{ club.name }}</span>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="mp-account-row">
-                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                            <span>Trainer-Typ</span>
-                            <div class="mp-csel" data-mp-csel data-mp-csel-id="type">
-                                <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
-                                    <span class="mp-csel-label">{{ manager.active_type }}</span>
-                                    <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
-                                </button>
-                                <ul class="mp-csel-list" role="listbox">
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'laptoptrainer' %} is-selected{% endif %}" data-value="laptoptrainer"><span>Laptoptrainer</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'taktikfuchs' %} is-selected{% endif %}" data-value="taktikfuchs"><span>Taktikfuchs</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'motivator' %} is-selected{% endif %}" data-value="motivator"><span>Motivator</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'talentschmied' %} is-selected{% endif %}" data-value="talentschmied"><span>Talentschmied</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'transferstratege' %} is-selected{% endif %}" data-value="transferstratege"><span>Transferstratege</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'pokaljager' %} is-selected{% endif %}" data-value="pokaljager"><span>Pokaljäger</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'offensivarchitekt' %} is-selected{% endif %}" data-value="offensivarchitekt"><span>Offensivarchitekt</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'underdog' %} is-selected{% endif %}" data-value="underdog"><span>Underdog-Flüsterer</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'aufstiegsheld' %} is-selected{% endif %}" data-value="aufstiegsheld"><span>Aufstiegsheld</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'defensivmeister' %} is-selected{% endif %}" data-value="defensivmeister"><span>Defensivmeister</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'weltenbummler' %} is-selected{% endif %}" data-value="weltenbummler"><span>Weltenbummler</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'serienmeister' %} is-selected{% endif %}" data-value="serienmeister"><span>Serienmeister</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'feuerwehrmann' %} is-selected{% endif %}" data-value="feuerwehrmann"><span>Feuerwehrmann</span></li>
-                                    <li class="mp-csel-opt{% if manager_trainer_type_key == 'vereinslegende' %} is-selected{% endif %}" data-value="vereinslegende"><span>Vereinslegende</span></li>
-                                </ul>
-                            </div>
-                        </div>
+            <article class="mp-card mp-card-manage">
+                <h3>Konto verwalten</h3>
+                <div class="mp-manage-list">
+                    <div class="mp-manage-row">
+                        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="4" width="14" height="11" rx="1"/><path d="M2 7l7 5 7-5"/></svg>
+                        <div><strong>E-Mail-Adresse ändern</strong><small>Ändere deine hinterlegte E-Mail-Adresse.</small></div>
+                        <button class="mp-btn mp-btn-secondary" type="button">E-Mail ändern</button>
                     </div>
-                    <button class="mp-btn mp-btn-primary" type="button" id="mpAccountSaveBtn">Speichern</button>
-                </article>
-
-                <article class="mp-card mp-card-manage">
-                    <h3>Konto verwalten</h3>
-                    <div class="mp-manage-list">
-                        <div class="mp-manage-row">
-                            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="4" width="14" height="11" rx="1"/><path d="M2 7l7 5 7-5"/></svg>
-                            <div>
-                                <strong>E-Mail-Adresse ändern</strong>
-                                <small>Ändere deine hinterlegte E-Mail-Adresse.</small>
-                            </div>
-                            <button class="mp-btn mp-btn-secondary" type="button">E-Mail ändern</button>
-                        </div>
-                        <div class="mp-manage-row is-danger">
-                            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6l1.5 10.5h9L15 6"/><path d="M2 6h14M7 6V3.5A1.5 1.5 0 0 1 8.5 2h1A1.5 1.5 0 0 1 11 3.5V6"/></svg>
-                            <div>
-                                <strong>Konto löschen</strong>
-                                <small>Lösche deinen Account dauerhaft und unwiderruflich.</small>
-                            </div>
-                            <button class="mp-btn mp-btn-danger" type="button">Konto löschen</button>
-                        </div>
-                        <div class="mp-manage-row">
-                            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 2v10"/><path d="M5 8l4 4 4-4"/><rect x="2" y="14" width="14" height="3" rx="1"/></svg>
-                            <div>
-                                <strong>Daten herunterladen</strong>
-                                <small>Lade eine Kopie deiner persönlichen Daten herunter.</small>
-                            </div>
-                            <button class="mp-btn mp-btn-secondary" type="button">Anfordern</button>
-                        </div>
+                    <div class="mp-manage-row is-danger">
+                        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6l1.5 10.5h9L15 6"/><path d="M2 6h14M7 6V3.5A1.5 1.5 0 0 1 8.5 2h1A1.5 1.5 0 0 1 11 3.5V6"/></svg>
+                        <div><strong>Konto löschen</strong><small>Lösche deinen Account dauerhaft und unwiderruflich.</small></div>
+                        <button class="mp-btn mp-btn-danger" type="button">Konto löschen</button>
                     </div>
-                    <p class="mp-manage-notice">
-                        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h2v4H7z"/></svg>
-                        Deine Daten sind sicher. Wir verwenden moderne Sicherheitsstandards, um deine Informationen zu schützen.
-                    </p>
-                </article>
-            </div>
-
-            <div class="mp-settings-col">
-                <article class="mp-card mp-card-password">
-                    <h3>Passwort ändern</h3>
-                    <div class="mp-pw-form">
-                        <label class="mp-pw-label">
-                            <span>Aktuelles Passwort</span>
-                            <div class="mp-pw-input-wrap">
-                                <input type="password" value="••••••••••••" class="mp-pw-input" autocomplete="current-password">
-                                <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen">
-                                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg>
-                                </button>
-                            </div>
-                        </label>
-                        <label class="mp-pw-label">
-                            <span>Neues Passwort</span>
-                            <div class="mp-pw-input-wrap">
-                                <input type="password" value="••••••••••" class="mp-pw-input" autocomplete="new-password">
-                                <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen">
-                                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg>
-                                </button>
-                            </div>
-                        </label>
-                        <label class="mp-pw-label">
-                            <span>Neues Passwort wiederholen</span>
-                            <div class="mp-pw-input-wrap">
-                                <input type="password" value="••••••••••" class="mp-pw-input" autocomplete="new-password">
-                                <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen">
-                                    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg>
-                                </button>
-                            </div>
-                        </label>
-                        <ul class="mp-pw-rules">
-                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Mindestens 12 Zeichen</li>
-                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Groß- &amp; Kleinbuchstaben</li>
-                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Mindestens eine Zahl</li>
-                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Keine einfachen Muster</li>
-                            <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Nicht in den letzten 5 Passwörtern verwendet</li>
-                        </ul>
-                        <button class="mp-btn mp-btn-primary" type="button">Passwort ändern</button>
+                    <div class="mp-manage-row">
+                        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 2v10"/><path d="M5 8l4 4 4-4"/><rect x="2" y="14" width="14" height="3" rx="1"/></svg>
+                        <div><strong>Daten herunterladen</strong><small>Lade eine Kopie deiner persönlichen Daten herunter.</small></div>
+                        <button class="mp-btn mp-btn-secondary" type="button">Anfordern</button>
                     </div>
-                </article>
-            </div>
-
-            <div class="mp-settings-col">
-                <article class="mp-card mp-card-privacy">
-                    <header class="mp-card-header">
-                        <h3>Sichtbarkeit &amp; Privatsphäre</h3>
-                    </header>
-                    <p class="mp-privacy-desc">Lege fest, welche Informationen andere Manager sehen dürfen.</p>
-                    <div class="mp-privacy-table">
-                        <div class="mp-privacy-thead">
-                            <span>Feld</span>
-                            <span>Öffentlich anzeigen</span>
-                        </div>
-                        {% for field in "Profilbild,Nickname,Trainer-Typ,Landesflagge,Lieblingsverein,E-Mail-Adresse,Geburtstag,Wohnort,Registriert am,Letzte Anmeldung"|split:"," %}
-                        <div class="mp-privacy-row">
-                            <span class="mp-privacy-field">{{ field }}</span>
-                            <div class="mp-privacy-controls">
-                                <label class="mp-toggle">
-                                    <input type="checkbox" {% if forloop.counter <= 5 %}checked{% endif %}>
-                                    <span class="mp-toggle-track"></span>
-                                </label>
-                                <select class="mp-visibility-select" aria-label="{{ field }} Sichtbarkeit">
-                                    <option {% if forloop.counter <= 5 %}selected{% endif %}>Für alle</option>
-                                    <option>Freunde</option>
-                                    <option {% if forloop.counter > 5 %}selected{% endif %}>Nur ich</option>
-                                </select>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <button class="mp-btn mp-btn-primary" type="button">Speichern</button>
-                </article>
-            </div>
-
+                </div>
+                <p class="mp-manage-notice">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h2v4H7z"/></svg>
+                    Deine Daten sind sicher. Wir verwenden moderne Sicherheitsstandards.
+                </p>
+            </article>
         </div>
 
-    </section>
-
-    {% else %}
-    <section class="mp-tab-content mp-coming-soon">
-        <div class="mp-coming-soon-inner">
-            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="32" cy="32" r="28"/>
-                <path d="M32 20v16l8 8"/>
-            </svg>
-            <h2>Kommt bald</h2>
-            <p>Dieser Bereich wird demnächst freigeschaltet.</p>
+        <div class="mp-settings-col">
+            <article class="mp-card mp-card-password">
+                <h3>Passwort ändern</h3>
+                <div class="mp-pw-form">
+                    <label class="mp-pw-label"><span>Aktuelles Passwort</span>
+                        <div class="mp-pw-input-wrap"><input type="password" value="••••••••••••" class="mp-pw-input" autocomplete="current-password">
+                        <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg></button></div>
+                    </label>
+                    <label class="mp-pw-label"><span>Neues Passwort</span>
+                        <div class="mp-pw-input-wrap"><input type="password" value="••••••••••" class="mp-pw-input" autocomplete="new-password">
+                        <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg></button></div>
+                    </label>
+                    <label class="mp-pw-label"><span>Neues Passwort wiederholen</span>
+                        <div class="mp-pw-input-wrap"><input type="password" value="••••••••••" class="mp-pw-input" autocomplete="new-password">
+                        <button type="button" class="mp-pw-toggle" aria-label="Passwort anzeigen"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M1 9s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="9" cy="9" r="2.5"/></svg></button></div>
+                    </label>
+                    <ul class="mp-pw-rules">
+                        <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Mindestens 12 Zeichen</li>
+                        <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Groß- &amp; Kleinbuchstaben</li>
+                        <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Mindestens eine Zahl</li>
+                        <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Keine einfachen Muster</li>
+                        <li class="is-ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 6l3 3 5-5"/></svg>Nicht in den letzten 5 Passwörtern</li>
+                    </ul>
+                    <button class="mp-btn mp-btn-primary" type="button">Passwort ändern</button>
+                </div>
+            </article>
         </div>
-    </section>
-    {% endif %}
+
+        <div class="mp-settings-col">
+            <article class="mp-card mp-card-privacy">
+                <header class="mp-card-header">
+                    <h3>Sichtbarkeit &amp; Privatsphäre</h3>
+                </header>
+                <p class="mp-privacy-desc">Lege fest, welche Informationen andere Manager sehen dürfen.</p>
+                <div class="mp-privacy-table">
+                    <div class="mp-privacy-thead"><span>Feld</span><span>Öffentlich anzeigen</span></div>
+                    {% for field in "Profilbild,Nickname,Trainer-Typ,Landesflagge,Lieblingsverein,E-Mail-Adresse,Geburtstag,Wohnort,Registriert am,Letzte Anmeldung"|split:"," %}
+                    <div class="mp-privacy-row">
+                        <span class="mp-privacy-field">{{ field }}</span>
+                        <div class="mp-privacy-controls">
+                            <label class="mp-toggle">
+                                <input type="checkbox" {% if forloop.counter <= 5 %}checked{% endif %}>
+                                <span class="mp-toggle-track"></span>
+                            </label>
+                            <select class="mp-visibility-select" aria-label="{{ field }} Sichtbarkeit">
+                                <option {% if forloop.counter <= 5 %}selected{% endif %}>Für alle</option>
+                                <option>Freunde</option>
+                                <option {% if forloop.counter > 5 %}selected{% endif %}>Nur ich</option>
+                            </select>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="mp-btn mp-btn-primary" type="button">Speichern</button>
+            </article>
+        </div>
+
+    </div>
+</section>
+
+{% else %}
+<section class="mp-tab-content mp-coming-soon">
+    <div class="mp-coming-soon-inner">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="32" cy="32" r="28"/><path d="M32 20v16l8 8"/></svg>
+        <h2>Kommt bald</h2>
+        <p>Dieser Bereich wird demnächst freigeschaltet.</p>
+    </div>
+</section>
+{% endif %}
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+var MP_TL_EVENTS = {{ timeline_events_json|safe }};
+var MP_STATIONS  = {{ station_switcher_json|safe }};
+</script>
+
+<!-- ═══ TIMELINE v2 ENGINE ═══ -->
+<script>
 (function () {
-    const filters = document.querySelectorAll('.mp-tl-filter');
-    const events = document.querySelectorAll('.mp-tl-event');
-    filters.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filters.forEach(b => b.classList.remove('is-active'));
-            btn.classList.add('is-active');
-            const f = btn.dataset.filter;
-            events.forEach(ev => {
-                ev.style.display = (f === 'alle' || ev.dataset.type === f) ? '' : 'none';
-            });
+    var TRACK_W  = 3200;
+    var MARGIN_L = 100;
+    var MARGIN_R = 140;
+    var USABLE   = TRACK_W - MARGIN_L - MARGIN_R;
+    var TONE = {
+        gold:    { bg: 'rgba(255,209,102,.08)', bd: 'rgba(255,209,102,.36)', dot: '#ffd166', acc: '#ffd166' },
+        cyan:    { bg: 'rgba(34,230,255,.06)',  bd: 'rgba(44,231,255,.30)',  dot: '#22e6ff', acc: '#22e6ff' },
+        green:   { bg: 'rgba(48,242,156,.07)',  bd: 'rgba(48,242,156,.32)',  dot: '#30f29c', acc: '#30f29c' },
+        red:     { bg: 'rgba(255,85,112,.07)',  bd: 'rgba(255,85,112,.32)',  dot: '#ff5570', acc: '#ff5570' },
+        neutral: { bg: 'rgba(44,231,255,.04)',  bd: 'rgba(44,231,255,.20)',  dot: '#22e6ff', acc: 'rgba(244,251,255,.6)' },
+    };
+
+    var track   = document.getElementById('mpTl2Track');
+    var scrollEl= document.getElementById('mpTl2Scroll');
+    if (!track || !scrollEl) return;
+
+    var activeFilter = 'alle';
+    var today = new Date();
+
+    function computeRange() {
+        var earliest = new Date(today.getFullYear() - 1, today.getMonth(), 1);
+        (MP_TL_EVENTS || []).forEach(function (ev) {
+            if (ev.date_iso) { var d = new Date(ev.date_iso); if (!isNaN(d) && d < earliest) earliest = d; }
         });
-    });
-})();
-
-(function () {
-    const tooltip = document.getElementById('mpMapTooltip');
-    if (!tooltip) return;
-
-    const svgWrap = tooltip.closest('.mp-euromap-svg-wrap');
-    const svg = svgWrap && svgWrap.querySelector('.mp-euromap-svg');
-    if (!svg) return;
-
-    const stations = svg.querySelectorAll('.mp-map-station');
-
-    function positionTooltip(stationEl) {
-        const svgRect = svg.getBoundingClientRect();
-        const wrapRect = svgWrap.getBoundingClientRect();
-
-        const transform = stationEl.getAttribute('transform') || '';
-        const match = transform.match(/translate\(\s*([\d.]+)\s*,\s*([\d.]+)\s*\)/);
-        if (!match) return;
-
-        const svgX = parseFloat(match[1]);
-        const svgY = parseFloat(match[2]);
-
-        const vb = svg.viewBox.baseVal;
-        const scaleX = svgRect.width / vb.width;
-        const scaleY = svgRect.height / vb.height;
-
-        const pinPixelX = svgRect.left - wrapRect.left + svgX * scaleX;
-        const pinPixelY = svgRect.top - wrapRect.top + svgY * scaleY;
-
-        const OFFSET = 16;
-        let left = pinPixelX + OFFSET;
-        let top = pinPixelY - tooltip.offsetHeight / 2;
-
-        const wrapW = wrapRect.width;
-        if (left + 200 > wrapW) {
-            left = pinPixelX - 200 - OFFSET;
-        }
-        if (top < 0) top = 4;
-
-        tooltip.style.left = left + 'px';
-        tooltip.style.top = top + 'px';
+        var rs = new Date(earliest); rs.setMonth(rs.getMonth() - 3);
+        var re = new Date(today);    re.setMonth(re.getMonth() + 3);
+        return { rs: rs, re: re, ms: re - rs };
     }
 
-    function showTooltip(stationEl) {
-        const d = stationEl.dataset;
-        tooltip.querySelector('.mp-map-tooltip-crest').src = d.crest || '';
-        tooltip.querySelector('.mp-map-tooltip-crest').alt = d.club || '';
-        tooltip.querySelector('.mp-map-tooltip-club').textContent = d.club || '';
-        tooltip.querySelector('.mp-map-tooltip-location').textContent =
-            [d.city, d.country].filter(Boolean).join(', ');
-        tooltip.querySelector('.mp-map-tooltip-period').textContent = d.period || '';
-        tooltip.querySelector('.mp-map-tooltip-games').textContent = d.games || '0';
-        tooltip.querySelector('.mp-map-tooltip-titles').textContent = d.titles || '0';
+    var range = computeRange();
 
-        if (d.active === '1') {
-            tooltip.classList.add('is-active-station');
-        } else {
-            tooltip.classList.remove('is-active-station');
+    function dateToX(d) {
+        if (!d || isNaN(d)) return MARGIN_L + USABLE * 0.5;
+        return Math.round(MARGIN_L + Math.max(0, Math.min(1, (d - range.rs) / range.ms)) * USABLE);
+    }
+
+    function render() {
+        range = computeRange();
+        track.innerHTML = '';
+        track.style.cssText = 'width:' + TRACK_W + 'px;height:260px;position:relative;';
+
+        var axis = document.createElement('div'); axis.className = 'mp-tl2-axis'; track.appendChild(axis);
+
+        var hx = dateToX(today);
+        var hl = document.createElement('div'); hl.className = 'mp-tl2-heute-line'; hl.style.left = hx + 'px'; track.appendChild(hl);
+        var htxt = document.createElement('span'); htxt.className = 'mp-tl2-heute-lbl'; htxt.textContent = 'HEUTE'; htxt.style.left = hx + 'px'; track.appendChild(htxt);
+
+        for (var yr = range.rs.getFullYear(); yr <= range.re.getFullYear() + 1; yr++) {
+            var td = new Date(yr, 7, 1); var tx = dateToX(td);
+            if (tx < MARGIN_L || tx > TRACK_W - MARGIN_R + 20) continue;
+            var tck = document.createElement('span'); tck.className = 'mp-tl2-tick'; tck.textContent = yr + '/' + String(yr + 1).slice(-2); tck.style.left = tx + 'px'; track.appendChild(tck);
         }
 
-        tooltip.classList.add('is-visible');
-        tooltip.removeAttribute('aria-hidden');
+        var visible = (MP_TL_EVENTS || []).filter(function (ev) { return activeFilter === 'alle' || ev.type === activeFilter; });
+        visible.forEach(function (ev, idx) {
+            var ts = TONE[ev.tone] || TONE.cyan;
+            var xPos = ev.date_iso ? dateToX(new Date(ev.date_iso)) : MARGIN_L + idx * 280;
+            var isTop = idx % 2 === 0;
 
-        positionTooltip(stationEl);
-    }
+            var dot = document.createElement('span'); dot.className = 'mp-tl2-dot-marker';
+            dot.style.cssText = 'left:' + xPos + 'px;background:' + ts.dot + ';box-shadow:0 0 8px ' + ts.dot + ';'; track.appendChild(dot);
 
-    function hideTooltip() {
-        tooltip.classList.remove('is-visible');
-        tooltip.setAttribute('aria-hidden', 'true');
-    }
+            var con = document.createElement('div');
+            con.className = 'mp-tl2-connector' + (isTop ? ' is-top' : ' is-bot');
+            con.style.cssText = 'left:' + (xPos + 4) + 'px;background:' + ts.dot + ';'; track.appendChild(con);
 
-    const panel = document.getElementById('mpStationPanel');
-    const panelClose = document.getElementById('mpStationPanelClose');
-    const panelSeasons = document.getElementById('mpStationPanelSeasons');
-    let activeStation = null;
-
-    function openPanel(stationEl) {
-        const d = stationEl.dataset;
-        panel.querySelector('.mp-station-panel-crest').src = d.crest || '';
-        panel.querySelector('.mp-station-panel-crest').alt = d.club || '';
-        panel.querySelector('.mp-station-panel-club').textContent = d.club || '';
-        panel.querySelector('.mp-station-panel-location').textContent =
-            [d.city, d.country].filter(Boolean).join(', ');
-        panel.querySelector('.mp-station-panel-period').textContent = d.period || '';
-        panel.querySelector('.mp-station-panel-total-games').textContent = d.games || '0';
-        panel.querySelector('.mp-station-panel-total-titles').textContent = d.titles || '0';
-
-        const link = panel.querySelector('.mp-station-panel-link');
-        const clubUrl = d.clubUrl || '';
-        link.href = clubUrl || '#';
-        link.style.display = clubUrl ? '' : 'none';
-
-        if (d.active === '1') {
-            panel.classList.add('is-active-station');
-        } else {
-            panel.classList.remove('is-active-station');
-        }
-
-        panelSeasons.innerHTML = '';
-        let seasons = [];
-        try { seasons = JSON.parse(d.seasons || '[]'); } catch(e) {}
-
-        if (seasons.length === 0) {
-            panelSeasons.innerHTML = '<p class="mp-season-no-data">Keine Saisondaten verfügbar.</p>';
-        } else {
-            seasons.forEach(s => {
-                const hasTrophy = s.titles > 0;
-                const el = document.createElement('div');
-                el.className = 'mp-season-row' + (hasTrophy ? ' has-title' : '');
-                el.innerHTML =
-                    '<span class="mp-season-label">' + s.season + '</span>' +
-                    '<div class="mp-season-wdl">' +
-                        '<div class="mp-season-wdl-item is-w">' +
-                            '<span class="mp-season-wdl-val">' + s.wins + '</span>' +
-                            '<span class="mp-season-wdl-lbl">S</span>' +
-                        '</div>' +
-                        '<div class="mp-season-wdl-item">' +
-                            '<span class="mp-season-wdl-val">' + s.draws + '</span>' +
-                            '<span class="mp-season-wdl-lbl">U</span>' +
-                        '</div>' +
-                        '<div class="mp-season-wdl-item is-l">' +
-                            '<span class="mp-season-wdl-val">' + s.losses + '</span>' +
-                            '<span class="mp-season-wdl-lbl">N</span>' +
-                        '</div>' +
-                    '</div>' +
-                    (hasTrophy ? '<p class="mp-season-title-badge">★ ' + s.titles + ' Titel</p>' : '');
-                panelSeasons.appendChild(el);
-            });
-        }
-
-        panel.classList.add('is-open');
-        panel.removeAttribute('aria-hidden');
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        activeStation = stationEl;
-    }
-
-    function closePanel() {
-        panel.classList.remove('is-open');
-        panel.setAttribute('aria-hidden', 'true');
-        activeStation = null;
-    }
-
-    stations.forEach(st => {
-        st.addEventListener('click', () => {
-            if (activeStation === st && panel.classList.contains('is-open')) {
-                closePanel();
-            } else {
-                openPanel(st);
-            }
+            var card = document.createElement('div');
+            card.className = 'mp-tl2-card' + (isTop ? ' is-top' : ' is-bot');
+            card.style.cssText = 'left:' + (xPos - 22) + 'px;border-color:' + ts.bd + ';background:' + ts.bg + ';';
+            var crestHtml = ev.crest_url ? '<span class="mp-tl2-card-crest" style="background-image:url(\'' + ev.crest_url + '\')"></span>' : '';
+            card.innerHTML =
+                '<div class="mp-tl2-card-top" style="color:' + ts.acc + '">' +
+                    '<span class="mp-tl2-chip" style="border-color:' + ts.bd + ';color:' + ts.acc + '">' + (ev.cat || ev.type.toUpperCase()) + '</span>' +
+                    '<time>' + (ev.date || '–') + '</time>' + crestHtml +
+                '</div>' +
+                '<strong class="mp-tl2-card-title">' + (ev.title || '') + '</strong>' +
+                '<p class="mp-tl2-card-body">' + (ev.body || '') + '</p>';
+            track.appendChild(card);
         });
-        st.addEventListener('keydown', e => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                if (activeStation === st && panel.classList.contains('is-open')) {
-                    closePanel();
-                } else {
-                    openPanel(st);
-                }
-            }
+    }
+
+    render();
+
+    document.querySelectorAll('.mp-tl2-filter').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.mp-tl2-filter').forEach(function (b) { b.classList.remove('is-active'); });
+            btn.classList.add('is-active'); activeFilter = btn.dataset.filter; render();
         });
     });
 
-    if (panel && panelClose) {
-        panelClose.addEventListener('click', closePanel);
-    }
-
-    stations.forEach(st => {
-        st.addEventListener('mouseenter', () => showTooltip(st));
-        st.addEventListener('mouseleave', hideTooltip);
-        st.addEventListener('focus', () => showTooltip(st));
-        st.addEventListener('blur', hideTooltip);
+    var step = 420;
+    document.getElementById('mpTl2NavL').addEventListener('click', function () { scrollEl.scrollLeft -= step; });
+    document.getElementById('mpTl2NavR').addEventListener('click', function () { scrollEl.scrollLeft += step; });
+    document.getElementById('mpTl2Today').addEventListener('click', function () {
+        scrollEl.scrollLeft = dateToX(today) - scrollEl.clientWidth / 2;
     });
 
-    const route = svg.querySelector('.mp-map-route-animated');
-    if (route) {
-        const len = route.getTotalLength ? route.getTotalLength() : 600;
-        route.style.strokeDasharray = len;
-        route.style.strokeDashoffset = len;
-        route.style.animation = 'none';
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                route.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s';
-                route.style.opacity = '1';
-                route.style.strokeDashoffset = '0';
-            });
-        });
-    }
+    window.addEventListener('load', function () {
+        scrollEl.scrollLeft = Math.max(0, dateToX(today) - scrollEl.clientWidth / 2);
+    });
 
-    const activeMapPin = svg.querySelector('.mp-map-station.is-active');
-    if (activeMapPin) {
-        const pulseCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        pulseCircle.setAttribute('r', '10');
-        pulseCircle.classList.add('mp-map-pin-pulse');
-        activeMapPin.insertBefore(pulseCircle, activeMapPin.firstChild);
-    }
+    var einBtn = document.getElementById('mpTl2Einreichen');
+    if (einBtn) einBtn.addEventListener('click', function () { alert('Einträge können bald eingereicht werden.'); });
+
+    window.mpTl2Render = render;
 })();
 </script>
 
+<!-- ═══ VEREINS-LEISTE ENGINE ═══ -->
 <script>
 (function () {
-    // europe-night.png natural size — used to keep the visible crop in the
-    // image's true aspect ratio (no vertical stretch) while zooming to the
-    // trainer's stations.
-    var IMG_W = 1536, IMG_H = 1024;
+    var stations = MP_STATIONS || [];
+    if (!stations.length) return;
 
-    // [min_x%, max_x%, min_y%, max_y%] country bbox from the server, or null.
-    // Used to set a minimum zoom level when there is only one training station
-    // (so the whole country is visible rather than just the city).
+    var vbarCrest   = document.getElementById('mpVbarCrest');
+    var vbarName    = document.getElementById('mpVbarName');
+    var vbarPer     = document.getElementById('mpVbarPeriod');
+    var vbarDrop    = document.getElementById('mpVbarDropdown');
+    var vbarList    = document.getElementById('mpVbarDropdownList');
+    var vbarToggle  = document.getElementById('mpVbarToggle');
+    var statsTitle  = document.getElementById('mpStatsTitle');
+
+    var CELL  = { zeit:'mpVbarZeit', spiele:'mpVbarSpiele', titel:'mpVbarTitel', finale:'mpVbarFinale', platz:'mpVbarPlatz', pps:'mpVbarPps' };
+    var PANEL = { games:'mss-games', wins:'mss-wins', draws:'mss-draws', losses:'mss-losses', goals:'mss-goals', ga:'mss-ga', pts:'mss-pts', ppg:'mss-ppg', gpg:'mss-gpg', gapg:'mss-gapg', ws:'mss-ws', ls:'mss-ls' };
+
+    function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+    function selectStation(key) {
+        var st = null;
+        for (var i = 0; i < stations.length; i++) { if (stations[i].key === key) { st = stations[i]; break; } }
+        if (!st && stations.length) st = stations[stations.length - 1];
+        if (!st) return;
+
+        if (vbarCrest) { vbarCrest.style.backgroundImage = st.crest_url ? "url('" + st.crest_url + "')" : 'none'; }
+        if (vbarName)  vbarName.textContent  = st.name;
+        if (vbarPer)   vbarPer.textContent   = st.period || '';
+
+        set(CELL.zeit,   st.zeit   || '–');
+        set(CELL.spiele, st.spiele || '0');
+        set(CELL.titel,  st.titel  || '0');
+        set(CELL.finale, st.finale || '0');
+        set(CELL.platz,  st.platz  || '–');
+        set(CELL.pps,    st.pps    || '0,00');
+
+        var s = st.stats || {};
+        if (statsTitle) statsTitle.textContent = 'STATISTIK (' + st.name.toUpperCase() + ')';
+        set(PANEL.games,  s.games || 0);
+        set(PANEL.wins,   (s.wins || 0) + ' (' + (s.win_pct || 0) + '%)');
+        set(PANEL.draws,  (s.draws || 0) + ' (' + (s.draw_pct || 0) + '%)');
+        set(PANEL.losses, (s.losses || 0) + ' (' + (s.loss_pct || 0) + '%)');
+        set(PANEL.goals,  s.goals || 0);
+        set(PANEL.ga,     s.goals_against || 0);
+        set(PANEL.pts,    s.points || 0);
+        set(PANEL.ppg,    s.ppg || '0,00');
+        set(PANEL.gpg,    s.gpg || '0,00');
+        set(PANEL.gapg,   s.gapg || '0,00');
+        set(PANEL.ws,     s.win_streak || 0);
+        set(PANEL.ls,     s.loss_streak || 0);
+
+        if (vbarList) { vbarList.querySelectorAll('.mp-vbar-opt').forEach(function (o) { o.classList.toggle('is-active', o.dataset.key === key); }); }
+        closeDropdown();
+    }
+
+    function openDropdown()  { if (vbarDrop) { vbarDrop.classList.add('is-open'); vbarDrop.removeAttribute('aria-hidden'); } }
+    function closeDropdown() { if (vbarDrop) { vbarDrop.classList.remove('is-open'); vbarDrop.setAttribute('aria-hidden', 'true'); } }
+
+    if (vbarList) {
+        stations.forEach(function (st) {
+            var btn = document.createElement('button');
+            btn.className = 'mp-vbar-opt' + (st.is_active ? ' is-act-station' : '');
+            btn.dataset.key = st.key; btn.type = 'button';
+            btn.innerHTML = (st.crest_url ? '<span class="mp-vbar-opt-crest" style="background-image:url(\'' + st.crest_url + '\')"></span>' : '') +
+                '<span><strong>' + st.name + '</strong><small>' + (st.period || '') + '</small></span>';
+            btn.addEventListener('click', function (e) { e.stopPropagation(); selectStation(st.key); });
+            vbarList.appendChild(btn);
+        });
+    }
+
+    if (vbarToggle) {
+        vbarToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            vbarDrop && vbarDrop.classList.contains('is-open') ? closeDropdown() : openDropdown();
+        });
+    }
+    document.addEventListener('click', closeDropdown);
+
+    var defaultKey = null;
+    for (var i = 0; i < stations.length; i++) { if (stations[i].is_active) { defaultKey = stations[i].key; break; } }
+    if (!defaultKey && stations.length) defaultKey = stations[stations.length - 1].key;
+    selectStation(defaultKey);
+
+    window.mpSelectStation = selectStation;
+})();
+</script>
+
+<!-- ═══ PHOTO MAP MARKER CLICK / HOVER ═══ -->
+<script>
+(function () {
+    var panel      = document.getElementById('mpStationPanel');
+    var panelClose = document.getElementById('mpStationPanelClose');
+    var panelSeasons = document.getElementById('mpStationPanelSeasons');
+    if (!panel) return;
+
+    var activeMarker = null;
+
+    function openPanel(markerEl) {
+        var d = markerEl.dataset;
+        panel.querySelector('.mp-station-panel-crest').src = d.crest || '';
+        panel.querySelector('.mp-station-panel-club').textContent = d.club || '';
+        panel.querySelector('.mp-station-panel-location').textContent = d.city || '';
+        var stData = null;
+        var stKey = d.stationKey || '';
+        if (window.MP_STATIONS && stKey) {
+            for (var i = 0; i < MP_STATIONS.length; i++) { if (MP_STATIONS[i].key === stKey) { stData = MP_STATIONS[i]; break; } }
+        }
+        panel.querySelector('.mp-station-panel-period').textContent = stData ? stData.period : '';
+        panel.querySelector('.mp-station-panel-total-games').textContent = stData ? stData.spiele : '–';
+        panel.querySelector('.mp-station-panel-total-titles').textContent = stData ? stData.titel : '–';
+        var link = panel.querySelector('.mp-station-panel-link');
+        if (link) { link.href = stData && stData.club_url ? stData.club_url : '#'; }
+        if (d.active === '1') panel.classList.add('is-active-station');
+        else panel.classList.remove('is-active-station');
+        if (panelSeasons) panelSeasons.innerHTML = '';
+        panel.classList.add('is-open'); panel.removeAttribute('aria-hidden');
+        activeMarker = markerEl;
+
+        if (window.mpSelectStation && stKey) window.mpSelectStation(stKey);
+    }
+
+    function closePanel() {
+        panel.classList.remove('is-open'); panel.setAttribute('aria-hidden', 'true'); activeMarker = null;
+    }
+
+    document.querySelectorAll('.mp-photo-marker').forEach(function (m) {
+        m.addEventListener('click', function () {
+            if (activeMarker === m && panel.classList.contains('is-open')) closePanel();
+            else openPanel(m);
+        });
+        m.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (activeMarker === m && panel.classList.contains('is-open')) closePanel(); else openPanel(m); }
+        });
+    });
+
+    if (panelClose) panelClose.addEventListener('click', closePanel);
+})();
+</script>
+
+<!-- ═══ MAP AUTO-ZOOM ENGINE ═══ (preserved) -->
+<script>
+var CITY_COORDS = {{ city_coords_json|safe }};
+</script>
+<script>
+(function () {
+    var IMG_W = 1536, IMG_H = 1024;
     var COUNTRY_BBOX = {{ country_zoom_box_json|safe }};
 
     function mpApplyMapZoom() {
         var map = document.getElementById('mpPhotoMap');
         var bg  = document.getElementById('mpPhotoMapBg');
         if (!map || !bg) return;
-
         var markers = map.querySelectorAll('.mp-photo-marker');
         if (!markers.length) return;
-
         var rect = map.getBoundingClientRect();
         var W = rect.width, H = rect.height;
         if (!W || !H) return;
-
         var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         markers.forEach(function (m) {
-            var x = parseFloat(m.dataset.x);
-            var y = parseFloat(m.dataset.y);
+            var x = parseFloat(m.dataset.x), y = parseFloat(m.dataset.y);
             if (isNaN(x) || isNaN(y)) return;
             if (x < minX) minX = x; if (x > maxX) maxX = x;
             if (y < minY) minY = y; if (y > maxY) maxY = y;
         });
         if (!isFinite(minX)) return;
-
-        // Single-station minimum zoom: expand the bounding box to cover the
-        // whole country so the map shows geographic context rather than just
-        // the city area.
         if (markers.length === 1 && Array.isArray(COUNTRY_BBOX)) {
             if (COUNTRY_BBOX[0] < minX) minX = COUNTRY_BBOX[0];
             if (COUNTRY_BBOX[1] > maxX) maxX = COUNTRY_BBOX[1];
             if (COUNTRY_BBOX[2] < minY) minY = COUNTRY_BBOX[2];
             if (COUNTRY_BBOX[3] > maxY) maxY = COUNTRY_BBOX[3];
         }
-
-        // Station bounding box in IMAGE PIXELS (so x and y share one scale).
         var bx1 = minX / 100 * IMG_W, bx2 = maxX / 100 * IMG_W;
         var by1 = minY / 100 * IMG_H, by2 = maxY / 100 * IMG_H;
-
         var padX = Math.max((bx2 - bx1) * 0.22, IMG_W * 0.06);
         var padY = Math.max((by2 - by1) * 0.30, IMG_H * 0.08);
         bx1 = Math.max(0, bx1 - padX); bx2 = Math.min(IMG_W, bx2 + padX);
         by1 = Math.max(0, by1 - padY); by2 = Math.min(IMG_H, by2 + padY + 50);
-
         var bw = bx2 - bx1, bh = by2 - by1;
-
-        // Grow the station box to the TILE's aspect ratio so the whole tile is
-        // filled (no black bars) without distorting the map and without cropping
-        // any station. Whichever side is too small for the tile aspect gets
-        // widened with real surrounding map, keeping the cluster centred.
         var tileAR = W / H, boxAR = bw / bh;
-        if (boxAR < tileAR) {
-            var nw = bh * tileAR, dx = (nw - bw) / 2;
-            bx1 -= dx; bx2 += dx;
-        } else {
-            var nh = bw / tileAR, dy = (nh - bh) / 2;
-            by1 -= dy; by2 += dy;
-        }
-
-        // Shift the box back inside the image if expansion pushed it off an edge.
-        if (bx1 < 0)      { bx2 -= bx1; bx1 = 0; }
-        if (bx2 > IMG_W)  { bx1 = Math.max(0, bx1 - (bx2 - IMG_W)); bx2 = IMG_W; }
-        if (by1 < 0)      { by2 -= by1; by1 = 0; }
-        if (by2 > IMG_H)  { by1 = Math.max(0, by1 - (by2 - IMG_H)); by2 = IMG_H; }
+        if (boxAR < tileAR) { var nw = bh * tileAR, dx = (nw - bw) / 2; bx1 -= dx; bx2 += dx; }
+        else { var nh = bw / tileAR, dy2 = (nh - bh) / 2; by1 -= dy2; by2 += dy2; }
+        if (bx1 < 0)     { bx2 -= bx1; bx1 = 0; }
+        if (bx2 > IMG_W) { bx1 = Math.max(0, bx1 - (bx2 - IMG_W)); bx2 = IMG_W; }
+        if (by1 < 0)     { by2 -= by1; by1 = 0; }
+        if (by2 > IMG_H) { by1 = Math.max(0, by1 - (by2 - IMG_H)); by2 = IMG_H; }
         bw = bx2 - bx1; bh = by2 - by1;
-
-        // Uniform scale (screen px per image px) — identical on both axes, so the
-        // rendered map keeps its true 3:2 aspect ratio (no vertical stretch). Use
-        // the LARGER ratio so the tile is always fully covered with real map.
         var s = Math.max(W / bw, H / bh);
         var dispW = s * IMG_W, dispH = s * IMG_H;
         var cx = (bx1 + bx2) / 2, cy = (by1 + by2) / 2;
-        var left = W / 2 - s * cx;
-        var top  = H / 2 - s * cy;
-
-        // Never let an edge of the image pull inside the tile (no black bars).
+        var left = W / 2 - s * cx, top = H / 2 - s * cy;
         left = Math.min(0, Math.max(W - dispW, left));
         top  = Math.min(0, Math.max(H - dispH, top));
-
-        bg.style.position = 'absolute';
-        bg.style.width    = dispW + 'px';
-        bg.style.height   = dispH + 'px';
-        bg.style.left     = left + 'px';
-        bg.style.top      = top + 'px';
-        bg.style.objectFit = 'fill';
-
+        bg.style.position = 'absolute'; bg.style.width = dispW + 'px'; bg.style.height = dispH + 'px';
+        bg.style.left = left + 'px'; bg.style.top = top + 'px'; bg.style.objectFit = 'fill';
         markers.forEach(function (m) {
-            var x = parseFloat(m.dataset.x);
-            var y = parseFloat(m.dataset.y);
+            var x = parseFloat(m.dataset.x), y = parseFloat(m.dataset.y);
             if (isNaN(x) || isNaN(y)) return;
             var mLeft = left + s * (x / 100 * IMG_W);
             var mTop  = top  + s * (y / 100 * IMG_H);
-            m.style.left = mLeft + 'px';
-            m.style.top  = mTop + 'px';
-            // The name label renders BELOW the crest. When a station sits near
-            // the bottom edge of the tile (e.g. Barcelona at a tight zoom) its
-            // label would be clipped, so flip it ABOVE the crest instead. This
-            // keeps the zoom tight without padding the crop.
-            if (mTop > H - 64) { m.classList.add('mp-label-above'); }
-            else               { m.classList.remove('mp-label-above'); }
+            m.style.left = mLeft + 'px'; m.style.top = mTop + 'px';
+            if (mTop > H - 64) m.classList.add('mp-label-above');
+            else m.classList.remove('mp-label-above');
         });
     }
 
-    var _zoomAttempts = 0;
+    var _attempts = 0;
     function schedule() {
         requestAnimationFrame(function () {
             var map = document.getElementById('mpPhotoMap');
             if (map) {
                 var r = map.getBoundingClientRect();
-                if ((!r.width || !r.height) && _zoomAttempts < 20) {
-                    _zoomAttempts++;
-                    setTimeout(schedule, 60);
-                    return;
-                }
+                if ((!r.width || !r.height) && _attempts < 20) { _attempts++; setTimeout(schedule, 60); return; }
             }
-            _zoomAttempts = 0;
-            mpApplyMapZoom();
+            _attempts = 0; mpApplyMapZoom();
         });
     }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', schedule);
-    } else {
-        schedule();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule);
+    else schedule();
     window.addEventListener('load', schedule);
-    window.addEventListener('resize', function () { _zoomAttempts = 0; schedule(); });
+    window.addEventListener('resize', function () { _attempts = 0; schedule(); });
 })();
 </script>
 
 {% if can_edit_profile %}
+<!-- ═══ CAREER EDIT DRAWER ═══ (preserved) -->
 <script>
 (function () {
     const CITY_COORDS = {{ city_coords_json|safe }};
@@ -1136,74 +1060,28 @@
 
     if (!drawer || !toggle) return;
 
-    function openDrawer() {
-        drawer.removeAttribute('aria-hidden');
-        drawer.classList.add('is-open');
-        toggle.textContent = 'Schließen';
-    }
-    function closeDrawer() {
-        drawer.setAttribute('aria-hidden', 'true');
-        drawer.classList.remove('is-open');
-        toggle.textContent = 'Bearbeiten';
-        hideForm();
-    }
+    function openDrawer()  { drawer.removeAttribute('aria-hidden'); drawer.classList.add('is-open'); toggle.textContent = 'Schließen'; }
+    function closeDrawer() { drawer.setAttribute('aria-hidden', 'true'); drawer.classList.remove('is-open'); toggle.textContent = 'Bearbeiten'; hideForm(); }
 
-    toggle.addEventListener('click', () => {
-        if (drawer.classList.contains('is-open')) closeDrawer();
-        else openDrawer();
-    });
+    toggle.addEventListener('click', () => { if (drawer.classList.contains('is-open')) closeDrawer(); else openDrawer(); });
     closeBtn.addEventListener('click', closeDrawer);
 
-    function showForm(title) {
-        formTitle.textContent = title;
-        form.removeAttribute('aria-hidden');
-        form.classList.add('is-visible');
-        errorEl.style.display = 'none';
-        fldClubName.focus();
-    }
-    function hideForm() {
-        form.setAttribute('aria-hidden', 'true');
-        form.classList.remove('is-visible');
-        clearForm();
-    }
-    function clearForm() {
-        fldStationId.value = '';
-        fldClubName.value  = '';
-        fldCityName.value  = '';
-        fldCityCountry.value = '';
-        fldStartYear.value = '';
-        fldEndYear.value   = '';
-        fldGames.value     = '';
-        fldMapX.value = '271';
-        fldMapY.value = '214';
-        hintEl.textContent = '';
-        suggestions.innerHTML = '';
-        suggestions.classList.remove('is-visible');
+    function showForm(title) { formTitle.textContent = title; form.removeAttribute('aria-hidden'); form.classList.add('is-visible'); errorEl.style.display = 'none'; fldClubName.focus(); }
+    function hideForm()      { form.setAttribute('aria-hidden', 'true'); form.classList.remove('is-visible'); clearForm(); }
+    function clearForm()     {
+        fldStationId.value = ''; fldClubName.value = ''; fldCityName.value = ''; fldCityCountry.value = '';
+        fldStartYear.value = ''; fldEndYear.value = ''; fldGames.value = '';
+        fldMapX.value = '271'; fldMapY.value = '214';
+        hintEl.textContent = ''; suggestions.innerHTML = ''; suggestions.classList.remove('is-visible');
     }
 
-    addBtn.addEventListener('click', () => {
-        clearForm();
-        showForm('Neue Station');
-    });
+    addBtn.addEventListener('click', () => { clearForm(); showForm('Neue Station'); });
     cancelBtn.addEventListener('click', hideForm);
 
-    function lookupCoords(cityName) {
-        const key = cityName.trim().toLowerCase();
-        return CITY_COORDS[key] || null;
-    }
-
+    function lookupCoords(cityName) { return CITY_COORDS[cityName.trim().toLowerCase()] || null; }
     function applyCoords(coords, cityName) {
-        if (coords) {
-            fldMapX.value = coords[0];
-            fldMapY.value = coords[1];
-            hintEl.textContent = `📍 Kartenposition automatisch erkannt für „${cityName}"`;
-            hintEl.style.color = 'var(--mp-green, #17df53)';
-        } else {
-            hintEl.textContent = 'Stadt nicht in der Datenbank — Standardposition wird verwendet.';
-            hintEl.style.color = 'rgba(180,195,230,0.5)';
-            fldMapX.value = '271';
-            fldMapY.value = '214';
-        }
+        if (coords) { fldMapX.value = coords[0]; fldMapY.value = coords[1]; hintEl.textContent = '📍 Kartenposition automatisch erkannt für „' + cityName + '"'; hintEl.style.color = '#30f29c'; }
+        else { hintEl.textContent = 'Stadt nicht in der Datenbank — Standardposition wird verwendet.'; hintEl.style.color = 'rgba(180,195,230,0.5)'; fldMapX.value = '271'; fldMapY.value = '214'; }
     }
 
     let suggestTimeout = null;
@@ -1211,62 +1089,29 @@
         clearTimeout(suggestTimeout);
         suggestTimeout = setTimeout(() => {
             const val = fldCityName.value.trim().toLowerCase();
-            if (val.length < 2) {
-                suggestions.innerHTML = '';
-                suggestions.classList.remove('is-visible');
-                return;
-            }
+            if (val.length < 2) { suggestions.innerHTML = ''; suggestions.classList.remove('is-visible'); return; }
             const matches = Object.keys(CITY_COORDS).filter(k => k.startsWith(val)).slice(0, 6);
-            if (!matches.length) {
-                suggestions.innerHTML = '';
-                suggestions.classList.remove('is-visible');
-                return;
-            }
+            if (!matches.length) { suggestions.innerHTML = ''; suggestions.classList.remove('is-visible'); return; }
             suggestions.innerHTML = '';
             matches.forEach(m => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'mp-city-suggestion-item';
+                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'mp-city-suggestion-item';
                 btn.textContent = m.charAt(0).toUpperCase() + m.slice(1);
-                btn.addEventListener('click', () => {
-                    fldCityName.value = btn.textContent;
-                    suggestions.innerHTML = '';
-                    suggestions.classList.remove('is-visible');
-                    applyCoords(CITY_COORDS[m], btn.textContent);
-                });
+                btn.addEventListener('click', () => { fldCityName.value = btn.textContent; suggestions.innerHTML = ''; suggestions.classList.remove('is-visible'); applyCoords(CITY_COORDS[m], btn.textContent); });
                 suggestions.appendChild(btn);
             });
             suggestions.classList.add('is-visible');
         }, 150);
     });
-
-    fldCityName.addEventListener('blur', () => {
-        setTimeout(() => {
-            suggestions.classList.remove('is-visible');
-            const coords = lookupCoords(fldCityName.value);
-            if (fldCityName.value.trim()) applyCoords(coords, fldCityName.value.trim());
-        }, 200);
-    });
+    fldCityName.addEventListener('blur', () => { setTimeout(() => { suggestions.classList.remove('is-visible'); const coords = lookupCoords(fldCityName.value); if (fldCityName.value.trim()) applyCoords(coords, fldCityName.value.trim()); }, 200); });
 
     document.querySelectorAll('.mp-career-edit-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const d = btn.dataset;
-            fldStationId.value   = d.stationId || '';
-            fldClubName.value    = d.club || '';
-            fldCityName.value    = d.city || '';
-            fldCityCountry.value = d.country || '';
-            fldStartYear.value   = d.started || '';
-            fldEndYear.value     = d.ended || '';
-            fldGames.value       = d.games || '';
-            fldMapX.value        = d.x || '271';
-            fldMapY.value        = d.y || '214';
+            fldStationId.value = d.stationId || ''; fldClubName.value = d.club || ''; fldCityName.value = d.city || '';
+            fldCityCountry.value = d.country || ''; fldStartYear.value = d.started || ''; fldEndYear.value = d.ended || '';
+            fldGames.value = d.games || ''; fldMapX.value = d.x || '271'; fldMapY.value = d.y || '214';
             const knownCoords = lookupCoords(d.city || '');
-            if (knownCoords) {
-                hintEl.textContent = `📍 Bekannte Stadt: ${d.city}`;
-                hintEl.style.color = 'var(--mp-green, #17df53)';
-            } else {
-                hintEl.textContent = '';
-            }
+            if (knownCoords) { hintEl.textContent = '📍 Bekannte Stadt: ' + d.city; hintEl.style.color = '#30f29c'; } else hintEl.textContent = '';
             showForm('Station bearbeiten');
         });
     });
@@ -1274,75 +1119,33 @@
     document.querySelectorAll('.mp-career-delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             if (!confirm('Diese Station wirklich löschen?')) return;
-            const stationId = btn.dataset.stationId;
-            const fd = new FormData();
-            fd.append('station_id', stationId);
-            fetch('/manager/career-station/delete/', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': CSRF },
-                body: fd,
-            }).then(r => r.json()).then(data => {
-                if (data.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Fehler: ' + (data.error || 'Unbekannter Fehler'));
-                }
-            });
+            const fd = new FormData(); fd.append('station_id', btn.dataset.stationId);
+            fetch('/manager/career-station/delete/', { method: 'POST', headers: { 'X-CSRFToken': CSRF }, body: fd })
+                .then(r => r.json()).then(data => { if (data.ok) window.location.reload(); else alert('Fehler: ' + (data.error || 'Unbekannter Fehler')); });
         });
     });
 
     saveBtn.addEventListener('click', () => {
-        const club = fldClubName.value.trim();
-        const city = fldCityName.value.trim();
-        if (!club || !city) {
-            errorEl.textContent = 'Verein und Stadt sind Pflichtfelder.';
-            errorEl.style.display = 'block';
-            return;
-        }
-        errorEl.style.display = 'none';
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Speichert…';
-
-        const coords = lookupCoords(city);
-        if (coords) {
-            fldMapX.value = coords[0];
-            fldMapY.value = coords[1];
-        }
-
+        const club = fldClubName.value.trim(), city = fldCityName.value.trim();
+        if (!club || !city) { errorEl.textContent = 'Verein und Stadt sind Pflichtfelder.'; errorEl.style.display = 'block'; return; }
+        errorEl.style.display = 'none'; saveBtn.disabled = true; saveBtn.textContent = 'Speichert…';
+        const coords = lookupCoords(city); if (coords) { fldMapX.value = coords[0]; fldMapY.value = coords[1]; }
         const fd = new FormData();
-        fd.append('station_id',   fldStationId.value);
-        fd.append('club_name',    club);
-        fd.append('city_name',    city);
-        fd.append('city_country', fldCityCountry.value.trim());
-        fd.append('started_year', fldStartYear.value.trim());
-        fd.append('ended_year',   fldEndYear.value.trim());
-        fd.append('games_played', fldGames.value.trim() || '0');
-        fd.append('map_x',        fldMapX.value);
-        fd.append('map_y',        fldMapY.value);
-
-        fetch('/manager/career-station/save/', {
-            method: 'POST',
-            headers: { 'X-CSRFToken': CSRF },
-            body: fd,
-        }).then(r => r.json()).then(data => {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Speichern';
-            if (data.ok) {
-                window.location.reload();
-            } else {
-                errorEl.textContent = 'Fehler: ' + (data.error || 'Unbekannter Fehler');
-                errorEl.style.display = 'block';
-            }
-        }).catch(() => {
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Speichern';
-            errorEl.textContent = 'Netzwerkfehler – bitte versuche es erneut.';
-            errorEl.style.display = 'block';
-        });
+        fd.append('station_id', fldStationId.value); fd.append('club_name', club); fd.append('city_name', city);
+        fd.append('city_country', fldCityCountry.value.trim()); fd.append('started_year', fldStartYear.value.trim());
+        fd.append('ended_year', fldEndYear.value.trim()); fd.append('games_played', fldGames.value.trim() || '0');
+        fd.append('map_x', fldMapX.value); fd.append('map_y', fldMapY.value);
+        fetch('/manager/career-station/save/', { method: 'POST', headers: { 'X-CSRFToken': CSRF }, body: fd })
+            .then(r => r.json()).then(data => {
+                saveBtn.disabled = false; saveBtn.textContent = 'Speichern';
+                if (data.ok) window.location.reload();
+                else { errorEl.textContent = 'Fehler: ' + (data.error || 'Unbekannter Fehler'); errorEl.style.display = 'block'; }
+            }).catch(() => { saveBtn.disabled = false; saveBtn.textContent = 'Speichern'; errorEl.textContent = 'Netzwerkfehler'; errorEl.style.display = 'block'; });
     });
 })();
 </script>
 
+<!-- ═══ EDIT PROFILE MODAL ═══ -->
 <div class="mp-edit-profile-overlay" id="mpEditProfileOverlay" aria-modal="true" role="dialog" aria-label="Profil bearbeiten">
     <div class="mp-edit-profile-modal" id="mpEditProfileModal">
         <header class="mp-edit-modal-header">
@@ -1355,21 +1158,12 @@
             {% csrf_token %}
             <label class="mp-edit-label" for="mpEditDisplayName">
                 <span>Anzeigename</span>
-                <input
-                    type="text"
-                    id="mpEditDisplayName"
-                    name="display_name"
+                <input type="text" id="mpEditDisplayName" name="display_name"
                     class="mp-edit-input{% if request.GET.name_taken or request.GET.name_invalid %} mp-edit-input--error{% endif %}"
                     value="{% if request.GET.name_taken or request.GET.name_invalid %}{{ request.GET.attempted_name }}{% else %}{{ manager.name }}{% endif %}"
-                    maxlength="100"
-                    required
-                    autocomplete="off"
-                >
-                {% if request.GET.name_taken %}
-                <span class="mp-edit-error">Dieser Name ist bereits vergeben.</span>
-                {% elif request.GET.name_invalid %}
-                <span class="mp-edit-error">Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie die Zeichen - . ' _ enthalten.</span>
-                {% endif %}
+                    maxlength="100" required autocomplete="off">
+                {% if request.GET.name_taken %}<span class="mp-edit-error">Dieser Name ist bereits vergeben.</span>
+                {% elif request.GET.name_invalid %}<span class="mp-edit-error">Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie - . ' _ enthalten.</span>{% endif %}
             </label>
             <label class="mp-edit-label" for="mpEditNationality">
                 <span>Nationalität</span>
@@ -1391,106 +1185,45 @@
     const overlay = document.getElementById('mpEditProfileOverlay');
     const modal   = document.getElementById('mpEditProfileModal');
     if (!overlay || !modal) return;
-
-    function openModal() {
-        overlay.classList.add('is-open');
-        modal.querySelector('#mpEditDisplayName').focus();
-    }
-    function closeModal() {
-        overlay.classList.remove('is-open');
-    }
-
-    document.querySelectorAll('[data-open-edit-profile]').forEach(btn => {
-        btn.addEventListener('click', openModal);
-    });
-
-    overlay.addEventListener('click', e => {
-        if (e.target === overlay) closeModal();
-    });
-
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal();
-    });
-
-    modal.querySelectorAll('.mp-edit-modal-close').forEach(btn => {
-        btn.addEventListener('click', closeModal);
-    });
-
+    function openModal()  { overlay.classList.add('is-open'); modal.querySelector('#mpEditDisplayName').focus(); }
+    function closeModal() { overlay.classList.remove('is-open'); }
+    document.querySelectorAll('[data-open-edit-profile]').forEach(btn => btn.addEventListener('click', openModal));
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
+    modal.querySelectorAll('.mp-edit-modal-close').forEach(btn => btn.addEventListener('click', closeModal));
     const editForm = modal.querySelector('.mp-edit-modal-form');
     if (editForm) {
-        const nameInput  = editForm.querySelector('#mpEditDisplayName');
-        const saveBtn    = editForm.querySelector('[type="submit"]');
-        let errorEl      = editForm.querySelector('.mp-edit-error');
-
+        const nameInput = editForm.querySelector('#mpEditDisplayName');
+        const saveBtn   = editForm.querySelector('[type="submit"]');
+        let errorEl     = editForm.querySelector('.mp-edit-error');
         function showInlineError(msg) {
-            if (!errorEl) {
-                errorEl = document.createElement('span');
-                errorEl.className = 'mp-edit-error';
-                nameInput.insertAdjacentElement('afterend', errorEl);
-            }
-            errorEl.textContent = msg;
-            errorEl.style.display = '';
-            nameInput.classList.add('mp-edit-input--error');
+            if (!errorEl) { errorEl = document.createElement('span'); errorEl.className = 'mp-edit-error'; nameInput.insertAdjacentElement('afterend', errorEl); }
+            errorEl.textContent = msg; errorEl.style.display = ''; nameInput.classList.add('mp-edit-input--error');
         }
-        function clearInlineError() {
-            if (errorEl) { errorEl.style.display = 'none'; }
-            nameInput.classList.remove('mp-edit-input--error');
-        }
-
+        function clearInlineError() { if (errorEl) errorEl.style.display = 'none'; nameInput.classList.remove('mp-edit-input--error'); }
         editForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            clearInlineError();
-            saveBtn.disabled = true;
-            const origText = saveBtn.textContent;
-            saveBtn.textContent = 'Speichert…';
-
-            const fd = new FormData(editForm);
-            fetch(editForm.action, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                body: fd,
-            })
-            .then(r => r.json())
-            .then(data => {
-                saveBtn.disabled = false;
-                saveBtn.textContent = origText;
-                if (data.ok) {
-                    closeModal();
-                    if (data.name_confirmed) {
-                        const banner = document.getElementById('mpOnboardingBanner');
-                        if (banner) { banner.remove(); }
-                    }
-                    if (data.display_name) {
-                        document.querySelectorAll('.mp-manager-name, .mp-sidebar-name, [data-manager-name]').forEach(el => {
-                            el.textContent = data.display_name;
-                        });
-                    }
-                } else if (data.error === 'name_taken') {
-                    showInlineError('Dieser Name ist bereits vergeben.');
-                } else if (data.error === 'name_invalid') {
-                    showInlineError('Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie die Zeichen - . \' _ enthalten.');
-                } else {
-                    showInlineError('Speichern fehlgeschlagen – bitte versuche es erneut.');
-                }
-            })
-            .catch(() => {
-                saveBtn.disabled = false;
-                saveBtn.textContent = origText;
-                showInlineError('Netzwerkfehler – bitte versuche es erneut.');
-            });
+            e.preventDefault(); clearInlineError(); saveBtn.disabled = true;
+            const origText = saveBtn.textContent; saveBtn.textContent = 'Speichert…';
+            fetch(editForm.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: new FormData(editForm) })
+                .then(r => r.json()).then(data => {
+                    saveBtn.disabled = false; saveBtn.textContent = origText;
+                    if (data.ok) {
+                        closeModal();
+                        if (data.name_confirmed) { const banner = document.getElementById('mpOnboardingBanner'); if (banner) banner.remove(); }
+                        if (data.display_name) { document.querySelectorAll('.mp-manager-name, [data-manager-name]').forEach(el => { el.textContent = data.display_name; }); }
+                    } else if (data.error === 'name_taken')   showInlineError('Dieser Name ist bereits vergeben.');
+                    else if (data.error === 'name_invalid')   showInlineError('Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie - . \' _ enthalten.');
+                    else showInlineError('Speichern fehlgeschlagen – bitte versuche es erneut.');
+                }).catch(() => { saveBtn.disabled = false; saveBtn.textContent = origText; showInlineError('Netzwerkfehler – bitte versuche es erneut.'); });
         });
     }
-
     {% if not name_confirmed or request.GET.name_taken or request.GET.name_invalid %}
-    window.addEventListener('load', function () {
-        setTimeout(openModal, 300);
-    });
+    window.addEventListener('load', function () { setTimeout(openModal, 300); });
     {% endif %}
 })();
 </script>
-{% endif %}
 
-{% if can_edit_profile %}
+<!-- ═══ AVATAR UPLOAD ═══ -->
 <input type="file" id="mpAvatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
 <div class="mp-avatar-upload-toast" id="mpAvatarToast" aria-live="polite"></div>
 <script>
@@ -1500,266 +1233,102 @@
     const fileInput = document.getElementById('mpAvatarFileInput');
     const toast     = document.getElementById('mpAvatarToast');
     if (!editBtn || !fileInput) return;
-
     function showToast(msg, isError) {
         toast.textContent = msg;
         toast.className = 'mp-avatar-upload-toast' + (isError ? ' mp-avatar-upload-toast--error' : ' mp-avatar-upload-toast--ok');
         toast.style.display = 'block';
-        clearTimeout(toast._t);
-        toast._t = setTimeout(function () { toast.style.display = 'none'; }, 4000);
+        clearTimeout(toast._t); toast._t = setTimeout(function () { toast.style.display = 'none'; }, 4000);
     }
-
     function updateAvatarImages(url) {
         const cache = '?v=' + Date.now();
         const hdr = document.getElementById('mpAvatarHeaderImg');
-        const bdg = document.getElementById('mpAvatarBadgeImg');
         if (hdr) hdr.src = url + cache;
-        if (bdg) bdg.src = url + cache;
     }
-
-    editBtn.addEventListener('click', function () {
-        fileInput.value = '';
-        fileInput.click();
-    });
-
+    editBtn.addEventListener('click', function () { fileInput.value = ''; fileInput.click(); });
     if (resetBtn) {
         resetBtn.addEventListener('click', function () {
-            if (!confirm('Standard-Avatar wiederherstellen? Das aktuelle Profilbild wird gelöscht.')) return;
+            if (!confirm('Standard-Avatar wiederherstellen?')) return;
             resetBtn.disabled = true;
-            fetch('{% url "reset_profile_image" %}', {
-                method: 'POST',
-                headers: {'X-CSRFToken': '{{ csrf_token }}'},
-            })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                resetBtn.disabled = false;
-                if (data.ok) {
-                    updateAvatarImages(data.url);
-                    resetBtn.style.display = 'none';
-                    showToast('Standard-Avatar wiederhergestellt.', false);
-                } else {
-                    showToast(data.error || 'Fehler beim Zurücksetzen', true);
-                }
-            })
-            .catch(function () {
-                resetBtn.disabled = false;
-                showToast('Netzwerkfehler – bitte versuche es erneut.', true);
-            });
+            fetch('{% url "reset_profile_image" %}', { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'} })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    resetBtn.disabled = false;
+                    if (data.ok) { updateAvatarImages(data.url); resetBtn.style.display = 'none'; showToast('Standard-Avatar wiederhergestellt.', false); }
+                    else showToast(data.error || 'Fehler beim Zurücksetzen', true);
+                }).catch(function () { resetBtn.disabled = false; showToast('Netzwerkfehler – bitte versuche es erneut.', true); });
         });
     }
-
     fileInput.addEventListener('change', function () {
-        const file = fileInput.files[0];
-        if (!file) return;
-
-        if (file.size > 5 * 1024 * 1024) {
-            showToast('Datei zu groß. Maximum: 5 MB', true);
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
+        const file = fileInput.files[0]; if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { showToast('Datei zu groß. Maximum: 5 MB', true); return; }
+        const formData = new FormData(); formData.append('image', file); formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
         editBtn.disabled = true;
-
-        fetch('{% url "upload_profile_image" %}', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-            editBtn.disabled = false;
-            if (data.url) {
-                updateAvatarImages(data.url);
-                showToast('Profilbild gespeichert!', false);
-            } else {
-                showToast(data.error || 'Fehler beim Speichern', true);
-            }
-        })
-        .catch(function () {
-            editBtn.disabled = false;
-            showToast('Netzwerkfehler – bitte versuche es erneut.', true);
-        });
+        fetch('{% url "upload_profile_image" %}', { method: 'POST', body: formData })
+            .then(function (res) { return res.json(); })
+            .then(function (data) { editBtn.disabled = false; if (data.url) { updateAvatarImages(data.url); showToast('Profilbild gespeichert!', false); } else showToast(data.error || 'Fehler beim Speichern', true); })
+            .catch(function () { editBtn.disabled = false; showToast('Netzwerkfehler – bitte versuche es erneut.', true); });
     });
 })();
 </script>
 {% endif %}
 
+<!-- ═══ CSEL + ACCOUNT SAVE ═══ (preserved) -->
 <script>
 (function () {
-    var CHEVRON = '<svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>';
-
     function initCsel(csel) {
         var btn  = csel.querySelector('.mp-csel-btn');
         var list = csel.querySelector('.mp-csel-list');
         if (!btn || !list) return;
-        var opts     = list.querySelectorAll('.mp-csel-opt');
-        var labelEl  = btn.querySelector('.mp-csel-label');
+        var opts = list.querySelectorAll('.mp-csel-opt');
+        var labelEl = btn.querySelector('.mp-csel-label');
         var btnImgEl = btn.querySelector('.mp-csel-img');
-
         function close() { csel.classList.remove('is-open'); }
-        function open() {
-            document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
-                if (el !== csel) el.classList.remove('is-open');
-            });
-            csel.classList.add('is-open');
-            var sel = list.querySelector('.is-selected');
-            if (sel) sel.scrollIntoView({ block: 'nearest' });
-        }
-
+        function open()  { document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) { if (el !== csel) el.classList.remove('is-open'); }); csel.classList.add('is-open'); var sel = list.querySelector('.is-selected'); if (sel) sel.scrollIntoView({block:'nearest'}); }
         function pickOpt(opt) {
-            opts.forEach(function (o) { o.classList.remove('is-selected'); });
-            opt.classList.add('is-selected');
-            var spanEl = opt.querySelector('span');
-            labelEl.textContent = spanEl ? spanEl.textContent.trim() : opt.textContent.trim();
+            opts.forEach(function (o) { o.classList.remove('is-selected'); }); opt.classList.add('is-selected');
+            var spanEl = opt.querySelector('span'); labelEl.textContent = spanEl ? spanEl.textContent.trim() : opt.textContent.trim();
             var dataImg = opt.dataset.img || '';
-            if (dataImg) {
-                if (!btnImgEl) {
-                    var img = document.createElement('img');
-                    img.className = 'mp-csel-img';
-                    btn.insertBefore(img, btn.firstChild);
-                    btnImgEl = img;
-                }
-                btnImgEl.src = dataImg;
-                btnImgEl.style.display = '';
-            } else if (btnImgEl) {
-                btnImgEl.style.display = 'none';
-            }
+            if (dataImg) { if (!btnImgEl) { var img = document.createElement('img'); img.className = 'mp-csel-img'; btn.insertBefore(img, btn.firstChild); btnImgEl = img; } btnImgEl.src = dataImg; btnImgEl.style.display = ''; }
+            else if (btnImgEl) { btnImgEl.style.display = 'none'; }
             close();
         }
-
-        btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            csel.classList.contains('is-open') ? close() : open();
-        });
-        opts.forEach(function (opt) {
-            opt.addEventListener('click', function (e) {
-                e.stopPropagation();
-                pickOpt(opt);
-            });
-        });
+        btn.addEventListener('click', function (e) { e.stopPropagation(); csel.classList.contains('is-open') ? close() : open(); });
+        opts.forEach(function (opt) { opt.addEventListener('click', function (e) { e.stopPropagation(); pickOpt(opt); }); });
     }
-
     document.querySelectorAll('[data-mp-csel]').forEach(initCsel);
 
     (function () {
         var saveBtn = document.getElementById('mpAccountSaveBtn');
         if (!saveBtn) return;
-
-        function getCselVal(id) {
-            var csel = document.querySelector('[data-mp-csel-id="' + id + '"]');
-            if (!csel) return '';
-            var sel = csel.querySelector('.mp-csel-opt.is-selected');
-            return sel ? (sel.dataset.value || '') : '';
-        }
-
-        function getCsrfToken() {
-            var c = document.cookie.split(';').map(function (s) { return s.trim(); });
-            for (var i = 0; i < c.length; i++) {
-                if (c[i].startsWith('csrftoken=')) return decodeURIComponent(c[i].slice(10));
-            }
-            return '';
-        }
-
+        function getCselVal(id) { var csel = document.querySelector('[data-mp-csel-id="' + id + '"]'); if (!csel) return ''; var sel = csel.querySelector('.mp-csel-opt.is-selected'); return sel ? (sel.dataset.value || '') : ''; }
+        function getCsrfToken() { var c = document.cookie.split(';').map(function (s) { return s.trim(); }); for (var i = 0; i < c.length; i++) { if (c[i].startsWith('csrftoken=')) return decodeURIComponent(c[i].slice(10)); } return ''; }
         saveBtn.addEventListener('click', function () {
-            var nationalityName = getCselVal('land');
-            var favouriteClubId = getCselVal('club');
-            var trainerType     = getCselVal('type');
-
-            saveBtn.disabled = true;
-            saveBtn.textContent = '…';
-
-            var body = 'nationality_name=' + encodeURIComponent(nationalityName)
-                     + '&favourite_club_id=' + encodeURIComponent(favouriteClubId)
-                     + '&trainer_type=' + encodeURIComponent(trainerType);
-
-            fetch('{% url "update_manager_profile" %}', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCsrfToken(),
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: body,
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                saveBtn.disabled = false;
-                if (data.ok) {
-                    saveBtn.textContent = 'Gespeichert ✓';
-                    setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
-
-                    var flagRow = document.querySelector('.mp-flag-row');
-                    if (flagRow) {
-                        var flagImg  = flagRow.querySelector('.mp-flag-img');
-                        var flagSpan = flagRow.querySelector('span');
-                        if (data.flag_url) {
-                            if (!flagImg) {
-                                flagImg = document.createElement('img');
-                                flagImg.className = 'mp-flag-img';
-                                flagRow.insertBefore(flagImg, flagRow.firstChild);
-                            }
-                            flagImg.src = data.flag_url;
-                            flagImg.style.display = '';
-                        } else if (flagImg) {
-                            flagImg.style.display = 'none';
-                        }
-                        if (flagSpan) flagSpan.textContent = data.flag_name || '';
-                    }
-
-                    var badge = document.querySelector('.mp-type-badge');
-                    if (badge && data.trainer_type_label) badge.textContent = data.trainer_type_label;
-
-                    var sidebarFlag = document.getElementById('mpSidebarFlagImg');
-                    if (sidebarFlag) {
-                        if (data.flag_url) {
-                            sidebarFlag.src = data.flag_url;
-                            sidebarFlag.style.display = '';
-                        } else {
-                            sidebarFlag.style.display = 'none';
-                        }
-                    }
-                    var sidebarRole = document.getElementById('mpSidebarRole');
-                    if (sidebarRole && data.trainer_type_label) sidebarRole.textContent = data.trainer_type_label;
-                } else {
-                    saveBtn.textContent = 'Fehler';
-                    setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
-                }
-            })
-            .catch(function () {
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Fehler';
-                setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
-            });
+            var nationalityName = getCselVal('land'), favouriteClubId = getCselVal('club'), trainerType = getCselVal('type');
+            saveBtn.disabled = true; saveBtn.textContent = '…';
+            var body = 'nationality_name=' + encodeURIComponent(nationalityName) + '&favourite_club_id=' + encodeURIComponent(favouriteClubId) + '&trainer_type=' + encodeURIComponent(trainerType);
+            fetch('{% url "update_manager_profile" %}', { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':getCsrfToken(),'Content-Type':'application/x-www-form-urlencoded'}, body:body })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    saveBtn.disabled = false;
+                    if (data.ok) {
+                        saveBtn.textContent = 'Gespeichert ✓'; setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000);
+                        var flagRow = document.querySelector('.mp-flag-row');
+                        if (flagRow) { var flagImg = flagRow.querySelector('.mp-flag-img'); var flagSpan = flagRow.querySelector('span'); if (data.flag_url) { if (!flagImg) { flagImg = document.createElement('img'); flagImg.className = 'mp-flag-img'; flagRow.insertBefore(flagImg, flagRow.firstChild); } flagImg.src = data.flag_url; flagImg.style.display = ''; } else if (flagImg) flagImg.style.display = 'none'; if (flagSpan) flagSpan.textContent = data.flag_name || ''; }
+                        var badge = document.querySelector('.mp-type-badge'); if (badge && data.trainer_type_label) badge.textContent = data.trainer_type_label;
+                        var sidebarFlag = document.getElementById('mpSidebarFlagImg'); if (sidebarFlag) { if (data.flag_url) { sidebarFlag.src = data.flag_url; sidebarFlag.style.display = ''; } else sidebarFlag.style.display = 'none'; }
+                        var sidebarRole = document.getElementById('mpSidebarRole'); if (sidebarRole && data.trainer_type_label) sidebarRole.textContent = data.trainer_type_label;
+                    } else { saveBtn.textContent = 'Fehler'; setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000); }
+                }).catch(function () { saveBtn.disabled = false; saveBtn.textContent = 'Fehler'; setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000); });
         });
     })();
 
-    document.addEventListener('click', function () {
-        document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
-            el.classList.remove('is-open');
-        });
-    });
+    document.addEventListener('click', function () { document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) { el.classList.remove('is-open'); }); });
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) {
-                el.classList.remove('is-open');
-            });
-            return;
-        }
+        if (e.key === 'Escape') { document.querySelectorAll('[data-mp-csel].is-open').forEach(function (el) { el.classList.remove('is-open'); }); return; }
         if (e.key.length !== 1) return;
-        var openCsel = document.querySelector('[data-mp-csel].is-open');
-        if (!openCsel) return;
-        var ch = e.key.toLowerCase();
-        var allOpts = openCsel.querySelectorAll('.mp-csel-opt');
-        for (var i = 0; i < allOpts.length; i++) {
-            var spanEl = allOpts[i].querySelector('span');
-            var txt = (spanEl ? spanEl.textContent : allOpts[i].textContent).trim().toLowerCase();
-            if (txt.charAt(0) === ch) {
-                allOpts[i].scrollIntoView({ block: 'nearest' });
-                break;
-            }
-        }
+        var openCsel = document.querySelector('[data-mp-csel].is-open'); if (!openCsel) return;
+        var ch = e.key.toLowerCase(); var allOpts = openCsel.querySelectorAll('.mp-csel-opt');
+        for (var i = 0; i < allOpts.length; i++) { var spanEl = allOpts[i].querySelector('span'); var txt = (spanEl ? spanEl.textContent : allOpts[i].textContent).trim().toLowerCase(); if (txt.charAt(0) === ch) { allOpts[i].scrollIntoView({block:'nearest'}); break; } }
     });
 })();
 </script>

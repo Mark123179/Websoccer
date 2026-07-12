@@ -6003,6 +6003,7 @@ def manager_profile(request):
                 'city': _city_label,
                 'crest_url': _crest_url,
                 'is_active': _is_active,
+                'station_key': str(_st.id) if _st.id else '',
             })
     elif club is not None:
         # Fallback: single marker from ClubPublicProfile (only if manager has a club)
@@ -6050,6 +6051,143 @@ def manager_profile(request):
         }
         for c in Club.objects.order_by('name')
     ]
+
+    # --- Station-switcher JSON (Vereins-Leiste + Statistik panel) ---
+    def _station_match_stats(c_id, results_list):
+        if not c_id or not results_list:
+            return {'games': 0, 'wins': 0, 'win_pct': 0, 'draws': 0, 'draw_pct': 0,
+                    'losses': 0, 'loss_pct': 0, 'goals': 0, 'goals_against': 0, 'points': 0,
+                    'ppg': '0,00', 'gpg': '0,00', 'gapg': '0,00', 'win_streak': 0, 'loss_streak': 0}
+        w = d2 = l2 = gf = ga = 0
+        for m in results_list:
+            hg = m.home_goals or 0
+            ag = m.away_goals or 0
+            club_g = hg if m.home_club_id == c_id else ag
+            opp_g = ag if m.home_club_id == c_id else hg
+            rl = m.result_label
+            if rl == MatchResult.RESULT_WIN:
+                w += 1
+            elif rl == MatchResult.RESULT_DRAW:
+                d2 += 1
+            elif rl == MatchResult.RESULT_LOSS:
+                l2 += 1
+            gf += club_g
+            ga += opp_g
+        g2 = w + d2 + l2
+        pts2 = w * 3 + d2
+        def _pct2(x): return round(x / g2 * 100) if g2 else 0
+        def _div2(x): return f'{x / g2:.2f}'.replace('.', ',') if g2 else '0,00'
+        mw2 = ml2 = cw2 = cl2 = 0
+        for m in results_list:
+            rl = m.result_label
+            if rl == MatchResult.RESULT_WIN:
+                cw2 += 1; cl2 = 0
+            elif rl == MatchResult.RESULT_LOSS:
+                cl2 += 1; cw2 = 0
+            else:
+                cw2 = cl2 = 0
+            mw2 = max(mw2, cw2)
+            ml2 = max(ml2, cl2)
+        return {'games': g2, 'wins': w, 'win_pct': _pct2(w), 'draws': d2, 'draw_pct': _pct2(d2),
+                'losses': l2, 'loss_pct': _pct2(l2), 'goals': gf, 'goals_against': ga, 'points': pts2,
+                'ppg': _div2(pts2), 'gpg': _div2(gf), 'gapg': _div2(ga), 'win_streak': mw2, 'loss_streak': ml2}
+
+    from django.templatetags.static import static as _sf2
+    from django.db.models import Sum as _Sum2
+    from datetime import date as _dc2
+
+    _switcher = []
+    for _si, _ss_st in enumerate(db_stations):
+        _cid = _ss_st.club_id
+        _st_results = list(
+            MatchResult.objects.filter(club_id=_cid)
+            .select_related('home_club', 'away_club')
+            .order_by('sort_order', 'id')
+        ) if _cid else []
+        _ss_stats = _station_match_stats(_cid, _st_results)
+        _st_nm = _ss_st.custom_club_name or (_ss_st.club.name if _ss_st.club else _ss_st.city_name or '?')
+        _st_cr = _ss_st.club.crest_static_path if _ss_st.club else club_crest
+        _is_act2 = _ss_st.ended_at is None
+        _today2 = _dc2.today()
+        _end2 = _ss_st.ended_at or _today2
+        if _ss_st.started_at:
+            _mo2 = (_end2.year - _ss_st.started_at.year) * 12 + (_end2.month - _ss_st.started_at.month)
+            _yr2, _rm2 = divmod(_mo2, 12)
+            if _yr2 and _rm2:
+                _zeit2 = f'{_yr2} J., {_rm2} Mo.'
+            elif _yr2:
+                _zeit2 = f'{_yr2} Jahr{"e" if _yr2 != 1 else ""}'
+            else:
+                _zeit2 = f'{_rm2} Monat{"e" if _rm2 != 1 else ""}'
+        else:
+            _zeit2 = '–'
+        _trophy2 = int(ClubTrophy.objects.filter(club_id=_cid).aggregate(total=_Sum2('count'))['total'] or 0) if _cid else 0
+        _switcher.append({
+            'key': str(_ss_st.id),
+            'name': _st_nm,
+            'crest_url': _sf2(_st_cr) if _st_cr else '',
+            'club_url': f'/clubs/{_cid}/' if _cid else '',
+            'period': _ss_st.period_label,
+            'is_active': _is_act2,
+            'zeit': _zeit2,
+            'spiele': str(_ss_stats['games']),
+            'titel': str(_trophy2),
+            'finale': '0',
+            'platz': '–',
+            'pps': _ss_stats['ppg'],
+            'stats': _ss_stats,
+        })
+    if not _switcher and club:
+        _ss_cur = _station_match_stats(club.id, all_results)
+        _switcher.append({
+            'key': 'current',
+            'name': club_name,
+            'crest_url': _sf2(club_crest) if club_crest else '',
+            'club_url': club_url,
+            'period': _current_period_str,
+            'is_active': True,
+            'zeit': _time_label_str,
+            'spiele': str(_ss_cur['games']),
+            'titel': str(trophies_count),
+            'finale': '0',
+            'platz': '–',
+            'pps': ppg,
+            'stats': _ss_cur,
+        })
+    station_switcher_json = json.dumps(_switcher)
+
+    # --- Timeline events with ISO dates for JS positioning ---
+    def _to_iso(d):
+        return d.isoformat() if d else ''
+
+    _tl_js = []
+    if db_stations:
+        for _tl_st in db_stations:
+            _tl_nm = _tl_st.custom_club_name or (_tl_st.club.name if _tl_st.club else _tl_st.city_name or '?')
+            _tl_cr = _tl_st.club.crest_static_path if _tl_st.club else club_crest
+            _tl_act = _tl_st.ended_at is None
+            _tl_body = f'Übernahme von {_tl_nm}' + (' — aktuell im Amt' if _tl_act else f' — bis {_fmt_de(_tl_st.ended_at)}')
+            _tl_js.append({'date_iso': _to_iso(_tl_st.started_at), 'date': _fmt_de(_tl_st.started_at),
+                           'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
+                           'title': 'Aktuelles Amt' if _tl_act else 'Amtsantritt', 'body': _tl_body,
+                           'crest_url': _sf2(_tl_cr) if _tl_cr else '', 'is_active': _tl_act,
+                           'station_key': str(_tl_st.id) if _tl_st.id else ''})
+    else:
+        _tl_js.append({'date_iso': '', 'date': '–', 'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
+                       'title': 'Willkommen', 'body': f'Übernahme von {club_name}',
+                       'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': True, 'station_key': ''})
+    for _tl_tr in db_trophies:
+        _tl_js.append({'date_iso': '', 'date': '–', 'type': 'titel', 'cat': 'TITEL', 'tone': 'gold',
+                       'title': _tl_tr.competition_name, 'body': f'{_tl_tr.count}× gewonnen',
+                       'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': False, 'station_key': ''})
+    if club:
+        for _tl_t in (PlayerTransferHistory.objects.filter(to_club=club).exclude(fee_eur=None).exclude(fee_eur=0).select_related('player').order_by('-fee_eur')[:2]):
+            _fee_tl = f'€{int(_tl_t.fee_eur):,}'.replace(',', '.')
+            _tl_js.append({'date_iso': _to_iso(_tl_t.transfer_date), 'date': _fmt_de(_tl_t.transfer_date),
+                           'type': 'transfers', 'cat': 'TRANSFER', 'tone': 'cyan',
+                           'title': 'Einkauf', 'body': f'{_fee_tl} für {_tl_t.player.full_name}',
+                           'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': False, 'station_key': ''})
+    timeline_events_json = json.dumps(_tl_js, default=str)
 
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
@@ -6137,6 +6275,8 @@ def manager_profile(request):
         'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
         'city_coords_json': city_coords_json,
+        'station_switcher_json': station_switcher_json,
+        'timeline_events_json': timeline_events_json,
     })
 
 
