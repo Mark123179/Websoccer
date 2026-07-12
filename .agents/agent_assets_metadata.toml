@@ -275,3 +275,9 @@ id = "WqkQYkw2HSejUh_jdXsRY"
 uri = "file://docs/cmtracker_integration.md"
 type = "text"
 title = "cmtracker-Integration — Doku, Feldmapping & Live-Modus-Plan"
+
+[[outputs]]
+id = "tqiEfXTINkpBqD57yYiV2"
+uri = "file://manager_profile_export.zip"
+type = "unspecified"
+title = "Managerprofil – alle relevanten Dateien"
