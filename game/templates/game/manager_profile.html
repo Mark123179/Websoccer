@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-71">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-80">
 {% endblock %}
 
 {% block content %}
@@ -86,7 +86,7 @@
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M4 3h8v3a4 4 0 0 1-8 0V3z"/><path d="M8 10v2M5 14h6M4 3H2v2a3 3 0 0 0 2.8 3M12 3h2v2a3 3 0 0 1-2.8 3"/></svg>
                 TROPHÄEN
             </span>
-            <strong class="mp-kpi-big">{{ manager.trophies }}</strong>
+            <strong class="mp-kpi-big mp-kpi-cyan">{{ manager.trophies }}</strong>
             {% if manager.trophies_list_mini %}
             <div class="mp-kpi-trophies-mini">
                 {% for t in manager.trophies_list_mini %}<img src="{% static t.icon %}" alt="{{ t.name }}">{% endfor %}
@@ -204,6 +204,7 @@
             <button class="mp-tl2-antraege" id="mpTl2Antraege" type="button">ANTRÄGE</button>
             <button class="mp-tl2-manuell" id="mpTl2Manuell" type="button">+ EREIGNIS</button>
             {% endif %}
+            <span class="mp-tl2-season-reset" id="mpTl2ResetChip" style="display:none;">SAISON ✕</span>
             <button class="mp-tl2-nav-btn" id="mpTl2NavL" aria-label="Zurück">‹</button>
             <button class="mp-tl2-nav-btn" id="mpTl2NavR" aria-label="Weiter">›</button>
             <button class="mp-tl2-today-btn" id="mpTl2Today">HEUTE</button>
@@ -696,112 +697,247 @@ var MP_TL_EVENTS = {{ timeline_events_json|safe }};
 var MP_STATIONS  = {{ station_switcher_json|safe }};
 </script>
 
-<!-- ═══ TIMELINE v2 ENGINE ═══ -->
+<!-- ═══ TIMELINE v2 ENGINE (rewrite) ═══ -->
 <script>
 (function () {
-    var TRACK_W  = 3200;
-    var MARGIN_L = 100;
-    var MARGIN_R = 140;
-    var USABLE   = TRACK_W - MARGIN_L - MARGIN_R;
+    /* ── Zeitdomäne & Geometrie ── */
+    var T0_MS   = Date.parse('2023-07-15');
+    var T1_MS   = Date.parse('2026-08-20');
+    var PAD_L   = 56, PAD_R = 96;
+    var CARD_W  = 234, GAP = 16, BASE_W = 2900;
+    var TRACK_H = 352, AXIS_Y = 176; /* 352/2 */
+
+    /* ── Solid-Fill Palette ── */
     var TONE = {
-        gold:    { bg: 'rgba(255,209,102,.08)', bd: 'rgba(255,209,102,.36)', dot: '#ffd166', acc: '#ffd166' },
-        cyan:    { bg: 'rgba(34,230,255,.06)',  bd: 'rgba(44,231,255,.30)',  dot: '#22e6ff', acc: '#22e6ff' },
-        green:   { bg: 'rgba(48,242,156,.07)',  bd: 'rgba(48,242,156,.32)',  dot: '#30f29c', acc: '#30f29c' },
-        red:     { bg: 'rgba(255,85,112,.07)',  bd: 'rgba(255,85,112,.32)',  dot: '#ff5570', acc: '#ff5570' },
-        neutral: { bg: 'rgba(44,231,255,.04)',  bd: 'rgba(44,231,255,.20)',  dot: '#22e6ff', acc: 'rgba(244,251,255,.6)' },
+        gold:    { grad:'linear-gradient(165deg,#ffd166,#e0a034)', text:'#061018', desc:'rgba(6,16,24,.75)',      chip:'rgba(6,16,24,.22)',      chipTxt:'#061018', dot:'#ffd166' },
+        cyan:    { grad:'linear-gradient(165deg,#4fe9ff,#149dc0)', text:'#061018', desc:'rgba(6,16,24,.75)',      chip:'rgba(6,16,24,.22)',      chipTxt:'#061018', dot:'#22e6ff' },
+        green:   { grad:'linear-gradient(165deg,#54f5ad,#17b06c)', text:'#061018', desc:'rgba(6,16,24,.75)',      chip:'rgba(6,16,24,.22)',      chipTxt:'#061018', dot:'#30f29c' },
+        red:     { grad:'linear-gradient(165deg,#ff6d84,#c22e46)', text:'#fff',    desc:'rgba(255,255,255,.85)',  chip:'rgba(255,255,255,.18)',  chipTxt:'#fff',    dot:'#ff5570' },
+        neutral: { grad:'linear-gradient(165deg,#4fe9ff,#149dc0)', text:'#061018', desc:'rgba(6,16,24,.75)',      chip:'rgba(6,16,24,.22)',      chipTxt:'#061018', dot:'#22e6ff' },
     };
 
-    var track   = document.getElementById('mpTl2Track');
-    var scrollEl= document.getElementById('mpTl2Scroll');
+    /* ── SVG-Icons pro Kategorie ── */
+    var SVG = {
+        VEREIN:   '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="3" width="10" height="8" rx="1"/><path d="M1 5h10M4 3V1M8 3V1"/></svg>',
+        LIGA:     '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="3" width="10" height="8" rx="1"/><path d="M1 5h10M4 3V1M8 3V1"/></svg>',
+        TITEL:    '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 2h6v3a3 3 0 0 1-6 0V2z"/><path d="M6 7v2M4 10h4"/></svg>',
+        HISTORIC: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="6" r="5"/><path d="M6 3v3l2 2"/></svg>',
+        JUGEND:   '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="4" r="2.2"/><path d="M2 11c0-2.2 1.8-4 4-4s4 1.8 4 4"/></svg>',
+        FINALE:   '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1l1.2 2.5L10 4 8 6l.5 2.6L6 7.3 3.5 8.6 4 6 2 4l2.8-.5z"/></svg>',
+        STATUS:   '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1.5L10.5 10h-9L6 1.5z"/><path d="M6 5v2M6 9h.01"/></svg>',
+    };
+    function catSvg(cat) { return SVG[(cat || '').toUpperCase()] || SVG.HISTORIC; }
+
+    /* ── DOM-Refs ── */
+    var track      = document.getElementById('mpTl2Track');
+    var scrollEl   = document.getElementById('mpTl2Scroll');
+    var resetChip  = document.getElementById('mpTl2ResetChip');
     if (!track || !scrollEl) return;
 
     var activeFilter = 'alle';
-    var today = new Date();
+    var zoomSeason   = null;  /* null = Gesamtansicht */
+    var today        = new Date();
 
-    function computeRange() {
-        var earliest = new Date(today.getFullYear() - 1, today.getMonth(), 1);
-        (MP_TL_EVENTS || []).forEach(function (ev) {
-            if (ev.date_iso) { var d = new Date(ev.date_iso); if (!isNaN(d) && d < earliest) earliest = d; }
-        });
-        var rs = new Date(earliest); rs.setMonth(rs.getMonth() - 3);
-        var re = new Date(today);    re.setMonth(re.getMonth() + 3);
-        return { rs: rs, re: re, ms: re - rs };
+    /* ── Saisongrenzen ── */
+    var SEASONS = [
+        { label:'2023/24', mid:Date.parse('2024-01-01'), t0:Date.parse('2023-07-01'), t1:Date.parse('2024-06-30') },
+        { label:'2024/25', mid:Date.parse('2025-01-01'), t0:Date.parse('2024-07-01'), t1:Date.parse('2025-06-30') },
+        { label:'2025/26', mid:Date.parse('2026-01-01'), t0:Date.parse('2025-07-01'), t1:Date.parse('2026-06-30') },
+    ];
+
+    function getRange() {
+        if (zoomSeason) {
+            for (var i=0;i<SEASONS.length;i++) {
+                if (SEASONS[i].label === zoomSeason) return { t0:SEASONS[i].t0, t1:SEASONS[i].t1, W:1256 };
+            }
+        }
+        return { t0:T0_MS, t1:T1_MS, W:BASE_W };
     }
 
-    var range = computeRange();
-
-    function dateToX(d) {
-        if (!d || isNaN(d)) return MARGIN_L + USABLE * 0.5;
-        return Math.round(MARGIN_L + Math.max(0, Math.min(1, (d - range.rs) / range.ms)) * USABLE);
+    function X(ts, range) {
+        var frac = Math.max(0, Math.min(1, (ts - range.t0) / (range.t1 - range.t0)));
+        return Math.round(PAD_L + frac * (range.W - PAD_L - PAD_R));
     }
 
+    /* ── Haupt-Render ── */
     function render() {
-        range = computeRange();
+        var range = getRange();
         track.innerHTML = '';
-        track.style.cssText = 'width:' + TRACK_W + 'px;height:260px;position:relative;';
+        track.style.cssText = 'width:'+range.W+'px;height:'+TRACK_H+'px;position:relative;flex-shrink:0;';
 
-        var axis = document.createElement('div'); axis.className = 'mp-tl2-axis'; track.appendChild(axis);
+        /* Achse */
+        var axis = document.createElement('div');
+        axis.style.cssText = 'position:absolute;left:0;right:0;top:'+AXIS_Y+'px;height:2px;'+
+            'background:linear-gradient(90deg,rgba(44,231,255,.06),rgba(44,231,255,.42) 10%,rgba(44,231,255,.42) 90%,rgba(44,231,255,.06));pointer-events:none;';
+        track.appendChild(axis);
 
-        var hx = dateToX(today);
-        var hl = document.createElement('div'); hl.className = 'mp-tl2-heute-line'; hl.style.left = hx + 'px'; track.appendChild(hl);
-        var htxt = document.createElement('span'); htxt.className = 'mp-tl2-heute-lbl'; htxt.textContent = 'HEUTE'; htxt.style.left = hx + 'px'; track.appendChild(htxt);
+        /* HEUTE-Marker */
+        var hx = X(today.getTime(), range);
+        var hLine = document.createElement('div');
+        hLine.style.cssText = 'position:absolute;left:'+hx+'px;top:0;bottom:0;width:2px;'+
+            'border-left:2px dashed rgba(34,230,255,.32);pointer-events:none;z-index:1;';
+        track.appendChild(hLine);
+        var hPill = document.createElement('span');
+        hPill.textContent = 'HEUTE';
+        hPill.style.cssText = 'position:absolute;left:'+hx+'px;top:'+(AXIS_Y-10)+'px;'+
+            'transform:translateX(-50%);background:#22e6ff;color:#061018;'+
+            'font:900 9px/1 Inter,system-ui,sans-serif;letter-spacing:.05em;'+
+            'border-radius:999px;padding:4px 9px;box-shadow:0 0 18px rgba(34,230,255,.55);'+
+            'white-space:nowrap;pointer-events:none;z-index:3;';
+        track.appendChild(hPill);
 
-        for (var yr = range.rs.getFullYear(); yr <= range.re.getFullYear() + 1; yr++) {
-            var td = new Date(yr, 7, 1); var tx = dateToX(td);
-            if (tx < MARGIN_L || tx > TRACK_W - MARGIN_R + 20) continue;
-            var tck = document.createElement('span'); tck.className = 'mp-tl2-tick'; tck.textContent = yr + '/' + String(yr + 1).slice(-2); tck.style.left = tx + 'px'; track.appendChild(tck);
+        /* Saison- oder Monats-Labels */
+        if (zoomSeason) {
+            var MONTHS = ['Jul','Aug','Sep','Okt','Nov','Dez','Jan','Feb','Mär','Apr','Mai','Jun'];
+            var baseYear = parseInt(zoomSeason.split('/')[0]);
+            for (var mi=0; mi<12; mi++) {
+                var yr = mi < 6 ? baseYear : baseYear+1;
+                var mo = mi < 6 ? mi+6 : mi-6;
+                var dt = new Date(yr, mo, 15).getTime();
+                if (dt < range.t0 || dt > range.t1) continue;
+                var mlbl = document.createElement('span');
+                mlbl.textContent = MONTHS[mi];
+                mlbl.style.cssText = 'position:absolute;left:'+X(dt,range)+'px;bottom:5px;'+
+                    'transform:translateX(-50%);font:700 10px/1 Inter,system-ui,sans-serif;'+
+                    'color:rgba(244,251,255,.35);white-space:nowrap;pointer-events:none;';
+                track.appendChild(mlbl);
+            }
+        } else {
+            SEASONS.forEach(function(s) {
+                var sx = X(s.mid, range);
+                var slbl = document.createElement('span');
+                slbl.textContent = s.label;
+                slbl.style.cssText = 'position:absolute;left:'+sx+'px;bottom:5px;'+
+                    'transform:translateX(-50%);font:700 10px/1.1 Inter,system-ui,sans-serif;'+
+                    'letter-spacing:.01em;color:rgba(244,251,255,.5);white-space:nowrap;'+
+                    'cursor:pointer;transition:color .15s;';
+                slbl.addEventListener('mouseenter', function() { slbl.style.color='#22e6ff'; });
+                slbl.addEventListener('mouseleave', function() { slbl.style.color='rgba(244,251,255,.5)'; });
+                slbl.addEventListener('click', function() { setZoom(s.label); });
+                track.appendChild(slbl);
+            });
         }
 
-        var visible = (MP_TL_EVENTS || []).filter(function (ev) { return activeFilter === 'alle' || ev.type === activeFilter; });
-        visible.forEach(function (ev, idx) {
-            var ts = TONE[ev.tone] || TONE.cyan;
-            var xPos = ev.date_iso ? dateToX(new Date(ev.date_iso)) : MARGIN_L + idx * 280;
+        /* Events filtern + sortieren */
+        var events = (MP_TL_EVENTS||[]).filter(function(ev) {
+            if (!ev.title || !ev.date_iso) return false;
+            return activeFilter==='alle' || ev.type===activeFilter;
+        }).slice().sort(function(a,b) {
+            return Date.parse(a.date_iso) - Date.parse(b.date_iso);
+        });
+
+        /* Anti-Kollision je Spur */
+        var lastTop = -99999, lastBot = -99999;
+
+        events.forEach(function(ev, idx) {
+            var ts  = Date.parse(ev.date_iso);
+            if (isNaN(ts)) return;
+            var tone = ev.tone || 'cyan';
+            var C    = TONE[tone] || TONE.cyan;
+            var rawX = X(ts, range);
             var isTop = idx % 2 === 0;
 
-            var dot = document.createElement('span'); dot.className = 'mp-tl2-dot-marker';
-            dot.style.cssText = 'left:' + xPos + 'px;background:' + ts.dot + ';box-shadow:0 0 8px ' + ts.dot + ';'; track.appendChild(dot);
+            if (isTop) { rawX = Math.max(rawX, lastTop + CARD_W + GAP); lastTop = rawX; }
+            else        { rawX = Math.max(rawX, lastBot + CARD_W + GAP); lastBot = rawX; }
 
-            var con = document.createElement('div');
-            con.className = 'mp-tl2-connector' + (isTop ? ' is-top' : ' is-bot');
-            con.style.cssText = 'left:' + (xPos + 4) + 'px;background:' + ts.dot + ';'; track.appendChild(con);
+            /* Achsenpunkt */
+            var dot = document.createElement('span');
+            dot.style.cssText = 'position:absolute;left:'+(rawX+26)+'px;top:'+(AXIS_Y-4)+'px;'+
+                'width:9px;height:9px;border-radius:50%;background:'+C.dot+';'+
+                'box-shadow:0 0 12px '+C.dot+';transform:translateX(-50%);z-index:2;';
+            track.appendChild(dot);
 
+            /* Stiel */
+            var stem = document.createElement('div');
+            var stemTop = isTop
+                ? 'bottom:50%;margin-bottom:0;'
+                : 'top:50%;margin-top:0;';
+            stem.style.cssText = 'position:absolute;left:'+(rawX+25)+'px;'+stemTop+
+                'width:2px;height:20px;background:'+C.dot+';opacity:.55;';
+            track.appendChild(stem);
+
+            /* Crest */
+            var crestHtml = ev.crest_url
+                ? '<img src="'+ev.crest_url+'" style="position:absolute;right:10px;bottom:8px;'+
+                  'width:30px;height:30px;object-fit:contain;'+
+                  'filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));" alt="">'
+                : '';
+
+            /* Kategorie */
+            var catLabel = (ev.cat || ev.type || 'VEREIN').toUpperCase();
+
+            /* Karte */
             var card = document.createElement('div');
-            card.className = 'mp-tl2-card' + (isTop ? ' is-top' : ' is-bot');
-            card.style.cssText = 'left:' + (xPos - 22) + 'px;border-color:' + ts.bd + ';background:' + ts.bg + ';';
-            var crestHtml = ev.crest_url ? '<span class="mp-tl2-card-crest" style="background-image:url(\'' + ev.crest_url + '\')"></span>' : '';
+            var cardTop = isTop
+                ? 'bottom:50%;margin-bottom:20px;'
+                : 'top:50%;margin-top:20px;';
+            card.style.cssText = 'position:absolute;left:'+rawX+'px;'+cardTop+
+                'width:'+CARD_W+'px;border-radius:8px;padding:10px 12px 12px;'+
+                'background:'+C.grad+';border:1px solid rgba(6,16,24,.16);'+
+                'box-shadow:0 12px 34px rgba(0,0,0,.2);overflow:hidden;';
             card.innerHTML =
-                '<div class="mp-tl2-card-top" style="color:' + ts.acc + '">' +
-                    '<span class="mp-tl2-chip" style="border-color:' + ts.bd + ';color:' + ts.acc + '">' + (ev.cat || ev.type.toUpperCase()) + '</span>' +
-                    '<time>' + (ev.date || '–') + '</time>' + crestHtml +
+                '<div style="display:flex;align-items:center;gap:7px;">' +
+                    '<span style="width:20px;height:20px;border-radius:5px;'+
+                        'background:'+C.chip+';display:flex;align-items:center;'+
+                        'justify-content:center;color:'+C.chipTxt+';flex-shrink:0;">' +
+                        catSvg(catLabel) +
+                    '</span>' +
+                    '<span style="font:900 9px/1 Inter,system-ui,sans-serif;'+
+                        'letter-spacing:.01em;color:'+C.text+';">'+catLabel+'</span>' +
+                    '<time style="margin-left:auto;font:700 9.5px/1 Inter,system-ui,sans-serif;'+
+                        'color:'+C.text+';opacity:.7;flex-shrink:0;">'+(ev.date||'')+'</time>' +
                 '</div>' +
-                '<strong class="mp-tl2-card-title">' + (ev.title || '') + '</strong>' +
-                '<p class="mp-tl2-card-body">' + (ev.body || '') + '</p>';
+                '<strong style="display:block;font:900 13px/1.2 Inter,system-ui,sans-serif;'+
+                    'color:'+C.text+';margin-top:7px;margin-right:40px;">'+(ev.title||'')+'</strong>' +
+                '<p style="margin:4px 40px 0 0;font:600 10.5px/1.45 Inter,system-ui,sans-serif;'+
+                    'color:'+C.desc+';">'+(ev.body||'')+'</p>' +
+                crestHtml;
             track.appendChild(card);
         });
     }
 
+    /* ── Zoom ── */
+    function setZoom(season) {
+        zoomSeason = season;
+        if (resetChip) { resetChip.textContent = 'SAISON '+season+' ✕'; resetChip.style.display = 'inline-flex'; }
+        render();
+        scrollEl.scrollLeft = 0;
+    }
+    function clearZoom() {
+        zoomSeason = null;
+        if (resetChip) resetChip.style.display = 'none';
+        render();
+        scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
+    }
+    if (resetChip) resetChip.addEventListener('click', clearZoom);
+
     render();
 
-    document.querySelectorAll('.mp-tl2-filter').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.mp-tl2-filter').forEach(function (b) { b.classList.remove('is-active'); });
-            btn.classList.add('is-active'); activeFilter = btn.dataset.filter; render();
+    /* ── Filter-Buttons ── */
+    document.querySelectorAll('.mp-tl2-filter').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.mp-tl2-filter').forEach(function(b) { b.classList.remove('is-active'); });
+            btn.classList.add('is-active');
+            activeFilter = btn.dataset.filter;
+            render();
         });
     });
 
-    var step = 420;
-    document.getElementById('mpTl2NavL').addEventListener('click', function () { scrollEl.scrollLeft -= step; });
-    document.getElementById('mpTl2NavR').addEventListener('click', function () { scrollEl.scrollLeft += step; });
-    document.getElementById('mpTl2Today').addEventListener('click', function () {
-        scrollEl.scrollLeft = dateToX(today) - scrollEl.clientWidth / 2;
+    /* ── Scroll-Navigation ── */
+    var STEP = 360;
+    document.getElementById('mpTl2NavL').addEventListener('click', function() { scrollEl.scrollLeft -= STEP; });
+    document.getElementById('mpTl2NavR').addEventListener('click', function() { scrollEl.scrollLeft += STEP; });
+    document.getElementById('mpTl2Today').addEventListener('click', function() {
+        if (zoomSeason) clearZoom();
+        else scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
     });
 
-    window.addEventListener('load', function () {
-        scrollEl.scrollLeft = Math.max(0, dateToX(today) - scrollEl.clientWidth / 2);
+    window.addEventListener('load', function() {
+        scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
     });
 
     var einBtn = document.getElementById('mpTl2Einreichen');
-    if (einBtn) einBtn.addEventListener('click', function () { alert('Einträge können bald eingereicht werden.'); });
+    if (einBtn) einBtn.addEventListener('click', function() { alert('Einträge können bald eingereicht werden.'); });
 
     window.mpTl2Render = render;
 })();
