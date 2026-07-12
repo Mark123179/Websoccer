@@ -935,10 +935,6 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
         else scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
     });
 
-    window.addEventListener('load', function() {
-        scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
-    });
-
     var einBtn = document.getElementById('mpTl2Einreichen');
     if (einBtn) einBtn.addEventListener('click', function() { alert('Einträge können bald eingereicht werden.'); });
 
