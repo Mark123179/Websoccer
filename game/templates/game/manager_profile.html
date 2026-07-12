@@ -818,9 +818,12 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
             });
         }
 
-        /* Events filtern + sortieren */
+        /* Events filtern + sortieren (nur Events ab T0) */
+        var domainT0 = zoomSeason ? getRange().t0 : T0_MS;
         var events = (MP_TL_EVENTS||[]).filter(function(ev) {
             if (!ev.title || !ev.date_iso) return false;
+            var ts = Date.parse(ev.date_iso);
+            if (isNaN(ts) || ts < T0_MS) return false;
             return activeFilter==='alle' || ev.type===activeFilter;
         }).slice().sort(function(a,b) {
             return Date.parse(a.date_iso) - Date.parse(b.date_iso);
