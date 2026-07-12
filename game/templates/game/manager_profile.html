@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-83">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-84">
 {% endblock %}
 
 {% block content %}
@@ -336,6 +336,7 @@
                  data-active="{% if m.is_active %}1{% else %}0{% endif %}"
                  style="left:{{ m.x_pct }}%;top:{{ m.y_pct }}%">
                 <img class="mp-photo-marker-crest" src="{{ m.crest_url }}" alt="{{ m.club }}">
+                <div class="mp-photo-marker-dot"></div>
                 <span class="mp-photo-marker-label">{{ m.city }}</span>
             </div>
             {% endfor %}

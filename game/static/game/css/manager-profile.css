@@ -382,6 +382,7 @@ body.manager-profile-page .nav-menu a:first-child {
 /* ─── PROFIL GRID (3 Spalten, unified) ───────────────────────── */
 .mp-profil-grid { display: grid; grid-template-columns: 250px 1fr 300px; gap: 12px; align-items: stretch; }
 .mp-profil-col-left  { display: flex; flex-direction: column; gap: 12px; }
+.mp-profil-col-left > .mp-card2:last-child { flex: 1; }
 .mp-profil-col-right { display: flex; flex-direction: column; gap: 12px; }
 
 /* ─── CARD v2 ────────────────────────────────────────────────── */
@@ -436,7 +437,7 @@ body.manager-profile-page .nav-menu a:first-child {
 
 /* Photo Map */
 .mp-photo-map {
-    position: relative; width: 100%; flex: 1 1 0; min-height: 280px;
+    position: relative; width: 100%; flex: 1 1 0; min-height: 260px; max-height: 440px;
     overflow: hidden; background: #021622;
 }
 .mp-photo-map-bg {
@@ -455,6 +456,12 @@ body.manager-profile-page .nav-menu a:first-child {
     box-shadow: 0 0 12px rgba(0,0,0,.6); transition: border-color .18s;
 }
 .mp-photo-marker.is-active .mp-photo-marker-crest { border-color: var(--mp-green); box-shadow: 0 0 16px rgba(48,242,156,.4); }
+.mp-photo-marker-dot {
+    width: 10px; height: 10px; border-radius: 50%; margin-top: 2px;
+    background: rgba(9,23,34,.9); border: 2px solid rgba(34,230,255,.75);
+    box-shadow: 0 0 8px rgba(34,230,255,.45);
+}
+.mp-photo-marker.is-active .mp-photo-marker-dot { border-color: var(--mp-green); box-shadow: 0 0 8px rgba(48,242,156,.55); }
 .mp-photo-marker-label {
     font-size: 9px; font-weight: 700; letter-spacing: .05em; color: rgba(244,251,255,.85);
     background: rgba(9,23,34,.75); padding: 1px 5px; border-radius: 3px; margin-top: 3px;
