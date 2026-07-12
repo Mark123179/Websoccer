@@ -5604,8 +5604,8 @@ def manager_profile(request):
     ppg = f'{points / games:.2f}'.replace('.', ',') if games else '0,00'
     gpg = f'{goals_scored / games:.2f}'.replace('.', ',') if games else '0,00'
     gagpg = f'{goals_against / games:.2f}'.replace('.', ',') if games else '0,00'
-    win_rate = f'{win_pct}%'
-    win_rate_detail = f'({wins} S / {draws} U / {losses} N)'
+    win_rate = f'{win_pct} %'
+    win_rate_detail = f'{wins} S · {draws} U · {losses} N'
 
     # --- Streak computation (longest run of consecutive wins / losses) ---
     max_win_streak = 0
@@ -5900,11 +5900,10 @@ def manager_profile(request):
             else '–'
         )
     )
-    last_login_display = (
-        request.user.last_login.strftime('%d.%m.%Y, %H:%M')
-        if request.user.is_authenticated and request.user.last_login
-        else '–'
-    )
+    _ll = request.user.last_login if (request.user.is_authenticated and request.user.last_login) else None
+    last_login_display = _ll.strftime('%d.%m.%Y, %H:%M') if _ll else '–'
+    last_login_date    = _ll.strftime('%d.%m.%Y') if _ll else '–'
+    last_login_time    = _ll.strftime('%H:%M') + ' Uhr' if _ll else ''
     _raw_image = manager_profile_obj.profile_image or ''
     _has_custom_avatar = bool(_raw_image and not _raw_image.startswith('game/'))
     if _has_custom_avatar:
@@ -6226,8 +6225,11 @@ def manager_profile(request):
             'xp_label': manager_profile_obj.xp_label,
             'highscore': manager_profile_obj.highscore,
             'highscore_rank': '–',
+            'highscore_delta': '',
             'trophies': trophies_count,
+            'trophies_list_mini': trophies_list[:3],
             'games_total': games,
+            'games_since': ('seit ' + db_stations[0].started_at.strftime('%b. %Y') if db_stations and db_stations[0].started_at else ''),
             'wins': wins,
             'draws': draws,
             'losses': losses,
@@ -6236,6 +6238,8 @@ def manager_profile(request):
             'not_fielded': '1/3',
             'transfer_ban': 'Keine',
             'last_login': last_login_display,
+            'last_login_date': last_login_date,
+            'last_login_time': last_login_time,
             'registered': member_since_display,
         },
         'club_stats': club_stats,

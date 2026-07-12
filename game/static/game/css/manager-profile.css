@@ -107,10 +107,10 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-edit-profile-btn svg { width: 10px; height: 10px; }
 .mp-edit-profile-btn:hover { border-color: var(--mp-cyan); color: var(--mp-cyan); }
 
-/* KPI v2 — 9-col grid */
+/* KPI v2 — 8-col grid */
 .mp-kpi-v2 {
     flex: 1; min-width: 0;
-    display: grid; grid-template-columns: repeat(9, 1fr);
+    display: grid; grid-template-columns: repeat(8, 1fr);
     border-left: 1px solid var(--mp-line);
 }
 .mp-kpi-cell {
@@ -160,6 +160,11 @@ body.manager-profile-page .nav-menu a:first-child {
     font-size: 13px; font-weight: 600; color: var(--mp-green);
 }
 .mp-kpi-ban-ok svg { width: 16px; height: 16px; }
+
+.mp-kpi-trophies-mini { display: flex; gap: 4px; margin-top: 2px; }
+.mp-kpi-trophies-mini img { width: 16px; height: 16px; object-fit: contain; border-radius: 2px; opacity: .85; }
+
+.mp-kpi-delta { font-size: 10px; font-weight: 600; color: var(--mp-green); margin-top: 1px; }
 
 /* ─── ONBOARDING BANNER ──────────────────────────────────────── */
 .mp-onboarding-banner {
@@ -499,6 +504,18 @@ body.manager-profile-page .nav-menu a:first-child {
 
 /* ─── STATISTIK v2 ───────────────────────────────────────────── */
 .mp-stats2 { overflow-y: auto; max-height: 500px; }
+.mp-stats2-alle-btn {
+    padding: 2px 8px; font-size: 9px; font-weight: 700; letter-spacing: .06em;
+    background: rgba(34,230,255,.08); border: 1px solid rgba(34,230,255,.22);
+    color: var(--mp-cyan); border-radius: 3px; cursor: pointer; transition: all .15s;
+}
+.mp-stats2-alle-btn:hover { background: rgba(34,230,255,.15); }
+.mp-stats2-hint {
+    font-size: 10px; color: var(--mp-sub); margin: -4px 0 8px; line-height: 1.4;
+    font-style: italic;
+}
+.mp-stats2-hint a { color: var(--mp-cyan); text-decoration: none; }
+.mp-stats2-hint a:hover { text-decoration: underline; }
 .mp-stats2-rows { display: flex; flex-direction: column; }
 .mp-stat2-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(44,231,255,.07); font-size: 12px; }
 .mp-stat2-row span   { color: var(--mp-sub); }

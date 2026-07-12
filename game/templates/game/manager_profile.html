@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-70">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-71">
 {% endblock %}
 
 {% block content %}
@@ -77,6 +77,7 @@
                 HIGHSCORE
             </span>
             <strong class="mp-kpi-big mp-kpi-gold">{{ manager.highscore }}</strong>
+            {% if manager.highscore_delta %}<span class="mp-kpi-delta">{{ manager.highscore_delta }}</span>{% endif %}
             <small class="mp-kpi-sub">{{ manager.highscore_rank }}</small>
         </div>
         <!-- 3: Trophäen -->
@@ -86,6 +87,11 @@
                 TROPHÄEN
             </span>
             <strong class="mp-kpi-big">{{ manager.trophies }}</strong>
+            {% if manager.trophies_list_mini %}
+            <div class="mp-kpi-trophies-mini">
+                {% for t in manager.trophies_list_mini %}<img src="{% static t.icon %}" alt="{{ t.name }}">{% endfor %}
+            </div>
+            {% endif %}
             <small class="mp-kpi-sub"><a href="?tab=profil">Alle ansehen</a></small>
         </div>
         <!-- 4: Spiele -->
@@ -95,6 +101,7 @@
                 SPIELE GESAMT
             </span>
             <strong class="mp-kpi-big">{{ manager.games_total }}</strong>
+            {% if manager.games_since %}<small class="mp-kpi-sub">{{ manager.games_since }}</small>{% endif %}
         </div>
         <!-- 5: Siegquote -->
         <div class="mp-kpi-cell">
@@ -146,16 +153,8 @@
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
                 LETZTE ANMELDUNG
             </span>
-            <strong class="mp-kpi-medium">{{ manager.last_login }}</strong>
-        </div>
-        <!-- 9: Registriert -->
-        <div class="mp-kpi-cell">
-            <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
-                REGISTRIERT AM
-            </span>
-            <strong class="mp-kpi-medium">{{ manager.registered }}</strong>
-            <small class="mp-kpi-sub">Gründungsmitglied</small>
+            <strong class="mp-kpi-medium">{{ manager.last_login_date }}</strong>
+            {% if manager.last_login_time %}<small class="mp-kpi-sub">{{ manager.last_login_time }}</small>{% endif %}
         </div>
     </div>
 </header>
@@ -195,7 +194,6 @@
             <button class="mp-tl2-filter" data-filter="verein">VEREIN</button>
             <button class="mp-tl2-filter" data-filter="titel">TITEL</button>
             <button class="mp-tl2-filter" data-filter="finale">FINALE</button>
-            <button class="mp-tl2-filter" data-filter="transfers">TRANSFERS</button>
             <button class="mp-tl2-filter" data-filter="jugend">JUGEND</button>
             <button class="mp-tl2-filter" data-filter="status">STATUS</button>
         </div>
@@ -307,6 +305,8 @@
             <h3>TRAINERSTATIONEN · EUROPA</h3>
             {% if can_edit_profile %}
             <button class="mp-btn mp-btn-ghost mp-stations-edit-toggle" id="mpStationEditToggle" type="button">Bearbeiten</button>
+            {% else %}
+            <span class="mp-card2-hint">Marker anklicken → Statistik wechselt mit</span>
             {% endif %}
         </header>
         <div class="mp-photo-map" id="mpPhotoMap">
@@ -424,8 +424,9 @@
     <article class="mp-card2 mp-stats2" id="mpStatsCard">
         <header class="mp-card2-header">
             <h3 id="mpStatsTitle">STATISTIK</h3>
-            <a href="#">Details</a>
+            <button class="mp-stats2-alle-btn" type="button">ALLE</button>
         </header>
+        <p class="mp-stats2-hint">Verein über die Leiste oben oder die Karte wählen · <a href="#">Details</a></p>
         <div class="mp-stats2-rows">
             <div class="mp-stat2-row"><span>Spiele gesamt</span><strong id="mss-games">{{ club_stats.games }}</strong></div>
             <div class="mp-stat2-row"><span>Siege</span><strong class="mp-s2-win" id="mss-wins">{{ club_stats.wins }} ({{ club_stats.win_pct }}%)</strong></div>
@@ -843,7 +844,7 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
         set(CELL.pps,    st.pps    || '0,00');
 
         var s = st.stats || {};
-        if (statsTitle) statsTitle.textContent = 'STATISTIK (' + st.name.toUpperCase() + ')';
+        if (statsTitle) statsTitle.textContent = 'STATISTIK · ' + st.name.toUpperCase();
         set(PANEL.games,  s.games || 0);
         set(PANEL.wins,   (s.wins || 0) + ' (' + (s.win_pct || 0) + '%)');
         set(PANEL.draws,  (s.draws || 0) + ' (' + (s.draw_pct || 0) + '%)');
