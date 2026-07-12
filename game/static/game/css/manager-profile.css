@@ -380,7 +380,7 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-vbar-gold { color: var(--mp-gold); }
 
 /* ─── PROFIL GRID (3 Spalten, unified) ───────────────────────── */
-.mp-profil-grid { display: grid; grid-template-columns: 200px 1fr 300px; gap: 12px; align-items: start; }
+.mp-profil-grid { display: grid; grid-template-columns: 250px 1fr 300px; gap: 12px; align-items: stretch; }
 .mp-profil-col-left  { display: flex; flex-direction: column; gap: 12px; }
 .mp-profil-col-right { display: flex; flex-direction: column; gap: 12px; }
 
@@ -429,14 +429,14 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-login2-pip.is-next { background: rgba(34,230,255,.1);  border-color: rgba(34,230,255,.4);  color: var(--mp-cyan); }
 
 /* ─── EUROPA-KARTE card ──────────────────────────────────────── */
-.mp-card2-map { padding: 14px 0 0; overflow: hidden; }
-.mp-card2-map .mp-card2-header { padding: 0 14px; }
+.mp-card2-map { padding: 14px 0 0; overflow: hidden; display: flex; flex-direction: column; }
+.mp-card2-map .mp-card2-header { padding: 0 14px; flex-shrink: 0; }
 .mp-card2-hint { font-size: 10px; color: var(--mp-sub); }
 .mp-stations-edit-toggle { font-size: 10px; padding: 3px 9px; border: 1px solid rgba(44,231,255,.18) !important; }
 
 /* Photo Map */
 .mp-photo-map {
-    position: relative; width: 100%; height: 380px;
+    position: relative; width: 100%; flex: 1 1 0; min-height: 280px;
     overflow: hidden; background: #021622;
 }
 .mp-photo-map-bg {
