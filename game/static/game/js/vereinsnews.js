@@ -156,7 +156,7 @@ function blocksHTML(blocks){
       return'<div class="blk-player">'+
         (f.portrait!==false&&p.img?'<img src="'+p.img+'" alt="">':'')+
         '<div style="display:flex;flex-direction:column;gap:8px;min-width:0">'+
-        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span><span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta||'')+'</span></div>'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span>'+(p.age?'<span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.35);border:1px solid rgba(244,251,255,.15);border-radius:4px;padding:1px 5px">'+p.age+' J.</span>':'')+(p.meta?'<span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta)+'</span>':'')+'</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap">'+stats.map(function(s){return'<span class="stat-chip"><em>'+s[0]+'</em><b style="color:'+s[2]+'">'+s[1]+'</b></span>';}).join('')+'</div>'+
         '</div></div>';
     }
@@ -191,6 +191,24 @@ function blocksHTML(blocks){
         (b.src?'<img src="'+b.src+'" alt="">':'<div class="img-placeholder">Bild-Platzhalter</div>')+
         '<figcaption>'+esc(b.cap||'')+'</figcaption></figure>';
     }
+    if(b.k==='motm'){
+      var mo=_d.motm;
+      if(!mo)return'<div class="blk-player" style="justify-content:center;text-align:center;padding:16px 20px;color:rgba(244,251,255,.3)">★ Noch kein Spieler des Spiels verfügbar</div>';
+      return'<div class="blk-player" style="flex-direction:column;align-items:flex-start;gap:12px;border-color:rgba(255,213,0,.3);background:linear-gradient(135deg,rgba(255,213,0,.05),rgba(255,195,0,.02))">'+
+        '<div style="font-size:10px;font-weight:900;letter-spacing:1.5px;color:#ffd166;display:flex;align-items:center;gap:6px"><span>★</span> SPIELER DES SPIELS</div>'+
+        '<div style="display:flex;align-items:center;gap:14px">'+
+        (mo.img?'<img src="'+mo.img+'" alt="" style="height:72px;width:54px;object-fit:cover;object-position:top center;border-radius:6px;filter:drop-shadow(0 0 10px rgba(255,213,0,.28))">':'')+
+        '<div style="display:flex;flex-direction:column;gap:8px">'+
+        '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        '<strong style="font-size:17px;font-weight:900">'+esc(mo.name)+'</strong>'+
+        (mo.pos?'<span class="pos-badge">'+esc(mo.pos)+'</span>':'')+
+        '</div>'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+        (mo.grade?'<span class="stat-chip"><em>Note</em><b style="color:#ffd166">'+mo.grade.toFixed(1)+'</b></span>':'')+
+        (mo.tore?'<span class="stat-chip"><em>Tore</em><b style="color:#22e6ff">'+mo.tore+'</b></span>':'')+
+        (mo.assists?'<span class="stat-chip"><em>Vorlagen</em><b style="color:#30f29c">'+mo.assists+'</b></span>':'')+
+        '</div></div></div></div>';
+    }
     return'';
   }).join('')+'</div>';
 }
@@ -216,7 +234,7 @@ function articleHTML(a){
 }
 
 /* ── Editor (Regie-Modus) ── */
-var LBL={text:'Fließtext',head:'Zwischentitel',quote:'Zitat',player:'Spielerkarte',match:'Spielkarte',image:'Bild'};
+var LBL={text:'Fließtext',head:'Zwischentitel',quote:'Zitat',player:'Spielerkarte',match:'Spielkarte',motm:'Spieler d. Spiels',image:'Bild'};
 var PTOG=[['portrait','Portrait'],['mw','Marktwert'],['tore','Tore'],['note','Ø-Note'],['fit','Fitness']];
 var MTOG=[['crests','Wappen'],['score','Ergebnis'],['scorers','Torschützen'],['momentum','Matchmomentum'],['zuschauer','Zuschauer']];
 
@@ -250,6 +268,11 @@ function blockEdHTML(b,i){
     h+='<div class="dropzone" onclick="App.pickImg('+i+')" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="App.dropImg(event,'+i+')">'+
       (b.src?'<img src="'+b.src+'" alt="">':'Bild hierher ziehen oder klicken')+'</div>'+
       '<input class="inp small" placeholder="Bildunterschrift…" value="'+esc(b.cap||'')+'" oninput="App.updB('+i+',\'cap\',this.value)">';
+  }else if(b.k==='motm'){
+    var mo=_d.motm;
+    h+='<div style="font-size:12px;font-weight:700;color:rgba(244,251,255,.55);padding:4px 0;display:flex;align-items:center;gap:8px">'+
+      (mo?'<span style="color:#ffd166">★</span>'+esc(mo.name)+(mo.grade?' &nbsp;·&nbsp; Note: '+mo.grade.toFixed(1):'')+(mo.tore?' &nbsp;·&nbsp; '+mo.tore+' Tor(e)':''):'Kein Spieler des Spiels — Daten erscheinen nach dem nächsten Spiel.')+
+      '</div>';
   }
   return h+'</div>';
 }
@@ -296,7 +319,7 @@ function editorHTML(){
   h+='<span class="panel-label" style="padding:0 2px">Bausteine</span>'+
     ed.blocks.map(blockEdHTML).join('')+
     '<div class="panel add-panel"><span class="micro-label">+ Block hinzufügen</span><div class="chips">'+
-    [['text','Fließtext','T'],['head','Zwischentitel','H2'],['quote','Zitat','„"'],['player','Spielerkarte','SP'],['match','Spielkarte','VS'],['image','Bild','IMG']].map(function(p){
+    [['text','Fließtext','T'],['head','Zwischentitel','H2'],['quote','Zitat','„"'],['player','Spielerkarte','SP'],['match','Spielkarte','VS'],['motm','Spieler d. Spiels','★'],['image','Bild','IMG']].map(function(p){
       return'<button class="chip add-chip" onclick="App.addB(\''+p[0]+'\')"><b>'+p[2]+'</b>'+p[1]+'</button>';
     }).join('')+'</div></div>';
 
@@ -366,8 +389,8 @@ window.App={
   moveB:function(i,d){var bl=state.ed.blocks,j=i+d;if(j<0||j>=bl.length)return;var t=bl[i];bl[i]=bl[j];bl[j]=t;render();},
   delB:function(i){state.ed.blocks.splice(i,1);render();},
   addB:function(k){
-    var defs={text:T(''),head:H(''),quote:Q('',''),player:PL(Object.keys(P)[0]||''),match:M(),image:IMG(null,'')};
-    state.ed.blocks.push(JSON.parse(JSON.stringify(defs[k])));render();
+    var defs={text:T(''),head:H(''),quote:Q('',''),player:PL(Object.keys(P)[0]||''),match:M(),motm:{k:'motm'},image:IMG(null,'')};
+    state.ed.blocks.push(JSON.parse(JSON.stringify(defs[k]||{k:k})));render();
   },
   pickImg:function(i){
     var inp=document.getElementById('imgInput');
@@ -408,4 +431,9 @@ window.App={
   sync:function(){var p=document.getElementById('prevPane');if(p)p.innerHTML=previewHTML();}
 };
 
+// URL-Hash → Artikel direkt öffnen (z. B. aus Übersicht verlinkt)
+(function(){
+  var h=window.location.hash;
+  if(h){var a=findArt(h.slice(1));if(a){state.view='article';state.art=a;}}
+})();
 render();

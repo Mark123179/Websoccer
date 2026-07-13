@@ -5250,11 +5250,31 @@ def club_news(request, club_id):
             'pos':  p.primary_position or p.position or '',
             'img':  p.portrait_url,
             'meta': p.nt_nationality or '',
+            'age':  p.age if p.age else None,
             'mw':   mw_str,
             'tore': None,
             'note': None,
             'fit':  None,
         }
+
+    # Saisonstats für Spielerkarten (Tore + Ø-Note)
+    try:
+        _pid_ints = [int(pid) for pid in players_dict]
+        _seen_pids: set = set()
+        for _ss in PlayerSeasonStat.objects.filter(
+            player_id__in=_pid_ints,
+            club=club,
+        ).order_by('-season_number', '-matches'):
+            _sk = str(_ss.player_id)
+            if _sk not in players_dict or _sk in _seen_pids:
+                continue
+            _seen_pids.add(_sk)
+            players_dict[_sk]['tore'] = _ss.goals
+            if _ss.average_grade:
+                _g_str = f'{float(_ss.average_grade):.2f}'.replace('.', ',')
+                players_dict[_sk]['note'] = _g_str
+    except Exception:
+        pass
 
     crest_url = _static(club.crest_static_path) if club.crest_static_path else ''
 
@@ -5266,28 +5286,64 @@ def club_news(request, club_id):
             league_logo = _static(_lp)
 
     last_match = None
+    _motm_data = None
     try:
-        from django.db.models import Q as _Q
-        _fx = (
-            SeasonFixture.objects
-            .filter(_Q(home_club=club) | _Q(away_club=club), is_played=True)
-            .select_related('home_club', 'away_club')
-            .order_by('-matchday', '-id')
-            .first()
-        )
-        if _fx:
-            _hc = _static(_fx.home_club.crest_static_path) if _fx.home_club.crest_static_path else ''
-            _ac = _static(_fx.away_club.crest_static_path) if _fx.away_club.crest_static_path else ''
+        from .fixture_display import get_last_match as _glm
+        _lm_obj = _glm(club)
+        if _lm_obj:
+            _hc_club = _lm_obj.home_club
+            _ac_club = _lm_obj.away_club
+            _hc = _static(_hc_club.crest_static_path) if _hc_club and getattr(_hc_club, 'crest_static_path', None) else ''
+            _ac = _static(_ac_club.crest_static_path) if _ac_club and getattr(_ac_club, 'crest_static_path', None) else ''
+            # Scorers: [minute, name] für JS
+            _raw_sc = _lm_obj.scorers or []
+            _scorers = [[s['minute'], s['playerName']] for s in _raw_sc]
+            # Crowd aus Stadion-Kapazität
+            _crowd = ''
+            try:
+                _cap = _lm_obj.home_club.stadium.capacity_total
+                if _cap:
+                    _crowd = f'{_cap:,}'.replace(',', '.')
+            except Exception:
+                pass
+            _hg = _lm_obj.home_goals
+            _ag = _lm_obj.away_goals
             last_match = {
-                'home_name':  _fx.home_club.name,
-                'away_name':  _fx.away_club.name,
+                'home_name':  _hc_club.name if _hc_club else '',
+                'away_name':  _ac_club.name if _ac_club else '',
                 'home_crest': _hc,
                 'away_crest': _ac,
-                'score':      f'{_fx.home_goals}:{_fx.away_goals}',
-                'scorers':    [],
-                'crowd':      '',
-                'momentum':   None,
+                'score':      f'{_hg}:{_ag}' if _hg is not None and _ag is not None else '?:?',
+                'scorers':    _scorers,
+                'crowd':      _crowd,
+                'momentum':   bool(_scorers),
             }
+            # MOTM aus report_data
+            try:
+                _rd = None
+                if hasattr(_lm_obj, '_f') and getattr(_lm_obj._f, 'simulated_match', None):
+                    _rd = _lm_obj._f.simulated_match.report_data
+                elif hasattr(_lm_obj, '_m'):
+                    _rd = _lm_obj._m.report_data
+                if _rd:
+                    _mraw = _rd.get('man_of_the_match')
+                    if _mraw and _mraw.get('name'):
+                        _tore, _ast = 0, 0
+                        for _ge in (_rd.get('goal_events') or []):
+                            if _ge.get('scorer_name') == _mraw.get('name'):
+                                _tore += 1
+                            if _ge.get('assister_name') == _mraw.get('name'):
+                                _ast += 1
+                        _motm_data = {
+                            'name':    _mraw.get('name', ''),
+                            'img':     _mraw.get('portrait_url', ''),
+                            'grade':   float(_mraw.get('rating') or 0),
+                            'pos':     _mraw.get('position', ''),
+                            'tore':    _tore,
+                            'assists': _ast,
+                        }
+            except Exception:
+                pass
     except Exception:
         pass
 
@@ -5384,6 +5440,7 @@ def club_news(request, club_id):
         'stadium_url': '',
         'club_abbr':   club.short_name or club.name[:3].upper(),
         'last_match':  last_match,
+        'motm':        _motm_data,
         'league_logo': league_logo,
         'league_name': league_name,
     }
