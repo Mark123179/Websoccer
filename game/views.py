@@ -1582,9 +1582,9 @@ def home(request):
     )
 
     # --- Nächstes / Letztes Spiel aus echten SeasonFixture-Daten ---
-    from .fixture_display import FixtureDisplay as FD, get_next_fixture, get_last_fixture
+    from .fixture_display import FixtureDisplay as FD, get_next_fixture, get_last_match
     next_fixture = get_next_fixture(primary_club) if primary_club else None
-    last_fixture = get_last_fixture(primary_club) if primary_club else None
+    last_match_obj = get_last_match(primary_club) if primary_club else None
 
     if next_fixture:
         next_match_obj = FD(next_fixture, primary_club)
@@ -1595,15 +1595,13 @@ def home(request):
         next_match_home_club = None
         next_match_away_club = None
 
-    if last_fixture:
-        last_match_obj = FD(last_fixture, primary_club)
-        last_match_home_club = last_fixture.home_club
-        last_match_away_club = last_fixture.away_club
-        hg = last_fixture.home_goals
-        ag = last_fixture.away_goals
+    if last_match_obj:
+        last_match_home_club = last_match_obj.home_club
+        last_match_away_club = last_match_obj.away_club
+        hg = last_match_obj.home_goals
+        ag = last_match_obj.away_goals
         last_match_score = f'{hg}:{ag}' if hg is not None and ag is not None else None
     else:
-        last_match_obj = None
         last_match_home_club = None
         last_match_away_club = None
         last_match_score = None

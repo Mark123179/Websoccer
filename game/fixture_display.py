@@ -65,6 +65,44 @@ def get_last_fixture(club):
     )
 
 
+def get_last_match(club):
+    """Zuletzt gespieltes Spiel (Liga, Pokal oder Freundschaft) als Display-Objekt.
+
+    Vergleicht das jüngste SeasonFixture mit dem jüngsten SimulatedMatch und
+    gibt das aktuellere als FixtureDisplay oder SimulatedMatchDisplay zurück.
+    """
+    import datetime
+    from .models import SeasonFixture, SimulatedMatch
+
+    fixture = (
+        SeasonFixture.objects
+        .filter(Q(home_club=club) | Q(away_club=club), is_played=True)
+        .select_related('home_club', 'away_club', 'league')
+        .order_by('-scheduled_date', '-id')
+        .first()
+    )
+    sim = (
+        SimulatedMatch.objects
+        .filter(Q(home_club=club) | Q(away_club=club))
+        .select_related('home_club', 'away_club')
+        .order_by('-simulated_at')
+        .first()
+    )
+
+    if fixture is None and sim is None:
+        return None
+    if fixture is None:
+        return SimulatedMatchDisplay(sim, club)
+    if sim is None:
+        return FixtureDisplay(fixture, club)
+
+    fixture_date = fixture.scheduled_date or datetime.date.min
+    sim_date = sim.simulated_at.date() if sim.simulated_at else datetime.date.min
+    if sim_date > fixture_date:
+        return SimulatedMatchDisplay(sim, club)
+    return FixtureDisplay(fixture, club)
+
+
 def get_form_rows(club, n=5):
     """Letzte n gespielte Spiele als Form-Liste [{'label','tone','score'}, ...]
     aus allen Wettbewerben (Liga + Pokal + Freundschaft)."""
@@ -202,6 +240,14 @@ class FixtureDisplay:
             return ''
 
     @property
+    def home_club(self):
+        return self._f.home_club
+
+    @property
+    def away_club(self):
+        return self._f.away_club
+
+    @property
     def home_goals(self):
         return self._f.home_goals
 
@@ -218,6 +264,72 @@ class FixtureDisplay:
         is_home = self._f.home_club_id == self._club.pk
         my = self._f.home_goals if is_home else self._f.away_goals
         opp = self._f.away_goals if is_home else self._f.home_goals
+        return _result_label(my, opp)
+
+    @property
+    def result_tone(self):
+        return _result_tone(self.result_label)
+
+
+class SimulatedMatchDisplay:
+    """Wrapper um ein SimulatedMatch mit identischer Template-Schnittstelle wie FixtureDisplay."""
+
+    def __init__(self, simulated_match, club):
+        self._m = simulated_match
+        self._club = club
+
+    @property
+    def competition_name(self):
+        if self._m.match_type == 'pokal':
+            return 'DFB-Pokal'
+        return 'Freundschaftsspiel'
+
+    @property
+    def matchday_label(self):
+        return ''
+
+    @property
+    def date_label(self):
+        d = self._m.simulated_at.date() if self._m.simulated_at else None
+        return _format_date(d)
+
+    @property
+    def time_label(self):
+        t = self._m.simulated_at.time() if self._m.simulated_at else None
+        return _format_time(t)
+
+    @property
+    def stadium_name(self):
+        try:
+            return self._m.home_club.stadium.name
+        except Exception:
+            return ''
+
+    @property
+    def home_club(self):
+        return self._m.home_club
+
+    @property
+    def away_club(self):
+        return self._m.away_club
+
+    @property
+    def home_goals(self):
+        return self._m.home_goals
+
+    @property
+    def away_goals(self):
+        return self._m.away_goals
+
+    @property
+    def scorers(self):
+        return []
+
+    @property
+    def result_label(self):
+        is_home = self._m.home_club_id == self._club.pk
+        my = self._m.home_goals if is_home else self._m.away_goals
+        opp = self._m.away_goals if is_home else self._m.home_goals
         return _result_label(my, opp)
 
     @property

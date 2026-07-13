@@ -17,7 +17,7 @@ import random
 from copy import deepcopy
 from typing import Optional
 
-from .match_readiness import apply_default_tactic_settings, ensure_default_tactic
+from .match_readiness import apply_default_tactic_settings, ensure_default_tactic, patch_managed_lineup, has_valid_lineup
 from .tactics import default_formation, formation_slots, formation_code, SQUAD_PRO, default_half_tactic
 from .tactic_compiler import (
     calculate_zone_strengths,
@@ -2748,7 +2748,9 @@ def simulate_match(
     """
     # 1. Aufstellungen sicherstellen
     # Trainerlose Vereine: optimal auto-auffüllen via ensure_default_tactic.
-    # Gemanagte Vereine: bestehende Aufstellung verwenden (Trainer ist verantwortlich).
+    # Gemanagte Vereine: bestehende Aufstellung verwenden; fehlt sie, wird sie
+    # via patch_managed_lineup generiert (kein Malus/Sportgericht — das ist Sache
+    # von prepare_matchday_lineups für echte Spieltage).
     from .models import TacticSetup as _TacticSetup
 
     if home_club.managed_by_id is None:
@@ -2759,6 +2761,8 @@ def simulate_match(
             squad_scope=SQUAD_PRO,
             defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
         )
+        if not has_valid_lineup(home_tactic, club=home_club):
+            patch_managed_lineup(home_club, home_tactic)
 
     if away_club.managed_by_id is None:
         away_tactic, _ = ensure_default_tactic(away_club)
@@ -2768,6 +2772,8 @@ def simulate_match(
             squad_scope=SQUAD_PRO,
             defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
         )
+        if not has_valid_lineup(away_tactic, club=away_club):
+            patch_managed_lineup(away_club, away_tactic)
 
     # 1b. Default-Taktik V1: Taktik-Einstellungen anhand des konkreten Matchups setzen.
     #     Nur für trainerlose Vereine — gemanagte Vereine behalten Trainer-Vorgaben.
