@@ -624,22 +624,6 @@
                         {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
                     </div>
                 </aside>
-                <aside class="card subs-card">
-                    <p class="card-title">Auswechslungen</p>
-                    <div class="subhead">{{ report.home_club_short }}</div>
-                    <div class="bench-subs">
-                        {% for sub in rc.home_substitutions %}
-                        <div class="bsub">
-                            <span class="min">{{ sub.minute }}'</span>
-                            <span class="sub-badge inline" title="Wechsel">&#8646;</span>
-                            <div class="sw">
-                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
-                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
-                            </div>
-                        </div>
-                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
-                    </div>
-                </aside>
                 </div>
 
                 <div class="lineup-center">
@@ -695,6 +679,42 @@
                         </div>
                     </div>
 
+                    <aside class="card subs-card">
+                        <p class="card-title">Auswechslungen</p>
+                        <div class="subs-grid">
+                            <div>
+                                <div class="subhead">{{ report.home_club_short }}</div>
+                                <div class="bench-subs">
+                                    {% for sub in rc.home_substitutions %}
+                                    <div class="bsub">
+                                        <span class="min">{{ sub.minute }}'</span>
+                                        <span class="sub-badge inline" title="Wechsel">&#8646;</span>
+                                        <div class="sw">
+                                            <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                            {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                                        </div>
+                                    </div>
+                                    {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="subhead">{{ report.away_club_short }}</div>
+                                <div class="bench-subs">
+                                    {% for sub in rc.away_substitutions %}
+                                    <div class="bsub">
+                                        <span class="min">{{ sub.minute }}'</span>
+                                        <span class="sub-badge inline" title="Wechsel">&#8646;</span>
+                                        <div class="sw">
+                                            <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                            {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                                        </div>
+                                    </div>
+                                    {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
                 </div>
 
                 <div class="bench-column">
@@ -714,22 +734,6 @@
                             {% endif %}
                         {% if b.id %}</a>{% else %}</div>{% endif %}
                         {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
-                    </div>
-                </aside>
-                <aside class="card subs-card">
-                    <p class="card-title">Auswechslungen</p>
-                    <div class="subhead">{{ report.away_club_short }}</div>
-                    <div class="bench-subs">
-                        {% for sub in rc.away_substitutions %}
-                        <div class="bsub">
-                            <span class="min">{{ sub.minute }}'</span>
-                            <span class="sub-badge inline" title="Wechsel">&#8646;</span>
-                            <div class="sw">
-                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
-                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
-                            </div>
-                        </div>
-                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
                     </div>
                 </aside>
                 </div>

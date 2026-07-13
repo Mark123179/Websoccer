@@ -253,7 +253,9 @@ button{font-family:inherit}
 .bench-row .in{font-size:11px;font-weight:800;color:var(--green);display:inline-flex;align-items:center;gap:4px}
 .subhead{display:flex;align-items:center;gap:8px;margin:2px 0 10px;color:var(--faint);font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}
 .subhead.subhead-gap{margin-top:16px}
-/* Auswechslungen — eigene Kachel unterhalb der Ersatzbank, je Team */
+/* Auswechslungen — zentrierte Kachel unterhalb der Startaufstellungen (beide Teams nebeneinander) */
+.subs-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.subs-grid>div:first-child{padding-right:24px;border-right:1px solid rgba(255,255,255,.07)}
 .bench-subs{display:grid;gap:2px;margin-top:6px}
 .bench-subs .bsub{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.055)}
 .bench-subs .bsub:first-child{border-top:none}
