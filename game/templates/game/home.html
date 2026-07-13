@@ -209,7 +209,7 @@
 
             {% if last_match_home_scorers or last_match_away_scorers %}
             <div class="overview-scorers">
-                <div class="overview-scorers-col overview-scorers-home">
+                <div class="overview-scorers-col overview-scorers-home{% if last_match_home_scorers|length >= 10 %} overview-scorers-col--scroll{% endif %}">
                     {% for scorer in last_match_home_scorers %}
                     <span>
                         <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
@@ -217,7 +217,7 @@
                     </span>
                     {% endfor %}
                 </div>
-                <div class="overview-scorers-col overview-scorers-away">
+                <div class="overview-scorers-col overview-scorers-away{% if last_match_away_scorers|length >= 10 %} overview-scorers-col--scroll{% endif %}">
                     {% for scorer in last_match_away_scorers %}
                     <span>
                         <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
