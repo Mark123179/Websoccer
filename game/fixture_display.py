@@ -79,40 +79,36 @@ def get_last_fixture(club):
 
 
 def get_last_match(club):
-    """Zuletzt gespieltes Spiel (Liga, Pokal oder Freundschaft) als Display-Objekt.
+    """Zuletzt gespieltes Pflichtspiel MIT vollständigem Spielbericht.
 
-    Vergleicht das jüngste SeasonFixture mit dem jüngsten SimulatedMatch und
-    gibt das aktuellere als FixtureDisplay oder SimulatedMatchDisplay zurück.
+    Gibt das neueste is_played SeasonFixture (Liga) zurück, das einen
+    verknüpften simulated_match (report_data) besitzt. Fixtures ohne Bericht
+    und reine Freundschaftsspiele (standalone SimulatedMatch) werden bewusst
+    übersprungen, damit Vereinsnews-Karte und Spielbericht-Seite immer
+    dasselbe Spiel — inkl. Torschützen/MOTM — anzeigen.
+
+    Hinweis: Pokalspiele sind standalone SimulatedMatch ohne SeasonFixture und
+    daher hier (noch) nicht berücksichtigt; sie bleiben über den direkten
+    Bericht-Link (match_report_by_id) erreichbar.
     """
-    import datetime
-    from .models import SeasonFixture, SimulatedMatch
+    from django.db.models import F
+    from .models import SeasonFixture
 
     fixture = (
         SeasonFixture.objects
-        .filter(Q(home_club=club) | Q(away_club=club), is_played=True)
+        .filter(
+            Q(home_club=club) | Q(away_club=club),
+            is_played=True,
+            simulated_match__isnull=False,
+            simulated_match__report_data__isnull=False,
+        )
+        .exclude(simulated_match__report_data={})
         .select_related('home_club', 'away_club', 'league', 'simulated_match')
-        .order_by('-scheduled_date', '-id')
+        .order_by(F('scheduled_date').desc(nulls_last=True), '-id')
         .first()
     )
-    sim = (
-        SimulatedMatch.objects
-        .filter(Q(home_club=club) | Q(away_club=club))
-        .select_related('home_club', 'away_club')
-        .order_by('-simulated_at')
-        .first()
-    )
-
-    if fixture is None and sim is None:
-        return None
     if fixture is None:
-        return SimulatedMatchDisplay(sim, club)
-    if sim is None:
-        return FixtureDisplay(fixture, club)
-
-    fixture_date = fixture.scheduled_date or datetime.date.min
-    sim_date = sim.simulated_at.date() if sim.simulated_at else datetime.date.min
-    if sim_date > fixture_date:
-        return SimulatedMatchDisplay(sim, club)
+        return None
     return FixtureDisplay(fixture, club)
 
 

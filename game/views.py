@@ -14,7 +14,7 @@ from django.contrib.staticfiles import finders
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render, get_object_or_404
-from django.db.models import Avg, Count, Sum
+from django.db.models import Avg, Count, F, Sum
 from django.utils import timezone
 from .club_profile import build_club_profile_context
 from .club_profile_highlights import nt_confederation_badge
@@ -4896,11 +4896,30 @@ def club_match_report(request, club_id):
             sim_error = str(exc)
         if not sim_error:
             from django.shortcuts import redirect as _redirect
-            return _redirect('club_match_report', club_id=club_id)
+            # Admin-Testsimulation direkt anzeigen (Freundschaft/Pokal haben
+            # kein SeasonFixture und würden sonst von der Pflichtspiel-Auswahl
+            # unten übersprungen).
+            return _redirect('match_report_by_id', sm_id=sm.id)
 
-    latest = SimulatedMatch.objects.filter(
-        Q(home_club=club) | Q(away_club=club)
-    ).first()
+    # Standardansicht: letztes Pflichtspiel MIT vollständigem Bericht — gleiche
+    # Auswahl wie get_last_match(), damit Spielbericht-Seite und Vereinsnews-
+    # Karte immer dasselbe Spiel zeigen.
+    latest = None
+    _last_fx = (
+        SeasonFixture.objects
+        .filter(
+            Q(home_club=club) | Q(away_club=club),
+            is_played=True,
+            simulated_match__isnull=False,
+            simulated_match__report_data__isnull=False,
+        )
+        .exclude(simulated_match__report_data={})
+        .select_related('simulated_match', 'home_club', 'away_club')
+        .order_by(F('scheduled_date').desc(nulls_last=True), '-id')
+        .first()
+    )
+    if _last_fx:
+        latest = _last_fx.simulated_match
 
     all_clubs = Club.objects.order_by('name')
 
