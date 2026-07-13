@@ -186,11 +186,26 @@
                 </div>
             </div>
 
-            <!-- VEREINSNEWS — in Entwicklung, zentriert in Reihe 3 -->
+            <!-- VEREINSNEWS — jetzt verfügbar -->
+            {% if club %}
+            <a href="/clubs/{{ club.id }}/news/" class="mhub-card mhub-card--active mhub-card--news" style="text-decoration:none;">
+                <div class="mhub-card-bg"></div>
+                <div class="mhub-card-overlay"></div>
+                <div class="mhub-card-body">
+                    <div class="mhub-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM6 10h12v2H6zm0 4h8v2H6zM6 6h12v2H6z"/>
+                        </svg>
+                    </div>
+                    <h2 class="mhub-card-title">Vereinsnews</h2>
+                    <p class="mhub-card-sub">Neuigkeiten &amp; Vereinsinformationen</p>
+                </div>
+            </a>
+            {% else %}
             <div class="mhub-card mhub-card--locked mhub-card--news">
                 <div class="mhub-card-bg"></div>
                 <div class="mhub-card-overlay"></div>
-                <span class="mhub-badge-dev">In Entwicklung</span>
+                <span class="mhub-badge-dev">Kein Verein</span>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -201,6 +216,7 @@
                     <p class="mhub-card-sub">Neuigkeiten &amp; Vereinsinformationen</p>
                 </div>
             </div>
+            {% endif %}
 
             <!-- JOB-ANGEBOTE — immer zugänglich, Reihe 3 Spalte 1 -->
             <a href="/management/job-angebote/" class="mhub-card mhub-card--active mhub-card--jobs">
