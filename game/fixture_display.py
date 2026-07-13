@@ -11,6 +11,18 @@ _MONTHS_DE = [
 ]
 
 
+def _scorers_from_goal_events(goal_events):
+    """Torschützen-Liste aus goal_events: [{'playerName', 'minute'}, ...]."""
+    result = []
+    for evt in (goal_events or []):
+        name = evt.get('scorer_name') or ''
+        minute = evt.get('minute')
+        if name and minute is not None:
+            result.append({'playerName': name, 'minute': minute})
+    result.sort(key=lambda x: x['minute'])
+    return result
+
+
 def _format_date(d):
     if not d:
         return 'Noch offen'
@@ -59,7 +71,7 @@ def get_last_fixture(club):
     return (
         SeasonFixture.objects
         .filter(Q(home_club=club) | Q(away_club=club), is_played=True)
-        .select_related('home_club', 'away_club', 'league')
+        .select_related('home_club', 'away_club', 'league', 'simulated_match')
         .order_by('-scheduled_date', '-id')
         .first()
     )
@@ -77,7 +89,7 @@ def get_last_match(club):
     fixture = (
         SeasonFixture.objects
         .filter(Q(home_club=club) | Q(away_club=club), is_played=True)
-        .select_related('home_club', 'away_club', 'league')
+        .select_related('home_club', 'away_club', 'league', 'simulated_match')
         .order_by('-scheduled_date', '-id')
         .first()
     )
@@ -257,6 +269,12 @@ class FixtureDisplay:
 
     @property
     def scorers(self):
+        try:
+            sm = self._f.simulated_match
+            if sm and sm.report_data:
+                return _scorers_from_goal_events(sm.report_data.get('goal_events', []))
+        except Exception:
+            pass
         return []
 
     @property
@@ -323,6 +341,11 @@ class SimulatedMatchDisplay:
 
     @property
     def scorers(self):
+        try:
+            if self._m.report_data:
+                return _scorers_from_goal_events(self._m.report_data.get('goal_events', []))
+        except Exception:
+            pass
         return []
 
     @property
