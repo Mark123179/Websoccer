@@ -5212,12 +5212,159 @@ def match_report_by_id(request, sm_id):
 
 
 def club_news(request, club_id):
-    return render_public_club_stub(
-        request,
-        club_id,
-        'Vereinsnews',
-        'Alle öffentlichen Vereinsmeldungen werden hier gebündelt.',
+    from django.templatetags.static import static as _static
+    from .competition_assets import competition_logo_static_path
+
+    club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
+
+    news_qs = ClubNewsItem.objects.filter(club=club).order_by('-published_at', '-id')
+    art_items    = [n.to_vn_dict() for n in news_qs.filter(is_social=False)]
+    social_items = [n.to_vn_dict() for n in news_qs.filter(is_social=True)]
+
+    season_num = 1
+    if club.league_id:
+        _lss = LeagueSeasonState.objects.filter(
+            league=club.league
+        ).order_by('-season').first()
+        if _lss:
+            season_num = _lss.season
+
+    top_players = (
+        Player.objects
+        .filter(club=club)
+        .select_related('strength_profile')
+        .order_by('-strength_profile__base_strength', '-market_value')[:8]
     )
+    players_dict = {}
+    for p in top_players:
+        mv = p.market_value or 0
+        if mv >= 1_000_000:
+            mw_str = '{:.1f}M €'.format(mv / 1_000_000).replace('.', ',')
+        elif mv > 0:
+            mw_str = '{:.0f}K €'.format(mv / 1_000)
+        else:
+            mw_str = ''
+        full_name = f'{p.first_name} {p.last_name}'.strip() if p.last_name else p.first_name or ''
+        players_dict[str(p.pk)] = {
+            'n':    full_name,
+            'pos':  p.primary_position or p.position or '',
+            'img':  p.portrait_url,
+            'meta': p.nt_nationality or '',
+            'mw':   mw_str,
+            'tore': None,
+            'note': None,
+            'fit':  None,
+        }
+
+    crest_url = _static(club.crest_static_path) if club.crest_static_path else ''
+
+    league_name = club.league.name if club.league else ''
+    league_logo = ''
+    if club.league:
+        _lp = competition_logo_static_path(club.league)
+        if _lp:
+            league_logo = _static(_lp)
+
+    last_match = None
+    try:
+        from django.db.models import Q as _Q
+        _fx = (
+            SeasonFixture.objects
+            .filter(_Q(home_club=club) | _Q(away_club=club), is_played=True)
+            .select_related('home_club', 'away_club')
+            .order_by('-matchday', '-id')
+            .first()
+        )
+        if _fx:
+            _hc = _static(_fx.home_club.crest_static_path) if _fx.home_club.crest_static_path else ''
+            _ac = _static(_fx.away_club.crest_static_path) if _fx.away_club.crest_static_path else ''
+            last_match = {
+                'home_name':  _fx.home_club.name,
+                'away_name':  _fx.away_club.name,
+                'home_crest': _hc,
+                'away_crest': _ac,
+                'score':      f'{_fx.home_goals}:{_fx.away_goals}',
+                'scorers':    [],
+                'crowd':      '',
+                'momentum':   None,
+            }
+    except Exception:
+        pass
+
+    vn_data = {
+        'season':      season_num,
+        'art':         art_items,
+        'social':      social_items,
+        'players':     players_dict,
+        'club_id':     club.id,
+        'publish_url': reverse('club_news_publish', args=[club.id]),
+        'csrf':        '',
+        'today':       timezone.localdate().strftime('%d.%m.%Y'),
+        'crest_url':   crest_url,
+        'stadium_url': '',
+        'club_abbr':   club.short_name or club.name[:3].upper(),
+        'last_match':  last_match,
+        'league_logo': league_logo,
+        'league_name': league_name,
+    }
+
+    import json as _json
+    return render(request, 'game/club_news.html', {
+        'club':         club,
+        'vn_data_json': _json.dumps(vn_data, ensure_ascii=False),
+        'game_header':  build_game_header(
+            'Vereinsnews',
+            club.name,
+            reverse_club_detail(club),
+        ),
+    })
+
+
+@login_required
+def club_news_publish(request, club_id):
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Nur POST erlaubt.'}, status=405)
+
+    club = get_object_or_404(Club, id=club_id)
+    user_club = current_manager_club(request.user)
+    if not user_club or user_club.id != club.id:
+        return JsonResponse({'ok': False, 'error': 'Keine Berechtigung.'}, status=403)
+
+    import json as _json
+    try:
+        body = _json.loads(request.body)
+    except Exception:
+        return JsonResponse({'ok': False, 'error': 'Ungültige Daten.'}, status=400)
+
+    titel = (body.get('titel') or '').strip()
+    if not titel:
+        return JsonResponse({'ok': False, 'error': 'Kein Titel angegeben.'}, status=400)
+
+    VALID_KATS = {
+        'Transfer-News', 'Spielbericht', 'Interview', 'Vereinsstatement',
+        'Pressemitteilung', 'Jugend/Akademie', 'Fans', 'Finanzen',
+        'Rekorde', 'Sonstiges',
+    }
+    VALID_OUTLETS = {
+        'Vereinsredaktion', 'Kicker', 'Sky Sport', 'Spox', 'Transfermarkt',
+        '90min', 'The Athletic', 'Magenta Sport', 'OneFootball', '90PLUS',
+    }
+    kat    = body.get('kat')    if body.get('kat')    in VALID_KATS    else 'Sonstiges'
+    outlet = body.get('outlet') if body.get('outlet') in VALID_OUTLETS else 'Vereinsredaktion'
+
+    item = ClubNewsItem.objects.create(
+        club=club,
+        title=titel,
+        subtitle=body.get('sub') or '',
+        category=kat,
+        outlet=outlet,
+        published_at=timezone.localdate(),
+        is_new=True,
+        is_social=False,
+        card_data=body.get('card') or None,
+        blocks=body.get('blocks') or [],
+    )
+    return JsonResponse({'ok': True, 'article': item.to_vn_dict()})
 
 
 def club_news_detail(request, club_id, news_id):

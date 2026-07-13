@@ -1091,7 +1091,17 @@ class ClubNewsItem(models.Model):
         related_name='public_news',
     )
     title = models.CharField(max_length=160)
+    subtitle = models.TextField(blank=True, default='')
+    category = models.CharField(max_length=50, default='Sonstiges')
+    outlet = models.CharField(max_length=50, default='Vereinsredaktion')
     published_at = models.DateField(default=timezone.localdate)
+    views_count = models.PositiveIntegerField(default=0)
+    is_new = models.BooleanField(default=False)
+    is_social = models.BooleanField(default=False)
+    card_data = models.JSONField(null=True, blank=True)
+    blocks = models.JSONField(default=list)
+    img_path = models.CharField(max_length=240, blank=True, default='')
+    img_height = models.PositiveSmallIntegerField(default=120)
     thumbnail_static_path = models.CharField(max_length=240, blank=True)
     sort_order = models.PositiveSmallIntegerField(default=0)
 
@@ -1102,6 +1112,24 @@ class ClubNewsItem(models.Model):
 
     def __str__(self):
         return f'{self.club} - {self.title}'
+
+    def to_vn_dict(self, request=None):
+        """Serialisiert das Item für vereinsnews.js (VN_DATA.art/social)."""
+        from django.templatetags.static import static
+        return {
+            'id': f'db_{self.pk}',
+            'kat': self.category,
+            'outlet': self.outlet,
+            'title': self.title,
+            'sub': self.subtitle,
+            'date': self.published_at.strftime('%d.%m.%Y'),
+            'views': self.views_count,
+            'isNew': self.is_new,
+            'img': self.img_path or None,
+            'imgH': self.img_height,
+            'card': self.card_data,
+            'blocks': self.blocks or [],
+        }
 
 
 class LeagueNews(models.Model):

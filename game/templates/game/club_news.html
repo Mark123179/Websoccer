@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vereinsnews – {{ club.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/vereinsnews.css' %}?v=1">
+<style>
+#vereinsnews-app { max-width: 1188px; margin: 0 auto; padding: 18px 24px 40px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+window.VN_DATA = {{ vn_data_json|safe }};
+window.VN_DATA.csrf = '{{ csrf_token }}';
+</script>
+<div id="vereinsnews-app"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'game/js/vereinsnews.js' %}?v=1"></script>
+{% endblock %}

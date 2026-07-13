@@ -8,6 +8,7 @@ from .views import (
     match_report_by_id,
     club_news,
     club_news_detail,
+    club_news_publish,
     club_professional_squad,
     club_table,
     club_tactics,
@@ -220,6 +221,12 @@ urlpatterns = [
         'clubs/<int:club_id>/news/<int:news_id>/',
         club_news_detail,
         name='club_news_detail'
+    ),
+
+    path(
+        'clubs/<int:club_id>/news/publish/',
+        club_news_publish,
+        name='club_news_publish'
     ),
 
     path(
