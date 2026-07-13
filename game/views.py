@@ -5291,6 +5291,86 @@ def club_news(request, club_id):
     except Exception:
         pass
 
+    # ── Auto-Social-Beiträge: Medienpräsenz & Fanbeiträge ──
+    import hashlib as _hl
+    _seed = int(_hl.md5((club.name + str(season_num)).encode()).hexdigest()[:8], 16)
+    _cn   = club.name
+    _abbr = club.short_name or _cn[:3].upper()
+    _plist = list(players_dict.values())
+    _top1 = _plist[0]['n'] if _plist else 'unser Stürmer'
+    _top2 = _plist[1]['n'] if len(_plist) > 1 else _top1
+    _today_str = timezone.localdate().strftime('%d.%m.%Y')
+    _lm_score = last_match['score'] if last_match else '?:?'
+    _lm_opp   = (last_match['away_name'] if last_match and last_match['home_name'] == _cn
+                 else (last_match['home_name'] if last_match else 'Gegner'))
+    _STMPL = [
+        ('Sonstiges', 'Kicker',      '#d31419',
+         f'„Titelfavorit Nr.\u00a01" \u2014 {_cn} im Kicker',
+         f'Der Kicker analysiert die Stärken der {_abbr}-Elf und warum sie den Titel holen kann.',
+         9400),
+        ('Sonstiges', 'Sky Sport',   '#0072c9',
+         f'Sky-Runde: {_top1}-Vertrag schlägt Wellen',
+         f'Experten diskutieren die Zukunft von {_top1} — und was ein Wechsel für {_cn} bedeuten würde.',
+         11900),
+        ('Sonstiges', 'Transfermarkt', '#00a35a',
+         f'TM-Forum: Gerücht um {_top2} heiß diskutiert',
+         f'Transfermarkt-User spekulieren über einen möglichen Abgang — der Verein dementiert.',
+         9400),
+        ('Fans',      'Vereinsredaktion', '#e50914',
+         f'Südkurve plant Derby-Choreo für {_cn}',
+         f'Die Fan-Initiative arbeitet an einer spektakulären Choreografie für das nächste Heimspiel.',
+         8100),
+        ('Sonstiges', '90min',       '#14d95c',
+         f'5:0 Gala-Abend unterm Flutlicht — {_cn} überzeugt',
+         f'Nach dem Kantersieg gegen {_lm_opp} ({_lm_score}) analysiert 90min die Gala-Vorstellung.',
+         9800),
+        ('Sonstiges', 'Spox',        '#ff6600',
+         f'Spox-Experte: „{_abbr} hat das beste Mittelfeld der Liga"',
+         f'Analyse der taktischen Stärken — besonders das Umschaltspiel überzeugt die Fachwelt.',
+         6800),
+        ('Sonstiges', 'The Athletic', '#e8e2d6',
+         f'The Athletic: {_cn} auf europäischer Bühne',
+         f'Internationales Interesse an {_cn} — The Athletic analysiert die Europaform.',
+         5900),
+        ('Fans',      'Vereinsredaktion', '#e50914',
+         f'Tifo-Projekt Saison {season_num}: Fans zeigen Einheit',
+         f'Die Fanclubs arbeiten zusammen an einem einzigartigen Tifo — alle Infos hier.',
+         4700),
+        ('Sonstiges', 'Magenta Sport', '#e20074',
+         f'Magenta-Analyse: {_cn} in Topform',
+         f'Chefanalyst Rudi zeigt, warum {_cn} derzeit keiner stoppen kann.',
+         7200),
+        ('Sonstiges', '90PLUS',      '#ffd166',
+         f'Olise: „Ich fange gerade erst an" — {_abbr}-Star spricht',
+         f'{_top1} im exklusiven 90PLUS-Interview über Ambitionen und Saisonziele.',
+         8400),
+    ]
+    _used, _auto_social = set(), []
+    for _i in range(4):
+        _idx = (_seed // max(1, 10 ** _i) + _i * 17) % len(_STMPL)
+        _tries = 0
+        while _idx in _used and _tries < len(_STMPL):
+            _idx = (_idx + 1) % len(_STMPL)
+            _tries += 1
+        _used.add(_idx)
+        _t = _STMPL[_idx]
+        _views_v = _t[5] + ((_seed >> (_i * 4)) & 0xFF) * 12
+        _auto_social.append({
+            'id':     f'auto_social_{_idx}',
+            'kat':    _t[0],
+            'outlet': _t[1],
+            'title':  _t[3],
+            'sub':    _t[4],
+            'date':   _today_str,
+            'views':  _views_v,
+            'isNew':  _i < 2,
+            'img':    None,
+            'imgH':   100,
+            'card':   {'motiv': 'wappen', 'pid': '', 'accent': _t[2], 'customSrc': None},
+            'blocks': [],
+        })
+    social_items = social_items + _auto_social
+
     vn_data = {
         'season':      season_num,
         'art':         art_items,
