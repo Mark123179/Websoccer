@@ -1949,7 +1949,8 @@ def home(request):
             'last_match_home_club': last_match_home_club,
             'last_match_away_club': last_match_away_club,
             'last_match_score': last_match_score,
-            'last_match_scorers': last_match_obj.scorers if last_match_obj else [],
+            'last_match_home_scorers': [s for s in last_match_obj.scorers if s.get('team') == 'home'] if last_match_obj else [],
+            'last_match_away_scorers': [s for s in last_match_obj.scorers if s.get('team') == 'away'] if last_match_obj else [],
             'live_matches': live_matches_data,
             'overview_stats': [
                 {'value': str(totals['manager_count']), 'label': 'registrierte Manager'},

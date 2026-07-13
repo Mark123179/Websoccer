@@ -694,26 +694,47 @@ body.overview-home-page {
 
 .overview-scorers {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--muted);
-    display: grid;
-    font-size: 13px;
-    gap: 4px 10px;
-    grid-auto-flow: row;
-    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
-    max-height: 52px;
-    overflow: auto;
+    display: flex;
+    gap: 6px;
     padding-top: 9px;
+}
+
+.overview-scorers-col {
+    color: var(--muted);
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    font-size: 13px;
+    gap: 4px;
+    max-height: 200px;
+    min-width: 0;
+    overflow-y: auto;
     scrollbar-width: thin;
 }
 
-.overview-scorers span {
+.overview-scorers-home {
+    align-items: flex-start;
+}
+
+.overview-scorers-away {
+    align-items: flex-end;
+}
+
+.overview-scorers-col span {
     align-items: center;
     display: flex;
+    max-width: 100%;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.overview-scorers img {
+.overview-scorers-away span {
+    flex-direction: row-reverse;
+}
+
+.overview-scorers-col img {
     background: transparent;
     display: block;
     flex: 0 0 13px;
@@ -721,6 +742,11 @@ body.overview-home-page {
     margin-right: 5px;
     object-fit: contain;
     width: 13px;
+}
+
+.overview-scorers-away img {
+    margin-left: 5px;
+    margin-right: 0;
 }
 
 .overview-last-match-card .card-action {

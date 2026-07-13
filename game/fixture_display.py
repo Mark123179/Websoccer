@@ -12,13 +12,14 @@ _MONTHS_DE = [
 
 
 def _scorers_from_goal_events(goal_events):
-    """Torschützen-Liste aus goal_events: [{'playerName', 'minute'}, ...]."""
+    """Torschützen-Liste aus goal_events: [{'playerName', 'minute', 'team'}, ...]."""
     result = []
     for evt in (goal_events or []):
         name = evt.get('scorer_name') or ''
         minute = evt.get('minute')
+        team = evt.get('team', '')
         if name and minute is not None:
-            result.append({'playerName': name, 'minute': minute})
+            result.append({'playerName': name, 'minute': minute, 'team': team})
     result.sort(key=lambda x: x['minute'])
     return result
 

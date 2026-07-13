@@ -207,14 +207,26 @@
                 {% endif %}
             </p>
 
+            {% if last_match_home_scorers or last_match_away_scorers %}
             <div class="overview-scorers">
-                {% for scorer in last_match_scorers %}
+                <div class="overview-scorers-col overview-scorers-home">
+                    {% for scorer in last_match_home_scorers %}
                     <span>
                         <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
-                        {{ scorer.playerName }}&nbsp;&nbsp;{{ scorer.minute }}'
+                        {{ scorer.playerName }}&nbsp;{{ scorer.minute }}'
                     </span>
-                {% endfor %}
+                    {% endfor %}
+                </div>
+                <div class="overview-scorers-col overview-scorers-away">
+                    {% for scorer in last_match_away_scorers %}
+                    <span>
+                        <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
+                        {{ scorer.playerName }}&nbsp;{{ scorer.minute }}'
+                    </span>
+                    {% endfor %}
+                </div>
             </div>
+            {% endif %}
 
             <a class="card-action" href="{% if primary_club %}{% url 'club_match_report' primary_club.id %}{% else %}/clubs/{% endif %}">Spielbericht anzeigen</a>
             {% endif %}
