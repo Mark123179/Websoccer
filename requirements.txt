@@ -27,6 +27,10 @@ requests==2.34.2          # HTTP-Client (cmtracker_api, api_football, sync_squad
 beautifulsoup4==4.15.0    # HTML-Parser (sync_squads_tm, populate_positions_fmi …)
 lxml==6.1.1               # Schneller BS4-Parser-Backend
 
+# --- Monitoring & Analytics ---
+sentry-sdk==2.64.0        # Error-Monitoring + Django-Integration (core/settings.py)
+posthog==7.22.1           # User-Analytics + Feature-Flags (core/settings.py)
+
 # --- KI ---
 openai==2.40.0            # OpenAI-API (game/views_ai.py)
 

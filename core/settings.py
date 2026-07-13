@@ -166,6 +166,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'game.context_processors.current_manager',
+                'game.context_processors.posthog_settings',
             ],
         },
     },
@@ -261,6 +262,28 @@ STORAGES = {
 }
 
 API_FOOTBALL_KEY = os.environ.get('API_FOOTBALL_KEY', '')
+
+# ─── Sentry (Error-Monitoring) ────────────────────────────────────────────────
+# DSN wird nach dem OAuth-Setup von Replit als SENTRY_DSN injiziert.
+# Nur aktiv wenn DSN vorhanden → kein Einfluss auf lokale Dev-Loops ohne DSN.
+_SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+if _SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[DjangoIntegration(), CeleryIntegration()],
+        traces_sample_rate=0.10,
+        send_default_pii=False,
+        environment='development' if DEBUG else 'production',
+    )
+
+# ─── PostHog (User-Analytics) ─────────────────────────────────────────────────
+# API-Key + Host werden nach dem OAuth-Setup von Replit injiziert.
+# Der JS-Snippet in base.html liest diese Werte via Template-Tag.
+POSTHOG_API_KEY = os.environ.get('POSTHOG_API_KEY', '')
+POSTHOG_HOST    = os.environ.get('POSTHOG_HOST', 'https://eu.i.posthog.com')
 
 
 # Celery / Hintergrund-Jobs

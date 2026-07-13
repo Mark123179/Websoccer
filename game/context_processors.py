@@ -1,3 +1,4 @@
+import os
 from datetime import date, timedelta
 
 from django.db.models import Q
@@ -243,4 +244,11 @@ def current_manager(request):
             'nationality_flag': nationality_flag_url,
         },
         'global_calendar': _build_global_calendar(club, calendar_offset),
+    }
+
+
+def posthog_settings(request):
+    return {
+        'POSTHOG_API_KEY': os.environ.get('POSTHOG_API_KEY', ''),
+        'POSTHOG_HOST':    os.environ.get('POSTHOG_HOST', 'https://eu.i.posthog.com'),
     }
