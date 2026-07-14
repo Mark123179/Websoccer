@@ -313,8 +313,8 @@ body.manager-profile-page .nav-menu a:first-child {
     width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0;
     background-size: contain; background-repeat: no-repeat; background-position: center;
 }
-.mp-tl2-card-title { display: block; font-size: 13px; font-weight: 700; color: rgba(244,251,255,.92); margin-bottom: 3px; }
-.mp-tl2-card-body  { margin: 0; font-size: 12px; color: rgba(180,200,230,.62); line-height: 1.4; }
+.mp-tl2-card-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 13px; font-weight: 700; color: rgba(244,251,255,.92); margin-bottom: 3px; }
+.mp-tl2-card-body  { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin: 0; font-size: 12px; color: rgba(180,200,230,.62); line-height: 1.4; }
 
 .mp-tl2-farbcode {
     display: flex; align-items: center; gap: 14px; padding: 7px 14px;
