@@ -33,6 +33,12 @@ already-running bash tool process. The new value is only available in **new proc
 tab workaround (Workaround B above) rather than retrying in the agent bash tool.
 The agent bash tool will keep seeing the old cached env var until the session restarts.
 
+## insteadOf rewrite does NOT match the oauth2 remote — push to explicit URL
+`-c url.https://TOKEN@github.com/.insteadOf=https://github.com/` fails because the
+remote URL is `https://oauth2:@github.com/...` — the prefix doesn't match, so the
+empty oauth2 credential is used (401). Working agent-bash push:
+  `git push "https://Mark123179:${GITHUB_TOKEN}@github.com/Mark123179/Websoccer.git" main`
+
 ## Remote URL in .git/config has empty OAuth token
 The `origin` remote URL is `https://oauth2:@github.com/Mark123179/Websoccer` (empty token).
 This is the configured state — Replit's GitHub OAuth token expired/was rotated.
