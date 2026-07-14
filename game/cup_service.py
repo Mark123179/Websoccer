@@ -402,7 +402,8 @@ def simulate_cup_fixture(fixture) -> object:
         away_goals_90 = data.get('away_goals', 0) - (away_goals_et_raw if decided_by != 'regular_time' else 0)
 
     with transaction.atomic():
-        sm = SimulatedMatch.objects.create(
+        sm = SimulatedMatch.create_numbered(
+            fixture.cup_round.cup_season.season,
             home_club=fixture.home_club,
             away_club=fixture.away_club,
             home_goals=data['home_goals'],

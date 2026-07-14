@@ -4952,7 +4952,9 @@ def club_match_report(request, club_id):
                 data = simulate_ko_match(club, opponent)
             else:
                 data = simulate_match(club, opponent)
-            sm = SimulatedMatch.objects.create(
+            _gss_sim = GameSeasonState.objects.only('current_season').first()
+            sm = SimulatedMatch.create_numbered(
+                _gss_sim.current_season if _gss_sim else '0',
                 home_club=club,
                 away_club=opponent,
                 home_goals=data['home_goals'],

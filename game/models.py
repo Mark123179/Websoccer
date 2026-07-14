@@ -4245,11 +4245,60 @@ class SimulatedMatch(models.Model):
         verbose_name='Spieltyp',
     )
     simulated_at = models.DateTimeField(auto_now_add=True)
+    season = models.CharField(
+        max_length=10,
+        default='0',
+        db_index=True,
+        verbose_name='Saison',
+        help_text='Saison, in der das Spiel stattfand (z. B. "0", "1").',
+    )
+    match_no = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name='Spiel-Nr. (Saison)',
+        help_text='Laufende Spielnummer innerhalb der Saison, beginnt je Saison bei 1.',
+    )
+
+    @classmethod
+    def create_numbered(cls, season, match_no=None, **kwargs):
+        """Erzeugt ein SimulatedMatch mit fortlaufender Spielnummer pro Saison.
+
+        match_no: optional explizit vergeben (z. B. bei Re-Simulation die alte
+        Nummer übernehmen). Ohne Angabe wird Max+1 mit Retry bei Kollision
+        vergeben (UniqueConstraint schützt vor Doppelvergabe).
+        """
+        from django.db import IntegrityError, transaction as _tx
+
+        season = str(season if season is not None else '0')
+        if match_no is not None:
+            return cls.objects.create(season=season, match_no=match_no, **kwargs)
+
+        last_error = None
+        for _ in range(5):
+            last = cls.objects.filter(season=season).aggregate(
+                m=models.Max('match_no')
+            )['m'] or 0
+            try:
+                with _tx.atomic():
+                    return cls.objects.create(
+                        season=season, match_no=last + 1, **kwargs
+                    )
+            except IntegrityError as exc:
+                last_error = exc
+                continue
+        raise last_error
 
     class Meta:
         ordering = ['-simulated_at']
         verbose_name = 'Simuliertes Spiel'
         verbose_name_plural = 'Simulierte Spiele'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['season', 'match_no'],
+                name='uniq_simulatedmatch_season_match_no',
+                condition=models.Q(match_no__isnull=False),
+            ),
+        ]
 
     def __str__(self):
         return (

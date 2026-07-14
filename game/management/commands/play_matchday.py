@@ -136,13 +136,18 @@ class Command(BaseCommand):
         with transaction.atomic():
             for fixture, data, hg, ag in results:
                 # 1. SimulatedMatch erstellen (alten ggf. ersetzen)
+                old_match_no = None
                 if fixture.simulated_match_id:
                     old_sm = fixture.simulated_match
+                    if str(old_sm.season) == str(season):
+                        old_match_no = old_sm.match_no
                     fixture.simulated_match = None
                     fixture.save(update_fields=['simulated_match'])
                     old_sm.delete()
 
-                sm = SimulatedMatch.objects.create(
+                sm = SimulatedMatch.create_numbered(
+                    season,
+                    match_no=old_match_no,
                     home_club=fixture.home_club,
                     away_club=fixture.away_club,
                     home_goals=hg,
