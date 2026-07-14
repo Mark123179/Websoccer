@@ -423,6 +423,59 @@ docker run --rm -v websoccer_media_data:/data -v "$PWD":/backup alpine \
 > Der Volume-Präfix (`websoccer_`) entspricht dem Compose-Projektnamen
 > (Verzeichnisname). Mit `docker volume ls` prüfen.
 
+## Bild-Assets (`/assets/`) auf dem Server
+
+Bild-Assets (Spielergesichter, Club-Logos, Trophäen …) liegen NICHT im
+Docker-Image, sondern auf dem Host unter `/var/www/assets` und werden von
+nginx direkt serviert (Bind-Mount `/var/www/assets:/app/assets:ro`,
+Location `/assets/` in `nginx/default.conf.template`). Fehlende Dateien
+liefern 404, die UI zeigt dann automatisch den Platzhalter.
+
+Erwartete Struktur (siehe auch `DATEN_UND_ASSETS.md`):
+
+```text
+/var/www/assets/
+  players/face_<player_fm_inside_id>.png
+  clubs/logos/<club_fm_inside_id>_club.png
+  clubs/stadiums/  clubs/cities/  clubs/jerseys/
+  trophies/<trophy_asset_id>.png
+  flags/  competitions/  avatars/  backgrounds/  icons/
+```
+
+Einrichtung + Live-Test in einem Schritt (auf dem Server, in `/opt/websoccer`):
+
+```bash
+sudo ./scripts/setup_assets_server.sh
+```
+
+Das Skript:
+
+1. prüft, ob `ASSETS_BASE_URL=/assets/` in der server-lokalen `.env` steht
+   (es schreibt die `.env` nie selbst — fehlt der Eintrag, ergänzen und
+   danach `docker compose up -d web` ausführen),
+2. legt die Ordnerstruktur unter `/var/www/assets` an,
+3. synct die im Repo versionierten Assets aus `game/static/assets/` dorthin
+   (nur hinzufügen/aktualisieren, nie löschen — zusätzliche, nur lokal
+   vorhandene Bilder auf dem Server bleiben erhalten),
+4. setzt Leserechte und lädt nginx neu,
+5. testet live: vorhandene Dateien → HTTP 200, fehlende Datei → HTTP 404.
+
+Nur den Live-Test (ohne Änderungen) ausführen:
+
+```bash
+./scripts/setup_assets_server.sh --check
+```
+
+Weitere Assets (z. B. neue Spielergesichter aus dem lokalen
+`Images/`-Bestand) können jederzeit per `rsync`/`scp` direkt nach
+`/var/www/assets/...` kopiert werden — ein Deploy oder Container-Neustart
+ist dafür nicht nötig, nginx liest den Host-Ordner direkt.
+
+```bash
+# Beispiel vom lokalen Rechner aus:
+rsync -av Images/Players/face_*.png root@49.13.5.151:/var/www/assets/players/
+```
+
 ## Nützliche Befehle
 
 ```bash
@@ -434,6 +487,7 @@ docker compose restart web         # nur web neu starten
 docker compose logs -f celeryworker # Celery-Worker-Logs (Hintergrund-Jobs)
 docker compose logs -f celerybeat   # Celery-Beat-Logs (geplante Auslösungen)
 ./scripts/backup_postgres.sh        # DB-Backup ziehen (gzip + Rotation)
+./scripts/setup_assets_server.sh    # /var/www/assets einrichten + Live-Test
 ```
 
 ## Offene Folgeaufgaben (nicht Teil von V1)
