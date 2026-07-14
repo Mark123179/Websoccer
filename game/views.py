@@ -1584,7 +1584,10 @@ def _build_ergebnis_bande_data():
 
     league_last_mds = (
         SeasonFixture.objects
-        .filter(is_played=True, home_goals__isnull=False)
+        .filter(
+            is_played=True, home_goals__isnull=False,
+            simulated_match__isnull=False,
+        )
         .values('league_id', 'league__name')
         .annotate(last_md=Max('matchday'))
         .order_by('league_id')
@@ -1599,6 +1602,7 @@ def _build_ergebnis_bande_data():
                 is_played=True,
                 home_goals__isnull=False,
                 away_goals__isnull=False,
+                simulated_match__isnull=False,
             )
             .select_related('home_club', 'away_club')
             .order_by('id')

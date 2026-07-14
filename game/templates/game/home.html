@@ -11,7 +11,7 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/overview-dashboard.css' %}?v=gm-39">
-    <link rel="stylesheet" href="{% static 'game/css/ergebnis-bande.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'game/css/ergebnis-bande.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -264,7 +264,7 @@
 
         {% if ergebnis_bande_json and ergebnis_bande_json != '[]' %}
         <div id="ergebnis-bande" class="overview-ergebnis-bande"></div>
-        <script src="{% static 'game/js/ergebnis-bande.js' %}?v=1"></script>
+        <script src="{% static 'game/js/ergebnis-bande.js' %}?v=2"></script>
         <script>
         (function () {
             var data = {{ ergebnis_bande_json|safe }};
