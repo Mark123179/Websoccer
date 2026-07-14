@@ -207,7 +207,7 @@ def transfer_scouting(request):
 
     mapdata = coverage.map_data()
     countries = mapdata['countries']
-    selected_continent = request.GET.get('kontinent', 'europa')
+    selected_continent = request.GET.get('kontinent', 'welt')
     region_options = mapdata['regions']
 
     scope_tiles = []
