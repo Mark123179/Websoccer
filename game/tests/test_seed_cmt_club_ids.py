@@ -66,11 +66,11 @@ class SeedCmtClubIdsDryRunTest(TestCase):
         _make_club(league, 'FC Bayern München')
 
     def test_dry_run_creates_no_records(self):
-        _run_cmd(dry_run=True)
+        _run_cmd()
         self.assertEqual(ClubExternalId.objects.count(), 0)
 
     def test_dry_run_output_mentions_dry(self):
-        out, _ = _run_cmd(dry_run=True)
+        out, _ = _run_cmd()
         self.assertIn('DRY', out.upper())
 
 
@@ -83,7 +83,7 @@ class SeedCmtClubIdsAll18Test(TestCase):
         self.clubs = _make_all_bundesliga_clubs(self.league)
 
     def test_all_18_clubs_get_external_ids(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         self.assertEqual(
             ClubExternalId.objects.filter(source=self.cmt_source).count(),
             18,
@@ -91,7 +91,7 @@ class SeedCmtClubIdsAll18Test(TestCase):
         )
 
     def test_union_berlin_is_included(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         ext = ClubExternalId.objects.filter(
             source=self.cmt_source,
             external_id='1831',
@@ -101,7 +101,7 @@ class SeedCmtClubIdsAll18Test(TestCase):
         self.assertEqual(ext.club.name, '1. FC Union Berlin')
 
     def test_all_db_slugs_are_correct(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         wrong = ClubExternalId.objects.filter(
             source=self.cmt_source,
         ).exclude(db_slug=DB_SLUG)
@@ -109,7 +109,7 @@ class SeedCmtClubIdsAll18Test(TestCase):
                          f'Alle Einträge müssen db_slug={DB_SLUG} haben.')
 
     def test_all_18_cmt_ids_present(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         inserted_ids = set(
             ClubExternalId.objects.filter(source=self.cmt_source)
             .values_list('external_id', flat=True)
@@ -129,7 +129,7 @@ class SeedCmtClubIdsCreateTest(TestCase):
         self.bvb = _make_club(self.league, 'Borussia Dortmund')
 
     def test_known_clubs_get_external_ids(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         self.assertEqual(
             ClubExternalId.objects.filter(source=self.cmt_source, external_id='21').count(), 1
         )
@@ -138,24 +138,24 @@ class SeedCmtClubIdsCreateTest(TestCase):
         )
 
     def test_external_id_linked_to_correct_club(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         ext = ClubExternalId.objects.get(source=self.cmt_source, external_id='21')
         self.assertEqual(ext.club.pk, self.bayern.pk)
 
     def test_db_slug_is_set(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         ext = ClubExternalId.objects.get(source=self.cmt_source, external_id='21')
         self.assertEqual(ext.db_slug, DB_SLUG)
 
     def test_idempotent_second_run_skips(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         count_after_first = ClubExternalId.objects.count()
-        out, _ = _run_cmd()
+        out, _ = _run_cmd(apply=True)
         self.assertEqual(ClubExternalId.objects.count(), count_after_first)
-        self.assertIn('bereits vorhanden', out)
+        self.assertIn('unverändert', out)
 
     def test_missing_ws_club_is_counted_not_raised(self):
-        out, _ = _run_cmd()
+        out, _ = _run_cmd(apply=True)
         self.assertIn('nicht gefunden', out)
 
 
@@ -174,16 +174,16 @@ class SeedCmtClubIdsUpdateTest(TestCase):
         )
 
     def test_wrong_id_is_updated_to_correct_id_with_force(self):
-        _run_cmd(force=True)
+        _run_cmd(apply=True, force=True)
         ext = ClubExternalId.objects.get(source=self.cmt_source, club=self.bayern)
         self.assertEqual(ext.external_id, '21')
 
     def test_wrong_id_without_force_shows_conflict_warning(self):
-        out, _ = _run_cmd()
+        out, _ = _run_cmd(apply=True)
         self.assertIn('9999', out)
 
     def test_update_is_reported_in_output(self):
-        out, _ = _run_cmd(force=True)
+        out, _ = _run_cmd(apply=True, force=True)
         self.assertIn('aktualisiert', out)
 
 
@@ -203,13 +203,13 @@ class SeedCmtClubIdsConflictTest(TestCase):
         )
 
     def test_conflicting_external_id_is_not_overwritten(self):
-        _run_cmd()
+        _run_cmd(apply=True)
         ext = ClubExternalId.objects.get(source=self.cmt_source, external_id='21')
         self.assertEqual(ext.club.pk, self.imposteur.pk,
                          'Konflikt darf vorhandenen Eintrag nicht überschreiben.')
 
     def test_conflict_is_reported_in_output(self):
-        out, _ = _run_cmd()
+        out, _ = _run_cmd(apply=True)
         self.assertIn('Konflikt', out)
 
 
