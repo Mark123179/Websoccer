@@ -1965,10 +1965,9 @@ def home(request):
     ]
 
     try:
-        import json as _json
-        ergebnis_bande_json = _json.dumps(_build_ergebnis_bande_data(), ensure_ascii=False)
+        ergebnis_bande_data = _build_ergebnis_bande_data()
     except Exception:
-        ergebnis_bande_json = '[]'
+        ergebnis_bande_data = []
 
     return render(
         request,
@@ -1976,7 +1975,7 @@ def home(request):
         {
             'richest_clubs': richest_clubs,
             'user_has_no_club': user_has_no_club,
-            'ergebnis_bande_json': ergebnis_bande_json,
+            'ergebnis_bande_data': ergebnis_bande_data,
             'primary_club': primary_club,
             'secondary_club': secondary_club,
             'transfer_targets': transfer_targets,
