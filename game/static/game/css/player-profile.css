@@ -830,21 +830,24 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     right: 0;
     bottom: 0;
     z-index: 4;
-    min-height: 94px;
+    min-height: 110px;
     display: flex;
-    align-items: center;
-    padding: 0 96px 0 28px;
+    align-items: flex-end;
+    padding: 0 96px 18px 28px;
     background: linear-gradient(90deg, rgba(0, 5, 10, 0.96), rgba(2, 20, 30, 0.78) 62%, rgba(0, 5, 10, 0.4));
 }
 
 .aaa-player-nameplate h2 {
     margin: 0;
     color: #ffffff;
-    font-size: clamp(28px, 2.55vw, 44px);
-    line-height: 1;
+    font-size: clamp(20px, 1.7vw, 34px);
+    line-height: 1.05;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0;
+    letter-spacing: 0.3px;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: none;
 }
 
 .aaa-bio-strip {
@@ -2092,7 +2095,7 @@ gap: 18px;
     }
 
     .aaa-player-nameplate h2 {
-font-size: 44px;
+        font-size: clamp(20px, 1.7vw, 32px);
     }
 
     .aaa-top-title h1 {
