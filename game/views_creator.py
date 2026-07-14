@@ -1491,6 +1491,49 @@ def creator_save_stammdaten(request, club_id):
     return _redirect_tab(club_id, 'stammdaten')
 
 
+# ─── Club: Quellen & IDs ──────────────────────────────────────────────────────
+
+@require_POST
+def creator_save_source_ids(request, club_id):
+    """Speichert fm_inside_id, transfermarkt_id und api_football_id des Vereins."""
+    from django.db import IntegrityError
+    club = get_object_or_404(Club, id=club_id)
+
+    def _parse_bigint(raw):
+        raw = (raw or '').strip()
+        if not raw:
+            return None
+        try:
+            v = int(raw)
+            return v if v > 0 else None
+        except ValueError:
+            return False  # Sentinel: ungültig
+
+    fmi_raw = request.POST.get('fm_inside_id', '')
+    tm_raw  = request.POST.get('transfermarkt_id', '')
+    af_raw  = request.POST.get('api_football_id', '')
+
+    fmi = _parse_bigint(fmi_raw)
+    tm  = _parse_bigint(tm_raw)
+    af  = _parse_bigint(af_raw)
+
+    if fmi is False or tm is False or af is False:
+        messages.error(request, 'Ungültige ID — nur positive ganze Zahlen erlaubt.')
+        return _redirect_tab(club_id, 'bilder')
+
+    club.fm_inside_id      = fmi
+    club.transfermarkt_id  = tm
+    club.api_football_id   = af
+
+    try:
+        club.save(update_fields=['fm_inside_id', 'transfermarkt_id', 'api_football_id'])
+        messages.success(request, 'Quellen & IDs gespeichert.')
+    except IntegrityError:
+        messages.error(request, 'Eine dieser IDs ist bereits einem anderen Verein zugewiesen.')
+
+    return _redirect_tab(club_id, 'bilder')
+
+
 # ─── Club: Infrastruktur ──────────────────────────────────────────────────────
 
 @require_POST

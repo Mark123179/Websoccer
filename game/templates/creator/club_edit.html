@@ -134,6 +134,44 @@
       </div>
     </div>
   </div>
+
+  <!-- ─── Quellen & IDs ──────────────────────────────────────────────────── -->
+  <div class="creator-source-ids-card">
+    <div class="creator-card-head"><h2>Quellen &amp; IDs</h2></div>
+    <div class="creator-card-body">
+      <p class="creator-source-ids-hint">
+        Diese IDs steuern, welche Wappen, Trikots und Spielerbilder vom Server geladen werden.
+        Lass ein Feld leer, um die ID zu entfernen.
+      </p>
+      <form method="post" action="{% url 'creator_save_source_ids' club_id=club.id %}">
+        {% csrf_token %}
+        <div class="creator-source-ids-grid">
+          <div class="creator-field">
+            <label>FM Inside ID
+              <span class="creator-source-ids-badge">Wappen · Trikots · Spielerbilder</span>
+            </label>
+            <input type="text" name="fm_inside_id" inputmode="numeric" pattern="[0-9]*"
+                   value="{{ club.fm_inside_id|default:'' }}" placeholder="z. B. 9825">
+          </div>
+          <div class="creator-field">
+            <label>Transfermarkt-ID
+              <span class="creator-source-ids-badge">TM-Import</span>
+            </label>
+            <input type="text" name="transfermarkt_id" inputmode="numeric" pattern="[0-9]*"
+                   value="{{ club.transfermarkt_id|default:'' }}" placeholder="z. B. 27">
+          </div>
+          <div class="creator-field">
+            <label>API-Football-ID
+              <span class="creator-source-ids-badge">Ergebnis-Feed</span>
+            </label>
+            <input type="text" name="api_football_id" inputmode="numeric" pattern="[0-9]*"
+                   value="{{ club.api_football_id|default:'' }}" placeholder="z. B. 157">
+          </div>
+        </div>
+        <button type="submit" class="creator-btn creator-btn-primary" style="margin-top:12px;">IDs speichern</button>
+      </form>
+    </div>
+  </div>
   {% endif %}
 
   <!-- ═══ TAB: STAMMDATEN ════════════════════════════════════════════════════ -->
@@ -794,6 +832,12 @@
 .creator-card-head { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1.25rem; background: #071525; border-bottom: 1px solid #0d2035; }
 .creator-card-head h2 { color: #00d4ff; font-size: .85rem; font-weight: 700; margin: 0; text-transform: uppercase; letter-spacing: .06em; }
 .creator-card-body { padding: 1rem; }
+
+/* ── Quellen & IDs ── */
+.creator-source-ids-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; overflow: hidden; margin-top: 1rem; }
+.creator-source-ids-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.creator-source-ids-hint { margin: 0 0 .9rem; font-size: .8rem; color: #4a7fa5; line-height: 1.5; }
+.creator-source-ids-badge { display: inline-block; margin-left: .5rem; font-size: .65rem; font-weight: 700; color: #00d4ff88; background: #00d4ff18; border-radius: 6px; padding: .1rem .45rem; vertical-align: middle; text-transform: uppercase; letter-spacing: .04em; }
 
 /* ── Images ── */
 .creator-image-preview { border: 1px solid #0d2035; border-radius: 8px; overflow: hidden; margin-bottom: .75rem; display: flex; align-items: center; justify-content: center; background: #030a12; }
