@@ -759,6 +759,16 @@ var MP_TL_EVENTS = JSON.parse(document.getElementById('mp-tl-events-data').textC
 var MP_TL_CLUBS  = JSON.parse(document.getElementById('mp-tl-clubs-data').textContent);
 var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textContent);
 </script>
+<script>
+/* Modal aus dem transform:scale()-Container heraus zu body verschieben,
+   damit position:fixed relativ zum echten Viewport funktioniert. */
+(function () {
+    var modal = document.getElementById('mpTleModal');
+    if (modal && modal.parentNode !== document.body) {
+        document.body.appendChild(modal);
+    }
+})();
+</script>
 
 <!-- ═══ TIMELINE v2 ENGINE (rewrite) ═══ -->
 <script>
