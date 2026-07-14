@@ -1611,7 +1611,7 @@ def _build_ergebnis_bande_data():
             match_url = (
                 f'/matches/{f.simulated_match_id}/report/'
                 if f.simulated_match_id
-                else (f'/clubs/{f.home_club_id}/' if f.home_club_id else '#')
+                else None
             )
             matches.append({
                 'home': _club_data(f.home_club),
