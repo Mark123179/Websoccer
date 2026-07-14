@@ -696,3 +696,64 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-coming-soon-inner svg { width: 48px; height: 48px; }
 .mp-coming-soon-inner h2  { font-size: 20px; font-weight: 700; margin: 0; }
 .mp-coming-soon-inner p   { font-size: 13px; color: var(--mp-sub); margin: 0; }
+
+/* ─── EINTRAG EINREICHEN MODAL ───────────────────────────────── */
+.mp-tle-overlay {
+    display: none; position: fixed; inset: 0; z-index: 400;
+    background: rgba(3,10,16,.72); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+}
+.mp-tle-overlay.is-open { display: flex; }
+.mp-tle-modal {
+    width: 560px; max-width: calc(100vw - 40px); max-height: calc(100vh - 60px);
+    background: rgba(9,20,32,.98); border: 1px solid rgba(44,231,255,.22);
+    border-radius: 8px; box-shadow: 0 24px 80px rgba(0,0,0,.7);
+    display: flex; flex-direction: column; overflow: hidden;
+    color: rgba(244,251,255,.92); font-family: 'Inter', system-ui, sans-serif;
+}
+.mp-tle-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid rgba(44,231,255,.12);
+}
+.mp-tle-header h3 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .08em; color: var(--mp-cyan); }
+.mp-tle-close {
+    background: none; border: none; color: var(--mp-sub); font-size: 18px;
+    cursor: pointer; padding: 2px 6px; line-height: 1;
+}
+.mp-tle-close:hover { color: rgba(244,251,255,.9); }
+.mp-tle-body { padding: 14px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.mp-tle-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mp-tle-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.mp-tle-field > span {
+    font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+    color: var(--mp-sub); display: flex; align-items: center; gap: 6px;
+}
+.mp-tle-cat-dot { width: 11px; height: 11px; border-radius: 50%; background: #22e6ff; display: inline-block; }
+.mp-tle-field input, .mp-tle-field select, .mp-tle-field textarea {
+    background: rgba(6,16,26,.85); border: 1px solid rgba(44,231,255,.18);
+    border-radius: 4px; color: rgba(244,251,255,.92);
+    font: 500 14px/1.4 'Inter', system-ui, sans-serif; padding: 8px 10px;
+    outline: none; width: 100%;
+}
+.mp-tle-field input:focus, .mp-tle-field select:focus, .mp-tle-field textarea:focus { border-color: rgba(34,230,255,.45); }
+.mp-tle-field textarea { resize: vertical; min-height: 68px; }
+.mp-tle-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: rgba(244,251,255,.85); cursor: pointer; }
+.mp-tle-check input { width: 16px; height: 16px; accent-color: #22e6ff; }
+.mp-tle-error { margin: 0; font-size: 13px; color: var(--mp-red); min-height: 16px; }
+.mp-tle-footer {
+    display: flex; justify-content: flex-end; gap: 8px;
+    padding: 12px 18px; border-top: 1px solid rgba(44,231,255,.12);
+}
+.mp-tle-btn-cancel {
+    padding: 7px 16px; font: 700 13px/1 'Inter', system-ui, sans-serif; letter-spacing: .05em;
+    background: none; border: 1px solid rgba(44,231,255,.18); border-radius: 4px;
+    color: var(--mp-sub); cursor: pointer;
+}
+.mp-tle-btn-cancel:hover { border-color: rgba(34,230,255,.4); color: rgba(244,251,255,.85); }
+.mp-tle-btn-save {
+    padding: 7px 18px; font: 800 13px/1 'Inter', system-ui, sans-serif; letter-spacing: .05em;
+    background: rgba(34,230,255,.14); border: 1px solid rgba(34,230,255,.45);
+    border-radius: 4px; color: var(--mp-cyan); cursor: pointer;
+}
+.mp-tle-btn-save:hover { background: rgba(34,230,255,.24); }
+.mp-tle-btn-save:disabled { opacity: .5; cursor: wait; }

@@ -6543,7 +6543,7 @@ def manager_profile(request):
             'pps': ppg,
             'stats': _ss_cur,
         })
-    station_switcher_json = json.dumps(_switcher)
+    station_switcher_json = json.loads(json.dumps(_switcher, default=str))
 
     # --- Timeline events with ISO dates for JS positioning ---
     def _to_iso(d):
@@ -6576,7 +6576,39 @@ def manager_profile(request):
                            'type': 'transfers', 'cat': 'TRANSFER', 'tone': 'cyan',
                            'title': 'Einkauf', 'body': f'{_fee_tl} für {_tl_t.player.full_name}',
                            'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': False, 'station_key': ''})
-    timeline_events_json = json.dumps(_tl_js, default=str)
+    # Vom Manager eingereichte Timeline-Einträge
+    from .models import ManagerTimelineEntry as _MTE
+    for _mte in (_MTE.objects.filter(manager=manager_profile_obj)
+                 .select_related('club', 'player')
+                 .order_by('event_date', 'id')):
+        _tl_js.append(_timeline_entry_js(_mte))
+
+    # Vereins-Optionen fürs Einreichen-Modal (Karrierestationen + Kader)
+    _tl_clubs = []
+    if db_stations:
+        for _cst in db_stations:
+            _cnm = _cst.custom_club_name or (_cst.club.name if _cst.club else _cst.city_name or '?')
+            _cpl = []
+            if _cst.club_id:
+                _cpl = [
+                    {'id': _p.id, 'name': _p.full_name}
+                    for _p in Player.objects.filter(club_id=_cst.club_id)
+                    .only('id', 'first_name', 'last_name')
+                    .order_by('last_name', 'first_name')
+                ]
+            _tl_clubs.append({'station_id': _cst.id, 'club_id': _cst.club_id or '',
+                              'name': _cnm, 'players': _cpl})
+    elif club:
+        _tl_clubs.append({'station_id': '', 'club_id': club.id, 'name': club.name,
+                          'players': [
+                              {'id': _p.id, 'name': _p.full_name}
+                              for _p in Player.objects.filter(club=club)
+                              .only('id', 'first_name', 'last_name')
+                              .order_by('last_name', 'first_name')
+                          ]})
+    timeline_clubs_json = json.loads(json.dumps(_tl_clubs, default=str))
+
+    timeline_events_json = json.loads(json.dumps(_tl_js, default=str))
 
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
@@ -6671,6 +6703,7 @@ def manager_profile(request):
         'city_coords_json': city_coords_json,
         'station_switcher_json': station_switcher_json,
         'timeline_events_json': timeline_events_json,
+        'timeline_clubs_json': timeline_clubs_json,
     })
 
 
@@ -6892,6 +6925,140 @@ def delete_career_station(request):
         return JsonResponse({'ok': False, 'error': 'Station nicht gefunden'}, status=404)
 
     return JsonResponse({'ok': True})
+
+
+_TL_DE_MON = ['Jan.', 'Feb.', 'Mär.', 'Apr.', 'Mai', 'Jun.',
+              'Jul.', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.']
+
+
+def _timeline_entry_js(entry):
+    """Serialisiert einen ManagerTimelineEntry ins Timeline-JS-Format."""
+    from django.templatetags.static import static as _st
+
+    crest = ''
+    if entry.club_id:
+        try:
+            crest = _st(entry.club.crest_static_path)
+        except Exception:
+            crest = ''
+    player_img = ''
+    if entry.player_id:
+        try:
+            player_img = entry.player.portrait_url
+        except Exception:
+            player_img = ''
+    d = entry.event_date
+    return {
+        'date_iso': d.isoformat(),
+        'date': f'{d.day}. {_TL_DE_MON[d.month - 1]} {d.year}',
+        'type': entry.category,
+        'cat': entry.get_category_display().upper(),
+        'tone': entry.tone,
+        'title': entry.title,
+        'body': entry.body,
+        'crest_url': crest,
+        'is_active': False,
+        'station_key': '',
+        'player_img': player_img,
+        'result': entry.result_text,
+        'trophy': entry.show_trophy,
+        'club_name': entry.club_name,
+        'entry_id': entry.id,
+        'is_custom': True,
+    }
+
+
+def submit_timeline_entry(request):
+    """Manager reicht einen eigenen Timeline-Eintrag ein (JSON-POST)."""
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Method not allowed'}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({'ok': False, 'error': 'Nicht angemeldet'}, status=401)
+
+    import json as _json
+    from datetime import date as _date
+    from .models import (
+        ManagerProfile, ManagerCareerStation, ManagerTimelineEntry,
+        Player as _Player, Club as _Club,
+    )
+
+    try:
+        data = _json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return JsonResponse({'ok': False, 'error': 'Ungültige Daten'}, status=400)
+
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+
+    category = (data.get('category') or '').strip()
+    if category not in ManagerTimelineEntry.CATEGORY_TONES:
+        return JsonResponse({'ok': False, 'error': 'Ungültige Kategorie'}, status=400)
+
+    title = (data.get('title') or '').strip()
+    if not title:
+        return JsonResponse({'ok': False, 'error': 'Überschrift fehlt'}, status=400)
+    if len(title) > 120:
+        title = title[:120]
+
+    body = (data.get('body') or '').strip()[:1000]
+
+    try:
+        event_date = _date.fromisoformat((data.get('event_date') or '').strip())
+    except Exception:
+        return JsonResponse({'ok': False, 'error': 'Ungültiges Datum'}, status=400)
+
+    # Verein auflösen: bevorzugt Karriere-Station, sonst direkte Club-ID
+    club = None
+    club_name = ''
+    station_id = str(data.get('station_id') or '').strip()
+    club_id = str(data.get('club_id') or '').strip()
+    if station_id:
+        try:
+            st = ManagerCareerStation.objects.select_related('club').get(
+                id=int(station_id), manager=profile)
+        except (ManagerCareerStation.DoesNotExist, ValueError):
+            return JsonResponse({'ok': False, 'error': 'Verein nicht gefunden'}, status=400)
+        club = st.club
+        club_name = st.custom_club_name or (st.club.name if st.club else st.city_name)
+    elif club_id:
+        # Fallback: aktueller Verein des Managers (ohne erfasste Stationen)
+        current = current_manager_club(request)
+        if not current or str(current.id) != club_id:
+            return JsonResponse({'ok': False, 'error': 'Verein nicht erlaubt'}, status=403)
+        club = current
+        club_name = current.name
+    else:
+        return JsonResponse({'ok': False, 'error': 'Verein fehlt'}, status=400)
+
+    player = None
+    player_id = str(data.get('player_id') or '').strip()
+    if player_id:
+        if not club:
+            return JsonResponse({'ok': False, 'error': 'Spieler ohne Verein'}, status=400)
+        try:
+            player = _Player.objects.get(id=int(player_id), club=club)
+        except (_Player.DoesNotExist, ValueError):
+            return JsonResponse({'ok': False, 'error': 'Spieler nicht gefunden'}, status=400)
+
+    result_text = (data.get('result_text') or '').strip()[:20]
+    show_trophy = bool(data.get('show_trophy'))
+
+    entry = ManagerTimelineEntry.objects.create(
+        manager=profile,
+        club=club,
+        club_name=club_name,
+        event_date=event_date,
+        category=category,
+        title=title,
+        body=body,
+        player=player,
+        result_text=result_text,
+        show_trophy=show_trophy,
+    )
+
+    return JsonResponse({'ok': True, 'event': _timeline_entry_js(entry)})
 
 
 @login_required

@@ -3596,6 +3596,70 @@ class ManagerCareerStation(models.Model):
         return 0
 
 
+class ManagerTimelineEntry(models.Model):
+    """Vom Manager eingereichter Timeline-Eintrag im Managerprofil.
+
+    Farbe/Ton ist je Kategorie fest vorgegeben (CATEGORY_TONES) und
+    bei allen Managern einheitlich.
+    """
+
+    CATEGORY_CHOICES = [
+        ('verein', 'Verein'),
+        ('titel', 'Titel'),
+        ('finale', 'Finale'),
+        ('jugend', 'Jugend'),
+        ('status', 'Status'),
+    ]
+
+    CATEGORY_TONES = {
+        'verein': 'cyan',
+        'titel': 'gold',
+        'finale': 'red',
+        'jugend': 'green',
+        'status': 'red',
+    }
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='timeline_entries',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='manager_timeline_entries',
+    )
+    club_name = models.CharField(max_length=150, blank=True)
+    event_date = models.DateField()
+    category = models.CharField(max_length=12, choices=CATEGORY_CHOICES)
+    title = models.CharField(max_length=120)
+    body = models.TextField(blank=True)
+    player = models.ForeignKey(
+        'Player',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='manager_timeline_entries',
+    )
+    result_text = models.CharField(max_length=20, blank=True)
+    show_trophy = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['event_date', 'id']
+        verbose_name = 'Manager-Timeline-Eintrag'
+        verbose_name_plural = 'Manager-Timeline-Einträge'
+
+    def __str__(self):
+        return f'{self.manager} – {self.title} ({self.event_date})'
+
+    @property
+    def tone(self):
+        return self.CATEGORY_TONES.get(self.category, 'cyan')
+
+
 # ============================================================
 #  Präsident — Saisonziele & Hoeneß-Coin
 # ============================================================

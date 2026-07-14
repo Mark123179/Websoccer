@@ -71,3 +71,4 @@
 - [Spielbericht-Tabs per Hash + Linkify](match-report-tabs-linkify.md) — Tab-Screenshots via #aufstellungen/#statistik; Kommentar-Namen: erst escapen, dann Regex (längste zuerst), dann mark_safe; Altdaten ohne IDs → div-Fallback.
 - [Equal-height cards across two columns](equal-height-cards-two-columns.md) — flex-per-column can't bottom-align cards in separate flank columns; use display:contents + shared grid 1fr 1fr rows.
 - [Stadionumfeld feature](stadionumfeld-feature.md) — global singleton scene; server is real admin-gate; new state keys need STADIONUMFELD_ALLOWED_KEYS or drop silently; baufeld1.png absent from source = expected 404, dont fabricate.
+- [Template-JSON XSS trap](template-json-xss.md) — never `|safe` JSON into <script> when user text can land in it; use json_script + JSON.parse.

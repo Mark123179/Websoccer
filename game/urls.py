@@ -26,6 +26,7 @@ from .views import (
     reset_profile_image,
     save_career_station,
     delete_career_station,
+    submit_timeline_entry,
     player_detail,
     player_graph_data,
 )
@@ -260,6 +261,7 @@ urlpatterns = [
     path('manager/reset-image/', reset_profile_image, name='reset_profile_image'),
     path('manager/career-station/save/', save_career_station, name='save_career_station'),
     path('manager/career-station/delete/', delete_career_station, name='delete_career_station'),
+    path('manager/timeline-entry/save/', submit_timeline_entry, name='submit_timeline_entry'),
 
     path('auth/login/', auth_login, name='auth_login'),
     path('auth/register/', auth_register, name='auth_register'),

@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-87">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-88">
 {% endblock %}
 
 {% block content %}
@@ -219,6 +219,67 @@
         <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#22e6ff;"></span>Verein · Liga</span>
         <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#30f29c;"></span>Jugend · Aktuelles Amt</span>
         <span class="mp-tl2-fc-item"><span class="mp-tl2-fc-dot" style="background:#ff5570;"></span>Finale verloren · Entlassung</span>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     EINTRAG EINREICHEN — MODAL
+══════════════════════════════════════════════════════════════ -->
+<div class="mp-tle-overlay" id="mpTleModal">
+    <div class="mp-tle-modal" role="dialog" aria-modal="true" aria-labelledby="mpTleHeading">
+        <header class="mp-tle-header">
+            <h3 id="mpTleHeading">EINTRAG EINREICHEN</h3>
+            <button type="button" class="mp-tle-close" id="mpTleClose" aria-label="Schließen">✕</button>
+        </header>
+        <div class="mp-tle-body">
+            <div class="mp-tle-row2">
+                <label class="mp-tle-field">
+                    <span>Verein</span>
+                    <select id="mpTleClub"></select>
+                </label>
+                <label class="mp-tle-field">
+                    <span>Datum</span>
+                    <input type="date" id="mpTleDate">
+                </label>
+            </div>
+            <label class="mp-tle-field">
+                <span>Kategorie <em class="mp-tle-cat-dot" id="mpTleCatDot"></em></span>
+                <select id="mpTleCat">
+                    <option value="verein">Verein · Liga</option>
+                    <option value="titel">Titel · Historie</option>
+                    <option value="jugend">Jugend · Aktuelles Amt</option>
+                    <option value="finale">Finale verloren</option>
+                    <option value="status">Status · Entlassung</option>
+                </select>
+            </label>
+            <label class="mp-tle-field">
+                <span>Überschrift</span>
+                <input type="text" id="mpTleTitle" maxlength="120" placeholder="z. B. Pokalsieg gegen BVB">
+            </label>
+            <label class="mp-tle-field">
+                <span>Fließtext</span>
+                <textarea id="mpTleBody" rows="3" maxlength="1000" placeholder="Was ist passiert?"></textarea>
+            </label>
+            <div class="mp-tle-row2">
+                <label class="mp-tle-field">
+                    <span>Spielerbild (optional)</span>
+                    <select id="mpTlePlayer"><option value="">— kein Spieler —</option></select>
+                </label>
+                <label class="mp-tle-field">
+                    <span>Ergebnis (optional)</span>
+                    <input type="text" id="mpTleResult" maxlength="20" placeholder="z. B. 3:1">
+                </label>
+            </div>
+            <label class="mp-tle-check">
+                <input type="checkbox" id="mpTleTrophy">
+                <span>Trophäe anzeigen 🏆</span>
+            </label>
+            <p class="mp-tle-error" id="mpTleError"></p>
+        </div>
+        <footer class="mp-tle-footer">
+            <button type="button" class="mp-tle-btn-cancel" id="mpTleCancel">ABBRECHEN</button>
+            <button type="button" class="mp-tle-btn-save" id="mpTleSave">EINREICHEN</button>
+        </footer>
     </div>
 </div>
 
@@ -690,9 +751,13 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ timeline_events_json|json_script:"mp-tl-events-data" }}
+{{ timeline_clubs_json|json_script:"mp-tl-clubs-data" }}
+{{ station_switcher_json|json_script:"mp-stations-data" }}
 <script>
-var MP_TL_EVENTS = {{ timeline_events_json|safe }};
-var MP_STATIONS  = {{ station_switcher_json|safe }};
+var MP_TL_EVENTS = JSON.parse(document.getElementById('mp-tl-events-data').textContent);
+var MP_TL_CLUBS  = JSON.parse(document.getElementById('mp-tl-clubs-data').textContent);
+var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textContent);
 </script>
 
 <!-- ═══ TIMELINE v2 ENGINE (rewrite) ═══ -->
@@ -725,6 +790,11 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
         STATUS:   '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 1.5L10.5 10h-9L6 1.5z"/><path d="M6 5v2M6 9h.01"/></svg>',
     };
     function catSvg(cat) { return SVG[(cat || '').toUpperCase()] || SVG.HISTORIC; }
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
 
     /* ── DOM-Refs ── */
     var track      = document.getElementById('mpTl2Track');
@@ -890,6 +960,23 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
                   'filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));" alt="">'
                 : '';
 
+            /* Extras: Spielerbild, Trophäe, Ergebnis */
+            var extraHtml = '';
+            if (ev.player_img) {
+                extraHtml += '<img src="'+esc(ev.player_img)+'" style="position:absolute;right:'+(ev.crest_url?46:10)+'px;bottom:8px;'+
+                    'width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top;'+
+                    'background:rgba(6,16,24,.25);filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));" alt="">';
+            }
+            if (ev.trophy) {
+                extraHtml += '<span style="position:absolute;right:'+((ev.crest_url?46:10)+(ev.player_img?36:0))+'px;bottom:10px;'+
+                    'font-size:20px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">🏆</span>';
+            }
+            var resultHtml = ev.result
+                ? '<span style="display:inline-block;margin-left:7px;padding:2px 7px;border-radius:3px;'+
+                  'background:'+C.chip+';color:'+C.chipTxt+';font:900 11px/1 Inter,system-ui,sans-serif;'+
+                  'vertical-align:middle;">'+esc(ev.result)+'</span>'
+                : '';
+
             /* Kategorie */
             var catLabel = (ev.cat || ev.type || 'VEREIN').toUpperCase();
 
@@ -913,10 +1000,10 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
                         'color:'+C.text+';opacity:.7;flex-shrink:0;">'+(ev.date||'')+'</time>' +
                 '</div>' +
                 '<strong style="display:block;font:900 13px/1.2 Inter,system-ui,sans-serif;'+
-                    'color:'+C.text+';margin-top:7px;margin-right:40px;">'+(ev.title||'')+'</strong>' +
+                    'color:'+C.text+';margin-top:7px;margin-right:40px;">'+esc(ev.title||'')+resultHtml+'</strong>' +
                 '<p style="margin:4px 40px 0 0;font:600 10.5px/1.45 Inter,system-ui,sans-serif;'+
-                    'color:'+C.desc+';">'+(ev.body||'')+'</p>' +
-                crestHtml;
+                    'color:'+C.desc+';">'+esc(ev.body||'')+'</p>' +
+                crestHtml + extraHtml;
             track.appendChild(card);
         });
     }
@@ -957,8 +1044,101 @@ var MP_STATIONS  = {{ station_switcher_json|safe }};
         else scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
     });
 
-    var einBtn = document.getElementById('mpTl2Einreichen');
-    if (einBtn) einBtn.addEventListener('click', function() { alert('Einträge können bald eingereicht werden.'); });
+    /* ── Eintrag einreichen (Modal) ── */
+    (function () {
+        var einBtn  = document.getElementById('mpTl2Einreichen');
+        var modal   = document.getElementById('mpTleModal');
+        if (!einBtn || !modal) return;
+
+        var clubs    = MP_TL_CLUBS || [];
+        var selClub  = document.getElementById('mpTleClub');
+        var selPlay  = document.getElementById('mpTlePlayer');
+        var inpDate  = document.getElementById('mpTleDate');
+        var selCat   = document.getElementById('mpTleCat');
+        var catDot   = document.getElementById('mpTleCatDot');
+        var inpTitle = document.getElementById('mpTleTitle');
+        var inpBody  = document.getElementById('mpTleBody');
+        var inpRes   = document.getElementById('mpTleResult');
+        var chkTro   = document.getElementById('mpTleTrophy');
+        var errEl    = document.getElementById('mpTleError');
+        var saveBtn  = document.getElementById('mpTleSave');
+
+        var CAT_DOTS = { verein:'#22e6ff', titel:'#ffd166', finale:'#ff5570', jugend:'#30f29c', status:'#ff5570' };
+
+        clubs.forEach(function(c, i) {
+            var o = document.createElement('option');
+            o.value = String(i);
+            o.textContent = c.name;
+            selClub.appendChild(o);
+        });
+
+        function fillPlayers() {
+            var c = clubs[parseInt(selClub.value, 10)] || null;
+            selPlay.innerHTML = '<option value="">— kein Spieler —</option>';
+            if (c && c.players) {
+                c.players.forEach(function(p) {
+                    var o = document.createElement('option');
+                    o.value = String(p.id);
+                    o.textContent = p.name;
+                    selPlay.appendChild(o);
+                });
+            }
+        }
+        selClub.addEventListener('change', fillPlayers);
+        selCat.addEventListener('change', function() {
+            catDot.style.background = CAT_DOTS[selCat.value] || '#22e6ff';
+        });
+
+        function openModal() {
+            errEl.textContent = '';
+            if (!clubs.length) { errEl.textContent = 'Kein Verein vorhanden — bitte zuerst eine Karriere-Station anlegen.'; }
+            if (!inpDate.value) inpDate.value = new Date().toISOString().slice(0, 10);
+            fillPlayers();
+            catDot.style.background = CAT_DOTS[selCat.value] || '#22e6ff';
+            modal.classList.add('is-open');
+        }
+        function closeModal() { modal.classList.remove('is-open'); }
+
+        einBtn.addEventListener('click', openModal);
+        document.getElementById('mpTleClose').addEventListener('click', closeModal);
+        document.getElementById('mpTleCancel').addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+        saveBtn.addEventListener('click', function() {
+            errEl.textContent = '';
+            var c = clubs[parseInt(selClub.value, 10)];
+            if (!c) { errEl.textContent = 'Bitte einen Verein wählen.'; return; }
+            if (!inpDate.value) { errEl.textContent = 'Bitte ein Datum wählen.'; return; }
+            if (!inpTitle.value.trim()) { errEl.textContent = 'Bitte eine Überschrift eingeben.'; return; }
+
+            saveBtn.disabled = true;
+            fetch('{% url "submit_timeline_entry" %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({
+                    station_id: c.station_id || '',
+                    club_id: c.club_id || '',
+                    event_date: inpDate.value,
+                    category: selCat.value,
+                    title: inpTitle.value.trim(),
+                    body: inpBody.value.trim(),
+                    player_id: selPlay.value || '',
+                    result_text: inpRes.value.trim(),
+                    show_trophy: chkTro.checked,
+                }),
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                saveBtn.disabled = false;
+                if (!res.ok) { errEl.textContent = res.error || 'Speichern fehlgeschlagen.'; return; }
+                MP_TL_EVENTS.push(res.event);
+                render();
+                closeModal();
+                inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; chkTro.checked = false; selPlay.value = '';
+            }).catch(function() {
+                saveBtn.disabled = false;
+                errEl.textContent = 'Netzwerkfehler — bitte erneut versuchen.';
+            });
+        });
+    })();
 
     window.mpTl2Render = render;
 })();
