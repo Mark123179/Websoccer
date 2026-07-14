@@ -841,13 +841,27 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     margin: 0;
     color: #ffffff;
     font-size: clamp(20px, 1.7vw, 34px);
-    line-height: 1.05;
+    line-height: 1.1;
     font-weight: 900;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    word-break: break-word;
-    overflow-wrap: break-word;
+    word-break: normal;
+    overflow-wrap: normal;
     hyphens: none;
+}
+
+.pn-first {
+    display: block;
+    font-size: 0.62em;
+    font-weight: 700;
+    opacity: 0.7;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+}
+
+.pn-last {
+    display: block;
+    white-space: nowrap;
 }
 
 .aaa-bio-strip {

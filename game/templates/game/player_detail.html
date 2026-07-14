@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-10">
+    <link rel="stylesheet" href="{% static 'game/css/player-profile.css' %}?v=gm-11">
     <link rel="stylesheet" href="{% static 'game/css/trophy-cabinet.css' %}?v=gm-4">
 {% endblock %}
 
@@ -37,7 +37,10 @@
                     <img class="aaa-player-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
                     {% endif %}
                     <div class="aaa-player-nameplate">
-                        <h2>{{ player.full_name }}</h2>
+                        <h2>
+                            <span class="pn-first">{{ player.first_name }}</span>
+                            <span class="pn-last">{{ player.last_name }}</span>
+                        </h2>
                     </div>
                 </div>
 
@@ -524,6 +527,21 @@
             touchLocked = false;
         }
     }, { passive: true });
+}());
+</script>
+
+<script>
+(function () {
+    requestAnimationFrame(function () {
+        var h2 = document.querySelector('.aaa-player-nameplate h2');
+        var last = h2 && h2.querySelector('.pn-last');
+        if (!h2 || !last) return;
+        var fs = parseFloat(window.getComputedStyle(h2).fontSize);
+        while (last.scrollWidth > last.offsetWidth && fs > 13) {
+            fs -= 0.5;
+            h2.style.fontSize = fs + 'px';
+        }
+    });
 }());
 </script>
 
