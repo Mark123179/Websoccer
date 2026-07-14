@@ -48,10 +48,10 @@
         </div>
 
         <div class="hof-kpi hof-kpi--4">
-            <div class="hof-kpi-label">Vereinsältester</div>
-            {% if longest_serving_player %}
-            <div class="hof-kpi-value">{{ longest_serving_player.name }}</div>
-            <div class="hof-kpi-sub">{{ longest_serving_player.value }} Saisons</div>
+            <div class="hof-kpi-label">Dienstältester Manager</div>
+            {% if longest_manager %}
+            <div class="hof-kpi-value">{{ longest_manager.name }}</div>
+            <div class="hof-kpi-sub">{{ longest_manager.days }} Tage</div>
             {% else %}
             <div class="hof-kpi-value">–</div>
             {% endif %}

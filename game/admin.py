@@ -3377,13 +3377,14 @@ class PlayerEditRequestAdmin(admin.ModelAdmin):
 
 class PlayerDataReviewAdmin(admin.ModelAdmin):
     list_display = (
-        'full_name',
+        'display_full_name',
         'club',
         'real_life_club',
         'source_strength_badge',
         'source_data_quality_badge',
         'open_requests_badge',
     )
+
     list_filter = (
         SourceBaseQualityFilter,
         'club',
@@ -3395,6 +3396,10 @@ class PlayerDataReviewAdmin(admin.ModelAdmin):
         'fm_inside_id',
         'transfermarkt_id',
     )
+
+    @admin.display(description='Name', ordering='last_name')
+    def display_full_name(self, obj):
+        return obj.full_name
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request).select_related(

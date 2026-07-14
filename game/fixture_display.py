@@ -257,6 +257,14 @@ class FixtureDisplay:
         return self._f.away_club
 
     @property
+    def home_name(self):
+        return self._f.home_club.name if self._f.home_club else ''
+
+    @property
+    def away_name(self):
+        return self._f.away_club.name if self._f.away_club else ''
+
+    @property
     def home_goals(self):
         return self._f.home_goals
 
@@ -327,6 +335,14 @@ class SimulatedMatchDisplay:
     @property
     def away_club(self):
         return self._m.away_club
+
+    @property
+    def home_name(self):
+        return self._m.home_club.name if self._m.home_club else ''
+
+    @property
+    def away_name(self):
+        return self._m.away_club.name if self._m.away_club else ''
 
     @property
     def home_goals(self):
