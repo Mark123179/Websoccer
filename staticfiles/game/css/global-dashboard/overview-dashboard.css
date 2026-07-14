@@ -44,6 +44,7 @@ body.overview-home-page {
     grid-template-columns: repeat(24, minmax(0, 1fr));
     grid-template-rows:
         430px
+        54px
         390px
         355px;
 }
@@ -194,12 +195,21 @@ body.overview-home-page {
 }
 
 /* ============================================================
-   ROW 2 — COLUMN PLACEMENT
+   ROW 2 — ERGEBNIS-BANDE (full-width ticker)
+   ============================================================ */
+
+.overview-ergebnis-bande {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}
+
+/* ============================================================
+   ROW 3 — COLUMN PLACEMENT (ehem. Zeile 2)
    ============================================================ */
 
 .overview-chat-card {
     grid-column: 1 / span 12;
-    grid-row: 2;
+    grid-row: 3;
     z-index: 3;
     --overview-card-bg: url("../../images/backgrounds/overview/overview-chat.png");
     --overview-card-bg-position: center;
@@ -211,7 +221,7 @@ body.overview-home-page {
 .overview-transfer-card {
     overflow: visible;
     grid-column: 13 / span 6;
-    grid-row: 2;
+    grid-row: 3;
     z-index: 8;
     --overview-card-bg: url("../../images/backgrounds/overview/overview-transfer.png");
     --overview-card-bg-position: center;
@@ -222,7 +232,7 @@ body.overview-home-page {
 
 .overview-table-card {
     grid-column: 19 / span 6;
-    grid-row: 2;
+    grid-row: 3;
     --overview-card-bg: url("../../images/backgrounds/overview/overview-table.png");
     --overview-card-bg-position: center;
     --overview-card-bg-opacity: 0.78;
@@ -231,12 +241,12 @@ body.overview-home-page {
 }
 
 /* ============================================================
-   ROW 3 — COLUMN PLACEMENT
+   ROW 4 — COLUMN PLACEMENT (ehem. Zeile 3)
    ============================================================ */
 
 .overview-club-news-card {
     grid-column: 1 / span 7;
-    grid-row: 3;
+    grid-row: 4;
     --overview-card-bg: url("../../images/backgrounds/overview/overview-news.png");
     --overview-card-bg-position: center;
     --overview-card-bg-opacity: 0.74;
@@ -246,7 +256,7 @@ body.overview-home-page {
 
 .overview-sim-news-card {
     grid-column: 8 / span 6;
-    grid-row: 3;
+    grid-row: 4;
     --overview-card-bg: url("../../images/backgrounds/overview/overview-sim-news.png");
     --overview-card-bg-position: center;
     --overview-card-bg-opacity: 0.76;
@@ -256,7 +266,7 @@ body.overview-home-page {
 
 .overview-social-card {
     grid-column: 14 / span 4;
-    grid-row: 3;
+    grid-row: 4;
     --overview-card-bg: url("../../images/backgrounds/overview/overview-social.png");
     --overview-card-bg-position: center;
     --overview-card-bg-opacity: 0.80;
@@ -268,7 +278,7 @@ body.overview-home-page {
     display: grid;
     gap: 8px;
     grid-column: 18 / span 7;
-    grid-row: 3;
+    grid-row: 4;
     grid-template-columns: minmax(0, 1.65fr) minmax(92px, 0.75fr);
     min-width: 0;
 }
@@ -694,26 +704,50 @@ body.overview-home-page {
 
 .overview-scorers {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--muted);
-    display: grid;
-    font-size: 13px;
-    gap: 4px 10px;
-    grid-auto-flow: row;
-    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
-    max-height: 52px;
-    overflow: auto;
+    display: flex;
+    gap: 6px;
     padding-top: 9px;
+}
+
+.overview-scorers-col {
+    color: var(--muted);
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    font-size: 13px;
+    gap: 4px;
+    min-width: 0;
+}
+
+.overview-scorers-col--scroll {
+    max-height: 220px;
+    overflow-y: auto;
     scrollbar-width: thin;
 }
 
-.overview-scorers span {
+.overview-scorers-home {
+    align-items: flex-start;
+}
+
+.overview-scorers-away {
+    align-items: flex-end;
+}
+
+.overview-scorers-col span {
     align-items: center;
     display: flex;
+    max-width: 100%;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.overview-scorers img {
+.overview-scorers-away span {
+    flex-direction: row-reverse;
+}
+
+.overview-scorers-col img {
     background: transparent;
     display: block;
     flex: 0 0 13px;
@@ -721,6 +755,11 @@ body.overview-home-page {
     margin-right: 5px;
     object-fit: contain;
     width: 13px;
+}
+
+.overview-scorers-away img {
+    margin-left: 5px;
+    margin-right: 0;
 }
 
 .overview-last-match-card .card-action {

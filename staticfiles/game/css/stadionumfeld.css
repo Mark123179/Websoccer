@@ -1,0 +1,168 @@
+/* ============================================================
+   STADIONUMFELD — 1:1-Port des Replit-Design-Exports
+   "Vereinsumfeld & Stadion".
+   Nur Größenanpassung an die 1440-Basis; Design & Texte
+   bleiben unverändert. Alle Tokens sind auf .vu-page gescoped
+   (Werte 1:1 aus dem mitgelieferten Design-System).
+   ============================================================ */
+
+@keyframes vu-snow { to { background-position: 0 700px, 40px 620px, -30px 540px; } }
+@keyframes vu-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes vu-rise { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.vu-page {
+    --panel:       rgba(9, 23, 34, 0.82);
+    --cyan:        #22e6ff;
+    --line:        rgba(44, 231, 255, 0.18);
+    --line-strong: rgba(44, 231, 255, 0.38);
+    --green:       #30f29c;
+    --yellow:      #ffd166;
+    --text:        #f4fbff;
+    --shadow:      0 18px 70px rgba(0, 0, 0, 0.46);
+    --muted:       rgba(244, 251, 255, 0.64);
+    --faint:       rgba(244, 251, 255, 0.38);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    background:
+        radial-gradient(120% 80% at 90% -10%, rgba(34, 230, 255, .10), transparent 45%),
+        radial-gradient(120% 90% at 0% 110%, rgba(48, 242, 156, .07), transparent 50%),
+        linear-gradient(160deg, #04090f, #070f18 60%, #04090f);
+}
+
+.vu-page * { box-sizing: border-box; }
+.vu-page input[type=range] { accent-color: #22e6ff; width: 100%; }
+.vu-page button { font-family: inherit; }
+
+.vu-rail::-webkit-scrollbar { width: 10px; }
+.vu-rail::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, .3); border-radius: 8px; }
+.vu-rail::-webkit-scrollbar-track { background: rgba(255, 255, 255, .03); }
+
+/* ============================================================
+   MANAGER-LAYOUT: 4 echte Einrichtungs-Karten links/rechts der
+   Szene (NLZ + Trainingsgelände links, Medizin + Geschäftsstelle
+   rechts). Karten sind serverseitig gerendert und für ALLE
+   Manager funktional (POST → facility_upgrade).
+   ============================================================ */
+.vu-shell {
+    --panel:       rgba(9, 23, 34, 0.82);
+    --cyan:        #22e6ff;
+    --line:        rgba(44, 231, 255, 0.18);
+    --line-strong: rgba(44, 231, 255, 0.38);
+    --green:       #30f29c;
+    --yellow:      #ffd166;
+    --text:        #f4fbff;
+    --shadow:      0 18px 70px rgba(0, 0, 0, 0.46);
+    --muted:       rgba(244, 251, 255, 0.64);
+    --faint:       rgba(244, 251, 255, 0.38);
+
+    display: grid;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(240px, 300px);
+    grid-template-rows: 1fr 1fr;
+    gap: 14px;
+    align-items: stretch;
+    color: var(--text);
+    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+}
+.vu-shell * { box-sizing: border-box; }
+.vu-shell--solo { grid-template-columns: 1fr; grid-template-rows: auto; }
+
+/* Karten sind über display:contents direkte Grid-Items der .vu-shell,
+   damit alle 4 Kacheln über beide Spalten dieselben Zeilentracks
+   (1fr 1fr) teilen → exakt gleich hoch und unten bündig. */
+.vu-flank { display: contents; }
+.vu-shell .vu-page { grid-column: 2; grid-row: 1 / span 2; min-width: 0; }
+.vu-shell--solo .vu-page { grid-column: auto; grid-row: auto; }
+.vu-flank--left  .sf-card:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.vu-flank--left  .sf-card:nth-of-type(2) { grid-column: 1; grid-row: 2; }
+.vu-flank--right .sf-card:nth-of-type(1) { grid-column: 3; grid-row: 1; }
+.vu-flank--right .sf-card:nth-of-type(2) { grid-column: 3; grid-row: 2; }
+
+.vu-flank .sf-card {
+    min-width: 0;
+    background: rgba(10, 15, 28, 0.72);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
+    transition: border-color .2s, background .2s;
+}
+.vu-flank .sf-card:hover { border-color: var(--line-strong); }
+
+.vu-flank .sf-card-head { display: flex; align-items: center; gap: 8px; }
+.vu-flank .sf-card-num {
+    display: flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(34, 230, 255, .16);
+    border: 1.5px solid var(--line-strong);
+    color: var(--cyan); font-size: 11px; font-weight: 800; flex-shrink: 0;
+}
+.vu-flank .sf-card-name { font-size: 14px; font-weight: 800; color: var(--text); flex: 1; line-height: 1.2; letter-spacing: .01em; }
+.vu-flank .sf-card-sub { font-size: 10px; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; }
+
+.vu-flank .sf-level-row { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.vu-flank .sf-level-pip { width: 24px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .12); transition: background .2s; }
+.vu-flank .sf-level-pip--active { background: var(--cyan); box-shadow: 0 0 6px rgba(34, 230, 255, .5); }
+.vu-flank .sf-level-text { font-size: 11px; font-weight: 700; color: var(--muted); margin-left: 6px; white-space: nowrap; }
+
+.vu-flank .sf-levels-inline { display: flex; flex-direction: column; margin: 6px -14px 0; }
+.vu-flank .sf-tt-row { padding: 6px 14px; border-top: 1px solid rgba(255, 255, 255, .07); }
+.vu-flank .sf-tt-row--current { background: rgba(34, 230, 255, .07); border-top: 1px solid rgba(34, 230, 255, .18); }
+.vu-flank .sf-tt-row-head { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.vu-flank .sf-tt-badge { font-size: 10px; font-weight: 800; letter-spacing: .06em; color: var(--muted); background: rgba(255, 255, 255, .09); padding: 2px 7px; border-radius: 4px; }
+.vu-flank .sf-tt-row--current .sf-tt-badge { color: var(--cyan); background: rgba(34, 230, 255, .18); }
+.vu-flank .sf-tt-cost { font-size: 10px; font-weight: 700; color: var(--green); margin-left: auto; }
+.vu-flank .sf-tt-desc { font-size: 11px; color: var(--muted); line-height: 1.45; }
+.vu-flank .sf-tt-row--current .sf-tt-desc { color: var(--text); }
+
+.vu-flank form { margin-top: auto; }
+.vu-flank .sf-upgrade-btn {
+    margin-top: 10px; width: 100%; min-height: 42px; padding: 0 15px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: linear-gradient(180deg, #1bd9ee, #06879a);
+    border: 1px solid rgba(93, 249, 255, .46);
+    border-radius: 8px; color: #fff;
+    font-size: 13px; font-weight: 800; letter-spacing: .04em;
+    cursor: pointer; transition: filter .2s, box-shadow .2s; text-align: center;
+}
+.vu-flank .sf-upgrade-btn:hover { filter: brightness(1.08); box-shadow: 0 0 16px rgba(34, 230, 255, .4); }
+.vu-flank .sf-maxed { margin-top: auto; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--faint); text-align: center; padding: 8px 0 2px; }
+
+.vu-flank .sf-card--nlz {
+    background-image: linear-gradient(160deg, rgba(6, 12, 20, .82), rgba(6, 12, 20, .94)), url('../images/backgrounds/facility-nlz.jpg');
+    background-size: cover; background-position: center 30%;
+}
+.vu-flank .sf-card--medizin {
+    background-image: linear-gradient(160deg, rgba(6, 12, 20, .82), rgba(6, 12, 20, .94)), url('../images/backgrounds/facility-medizin.jpg');
+    background-size: cover; background-position: center 40%;
+}
+.vu-flank .sf-card--office {
+    background-image: linear-gradient(160deg, rgba(6, 12, 20, .82), rgba(6, 12, 20, .94)), url('../images/backgrounds/facility-office.jpg');
+    background-size: cover; background-position: center 40%;
+}
+.vu-flank .sf-card--training {
+    background-image: linear-gradient(160deg, rgba(6, 12, 20, .82), rgba(6, 12, 20, .94)), url('../images/backgrounds/facility-training.jpg');
+    background-size: cover; background-position: center 35%;
+}
+
+/* Flash-Messages (Feedback nach Ausbau) */
+.vu-flash { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.vu-flash-item {
+    padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700;
+    border: 1px solid rgba(44, 231, 255, 0.18);
+    background: rgba(9, 23, 34, 0.82); color: #f4fbff;
+}
+.vu-flash-item--success { border-color: rgba(48, 242, 156, .5); color: #30f29c; }
+.vu-flash-item--error { border-color: rgba(255, 90, 90, .5); color: #ff8a8a; }
+.vu-flash-item--warning { border-color: rgba(255, 209, 102, .5); color: #ffd166; }

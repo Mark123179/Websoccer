@@ -730,39 +730,16 @@
 .squad-pitch {
     position: relative;
     aspect-ratio: 68 / 105;
-    margin: 11px;
-    border-radius: 8px;
+    margin: 0;
+    border-radius: 0;
     overflow: hidden;
     background:
-        linear-gradient(0deg, rgba(20, 92, 56, 0.55), rgba(16, 78, 48, 0.5)),
-        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 9.5%, rgba(255, 255, 255, 0) 9.5% 19%);
-    border: 1px solid rgba(53, 217, 120, 0.28);
+        linear-gradient(180deg, rgba(2, 8, 14, 0.5) 0%, transparent 16%),
+        url("../images/backgrounds/spielfeld.png") center / cover no-repeat;
+    border: none;
 }
 .squad-pitch__lines {
-    position: absolute;
-    inset: 7px;
-    border: 1.5px solid rgba(255, 255, 255, 0.22);
-    border-radius: 4px;
-}
-.squad-pitch__lines::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 1.5px;
-    background: rgba(255, 255, 255, 0.22);
-}
-.squad-pitch__lines::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 30%;
-    aspect-ratio: 1;
-    transform: translate(-50%, -50%);
-    border: 1.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
+    display: none;
 }
 
 .pitch-node {

@@ -1,0 +1,502 @@
+/* ============================================================
+   WEBSOCCER — MatchEngine · Spielbericht V2 (Tab-Design)
+   Alle Selektoren sind via @scope auf .spb-report begrenzt, um
+   Kollisionen mit bestehenden globalen Klassen (.card, .tab, .note …)
+   zu vermeiden. Design-Tokens sind lokal auf .spb-report definiert.
+   ============================================================ */
+.spb-report{
+  /* Surfaces */
+  --panel:rgba(9,23,34,.82); --panel-strong:rgba(12,31,45,.94); --panel-soft:rgba(17,43,58,.72);
+  /* Cyan – funktionales Licht */
+  --cyan:#22e6ff; --cyan-soft:rgba(34,230,255,.14);
+  --line:rgba(44,231,255,.18); --line-strong:rgba(44,231,255,.38);
+  /* Sport-Signale */
+  --green:#30f29c; --yellow:#ffd166; --red:#ff5570; --orange-1:#ff9f1c; --orange-2:#d85d00;
+  /* Text */
+  --text:#f4fbff; --text-secondary:#aab8c3; --muted:rgba(244,251,255,.64); --faint:rgba(244,251,255,.38); --dark-text:#061018;
+  /* Team-Farben */
+  --home:#e2001a; --away:#fde100;
+  /* Radien / Elevation */
+  --radius:8px; --radius-sm:6px; --radius-xs:4px; --pill:999px;
+  --shadow:0 18px 70px rgba(0,0,0,.46); --glow:0 0 28px rgba(34,230,255,.18);
+  --font:'Inter','Segoe UI',Roboto,Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --bg-hero:linear-gradient(rgba(7,20,31,.88),rgba(5,15,23,.92)),radial-gradient(circle at 50% -12%,rgba(48,242,156,.2),transparent 55%);
+
+  position:relative;font-family:var(--font);color:var(--text);
+}
+
+@keyframes tabin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes crestpop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+/* ── Ticker-Animationen ─────────────────────────────────────────────── */
+@keyframes tkEvIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes tkGoalPing{0%{box-shadow:0 0 0 0 var(--tk-ping,rgba(34,230,255,.55)),0 0 18px var(--tk-ping2,rgba(34,230,255,.35))}100%{box-shadow:0 0 0 24px transparent,0 0 18px var(--tk-ping2,rgba(34,230,255,.35))}}
+@keyframes tkScorePop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+@keyframes tkSweep{from{transform:translateX(-130%) skewX(-18deg)}to{transform:translateX(260%) skewX(-18deg)}}
+@keyframes tkCardRise{0%{transform:translateY(7px) rotate(-16deg);opacity:0}60%{transform:translateY(-1px) rotate(11deg)}100%{transform:none;opacity:1}}
+@keyframes tkFlashY{0%,100%{background:transparent}35%{background:rgba(255,209,102,.16)}}
+@keyframes tkFlashR{0%,100%{background:transparent}35%{background:rgba(255,85,112,.14)}}
+@keyframes tkSubIn{from{transform:translateX(-7px);opacity:0}to{transform:none;opacity:1}}
+@keyframes tkInjury{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+
+@scope (.spb-report) {
+
+*{box-sizing:border-box}
+img{display:block}
+button{font-family:inherit}
+
+/* ── Report container ────────────────────────────────── */
+.report{position:relative;z-index:1;padding:6px 0 40px;max-width:1440px;margin:0 auto}
+
+/* ── Match hero header ───────────────────────────────── */
+.hero{display:grid;grid-template-columns:300px 1fr auto 1fr;align-items:center;gap:20px;background:var(--bg-hero);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:18px 26px}
+.hero-comp{display:flex;align-items:center;gap:11px}
+.hero-comp img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(34,230,255,.3))}
+.hero-comp b{font-size:15px;font-weight:900;letter-spacing:.6px;color:#fff;display:block;line-height:1.15}
+.hero-comp span{font-size:12px;font-weight:700;color:var(--cyan)}
+.hero-meta{margin-top:13px;display:grid;gap:7px}
+.hero-meta .m{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);font-weight:700}
+.hero-meta .m strong{color:var(--text)}
+.hero-meta svg{width:15px;height:15px;flex-shrink:0}
+.hero-team{display:flex;align-items:center;gap:16px}
+.hero-team.home{justify-content:flex-end}
+.hero-team .nm{line-height:1.02}
+.hero-team.home .nm{text-align:right}
+.hero-team .nm b{font-size:22px;font-weight:900;color:#fff;display:block}
+.hero-team .nm small{margin-top:5px;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.4px;display:block}
+.hero-crest{width:80px;height:80px;object-fit:contain;animation:crestpop .5s ease both}
+.hero-crest-fallback{width:80px;height:80px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);border:2px solid var(--line-strong);font-weight:900;font-size:22px;color:#fff}
+.hero-crest.home{filter:drop-shadow(0 0 18px rgba(34,230,255,.28))}
+.hero-crest.away{filter:drop-shadow(0 0 18px rgba(255,209,102,.26))}
+.hero-score{text-align:center;min-width:190px}
+.hs-nums{display:flex;align-items:center;justify-content:center;gap:14px;line-height:1}
+.hs-nums b{font-size:56px;font-weight:900;color:#fff}
+.hs-nums i{font-size:40px;font-weight:900;color:var(--muted);font-style:normal}
+.hs-ht{margin-top:2px;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.5px}
+.hs-goals{margin-top:9px;font-size:12px;font-weight:700;color:var(--text-secondary)}
+
+/* ── Tabs ────────────────────────────────────────────── */
+.tabs{display:flex;justify-content:center;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 20px;flex-wrap:wrap}
+.tab{background:none;border:0;cursor:pointer;color:var(--muted);font-size:14px;font-weight:900;letter-spacing:.4px;text-transform:uppercase;padding:12px 18px;position:relative;transition:color .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--cyan)}
+.tab.active::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--cyan);border-radius:2px;box-shadow:0 0 10px rgba(34,230,255,.6)}
+
+.panel[hidden]{display:none}
+.panel{animation:tabin .35s ease}
+
+/* ── Cards (glass panel) ─────────────────────────────── */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;min-width:0}
+.card-title{margin:0 0 12px;color:var(--text);font-size:13px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.card-head .card-title{margin:0}
+.ttl-i{display:inline-flex;align-items:center;gap:8px}
+.ttl-i svg{width:14px;height:14px;color:var(--faint)}
+.linklike{background:none;border:0;color:var(--cyan);font-weight:800;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:color .15s}
+.linklike:hover{color:#8ff5ff}
+.linklike svg{width:13px;height:13px}
+
+/* ── Overview grid ────────────────────────────────────── */
+.ov-grid{display:grid;gap:14px;align-items:stretch;grid-template-columns:1.5fr 1fr 1fr;grid-template-areas:"momentum keystats story" "ticker lineups zones"}
+.mod-momentum{grid-area:momentum;display:flex;flex-direction:column}
+.mod-story{grid-area:story}
+.mod-keystats{grid-area:keystats}
+.mod-ticker{grid-area:ticker;display:flex;flex-direction:column}
+.mod-lineups{grid-area:lineups}
+.mod-zones{grid-area:zones}
+@media(max-width:1080px){
+  .ov-grid{grid-template-columns:1fr 1fr;grid-template-areas:"momentum momentum" "keystats story" "ticker lineups" "zones zones"}
+  .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .hero-team.home{justify-content:center}
+}
+
+/* ── Momentum chart ──────────────────────────────────── */
+.momentum-box{position:relative;flex:1;min-height:170px;overflow:hidden}
+.momentum-box svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.mom-cap{text-align:center;margin-top:6px;font-size:12px;font-weight:800;color:var(--cyan)}
+.mom-cap span{color:#8ff5ff}
+
+/* ── Stat compare bars ───────────────────────────────── */
+.stat-list{display:grid;gap:12px}
+.stat-row{display:grid;grid-template-columns:52px 1fr 52px;align-items:center;gap:10px}
+.stat-row .hv{text-align:left;font-weight:900;font-size:14px;color:var(--cyan)}
+.stat-row .av{text-align:right;font-weight:900;font-size:14px;color:var(--yellow)}
+.stat-row .mid .lab{text-align:center;color:var(--faint);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.stat-bar{display:flex;height:7px;border-radius:var(--pill);background:rgba(255,255,255,.07);overflow:hidden}
+.stat-bar .h{height:100%;background:var(--cyan);border-radius:var(--pill) 0 0 var(--pill)}
+.stat-bar .a{height:100%;background:var(--yellow);border-radius:0 var(--pill) var(--pill) 0}
+
+/* ── Ticker ──────────────────────────────────────────── */
+.ev-row{display:grid;grid-template-columns:26px 42px 50px 1fr auto;align-items:center;gap:9px;padding:9px 8px;border-top:1px solid rgba(255,255,255,.06);border-left:3px solid transparent}
+.ev-row.t-h{border-left-color:var(--cyan);background:linear-gradient(90deg,rgba(34,230,255,.07),transparent 42%)}
+.ev-row.t-a{border-left-color:var(--yellow);background:linear-gradient(90deg,rgba(255,209,102,.07),transparent 42%)}
+.ev-row.t-n{border-left-color:rgba(255,255,255,.16)}
+.ev-club{display:inline-flex;align-items:center;gap:4px}
+.ev-club img{width:19px;height:19px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(0,0,0,.5))}
+.ev-club b{font-size:9.5px;font-weight:900;letter-spacing:.3px;color:var(--muted)}
+.ev-row.t-h .ev-club b{color:var(--cyan)}
+.ev-row.t-a .ev-club b{color:var(--yellow)}
+.ev-club.neutral{justify-content:center}
+.ev-ico{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:14px}
+.ev-min{font-family:var(--mono);font-weight:900;color:var(--cyan);font-size:12px}
+.ev-txt{font-size:13px;font-weight:700;color:var(--text);min-width:0}
+.ev-txt .tag{font-weight:900;font-size:11px;letter-spacing:.4px;margin-right:5px}
+.ev-score{font-weight:900;font-size:13px}
+.tag-tor{color:var(--cyan)} .tag-gelb{color:var(--yellow)} .tag-rot{color:var(--red)} .tag-sub{color:var(--green)} .tag-neu{color:var(--muted)}
+.filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.ov-ticker-list{flex:1;max-height:340px;overflow-y:auto;padding-right:2px}
+.ticker-card{position:relative}
+.ticker-scroll{overflow-y:auto;padding-right:4px;scrollbar-color:rgba(34,230,255,.35) transparent;scrollbar-width:thin}
+.ticker-scroll::-webkit-scrollbar{width:6px}
+.ticker-scroll::-webkit-scrollbar-thumb{background:rgba(34,230,255,.35);border-radius:99px}
+.ticker-scroll-btn{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);width:34px;height:34px;border-radius:50%;border:1px solid var(--line-strong);background:linear-gradient(180deg,var(--cyan),#0a8fa3);color:#02141c;font-size:14px;font-weight:900;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.4),0 0 0 5px rgba(34,230,255,.08);z-index:5;animation:tickerScrollBounce 1.6s ease-in-out infinite}
+.ticker-scroll-btn[hidden]{display:none}
+@keyframes tickerScrollBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(5px)}}
+.ticker-fade{position:absolute;left:18px;right:18px;bottom:0;height:46px;background:linear-gradient(180deg,transparent,rgba(2,8,14,.92));pointer-events:none;z-index:4;border-radius:0 0 var(--radius) var(--radius)}
+.ticker-fade[hidden]{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;color:var(--muted);font-size:13px;font-weight:800;cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--line-strong);color:var(--text)}
+.chip.active{color:var(--cyan);border-color:var(--line-strong);background:var(--cyan-soft)}
+
+/* ── Pitch ───────────────────────────────────────────── */
+.pitch{position:relative;border-radius:0;overflow:hidden;border:none;background:linear-gradient(180deg,rgba(2,8,14,.5) 0%,transparent 16%),url("../images/backgrounds/spielfeld.png") center/cover no-repeat;box-shadow:none}
+.pitch.mini{aspect-ratio:5/7;background-image:linear-gradient(180deg,rgba(2,8,14,.5) 0%,transparent 16%),url("../images/backgrounds/spielfeld_mini_clean.png")}
+.pitch.big{aspect-ratio:2/3;background-image:linear-gradient(180deg,rgba(2,8,14,.5) 0%,transparent 16%),url("../images/backgrounds/spielfeld.png")}
+.pm{display:none}
+.pm.line{left:6%;right:6%;top:50%;border-top:1px solid rgba(255,255,255,.2)}
+.pm.circle{left:50%;top:50%;width:24%;aspect-ratio:1;border:1px solid rgba(255,255,255,.2);border-radius:50%;transform:translate(-50%,-50%)}
+.pm.spot{left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.55);transform:translate(-50%,-50%)}
+.pm.box{left:23%;right:23%;height:16%;border:1px solid rgba(255,255,255,.2)}
+.pm.box.top{top:-1px;border-top:none}
+.pm.box.bot{bottom:-1px;border-bottom:none}
+.pm.six{left:36%;right:36%;height:7.5%;border:1px solid rgba(255,255,255,.18)}
+.pm.six.top{top:-1px;border-top:none}
+.pm.six.bot{bottom:-1px;border-bottom:none}
+.pline{position:absolute;left:6%;right:6%;display:flex;justify-content:space-evenly;align-items:flex-start}
+.pnode{position:absolute;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:8px;width:82px}
+.pnode .ph{position:relative;width:62px;height:62px;border-radius:13px;border:2px solid #fff;overflow:visible;background:linear-gradient(180deg,#125f3b,#082a1c)}
+.pnode .ph img{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;height:134%;object-fit:cover;object-position:top center;clip-path:inset(-38px 0 0 0 round 0 0 11px 11px)}
+.pnode.home .ph{border-color:#e2001a;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 16px rgba(226,0,26,.42)}
+.pnode.away .ph{border-color:#fde100;box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 16px rgba(253,225,0,.36)}
+.pnode .num{position:absolute;left:-8px;bottom:-8px;min-width:22px;height:22px;padding:0 4px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900;border:2px solid rgba(3,16,24,.9);z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.55)}
+.pnode.home .num{background:#e2001a;color:#fff}
+.pnode.away .num{background:#fde100;color:#03141b}
+.pnode .nm{font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.95);white-space:nowrap;background:rgba(3,12,20,.62);padding:2px 9px;border-radius:6px;position:relative;z-index:2}
+.legend-team{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:900;color:var(--text)}
+.legend-team i{width:9px;height:9px;border-radius:50%}
+
+/* ── Mini-Pitch (Übersicht · Aufstellungen-Modul) ─────── */
+.mod-lineups .pitch{position:relative}
+.pdot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;display:grid;place-items:center;font-weight:900;border:1.5px solid rgba(255,255,255,.72);box-shadow:0 2px 7px rgba(0,0,0,.55)}
+.dot-home{background:radial-gradient(circle at 36% 28%,#ff4e60,#c2001a);color:#fff;box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 9px rgba(226,0,26,.5)}
+.dot-away{background:radial-gradient(circle at 36% 28%,#fff275,#e6c400);color:#03141b;box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 9px rgba(253,225,0,.4)}
+
+/* ── Zones ───────────────────────────────────────────── */
+.zone-team + .zone-team{margin-top:12px}
+.zt-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;color:var(--text);margin-bottom:8px}
+.zt-head img{width:22px;height:22px;object-fit:contain}
+.zone-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.zone{border-radius:var(--radius-sm);padding:12px 8px;text-align:center;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+.zone.hi{background:rgba(34,230,255,.12);border-color:var(--line-strong)}
+.zone .p{font-size:19px;font-weight:900;color:var(--muted)}
+.zone.hi .p{color:var(--cyan)}
+.zone .l{color:var(--faint);font-size:9.5px;font-weight:900;text-transform:uppercase;letter-spacing:.4px;margin-top:5px}
+.zone-team.away .zone.hi{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.4)}
+.zone-team.away .zone.hi .p{color:var(--yellow)}
+.zone-note{margin-top:11px;font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+
+/* ── Statistik tab ───────────────────────────────────── */
+.stat-teamhead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin-bottom:16px}
+.stat-teamhead .tm{display:flex;align-items:center;gap:10px;font-weight:900;font-size:14px;color:var(--text)}
+.stat-teamhead .tm.away{justify-content:flex-end}
+.stat-teamhead img{width:34px;height:34px;object-fit:contain}
+.stat-teamhead .vs{font-size:13px;font-weight:900;color:var(--muted)}
+.stat-group + .stat-group{margin-top:18px}
+.stat-group{display:flex;flex-direction:column;height:100%}
+.stat-group h4{margin:0 0 12px;color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.stat-group h4::after{content:"";flex:1;height:1px;background:var(--line)}
+.stat-group .stat-list{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+.spielinfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.info-cell{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px}
+.info-cell .l{color:var(--faint);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
+.info-cell .v{color:var(--text);font-size:15px;font-weight:900;margin-top:6px;display:flex;align-items:center;gap:8px}
+
+/* ── Aufstellungen tab ───────────────────────────────── */
+.lineup-layout{display:grid;grid-template-columns:225px minmax(0,1fr) 225px;gap:14px;align-items:start}
+.lineup-center{display:grid;gap:14px;min-width:0}
+.bench-column{display:grid;gap:14px;min-width:0}
+.subs-card{padding:14px 14px 10px}
+.bench-col{padding:14px 14px 10px}
+.bench-col .subhead{margin-top:2px}
+.bench-col .bench-list{margin-top:8px}
+.bench-col .bench-row{grid-template-columns:30px 20px minmax(0,1fr) auto;gap:7px;padding:7px 0}
+.bench-col .bench-row .ph-slot img{width:28px;height:28px}
+.bench-col .bench-row .nm{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bench-col .bench-row .nm small{display:block;margin-left:0;font-size:10px}
+.bench-row .bnk{font-size:11px;color:var(--faint);font-weight:700}
+.lineup-grid .pitch.big .pnode .nm{max-width:88px;overflow:hidden;text-overflow:ellipsis}
+.lineup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.lu-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.lu-head .tm{display:flex;align-items:center;gap:10px}
+.lu-head img{width:30px;height:30px;object-fit:contain}
+.lu-head b{font-size:14px;font-weight:900;color:#fff}
+.lu-head small{font-size:11px;color:var(--muted);font-weight:700;display:block}
+.lu-form{font-size:12px;font-weight:900;color:var(--cyan);background:var(--cyan-soft);border:1px solid var(--line-strong);border-radius:var(--radius-sm);padding:5px 10px}
+.bench-list{display:grid;gap:2px;margin-top:12px}
+.bench-row{display:grid;grid-template-columns:34px 22px 1fr auto;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.055)}
+.bench-row .ph-slot{display:block}
+.bench-row .ph-slot img{width:32px;height:32px;border-radius:6px;object-fit:cover;object-position:top center;border:1px solid var(--line-strong);background:rgba(255,255,255,.05)}
+.bench-row .n{font-family:var(--mono);font-size:12px;font-weight:900;color:var(--faint);text-align:center}
+.bench-row .nm{font-size:13px;font-weight:700;color:var(--text)}
+.bench-row .nm small{color:var(--faint);font-weight:800;margin-left:6px}
+.bench-row .in{font-size:11px;font-weight:800;color:var(--green);display:inline-flex;align-items:center;gap:4px}
+.subhead{display:flex;align-items:center;gap:8px;margin:2px 0 10px;color:var(--faint);font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}
+.subhead.subhead-gap{margin-top:16px}
+/* Auswechslungen — zentrierte Kachel unterhalb der Startaufstellungen (beide Teams nebeneinander) */
+.subs-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.subs-grid>div:first-child{padding-right:24px;border-right:1px solid rgba(255,255,255,.07)}
+.bench-subs{display:grid;gap:2px;margin-top:6px}
+.bench-subs .bsub{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-top:1px solid rgba(255,255,255,.055)}
+.bench-subs .bsub:first-child{border-top:none}
+.bench-subs .min{font-family:var(--mono);font-weight:900;color:var(--cyan);font-size:11px;flex-shrink:0;margin-top:1px}
+.bench-subs .sub-badge.inline{position:static;flex-shrink:0;margin-top:1px}
+.bench-subs .sw{display:flex;flex-direction:column;gap:2px;font-size:11.5px;min-width:0}
+.bench-subs .on{color:var(--green);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bench-subs .off{color:var(--red);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Auswechslungs-Icon (⇆) — auf Bank-Portrait (grün=eingewechselt), Pitch-Portrait (rot=ausgewechselt), inline in der Auswechslungen-Kachel */
+.ph-slot{position:relative;display:inline-block}
+.sub-badge{display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;line-height:1;border-radius:50%;width:14px;height:14px;color:#04140f;box-shadow:0 0 0 2px var(--bg-hero,#0b1310)}
+.sub-badge.on{position:absolute;right:-3px;bottom:-3px;background:var(--green)}
+.sub-badge.off{position:absolute;right:-3px;bottom:-3px;background:var(--red);color:#fff}
+.sub-badge.inline{width:16px;height:16px;font-size:10px;background:rgba(255,255,255,.08);color:var(--cyan);box-shadow:none;border:1px solid var(--line-strong)}
+.ph .sub-badge.off{right:-4px;bottom:-4px}
+
+/* ── Spieler tab ─────────────────────────────────────── */
+.players-grid{display:grid;grid-template-columns:320px 1fr 1fr;gap:16px;align-items:start}
+.motm-card{background:var(--bg-hero);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:var(--shadow),var(--glow);padding:20px;text-align:center}
+.motm-card .badge{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:900;letter-spacing:.6px;color:var(--cyan);text-transform:uppercase;margin-top:14px}
+.motm-card .por{width:100px;height:100px;border-radius:50%;object-fit:cover;object-position:top center;margin:0 auto;border:2px solid var(--line-strong);background:rgba(255,255,255,.05);box-shadow:var(--glow);display:grid;place-items:center;font-weight:900;font-size:26px;color:#fff}
+.motm-card h3{margin:12px 0 2px;font-size:22px;font-weight:900;color:#fff}
+.motm-card .pos{font-size:12px;color:var(--muted);font-weight:700}
+.motm-card .bignote{margin:14px auto 0;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--green);color:#03141b;font-size:28px;font-weight:900;box-shadow:0 6px 20px rgba(48,242,156,.35)}
+.motm-card .line{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.motm-card .line .s{text-align:center;min-width:60px}
+.motm-card .line .s b{font-size:18px;font-weight:900;color:var(--cyan);display:block;white-space:nowrap}
+.motm-card .line .s small{font-size:9.5px;font-weight:900;color:var(--faint);text-transform:uppercase}
+.pl-list{display:grid;gap:2px}
+.pl-row{display:grid;grid-template-columns:38px 26px 1fr auto auto;align-items:center;gap:10px;padding:9px 6px;border-top:1px solid rgba(255,255,255,.055);border-radius:6px;transition:background .15s}
+.pl-row:hover{background:rgba(34,230,255,.05)}
+.pl-row .n{font-family:var(--mono);font-size:12px;font-weight:900;color:var(--faint);text-align:center}
+.pl-row .ph-slot{display:block}
+.pl-row .ph-slot img{width:36px;height:36px;border-radius:7px;object-fit:cover;object-position:top center;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.pl-row .who b{font-size:13.5px;font-weight:800;color:var(--text)}
+.pl-row .who small{font-size:11px;color:var(--faint);font-weight:800;display:block;margin-top:1px}
+.pl-badges{display:flex;gap:5px;align-items:center}
+.mini-chip{font-size:9.5px;font-weight:900;letter-spacing:.3px;padding:2px 6px;border-radius:4px;text-transform:uppercase}
+.mini-chip.tor{background:rgba(34,230,255,.16);color:var(--cyan)}
+.mini-chip.vor{background:rgba(48,242,156,.16);color:var(--green)}
+.card-yel,.card-red{display:inline-block;width:11px;height:14px;border-radius:2px}
+.card-yel{background:var(--yellow)}
+.card-red{background:var(--red)}
+.note{font-size:12px;font-weight:900;color:#03141b;background:var(--green);border-radius:5px;padding:2px 6px;min-width:38px;text-align:center;flex-shrink:0}
+.note.n1{background:var(--green);color:#03141b}
+.note.n2{background:rgba(34,230,255,.16);color:var(--cyan)}
+.note.n3{background:rgba(255,255,255,.09);color:var(--text)}
+.note.n4{background:rgba(255,209,102,.18);color:var(--yellow)}
+.note.n5{background:rgba(255,85,112,.18);color:var(--red)}
+.note-dash{display:inline-block;min-width:38px;text-align:center;color:var(--faint);font-weight:800;font-size:13px;flex-shrink:0}
+.pl-team-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pl-team-head img{width:26px;height:26px;object-fit:contain}
+.pl-team-head b{font-size:14px;font-weight:900;color:#fff}
+@media(max-width:1080px){.players-grid{grid-template-columns:1fr}.lineup-grid,.grid-2,.lineup-layout{grid-template-columns:1fr}.subs-grid{grid-template-columns:1fr}.subs-grid>div:first-child{padding-right:0;border-right:none;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:14px;margin-bottom:4px}}
+
+/* ── Admin-Bericht Tab (bestehendes mr-* Design bleibt unangetastet) ─── */
+.admin-note{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(255,85,112,.08);border:1px solid rgba(255,85,112,.32);color:var(--muted);font-size:12px;font-weight:700}
+.admin-note b{color:var(--red)}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SPIELBERICHT-TICKER V2  (tk- Präfix, alle Selektoren im @scope)
+   ═══════════════════════════════════════════════════════════════════════ */
+.tk-wrap{--own-tint-bg:rgba(48,242,156,.08);--own-tint-border:rgba(48,242,156,.28);--own-tint-text:#7df5c4;--opp-tint-bg:rgba(255,85,112,.08);--opp-tint-border:rgba(255,85,112,.28);--opp-tint-text:#ff9aae}
+
+/* Filter-Chips */
+.tk-chips{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.tk-chip{padding:7px 16px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line);color:var(--muted);font:700 12.5px Inter,sans-serif;cursor:pointer;transition:border-color .15s,color .15s,background .15s;user-select:none}
+.tk-chip:hover{border-color:var(--line-strong);color:var(--text)}
+.tk-chip.active{background:var(--cyan-soft);border-color:var(--line-strong);color:var(--cyan);font-weight:800}
+.tk-context{margin-left:auto;font:900 11px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}
+
+/* Filter-Logik: data-flt am Container schaltet Events aus */
+.tk-wrap[data-flt="tore"] .tk-ev:not(.tk-k-tor){display:none}
+.tk-wrap[data-flt="karten"] .tk-ev:not(.tk-k-karte){display:none}
+.tk-wrap[data-flt="wechsel"] .tk-ev:not(.tk-k-wechsel){display:none}
+
+/* Spielverlauf-Leiste */
+.tk-verlauf{border-radius:var(--radius);border:1px solid var(--line);background:var(--panel);box-shadow:var(--shadow);padding:13px 18px 15px;margin-bottom:16px}
+.tk-verlauf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tk-label{font:900 11px Inter,sans-serif;letter-spacing:.7px;text-transform:uppercase;color:var(--faint)}
+.tk-legend{display:flex;align-items:center;gap:14px}
+.tk-legend>span{display:flex;align-items:center;gap:5px;font:800 10px Inter,sans-serif;letter-spacing:.5px;text-transform:uppercase;color:var(--faint)}
+.sw-gelb{width:6px;height:9px;border-radius:2px;background:var(--yellow)}
+.sw-rot{width:6px;height:9px;border-radius:2px;background:var(--red)}
+.sw-verletzung{width:9px;height:9px;border-radius:999px;background:rgba(255,85,112,.18);border:1.5px solid rgba(255,85,112,.7)}
+.tk-verlauf-body{position:relative;height:64px}
+.tk-lane-crest{position:absolute;left:0;width:17px;height:17px;object-fit:contain}
+.tk-lane-crest.top{top:6px}
+.tk-lane-crest.bottom{bottom:6px}
+.tk-verlauf-track{position:absolute;left:30px;right:0;top:0;bottom:0}
+.tk-baseline{position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,rgba(44,231,255,.08),rgba(44,231,255,.30) 8%,rgba(44,231,255,.30) 92%,rgba(44,231,255,.08))}
+.tk-hz-tick{position:absolute;left:47%;top:14px;bottom:14px;width:1px;background:rgba(44,231,255,.25)}
+.tk-hz-label{position:absolute;left:47%;top:50%;transform:translate(-50%,-50%);padding:1px 6px;border-radius:999px;background:var(--stadium-bg,#07111a);border:1px solid rgba(44,231,255,.25);font:900 9px Inter,sans-serif;letter-spacing:.6px;color:var(--faint)}
+.tk-t-start{position:absolute;left:0;bottom:-4px;font:800 9.5px Inter,sans-serif;color:rgba(244,251,255,.28)}
+.tk-t-end{position:absolute;right:0;bottom:-4px;font:800 9.5px Inter,sans-serif;color:rgba(244,251,255,.28)}
+
+/* Verlaufs-Marker */
+.tk-marker{position:absolute;width:18px;height:18px;border-radius:999px;display:flex;align-items:center;justify-content:center;transform:translateX(-50%);transition:transform .15s;background:var(--stadium-bg,#07111a);text-decoration:none}
+.tk-marker:hover{transform:translateX(-50%) scale(1.3)}
+.tk-marker.top{top:5px}
+.tk-marker.bottom{bottom:5px}
+.tk-marker.top.inner{top:18px}
+.tk-marker.bottom.inner{bottom:18px}
+.tk-marker.m-tor{background:var(--cyan-soft);border:1.5px solid rgba(44,231,255,.65);box-shadow:0 0 10px rgba(34,230,255,.45);color:var(--cyan)}
+.tk-marker.m-tor.own{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.65);box-shadow:0 0 10px rgba(48,242,156,.45);color:var(--green)}
+.tk-marker.m-wechsel{border:1.5px solid rgba(48,242,156,.55)}
+.tk-marker.m-verletzung{background:rgba(255,85,112,.15);border:1.5px solid rgba(255,85,112,.7);box-shadow:0 0 8px rgba(255,85,112,.35);color:#ff5570}
+.tk-marker.m-gelb,.tk-marker.m-rot{width:7px;height:11px;border-radius:2px;border:none}
+.tk-marker.m-gelb{background:var(--yellow)}
+.tk-marker.m-rot{background:var(--red);box-shadow:0 0 10px rgba(255,85,112,.5)}
+
+/* Timeline */
+.tk-timeline{position:relative;padding-left:38px}
+.tk-spine{position:absolute;left:13px;top:14px;bottom:14px;width:2px;background:linear-gradient(180deg,rgba(44,231,255,.05),rgba(44,231,255,.32) 8%,rgba(44,231,255,.32) 92%,rgba(44,231,255,.05))}
+.tk-events{display:flex;flex-direction:column;gap:15px}
+
+/* Zeilen-Animation */
+.tk-row{position:relative;animation:tkEvIn .45s ease var(--d,0s) both;scroll-margin-top:16px}
+.tk-row.tk-flash-y{animation:tkEvIn .45s ease var(--d,0s) both,tkFlashY 1.4s ease calc(var(--d,0s) + .2s)}
+.tk-row.tk-flash-r{animation:tkEvIn .45s ease var(--d,0s) both,tkFlashR 1.4s ease calc(var(--d,0s) + .2s)}
+@media(prefers-reduced-motion:reduce){.tk-row,.tk-row.tk-flash-y,.tk-row.tk-flash-r{animation:none}}
+
+/* Knoten auf der Spine */
+.tk-node{position:absolute;left:-34px;top:0;width:18px;height:18px;border-radius:999px;background:var(--panel-strong);border:1.5px solid var(--line-strong);display:flex;align-items:center;justify-content:center}
+.tk-c-yellow{border-color:rgba(255,209,102,.5)}
+.tk-c-red{border-color:rgba(255,85,112,.55)}
+.tk-c-red-glow{border-color:rgba(255,85,112,.6);box-shadow:0 0 12px rgba(255,85,112,.35)}
+.tk-c-green{border-color:rgba(48,242,156,.5)}
+.tk-c-neutral{border-color:rgba(44,231,255,.3)}
+.tk-node-goal{left:-39px;top:8px;width:28px;height:28px;background:var(--cyan-soft);border:1.5px solid rgba(44,231,255,.55);--tk-ping:rgba(34,230,255,.55);--tk-ping2:rgba(34,230,255,.35);animation:tkGoalPing 1s ease-out calc(var(--d,0s) + .35s) 2 both;color:var(--cyan)}
+.own .tk-node-goal{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.55);--tk-ping:rgba(48,242,156,.55);--tk-ping2:rgba(48,242,156,.35);color:var(--green)}
+.tk-node-big{left:-36px;top:9px;width:22px;height:22px;border-color:rgba(44,231,255,.45);color:var(--cyan)}
+.tk-final.tk-node-big{background:var(--cyan-soft);border-color:rgba(44,231,255,.55);box-shadow:0 0 14px rgba(34,230,255,.3)}
+.tk-anim-card{animation:tkCardRise .55s ease calc(var(--d,0s) + .25s) both}
+.tk-anim-injury{animation:tkInjury .6s ease calc(var(--d,0s) + .3s) 3 both}
+
+/* Textzeile kleine Events */
+.tk-ev-line{display:flex;align-items:flex-start;gap:10px;padding:2px 4px;border-radius:6px;transition:background .15s}
+.tk-row:hover .tk-ev-line{background:rgba(34,230,255,.05)}
+.tk-ev-line .tk-min{font:800 13px Inter,sans-serif;color:var(--muted);min-width:30px;margin-top:2px;flex-shrink:0}
+.tk-ev-line p{margin:2px 0 0;font:600 13.5px/1.5 Inter,sans-serif;color:var(--muted)}
+.tk-ev-line p strong{color:var(--text);font-weight:800}
+.tk-ev-line p .in{color:var(--green);font-weight:800}
+.tk-tag{font-weight:900;letter-spacing:.5px}
+.tk-t-gelb,.tk-t-abseits{color:var(--yellow)}
+.tk-t-rot,.tk-t-verletzung{color:var(--red)}
+.tk-t-wechsel{color:var(--green)}
+.tk-t-var,.tk-t-elfmeter{color:var(--cyan)}
+.tk-t-ecke{color:rgba(244,251,255,.9)}
+.tk-t-alu{color:#ffa040}
+
+/* Team-Chip */
+.tk-teamchip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 4px;border-radius:999px;flex-shrink:0}
+.tk-teamchip img{width:14px;height:14px;object-fit:contain}
+.tk-teamchip span{font:900 9.5px Inter,sans-serif;letter-spacing:.5px}
+.tk-teamchip.own{background:var(--own-tint-bg);border:1px solid var(--own-tint-border)}
+.tk-teamchip.own span{color:var(--own-tint-text)}
+.tk-teamchip.opp{background:var(--opp-tint-bg);border:1px solid var(--opp-tint-border)}
+.tk-teamchip.opp span{color:var(--opp-tint-text)}
+
+/* Tor-Karte */
+.tk-goal-card{position:relative;overflow:hidden;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--panel-strong);padding:16px 20px;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
+.tk-goal-card:hover{border-color:rgba(44,231,255,.65);box-shadow:var(--shadow),0 0 24px rgba(34,230,255,.18)}
+.own .tk-goal-card{border-color:rgba(48,242,156,.35)}
+.own .tk-goal-card:hover{border-color:rgba(48,242,156,.6);box-shadow:var(--shadow),0 0 24px rgba(48,242,156,.15)}
+.tk-sweep{position:absolute;top:0;bottom:0;left:0;width:38%;background:linear-gradient(90deg,transparent,rgba(34,230,255,.10),transparent);animation:tkSweep .9s ease-out calc(var(--d,0s) + .3s) both;pointer-events:none}
+.own .tk-sweep{background:linear-gradient(90deg,transparent,rgba(48,242,156,.10),transparent)}
+.tk-goal-head{position:relative;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.tk-goal-head .tk-min{font:900 15px Inter,sans-serif;color:var(--cyan)}
+.own .tk-goal-head .tk-min{color:var(--green)}
+.tk-goal-head img{width:24px;height:24px;object-fit:contain}
+.tk-name{font:900 15px Inter,sans-serif;color:var(--text)}
+.tk-badge{padding:2px 9px;border-radius:999px;font:900 10px Inter,sans-serif;letter-spacing:.8px}
+.tk-b-tor{background:var(--cyan);color:var(--dark-text,#061018)}
+.own .tk-b-tor{background:var(--green)}
+.tk-b-extra{background:var(--cyan-soft);border:1px solid var(--line-strong);color:var(--cyan)}
+.own .tk-b-extra{background:rgba(48,242,156,.14);border-color:rgba(48,242,156,.38);color:var(--green)}
+.tk-score{margin-left:auto;font:900 18px Inter,sans-serif;color:var(--cyan);animation:tkScorePop .55s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0s) + .4s) both}
+.own .tk-score{color:var(--green)}
+.tk-goal-card>p{position:relative;margin:0;font:600 13.5px/1.5 Inter,sans-serif;color:var(--muted)}
+
+/* Trennkarten */
+.tk-divider-card{border-radius:var(--radius);border:1px solid rgba(44,231,255,.28);background:linear-gradient(90deg,var(--panel-strong),rgba(9,23,34,.7));padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tk-divider-card.tk-final{border-color:var(--line-strong);padding:12px 16px;box-shadow:0 0 24px rgba(34,230,255,.08)}
+.tk-dlabel{font:900 12px Inter,sans-serif;letter-spacing:1.4px;text-transform:uppercase;color:var(--cyan)}
+.tk-dmin{font:900 12px Inter,sans-serif;color:var(--faint)}
+.tk-dline{flex:1;height:1px;background:linear-gradient(90deg,rgba(44,231,255,.28),transparent)}
+.tk-dinfo{display:flex;align-items:center;gap:8px;font:700 12px Inter,sans-serif;color:var(--muted)}
+.tk-dinfo img{width:18px;height:18px;object-fit:contain}
+.tk-dvs{font:900 11px Inter,sans-serif;color:var(--faint)}
+.tk-dfaint{font:900 11px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:var(--faint)}
+.tk-own-tag{padding:2px 7px;border-radius:999px;background:rgba(48,242,156,.12);border:1px solid rgba(48,242,156,.35);font:900 9px Inter,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:var(--green)}
+.tk-score-pill{display:flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;background:rgba(3,7,12,.6);border:1px solid rgba(44,231,255,.28)}
+.tk-score-pill img{width:16px;height:16px;object-fit:contain}
+.tk-score-pill b{font:900 13px Inter,sans-serif;color:var(--text)}
+.tk-divider-card.tk-final .tk-score-pill{border-color:var(--line-strong);animation:tkScorePop .55s cubic-bezier(.34,1.56,.64,1) calc(var(--d,0s) + .4s) both}
+.tk-divider-card.tk-final .tk-score-pill img{width:18px;height:18px}
+.tk-divider-card.tk-final .tk-score-pill b{font-size:14px}
+
+/* Verbundene Events */
+.tk-group{position:relative;display:flex;flex-direction:column;gap:7px}
+.tk-group-link{position:absolute;left:-26px;top:16px;bottom:14px;width:2px;border-radius:2px;background:linear-gradient(180deg,var(--red),var(--green));box-shadow:0 0 8px rgba(48,242,156,.3)}
+
+.spb-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:14px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+
+/* ── Verlinkungen: Spieler & Vereine ─────────────────── */
+a.plink{color:inherit;text-decoration:none;border-bottom:1px dotted rgba(255,255,255,.28);transition:color .12s,border-color .12s}
+a.plink:hover{color:var(--cyan);border-bottom-color:var(--cyan)}
+a.crest-link{display:inline-flex;align-items:center;gap:inherit;color:inherit;text-decoration:none;transition:color .12s}
+a.crest-link:hover{color:var(--cyan)}
+a.crest-link:hover img{filter:drop-shadow(0 0 8px rgba(34,230,255,.5))}
+a.bench-row,a.pl-row{color:inherit;text-decoration:none;transition:background .15s}
+a.bench-row:hover{background:rgba(34,230,255,.05)}
+a.bench-row:hover .nm,a.pl-row:hover .who b{color:var(--cyan)}
+.pnode-link{display:grid;justify-items:center;gap:8px;color:inherit;text-decoration:none}
+.pnode-link:hover .nm{color:var(--cyan)}
+.motm-link{display:inline-flex}
+.motm-card h3 a.plink{border-bottom:0}
+.motm-card h3 a.plink:hover{color:var(--cyan)}
+
+/* Auswahlfelder (Simulations-Formular): dunkler Hintergrund statt Weiß-auf-Weiß */
+select.chip{background:#0c2230;color:var(--text)}
+select.chip:hover{color:var(--text)}
+select.chip option{background:#0c2230;color:#eaf6fb}
+
+}
+
+/* ── Formation & Taktik pro Halbzeit ─────────────────────────────────── */
+.htt-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.htt-team{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px 16px}
+.htt-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.htt-head .tm{display:flex;align-items:center;gap:10px;font-weight:900;font-size:13px;color:var(--text)}
+.htt-head .tm img{width:26px;height:26px;object-fit:contain}
+.htt-half + .htt-half{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.04)}
+/* 1. HZ und 2. HZ nebeneinander */
+.htt-halves{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.htt-halves .htt-half + .htt-half{margin-top:0;padding-top:0;border-top:0;border-left:1px solid rgba(255,255,255,.06);padding-left:12px}
+.htt-half-title{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.htt-half-title .hz{color:var(--faint);font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}
+.htt-half-title .form{color:var(--cyan);font-size:14px;font-weight:900;white-space:nowrap}
+.htt-line{display:grid;grid-template-columns:minmax(72px,auto) 1fr;align-items:center;gap:12px;padding:4px 0}
+.htt-line .lab{color:var(--faint);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.htt-line .val{color:var(--muted);font-size:12px;font-weight:700}
