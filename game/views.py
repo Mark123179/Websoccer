@@ -1565,6 +1565,74 @@ def career_summary_from_ws_stats(rows):
     }
 
 
+def _build_ergebnis_bande_data():
+    """Ergebnis-Bande: letzten Spieltag jeder aktiven Liga als JSON-ready Liste."""
+    from django.templatetags.static import static as _static
+    from django.db.models import Max
+    from .models import SeasonFixture
+    from .competition_assets import competition_logo_static_path as _comp_logo
+
+    def _club_data(club):
+        if not club:
+            return {'abbr': '?', 'crest': None, 'url': '#'}
+        crest = getattr(club, 'crest_static_path', '') or ''
+        return {
+            'abbr': club.short_name or '?',
+            'crest': _static(crest) if crest else None,
+            'url': f'/clubs/{club.id}/',
+        }
+
+    league_last_mds = (
+        SeasonFixture.objects
+        .filter(is_played=True, home_goals__isnull=False)
+        .values('league_id', 'league__name')
+        .annotate(last_md=Max('matchday'))
+        .order_by('league_id')
+    )
+
+    segments = []
+    for row in league_last_mds:
+        fixtures = list(
+            SeasonFixture.objects.filter(
+                league_id=row['league_id'],
+                matchday=row['last_md'],
+                is_played=True,
+                home_goals__isnull=False,
+                away_goals__isnull=False,
+            )
+            .select_related('home_club', 'away_club')
+            .order_by('id')
+        )
+        if not fixtures:
+            continue
+
+        matches = []
+        for f in fixtures:
+            match_url = (
+                f'/matches/{f.simulated_match_id}/report/'
+                if f.simulated_match_id
+                else (f'/clubs/{f.home_club_id}/' if f.home_club_id else '#')
+            )
+            matches.append({
+                'home': _club_data(f.home_club),
+                'homeGoals': f.home_goals,
+                'awayGoals': f.away_goals,
+                'away': _club_data(f.away_club),
+                'matchUrl': match_url,
+            })
+
+        league_name = row['league__name'] or ''
+        logo_path = _comp_logo(league_name)
+        segments.append({
+            'name': league_name,
+            'round': f'{row["last_md"]}. Spieltag',
+            'logo': _static(logo_path) if logo_path else '',
+            'matches': matches,
+        })
+
+    return segments
+
+
 @login_required
 def home(request):
     clubs = Club.objects.select_related('league').annotate(
@@ -1892,12 +1960,19 @@ def home(request):
         for mp in _other_profiles
     ]
 
+    try:
+        import json as _json
+        ergebnis_bande_json = _json.dumps(_build_ergebnis_bande_data(), ensure_ascii=False)
+    except Exception:
+        ergebnis_bande_json = '[]'
+
     return render(
         request,
         'game/home.html',
         {
             'richest_clubs': richest_clubs,
             'user_has_no_club': user_has_no_club,
+            'ergebnis_bande_json': ergebnis_bande_json,
             'primary_club': primary_club,
             'secondary_club': secondary_club,
             'transfer_targets': transfer_targets,

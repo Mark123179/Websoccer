@@ -1,0 +1,154 @@
+/* ============================================================
+   ERGEBNIS-BANDE — Ticker mit den letzten Pflichtspielergebnissen
+   Prefix eb-; kollidiert nicht mit globalem CSS
+   ============================================================ */
+
+:root {
+  --eb-panel: rgba(9, 23, 34, 0.82);
+  --eb-panel-strong: rgba(12, 31, 45, 0.94);
+  --eb-panel-soft: rgba(17, 43, 58, 0.72);
+  --eb-cyan-soft: rgba(34, 230, 255, 0.14);
+  --eb-line: rgba(44, 231, 255, 0.18);
+  --eb-line-strong: rgba(44, 231, 255, 0.38);
+  --eb-green: #30f29c;
+  --eb-yellow: #ffd166;
+  --eb-red: #ff5570;
+  --eb-text: #f4fbff;
+  --eb-muted: rgba(244, 251, 255, 0.64);
+  --eb-faint: rgba(244, 251, 255, 0.38);
+  --eb-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes eb-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.eb-bande {
+  display: flex;
+  align-items: stretch;
+  height: 54px;
+  background: var(--eb-panel);
+  border: 1px solid var(--eb-line);
+  border-radius: 8px;
+  box-shadow: var(--eb-shadow);
+  overflow: hidden;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+
+/* Feste Kappe links */
+.eb-cap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 18px;
+  background: var(--eb-panel-strong);
+  border-right: 1px solid var(--eb-line);
+}
+.eb-cap-dot {
+  width: 7px; height: 7px; border-radius: 999px;
+  background: var(--eb-green);
+  box-shadow: 0 0 10px rgba(48, 242, 156, 0.8);
+}
+.eb-cap-label {
+  font-size: 11px; font-weight: 900; letter-spacing: 0.7px;
+  text-transform: uppercase; color: var(--eb-faint); white-space: nowrap;
+}
+
+/* Laufband */
+.eb-viewport {
+  flex: 1 1 auto;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 36px, black calc(100% - 36px), transparent);
+  mask-image: linear-gradient(90deg, transparent, black 36px, black calc(100% - 36px), transparent);
+}
+.eb-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: eb-scroll var(--eb-duration, 100s) linear infinite;
+}
+.eb-bande[data-pause-on-hover="true"]:hover .eb-track {
+  animation-play-state: paused;
+}
+.eb-copy {
+  display: flex; align-items: center; gap: 26px; padding: 0 13px;
+}
+
+/* Wettbewerbs-Segment */
+.eb-segment { display: flex; align-items: center; gap: 20px; }
+.eb-divider { width: 1px; height: 24px; background: var(--eb-line-strong); flex: 0 0 auto; }
+.eb-comp { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; }
+.eb-comp-logo {
+  height: 21px; width: auto; display: block;
+  filter: brightness(1.3) drop-shadow(0 0 7px rgba(244, 251, 255, 0.38));
+}
+.eb-comp-name {
+  font-size: 12px; font-weight: 900; letter-spacing: 0.7px;
+  text-transform: uppercase; color: var(--eb-text); white-space: nowrap;
+}
+.eb-comp-round {
+  font-size: 12px; font-weight: 900; letter-spacing: 0.7px;
+  text-transform: uppercase; color: var(--eb-faint); white-space: nowrap;
+}
+
+/* Einzelnes Spiel */
+.eb-match-wrap { display: flex; align-items: center; gap: 14px; }
+.eb-match-divider { width: 1px; height: 16px; background: var(--eb-line); flex: 0 0 auto; }
+.eb-match {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 11px; border-radius: 999px;
+  border: 1px solid transparent; background: transparent;
+}
+.eb-match.eb-own {
+  border-color: var(--eb-line-strong);
+  background: var(--eb-cyan-soft);
+}
+.eb-crest {
+  width: 24px; height: 24px; object-fit: contain; display: block;
+  filter: drop-shadow(0 0 7px rgba(34, 230, 255, 0.22));
+  transition: filter 0.15s;
+}
+.eb-crest-link {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  border-radius: 999px;
+  transition: transform 0.18s;
+}
+.eb-crest-link:hover {
+  transform: scale(1.15);
+}
+.eb-crest-link:hover .eb-crest {
+  filter: drop-shadow(0 0 9px rgba(34, 230, 255, 0.60));
+}
+.eb-monogram {
+  width: 24px; height: 24px; border-radius: 999px;
+  background: var(--eb-panel-soft); border: 1px solid var(--eb-line);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 8px; font-weight: 900; letter-spacing: 0.4px;
+  color: var(--eb-muted); flex: 0 0 auto;
+}
+.eb-abbr {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.4px; color: var(--eb-muted);
+}
+.eb-score {
+  font-size: 14px; font-weight: 900; font-variant-numeric: tabular-nums;
+  white-space: nowrap; color: var(--eb-text); padding: 0 3px;
+}
+.eb-score.eb-win  { color: var(--eb-green); }
+.eb-score.eb-loss { color: var(--eb-red); }
+.eb-score.eb-draw { color: var(--eb-yellow); }
+
+/* Score als Link */
+a.eb-score {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+a.eb-score:hover {
+  opacity: 0.72;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
