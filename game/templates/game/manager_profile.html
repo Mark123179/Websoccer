@@ -1100,6 +1100,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
         });
 
         function openModal() {
+            if (modal.parentNode !== document.body) document.body.appendChild(modal);
             errEl.textContent = '';
             if (!clubs.length) { errEl.textContent = 'Kein Verein vorhanden — bitte zuerst eine Karriere-Station anlegen.'; }
             if (!inpDate.value) inpDate.value = new Date().toISOString().slice(0, 10);
