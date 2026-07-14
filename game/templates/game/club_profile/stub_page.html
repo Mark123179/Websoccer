@@ -16,7 +16,7 @@
 
     <article class="club-profile-stub">
         {% if club.crest_static_path %}
-            <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+            <img src="{{ club.crest_static_path }}" alt="{{ club.name }}">
         {% endif %}
         <div>
             <span>{{ club.name }}</span>

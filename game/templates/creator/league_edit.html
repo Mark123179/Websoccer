@@ -154,7 +154,7 @@
           <tr>
             <td class="creator-portrait-cell">
               {% if club.crest_static_path %}
-                <img class="creator-portrait-thumb" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                <img class="creator-portrait-thumb" src="{{ club.crest_static_path }}" alt="{{ club.name }}">
               {% else %}
                 <div class="creator-portrait-placeholder">{{ club.short_name|slice:":2" }}</div>
               {% endif %}
@@ -536,7 +536,7 @@
                 <tr class="sp-fixture-row" data-fixture-id="{{ f.pk }}" data-md="{{ block.matchday }}">
                   <td class="sp-team-cell sp-home">
                     {% if f.home_club.crest_static_path %}
-                      <img class="sp-crest" src="{% static f.home_club.crest_static_path %}" alt="">
+                      <img class="sp-crest" src="{{ f.home_club.crest_static_path }}" alt="">
                     {% endif %}
                     <span>{{ f.home_club.name }}</span>
                     {% if f.home_lineup_status == 'confirmed' %}<span class="sp-lineup-dot sp-lineup-ok" title="Aufstellung bestätigt"></span>
@@ -546,7 +546,7 @@
                   <td class="sp-vs">vs</td>
                   <td class="sp-team-cell sp-away">
                     {% if f.away_club.crest_static_path %}
-                      <img class="sp-crest" src="{% static f.away_club.crest_static_path %}" alt="">
+                      <img class="sp-crest" src="{{ f.away_club.crest_static_path }}" alt="">
                     {% endif %}
                     <span>{{ f.away_club.name }}</span>
                     {% if f.away_lineup_status == 'confirmed' %}<span class="sp-lineup-dot sp-lineup-ok" title="Aufstellung bestätigt"></span>

@@ -10,7 +10,7 @@
             {% endif %}
             {% if profile.club.crestUrl %}
                 <a class="club-crest-link club-identity-crest-link" href="{{ profile.links.profileUrl }}" aria-label="{{ profile.club.name }} Profil">
-                    <img class="club-identity-crest" src="{% static profile.club.crestUrl %}" alt="{{ profile.club.name }}">
+                    <img class="club-identity-crest" src="{{ profile.club.crestUrl }}" alt="{{ profile.club.name }}" onerror="this.style.display='none'">
                 </a>
             {% endif %}
         </div>

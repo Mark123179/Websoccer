@@ -26,10 +26,10 @@
                                 {% if day.fixture.opponent_crest %}
                                     {% if day.fixture.opponent_url %}
                                         <a class="ws-fixture-crest-link" href="{{ day.fixture.opponent_url }}" aria-label="{{ day.fixture.opponent_name }} Profil">
-                                            <img src="{% static day.fixture.opponent_crest %}" alt="{{ day.fixture.opponent_name }}">
+                                            <img src="{{ day.fixture.opponent_crest }}" alt="{{ day.fixture.opponent_name }}">
                                         </a>
                                     {% else %}
-                                        <img src="{% static day.fixture.opponent_crest %}" alt="{{ day.fixture.opponent_name }}">
+                                        <img src="{{ day.fixture.opponent_crest }}" alt="{{ day.fixture.opponent_name }}">
                                     {% endif %}
                                 {% endif %}
                                 {% if day.fixture.competition_logo %}

@@ -212,7 +212,7 @@
               <div class="sc-bid-thumb sc-bid-thumb--empty"></div>
               {% endif %}
               {% if b.rl_club_crest %}
-              <img src="{% static b.rl_club_crest %}" alt="{{ b.rl_club }}" class="sc-bid-crest" onerror="this.style.display='none'">
+              <img src="{{ b.rl_club_crest }}" alt="{{ b.rl_club }}" class="sc-bid-crest" onerror="this.style.display='none'">
               {% else %}
               <div class="sc-bid-crest sc-bid-crest--empty" title="{{ b.rl_club }}">{{ b.rl_club|slice:":1" }}</div>
               {% endif %}
@@ -282,7 +282,7 @@
               </div>
               <div class="sc-result-club-row">
                 {% if f.rl_club_crest %}
-                <img src="{% static f.rl_club_crest %}" alt="{{ f.rl_club }}" class="sc-result-crest" onerror="this.style.display='none'">
+                <img src="{{ f.rl_club_crest }}" alt="{{ f.rl_club }}" class="sc-result-crest" onerror="this.style.display='none'">
                 {% else %}
                 <div class="sc-result-crest sc-result-crest--empty">{{ f.rl_club|slice:":1" }}</div>
                 {% endif %}

@@ -10,7 +10,7 @@
                     {% if trophy %}
                         <figure class="club-trophy-item">
                             {% if trophy.trophyImageUrl %}
-                                <img src="{% static trophy.trophyImageUrl %}" alt="{{ trophy.competitionName }}">
+                                <img src="{{ trophy.trophyImageUrl }}" alt="{{ trophy.competitionName }}" onerror="this.style.display='none'">
                             {% endif %}
                             <strong>{{ trophy.count }}</strong>
                             <figcaption>{{ trophy.competitionName }}</figcaption>

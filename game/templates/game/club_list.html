@@ -57,7 +57,7 @@
       <div class="cv-club-card {% if not club.is_free %}cv-club-card--taken{% endif %}">
         <div class="cv-club-crest">
           {% if club.crest_static_path %}
-            <img src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+            <img src="{{ club.crest_static_path }}" alt="{{ club.name }}">
           {% else %}
             <div class="cv-crest-placeholder">{{ club.short_name|slice:":2" }}</div>
           {% endif %}
@@ -152,7 +152,7 @@
                                 <span class="club-name-cell">
                                     {% if club.crest_static_path %}
                                         <a class="img-link" href="/clubs/{{ club.id }}/" aria-label="{{ club.name }}">
-                                            <img class="club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+                                            <img class="club-crest" src="{{ club.crest_static_path }}" alt="{{ club.name }}">
                                         </a>
                                     {% endif %}
                                     <a href="/clubs/{{ club.id }}/">{{ club.name }}</a>

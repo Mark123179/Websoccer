@@ -29,3 +29,11 @@
 - Einsatzort: Spielerprofil, Auszeichnungen & Titel
 - Uebernommen am: 2026-05-13
 - Hinweise: `PlayerAwardTitle.trophy_asset_id` verweist auf die FM-ID ohne Dateiendung. Harry-Kane-Dummy nutzt aktuell `22`, `1301410`, `1301394` und `1301397`.
+
+## ASSETS_BASE_URL Umstellung (2026-07-14)
+
+- Quelle: bestehende Projekt-Assets (Kopien aus `game/static/game/images/…`)
+- Lokale Zielpfade (Dev): `game/static/assets/players/face_<fm_inside_id>.png`, `game/static/assets/clubs/logos/<fm_inside_id>_club.png`, `game/static/assets/trophies/<trophy_asset_id>.png`
+- Produktion: Host-Ordner `/var/www/assets` → nginx-Location `/assets/` (read-only Bind-Mount)
+- Einsatzort: alle Spielergesichter, Vereinswappen und Trophaeen (URL-Aufbau via `game/asset_urls.py`, konfiguriert durch `ASSETS_BASE_URL`)
+- Hinweise: keine `{% static %}`-Aufloesung mehr fuer diese Bilder; fehlende Dateien = 404 + onerror-Platzhalter

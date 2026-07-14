@@ -8,6 +8,15 @@
     const players = readJson('tactics-player-data', []);
     const playerById = new Map(players.map((player) => [String(player.id), player]));
     const staticPrefix = form.dataset.staticPrefix || '/static/';
+
+    // Absolute Asset-URLs (beginnen mit '/') unverändert lassen,
+    // relative Static-Pfade weiterhin mit dem Static-Prefix versehen.
+    function assetSrc(path) {
+        if (!path) {
+            return '';
+        }
+        return path.startsWith('/') ? path : `${staticPrefix}${path}`;
+    }
     const formationOrder = [
         'defense',
         'defensive_midfield',
@@ -373,7 +382,7 @@
         portraitWrap.innerHTML = '';
         if (player) {
             const image = document.createElement('img');
-            image.src = `${staticPrefix}${player.portrait}`;
+            image.src = assetSrc(player.portrait);
             image.alt = player.name;
             portraitWrap.append(image);
         } else {
@@ -396,7 +405,7 @@
         const player = playerById.get(String(select.value || ''));
         if (player) {
             const image = document.createElement('img');
-            image.src = `${staticPrefix}${player.portrait}`;
+            image.src = assetSrc(player.portrait);
             image.alt = player.name;
             media.replaceWith(image);
         } else {

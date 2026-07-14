@@ -216,7 +216,7 @@
         {% endif %}
         {% if row.top_player_portrait %}
         <img class="jo-toplayer-portrait"
-             src="{% static row.top_player_portrait %}"
+             src="{{ row.top_player_portrait }}"
              alt="{{ row.top_player_name }}"
              onerror="this.style.display='none'">
         {% else %}

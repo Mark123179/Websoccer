@@ -1123,7 +1123,7 @@ class ClubAdmin(admin.ModelAdmin):
         return format_html(
             '<img src="{}" alt="{}" style="width:80px;height:80px;object-fit:contain;'
             'border:1px solid #ddd;padding:4px;border-radius:4px;" />',
-            static(path), obj.name,
+            path, obj.name,
         )
 
     @admin.display(description='Aktuelle Trikots (Heim / Auswärts / Ausweich)')
@@ -1657,7 +1657,7 @@ class PlayerDataQualityFilter(admin.SimpleListFilter):
             matching_ids = [
                 player.pk
                 for player in queryset
-                if player.portrait_static_path == 'game/images/default_player.svg'
+                if not player.fm_inside_id
             ]
             return queryset.filter(pk__in=matching_ids)
 
@@ -1996,7 +1996,7 @@ class PlayerAdmin(admin.ModelAdmin):
             '<img src="{}" alt="{}" style="width:{}px;height:{}px;'
             'object-fit:contain;object-position:center bottom;'
             'background:#f5f7fa;border:1px solid #b7c3ca;" />',
-            static(obj.portrait_static_path),
+            obj.portrait_static_path,
             obj.full_name,
             size,
             size,

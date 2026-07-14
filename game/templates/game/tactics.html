@@ -26,7 +26,7 @@
                 <div class="tactics-team-block">
                     {% if next_match.homeClub.crestUrl %}
                         <a class="tactics-crest-link" href="{{ home_club_url }}">
-                            <img src="{% static next_match.homeClub.crestUrl %}" alt="{{ next_match.homeClub.name }}">
+                            <img src="{{ next_match.homeClub.crestUrl }}" alt="{{ next_match.homeClub.name }}">
                         </a>
                     {% endif %}
                     <div>
@@ -37,7 +37,7 @@
                                 <i class="is-{{ result.tone }}">
                                     {% if result.opponent_crest %}
                                         <a href="{{ result.opponent_url }}" aria-label="{{ result.opponent_name }}">
-                                            <img src="{% static result.opponent_crest %}" alt="{{ result.opponent_name }}">
+                                            <img src="{{ result.opponent_crest }}" alt="{{ result.opponent_name }}">
                                         </a>
                                     {% endif %}
                                     {{ result.score }} <b>{{ result.label }}</b>
@@ -58,7 +58,7 @@
                                 <i class="is-{{ result.tone }}">
                                     {% if result.opponent_crest %}
                                         <a href="{{ result.opponent_url }}" aria-label="{{ result.opponent_name }}">
-                                            <img src="{% static result.opponent_crest %}" alt="{{ result.opponent_name }}">
+                                            <img src="{{ result.opponent_crest }}" alt="{{ result.opponent_name }}">
                                         </a>
                                     {% endif %}
                                     {{ result.score }} <b>{{ result.label }}</b>
@@ -68,7 +68,7 @@
                     </div>
                     {% if next_match.awayClub.crestUrl %}
                         <a class="tactics-crest-link" href="{{ away_club_url }}">
-                            <img src="{% static next_match.awayClub.crestUrl %}" alt="{{ next_match.awayClub.name }}">
+                            <img src="{{ next_match.awayClub.crestUrl }}" alt="{{ next_match.awayClub.name }}">
                         </a>
                     {% endif %}
                 </div>
@@ -147,7 +147,7 @@
                     {% for option in player_options %}
                         <article class="tactics-roster-player{% if option.is_suspended or option.is_injured %} is-unavailable{% endif %}" data-roster-player="{{ option.id }}"{% if option.is_suspended or option.is_injured %} data-unavailable="true"{% endif %}>
                             <a class="tactics-roster-image" href="{{ option.profile_url }}">
-                                <img src="{% static option.portrait %}" alt="{{ option.name }}">
+                                <img src="{{ option.portrait }}" alt="{{ option.name }}">
                             </a>
                             <strong>{{ option.name }}</strong>
                             {% if option.is_suspended %}<span class="tactics-status-badge is-suspended">Gesperrt</span>{% elif option.is_injured %}<span class="tactics-status-badge is-injured">Verletzt</span>{% endif %}
@@ -188,7 +188,7 @@
                     <h3 class="tactics-own-absences__title">Ausfälle</h3>
                     {% for row in own_absences %}
                     <div class="tactics-own-absence-row is-{{ row.tone }}">
-                        <img src="{% static row.portrait %}" alt="{{ row.name }}">
+                        <img src="{{ row.portrait }}" alt="{{ row.name }}">
                         <span class="tactics-own-absence-name">{{ row.name }}</span>
                         <span class="tactics-status-badge is-{% if row.tone == 'suspension' %}suspended{% else %}injured{% endif %}">{% if row.tone == 'suspension' %}Gesperrt{% else %}Verletzt{% endif %}</span>
                         <small class="tactics-own-absence-reason">{{ row.reason }}</small>
@@ -260,7 +260,7 @@
                                     <img class="tactics-captain-badge{% if slot.is_captain %} is-visible{% endif %}" data-captain-badge src="{% static 'game/images/icons/captain-armband.png' %}?v=yellow-20260519" alt="Kapitän">
                                     <div class="tactics-slot-portrait">
                                         {% if slot.player %}
-                                            <img src="{% static slot.player.portrait %}" alt="{{ slot.player.name }}">
+                                            <img src="{{ slot.player.portrait }}" alt="{{ slot.player.name }}">
                                         {% else %}
                                             <span></span>
                                         {% endif %}
@@ -373,7 +373,7 @@
                             <small class="tactics-bench-position">{% if row.player %}{{ row.player.position }}{% else %}-{% endif %}</small>
                             <span class="tactics-bench-number">{{ row.index|add:"11" }}</span>
                             {% if row.player %}
-                                <img src="{% static row.player.portrait %}" alt="{{ row.player.name }}">
+                                <img src="{{ row.player.portrait }}" alt="{{ row.player.name }}">
                             {% else %}
                                 <i></i>
                             {% endif %}
@@ -659,7 +659,7 @@
                 <div class="tactics-opponent-absence-list dashboard-scrollarea">
                     {% for row in opponent_absences %}
                         <div class="is-{{ row.tone }}">
-                            <img src="{% static row.portrait %}" alt="{{ row.name }}">
+                            <img src="{{ row.portrait }}" alt="{{ row.name }}">
                             <strong>{{ row.name|shorten_name }}</strong>
                             <span>{{ row.reason }}</span>
                             <small>{{ row.duration }}</small>
@@ -681,5 +681,5 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script src="{% static 'game/js/tactics.js' %}?v=instructions-grid-3"></script>
+    <script src="{% static 'game/js/tactics.js' %}?v=asset-urls-1"></script>
 {% endblock %}

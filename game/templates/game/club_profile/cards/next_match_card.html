@@ -21,10 +21,10 @@
             {% if profile.nextMatch.homeClub.crestUrl %}
                 {% if profile.nextMatch.homeClub.profileUrl %}
                     <a class="club-crest-link" href="{{ profile.nextMatch.homeClub.profileUrl }}" aria-label="{{ profile.nextMatch.homeClub.name }} Profil">
-                        <img src="{% static profile.nextMatch.homeClub.crestUrl %}" alt="{{ profile.nextMatch.homeClub.name }}">
+                        <img src="{{ profile.nextMatch.homeClub.crestUrl }}" alt="{{ profile.nextMatch.homeClub.name }}">
                     </a>
                 {% else %}
-                    <img src="{% static profile.nextMatch.homeClub.crestUrl %}" alt="{{ profile.nextMatch.homeClub.name }}">
+                    <img src="{{ profile.nextMatch.homeClub.crestUrl }}" alt="{{ profile.nextMatch.homeClub.name }}">
                 {% endif %}
             {% endif %}
             <strong>{{ profile.nextMatch.homeClub.shortName }}</strong>
@@ -36,10 +36,10 @@
             {% if profile.nextMatch.awayClub.crestUrl %}
                 {% if profile.nextMatch.awayClub.profileUrl %}
                     <a class="club-crest-link" href="{{ profile.nextMatch.awayClub.profileUrl }}" aria-label="{{ profile.nextMatch.awayClub.name }} Profil">
-                        <img src="{% static profile.nextMatch.awayClub.crestUrl %}" alt="{{ profile.nextMatch.awayClub.name }}">
+                        <img src="{{ profile.nextMatch.awayClub.crestUrl }}" alt="{{ profile.nextMatch.awayClub.name }}">
                     </a>
                 {% else %}
-                    <img src="{% static profile.nextMatch.awayClub.crestUrl %}" alt="{{ profile.nextMatch.awayClub.name }}">
+                    <img src="{{ profile.nextMatch.awayClub.crestUrl }}" alt="{{ profile.nextMatch.awayClub.name }}">
                 {% endif %}
             {% endif %}
             <strong>{{ profile.nextMatch.awayClub.shortName }}</strong>

@@ -35,7 +35,7 @@
             <div class="overview-club-main">
                 {% if primary_club and primary_club.crest_static_path %}
                     <a class="img-link" href="/clubs/{{ primary_club.id }}/" aria-label="{{ primary_club.name }} Vereinsprofil">
-                        <img class="overview-club-crest" src="{% static primary_club.crest_static_path %}" alt="{{ primary_club.name }}">
+                        <img class="overview-club-crest" src="{{ primary_club.crest_static_path }}" alt="{{ primary_club.name }}">
                     </a>
                 {% endif %}
 
@@ -97,10 +97,10 @@
                         {% if spotlight.portrait %}
                             {% if spotlight.player_id %}
                                 <a class="img-link" href="/players/{{ spotlight.player_id }}/" aria-label="Spielerprofil">
-                                    <img src="{% static spotlight.portrait %}" alt="{{ spotlight.name }}">
+                                    <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}">
                                 </a>
                             {% else %}
-                                <img src="{% static spotlight.portrait %}" alt="{{ spotlight.name }}">
+                                <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}">
                             {% endif %}
                         {% endif %}
                     </div>
@@ -140,7 +140,7 @@
                 <div class="overview-team">
                     {% if next_match_home_club and next_match_home_club.crest_static_path %}
                         <a class="img-link" href="/clubs/{{ next_match_home_club.id }}/" aria-label="{{ next_match_home_club.name }} Vereinsprofil">
-                            <img src="{% static next_match_home_club.crest_static_path %}" alt="{{ next_match_home_club.name }}">
+                            <img src="{{ next_match_home_club.crest_static_path }}" alt="{{ next_match_home_club.name }}">
                         </a>
                     {% endif %}
                     <strong>{{ next_match_home_club.short_name|default:"–" }}</strong>
@@ -151,7 +151,7 @@
                 <div class="overview-team">
                     {% if next_match_away_club and next_match_away_club.crest_static_path %}
                         <a class="img-link" href="/clubs/{{ next_match_away_club.id }}/" aria-label="{{ next_match_away_club.name }} Vereinsprofil">
-                            <img src="{% static next_match_away_club.crest_static_path %}" alt="{{ next_match_away_club.name }}">
+                            <img src="{{ next_match_away_club.crest_static_path }}" alt="{{ next_match_away_club.name }}">
                         </a>
                     {% endif %}
                     <strong>{{ next_match_away_club.short_name|default:"–" }}</strong>
@@ -181,7 +181,7 @@
                 <div class="overview-team compact">
                     {% if last_match_home_club and last_match_home_club.crest_static_path %}
                         <a class="img-link" href="/clubs/{{ last_match_home_club.id }}/" aria-label="{{ last_match_home_club.name }} Vereinsprofil">
-                            <img src="{% static last_match_home_club.crest_static_path %}" alt="{{ last_match_home_club.name }}" style="margin-left: -23px; margin-right: -23px;">
+                            <img src="{{ last_match_home_club.crest_static_path }}" alt="{{ last_match_home_club.name }}" style="margin-left: -23px; margin-right: -23px;">
                         </a>
                     {% endif %}
                     <strong>{{ last_match_home_club.short_name|default:"–" }}</strong>
@@ -190,7 +190,7 @@
                 <div class="overview-team compact">
                     {% if last_match_away_club and last_match_away_club.crest_static_path %}
                         <a class="img-link" href="/clubs/{{ last_match_away_club.id }}/" aria-label="{{ last_match_away_club.name }} Vereinsprofil">
-                            <img src="{% static last_match_away_club.crest_static_path %}" alt="{{ last_match_away_club.name }}" style="margin-left: -4px; margin-right: -4px;">
+                            <img src="{{ last_match_away_club.crest_static_path }}" alt="{{ last_match_away_club.name }}" style="margin-left: -4px; margin-right: -4px;">
                         </a>
                     {% endif %}
                     <strong>{{ last_match_away_club.short_name|default:"–" }}</strong>
@@ -244,7 +244,7 @@
                     <div>
                         {% if manager.crest %}
                             <a class="img-link" href="{{ manager.club_url }}" aria-label="Vereinsprofil">
-                                <img class="overview-manager-crest" src="{% static manager.crest %}" alt="">
+                                <img class="overview-manager-crest" src="{{ manager.crest }}" alt="">
                             </a>
                         {% else %}
                             <span class="overview-manager-crest is-empty"></span>
@@ -311,7 +311,7 @@
                     <details class="overview-transfer-row">
                         <summary>
                             <a class="overview-transfer-avatar" href="/players/{{ row.player.id }}/" onclick="event.stopPropagation();" aria-label="Spielerprofil von {{ row.player.full_name }}">
-                                <img src="{% static row.player.portrait_static_path %}" alt="{{ row.player.full_name }}">
+                                <img src="{{ row.player.portrait_static_path }}" alt="{{ row.player.full_name }}">
                             </a>
                             <span class="overview-transfer-player">
                                 <strong>{{ row.player.full_name }}</strong>
@@ -329,7 +329,7 @@
                                 <span class="overview-transfer-crest">
                                     {% if row.from_crest %}
                                         <a class="img-link" href="{{ row.from_club_url }}" aria-label="Vereinsprofil">
-                                            <img src="{% static row.from_crest %}" alt="{{ row.from_label }}">
+                                            <img src="{{ row.from_crest }}" alt="{{ row.from_label }}">
                                         </a>
                                     {% else %}
                                         <em>?</em>
@@ -339,7 +339,7 @@
                                 <span class="overview-transfer-crest">
                                     {% if row.to_crest %}
                                         <a class="img-link" href="{{ row.to_club_url }}" aria-label="Vereinsprofil">
-                                            <img src="{% static row.to_crest %}" alt="{{ row.to_label }}">
+                                            <img src="{{ row.to_crest }}" alt="{{ row.to_label }}">
                                         </a>
                                     {% else %}
                                         <em>?</em>
@@ -403,7 +403,7 @@
                             <td>
                                 {% if row.crest_static_path %}
                                     <a class="img-link" href="{{ row.club_url }}" aria-label="{{ row.club_name }} Vereinsprofil">
-                                        <img src="{% static row.crest_static_path %}" alt="{{ row.club_name }}">
+                                        <img src="{{ row.crest_static_path }}" alt="{{ row.club_name }}">
                                     </a>
                                 {% endif %}
                                 <span>{{ row.short_name }}</span>
@@ -433,7 +433,7 @@
                 {% for item in club_news %}
                     <a href="{% if primary_club %}/clubs/{{ primary_club.id }}/news/{% else %}/clubs/{% endif %}">
                         {% if primary_club and primary_club.crest_static_path %}
-                            <img class="overview-news-crest" src="{% static primary_club.crest_static_path %}" alt="">
+                            <img class="overview-news-crest" src="{{ primary_club.crest_static_path }}" alt="">
                         {% else %}
                             <i aria-hidden="true"></i>
                         {% endif %}
@@ -494,7 +494,7 @@
                         <strong class="olr-home-name">{{ match.home }}</strong>
                         {% if match.home_crest %}
                             <a class="olr-crest" href="{{ match.home_url }}" aria-label="{{ match.home }} Vereinsprofil">
-                                <img src="{% static match.home_crest %}" alt="{{ match.home }}">
+                                <img src="{{ match.home_crest }}" alt="{{ match.home }}">
                             </a>
                         {% else %}
                             <span class="olr-crest is-empty"></span>
@@ -502,7 +502,7 @@
                         <span class="olr-score">–:–</span>
                         {% if match.away_crest %}
                             <a class="olr-crest" href="{{ match.away_url }}" aria-label="{{ match.away }} Vereinsprofil">
-                                <img src="{% static match.away_crest %}" alt="{{ match.away }}">
+                                <img src="{{ match.away_crest }}" alt="{{ match.away }}">
                             </a>
                         {% else %}
                             <span class="olr-crest is-empty"></span>

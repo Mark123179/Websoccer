@@ -984,7 +984,7 @@ def award_podium_slots(awards):
                     'title': award_display_title(award),
                     'count': award.count,
                     'shape': award_trophy_shape(award),
-                    'asset_version': static_asset_version(award.trophy_static_path),
+                    'asset_version': '',
                     'is_placeholder': False,
                 }
             )
@@ -1578,7 +1578,7 @@ def _build_ergebnis_bande_data():
         crest = getattr(club, 'crest_static_path', '') or ''
         return {
             'abbr': club.short_name or '?',
-            'crest': _static(crest) if crest else None,
+            'crest': crest or None,
             'url': f'/clubs/{club.id}/',
         }
 
@@ -2703,7 +2703,8 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
     def duel_avatar_path(manager_club):
         if manager_club and manager_club.crest_static_path:
             return manager_club.crest_static_path
-        return 'game/images/default_player.svg'
+        from django.templatetags.static import static as _st
+        return _st('game/images/default_player.svg')
 
     return {
         'club': club,
@@ -5376,7 +5377,7 @@ def club_news(request, club_id):
     except Exception:
         pass
 
-    crest_url = _static(club.crest_static_path) if club.crest_static_path else ''
+    crest_url = club.crest_static_path or ''
 
     league_name = club.league.name if club.league else ''
     league_logo = ''
@@ -5393,8 +5394,8 @@ def club_news(request, club_id):
         if _lm_obj:
             _hc_club = _lm_obj.home_club
             _ac_club = _lm_obj.away_club
-            _hc = _static(_hc_club.crest_static_path) if _hc_club and getattr(_hc_club, 'crest_static_path', None) else ''
-            _ac = _static(_ac_club.crest_static_path) if _ac_club and getattr(_ac_club, 'crest_static_path', None) else ''
+            _hc = _hc_club.crest_static_path if _hc_club and getattr(_hc_club, 'crest_static_path', None) else ''
+            _ac = _ac_club.crest_static_path if _ac_club and getattr(_ac_club, 'crest_static_path', None) else ''
             # Scorers: [minute, name] für JS
             _raw_sc = _lm_obj.scorers or []
             _scorers = [[s['minute'], s['playerName']] for s in _raw_sc]
@@ -6436,7 +6437,7 @@ def manager_profile(request):
         {
             'id': c.id,
             'name': c.name,
-            'crest_url': _static_fn(c.crest_static_path) if c.crest_static_path else '',
+            'crest_url': c.crest_static_path or '',
         }
         for c in Club.objects.order_by('name')
     ]
@@ -6940,7 +6941,7 @@ def _timeline_entry_js(entry):
     crest = ''
     if entry.club_id:
         try:
-            crest = _st(entry.club.crest_static_path)
+            crest = entry.club.crest_static_path
         except Exception:
             crest = ''
     player_img = ''

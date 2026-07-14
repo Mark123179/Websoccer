@@ -13,27 +13,31 @@ Als externe Referenz-ID verwenden wir vorerst die IDs von FMInside/FMIScout-komp
 
 Diese IDs sind nicht die internen Django-IDs. Die Django-ID darf sich durch Datenbank-Resets aendern, die `fm_inside_id` bleibt als fachliche Zuordnung stabil.
 
-## Geplante lokale Asset-Struktur
+## Konfigurierbare Asset-Basis-URL (`ASSETS_BASE_URL`)
 
-Die Bilddateien werden spaeter lokal abgelegt. Die Zuordnung soll ueber die `fm_inside_id` erfolgen:
+Bild-Assets (Spielergesichter, Club-Logos, Trophaeen usw.) werden ueber eine konfigurierbare Basis-URL referenziert. Die App baut die URLs nur noch als reine Strings zusammen (`game/asset_urls.py`), ohne `{% static %}`-Aufloesung oder Dateisystem-Checks. Fehlt eine Datei, liefert der Webserver 404 und die UI zeigt ueber `onerror` einen Platzhalter.
+
+- Einstellung: `ASSETS_BASE_URL` in `core/settings.py` (per Env-Variable ueberschreibbar)
+- Entwicklung (Replit): Default `/static/assets/` → Dateien liegen unter `game/static/assets/`
+- Produktion (Hetzner): `ASSETS_BASE_URL=/assets/` → nginx serviert den Host-Ordner `/var/www/assets` (Bind-Mount `/var/www/assets:/app/assets:ro`, Location `/assets/` in `nginx/default.conf.template`)
+
+Struktur unterhalb der Basis-URL:
 
 ```text
-assets/
+<ASSETS_BASE_URL>
+  players/face_<player_fm_inside_id>.png
   clubs/
-    <club_fm_inside_id>/
-      crest.png
-      stadium.jpg
-      city.jpg
-  players/
-    <player_fm_inside_id>/
-      portrait.png
+    logos/<club_fm_inside_id>_club.png
+    stadiums/…  cities/…  jerseys/…
+  trophies/<trophy_asset_id>.png
+  flags/  competitions/  avatars/  backgrounds/  icons/
 ```
 
 Beispiele:
 
-- Borussia Dortmund: `assets/clubs/907/crest.png`
-- FC Bayern: `assets/clubs/915/crest.png`
-- Harry Kane: `assets/players/28049320/portrait.png`
+- Borussia Dortmund: `/static/assets/clubs/logos/907_club.png`
+- FC Bayern: `/static/assets/clubs/logos/915_club.png`
+- Harry Kane: `/static/assets/players/face_28049320.png`
 
 ## Externe Logos und Icons
 

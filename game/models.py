@@ -469,6 +469,11 @@ class Club(models.Model):
         blank=True,
         help_text='Transfermarkt-Vereins-ID. Eindeutige Erkennung beim Import.',
     )
+    cmtracker_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        help_text='CMTracker-Vereins-ID (Spalte existiert live bereits manuell).',
+    )
     transfermarkt_profile_url = models.URLField(
         blank=True,
         help_text='Kanonischer Transfermarkt-Vereinslink.',
@@ -559,11 +564,22 @@ class Club(models.Model):
 
     @property
     def crest_static_path(self):
+        """Absolute Wappen-URL (fertige URL, KEIN Static-Pfad mehr).
+
+        Vereine mit fm_inside_id laden aus der Assets-Struktur
+        (ASSETS_BASE_URL + clubs/logos/{id}_club.png, kein Dateisystem-Check);
+        Vereine ohne fm_inside_id (ws_<pk>) behalten den bisherigen
+        Static-Fallback, aber ebenfalls als fertige URL.
+        """
+        if self.fm_inside_id:
+            from .asset_urls import club_logo_url
+            return club_logo_url(self.fm_inside_id)
         stem = self._asset_stem()
         for ext in ('png', 'svg'):
             path = f'game/images/crests/{stem}.{ext}'
             if finders.find(path):
-                return path
+                from django.templatetags.static import static
+                return static(path)
         return ''
 
     @property
@@ -1598,15 +1614,18 @@ class Player(models.Model):
 
     @property
     def portrait_static_path(self):
+        """Absolute Spielerbild-URL (fertige URL, KEIN Static-Pfad mehr).
+
+        Mit fm_inside_id: Assets-Struktur (players/face_{id}.png), rein
+        String-basiert ohne Dateisystem-Check — fehlende Bilder fängt der
+        client-seitige onerror-Fallback ab. Ohne fm_inside_id: Default-SVG.
+        """
         if not self.fm_inside_id:
-            return 'game/images/default_player.svg'
+            from django.templatetags.static import static
+            return static('game/images/default_player.svg')
 
-        for extension in ('png', 'svg'):
-            path = f'game/images/players/{self.fm_inside_id}.{extension}'
-            if finders.find(path):
-                return path
-
-        return 'game/images/default_player.svg'
+        from .asset_urls import player_face_url
+        return player_face_url(self.fm_inside_id)
 
     @property
     def cmt_headshot_url(self):
@@ -1630,8 +1649,7 @@ class Player(models.Model):
         cmt = self.cmt_headshot_url
         if cmt:
             return cmt
-        from django.templatetags.static import static
-        return static(self.portrait_static_path)
+        return self.portrait_static_path
 
     @property
     def profile_portrait_static_path(self):

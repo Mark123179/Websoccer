@@ -23,7 +23,7 @@
                 <div class="aaa-player-poster">
                     {% if shirt_number %}<span class="aaa-shirt-number">{{ shirt_number }}</span>{% endif %}
                     {% if rl_club_crest %}
-                        <img class="aaa-poster-club" src="{% static rl_club_crest %}" alt="">
+                        <img class="aaa-poster-club" src="{{ rl_club_crest }}" alt="">
                     {% endif %}
                     {% if nation_nt_logo %}
                         <img class="aaa-poster-nation" src="{% static nation_nt_logo %}" alt="" title="{{ nation_nt_name }}">
@@ -34,7 +34,7 @@
                     {% if player.cmt_headshot_url %}
                     <img class="aaa-player-portrait" src="{{ player.cmt_headshot_url }}" alt="{{ player.full_name }}">
                     {% else %}
-                    <img class="aaa-player-portrait" src="{% static player.portrait_static_path %}" alt="{{ player.full_name }}">
+                    <img class="aaa-player-portrait" src="{{ player.portrait_static_path }}" alt="{{ player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                     {% endif %}
                     <div class="aaa-player-nameplate">
                         <h2>
@@ -70,7 +70,7 @@
                         <strong>
                             {% if player.club and player.club.crest_static_path %}
                                 <a class="img-link" href="/clubs/{{ player.club.id }}/" aria-label="{{ player.club.name }} Vereinsprofil">
-                                    <img src="{% static player.club.crest_static_path %}" alt="">
+                                    <img src="{{ player.club.crest_static_path }}" alt="" onerror="this.style.display='none'">
                                 </a>
                             {% endif %}
                             {{ player.club.name|default:"ohne WS-Verein" }}
@@ -286,7 +286,7 @@
                                         <span class="aaa-transfer-crest">
                                             {% if row.from_crest %}
                                                 <a class="img-link" href="{{ row.from_club_url }}" aria-label="Vereinsprofil">
-                                                    <img src="{% static row.from_crest %}" alt="">
+                                                    <img src="{{ row.from_crest }}" alt="">
                                                 </a>
                                             {% else %}
                                                 <em>?</em>
@@ -296,7 +296,7 @@
                                         <span class="aaa-transfer-crest">
                                             {% if row.to_crest %}
                                                 <a class="img-link" href="{{ row.to_club_url }}" aria-label="Vereinsprofil">
-                                                    <img src="{% static row.to_crest %}" alt="">
+                                                    <img src="{{ row.to_crest }}" alt="">
                                                 </a>
                                             {% else %}
                                                 <em>?</em>
@@ -355,7 +355,7 @@
                     <figure class="trophy-slot trophy-card trophy-rank-{{ forloop.counter }} is-{{ slot.shape }}{% if slot.is_placeholder %} is-placeholder{% endif %}">
                         <img class="podium" src="{% static 'game/images/trophies/podest.png' %}" alt="" aria-hidden="true">
                         {% if slot.image_path %}
-                            <img class="trophy-img is-{{ slot.shape }}" src="{% static slot.image_path %}{% if slot.asset_version %}?v={{ slot.asset_version }}{% endif %}" alt="{{ slot.title }}">
+                            <img class="trophy-img is-{{ slot.shape }}" src="{{ slot.image_path }}{% if slot.asset_version %}?v={{ slot.asset_version }}{% endif %}" alt="{{ slot.title }}">
                         {% elif slot.is_placeholder %}
                             <img class="trophy-img is-default" src="{% static 'game/images/trophies/default.png' %}" alt="" aria-hidden="true">
                         {% endif %}

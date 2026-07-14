@@ -4,7 +4,7 @@
     <span class="club-player-category">{{ item.category }}</span>
     <a class="club-player-main-link" href="{{ item.profileUrl }}">
         <span class="club-player-cutout-wrap">
-            <img class="club-player-cutout" src="{% static item.cutoutUrl %}" alt="{{ item.playerName }}">
+            <img class="club-player-cutout" src="{{ item.cutoutUrl }}" alt="{{ item.playerName }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
         </span>
         <strong class="club-player-name-row">
             {% if item.flagUrl %}

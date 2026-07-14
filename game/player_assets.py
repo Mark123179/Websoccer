@@ -2,6 +2,9 @@ from pathlib import Path
 import shutil
 
 from django.conf import settings
+from django.templatetags.static import static
+
+from .asset_urls import trophy_url
 
 
 def _image_paths(player):
@@ -32,13 +35,17 @@ def _image_paths(player):
 
 
 def get_cached_profile_portrait_static_path(player):
+    """Absolute URL des Profil-Kompositbilds (Gesicht + Trikot).
+
+    Fällt auf player.portrait_static_path (bereits absolute URL) zurück.
+    """
     paths = _image_paths(player)
     if paths is None:
         return player.portrait_static_path
 
     face_path, kit_path, output_dir, output_name = paths
     output_path = output_dir / output_name
-    static_path = f'game/images/player_composites/{output_name}'
+    static_url = static(f'game/images/player_composites/{output_name}')
 
     if not face_path.exists() or not kit_path.exists():
         return player.portrait_static_path
@@ -49,43 +56,24 @@ def get_cached_profile_portrait_static_path(player):
             output_mtime >= face_path.stat().st_mtime and
             output_mtime >= kit_path.stat().st_mtime
         ):
-            return static_path
+            return static_url
 
     try:
         build_profile_portrait(face_path, kit_path, output_path)
     except Exception:
         return player.portrait_static_path
 
-    return static_path if output_path.exists() else player.portrait_static_path
+    return static_url if output_path.exists() else player.portrait_static_path
 
 
 def get_cached_trophy_static_path(trophy_asset_id):
-    if not trophy_asset_id:
-        return ''
+    """Absolute Trophäenbild-URL aus der Assets-Struktur.
 
-    source_path = _find_trophy_source(trophy_asset_id)
-    if source_path is None:
-        return ''
-
-    output_dir = (
-        settings.BASE_DIR /
-        'game' /
-        'static' /
-        'game' /
-        'images' /
-        'trophies'
-    )
-    output_name = f'{_safe_trophy_output_stem(source_path.stem)}.png'
-    output_path = output_dir / output_name
-
-    if output_path.exists():
-        if output_path.stat().st_mtime >= source_path.stat().st_mtime:
-            return f'game/images/trophies/{output_name}'
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(source_path, output_path)
-
-    return f'game/images/trophies/{output_name}'
+    Reiner String-Aufbau (ASSETS_BASE_URL + trophies/{id}.png) —
+    kein Dateisystem-Check, kein Kopier-Cache mehr. Fehlende Bilder
+    fängt der client-seitige onerror-Fallback ab.
+    """
+    return trophy_url(trophy_asset_id)
 
 
 def get_cached_nation_static_path(nation_asset_id):
@@ -125,23 +113,6 @@ def get_cached_nation_static_path(nation_asset_id):
     shutil.copy2(source_path, output_path)
 
     return f'game/images/nations/federations/{output_name}'
-
-
-def _find_trophy_source(trophy_asset_id):
-    clean_id = str(trophy_asset_id).removesuffix('.png')
-    static_path = (
-        settings.BASE_DIR / 'game' / 'static' / 'game' / 'images' / 'trophies' / f'{clean_id}.png'
-    )
-    if static_path.exists():
-        return static_path
-
-    return None
-
-
-def _safe_trophy_output_stem(stem):
-    from django.utils.text import slugify
-
-    return slugify(stem) or stem
 
 
 def build_profile_portrait(face_path, kit_path, output_path):

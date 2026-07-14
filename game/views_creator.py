@@ -3838,7 +3838,7 @@ def creator_search(request):
 
     clubs_out = []
     for c in clubs_qs:
-        crest_url = static(c.crest_static_path) if c.crest_static_path else None
+        crest_url = c.crest_static_path or None
         clubs_out.append({
             'id': c.pk,
             'name': c.name,

@@ -21,10 +21,10 @@
             {% if profile.lastMatch.homeClub.crestUrl %}
                 {% if profile.lastMatch.homeClub.profileUrl %}
                     <a class="club-crest-link" href="{{ profile.lastMatch.homeClub.profileUrl }}" aria-label="{{ profile.lastMatch.homeClub.name }} Profil">
-                        <img src="{% static profile.lastMatch.homeClub.crestUrl %}" alt="{{ profile.lastMatch.homeClub.name }}">
+                        <img src="{{ profile.lastMatch.homeClub.crestUrl }}" alt="{{ profile.lastMatch.homeClub.name }}">
                     </a>
                 {% else %}
-                    <img src="{% static profile.lastMatch.homeClub.crestUrl %}" alt="{{ profile.lastMatch.homeClub.name }}">
+                    <img src="{{ profile.lastMatch.homeClub.crestUrl }}" alt="{{ profile.lastMatch.homeClub.name }}">
                 {% endif %}
             {% endif %}
             <strong>{{ profile.lastMatch.homeClub.shortName }}</strong>
@@ -36,10 +36,10 @@
             {% if profile.lastMatch.awayClub.crestUrl %}
                 {% if profile.lastMatch.awayClub.profileUrl %}
                     <a class="club-crest-link" href="{{ profile.lastMatch.awayClub.profileUrl }}" aria-label="{{ profile.lastMatch.awayClub.name }} Profil">
-                        <img src="{% static profile.lastMatch.awayClub.crestUrl %}" alt="{{ profile.lastMatch.awayClub.name }}">
+                        <img src="{{ profile.lastMatch.awayClub.crestUrl }}" alt="{{ profile.lastMatch.awayClub.name }}">
                     </a>
                 {% else %}
-                    <img src="{% static profile.lastMatch.awayClub.crestUrl %}" alt="{{ profile.lastMatch.awayClub.name }}">
+                    <img src="{{ profile.lastMatch.awayClub.crestUrl }}" alt="{{ profile.lastMatch.awayClub.name }}">
                 {% endif %}
             {% endif %}
             <strong>{{ profile.lastMatch.awayClub.shortName }}</strong>

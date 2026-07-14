@@ -63,7 +63,7 @@
                         <tr class="{% if row.is_own %}sg-act-row--own{% endif %}">
                             <td class="sg-act-club">
                                 {% if row.club.crest_static_path %}
-                                <img src="{% static row.club.crest_static_path %}" alt="{{ row.club.name }}" class="sg-act-logo">
+                                <img src="{{ row.club.crest_static_path }}" alt="{{ row.club.name }}" class="sg-act-logo">
                                 {% endif %}
                                 {{ row.club.name }}
                             </td>

@@ -7,7 +7,7 @@
         {% for item in profile.news %}
             <a href="{{ item.url }}">
                 {% if item.thumbnailUrl %}
-                    <img src="{% static item.thumbnailUrl %}" alt="">
+                    <img src="{{ item.thumbnailUrl }}" alt="">
                 {% else %}
                     <span aria-hidden="true"></span>
                 {% endif %}

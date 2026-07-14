@@ -7,10 +7,10 @@
         {% if profile.partnerClub.crestUrl %}
             {% if profile.partnerClub.profileUrl %}
                 <a class="club-crest-link" href="{{ profile.partnerClub.profileUrl }}" aria-label="{{ profile.partnerClub.name }} Profil">
-                    <img src="{% static profile.partnerClub.crestUrl %}" alt="{{ profile.partnerClub.name }}">
+                    <img src="{{ profile.partnerClub.crestUrl }}" alt="{{ profile.partnerClub.name }}">
                 </a>
             {% else %}
-                <img src="{% static profile.partnerClub.crestUrl %}" alt="{{ profile.partnerClub.name }}">
+                <img src="{{ profile.partnerClub.crestUrl }}" alt="{{ profile.partnerClub.name }}">
             {% endif %}
         {% endif %}
         <strong>{{ profile.partnerClub.name }}</strong>

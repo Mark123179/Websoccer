@@ -120,6 +120,9 @@ services:
       # nginx serves static & media directly from the shared volumes (read-only).
       - static_data:/app/staticfiles:ro
       - media_data:/app/media:ro
+      # Bild-Assets (Spielergesichter, Club-Logos, Trophäen …) liegen auf dem
+      # Host unter /var/www/assets und werden read-only unter /assets/ serviert.
+      - /var/www/assets:/app/assets:ro
       # Let's Encrypt certificates + ACME webroot (written by the certbot service).
       - certbot_certs:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro

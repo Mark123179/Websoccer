@@ -189,7 +189,7 @@
     <a class="cm-club-card" href="{% url 'creator_club_edit' club_id=club.pk %}" data-search="{{ club.name|lower }} {{ club.short_name|lower }} {{ club.fm_inside_id }}">
       <div class="cm-club-crest-wrap">
         {% if club.crest_static_path %}
-          <img class="cm-club-crest" src="{% static club.crest_static_path %}" alt="{{ club.name }}">
+          <img class="cm-club-crest" src="{{ club.crest_static_path }}" alt="{{ club.name }}">
         {% else %}
           <div class="cm-crest-placeholder">{{ club.short_name|slice:":3" }}</div>
         {% endif %}

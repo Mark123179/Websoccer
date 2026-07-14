@@ -32,7 +32,7 @@
                 {% endif %}
             </div>
             {% if manager.club_crest %}
-            <img src="{% static manager.club_crest %}" alt="{{ manager.club_name }}" class="mp-header-crest" id="mpAvatarBadgeImg">
+            <img src="{{ manager.club_crest }}" alt="{{ manager.club_name }}" class="mp-header-crest" id="mpAvatarBadgeImg">
             {% endif %}
         </div>
         <div class="mp-identity-block">

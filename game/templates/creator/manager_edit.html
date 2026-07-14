@@ -143,7 +143,7 @@
       <div class="creator-current-club">
         <div class="creator-current-club-info">
           {% if managed_club.crest_static_path %}
-            <img src="{% static managed_club.crest_static_path %}" class="creator-club-crest-sm" alt="">
+            <img src="{{ managed_club.crest_static_path }}" class="creator-club-crest-sm" alt="">
           {% endif %}
           <div>
             <strong>{{ managed_club.name }}</strong>

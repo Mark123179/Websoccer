@@ -235,6 +235,11 @@ STATIC_URL = '/static/'
 # (nginx). Harmless in Replit dev where runserver serves from app dirs.
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Basis-URL für Bild-Assets (Spielergesichter, Club-Logos, Trophäen …).
+# Lokal/Replit: /static/assets/ (Ordner game/static/assets/).
+# Live (Hetzner): ASSETS_BASE_URL=/assets/ — nginx serviert /var/www/assets.
+ASSETS_BASE_URL = os.environ.get('ASSETS_BASE_URL', '/static/assets/')
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

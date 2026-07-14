@@ -55,6 +55,18 @@ server {
     # Allow large-ish uploads (avatars etc.)
     client_max_body_size 10M;
 
+    # Bild-Assets (Spielergesichter, Club-Logos, Trophäen …) direkt von
+    # der Platte (Bind-Mount /var/www/assets → /app/assets). Die App baut
+    # die URLs nur als Strings (ASSETS_BASE_URL=/assets/) — fehlende
+    # Dateien beantwortet nginx mit 404, der Client zeigt den Platzhalter.
+    location /assets/ {
+        alias /app/assets/;
+        access_log off;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
     location /static/ {
         alias /app/staticfiles/;
         access_log off;

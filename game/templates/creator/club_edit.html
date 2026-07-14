@@ -10,7 +10,7 @@
     <a class="creator-back" href="{% url 'creator_index' %}">← Creator Mode</a>
     <div class="creator-club-identity">
       {% if crest_path %}
-        <img class="creator-club-crest-large" src="{% static crest_path %}" alt="{{ club.name }}">
+        <img class="creator-club-crest-large" src="{{ crest_path }}" alt="{{ club.name }}">
       {% endif %}
       <div>
         <h1 class="creator-club-title">{{ club.name }}</h1>
@@ -65,7 +65,7 @@
       <div class="creator-card-head"><h2>Vereinswappen</h2></div>
       <div class="creator-card-body">
         <div class="creator-image-preview creator-image-crest">
-          {% if crest_path %}<img src="{% static crest_path %}" alt="Wappen">
+          {% if crest_path %}<img src="{{ crest_path }}" alt="Wappen">
           {% else %}<div class="creator-no-image">Kein Wappen</div>{% endif %}
         </div>
         <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_crest' club_id=club.id %}">
@@ -710,7 +710,7 @@
           <tr>
             <td class="creator-portrait-cell">
               {% if player.portrait_static_path %}
-                <img class="creator-portrait-thumb" src="{% static player.portrait_static_path %}" alt="{{ player.last_name }}">
+                <img class="creator-portrait-thumb" src="{{ player.portrait_static_path }}" alt="{{ player.last_name }}">
               {% else %}
                 <div class="creator-portrait-placeholder">{{ player.first_name|first }}{{ player.last_name|first }}</div>
               {% endif %}

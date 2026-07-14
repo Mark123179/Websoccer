@@ -64,7 +64,7 @@
         <div class="cpe-portrait-block">
           <div class="cpe-portrait-frame">
             {% if portrait_path %}
-              <img id="portrait-preview" src="{% static portrait_path %}" alt="Portrait">
+              <img id="portrait-preview" src="{{ portrait_path }}" alt="Portrait">
             {% else %}
               <img id="portrait-preview" src="{% static 'game/images/default_player.png' %}" alt="Portrait" style="opacity:.4">
             {% endif %}

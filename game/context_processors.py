@@ -205,7 +205,7 @@ def current_manager(request):
     club_url    = f'/clubs/{club.id}/'                    if club else ''
     squad_url   = f'/clubs/{club.id}/squad/'              if club else ''
     tactics_url = f'/clubs/{club.id}/tactics/?squad=pro'  if club else ''
-    club_crest = club.crest_static_path if club else 'game/images/brand/favicon-32.png'
+    club_crest = club.crest_static_path if club else _static('game/images/brand/favicon-32.png')
     club_name = club.name if club else 'Kein Verein'
 
     if manager_profile_obj:

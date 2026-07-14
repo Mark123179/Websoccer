@@ -22,10 +22,10 @@
                         {% if row.clubCrestUrl %}
                             {% if row.clubProfileUrl %}
                                 <a class="club-crest-link" href="{{ row.clubProfileUrl }}" aria-label="{{ row.clubName }} Profil">
-                                    <img src="{% static row.clubCrestUrl %}" alt="{{ row.clubName }}">
+                                    <img src="{{ row.clubCrestUrl }}" alt="{{ row.clubName }}">
                                 </a>
                             {% else %}
-                                <img src="{% static row.clubCrestUrl %}" alt="{{ row.clubName }}">
+                                <img src="{{ row.clubCrestUrl }}" alt="{{ row.clubName }}">
                             {% endif %}
                         {% endif %}
                         <span>{{ row.clubName }}</span>
