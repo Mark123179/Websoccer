@@ -1129,15 +1129,35 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
             }).then(function(r) { return r.json(); }).then(function(res) {
                 saveBtn.disabled = false;
                 if (!res.ok) { errEl.textContent = res.error || 'Speichern fehlgeschlagen.'; return; }
-                MP_TL_EVENTS.push(res.event);
-                render();
-                closeModal();
-                inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; chkTro.checked = false; selPlay.value = '';
+                if (res.event && res.event.status === 'pending') {
+                    errEl.textContent = res.message || 'Eintrag eingereicht. Er wird nach Pr\u00fcfung sichtbar.';
+                    errEl.style.color = '#ffd166';
+                    setTimeout(function() {
+                        errEl.style.color = '';
+                        closeModal();
+                        inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; chkTro.checked = false; selPlay.value = '';
+                    }, 2500);
+                } else {
+                    MP_TL_EVENTS.push(res.event);
+                    render();
+                    closeModal();
+                    inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; chkTro.checked = false; selPlay.value = '';
+                }
             }).catch(function() {
                 saveBtn.disabled = false;
                 errEl.textContent = 'Netzwerkfehler — bitte erneut versuchen.';
             });
         });
+    })();
+
+    /* ── Antr\u00e4ge-Button (Admin) ── */
+    (function() {
+        var antBtn = document.getElementById('mpTl2Antraege');
+        if (antBtn) {
+            antBtn.addEventListener('click', function() {
+                window.location.href = '{% url "creator_timeline_overview" %}';
+            });
+        }
     })();
 
     window.mpTl2Render = render;

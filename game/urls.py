@@ -46,6 +46,8 @@ from .views_scouting import (
     scouting_community_submit,
     creator_scouting_overview,
     creator_moderate_submission,
+    creator_timeline_overview,
+    creator_moderate_timeline,
 )
 from .views_management import (
     management_hub,
@@ -320,6 +322,8 @@ urlpatterns = [
     path('transfers/scouting/community/', scouting_community_submit, name='scouting_community_submit'),
     path('creator/scouting/', creator_scouting_overview, name='creator_scouting_overview'),
     path('creator/scouting/<int:submission_id>/moderieren/', creator_moderate_submission, name='creator_moderate_submission'),
+    path('creator/antraege/', creator_timeline_overview, name='creator_timeline_overview'),
+    path('creator/antraege/<int:entry_id>/moderieren/', creator_moderate_timeline, name='creator_moderate_timeline'),
 
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),
     path('creator/system-diagnostics/', creator_system_diagnostics, name='creator_system_diagnostics'),

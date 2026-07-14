@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="transfer-scouting-page">
+
+  {% if messages %}
+  <div class="scouting-flash">
+    {% for m in messages %}
+    <div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="watchlist-layout">
+    <section class="watchlist-panel" style="flex:1 1 auto;max-width:none;">
+      <h2 class="scout-panel-title">TIMELINE-ANTRÄGE ({{ pending_count }})</h2>
+      {% if pending %}
+      <div class="watch-table" style="min-width:860px;">
+        <div class="watch-row watch-head moderate-head">
+          <span style="width:130px;">Manager</span>
+          <span style="width:140px;">Verein</span>
+          <span style="width:100px;">Datum</span>
+          <span style="width:90px;">Kategorie</span>
+          <span style="width:200px;">Überschrift</span>
+          <span style="width:180px;">Fließtext</span>
+          <span style="width:110px;">Aktion</span>
+        </div>
+        {% for e in pending %}
+        <div class="watch-row moderate-row" style="align-items:flex-start;padding-top:10px;padding-bottom:10px;">
+          <span style="width:130px;word-break:break-word;">{{ e.manager.name|default:e.manager.user.username }}</span>
+          <span style="width:140px;word-break:break-word;">{{ e.club_name|default:'—' }}</span>
+          <span style="width:100px;">{{ e.event_date|date:'d.m.Y' }}</span>
+          <span style="width:90px;"><span class="tl-cat-badge tl-cat-{{ e.category }}">{{ e.get_category_display }}</span></span>
+          <span style="width:200px;word-break:break-word;font-weight:700;">{{ e.title }}</span>
+          <span style="width:180px;word-break:break-word;color:#8899aa;font-size:12px;">{{ e.body|default:'—'|truncatechars:80 }}</span>
+          <span class="moderate-actions" style="width:110px;">
+            <form method="post" action="{% url 'creator_moderate_timeline' e.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="approve">
+              <button type="submit" class="result-btn result-btn--cyan">Annehmen</button>
+            </form>
+            <form method="post" action="{% url 'creator_moderate_timeline' e.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="reject">
+              <button type="submit" class="result-btn">Ablehnen</button>
+            </form>
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="bids-empty">Keine offenen Timeline-Anträge.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<style>
+.tl-cat-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #03070c;
+}
+.tl-cat-verein  { background: #22e6ff; }
+.tl-cat-titel   { background: #ffd166; }
+.tl-cat-finale  { background: #ff5570; }
+.tl-cat-jugend  { background: #30f29c; }
+.tl-cat-status  { background: #ff5570; }
+</style>
+{% endblock %}

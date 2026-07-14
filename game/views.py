@@ -6576,11 +6576,13 @@ def manager_profile(request):
                            'type': 'transfers', 'cat': 'TRANSFER', 'tone': 'cyan',
                            'title': 'Einkauf', 'body': f'{_fee_tl} für {_tl_t.player.full_name}',
                            'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': False, 'station_key': ''})
-    # Vom Manager eingereichte Timeline-Einträge
+    # Vom Manager eingereichte Timeline-Einträge (nur genehmigte öffentlich)
     from .models import ManagerTimelineEntry as _MTE
-    for _mte in (_MTE.objects.filter(manager=manager_profile_obj)
-                 .select_related('club', 'player')
-                 .order_by('event_date', 'id')):
+    _mte_qs = _MTE.objects.filter(
+        manager=manager_profile_obj,
+        status=_MTE.STATUS_APPROVED,
+    ).select_related('club', 'player').order_by('event_date', 'id')
+    for _mte in _mte_qs:
         _tl_js.append(_timeline_entry_js(_mte))
 
     # Vereins-Optionen fürs Einreichen-Modal (Karrierestationen + Kader)
@@ -6962,6 +6964,7 @@ def _timeline_entry_js(entry):
         'player_img': player_img,
         'result': entry.result_text,
         'trophy': entry.show_trophy,
+        'status': entry.status,
         'club_name': entry.club_name,
         'entry_id': entry.id,
         'is_custom': True,
@@ -7056,9 +7059,14 @@ def submit_timeline_entry(request):
         player=player,
         result_text=result_text,
         show_trophy=show_trophy,
+        status=ManagerTimelineEntry.STATUS_PENDING,
     )
 
-    return JsonResponse({'ok': True, 'event': _timeline_entry_js(entry)})
+    return JsonResponse({
+        'ok': True,
+        'event': _timeline_entry_js(entry),
+        'message': 'Eintrag eingereicht. Er wird nach Prüfung sichtbar.',
+    })
 
 
 @login_required

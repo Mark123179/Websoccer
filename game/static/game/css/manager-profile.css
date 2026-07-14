@@ -757,3 +757,19 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 .mp-tle-btn-save:hover { background: rgba(34,230,255,.24); }
 .mp-tle-btn-save:disabled { opacity: .5; cursor: wait; }
+
+/* ─── PENDING-BADGE F\u00dcR TIMELINE ─────────────────────────── */
+.mp-tl-pending-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    background: rgba(255, 209, 102, .18);
+    color: #ffd166;
+    border: 1px solid rgba(255, 209, 102, .35);
+    margin-left: 6px;
+    vertical-align: middle;
+}

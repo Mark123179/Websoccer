@@ -3647,6 +3647,21 @@ class ManagerTimelineEntry(models.Model):
     show_trophy = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Ausstehend'),
+        (STATUS_APPROVED, 'Genehmigt'),
+        (STATUS_REJECTED, 'Abgelehnt'),
+    ]
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         ordering = ['event_date', 'id']
         verbose_name = 'Manager-Timeline-Eintrag'

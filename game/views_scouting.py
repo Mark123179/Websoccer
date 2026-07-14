@@ -20,6 +20,7 @@ from .views import build_game_header, current_manager_club
 from .models import (
     CommunitySubmission,
     CountryNetwork,
+    ManagerTimelineEntry,
     Player,
     ScoutingBid,
     ScoutingFind,
@@ -530,3 +531,43 @@ def creator_moderate_submission(request, submission_id):
     service.moderate_submission(sub, approve=approve)
     messages.success(request, 'Einreichung bearbeitet.')
     return redirect('creator_scouting_overview')
+
+
+# ── Timeline-Eintrag Moderation ─────────────────────────────────────────────
+@login_required(login_url='/auth/login/')
+def creator_timeline_overview(request):
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Nur Staff-Mitglieder.')
+    pending = ManagerTimelineEntry.objects.filter(
+        status=ManagerTimelineEntry.STATUS_PENDING
+    ).select_related('manager', 'club', 'player').order_by('created_at')
+    context = {
+        'pending': pending,
+        'pending_count': pending.count(),
+    }
+    return render(request, 'creator/timeline_overview.html', context)
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def creator_moderate_timeline(request, entry_id):
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Nur Staff-Mitglieder.')
+    from django.utils import timezone
+    entry = get_object_or_404(ManagerTimelineEntry, pk=entry_id)
+    action = request.POST.get('action', '').strip()
+    if action == 'approve':
+        entry.status = ManagerTimelineEntry.STATUS_APPROVED
+        entry.reviewed_at = timezone.now()
+        entry.save(update_fields=['status', 'reviewed_at'])
+        messages.success(request, 'Timeline-Eintrag genehmigt.')
+    elif action == 'reject':
+        entry.status = ManagerTimelineEntry.STATUS_REJECTED
+        entry.reviewed_at = timezone.now()
+        entry.save(update_fields=['status', 'reviewed_at'])
+        messages.success(request, 'Timeline-Eintrag abgelehnt.')
+    else:
+        messages.error(request, 'Ungültige Aktion.')
+    return redirect('creator_timeline_overview')
