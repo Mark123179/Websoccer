@@ -417,3 +417,84 @@ class BatchImportTests(TestCase):
         # Gute Datei wurde trotz Fehler in der anderen importiert.
         self.assertTrue(Player.objects.filter(transfermarkt_id=100).exists())
         self.assertFalse(Player.objects.filter(transfermarkt_id=200).exists())
+
+
+# ── Nationalitäts-Schutz: leere CSV-Spalte darf bestehende Daten nicht löschen ──
+
+class NationalityProtectionTests(TestCase):
+    """Re-Import mit leerer Nationalitätsspalte darf bestehende Werte nicht überschreiben."""
+
+    def setUp(self):
+        self.league = League.objects.create(name='L', country='DE')
+        self.club = Club.objects.create(
+            name='Hamburger SV', short_name='HSV', founded_year=1887,
+            transfermarkt_id=41, budget=Decimal('0'), league=self.league,
+        )
+
+    def _candidate(self, nd):
+        job = ClubPlayerImportJob.objects.create(
+            ws_club=self.club, tm_club_id=41, tm_season_id=2025, season_label='x')
+        return PlayerImportCandidate.objects.create(
+            job=job, tm_player_id=nd['tm_player_id'], selected_for_import=True,
+            overwrite_existing=True, normalized_data=nd)
+
+    def _nd(self, **over):
+        base = {
+            'tm_player_id': 777, 'fm_inside_id': 12345,
+            'first_name': 'Kai', 'last_name': 'Havertz',
+            'date_of_birth': '1999-06-11', 'height_cm': 184,
+            'strong_foot': 'R', 'nationalities': 'Germany',
+            'main_positions': ['ZM'], 'secondary_positions': [],
+            'market_value': None, 'loan_status': 'none',
+            'fmi_ratings': {'rating': 83, 'potential': 88, 'attrs': {'tempo': 70}},
+            'sofifa_ratings': None,
+        }
+        base.update(over)
+        return base
+
+    def test_reimport_with_empty_nationality_preserves_existing_value(self):
+        """Erstes Import setzt Nationalität; zweiter Import mit leerer Spalte behält sie.
+
+        Der zweite Aufruf läuft bewusst mit update_only=False, damit er den
+        `if not update_only:`-Block in import_service.py betritt — genau dort
+        liegt der Schutz (nat_val or is_new). Nur so deckt der Test ab, dass
+        die Schutzlogik selbst noch greift und nicht versehentlich entfernt wurde.
+        """
+        import_candidate(self._candidate(self._nd(nationalities='Germany')),
+                         update_only=False, recalculate=False)
+
+        p = Player.objects.get(transfermarkt_id=777)
+        self.assertEqual(p.nationalities, 'Germany')
+
+        # update_only=False + existierender Spieler + overwrite_existing=True:
+        # der Code betritt den Stammdaten-Block und muss die leere Spalte ignorieren.
+        import_candidate(self._candidate(self._nd(nationalities='')),
+                         update_only=False, recalculate=False)
+
+        p.refresh_from_db()
+        self.assertEqual(
+            p.nationalities, 'Germany',
+            'Re-Import mit leerer nationalities-Spalte darf bestehenden Wert nicht löschen.',
+        )
+
+    def test_reimport_with_empty_nationality_via_none_preserves_existing_value(self):
+        """Robustheit: nationalities=None im normalisierten Dict löscht Wert nicht.
+
+        Wie test_reimport_with_empty_nationality_preserves_existing_value — dieselbe
+        Schutzlogik (nat_val = nd.get('nationalities') or '') muss None ebenso
+        wie '' behandeln.
+        """
+        import_candidate(self._candidate(self._nd(nationalities='Brasilien')),
+                         update_only=False, recalculate=False)
+
+        p = Player.objects.get(transfermarkt_id=777)
+        self.assertEqual(p.nationalities, 'Brasilien')
+
+        import_candidate(self._candidate(self._nd(nationalities=None)),
+                         update_only=False, recalculate=False)
+
+        p.refresh_from_db()
+        self.assertEqual(
+            p.nationalities, 'Brasilien',
+            'Re-Import mit nationalities=None darf bestehenden Wert nicht löschen.',
+        )
