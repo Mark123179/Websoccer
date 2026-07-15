@@ -43,15 +43,19 @@
                 <div class="aaa-bio-strip">
                     <span>
                         <b>
-                            {% for nationality in player.nationality_badges %}
-                                {% if nationality.flag_url %}
-                                    <img class="flag-badge" src="{{ nationality.flag_url }}" alt="{{ nationality.name }}" title="{{ nationality.name }}">
-                                {% else %}
-                                    {{ nationality.code }}
-                                {% endif %}
-                            {% empty %}
-                                -
-                            {% endfor %}
+                            {% if player.nation_badge_url %}
+                                <img class="flag-badge" src="{{ player.nation_badge_url }}" alt="{{ player.nt_nationality|default:player.nationalities }}" title="{{ player.nt_nationality|default:player.nationalities }}" onerror="this.style.display='none'">
+                            {% else %}
+                                {% for nationality in player.nationality_badges %}
+                                    {% if nationality.flag_url %}
+                                        <img class="flag-badge" src="{{ nationality.flag_url }}" alt="{{ nationality.name }}" title="{{ nationality.name }}" onerror="this.style.display='none'">
+                                    {% else %}
+                                        {{ nationality.code }}
+                                    {% endif %}
+                                {% empty %}
+                                    -
+                                {% endfor %}
+                            {% endif %}
                         </b>
                         <small>Nation</small>
                     </span>

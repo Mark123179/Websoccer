@@ -120,7 +120,7 @@
                                             {% if p.edit_pending %}<span class="edit-pending-dot" title="Bearbeitung beantragt">✎</span>{% endif %}
                                         </span>
                                         <span class="squad-player__sub">
-                                            {% if p.flag_url %}<img class="squad-flag" src="{{ p.flag_url }}" alt="{{ p.nation_name }}" loading="lazy">{% endif %}
+                                            {% if p.flag_url %}<img class="squad-flag" src="{{ p.flag_url }}" alt="{{ p.nation_name }}" loading="lazy" onerror="this.style.display='none'">{% endif %}
                                             {% if p.nat_code %}<span class="squad-nat-code">{{ p.nat_code }}</span>{% endif %}
                                             <span class="squad-age">{{ p.age|default:"–" }} J.</span>
                                         </span>

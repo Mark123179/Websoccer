@@ -3248,10 +3248,10 @@ def _build_player_row(player, stats, form_map):
     if profile and profile.freshness is not None:
         fitness = int(round(float(profile.freshness)))
 
-    # Nation: flagcdn-URL + 3-Buchstaben-Code
-    # Prio: Player.nationalities → CMT nationality (Fallback bei leer)
+    # Nation: CDN-Badge-URL + 3-Buchstaben-Code
+    # Prio: Player.nation_badge_url (nt_nationality → nationalities → CMT)
     nat_code = ''
-    flag_url = ''
+    flag_url = player.nation_badge_url
     nation_name = ''
     _raw_nat = player.nationalities or ''
     if not _raw_nat:
@@ -3265,7 +3265,6 @@ def _build_player_row(player, stats, form_map):
         asset = COUNTRY_FLAG_ASSETS.get(country, {})
         iso2 = asset.get('code', '')
         if iso2:
-            flag_url = f"https://flagcdn.com/{iso2.lower()}.svg"
             nat_code = _ISO2_TO_CODE3.get(iso2, iso2)
 
     # Status
