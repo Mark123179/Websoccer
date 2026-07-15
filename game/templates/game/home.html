@@ -97,10 +97,10 @@
                         {% if spotlight.portrait %}
                             {% if spotlight.player_id %}
                                 <a class="img-link" href="/players/{{ spotlight.player_id }}/" aria-label="Spielerprofil">
-                                    <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}">
+                                    <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                                 </a>
                             {% else %}
-                                <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}">
+                                <img src="{{ spotlight.portrait }}" alt="{{ spotlight.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                             {% endif %}
                         {% endif %}
                     </div>
@@ -310,7 +310,7 @@
                     <details class="overview-transfer-row">
                         <summary>
                             <a class="overview-transfer-avatar" href="/players/{{ row.player.id }}/" onclick="event.stopPropagation();" aria-label="Spielerprofil von {{ row.player.full_name }}">
-                                <img src="{{ row.player.portrait_static_path }}" alt="{{ row.player.full_name }}">
+                                <img src="{{ row.player.portrait_static_path }}" alt="{{ row.player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                             </a>
                             <span class="overview-transfer-player">
                                 <strong>{{ row.player.full_name }}</strong>

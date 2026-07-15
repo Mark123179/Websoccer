@@ -101,7 +101,7 @@ def _find_card(find, watched_ids):
         'min_bid': int(find.min_bid),
         'min_bid_fmt': _euro(find.min_bid),
         'observer_count': find.observer_count,
-        'portrait': p.profile_portrait_static_path,
+        'portrait': p.portrait_static_path,
         'watched': p.id in watched_ids,
     }
 
@@ -242,7 +242,7 @@ def transfer_scouting(request):
         bids.append({
             'id': b.id,
             'name': p.full_name,
-            'portrait': p.profile_portrait_static_path,
+            'portrait': p.portrait_static_path,
             'rl_club': rl_club.name if rl_club else '—',
             'rl_club_crest': rl_club.crest_static_path if rl_club else '',
             'amount_fmt': _euro(b.amount),

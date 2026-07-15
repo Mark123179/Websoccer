@@ -549,7 +549,7 @@
                     <li class="liga-stat-row">
                         <span class="liga-stat-rank">{{ forloop.counter }}</span>
                         {% if s.player.portrait_static_path %}
-                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}">
+                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                         {% else %}
                         <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
                         {% endif %}
@@ -577,7 +577,7 @@
                     <li class="liga-stat-row">
                         <span class="liga-stat-rank">{{ forloop.counter }}</span>
                         {% if s.player.portrait_static_path %}
-                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}">
+                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                         {% else %}
                         <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
                         {% endif %}
@@ -611,7 +611,7 @@
                     <li class="liga-stat-row">
                         <span class="liga-stat-rank">{{ forloop.counter }}</span>
                         {% if s.player.portrait_static_path %}
-                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}">
+                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                         {% else %}
                         <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
                         {% endif %}
@@ -639,7 +639,7 @@
                     <li class="liga-stat-row">
                         <span class="liga-stat-rank">{{ forloop.counter }}</span>
                         {% if s.player.portrait_static_path %}
-                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}">
+                        <img class="liga-stat-portrait" src="{{ s.player.portrait_static_path }}" alt="{{ s.player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                         {% else %}
                         <span class="liga-stat-portrait liga-stat-portrait--placeholder"></span>
                         {% endif %}

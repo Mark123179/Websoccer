@@ -1641,14 +1641,12 @@ class Player(models.Model):
 
     @property
     def portrait_url(self):
-        """Vollständige Portrait-URL für Templates: CMT > FM-Static > Default.
+        """Vollständige Portrait-URL für Templates.
 
-        Gibt immer eine gültige URL zurück (nie leer).
-        CMT cached > CMT CDN > FM-Static (fm_inside_id) > Default-SVG.
+        Konsistent mit den Club-Wappen: immer der Assets-Server-Pfad
+        (portrait_static_path); fehlende Bilder fängt der client-seitige
+        onerror-Fallback ab. CMT-Headshots werden nicht mehr verwendet.
         """
-        cmt = self.cmt_headshot_url
-        if cmt:
-            return cmt
         return self.portrait_static_path
 
     @property

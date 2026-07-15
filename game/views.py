@@ -3594,30 +3594,28 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
 
 
 def _ensure_portraits_in_report(report_data: dict) -> dict:
-    """Fügt Portrait-URLs in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
+    """Gleicht Portrait-URLs in report_data immer mit der DB ab.
 
-    Neue Simulationen betten portrait_url direkt in home_players/away_players/
-    home_ratings/away_ratings/man_of_the_match ein. Ältere gespeicherte
-    SimulatedMatch-Einträge enthalten dieses Feld noch nicht — hier per
-    DB-Lookup (fm_inside_id / CMT) nachgerüstet.
+    Simulationen betten portrait_url direkt in home_players/away_players/
+    home_ratings/away_ratings/man_of_the_match ein. Beim Rendern wird die
+    URL hier IMMER aus dem aktuellen Player.portrait_url neu aufgelöst —
+    so werden fehlende Felder in Altdaten ergänzt UND veraltete eingebettete
+    URLs (z. B. frühere CMT-/Media-Pfade) korrigiert.
     """
     if not report_data:
         return report_data
 
     lists_to_check = ('home_players', 'away_players', 'home_ratings', 'away_ratings')
     ids = set()
-    needs_backfill = False
     for key in lists_to_check:
         for row in (report_data.get(key) or []):
-            if row.get('id') and not row.get('portrait_url'):
-                needs_backfill = True
+            if row.get('id'):
                 ids.add(row['id'])
     motm = report_data.get('man_of_the_match')
-    if motm and motm.get('id') and not motm.get('portrait_url'):
-        needs_backfill = True
+    if motm and motm.get('id'):
         ids.add(motm['id'])
 
-    if not needs_backfill:
+    if not ids:
         return report_data
 
     from .models import Player as _Player
@@ -3634,13 +3632,13 @@ def _ensure_portraits_in_report(report_data: dict) -> dict:
         if not rows:
             continue
         report_data[key] = [
-            {**row, 'portrait_url': row.get('portrait_url') or portrait_map.get(row.get('id'), '')}
+            {**row, 'portrait_url': portrait_map.get(row.get('id')) or row.get('portrait_url', '')}
             for row in rows
         ]
     if motm and motm.get('id'):
         report_data['man_of_the_match'] = {
             **motm,
-            'portrait_url': motm.get('portrait_url') or portrait_map.get(motm['id'], ''),
+            'portrait_url': portrait_map.get(motm['id']) or motm.get('portrait_url', ''),
         }
     return report_data
 

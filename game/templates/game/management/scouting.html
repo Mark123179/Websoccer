@@ -207,7 +207,7 @@
           <div class="sc-bid-row">
             <div class="sc-bid-player">
               {% if b.portrait %}
-              <img src="{% static b.portrait %}" alt="{{ b.name }}" class="sc-bid-thumb" onerror="this.style.display='none'">
+              <img src="{{ b.portrait }}" alt="{{ b.name }}" class="sc-bid-thumb" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
               {% else %}
               <div class="sc-bid-thumb sc-bid-thumb--empty"></div>
               {% endif %}
@@ -259,7 +259,7 @@
         <article class="sc-result-card">
           <div class="sc-result-top">
             <div class="sc-result-photo">
-              <img src="{% static f.portrait %}" alt="{{ f.name }}" onerror="this.style.visibility='hidden'">
+              <img src="{{ f.portrait }}" alt="{{ f.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
             </div>
             <div class="sc-result-cols">
             <!-- linke Info-Spalte -->
