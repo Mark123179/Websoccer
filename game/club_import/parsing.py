@@ -110,7 +110,8 @@ def parse_nationalities(value):
     if not value:
         return '', ''
     if isinstance(value, str):
-        items = [v.strip() for v in value.split(',') if v.strip()]
+        normalized = value.replace(';', ',')
+        items = [v.strip() for v in normalized.split(',') if v.strip()]
     else:
         items = [str(v).strip() for v in value if str(v).strip()]
     if not items:

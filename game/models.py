@@ -2141,6 +2141,15 @@ class Player(models.Model):
 
         return ' | '.join(lines)
 
+    def save(self, *args, **kwargs):
+        if self.nationalities:
+            self.nationalities = ', '.join(
+                p.strip()
+                for p in self.nationalities.replace(';', ',').split(',')
+                if p.strip()
+            )
+        super().save(*args, **kwargs)
+
 
 class PlayerExternalId(models.Model):
     player = models.ForeignKey(

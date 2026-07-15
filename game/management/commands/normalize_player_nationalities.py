@@ -31,9 +31,10 @@ def _normalize_field(value):
     if not value:
         return value, False, []
 
-    segments = [s.strip() for s in value.split(',') if s.strip()]
+    normalized_value = value.replace(';', ',')
+    changed = normalized_value != value
+    segments = [s.strip() for s in normalized_value.split(',') if s.strip()]
     result_parts = []
-    changed = False
     unknowns = []
 
     for seg in segments:
