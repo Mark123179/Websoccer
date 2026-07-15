@@ -66,7 +66,7 @@
             {% if portrait_path %}
               <img id="portrait-preview" src="{{ portrait_path }}" alt="Portrait">
             {% else %}
-              <img id="portrait-preview" src="{% static 'game/images/default_player.png' %}" alt="Portrait" style="opacity:.4">
+              <img id="portrait-preview" src="{{ default_player_url }}" alt="Portrait" style="opacity:.4">
             {% endif %}
           </div>
           <div class="cpe-portrait-info">

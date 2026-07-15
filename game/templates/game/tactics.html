@@ -147,7 +147,7 @@
                     {% for option in player_options %}
                         <article class="tactics-roster-player{% if option.is_suspended or option.is_injured %} is-unavailable{% endif %}" data-roster-player="{{ option.id }}"{% if option.is_suspended or option.is_injured %} data-unavailable="true"{% endif %}>
                             <a class="tactics-roster-image" href="{{ option.profile_url }}">
-                                <img src="{{ option.portrait }}" alt="{{ option.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                                <img src="{{ option.portrait }}" alt="{{ option.name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                             </a>
                             <strong>{{ option.name }}</strong>
                             {% if option.is_suspended %}<span class="tactics-status-badge is-suspended">Gesperrt</span>{% elif option.is_injured %}<span class="tactics-status-badge is-injured">Verletzt</span>{% endif %}
@@ -188,7 +188,7 @@
                     <h3 class="tactics-own-absences__title">Ausfälle</h3>
                     {% for row in own_absences %}
                     <div class="tactics-own-absence-row is-{{ row.tone }}">
-                        <img src="{{ row.portrait }}" alt="{{ row.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                        <img src="{{ row.portrait }}" alt="{{ row.name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                         <span class="tactics-own-absence-name">{{ row.name }}</span>
                         <span class="tactics-status-badge is-{% if row.tone == 'suspension' %}suspended{% else %}injured{% endif %}">{% if row.tone == 'suspension' %}Gesperrt{% else %}Verletzt{% endif %}</span>
                         <small class="tactics-own-absence-reason">{{ row.reason }}</small>
@@ -260,7 +260,7 @@
                                     <img class="tactics-captain-badge{% if slot.is_captain %} is-visible{% endif %}" data-captain-badge src="{% static 'game/images/icons/captain-armband.png' %}?v=yellow-20260519" alt="Kapitän">
                                     <div class="tactics-slot-portrait">
                                         {% if slot.player %}
-                                            <img src="{{ slot.player.portrait }}" alt="{{ slot.player.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                                            <img src="{{ slot.player.portrait }}" alt="{{ slot.player.name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                                         {% else %}
                                             <span></span>
                                         {% endif %}
@@ -373,7 +373,7 @@
                             <small class="tactics-bench-position">{% if row.player %}{{ row.player.position }}{% else %}-{% endif %}</small>
                             <span class="tactics-bench-number">{{ row.index|add:"11" }}</span>
                             {% if row.player %}
-                                <img src="{{ row.player.portrait }}" alt="{{ row.player.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                                <img src="{{ row.player.portrait }}" alt="{{ row.player.name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                             {% else %}
                                 <i></i>
                             {% endif %}
@@ -659,7 +659,7 @@
                 <div class="tactics-opponent-absence-list dashboard-scrollarea">
                     {% for row in opponent_absences %}
                         <div class="is-{{ row.tone }}">
-                            <img src="{{ row.portrait }}" alt="{{ row.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                            <img src="{{ row.portrait }}" alt="{{ row.name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                             <strong>{{ row.name|shorten_name }}</strong>
                             <span>{{ row.reason }}</span>
                             <small>{{ row.duration }}</small>

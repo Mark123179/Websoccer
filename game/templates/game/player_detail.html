@@ -31,7 +31,7 @@
                     {% if nt_confederation_badge_url %}
                         <img class="aaa-poster-confederation" src="{{ nt_confederation_badge_url }}" alt="" title="{{ nation_nt_name }}">
                     {% endif %}
-                    <img class="aaa-player-portrait" src="{{ player.portrait_static_path }}" alt="{{ player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                    <img class="aaa-player-portrait" src="{{ player.portrait_static_path }}" alt="{{ player.full_name }}" onerror="this.onerror=null;this.src='{{ default_player_url }}'">
                     <div class="aaa-player-nameplate">
                         <h2>
                             <span class="pn-first">{{ player.first_name }}</span>

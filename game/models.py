@@ -1841,8 +1841,8 @@ class Player(models.Model):
         client-seitige onerror-Fallback ab. Ohne fm_inside_id: Default-SVG.
         """
         if not self.fm_inside_id:
-            from django.templatetags.static import static
-            return static('game/images/default_player.svg')
+            from .asset_urls import default_player_url
+            return default_player_url()
 
         from .asset_urls import player_face_url
         return player_face_url(self.fm_inside_id)

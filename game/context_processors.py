@@ -223,6 +223,7 @@ def current_manager(request):
     except (TypeError, ValueError):
         calendar_offset = 0
 
+    from .asset_urls import default_player_url as _dp_url
     return {
         'current_manager': {
             'name': manager_name,
@@ -237,6 +238,7 @@ def current_manager(request):
             'nationality_flag': nationality_flag_url,
         },
         'global_calendar': _build_global_calendar(club, calendar_offset),
+        'default_player_url': _dp_url(),
     }
 
 

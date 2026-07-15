@@ -612,7 +612,7 @@
                     <div class="bench-list">
                         {% for b in rc.home_bench_display %}
                         {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
                             {% if b.came_on %}
@@ -660,7 +660,7 @@
                             {% for p in rc.home_pitch_players %}
                             <div class="pnode home" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
                                 {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
-                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
+                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
                                 <span class="nm">{{ p.name }}</span>
                                 {% if p.id %}</a>{% endif %}
                             </div>
@@ -683,7 +683,7 @@
                             {% for p in rc.away_pitch_players %}
                             <div class="pnode away" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
                                 {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
-                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
+                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
                                 <span class="nm">{{ p.name }}</span>
                                 {% if p.id %}</a>{% endif %}
                             </div>
@@ -704,7 +704,7 @@
                     <div class="bench-list">
                         {% for b in rc.away_bench_display %}
                         {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
                             {% if b.came_on %}
@@ -745,7 +745,7 @@
                 {% with motm=report.man_of_the_match %}
                 <div class="motm-card">
                     {% if motm.id %}<a class="crest-link motm-link" href="{% url 'player_detail' motm.id %}">{% endif %}
-                    {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% elif motm.club_crest %}<img class="por" src="{{ motm.club_crest }}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
+                    {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% elif motm.club_crest %}<img class="por" src="{{ motm.club_crest }}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
                     {% if motm.id %}</a>{% endif %}
                     <div class="badge">&#9733; Spieler des Spiels</div>
                     <h3>{% if motm.id %}<a class="plink" href="{% url 'player_detail' motm.id %}">{{ motm.name }}</a>{% else %}{{ motm.name }}{% endif %}</h3>
@@ -776,7 +776,7 @@
                     <div class="pl-list">
                         {% for r in report.home_ratings %}{% if not r.is_sub %}
                         {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}{% if r.id in rc.home_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if r.id in rc.home_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
                             <div class="pl-badges">
@@ -793,7 +793,7 @@
                     <div class="pl-list">
                         {% for b in rc.home_bench_display %}
                         {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
                             <div class="pl-badges">
@@ -823,7 +823,7 @@
                     <div class="pl-list">
                         {% for r in report.away_ratings %}{% if not r.is_sub %}
                         {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}{% if r.id in rc.away_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if r.id in rc.away_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
                             <span class="n">{{ r.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
                             <div class="pl-badges">
@@ -840,7 +840,7 @@
                     <div class="pl-list">
                         {% for b in rc.away_bench_display %}
                         {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
-                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
                             <span class="n">{{ b.shirt_number|default:"" }}</span>
                             <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
                             <div class="pl-badges">

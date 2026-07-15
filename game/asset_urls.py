@@ -45,6 +45,11 @@ def asset_url(category, filename):
     return f"{assets_base_url()}{category.strip('/')}/{filename}"
 
 
+def default_player_url():
+    """URL für das zentrale Default-Spielerbild (kein fm_inside_id)."""
+    return asset_url('players', 'default_player.jpg')
+
+
 def player_face_url(fm_inside_id):
     if not fm_inside_id:
         return ''

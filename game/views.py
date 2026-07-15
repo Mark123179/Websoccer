@@ -2701,8 +2701,8 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
     def duel_avatar_path(manager_club):
         if manager_club and manager_club.crest_static_path:
             return manager_club.crest_static_path
-        from django.templatetags.static import static as _st
-        return _st('game/images/default_player.svg')
+        from .asset_urls import default_player_url as _dp
+        return _dp()
 
     return {
         'club': club,
