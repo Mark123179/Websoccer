@@ -139,7 +139,7 @@ class NationBadgeUrlTests(TestCase):
         self.assertEqual(url, 'https://playwebsoccer.de/assets/nations/765_nation.png')
 
     def test_returns_empty_string_when_no_asset_id(self):
-        player = self._make_player(nt_nationality='Bahrain')
+        player = self._make_player(nt_nationality='Angola')
         self.assertEqual(player.nation_badge_url, '')
 
     def test_returns_empty_string_when_nation_unknown(self):
@@ -163,7 +163,7 @@ class NationBadgeUrlTests(TestCase):
             'Polen': '787',
             'Schweden': '797',
             'Serbien': '802',
-            'Spanien': '773',
+            'Spanien': '796',
             'Südkorea': '135',
         }
         for nation, asset_id in cases.items():
