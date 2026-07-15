@@ -102,7 +102,7 @@
     opts = opts || {};
     var root = typeof target === 'string' ? document.querySelector(target) : target;
     if (!root) { return; }
-    if (!data || !data.length) { root.style.display = 'none'; return; }
+    var isEmpty = !data || !data.length;
 
     var bande = el('div', 'eb-bande');
     bande.dataset.pauseOnHover = String(opts.pauseOnHover !== false);
@@ -114,10 +114,15 @@
     bande.appendChild(cap);
 
     var viewport = el('div', 'eb-viewport');
-    var track = el('div', 'eb-track');
-    track.appendChild(buildCopy(data, opts, false));
-    track.appendChild(buildCopy(data, opts, true));
-    viewport.appendChild(track);
+    if (isEmpty) {
+      viewport.appendChild(el('div', 'eb-empty',
+        opts.emptyText || 'Noch keine Ergebnisse — der erste Spieltag steht noch aus.'));
+    } else {
+      var track = el('div', 'eb-track');
+      track.appendChild(buildCopy(data, opts, false));
+      track.appendChild(buildCopy(data, opts, true));
+      viewport.appendChild(track);
+    }
     bande.appendChild(viewport);
 
     root.innerHTML = '';
