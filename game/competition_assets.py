@@ -210,18 +210,31 @@ _NATIONALITY_CONFEDERATION = {
     'Vanuatu':              'ofc',
 }
 
-_CONFEDERATION_BADGE = {
-    'uefa':     'game/images/competitions/nt-uefa.png',
-    'conmebol': 'game/images/competitions/nt-conmebol.png',
-    'caf':      'game/images/competitions/nt-caf.png',
-    'afc':      'game/images/competitions/nt-afc.png',
-    'concacaf': 'game/images/competitions/nt-concacaf.png',
-    'ofc':      'game/images/competitions/nt-ofc.png',
-}
+
+def _build_confederation_badge():
+    from game.asset_urls import asset_url
+    return {
+        'caf':      asset_url('confederations', '1_conf.png'),
+        'afc':      asset_url('confederations', '2_conf.png'),
+        'uefa':     asset_url('confederations', '3_conf.png'),
+        'concacaf': asset_url('confederations', '4_conf.png'),
+        'ofc':      asset_url('confederations', '5_conf.png'),
+        'conmebol': asset_url('confederations', '6_conf.png'),
+    }
+
+
+_GENERIC_CONFEDERATION_BADGE = None
+
+
+def _generic_confederation_badge():
+    global _GENERIC_CONFEDERATION_BADGE
+    if _GENERIC_CONFEDERATION_BADGE is None:
+        from game.asset_urls import asset_url
+        _GENERIC_CONFEDERATION_BADGE = asset_url('confederations', '7_conf.png')
+    return _GENERIC_CONFEDERATION_BADGE
 
 
 def nt_competition_logo(nationality):
-    from django.templatetags.static import static as _static
     key = nationality or ''
     conf = _NATIONALITY_CONFEDERATION.get(key)
     if conf is None and key:
@@ -230,8 +243,8 @@ def nt_competition_logo(nationality):
             'falling back to generic badge',
             key,
         )
-    rel = _CONFEDERATION_BADGE.get(conf, 'game/images/competitions/nationalmannschaft.svg')
-    return _static(rel)
+    badge_map = _build_confederation_badge()
+    return badge_map.get(conf, _generic_confederation_badge())
 
 
 def competition_logo_static_path(competition, nt_nationality=None):

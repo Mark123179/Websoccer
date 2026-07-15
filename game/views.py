@@ -21,7 +21,6 @@ from .club_profile_highlights import nt_confederation_badge
 from .competition_assets import (
     _NT_COMPETITION_KEYS,
     _NATIONALITY_CONFEDERATION,
-    _CONFEDERATION_BADGE,
     nt_competition_logo,
     competition_logo_static_path,
 )
