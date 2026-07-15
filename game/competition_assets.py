@@ -221,6 +221,7 @@ _CONFEDERATION_BADGE = {
 
 
 def nt_competition_logo(nationality):
+    from django.templatetags.static import static as _static
     key = nationality or ''
     conf = _NATIONALITY_CONFEDERATION.get(key)
     if conf is None and key:
@@ -229,13 +230,31 @@ def nt_competition_logo(nationality):
             'falling back to generic badge',
             key,
         )
-    return _CONFEDERATION_BADGE.get(conf, 'game/images/competitions/nationalmannschaft.svg')
+    rel = _CONFEDERATION_BADGE.get(conf, 'game/images/competitions/nationalmannschaft.svg')
+    return _static(rel)
 
 
 def competition_logo_static_path(competition, nt_nationality=None):
+    """Gibt immer eine fertige URL zurück (kein relativer Static-Pfad mehr).
+
+    Reihenfolge:
+    1. NT-Wettbewerbe → Konföderation-Badge
+    2. Hardcodiertes Dict (Bundesliga, CL, …) → Django-Static-URL
+    3. League-DB-Lookup nach Name → Asset-Server-URL (/assets/competitions/{id}.png)
+    4. Leer-String wenn kein Match
+    """
+    from django.templatetags.static import static as _static
+
+    # League-Objekt → Name extrahieren, ID merken
+    league_id = None
+    if hasattr(competition, 'name'):
+        league_id = getattr(competition, 'id', None)
+        competition = competition.name
+
     if competition in _NT_COMPETITION_KEYS:
         return nt_competition_logo(nt_nationality)
-    assets = {
+
+    _HARDCODED = {
         '1. Bundesliga': 'game/images/competitions/bundesliga.png',
         'Bundesliga': 'game/images/competitions/bundesliga.png',
         'Websoccer Liga': 'game/images/competitions/websoccer-liga.svg',
@@ -249,4 +268,27 @@ def competition_logo_static_path(competition, nt_nationality=None):
         'Europa Conference League': 'game/images/competitions/europa-conference-league.png',
         'ECL': 'game/images/competitions/europa-conference-league.png',
     }
-    return assets.get(competition, '')
+    if competition in _HARDCODED:
+        return _static(_HARDCODED[competition])
+
+    # DB-Fallback: Logo das über Creator hochgeladen wurde (logo_static_path)
+    try:
+        from game.models import League as _League
+        from game.asset_urls import competition_url as _comp_url, assets_base_url as _base
+        if league_id is None and competition:
+            league = _League.objects.filter(name=competition).first()
+        elif league_id:
+            league = _League.objects.filter(id=league_id).first()
+        else:
+            league = None
+        if league and league.logo_static_path:
+            lp = league.logo_static_path
+            # Neues Format: 'competitions/{id}.png' → Asset-URL
+            if lp.startswith('competitions/'):
+                return _base() + lp
+            # Altes Format: 'game/images/competitions/…' → Static-URL
+            return _static(lp)
+    except Exception:
+        pass
+
+    return ''

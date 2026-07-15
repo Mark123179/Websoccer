@@ -21,7 +21,7 @@
         <div class="hero-info">
             <div class="hero-comp">
                 {% if competition_logo %}
-                    <img src="{% static competition_logo %}" alt="{{ competition_name }}">
+                    <img src="{{ competition_logo }}" alt="{{ competition_name }}">
                 {% endif %}
                 <div>
                     <b>{{ competition_name|default:"Freundschaftsspiel"|upper }}</b>

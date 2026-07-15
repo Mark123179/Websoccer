@@ -21,7 +21,7 @@
 
                     {% if current_manager.club and forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">U21</span>{% endif %}
                     {% if day.fixture %}
-                        <div class="ws-fixture-card"{% if day.fixture.stadium %} style="--fixture-stadium: url('{% static day.fixture.stadium %}');"{% endif %}>
+                        <div class="ws-fixture-card"{% if day.fixture.stadium %} style="--fixture-stadium: url('{{ day.fixture.stadium }}');"{% endif %}>
                             <div class="ws-fixture-crests">
                                 {% if day.fixture.opponent_crest %}
                                     {% if day.fixture.opponent_url %}
@@ -33,7 +33,7 @@
                                     {% endif %}
                                 {% endif %}
                                 {% if day.fixture.competition_logo %}
-                                    <img src="{% static day.fixture.competition_logo %}" alt="">
+                                    <img src="{{ day.fixture.competition_logo }}" alt="">
                                 {% endif %}
                             </div>
                             {% if day.fixture.result %}

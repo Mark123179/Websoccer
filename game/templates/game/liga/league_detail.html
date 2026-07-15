@@ -17,7 +17,7 @@
     <div class="liga-hero">
         <div class="liga-hero__left">
             {% if league_logo_path %}
-            <img class="liga-hero__logo" src="{% static league_logo_path %}" alt="{{ league.name }}">
+            <img class="liga-hero__logo" src="{{ league_logo_path }}" alt="{{ league.name }}">
             {% endif %}
             <div class="liga-hero__meta">
                 <h1 class="liga-hero__name">{{ league.name }}</h1>
@@ -507,7 +507,7 @@
             <article class="liga-news-card">
                 {% if item.thumbnail_static_path %}
                 <div class="liga-news-card__thumb">
-                    <img src="{% static item.thumbnail_static_path %}" alt="{{ item.title }}">
+                    <img src="{{ item.thumbnail_static_path }}" alt="{{ item.title }}">
                 </div>
                 {% endif %}
                 <div class="liga-news-card__body">

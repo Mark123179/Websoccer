@@ -1630,7 +1630,7 @@ def _build_ergebnis_bande_data():
         segments.append({
             'name': league_name,
             'round': f'{row["last_md"]}. Spieltag',
-            'logo': _static(logo_path) if logo_path else '',
+            'logo': logo_path,
             'matches': matches,
         })
 
@@ -5377,11 +5377,7 @@ def club_news(request, club_id):
     crest_url = club.crest_static_path or ''
 
     league_name = club.league.name if club.league else ''
-    league_logo = ''
-    if club.league:
-        _lp = competition_logo_static_path(club.league)
-        if _lp:
-            league_logo = _static(_lp)
+    league_logo = competition_logo_static_path(club.league) if club.league else ''
 
     last_match = None
     _motm_data = None
@@ -7583,11 +7579,8 @@ def league_detail(request, league_id):
             standings_qs.order_by('-goals_for', '-goals_against')
         )
 
-    # ---- Bundesliga-Logo --------------------------------------------------
-    logo_path = league.logo_static_path
-    if not logo_path:
-        slug = league.name.lower().replace(' ', '-').replace('.', '')
-        logo_path = f'game/images/competitions/{slug}.svg'
+    # ---- Liga-Logo --------------------------------------------------
+    logo_path = competition_logo_static_path(league)
 
     return render(request, 'game/liga/league_detail.html', {
         'league': league,

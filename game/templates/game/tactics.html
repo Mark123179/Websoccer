@@ -76,7 +76,7 @@
                 <div class="tactics-match-meta" aria-label="Spieldaten">
                     <div class="tactics-meta-item">
                         {% if competition_logo %}
-                            <img class="tactics-meta-logo" src="{% static competition_logo %}" alt="">
+                            <img class="tactics-meta-logo" src="{{ competition_logo }}" alt="">
                         {% else %}
                             <i class="tactics-meta-icon is-ball" aria-hidden="true"></i>
                         {% endif %}

@@ -3,7 +3,7 @@
 <article
     class="club-profile-card next-match-profile-card"
     {% if profile.nextMatch.backgroundImageUrl %}
-        style="--match-bg: url('{% static profile.nextMatch.backgroundImageUrl %}');"
+        style="--match-bg: url('{{ profile.nextMatch.backgroundImageUrl }}');"
     {% endif %}
 >
     <h2 class="club-card-title">NÄCHSTES SPIEL</h2>
@@ -11,7 +11,7 @@
     {% if profile.nextMatch %}
     <p class="club-match-competition">
         {% if profile.nextMatch.competitionLogoUrl %}
-            <img src="{% static profile.nextMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
+            <img src="{{ profile.nextMatch.competitionLogoUrl }}" alt="" class="club-match-competition-logo">
         {% endif %}
         {{ profile.nextMatch.competitionName }} · {{ profile.nextMatch.matchdayLabel }}
     </p>

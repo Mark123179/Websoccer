@@ -321,17 +321,38 @@ def build_facilities(club):
     return result
 
 
+def _resolve_image_url(path):
+    """Normalisiert einen Bild-Pfad zu einer fertigen URL.
+
+    Behandelt:
+    - Leerer Pfad → ''
+    - Bereits volle URL (/static/…, /assets/…, http…) → unverändert
+    - Neues Asset-Format (clubs/…, players/…, competitions/…) → ASSETS_BASE_URL + path
+    - Altes Django-Static-Format (game/images/…, img/…) → Django-static URL
+    """
+    if not path:
+        return ''
+    if path.startswith('/') or path.startswith('http'):
+        return path
+    from .asset_urls import assets_base_url
+    _ASSET_PREFIXES = ('clubs/', 'players/', 'competitions/', 'trophies/')
+    if any(path.startswith(p) for p in _ASSET_PREFIXES):
+        return assets_base_url() + path
+    from django.templatetags.static import static as _s
+    return _s(path)
+
+
 def build_stadium(public_profile):
     capacity = getattr(public_profile, 'stadium_capacity', 0) or 0
     attendance = getattr(public_profile, 'average_attendance', 0) or 0
     utilization = round((attendance / capacity) * 100) if capacity and attendance else None
-
+    raw = (
+        getattr(public_profile, 'stadium_image_static_path', '')
+        or 'game/images/backgrounds/profile-pitch-stadium.svg'
+    )
     return {
         'name': getattr(public_profile, 'stadium_name', '') or 'Stadion nicht hinterlegt',
-        'imageUrl': (
-            getattr(public_profile, 'stadium_image_static_path', '')
-            or 'game/images/backgrounds/profile-pitch-stadium.svg'
-        ),
+        'imageUrl': _resolve_image_url(raw),
         'capacityFormatted': format_number(capacity) if capacity else '-',
         'averageAttendanceFormatted': format_number(attendance) if attendance else '-',
         'utilizationFormatted': f'{utilization}%' if utilization else '-',
@@ -343,14 +364,15 @@ def build_city(public_profile, club):
         getattr(public_profile, 'city_country', '')
         or (club.league.country if club.league else 'Deutschland')
     )
+    raw = (
+        getattr(public_profile, 'city_image_static_path', '')
+        or city_static_path(club)
+        or 'game/images/backgrounds/overview/overview-navigation.png'
+    )
     return {
         'name': getattr(public_profile, 'city_name', '') or 'Stadt nicht hinterlegt',
         'countryName': country_name,
-        'imageUrl': (
-            getattr(public_profile, 'city_image_static_path', '')
-            or city_static_path(club)
-            or 'game/images/backgrounds/overview/overview-navigation.png'
-        ),
+        'imageUrl': _resolve_image_url(raw),
     }
 
 
@@ -460,10 +482,11 @@ def stadium_name_for(club):
 
 def stadium_image_for(club):
     profile = get_public_profile(club)
-    return (
+    raw = (
         getattr(profile, 'stadium_image_static_path', '')
         or 'game/images/backgrounds/profile-pitch-stadium.svg'
     )
+    return _resolve_image_url(raw)
 
 
 def result_tone(result_label):

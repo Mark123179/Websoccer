@@ -34,7 +34,7 @@
     <div class="cv-league-header">
       <div class="cv-league-identity">
         {% if lg.logo %}
-          <img class="cv-league-logo" src="{% static lg.logo %}" alt="{{ lg.name }}">
+          <img class="cv-league-logo" src="{{ lg.logo }}" alt="{{ lg.name }}">
         {% else %}
           <div class="cv-league-logo-placeholder">🏆</div>
         {% endif %}

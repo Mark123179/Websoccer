@@ -2,7 +2,7 @@
 
 <article class="club-profile-card image-profile-card stadium-profile-card">
     {% if profile.stadium.imageUrl %}
-        <img src="{% static profile.stadium.imageUrl %}" alt="{{ profile.stadium.name }}">
+        <img src="{{ profile.stadium.imageUrl }}" alt="{{ profile.stadium.name }}">
     {% endif %}
     <div class="image-card-top">
         <h2 class="club-card-title">STADION</h2>

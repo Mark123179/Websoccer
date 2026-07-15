@@ -82,7 +82,7 @@
       <div class="creator-card-head"><h2>Stadionbild</h2></div>
       <div class="creator-card-body">
         <div class="creator-image-preview creator-image-wide">
-          {% if stadium_path %}<img src="{% static stadium_path %}" alt="Stadion">
+          {% if stadium_path %}<img src="{{ stadium_path }}" alt="Stadion">
           {% else %}<div class="creator-no-image">Kein Bild</div>{% endif %}
         </div>
         <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_stadium' club_id=club.id %}">
@@ -99,7 +99,7 @@
       <div class="creator-card-head"><h2>Citypic</h2></div>
       <div class="creator-card-body">
         <div class="creator-image-preview creator-image-wide">
-          {% if city_path %}<img src="{% static city_path %}" alt="Stadt">
+          {% if city_path %}<img src="{{ city_path }}" alt="Stadt">
           {% else %}<div class="creator-no-image">Kein Bild</div>{% endif %}
         </div>
         <form method="post" enctype="multipart/form-data" action="{% url 'creator_upload_city' club_id=club.id %}">
@@ -210,7 +210,7 @@
               <select name="league" id="creator-liga-select">
                 {% for league in all_leagues %}
                 <option value="{{ league.id }}"
-                        data-logo="{% if league.logo_static_path %}{% static league.logo_static_path %}{% endif %}"
+                        data-logo="{% if league.logo_static_path %}{{ league.logo_url }}{% endif %}"
                         {% if league.id == club.league_id %}selected{% endif %}>
                   {{ league.name }} ({{ league.country }})
                 </option>
@@ -219,7 +219,7 @@
               <div class="creator-liga-logo-preview" id="creator-liga-logo-preview">
                 {% if club.league.logo_static_path %}
                 <img id="creator-liga-logo-img"
-                     src="{% static club.league.logo_static_path %}"
+                     src="{{ club.league.logo_url }}"
                      alt="{{ club.league.name }}">
                 {% else %}
                 <img id="creator-liga-logo-img" src="" alt="" style="display:none;">

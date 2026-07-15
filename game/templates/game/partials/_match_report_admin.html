@@ -16,7 +16,7 @@
         <div class="mr-score-center">
             {% if competition_logo %}
             <div class="mr-competition-badge">
-                <img src="{% static competition_logo %}" alt="{{ competition_name }}">
+                <img src="{{ competition_logo }}" alt="{{ competition_name }}">
                 <span>{{ competition_name }}</span>
             </div>
             {% elif competition_name %}

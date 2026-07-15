@@ -12,7 +12,7 @@
             {% endif %}
             <span>{{ item.playerName }}</span>
             {% if item.ntBadgeUrl %}
-                <img class="club-player-nt-badge" src="{% static item.ntBadgeUrl %}" alt="">
+                <img class="club-player-nt-badge" src="{{ item.ntBadgeUrl }}" alt="">
             {% endif %}
         </strong>
     </a>

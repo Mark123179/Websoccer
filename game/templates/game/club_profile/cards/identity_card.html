@@ -6,7 +6,7 @@
     <div class="club-identity-main">
         <div class="club-identity-logo-stack">
             {% if profile.club.league.logoUrl %}
-                <img class="club-league-watermark" src="{% static profile.club.league.logoUrl %}" alt="">
+                <img class="club-league-watermark" src="{{ profile.club.league.logoUrl }}" alt="">
             {% endif %}
             {% if profile.club.crestUrl %}
                 <a class="club-crest-link club-identity-crest-link" href="{{ profile.links.profileUrl }}" aria-label="{{ profile.club.name }} Profil">
@@ -25,7 +25,7 @@
             </span>
             <span class="club-meta-line">
                 {% if profile.club.league.logoUrl %}
-                    <img src="{% static profile.club.league.logoUrl %}" alt="">
+                    <img src="{{ profile.club.league.logoUrl }}" alt="">
                 {% endif %}
                 {{ profile.club.league.name }}
             </span>

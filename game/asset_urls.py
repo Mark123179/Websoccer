@@ -12,7 +12,23 @@ Struktur (live via nginx unter /assets/, auf Replit unter /static/assets/):
     flags/  competitions/  avatars/  backgrounds/  icons/  (noch leer)
 """
 
+import os as _os
 from django.conf import settings
+
+
+def assets_root():
+    """Dateisystem-Pfad für Asset-Uploads (Creator-Mode schreibt hierhin).
+
+    Entspricht ASSETS_BASE_URL auf dem Dateisystem:
+      Lokal  → <BASE_DIR>/game/static/assets/
+      Server → /var/www/assets  (via ASSETS_ROOT env-var)
+    """
+    root = getattr(settings, 'ASSETS_ROOT', None)
+    if root:
+        return str(root).rstrip('/')
+    return _os.path.join(
+        _os.path.dirname(_os.path.dirname(__file__)), 'game', 'static', 'assets'
+    )
 
 
 def assets_base_url():

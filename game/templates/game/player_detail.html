@@ -29,7 +29,7 @@
                         <img class="aaa-poster-nation" src="{% static nation_nt_logo %}" alt="" title="{{ nation_nt_name }}">
                     {% endif %}
                     {% if nt_confederation_badge_url %}
-                        <img class="aaa-poster-confederation" src="{% static nt_confederation_badge_url %}" alt="" title="{{ nation_nt_name }}">
+                        <img class="aaa-poster-confederation" src="{{ nt_confederation_badge_url }}" alt="" title="{{ nation_nt_name }}">
                     {% endif %}
                     <img class="aaa-player-portrait" src="{{ player.portrait_static_path }}" alt="{{ player.full_name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
                     <div class="aaa-player-nameplate">
@@ -76,7 +76,7 @@
                         <span>Wettbewerb</span>
                         <strong>
                             {% if league_logo %}
-                                <img src="{% static league_logo %}" alt="">
+                                <img src="{{ league_logo }}" alt="">
                             {% endif %}
                             {{ player.club.league.name|default:"Websoccer" }}
                         </strong>
@@ -161,7 +161,7 @@
                             <div class="aaa-stat-row performance-lane{% if row.is_preview %} is-preview-row{% endif %}">
                                 <span class="aaa-stat-competition">
                                     {% if row.competition_logo %}
-                                        <img src="{% static row.competition_logo %}" alt="">
+                                        <img src="{{ row.competition_logo }}" alt="">
                                     {% endif %}
                                     <b>{{ row.competition }}</b>
                                 </span>
@@ -421,7 +421,7 @@
                         <div class="aaa-career-row performance-lane{% if row.is_preview %} is-preview-row{% endif %}">
                             <span class="aaa-stat-competition">
                                 {% if row.competition_logo %}
-                                    <img src="{% static row.competition_logo %}" alt="">
+                                    <img src="{{ row.competition_logo }}" alt="">
                                 {% endif %}
                                 <b>{{ row.competition }}</b>
                             </span>

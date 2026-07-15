@@ -393,6 +393,12 @@ class League(models.Model):
         blank=True,
         help_text='Statischer Pfad zum Liga-Logo, z. B. game/images/competitions/bundesliga.svg',
     )
+
+    @property
+    def logo_url(self):
+        from .competition_assets import competition_logo_static_path
+        return competition_logo_static_path(self)
+
     cl_spots = models.PositiveSmallIntegerField(
         default=2,
         verbose_name='Champions-League-Plätze',

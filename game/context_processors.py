@@ -88,11 +88,7 @@ def _build_global_calendar(club, calendar_offset):
             opp_crest = opponent.crest_static_path if opponent else ''
             opp_url   = f'/clubs/{opponent.pk}/' if opponent else ''
 
-            # Prefer the DB-stored logo (set by Creator Mode); fall back to name dict
-            comp_logo = (
-                f.league.logo_static_path
-                or competition_logo_static_path(f.league.name)
-            )
+            comp_logo = competition_logo_static_path(f.league)
 
             fixtures_by_date[f.scheduled_date] = {
                 'opponent_name':    opponent.name if opponent else '',
@@ -153,10 +149,7 @@ def _build_global_calendar(club, calendar_offset):
             cup_stadium = _STADIUM_ASSETS.get(
                 cf.home_club.fm_inside_id if cf.home_club else None, ''
             )
-            cup_comp_logo = (
-                cup_comp.logo_static_path
-                or competition_logo_static_path(comp_name)
-            )
+            cup_comp_logo = competition_logo_static_path(cup_comp)
             fixtures_by_date[scheduled_date] = {
                 'opponent_name':    cup_opponent.name if cup_opponent else 'Freilos',
                 'opponent_crest':   cup_opponent.crest_static_path if cup_opponent else '',

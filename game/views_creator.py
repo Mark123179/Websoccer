@@ -460,6 +460,21 @@ def _build_strength_tab_context(player):
 
 
 STATIC_BASE = 'game/static'
+
+
+def _assets_root():
+    from .asset_urls import assets_root
+    return assets_root()
+
+
+def _asset_dest(*parts):
+    """Baut einen vollständigen Dateisystempfad unter ASSETS_ROOT und legt
+    das Verzeichnis bei Bedarf an."""
+    path = os.path.join(_assets_root(), *parts)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    return path
+
+
 POSITION_CHOICES = [
     ('', '----------'),
     ('TW', 'TW'), ('IV', 'IV'), ('LI', 'LI'), ('LV', 'LV'),
@@ -672,8 +687,9 @@ def creator_club_edit(request, club_id):
                 break
         kits.append({'type': kit_type, 'label': label, 'path': found_path})
 
-    stadium_path = _static_file_path(profile.stadium_image_static_path) if profile.stadium_image_static_path else ''
-    city_path = _static_file_path(profile.city_image_static_path) if profile.city_image_static_path else ''
+    from .asset_urls import club_stadium_url as _stadium_url, club_city_url as _city_url
+    stadium_path = _stadium_url(club.fm_inside_id) if club.fm_inside_id else ''
+    city_path = _city_url(club.fm_inside_id) if club.fm_inside_id else ''
     crest_path = club.crest_static_path
 
     try:
@@ -736,10 +752,12 @@ def creator_upload_stadium(request, club_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
-    stem = club._asset_stem()
-    rel = f'game/images/stadiums/germany/{stem}.jpg'
-    _save_as_jpg(f, os.path.join(STATIC_BASE, rel))
-    profile.stadium_image_static_path = rel
+    if not club.fm_inside_id:
+        messages.error(request, 'Kein fm_inside_id gesetzt – Bild kann nicht gespeichert werden.')
+        return redirect('creator_club_edit', club_id=club_id)
+    dest = _asset_dest('clubs', 'stadiums', f'{club.fm_inside_id}_stadium.jpg')
+    _save_as_jpg(f, dest)
+    profile.stadium_image_static_path = f'clubs/stadiums/{club.fm_inside_id}_stadium.jpg'
     profile.save(update_fields=['stadium_image_static_path'])
     messages.success(request, 'Stadionbild gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)
@@ -754,12 +772,14 @@ def creator_upload_city(request, club_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
-    stem = club._asset_stem()
-    rel = f'game/images/city/{stem}.jpg'
-    _save_as_jpg(f, os.path.join(STATIC_BASE, rel))
-    profile.city_image_static_path = rel
+    if not club.fm_inside_id:
+        messages.error(request, 'Kein fm_inside_id gesetzt – Bild kann nicht gespeichert werden.')
+        return redirect('creator_club_edit', club_id=club_id)
+    dest = _asset_dest('clubs', 'cities', f'{club.fm_inside_id}_city.jpg')
+    _save_as_jpg(f, dest)
+    profile.city_image_static_path = f'clubs/cities/{club.fm_inside_id}_city.jpg'
     profile.save(update_fields=['city_image_static_path'])
-    messages.success(request, 'Citypic gespeichert.')
+    messages.success(request, 'Stadtbild gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)
 
 
@@ -791,12 +811,10 @@ def creator_upload_crest(request, club_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
-    stem = club._asset_stem()
-    for ext in ['png', 'svg', 'jpg', 'webp']:
-        old = os.path.join(STATIC_BASE, f'game/images/crests/{stem}.{ext}')
-        if os.path.exists(old):
-            os.remove(old)
-    dest = os.path.join(STATIC_BASE, f'game/images/crests/{stem}.png')
+    if not club.fm_inside_id:
+        messages.error(request, 'Kein fm_inside_id gesetzt – Wappen kann nicht gespeichert werden.')
+        return redirect('creator_club_edit', club_id=club_id)
+    dest = _asset_dest('clubs', 'logos', f'{club.fm_inside_id}_club.png')
     _save_as_png(f, dest)
     messages.success(request, 'Vereinswappen gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)
@@ -810,13 +828,9 @@ def creator_upload_league_logo(request, league_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
-    if league.logo_static_path:
-        old = os.path.join(STATIC_BASE, league.logo_static_path)
-        if os.path.exists(old):
-            os.remove(old)
-    dest = os.path.join(STATIC_BASE, f'game/images/competitions/{league_id}.png')
+    dest = _asset_dest('competitions', f'{league_id}.png')
     _save_as_png(f, dest)
-    league.logo_static_path = f'game/images/competitions/{league_id}.png'
+    league.logo_static_path = f'competitions/{league_id}.png'
     league.save(update_fields=['logo_static_path'])
     messages.success(request, 'Liga-Logo gespeichert.')
     return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
@@ -1069,7 +1083,7 @@ def creator_player_edit(request, player_id):
 
         portrait_file = request.FILES.get('portrait')
         if portrait_file and player.fm_inside_id:
-            dest = os.path.join(STATIC_BASE, f'game/images/players/{player.fm_inside_id}.png')
+            dest = _asset_dest('players', f'face_{player.fm_inside_id}.png')
             _save_as_png(portrait_file, dest)
             _write_edit_log(player, request.user, PlayerEditLog.CATEGORY_BILD, 'Portraitbild aktualisiert.')
 
@@ -2086,7 +2100,8 @@ def creator_league_edit(request, league_id):
         else:
             club.lineup_status = 'missing'
 
-    logo_path = league.logo_static_path or ''
+    from game.competition_assets import competition_logo_static_path as _comp_logo_url
+    logo_path = _comp_logo_url(league) if league else ''
 
     spielplan_seasons = []
     spielplan_matchdays = []

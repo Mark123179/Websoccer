@@ -19,7 +19,7 @@
 <section class="start-dashboard overview-dashboard">
 
     <div class="overview-grid">
-        <article class="dashboard-card overview-card overview-club-card"{% if overview_profile.city_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static overview_profile.city_static_path %}');"{% endif %}>
+        <article class="dashboard-card overview-card overview-club-card"{% if overview_profile.city_static_path and not user_has_no_club %} style="--overview-card-bg: url('{{ overview_profile.city_static_path }}');"{% endif %}>
             <h2 class="card-title">Vereins&uuml;bersicht</h2>
 
             {% if user_has_no_club %}
@@ -49,7 +49,7 @@
                     </h1>
                     <span class="overview-league-line">
                         {% if competition_logo_static_path %}
-                            <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
+                            <img src="{{ competition_logo_static_path }}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
                         {% endif %}
                         {% if primary_club and primary_club.league %}
                             {{ primary_club.league.name }}
@@ -109,7 +109,7 @@
             {% endif %}
         </article>
 
-        <article class="dashboard-card overview-card overview-next-match-card"{% if home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static home_stadium_static_path %}');"{% endif %}>
+        <article class="dashboard-card overview-card overview-next-match-card"{% if home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{{ home_stadium_static_path }}');"{% endif %}>
             <h2 class="card-title">N&auml;chstes Spiel</h2>
             {% if user_has_no_club %}
                 <div class="overview-no-club-state">
@@ -130,7 +130,7 @@
             {% else %}
             <p class="overview-fixture-title">
                 {% if competition_logo_static_path %}
-                    <img src="{% static competition_logo_static_path %}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
+                    <img src="{{ competition_logo_static_path }}" alt="" style="width: 18px; height: 18px; max-width: 18px; max-height: 18px; object-fit: contain; flex: 0 0 18px;">
                 {% endif %}
                 {{ next_match.competition_name }}
                 {% if next_match.matchday_label %} - {{ next_match.matchday_label }}{% endif %}
@@ -168,7 +168,7 @@
             {% endif %}
         </article>
 
-        <article class="dashboard-card overview-card overview-last-match-card"{% if last_match_home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{% static last_match_home_stadium_static_path %}');"{% endif %}>
+        <article class="dashboard-card overview-card overview-last-match-card"{% if last_match_home_stadium_static_path and not user_has_no_club %} style="--overview-card-bg: url('{{ last_match_home_stadium_static_path }}');"{% endif %}>
             <h2 class="card-title">Letztes Spiel</h2>
 
             {% if user_has_no_club %}
@@ -486,7 +486,7 @@
                     <div class="overview-live-row">
                         <span class="olr-time">{{ match.time }}</span>
                         {% if match.competition_logo %}
-                            <img class="olr-comp" src="{% static match.competition_logo %}" alt="">
+                            <img class="olr-comp" src="{{ match.competition_logo }}" alt="">
                         {% else %}
                             <span class="olr-comp"></span>
                         {% endif %}

@@ -3,7 +3,7 @@
 <article
     class="club-profile-card last-match-profile-card"
     {% if profile.lastMatch.backgroundImageUrl %}
-        style="--match-bg: url('{% static profile.lastMatch.backgroundImageUrl %}');"
+        style="--match-bg: url('{{ profile.lastMatch.backgroundImageUrl }}');"
     {% endif %}
 >
     <h2 class="club-card-title">LETZTES SPIEL</h2>
@@ -11,7 +11,7 @@
     {% if profile.lastMatch %}
     <p class="club-match-competition">
         {% if profile.lastMatch.competitionLogoUrl %}
-            <img src="{% static profile.lastMatch.competitionLogoUrl %}" alt="" class="club-match-competition-logo">
+            <img src="{{ profile.lastMatch.competitionLogoUrl }}" alt="" class="club-match-competition-logo">
         {% endif %}
         {{ profile.lastMatch.competitionName }} · {{ profile.lastMatch.matchdayLabel }}
     </p>

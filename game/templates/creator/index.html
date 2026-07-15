@@ -38,7 +38,7 @@
     {% if level == 3 %}
     <span class="cm-bc-sep">›</span>
     <span class="cm-bc-item cm-bc-current">
-      {% if league.logo_static_path %}<img class="cm-bc-logo" src="{% static league.logo_static_path %}" alt="" onerror="this.style.display='none'">{% endif %}
+      {% if league.logo_static_path %}<img class="cm-bc-logo" src="{{ league.logo_url }}" alt="" onerror="this.style.display='none'">{% endif %}
       {{ league.name }}
     </span>
     {% endif %}
@@ -152,7 +152,7 @@
       <a class="cm-league-card" href="{% url 'creator_index' %}?league={{ entry.league.pk }}">
         <div class="cm-league-logo-wrap">
           {% if entry.league.logo_static_path %}
-            <img class="cm-league-logo" src="{% static entry.league.logo_static_path %}" alt="{{ entry.league.name }}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=cm-league-logo-placeholder>&#127942;</div>'">
+            <img class="cm-league-logo" src="{{ entry.league.logo_url }}" alt="{{ entry.league.name }}" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=cm-league-logo-placeholder>&#127942;</div>'">
           {% else %}
             <div class="cm-league-logo-placeholder">🏆</div>
           {% endif %}
@@ -178,7 +178,7 @@
   <div class="cm-level-header">
     <div class="cm-level-title-group">
       {% if league.logo_static_path %}
-        <img class="cm-level-league-logo" src="{% static league.logo_static_path %}" alt="" onerror="this.style.display='none'">
+        <img class="cm-level-league-logo" src="{{ league.logo_url }}" alt="" onerror="this.style.display='none'">
       {% endif %}
       <h2 class="cm-level-title">{{ league.name }} <span class="cm-level-count">{{ clubs|length }}</span></h2>
     </div>
