@@ -36,7 +36,7 @@ body {
 a { color: var(--cyan); text-decoration: none; }
 a:hover { color: #7ef0ff; }
 
-#vereinsnews-app { max-width: 1188px; margin: 0 auto; padding: 18px 24px 40px; }
+#vereinsnews-app { width: 100%; margin: 0; padding: 18px 24px 40px; }
 
 /* ── Kopf ── */
 .vn-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }

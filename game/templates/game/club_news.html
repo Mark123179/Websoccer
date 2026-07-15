@@ -4,10 +4,7 @@
 {% block title %}Vereinsnews – {{ club.name }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/vereinsnews.css' %}?v=2">
-<style>
-#vereinsnews-app { max-width: 1188px; margin: 0 auto; padding: 18px 24px 40px; }
-</style>
+<link rel="stylesheet" href="{% static 'game/css/vereinsnews.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -20,5 +17,5 @@ window.VN_DATA.csrf = '{{ csrf_token }}';
 
 {% block extra_js %}
 <script>window.wsDefaultPlayerUrl='{{ default_player_url }}';</script>
-<script src="{% static 'game/js/vereinsnews.js' %}?v=3"></script>
+<script src="{% static 'game/js/vereinsnews.js' %}?v=4"></script>
 {% endblock %}
