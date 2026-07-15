@@ -319,7 +319,7 @@
                         <div class="liga-fixture__motm">
                             <span class="liga-fixture__motm-star">★</span>
                             {% if f.motm.club_crest %}
-                            <img class="liga-fixture__motm-crest" src="{% static f.motm.club_crest %}" alt="{{ f.motm.club_name }}">
+                            <img class="liga-fixture__motm-crest" src="{{ f.motm.club_crest }}" alt="{{ f.motm.club_name }}">
                             {% endif %}
                             <span class="liga-fixture__motm-name">{{ f.motm.name }}</span>
                             <span class="liga-fixture__motm-rating">{{ f.motm.rating|floatformat:1 }}</span>

@@ -5,7 +5,7 @@
     <div class="mr-scoreboard">
         <div class="mr-team">
             {% if report.home_club_crest %}
-                <img class="mr-crest" src="{% static report.home_club_crest %}" alt="{{ report.home_club_name }}">
+                <img class="mr-crest" src="{{ report.home_club_crest }}" alt="{{ report.home_club_name }}">
             {% else %}
                 <span class="mr-crest-fallback">{{ report.home_club_short }}</span>
             {% endif %}
@@ -37,7 +37,7 @@
 
         <div class="mr-team is-away">
             {% if report.away_club_crest %}
-                <img class="mr-crest" src="{% static report.away_club_crest %}" alt="{{ report.away_club_name }}">
+                <img class="mr-crest" src="{{ report.away_club_crest }}" alt="{{ report.away_club_name }}">
             {% else %}
                 <span class="mr-crest-fallback">{{ report.away_club_short }}</span>
             {% endif %}
@@ -467,7 +467,7 @@
             <div class="mr-motm-label">&#9733; Spieler des Spiels</div>
             <div class="mr-motm-body">
                 {% if motm.club_crest %}
-                    <img class="mr-motm-crest" src="{% static motm.club_crest %}" alt="{{ motm.club_short }}">
+                    <img class="mr-motm-crest" src="{{ motm.club_crest }}" alt="{{ motm.club_short }}">
                 {% else %}
                     <span class="mr-motm-crest-fallback">{{ motm.club_short }}</span>
                 {% endif %}

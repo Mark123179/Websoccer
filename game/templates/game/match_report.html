@@ -55,7 +55,7 @@
             </div>
             {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
             {% if report.home_club_crest %}
-                <img class="hero-crest home" src="{% static report.home_club_crest %}" alt="{{ report.home_club_name }}">
+                <img class="hero-crest home" src="{{ report.home_club_crest }}" alt="{{ report.home_club_name }}">
             {% else %}
                 <span class="hero-crest-fallback">{{ report.home_club_short }}</span>
             {% endif %}
@@ -72,7 +72,7 @@
         <div class="hero-team away">
             {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
             {% if report.away_club_crest %}
-                <img class="hero-crest away" src="{% static report.away_club_crest %}" alt="{{ report.away_club_name }}">
+                <img class="hero-crest away" src="{{ report.away_club_crest }}" alt="{{ report.away_club_name }}">
             {% else %}
                 <span class="hero-crest-fallback">{{ report.away_club_short }}</span>
             {% endif %}
@@ -179,7 +179,7 @@
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
-                                <span class="legend-team">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}{% endif %}</span>
+                                <span class="legend-team">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}{% endif %}</span>
                                 <span style="font-size:11px;font-weight:800;color:var(--muted);">{{ report.home_formation }}</span>
                             </div>
                             <div class="pitch mini">
@@ -193,7 +193,7 @@
                         </div>
                         <div>
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
-                                <span class="legend-team">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}{% endif %}</span>
+                                <span class="legend-team">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}{% endif %}</span>
                                 <span style="font-size:11px;font-weight:800;color:var(--muted);">{{ report.away_formation }}</span>
                             </div>
                             <div class="pitch mini">
@@ -215,7 +215,7 @@
                     <p class="card-title">Angriffszonen</p>
                     {% if rc.home_att_total %}
                     <div class="zone-team">
-                        <div class="zt-head">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_short }}{% endif %}</div>
+                        <div class="zt-head">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_short }}{% endif %}</div>
                         <div class="zone-grid">
                             <div class="zone {% if rc.home_att_max_zone == 'l' %}hi{% endif %}"><div class="p">{{ rc.home_att_l_pct }}%</div><div class="l">Links</div></div>
                             <div class="zone {% if rc.home_att_max_zone == 'c' %}hi{% endif %}"><div class="p">{{ rc.home_att_c_pct }}%</div><div class="l">Zentrum</div></div>
@@ -223,7 +223,7 @@
                         </div>
                     </div>
                     <div class="zone-team away">
-                        <div class="zt-head">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_short }}{% endif %}</div>
+                        <div class="zt-head">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_short }}{% endif %}</div>
                         <div class="zone-grid">
                             <div class="zone {% if rc.away_att_max_zone == 'l' %}hi{% endif %}"><div class="p">{{ rc.away_att_l_pct }}%</div><div class="l">Links</div></div>
                             <div class="zone {% if rc.away_att_max_zone == 'c' %}hi{% endif %}"><div class="p">{{ rc.away_att_c_pct }}%</div><div class="l">Zentrum</div></div>
@@ -283,14 +283,14 @@
     </div>
     <div class="tk-verlauf-body">
       {% if rc.ticker_manager_side == 'home' %}
-        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
-        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
       {% elif rc.ticker_manager_side == 'away' %}
-        {% if report.away_club_crest %}<img class="tk-lane-crest top" src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
-        {% if report.home_club_crest %}<img class="tk-lane-crest bottom" src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest top" src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest bottom" src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
       {% else %}
-        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
-        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
       {% endif %}
       <div class="tk-verlauf-track">
         <div class="tk-baseline"></div>
@@ -324,18 +324,18 @@
           <div class="tk-dline"></div>
           <span class="tk-dinfo">
             {% if rc.ticker_manager_side == 'home' %}
-              {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+              {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
               {{ report.home_club_name }}<span class="tk-own-tag">Dein Verein</span>
               <span class="tk-dvs">vs.</span>
-              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
             {% elif rc.ticker_manager_side == 'away' %}
-              {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+              {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
               {{ report.home_club_name }}<span class="tk-dvs">vs.</span>
-              {{ report.away_club_name }}<span class="tk-own-tag">Dein Verein</span>{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+              {{ report.away_club_name }}<span class="tk-own-tag">Dein Verein</span>{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
             {% else %}
-              {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+              {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
               {{ report.home_club_name }}<span class="tk-dvs">vs.</span>
-              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
             {% endif %}
           </span>
         </div>
@@ -348,9 +348,9 @@
           <span class="tk-dlabel">Halbzeit</span><span class="tk-dmin">{{ evt.minute }}'</span>
           <div class="tk-dline"></div>
           <span class="tk-score-pill">
-            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+            {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
             <b>{{ evt.score_h }}:{{ evt.score_a }}</b>
-            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+            {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
           </span>
         </div>
       </div>
@@ -363,9 +363,9 @@
           <div class="tk-dline"></div>
           <span class="tk-dfaint">Endstand</span>
           <span class="tk-score-pill">
-            {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="{{ report.home_club_short }}">{% endif %}
+            {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
             <b>{{ evt.score_h }}:{{ evt.score_a }}</b>
-            {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="{{ report.away_club_short }}">{% endif %}
+            {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
           </span>
         </div>
       </div>
@@ -380,8 +380,8 @@
           <div class="tk-sweep"></div>
           <div class="tk-goal-head">
             <span class="tk-min">{{ evt.minute }}'</span>
-            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
-            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{% endif %}
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{% endif %}
             <span class="tk-name">{{ evt.scorer_name }}</span>
             <span class="tk-badge tk-b-tor">TOR</span>
             {% if evt.goal_label %}<span class="tk-badge tk-b-extra">{{ evt.goal_label|upper }}</span>{% endif %}
@@ -405,8 +405,8 @@
         <div class="tk-ev-line">
           <span class="tk-min">{{ evt.minute }}'</span>
           <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
-            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
-            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
           </span>
           <p>{% if evt.card_type == 'rot' %}<span class="tk-tag tk-t-rot">ROTE KARTE</span>{% elif evt.card_type == 'gelbrot' %}<span class="tk-tag tk-t-rot">GELB-ROT</span>{% else %}<span class="tk-tag tk-t-gelb">GELBE KARTE</span>{% endif %} &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
         </div>
@@ -422,8 +422,8 @@
         <div class="tk-ev-line">
           <span class="tk-min">{{ evt.minute }}'</span>
           <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
-            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
-            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
           </span>
           <p><span class="tk-tag tk-t-wechsel">WECHSEL</span> &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
         </div>
@@ -439,8 +439,8 @@
         <div class="tk-ev-line">
           <span class="tk-min">{{ evt.minute }}'</span>
           <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
-            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
-            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
           </span>
           <p><span class="tk-tag tk-t-verletzung">VERLETZUNG</span> &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
         </div>
@@ -467,8 +467,8 @@
           <span class="tk-min">{{ evt.minute }}'</span>
           {% if evt.team == 'home' or evt.team == 'away' %}
           <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
-            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
-            {% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
           </span>
           {% endif %}
           <p>{% if evt.type == 'corner_miss' %}<span class="tk-tag tk-t-ecke">ECKE</span> &mdash; {% elif evt.type == 'fk_direct_miss' or evt.type == 'fk_cross_miss' %}<span class="tk-tag tk-t-ecke">FREISTOSS</span> &mdash; {% elif evt.type == 'alu' or evt.type == 'near_miss' %}<span class="tk-tag tk-t-alu">ALU / PFOSTEN</span> &mdash; {% elif evt.type == 'var' %}<span class="tk-tag tk-t-var">VAR</span> &mdash; {% elif evt.type == 'penalty' or evt.type == 'elfmeter_pfiff' %}<span class="tk-tag tk-t-elfmeter">ELFMETER</span> &mdash; {% elif evt.type == 'offside' %}<span class="tk-tag tk-t-abseits">ABSEITS</span> &mdash; {% endif %}{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
@@ -491,7 +491,7 @@
                 <div class="stat-teamhead">
                     <div class="tm">
                         {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
-                        {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+                        {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
                         {{ report.home_club_name }}
                         {% if report.home_club_id %}</a>{% endif %}
                     </div>
@@ -499,7 +499,7 @@
                     <div class="tm away">
                         {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
                         {{ report.away_club_name }}
-                        {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+                        {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
                         {% if report.away_club_id %}</a>{% endif %}
                     </div>
                 </div>
@@ -558,7 +558,7 @@
                 <div class="htt-grid">
                     <div class="htt-team">
                         <div class="htt-head">
-                            <span class="tm">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}</a>{% else %}{% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}{{ report.home_club_name }}{% endif %}</span>
+                            <span class="tm">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_name }}</a>{% else %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_name }}{% endif %}</span>
                         </div>
                         <div class="htt-halves">
                         <div class="htt-half">
@@ -579,7 +579,7 @@
                     </div>
                     <div class="htt-team">
                         <div class="htt-head">
-                            <span class="tm">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}</a>{% else %}{% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}{{ report.away_club_name }}{% endif %}</span>
+                            <span class="tm">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_name }}</a>{% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_name }}{% endif %}</span>
                         </div>
                         <div class="htt-halves">
                         <div class="htt-half">
@@ -650,7 +650,7 @@
                         <div class="lu-head">
                             <div class="tm">
                                 {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
-                                {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+                                {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
                                 <div><b>{{ report.home_club_name }}</b></div>
                                 {% if report.home_club_id %}</a>{% endif %}
                             </div>
@@ -673,7 +673,7 @@
                         <div class="lu-head">
                             <div class="tm">
                                 {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
-                                {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+                                {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
                                 <div><b>{{ report.away_club_name }}</b></div>
                                 {% if report.away_club_id %}</a>{% endif %}
                             </div>
@@ -745,7 +745,7 @@
                 {% with motm=report.man_of_the_match %}
                 <div class="motm-card">
                     {% if motm.id %}<a class="crest-link motm-link" href="{% url 'player_detail' motm.id %}">{% endif %}
-                    {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% elif motm.club_crest %}<img class="por" src="{% static motm.club_crest %}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
+                    {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% elif motm.club_crest %}<img class="por" src="{{ motm.club_crest }}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
                     {% if motm.id %}</a>{% endif %}
                     <div class="badge">&#9733; Spieler des Spiels</div>
                     <h3>{% if motm.id %}<a class="plink" href="{% url 'player_detail' motm.id %}">{{ motm.name }}</a>{% else %}{{ motm.name }}{% endif %}</h3>
@@ -768,7 +768,7 @@
                 <section class="card">
                     <div class="pl-team-head">
                         {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
-                        {% if report.home_club_crest %}<img src="{% static report.home_club_crest %}" alt="">{% endif %}
+                        {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
                         <b>{{ report.home_club_name }}</b>
                         {% if report.home_club_id %}</a>{% endif %}
                     </div>
@@ -815,7 +815,7 @@
                 <section class="card">
                     <div class="pl-team-head">
                         {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
-                        {% if report.away_club_crest %}<img src="{% static report.away_club_crest %}" alt="">{% endif %}
+                        {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
                         <b>{{ report.away_club_name }}</b>
                         {% if report.away_club_id %}</a>{% endif %}
                     </div>

@@ -86,9 +86,8 @@
       <!-- ① Wappen + Vereinsinfo -->
       <div class="jo-card-identity">
         <a href="{% url 'club_detail' row.club.pk %}" class="jo-crest-link">
-          {% if row.club.fm_inside_id %}
-          <img src="{% static 'game/images/crests/' %}{{ row.club.fm_inside_id }}.png"
-               alt="{{ row.club.name }}" class="jo-crest"
+          {% if row.club.crest_static_path %}
+          <img src="{{ row.club.crest_static_path }}" alt="{{ row.club.name }}" class="jo-crest"
                onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div class=\'jo-crest jo-crest--missing\'></div>');">
           {% else %}
           <div class="jo-crest jo-crest--missing"></div>

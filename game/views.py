@@ -6382,8 +6382,7 @@ def manager_profile(request):
                 _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
             _is_active = _st.ended_at is None
             _crest = _st.club.crest_static_path if _st.club else club_crest
-            from django.templatetags.static import static as _s
-            _crest_url = _s(_crest) if _crest else ''
+            _crest_url = _crest or ''
             photo_map_markers.append({
                 'x_pct': _xp, 'y_pct': _yp,
                 'club': _st.custom_club_name or (_st.club.name if _st.club else ''),
@@ -6402,12 +6401,11 @@ def manager_profile(request):
             _lat = club_profile.map_lat if club_profile and club_profile.map_lat else 48.22
             _lng = club_profile.map_lng if club_profile and club_profile.map_lng else 11.55
             _xp, _yp = lat_lng_to_map_pct(_lat, _lng)
-        from django.templatetags.static import static as _s
         photo_map_markers.append({
             'x_pct': _xp, 'y_pct': _yp,
             'club': club_name,
             'city': club_profile.city_name if club_profile and club_profile.city_name else 'München',
-            'crest_url': _s(club_crest),
+            'crest_url': club_crest or '',
             'is_active': True,
         })
 
@@ -6479,7 +6477,6 @@ def manager_profile(request):
                 'losses': l2, 'loss_pct': _pct2(l2), 'goals': gf, 'goals_against': ga, 'points': pts2,
                 'ppg': _div2(pts2), 'gpg': _div2(gf), 'gapg': _div2(ga), 'win_streak': mw2, 'loss_streak': ml2}
 
-    from django.templatetags.static import static as _sf2
     from django.db.models import Sum as _Sum2
     from datetime import date as _dc2
 
@@ -6512,7 +6509,7 @@ def manager_profile(request):
         _switcher.append({
             'key': str(_ss_st.id),
             'name': _st_nm,
-            'crest_url': _sf2(_st_cr) if _st_cr else '',
+            'crest_url': _st_cr or '',
             'club_url': f'/clubs/{_cid}/' if _cid else '',
             'period': _ss_st.period_label,
             'is_active': _is_act2,
@@ -6529,7 +6526,7 @@ def manager_profile(request):
         _switcher.append({
             'key': 'current',
             'name': club_name,
-            'crest_url': _sf2(club_crest) if club_crest else '',
+            'crest_url': club_crest or '',
             'club_url': club_url,
             'period': _current_period_str,
             'is_active': True,
@@ -6557,23 +6554,23 @@ def manager_profile(request):
             _tl_js.append({'date_iso': _to_iso(_tl_st.started_at), 'date': _fmt_de(_tl_st.started_at),
                            'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
                            'title': 'Aktuelles Amt' if _tl_act else 'Amtsantritt', 'body': _tl_body,
-                           'crest_url': _sf2(_tl_cr) if _tl_cr else '', 'is_active': _tl_act,
+                           'crest_url': _tl_cr or '', 'is_active': _tl_act,
                            'station_key': str(_tl_st.id) if _tl_st.id else ''})
     else:
         _tl_js.append({'date_iso': '', 'date': '–', 'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
                        'title': 'Willkommen', 'body': f'Übernahme von {club_name}',
-                       'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': True, 'station_key': ''})
+                       'crest_url': club_crest or '', 'is_active': True, 'station_key': ''})
     for _tl_tr in db_trophies:
         _tl_js.append({'date_iso': '', 'date': '–', 'type': 'titel', 'cat': 'TITEL', 'tone': 'gold',
                        'title': _tl_tr.competition_name, 'body': f'{_tl_tr.count}× gewonnen',
-                       'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': False, 'station_key': ''})
+                       'crest_url': club_crest or '', 'is_active': False, 'station_key': ''})
     if club:
         for _tl_t in (PlayerTransferHistory.objects.filter(to_club=club).exclude(fee_eur=None).exclude(fee_eur=0).select_related('player').order_by('-fee_eur')[:2]):
             _fee_tl = f'€{int(_tl_t.fee_eur):,}'.replace(',', '.')
             _tl_js.append({'date_iso': _to_iso(_tl_t.transfer_date), 'date': _fmt_de(_tl_t.transfer_date),
                            'type': 'transfers', 'cat': 'TRANSFER', 'tone': 'cyan',
                            'title': 'Einkauf', 'body': f'{_fee_tl} für {_tl_t.player.full_name}',
-                           'crest_url': _sf2(club_crest) if club_crest else '', 'is_active': False, 'station_key': ''})
+                           'crest_url': club_crest or '', 'is_active': False, 'station_key': ''})
     # Vom Manager eingereichte Timeline-Einträge (nur genehmigte öffentlich)
     from .models import ManagerTimelineEntry as _MTE
     _mte_qs = _MTE.objects.filter(
