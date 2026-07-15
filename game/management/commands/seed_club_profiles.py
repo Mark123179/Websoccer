@@ -2,7 +2,7 @@ from datetime import date
 
 from django.core.management.base import BaseCommand
 
-from game.models import Club, ClubNewsItem, ClubPublicProfile, ClubTrophy
+from game.models import Club, ClubPublicProfile, ClubTrophy
 
 
 CLUB_PROFILES = [
@@ -411,22 +411,5 @@ class Command(BaseCommand):
                     },
                 )
             self.stdout.write(f"  Trophäen: {len(entry['trophies'])} für {club.name}")
-
-            for title, published_at, sort_order in entry['news']:
-                thumbnail_static_path = (
-                    f'game/images/crests/{club.fm_inside_id}.png'
-                    if club.fm_inside_id
-                    else ''
-                )
-                ClubNewsItem.objects.update_or_create(
-                    club=club,
-                    title=title,
-                    defaults={
-                        'published_at': published_at,
-                        'thumbnail_static_path': thumbnail_static_path,
-                        'sort_order': sort_order,
-                    },
-                )
-            self.stdout.write(f"  News: {len(entry['news'])} für {club.name}")
 
         self.stdout.write(self.style.SUCCESS('seed_club_profiles abgeschlossen.'))
