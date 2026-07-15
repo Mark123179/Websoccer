@@ -395,7 +395,12 @@ def import_candidate(candidate, user=None, recalculate=True, update_only=False):
 
             player.height_cm = nd.get('height_cm')
             player.strong_foot = nd.get('strong_foot') or ''
-            player.nationalities = nd.get('nationalities') or ''
+            # Nationalität: nur überschreiben wenn die CSV einen Wert liefert
+            # ODER der Spieler neu angelegt wird. Leere CSV-Spalten dürfen
+            # einen bereits via Backfill gesetzten Wert nicht löschen.
+            nat_val = nd.get('nationalities') or ''
+            if nat_val or is_new:
+                player.nationalities = nat_val
             if nd.get('nt_nationality'):
                 player.nt_nationality = nd.get('nt_nationality')
 
