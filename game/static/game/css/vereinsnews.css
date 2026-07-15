@@ -102,6 +102,23 @@ a:hover { color: #7ef0ff; }
 .card-kat { font-size: 9px; font-weight: 900; letter-spacing: .8px; text-transform: uppercase; }
 .card-title { font-size: 13.5px; font-weight: 800; line-height: 1.25; text-wrap: balance; }
 
+/* ── Breite Bildschirme: Karten füllen die Reihe fluid (Baseline 1440×900 unverändert) ── */
+@media (min-width: 1512px) {
+  .vn-row .news-card { flex: 0 0 calc((100% - 5 * 8px) / 6); }
+}
+@media (min-width: 1756px) {
+  .vn-row .news-card { flex: 0 0 calc((100% - 6 * 8px) / 7); }
+}
+@media (min-width: 2000px) {
+  .vn-row .news-card { flex: 0 0 calc((100% - 7 * 8px) / 8); }
+}
+@media (min-width: 2244px) {
+  .vn-row .news-card { flex: 0 0 calc((100% - 8 * 8px) / 9); }
+}
+@media (min-width: 2488px) {
+  .vn-row .news-card { flex: 0 0 calc((100% - 9 * 8px) / 10); }
+}
+
 /* Top 10 */
 .vn-row.top10 { gap: 2px; align-items: flex-end; }
 .top-item { display: flex; align-items: flex-end; flex: 0 0 auto; cursor: pointer; transition: transform .18s ease; }
