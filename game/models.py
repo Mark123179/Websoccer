@@ -3776,6 +3776,11 @@ class ManagerProfile(models.Model):
     level = models.PositiveIntegerField(default=1)
     highscore = models.CharField(max_length=50, blank=True, default='–')
     updated_at = models.DateTimeField(auto_now=True)
+    last_seen = models.DateTimeField(
+        null=True, blank=True,
+        verbose_name='Zuletzt online',
+        help_text='Wird bei jedem Seitenaufruf aktualisiert (max. alle 2 Minuten).',
+    )
     favourite_club = models.ForeignKey(
         'Club',
         null=True,

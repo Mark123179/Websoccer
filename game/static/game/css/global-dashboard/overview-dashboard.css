@@ -979,6 +979,22 @@ body.overview-home-page {
     width: 13px;
 }
 
+.overview-manager-empty {
+    color: rgba(244, 251, 255, 0.3);
+    font-size: 12px;
+    font-style: italic;
+    margin: 8px 0 0;
+    padding: 0;
+}
+
+.overview-manager-today-note {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    color: rgba(244, 251, 255, 0.35);
+    font-size: 11px;
+    margin: 8px 0 0;
+    padding: 8px 0 0;
+}
+
 /* ============================================================
    CHAT (ROW 2 LEFT)
    ============================================================ */

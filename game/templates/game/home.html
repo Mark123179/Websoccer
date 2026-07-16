@@ -237,7 +237,7 @@
             <h2 class="card-title">Aktive Manager</h2>
             <div class="overview-manager-online-bar">
                 <span class="overview-manager-online-dot" aria-hidden="true"></span>
-                <span>{{ active_managers|length }} heute online</span>
+                <span>{{ active_managers|length }} jetzt online</span>
             </div>
             <div class="overview-manager-list">
                 {% for manager in active_managers %}
@@ -258,8 +258,11 @@
                             </svg>
                         </a>
                     </div>
+                {% empty %}
+                    <p class="overview-manager-empty">Gerade niemand online.</p>
                 {% endfor %}
             </div>
+            <p class="overview-manager-today-note">{{ today_online_count }} von {{ total_manager_count }} Manager heute aktiv</p>
         </aside>
 
         <div id="ergebnis-bande" class="overview-ergebnis-bande"></div>
