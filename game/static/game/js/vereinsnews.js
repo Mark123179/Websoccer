@@ -184,7 +184,7 @@ function blocksHTML(blocks){
       return'<div class="blk-player">'+
         (f.portrait!==false&&p.img?'<img src="'+p.img+'" onerror="this.onerror=null;this.src=\''+(window.wsDefaultPlayerUrl||'/static/assets/players/default_player.jpg')+'\'" alt="">':'')+
         '<div style="display:flex;flex-direction:column;gap:8px;min-width:0">'+
-        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span>'+(p.age?'<span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.35);border:1px solid rgba(244,251,255,.15);border-radius:4px;padding:1px 5px">'+p.age+' J.</span>':'')+(p.meta?'<span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta)+'</span>':'')+'</div>'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span>'+(p.age?'<span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.35);border:1px solid rgba(244,251,255,.15);border-radius:4px;padding:1px 5px">'+p.age+' J.</span>':'')+(p.flag?'<img src="'+p.flag+'" alt="'+esc(p.meta||'')+'" title="'+esc(p.meta||'')+'" style="height:13px;border-radius:2px;vertical-align:middle">':p.meta?'<span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta)+'</span>':'')+'</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap">'+stats.map(function(s){return'<span class="stat-chip"><em>'+s[0]+'</em><b style="color:'+s[2]+'">'+s[1]+'</b></span>';}).join('')+'</div>'+
         '</div></div>';
     }
@@ -279,9 +279,10 @@ function blockEdHTML(b,i){
       '<input class="inp small" placeholder="Wer sagt das?" value="'+esc(b.autor)+'" oninput="App.updB('+i+',\'autor\',this.value)">';
   }else if(b.k==='player'){
     var pkeys=Object.keys(P);
-    h+='<div class="chips">'+pkeys.map(function(pid){
-      return'<button class="chip'+(b.pid===pid?' on-cyan':'')+'" onclick="App.updB('+i+',\'pid\',\''+pid+'\')">'+esc(P[pid].n)+'</button>';
-    }).join('')+'</div><span class="micro-label">Infos aus dem Spielerprofil</span><div class="chips">'+PTOG.map(function(t){
+    h+='<select class="inp" style="margin-bottom:6px" onchange="App.updB('+i+',\'pid\',this.value)">'+
+      pkeys.map(function(pid){return'<option value="'+pid+'"'+(b.pid===pid?' selected':'')+'>'+esc(P[pid].pos?P[pid].n+' ('+P[pid].pos+')':P[pid].n)+'</option>';}).join('')+
+    '</select>'+
+    '<span class="micro-label">Infos aus dem Spielerprofil</span><div class="chips">'+PTOG.map(function(t){
       return'<button class="chip pill-t'+(b.f[t[0]]?' on-green':'')+'" onclick="App.togB('+i+',\''+t[0]+'\')">'+t[1]+'</button>';
     }).join('')+'</div>';
   }else if(b.k==='match'){

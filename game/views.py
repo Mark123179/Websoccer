@@ -5336,14 +5336,14 @@ def club_news(request, club_id):
         if _lss:
             season_num = _lss.season
 
-    top_players = (
+    squad_players = (
         Player.objects
         .filter(club=club)
-        .select_related('strength_profile')
-        .order_by('-strength_profile__base_strength', '-market_value')[:8]
+        .select_related('strength_profile', 'rl_form_profile')
+        .order_by('-strength_profile__base_strength', '-market_value')
     )
     players_dict = {}
-    for p in top_players:
+    for p in squad_players:
         mv = p.market_value or 0
         if mv >= 1_000_000:
             mw_str = '{:.1f}M €'.format(mv / 1_000_000).replace('.', ',')
@@ -5352,16 +5352,29 @@ def club_news(request, club_id):
         else:
             mw_str = ''
         full_name = f'{p.first_name} {p.last_name}'.strip() if p.last_name else p.first_name or ''
+        nat = p.nt_nationality or ''
+        flag_url = ''
+        if nat:
+            _fa = COUNTRY_FLAG_ASSETS.get(nat) or {}
+            _code = _fa.get('code', '')
+            if _code:
+                flag_url = f'https://flagcdn.com/{_code.lower()}.svg'
+        fit_str = None
+        try:
+            fit_str = f'{round(float(p.rl_form_profile.rl_form_fit) * 100)}%'
+        except Exception:
+            pass
         players_dict[str(p.pk)] = {
             'n':    full_name,
             'pos':  p.primary_position or p.position or '',
             'img':  p.portrait_url,
-            'meta': p.nt_nationality or '',
+            'meta': nat,
+            'flag': flag_url,
             'age':  p.age if p.age else None,
             'mw':   mw_str,
             'tore': None,
             'note': None,
-            'fit':  None,
+            'fit':  fit_str,
         }
 
     # Saisonstats für Spielerkarten (Tore + Ø-Note)
