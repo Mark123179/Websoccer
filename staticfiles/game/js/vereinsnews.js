@@ -22,11 +22,34 @@ var KATS = [
   {n:'Vereinsstatement',c:'#e50914'},{n:'Pressemitteilung',c:'#9fb6c4'},{n:'Jugend/Akademie',c:'#7ef0c2'},
   {n:'Fans',c:'#ff5570'},{n:'Finanzen',c:'#ff9f1c'},{n:'Rekorde',c:'#f6c945'},{n:'Sonstiges',c:'#8fa8b8'}
 ];
-var OUTLETS = [
-  {n:'Vereinsredaktion',d:'#e50914',m:'VR'},{n:'Kicker',d:'#d31419',m:'KIC'},{n:'Sky Sport',d:'#0072c9',m:'SKY'},
-  {n:'Spox',d:'#ff6600',m:'SPX'},{n:'Transfermarkt',d:'#00a35a',m:'TM'},{n:'90min',d:'#14d95c',m:'90M'},
-  {n:'The Athletic',d:'#e8e2d6',m:'TA'},{n:'Magenta Sport',d:'#e20074',m:'MS'},{n:'OneFootball',d:'#8fd0ff',m:'OF'},{n:'90PLUS',d:'#ffd166',m:'90+'}
+var MEDIA_BASE='https://playwebsoccer.de/assets/media/';
+var OUTLETS_DEFAULT=[
+  {n:'Vereinsredaktion',slug:null,     d:'#e50914'},
+  {n:'Kicker',          slug:'kicker',          d:'#d31419'},
+  {n:'Sky Sports',      slug:'skysports',        d:'#0072c9'},
+  {n:'90min',           slug:'90min',            d:'#14d95c'},
+  {n:'OneFootball',     slug:'onefootball',      d:'#8fd0ff'},
+  {n:'Eurosport',       slug:'eurosport',        d:'#ff6600'},
+  {n:'BBC Sport',       slug:'bbcsport',         d:'#e8e2d6'},
+  {n:'beIN Sports',     slug:'beinsports',       d:'#9f2fff'},
+  {n:'Fox Sports',      slug:'foxsports',        d:'#c41230'},
+  {n:'Goal.com',        slug:'goal',             d:'#22e6ff'},
+  {n:"L'Équipe",        slug:'lequipe',          d:'#1e90ff'},
+  {n:'Marca',           slug:'marca',            d:'#0075c2'},
+  {n:'SportBild',       slug:'sportbild',        d:'#e50914'},
+  {n:'talkSPORT',       slug:'talksport',        d:'#1a73e8'},
+  {n:'The Guardian',    slug:'theguardian',      d:'#00789c'},
+  {n:'Planet Football', slug:'planetfootball',   d:'#ffd166'},
+  {n:'World Soccer',    slug:'worldsoccer',      d:'#22c55e'},
+  {n:'Eleven Sports',   slug:'eleven',           d:'#f97316'},
+  {n:'442',             slug:'442ch',            d:'#e50914'},
+  {n:'Sport.fr',        slug:'sportfr',          d:'#0f5bb5'},
+  {n:'Sport TV',        slug:'sporttv',          d:'#c00'},
+  {n:'CNN Sport',       slug:'cnn',              d:'#e50914'},
+  {n:'Toronto Sun',     slug:'torontosun',       d:'#e50914'},
+  {n:'CNN Indonesia',   slug:'cnnindonesia',     d:'#cc0000'}
 ];
+var OUTLETS=(_d.outlets&&_d.outlets.length)?_d.outlets:OUTLETS_DEFAULT;
 
 function T(t){return{k:'text',text:t};}
 function H(t){return{k:'head',text:t};}
@@ -64,10 +87,15 @@ function cardArt(a){
   if(cd&&cd.motiv==='spieler'){var p=P[cd.pid]||P[Object.keys(P)[0]];return{custom:null,img:p?p.img:null,imgH:124};}
   return{custom:null,img:a.img||null,imgH:a.imgH||120};
 }
+function mediaLogoURL(slug){return slug?MEDIA_BASE+slug+'_media.png':'';}
 function markChip(name,big){
   var o=outletOf(name);
+  if(o.slug){
+    var h=big?'18px':'14px';
+    return'<img class="outlet-logo-xs" src="'+mediaLogoURL(o.slug)+'" alt="'+esc(name)+'" style="height:'+h+';vertical-align:middle;margin-right:3px">';
+  }
   var s=big?'min-width:17px;height:16px;font-size:8px;padding:0 4px':'';
-  return'<i class="mark" style="background:'+o.d+';color:'+markTc(o.d)+';'+s+'">'+o.m+'</i>';
+  return'<i class="mark" style="background:'+o.d+';color:'+markTc(o.d)+';'+s+'">VR</i>';
 }
 
 /* ── Karten ── */
@@ -156,7 +184,7 @@ function blocksHTML(blocks){
       return'<div class="blk-player">'+
         (f.portrait!==false&&p.img?'<img src="'+p.img+'" onerror="this.onerror=null;this.src=\''+(window.wsDefaultPlayerUrl||'/static/assets/players/default_player.jpg')+'\'" alt="">':'')+
         '<div style="display:flex;flex-direction:column;gap:8px;min-width:0">'+
-        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span>'+(p.age?'<span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.35);border:1px solid rgba(244,251,255,.15);border-radius:4px;padding:1px 5px">'+p.age+' J.</span>':'')+(p.meta?'<span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta)+'</span>':'')+'</div>'+
+        '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span>'+(p.age?'<span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.35);border:1px solid rgba(244,251,255,.15);border-radius:4px;padding:1px 5px">'+p.age+' J.</span>':'')+(p.flag?'<img src="'+p.flag+'" alt="'+esc(p.meta||'')+'" title="'+esc(p.meta||'')+'" class="nat-flag">':p.meta?'<span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta)+'</span>':'')+'</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap">'+stats.map(function(s){return'<span class="stat-chip"><em>'+s[0]+'</em><b style="color:'+s[2]+'">'+s[1]+'</b></span>';}).join('')+'</div>'+
         '</div></div>';
     }
@@ -225,7 +253,7 @@ function articleHTML(a){
     '<div class="art-body">'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
     '<span class="pill" style="border:1px solid '+kc+';color:'+kc+';text-transform:uppercase;letter-spacing:.8px;font-weight:900">'+esc(a.kat)+'</span>'+
-    '<span class="pill" style="border:1px solid rgba(255,255,255,.14);color:rgba(244,251,255,.75)"><i style="width:7px;height:7px;border-radius:999px;background:'+o.d+'"></i>Erschienen bei '+esc(a.outlet)+'</span>'+
+    '<span class="pill" style="border:1px solid rgba(255,255,255,.14);color:rgba(244,251,255,.75)">'+(o.slug?'<img class="outlet-logo-xs" src="'+mediaLogoURL(o.slug)+'" alt="'+esc(a.outlet)+'" style="height:16px">':'<i style="width:7px;height:7px;border-radius:999px;background:'+o.d+'"></i>')+'Erschienen bei '+esc(a.outlet)+'</span>'+
     '</div><h2>'+esc(a.title)+'</h2></div></div>'+
     '<div class="art-content">'+
     '<p class="art-lead">'+esc(a.sub)+'</p>'+
@@ -251,9 +279,10 @@ function blockEdHTML(b,i){
       '<input class="inp small" placeholder="Wer sagt das?" value="'+esc(b.autor)+'" oninput="App.updB('+i+',\'autor\',this.value)">';
   }else if(b.k==='player'){
     var pkeys=Object.keys(P);
-    h+='<div class="chips">'+pkeys.map(function(pid){
-      return'<button class="chip'+(b.pid===pid?' on-cyan':'')+'" onclick="App.updB('+i+',\'pid\',\''+pid+'\')">'+esc(P[pid].n)+'</button>';
-    }).join('')+'</div><span class="micro-label">Infos aus dem Spielerprofil</span><div class="chips">'+PTOG.map(function(t){
+    h+='<select class="inp" style="margin-bottom:6px" onchange="App.updB('+i+',\'pid\',this.value)">'+
+      pkeys.map(function(pid){return'<option value="'+pid+'"'+(b.pid===pid?' selected':'')+'>'+esc(P[pid].pos?P[pid].n+' ('+P[pid].pos+')':P[pid].n)+'</option>';}).join('')+
+    '</select>'+
+    '<span class="micro-label">Infos aus dem Spielerprofil</span><div class="chips">'+PTOG.map(function(t){
       return'<button class="chip pill-t'+(b.f[t[0]]?' on-green':'')+'" onclick="App.togB('+i+',\''+t[0]+'\')">'+t[1]+'</button>';
     }).join('')+'</div>';
   }else if(b.k==='match'){
@@ -293,10 +322,17 @@ function editorHTML(){
     return'<button class="chip" style="'+(on?'background:'+ha(k.c,.14)+';border-color:'+ha(k.c,.55)+';color:'+k.c:'')+'" onclick="App.setEd(\'kat\',\''+k.n+'\')">'+k.n+'</button>';
   }).join('')+'</div></div>';
 
-  h+='<div class="panel"><span class="panel-label">Ausstrahlung über</span><div class="chips">'+OUTLETS.map(function(o){
-    var on=ed.outlet===o.n;
-    return'<button class="chip" style="'+(on?'background:'+ha(o.d,.14)+';border-color:'+ha(o.d,.6)+';color:#f4fbff':'')+'" onclick="App.setEd(\'outlet\',\''+o.n+'\')"><i class="dot" style="background:'+o.d+'"></i>'+o.n+'</button>';
-  }).join('')+'</div><span class="hint">Deine News erscheint als Beitrag der Vereinsredaktion — das gewählte Blatt greift sie auf und zitiert den Verein.</span></div>';
+  var selOut=outletOf(ed.outlet);
+  h+='<div class="panel"><span class="panel-label">Ausstrahlung über</span>'+
+    '<div class="outlet-picker">'+
+    (selOut.slug?'<img class="outlet-logo-prev" src="'+mediaLogoURL(selOut.slug)+'" alt="'+esc(selOut.n)+'">':
+      '<span class="outlet-vr-badge">'+esc(selOut.n)+'</span>')+
+    '<select class="inp outlet-sel" onchange="App.setEd(\'outlet\',this.value)">'+
+    OUTLETS.map(function(o){
+      return'<option value="'+esc(o.n)+'"'+(ed.outlet===o.n?' selected':'')+'>'+esc(o.n)+'</option>';
+    }).join('')+
+    '</select></div>'+
+    '<span class="hint">Deine News erscheint als Beitrag der Vereinsredaktion — das gewählte Blatt greift sie auf und zitiert den Verein.</span></div>';
 
   h+='<div class="panel" style="border-color:rgba(44,231,255,.28)"><div class="blk-head"><span class="panel-label cyan">News-Karte gestalten</span><span style="flex:1"></span>'+
     '<button class="chip on-cyan" onclick="App.setPrev(\'karte\')">Vorschau</button></div>'+
@@ -352,7 +388,7 @@ function previewHTML(){
   return'<div class="prev-body">'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<span class="pill" style="border:1px solid '+kc+';color:'+kc+';font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;background:transparent">'+esc(ed.kat)+'</span>'+
-    '<span class="pill" style="border:1px solid rgba(255,255,255,.14);color:rgba(244,251,255,.7);font-size:10px;background:transparent"><i style="width:7px;height:7px;border-radius:999px;background:'+o.d+'"></i>'+esc(ed.outlet)+'</span></div>'+
+    '<span class="pill" style="border:1px solid rgba(255,255,255,.14);color:rgba(244,251,255,.7);font-size:10px;background:transparent">'+(o.slug?'<img class="outlet-logo-xs" src="'+mediaLogoURL(o.slug)+'" alt="'+esc(ed.outlet)+'" style="height:14px">':'<i style="width:7px;height:7px;border-radius:999px;background:'+o.d+'"></i>')+esc(ed.outlet)+'</span></div>'+
     '<h2>'+esc(ed.titel)+'</h2><p class="prev-sub">'+esc(ed.sub)+'</p><div class="prev-sep"></div>'+
     blocksHTML(ed.blocks)+'</div>';
 }

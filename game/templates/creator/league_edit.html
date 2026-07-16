@@ -65,9 +65,9 @@
             </div>
             <div class="creator-field" style="grid-column:1/-1;">
               <label class="creator-label">Logo-Pfad</label>
-              <input class="creator-input" name="logo_static_path" value="{{ league.logo_static_path }}"
-                     placeholder="z.B. competitions/42_comp.png">
-              <span class="creator-hint">Format: <code>competitions/{id}_comp.png</code> — wird automatisch über den Upload-Button gesetzt.</span>
+              <input class="creator-input" value="{{ league.logo_static_path|default:'' }}" disabled
+                     placeholder="Wird automatisch beim Logo-Hochladen gesetzt">
+              <span class="creator-hint">Format: <code>competitions/{id}_comp.png</code> — wird automatisch beim Hochladen gesetzt, nicht manuell bearbeiten.</span>
             </div>
             <div class="creator-field">
               <label class="creator-label">Koeffizient-Quelle</label>

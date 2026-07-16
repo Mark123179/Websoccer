@@ -2210,7 +2210,7 @@ def creator_league_save_stammdaten(request, league_id):
     league = get_object_or_404(League, id=league_id)
     league.name = request.POST.get('name', league.name).strip() or league.name
     league.country = request.POST.get('country', league.country).strip()
-    league.logo_static_path = request.POST.get('logo_static_path', '').strip()
+    # logo_static_path wird ausschließlich über den Upload-Endpunkt gesetzt — nie aus dem Stammdaten-Formular überschreiben.
     league.coefficient_source = request.POST.get('coefficient_source', '').strip()
     try:
         league.strength_coefficient = Decimal(request.POST.get('strength_coefficient', '1.00'))
