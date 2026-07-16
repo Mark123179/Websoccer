@@ -829,9 +829,9 @@ def creator_upload_league_logo(request, league_id):
     if not f:
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')
-    dest = _asset_dest('competitions', f'{league_id}.png')
+    dest = _asset_dest('competitions', f'{league_id}_comp.png')
     _save_as_png(f, dest)
-    league.logo_static_path = f'competitions/{league_id}.png'
+    league.logo_static_path = f'competitions/{league_id}_comp.png'
     league.save(update_fields=['logo_static_path'])
     messages.success(request, 'Liga-Logo gespeichert.')
     return redirect(f'/creator/leagues/{league_id}/?tab=stammdaten')

@@ -84,7 +84,7 @@ def trophy_url(trophy_id):
     if not trophy_id:
         return ''
     clean_id = str(trophy_id).removesuffix('.png')
-    return asset_url('trophies', f'{clean_id}.png')
+    return f'https://playwebsoccer.de/assets/trophies/{clean_id}.png'
 
 
 def flag_url(code):
@@ -96,7 +96,8 @@ def flag_url(code):
 def competition_url(competition_id):
     if not competition_id:
         return ''
-    return asset_url('competitions', f'{competition_id}.png')
+    clean_id = str(competition_id).removesuffix('_comp.png').removesuffix('.png')
+    return f'https://playwebsoccer.de/assets/competitions/{clean_id}_comp.png'
 
 
 def avatar_url(name):
