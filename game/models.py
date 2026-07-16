@@ -5580,3 +5580,33 @@ class FacilityConstruction(models.Model):
             f'{self.club} – {self.facility} → Stufe {self.target_level} '
             f'({self.status})'
         )
+
+
+class MediaOutlet(models.Model):
+    """Medienpartner für Vereinsnews (Logo unter ASSETS_ROOT/media/{slug}_media.png)."""
+
+    name         = models.CharField(max_length=80, unique=True)
+    slug         = models.SlugField(max_length=60, unique=True,
+                                    help_text='Dateiname ohne _media.png, z.B. kicker')
+    accent_color = models.CharField(max_length=7, default='#22e6ff',
+                                    help_text='Hex-Akzentfarbe für Fallback-Badge')
+    has_logo     = models.BooleanField(default=False,
+                                       help_text='True wenn PNG unter ASSETS_ROOT/media/ vorhanden')
+    sort_order   = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+
+    def __str__(self):
+        return self.name
+
+    def logo_url(self):
+        from .asset_urls import assets_base_url
+        return f'{assets_base_url()}media/{self.slug}_media.png'
+
+    def to_vn_dict(self):
+        return {
+            'n':    self.name,
+            'slug': self.slug if self.has_logo else None,
+            'd':    self.accent_color,
+        }

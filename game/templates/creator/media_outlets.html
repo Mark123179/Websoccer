@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator – Medien-Logos{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Medien-Logos</h1>
+    </div>
+    <div class="cm-header-right">
+      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine &amp; Ligen</a>
+      <a class="cm-nav-pill" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
+      <a class="cm-nav-pill" href="{% url 'creator_season_end' %}">Saison</a>
+      <a class="cm-nav-pill" href="{% url 'creator_freie_vereine' %}">System</a>
+      <a class="cm-nav-pill active" href="{% url 'creator_media_outlets' %}">Medien</a>
+      <a class="cm-nav-pill" href="{% url 'creator_simulation_diagnostics' %}">Simulation-Diagnose</a>
+      <a class="cm-nav-pill" href="{% url 'creator_system_diagnostics' %}">Systemanalyse</a>
+      <a class="cm-nav-pill" href="{% url 'creator_timeline_overview' %}">Anträge</a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div style="margin-bottom:16px">
+    {% for m in messages %}
+    <div style="padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:6px;
+      background:{% if m.tags == 'error' %}rgba(229,9,20,.18){% else %}rgba(48,242,156,.14){% endif %};
+      border:1px solid {% if m.tags == 'error' %}rgba(229,9,20,.4){% else %}rgba(48,242,156,.35){% endif %};
+      color:{% if m.tags == 'error' %}#ff6b6b{% else %}#30f29c{% endif %}">
+      {{ m }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start">
+
+    <!-- ── Bestehende Outlets ─────────────────────────────────────── -->
+    <div>
+      <h2 style="font-size:13px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
+                 color:rgba(244,251,255,.45);margin:0 0 14px">
+        {{ outlets.count }} Medien erfasst
+      </h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+        {% for o in outlets %}
+        <div style="background:rgba(3,14,24,.7);border:1px solid rgba(44,231,255,.12);
+                    border-radius:10px;padding:14px 12px;display:flex;flex-direction:column;
+                    align-items:center;gap:10px;position:relative">
+          {% if o.has_logo %}
+          <img src="{{ media_base }}{{ o.slug }}_media.png"
+               alt="{{ o.name }}"
+               style="height:36px;width:auto;max-width:130px;object-fit:contain;
+                      filter:brightness(1.1) contrast(1.05)"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <span style="display:none;align-items:center;justify-content:center;
+                       width:40px;height:40px;border-radius:6px;font-size:11px;font-weight:900;
+                       background:{{ o.accent_color }}22;border:1px solid {{ o.accent_color }}55;
+                       color:{{ o.accent_color }}">IMG</span>
+          {% else %}
+          <span style="display:flex;align-items:center;justify-content:center;
+                       width:40px;height:40px;border-radius:6px;font-size:10px;font-weight:900;
+                       background:{{ o.accent_color }}22;border:1px solid {{ o.accent_color }}55;
+                       color:{{ o.accent_color }}">VR</span>
+          {% endif %}
+          <span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.85);
+                       text-align:center;line-height:1.2">{{ o.name }}</span>
+          <code style="font-size:9px;color:rgba(244,251,255,.3);letter-spacing:.3px">{{ o.slug }}</code>
+          <div style="display:flex;gap:6px;margin-top:2px">
+            <button onclick="fillForm('{{ o.name|escapejs }}','{{ o.slug }}','{{ o.accent_color }}')"
+                    style="font-size:10px;font-weight:800;padding:4px 8px;border-radius:5px;cursor:pointer;
+                           background:rgba(44,231,255,.1);border:1px solid rgba(44,231,255,.25);
+                           color:rgba(44,231,255,.8)">Bearbeiten</button>
+            <form method="post" action="{% url 'creator_media_outlet_delete' o.id %}"
+                  onsubmit="return confirm('{{ o.name|escapejs }} wirklich löschen?')" style="margin:0">
+              {% csrf_token %}
+              <button type="submit"
+                      style="font-size:10px;font-weight:800;padding:4px 8px;border-radius:5px;cursor:pointer;
+                             background:rgba(229,9,20,.1);border:1px solid rgba(229,9,20,.3);
+                             color:rgba(229,9,20,.8)">✕</button>
+            </form>
+          </div>
+        </div>
+        {% empty %}
+        <p style="color:rgba(244,251,255,.35);font-size:13px">Noch keine Medien erfasst.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── Upload-Formular ───────────────────────────────────────── -->
+    <div style="position:sticky;top:20px">
+      <div style="background:rgba(3,14,24,.8);border:1px solid rgba(44,231,255,.2);
+                  border-radius:12px;padding:22px 20px">
+        <h3 style="font-size:12px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
+                   color:var(--cyan,#22e6ff);margin:0 0 18px">Neues Medium / Logo ersetzen</h3>
+        <form method="post" enctype="multipart/form-data" id="outletForm">
+          {% csrf_token %}
+          <div style="display:flex;flex-direction:column;gap:12px">
+
+            <div>
+              <label style="font-size:11px;font-weight:800;color:rgba(244,251,255,.5);
+                            letter-spacing:.5px;display:block;margin-bottom:5px">NAME</label>
+              <input id="f-name" name="name" type="text" placeholder="z.B. Kicker"
+                     oninput="autoSlug(this.value)"
+                     style="width:100%;box-sizing:border-box;background:rgba(3,12,20,.7);
+                            border:1px solid rgba(44,231,255,.22);border-radius:7px;
+                            color:#f4fbff;font:700 13px Inter,sans-serif;padding:9px 12px">
+            </div>
+
+            <div>
+              <label style="font-size:11px;font-weight:800;color:rgba(244,251,255,.5);
+                            letter-spacing:.5px;display:block;margin-bottom:5px">SLUG
+                <span style="font-weight:600;color:rgba(244,251,255,.3)">(Dateiname ohne _media.png)</span>
+              </label>
+              <input id="f-slug" name="slug" type="text" placeholder="z.B. kicker"
+                     style="width:100%;box-sizing:border-box;background:rgba(3,12,20,.7);
+                            border:1px solid rgba(44,231,255,.22);border-radius:7px;
+                            color:#f4fbff;font:700 13px Inter,sans-serif;padding:9px 12px">
+            </div>
+
+            <div>
+              <label style="font-size:11px;font-weight:800;color:rgba(244,251,255,.5);
+                            letter-spacing:.5px;display:block;margin-bottom:5px">AKZENTFARBE (Fallback)</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="f-color" name="color" type="color" value="#22e6ff"
+                       style="width:44px;height:36px;border-radius:6px;border:none;
+                              background:transparent;cursor:pointer;padding:2px">
+                <input id="f-color-hex" type="text" value="#22e6ff" maxlength="7"
+                       oninput="document.getElementById('f-color').value=this.value"
+                       style="width:80px;background:rgba(3,12,20,.7);border:1px solid rgba(44,231,255,.22);
+                              border-radius:7px;color:#f4fbff;font:700 13px monospace;padding:8px 10px">
+                <script>
+                  document.getElementById('f-color').addEventListener('input',function(){
+                    document.getElementById('f-color-hex').value=this.value;
+                  });
+                </script>
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size:11px;font-weight:800;color:rgba(244,251,255,.5);
+                            letter-spacing:.5px;display:block;margin-bottom:5px">LOGO (PNG, transparent)</label>
+              <div id="dropzone"
+                   onclick="document.getElementById('f-logo').click()"
+                   ondragover="event.preventDefault();this.style.borderColor='#22e6ff'"
+                   ondragleave="this.style.borderColor='rgba(44,231,255,.22)'"
+                   ondrop="handleDrop(event)"
+                   style="border:2px dashed rgba(44,231,255,.22);border-radius:8px;
+                          padding:22px;text-align:center;cursor:pointer;
+                          color:rgba(244,251,255,.35);font-size:12px;font-weight:700;
+                          transition:border-color .15s">
+                <div id="dropzone-label">PNG hierher ziehen oder klicken</div>
+                <img id="dropzone-preview" src="" alt="" style="display:none;max-height:48px;
+                     width:auto;max-width:100%;object-fit:contain;margin-top:8px">
+              </div>
+              <input id="f-logo" name="logo" type="file" accept="image/png,image/webp"
+                     style="display:none" onchange="previewFile(this)">
+            </div>
+
+            <button type="submit"
+                    style="width:100%;padding:11px;border-radius:8px;cursor:pointer;font-size:13px;
+                           font-weight:900;background:#e50914;border:none;color:#fff;
+                           box-shadow:0 0 20px rgba(229,9,20,.35);margin-top:4px">
+              Speichern &amp; Logo hochladen
+            </button>
+          </div>
+        </form>
+
+        <p style="font-size:10px;color:rgba(244,251,255,.3);margin:14px 0 0;line-height:1.5">
+          Das Logo wird als <code>{{ media_base }}{slug}_media.png</code> gespeichert
+          und erscheint sofort in allen Vereinsnews.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+function autoSlug(val){
+  var s=document.getElementById('f-slug');
+  if(!s._manual){
+    s.value=val.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  }
+}
+document.getElementById('f-slug').addEventListener('input',function(){this._manual=!!this.value;});
+
+function fillForm(name,slug,color){
+  document.getElementById('f-name').value=name;
+  var s=document.getElementById('f-slug');s.value=slug;s._manual=true;
+  document.getElementById('f-color').value=color;
+  document.getElementById('f-color-hex').value=color;
+  document.getElementById('outletForm').scrollIntoView({behavior:'smooth'});
+}
+
+function previewFile(input){
+  var f=input.files[0];
+  if(!f)return;
+  document.getElementById('dropzone-label').textContent=f.name;
+  var r=new FileReader();
+  r.onload=function(e){
+    var p=document.getElementById('dropzone-preview');
+    p.src=e.target.result;p.style.display='block';
+  };
+  r.readAsDataURL(f);
+}
+
+function handleDrop(ev){
+  ev.preventDefault();
+  ev.currentTarget.style.borderColor='rgba(44,231,255,.22)';
+  var f=ev.dataTransfer.files[0];
+  if(!f)return;
+  var inp=document.getElementById('f-logo');
+  var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;
+  previewFile(inp);
+}
+</script>
+{% endblock %}

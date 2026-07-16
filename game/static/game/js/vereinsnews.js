@@ -23,7 +23,7 @@ var KATS = [
   {n:'Fans',c:'#ff5570'},{n:'Finanzen',c:'#ff9f1c'},{n:'Rekorde',c:'#f6c945'},{n:'Sonstiges',c:'#8fa8b8'}
 ];
 var MEDIA_BASE='https://playwebsoccer.de/assets/media/';
-var OUTLETS=[
+var OUTLETS_DEFAULT=[
   {n:'Vereinsredaktion',slug:null,     d:'#e50914'},
   {n:'Kicker',          slug:'kicker',          d:'#d31419'},
   {n:'Sky Sports',      slug:'skysports',        d:'#0072c9'},
@@ -49,6 +49,7 @@ var OUTLETS=[
   {n:'Toronto Sun',     slug:'torontosun',       d:'#e50914'},
   {n:'CNN Indonesia',   slug:'cnnindonesia',     d:'#cc0000'}
 ];
+var OUTLETS=(_d.outlets&&_d.outlets.length)?_d.outlets:OUTLETS_DEFAULT;
 
 function T(t){return{k:'text',text:t};}
 function H(t){return{k:'head',text:t};}

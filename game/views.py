@@ -5520,6 +5520,9 @@ def club_news(request, club_id):
         })
     social_items = social_items + _auto_social
 
+    from .models import MediaOutlet as _MediaOutlet
+    _outlets = [o.to_vn_dict() for o in _MediaOutlet.objects.all().order_by('sort_order', 'name')]
+
     vn_data = {
         'season':      season_num,
         'art':         art_items,
@@ -5536,6 +5539,7 @@ def club_news(request, club_id):
         'motm':        _motm_data,
         'league_logo': league_logo,
         'league_name': league_name,
+        'outlets':     _outlets,
     }
 
     import json as _json

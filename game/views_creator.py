@@ -19,6 +19,7 @@ from .models import (
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
     PlayerEditLog, PlayerRLFormProfile, GameSeasonState,
+    MediaOutlet,
 )
 from . import strength_engine as se
 from .strength_service import compute_strength_for_player, compute_rl_form_for_player
@@ -4072,3 +4073,47 @@ def creator_freie_vereine(request):
         'page':         'system',
     }
     return render(request, 'creator/freie_vereine.html', ctx)
+
+
+@staff_member_required
+def creator_media_outlets(request):
+    from .asset_urls import assets_base_url as _abu
+    if request.method == 'POST':
+        name  = request.POST.get('name', '').strip()
+        slug  = request.POST.get('slug', '').strip()
+        color = request.POST.get('color', '#22e6ff').strip()
+        f     = request.FILES.get('logo')
+
+        if not name or not slug:
+            messages.error(request, 'Name und Slug sind Pflichtfelder.')
+        else:
+            saved_logo = False
+            if f:
+                dest = _asset_dest('media', f'{slug}_media.png')
+                _save_as_png(f, dest)
+                saved_logo = True
+            updates = {'name': name, 'accent_color': color}
+            if saved_logo:
+                updates['has_logo'] = True
+            obj, created = MediaOutlet.objects.update_or_create(
+                slug=slug, defaults=updates,
+            )
+            messages.success(request, f'{"Angelegt" if created else "Aktualisiert"}: {name}')
+        return redirect('creator_media_outlets')
+
+    outlets    = MediaOutlet.objects.all()
+    media_base = _abu() + 'media/'
+    return render(request, 'creator/media_outlets.html', {
+        'outlets':    outlets,
+        'media_base': media_base,
+    })
+
+
+@staff_member_required
+@require_POST
+def creator_media_outlet_delete(request, outlet_id):
+    outlet = get_object_or_404(MediaOutlet, id=outlet_id)
+    name   = outlet.name
+    outlet.delete()
+    messages.success(request, f'{name} gelöscht.')
+    return redirect('creator_media_outlets')

@@ -137,6 +137,10 @@ from .views_creator import (
     creator_import_bulk,
     creator_import_confirm,
 )
+from .views_creator import (
+    creator_media_outlets,
+    creator_media_outlet_delete,
+)
 from .views_importer_api import (
     importer_next_job,
     importer_claim_job,
@@ -325,6 +329,8 @@ urlpatterns = [
     path('creator/antraege/', creator_timeline_overview, name='creator_timeline_overview'),
     path('creator/antraege/<int:entry_id>/moderieren/', creator_moderate_timeline, name='creator_moderate_timeline'),
 
+    path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
+    path('creator/medien/<int:outlet_id>/loeschen/', creator_media_outlet_delete, name='creator_media_outlet_delete'),
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),
     path('creator/system-diagnostics/', creator_system_diagnostics, name='creator_system_diagnostics'),
     path('creator/', creator_index, name='creator_index'),
