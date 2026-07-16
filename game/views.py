@@ -5358,7 +5358,7 @@ def club_news(request, club_id):
             _fa = COUNTRY_FLAG_ASSETS.get(nat) or {}
             _code = _fa.get('code', '')
             if _code:
-                flag_url = f'https://flagcdn.com/{_code.lower()}.svg'
+                flag_url = f'https://flagcdn.com/16x12/{_code.lower()}.png'
         fit_str = None
         try:
             fit_str = f'{round(float(p.rl_form_profile.rl_form_fit) * 100)}%'

@@ -182,6 +182,8 @@ a:hover { color: #7ef0ff; }
 .inp.small { font: 700 12px Inter, sans-serif; padding: 9px 12px; }
 textarea.inp { font: 600 13px/1.6 Inter, sans-serif; resize: vertical; min-height: 76px; }
 textarea.inp.quote { font: italic 700 14px/1.6 Inter, sans-serif; min-height: 60px; }
+select.inp { background-color: #0d1117; color: #f4fbff; cursor: pointer; }
+select.inp option { background-color: #0d1117; color: #f4fbff; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { background: rgba(255,255,255,.04); border: 1px solid rgba(44,231,255,.14); border-radius: 6px; color: rgba(244,251,255,.6); font: 800 11.5px Inter, sans-serif; padding: 7px 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
 .chip .dot { width: 7px; height: 7px; border-radius: 999px; }
