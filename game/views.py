@@ -5339,7 +5339,7 @@ def club_news(request, club_id):
     squad_players = (
         Player.objects
         .filter(club=club)
-        .select_related('strength_profile', 'rl_form_profile')
+        .select_related('strength_profile', 'rl_form_profile', 'cmt_profile')
         .order_by('-strength_profile__base_strength', '-market_value')
     )
     players_dict = {}
@@ -5352,7 +5352,15 @@ def club_news(request, club_id):
         else:
             mw_str = ''
         full_name = f'{p.first_name} {p.last_name}'.strip() if p.last_name else p.first_name or ''
-        nat = p.nt_nationality or ''
+        _raw_nat = p.nationalities or ''
+        if not _raw_nat:
+            try:
+                _raw_nat = p.cmt_profile.nationality or ''
+            except Exception:
+                pass
+        if not _raw_nat:
+            _raw_nat = p.nt_nationality or ''
+        nat = _raw_nat.split(',')[0].strip() if _raw_nat else ''
         flag_url = ''
         if nat:
             _fa = COUNTRY_FLAG_ASSETS.get(nat) or {}
