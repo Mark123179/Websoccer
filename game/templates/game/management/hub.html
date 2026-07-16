@@ -39,7 +39,7 @@
             <!-- STADION -->
             {% if club %}
             <a href="/management/stadion/" class="mhub-card mhub-card--active mhub-card--stadion">
-                <div class="mhub-card-bg" style="background-image:url('{% if stadium_bg %}{% static stadium_bg %}{% else %}{% static 'game/images/backgrounds/stadium-hero.jpg' %}{% endif %}'); filter: {{ stadium_bg_filter }};"></div>
+                <div class="mhub-card-bg" style="background-image:url('{% if stadium_bg %}{{ stadium_bg }}{% else %}{% static 'game/images/backgrounds/stadium-hero.jpg' %}{% endif %}'); filter: {{ stadium_bg_filter }};"></div>
                 <div class="mhub-card-overlay"></div>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">

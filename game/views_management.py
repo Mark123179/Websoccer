@@ -2,6 +2,7 @@ import json
 from decimal import Decimal
 
 from game.stadium_brightness import get_stadium_tile_filter
+from game.asset_urls import resolve_stadium_url as _resolve_stadium_url
 
 # ── Stadionumfeld: Einrichtungsdaten ──────────────────────────────────────────
 def _fmt_euro(amount):
@@ -133,15 +134,17 @@ def management_hub(request):
 
     # Stadionbild: aus PublicProfile des Clubs oder generisches Fallback
     stadium_bg = None
+    _stadium_raw_path = None
     if club:
         pp = getattr(club, 'public_profile', None)
         if pp and pp.stadium_image_static_path:
-            stadium_bg = pp.stadium_image_static_path
+            _stadium_raw_path = pp.stadium_image_static_path
+            stadium_bg = _resolve_stadium_url(_stadium_raw_path)
 
     # Automatische Helligkeits-Normalisierung: jedes Vereinsstadion hat ein
     # anderes, unterschiedlich belichtetes Foto — der Filter gleicht das auf
     # das Helligkeitsniveau der übrigen Hub-Kacheln an.
-    stadium_bg_filter = get_stadium_tile_filter(stadium_bg)
+    stadium_bg_filter = get_stadium_tile_filter(_stadium_raw_path)
 
     return render(request, 'game/management/hub.html', {
         'club':              club,
@@ -1262,7 +1265,9 @@ def management_job_offers(request):
 
         stadium_img = ''
         try:
-            stadium_img = c.public_profile.stadium_image_static_path or ''
+            stadium_img = _resolve_stadium_url(
+                c.public_profile.stadium_image_static_path or ''
+            )
         except Exception:
             pass
 

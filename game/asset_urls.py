@@ -65,7 +65,21 @@ def club_logo_url(fm_inside_id):
 def club_stadium_url(fm_inside_id):
     if not fm_inside_id:
         return ''
-    return asset_url('clubs/stadiums', f'{fm_inside_id}_stadium.png')
+    return f'https://playwebsoccer.de/assets/clubs/stadiums/{fm_inside_id}_stadium.jpg'
+
+
+def resolve_stadium_url(static_path):
+    """Gibt die vollständige URL für ein gespeichertes Stadionbild zurück.
+
+    - Neues Format 'clubs/stadiums/{id}_stadium.jpg' → externe URL
+    - Altes Format 'game/images/stadiums/...'       → lokale Static-URL (Fallback)
+    """
+    if not static_path:
+        return ''
+    if static_path.startswith('clubs/stadiums/'):
+        return f'https://playwebsoccer.de/assets/{static_path}'
+    from django.templatetags.static import static as _static
+    return _static(static_path)
 
 
 def club_city_url(fm_inside_id):
