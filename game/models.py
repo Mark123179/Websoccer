@@ -619,7 +619,7 @@ class League(models.Model):
     logo_static_path = models.CharField(
         max_length=240,
         blank=True,
-        help_text='Statischer Pfad zum Liga-Logo, z. B. game/images/competitions/bundesliga.svg',
+        help_text='Logo-Pfad im Format competitions/{id}_comp.png (wird über den Upload-Button gesetzt).',
     )
 
     @property

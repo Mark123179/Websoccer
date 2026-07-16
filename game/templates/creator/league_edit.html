@@ -64,10 +64,10 @@
               <input class="creator-input" name="country" value="{{ league.country }}">
             </div>
             <div class="creator-field" style="grid-column:1/-1;">
-              <label class="creator-label">Logo-Pfad (Static)</label>
+              <label class="creator-label">Logo-Pfad</label>
               <input class="creator-input" name="logo_static_path" value="{{ league.logo_static_path }}"
-                     placeholder="z.B. game/images/leagues/bundesliga.png">
-              <span class="creator-hint">Relativer Pfad ab dem static-Root.</span>
+                     placeholder="z.B. competitions/42_comp.png">
+              <span class="creator-hint">Format: <code>competitions/{id}_comp.png</code> — wird automatisch über den Upload-Button gesetzt.</span>
             </div>
             <div class="creator-field">
               <label class="creator-label">Koeffizient-Quelle</label>
