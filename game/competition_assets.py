@@ -431,9 +431,12 @@ def competition_logo_static_path(competition, nt_nationality=None):
             league = None
         if league and league.logo_static_path:
             lp = league.logo_static_path
-            # Neues Format: 'competitions/{id}_comp.png' (oder altes {id}.png) → externe URL
+            # Neues Format: 'competitions/{id}_comp.png' oder altes '{id}.png'
+            # → beide über competition_url() normalisieren → externe URL mit _comp-Suffix
             if lp.startswith('competitions/'):
-                return f'https://playwebsoccer.de/assets/{lp}'
+                filename = lp[len('competitions/'):]
+                raw_id = filename.removesuffix('_comp.png').removesuffix('.png')
+                return _comp_url(raw_id)
             # Altes Format: 'game/images/competitions/…' → Static-URL
             return _static(lp)
     except Exception:
