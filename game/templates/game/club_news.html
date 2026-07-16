@@ -4,7 +4,7 @@
 {% block title %}Vereinsnews – {{ club.name }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/vereinsnews.css' %}?v=4">
+<link rel="stylesheet" href="{% static 'game/css/vereinsnews.css' %}?v=5">
 {% endblock %}
 
 {% block content %}
@@ -17,5 +17,5 @@ window.VN_DATA.csrf = '{{ csrf_token }}';
 
 {% block extra_js %}
 <script>window.wsDefaultPlayerUrl='{{ default_player_url }}';</script>
-<script src="{% static 'game/js/vereinsnews.js' %}?v=4"></script>
+<script src="{% static 'game/js/vereinsnews.js' %}?v=5"></script>
 {% endblock %}
