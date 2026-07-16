@@ -776,9 +776,9 @@ def creator_upload_city(request, club_id):
     if not club.fm_inside_id:
         messages.error(request, 'Kein fm_inside_id gesetzt – Bild kann nicht gespeichert werden.')
         return redirect('creator_club_edit', club_id=club_id)
-    dest = _asset_dest('clubs', 'cities', f'{club.fm_inside_id}_city.jpg')
+    dest = _asset_dest('clubs', 'cities', f'{club.fm_inside_id}.jpg')
     _save_as_jpg(f, dest)
-    profile.city_image_static_path = f'clubs/cities/{club.fm_inside_id}_city.jpg'
+    profile.city_image_static_path = f'clubs/cities/{club.fm_inside_id}.jpg'
     profile.save(update_fields=['city_image_static_path'])
     messages.success(request, 'Stadtbild gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)
