@@ -1354,6 +1354,13 @@ class ClubNewsItem(models.Model):
     img_height = models.PositiveSmallIntegerField(default=120)
     thumbnail_static_path = models.CharField(max_length=240, blank=True)
     sort_order = models.PositiveSmallIntegerField(default=0)
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='published_news',
+        verbose_name='Verfasser',
+    )
 
     class Meta:
         ordering = ['sort_order', '-published_at', '-id']
@@ -1365,9 +1372,10 @@ class ClubNewsItem(models.Model):
 
     def to_vn_dict(self, request=None):
         """Serialisiert das Item für vereinsnews.js (VN_DATA.art/social)."""
-        from django.templatetags.static import static
+        author = self.published_by
         return {
             'id': f'db_{self.pk}',
+            'pk': self.pk,
             'kat': self.category,
             'outlet': self.outlet,
             'title': self.title,
@@ -1379,6 +1387,8 @@ class ClubNewsItem(models.Model):
             'imgH': self.img_height,
             'card': self.card_data,
             'blocks': self.blocks or [],
+            'author': author.username if author else None,
+            'author_url': f'/manager/{author.username}/' if author else None,
         }
 
 

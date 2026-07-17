@@ -7,8 +7,10 @@ from .views import (
     club_match_report,
     match_report_by_id,
     club_news,
+    club_news_delete,
     club_news_detail,
     club_news_publish,
+    public_manager_profile,
     club_professional_squad,
     club_table,
     club_tactics,
@@ -238,6 +240,12 @@ urlpatterns = [
     ),
 
     path(
+        'clubs/<int:club_id>/news/<int:news_id>/delete/',
+        club_news_delete,
+        name='club_news_delete'
+    ),
+
+    path(
         'clubs/<int:club_id>/squad/assign-shirt/',
         squad_assign_shirt,
         name='squad_assign_shirt'
@@ -269,6 +277,7 @@ urlpatterns = [
     path('manager/career-station/save/', save_career_station, name='save_career_station'),
     path('manager/career-station/delete/', delete_career_station, name='delete_career_station'),
     path('manager/timeline-entry/save/', submit_timeline_entry, name='submit_timeline_entry'),
+    path('manager/<str:username>/', public_manager_profile, name='public_manager_profile'),
 
     path('auth/login/', auth_login, name='auth_login'),
     path('auth/register/', auth_register, name='auth_register'),

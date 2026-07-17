@@ -5576,6 +5576,8 @@ def club_news(request, club_id):
         'outlets':     _outlets,
         'is_own_club': is_own_club,
         'has_club':    bool(_viewer_club),
+        'is_admin':    request.user.is_staff if request.user.is_authenticated else False,
+        'delete_url_base': f'/clubs/{club.id}/news/',
     }
 
     import json as _json
@@ -5643,8 +5645,41 @@ def club_news_publish(request, club_id):
         is_social=False,
         card_data=body.get('card') or None,
         blocks=body.get('blocks') or [],
+        published_by=request.user,
     )
     return JsonResponse({'ok': True, 'article': item.to_vn_dict()})
+
+
+@login_required
+def club_news_delete(request, club_id, news_id):
+    if not request.user.is_staff:
+        return JsonResponse({'ok': False, 'error': 'Keine Berechtigung.'}, status=403)
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'Nur POST erlaubt.'}, status=405)
+    item = get_object_or_404(ClubNewsItem, id=news_id, club_id=club_id)
+    item.delete()
+    return JsonResponse({'ok': True})
+
+
+def public_manager_profile(request, username):
+    from django.contrib.auth import get_user_model as _gum
+    _User = _gum()
+    target_user = get_object_or_404(_User, username=username)
+    try:
+        profile = target_user.manager_profile
+    except Exception:
+        profile = None
+    target_club = current_manager_club(target_user)
+    crest_url = ''
+    if target_club and target_club.fm_inside_id:
+        from .asset_urls import club_crest_url as _crest_url
+        crest_url = _crest_url(target_club.fm_inside_id)
+    return render(request, 'game/public_manager_profile.html', {
+        'profile':     profile,
+        'target_user': target_user,
+        'target_club': target_club,
+        'crest_url':   crest_url,
+    })
 
 
 def club_news_detail(request, club_id, news_id):

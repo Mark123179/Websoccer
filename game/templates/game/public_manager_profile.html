@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static game_filters %}
+
+{% block title %}Manager · {% if profile %}{{ profile.name }}{% else %}{{ target_user.username }}{% endif %}{% endblock %}
+
+{% block content %}
+<div class="ws-wide-shell" style="max-width:680px;margin:48px auto;padding:0 24px">
+
+  <a href="javascript:history.back()" style="display:inline-flex;align-items:center;gap:6px;color:rgba(244,251,255,.5);font-size:13px;font-weight:700;text-decoration:none;margin-bottom:28px;letter-spacing:.3px">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 2L4 7L9 12"/></svg>
+    Zurück
+  </a>
+
+  <div style="background:linear-gradient(135deg,#0e2130,#060c14);border:1px solid rgba(44,231,255,.12);border-radius:16px;overflow:hidden">
+
+    <div style="background:linear-gradient(135deg,rgba(44,231,255,.06),rgba(44,231,255,.02));padding:32px;display:flex;align-items:flex-start;gap:24px">
+
+      {% if profile and profile.profile_image_url %}
+      <img src="{{ profile.profile_image_url }}" alt="{{ profile.name }}"
+           style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(44,231,255,.25);flex-shrink:0">
+      {% else %}
+      <div style="width:80px;height:80px;border-radius:50%;background:rgba(44,231,255,.08);border:2px solid rgba(44,231,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;color:rgba(44,231,255,.4)">
+        ⚽
+      </div>
+      {% endif %}
+
+      <div style="min-width:0;flex:1">
+        <div style="font-size:22px;font-weight:900;color:#f4fbff;margin-bottom:4px">
+          {% if profile %}{{ profile.name }}{% else %}{{ target_user.username }}{% endif %}
+        </div>
+        <div style="font-size:12px;font-weight:700;color:rgba(44,231,255,.7);letter-spacing:.8px;margin-bottom:12px">
+          @{{ target_user.username }}
+        </div>
+
+        {% if profile %}
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span style="background:rgba(44,231,255,.08);border:1px solid rgba(44,231,255,.2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:800;color:#22e6ff;letter-spacing:.3px">
+            {{ profile.get_trainer_type_display }}
+          </span>
+          {% if profile.nationality %}
+          <span style="background:rgba(244,251,255,.04);border:1px solid rgba(244,251,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(244,251,255,.6)">
+            {{ profile.nationality }}
+          </span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if target_club %}
+    <div style="border-top:1px solid rgba(44,231,255,.1);padding:20px 32px;display:flex;align-items:center;gap:16px">
+      {% if crest_url %}
+      <img src="{{ crest_url }}" alt="{{ target_club.name }}"
+           style="height:36px;width:36px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(44,231,255,.2))">
+      {% endif %}
+      <div>
+        <div style="font-size:10px;font-weight:800;color:rgba(244,251,255,.35);letter-spacing:.8px;margin-bottom:2px">AKTUELLER VEREIN</div>
+        <a href="/clubs/{{ target_club.id }}/news/"
+           style="font-size:16px;font-weight:900;color:#f4fbff;text-decoration:none"
+           onmouseover="this.style.color='#22e6ff'" onmouseout="this.style.color='#f4fbff'">
+          {{ target_club.name }}
+        </a>
+      </div>
+      <a href="/clubs/{{ target_club.id }}/news/"
+         style="margin-left:auto;background:rgba(44,231,255,.08);border:1px solid rgba(44,231,255,.25);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:800;color:#22e6ff;text-decoration:none;white-space:nowrap"
+         onmouseover="this.style.background='rgba(44,231,255,.15)'" onmouseout="this.style.background='rgba(44,231,255,.08)'">
+        News →
+      </a>
+    </div>
+    {% else %}
+    <div style="border-top:1px solid rgba(44,231,255,.1);padding:16px 32px">
+      <span style="font-size:13px;font-weight:700;color:rgba(244,251,255,.3)">Kein Verein</span>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
