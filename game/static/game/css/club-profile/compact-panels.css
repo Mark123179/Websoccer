@@ -105,6 +105,16 @@
         linear-gradient(90deg, rgba(1, 7, 13, 0.76), transparent 58%);
 }
 
+.city-profile-card > img {
+    filter: saturate(1.12) brightness(1.0);
+}
+
+.city-profile-card::before {
+    background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.08) 48%, rgba(0, 0, 0, 0.58) 78%, rgba(0, 0, 0, 0.80) 100%),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.28), transparent 52%);
+}
+
 .image-card-top,
 .stadium-card-metrics,
 .city-card-location {
