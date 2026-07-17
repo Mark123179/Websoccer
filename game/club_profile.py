@@ -471,7 +471,7 @@ def country_flag_static_path(country_name):
 def city_static_path(club):
     if not club or not club.fm_inside_id:
         return ''
-    return f'game/images/city/{club.fm_inside_id}.jpg'
+    return f'clubs/cities/{club.fm_inside_id}.jpg'
 
 
 def stadium_name_for(club):
