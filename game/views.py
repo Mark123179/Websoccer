@@ -5554,6 +5554,9 @@ def club_news(request, club_id):
     from .models import MediaOutlet as _MediaOutlet
     _outlets = [o.to_vn_dict() for o in _MediaOutlet.objects.all().order_by('sort_order', 'name')]
 
+    _viewer_club = current_manager_club(request.user) if request.user.is_authenticated else None
+    is_own_club = bool(_viewer_club and _viewer_club.id == club.id)
+
     vn_data = {
         'season':      season_num,
         'art':         art_items,
@@ -5571,6 +5574,7 @@ def club_news(request, club_id):
         'league_logo': league_logo,
         'league_name': league_name,
         'outlets':     _outlets,
+        'is_own_club': is_own_club,
     }
 
     import json as _json
@@ -5592,8 +5596,7 @@ def club_news_publish(request, club_id):
 
     club = get_object_or_404(Club, id=club_id)
     user_club = current_manager_club(request.user)
-    if not user_club or user_club.id != club.id:
-        return JsonResponse({'ok': False, 'error': 'Keine Berechtigung.'}, status=403)
+    is_own_club = bool(user_club and user_club.id == club.id)
 
     import json as _json
     try:
@@ -5616,6 +5619,15 @@ def club_news_publish(request, club_id):
     }
     kat    = body.get('kat')    if body.get('kat')    in VALID_KATS    else 'Sonstiges'
     outlet = body.get('outlet') if body.get('outlet') in VALID_OUTLETS else 'Vereinsredaktion'
+
+    if not is_own_club:
+        if kat != 'Transfer-News':
+            return JsonResponse({'ok': False, 'error': 'Für fremde Vereine sind nur Transfer-News erlaubt.'}, status=403)
+        if outlet == 'Vereinsredaktion':
+            return JsonResponse({'ok': False, 'error': 'Vereinsredaktion ist nur beim eigenen Verein verfügbar.'}, status=403)
+        for blk in (body.get('blocks') or []):
+            if blk.get('k') in ('match', 'motm'):
+                return JsonResponse({'ok': False, 'error': 'Dieser Block-Typ ist nur beim eigenen Verein verfügbar.'}, status=403)
 
     item = ClubNewsItem.objects.create(
         club=club,
