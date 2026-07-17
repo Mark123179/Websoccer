@@ -818,16 +818,23 @@ class Club(models.Model):
 
     @property
     def kit_static_paths(self):
+        import os as _os
+        from .asset_urls import ASSETS_BASE, assets_root
         stem = self._asset_stem()
         kits = []
         for label, suffix in (('Heim', 'home'), ('Auswärts', 'away'), ('Third', 'third')):
-            path = ''
-            for ext in ('svg', 'png'):
-                candidate = f'game/images/kits/{stem}_{suffix}.{ext}'
-                if finders.find(candidate):
-                    path = candidate
-                    break
-            kits.append({'label': label, 'path': path})
+            url = ''
+            assets_path = _os.path.join(assets_root(), 'clubs', 'kits', f'{stem}_{suffix}.png')
+            if _os.path.exists(assets_path):
+                url = f'{ASSETS_BASE}clubs/kits/{stem}_{suffix}.png'
+            else:
+                for ext in ('svg', 'png'):
+                    candidate = f'game/images/kits/{stem}_{suffix}.{ext}'
+                    if finders.find(candidate):
+                        from django.templatetags.static import static
+                        url = static(candidate)
+                        break
+            kits.append({'label': label, 'path': url})
         return kits
 
 

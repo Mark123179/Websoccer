@@ -795,11 +795,7 @@ def creator_upload_kit(request, club_id, kit_type):
         messages.error(request, 'Keine Datei ausgewählt.')
         return redirect('creator_club_edit', club_id=club_id)
     stem = club._asset_stem()
-    for ext in ['png', 'svg', 'jpg', 'webp']:
-        old = os.path.join(STATIC_BASE, f'game/images/kits/{stem}_{kit_type}.{ext}')
-        if os.path.exists(old):
-            os.remove(old)
-    dest = os.path.join(STATIC_BASE, f'game/images/kits/{stem}_{kit_type}.png')
+    dest = _asset_dest('clubs', 'kits', f'{stem}_{kit_type}.png')
     _save_as_png(f, dest)
     messages.success(request, f'Trikot ({kit_type}) gespeichert.')
     return redirect('creator_club_edit', club_id=club_id)

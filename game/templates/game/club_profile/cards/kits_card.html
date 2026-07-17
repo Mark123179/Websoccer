@@ -6,19 +6,19 @@
     <div class="club-kits-row">
         <figure>
             {% if profile.kits.homeImageUrl %}
-                <img src="{% static profile.kits.homeImageUrl %}" alt="Heimtrikot">
+                <img src="{{ profile.kits.homeImageUrl }}" alt="Heimtrikot">
             {% endif %}
             <figcaption>Heim</figcaption>
         </figure>
         <figure>
             {% if profile.kits.awayImageUrl %}
-                <img src="{% static profile.kits.awayImageUrl %}" alt="Auswärtstrikot">
+                <img src="{{ profile.kits.awayImageUrl }}" alt="Auswärtstrikot">
             {% endif %}
             <figcaption>Auswärts</figcaption>
         </figure>
         <figure>
             {% if profile.kits.thirdImageUrl %}
-                <img src="{% static profile.kits.thirdImageUrl %}" alt="Drittes Trikot">
+                <img src="{{ profile.kits.thirdImageUrl }}" alt="Drittes Trikot">
             {% endif %}
             <figcaption>Drittes</figcaption>
         </figure>
