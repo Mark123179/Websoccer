@@ -14,6 +14,8 @@ var VN_CLUB_ID     = _d.club_id     || 0;
 var VN_PUBLISH_URL = _d.publish_url || '';
 var VN_CSRF        = _d.csrf        || '';
 var VN_TODAY       = _d.today       || '01.01.2026';
+var IS_OWN_CLUB    = !!_d.is_own_club;
+var HAS_CLUB       = !!_d.has_club;
 
 var MOM = [0.6,0.3,-0.2,0.8,1,0.4,-0.5,-0.3,0.7,0.9,0.2,-0.6,0.5,1,0.8,0.3,-0.2,0.6];
 
@@ -317,22 +319,30 @@ function editorHTML(){
     '<input class="inp" placeholder="Überschrift…" value="'+esc(ed.titel)+'" oninput="App.setEd(\'titel\',this.value)">'+
     '<input class="inp sub" placeholder="Untertitel…" value="'+esc(ed.sub)+'" oninput="App.setEd(\'sub\',this.value)"></div>';
 
-  h+='<div class="panel"><span class="panel-label">Kategorie</span><div class="chips">'+KATS.map(function(k){
-    var on=ed.kat===k.n;
-    return'<button class="chip" style="'+(on?'background:'+ha(k.c,.14)+';border-color:'+ha(k.c,.55)+';color:'+k.c:'')+'" onclick="App.setEd(\'kat\',\''+k.n+'\')">'+k.n+'</button>';
-  }).join('')+'</div></div>';
+  var visKats=IS_OWN_CLUB?KATS:KATS.filter(function(k){return k.n==='Transfer-News';});
+  h+='<div class="panel"><span class="panel-label">Kategorie</span>'+
+    (!IS_OWN_CLUB?'<span class="hint" style="display:block;margin-bottom:8px">Für fremde Vereine sind nur Transfer-News möglich.</span>':'')+
+    '<div class="chips">'+visKats.map(function(k){
+      var on=ed.kat===k.n;
+      return'<button class="chip" style="'+(on?'background:'+ha(k.c,.14)+';border-color:'+ha(k.c,.55)+';color:'+k.c:'')+'" onclick="App.setEd(\'kat\',\''+k.n+'\')">'+k.n+'</button>';
+    }).join('')+'</div></div>';
 
-  var selOut=outletOf(ed.outlet);
+  var visOutlets=IS_OWN_CLUB?OUTLETS:OUTLETS.filter(function(o){return o.n!=='Vereinsredaktion';});
+  var effOutlet=ed.outlet;
+  if(!IS_OWN_CLUB&&effOutlet==='Vereinsredaktion')effOutlet=(visOutlets[0]||{}).n||'Transfermarkt';
+  var selOut=outletOf(effOutlet);
   h+='<div class="panel"><span class="panel-label">Ausstrahlung über</span>'+
     '<div class="outlet-picker">'+
     (selOut.slug?'<img class="outlet-logo-prev" src="'+mediaLogoURL(selOut.slug)+'" alt="'+esc(selOut.n)+'">':
       '<span class="outlet-vr-badge">'+esc(selOut.n)+'</span>')+
     '<select class="inp outlet-sel" onchange="App.setEd(\'outlet\',this.value)">'+
-    OUTLETS.map(function(o){
-      return'<option value="'+esc(o.n)+'"'+(ed.outlet===o.n?' selected':'')+'>'+esc(o.n)+'</option>';
+    visOutlets.map(function(o){
+      return'<option value="'+esc(o.n)+'"'+(effOutlet===o.n?' selected':'')+'>'+esc(o.n)+'</option>';
     }).join('')+
     '</select></div>'+
-    '<span class="hint">Deine News erscheint als Beitrag der Vereinsredaktion — das gewählte Blatt greift sie auf und zitiert den Verein.</span></div>';
+    (IS_OWN_CLUB?'<span class="hint">Deine News erscheint als Beitrag der Vereinsredaktion — das gewählte Blatt greift sie auf und zitiert den Verein.</span>':
+      '<span class="hint">Als Journalist berichtest du über Transfer-Aktivitäten dieses Vereins.</span>')+
+    '</div>';
 
   h+='<div class="panel" style="border-color:rgba(44,231,255,.28)"><div class="blk-head"><span class="panel-label cyan">News-Karte gestalten</span><span style="flex:1"></span>'+
     '<button class="chip on-cyan" onclick="App.setPrev(\'karte\')">Vorschau</button></div>'+
@@ -340,9 +350,11 @@ function editorHTML(){
       return'<button class="chip'+(ed.card.motiv===m[0]?' on-cyan':'')+'" onclick="App.setCard(\'motiv\',\''+m[0]+'\')">'+m[1]+'</button>';
     }).join('')+'</div>';
   if(ed.card.motiv==='spieler'){
-    h+='<div class="chips">'+Object.keys(P).map(function(pid){
-      return'<button class="chip'+(ed.card.pid===pid?' on-cyan':'')+'" onclick="App.setCard(\'pid\',\''+pid+'\')">'+esc(P[pid].n)+'</button>';
-    }).join('')+'</div>';
+    h+='<select class="inp" style="margin-bottom:6px" onchange="App.setCard(\'pid\',this.value)">'+
+      Object.keys(P).map(function(pid){
+        return'<option value="'+pid+'"'+(ed.card.pid===pid?' selected':'')+'>'+esc(P[pid].pos?P[pid].n+' ('+P[pid].pos+')':P[pid].n)+'</option>';
+      }).join('')+
+    '</select>';
   }
   if(ed.card.motiv==='eigenes'){
     h+='<div class="dropzone" onclick="App.pickImg(-1)" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="App.dropImg(event,-1)">'+
@@ -352,10 +364,12 @@ function editorHTML(){
     return'<button class="swatch'+(ed.card.accent===c?' on':'')+'" style="background:'+c+';box-shadow:0 0 10px '+c+'" onclick="App.setCard(\'accent\',\''+c+'\')"></button>';
   }).join('')+'</div></div>';
 
+  var addBlocks=[['text','Fließtext','T'],['head','Zwischentitel','H2'],['quote','Zitat','„"'],['player','Spielerkarte','SP'],['match','Spielkarte','VS'],['motm','Spieler d. Spiels','★'],['image','Bild','IMG']];
+  if(!IS_OWN_CLUB)addBlocks=addBlocks.filter(function(p){return p[0]!=='match'&&p[0]!=='motm';});
   h+='<span class="panel-label" style="padding:0 2px">Bausteine</span>'+
     ed.blocks.map(blockEdHTML).join('')+
     '<div class="panel add-panel"><span class="micro-label">+ Block hinzufügen</span><div class="chips">'+
-    [['text','Fließtext','T'],['head','Zwischentitel','H2'],['quote','Zitat','„"'],['player','Spielerkarte','SP'],['match','Spielkarte','VS'],['motm','Spieler d. Spiels','★'],['image','Bild','IMG']].map(function(p){
+    addBlocks.map(function(p){
       return'<button class="chip add-chip" onclick="App.addB(\''+p[0]+'\')"><b>'+p[2]+'</b>'+p[1]+'</button>';
     }).join('')+'</div></div>';
 
@@ -404,7 +418,13 @@ function render(){
   var h='<div class="vn-head"><div class="vn-brand">'+N_SVG_BIG+
     '<div><h1 class="vn-title">VEREINS<b>N</b>EWS</h1>'+
     '<span class="vn-sub">'+total+' Beiträge · Saison '+SEASON+' · Ausstrahlung über '+OUTLETS.length+' Blätter</span></div></div>';
-  if(state.view==='home')h+='<button class="btn-red" onclick="App.goEditor()">+ Neue News</button>';
+  if(state.view==='home'){
+    if(HAS_CLUB){
+      h+='<button class="btn-red" onclick="App.goEditor()">+ Neue News</button>';
+    }else{
+      h+='<span style="font-size:11px;font-weight:700;color:rgba(244,251,255,.35);padding:0 8px;align-self:center">Nur für Manager mit eigenem Verein</span>';
+    }
+  }
   h+='</div>';
   if(state.view==='home')h+=homeHTML();
   if(state.view==='article')h+=articleHTML(state.art);
@@ -416,7 +436,15 @@ function render(){
 window.App={
   open:function(id){var a=findArt(id);if(a){state.view='article';state.art=a;render();window.scrollTo(0,0);}},
   goHome:function(){state.view='home';render();window.scrollTo(0,0);},
-  goEditor:function(){state.view='editor';render();window.scrollTo(0,0);},
+  goEditor:function(){
+    state.view='editor';
+    if(!IS_OWN_CLUB){
+      state.ed.kat='Transfer-News';
+      var _firstOut=OUTLETS.filter(function(o){return o.n!=='Vereinsredaktion';})[0];
+      if(_firstOut&&state.ed.outlet==='Vereinsredaktion')state.ed.outlet=_firstOut.n;
+    }
+    render();window.scrollTo(0,0);
+  },
   setEd:function(k,v){state.ed[k]=v;if(k==='kat'||k==='outlet')render();else this.sync();},
   setCard:function(k,v){state.ed.card[k]=v;render();},
   setPrev:function(p){state.edPrev=p;render();},
