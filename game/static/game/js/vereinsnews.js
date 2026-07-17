@@ -15,6 +15,7 @@ var VN_PUBLISH_URL = _d.publish_url || '';
 var VN_CSRF        = _d.csrf        || '';
 var VN_TODAY       = _d.today       || '01.01.2026';
 var IS_OWN_CLUB    = !!_d.is_own_club;
+var HAS_CLUB       = !!_d.has_club;
 
 var MOM = [0.6,0.3,-0.2,0.8,1,0.4,-0.5,-0.3,0.7,0.9,0.2,-0.6,0.5,1,0.8,0.3,-0.2,0.6];
 
@@ -417,7 +418,13 @@ function render(){
   var h='<div class="vn-head"><div class="vn-brand">'+N_SVG_BIG+
     '<div><h1 class="vn-title">VEREINS<b>N</b>EWS</h1>'+
     '<span class="vn-sub">'+total+' Beiträge · Saison '+SEASON+' · Ausstrahlung über '+OUTLETS.length+' Blätter</span></div></div>';
-  if(state.view==='home')h+='<button class="btn-red" onclick="App.goEditor()">+ Neue News</button>';
+  if(state.view==='home'){
+    if(HAS_CLUB){
+      h+='<button class="btn-red" onclick="App.goEditor()">+ Neue News</button>';
+    }else{
+      h+='<span style="font-size:11px;font-weight:700;color:rgba(244,251,255,.35);padding:0 8px;align-self:center">Nur für Manager mit eigenem Verein</span>';
+    }
+  }
   h+='</div>';
   if(state.view==='home')h+=homeHTML();
   if(state.view==='article')h+=articleHTML(state.art);

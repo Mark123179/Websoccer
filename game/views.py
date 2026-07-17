@@ -5575,6 +5575,7 @@ def club_news(request, club_id):
         'league_name': league_name,
         'outlets':     _outlets,
         'is_own_club': is_own_club,
+        'has_club':    bool(_viewer_club),
     }
 
     import json as _json
@@ -5596,7 +5597,9 @@ def club_news_publish(request, club_id):
 
     club = get_object_or_404(Club, id=club_id)
     user_club = current_manager_club(request.user)
-    is_own_club = bool(user_club and user_club.id == club.id)
+    if not user_club:
+        return JsonResponse({'ok': False, 'error': 'Nur Manager mit eigenem Verein können News veröffentlichen.'}, status=403)
+    is_own_club = bool(user_club.id == club.id)
 
     import json as _json
     try:
