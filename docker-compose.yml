@@ -40,9 +40,12 @@ services:
     env_file:
       - .env
     # Persist uploaded media and collected static across rebuilds.
+    # /var/www/assets: host bind-mount shared with nginx (read-only there);
+    # web needs write access so Creator-Mode uploads land where nginx can serve them.
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
+      - /var/www/assets:/app/assets
     depends_on:
       db:
         condition: service_healthy

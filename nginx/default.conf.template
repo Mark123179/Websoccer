@@ -56,9 +56,9 @@ server {
     client_max_body_size 10M;
 
     # Bild-Assets (Spielergesichter, Club-Logos, Trophäen …) direkt von
-    # der Platte (Bind-Mount /var/www/assets → /app/assets). Die App baut
-    # die URLs nur als Strings (ASSETS_BASE_URL=/assets/) — fehlende
-    # Dateien beantwortet nginx mit 404, der Client zeigt den Platzhalter.
+    # der Platte (Bind-Mount /var/www/assets → /app/assets). Creator-Mode
+    # schreibt via web-Container in denselben Bind-Mount (ASSETS_ROOT=/app/assets).
+    # Fehlende Dateien beantwortet nginx mit 404, der Client zeigt den Platzhalter.
     location /assets/ {
         alias /app/assets/;
         access_log off;
