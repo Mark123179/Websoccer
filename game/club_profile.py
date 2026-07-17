@@ -327,6 +327,7 @@ def _resolve_image_url(path):
     Behandelt:
     - Leerer Pfad → ''
     - Bereits volle URL (/static/…, /assets/…, http…) → unverändert
+    - Altes City-Format (game/images/city/{fmid}.jpg) → externe URL clubs/cities/
     - Neues Asset-Format (clubs/…, players/…, competitions/…) → ASSETS_BASE_URL + path
     - Altes Django-Static-Format (game/images/…, img/…) → Django-static URL
     """
@@ -334,6 +335,9 @@ def _resolve_image_url(path):
         return ''
     if path.startswith('/') or path.startswith('http'):
         return path
+    if path.startswith('game/images/city/'):
+        fname = path.split('/')[-1]
+        return f'https://playwebsoccer.de/assets/clubs/cities/{fname}'
     _ASSET_PREFIXES = ('clubs/', 'players/', 'competitions/', 'trophies/')
     if any(path.startswith(p) for p in _ASSET_PREFIXES):
         return f'https://playwebsoccer.de/assets/{path}'
