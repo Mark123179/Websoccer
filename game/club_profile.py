@@ -413,20 +413,7 @@ def build_news(club):
             for item in news
         ]
 
-    return [
-        {
-            'id': f'fallback-{index}',
-            'title': title,
-            'dateLabel': date_label,
-            'thumbnailUrl': club.crest_static_path,
-            'url': reverse('club_news', kwargs={'club_id': club.id}),
-        }
-        for index, (title, date_label) in enumerate([
-            ('Topspieler führt die Formkurve an', 'Heute'),
-            ('Jugendtalent trainiert bei den Profis', 'Gestern'),
-            ('Stadion meldet starke Auslastung', 'Vor 2 Tagen'),
-        ])
-    ]
+    return []
 
 
 def club_stub(club):
