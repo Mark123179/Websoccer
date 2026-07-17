@@ -340,9 +340,11 @@ function editorHTML(){
       return'<button class="chip'+(ed.card.motiv===m[0]?' on-cyan':'')+'" onclick="App.setCard(\'motiv\',\''+m[0]+'\')">'+m[1]+'</button>';
     }).join('')+'</div>';
   if(ed.card.motiv==='spieler'){
-    h+='<div class="chips">'+Object.keys(P).map(function(pid){
-      return'<button class="chip'+(ed.card.pid===pid?' on-cyan':'')+'" onclick="App.setCard(\'pid\',\''+pid+'\')">'+esc(P[pid].n)+'</button>';
-    }).join('')+'</div>';
+    h+='<select class="inp" style="margin-bottom:6px" onchange="App.setCard(\'pid\',this.value)">'+
+      Object.keys(P).map(function(pid){
+        return'<option value="'+pid+'"'+(ed.card.pid===pid?' selected':'')+'>'+esc(P[pid].pos?P[pid].n+' ('+P[pid].pos+')':P[pid].n)+'</option>';
+      }).join('')+
+    '</select>';
   }
   if(ed.card.motiv==='eigenes'){
     h+='<div class="dropzone" onclick="App.pickImg(-1)" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="App.dropImg(event,-1)">'+
