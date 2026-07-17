@@ -327,7 +327,6 @@ def _resolve_image_url(path):
     Behandelt:
     - Leerer Pfad → ''
     - Bereits volle URL (/static/…, /assets/…, http…) → unverändert
-    - Altes City-Format (game/images/city/{fmid}.jpg) → externe URL clubs/cities/
     - Neues Asset-Format (clubs/…, players/…, competitions/…) → ASSETS_BASE_URL + path
     - Altes Django-Static-Format (game/images/…, img/…) → Django-static URL
     """
@@ -335,9 +334,6 @@ def _resolve_image_url(path):
         return ''
     if path.startswith('/') or path.startswith('http'):
         return path
-    if path.startswith('game/images/city/'):
-        fname = path.split('/')[-1]
-        return f'https://playwebsoccer.de/assets/clubs/cities/{fname}'
     _ASSET_PREFIXES = ('clubs/', 'players/', 'competitions/', 'trophies/')
     if any(path.startswith(p) for p in _ASSET_PREFIXES):
         return f'https://playwebsoccer.de/assets/{path}'
@@ -363,19 +359,16 @@ def build_stadium(public_profile):
 
 
 def build_city(public_profile, club):
+    from .asset_urls import club_city_url
     country_name = (
         getattr(public_profile, 'city_country', '')
         or (club.league.country if club.league else 'Deutschland')
     )
-    raw = (
-        getattr(public_profile, 'city_image_static_path', '')
-        or city_static_path(club)
-        or 'game/images/backgrounds/overview/overview-navigation.png'
-    )
+    image_url = club_city_url(club.fm_inside_id) if (club and club.fm_inside_id) else ''
     return {
         'name': getattr(public_profile, 'city_name', '') or 'Stadt nicht hinterlegt',
         'countryName': country_name,
-        'imageUrl': _resolve_image_url(raw),
+        'imageUrl': image_url,
     }
 
 
