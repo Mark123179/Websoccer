@@ -336,7 +336,8 @@ def _resolve_image_url(path):
         return path
     _ASSET_PREFIXES = ('clubs/', 'players/', 'competitions/', 'trophies/')
     if any(path.startswith(p) for p in _ASSET_PREFIXES):
-        return f'https://playwebsoccer.de/assets/{path}'
+        from .asset_urls import assets_base_url
+        return f'{assets_base_url()}{path}'
     from django.templatetags.static import static as _s
     return _s(path)
 
