@@ -1,27 +1,21 @@
-"""Zentrale Asset-URL-Bausteine für die neue Live-Struktur (/assets/).
+"""Zentrale Asset-URL-Bausteine.
 
-Alle Funktionen bauen reine URL-Strings aus settings.ASSETS_BASE_URL —
-kein Dateisystem-Check, kein {% static %}. Fehlende Bilder werden
-client-seitig per onerror-Fallback abgefangen.
-
-Struktur (live via nginx unter /assets/, auf Replit unter /static/assets/):
-    players/face_{fm_inside_id}.png
-    clubs/logos/{fm_inside_id}_club.png
-    clubs/stadiums/  clubs/cities/  clubs/jerseys/   (noch leer)
-    trophies/{trophy_id}.png
-    flags/  competitions/  avatars/  backgrounds/  icons/  (noch leer)
+Alle URLs zeigen direkt auf https://playwebsoccer.de/assets/ —
+Uploads laufen ausschließlich auf dem Hetzner-Server, nicht auf Replit.
+assets_root() liefert den Dateisystem-Pfad für den Upload-Schreibzugriff.
 """
 
 import os as _os
 from django.conf import settings
 
+ASSETS_BASE = 'https://playwebsoccer.de/assets/'
+
 
 def assets_root():
     """Dateisystem-Pfad für Asset-Uploads (Creator-Mode schreibt hierhin).
 
-    Entspricht ASSETS_BASE_URL auf dem Dateisystem:
-      Lokal  → <BASE_DIR>/game/static/assets/
-      Server → /var/www/assets  (via ASSETS_ROOT env-var)
+    Server → ASSETS_ROOT env-var (z.B. /var/www/assets)
+    Fallback → <BASE_DIR>/game/static/assets/ (Replit, nie produktiv genutzt)
     """
     root = getattr(settings, 'ASSETS_ROOT', None)
     if root:
@@ -31,22 +25,14 @@ def assets_root():
     )
 
 
-def assets_base_url():
-    base = getattr(settings, 'ASSETS_BASE_URL', '/static/assets/')
-    if not base.endswith('/'):
-        base += '/'
-    return base
-
-
 def asset_url(category, filename):
     """Generische URL: asset_url('clubs/logos', '915_club.png')."""
     if not filename:
         return ''
-    return f"{assets_base_url()}{category.strip('/')}/{filename}"
+    return f"{ASSETS_BASE}{category.strip('/')}/{filename}"
 
 
 def default_player_url():
-    """URL für das zentrale Default-Spielerbild (kein fm_inside_id)."""
     return asset_url('players', 'default_player.png')
 
 
@@ -69,15 +55,15 @@ def club_stadium_url(fm_inside_id):
 
 
 def resolve_stadium_url(static_path):
-    """Gibt die vollständige URL für ein gespeichertes Stadionbild zurück.
+    """Vollständige URL für ein gespeichertes Stadionbild.
 
-    - Neues Format 'clubs/stadiums/{id}_stadium.jpg' → assets_base_url() + path
-    - Altes Format 'game/images/stadiums/...'       → lokale Static-URL (Fallback)
+    - Neues Format 'clubs/stadiums/{id}_stadium.jpg' → externe URL
+    - Altes Format 'game/images/stadiums/...'        → lokale Static-URL (Fallback)
     """
     if not static_path:
         return ''
     if static_path.startswith('clubs/stadiums/'):
-        return f'{assets_base_url()}{static_path}'
+        return f'{ASSETS_BASE}{static_path}'
     from django.templatetags.static import static as _static
     return _static(static_path)
 
@@ -85,11 +71,11 @@ def resolve_stadium_url(static_path):
 def club_city_url(fm_inside_id):
     if not fm_inside_id:
         return ''
-    return f'https://playwebsoccer.de/assets/clubs/cities/{fm_inside_id}.jpg'
+    return f'{ASSETS_BASE}clubs/cities/{fm_inside_id}.jpg'
 
 
 def resolve_city_url(static_path):
-    """Gibt die vollständige URL für ein gespeichertes Stadt-Bild zurück.
+    """Vollständige URL für ein gespeichertes Stadtbild.
 
     - Neues Format 'clubs/cities/{fmid}.jpg' → externe URL
     - Altes Format 'game/images/city/...'    → lokale Static-URL (Fallback)
@@ -97,7 +83,7 @@ def resolve_city_url(static_path):
     if not static_path:
         return ''
     if static_path.startswith('clubs/cities/'):
-        return f'https://playwebsoccer.de/assets/{static_path}'
+        return f'{ASSETS_BASE}{static_path}'
     from django.templatetags.static import static as _static
     return _static(static_path)
 
@@ -112,7 +98,7 @@ def trophy_url(trophy_id):
     if not trophy_id:
         return ''
     clean_id = str(trophy_id).removesuffix('.png')
-    return f'https://playwebsoccer.de/assets/trophies/{clean_id}.png'
+    return f'{ASSETS_BASE}trophies/{clean_id}.png'
 
 
 def flag_url(code):
@@ -125,7 +111,7 @@ def competition_url(competition_id):
     if not competition_id:
         return ''
     clean_id = str(competition_id).removesuffix('_comp.png').removesuffix('.png')
-    return f'https://playwebsoccer.de/assets/competitions/{clean_id}_comp.png'
+    return f'{ASSETS_BASE}competitions/{clean_id}_comp.png'
 
 
 def avatar_url(name):

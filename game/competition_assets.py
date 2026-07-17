@@ -422,7 +422,7 @@ def competition_logo_static_path(competition, nt_nationality=None):
     # DB-Fallback: Logo das über Creator hochgeladen wurde (logo_static_path)
     try:
         from game.models import League as _League
-        from game.asset_urls import competition_url as _comp_url, assets_base_url as _base
+        from game.asset_urls import competition_url as _comp_url
         if league_id is None and competition:
             league = _League.objects.filter(name=competition).first()
         elif league_id:

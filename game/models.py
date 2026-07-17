@@ -5616,8 +5616,8 @@ class MediaOutlet(models.Model):
         return self.name
 
     def logo_url(self):
-        from .asset_urls import assets_base_url
-        return f'{assets_base_url()}media/{self.slug}_media.png'
+        from .asset_urls import ASSETS_BASE
+        return f'{ASSETS_BASE}media/{self.slug}_media.png'
 
     def to_vn_dict(self):
         return {
