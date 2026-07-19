@@ -519,6 +519,14 @@ class Command(BaseCommand):
                             target_club = matched_club or karrierende
                             if player.club != target_club:
                                 old_club = player.club.name if player.club else "—"
+                                if target_club is karrierende and not dry_run:
+                                    # Karriereende-Ereignispfad: Abfindung
+                                    # buchen, solange der Spieler noch am
+                                    # abgebenden Verein hängt.
+                                    from game.economy.severance import (
+                                        GRUND_KARRIEREENDE, book_abfindung,
+                                    )
+                                    book_abfindung(player, GRUND_KARRIEREENDE)
                                 player.club = target_club
                                 update_fields.append("club")
                                 squad_moved += 1

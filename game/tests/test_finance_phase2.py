@@ -16,7 +16,7 @@ from django.utils import timezone
 from game.economy.events import pokal_basis, sync_cup_premiums
 from game.economy.params import get_decimal, get_param
 from game.economy.season_jobs import finance_season_close, finance_season_open
-from game.economy.severance import book_abfindung
+from game.economy.severance import book_abfindung, retire_player
 from game.economy.sponsors import (
     SponsorChoiceError, book_sieg_bonus, book_zieljaeger_bonus,
     book_zuschauer_bonus, choose_offer, generate_offers, get_active_offer,
@@ -316,6 +316,79 @@ class SeveranceTests(TestCase):
     def test_unbekannter_grund(self):
         with self.assertRaises(ValueError):
             book_abfindung(self.player, 'urlaub', '0')
+
+
+class AbfindungEventPathTests(TestCase):
+    """Integrationstests über die produktiven Ereignispfade (nicht nur
+    der Service): retire_player() (TM-Kader-Sync-Pfad) und das
+    finance_abfindung-Command (Monatspflege-Pfad)."""
+
+    def setUp(self):
+        GameSeasonState.objects.create(current_season=0)
+        league = League.objects.create(name='Testonia-Liga', country=LAND)
+        self.club = _mk_club('FC Abschied', league)
+        # Migration 0009 seedet den Karrierende-Pseudo-Verein bereits.
+        self.karrierende = Club.objects.filter(
+            name__iexact='Karrierende').first()
+        if self.karrierende is None:
+            pseudo_liga = League.objects.create(
+                name='Pseudo-Liga', country=LAND)
+            self.karrierende = Club.objects.create(
+                name='Karrierende', short_name='KAR', founded_year=1900,
+                budget=Decimal('0.00'), league=pseudo_liga,
+            )
+        self.player = Player.objects.create(
+            club=self.club, first_name='Willi', last_name='Weg', age=27,
+            position='Sturm', main_position_1='ST',
+            nationalities='Deutschland', market_value=Decimal('2000000'),
+        )
+
+    def test_retire_player_karriereende_bucht_nichts_und_verschiebt(self):
+        tx = retire_player(self.player, self.karrierende, saison='0')
+        self.assertIsNone(tx)  # ABFINDUNG_KARRIEREENDE = 0
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.karrierende.pk)
+        self.assertIsNone(self.player.real_life_club)
+        self.assertFalse(
+            FinanceTransaction.objects.filter(typ='ABFINDUNG').exists())
+        # Idempotent: erneuter Aufruf bucht weiterhin nichts.
+        self.assertIsNone(retire_player(self.player, self.karrierende,
+                                        saison='0'))
+
+    def test_command_todesfall_bucht_und_verschiebt(self):
+        from django.core.management import call_command
+
+        faktor = Decimal(str(get_param('ABFINDUNG_TOD', '0')['25-28']))
+        call_command(
+            'finance_abfindung', '--player-id', str(self.player.pk),
+            '--grund', 'tod', '--saison', '0', verbosity=0)
+
+        tx = FinanceTransaction.objects.get(typ='ABFINDUNG')
+        self.assertEqual(tx.club_id, self.club.pk)  # abgebender Verein
+        self.assertEqual(
+            tx.betrag,
+            (faktor * Decimal('2000000')).quantize(Decimal('0.01')))
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.karrierende.pk)
+
+        # Wiederholungslauf: Spieler ist schon beim Pseudo-Verein → no-op.
+        call_command(
+            'finance_abfindung', '--player-id', str(self.player.pk),
+            '--grund', 'tod', '--saison', '0', verbosity=0)
+        self.assertEqual(
+            FinanceTransaction.objects.filter(typ='ABFINDUNG').count(), 1)
+
+    def test_command_keep_club_bucht_ohne_verschieben(self):
+        from django.core.management import call_command
+
+        call_command(
+            'finance_abfindung', '--player-id', str(self.player.pk),
+            '--grund', 'tod', '--saison', '0', '--keep-club', verbosity=0)
+        self.assertTrue(
+            FinanceTransaction.objects.filter(
+                typ='ABFINDUNG', club=self.club).exists())
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.club.pk)
 
 
 class SeasonJobsTests(TestCase):

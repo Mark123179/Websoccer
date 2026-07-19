@@ -334,9 +334,11 @@ class Command(BaseCommand):
                             f" (tm:{db_player.transfermarkt_id}) → Karrierende"
                         )
                         if not dry_run:
-                            db_player.club = karrierende
-                            db_player.real_life_club = None
-                            db_player.save(update_fields=["club", "real_life_club"])
+                            # Einheitlicher Ereignispfad: bucht die
+                            # (Null-)Abfindung für den abgebenden Verein
+                            # und hängt DANACH auf Karrierende um.
+                            from game.economy.severance import retire_player
+                            retire_player(db_player, karrierende)
                         retired += 1
                     elif not db_player.transfermarkt_id:
                         # No TM ID — keep in place (Heidenheim/Mainz/Kiel placeholder players)

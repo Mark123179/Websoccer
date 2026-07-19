@@ -144,9 +144,18 @@ def finance_season_close(saison: str) -> dict:
             report['errors'].append(f'Koeffizienten-Update: {exc}')
             logger.exception('Koeffizienten-Update %s fehlgeschlagen', saison)
 
-        state.closed_at = timezone.now()
-        state.report_json = report
-        state.save(update_fields=['closed_at', 'report_json'])
+        if report['errors']:
+            # Fehler beim Abschluss: closed_at offen lassen, damit ein
+            # Wiederholungslauf die fehlenden (idempotenten) Buchungen
+            # nachholen kann — sonst wären sie dauerhaft „eingefroren".
+            report['hinweis'] = (
+                'Abschluss mit Fehlern — closed_at bleibt offen '
+                'für einen Wiederholungslauf.'
+            )
+        else:
+            state.closed_at = timezone.now()
+            state.report_json = report
+            state.save(update_fields=['closed_at', 'report_json'])
     else:
         report['hinweis'] = (
             'Noch nicht alle Ligen durchgespielt — Teil-Lauf, '

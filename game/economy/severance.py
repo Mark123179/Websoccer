@@ -8,8 +8,12 @@ Todesfall: Entschädigung = Altersfaktor × Marktwert (ABFINDUNG_TOD,
 WSC-Alterstabelle), Buchungstyp ABFINDUNG. Geldschöpfung, wegen der
 Seltenheit ökonomisch unbedenklich.
 
-Es gibt kein Todesfall-Event in der Sim — book_abfindung() ist der
-Servicepfad für die Monats-Realdaten-Pflege (Admin/Importer).
+Es gibt kein Todesfall-Event in der Sim — die Produktionspfade sind:
+- retire_player(): einheitlicher Ereignispfad (Abfindung buchen, DANN
+  zum Karrierende-Pseudo-Verein umhängen); genutzt vom TM-Kader-Sync
+  (sync_squads_tm) und dem finance_abfindung-Command.
+- book_abfindung(): reine Buchung, von populate_player_data (Kader-Fix)
+  und retire_player() aufgerufen.
 Karriereende-Spieler wandern zum Pseudo-Verein „Karrierende"
 (game.club_history.is_career_end_club); der ABGEBENDE Verein erhält
 die (Null-)Abfindung.
@@ -97,3 +101,23 @@ def book_abfindung(player, grund: str, saison: str | None = None):
         referenz_typ=referenz_typ, referenz_id=player.pk,
         pflicht=True,
     )
+
+
+def retire_player(player, career_end_club, grund: str = GRUND_KARRIEREENDE,
+                  saison: str | None = None):
+    """Einheitlicher Ereignispfad für Karriereende/Todesfall.
+
+    Bucht die Abfindung für den abgebenden Verein (solange der Spieler
+    noch dort hängt) und verschiebt den Spieler DANACH zum
+    Karrierende-Pseudo-Verein. Idempotent: erneuter Aufruf bucht nichts
+    mehr (referenz-Guard in book_abfindung) und lässt den Spieler beim
+    Pseudo-Verein.
+
+    Rückgabe: FinanceTransaction oder None (keine Zahlung fällig).
+    """
+    tx = book_abfindung(player, grund, saison)
+    if player.club_id != career_end_club.pk:
+        player.club = career_end_club
+        player.real_life_club = None
+        player.save(update_fields=['club', 'real_life_club'])
+    return tx
