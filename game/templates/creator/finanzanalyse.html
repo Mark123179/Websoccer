@@ -106,7 +106,7 @@
           <td class="fa-strong">Saison {{ r.season }}{% if r.season == current_season %} <span class="fa-tag">aktuell</span>{% endif %}</td>
           <td class="fa-r fa-green">{{ r.income_fmt }}</td>
           <td class="fa-r fa-red">{{ r.expense_fmt }}</td>
-          <td class="fa-r fa-strong {% if r.net < 0 %}fa-red{% else %}fa-green{% endif %}">{{ r.net_fmt }}</td>
+          <td class="fa-r fa-strong {% if r.net < 0 %}fa-red{% elif r.net > 0 %}fa-green{% endif %}" title="Netto: {% if r.net > 0 %}Gewinn{% elif r.net < 0 %}Verlust{% else %}ausgeglichen{% endif %}">{{ r.net_fmt }}</td>
           <td class="fa-r">{{ r.cnt }}</td>
           <td class="fa-r"><a class="fa-link" href="?season={{ r.season }}">Details</a></td>
         </tr>

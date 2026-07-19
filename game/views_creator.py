@@ -4197,12 +4197,20 @@ def creator_finanzanalyse(request):
         income = r['income'] or 0
         expense = r['expense'] or 0
         net = income + expense
+        net_f = float(net)
+        net_abs = _fmt(abs(net_f))
+        if net_f > 0:
+            net_signed = f'+ {net_abs}'
+        elif net_f < 0:
+            net_signed = f'− {net_abs}'
+        else:
+            net_signed = net_abs
         season_rows.append({
             'season': r['season'] or '—',
             'income_fmt': _fmt(income),
             'expense_fmt': _fmt(expense),
-            'net': float(net),
-            'net_fmt': _fmt(net),
+            'net': net_f,
+            'net_fmt': net_signed,
             'cnt': r['cnt'],
         })
 
