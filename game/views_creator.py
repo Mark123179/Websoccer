@@ -4256,7 +4256,73 @@ def creator_finanzanalyse(request):
     if sel_season not in season_options:
         season_options.append(sel_season)
 
+    # ── Monitoring (Spec 12.5): Geldmenge, Senken, Alarmwerte ────────
+    from .economy import monitoring
+    from .economy.integrity import check_ledger_integrity
+
+    verlauf = monitoring.geldmengen_verlauf()
+    verlauf_rows = [{
+        'saison': v['saison'],
+        'start_fmt': _fmt(v['start']),
+        'ende_fmt': _fmt(v['ende']),
+        'netto': float(v['netto']),
+        'netto_fmt': _fmt(v['netto']),
+        'wachstum_fmt': (f"{v['wachstum']*100:+.1f} %".replace('.', ',')
+                         if v['wachstum'] is not None else '—'),
+        'alarm': v['alarm'],
+    } for v in verlauf]
+
+    fluesse = monitoring.saison_geldfluesse(sel_season)
+    schoepfung_rows = [{
+        'label': r['label'], 'amount_fmt': _fmt(r['total']),
+    } for r in fluesse['schoepfung_rows']]
+    vernichtung_rows = [{
+        'label': r['label'], 'amount_fmt': _fmt(abs(r['total'])),
+    } for r in fluesse['vernichtung_rows']]
+
+    ratio = monitoring.abloese_mw_median(sel_season)
+    ratio_fmt = (f"{ratio['median']:.2f}".replace('.', ',')
+                 if ratio['median'] is not None else '—')
+
+    tk = monitoring.totes_kapital(sel_season)
+    tk_alarm = False
+    if len(verlauf_rows) >= 1:
+        # Trend über 3 Saisons ist erst mit historischen Snapshots messbar —
+        # als Näherung alarmiert das Badge, wenn aktuell totes Kapital existiert
+        # UND die Geldmenge zuletzt über der Alarmschwelle wuchs.
+        tk_alarm = tk['count'] > 0 and verlauf_rows[-1]['alarm']
+
+    integrity = check_ledger_integrity()
+    alarm_count = sum([
+        1 if any(v['alarm'] for v in verlauf_rows) else 0,
+        1 if ratio['alarm'] else 0,
+        1 if tk_alarm else 0,
+        1 if integrity['mismatches'] else 0,
+    ])
+
     return render(request, 'creator/finanzanalyse.html', {
+        'verlauf_rows': verlauf_rows,
+        'schoepfung_rows': schoepfung_rows,
+        'vernichtung_rows': vernichtung_rows,
+        'schoepfung_sum_fmt': _fmt(fluesse['schoepfung']),
+        'vernichtung_sum_fmt': _fmt(fluesse['vernichtung']),
+        'netto_sum_fmt': _fmt(fluesse['netto']),
+        'netto_sum': float(fluesse['netto']),
+        'zirkulation_fmt': _fmt(fluesse['zirkulation_volumen']),
+        'ratio': ratio,
+        'ratio_fmt': ratio_fmt,
+        'totes_kapital_fmt': _fmt(tk['summe']),
+        'totes_kapital_count': tk['count'],
+        'totes_kapital_clubs': [
+            {'name': c['name'], 'budget_fmt': _fmt(c['budget']),
+             'umsatz_fmt': _fmt(c['umsatz'])}
+            for c in tk['clubs']
+        ],
+        'tk_alarm': tk_alarm,
+        'integrity_ok': not integrity['mismatches'],
+        'integrity_checked': integrity['checked'],
+        'integrity_mismatches': integrity['mismatches'][:10],
+        'alarm_count': alarm_count,
         'kpi_total_fmt': _fmt(kpi['total']),
         'kpi_clubs': kpi['cnt'] or 0,
         'kpi_avg_fmt': _fmt(kpi['avg']),
@@ -4388,4 +4454,111 @@ def creator_ki_angebote(request):
         'q_season': q_season,
         'season_ids': list(season_ids),
         'result_count': len(rows),
+    })
+
+
+@staff_member_required
+def creator_sportgericht(request):
+    """Creator-Übersicht Zahlungsunfähigkeit (Spec Kap. 12.3).
+
+    Listet offene Vermerke; nach Fristablauf (und weiterhin negativem
+    Konto) kann der Admin hier Zwangsversteigerungen ansetzen.
+    """
+    from django.utils import timezone as tz
+    from .economy import forced_auction as fa_service
+    from .models import ForcedAuction, InsolvencyCase, Player
+
+    def _fmt(v):
+        if v is None:
+            return '—'
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return '—'
+        return f'{int(v):,} €'.replace(',', '.')
+
+    if request.method == 'POST':
+        case = get_object_or_404(InsolvencyCase, pk=request.POST.get('case_id'))
+        player = get_object_or_404(Player, pk=request.POST.get('player_id'))
+        raw = (request.POST.get('min_bid') or '').replace('.', '').replace(',', '.')
+        try:
+            min_bid = Decimal(raw)
+        except (InvalidOperation, ValueError):
+            messages.error(request, 'Ungültiges Mindestgebot.')
+            return redirect('creator_sportgericht')
+        try:
+            auction = fa_service.start_auction(case, player, min_bid)
+            messages.success(
+                request,
+                f'Zwangsversteigerung angesetzt: {player.full_name}, '
+                f'Mindestgebot {_fmt(auction.min_bid)}, '
+                f'Zuschlag am {auction.ends_on:%d.%m.%Y}.',
+            )
+        except fa_service.ForcedAuctionError as exc:
+            messages.error(request, str(exc))
+        return redirect('creator_sportgericht')
+
+    now = tz.now()
+    case_rows = []
+    open_cases = (
+        InsolvencyCase.objects
+        .filter(status__in=[InsolvencyCase.STATUS_OPEN,
+                            InsolvencyCase.STATUS_ENFORCED])
+        .select_related('club')
+        .order_by('deadline_at')
+    )
+    for case in open_cases:
+        club = case.club
+        deadline_passed = now >= case.deadline_at
+        enforceable = deadline_passed and (club.budget or 0) < 0
+        players = []
+        if enforceable:
+            players = list(
+                Player.objects.filter(club=club)
+                .order_by('-market_value', 'last_name')
+                .values('id', 'first_name', 'last_name', 'position',
+                        'market_value')
+            )
+            for p in players:
+                p['mv_fmt'] = _fmt(p['market_value'])
+        case_rows.append({
+            'case': case,
+            'club': club,
+            'budget_fmt': _fmt(club.budget),
+            'eroeffnung_fmt': _fmt(case.betrag_bei_eroeffnung),
+            'deadline_passed': deadline_passed,
+            'enforceable': enforceable,
+            'players': players,
+            'open_auctions': case.forced_auctions.filter(
+                status=ForcedAuction.STATUS_OPEN).count(),
+        })
+
+    auction_rows = []
+    for a in (
+        ForcedAuction.objects
+        .select_related('player', 'seller_club', 'winning_bid',
+                        'winning_bid__club')
+        .order_by('-created_at')[:100]
+    ):
+        auction_rows.append({
+            'auction': a,
+            'min_bid_fmt': _fmt(a.min_bid),
+            'bid_count': a.bids.count(),
+            'winner_name': (a.winning_bid.club.name
+                            if a.winning_bid_id else '—'),
+            'winner_amount_fmt': (_fmt(a.winning_bid.amount)
+                                  if a.winning_bid_id else '—'),
+        })
+
+    resolved_cases = (
+        InsolvencyCase.objects
+        .filter(status=InsolvencyCase.STATUS_RESOLVED)
+        .select_related('club')
+        .order_by('-resolved_at')[:20]
+    )
+
+    return render(request, 'creator/sportgericht.html', {
+        'case_rows': case_rows,
+        'auction_rows': auction_rows,
+        'resolved_cases': resolved_cases,
     })

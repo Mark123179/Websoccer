@@ -6285,3 +6285,192 @@ class TransferNegotiation(models.Model):
     def __str__(self):
         return (f'{self.bidder_club} → {self.player} '
                 f'(Runde {self.runde}, {self.get_status_display()})')
+
+
+# ── Zahlungsunfähigkeit & Zwangsversteigerung (Spec Kap. 12.3) ─────────────────
+
+class InsolvencyCase(models.Model):
+    """Sportgericht-Vermerk bei Zahlungsunfähigkeit (Spec Kap. 12.3).
+
+    Wird automatisch geöffnet, wenn eine Pflichtbuchung das Konto ins Minus
+    bucht (Hook in game.economy.booking → game.economy.insolvency). Der
+    Manager hat 7 ECHTE Tage, den Kontostand zu bereinigen (deadline_at);
+    kehrt das Konto auf ≥ 0 zurück, schließt der Fall automatisch.
+    Andernfalls kann der Admin eine Zwangsversteigerung ausgewählter
+    Spieler starten (ForcedAuction) — der Erlös geht an den Verein.
+    Keine gesonderte Transfersperre: Aktive Ausgaben scheitern im Minus
+    ohnehin an der Deckung (Grundregel 2).
+    """
+
+    STATUS_OPEN = 'open'
+    STATUS_RESOLVED = 'resolved'
+    STATUS_ENFORCED = 'enforced'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Offen'),
+        (STATUS_RESOLVED, 'Bereinigt'),
+        (STATUS_ENFORCED, 'Zwangsversteigerung eingeleitet'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='insolvency_cases',
+        verbose_name='Verein',
+    )
+    opened_at = models.DateTimeField(auto_now_add=True, verbose_name='Eröffnet am')
+    deadline_at = models.DateTimeField(verbose_name='Frist (7 echte Tage)')
+    trigger_tx = models.ForeignKey(
+        'FinanceTransaction',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+        verbose_name='Auslösende Buchung',
+    )
+    betrag_bei_eroeffnung = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        verbose_name='Kontostand bei Eröffnung (€)',
+    )
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=STATUS_OPEN,
+    )
+    resolved_at = models.DateTimeField(null=True, blank=True, verbose_name='Bereinigt am')
+    enforced_at = models.DateTimeField(null=True, blank=True, verbose_name='Vollstreckt am')
+
+    class Meta:
+        ordering = ['-opened_at']
+        verbose_name = 'Zahlungsunfähigkeits-Vermerk'
+        verbose_name_plural = 'Zahlungsunfähigkeits-Vermerke'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club'],
+                condition=models.Q(status='open'),
+                name='unique_open_insolvency_case_per_club',
+            ),
+        ]
+
+    def __str__(self):
+        return (f'Vermerk {self.club} ({self.get_status_display()}, '
+                f'eröffnet {self.opened_at:%d.%m.%Y})')
+
+
+class ForcedAuction(models.Model):
+    """Zwangsversteigerung eines Spielers (Spec Kap. 12.3).
+
+    Vom Admin nach Fristablauf eines offenen Zahlungsunfähigkeits-Vermerks
+    angesetzt. Anders als reguläre Auktionen (Scouting-Pool, Erlös
+    vernichtet) geht der Erlös hier an den Verein: Das Settlement läuft
+    über execute_money_transfer (TRANSFER_AUS/TRANSFER_EIN inkl.
+    Ausbildungsabgabe). Höchstes Gebot gewinnt; fehlt dem Gewinner beim
+    Zuschlag die Deckung, rückt das nächsthöhere Gebot nach.
+    """
+
+    STATUS_OPEN = 'open'
+    STATUS_SETTLED = 'settled'
+    STATUS_UNSOLD = 'unsold'
+    STATUS_CANCELLED = 'cancelled'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Laufend'),
+        (STATUS_SETTLED, 'Zugeschlagen'),
+        (STATUS_UNSOLD, 'Kein Zuschlag'),
+        (STATUS_CANCELLED, 'Abgebrochen'),
+    ]
+
+    case = models.ForeignKey(
+        InsolvencyCase,
+        on_delete=models.PROTECT,
+        related_name='forced_auctions',
+        verbose_name='Vermerk',
+    )
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.PROTECT,
+        related_name='forced_auctions',
+    )
+    seller_club = models.ForeignKey(
+        Club,
+        on_delete=models.PROTECT,
+        related_name='forced_auctions',
+        verbose_name='Schuldner-Verein',
+    )
+    min_bid = models.DecimalField(
+        max_digits=15, decimal_places=2, verbose_name='Mindestgebot (€)',
+    )
+    ends_on = models.DateField(verbose_name='Zuschlagstermin')
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=STATUS_OPEN,
+    )
+    winning_bid = models.ForeignKey(
+        'ForcedAuctionBid',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+        verbose_name='Zuschlags-Gebot',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    settled_on = models.DateField(null=True, blank=True, verbose_name='Gewertet am')
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Zwangsversteigerung'
+        verbose_name_plural = 'Zwangsversteigerungen'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player'],
+                condition=models.Q(status='open'),
+                name='unique_open_forced_auction_per_player',
+            ),
+        ]
+
+    def __str__(self):
+        return (f'Zwangsversteigerung {self.player} '
+                f'({self.seller_club}, {self.get_status_display()})')
+
+
+class ForcedAuctionBid(models.Model):
+    """Gebot eines Vereins auf eine Zwangsversteigerung.
+
+    Ein Verein hält je Auktion genau ein Gebot (Erhöhen = Update).
+    Keine Budget-Reservierung beim Bieten — die Deckung wird beim
+    Zuschlag geprüft (aktive Ausgabe, Grundregel 2); scheitert sie,
+    rückt das nächsthöhere Gebot nach.
+    """
+
+    auction = models.ForeignKey(
+        ForcedAuction,
+        on_delete=models.CASCADE,
+        related_name='bids',
+    )
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='forced_auction_bids',
+        verbose_name='Bieter',
+    )
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='forced_auction_bids',
+    )
+    amount = models.DecimalField(
+        max_digits=15, decimal_places=2, verbose_name='Gebot (€)',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-amount', 'created_at']
+        verbose_name = 'Zwangsversteigerungs-Gebot'
+        verbose_name_plural = 'Zwangsversteigerungs-Gebote'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['auction', 'club'],
+                name='unique_forced_auction_bid_per_club',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.club} bietet {self.amount} € ({self.auction})'

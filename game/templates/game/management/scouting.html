@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -243,6 +243,63 @@
         <p class="sc-empty-hint">Noch keine laufenden Gebote.</p>
         {% endif %}
       </section>
+
+      {% if forced_auctions %}
+      <!-- Zwangsversteigerungen (Spec Kap. 12.3) -->
+      <section class="sc-panel sc-fa-panel">
+        <div class="sc-panel-title-row">
+          <span class="sc-panel-title sc-fa-title">Zwangsversteigerungen</span>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Vom Sportgericht angesetzte Auktionen zahlungsunfähiger Vereine. Höchstes Gebot gewinnt am Zuschlagstermin; der Erlös geht an den Verein."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+        </div>
+        <div class="sc-bids-table">
+          <div class="sc-bids-head sc-fa-head">
+            <span></span>
+            <span class="sc-bids-col-r">Mindestgebot</span>
+            <span class="sc-bids-col-r">Eigenes Gebot</span>
+            <span>Zuschlag</span>
+            <span></span>
+          </div>
+          {% for fa in forced_auctions %}
+          <div class="sc-bid-row sc-fa-row">
+            <div class="sc-bid-player">
+              {% if fa.portrait %}
+              <img src="{{ fa.portrait }}" alt="{{ fa.player_name }}" class="sc-bid-thumb" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+              {% else %}
+              <div class="sc-bid-thumb sc-bid-thumb--empty"></div>
+              {% endif %}
+              {% if fa.seller_crest %}
+              <img src="{{ fa.seller_crest }}" alt="{{ fa.seller_name }}" class="sc-bid-crest" onerror="this.style.display='none'">
+              {% else %}
+              <div class="sc-bid-crest sc-bid-crest--empty" title="{{ fa.seller_name }}">{{ fa.seller_name|slice:":1" }}</div>
+              {% endif %}
+              <div class="sc-bid-name-block">
+                <div class="sc-bid-name">{{ fa.player_name }}{% if fa.position %} <span class="sc-fa-pos">{{ fa.position }}</span>{% endif %}</div>
+                <div class="sc-bid-club">{{ fa.seller_name }}</div>
+              </div>
+            </div>
+            <div class="sc-bids-col-r sc-bid-min">{{ fa.min_bid_fmt }}</div>
+            <div class="sc-bids-col-r">{{ fa.own_amount_fmt|default:"—" }}</div>
+            <div class="sc-bid-decision">
+              <div class="sc-bid-window">Zuschlag am {{ fa.ends_on|date:"d.m.Y" }}</div>
+              <div class="sc-bid-days">in {{ fa.days }} Tagen</div>
+            </div>
+            <div class="sc-bid-action">
+              {% if fa.is_seller %}
+              <span class="sc-fa-seller-tag" title="Eigener Verein — kein Gebot möglich">Eigener Verein</span>
+              {% else %}
+              <form method="post" action="{% url 'forced_auction_bid' %}" class="sc-fa-bid-form">
+                {% csrf_token %}
+                <input type="hidden" name="auction_id" value="{{ fa.id }}">
+                <input type="text" name="amount" class="sc-fa-bid-input" placeholder="Gebot in €" inputmode="numeric" required>
+                <button type="submit" class="sc-fa-bid-btn">{% if fa.own_amount_fmt %}Erhöhen{% else %}Bieten{% endif %}</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
 
     </main>
 

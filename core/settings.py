@@ -330,6 +330,9 @@ _CITY_PIN_CHECK_INTERVAL = float(
 _FINANCE_INTEGRITY_INTERVAL = float(
     os.environ.get('CELERY_FINANCE_INTEGRITY_INTERVAL', 24 * 60 * 60)
 )
+_FORCED_AUCTION_INTERVAL = float(
+    os.environ.get('CELERY_FORCED_AUCTION_INTERVAL', 24 * 60 * 60)
+)
 CELERY_BEAT_SCHEDULE = {
     'city-pin-check-taeglich': {
         'task': 'game.tasks.run_management_command',
@@ -342,5 +345,11 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'game.tasks.run_management_command',
         'schedule': _FINANCE_INTEGRITY_INTERVAL,
         'args': ('finance_integrity_check',),
+    },
+    # Fällige Zwangsversteigerungen täglich zuschlagen (Spec Kap. 12.3).
+    'forced-auctions-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': _FORCED_AUCTION_INTERVAL,
+        'args': ('resolve_forced_auctions',),
     },
 }

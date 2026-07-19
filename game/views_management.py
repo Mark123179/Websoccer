@@ -841,6 +841,19 @@ def management_sportgericht(request):
 
     my_row = next((r for r in all_manager_rows if r['is_own']), None)
 
+    # ── Zahlungsunfähigkeits-Vermerk (Spec Kap. 12.3): eigener Verein ──
+    insolvency_case = None
+    insolvency_auctions = []
+    if my_club:
+        from .economy.insolvency import offene_faelle
+        insolvency_case = offene_faelle(my_club).first()
+        if insolvency_case is not None:
+            insolvency_auctions = list(
+                insolvency_case.forced_auctions
+                .select_related('player')
+                .order_by('ends_on')
+            )
+
     return render(request, 'game/management/sportgericht.html', {
         'club': my_club,
         'all_manager_rows': all_manager_rows,
@@ -849,6 +862,8 @@ def management_sportgericht(request):
         'open_tickets': open_tickets,
         'closed_tickets': closed_tickets,
         'season': season,
+        'insolvency_case': insolvency_case,
+        'insolvency_auctions': insolvency_auctions,
     })
 
 

@@ -149,6 +149,130 @@
     </div>
   </div>
 
+  <!-- ── Monitoring (Spec 12.5) ────────────────────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">
+      Monitoring &amp; Alarmwerte
+      <span class="fa-panel-sub">Spec 12.5 — nur Anzeige, keine Automatik</span>
+      {% if alarm_count %}
+      <span class="fa-alarm-badge fa-alarm-on">{{ alarm_count }} Alarm{{ alarm_count|pluralize:"e" }}</span>
+      {% else %}
+      <span class="fa-alarm-badge fa-alarm-off">Alles im grünen Bereich</span>
+      {% endif %}
+    </h2>
+
+    <div class="fa-mon-grid">
+      <div class="fa-mon-card {% if ratio.alarm %}fa-mon-alarm{% elif ratio.gesund %}fa-mon-ok{% endif %}">
+        <span class="fa-kpi-label">Ablöse/MW-Median (Saison {{ sel_season }})</span>
+        <span class="fa-kpi-value {% if ratio.alarm %}fa-red{% elif ratio.gesund %}fa-green{% endif %}">{{ ratio_fmt }}</span>
+        <span class="fa-kpi-sub">{{ ratio.count }} Transfer(s) · Ziel 1,3–1,8 · Alarm &gt; 2,2</span>
+      </div>
+      <div class="fa-mon-card {% if tk_alarm %}fa-mon-alarm{% endif %}">
+        <span class="fa-kpi-label">Totes Kapital (Saison {{ sel_season }})</span>
+        <span class="fa-kpi-value {% if tk_alarm %}fa-red{% endif %}">{{ totes_kapital_fmt }}</span>
+        <span class="fa-kpi-sub">{{ totes_kapital_count }} Verein(e) mit Kontostand &gt; 2× Jahresumsatz</span>
+      </div>
+      <div class="fa-mon-card">
+        <span class="fa-kpi-label">Zirkulation (Saison {{ sel_season }})</span>
+        <span class="fa-kpi-value">{{ zirkulation_fmt }}</span>
+        <span class="fa-kpi-sub">Transfervolumen Verein↔Verein (geldmengenneutral)</span>
+      </div>
+      <div class="fa-mon-card {% if not integrity_ok %}fa-mon-alarm{% else %}fa-mon-ok{% endif %}">
+        <span class="fa-kpi-label">Ledger-Integrität</span>
+        <span class="fa-kpi-value {% if integrity_ok %}fa-green{% else %}fa-red{% endif %}">{% if integrity_ok %}OK{% else %}ALARM{% endif %}</span>
+        <span class="fa-kpi-sub">{{ integrity_checked }} Konten live geprüft{% if not integrity_ok %} · Abweichungen unten{% endif %}</span>
+      </div>
+    </div>
+
+    {% if integrity_mismatches %}
+    <table class="fa-table" style="margin-top:.75rem;">
+      <thead>
+        <tr><th>Verein (Abweichung)</th><th class="fa-r">Konto-Cache</th><th class="fa-r">Ledger-Summe</th><th class="fa-r">Differenz</th></tr>
+      </thead>
+      <tbody>
+        {% for m in integrity_mismatches %}
+        <tr>
+          <td class="fa-strong">{{ m.club }}</td>
+          <td class="fa-r">{{ m.budget }}</td>
+          <td class="fa-r">{{ m.ledger }}</td>
+          <td class="fa-r fa-red">{{ m.diff }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
+  <!-- ── Geldmengen-Verlauf ───────────────────────────────────────────── -->
+  <div class="fa-grid-2">
+    <div class="fa-panel">
+      <h2 class="fa-panel-title">Geldmengen-Verlauf <span class="fa-panel-sub">Schöpfung − Vernichtung je Saison · Alarm &gt; +4 %</span></h2>
+      <table class="fa-table">
+        <thead>
+          <tr><th>Saison</th><th class="fa-r">Start</th><th class="fa-r">Netto</th><th class="fa-r">Ende</th><th class="fa-r">Wachstum</th></tr>
+        </thead>
+        <tbody>
+          {% for r in verlauf_rows %}
+          <tr>
+            <td class="fa-strong">Saison {{ r.saison }}</td>
+            <td class="fa-r">{{ r.start_fmt }}</td>
+            <td class="fa-r {% if r.netto > 0 %}fa-green{% elif r.netto < 0 %}fa-red{% endif %}">{{ r.netto_fmt }}</td>
+            <td class="fa-r">{{ r.ende_fmt }}</td>
+            <td class="fa-r fa-strong {% if r.alarm %}fa-red{% endif %}">{{ r.wachstum_fmt }}{% if r.alarm %} ⚠{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="fa-empty">Noch keine Saison-Buchungen im Ledger.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fa-panel">
+      <h2 class="fa-panel-title">
+        Schöpfung vs. Vernichtung — Saison {{ sel_season }}
+        <span class="fa-panel-sub">+{{ schoepfung_sum_fmt }} · −{{ vernichtung_sum_fmt }} · Netto {{ netto_sum_fmt }}</span>
+      </h2>
+      <div class="fa-topflop">
+        <div>
+          <h3 class="fa-list-head fa-green">Geldschöpfung</h3>
+          {% for r in schoepfung_rows %}
+          <div class="fa-cat-meta" style="margin-bottom:.35rem;"><span>{{ r.label }}</span><span class="fa-green">{{ r.amount_fmt }}</span></div>
+          {% empty %}
+          <p class="fa-empty">Keine Schöpfungsbuchungen.</p>
+          {% endfor %}
+        </div>
+        <div>
+          <h3 class="fa-list-head fa-red">Geldvernichtung</h3>
+          {% for r in vernichtung_rows %}
+          <div class="fa-cat-meta" style="margin-bottom:.35rem;"><span>{{ r.label }}</span><span class="fa-red">{{ r.amount_fmt }}</span></div>
+          {% empty %}
+          <p class="fa-empty">Keine Vernichtungsbuchungen.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if totes_kapital_clubs %}
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">Totes Kapital — Vereine <span class="fa-panel-sub">Kontostand &gt; 2× Jahresumsatz (Saison {{ sel_season }})</span></h2>
+    <table class="fa-table">
+      <thead>
+        <tr><th>Verein</th><th class="fa-r">Kontostand</th><th class="fa-r">Jahresumsatz</th></tr>
+      </thead>
+      <tbody>
+        {% for c in totes_kapital_clubs %}
+        <tr>
+          <td class="fa-strong">{{ c.name }}</td>
+          <td class="fa-r">{{ c.budget_fmt }}</td>
+          <td class="fa-r">{{ c.umsatz_fmt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
 </section>
 
 <style>
@@ -213,6 +337,15 @@
 .fa-club-budget { font-weight: 700; color: #cce8ff; white-space: nowrap; }
 .fa-club-budget.fa-green { color: #22c55e; }
 .fa-club-budget.fa-red { color: #ef4444; }
+/* Monitoring */
+.fa-mon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
+.fa-mon-card { background: #071525; border: 1px solid #0d2035; border-radius: 10px; padding: .85rem 1rem; display: flex; flex-direction: column; gap: .25rem; }
+.fa-mon-card.fa-mon-alarm { border-color: #ef444466; background: #170a0e; }
+.fa-mon-card.fa-mon-ok { border-color: #22c55e44; }
+.fa-alarm-badge { font-size: .66rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: .18rem .55rem; border-radius: 10px; }
+.fa-alarm-on { background: #ef444422; color: #ef4444; border: 1px solid #ef444455; }
+.fa-alarm-off { background: #22c55e18; color: #22c55e; border: 1px solid #22c55e44; }
+
 .fa-cat-row { margin-bottom: .55rem; }
 .fa-cat-meta { display: flex; justify-content: space-between; font-size: .8rem; color: #aabbcc; margin-bottom: .2rem; }
 .fa-cat-meta em { color: #556677; font-style: normal; font-size: .7rem; }

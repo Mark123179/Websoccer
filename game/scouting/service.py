@@ -423,9 +423,12 @@ def _settle_win(bid, today):
 
     # Pflichtbuchung: Der Zuschlag wurde beim Bieten budgetär reserviert —
     # das Settlement darf nicht mehr an der Deckung scheitern.
+    # Buchungstyp AUKTION (Spec Kap. 11): Reguläre Auktion eines vereins-
+    # losen Poolspielers ist eine Geldsenke — der Zuschlagserlös wird
+    # vollständig vernichtet (kein Empfänger), nicht als Transfer gezählt.
     book(
-        club, 'TRANSFER_AUS', -bid.amount,
-        beschreibung=f'Scouting-Transfer: {_player_name(player)}',
+        club, 'AUKTION', -bid.amount,
+        beschreibung=f'Auktions-Zuschlag: {_player_name(player)}',
         datum=today,
         referenz_typ='scouting_bid',
         referenz_id=bid.pk,

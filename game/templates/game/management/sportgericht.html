@@ -4,7 +4,7 @@
 {% block body_class %}sportgericht-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/sportgericht.css' %}?v=6">
 <style>
 .sportgericht-page .gameViewport {
     background-image: url('{% static 'game/img/sportgericht_bg.png' %}');
@@ -31,6 +31,44 @@
                 <h1 class="sg-page-title">Sport<strong>gericht</strong></h1>
                 <hr class="sg-divider">
             </div>
+
+            {% if insolvency_case %}
+            <!-- Zahlungsunfähigkeits-Vermerk (Spec Kap. 12.3) -->
+            <div class="sg-panel sg-panel--insolvenz">
+                <p class="sg-panel-title sg-panel-title--insolvenz">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Vermerk: Zahlungsunfähigkeit
+                </p>
+                <p class="sg-insolvenz-text">
+                    Dein Vereinskonto ist am {{ insolvency_case.opened_at|date:"d.m.Y" }} durch eine
+                    Pflichtbuchung ins Minus geraten
+                    (Kontostand bei Eröffnung: {{ insolvency_case.betrag_bei_eroeffnung|floatformat:0 }} €).
+                    Du hast bis zum <strong>{{ insolvency_case.deadline_at|date:"d.m.Y, H:i" }} Uhr</strong> Zeit,
+                    den Kontostand zu bereinigen — etwa durch Spielerverkäufe.
+                    Sobald das Konto wieder auf mindestens 0 € steht, wird der Vermerk automatisch gelöscht.
+                </p>
+                {% if insolvency_case.status == 'enforced' %}
+                <p class="sg-insolvenz-text sg-insolvenz-text--enforced">
+                    Die Frist ist verstrichen: Das Sportgericht hat eine
+                    <strong>Zwangsversteigerung</strong> eingeleitet.
+                </p>
+                {% if insolvency_auctions %}
+                <ul class="sg-insolvenz-auctions">
+                    {% for auction in insolvency_auctions %}
+                    <li>
+                        {{ auction.player.full_name }} —
+                        Mindestgebot {{ auction.min_bid|floatformat:0 }} €,
+                        Zuschlag am {{ auction.ends_on|date:"d.m.Y" }}
+                        ({{ auction.get_status_display }})
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
 
             <!-- Aktivitätscheck — Tabellenformat -->
             <div class="sg-panel">

@@ -206,7 +206,7 @@ class ResolutionTests(ScoutingServiceBase):
         club2.refresh_from_db()
         self.assertEqual(club2.budget, Decimal('192000000'))
         self.assertTrue(FinanceTransaction.objects.filter(
-            club=club2, typ='TRANSFER_AUS').exists())
+            club=club2, typ='AUKTION').exists())
 
     def test_tie_breaks_to_earlier_bid(self):
         player = self.pool[0]

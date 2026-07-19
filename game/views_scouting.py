@@ -232,6 +232,37 @@ def transfer_scouting(request):
         ).order_by('order')
         finds = [_find_card(f, watched_ids) for f in offered]
 
+    # ── Zwangsversteigerungen (Spec Kap. 12.3): offene Auktionen ──────
+    from .models import ForcedAuction, ForcedAuctionBid
+    forced_auctions = []
+    fa_today = date.today()
+    own_fa_bids = {
+        b.auction_id: b for b in ForcedAuctionBid.objects.filter(
+            club=club,
+            auction__status=ForcedAuction.STATUS_OPEN,
+        )
+    }
+    for fa in (
+        ForcedAuction.objects
+        .filter(status=ForcedAuction.STATUS_OPEN)
+        .select_related('player', 'seller_club')
+        .order_by('ends_on')
+    ):
+        own_bid = own_fa_bids.get(fa.pk)
+        forced_auctions.append({
+            'id': fa.pk,
+            'player_name': fa.player.full_name,
+            'portrait': fa.player.portrait_static_path,
+            'position': fa.player.position,
+            'seller_name': fa.seller_club.name,
+            'seller_crest': fa.seller_club.crest_static_path,
+            'min_bid_fmt': _euro(fa.min_bid),
+            'ends_on': fa.ends_on,
+            'days': max((fa.ends_on - fa_today).days, 0),
+            'is_seller': fa.seller_club_id == club.pk,
+            'own_amount_fmt': _euro(own_bid.amount) if own_bid else None,
+        })
+
     today = date.today()
     bids = []
     for b in club.scouting_bids.filter(
@@ -272,6 +303,7 @@ def transfer_scouting(request):
         'active_assignment': active,
         'finds': finds,
         'bids': bids,
+        'forced_auctions': forced_auctions,
         'coverage_pct': coverage_pct,
         'scoutable_count': scoutable_count,
         'building_count': building_count,
@@ -317,6 +349,30 @@ def scouting_bid(request):
         service.place_bid(club, manager, find, amount)
         messages.success(request, 'Gebot abgegeben.')
     except service.ScoutingError as exc:
+        messages.error(request, str(exc))
+    return redirect('transfer_scouting')
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def forced_auction_bid(request):
+    """Gebot auf eine Zwangsversteigerung (Spec Kap. 12.3)."""
+    from .economy import forced_auction as fa_service
+    from .models import ForcedAuction
+
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    manager = _manager_of(club)
+    auction = get_object_or_404(ForcedAuction, pk=request.POST.get('auction_id'))
+    amount = _parse_amount(request.POST.get('amount'))
+    if amount is None:
+        messages.error(request, 'Ungültiger Gebotsbetrag.')
+        return redirect('transfer_scouting')
+    try:
+        fa_service.place_bid(auction, club, manager, amount)
+        messages.success(request, 'Gebot auf die Zwangsversteigerung abgegeben.')
+    except fa_service.ForcedAuctionError as exc:
         messages.error(request, str(exc))
     return redirect('transfer_scouting')
 

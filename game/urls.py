@@ -39,6 +39,7 @@ from .views_scouting import (
     transfer_scouting,
     scouting_start,
     scouting_bid,
+    forced_auction_bid,
     scouting_watch,
     scouting_withdraw,
     scouting_upgrade,
@@ -146,6 +147,7 @@ from .views_creator import (
     creator_finanzanalyse,
     creator_media_outlet_delete,
     creator_ki_angebote,
+    creator_sportgericht,
 )
 from .views_importer_api import (
     importer_next_job,
@@ -364,6 +366,8 @@ urlpatterns = [
     path('transfers/scouting/gebot/', scouting_bid, name='scouting_bid'),
     path('transfers/scouting/beobachten/', scouting_watch, name='scouting_watch'),
     path('transfers/scouting/zurueckziehen/', scouting_withdraw, name='scouting_withdraw'),
+    path('transfers/zwangsversteigerung/gebot/', forced_auction_bid,
+         name='forced_auction_bid'),
     path('transfers/scouting/ausbauen/', scouting_upgrade, name='scouting_upgrade'),
     path('transfers/scouting/ablehnen/', scouting_reject, name='scouting_reject'),
     path('transfers/beobachtungsliste/', transfer_watchlist, name='transfer_watchlist'),
@@ -378,6 +382,7 @@ urlpatterns = [
     path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
     path('creator/finanzen/', creator_finanzanalyse, name='creator_finanzanalyse'),
     path('creator/ki-angebote/', creator_ki_angebote, name='creator_ki_angebote'),
+    path('creator/sportgericht/', creator_sportgericht, name='creator_sportgericht'),
     path('creator/medien/<int:outlet_id>/loeschen/', creator_media_outlet_delete, name='creator_media_outlet_delete'),
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),
     path('creator/system-diagnostics/', creator_system_diagnostics, name='creator_system_diagnostics'),

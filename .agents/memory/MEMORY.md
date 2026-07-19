@@ -73,6 +73,7 @@
 - [Stadionumfeld feature](stadionumfeld-feature.md) — global singleton scene; server is real admin-gate; new state keys need STADIONUMFELD_ALLOWED_KEYS or drop silently; baufeld1.png absent from source = expected 404, dont fabricate.
 - [Template-JSON XSS trap](template-json-xss.md) — never `|safe` JSON into <script> when user text can land in it; use json_script + JSON.parse.
 - [Nation-Badge-ID Calibration](nation-badge-id-calibration.md) — Badge-Lücken 56–105/803–1434; 46 IDs korrigiert; Bild-Erkennung ±1 unzuverlässig → User-Textliste bevorzugen.
+- [Insolvenz & Zwangsversteigerung V1](finance-insolvency-forced-auction.md) — Vermerk-Hooks als Vorzeichen-Guards im Buchungspfad; Konto bereinigt → Auktion cancelled; nur Scouting-Auktion vernichtet Geld; Verbandsabgabe hart disabled per Seed.
 - [Transfer-Engine Locking](transfer-engine-locking.md) — geldbewegende Pfade: Nego→Clubs(sortiert)→Spielerzeile sperren + club_id re-validieren, sonst Doppelkauf-Race.
 - [Stadionökonomie Phase 3](stadium-economy-phase3.md) — Nachfrage live aus Kader-MW (kein Fanbasis-Feld); Ausbau erst nach Bauzeit via resolve_due_expansions; 0-€-Spieltag = keine Ledger-Zeile; Umfeld: Layout global / Ambiente per Verein (merge, nie Vollersatz).
 - [Finanz-Ledger Phase 1](finance-ledger-phase1.md) — alles über book() (nie budget direkt); Betriebskosten-Fenster halboffen (prev,run]; book_many braucht order_by('pk') im Lock; log_club_transaction bucht jetzt MIT.

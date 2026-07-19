@@ -64,6 +64,17 @@ def _create_booking(locked, typ, betrag, *, saison, spieltag, beschreibung,
     )
     locked.budget = kontostand + betrag
     locked.save(update_fields=['budget'])
+
+    # Zahlungsunfähigkeit (Spec Kap. 12.3): Nur der Vorzeichen-Übergang
+    # löst Queries aus — der heiße Buchungspfad bleibt reine Arithmetik.
+    # Läuft in derselben Transaktion wie die Buchung (Club-Zeile gesperrt);
+    # rollt die Buchung zurück, verschwindet auch der Vermerk.
+    from game.economy import insolvency
+    if pflicht and betrag < 0 and kontostand >= 0 and locked.budget < 0:
+        insolvency.open_case(locked, tx)
+    elif betrag > 0 and kontostand < 0 and locked.budget >= 0:
+        insolvency.resolve_cases(locked)
+
     return tx
 
 
