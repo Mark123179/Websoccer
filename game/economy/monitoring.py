@@ -169,6 +169,63 @@ def abloese_mw_median(saison: str) -> dict:
     }
 
 
+def totes_kapital_verlauf() -> dict:
+    """Totes Kapital je Saison + Alarm „3 Saisons steigend" (Spec 12.5).
+
+    Historische Kontostände werden pro Verein rückwärts aus dem heutigen
+    Budget rekonstruiert (Saisonende S = heutiges Budget − Netto-Buchungen
+    aller Saisons nach S) — gleiche Approximation wie geldmengen_verlauf,
+    Buchungen ohne Saisonzuordnung/KORREKTUR-freie Lücken bleiben außen vor.
+    Totes Kapital am Saisonende = Summe der Kontostände > 2× Jahresumsatz
+    der Saison. Alarm, wenn die Summe über die letzten 3 Saisons strikt
+    steigt (braucht mindestens 3 Saisons Datenbasis).
+    """
+    from game.models import Club, FinanceTransaction
+
+    saisons = sorted(
+        {s for s in FinanceTransaction.objects.values_list('saison', flat=True)
+         .distinct() if (s or '').isdigit()},
+        key=int,
+    )
+    if not saisons:
+        return {'verlauf': [], 'alarm': False}
+
+    agg = (
+        FinanceTransaction.objects.filter(saison__in=saisons)
+        .values('club_id', 'saison')
+        .annotate(netto=Sum('betrag'),
+                  umsatz=Sum('betrag', filter=Q(betrag__gt=0)))
+    )
+    netto_map, umsatz_map = {}, {}
+    for r in agg:
+        key = (r['club_id'], r['saison'])
+        netto_map[key] = r['netto'] or Decimal('0')
+        umsatz_map[key] = r['umsatz'] or Decimal('0')
+
+    ende = {pk: (b or Decimal('0'))
+            for pk, b in Club.objects.values_list('pk', 'budget')}
+    verlauf_rev = []
+    for s in reversed(saisons):
+        summe = Decimal('0')
+        count = 0
+        for club_id, bal in ende.items():
+            if bal > 0:
+                umsatz = umsatz_map.get((club_id, s), Decimal('0'))
+                if bal > TOTES_KAPITAL_UMSATZ_FAKTOR * umsatz:
+                    summe += bal
+                    count += 1
+        verlauf_rev.append({'saison': s, 'summe': summe, 'count': count})
+        for club_id in ende:
+            ende[club_id] -= netto_map.get((club_id, s), Decimal('0'))
+
+    verlauf = list(reversed(verlauf_rev))
+    alarm = (
+        len(verlauf) >= 3
+        and verlauf[-3]['summe'] < verlauf[-2]['summe'] < verlauf[-1]['summe']
+    )
+    return {'verlauf': verlauf, 'alarm': alarm}
+
+
 def totes_kapital(saison: str) -> dict:
     """Summe der Kontostände > 2× Jahresumsatz (Spec 12.5).
 

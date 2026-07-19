@@ -340,6 +340,60 @@ class MonitoringTests(TestCase):
         self.assertIsNone(r['median'])
         self.assertFalse(r['alarm'])
 
+    def test_totes_kapital_verlauf_alarm_bei_3_saisons_steigend(self):
+        # Hortender Verein: heutiges Budget 300 000 €, drei Saisons mit je
+        # +10 000 € Netto (Umsatz 10 000 → Schwelle 20 000, weit unterm
+        # Kontostand). Rückwärtsrechnung: Saisonenden 280k < 290k < 300k
+        # → totes Kapital 3 Saisons strikt steigend → Alarm.
+        club = _mk_club('Hortender FC', budget='300000')
+        for saison in ('1', '2', '3'):
+            FinanceTransaction.objects.create(
+                club=club, saison=saison, typ='TICKET',
+                betrag=Decimal('10000'), datum=datetime.date(2026, 7, 1),
+            )
+        r = monitoring.totes_kapital_verlauf()
+        self.assertEqual([v['saison'] for v in r['verlauf']], ['1', '2', '3'])
+        self.assertEqual(
+            [v['summe'] for v in r['verlauf']],
+            [Decimal('280000.00'), Decimal('290000.00'),
+             Decimal('300000.00')],
+        )
+        self.assertTrue(r['alarm'])
+
+    def test_totes_kapital_verlauf_kein_alarm_bei_sinkendem_trend(self):
+        # Gleiches Setup, aber Vermögen SINKT rückwärts betrachtet nicht —
+        # negative Netto-Buchungen lassen die Saisonenden fallen → kein Alarm.
+        club = _mk_club('Abschmelzender FC', budget='200000')
+        for saison in ('1', '2', '3'):
+            FinanceTransaction.objects.create(
+                club=club, saison=saison, typ='GEHALT',
+                betrag=Decimal('-10000'), datum=datetime.date(2026, 7, 1),
+            )
+        r = monitoring.totes_kapital_verlauf()
+        self.assertEqual(
+            [v['summe'] for v in r['verlauf']],
+            [Decimal('220000.00'), Decimal('210000.00'),
+             Decimal('200000.00')],
+        )
+        self.assertFalse(r['alarm'])
+
+    def test_totes_kapital_verlauf_kein_alarm_unter_3_saisons(self):
+        # Steigender Trend, aber nur 2 Saisons Datenbasis → kein Alarm.
+        club = _mk_club('Junger FC', budget='300000')
+        for saison in ('1', '2'):
+            FinanceTransaction.objects.create(
+                club=club, saison=saison, typ='TICKET',
+                betrag=Decimal('10000'), datum=datetime.date(2026, 7, 1),
+            )
+        r = monitoring.totes_kapital_verlauf()
+        self.assertEqual(len(r['verlauf']), 2)
+        self.assertFalse(r['alarm'])
+
+    def test_totes_kapital_verlauf_leer(self):
+        r = monitoring.totes_kapital_verlauf()
+        self.assertEqual(r['verlauf'], [])
+        self.assertFalse(r['alarm'])
+
 
 class CreatorSeitenSmokeTests(TestCase):
     """Sportgericht- und Finanzanalyse-Seite rendern für Staff."""

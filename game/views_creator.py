@@ -4285,12 +4285,10 @@ def creator_finanzanalyse(request):
                  if ratio['median'] is not None else '—')
 
     tk = monitoring.totes_kapital(sel_season)
-    tk_alarm = False
-    if len(verlauf_rows) >= 1:
-        # Trend über 3 Saisons ist erst mit historischen Snapshots messbar —
-        # als Näherung alarmiert das Badge, wenn aktuell totes Kapital existiert
-        # UND die Geldmenge zuletzt über der Alarmschwelle wuchs.
-        tk_alarm = tk['count'] > 0 and verlauf_rows[-1]['alarm']
+    # Alarm laut Spec 12.5: totes Kapital über 3 Saisons strikt steigend
+    # (Saisonverlauf per Rückwärtsrechnung aus dem Ledger).
+    tk_verlauf = monitoring.totes_kapital_verlauf()
+    tk_alarm = tk_verlauf['alarm']
 
     integrity = check_ledger_integrity()
     alarm_count = sum([

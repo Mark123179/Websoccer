@@ -25,4 +25,4 @@ description: Design-Entscheidungen Finanzsystem Phase 5 — Vermerk-Hooks, Zwang
 ## Monitoring (Creator-Finanzanalyse)
 - Geldmengen-Verlauf = Rückwärtsrechnung von heutiger Geldmenge über Saison-Nettoflüsse (Approximation, ignoriert KORREKTUR_ADMIN); Alarm >4 %/Saison.
 - Ablöse/MW-Median nutzt TRANSFER_AUS mit referenz_typ='transfer' + aktuellen MW als Näherung; Ziel 1,3–1,8, Alarm >2,2.
-- Totes Kapital: Kontostand > 2× Jahresumsatz.
+- Totes Kapital: Kontostand > 2× Jahresumsatz; der „3 Saisons steigend"-Alarm braucht KEINE historischen Snapshots — Saisonend-Kontostände pro Verein sind rückwärts aus heutigem Budget minus Folge-Saisons-Netto rekonstruierbar (gleicher Trick wie Geldmengen-Verlauf, nur per-Verein statt Gesamtsystem).

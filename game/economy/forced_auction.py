@@ -102,7 +102,14 @@ def start_auction(case, player, min_bid, *, ends_on=None, today=None):
 
 
 def place_bid(auction, club, manager, amount, *, today=None):
-    """Verdecktes Gebot eines Vereins (Erhöhen = Update des eigenen Gebots)."""
+    """Verdecktes Gebot eines Vereins (Erhöhen = Update des eigenen Gebots).
+
+    Beim Bieten wird der aktuelle Kontostand als Plausibilitätsprüfung
+    herangezogen (Grundregel: keine aktiven Ausgaben ohne Deckung) — es
+    wird aber NICHTS reserviert. Maßgeblich ist die erneute Deckungs-
+    prüfung beim Zuschlag; scheitert sie dort, rückt das nächsthöhere
+    Gebot nach (Kaskade in resolve_due_auctions).
+    """
     from game.models import ForcedAuction, ForcedAuctionBid
 
     today = _today(today)

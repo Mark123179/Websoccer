@@ -6432,9 +6432,10 @@ class ForcedAuctionBid(models.Model):
     """Gebot eines Vereins auf eine Zwangsversteigerung.
 
     Ein Verein hält je Auktion genau ein Gebot (Erhöhen = Update).
-    Keine Budget-Reservierung beim Bieten — die Deckung wird beim
-    Zuschlag geprüft (aktive Ausgabe, Grundregel 2); scheitert sie,
-    rückt das nächsthöhere Gebot nach.
+    Keine Budget-Reservierung beim Bieten — beim Bieten erfolgt nur eine
+    Plausibilitätsprüfung gegen den aktuellen Kontostand; maßgeblich ist
+    die erneute Deckungsprüfung beim Zuschlag (aktive Ausgabe,
+    Grundregel 2); scheitert sie, rückt das nächsthöhere Gebot nach.
     """
 
     auction = models.ForeignKey(
