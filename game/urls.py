@@ -141,6 +141,7 @@ from .views_creator import (
 )
 from .views_creator import (
     creator_media_outlets,
+    creator_finanzanalyse,
     creator_media_outlet_delete,
 )
 from .views_importer_api import (
@@ -339,6 +340,7 @@ urlpatterns = [
     path('creator/antraege/<int:entry_id>/moderieren/', creator_moderate_timeline, name='creator_moderate_timeline'),
 
     path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
+    path('creator/finanzen/', creator_finanzanalyse, name='creator_finanzanalyse'),
     path('creator/medien/<int:outlet_id>/loeschen/', creator_media_outlet_delete, name='creator_media_outlet_delete'),
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),
     path('creator/system-diagnostics/', creator_system_diagnostics, name='creator_system_diagnostics'),

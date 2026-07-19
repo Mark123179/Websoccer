@@ -72,6 +72,7 @@ from .models import (
     Club, CupFixture, FacilityConstruction, MatchdayRevenue,
     SeasonFixture, StadiumExpansion, StadionumfeldConfig,
 )
+from .finance import log_club_transaction
 from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
 from .stadium_revenue import record_matchday_revenue
 from .views import current_manager_club, build_game_header
@@ -406,48 +407,58 @@ def stadium_expand(request):
 
     kosten = get_expansion_cost(aktuelle_kapazitaet, seat_type, anzahl)
 
-    if club.budget < kosten:
-        messages.error(
-            request,
-            f'Budget reicht nicht. Benötigt: {kosten:,.0f} € — '
-            f'Verfügbar: {club.budget:,.0f} €'
-        )
-        return redirect('stadium_detail')
-
-    # Budget abziehen
-    club.budget -= kosten
-    club.save(update_fields=['budget'])
-
-    # Kapazität erhöhen
-    feld_map = {
-        ('NORD', 'STEH'): 'nord_standing',
-        ('NORD', 'SITZ'): 'nord_seating',
-        ('NORD', 'VIP'):  'nord_vip',
-        ('OST',  'STEH'): 'ost_standing',
-        ('OST',  'SITZ'): 'ost_seating',
-        ('OST',  'VIP'):  'ost_vip',
-        ('SUED', 'STEH'): 'sued_standing',
-        ('SUED', 'SITZ'): 'sued_seating',
-        ('SUED', 'VIP'):  'sued_vip',
-        ('WEST', 'STEH'): 'west_standing',
-        ('WEST', 'SITZ'): 'west_seating',
-        ('WEST', 'VIP'):  'west_vip',
-    }
-    feld = feld_map[(stand, seat_type)]
-    setattr(stadium, feld, getattr(stadium, feld) + anzahl)
-    stadium.save(update_fields=[feld])
-
-    # Ausbau-Eintrag anlegen
-    StadiumExpansion.objects.create(
-        stadium   = stadium,
-        stand     = stand,
-        seat_type = seat_type,
-        seats_added = anzahl,
-        cost      = kosten,
-    )
-
     stand_labels = {'NORD': 'Nordkurve', 'OST': 'Osttribüne', 'SUED': 'Südkurve', 'WEST': 'Westtribüne'}
     type_labels  = {'STEH': 'Stehplätze', 'SITZ': 'Sitzplätze', 'VIP': 'VIP-Plätze'}
+
+    with db_transaction.atomic():
+        locked = Club.objects.select_for_update().get(pk=club.pk)
+
+        if locked.budget < kosten:
+            messages.error(
+                request,
+                f'Budget reicht nicht. Benötigt: {kosten:,.0f} € — '
+                f'Verfügbar: {locked.budget:,.0f} €'
+            )
+            return redirect('stadium_detail')
+
+        # Budget abziehen
+        locked.budget -= kosten
+        locked.save(update_fields=['budget'])
+
+        # Kapazität erhöhen
+        feld_map = {
+            ('NORD', 'STEH'): 'nord_standing',
+            ('NORD', 'SITZ'): 'nord_seating',
+            ('NORD', 'VIP'):  'nord_vip',
+            ('OST',  'STEH'): 'ost_standing',
+            ('OST',  'SITZ'): 'ost_seating',
+            ('OST',  'VIP'):  'ost_vip',
+            ('SUED', 'STEH'): 'sued_standing',
+            ('SUED', 'SITZ'): 'sued_seating',
+            ('SUED', 'VIP'):  'sued_vip',
+            ('WEST', 'STEH'): 'west_standing',
+            ('WEST', 'SITZ'): 'west_seating',
+            ('WEST', 'VIP'):  'west_vip',
+        }
+        feld = feld_map[(stand, seat_type)]
+        setattr(stadium, feld, getattr(stadium, feld) + anzahl)
+        stadium.save(update_fields=[feld])
+
+        # Ausbau-Eintrag anlegen
+        StadiumExpansion.objects.create(
+            stadium   = stadium,
+            stand     = stand,
+            seat_type = seat_type,
+            seats_added = anzahl,
+            cost      = kosten,
+        )
+
+        log_club_transaction(
+            locked, 'stadionkosten',
+            f'Stadionausbau: +{anzahl:,} {type_labels[seat_type]} ({stand_labels[stand]})',
+            -kosten,
+        )
+
     messages.success(
         request,
         f'+{anzahl:,} {type_labels[seat_type]} in der {stand_labels[stand]} '
@@ -597,6 +608,12 @@ def facility_upgrade(request):
                 started_at=now,
                 completes_at=now + timedelta(days=days),
                 status=FacilityConstruction.STATUS_ACTIVE,
+            )
+
+            log_club_transaction(
+                locked, 'stadionumfeld',
+                f'Stadionumfeld-Ausbau: {FACILITY_LABELS[key]} → Stufe {target}',
+                -kosten,
             )
     except IntegrityError:
         messages.error(request, f'{FACILITY_LABELS[key]} wird bereits ausgebaut.')

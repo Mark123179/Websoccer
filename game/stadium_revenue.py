@@ -9,6 +9,10 @@ Berechnet die Zuschauerzahl und die Einnahmen für ein Heimspiel basierend auf:
 """
 from decimal import Decimal
 
+from django.db import transaction
+
+from .finance import log_club_transaction
+
 COMPETITION_FACTORS = [
     ('champions league',   1.30),
     ('europa league',      1.18),
@@ -134,20 +138,31 @@ def record_matchday_revenue(
     else:
         match_label = f'Heimspiel ({effective_competition})' if effective_competition else 'Freundschaftsspiel'
 
-    entry = MatchdayRevenue.objects.create(
-        stadium          = stadium,
-        match_result     = match_result,
-        match_label      = match_label,
-        competition_name = effective_competition,
-        auslastung_pct   = Decimal(str(round(auslastung * 100, 1))),
-        attendance       = att_standing + att_seating + att_vip,
-        revenue_standing = rev_standing,
-        revenue_seating  = rev_seating,
-        revenue_vip      = rev_vip,
-        revenue_total    = rev_total,
-    )
+    with transaction.atomic():
+        from .models import Club
+        locked = Club.objects.select_for_update().get(pk=club.pk)
 
-    club.budget += rev_total
-    club.save(update_fields=['budget'])
+        entry = MatchdayRevenue.objects.create(
+            stadium          = stadium,
+            match_result     = match_result,
+            match_label      = match_label,
+            competition_name = effective_competition,
+            auslastung_pct   = Decimal(str(round(auslastung * 100, 1))),
+            attendance       = att_standing + att_seating + att_vip,
+            revenue_standing = rev_standing,
+            revenue_seating  = rev_seating,
+            revenue_vip      = rev_vip,
+            revenue_total    = rev_total,
+        )
+
+        locked.budget += rev_total
+        locked.save(update_fields=['budget'])
+        club.budget = locked.budget  # Übergebene Instanz aktuell halten
+
+        log_club_transaction(
+            locked, 'ticketverkauf',
+            f'Spieltagseinnahmen {match_label}',
+            rev_total,
+        )
 
     return entry

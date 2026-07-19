@@ -1,0 +1,14 @@
+{# Gemeinsame Creator-Navigation. Aktive Pill via nav_active:
+   'index' | 'manager' | 'saison' | 'system' | 'medien' | 'finanzen'
+   | 'simdiag' | 'sysdiag' | 'antraege' #}
+<div class="cm-header-right">
+  <a class="cm-nav-pill {% if nav_active == 'index' %}active{% endif %}" href="{% url 'creator_index' %}">Vereine &amp; Ligen</a>
+  <a class="cm-nav-pill {% if nav_active == 'manager' %}active{% endif %}" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
+  <a class="cm-nav-pill {% if nav_active == 'saison' %}active{% endif %}" href="{% url 'creator_season_end' %}">Saison</a>
+  <a class="cm-nav-pill {% if nav_active == 'system' %}active{% endif %}" href="{% url 'creator_freie_vereine' %}">System</a>
+  <a class="cm-nav-pill {% if nav_active == 'medien' %}active{% endif %}" href="{% url 'creator_media_outlets' %}">Medien</a>
+  <a class="cm-nav-pill {% if nav_active == 'finanzen' %}active{% endif %}" href="{% url 'creator_finanzanalyse' %}">Finanzanalyse</a>
+  <a class="cm-nav-pill {% if nav_active == 'simdiag' %}active{% endif %}" href="{% url 'creator_simulation_diagnostics' %}">Simulation-Diagnose</a>
+  <a class="cm-nav-pill {% if nav_active == 'sysdiag' %}active{% endif %}" href="{% url 'creator_system_diagnostics' %}">Systemanalyse</a>
+  <a class="cm-nav-pill {% if nav_active == 'antraege' %}active{% endif %}" href="{% url 'creator_timeline_overview' %}">Anträge</a>
+</div>

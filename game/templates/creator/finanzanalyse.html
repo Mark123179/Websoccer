@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator – Finanzanalyse{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Finanzanalyse</h1>
+    </div>
+    {% include 'creator/_nav_pills.html' with nav_active='finanzen' %}
+  </div>
+
+  <!-- ── KPI-Zeile ─────────────────────────────────────────────────────── -->
+  <div class="fa-kpi-row">
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Geld im Umlauf</span>
+      <span class="fa-kpi-value fa-cyan">{{ kpi_total_fmt }}</span>
+      <span class="fa-kpi-sub">Summe aller Vereinsbudgets</span>
+    </div>
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Vereine</span>
+      <span class="fa-kpi-value">{{ kpi_clubs }}</span>
+      <span class="fa-kpi-sub">mit Budget erfasst</span>
+    </div>
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Ø Budget</span>
+      <span class="fa-kpi-value">{{ kpi_avg_fmt }}</span>
+      <span class="fa-kpi-sub">pro Verein</span>
+    </div>
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Buchungen</span>
+      <span class="fa-kpi-value">{{ kpi_tx_count }}</span>
+      <span class="fa-kpi-sub">Transaktionen im Ledger</span>
+    </div>
+  </div>
+
+  <div class="fa-note">
+    Hinweis: Das Transaktions-Ledger wird erst seit Kurzem vollständig geführt —
+    ältere Saisons können unvollständige Ein-/Ausgaben zeigen. Die Budgets
+    („Geld im Umlauf") sind immer aktuell.
+  </div>
+
+  <!-- ── Liga-Vergleich + Top/Flop ─────────────────────────────────────── -->
+  <div class="fa-grid-2">
+
+    <div class="fa-panel">
+      <h2 class="fa-panel-title">Liga-Vergleich <span class="fa-panel-sub">Gesamtbudget je Liga</span></h2>
+      <table class="fa-table">
+        <thead>
+          <tr><th>Liga</th><th class="fa-r">Vereine</th><th class="fa-r">Gesamt</th><th class="fa-r">Ø</th><th class="fa-bar-col"></th></tr>
+        </thead>
+        <tbody>
+          {% for r in league_rows %}
+          <tr>
+            <td>{{ r.name }}</td>
+            <td class="fa-r">{{ r.cnt }}</td>
+            <td class="fa-r fa-strong">{{ r.total_fmt }}</td>
+            <td class="fa-r">{{ r.avg_fmt }}</td>
+            <td class="fa-bar-col"><div class="fa-bar"><span style="width:{{ r.pct }}%"></span></div></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="fa-empty">Keine Ligen vorhanden.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fa-panel">
+      <h2 class="fa-panel-title">Top &amp; Flop <span class="fa-panel-sub">Vereine nach Budget</span></h2>
+      <div class="fa-topflop">
+        <div>
+          <h3 class="fa-list-head fa-green">Top 10</h3>
+          <ol class="fa-club-list">
+            {% for c in top_clubs %}
+            <li><span class="fa-club-name">{{ c.name }} <em>{{ c.league }}</em></span><span class="fa-club-budget fa-green">{{ c.budget_fmt }}</span></li>
+            {% endfor %}
+          </ol>
+        </div>
+        <div>
+          <h3 class="fa-list-head fa-red">Flop 10</h3>
+          <ol class="fa-club-list">
+            {% for c in flop_clubs %}
+            <li><span class="fa-club-name">{{ c.name }} <em>{{ c.league }}</em></span><span class="fa-club-budget {% if c.budget < 0 %}fa-red{% endif %}">{{ c.budget_fmt }}</span></li>
+            {% endfor %}
+          </ol>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Saisonbilanzen ────────────────────────────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">Ein- &amp; Ausgaben pro Saison <span class="fa-panel-sub">alle Vereine, laut Ledger</span></h2>
+    <table class="fa-table">
+      <thead>
+        <tr><th>Saison</th><th class="fa-r">Einnahmen</th><th class="fa-r">Ausgaben</th><th class="fa-r">Netto</th><th class="fa-r">Buchungen</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for r in season_rows %}
+        <tr {% if r.season == sel_season %}class="fa-row-active"{% endif %}>
+          <td class="fa-strong">Saison {{ r.season }}{% if r.season == current_season %} <span class="fa-tag">aktuell</span>{% endif %}</td>
+          <td class="fa-r fa-green">{{ r.income_fmt }}</td>
+          <td class="fa-r fa-red">{{ r.expense_fmt }}</td>
+          <td class="fa-r fa-strong {% if r.net < 0 %}fa-red{% else %}fa-green{% endif %}">{{ r.net_fmt }}</td>
+          <td class="fa-r">{{ r.cnt }}</td>
+          <td class="fa-r"><a class="fa-link" href="?season={{ r.season }}">Details</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="fa-empty">Noch keine Buchungen im Ledger.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Kategorien der gewählten Saison ───────────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">
+      Kategorien — Saison {{ sel_season }}
+      <span class="fa-panel-sub">Einnahmen {{ income_sum_fmt }} · Ausgaben {{ expense_sum_fmt }}</span>
+    </h2>
+    <div class="fa-topflop">
+      <div>
+        <h3 class="fa-list-head fa-green">Einnahmen</h3>
+        {% for r in income_cat_rows %}
+        <div class="fa-cat-row">
+          <div class="fa-cat-meta"><span>{{ r.label }} <em>({{ r.cnt }})</em></span><span class="fa-green">{{ r.amount_fmt }}</span></div>
+          <div class="fa-bar fa-bar-green"><span style="width:{{ r.pct }}%"></span></div>
+        </div>
+        {% empty %}
+        <p class="fa-empty">Keine Einnahmen gebucht.</p>
+        {% endfor %}
+      </div>
+      <div>
+        <h3 class="fa-list-head fa-red">Ausgaben</h3>
+        {% for r in expense_cat_rows %}
+        <div class="fa-cat-row">
+          <div class="fa-cat-meta"><span>{{ r.label }} <em>({{ r.cnt }})</em></span><span class="fa-red">{{ r.amount_fmt }}</span></div>
+          <div class="fa-bar fa-bar-red"><span style="width:{{ r.pct }}%"></span></div>
+        </div>
+        {% empty %}
+        <p class="fa-empty">Keine Ausgaben gebucht.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<style>
+.cm-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.cm-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
+.cm-header-left { display: flex; align-items: center; gap: 1rem; }
+.cm-badge { background: #00d4ff; color: #03070c; font-size: .6rem; font-weight: 900; letter-spacing: .14em; padding: .2rem .55rem; border-radius: 3px; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+.cm-header-right { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: flex-end; }
+.cm-nav-pill { padding: .35rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; text-decoration: none; border: 1px solid #0d2035; color: #556677; background: #050e1a; transition: all .15s; }
+.cm-nav-pill:hover { border-color: #00d4ff44; color: #aabbcc; }
+.cm-nav-pill.active { border-color: #00d4ff55; color: #00d4ff; background: #071525; }
+
+/* KPI */
+.fa-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: 1rem; }
+.fa-kpi-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .25rem; }
+.fa-kpi-label { color: #556677; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.fa-kpi-value { color: #cce8ff; font-size: 1.45rem; font-weight: 800; }
+.fa-kpi-value.fa-cyan { color: #00d4ff; }
+.fa-kpi-sub { color: #334455; font-size: .72rem; }
+
+.fa-note { background: #071525; border: 1px solid #0d2035; border-left: 3px solid #00d4ff55; border-radius: 8px; padding: .6rem 1rem; color: #556677; font-size: .78rem; margin-bottom: 1.25rem; }
+
+/* Panels */
+.fa-grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: .75rem; margin-bottom: .75rem; }
+.fa-panel { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: .75rem; }
+.fa-panel-title { color: #cce8ff; font-size: .95rem; font-weight: 800; margin: 0 0 .9rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.fa-panel-sub { color: #556677; font-size: .72rem; font-weight: 600; }
+
+/* Tabellen */
+.fa-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.fa-table th { text-align: left; color: #556677; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .5rem; border-bottom: 1px solid #0d2035; }
+.fa-table td { padding: .45rem .5rem; color: #aabbcc; border-bottom: 1px solid #081627; }
+.fa-table tr:last-child td { border-bottom: none; }
+.fa-r { text-align: right; }
+.fa-table th.fa-r { text-align: right; }
+.fa-strong { color: #cce8ff; font-weight: 700; }
+.fa-row-active td { background: #071525; }
+.fa-tag { background: #00d4ff22; color: #00d4ff; font-size: .62rem; font-weight: 800; padding: .08rem .4rem; border-radius: 8px; margin-left: .3rem; }
+.fa-link { color: #00d4ff88; text-decoration: none; font-size: .75rem; font-weight: 700; }
+.fa-link:hover { color: #00d4ff; }
+.fa-empty { color: #334455; font-size: .8rem; padding: .5rem 0; }
+
+/* Balken */
+.fa-bar-col { width: 26%; }
+.fa-bar { background: #081627; border-radius: 4px; height: 8px; overflow: hidden; }
+.fa-bar span { display: block; height: 100%; background: #00d4ff88; border-radius: 4px; }
+.fa-bar-green span { background: #22c55e88; }
+.fa-bar-red span { background: #ef444488; }
+
+/* Top/Flop + Kategorien */
+.fa-topflop { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.fa-list-head { font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 .5rem; }
+.fa-green { color: #22c55e; }
+.fa-red { color: #ef4444; }
+.fa-club-list { list-style: none; margin: 0; padding: 0; counter-reset: fa; }
+.fa-club-list li { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .3rem 0; border-bottom: 1px solid #081627; font-size: .8rem; counter-increment: fa; }
+.fa-club-list li:last-child { border-bottom: none; }
+.fa-club-name { color: #aabbcc; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fa-club-name::before { content: counter(fa) ". "; color: #334455; font-weight: 700; }
+.fa-club-name em { color: #556677; font-style: normal; font-size: .7rem; }
+.fa-club-budget { font-weight: 700; color: #cce8ff; white-space: nowrap; }
+.fa-club-budget.fa-green { color: #22c55e; }
+.fa-club-budget.fa-red { color: #ef4444; }
+.fa-cat-row { margin-bottom: .55rem; }
+.fa-cat-meta { display: flex; justify-content: space-between; font-size: .8rem; color: #aabbcc; margin-bottom: .2rem; }
+.fa-cat-meta em { color: #556677; font-style: normal; font-size: .7rem; }
+</style>
+{% endblock %}

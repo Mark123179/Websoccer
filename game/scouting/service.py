@@ -14,7 +14,8 @@ from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 
-from game.club_import.season import get_current_tm_season_id, season_label
+from game.club_import.season import get_current_tm_season_id
+from game.finance import log_club_transaction
 
 from . import coverage, department, draw, pricing
 from .constants import (
@@ -108,7 +109,7 @@ def coin_available(manager, season_id):
 
 # ── Abteilung ────────────────────────────────────────────────────────────────
 def upgrade_department(club, today=None):
-    from game.models import ClubFinancialTransaction, Club
+    from game.models import Club
     today = _today(today)
     with transaction.atomic():
         club = Club.objects.select_for_update().get(pk=club.pk)
@@ -123,19 +124,17 @@ def upgrade_department(club, today=None):
         club.save(update_fields=['budget'])
         dept.level = new_level
         dept.save(update_fields=['level', 'updated_at'])
-        season_id = get_current_tm_season_id(today)
-        ClubFinancialTransaction.objects.create(
-            club=club, date=today, season=season_label(season_id),
-            category='sonstige_ausgabe',
-            description=f'Ausbau Scoutingbüro auf Stufe {new_level}',
-            amount=-cost,
+        log_club_transaction(
+            club, 'sonstige_ausgabe',
+            f'Ausbau Scoutingbüro auf Stufe {new_level}',
+            -cost, date=today,
         )
     return dept
 
 
 # ── Auftrag starten ──────────────────────────────────────────────────────────
 def start_assignment(club, manager, scope_type, scope_key, profile, position='', today=None):
-    from game.models import Club, ScoutingAssignment, ClubFinancialTransaction
+    from game.models import Club, ScoutingAssignment
     today = _today(today)
     if scope_type == ScoutingAssignment.SCOPE_COUNTRY:
         scope_key = (scope_key or '').upper()
@@ -167,11 +166,10 @@ def start_assignment(club, manager, scope_type, scope_key, profile, position='',
         )
         club.budget = (club.budget or Decimal('0.00')) - cost
         club.save(update_fields=['budget'])
-        ClubFinancialTransaction.objects.create(
-            club=club, date=today, season=season_label(season_id),
-            category='sonstige_ausgabe',
-            description=f'Scoutingauftrag {_scope_label(scope_type, scope_key)}',
-            amount=-cost,
+        log_club_transaction(
+            club, 'sonstige_ausgabe',
+            f'Scoutingauftrag {_scope_label(scope_type, scope_key)}',
+            -cost, date=today,
         )
     return assignment
 
@@ -403,7 +401,7 @@ def _settle_loss(bid, today):
 
 def _settle_win(bid, today):
     from game.models import (
-        Club, Player, ScoutingBid, ClubFinancialTransaction, HoenessCoin, CoinTransaction,
+        Club, Player, ScoutingBid, HoenessCoin, CoinTransaction,
     )
     player = Player.objects.select_for_update().get(pk=bid.player_id)
     if player.club_id is not None or player.pool_status != Player.POOL_STATUS_SCOUTABLE:
@@ -423,11 +421,10 @@ def _settle_win(bid, today):
 
     club.budget = (club.budget or Decimal('0.00')) - bid.amount
     club.save(update_fields=['budget'])
-    ClubFinancialTransaction.objects.create(
-        club=club, date=today, season=season_label(bid.season_id),
-        category='transfer_ausgabe',
-        description=f'Scouting-Transfer: {_player_name(player)}',
-        amount=-bid.amount,
+    log_club_transaction(
+        club, 'transfer_ausgabe',
+        f'Scouting-Transfer: {_player_name(player)}',
+        -bid.amount, date=today,
     )
 
     mv = player.market_value if player.market_value is not None else bid.amount

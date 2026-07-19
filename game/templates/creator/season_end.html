@@ -11,12 +11,7 @@
       <span class="cm-badge">CREATOR MODE</span>
       <h1>Saisonverwaltung</h1>
     </div>
-    <div class="cm-header-right">
-      <a class="cm-nav-pill" href="{% url 'creator_index' %}">Vereine & Ligen</a>
-      <a class="cm-nav-pill" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
-      <a class="cm-nav-pill active" href="{% url 'creator_season_end' %}">Saison</a>
-      <a class="cm-nav-pill" href="{% url 'creator_freie_vereine' %}">System</a>
-    </div>
+    {% include 'creator/_nav_pills.html' with nav_active='saison' %}
   </div>
 
   {% if messages %}

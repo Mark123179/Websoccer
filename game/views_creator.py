@@ -4119,3 +4119,135 @@ def creator_media_outlet_delete(request, outlet_id):
     outlet.delete()
     messages.success(request, f'{name} gelöscht.')
     return redirect('creator_media_outlets')
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  Finanzanalyse (global, Spec Kap. 12.5)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@staff_member_required
+def creator_finanzanalyse(request):
+    """Globale Finanzanalyse: Geld im Umlauf, Saisonbilanzen, Liga-Vergleich."""
+    from django.db.models import Avg, Count, Q, Sum
+    from .models import ClubFinancialTransaction
+    from .finance import current_sim_season
+
+    def _fmt(val):
+        v = float(val or 0)
+        sign = '−' if v < 0 else ''
+        a = abs(v)
+        if a >= 1_000_000_000:
+            return f'{sign}{a/1_000_000_000:.2f} Mrd €'.replace('.', ',')
+        if a >= 1_000_000:
+            return f'{sign}{a/1_000_000:.1f} Mio €'.replace('.', ',')
+        if a >= 1_000:
+            return f'{sign}{a/1_000:.0f} Tsd €'
+        return f'{sign}{a:,.0f} €'.replace(',', '.')
+
+    current_season = current_sim_season() or '0'
+    cat_labels = dict(ClubFinancialTransaction.CATEGORY_CHOICES)
+
+    # ── KPIs: Geld im Umlauf ─────────────────────────────────────────
+    kpi = Club.objects.aggregate(
+        total=Sum('budget'), cnt=Count('id'), avg=Avg('budget'),
+    )
+    tx_count = ClubFinancialTransaction.objects.count()
+
+    # ── Liga-Vergleich ───────────────────────────────────────────────
+    league_rows = list(
+        Club.objects.values('league__name')
+        .annotate(total=Sum('budget'), cnt=Count('id'), avg=Avg('budget'))
+        .order_by('-total')
+    )
+    max_league_total = max((float(r['total'] or 0) for r in league_rows), default=0)
+    for r in league_rows:
+        r['name'] = r['league__name'] or 'Ohne Liga'
+        r['total_fmt'] = _fmt(r['total'])
+        r['avg_fmt'] = _fmt(r['avg'])
+        r['pct'] = round(float(r['total'] or 0) / max_league_total * 100, 1) if max_league_total > 0 else 0
+
+    # ── Top-/Flop-Vereine ────────────────────────────────────────────
+    def _club_rows(qs):
+        return [{
+            'name': c.name,
+            'league': c.league.name if c.league_id else '—',
+            'budget': float(c.budget),
+            'budget_fmt': _fmt(c.budget),
+        } for c in qs.select_related('league')]
+
+    top_clubs = _club_rows(Club.objects.order_by('-budget')[:10])
+    flop_clubs = _club_rows(Club.objects.order_by('budget')[:10])
+
+    # ── Saisonbilanzen ───────────────────────────────────────────────
+    season_agg = (
+        ClubFinancialTransaction.objects.values('season')
+        .annotate(
+            income=Sum('amount', filter=Q(amount__gt=0)),
+            expense=Sum('amount', filter=Q(amount__lt=0)),
+            cnt=Count('id'),
+        )
+    )
+
+    def _season_sort_key(row):
+        s = row['season'] or ''
+        return (0, int(s)) if s.isdigit() else (1, 0)
+
+    season_rows = []
+    for r in sorted(season_agg, key=_season_sort_key):
+        income = r['income'] or 0
+        expense = r['expense'] or 0
+        net = income + expense
+        season_rows.append({
+            'season': r['season'] or '—',
+            'income_fmt': _fmt(income),
+            'expense_fmt': _fmt(expense),
+            'net': float(net),
+            'net_fmt': _fmt(net),
+            'cnt': r['cnt'],
+        })
+
+    # ── Kategorien der gewählten Saison ──────────────────────────────
+    sel_season = request.GET.get('season') or current_season
+    cat_agg = list(
+        ClubFinancialTransaction.objects.filter(season=sel_season)
+        .values('category')
+        .annotate(total=Sum('amount'), cnt=Count('id'))
+    )
+    income_cats = [r for r in cat_agg if (r['total'] or 0) > 0]
+    expense_cats = [r for r in cat_agg if (r['total'] or 0) < 0]
+    income_sum = sum(float(r['total']) for r in income_cats)
+    expense_sum = sum(abs(float(r['total'])) for r in expense_cats)
+
+    def _cat_rows(rows, total_abs):
+        out = []
+        for r in sorted(rows, key=lambda x: -abs(float(x['total']))):
+            a = abs(float(r['total']))
+            out.append({
+                'label': cat_labels.get(r['category'], r['category']),
+                'amount_fmt': _fmt(a),
+                'cnt': r['cnt'],
+                'pct': round(a / total_abs * 100, 1) if total_abs > 0 else 0,
+            })
+        return out
+
+    season_options = [row['season'] for row in season_rows if row['season'] != '—']
+    if sel_season not in season_options:
+        season_options.append(sel_season)
+
+    return render(request, 'creator/finanzanalyse.html', {
+        'kpi_total_fmt': _fmt(kpi['total']),
+        'kpi_clubs': kpi['cnt'] or 0,
+        'kpi_avg_fmt': _fmt(kpi['avg']),
+        'kpi_tx_count': tx_count,
+        'league_rows': league_rows,
+        'top_clubs': top_clubs,
+        'flop_clubs': flop_clubs,
+        'season_rows': season_rows,
+        'sel_season': sel_season,
+        'season_options': season_options,
+        'income_cat_rows': _cat_rows(income_cats, income_sum),
+        'expense_cat_rows': _cat_rows(expense_cats, expense_sum),
+        'income_sum_fmt': _fmt(income_sum),
+        'expense_sum_fmt': _fmt(expense_sum),
+        'current_season': current_season,
+    })
