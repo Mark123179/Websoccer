@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -47,6 +47,7 @@
             <div class="squad-actionbar" id="squadActionBar"
                  data-shirt-url="{{ shirt_action_url }}"
                  data-youth-url="{{ youth_action_url }}"
+                 data-sale-url="{{ sale_status_url }}"
                  data-youth-limit="{{ youth_age_limit }}"
                  data-csrf="{{ csrf_token }}" hidden>
                 <span class="squad-actionbar__count"><strong id="selCount">0</strong>&nbsp;ausgewählt</span>
@@ -54,7 +55,7 @@
                     <button type="button" class="squad-act squad-act--primary" data-act="shirt">Rückennummer zuordnen</button>
                     <button type="button" class="squad-act" data-act="youth" id="actYouth">In Jugend verschieben</button>
                     <button type="button" class="squad-act" data-act="edit">Bearbeitung beantragen</button>
-                    <button type="button" class="squad-act" data-act="transfer">Auf Transferliste setzen</button>
+                    <button type="button" class="squad-act" data-act="sale">Verkaufsstatus setzen</button>
                     <button type="button" class="squad-act" data-act="loan">Auf Leihliste setzen</button>
                 </div>
                 <button type="button" class="squad-actionbar__clear" id="selClear" aria-label="Auswahl aufheben">✕</button>
@@ -99,7 +100,9 @@
                             data-player="{{ p.id }}"
                             data-name="{{ p.name|lower }}"
                             data-pos="{% for c in p.hp %}{{ c }} {% endfor %}{% for c in p.np %}{{ c }} {% endfor %}"
-                            data-youth="{{ p.youth_eligible|yesno:'1,0' }}">
+                            data-youth="{{ p.youth_eligible|yesno:'1,0' }}"
+                            {% if is_owner %}data-sale-cat="{{ p.sale_category|default:'UVK' }}" data-sale-vis="{{ p.sale_visible_to_ai|yesno:'1,0' }}"{% endif %}
+                            {% if can_bid %}data-mv="{{ p.market_value_fmt }}"{% if p.nego.id %} data-nego-id="{{ p.nego.id }}" data-nego-runde="{{ p.nego.runde }}" data-nego-counter="{{ p.nego.gegenforderung }}" data-nego-counter-fmt="{{ p.nego.gegenforderung_fmt }}"{% endif %}{% if p.nego.cooldown_until %} data-nego-cooldown="{{ p.nego.cooldown_until }}"{% endif %}{% endif %}>
                             {% if is_owner %}
                             <td class="col-check">
                                 <label class="squad-check">
@@ -169,8 +172,19 @@
                                 {% endif %}
                                 {% if p.on_transfer_list %}<span class="status-pill status-pill--tl">TL</span>{% endif %}
                                 {% if p.on_loan_list %}<span class="status-pill status-pill--ll">LL</span>{% endif %}
+                                {% if is_owner and p.sale_category and p.sale_category != 'UVK' %}
+                                <span class="status-pill status-pill--sale sale-pill" title="{% if p.sale_visible_to_ai %}Für KI-Vereine sichtbar{% else %}Nur intern markiert{% endif %}">{% if p.sale_category == 'GELD' %}VK{% elif p.sale_category == 'TAUSCH' %}TAUSCH{% else %}VK+T{% endif %}{% if p.sale_visible_to_ai %} 👁{% endif %}</span>
+                                {% endif %}
+                                {% if can_bid and p.nego.id %}
+                                <span class="status-pill status-pill--nego" title="Gegenforderung {{ p.nego.gegenforderung_fmt }}">VH R{{ p.nego.runde }}</span>
+                                {% endif %}
                             </td>
-                            <td class="col-go"><a href="{{ p.detail_url }}" aria-label="Profil von {{ p.name }}">›</a></td>
+                            <td class="col-go">
+                                {% if can_bid %}
+                                <button type="button" class="squad-bid-btn" data-bid data-player="{{ p.id }}" title="Angebot abgeben">Angebot</button>
+                                {% endif %}
+                                <a href="{{ p.detail_url }}" aria-label="Profil von {{ p.name }}">›</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -259,11 +273,73 @@
         </div>
     </div>
 
+    {% if is_owner %}
+    <!-- Verkaufsstatus-Dialog (Finanzsystem Phase 4) -->
+    <div class="squad-modal" id="saleModal" hidden>
+        <div class="squad-modal__backdrop" data-close></div>
+        <div class="squad-modal__panel" role="dialog" aria-modal="true" aria-labelledby="saleModalTitle">
+            <h4 id="saleModalTitle">Verkaufsstatus setzen</h4>
+            <p class="squad-modal__player" id="saleModalPlayers"></p>
+            <div class="squad-modal__field">
+                <label for="saleCategory">Kategorie</label>
+                <select id="saleCategory">
+                    <option value="GELD">Verkauf gegen Geld</option>
+                    <option value="TAUSCH">Nur Tausch</option>
+                    <option value="GELD_TAUSCH">Geld oder Tausch</option>
+                    <option value="UVK" selected>Unverkäuflich</option>
+                </select>
+            </div>
+            <label class="sale-visible-toggle" id="saleVisibleWrap">
+                <input type="checkbox" id="saleVisible">
+                <span>Markierung für KI-Vereine sichtbar (erst dann kommen Angebote)</span>
+            </label>
+            <p class="squad-modal__error" id="saleError" hidden></p>
+            <div class="squad-modal__actions">
+                <button type="button" class="squad-btn squad-btn--ghost" data-close>Abbrechen</button>
+                <button type="button" class="squad-btn squad-btn--primary" id="saleSave">Speichern</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if can_bid %}
+    <!-- Angebots-Dialog (reaktive KI-Verkäufer) -->
+    <div class="squad-modal" id="bidModal" hidden
+         data-bid-url="{{ bid_url }}"
+         data-accept-url="{{ bid_accept_url }}"
+         data-cancel-url="{{ bid_cancel_url }}"
+         data-csrf="{{ csrf_token }}">
+        <div class="squad-modal__backdrop" data-close></div>
+        <div class="squad-modal__panel" role="dialog" aria-modal="true" aria-labelledby="bidModalTitle">
+            <h4 id="bidModalTitle">Angebot abgeben</h4>
+            <p class="squad-modal__player" id="bidModalPlayer"></p>
+            <p class="bid-modal-mv" id="bidModalMv"></p>
+            <div class="bid-modal-nego" id="bidNegoInfo" hidden>
+                <p id="bidNegoText"></p>
+                <div class="squad-modal__actions bid-modal-counter-actions">
+                    <button type="button" class="squad-btn squad-btn--primary" id="bidAcceptCounter">Gegenforderung annehmen</button>
+                    <button type="button" class="squad-btn squad-btn--ghost" id="bidCancelNego">Verhandlung abbrechen</button>
+                </div>
+            </div>
+            <div class="squad-modal__field" id="bidField">
+                <label for="bidInput">Dein Angebot (€)</label>
+                <input type="text" id="bidInput" inputmode="numeric" placeholder="z. B. 5.000.000">
+            </div>
+            <p class="squad-modal__error" id="bidError" hidden></p>
+            <p class="bid-modal-result" id="bidResult" hidden></p>
+            <div class="squad-modal__actions">
+                <button type="button" class="squad-btn squad-btn--ghost" data-close>Schließen</button>
+                <button type="button" class="squad-btn squad-btn--primary" id="bidSend">Angebot senden</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="squad-toast" id="squadToast" hidden></div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/squad-overview.js' %}?v=4" defer></script>
+    <script src="{% static 'game/js/squad-overview.js' %}?v=5" defer></script>
 {% endblock %}

@@ -1818,6 +1818,28 @@ class Player(models.Model):
         default=False,
     )
 
+    # ── Verkaufskategorien (Finanzsystem Phase 4, Spec Kap. 9.1) ──────────
+    SALE_CATEGORY_CHOICES = [
+        ('GELD', 'Verkauf gegen Geld'),
+        ('TAUSCH', 'Nur Tausch'),
+        ('GELD_TAUSCH', 'Geld oder Tausch'),
+        ('UVK', 'Unverkäuflich'),
+    ]
+    sale_category = models.CharField(
+        'Verkaufskategorie',
+        max_length=12,
+        choices=SALE_CATEGORY_CHOICES,
+        default='UVK',
+        help_text='Manager-Markierung: KI bietet nur auf GELD und '
+                  'GELD_TAUSCH — und nur, wenn die Markierung sichtbar ist.',
+    )
+    sale_visible_to_ai = models.BooleanField(
+        'Markierung für KI sichtbar',
+        default=False,
+        help_text='Nur sichtbar geschaltete Markierungen erhalten KI-Angebote '
+                  '(Postfach-Hygiene).',
+    )
+
     # ── Scouting-Pool (Task #594) ──────────────────────────────────────────
     POOL_STATUS_NONE = 'none'
     POOL_STATUS_SCOUTABLE = 'scoutable'
@@ -6190,3 +6212,76 @@ class SeasonFinanceState(models.Model):
         o = 'offen' if self.opened_at else '—'
         c = 'geschlossen' if self.closed_at else '—'
         return f'Saison {self.saison}: open={o}, close={c}'
+
+
+class TransferNegotiation(models.Model):
+    """Verhandlung Manager → KI-Verein (reaktive Verkäufer, Spec Kap. 9.2/9.3).
+
+    Zustandsmaschine mit max. 3 Manager-Geboten (runde). Die KI antwortet
+    sofort: Deal, Gegenforderung oder Absage (+ Cooldown). noise_seed
+    speist die deterministische ±STREUUNG je (Verhandlung, Runde) — stabil
+    gegen Reload-Exploits, ohne Seed nicht reverse-engineerbar. Der Seed
+    und die Schmerzgrenze werden NIE an Clients ausgeliefert.
+    """
+
+    STATUS_GEGENFORDERUNG = 'gegenforderung'
+    STATUS_DEAL = 'deal'
+    STATUS_ABGELEHNT = 'abgelehnt'
+    STATUS_CHOICES = [
+        (STATUS_GEGENFORDERUNG, 'Gegenforderung — Manager am Zug'),
+        (STATUS_DEAL, 'Abgeschlossen'),
+        (STATUS_ABGELEHNT, 'Abgelehnt'),
+    ]
+
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='transfer_negotiations',
+        verbose_name='Spieler',
+    )
+    bidder_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='transfer_bids',
+        verbose_name='Bietender Verein',
+    )
+    seller_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='transfer_sales',
+        verbose_name='Verkaufender Verein',
+    )
+    status = models.CharField(
+        max_length=16, choices=STATUS_CHOICES, verbose_name='Status',
+    )
+    runde = models.PositiveSmallIntegerField(default=1, verbose_name='Runde')
+    letztes_gebot = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        verbose_name='Letztes Gebot (€)',
+    )
+    gegenforderung = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        verbose_name='Gegenforderung (€)',
+    )
+    noise_seed = models.CharField(max_length=64, editable=False)
+    cooldown_until = models.DateTimeField(
+        null=True, blank=True, verbose_name='Cooldown bis',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'bidder_club'],
+                condition=models.Q(status='gegenforderung'),
+                name='unique_active_transfer_negotiation',
+            ),
+        ]
+        ordering = ['-updated_at']
+        verbose_name = 'Transferverhandlung'
+        verbose_name_plural = 'Transferverhandlungen'
+
+    def __str__(self):
+        return (f'{self.bidder_club} → {self.player} '
+                f'(Runde {self.runde}, {self.get_status_display()})')

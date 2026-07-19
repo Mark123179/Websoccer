@@ -14,8 +14,11 @@
 
     function getCsrfToken() {
         const bar = document.getElementById('squadActionBar');
-        const fromData = bar && bar.getAttribute('data-csrf');
-        return fromData || getCookie('csrftoken');
+        const fromBar = bar && bar.getAttribute('data-csrf');
+        if (fromBar) { return fromBar; }
+        const bidModal = document.getElementById('bidModal');
+        const fromBid = bidModal && bidModal.getAttribute('data-csrf');
+        return fromBid || getCookie('csrftoken');
     }
 
     ready(function () {
@@ -262,8 +265,8 @@
                     runYouth(selected);
                 } else if (act === 'edit') {
                     showToast('Bearbeitung beantragen – genaueres folgt.', 'ok');
-                } else if (act === 'transfer') {
-                    showToast('Auf Transferliste setzen – folgt.', 'ok');
+                } else if (act === 'sale') {
+                    openSaleModal(selected);
                 } else if (act === 'loan') {
                     showToast('Auf Leihliste setzen – folgt.', 'ok');
                 }
@@ -369,6 +372,293 @@
         if (shirtInput) {
             shirtInput.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') { shirtSave.click(); }
+            });
+        }
+
+        /* ---------------- sale modal (Verkaufsstatus) ---------------- */
+        const saleModal = document.getElementById('saleModal');
+        const saleModalPlayers = document.getElementById('saleModalPlayers');
+        const saleCategory = document.getElementById('saleCategory');
+        const saleVisible = document.getElementById('saleVisible');
+        const saleError = document.getElementById('saleError');
+        const saleSave = document.getElementById('saleSave');
+        const saleUrl = actionBar && actionBar.getAttribute('data-sale-url');
+        let saleRows = [];
+
+        function openSaleModal(selected) {
+            if (!saleModal) { return; }
+            saleRows = selected;
+            if (saleModalPlayers) {
+                const names = selected.map(function (r) {
+                    const el = r.querySelector('.squad-player__name');
+                    return el ? el.textContent.trim() : '';
+                }).filter(Boolean);
+                saleModalPlayers.textContent = names.length <= 3
+                    ? names.join(', ')
+                    : names.slice(0, 3).join(', ') + ' + ' +
+                      (names.length - 3) + ' weitere';
+            }
+            if (selected.length === 1) {
+                saleCategory.value =
+                    selected[0].getAttribute('data-sale-cat') || 'UVK';
+                saleVisible.checked =
+                    selected[0].getAttribute('data-sale-vis') === '1';
+            } else {
+                saleCategory.value = 'UVK';
+                saleVisible.checked = false;
+            }
+            if (saleError) { saleError.hidden = true; }
+            saleModal.hidden = false;
+        }
+
+        function closeSaleModal() {
+            if (saleModal) { saleModal.hidden = true; }
+            saleRows = [];
+        }
+
+        if (saleModal) {
+            saleModal.addEventListener('click', function (event) {
+                if (event.target.hasAttribute('data-close')) { closeSaleModal(); }
+            });
+        }
+
+        if (saleSave) {
+            saleSave.addEventListener('click', function () {
+                if (!saleRows.length || !saleUrl) { return; }
+                const data = new URLSearchParams();
+                saleRows.forEach(function (r) {
+                    data.append('player_ids', r.getAttribute('data-player'));
+                });
+                data.append('sale_category', saleCategory.value);
+                data.append('sale_visible_to_ai', saleVisible.checked ? '1' : '0');
+                saleSave.disabled = true;
+                fetch(saleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: data.toString()
+                }).then(function (r) {
+                    return r.json().then(function (j) {
+                        return { ok: r.ok, data: j };
+                    });
+                }).then(function (res) {
+                    if (res.ok && res.data.ok) {
+                        showToast('Verkaufsstatus für ' + res.data.updated +
+                            ' Spieler gespeichert.', 'ok');
+                        closeSaleModal();
+                        setTimeout(function () { window.location.reload(); }, 700);
+                    } else if (saleError) {
+                        saleError.textContent = (res.data && res.data.error) ||
+                            'Speichern fehlgeschlagen.';
+                        saleError.hidden = false;
+                    }
+                }).catch(function () {
+                    if (saleError) {
+                        saleError.textContent = 'Netzwerkfehler.';
+                        saleError.hidden = false;
+                    }
+                }).finally(function () { saleSave.disabled = false; });
+            });
+        }
+
+        /* ---------------- bid modal (Angebot an KI-Verein) ---------------- */
+        const bidModal = document.getElementById('bidModal');
+        const bidModalPlayer = document.getElementById('bidModalPlayer');
+        const bidModalMv = document.getElementById('bidModalMv');
+        const bidNegoInfo = document.getElementById('bidNegoInfo');
+        const bidNegoText = document.getElementById('bidNegoText');
+        const bidAcceptCounter = document.getElementById('bidAcceptCounter');
+        const bidCancelNego = document.getElementById('bidCancelNego');
+        const bidField = document.getElementById('bidField');
+        const bidInput = document.getElementById('bidInput');
+        const bidError = document.getElementById('bidError');
+        const bidResult = document.getElementById('bidResult');
+        const bidSend = document.getElementById('bidSend');
+        let bidRow = null;
+
+        function bidPost(url, params) {
+            const data = new URLSearchParams();
+            Object.keys(params).forEach(function (k) {
+                data.append(k, params[k]);
+            });
+            return fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken(),
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: data.toString()
+            }).then(function (r) {
+                return r.json().then(function (j) {
+                    return { ok: r.ok, data: j };
+                });
+            });
+        }
+
+        function refreshBidModalState() {
+            if (!bidRow) { return; }
+            const negoId = bidRow.getAttribute('data-nego-id');
+            const counterFmt = bidRow.getAttribute('data-nego-counter-fmt');
+            const runde = bidRow.getAttribute('data-nego-runde');
+            const cooldown = bidRow.getAttribute('data-nego-cooldown');
+            if (bidNegoInfo) {
+                bidNegoInfo.hidden = !negoId;
+                if (negoId && bidNegoText) {
+                    bidNegoText.textContent = 'Laufende Verhandlung (Runde ' +
+                        runde + '): Der Verein fordert ' + counterFmt + '.';
+                }
+            }
+            if (cooldown) {
+                if (bidError) {
+                    bidError.textContent = 'Abgelehnt — neues Angebot erst ab ' +
+                        cooldown + ' möglich.';
+                    bidError.hidden = false;
+                }
+                if (bidField) { bidField.hidden = true; }
+                if (bidSend) { bidSend.disabled = true; }
+            } else {
+                if (bidField) { bidField.hidden = false; }
+                if (bidSend) { bidSend.disabled = false; }
+            }
+        }
+
+        function openBidModal(row) {
+            if (!bidModal) { return; }
+            bidRow = row;
+            const nameEl = row.querySelector('.squad-player__name');
+            if (bidModalPlayer) {
+                bidModalPlayer.textContent = nameEl ? nameEl.textContent.trim() : '';
+            }
+            if (bidModalMv) {
+                bidModalMv.textContent =
+                    'Marktwert: ' + (row.getAttribute('data-mv') || '–');
+            }
+            if (bidInput) { bidInput.value = ''; }
+            if (bidError) { bidError.hidden = true; }
+            if (bidResult) { bidResult.hidden = true; }
+            refreshBidModalState();
+            bidModal.hidden = false;
+            if (bidInput && !bidField.hidden) { bidInput.focus(); }
+        }
+
+        function closeBidModal() {
+            if (bidModal) { bidModal.hidden = true; }
+            bidRow = null;
+        }
+
+        function handleBidResponse(res) {
+            if (!(res.ok && res.data.ok)) {
+                if (bidError) {
+                    bidError.textContent = (res.data && res.data.error) ||
+                        'Aktion fehlgeschlagen.';
+                    bidError.hidden = false;
+                }
+                return;
+            }
+            if (bidError) { bidError.hidden = true; }
+            if (bidResult) {
+                bidResult.textContent = res.data.message || '';
+                bidResult.hidden = false;
+            }
+            const nego = res.data.negotiation || {};
+            if (res.data.ergebnis === 'deal') {
+                setTimeout(function () { window.location.reload(); }, 1400);
+                return;
+            }
+            if (bidRow) {
+                if (res.data.ergebnis === 'gegenforderung') {
+                    bidRow.setAttribute('data-nego-id', nego.id);
+                    bidRow.setAttribute('data-nego-runde', nego.runde);
+                    bidRow.setAttribute('data-nego-counter', nego.gegenforderung);
+                    bidRow.setAttribute('data-nego-counter-fmt',
+                        nego.gegenforderung_fmt || '');
+                } else {
+                    bidRow.removeAttribute('data-nego-id');
+                    bidRow.removeAttribute('data-nego-runde');
+                    bidRow.removeAttribute('data-nego-counter');
+                    bidRow.removeAttribute('data-nego-counter-fmt');
+                    setTimeout(function () { window.location.reload(); }, 1400);
+                }
+            }
+            refreshBidModalState();
+        }
+
+        if (bidModal) {
+            bidModal.addEventListener('click', function (event) {
+                if (event.target.hasAttribute('data-close')) { closeBidModal(); }
+            });
+            body.addEventListener('click', function (event) {
+                const btn = event.target.closest('[data-bid]');
+                if (!btn) { return; }
+                const row = btn.closest('.squad-row');
+                if (row) { openBidModal(row); }
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && !bidModal.hidden) {
+                    closeBidModal();
+                }
+            });
+        }
+
+        if (bidSend) {
+            bidSend.addEventListener('click', function () {
+                if (!bidRow) { return; }
+                const raw = (bidInput.value || '').trim();
+                if (!raw) {
+                    if (bidError) {
+                        bidError.textContent = 'Bitte einen Betrag eingeben.';
+                        bidError.hidden = false;
+                    }
+                    return;
+                }
+                bidSend.disabled = true;
+                bidPost(bidModal.getAttribute('data-bid-url'), {
+                    player_id: bidRow.getAttribute('data-player'),
+                    betrag: raw
+                }).then(handleBidResponse).catch(function () {
+                    if (bidError) {
+                        bidError.textContent = 'Netzwerkfehler.';
+                        bidError.hidden = false;
+                    }
+                }).finally(function () { bidSend.disabled = false; });
+            });
+        }
+
+        if (bidAcceptCounter) {
+            bidAcceptCounter.addEventListener('click', function () {
+                if (!bidRow) { return; }
+                const negoId = bidRow.getAttribute('data-nego-id');
+                if (!negoId) { return; }
+                bidAcceptCounter.disabled = true;
+                bidPost(bidModal.getAttribute('data-accept-url'), {
+                    negotiation_id: negoId
+                }).then(handleBidResponse).catch(function () {
+                    if (bidError) {
+                        bidError.textContent = 'Netzwerkfehler.';
+                        bidError.hidden = false;
+                    }
+                }).finally(function () { bidAcceptCounter.disabled = false; });
+            });
+        }
+
+        if (bidCancelNego) {
+            bidCancelNego.addEventListener('click', function () {
+                if (!bidRow) { return; }
+                const negoId = bidRow.getAttribute('data-nego-id');
+                if (!negoId) { return; }
+                bidCancelNego.disabled = true;
+                bidPost(bidModal.getAttribute('data-cancel-url'), {
+                    negotiation_id: negoId
+                }).then(handleBidResponse).catch(function () {
+                    if (bidError) {
+                        bidError.textContent = 'Netzwerkfehler.';
+                        bidError.hidden = false;
+                    }
+                }).finally(function () { bidCancelNego.disabled = false; });
             });
         }
 

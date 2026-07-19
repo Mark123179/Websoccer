@@ -3441,12 +3441,59 @@ def _build_squad_context(request, club, squad_title):
     loaned_in_cards = [_build_loan_card(p, stats) for p in loaned_in[:6]]
     loaned_out_cards = [_build_loan_card(p, stats) for p in loaned_out[:6]]
 
-    is_owner = (
-        request.user.is_authenticated
-        and current_manager_club(user=request.user) == club
+    viewer_club = (
+        current_manager_club(user=request.user)
+        if request.user.is_authenticated else None
     )
+    is_owner = viewer_club == club
+
+    # ── Transfermarkt Phase 4: Verkaufsstatus (Eigner) / Angebote (Fremde) ──
+    if is_owner:
+        sale_map = {p.id: p for p in active_players}
+        for row in player_rows:
+            pl = sale_map.get(row['id'])
+            if pl is not None:
+                row['sale_category'] = pl.sale_category
+                row['sale_visible_to_ai'] = pl.sale_visible_to_ai
+
+    can_bid = (
+        viewer_club is not None
+        and not is_owner
+        and club.managed_by_id is None
+        and not is_youth
+    )
+    if can_bid:
+        from django.utils import timezone as _tz
+        from .models import TransferNegotiation
+        jetzt = _tz.now()
+        negos = TransferNegotiation.objects.filter(
+            bidder_club=viewer_club, player__club=club,
+        ).order_by('updated_at')
+        nego_map = {}
+        for n in negos:
+            if n.status == TransferNegotiation.STATUS_GEGENFORDERUNG:
+                nego_map[n.player_id] = {
+                    'id': n.pk, 'runde': n.runde,
+                    'gegenforderung': float(n.gegenforderung or 0),
+                    'gegenforderung_fmt': compact_money(
+                        float(n.gegenforderung or 0)),
+                }
+            elif (n.status == TransferNegotiation.STATUS_ABGELEHNT
+                    and n.cooldown_until and n.cooldown_until > jetzt):
+                nego_map.setdefault(n.player_id, {
+                    'cooldown_until': _tz.localtime(
+                        n.cooldown_until).strftime('%d.%m.%Y %H:%M'),
+                })
+        for row in player_rows:
+            row['nego'] = nego_map.get(row['id'])
 
     return {
+        'viewer_club': viewer_club,
+        'can_bid': can_bid,
+        'sale_status_url': reverse('squad_set_sale_status', args=[club.id]),
+        'bid_url': reverse('transfer_place_bid'),
+        'bid_accept_url': reverse('transfer_accept_counter'),
+        'bid_cancel_url': reverse('transfer_cancel_negotiation'),
         'club': club,
         'squad_title': squad_title,
         'is_youth': is_youth,

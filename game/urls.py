@@ -156,6 +156,12 @@ from .views_importer_api import (
     importer_complete,
     importer_fail,
 )
+from .views_transfermarkt import (
+    squad_set_sale_status,
+    transfer_place_bid,
+    transfer_accept_counter,
+    transfer_cancel_negotiation,
+)
 
 
 urlpatterns = [
@@ -259,6 +265,30 @@ urlpatterns = [
         'clubs/<int:club_id>/squad/move-to-youth/',
         squad_move_to_youth,
         name='squad_move_to_youth'
+    ),
+
+    path(
+        'clubs/<int:club_id>/squad/sale-status/',
+        squad_set_sale_status,
+        name='squad_set_sale_status'
+    ),
+
+    path(
+        'transfers/bid/',
+        transfer_place_bid,
+        name='transfer_place_bid'
+    ),
+
+    path(
+        'transfers/accept-counter/',
+        transfer_accept_counter,
+        name='transfer_accept_counter'
+    ),
+
+    path(
+        'transfers/cancel/',
+        transfer_cancel_negotiation,
+        name='transfer_cancel_negotiation'
     ),
 
     path(

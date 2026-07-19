@@ -57,6 +57,12 @@ def compute_snapshot_values(saison):
         PlayerStrengthProfile.objects.values_list('base_strength', flat=True)
     )
 
+    # Potential-Median nur über Sim-relevante Spieler (mit Stärkeprofil) —
+    # dämpft das default=50-Rauschen der Nicht-Sim-Spieler (Phase 4).
+    potential_median = _median_or_none(
+        PlayerStrengthProfile.objects.values_list('player__potential', flat=True)
+    )
+
     pairs = list(
         PlayerStrengthProfile.objects
         .filter(player__market_value__isnull=False)
@@ -82,7 +88,7 @@ def compute_snapshot_values(saison):
     return {
         'mw_median': mw_median.quantize(Decimal('0.01')),
         'staerke_median': staerke_median,
-        'potential_median': None,  # Kein verlässliches Sim-Potentialfeld in Phase 1.
+        'potential_median': potential_median,
         'mw_kurve_json': kurve,
         'gehalts_anker': Decimal(anker).quantize(Decimal('0.01')),
     }
