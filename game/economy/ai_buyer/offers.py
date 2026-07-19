@@ -188,11 +188,17 @@ def manager_annehmen(offer, *, saison=None, spieltag=None):
 
     Deckungslücke beim Käufer (InsufficientFunds/TransferError) storniert
     das Angebot sauber statt zu crashen.
+
+    Terminale Status (abgelaufen/storniert) werden VOR dem AIBuyerError
+    committet — ein Raise innerhalb von transaction.atomic() würde den
+    Status-Save mit zurückrollen und das Angebot bliebe 'versendet'.
     """
     from game.models import AITransferOffer
 
     from ..booking import InsufficientFunds
 
+    fehler = None
+    transfer = None
     with transaction.atomic():
         o = (AITransferOffer.objects.select_for_update()
              .select_related('player', 'buyer_club', 'seller_club')
@@ -202,28 +208,30 @@ def manager_annehmen(offer, *, saison=None, spieltag=None):
         if o.gueltig_bis and o.gueltig_bis < timezone.now():
             o.status = AITransferOffer.STATUS_ABGELAUFEN
             o.save(update_fields=['status', 'updated_at'])
-            raise AIBuyerError('Dieses Angebot ist abgelaufen.')
-        if o.player.club_id != o.seller_club_id:
+            fehler = 'Dieses Angebot ist abgelaufen.'
+        elif o.player.club_id != o.seller_club_id:
             o.status = AITransferOffer.STATUS_STORNIERT
             o.begruendung += '\nStorno: Spieler hat den Verein verlassen.'
             o.save(update_fields=['status', 'begruendung', 'updated_at'])
-            raise AIBuyerError('Der Spieler hat den Verein bereits verlassen.')
-
-        try:
-            transfer = execute_money_transfer(
-                o.player, o.buyer_club, o.aktuelles_gebot,
-                saison=saison, spieltag=spieltag,
-            )
-        except (InsufficientFunds, TransferError) as exc:
-            o.status = AITransferOffer.STATUS_STORNIERT
-            o.begruendung += f'\nStorno bei Annahme: {exc}'
-            o.save(update_fields=['status', 'begruendung', 'updated_at'])
-            raise AIBuyerError(
-                'Der Transfer ist gescheitert — das Angebot wurde storniert.'
-            )
-        o.status = AITransferOffer.STATUS_DEAL
-        o.save(update_fields=['status', 'updated_at'])
-        return {'offer': o, 'transfer': transfer}
+            fehler = 'Der Spieler hat den Verein bereits verlassen.'
+        else:
+            try:
+                transfer = execute_money_transfer(
+                    o.player, o.buyer_club, o.aktuelles_gebot,
+                    saison=saison, spieltag=spieltag,
+                )
+            except (InsufficientFunds, TransferError) as exc:
+                o.status = AITransferOffer.STATUS_STORNIERT
+                o.begruendung += f'\nStorno bei Annahme: {exc}'
+                o.save(update_fields=['status', 'begruendung', 'updated_at'])
+                fehler = ('Der Transfer ist gescheitert — das Angebot '
+                          'wurde storniert.')
+            else:
+                o.status = AITransferOffer.STATUS_DEAL
+                o.save(update_fields=['status', 'updated_at'])
+    if fehler:
+        raise AIBuyerError(fehler)
+    return {'offer': o, 'transfer': transfer}
 
 
 def manager_ablehnen(offer, *, params, saison=None):
@@ -240,26 +248,34 @@ def manager_ablehnen(offer, *, params, saison=None):
              .get(pk=offer.pk))
         if o.status != AITransferOffer.STATUS_VERSENDET:
             raise AIBuyerError('Dieses Angebot ist nicht mehr offen.')
+        # Gültigkeit (72 h) gilt für JEDE Manager-Reaktion — eine späte
+        # Ablehnung darf keine Nachbesserung/Eskalation mehr auslösen.
+        # Der Ablauf-Status wird VOR dem Raise committet (siehe
+        # manager_annehmen), deshalb fällt dieser Zweig aus dem atomic.
+        if o.gueltig_bis and o.gueltig_bis < timezone.now():
+            o.status = AITransferOffer.STATUS_ABGELAUFEN
+            o.save(update_fields=['status', 'updated_at'])
+        else:
+            naechste = _naechste_stufe(o)
+            if naechste is not None:
+                o.stufe = naechste
+                o.aktuelles_gebot = gebot_fuer_stufe(o, naechste, params)
+                o.gueltig_bis = timezone.now() + timedelta(
+                    hours=int(params.get('gueltigkeit_stunden', 72)),
+                )
+                o.save(update_fields=[
+                    'stufe', 'aktuelles_gebot', 'gueltig_bis', 'updated_at',
+                ])
+                return {'offer': o, 'ergebnis': 'nachgebessert'}
 
-        naechste = _naechste_stufe(o)
-        if naechste is not None:
-            o.stufe = naechste
-            o.aktuelles_gebot = gebot_fuer_stufe(o, naechste, params)
-            o.gueltig_bis = timezone.now() + timedelta(
-                hours=int(params.get('gueltigkeit_stunden', 72)),
-            )
-            o.save(update_fields=[
-                'stufe', 'aktuelles_gebot', 'gueltig_bis', 'updated_at',
-            ])
-            return {'offer': o, 'ergebnis': 'nachgebessert'}
-
-        cooldowns = params.get('cooldown_tage', {}) or {}
-        tage = int(cooldowns.get(o.kauftyp, 0) or 0)
-        o.status = AITransferOffer.STATUS_ABGELEHNT
-        if tage > 0:
-            o.cooldown_until = timezone.now() + timedelta(days=tage)
-        o.save(update_fields=['status', 'cooldown_until', 'updated_at'])
-        return {'offer': o, 'ergebnis': 'zurueckgezogen'}
+            cooldowns = params.get('cooldown_tage', {}) or {}
+            tage = int(cooldowns.get(o.kauftyp, 0) or 0)
+            o.status = AITransferOffer.STATUS_ABGELEHNT
+            if tage > 0:
+                o.cooldown_until = timezone.now() + timedelta(days=tage)
+            o.save(update_fields=['status', 'cooldown_until', 'updated_at'])
+            return {'offer': o, 'ergebnis': 'zurueckgezogen'}
+    raise AIBuyerError('Dieses Angebot ist abgelaufen.')
 
 
 def ki_zu_ki_clearing(buyer, kandidat, *, kauftyp, params, saison,

@@ -9,6 +9,7 @@ Ito-Referenzfall (Verkauf eines Beste-11-IV → Stammlücke → Bedarfskauf
 im nächsten Prüflauf).
 """
 
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -708,3 +709,62 @@ class KiZuKiClearingTests(TestCase):
         self.assertTrue(offer.dry_run)
         # Clearing-Preis nie über dem Käufer-Maximum.
         self.assertLessEqual(offer.aktuelles_gebot, offer.max_gebot)
+
+
+class AblehnungNachAblaufTests(TestCase):
+    """Gültigkeit (72 h) gilt für JEDE Manager-Reaktion: Eine späte
+    Ablehnung darf keine Nachbesserung/Eskalation mehr auslösen —
+    das Angebot kippt stattdessen auf 'abgelaufen'."""
+
+    def setUp(self):
+        self.params = _params()
+        self.buyer = _mk_club('Ablauf Käufer', budget='50000000')
+        self.seller = _mk_club('Ablauf Verkäufer')
+        self.user = _mk_manager(self.seller, 'ablauf-manager')
+        self.player = _mk_player(self.seller, 'Ablauf Kandidat')
+        self.offer = create_offer(
+            self.buyer, self.player, kauftyp='bedarf',
+            wertung=_wertung('10000000'), params=self.params, saison=SAISON,
+            window_id=WINDOW, dry_run=False, luecken_score=Decimal('12'),
+        )
+        AITransferOffer.objects.filter(pk=self.offer.pk).update(
+            gueltig_bis=timezone.now() - timedelta(hours=1),
+        )
+        self.offer.refresh_from_db()
+
+    def test_ablehnung_nach_ablauf_eskaliert_nicht(self):
+        stufe_vorher = self.offer.stufe
+        gebot_vorher = self.offer.aktuelles_gebot
+        with self.assertRaises(AIBuyerError):
+            manager_ablehnen(self.offer, params=self.params)
+        self.offer.refresh_from_db()
+        self.assertEqual(self.offer.status,
+                         AITransferOffer.STATUS_ABGELAUFEN)
+        self.assertEqual(self.offer.stufe, stufe_vorher)
+        self.assertEqual(self.offer.aktuelles_gebot, gebot_vorher)
+        # Auch ein zweiter Versuch (jetzt nicht mehr 'versendet') scheitert.
+        with self.assertRaises(AIBuyerError):
+            manager_ablehnen(self.offer, params=self.params)
+
+    def test_stale_page_post_abgelaufenes_angebot(self):
+        # Manager hat die Kaderseite offen gelassen und klickt nach Ablauf
+        # auf „Ablehnen" — der Endpoint darf keine Eskalation auslösen.
+        self.client.force_login(self.user)
+        resp = self.client.post(
+            reverse('ai_offer_reject'), {'offer_id': self.offer.pk},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn('abgelaufen', resp.content.decode())
+        self.offer.refresh_from_db()
+        self.assertEqual(self.offer.status,
+                         AITransferOffer.STATUS_ABGELAUFEN)
+        self.assertEqual(self.offer.stufe, 1)
+
+    def test_annahme_nach_ablauf_weiterhin_blockiert(self):
+        with self.assertRaises(AIBuyerError):
+            manager_annehmen(self.offer)
+        self.offer.refresh_from_db()
+        self.assertEqual(self.offer.status,
+                         AITransferOffer.STATUS_ABGELAUFEN)
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.seller.pk)
