@@ -1459,9 +1459,10 @@ def creator_save_stammdaten(request, club_id):
             pass
 
     budget_raw = request.POST.get('budget', '').strip().replace(',', '.')
+    budget_target = None
     if budget_raw:
         try:
-            club.budget = Decimal(budget_raw)
+            budget_target = Decimal(budget_raw)
         except InvalidOperation:
             pass
 
@@ -1480,6 +1481,19 @@ def creator_save_stammdaten(request, club_id):
             pass
 
     club.save()
+
+    # Kontostand wird nie direkt gesetzt — Differenz als Admin-Korrektur
+    # über das Ledger buchen (Ledger = einzige Wahrheit, Spec Kap. 12.1).
+    if budget_target is not None:
+        from game.economy.booking import book
+        delta = budget_target - (club.budget or Decimal('0.00'))
+        if delta != 0:
+            book(
+                club, 'KORREKTUR_ADMIN', delta,
+                beschreibung=f'Creator: Kontostand auf {budget_target:,.2f} € gesetzt',
+                referenz_typ='creator_stammdaten',
+                pflicht=True,
+            )
 
     profile.city_name = request.POST.get('city_name', '').strip()
     profile.city_country = request.POST.get('city_country', '').strip()
@@ -4129,7 +4143,7 @@ def creator_media_outlet_delete(request, outlet_id):
 def creator_finanzanalyse(request):
     """Globale Finanzanalyse: Geld im Umlauf, Saisonbilanzen, Liga-Vergleich."""
     from django.db.models import Avg, Count, Q, Sum
-    from .models import ClubFinancialTransaction
+    from .models import FinanceTransaction
     from .finance import current_sim_season
 
     def _fmt(val):
@@ -4145,13 +4159,13 @@ def creator_finanzanalyse(request):
         return f'{sign}{a:,.0f} €'.replace(',', '.')
 
     current_season = current_sim_season() or '0'
-    cat_labels = dict(ClubFinancialTransaction.CATEGORY_CHOICES)
+    cat_labels = dict(FinanceTransaction.TYP_CHOICES)
 
     # ── KPIs: Geld im Umlauf ─────────────────────────────────────────
     kpi = Club.objects.aggregate(
         total=Sum('budget'), cnt=Count('id'), avg=Avg('budget'),
     )
-    tx_count = ClubFinancialTransaction.objects.count()
+    tx_count = FinanceTransaction.objects.count()
 
     # ── Liga-Vergleich ───────────────────────────────────────────────
     league_rows = list(
@@ -4180,16 +4194,16 @@ def creator_finanzanalyse(request):
 
     # ── Saisonbilanzen ───────────────────────────────────────────────
     season_agg = (
-        ClubFinancialTransaction.objects.values('season')
+        FinanceTransaction.objects.values('saison')
         .annotate(
-            income=Sum('amount', filter=Q(amount__gt=0)),
-            expense=Sum('amount', filter=Q(amount__lt=0)),
+            income=Sum('betrag', filter=Q(betrag__gt=0)),
+            expense=Sum('betrag', filter=Q(betrag__lt=0)),
             cnt=Count('id'),
         )
     )
 
     def _season_sort_key(row):
-        s = row['season'] or ''
+        s = row['saison'] or ''
         return (0, int(s)) if s.isdigit() else (1, 0)
 
     season_rows = []
@@ -4206,7 +4220,7 @@ def creator_finanzanalyse(request):
         else:
             net_signed = net_abs
         season_rows.append({
-            'season': r['season'] or '—',
+            'season': r['saison'] or '—',
             'income_fmt': _fmt(income),
             'expense_fmt': _fmt(expense),
             'net': net_f,
@@ -4217,9 +4231,9 @@ def creator_finanzanalyse(request):
     # ── Kategorien der gewählten Saison ──────────────────────────────
     sel_season = request.GET.get('season') or current_season
     cat_agg = list(
-        ClubFinancialTransaction.objects.filter(season=sel_season)
-        .values('category')
-        .annotate(total=Sum('amount'), cnt=Count('id'))
+        FinanceTransaction.objects.filter(saison=sel_season)
+        .values('typ')
+        .annotate(total=Sum('betrag'), cnt=Count('id'))
     )
     income_cats = [r for r in cat_agg if (r['total'] or 0) > 0]
     expense_cats = [r for r in cat_agg if (r['total'] or 0) < 0]
@@ -4231,7 +4245,7 @@ def creator_finanzanalyse(request):
         for r in sorted(rows, key=lambda x: -abs(float(x['total']))):
             a = abs(float(r['total']))
             out.append({
-                'label': cat_labels.get(r['category'], r['category']),
+                'label': cat_labels.get(r['typ'], r['typ']),
                 'amount_fmt': _fmt(a),
                 'cnt': r['cnt'],
                 'pct': round(a / total_abs * 100, 1) if total_abs > 0 else 0,

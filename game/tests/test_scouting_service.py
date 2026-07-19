@@ -16,7 +16,7 @@ from game.club_import.season import get_current_tm_season_id
 from game.models import (
     League, Club, Player, PlayerStrengthProfile, ManagerProfile, HoenessCoin,
     ScoutingAssignment, ScoutingFind, ScoutingBid, WatchlistEntry,
-    CountryNetwork, CommunitySubmission, ClubFinancialTransaction, ClubNewsItem,
+    CountryNetwork, CommunitySubmission, FinanceTransaction, ClubNewsItem,
 )
 from game.scouting import service, coverage, department, constants
 
@@ -80,8 +80,8 @@ class StartAssignmentTests(ScoutingServiceBase):
         cost = Decimal(department.order_cost(0))
         self.assertEqual(self.club.budget, before - cost)
         self.assertEqual(a.status, ScoutingAssignment.STATUS_ACTIVE)
-        self.assertTrue(ClubFinancialTransaction.objects.filter(
-            club=self.club, category='sonstige_ausgabe').exists())
+        self.assertTrue(FinanceTransaction.objects.filter(
+            club=self.club, typ='SCOUTING').exists())
 
     def test_only_one_active_assignment(self):
         service.start_assignment(self.club, self.manager, 'country', 'TR',
@@ -205,8 +205,8 @@ class ResolutionTests(ScoutingServiceBase):
         self.assertEqual(player.pool_status, Player.POOL_STATUS_NONE)
         club2.refresh_from_db()
         self.assertEqual(club2.budget, Decimal('192000000'))
-        self.assertTrue(ClubFinancialTransaction.objects.filter(
-            club=club2, category='transfer_ausgabe').exists())
+        self.assertTrue(FinanceTransaction.objects.filter(
+            club=club2, typ='TRANSFER_AUS').exists())
 
     def test_tie_breaks_to_earlier_bid(self):
         player = self.pool[0]
@@ -507,9 +507,9 @@ class DepartmentUpgradeTests(ScoutingServiceBase):
         cost = Decimal(department.upgrade_cost(0))
         self.assertEqual(dept.level, 1)
         self.assertEqual(self.club.budget, before - cost)
-        self.assertTrue(ClubFinancialTransaction.objects.filter(
-            club=self.club, category='sonstige_ausgabe',
-            description__icontains='Scoutingbüro').exists())
+        self.assertTrue(FinanceTransaction.objects.filter(
+            club=self.club, typ='SCOUTING',
+            beschreibung__icontains='Scoutingbüro').exists())
 
     def test_upgrade_blocked_without_budget(self):
         self.club.budget = Decimal('0.00')

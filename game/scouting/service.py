@@ -15,7 +15,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from game.club_import.season import get_current_tm_season_id
-from game.finance import log_club_transaction
+from game.economy.booking import book
 
 from . import coverage, department, draw, pricing
 from .constants import (
@@ -120,14 +120,15 @@ def upgrade_department(club, today=None):
         if available_budget(club) < cost:
             raise ScoutingError('Das verfügbare Budget reicht für den Ausbau nicht aus.')
         new_level = dept.level + 1
-        club.budget = (club.budget or Decimal('0.00')) - cost
-        club.save(update_fields=['budget'])
         dept.level = new_level
         dept.save(update_fields=['level', 'updated_at'])
-        log_club_transaction(
-            club, 'sonstige_ausgabe',
-            f'Ausbau Scoutingbüro auf Stufe {new_level}',
-            -cost, date=today,
+        # book() schreibt Ledger-Zeile + Konto-Cache atomar.
+        book(
+            club, 'SCOUTING', -cost,
+            beschreibung=f'Ausbau Scoutingbüro auf Stufe {new_level}',
+            datum=today,
+            referenz_typ='scouting_department',
+            referenz_id=dept.pk,
         )
     return dept
 
@@ -164,12 +165,13 @@ def start_assignment(club, manager, scope_type, scope_key, profile, position='',
             started_on=today, completes_on=today + timedelta(days=duration),
             season_id=season_id, status=ScoutingAssignment.STATUS_ACTIVE,
         )
-        club.budget = (club.budget or Decimal('0.00')) - cost
-        club.save(update_fields=['budget'])
-        log_club_transaction(
-            club, 'sonstige_ausgabe',
-            f'Scoutingauftrag {_scope_label(scope_type, scope_key)}',
-            -cost, date=today,
+        # book() schreibt Ledger-Zeile + Konto-Cache atomar.
+        book(
+            club, 'SCOUTING', -cost,
+            beschreibung=f'Scoutingauftrag {_scope_label(scope_type, scope_key)}',
+            datum=today,
+            referenz_typ='scouting_assignment',
+            referenz_id=assignment.pk,
         )
     return assignment
 
@@ -419,12 +421,15 @@ def _settle_win(bid, today):
 
     club = Club.objects.select_for_update().get(pk=bid.club_id)
 
-    club.budget = (club.budget or Decimal('0.00')) - bid.amount
-    club.save(update_fields=['budget'])
-    log_club_transaction(
-        club, 'transfer_ausgabe',
-        f'Scouting-Transfer: {_player_name(player)}',
-        -bid.amount, date=today,
+    # Pflichtbuchung: Der Zuschlag wurde beim Bieten budgetär reserviert —
+    # das Settlement darf nicht mehr an der Deckung scheitern.
+    book(
+        club, 'TRANSFER_AUS', -bid.amount,
+        beschreibung=f'Scouting-Transfer: {_player_name(player)}',
+        datum=today,
+        referenz_typ='scouting_bid',
+        referenz_id=bid.pk,
+        pflicht=True,
     )
 
     mv = player.market_value if player.market_value is not None else bid.amount

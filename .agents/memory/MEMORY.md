@@ -73,6 +73,7 @@
 - [Stadionumfeld feature](stadionumfeld-feature.md) — global singleton scene; server is real admin-gate; new state keys need STADIONUMFELD_ALLOWED_KEYS or drop silently; baufeld1.png absent from source = expected 404, dont fabricate.
 - [Template-JSON XSS trap](template-json-xss.md) — never `|safe` JSON into <script> when user text can land in it; use json_script + JSON.parse.
 - [Nation-Badge-ID Calibration](nation-badge-id-calibration.md) — Badge-Lücken 56–105/803–1434; 46 IDs korrigiert; Bild-Erkennung ±1 unzuverlässig → User-Textliste bevorzugen.
+- [Finanz-Ledger Phase 1](finance-ledger-phase1.md) — alles über book() (nie budget direkt); Betriebskosten-Fenster halboffen (prev,run]; book_many braucht order_by('pk') im Lock; log_club_transaction bucht jetzt MIT.
 - [ManagerProfile auto-create signal](manager-profile-auto-signal.md) — post_save auf auth.User legt IMMER ein ManagerProfile an; Tests müssen get() statt create() nutzen.
-- [Finanz-Ledger Buchungs-Konvention](finance-ledger-convention.md) — jede Budget-Mutation braucht log_club_transaction im selben atomic+Lock; season = numerische Sim-Saison, nie TM-Label; Nav-Pills zentral in _nav_pills.html.
+- [Finanz-Ledger Buchungs-Konvention](finance-ledger-convention.md) — Budget-Mutationen NUR via book() (log_club_transaction = Legacy-Wrapper, bucht mit); saison = numerische Sim-Saison, nie TM-Label; Nav-Pills zentral in _nav_pills.html.
 - [PlayerClubHistory Phase 0](player-club-history-phase0.md) — Creator/Admin-Edits = Korrektur (Suppress-Flag, KEINE Zeile); Karrierende per Name nicht pk ausschließen; from_db nur __dict__ lesen (N+1).

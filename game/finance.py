@@ -1,18 +1,35 @@
 """Zentrale Buchungsstelle für Vereins-Finanztransaktionen.
 
-Jede Budget-Mutation soll zusätzlich eine Ledger-Zeile
-(ClubFinancialTransaction) schreiben — das Ledger ist die Datenbasis für
-Manager-Finanzansicht und Creator-Finanzanalyse.
+Seit dem Finanzsystem Phase 1 (Spec Kap. 12) ist das FinanceTransaction-
+Ledger die einzige Wahrheit: game.economy.booking.book() schreibt Ledger-
+Zeile UND Konto-Cache (Club.budget) atomar.
+
+log_club_transaction() bleibt als DEPRECATED-Kompatibilitäts-Wrapper für
+Alt-Aufrufer erhalten und delegiert an book() — Achtung: es mutiert damit
+jetzt AUCH das Budget. Aufrufer dürfen das Budget nicht mehr selbst
+verändern (sonst Doppelbuchung). Neue Aufrufer nutzen direkt
+game.economy.booking.book().
 
 Saison-Konvention: numerische Sim-Saison als String
-(GameSeasonState.current_season, z. B. "0", "1"), konsistent mit der
-Manager-Finanzansicht (management_finanzen).
-
-Dieser Helper ist bewusst dünn gehalten: Beim späteren Ausbau des
-Finanzsystems (Spec Kap. 12, FinanceTransaction-Ledger) ist er die eine
-Stelle, an der das Backing-Modell ausgetauscht wird.
+(GameSeasonState.current_season, z. B. "0", "1").
 """
-from django.utils import timezone
+
+# Mapping Alt-Kategorie (ClubFinancialTransaction) → neuer Buchungstyp.
+LEGACY_CATEGORY_TO_TYP = {
+    'ticketverkauf':     'TICKET',
+    'sponsor':           'SPONSOR_FIX',
+    'tv_gelder':         'TV_SOCKEL',
+    'transfer_einnahme': 'TRANSFER_EIN',
+    'leih_einnahme':     'TRANSFER_EIN',
+    'praemie':           'PRAEMIE_POKAL',
+    'sonstige_einnahme': 'KORREKTUR_ADMIN',
+    'transfer_ausgabe':  'TRANSFER_AUS',
+    'profigehalt':       'GEHALT',
+    'jugendgehalt':      'GEHALT',
+    'stadionkosten':     'AUSBAU',
+    'stadionumfeld':     'UMFELD_AUSBAU',
+    'sonstige_ausgabe':  'KORREKTUR_ADMIN',
+}
 
 
 def current_sim_season():
@@ -24,26 +41,22 @@ def current_sim_season():
 
 def log_club_transaction(club, category, description, amount,
                          date=None, season=None):
-    """Schreibt eine Finanztransaktions-Zeile für einen Verein.
+    """DEPRECATED — delegiert an game.economy.booking.book().
 
-    Args:
-        club: Club-Instanz.
-        category: Kategorie-Key aus ClubFinancialTransaction.CATEGORY_CHOICES.
-        description: Verwendungszweck (wird auf 200 Zeichen gekürzt).
-        amount: Betrag — positiv = Einnahme, negativ = Ausgabe.
-        date: Buchungsdatum (Default: heute).
-        season: Saison-String (Default: aktuelle Sim-Saison).
-
-    Muss innerhalb derselben DB-Transaktion wie die zugehörige
-    Budget-Mutation aufgerufen werden, damit Budget und Ledger nie
-    auseinanderlaufen.
+    Schreibt eine Ledger-Zeile UND aktualisiert Club.budget atomar.
+    Der Aufrufer darf das Budget NICHT zusätzlich selbst mutieren.
+    Buchung erfolgt als Pflichtbuchung (kein Deckungs-Abbruch), damit
+    Alt-Aufrufer, die die Deckung bereits selbst geprüft haben, ihr
+    Verhalten behalten.
     """
-    from game.models import ClubFinancialTransaction
-    return ClubFinancialTransaction.objects.create(
-        club=club,
-        date=date or timezone.localdate(),
-        season=current_sim_season() if season is None else str(season),
-        category=category,
-        description=(description or '')[:200],
-        amount=amount,
+    from game.economy.booking import book
+
+    typ = LEGACY_CATEGORY_TO_TYP.get(category, 'KORREKTUR_ADMIN')
+    return book(
+        club, typ, amount,
+        beschreibung=description,
+        saison=season,
+        datum=date,
+        referenz_typ=f'legacy:{category}',
+        pflicht=True,
     )

@@ -327,10 +327,20 @@ CELERY_RESULT_EXPIRES = 60 * 60 * 24      # Ergebnisse 24 h aufbewahren
 _CITY_PIN_CHECK_INTERVAL = float(
     os.environ.get('CELERY_CITY_PIN_CHECK_INTERVAL', 24 * 60 * 60)
 )
+_FINANCE_INTEGRITY_INTERVAL = float(
+    os.environ.get('CELERY_FINANCE_INTEGRITY_INTERVAL', 24 * 60 * 60)
+)
 CELERY_BEAT_SCHEDULE = {
     'city-pin-check-taeglich': {
         'task': 'game.tasks.run_management_command',
         'schedule': _CITY_PIN_CHECK_INTERVAL,
         'args': ('check_city_pins',),
+    },
+    # Finanz-Ledger vs. Konto-Cache täglich abgleichen (Spec Kap. 12.2);
+    # meldet Abweichungen nur, --fix bleibt ein manueller Schritt.
+    'finance-integrity-check-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': _FINANCE_INTEGRITY_INTERVAL,
+        'args': ('finance_integrity_check',),
     },
 }

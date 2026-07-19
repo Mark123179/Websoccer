@@ -823,6 +823,18 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
             state.is_simulated = True
             state.save(update_fields=['is_simulated', 'updated_at'])
 
+    # ── Finanz-Spieltagslauf (Phase 1) ────────────────────────────────────────
+    # Nach der sportlichen Simulation, außerhalb ihrer Transaktion. Idempotent
+    # je Verein+Spieltag (FinanceMatchdayRun) — Fehler hier dürfen die
+    # Simulation nicht rückwirkend brechen.
+    finance_errors = []
+    try:
+        from .economy.matchday_run import run_matchday_finance
+        finance_summary = run_matchday_finance(league, season, matchday)
+        finance_errors = finance_summary.get('errors', [])
+    except Exception as exc:
+        finance_errors = [f'Finanzlauf fehlgeschlagen: {exc}']
+
     return {
         'simulated': [
             (f.home_club.short_name, f'{hg}:{ag}', f.away_club.short_name)
@@ -833,6 +845,7 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
             for f in skipped
         ],
         'errors': errors,
+        'finance_errors': finance_errors,
     }
 
 

@@ -193,12 +193,30 @@
         <div class="fn-panel fn-buchungen-col">
             <div class="fn-buchungen-header">
                 <p class="fn-panel-title" style="margin:0;">
-                    Letzte Buchungen
+                    Kontoauszug
                 </p>
+                <form method="get" class="fn-statement-filter"
+                      style="display:flex; gap:8px; align-items:center;">
+                    <input type="hidden" name="range" value="{{ chart_range }}">
+                    <select name="saison" onchange="this.form.submit()"
+                            class="fn-filter-select">
+                        <option value="">Alle Saisons</option>
+                        {% for s in saison_options %}
+                        <option value="{{ s }}" {% if s == filter_saison %}selected{% endif %}>Saison {{ s }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="typ" onchange="this.form.submit()"
+                            class="fn-filter-select">
+                        <option value="">Alle Typen</option>
+                        {% for code, label in typ_options %}
+                        <option value="{{ code }}" {% if code == filter_typ %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
                 {% if total_pages > 1 %}
                 <div class="fn-pagination">
                     {% for p in page_range %}
-                    <a href="?range={{ chart_range }}&page={{ p }}"
+                    <a href="?range={{ chart_range }}&saison={{ filter_saison }}&typ={{ filter_typ }}&page={{ p }}"
                        class="fn-page-btn {% if p == page_num %}fn-page-btn--active{% endif %}">{{ p }}</a>
                     {% endfor %}
                 </div>
@@ -218,11 +236,11 @@
                 <tbody>
                     {% for tx in page_obj %}
                     <tr>
-                        <td class="fn-td-date">{{ tx.date|date:"d.m.Y" }}</td>
-                        <td><span class="fn-table-cat">{{ tx.get_category_display }}</span></td>
-                        <td class="fn-td-desc">{{ tx.description }}</td>
-                        <td class="{% if tx.amount >= 0 %}fn-amount--pos{% else %}fn-amount--neg{% endif %}">
-                            {% if tx.amount >= 0 %}+{% endif %}{{ tx.amount|floatformat:0|intcomma }} €
+                        <td class="fn-td-date">{{ tx.datum|date:"d.m.Y" }}</td>
+                        <td><span class="fn-table-cat">{{ tx.get_typ_display }}</span></td>
+                        <td class="fn-td-desc">{{ tx.beschreibung }}</td>
+                        <td class="{% if tx.betrag >= 0 %}fn-amount--pos{% else %}fn-amount--neg{% endif %}">
+                            {% if tx.betrag >= 0 %}+{% endif %}{{ tx.betrag|floatformat:0|intcomma }} €
                         </td>
                     </tr>
                     {% endfor %}

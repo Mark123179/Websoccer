@@ -72,7 +72,7 @@ from .models import (
     Club, CupFixture, FacilityConstruction, MatchdayRevenue,
     SeasonFixture, StadiumExpansion, StadionumfeldConfig,
 )
-from .finance import log_club_transaction
+from .economy.booking import book
 from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
 from .stadium_revenue import record_matchday_revenue
 from .views import current_manager_club, build_game_header
@@ -421,10 +421,6 @@ def stadium_expand(request):
             )
             return redirect('stadium_detail')
 
-        # Budget abziehen
-        locked.budget -= kosten
-        locked.save(update_fields=['budget'])
-
         # Kapazität erhöhen
         feld_map = {
             ('NORD', 'STEH'): 'nord_standing',
@@ -445,7 +441,7 @@ def stadium_expand(request):
         stadium.save(update_fields=[feld])
 
         # Ausbau-Eintrag anlegen
-        StadiumExpansion.objects.create(
+        expansion = StadiumExpansion.objects.create(
             stadium   = stadium,
             stand     = stand,
             seat_type = seat_type,
@@ -453,10 +449,12 @@ def stadium_expand(request):
             cost      = kosten,
         )
 
-        log_club_transaction(
-            locked, 'stadionkosten',
-            f'Stadionausbau: +{anzahl:,} {type_labels[seat_type]} ({stand_labels[stand]})',
-            -kosten,
+        # Bucht Ledger-Zeile + Konto-Cache atomar (aktive Ausgabe).
+        book(
+            locked, 'AUSBAU', -kosten,
+            beschreibung=f'Stadionausbau: +{anzahl:,} {type_labels[seat_type]} ({stand_labels[stand]})',
+            referenz_typ='stadium_expansion',
+            referenz_id=expansion.pk,
         )
 
     messages.success(
@@ -596,11 +594,8 @@ def facility_upgrade(request):
                 )
                 return redirect('management_stadionumfeld')
 
-            locked.budget -= kosten
-            locked.save(update_fields=['budget'])
-
             now = timezone.now()
-            FacilityConstruction.objects.create(
+            construction = FacilityConstruction.objects.create(
                 club=locked,
                 facility=key,
                 target_level=target,
@@ -610,10 +605,12 @@ def facility_upgrade(request):
                 status=FacilityConstruction.STATUS_ACTIVE,
             )
 
-            log_club_transaction(
-                locked, 'stadionumfeld',
-                f'Stadionumfeld-Ausbau: {FACILITY_LABELS[key]} → Stufe {target}',
-                -kosten,
+            # Bucht Ledger-Zeile + Konto-Cache atomar (aktive Ausgabe).
+            book(
+                locked, 'UMFELD_AUSBAU', -kosten,
+                beschreibung=f'Stadionumfeld-Ausbau: {FACILITY_LABELS[key]} → Stufe {target}',
+                referenz_typ='facility_construction',
+                referenz_id=construction.pk,
             )
     except IntegrityError:
         messages.error(request, f'{FACILITY_LABELS[key]} wird bereits ausgebaut.')
@@ -926,22 +923,38 @@ def coin_shop_purchase(request):
 #  FINANZEN
 # ──────────────────────────────────────────────────────────────────────────
 
+# Icon/Farb-Metadaten je Buchungstyp (Labels kommen aus TYP_CHOICES).
 _INCOME_CATS = {
-    'ticketverkauf':     ('Ticketverkauf',        '🎟',  'fn-icon-green'),
-    'sponsor':           ('Sponsoren',             '🤝',  'fn-icon-amber'),
-    'tv_gelder':         ('TV-Gelder',             '📺',  'fn-icon-blue'),
-    'transfer_einnahme': ('Transfers',             '💸',  'fn-icon-violet'),
-    'leih_einnahme':     ('Leihen',                '🔄',  'fn-icon-teal'),
-    'praemie':           ('Prämien',               '🏆',  'fn-icon-amber'),
-    'sonstige_einnahme': ('Sonstige',              '➕',  'fn-icon-gray'),
+    'TICKET':            ('Ticketverkauf',         '🎟',  'fn-icon-green'),
+    'UMFELD':            ('Stadionumfeld',         '🏪',  'fn-icon-teal'),
+    'SPONSOR_FIX':       ('Sponsoren',             '🤝',  'fn-icon-amber'),
+    'SPONSOR_VARIABEL':  ('Sponsoren (variabel)',  '🤝',  'fn-icon-amber'),
+    'TV_SOCKEL':         ('TV-Gelder',             '📺',  'fn-icon-blue'),
+    'TV_PLATZ':          ('TV-Gelder (Platz)',     '📺',  'fn-icon-blue'),
+    'TV_KOEFF':          ('TV-Gelder (Koeff.)',    '📺',  'fn-icon-blue'),
+    'FALLSCHIRM':        ('Fallschirmzahlung',     '🪂',  'fn-icon-teal'),
+    'PRAEMIE_POKAL':     ('Pokalprämien',          '🏆',  'fn-icon-amber'),
+    'PRAEMIE_SUPERCUP':  ('Supercup-Prämien',      '🏆',  'fn-icon-amber'),
+    'PRAEMIE_INTL':      ('Int. Prämien',          '🏆',  'fn-icon-amber'),
+    'ABFINDUNG':         ('Abfindung',             '🕊',  'fn-icon-gray'),
+    'TRANSFER_EIN':      ('Transfers',             '💸',  'fn-icon-violet'),
+    'AUSBILDUNG_EIN':    ('Ausbildungsabgabe',     '🎓',  'fn-icon-teal'),
+    'KORREKTUR_ADMIN':   ('Korrektur',             '🛠',  'fn-icon-gray'),
 }
 _EXPENSE_CATS = {
-    'transfer_ausgabe':  ('Transfers',             '💸',  'fn-icon-rose',   '#ef4444'),
-    'profigehalt':       ('Profigehälter',         '👕',  'fn-icon-orange', '#f97316'),
-    'jugendgehalt':      ('Jugendgehälter',        '🌱',  'fn-icon-teal',   '#14b8a6'),
-    'stadionkosten':     ('Stadionkosten',         '🏟',  'fn-icon-blue',   '#3b82f6'),
-    'stadionumfeld':     ('Stadionumfeld',         '🔧',  'fn-icon-violet', '#8b5cf6'),
-    'sonstige_ausgabe':  ('Sonstiges',             '📌',  'fn-icon-gray',   '#6b7280'),
+    'TRANSFER_AUS':      ('Transfers',             '💸',  'fn-icon-rose',   '#ef4444'),
+    'GEHALT':            ('Gehälter',              '👕',  'fn-icon-orange', '#f97316'),
+    'BETRIEB':           ('Betriebskosten',        '🏢',  'fn-icon-blue',   '#3b82f6'),
+    'STADION_UNTERHALT': ('Stadionunterhalt',      '🏟',  'fn-icon-blue',   '#0ea5e9'),
+    'STADION_SPIELTAG':  ('Spieltagskosten',       '🏟',  'fn-icon-blue',   '#38bdf8'),
+    'AUSBAU':            ('Stadionausbau',         '🏗',  'fn-icon-blue',   '#2563eb'),
+    'UMFELD_AUSBAU':     ('Stadionumfeld',         '🔧',  'fn-icon-violet', '#8b5cf6'),
+    'SCOUTING':          ('Scouting',              '🔭',  'fn-icon-teal',   '#14b8a6'),
+    'AUKTION':           ('Auktionen',             '🔨',  'fn-icon-gray',   '#9ca3af'),
+    'STRAFE':            ('Strafen',               '⚖',  'fn-icon-rose',   '#f43f5e'),
+    'VERBANDSABGABE':    ('Verbandsabgabe',        '🏛',  'fn-icon-gray',   '#6b7280'),
+    'AUSBILDUNG_AUS':    ('Ausbildungsabgabe',     '🎓',  'fn-icon-teal',   '#0d9488'),
+    'KORREKTUR_ADMIN':   ('Korrektur',             '🛠',  'fn-icon-gray',   '#6b7280'),
 }
 
 
@@ -950,7 +963,7 @@ def management_finanzen(request):
     import json
     from decimal import Decimal
     from django.core.paginator import Paginator
-    from .models import ClubFinancialTransaction, ClubSponsor, GameSeasonState
+    from .models import FinanceTransaction, ClubSponsor, GameSeasonState
 
     club = current_manager_club(user=request.user)
     if not club:
@@ -959,12 +972,12 @@ def management_finanzen(request):
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else ''
 
-    # ── Transaktionen ────────────────────────────────────────────────
-    all_txs = ClubFinancialTransaction.objects.filter(club=club).order_by('-date', '-created_at')
-    season_txs = list(all_txs.filter(season=season))
+    # ── Transaktionen (FinanceTransaction-Ledger) ────────────────────
+    all_txs = FinanceTransaction.objects.filter(club=club).order_by('-datum', '-created_at')
+    season_txs = list(all_txs.filter(saison=season))
 
-    total_income  = sum(t.amount for t in season_txs if t.amount  > 0) or Decimal('0')
-    total_expenses = abs(sum(t.amount for t in season_txs if t.amount < 0)) or Decimal('0')
+    total_income  = sum(t.betrag for t in season_txs if t.betrag  > 0) or Decimal('0')
+    total_expenses = abs(sum(t.betrag for t in season_txs if t.betrag < 0)) or Decimal('0')
     net = total_income - total_expenses
 
     def _mio(val):
@@ -981,8 +994,8 @@ def management_finanzen(request):
     # ── Income rows ──────────────────────────────────────────────────
     income_agg = {}
     for t in season_txs:
-        if t.amount > 0:
-            income_agg[t.category] = income_agg.get(t.category, Decimal('0')) + t.amount
+        if t.betrag > 0:
+            income_agg[t.typ] = income_agg.get(t.typ, Decimal('0')) + t.betrag
 
     income_rows = []
     for cat, amt in sorted(income_agg.items(), key=lambda x: -x[1]):
@@ -996,8 +1009,8 @@ def management_finanzen(request):
     # ── Expense rows ─────────────────────────────────────────────────
     expense_agg = {}
     for t in season_txs:
-        if t.amount < 0:
-            expense_agg[t.category] = expense_agg.get(t.category, Decimal('0')) + abs(t.amount)
+        if t.betrag < 0:
+            expense_agg[t.typ] = expense_agg.get(t.typ, Decimal('0')) + abs(t.betrag)
 
     expense_rows = []
     for cat, amt in sorted(expense_agg.items(), key=lambda x: -x[1]):
@@ -1023,44 +1036,70 @@ def management_finanzen(request):
     # ── Kapitalverlauf ───────────────────────────────────────────────
     chart_range = request.GET.get('range', 'season')
     if chart_range == 'complete':
-        chart_qs = list(all_txs.order_by('date', 'created_at'))
+        chart_qs = list(all_txs.order_by('datum', 'created_at'))
     elif chart_range == 'last5':
         try:
             s_int = int(season)
             seasons_5 = [str(s_int - i) for i in range(5)]
-            chart_qs = list(all_txs.filter(season__in=seasons_5).order_by('date', 'created_at'))
+            chart_qs = list(all_txs.filter(saison__in=seasons_5).order_by('datum', 'created_at'))
         except (ValueError, TypeError):
-            chart_qs = list(all_txs.filter(season=season).order_by('date', 'created_at'))
+            chart_qs = list(all_txs.filter(saison=season).order_by('datum', 'created_at'))
     else:
-        chart_qs = list(all_txs.filter(season=season).order_by('date', 'created_at'))
+        chart_qs = list(all_txs.filter(saison=season).order_by('datum', 'created_at'))
 
-    chart_net = sum(t.amount for t in chart_qs) if chart_qs else Decimal('0')
+    chart_net = sum(t.betrag for t in chart_qs) if chart_qs else Decimal('0')
     start_balance = club.budget - chart_net
     running = float(start_balance)
     chart_points = []
     if chart_qs:
         chart_points.append({
-            'date': chart_qs[0].date.strftime('%d.%m.%Y'),
+            'date': chart_qs[0].datum.strftime('%d.%m.%Y'),
             'label': 'Saisonbeginn',
             'balance': round(running / 1_000_000, 2),
             'amount': 0,
             'category': '',
         })
     for t in chart_qs:
-        running += float(t.amount)
+        running += float(t.betrag)
         chart_points.append({
-            'date': t.date.strftime('%d.%m.%Y'),
-            'label': t.description[:30],
+            'date': t.datum.strftime('%d.%m.%Y'),
+            'label': t.beschreibung[:30],
             'balance': round(running / 1_000_000, 2),
-            'amount': float(t.amount),
-            'category': t.get_category_display(),
+            'amount': float(t.betrag),
+            'category': t.get_typ_display(),
         })
 
-    # ── Pagination ───────────────────────────────────────────────────
+    # ── Kontoauszug: Saison-/Typ-Filter + Pagination ─────────────────
+    typ_labels = dict(FinanceTransaction.TYP_CHOICES)
+    filter_saison = request.GET.get('saison', '').strip()
+    filter_typ = request.GET.get('typ', '').strip()
+    if filter_typ not in typ_labels:
+        filter_typ = ''
+
+    statement_txs = all_txs
+    if filter_saison:
+        statement_txs = statement_txs.filter(saison=filter_saison)
+    if filter_typ:
+        statement_txs = statement_txs.filter(typ=filter_typ)
+
+    saison_options = sorted(
+        set(all_txs.values_list('saison', flat=True).distinct()),
+        key=lambda s: (0, int(s)) if s.isdigit() else (1, 0),
+        reverse=True,
+    )
+    typ_options = [
+        (code, typ_labels[code])
+        for code in sorted(
+            set(all_txs.values_list('typ', flat=True).distinct()),
+            key=lambda c: typ_labels.get(c, c),
+        )
+        if code in typ_labels
+    ]
+
     PER_PAGE = 10
     MAX_PAGES = 5
     page_num = max(1, min(int(request.GET.get('page', 1)), MAX_PAGES))
-    paginator = Paginator(all_txs, PER_PAGE)
+    paginator = Paginator(statement_txs, PER_PAGE)
     total_pages = min(paginator.num_pages, MAX_PAGES)
     page_obj = paginator.get_page(page_num)
     page_range = list(range(1, total_pages + 1))
@@ -1068,6 +1107,10 @@ def management_finanzen(request):
     return render(request, 'game/management/finanzen.html', {
         'club':             club,
         'season':           season,
+        'filter_saison':    filter_saison,
+        'filter_typ':       filter_typ,
+        'saison_options':   saison_options,
+        'typ_options':      typ_options,
         'budget_mio':       _mio(club.budget),
         'income_mio':       _mio(total_income),
         'expense_mio':      _mio(total_expenses),

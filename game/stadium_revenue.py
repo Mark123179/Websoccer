@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from django.db import transaction
 
-from .finance import log_club_transaction
+from .economy.booking import book
 
 COMPETITION_FACTORS = [
     ('champions league',   1.30),
@@ -76,6 +76,8 @@ def record_matchday_revenue(
     match_result=None,
     opponent_strength: float = 65.0,
     competition_name: str = '',
+    saison=None,
+    spieltag=None,
 ):
     """
     Berechnet die Spieltags-Einnahmen, schreibt sie dem Vereinsbudget gut
@@ -139,9 +141,6 @@ def record_matchday_revenue(
         match_label = f'Heimspiel ({effective_competition})' if effective_competition else 'Freundschaftsspiel'
 
     with transaction.atomic():
-        from .models import Club
-        locked = Club.objects.select_for_update().get(pk=club.pk)
-
         entry = MatchdayRevenue.objects.create(
             stadium          = stadium,
             match_result     = match_result,
@@ -155,14 +154,16 @@ def record_matchday_revenue(
             revenue_total    = rev_total,
         )
 
-        locked.budget += rev_total
-        locked.save(update_fields=['budget'])
-        club.budget = locked.budget  # Übergebene Instanz aktuell halten
-
-        log_club_transaction(
-            locked, 'ticketverkauf',
-            f'Spieltagseinnahmen {match_label}',
-            rev_total,
+        # book() sperrt die Club-Zeile, schreibt die Ledger-Zeile und
+        # aktualisiert den Konto-Cache (inkl. der übergebenen Instanz).
+        book(
+            club, 'TICKET', rev_total,
+            beschreibung=f'Spieltagseinnahmen {match_label}',
+            saison=saison,
+            spieltag=spieltag,
+            referenz_typ='matchday_revenue',
+            referenz_id=entry.pk,
+            pflicht=True,
         )
 
     return entry

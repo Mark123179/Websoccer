@@ -178,6 +178,15 @@ class Command(BaseCommand):
             # 5. Positionen neu berechnen
             _recalculate_positions(league, season)
 
+        # ── Finanz-Spieltagslauf (Phase 1, idempotent je Verein+Spieltag) ────
+        try:
+            from game.economy.matchday_run import run_matchday_finance
+            finance_summary = run_matchday_finance(league, season, matchday)
+            for err in finance_summary.get('errors', []):
+                out(self.style.WARNING(f'  Finanzlauf: {err}'))
+        except Exception as exc:
+            out(self.style.WARNING(f'  Finanzlauf fehlgeschlagen: {exc}'))
+
         # ── LeagueSeasonState synchronisieren ────────────────────────────────
         if not force:
             from game.season_service import get_season_state

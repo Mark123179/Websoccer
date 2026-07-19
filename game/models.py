@@ -5768,3 +5768,174 @@ class MediaOutlet(models.Model):
             'slug': self.slug if self.has_logo else None,
             'd':    self.accent_color,
         }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  Finanzsystem (Spec Kap. 2, 4, 12) — EconomyParameter, Ledger, Snapshot
+# ═══════════════════════════════════════════════════════════════════════════
+
+class EconomyParameter(models.Model):
+    """Zentrale Balancing-Regler-Tabelle (Spec Kap. 2), pro Saison versioniert.
+
+    Saison-Konvention: numerische Sim-Saison als String
+    (GameSeasonState.current_season, z. B. "0", "1") — es gibt kein
+    Season-Modell. Lookup mit Fallback auf die jüngste Saison ≤ angefragt
+    (game.economy.params.get_param).
+    """
+
+    saison = models.CharField(max_length=20, verbose_name='Saison')
+    key = models.CharField(max_length=64, verbose_name='Parameter-Key')
+    value = models.JSONField(verbose_name='Wert')
+
+    class Meta:
+        unique_together = ('saison', 'key')
+        ordering = ['key', 'saison']
+        verbose_name = 'Economy-Parameter'
+        verbose_name_plural = 'Economy-Parameter'
+
+    def __str__(self):
+        return f'{self.key} (Saison {self.saison}) = {self.value}'
+
+
+class FinanceTransaction(models.Model):
+    """Finanz-Ledger (Spec Kap. 12.1) — die einzige Wahrheit über Geld.
+
+    Der Kontostand eines Vereins ist die Summe seiner Ledger-Zeilen;
+    Club.budget ist nur ein Performance-Cache (Integritätsprüfung via
+    finance_integrity_check). Buchungen laufen ausschließlich über
+    game.economy.booking.book() — nie direkt Zeilen anlegen.
+    """
+
+    TYP_CHOICES = [
+        # Einnahmen (Schöpfung)
+        ('TICKET',            'Ticketverkauf'),
+        ('UMFELD',            'Stadionumfeld-Umsatz'),
+        ('SPONSOR_FIX',       'Sponsor (Fixrate)'),
+        ('SPONSOR_VARIABEL',  'Sponsor (variabel)'),
+        ('TV_SOCKEL',         'TV-Gelder (Sockel)'),
+        ('TV_PLATZ',          'TV-Gelder (Platzierung)'),
+        ('TV_KOEFF',          'TV-Gelder (Koeffizient)'),
+        ('FALLSCHIRM',        'Fallschirmzahlung'),
+        ('PRAEMIE_POKAL',     'Pokalprämie'),
+        ('PRAEMIE_SUPERCUP',  'Supercup-Prämie'),
+        ('PRAEMIE_INTL',      'Internationale Prämie'),
+        ('ABFINDUNG',         'Abfindung (Todesfall)'),
+        # Transfers (Zirkulation)
+        ('TRANSFER_EIN',      'Transfer (Einnahme)'),
+        ('TRANSFER_AUS',      'Transfer (Ausgabe)'),
+        ('AUSBILDUNG_EIN',    'Ausbildungsabgabe (Einnahme)'),
+        ('AUSBILDUNG_AUS',    'Ausbildungsabgabe (Ausgabe)'),
+        # Senken (Vernichtung)
+        ('GEHALT',            'Gehälter'),
+        ('BETRIEB',           'Betriebskosten'),
+        ('STADION_UNTERHALT', 'Stadionunterhalt'),
+        ('STADION_SPIELTAG',  'Spieltagskosten'),
+        ('AUSBAU',            'Stadionausbau'),
+        ('UMFELD_AUSBAU',     'Stadionumfeld-Ausbau'),
+        ('SCOUTING',          'Scouting'),
+        ('AUKTION',           'Auktion'),
+        ('STRAFE',            'Sportgericht-Strafe'),
+        ('VERBANDSABGABE',    'Verbandsabgabe'),
+        # Admin
+        ('KORREKTUR_ADMIN',   'Admin-Korrektur'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.PROTECT,
+        related_name='finance_transactions',
+        verbose_name='Verein',
+    )
+    saison = models.CharField(max_length=20, blank=True, verbose_name='Saison')
+    spieltag = models.PositiveSmallIntegerField(
+        null=True, blank=True, verbose_name='Spieltag',
+    )
+    typ = models.CharField(
+        max_length=32, choices=TYP_CHOICES, verbose_name='Buchungstyp',
+    )
+    betrag = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        verbose_name='Betrag (€)',
+        help_text='Positiv = Einnahme, Negativ = Ausgabe.',
+    )
+    referenz_typ = models.CharField(max_length=32, blank=True, default='')
+    referenz_id = models.PositiveIntegerField(null=True, blank=True)
+    beschreibung = models.CharField(
+        max_length=200, blank=True, default='', verbose_name='Verwendungszweck',
+    )
+    datum = models.DateField(default=timezone.localdate, verbose_name='Buchungsdatum')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['club', 'saison']),
+            models.Index(fields=['saison', 'typ']),
+            models.Index(fields=['club', 'created_at']),
+        ]
+        verbose_name = 'Finanzbuchung'
+        verbose_name_plural = 'Finanzbuchungen'
+
+    @property
+    def is_income(self):
+        return self.betrag >= 0
+
+    def __str__(self):
+        sign = '+' if self.betrag >= 0 else ''
+        return (f'{self.club} | {self.get_typ_display()} | '
+                f'{sign}{self.betrag:,.0f} € (S{self.saison}'
+                + (f'/ST{self.spieltag}' if self.spieltag else '') + ')')
+
+
+class SeasonEconomySnapshot(models.Model):
+    """Saison-Snapshot der Ökonomie-Basisdaten (Spec Kap. 4 + 14).
+
+    gehalts_anker = gedämpfter MW-Median (max ±MEDIAN_DAEMPFUNG pro Saison
+    gegenüber Vorsaison-Anker). Erste Saison ohne Vorgänger: roher Median.
+    """
+
+    saison = models.CharField(max_length=20, unique=True, verbose_name='Saison')
+    mw_median = models.DecimalField(max_digits=15, decimal_places=2)
+    staerke_median = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True,
+    )
+    potential_median = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True,
+    )
+    mw_kurve_json = models.JSONField(default=dict, blank=True)
+    gehalts_anker = models.DecimalField(max_digits=15, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-saison']
+        verbose_name = 'Saison-Ökonomie-Snapshot'
+        verbose_name_plural = 'Saison-Ökonomie-Snapshots'
+
+    def __str__(self):
+        return (f'Snapshot Saison {self.saison}: MW-Median {self.mw_median:,.0f} €, '
+                f'Anker {self.gehalts_anker:,.0f} €')
+
+
+class FinanceMatchdayRun(models.Model):
+    """Idempotenz-Guard für finance_matchday_run (ein Lauf je Verein+Spieltag).
+
+    run_at dient zugleich als „seit letztem Lauf“-Marker für die
+    Betriebskosten-Quote (Spec Kap. 10).
+    """
+
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name='finance_matchday_runs',
+    )
+    saison = models.CharField(max_length=20)
+    spieltag = models.PositiveSmallIntegerField()
+    run_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('club', 'saison', 'spieltag')
+        ordering = ['-run_at']
+        verbose_name = 'Finanz-Spieltagslauf'
+        verbose_name_plural = 'Finanz-Spieltagsläufe'
+
+    def __str__(self):
+        return f'{self.club} — Saison {self.saison}, ST {self.spieltag} ({self.run_at:%d.%m.%Y %H:%M})'

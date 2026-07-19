@@ -1,32 +1,33 @@
 ---
 name: Finanz-Ledger Buchungs-Konvention
-description: Wie Budget-Mutationen zu loggen sind (log_club_transaction) und welche Saison-Konvention im ClubFinancialTransaction-Ledger gilt.
+description: Wie Budget-Mutationen zu buchen sind (seit Phase 1 via game.economy.booking.book) und welche Saison-Konvention im Ledger gilt.
 ---
 
 # Finanz-Ledger — Buchungs-Konvention
 
-**Regel:** Jede Mutation von `Club.budget` MUSS in derselben DB-Transaktion eine
-Ledger-Zeile über `game/finance.py::log_club_transaction()` schreiben, auf der
-per `select_for_update` gesperrten Club-Zeile.
+**Regel (seit Finanzsystem Phase 1):** Jede Mutation von `Club.budget` läuft
+über `game/economy/booking.py::book()` bzw. `book_many()` — die Funktion
+sperrt selbst (`select_for_update`), schreibt die `FinanceTransaction`-Zeile
+und aktualisiert den Budget-Cache atomar. NIE Budget von Hand mutieren und
+daneben loggen. `game/finance.py::log_club_transaction()` ist nur noch ein
+Legacy-Wrapper um `book()` (mappt Alt-Kategorien auf Typen) und bucht das
+Budget MIT — Aufrufer dürfen nicht zusätzlich selbst mutieren.
+Details: siehe [finance-ledger-phase1.md](finance-ledger-phase1.md).
 
-**Saison-Konvention:** `ClubFinancialTransaction.season` ist IMMER die
-numerische Sim-Saison als String (`str(GameSeasonState.current_season)`, z. B.
-`"0"`). TM-Labels wie `"2025/26"` sind verboten — die Manager-Finanzansicht
-und die Creator-Finanzanalyse filtern exakt auf diesen String. Alt-Zeilen mit
-`/` wurden per Datenmigration auf die Sim-Saison gemappt.
+**Saison-Konvention:** `FinanceTransaction.saison` ist IMMER die numerische
+Sim-Saison als String (`str(GameSeasonState.current_season)`, z. B. `"0"`).
+TM-Labels wie `"2025/26"` sind verboten — Manager-Kontoauszug und
+Creator-Finanzanalyse filtern exakt auf diesen String. Alt-Zeilen mit `/`
+wurden per Datenmigration gemappt.
 
 **Why:** Scouting buchte anfangs mit TM-Saisonlabels, wodurch die
 Manager-Finanzansicht (numerischer Filter) diese Buchungen unsichtbar
 verschluckte. Außerdem hatte stadium_expand einen TOCTOU-Bug
-(Budget-Check ohne Lock).
+(Budget-Check ohne Lock) — `book()` erzwingt jetzt beides zentral.
 
-**How to apply:** Bei jedem neuen Geldfluss: `with transaction.atomic():`
-→ `Club.objects.select_for_update().get(...)` → Budget mutieren →
-`log_club_transaction(locked, kategorie, beschreibung, betrag)`.
-Kategorien kommen aus `ClubFinancialTransaction.CATEGORY_CHOICES`;
-positiv = Einnahme, negativ = Ausgabe. `log_club_transaction` ist die
-Austausch-Naht für das spätere FinanceTransaction-Ledger aus der
-Finanzsystem-Spec (Phase 1) — Aufrufer nicht direkt auf das Modell koppeln.
+**How to apply:** Neuer Geldfluss = ein `book(club, TYP, betrag, …)`-Aufruf
+(positiv = Einnahme, negativ = Ausgabe; `pflicht=True` nur für Gehälter/
+Betrieb/Unterhalt). Typen aus `FinanceTransaction.TYP_CHOICES`.
 
 Globale Auswertung: Creator-Seite „Finanzanalyse" (`/creator/finanzen/`,
 staff-only). Creator-Navigation ist zentral in

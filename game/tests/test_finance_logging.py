@@ -1,8 +1,11 @@
-"""Tests für das Finanz-Ledger (game/finance.py) und die Creator-Finanzanalyse.
+"""Tests für den Legacy-Buchungs-Wrapper (game/finance.py) und die
+Creator-Finanzanalyse.
 
-Deckt ab: zentraler Buchungs-Helper (Saison-Konvention, Kürzung),
-Ticketverkauf-Buchung in record_matchday_revenue, Stadionausbau- und
-Stadionumfeld-Buchungen sowie die globale Finanzanalyse-Seite.
+Seit Finanzsystem Phase 1 delegiert log_club_transaction() an
+game.economy.booking.book(): es schreibt eine FinanceTransaction-Zeile
+UND mutiert Club.budget atomar. Diese Tests decken den Wrapper
+(Saison-Konvention, Typ-Mapping, Kürzung, Budget-Wirkung), die
+Ticketbuchung in record_matchday_revenue sowie die Analyse-Seite ab.
 """
 
 from decimal import Decimal
@@ -13,7 +16,7 @@ from django.urls import reverse
 
 from game.finance import current_sim_season, log_club_transaction
 from game.models import (
-    Club, ClubFinancialTransaction, GameSeasonState, League, Stadium,
+    Club, FinanceTransaction, GameSeasonState, League, Stadium,
 )
 from game.stadium_revenue import record_matchday_revenue
 
@@ -39,20 +42,36 @@ class FinanceHelperTests(TestCase):
         GameSeasonState.objects.create(current_season=2)
         club = _mk_club()
         tx = log_club_transaction(club, 'sonstige_ausgabe', 'Test', Decimal('-100'))
-        self.assertEqual(tx.season, '2')
-        self.assertEqual(tx.category, 'sonstige_ausgabe')
-        self.assertEqual(tx.amount, Decimal('-100'))
+        self.assertEqual(tx.saison, '2')
+        self.assertEqual(tx.typ, 'KORREKTUR_ADMIN')
+        self.assertEqual(tx.referenz_typ, 'legacy:sonstige_ausgabe')
+        self.assertEqual(tx.betrag, Decimal('-100'))
+
+    def test_log_mutates_budget(self):
+        GameSeasonState.objects.create(current_season=2)
+        club = _mk_club()
+        log_club_transaction(club, 'praemie', 'Bonus', Decimal('250000'))
+        club.refresh_from_db()
+        self.assertEqual(club.budget, Decimal('10250000.00'))
 
     def test_log_truncates_description(self):
         club = _mk_club()
         tx = log_club_transaction(club, 'sonstige_ausgabe', 'x' * 300, Decimal('-1'))
-        self.assertEqual(len(tx.description), 200)
+        self.assertEqual(len(tx.beschreibung), 200)
 
     def test_log_explicit_season_wins(self):
         GameSeasonState.objects.create(current_season=5)
         club = _mk_club()
         tx = log_club_transaction(club, 'praemie', 'Bonus', Decimal('50'), season=1)
-        self.assertEqual(tx.season, '1')
+        self.assertEqual(tx.saison, '1')
+
+    def test_legacy_category_mapping(self):
+        GameSeasonState.objects.create(current_season=0)
+        club = _mk_club()
+        tx = log_club_transaction(club, 'ticketverkauf', 'Heimspiel', Decimal('1000'))
+        self.assertEqual(tx.typ, 'TICKET')
+        tx = log_club_transaction(club, 'stadionkosten', 'Ausbau', Decimal('-1000'))
+        self.assertEqual(tx.typ, 'AUSBAU')
 
 
 class TicketRevenueLoggingTests(TestCase):
@@ -70,11 +89,11 @@ class TicketRevenueLoggingTests(TestCase):
         self.club.refresh_from_db()
         self.assertEqual(self.club.budget, before + entry.revenue_total)
 
-        tx = ClubFinancialTransaction.objects.get(club=self.club)
-        self.assertEqual(tx.category, 'ticketverkauf')
-        self.assertEqual(tx.amount, entry.revenue_total)
-        self.assertEqual(tx.season, '1')
-        self.assertIn('Spieltagseinnahmen', tx.description)
+        tx = FinanceTransaction.objects.get(club=self.club)
+        self.assertEqual(tx.typ, 'TICKET')
+        self.assertEqual(tx.betrag, entry.revenue_total)
+        self.assertEqual(tx.saison, '1')
+        self.assertIn('Spieltagseinnahmen', tx.beschreibung)
 
 
 class FinanzanalyseViewTests(TestCase):
@@ -100,7 +119,7 @@ class FinanzanalyseViewTests(TestCase):
         self.assertIn('Geld im Umlauf', html)
         self.assertIn('Testliga', html)
         self.assertIn('Ticketverkauf', html)
-        self.assertIn('Stadionkosten', html)
+        self.assertIn('Stadionausbau', html)
 
     def test_season_filter_param(self):
         self.client.force_login(self.staff)
@@ -110,4 +129,4 @@ class FinanzanalyseViewTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         html = resp.content.decode()
         self.assertIn('Kategorien — Saison 7', html)
-        self.assertIn('Prämie', html)
+        self.assertIn('Pokalprämie', html)
