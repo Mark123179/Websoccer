@@ -14,8 +14,10 @@ var VN_CLUB_ID     = _d.club_id     || 0;
 var VN_PUBLISH_URL = _d.publish_url || '';
 var VN_CSRF        = _d.csrf        || '';
 var VN_TODAY       = _d.today       || '01.01.2026';
-var IS_OWN_CLUB    = !!_d.is_own_club;
-var HAS_CLUB       = !!_d.has_club;
+var IS_OWN_CLUB       = !!_d.is_own_club;
+var HAS_CLUB          = !!_d.has_club;
+var IS_ADMIN          = !!_d.is_admin;
+var VN_DELETE_URL_BASE= _d.delete_url_base || '';
 
 var MOM = [0.6,0.3,-0.2,0.8,1,0.4,-0.5,-0.3,0.7,0.9,0.2,-0.6,0.5,1,0.8,0.3,-0.2,0.6];
 
@@ -100,17 +102,27 @@ function markChip(name,big){
   return'<i class="mark" style="background:'+o.d+';color:'+markTc(o.d)+';'+s+'">VR</i>';
 }
 
+function authorLink(a){
+  if(!a.author)return'';
+  return' · <a href="'+esc(a.author_url||'#')+'" class="author-link" onclick="event.stopPropagation()" style="color:rgba(244,251,255,.55);font-weight:800;text-decoration:none" onmouseover="this.style.color=\'#22e6ff\'" onmouseout="this.style.color=\'rgba(244,251,255,.55)\'">'+'@'+esc(a.author)+'</a>';
+}
+function adminDeleteBtn(a){
+  if(!IS_ADMIN||!a.pk)return'';
+  return'<button class="blk-btn del" style="position:absolute;top:8px;right:8px;z-index:10;font-size:10px;padding:3px 7px;opacity:.75" onclick="event.stopPropagation();App.deleteNews(\''+a.id+'\','+a.pk+')">✕ Löschen</button>';
+}
+
 /* ── Karten ── */
 function cardHTML(a){
   var art=cardArt(a);
-  var h='<div class="news-card" style="background:'+bgFor(a)+'" onclick="App.open(\''+a.id+'\')">';
+  var h='<div class="news-card" style="position:relative;background:'+bgFor(a)+'" onclick="App.open(\''+a.id+'\')">';
   if(art.custom)h+='<img class="card-custom" src="'+art.custom+'" alt="">';
   else if(art.img)h+='<img class="card-motif" src="'+art.img+'" alt="" style="height:'+art.imgH+'px">';
   if(a.isNew)h+='<span class="badge-neu card-neu">NEU</span>';
+  h+=adminDeleteBtn(a);
   h+='<div class="card-overlay">'+
     '<span class="card-kat" style="color:'+katC(a.kat)+'">'+esc(a.kat)+'</span>'+
     '<strong class="card-title">'+esc(a.title)+'</strong>'+
-    '<span class="meta-line">'+esc(a.date)+' · '+markChip(a.outlet)+esc(a.outlet)+'</span>'+
+    '<span class="meta-line">'+esc(a.date)+' · '+markChip(a.outlet)+esc(a.outlet)+authorLink(a)+'</span>'+
     '</div></div>';
   return h;
 }
@@ -259,7 +271,12 @@ function articleHTML(a){
     '</div><h2>'+esc(a.title)+'</h2></div></div>'+
     '<div class="art-content">'+
     '<p class="art-lead">'+esc(a.sub)+'</p>'+
-    '<div class="art-meta"><span>'+esc(a.date)+'</span><span>·</span><span>'+fmtViews(a.views)+'</span><span>·</span><span style="color:#e50914">Vereinsredaktion '+esc(_d.club_abbr||'')+'</span></div>'+
+    '<div class="art-meta" style="display:flex;align-items:center;flex-wrap:wrap;gap:6px">'+
+    '<span>'+esc(a.date)+'</span><span>·</span><span>'+fmtViews(a.views)+'</span><span>·</span>'+
+    (a.author?'<a href="'+esc(a.author_url||'#')+'" class="author-link" style="color:#22e6ff;font-weight:800;text-decoration:none">@'+esc(a.author)+'</a>':
+      '<span style="color:#e50914">Vereinsredaktion '+esc(_d.club_abbr||'')+'</span>')+
+    (IS_ADMIN&&a.pk?'<button class="blk-btn del" style="margin-left:auto;font-size:11px;padding:3px 10px" onclick="App.deleteNews(\''+a.id+'\','+a.pk+')">✕ Artikel löschen</button>':'')+
+    '</div>'+
     blocksHTML(a.blocks||[])+'</div>';
 }
 
@@ -452,6 +469,21 @@ window.App={
   togB:function(i,k){var b=state.ed.blocks[i];b.f[k]=!b.f[k];render();},
   moveB:function(i,d){var bl=state.ed.blocks,j=i+d;if(j<0||j>=bl.length)return;var t=bl[i];bl[i]=bl[j];bl[j]=t;render();},
   delB:function(i){state.ed.blocks.splice(i,1);render();},
+  deleteNews:function(artId,pk){
+    if(!confirm('Artikel wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.'))return;
+    var clubId=VN_CLUB_ID;
+    var url=VN_DELETE_URL_BASE+(VN_DELETE_URL_BASE.slice(-1)==='/'?'':'/');
+    url+=pk+'/delete/';
+    fetch(url,{method:'POST',headers:{'X-CSRFToken':VN_CSRF}})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok){
+          ART=ART.filter(function(a){return a.id!==artId;});
+          state.published=state.published.filter(function(a){return a.id!==artId;});
+          state.view='home';render();window.scrollTo(0,0);
+        }else{alert(d.error||'Fehler beim Löschen.');}
+      }).catch(function(){alert('Netzwerkfehler.');});
+  },
   addB:function(k){
     var defs={text:T(''),head:H(''),quote:Q('',''),player:PL(Object.keys(P)[0]||''),match:M(),motm:{k:'motm'},image:IMG(null,'')};
     state.ed.blocks.push(JSON.parse(JSON.stringify(defs[k]||{k:k})));render();
