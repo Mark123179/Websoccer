@@ -268,6 +268,13 @@ def ki_zu_ki_clearing(buyer, kandidat, *, kauftyp, params, saison,
     """Sofort-Clearing KI-zu-KI (kein Postfach): Deal, wenn Käufer-Max ≥
     Verkäufer-Forderung — Preis = Mittelwert beider Werte.
 
+    Verkäufer-Forderung ist hier die echte Reserve des KI-Verkäufers: seine
+    Schmerzgrenze (beide Bewertungen sind systemseitig bekannt, Spec 9.3).
+    Der 1,1–1,3-Aufschlag aus finde_kandidaten ist nur die ERWARTETE
+    Ausgangsforderung fürs Nutzen-Ranking gegenüber Manager-Vereinen —
+    gegen sie könnte das Clearing wegen der Bewertungssymmetrie
+    (Käufer-Max ≤ 1,0 × Schmerzgrenze) strukturell nie dealen.
+
     kandidat: dict aus kandidaten.finde_kandidaten (player/wertung/forderung).
     Returns dict {'offer', 'ergebnis': 'deal'|'kein_deal'|'berechnet',
                   'preis': Decimal|None}.
@@ -278,7 +285,7 @@ def ki_zu_ki_clearing(buyer, kandidat, *, kauftyp, params, saison,
 
     player = kandidat['player']
     wertung = kandidat['wertung']
-    forderung = kandidat['forderung']
+    forderung = wertung['schmerzgrenze']
     max_gebot = max_gebot_fuer(kauftyp, wertung, params)
 
     if max_gebot < forderung:
@@ -287,7 +294,7 @@ def ki_zu_ki_clearing(buyer, kandidat, *, kauftyp, params, saison,
     preis = _quantisiere(
         (max_gebot + forderung) / 2, params.get('gebot_quantisierung', 10000),
     )
-    grund = (begruendung + f'\nKI-zu-KI-Clearing: Forderung '
+    grund = (begruendung + f'\nKI-zu-KI-Clearing: Reserve '
              f'{forderung:.0f} €, Max {max_gebot:.0f} €, '
              f'Preis {preis:.0f} €.').strip()
 

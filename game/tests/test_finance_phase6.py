@@ -18,8 +18,9 @@ from django.utils import timezone
 
 from game.economy.ai_buyer.bedarf import bedarfs_analyse, beste_elf
 from game.economy.ai_buyer.offers import (
-    AIBuyerError, create_offer, gebot_fuer_stufe, manager_ablehnen,
-    manager_annehmen, max_gebot_fuer, offer_manager_payload,
+    AIBuyerError, create_offer, gebot_fuer_stufe, ki_zu_ki_clearing,
+    manager_ablehnen, manager_annehmen, max_gebot_fuer,
+    offer_manager_payload,
 )
 from game.economy.ai_buyer.pruflauf import run_club_pruflauf
 from game.economy.kader import min_squad_size
@@ -579,3 +580,131 @@ class ItoReferenzTests(TestCase):
         self.assertEqual(
             AIBuyerRun.objects.filter(club=self.club, spieltag=3).count(), 1,
         )
+
+
+class KiZuKiClearingTests(TestCase):
+    """KI-zu-KI-Sofortclearing (Spec 9.3): Deal gegen die echte Reserve des
+    KI-Verkäufers (Schmerzgrenze), nicht gegen die erwartete Ausgangs-
+    forderung (1,1–1,3×) — sonst wäre Clearing strukturell unmöglich."""
+
+    def setUp(self):
+        self.params = _params()
+        self.buyer = _mk_club('Clearing Käufer', budget='20000000')
+        _fill_squad(self.buyer, 5)
+        self.seller = _mk_club('Clearing KI-Verkäufer')
+        _fill_squad(self.seller, min_squad_size(SAISON) + 2)
+        self.player = _mk_player(
+            self.seller, 'Sofort Deal', pos='IV', staerke=65, age=26,
+            mw='2000000',
+        )
+
+    def _kandidat(self, schmerz='8000000', zukunft=None):
+        return {
+            'player': self.player,
+            'wertung': _wertung(schmerz, zukunft),
+            # Erwartete Ausgangsforderung (1,1–1,3×) — fürs Clearing
+            # irrelevant, darf das Ergebnis nicht beeinflussen.
+            'forderung': Decimal(schmerz) * Decimal('1.3'),
+        }
+
+    def test_bedarf_dealt_zur_reserve_im_trockenlauf(self):
+        ergebnis = ki_zu_ki_clearing(
+            self.buyer, self._kandidat(), kauftyp='bedarf',
+            params=self.params, saison=SAISON, window_id=WINDOW,
+            dry_run=True,
+        )
+        self.assertEqual(ergebnis['ergebnis'], 'berechnet')
+        # Max (1,0×) == Reserve → Mittelwert = Schmerzgrenze.
+        self.assertEqual(ergebnis['preis'], Decimal('8000000'))
+        offer = ergebnis['offer']
+        self.assertEqual(offer.status, AITransferOffer.STATUS_BERECHNET)
+        self.assertTrue(offer.dry_run)
+        self.assertEqual(offer.aktuelles_gebot, Decimal('8000000'))
+        # Trockenlauf: Spieler und Budgets unverändert.
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.seller.pk)
+
+    def test_qualitaet_und_talent_dealen_nicht_unter_reserve(self):
+        for kauftyp in ('qualitaet', 'talent'):
+            ergebnis = ki_zu_ki_clearing(
+                self.buyer, self._kandidat(zukunft='8000000'),
+                kauftyp=kauftyp, params=self.params, saison=SAISON,
+                window_id=WINDOW, dry_run=True,
+            )
+            self.assertEqual(ergebnis['ergebnis'], 'kein_deal', kauftyp)
+            self.assertIsNone(ergebnis['offer'], kauftyp)
+        self.assertFalse(AITransferOffer.objects.exists())
+
+    def test_scharfer_deal_ist_atomare_buchung(self):
+        budget_vorher = self.buyer.budget
+        ergebnis = ki_zu_ki_clearing(
+            self.buyer, self._kandidat(), kauftyp='bedarf',
+            params=self.params, saison=SAISON, window_id=WINDOW,
+            dry_run=False, spieltag=1,
+        )
+        self.assertEqual(ergebnis['ergebnis'], 'deal')
+        self.assertEqual(ergebnis['preis'], Decimal('8000000'))
+        offer = ergebnis['offer']
+        self.assertEqual(offer.status, AITransferOffer.STATUS_DEAL)
+        self.assertFalse(offer.dry_run)
+        self.assertEqual(offer.seller_club_id, self.seller.pk)
+        self.player.refresh_from_db()
+        self.buyer.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.buyer.pk)
+        self.assertEqual(
+            self.buyer.budget, budget_vorher - Decimal('8000000'),
+        )
+
+    def test_scharfer_deal_scheitert_ohne_geld_ohne_seiteneffekt(self):
+        self.buyer.budget = Decimal('1000000')
+        self.buyer.save(update_fields=['budget'])
+        ergebnis = ki_zu_ki_clearing(
+            self.buyer, self._kandidat(), kauftyp='bedarf',
+            params=self.params, saison=SAISON, window_id=WINDOW,
+            dry_run=False, spieltag=1,
+        )
+        self.assertEqual(ergebnis['ergebnis'], 'kein_deal')
+        self.assertFalse(AITransferOffer.objects.exists())
+        self.player.refresh_from_db()
+        self.assertEqual(self.player.club_id, self.seller.pk)
+
+    def test_pruflauf_clearing_unter_seed_defaults(self):
+        """Integrationsfall: Bedarfslücke + KI-Verkäufer → das Clearing
+        kommt unter den Seed-Defaults tatsächlich zustande (Regression
+        gegen strukturell null Deals)."""
+        SeasonEconomySnapshot.objects.get_or_create(
+            saison=SAISON, defaults={
+                'mw_median': Decimal('1000000'),
+                'gehalts_anker': Decimal('1000000'),
+            },
+        )
+        state, _ = GameSeasonState.objects.get_or_create(pk=1)
+        state.transfer_window_open = True
+        state.transfer_window_id = WINDOW
+        state.save()
+
+        club = _mk_club('Clearing Ito FC', budget='80000000',
+                        league=_mk_league('Clearing-Liga'))
+        kader = _mk_442_kader(club)
+        kader['IV1'].club = None
+        kader['IV1'].save(update_fields=['club'])
+
+        run = run_club_pruflauf(
+            club, saison=SAISON, spieltag=1, trigger='test',
+            soll=Decimal('60'),
+        )
+        self.assertIsNotNone(run)
+        kaeufe = run.report.get('kaeufe', [])
+        bedarf = [k for k in kaeufe if k['typ'] == 'bedarf']
+        self.assertTrue(bedarf, f'Kein Bedarfskauf im Report: {run.report}')
+        self.assertEqual(bedarf[0]['player_id'], self.player.pk)
+        self.assertEqual(bedarf[0]['aktion'], 'berechnet')
+        self.assertIn('preis', bedarf[0])
+
+        offer = AITransferOffer.objects.get(
+            buyer_club=club, player=self.player,
+        )
+        self.assertEqual(offer.status, AITransferOffer.STATUS_BERECHNET)
+        self.assertTrue(offer.dry_run)
+        # Clearing-Preis nie über dem Käufer-Maximum.
+        self.assertLessEqual(offer.aktuelles_gebot, offer.max_gebot)

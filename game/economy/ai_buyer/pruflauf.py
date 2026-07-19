@@ -39,6 +39,7 @@ from .offers import (
     create_offer,
     expire_offers,
     ki_zu_ki_clearing,
+    max_gebot_fuer,
 )
 
 logger = logging.getLogger(__name__)
@@ -142,7 +143,11 @@ def _kauf_versuchen(club, kandidatenliste, *, kauftyp, params, saison,
     if not _kaderplatz_frei(club, saison):
         return {'aktion': None, 'grund': 'kader_voll'}
     for kandidat in kandidatenliste:
-        if kandidat['forderung'] > budget_max:
+        # Bezahlbarkeit am eigenen Käufer-Maximum messen (mehr zahlt die KI
+        # nie — weder Clearing-Preis noch Gebotstreppe überschreiten es).
+        # Die erwartete Forderung (1,1–1,3×) ist nur Ranking-Heuristik.
+        max_gebot = max_gebot_fuer(kauftyp, kandidat['wertung'], params)
+        if max_gebot <= 0 or max_gebot > budget_max:
             continue
         player = kandidat['player']
         seller = player.club

@@ -5,19 +5,20 @@ description: Designentscheidungen und Fallen des KI-Käufers (AITransferOffer/AI
 
 # KI-Käufer Stufe 2 — Entscheidungen & Fallen
 
-## Bewertungssymmetrie ⇒ KI-zu-KI-Clearing dealt strukturell NIE
-Spec 9.3: Verkäufer-Forderung = Bewertung × 1,1–1,3, Käufer-Max = 1,0 × Bewertung
-(bei Bedarf; Qualität/Talent noch weniger). Beide Seiten nutzen dieselbe
-Schmerzgrenzen-Bewertung ⇒ max_gebot < Forderung IMMER ⇒ `ki_zu_ki_clearing`
-kann nie abschließen; Deals entstehen nur bei Manager-Vereinen via Gebotstreppe
-(70/90/100 % mit Dringlichkeits-Gates).
-**Why:** Trockenlauf auf Live-Daten (26 Läufe) ergab 0 Angebote — empirisch
-bestätigt; Architect stufte es als Spec-Widerspruch ein (Spec erwartet im
-Ito-Referenzfall „KI-zu-KI sofort").
-**How to apply:** NICHT stillschweigend patchen — Balancing-Entscheidung des
-Users. Naheliegende Korrektur: Clearing gegen Schmerzgrenze (Reserve) statt
-gegen Forderung. Log „kein bezahlbarer Kandidat" ist dabei irreführend (Budget
-war nie das Gate).
+## KI-zu-KI-Clearing dealt gegen die RESERVE, nie gegen die Forderung
+Die erwartete Forderung (Bewertung × 1,1–1,3) ist NUR Ranking-Heuristik fürs
+Nutzen-Sortieren gegenüber Manager-Vereinen. Beim KI-zu-KI-Clearing sind beide
+Bewertungen systemseitig bekannt: Deal, wenn Käufer-Max ≥ Schmerzgrenze des
+Verkäufers (Reserve), Preis = Mittelwert. Effekt: nur Bedarfskäufe
+(Max = 1,0×) clearen KI-zu-KI — exakt zur Schmerzgrenze; Qualität (0,85×) und
+Talent (0,9× Zukunftswert) nie.
+**Why:** Beide Seiten nutzen dieselbe Schmerzgrenzen-Bewertung
+(Bewertungssymmetrie) ⇒ gegen die 1,1–1,3×-Forderung wäre max_gebot < Forderung
+IMMER und Clearing strukturell tot (Trockenlauf: 26 Läufe, 0 Deals); Spec 9.3
+verlangt aber den Ito-Referenzfall „KI-zu-KI sofort".
+**How to apply:** Auch Bezahlbarkeits-Gates (Prüflauf) am Käufer-Maximum
+messen, nicht an der Forderung — sonst werden Manager-Angebote unterdrückt,
+die die Gebotstreppe nie über Max führt.
 
 ## Trockenlauf-Altbestand beim Scharfschalten stornieren
 `berechnet`-Angebote (dry_run) haben kein gueltig_bis und laufen nie ab; sie
