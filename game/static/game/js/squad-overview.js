@@ -662,6 +662,50 @@
             });
         }
 
+        /* ------- Manager-Postfach: eingehende KI-Kaufangebote (Phase 6) ------- */
+        const aiPanel = document.getElementById('aiOfferPanel');
+        if (aiPanel) {
+            aiPanel.addEventListener('click', function (ev) {
+                const btn = ev.target.closest('.ai-offer-act');
+                if (!btn) { return; }
+                const card = btn.closest('.ai-offer');
+                const offerId = card && card.getAttribute('data-offer');
+                if (!offerId) { return; }
+                const accept = btn.getAttribute('data-act') === 'accept';
+                const url = aiPanel.getAttribute(
+                    accept ? 'data-accept-url' : 'data-reject-url');
+                const params = new URLSearchParams();
+                params.set('offer_id', offerId);
+                card.querySelectorAll('.ai-offer-act').forEach(function (b) {
+                    b.disabled = true;
+                });
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': aiPanel.getAttribute('data-csrf') || getCsrfToken(),
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params.toString(),
+                    credentials: 'same-origin'
+                }).then(function (r) { return r.json(); }).then(function (data) {
+                    if (!data.ok) {
+                        showToast(data.error || 'Aktion fehlgeschlagen.', 'error');
+                        card.querySelectorAll('.ai-offer-act').forEach(function (b) {
+                            b.disabled = false;
+                        });
+                        return;
+                    }
+                    showToast(data.message || 'Erledigt.', 'success');
+                    setTimeout(function () { window.location.reload(); }, 1400);
+                }).catch(function () {
+                    showToast('Netzwerkfehler.', 'error');
+                    card.querySelectorAll('.ai-offer-act').forEach(function (b) {
+                        b.disabled = false;
+                    });
+                });
+            });
+        }
+
         updateSelectionUI();
         applyFilters();
     });

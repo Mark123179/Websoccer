@@ -9,7 +9,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'game/css/squad-overview.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -200,6 +200,37 @@
         <aside class="squad-analysis">
             <h3 class="squad-analysis__title">Kaderanalyse</h3>
 
+            {% if is_owner and ai_offers %}
+            <!-- Manager-Postfach: eingehende KI-Kaufangebote (Phase 6) -->
+            <section class="squad-panel ai-offer-panel" id="aiOfferPanel"
+                     data-accept-url="{{ ai_offer_accept_url }}"
+                     data-reject-url="{{ ai_offer_reject_url }}"
+                     data-csrf="{{ csrf_token }}">
+                <header class="squad-panel__head">
+                    <span>Eingehende Angebote</span>
+                    <span class="squad-panel__badge">{{ ai_offers|length }}</span>
+                </header>
+                <div class="ai-offer-list">
+                    {% for o in ai_offers %}
+                    <article class="ai-offer" data-offer="{{ o.id }}">
+                        <div class="ai-offer__row">
+                            <span class="ai-offer__player">{{ o.player_name }}</span>
+                            <span class="ai-offer__amount">{{ o.gebot_fmt }}</span>
+                        </div>
+                        <div class="ai-offer__row ai-offer__row--meta">
+                            <span class="ai-offer__buyer">{{ o.buyer_name }}</span>
+                            <span class="ai-offer__meta">{{ o.kauftyp_label }} · Stufe {{ o.stufe }}{% if o.gueltig_bis %} · bis {{ o.gueltig_bis }}{% endif %}</span>
+                        </div>
+                        <div class="ai-offer__actions">
+                            <button type="button" class="squad-btn squad-btn--primary ai-offer-act" data-act="accept">Annehmen</button>
+                            <button type="button" class="squad-btn squad-btn--ghost ai-offer-act" data-act="reject">Ablehnen</button>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
             <section class="squad-panel squad-pitch-panel">
                 <header class="squad-panel__head">
                     <span>Positionsübersicht</span>
@@ -341,5 +372,5 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/squad-overview.js' %}?v=5" defer></script>
+    <script src="{% static 'game/js/squad-overview.js' %}?v=6" defer></script>
 {% endblock %}

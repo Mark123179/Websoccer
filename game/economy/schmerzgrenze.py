@@ -92,12 +92,38 @@ def _realisierung(age, luecke, konst):
     return min(max(wert, Decimal(str(r['min']))), Decimal(str(r['max'])))
 
 
+def potential_200(player):
+    """Wahres Potential auf der 200er-Stärkeskala (wie die Match-Engine).
+
+    Kanonische Quelle ist Player.calculated_potential_strength (Summe der
+    Quellen-Potentiale bzw. ×2 bei nur einer Quelle). Player.potential ist
+    ein 100er-Rohwert und darf NIE direkt mit base_strength verglichen
+    werden (Skalenfalle). Fallback ohne Quellen-Potentiale: Rohwert × 2.
+    """
+    try:
+        pot = player.calculated_potential_strength
+    except Exception:
+        pot = None
+    if pot is not None:
+        return Decimal(str(pot))
+    roh = getattr(player, 'potential', None)
+    if roh:
+        return Decimal(str(roh)) * 2
+    return None
+
+
 def _wahre_werte(player):
-    """(Stärke, Potential) aus den verborgenen Feldern; None wenn kein Profil."""
+    """(Stärke, Potential) aus den verborgenen Feldern; None wenn kein Profil.
+
+    Potential auf der 200er-Skala (potential_200) — nur so sind die
+    Spec-Vergleiche „Potential > Stärke" und „Potential > Potential-Median"
+    überhaupt erfüllbar (Zukunftswert, Spec 9.2).
+    """
     profil = getattr(player, 'strength_profile', None)
     if profil is None or profil.base_strength is None:
         return None, None
-    return Decimal(str(profil.base_strength)), Decimal(str(player.potential or 0))
+    pot = potential_200(player)
+    return Decimal(str(profil.base_strength)), (pot or Decimal('0'))
 
 
 def ist_kernspieler(player, staerke=None):

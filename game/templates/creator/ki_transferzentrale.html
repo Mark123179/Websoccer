@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator – KI-Transferzentrale{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>KI-Transferzentrale</h1>
+    </div>
+    {% include 'creator/_nav_pills.html' with nav_active='kikauf' %}
+  </div>
+
+  <style>
+    .ktz-kpi-row { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    .ktz-kpi-card {
+      background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.08);
+      border-radius:8px; padding:14px 22px; min-width:140px;
+    }
+    .ktz-kpi-label { display:block; font-size:.72rem; color:#8a9bb0; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .ktz-kpi-value { display:block; font-size:1.55rem; font-weight:700; color:#e8eaf0; }
+    .ktz-kpi-value.cyan { color:var(--cyan,#00d4ff); }
+    .ktz-kpi-value.green { color:#00c850; }
+    .ktz-kpi-value.amber { color:#ffb400; }
+    .ktz-kpi-value.red { color:#e05050; }
+
+    .ktz-control-row { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    .ktz-control-card {
+      background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.08);
+      border-radius:8px; padding:14px 20px; flex:1; min-width:260px;
+    }
+    .ktz-control-card h3 {
+      margin:0 0 8px; font-size:.78rem; color:#8a9bb0;
+      text-transform:uppercase; letter-spacing:.06em;
+    }
+    .ktz-control-state { font-size:.95rem; font-weight:700; margin-bottom:10px; }
+    .ktz-control-state.on { color:#00c850; }
+    .ktz-control-state.off { color:#ffb400; }
+    .ktz-control-state.danger { color:#e05050; }
+    .ktz-control-note { font-size:.75rem; color:#5a6a80; margin-top:8px; }
+
+    .ktz-btn {
+      display:inline-block; border:none; border-radius:6px;
+      padding:7px 16px; font-size:.8rem; font-weight:600; cursor:pointer;
+    }
+    .ktz-btn.primary { background:var(--cyan,#00d4ff); color:#000; }
+    .ktz-btn.warn { background:rgba(255,180,0,.85); color:#000; }
+    .ktz-btn.danger { background:rgba(224,80,80,.85); color:#fff; }
+    .ktz-btn.ghost {
+      background:transparent; color:#8a9bb0;
+      border:1px solid rgba(255,255,255,.15);
+    }
+    .ktz-btn.small { padding:4px 10px; font-size:.72rem; }
+
+    .ktz-filter-row {
+      display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;
+      margin-bottom:16px;
+    }
+    .ktz-filter-row select,
+    .ktz-filter-row input[type=text] {
+      background:#0d1520; border:1px solid rgba(255,255,255,.15);
+      color:#c8d4e0; border-radius:6px; padding:7px 12px; font-size:.82rem;
+    }
+    .ktz-filter-row .ktz-reset {
+      background:transparent; color:#8a9bb0; border:1px solid rgba(255,255,255,.12);
+      text-decoration:none; border-radius:6px; padding:7px 14px; font-size:.82rem;
+    }
+
+    .ktz-table-wrap { overflow-x:auto; margin-bottom:32px; }
+    .ktz-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+    .ktz-table th {
+      background:rgba(0,0,0,.5); color:#8a9bb0; font-weight:600;
+      text-transform:uppercase; letter-spacing:.05em; font-size:.7rem;
+      padding:9px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08);
+      white-space:nowrap;
+    }
+    .ktz-table td {
+      padding:8px 10px; border-bottom:1px solid rgba(255,255,255,.05);
+      color:#c8d4e0; vertical-align:middle;
+    }
+    .ktz-table tr:hover td { background:rgba(255,255,255,.03); }
+
+    .ktz-badge {
+      display:inline-block; border-radius:4px; padding:2px 8px;
+      font-size:.7rem; font-weight:600; letter-spacing:.04em; white-space:nowrap;
+    }
+    .ktz-badge.berechnet { background:rgba(140,140,140,.18); color:#a8b4c0; }
+    .ktz-badge.versendet { background:rgba(0,212,255,.18); color:#00d4ff; }
+    .ktz-badge.deal      { background:rgba(0,200,80,.18);  color:#00c850; }
+    .ktz-badge.abgelehnt { background:rgba(200,60,60,.18); color:#e05050; }
+    .ktz-badge.storniert { background:rgba(200,60,60,.12); color:#b07070; }
+    .ktz-badge.abgelaufen{ background:rgba(140,140,140,.14);color:#808890; }
+
+    .ktz-typ-badge { font-size:.68rem; padding:2px 7px; border-radius:4px; white-space:nowrap; }
+    .ktz-typ-badge.bedarf    { background:rgba(0,212,255,.12); color:#00d4ff; }
+    .ktz-typ-badge.qualitaet { background:rgba(255,180,0,.15); color:#ffb400; }
+    .ktz-typ-badge.talent    { background:rgba(160,120,255,.15); color:#b090ff; }
+
+    .ktz-dry-tag { font-size:.66rem; color:#ffb400; border:1px solid rgba(255,180,0,.4); border-radius:4px; padding:1px 5px; margin-left:5px; }
+    .ktz-paused-tag { font-size:.66rem; color:#e05050; border:1px solid rgba(224,80,80,.4); border-radius:4px; padding:1px 5px; margin-left:5px; }
+
+    .ktz-section-title {
+      font-size:.9rem; color:#e8eaf0; margin:0 0 12px; font-weight:600;
+    }
+    .ktz-empty { text-align:center; padding:40px 20px; color:#5a6a80; font-size:.88rem; }
+    .ktz-result-info { color:#8a9bb0; font-size:.78rem; margin-bottom:10px; }
+    .ktz-begruendung { max-width:280px; font-size:.72rem; color:#8a9bb0; white-space:pre-line; }
+    .ktz-inline-form { display:inline; }
+    .ktz-pause-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .ktz-pause-chip {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(224,80,80,.10); border:1px solid rgba(224,80,80,.35);
+      border-radius:6px; padding:3px 8px; font-size:.74rem; color:#e0a0a0;
+    }
+  </style>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="cm-flash cm-flash-{{ m.tags }}" style="margin-bottom:14px; padding:10px 14px; border-radius:6px; font-size:.84rem;
+        {% if 'error' in m.tags %}background:rgba(200,60,60,.15); color:#e05050; border:1px solid rgba(200,60,60,.3);
+        {% else %}background:rgba(0,200,80,.12); color:#00c850; border:1px solid rgba(0,200,80,.3);{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="ktz-kpi-row">
+    <div class="ktz-kpi-card">
+      <span class="ktz-kpi-label">Angebote gesamt</span>
+      <span class="ktz-kpi-value">{{ total }}</span>
+    </div>
+    <div class="ktz-kpi-card">
+      <span class="ktz-kpi-label">Versendet (offen)</span>
+      <span class="ktz-kpi-value cyan">{{ offen_count }}</span>
+    </div>
+    <div class="ktz-kpi-card">
+      <span class="ktz-kpi-label">Berechnet (Trockenlauf)</span>
+      <span class="ktz-kpi-value amber">{{ berechnet_count }}</span>
+    </div>
+    <div class="ktz-kpi-card">
+      <span class="ktz-kpi-label">Deals</span>
+      <span class="ktz-kpi-value green">{{ deal_count }}</span>
+    </div>
+    <div class="ktz-kpi-card">
+      <span class="ktz-kpi-label">Governor (KI-Anteil)</span>
+      <span class="ktz-kpi-value {% if governor_ueberschritten %}red{% else %}green{% endif %}">{{ governor_anteil }}</span>
+      <span class="ktz-control-note">Limit {{ governor_limit }} · KI {{ governor_ki_fmt }} / Gesamt {{ governor_gesamt_fmt }}</span>
+    </div>
+  </div>
+
+  <div class="ktz-control-row">
+    <div class="ktz-control-card">
+      <h3>Betriebsmodus (Saison {{ saison }})</h3>
+      <div class="ktz-control-state {% if dry_run %}off{% else %}on{% endif %}">
+        {% if dry_run %}Trockenlauf — Angebote werden nur berechnet{% else %}SCHARF — Angebote werden versendet{% endif %}
+      </div>
+      <form method="post" class="ktz-inline-form"
+            {% if dry_run %}onsubmit="return confirm('KI-Käufer SCHARF schalten? Angebote gehen dann real an Manager-Vereine raus.');"{% endif %}>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="dry_run">
+        <input type="hidden" name="value" value="{% if dry_run %}0{% else %}1{% endif %}">
+        {% if dry_run %}
+          <button type="submit" class="ktz-btn danger">Scharf schalten</button>
+        {% else %}
+          <button type="submit" class="ktz-btn warn">Trockenlauf aktivieren</button>
+        {% endif %}
+      </form>
+    </div>
+
+    <div class="ktz-control-card">
+      <h3>Transferfenster</h3>
+      <div class="ktz-control-state {% if window_open %}on{% else %}off{% endif %}">
+        {% if window_open %}Geöffnet{% else %}Geschlossen{% endif %} · Fenster-ID {{ window_id }}
+      </div>
+      <form method="post" class="ktz-inline-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="fenster">
+        <input type="hidden" name="value" value="{% if window_open %}0{% else %}1{% endif %}">
+        {% if window_open %}
+          <button type="submit" class="ktz-btn warn">Fenster schließen</button>
+        {% else %}
+          <button type="submit" class="ktz-btn primary">Fenster öffnen</button>
+        {% endif %}
+      </form>
+      <div class="ktz-control-note">Kadenz- und Cooldown-Zähler hängen an der Fenster-ID.</div>
+    </div>
+
+    <div class="ktz-control-card">
+      <h3>Pausierte KI-Vereine</h3>
+      {% if pausierte %}
+        <div class="ktz-pause-list">
+          {% for c in pausierte %}
+            <form method="post" class="ktz-inline-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="pause_club">
+              <input type="hidden" name="club_id" value="{{ c.id }}">
+              <input type="hidden" name="pause" value="0">
+              <span class="ktz-pause-chip">{{ c.name }}
+                <button type="submit" class="ktz-btn ghost small" title="Reaktivieren">✕</button>
+              </span>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="ktz-control-note">Keine Vereine pausiert. Pausieren direkt in der Angebotsliste (Käufer-Spalte).</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <h2 class="ktz-section-title">Angebote</h2>
+
+  <form method="get" class="ktz-filter-row">
+    <select name="status">
+      <option value="">Alle Status</option>
+      {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if q_status == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select name="typ">
+      <option value="">Alle Kauftypen</option>
+      {% for value, label in kauftyp_choices %}
+        <option value="{{ value }}" {% if q_typ == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <input type="text" name="q" placeholder="Käufer-Verein…" value="{{ q_club }}">
+    <button type="submit" class="ktz-btn primary">Filtern</button>
+    <a href="{% url 'creator_ki_transferzentrale' %}" class="ktz-reset">Zurücksetzen</a>
+  </form>
+
+  <div class="ktz-result-info">{{ result_count }} Angebote angezeigt (max. 200, neueste zuerst)</div>
+
+  {% if rows %}
+  <div class="ktz-table-wrap">
+    <table class="ktz-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Käufer (KI)</th>
+          <th>Zielspieler</th>
+          <th>Verkäufer</th>
+          <th>Kauftyp</th>
+          <th>Bewertung</th>
+          <th>Max-Gebot</th>
+          <th>Gebot (Stufe)</th>
+          <th>Status</th>
+          <th>Begründung</th>
+          <th>Stand</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>
+            {{ r.buyer_name }}
+            {% if r.buyer_paused %}<span class="ktz-paused-tag">pausiert</span>{% endif %}
+          </td>
+          <td>{{ r.player_name }}{% if r.luecken_score != '—' %} <span class="ktz-control-note">(Lücke {{ r.luecken_score }})</span>{% endif %}</td>
+          <td>{{ r.seller_name }} <span class="ktz-control-note">({{ r.seller_typ }})</span></td>
+          <td><span class="ktz-typ-badge {{ r.kauftyp }}">{{ r.kauftyp_label }}</span></td>
+          <td>{{ r.bewertung_fmt }}</td>
+          <td>{{ r.max_gebot_fmt }}</td>
+          <td>{{ r.gebot_fmt }} <span class="ktz-control-note">St. {{ r.stufe }}</span>{% if r.dry_run %}<span class="ktz-dry-tag">Trockenlauf</span>{% endif %}</td>
+          <td><span class="ktz-badge {{ r.status }}">{{ r.status_label }}</span></td>
+          <td><div class="ktz-begruendung">{{ r.begruendung|truncatechars:160 }}</div></td>
+          <td style="white-space:nowrap;">{{ r.updated_at }}</td>
+          <td style="white-space:nowrap;">
+            {% if r.offen %}
+            <form method="post" class="ktz-inline-form"
+                  onsubmit="return confirm('Angebot #{{ r.id }} stornieren?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="storno">
+              <input type="hidden" name="offer_id" value="{{ r.id }}">
+              <button type="submit" class="ktz-btn danger small">Storno</button>
+            </form>
+            {% endif %}
+            {% if not r.buyer_paused %}
+            <form method="post" class="ktz-inline-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="pause_club">
+              <input type="hidden" name="club_id" value="{{ r.buyer_id }}">
+              <input type="hidden" name="pause" value="1">
+              <button type="submit" class="ktz-btn ghost small">Käufer pausieren</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="ktz-empty">Keine Angebote gefunden.</div>
+  {% endif %}
+
+  <h2 class="ktz-section-title">Letzte Prüfläufe</h2>
+  {% if lauf_rows %}
+  <div class="ktz-table-wrap">
+    <table class="ktz-table">
+      <thead>
+        <tr>
+          <th>Verein</th>
+          <th>Spieltag</th>
+          <th>Trigger</th>
+          <th>Modus</th>
+          <th>Käufe</th>
+          <th>Entscheidungen</th>
+          <th>Zeitpunkt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lauf_rows %}
+        <tr>
+          <td>{{ l.club_name }}</td>
+          <td>{{ l.spieltag|default:'—' }}</td>
+          <td>{{ l.trigger }}</td>
+          <td>{% if l.dry_run %}<span class="ktz-dry-tag">Trockenlauf</span>{% else %}scharf{% endif %}</td>
+          <td>{{ l.kaeufe }}</td>
+          <td><div class="ktz-begruendung">{% for e in l.entscheidungen %}{{ e }}{% if not forloop.last %} · {% endif %}{% endfor %}</div></td>
+          <td style="white-space:nowrap;">{{ l.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="ktz-empty">Noch keine Prüfläufe protokolliert.</div>
+  {% endif %}
+
+</section>
+{% endblock %}

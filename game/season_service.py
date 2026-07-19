@@ -835,6 +835,16 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
     except Exception as exc:
         finance_errors = [f'Finanzlauf fehlgeschlagen: {exc}']
 
+    # ── KI-Käufer-Prüflauf (Phase 6) ─────────────────────────────────────────
+    # NACH der Finanzrunde (frische Kontostände), außerhalb jeder Transaktion.
+    # Idempotent je Verein+Spieltag (AIBuyerRun) — Fehler hier dürfen die
+    # Simulation nicht rückwirkend brechen.
+    try:
+        from .economy.ai_buyer import run_ai_buyer_matchday
+        run_ai_buyer_matchday(league, saison=season, spieltag=matchday)
+    except Exception as exc:
+        finance_errors.append(f'KI-Käufer-Prüflauf fehlgeschlagen: {exc}')
+
     return {
         'simulated': [
             (f.home_club.short_name, f'{hg}:{ag}', f.away_club.short_name)

@@ -265,8 +265,9 @@ class SchmerzgrenzeTests(TestCase):
                          3_000_000.0)
 
     def test_gegenwartswert_pfad_mw(self):
+        # Rohpotential 30 → potential_200 = 60 = Stärke → kein Upside.
         p = _mk_player(self.club, 'Peter Präsenz', age=27, mw=2_000_000,
-                       potential=60)
+                       potential=30)
         _profil(p, 60)
         w = bewertung(p, saison='7')
         # Pfad 1: 2 Mio × 1,0 (Median) × 1,0 (26–29) schlägt Kurve×Restnutzwert.
@@ -282,8 +283,10 @@ class SchmerzgrenzeTests(TestCase):
                        potential=80)
         _profil(p, 55)
         w = bewertung(p, saison='7')
-        # Zukunft: Kurve(80)=3,5 Mio × Realisierung(0,45−25×0,002−1×0,015=0,385).
-        self.assertEqual(w['zukunftswert'], Decimal('1347500.00'))
+        # Potential auf 200er-Skala: 80 × 2 = 160 (Skalenfalle-Fix).
+        # Zukunft: Kurve(160)=11,5 Mio × Realisierung(0,45−105×0,002−1×0,015
+        # = 0,225) = 2.587.500.
+        self.assertEqual(w['zukunftswert'], Decimal('2587500.00'))
         self.assertEqual(w['schmerzgrenze'], w['zukunftswert'])
         self.assertFalse(w['kernspieler'])
 

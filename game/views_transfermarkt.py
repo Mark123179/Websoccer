@@ -1,9 +1,10 @@
-"""Transfermarkt-Endpunkte (Finanzsystem Phase 4, Spec Kap. 9).
+"""Transfermarkt-Endpunkte (Finanzsystem Phase 4 + 6, Spec Kap. 9).
 
 Verkaufskategorien (eigener Kader) + Angebots-Dialog gegen KI-Verkäufer
-(reaktive Verhandlungen). Alle Antworten sind JSON für die Kaderseite.
-Schmerzgrenzen oder Streuungsdetails werden NIE ausgeliefert — nur das
-Verhandlungsergebnis (Deal / Gegenforderung / Absage).
+(reaktive Verhandlungen) + Manager-Postfach für eingehende KI-Kaufangebote
+(KI-Käufer Stufe 2). Alle Antworten sind JSON für die Kaderseite.
+Schmerzgrenzen, Käufer-Maxima oder Streuungsdetails werden NIE
+ausgeliefert — nur das Verhandlungsergebnis bzw. das aktuelle Gebot.
 """
 from decimal import Decimal, InvalidOperation
 
@@ -13,12 +14,16 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .economy.ai_buyer import (
+    AIBuyerError, manager_ablehnen, manager_annehmen,
+)
 from .economy.booking import InsufficientFunds
 from .economy.negotiation import (
     NegotiationError, accept_counter, cancel, place_bid,
 )
+from .economy.params import get_param
 from .economy.transfers import TransferError
-from .models import Club, Player, TransferNegotiation
+from .models import AITransferOffer, Club, Player, TransferNegotiation
 
 SALE_CATEGORIES = {code for code, _ in Player.SALE_CATEGORY_CHOICES}
 
@@ -194,3 +199,110 @@ def transfer_cancel_negotiation(request):
                     f'{bis:%d.%m.%Y %H:%M} möglich.'),
         'negotiation': _nego_payload(nego),
     })
+
+
+# ═════════════════════ Manager-Postfach: KI-Kaufangebote ═════════════════════
+# (Finanzsystem Phase 6 — eingehende Angebote aktiver KI-Käufer)
+
+def _own_ai_offer(request, club):
+    """Eingehendes KI-Angebot des eigenen Vereins (nur echte, versendete)."""
+    try:
+        offer_id = int(request.POST.get('offer_id', ''))
+    except (TypeError, ValueError):
+        return None
+    return (
+        AITransferOffer.objects
+        .filter(pk=offer_id, seller_club=club, dry_run=False)
+        .select_related('player', 'buyer_club', 'seller_club')
+        .first()
+    )
+
+
+@login_required
+@require_POST
+def ai_offer_accept(request):
+    """KI-Kaufangebot annehmen → Transfer zum aktuellen Gebot."""
+    club = _viewer_club(request)
+    if club is None:
+        return _fehler('Du führst aktuell keinen Verein.', 403)
+    offer = _own_ai_offer(request, club)
+    if offer is None:
+        return _fehler('Angebot nicht gefunden.', 404)
+
+    try:
+        ergebnis = manager_annehmen(offer)
+    except AIBuyerError as exc:
+        return _fehler(str(exc))
+
+    o = ergebnis['offer']
+    return JsonResponse({
+        'ok': True,
+        'ergebnis': 'deal',
+        'message': (f'Transfer perfekt! {o.player.full_name} wechselt für '
+                    f'{_fmt_euro(o.aktuelles_gebot)} zu {o.buyer_club.name}.'),
+    })
+
+
+@login_required
+@require_POST
+def ai_offer_reject(request):
+    """KI-Kaufangebot ablehnen → KI bessert ggf. nach oder zieht zurück."""
+    club = _viewer_club(request)
+    if club is None:
+        return _fehler('Du führst aktuell keinen Verein.', 403)
+    offer = _own_ai_offer(request, club)
+    if offer is None:
+        return _fehler('Angebot nicht gefunden.', 404)
+
+    params = get_param('KI_KAEUFER')
+    try:
+        ergebnis = manager_ablehnen(offer, params=params)
+    except AIBuyerError as exc:
+        return _fehler(str(exc))
+
+    o = ergebnis['offer']
+    if ergebnis['ergebnis'] == 'nachgebessert':
+        message = (f'{o.buyer_club.name} bessert nach: neues Angebot '
+                   f'{_fmt_euro(o.aktuelles_gebot)} für {o.player.full_name} '
+                   f'(Stufe {o.stufe}).')
+    else:
+        message = (f'{o.buyer_club.name} zieht das Angebot für '
+                   f'{o.player.full_name} zurück.')
+    return JsonResponse({
+        'ok': True,
+        'ergebnis': ergebnis['ergebnis'],
+        'message': message,
+    })
+
+
+def incoming_ai_offers(club):
+    """Offene KI-Angebote für die Kaderseite (Manager-Postfach-Panel).
+
+    Nur manager-sichtbare Felder (offer_manager_payload-Disziplin):
+    niemals bewertung/max_gebot/noise_seed.
+    """
+    jetzt = timezone.now()
+    offers = (
+        AITransferOffer.objects
+        .filter(seller_club=club, dry_run=False,
+                status=AITransferOffer.STATUS_VERSENDET)
+        .exclude(gueltig_bis__lt=jetzt)
+        .select_related('player', 'buyer_club')
+        .order_by('-updated_at')
+    )
+    rows = []
+    for o in offers:
+        rows.append({
+            'id': o.pk,
+            'player_id': o.player_id,
+            'player_name': o.player.full_name,
+            'buyer_name': o.buyer_club.name,
+            'kauftyp_label': o.get_kauftyp_display(),
+            'gebot_fmt': _fmt_euro(o.aktuelles_gebot),
+            'stufe': o.stufe,
+            'gueltig_bis': (
+                timezone.localtime(o.gueltig_bis).strftime('%d.%m. %H:%M')
+                if o.gueltig_bis else ''
+            ),
+        })
+    return rows

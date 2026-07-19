@@ -165,6 +165,8 @@ def _complete_move(player, new_club):
 
     club_history-Tracking läuft automatisch über das save-Signal
     (kein _suppress_club_history — der Wechsel SOLL eine Station erzeugen).
+    Offene KI-Kaufangebote auf den Spieler werden storniert — sie galten
+    dem Ex-Verein (Phase 6, Spec Kap. 9.3).
     """
     player.club = new_club
     player.is_on_transfer_list = False
@@ -175,6 +177,8 @@ def _complete_move(player, new_club):
         'club', 'is_on_transfer_list', 'is_on_loan_list',
         'sale_category', 'sale_visible_to_ai',
     ])
+    from .ai_buyer.offers import storniere_offene_fuer_spieler
+    storniere_offene_fuer_spieler(player)
 
 
 def execute_money_transfer(player, kaeufer, abloese, *, saison=None,

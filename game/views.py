@@ -3448,6 +3448,7 @@ def _build_squad_context(request, club, squad_title):
     is_owner = viewer_club == club
 
     # ── Transfermarkt Phase 4: Verkaufsstatus (Eigner) / Angebote (Fremde) ──
+    ai_offers = []
     if is_owner:
         sale_map = {p.id: p for p in active_players}
         for row in player_rows:
@@ -3455,6 +3456,10 @@ def _build_squad_context(request, club, squad_title):
             if pl is not None:
                 row['sale_category'] = pl.sale_category
                 row['sale_visible_to_ai'] = pl.sale_visible_to_ai
+        # Phase 6: eingehende KI-Kaufangebote (Manager-Postfach).
+        if not is_youth:
+            from .views_transfermarkt import incoming_ai_offers
+            ai_offers = incoming_ai_offers(club)
 
     can_bid = (
         viewer_club is not None
@@ -3494,6 +3499,9 @@ def _build_squad_context(request, club, squad_title):
         'bid_url': reverse('transfer_place_bid'),
         'bid_accept_url': reverse('transfer_accept_counter'),
         'bid_cancel_url': reverse('transfer_cancel_negotiation'),
+        'ai_offers': ai_offers,
+        'ai_offer_accept_url': reverse('ai_offer_accept'),
+        'ai_offer_reject_url': reverse('ai_offer_reject'),
         'club': club,
         'squad_title': squad_title,
         'is_youth': is_youth,

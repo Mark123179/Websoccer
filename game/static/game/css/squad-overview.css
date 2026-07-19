@@ -1118,3 +1118,58 @@
     color: var(--green, #2bd97c);
     margin: 8px 0 0;
 }
+
+/* ── Manager-Postfach: eingehende KI-Kaufangebote (Phase 6) ─────────────── */
+.ai-offer-panel { border-color: rgba(0, 229, 255, 0.28); }
+
+.ai-offer {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ai-offer:last-child { border-bottom: none; }
+
+.ai-offer__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ai-offer__player {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.ai-offer__amount {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan, #00e5ff);
+    white-space: nowrap;
+}
+
+.ai-offer__row--meta { margin-top: 2px; }
+
+.ai-offer__buyer {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.ai-offer__meta {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.45);
+    white-space: nowrap;
+}
+
+.ai-offer__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ai-offer__actions .squad-btn {
+    flex: 1;
+    padding: 5px 10px;
+    font-size: 12px;
+}

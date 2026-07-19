@@ -73,6 +73,8 @@
 - [Stadionumfeld feature](stadionumfeld-feature.md) — global singleton scene; server is real admin-gate; new state keys need STADIONUMFELD_ALLOWED_KEYS or drop silently; baufeld1.png absent from source = expected 404, dont fabricate.
 - [Template-JSON XSS trap](template-json-xss.md) — never `|safe` JSON into <script> when user text can land in it; use json_script + JSON.parse.
 - [Nation-Badge-ID Calibration](nation-badge-id-calibration.md) — Badge-Lücken 56–105/803–1434; 46 IDs korrigiert; Bild-Erkennung ±1 unzuverlässig → User-Textliste bevorzugen.
+- [potential_200 Skalenregel](potential-200-scale.md) — Player.potential ist 100er-Rohwert; Ökonomie vergleicht Potential↔Stärke NUR via potential_200(); Snapshot-Median jetzt 200er-Skala.
+- [KI-Käufer Phase 6](ki-kaeufer-phase6.md) — Bewertungssymmetrie ⇒ KI-zu-KI-Clearing dealt strukturell nie (Spec-Widerspruch, User entscheidet); dry_run-Altbestand beim Scharfschalten stornieren.
 - [Insolvenz & Zwangsversteigerung V1](finance-insolvency-forced-auction.md) — Vermerk-Hooks als Vorzeichen-Guards im Buchungspfad; Konto bereinigt → Auktion cancelled; nur Scouting-Auktion vernichtet Geld; Verbandsabgabe hart disabled per Seed.
 - [Transfer-Engine Locking](transfer-engine-locking.md) — geldbewegende Pfade: Nego→Clubs(sortiert)→Spielerzeile sperren + club_id re-validieren, sonst Doppelkauf-Race.
 - [Stadionökonomie Phase 3](stadium-economy-phase3.md) — Nachfrage live aus Kader-MW (kein Fanbasis-Feld); Ausbau erst nach Bauzeit via resolve_due_expansions; 0-€-Spieltag = keine Ledger-Zeile; Umfeld: Layout global / Ambiente per Verein (merge, nie Vollersatz).

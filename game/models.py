@@ -797,6 +797,13 @@ class Club(models.Model):
         ),
     )
 
+    ai_buyer_paused = models.BooleanField(
+        'KI-Käufer pausiert',
+        default=False,
+        help_text='Pausiert den KI-Käufer-Prüflauf dieses Vereins '
+                  '(Admin-Eingriff über die KI-Transferzentrale).',
+    )
+
     def __str__(self):
         return self.name
 
@@ -4300,6 +4307,20 @@ class GameSeasonState(models.Model):
         help_text='Erst wenn aktiv, verkündet der Präsident die Saisonziele.',
     )
     started_at = models.DateTimeField(null=True, blank=True)
+    transfer_window_open = models.BooleanField(
+        'Transferfenster offen',
+        default=False,
+        help_text='Admin-Schalter (KI-Transferzentrale): Nur bei offenem '
+                  'Fenster laufen KI-Käufer-Prüfläufe.',
+    )
+    transfer_window_id = models.CharField(
+        'Transferfenster-ID',
+        max_length=20,
+        blank=True,
+        default='',
+        help_text='Kennung des aktuellen/letzten Fensters (z. B. "0-S1"). '
+                  'Fenster-Zähler und Talent-Cooldowns hängen an dieser ID.',
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -6285,6 +6306,178 @@ class TransferNegotiation(models.Model):
     def __str__(self):
         return (f'{self.bidder_club} → {self.player} '
                 f'(Runde {self.runde}, {self.get_status_display()})')
+
+
+# ── KI-Käufer Stufe 2 (Spec Kap. 9.3) ─────────────────────────────────────────
+
+class AITransferOffer(models.Model):
+    """Aktives KI-Kaufangebot (KI-Käufer Stufe 2, Spec Kap. 9.3).
+
+    bewertung + max_gebot sind interne Rechnungsgrößen und werden NIE an
+    Manager-Clients serialisiert — sichtbar sind nur aktuelles_gebot,
+    stufe und gueltig_bis. Trockenlauf-Angebote tragen dry_run=True und
+    bleiben im Status 'berechnet' (Admin-Review in der Transferzentrale).
+    Fenster-Zähler und Talent-Cooldowns hängen an window_id.
+    """
+
+    KAUFTYP_BEDARF = 'bedarf'
+    KAUFTYP_QUALITAET = 'qualitaet'
+    KAUFTYP_TALENT = 'talent'
+    KAUFTYP_CHOICES = [
+        (KAUFTYP_BEDARF, 'Bedarfskauf'),
+        (KAUFTYP_QUALITAET, 'Qualitätskauf'),
+        (KAUFTYP_TALENT, 'Talentkauf'),
+    ]
+
+    STATUS_BERECHNET = 'berechnet'
+    STATUS_VERSENDET = 'versendet'
+    STATUS_ABGELEHNT = 'abgelehnt'
+    STATUS_DEAL = 'deal'
+    STATUS_STORNIERT = 'storniert'
+    STATUS_ABGELAUFEN = 'abgelaufen'
+    STATUS_CHOICES = [
+        (STATUS_BERECHNET, 'Berechnet (Trockenlauf)'),
+        (STATUS_VERSENDET, 'Versendet — Manager am Zug'),
+        (STATUS_ABGELEHNT, 'Abgelehnt'),
+        (STATUS_DEAL, 'Deal'),
+        (STATUS_STORNIERT, 'Storniert'),
+        (STATUS_ABGELAUFEN, 'Abgelaufen'),
+    ]
+    OFFENE_STATUS = (STATUS_BERECHNET, STATUS_VERSENDET)
+
+    buyer_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='ai_buy_offers',
+        verbose_name='Bietender KI-Verein',
+    )
+    seller_club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='ai_incoming_offers',
+        verbose_name='Besitzerverein',
+    )
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='ai_transfer_offers',
+        verbose_name='Zielspieler',
+    )
+    kauftyp = models.CharField(
+        max_length=12, choices=KAUFTYP_CHOICES, verbose_name='Kauftyp',
+    )
+    bewertung = models.DecimalField(
+        max_digits=15, decimal_places=2, editable=False,
+        verbose_name='Interne Bewertung (€)',
+    )
+    max_gebot = models.DecimalField(
+        max_digits=15, decimal_places=2, editable=False,
+        verbose_name='Käufer-Maximum (€)',
+    )
+    aktuelles_gebot = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        verbose_name='Aktuelles Gebot (€)',
+    )
+    stufe = models.PositiveSmallIntegerField(
+        default=1, verbose_name='Gebotsstufe (1–3)',
+    )
+    status = models.CharField(
+        max_length=12, choices=STATUS_CHOICES, default=STATUS_BERECHNET,
+        verbose_name='Status',
+    )
+    dry_run = models.BooleanField(default=False, verbose_name='Trockenlauf')
+    window_id = models.CharField(
+        max_length=20, blank=True, default='', verbose_name='Fenster-ID',
+    )
+    noise_seed = models.CharField(max_length=64, editable=False)
+    gueltig_bis = models.DateTimeField(
+        null=True, blank=True, verbose_name='Gültig bis',
+    )
+    cooldown_until = models.DateTimeField(
+        null=True, blank=True, verbose_name='Cooldown bis',
+    )
+    luecken_score = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True,
+        verbose_name='Lückenscore',
+    )
+    begruendung = models.TextField(
+        blank=True, default='', verbose_name='Begründung (Admin-Review)',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['buyer_club', 'player'],
+                condition=models.Q(status__in=('berechnet', 'versendet')),
+                name='unique_open_ai_transfer_offer',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['status', 'window_id']),
+            models.Index(fields=['seller_club', 'status']),
+        ]
+        ordering = ['-updated_at']
+        verbose_name = 'KI-Kaufangebot'
+        verbose_name_plural = 'KI-Kaufangebote'
+
+    def __str__(self):
+        return (f'{self.buyer_club} → {self.player} '
+                f'({self.get_kauftyp_display()}, Stufe {self.stufe}, '
+                f'{self.get_status_display()})')
+
+
+class AIBuyerRun(models.Model):
+    """Idempotenz-Guard für den KI-Käufer-Prüflauf (Spec Kap. 9.3).
+
+    Spieltagsläufe (trigger='spieltag') sind je Verein+Saison+Spieltag
+    eindeutig — Doppel-Hooks sind unschädlich. Trigger-Läufe (eigener
+    Verkauf, Monatsupdate, Finanzlagenwechsel, manuell) dürfen zusätzlich
+    laufen. report speichert das Prüflauf-Ergebnis fürs Admin-Review.
+    """
+
+    TRIGGER_SPIELTAG = 'spieltag'
+    TRIGGER_VERKAUF = 'verkauf'
+    TRIGGER_MONATSUPDATE = 'monatsupdate'
+    TRIGGER_FINANZLAGE = 'finanzlage'
+    TRIGGER_MANUELL = 'manuell'
+    TRIGGER_CHOICES = [
+        (TRIGGER_SPIELTAG, 'Spieltag'),
+        (TRIGGER_VERKAUF, 'Eigener Verkauf'),
+        (TRIGGER_MONATSUPDATE, 'Monats-Datenupdate'),
+        (TRIGGER_FINANZLAGE, 'Finanzlagenwechsel'),
+        (TRIGGER_MANUELL, 'Manuell'),
+    ]
+
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE, related_name='ai_buyer_runs',
+    )
+    saison = models.CharField(max_length=20)
+    spieltag = models.PositiveSmallIntegerField()
+    trigger = models.CharField(
+        max_length=16, choices=TRIGGER_CHOICES, default=TRIGGER_SPIELTAG,
+    )
+    dry_run = models.BooleanField(default=False)
+    window_id = models.CharField(max_length=20, blank=True, default='')
+    report = models.JSONField(default=dict, blank=True)
+    run_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'saison', 'spieltag'],
+                condition=models.Q(trigger='spieltag'),
+                name='unique_ai_buyer_matchday_run',
+            ),
+        ]
+        ordering = ['-run_at']
+        verbose_name = 'KI-Käufer-Prüflauf'
+        verbose_name_plural = 'KI-Käufer-Prüfläufe'
+
+    def __str__(self):
+        return (f'{self.club} — Saison {self.saison}, ST {self.spieltag} '
+                f'({self.get_trigger_display()}, {self.run_at:%d.%m.%Y %H:%M})')
 
 
 # ── Zahlungsunfähigkeit & Zwangsversteigerung (Spec Kap. 12.3) ─────────────────

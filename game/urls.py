@@ -147,6 +147,7 @@ from .views_creator import (
     creator_finanzanalyse,
     creator_media_outlet_delete,
     creator_ki_angebote,
+    creator_ki_transferzentrale,
     creator_sportgericht,
 )
 from .views_importer_api import (
@@ -163,6 +164,8 @@ from .views_transfermarkt import (
     transfer_place_bid,
     transfer_accept_counter,
     transfer_cancel_negotiation,
+    ai_offer_accept,
+    ai_offer_reject,
 )
 
 
@@ -294,6 +297,18 @@ urlpatterns = [
     ),
 
     path(
+        'transfers/ki-angebot/annehmen/',
+        ai_offer_accept,
+        name='ai_offer_accept'
+    ),
+
+    path(
+        'transfers/ki-angebot/ablehnen/',
+        ai_offer_reject,
+        name='ai_offer_reject'
+    ),
+
+    path(
         'players/<int:player_id>/',
         player_detail,
         name='player_detail'
@@ -382,6 +397,7 @@ urlpatterns = [
     path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
     path('creator/finanzen/', creator_finanzanalyse, name='creator_finanzanalyse'),
     path('creator/ki-angebote/', creator_ki_angebote, name='creator_ki_angebote'),
+    path('creator/ki-transferzentrale/', creator_ki_transferzentrale, name='creator_ki_transferzentrale'),
     path('creator/sportgericht/', creator_sportgericht, name='creator_sportgericht'),
     path('creator/medien/<int:outlet_id>/loeschen/', creator_media_outlet_delete, name='creator_media_outlet_delete'),
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),

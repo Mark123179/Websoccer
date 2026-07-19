@@ -4456,6 +4456,221 @@ def creator_ki_angebote(request):
 
 
 @staff_member_required
+def creator_ki_transferzentrale(request):
+    """KI-Transferzentrale (Finanzsystem Phase 6, Spec Kap. 9.3).
+
+    Live-Übersicht aller Angebote des aktiven KI-Käufers mit Eingriffen:
+    Angebot stornieren, KI-Verein pausieren, globaler Trockenlauf-Schalter,
+    Transferfenster öffnen/schließen. Interne Rechnungsgrößen (Bewertung,
+    Käufer-Maximum) sind hier bewusst sichtbar — Admin-Review-Werkzeug;
+    an Manager-Clients gehen sie weiterhin NIE raus.
+    """
+    from .economy.ai_buyer import governor_status
+    from .economy.params import current_season, get_param
+    from .models import AIBuyerRun, AITransferOffer, EconomyParameter
+
+    saison = current_season()
+    state, _ = GameSeasonState.objects.get_or_create(pk=1)
+
+    def _fmt(v):
+        if v is None:
+            return '—'
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return '—'
+        if v >= 1_000_000:
+            return f'{v / 1_000_000:.1f} Mio. €'
+        return f'{int(v):,} €'.replace(',', '.')
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'storno':
+            offer = get_object_or_404(
+                AITransferOffer, pk=request.POST.get('offer_id'))
+            if offer.status in AITransferOffer.OFFENE_STATUS:
+                offer.status = AITransferOffer.STATUS_STORNIERT
+                offer.begruendung = (
+                    offer.begruendung + '\nStorno durch Admin '
+                    f'({timezone.localtime():%d.%m.%Y %H:%M}).'
+                ).strip()
+                offer.save(update_fields=['status', 'begruendung', 'updated_at'])
+                messages.success(
+                    request,
+                    f'Angebot #{offer.pk} ({offer.player.full_name}) storniert.',
+                )
+            else:
+                messages.error(request, 'Angebot ist nicht mehr offen.')
+
+        elif action == 'pause_club':
+            club = get_object_or_404(Club, pk=request.POST.get('club_id'))
+            club.ai_buyer_paused = request.POST.get('pause') == '1'
+            club.save(update_fields=['ai_buyer_paused'])
+            messages.success(
+                request,
+                f'KI-Käufer für {club.name} '
+                f'{"pausiert" if club.ai_buyer_paused else "reaktiviert"}.',
+            )
+
+        elif action == 'dry_run':
+            scharf = request.POST.get('value') == '0'
+            wert = dict(get_param('KI_KAEUFER', saison))
+            wert['dry_run'] = not scharf
+            EconomyParameter.objects.update_or_create(
+                saison=saison, key='KI_KAEUFER', defaults={'value': wert},
+            )
+            storniert = 0
+            if scharf:
+                # Trockenlauf-Reste räumen: 'berechnet'-Angebote aus dem
+                # Trockenlauf zählen sonst weiter gegen Kadenz-Limits und
+                # sperren Kandidaten (haben kein gueltig_bis, laufen nie ab).
+                stempel = (
+                    '\nStorno: Trockenlauf-Altbestand beim Scharfschalten '
+                    f'({timezone.localtime():%d.%m.%Y %H:%M}).'
+                )
+                for alt in AITransferOffer.objects.filter(
+                        dry_run=True,
+                        status=AITransferOffer.STATUS_BERECHNET):
+                    alt.status = AITransferOffer.STATUS_STORNIERT
+                    alt.begruendung = (alt.begruendung + stempel).strip()
+                    alt.save(update_fields=[
+                        'status', 'begruendung', 'updated_at'])
+                    storniert += 1
+            messages.success(
+                request,
+                'KI-Käufer SCHARF geschaltet — Angebote werden versendet.'
+                + (f' {storniert} Trockenlauf-Angebote storniert.'
+                   if storniert else '')
+                if scharf else
+                'Trockenlauf aktiviert — Angebote werden nur berechnet.',
+            )
+
+        elif action == 'fenster':
+            oeffnen = request.POST.get('value') == '1'
+            state.transfer_window_open = oeffnen
+            if oeffnen and not state.transfer_window_id:
+                state.transfer_window_id = f'{saison}-F1'
+            state.save(update_fields=['transfer_window_open',
+                                      'transfer_window_id'])
+            messages.success(
+                request,
+                f'Transferfenster {"geöffnet" if oeffnen else "geschlossen"} '
+                f'(Fenster-ID {state.transfer_window_id or "—"}).',
+            )
+
+        else:
+            messages.error(request, 'Unbekannte Aktion.')
+        return redirect('creator_ki_transferzentrale')
+
+    params = get_param('KI_KAEUFER', saison)
+    dry_run = bool(params.get('dry_run', True))
+    governor = governor_status(saison, params)
+
+    q_status = request.GET.get('status', '')
+    q_typ = request.GET.get('typ', '')
+    q_club = request.GET.get('q', '').strip()
+
+    qs = (
+        AITransferOffer.objects
+        .select_related('buyer_club', 'seller_club', 'player',
+                        'seller_club__managed_by')
+        .order_by('-updated_at')
+    )
+    if q_status:
+        qs = qs.filter(status=q_status)
+    if q_typ:
+        qs = qs.filter(kauftyp=q_typ)
+    if q_club:
+        qs = qs.filter(buyer_club__name__icontains=q_club)
+
+    rows = []
+    for o in qs[:200]:
+        rows.append({
+            'id': o.pk,
+            'buyer_name': o.buyer_club.name,
+            'buyer_id': o.buyer_club_id,
+            'buyer_paused': o.buyer_club.ai_buyer_paused,
+            'seller_name': o.seller_club.name,
+            'seller_typ': 'Manager' if o.seller_club.managed_by_id else 'KI',
+            'player_name': o.player.full_name,
+            'player_id': o.player_id,
+            'kauftyp': o.kauftyp,
+            'kauftyp_label': o.get_kauftyp_display(),
+            'bewertung_fmt': _fmt(o.bewertung),
+            'max_gebot_fmt': _fmt(o.max_gebot),
+            'gebot_fmt': _fmt(o.aktuelles_gebot),
+            'stufe': o.stufe,
+            'status': o.status,
+            'status_label': o.get_status_display(),
+            'dry_run': o.dry_run,
+            'window_id': o.window_id,
+            'offen': o.status in AITransferOffer.OFFENE_STATUS,
+            'luecken_score': (f'{o.luecken_score:.1f}'
+                              if o.luecken_score is not None else '—'),
+            'begruendung': o.begruendung,
+            'updated_at': timezone.localtime(o.updated_at)
+                          .strftime('%d.%m.%Y %H:%M'),
+        })
+
+    laeufe = (
+        AIBuyerRun.objects
+        .select_related('club')
+        .order_by('-run_at')[:20]
+    )
+    lauf_rows = []
+    for lauf in laeufe:
+        report = lauf.report or {}
+        lauf_rows.append({
+            'club_name': lauf.club.name,
+            'spieltag': lauf.spieltag,
+            'trigger': lauf.trigger,
+            'dry_run': lauf.dry_run,
+            'kaeufe': len(report.get('kaeufe', [])),
+            'entscheidungen': report.get('entscheidungen', []),
+            'created_at': timezone.localtime(lauf.run_at)
+                          .strftime('%d.%m.%Y %H:%M'),
+        })
+
+    pausierte = list(
+        Club.objects.filter(ai_buyer_paused=True).order_by('name')
+        .values('id', 'name')
+    )
+
+    offen_count = AITransferOffer.objects.filter(
+        status=AITransferOffer.STATUS_VERSENDET).count()
+    berechnet_count = AITransferOffer.objects.filter(
+        status=AITransferOffer.STATUS_BERECHNET).count()
+    deal_count = AITransferOffer.objects.filter(
+        status=AITransferOffer.STATUS_DEAL).count()
+
+    return render(request, 'creator/ki_transferzentrale.html', {
+        'rows': rows,
+        'result_count': len(rows),
+        'total': AITransferOffer.objects.count(),
+        'offen_count': offen_count,
+        'berechnet_count': berechnet_count,
+        'deal_count': deal_count,
+        'dry_run': dry_run,
+        'window_open': state.transfer_window_open,
+        'window_id': state.transfer_window_id or '—',
+        'saison': saison,
+        'governor_anteil': f'{governor["anteil"]:.0%}',
+        'governor_limit': f'{governor["limit"]:.0%}',
+        'governor_ueberschritten': governor['ueberschritten'],
+        'governor_ki_fmt': _fmt(governor['ki_volumen']),
+        'governor_gesamt_fmt': _fmt(governor['gesamt_volumen']),
+        'lauf_rows': lauf_rows,
+        'pausierte': pausierte,
+        'q_status': q_status,
+        'q_typ': q_typ,
+        'q_club': q_club,
+        'status_choices': AITransferOffer.STATUS_CHOICES,
+        'kauftyp_choices': AITransferOffer.KAUFTYP_CHOICES,
+    })
+
+
+@staff_member_required
 def creator_sportgericht(request):
     """Creator-Übersicht Zahlungsunfähigkeit (Spec Kap. 12.3).
 

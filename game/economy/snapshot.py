@@ -59,8 +59,17 @@ def compute_snapshot_values(saison):
 
     # Potential-Median nur über Sim-relevante Spieler (mit Stärkeprofil) —
     # dämpft das default=50-Rauschen der Nicht-Sim-Spieler (Phase 4).
+    # WICHTIG: auf der 200er-Skala (potential_200), damit der Median mit
+    # base_strength vergleichbar ist (Spec 9.2: Potential-Median ~150).
+    from .schmerzgrenze import potential_200
+
+    pot_spieler = (
+        Player.objects
+        .filter(strength_profile__isnull=False)
+        .prefetch_related('source_ratings')
+    )
     potential_median = _median_or_none(
-        PlayerStrengthProfile.objects.values_list('player__potential', flat=True)
+        [potential_200(p) for p in pot_spieler]
     )
 
     pairs = list(
