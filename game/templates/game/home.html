@@ -317,9 +317,11 @@
                                 <strong>{{ row.player.full_name }}</strong>
                                 <small>{{ row.player.age }} Jahre</small>
                                 <em>
-                                    {% if row.player.nation_badge_url %}
-                                        <img src="{{ row.player.nation_badge_url }}" alt="{{ row.player.nt_nationality|default:row.player.nationalities }}" onerror="this.style.display='none'">
-                                    {% endif %}
+                                    {% with flag=row.player.nationality_badges.0 %}
+                                        {% if flag.flag_url %}
+                                            <img src="{{ flag.flag_url }}" alt="{{ flag.name }}" onerror="this.style.display='none'">
+                                        {% endif %}
+                                    {% endwith %}
                                     {{ row.player.position|default:row.player.primary_position }}
                                 </em>
                             </span>
