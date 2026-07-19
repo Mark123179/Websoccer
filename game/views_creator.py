@@ -930,6 +930,9 @@ def creator_player_edit(request, player_id):
         if club_id:
             try:
                 player.club = Club.objects.get(id=int(club_id))
+                # Creator-Edits sind Datenkorrekturen — keine Vereinsstation
+                # in der Ausbildungshistorie erzeugen.
+                player._suppress_club_history = True
             except Club.DoesNotExist:
                 pass
 
@@ -1347,6 +1350,9 @@ def creator_new_player(request, club_id):
                 player.club = Club.objects.get(id=int(club_id_post))
             except Club.DoesNotExist:
                 pass
+        # Creator-Neuanlagen sind Datenpflege — keine Vereinsstation
+        # in der Ausbildungshistorie erzeugen.
+        player._suppress_club_history = True
 
         for field in ['main_position_1', 'main_position_2', 'main_position_3',
                       'secondary_position_1', 'secondary_position_2', 'secondary_position_3',

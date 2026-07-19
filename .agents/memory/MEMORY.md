@@ -73,3 +73,4 @@
 - [Stadionumfeld feature](stadionumfeld-feature.md) — global singleton scene; server is real admin-gate; new state keys need STADIONUMFELD_ALLOWED_KEYS or drop silently; baufeld1.png absent from source = expected 404, dont fabricate.
 - [Template-JSON XSS trap](template-json-xss.md) — never `|safe` JSON into <script> when user text can land in it; use json_script + JSON.parse.
 - [Nation-Badge-ID Calibration](nation-badge-id-calibration.md) — Badge-Lücken 56–105/803–1434; 46 IDs korrigiert; Bild-Erkennung ±1 unzuverlässig → User-Textliste bevorzugen.
+- [PlayerClubHistory Phase 0](player-club-history-phase0.md) — Creator/Admin-Edits = Korrektur (Suppress-Flag, KEINE Zeile); Karrierende per Name nicht pk ausschließen; from_db nur __dict__ lesen (N+1).

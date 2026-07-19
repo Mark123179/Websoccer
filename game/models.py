@@ -2172,6 +2172,19 @@ class Player(models.Model):
 
         return ' | '.join(lines)
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        # Geladenen Vereinsstand merken, um echte Vereinswechsel beim
+        # Speichern zu erkennen (Vereinsstationen-Historie, Phase 0
+        # Finanzsystem). Wichtig: nur aus __dict__ lesen — bei .only()/
+        # defer()-Loads ohne club würde ein Attributzugriff sonst eine
+        # zusätzliche Query pro Instanz auslösen (N+1).
+        instance._loaded_club_id = instance.__dict__.get(
+            'club_id', _CLUB_HISTORY_UNSET
+        )
+        return instance
+
     def save(self, *args, **kwargs):
         if self.nationalities:
             self.nationalities = ', '.join(
@@ -2179,7 +2192,52 @@ class Player(models.Model):
                 for p in self.nationalities.replace(';', ',').split(',')
                 if p.strip()
             )
+        is_new = self._state.adding
+        old_club_id = self.__dict__.get('_loaded_club_id', _CLUB_HISTORY_UNSET)
+        if (
+            not is_new
+            and old_club_id is _CLUB_HISTORY_UNSET
+            and self.pk is not None
+            and 'club_id' in self.__dict__
+        ):
+            # Instanz wurde ohne club-Feld geladen (.only()/defer()), aber der
+            # Verein wurde gesetzt: alten Stand vor dem Schreiben holen, damit
+            # echte Wechsel nicht verloren gehen.
+            old_club_id = (
+                type(self).objects.filter(pk=self.pk)
+                .values_list('club_id', flat=True)
+                .first()
+            )
         super().save(*args, **kwargs)
+        self._track_club_history(is_new, old_club_id)
+        self._loaded_club_id = self.__dict__.get(
+            'club_id', _CLUB_HISTORY_UNSET
+        )
+
+    def _track_club_history(self, is_new, old_club_id):
+        """Erfasst eine Vereinsstation bei Neuanlage mit Verein oder echtem
+        Vereinswechsel. Creator-/Admin-Korrekturen setzen
+        ``_suppress_club_history`` und erzeugen keine Zeile."""
+        if getattr(self, '_suppress_club_history', False):
+            return
+        # Nur aus __dict__ lesen: bei weiterhin deferred club-Feld darf hier
+        # keine Nachlade-Query ausgelöst werden (Feld unberührt = kein Wechsel).
+        club_id = self.__dict__.get('club_id')
+        if not club_id:
+            return
+        changed = is_new or (
+            old_club_id is not _CLUB_HISTORY_UNSET
+            and old_club_id != club_id
+        )
+        if not changed:
+            return
+        from game.club_history import record_club_stint
+        record_club_stint(self.pk, club_id)
+
+
+# Sentinel: unterscheidet „Instanz wurde nicht aus der DB geladen" von
+# „Spieler war vereinslos (club_id=None)".
+_CLUB_HISTORY_UNSET = object()
 
 
 class PlayerExternalId(models.Model):
@@ -3043,6 +3101,44 @@ class PlayerTransferHistory(models.Model):
 
     def __str__(self):
         return f'{self.player} - {self.transfer_date}'
+
+
+class PlayerClubHistory(models.Model):
+    """Vereinsstation eines Spielers: eine Zeile pro Spieler+Verein+Saison.
+
+    Grundlage für die Ausbildungsabgabe (Spec Finanzsystem, Phase 0) und
+    fürs Datencenter. Vereinslose Phasen und der Pseudo-Verein
+    „Karrierende" erzeugen keine Zeile.
+    """
+
+    player = models.ForeignKey(
+        Player,
+        on_delete=models.CASCADE,
+        related_name='club_history',
+    )
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='player_club_history',
+    )
+    season = models.PositiveSmallIntegerField(
+        help_text='Globale Saisonnummer (GameSeasonState, beginnt bei 0).',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'club', 'season'],
+                name='unique_player_club_history_season',
+            ),
+        ]
+        ordering = ['season', 'id']
+        verbose_name = 'Vereinsstation'
+        verbose_name_plural = 'Vereinsstationen'
+
+    def __str__(self):
+        return f'{self.player} @ {self.club} (Saison {self.season})'
 
 
 class PlayerInjuryRecord(models.Model):
@@ -4153,6 +4249,7 @@ class GameSeasonState(models.Model):
         offiziellen Start einer Saison schließen wir diese Lücke.
         """
         is_transition = False
+        advanced = False
         if self.pk:
             previous = type(self).objects.filter(pk=self.pk).only(
                 'current_season', 'is_started'
@@ -4163,6 +4260,20 @@ class GameSeasonState(models.Model):
                 is_transition = advanced or started
 
         super().save(*args, **kwargs)
+
+        # Beim Vorrücken der Saisonnummer: Vereinsstationen-Snapshot für die
+        # neue Saison (Ausbildungsabgabe, Phase 0 Finanzsystem). Fehler dürfen
+        # das Speichern nicht blockieren, werden aber geloggt.
+        if advanced:
+            try:
+                from game.club_history import snapshot_season
+                snapshot_season(self.current_season)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    'Vereinsstationen-Snapshot für Saison %s fehlgeschlagen',
+                    self.current_season,
+                )
 
         # Fällige Zuschlagstermine beim Saisonübergang/-start auflösen. Läuft
         # in eigener Transaktion (innerhalb von resolve_due_windows) und darf

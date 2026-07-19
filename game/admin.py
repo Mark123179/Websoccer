@@ -47,6 +47,7 @@ from .models import (
     PlayerSuspensionRecord,
     PresidentSatisfaction,
     SeasonGoal,
+    PlayerClubHistory,
     PlayerTransferHistory,
     PlayerWeightedRatingSnapshot,
     SeasonFixture,
@@ -1914,6 +1915,9 @@ class PlayerAdmin(admin.ModelAdmin):
     ]
 
     def save_model(self, request, obj, form, change):
+        # Admin-Edits sind Datenkorrekturen — keine Vereinsstation
+        # in der Ausbildungshistorie erzeugen.
+        obj._suppress_club_history = True
         super().save_model(request, obj, form, change)
         portrait_file = form.cleaned_data.get('portrait_file')
         if portrait_file:
@@ -3106,6 +3110,18 @@ class PlayerTransferHistoryAdmin(admin.ModelAdmin):
     )
     list_filter = ('season', 'from_club', 'to_club')
     search_fields = ('player__first_name', 'player__last_name')
+
+
+@admin.register(PlayerClubHistory)
+class PlayerClubHistoryAdmin(admin.ModelAdmin):
+    list_display = ('player', 'club', 'season', 'created_at')
+    list_filter = ('season',)
+    search_fields = (
+        'player__first_name',
+        'player__last_name',
+        'club__name',
+    )
+    raw_id_fields = ('player', 'club')
 
 
 @admin.register(PlayerInjuryRecord)
