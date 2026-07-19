@@ -1,0 +1,67 @@
+<!-- Manager-Notizen Tablet — Overlay + Trigger (Task #717) -->
+<button class="nt-fab" data-nt-open aria-label="Notizen öffnen" title="Manager-Notizen">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/>
+    <rect x="4" y="4" width="16" height="18" rx="2"/>
+    <path d="M8 10h8"/><path d="M8 14h8"/><path d="M8 18h5"/>
+  </svg>
+</button>
+
+<div class="nt-overlay" id="nt-overlay" hidden>
+  <div class="nt-device">
+    <div class="nt-cam"></div>
+    <div class="nt-btn-power"></div>
+    <div class="nt-btn-vol up"></div>
+    <div class="nt-btn-vol down"></div>
+    <div class="nt-btn-mute"></div>
+    <div class="nt-home"><span></span></div>
+    <div class="nt-speakers"><i></i><i></i></div>
+
+    <div class="nt-screen">
+      <div class="nt-status">
+        <div id="nt-clock">–:–</div>
+        <div class="right">
+          <div class="nt-signal"><i></i><i></i><i></i><i></i></div>
+          <div class="nt-battery"><i></i></div>
+        </div>
+      </div>
+
+      <div class="nt-header">
+        <div>
+          <div class="nt-kicker">Manager-Notizen</div>
+          <div class="nt-title">Notizen</div>
+        </div>
+        <div class="right">
+          <div class="nt-saved"><i></i>Automatisch gespeichert · Managerprofil</div>
+          <button class="nt-close" data-nt-close type="button">✕</button>
+        </div>
+      </div>
+
+      <div class="nt-body">
+        <div class="nt-list-col">
+          <button class="nt-new" id="nt-new" type="button">+ Neue Notiz</button>
+          <div class="nt-list" id="nt-list"></div>
+        </div>
+
+        <div class="nt-editor" id="nt-editor" hidden>
+          <input class="nt-ed-title" id="nt-ed-title" placeholder="Titel">
+          <div class="nt-ed-date" id="nt-ed-date"></div>
+          <textarea class="nt-ed-content" id="nt-ed-content" placeholder="Notiz schreiben …"></textarea>
+          <div class="nt-todos">
+            <div class="label">Checkliste</div>
+            <div class="nt-todo-list" id="nt-todo-list"></div>
+            <div class="nt-todo-new">
+              <input id="nt-todo-input" placeholder="Neuer Punkt …">
+              <button id="nt-todo-add" type="button">Hinzufügen</button>
+            </div>
+          </div>
+          <div class="nt-footer">
+            <button class="nt-delete" id="nt-delete" type="button">Notiz löschen</button>
+          </div>
+        </div>
+        <div class="nt-noselect" id="nt-noselect" hidden>Keine Notiz ausgewählt.</div>
+      </div>
+    </div>
+  </div>
+</div>

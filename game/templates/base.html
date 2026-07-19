@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
     {% if request.user.is_authenticated %}
     <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=3">
+    <link rel="stylesheet" href="{% static 'game/css/notizen_tablet.css' %}?v=2">
     {% endif %}
 
     {% block extra_css %}{% endblock %}
@@ -142,6 +143,16 @@
     </div><!-- /.gameStageSpacer -->
     </div><!-- /.gameScroll -->
     </div><!-- /.gameViewport -->
+
+    {% if request.user.is_authenticated and request.user.manager_profile %}
+    <!-- ===== MANAGER-NOTIZEN TABLET ===== -->
+    {% include 'game/notizen_tablet.html' %}
+    <script>
+        window.NOTIZEN_API_URL = "{% url 'notizen_api' %}";
+        window.NOTIZEN_CSRF = "{{ csrf_token }}";
+    </script>
+    <script src="{% static 'game/js/notizen_tablet.js' %}?v=2"></script>
+    {% endif %}
 
     {% if request.user.is_authenticated %}
     <!-- ===== AI CHAT WIDGET ===== -->

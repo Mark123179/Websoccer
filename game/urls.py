@@ -34,6 +34,7 @@ from .views import (
 )
 from .views_auth import auth_login, auth_register, auth_logout
 from .views_ai import ai_chat
+from .views_notes import notizen_api
 from .views_scouting import (
     transfer_scouting,
     scouting_start,
@@ -286,6 +287,8 @@ urlpatterns = [
     path('auth/logout/', auth_logout, name='auth_logout'),
 
     path('ai/chat/', ai_chat, name='ai_chat'),
+
+    path('api/notizen/', notizen_api, name='notizen_api'),
 
     path(
         'liga/<int:league_id>/',

@@ -4073,6 +4073,31 @@ class ManagerTimelineEntry(models.Model):
         return self.CATEGORY_TONES.get(self.category, 'cyan')
 
 
+class ManagerNotes(models.Model):
+    """Persönlicher Notizblock eines Managers (Tablet-Overlay).
+
+    Manager-gebunden und vereinsunabhängig: Notizen bleiben beim
+    Vereinswechsel erhalten und werden nur vom Manager selbst gelöscht.
+    Struktur von ``data``:
+    [{id, title, content, todos: [{id, text, done}], updatedAt}, ...]
+    """
+
+    manager = models.OneToOneField(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='notes',
+    )
+    data = models.JSONField(default=list, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Manager-Notizen'
+        verbose_name_plural = 'Manager-Notizen'
+
+    def __str__(self):
+        return f'Notizen von {self.manager}'
+
+
 # ============================================================
 #  Präsident — Saisonziele & Hoeneß-Coin
 # ============================================================

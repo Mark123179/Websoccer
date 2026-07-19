@@ -28,6 +28,7 @@ from .models import (
     Club,
     ManagerAtRisk,
     ManagerCareerStation,
+    ManagerNotes,
     ManagerProfile,
     MatchdayRevenue,
     MatchResult,
@@ -3885,3 +3886,15 @@ class CommunitySubmissionAdmin(admin.ModelAdmin):
     list_display = ('manager', 'iso2', 'player_name', 'status', 'week_key', 'created_at')
     list_filter = ('status', 'iso2')
     search_fields = ('player_name', 'manager__name')
+
+
+@admin.register(ManagerNotes)
+class ManagerNotesAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'note_count', 'updated_at')
+    search_fields = ('manager__name', 'manager__user__username')
+    readonly_fields = ('updated_at',)
+    ordering = ('-updated_at',)
+
+    @admin.display(description='Anzahl Notizen')
+    def note_count(self, obj):
+        return len(obj.data or [])
