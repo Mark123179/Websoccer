@@ -253,6 +253,12 @@ def execute_free_transfer(player, aufnehmender, *, saison=None, spieltag=None):
         if ex_club is not None:
             club_ids.append(ex_club.pk)
         locked = _lock_clubs(club_ids)
+        # Doppelwechsel-Schutz (analog Geldtransfer): Spielerzeile nach den
+        # Club-Locks sperren und Vereinszugehörigkeit re-validieren.
+        from game.models import Player
+        aktuell = Player.objects.select_for_update().get(pk=player.pk)
+        if aktuell.club_id != (ex_club.pk if ex_club is not None else None):
+            raise TransferError('Der Spieler hat den Verein bereits gewechselt.')
         _check_kaderplatz(locked[aufnehmender.pk], saison_str)
         if ex_club is not None:
             _check_mindestkader(locked[ex_club.pk], saison_str)
@@ -295,6 +301,16 @@ def execute_swap(player_a, player_b, *, saison=None, spieltag=None):
             [club_a.pk, club_b.pk]
             + list(vert_a['empfaenger']) + list(vert_b['empfaenger'])
         )
+        # Doppelwechsel-Schutz (analog Geldtransfer): beide Spielerzeilen
+        # nach den Club-Locks sperren (PK-Reihenfolge) und re-validieren.
+        from game.models import Player
+        aktuelle = {
+            p.pk: p for p in Player.objects.select_for_update()
+            .filter(pk__in=[player_a.pk, player_b.pk]).order_by('pk')
+        }
+        if (aktuelle[player_a.pk].club_id != club_a.pk
+                or aktuelle[player_b.pk].club_id != club_b.pk):
+            raise TransferError('Ein Spieler hat den Verein bereits gewechselt.')
         # Kadergrößen bleiben beim Tausch konstant — keine Limit-Checks nötig.
         entries = _abgabe_entries(
             club_a, vert_a, locked, player=player_a,

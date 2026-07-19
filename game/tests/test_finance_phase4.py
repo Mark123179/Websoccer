@@ -23,7 +23,8 @@ from game.economy.negotiation import (
 from game.economy.schmerzgrenze import bewertung, kurve_wert
 from game.economy.transfers import (
     KaderVoll, MindestkaderUnterschritten, TransferError,
-    compute_ausbildungsabgabe, execute_money_transfer,
+    compute_ausbildungsabgabe, execute_free_transfer,
+    execute_money_transfer, execute_swap,
 )
 from game.models import (
     Club, FinanceTransaction, GameSeasonState, League, ManagerProfile,
@@ -197,6 +198,31 @@ class AusbildungsabgabeTests(TestCase):
             execute_money_transfer(spieler, self.kaeufer, Decimal('1000000'))
         self.kaeufer.refresh_from_db()
         self.assertEqual(self.kaeufer.budget, Decimal('200000000.00'))
+
+    def test_doppelwechsel_schutz_abloesefrei(self):
+        # Gleicher Schutz im ablösefreien Pfad: Instanz veraltet → Abbruch.
+        spieler = _mk_player(None, 'Frei Vogel', age=25, mw=100_000)
+        anderer = _mk_club('Zugriff 07')
+        Player.objects.filter(pk=spieler.pk).update(club=anderer)
+        with self.assertRaises(TransferError):
+            execute_free_transfer(spieler, self.kaeufer)
+
+    def test_doppelwechsel_schutz_tausch(self):
+        user_a = User.objects.create_user('tausch_a', password='x')
+        user_b = User.objects.create_user('tausch_b', password='x')
+        club_a = _mk_club('Tausch A')
+        club_a.managed_by = user_a.manager_profile
+        club_a.save(update_fields=['managed_by'])
+        club_b = _mk_club('Tausch B')
+        club_b.managed_by = user_b.manager_profile
+        club_b.save(update_fields=['managed_by'])
+        pa = _mk_player(club_a, 'Anton Ass', age=25, mw=100_000)
+        pb = _mk_player(club_b, 'Bruno Bär', age=25, mw=100_000)
+        Player.objects.filter(pk=pb.pk).update(club=self.kaeufer)
+        with self.assertRaises(TransferError):
+            execute_swap(pa, pb)
+        pa.refresh_from_db()
+        self.assertEqual(pa.club_id, club_a.pk)
 
 
 def _mk_snapshot(saison='7'):

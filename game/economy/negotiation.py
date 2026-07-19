@@ -1,6 +1,12 @@
 """Reaktive KI-Verkäufer — Verhandlungs-Zustandsmaschine (Spec Kap. 9.2/9.3).
 
 Manager bieten auf Spieler MANAGERLOSER Vereine (Club.managed_by IS NULL).
+Bewusst KEIN Verkaufskategorie-Gate: Die Kategorien GELD/GELD_TAUSCH/UVK
+(Spec Kap. 9.1) regeln, worauf die KI bei MANAGER-Spielern bieten darf
+(Phase 6). Managerlose Vereine haben niemanden, der Kategorien setzt
+(alles UVK-Default) — sie verkaufen rein reaktiv über die Schmerzgrenze
+(Spec Kap. 9.2: „Die Ablehnung eines hohen Gebots ist damit selbst
+Scouting-Information."); Kernspieler schützt der ×1,5-Zuschlag.
 Die KI antwortet sofort nach Schmerzgrenze v2:
 
   Gebot ≥ Grenze_eff                → Deal (Abwicklung via execute_money_transfer)
