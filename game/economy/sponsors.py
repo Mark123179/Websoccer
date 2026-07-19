@@ -150,26 +150,21 @@ def erwartete_siege(club, saison: str) -> Decimal:
 
 
 def erwartete_besucher(club, saison: str) -> Decimal:
-    """Erwartete Saison-Gesamtbesucher der Liga-Heimspiele."""
-    from game.stadium_revenue import calculate_auslastung
+    """Erwartete Saison-Gesamtbesucher der Liga-Heimspiele.
+
+    Projektion mit der vollen Nachfrageformel (Kap. 5.1) bei neutralem
+    Gegnerfaktor (kein konkreter Gegner bekannt).
+    """
+    from .stadium import compute_demand
 
     try:
         stadium = club.stadium
     except Exception:
         return Decimal('0.00')
 
-    kapazitaet = (
-        stadium.capacity_standing + stadium.capacity_seating + stadium.capacity_vip
-    )
-    auslastung = calculate_auslastung(
-        fan_popularity=club.fan_popularity,
-        price_standing=float(stadium.price_standing),
-        price_seating=float(stadium.price_seating),
-        competition_factor=1.0,
-        opponent_strength=65.0,
-    )
+    demand = compute_demand(club, stadium, saison=saison)
     _, heimspiele = _liga_spieltage(club, saison)
-    return (Decimal(kapazitaet) * Decimal(str(auslastung)) * heimspiele)\
+    return (Decimal(demand['zuschauer_gesamt']) * heimspiele)\
         .quantize(Decimal('0.01'))
 
 

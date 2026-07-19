@@ -16,7 +16,7 @@ from django.urls import reverse
 
 from game.finance import current_sim_season, log_club_transaction
 from game.models import (
-    Club, FinanceTransaction, GameSeasonState, League, Stadium,
+    Club, FinanceTransaction, GameSeasonState, League, Player, Stadium,
 )
 from game.stadium_revenue import record_matchday_revenue
 
@@ -82,10 +82,18 @@ class TicketRevenueLoggingTests(TestCase):
             club=self.club, name='Arena', city='Stadt',
             nord_standing=2000, nord_seating=3000, nord_vip=100,
         )
+        # Kader mit Marktwert → Nachfrage > 0 (seit Phase 3 kommt die
+        # Zuschauerzahl aus der Kader-MW-basierten Nachfrageformel).
+        for i in range(15):
+            Player.objects.create(
+                club=self.club, first_name='T', last_name=f'Spieler{i}',
+                position='MID', market_value=Decimal('2000000'), age=25,
+            )
 
     def test_matchday_revenue_creates_ledger_row(self):
         before = self.club.budget
         entry = record_matchday_revenue(self.club, competition_name='Bundesliga')
+        self.assertGreater(entry.revenue_total, 0)
         self.club.refresh_from_db()
         self.assertEqual(self.club.budget, before + entry.revenue_total)
 
@@ -94,6 +102,17 @@ class TicketRevenueLoggingTests(TestCase):
         self.assertEqual(tx.betrag, entry.revenue_total)
         self.assertEqual(tx.saison, '1')
         self.assertIn('Spieltagseinnahmen', tx.beschreibung)
+
+    def test_zero_revenue_skips_ledger_row(self):
+        # Verein ohne Kader-MW → Nachfrage 0 → Eintrag ja, Buchung nein.
+        leer = _mk_club(name='FC Leer')
+        Stadium.objects.create(
+            club=leer, name='Leer-Arena', city='Leerstadt',
+            nord_standing=1000,
+        )
+        entry = record_matchday_revenue(leer, competition_name='Testspiel')
+        self.assertEqual(entry.revenue_total, 0)
+        self.assertFalse(FinanceTransaction.objects.filter(club=leer).exists())
 
 
 class FinanzanalyseViewTests(TestCase):

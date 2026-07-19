@@ -3,9 +3,11 @@
 Reihenfolge je Verein (Cashflow-Design Kap. 12.2: Einnahmen VOR Gehältern):
   1. TV-Sockel-Spieltagsrate buchen (echte Landeskoeffizienten, game.economy.tv)
   2. Sponsor: Fixrate + Sieggeld (Ligasieg) buchen
-  3. Heimspiel: Ticketeinnahmen buchen + Zuschauer-Sponsorbonus
+  3. Heimspiel: Ticketeinnahmen (volle Nachfrageformel Kap. 5.1) +
+     Stadionumfeld-Zusatzeinnahme + Zuschauer-Sponsorbonus
   4. Gehälter aller Kaderspieler buchen (Pflichtbuchung, aggregiert)
-  5. Betriebskosten: Sockel-Rate + BETRIEBSQUOTE × Einnahmen seit letztem Lauf
+  5. Stadionkosten: Unterhalt-Rate (jeder Spieltag) + Spieltagskosten (Heimspiel)
+  6. Betriebskosten: Sockel-Rate + BETRIEBSQUOTE × Einnahmen seit letztem Lauf
 
 Idempotenz: FinanceMatchdayRun (unique je Verein+Saison+Spieltag) — ein
 zweiter Aufruf für denselben Spieltag ist ein No-op. Der gesamte Lauf eines
@@ -36,15 +38,6 @@ OPERATIVE_EINNAHME_TYPEN = (
 )
 
 
-def _opponent_strength(club) -> float:
-    """Ø base_strength der Top-11 des Gegners (Fallback 65)."""
-    from game.season_goals import club_squad_strength
-    total = club_squad_strength(club)
-    if not total:
-        return 65.0
-    return float(total) / 11.0
-
-
 def _book_salaries(club, saison, matchday, anker, salary_params):
     from game.models import Player
 
@@ -68,24 +61,85 @@ def _book_salaries(club, saison, matchday, anker, salary_params):
 
 
 def _book_tickets(club, fixture, saison, matchday):
-    """Ticketeinnahmen fürs Heimspiel (einfacher Nachfragefaktor, Phase 1)."""
+    """Ticketeinnahmen fürs Heimspiel (volle Nachfrageformel, Kap. 5.1)."""
     from game.stadium_revenue import record_matchday_revenue
 
     try:
         club.stadium
     except Exception:
-        return None  # Kein Stadion → keine Ticketeinnahmen (Phase 1).
+        return None  # Kein Stadion → keine Ticketeinnahmen.
 
-    opponent_strength = _opponent_strength(fixture.away_club)
     entry = record_matchday_revenue(
         club=club,
         match_result=None,
-        opponent_strength=opponent_strength,
+        opponent_club=fixture.away_club,
         competition_name=fixture.league.name if fixture.league_id else 'Liga',
         saison=saison,
         spieltag=matchday,
     )
     return entry
+
+
+def _book_umfeld(club, stadium, zuschauer, saison, matchday):
+    """Stadionumfeld-Zusatzeinnahme €/Besucher (Kap. 5.4)."""
+    from .stadium import umfeld_einnahme, umfeld_stufen
+
+    betrag = umfeld_einnahme(stadium, zuschauer, saison)
+    if betrag <= 0:
+        return None
+    return book(
+        club, 'UMFELD', betrag,
+        beschreibung=(
+            f'Stadionumfeld Spieltag {matchday} '
+            f'({umfeld_stufen(stadium)} Stufen × {zuschauer:,} Besucher)'
+        ),
+        saison=saison, spieltag=matchday,
+        referenz_typ='matchday', pflicht=True,
+    )
+
+
+def _book_stadionkosten(club, saison, matchday, zuschauer):
+    """Stadion-Unterhalt (jeder Spieltag) + Spieltagskosten (nur Heimspiel).
+
+    Unterhalt = Kapazität × UNTERHALT_PLATZ pro Saison, anteilig je Spieltag
+    (GEHALT_DIVISOR-Raster); Spieltagskosten = Zuschauer × KOSTEN_BESUCHER.
+    Beides Pflichtbuchungen (dürfen ins Minus).
+    """
+    from .stadium import spieltagskosten, unterhalt_rate
+
+    try:
+        stadium = club.stadium
+    except Exception:
+        return None, None
+
+    unterhalt_tx = None
+    rate = unterhalt_rate(stadium, saison)
+    if rate > 0:
+        unterhalt_tx = book(
+            club, 'STADION_UNTERHALT', -rate,
+            beschreibung=(
+                f'Stadion-Unterhalt Spieltag {matchday} '
+                f'({stadium.capacity_total:,} Plätze)'
+            ),
+            saison=saison, spieltag=matchday,
+            referenz_typ='matchday', pflicht=True,
+        )
+
+    spieltag_tx = None
+    if zuschauer:
+        kosten = spieltagskosten(zuschauer, saison)
+        if kosten > 0:
+            spieltag_tx = book(
+                club, 'STADION_SPIELTAG', -kosten,
+                beschreibung=(
+                    f'Spieltagskosten Spieltag {matchday} '
+                    f'({zuschauer:,} Zuschauer)'
+                ),
+                saison=saison, spieltag=matchday,
+                referenz_typ='matchday', pflicht=True,
+            )
+
+    return unterhalt_tx, spieltag_tx
 
 
 def _book_betriebskosten(club, saison, matchday, window_start, window_end):
@@ -203,6 +257,16 @@ def run_club_finance(club, league, saison: str, matchday: int,
 
     result = {'club': club.name, 'skipped': False, 'tickets': None}
 
+    # Fällige Stadionausbauten fertigstellen, BEVOR Nachfrage und
+    # Unterhalt gerechnet werden (Kapazität wirkt auf beides).
+    from .stadium import resolve_due_expansions
+    try:
+        _stadium = club.stadium
+    except Exception:
+        _stadium = None
+    if _stadium is not None:
+        resolve_due_expansions(_stadium)
+
     with transaction.atomic():
         run = FinanceMatchdayRun.objects.create(
             club=club, saison=saison, spieltag=matchday,
@@ -227,10 +291,16 @@ def run_club_finance(club, league, saison: str, matchday: int,
 
         offer = _book_sponsor_income(club, saison, matchday, fixture, result)
 
+        zuschauer = 0
         if home_fixture is not None:
             entry = _book_tickets(club, home_fixture, saison, matchday)
             if entry is not None:
                 result['tickets'] = entry.revenue_total
+                zuschauer = entry.attendance
+                umfeld_tx = _book_umfeld(
+                    club, entry.stadium, zuschauer, saison, matchday)
+                if umfeld_tx is not None:
+                    result['umfeld'] = umfeld_tx.betrag
                 if offer is not None:
                     from .sponsors import book_zuschauer_bonus
                     zs_tx = book_zuschauer_bonus(
@@ -242,6 +312,13 @@ def run_club_finance(club, league, saison: str, matchday: int,
 
         gehalt_tx = _book_salaries(club, saison, matchday, anker, salary_params)
         result['gehalt'] = gehalt_tx.betrag if gehalt_tx else Decimal('0.00')
+
+        unterhalt_tx, spieltag_tx = _book_stadionkosten(
+            club, saison, matchday, zuschauer)
+        if unterhalt_tx is not None:
+            result['stadion_unterhalt'] = unterhalt_tx.betrag
+        if spieltag_tx is not None:
+            result['stadion_spieltag'] = spieltag_tx.betrag
 
         betrieb_tx = _book_betriebskosten(
             club, saison, matchday, window_start, run.run_at)

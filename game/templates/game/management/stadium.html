@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=23">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=24">
 {% endblock %}
 
 {% block content %}
@@ -117,6 +117,7 @@
                                 <input class="st-price-input" type="number" name="price_standing"
                                     value="{{ stadium.price_standing }}" min="0" max="9999" step="0.50">
                             </div>
+                            <span class="st-price-ref">Referenz {{ ref_standing|floatformat:2 }} €</span>
                         </div>
                         <div class="st-price-field">
                             <label>
@@ -127,6 +128,7 @@
                                 <input class="st-price-input" type="number" name="price_seating"
                                     value="{{ stadium.price_seating }}" min="0" max="9999" step="0.50">
                             </div>
+                            <span class="st-price-ref">Referenz {{ ref_seating|floatformat:2 }} €</span>
                         </div>
                         <div class="st-price-field">
                             <label>
@@ -137,8 +139,13 @@
                                 <input class="st-price-input" type="number" name="price_vip"
                                     value="{{ stadium.price_vip }}" min="0" max="9999" step="0.50">
                             </div>
+                            <span class="st-price-ref">Referenz {{ ref_vip|floatformat:2 }} €</span>
                         </div>
                     </div>
+                    <p class="st-price-hint">
+                        Preise über der Referenz dämpfen die Nachfrage, günstigere füllen das Stadion.
+                        {% if hat_last_entry %}Letzte Auslastung: <strong>{{ last_auslastung_pct|floatformat:1 }} %</strong>{% endif %}
+                    </p>
                     <button type="submit" class="st-btn st-btn--gold">Preise speichern</button>
                 </form>
             </div>
@@ -178,6 +185,13 @@
                         <span class="st-expand-cost-label">Kosten</span>
                         <span class="st-expand-cost-value" id="expand-cost-display">—</span>
                     </div>
+                    <div class="st-expand-cost-preview">
+                        <span class="st-expand-cost-label">Bauzeit</span>
+                        <span class="st-expand-cost-value" id="expand-days-display" style="font-size:15px;">—</span>
+                    </div>
+                    {% if pending_seats %}
+                    <p class="st-expand-pending">Im Bau: +{{ pending_seats|intcomma }} Plätze — Kapazität steigt nach Fertigstellung.</p>
+                    {% endif %}
                 </form>
 
             </div>
@@ -310,6 +324,8 @@
     const typeEl   = document.getElementById('expand-type');
     const countEl  = document.getElementById('expand-count');
     const display  = document.getElementById('expand-cost-display');
+    const daysEl   = document.getElementById('expand-days-display');
+    const COST_API = "{% url 'stadium_cost_api' %}";
 
     // Tribünen-Kacheln anklicken → Ausbau-Formular aktualisieren
     document.querySelectorAll('.st-stand-card').forEach(card => {
@@ -327,18 +343,44 @@
     const firstCard = document.querySelector('.st-stand-card');
     if (firstCard) firstCard.classList.add('st-stand-card--selected');
 
+    function formatEuro(betrag) {
+        return betrag.toLocaleString('de-DE', {
+            minimumFractionDigits: 0, maximumFractionDigits: 0
+        }) + ' €';
+    }
+
+    // Sofortige Schätzung aus der Kostenmatrix (Band der Zielkapazität) —
+    // die Server-API liefert danach den exakten Wert inkl. Band-Splitting.
+    function lokaleSchaetzung(typ, anzahl) {
+        const preis = KOSTEN[typ] || 0;
+        display.textContent = anzahl > 0 ? formatEuro(preis * anzahl) : '—';
+        if (daysEl) daysEl.textContent = '—';
+    }
+
+    let fetchTimer = null;
+    let fetchSeq   = 0;
     function aktualisieren() {
         const typ    = typeEl ? typeEl.value : 'SITZ';
         const anzahl = parseInt(countEl ? countEl.value : 0, 10) || 0;
-        const preis  = KOSTEN[typ] || 0;
-        const gesamt = preis * anzahl;
-        if (anzahl > 0) {
-            display.textContent = gesamt.toLocaleString('de-DE', {
-                minimumFractionDigits: 0, maximumFractionDigits: 0
-            }) + ' €';
-        } else {
-            display.textContent = '—';
-        }
+        lokaleSchaetzung(typ, anzahl);
+        if (anzahl <= 0) return;
+        clearTimeout(fetchTimer);
+        fetchTimer = setTimeout(function () {
+            const seq = ++fetchSeq;
+            fetch(COST_API + '?seat_type=' + encodeURIComponent(typ) + '&anzahl=' + anzahl,
+                  {credentials: 'same-origin'})
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data || seq !== fetchSeq) return;
+                    if (typeof data.kosten === 'number') {
+                        display.textContent = formatEuro(data.kosten);
+                    }
+                    if (daysEl && typeof data.bautage === 'number') {
+                        daysEl.textContent = data.bautage + ' Tag' + (data.bautage === 1 ? '' : 'e');
+                    }
+                })
+                .catch(() => {});
+        }, 200);
     }
 
     if (typeEl)  typeEl.addEventListener('change', aktualisieren);

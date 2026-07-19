@@ -73,7 +73,10 @@ from .models import (
     SeasonFixture, StadiumExpansion, StadionumfeldConfig,
 )
 from .economy.booking import book
-from .stadium_costs import MAX_KAPAZITAET, get_expansion_cost, get_kostenmatrix
+from .economy.stadium import (
+    expansion_bauzeit_tage, pending_expansion_seats, resolve_due_expansions,
+)
+from .stadium_costs import get_expansion_cost, get_kostenmatrix, max_kapazitaet
 from .stadium_revenue import record_matchday_revenue
 from .views import current_manager_club, build_game_header
 
@@ -168,8 +171,13 @@ def stadium_detail(request):
         messages.error(request, 'Dein Verein hat noch kein Stadion.')
         return redirect('management_hub')
 
+    # Fällige Ausbauten anwenden, BEVOR Kapazität/Kosten angezeigt werden.
+    resolve_due_expansions(stadium)
+
     expansions     = stadium.expansions.all()[:10]
-    kostenmatrix   = get_kostenmatrix(stadium.capacity_total)
+    # Kostenvorschau ab der ZIELkapazität inkl. bereits bestellter Plätze.
+    pending_seats  = pending_expansion_seats(stadium)
+    kostenmatrix   = get_kostenmatrix(stadium.capacity_total + pending_seats)
     revenue_entries = stadium.revenue_entries.all()[:10]
 
     # Letzte Auslastung für Tribünen-Balken
@@ -238,15 +246,10 @@ def stadium_detail(request):
         gauge_auslastung = round(avg_auslastung)
         auslastung_faktor = avg_auslastung / 100.0
     else:
-        from .stadium_revenue import calculate_auslastung, get_competition_factor
-        auslastung_faktor = calculate_auslastung(
-            fan_popularity=club.fan_popularity,
-            price_standing=float(stadium.price_standing),
-            price_seating=float(stadium.price_seating),
-            competition_factor=1.0,
-            opponent_strength=65.0,
-        )
-        gauge_auslastung = round(auslastung_faktor * 100)
+        from .economy.stadium import compute_demand
+        _demand = compute_demand(club, stadium)
+        auslastung_faktor = _demand['auslastung_pct'] / 100.0
+        gauge_auslastung = round(_demand['auslastung_pct'])
 
     # Einnahmen bei Vollauslastung (Stehplätze + Sitzplätze + VIP × Preis)
     einnahmen_vollauslastung = (
@@ -260,13 +263,13 @@ def stadium_detail(request):
         sum(r.revenue_total for r in recent_revenues)
     ) if recent_revenues else 0
 
-    # Stadionkosten laufende Saison (Betriebskosten je Heimspiel × Spiele)
+    # Stadionkosten laufende Saison: Unterhalt je Spieltag + Spieltagskosten
+    # je Heimspiel-Zuschauer (Kap. 5.4, EconomyParameter).
+    from .economy.stadium import spieltagskosten, unterhalt_rate
     games_played = len(recent_revenues)
-    stadionkosten_saison = (
-        stadium.capacity_standing * 3 +
-        stadium.capacity_seating  * 7 +
-        stadium.capacity_vip      * 25
-    ) * games_played
+    stadionkosten_saison = float(unterhalt_rate(stadium)) * games_played + sum(
+        float(spieltagskosten(r.attendance)) for r in recent_revenues
+    )
 
     # Liga-Durchschnitt Ticketpreise (alle Stadien in der gleichen Liga)
     from django.db.models import Avg
@@ -280,6 +283,14 @@ def stadium_detail(request):
     liga_avg_standing = round(float(_liga_avgs['avg_standing'] or stadium.price_standing), 2)
     liga_avg_seating  = round(float(_liga_avgs['avg_seating']  or stadium.price_seating),  2)
     liga_avg_vip      = round(float(_liga_avgs['avg_vip']      or stadium.price_vip),      2)
+
+    # Referenzpreise der Nachfrageformel (PREIS_REFERENZ, Kap. 5.1) —
+    # Abweichung nach oben dämpft die Nachfrage (Preis-Elastizität).
+    from .economy.params import get_param as _get_param
+    _referenz = _get_param('PREIS_REFERENZ')
+    ref_standing = float(_referenz['steh'])
+    ref_seating  = float(_referenz['sitz'])
+    ref_vip      = float(_referenz['vip'])
 
     # Fan-Erlebnis-Werte
     cap = stadium.capacity_total or 1
@@ -297,7 +308,8 @@ def stadium_detail(request):
         'expansions':            expansions,
         'revenue_entries':       revenue_entries,
         'kostenmatrix_json':     json.dumps(kostenmatrix),
-        'max_kapazitaet':        MAX_KAPAZITAET,
+        'max_kapazitaet':        max_kapazitaet(),
+        'pending_seats':         pending_seats,
         'einnahmen_vollauslastung': einnahmen_vollauslastung,
         'saisoneinnahmen':          saisoneinnahmen_aktuell,
         'stadionkosten_saison':     stadionkosten_saison,
@@ -305,6 +317,11 @@ def stadium_detail(request):
         'liga_avg_standing':        liga_avg_standing,
         'liga_avg_seating':         liga_avg_seating,
         'liga_avg_vip':             liga_avg_vip,
+        'ref_standing':             ref_standing,
+        'ref_seating':              ref_seating,
+        'ref_vip':                  ref_vip,
+        'last_auslastung_pct':      last_pct,
+        'hat_last_entry':           last_entry is not None,
         'gauge_auslastung':         gauge_auslastung,
         'gauge_atmosphaere':        gauge_atmosphaere,
         'gauge_komfort':            gauge_komfort,
@@ -395,23 +412,33 @@ def stadium_expand(request):
         messages.error(request, 'Anzahl muss zwischen 1 und 50.000 liegen.')
         return redirect('stadium_detail')
 
-    aktuelle_kapazitaet = stadium.capacity_total
-    if aktuelle_kapazitaet + anzahl > MAX_KAPAZITAET:
-        verbleibend = MAX_KAPAZITAET - aktuelle_kapazitaet
-        messages.error(
-            request,
-            f'Maximale Kapazität ({MAX_KAPAZITAET:,}) würde überschritten. '
-            f'Noch {verbleibend:,} Plätze möglich.'
-        )
-        return redirect('stadium_detail')
-
-    kosten = get_expansion_cost(aktuelle_kapazitaet, seat_type, anzahl)
+    # Fällige Ausbauten zuerst anwenden (Kapazität aktuell halten).
+    resolve_due_expansions(stadium)
 
     stand_labels = {'NORD': 'Nordkurve', 'OST': 'Osttribüne', 'SUED': 'Südkurve', 'WEST': 'Westtribüne'}
     type_labels  = {'STEH': 'Stehplätze', 'SITZ': 'Sitzplätze', 'VIP': 'VIP-Plätze'}
 
     with db_transaction.atomic():
         locked = Club.objects.select_for_update().get(pk=club.pk)
+
+        # MAX-Check + Kostenband INNERHALB der Club-Sperre: parallele
+        # Aufträge desselben Vereins werden serialisiert und können das
+        # Maximum nicht gemeinsam überschreiten.
+        stadium.refresh_from_db()
+        pending = pending_expansion_seats(stadium)
+        zielbasis = stadium.capacity_total + pending
+        max_kap = max_kapazitaet()
+        if zielbasis + anzahl > max_kap:
+            verbleibend = max(0, max_kap - zielbasis)
+            messages.error(
+                request,
+                f'Maximale Kapazität ({max_kap:,}) würde überschritten. '
+                f'Noch {verbleibend:,} Plätze möglich (inkl. laufender Ausbauten).'
+            )
+            return redirect('stadium_detail')
+
+        kosten = get_expansion_cost(zielbasis, seat_type, anzahl)
+        bautage = expansion_bauzeit_tage(anzahl)
 
         if locked.budget < kosten:
             messages.error(
@@ -421,32 +448,16 @@ def stadium_expand(request):
             )
             return redirect('stadium_detail')
 
-        # Kapazität erhöhen
-        feld_map = {
-            ('NORD', 'STEH'): 'nord_standing',
-            ('NORD', 'SITZ'): 'nord_seating',
-            ('NORD', 'VIP'):  'nord_vip',
-            ('OST',  'STEH'): 'ost_standing',
-            ('OST',  'SITZ'): 'ost_seating',
-            ('OST',  'VIP'):  'ost_vip',
-            ('SUED', 'STEH'): 'sued_standing',
-            ('SUED', 'SITZ'): 'sued_seating',
-            ('SUED', 'VIP'):  'sued_vip',
-            ('WEST', 'STEH'): 'west_standing',
-            ('WEST', 'SITZ'): 'west_seating',
-            ('WEST', 'VIP'):  'west_vip',
-        }
-        feld = feld_map[(stand, seat_type)]
-        setattr(stadium, feld, getattr(stadium, feld) + anzahl)
-        stadium.save(update_fields=[feld])
-
-        # Ausbau-Eintrag anlegen
+        # Ausbau-Auftrag anlegen (Bauzeit: Kapazität erhöht sich erst nach
+        # Fertigstellung über resolve_due_expansions()).
         expansion = StadiumExpansion.objects.create(
-            stadium   = stadium,
-            stand     = stand,
-            seat_type = seat_type,
-            seats_added = anzahl,
-            cost      = kosten,
+            stadium      = stadium,
+            stand        = stand,
+            seat_type    = seat_type,
+            seats_added  = anzahl,
+            cost         = kosten,
+            completes_at = timezone.now() + timedelta(days=bautage),
+            applied      = False,
         )
 
         # Bucht Ledger-Zeile + Konto-Cache atomar (aktive Ausgabe).
@@ -460,7 +471,8 @@ def stadium_expand(request):
     messages.success(
         request,
         f'+{anzahl:,} {type_labels[seat_type]} in der {stand_labels[stand]} '
-        f'für {kosten:,.0f} € erfolgreich gebaut.'
+        f'für {kosten:,.0f} € beauftragt — Fertigstellung in {bautage} '
+        f'Tag{"en" if bautage != 1 else ""}.'
     )
     return redirect('stadium_detail')
 
@@ -526,11 +538,14 @@ def stadium_cost_api(request):
     if anzahl <= 0:
         return JsonResponse({'kosten': 0, 'preis_pro_platz': 0})
 
-    kosten = get_expansion_cost(stadium.capacity_total, seat_type, anzahl)
+    zielbasis = stadium.capacity_total + pending_expansion_seats(stadium)
+    kosten = get_expansion_cost(zielbasis, seat_type, anzahl)
+    bautage = expansion_bauzeit_tage(anzahl)
     return JsonResponse({
         'kosten':         float(kosten),
         'kosten_fmt':     f'{kosten:,.0f}',
         'preis_pro_platz': float(kosten / anzahl) if anzahl else 0,
+        'bautage':        bautage,
     })
 
 
@@ -1500,13 +1515,14 @@ def management_job_offers(request):
 
 
 # ── Stadionumfeld (Vereinsumfeld & Stadion-Szene) ─────────────────────────────
-# Globale Szene aus dem Replit-Design-Export. Superuser sehen die rechte
-# Editor-Leiste (Ecken ziehen, Fans, Tag/Nacht, Slider); ihre Änderungen gelten
-# global für ALLE Vereine (ein Singleton). Alle anderen sehen die Szene ohne Leiste.
-STADIONUMFELD_ALLOWED_KEYS = {
-    'heimspiel', 'tod', 'wetter', 'day',
-    'positions', 'badgePos', 'selected',
-}
+# Szene aus dem Replit-Design-Export. Superuser sehen die rechte Editor-Leiste
+# (Ecken ziehen, Fans, Tag/Nacht, Slider). Das Szenen-LAYOUT (positions/
+# badgePos/selected) bleibt global im StadionumfeldConfig-Singleton
+# (Kalibrierung gilt für ALLE Vereine); die AMBIENTE-Keys (heimspiel/tod/
+# wetter/day) liegen seit Phase 3 per Verein in ClubStadionumfeldState.
+STADIONUMFELD_LAYOUT_KEYS = {'positions', 'badgePos', 'selected'}
+STADIONUMFELD_AMBIENTE_KEYS = {'heimspiel', 'tod', 'wetter', 'day'}
+STADIONUMFELD_ALLOWED_KEYS = STADIONUMFELD_LAYOUT_KEYS | STADIONUMFELD_AMBIENTE_KEYS
 
 
 def _build_club_scene_state(club, stadium, game_date=None):
@@ -1642,9 +1658,22 @@ def management_stadionumfeld(request):
     stadium = _get_stadium_or_none(club)
     # Abgelaufene Ausbauten anwenden, BEVOR der Szenen-Zustand gebaut wird.
     resolve_due_constructions(club)
+    resolve_due_expansions(stadium)
     if stadium is not None:
         stadium.refresh_from_db()
     config = StadionumfeldConfig.get_solo()
+    # Szenen-Zustand: globales Layout + Ambiente des eigenen Vereins.
+    vu_state = {
+        k: v for k, v in (config.state or {}).items()
+        if k in STADIONUMFELD_LAYOUT_KEYS
+    }
+    if club is not None:
+        from .models import ClubStadionumfeldState
+        club_row = ClubStadionumfeldState.for_club(club)
+        vu_state.update({
+            k: v for k, v in (club_row.state or {}).items()
+            if k in STADIONUMFELD_AMBIENTE_KEYS
+        })
     # Selbes Datum wie der Kalender-Header (date.today() + calendar_offset).
     try:
         _offset = int(request.GET.get('calendar_offset', 0))
@@ -1656,7 +1685,7 @@ def management_stadionumfeld(request):
         'club':       club,
         'stadium':    stadium,
         'is_admin':   request.user.is_superuser,
-        'vu_state':   config.state or {},
+        'vu_state':   vu_state,
         'club_state': _build_club_scene_state(club, stadium, game_date=_game_date),
         'game_header': build_game_header(
             'Stadionumfeld',
@@ -1678,9 +1707,33 @@ def stadionumfeld_save(request):
     if not isinstance(payload, dict):
         return JsonResponse({'error': 'invalid payload'}, status=400)
     clean = {k: v for k, v in payload.items() if k in STADIONUMFELD_ALLOWED_KEYS}
+
+    # Layout (positions/badgePos/selected) → globales Singleton (alle Vereine).
+    # Merge statt Vollersatz: ein partieller POST (z. B. nur Ambiente) darf
+    # das gespeicherte Layout nicht wegwischen.
+    layout = {k: v for k, v in clean.items() if k in STADIONUMFELD_LAYOUT_KEYS}
     config = StadionumfeldConfig.get_solo()
-    config.state = clean
-    config.save(update_fields=['state', 'updated_at'])
+    if layout:
+        merged = dict(config.state or {})
+        merged.update(layout)
+        config.state = {
+            k: v for k, v in merged.items() if k in STADIONUMFELD_LAYOUT_KEYS
+        }
+        config.save(update_fields=['state', 'updated_at'])
+
+    # Ambiente (heimspiel/tod/wetter/day) → Zustand des eigenen Vereins.
+    ambiente = {k: v for k, v in clean.items() if k in STADIONUMFELD_AMBIENTE_KEYS}
+    club = current_manager_club(user=request.user)
+    if ambiente and club is not None:
+        from .models import ClubStadionumfeldState
+        club_row = ClubStadionumfeldState.for_club(club)
+        merged = dict(club_row.state or {})
+        merged.update(ambiente)
+        club_row.state = {
+            k: v for k, v in merged.items() if k in STADIONUMFELD_AMBIENTE_KEYS
+        }
+        club_row.save(update_fields=['state', 'updated_at'])
+
     return JsonResponse({'ok': True})
 
 

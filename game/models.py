@@ -947,6 +947,15 @@ class StadiumExpansion(models.Model):
     seats_added = models.PositiveIntegerField()
     cost       = models.DecimalField(max_digits=14, decimal_places=2)
     ordered_at = models.DateTimeField(auto_now_add=True)
+    # Bauzeit (Kap. 5.3): Zahlung sofort, Kapazität erst bei Fertigstellung.
+    completes_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Fertigstellung',
+        help_text='Wanduhr-Zeitpunkt, ab dem die Plätze aktiv werden (leer = sofort).',
+    )
+    applied = models.BooleanField(
+        default=True, verbose_name='Kapazität übernommen',
+        help_text='True, sobald die Plätze auf das Stadion gebucht wurden.',
+    )
 
     class Meta:
         verbose_name = 'Stadionausbau'
@@ -999,6 +1008,15 @@ class MatchdayRevenue(models.Model):
     attendance = models.PositiveIntegerField(
         default=0,
         verbose_name='Zuschauer',
+    )
+    attendance_standing = models.PositiveIntegerField(
+        default=0, verbose_name='Zuschauer Stehplätze',
+    )
+    attendance_seating = models.PositiveIntegerField(
+        default=0, verbose_name='Zuschauer Sitzplätze',
+    )
+    attendance_vip = models.PositiveIntegerField(
+        default=0, verbose_name='Zuschauer VIP',
     )
     revenue_standing = models.DecimalField(
         max_digits=14, decimal_places=2, default=0,
@@ -5698,6 +5716,38 @@ class StadionumfeldConfig(models.Model):
         obj = cls.objects.order_by('id').first()
         if obj is None:
             obj = cls.objects.create(state={})
+        return obj
+
+
+class ClubStadionumfeldState(models.Model):
+    """Per-Verein-Zustand der Stadionumfeld-Szene (Spec Kap. 5, Phase 3).
+
+    Hält die Ambiente-Keys (heimspiel, tod, wetter, day) je Verein — das
+    Szenen-LAYOUT (positions, badgePos, selected) bleibt bewusst im globalen
+    StadionumfeldConfig-Singleton (Kalibrierung durch Superuser, gilt für
+    alle Vereine). Die Facility-Ausbaustufen liegen weiterhin auf Stadium,
+    laufende Bauten in FacilityConstruction.
+    """
+
+    club = models.OneToOneField(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='stadionumfeld_state',
+        verbose_name='Verein',
+    )
+    state = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Stadionumfeld-Zustand (Verein)'
+        verbose_name_plural = 'Stadionumfeld-Zustände (Vereine)'
+
+    def __str__(self):
+        return f'Stadionumfeld-Zustand {self.club.name}'
+
+    @classmethod
+    def for_club(cls, club):
+        obj, _ = cls.objects.get_or_create(club=club)
         return obj
 
 
