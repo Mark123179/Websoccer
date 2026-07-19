@@ -2,6 +2,7 @@
 
 {% load humanize %}
 {% load static %}
+{% load game_filters %}
 
 {% block body_class %}overview-home-page{% endblock %}
 
@@ -214,7 +215,7 @@
                     {% for scorer in last_match_home_scorers %}
                     <span>
                         <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
-                        {{ scorer.playerName }}&nbsp;{{ scorer.minute }}'
+                        {{ scorer.playerName|abbr_name }}&nbsp;{{ scorer.minute }}'
                     </span>
                     {% endfor %}
                 </div>
@@ -222,7 +223,7 @@
                     {% for scorer in last_match_away_scorers %}
                     <span>
                         <img src="{% static 'game/images/icons/stat-goals.svg' %}" alt="" aria-hidden="true">
-                        {{ scorer.playerName }}&nbsp;{{ scorer.minute }}'
+                        {{ scorer.playerName|abbr_name }}&nbsp;{{ scorer.minute }}'
                     </span>
                     {% endfor %}
                 </div>

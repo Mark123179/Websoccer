@@ -4,6 +4,19 @@ register = template.Library()
 
 
 @register.filter
+def abbr_name(name):
+    """Kürzt immer auf Initiale + Nachname: 'Christian Eriksen' → 'C. Eriksen'.
+    Einwortnamen bleiben unverändert.
+    """
+    if not name:
+        return name
+    parts = name.split()
+    if len(parts) >= 2:
+        return f"{parts[0][0]}. {parts[-1]}"
+    return name
+
+
+@register.filter
 def shorten_name(name, max_len=16):
     """
     If a player name exceeds max_len characters, abbreviate the first name
