@@ -4251,3 +4251,119 @@ def creator_finanzanalyse(request):
         'expense_sum_fmt': _fmt(expense_sum),
         'current_season': current_season,
     })
+
+
+@staff_member_required
+def creator_ki_angebote(request):
+    """Creator-Übersicht aller Scouting-Gebote mit Verhandlungsstatus und Begründung."""
+    from .models import ScoutingBid, ScoutingAssignment
+
+    PROFILE_LABELS = {
+        'backup': 'Back-up',
+        'ergaenzung': 'Ergänzungsspieler',
+        'rotation': 'Rotationsspieler',
+        'stammkraft': 'Stammkraft',
+        'talent': 'Jugendspieler / Talent',
+    }
+
+    STATUS_LABELS = {
+        'active': 'Aktiv',
+        'won': 'Gewonnen',
+        'lost': 'Verloren',
+        'cancelled': 'Zurückgezogen',
+    }
+
+    def _fmt(v):
+        if v is None:
+            return '—'
+        try:
+            v = float(v)
+        except (TypeError, ValueError):
+            return '—'
+        if v >= 1_000_000:
+            return f'{v / 1_000_000:.1f} Mio. €'
+        if v >= 1_000:
+            return f'{int(v):,} €'.replace(',', '.')
+        return f'{int(v)} €'
+
+    q_status = request.GET.get('status', '')
+    q_typ = request.GET.get('typ', '')
+    q_club = request.GET.get('q', '').strip()
+    q_season = request.GET.get('season', '')
+
+    qs = ScoutingBid.objects.select_related(
+        'club', 'club__league', 'player', 'manager', 'find', 'find__assignment',
+    ).order_by('-created_at')
+
+    if q_status:
+        qs = qs.filter(status=q_status)
+    if q_typ == 'ki':
+        qs = qs.filter(manager__isnull=True)
+    elif q_typ == 'mensch':
+        qs = qs.filter(manager__isnull=False)
+    if q_club:
+        qs = qs.filter(club__name__icontains=q_club)
+    if q_season:
+        try:
+            qs = qs.filter(season_id=int(q_season))
+        except ValueError:
+            pass
+
+    rows = []
+    for bid in qs[:200]:
+        profile_label = ''
+        position_filter = ''
+        if bid.find and bid.find.assignment:
+            asgn = bid.find.assignment
+            profile_label = PROFILE_LABELS.get(asgn.profile, asgn.profile)
+            position_filter = asgn.position or ''
+
+        begruendung = profile_label
+        if position_filter:
+            begruendung = f'{profile_label} ({position_filter})' if profile_label else position_filter
+
+        rows.append({
+            'id': bid.pk,
+            'club_name': bid.club.name,
+            'club_id': bid.club.pk,
+            'league_name': bid.club.league.name if bid.club.league_id else '—',
+            'player_name': bid.player.name if bid.player else '—',
+            'player_id': bid.player_id,
+            'player_pos': bid.player.position if bid.player else '',
+            'amount_fmt': _fmt(bid.amount),
+            'min_bid_fmt': _fmt(bid.min_bid),
+            'status': bid.status,
+            'status_label': STATUS_LABELS.get(bid.status, bid.status),
+            'window_date': bid.window_date.strftime('%d.%m.%Y') if bid.window_date else '—',
+            'created_at': bid.created_at.strftime('%d.%m.%Y %H:%M'),
+            'settled_on': bid.settled_on.strftime('%d.%m.%Y') if bid.settled_on else '—',
+            'is_ki': bid.manager_id is None,
+            'manager_name': str(bid.manager) if bid.manager_id else 'KI',
+            'coin_earmarked': bid.coin_earmarked,
+            'begruendung': begruendung or '—',
+            'season_id': bid.season_id,
+        })
+
+    total = ScoutingBid.objects.count()
+    active_count = ScoutingBid.objects.filter(status='active').count()
+    ki_count = ScoutingBid.objects.filter(manager__isnull=True).count()
+    human_count = ScoutingBid.objects.filter(manager__isnull=False).count()
+
+    season_ids = (
+        ScoutingBid.objects.values_list('season_id', flat=True)
+        .order_by('season_id').distinct()
+    )
+
+    return render(request, 'creator/ki_angebote.html', {
+        'rows': rows,
+        'total': total,
+        'active_count': active_count,
+        'ki_count': ki_count,
+        'human_count': human_count,
+        'q_status': q_status,
+        'q_typ': q_typ,
+        'q_club': q_club,
+        'q_season': q_season,
+        'season_ids': list(season_ids),
+        'result_count': len(rows),
+    })

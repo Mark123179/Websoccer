@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator – KI-Angebote{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>KI-Angebote</h1>
+    </div>
+    {% include 'creator/_nav_pills.html' with nav_active='angebote' %}
+  </div>
+
+  <style>
+    .kia-kpi-row { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    .kia-kpi-card {
+      background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.08);
+      border-radius:8px; padding:14px 22px; min-width:140px;
+    }
+    .kia-kpi-label { display:block; font-size:.72rem; color:#8a9bb0; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .kia-kpi-value { display:block; font-size:1.55rem; font-weight:700; color:#e8eaf0; }
+    .kia-kpi-value.cyan { color:var(--cyan,#00d4ff); }
+
+    .kia-filter-row {
+      display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;
+      margin-bottom:20px;
+    }
+    .kia-filter-row select,
+    .kia-filter-row input[type=text] {
+      background:#0d1520; border:1px solid rgba(255,255,255,.15);
+      color:#c8d4e0; border-radius:6px; padding:7px 12px; font-size:.82rem;
+    }
+    .kia-filter-row button {
+      background:var(--cyan,#00d4ff); color:#000; border:none;
+      border-radius:6px; padding:7px 16px; font-size:.82rem; font-weight:600;
+      cursor:pointer;
+    }
+    .kia-filter-row .kia-reset {
+      background:transparent; color:#8a9bb0; border:1px solid rgba(255,255,255,.12);
+      text-decoration:none; border-radius:6px; padding:7px 14px; font-size:.82rem;
+    }
+
+    .kia-table-wrap { overflow-x:auto; }
+    .kia-table {
+      width:100%; border-collapse:collapse; font-size:.82rem;
+    }
+    .kia-table th {
+      background:rgba(0,0,0,.5); color:#8a9bb0; font-weight:600;
+      text-transform:uppercase; letter-spacing:.05em; font-size:.72rem;
+      padding:9px 12px; text-align:left; border-bottom:1px solid rgba(255,255,255,.08);
+      white-space:nowrap;
+    }
+    .kia-table td {
+      padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.05);
+      color:#c8d4e0; vertical-align:middle;
+    }
+    .kia-table tr:hover td { background:rgba(255,255,255,.03); }
+
+    .kia-badge {
+      display:inline-block; border-radius:4px; padding:2px 8px;
+      font-size:.72rem; font-weight:600; letter-spacing:.04em;
+    }
+    .kia-badge.active   { background:rgba(0,212,255,.18); color:#00d4ff; }
+    .kia-badge.won      { background:rgba(0,200,80,.18);  color:#00c850; }
+    .kia-badge.lost     { background:rgba(200,60,60,.18); color:#e05050; }
+    .kia-badge.cancelled{ background:rgba(140,140,140,.18);color:#909090; }
+
+    .kia-typ-badge { font-size:.70rem; padding:2px 7px; border-radius:4px; }
+    .kia-typ-badge.ki    { background:rgba(255,180,0,.15); color:#ffb400; }
+    .kia-typ-badge.mensch{ background:rgba(0,180,255,.15); color:#00b4ff; }
+
+    .kia-coin { color:#ffb400; font-size:.80rem; margin-left:4px; }
+    .kia-empty {
+      text-align:center; padding:60px 20px; color:#5a6a80; font-size:.9rem;
+    }
+    .kia-result-info { color:#8a9bb0; font-size:.80rem; margin-bottom:10px; }
+  </style>
+
+  <!-- KPI-Zeile -->
+  <div class="kia-kpi-row">
+    <div class="kia-kpi-card">
+      <span class="kia-kpi-label">Gebote gesamt</span>
+      <span class="kia-kpi-value cyan">{{ total }}</span>
+    </div>
+    <div class="kia-kpi-card">
+      <span class="kia-kpi-label">Aktiv</span>
+      <span class="kia-kpi-value">{{ active_count }}</span>
+    </div>
+    <div class="kia-kpi-card">
+      <span class="kia-kpi-label">KI-Gebote</span>
+      <span class="kia-kpi-value">{{ ki_count }}</span>
+    </div>
+    <div class="kia-kpi-card">
+      <span class="kia-kpi-label">Mensch-Gebote</span>
+      <span class="kia-kpi-value">{{ human_count }}</span>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <form method="get" class="kia-filter-row">
+    <div>
+      <label style="display:block;font-size:.72rem;color:#8a9bb0;margin-bottom:3px;">Status</label>
+      <select name="status">
+        <option value="" {% if not q_status %}selected{% endif %}>Alle Status</option>
+        <option value="active"    {% if q_status == 'active'    %}selected{% endif %}>Aktiv</option>
+        <option value="won"       {% if q_status == 'won'       %}selected{% endif %}>Gewonnen</option>
+        <option value="lost"      {% if q_status == 'lost'      %}selected{% endif %}>Verloren</option>
+        <option value="cancelled" {% if q_status == 'cancelled' %}selected{% endif %}>Zurückgezogen</option>
+      </select>
+    </div>
+    <div>
+      <label style="display:block;font-size:.72rem;color:#8a9bb0;margin-bottom:3px;">Typ</label>
+      <select name="typ">
+        <option value=""       {% if not q_typ %}selected{% endif %}>KI &amp; Mensch</option>
+        <option value="ki"     {% if q_typ == 'ki'     %}selected{% endif %}>Nur KI</option>
+        <option value="mensch" {% if q_typ == 'mensch' %}selected{% endif %}>Nur Mensch</option>
+      </select>
+    </div>
+    {% if season_ids %}
+    <div>
+      <label style="display:block;font-size:.72rem;color:#8a9bb0;margin-bottom:3px;">Saison</label>
+      <select name="season">
+        <option value="" {% if not q_season %}selected{% endif %}>Alle Saisons</option>
+        {% for sid in season_ids %}
+        <option value="{{ sid }}" {% if q_season == sid|stringformat:"s" %}selected{% endif %}>Saison {{ sid }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div>
+      <label style="display:block;font-size:.72rem;color:#8a9bb0;margin-bottom:3px;">Verein</label>
+      <input type="text" name="q" value="{{ q_club }}" placeholder="Vereinsname…" style="width:180px;">
+    </div>
+    <button type="submit">Filtern</button>
+    <a href="{% url 'creator_ki_angebote' %}" class="kia-reset">Zurücksetzen</a>
+  </form>
+
+  <!-- Ergebniszahl -->
+  <p class="kia-result-info">{{ result_count }} Gebot{% if result_count != 1 %}e{% endif %} angezeigt{% if result_count == 200 %} (max. 200){% endif %}</p>
+
+  {% if rows %}
+  <div class="kia-table-wrap">
+    <table class="kia-table">
+      <thead>
+        <tr>
+          <th>Bietender Verein</th>
+          <th>Liga</th>
+          <th>Spieler</th>
+          <th>Pos.</th>
+          <th>Gebotshöhe</th>
+          <th>Mindestgebot</th>
+          <th>Status</th>
+          <th>Typ</th>
+          <th>Saison</th>
+          <th>Zuschlagstermin</th>
+          <th>Gebotszeit</th>
+          <th>Abgerechnet</th>
+          <th>Begründung</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <a href="{% url 'creator_club_edit' r.club_id %}" style="color:#c8d4e0;text-decoration:none;">
+              {{ r.club_name }}
+            </a>
+          </td>
+          <td style="color:#8a9bb0;">{{ r.league_name }}</td>
+          <td>
+            <a href="{% url 'creator_player_edit' r.player_id %}" style="color:#c8d4e0;text-decoration:none;">
+              {{ r.player_name }}
+            </a>
+          </td>
+          <td style="color:#8a9bb0;">{{ r.player_pos|default:"—" }}</td>
+          <td style="color:#00d4ff;font-variant-numeric:tabular-nums;">{{ r.amount_fmt }}</td>
+          <td style="color:#8a9bb0;font-variant-numeric:tabular-nums;">{{ r.min_bid_fmt }}</td>
+          <td>
+            <span class="kia-badge {{ r.status }}">{{ r.status_label }}</span>
+          </td>
+          <td>
+            {% if r.is_ki %}
+              <span class="kia-typ-badge ki">KI</span>
+            {% else %}
+              <span class="kia-typ-badge mensch">Mensch</span>
+            {% endif %}
+            {% if r.coin_earmarked %}
+              <span class="kia-coin" title="Hoeneß-Coin reserviert">🪙</span>
+            {% endif %}
+          </td>
+          <td style="color:#8a9bb0;">{{ r.season_id }}</td>
+          <td style="color:#8a9bb0;white-space:nowrap;">{{ r.window_date }}</td>
+          <td style="color:#8a9bb0;white-space:nowrap;">{{ r.created_at }}</td>
+          <td style="color:{% if r.settled_on == '—' %}#5a6a80{% else %}#8a9bb0{% endif %};white-space:nowrap;">{{ r.settled_on }}</td>
+          <td style="color:#8a9bb0;max-width:200px;">{{ r.begruendung }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="kia-empty">
+    {% if q_status or q_typ or q_club or q_season %}
+      Keine Gebote für diese Filterauswahl.
+    {% else %}
+      Noch keine Scouting-Gebote vorhanden.
+      <br><span style="font-size:.80rem;margin-top:6px;display:block;">Sobald Vereine im Scouting-System Gebote abgeben, erscheinen sie hier.</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</section>
+{% endblock %}
