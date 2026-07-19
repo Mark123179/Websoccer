@@ -145,6 +145,7 @@ from .views_creator import (
 from .views_creator import (
     creator_media_outlets,
     creator_finanzanalyse,
+    creator_kalibrierung,
     creator_media_outlet_delete,
     creator_ki_angebote,
     creator_ki_transferzentrale,
@@ -396,6 +397,7 @@ urlpatterns = [
 
     path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
     path('creator/finanzen/', creator_finanzanalyse, name='creator_finanzanalyse'),
+    path('creator/kalibrierung/', creator_kalibrierung, name='creator_kalibrierung'),
     path('creator/ki-angebote/', creator_ki_angebote, name='creator_ki_angebote'),
     path('creator/ki-transferzentrale/', creator_ki_transferzentrale, name='creator_ki_transferzentrale'),
     path('creator/sportgericht/', creator_sportgericht, name='creator_sportgericht'),

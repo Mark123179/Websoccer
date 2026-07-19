@@ -4340,6 +4340,220 @@ def creator_finanzanalyse(request):
 
 
 @staff_member_required
+def creator_kalibrierung(request):
+    """Kalibrierung & Regler-Pflege (Finanzsystem Phase 7, Spec Kap. 16).
+
+    Drei Abschnitte: (1) Kennzahlen-Report Live-Ledger vs. Zielkorridore,
+    (2) Regler-Übersicht aller EconomyParameter mit [KALIBRIERUNG]-Badge,
+    Saison-Historie und Edit-Formular (Versionierung: Speichern schreibt
+    IMMER die aktuelle Saison, ältere Saisons bleiben unangetastet),
+    (3) Kalibrierungs-Leitfaden (welcher Regler wirkt auf welche Kennzahl).
+    Keine Selbstjustierung — jede Änderung ist eine Admin-Entscheidung.
+    """
+    import json as _json
+
+    from .economy import kalibrierung
+    from .economy.params import current_season as _cur_season
+    from .models import EconomyParameter
+
+    saison = _cur_season()
+
+    def _typ_kategorie(v):
+        if isinstance(v, bool):
+            return 'Wahrheitswert'
+        if isinstance(v, (int, float)):
+            return 'Zahl'
+        if isinstance(v, str):
+            return 'Text'
+        if isinstance(v, dict):
+            return 'Objekt'
+        if isinstance(v, list):
+            return 'Liste'
+        return 'Unbekannt'
+
+    if request.method == 'POST':
+        key = (request.POST.get('key') or '').strip()
+        raw = request.POST.get('value') or ''
+
+        alt_row = (
+            EconomyParameter.objects.filter(key=key)
+            .order_by('-saison').first()
+        )
+        if alt_row is None:
+            messages.error(
+                request,
+                f'Unbekannter Parameter-Key „{key}" — neue Keys entstehen '
+                'nur über Seed-Migrationen.',
+            )
+            return redirect('creator_kalibrierung')
+
+        try:
+            neu = _json.loads(raw)
+        except ValueError as exc:
+            messages.error(
+                request, f'Ungültiges JSON für {key}: {exc}')
+            return redirect('creator_kalibrierung')
+
+        from .economy.params import get_param
+        alt = get_param(key, saison)
+        if _typ_kategorie(neu) != _typ_kategorie(alt):
+            messages.error(
+                request,
+                f'Typwechsel abgelehnt: {key} ist bisher '
+                f'{_typ_kategorie(alt)}, der neue Wert wäre '
+                f'{_typ_kategorie(neu)} — das würde Finanzläufe brechen.',
+            )
+            return redirect('creator_kalibrierung')
+
+        if key == 'KI_KAEUFER' and isinstance(neu, dict):
+            # Operativer Schalter der KI-Transferzentrale — hier bewahren,
+            # damit ein Regler-Edit die KI nicht versehentlich scharf
+            # schaltet oder lahmlegt.
+            neu['dry_run'] = bool(alt.get('dry_run', True))
+
+        EconomyParameter.objects.update_or_create(
+            saison=saison, key=key, defaults={'value': neu},
+        )
+        messages.success(
+            request,
+            f'{key} für Saison {saison} gespeichert '
+            f'(ältere Saisons bleiben unverändert).',
+        )
+        return redirect('creator_kalibrierung')
+
+    # ── Abschnitt 1: Kennzahlen-Report ───────────────────────────────
+    sel_season = request.GET.get('saison') or saison
+    report = kalibrierung.kalibrierungs_report(sel_season)
+
+    def _pct(v, signed=True):
+        if v is None:
+            return '—'
+        fmt = f'{v * 100:+.1f} %' if signed else f'{v * 100:.1f} %'
+        return fmt.replace('.', ',')
+
+    def _num(v, nk=2):
+        return (f'{v:.{nk}f}'.replace('.', ',')
+                if v is not None else '—')
+
+    kennzahl_rows = []
+    for k in report['kennzahlen']:
+        ist_zeilen = []
+        if k['id'] == 'geldmenge':
+            ist_zeilen.append(f"Wachstum {_pct(k['wachstum'])} · "
+                              f"MW-Drift {_pct(k['mw_drift'])}")
+        elif k['id'] == 'abloese_mw':
+            ist_zeilen.append(f"Median {_num(k['median'])} "
+                              f"({k['count']} Transfers)")
+        elif k['id'] == 'gehaltslasten':
+            ist_zeilen.append(
+                f"klein {_pct(k['quote_klein'], signed=False)} · "
+                f"top {_pct(k['quote_top'], signed=False)} "
+                f"({k['clubs_gesamt']} Vereine, Gruppen je "
+                f"{k['gruppen_groesse']})")
+            if k['laufend']:
+                ist_zeilen.append('Werte anteilig — laufende Saison')
+        elif k['id'] == 'zuschauer':
+            ist_zeilen.append(
+                f"Median-Ratio {_num(k['median'])} · Auslastung "
+                f"{_pct((k['auslastung_median'] or 0) / 100, signed=False) if k['auslastung_median'] is not None else '—'} "
+                f"({k['spiele']} Heimspiele)")
+            for a in k['ausreisser']:
+                ist_zeilen.append(
+                    f"Ausreißer: {a['club']} — Ratio {_num(a['ratio'])}")
+        elif k['id'] == 'ki_anteil':
+            ist_zeilen.append(
+                f"KI-Anteil {_pct(k['anteil'], signed=False)} "
+                f"(Limit {_pct(k['limit'], signed=False)})")
+        kennzahl_rows.append({
+            'titel': k['titel'],
+            'korridor': k['korridor'],
+            'status': k['status'],
+            'status_label': kalibrierung.STATUS_LABELS[k['status']],
+            'hinweis': k['hinweis'],
+            'regler': k['regler'],
+            'ist_zeilen': ist_zeilen,
+        })
+
+    # ── Abschnitt 2: Regler-Übersicht + Saison-Historie ──────────────
+    registry = {r['key']: r for r in kalibrierung.KALIBRIERUNG_REGLER
+                if r['key']}
+    historie: dict[str, list] = {}
+    for row in EconomyParameter.objects.all().order_by('key'):
+        historie.setdefault(row.key, []).append((row.saison, row.value))
+
+    def _saison_key(s):
+        return (0, int(s)) if (s or '').lstrip('-').isdigit() else (1, 0)
+
+    param_rows = []
+    for key in sorted(historie):
+        versionen = sorted(historie[key], key=lambda t: _saison_key(t[0]))
+        exakt = next((v for s, v in versionen if s == saison), None)
+        herkunft, wert = versionen[-1]
+        for s, v in reversed(versionen):
+            if _saison_key(s) <= _saison_key(saison):
+                herkunft, wert = s, v
+                break
+        reg = registry.get(key)
+        param_rows.append({
+            'key': key,
+            'kalibrierung': key in kalibrierung.KALIBRIERUNG_KEYS,
+            'kapitel': reg['kapitel'] if reg else '',
+            'beschreibung': reg['beschreibung'] if reg else '',
+            'wert_json': _json.dumps(wert, indent=2, ensure_ascii=False,
+                                     sort_keys=True),
+            'typ': _typ_kategorie(wert),
+            'herkunft': herkunft,
+            'aktuell': exakt is not None,
+            'versionen': [
+                {'saison': s,
+                 'wert_json': _json.dumps(v, ensure_ascii=False,
+                                          sort_keys=True)}
+                for s, v in versionen
+            ],
+        })
+    param_rows.sort(key=lambda r: (not r['kalibrierung'], r['key']))
+
+    # ── Abschnitt 3: Leitfaden (Regler → Kennzahl) ───────────────────
+    kennzahl_titel = {k['id']: k['titel'] for k in report['kennzahlen']}
+    leitfaden_rows = [{
+        'name': r['key'] or r.get('titel', ''),
+        'hat_key': bool(r['key']),
+        'kalibrierung': r.get('kalibrierung', False),
+        'kapitel': r['kapitel'],
+        'kennzahlen': [kennzahl_titel.get(kid, kid)
+                       for kid in r['wirkt_auf']],
+        'beschreibung': r['beschreibung'],
+    } for r in kalibrierung.KALIBRIERUNG_REGLER]
+
+    from .models import FinanceTransaction
+    saison_options = sorted(
+        {s for s in FinanceTransaction.objects
+         .values_list('saison', flat=True).distinct()
+         if (s or '').isdigit()},
+        key=int,
+    )
+    if sel_season not in saison_options:
+        saison_options.append(sel_season)
+
+    return render(request, 'creator/kalibrierung.html', {
+        'saison': saison,
+        'sel_season': sel_season,
+        'saison_options': saison_options,
+        'kennzahl_rows': kennzahl_rows,
+        'alarm_count': report['alarm_count'],
+        'warn_count': report['warn_count'],
+        'nicht_messbar_count': report['nicht_messbar_count'],
+        'ok_count': (len(kennzahl_rows) - report['alarm_count']
+                     - report['warn_count']
+                     - report['nicht_messbar_count']),
+        'param_rows': param_rows,
+        'kalibrierung_count': sum(
+            1 for r in param_rows if r['kalibrierung']),
+        'leitfaden_rows': leitfaden_rows,
+    })
+
+
+@staff_member_required
 def creator_ki_angebote(request):
     """Creator-Übersicht aller Scouting-Gebote mit Verhandlungsstatus und Begründung."""
     from .models import ScoutingBid, ScoutingAssignment

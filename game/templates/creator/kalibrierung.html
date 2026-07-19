@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator – Kalibrierung{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Kalibrierung &amp; Regler</h1>
+    </div>
+    {% include 'creator/_nav_pills.html' with nav_active='kalibrierung' %}
+  </div>
+
+  {% if messages %}
+  {% for m in messages %}
+  <div class="ka-flash {% if m.tags == 'error' %}ka-flash-err{% else %}ka-flash-ok{% endif %}">{{ m }}</div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ── KPI-Zeile ─────────────────────────────────────────────────────── -->
+  <div class="fa-kpi-row">
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Saison</span>
+      <form method="get" class="ka-season-form">
+        <select name="saison" class="ka-season-select" onchange="this.form.submit()">
+          {% for s in saison_options %}
+          <option value="{{ s }}" {% if s == sel_season %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </form>
+      <span class="fa-kpi-sub">Report-Bezug{% if sel_season == saison %} · aktuelle Saison{% endif %}</span>
+    </div>
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Alarm</span>
+      <span class="fa-kpi-value {% if alarm_count %}fa-red{% else %}fa-green{% endif %}">{{ alarm_count }}</span>
+      <span class="fa-kpi-sub">Kennzahlen über Alarmschwelle</span>
+    </div>
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Außerhalb Korridor</span>
+      <span class="fa-kpi-value {% if warn_count %}fa-amber{% endif %}">{{ warn_count }}</span>
+      <span class="fa-kpi-sub">im Korridor: {{ ok_count }}</span>
+    </div>
+    <div class="fa-kpi-card">
+      <span class="fa-kpi-label">Nicht messbar</span>
+      <span class="fa-kpi-value">{{ nicht_messbar_count }}</span>
+      <span class="fa-kpi-sub">Datenbasis noch zu dünn</span>
+    </div>
+  </div>
+
+  <div class="fa-note">
+    Kalibrierung nach Spec Kap. 16: Kennzahlen aus dem Live-Ledger gegen die
+    Zielkorridore. Anpassungen laufen ausschließlich über EconomyParameter
+    (Saison-Versionierung) — nie über Code-Konstanten. Keine Selbstjustierung:
+    Jede Regler-Änderung ist eine bewusste Admin-Entscheidung.
+  </div>
+
+  <!-- ── Abschnitt 1: Kennzahlen-Report ────────────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">Kennzahlen-Report <span class="fa-panel-sub">Live-Ledger vs. Zielkorridore (Spec Kap. 16)</span></h2>
+    <div class="ka-report-grid">
+      {% for k in kennzahl_rows %}
+      <div class="ka-card ka-{{ k.status }}">
+        <div class="ka-card-head">
+          <span class="ka-status-badge ka-badge-{{ k.status }}">{{ k.status_label }}</span>
+          <span class="ka-card-title">{{ k.titel }}</span>
+        </div>
+        <div class="ka-card-row"><span class="ka-lbl">Korridor</span><span>{{ k.korridor }}</span></div>
+        {% for z in k.ist_zeilen %}
+        <div class="ka-card-row"><span class="ka-lbl">{% if forloop.first %}Ist{% endif %}</span><span>{{ z }}</span></div>
+        {% endfor %}
+        {% if k.hinweis %}
+        <div class="ka-hint">{{ k.hinweis }}</div>
+        {% endif %}
+        <div class="ka-regler-line">
+          {% for r in k.regler %}<span class="ka-chip">{{ r }}</span>{% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ── Abschnitt 2: Regler-Übersicht ─────────────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">
+      Regler-Übersicht — EconomyParameter
+      <span class="fa-panel-sub">{{ param_rows|length }} Keys · {{ kalibrierung_count }} als [KALIBRIERUNG] markiert · Speichern schreibt immer Saison {{ saison }}</span>
+    </h2>
+    <table class="fa-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Typ</th>
+          <th>Stand aus Saison</th>
+          <th>Wert / Bearbeiten</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in param_rows %}
+        <tr>
+          <td class="ka-key-cell">
+            <span class="fa-strong">{{ p.key }}</span>
+            {% if p.kalibrierung %}<span class="ka-cal-badge">KALIBRIERUNG</span>{% endif %}
+            {% if p.beschreibung %}<div class="ka-key-desc">{{ p.beschreibung }}{% if p.kapitel %} <em>({{ p.kapitel }})</em>{% endif %}</div>{% endif %}
+          </td>
+          <td>{{ p.typ }}</td>
+          <td>
+            Saison {{ p.herkunft }}
+            {% if p.aktuell %}<span class="fa-tag">aktuell</span>{% else %}<span class="ka-inherit">geerbt</span>{% endif %}
+          </td>
+          <td class="ka-value-cell">
+            <details>
+              <summary><code class="ka-json-preview">{{ p.wert_json|truncatechars:80 }}</code></summary>
+              <form method="post" class="ka-edit-form">
+                {% csrf_token %}
+                <input type="hidden" name="key" value="{{ p.key }}">
+                <textarea name="value" rows="{% if p.typ == 'Objekt' or p.typ == 'Liste' %}8{% else %}2{% endif %}" spellcheck="false">{{ p.wert_json }}</textarea>
+                <div class="ka-edit-actions">
+                  <button type="submit" class="ka-save-btn">Für Saison {{ saison }} speichern</button>
+                  {% if p.key == 'KI_KAEUFER' %}<span class="ka-edit-note">dry_run wird vom bestehenden Wert übernommen (Schalter: KI-Käufer-Seite)</span>{% endif %}
+                </div>
+              </form>
+              {% if p.versionen|length > 1 %}
+              <div class="ka-history">
+                <span class="ka-lbl">Historie</span>
+                {% for v in p.versionen %}
+                <div class="ka-history-row"><span>Saison {{ v.saison }}</span><code>{{ v.wert_json|truncatechars:100 }}</code></div>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </details>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="fa-empty">Keine EconomyParameter vorhanden.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Abschnitt 3: Kalibrierungs-Leitfaden ──────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">Kalibrierungs-Leitfaden <span class="fa-panel-sub">welcher Regler wirkt auf welche Kennzahl (Spec Kap. 17)</span></h2>
+    <table class="fa-table">
+      <thead>
+        <tr><th>Regler</th><th>Kapitel</th><th>Wirkt auf</th><th>Wirkung</th></tr>
+      </thead>
+      <tbody>
+        {% for r in leitfaden_rows %}
+        <tr>
+          <td class="fa-strong">
+            {{ r.name }}
+            {% if r.kalibrierung %}<span class="ka-cal-badge">KALIBRIERUNG</span>{% endif %}
+            {% if not r.hat_key %}<span class="ka-inherit">kein Parameter-Key</span>{% endif %}
+          </td>
+          <td>{{ r.kapitel }}</td>
+          <td>{% for kz in r.kennzahlen %}<span class="ka-chip">{{ kz }}</span>{% endfor %}</td>
+          <td class="ka-wirkung">{{ r.beschreibung }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</section>
+
+<style>
+.cm-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.cm-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.25rem; }
+.cm-header-left { display: flex; align-items: center; gap: 1rem; }
+.cm-badge { background: #00d4ff; color: #03070c; font-size: .6rem; font-weight: 900; letter-spacing: .14em; padding: .2rem .55rem; border-radius: 3px; }
+.cm-header-left h1 { color: #cce8ff; font-size: 1.4rem; font-weight: 800; margin: 0; }
+.cm-header-right { display: flex; gap: .5rem; flex-wrap: wrap; justify-content: flex-end; }
+.cm-nav-pill { padding: .35rem .9rem; border-radius: 20px; font-size: .78rem; font-weight: 600; text-decoration: none; border: 1px solid #0d2035; color: #556677; background: #050e1a; transition: all .15s; }
+.cm-nav-pill:hover { border-color: #00d4ff44; color: #aabbcc; }
+.cm-nav-pill.active { border-color: #00d4ff55; color: #00d4ff; background: #071525; }
+
+.fa-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: 1rem; }
+.fa-kpi-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .25rem; }
+.fa-kpi-label { color: #556677; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.fa-kpi-value { color: #cce8ff; font-size: 1.45rem; font-weight: 800; }
+.fa-kpi-value.fa-cyan { color: #00d4ff; }
+.fa-kpi-value.fa-green { color: #22c55e; }
+.fa-kpi-value.fa-red { color: #ef4444; }
+.fa-kpi-value.fa-amber { color: #f59e0b; }
+.fa-kpi-sub { color: #334455; font-size: .72rem; }
+
+.fa-note { background: #071525; border: 1px solid #0d2035; border-left: 3px solid #00d4ff55; border-radius: 8px; padding: .6rem 1rem; color: #556677; font-size: .78rem; margin-bottom: 1.25rem; }
+.fa-panel { background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: 1.1rem 1.25rem; margin-bottom: .75rem; }
+.fa-panel-title { color: #cce8ff; font-size: .95rem; font-weight: 800; margin: 0 0 .9rem; display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.fa-panel-sub { color: #556677; font-size: .72rem; font-weight: 600; }
+
+.fa-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.fa-table th { text-align: left; color: #556677; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .35rem .5rem; border-bottom: 1px solid #0d2035; }
+.fa-table td { padding: .45rem .5rem; color: #aabbcc; border-bottom: 1px solid #081627; vertical-align: top; }
+.fa-table tr:last-child td { border-bottom: none; }
+.fa-strong { color: #cce8ff; font-weight: 700; }
+.fa-tag { background: #00d4ff22; color: #00d4ff; font-size: .62rem; font-weight: 800; padding: .08rem .4rem; border-radius: 8px; margin-left: .3rem; }
+.fa-empty { color: #334455; font-size: .8rem; padding: .5rem 0; }
+.fa-green { color: #22c55e; }
+.fa-red { color: #ef4444; }
+
+/* Flash */
+.ka-flash { border-radius: 8px; padding: .6rem 1rem; font-size: .82rem; margin-bottom: .75rem; border: 1px solid; }
+.ka-flash-ok { background: #22c55e14; border-color: #22c55e44; color: #22c55e; }
+.ka-flash-err { background: #ef444414; border-color: #ef444455; color: #ef4444; }
+
+/* Report-Karten */
+.ka-report-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+.ka-card { background: #071525; border: 1px solid #0d2035; border-radius: 10px; padding: .85rem 1rem; display: flex; flex-direction: column; gap: .35rem; }
+.ka-card.ka-ok { border-color: #22c55e44; }
+.ka-card.ka-warn { border-color: #f59e0b66; background: #14100a; }
+.ka-card.ka-alarm { border-color: #ef444466; background: #170a0e; }
+.ka-card-head { display: flex; align-items: center; gap: .55rem; margin-bottom: .15rem; }
+.ka-card-title { color: #cce8ff; font-weight: 800; font-size: .88rem; }
+.ka-status-badge { font-size: .6rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; padding: .16rem .5rem; border-radius: 10px; white-space: nowrap; }
+.ka-badge-ok { background: #22c55e1c; color: #22c55e; border: 1px solid #22c55e44; }
+.ka-badge-warn { background: #f59e0b1c; color: #f59e0b; border: 1px solid #f59e0b55; }
+.ka-badge-alarm { background: #ef44441c; color: #ef4444; border: 1px solid #ef444455; }
+.ka-badge-nicht_messbar { background: #55667722; color: #8899aa; border: 1px solid #55667755; }
+.ka-card-row { display: flex; gap: .6rem; font-size: .78rem; color: #aabbcc; }
+.ka-lbl { color: #556677; font-size: .66rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; min-width: 62px; padding-top: .1rem; }
+.ka-hint { color: #8899aa; font-size: .74rem; font-style: italic; border-left: 2px solid #0d2035; padding-left: .6rem; }
+.ka-regler-line { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
+.ka-chip { background: #050e1a; border: 1px solid #0d2035; color: #7f9ab3; font-size: .66rem; font-weight: 700; padding: .12rem .5rem; border-radius: 9px; white-space: nowrap; }
+
+/* Regler-Tabelle */
+.ka-key-cell { max-width: 340px; }
+.ka-cal-badge { background: #00d4ff1a; color: #00d4ff; border: 1px solid #00d4ff44; font-size: .58rem; font-weight: 900; letter-spacing: .1em; padding: .1rem .42rem; border-radius: 8px; margin-left: .35rem; vertical-align: middle; }
+.ka-inherit { color: #556677; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-left: .3rem; }
+.ka-key-desc { color: #556677; font-size: .72rem; margin-top: .15rem; }
+.ka-key-desc em { font-style: normal; color: #334455; }
+.ka-value-cell { max-width: 520px; }
+.ka-value-cell details summary { cursor: pointer; list-style: none; }
+.ka-value-cell details summary::-webkit-details-marker { display: none; }
+.ka-json-preview { color: #7f9ab3; font-size: .74rem; background: #071525; border: 1px solid #0d2035; border-radius: 6px; padding: .18rem .5rem; display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ka-value-cell details[open] .ka-json-preview { border-color: #00d4ff44; color: #cce8ff; }
+.ka-edit-form { margin-top: .5rem; }
+.ka-edit-form textarea { width: 100%; background: #03070c; border: 1px solid #0d2035; border-radius: 8px; color: #cce8ff; font-family: monospace; font-size: .76rem; padding: .5rem .65rem; resize: vertical; }
+.ka-edit-form textarea:focus { outline: none; border-color: #00d4ff55; }
+.ka-edit-actions { display: flex; align-items: center; gap: .6rem; margin-top: .4rem; flex-wrap: wrap; }
+.ka-save-btn { background: #00d4ff1a; border: 1px solid #00d4ff55; color: #00d4ff; font-size: .72rem; font-weight: 800; padding: .32rem .8rem; border-radius: 8px; cursor: pointer; }
+.ka-save-btn:hover { background: #00d4ff2e; }
+.ka-season-form { margin: .1rem 0 .15rem; }
+.ka-season-select { background: #0a1520; border: 1px solid #00d4ff55; color: #00d4ff; font-size: 1.25rem; font-weight: 800; padding: .1rem .45rem; border-radius: 8px; cursor: pointer; }
+.ka-season-select:focus { outline: none; border-color: #00d4ff; }
+.ka-edit-note { color: #556677; font-size: .68rem; }
+.ka-history { margin-top: .55rem; border-top: 1px solid #0d2035; padding-top: .45rem; }
+.ka-history-row { display: flex; gap: .6rem; font-size: .72rem; color: #8899aa; padding: .12rem 0; }
+.ka-history-row code { color: #556677; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ka-wirkung { color: #8899aa; font-size: .76rem; max-width: 420px; }
+</style>
+{% endblock %}
