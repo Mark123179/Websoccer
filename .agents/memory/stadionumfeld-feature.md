@@ -23,9 +23,14 @@ Management-Hub-Kachel `/management/stadionumfeld/`. Portierung des Replit-Design
 - **Why:** Layout global/admin-kuratiert; Stufen/Kapazität/Budget/Ausbau müssen die REALEN Daten des
   eingeloggten Vereins zeigen (Anforderung „alles verknüpfen").
 - **How to apply:** Neue facility-/kapazitätsbezogene Werte in `_build_club_scene_state` ergänzen,
-  NICHT in den Singleton/Save-Payload. WICHTIG: Der ADMIN-Rail (startBuild/finishBuild/advanceDay/
-  setLevel) ist rein session-lokale Vorschau (persistiert nichts). Der MANAGER-Rail (Nicht-Admin,
-  `buildManagerRail`/`doUpgrade`) ist der ECHTE Ausbau-Pfad → siehe „Echter Ausbau" unten.
+  NICHT in den Singleton/Save-Payload. WICHTIG: Die Admin-Werkzeuge (startBuild/finishBuild/
+  advanceDay/setLevel) sind rein session-lokale Vorschau (persistiert nichts) und im UI explizit
+  „Vorschau / nur Session" beschriftet. Der ECHTE Ausbau-Pfad ist `buildUpgradePanel`/`doUpgrade`
+  (POST facility_upgrade) → siehe „Echter Ausbau" unten. Seit 2026-07: das echte Panel erscheint im
+  Detail-Rail für ALLE (Admin UND Manager); Übersichts-Karten-Buttons öffnen nur noch die
+  Detail-Ansicht (openDetail), nie direkt eine Preview — sonst „baut" ein Superuser nur zum Schein
+  (kein Geld, nach Reload weg). Echt-Status im Panel IMMER an `meta.is_building`
+  (Server-Wahrheit aus clubFacilities) hängen, nie an `s.building` (kann Admin-Preview sein).
 
 ## Echter Ausbau (Wanduhr-Bauzeit) — FacilityConstruction
 - Manager-Ausbau (`facility_upgrade`, POST `/management/stadion/einrichtung-ausbauen/`): Geld wird

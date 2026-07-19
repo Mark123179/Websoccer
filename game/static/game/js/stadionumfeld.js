@@ -327,16 +327,17 @@
         var src,hasImg,empty=false,showCard=false,tone='faint',chipText='',cardLabel=p.short,cardSub='';
         var statusText='',actionLabel='',actionFn=null,showAction=true,av='ghost';
         src=self.assetFor(p,lvl,b);
+        var goDetail=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); self.openDetail(p.id); };
         if(isStad){
           var ti=self.tiers[lvl];
-          if(b){ tone='yellow'; chipText=lvl+'+ · '+b.left+'T'; statusText='Stufe '+lvl+' → '+self.tiers[b.target].name+' · '+b.left+' T'; cardSub='Stadion-Ausbau'; actionLabel='Fertig'; actionFn=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); self.finishBuild(p.id); }; av='warn'; }
+          if(b){ tone='yellow'; chipText=lvl+'+ · '+b.left+'T'; statusText='Stufe '+lvl+' → '+self.tiers[b.target].name+' · '+b.left+' T'; cardSub='Stadion-Ausbau'; actionLabel='Details'; actionFn=goDetail; av='warn'; }
           cardLabel='Stadion'; cardSub=cardSub||(ti.name+' · Standard im Hintergrund');
           empty=(lvl===0&&!b);
           showCard=(!hasImgSrc(src)&&!empty);
         } else {
-          if(b){ tone='yellow'; var to=b.target; chipText=(lvl===0?'Bau':lvl+'+')+' · '+b.left+'T'; statusText=(lvl===0?'Bau · Stufe 1':'Stufe '+lvl+' → '+to)+' · '+b.left+' T'; cardSub=(lvl===0?'Baustelle · Stufe 1':'Ausbau → Stufe '+to); actionLabel='Fertig'; actionFn=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); self.finishBuild(p.id); }; av='warn'; }
-          else if(lvl>0){ tone='green'; chipText='Stufe '+lvl; statusText='Stufe '+lvl+' · In Betrieb'; cardSub='Stufe '+lvl+' · Bild folgt'; if(lvl<p.max){ actionLabel='Ausbauen'; actionFn=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); self.startBuild(p.id); }; av='primary'; } else { showAction=false; } }
-          else { empty=true; tone='faint'; chipText='frei'; statusText=(p.kind==='reserve'?'Baufeld frei · reserviert':'Baufeld frei'); actionLabel='Bauen'; actionFn=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); self.startBuild(p.id); }; av='primary'; }
+          if(b){ tone='yellow'; var to=b.target; chipText=(lvl===0?'Bau':lvl+'+')+' · '+b.left+'T'; statusText=(lvl===0?'Bau · Stufe 1':'Stufe '+lvl+' → '+to)+' · '+b.left+' T'; cardSub=(lvl===0?'Baustelle · Stufe 1':'Ausbau → Stufe '+to); actionLabel='Details'; actionFn=goDetail; av='warn'; }
+          else if(lvl>0){ tone='green'; chipText='Stufe '+lvl; statusText='Stufe '+lvl+' · In Betrieb'; cardSub='Stufe '+lvl+' · Bild folgt'; if(lvl<p.max){ actionLabel='Ausbauen'; actionFn=goDetail; av='primary'; } else { showAction=false; } }
+          else { empty=true; tone='faint'; chipText='frei'; statusText=(p.kind==='reserve'?'Baufeld frei · reserviert':'Baufeld frei'); actionLabel='Bauen'; actionFn=goDetail; av='primary'; }
           showCard=(!hasImgSrc(src)&&!empty);
         }
         hasImg=hasImgSrc(src);
@@ -678,12 +679,15 @@
 
     buildDetailRail(V){
       var self=this, sel=V.sel;
+      var meta=this.clubFacilities[sel.id]||{};
       var panels=[];
       panels.push(h('div',{style:V.S.panel},[
         h('div',{style:{fontSize:'21px',fontWeight:'900',letterSpacing:'.3px'},text:sel.name}),
         h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginTop:'3px'},text:sel.purpose}),
         h('div',{style:{marginTop:'11px'}},[ h('span',{style:sel.statusBadge,text:sel.statusText}) ])
       ]));
+      // Echter Ausbau (Geld + Bauzeit) — auch für Admins, wenn die Einrichtung ausbaubar ist.
+      if(meta.upgradeable){ panels.push(this.buildUpgradePanel(V)); }
       if(sel.isStadium){
         var capNum=h('div',{style:{fontSize:'28px',fontWeight:'900',color:'var(--cyan)',lineHeight:'1'},text:sel.capFmt});
         this._capNumEl=capNum;
@@ -699,7 +703,7 @@
         }));
         panels.push(h('div',{style:V.S.panel},[ h('div',{style:V.S.title},[ h('span',{},'Zuschauer-Kapazität') ]), capNum, capTier, capSlider, ladder ]));
       }
-      var buildKids=[ h('div',{style:V.S.title},[ h('span',{},sel.buildHeading) ]) ];
+      var buildKids=[ h('div',{style:V.S.title},[ h('span',{},sel.buildHeading+' · Vorschau'), h('span',{style:{fontSize:'10px',color:'var(--faint)'}},'nur Session') ]) ];
       if(sel.isBuilding){
         buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--yellow)',fontWeight:'800',marginBottom:'9px'},text:sel.buildingText}));
         buildKids.push(h('div',{style:sel.progTrack},[ h('div',{style:sel.progFill}) ]));
@@ -715,7 +719,7 @@
       }
       if(sel.canBuild){
         buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginBottom:'11px',lineHeight:'1.4'},text:sel.buildHint}));
-        if(IS_ADMIN){ buildKids.push(h('button',{style:V.S.primaryBtnFull,onClick:sel.buildFn,text:sel.buildLabel})); }
+        if(IS_ADMIN){ buildKids.push(h('button',{style:V.S.primaryBtnFull,onClick:sel.buildFn,text:'Vorschau: '+sel.buildLabel})); }
       }
       if(sel.isMax){ buildKids.push(h('div',{style:{fontSize:'12.5px',color:'var(--green)',fontWeight:'800'},text:'Maximalstufe erreicht · '+sel.maxName})); }
       panels.push(h('div',{style:V.S.panel},buildKids));
@@ -736,27 +740,21 @@
       return h('aside',{'class':'vu-rail',style:{flex:'0 0 408px',borderLeft:'1px solid var(--line)',background:'rgba(5,14,22,.5)',overflowY:'auto',padding:'18px',display:'flex',flexDirection:'column',gap:'13px'}},panels);
     }
 
-    /* ---- Manager-Detailleiste (Nicht-Admin: echter Ausbau) ---------- */
-    buildManagerRail(V){
+    /* ---- Echtes Ausbau-Panel (Geld + Bauzeit, server-persistiert) --- */
+    buildUpgradePanel(V){
       var self=this, sel=V.sel;
       var meta=this.clubFacilities[sel.id]||{};
-      var panels=[];
-
-      // Kopf: Name / Zweck / Status
-      panels.push(h('div',{style:V.S.panel},[
-        h('div',{style:{fontSize:'21px',fontWeight:'900',letterSpacing:'.3px'},text:sel.name}),
-        h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginTop:'3px'},text:sel.purpose}),
-        h('div',{style:{marginTop:'11px'}},[ h('span',{style:sel.statusBadge,text:sel.statusText}) ])
-      ]));
-
-      // Ausbau-Panel
       var head=[ h('span',{},sel.buildHeading) ];
       if(meta.level!=null && meta.max!=null){ head.push(h('span',{style:{fontSize:'10px',color:'var(--faint)'}},'Stufe '+meta.level+' / '+meta.max)); }
       var buildKids=[ h('div',{style:V.S.title},head) ];
 
-      if(sel.isBuilding){
-        buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--yellow)',fontWeight:'800',marginBottom:'9px'},text:sel.buildingText}));
-        buildKids.push(h('div',{style:sel.progTrack},[ h('div',{style:sel.progFill}) ]));
+      if(meta.upgradeable && meta.is_building){
+        if(sel.isBuilding && sel.buildingText){
+          buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--yellow)',fontWeight:'800',marginBottom:'9px'},text:sel.buildingText}));
+          buildKids.push(h('div',{style:sel.progTrack},[ h('div',{style:sel.progFill}) ]));
+        } else {
+          buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--yellow)',fontWeight:'800',marginBottom:'9px'}},'Ausbau läuft.'));
+        }
         buildKids.push(h('div',{style:{marginTop:'12px',fontSize:'11.5px',color:'var(--muted)',fontWeight:'700',lineHeight:'1.45'}},'Der Ausbau läuft in Echtzeit. Sobald die Bauzeit abgelaufen ist, wird die neue Stufe automatisch aktiv — die Boni greifen erst dann.'));
       } else if(meta.upgradeable && meta.can_upgrade){
         buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginBottom:'8px',lineHeight:'1.45'}},'Ausbau auf Stufe '+(meta.level+1)+'. Das Geld wird sofort abgebucht, danach läuft die Bauzeit in Echtzeit.'));
@@ -782,7 +780,24 @@
       } else {
         buildKids.push(h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',lineHeight:'1.5'},text:meta.note||'Für diese Einrichtung ist der Ausbau hier noch nicht verfügbar.'}));
       }
-      panels.push(h('div',{style:V.S.panel},buildKids));
+      return h('div',{style:V.S.panel},buildKids);
+    }
+
+    /* ---- Manager-Detailleiste (Nicht-Admin: echter Ausbau) ---------- */
+    buildManagerRail(V){
+      var self=this, sel=V.sel;
+      var meta=this.clubFacilities[sel.id]||{};
+      var panels=[];
+
+      // Kopf: Name / Zweck / Status
+      panels.push(h('div',{style:V.S.panel},[
+        h('div',{style:{fontSize:'21px',fontWeight:'900',letterSpacing:'.3px'},text:sel.name}),
+        h('div',{style:{fontSize:'12px',color:'var(--muted)',fontWeight:'700',marginTop:'3px'},text:sel.purpose}),
+        h('div',{style:{marginTop:'11px'}},[ h('span',{style:sel.statusBadge,text:sel.statusText}) ])
+      ]));
+
+      // Ausbau-Panel (echter, server-persistierter Pfad)
+      panels.push(this.buildUpgradePanel(V));
 
       // Ausbaustufen-Übersicht (informativ)
       if(meta.tiers && meta.tiers.length){
