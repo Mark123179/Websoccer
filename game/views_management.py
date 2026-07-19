@@ -1033,6 +1033,45 @@ def management_finanzen(request):
     for sp in sponsors_raw:
         sp.amount_mio = f'{float(sp.amount_per_season)/1_000_000:.1f}'.replace('.', ',')
 
+    # ── Hauptsponsor-Angebote (Phase 2, Spec Kap. 6.2) ───────────────
+    def _var_text(offer):
+        v = offer.variable_json or {}
+        betrag = float(v.get('betrag', 0) or 0)
+        if offer.typ == 'sieggeld':
+            return f'+ {_fmt(betrag)} je Pflichtspielsieg'
+        if offer.typ == 'zuschauer':
+            return f'+ {betrag:,.2f} € je Heimspiel-Besucher'.replace(
+                ',', 'X').replace('.', ',').replace('X', '.')
+        if offer.typ == 'zieljaeger':
+            ziel = v.get('ziel_label') or 'Saisonziel erreicht'
+            return f'+ {_fmt(betrag)} bei Saisonziel: {ziel}'
+        return '100 % garantiert — keine Bedingungen'
+
+    sponsor_offers, active_offer = [], None
+    try:
+        from game.economy.sponsors import generate_offers, get_active_offer
+        chosen = get_active_offer(club, season, autopick=False)
+        for offer in generate_offers(club, season):
+            sponsor_offers.append({
+                'id': offer.pk,
+                'name': offer.sponsor_name,
+                'typ': offer.typ,
+                'typ_label': offer.get_typ_display(),
+                'fix_fmt': _fmt(offer.fix_betrag),
+                'ew_fmt': _fmt(offer.erwartungswert),
+                'var_text': _var_text(offer),
+                'is_chosen': bool(chosen and offer.pk == chosen.pk),
+            })
+        if chosen is not None:
+            active_offer = next(
+                (o for o in sponsor_offers if o['is_chosen']), None)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'Sponsorangebote für %s (Saison %s) konnten nicht geladen werden',
+            club, season,
+        )
+
     # ── Kapitalverlauf ───────────────────────────────────────────────
     chart_range = request.GET.get('range', 'season')
     if chart_range == 'complete':
@@ -1120,6 +1159,8 @@ def management_finanzen(request):
         'expense_rows':     expense_rows,
         'expense_rows_json': expense_rows_json,
         'sponsors':         sponsors_raw,
+        'sponsor_offers':   sponsor_offers,
+        'active_offer':     active_offer,
         'page_obj':         page_obj,
         'page_num':         page_num,
         'total_pages':      total_pages,
@@ -1127,6 +1168,39 @@ def management_finanzen(request):
         'chart_range':      chart_range,
         'chart_points_json': json.dumps(chart_points),
     })
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def management_sponsor_choose(request):
+    """Hauptsponsor-Angebot annehmen (genau eins je Verein und Saison)."""
+    from .models import SponsorOffer, GameSeasonState
+    from game.economy.sponsors import choose_offer, SponsorChoiceError
+
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+
+    season_state = GameSeasonState.objects.first()
+    season = str(season_state.current_season) if season_state else '0'
+
+    offer = SponsorOffer.objects.filter(
+        pk=request.POST.get('offer_id'), club=club, saison=season,
+    ).first()
+    if offer is None:
+        messages.error(request, 'Sponsorangebot nicht gefunden.')
+        return redirect('management_finanzen')
+
+    try:
+        choose_offer(offer)
+        messages.success(
+            request,
+            f'✓ Sponsorvertrag mit {offer.sponsor_name} abgeschlossen — '
+            f'Laufzeit: ganze Saison.',
+        )
+    except SponsorChoiceError as exc:
+        messages.error(request, str(exc))
+    return redirect('management_finanzen')
 
 
 @login_required(login_url='/auth/login/')

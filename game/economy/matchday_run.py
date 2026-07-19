@@ -1,31 +1,30 @@
-"""finance_matchday_run — Finanz-Spieltagslauf (Spec Kap. 15, Phase-1-Umfang).
+"""finance_matchday_run — Finanz-Spieltagslauf (Spec Kap. 15, Phase 2).
 
 Reihenfolge je Verein (Cashflow-Design Kap. 12.2: Einnahmen VOR Gehältern):
-  1. TV-Sockel-Spieltagsrate buchen (Einnahme)
-  2. Gehälter aller Kaderspieler buchen (Pflichtbuchung, aggregiert)
-  3. Heimspiel: Ticketeinnahmen buchen (einfacher Nachfragefaktor, Phase 1)
-  4. Betriebskosten: Sockel-Rate + BETRIEBSQUOTE × Einnahmen seit letztem Lauf
+  1. TV-Sockel-Spieltagsrate buchen (echte Landeskoeffizienten, game.economy.tv)
+  2. Sponsor: Fixrate + Sieggeld (Ligasieg) buchen
+  3. Heimspiel: Ticketeinnahmen buchen + Zuschauer-Sponsorbonus
+  4. Gehälter aller Kaderspieler buchen (Pflichtbuchung, aggregiert)
+  5. Betriebskosten: Sockel-Rate + BETRIEBSQUOTE × Einnahmen seit letztem Lauf
 
 Idempotenz: FinanceMatchdayRun (unique je Verein+Saison+Spieltag) — ein
 zweiter Aufruf für denselben Spieltag ist ein No-op. Der gesamte Lauf eines
 Vereins ist EINE Transaktion: bricht ein Schritt ab, wird auch der
 Idempotenz-Marker zurückgerollt.
 
-Phase-2+-Posten (Sponsor-Fix, Unterhalt, Spieltagskosten, Sieggeld-Sponsor)
-fehlen hier bewusst.
-
-TV-Interim (Phase 1): Der Ländertopf-Rang kommt aus dem Interim-Parameter
-TV_INTERIM_RANG_JE_LAND (Land → Rang), bis Phase 2 die echten
-Landeskoeffizienten einführt. Alle Ligen gelten interim als „liga1“.
+Sponsor: Ohne gewähltes Angebot pickt get_active_offer() automatisch das
+Sicherheits-Angebot (KI-Vereine & zögerliche Manager). Sieggeld für
+Pokalsiege bucht der Pokal-Hook (cup_service), nicht dieser Lauf.
 """
 from decimal import Decimal
 
 from django.db import transaction
 
 from .booking import book
-from .params import get_decimal, get_param
+from .params import get_decimal
 from .salary import gehalt_pro_pflichtspiel, load_salary_params
 from .snapshot import ensure_season_snapshot
+from .tv import tv_sockel_rate
 
 # Laufende Einnahmen für die Betriebskosten-Quote (Spec Kap. 10).
 # Bewusst OHNE Transfers/Ausbildungsabgabe (Zirkulation) und ohne
@@ -35,32 +34,6 @@ OPERATIVE_EINNAHME_TYPEN = (
     'TV_SOCKEL', 'TV_PLATZ', 'TV_KOEFF', 'FALLSCHIRM',
     'PRAEMIE_POKAL', 'PRAEMIE_SUPERCUP', 'PRAEMIE_INTL',
 )
-
-TV_INTERIM_DEFAULT_RANG = 6
-
-
-def _tv_sockel_rate(league, saison: str) -> Decimal:
-    """TV-Sockel-Rate je Verein und Spieltag (Interim-Rangzuordnung)."""
-    from game.models import SeasonFixture
-
-    rang_map = get_param('TV_INTERIM_RANG_JE_LAND', saison) or {}
-    rang = str(rang_map.get(league.country, TV_INTERIM_DEFAULT_RANG))
-
-    toepfe = get_param('TV_TOEPFE', saison)
-    topf = Decimal(str(toepfe.get(rang, toepfe.get(str(TV_INTERIM_DEFAULT_RANG)))))
-
-    split = Decimal(str(get_param('TV_SPLIT_LIGA', saison)['liga1']))
-    sockel_anteil = Decimal(str(get_param('TV_VERTEILUNG', saison)['sockel']))
-
-    fixtures = SeasonFixture.objects.filter(league=league, season=saison)
-    club_ids = set(fixtures.values_list('home_club_id', flat=True))
-    n_clubs = len(club_ids) or 1
-    max_md = (
-        fixtures.order_by('-matchday').values_list('matchday', flat=True).first()
-        or 1
-    )
-
-    return (topf * split * sockel_anteil / n_clubs / max_md).quantize(Decimal('0.01'))
 
 
 def _opponent_strength(club) -> float:
@@ -158,10 +131,60 @@ def _book_betriebskosten(club, saison, matchday, window_start, window_end):
     )
 
 
+def _club_won_fixture(club, fixture) -> bool:
+    """True, wenn der Verein das (gespielte) Liga-Fixture gewonnen hat."""
+    if fixture is None or not fixture.is_played:
+        return False
+    if fixture.home_goals is None or fixture.away_goals is None:
+        return False
+    if fixture.home_club_id == club.pk:
+        return fixture.home_goals > fixture.away_goals
+    if fixture.away_club_id == club.pk:
+        return fixture.away_goals > fixture.home_goals
+    return False
+
+
+def _book_sponsor_income(club, saison, matchday, fixture, result):
+    """Sponsor-Fixrate + Sieggeld für den Spieltag (Spec Kap. 6)."""
+    from .sponsors import get_active_offer, sponsor_fix_rate, book_sieg_bonus
+
+    offer = get_active_offer(club, saison, autopick=True)
+    if offer is None:
+        return None
+
+    fix_rate = sponsor_fix_rate(offer, saison)
+    if fix_rate > 0:
+        tx = book(
+            club, 'SPONSOR_FIX', fix_rate,
+            beschreibung=f'{offer.sponsor_name}: Fixrate Spieltag {matchday}',
+            saison=saison, spieltag=matchday,
+            referenz_typ='matchday', referenz_id=offer.pk,
+            pflicht=True,
+        )
+        result['sponsor_fix'] = tx.betrag
+
+    if fixture is not None and _club_won_fixture(club, fixture):
+        sieg_tx = book_sieg_bonus(
+            club, offer, saison,
+            beschreibung=f'{offer.sponsor_name}: Siegprämie Spieltag {matchday}',
+            referenz_typ='sponsor_sieg_liga', referenz_id=fixture.pk,
+            spieltag=matchday,
+        )
+        if sieg_tx is not None:
+            result['sponsor_sieg'] = sieg_tx.betrag
+
+    return offer
+
+
 def run_club_finance(club, league, saison: str, matchday: int,
-                     home_fixture=None, tv_rate=None,
+                     home_fixture=None, fixture=None, tv_rate=None,
                      anker=None, salary_params=None) -> dict:
-    """Kompletter Finanz-Spieltagslauf für EINEN Verein (idempotent)."""
+    """Kompletter Finanz-Spieltagslauf für EINEN Verein (idempotent).
+
+    ``fixture`` = das Fixture des Vereins an diesem Spieltag (heim ODER
+    auswärts) — Basis für das Sponsor-Sieggeld. ``home_fixture`` bleibt
+    separat, weil nur Heimspiele Tickets erzeugen.
+    """
     from game.models import FinanceMatchdayRun
 
     saison = str(saison)
@@ -172,7 +195,7 @@ def run_club_finance(club, league, saison: str, matchday: int,
         return {'club': club.name, 'skipped': True}
 
     if tv_rate is None:
-        tv_rate = _tv_sockel_rate(league, saison)
+        tv_rate = tv_sockel_rate(league, saison)
     if anker is None:
         anker = ensure_season_snapshot(saison).gehalts_anker
     if salary_params is None:
@@ -202,13 +225,23 @@ def run_club_finance(club, league, saison: str, matchday: int,
             )
             result['tv_sockel'] = tx.betrag
 
-        gehalt_tx = _book_salaries(club, saison, matchday, anker, salary_params)
-        result['gehalt'] = gehalt_tx.betrag if gehalt_tx else Decimal('0.00')
+        offer = _book_sponsor_income(club, saison, matchday, fixture, result)
 
         if home_fixture is not None:
             entry = _book_tickets(club, home_fixture, saison, matchday)
             if entry is not None:
                 result['tickets'] = entry.revenue_total
+                if offer is not None:
+                    from .sponsors import book_zuschauer_bonus
+                    zs_tx = book_zuschauer_bonus(
+                        club, offer, entry.attendance, saison,
+                        spieltag=matchday,
+                    )
+                    if zs_tx is not None:
+                        result['sponsor_zuschauer'] = zs_tx.betrag
+
+        gehalt_tx = _book_salaries(club, saison, matchday, anker, salary_params)
+        result['gehalt'] = gehalt_tx.betrag if gehalt_tx else Decimal('0.00')
 
         betrieb_tx = _book_betriebskosten(
             club, saison, matchday, window_start, run.run_at)
@@ -235,15 +268,18 @@ def run_matchday_finance(league, saison: str, matchday: int) -> dict:
     if not fixtures:
         return {'clubs': [], 'errors': [f'Keine Fixtures für Spieltag {matchday}.']}
 
-    tv_rate = _tv_sockel_rate(league, saison)
+    tv_rate = tv_sockel_rate(league, saison)
     anker = ensure_season_snapshot(saison).gehalts_anker
     salary_params = load_salary_params(saison)
 
     home_by_club = {f.home_club_id: f for f in fixtures}
+    fixture_by_club = {}
     clubs = {}
     for f in fixtures:
         clubs[f.home_club_id] = f.home_club
         clubs[f.away_club_id] = f.away_club
+        fixture_by_club[f.home_club_id] = f
+        fixture_by_club[f.away_club_id] = f
 
     results, errors = [], []
     for club_id, club in sorted(clubs.items()):
@@ -251,6 +287,7 @@ def run_matchday_finance(league, saison: str, matchday: int) -> dict:
             results.append(run_club_finance(
                 club, league, saison, matchday,
                 home_fixture=home_by_club.get(club_id),
+                fixture=fixture_by_club.get(club_id),
                 tv_rate=tv_rate, anker=anker, salary_params=salary_params,
             ))
         except Exception as exc:  # Ein Vereinsfehler stoppt nicht den Spieltag.

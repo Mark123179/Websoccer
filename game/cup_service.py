@@ -436,7 +436,45 @@ def simulate_cup_fixture(fixture) -> object:
         fixture.status = fixture.STATUS_PLAYED
         fixture.save()
 
+    # ── Finanz-Hook: Sponsor-Sieggeld für den Pokalsieger ─────────────────────
+    # Nach der Transaktion, fehlertolerant — Finanzfehler dürfen die
+    # Simulation nicht rückwirkend brechen. Idempotent je Fixture.
+    try:
+        _book_cup_win_sponsor_bonus(fixture)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'Sponsor-Sieggeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
+        )
+
     return fixture
+
+
+def _book_cup_win_sponsor_bonus(fixture) -> None:
+    """Bucht das Sponsor-Sieggeld des Pokalsiegers (Pflichtspielsieg, Kap. 6).
+
+    Nur relevant, wenn der Sieger einen Sieggeld-Sponsor gewählt hat —
+    ohne Wahl wird hier bewusst KEIN Auto-Pick ausgelöst (das übernimmt
+    der Liga-Finanzlauf).
+    """
+    from .models import SponsorOffer
+    from .economy.sponsors import book_sieg_bonus
+
+    winner = fixture.winner_club
+    if winner is None:
+        return
+    saison = str(fixture.cup_round.cup_season.season)
+    offer = SponsorOffer.objects.filter(
+        club=winner, saison=saison, gewaehlt=True, typ=SponsorOffer.TYP_SIEGGELD,
+    ).first()
+    if offer is None:
+        return
+    runden_name = _round_display_name(fixture.cup_round.round_code)
+    book_sieg_bonus(
+        winner, offer, saison,
+        beschreibung=f'{offer.sponsor_name}: Siegprämie Pokal ({runden_name})',
+        referenz_typ='sponsor_sieg_pokal', referenz_id=fixture.pk,
+    )
 
 
 # ── Rundenfortschritt ─────────────────────────────────────────────────────────
@@ -444,11 +482,31 @@ def simulate_cup_fixture(fixture) -> object:
 def advance_cup_round(cup_round) -> object | None:
     """Schließt die aktuelle Runde ab und legt die nächste an.
 
-    Atomar + select_for_update: Gleichzeitige Aufrufe erzeugen keine
-    doppelte Folgerunde.
-
-    Gibt die neue CupRound zurück, oder None wenn das Finale abgeschlossen wurde.
+    Gibt die neue CupRound zurück, oder None wenn das Finale abgeschlossen
+    wurde. Nach erfolgreichem Fortschritt werden die Pokalprämien der
+    Pokalsaison synchronisiert (fehlertolerant, idempotent).
     """
+    result = _advance_cup_round_locked(cup_round)
+
+    # ── Finanz-Hook: Pokalprämien buchen (Spec Kap. 8.1) ──────────────────────
+    # Außerhalb der Rundenfortschritts-Transaktion, fehlertolerant.
+    try:
+        from .models import CupSeason
+        from .economy.events import sync_cup_premiums
+        cup_season = CupSeason.objects.get(pk=cup_round.cup_season_id)
+        sync_cup_premiums(cup_season)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'Pokalprämien-Sync für Pokalsaison %s fehlgeschlagen',
+            cup_round.cup_season_id,
+        )
+
+    return result
+
+
+def _advance_cup_round_locked(cup_round) -> object | None:
+    """Rundenfortschritt (atomar + select_for_update: keine Doppel-Folgerunde)."""
     from .models import CupRound, CupFixture
 
     with transaction.atomic():

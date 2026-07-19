@@ -23,6 +23,11 @@ Wages must matter more than one-time transfer fees over a full season. Star play
 
 Age + Strength + Potential + Position scarcity + Contract length remaining. Very young high-potential players = valuable but risky. Old strong players = short-term boost, high wage, low resale.
 
+## Booking robustness patterns
+
+- If an idempotency skip-guard checks only ONE transaction typ but the job books SEVERAL per club (e.g. season-end payouts), wrap the books in `transaction.atomic()` — otherwise a partial failure marks the club as done and the remaining share is lost forever on retry.
+- Races guarded by a DB partial-unique constraint (e.g. one chosen sponsor per season) still pass application-level `exists()` checks; catch `IntegrityError` and re-raise as the friendly domain error so users get a message instead of a 500.
+
 ## Hard no-gos
 
 - No unlimited income source without risk or counter-cost

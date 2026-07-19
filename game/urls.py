@@ -65,6 +65,7 @@ from .views_management import (
     management_sportgericht,
     sportgericht_ticket_submit,
     management_finanzen,
+    management_sponsor_choose,
     management_halloffame,
     management_job_offers,
     management_stadionumfeld,
@@ -323,6 +324,7 @@ urlpatterns = [
     path('management/sportgericht/ticket/', sportgericht_ticket_submit, name='sportgericht_ticket_submit'),
 
     path('management/finanzen/', management_finanzen, name='management_finanzen'),
+    path('management/finanzen/sponsor/', management_sponsor_choose, name='management_sponsor_choose'),
     path('management/halloffame/', management_halloffame, name='management_halloffame'),
     path('management/job-angebote/', management_job_offers, name='management_job_offers'),
 

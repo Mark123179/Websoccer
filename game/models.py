@@ -600,6 +600,14 @@ class StrengthModifierRule(models.Model):
 class League(models.Model):
     name = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
+    level = models.PositiveSmallIntegerField(
+        default=1,
+        verbose_name='Liga-Ebene',
+        help_text=(
+            'Ebene im Ligasystem des Landes: 1 = Erstliga, 2 = Zweitliga. '
+            'Steuert TV_SPLIT_LIGA und SPONSOR_SOCKEL (Finanzsystem Kap. 6/7).'
+        ),
+    )
     api_football_id = models.PositiveIntegerField(
         unique=True,
         null=True,
@@ -4275,11 +4283,13 @@ class GameSeasonState(models.Model):
         """
         is_transition = False
         advanced = False
+        prev_season = None
         if self.pk:
             previous = type(self).objects.filter(pk=self.pk).only(
                 'current_season', 'is_started'
             ).first()
             if previous is not None:
+                prev_season = previous.current_season
                 advanced = self.current_season != previous.current_season
                 started = self.is_started and not previous.is_started
                 is_transition = advanced or started
@@ -4297,6 +4307,26 @@ class GameSeasonState(models.Model):
                 import logging
                 logging.getLogger(__name__).exception(
                     'Vereinsstationen-Snapshot für Saison %s fehlgeschlagen',
+                    self.current_season,
+                )
+
+        # Finanz-Saisonjobs (Spec Kap. 15): Beim Vorrücken der Saisonnummer
+        # die alte Saison finanziell abschließen (Backstop, idempotent) und
+        # die neue öffnen (Snapshot, TV-Töpfe, Sponsorangebote). Beim
+        # offiziellen Saisonstart ebenfalls öffnen. Fehler dürfen das
+        # Speichern nie blockieren.
+        if is_transition:
+            try:
+                from game.economy.season_jobs import (
+                    finance_season_close, finance_season_open,
+                )
+                if advanced and prev_season is not None:
+                    finance_season_close(str(prev_season))
+                finance_season_open(str(self.current_season))
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    'Finanz-Saisonjobs beim Saisonübergang auf %s fehlgeschlagen',
                     self.current_season,
                 )
 
@@ -5939,3 +5969,174 @@ class FinanceMatchdayRun(models.Model):
 
     def __str__(self):
         return f'{self.club} — Saison {self.saison}, ST {self.spieltag} ({self.run_at:%d.%m.%Y %H:%M})'
+
+
+class LandKoeffizient(models.Model):
+    """Landes-5-Jahreswertung (Spec Kap. 7.1) — Punkte je Land und Saison.
+
+    Der Koeffizienten-Rang eines Landes ergibt sich aus der Summe der
+    Punkte der letzten 5 Saisons (game.economy.tv.land_rank_map). Beim
+    Launch geseedet mit realen UEFA-Werten (eine Zeile pro Land in der
+    Seed-Saison = komplette 5-Jahres-Summe). Sobald Europapokal-Ergebnisse
+    simuliert werden, schreibt finance_season_close echte Saisonpunkte.
+    """
+
+    land = models.CharField(max_length=80, verbose_name='Land')
+    saison = models.CharField(max_length=20, verbose_name='Saison')
+    punkte = models.DecimalField(
+        max_digits=8, decimal_places=3, verbose_name='Punkte',
+    )
+
+    class Meta:
+        unique_together = ('land', 'saison')
+        ordering = ['saison', '-punkte']
+        verbose_name = 'Landeskoeffizient'
+        verbose_name_plural = 'Landeskoeffizienten'
+
+    def __str__(self):
+        return f'{self.land} (Saison {self.saison}): {self.punkte}'
+
+
+class VereinKoeffizient(models.Model):
+    """Vereins-5-Jahreswertung (Spec Kap. 7.1) — Punkte je Verein und Saison.
+
+    Bestimmt den Koeffizienten-Rang innerhalb der Liga für den 20-%-
+    Koeffanteil der TV-Gelder (Kap. 7.3). Seed wie LandKoeffizient.
+    """
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='koeffizienten',
+        verbose_name='Verein',
+    )
+    saison = models.CharField(max_length=20, verbose_name='Saison')
+    punkte = models.DecimalField(
+        max_digits=8, decimal_places=3, verbose_name='Punkte',
+    )
+
+    class Meta:
+        unique_together = ('club', 'saison')
+        ordering = ['saison', '-punkte']
+        verbose_name = 'Vereinskoeffizient'
+        verbose_name_plural = 'Vereinskoeffizienten'
+
+    def __str__(self):
+        return f'{self.club} (Saison {self.saison}): {self.punkte}'
+
+
+class TVPot(models.Model):
+    """Ländertopf-Snapshot je Saison (Spec Kap. 7.2).
+
+    Wird bei finance_season_open aus TV_TOEPFE × Koeffizienten-Rang
+    eingefroren — der Rang bleibt damit saisonstabil, auch wenn sich die
+    Koeffizienten unterjährig ändern würden.
+    """
+
+    saison = models.CharField(max_length=20, verbose_name='Saison')
+    land = models.CharField(max_length=80, verbose_name='Land')
+    rang = models.PositiveSmallIntegerField(verbose_name='Koeffizienten-Rang')
+    gesamt = models.DecimalField(
+        max_digits=15, decimal_places=2, verbose_name='Gesamttopf (€)',
+    )
+
+    class Meta:
+        unique_together = ('saison', 'land')
+        ordering = ['saison', 'rang']
+        verbose_name = 'TV-Ländertopf'
+        verbose_name_plural = 'TV-Ländertöpfe'
+
+    def __str__(self):
+        return f'{self.land} Saison {self.saison}: Rang {self.rang}, {self.gesamt:,.0f} €'
+
+
+class SponsorOffer(models.Model):
+    """Sponsor-Jahresangebot (Spec Kap. 6.2) — Laufzeit genau 1 Saison.
+
+    3–5 Angebote je Verein und Saison, alle mit demselben Erwartungswert
+    ≈ Sponsorwert (kalibriert auf die Präsidenten-Erwartung, ±Streuung).
+    Genau EIN Angebot pro (Verein, Saison) darf gewaehlt=True sein
+    (DB-Constraint). variable_json beschreibt den variablen Anteil:
+    {'einheit': 'sieg'|'besucher'|'ziel', 'betrag': float,
+     'erwartete_events': float, 'ziel_label': str}.
+    """
+
+    TYP_SICHERHEIT = 'sicherheit'
+    TYP_SIEGGELD = 'sieggeld'
+    TYP_ZIELJAEGER = 'zieljaeger'
+    TYP_ZUSCHAUER = 'zuschauer'
+    TYP_CHOICES = [
+        (TYP_SICHERHEIT, 'Sicherheit (100 % fix)'),
+        (TYP_SIEGGELD, 'Sieggeld (fix + €/Sieg)'),
+        (TYP_ZIELJAEGER, 'Zieljäger (fix + Zielbonus)'),
+        (TYP_ZUSCHAUER, 'Zuschauer (fix + €/Besucher)'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='sponsor_offers',
+        verbose_name='Verein',
+    )
+    saison = models.CharField(max_length=20, verbose_name='Saison')
+    typ = models.CharField(
+        max_length=20, choices=TYP_CHOICES, verbose_name='Angebotstyp',
+    )
+    sponsor_name = models.CharField(max_length=100, verbose_name='Sponsorname')
+    fix_betrag = models.DecimalField(
+        max_digits=15, decimal_places=2, verbose_name='Fixbetrag / Saison (€)',
+    )
+    variable_json = models.JSONField(
+        default=dict, blank=True, verbose_name='Variabler Anteil',
+    )
+    erwartungswert = models.DecimalField(
+        max_digits=15, decimal_places=2, verbose_name='Erwartungswert (€)',
+    )
+    gewaehlt = models.BooleanField(default=False, verbose_name='Gewählt')
+    angenommen_at = models.DateTimeField(
+        null=True, blank=True, verbose_name='Angenommen am',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['club', 'saison', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'saison'],
+                condition=models.Q(gewaehlt=True),
+                name='unique_chosen_sponsor_offer_per_season',
+            ),
+        ]
+        indexes = [models.Index(fields=['club', 'saison'])]
+        verbose_name = 'Sponsorangebot'
+        verbose_name_plural = 'Sponsorangebote'
+
+    def __str__(self):
+        status = 'gewählt' if self.gewaehlt else 'offen'
+        return (f'{self.club} S{self.saison} — {self.get_typ_display()} '
+                f'({self.sponsor_name}, {status})')
+
+
+class SeasonFinanceState(models.Model):
+    """Idempotenz-Guard für die Saison-Finanzjobs (Spec Kap. 15).
+
+    opened_at gesetzt = finance_season_open gelaufen (Snapshot, TV-Töpfe,
+    Sponsorangebote); closed_at gesetzt = finance_season_close gelaufen
+    (Platz-/Koeffausschüttung, Fallschirme, Koeffizienten-Update).
+    report_json hält den Saison-Finanzreport des Close-Laufs.
+    """
+
+    saison = models.CharField(max_length=20, unique=True, verbose_name='Saison')
+    opened_at = models.DateTimeField(null=True, blank=True)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    report_json = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['-saison']
+        verbose_name = 'Saison-Finanzstatus'
+        verbose_name_plural = 'Saison-Finanzstatus'
+
+    def __str__(self):
+        o = 'offen' if self.opened_at else '—'
+        c = 'geschlossen' if self.closed_at else '—'
+        return f'Saison {self.saison}: open={o}, close={c}'

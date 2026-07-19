@@ -898,6 +898,20 @@ def close_matchday(league, season: str) -> dict:
     except Exception:
         pass
 
+    # ── Finanz-Saisonabschluss (Spec Kap. 15) ────────────────────────────────
+    # Ist die Liga durchgespielt, TV-Saisonausschüttung & Co. anstoßen.
+    # finance_season_close ist idempotent und verkraftet Teil-Läufe (andere
+    # Ligen noch offen). Fehler dürfen den Spieltag-Abschluss nie blockieren.
+    if season_complete:
+        try:
+            from game.economy.season_jobs import finance_season_close
+            finance_season_close(str(season))
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'Finanz-Saisonabschluss für Saison %s fehlgeschlagen', season,
+            )
+
     return {
         'closed': closed_matchday,
         'next': state.current_matchday if not season_complete else None,

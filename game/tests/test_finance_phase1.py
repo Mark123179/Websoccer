@@ -191,8 +191,11 @@ class MatchdayFinanceRunTests(TestCase):
         ).quantize(Decimal('0.01'))
         quote = get_decimal('BETRIEBSQUOTE', '0')
 
-        tv1 = FinanceTransaction.objects.get(
-            club=self.heim, typ='TV_SOCKEL', spieltag=1).betrag
+        # Alle Einnahmen des Erstlaufs (seit Phase 2: TV-Sockel + Sponsor-Fix).
+        from django.db.models import Sum
+        einnahmen1 = FinanceTransaction.objects.filter(
+            club=self.heim, spieltag=1, betrag__gt=0,
+        ).aggregate(s=Sum('betrag'))['s'] or Decimal('0')
         betrieb1 = FinanceTransaction.objects.get(
             club=self.heim, typ='BETRIEB', spieltag=1).betrag
         betrieb2 = FinanceTransaction.objects.get(
@@ -200,7 +203,8 @@ class MatchdayFinanceRunTests(TestCase):
 
         self.assertEqual(-betrieb1, sockel_rate)
         self.assertEqual(
-            -betrieb2, (sockel_rate + quote * tv1).quantize(Decimal('0.01')))
+            -betrieb2,
+            (sockel_rate + quote * einnahmen1).quantize(Decimal('0.01')))
 
     def test_missing_matchday_reports_error(self):
         summary = run_matchday_finance(self.league, '0', 99)
