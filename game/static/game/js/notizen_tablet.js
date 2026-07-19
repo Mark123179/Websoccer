@@ -11,8 +11,10 @@
   var notes = [];
   var activeId = null;
   var saveTimer = null;
+  var retryTimer = null;
   var loadFailed = false;   // GET fehlgeschlagen → niemals mit leerer Liste überschreiben
   var dirty = false;        // ungespeicherte Änderung vorhanden (für pagehide-Flush)
+  var RETRY_DELAY = 5000;   // ms bis zum automatischen Retry nach Fehler
 
   /* ---------- Speicherung ---------- */
   function getCsrf() {
@@ -20,6 +22,18 @@
     var m = document.cookie.match(/csrftoken=([^;]+)/);
     return m ? m[1] : "";
   }
+
+  function setSaveState(state) {
+    var el = document.getElementById("nt-saved");
+    if (!el) return;
+    el.setAttribute("data-state", state);
+    var span = el.querySelector("span");
+    if (!span) return;
+    if (state === "saving")  span.textContent = "Speichert\u202f\u2026";
+    if (state === "saved")   span.textContent = "Gespeichert";
+    if (state === "error")   span.textContent = "Nicht gespeichert \u2014 Erneut versuchen\u202f\u2026";
+  }
+
   function load(cb) {
     if (API) {
       fetch(API, { credentials: "same-origin" })
@@ -32,16 +46,29 @@
       cb(data);
     }
   }
+
   function doSave(keepalive) {
-    dirty = false;
+    clearTimeout(retryTimer);
+    setSaveState("saving");
     fetch(API, {
       method: "PUT",
       credentials: "same-origin",
       keepalive: !!keepalive,
       headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
       body: JSON.stringify({ notes: notes })
-    }).catch(function () { dirty = true; });
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      dirty = false;
+      setSaveState("saved");
+    }).catch(function () {
+      dirty = true;
+      setSaveState("error");
+      retryTimer = setTimeout(function () {
+        if (dirty && !loadFailed) doSave(false);
+      }, RETRY_DELAY);
+    });
   }
+
   function persist() {
     if (API) {
       if (loadFailed) return; // Server-Stand unbekannt → nicht überschreiben

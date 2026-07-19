@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
     {% if request.user.is_authenticated %}
     <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=3">
-    <link rel="stylesheet" href="{% static 'game/css/notizen_tablet.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'game/css/notizen_tablet.css' %}?v=3">
     {% endif %}
 
     {% block extra_css %}{% endblock %}
@@ -151,7 +151,7 @@
         window.NOTIZEN_API_URL = "{% url 'notizen_api' %}";
         window.NOTIZEN_CSRF = "{{ csrf_token }}";
     </script>
-    <script src="{% static 'game/js/notizen_tablet.js' %}?v=2"></script>
+    <script src="{% static 'game/js/notizen_tablet.js' %}?v=3"></script>
     {% endif %}
 
     {% if request.user.is_authenticated %}

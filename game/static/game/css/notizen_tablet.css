@@ -86,7 +86,12 @@
 .nt-title { font-size: 20px; font-weight: 900; }
 .nt-header .right { display: flex; align-items: center; gap: 12px; }
 .nt-saved { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: var(--muted, rgba(244,251,255,0.64)); }
-.nt-saved i { width: 7px; height: 7px; border-radius: 999px; background: var(--green, #30f29c); box-shadow: 0 0 8px rgba(48,242,156,0.6); }
+.nt-saved i { width: 7px; height: 7px; border-radius: 999px; background: var(--green, #30f29c); box-shadow: 0 0 8px rgba(48,242,156,0.6); transition: background 0.2s, box-shadow 0.2s; }
+.nt-saved[data-state="saving"] { color: rgba(244,251,255,0.45); }
+.nt-saved[data-state="saving"] i { background: rgba(244,251,255,0.35); box-shadow: none; animation: nt-pulse 1s ease-in-out infinite; }
+.nt-saved[data-state="error"] { color: var(--red, #ff5570); }
+.nt-saved[data-state="error"] i { background: var(--red, #ff5570); box-shadow: 0 0 8px rgba(255,85,112,0.55); }
+@keyframes nt-pulse { 0%,100%{ opacity:.35; } 50%{ opacity:1; } }
 .nt-close { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--line, rgba(44,231,255,0.18)); background: var(--panel, rgba(9,23,34,0.82)); color: var(--muted, rgba(244,251,255,0.64)); font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; transition: border-color 0.15s ease, color 0.15s ease; }
 .nt-close:hover { border-color: var(--line-strong, rgba(44,231,255,0.38)); color: #22e6ff; }
 .nt-close:active { transform: translateY(1px); }
