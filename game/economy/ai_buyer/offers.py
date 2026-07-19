@@ -136,6 +136,11 @@ def create_offer(buyer, player, *, kauftyp, wertung, params, saison,
     max_gebot = max_gebot_fuer(kauftyp, wertung, params)
     if max_gebot <= 0:
         raise AIBuyerError('Käufer-Maximum ist 0 — kein Angebot möglich.')
+    from ..kader import effective_squad_limit, squad_count
+    if squad_count(buyer) >= effective_squad_limit(buyer, saison):
+        raise AIBuyerError(
+            'Kein freier Kaderplatz beim Käufer — kein Angebot möglich.'
+        )
     if player.club_id and player.club.managed_by_id is not None:
         if not _manager_kadenz_ok(player.club, window_id, params,
                                   dry_run=dry_run):

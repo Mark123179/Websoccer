@@ -126,6 +126,12 @@ def _talent_deal_in_saison(club, saison):
     ).exists()
 
 
+def _kaderplatz_frei(club, saison):
+    """Käufer-Kaderplatz-Gate (Spec 9.1): Käufe nur mit freiem Platz."""
+    from ..kader import effective_squad_limit, squad_count
+    return squad_count(club) < effective_squad_limit(club, saison)
+
+
 def _kauf_versuchen(club, kandidatenliste, *, kauftyp, params, saison,
                     window_id, dry_run, spieltag, budget_max,
                     luecken_score=None, begruendung=''):
@@ -133,6 +139,8 @@ def _kauf_versuchen(club, kandidatenliste, *, kauftyp, params, saison,
 
     Returns dict {'aktion': 'deal'|'angebot'|'berechnet'|None, …}.
     """
+    if not _kaderplatz_frei(club, saison):
+        return {'aktion': None, 'grund': 'kader_voll'}
     for kandidat in kandidatenliste:
         if kandidat['forderung'] > budget_max:
             continue
@@ -224,6 +232,10 @@ def run_club_pruflauf(club, *, saison, spieltag, trigger='spieltag',
                 'anteil': str(governor['anteil']),
                 'limit': str(governor['limit']),
             }
+            return run
+
+        if not _kaderplatz_frei(club, saison):
+            _log('Kein freier Kaderplatz — keine Käufe.')
             return run
 
         anker = snapshot.gehalts_anker

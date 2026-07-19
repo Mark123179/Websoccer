@@ -25,8 +25,8 @@ from game.economy.ai_buyer.pruflauf import run_club_pruflauf
 from game.economy.kader import min_squad_size
 from game.economy.params import get_param
 from game.models import (
-    AIBuyerRun, AITransferOffer, Club, GameSeasonState, League, Player,
-    PlayerStrengthProfile, SeasonEconomySnapshot,
+    AIBuyerRun, AITransferOffer, Club, EconomyParameter, GameSeasonState,
+    League, Player, PlayerStrengthProfile, SeasonEconomySnapshot,
 )
 from game.views_transfermarkt import incoming_ai_offers
 
@@ -318,6 +318,58 @@ class DryRunTests(TestCase):
         )
         self.assertEqual(resp.status_code, 302)
         self.assertTrue(get_param('KI_KAEUFER', SAISON).get('dry_run'))
+
+
+class KaderplatzGateTests(TestCase):
+    """Käufer ohne freien Kaderplatz sendet NIE Angebote (Spec 9.1)."""
+
+    def setUp(self):
+        # Kaderlimit klein setzen, damit „voll" billig herstellbar ist.
+        EconomyParameter.objects.update_or_create(
+            saison=SAISON, key='KADER_MAX_BASIS', defaults={'value': 12},
+        )
+        self.params = _params()
+        self.league = _mk_league()
+        self.buyer = _mk_club('KI Voll 15', budget='80000000',
+                              league=self.league)
+        _fill_squad(self.buyer, 12)
+        self.seller = _mk_club('Manager Voll 16', league=self.league)
+        self.user = _mk_manager(self.seller, 'voll-manager')
+        self.player = _mk_player(self.seller, 'Voll Ziel')
+
+    def test_create_offer_blockiert_ohne_kaderplatz(self):
+        with self.assertRaises(AIBuyerError):
+            create_offer(
+                self.buyer, self.player, kauftyp='bedarf',
+                wertung=_wertung('8000000'), params=self.params,
+                saison=SAISON, window_id=WINDOW, dry_run=True,
+            )
+        self.assertFalse(
+            AITransferOffer.objects.filter(buyer_club=self.buyer).exists())
+
+    def test_pruflauf_ueberspringt_vollen_kader(self):
+        state, _ = GameSeasonState.objects.get_or_create(pk=1)
+        state.transfer_window_open = True
+        state.transfer_window_id = WINDOW
+        state.save()
+        run = run_club_pruflauf(
+            self.buyer, saison=SAISON, spieltag=1, trigger='test',
+        )
+        self.assertIsNotNone(run)
+        self.assertIn('Kein freier Kaderplatz — keine Käufe.',
+                      run.report['entscheidungen'])
+        self.assertEqual(run.report.get('kaeufe', []), [])
+        self.assertFalse(
+            AITransferOffer.objects.filter(buyer_club=self.buyer).exists())
+
+    def test_ein_freier_platz_erlaubt_angebot(self):
+        Player.objects.filter(club=self.buyer).first().delete()
+        offer = create_offer(
+            self.buyer, self.player, kauftyp='bedarf',
+            wertung=_wertung('8000000'), params=self.params,
+            saison=SAISON, window_id=WINDOW, dry_run=True,
+        )
+        self.assertEqual(offer.status, AITransferOffer.STATUS_BERECHNET)
 
 
 class SerializerLeakTests(TestCase):
