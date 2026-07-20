@@ -1,14 +1,23 @@
 """Zentrale Asset-URL-Bausteine.
 
-Alle URLs zeigen direkt auf https://playwebsoccer.de/assets/ —
-Uploads laufen ausschließlich auf dem Hetzner-Server, nicht auf Replit.
-assets_root() liefert den Dateisystem-Pfad für den Upload-Schreibzugriff.
+Produktions-Server (ASSETS_ROOT gesetzt): alle URLs zeigen auf
+https://playwebsoccer.de/assets/ — nginx liefert sie aus.
+
+Replit-Dev (kein ASSETS_ROOT): Uploads landen in game/static/assets/
+und werden von Django's staticfiles als /static/assets/ serviert.
 """
 
 import os as _os
 from django.conf import settings
 
-ASSETS_BASE = 'https://playwebsoccer.de/assets/'
+
+def _resolve_assets_base() -> str:
+    if getattr(settings, 'ASSETS_ROOT', None):
+        return 'https://playwebsoccer.de/assets/'
+    return '/static/assets/'
+
+
+ASSETS_BASE = _resolve_assets_base()
 
 
 def assets_root():
