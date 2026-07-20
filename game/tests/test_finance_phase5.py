@@ -5,6 +5,10 @@ Buchungs-Hooks), Zwangsversteigerung (Guards, verdeckte Gebote, Settlement
 mit Kaskade zum nächsthöheren Gebot), Verbandsabgabe (Formel + harter
 Disable-Schalter) und Monitoring-Aggregationen (Typ-Klassifikation,
 Schöpfung/Vernichtung, Ablöse/MW-Median).
+
+Phase 6 — KI-Bieter (run_ki_zwangsversteigerungen):
+  KI-Vereine (managed_by=None) geben plausible Gebote auf offene Auktionen ab.
+  Keine Geldschöpfung: Gebot ≤ budget; dry_run-Gate blockiert alle KI-Gebote.
 """
 
 import datetime
@@ -17,7 +21,8 @@ from django.utils import timezone
 from game.economy import monitoring
 from game.economy.booking import InsufficientFunds, book
 from game.economy.forced_auction import (
-    ForcedAuctionError, place_bid, resolve_due_auctions, start_auction,
+    ForcedAuctionError, place_bid, resolve_due_auctions,
+    run_ki_zwangsversteigerungen, start_auction,
 )
 from game.economy.kader import min_squad_size
 from game.economy.verbandsabgabe import (
@@ -25,7 +30,7 @@ from game.economy.verbandsabgabe import (
 )
 from game.models import (
     Club, ClubNewsItem, EconomyParameter, FinanceTransaction, ForcedAuction,
-    InsolvencyCase, League, Player,
+    ForcedAuctionBid, InsolvencyCase, League, Player, PlayerStrengthProfile,
 )
 
 SAISON = '0'
@@ -393,6 +398,198 @@ class MonitoringTests(TestCase):
         r = monitoring.totes_kapital_verlauf()
         self.assertEqual(r['verlauf'], [])
         self.assertFalse(r['alarm'])
+
+
+class KIZwangsversteigerungTests(TestCase):
+    """Phase 6 — KI-Vereine bieten bei Zwangsversteigerungen mit."""
+
+    def setUp(self):
+        self.league = _mk_league('KI-ZV-Liga')
+        self.minkader = min_squad_size()
+        self.debtor = _mk_club('Pleite KI', budget='-100000', league=self.league)
+        _fill_squad(self.debtor, self.minkader)
+        self.spieler = _mk_player(self.debtor, name='Auktion Held',
+                                  mw=Decimal('1000000'))
+        PlayerStrengthProfile.objects.create(
+            player=self.spieler, base_strength=130,
+        )
+        self.case = InsolvencyCase.objects.create(
+            club=self.debtor,
+            deadline_at=timezone.now() - datetime.timedelta(days=1),
+            betrag_bei_eroeffnung=Decimal('-100000'),
+        )
+        self.auction = start_auction(
+            self.case, self.spieler, Decimal('10000'),
+        )
+
+        self.ki_club = _mk_club('KI-Käufer', budget='500000', league=self.league)
+        _fill_squad(self.ki_club, self.minkader)
+
+        row = EconomyParameter.objects.get(saison=SAISON, key='KI_KAEUFER')
+        row.value = {**row.value, 'dry_run': False}
+        row.save(update_fields=['value'])
+
+    def test_dry_run_gate_verhindert_gebote(self):
+        row = EconomyParameter.objects.get(saison=SAISON, key='KI_KAEUFER')
+        row.value = {**row.value, 'dry_run': True}
+        row.save(update_fields=['value'])
+
+        summary = run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertTrue(summary['dry_run'])
+        self.assertEqual(summary['gebote'], 0)
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 0)
+
+    def test_ki_club_gibt_gebot_ab(self):
+        summary = run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertFalse(summary['dry_run'])
+        self.assertEqual(summary['auktionen'], 1)
+        self.assertGreater(summary['gebote'], 0)
+
+        bid = ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).first()
+        self.assertIsNotNone(bid)
+        self.assertGreaterEqual(bid.amount, self.auction.min_bid)
+        self.assertLessEqual(bid.amount, self.ki_club.budget)
+        self.assertIsNone(bid.manager)
+
+    def test_gebot_unter_mindestgebot_wird_nicht_platziert(self):
+        Club.objects.filter(pk=self.ki_club.pk).update(budget=Decimal('5000'))
+        summary = run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 0)
+
+    def test_schuldnerverein_bietet_nicht_mit(self):
+        Club.objects.filter(pk=self.debtor.pk).update(
+            budget=Decimal('500000'), managed_by=None,
+        )
+        run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.debtor,
+        ).count(), 0)
+
+    def test_ki_club_mit_vollem_kader_bietet_nicht(self):
+        from game.economy.kader import effective_squad_limit
+        limit = effective_squad_limit(self.ki_club, SAISON)
+        fehlende = limit - self.minkader
+        if fehlende > 0:
+            _fill_squad(self.ki_club, fehlende)
+
+        summary = run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 0)
+
+    def test_ki_club_ohne_budget_bietet_nicht(self):
+        Club.objects.filter(pk=self.ki_club.pk).update(budget=Decimal('0'))
+        run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 0)
+
+    def test_ki_gebot_idempotent_bei_wiederholung(self):
+        tag = self.auction.ends_on - datetime.timedelta(days=1)
+        run_ki_zwangsversteigerungen(today=tag, saison=SAISON)
+        run_ki_zwangsversteigerungen(today=tag, saison=SAISON)
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 1)
+
+    def test_ki_gebot_fuehrt_zu_zuschlag_bei_aufloesung(self):
+        run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        bid = ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).first()
+        self.assertIsNotNone(bid, 'KI-Gebot fehlt — vorheriger Schritt fehlgeschlagen.')
+
+        summary = resolve_due_auctions(today=self.auction.ends_on)
+        self.assertEqual(summary['settled'], 1, 'Zuschlag erwartet.')
+        self.auction.refresh_from_db()
+        self.assertEqual(self.auction.status, ForcedAuction.STATUS_SETTLED)
+        self.assertEqual(self.auction.winning_bid.club_id, self.ki_club.pk)
+
+    def test_pausierter_ki_club_bietet_nicht(self):
+        Club.objects.filter(pk=self.ki_club.pk).update(ai_buyer_paused=True)
+        run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on - datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 0)
+
+    def test_abgelaufene_auktion_bekommt_keine_ki_gebote(self):
+        run_ki_zwangsversteigerungen(
+            today=self.auction.ends_on + datetime.timedelta(days=1),
+            saison=SAISON,
+        )
+        self.assertEqual(summary := ForcedAuctionBid.objects.filter(
+            auction=self.auction,
+        ).count(), 0)
+
+    def test_ki_ohne_akuten_bedarf_bietet_nicht(self):
+        """KI-Verein ohne akuten Kader-Bedarf gibt kein Gebot ab."""
+        from unittest.mock import patch
+
+        empty_analyse = {
+            'elf': {'formation': {}, 'zuordnung': [], 'staerken': []},
+            'positionen': [],
+            'akut': [],
+            'posbester': {},
+        }
+        with patch('game.economy.ai_buyer.bedarf.bedarfs_analyse',
+                   return_value=empty_analyse):
+            summary = run_ki_zwangsversteigerungen(
+                today=self.auction.ends_on - datetime.timedelta(days=1),
+                saison=SAISON,
+            )
+        self.assertEqual(summary['gebote'], 0)
+        self.assertEqual(ForcedAuctionBid.objects.filter(
+            auction=self.auction, club=self.ki_club,
+        ).count(), 0)
+
+    def test_command_ki_gebote_ohne_faellige_auktionen(self):
+        """Command setzt KI-Gebote auch dann, wenn heute keine Auktion fällig ist."""
+        from io import StringIO
+        from django.core.management import call_command
+
+        datum_vor_ablauf = str(
+            self.auction.ends_on - datetime.timedelta(days=2)
+        )
+        out = StringIO()
+        call_command(
+            'resolve_forced_auctions',
+            date=datum_vor_ablauf,
+            stdout=out,
+        )
+        self.assertGreater(
+            ForcedAuctionBid.objects.filter(auction=self.auction).count(), 0,
+            'KI-Gebote wurden nicht gesetzt, obwohl Auktion offen ist.',
+        )
 
 
 class CreatorSeitenSmokeTests(TestCase):

@@ -10,9 +10,16 @@ Gebote sind verdeckt (wie Scouting): höchstes Gebot gewinnt, bei Gleichstand
 das früher abgegebene. Keine Budget-Reservierung beim Bieten — die Deckung
 wird beim Zuschlag geprüft (aktive Ausgabe, Grundregel 2); scheitert der
 Höchstbietende, rückt das nächsthöhere Gebot nach.
+
+Phase 6 — KI-Vereine bieten mit (Spec Kap. 11):
+  run_ki_zwangsversteigerungen() lässt KI-Vereine (managed_by IS NULL,
+  ai_buyer_paused=False) plausible Gebote auf offene Auktionen abgeben.
+  Kein Transferfenster-Gate (Zwangsversteigerungen sind Notverfahren).
+  KI_KAEUFER.dry_run muss False sein — sonst keine Gebote.
 """
 import datetime
-
+import hashlib
+import logging
 from decimal import Decimal
 
 from django.db import transaction
@@ -21,6 +28,8 @@ from django.utils import timezone
 from .booking import InsufficientFunds
 from .kader import min_squad_size, squad_count
 from .transfers import TransferError, execute_money_transfer
+
+logger = logging.getLogger(__name__)
 
 #: Laufzeit einer Zwangsversteigerung ab Ansetzung (echte Tage).
 AUKTIONS_LAUFZEIT_TAGE = 7
@@ -141,6 +150,192 @@ def place_bid(auction, club, manager, amount, *, today=None):
             defaults={'manager': manager, 'amount': amount},
         )
     return bid
+
+
+def _ki_gebot_betrag(auction, wertung, club_budget, params):
+    """KI-Gebot für eine Zwangsversteigerung: Schmerzgrenzen-Maximum,
+    deterministisch variiert (±streuung), quantisiert, geclampt.
+
+    Returns das Gebot als Decimal oder None wenn Gebot < min_bid.
+    """
+    from .ai_buyer.offers import max_gebot_fuer
+    from .negotiation import _quantisiere
+
+    max_ki = max_gebot_fuer('bedarf', wertung, params)
+    if max_ki <= 0:
+        return None
+
+    schritt = Decimal(str(params.get('gebot_quantisierung', 10000)))
+    streuung = Decimal(str(params.get('streuung', 0.05)))
+
+    noise_seed = f'{club_budget}:{auction.pk}'
+    digest = hashlib.sha256(noise_seed.encode()).hexdigest()
+    anteil = Decimal(int(digest[:8], 16)) / Decimal('4294967295')
+    faktor = Decimal('1') - streuung + anteil * 2 * streuung
+
+    verfuegbar = Decimal(str(club_budget))
+    gebot_raw = min(max_ki, verfuegbar) * faktor
+    gebot = _quantisiere(gebot_raw, schritt)
+    gebot = min(gebot, verfuegbar)
+
+    if gebot < auction.min_bid:
+        if schritt > 0:
+            gebot_aufgerundet = (
+                (auction.min_bid / schritt).to_integral_value(
+                    rounding='ROUND_CEILING',
+                ) * schritt
+            )
+        else:
+            gebot_aufgerundet = auction.min_bid
+        gebot = min(gebot_aufgerundet, verfuegbar)
+
+    if gebot < auction.min_bid:
+        return None
+
+    return gebot
+
+
+def run_ki_zwangsversteigerungen(today=None, saison=None):
+    """KI-Vereine geben Gebote auf offene Zwangsversteigerungen ab (Phase 6).
+
+    Aufruf täglich vom resolve_forced_auctions-Command — VOR der Auflösung,
+    damit KI-Gebote beim Zuschlag berücksichtigt werden. Läuft unabhängig
+    davon, ob heute Auktionen fällig sind (offene Auktionen erhalten Gebote).
+
+    Kein Transferfenster-Gate: Zwangsversteigerungen sind admin-initiierte
+    Notverfahren, die außerhalb des regulären Marktzyklus stattfinden.
+    KI_KAEUFER.dry_run=True → keine Gebote (Sicherheitsnetz).
+
+    Bedarfs-Gate: KI-Vereine bieten nur, wenn sie einen akuten Kader-Bedarf
+    haben (bedarfs_analyse.akut ≠ ∅ oder Kader zu klein für Beste-11).
+    Positions-Check: Spieler muss eine der akuten Positionen abdecken können
+    (Spieler ohne Positions-Codes = unvollständige Daten, keine Restriction).
+
+    Returns dict: {'auktionen': int, 'gebote': int, 'uebersprungen': int,
+                   'dry_run': bool}
+    """
+    from game.models import Club, ForcedAuction
+
+    from .ai_buyer.bedarf import bedarfs_analyse, liga_soll
+    from .ai_buyer.offers import max_gebot_fuer
+    from .kader import effective_squad_limit
+    from .params import get_param
+    from .schmerzgrenze import bewertung
+    from .snapshot import ensure_season_snapshot
+
+    today = _today(today)
+    if saison is None:
+        from game.finance import current_sim_season
+        saison = current_sim_season() or '0'
+
+    params = get_param('KI_KAEUFER', saison)
+    dry_run = bool(params.get('dry_run', True))
+
+    summary = {
+        'auktionen': 0, 'gebote': 0, 'uebersprungen': 0, 'dry_run': dry_run,
+    }
+    if dry_run:
+        logger.info('KI-Zwangsversteigerung: dry_run=True — keine Gebote.')
+        return summary
+
+    snapshot = ensure_season_snapshot(saison)
+
+    offene_auktionen = list(
+        ForcedAuction.objects
+        .filter(status=ForcedAuction.STATUS_OPEN, ends_on__gte=today)
+        .select_related(
+            'player', 'seller_club',
+            'player__strength_profile',
+        )
+        .prefetch_related('player__source_ratings')
+    )
+
+    ki_clubs = list(
+        Club.objects
+        .filter(managed_by__isnull=True, ai_buyer_paused=False)
+        .select_related('stadium', 'league')
+    )
+
+    # Bedarfsanalyse je KI-Verein einmal vorberechnen (liga_soll je Liga cachen).
+    # klub_bedarf[pk] = None   → Kader zu klein für Beste-11 (dringendster Bedarf)
+    # klub_bedarf[pk] = set()  → kein akuter Bedarf (kein Gebot)
+    # klub_bedarf[pk] = {codes} → akute Positions-Lücken
+    liga_soll_cache: dict = {}
+    klub_bedarf: dict = {}
+    for club in ki_clubs:
+        if club.league_id is None:
+            klub_bedarf[club.pk] = set()
+            continue
+        if club.league_id not in liga_soll_cache:
+            liga_soll_cache[club.league_id] = liga_soll(club.league)
+        soll = liga_soll_cache[club.league_id]
+        analyse = bedarfs_analyse(club, soll, params)
+        if analyse['elf'] is None:
+            klub_bedarf[club.pk] = None
+        elif analyse['akut']:
+            klub_bedarf[club.pk] = {p['position'] for p in analyse['akut']}
+        else:
+            klub_bedarf[club.pk] = set()
+
+    for auction in offene_auktionen:
+        summary['auktionen'] += 1
+        player = auction.player
+
+        wert = bewertung(player, saison=saison, snapshot=snapshot)
+        if wert is None:
+            logger.debug(
+                'KI-ZV: Spieler %s (%d) ohne Bewertung — übersprungen.',
+                player.full_name, player.pk,
+            )
+            summary['uebersprungen'] += 1
+            continue
+
+        if max_gebot_fuer('bedarf', wert, params) < auction.min_bid:
+            logger.debug(
+                'KI-ZV: Max-Gebot für %s unterschreitet Mindestgebot %s — '
+                'übersprungen.', player.full_name, auction.min_bid,
+            )
+            summary['uebersprungen'] += 1
+            continue
+
+        player_codes = frozenset(player.all_position_codes)
+
+        for club in ki_clubs:
+            if club.pk == auction.seller_club_id:
+                continue
+
+            if squad_count(club) >= effective_squad_limit(club, saison):
+                continue
+
+            akut = klub_bedarf.get(club.pk)
+            if akut is not None and not akut:
+                continue
+            if akut is not None and player_codes and not (akut & player_codes):
+                continue
+
+            club.refresh_from_db(fields=['budget'])
+            verfuegbar = club.budget if club.budget is not None else Decimal('0')
+            if verfuegbar <= 0:
+                continue
+
+            gebot = _ki_gebot_betrag(auction, wert, verfuegbar, params)
+            if gebot is None:
+                continue
+
+            try:
+                place_bid(auction, club, None, gebot, today=today)
+                summary['gebote'] += 1
+                logger.info(
+                    'KI-ZV: %s bietet %s € auf %s.',
+                    club.name, gebot, player.full_name,
+                )
+            except ForcedAuctionError as exc:
+                logger.debug(
+                    'KI-ZV: Gebot von %s auf %s abgelehnt: %s',
+                    club.name, player.full_name, exc,
+                )
+
+    return summary
 
 
 def resolve_due_auctions(today=None):
