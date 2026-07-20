@@ -77,6 +77,55 @@ Status: 0 Alarm · 0 außerhalb Korridor · 3 nicht messbar
 - Der einzelne Zuschauer-Ausreißer (Gladbach, Ratio exakt 1,30) liegt auf der
   Bandkante und ist mit 1 von 9 Spielen kein Muster.
 
+## Zweiter Lauf — erste vollständige Kalibrierung (20.07.2026, Saison 0 abgeschlossen)
+
+Vorbereitung: Saison 0 wurde zu Ende simuliert (Spieltage 7–34,
+`play_matchday`), danach `finance_season_close --saison 0`, Sim-Saison auf 1
+gestellt und der Saison-1-Snapshot via `finance_season_open` bestätigt
+(war bereits geöffnet — Snapshot vorhanden).
+
+```
+Kalibrierungs-Report — Saison 0 (Spec Kap. 16)
+Status: 1 Alarm · 1 außerhalb Korridor · 1 nicht messbar
+
+[ALARM] Geldmengenwachstum vs. MW-Drift
+    Ist: Wachstum +124,5 % · MW-Drift +0,0 %
+    (Geldmenge 1,227 Mrd. → 2,756 Mrd. €; netto +1,528 Mrd. €)
+[NICHT MESSBAR] Ablöse/MW-Median
+    Ist: Median — (0 Transfers mit MW-Bezug in Saison 0)
+[AUSSERHALB KORRIDOR] Gehaltslasten nach Vereinsgröße
+    Ist: klein 15,9 % (Ziel 16–20) · top 20,1 % (Ziel 28–30) — warn, kein Alarm
+[IM KORRIDOR] Zuschauer-Plausibilität
+    Ist: Median-Ratio 1,03 · Auslastung 80,7 % (261 Heimspiele)
+    Ausreißer nur an der Bandobergrenze 1,30 (Mainz, Bremen, Gladbach)
+[IM KORRIDOR] KI-Kaufvolumen-Anteil
+    Ist: 0 % von 42.500.000 € Transfervolumen (Limit 50 %)
+```
+
+### Abweichungsanalyse & Entscheidung
+
+- **Geldmengen-Alarm (+124,5 %)** ist teilweise strukturell: Saison 0 startet
+  von der Genesis-Basis (niedrige Anfangskonten), die volle TV-Ausschüttung
+  und Prämien der ersten kompletten Saison wirken relativ dazu enorm; die
+  MW-Drift ist 0 %, weil beide Snapshots denselben statischen MW-Median
+  (700 000 €) tragen. Dennoch ist der absolute Nettoüberschuss
+  (+1,53 Mrd. €) ein echtes Senken-Defizit.
+- **Regler-Entscheidung (eine Anpassung, kleiner Schritt):**
+  `BETRIEBSQUOTE` **0,34 → 0,38** ab **Saison 1** (EconomyParameter-Zeile
+  `(saison=1, key=BETRIEBSQUOTE)`, Saison-0-Wert unangetastet —
+  Snapshot-Semantik). Wirkung wird nach Abschluss von Saison 1 bewertet.
+- Zusätzlich gilt die Spec-Empfehlung: bei anhaltendem Geldmengen-Alarm
+  **Auktionsvolumen erhöhen** (zweite große Geldsenke, Admin-Aufgabe ohne
+  Parameter-Key).
+- **Gehaltslasten (warn):** beide Gruppen unter dem Korridor, Abstand < 10 pp
+  (kein Alarm). Bewusst **keine zweite Anpassung** in derselben Saison
+  (Regel: ein Regler pro Saison). Kandidat für Saison 2:
+  `GEHALT_PROGRESSION` anheben (spreizt v. a. die Top-Quote Richtung
+  28–30 %), falls sich das Bild in Saison 1 bestätigt.
+- **Ablöse/MW-Median** bleibt nicht messbar — in Saison 0 fanden keine
+  MW-relevanten Transfers statt (KI-Käufer im dry_run). Erwartung: ab
+  Saison 1 messbar, sobald KI-Transfers scharf laufen.
+
 ### Wiederholungs-Workflow (jede Saison nach Abschluss)
 
 1. `python manage.py kalibrierungs_report --saison <abgeschlossene Saison>`

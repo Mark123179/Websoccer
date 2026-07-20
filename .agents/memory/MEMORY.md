@@ -83,4 +83,5 @@
 - [Finanz-Ledger Phase 1](finance-ledger-phase1.md) — alles über book() (nie budget direkt); Betriebskosten-Fenster halboffen (prev,run]; book_many braucht order_by('pk') im Lock; log_club_transaction bucht jetzt MIT.
 - [ManagerProfile auto-create signal](manager-profile-auto-signal.md) — post_save auf auth.User legt IMMER ein ManagerProfile an; Tests müssen get() statt create() nutzen.
 - [Finanz-Ledger Buchungs-Konvention](finance-ledger-convention.md) — Budget-Mutationen NUR via book() (log_club_transaction = Legacy-Wrapper, bucht mit); saison = numerische Sim-Saison, nie TM-Label; Nav-Pills zentral in _nav_pills.html.
+- [Season rollover is manual](season-rollover-manual.md) — play_matchday → finance_season_close → current_season+1 per Shell → finance_season_open; sonst bleiben Kalibrierungs-Kennzahlen nicht_messbar.
 - [PlayerClubHistory Phase 0](player-club-history-phase0.md) — Creator/Admin-Edits = Korrektur (Suppress-Flag, KEINE Zeile); Karrierende per Name nicht pk ausschließen; from_db nur __dict__ lesen (N+1).
