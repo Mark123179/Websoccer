@@ -1,0 +1,558 @@
+{
+  "game/images/backgrounds/stadium-hero.jpg": {
+    "factor": 0.979,
+    "luminance": 61.3
+  },
+  "game/images/stadiums/germany/1-fc-saarbrucken.jpg": {
+    "factor": 0.55,
+    "luminance": 141.5
+  },
+  "game/images/stadiums/germany/1860 munich.jpg": {
+    "factor": 0.55,
+    "luminance": 146.4
+  },
+  "game/images/stadiums/germany/1860-munich-2.jpg": {
+    "factor": 0.55,
+    "luminance": 146.4
+  },
+  "game/images/stadiums/germany/aachen.jpg": {
+    "factor": 0.609,
+    "luminance": 98.4
+  },
+  "game/images/stadiums/germany/aalen.jpg": {
+    "factor": 0.55,
+    "luminance": 157.0
+  },
+  "game/images/stadiums/germany/altglienicke.jpg": {
+    "factor": 0.55,
+    "luminance": 125.7
+  },
+  "game/images/stadiums/germany/augsburg-2.jpg": {
+    "factor": 0.55,
+    "luminance": 125.9
+  },
+  "game/images/stadiums/germany/augsburg.jpg": {
+    "factor": 0.55,
+    "luminance": 116.6
+  },
+  "game/images/stadiums/germany/b-dortmund.jpg": {
+    "factor": 0.55,
+    "luminance": 136.8
+  },
+  "game/images/stadiums/germany/b-gladbach-2.jpg": {
+    "factor": 0.645,
+    "luminance": 93.1
+  },
+  "game/images/stadiums/germany/b-gladbach.jpg": {
+    "factor": 0.552,
+    "luminance": 108.8
+  },
+  "game/images/stadiums/germany/b-leverkusen.jpg": {
+    "factor": 0.55,
+    "luminance": 150.9
+  },
+  "game/images/stadiums/germany/bamberg.jpg": {
+    "factor": 0.55,
+    "luminance": 177.1
+  },
+  "game/images/stadiums/germany/barockstadt.jpg": {
+    "factor": 0.608,
+    "luminance": 98.7
+  },
+  "game/images/stadiums/germany/bayreuth.jpg": {
+    "factor": 0.55,
+    "luminance": 128.3
+  },
+  "game/images/stadiums/germany/berliner-dynamo.jpg": {
+    "factor": 0.622,
+    "luminance": 96.5
+  },
+  "game/images/stadiums/germany/bielefeld.jpg": {
+    "factor": 0.55,
+    "luminance": 140.8
+  },
+  "game/images/stadiums/germany/bochum.jpg": {
+    "factor": 0.55,
+    "luminance": 127.4
+  },
+  "game/images/stadiums/germany/carl zeiss jena.jpg": {
+    "factor": 0.55,
+    "luminance": 133.4
+  },
+  "game/images/stadiums/germany/chemie-leipzig.jpg": {
+    "factor": 0.55,
+    "luminance": 118.2
+  },
+  "game/images/stadiums/germany/chemnitzer.jpg": {
+    "factor": 0.55,
+    "luminance": 149.1
+  },
+  "game/images/stadiums/germany/cottbus.jpg": {
+    "factor": 0.55,
+    "luminance": 126.9
+  },
+  "game/images/stadiums/germany/darmstadt.jpg": {
+    "factor": 0.605,
+    "luminance": 99.1
+  },
+  "game/images/stadiums/germany/dortmund ii.jpg": {
+    "factor": 0.55,
+    "luminance": 128.8
+  },
+  "game/images/stadiums/germany/dresdner.jpg": {
+    "factor": 0.621,
+    "luminance": 96.6
+  },
+  "game/images/stadiums/germany/duisburg.jpg": {
+    "factor": 0.554,
+    "luminance": 108.3
+  },
+  "game/images/stadiums/germany/duren.jpg": {
+    "factor": 0.55,
+    "luminance": 128.7
+  },
+  "game/images/stadiums/germany/dynamo dresden.jpg": {
+    "factor": 0.563,
+    "luminance": 106.5
+  },
+  "game/images/stadiums/germany/e-frankfurt.jpg": {
+    "factor": 0.55,
+    "luminance": 153.1
+  },
+  "game/images/stadiums/germany/eintracht braunschweig.jpg": {
+    "factor": 0.55,
+    "luminance": 158.4
+  },
+  "game/images/stadiums/germany/eintracht-celle.jpg": {
+    "factor": 0.55,
+    "luminance": 121.3
+  },
+  "game/images/stadiums/germany/eintracht-norderstedt.jpg": {
+    "factor": 0.55,
+    "luminance": 118.6
+  },
+  "game/images/stadiums/germany/elversberg-2.jpg": {
+    "factor": 0.55,
+    "luminance": 157.7
+  },
+  "game/images/stadiums/germany/elversberg.jpg": {
+    "factor": 0.55,
+    "luminance": 157.7
+  },
+  "game/images/stadiums/germany/empor-berlin.jpg": {
+    "factor": 0.622,
+    "luminance": 96.4
+  },
+  "game/images/stadiums/germany/engers.jpg": {
+    "factor": 0.55,
+    "luminance": 118.0
+  },
+  "game/images/stadiums/germany/erfurt.jpg": {
+    "factor": 0.572,
+    "luminance": 104.9
+  },
+  "game/images/stadiums/germany/erkenschwick.jpg": {
+    "factor": 0.55,
+    "luminance": 134.8
+  },
+  "game/images/stadiums/germany/f-dusseldorf-2.jpg": {
+    "factor": 0.55,
+    "luminance": 129.6
+  },
+  "game/images/stadiums/germany/f-dusseldorf.jpg": {
+    "factor": 0.557,
+    "luminance": 107.7
+  },
+  "game/images/stadiums/germany/fc bayern ii.jpg": {
+    "factor": 0.55,
+    "luminance": 146.4
+  },
+  "game/images/stadiums/germany/fc erzgebirge aue.jpg": {
+    "factor": 0.55,
+    "luminance": 145.1
+  },
+  "game/images/stadiums/germany/fc-bayern.jpg": {
+    "factor": 0.562,
+    "luminance": 106.8
+  },
+  "game/images/stadiums/germany/fc-viktoria-koln.jpg": {
+    "factor": 0.55,
+    "luminance": 179.6
+  },
+  "game/images/stadiums/germany/fortuna koln.jpg": {
+    "factor": 0.55,
+    "luminance": 145.9
+  },
+  "game/images/stadiums/germany/freiburg-2.jpg": {
+    "factor": 0.55,
+    "luminance": 163.4
+  },
+  "game/images/stadiums/germany/freiburg.jpg": {
+    "factor": 0.55,
+    "luminance": 113.5
+  },
+  "game/images/stadiums/germany/furstenwalde.jpg": {
+    "factor": 0.55,
+    "luminance": 130.8
+  },
+  "game/images/stadiums/germany/greuther furth-2.jpg": {
+    "factor": 0.55,
+    "luminance": 138.0
+  },
+  "game/images/stadiums/germany/greuther furth.jpg": {
+    "factor": 0.55,
+    "luminance": 138.0
+  },
+  "game/images/stadiums/germany/hallescher.jpg": {
+    "factor": 0.55,
+    "luminance": 124.2
+  },
+  "game/images/stadiums/germany/hamburger sv.jpg": {
+    "factor": 0.55,
+    "luminance": 121.2
+  },
+  "game/images/stadiums/germany/hamburger-sv-2.jpg": {
+    "factor": 0.555,
+    "luminance": 108.0
+  },
+  "game/images/stadiums/germany/hamburger-sv-3.jpg": {
+    "factor": 0.555,
+    "luminance": 108.0
+  },
+  "game/images/stadiums/germany/hannover-2.jpg": {
+    "factor": 0.55,
+    "luminance": 144.0
+  },
+  "game/images/stadiums/germany/hannover.jpg": {
+    "factor": 0.55,
+    "luminance": 125.0
+  },
+  "game/images/stadiums/germany/hansa rostock.jpg": {
+    "factor": 0.55,
+    "luminance": 165.0
+  },
+  "game/images/stadiums/germany/havelse.jpg": {
+    "factor": 0.55,
+    "luminance": 125.0
+  },
+  "game/images/stadiums/germany/heidenheim.jpg": {
+    "factor": 0.55,
+    "luminance": 132.7
+  },
+  "game/images/stadiums/germany/herford.jpg": {
+    "factor": 0.55,
+    "luminance": 130.0
+  },
+  "game/images/stadiums/germany/herne.jpg": {
+    "factor": 0.55,
+    "luminance": 117.2
+  },
+  "game/images/stadiums/germany/hertha-berlin.jpg": {
+    "factor": 0.55,
+    "luminance": 114.2
+  },
+  "game/images/stadiums/germany/hertha-bsc-II.jpg": {
+    "factor": 0.55,
+    "luminance": 125.7
+  },
+  "game/images/stadiums/germany/hoffenheim-2.jpg": {
+    "factor": 0.55,
+    "luminance": 115.7
+  },
+  "game/images/stadiums/germany/hoffenheim.jpg": {
+    "factor": 0.55,
+    "luminance": 145.3
+  },
+  "game/images/stadiums/germany/holstein kiel.jpg": {
+    "factor": 0.55,
+    "luminance": 142.8
+  },
+  "game/images/stadiums/germany/homburg.jpg": {
+    "factor": 0.55,
+    "luminance": 122.8
+  },
+  "game/images/stadiums/germany/horst-emscher.jpg": {
+    "factor": 0.55,
+    "luminance": 127.3
+  },
+  "game/images/stadiums/germany/ingolstadt.jpg": {
+    "factor": 0.55,
+    "luminance": 128.0
+  },
+  "game/images/stadiums/germany/kaiserlautern-2.jpg": {
+    "factor": 0.55,
+    "luminance": 115.9
+  },
+  "game/images/stadiums/germany/kaiserlautern.jpg": {
+    "factor": 0.55,
+    "luminance": 115.9
+  },
+  "game/images/stadiums/germany/karlsruhr.jpg": {
+    "factor": 0.55,
+    "luminance": 127.0
+  },
+  "game/images/stadiums/germany/kassel.jpg": {
+    "factor": 0.55,
+    "luminance": 116.8
+  },
+  "game/images/stadiums/germany/kfc uerdingen 05.jpg": {
+    "factor": 0.557,
+    "luminance": 107.7
+  },
+  "game/images/stadiums/germany/kickers-offenbach.jpg": {
+    "factor": 0.55,
+    "luminance": 135.1
+  },
+  "game/images/stadiums/germany/koln-2.jpg": {
+    "factor": 0.55,
+    "luminance": 128.3
+  },
+  "game/images/stadiums/germany/koln.jpg": {
+    "factor": 0.55,
+    "luminance": 140.1
+  },
+  "game/images/stadiums/germany/konstanz.jpg": {
+    "factor": 0.55,
+    "luminance": 110.0
+  },
+  "game/images/stadiums/germany/magdeburg.jpg": {
+    "factor": 0.55,
+    "luminance": 128.5
+  },
+  "game/images/stadiums/germany/mainz-2.jpg": {
+    "factor": 0.55,
+    "luminance": 131.0
+  },
+  "game/images/stadiums/germany/mainz.jpg": {
+    "factor": 0.55,
+    "luminance": 146.7
+  },
+  "game/images/stadiums/germany/meinerzhagen.jpg": {
+    "factor": 0.651,
+    "luminance": 92.2
+  },
+  "game/images/stadiums/germany/motor-altenburg.jpg": {
+    "factor": 0.664,
+    "luminance": 90.4
+  },
+  "game/images/stadiums/germany/munchner-olympiastadion-stadium.jpg": {
+    "factor": 0.55,
+    "luminance": 134.4
+  },
+  "game/images/stadiums/germany/neunkirchen.jpg": {
+    "factor": 0.55,
+    "luminance": 111.3
+  },
+  "game/images/stadiums/germany/nurnburg-2.jpg": {
+    "factor": 0.55,
+    "luminance": 142.6
+  },
+  "game/images/stadiums/germany/nurnburg.jpg": {
+    "factor": 0.55,
+    "luminance": 163.0
+  },
+  "game/images/stadiums/germany/oberneuland.jpg": {
+    "factor": 0.55,
+    "luminance": 120.6
+  },
+  "game/images/stadiums/germany/oggersheim.jpg": {
+    "factor": 0.55,
+    "luminance": 122.3
+  },
+  "game/images/stadiums/germany/osnabruck.jpg": {
+    "factor": 0.55,
+    "luminance": 141.0
+  },
+  "game/images/stadiums/germany/paderborn.jpg": {
+    "factor": 0.55,
+    "luminance": 131.1
+  },
+  "game/images/stadiums/germany/passau.jpg": {
+    "factor": 0.55,
+    "luminance": 136.8
+  },
+  "game/images/stadiums/germany/pirmasens.jpg": {
+    "factor": 0.55,
+    "luminance": 122.4
+  },
+  "game/images/stadiums/germany/redbull-leipzig.jpg": {
+    "factor": 0.55,
+    "luminance": 129.1
+  },
+  "game/images/stadiums/germany/regensburg.jpg": {
+    "factor": 0.55,
+    "luminance": 118.9
+  },
+  "game/images/stadiums/germany/rehden.jpg": {
+    "factor": 0.55,
+    "luminance": 114.9
+  },
+  "game/images/stadiums/germany/rheydter.jpg": {
+    "factor": 0.55,
+    "luminance": 109.8
+  },
+  "game/images/stadiums/germany/rielasingen.jpg": {
+    "factor": 0.55,
+    "luminance": 128.8
+  },
+  "game/images/stadiums/germany/rodinghausen.jpg": {
+    "factor": 0.55,
+    "luminance": 157.1
+  },
+  "game/images/stadiums/germany/rot weiss oberhausen.jpg": {
+    "factor": 0.55,
+    "luminance": 138.0
+  },
+  "game/images/stadiums/germany/rot-weiss-essen.jpg": {
+    "factor": 0.55,
+    "luminance": 135.2
+  },
+  "game/images/stadiums/germany/sachsen-leipzig.jpg": {
+    "factor": 0.55,
+    "luminance": 118.2
+  },
+  "game/images/stadiums/germany/sandhausen.jpg": {
+    "factor": 0.55,
+    "luminance": 113.3
+  },
+  "game/images/stadiums/germany/sc preussen munster.jpg": {
+    "factor": 0.55,
+    "luminance": 144.2
+  },
+  "game/images/stadiums/germany/schalke-2.jpg": {
+    "factor": 0.55,
+    "luminance": 168.8
+  },
+  "game/images/stadiums/germany/schalke.jpg": {
+    "factor": 0.55,
+    "luminance": 121.2
+  },
+  "game/images/stadiums/germany/schermbeck.jpg": {
+    "factor": 0.55,
+    "luminance": 137.1
+  },
+  "game/images/stadiums/germany/sonnenhof grossaspach.jpg": {
+    "factor": 0.55,
+    "luminance": 137.0
+  },
+  "game/images/stadiums/germany/sportclub-verl.jpg": {
+    "factor": 0.55,
+    "luminance": 125.5
+  },
+  "game/images/stadiums/germany/sportfreunde lotte.jpg": {
+    "factor": 0.58,
+    "luminance": 103.5
+  },
+  "game/images/stadiums/germany/sportfreunde-siegen.jpg": {
+    "factor": 0.55,
+    "luminance": 111.1
+  },
+  "game/images/stadiums/germany/ssv-ulm.jpg": {
+    "factor": 0.55,
+    "luminance": 164.0
+  },
+  "game/images/stadiums/germany/st pauli.jpg": {
+    "factor": 0.55,
+    "luminance": 139.6
+  },
+  "game/images/stadiums/germany/st-pauli-2.jpg": {
+    "factor": 0.55,
+    "luminance": 118.6
+  },
+  "game/images/stadiums/germany/steinbach-haiger.jpg": {
+    "factor": 0.584,
+    "luminance": 102.8
+  },
+  "game/images/stadiums/germany/stuttgart-2.jpg": {
+    "factor": 0.55,
+    "luminance": 134.4
+  },
+  "game/images/stadiums/germany/stuttgart.jpg": {
+    "factor": 0.55,
+    "luminance": 165.6
+  },
+  "game/images/stadiums/germany/stuttgarter k.jpg": {
+    "factor": 0.55,
+    "luminance": 126.8
+  },
+  "game/images/stadiums/germany/sudwest-ludwigshafen.jpg": {
+    "factor": 0.55,
+    "luminance": 122.3
+  },
+  "game/images/stadiums/germany/sv meppen.jpg": {
+    "factor": 0.55,
+    "luminance": 149.8
+  },
+  "game/images/stadiums/germany/sv-waldhof-mannheim-07.jpg": {
+    "factor": 0.55,
+    "luminance": 119.6
+  },
+  "game/images/stadiums/germany/todesfelde.jpg": {
+    "factor": 0.55,
+    "luminance": 131.1
+  },
+  "game/images/stadiums/germany/turkgucu-munchen.jpg": {
+    "factor": 0.55,
+    "luminance": 134.4
+  },
+  "game/images/stadiums/germany/union berlin.jpg": {
+    "factor": 0.656,
+    "luminance": 91.4
+  },
+  "game/images/stadiums/germany/unterhaching.jpg": {
+    "factor": 0.55,
+    "luminance": 158.0
+  },
+  "game/images/stadiums/germany/vfb-lubeck-2.jpg": {
+    "factor": 0.55,
+    "luminance": 123.4
+  },
+  "game/images/stadiums/germany/vfb-lubeck.jpg": {
+    "factor": 0.55,
+    "luminance": 123.4
+  },
+  "game/images/stadiums/germany/vfb-oldenburg.jpg": {
+    "factor": 0.55,
+    "luminance": 118.1
+  },
+  "game/images/stadiums/germany/viktoria-1889-berlin.jpg": {
+    "factor": 0.613,
+    "luminance": 97.9
+  },
+  "game/images/stadiums/germany/wehen wiesbaden.jpg": {
+    "factor": 0.55,
+    "luminance": 117.0
+  },
+  "game/images/stadiums/germany/werder-2.jpg": {
+    "factor": 0.55,
+    "luminance": 113.8
+  },
+  "game/images/stadiums/germany/werder.jpg": {
+    "factor": 0.55,
+    "luminance": 130.6
+  },
+  "game/images/stadiums/germany/wirsol rhein neckar arena.jpg": {
+    "factor": 0.55,
+    "luminance": 146.4
+  },
+  "game/images/stadiums/germany/wolfsburg-2.jpg": {
+    "factor": 0.55,
+    "luminance": 149.7
+  },
+  "game/images/stadiums/germany/wolfsburg.jpg": {
+    "factor": 0.55,
+    "luminance": 132.6
+  },
+  "game/images/stadiums/germany/wuppertaler.jpg": {
+    "factor": 0.55,
+    "luminance": 124.0
+  },
+  "game/images/stadiums/germany/wurzburger kickers.jpg": {
+    "factor": 0.55,
+    "luminance": 118.5
+  },
+  "game/images/stadiums/germany/zwickau.jpg": {
+    "factor": 0.55,
+    "luminance": 115.8
+  }
+}
