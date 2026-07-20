@@ -196,6 +196,54 @@ def _ki_gebot_betrag(auction, wertung, club_budget, params):
     return gebot
 
 
+_KI_SUMMARY_KEY = 'KI_ZV_LAST_SUMMARY'
+_KI_SUMMARY_SAISON = '_log'
+_KI_SUMMARY_CACHE_KEY = 'ki_zv_last_summary'
+_KI_SUMMARY_CACHE_TTL = 60 * 60 * 24 * 7
+
+
+def _persist_ki_summary(summary: dict) -> None:
+    """Speichert die KI-Zusammenfassung im Cache UND dauerhaft in EconomyParameter.
+
+    Cache: schneller Lesepfad (7 Tage TTL).
+    EconomyParameter (saison='_log'): persistente Ablage — überlebt Server-Neustart
+    und Cache-Flush.
+    """
+    from game.models import EconomyParameter
+
+    cache.set(_KI_SUMMARY_CACHE_KEY, summary, timeout=_KI_SUMMARY_CACHE_TTL)
+    EconomyParameter.objects.update_or_create(
+        saison=_KI_SUMMARY_SAISON,
+        key=_KI_SUMMARY_KEY,
+        defaults={'value': summary},
+    )
+
+
+def load_ki_summary() -> dict | None:
+    """Gibt die letzte KI-Zusammenfassung zurück (Cache → DB-Fallback).
+
+    Schreibt DB-Treffer zurück in den Cache, damit Folgeanfragen
+    wieder schnell sind.
+    Returns None wenn noch kein Lauf stattgefunden hat.
+    """
+    from game.models import EconomyParameter
+
+    summary = cache.get(_KI_SUMMARY_CACHE_KEY)
+    if summary is not None:
+        return summary
+
+    try:
+        ep = EconomyParameter.objects.get(
+            saison=_KI_SUMMARY_SAISON, key=_KI_SUMMARY_KEY,
+        )
+    except EconomyParameter.DoesNotExist:
+        return None
+
+    summary = ep.value
+    cache.set(_KI_SUMMARY_CACHE_KEY, summary, timeout=_KI_SUMMARY_CACHE_TTL)
+    return summary
+
+
 def run_ki_zwangsversteigerungen(today=None, saison=None):
     """KI-Vereine geben Gebote auf offene Zwangsversteigerungen ab (Phase 6).
 
@@ -238,7 +286,7 @@ def run_ki_zwangsversteigerungen(today=None, saison=None):
     if dry_run:
         logger.info('KI-Zwangsversteigerung: dry_run=True — keine Gebote.')
         summary['letzter_lauf'] = timezone.now().isoformat()
-        cache.set('ki_zv_last_summary', summary, timeout=60 * 60 * 24 * 7)
+        _persist_ki_summary(summary)
         return summary
 
     snapshot = ensure_season_snapshot(saison)
@@ -340,7 +388,7 @@ def run_ki_zwangsversteigerungen(today=None, saison=None):
 
     from django.utils import timezone as _tz
     summary['letzter_lauf'] = _tz.now().isoformat()
-    cache.set('ki_zv_last_summary', summary, timeout=60 * 60 * 24 * 7)
+    _persist_ki_summary(summary)
     return summary
 
 

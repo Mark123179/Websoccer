@@ -5158,7 +5158,8 @@ def creator_sportgericht(request):
                                   if a.winning_bid_id else '—'),
         })
 
-    ki_summary = cache.get('ki_zv_last_summary')
+    from .economy.forced_auction import load_ki_summary
+    ki_summary = load_ki_summary()
 
     resolved_cases = (
         InsolvencyCase.objects
