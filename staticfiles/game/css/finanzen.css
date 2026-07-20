@@ -427,3 +427,124 @@
 .fn-icon-rose   { background: rgba(251,113,133,0.15); color: #fb7185; }
 .fn-icon-orange { background: rgba(251,146,60,0.15);  color: #fb923c; }
 .fn-icon-gray   { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+/* ── Hauptsponsor-Angebote (Phase 2, Saisonvertrag) ─────────────────── */
+.fn-offer-panel { margin-bottom: 18px; }
+.fn-offer-status {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: rgba(148,163,184,0.85);
+    text-transform: none;
+}
+.fn-offer-status--active { color: #4ade80; }
+.fn-offer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+}
+.fn-offer-card {
+    position: relative;
+    border: 1px solid rgba(148,163,184,0.18);
+    border-radius: 10px;
+    padding: 12px 14px;
+    background: rgba(15,23,42,0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.fn-offer-card--chosen {
+    border-color: rgba(74,222,128,0.55);
+    background: rgba(74,222,128,0.07);
+}
+.fn-offer-card--locked { opacity: 0.45; }
+.fn-offer-name {
+    margin: 0;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #e2e8f0;
+}
+.fn-offer-typ {
+    margin: 0;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(201,168,76,0.9);
+}
+.fn-offer-fix {
+    margin: 4px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+.fn-offer-fix span {
+    font-size: 9.5px;
+    font-weight: 400;
+    color: rgba(148,163,184,0.8);
+}
+.fn-offer-var {
+    margin: 0;
+    font-size: 10.5px;
+    color: #93c5fd;
+}
+.fn-offer-ew {
+    margin: 0 0 4px;
+    font-size: 9.5px;
+    color: rgba(148,163,184,0.75);
+}
+.fn-offer-btn {
+    margin-top: auto;
+    padding: 6px 10px;
+    border: 1px solid rgba(201,168,76,0.45);
+    border-radius: 7px;
+    background: rgba(201,168,76,0.12);
+    color: #e7cf8a;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.fn-offer-btn:hover {
+    background: rgba(201,168,76,0.22);
+    border-color: rgba(201,168,76,0.7);
+}
+.fn-offer-badge {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(74,222,128,0.14);
+    border: 1px solid rgba(74,222,128,0.4);
+    color: #4ade80;
+    font-size: 9.5px;
+    font-weight: 700;
+}
+
+/* ── Django-Messages ─────────────────────────────────────────────────── */
+.fn-messages {
+    list-style: none;
+    margin: 0 0 14px;
+    padding: 0;
+}
+.fn-message {
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+    border: 1px solid rgba(148,163,184,0.25);
+    background: rgba(148,163,184,0.08);
+    color: #cbd5e1;
+}
+.fn-message + .fn-message { margin-top: 6px; }
+.fn-message--success {
+    border-color: rgba(74,222,128,0.4);
+    background: rgba(74,222,128,0.08);
+    color: #4ade80;
+}
+.fn-message--error {
+    border-color: rgba(248,113,113,0.4);
+    background: rgba(248,113,113,0.08);
+    color: #f87171;
+}

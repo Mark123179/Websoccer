@@ -1024,3 +1024,152 @@
     from { opacity: 0; transform: translate(-50%, 8px); }
     to { opacity: 1; transform: translateX(-50%); }
 }
+
+/* ===== Transfermarkt Phase 4 (Verkaufsstatus + Angebote) ===== */
+.status-pill--sale {
+    background: rgba(0, 229, 255, 0.12);
+    color: var(--cyan, #00e5ff);
+    border: 1px solid rgba(0, 229, 255, 0.35);
+}
+
+.status-pill--nego {
+    background: rgba(255, 193, 7, 0.12);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.35);
+}
+
+.squad-bid-btn {
+    appearance: none;
+    background: rgba(0, 229, 255, 0.10);
+    border: 1px solid rgba(0, 229, 255, 0.40);
+    color: var(--cyan, #00e5ff);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 6px;
+    transition: background 0.15s ease;
+}
+
+.squad-bid-btn:hover {
+    background: rgba(0, 229, 255, 0.22);
+}
+
+.sale-visible-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 12px 0 4px;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+}
+
+.sale-visible-toggle input {
+    margin-top: 2px;
+    accent-color: var(--cyan, #00e5ff);
+}
+
+#saleCategory {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 13px;
+}
+
+#saleCategory option {
+    background: #101722;
+    color: #fff;
+}
+
+.bid-modal-mv {
+    margin: -4px 0 10px;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.60);
+}
+
+.bid-modal-nego {
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    background: rgba(255, 193, 7, 0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.bid-modal-nego p {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    color: #ffd54f;
+}
+
+.bid-modal-counter-actions {
+    margin-top: 4px;
+}
+
+.bid-modal-result {
+    font-size: 12.5px;
+    color: var(--green, #2bd97c);
+    margin: 8px 0 0;
+}
+
+/* ── Manager-Postfach: eingehende KI-Kaufangebote (Phase 6) ─────────────── */
+.ai-offer-panel { border-color: rgba(0, 229, 255, 0.28); }
+
+.ai-offer {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.ai-offer:last-child { border-bottom: none; }
+
+.ai-offer__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ai-offer__player {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.ai-offer__amount {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan, #00e5ff);
+    white-space: nowrap;
+}
+
+.ai-offer__row--meta { margin-top: 2px; }
+
+.ai-offer__buyer {
+    font-size: 11.5px;
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.ai-offer__meta {
+    font-size: 10.5px;
+    color: rgba(255, 255, 255, 0.45);
+    white-space: nowrap;
+}
+
+.ai-offer__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.ai-offer__actions .squad-btn {
+    flex: 1;
+    padding: 5px 10px;
+    font-size: 12px;
+}

@@ -86,6 +86,42 @@
     flex-shrink: 0;
 }
 
+/* ---- Zahlungsunfähigkeits-Vermerk (Spec Kap. 12.3) ---- */
+.sg-panel--insolvenz {
+    border-color: rgba(224, 82, 82, 0.38);
+    background: rgba(24, 8, 8, 0.72);
+}
+
+.sg-panel-title--insolvenz {
+    color: #e05252;
+}
+
+.sg-insolvenz-text {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.62);
+    margin: 0 0 10px 0;
+    line-height: 1.7;
+}
+
+.sg-insolvenz-text strong {
+    color: #e8ecf3;
+}
+
+.sg-insolvenz-text--enforced {
+    color: #e07a52;
+    margin-bottom: 6px;
+}
+
+.sg-insolvenz-auctions {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.62);
+    margin: 0;
+    padding-left: 18px;
+    line-height: 1.8;
+}
+
 /* ---- Rechte Spalte: kompakte Panel-Overrides ---- */
 .sg-right .sg-panel {
     padding: 16px 18px;
