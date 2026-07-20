@@ -273,6 +273,93 @@
   </div>
   {% endif %}
 
+  <!-- ── Finanzlücken ─────────────────────────────────────────────────── -->
+  <div class="fa-panel">
+    <h2 class="fa-panel-title">
+      Finanzlücken
+      <span class="fa-panel-sub">fehlende Pflicht-Marker je Spieltag / Verein</span>
+      {% if not gaps and gaps_checked > 0 %}
+      <span class="fa-alarm-badge fa-alarm-off">Alle {{ gaps_checked }} Kombinationen vollständig</span>
+      {% elif gaps %}
+      <span class="fa-alarm-badge fa-alarm-on">{{ gaps|length }} Lücke{{ gaps|length|pluralize:"n" }}</span>
+      {% endif %}
+    </h2>
+
+    <!-- Filter -->
+    <form method="get" class="fa-gap-filter" id="gap-filter-form">
+      {# preserve existing season filter #}
+      {% if sel_season %}<input type="hidden" name="season" value="{{ sel_season }}">{% endif %}
+      <div class="fa-gap-filter-row">
+        <label class="fa-filter-label">
+          Saison
+          <input type="text" name="gap_saison" value="{{ gap_saison }}" placeholder="z.B. 1" class="fa-filter-input" maxlength="10">
+        </label>
+        <label class="fa-filter-label">
+          Liga
+          <select name="gap_liga" class="fa-filter-select">
+            <option value="">Alle Ligen</option>
+            {% for lg in all_leagues %}
+            <option value="{{ lg.id }}" {% if gap_liga_id == lg.id %}selected{% endif %}>{{ lg.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="fa-filter-label">
+          Spieltag
+          <input type="number" name="gap_spieltag" value="{{ gap_spieltag }}" placeholder="z.B. 17" class="fa-filter-input fa-filter-input-sm" min="1" max="99">
+        </label>
+        <button type="submit" class="fa-filter-btn">Filtern</button>
+        {% if gap_saison or gap_liga_id or gap_spieltag %}
+        <a href="?{% if sel_season %}season={{ sel_season }}{% endif %}" class="fa-filter-reset">Zurücksetzen</a>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if gaps %}
+    <table class="fa-table fa-gap-table">
+      <thead>
+        <tr>
+          <th>Saison</th>
+          <th>Liga</th>
+          <th class="fa-r">Spieltag</th>
+          <th>Verein</th>
+          <th>Rolle</th>
+          <th>Fehlende Marker</th>
+          <th>Header</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in gaps %}
+        <tr class="{% if g.no_header %}fa-gap-critical{% else %}fa-gap-warn{% endif %}">
+          <td class="fa-strong">{{ g.saison }}</td>
+          <td>{{ g.liga }}</td>
+          <td class="fa-r">{{ g.spieltag }}</td>
+          <td class="fa-strong">{{ g.club }}</td>
+          <td><span class="fa-role-badge {% if g.is_home %}fa-role-home{% else %}fa-role-away{% endif %}">{% if g.is_home %}Heim{% else %}Auswärts{% endif %}</span></td>
+          <td>
+            {% if g.missing %}
+            <span class="fa-missing-markers">{{ g.missing|join:", " }}</span>
+            {% else %}
+            <span class="fa-empty-cell">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if g.no_header %}
+            <span class="fa-header-badge fa-header-missing">fehlt</span>
+            {% else %}
+            <span class="fa-header-badge fa-header-ok">OK</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% elif gaps_checked == 0 %}
+    <p class="fa-gap-none fa-gap-neutral">Keine gespielten Spieltage gefunden (Filter zu eng oder noch keine Simulation).</p>
+    {% else %}
+    <p class="fa-gap-none">Keine Lücken — alle {{ gaps_checked }} geprüften (Spieltag, Verein)-Kombinationen sind vollständig.</p>
+    {% endif %}
+  </div>
+
 </section>
 
 <style>
@@ -349,5 +436,34 @@
 .fa-cat-row { margin-bottom: .55rem; }
 .fa-cat-meta { display: flex; justify-content: space-between; font-size: .8rem; color: #aabbcc; margin-bottom: .2rem; }
 .fa-cat-meta em { color: #556677; font-style: normal; font-size: .7rem; }
+
+/* Finanzlücken */
+.fa-gap-filter { margin-bottom: .85rem; }
+.fa-gap-filter-row { display: flex; align-items: flex-end; gap: .65rem; flex-wrap: wrap; }
+.fa-filter-label { display: flex; flex-direction: column; gap: .25rem; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #556677; }
+.fa-filter-input { background: #071525; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .8rem; padding: .3rem .55rem; width: 7rem; outline: none; }
+.fa-filter-input-sm { width: 4.5rem; }
+.fa-filter-select { background: #071525; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; font-size: .8rem; padding: .3rem .55rem; outline: none; }
+.fa-filter-input:focus, .fa-filter-select:focus { border-color: #00d4ff55; }
+.fa-filter-btn { background: #00d4ff18; border: 1px solid #00d4ff44; border-radius: 6px; color: #00d4ff; font-size: .78rem; font-weight: 700; padding: .32rem .85rem; cursor: pointer; transition: background .15s; }
+.fa-filter-btn:hover { background: #00d4ff28; }
+.fa-filter-reset { color: #556677; font-size: .75rem; text-decoration: none; padding: .32rem .4rem; }
+.fa-filter-reset:hover { color: #aabbcc; }
+.fa-gap-table tr.fa-gap-critical td { background: #180a0a; }
+.fa-gap-table tr.fa-gap-warn td { background: #0e1200; }
+.fa-gap-table tr.fa-gap-critical:hover td,
+.fa-gap-table tr.fa-gap-warn:hover td { filter: brightness(1.15); }
+.fa-missing-markers { color: #ef4444; font-weight: 700; font-size: .78rem; letter-spacing: .02em; }
+.fa-empty-cell { color: #334455; }
+.fa-role-badge { font-size: .62rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: .1rem .4rem; border-radius: 6px; }
+.fa-role-home { background: #00d4ff18; color: #00d4ff; border: 1px solid #00d4ff33; }
+.fa-role-away { background: #334455; color: #778899; border: 1px solid #0d2035; }
+.fa-header-badge { font-size: .62rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: .1rem .38rem; border-radius: 6px; }
+.fa-header-missing { background: #ef444422; color: #ef4444; border: 1px solid #ef444455; }
+.fa-header-ok { background: #22c55e18; color: #22c55e; border: 1px solid #22c55e44; }
+.fa-gap-none { color: #22c55e; font-size: .82rem; padding: .4rem 0; display: flex; align-items: center; gap: .5rem; }
+.fa-gap-none::before { content: '✓'; font-weight: 900; }
+.fa-gap-neutral { color: #556677; }
+.fa-gap-neutral::before { content: '—'; }
 </style>
 {% endblock %}

@@ -4291,11 +4291,32 @@ def creator_finanzanalyse(request):
     tk_alarm = tk_verlauf['alarm']
 
     integrity = check_ledger_integrity()
+
+    # ── Vollständigkeitsprüfung (Finanzlücken je Spieltag/Verein) ────────
+    from .economy.integrity import check_finance_completeness
+    from .models import League
+
+    gap_saison = request.GET.get('gap_saison') or None
+    gap_liga_raw = request.GET.get('gap_liga') or None
+    gap_spieltag_raw = request.GET.get('gap_spieltag') or None
+    gap_liga_id = int(gap_liga_raw) if gap_liga_raw and gap_liga_raw.isdigit() else None
+    gap_spieltag = int(gap_spieltag_raw) if gap_spieltag_raw and gap_spieltag_raw.isdigit() else None
+
+    completeness = check_finance_completeness(
+        saison=gap_saison,
+        liga_id=gap_liga_id,
+        spieltag=gap_spieltag,
+    )
+    gaps = completeness['gaps']
+    gaps_checked = completeness['checked_clubs']
+    all_leagues = list(League.objects.order_by('name').only('id', 'name'))
+
     alarm_count = sum([
         1 if any(v['alarm'] for v in verlauf_rows) else 0,
         1 if ratio['alarm'] else 0,
         1 if tk_alarm else 0,
         1 if integrity['mismatches'] else 0,
+        1 if gaps else 0,
     ])
 
     return render(request, 'creator/finanzanalyse.html', {
@@ -4336,6 +4357,12 @@ def creator_finanzanalyse(request):
         'income_sum_fmt': _fmt(income_sum),
         'expense_sum_fmt': _fmt(expense_sum),
         'current_season': current_season,
+        'gaps': gaps,
+        'gaps_checked': gaps_checked,
+        'gap_saison': gap_saison or '',
+        'gap_liga_id': gap_liga_id or '',
+        'gap_spieltag': gap_spieltag or '',
+        'all_leagues': all_leagues,
     })
 
 
