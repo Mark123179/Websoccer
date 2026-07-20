@@ -1,4 +1,4 @@
-"""Tests für die Finance-Vollständigkeitsprüfung (Task #763).
+"""Tests für die Finance-Vollständigkeitsprüfung (Task #763 / #764).
 
 Prüft check_finance_completeness() aus game.economy.integrity:
   - Lücken-Erkennung bei fehlendem Marker
@@ -6,6 +6,11 @@ Prüft check_finance_completeness() aus game.economy.integrity:
   - No-Header-Erkennung (Verein hat gar keinen Finanz-Lauf)
   - Heim/Auswärts-Unterscheidung: TICKET nur für Heimvereine Pflicht
   - Saison- / Liga- / Spieltagfilter funktionieren
+
+Integration (Task #764):
+  - run_matchday_finance() enthält 'gaps'-Schlüssel im Rückgabe-Dict
+  - Vollständige Marker → gaps=[]
+  - Fehlende Marker → gaps enthält die Lücke
 """
 from decimal import Decimal
 
@@ -228,3 +233,88 @@ class CompletenessCheckMultipleGapsTests(TestCase):
         away_ids = {g['club_id'] for g in result['gaps'] if not g['is_home']}
         self.assertEqual(home_ids, {self.clubs[0].pk, self.clubs[2].pk})
         self.assertEqual(away_ids, {self.clubs[1].pk, self.clubs[3].pk})
+
+
+class RunMatchdayFinanceCompletenessIntegrationTests(TestCase):
+    """run_matchday_finance() enthält nach dem Verein-Loop 'gaps' im Rückgabe-Dict.
+
+    Testet die Integration ohne echten Finanzlauf: Marker werden manuell
+    gesetzt, danach wird run_matchday_finance() so aufgerufen, dass der
+    Verein-Loop übersprungen wird (alle Marker bereits vorhanden → skipped).
+    Danach muss 'gaps' korrekt befüllt sein.
+    """
+
+    def setUp(self):
+        GameSeasonState.objects.create(current_season=0)
+        self.liga = _mk_league('Int-Liga')
+        self.heim = _mk_club('FC Int-Heim', self.liga)
+        self.gast = _mk_club('FC Int-Gast', self.liga)
+        self.fixture = _mk_fixture(self.liga, self.heim, self.gast, matchday=1, saison='0')
+
+    def _call_run(self):
+        from game.economy.matchday_run import run_matchday_finance
+        return run_matchday_finance(self.liga, '0', 1)
+
+    def test_gaps_key_always_present(self):
+        """run_matchday_finance() gibt immer einen 'gaps'-Schlüssel zurück."""
+        _set_all_markers(self.heim, '0', 1)
+        _set_all_markers(self.gast, '0', 1)
+
+        result = self._call_run()
+
+        self.assertIn('gaps', result)
+
+    def test_no_gaps_when_all_markers_complete(self):
+        """Alle Marker vorhanden → gaps=[]."""
+        _set_all_markers(self.heim, '0', 1)
+        _set_all_markers(self.gast, '0', 1)
+
+        result = self._call_run()
+
+        self.assertEqual(result['gaps'], [])
+
+    def test_gaps_reported_when_club_run_fails(self):
+        """Schlägt run_club_finance() für einen Verein fehl, meldet gaps die Lücken.
+
+        Realfall: Verein-Lauf wirft Exception (bleibt in 'errors', kein Marker).
+        Completeness-Check findet danach die fehlenden Marker und füllt 'gaps'.
+        """
+        from unittest.mock import patch
+
+        # Gast vollständig vorab; Heim-Marker werden absichtlich ausgelassen
+        # (der Heim-Lauf wird per Mock zum Fehler).
+        _set_all_markers(self.gast, '0', 1)
+
+        original_run_club_finance = __import__(
+            'game.economy.matchday_run', fromlist=['run_club_finance']
+        ).run_club_finance
+
+        def failing_for_heim(club, *args, **kwargs):
+            if club.pk == self.heim.pk:
+                raise RuntimeError('Simulierter Buchhaltungsfehler')
+            return original_run_club_finance(club, *args, **kwargs)
+
+        with patch('game.economy.matchday_run.run_club_finance', side_effect=failing_for_heim):
+            result = self._call_run()
+
+        # Heim-Verein hat keinen Marker erhalten → gaps meldet ihn.
+        self.assertGreaterEqual(len(result['gaps']), 1)
+        gap_clubs = {g['club_id'] for g in result['gaps']}
+        self.assertIn(self.heim.pk, gap_clubs)
+
+    def test_gaps_scoped_to_liga_and_spieltag(self):
+        """Lücken in anderer Liga tauchen NICHT in gaps auf (Scope-Filter)."""
+        other_liga = _mk_league('Andere Int-Liga')
+        other_heim = _mk_club('FC Other-H', other_liga)
+        other_gast = _mk_club('FC Other-G', other_liga)
+        _mk_fixture(other_liga, other_heim, other_gast, matchday=1, saison='0')
+        # Marker in anderer Liga absichtlich weglassen.
+
+        # Eigene Liga vollständig.
+        _set_all_markers(self.heim, '0', 1)
+        _set_all_markers(self.gast, '0', 1)
+
+        result = self._call_run()
+
+        # Lücken der anderen Liga dürfen nicht auftauchen.
+        self.assertEqual(result['gaps'], [])

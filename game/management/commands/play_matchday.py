@@ -179,6 +179,7 @@ class Command(BaseCommand):
             _recalculate_positions(league, season)
 
         # ── Finanz-Spieltagslauf (Phase 1, idempotent je Verein+Spieltag) ────
+        finance_summary = {}
         try:
             from game.economy.matchday_run import run_matchday_finance
             finance_summary = run_matchday_finance(league, season, matchday)
@@ -186,6 +187,23 @@ class Command(BaseCommand):
                 out(self.style.WARNING(f'  Finanzlauf: {err}'))
         except Exception as exc:
             out(self.style.WARNING(f'  Finanzlauf fehlgeschlagen: {exc}'))
+
+        # ── Vollständigkeitsprüfung — Lücken-Alarm ────────────────────────────
+        gaps = finance_summary.get('gaps', [])
+        if gaps:
+            out(self.style.WARNING(
+                f'\n⚠  FINANZ-VOLLSTÄNDIGKEIT: {len(gaps)} Lücke(n) nach Spieltag {matchday}!'
+            ))
+            for g in gaps:
+                if 'error' in g:
+                    out(self.style.WARNING(f'   Prüffehler: {g["error"]}'))
+                else:
+                    missing_str = ', '.join(g.get('missing', []))
+                    header_hint = ' [kein Header]' if g.get('no_header') else ''
+                    out(self.style.WARNING(
+                        f'   {g["club"]} (ST {g["spieltag"]}): '
+                        f'fehlende Marker: {missing_str or "–"}{header_hint}'
+                    ))
 
         # ── LeagueSeasonState synchronisieren ────────────────────────────────
         if not force:

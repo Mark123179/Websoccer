@@ -489,4 +489,16 @@ def run_matchday_finance(league, saison: str, matchday: int) -> dict:
         except Exception as exc:  # Ein Vereinsfehler stoppt nicht den Spieltag.
             errors.append(f'{club.name}: {exc}')
 
-    return {'clubs': results, 'errors': errors}
+    # ── Vollständigkeitsprüfung (Hook nach Vereins-Loop) ─────────────────────
+    try:
+        from .integrity import check_finance_completeness
+        completeness = check_finance_completeness(
+            saison=saison,
+            liga_id=league.pk,
+            spieltag=matchday,
+        )
+        gaps = completeness.get('gaps', [])
+    except Exception as exc:
+        gaps = [{'error': str(exc)}]
+
+    return {'clubs': results, 'errors': errors, 'gaps': gaps}
