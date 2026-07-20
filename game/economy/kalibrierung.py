@@ -287,6 +287,11 @@ def abloese_mw(saison: str) -> dict:
                    if med < lo else
                    'Median über 1,8: Ablösen laufen dem MW davon.')
 
+    fussnote = (
+        'Betrieb-Backfill Saison 0 mit Marktwerten vom Backfill-Datum '
+        '(Approximation).'
+        if str(saison) == '0' else ''
+    )
     return {
         'id': 'abloese_mw',
         'titel': 'Ablöse/MW-Median',
@@ -294,6 +299,7 @@ def abloese_mw(saison: str) -> dict:
                     f'{monitoring.ALARM_ABLOESE_MW_MEDIAN:.1f}',
         'status': status,
         'hinweis': hinweis,
+        'fussnote': fussnote,
         'regler': regler_fuer('abloese_mw'),
         'median': med,
         'count': ratio['count'],

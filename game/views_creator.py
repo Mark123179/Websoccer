@@ -4470,6 +4470,7 @@ def creator_kalibrierung(request):
             'status': k['status'],
             'status_label': kalibrierung.STATUS_LABELS[k['status']],
             'hinweis': k['hinweis'],
+            'fussnote': k.get('fussnote', ''),
             'regler': k['regler'],
             'ist_zeilen': ist_zeilen,
         })

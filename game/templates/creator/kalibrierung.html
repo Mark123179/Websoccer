@@ -74,6 +74,9 @@
         {% if k.hinweis %}
         <div class="ka-hint">{{ k.hinweis }}</div>
         {% endif %}
+        {% if k.fussnote %}
+        <div class="ka-fussnote">* {{ k.fussnote }}</div>
+        {% endif %}
         <div class="ka-regler-line">
           {% for r in k.regler %}<span class="ka-chip">{{ r }}</span>{% endfor %}
         </div>
@@ -223,6 +226,7 @@
 .ka-card-row { display: flex; gap: .6rem; font-size: .78rem; color: #aabbcc; }
 .ka-lbl { color: #556677; font-size: .66rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; min-width: 62px; padding-top: .1rem; }
 .ka-hint { color: #8899aa; font-size: .74rem; font-style: italic; border-left: 2px solid #0d2035; padding-left: .6rem; }
+.ka-fussnote { color: #6a7f94; font-size: .70rem; font-style: italic; margin-top: .3rem; }
 .ka-regler-line { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .2rem; }
 .ka-chip { background: #050e1a; border: 1px solid #0d2035; color: #7f9ab3; font-size: .66rem; font-weight: 700; padding: .12rem .5rem; border-radius: 9px; white-space: nowrap; }
 

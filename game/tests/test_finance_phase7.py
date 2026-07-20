@@ -370,3 +370,110 @@ class KalibrierungViewTests(TestCase):
         self._post('KI_KAEUFER', json.dumps(manipuliert))
         neu = get_param('KI_KAEUFER', '0')
         self.assertEqual(neu.get('dry_run'), kk.get('dry_run', True))
+
+
+# ── Ausbildungsabgabe MW-Snapshot ────────────────────────────────────────
+
+class AusbildungsabgabeMwSnapshotTests(TestCase):
+    """referenz_mw wird bei ablösefrei und Tausch auf mw_basis-Wert gesetzt."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from game.models import PlayerClubHistory
+
+        league, _ = League.objects.get_or_create(name='Abgabe-Liga', country='DE')
+
+        cls.kaeufer = Club.objects.create(
+            name='Käufer FC', short_name='KAE', founded_year=1900,
+            budget=Decimal('10000000.00'), league=league,
+        )
+        cls.verkaeufer = Club.objects.create(
+            name='Verkäufer FC', short_name='VER', founded_year=1900,
+            budget=Decimal('10000000.00'), league=league,
+        )
+        cls.club_b = Club.objects.create(
+            name='Tausch-B FC', short_name='TAB', founded_year=1900,
+            budget=Decimal('10000000.00'), league=league,
+        )
+        cls.ausbilder = Club.objects.create(
+            name='Ausbilder FC', short_name='AUS', founded_year=1900,
+            budget=Decimal('1000000.00'), league=league,
+        )
+
+        cls.user_a = User.objects.create_user('abg_mgr_a', password='x')
+        cls.user_b = User.objects.create_user('abg_mgr_b', password='x')
+        cls.verkaeufer.managed_by = cls.user_a.manager_profile
+        cls.verkaeufer.save(update_fields=['managed_by'])
+        cls.club_b.managed_by = cls.user_b.manager_profile
+        cls.club_b.save(update_fields=['managed_by'])
+
+    def _mk_spieler_mit_history(self, current_club, mw, ausbilder=None):
+        """Spieler (age=18) mit einer Ausbildungsstation, damit Abgabe > 0."""
+        from game.models import PlayerClubHistory
+
+        p = Player.objects.create(
+            club=current_club, first_name='Test', last_name='Abgabe',
+            position='MID', age=18, potential=75,
+            market_value=Decimal(str(mw)),
+        )
+        ausb = ausbilder or self.ausbilder
+        # cutoff = saison(0) + (21-18) = 3 → season=0 <= 3 ✓
+        PlayerClubHistory.objects.create(player=p, club=ausb, season=0)
+        return p
+
+    def test_free_transfer_setzt_referenz_mw(self):
+        """AUSBILDUNG_AUS-Zeile trägt den mw_basis()-Wert als referenz_mw."""
+        from game.economy.transfers import execute_free_transfer, mw_basis
+
+        # Spieler ohne aktuellen Verein (kein Mindestkader-Problem)
+        spieler = self._mk_spieler_mit_history(None, 2_000_000)
+        spieler.club = None
+        spieler.save(update_fields=['club'])
+
+        basis = mw_basis(spieler, '0')
+        execute_free_transfer(spieler, self.kaeufer, saison='0')
+
+        tx = FinanceTransaction.objects.filter(
+            club=self.kaeufer, typ='AUSBILDUNG_AUS',
+        ).order_by('-id').first()
+        self.assertIsNotNone(tx, 'AUSBILDUNG_AUS fehlt nach free transfer')
+        self.assertEqual(tx.referenz_mw, basis,
+                         'referenz_mw stimmt nicht mit mw_basis überein')
+
+    def test_swap_setzt_referenz_mw_fuer_beide(self):
+        """Beide AUSBILDUNG_AUS-Zeilen tragen jeweils den mw_basis()-Wert."""
+        from game.economy.transfers import execute_swap, mw_basis
+
+        spieler_a = self._mk_spieler_mit_history(self.verkaeufer, 1_500_000)
+        spieler_b = self._mk_spieler_mit_history(self.club_b, 2_500_000)
+
+        basis_a = mw_basis(spieler_a, '0')
+        basis_b = mw_basis(spieler_b, '0')
+
+        execute_swap(spieler_a, spieler_b, saison='0')
+
+        tx_a = FinanceTransaction.objects.filter(
+            club=self.verkaeufer, typ='AUSBILDUNG_AUS',
+        ).order_by('-id').first()
+        tx_b = FinanceTransaction.objects.filter(
+            club=self.club_b, typ='AUSBILDUNG_AUS',
+        ).order_by('-id').first()
+        self.assertIsNotNone(tx_a, 'AUSBILDUNG_AUS für verkaeufer fehlt')
+        self.assertIsNotNone(tx_b, 'AUSBILDUNG_AUS für club_b fehlt')
+        self.assertEqual(tx_a.referenz_mw, basis_a,
+                         'referenz_mw für Spieler A stimmt nicht')
+        self.assertEqual(tx_b.referenz_mw, basis_b,
+                         'referenz_mw für Spieler B stimmt nicht')
+
+    def test_fussnote_saison_0_vorhanden(self):
+        """abloese_mw() enthält für Saison 0 eine Backfill-Fußnote."""
+        from game.economy.kalibrierung import abloese_mw
+        result = abloese_mw('0')
+        self.assertIn('fussnote', result)
+        self.assertIn('Approximation', result['fussnote'])
+
+    def test_fussnote_andere_saison_leer(self):
+        """abloese_mw() enthält für andere Saisons keine Fußnote."""
+        from game.economy.kalibrierung import abloese_mw
+        result = abloese_mw('5')
+        self.assertEqual(result.get('fussnote', ''), '')

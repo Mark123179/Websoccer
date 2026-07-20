@@ -138,18 +138,21 @@ def _check_mindestkader(club, saison=None):
 
 
 def _abgabe_entries(zahler_club, verteilung, locked, *, player, saison,
-                    spieltag, pflicht, beschreibung):
+                    spieltag, pflicht, beschreibung, referenz_mw=None):
     """Buchungszeilen der Abgabe (AUS beim Zahler, EIN je Empfänger)."""
     entries = []
     if verteilung['gesamt'] <= 0:
         return entries
-    entries.append({
+    aus_entry = {
         'club': locked[zahler_club.pk], 'typ': 'AUSBILDUNG_AUS',
         'betrag': -verteilung['gesamt'], 'beschreibung': beschreibung,
         'saison': saison, 'spieltag': spieltag,
         'referenz_typ': 'transfer', 'referenz_id': player.pk,
         'pflicht': pflicht,
-    })
+    }
+    if referenz_mw is not None:
+        aus_entry['referenz_mw'] = referenz_mw
+    entries.append(aus_entry)
     for club_id, betrag in sorted(verteilung['empfaenger'].items()):
         entries.append({
             'club': locked[club_id], 'typ': 'AUSBILDUNG_EIN',
@@ -277,6 +280,7 @@ def execute_free_transfer(player, aufnehmender, *, saison=None, spieltag=None):
             aufnehmender, verteilung, locked, player=player,
             saison=saison_str, spieltag=spieltag, pflicht=False,
             beschreibung=f'Ausbildungsabgabe (ablösefrei) {player.full_name}',
+            referenz_mw=basis,
         )
         txs = book_many(entries, saison=saison_str) if entries else []
         _complete_move(player, aufnehmender)
@@ -301,11 +305,13 @@ def execute_swap(player_a, player_b, *, saison=None, spieltag=None):
     _, saison_str = _saison_int(saison)
 
     with transaction.atomic():
+        basis_a = mw_basis(player_a, saison_str)
+        basis_b = mw_basis(player_b, saison_str)
         vert_a = compute_ausbildungsabgabe(
-            player_a, club_a, mw_basis(player_a, saison_str), saison_str,
+            player_a, club_a, basis_a, saison_str,
         )
         vert_b = compute_ausbildungsabgabe(
-            player_b, club_b, mw_basis(player_b, saison_str), saison_str,
+            player_b, club_b, basis_b, saison_str,
         )
         locked = _lock_clubs(
             [club_a.pk, club_b.pk]
@@ -326,10 +332,12 @@ def execute_swap(player_a, player_b, *, saison=None, spieltag=None):
             club_a, vert_a, locked, player=player_a,
             saison=saison_str, spieltag=spieltag, pflicht=False,
             beschreibung=f'Ausbildungsabgabe (Tausch) {player_a.full_name}',
+            referenz_mw=basis_a,
         ) + _abgabe_entries(
             club_b, vert_b, locked, player=player_b,
             saison=saison_str, spieltag=spieltag, pflicht=False,
             beschreibung=f'Ausbildungsabgabe (Tausch) {player_b.full_name}',
+            referenz_mw=basis_b,
         )
         txs = book_many(entries, saison=saison_str) if entries else []
         _complete_move(player_a, club_b)
