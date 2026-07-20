@@ -286,10 +286,22 @@ title = "Managerprofil – alle relevanten Dateien"
 id = "MrldTMM-rucssIC2aMFXD"
 uri = "file://docs/kalibrierung_aktuell_saison0.txt"
 type = "text"
-title = "Kalibrierungs-Report Saison 0 (Text)"
+title = "Kalibrierung Lauf 1 — Saison 0, Spieltag 6 (19.07.2026, Text)"
 
 [[outputs]]
 id = "rMXGjjSfJZDvh6s4bryEF"
 uri = "file://docs/kalibrierung_aktuell_saison0.json"
 type = "unspecified"
-title = "Kalibrierungs-Report Saison 0 (JSON)"
+title = "Kalibrierung Lauf 1 — Saison 0, Spieltag 6 (19.07.2026, JSON)"
+
+[[outputs]]
+id = "d0zzLWBl2wJ2fB5J2OWo_"
+uri = "file://docs/kalibrierung_lauf2_saison0.txt"
+type = "text"
+title = "Kalibrierung Lauf 2 — Saison 0, abgeschlossen (20.07.2026, Text)"
+
+[[outputs]]
+id = "fmTKJqgF-reGK1Kcwltzb"
+uri = "file://docs/kalibrierung_lauf2_saison0.json"
+type = "unspecified"
+title = "Kalibrierung Lauf 2 — Saison 0, abgeschlossen (20.07.2026, JSON)"

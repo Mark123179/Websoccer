@@ -1,0 +1,91 @@
+{
+  "saison": "0",
+  "kennzahlen": [
+    {
+      "id": "geldmenge",
+      "titel": "Geldmengenwachstum vs. MW-Drift",
+      "korridor": "Wachstum ≈ MW-Drift ± 2 pp · Alarm > 4 %/Saison",
+      "status": "nicht_messbar",
+      "hinweis": "MW-Drift braucht zwei Saison-Snapshots — Korridorvergleich erst ab der zweiten Saison möglich.",
+      "regler": [
+        "BETRIEBSQUOTE",
+        "TV_TOEPFE",
+        "SPONSOR_MW_ANTEIL",
+        "Auktionsvolumen pro Saison"
+      ],
+      "wachstum": 0.01892953291015792,
+      "mw_drift": null,
+      "netto": "23233862.61"
+    },
+    {
+      "id": "abloese_mw",
+      "titel": "Ablöse/MW-Median",
+      "korridor": "Ziel 1.3–1.8 · Alarm > 2.2",
+      "status": "nicht_messbar",
+      "hinweis": "Keine Transfers mit MW-Bezug in dieser Saison.",
+      "regler": [
+        "KI_ANGEBOTS_KADENZ",
+        "KI_KAEUFER",
+        "SCHMERZGRENZE_KONSTANTEN"
+      ],
+      "median": null,
+      "count": 0
+    },
+    {
+      "id": "gehaltslasten",
+      "titel": "Gehaltslasten nach Vereinsgröße",
+      "korridor": "klein 16–20 % · top 28–30 % des Kader-MW",
+      "status": "nicht_messbar",
+      "hinweis": "Laufende Saison: Gehälter erst anteilig gebucht — Korridorvergleich erst nach Saisonabschluss. Ist-Werte nur nachrichtlich.",
+      "regler": [
+        "GEHALT_BASIS",
+        "GEHALT_PROGRESSION"
+      ],
+      "quote_klein": 0.005468345275590552,
+      "quote_top": 0.0069336786261933615,
+      "clubs_gesamt": 18,
+      "gruppen_groesse": 4,
+      "laufend": true
+    },
+    {
+      "id": "zuschauer",
+      "titel": "Zuschauer-Plausibilität",
+      "korridor": "Zuschauer ÷ Basisnachfrage 0.5–1.3 (global, keine Saison-Zuordnung)",
+      "status": "ok",
+      "hinweis": "",
+      "regler": [
+        "NACHFRAGE_KOEFF",
+        "NACHFRAGE_EXP",
+        "PREIS_ELASTIZITAET"
+      ],
+      "median": 0.813370757810218,
+      "auslastung_median": 68.6,
+      "spiele": 9,
+      "ausreisser": [
+        {
+          "club": "Borussia Mönchengladbach",
+          "ratio": 1.3033176980916967,
+          "attendance": 32879
+        }
+      ]
+    },
+    {
+      "id": "ki_anteil",
+      "titel": "KI-Kaufvolumen-Anteil",
+      "korridor": "≤ 50% des Transfervolumens (Governor)",
+      "status": "ok",
+      "hinweis": "",
+      "regler": [
+        "KI_ANGEBOTS_KADENZ",
+        "KI_KAEUFER"
+      ],
+      "anteil": 0.0,
+      "limit": 0.5,
+      "ki_volumen": "0",
+      "gesamt_volumen": "42500000.00"
+    }
+  ],
+  "alarm_count": 0,
+  "warn_count": 0,
+  "nicht_messbar_count": 3
+}
