@@ -5779,11 +5779,20 @@ def _player_nation_nt_logo(player):
     if registered and registered in COUNTRY_FLAG_ASSETS:
         asset_id = COUNTRY_FLAG_ASSETS[registered].get('asset_id', '')
     else:
-        badges = player.nationality_badges
-        if not badges:
-            return ''
-        first_country = badges[0].get('name', '')
-        asset_id = COUNTRY_FLAG_ASSETS.get(first_country, {}).get('asset_id', '')
+        # 1. Nationalität bevorzugen, dann 2., dann badges
+        primary = (player.nationality or '').strip()
+        if primary and primary in COUNTRY_FLAG_ASSETS:
+            asset_id = COUNTRY_FLAG_ASSETS[primary].get('asset_id', '')
+        else:
+            secondary = (player.second_nationality or '').strip()
+            if secondary and secondary in COUNTRY_FLAG_ASSETS:
+                asset_id = COUNTRY_FLAG_ASSETS[secondary].get('asset_id', '')
+            else:
+                badges = player.nationality_badges
+                if not badges:
+                    return ''
+                first_country = badges[0].get('name', '')
+                asset_id = COUNTRY_FLAG_ASSETS.get(first_country, {}).get('asset_id', '')
 
     return federation_url(asset_id)
 

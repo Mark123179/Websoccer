@@ -175,8 +175,16 @@ def nt_confederation_badge(player):
     nt_nationality = (player.nt_nationality or '').strip()
 
     if not nt_nationality:
-        badges = player.nationality_badges
-        nt_nationality = badges[0].get('name', '') if badges else ''
+        primary = (player.nationality or '').strip()
+        if primary:
+            nt_nationality = primary
+        else:
+            secondary = (player.second_nationality or '').strip()
+            if secondary:
+                nt_nationality = secondary
+            else:
+                badges = player.nationality_badges
+                nt_nationality = badges[0].get('name', '') if badges else ''
 
     if not nt_nationality:
         logger.warning(
