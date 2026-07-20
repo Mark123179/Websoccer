@@ -6050,10 +6050,12 @@ class SeasonEconomySnapshot(models.Model):
 
 
 class FinanceMatchdayRun(models.Model):
-    """Idempotenz-Guard für finance_matchday_run (ein Lauf je Verein+Spieltag).
+    """Idempotenz-Guard für finance_matchday_run (ein Marker je Verein+Spieltag+Typ).
 
-    run_at dient zugleich als „seit letztem Lauf“-Marker für die
-    Betriebskosten-Quote (Spec Kap. 10).
+    typ='' (leer) ist der Haupt-Zeitstempel-Anker: seine run_at-Zeit definiert
+    das Betriebskosten-Fenster. Typ-Marker (TV_SOCKEL, SPONSOR, TICKET, GEHALT,
+    STADION, BETRIEB) zeigen an, welche Buchungsschritte bereits abgeschlossen
+    wurden. Ein Wiederholungsaufruf ergänzt nur fehlende Typen.
     """
 
     club = models.ForeignKey(
@@ -6061,16 +6063,24 @@ class FinanceMatchdayRun(models.Model):
     )
     saison = models.CharField(max_length=20)
     spieltag = models.PositiveSmallIntegerField()
+    typ = models.CharField(
+        max_length=30, default='', blank=True,
+        help_text=(
+            "Buchungstyp-Guard (leer = Haupt-Zeitstempel-Anker; "
+            "TV_SOCKEL / SPONSOR / TICKET / GEHALT / STADION / BETRIEB = Schritt-Marker)."
+        ),
+    )
     run_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('club', 'saison', 'spieltag')
+        unique_together = ('club', 'saison', 'spieltag', 'typ')
         ordering = ['-run_at']
         verbose_name = 'Finanz-Spieltagslauf'
         verbose_name_plural = 'Finanz-Spieltagsläufe'
 
     def __str__(self):
-        return f'{self.club} — Saison {self.saison}, ST {self.spieltag} ({self.run_at:%d.%m.%Y %H:%M})'
+        label = f' [{self.typ}]' if self.typ else ''
+        return f'{self.club} — Saison {self.saison}, ST {self.spieltag}{label} ({self.run_at:%d.%m.%Y %H:%M})'
 
 
 class LandKoeffizient(models.Model):

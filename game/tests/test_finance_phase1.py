@@ -163,8 +163,9 @@ class MatchdayFinanceRunTests(TestCase):
         summary = run_matchday_finance(self.league, '0', 1)
         self.assertEqual(FinanceTransaction.objects.count(), count_before)
         self.assertTrue(all(r['skipped'] for r in summary['clubs']))
+        # 2 Vereine × (1 Header + 6 Typ-Marker) = 14 Zeilen
         self.assertEqual(
-            FinanceMatchdayRun.objects.filter(saison='0', spieltag=1).count(), 2)
+            FinanceMatchdayRun.objects.filter(saison='0', spieltag=1).count(), 14)
 
     def test_cache_equals_ledger_after_run(self):
         run_matchday_finance(self.league, '0', 1)
@@ -210,6 +211,110 @@ class MatchdayFinanceRunTests(TestCase):
         summary = run_matchday_finance(self.league, '0', 99)
         self.assertEqual(summary['clubs'], [])
         self.assertTrue(summary['errors'])
+
+
+class IdempotenzPerTypTests(TestCase):
+    """Partiell gebuchter Spieltag wird beim Wiederholungslauf lücken-schließend ergänzt."""
+
+    def setUp(self):
+        from game.economy.matchday_run import run_club_finance, RUN_TYP_SPONSOR
+        GameSeasonState.objects.create(current_season=0)
+        self.league = League.objects.create(
+            name='Idempotenz-Liga', country='Deutschland')
+        self.heim = _mk_club('FC Idempotenz', budget='0.00', league=self.league)
+        self.gast = _mk_club('FC Gast-Idempotenz', budget='0.00', league=self.league)
+        self.fixture = SeasonFixture.objects.create(
+            league=self.league, season='0', matchday=1,
+            home_club=self.heim, away_club=self.gast, is_played=True,
+        )
+        Player.objects.create(
+            club=self.heim, first_name='Idem', last_name='Potenz', age=25,
+            position='Sturm', main_position_1='ST',
+            nationalities='Deutschland', market_value=Decimal('2000000'),
+        )
+
+    def _run_heim(self):
+        from game.economy.matchday_run import run_club_finance
+        return run_club_finance(
+            self.heim, self.league, '0', 1,
+            fixture=self.fixture,
+        )
+
+    def test_complete_run_skips_on_rerun(self):
+        """Vollständiger Lauf: zweiter Aufruf ist reines No-op."""
+        self._run_heim()
+        count_before = FinanceTransaction.objects.filter(club=self.heim).count()
+        result = self._run_heim()
+        self.assertTrue(result['skipped'])
+        self.assertEqual(
+            FinanceTransaction.objects.filter(club=self.heim).count(),
+            count_before,
+        )
+
+    def test_partial_run_nur_fehlender_typ_wird_nachgeholt(self):
+        """Wenn der SPONSOR-Marker fehlt, bucht der zweite Aufruf nur SPONSOR nach."""
+        from game.economy.matchday_run import RUN_TYP_SPONSOR
+
+        self._run_heim()
+
+        # Typ-Marker + Buchung löschen — simuliert atomaren Rollback des SPONSOR-Schritts.
+        FinanceMatchdayRun.objects.filter(
+            club=self.heim, saison='0', spieltag=1, typ=RUN_TYP_SPONSOR,
+        ).delete()
+        FinanceTransaction.objects.filter(
+            club=self.heim, typ='SPONSOR_FIX', spieltag=1,
+        ).delete()
+
+        # Budget und Konto-Cache zurücksetzen (Buchung war rückgängig gemacht).
+        sponsor_fix = FinanceTransaction.objects.filter(
+            club=self.heim, typ='SPONSOR_FIX', spieltag=1,
+        ).first()
+        self.assertIsNone(sponsor_fix, 'Test-Vorbedingung: SPONSOR_FIX muss gelöscht sein')
+
+        tx_count_before = FinanceTransaction.objects.filter(club=self.heim).count()
+
+        # Zweiter Lauf schließt die Lücke.
+        result = self._run_heim()
+
+        self.assertFalse(result['skipped'], 'Reparatur-Lauf darf nicht als skipped gelten')
+        self.assertTrue(result.get('repaired'), 'Reparatur-Lauf muss repaired=True melden')
+
+        # SPONSOR_FIX jetzt vorhanden.
+        self.assertTrue(
+            FinanceTransaction.objects.filter(club=self.heim, typ='SPONSOR_FIX', spieltag=1).exists(),
+            'SPONSOR_FIX fehlt nach dem Reparatur-Lauf',
+        )
+
+        # Kein anderer Typ wurde doppelt gebucht.
+        for typ in ('TV_SOCKEL', 'GEHALT', 'BETRIEB'):
+            cnt = FinanceTransaction.objects.filter(
+                club=self.heim, typ=typ, spieltag=1).count()
+            self.assertEqual(cnt, 1, f'{typ} wurde doppelt gebucht (count={cnt})')
+
+        # Insgesamt nur eine neue Zeile (SPONSOR_FIX) hinzugekommen.
+        tx_count_after = FinanceTransaction.objects.filter(club=self.heim).count()
+        self.assertEqual(
+            tx_count_after, tx_count_before + 1,
+            f'Erwartete genau +1 Buchung, bekam {tx_count_after - tx_count_before}',
+        )
+
+    def test_typ_marker_alle_vorhanden_nach_erstem_lauf(self):
+        """Nach dem ersten Lauf müssen alle 7 Marker (Header + 6 Typen) gesetzt sein."""
+        from game.economy.matchday_run import ALLE_RUN_TYPEN
+
+        self._run_heim()
+
+        marker_typen = set(
+            FinanceMatchdayRun.objects
+            .filter(club=self.heim, saison='0', spieltag=1)
+            .values_list('typ', flat=True)
+        )
+        self.assertIn('', marker_typen, 'Haupt-Marker (Header) fehlt')
+        self.assertEqual(
+            marker_typen - {''},
+            ALLE_RUN_TYPEN,
+            'Nicht alle Typ-Marker gesetzt nach erstem Lauf',
+        )
 
 
 class LedgerIntegrityTests(TestCase):

@@ -9,10 +9,15 @@ Reihenfolge je Verein (Cashflow-Design Kap. 12.2: Einnahmen VOR Gehältern):
   5. Stadionkosten: Unterhalt-Rate (jeder Spieltag) + Spieltagskosten (Heimspiel)
   6. Betriebskosten: Sockel-Rate + BETRIEBSQUOTE × Einnahmen seit letztem Lauf
 
-Idempotenz: FinanceMatchdayRun (unique je Verein+Saison+Spieltag) — ein
-zweiter Aufruf für denselben Spieltag ist ein No-op. Der gesamte Lauf eines
-Vereins ist EINE Transaktion: bricht ein Schritt ab, wird auch der
-Idempotenz-Marker zurückgerollt.
+Idempotenz: FinanceMatchdayRun (unique je Verein+Saison+Spieltag+Typ) —
+ein zweiter Aufruf für denselben Spieltag schließt fehlende Typ-Marker (Lücken).
+Ein Schritt ist EINE atomare Transaktion zusammen mit seinem Typ-Marker:
+bricht ein Schritt ab, fehlt sein Marker und der nächste Aufruf ergänzt ihn.
+
+Betriebskosten-Fenster: window_end = run_at des Haupt-Markers (typ=''),
+der beim ersten Aufruf erzeugt wird und auf Folgeaufrufe unveränderlich bleibt.
+Neu gebuchte Einnahmen aus Reparaturläufen fallen ins nächste Fenster
+(akzeptable Näherung für den Ausnahmefall).
 
 Sponsor: Ohne gewähltes Angebot pickt get_active_offer() automatisch das
 Sicherheits-Angebot (KI-Vereine & zögerliche Manager). Sieggeld für
@@ -28,6 +33,20 @@ from .salary import gehalt_pro_pflichtspiel, load_salary_params
 from .snapshot import ensure_season_snapshot
 from .tv import tv_sockel_rate
 
+# ── Typ-Konstanten für FinanceMatchdayRun-Marker ───────────────────────────
+RUN_TYP_HEADER = ''         # Haupt-Zeitstempel-Anker (Betriebskosten-Fenster)
+RUN_TYP_TV = 'TV_SOCKEL'   # Schritt 1: TV-Sockel
+RUN_TYP_SPONSOR = 'SPONSOR' # Schritt 2: Sponsor-Fix + Sieggeld
+RUN_TYP_TICKET = 'TICKET'   # Schritt 3: Tickets + Umfeld + Zuschauer-Bonus
+RUN_TYP_GEHALT = 'GEHALT'   # Schritt 4: Gehälter
+RUN_TYP_STADION = 'STADION' # Schritt 5: Stadion-Unterhalt + Spieltagskosten
+RUN_TYP_BETRIEB = 'BETRIEB' # Schritt 6: Betriebskosten
+
+ALLE_RUN_TYPEN = frozenset({
+    RUN_TYP_TV, RUN_TYP_SPONSOR, RUN_TYP_TICKET,
+    RUN_TYP_GEHALT, RUN_TYP_STADION, RUN_TYP_BETRIEB,
+})
+
 # Laufende Einnahmen für die Betriebskosten-Quote (Spec Kap. 10).
 # Bewusst OHNE Transfers/Ausbildungsabgabe (Zirkulation) und ohne
 # KORREKTUR_ADMIN (Admin-Eingriffe sind kein Umsatz).
@@ -36,6 +55,38 @@ OPERATIVE_EINNAHME_TYPEN = (
     'TV_SOCKEL', 'TV_PLATZ', 'TV_KOEFF', 'FALLSCHIRM',
     'PRAEMIE_POKAL', 'PRAEMIE_SUPERCUP', 'PRAEMIE_INTL',
 )
+
+
+def _mark_typ(club, saison, matchday, typ):
+    """Setzt den Typ-Marker (INNERHALB der aufrufenden atomic-Transaktion)."""
+    from game.models import FinanceMatchdayRun
+    FinanceMatchdayRun.objects.get_or_create(
+        club=club, saison=saison, spieltag=matchday, typ=typ,
+    )
+
+
+def _get_zuschauer_from_db(club, saison, matchday) -> int:
+    """Rekonstruiert die Zuschauerzahl aus der TICKET-Buchung (Reparaturlauf).
+
+    Wird benötigt, wenn der TICKET-Marker bereits gesetzt ist, der STADION-Marker
+    aber noch fehlt (sehr seltener Fehlerfall zwischen den atomaren Blöcken).
+    """
+    from game.models import FinanceTransaction, MatchdayRevenue
+
+    tx = (
+        FinanceTransaction.objects
+        .filter(
+            club=club, saison=saison, spieltag=matchday,
+            typ='TICKET', referenz_typ='matchday_revenue',
+        )
+        .first()
+    )
+    if tx is None:
+        return 0
+    try:
+        return MatchdayRevenue.objects.get(pk=tx.referenz_id).attendance
+    except Exception:
+        return 0
 
 
 def _book_salaries(club, saison, matchday, anker, salary_params):
@@ -233,21 +284,40 @@ def _book_sponsor_income(club, saison, matchday, fixture, result):
 def run_club_finance(club, league, saison: str, matchday: int,
                      home_fixture=None, fixture=None, tv_rate=None,
                      anker=None, salary_params=None) -> dict:
-    """Kompletter Finanz-Spieltagslauf für EINEN Verein (idempotent).
+    """Kompletter Finanz-Spieltagslauf für EINEN Verein (idempotent per Typ).
 
     ``fixture`` = das Fixture des Vereins an diesem Spieltag (heim ODER
     auswärts) — Basis für das Sponsor-Sieggeld. ``home_fixture`` bleibt
     separat, weil nur Heimspiele Tickets erzeugen.
+
+    Wiederholungsaufruf: Nur fehlende Typ-Marker werden nachgeholt. Jeder
+    Schritt ist zusammen mit seinem Marker atomar — fällt ein Schritt aus,
+    fehlt sein Marker und der nächste Aufruf ergänzt ihn lücken-schließend.
     """
     from game.models import FinanceMatchdayRun
 
     saison = str(saison)
 
-    if FinanceMatchdayRun.objects.filter(
-        club=club, saison=saison, spieltag=matchday,
-    ).exists():
+    # ── Haupt-Marker (typ='') — Zeitstempel-Anker für Betriebskosten-Fenster ─
+    # get_or_create: erster Aufruf erzeugt den Marker, Folgeaufrufe geben ihn
+    # zurück ohne run_at zu ändern (window_end bleibt stabil über Läufe hinweg).
+    header, header_created = FinanceMatchdayRun.objects.get_or_create(
+        club=club, saison=saison, spieltag=matchday, typ=RUN_TYP_HEADER,
+    )
+
+    # Welche Typ-Marker existieren bereits?
+    done_typen = set(
+        FinanceMatchdayRun.objects
+        .filter(club=club, saison=saison, spieltag=matchday)
+        .exclude(typ=RUN_TYP_HEADER)
+        .values_list('typ', flat=True)
+    )
+
+    if done_typen >= ALLE_RUN_TYPEN:
         return {'club': club.name, 'skipped': True}
 
+    # ── Pre-compute (einmal pro Aufruf, unabhängig davon wie viele Schritte ─
+    # noch ausstehen)                                                          ─
     if tv_rate is None:
         tv_rate = tv_sockel_rate(league, saison)
     if anker is None:
@@ -255,7 +325,12 @@ def run_club_finance(club, league, saison: str, matchday: int,
     if salary_params is None:
         salary_params = load_salary_params(saison)
 
-    result = {'club': club.name, 'skipped': False, 'tickets': None}
+    result = {
+        'club': club.name,
+        'skipped': False,
+        'repaired': not header_created,
+        'tickets': None,
+    }
 
     # Fällige Stadionausbauten fertigstellen, BEVOR Nachfrage und
     # Unterhalt gerechnet werden (Kapazität wirkt auf beides).
@@ -267,62 +342,91 @@ def run_club_finance(club, league, saison: str, matchday: int,
     if _stadium is not None:
         resolve_due_expansions(_stadium)
 
-    with transaction.atomic():
-        run = FinanceMatchdayRun.objects.create(
-            club=club, saison=saison, spieltag=matchday,
-        )
-        prev = (
-            FinanceMatchdayRun.objects
-            .filter(club=club, run_at__lt=run.run_at)
-            .exclude(pk=run.pk)
-            .order_by('-run_at')
-            .first()
-        )
-        window_start = prev.run_at if prev else run.run_at
+    # Betriebskosten-Fenster: (window_start, header.run_at].
+    # Vorheriger Haupt-Marker (anderer Spieltag) liefert window_start.
+    prev = (
+        FinanceMatchdayRun.objects
+        .filter(club=club, typ=RUN_TYP_HEADER, run_at__lt=header.run_at)
+        .order_by('-run_at')
+        .first()
+    )
+    window_start = prev.run_at if prev else header.run_at
 
-        if tv_rate > 0:
-            tx = book(
-                club, 'TV_SOCKEL', tv_rate,
-                beschreibung=f'TV-Gelder Sockelrate Spieltag {matchday}',
-                saison=saison, spieltag=matchday,
-                referenz_typ='matchday', pflicht=True,
-            )
-            result['tv_sockel'] = tx.betrag
+    # ── Schritt 1: TV-Sockel ──────────────────────────────────────────────────
+    if RUN_TYP_TV not in done_typen:
+        with transaction.atomic():
+            if tv_rate > 0:
+                tx = book(
+                    club, 'TV_SOCKEL', tv_rate,
+                    beschreibung=f'TV-Gelder Sockelrate Spieltag {matchday}',
+                    saison=saison, spieltag=matchday,
+                    referenz_typ='matchday', pflicht=True,
+                )
+                result['tv_sockel'] = tx.betrag
+            _mark_typ(club, saison, matchday, RUN_TYP_TV)
 
-        offer = _book_sponsor_income(club, saison, matchday, fixture, result)
+    # ── Schritt 2: Sponsor ────────────────────────────────────────────────────
+    offer = None
+    if RUN_TYP_SPONSOR not in done_typen:
+        with transaction.atomic():
+            offer = _book_sponsor_income(club, saison, matchday, fixture, result)
+            _mark_typ(club, saison, matchday, RUN_TYP_SPONSOR)
+    elif RUN_TYP_TICKET not in done_typen:
+        # Sponsor-Angebot für den Zuschauer-Bonus im TICKET-Schritt nachladen.
+        from .sponsors import get_active_offer
+        offer = get_active_offer(club, saison, autopick=False)
 
-        zuschauer = 0
-        if home_fixture is not None:
-            entry = _book_tickets(club, home_fixture, saison, matchday)
-            if entry is not None:
-                result['tickets'] = entry.revenue_total
-                zuschauer = entry.attendance
-                umfeld_tx = _book_umfeld(
-                    club, entry.stadium, zuschauer, saison, matchday)
-                if umfeld_tx is not None:
-                    result['umfeld'] = umfeld_tx.betrag
-                if offer is not None:
-                    from .sponsors import book_zuschauer_bonus
-                    zs_tx = book_zuschauer_bonus(
-                        club, offer, entry.attendance, saison,
-                        spieltag=matchday,
-                    )
-                    if zs_tx is not None:
-                        result['sponsor_zuschauer'] = zs_tx.betrag
+    # ── Schritt 3: Tickets (nur Heimspiel) ────────────────────────────────────
+    zuschauer = 0
+    if RUN_TYP_TICKET not in done_typen:
+        with transaction.atomic():
+            if home_fixture is not None:
+                entry = _book_tickets(club, home_fixture, saison, matchday)
+                if entry is not None:
+                    result['tickets'] = entry.revenue_total
+                    zuschauer = entry.attendance
+                    umfeld_tx = _book_umfeld(
+                        club, entry.stadium, zuschauer, saison, matchday)
+                    if umfeld_tx is not None:
+                        result['umfeld'] = umfeld_tx.betrag
+                    if offer is not None:
+                        from .sponsors import book_zuschauer_bonus
+                        zs_tx = book_zuschauer_bonus(
+                            club, offer, entry.attendance, saison,
+                            spieltag=matchday,
+                        )
+                        if zs_tx is not None:
+                            result['sponsor_zuschauer'] = zs_tx.betrag
+            _mark_typ(club, saison, matchday, RUN_TYP_TICKET)
+    else:
+        # Re-run: Zuschauerzahl aus DB rekonstruieren (für STADION-Schritt).
+        zuschauer = _get_zuschauer_from_db(club, saison, matchday)
 
-        gehalt_tx = _book_salaries(club, saison, matchday, anker, salary_params)
-        result['gehalt'] = gehalt_tx.betrag if gehalt_tx else Decimal('0.00')
+    # ── Schritt 4: Gehalt ─────────────────────────────────────────────────────
+    if RUN_TYP_GEHALT not in done_typen:
+        with transaction.atomic():
+            gehalt_tx = _book_salaries(club, saison, matchday, anker, salary_params)
+            result['gehalt'] = gehalt_tx.betrag if gehalt_tx else Decimal('0.00')
+            _mark_typ(club, saison, matchday, RUN_TYP_GEHALT)
 
-        unterhalt_tx, spieltag_tx = _book_stadionkosten(
-            club, saison, matchday, zuschauer)
-        if unterhalt_tx is not None:
-            result['stadion_unterhalt'] = unterhalt_tx.betrag
-        if spieltag_tx is not None:
-            result['stadion_spieltag'] = spieltag_tx.betrag
+    # ── Schritt 5: Stadion ────────────────────────────────────────────────────
+    if RUN_TYP_STADION not in done_typen:
+        with transaction.atomic():
+            unterhalt_tx, spieltag_tx = _book_stadionkosten(
+                club, saison, matchday, zuschauer)
+            if unterhalt_tx is not None:
+                result['stadion_unterhalt'] = unterhalt_tx.betrag
+            if spieltag_tx is not None:
+                result['stadion_spieltag'] = spieltag_tx.betrag
+            _mark_typ(club, saison, matchday, RUN_TYP_STADION)
 
-        betrieb_tx = _book_betriebskosten(
-            club, saison, matchday, window_start, run.run_at)
-        result['betrieb'] = betrieb_tx.betrag if betrieb_tx else Decimal('0.00')
+    # ── Schritt 6: Betrieb ────────────────────────────────────────────────────
+    if RUN_TYP_BETRIEB not in done_typen:
+        with transaction.atomic():
+            betrieb_tx = _book_betriebskosten(
+                club, saison, matchday, window_start, header.run_at)
+            result['betrieb'] = betrieb_tx.betrag if betrieb_tx else Decimal('0.00')
+            _mark_typ(club, saison, matchday, RUN_TYP_BETRIEB)
 
     return result
 
@@ -332,7 +436,7 @@ def run_matchday_finance(league, saison: str, matchday: int) -> dict:
 
     Läuft NACH der sportlichen Simulation (Hook in season_service /
     play_matchday) oder manuell via Management-Command. Idempotent je
-    Verein+Spieltag — Doppel-Hooks sind unschädlich.
+    Verein+Spieltag+Typ — Doppel-Hooks sind unschädlich.
     """
     from game.models import SeasonFixture
 
