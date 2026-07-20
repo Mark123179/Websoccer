@@ -512,26 +512,38 @@ class LeagueAdmin(admin.ModelAdmin):
             except (ValueError, TypeError):
                 self.message_user(request, 'Ungültiger Spieltag.', messages.ERROR)
                 return redirect(reverse('admin:game_league_finance_completeness', args=[league_id]))
+            def _session_safe(club_dict):
+                """Return a JSON-safe copy of a run_club_finance result dict.
+
+                Decimal values (betrag fields) are cast to str to keep
+                precision without requiring a custom encoder.
+                """
+                from decimal import Decimal
+                out = {}
+                for k, v in club_dict.items():
+                    if isinstance(v, Decimal):
+                        out[k] = str(v)
+                    elif isinstance(v, bool):
+                        out[k] = v
+                    elif v is None:
+                        out[k] = None
+                    else:
+                        out[k] = v
+                return out
+
             try:
                 summary = run_matchday_finance(league, saison, spieltag)
                 errors = summary.get('errors', [])
-                booked = [r for r in summary.get('clubs', []) if not r.get('skipped')]
-                skipped = [r for r in summary.get('clubs', []) if r.get('skipped')]
-                if errors:
-                    self.message_user(
-                        request,
-                        f'Lücken-Re-Run Spieltag {spieltag} (Saison {saison}): '
-                        f'{len(booked)} gebucht, {len(skipped)} übersprungen. '
-                        f'Fehler: {"; ".join(str(e) for e in errors)}',
-                        messages.WARNING,
-                    )
-                else:
-                    self.message_user(
-                        request,
-                        f'Lücken-Re-Run Spieltag {spieltag} (Saison {saison}): '
-                        f'{len(booked)} Verein(e) gebucht, {len(skipped)} bereits vollständig.',
-                        messages.SUCCESS,
-                    )
+                booked = [_session_safe(r) for r in summary.get('clubs', []) if not r.get('skipped')]
+                skipped = [_session_safe(r) for r in summary.get('clubs', []) if r.get('skipped')]
+                # Persist result in session so the GET can render the detail table.
+                request.session['finance_rerun_result'] = {
+                    'saison': saison,
+                    'spieltag': spieltag,
+                    'booked': booked,
+                    'skipped': skipped,
+                    'errors': [str(e) for e in errors],
+                }
             except Exception as exc:
                 self.message_user(request, f'Fehler beim Re-Run: {exc}', messages.ERROR)
             return redirect(
@@ -576,6 +588,8 @@ class LeagueAdmin(admin.ModelAdmin):
                 'clubs': md_gaps,
             })
 
+        rerun_result = request.session.pop('finance_rerun_result', None)
+
         context = {
             **self.admin_site.each_context(request),
             'title': f'Finanz-Vollständigkeit — {league}',
@@ -586,6 +600,7 @@ class LeagueAdmin(admin.ModelAdmin):
             'total_gaps': len(gaps),
             'all_seasons': all_seasons,
             'filter_saison': filter_saison,
+            'rerun_result': rerun_result,
         }
         return render(request, 'admin/game/league/finance_completeness.html', context)
 
