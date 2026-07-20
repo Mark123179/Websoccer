@@ -6419,6 +6419,15 @@ class AITransferOffer(models.Model):
         max_digits=8, decimal_places=2, null=True, blank=True,
         verbose_name='Lückenscore',
     )
+    ki_meta = models.JSONField(
+        null=True, blank=True,
+        verbose_name='KI-Bewertungsdetails',
+        help_text=(
+            'Nur bei KI-Angeboten gesetzt. Enthält: max_gebot (KI-Schmerzgrenzen-'
+            'Maximum), schmerzgrenze, gegenwartswert, zukunftswert (alle in €), '
+            'kernspieler (bool).'
+        ),
+    )
     begruendung = models.TextField(
         blank=True, default='', verbose_name='Begründung (Admin-Review)',
     )

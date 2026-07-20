@@ -169,6 +169,13 @@ def create_offer(buyer, player, *, kauftyp, wertung, params, saison,
         offer.dry_run = dry_run
         offer.window_id = window_id
         offer.luecken_score = luecken_score
+        offer.ki_meta = {
+            'max_gebot': float(max_gebot),
+            'schmerzgrenze': float(wertung.get('schmerzgrenze', 0)),
+            'gegenwartswert': float(wertung.get('gegenwartswert', 0)),
+            'zukunftswert': float(wertung.get('zukunftswert', 0)),
+            'kernspieler': bool(wertung.get('kernspieler', False)),
+        }
         offer.begruendung = begruendung
         offer.aktuelles_gebot = gebot_fuer_stufe(offer, 1, params)
         if dry_run:
@@ -339,6 +346,13 @@ def ki_zu_ki_clearing(buyer, kandidat, *, kauftyp, params, saison,
         status=AITransferOffer.STATUS_DEAL, dry_run=False,
         window_id=window_id, noise_seed=secrets.token_hex(16),
         luecken_score=luecken_score, begruendung=grund,
+        ki_meta={
+            'max_gebot': float(max_gebot),
+            'schmerzgrenze': float(wertung.get('schmerzgrenze', 0)),
+            'gegenwartswert': float(wertung.get('gegenwartswert', 0)),
+            'zukunftswert': float(wertung.get('zukunftswert', 0)),
+            'kernspieler': bool(wertung.get('kernspieler', False)),
+        },
     )
     return {'offer': offer, 'ergebnis': 'deal', 'preis': preis}
 

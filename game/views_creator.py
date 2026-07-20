@@ -4982,6 +4982,7 @@ def creator_ki_transferzentrale(request):
             'offen': o.status in AITransferOffer.OFFENE_STATUS,
             'luecken_score': (f'{o.luecken_score:.1f}'
                               if o.luecken_score is not None else '—'),
+            'ki_meta': o.ki_meta or {},
             'begruendung': o.begruendung,
             'updated_at': timezone.localtime(o.updated_at)
                           .strftime('%d.%m.%Y %H:%M'),
