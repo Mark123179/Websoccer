@@ -6548,6 +6548,11 @@ class InsolvencyCase(models.Model):
     )
     resolved_at = models.DateTimeField(null=True, blank=True, verbose_name='Bereinigt am')
     enforced_at = models.DateTimeField(null=True, blank=True, verbose_name='Vollstreckt am')
+    reminder_sent = models.BooleanField(
+        default=False,
+        verbose_name='Erinnerung gesendet',
+        help_text='Wird gesetzt, sobald die 1–2-Tage-Erinnerungs-News erzeugt wurde.',
+    )
 
     class Meta:
         ordering = ['-opened_at']

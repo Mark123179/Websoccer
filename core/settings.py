@@ -333,6 +333,9 @@ _FINANCE_INTEGRITY_INTERVAL = float(
 _FORCED_AUCTION_INTERVAL = float(
     os.environ.get('CELERY_FORCED_AUCTION_INTERVAL', 24 * 60 * 60)
 )
+_INSOLVENCY_REMINDER_INTERVAL = float(
+    os.environ.get('CELERY_INSOLVENCY_REMINDER_INTERVAL', 24 * 60 * 60)
+)
 CELERY_BEAT_SCHEDULE = {
     'city-pin-check-taeglich': {
         'task': 'game.tasks.run_management_command',
@@ -351,5 +354,11 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'game.tasks.run_management_command',
         'schedule': _FORCED_AUCTION_INTERVAL,
         'args': ('resolve_forced_auctions',),
+    },
+    # Erinnerungs-News kurz vor Fristablauf offener Vermerke (Spec Kap. 12.3).
+    'insolvency-reminders-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': _INSOLVENCY_REMINDER_INTERVAL,
+        'args': ('check_insolvency_reminders',),
     },
 }
