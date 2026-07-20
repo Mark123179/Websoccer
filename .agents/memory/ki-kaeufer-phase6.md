@@ -29,6 +29,19 @@ KI-Transferzentrale storniert sie deshalb beim Umschalten auf scharf.
 Command), muss denselben Storno machen, sonst ist die Angebotsaktivität im
 ersten scharfen Fenster massiv unterdrückt.
 
+## Fenster-Gate: KI-Käufer läuft NUR bei offenem Transferfenster
+`run_ai_buyer_matchday` kehrt sofort zurück, wenn
+`GameSeasonState.transfer_window_open=False` — auch wenn dry_run=False gesetzt
+ist. Saison 0 lief komplett mit geschlossenem Fenster: 0 Angebote, 0 Käufe,
+Ablöse/MW-Kennzahl blieb „nicht messbar".
+**Why:** dry_run und Fenster sind zwei unabhängige Gates; „KI-Käufer scharf"
+ohne offenes Fenster ist ein No-op.
+**How to apply:** Beim Saisonstart prüfen, dass BEIDE gesetzt sind:
+`transfer_window_open=True` (+ passende `transfer_window_id` `<saison>-F1`)
+und `KI_KAEUFER.dry_run=False`. Nachträglicher Backfill für eine bereits
+geschlossene Saison ist möglich: manueller `run_ai_buyer_matchday(...,
+saison=<alt>, spieltag=<unbenutzt>)` bucht mit dem übergebenen Saison-Tag.
+
 ## Kadenz-Limits (eingefroren)
 Manager-Postfach: max 2 offene / 4 je Fenster. KI-Seite: max 1 offen / 3 je
 Fenster. Im Trockenlauf zählt Status `berechnet` als offen (bewusst, damit die
