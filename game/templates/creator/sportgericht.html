@@ -59,6 +59,39 @@
     }
     .csg-form button:hover { background:rgba(224,82,82,.3); color:#fff; }
     .csg-empty { color:#8a9bb0; font-size:.82rem; margin:0; }
+    .csg-ki-box {
+      background:rgba(0,180,255,.07); border:1px solid rgba(0,180,255,.22);
+      border-radius:8px; padding:14px 20px; margin-bottom:24px;
+      font-size:.82rem; color:#c8d4e0;
+    }
+    .csg-ki-box-title {
+      font-size:.73rem; font-weight:700; color:#00b4ff;
+      text-transform:uppercase; letter-spacing:.06em; margin:0 0 10px 0;
+    }
+    .csg-ki-stats { display:flex; gap:28px; flex-wrap:wrap; }
+    .csg-ki-stat { display:flex; flex-direction:column; gap:2px; }
+    .csg-ki-stat-val { font-size:1.05rem; font-weight:700; color:#e0eaf5; }
+    .csg-ki-stat-lbl { font-size:.7rem; color:#8a9bb0; text-transform:uppercase; letter-spacing:.04em; }
+    .csg-badge--ki {
+      background:rgba(0,180,255,.15); color:#00c4ff;
+      border:1px solid rgba(0,180,255,.4);
+    }
+    .csg-bids-toggle {
+      background:none; border:none; color:#8a9bb0; font-size:.75rem;
+      cursor:pointer; padding:0; text-decoration:underline dotted;
+    }
+    .csg-bids-toggle:hover { color:#c8d4e0; }
+    .csg-bid-list {
+      margin:6px 0 0 0; padding:0; list-style:none; font-size:.76rem;
+    }
+    .csg-bid-list li {
+      display:flex; gap:10px; align-items:center;
+      padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04);
+      color:#c8d4e0;
+    }
+    .csg-bid-list li:last-child { border-bottom:none; }
+    .csg-bid-amount { font-weight:700; color:#e0eaf5; min-width:90px; }
+    .csg-bid-club { flex:1; }
   </style>
 
   {% if messages %}
@@ -136,6 +169,39 @@
     {% endif %}
   </div>
 
+  <!-- KI-Gebote Zusammenfassung -->
+  {% if ki_summary %}
+  <div class="csg-ki-box">
+    <p class="csg-ki-box-title">KI-Zwangsversteigerungen — letzter Lauf</p>
+    <div class="csg-ki-stats">
+      <div class="csg-ki-stat">
+        <span class="csg-ki-stat-val">{{ ki_summary.gebote }}</span>
+        <span class="csg-ki-stat-lbl">Gebote platziert</span>
+      </div>
+      <div class="csg-ki-stat">
+        <span class="csg-ki-stat-val">{{ ki_summary.auktionen }}</span>
+        <span class="csg-ki-stat-lbl">Auktionen geprüft</span>
+      </div>
+      <div class="csg-ki-stat">
+        <span class="csg-ki-stat-val">{{ ki_summary.uebersprungen }}</span>
+        <span class="csg-ki-stat-lbl">Übersprungen</span>
+      </div>
+      <div class="csg-ki-stat">
+        <span class="csg-ki-stat-val" style="{% if ki_summary.dry_run %}color:#e08c52;{% else %}color:#4cc984;{% endif %}">
+          {% if ki_summary.dry_run %}Trockenlauf{% else %}Scharf{% endif %}
+        </span>
+        <span class="csg-ki-stat-lbl">dry_run</span>
+      </div>
+      {% if ki_summary.letzter_lauf %}
+      <div class="csg-ki-stat">
+        <span class="csg-ki-stat-val" style="font-size:.82rem;font-weight:400;color:#8a9bb0;">{{ ki_summary.letzter_lauf|slice:":16"|default:"—" }}</span>
+        <span class="csg-ki-stat-lbl">Zeitstempel</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Auktionen -->
   <div class="csg-panel">
     <p class="csg-panel-title">Zwangsversteigerungen</p>
@@ -171,7 +237,26 @@
             <span class="csg-badge csg-badge--wait">{{ row.auction.get_status_display }}</span>
             {% endif %}
           </td>
-          <td>{{ row.bid_count }}</td>
+          <td>
+            {% if row.bids %}
+            <details>
+              <summary class="csg-bids-toggle">{{ row.bid_count }} Gebot{{ row.bid_count|pluralize:",e" }}</summary>
+              <ul class="csg-bid-list">
+                {% for bid in row.bids %}
+                <li>
+                  <span class="csg-bid-amount">{{ bid.amount_fmt }}</span>
+                  <span class="csg-bid-club">{{ bid.club_name }}</span>
+                  {% if bid.is_ki %}
+                  <span class="csg-badge csg-badge--ki">KI</span>
+                  {% endif %}
+                </li>
+                {% endfor %}
+              </ul>
+            </details>
+            {% else %}
+            <span style="color:#8a9bb0;">0</span>
+            {% endif %}
+          </td>
           <td>{{ row.winner_name }}</td>
           <td>{{ row.winner_amount_fmt }}</td>
         </tr>

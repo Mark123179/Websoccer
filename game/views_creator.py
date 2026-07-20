@@ -5120,22 +5120,45 @@ def creator_sportgericht(request):
                 status=ForcedAuction.STATUS_OPEN).count(),
         })
 
+    from django.core.cache import cache
+    from game.models import ForcedAuctionBid
+
     auction_rows = []
-    for a in (
+    auctions_qs = list(
         ForcedAuction.objects
         .select_related('player', 'seller_club', 'winning_bid',
                         'winning_bid__club')
         .order_by('-created_at')[:100]
+    )
+    auction_pks = [a.pk for a in auctions_qs]
+    bids_by_auction: dict = {pk: [] for pk in auction_pks}
+    for bid in (
+        ForcedAuctionBid.objects
+        .filter(auction_id__in=auction_pks)
+        .select_related('club', 'manager')
+        .order_by('-amount', 'created_at')
     ):
+        bids_by_auction[bid.auction_id].append({
+            'club_name': bid.club.name,
+            'amount_fmt': _fmt(bid.amount),
+            'is_ki': bid.manager_id is None,
+            'created_at': bid.created_at,
+        })
+
+    for a in auctions_qs:
+        bids = bids_by_auction[a.pk]
         auction_rows.append({
             'auction': a,
             'min_bid_fmt': _fmt(a.min_bid),
-            'bid_count': a.bids.count(),
+            'bid_count': len(bids),
+            'bids': bids,
             'winner_name': (a.winning_bid.club.name
                             if a.winning_bid_id else '—'),
             'winner_amount_fmt': (_fmt(a.winning_bid.amount)
                                   if a.winning_bid_id else '—'),
         })
+
+    ki_summary = cache.get('ki_zv_last_summary')
 
     resolved_cases = (
         InsolvencyCase.objects
@@ -5148,4 +5171,5 @@ def creator_sportgericht(request):
         'case_rows': case_rows,
         'auction_rows': auction_rows,
         'resolved_cases': resolved_cases,
+        'ki_summary': ki_summary,
     })

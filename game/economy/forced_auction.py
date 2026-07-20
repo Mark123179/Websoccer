@@ -22,6 +22,7 @@ import hashlib
 import logging
 from decimal import Decimal
 
+from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
 
@@ -236,6 +237,8 @@ def run_ki_zwangsversteigerungen(today=None, saison=None):
     }
     if dry_run:
         logger.info('KI-Zwangsversteigerung: dry_run=True — keine Gebote.')
+        summary['letzter_lauf'] = timezone.now().isoformat()
+        cache.set('ki_zv_last_summary', summary, timeout=60 * 60 * 24 * 7)
         return summary
 
     snapshot = ensure_season_snapshot(saison)
@@ -335,6 +338,9 @@ def run_ki_zwangsversteigerungen(today=None, saison=None):
                     club.name, player.full_name, exc,
                 )
 
+    from django.utils import timezone as _tz
+    summary['letzter_lauf'] = _tz.now().isoformat()
+    cache.set('ki_zv_last_summary', summary, timeout=60 * 60 * 24 * 7)
     return summary
 
 
