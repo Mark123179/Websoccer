@@ -315,6 +315,29 @@
     </form>
 
     {% if gaps %}
+
+    {# Alle-nachholen-Button (globale Aktion für den aktuellen Filter) #}
+    <form method="post" action="{% url 'creator_finance_gap_retry' %}" class="fa-gap-all-form">
+      {% csrf_token %}
+      <input type="hidden" name="nachholen_alle" value="1">
+      <input type="hidden" name="back_season"   value="{{ sel_season }}">
+      <input type="hidden" name="gap_saison"    value="{{ gap_saison }}">
+      <input type="hidden" name="gap_liga"      value="{{ gap_liga_id }}">
+      <input type="hidden" name="gap_spieltag"  value="{{ gap_spieltag }}">
+      <button type="submit" class="fa-retry-all-btn">
+        ↻ Alle {{ gaps|length }} Lücke{{ gaps|length|pluralize:"n" }} nachholen
+      </button>
+    </form>
+
+    {# Django-Messages (Erfolg / Fehler nach Nachhol-Lauf) #}
+    {% if messages %}
+    <div class="fa-messages">
+      {% for msg in messages %}
+      <div class="fa-msg fa-msg-{{ msg.tags }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <table class="fa-table fa-gap-table">
       <thead>
         <tr>
@@ -325,6 +348,7 @@
           <th>Rolle</th>
           <th>Fehlende Marker</th>
           <th>Header</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -349,13 +373,41 @@
             <span class="fa-header-badge fa-header-ok">OK</span>
             {% endif %}
           </td>
+          <td class="fa-r">
+            <form method="post" action="{% url 'creator_finance_gap_retry' %}" class="fa-gap-row-form">
+              {% csrf_token %}
+              <input type="hidden" name="liga_id"      value="{{ g.liga_id }}">
+              <input type="hidden" name="saison"       value="{{ g.saison }}">
+              <input type="hidden" name="spieltag"     value="{{ g.spieltag }}">
+              <input type="hidden" name="back_season"  value="{{ sel_season }}">
+              <input type="hidden" name="gap_saison"   value="{{ gap_saison }}">
+              <input type="hidden" name="gap_liga"     value="{{ gap_liga_id }}">
+              <input type="hidden" name="gap_spieltag" value="{{ gap_spieltag }}">
+              <button type="submit" class="fa-retry-btn" title="Finanzlauf für {{ g.liga }} Saison {{ g.saison }} Spieltag {{ g.spieltag }} nachholen">↻ Nachholen</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
     {% elif gaps_checked == 0 %}
+    {# Messages auch ohne Lücken anzeigen (z.B. "erfolgreich nachgeholt") #}
+    {% if messages %}
+    <div class="fa-messages">
+      {% for msg in messages %}
+      <div class="fa-msg fa-msg-{{ msg.tags }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
     <p class="fa-gap-none fa-gap-neutral">Keine gespielten Spieltage gefunden (Filter zu eng oder noch keine Simulation).</p>
     {% else %}
+    {% if messages %}
+    <div class="fa-messages">
+      {% for msg in messages %}
+      <div class="fa-msg fa-msg-{{ msg.tags }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
     <p class="fa-gap-none">Keine Lücken — alle {{ gaps_checked }} geprüften (Spieltag, Verein)-Kombinationen sind vollständig.</p>
     {% endif %}
   </div>
@@ -465,5 +517,21 @@
 .fa-gap-none::before { content: '✓'; font-weight: 900; }
 .fa-gap-neutral { color: #556677; }
 .fa-gap-neutral::before { content: '—'; }
+
+/* Nachholen-Buttons */
+.fa-gap-all-form { margin-bottom: .75rem; }
+.fa-retry-all-btn { background: #00d4ff18; border: 1px solid #00d4ff55; border-radius: 6px; color: #00d4ff; font-size: .78rem; font-weight: 800; padding: .38rem 1rem; cursor: pointer; transition: background .15s; letter-spacing: .03em; }
+.fa-retry-all-btn:hover { background: #00d4ff2e; border-color: #00d4ff88; }
+.fa-gap-row-form { margin: 0; }
+.fa-retry-btn { background: #071525; border: 1px solid #0d2035; border-radius: 5px; color: #556677; font-size: .72rem; font-weight: 700; padding: .22rem .65rem; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.fa-retry-btn:hover { border-color: #00d4ff44; color: #00d4ff; background: #081c30; }
+
+/* Messages */
+.fa-messages { margin-bottom: .75rem; display: flex; flex-direction: column; gap: .35rem; }
+.fa-msg { font-size: .8rem; font-weight: 600; padding: .45rem .9rem; border-radius: 6px; }
+.fa-msg-success { background: #22c55e18; color: #22c55e; border: 1px solid #22c55e44; }
+.fa-msg-warning { background: #f59e0b18; color: #f59e0b; border: 1px solid #f59e0b44; }
+.fa-msg-error { background: #ef444418; color: #ef4444; border: 1px solid #ef444444; }
+.fa-msg-info { background: #00d4ff14; color: #00d4ff; border: 1px solid #00d4ff33; }
 </style>
 {% endblock %}

@@ -4367,6 +4367,138 @@ def creator_finanzanalyse(request):
 
 
 @staff_member_required
+@require_POST
+def creator_finance_gap_retry(request):
+    """Nachhol-Lauf für einen fehlenden Spieltag-Finanzlauf (POST, CSRF-geschützt).
+
+    Erwartet POST-Parameter:
+      liga_id   — ID der Liga
+      saison    — Saison-String (z.B. '1')
+      spieltag  — Spieltag-Nummer
+
+    Optional:
+      gap_saison / gap_liga / gap_spieltag — Filter-Parameter für den Redirect zurück.
+      nachholen_alle=1                      — Alle aktuell sichtbaren Lücken nachholen.
+    """
+    from .economy.matchday_run import run_matchday_finance
+    from .models import League
+
+    # ── Redirect-URL mit Filterparametern rekonstruieren ─────────────────
+    base_url = reverse('creator_finanzanalyse')
+    params = []
+    back_season   = request.POST.get('back_season', '')
+    back_gap_saison  = request.POST.get('gap_saison', '')
+    back_gap_liga    = request.POST.get('gap_liga', '')
+    back_gap_spieltag = request.POST.get('gap_spieltag', '')
+    if back_season:
+        params.append(f'season={back_season}')
+    if back_gap_saison:
+        params.append(f'gap_saison={back_gap_saison}')
+    if back_gap_liga:
+        params.append(f'gap_liga={back_gap_liga}')
+    if back_gap_spieltag:
+        params.append(f'gap_spieltag={back_gap_spieltag}')
+    redirect_url = f'{base_url}?{"&".join(params)}' if params else base_url
+
+    nachholen_alle = request.POST.get('nachholen_alle') == '1'
+
+    if nachholen_alle:
+        # Alle Lücken für den aktuellen Filter nachholen
+        from .economy.integrity import check_finance_completeness
+
+        gap_saison_f   = request.POST.get('gap_saison') or None
+        gap_liga_f_raw = request.POST.get('gap_liga') or None
+        gap_spieltag_f_raw = request.POST.get('gap_spieltag') or None
+        gap_liga_f_id  = int(gap_liga_f_raw) if gap_liga_f_raw and gap_liga_f_raw.isdigit() else None
+        gap_spieltag_f = int(gap_spieltag_f_raw) if gap_spieltag_f_raw and gap_spieltag_f_raw.isdigit() else None
+
+        completeness = check_finance_completeness(
+            saison=gap_saison_f,
+            liga_id=gap_liga_f_id,
+            spieltag=gap_spieltag_f,
+        )
+        combos = set()
+        for g in completeness['gaps']:
+            combos.add((g['liga_id'], g['saison'], g['spieltag']))
+
+        ok_count, err_count = 0, 0
+        for liga_id_c, saison_c, spieltag_c in sorted(combos):
+            try:
+                liga = League.objects.get(pk=liga_id_c)
+                run_matchday_finance(liga, saison_c, spieltag_c)
+                ok_count += 1
+            except Exception as exc:
+                err_count += 1
+                messages.error(
+                    request,
+                    f'Fehler bei Liga {liga_id_c}, Saison {saison_c}, '
+                    f'Spieltag {spieltag_c}: {exc}',
+                )
+
+        if ok_count:
+            messages.success(
+                request,
+                f'{ok_count} Spieltag-Finanzlauf/-läufe nachgeholt'
+                f'{f", {err_count} Fehler" if err_count else ""}.',
+            )
+        elif not err_count:
+            messages.info(request, 'Keine Lücken gefunden — nichts zu tun.')
+        return redirect(redirect_url)
+
+    # ── Einzelner Nachhol-Lauf ────────────────────────────────────────────
+    liga_id_raw   = request.POST.get('liga_id', '')
+    saison        = request.POST.get('saison', '').strip()
+    spieltag_raw  = request.POST.get('spieltag', '')
+
+    if not liga_id_raw or not saison or not spieltag_raw:
+        messages.error(request, 'Unvollständige Parameter (liga_id, saison, spieltag benötigt).')
+        return redirect(redirect_url)
+
+    try:
+        liga_id  = int(liga_id_raw)
+        spieltag = int(spieltag_raw)
+    except ValueError:
+        messages.error(request, 'liga_id und spieltag müssen ganzzahlig sein.')
+        return redirect(redirect_url)
+
+    try:
+        liga = League.objects.get(pk=liga_id)
+    except League.DoesNotExist:
+        messages.error(request, f'Liga mit ID {liga_id} nicht gefunden.')
+        return redirect(redirect_url)
+
+    try:
+        result = run_matchday_finance(liga, saison, spieltag)
+    except Exception as exc:
+        messages.error(request, f'Fehler beim Nachholen: {exc}')
+        return redirect(redirect_url)
+
+    errors = result.get('errors', [])
+    gaps   = result.get('gaps', [])
+    clubs  = result.get('clubs', [])
+    skipped = sum(1 for c in clubs if c.get('skipped'))
+    repaired = sum(1 for c in clubs if c.get('repaired'))
+
+    if errors:
+        for e in errors[:3]:
+            messages.warning(request, e)
+    if gaps:
+        messages.warning(
+            request,
+            f'Noch {len(gaps)} Lücke(n) nach dem Lauf (teilweise nachgeholt).',
+        )
+    else:
+        summary_parts = [f'{liga.name} Saison {saison} Spieltag {spieltag}']
+        if repaired:
+            summary_parts.append(f'{repaired} Reparatur(en)')
+        if skipped:
+            summary_parts.append(f'{skipped} bereits vollständig')
+        messages.success(request, 'Finanzlauf nachgeholt: ' + ' · '.join(summary_parts) + '.')
+
+    return redirect(redirect_url)
+
+
+@staff_member_required
 def creator_kalibrierung(request):
     """Kalibrierung & Regler-Pflege (Finanzsystem Phase 7, Spec Kap. 16).
 
