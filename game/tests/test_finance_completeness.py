@@ -11,10 +11,17 @@ Integration (Task #764):
   - run_matchday_finance() enthält 'gaps'-Schlüssel im Rückgabe-Dict
   - Vollständige Marker → gaps=[]
   - Fehlende Marker → gaps enthält die Lücke
+
+Admin-View (Task #770):
+  - GET finance_completeness_view → 200 für Superuser
+  - POST finance_completeness_view → ruft run_matchday_finance() auf + korrekte Message
 """
 from decimal import Decimal
+from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
 from game.economy.integrity import check_finance_completeness
 from game.economy.matchday_run import (
@@ -318,3 +325,98 @@ class RunMatchdayFinanceCompletenessIntegrationTests(TestCase):
 
         # Lücken der anderen Liga dürfen nicht auftauchen.
         self.assertEqual(result['gaps'], [])
+
+
+class FinanceCompletenessAdminViewTests(TestCase):
+    """Admin-View finance_completeness_view: GET 200 + POST triggert Re-Run."""
+
+    def setUp(self):
+        GameSeasonState.objects.create(current_season=0)
+        User = get_user_model()
+        self.superuser = User.objects.create_superuser(
+            'fc_admin', 'admin@example.de', 'pw12345',
+        )
+        self.liga = _mk_league('Admin-Test-Liga')
+        self.heim = _mk_club('FC Admin-Heim', self.liga)
+        self.gast = _mk_club('FC Admin-Gast', self.liga)
+        self.fixture = _mk_fixture(self.liga, self.heim, self.gast, matchday=1, saison='0')
+        _set_all_markers(self.heim, '0', 1)
+        _set_all_markers(self.gast, '0', 1)
+        self.url = reverse('admin:game_league_finance_completeness', args=[self.liga.pk])
+
+    def test_get_returns_200_for_superuser(self):
+        """GET finance_completeness_view liefert 200 für einen eingeloggten Superuser."""
+        self.client.force_login(self.superuser)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, 200)
+
+    def test_get_contains_league_name(self):
+        """GET-Response enthält den Liga-Namen im Titel-Bereich."""
+        self.client.force_login(self.superuser)
+        resp = self.client.get(self.url)
+        self.assertContains(resp, self.liga.name)
+
+    def test_post_calls_run_matchday_finance_and_sets_success_message(self):
+        """POST triggert run_matchday_finance() und setzt eine SUCCESS-Message."""
+        self.client.force_login(self.superuser)
+
+        mock_summary = {
+            'clubs': [
+                {'club_id': self.heim.pk, 'skipped': False},
+                {'club_id': self.gast.pk, 'skipped': True},
+            ],
+            'errors': [],
+            'gaps': [],
+        }
+
+        with patch(
+            'game.economy.matchday_run.run_matchday_finance', return_value=mock_summary
+        ) as mock_run:
+            resp = self.client.post(self.url, {
+                'saison': '0',
+                'spieltag': '1',
+            }, follow=True)
+
+        mock_run.assert_called_once_with(self.liga, '0', 1)
+
+        messages = list(resp.context['messages'])
+        self.assertTrue(
+            any('1' in str(m) and 'gebucht' in str(m) for m in messages),
+            f'Keine passende Success-Message gefunden; Nachrichten: {[str(m) for m in messages]}',
+        )
+
+    def test_post_with_invalid_spieltag_sets_error_message(self):
+        """POST mit ungültigem Spieltag-Wert setzt eine ERROR-Message."""
+        self.client.force_login(self.superuser)
+        resp = self.client.post(self.url, {
+            'saison': '0',
+            'spieltag': 'kein_int',
+        }, follow=True)
+        messages = list(resp.context['messages'])
+        self.assertTrue(
+            any('Ungültiger' in str(m) or 'ERROR' in str(m).upper() or 'error' in str(m).lower()
+                for m in messages),
+            f'Keine Fehler-Message gefunden; Nachrichten: {[str(m) for m in messages]}',
+        )
+
+    def test_post_with_errors_from_run_sets_warning_message(self):
+        """POST mit Fehlern im Re-Run-Summary setzt eine WARNING-Message."""
+        self.client.force_login(self.superuser)
+
+        mock_summary = {
+            'clubs': [{'club_id': self.heim.pk, 'skipped': False}],
+            'errors': ['Buchungsfehler Testverein'],
+            'gaps': [],
+        }
+
+        with patch('game.economy.matchday_run.run_matchday_finance', return_value=mock_summary):
+            resp = self.client.post(self.url, {
+                'saison': '0',
+                'spieltag': '1',
+            }, follow=True)
+
+        messages = list(resp.context['messages'])
+        self.assertTrue(
+            any('Fehler' in str(m) for m in messages),
+            f'Keine Warning-Message mit Fehler-Inhalt; Nachrichten: {[str(m) for m in messages]}',
+        )
