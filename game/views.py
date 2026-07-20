@@ -5772,7 +5772,7 @@ def reverse_club_detail(club):
 
 
 def _player_nation_nt_logo(player):
-    from django.contrib.staticfiles import finders
+    from game.asset_urls import federation_url
     from game.models import COUNTRY_FLAG_ASSETS
 
     registered = (player.nt_nationality or '').strip()
@@ -5785,13 +5785,7 @@ def _player_nation_nt_logo(player):
         first_country = badges[0].get('name', '')
         asset_id = COUNTRY_FLAG_ASSETS.get(first_country, {}).get('asset_id', '')
 
-    if asset_id:
-        for ext in ('png', 'svg'):
-            nt_path = f'game/images/crests/nt_{asset_id}.{ext}'
-            if finders.find(nt_path):
-                return nt_path
-
-    return ''
+    return federation_url(asset_id)
 
 
 def _player_nation_nt_name(player):

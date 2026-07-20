@@ -123,6 +123,17 @@ def competition_url(competition_id):
     return f'{ASSETS_BASE}competitions/{clean_id}_comp.png'
 
 
+def federation_url(asset_id):
+    """Föderations-Badge eines Verbands (Nationalmannschaft).
+
+    Neue Asset-Struktur (Live-Server): /assets/federations/{id}_federation.png
+    Ersetzt die alten statischen Pfade game/images/crests/nt_{id}.png.
+    """
+    if not asset_id:
+        return ''
+    return f'{ASSETS_BASE}federations/{asset_id}_federation.png'
+
+
 def avatar_url(name):
     if not name:
         return ''
