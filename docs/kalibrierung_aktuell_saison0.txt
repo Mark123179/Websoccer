@@ -1,0 +1,26 @@
+Kalibrierungs-Report — Saison 0 (Spec Kap. 16)
+Status: 0 Alarm · 0 außerhalb Korridor · 3 nicht messbar
+[NICHT MESSBAR] Geldmengenwachstum vs. MW-Drift
+    Korridor: Wachstum ≈ MW-Drift ± 2 pp · Alarm > 4 %/Saison
+    Ist: Wachstum +1,9 % · MW-Drift —
+    Hinweis: MW-Drift braucht zwei Saison-Snapshots — Korridorvergleich erst ab der zweiten Saison möglich.
+    Regler: BETRIEBSQUOTE, TV_TOEPFE, SPONSOR_MW_ANTEIL, Auktionsvolumen pro Saison
+[NICHT MESSBAR] Ablöse/MW-Median
+    Korridor: Ziel 1.3–1.8 · Alarm > 2.2
+    Ist: Median — (0 Transfers)
+    Hinweis: Keine Transfers mit MW-Bezug in dieser Saison.
+    Regler: KI_ANGEBOTS_KADENZ, KI_KAEUFER, SCHMERZGRENZE_KONSTANTEN
+[NICHT MESSBAR] Gehaltslasten nach Vereinsgröße
+    Korridor: klein 16–20 % · top 28–30 % des Kader-MW
+    Ist: klein 0,5 % · top 0,7 % (18 Vereine, Gruppen je 4) — anteilig, laufende Saison
+    Hinweis: Laufende Saison: Gehälter erst anteilig gebucht — Korridorvergleich erst nach Saisonabschluss. Ist-Werte nur nachrichtlich.
+    Regler: GEHALT_BASIS, GEHALT_PROGRESSION
+[IM KORRIDOR] Zuschauer-Plausibilität
+    Korridor: Zuschauer ÷ Basisnachfrage 0.5–1.3 (global, keine Saison-Zuordnung)
+    Ist: Median-Ratio 0,81 · Auslastung 68,6 % (9 Heimspiele)
+      Ausreißer: Borussia Mönchengladbach — Ratio 1.30 (32879 Zuschauer)
+    Regler: NACHFRAGE_KOEFF, NACHFRAGE_EXP, PREIS_ELASTIZITAET
+[IM KORRIDOR] KI-Kaufvolumen-Anteil
+    Korridor: ≤ 50% des Transfervolumens (Governor)
+    Ist: 0% von 42.500.000 € Transfervolumen (Limit 50%)
+    Regler: KI_ANGEBOTS_KADENZ, KI_KAEUFER

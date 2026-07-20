@@ -281,3 +281,15 @@ id = "tqiEfXTINkpBqD57yYiV2"
 uri = "file://manager_profile_export.zip"
 type = "unspecified"
 title = "Managerprofil – alle relevanten Dateien"
+
+[[outputs]]
+id = "MrldTMM-rucssIC2aMFXD"
+uri = "file://docs/kalibrierung_aktuell_saison0.txt"
+type = "text"
+title = "Kalibrierungs-Report Saison 0 (Text)"
+
+[[outputs]]
+id = "rMXGjjSfJZDvh6s4bryEF"
+uri = "file://docs/kalibrierung_aktuell_saison0.json"
+type = "unspecified"
+title = "Kalibrierungs-Report Saison 0 (JSON)"
