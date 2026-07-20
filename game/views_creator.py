@@ -5142,6 +5142,7 @@ def creator_sportgericht(request):
             'club_name': bid.club.name,
             'amount_fmt': _fmt(bid.amount),
             'is_ki': bid.manager_id is None,
+            'ki_meta': bid.ki_meta,
             'created_at': bid.created_at,
         })
 

@@ -111,7 +111,7 @@ def start_auction(case, player, min_bid, *, ends_on=None, today=None):
     return auction
 
 
-def place_bid(auction, club, manager, amount, *, today=None):
+def place_bid(auction, club, manager, amount, *, today=None, ki_meta=None):
     """Verdecktes Gebot eines Vereins (Erhöhen = Update des eigenen Gebots).
 
     Beim Bieten wird der aktuelle Kontostand als Plausibilitätsprüfung
@@ -119,6 +119,8 @@ def place_bid(auction, club, manager, amount, *, today=None):
     wird aber NICHTS reserviert. Maßgeblich ist die erneute Deckungs-
     prüfung beim Zuschlag; scheitert sie dort, rückt das nächsthöhere
     Gebot nach (Kaskade in resolve_due_auctions).
+
+    ki_meta: optionales dict mit KI-Bewertungsdetails (nur bei KI-Geboten).
     """
     from game.models import ForcedAuction, ForcedAuctionBid
 
@@ -146,9 +148,12 @@ def place_bid(auction, club, manager, amount, *, today=None):
                 'keine aktiven Ausgaben ohne Deckung).'
             )
 
+        defaults = {'manager': manager, 'amount': amount}
+        if ki_meta is not None:
+            defaults['ki_meta'] = ki_meta
         bid, created = ForcedAuctionBid.objects.update_or_create(
             auction=auction, club=club,
-            defaults={'manager': manager, 'amount': amount},
+            defaults=defaults,
         )
     return bid
 
@@ -373,8 +378,18 @@ def run_ki_zwangsversteigerungen(today=None, saison=None):
             if gebot is None:
                 continue
 
+            max_ki = max_gebot_fuer('bedarf', wert, params)
+            ki_meta = {
+                'max_gebot': float(max_ki),
+                'schmerzgrenze': float(wert.get('schmerzgrenze', 0)),
+                'gegenwartswert': float(wert.get('gegenwartswert', 0)),
+                'zukunftswert': float(wert.get('zukunftswert', 0)),
+                'kernspieler': bool(wert.get('kernspieler', False)),
+                'akute_positionen': sorted(akut) if akut else [],
+            }
+
             try:
-                place_bid(auction, club, None, gebot, today=today)
+                place_bid(auction, club, None, gebot, today=today, ki_meta=ki_meta)
                 summary['gebote'] += 1
                 logger.info(
                     'KI-ZV: %s bietet %s € auf %s.',

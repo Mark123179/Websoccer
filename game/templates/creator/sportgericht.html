@@ -92,6 +92,21 @@
     .csg-bid-list li:last-child { border-bottom:none; }
     .csg-bid-amount { font-weight:700; color:#e0eaf5; min-width:90px; }
     .csg-bid-club { flex:1; }
+    .csg-ki-detail {
+      display:flex; flex-wrap:wrap; gap:6px 16px;
+      margin-top:4px; padding:6px 10px;
+      background:rgba(0,180,255,.06); border-radius:5px;
+      border:1px solid rgba(0,180,255,.15); font-size:.7rem; color:#8ab4cc;
+    }
+    .csg-ki-detail-item { display:flex; flex-direction:column; gap:1px; }
+    .csg-ki-detail-val { font-weight:700; color:#b8d8ee; }
+    .csg-ki-detail-lbl { font-size:.63rem; color:#6a8fa8; text-transform:uppercase; letter-spacing:.04em; }
+    .csg-ki-pos-list { display:inline-flex; gap:4px; flex-wrap:wrap; }
+    .csg-ki-pos { background:rgba(0,180,255,.14); border:1px solid rgba(0,180,255,.3);
+      border-radius:3px; padding:1px 5px; font-size:.67rem; color:#00c4ff; font-weight:700; }
+    .csg-bid-row-wrap { display:flex; flex-direction:column; width:100%; border-bottom:1px solid rgba(255,255,255,.04); }
+    .csg-bid-row-wrap:last-child { border-bottom:none; }
+    .csg-bid-row-wrap .csg-bid-list-inner { display:flex; gap:10px; align-items:center; padding:3px 0; color:#c8d4e0; }
   </style>
 
   {% if messages %}
@@ -243,11 +258,58 @@
               <summary class="csg-bids-toggle">{{ row.bid_count }} Gebot{{ row.bid_count|pluralize:",e" }}</summary>
               <ul class="csg-bid-list">
                 {% for bid in row.bids %}
-                <li>
-                  <span class="csg-bid-amount">{{ bid.amount_fmt }}</span>
-                  <span class="csg-bid-club">{{ bid.club_name }}</span>
-                  {% if bid.is_ki %}
-                  <span class="csg-badge csg-badge--ki">KI</span>
+                <li class="csg-bid-row-wrap">
+                  <div class="csg-bid-list-inner">
+                    <span class="csg-bid-amount">{{ bid.amount_fmt }}</span>
+                    <span class="csg-bid-club">{{ bid.club_name }}</span>
+                    {% if bid.is_ki %}
+                    <span class="csg-badge csg-badge--ki">KI</span>
+                    {% endif %}
+                  </div>
+                  {% if bid.is_ki and bid.ki_meta %}
+                  <div class="csg-ki-detail">
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val">{{ bid.ki_meta.max_gebot|floatformat:0 }} €</span>
+                      <span class="csg-ki-detail-lbl">KI-Maximum</span>
+                    </div>
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val">{{ bid.ki_meta.schmerzgrenze|floatformat:0 }} €</span>
+                      <span class="csg-ki-detail-lbl">Schmerzgrenze</span>
+                    </div>
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val">{{ bid.ki_meta.gegenwartswert|floatformat:0 }} €</span>
+                      <span class="csg-ki-detail-lbl">Gegenwartswert</span>
+                    </div>
+                    {% if bid.ki_meta.zukunftswert %}
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val">{{ bid.ki_meta.zukunftswert|floatformat:0 }} €</span>
+                      <span class="csg-ki-detail-lbl">Zukunftswert</span>
+                    </div>
+                    {% endif %}
+                    {% if bid.ki_meta.kernspieler %}
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val" style="color:#f0c040;">Ja</span>
+                      <span class="csg-ki-detail-lbl">Kernspieler</span>
+                    </div>
+                    {% endif %}
+                    {% if bid.ki_meta.akute_positionen %}
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val">
+                        <span class="csg-ki-pos-list">
+                          {% for pos in bid.ki_meta.akute_positionen %}
+                          <span class="csg-ki-pos">{{ pos }}</span>
+                          {% endfor %}
+                        </span>
+                      </span>
+                      <span class="csg-ki-detail-lbl">Akuter Bedarf</span>
+                    </div>
+                    {% else %}
+                    <div class="csg-ki-detail-item">
+                      <span class="csg-ki-detail-val" style="color:#8ab4cc;">Generell</span>
+                      <span class="csg-ki-detail-lbl">Akuter Bedarf</span>
+                    </div>
+                    {% endif %}
+                  </div>
                   {% endif %}
                 </li>
                 {% endfor %}
