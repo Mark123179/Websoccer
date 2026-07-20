@@ -375,6 +375,9 @@
     {% if spielplan_gen_url %}
       <a class="spielplan-gen-btn" href="{{ spielplan_gen_url }}">&#9881; Generieren / Reset</a>
     {% endif %}
+    {% if finance_completeness_url %}
+      <a class="spielplan-gen-btn" href="{{ finance_completeness_url }}" style="margin-left:4px;" title="Finanz-Vollständigkeit je Spieltag prüfen">&#9888; Finanz-Vollständigkeit</a>
+    {% endif %}
   </h2>
 
   {% if spielplan_seasons %}

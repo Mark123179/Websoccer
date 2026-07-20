@@ -461,6 +461,7 @@ class LeagueAdmin(admin.ModelAdmin):
                     'spielplan_matchdays': spielplan_matchdays,
                     'spielplan_gen_url': reverse('admin:game_league_spielplan', args=[object_id]),
                     'fixture_edit_url': reverse('admin:game_league_fixture_edit', args=[object_id]),
+                    'finance_completeness_url': reverse('admin:game_league_finance_completeness', args=[object_id]),
                     'change_object_id': object_id,
                     'spielplan_total_played': total_played,
                     'spielplan_total_fixtures': total_fixtures,
@@ -484,8 +485,109 @@ class LeagueAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.fixture_edit_view),
                 name='game_league_fixture_edit',
             ),
+            path(
+                '<int:league_id>/finanz-vollstaendigkeit/',
+                self.admin_site.admin_view(self.finance_completeness_view),
+                name='game_league_finance_completeness',
+            ),
         ]
         return custom + urls
+
+    def finance_completeness_view(self, request, league_id):
+        from django.http import JsonResponse
+        from django.shortcuts import get_object_or_404, redirect, render
+        from django.urls import reverse
+        from game.economy.integrity import check_finance_completeness
+        from game.economy.matchday_run import run_matchday_finance
+
+        league = get_object_or_404(League, pk=league_id)
+
+        if request.method == 'POST':
+            if not request.user.is_staff:
+                return JsonResponse({'error': 'Keine Berechtigung'}, status=403)
+            saison = request.POST.get('saison', '').strip()
+            spieltag_raw = request.POST.get('spieltag', '').strip()
+            try:
+                spieltag = int(spieltag_raw)
+            except (ValueError, TypeError):
+                self.message_user(request, 'Ungültiger Spieltag.', messages.ERROR)
+                return redirect(reverse('admin:game_league_finance_completeness', args=[league_id]))
+            try:
+                summary = run_matchday_finance(league, saison, spieltag)
+                errors = summary.get('errors', [])
+                booked = [r for r in summary.get('clubs', []) if not r.get('skipped')]
+                skipped = [r for r in summary.get('clubs', []) if r.get('skipped')]
+                if errors:
+                    self.message_user(
+                        request,
+                        f'Lücken-Re-Run Spieltag {spieltag} (Saison {saison}): '
+                        f'{len(booked)} gebucht, {len(skipped)} übersprungen. '
+                        f'Fehler: {"; ".join(str(e) for e in errors)}',
+                        messages.WARNING,
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        f'Lücken-Re-Run Spieltag {spieltag} (Saison {saison}): '
+                        f'{len(booked)} Verein(e) gebucht, {len(skipped)} bereits vollständig.',
+                        messages.SUCCESS,
+                    )
+            except Exception as exc:
+                self.message_user(request, f'Fehler beim Re-Run: {exc}', messages.ERROR)
+            return redirect(
+                reverse('admin:game_league_finance_completeness', args=[league_id])
+                + f'?saison={saison}'
+            )
+
+        result = check_finance_completeness(liga_id=league_id)
+        gaps = result['gaps']
+        checked = result['checked_clubs']
+
+        from collections import defaultdict
+        from game.models import SeasonFixture
+
+        played_fixtures = (
+            SeasonFixture.objects
+            .filter(league=league, is_played=True)
+            .values('season', 'matchday')
+            .distinct()
+            .order_by('season', 'matchday')
+        )
+
+        gap_index = defaultdict(list)
+        for g in gaps:
+            gap_index[(g['saison'], g['spieltag'])].append(g)
+
+        all_seasons = sorted({f['season'] for f in played_fixtures}, reverse=True)
+        filter_saison = request.GET.get('saison') or (all_seasons[0] if all_seasons else None)
+
+        matchday_rows = []
+        for f in played_fixtures:
+            sais = f['season']
+            md = f['matchday']
+            if filter_saison and sais != filter_saison:
+                continue
+            md_gaps = gap_index.get((sais, md), [])
+            matchday_rows.append({
+                'saison': sais,
+                'spieltag': md,
+                'ok': len(md_gaps) == 0,
+                'gap_count': len(md_gaps),
+                'clubs': md_gaps,
+            })
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Finanz-Vollständigkeit — {league}',
+            'league': league,
+            'opts': self.model._meta,
+            'matchday_rows': matchday_rows,
+            'checked_clubs': checked,
+            'total_gaps': len(gaps),
+            'all_seasons': all_seasons,
+            'filter_saison': filter_saison,
+        }
+        return render(request, 'admin/game/league/finance_completeness.html', context)
 
     def fixture_edit_view(self, request, league_id):
         import json

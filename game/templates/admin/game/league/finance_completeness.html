@@ -1,0 +1,272 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Finanz-Vollständigkeit — {{ league }}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Start</a>
+  &rsaquo; <a href="{% url 'admin:game_league_changelist' %}">Ligen</a>
+  &rsaquo; <a href="{% url 'admin:game_league_change' league.pk %}">{{ league }}</a>
+  &rsaquo; Finanz-Vollständigkeit
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .fc-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .fc-header h1 {
+    margin: 0;
+    font-size: 18px;
+    color: #e0e0e0;
+  }
+  .fc-summary-badge {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-weight: bold;
+  }
+  .fc-summary-badge.all-ok {
+    background: #1b3d1e;
+    color: #4caf50;
+    border: 1px solid #2e6b33;
+  }
+  .fc-summary-badge.has-gaps {
+    background: #3d1a1a;
+    color: #ef5350;
+    border: 1px solid #6b2b2b;
+  }
+  .fc-season-form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .fc-season-form label {
+    font-size: 12px;
+    color: #aaa;
+  }
+  .fc-season-form select {
+    font-size: 12px;
+    padding: 3px 8px;
+    background: #1e272e;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 3px;
+  }
+  .fc-season-form button {
+    font-size: 12px;
+    padding: 3px 10px;
+    background: #204050;
+    color: #79aec8;
+    border: 1px solid #417690;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .fc-season-form button:hover { background: #2a5060; }
+
+  .fc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .fc-table th {
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 2px solid #333;
+    color: #888;
+    font-size: 11px;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .fc-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #1e1e1e;
+    vertical-align: top;
+    color: #ccc;
+  }
+  .fc-table tr:hover td { background: #1a1f26; }
+
+  .fc-status-ok {
+    display: inline-block;
+    background: #1b3d1e;
+    color: #4caf50;
+    border: 1px solid #2e6b33;
+    border-radius: 3px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  .fc-status-gap {
+    display: inline-block;
+    background: #3d1a1a;
+    color: #ef5350;
+    border: 1px solid #6b2b2b;
+    border-radius: 3px;
+    padding: 2px 9px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  .fc-gap-list {
+    margin: 4px 0 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .fc-gap-list li {
+    font-size: 11px;
+    color: #aaa;
+    padding: 1px 0;
+  }
+  .fc-gap-list li .fc-missing-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-left: 4px;
+  }
+  .fc-gap-list li .fc-missing-tag {
+    background: #3a1a00;
+    color: #ff9800;
+    border: 1px solid #6b3d00;
+    border-radius: 2px;
+    padding: 0 5px;
+    font-size: 10px;
+    line-height: 1.6;
+  }
+  .fc-home-tag {
+    color: #79aec8;
+    font-size: 10px;
+    margin-left: 2px;
+  }
+  .fc-fix-btn {
+    font-size: 11px;
+    padding: 3px 12px;
+    background: #1a2f3d;
+    color: #79aec8;
+    border: 1px solid #2a4f65;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .fc-fix-btn:hover {
+    background: #204050;
+    color: #a0c8e0;
+  }
+  .fc-no-data {
+    color: #555;
+    font-size: 13px;
+    padding: 20px 0;
+  }
+  .fc-checked-info {
+    font-size: 11px;
+    color: #666;
+    margin-top: 14px;
+  }
+  .fc-fix-form { display: inline; }
+</style>
+
+<div class="fc-header">
+  <h1>&#9888; Finanz-Vollständigkeit — <em>{{ league }}</em></h1>
+  {% if total_gaps == 0 %}
+    <span class="fc-summary-badge all-ok">&#10003; Alles vollständig</span>
+  {% else %}
+    <span class="fc-summary-badge has-gaps">{{ total_gaps }} Lücke{{ total_gaps|pluralize:"n" }} gesamt</span>
+  {% endif %}
+</div>
+
+{% if all_seasons %}
+  <form class="fc-season-form" method="get">
+    <label for="fc-season-sel">Saison:</label>
+    <select id="fc-season-sel" name="saison">
+      {% for s in all_seasons %}
+        <option value="{{ s }}"{% if s == filter_saison %} selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Anzeigen</button>
+  </form>
+{% endif %}
+
+{% if matchday_rows %}
+  <table class="fc-table">
+    <thead>
+      <tr>
+        <th style="width:90px;">Spieltag</th>
+        <th style="width:120px;">Status</th>
+        <th>Lücken (Verein / fehlende Marker)</th>
+        <th style="width:130px;text-align:right;">Aktion</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in matchday_rows %}
+        <tr>
+          <td style="font-weight:bold;color:#79aec8;">{{ row.spieltag }}</td>
+          <td>
+            {% if row.ok %}
+              <span class="fc-status-ok">&#10003; OK</span>
+            {% else %}
+              <span class="fc-status-gap">&#9888; {{ row.gap_count }} Lücke{{ row.gap_count|pluralize:"n" }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if not row.ok %}
+              <ul class="fc-gap-list">
+                {% for g in row.clubs %}
+                  <li>
+                    <span>{{ g.club }}</span>
+                    {% if g.is_home %}<span class="fc-home-tag">(Heim)</span>{% endif %}
+                    {% if g.no_header %}<span class="fc-missing-tag">HEADER</span>{% endif %}
+                    {% if g.missing %}
+                      <span class="fc-missing-tags">
+                        {% for m in g.missing %}
+                          <span class="fc-missing-tag">{{ m }}</span>
+                        {% endfor %}
+                      </span>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span style="color:#3a4a3a;font-size:11px;">—</span>
+            {% endif %}
+          </td>
+          <td style="text-align:right;">
+            {% if not row.ok %}
+              <form class="fc-fix-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="saison" value="{{ row.saison }}">
+                <input type="hidden" name="spieltag" value="{{ row.spieltag }}">
+                <button class="fc-fix-btn" type="submit"
+                  onclick="return confirm('Finanz-Lücken für Spieltag {{ row.spieltag }} (Saison {{ row.saison }}) schließen?\n\nDer Lauf ist idempotent — bereits gebuchte Marker werden übersprungen.')">
+                  &#9654; Lücken schließen
+                </button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="fc-checked-info">
+    {{ checked_clubs }} (Spieltag, Verein)-Kombinationen geprüft.
+  </p>
+{% else %}
+  <p class="fc-no-data">
+    {% if filter_saison %}
+      Keine gespielten Spieltage für Saison {{ filter_saison }} gefunden.
+    {% else %}
+      Noch keine gespielten Spieltage in dieser Liga.
+    {% endif %}
+  </p>
+{% endif %}
+
+<p style="margin-top:20px;">
+  <a href="{% url 'admin:game_league_change' league.pk %}">&larr; Zurück zur Liga</a>
+</p>
+{% endblock %}
