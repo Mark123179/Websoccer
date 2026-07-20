@@ -218,16 +218,22 @@ def execute_money_transfer(player, kaeufer, abloese, *, saison=None,
         _check_kaderplatz(locked[kaeufer.pk], saison_str)
         _check_mindestkader(locked[verkaeufer.pk], saison_str)
 
+        mw_snapshot = (
+            Decimal(str(aktuell.market_value)).quantize(Decimal('0.01'))
+            if aktuell.market_value is not None else None
+        )
         text = f'Transfer {player.full_name}'
         entries = [
             {'club': locked[kaeufer.pk], 'typ': 'TRANSFER_AUS',
              'betrag': -abloese, 'beschreibung': text,
              'saison': saison_str, 'spieltag': spieltag,
-             'referenz_typ': 'transfer', 'referenz_id': player.pk},
+             'referenz_typ': 'transfer', 'referenz_id': player.pk,
+             'referenz_mw': mw_snapshot},
             {'club': locked[verkaeufer.pk], 'typ': 'TRANSFER_EIN',
              'betrag': abloese, 'beschreibung': text,
              'saison': saison_str, 'spieltag': spieltag,
-             'referenz_typ': 'transfer', 'referenz_id': player.pk},
+             'referenz_typ': 'transfer', 'referenz_id': player.pk,
+             'referenz_mw': mw_snapshot},
         ] + _abgabe_entries(
             verkaeufer, verteilung, locked, player=player,
             saison=saison_str, spieltag=spieltag, pflicht=True,

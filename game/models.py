@@ -5984,6 +5984,15 @@ class FinanceTransaction(models.Model):
     )
     referenz_typ = models.CharField(max_length=32, blank=True, default='')
     referenz_id = models.PositiveIntegerField(null=True, blank=True)
+    referenz_mw = models.DecimalField(
+        max_digits=14, decimal_places=2, null=True, blank=True,
+        verbose_name='Marktwert-Snapshot (€)',
+        help_text=(
+            'Marktwert des Spielers zum Buchungszeitpunkt (Snapshot). '
+            'Nur bei Transfer-Buchungen befüllt — ermöglicht historische '
+            'Ablöse/MW-Auswertung ohne Rekonstruktion.'
+        ),
+    )
     beschreibung = models.CharField(
         max_length=200, blank=True, default='', verbose_name='Verwendungszweck',
     )

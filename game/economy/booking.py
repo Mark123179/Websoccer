@@ -40,7 +40,7 @@ def _current_saison(saison):
 
 
 def _create_booking(locked, typ, betrag, *, saison, spieltag, beschreibung,
-                    referenz_typ, referenz_id, datum, pflicht):
+                    referenz_typ, referenz_id, datum, pflicht, referenz_mw=None):
     """Buchung gegen eine bereits gesperrte Club-Zeile schreiben."""
     from django.utils import timezone
     from game.models import FinanceTransaction
@@ -59,6 +59,7 @@ def _create_booking(locked, typ, betrag, *, saison, spieltag, beschreibung,
         betrag=betrag,
         referenz_typ=referenz_typ or '',
         referenz_id=referenz_id,
+        referenz_mw=referenz_mw,
         beschreibung=(beschreibung or '')[:200],
         datum=datum or timezone.localdate(),
     )
@@ -79,7 +80,7 @@ def _create_booking(locked, typ, betrag, *, saison, spieltag, beschreibung,
 
 
 def book(club, typ, betrag, *, beschreibung='', saison=None, spieltag=None,
-         referenz_typ='', referenz_id=None, datum=None, pflicht=False):
+         referenz_typ='', referenz_id=None, referenz_mw=None, datum=None, pflicht=False):
     """Bucht einen Betrag auf das Vereinskonto (Ledger + Cache atomar).
 
     Args:
@@ -110,7 +111,7 @@ def book(club, typ, betrag, *, beschreibung='', saison=None, spieltag=None,
             locked, typ, betrag,
             saison=saison, spieltag=spieltag, beschreibung=beschreibung,
             referenz_typ=referenz_typ, referenz_id=referenz_id,
-            datum=datum, pflicht=pflicht,
+            referenz_mw=referenz_mw, datum=datum, pflicht=pflicht,
         )
         club.budget = locked.budget
     return tx
@@ -151,6 +152,7 @@ def book_many(entries, *, saison=None):
                 beschreibung=e.get('beschreibung', ''),
                 referenz_typ=e.get('referenz_typ', ''),
                 referenz_id=e.get('referenz_id'),
+                referenz_mw=e.get('referenz_mw'),
                 datum=e.get('datum'),
                 pflicht=e.get('pflicht', False),
             ))

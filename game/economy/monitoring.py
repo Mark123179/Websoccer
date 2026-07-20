@@ -131,33 +131,62 @@ def geldmengen_verlauf() -> list[dict]:
 def abloese_mw_median(saison: str) -> dict:
     """Median-Ratio Ablöse/Marktwert der Transfers einer Saison.
 
-    Datenbasis: TRANSFER_AUS-Buchungen (Käuferseite, referenz_typ='transfer',
-    referenz_id=Player-PK) der Saison. Marktwert = aktueller
-    Player.market_value (historische MW werden nicht versioniert —
-    bewusste Approximation, für den Alarmwert ausreichend).
+    Datenbasis: TRANSFER_AUS-Buchungen der Saison (Käuferseite).
+    Filter: referenz_typ='transfer' ODER referenz_typ startet mit 'legacy:'
+    (damit Legacy-Importe nicht still durchs Raster fallen).
+
+    Marktwert-Hierarchie je Buchung:
+      1. referenz_mw (Snapshot zum Buchungszeitpunkt, seit Migration 0135)
+      2. aktueller Player.market_value (Fallback für ältere Buchungen)
+    Buchungen ohne jeden MW-Bezug werden gezählt, aber nicht in die Ratio
+    einbezogen; ihr Volumen erscheint im Rückgabewert als skipped_count.
     """
     from game.models import FinanceTransaction, Player
 
     txs = list(
         FinanceTransaction.objects
-        .filter(saison=str(saison), typ='TRANSFER_AUS',
-                referenz_typ='transfer', referenz_id__isnull=False)
-        .values('referenz_id', 'betrag')
+        .filter(
+            saison=str(saison),
+            typ='TRANSFER_AUS',
+            referenz_id__isnull=False,
+        )
+        .filter(
+            Q(referenz_typ='transfer')
+            | Q(referenz_typ__startswith='legacy:')
+        )
+        .values('referenz_id', 'betrag', 'referenz_mw', 'referenz_typ')
     )
     if not txs:
-        return {'median': None, 'count': 0, 'alarm': False, 'gesund': None}
+        return {
+            'median': None, 'count': 0, 'alarm': False, 'gesund': None,
+            'skipped_count': 0,
+        }
 
+    player_ids_without_snapshot = {
+        t['referenz_id'] for t in txs if not t['referenz_mw']
+        and not str(t['referenz_typ']).startswith('legacy:')
+    }
     mw_map = dict(
-        Player.objects.filter(pk__in={t['referenz_id'] for t in txs})
+        Player.objects.filter(pk__in=player_ids_without_snapshot)
         .values_list('pk', 'market_value')
-    )
+    ) if player_ids_without_snapshot else {}
+
     ratios = []
+    skipped = 0
     for t in txs:
-        mw = mw_map.get(t['referenz_id'])
-        if mw and mw > 0:
+        mw = t['referenz_mw']
+        if mw is None:
+            mw = mw_map.get(t['referenz_id'])
+        if mw and float(mw) > 0:
             ratios.append(float(abs(t['betrag'])) / float(mw))
+        else:
+            skipped += 1
+
     if not ratios:
-        return {'median': None, 'count': 0, 'alarm': False, 'gesund': None}
+        return {
+            'median': None, 'count': 0, 'alarm': False, 'gesund': None,
+            'skipped_count': skipped,
+        }
 
     med = median(ratios)
     lo, hi = GESUND_ABLOESE_MW
@@ -166,6 +195,7 @@ def abloese_mw_median(saison: str) -> dict:
         'count': len(ratios),
         'alarm': med > ALARM_ABLOESE_MW_MEDIAN,
         'gesund': lo <= med <= hi,
+        'skipped_count': skipped,
     }
 
 
