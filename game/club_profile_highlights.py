@@ -175,16 +175,14 @@ def nt_confederation_badge(player):
     nt_nationality = (player.nt_nationality or '').strip()
 
     if not nt_nationality:
-        primary = (player.nationality or '').strip()
+        # 1. Nationalität aus dem komma-separierten String bevorzugen
+        parts = (player.nationalities or '').split(',')
+        primary = parts[0].strip() if parts else ''
         if primary:
             nt_nationality = primary
         else:
-            secondary = (player.second_nationality or '').strip()
-            if secondary:
-                nt_nationality = secondary
-            else:
-                badges = player.nationality_badges
-                nt_nationality = badges[0].get('name', '') if badges else ''
+            badges = player.nationality_badges
+            nt_nationality = badges[0].get('name', '') if badges else ''
 
     if not nt_nationality:
         logger.warning(
