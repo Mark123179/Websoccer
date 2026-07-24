@@ -1483,11 +1483,20 @@ def management_sponsoring(request):
                     c.sponsor.name if c.sponsor_id
                     else (c.offer.sponsor_name if c.offer_id else '—')
                 )
+                s_logo = None
+                try:
+                    if c.sponsor_id and c.sponsor:
+                        s_logo = c.sponsor.logo_url
+                except Exception:
+                    pass
                 liga_ticker.append({
                     'club_name': c.club.name,
+                    'club_logo_url': c.club.logo_url if hasattr(c.club, 'logo_url') else None,
                     'sponsor_name': s_name,
+                    'sponsor_logo_url': s_logo,
                     'slot_label': SLOT_LABELS.get(c.slot, c.slot),
                     'fix_fmt': _fmt_eur_sponsoring(c.fix_saison),
+                    'slot': c.slot,
                 })
         except Exception:
             pass

@@ -1,0 +1,3514 @@
+{
+  "token": "pk_QmUpoNKUTByAKyVZIVYYVw",
+  "logo_url_schema": "https://img.logo.dev/{domain}?token={token}&size=400&format=jpg",
+  "anzahl": 500,
+  "kategorien": {
+    "ausruester": 40,
+    "hauptsponsor": 120,
+    "trikotsponsor": 180,
+    "stadionpartner": 100,
+    "tv_medien": 60
+  },
+  "sponsoren": [
+    {
+      "id": "adidas",
+      "name": "adidas",
+      "kategorie": "ausruester",
+      "domain": "adidas.com",
+      "logo": "https://img.logo.dev/adidas.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nike",
+      "name": "Nike",
+      "kategorie": "ausruester",
+      "domain": "nike.com",
+      "logo": "https://img.logo.dev/nike.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "puma",
+      "name": "PUMA",
+      "kategorie": "ausruester",
+      "domain": "puma.com",
+      "logo": "https://img.logo.dev/puma.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "umbro",
+      "name": "Umbro",
+      "kategorie": "ausruester",
+      "domain": "umbro.com",
+      "logo": "https://img.logo.dev/umbro.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kappa",
+      "name": "Kappa",
+      "kategorie": "ausruester",
+      "domain": "kappa.com",
+      "logo": "https://img.logo.dev/kappa.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "macron",
+      "name": "Macron",
+      "kategorie": "ausruester",
+      "domain": "macron.com",
+      "logo": "https://img.logo.dev/macron.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "joma",
+      "name": "Joma",
+      "kategorie": "ausruester",
+      "domain": "joma-sport.com",
+      "logo": "https://img.logo.dev/joma-sport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hummel",
+      "name": "Hummel",
+      "kategorie": "ausruester",
+      "domain": "hummel.net",
+      "logo": "https://img.logo.dev/hummel.net?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "new_balance",
+      "name": "New Balance",
+      "kategorie": "ausruester",
+      "domain": "newbalance.com",
+      "logo": "https://img.logo.dev/newbalance.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mizuno",
+      "name": "Mizuno",
+      "kategorie": "ausruester",
+      "domain": "mizuno.com",
+      "logo": "https://img.logo.dev/mizuno.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "castore",
+      "name": "Castore",
+      "kategorie": "ausruester",
+      "domain": "castore.com",
+      "logo": "https://img.logo.dev/castore.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "errea",
+      "name": "Errea",
+      "kategorie": "ausruester",
+      "domain": "errea.com",
+      "logo": "https://img.logo.dev/errea.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "jako",
+      "name": "JAKO",
+      "kategorie": "ausruester",
+      "domain": "jako.com",
+      "logo": "https://img.logo.dev/jako.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "uhlsport",
+      "name": "uhlsport",
+      "kategorie": "ausruester",
+      "domain": "uhlsport.com",
+      "logo": "https://img.logo.dev/uhlsport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kelme",
+      "name": "Kelme",
+      "kategorie": "ausruester",
+      "domain": "kelme.com",
+      "logo": "https://img.logo.dev/kelme.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "diadora",
+      "name": "Diadora",
+      "kategorie": "ausruester",
+      "domain": "diadora.com",
+      "logo": "https://img.logo.dev/diadora.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lotto",
+      "name": "Lotto",
+      "kategorie": "ausruester",
+      "domain": "lottosport.com",
+      "logo": "https://img.logo.dev/lottosport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "le_coq_sportif",
+      "name": "Le Coq Sportif",
+      "kategorie": "ausruester",
+      "domain": "lecoqsportif.com",
+      "logo": "https://img.logo.dev/lecoqsportif.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "reusch",
+      "name": "Reusch",
+      "kategorie": "ausruester",
+      "domain": "reusch.com",
+      "logo": "https://img.logo.dev/reusch.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "derbystar",
+      "name": "Derbystar",
+      "kategorie": "ausruester",
+      "domain": "derbystar.de",
+      "logo": "https://img.logo.dev/derbystar.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "select",
+      "name": "Select",
+      "kategorie": "ausruester",
+      "domain": "select-sport.com",
+      "logo": "https://img.logo.dev/select-sport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "craft",
+      "name": "Craft",
+      "kategorie": "ausruester",
+      "domain": "craftsportswear.com",
+      "logo": "https://img.logo.dev/craftsportswear.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "capelli_sport",
+      "name": "Capelli Sport",
+      "kategorie": "ausruester",
+      "domain": "capellisport.com",
+      "logo": "https://img.logo.dev/capellisport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "asics",
+      "name": "Asics",
+      "kategorie": "ausruester",
+      "domain": "asics.com",
+      "logo": "https://img.logo.dev/asics.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "under_armour",
+      "name": "Under Armour",
+      "kategorie": "ausruester",
+      "domain": "underarmour.com",
+      "logo": "https://img.logo.dev/underarmour.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fila",
+      "name": "Fila",
+      "kategorie": "ausruester",
+      "domain": "fila.com",
+      "logo": "https://img.logo.dev/fila.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "oneills",
+      "name": "O'Neills",
+      "kategorie": "ausruester",
+      "domain": "oneills.com",
+      "logo": "https://img.logo.dev/oneills.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "li_ning",
+      "name": "Li-Ning",
+      "kategorie": "ausruester",
+      "domain": "lining.com",
+      "logo": "https://img.logo.dev/lining.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "luanvi",
+      "name": "Luanvi",
+      "kategorie": "ausruester",
+      "domain": "luanvi.com",
+      "logo": "https://img.logo.dev/luanvi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "givova",
+      "name": "Givova",
+      "kategorie": "ausruester",
+      "domain": "givova.it",
+      "logo": "https://img.logo.dev/givova.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "zeus",
+      "name": "Zeus",
+      "kategorie": "ausruester",
+      "domain": "zeussport.it",
+      "logo": "https://img.logo.dev/zeussport.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "legea",
+      "name": "Legea",
+      "kategorie": "ausruester",
+      "domain": "legea.it",
+      "logo": "https://img.logo.dev/legea.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "acerbis",
+      "name": "Acerbis",
+      "kategorie": "ausruester",
+      "domain": "acerbis.it",
+      "logo": "https://img.logo.dev/acerbis.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stanno",
+      "name": "Stanno",
+      "kategorie": "ausruester",
+      "domain": "stanno.com",
+      "logo": "https://img.logo.dev/stanno.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "masita",
+      "name": "Masita",
+      "kategorie": "ausruester",
+      "domain": "masita.com",
+      "logo": "https://img.logo.dev/masita.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "saller",
+      "name": "Saller",
+      "kategorie": "ausruester",
+      "domain": "saller.de",
+      "logo": "https://img.logo.dev/saller.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "erima",
+      "name": "ERIMA",
+      "kategorie": "ausruester",
+      "domain": "erima.de",
+      "logo": "https://img.logo.dev/erima.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "penalty",
+      "name": "Penalty",
+      "kategorie": "ausruester",
+      "domain": "penalty.com.br",
+      "logo": "https://img.logo.dev/penalty.com.br?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "charly",
+      "name": "Charly",
+      "kategorie": "ausruester",
+      "domain": "charly.com.mx",
+      "logo": "https://img.logo.dev/charly.com.mx?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "warrix",
+      "name": "Warrix",
+      "kategorie": "ausruester",
+      "domain": "warrix.com",
+      "logo": "https://img.logo.dev/warrix.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "emirates",
+      "name": "Emirates",
+      "kategorie": "hauptsponsor",
+      "domain": "emirates.com",
+      "logo": "https://img.logo.dev/emirates.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "qatar_airways",
+      "name": "Qatar Airways",
+      "kategorie": "hauptsponsor",
+      "domain": "qatarairways.com",
+      "logo": "https://img.logo.dev/qatarairways.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "etihad_airways",
+      "name": "Etihad Airways",
+      "kategorie": "hauptsponsor",
+      "domain": "etihad.com",
+      "logo": "https://img.logo.dev/etihad.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "turkish_airlines",
+      "name": "Turkish Airlines",
+      "kategorie": "hauptsponsor",
+      "domain": "turkishairlines.com",
+      "logo": "https://img.logo.dev/turkishairlines.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "riyadh_air",
+      "name": "Riyadh Air",
+      "kategorie": "hauptsponsor",
+      "domain": "riyadhair.com",
+      "logo": "https://img.logo.dev/riyadhair.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "visit_rwanda",
+      "name": "Visit Rwanda",
+      "kategorie": "hauptsponsor",
+      "domain": "visitrwanda.com",
+      "logo": "https://img.logo.dev/visitrwanda.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "aramco",
+      "name": "Aramco",
+      "kategorie": "hauptsponsor",
+      "domain": "aramco.com",
+      "logo": "https://img.logo.dev/aramco.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "deutsche_telekom",
+      "name": "Deutsche Telekom",
+      "kategorie": "hauptsponsor",
+      "domain": "telekom.com",
+      "logo": "https://img.logo.dev/telekom.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "t_mobile",
+      "name": "T-Mobile",
+      "kategorie": "hauptsponsor",
+      "domain": "t-mobile.com",
+      "logo": "https://img.logo.dev/t-mobile.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vodafone",
+      "name": "Vodafone",
+      "kategorie": "hauptsponsor",
+      "domain": "vodafone.com",
+      "logo": "https://img.logo.dev/vodafone.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "orange",
+      "name": "Orange",
+      "kategorie": "hauptsponsor",
+      "domain": "orange.com",
+      "logo": "https://img.logo.dev/orange.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "o2",
+      "name": "O2",
+      "kategorie": "hauptsponsor",
+      "domain": "o2.co.uk",
+      "logo": "https://img.logo.dev/o2.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "three",
+      "name": "Three",
+      "kategorie": "hauptsponsor",
+      "domain": "three.co.uk",
+      "logo": "https://img.logo.dev/three.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ee",
+      "name": "EE",
+      "kategorie": "hauptsponsor",
+      "domain": "ee.co.uk",
+      "logo": "https://img.logo.dev/ee.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "turk_telekom",
+      "name": "Türk Telekom",
+      "kategorie": "hauptsponsor",
+      "domain": "turktelekom.com.tr",
+      "logo": "https://img.logo.dev/turktelekom.com.tr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "etisalat",
+      "name": "Etisalat",
+      "kategorie": "hauptsponsor",
+      "domain": "etisalat.ae",
+      "logo": "https://img.logo.dev/etisalat.ae?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stc",
+      "name": "stc",
+      "kategorie": "hauptsponsor",
+      "domain": "stc.com.sa",
+      "logo": "https://img.logo.dev/stc.com.sa?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ooredoo",
+      "name": "Ooredoo",
+      "kategorie": "hauptsponsor",
+      "domain": "ooredoo.com",
+      "logo": "https://img.logo.dev/ooredoo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mtn",
+      "name": "MTN",
+      "kategorie": "hauptsponsor",
+      "domain": "mtn.com",
+      "logo": "https://img.logo.dev/mtn.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "airtel",
+      "name": "Airtel",
+      "kategorie": "hauptsponsor",
+      "domain": "airtel.in",
+      "logo": "https://img.logo.dev/airtel.in?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "jio",
+      "name": "Jio",
+      "kategorie": "hauptsponsor",
+      "domain": "jio.com",
+      "logo": "https://img.logo.dev/jio.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "standard_chartered",
+      "name": "Standard Chartered",
+      "kategorie": "hauptsponsor",
+      "domain": "sc.com",
+      "logo": "https://img.logo.dev/sc.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "santander",
+      "name": "Santander",
+      "kategorie": "hauptsponsor",
+      "domain": "santander.com",
+      "logo": "https://img.logo.dev/santander.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "barclays",
+      "name": "Barclays",
+      "kategorie": "hauptsponsor",
+      "domain": "barclays.com",
+      "logo": "https://img.logo.dev/barclays.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "unicredit",
+      "name": "UniCredit",
+      "kategorie": "hauptsponsor",
+      "domain": "unicredit.eu",
+      "logo": "https://img.logo.dev/unicredit.eu?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ing",
+      "name": "ING",
+      "kategorie": "hauptsponsor",
+      "domain": "ing.com",
+      "logo": "https://img.logo.dev/ing.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bbva",
+      "name": "BBVA",
+      "kategorie": "hauptsponsor",
+      "domain": "bbva.com",
+      "logo": "https://img.logo.dev/bbva.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mastercard",
+      "name": "Mastercard",
+      "kategorie": "hauptsponsor",
+      "domain": "mastercard.com",
+      "logo": "https://img.logo.dev/mastercard.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "visa",
+      "name": "Visa",
+      "kategorie": "hauptsponsor",
+      "domain": "visa.com",
+      "logo": "https://img.logo.dev/visa.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "paypal",
+      "name": "PayPal",
+      "kategorie": "hauptsponsor",
+      "domain": "paypal.com",
+      "logo": "https://img.logo.dev/paypal.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "klarna",
+      "name": "Klarna",
+      "kategorie": "hauptsponsor",
+      "domain": "klarna.com",
+      "logo": "https://img.logo.dev/klarna.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "revolut",
+      "name": "Revolut",
+      "kategorie": "hauptsponsor",
+      "domain": "revolut.com",
+      "logo": "https://img.logo.dev/revolut.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "n26",
+      "name": "N26",
+      "kategorie": "hauptsponsor",
+      "domain": "n26.com",
+      "logo": "https://img.logo.dev/n26.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "trade_republic",
+      "name": "Trade Republic",
+      "kategorie": "hauptsponsor",
+      "domain": "traderepublic.com",
+      "logo": "https://img.logo.dev/traderepublic.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "qnb",
+      "name": "QNB",
+      "kategorie": "hauptsponsor",
+      "domain": "qnb.com",
+      "logo": "https://img.logo.dev/qnb.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hsbc",
+      "name": "HSBC",
+      "kategorie": "hauptsponsor",
+      "domain": "hsbc.com",
+      "logo": "https://img.logo.dev/hsbc.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "skrill",
+      "name": "Skrill",
+      "kategorie": "hauptsponsor",
+      "domain": "skrill.com",
+      "logo": "https://img.logo.dev/skrill.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "axa",
+      "name": "AXA",
+      "kategorie": "hauptsponsor",
+      "domain": "axa.com",
+      "logo": "https://img.logo.dev/axa.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "zurich",
+      "name": "Zurich",
+      "kategorie": "hauptsponsor",
+      "domain": "zurich.com",
+      "logo": "https://img.logo.dev/zurich.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mapfre",
+      "name": "Mapfre",
+      "kategorie": "hauptsponsor",
+      "domain": "mapfre.com",
+      "logo": "https://img.logo.dev/mapfre.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "aon",
+      "name": "Aon",
+      "kategorie": "hauptsponsor",
+      "domain": "aon.com",
+      "logo": "https://img.logo.dev/aon.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "allstate",
+      "name": "Allstate",
+      "kategorie": "hauptsponsor",
+      "domain": "allstate.com",
+      "logo": "https://img.logo.dev/allstate.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wefox",
+      "name": "Wefox",
+      "kategorie": "hauptsponsor",
+      "domain": "wefox.com",
+      "logo": "https://img.logo.dev/wefox.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "coca_cola",
+      "name": "Coca-Cola",
+      "kategorie": "hauptsponsor",
+      "domain": "coca-cola.com",
+      "logo": "https://img.logo.dev/coca-cola.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "pepsi",
+      "name": "Pepsi",
+      "kategorie": "hauptsponsor",
+      "domain": "pepsi.com",
+      "logo": "https://img.logo.dev/pepsi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "red_bull",
+      "name": "Red Bull",
+      "kategorie": "hauptsponsor",
+      "domain": "redbull.com",
+      "logo": "https://img.logo.dev/redbull.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "heineken",
+      "name": "Heineken",
+      "kategorie": "hauptsponsor",
+      "domain": "heineken.com",
+      "logo": "https://img.logo.dev/heineken.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "carlsberg",
+      "name": "Carlsberg",
+      "kategorie": "hauptsponsor",
+      "domain": "carlsberg.com",
+      "logo": "https://img.logo.dev/carlsberg.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "budweiser",
+      "name": "Budweiser",
+      "kategorie": "hauptsponsor",
+      "domain": "budweiser.com",
+      "logo": "https://img.logo.dev/budweiser.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "guinness",
+      "name": "Guinness",
+      "kategorie": "hauptsponsor",
+      "domain": "guinness.com",
+      "logo": "https://img.logo.dev/guinness.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gatorade",
+      "name": "Gatorade",
+      "kategorie": "hauptsponsor",
+      "domain": "gatorade.com",
+      "logo": "https://img.logo.dev/gatorade.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "monster_energy",
+      "name": "Monster Energy",
+      "kategorie": "hauptsponsor",
+      "domain": "monsterenergy.com",
+      "logo": "https://img.logo.dev/monsterenergy.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "amstel",
+      "name": "Amstel",
+      "kategorie": "hauptsponsor",
+      "domain": "amstel.com",
+      "logo": "https://img.logo.dev/amstel.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "chang",
+      "name": "Chang",
+      "kategorie": "hauptsponsor",
+      "domain": "changbeer.com",
+      "logo": "https://img.logo.dev/changbeer.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "singha",
+      "name": "Singha",
+      "kategorie": "hauptsponsor",
+      "domain": "singha.com",
+      "logo": "https://img.logo.dev/singha.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tiger_beer",
+      "name": "Tiger Beer",
+      "kategorie": "hauptsponsor",
+      "domain": "tigerbeer.com",
+      "logo": "https://img.logo.dev/tigerbeer.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "super_bock",
+      "name": "Super Bock",
+      "kategorie": "hauptsponsor",
+      "domain": "superbock.pt",
+      "logo": "https://img.logo.dev/superbock.pt?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mcdonalds",
+      "name": "McDonald's",
+      "kategorie": "hauptsponsor",
+      "domain": "mcdonalds.com",
+      "logo": "https://img.logo.dev/mcdonalds.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "burger_king",
+      "name": "Burger King",
+      "kategorie": "hauptsponsor",
+      "domain": "bk.com",
+      "logo": "https://img.logo.dev/bk.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kfc",
+      "name": "KFC",
+      "kategorie": "hauptsponsor",
+      "domain": "kfc.com",
+      "logo": "https://img.logo.dev/kfc.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dominos",
+      "name": "Domino's",
+      "kategorie": "hauptsponsor",
+      "domain": "dominos.com",
+      "logo": "https://img.logo.dev/dominos.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "pizza_hut",
+      "name": "Pizza Hut",
+      "kategorie": "hauptsponsor",
+      "domain": "pizzahut.com",
+      "logo": "https://img.logo.dev/pizzahut.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "subway",
+      "name": "Subway",
+      "kategorie": "hauptsponsor",
+      "domain": "subway.com",
+      "logo": "https://img.logo.dev/subway.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nestle",
+      "name": "Nestlé",
+      "kategorie": "hauptsponsor",
+      "domain": "nestle.com",
+      "logo": "https://img.logo.dev/nestle.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "danone",
+      "name": "Danone",
+      "kategorie": "hauptsponsor",
+      "domain": "danone.com",
+      "logo": "https://img.logo.dev/danone.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ferrero",
+      "name": "Ferrero",
+      "kategorie": "hauptsponsor",
+      "domain": "ferrero.com",
+      "logo": "https://img.logo.dev/ferrero.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lays",
+      "name": "Lay's",
+      "kategorie": "hauptsponsor",
+      "domain": "lays.com",
+      "logo": "https://img.logo.dev/lays.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "samsung",
+      "name": "Samsung",
+      "kategorie": "hauptsponsor",
+      "domain": "samsung.com",
+      "logo": "https://img.logo.dev/samsung.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lg",
+      "name": "LG",
+      "kategorie": "hauptsponsor",
+      "domain": "lg.com",
+      "logo": "https://img.logo.dev/lg.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sony",
+      "name": "Sony",
+      "kategorie": "hauptsponsor",
+      "domain": "sony.com",
+      "logo": "https://img.logo.dev/sony.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "panasonic",
+      "name": "Panasonic",
+      "kategorie": "hauptsponsor",
+      "domain": "panasonic.com",
+      "logo": "https://img.logo.dev/panasonic.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hisense",
+      "name": "Hisense",
+      "kategorie": "hauptsponsor",
+      "domain": "hisense.com",
+      "logo": "https://img.logo.dev/hisense.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tcl",
+      "name": "TCL",
+      "kategorie": "hauptsponsor",
+      "domain": "tcl.com",
+      "logo": "https://img.logo.dev/tcl.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "huawei",
+      "name": "Huawei",
+      "kategorie": "hauptsponsor",
+      "domain": "huawei.com",
+      "logo": "https://img.logo.dev/huawei.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "xiaomi",
+      "name": "Xiaomi",
+      "kategorie": "hauptsponsor",
+      "domain": "mi.com",
+      "logo": "https://img.logo.dev/mi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "oppo",
+      "name": "Oppo",
+      "kategorie": "hauptsponsor",
+      "domain": "oppo.com",
+      "logo": "https://img.logo.dev/oppo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vivo",
+      "name": "Vivo",
+      "kategorie": "hauptsponsor",
+      "domain": "vivo.com",
+      "logo": "https://img.logo.dev/vivo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lenovo",
+      "name": "Lenovo",
+      "kategorie": "hauptsponsor",
+      "domain": "lenovo.com",
+      "logo": "https://img.logo.dev/lenovo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "intel",
+      "name": "Intel",
+      "kategorie": "hauptsponsor",
+      "domain": "intel.com",
+      "logo": "https://img.logo.dev/intel.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hp",
+      "name": "HP",
+      "kategorie": "hauptsponsor",
+      "domain": "hp.com",
+      "logo": "https://img.logo.dev/hp.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "toshiba",
+      "name": "Toshiba",
+      "kategorie": "hauptsponsor",
+      "domain": "toshiba.com",
+      "logo": "https://img.logo.dev/toshiba.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sap",
+      "name": "SAP",
+      "kategorie": "hauptsponsor",
+      "domain": "sap.com",
+      "logo": "https://img.logo.dev/sap.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "siemens",
+      "name": "Siemens",
+      "kategorie": "hauptsponsor",
+      "domain": "siemens.com",
+      "logo": "https://img.logo.dev/siemens.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bosch",
+      "name": "Bosch",
+      "kategorie": "hauptsponsor",
+      "domain": "bosch.com",
+      "logo": "https://img.logo.dev/bosch.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "teamviewer",
+      "name": "Teamviewer",
+      "kategorie": "hauptsponsor",
+      "domain": "teamviewer.com",
+      "logo": "https://img.logo.dev/teamviewer.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "kategorie": "hauptsponsor",
+      "domain": "spotify.com",
+      "logo": "https://img.logo.dev/spotify.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rakuten",
+      "name": "Rakuten",
+      "kategorie": "hauptsponsor",
+      "domain": "rakuten.com",
+      "logo": "https://img.logo.dev/rakuten.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ea_sports",
+      "name": "EA SPORTS",
+      "kategorie": "hauptsponsor",
+      "domain": "ea.com",
+      "logo": "https://img.logo.dev/ea.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "playstation",
+      "name": "PlayStation",
+      "kategorie": "hauptsponsor",
+      "domain": "playstation.com",
+      "logo": "https://img.logo.dev/playstation.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "konami",
+      "name": "Konami",
+      "kategorie": "hauptsponsor",
+      "domain": "konami.com",
+      "logo": "https://img.logo.dev/konami.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dream11",
+      "name": "Dream11",
+      "kategorie": "hauptsponsor",
+      "domain": "dream11.com",
+      "logo": "https://img.logo.dev/dream11.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "google_pixel",
+      "name": "Google Pixel",
+      "kategorie": "hauptsponsor",
+      "domain": "google.com",
+      "logo": "https://img.logo.dev/google.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "crypto_com",
+      "name": "Crypto.com",
+      "kategorie": "hauptsponsor",
+      "domain": "crypto.com",
+      "logo": "https://img.logo.dev/crypto.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "binance",
+      "name": "Binance",
+      "kategorie": "hauptsponsor",
+      "domain": "binance.com",
+      "logo": "https://img.logo.dev/binance.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "coinbase",
+      "name": "Coinbase",
+      "kategorie": "hauptsponsor",
+      "domain": "coinbase.com",
+      "logo": "https://img.logo.dev/coinbase.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "socios",
+      "name": "Socios",
+      "kategorie": "hauptsponsor",
+      "domain": "socios.com",
+      "logo": "https://img.logo.dev/socios.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "okx",
+      "name": "OKX",
+      "kategorie": "hauptsponsor",
+      "domain": "okx.com",
+      "logo": "https://img.logo.dev/okx.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bybit",
+      "name": "Bybit",
+      "kategorie": "hauptsponsor",
+      "domain": "bybit.com",
+      "logo": "https://img.logo.dev/bybit.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "audi",
+      "name": "Audi",
+      "kategorie": "hauptsponsor",
+      "domain": "audi.com",
+      "logo": "https://img.logo.dev/audi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "volkswagen",
+      "name": "Volkswagen",
+      "kategorie": "hauptsponsor",
+      "domain": "volkswagen.com",
+      "logo": "https://img.logo.dev/volkswagen.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bmw",
+      "name": "BMW",
+      "kategorie": "hauptsponsor",
+      "domain": "bmw.com",
+      "logo": "https://img.logo.dev/bmw.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "toyota",
+      "name": "Toyota",
+      "kategorie": "hauptsponsor",
+      "domain": "toyota.com",
+      "logo": "https://img.logo.dev/toyota.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hyundai",
+      "name": "Hyundai",
+      "kategorie": "hauptsponsor",
+      "domain": "hyundai.com",
+      "logo": "https://img.logo.dev/hyundai.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kia",
+      "name": "Kia",
+      "kategorie": "hauptsponsor",
+      "domain": "kia.com",
+      "logo": "https://img.logo.dev/kia.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nissan",
+      "name": "Nissan",
+      "kategorie": "hauptsponsor",
+      "domain": "nissan-global.com",
+      "logo": "https://img.logo.dev/nissan-global.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ford",
+      "name": "Ford",
+      "kategorie": "hauptsponsor",
+      "domain": "ford.com",
+      "logo": "https://img.logo.dev/ford.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "chevrolet",
+      "name": "Chevrolet",
+      "kategorie": "hauptsponsor",
+      "domain": "chevrolet.com",
+      "logo": "https://img.logo.dev/chevrolet.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "jeep",
+      "name": "Jeep",
+      "kategorie": "hauptsponsor",
+      "domain": "jeep.com",
+      "logo": "https://img.logo.dev/jeep.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fiat",
+      "name": "Fiat",
+      "kategorie": "hauptsponsor",
+      "domain": "fiat.com",
+      "logo": "https://img.logo.dev/fiat.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "renault",
+      "name": "Renault",
+      "kategorie": "hauptsponsor",
+      "domain": "renault.com",
+      "logo": "https://img.logo.dev/renault.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "byd",
+      "name": "BYD",
+      "kategorie": "hauptsponsor",
+      "domain": "byd.com",
+      "logo": "https://img.logo.dev/byd.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "cupra",
+      "name": "CUPRA",
+      "kategorie": "hauptsponsor",
+      "domain": "cupraofficial.com",
+      "logo": "https://img.logo.dev/cupraofficial.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "skoda",
+      "name": "Škoda",
+      "kategorie": "hauptsponsor",
+      "domain": "skoda-auto.com",
+      "logo": "https://img.logo.dev/skoda-auto.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "continental",
+      "name": "Continental",
+      "kategorie": "hauptsponsor",
+      "domain": "continental.com",
+      "logo": "https://img.logo.dev/continental.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "pirelli",
+      "name": "Pirelli",
+      "kategorie": "hauptsponsor",
+      "domain": "pirelli.com",
+      "logo": "https://img.logo.dev/pirelli.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "michelin",
+      "name": "Michelin",
+      "kategorie": "hauptsponsor",
+      "domain": "michelin.com",
+      "logo": "https://img.logo.dev/michelin.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "total_energies",
+      "name": "TotalEnergies",
+      "kategorie": "hauptsponsor",
+      "domain": "totalenergies.com",
+      "logo": "https://img.logo.dev/totalenergies.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ineos",
+      "name": "INEOS",
+      "kategorie": "hauptsponsor",
+      "domain": "ineos.com",
+      "logo": "https://img.logo.dev/ineos.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dhl",
+      "name": "DHL",
+      "kategorie": "hauptsponsor",
+      "domain": "dhl.com",
+      "logo": "https://img.logo.dev/dhl.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fedex",
+      "name": "FedEx",
+      "kategorie": "hauptsponsor",
+      "domain": "fedex.com",
+      "logo": "https://img.logo.dev/fedex.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bwin",
+      "name": "bwin",
+      "kategorie": "trikotsponsor",
+      "domain": "bwin.com",
+      "logo": "https://img.logo.dev/bwin.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bet365",
+      "name": "bet365",
+      "kategorie": "trikotsponsor",
+      "domain": "bet365.com",
+      "logo": "https://img.logo.dev/bet365.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "betway",
+      "name": "Betway",
+      "kategorie": "trikotsponsor",
+      "domain": "betway.com",
+      "logo": "https://img.logo.dev/betway.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "unibet",
+      "name": "Unibet",
+      "kategorie": "trikotsponsor",
+      "domain": "unibet.com",
+      "logo": "https://img.logo.dev/unibet.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "william_hill",
+      "name": "William Hill",
+      "kategorie": "trikotsponsor",
+      "domain": "williamhill.com",
+      "logo": "https://img.logo.dev/williamhill.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "888sport",
+      "name": "888sport",
+      "kategorie": "trikotsponsor",
+      "domain": "888sport.com",
+      "logo": "https://img.logo.dev/888sport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tipico",
+      "name": "Tipico",
+      "kategorie": "trikotsponsor",
+      "domain": "tipico.de",
+      "logo": "https://img.logo.dev/tipico.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "betano",
+      "name": "Betano",
+      "kategorie": "trikotsponsor",
+      "domain": "betano.com",
+      "logo": "https://img.logo.dev/betano.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stake",
+      "name": "Stake",
+      "kategorie": "trikotsponsor",
+      "domain": "stake.com",
+      "logo": "https://img.logo.dev/stake.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dafabet",
+      "name": "Dafabet",
+      "kategorie": "trikotsponsor",
+      "domain": "dafabet.com",
+      "logo": "https://img.logo.dev/dafabet.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sbotop",
+      "name": "Sbotop",
+      "kategorie": "trikotsponsor",
+      "domain": "sbotop.com",
+      "logo": "https://img.logo.dev/sbotop.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fun88",
+      "name": "Fun88",
+      "kategorie": "trikotsponsor",
+      "domain": "fun88.com",
+      "logo": "https://img.logo.dev/fun88.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "w88",
+      "name": "W88",
+      "kategorie": "trikotsponsor",
+      "domain": "w88.com",
+      "logo": "https://img.logo.dev/w88.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "leovegas",
+      "name": "Leovegas",
+      "kategorie": "trikotsponsor",
+      "domain": "leovegas.com",
+      "logo": "https://img.logo.dev/leovegas.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "interwetten",
+      "name": "Interwetten",
+      "kategorie": "trikotsponsor",
+      "domain": "interwetten.com",
+      "logo": "https://img.logo.dev/interwetten.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "winamax",
+      "name": "Winamax",
+      "kategorie": "trikotsponsor",
+      "domain": "winamax.fr",
+      "logo": "https://img.logo.dev/winamax.fr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "betfred",
+      "name": "Betfred",
+      "kategorie": "trikotsponsor",
+      "domain": "betfred.com",
+      "logo": "https://img.logo.dev/betfred.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sky_bet",
+      "name": "Sky Bet",
+      "kategorie": "trikotsponsor",
+      "domain": "skybet.com",
+      "logo": "https://img.logo.dev/skybet.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "paddy_power",
+      "name": "Paddy Power",
+      "kategorie": "trikotsponsor",
+      "domain": "paddypower.com",
+      "logo": "https://img.logo.dev/paddypower.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ladbrokes",
+      "name": "Ladbrokes",
+      "kategorie": "trikotsponsor",
+      "domain": "ladbrokes.com",
+      "logo": "https://img.logo.dev/ladbrokes.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bet_at_home",
+      "name": "bet-at-home",
+      "kategorie": "trikotsponsor",
+      "domain": "bet-at-home.com",
+      "logo": "https://img.logo.dev/bet-at-home.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "admiralbet",
+      "name": "AdmiralBet",
+      "kategorie": "trikotsponsor",
+      "domain": "admiralbet.de",
+      "logo": "https://img.logo.dev/admiralbet.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "betsson",
+      "name": "Betsson",
+      "kategorie": "trikotsponsor",
+      "domain": "betsson.com",
+      "logo": "https://img.logo.dev/betsson.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "parimatch",
+      "name": "Parimatch",
+      "kategorie": "trikotsponsor",
+      "domain": "parimatch.com",
+      "logo": "https://img.logo.dev/parimatch.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "neobet",
+      "name": "NEO.bet",
+      "kategorie": "trikotsponsor",
+      "domain": "neo.bet",
+      "logo": "https://img.logo.dev/neo.bet?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "betclic",
+      "name": "Betclic",
+      "kategorie": "trikotsponsor",
+      "domain": "betclic.com",
+      "logo": "https://img.logo.dev/betclic.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bridgestone",
+      "name": "Bridgestone",
+      "kategorie": "trikotsponsor",
+      "domain": "bridgestone.com",
+      "logo": "https://img.logo.dev/bridgestone.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hankook",
+      "name": "Hankook",
+      "kategorie": "trikotsponsor",
+      "domain": "hankooktire.com",
+      "logo": "https://img.logo.dev/hankooktire.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "yokohama",
+      "name": "Yokohama",
+      "kategorie": "trikotsponsor",
+      "domain": "y-yokohama.com",
+      "logo": "https://img.logo.dev/y-yokohama.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gazprom",
+      "name": "Gazprom",
+      "kategorie": "trikotsponsor",
+      "domain": "gazprom.com",
+      "logo": "https://img.logo.dev/gazprom.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "eon",
+      "name": "E.ON",
+      "kategorie": "trikotsponsor",
+      "domain": "eon.com",
+      "logo": "https://img.logo.dev/eon.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rwe",
+      "name": "RWE",
+      "kategorie": "trikotsponsor",
+      "domain": "rwe.com",
+      "logo": "https://img.logo.dev/rwe.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "enbw",
+      "name": "EnBW",
+      "kategorie": "trikotsponsor",
+      "domain": "enbw.com",
+      "logo": "https://img.logo.dev/enbw.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "iberdrola",
+      "name": "Iberdrola",
+      "kategorie": "trikotsponsor",
+      "domain": "iberdrola.com",
+      "logo": "https://img.logo.dev/iberdrola.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "endesa",
+      "name": "Endesa",
+      "kategorie": "trikotsponsor",
+      "domain": "endesa.com",
+      "logo": "https://img.logo.dev/endesa.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "enel",
+      "name": "Enel",
+      "kategorie": "trikotsponsor",
+      "domain": "enel.com",
+      "logo": "https://img.logo.dev/enel.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "repsol",
+      "name": "Repsol",
+      "kategorie": "trikotsponsor",
+      "domain": "repsol.com",
+      "logo": "https://img.logo.dev/repsol.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wien_energie",
+      "name": "Wien Energie",
+      "kategorie": "trikotsponsor",
+      "domain": "wienenergie.at",
+      "logo": "https://img.logo.dev/wienenergie.at?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "evonik",
+      "name": "Evonik",
+      "kategorie": "trikotsponsor",
+      "domain": "evonik.com",
+      "logo": "https://img.logo.dev/evonik.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rheinmetall",
+      "name": "Rheinmetall",
+      "kategorie": "trikotsponsor",
+      "domain": "rheinmetall.com",
+      "logo": "https://img.logo.dev/rheinmetall.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wuerth",
+      "name": "Würth",
+      "kategorie": "trikotsponsor",
+      "domain": "wuerth.com",
+      "logo": "https://img.logo.dev/wuerth.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "flyeralarm",
+      "name": "flyeralarm",
+      "kategorie": "trikotsponsor",
+      "domain": "flyeralarm.com",
+      "logo": "https://img.logo.dev/flyeralarm.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "viessmann",
+      "name": "Viessmann",
+      "kategorie": "trikotsponsor",
+      "domain": "viessmann.com",
+      "logo": "https://img.logo.dev/viessmann.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stihl",
+      "name": "STIHL",
+      "kategorie": "trikotsponsor",
+      "domain": "stihl.com",
+      "logo": "https://img.logo.dev/stihl.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hornbach",
+      "name": "HORNBACH",
+      "kategorie": "trikotsponsor",
+      "domain": "hornbach.de",
+      "logo": "https://img.logo.dev/hornbach.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bauhaus",
+      "name": "BAUHAUS",
+      "kategorie": "trikotsponsor",
+      "domain": "bauhaus.info",
+      "logo": "https://img.logo.dev/bauhaus.info?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "autohero",
+      "name": "Autohero",
+      "kategorie": "trikotsponsor",
+      "domain": "autohero.com",
+      "logo": "https://img.logo.dev/autohero.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "prowin",
+      "name": "proWIN",
+      "kategorie": "trikotsponsor",
+      "domain": "prowin.net",
+      "logo": "https://img.logo.dev/prowin.net?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mainova",
+      "name": "Mainova",
+      "kategorie": "trikotsponsor",
+      "domain": "mainova.de",
+      "logo": "https://img.logo.dev/mainova.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sunexpress",
+      "name": "SunExpress",
+      "kategorie": "trikotsponsor",
+      "domain": "sunexpress.com",
+      "logo": "https://img.logo.dev/sunexpress.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "krombacher",
+      "name": "Krombacher",
+      "kategorie": "trikotsponsor",
+      "domain": "krombacher.de",
+      "logo": "https://img.logo.dev/krombacher.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bitburger",
+      "name": "Bitburger",
+      "kategorie": "trikotsponsor",
+      "domain": "bitburger.de",
+      "logo": "https://img.logo.dev/bitburger.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "warsteiner",
+      "name": "Warsteiner",
+      "kategorie": "trikotsponsor",
+      "domain": "warsteiner.de",
+      "logo": "https://img.logo.dev/warsteiner.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "paulaner",
+      "name": "Paulaner",
+      "kategorie": "trikotsponsor",
+      "domain": "paulaner.com",
+      "logo": "https://img.logo.dev/paulaner.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "erdinger",
+      "name": "Erdinger",
+      "kategorie": "trikotsponsor",
+      "domain": "erdinger.de",
+      "logo": "https://img.logo.dev/erdinger.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "jaegermeister",
+      "name": "Jägermeister",
+      "kategorie": "trikotsponsor",
+      "domain": "jagermeister.com",
+      "logo": "https://img.logo.dev/jagermeister.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "koenig_pilsener",
+      "name": "König Pilsener",
+      "kategorie": "trikotsponsor",
+      "domain": "koenig.de",
+      "logo": "https://img.logo.dev/koenig.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "radeberger",
+      "name": "Radeberger",
+      "kategorie": "trikotsponsor",
+      "domain": "radeberger.de",
+      "logo": "https://img.logo.dev/radeberger.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "oettinger",
+      "name": "Oettinger",
+      "kategorie": "trikotsponsor",
+      "domain": "oettinger-bier.de",
+      "logo": "https://img.logo.dev/oettinger-bier.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "estrella_damm",
+      "name": "Estrella Damm",
+      "kategorie": "trikotsponsor",
+      "domain": "estrelladamm.com",
+      "logo": "https://img.logo.dev/estrelladamm.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mahou",
+      "name": "Mahou",
+      "kategorie": "trikotsponsor",
+      "domain": "mahou.es",
+      "logo": "https://img.logo.dev/mahou.es?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "san_miguel",
+      "name": "San Miguel",
+      "kategorie": "trikotsponsor",
+      "domain": "sanmiguel.com",
+      "logo": "https://img.logo.dev/sanmiguel.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "estrella_galicia",
+      "name": "Estrella Galicia",
+      "kategorie": "trikotsponsor",
+      "domain": "estrellagalicia.es",
+      "logo": "https://img.logo.dev/estrellagalicia.es?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "cruzcampo",
+      "name": "Cruzcampo",
+      "kategorie": "trikotsponsor",
+      "domain": "cruzcampo.es",
+      "logo": "https://img.logo.dev/cruzcampo.es?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sagres",
+      "name": "Sagres",
+      "kategorie": "trikotsponsor",
+      "domain": "sagres.pt",
+      "logo": "https://img.logo.dev/sagres.pt?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "birra_moretti",
+      "name": "Birra Moretti",
+      "kategorie": "trikotsponsor",
+      "domain": "birramoretti.com",
+      "logo": "https://img.logo.dev/birramoretti.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fritz_kola",
+      "name": "fritz-kola",
+      "kategorie": "trikotsponsor",
+      "domain": "fritz-kola.com",
+      "logo": "https://img.logo.dev/fritz-kola.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vita_cola",
+      "name": "VITA COLA",
+      "kategorie": "trikotsponsor",
+      "domain": "vita-cola.de",
+      "logo": "https://img.logo.dev/vita-cola.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gerolsteiner",
+      "name": "Gerolsteiner",
+      "kategorie": "trikotsponsor",
+      "domain": "gerolsteiner.de",
+      "logo": "https://img.logo.dev/gerolsteiner.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "adelholzener",
+      "name": "Adelholzener",
+      "kategorie": "trikotsponsor",
+      "domain": "adelholzener.de",
+      "logo": "https://img.logo.dev/adelholzener.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "effect_energy",
+      "name": "effect",
+      "kategorie": "trikotsponsor",
+      "domain": "effect-energy.com",
+      "logo": "https://img.logo.dev/effect-energy.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rockstar_energy",
+      "name": "Rockstar Energy",
+      "kategorie": "trikotsponsor",
+      "domain": "rockstarenergy.com",
+      "logo": "https://img.logo.dev/rockstarenergy.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "powerade",
+      "name": "Powerade",
+      "kategorie": "trikotsponsor",
+      "domain": "powerade.com",
+      "logo": "https://img.logo.dev/powerade.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "capri_sun",
+      "name": "Capri-Sun",
+      "kategorie": "trikotsponsor",
+      "domain": "capri-sun.com",
+      "logo": "https://img.logo.dev/capri-sun.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "congstar",
+      "name": "congstar",
+      "kategorie": "trikotsponsor",
+      "domain": "congstar.de",
+      "logo": "https://img.logo.dev/congstar.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "1und1",
+      "name": "1&1",
+      "kategorie": "trikotsponsor",
+      "domain": "1und1.de",
+      "logo": "https://img.logo.dev/1und1.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "freenet",
+      "name": "Freenet",
+      "kategorie": "trikotsponsor",
+      "domain": "freenet.de",
+      "logo": "https://img.logo.dev/freenet.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "telia",
+      "name": "Telia",
+      "kategorie": "trikotsponsor",
+      "domain": "telia.com",
+      "logo": "https://img.logo.dev/telia.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "a1",
+      "name": "A1",
+      "kategorie": "trikotsponsor",
+      "domain": "a1.net",
+      "logo": "https://img.logo.dev/a1.net?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ergo",
+      "name": "ERGO",
+      "kategorie": "trikotsponsor",
+      "domain": "ergo.de",
+      "logo": "https://img.logo.dev/ergo.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "huk_coburg",
+      "name": "HUK-COBURG",
+      "kategorie": "trikotsponsor",
+      "domain": "huk.de",
+      "logo": "https://img.logo.dev/huk.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lvm",
+      "name": "LVM",
+      "kategorie": "trikotsponsor",
+      "domain": "lvm.de",
+      "logo": "https://img.logo.dev/lvm.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "debeka",
+      "name": "Debeka",
+      "kategorie": "trikotsponsor",
+      "domain": "debeka.de",
+      "logo": "https://img.logo.dev/debeka.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "barmenia",
+      "name": "Barmenia",
+      "kategorie": "trikotsponsor",
+      "domain": "barmenia.de",
+      "logo": "https://img.logo.dev/barmenia.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wuestenrot",
+      "name": "Wuestenrot",
+      "kategorie": "trikotsponsor",
+      "domain": "wuestenrot.de",
+      "logo": "https://img.logo.dev/wuestenrot.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "r_v",
+      "name": "R+V",
+      "kategorie": "trikotsponsor",
+      "domain": "ruv.de",
+      "logo": "https://img.logo.dev/ruv.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vhv",
+      "name": "VHV",
+      "kategorie": "trikotsponsor",
+      "domain": "vhv.de",
+      "logo": "https://img.logo.dev/vhv.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sparkasse",
+      "name": "Sparkasse",
+      "kategorie": "trikotsponsor",
+      "domain": "sparkasse.de",
+      "logo": "https://img.logo.dev/sparkasse.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "volksbank",
+      "name": "Volksbank",
+      "kategorie": "trikotsponsor",
+      "domain": "vr.de",
+      "logo": "https://img.logo.dev/vr.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "targobank",
+      "name": "Targobank",
+      "kategorie": "trikotsponsor",
+      "domain": "targobank.de",
+      "logo": "https://img.logo.dev/targobank.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "comdirect",
+      "name": "Comdirect",
+      "kategorie": "trikotsponsor",
+      "domain": "comdirect.de",
+      "logo": "https://img.logo.dev/comdirect.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dkb",
+      "name": "DKB",
+      "kategorie": "trikotsponsor",
+      "domain": "dkb.de",
+      "logo": "https://img.logo.dev/dkb.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "caixabank",
+      "name": "CaixaBank",
+      "kategorie": "trikotsponsor",
+      "domain": "caixabank.com",
+      "logo": "https://img.logo.dev/caixabank.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rewe",
+      "name": "REWE",
+      "kategorie": "trikotsponsor",
+      "domain": "rewe.de",
+      "logo": "https://img.logo.dev/rewe.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "edeka",
+      "name": "EDEKA",
+      "kategorie": "trikotsponsor",
+      "domain": "edeka.de",
+      "logo": "https://img.logo.dev/edeka.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lidl",
+      "name": "Lidl",
+      "kategorie": "trikotsponsor",
+      "domain": "lidl.de",
+      "logo": "https://img.logo.dev/lidl.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "aldi",
+      "name": "ALDI",
+      "kategorie": "trikotsponsor",
+      "domain": "aldi.de",
+      "logo": "https://img.logo.dev/aldi.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "netto",
+      "name": "Netto",
+      "kategorie": "trikotsponsor",
+      "domain": "netto-online.de",
+      "logo": "https://img.logo.dev/netto-online.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kaufland",
+      "name": "Kaufland",
+      "kategorie": "trikotsponsor",
+      "domain": "kaufland.de",
+      "logo": "https://img.logo.dev/kaufland.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "penny",
+      "name": "PENNY",
+      "kategorie": "trikotsponsor",
+      "domain": "penny.de",
+      "logo": "https://img.logo.dev/penny.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "globus",
+      "name": "Globus",
+      "kategorie": "trikotsponsor",
+      "domain": "globus.de",
+      "logo": "https://img.logo.dev/globus.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "media_markt",
+      "name": "MediaMarkt",
+      "kategorie": "trikotsponsor",
+      "domain": "mediamarkt.de",
+      "logo": "https://img.logo.dev/mediamarkt.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "saturn",
+      "name": "Saturn",
+      "kategorie": "trikotsponsor",
+      "domain": "saturn.de",
+      "logo": "https://img.logo.dev/saturn.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "expert",
+      "name": "Expert",
+      "kategorie": "trikotsponsor",
+      "domain": "expert.de",
+      "logo": "https://img.logo.dev/expert.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "euronics",
+      "name": "Euronics",
+      "kategorie": "trikotsponsor",
+      "domain": "euronics.de",
+      "logo": "https://img.logo.dev/euronics.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "intersport",
+      "name": "Intersport",
+      "kategorie": "trikotsponsor",
+      "domain": "intersport.de",
+      "logo": "https://img.logo.dev/intersport.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "jd_sports",
+      "name": "JD Sports",
+      "kategorie": "trikotsponsor",
+      "domain": "jdsports.co.uk",
+      "logo": "https://img.logo.dev/jdsports.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sports_direct",
+      "name": "Sports Direct",
+      "kategorie": "trikotsponsor",
+      "domain": "sportsdirect.com",
+      "logo": "https://img.logo.dev/sportsdirect.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "foot_locker",
+      "name": "Foot Locker",
+      "kategorie": "trikotsponsor",
+      "domain": "footlocker.com",
+      "logo": "https://img.logo.dev/footlocker.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "kategorie": "trikotsponsor",
+      "domain": "amazon.com",
+      "logo": "https://img.logo.dev/amazon.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ebay",
+      "name": "eBay",
+      "kategorie": "trikotsponsor",
+      "domain": "ebay.com",
+      "logo": "https://img.logo.dev/ebay.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "alibaba",
+      "name": "Alibaba",
+      "kategorie": "trikotsponsor",
+      "domain": "alibaba.com",
+      "logo": "https://img.logo.dev/alibaba.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "aliexpress",
+      "name": "AliExpress",
+      "kategorie": "trikotsponsor",
+      "domain": "aliexpress.com",
+      "logo": "https://img.logo.dev/aliexpress.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "zalando",
+      "name": "Zalando",
+      "kategorie": "trikotsponsor",
+      "domain": "zalando.de",
+      "logo": "https://img.logo.dev/zalando.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "about_you",
+      "name": "ABOUT YOU",
+      "kategorie": "trikotsponsor",
+      "domain": "aboutyou.de",
+      "logo": "https://img.logo.dev/aboutyou.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "otto",
+      "name": "OTTO",
+      "kategorie": "trikotsponsor",
+      "domain": "otto.de",
+      "logo": "https://img.logo.dev/otto.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "snipes",
+      "name": "SNIPES",
+      "kategorie": "trikotsponsor",
+      "domain": "snipes.com",
+      "logo": "https://img.logo.dev/snipes.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "booking_com",
+      "name": "Booking.com",
+      "kategorie": "trikotsponsor",
+      "domain": "booking.com",
+      "logo": "https://img.logo.dev/booking.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "expedia",
+      "name": "Expedia",
+      "kategorie": "trikotsponsor",
+      "domain": "expedia.com",
+      "logo": "https://img.logo.dev/expedia.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tui",
+      "name": "TUI",
+      "kategorie": "trikotsponsor",
+      "domain": "tui.com",
+      "logo": "https://img.logo.dev/tui.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "condor",
+      "name": "Condor",
+      "kategorie": "trikotsponsor",
+      "domain": "condor.com",
+      "logo": "https://img.logo.dev/condor.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "eurowings",
+      "name": "Eurowings",
+      "kategorie": "trikotsponsor",
+      "domain": "eurowings.com",
+      "logo": "https://img.logo.dev/eurowings.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wizz_air",
+      "name": "Wizz Air",
+      "kategorie": "trikotsponsor",
+      "domain": "wizzair.com",
+      "logo": "https://img.logo.dev/wizzair.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ryanair",
+      "name": "Ryanair",
+      "kategorie": "trikotsponsor",
+      "domain": "ryanair.com",
+      "logo": "https://img.logo.dev/ryanair.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "easyjet",
+      "name": "easyJet",
+      "kategorie": "trikotsponsor",
+      "domain": "easyjet.com",
+      "logo": "https://img.logo.dev/easyjet.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vueling",
+      "name": "Vueling",
+      "kategorie": "trikotsponsor",
+      "domain": "vueling.com",
+      "logo": "https://img.logo.dev/vueling.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "alltours",
+      "name": "Alltours",
+      "kategorie": "trikotsponsor",
+      "domain": "alltours.de",
+      "logo": "https://img.logo.dev/alltours.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "schauinsland_reisen",
+      "name": "schauinsland-reisen",
+      "kategorie": "trikotsponsor",
+      "domain": "schauinsland-reisen.de",
+      "logo": "https://img.logo.dev/schauinsland-reisen.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sixt",
+      "name": "SIXT",
+      "kategorie": "trikotsponsor",
+      "domain": "sixt.com",
+      "logo": "https://img.logo.dev/sixt.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "europcar",
+      "name": "Europcar",
+      "kategorie": "trikotsponsor",
+      "domain": "europcar.com",
+      "logo": "https://img.logo.dev/europcar.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hertz",
+      "name": "Hertz",
+      "kategorie": "trikotsponsor",
+      "domain": "hertz.com",
+      "logo": "https://img.logo.dev/hertz.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "flixbus",
+      "name": "FlixBus",
+      "kategorie": "trikotsponsor",
+      "domain": "flixbus.com",
+      "logo": "https://img.logo.dev/flixbus.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "deutsche_bahn",
+      "name": "Deutsche Bahn",
+      "kategorie": "trikotsponsor",
+      "domain": "bahn.de",
+      "logo": "https://img.logo.dev/bahn.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "uber",
+      "name": "Uber",
+      "kategorie": "trikotsponsor",
+      "domain": "uber.com",
+      "logo": "https://img.logo.dev/uber.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bolt",
+      "name": "Bolt",
+      "kategorie": "trikotsponsor",
+      "domain": "bolt.eu",
+      "logo": "https://img.logo.dev/bolt.eu?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "freenow",
+      "name": "FREE NOW",
+      "kategorie": "trikotsponsor",
+      "domain": "free-now.com",
+      "logo": "https://img.logo.dev/free-now.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lieferando",
+      "name": "Lieferando",
+      "kategorie": "trikotsponsor",
+      "domain": "lieferando.de",
+      "logo": "https://img.logo.dev/lieferando.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "delivery_hero",
+      "name": "Delivery Hero",
+      "kategorie": "trikotsponsor",
+      "domain": "deliveryhero.com",
+      "logo": "https://img.logo.dev/deliveryhero.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wolt",
+      "name": "Wolt",
+      "kategorie": "trikotsponsor",
+      "domain": "wolt.com",
+      "logo": "https://img.logo.dev/wolt.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "uber_eats",
+      "name": "Uber Eats",
+      "kategorie": "trikotsponsor",
+      "domain": "ubereats.com",
+      "logo": "https://img.logo.dev/ubereats.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "just_eat",
+      "name": "Just Eat Takeaway",
+      "kategorie": "trikotsponsor",
+      "domain": "justeattakeaway.com",
+      "logo": "https://img.logo.dev/justeattakeaway.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hellofresh",
+      "name": "HelloFresh",
+      "kategorie": "trikotsponsor",
+      "domain": "hellofresh.com",
+      "logo": "https://img.logo.dev/hellofresh.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dr_oetker",
+      "name": "Dr. Oetker",
+      "kategorie": "trikotsponsor",
+      "domain": "oetker.com",
+      "logo": "https://img.logo.dev/oetker.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wiesenhof",
+      "name": "WIESENHOF",
+      "kategorie": "trikotsponsor",
+      "domain": "wiesenhof.de",
+      "logo": "https://img.logo.dev/wiesenhof.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "haribo",
+      "name": "HARIBO",
+      "kategorie": "trikotsponsor",
+      "domain": "haribo.com",
+      "logo": "https://img.logo.dev/haribo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "milka",
+      "name": "Milka",
+      "kategorie": "trikotsponsor",
+      "domain": "milka.de",
+      "logo": "https://img.logo.dev/milka.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "chupa_chups",
+      "name": "Chupa Chups",
+      "kategorie": "trikotsponsor",
+      "domain": "chupachups.com",
+      "logo": "https://img.logo.dev/chupachups.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "funny_frisch",
+      "name": "funny-frisch",
+      "kategorie": "trikotsponsor",
+      "domain": "funny-frisch.de",
+      "logo": "https://img.logo.dev/funny-frisch.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "katjes",
+      "name": "Katjes",
+      "kategorie": "trikotsponsor",
+      "domain": "katjes.de",
+      "logo": "https://img.logo.dev/katjes.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ritter_sport",
+      "name": "Ritter Sport",
+      "kategorie": "trikotsponsor",
+      "domain": "ritter-sport.de",
+      "logo": "https://img.logo.dev/ritter-sport.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "muellermilch",
+      "name": "Müllermilch",
+      "kategorie": "trikotsponsor",
+      "domain": "muellermilch.de",
+      "logo": "https://img.logo.dev/muellermilch.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "homann",
+      "name": "HOMANN",
+      "kategorie": "trikotsponsor",
+      "domain": "homann.de",
+      "logo": "https://img.logo.dev/homann.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "check24",
+      "name": "CHECK24",
+      "kategorie": "trikotsponsor",
+      "domain": "check24.de",
+      "logo": "https://img.logo.dev/check24.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "verivox",
+      "name": "Verivox",
+      "kategorie": "trikotsponsor",
+      "domain": "verivox.de",
+      "logo": "https://img.logo.dev/verivox.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stepstone",
+      "name": "StepStone",
+      "kategorie": "trikotsponsor",
+      "domain": "stepstone.de",
+      "logo": "https://img.logo.dev/stepstone.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "indeed",
+      "name": "Indeed",
+      "kategorie": "trikotsponsor",
+      "domain": "indeed.com",
+      "logo": "https://img.logo.dev/indeed.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "immoscout24",
+      "name": "ImmoScout24",
+      "kategorie": "trikotsponsor",
+      "domain": "immobilienscout24.de",
+      "logo": "https://img.logo.dev/immobilienscout24.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "autoscout24",
+      "name": "AutoScout24",
+      "kategorie": "trikotsponsor",
+      "domain": "autoscout24.de",
+      "logo": "https://img.logo.dev/autoscout24.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kleinanzeigen",
+      "name": "Kleinanzeigen",
+      "kategorie": "trikotsponsor",
+      "domain": "kleinanzeigen.de",
+      "logo": "https://img.logo.dev/kleinanzeigen.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "trivago",
+      "name": "Trivago",
+      "kategorie": "trikotsponsor",
+      "domain": "trivago.com",
+      "logo": "https://img.logo.dev/trivago.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bitpanda",
+      "name": "Bitpanda",
+      "kategorie": "trikotsponsor",
+      "domain": "bitpanda.com",
+      "logo": "https://img.logo.dev/bitpanda.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kucoin",
+      "name": "KuCoin",
+      "kategorie": "trikotsponsor",
+      "domain": "kucoin.com",
+      "logo": "https://img.logo.dev/kucoin.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sorare",
+      "name": "Sorare",
+      "kategorie": "trikotsponsor",
+      "domain": "sorare.com",
+      "logo": "https://img.logo.dev/sorare.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "chiliz",
+      "name": "Chiliz",
+      "kategorie": "trikotsponsor",
+      "domain": "chiliz.com",
+      "logo": "https://img.logo.dev/chiliz.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "etoro",
+      "name": "eToro",
+      "kategorie": "trikotsponsor",
+      "domain": "etoro.com",
+      "logo": "https://img.logo.dev/etoro.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "plus500",
+      "name": "Plus500",
+      "kategorie": "trikotsponsor",
+      "domain": "plus500.com",
+      "logo": "https://img.logo.dev/plus500.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "myprotein",
+      "name": "Myprotein",
+      "kategorie": "trikotsponsor",
+      "domain": "myprotein.com",
+      "logo": "https://img.logo.dev/myprotein.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "foodspring",
+      "name": "Foodspring",
+      "kategorie": "trikotsponsor",
+      "domain": "foodspring.com",
+      "logo": "https://img.logo.dev/foodspring.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "prozis",
+      "name": "Prozis",
+      "kategorie": "trikotsponsor",
+      "domain": "prozis.com",
+      "logo": "https://img.logo.dev/prozis.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "whoop",
+      "name": "WHOOP",
+      "kategorie": "trikotsponsor",
+      "domain": "whoop.com",
+      "logo": "https://img.logo.dev/whoop.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "garmin",
+      "name": "Garmin",
+      "kategorie": "trikotsponsor",
+      "domain": "garmin.com",
+      "logo": "https://img.logo.dev/garmin.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "polar",
+      "name": "Polar",
+      "kategorie": "trikotsponsor",
+      "domain": "polar.com",
+      "logo": "https://img.logo.dev/polar.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "isostar",
+      "name": "Isostar",
+      "kategorie": "trikotsponsor",
+      "domain": "isostar.com",
+      "logo": "https://img.logo.dev/isostar.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "acronis",
+      "name": "Acronis",
+      "kategorie": "trikotsponsor",
+      "domain": "acronis.com",
+      "logo": "https://img.logo.dev/acronis.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kaspersky",
+      "name": "Kaspersky",
+      "kategorie": "trikotsponsor",
+      "domain": "kaspersky.com",
+      "logo": "https://img.logo.dev/kaspersky.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "western_union",
+      "name": "Western Union",
+      "kategorie": "trikotsponsor",
+      "domain": "westernunion.com",
+      "logo": "https://img.logo.dev/westernunion.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "remitly",
+      "name": "Remitly",
+      "kategorie": "trikotsponsor",
+      "domain": "remitly.com",
+      "logo": "https://img.logo.dev/remitly.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "moneygram",
+      "name": "MoneyGram",
+      "kategorie": "trikotsponsor",
+      "domain": "moneygram.com",
+      "logo": "https://img.logo.dev/moneygram.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tezos",
+      "name": "Tezos",
+      "kategorie": "trikotsponsor",
+      "domain": "tezos.com",
+      "logo": "https://img.logo.dev/tezos.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "cinch",
+      "name": "cinch",
+      "kategorie": "trikotsponsor",
+      "domain": "cinch.co.uk",
+      "logo": "https://img.logo.dev/cinch.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "allianz",
+      "name": "Allianz",
+      "kategorie": "stadionpartner",
+      "domain": "allianz.com",
+      "logo": "https://img.logo.dev/allianz.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "signal_iduna",
+      "name": "SIGNAL IDUNA",
+      "kategorie": "stadionpartner",
+      "domain": "signal-iduna.de",
+      "logo": "https://img.logo.dev/signal-iduna.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "veltins",
+      "name": "Veltins",
+      "kategorie": "stadionpartner",
+      "domain": "veltins.de",
+      "logo": "https://img.logo.dev/veltins.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mercedes_benz",
+      "name": "Mercedes-Benz",
+      "kategorie": "stadionpartner",
+      "domain": "mercedes-benz.com",
+      "logo": "https://img.logo.dev/mercedes-benz.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "deutsche_bank",
+      "name": "Deutsche Bank",
+      "kategorie": "stadionpartner",
+      "domain": "db.com",
+      "logo": "https://img.logo.dev/db.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "commerzbank",
+      "name": "Commerzbank",
+      "kategorie": "stadionpartner",
+      "domain": "commerzbank.de",
+      "logo": "https://img.logo.dev/commerzbank.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "opel",
+      "name": "Opel",
+      "kategorie": "stadionpartner",
+      "domain": "opel.com",
+      "logo": "https://img.logo.dev/opel.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mewa",
+      "name": "Mewa",
+      "kategorie": "stadionpartner",
+      "domain": "mewa.de",
+      "logo": "https://img.logo.dev/mewa.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wwk",
+      "name": "WWK",
+      "kategorie": "stadionpartner",
+      "domain": "wwk.de",
+      "logo": "https://img.logo.dev/wwk.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "prezero",
+      "name": "PreZero",
+      "kategorie": "stadionpartner",
+      "domain": "prezero.com",
+      "logo": "https://img.logo.dev/prezero.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rhein_energie",
+      "name": "RheinEnergie",
+      "kategorie": "stadionpartner",
+      "domain": "rheinenergie.com",
+      "logo": "https://img.logo.dev/rheinenergie.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "merkur",
+      "name": "MERKUR",
+      "kategorie": "stadionpartner",
+      "domain": "merkur.com",
+      "logo": "https://img.logo.dev/merkur.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vonovia",
+      "name": "Vonovia",
+      "kategorie": "stadionpartner",
+      "domain": "vonovia.de",
+      "logo": "https://img.logo.dev/vonovia.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "schueco",
+      "name": "Schüco",
+      "kategorie": "stadionpartner",
+      "domain": "schueco.com",
+      "logo": "https://img.logo.dev/schueco.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "heinz_von_heiden",
+      "name": "Heinz von Heiden",
+      "kategorie": "stadionpartner",
+      "domain": "heinz-von-heiden.de",
+      "logo": "https://img.logo.dev/heinz-von-heiden.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hdi",
+      "name": "HDI",
+      "kategorie": "stadionpartner",
+      "domain": "hdi.de",
+      "logo": "https://img.logo.dev/hdi.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "voith",
+      "name": "Voith",
+      "kategorie": "stadionpartner",
+      "domain": "voith.com",
+      "logo": "https://img.logo.dev/voith.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "benteler",
+      "name": "Benteler",
+      "kategorie": "stadionpartner",
+      "domain": "benteler.com",
+      "logo": "https://img.logo.dev/benteler.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "wohninvest",
+      "name": "wohninvest",
+      "kategorie": "stadionpartner",
+      "domain": "wohninvest.de",
+      "logo": "https://img.logo.dev/wohninvest.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sparda_bank",
+      "name": "Sparda-Bank",
+      "kategorie": "stadionpartner",
+      "domain": "sparda.de",
+      "logo": "https://img.logo.dev/sparda.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "psd_bank",
+      "name": "PSD Bank",
+      "kategorie": "stadionpartner",
+      "domain": "psd-bank.de",
+      "logo": "https://img.logo.dev/psd-bank.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ratiopharm",
+      "name": "Ratiopharm",
+      "kategorie": "stadionpartner",
+      "domain": "ratiopharm.de",
+      "logo": "https://img.logo.dev/ratiopharm.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ewe",
+      "name": "EWE",
+      "kategorie": "stadionpartner",
+      "domain": "ewe.de",
+      "logo": "https://img.logo.dev/ewe.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "getec",
+      "name": "GETEC",
+      "kategorie": "stadionpartner",
+      "domain": "getec.de",
+      "logo": "https://img.logo.dev/getec.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "brita",
+      "name": "BRITA",
+      "kategorie": "stadionpartner",
+      "domain": "brita.de",
+      "logo": "https://img.logo.dev/brita.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "home_deluxe",
+      "name": "HOME DELUXE",
+      "kategorie": "stadionpartner",
+      "domain": "home-deluxe.de",
+      "logo": "https://img.logo.dev/home-deluxe.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "american_express",
+      "name": "American Express",
+      "kategorie": "stadionpartner",
+      "domain": "americanexpress.com",
+      "logo": "https://img.logo.dev/americanexpress.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "king_power",
+      "name": "King Power",
+      "kategorie": "stadionpartner",
+      "domain": "kingpower.com",
+      "logo": "https://img.logo.dev/kingpower.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "vitality",
+      "name": "Vitality",
+      "kategorie": "stadionpartner",
+      "domain": "vitality.co.uk",
+      "logo": "https://img.logo.dev/vitality.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "coventry_building_society",
+      "name": "Coventry Building Society",
+      "kategorie": "stadionpartner",
+      "domain": "thecoventry.co.uk",
+      "logo": "https://img.logo.dev/thecoventry.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "john_smiths",
+      "name": "John Smith's",
+      "kategorie": "stadionpartner",
+      "domain": "johnsmiths.co.uk",
+      "logo": "https://img.logo.dev/johnsmiths.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "select_car_leasing",
+      "name": "Select Car Leasing",
+      "kategorie": "stadionpartner",
+      "domain": "selectcarleasing.co.uk",
+      "logo": "https://img.logo.dev/selectcarleasing.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gtech",
+      "name": "Gtech",
+      "kategorie": "stadionpartner",
+      "domain": "gtech.co.uk",
+      "logo": "https://img.logo.dev/gtech.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "reale",
+      "name": "Reale",
+      "kategorie": "stadionpartner",
+      "domain": "reale.es",
+      "logo": "https://img.logo.dev/reale.es?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "abanca",
+      "name": "Abanca",
+      "kategorie": "stadionpartner",
+      "domain": "abanca.com",
+      "logo": "https://img.logo.dev/abanca.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "power_horse",
+      "name": "Power Horse",
+      "kategorie": "stadionpartner",
+      "domain": "powerhorse.com",
+      "logo": "https://img.logo.dev/powerhorse.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stage_front",
+      "name": "Stage Front",
+      "kategorie": "stadionpartner",
+      "domain": "stagefront.com",
+      "logo": "https://img.logo.dev/stagefront.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gewiss",
+      "name": "Gewiss",
+      "kategorie": "stadionpartner",
+      "domain": "gewiss.com",
+      "logo": "https://img.logo.dev/gewiss.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mapei",
+      "name": "MAPEI",
+      "kategorie": "stadionpartner",
+      "domain": "mapei.com",
+      "logo": "https://img.logo.dev/mapei.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dacia",
+      "name": "Dacia",
+      "kategorie": "stadionpartner",
+      "domain": "dacia.com",
+      "logo": "https://img.logo.dev/dacia.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bluenergy",
+      "name": "Bluenergy",
+      "kategorie": "stadionpartner",
+      "domain": "bluenergygroup.it",
+      "logo": "https://img.logo.dev/bluenergygroup.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "unipol",
+      "name": "Unipol",
+      "kategorie": "stadionpartner",
+      "domain": "unipol.it",
+      "logo": "https://img.logo.dev/unipol.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "groupama",
+      "name": "Groupama",
+      "kategorie": "stadionpartner",
+      "domain": "groupama.com",
+      "logo": "https://img.logo.dev/groupama.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "matmut",
+      "name": "Matmut",
+      "kategorie": "stadionpartner",
+      "domain": "matmut.fr",
+      "logo": "https://img.logo.dev/matmut.fr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "decathlon",
+      "name": "Decathlon",
+      "kategorie": "stadionpartner",
+      "domain": "decathlon.com",
+      "logo": "https://img.logo.dev/decathlon.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mma",
+      "name": "MMA",
+      "kategorie": "stadionpartner",
+      "domain": "mma.fr",
+      "logo": "https://img.logo.dev/mma.fr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "generali",
+      "name": "Generali",
+      "kategorie": "stadionpartner",
+      "domain": "generali.com",
+      "logo": "https://img.logo.dev/generali.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "raiffeisen",
+      "name": "Raiffeisen",
+      "kategorie": "stadionpartner",
+      "domain": "raiffeisen.at",
+      "logo": "https://img.logo.dev/raiffeisen.at?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "swisspor",
+      "name": "Swisspor",
+      "kategorie": "stadionpartner",
+      "domain": "swisspor.ch",
+      "logo": "https://img.logo.dev/swisspor.ch?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kybun",
+      "name": "kybun",
+      "kategorie": "stadionpartner",
+      "domain": "kybun.com",
+      "logo": "https://img.logo.dev/kybun.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "philips",
+      "name": "Philips",
+      "kategorie": "stadionpartner",
+      "domain": "philips.com",
+      "logo": "https://img.logo.dev/philips.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "afas",
+      "name": "AFAS",
+      "kategorie": "stadionpartner",
+      "domain": "afas.com",
+      "logo": "https://img.logo.dev/afas.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "yanmar",
+      "name": "Yanmar",
+      "kategorie": "stadionpartner",
+      "domain": "yanmar.com",
+      "logo": "https://img.logo.dev/yanmar.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hitachi",
+      "name": "Hitachi",
+      "kategorie": "stadionpartner",
+      "domain": "hitachi.com",
+      "logo": "https://img.logo.dev/hitachi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "covebo",
+      "name": "Covebo",
+      "kategorie": "stadionpartner",
+      "domain": "covebo.nl",
+      "logo": "https://img.logo.dev/covebo.nl?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ceres",
+      "name": "Ceres",
+      "kategorie": "stadionpartner",
+      "domain": "ceres.dk",
+      "logo": "https://img.logo.dev/ceres.dk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "eleda",
+      "name": "Eleda",
+      "kategorie": "stadionpartner",
+      "domain": "eleda.se",
+      "logo": "https://img.logo.dev/eleda.se?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ulker",
+      "name": "Ülker",
+      "kategorie": "stadionpartner",
+      "domain": "ulker.com.tr",
+      "logo": "https://img.logo.dev/ulker.com.tr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rams",
+      "name": "RAMS",
+      "kategorie": "stadionpartner",
+      "domain": "ramsglobal.com",
+      "logo": "https://img.logo.dev/ramsglobal.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tupras",
+      "name": "Tüpraş",
+      "kategorie": "stadionpartner",
+      "domain": "tupras.com.tr",
+      "logo": "https://img.logo.dev/tupras.com.tr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "chobani",
+      "name": "Chobani",
+      "kategorie": "stadionpartner",
+      "domain": "chobani.com",
+      "logo": "https://img.logo.dev/chobani.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sofi",
+      "name": "SoFi",
+      "kategorie": "stadionpartner",
+      "domain": "sofi.com",
+      "logo": "https://img.logo.dev/sofi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "allegiant",
+      "name": "Allegiant",
+      "kategorie": "stadionpartner",
+      "domain": "allegiantair.com",
+      "logo": "https://img.logo.dev/allegiantair.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "metlife",
+      "name": "MetLife",
+      "kategorie": "stadionpartner",
+      "domain": "metlife.com",
+      "logo": "https://img.logo.dev/metlife.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "levis",
+      "name": "Levi's",
+      "kategorie": "stadionpartner",
+      "domain": "levi.com",
+      "logo": "https://img.logo.dev/levi.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lumen",
+      "name": "Lumen",
+      "kategorie": "stadionpartner",
+      "domain": "lumen.com",
+      "logo": "https://img.logo.dev/lumen.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "att",
+      "name": "AT&T",
+      "kategorie": "stadionpartner",
+      "domain": "att.com",
+      "logo": "https://img.logo.dev/att.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bmo",
+      "name": "BMO",
+      "kategorie": "stadionpartner",
+      "domain": "bmo.com",
+      "logo": "https://img.logo.dev/bmo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "geodis",
+      "name": "Geodis",
+      "kategorie": "stadionpartner",
+      "domain": "geodis.com",
+      "logo": "https://img.logo.dev/geodis.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "q2",
+      "name": "Q2",
+      "kategorie": "stadionpartner",
+      "domain": "q2.com",
+      "logo": "https://img.logo.dev/q2.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dignity_health",
+      "name": "Dignity Health",
+      "kategorie": "stadionpartner",
+      "domain": "dignityhealth.org",
+      "logo": "https://img.logo.dev/dignityhealth.org?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "inter_and_co",
+      "name": "Inter&Co",
+      "kategorie": "stadionpartner",
+      "domain": "inter.co",
+      "logo": "https://img.logo.dev/inter.co?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "chase",
+      "name": "Chase",
+      "kategorie": "stadionpartner",
+      "domain": "chase.com",
+      "logo": "https://img.logo.dev/chase.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "subaru",
+      "name": "Subaru",
+      "kategorie": "stadionpartner",
+      "domain": "subaru.com",
+      "logo": "https://img.logo.dev/subaru.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "energizer",
+      "name": "Energizer",
+      "kategorie": "stadionpartner",
+      "domain": "energizer.com",
+      "logo": "https://img.logo.dev/energizer.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "shell",
+      "name": "Shell",
+      "kategorie": "stadionpartner",
+      "domain": "shell.com",
+      "logo": "https://img.logo.dev/shell.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "snapdragon",
+      "name": "Snapdragon",
+      "kategorie": "stadionpartner",
+      "domain": "qualcomm.com",
+      "logo": "https://img.logo.dev/qualcomm.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gillette",
+      "name": "Gillette",
+      "kategorie": "stadionpartner",
+      "domain": "gillette.com",
+      "logo": "https://img.logo.dev/gillette.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ajinomoto",
+      "name": "Ajinomoto",
+      "kategorie": "stadionpartner",
+      "domain": "ajinomoto.com",
+      "logo": "https://img.logo.dev/ajinomoto.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "edion",
+      "name": "Edion",
+      "kategorie": "stadionpartner",
+      "domain": "edion.com",
+      "logo": "https://img.logo.dev/edion.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "noevir",
+      "name": "Noevir",
+      "kategorie": "stadionpartner",
+      "domain": "noevir.co.jp",
+      "logo": "https://img.logo.dev/noevir.co.jp?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "aramark",
+      "name": "Aramark",
+      "kategorie": "stadionpartner",
+      "domain": "aramark.com",
+      "logo": "https://img.logo.dev/aramark.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sodexo",
+      "name": "Sodexo",
+      "kategorie": "stadionpartner",
+      "domain": "sodexo.com",
+      "logo": "https://img.logo.dev/sodexo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ticketmaster",
+      "name": "Ticketmaster",
+      "kategorie": "stadionpartner",
+      "domain": "ticketmaster.com",
+      "logo": "https://img.logo.dev/ticketmaster.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "eventim",
+      "name": "Eventim",
+      "kategorie": "stadionpartner",
+      "domain": "eventim.de",
+      "logo": "https://img.logo.dev/eventim.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "skidata",
+      "name": "SKIDATA",
+      "kategorie": "stadionpartner",
+      "domain": "skidata.com",
+      "logo": "https://img.logo.dev/skidata.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "signify",
+      "name": "Signify",
+      "kategorie": "stadionpartner",
+      "domain": "signify.com",
+      "logo": "https://img.logo.dev/signify.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "strabag",
+      "name": "STRABAG",
+      "kategorie": "stadionpartner",
+      "domain": "strabag.com",
+      "logo": "https://img.logo.dev/strabag.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "hochtief",
+      "name": "HOCHTIEF",
+      "kategorie": "stadionpartner",
+      "domain": "hochtief.de",
+      "logo": "https://img.logo.dev/hochtief.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "daktronics",
+      "name": "Daktronics",
+      "kategorie": "stadionpartner",
+      "domain": "daktronics.com",
+      "logo": "https://img.logo.dev/daktronics.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "musco",
+      "name": "Musco",
+      "kategorie": "stadionpartner",
+      "domain": "musco.com",
+      "logo": "https://img.logo.dev/musco.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fieldturf",
+      "name": "FieldTurf",
+      "kategorie": "stadionpartner",
+      "domain": "fieldturf.com",
+      "logo": "https://img.logo.dev/fieldturf.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "verizon",
+      "name": "Verizon",
+      "kategorie": "stadionpartner",
+      "domain": "verizon.com",
+      "logo": "https://img.logo.dev/verizon.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "cisco",
+      "name": "Cisco",
+      "kategorie": "stadionpartner",
+      "domain": "cisco.com",
+      "logo": "https://img.logo.dev/cisco.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "oracle",
+      "name": "Oracle",
+      "kategorie": "stadionpartner",
+      "domain": "oracle.com",
+      "logo": "https://img.logo.dev/oracle.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "schneider_electric",
+      "name": "Schneider Electric",
+      "kategorie": "stadionpartner",
+      "domain": "se.com",
+      "logo": "https://img.logo.dev/se.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "johnson_controls",
+      "name": "Johnson Controls",
+      "kategorie": "stadionpartner",
+      "domain": "johnsoncontrols.com",
+      "logo": "https://img.logo.dev/johnsoncontrols.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "otis",
+      "name": "Otis",
+      "kategorie": "stadionpartner",
+      "domain": "otis.com",
+      "logo": "https://img.logo.dev/otis.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kone",
+      "name": "KONE",
+      "kategorie": "stadionpartner",
+      "domain": "kone.com",
+      "logo": "https://img.logo.dev/kone.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "thyssenkrupp",
+      "name": "thyssenkrupp",
+      "kategorie": "stadionpartner",
+      "domain": "thyssenkrupp.com",
+      "logo": "https://img.logo.dev/thyssenkrupp.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sky",
+      "name": "Sky",
+      "kategorie": "tv_medien",
+      "domain": "sky.com",
+      "logo": "https://img.logo.dev/sky.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "dazn",
+      "name": "DAZN",
+      "kategorie": "tv_medien",
+      "domain": "dazn.com",
+      "logo": "https://img.logo.dev/dazn.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "espn",
+      "name": "ESPN",
+      "kategorie": "tv_medien",
+      "domain": "espn.com",
+      "logo": "https://img.logo.dev/espn.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tnt_sports",
+      "name": "TNT Sports",
+      "kategorie": "tv_medien",
+      "domain": "tntsports.co.uk",
+      "logo": "https://img.logo.dev/tntsports.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bein_sports",
+      "name": "beIN SPORTS",
+      "kategorie": "tv_medien",
+      "domain": "beinsports.com",
+      "logo": "https://img.logo.dev/beinsports.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "movistar",
+      "name": "Movistar",
+      "kategorie": "tv_medien",
+      "domain": "movistar.es",
+      "logo": "https://img.logo.dev/movistar.es?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "canal_plus",
+      "name": "CANAL+",
+      "kategorie": "tv_medien",
+      "domain": "canalplus.com",
+      "logo": "https://img.logo.dev/canalplus.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "prime_video",
+      "name": "Prime Video",
+      "kategorie": "tv_medien",
+      "domain": "primevideo.com",
+      "logo": "https://img.logo.dev/primevideo.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "apple_tv",
+      "name": "Apple TV",
+      "kategorie": "tv_medien",
+      "domain": "apple.com",
+      "logo": "https://img.logo.dev/apple.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "paramount_plus",
+      "name": "Paramount+",
+      "kategorie": "tv_medien",
+      "domain": "paramountplus.com",
+      "logo": "https://img.logo.dev/paramountplus.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "peacock",
+      "name": "Peacock",
+      "kategorie": "tv_medien",
+      "domain": "peacocktv.com",
+      "logo": "https://img.logo.dev/peacocktv.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fubo",
+      "name": "Fubo",
+      "kategorie": "tv_medien",
+      "domain": "fubo.tv",
+      "logo": "https://img.logo.dev/fubo.tv?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "viaplay",
+      "name": "Viaplay",
+      "kategorie": "tv_medien",
+      "domain": "viaplay.com",
+      "logo": "https://img.logo.dev/viaplay.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "rtl",
+      "name": "RTL",
+      "kategorie": "tv_medien",
+      "domain": "rtl.de",
+      "logo": "https://img.logo.dev/rtl.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "zdf",
+      "name": "ZDF",
+      "kategorie": "tv_medien",
+      "domain": "zdf.de",
+      "logo": "https://img.logo.dev/zdf.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ard",
+      "name": "ARD",
+      "kategorie": "tv_medien",
+      "domain": "ard.de",
+      "logo": "https://img.logo.dev/ard.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sport1",
+      "name": "SPORT1",
+      "kategorie": "tv_medien",
+      "domain": "sport1.de",
+      "logo": "https://img.logo.dev/sport1.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sportdigital",
+      "name": "sportdigital",
+      "kategorie": "tv_medien",
+      "domain": "sportdigital.de",
+      "logo": "https://img.logo.dev/sportdigital.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "kicker",
+      "name": "Kicker",
+      "kategorie": "tv_medien",
+      "domain": "kicker.de",
+      "logo": "https://img.logo.dev/kicker.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bild",
+      "name": "BILD",
+      "kategorie": "tv_medien",
+      "domain": "bild.de",
+      "logo": "https://img.logo.dev/bild.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fox_sports",
+      "name": "FOX Sports",
+      "kategorie": "tv_medien",
+      "domain": "foxsports.com",
+      "logo": "https://img.logo.dev/foxsports.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "cbs_sports",
+      "name": "CBS Sports",
+      "kategorie": "tv_medien",
+      "domain": "cbssports.com",
+      "logo": "https://img.logo.dev/cbssports.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nbc_sports",
+      "name": "NBC Sports",
+      "kategorie": "tv_medien",
+      "domain": "nbcsports.com",
+      "logo": "https://img.logo.dev/nbcsports.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tsn",
+      "name": "TSN",
+      "kategorie": "tv_medien",
+      "domain": "tsn.ca",
+      "logo": "https://img.logo.dev/tsn.ca?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sportsnet",
+      "name": "Sportsnet",
+      "kategorie": "tv_medien",
+      "domain": "sportsnet.ca",
+      "logo": "https://img.logo.dev/sportsnet.ca?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "supersport",
+      "name": "SuperSport",
+      "kategorie": "tv_medien",
+      "domain": "supersport.com",
+      "logo": "https://img.logo.dev/supersport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "trt",
+      "name": "TRT",
+      "kategorie": "tv_medien",
+      "domain": "trt.net.tr",
+      "logo": "https://img.logo.dev/trt.net.tr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "ziggo",
+      "name": "Ziggo",
+      "kategorie": "tv_medien",
+      "domain": "ziggo.nl",
+      "logo": "https://img.logo.dev/ziggo.nl?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nos",
+      "name": "NOS",
+      "kategorie": "tv_medien",
+      "domain": "nos.nl",
+      "logo": "https://img.logo.dev/nos.nl?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sporza",
+      "name": "Sporza",
+      "kategorie": "tv_medien",
+      "domain": "sporza.be",
+      "logo": "https://img.logo.dev/sporza.be?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "eleven_sports",
+      "name": "Eleven Sports",
+      "kategorie": "tv_medien",
+      "domain": "elevensports.com",
+      "logo": "https://img.logo.dev/elevensports.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "setanta_sports",
+      "name": "Setanta Sports",
+      "kategorie": "tv_medien",
+      "domain": "setantasports.com",
+      "logo": "https://img.logo.dev/setantasports.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nova_sports",
+      "name": "Nova Sports",
+      "kategorie": "tv_medien",
+      "domain": "novasports.gr",
+      "logo": "https://img.logo.dev/novasports.gr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sport_tv",
+      "name": "Sport TV",
+      "kategorie": "tv_medien",
+      "domain": "sporttv.pt",
+      "logo": "https://img.logo.dev/sporttv.pt?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "match_tv",
+      "name": "Match TV",
+      "kategorie": "tv_medien",
+      "domain": "matchtv.ru",
+      "logo": "https://img.logo.dev/matchtv.ru?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "optus_sport",
+      "name": "Optus Sport",
+      "kategorie": "tv_medien",
+      "domain": "optus.com.au",
+      "logo": "https://img.logo.dev/optus.com.au?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "stan_sport",
+      "name": "Stan Sport",
+      "kategorie": "tv_medien",
+      "domain": "stan.com.au",
+      "logo": "https://img.logo.dev/stan.com.au?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "talksport",
+      "name": "talkSPORT",
+      "kategorie": "tv_medien",
+      "domain": "talksport.com",
+      "logo": "https://img.logo.dev/talksport.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "bbc",
+      "name": "BBC",
+      "kategorie": "tv_medien",
+      "domain": "bbc.co.uk",
+      "logo": "https://img.logo.dev/bbc.co.uk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "itv",
+      "name": "ITV",
+      "kategorie": "tv_medien",
+      "domain": "itv.com",
+      "logo": "https://img.logo.dev/itv.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "lequipe",
+      "name": "L'Équipe",
+      "kategorie": "tv_medien",
+      "domain": "lequipe.fr",
+      "logo": "https://img.logo.dev/lequipe.fr?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "marca",
+      "name": "MARCA",
+      "kategorie": "tv_medien",
+      "domain": "marca.com",
+      "logo": "https://img.logo.dev/marca.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "as",
+      "name": "AS",
+      "kategorie": "tv_medien",
+      "domain": "as.com",
+      "logo": "https://img.logo.dev/as.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "gazzetta",
+      "name": "La Gazzetta dello Sport",
+      "kategorie": "tv_medien",
+      "domain": "gazzetta.it",
+      "logo": "https://img.logo.dev/gazzetta.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "mediaset",
+      "name": "Mediaset",
+      "kategorie": "tv_medien",
+      "domain": "mediaset.it",
+      "logo": "https://img.logo.dev/mediaset.it?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "servus_tv",
+      "name": "ServusTV",
+      "kategorie": "tv_medien",
+      "domain": "servustv.com",
+      "logo": "https://img.logo.dev/servustv.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "orf",
+      "name": "ORF",
+      "kategorie": "tv_medien",
+      "domain": "orf.at",
+      "logo": "https://img.logo.dev/orf.at?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "srf",
+      "name": "SRF",
+      "kategorie": "tv_medien",
+      "domain": "srf.ch",
+      "logo": "https://img.logo.dev/srf.ch?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "the_athletic",
+      "name": "The Athletic",
+      "kategorie": "tv_medien",
+      "domain": "theathletic.com",
+      "logo": "https://img.logo.dev/theathletic.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "onefootball",
+      "name": "OneFootball",
+      "kategorie": "tv_medien",
+      "domain": "onefootball.com",
+      "logo": "https://img.logo.dev/onefootball.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "goal",
+      "name": "GOAL",
+      "kategorie": "tv_medien",
+      "domain": "goal.com",
+      "logo": "https://img.logo.dev/goal.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "transfermarkt",
+      "name": "Transfermarkt",
+      "kategorie": "tv_medien",
+      "domain": "transfermarkt.de",
+      "logo": "https://img.logo.dev/transfermarkt.de?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "fotmob",
+      "name": "FotMob",
+      "kategorie": "tv_medien",
+      "domain": "fotmob.com",
+      "logo": "https://img.logo.dev/fotmob.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "flashscore",
+      "name": "Flashscore",
+      "kategorie": "tv_medien",
+      "domain": "flashscore.com",
+      "logo": "https://img.logo.dev/flashscore.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sofascore",
+      "name": "Sofascore",
+      "kategorie": "tv_medien",
+      "domain": "sofascore.com",
+      "logo": "https://img.logo.dev/sofascore.com?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "sporttotal",
+      "name": "sporttotal.tv",
+      "kategorie": "tv_medien",
+      "domain": "sporttotal.tv",
+      "logo": "https://img.logo.dev/sporttotal.tv?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "tv2",
+      "name": "TV 2",
+      "kategorie": "tv_medien",
+      "domain": "tv2.dk",
+      "logo": "https://img.logo.dev/tv2.dk?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "nrk",
+      "name": "NRK",
+      "kategorie": "tv_medien",
+      "domain": "nrk.no",
+      "logo": "https://img.logo.dev/nrk.no?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "polsat",
+      "name": "Polsat",
+      "kategorie": "tv_medien",
+      "domain": "polsat.pl",
+      "logo": "https://img.logo.dev/polsat.pl?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    },
+    {
+      "id": "digi_sport",
+      "name": "Digi Sport",
+      "kategorie": "tv_medien",
+      "domain": "digisport.ro",
+      "logo": "https://img.logo.dev/digisport.ro?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg"
+    }
+  ]
+}

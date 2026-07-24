@@ -4,7 +4,7 @@
 {% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -240,35 +240,36 @@
             <div class="sp-panel-box">
                 <h3 class="sp-panel-box-title">Szenario-Projektion</h3>
                 <div class="sp-scenario">
-                    <div class="sp-scenario-row sp-scenario-row--worst">
-                        <span class="sp-scenario-label">Worst <span class="sp-scenario-sub">(nur Fix)</span></span>
-                        <span class="sp-scenario-val">{{ proj_worst_fmt }}</span>
+                    <div class="sp-scenario-row">
+                        <span class="sp-scenario-label">Worst Case <span class="sp-scenario-sub">(nur Fix)</span></span>
+                        <span class="sp-scenario-val sp-scenario-val--worst">{{ proj_worst_fmt }}</span>
                     </div>
-                    <div class="sp-scenario-bar-wrap">
-                        <div class="sp-scenario-bar sp-scenario-bar--fix" style="width:{% if slots_fixiert_count %}{{ slots_fixiert_count }}0{% else %}0{% endif %}%"></div>
-                        <div class="sp-scenario-bar sp-scenario-bar--open" style="width:{% if proj_open_fmt != '—' %}20{% else %}0{% endif %}%"></div>
+                    <div class="sp-scenario-row">
+                        <span class="sp-scenario-label">Erwartet</span>
+                        <span class="sp-scenario-val sp-scenario-val--expected">{{ proj_expected_fmt }}</span>
                     </div>
-                    <div class="sp-scenario-row sp-scenario-row--expected">
-                        <span class="sp-scenario-label">Erwartet <span class="sp-scenario-sub">(+Boni)</span></span>
-                        <span class="sp-scenario-val">{{ proj_expected_fmt }}</span>
-                    </div>
-                    <div class="sp-scenario-row sp-scenario-row--best">
-                        <span class="sp-scenario-label">Best <span class="sp-scenario-sub">(Max-Boni)</span></span>
+                    <div class="sp-scenario-row">
+                        <span class="sp-scenario-label">Best Case <span class="sp-scenario-sub">(alle Boni)</span></span>
                         <span class="sp-scenario-val sp-scenario-val--best">{{ proj_best_fmt }}</span>
                     </div>
-                    {% if proj_open_fmt != '—' %}
-                    <div class="sp-scenario-open">
-                        <span class="sp-scenario-label">Offene Slots</span>
-                        <span class="sp-scenario-val sp-scenario-val--open">~{{ proj_open_fmt }}</span>
+                    <div class="sp-scenario-divider"></div>
+                    <!-- Fix / Variabel / Offen Legende -->
+                    <div class="sp-scenario-legend">
+                        <span class="sp-legend-dot sp-legend-dot--fix"></span>
+                        <span class="sp-legend-label">Fix {{ slots_fixiert_count }}0 %</span>
+                        <span class="sp-legend-dot sp-legend-dot--var"></span>
+                        <span class="sp-legend-label">Variabel 0 %</span>
+                        <span class="sp-legend-dot sp-legend-dot--open"></span>
+                        <span class="sp-legend-label">Offen {{ 5|add:"-"|add:slots_fixiert_count|stringformat:"d" }}0 %</span>
                     </div>
-                    {% endif %}
+                    <p class="sp-scenario-rule">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
                 </div>
             </div>
 
             <!-- Präsidenten-Erwartung -->
+            {% if president_goal %}
             <div class="sp-panel-box">
                 <h3 class="sp-panel-box-title">Präsidenten-Erwartung</h3>
-                {% if president_goal %}
                 <div class="sp-president">
                     <div class="sp-president-row">
                         <span class="sp-president-label">Saisonziel</span>
@@ -279,29 +280,43 @@
                         <span class="sp-president-val">{{ president_goal.rank_in_league }}/{{ president_goal.league_size }}</span>
                     </div>
                 </div>
-                {% else %}
-                <p class="sp-panel-box-empty">Noch keine Ziele für Saison {{ season }} definiert.</p>
-                {% endif %}
             </div>
+            {% endif %}
 
             <!-- Liga-Ticker -->
             <div class="sp-panel-box sp-ticker-box">
                 <h3 class="sp-panel-box-title">
-                    Liga-Ticker
+                    Liga-Ticker &middot; Fixierte Verträge
                     <span class="sp-ticker-live">LIVE</span>
                 </h3>
                 <div class="sp-ticker" id="sp-ticker">
                     {% if liga_ticker %}
                     {% for t in liga_ticker %}
                     <div class="sp-ticker-item">
-                        <span class="sp-ticker-club">{{ t.club_name }}</span>
-                        <span class="sp-ticker-slot">{{ t.slot_label }}</span>
-                        <span class="sp-ticker-sponsor">{{ t.sponsor_name }}</span>
-                        <span class="sp-ticker-fix">{{ t.fix_fmt }}</span>
+                        <div class="sp-ticker-badge">
+                            {% if t.club_logo_url %}
+                            <img src="{{ t.club_logo_url }}" alt="{{ t.club_name }}" class="sp-ticker-badge-img" onerror="this.style.display='none'">
+                            {% endif %}
+                        </div>
+                        <div class="sp-ticker-body">
+                            <p class="sp-ticker-headline">
+                                <span class="sp-ticker-club">{{ t.club_name }}</span>
+                                <span class="sp-ticker-dash"> — </span>
+                                <span class="sp-ticker-slotname">{{ t.slot_label }}</span>
+                                <span class="sp-ticker-fix">{{ t.fix_fmt }}</span>
+                            </p>
+                            <div class="sp-ticker-meta">
+                                {% if t.sponsor_logo_url %}
+                                <img src="{{ t.sponsor_logo_url }}" alt="{{ t.sponsor_name }}" class="sp-ticker-sp-logo" onerror="this.style.display='none'">
+                                {% endif %}
+                                <span class="sp-ticker-sponsor">{{ t.sponsor_name }}</span>
+                                <span class="sp-ticker-slot-badge">{{ t.slot_label|upper }}</span>
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                     {% else %}
-                    <p class="sp-panel-box-empty">Noch keine Verträge in dieser Liga.</p>
+                    <p class="sp-panel-box-empty">Neue Abschlüsse der Liga laufen hier ein, sobald andere Vereine ihre Sponsoren fixieren.</p>
                     {% endif %}
                 </div>
             </div>

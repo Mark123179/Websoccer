@@ -241,6 +241,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Live (Hetzner): ASSETS_BASE_URL=/assets/ — nginx serviert /var/www/assets.
 ASSETS_BASE_URL = os.environ.get('ASSETS_BASE_URL', '/static/assets/')
 
+# logo.dev CDN Token für Sponsor-Logos (Public-Token aus sponsoren_datenbank.json)
+LOGO_DEV_TOKEN = os.environ.get('LOGO_DEV_TOKEN', 'pk_QmUpoNKUTByAKyVZIVYYVw')
+
 # Dateisystem-Pfad für Asset-Uploads (Creator-Mode schreibt hierhin).
 # Lokal/Replit: <BASE_DIR>/game/static/assets/
 # Live (Hetzner): ASSETS_ROOT=/var/www/assets
