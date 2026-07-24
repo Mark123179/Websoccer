@@ -1741,6 +1741,7 @@ def creator_toggle_sponsor(request, club_id, sponsor_id):
 
 # ─── Sponsoring V2: Creator-Controls ─────────────────────────────────────────
 
+@staff_member_required
 @require_POST
 def creator_sponsoring_deactivate(request):
     """Sponsor (Stammdaten) deaktivieren: aktiv=False — greift ab nächster Generierung."""
@@ -1754,6 +1755,7 @@ def creator_sponsoring_deactivate(request):
     return redirect(next_url)
 
 
+@staff_member_required
 @require_POST
 def creator_sponsoring_slot_reset(request, club_id):
     """Slot-Reset: Contracts + Offers der Saison löschen und neu würfeln."""
@@ -1796,6 +1798,7 @@ def creator_sponsoring_slot_reset(request, club_id):
     return _redirect_tab(club_id, 'sponsoring')
 
 
+@staff_member_required
 @require_POST
 def creator_sponsoring_risk_mode(request):
     """SPONSOR_RISK_MODE Regler: Entschärft / Standard / Hardcore."""
