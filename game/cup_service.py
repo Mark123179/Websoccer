@@ -484,12 +484,14 @@ def _book_cup_win_sponsor_bonus(fixture) -> None:
         if contracts:
             for contract in contracts:
                 name = contract.sponsor.name if contract.sponsor_id else contract.offer.sponsor_name
+                # Idempotenz: fixture.pk als spieltag + contract.pk als referenz_id
+                # → jedes Pokalspiel × Contract bucht genau einmal.
                 book_sieg_bonus_v2(
                     winner, contract, saison,
                     beschreibung=f'{name}: Siegprämie Pokal ({runden_name})',
                     referenz_typ='sponsor_sieg_pokal_v2',
                     referenz_id=contract.pk,
-                    spieltag=None,
+                    spieltag=fixture.pk,
                 )
             return  # V1-Fallback nicht zusätzlich ausführen
     except Exception:

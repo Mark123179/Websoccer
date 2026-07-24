@@ -1077,30 +1077,9 @@ def management_finanzen(request):
             return f'+ {_fmt(betrag)} bei Saisonziel: {ziel}'
         return '100 % garantiert — keine Bedingungen'
 
+    # V1 Sponsor-Angebote (generate_offers/get_active_offer) sind durch das
+    # V2 Sponsoring-Board (management_sponsoring) ersetzt. Nicht mehr rendern.
     sponsor_offers, active_offer = [], None
-    try:
-        from game.economy.sponsors import generate_offers, get_active_offer
-        chosen = get_active_offer(club, season, autopick=False)
-        for offer in generate_offers(club, season):
-            sponsor_offers.append({
-                'id': offer.pk,
-                'name': offer.sponsor_name,
-                'typ': offer.typ,
-                'typ_label': offer.get_typ_display(),
-                'fix_fmt': _fmt(offer.fix_betrag),
-                'ew_fmt': _fmt(offer.erwartungswert),
-                'var_text': _var_text(offer),
-                'is_chosen': bool(chosen and offer.pk == chosen.pk),
-            })
-        if chosen is not None:
-            active_offer = next(
-                (o for o in sponsor_offers if o['is_chosen']), None)
-    except Exception:
-        import logging
-        logging.getLogger(__name__).exception(
-            'Sponsorangebote für %s (Saison %s) konnten nicht geladen werden',
-            club, season,
-        )
 
     # ── Kapitalverlauf ───────────────────────────────────────────────
     chart_range = request.GET.get('range', 'season')

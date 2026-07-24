@@ -1,0 +1,14 @@
+{
+  "_comment": "Optionale Slug→Display-Name Überschreibungen für import_sponsors.",
+  "_format": "{ \"slug\": \"Anzeigename\", ... }",
+  "eon": "E.ON",
+  "mcdonalds": "McDonald's",
+  "bmw": "BMW",
+  "adidas": "Adidas",
+  "nike": "Nike",
+  "redbull": "Red Bull",
+  "allianz": "Allianz",
+  "telekom": "Deutsche Telekom",
+  "dhl": "DHL",
+  "volkswagen": "Volkswagen"
+}

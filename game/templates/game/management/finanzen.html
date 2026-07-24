@@ -128,39 +128,7 @@
 
     </div><!-- /.fn-mid-row -->
 
-    <!-- ── HAUPTSPONSOR-ANGEBOTE (Saisonvertrag) ─────────────────── -->
-    {% if sponsor_offers %}
-    <div class="fn-panel fn-offer-panel">
-        <p class="fn-panel-title">
-            <span>Hauptsponsor Saison {{ season }}</span>
-            {% if active_offer %}
-            <span class="fn-offer-status fn-offer-status--active">Vertrag läuft: {{ active_offer.name }}</span>
-            {% else %}
-            <span class="fn-offer-status">Angebot wählen — Laufzeit: ganze Saison</span>
-            {% endif %}
-        </p>
-        <div class="fn-offer-grid">
-            {% for offer in sponsor_offers %}
-            <div class="fn-offer-card {% if offer.is_chosen %}fn-offer-card--chosen{% elif active_offer %}fn-offer-card--locked{% endif %}">
-                <p class="fn-offer-name">{{ offer.name }}</p>
-                <p class="fn-offer-typ">{{ offer.typ_label }}</p>
-                <p class="fn-offer-fix">{{ offer.fix_fmt }} <span>fix / Saison</span></p>
-                <p class="fn-offer-var">{{ offer.var_text }}</p>
-                <p class="fn-offer-ew">Erwartungswert ≈ {{ offer.ew_fmt }}</p>
-                {% if offer.is_chosen %}
-                <span class="fn-offer-badge">✓ Unterschrieben</span>
-                {% elif not active_offer %}
-                <form method="post" action="{% url 'management_sponsor_choose' %}">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-                    <input type="hidden" name="offer_id" value="{{ offer.id }}">
-                    <button type="submit" class="fn-offer-btn">Vertrag unterschreiben</button>
-                </form>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+    <!-- V1 Sponsor-Angebote entfernt — Sponsoring läuft über das V2 Board (/management/sponsoring/) -->
 
     <!-- ── UNTERER BEREICH: Einnahmen + Ausgaben + Donut + Buchungen ── -->
     <div class="fn-bot-row">
