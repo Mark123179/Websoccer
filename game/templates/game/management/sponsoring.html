@@ -4,7 +4,7 @@
 {% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=6">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=7">
 {% endblock %}
 
 {% block content %}
@@ -67,21 +67,24 @@
     <!-- ── HAUPTBEREICH: SLOT-BOARD + SIDEBAR ──────────────────────── -->
     <div class="sp-body">
 
-        <!-- ── LEFT: Slot-Tabs + Panels ───────────────────────────── -->
+        <!-- ── LEFT: Aufklappbare Slot-Karten ─────────────────────── -->
         <div class="sp-left">
 
-            <nav class="sp-tabs">
-                {% for s in slots_data %}
-                <button class="sp-tab{% if s.slot == active_slot %} sp-tab--active{% endif %}{% if s.has_contract %} sp-tab--done{% endif %}"
-                        data-slot="{{ s.slot }}">
-                    <span class="sp-tab-dot sp-tab-dot--{{ s.dot_status }}"></span>
-                    {{ s.label }}
-                </button>
-                {% endfor %}
-            </nav>
-
             {% for s in slots_data %}
-            <div class="sp-panel{% if s.slot == active_slot %} sp-panel--active{% endif %}" data-panel="{{ s.slot }}">
+            <div class="sp-slot-card{% if s.slot == active_slot %} sp-slot-card--open{% endif %}" data-slot="{{ s.slot }}">
+
+                <button class="sp-slot-card-header" data-slot="{{ s.slot }}" aria-expanded="{% if s.slot == active_slot %}true{% else %}false{% endif %}">
+                    <span class="sp-tab-dot sp-tab-dot--{{ s.dot_status }}"></span>
+                    <span class="sp-slot-card-label">{{ s.label }}</span>
+                    {% if s.has_contract %}
+                    <span class="sp-slot-card-meta">{{ s.contract.sponsor_name }}</span>
+                    {% elif s.offers %}
+                    <span class="sp-slot-card-meta sp-slot-card-meta--open">{{ s.offers|length }} Angebot{{ s.offers|length|pluralize:"e" }}</span>
+                    {% endif %}
+                    <svg class="sp-slot-card-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+
+                <div class="sp-panel" data-panel="{{ s.slot }}">
 
                 {% if s.has_contract %}
                 <div class="sp-contract">
@@ -224,7 +227,8 @@
                 </div>
                 {% endif %}
 
-            </div>
+                </div><!-- /sp-panel -->
+            </div><!-- /sp-slot-card -->
             {% endfor %}
 
         </div><!-- /sp-left -->
@@ -313,19 +317,32 @@
 <script>
 (function() {
 
-    // ── Tab-Navigation ───────────────────────────────────────────────
-    const tabs   = document.querySelectorAll('.sp-tab');
-    const panels = document.querySelectorAll('.sp-panel');
+    // ── Aufklappbare Slot-Karten ──────────────────────────────────────
+    const cards = document.querySelectorAll('.sp-slot-card');
 
-    function activate(slot) {
-        tabs.forEach(t   => t.classList.toggle('sp-tab--active',   t.dataset.slot  === slot));
-        panels.forEach(p => p.classList.toggle('sp-panel--active', p.dataset.panel === slot));
-        const url = new URL(window.location);
-        url.searchParams.set('slot', slot);
-        history.replaceState(null, '', url);
+    function toggleCard(card) {
+        const slot    = card.dataset.slot;
+        const isOpen  = card.classList.contains('sp-slot-card--open');
+        const header  = card.querySelector('.sp-slot-card-header');
+        // Alle anderen schließen (Accordion-Verhalten)
+        cards.forEach(c => {
+            c.classList.remove('sp-slot-card--open');
+            const h = c.querySelector('.sp-slot-card-header');
+            if (h) h.setAttribute('aria-expanded', 'false');
+        });
+        if (!isOpen) {
+            card.classList.add('sp-slot-card--open');
+            if (header) header.setAttribute('aria-expanded', 'true');
+            const url = new URL(window.location);
+            url.searchParams.set('slot', slot);
+            history.replaceState(null, '', url);
+        }
     }
 
-    tabs.forEach(tab => tab.addEventListener('click', () => activate(tab.dataset.slot)));
+    cards.forEach(card => {
+        const btn = card.querySelector('.sp-slot-card-header');
+        if (btn) btn.addEventListener('click', () => toggleCard(card));
+    });
 
     // ── Meldungen 6 s auto-hide ──────────────────────────────────────
     const msgEl = document.getElementById('sp-messages');

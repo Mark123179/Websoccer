@@ -85,8 +85,48 @@
 .sp-tab--done .sp-tab-check { stroke: #4ade80; }
 .sp-tab-check { flex-shrink: 0; }
 
+/* ── Slot-Karten (Accordion) ──────────────────────────────────────────────── */
+.sp-slot-card {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    background: rgba(255,255,255,.02);
+    transition: border-color .15s;
+}
+.sp-slot-card--open {
+    border-color: rgba(34,211,238,.25);
+}
+.sp-slot-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    color: #9ca3af;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color .15s, background .15s;
+}
+.sp-slot-card-header:hover { background: rgba(255,255,255,.03); color: #e2e8f0; }
+.sp-slot-card--open .sp-slot-card-header { color: var(--cyan, #22d3ee); }
+.sp-slot-card-label { flex: 1; font-size: 13.5px; font-weight: 600; }
+.sp-slot-card-meta { font-size: 12px; color: #6b7280; }
+.sp-slot-card-meta--open { color: var(--cyan, #22d3ee); opacity: .7; }
+.sp-slot-card-chevron {
+    flex-shrink: 0;
+    color: #6b7280;
+    transition: transform .2s;
+}
+.sp-slot-card--open .sp-slot-card-chevron { transform: rotate(180deg); }
+
 /* ── Panel ────────────────────────────────────────────────────────────────── */
-.sp-panel { display: none; }
+.sp-panel { display: none; padding: 0 18px 18px; }
+.sp-slot-card--open .sp-panel { display: block; }
 .sp-panel--active { display: block; }
 
 /* ── Active Contract ──────────────────────────────────────────────────────── */

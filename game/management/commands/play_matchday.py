@@ -94,6 +94,25 @@ class Command(BaseCommand):
 
         out(f"Zu spielen: {len(to_play)}\n")
 
+        # ── Auto-Finalize Sponsor-Contracts vor Spieltag 1 (SPEC §5.4) ───────
+        # Idempotent: finalize_contracts_for_club prüft belegt-Slots vor Anlage.
+        if matchday == 1 and not dry_run:
+            try:
+                from game.economy.sponsors import finalize_contracts_for_club
+                all_clubs = set()
+                for f in qs:
+                    all_clubs.add(f.home_club)
+                    all_clubs.add(f.away_club)
+                finalized = []
+                for club in all_clubs:
+                    new_c = finalize_contracts_for_club(club, season)
+                    if new_c:
+                        finalized.extend(new_c)
+                if finalized:
+                    out(f"Sponsor-Auto-Finalize ST1: {len(finalized)} Contract(s) angelegt.")
+            except Exception as _exc:
+                out(self.style.WARNING(f"Sponsor-Auto-Finalize fehlgeschlagen: {_exc}"))
+
         # ── Spiele simulieren ─────────────────────────────────────────────────
         results = []
         errors  = []

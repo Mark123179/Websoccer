@@ -74,12 +74,12 @@ _NAMEN = {
 
 # ── Zieljäger: Ziel-Tier → P(Ziel) Kalibrierungstabelle (SPEC §4) ─────────
 # Fallback-Tier-Map für Umgebungen ohne EconomyParameter-Seed.
-# Keys = exakte SeasonGoal.goal_tier-Werte (SPEC §4).
+# Keys = exakte SeasonGoal.goal_tier-Werte (SPEC §4 Kalibrierung).
 _GOAL_TIER_PROB_FALLBACK: dict[str, float] = {
-    'meister':       0.08,
-    'top4':          0.22,
-    'international': 0.30,
-    'mittelfeld':    0.50,
+    'meister':       0.45,
+    'top4':          0.50,
+    'international': 0.50,
+    'mittelfeld':    0.60,
     'klassenerhalt': 0.65,
 }
 _DEFAULT_ZIEL_WKT = Decimal('0.35')
