@@ -1273,9 +1273,16 @@ def management_sponsoring(request):
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else '1'
 
+    # Staff-only: ?saison=N überschreibt die aktuelle Saison zum Testen
+    if request.user.is_staff and request.GET.get('saison'):
+        season = str(request.GET['saison'])
+
     # Phasensperre: Fenster offen nur vor Spieltag 1 (SPEC §5.5: >= 1 → geschlossen)
+    # Staff-only: ?fenster=1 erzwingt Fenster dauerhaft offen
     fenster_offen = True
-    if club.league_id:
+    if request.user.is_staff and request.GET.get('fenster') == '1':
+        fenster_offen = True
+    elif club.league_id:
         ls = LeagueSeasonState.objects.filter(
             league=club.league, season=season,
         ).first()
