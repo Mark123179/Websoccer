@@ -259,7 +259,9 @@ def _book_sponsor_income(club, saison, matchday, fixture, result):
     contracts = get_active_contracts(club, saison)
     if contracts:
         book_sponsor_matchday_v2(club, saison, matchday, fixture, result)
-        return contracts[0].offer  # Für Zuschauer-Bonus-Kompatibilität zurückgeben
+        # V2 bucht den Zuschauer-Bonus eigenständig via book_v2_zuschauer_after_tickets.
+        # Kein V1-Sentinel zurückgeben — V1 book_zuschauer_bonus darf nicht zusätzlich laufen.
+        return None
 
     # ── V1-Fallback: gewaehlt=True (legacy rows) ─────────────────────────────
     offer = get_active_offer(club, saison, autopick=True)

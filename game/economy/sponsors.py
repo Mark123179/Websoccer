@@ -73,18 +73,14 @@ _NAMEN = {
 }
 
 # ── Zieljäger: Ziel-Tier → P(Ziel) Kalibrierungstabelle (SPEC §4) ─────────
-# Fallback-Tier-Map für Umgebungen ohne EconomyParameter-Seed
+# Fallback-Tier-Map für Umgebungen ohne EconomyParameter-Seed.
+# Keys = exakte SeasonGoal.goal_tier-Werte (SPEC §4).
 _GOAL_TIER_PROB_FALLBACK: dict[str, float] = {
-    'meister':          0.08,
-    'top2':             0.14,
-    'top4':             0.22,
-    'top6':             0.34,
-    'top_half':         0.50,
-    'mittelfeld':       0.50,
-    'klassenerhalt':    0.65,
-    'avoid_relegation': 0.65,
-    'aufstieg':         0.30,
-    'abstieg_kampf':    0.55,
+    'meister':       0.08,
+    'top4':          0.22,
+    'international': 0.30,
+    'mittelfeld':    0.50,
+    'klassenerhalt': 0.65,
 }
 _DEFAULT_ZIEL_WKT = Decimal('0.35')
 
@@ -430,11 +426,22 @@ def _build_v2_offer(club, saison: str, slot: str, typ: str, wert_slot: int,
             'erwartete_events': str(e_besucher),
         }
     elif typ == 'zieljaeger':
+        # var_ziel = persistiertes SeasonGoal.goal_tier (SPEC: authoritative Quelle)
         try:
-            from game.season_goals import project_goal_for_club
-            p = project_goal_for_club(club)
-            var_ziel = p.get('goal_tier', '')
-            ziel_label = p.get('goal_tier_label', 'Saisonziel')
+            from game.models import SeasonGoal
+            _goal = SeasonGoal.objects.filter(
+                club=club, season_number=int(saison),
+            ).first()
+            var_ziel = _goal.goal_tier if _goal and _goal.goal_tier else ''
+            # Label für die UI aus goal_tier ableiten
+            _label_map = {
+                'meister':       'Meister',
+                'top4':          'Top 4',
+                'international': 'International',
+                'mittelfeld':    'Mittelfeld',
+                'klassenerhalt': 'Klassenerhalt',
+            }
+            ziel_label = _label_map.get(var_ziel, var_ziel.capitalize() if var_ziel else 'Saisonziel')
         except Exception:
             var_ziel = ''
             ziel_label = 'Saisonziel'
