@@ -3,35 +3,16 @@
    Scope: .sponsoring-page  (analog zu finanzen.css)
    ========================================================= */
 
-/* ── Seiten-Hintergrund ────────────────────────────────── */
-.sponsoring-page .gameViewport {
-    background-image:
-        radial-gradient(ellipse 900px 500px at 100% 0%, rgba(34,230,255,.09), transparent 60%),
-        radial-gradient(ellipse 900px 500px at 0% 100%, rgba(48,242,156,.06), transparent 60%);
-    background-color: #07111a;
-    background-size: cover;
-}
-
-/* Dark overlay — verhindert, dass das Dashboard-Artboard
-   unter dem Pseudo-Element verschwindet (analog finanzen). */
-.sponsoring-page .gameViewport::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(4, 8, 16, 0.80);
-    pointer-events: none;
-    z-index: 0;
-}
-
 /* ── Dashboard-Artboard ────────────────────────────────── */
 .sponsoring-page .dashboard-artboard {
     position: relative;
-    z-index: 1;
+    min-height: 960px;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    box-sizing: border-box;
-    overflow-y: auto;
+    background:
+        radial-gradient(ellipse 900px 500px at 100% 0%, rgba(34,230,255,.09), transparent 60%),
+        radial-gradient(ellipse 900px 500px at 0% 100%, rgba(48,242,156,.06), transparent 60%),
+        #07111a;
 }
 
 /* ── Haupt-Grid ─────────────────────────────────────────── */
