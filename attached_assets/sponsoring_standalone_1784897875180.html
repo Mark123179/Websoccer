@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sponsoring — MatchEngine</title>
+<!--
+  FERTIGE REFERENZ-IMPLEMENTIERUNG — NICHT NACHBAUEN, DIREKT VERWENDEN.
+  Integration in Django: dieses File als Template übernehmen, CSS/JS können in
+  static/ ausgelagert werden. Die Daten im SLOTS-Array unten kommen später aus dem Backend.
+  Wappen-Bilder liegen im ZIP unter assets/crest-*.png.
+-->
+<link rel="preconnect" href="https://rsms.me/">
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+<style>
+:root{
+  --bg0:#03070c; --bg1:#07111a;
+  --panel:rgba(9,23,34,.82); --panel-strong:rgba(7,17,26,.92); --panel-soft:rgba(34,230,255,.07);
+  --line:rgba(34,230,255,.18); --line-strong:rgba(34,230,255,.38);
+  --cyan:#22e6ff; --cyan-soft:rgba(34,230,255,.12);
+  --green:#30f29c; --yellow:#ffd166; --red:#ff5570; --orange:#ff9f1c;
+  --text:#f4fbff; --muted:rgba(244,251,255,.64); --faint:rgba(244,251,255,.38);
+  --radius:8px;
+  --shadow:0 18px 70px rgba(0,0,0,.5);
+  --font:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;min-width:1280px;font-family:var(--font);color:var(--text);font-weight:700;
+  background:
+    radial-gradient(ellipse 900px 500px at 100% 0%, rgba(34,230,255,.12), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 0% 100%, rgba(48,242,156,.08), transparent 60%),
+    linear-gradient(135deg, var(--bg0), var(--bg1));
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(34,230,255,.045) 1px, transparent 1px),linear-gradient(90deg, rgba(34,230,255,.045) 1px, transparent 1px);
+  background-size:56px 56px;}
+.app{display:flex;position:relative;z-index:1;min-height:100vh}
+/* ---------- Sidebar ---------- */
+.sidebar{width:232px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;padding:18px 12px;
+  background:var(--panel-strong);border-right:1px solid var(--line);box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 6px}
+.brand strong{font-size:14px;font-weight:900;letter-spacing:.7px}
+.brand span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.7px;color:var(--faint)}
+.club{display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px}
+.club img{width:30px;height:30px;object-fit:contain;filter:drop-shadow(0 0 18px rgba(34,230,255,.28))}
+.club strong{font-size:13px;font-weight:900;line-height:1.2}
+.club span{display:block;font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--faint);text-transform:uppercase}
+nav{display:flex;flex-direction:column;gap:4px}
+nav a{display:flex;align-items:center;gap:10px;min-height:40px;padding:0 11px;border-radius:8px;border:1px solid transparent;
+  color:var(--muted);font-size:14px;font-weight:700;text-decoration:none;transition:color .15s}
+nav a:hover{color:var(--text)}
+nav a .ic{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--cyan);flex-shrink:0}
+nav a.active{border-color:var(--line-strong);background:linear-gradient(90deg, rgba(34,230,255,.2), rgba(34,230,255,.06));
+  box-shadow:inset 3px 0 0 var(--cyan);color:var(--text);font-weight:800}
+.sb-foot{margin-top:auto;padding:12px 11px 2px;border-top:1px solid var(--line);font-size:10.5px;font-weight:900;letter-spacing:.7px;color:var(--faint);text-transform:uppercase}
+/* ---------- Main ---------- */
+main{flex:1;min-width:0;padding:24px 28px 44px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-content:start}
+.pagehead{grid-column:1/-1;display:flex;align-items:flex-start;gap:16px}
+.pagehead img.crest{width:52px;height:52px;object-fit:contain;align-self:center;filter:drop-shadow(0 0 18px rgba(34,230,255,.28))}
+.micro{font-size:11px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--faint)}
+h1{font-size:25px;font-weight:900;letter-spacing:.5px;text-transform:uppercase}
+.sub{font-size:13px;font-weight:600;color:var(--muted)}
+.pill{margin-left:auto;align-self:center;padding:7px 12px;border-radius:999px;border:1px solid rgba(48,242,156,.4);
+  background:rgba(48,242,156,.08);color:var(--green);font-size:11px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;white-space:nowrap}
+.ghost{align-self:center;min-height:34px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--line);background:transparent;
+  color:var(--muted);font-family:var(--font);font-size:13px;font-weight:800;cursor:pointer}
+.ghost:hover{color:var(--text);border-color:var(--line-strong)}
+.col-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.col-side{display:flex;flex-direction:column;gap:16px}
+.toast{padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:14px 16px}
+.kpi .micro{display:block;margin-bottom:5px}
+.kpi strong{font-size:20px;font-weight:900;color:var(--cyan)}
+.rule{display:flex;gap:12px;align-items:flex-start;padding:13px 18px;background:var(--panel);border:1px solid rgba(255,209,102,.35);border-radius:8px}
+.rule .tag{flex-shrink:0;padding:4px 9px;border-radius:999px;border:1px solid rgba(255,209,102,.4);color:var(--yellow);
+  font-size:10px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}
+.rule p{font-size:13px;line-height:1.55;color:var(--muted);font-weight:600}
+/* ---------- Slots ---------- */
+.slot{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
+.slot.open{border-color:var(--line-strong)}
+.slot-head{display:flex;align-items:center;gap:12px;width:100%;padding:14px 18px;background:transparent;border:none;cursor:pointer;
+  text-align:left;color:var(--text);font-family:var(--font);transition:background .15s}
+.slot-head:hover{background:rgba(34,230,255,.05)}
+.dot{width:9px;height:9px;flex-shrink:0;border-radius:999px}
+.slot-head .ttl{font-size:14px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;display:block}
+.slot-head .sb{font-size:12px;color:var(--faint);font-weight:700}
+.slot-head .right{margin-left:auto;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.slot-head .status{font-size:11px;font-weight:900;letter-spacing:.6px;text-transform:uppercase}
+.slot-head .val{font-size:15px;font-weight:900;color:var(--cyan)}
+.chosen-chip{display:flex;align-items:center;gap:8px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid rgba(48,242,156,.35);background:rgba(48,242,156,.07)}
+.chosen-chip .lg{width:24px;height:24px;border-radius:999px;border:1px solid rgba(255,255,255,.18)}
+.chosen-chip b{font-size:12px;font-weight:900}
+.cards{padding:2px 18px 18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(246px,1fr));gap:12px}
+/* ---------- Cards ---------- */
+.card{display:flex;flex-direction:column;gap:10px;padding:14px;background:rgba(255,255,255,.035);border:1px solid var(--line);
+  border-radius:8px;transition:border-color .15s, background .15s}
+.card:hover{border-color:var(--line-strong);background:rgba(255,255,255,.055)}
+.card.pending{border-color:var(--line-strong);animation:pulse 1s ease-in-out infinite}
+.card.ok{animation:flashok .85s ease-out}
+.card.fail{animation:flashfail .85s ease-out}
+.card.dim{opacity:.42}
+.card.chosen{border-color:rgba(48,242,156,.45)}
+.card.gone{border-color:rgba(255,85,112,.4)}
+.card.auto{border-color:rgba(255,209,102,.45)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,230,255,0)}50%{box-shadow:0 0 24px 3px rgba(34,230,255,.4)}}
+@keyframes flashok{0%{background-color:rgba(48,242,156,.25)}100%{background-color:rgba(255,255,255,.035)}}
+@keyframes flashfail{0%{background-color:rgba(255,85,112,.3)}100%{background-color:rgba(255,255,255,.035)}}
+.card .top{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;flex-shrink:0;border-radius:8px;border:1px solid rgba(255,255,255,.18);
+  background-color:#fff;background-position:center;background-repeat:no-repeat;background-size:76%}
+.card .nm{font-size:13.5px;font-weight:900;line-height:1.15;display:block}
+.card .br{font-size:10px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.6px}
+.typ{margin-left:auto;flex-shrink:0;padding:4px 8px;border-radius:999px;font-size:9.5px;font-weight:900;letter-spacing:.6px;text-transform:uppercase}
+.badge{align-self:flex-start;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;border:1px solid}
+.fixlabel{font-size:10px;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--faint)}
+.fix{font-size:19px;font-weight:900;color:var(--cyan)}
+.delta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.delta .old{font-size:11px;font-weight:700;color:var(--faint);text-decoration:line-through}
+.delta .chip{padding:2px 7px;border-radius:999px;background:rgba(48,242,156,.14);color:var(--green);font-size:10px;font-weight:900}
+.varline{font-size:12px;font-weight:800;color:var(--green)}
+.exp{font-size:11px;font-weight:700;color:var(--faint)}
+.riskrow{display:flex;justify-content:space-between;font-size:10px;font-weight:900;letter-spacing:.6px;color:var(--faint);text-transform:uppercase}
+.track{position:relative;height:6px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.track i{position:absolute;inset:0 auto 0 0;border-radius:inherit}
+.rounds{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:var(--faint)}
+.rounds i{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.14)}
+.rounds i.on{background:var(--cyan);box-shadow:0 0 8px rgba(34,230,255,.5)}
+.autonote{font-size:12px;font-weight:700;color:var(--yellow);line-height:1.45}
+.actions{display:flex;gap:8px;margin-top:auto}
+.btn{flex:1;min-height:34px;padding:0 10px;border-radius:var(--radius);font-family:var(--font);font-size:12.5px;font-weight:800;
+  letter-spacing:.2px;cursor:pointer;transition:filter .15s, transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn-prim{border:1px solid rgba(93,249,255,.46);background:linear-gradient(180deg,#1bd9ee,#06879a);color:#fff}
+.btn-prim:not([disabled]):hover{filter:brightness(1.08)}
+.btn-sec{border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text)}
+.btn-sec:not([disabled]):hover{border-color:var(--line-strong)}
+/* ---------- Side panels ---------- */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:10px}
+.projrow{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800}
+.projrow span{color:var(--muted)} 
+.stack{display:flex;position:relative;height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.stack i{height:100%}
+.legend{display:flex;gap:12px;font-size:10.5px;font-weight:800;color:var(--faint);flex-wrap:wrap}
+.legend b{width:8px;height:8px;border-radius:999px;display:inline-block;margin-right:5px;vertical-align:middle}
+.note{font-size:11px;line-height:1.5;color:var(--faint);font-weight:700}
+.tick-item{display:flex;gap:10px;align-items:flex-start}
+.tick-item.limit{padding:9px 10px;margin:0 -10px;border:1px solid rgba(255,209,102,.4);border-radius:8px;background:rgba(255,209,102,.06)}
+.tick-item.new{animation:tickin .5s ease-out}
+@keyframes tickin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.tick-item img{width:24px;height:24px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 0 10px rgba(34,230,255,.2))}
+.tick-item .tx{font-size:12px;font-weight:800;line-height:1.4;color:var(--muted)}
+.tick-item .tx b{color:var(--text)}
+.tick-item .sl{display:block;margin-top:2px;font-size:10px;font-weight:800;color:var(--faint);text-transform:uppercase;letter-spacing:.5px}
+.tick-item .lim{display:inline-block;margin-top:3px;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,209,102,.4);
+  color:var(--yellow);font-size:9px;font-weight:900;letter-spacing:.6px;text-transform:uppercase}
+.livehead{display:flex;align-items:center;gap:8px}
+.livehead .p{width:7px;height:7px;border-radius:999px;background:var(--green);box-shadow:0 0 8px var(--green)}
+a{color:var(--cyan)} a:hover{color:#7df2ff}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/matchengine-logo-128.png" alt="" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 18px rgba(34,230,255,.28))">
+      <div><strong>MATCHENGINE</strong><span>SAISON 2026/27</span></div>
+    </div>
+    <div class="club">
+      <img src="assets/crest-912.png" alt="Wappen">
+      <div><strong>Eintracht Frankfurt</strong><span>1. Bundesliga · Platz 6</span></div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="sb-foot">Spieltag 0 · Vorbereitung</div>
+  </aside>
+  <main>
+    <div class="pagehead">
+      <img class="crest" src="assets/crest-912.png" alt="">
+      <div>
+        <span class="micro">Eintracht Frankfurt · Finanzen · Sponsoring</span>
+        <h1>Sponsoren 2026/27</h1>
+        <span class="sub">Fünf Slots, Verträge für genau eine Saison — alle Angebote kalibriert auf die Erwartung des Präsidenten.</span>
+      </div>
+      <span class="pill">Saisonvorbereitung · Fenster offen</span>
+      <button class="ghost" onclick="resetGame()">Zurücksetzen</button>
+    </div>
+    <div class="col-main">
+      <div class="toast" id="toast" style="display:none"></div>
+      <div class="kpis">
+        <div class="kpi"><span class="micro">Sponsorwert (Schätzung)</span><strong>30,5 Mio €</strong></div>
+        <div class="kpi"><span class="micro">Erwartetes Volumen</span><strong id="kVol"></strong></div>
+        <div class="kpi"><span class="micro">Slots fixiert</span><strong id="kFix" style="color:var(--green)"></strong></div>
+        <div class="kpi"><span class="micro">Verprellte Sponsoren</span><strong id="kGone"></strong></div>
+      </div>
+      <div class="rule"><span class="tag">Regel</span>
+        <p>Ohne Sponsor startet kein Verein: Slots, die bis zum Anpfiff des 1. Spieltags offen sind, werden automatisch mit dem Sicherheits-Angebot besetzt — ohne Verhandlungsrunden. Bleibt in einem Slot nur noch ein Angebot übrig, gilt dieses als angenommen. Verprellte Sponsoren kehren in dieser Saison nicht zurück. Nachverhandeln bringt +7 / +10 / +12 % pro Runde auf Fixbetrag UND alle Boni, bei 18 / 38 / 62 % Abbruchrisiko.</p>
+      </div>
+      <div id="slots"></div>
+    </div>
+    <div class="col-side">
+      <div class="panel">
+        <span class="micro">Szenario-Projektion</span>
+        <div class="projrow"><span>Worst Case (nur Fix)</span><b id="pWorst" style="color:var(--red)"></b></div>
+        <div class="projrow"><span>Erwartet</span><b id="pExp" style="color:var(--cyan)"></b></div>
+        <div class="projrow"><span>Best Case (alle Boni)</span><b id="pBest" style="color:var(--green)"></b></div>
+        <div class="stack"><i id="stFix" style="background:var(--cyan)"></i><i id="stVar" style="background:var(--green)"></i></div>
+        <div class="legend">
+          <span><b style="background:var(--cyan)"></b>Fix <span id="lgFix"></span> %</span>
+          <span><b style="background:var(--green)"></b>Variabel <span id="lgVar"></span> %</span>
+          <span><b style="background:rgba(255,255,255,.25)"></b>Offen <span id="lgOpen"></span> %</span>
+        </div>
+        <p class="note">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
+      </div>
+      <div class="panel">
+        <div class="livehead"><span class="p"></span><span class="micro">Liga-Ticker · Fixierte Verträge</span></div>
+        <div id="ticker" style="display:flex;flex-direction:column;gap:12px"></div>
+        <p class="note" style="padding-top:4px;border-top:1px solid var(--line)">Neue Abschlüsse der Liga laufen hier ein, sobald andere Vereine ihre Sponsoren fixieren.</p>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+'use strict';
+const TOKEN='pk_QmUpoNKUTByAKyVZIVYYVw';
+const logoUrl=d=>`https://img.logo.dev/${d}?token=${TOKEN}&size=400&format=jpg`;
+const GAINS=[7,10,12], RISKS=[18,38,62], MAXR=3;
+const eur=n=>n.toLocaleString('de-DE')+' €';
+const mio=n=>(n/1e6).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' Mio €';
+const rate=n=>n>=1e6?mio(Math.round(n/1e4)*1e4):n>=1000?eur(Math.round(n/1000)*1000):n.toLocaleString('de-DE',{maximumFractionDigits:2})+' €';
+
+const SLOTS=[
+ {id:'haupt',name:'Hauptsponsor',sub:'Markenpräsenz auf allen Kanälen',wert:12400000,cands:[
+  {name:'Deutsche Telekom',br:'Telekommunikation',typ:'Sicherheit',fix0:12150000,vExp:0,vMax:0,vRate:0,vSuf:'',dom:'telekom.com'},
+  {name:'Santander',br:'Bankwesen',typ:'Sieggeld',fix0:6400000,vExp:6150000,vMax:9840000,vRate:410000,vSuf:'je Pflichtspielsieg',dom:'santander.com'},
+  {name:'Turkish Airlines',br:'Luftfahrt',typ:'Zieljäger',fix0:9300000,vExp:3120000,vMax:5200000,vRate:5200000,vSuf:'bei Europapokal-Quali',dom:'turkishairlines.com'},
+  {name:'Coca-Cola',br:'Getränke',typ:'Zuschauer',fix0:6300000,vExp:6430000,vMax:6900000,vRate:7,vSuf:'je Stadionbesucher',dom:'coca-cola.com'}]},
+ {id:'trikot',name:'Trikotsponsor',sub:'Brustlogo auf dem Spieltrikot',wert:7800000,cands:[
+  {name:'CHECK24',br:'Vergleichsportal',typ:'Sicherheit',fix0:7650000,vExp:0,vMax:0,vRate:0,vSuf:'',dom:'check24.de'},
+  {name:'fritz-kola',br:'Getränke',typ:'Torgeld',fix0:4000000,vExp:3850000,vMax:5250000,vRate:70000,vSuf:'je Pflichtspieltor',dom:'fritz-kola.com'},
+  {name:'bwin',br:'Sportwetten',typ:'Zieljäger',fix0:5800000,vExp:1980000,vMax:3300000,vRate:3300000,vSuf:'bei Top-6-Platzierung',dom:'bwin.com'},
+  {name:'Krombacher',br:'Brauerei',typ:'Zuschauer',fix0:3900000,vExp:3670000,vMax:3940000,vRate:4,vSuf:'je Stadionbesucher',dom:'krombacher.de'}]},
+ {id:'ausruester',name:'Ausrüster',sub:'Trikots, Schuhe & Equipment',wert:4600000,cands:[
+  {name:'adidas',br:'Sportartikel',typ:'Sicherheit',fix0:4500000,vExp:0,vMax:0,vRate:0,vSuf:'',dom:'adidas.com'},
+  {name:'PUMA',br:'Sportartikel',typ:'Sieggeld',fix0:2350000,vExp:2325000,vMax:3720000,vRate:155000,vSuf:'je Pflichtspielsieg',dom:'puma.com'},
+  {name:'Nike',br:'Sportartikel',typ:'Zieljäger',fix0:3400000,vExp:1170000,vMax:1950000,vRate:1950000,vSuf:'bei Top-6-Platzierung',dom:'nike.com'}]},
+ {id:'stadion',name:'Stadionpartner',sub:'Werbeflächen & Hospitality — das Stadion behält seinen Namen',wert:3400000,cands:[
+  {name:'Commerzbank',br:'Bankwesen',typ:'Sicherheit',fix0:3350000,vExp:0,vMax:0,vRate:0,vSuf:'',dom:'commerzbank.de'},
+  {name:'Eventim',br:'Ticketing',typ:'Zuschauer',fix0:1700000,vExp:1840000,vMax:1970000,vRate:2,vSuf:'je Stadionbesucher',dom:'eventim.de'},
+  {name:'Veltins',br:'Brauerei',typ:'Torgeld',fix0:1750000,vExp:1650000,vMax:2250000,vRate:30000,vSuf:'je Pflichtspieltor',dom:'veltins.de'}]},
+ {id:'medien',name:'TV- & Medienpartner',sub:'Vereins-TV, Streaming & Doku-Rechte',wert:2300000,cands:[
+  {name:'DAZN',br:'Streaming',typ:'Sicherheit',fix0:2250000,vExp:0,vMax:0,vRate:0,vSuf:'',dom:'dazn.com'},
+  {name:'Sky',br:'Pay-TV',typ:'Zieljäger',fix0:1700000,vExp:600000,vMax:1000000,vRate:1000000,vSuf:'bei Europapokal-Quali',dom:'sky.com'},
+  {name:'SPORT1',br:'Sport-TV',typ:'Zuschauer',fix0:1350000,vExp:920000,vMax:990000,vRate:1,vSuf:'je Stadionbesucher',dom:'sport1.de'}]}];
+
+const TYPCOL={Sicherheit:['rgba(34,230,255,.12)','var(--cyan)'],Sieggeld:['rgba(48,242,156,.14)','var(--green)'],
+  Torgeld:['rgba(48,242,156,.14)','var(--green)'],'Zieljäger':['rgba(255,209,102,.14)','var(--yellow)'],Zuschauer:['rgba(255,159,28,.16)','var(--orange)']};
+
+const TICKER=[
+ {crest:'assets/crest-915.png',club:'Bayern München',text:'— Hauptsponsor Qatar Airways fixiert, 24,8 Mio € fix (Sicherheit, keine Boni).',slot:'Hauptsponsor'},
+ {crest:'assets/crest-907.png',club:'Borussia Dortmund',text:'— Trikotsponsor Evonik fixiert, 14,2 Mio € fix + 8,0 Mio € Titelbonus.',slot:'Trikotsponsor'},
+ {crest:'assets/crest-960.png',club:'VfB Stuttgart',text:'— Trikotsponsor bis ans Limit verhandelt und zum Maximum fixiert, 12,9 Mio € fix + 340.000 € je Pflichtspielsieg.',limit:true},
+ {crest:'assets/crest-944.png',club:'SC Freiburg',text:'— Ausrüster JAKO fixiert, 3,1 Mio € fix + 2 € je Stadionbesucher.',slot:'Ausrüster'},
+ {crest:'assets/crest-918.png',club:'Mainz 05',text:'— TV-Partner per Auto-Annahme fixiert, 1,1 Mio € fix + 500.000 € bei Klassenerhalt.',slot:'TV- & Medienpartner'},
+ {crest:'assets/crest-961.png',club:'VfL Wolfsburg',text:'— Stadionpartner Volkswagen fixiert, 2,9 Mio € fix (Sicherheit).',slot:'Stadionpartner'},
+ {crest:'assets/crest-908.png',club:'Borussia M\u2019gladbach',text:'— Hauptsponsor flyeralarm fixiert, 9,6 Mio € fix + 300.000 € je Pflichtspielsieg.',slot:'Hauptsponsor'},
+ {crest:'assets/crest-901.png',club:'Bayer Leverkusen',text:'— Ausrüster bis ans Limit verhandelt und fixiert, 5,4 Mio € fix + 1,2 Mio € bei Titelgewinn.',limit:true},
+ {crest:'assets/crest-905.png',club:'VfL Bochum',text:'— Trikotsponsor Vonovia per Auto-Wahl (Sicherheit) besetzt, 2,4 Mio € fix.',slot:'Trikotsponsor'}];
+
+const ICONS={uebersicht:'M4 10.5 12 4l8 6.5M6.5 10v8.5h4v-5h3v5h4V10',verein:'M12 3.5 19 6.7v5.7c0 3.8-2.8 6.7-7 8.1-4.2-1.4-7-4.3-7-8.1V6.7l7-3.2Z',
+ kader:'M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM15.8 10.2a2.4 2.4 0 1 0 0-4.8M3.5 19c.6-3.3 2.5-5.2 5-5.2s4.4 1.9 5 5.2M14.8 14.2c2.5.2 4.2 1.9 4.7 4.8',
+ taktik:'M6 3.5h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2ZM12 3.5v17M4 12h16',
+ transfers:'M5 8h13.5l-3-3M19 16H5.5l3 3',jugend:'M12 3.5 19 7v5.3c0 4-2.8 6.8-7 8.2-4.2-1.4-7-4.2-7-8.2V7l7-3.5Zm-2.8 9.9 2.8-6 2.8 6',
+ finanzen:'M6 5.5h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2ZM4 9h16M8 14h4.5M15.5 14H17',
+ wettbewerbe:'M8 4h8v3.5c0 3.4-1.5 5.5-4 6.4-2.5-.9-4-3-4-6.4V4ZM8 6H5.5c0 3 1.1 4.8 3.2 5.4M16 6h2.5c0 3-1.1 4.8-3.2 5.4M12 14v3.5M8.8 20h6.4M10 17.5h4'};
+document.getElementById('nav').innerHTML=[['Übersicht','uebersicht'],['Verein','verein'],['Kader','kader'],['Taktik','taktik'],
+ ['Transfers','transfers'],['Jugend','jugend'],['Finanzen','finanzen'],['Wettbewerbe','wettbewerbe']].map(([l,k])=>
+ `<a href="#" class="${k==='finanzen'?'active':''}"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${ICONS[k]}"/></svg></span>${l}</a>`).join('');
+
+let G, openSlot, pending=null, fx=null, count=null, tickerN=3, toastT;
+function initG(){G=SLOTS.map(s=>({locked:null,cands:s.cands.map(c=>({fix:c.fix0,mult:1,round:0,gone:false}))}));openSlot='haupt';}
+initG();
+
+function toast(t,col){const el=document.getElementById('toast');el.style.display='block';el.style.color=col;el.textContent=t;
+ clearTimeout(toastT);toastT=setTimeout(()=>{el.style.display='none';render();},6000);}
+
+function slotState(si){
+ const S=G[si],D=SLOTS[si];
+ const active=S.cands.filter(c=>!c.gone).length;
+ const status=S.locked!=null?'fixiert':active===1?'auto':'offen';
+ const ci=S.locked!=null?S.locked:status==='auto'?S.cands.findIndex(c=>!c.gone):-1;
+ return {S,D,active,status,ci};
+}
+function accept(si,ci){if(pending)return;const {S,D}=slotState(si);if(S.locked!=null||S.cands[ci].gone)return;
+ S.locked=ci;toast(`${D.name} fixiert: ${D.cands[ci].name} — ${eur(S.cands[ci].fix)} Fixbetrag pro Saison.`,'var(--green)');render();}
+function push(si,ci){if(pending)return;const {S,D,active}=slotState(si);const c=S.cands[ci];
+ if(S.locked!=null||c.gone||c.round>=MAXR||active<=1)return;
+ pending={si,ci};render();
+ setTimeout(()=>{
+  pending=null;
+  if(Math.random()*100<RISKS[c.round]){
+   c.gone=true;fx={si,ci,ok:false};
+   const rest=S.cands.filter(x=>!x.gone).length;
+   toast(`${D.cands[ci].name} bricht die Verhandlung ab und zieht das Angebot zurück.`+(rest===1?' Nur noch ein Angebot im Slot — es gilt zum Saisonstart automatisch als angenommen.':''),'var(--red)');
+  }else{
+   const prev=c.fix,g=GAINS[c.round];c.round++;
+   c.fix=Math.round(c.fix*(1+g/100)/1e4)*1e4;c.mult=Math.round(c.mult*(1+g/100)*1e4)/1e4;
+   fx={si,ci,ok:true};
+   toast(`${D.cands[ci].name} erhöht von ${eur(prev)} auf ${eur(c.fix)}`+(D.cands[ci].vRate>0?` — die Boni steigen ebenfalls um +${g} %`:'')+` (${MAXR-c.round} Runde(n) übrig).`,'var(--green)');
+   countUp(si,ci,prev,c.fix);
+  }
+  render();setTimeout(()=>{fx=null;},850);
+ },1000);}
+function countUp(si,ci,from,to){const t0=performance.now(),dur=600;
+ (function step(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+  count=p<1?{si,ci,val:Math.round(from+(to-from)*e)}:null;
+  const el=document.getElementById(`fix-${si}-${ci}`);if(el)el.textContent=eur(count?count.val:to);
+  if(p<1)requestAnimationFrame(step);})(t0);}
+function resetGame(){initG();pending=null;fx=null;document.getElementById('toast').style.display='none';render();}
+function toggle(id){openSlot=openSlot===id?null:id;render();}
+
+function render(){
+ let worst=0,exp=0,best=0,fSum=0,vSum=0,oSum=0,fixed=0,gone=0;
+ const html=SLOTS.map((D,si)=>{
+  const {S,active,status,ci}=slotState(si);
+  gone+=S.cands.filter(c=>c.gone).length;if(S.locked!=null)fixed++;
+  const ch=ci>=0?D.cands[ci]:null,cs=ci>=0?S.cands[ci]:null;
+  if(ch){const vE=Math.round(ch.vExp*cs.mult),vM=Math.round(ch.vMax*cs.mult);
+   worst+=cs.fix;exp+=cs.fix+vE;best+=cs.fix+vM;fSum+=cs.fix;vSum+=vE;}
+  else{worst+=D.wert;exp+=D.wert;best+=D.wert;oSum+=D.wert;}
+  const dcol=status==='fixiert'?'var(--green)':status==='auto'?'var(--yellow)':'var(--cyan)';
+  const stTxt=status==='fixiert'?'Vertrag fixiert':status==='auto'?'Auto-Annahme zum Saisonstart':`${active} Angebote offen`;
+  const val=ch?mio(cs.fix+Math.round(ch.vExp*cs.mult))+(status==='auto'?' (auto)':''):'Slotwert ≈ '+mio(D.wert);
+  const open=openSlot===D.id;
+  const chip=status==='fixiert'?`<span class="chosen-chip"><span class="lg" style="background:#fff url('${logoUrl(ch.dom)}') center/76% no-repeat"></span><b>${ch.name}</b></span>`:'';
+  const cards=open?`<div class="cards">`+D.cands.map((cd,cj)=>{
+   const c=S.cands[cj];
+   const isP=pending&&pending.si===si&&pending.ci===cj;
+   const isF=fx&&fx.si===si&&fx.ci===cj;
+   const chosen=S.locked===cj,declined=S.locked!=null&&!chosen&&!c.gone;
+   const isAuto=status==='auto'&&S.locked==null&&cj===ci;
+   const maxed=c.round>=MAXR;
+   const show=!c.gone&&!declined&&!chosen;
+   const risk=maxed?null:RISKS[c.round];
+   const rCol=risk==null?'var(--red)':risk<25?'var(--green)':risk<50?'var(--yellow)':'var(--red)';
+   const badge=c.gone?['Verprellt','var(--red)']:chosen?['Vertrag fixiert','var(--green)']:declined?['Abgesagt','var(--faint)']
+     :isAuto?['Auto-Annahme','var(--yellow)']:status==='offen'&&cd.typ==='Sicherheit'?['Auto-Wahl bei Anpfiff','var(--cyan)']:null;
+   const tc=TYPCOL[cd.typ];
+   const m=c.mult,vE=Math.round(cd.vExp*m),vM=Math.round(cd.vMax*m);
+   const varline=cd.vRate>0?`<span class="varline">+ ${rate(cd.vRate*m)} ${cd.vSuf}</span>`:'';
+   const delta=c.round>0?`<span class="delta"><span class="old">${eur(cd.fix0)}</span><span class="chip">+${eur(c.fix-cd.fix0)} fix${cd.vRate>0?` · Boni +${Math.round((m-1)*100)} %`:''}</span></span>`:'';
+   return `<div class="card ${isP?'pending':''} ${isF?(fx.ok?'ok':'fail'):''} ${c.gone||declined?'dim':''} ${chosen?'chosen':''} ${c.gone?'gone':''} ${isAuto?'auto':''}">
+    <div class="top"><span class="logo" style="background-image:url('${logoUrl(cd.dom)}')"></span>
+     <span style="min-width:0"><span class="nm">${cd.name}</span><span class="br">${cd.br}</span></span>
+     <span class="typ" style="background:${tc[0]};color:${tc[1]}">${cd.typ}</span></div>
+    ${badge?`<span class="badge" style="border-color:${badge[1]};color:${badge[1]}">${badge[0]}</span>`:''}
+    <div><span class="fixlabel">Fixbetrag / Saison</span><br>
+     <span class="fix" id="fix-${si}-${cj}">${eur(c.fix)}</span><br>${delta}${varline}
+     <span class="exp">≈ ${mio(c.fix+vE)} erwartet${cd.vMax>0?` · max ${mio(c.fix+vM)}`:''}</span></div>
+    ${show?`<div>
+     <div class="riskrow"><span>Abbruchrisiko</span><span style="color:${rCol}">${maxed?'Limit erreicht':risk+' %'}</span></div>
+     <div class="track"><i style="width:${risk==null?100:risk}%;background:${rCol}"></i></div>
+     <div class="rounds" style="margin-top:5px">Runde ${[0,1,2].map(i=>`<i class="${i<c.round?'on':''}"></i>`).join('')}</div></div>`:''}
+    ${isAuto?`<p class="autonote">Letztes verbliebenes Angebot — wird zum Saisonstart automatisch angenommen.</p>`:''}
+    ${show?`<div class="actions">
+     <button class="btn btn-prim" ${pending?'disabled':''} onclick="accept(${si},${cj})">${isAuto?'Jetzt fixieren':'Annehmen'}</button>
+     <button class="btn btn-sec" ${pending||maxed||isAuto?'disabled':''} onclick="push(${si},${cj})">${isP?'Verhandelt …':maxed?'Limit erreicht':isAuto?'Verhandlung gesperrt':'Nachverhandeln +'+GAINS[c.round]+' %'}</button>
+    </div>`:''}
+   </div>`;}).join('')+`</div>`:'';
+  return `<div class="slot ${open?'open':''}">
+   <button class="slot-head" onclick="toggle('${D.id}')">
+    <span class="dot" style="background:${dcol};box-shadow:0 0 10px ${dcol}"></span>
+    <span style="min-width:0"><span class="ttl">${D.name}</span><span class="sb">${D.sub}</span></span>
+    <span class="right"><span class="status" style="color:${dcol}">${stTxt}</span>${chip}<span class="val">${val}</span>
+    <span style="font-size:12px;color:var(--faint)">${open?'▲':'▼'}</span></span>
+   </button>${cards}</div>`;
+ }).join('');
+ document.getElementById('slots').innerHTML=html;
+ document.getElementById('kVol').textContent=mio(exp);
+ document.getElementById('kFix').textContent=fixed+' / 5';
+ const kg=document.getElementById('kGone');kg.textContent=gone+(gone===1?' Kandidat':' Kandidaten');
+ kg.style.color=gone>0?'var(--red)':'var(--green)';
+ document.getElementById('pWorst').textContent=mio(worst);
+ document.getElementById('pExp').textContent=mio(exp);
+ document.getElementById('pBest').textContent=mio(best);
+ const tot=fSum+vSum+oSum,pF=Math.round(fSum/tot*100),pV=Math.round(vSum/tot*100);
+ document.getElementById('stFix').style.width=pF+'%';document.getElementById('stVar').style.width=pV+'%';
+ document.getElementById('lgFix').textContent=pF;document.getElementById('lgVar').textContent=pV;
+ document.getElementById('lgOpen').textContent=Math.max(0,100-pF-pV);
+ renderTicker(false);
+}
+function renderTicker(isNew){
+ document.getElementById('ticker').innerHTML=TICKER.slice(0,tickerN).slice().reverse().map((t,i)=>
+  `<div class="tick-item ${t.limit?'limit':''} ${isNew&&i===0?'new':''}">
+   <img src="${t.crest}" alt=""><span style="min-width:0"><span class="tx"><b>${t.club}</b> ${t.text}</span>
+   ${t.limit?`<span class="lim">Limit erreicht</span>`:`<span class="sl">${t.slot}</span>`}</span></div>`).join('');
+}
+setInterval(()=>{if(tickerN<TICKER.length){tickerN++;renderTicker(true);}},9000);
+render();
+</script>
+</body>
+</html>

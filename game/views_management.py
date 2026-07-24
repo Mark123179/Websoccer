@@ -1540,9 +1540,113 @@ def management_sponsoring(request):
         except Exception:
             pass
 
+    # ── JSON-Kontext für Standalone-Template ──────────────────────────────────
+    import json as _json
+    _BRANCHE = {
+        'Deutsche Telekom': 'Telekommunikation', 'Santander': 'Bankwesen',
+        'Turkish Airlines': 'Luftfahrt', 'Coca-Cola': 'Getränke',
+        'CHECK24': 'Vergleichsportal', 'fritz-kola': 'Getränke',
+        'bwin': 'Sportwetten', 'Krombacher': 'Brauerei',
+        'adidas': 'Sportartikel', 'PUMA': 'Sportartikel', 'Nike': 'Sportartikel',
+        'Commerzbank': 'Bankwesen', 'Eventim': 'Ticketing', 'Veltins': 'Brauerei',
+        'DAZN': 'Streaming', 'Sky': 'Pay-TV', 'SPORT1': 'Sport-TV',
+    }
+    _SLOT_LONG = {
+        'haupt': 'Hauptsponsor', 'trikot': 'Trikotsponsor',
+        'ausruester': 'Ausrüster', 'stadion': 'Stadionpartner',
+        'tv': 'TV- & Medienpartner',
+    }
+    _SLOT_SUB = {
+        'haupt': 'Markenpräsenz auf allen Kanälen',
+        'trikot': 'Brustlogo auf dem Spieltrikot',
+        'ausruester': 'Trikots, Schuhe & Equipment',
+        'stadion': 'Werbeflächen & Hospitality — das Stadion behält seinen Namen',
+        'tv': 'Vereins-TV, Streaming & Doku-Rechte',
+    }
+    _TYP_LONG = {
+        'sicherheit': 'Sicherheit', 'sieggeld': 'Sieggeld',
+        'torgeld': 'Torgeld', 'zieljaeger': 'Zieljäger', 'zuschauer': 'Zuschauer',
+    }
+    _VSUF = {'sieggeld': 'je Pflichtspielsieg', 'zuschauer': 'je Stadionbesucher', 'torgeld': 'je Pflichtspieltor'}
+    _SLOT_WERT_DEFAULT = {'haupt': 12400000, 'trikot': 7800000, 'ausruester': 4600000, 'stadion': 3400000, 'tv': 2300000}
+
+    slots_json_list = []
+    initial_json_list = []
+    for _slot in SLOTS:
+        _raw = SponsorOffer.objects.filter(club=club, saison=season, slot=_slot).order_by('id')
+        _cands, _init = [], {'locked': None, 'cands': []}
+        for _i, _o in enumerate(_raw):
+            _v = _o.variable_json or {}
+            _typ = _o.typ
+            _vRate = int(float(_v.get('betrag', 0))) if _typ != 'sicherheit' else 0
+            _ziel = _v.get('ziel_label', '')
+            _vsuf = f'bei {_ziel}' if _typ == 'zieljaeger' else _VSUF.get(_typ, '')
+            _dom = ''
+            try:
+                if _o.sponsor_id:
+                    _dom = _o.sponsor.domain or ''
+            except Exception:
+                pass
+            _cands.append({
+                'pk': _o.pk,
+                'name': _o.sponsor_name,
+                'br': _BRANCHE.get(_o.sponsor_name, ''),
+                'typ': _TYP_LONG.get(_typ, _typ.capitalize()),
+                'fix0': int(_o.fix_betrag),
+                'vExp': int(_v.get('var_exp', 0)),
+                'vMax': int(_v.get('var_max', 0)),
+                'vRate': _vRate,
+                'vSuf': _vsuf,
+                'dom': _dom,
+            })
+            if _o.status == 'fixiert':
+                _init['locked'] = _i
+            _fix_val = int(_o.fix_aktuell) if _o.fix_aktuell is not None else int(_o.fix_betrag)
+            _init['cands'].append({'fix': _fix_val, 'mult': float(_o.mult), 'round': _o.runde, 'gone': _o.status == 'verprellt'})
+        _wert = _SLOT_WERT_DEFAULT.get(_slot, 0)
+        try:
+            from game.economy.sponsors import sponsorwert_slot as _sw_slot
+            _wert = int(_sw_slot(club, season, _slot))
+        except Exception:
+            pass
+        slots_json_list.append({'id': _slot, 'name': _SLOT_LONG.get(_slot, _slot), 'sub': _SLOT_SUB.get(_slot, ''), 'wert': _wert, 'cands': _cands})
+        initial_json_list.append(_init)
+
+    _ticker_json = []
+    for _t in liga_ticker:
+        _ticker_json.append({
+            'crest': _t.get('club_logo_url') or '',
+            'club': _t['club_name'],
+            'text': f'— {_t["slot_label"]} {_t["sponsor_name"]} fixiert, {_t["fix_fmt"]} fix.',
+            'slot': _t['slot_label'],
+            'limit': False,
+        })
+
+    _liga_name_short = ''
+    _liga_rank = 0
+    _current_matchday = 0
+    try:
+        if club.league_id:
+            _liga_name_short = club.league.name
+        ls_cur = LeagueSeasonState.objects.filter(league=club.league, season=season).first() if club.league_id else None
+        if ls_cur:
+            _current_matchday = ls_cur.current_matchday
+    except Exception:
+        pass
+
+    _saison_int = int(season) if str(season).lstrip('-').isdigit() else 1
+    _season_label = f'{2025 + _saison_int}/{str(2026 + _saison_int)[2:]}'
+
+    _crest_url = ''
+    try:
+        _crest_url = club.logo_url or ''
+    except Exception:
+        pass
+
     return render(request, 'game/management/sponsoring.html', {
         'club': club,
         'season': season,
+        'season_label': _season_label,
         'fenster_offen': fenster_offen,
         'slots_data': slots_data,
         'slot_labels': SLOT_LABELS,
@@ -1560,6 +1664,13 @@ def management_sponsoring(request):
         'verprellt_label': verprellt_label,
         'president_goal': president_goal,
         'liga_ticker': liga_ticker,
+        'slots_json': slots_json_list,
+        'initial_state_json': initial_json_list,
+        'ticker_json': _ticker_json,
+        'club_crest_url': _crest_url,
+        'liga_name_short': _liga_name_short,
+        'liga_rank': _liga_rank,
+        'current_matchday': _current_matchday,
     })
 
 
@@ -1598,15 +1709,15 @@ def management_sponsoring_accept(request):
     try:
         contract = accept_offer_v2(offer)
         slot_label = SLOT_LABELS.get(offer.slot, offer.slot)
-        messages.success(
-            request,
+        msg = (
             f'✓ {slot_label} fixiert: {offer.sponsor_name} — '
-            f'{_fmt_eur_sponsoring(contract.fix_saison)} € Fixbetrag pro Saison.',
+            f'{_fmt_eur_sponsoring(contract.fix_saison)} € Fixbetrag pro Saison.'
         )
+        messages.success(request, msg)
+        return JsonResponse({'ok': True, 'message': msg})
     except SponsorAcceptError as exc:
         messages.error(request, str(exc))
-
-    return redirect(f'/management/finanzen/sponsoring/?slot={offer.slot}')
+        return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
 
 
 @login_required(login_url='/auth/login/')
@@ -1646,6 +1757,7 @@ def management_sponsoring_push(request):
     try:
         r = push_offer_v2(offer)
         slot_label = SLOT_LABELS.get(offer.slot, offer.slot)
+        r['mult'] = float(offer.mult)
         if r.get('verprellt'):
             messages.error(
                 request,
@@ -1660,10 +1772,10 @@ def management_sponsoring_push(request):
                 f'{_fmt_eur_sponsoring(r["neu_fix"])} / Saison '
                 f'(+{_fmt_eur_sponsoring(r["delta"])}).',
             )
+        return JsonResponse(r)
     except SponsorAcceptError as exc:
         messages.error(request, str(exc))
-
-    return redirect(f'/management/finanzen/sponsoring/?slot={offer.slot}')
+        return JsonResponse({'ok': False, 'verprellt': False, 'error': str(exc)}, status=400)
 
 
 @login_required(login_url='/auth/login/')
