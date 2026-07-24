@@ -482,8 +482,9 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
 
     streuung = float(get_param('SPONSOR_STREUUNG', saison))
     splits = get_param('SPONSOR_TYP_SPLIT', saison)
-    ziel_wkt = Decimal(str(get_param('SPONSOR_ZIEL_PROB', saison)))
     offers_per_slot = get_param('SPONSOR_OFFERS_PER_SLOT', saison)
+    # SPONSOR_ZIEL_PROB ist nach Migration 0149 ein dict (Tier-Map) —
+    # kein Decimal-Cast hier; _ziel_wkt_from_goal_tier() liest es per Club.
 
     result = {}
     for slot in SLOTS:
@@ -1066,7 +1067,12 @@ def sponsor_fix_rate_v2(contract, saison: str, matchday: int = 0,
 def book_sieg_bonus_v2(club, contract, saison: str, *, beschreibung: str,
                         referenz_typ: str, referenz_id: int | None,
                         spieltag: int | None = None):
-    """V2: Sieggeld aus SponsorContract → var_rate × mult (SPEC §6)."""
+    """V2: Sieggeld aus SponsorContract → var_rate × mult (SPEC §6).
+
+    Idempotenz: pro (club, saison, spieltag, referenz_typ, referenz_id) einmal.
+    referenz_id muss contract.pk sein (nicht fixture.pk), damit mehrere
+    Contracts mit sieggeld im selben Spiel unabhängig buchen.
+    """
     from game.models import FinanceTransaction
     from .booking import book
 
@@ -1078,10 +1084,15 @@ def book_sieg_bonus_v2(club, contract, saison: str, *, beschreibung: str,
     if einheit != EINHEIT_SIEG or betrag <= 0:
         return None
 
-    if FinanceTransaction.objects.filter(
+    # Idempotenz: Spieltag + Contract eindeutig (konsistent mit torgeld/zuschauer)
+    _filter = dict(
         club=club, typ='SPONSOR_VARIABEL',
         referenz_typ=referenz_typ, referenz_id=referenz_id,
-    ).exists():
+    )
+    if spieltag is not None:
+        _filter['saison'] = saison
+        _filter['spieltag'] = spieltag
+    if FinanceTransaction.objects.filter(**_filter).exists():
         return None
 
     return book(
@@ -1290,7 +1301,7 @@ def book_sponsor_matchday_v2(club, saison: str, matchday: int,
                 club, contract, saison,
                 beschreibung=f'{name} ({slot_label}): Siegprämie ST{matchday}'[:200],
                 referenz_typ='sponsor_sieg_v2',
-                referenz_id=fixture.pk,
+                referenz_id=contract.pk,   # pro Contract eindeutig (nicht fixture.pk)
                 spieltag=matchday,
             )
             if sieg_tx is not None:

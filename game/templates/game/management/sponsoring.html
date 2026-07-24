@@ -341,7 +341,9 @@
     const tickerEl = document.getElementById('sp-ticker');
     if (tickerEl) {
         setInterval(function() {
-            fetch(window.location.pathname + window.location.search + '&_ticker=1')
+            const _tu = new URL(window.location);
+            _tu.searchParams.set('_ticker', '1');
+            fetch(_tu.toString())
                 .then(r => r.text())
                 .then(function(html) {
                     const doc = new DOMParser().parseFromString(html, 'text/html');
