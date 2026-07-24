@@ -525,12 +525,12 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
 
     result = {}
     for slot in SLOTS:
-        # Only treat truly active/accepted V2 rows as "already generated"
-        # (status='abgesagt' from V1 migration must NOT block fresh V2 generation)
+        # Idempotenz: jede Non-Legacy-Row (offen, fixiert, abgesagt, verprellt …)
+        # gilt als "bereits generiert" — verhindert Replay-Exploit beim Page-Refresh.
+        # Explizites Re-Roll erfolgt NUR via Slot-Reset (creator_sponsoring_slot_reset).
         existing = list(
             SponsorOffer.objects.filter(
                 club=club, saison=saison, slot=slot,
-                status__in=['offen', 'fixiert'],
             ).exclude(status='legacy').select_related('sponsor')
         )
         if existing:

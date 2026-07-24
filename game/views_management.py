@@ -1297,13 +1297,29 @@ def management_sponsoring(request):
 
     active = {c.slot: c for c in get_active_contracts(club, season)}
 
-    try:
-        offers_by_slot = generate_offers_v2(club, season)
-    except Exception:
-        logging.getLogger(__name__).exception(
-            'generate_offers_v2 für %s fehlgeschlagen', club,
-        )
+    # Nur beim allerersten Aufruf der Saison generieren (wenn noch keine
+    # V2-Rows vorhanden sind). Bei jedem späteren Page-Load direkt aus DB
+    # laden — verhindert Replay-Exploit / zufälliges Re-Roll bei abgesagten Rows.
+    has_any_v2 = SponsorOffer.objects.filter(
+        club=club, saison=season,
+    ).exclude(status='legacy').exists()
+
+    if not has_any_v2:
+        try:
+            offers_by_slot = generate_offers_v2(club, season)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                'generate_offers_v2 für %s fehlgeschlagen', club,
+            )
+            offers_by_slot = {}
+    else:
+        # Direkt aus DB laden — keine Regenerierung
+        raw_qs = SponsorOffer.objects.filter(
+            club=club, saison=season,
+        ).exclude(status='legacy').select_related('sponsor')
         offers_by_slot = {}
+        for o in raw_qs:
+            offers_by_slot.setdefault(o.slot, []).append(o)
 
     slots_data = []
     for slot in SLOTS:
