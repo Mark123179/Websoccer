@@ -3843,11 +3843,15 @@ class LeagueNewsAdmin(admin.ModelAdmin):
 try:
     from .models import Sponsor as SponsorPool  # noqa: E402
 
+    from django.utils.html import format_html
+
     def _logo_preview(obj):
         if obj.logo_url:
-            return f'<img src="{obj.logo_url}" style="height:28px;max-width:80px;object-fit:contain;" />'
+            return format_html(
+                '<img src="{}" style="height:28px;max-width:80px;object-fit:contain;" />',
+                obj.logo_url,
+            )
         return '—'
-    _logo_preview.allow_tags = True
     _logo_preview.short_description = 'Logo'
 
     @admin.register(SponsorPool)
