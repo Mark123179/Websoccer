@@ -73,13 +73,14 @@ _NAMEN = {
 }
 
 # ── Zieljäger: Ziel-Tier → P(Ziel) Kalibrierungstabelle (SPEC §4) ─────────
-GOAL_TIER_PROB: dict[str, float] = {
+# Fallback-Tier-Map für Umgebungen ohne EconomyParameter-Seed
+_GOAL_TIER_PROB_FALLBACK: dict[str, float] = {
     'meister':          0.08,
     'top2':             0.14,
     'top4':             0.22,
     'top6':             0.34,
     'top_half':         0.50,
-    'mittelfeld':       0.55,
+    'mittelfeld':       0.50,
     'klassenerhalt':    0.65,
     'avoid_relegation': 0.65,
     'aufstieg':         0.30,
@@ -89,22 +90,30 @@ _DEFAULT_ZIEL_WKT = Decimal('0.35')
 
 
 def _ziel_wkt_from_goal_tier(club, saison: str) -> Decimal:
-    """P(Ziel) aus SeasonGoal.goal_tier (SPEC §4 — Zieljäger kalibriert auf Präsidenten-Erwartung)."""
+    """P(Ziel) aus SeasonGoal.goal_tier.
+
+    Liest SPEC-konforme Tier-Map aus EconomyParameter SPONSOR_ZIEL_PROB (dict);
+    Fallback: _GOAL_TIER_PROB_FALLBACK. var_ziel = exaktes goal_tier aus SeasonGoal.
+    """
     try:
         from game.models import SeasonGoal
         goal = SeasonGoal.objects.filter(
             club=club, season_number=int(saison),
         ).first()
-        if goal and goal.goal_tier in GOAL_TIER_PROB:
-            return Decimal(str(GOAL_TIER_PROB[goal.goal_tier]))
+        if goal and goal.goal_tier:
+            # Tier-Map aus EconomyParameter (SPEC: SPONSOR_ZIEL_PROB ist ein dict)
+            try:
+                tier_map = get_param('SPONSOR_ZIEL_PROB', saison)
+                if isinstance(tier_map, dict) and goal.goal_tier in tier_map:
+                    return Decimal(str(tier_map[goal.goal_tier]))
+            except Exception:
+                pass
+            # Fallback auf hardcoded Map
+            if goal.goal_tier in _GOAL_TIER_PROB_FALLBACK:
+                return Decimal(str(_GOAL_TIER_PROB_FALLBACK[goal.goal_tier]))
     except Exception:
         pass
-    # Fallback: EconomyParameter-Scalar
-    try:
-        v = get_param('SPONSOR_ZIEL_PROB', saison)
-        return Decimal(str(v))
-    except Exception:
-        return _DEFAULT_ZIEL_WKT
+    return _DEFAULT_ZIEL_WKT
 
 # Fiktive Slot-Namens-Pools (V2) für Slots ohne DB-Sponsor
 _NAMEN_V2 = {
