@@ -5295,18 +5295,49 @@ def creator_referee_save(request, referee_id=None):
 
     ref.save()
 
-    # optional image upload — stored as face_{fm_uid}.png
+    # ── Auto-Copy: Spieler-Ordner → Referee-Ordner ───────────────────────────
+    if ref.fm_uid:
+        import shutil
+        from django.conf import settings as _settings
+        assets_root = str(_settings.ASSETS_ROOT).rstrip('/')
+        ref_dir = os.path.join(assets_root, 'referees')
+        os.makedirs(ref_dir, exist_ok=True)
+
+        # Existiert das Bild bereits im Referee-Ordner? → überspringen
+        already = next(
+            (os.path.join(ref_dir, f'face_{ref.fm_uid}.{ext}')
+             for ext in ('png', 'jpg', 'jpeg')
+             if os.path.exists(os.path.join(ref_dir, f'face_{ref.fm_uid}.{ext}'))),
+            None,
+        )
+        if already:
+            messages.info(request, f'Bild bereits vorhanden — übersprungen ({os.path.basename(already)}).')
+        else:
+            # Suche im Spieler-Ordner
+            player_dir = os.path.join(assets_root, 'players')
+            src = next(
+                (os.path.join(player_dir, f'face_{ref.fm_uid}.{ext}')
+                 for ext in ('png', 'jpg', 'jpeg')
+                 if os.path.exists(os.path.join(player_dir, f'face_{ref.fm_uid}.{ext}'))),
+                None,
+            )
+            if src:
+                ext = os.path.splitext(src)[1]
+                dest = os.path.join(ref_dir, f'face_{ref.fm_uid}{ext}')
+                shutil.copy2(src, dest)
+                messages.info(request, f'Bild aus Spieler-Ordner kopiert: face_{ref.fm_uid}{ext}')
+
+    # ── Manueller Upload (Override) ───────────────────────────────────────────
     img = request.FILES.get('face_image')
     if img and ref.fm_uid:
-        import os
-        from django.conf import settings
-        dest_dir = os.path.join(settings.BASE_DIR, 'game', 'static', 'assets', 'referees')
-        os.makedirs(dest_dir, exist_ok=True)
-        dest = os.path.join(dest_dir, f'face_{ref.fm_uid}.png')
+        from django.conf import settings as _settings
+        ref_dir = os.path.join(str(_settings.ASSETS_ROOT).rstrip('/'), 'referees')
+        os.makedirs(ref_dir, exist_ok=True)
+        dest = os.path.join(ref_dir, f'face_{ref.fm_uid}.png')
         with open(dest, 'wb') as f:
             for chunk in img.chunks():
                 f.write(chunk)
-        messages.success(request, f'Bild für {ref.name} gespeichert.')
+        messages.success(request, f'Bild für {ref.name} manuell gespeichert.')
     elif img and not ref.fm_uid:
         messages.warning(request, 'Bild ignoriert — bitte zuerst eine FM-UID setzen.')
 

@@ -10,12 +10,11 @@
     <a class="creator-back" href="{% url 'creator_referee_list' %}">← Schiedsrichter-Übersicht</a>
     <div class="ref-identity">
       <div class="ref-avatar-wrap">
-        {% if not is_new and ref.fm_uid %}
         <img id="ref-face-preview"
-             src="/static/assets/referees/face_{{ ref.fm_uid }}.png"
+             {% if not is_new and ref.fm_uid %}src="/static/assets/referees/face_{{ ref.fm_uid }}.png"{% endif %}
              alt="{{ ref.name }}"
-             onerror="this.style.display='none';document.getElementById('ref-initials').style.display='flex'">
-        {% endif %}
+             style="{% if is_new or not ref.fm_uid %}display:none{% endif %}"
+             onerror="refImgFallback(this, 'avatar')">
         <div id="ref-initials" class="ref-avatar-initials"
              {% if not is_new and ref.fm_uid %}style="display:none"{% endif %}>
           {{ ref.name|first|default:'?' }}
@@ -58,9 +57,11 @@
 
           <div class="creator-field">
             <label>FM-UID</label>
-            <input type="number" name="fm_uid" value="{{ ref.fm_uid|default:'' }}" min="1"
-                   placeholder="z. B. 8728491">
-            <span class="creator-field-hint">Schlüssel für das CutOut-Bild</span>
+            <input type="number" name="fm_uid" id="fm-uid-input"
+                   value="{{ ref.fm_uid|default:'' }}" min="1"
+                   placeholder="z. B. 8728491"
+                   oninput="onFmUidChange(this.value)">
+            <span class="creator-field-hint">Bild wird automatisch geladen</span>
           </div>
 
           <div class="creator-field">
@@ -114,12 +115,11 @@
         <div class="creator-card-body">
           <div class="ref-image-zone">
             <div class="ref-current-img">
-              {% if not is_new and ref.fm_uid %}
               <img id="ref-img-large"
-                   src="/static/assets/referees/face_{{ ref.fm_uid }}.png"
+                   {% if not is_new and ref.fm_uid %}src="/static/assets/referees/face_{{ ref.fm_uid }}.png"{% endif %}
                    alt="{{ ref.name }}"
-                   onerror="this.style.display='none';document.getElementById('ref-no-img').style.display='flex'">
-              {% endif %}
+                   style="{% if is_new or not ref.fm_uid %}display:none{% endif %}"
+                   onerror="refImgFallback(this, 'large')">
               <div id="ref-no-img" class="ref-no-img-placeholder"
                    {% if not is_new and ref.fm_uid %}style="display:none"{% endif %}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;opacity:.3"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -127,10 +127,10 @@
               </div>
             </div>
             <div class="ref-upload-col">
-              <label class="ref-upload-label" for="face_image">Bild hochladen</label>
+              <label class="ref-upload-label" for="face_image">Bild überschreiben (optional)</label>
               <input type="file" id="face_image" name="face_image" accept="image/*"
                      onchange="previewImage(this)">
-              <span class="creator-field-hint">PNG/JPG · wird als face_&lt;fm_uid&gt;.png gespeichert<br>FM-UID muss gesetzt sein</span>
+              <span class="creator-field-hint">PNG/JPG · nur nötig wenn kein FM-UID-Bild vorhanden<br>FM-UID muss gesetzt sein</span>
             </div>
           </div>
         </div>
@@ -355,13 +355,77 @@ input[type=file] { display: none; }
 </style>
 
 <script>
+// ── FM-UID Live-Vorschau ───────────────────────────────────────────────────
+// Fallback-Kette: referees .png → referees .jpg → players .png → players .jpg → referee_default.jpg
+const REF_FALLBACK_CHAIN = uid => [
+  `/static/assets/referees/face_${uid}.png`,
+  `/static/assets/referees/face_${uid}.jpg`,
+  `/static/assets/players/face_${uid}.png`,
+  `/static/assets/players/face_${uid}.jpg`,
+  `/static/assets/referees/referee_default.jpg`,
+];
+
+function _applyImg(url) {
+  const large = document.getElementById('ref-img-large');
+  const avatar = document.getElementById('ref-face-preview');
+  const noImg = document.getElementById('ref-no-img');
+  const initials = document.getElementById('ref-initials');
+  if (large)  { large.src  = url; large.style.display  = ''; }
+  if (avatar) { avatar.src = url; avatar.style.display = ''; }
+  if (noImg)  noImg.style.display = 'none';
+  if (initials) initials.style.display = 'none';
+}
+
+function _showNoImg() {
+  const large = document.getElementById('ref-img-large');
+  const avatar = document.getElementById('ref-face-preview');
+  const noImg = document.getElementById('ref-no-img');
+  const initials = document.getElementById('ref-initials');
+  if (large)  large.style.display  = 'none';
+  if (avatar) avatar.style.display = 'none';
+  if (noImg)  noImg.style.display  = 'flex';
+  if (initials) initials.style.display = 'flex';
+}
+
+function _tryChain(chain, idx) {
+  if (idx >= chain.length) { _showNoImg(); return; }
+  const img = new Image();
+  img.onload  = () => _applyImg(chain[idx]);
+  img.onerror = () => _tryChain(chain, idx + 1);
+  img.src = chain[idx];
+}
+
+function onFmUidChange(val) {
+  const uid = parseInt(val);
+  if (!uid || uid < 1) { _showNoImg(); return; }
+  _tryChain(REF_FALLBACK_CHAIN(uid), 0);
+}
+
+// onerror auf bereits gerenderten Bildern (page-load)
+function refImgFallback(imgEl, role) {
+  const uid = document.getElementById('fm-uid-input')?.value;
+  if (!uid) { _showNoImg(); return; }
+  // Bestimme aktuellen Index in der Kette
+  const chain = REF_FALLBACK_CHAIN(uid);
+  const curSrc = imgEl.src.replace(window.location.origin, '');
+  const curIdx = chain.indexOf(curSrc);
+  const next = curIdx >= 0 ? curIdx + 1 : 1;
+  if (next >= chain.length) { _showNoImg(); return; }
+  imgEl.onerror = () => refImgFallback(imgEl, role);
+  imgEl.src = chain[next];
+  imgEl.style.display = '';
+  const noImg = document.getElementById('ref-no-img');
+  if (noImg) noImg.style.display = 'none';
+  const initials = document.getElementById('ref-initials');
+  if (initials) initials.style.display = 'none';
+}
+
+// ── Tendenz-Bucket-Auswahl ─────────────────────────────────────────────────
 function setBucket(btn, thisGroupId, otherGroupId, kBucket) {
-  // highlight this group
   document.querySelectorAll('#' + thisGroupId + ' .ref-tend-opt').forEach(b => b.classList.remove('is-active', 'is-hot'));
   btn.classList.add('is-active');
   if (kBucket === 2) btn.classList.add('is-hot');
 
-  // mirror in the other group (kBucket in karten = (2-kBucket) in spielfluss and vice versa)
   const otherBucket = 2 - kBucket;
   const otherBtns = document.querySelectorAll('#' + otherGroupId + ' .ref-tend-opt');
   otherBtns.forEach(b => b.classList.remove('is-active', 'is-hot'));
@@ -370,17 +434,12 @@ function setBucket(btn, thisGroupId, otherGroupId, kBucket) {
     if (otherBucket === 0) otherBtns[otherBucket].classList.add('is-hot');
   }
 
-  // update number inputs
-  const kt = parseInt(btn.dataset.kt);
-  const st = parseInt(btn.dataset.st);
-  document.getElementById('kt-input').value = kt;
-  document.getElementById('st-input').value = st;
+  document.getElementById('kt-input').value = parseInt(btn.dataset.kt);
+  document.getElementById('st-input').value = parseInt(btn.dataset.st);
   updateSum();
 }
 
-function syncBucketFromInputs() {
-  updateSum();
-}
+function syncBucketFromInputs() { updateSum(); }
 
 function updateSum() {
   const kt = parseInt(document.getElementById('kt-input').value) || 0;
@@ -391,16 +450,11 @@ function updateSum() {
   el.classList.toggle('is-bad', sum !== 21);
 }
 
+// ── Manueller Upload-Preview ───────────────────────────────────────────────
 function previewImage(input) {
   if (input.files && input.files[0]) {
     const url = URL.createObjectURL(input.files[0]);
-    const largeImg = document.getElementById('ref-img-large');
-    const preview = document.getElementById('ref-face-preview');
-    const noImg = document.getElementById('ref-no-img');
-    if (largeImg) { largeImg.src = url; largeImg.style.display = ''; }
-    if (preview) { preview.src = url; preview.style.display = ''; }
-    if (noImg) noImg.style.display = 'none';
-    document.getElementById('ref-initials').style.display = 'none';
+    _applyImg(url);
   }
 }
 
