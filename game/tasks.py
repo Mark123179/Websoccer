@@ -70,3 +70,30 @@ def run_management_command(self, command_name, *args, fail_on_exit_code=True):
         'exit_code': exit_code,
         'output': output,
     }
+
+
+@shared_task(name='game.tasks.generate_sponsor_offers')
+def generate_sponsor_offers(saison: str | None = None):
+    """V2-Sponsor-Angebote für alle Ligavereine generieren (Saisonbeginn)."""
+    return run_management_command(
+        'generate_sponsor_offers',
+        *(['--saison', saison] if saison else []),
+    )
+
+
+@shared_task(name='game.tasks.finalize_sponsor_contracts')
+def finalize_sponsor_contracts(saison: str | None = None):
+    """Fehlende Sponsor-Verträge per Auto-Pick abschließen."""
+    return run_management_command(
+        'finalize_sponsor_contracts',
+        *(['--saison', saison] if saison else []),
+    )
+
+
+@shared_task(name='game.tasks.sponsor_season_close')
+def sponsor_season_close(saison: str | None = None):
+    """Alle aktiven Sponsor-Verträge der Saison auf abgelaufen=True setzen."""
+    return run_management_command(
+        'sponsor_season_close',
+        *(['--saison', saison] if saison else []),
+    )

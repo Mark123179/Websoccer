@@ -702,6 +702,20 @@ def accept_offer_v2(offer, *, auto: bool = False,
                 f'Slot {SLOT_LABELS.get(locked.slot, locked.slot)} ist bereits belegt.'
             )
 
+        # Liga-Exklusivitäts-Guard (transaktional, pre-create):
+        # Verhindert, dass zwei Clubs denselben Sponsor gleichzeitig annehmen.
+        if locked.sponsor_id and locked.club.league_id:
+            liga_conflict = SponsorContract.objects.filter(
+                sponsor_id=locked.sponsor_id,
+                saison=locked.saison,
+                club__league_id=locked.club.league_id,
+            ).exclude(club_id=locked.club_id).exists()
+            if liga_conflict:
+                raise SponsorAcceptError(
+                    f'Sponsor {locked.sponsor_id} ist in dieser Liga und Saison '
+                    f'bereits vergeben (Exklusivvertrag).'
+                )
+
         if not auto:
             _check_transfer_window(locked.club, locked.saison)
 

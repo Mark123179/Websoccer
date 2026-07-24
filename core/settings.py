@@ -361,4 +361,19 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': _INSOLVENCY_REMINDER_INTERVAL,
         'args': ('check_insolvency_reminders',),
     },
+    # Sponsoring V2: Angebote zu Saisonbeginn generieren (täglich, idempotent).
+    'sponsor-generate-offers-taeglich': {
+        'task': 'game.tasks.generate_sponsor_offers',
+        'schedule': int(os.environ.get('CELERY_SPONSOR_GENERATE_INTERVAL', 24 * 60 * 60)),
+    },
+    # Sponsoring V2: Fehlende Verträge per Auto-Pick abschließen (täglich).
+    'sponsor-finalize-contracts-taeglich': {
+        'task': 'game.tasks.finalize_sponsor_contracts',
+        'schedule': int(os.environ.get('CELERY_SPONSOR_FINALIZE_INTERVAL', 24 * 60 * 60)),
+    },
+    # Sponsoring V2: Saisonabschluss — aktive Verträge auf abgelaufen=True (täglich).
+    'sponsor-season-close-taeglich': {
+        'task': 'game.tasks.sponsor_season_close',
+        'schedule': int(os.environ.get('CELERY_SPONSOR_SEASON_CLOSE_INTERVAL', 24 * 60 * 60)),
+    },
 }
