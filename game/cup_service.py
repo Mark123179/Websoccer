@@ -411,6 +411,12 @@ def simulate_cup_fixture(fixture) -> object:
             report_data=data,
             match_type='pokal',
         )
+        try:
+            from .models import pick_random_referee
+            sm.referee = pick_random_referee()
+            sm.save(update_fields=['referee'])
+        except Exception:
+            pass
 
         # Kanonische Pipeline — Stats, Verletzungen, Frische, Karten.
         # Fehler hier brechen die Transaktion: kein teilweise-persistierter Zustand.

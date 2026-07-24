@@ -154,6 +154,12 @@ class Command(BaseCommand):
                     away_goals=ag,
                     report_data=data,
                 )
+                try:
+                    from game.models import pick_random_referee
+                    sm.referee = pick_random_referee()
+                    sm.save(update_fields=['referee'])
+                except Exception:
+                    pass
 
                 # 2. SeasonFixture aktualisieren
                 fixture.home_goals    = hg
