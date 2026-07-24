@@ -545,6 +545,18 @@ class LeagueAdmin(admin.ModelAdmin):
                     'skipped': skipped,
                     'errors': [str(e) for e in errors],
                 }
+                if errors:
+                    for e in errors[:3]:
+                        self.message_user(
+                            request, f'Fehler beim Re-Run: {e}', messages.WARNING,
+                        )
+                else:
+                    self.message_user(
+                        request,
+                        f'{len(booked)} Verein(e) gebucht, {len(skipped)} übersprungen'
+                        f' (Saison {saison}, Spieltag {spieltag}).',
+                        messages.SUCCESS,
+                    )
             except Exception as exc:
                 self.message_user(request, f'Fehler beim Re-Run: {exc}', messages.ERROR)
             return redirect(

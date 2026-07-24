@@ -6288,6 +6288,51 @@ class TVPot(models.Model):
         return f'{self.land} Saison {self.saison}: Rang {self.rang}, {self.gesamt:,.0f} €'
 
 
+class Sponsor(models.Model):
+    """Reales Sponsoring-Unternehmen aus der Stammdatenbank (Spec Kap. 6 V2).
+
+    slug: Eindeutiger Bezeichner (ASCII), dient als Dateiname-Stem für
+    Logo-Assets (/var/www/assets/sponsors/{bereich}/{slug}.jpg).
+    bereich: Slot-Typ des Sponsors — steuert, in welchem der 5 Slots
+    ein Angebot generiert werden darf (Exclusivity-Regel).
+    """
+
+    BEREICH_HAUPTSPONSOR = 'hauptsponsor'
+    BEREICH_TRIKOTSPONSOR = 'trikotsponsor'
+    BEREICH_AUSRUESTER = 'ausruester'
+    BEREICH_STADIONPARTNER = 'stadionpartner'
+    BEREICH_TV_MEDIEN = 'tv_medien'
+    BEREICH_CHOICES = [
+        (BEREICH_HAUPTSPONSOR, 'Hauptsponsor'),
+        (BEREICH_TRIKOTSPONSOR, 'Trikotsponsor'),
+        (BEREICH_AUSRUESTER, 'Ausrüster'),
+        (BEREICH_STADIONPARTNER, 'Stadionpartner'),
+        (BEREICH_TV_MEDIEN, 'TV- & Medienpartner'),
+    ]
+
+    slug = models.SlugField(max_length=80, unique=True, verbose_name='Slug')
+    name = models.CharField(max_length=120, verbose_name='Firmenname')
+    display_name = models.CharField(
+        max_length=120, blank=True, verbose_name='Anzeigename (Caps)',
+    )
+    bereich = models.CharField(
+        max_length=20, choices=BEREICH_CHOICES,
+        db_index=True, verbose_name='Bereich',
+    )
+    branche = models.CharField(max_length=60, blank=True, verbose_name='Branche')
+    aktiv = models.BooleanField(default=True, db_index=True, verbose_name='Aktiv')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['bereich', 'name']
+        verbose_name = 'Sponsor'
+        verbose_name_plural = 'Sponsoren'
+        indexes = [models.Index(fields=['bereich', 'aktiv'])]
+
+    def __str__(self):
+        return f'{self.name} ({self.get_bereich_display()})'
+
+
 class SponsorOffer(models.Model):
     """Sponsor-Jahresangebot (Spec Kap. 6.2) — Laufzeit genau 1 Saison.
 
@@ -6297,6 +6342,10 @@ class SponsorOffer(models.Model):
     (DB-Constraint). variable_json beschreibt den variablen Anteil:
     {'einheit': 'sieg'|'besucher'|'ziel', 'betrag': float,
      'erwartete_events': float, 'ziel_label': str}.
+
+    V2-Felder (Slot-Modell, Spec Kap. 6 V2):
+    slot=haupt|trikot|ausruester|stadion|tv; fix_start/fix_aktuell in €
+    (int) für Verhandlungs-Tracking; status-Zustandsmaschine.
     """
 
     TYP_SICHERHEIT = 'sicherheit'
@@ -6336,8 +6385,57 @@ class SponsorOffer(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # ── V2-Felder (Slot-Modell, Spec Kap. 6 V2) ──────────────────────────────
+    STATUS_OFFEN = 'offen'
+    STATUS_ANGENOMMEN = 'angenommen'
+    STATUS_ABGESAGT = 'abgesagt'
+    STATUS_LEGACY = 'legacy'
+    STATUS_CHOICES = [
+        (STATUS_OFFEN, 'Offen'),
+        (STATUS_ANGENOMMEN, 'Angenommen'),
+        (STATUS_ABGESAGT, 'Abgesagt'),
+        (STATUS_LEGACY, 'Alt (V1)'),
+    ]
+
+    slot = models.CharField(
+        max_length=20, default='haupt', db_index=True,
+        verbose_name='Sponsoring-Slot',
+    )
+    sponsor = models.ForeignKey(
+        'Sponsor', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='offers',
+        verbose_name='Sponsor',
+    )
+    fix_start = models.BigIntegerField(
+        null=True, blank=True,
+        verbose_name='Fixbetrag Verhandlungsstart (€)',
+    )
+    fix_aktuell = models.BigIntegerField(
+        null=True, blank=True,
+        verbose_name='Fixbetrag aktuell (€)',
+    )
+    var_rate = models.BigIntegerField(
+        default=0,
+        verbose_name='Variabler Betrag je Event (€-Cent)',
+    )
+    var_ziel = models.CharField(
+        max_length=32, blank=True,
+        verbose_name='Zielstufe (goal_tier)',
+    )
+    mult = models.DecimalField(
+        max_digits=6, decimal_places=4, default=1,
+        verbose_name='Verhandlungs-Multiplikator',
+    )
+    runde = models.PositiveSmallIntegerField(
+        default=0, verbose_name='Verhandlungsrunde',
+    )
+    status = models.CharField(
+        max_length=12, default=STATUS_LEGACY, choices=STATUS_CHOICES,
+        db_index=True, verbose_name='Status',
+    )
+
     class Meta:
-        ordering = ['club', 'saison', 'id']
+        ordering = ['club', 'saison', 'slot', 'id']
         constraints = [
             models.UniqueConstraint(
                 fields=['club', 'saison'],
@@ -6345,14 +6443,72 @@ class SponsorOffer(models.Model):
                 name='unique_chosen_sponsor_offer_per_season',
             ),
         ]
-        indexes = [models.Index(fields=['club', 'saison'])]
+        indexes = [
+            models.Index(fields=['club', 'saison']),
+            models.Index(fields=['club', 'saison', 'slot']),
+        ]
         verbose_name = 'Sponsorangebot'
         verbose_name_plural = 'Sponsorangebote'
 
     def __str__(self):
-        status = 'gewählt' if self.gewaehlt else 'offen'
-        return (f'{self.club} S{self.saison} — {self.get_typ_display()} '
-                f'({self.sponsor_name}, {status})')
+        v2_status = self.status if self.status != self.STATUS_LEGACY else (
+            'gewählt' if self.gewaehlt else 'offen'
+        )
+        return (f'{self.club} S{self.saison}/{self.slot} — {self.get_typ_display()} '
+                f'({self.sponsor_name}, {v2_status})')
+
+
+class SponsorContract(models.Model):
+    """Aktiver Sponsoring-Vertrag je Slot pro Saison (Spec Kap. 6 V2).
+
+    Entsteht, wenn ein Manager (oder Auto-Pick) ein SponsorOffer annimmt.
+    fix_saison = Gesamtfixbetrag der Saison in € (ganze Euros).
+    Spieltagsrate = fix_saison / Anzahl_Spieltage (dynamisch aus Spielplan).
+    Zieljäger-Bonus und Zuschauerbonus laufen weiterhin über das
+    referenzierte offer (V1-Pfad bleibt rückwärtskompatibel).
+    """
+
+    saison = models.CharField(max_length=20, verbose_name='Saison')
+    club = models.ForeignKey(
+        Club, on_delete=models.CASCADE,
+        related_name='sponsor_contracts', verbose_name='Verein',
+    )
+    slot = models.CharField(max_length=20, verbose_name='Slot')
+    sponsor = models.ForeignKey(
+        'Sponsor', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='contracts',
+        verbose_name='Sponsor',
+    )
+    offer = models.OneToOneField(
+        SponsorOffer, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='contract',
+        verbose_name='Zugrundeliegendes Angebot',
+    )
+    fix_saison = models.BigIntegerField(verbose_name='Fixbetrag Saison (€)')
+    auto = models.BooleanField(
+        default=False, verbose_name='Automatisch gewählt',
+    )
+    abgelaufen = models.BooleanField(
+        default=False, db_index=True, verbose_name='Abgelaufen',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('saison', 'club', 'slot')]
+        ordering = ['saison', 'club', 'slot']
+        indexes = [
+            models.Index(fields=['saison', 'club']),
+            models.Index(fields=['club', 'saison', 'abgelaufen']),
+        ]
+        verbose_name = 'Sponsoring-Vertrag'
+        verbose_name_plural = 'Sponsoring-Verträge'
+
+    def __str__(self):
+        name = self.sponsor.name if self.sponsor_id else (
+            self.offer.sponsor_name if self.offer_id else '—'
+        )
+        return (f'{self.club} S{self.saison}/{self.slot} — '
+                f'{name}: {self.fix_saison:,} €')
 
 
 class SeasonFinanceState(models.Model):

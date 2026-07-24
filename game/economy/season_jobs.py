@@ -124,7 +124,9 @@ def finance_season_close(saison: str) -> dict:
             report['errors'].append(f'Pokalprämien {cup_season}: {exc}')
             logger.exception('Pokalprämien-Sync für %s fehlgeschlagen', cup_season)
 
-    # ── 3. Zieljäger-Boni (nur ausgewertete, erreichte Saisonziele) ──────────
+    # ── 3. Zieljäger-Boni (V1: gewaehlt=True; V2: aktive Contracts) ──────────
+    from .sponsors import book_zieljaeger_bonus_v2
+
     zieljaeger_offers = SponsorOffer.objects.filter(
         saison=saison, gewaehlt=True, typ=SponsorOffer.TYP_ZIELJAEGER,
     ).select_related('club')
@@ -132,9 +134,23 @@ def finance_season_close(saison: str) -> dict:
         try:
             tx = book_zieljaeger_bonus(offer.club, saison)
             if tx is not None:
-                report['zieljaeger'].append(offer.club.name)
+                report['zieljaeger'].append(f'{offer.club.name} (V1)')
         except Exception as exc:
-            report['errors'].append(f'Zielbonus {offer.club.name}: {exc}')
+            report['errors'].append(f'Zielbonus V1 {offer.club.name}: {exc}')
+
+    clubs_v1 = {o.club_id for o in zieljaeger_offers}
+    clubs_all = set(
+        SponsorOffer.objects.filter(saison=saison)
+        .values_list('club_id', flat=True).distinct()
+    )
+    from game.models import Club
+    for club in Club.objects.filter(pk__in=clubs_all):
+        try:
+            txs = book_zieljaeger_bonus_v2(club, saison)
+            if txs:
+                report['zieljaeger'].append(f'{club.name} (V2, {len(txs)} Slots)')
+        except Exception as exc:
+            report['errors'].append(f'Zielbonus V2 {club.name}: {exc}')
 
     # ── 4./5. Nur beim endgültigen Abschluss ─────────────────────────────────
     if alle_komplett:

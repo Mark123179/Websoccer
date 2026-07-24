@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}sponsoring-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sp-artboard">
+
+    {% if messages %}
+    <ul class="sp-messages">
+        {% for msg in messages %}
+        <li class="sp-message sp-message--{{ msg.tags }}">{{ msg }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- ── HEADER ──────────────────────────────────────────────────── -->
+    <div class="sp-header">
+        <div class="sp-header-left">
+            <a href="{% url 'management_finanzen' %}" class="sp-back-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                Finanzen
+            </a>
+            <h1 class="sp-title">Sponsoring</h1>
+            <span class="sp-season">Saison {{ season }}</span>
+        </div>
+        <div class="sp-header-right">
+            {% if fenster_offen %}
+            <span class="sp-badge sp-badge--offen">Fenster offen</span>
+            {% else %}
+            <span class="sp-badge sp-badge--geschlossen">Fenster geschlossen</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── SLOT-TABS ───────────────────────────────────────────────── -->
+    <nav class="sp-tabs">
+        {% for s in slots_data %}
+        <button class="sp-tab{% if s.slot == active_slot %} sp-tab--active{% endif %}{% if s.has_contract %} sp-tab--done{% endif %}"
+                data-slot="{{ s.slot }}">
+            {% if s.has_contract %}
+            <svg class="sp-tab-check" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+            {% endif %}
+            {{ s.label }}
+        </button>
+        {% endfor %}
+    </nav>
+
+    <!-- ── SLOT-PANELS ─────────────────────────────────────────────── -->
+    {% for s in slots_data %}
+    <div class="sp-panel{% if s.slot == active_slot %} sp-panel--active{% endif %}" data-panel="{{ s.slot }}">
+
+        <!-- Contract aktiv -->
+        {% if s.has_contract %}
+        <div class="sp-contract">
+            <div class="sp-contract-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div class="sp-contract-info">
+                <p class="sp-contract-label">Aktiver Vertrag</p>
+                <p class="sp-contract-name">{{ s.contract.sponsor_name }}</p>
+                <p class="sp-contract-fix">{{ s.contract.fix_saison }} / Saison</p>
+                {% if s.contract.auto %}
+                <p class="sp-contract-auto">Automatisch gewählt</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Angebote -->
+        {% if not s.has_contract %}
+        <div class="sp-offers-header">
+            <h2 class="sp-offers-title">{{ s.label }} — Angebote</h2>
+            {% if not fenster_offen %}
+            <p class="sp-window-closed">Sponsoring-Fenster geschlossen nach Spieltag 1</p>
+            {% endif %}
+        </div>
+
+        {% if s.offers %}
+        <div class="sp-offer-grid">
+            {% for o in s.offers %}
+            <div class="sp-offer-card{% if o.status == 'angenommen' %} sp-offer-card--done{% endif %}">
+
+                <div class="sp-offer-head">
+                    <div>
+                        <p class="sp-offer-name">{{ o.sponsor_name }}</p>
+                        <p class="sp-offer-typ">{{ o.typ_display }}</p>
+                    </div>
+                    {% if o.status == 'angenommen' %}
+                    <span class="sp-offer-badge sp-offer-badge--done">Angenommen</span>
+                    {% elif o.status == 'abgesagt' %}
+                    <span class="sp-offer-badge sp-offer-badge--out">Zurückgezogen</span>
+                    {% else %}
+                    <span class="sp-offer-badge">Offen</span>
+                    {% endif %}
+                </div>
+
+                <div class="sp-offer-amounts">
+                    <div class="sp-offer-fix">
+                        <span class="sp-offer-fix-label">Fix / Saison</span>
+                        <span class="sp-offer-fix-val">{{ o.fix_fmt }}</span>
+                    </div>
+                    <div class="sp-offer-var">
+                        <span class="sp-offer-var-label">Variabel</span>
+                        <span class="sp-offer-var-val">{{ o.var_text }}</span>
+                    </div>
+                </div>
+
+                {% if o.runde > 0 %}
+                <div class="sp-offer-runden">
+                    Runde {{ o.runde }}/{{ o.max_runden }}
+                    <span class="sp-offer-runden-bar">
+                        {% for i in "123" %}
+                        <span class="sp-runde-pip{% if forloop.counter <= o.runde %} sp-runde-pip--used{% endif %}"></span>
+                        {% endfor %}
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if fenster_offen and o.status == 'offen' %}
+                <div class="sp-offer-actions">
+                    <form method="post" action="{% url 'management_sponsoring_accept' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="offer_id" value="{{ o.id }}">
+                        <input type="hidden" name="slot" value="{{ s.slot }}">
+                        <button type="submit" class="sp-btn sp-btn--accept">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Annehmen
+                        </button>
+                    </form>
+                    {% if o.can_push %}
+                    <form method="post" action="{% url 'management_sponsoring_push' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="offer_id" value="{{ o.id }}">
+                        <button type="submit" class="sp-btn sp-btn--push">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            Nachverhandeln
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="sp-no-offers">
+            <p>Keine Angebote für diesen Slot in Saison {{ season }} verfügbar.</p>
+        </div>
+        {% endif %}
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const tabs = document.querySelectorAll('.sp-tab');
+    const panels = document.querySelectorAll('.sp-panel');
+
+    function activate(slot) {
+        tabs.forEach(t => t.classList.toggle('sp-tab--active', t.dataset.slot === slot));
+        panels.forEach(p => p.classList.toggle('sp-panel--active', p.dataset.panel === slot));
+        const url = new URL(window.location);
+        url.searchParams.set('slot', slot);
+        history.replaceState(null, '', url);
+    }
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => activate(tab.dataset.slot));
+    });
+})();
+</script>
+{% endblock %}

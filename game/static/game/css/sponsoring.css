@@ -1,0 +1,237 @@
+/* ── Sponsoring V2 UI ─────────────────────────────────────────────────────── */
+
+.sp-artboard {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 24px 32px 48px;
+}
+
+/* ── Messages ─────────────────────────────────────────────────────────────── */
+.sp-messages { list-style: none; margin: 0 0 20px; padding: 0; }
+.sp-message {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 6px;
+    border: 1px solid transparent;
+}
+.sp-message--success { background: rgba(74,222,128,.1); border-color: #4ade80; color: #4ade80; }
+.sp-message--error   { background: rgba(248,113,113,.1); border-color: #f87171; color: #f87171; }
+.sp-message--warning { background: rgba(251,191,36,.1); border-color: #fbbf24; color: #fbbf24; }
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.sp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+.sp-header-left { display: flex; align-items: center; gap: 16px; }
+.sp-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--cyan, #22d3ee);
+    font-size: 12px;
+    text-decoration: none;
+    padding: 4px 8px;
+    border: 1px solid rgba(34,211,238,.3);
+    border-radius: 4px;
+}
+.sp-back-btn:hover { background: rgba(34,211,238,.08); }
+.sp-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+.sp-season { font-size: 12px; color: #6b7280; }
+
+.sp-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid;
+}
+.sp-badge--offen     { color: #4ade80; border-color: #4ade80; background: rgba(74,222,128,.08); }
+.sp-badge--geschlossen { color: #f87171; border-color: #f87171; background: rgba(248,113,113,.08); }
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────── */
+.sp-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    padding-bottom: 0;
+}
+.sp-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 9px 18px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #9ca3af;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+}
+.sp-tab:hover { color: #e2e8f0; }
+.sp-tab--active { color: var(--cyan, #22d3ee); border-bottom-color: var(--cyan, #22d3ee); }
+.sp-tab--done .sp-tab-check { stroke: #4ade80; }
+.sp-tab-check { flex-shrink: 0; }
+
+/* ── Panel ────────────────────────────────────────────────────────────────── */
+.sp-panel { display: none; }
+.sp-panel--active { display: block; }
+
+/* ── Active Contract ──────────────────────────────────────────────────────── */
+.sp-contract {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: rgba(74,222,128,.05);
+    border: 1px solid rgba(74,222,128,.2);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+}
+.sp-contract-icon { flex-shrink: 0; margin-top: 2px; }
+.sp-contract-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #4ade80; margin: 0 0 4px; }
+.sp-contract-name  { font-size: 18px; font-weight: 600; color: #f1f5f9; margin: 0 0 4px; }
+.sp-contract-fix   { font-size: 14px; color: #9ca3af; margin: 0; }
+.sp-contract-auto  { font-size: 11px; color: #6b7280; margin: 4px 0 0; font-style: italic; }
+
+/* ── Offers header ────────────────────────────────────────────────────────── */
+.sp-offers-header { margin-bottom: 16px; }
+.sp-offers-title  { font-size: 16px; font-weight: 600; color: #e2e8f0; margin: 0 0 4px; }
+.sp-window-closed { font-size: 12px; color: #f87171; margin: 0; }
+
+/* ── Offer grid ───────────────────────────────────────────────────────────── */
+.sp-offer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.sp-offer-card {
+    background: #111827;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color .2s;
+}
+.sp-offer-card:hover { border-color: rgba(34,211,238,.25); }
+.sp-offer-card--done { border-color: rgba(74,222,128,.3); background: rgba(74,222,128,.04); }
+
+.sp-offer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+.sp-offer-name { font-size: 15px; font-weight: 600; color: #f1f5f9; margin: 0 0 2px; }
+.sp-offer-typ  { font-size: 11px; color: #6b7280; margin: 0; }
+
+.sp-offer-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(34,211,238,.4);
+    color: var(--cyan, #22d3ee);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.sp-offer-badge--done { border-color: rgba(74,222,128,.4); color: #4ade80; }
+.sp-offer-badge--out  { border-color: rgba(248,113,113,.4); color: #f87171; }
+
+.sp-offer-amounts { display: flex; flex-direction: column; gap: 8px; }
+.sp-offer-fix, .sp-offer-var {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+.sp-offer-fix-label, .sp-offer-var-label {
+    font-size: 11px;
+    color: #6b7280;
+    min-width: 80px;
+}
+.sp-offer-fix-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: #4ade80;
+    text-align: right;
+}
+.sp-offer-var-val {
+    font-size: 12px;
+    color: #9ca3af;
+    text-align: right;
+}
+
+/* ── Verhandlungsrunden ───────────────────────────────────────────────────── */
+.sp-offer-runden {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #6b7280;
+}
+.sp-offer-runden-bar { display: flex; gap: 4px; }
+.sp-runde-pip {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.12);
+}
+.sp-runde-pip--used { background: var(--cyan, #22d3ee); }
+
+/* ── Action buttons ───────────────────────────────────────────────────────── */
+.sp-offer-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+.sp-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all .15s;
+}
+.sp-btn--accept {
+    background: rgba(74,222,128,.12);
+    border-color: rgba(74,222,128,.5);
+    color: #4ade80;
+}
+.sp-btn--accept:hover { background: rgba(74,222,128,.22); }
+.sp-btn--push {
+    background: rgba(34,211,238,.08);
+    border-color: rgba(34,211,238,.35);
+    color: var(--cyan, #22d3ee);
+}
+.sp-btn--push:hover { background: rgba(34,211,238,.16); }
+
+/* ── No offers ────────────────────────────────────────────────────────────── */
+.sp-no-offers {
+    padding: 40px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 13px;
+    border: 1px dashed rgba(255,255,255,.1);
+    border-radius: 10px;
+}

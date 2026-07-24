@@ -244,9 +244,24 @@ def _club_won_fixture(club, fixture) -> bool:
 
 
 def _book_sponsor_income(club, saison, matchday, fixture, result):
-    """Sponsor-Fixrate + Sieggeld für den Spieltag (Spec Kap. 6)."""
-    from .sponsors import get_active_offer, sponsor_fix_rate, book_sieg_bonus
+    """Sponsor-Fixrate + Sieggeld für den Spieltag (V2 zuerst, V1 Fallback).
 
+    V2-Pfad: Bucht alle aktiven SponsorContracts (book_sponsor_matchday_v2).
+    Fallback auf V1 (get_active_offer), wenn noch keine V2-Contracts vorhanden.
+    """
+    from .sponsors import (
+        get_active_contracts,
+        book_sponsor_matchday_v2,
+        get_active_offer, sponsor_fix_rate, book_sieg_bonus,
+    )
+
+    # ── V2-Pfad: SponsorContract (nur wenn explizit angelegt via UI/Cmd) ─────
+    contracts = get_active_contracts(club, saison)
+    if contracts:
+        book_sponsor_matchday_v2(club, saison, matchday, fixture, result)
+        return contracts[0].offer  # Für Zuschauer-Bonus-Kompatibilität zurückgeben
+
+    # ── V1-Fallback: gewaehlt=True (legacy rows) ─────────────────────────────
     offer = get_active_offer(club, saison, autopick=True)
     if offer is None:
         return None
