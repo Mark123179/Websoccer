@@ -169,7 +169,11 @@
     document.querySelectorAll("[data-nt-close]").forEach(function (b) {
       b.addEventListener("click", function () { overlay.hidden = true; });
     });
-    overlay.addEventListener("click", function (e) { if (e.target === overlay) overlay.hidden = true; });
+    document.addEventListener("click", function (e) {
+      if (!overlay.hidden && !overlay.contains(e.target) && !e.target.closest('.nt-fab')) {
+        overlay.hidden = true;
+      }
+    });
     window.addEventListener("keydown", function (e) { if (e.key === "Escape") overlay.hidden = true; });
 
     $("nt-new").addEventListener("click", function () {
