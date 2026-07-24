@@ -5029,6 +5029,12 @@ def club_match_report(request, club_id):
                 match_type=match_type,
             )
             try:
+                from .models import pick_random_referee
+                sm.referee = pick_random_referee()
+                sm.save(update_fields=['referee'])
+            except Exception:
+                pass
+            try:
                 from .season_service import write_simulated_match_stats
                 write_simulated_match_stats(sm, data)
             except Exception:

@@ -4925,6 +4925,11 @@ class Referee(models.Model):
         return dict(self.LEVEL_CHOICES).get(self.level, self.level).upper()
 
 
+def pick_random_referee():
+    """Gibt einen zufälligen Referee aus der DB zurück, oder None wenn leer."""
+    return Referee.objects.order_by('?').first()
+
+
 class SimulatedMatch(models.Model):
     """Gespeichertes Ergebnis einer Match-Engine-Simulation (zum Testen)."""
 

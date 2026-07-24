@@ -793,6 +793,12 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 away_goals=ag,
                 report_data=data,
             )
+            try:
+                from .models import pick_random_referee
+                sm.referee = pick_random_referee()
+                sm.save(update_fields=['referee'])
+            except Exception:
+                pass
             fixture.home_goals      = hg
             fixture.away_goals      = ag
             fixture.is_played       = True
