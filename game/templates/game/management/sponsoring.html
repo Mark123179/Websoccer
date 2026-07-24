@@ -4,7 +4,7 @@
 {% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=9">
 {% endblock %}
 
 {% block content %}
@@ -51,17 +51,21 @@
         <div class="sp-kpi-sep"></div>
         <div class="sp-kpi-item">
             <span class="sp-kpi-label">Slots fixiert</span>
-            <span class="sp-kpi-val sp-kpi-val--slots">{{ slots_fixiert_count }}<span class="sp-kpi-of">/5</span></span>
+            <span class="sp-kpi-val sp-kpi-val--neutral">{{ slots_fixiert_count }}<span class="sp-kpi-of">/5</span></span>
         </div>
         <div class="sp-kpi-sep"></div>
         <div class="sp-kpi-item">
             <span class="sp-kpi-label">Verprellte Sponsoren</span>
-            <span class="sp-kpi-val{% if verprellt_count > 0 %} sp-kpi-val--warn{% endif %}">{{ verprellt_count }}</span>
+            <span class="sp-kpi-val{% if verprellt_count > 0 %} sp-kpi-val--warn{% endif %}">{{ verprellt_label }}</span>
         </div>
-        <div class="sp-kpi-sep"></div>
-        <div class="sp-kpi-rule">
-            Verhandlung nur vor Spieltag 1 möglich.{% if not fenster_offen %} Saison läuft — read-only.{% endif %}
-        </div>
+    </div>
+
+    <!-- ── REGEL-BOX ────────────────────────────────────────────────── -->
+    <div class="sp-regel">
+        <span class="sp-regel-icon">≈</span>
+        <span class="sp-regel-label">Regel</span>
+        <span class="sp-regel-sep">|</span>
+        <p class="sp-regel-text">Ohne Sponsor startet kein Verein: Slots, die bis zum Anpfiff des 1. Spieltags offen sind, werden automatisch mit dem Sicherheits-Angebot besetzt — ohne Verhandlungsrunden. Bleibt in einem Slot nur noch ein Angebot übrig, gilt dieses als angenommen. Verprellte Sponsoren kehren in dieser Saison nicht zurück. Nachverhandeln bringt +7 / +10 / +12 % pro Runde auf Fixbetrag UND alle Boni, bei 18 / 38 / 62 % Abbruchrisiko.</p>
     </div>
 
     <!-- ── HAUPTBEREICH: SLOT-BOARD + SIDEBAR ──────────────────────── -->
@@ -75,12 +79,18 @@
 
                 <button class="sp-slot-card-header" data-slot="{{ s.slot }}" aria-expanded="{% if s.slot == active_slot %}true{% else %}false{% endif %}">
                     <span class="sp-tab-dot sp-tab-dot--{{ s.dot_status }}"></span>
-                    <span class="sp-slot-card-label">{{ s.label }}</span>
-                    {% if s.has_contract %}
-                    <span class="sp-slot-card-meta">{{ s.contract.sponsor_name }}</span>
-                    {% elif s.offers %}
-                    <span class="sp-slot-card-meta sp-slot-card-meta--open">{{ s.offers|length }} Angebot{{ s.offers|length|pluralize:"e" }}</span>
-                    {% endif %}
+                    <div class="sp-slot-card-titles">
+                        <span class="sp-slot-card-label">{{ s.label }}</span>
+                        {% if s.sub_label %}<span class="sp-slot-card-sub">{{ s.sub_label }}</span>{% endif %}
+                    </div>
+                    <div class="sp-slot-card-right">
+                        {% if s.has_contract %}
+                        <span class="sp-slot-fixiert-badge">✓ Fixiert</span>
+                        {% elif s.offen_count > 0 %}
+                        <span class="sp-slot-angebote-badge">{{ s.offen_count }} Angebot{{ s.offen_count|pluralize:"e" }} offen</span>
+                        {% endif %}
+                        <span class="sp-slot-slotwert">Slotwert = {{ s.slotwert_fmt }}</span>
+                    </div>
                     <svg class="sp-slot-card-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
 
@@ -118,7 +128,7 @@
                         {% if o.status == 'fixiert' %} sp-offer-card--done{% endif %}
                         {% if o.status == 'verprellt' or o.status == 'abgesagt' %} sp-offer-card--out{% endif %}">
 
-                            {% if o.logo_url %}
+                        {% if o.logo_url %}
                         <div class="sp-offer-logo-tile">
                             <img src="{{ o.logo_url }}" alt="{{ o.sponsor_name }}" class="sp-offer-logo-img" loading="lazy" onerror="this.parentElement.style.display='none'">
                         </div>
@@ -138,18 +148,21 @@
                             {% elif o.is_last_offen %}
                             <span class="sp-offer-badge sp-offer-badge--auto" title="Wird automatisch zum Saisonstart angenommen">Auto-Annahme</span>
                             {% else %}
-                            <span class="sp-offer-badge">Offen</span>
+                            <span class="sp-offer-badge sp-offer-badge--typ">{{ o.typ|upper }}</span>
                             {% endif %}
                         </div>
 
+                        {% if o.is_last_offen and o.status == 'offen' %}
+                        <div class="sp-offer-auto-hint">Auto-Wahl bei Anpfiff</div>
+                        {% endif %}
+
                         <div class="sp-offer-amounts">
-                            <div class="sp-offer-fix">
-                                <span class="sp-offer-fix-label">Fix / Saison</span>
+                            <div class="sp-offer-fix-block">
+                                <span class="sp-offer-fix-label">Fixbetrag / Saison</span>
                                 <span class="sp-offer-fix-val">{{ o.fix_fmt }}</span>
                             </div>
                             {% if o.var_text %}
-                            <div class="sp-offer-var">
-                                <span class="sp-offer-var-label">Variabel</span>
+                            <div class="sp-offer-var-block">
                                 <span class="sp-offer-var-val">{{ o.var_text }}</span>
                             </div>
                             {% endif %}
@@ -167,6 +180,17 @@
                         </div>
                         {% endif %}
 
+                        {% if o.risk_pct is not None %}
+                        <div class="sp-risk-wrap">
+                            <span class="sp-risk-label-top">Abbruchrisiko</span>
+                            <div class="sp-risk-bar-track">
+                                <div class="sp-risk-bar-fill sp-risk-bar-fill--{% if o.risk_pct < 25 %}low{% elif o.risk_pct < 50 %}mid{% else %}high{% endif %}"
+                                     style="width:{{ o.risk_pct }}%"></div>
+                            </div>
+                            <span class="sp-risk-pct">{{ o.risk_pct }}%</span>
+                        </div>
+                        {% endif %}
+
                         <div class="sp-offer-runden">
                             <span class="sp-offer-runden-bar">
                                 {% for i in "123" %}
@@ -175,16 +199,6 @@
                             </span>
                             {% if o.runde > 0 %}<span class="sp-offer-runden-label">Runde {{ o.runde }}/{{ o.max_runden }}</span>{% endif %}
                         </div>
-
-                        {% if o.risk_pct is not None %}
-                        <div class="sp-risk-bar-wrap">
-                            <div class="sp-risk-bar-track">
-                                <div class="sp-risk-bar-fill sp-risk-bar-fill--{% if o.risk_pct < 25 %}low{% elif o.risk_pct < 50 %}mid{% else %}high{% endif %}"
-                                     style="width:{{ o.risk_pct }}%"></div>
-                            </div>
-                            <span class="sp-risk-label">{{ o.risk_pct }}% Abbruchrisiko</span>
-                        </div>
-                        {% endif %}
 
                         {% if o.status == 'offen' %}
                         <div class="sp-offer-actions">
@@ -233,7 +247,7 @@
 
         </div><!-- /sp-left -->
 
-        <!-- ── RIGHT: Szenario + Präsident + Ticker ─────────────────── -->
+        <!-- ── RIGHT: Szenario + Ticker ──────────────────────────────── -->
         <div class="sp-right">
 
             <!-- Szenario-Projektion -->
@@ -253,35 +267,17 @@
                         <span class="sp-scenario-val sp-scenario-val--best">{{ proj_best_fmt }}</span>
                     </div>
                     <div class="sp-scenario-divider"></div>
-                    <!-- Fix / Variabel / Offen Legende -->
                     <div class="sp-scenario-legend">
                         <span class="sp-legend-dot sp-legend-dot--fix"></span>
-                        <span class="sp-legend-label">Fix {{ slots_fix_pct }} %</span>
+                        <span class="sp-legend-label">Fix {{ slots_fix_pct }}&thinsp;%</span>
                         <span class="sp-legend-dot sp-legend-dot--var"></span>
-                        <span class="sp-legend-label">Variabel 0 %</span>
+                        <span class="sp-legend-label">Variabel 0&thinsp;%</span>
                         <span class="sp-legend-dot sp-legend-dot--open"></span>
-                        <span class="sp-legend-label">Offen {{ slots_open_pct }} %</span>
+                        <span class="sp-legend-label">Offen {{ slots_open_pct }}&thinsp;%</span>
                     </div>
                     <p class="sp-scenario-rule">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
                 </div>
             </div>
-
-            <!-- Präsidenten-Erwartung -->
-            {% if president_goal %}
-            <div class="sp-panel-box">
-                <h3 class="sp-panel-box-title">Präsidenten-Erwartung</h3>
-                <div class="sp-president">
-                    <div class="sp-president-row">
-                        <span class="sp-president-label">Saisonziel</span>
-                        <span class="sp-president-val">{{ president_goal.goal_tier_label }}</span>
-                    </div>
-                    <div class="sp-president-row">
-                        <span class="sp-president-label">Ligarang Kader</span>
-                        <span class="sp-president-val">{{ president_goal.rank_in_league }}/{{ president_goal.league_size }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
 
             <!-- Liga-Ticker -->
             <div class="sp-panel-box sp-ticker-box">
@@ -299,19 +295,11 @@
                             {% endif %}
                         </div>
                         <div class="sp-ticker-body">
-                            <p class="sp-ticker-headline">
-                                <span class="sp-ticker-club">{{ t.club_name }}</span>
-                                <span class="sp-ticker-dash"> — </span>
-                                <span class="sp-ticker-slotname">{{ t.slot_label }}</span>
-                                <span class="sp-ticker-fix">{{ t.fix_fmt }}</span>
+                            <p class="sp-ticker-desc">
+                                <strong class="sp-ticker-club">{{ t.club_name }}</strong>
+                                <span class="sp-ticker-dash"> — </span>{{ t.beschreibung|slice:"0:" }}
                             </p>
-                            <div class="sp-ticker-meta">
-                                {% if t.sponsor_logo_url %}
-                                <img src="{{ t.sponsor_logo_url }}" alt="{{ t.sponsor_name }}" class="sp-ticker-sp-logo" onerror="this.style.display='none'">
-                                {% endif %}
-                                <span class="sp-ticker-sponsor">{{ t.sponsor_name }}</span>
-                                <span class="sp-ticker-slot-badge">{{ t.slot_label|upper }}</span>
-                            </div>
+                            <span class="sp-ticker-slot-badge">{{ t.slot_label_upper }}</span>
                         </div>
                     </div>
                     {% endfor %}
@@ -326,66 +314,21 @@
     </div><!-- /sp-body -->
 
 </div><!-- /sp-artboard -->
-{% endblock %}
 
-{% block extra_js %}
 <script>
-(function() {
-
-    // ── Aufklappbare Slot-Karten ──────────────────────────────────────
-    const cards = document.querySelectorAll('.sp-slot-card');
-
-    function toggleCard(card) {
-        const slot    = card.dataset.slot;
-        const isOpen  = card.classList.contains('sp-slot-card--open');
-        const header  = card.querySelector('.sp-slot-card-header');
-        // Alle anderen schließen (Accordion-Verhalten)
-        cards.forEach(c => {
-            c.classList.remove('sp-slot-card--open');
-            const h = c.querySelector('.sp-slot-card-header');
-            if (h) h.setAttribute('aria-expanded', 'false');
-        });
-        if (!isOpen) {
-            card.classList.add('sp-slot-card--open');
-            if (header) header.setAttribute('aria-expanded', 'true');
-            const url = new URL(window.location);
-            url.searchParams.set('slot', slot);
-            history.replaceState(null, '', url);
-        }
-    }
-
-    cards.forEach(card => {
-        const btn = card.querySelector('.sp-slot-card-header');
-        if (btn) btn.addEventListener('click', () => toggleCard(card));
+document.querySelectorAll('.sp-slot-card-header').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const card = btn.closest('.sp-slot-card');
+        const isOpen = card.classList.contains('sp-slot-card--open');
+        document.querySelectorAll('.sp-slot-card').forEach(c => c.classList.remove('sp-slot-card--open'));
+        if (!isOpen) card.classList.add('sp-slot-card--open');
     });
-
-    // ── Meldungen 6 s auto-hide ──────────────────────────────────────
-    const msgEl = document.getElementById('sp-messages');
-    if (msgEl) {
-        setTimeout(function() {
-            msgEl.style.transition = 'opacity .5s';
-            msgEl.style.opacity    = '0';
-            setTimeout(function() { msgEl.style.display = 'none'; }, 500);
-        }, 6000);
-    }
-
-    // ── Liga-Ticker Poll alle 30 s ───────────────────────────────────
-    const tickerEl = document.getElementById('sp-ticker');
-    if (tickerEl) {
-        setInterval(function() {
-            const _tu = new URL(window.location);
-            _tu.searchParams.set('_ticker', '1');
-            fetch(_tu.toString())
-                .then(r => r.text())
-                .then(function(html) {
-                    const doc = new DOMParser().parseFromString(html, 'text/html');
-                    const fresh = doc.getElementById('sp-ticker');
-                    if (fresh) tickerEl.innerHTML = fresh.innerHTML;
-                })
-                .catch(function() {});
-        }, 30000);
-    }
-
-})();
+});
+// Auto-close flash messages
+setTimeout(() => {
+    const msgs = document.getElementById('sp-messages');
+    if (msgs) msgs.style.transition = 'opacity .5s';
+    if (msgs) msgs.style.opacity = '0';
+}, 5000);
 </script>
 {% endblock %}

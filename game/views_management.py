@@ -1277,16 +1277,12 @@ def management_sponsoring(request):
     if request.user.is_staff and request.GET.get('saison'):
         season = str(request.GET['saison'])
 
-    # Phasensperre: Fenster offen nur vor Spieltag 1 (SPEC §5.5: >= 1 → geschlossen)
-    # Staff-only: ?fenster=1 erzwingt Fenster dauerhaft offen
-    fenster_offen = True
-    if request.user.is_staff and request.GET.get('fenster') == '1':
+    # Testmodus: Fenster dauerhaft offen (Saison 0).
+    # Staff-override ?fenster=0 schließt explizit zum Testen der geschlossenen Ansicht.
+    if request.user.is_staff and request.GET.get('fenster') == '0':
+        fenster_offen = False
+    else:
         fenster_offen = True
-    elif club.league_id:
-        ls = LeagueSeasonState.objects.filter(
-            league=club.league, season=season,
-        ).first()
-        fenster_offen = (ls is None) or (ls.current_matchday < 1)
 
     try:
         max_runden = int(_get_param('SPONSOR_PUSH_MAX_ROUNDS', season))
@@ -1426,9 +1422,25 @@ def management_sponsoring(request):
         _dot_status = ('fixiert' if contract is not None else
                        'auto'    if _any_auto else 'offen')
 
+        _SLOT_SUB = {
+            'haupt':     'Marketingpräsenz auf Kanälen',
+            'trikot':    'Bruchtrag auf dem Spieltrikot',
+            'ausruester':'Trikots, Schuhe & Equipment',
+            'stadion':   'Werbeflächen & Hospitality — das Stadion behält seinen Namen',
+            'tv':        'Vereins-TV, Streaming & Doku-Rechte',
+        }
+        try:
+            from game.economy.sponsors import sponsorwert_slot
+            _slotwert_fmt = _fmt_eur_sponsoring(sponsorwert_slot(club, season, slot))
+        except Exception:
+            _slotwert_fmt = '—'
+
         slots_data.append({
             'slot': slot,
             'label': SLOT_LABELS[slot],
+            'sub_label': _SLOT_SUB.get(slot, ''),
+            'slotwert_fmt': _slotwert_fmt,
+            'offen_count': offen_raw_count,
             'contract': contract_info,
             'offers': offer_list,
             'has_contract': contract is not None,
@@ -1447,6 +1459,10 @@ def management_sponsoring(request):
     verprellt_count = SponsorOffer.objects.filter(
         club=club, saison=season, status='verprellt',
     ).count()
+    verprellt_label = (
+        f'{verprellt_count}\u00a0Kandidat' if verprellt_count == 1
+        else f'{verprellt_count}\u00a0Kandidaten'
+    ) if verprellt_count > 0 else '0'
     expected_vol = sum(c.fix_saison for c in active.values())
     expected_vol_fmt = _fmt_eur_sponsoring(expected_vol) if expected_vol else '—'
 
@@ -1492,14 +1508,18 @@ def management_sponsoring(request):
                         s_logo = c.sponsor.logo_url
                 except Exception:
                     pass
+                _slot_lbl = SLOT_LABELS.get(c.slot, c.slot)
+                _beschr = f'{_slot_lbl} {s_name} fixiert, {_fmt_eur_sponsoring(c.fix_saison)} fix.'
                 liga_ticker.append({
                     'club_name': c.club.name,
                     'club_logo_url': c.club.logo_url if hasattr(c.club, 'logo_url') else None,
                     'sponsor_name': s_name,
                     'sponsor_logo_url': s_logo,
-                    'slot_label': SLOT_LABELS.get(c.slot, c.slot),
+                    'slot_label': _slot_lbl,
+                    'slot_label_upper': _slot_lbl.upper(),
                     'fix_fmt': _fmt_eur_sponsoring(c.fix_saison),
                     'slot': c.slot,
+                    'beschreibung': _beschr,
                 })
         except Exception:
             pass
@@ -1521,6 +1541,7 @@ def management_sponsoring(request):
         'proj_open_fmt': _fmt_eur_sponsoring(proj_open_val) if proj_open_val else '—',
         'slots_fix_pct': slots_fix_pct,
         'slots_open_pct': slots_open_pct,
+        'verprellt_label': verprellt_label,
         'president_goal': president_goal,
         'liga_ticker': liga_ticker,
     })
