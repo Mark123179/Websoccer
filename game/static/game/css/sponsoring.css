@@ -390,3 +390,80 @@
     cursor: not-allowed;
     background: rgba(255,255,255,.04);
 }
+
+/* ── Status-Dot (Tab-Statusanzeige) ──────────────────────────────────────── */
+.sp-tab-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.sp-tab-dot--offen   { background: var(--cyan, #22d3ee); }
+.sp-tab-dot--auto    { background: #fbbf24; }
+.sp-tab-dot--fixiert { background: #4ade80; }
+
+/* ── Logo-Tile (weißer Kachel-Hintergrund, center/76% no-repeat) ─────────── */
+.sp-offer-logo-tile {
+    background: #ffffff;
+    border-radius: 6px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: -4px;
+}
+.sp-offer-logo-img {
+    max-width: 76%;
+    max-height: 76%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* ── Delta-Zeile (Start → +X fix · Boni +Y %) ───────────────────────────── */
+.sp-offer-delta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #9ca3af;
+    flex-wrap: wrap;
+}
+.sp-offer-delta-from  { color: #6b7280; }
+.sp-offer-delta-arrow { color: #4b5563; }
+.sp-offer-delta-fix   { color: #4ade80; font-weight: 600; }
+.sp-offer-delta-sep   { color: #4b5563; }
+.sp-offer-delta-mult  { color: var(--cyan, #22d3ee); font-weight: 600; }
+
+/* ── Runden-Label neben Pips ─────────────────────────────────────────────── */
+.sp-offer-runden-label { font-size: 11px; color: #6b7280; }
+
+/* ── Abbruchrisiko-Balken ─────────────────────────────────────────────────── */
+.sp-risk-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.sp-risk-bar-track {
+    flex: 1;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255,255,255,.07);
+    overflow: hidden;
+}
+.sp-risk-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .3s ease;
+}
+.sp-risk-bar-fill--low  { background: #4ade80; }
+.sp-risk-bar-fill--mid  { background: #fbbf24; }
+.sp-risk-bar-fill--high { background: #f87171; }
+.sp-risk-label {
+    font-size: 10px;
+    color: #9ca3af;
+    white-space: nowrap;
+    min-width: 100px;
+    text-align: right;
+}

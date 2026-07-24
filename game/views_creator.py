@@ -1739,6 +1739,87 @@ def creator_toggle_sponsor(request, club_id, sponsor_id):
     return _redirect_tab(club_id, 'sponsoring')
 
 
+# ─── Sponsoring V2: Creator-Controls ─────────────────────────────────────────
+
+@require_POST
+def creator_sponsoring_deactivate(request):
+    """Sponsor (Stammdaten) deaktivieren: aktiv=False — greift ab nächster Generierung."""
+    from game.models import Sponsor as SponsorPool
+    sponsor_id = request.POST.get('sponsor_id', '').strip()
+    sponsor = get_object_or_404(SponsorPool, pk=sponsor_id)
+    sponsor.aktiv = False
+    sponsor.save(update_fields=['aktiv'])
+    messages.success(request, f'Sponsor „{sponsor.name}" deaktiviert (greift ab nächster Generierung).')
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
+    return redirect(next_url)
+
+
+@require_POST
+def creator_sponsoring_slot_reset(request, club_id):
+    """Slot-Reset: Contracts + Offers der Saison löschen und neu würfeln."""
+    from game.models import (
+        SponsorOffer as SponsorOfferModel,
+        SponsorContract as SponsorContractModel,
+        GameSeasonState,
+    )
+    from game.economy.sponsors import generate_offers_v2
+
+    club = get_object_or_404(Club, pk=club_id)
+    slot = request.POST.get('slot', '').strip()
+    season_state = GameSeasonState.objects.first()
+    season = str(season_state.current_season) if season_state else '1'
+
+    valid_slots = ('haupt', 'trikot', 'ausruester', 'stadion', 'tv')
+    if slot not in valid_slots and slot != '':
+        messages.error(request, f'Ungültiger Slot „{slot}".')
+        return _redirect_tab(club_id, 'sponsoring')
+
+    # Contracts + Offers der laufenden Saison löschen
+    qs_contracts = SponsorContractModel.objects.filter(club=club, saison=season)
+    qs_offers    = SponsorOfferModel.objects.filter(club=club, saison=season)
+    if slot:
+        qs_contracts = qs_contracts.filter(slot=slot)
+        qs_offers    = qs_offers.filter(slot=slot)
+    n_c = qs_contracts.count()
+    n_o = qs_offers.count()
+    qs_contracts.delete()
+    qs_offers.delete()
+
+    # Neu würfeln — generate_offers_v2 ist idempotent: nach dem Löschen generiert sie neue
+    try:
+        generate_offers_v2(club, season)
+        msg = f'Slot-Reset: {n_c} Vertrag/Verträge + {n_o} Angebote entfernt, neu generiert.'
+        messages.success(request, msg)
+    except Exception as exc:
+        messages.warning(request, f'Slot-Reset: Löschen OK ({n_c}/{n_o}), Neugenerierung fehlgeschlagen: {exc}')
+
+    return _redirect_tab(club_id, 'sponsoring')
+
+
+@require_POST
+def creator_sponsoring_risk_mode(request):
+    """SPONSOR_RISK_MODE Regler: Entschärft / Standard / Hardcore."""
+    from game.economy.params import get_param as _get_param
+    from game.models import EconomyParameter, GameSeasonState
+
+    mode = request.POST.get('risk_mode', 'Standard').strip()
+    if mode not in ('Entschärft', 'Standard', 'Hardcore'):
+        messages.error(request, f'Ungültiger Risk-Mode: {mode!r}')
+        next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
+        return redirect(next_url)
+
+    season_state = GameSeasonState.objects.first()
+    season = str(season_state.current_season) if season_state else '1'
+
+    EconomyParameter.objects.update_or_create(
+        key='SPONSOR_RISK_MODE', saison=season,
+        defaults={'value': mode},
+    )
+    messages.success(request, f'SPONSOR_RISK_MODE auf „{mode}" gesetzt (Saison {season}).')
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
+    return redirect(next_url)
+
+
 # ─── Club: Saisonziele ────────────────────────────────────────────────────────
 
 @require_POST

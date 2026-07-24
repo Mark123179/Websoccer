@@ -4,7 +4,7 @@
 {% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -74,9 +74,7 @@
                 {% for s in slots_data %}
                 <button class="sp-tab{% if s.slot == active_slot %} sp-tab--active{% endif %}{% if s.has_contract %} sp-tab--done{% endif %}"
                         data-slot="{{ s.slot }}">
-                    {% if s.has_contract %}
-                    <svg class="sp-tab-check" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                    {% endif %}
+                    <span class="sp-tab-dot sp-tab-dot--{{ s.dot_status }}"></span>
                     {{ s.label }}
                 </button>
                 {% endfor %}
@@ -117,6 +115,12 @@
                         {% if o.status == 'fixiert' %} sp-offer-card--done{% endif %}
                         {% if o.status == 'verprellt' or o.status == 'abgesagt' %} sp-offer-card--out{% endif %}">
 
+                            {% if o.logo_url %}
+                        <div class="sp-offer-logo-tile">
+                            <img src="{{ o.logo_url }}" alt="{{ o.sponsor_name }}" class="sp-offer-logo-img" loading="lazy" onerror="this.parentElement.style.display='none'">
+                        </div>
+                        {% endif %}
+
                         <div class="sp-offer-head">
                             <div>
                                 <p class="sp-offer-name">{{ o.sponsor_name }}</p>
@@ -148,14 +152,34 @@
                             {% endif %}
                         </div>
 
-                        {% if o.runde > 0 %}
+                        {% if o.delta_fix_pct is not None %}
+                        <div class="sp-offer-delta">
+                            <span class="sp-offer-delta-from">{{ o.fix_start_fmt }}</span>
+                            <span class="sp-offer-delta-arrow">→</span>
+                            <span class="sp-offer-delta-fix">+{{ o.delta_fix_pct }}% fix</span>
+                            {% if o.delta_mult_pct is not None %}
+                            <span class="sp-offer-delta-sep">·</span>
+                            <span class="sp-offer-delta-mult">Boni +{{ o.delta_mult_pct }}%</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
                         <div class="sp-offer-runden">
-                            Runde {{ o.runde }}/{{ o.max_runden }}
                             <span class="sp-offer-runden-bar">
                                 {% for i in "123" %}
                                 <span class="sp-runde-pip{% if forloop.counter <= o.runde %} sp-runde-pip--used{% endif %}"></span>
                                 {% endfor %}
                             </span>
+                            {% if o.runde > 0 %}<span class="sp-offer-runden-label">Runde {{ o.runde }}/{{ o.max_runden }}</span>{% endif %}
+                        </div>
+
+                        {% if o.risk_pct is not None %}
+                        <div class="sp-risk-bar-wrap">
+                            <div class="sp-risk-bar-track">
+                                <div class="sp-risk-bar-fill sp-risk-bar-fill--{% if o.risk_pct < 25 %}low{% elif o.risk_pct < 50 %}mid{% else %}high{% endif %}"
+                                     style="width:{{ o.risk_pct }}%"></div>
+                            </div>
+                            <span class="sp-risk-label">{{ o.risk_pct }}% Abbruchrisiko</span>
                         </div>
                         {% endif %}
 
@@ -177,7 +201,7 @@
                                 <input type="hidden" name="offer_id" value="{{ o.id }}">
                                 <button type="submit" class="sp-btn sp-btn--push">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-                                    Nachverhandeln
+                                    Nachverhandeln{% if o.push_gain_pct %} +{{ o.push_gain_pct }}%{% endif %}
                                 </button>
                             </form>
                             {% elif o.is_last_offen %}

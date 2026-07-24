@@ -828,14 +828,21 @@ def finalize_contracts_for_club(club, saison: str, *,
                                  force_v2: bool = True) -> list:
     """Auto-Pick: Fehlende Slots mit dem Sicherheits-Angebot belegen.
 
-    Läuft beim ersten Finanzlauf der Saison (matchday_run, Schritt 2).
-    Erzeugt vorher Angebote (generate_offers_v2), falls noch keine vorhanden.
-    Gibt die Liste der neu angelegten SponsorContracts zurück.
+    SPEC §5.4:
+    - Manager-Clubs: sicherheit bevorzugt, sonst höchster Fix zum fix_start.
+    - KI-Clubs (managed_by is None): zufällige Auswahl mit 40 % sicherheit-Präferenz,
+      immer zum fix_start (keine Verhandlungsgewinne).
     """
+    import random as _random
     from game.models import SponsorContract
 
     saison = str(saison)
     new_contracts = []
+
+    # KI-Verein = kein Manager verknüpft (SPEC §5.4)
+    is_ki = (getattr(club, 'managed_by_id', None) is None)
+    # Deterministischer Seed damit Wiederholungen idempotent sind
+    _rng = _random.Random(f'ki-finalize:{club.pk}:{saison}') if is_ki else None
 
     belegt = set(
         SponsorContract.objects.filter(
@@ -856,16 +863,25 @@ def finalize_contracts_for_club(club, saison: str, *,
         if not offene:
             continue
 
-        # SPEC §5.4: sicherheit bevorzugt, sonst höchster Fix
-        picked = next(
-            (o for o in offene if o.typ == 'sicherheit'),
-            max(offene, key=lambda o: o.fix_aktuell or o.fix_start or 0),
-        )
-
-        # Wenn mehrere aktiv: fix_start (Verhandlungsgewinne verfallen per SPEC §5.4)
-        override = None
-        if len(offene) > 1:
+        if is_ki:
+            # SPEC §5.4 KI: zufällig, 40 % Chance auf sicherheit-Typ
+            sicher = [o for o in offene if o.typ == 'sicherheit']
+            if sicher and _rng.random() < 0.40:
+                picked = _rng.choice(sicher)
+            else:
+                picked = _rng.choice(offene)
+            # KI fixiert immer zum Startwert
             override = picked.fix_start if picked.fix_start is not None else int(picked.fix_betrag)
+        else:
+            # SPEC §5.4 Manager-Club: sicherheit bevorzugt, sonst höchster Fix
+            picked = next(
+                (o for o in offene if o.typ == 'sicherheit'),
+                max(offene, key=lambda o: o.fix_aktuell or o.fix_start or 0),
+            )
+            # Wenn mehrere aktiv: fix_start (Verhandlungsgewinne verfallen per SPEC §5.4)
+            override = None
+            if len(offene) > 1:
+                override = picked.fix_start if picked.fix_start is not None else int(picked.fix_betrag)
 
         try:
             c = accept_offer_v2(picked, auto=True, fix_saison_override=override)

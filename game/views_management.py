@@ -1302,6 +1302,15 @@ def management_sponsoring(request):
     except Exception:
         max_runden = 3
 
+    try:
+        push_gains = list(_get_param('SPONSOR_PUSH_GAINS', season))
+        push_risks = list(_get_param('SPONSOR_PUSH_RISKS', season))
+        risk_mode  = str(_get_param('SPONSOR_RISK_MODE', season))
+    except Exception:
+        push_gains, push_risks, risk_mode = [7, 10, 12], [18, 38, 62], 'Standard'
+    _risk_mults = {'Entschärft': 0.6, 'Standard': 1.0, 'Hardcore': 1.4}
+    _riskmult   = _risk_mults.get(risk_mode, 1.0)
+
     active = {c.slot: c for c in get_active_contracts(club, season)}
 
     try:
@@ -1326,6 +1335,41 @@ def management_sponsoring(request):
             if o.status not in ('offen', 'fixiert', 'verprellt', 'abgesagt'):
                 continue
             fix_val = o.fix_aktuell if o.fix_aktuell is not None else int(o.fix_betrag)
+
+            # Logo-URL aus verknüpftem Sponsor
+            _logo_url = None
+            try:
+                if o.sponsor_id:
+                    _logo_url = o.sponsor.logo_url
+            except Exception:
+                pass
+
+            # Risk-Bar + Push-Gain für die NÄCHSTE Verhandlungsrunde
+            _risk_pct = None
+            _push_gain_pct = None
+            if o.status == 'offen' and o.runde < max_runden:
+                _idx = o.runde
+                if _idx < len(push_risks):
+                    _risk_pct = round(min(95, push_risks[_idx] * _riskmult))
+                if _idx < len(push_gains):
+                    _push_gain_pct = push_gains[_idx]
+
+            # Delta-Zeile: Ausgangswert → aktueller Wert nach Verhandlung(en)
+            _delta_fix_pct = None
+            _delta_mult_pct = None
+            _fix_start_fmt = None
+            if o.runde > 0:
+                _fs = o.fix_start if o.fix_start is not None else None
+                if _fs and _fs > 0:
+                    _fix_start_fmt = _fmt_eur_sponsoring(int(_fs))
+                    _delta_fix_pct = round((fix_val - int(_fs)) / int(_fs) * 100)
+                try:
+                    _m = float(o.mult)
+                    if _m != 1.0:
+                        _delta_mult_pct = round((_m - 1) * 100, 1)
+                except Exception:
+                    pass
+
             offer_list.append({
                 'id': o.pk,
                 'sponsor_name': o.sponsor_name,
@@ -1341,6 +1385,12 @@ def management_sponsoring(request):
                              and fenster_offen and offen_raw_count >= 2),
                 'can_accept': (o.status == 'offen' and fenster_offen),
                 'is_last_offen': (o.status == 'offen' and offen_raw_count == 1),
+                'logo_url': _logo_url,
+                'risk_pct': _risk_pct,
+                'push_gain_pct': _push_gain_pct,
+                'delta_fix_pct': _delta_fix_pct,
+                'delta_mult_pct': _delta_mult_pct,
+                'fix_start_fmt': _fix_start_fmt,
             })
 
         offer_list.sort(key=lambda x: (
@@ -1363,12 +1413,18 @@ def management_sponsoring(request):
                 'pk': contract.pk,
             }
 
+        # Status-Dot: fixiert=grün · auto=gelb · offen=cyan
+        _any_auto = any(o.get('is_last_offen') for o in offer_list)
+        _dot_status = ('fixiert' if contract is not None else
+                       'auto'    if _any_auto else 'offen')
+
         slots_data.append({
             'slot': slot,
             'label': SLOT_LABELS[slot],
             'contract': contract_info,
             'offers': offer_list,
             'has_contract': contract is not None,
+            'dot_status': _dot_status,
         })
 
     # ── KPI-Daten ─────────────────────────────────────────────────────────────
