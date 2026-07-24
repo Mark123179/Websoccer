@@ -356,13 +356,13 @@ input[type=file] { display: none; }
 
 <script>
 // ── FM-UID Live-Vorschau ───────────────────────────────────────────────────
-// Fallback-Kette: referees .png → referees .jpg → players .png → players .jpg → referee_default.jpg
+// Fallback-Kette: referees .png → referees .jpg → players .png → players .jpg → referee_default.svg
 const REF_FALLBACK_CHAIN = uid => [
   `/static/assets/referees/face_${uid}.png`,
   `/static/assets/referees/face_${uid}.jpg`,
   `/static/assets/players/face_${uid}.png`,
   `/static/assets/players/face_${uid}.jpg`,
-  `/static/assets/referees/referee_default.jpg`,
+  `/static/assets/referees/referee_default.svg`,
 ];
 
 function _applyImg(url) {

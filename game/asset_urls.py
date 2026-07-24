@@ -131,10 +131,10 @@ def referee_face_url(fm_uid):
 
     Reihenfolge: referees/face_{uid}.png → .jpg → .jpeg
     Prüft ggf. ASSETS_ROOT/referees/ direkt (falls gesetzt).
-    Fallback: referee_default.jpg.
+    Fallback: referee_default.svg.
     """
     if not fm_uid:
-        return asset_url('referees', 'referee_default.jpg')
+        return asset_url('referees', 'referee_default.svg')
     assets_root = getattr(settings, 'ASSETS_ROOT', None)
     if assets_root:
         ref_dir = _os.path.join(str(assets_root).rstrip('/'), 'referees')
