@@ -128,7 +128,7 @@ def flag_url(code):
 
 def referee_face_url(fm_uid):
     if not fm_uid:
-        return asset_url('referees', 'referee_default.svg')
+        return asset_url('referees', 'referee_default.jpg')
     return asset_url('referees', f'face_{fm_uid}.png')
 
 

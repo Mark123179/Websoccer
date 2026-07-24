@@ -75,10 +75,22 @@ class Command(BaseCommand):
             warnings.extend(warn)
 
             if dry_run:
-                if ref_data.get('_fallback_name'):
-                    name_fallback_candidates.append(
-                        f"  Zeile {lineno}: {ref_data['name']} ({ref_data['nationality']}) — Name+Nation-Fallback"
-                    )
+                # Vollständige Matching-Simulation — kein DB-Schreiben
+                try:
+                    would_create, via_uid = self._simulate_upsert(ref_data)
+                except Exception as exc:
+                    errors.append(f'Zeile {lineno}: DB-Fehler: {exc}')
+                    continue
+                if would_create:
+                    if via_uid:
+                        created_uid += 1
+                    else:
+                        created_name += 1
+                        name_fallback_candidates.append(
+                            f"  {ref_data['name']} ({ref_data['nationality']}) — Name+Nation-Fallback"
+                        )
+                else:
+                    updated += 1
                 continue
 
             try:
@@ -100,24 +112,25 @@ class Command(BaseCommand):
 
         # ── Ausgabe ──────────────────────────────────────────────────────────
         if dry_run:
-            self.stdout.write('[Dry-Run] Keine Änderungen gespeichert.\n')
-            self.stdout.write(f'Gefundene Zeilen: {len(rows)}\n')
-            uid_rows = sum(1 for r in rows if r.get('fm_uid', '').strip())
-            name_rows = len(rows) - uid_rows
-            self.stdout.write(f'  davon per fm_uid:       {uid_rows}\n')
-            self.stdout.write(f'  davon Name+Nation-Fallback: {name_rows}\n')
+            self.stdout.write('[Dry-Run] Keine Änderungen gespeichert.')
+            summary = (
+                f'{created_uid} würden angelegt (per fm_uid), '
+                f'{created_name} würden angelegt (per Name+Nation), '
+                f'{updated} würden aktualisiert, '
+                f'{len(errors)} Fehler'
+            )
+            self.stdout.write(summary)
             if name_fallback_candidates:
-                self.stdout.write('Name-Fallback-Kandidaten:\n')
+                self.stdout.write('Name+Nation-Fallback-Kandidaten:')
                 for c in name_fallback_candidates:
-                    self.stdout.write(c + '\n')
+                    self.stdout.write(c)
             if warnings:
-                self.stdout.write(f'Warnungen: {len(warnings)}\n')
+                self.stdout.write(f'  [{len(warnings)} Warnung(en)]')
                 for w in warnings[:10]:
-                    self.stdout.write(f'  [WARN] {w}\n')
+                    self.stdout.write(f'  [WARN] {w}')
             if errors:
-                self.stdout.write(self.style.ERROR(f'Fehler: {len(errors)}\n'))
                 for e in errors[:10]:
-                    self.stdout.write(self.style.ERROR(f'  [ERROR] {e}\n'))
+                    self.stdout.write(self.style.ERROR(f'  [ERROR] {e}'))
             return
 
         # ── Bild-Auto-Copy (wie in creator_referee_save) ─────────────────────
@@ -270,6 +283,19 @@ class Command(BaseCommand):
             'vorsaison_competitions': vorsaison_competitions,
             '_fallback_name': fm_uid is None,
         }, warnings
+
+    def _simulate_upsert(self, data):
+        """Dry-run-Variante: gibt (would_create, via_uid) zurück ohne DB-Schreiben."""
+        fm_uid = data['fm_uid']
+        if fm_uid is not None:
+            exists = Referee.objects.filter(fm_uid=fm_uid).exists()
+            return (not exists, True)
+        else:
+            exists = Referee.objects.filter(
+                name=data['name'],
+                nationality=data['nationality'],
+            ).exists()
+            return (not exists, False)
 
     def _upsert(self, data):
         fm_uid = data['fm_uid']
