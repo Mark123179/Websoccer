@@ -1,14 +1,18 @@
-"""Sponsor-Stammdaten importieren (Spec Kap. 6 V2).
+"""Sponsor-Stammdaten importieren (SPEC Kap. 3.1).
 
-Liest sponsors.csv aus dem Projektroot (oder --csv-pfad) und optional
-sponsor_names.json (Mapping slug → display_name).
+Liest sponsors.csv (Format: bereich,name,domain — Komma-getrennt) und
+optional sponsor_names.json (Mapping slug → display_name, ~40 Einträge).
 
-CSV-Format (Semikolon-getrennt, kein Header oder mit Header):
-  slug;name;bereich;branche
+CSV-Format (Komma-getrennt, mit oder ohne Header):
+  bereich,name,domain
 
 Beispiel:
-  adidas;adidas AG;ausruester;Sportartikel
-  allianz;Allianz SE;hauptsponsor;Versicherung
+  ausruester,adidas,adidas.com
+  hauptsponsor,deutsche_telekom,telekom.de
+
+  → slug = slugify(name)  z.B. "adidas", "deutsche-telekom"
+  → display_name aus sponsor_names.json[slug]
+                   oder automatisch: "Adidas", "Deutsche Telekom"
 
 Gültige Bereiche: hauptsponsor | trikotsponsor | ausruester | stadionpartner | tv_medien
 
@@ -90,7 +94,7 @@ class Command(BaseCommand):
             name = row['name']
             bereich = row['bereich']
             branche = row.get('branche', '')
-            display_name = names_map.get(slug, name.upper())
+            display_name = names_map.get(slug, _auto_display_name(slug))
 
             if bereich not in VALID_BEREICHE:
                 errors.append(f'Ungültiger Bereich "{bereich}" für {slug} — übersprungen')
@@ -175,24 +179,45 @@ def _load_names_json(path) -> dict:
         return {}
 
 
+def _auto_display_name(slug: str) -> str:
+    """Titelform des Slugs: Unterstriche/Bindestriche → Leerzeichen, capitalize."""
+    return ' '.join(w.capitalize() for w in slug.replace('-', ' ').replace('_', ' ').split())
+
+
 def _parse_csv(path: str) -> list[dict]:
+    """Parst sponsors.csv im Format: bereich,name,domain (SPEC §3.1).
+
+    Spalten:
+      0 → bereich   (z.B. hauptsponsor, ausruester, …)
+      1 → name      (Identifier/Slug-Vorlage, z.B. fritz_kola, deutsche_telekom)
+      2 → domain    (z.B. fritz-kola.de) — für spätere Erweiterungen, nicht Pflicht
+    """
     rows = []
     with open(path, encoding='utf-8', newline='') as f:
-        sample = f.read(1024)
+        sample = f.read(2048)
         f.seek(0)
-        dialect = csv.Sniffer().sniff(sample, delimiters=';,\t')
+        try:
+            dialect = csv.Sniffer().sniff(sample, delimiters=',;\t')
+        except csv.Error:
+            dialect = csv.excel
         reader = csv.reader(f, dialect)
         for i, row in enumerate(reader):
-            if not row or not any(row):
+            if not row or not any(r.strip() for r in row):
                 continue
-            if i == 0 and row[0].strip().lower() in ('slug', 'id', 'name'):
+            # Header-Erkennung: erste Zeile mit bekannten Spaltennamen
+            if i == 0 and row[0].strip().lower() in ('bereich', 'slug', 'id', 'name', 'typ'):
                 continue
-            if len(row) < 3:
+            if len(row) < 2:
+                continue
+            bereich = row[0].strip().lower()
+            raw_name = row[1].strip()
+            slug = slugify(raw_name)
+            if not slug:
                 continue
             rows.append({
-                'slug': slugify(row[0].strip()),
-                'name': row[1].strip() if len(row) > 1 else row[0].strip(),
-                'bereich': row[2].strip().lower() if len(row) > 2 else 'hauptsponsor',
-                'branche': row[3].strip() if len(row) > 3 else '',
+                'slug': slug,
+                'name': raw_name,     # Rohwert aus CSV (Basis für display_name-Fallback)
+                'bereich': bereich,
+                'branche': '',        # Nicht im neuen CSV-Format; kann per sponsor_names.json ergänzt werden
             })
     return rows

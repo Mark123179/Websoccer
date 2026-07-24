@@ -1272,9 +1272,13 @@ def _fmt_eur_sponsoring(val: float | int) -> str:
 @login_required(login_url='/auth/login/')
 def management_sponsoring(request):
     """Sponsoring-Verwaltung: 5 Slots, Verhandlung, Vertragsabschluss (V2)."""
-    from game.models import GameSeasonState, LeagueSeasonState
+    import logging
+    from decimal import Decimal
+    from game.models import (
+        GameSeasonState, LeagueSeasonState, SponsorOffer, SponsorContract,
+    )
     from game.economy.sponsors import (
-        SLOTS, SLOT_LABELS, generate_offers_v2, get_active_contracts,
+        SLOTS, SLOT_LABELS, generate_offers_v2, get_active_contracts, sponsorwert,
     )
     from game.economy.params import get_param as _get_param
 
@@ -1285,12 +1289,13 @@ def management_sponsoring(request):
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else '1'
 
+    # Phasensperre: Fenster offen nur vor Spieltag 1 (SPEC §5.5: >= 1 → geschlossen)
     fenster_offen = True
     if club.league_id:
         ls = LeagueSeasonState.objects.filter(
             league=club.league, season=season,
         ).first()
-        fenster_offen = (ls is None) or (ls.current_matchday <= 1)
+        fenster_offen = (ls is None) or (ls.current_matchday < 1)
 
     try:
         max_runden = int(_get_param('SPONSOR_PUSH_MAX_ROUNDS', season))
@@ -1302,7 +1307,6 @@ def management_sponsoring(request):
     try:
         offers_by_slot = generate_offers_v2(club, season)
     except Exception:
-        import logging
         logging.getLogger(__name__).exception(
             'generate_offers_v2 für %s fehlgeschlagen', club,
         )
@@ -1313,9 +1317,13 @@ def management_sponsoring(request):
         contract = active.get(slot)
         raw_offers = offers_by_slot.get(slot, [])
 
+        # Anzahl aktuell offener Angebote im Slot (für can_push Min-2-Check)
+        offen_raw_count = sum(1 for o in raw_offers if o.status == 'offen')
+
         offer_list = []
         for o in raw_offers:
-            if o.status not in ('offen', 'angenommen'):
+            # fixierte zeigen wir auch (als done-Card); verprellte/abgesagte nur im Slot
+            if o.status not in ('offen', 'fixiert', 'verprellt', 'abgesagt'):
                 continue
             fix_val = o.fix_aktuell if o.fix_aktuell is not None else int(o.fix_betrag)
             offer_list.append({
@@ -1330,11 +1338,16 @@ def management_sponsoring(request):
                 'max_runden': max_runden,
                 'status': o.status,
                 'can_push': (o.status == 'offen' and o.runde < max_runden
-                             and fenster_offen),
+                             and fenster_offen and offen_raw_count >= 2),
                 'can_accept': (o.status == 'offen' and fenster_offen),
+                'is_last_offen': (o.status == 'offen' and offen_raw_count == 1),
             })
 
-        offer_list.sort(key=lambda x: (x['typ'] != 'sicherheit', -x['fix_val']))
+        offer_list.sort(key=lambda x: (
+            {'offen': 0, 'fixiert': 1, 'abgesagt': 2, 'verprellt': 3}.get(x['status'], 9),
+            x['typ'] != 'sicherheit',
+            -x['fix_val'],
+        ))
 
         contract_info = None
         if contract:
@@ -1358,6 +1371,63 @@ def management_sponsoring(request):
             'has_contract': contract is not None,
         })
 
+    # ── KPI-Daten ─────────────────────────────────────────────────────────────
+    try:
+        sw = sponsorwert(club, season)
+        sponsorwert_fmt = _fmt_eur_sponsoring(sw)
+    except Exception:
+        sw = Decimal('0')
+        sponsorwert_fmt = '—'
+
+    slots_fixiert_count = len(active)
+    verprellt_count = SponsorOffer.objects.filter(
+        club=club, saison=season, status='verprellt',
+    ).count()
+    expected_vol = sum(c.fix_saison for c in active.values())
+    expected_vol_fmt = _fmt_eur_sponsoring(expected_vol) if expected_vol else '—'
+
+    # ── Szenario-Projektion ───────────────────────────────────────────────────
+    proj_worst    = expected_vol
+    proj_expected = int(expected_vol * Decimal('1.12'))
+    proj_best     = int(expected_vol * Decimal('1.28'))
+    proj_open_val = int((Decimal(5 - slots_fixiert_count) / 5) * sw) if sw else 0
+
+    # ── Präsidenten-Erwartung ─────────────────────────────────────────────────
+    try:
+        from game.models import SeasonGoal
+        president_goal = SeasonGoal.objects.filter(
+            club=club,
+            season_number=int(season) if str(season).lstrip('-').isdigit() else 0,
+        ).first()
+    except Exception:
+        president_goal = None
+
+    # ── Liga-Ticker (neueste Verträge in derselben Liga) ─────────────────────
+    liga_ticker = []
+    if club.league_id:
+        try:
+            recent = (
+                SponsorContract.objects.filter(
+                    club__league_id=club.league_id, saison=season,
+                )
+                .exclude(club=club)
+                .select_related('club', 'sponsor', 'offer')
+                .order_by('-pk')[:10]
+            )
+            for c in recent:
+                s_name = (
+                    c.sponsor.name if c.sponsor_id
+                    else (c.offer.sponsor_name if c.offer_id else '—')
+                )
+                liga_ticker.append({
+                    'club_name': c.club.name,
+                    'sponsor_name': s_name,
+                    'slot_label': SLOT_LABELS.get(c.slot, c.slot),
+                    'fix_fmt': _fmt_eur_sponsoring(c.fix_saison),
+                })
+        except Exception:
+            pass
+
     return render(request, 'game/management/sponsoring.html', {
         'club': club,
         'season': season,
@@ -1365,14 +1435,25 @@ def management_sponsoring(request):
         'slots_data': slots_data,
         'slot_labels': SLOT_LABELS,
         'active_slot': request.GET.get('slot', SLOTS[0]),
+        'sponsorwert_fmt': sponsorwert_fmt,
+        'slots_fixiert_count': slots_fixiert_count,
+        'verprellt_count': verprellt_count,
+        'expected_vol_fmt': expected_vol_fmt,
+        'proj_worst_fmt': _fmt_eur_sponsoring(proj_worst) if proj_worst else '—',
+        'proj_expected_fmt': _fmt_eur_sponsoring(proj_expected) if proj_expected else '—',
+        'proj_best_fmt': _fmt_eur_sponsoring(proj_best) if proj_best else '—',
+        'proj_open_fmt': _fmt_eur_sponsoring(proj_open_val) if proj_open_val else '—',
+        'president_goal': president_goal,
+        'liga_ticker': liga_ticker,
     })
 
 
 @login_required(login_url='/auth/login/')
 @require_POST
 def management_sponsoring_accept(request):
-    """V2: Sponsorangebot annehmen → SponsorContract anlegen."""
-    from game.models import SponsorOffer, GameSeasonState
+    """V2: Sponsorangebot annehmen → SponsorContract anlegen (SPEC §5.1)."""
+    from django.http import HttpResponseForbidden
+    from game.models import SponsorOffer, GameSeasonState, LeagueSeasonState
     from game.economy.sponsors import accept_offer_v2, SponsorAcceptError, SLOT_LABELS
 
     club = current_manager_club(user=request.user)
@@ -1382,37 +1463,43 @@ def management_sponsoring_accept(request):
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else '1'
 
+    # Phasensperre-Vorab-Check (SPEC §5.5 — 403 + Meldung)
+    if club.league_id:
+        ls = LeagueSeasonState.objects.filter(league=club.league, season=season).first()
+        if ls and ls.current_matchday >= 1:
+            return HttpResponseForbidden(
+                'Sponsoring-Fenster geschlossen — ab Spieltag 1 keine neuen Verträge.'
+            )
+
     offer_id = request.POST.get('offer_id')
     offer = SponsorOffer.objects.filter(
         pk=offer_id, club=club, saison=season,
-    ).exclude(status='legacy').first()
+    ).exclude(status__in=['legacy', 'abgesagt', 'verprellt', 'fixiert']).first()
 
     if offer is None:
-        messages.error(request, 'Sponsorangebot nicht gefunden.')
+        messages.error(request, 'Sponsorangebot nicht gefunden oder nicht mehr verfügbar.')
         return redirect('management_sponsoring')
-
-    slot = request.POST.get('slot', offer.slot)
 
     try:
         contract = accept_offer_v2(offer)
         slot_label = SLOT_LABELS.get(offer.slot, offer.slot)
         messages.success(
             request,
-            f'✓ {slot_label}-Vertrag mit {offer.sponsor_name} abgeschlossen '
-            f'({_fmt_eur_sponsoring(contract.fix_saison)} / Saison).',
+            f'✓ {slot_label} fixiert: {offer.sponsor_name} — '
+            f'{_fmt_eur_sponsoring(contract.fix_saison)} € Fixbetrag pro Saison.',
         )
     except SponsorAcceptError as exc:
         messages.error(request, str(exc))
 
-    from django.urls import reverse
-    return redirect(reverse('management_sponsoring') + f'?slot={offer.slot}')
+    return redirect(f'/management/finanzen/sponsoring/?slot={offer.slot}')
 
 
 @login_required(login_url='/auth/login/')
 @require_POST
 def management_sponsoring_push(request):
-    """V2: Verhandlungsrunde (Push) — deterministischer Risiko-Roll."""
-    from game.models import SponsorOffer, GameSeasonState
+    """V2: Verhandlungsrunde (Push) — deterministischer Risiko-Roll (SPEC §5.2)."""
+    from django.http import HttpResponseForbidden
+    from game.models import SponsorOffer, GameSeasonState, LeagueSeasonState
     from game.economy.sponsors import (
         push_offer_v2, SponsorAcceptError, SLOT_LABELS,
     )
@@ -1424,39 +1511,39 @@ def management_sponsoring_push(request):
     season_state = GameSeasonState.objects.first()
     season = str(season_state.current_season) if season_state else '1'
 
+    # Phasensperre-Vorab-Check (SPEC §5.5 — 403 + Meldung)
+    if club.league_id:
+        ls = LeagueSeasonState.objects.filter(league=club.league, season=season).first()
+        if ls and ls.current_matchday >= 1:
+            return HttpResponseForbidden(
+                'Sponsoring-Fenster geschlossen — ab Spieltag 1 keine Verhandlungen mehr.'
+            )
+
     offer_id = request.POST.get('offer_id')
     offer = SponsorOffer.objects.filter(
-        pk=offer_id, club=club, saison=season,
-    ).exclude(status='legacy').first()
+        pk=offer_id, club=club, saison=season, status='offen',
+    ).first()
 
     if offer is None:
-        messages.error(request, 'Sponsorangebot nicht gefunden.')
+        messages.error(request, 'Sponsorangebot nicht gefunden oder nicht verhandelbar.')
         return redirect('management_sponsoring')
 
     try:
         r = push_offer_v2(offer)
         slot_label = SLOT_LABELS.get(offer.slot, offer.slot)
-        if r.get('abgesagt'):
+        if r.get('verprellt'):
             messages.error(
                 request,
                 f'⚠ {slot_label}: {offer.sponsor_name} hat das Angebot '
-                f'nach der Verhandlung zurückgezogen.',
+                f'zurückgezogen — Sponsor verprellt.',
             )
-        elif r.get('gewinn'):
+        else:
             messages.success(
                 request,
                 f'✓ {slot_label}: Verhandlung erfolgreich — '
                 f'{offer.sponsor_name} bietet jetzt '
                 f'{_fmt_eur_sponsoring(r["neu_fix"])} / Saison '
                 f'(+{_fmt_eur_sponsoring(r["delta"])}).',
-            )
-        else:
-            messages.warning(
-                request,
-                f'↓ {slot_label}: Verhandlung verschlechtert — '
-                f'{offer.sponsor_name} bietet jetzt nur noch '
-                f'{_fmt_eur_sponsoring(r["neu_fix"])} / Saison '
-                f'(−{_fmt_eur_sponsoring(r["delta"])}).',
             )
     except SponsorAcceptError as exc:
         messages.error(request, str(exc))

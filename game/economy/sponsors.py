@@ -544,11 +544,12 @@ class SponsorAcceptError(Exception):
     """Ungültige Annahme (Angebot abgesagt / Slot belegt / Saison gesperrt)."""
 
 
-def accept_offer_v2(offer, *, auto: bool = False) -> 'SponsorContract':
+def accept_offer_v2(offer, *, auto: bool = False,
+                     fix_saison_override: int | None = None) -> 'SponsorContract':
     """V2: Nimmt ein SponsorOffer an — erstellt SponsorContract für den Slot.
 
-    Sperrlogik: Ist das erste Spieltag der Liga bereits simuliert, wird
-    das Fenster als gesperrt betrachtet. Dann nur noch auto=True möglich.
+    fix_saison_override: Wenn gesetzt, wird dieser Wert statt fix_aktuell als
+    Vertragswert verwendet (SPEC §5.4 Auto-Wahl: Multi-Offer → fix_start).
 
     Raises SponsorAcceptError wenn:
       - offer.status != 'offen'
@@ -575,11 +576,15 @@ def accept_offer_v2(offer, *, auto: bool = False) -> 'SponsorContract':
         if not auto:
             _check_transfer_window(locked.club, locked.saison)
 
-        locked.status = 'angenommen'
+        locked.status = 'fixiert'
         locked.angenommen_at = timezone.now()
         locked.save(update_fields=['status', 'angenommen_at'])
 
-        fix_saison = locked.fix_aktuell if locked.fix_aktuell is not None else int(locked.fix_betrag)
+        fix_saison = (
+            fix_saison_override
+            if fix_saison_override is not None
+            else (locked.fix_aktuell if locked.fix_aktuell is not None else int(locked.fix_betrag))
+        )
         contract = SponsorContract.objects.create(
             saison=locked.saison,
             club=locked.club,
@@ -590,7 +595,22 @@ def accept_offer_v2(offer, *, auto: bool = False) -> 'SponsorContract':
             auto=auto,
         )
 
-    offer.status = 'angenommen'
+        # Alle anderen offenen Angebote im selben Slot → abgesagt
+        from game.models import SponsorOffer as _SO
+        _SO.objects.filter(
+            club=locked.club, saison=locked.saison, slot=locked.slot, status='offen',
+        ).exclude(pk=locked.pk).update(status='abgesagt')
+
+        # Liga-Exklusivität (SPONSOR_EXCLUSIVITY="liga"): first-come-first-served
+        if locked.sponsor_id and locked.club.league_id:
+            _SO.objects.filter(
+                sponsor_id=locked.sponsor_id,
+                saison=locked.saison,
+                club__league_id=locked.club.league_id,
+                status='offen',
+            ).exclude(club_id=locked.club_id).update(status='abgesagt')
+
+    offer.status = 'fixiert'
     offer.angenommen_at = locked.angenommen_at
     return contract
 
@@ -604,18 +624,24 @@ def _check_transfer_window(club, saison: str):
     state = LeagueSeasonState.objects.filter(
         league=club.league, season=saison,
     ).first()
-    if state and state.current_matchday > 1:
+    if state and state.current_matchday >= 1:
         raise SponsorAcceptError(
             'Sponsoring-Fenster ist geschlossen — '
-            'nach Spieltag 1 können keine neuen Verträge mehr abgeschlossen werden.'
+            'ab Spieltag 1 können keine neuen Verträge mehr abgeschlossen werden.'
         )
 
 
 def push_offer_v2(offer) -> dict:
-    """V2: Verhandlungsrunde — deterministischer Risiko-Roll.
+    """V2: Verhandlungsrunde — deterministischer Risiko-Roll (SPEC §5.2).
+
+    Phasensperre: wird wie accept abgelehnt wenn Saison bereits läuft (matchday>=1).
+    Mindestens 2 aktive (offen) Angebote im Slot erforderlich.
+    Risiko = SPONSOR_PUSH_RISKS[runde] × riskmult(RISK_MODE) → Wahrscheinlichkeit
+    für „verprellt" (Angebot zurückgezogen).
+    Bei Erfolg: fix_aktuell *= (1 + gain%), mult *= (1 + gain%).
 
     Gibt zurück:
-      {'gewinn': bool, 'neu_fix': int, 'delta': int, 'abgesagt': bool,
+      {'gewinn': bool, 'neu_fix': int, 'delta': int, 'verprellt': bool,
        'runde': int, 'max_runden': int}
     """
     from game.models import SponsorOffer
@@ -624,19 +650,30 @@ def push_offer_v2(offer) -> dict:
 
     try:
         max_runden = int(get_param('SPONSOR_PUSH_MAX_ROUNDS', saison))
-        gains_list = list(get_param('SPONSOR_PUSH_GAINS', saison))
-        risks_list = list(get_param('SPONSOR_PUSH_RISKS', saison))
-        risk_mode = str(get_param('SPONSOR_RISK_MODE', saison))
+        gains_raw  = list(get_param('SPONSOR_PUSH_GAINS', saison))
+        risks_raw  = list(get_param('SPONSOR_PUSH_RISKS', saison))
+        risk_mode  = str(get_param('SPONSOR_RISK_MODE', saison))
     except Exception:
-        max_runden, gains_list, risks_list, risk_mode = 3, [0.05, 0.03, 0.02], [0.08, 0.12, 0.20], 'malus'
+        max_runden, gains_raw, risks_raw, risk_mode = 3, [7, 10, 12], [18, 38, 62], 'Standard'
+
+    def _as_fraction(v) -> float:
+        """Normalisiert Prozent-Ganzzahl (≥1) oder Dezimalwert (<1) auf [0,1]."""
+        f = float(v)
+        return f / 100.0 if f >= 1.0 else f
+
+    RISK_MULTS = {'Entschärft': 0.6, 'Standard': 1.0, 'Hardcore': 1.4}
+    riskmult = RISK_MULTS.get(risk_mode, 1.0)
+
+    _check_transfer_window(offer.club, saison)
 
     with transaction.atomic():
         locked = SponsorOffer.objects.select_for_update().get(pk=offer.pk)
 
         if locked.status != 'offen':
             return {
-                'gewinn': False, 'neu_fix': locked.fix_aktuell or int(locked.fix_betrag),
-                'delta': 0, 'abgesagt': locked.status == 'abgesagt',
+                'gewinn': False,
+                'neu_fix': locked.fix_aktuell if locked.fix_aktuell is not None else int(locked.fix_betrag),
+                'delta': 0, 'verprellt': locked.status == 'verprellt',
                 'runde': locked.runde, 'max_runden': max_runden,
             }
 
@@ -645,49 +682,56 @@ def push_offer_v2(offer) -> dict:
                 f'Maximale Verhandlungsrunden ({max_runden}) erreicht.'
             )
 
-        fix_start = locked.fix_start if locked.fix_start is not None else int(locked.fix_betrag)
+        aktive_count = SponsorOffer.objects.filter(
+            club=locked.club, saison=locked.saison, slot=locked.slot, status='offen',
+        ).count()
+        if aktive_count < 2:
+            raise SponsorAcceptError(
+                'Das letzte verbliebene Angebot ist nicht verhandelbar (Auto-Annahme-Schutz).'
+            )
+
+        fix_start   = locked.fix_start   if locked.fix_start   is not None else int(locked.fix_betrag)
         fix_aktuell = locked.fix_aktuell if locked.fix_aktuell is not None else fix_start
         runde = locked.runde
 
         seed_hex = hashlib.sha256(f'push:{offer.pk}:{runde}'.encode()).hexdigest()
         roll = int(seed_hex[:8], 16) / 0xFFFFFFFF
 
-        idx = min(runde, len(gains_list) - 1)
-        gain_ratio = float(gains_list[idx])
-        risk_ratio = float(risks_list[idx])
+        idx = min(runde, len(gains_raw) - 1)
+        gain_frac = _as_fraction(gains_raw[idx])
+        risk_frac = min(0.95, _as_fraction(risks_raw[idx]) * riskmult)
 
-        gewinn = roll < 0.50
-        abgesagt = False
-        delta = 0
+        verprellt = (roll < risk_frac)
 
-        if gewinn:
-            delta = max(1, int(fix_start * gain_ratio))
-            neu_fix = fix_aktuell + delta
-        else:
-            if risk_mode == 'verlust':
-                locked.status = 'abgesagt'
-                locked.save(update_fields=['status', 'runde'])
-                offer.status = 'abgesagt'
-                offer.runde = locked.runde
-                return {
-                    'gewinn': False, 'neu_fix': fix_aktuell,
-                    'delta': 0, 'abgesagt': True,
-                    'runde': locked.runde, 'max_runden': max_runden,
-                }
-            else:
-                delta = -max(1, int(fix_start * risk_ratio))
-                neu_fix = max(1, fix_aktuell + delta)
+        if verprellt:
+            locked.status = 'verprellt'
+            locked.runde  = runde
+            locked.save(update_fields=['status', 'runde'])
+            offer.status = 'verprellt'
+            offer.runde  = runde
+            return {
+                'gewinn': False, 'neu_fix': fix_aktuell,
+                'delta': 0, 'verprellt': True,
+                'runde': runde, 'max_runden': max_runden,
+            }
 
-        locked.fix_start = locked.fix_start or fix_start
+        delta   = max(10_000, round(fix_aktuell * gain_frac / 10_000) * 10_000)
+        neu_fix = fix_aktuell + delta
+        from decimal import Decimal as _D
+        neu_mult = (_D(str(locked.mult or 1)) * _D(str(1 + gain_frac))).quantize(_D('0.0001'))
+
+        locked.fix_start   = locked.fix_start or fix_start
         locked.fix_aktuell = neu_fix
-        locked.runde = runde + 1
-        locked.save(update_fields=['fix_start', 'fix_aktuell', 'runde'])
+        locked.mult        = neu_mult
+        locked.runde       = runde + 1
+        locked.save(update_fields=['fix_start', 'fix_aktuell', 'mult', 'runde'])
 
     offer.fix_aktuell = neu_fix
-    offer.runde = runde + 1
+    offer.mult        = neu_mult
+    offer.runde       = runde + 1
     return {
-        'gewinn': gewinn, 'neu_fix': neu_fix, 'delta': abs(delta),
-        'abgesagt': abgesagt, 'runde': runde + 1, 'max_runden': max_runden,
+        'gewinn': True, 'neu_fix': neu_fix, 'delta': delta,
+        'verprellt': False, 'runde': runde + 1, 'max_runden': max_runden,
     }
 
 
@@ -730,14 +774,23 @@ def finalize_contracts_for_club(club, saison: str, *,
         if slot in belegt:
             continue
         angebote = offers_by_slot.get(slot, [])
-        sicherheit = next(
-            (o for o in angebote if o.typ == 'sicherheit' and o.status == 'offen'),
-            next((o for o in angebote if o.status == 'offen'), None),
-        )
-        if sicherheit is None:
+        offene = [o for o in angebote if o.status == 'offen']
+        if not offene:
             continue
+
+        # SPEC §5.4: sicherheit bevorzugt, sonst höchster Fix
+        picked = next(
+            (o for o in offene if o.typ == 'sicherheit'),
+            max(offene, key=lambda o: o.fix_aktuell or o.fix_start or 0),
+        )
+
+        # Wenn mehrere aktiv: fix_start (Verhandlungsgewinne verfallen per SPEC §5.4)
+        override = None
+        if len(offene) > 1:
+            override = picked.fix_start if picked.fix_start is not None else int(picked.fix_betrag)
+
         try:
-            c = accept_offer_v2(sicherheit, auto=True)
+            c = accept_offer_v2(picked, auto=True, fix_saison_override=override)
             new_contracts.append(c)
         except (SponsorAcceptError, IntegrityError):
             pass
@@ -758,6 +811,24 @@ def _variable(offer) -> tuple[str | None, Decimal]:
     einheit = v.get('einheit')
     try:
         betrag = Decimal(str(v.get('betrag', '0')))
+    except Exception:
+        betrag = Decimal('0')
+    return einheit, betrag
+
+
+def _variable_v2(offer) -> tuple[str | None, Decimal]:
+    """V2: Betrag pro Event aus offer.var_rate × offer.mult (SPEC §6)."""
+    typ_to_einheit = {
+        'sieggeld': EINHEIT_SIEG,
+        'torgeld':  'tor',
+        'zuschauer': EINHEIT_BESUCHER,
+        'zieljaeger': EINHEIT_ZIEL,
+    }
+    einheit = typ_to_einheit.get(offer.typ) if offer else None
+    if einheit is None:
+        return None, Decimal('0')
+    try:
+        betrag = Decimal(str(offer.var_rate or 0)) * Decimal(str(offer.mult or 1))
     except Exception:
         betrag = Decimal('0')
     return einheit, betrag
@@ -867,7 +938,7 @@ def sponsor_fix_rate_v2(contract, saison: str) -> Decimal:
 def book_sieg_bonus_v2(club, contract, saison: str, *, beschreibung: str,
                         referenz_typ: str, referenz_id: int | None,
                         spieltag: int | None = None):
-    """V2: Sieggeld aus SponsorContract → offer.variable_json."""
+    """V2: Sieggeld aus SponsorContract → var_rate × mult (SPEC §6)."""
     from game.models import FinanceTransaction
     from .booking import book
 
@@ -875,7 +946,7 @@ def book_sieg_bonus_v2(club, contract, saison: str, *, beschreibung: str,
     if offer is None or offer.typ != 'sieggeld':
         return None
 
-    einheit, betrag = _variable(offer)
+    einheit, betrag = _variable_v2(offer)
     if einheit != EINHEIT_SIEG or betrag <= 0:
         return None
 
@@ -896,14 +967,14 @@ def book_sieg_bonus_v2(club, contract, saison: str, *, beschreibung: str,
 
 def book_zuschauer_bonus_v2(club, contract, attendance: int, saison: str,
                              spieltag: int | None = None):
-    """V2: Zuschauer-Bonus aus SponsorContract → offer.variable_json."""
+    """V2: Zuschauer-Bonus aus SponsorContract → var_rate × mult (SPEC §6)."""
     from .booking import book
 
     offer = contract.offer
     if offer is None or offer.typ != 'zuschauer':
         return None
 
-    einheit, betrag = _variable(offer)
+    einheit, betrag = _variable_v2(offer)
     if einheit != EINHEIT_BESUCHER or betrag <= 0 or attendance <= 0:
         return None
     summe = (betrag * attendance).quantize(Decimal('0.01'))
@@ -924,7 +995,7 @@ def book_zuschauer_bonus_v2(club, contract, attendance: int, saison: str,
 
 
 def book_zieljaeger_bonus_v2(club, saison: str) -> list:
-    """V2: Zielbonus aller aktiven Zieljäger-Contracts bei Saisonende."""
+    """V2: Zielbonus aller aktiven Zieljäger-Contracts bei Saisonende (SPEC §6)."""
     from game.models import FinanceTransaction, SeasonGoal, SponsorContract
     from .booking import book
 
@@ -947,7 +1018,7 @@ def book_zieljaeger_bonus_v2(club, saison: str) -> list:
         offer = contract.offer
         if offer is None or offer.typ != 'zieljaeger':
             continue
-        einheit, betrag = _variable(offer)
+        einheit, betrag = _variable_v2(offer)
         if einheit != EINHEIT_ZIEL or betrag <= 0:
             continue
         if FinanceTransaction.objects.filter(
@@ -957,7 +1028,7 @@ def book_zieljaeger_bonus_v2(club, saison: str) -> list:
             continue
 
         name = contract.sponsor.name if contract.sponsor_id else offer.sponsor_name
-        ziel_label = (offer.variable_json or {}).get('ziel_label', 'Saisonziel')
+        ziel_label = offer.var_ziel or (offer.variable_json or {}).get('ziel_label', 'Saisonziel')
         tx = book(
             club, 'SPONSOR_VARIABEL', betrag,
             beschreibung=f'{name}/{SLOT_LABELS.get(contract.slot,"")}: '
@@ -969,6 +1040,16 @@ def book_zieljaeger_bonus_v2(club, saison: str) -> list:
         booked.append(tx)
 
     return booked
+
+
+def expire_contracts_v2(saison: str) -> int:
+    """Setzt alle SponsorContracts der Saison auf abgelaufen=True (SPEC §9 sponsor_season_close)."""
+    from game.models import SponsorContract
+
+    count = SponsorContract.objects.filter(
+        saison=str(saison), abgelaufen=False,
+    ).update(abgelaufen=True)
+    return count
 
 
 def book_sponsor_matchday_v2(club, saison: str, matchday: int,

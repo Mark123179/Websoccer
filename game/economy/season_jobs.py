@@ -152,6 +152,14 @@ def finance_season_close(saison: str) -> dict:
         except Exception as exc:
             report['errors'].append(f'Zielbonus V2 {club.name}: {exc}')
 
+    # ── 3b. Sponsor-Contracts auslaufen lassen (SPEC §9 sponsor_season_close) ──
+    try:
+        from .sponsors import expire_contracts_v2
+        expired = expire_contracts_v2(saison)
+        report['sponsor_contracts_abgelaufen'] = expired
+    except Exception as exc:
+        report['errors'].append(f'Sponsor-Contracts ablaufen lassen: {exc}')
+
     # ── 4./5. Nur beim endgültigen Abschluss ─────────────────────────────────
     if alle_komplett:
         try:
