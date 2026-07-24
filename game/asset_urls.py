@@ -12,7 +12,17 @@ from django.conf import settings
 
 
 def _resolve_assets_base() -> str:
-    if getattr(settings, 'ASSETS_ROOT', None):
+    """Unterscheidet Produktiv-Server (Hetzner) von Replit-Dev.
+
+    Produktiv: ASSETS_ROOT = /var/www/assets (außerhalb Projekt)
+    Replit:    ASSETS_ROOT = <BASE_DIR>/game/static/assets (im Projekt)
+    """
+    assets_root = getattr(settings, 'ASSETS_ROOT', None)
+    # Replit-Dev erkennen: ASSETS_ROOT liegt im Projektverzeichnis
+    if assets_root and str(assets_root).startswith(str(settings.BASE_DIR)):
+        return '/static/assets/'
+    # Produktiv-Server: ASSETS_ROOT ist gesetzt und außerhalb Projekt
+    if assets_root:
         return 'https://playwebsoccer.de/assets/'
     return '/static/assets/'
 
