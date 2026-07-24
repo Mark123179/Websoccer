@@ -493,6 +493,33 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
     # SPONSOR_ZIEL_PROB ist nach Migration 0149 ein dict (Tier-Map) —
     # kein Decimal-Cast hier; _ziel_wkt_from_goal_tier() liest es per Club.
 
+    # ── Exclusivity: Sponsor-Slugs die in der Liga+Saison bereits fixiert sind ausschließen ──
+    # SPEC §5.x: ein Sponsor kann nicht in mehreren Clubs der gleichen Liga aktiv sein.
+    _league_used_slugs: set[str] = set()
+    try:
+        from game.models import LeagueStandings, SponsorContract
+        league_club_ids = set(
+            LeagueStandings.objects.filter(
+                season=saison,
+            ).exclude(club=club).values_list('club_id', flat=True)
+        )
+        if league_club_ids:
+            contracted_sponsor_ids = set(
+                SponsorContract.objects.filter(
+                    club_id__in=league_club_ids, saison=saison, abgelaufen=False,
+                ).exclude(offer__isnull=True)
+                .values_list('offer__sponsor_id', flat=True)
+            )
+            contracted_sponsor_ids.discard(None)
+            if contracted_sponsor_ids:
+                from game.models import Sponsor
+                _league_used_slugs = set(
+                    Sponsor.objects.filter(pk__in=contracted_sponsor_ids)
+                    .values_list('slug', flat=True)
+                )
+    except Exception:
+        pass
+
     result = {}
     for slot in SLOTS:
         existing = list(
@@ -537,7 +564,8 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
         except Exception:
             pass
 
-        used_slugs: set[str] = set()
+        # used_slugs startet mit liga-weit bereits belegten Sponsoren (Exclusivity)
+        used_slugs: set[str] = set(_league_used_slugs)
         new_offers = []
         for typ in typen:
             sponsor_id, sp_name = _pick_sponsor(slot, saison, rng, used_slugs)

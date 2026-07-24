@@ -1251,6 +1251,11 @@ def _sponsoring_offer_var_text(offer) -> str:
             return f'+ {val:.4f} € je Heimspiel-Besucher'.replace('.', ',', 1)
         except Exception:
             return '+ X € je Besucher'
+    if typ == 'torgeld':
+        try:
+            return f'+ {float(v.get("betrag", 0)):,.2f} € je Tor'.replace(',', '.')
+        except Exception:
+            return '+ X € je Tor'
     if typ == 'zieljaeger':
         ziel = v.get('ziel_label', 'Saisonziel')
         try:
@@ -1345,14 +1350,15 @@ def management_sponsoring(request):
                 pass
 
             # Risk-Bar + Push-Gain für die NÄCHSTE Verhandlungsrunde
+            # SPONSOR_PUSH_GAINS/_RISKS sind als Fractions (0.05 = 5%) gespeichert.
             _risk_pct = None
             _push_gain_pct = None
             if o.status == 'offen' and o.runde < max_runden:
                 _idx = o.runde
                 if _idx < len(push_risks):
-                    _risk_pct = round(min(95, push_risks[_idx] * _riskmult))
+                    _risk_pct = round(min(95, push_risks[_idx] * _riskmult * 100))
                 if _idx < len(push_gains):
-                    _push_gain_pct = push_gains[_idx]
+                    _push_gain_pct = round(push_gains[_idx] * 100, 1)
 
             # Delta-Zeile: Ausgangswert → aktueller Wert nach Verhandlung(en)
             _delta_fix_pct = None
