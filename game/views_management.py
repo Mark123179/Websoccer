@@ -1442,7 +1442,8 @@ def management_job_offers(request):
             flag_code = entry.get('code')
             _aid = entry.get('asset_id', '')
             if _aid:
-                flag_asset_path = f'game/images/flags/{_aid}.png'
+                from game.asset_urls import flag_url
+                flag_asset_path = flag_url(_aid)
         except Exception:
             pass
 
@@ -1481,8 +1482,9 @@ def management_job_offers(request):
         cup_parts = list(c.cup_participations.all())
         club_country = c.league.country if c.league else ''
 
+        from game.competition_assets import competition_logo_static_path
         national_cups = [
-            {'name': cs.competition.name, 'logo': cs.competition.logo_static_path or ''}
+            {'name': cs.competition.name, 'logo': competition_logo_static_path(cs.competition)}
             for cs in cup_parts
             if cs.competition.competition_type == 'cup'
             and cs.competition.country == club_country
@@ -1495,7 +1497,7 @@ def management_job_offers(request):
             n = cs.competition.name.lower()
             if 'champions' in n or 'europa' in n or 'conference' in n:
                 intl_comp_name = cs.competition.name
-                intl_comp_logo = cs.competition.logo_static_path or ''
+                intl_comp_logo = competition_logo_static_path(cs.competition)
                 break
 
         _tp = _top_player_map.get(c.pk)
@@ -1511,7 +1513,7 @@ def management_job_offers(request):
             'situation_label':   situation_label,
             'situation_cls':     situation_cls,
             'league_name':       c.league.name if c.league else '—',
-            'league_logo':       c.league.logo_static_path if c.league else '',
+            'league_logo':       c.league.logo_url if c.league else '',
             'national_cups':     national_cups,
             'national_cup_names': [x['name'] for x in national_cups],
             'intl_comp_name':    intl_comp_name,
