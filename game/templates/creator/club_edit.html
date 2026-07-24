@@ -604,6 +604,7 @@
         </p>
         <form method="post" action="{% url 'creator_sponsoring_slot_reset' club_id=club.id %}" class="creator-inline-form">
           {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
           <div class="creator-inline-fields">
             <div class="creator-field creator-field-sm">
               <label>Slot</label>
@@ -619,6 +620,54 @@
             <div class="creator-field creator-field-action">
               <label>&nbsp;</label>
               <button type="submit" class="creator-btn creator-btn-warning" onclick="return confirm('Slot-Reset: V2-Contracts + Offers löschen und neu würfeln?')">↺ Reset</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── V2 Creator-Controls: Risk-Mode ────────────────────────────── -->
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">V2 Risiko-Modus (SPONSOR_RISK_MODE)</h3>
+        <p style="color:#8899aa;font-size:.85rem;margin-bottom:.75rem">
+          Steuert, wie stark leistungsabhängige Sponsoring-Boni ausfallen können.
+        </p>
+        <form method="post" action="{% url 'creator_sponsoring_risk_mode' %}" class="creator-inline-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <div class="creator-inline-fields">
+            <div class="creator-field creator-field-sm">
+              <label>Modus</label>
+              <select name="risk_mode">
+                <option value="Entschärft">Entschärft</option>
+                <option value="Standard" selected>Standard</option>
+                <option value="Hardcore">Hardcore</option>
+              </select>
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-primary">Setzen</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── V2 Creator-Controls: Sponsor deaktivieren ─────────────────── -->
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">Sponsor-Pool deaktivieren</h3>
+        <p style="color:#8899aa;font-size:.85rem;margin-bottom:.75rem">
+          Deaktiviert einen Sponsor im Pool — greift ab der nächsten Angebotsrunde.
+        </p>
+        <form method="post" action="{% url 'creator_sponsoring_deactivate' %}" class="creator-inline-form">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <div class="creator-inline-fields">
+            <div class="creator-field creator-field-sm">
+              <label>Sponsor-ID</label>
+              <input type="number" name="sponsor_id" placeholder="DB-PK" min="1">
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-danger" onclick="return confirm('Sponsor deaktivieren?')">Deaktivieren</button>
             </div>
           </div>
         </form>

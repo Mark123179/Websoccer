@@ -365,16 +365,16 @@ def _pick_sponsor(slot: str, saison: str, rng: random.Random,
     pool = list(
         Sponsor.objects.filter(bereich=bereich, aktiv=True)
         .exclude(slug__in=used_slugs)
-        .values_list('id', 'slug', 'name')
+        .values_list('id', 'slug', 'name', 'display_name')
     )
     if not pool:
         pool = list(
             Sponsor.objects.filter(bereich=bereich, aktiv=True)
-            .values_list('id', 'slug', 'name')
+            .values_list('id', 'slug', 'name', 'display_name')
         )
     if pool:
-        pk, slug, name = rng.choice(pool)
-        return pk, name
+        pk, slug, name, display_name = rng.choice(pool)
+        return pk, (display_name or name)
     return None, None
 
 
@@ -525,9 +525,12 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
 
     result = {}
     for slot in SLOTS:
+        # Only treat truly active/accepted V2 rows as "already generated"
+        # (status='abgesagt' from V1 migration must NOT block fresh V2 generation)
         existing = list(
             SponsorOffer.objects.filter(
                 club=club, saison=saison, slot=slot,
+                status__in=['offen', 'fixiert'],
             ).exclude(status='legacy').select_related('sponsor')
         )
         if existing:
