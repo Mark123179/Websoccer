@@ -161,15 +161,6 @@ def finance_season_close(saison: str) -> dict:
 
     # ── 4./5. Nur beim endgültigen Abschluss ─────────────────────────────────
     if alle_komplett:
-        # ── 3b. Sponsor-Contracts auslaufen lassen (SPEC §9 sponsor_season_close) ──
-        # ACHTUNG: erst hier, wenn ALLE Ligen fertig — Partial-Rerun würde sonst
-        # Payouts für laufende Ligen vorzeitig stoppen.
-        try:
-            from .sponsors import expire_contracts_v2
-            expired = expire_contracts_v2(saison)
-            report['sponsor_contracts_abgelaufen'] = expired
-        except Exception as exc:
-            report['errors'].append(f'Sponsor-Contracts ablaufen lassen: {exc}')
         try:
             report['koeffizienten'] = update_koeffizienten(saison)
         except Exception as exc:
@@ -185,6 +176,22 @@ def finance_season_close(saison: str) -> dict:
                 'für einen Wiederholungslauf.'
             )
         else:
+            # ── Sponsor-Contracts erst ablaufen lassen wenn Abschluss
+            # fehlerfrei war — sonst sind Contracts abgelaufen, aber
+            # idempotente Payouts können im Rerun nicht mehr buchen.
+            try:
+                from .sponsors import expire_contracts_v2
+                expired = expire_contracts_v2(saison)
+                report['sponsor_contracts_abgelaufen'] = expired
+            except Exception as exc:
+                report['errors'].append(f'Sponsor-Contracts ablaufen lassen: {exc}')
+                logger.exception('Sponsor-Contracts ablaufen lassen %s fehlgeschlagen', saison)
+                report['hinweis'] = (
+                    'Abschluss mit Fehlern — closed_at bleibt offen '
+                    'für einen Wiederholungslauf.'
+                )
+                return report
+
             state.closed_at = timezone.now()
             state.report_json = report
             state.save(update_fields=['closed_at', 'report_json'])
