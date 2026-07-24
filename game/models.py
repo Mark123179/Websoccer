@@ -6320,6 +6320,9 @@ class Sponsor(models.Model):
         db_index=True, verbose_name='Bereich',
     )
     branche = models.CharField(max_length=60, blank=True, verbose_name='Branche')
+    domain = models.CharField(
+        max_length=120, blank=True, verbose_name='Domain (z.B. fritz-kola.de)',
+    )
     aktiv = models.BooleanField(default=True, db_index=True, verbose_name='Aktiv')
     created_at = models.DateTimeField(auto_now_add=True)
 

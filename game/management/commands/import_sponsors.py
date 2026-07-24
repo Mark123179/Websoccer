@@ -106,27 +106,22 @@ class Command(BaseCommand):
                 continue
 
             try:
-                obj, was_created = Sponsor.objects.get_or_create(
+                domain = row.get('domain', '')
+                obj, was_created = Sponsor.objects.update_or_create(
                     slug=slug,
                     defaults={
                         'name': name,
                         'display_name': display_name,
                         'bereich': bereich,
                         'branche': branche,
+                        'domain': domain,
                         'aktiv': True,
                     },
                 )
                 if was_created:
                     created += 1
-                elif do_update:
-                    obj.name = name
-                    obj.display_name = display_name
-                    obj.bereich = bereich
-                    obj.branche = branche
-                    obj.save(update_fields=['name', 'display_name', 'bereich', 'branche'])
-                    updated += 1
                 else:
-                    skipped += 1
+                    updated += 1
             except Exception as exc:
                 errors.append(f'{slug}: {exc}')
 
@@ -214,10 +209,12 @@ def _parse_csv(path: str) -> list[dict]:
             slug = slugify(raw_name)
             if not slug:
                 continue
+            domain = row[2].strip() if len(row) > 2 else ''
             rows.append({
                 'slug': slug,
                 'name': raw_name,     # Rohwert aus CSV (Basis für display_name-Fallback)
                 'bereich': bereich,
                 'branche': '',        # Nicht im neuen CSV-Format; kann per sponsor_names.json ergänzt werden
+                'domain': domain,
             })
     return rows

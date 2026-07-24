@@ -428,6 +428,13 @@ def run_club_finance(club, league, saison: str, matchday: int,
                             )
                             if zs_tx is not None:
                                 result['sponsor_zuschauer'] = zs_tx.betrag
+                        # V2-Pfad: Zuschauerbonus nach Tickets (Attendance jetzt bekannt)
+                        if entry is not None and entry.attendance > 0:
+                            from .sponsors import book_v2_zuschauer_after_tickets
+                            book_v2_zuschauer_after_tickets(
+                                club, saison, matchday,
+                                entry.attendance, result,
+                            )
     else:
         # Re-run: Zuschauerzahl aus DB rekonstruieren (für STADION-Schritt).
         zuschauer = _get_zuschauer_from_db(club, saison, matchday)

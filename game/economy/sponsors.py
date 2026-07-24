@@ -895,10 +895,16 @@ def _variable(offer) -> tuple[str | None, Decimal]:
 
 
 def _variable_v2(offer) -> tuple[str | None, Decimal]:
-    """V2: Betrag pro Event aus offer.var_rate × offer.mult (SPEC §6)."""
+    """V2: Euro-Betrag pro Event aus variable_json['betrag'] × mult (SPEC §6).
+
+    Quelle der Wahrheit: variable_json['betrag'] enthält den Euro-Betrag
+    pro Ereignis (als String), der beim Angebot generiert wurde.
+    var_rate ist Cent-/Promille-intern und wird NICHT direkt für Auszahlungen
+    verwendet (um 100x / 10000x Überzahlung zu vermeiden).
+    """
     typ_to_einheit = {
-        'sieggeld': EINHEIT_SIEG,
-        'torgeld':  'tor',
+        'sieggeld':  EINHEIT_SIEG,
+        'torgeld':   EINHEIT_TOR,
         'zuschauer': EINHEIT_BESUCHER,
         'zieljaeger': EINHEIT_ZIEL,
     }
@@ -906,7 +912,14 @@ def _variable_v2(offer) -> tuple[str | None, Decimal]:
     if einheit is None:
         return None, Decimal('0')
     try:
-        betrag = Decimal(str(offer.var_rate or 0)) * Decimal(str(offer.mult or 1))
+        vj = offer.variable_json or {}
+        betrag_str = vj.get('betrag')
+        if betrag_str:
+            betrag = Decimal(str(betrag_str)) * Decimal(str(offer.mult or 1))
+        else:
+            # Fallback auf var_rate mit Skalierung (Cent → Euro)
+            div = Decimal('10000') if einheit == EINHEIT_BESUCHER else Decimal('100')
+            betrag = Decimal(str(offer.var_rate or 0)) / div * Decimal(str(offer.mult or 1))
     except Exception:
         betrag = Decimal('0')
     return einheit, betrag
@@ -1272,18 +1285,30 @@ def book_sponsor_matchday_v2(club, saison: str, matchday: int,
                     result.get('sponsor_torgeld', Decimal('0')) + tor_tx.betrag
                 )
 
-        # ── Zuschauerbonus (nur Heimspiel) ───────────────────────────────────
-        if is_home and attendance > 0:
-            zus_tx = book_zuschauer_bonus_v2(
-                club, contract, attendance, saison, spieltag=matchday,
-            )
-            if zus_tx is not None:
-                booked.append(zus_tx)
-                result['sponsor_zuschauer'] = (
-                    result.get('sponsor_zuschauer', Decimal('0')) + zus_tx.betrag
-                )
+        # ── Zuschauerbonus: wird NACH _book_tickets in matchday_run.py gebucht ──
+        # (Attendance existiert im Sponsor-Schritt noch nicht; Buchung erfolgt
+        # in Schritt 3 via book_v2_zuschauer_after_tickets())
 
     return booked
+
+
+def book_v2_zuschauer_after_tickets(club, saison: str, matchday: int,
+                                     attendance: int, result: dict) -> None:
+    """V2-Zuschauerbonus für alle aktiven Contracts — nach Ticket-Buchung aufrufen.
+
+    Wird in matchday_run.py Schritt 3 (nach _book_tickets) aufgerufen,
+    wenn Attendance aus MatchdayRevenue bekannt ist.
+    """
+    saison = str(saison)
+    contracts = get_active_contracts(club, saison)
+    for contract in contracts:
+        zus_tx = book_zuschauer_bonus_v2(
+            club, contract, attendance, saison, spieltag=matchday,
+        )
+        if zus_tx is not None:
+            result['sponsor_zuschauer'] = (
+                result.get('sponsor_zuschauer', Decimal('0')) + zus_tx.betrag
+            )
 
 
 def _club_won_fixture(club, fixture) -> bool:

@@ -47,7 +47,7 @@ def finance_season_open(saison: str) -> dict:
     """Saisonstart-Job (idempotent via SeasonFinanceState.opened_at)."""
     from game.models import Club, SeasonFinanceState
     from .snapshot import ensure_season_snapshot
-    from .sponsors import generate_offers
+    from .sponsors import generate_offers, generate_offers_v2
     from .tv import ensure_tv_pots
 
     saison = str(saison)
@@ -62,10 +62,17 @@ def finance_season_open(saison: str) -> dict:
     clubs = Club.objects.filter(league__isnull=False).select_related('league')
     for club in clubs:
         try:
-            offers_created += len(generate_offers(club, saison))
+            # V2-Pfad: generiert Slot-basierte Angebote (5 Slots, je N Offers)
+            result_v2 = generate_offers_v2(club, saison)
+            offers_created += sum(len(v) for v in result_v2.values())
         except Exception as exc:
             offer_errors.append(f'{club.name}: {exc}')
-            logger.exception('Sponsorangebote für %s fehlgeschlagen', club)
+            logger.exception('Sponsorangebote V2 für %s fehlgeschlagen', club)
+            # V1-Fallback bei Fehler (z.B. Liga-/Konfigurationsproblem)
+            try:
+                offers_created += len(generate_offers(club, saison))
+            except Exception:
+                pass
 
     state.opened_at = timezone.now()
     state.save(update_fields=['opened_at'])
