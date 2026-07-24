@@ -38,37 +38,38 @@
 }
 
 /* Overlay */
+/* Overlay als Dock-Panel (unten rechts, ~1/4 Bildschirm) */
 .nt-overlay {
-  position: fixed; inset: 0; z-index: 10000; /* über KI-Kloppo-Button (9999) */
-  background: rgba(2,6,10,0.72); backdrop-filter: blur(6px);
-  display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  bottom: 0; right: 0;
+  width: min(480px, 35vw);
+  height: min(520px, 45vh);
+  z-index: 10000; /* über KI-Kloppo-Button (9999) */
+  display: flex; align-items: stretch; justify-content: stretch;
   animation: nt-fade 0.2s ease;
 }
 .nt-overlay[hidden] { display: none; }
 @keyframes nt-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes nt-in { from { opacity: 0; transform: scale(0.96) translateY(14px); } to { opacity: 1; transform: none; } }
 
-/* Gerät */
+/* Gerät — Dock-Panel, kein iPad-Rahmen */
 .nt-device {
-  width: min(1100px, 94vw); height: min(780px, 90vh);
-  border-radius: 34px; padding: 20px 22px 58px; position: relative; display: flex;
-  background: linear-gradient(145deg, #2b3038, #14171c 55%, #1d2127);
-  box-shadow: 0 50px 110px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(0,0,0,0.5);
+  width: 100%; height: 100%;
+  border-radius: 18px 0 0 0; padding: 0; position: relative; display: flex;
+  background: linear-gradient(160deg, #0a1622, #03070c);
+  box-shadow: -6px -6px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(44,231,255,0.10);
   animation: nt-in 0.25s ease;
 }
-.nt-cam { position: absolute; top: 7px; left: 50%; transform: translateX(-50%); width: 7px; height: 7px; border-radius: 999px; background: #0a0d11; box-shadow: inset 0 0 3px rgba(34,230,255,0.35); }
-.nt-btn-power { position: absolute; top: -4px; right: 70px; width: 62px; height: 5px; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, #3a4048, #1a1e24); box-shadow: 0 -1px 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18); }
-.nt-btn-vol { position: absolute; right: -4px; width: 5px; height: 52px; border-radius: 0 3px 3px 0; background: linear-gradient(90deg, #1a1e24, #3a4048); box-shadow: 1px 0 2px rgba(0,0,0,0.5), inset -1px 0 0 rgba(255,255,255,0.15); }
-.nt-btn-vol.up { top: 100px; } .nt-btn-vol.down { top: 162px; }
-.nt-btn-mute { position: absolute; left: -4px; top: 100px; width: 5px; height: 34px; border-radius: 3px 0 0 3px; background: linear-gradient(270deg, #1a1e24, #3a4048); box-shadow: -1px 0 2px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.15); }
-.nt-home { position: absolute; bottom: 9px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; border-radius: 999px; background: radial-gradient(circle at 35% 30%, #23272e, #0d1014 70%); box-shadow: inset 0 2px 5px rgba(0,0,0,0.75), inset 0 -1px 0 rgba(255,255,255,0.08), 0 1px 0 rgba(255,255,255,0.10); display: flex; align-items: center; justify-content: center; }
-.nt-home span { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid rgba(244,251,255,0.28); }
-.nt-speakers { position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); display: flex; gap: 260px; }
-.nt-speakers i { width: 64px; height: 4px; border-radius: 999px; background: #0a0d11; box-shadow: inset 0 1px 2px rgba(0,0,0,0.8); }
+.nt-cam,
+.nt-btn-power,
+.nt-btn-vol,
+.nt-btn-mute,
+.nt-home,
+.nt-speakers { display: none; } /* Kein iPad-Rahmen im Dock-Panel */
 
 /* Screen */
 .nt-screen {
-  flex: 1; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column;
+  flex: 1; border-radius: 18px 0 0 0; overflow: hidden; display: flex; flex-direction: column;
   border: 1px solid var(--line, rgba(44,231,255,0.18));
   background: radial-gradient(700px 320px at 90% -5%, rgba(34,230,255,0.10), transparent 60%), linear-gradient(160deg, #07111a, #03070c);
   font-family: 'Inter', sans-serif; color: var(--text, #f4fbff);
