@@ -29,3 +29,6 @@ confusing "half the fix works" symptom (new styles present, but the new JS behav
 **How to apply generally:** whenever a template links a versioned CSS file AND a versioned JS file
 for the same feature, bump BOTH `?v=` query strings together on every edit to either, even if you
 only touched one of the two files this time.
+
+## Update Juli 2026: DEBUG-No-Store-Middleware
+?v=-Bump allein reicht nicht, wenn der Client das HTML selbst (mit altem ?v=-Link) aus Browser-/Proxy-Cache lädt. Seitdem: `game.middleware.DevNoCacheMiddleware` (erste Position in MIDDLEWARE, nur bei DEBUG aktiv) setzt `Cache-Control: no-store` auf alle dynamischen Antworten. Statische Dateien laufen in runserver NICHT durch die Middleware — dafür bleibt der ?v=-Bump nötig.

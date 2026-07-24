@@ -141,6 +141,7 @@ INSTALLED_APPS = [
     'game',
 ]
 MIDDLEWARE = [
+    'game.middleware.DevNoCacheMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

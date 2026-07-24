@@ -26,6 +26,25 @@ class LastSeenMiddleware:
         return response
 
 
+class DevNoCacheMiddleware:
+    """
+    DEBUG-only: verbietet Browsern und Proxies das Zwischenspeichern von
+    Antworten, damit in der Entwicklung nie veraltete Seiten angezeigt werden.
+    In Produktion (DEBUG=False) komplett inaktiv.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if settings.DEBUG:
+            response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        return response
+
+
 class DevAutoLoginMiddleware:
     """
     DEBUG-only: automatically logs in the first superuser if no user is
