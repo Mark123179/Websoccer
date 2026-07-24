@@ -728,13 +728,39 @@ def accept_offer_v2(offer, *, auto: bool = False,
         ).exclude(pk=locked.pk).update(status='abgesagt')
 
         # Liga-Exklusivität (SPONSOR_EXCLUSIVITY="liga"): first-come-first-served
+        cancelled_clubs = []
         if locked.sponsor_id and locked.club.league_id:
-            _SO.objects.filter(
+            cancelled_qs = _SO.objects.filter(
                 sponsor_id=locked.sponsor_id,
                 saison=locked.saison,
                 club__league_id=locked.club.league_id,
                 status='offen',
-            ).exclude(club_id=locked.club_id).update(status='abgesagt')
+            ).exclude(club_id=locked.club_id).select_related('club')
+            cancelled_clubs = list(cancelled_qs.values_list('club__name', flat=True))
+            cancelled_qs.update(status='abgesagt')
+
+    # ── Exklusivitäts-Ticker: News-Eintrag für stornierte Angebote ───────────
+    if cancelled_clubs and locked.club.league_id:
+        try:
+            from game.models import LeagueNews
+            sponsor_name = getattr(locked, 'sponsor_name', None) or str(locked.sponsor_id)
+            club_list = ', '.join(cancelled_clubs[:5])
+            if len(cancelled_clubs) > 5:
+                club_list += f' (+{len(cancelled_clubs) - 5} weitere)'
+            LeagueNews.objects.create(
+                league_id=locked.club.league_id,
+                title=f'Exklusivvertrag: {locked.club.name} sichert sich {sponsor_name}',
+                body=(
+                    f'{locked.club.name} hat {sponsor_name} als Exklusiv-Sponsor (Slot: '
+                    f'{SLOT_LABELS.get(locked.slot, locked.slot)}) verpflichtet. '
+                    f'Konkurrierende Angebote bei {club_list} wurden damit hinfällig.'
+                ),
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'Exklusivitäts-Ticker für %s fehlgeschlagen', locked.club,
+            )
 
     offer.status = 'fixiert'
     offer.angenommen_at = locked.angenommen_at

@@ -3837,8 +3837,29 @@ class LeagueNewsAdmin(admin.ModelAdmin):
     list_filter    = ('league',)
     search_fields  = ('title', 'body')
     ordering       = ('league', 'sort_order', '-published_at')
-    fields         = ('league', 'title', 'published_at', 'thumbnail_static_path', 'body', 'sort_order')
-    date_hierarchy = 'published_at'
+
+
+# ─── Sponsor-Pool (V2) ────────────────────────────────────────────────────────
+try:
+    from .models import Sponsor as SponsorPool  # noqa: E402
+
+    def _logo_preview(obj):
+        if obj.logo_url:
+            return f'<img src="{obj.logo_url}" style="height:28px;max-width:80px;object-fit:contain;" />'
+        return '—'
+    _logo_preview.allow_tags = True
+    _logo_preview.short_description = 'Logo'
+
+    @admin.register(SponsorPool)
+    class SponsorPoolAdmin(admin.ModelAdmin):
+        list_display   = ('name', 'slug', 'bereich', 'aktiv', _logo_preview)
+        list_filter    = ('aktiv', 'bereich')
+        search_fields  = ('name', 'slug', 'bereich')
+        ordering       = ('bereich', 'name')
+        readonly_fields = ('slug', _logo_preview)
+        fields         = ('name', 'slug', 'bereich', 'aktiv', 'logo_url', _logo_preview)
+except Exception:
+    pass  # Sponsor-Modell noch nicht migriert → kein Fehler beim Start
 
 
 @admin.register(LeagueStandings)

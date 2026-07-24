@@ -595,6 +595,34 @@
           </div>
         </form>
       </div>
+
+      <!-- ── V2 Creator-Controls: Slot-Reset ───────────────────────────── -->
+      <div class="creator-sub-section">
+        <h3 class="creator-sub-head">V2 Slot-Reset</h3>
+        <p style="color:#8899aa;font-size:.85rem;margin-bottom:.75rem">
+          Löscht V2-Contracts und -Offers für den gewählten Slot und würfelt neu.
+        </p>
+        <form method="post" action="{% url 'creator_sponsoring_slot_reset' club_id=club.id %}" class="creator-inline-form">
+          {% csrf_token %}
+          <div class="creator-inline-fields">
+            <div class="creator-field creator-field-sm">
+              <label>Slot</label>
+              <select name="slot">
+                <option value="">Alle</option>
+                <option value="haupt">Hauptsponsor</option>
+                <option value="trikot">Trikotsponsor</option>
+                <option value="ausruester">Ausrüster</option>
+                <option value="stadion">Stadionsponsor</option>
+                <option value="tv">TV/Medien</option>
+              </select>
+            </div>
+            <div class="creator-field creator-field-action">
+              <label>&nbsp;</label>
+              <button type="submit" class="creator-btn creator-btn-warning" onclick="return confirm('Slot-Reset: V2-Contracts + Offers löschen und neu würfeln?')">↺ Reset</button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
   {% endif %}
