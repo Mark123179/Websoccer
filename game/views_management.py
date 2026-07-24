@@ -1597,9 +1597,10 @@ def _build_club_scene_state(club, stadium, game_date=None):
             secs_left  = (c.completes_at - now).total_seconds()
             left       = max(0, math.ceil(secs_left / 86400.0))
             building[jsid] = {
-                'target': c.target_level,
-                'total':  total_days,
-                'left':   left,
+                'target':    c.target_level,
+                'total':     total_days,
+                'left':      left,
+                'secs_left': max(0, int(secs_left)),
             }
         next_cost = FACILITY_DATA[srv][lvl + 1]['cost'] if lvl < FACILITY_MAX_LEVEL else None
         next_days = FACILITY_DATA[srv][lvl + 1]['days'] if lvl < FACILITY_MAX_LEVEL else None
