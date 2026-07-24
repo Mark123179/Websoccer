@@ -1,6 +1,7 @@
 <div class="cm-header-right">
   <a class="cm-nav-pill {% if nav_active == 'index' %}active{% endif %}" href="{% url 'creator_index' %}">Vereine &amp; Ligen</a>
   <a class="cm-nav-pill {% if nav_active == 'manager' %}active{% endif %}" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
+  <a class="cm-nav-pill {% if nav_active == 'referees' %}active{% endif %}" href="{% url 'creator_referee_list' %}">Schiedsrichter</a>
   <a class="cm-nav-pill {% if nav_active == 'saison' %}active{% endif %}" href="{% url 'creator_season_end' %}">Saison</a>
   <a class="cm-nav-pill {% if nav_active == 'system' %}active{% endif %}" href="{% url 'creator_freie_vereine' %}">System</a>
   <a class="cm-nav-pill {% if nav_active == 'medien' %}active{% endif %}" href="{% url 'creator_media_outlets' %}">Medien</a>

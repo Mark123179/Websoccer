@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · {% if is_new %}Neuer Schiedsrichter{% else %}{{ ref.name }}{% endif %}{% endblock %}
+
+{% block content %}
+<section class="creator-section">
+
+  <div class="ref-topbar">
+    <a class="creator-back" href="{% url 'creator_referee_list' %}">← Schiedsrichter-Übersicht</a>
+    <div class="ref-identity">
+      <div class="ref-avatar-wrap">
+        {% if not is_new and ref.fm_uid %}
+        <img id="ref-face-preview"
+             src="/static/assets/referees/face_{{ ref.fm_uid }}.png"
+             alt="{{ ref.name }}"
+             onerror="this.style.display='none';document.getElementById('ref-initials').style.display='flex'">
+        {% endif %}
+        <div id="ref-initials" class="ref-avatar-initials"
+             {% if not is_new and ref.fm_uid %}style="display:none"{% endif %}>
+          {{ ref.name|first|default:'?' }}
+        </div>
+      </div>
+      <div>
+        <h1 class="ref-page-title">{% if is_new %}Neuer Schiedsrichter{% else %}{{ ref.name }}{% endif %}</h1>
+        {% if not is_new %}
+        <span class="ref-page-meta">ID {{ ref.pk }}{% if ref.fm_uid %} · FM-UID {{ ref.fm_uid }}{% endif %}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="creator-messages" style="margin-bottom:1rem">
+    {% for m in messages %}
+    <div class="creator-msg creator-msg-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post"
+        action="{% if is_new %}{% url 'creator_referee_new_save' %}{% else %}{% url 'creator_referee_save' referee_id=ref.pk %}{% endif %}"
+        enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="ref-form-grid">
+
+      <!-- ── IDENTITÄT ─────────────────────────────────────────────────────── -->
+      <div class="creator-card">
+        <div class="creator-card-head"><h2>Identität</h2></div>
+        <div class="creator-card-body creator-field-grid">
+
+          <div class="creator-field creator-field--full">
+            <label>Name <span class="req">*</span></label>
+            <input type="text" name="name" value="{{ ref.name }}" required
+                   oninput="document.getElementById('ref-initials').textContent = this.value.charAt(0) || '?'">
+          </div>
+
+          <div class="creator-field">
+            <label>FM-UID</label>
+            <input type="number" name="fm_uid" value="{{ ref.fm_uid|default:'' }}" min="1"
+                   placeholder="z. B. 8728491">
+            <span class="creator-field-hint">Schlüssel für das CutOut-Bild</span>
+          </div>
+
+          <div class="creator-field">
+            <label>Nationalität</label>
+            <input type="text" name="nationality" value="{{ ref.nationality }}"
+                   placeholder="z. B. Deutschland">
+          </div>
+
+          <div class="creator-field">
+            <label>Flaggen-Code</label>
+            <input type="text" name="nationality_code" value="{{ ref.nationality_code }}"
+                   placeholder="z. B. de oder 771">
+            <span class="creator-field-hint">ISO-2 oder Assetserver-Code</span>
+          </div>
+
+          <div class="creator-field">
+            <label>Geburtsdatum</label>
+            <input type="date" name="birth_date"
+                   value="{{ ref.birth_date|date:'Y-m-d'|default:'' }}">
+          </div>
+
+          <div class="creator-field">
+            <label>Niveau (1–5)</label>
+            <select name="level">
+              {% for val, label in level_choices %}
+              <option value="{{ val }}" {% if ref.level == val %}selected{% endif %}>{{ val }} — {{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="creator-field">
+            <label>Schlagwort (Popup-Text)</label>
+            <input type="text" name="schlagwort" value="{{ ref.schlagwort }}"
+                   placeholder="z. B. Souveräner Spielleiter">
+            <span class="creator-field-hint">Erscheint kursiv im Spielbericht-Popup</span>
+          </div>
+
+          <div class="creator-field">
+            <label>Entscheidungsqualität (1–20)</label>
+            <input type="number" name="quote" value="{{ ref.quote|default:10 }}"
+                   min="1" max="20">
+            <span class="creator-field-hint">20 = makellos, 1 = fehlerhaft</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── BILD ──────────────────────────────────────────────────────────── -->
+      <div class="creator-card">
+        <div class="creator-card-head"><h2>CutOut-Bild</h2></div>
+        <div class="creator-card-body">
+          <div class="ref-image-zone">
+            <div class="ref-current-img">
+              {% if not is_new and ref.fm_uid %}
+              <img id="ref-img-large"
+                   src="/static/assets/referees/face_{{ ref.fm_uid }}.png"
+                   alt="{{ ref.name }}"
+                   onerror="this.style.display='none';document.getElementById('ref-no-img').style.display='flex'">
+              {% endif %}
+              <div id="ref-no-img" class="ref-no-img-placeholder"
+                   {% if not is_new and ref.fm_uid %}style="display:none"{% endif %}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;opacity:.3"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                <span>Kein Bild</span>
+              </div>
+            </div>
+            <div class="ref-upload-col">
+              <label class="ref-upload-label" for="face_image">Bild hochladen</label>
+              <input type="file" id="face_image" name="face_image" accept="image/*"
+                     onchange="previewImage(this)">
+              <span class="creator-field-hint">PNG/JPG · wird als face_&lt;fm_uid&gt;.png gespeichert<br>FM-UID muss gesetzt sein</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TENDENZEN ─────────────────────────────────────────────────────── -->
+      <div class="creator-card creator-card--full">
+        <div class="creator-card-head"><h2>Tendenzen</h2><span class="creator-card-sub">Invariante: Karten + Spielfluss = 21</span></div>
+        <div class="creator-card-body">
+
+          <div class="ref-tendency-selector">
+            <div class="ref-tend-col">
+              <div class="ref-tend-label">Karten-Stil</div>
+              <div class="ref-tend-options" id="karten-opts">
+                <button type="button" class="ref-tend-opt {% if ref.karten_bucket == 0 %}is-active{% endif %}"
+                        data-kt="5" data-st="16" onclick="setBucket(this, 'karten-opts', 'spielfluss-opts', 0)">
+                  <span class="ref-tend-dot is-green"></span>
+                  <strong>Nachsichtig</strong>
+                  <span class="ref-tend-sub">Karten-Tendenz ≤ 7</span>
+                </button>
+                <button type="button" class="ref-tend-opt {% if ref.karten_bucket == 1 %}is-active{% endif %}"
+                        data-kt="10" data-st="11" onclick="setBucket(this, 'karten-opts', 'spielfluss-opts', 1)">
+                  <span class="ref-tend-dot"></span>
+                  <strong>Ausgewogen</strong>
+                  <span class="ref-tend-sub">Karten-Tendenz 8–13</span>
+                </button>
+                <button type="button" class="ref-tend-opt {% if ref.karten_bucket == 2 %}is-active is-hot{% endif %}"
+                        data-kt="16" data-st="5" onclick="setBucket(this, 'karten-opts', 'spielfluss-opts', 2)">
+                  <span class="ref-tend-dot is-red"></span>
+                  <strong>Kartenfreudig</strong>
+                  <span class="ref-tend-sub">Karten-Tendenz ≥ 14</span>
+                </button>
+              </div>
+            </div>
+            <div class="ref-tend-divider">↔</div>
+            <div class="ref-tend-col">
+              <div class="ref-tend-label">Spielfluss-Stil</div>
+              <div class="ref-tend-options" id="spielfluss-opts">
+                <button type="button" class="ref-tend-opt {% if ref.spielfluss_bucket == 0 %}is-active is-hot{% endif %}"
+                        data-kt="16" data-st="5" onclick="setBucket(this, 'spielfluss-opts', 'karten-opts', 2)">
+                  <span class="ref-tend-dot is-red"></span>
+                  <strong>Pfeift viel ab</strong>
+                  <span class="ref-tend-sub">Spielfluss-Tendenz ≤ 7</span>
+                </button>
+                <button type="button" class="ref-tend-opt {% if ref.spielfluss_bucket == 1 %}is-active{% endif %}"
+                        data-kt="10" data-st="11" onclick="setBucket(this, 'spielfluss-opts', 'karten-opts', 1)">
+                  <span class="ref-tend-dot"></span>
+                  <strong>Ausgewogen</strong>
+                  <span class="ref-tend-sub">Spielfluss-Tendenz 8–13</span>
+                </button>
+                <button type="button" class="ref-tend-opt {% if ref.spielfluss_bucket == 2 %}is-active{% endif %}"
+                        data-kt="5" data-st="16" onclick="setBucket(this, 'spielfluss-opts', 'karten-opts', 0)">
+                  <span class="ref-tend-dot is-green"></span>
+                  <strong>Lässt laufen</strong>
+                  <span class="ref-tend-sub">Spielfluss-Tendenz ≥ 14</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ref-fine-tune">
+            <div class="ref-fine-field">
+              <label>Karten-Tendenz (1–20)</label>
+              <input type="number" id="kt-input" name="karten_tendenz"
+                     value="{{ ref.karten_tendenz|default:10 }}" min="1" max="20"
+                     oninput="syncBucketFromInputs()">
+            </div>
+            <div class="ref-fine-sep">+</div>
+            <div class="ref-fine-field">
+              <label>Spielfluss-Tendenz (1–20)</label>
+              <input type="number" id="st-input" name="spielfluss_tendenz"
+                     value="{{ ref.spielfluss_tendenz|default:11 }}" min="1" max="20"
+                     oninput="syncBucketFromInputs()">
+            </div>
+            <div class="ref-fine-sep">=</div>
+            <div class="ref-fine-sum">
+              <label>Summe</label>
+              <div id="kt-sum" class="ref-sum-display">{{ ref.karten_tendenz|add:ref.spielfluss_tendenz|default:21 }}</div>
+              <span class="creator-field-hint">Soll 21 sein</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── VORSAISON ─────────────────────────────────────────────────────── -->
+      <div class="creator-card creator-card--full">
+        <div class="creator-card-head"><h2>Vorsaison-Statistiken</h2></div>
+        <div class="creator-card-body creator-field-grid">
+
+          <div class="creator-field">
+            <label>Spiele</label>
+            <input type="number" name="vorsaison_spiele" value="{{ ref.vorsaison_spiele }}" min="0">
+          </div>
+          <div class="creator-field">
+            <label>Ø Gelbe/Spiel</label>
+            <input type="text" name="vorsaison_gelb_avg" value="{{ ref.vorsaison_gelb_avg }}"
+                   placeholder="z. B. 3.9">
+          </div>
+          <div class="creator-field">
+            <label>Rote Karten</label>
+            <input type="number" name="vorsaison_rot" value="{{ ref.vorsaison_rot }}" min="0">
+          </div>
+          <div class="creator-field">
+            <label>Elfmeter</label>
+            <input type="number" name="vorsaison_elfmeter" value="{{ ref.vorsaison_elfmeter }}" min="0">
+          </div>
+          <div class="creator-field">
+            <label>Umstrittene Entscheidungen</label>
+            <input type="number" name="vorsaison_umstritten" value="{{ ref.vorsaison_umstritten }}" min="0">
+          </div>
+          <div class="creator-field creator-field--full">
+            <label>Wettbewerbe (komma-getrennt)</label>
+            <input type="text" name="vorsaison_competitions"
+                   value="{{ ref.vorsaison_competitions|join:', ' }}"
+                   placeholder="Bundesliga, DFB-Pokal, Champions League">
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /ref-form-grid -->
+
+    <div class="ref-action-bar">
+      <button type="submit" class="ref-save-btn">Speichern</button>
+      <a class="ref-cancel-btn" href="{% url 'creator_referee_list' %}">Abbrechen</a>
+      {% if not is_new %}
+      <form method="post" action="{% url 'creator_referee_delete' referee_id=ref.pk %}"
+            style="margin-left:auto"
+            onsubmit="return confirm('Schiedsrichter „{{ ref.name }}" wirklich löschen?')">
+        {% csrf_token %}
+        <button type="submit" class="ref-delete-btn">Löschen</button>
+      </form>
+      {% endif %}
+    </div>
+
+  </form>
+
+</section>
+
+<style>
+.creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.creator-back { color: #00d4ff88; text-decoration: none; font-size: .8rem; letter-spacing: .04em; display: inline-block; margin-bottom: .75rem; }
+.creator-back:hover { color: #00d4ff; }
+.creator-messages { display: flex; flex-direction: column; gap: .4rem; }
+.creator-msg { padding: .6rem 1rem; border-radius: 6px; font-size: .85rem; }
+.creator-msg-success { background: #0d2a1a; color: #30f29c; border: 1px solid #30f29c33; }
+.creator-msg-error { background: #2a0d0d; color: #ff4444; border: 1px solid #ff444433; }
+.creator-msg-warning { background: #2a1f0d; color: #ffaa00; border: 1px solid #ffaa0033; }
+
+.ref-topbar { margin-bottom: 1.5rem; }
+.ref-identity { display: flex; align-items: center; gap: 1rem; }
+.ref-avatar-wrap { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background: #071525; border: 2px solid #00d4ff33; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ref-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.ref-avatar-initials { color: #00d4ff; font-size: 1.6rem; font-weight: 800; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.ref-page-title { color: #fff; font-size: 1.6rem; margin: 0; }
+.ref-page-meta { color: #556677; font-size: .8rem; }
+
+.ref-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.creator-card { background: #050e1a; border: 1px solid #0d2035; border-radius: 12px; overflow: hidden; }
+.creator-card--full { grid-column: 1 / -1; }
+.creator-card-head { padding: 1rem 1.25rem .75rem; border-bottom: 1px solid #0d2035; display: flex; align-items: baseline; gap: 1rem; }
+.creator-card-head h2 { color: #cce8ff; font-size: 1rem; margin: 0; font-weight: 700; }
+.creator-card-sub { color: #334455; font-size: .75rem; }
+.creator-card-body { padding: 1.25rem; }
+.creator-field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .85rem; }
+.creator-field { display: flex; flex-direction: column; gap: .35rem; }
+.creator-field--full { grid-column: 1 / -1; }
+.creator-field label { color: #8899aa; font-size: .75rem; font-weight: 600; letter-spacing: .04em; }
+.creator-field input, .creator-field select { background: #03070c; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; padding: .55rem .75rem; font-size: .85rem; outline: none; width: 100%; }
+.creator-field input:focus, .creator-field select:focus { border-color: #00d4ff44; }
+.creator-field-hint { color: #334455; font-size: .7rem; line-height: 1.4; }
+.req { color: #ff4444; }
+
+/* image */
+.ref-image-zone { display: flex; align-items: flex-start; gap: 1.25rem; }
+.ref-current-img { width: 90px; height: 90px; border-radius: 8px; overflow: hidden; background: #03070c; border: 1px solid #0d2035; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ref-current-img img { width: 100%; height: 100%; object-fit: cover; }
+.ref-no-img-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem; color: #334455; font-size: .7rem; width: 100%; height: 100%; }
+.ref-upload-col { display: flex; flex-direction: column; gap: .5rem; }
+.ref-upload-label { background: #0d2035; border: 1px solid #00d4ff22; border-radius: 6px; color: #00d4ff; padding: .5rem 1rem; font-size: .8rem; font-weight: 700; cursor: pointer; display: inline-block; }
+.ref-upload-label:hover { background: #162c45; }
+input[type=file] { display: none; }
+
+/* tendency selector */
+.ref-tendency-selector { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.25rem; }
+.ref-tend-col { flex: 1; }
+.ref-tend-label { color: #8899aa; font-size: .75rem; font-weight: 600; letter-spacing: .04em; margin-bottom: .6rem; text-transform: uppercase; }
+.ref-tend-options { display: flex; flex-direction: column; gap: .5rem; }
+.ref-tend-opt { display: flex; align-items: center; gap: .75rem; background: #03070c; border: 1px solid #0d2035; border-radius: 8px; padding: .75rem 1rem; cursor: pointer; text-align: left; transition: border-color .15s, background .15s; }
+.ref-tend-opt:hover { border-color: #00d4ff33; background: #071525; }
+.ref-tend-opt.is-active { border-color: #00d4ff66; background: #071a2a; }
+.ref-tend-opt.is-active.is-hot { border-color: #ff444466; background: #1a0707; }
+.ref-tend-dot { width: 10px; height: 10px; border-radius: 50%; background: #0d2035; border: 2px solid #334455; flex-shrink: 0; }
+.ref-tend-dot.is-green { background: #1a3a1a; border-color: #30f29c; }
+.ref-tend-dot.is-red { background: #3a1a1a; border-color: #ff4444; }
+.ref-tend-opt.is-active .ref-tend-dot { border-color: #00d4ff; background: #00d4ff; }
+.ref-tend-opt.is-active.is-hot .ref-tend-dot { border-color: #ff4444; background: #ff4444; }
+.ref-tend-opt strong { color: #cce8ff; font-size: .85rem; display: block; }
+.ref-tend-opt .ref-tend-sub { color: #556677; font-size: .72rem; display: block; margin-top: .1rem; }
+.ref-tend-divider { color: #334455; font-size: 1.5rem; flex-shrink: 0; }
+
+.ref-fine-tune { display: flex; align-items: flex-end; gap: .75rem; }
+.ref-fine-field { display: flex; flex-direction: column; gap: .35rem; }
+.ref-fine-field label { color: #8899aa; font-size: .72rem; font-weight: 600; }
+.ref-fine-field input { width: 90px; background: #03070c; border: 1px solid #0d2035; border-radius: 6px; color: #cce8ff; padding: .5rem .75rem; font-size: .85rem; outline: none; }
+.ref-fine-field input:focus { border-color: #00d4ff44; }
+.ref-fine-sep { color: #334455; font-size: 1.2rem; padding-bottom: .4rem; }
+.ref-fine-sum { display: flex; flex-direction: column; gap: .35rem; }
+.ref-fine-sum label { color: #8899aa; font-size: .72rem; font-weight: 600; }
+.ref-sum-display { font-size: 1.4rem; font-weight: 800; color: #00d4ff; padding: .3rem .5rem; min-width: 48px; text-align: center; }
+.ref-sum-display.is-bad { color: #ff4444; }
+
+/* action bar */
+.ref-action-bar { display: flex; align-items: center; gap: .75rem; padding: 1rem 0; }
+.ref-save-btn { background: linear-gradient(135deg, #00d4ff22, #0088ff22); border: 1px solid #00d4ff55; border-radius: 8px; color: #00d4ff; padding: .7rem 2rem; font-size: .88rem; font-weight: 800; cursor: pointer; letter-spacing: .04em; }
+.ref-save-btn:hover { background: linear-gradient(135deg, #00d4ff33, #0088ff33); }
+.ref-cancel-btn { color: #556677; font-size: .85rem; text-decoration: none; padding: .7rem 1rem; }
+.ref-cancel-btn:hover { color: #8899aa; }
+.ref-delete-btn { background: #1a0707; border: 1px solid #ff444433; border-radius: 8px; color: #ff4444; padding: .65rem 1.25rem; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.ref-delete-btn:hover { background: #2a0d0d; }
+</style>
+
+<script>
+function setBucket(btn, thisGroupId, otherGroupId, kBucket) {
+  // highlight this group
+  document.querySelectorAll('#' + thisGroupId + ' .ref-tend-opt').forEach(b => b.classList.remove('is-active', 'is-hot'));
+  btn.classList.add('is-active');
+  if (kBucket === 2) btn.classList.add('is-hot');
+
+  // mirror in the other group (kBucket in karten = (2-kBucket) in spielfluss and vice versa)
+  const otherBucket = 2 - kBucket;
+  const otherBtns = document.querySelectorAll('#' + otherGroupId + ' .ref-tend-opt');
+  otherBtns.forEach(b => b.classList.remove('is-active', 'is-hot'));
+  if (otherBtns[otherBucket]) {
+    otherBtns[otherBucket].classList.add('is-active');
+    if (otherBucket === 0) otherBtns[otherBucket].classList.add('is-hot');
+  }
+
+  // update number inputs
+  const kt = parseInt(btn.dataset.kt);
+  const st = parseInt(btn.dataset.st);
+  document.getElementById('kt-input').value = kt;
+  document.getElementById('st-input').value = st;
+  updateSum();
+}
+
+function syncBucketFromInputs() {
+  updateSum();
+}
+
+function updateSum() {
+  const kt = parseInt(document.getElementById('kt-input').value) || 0;
+  const st = parseInt(document.getElementById('st-input').value) || 0;
+  const sum = kt + st;
+  const el = document.getElementById('kt-sum');
+  el.textContent = sum;
+  el.classList.toggle('is-bad', sum !== 21);
+}
+
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const url = URL.createObjectURL(input.files[0]);
+    const largeImg = document.getElementById('ref-img-large');
+    const preview = document.getElementById('ref-face-preview');
+    const noImg = document.getElementById('ref-no-img');
+    if (largeImg) { largeImg.src = url; largeImg.style.display = ''; }
+    if (preview) { preview.src = url; preview.style.display = ''; }
+    if (noImg) noImg.style.display = 'none';
+    document.getElementById('ref-initials').style.display = 'none';
+  }
+}
+
+updateSum();
+</script>
+
+{% endblock %}

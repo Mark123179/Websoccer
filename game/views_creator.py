@@ -19,7 +19,7 @@ from .models import (
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
     PlayerEditLog, PlayerRLFormProfile, GameSeasonState,
-    MediaOutlet,
+    MediaOutlet, Referee,
 )
 from . import strength_engine as se
 from .strength_service import compute_strength_for_player, compute_rl_form_for_player
@@ -5176,3 +5176,149 @@ def creator_sportgericht(request):
         'resolved_cases': resolved_cases,
         'ki_summary': ki_summary,
     })
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SCHIEDSRICHTER — Creator Mode
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@login_required
+def creator_referee_list(request):
+    q = request.GET.get('q', '').strip()
+    qs = Referee.objects.all().order_by('name')
+    if q:
+        qs = qs.filter(name__icontains=q)
+    return render(request, 'creator/referee_list.html', {
+        'referees': list(qs),
+        'q': q,
+        'total': Referee.objects.count(),
+    })
+
+
+@login_required
+def creator_referee_edit(request, referee_id=None):
+    if referee_id:
+        ref = get_object_or_404(Referee, pk=referee_id)
+        is_new = False
+    else:
+        ref = Referee()
+        is_new = True
+    return render(request, 'creator/referee_edit.html', {
+        'ref': ref,
+        'is_new': is_new,
+        'level_choices': [(5, 'Weltklasse'), (4, 'International'), (3, 'Erste Liga'), (2, 'Zweite Liga'), (1, 'Aufsteiger')],
+    })
+
+
+@login_required
+@require_POST
+def creator_referee_save(request, referee_id=None):
+    if referee_id:
+        ref = get_object_or_404(Referee, pk=referee_id)
+    else:
+        ref = Referee()
+
+    name = request.POST.get('name', '').strip()
+    if not name:
+        messages.error(request, 'Name darf nicht leer sein.')
+        return redirect(request.META.get('HTTP_REFERER', 'creator_referee_list'))
+
+    # fm_uid (optional, unique)
+    fm_uid_raw = request.POST.get('fm_uid', '').strip()
+    fm_uid = int(fm_uid_raw) if fm_uid_raw else None
+    if fm_uid is not None:
+        dup = Referee.objects.filter(fm_uid=fm_uid).exclude(pk=ref.pk or 0)
+        if dup.exists():
+            messages.error(request, f'FM-UID {fm_uid} ist bereits einem anderen Schiedsrichter zugewiesen.')
+            return redirect(request.META.get('HTTP_REFERER', 'creator_referee_list'))
+
+    ref.name = name
+    ref.fm_uid = fm_uid
+    ref.nationality = request.POST.get('nationality', '').strip()
+    ref.nationality_code = request.POST.get('nationality_code', '').strip()
+    ref.schlagwort = request.POST.get('schlagwort', '').strip()
+
+    # birth_date
+    bd_raw = request.POST.get('birth_date', '').strip()
+    if bd_raw:
+        from django.utils.dateparse import parse_date
+        ref.birth_date = parse_date(bd_raw)
+    else:
+        ref.birth_date = None
+
+    # level 1–5
+    try:
+        ref.level = max(1, min(5, int(request.POST.get('level', 3))))
+    except (ValueError, TypeError):
+        ref.level = 3
+
+    # quote 1–20
+    try:
+        ref.quote = max(1, min(20, int(request.POST.get('quote', 10))))
+    except (ValueError, TypeError):
+        ref.quote = 10
+
+    # tendencies — fine-grained 1–20
+    try:
+        kt = max(1, min(20, int(request.POST.get('karten_tendenz', 10))))
+    except (ValueError, TypeError):
+        kt = 10
+    try:
+        st = max(1, min(20, int(request.POST.get('spielfluss_tendenz', 11))))
+    except (ValueError, TypeError):
+        st = 11
+    ref.karten_tendenz = kt
+    ref.spielfluss_tendenz = st
+
+    # vorsaison stats
+    def _int(key, default=0):
+        try:
+            return max(0, int(request.POST.get(key, default)))
+        except (ValueError, TypeError):
+            return default
+
+    def _dec(key, default='0'):
+        import decimal
+        try:
+            return decimal.Decimal(str(request.POST.get(key, default)).replace(',', '.'))
+        except Exception:
+            return decimal.Decimal(default)
+
+    ref.vorsaison_spiele = _int('vorsaison_spiele')
+    ref.vorsaison_gelb_avg = _dec('vorsaison_gelb_avg')
+    ref.vorsaison_rot = _int('vorsaison_rot')
+    ref.vorsaison_elfmeter = _int('vorsaison_elfmeter')
+    ref.vorsaison_umstritten = _int('vorsaison_umstritten')
+
+    comps_raw = request.POST.get('vorsaison_competitions', '').strip()
+    ref.vorsaison_competitions = [c.strip() for c in comps_raw.split(',') if c.strip()] if comps_raw else []
+
+    ref.save()
+
+    # optional image upload — stored as face_{fm_uid}.png
+    img = request.FILES.get('face_image')
+    if img and ref.fm_uid:
+        import os
+        from django.conf import settings
+        dest_dir = os.path.join(settings.BASE_DIR, 'game', 'static', 'assets', 'referees')
+        os.makedirs(dest_dir, exist_ok=True)
+        dest = os.path.join(dest_dir, f'face_{ref.fm_uid}.png')
+        with open(dest, 'wb') as f:
+            for chunk in img.chunks():
+                f.write(chunk)
+        messages.success(request, f'Bild für {ref.name} gespeichert.')
+    elif img and not ref.fm_uid:
+        messages.warning(request, 'Bild ignoriert — bitte zuerst eine FM-UID setzen.')
+
+    messages.success(request, f'Schiedsrichter „{ref.name}" gespeichert.')
+    return redirect('creator_referee_edit', referee_id=ref.pk)
+
+
+@login_required
+@require_POST
+def creator_referee_delete(request, referee_id):
+    ref = get_object_or_404(Referee, pk=referee_id)
+    name = ref.name
+    ref.delete()
+    messages.success(request, f'Schiedsrichter „{name}" gelöscht.')
+    return redirect('creator_referee_list')

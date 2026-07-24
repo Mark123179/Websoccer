@@ -4825,36 +4825,21 @@ class ManagerCareerEntry(models.Model):
 class Referee(models.Model):
     """Schiedsrichter-Datenbank — Profil + Tendenzen + Vorsaison-Statistiken."""
 
-    LEVEL_WELTKLASSE   = 'weltklasse'
-    LEVEL_INTERNATIONAL = 'international'
-    LEVEL_ERSTE_LIGA   = 'erste-liga'
-    LEVEL_ZWEITE_LIGA  = 'zweite-liga'
-    LEVEL_AUFSTEIGER   = 'aufsteiger'
-    LEVEL_CHOICES = [
-        (LEVEL_WELTKLASSE,   'Weltklasse'),
-        (LEVEL_INTERNATIONAL, 'International'),
-        (LEVEL_ERSTE_LIGA,   'Erste Liga'),
-        (LEVEL_ZWEITE_LIGA,  'Zweite Liga'),
-        (LEVEL_AUFSTEIGER,   'Aufsteiger'),
-    ]
-
-    KARTEN_NACHSICHTIG   = 'nachsichtig'
-    KARTEN_AUSGEWOGEN    = 'ausgewogen'
-    KARTEN_KARTENFREUDIG = 'kartenfreudig'
-    KARTEN_CHOICES = [
-        (KARTEN_NACHSICHTIG,   'Nachsichtig'),
-        (KARTEN_AUSGEWOGEN,    'Ausgewogen'),
-        (KARTEN_KARTENFREUDIG, 'Kartenfreudig'),
-    ]
-
-    SPIELFLUSS_PFEIFT    = 'pfeift_viel_ab'
-    SPIELFLUSS_AUSGEWOGEN = 'ausgewogen'
-    SPIELFLUSS_LAESST    = 'laesst_laufen'
-    SPIELFLUSS_CHOICES = [
-        (SPIELFLUSS_PFEIFT,    'Pfeift viel ab'),
-        (SPIELFLUSS_AUSGEWOGEN, 'Ausgewogen'),
-        (SPIELFLUSS_LAESST,    'Lässt laufen'),
-    ]
+    # level: 5=Weltklasse, 4=International, 3=Erste Liga, 2=Zweite Liga, 1=Aufsteiger  (E-16)
+    LEVEL_BADGE_MAP = {
+        5: 'weltklasse',
+        4: 'international',
+        3: 'erste-liga',
+        2: 'zweite-liga',
+        1: 'aufsteiger',
+    }
+    LEVEL_LABEL_MAP = {
+        5: 'Weltklasse',
+        4: 'International',
+        3: 'Erste Liga',
+        2: 'Zweite Liga',
+        1: 'Aufsteiger',
+    }
 
     fm_uid = models.BigIntegerField(
         unique=True,
@@ -4869,24 +4854,31 @@ class Referee(models.Model):
     )
     nationality_code = models.CharField(
         max_length=10, blank=True, verbose_name='Flaggen-Code',
-        help_text='Assetserver-Code für flag_url(), z. B. "771" (CH) oder ISO-2 "fr".',
+        help_text='Assetserver-Code für flag_url(), z. B. "771" oder ISO-2 "de".',
     )
-    age = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Alter')
-    level = models.CharField(
-        max_length=20, choices=LEVEL_CHOICES,
-        default=LEVEL_INTERNATIONAL, verbose_name='Niveau',
+    birth_date = models.DateField(
+        null=True, blank=True, verbose_name='Geburtsdatum',
+        help_text='Format DD.MM.YYYY; Alter wird zur Laufzeit berechnet.',
     )
-    quote = models.CharField(
-        max_length=200, blank=True, verbose_name='Kurzcharakter',
+    level = models.PositiveSmallIntegerField(
+        default=3, verbose_name='Niveau (1–5)',
+        help_text='5=Weltklasse, 4=International, 3=Erste Liga, 2=Zweite Liga, 1=Aufsteiger',
+    )
+    schlagwort = models.CharField(
+        max_length=200, blank=True, verbose_name='Schlagwort/Kurzcharakter',
         help_text='Erscheint kursiv im Popup, z. B. „Souveräner Spielleiter".',
     )
-    karten_tendenz = models.CharField(
-        max_length=20, choices=KARTEN_CHOICES,
-        default=KARTEN_AUSGEWOGEN, verbose_name='Karten-Tendenz',
+    quote = models.PositiveSmallIntegerField(
+        default=10, verbose_name='Entscheidungsqualität (1–20)',
+        help_text='1=fehlerhaft, 20=makellos. P(Fehlentscheidung/Sp) = clamp((14−quote)×0.7; 1; 8)%.',
     )
-    spielfluss_tendenz = models.CharField(
-        max_length=20, choices=SPIELFLUSS_CHOICES,
-        default=SPIELFLUSS_AUSGEWOGEN, verbose_name='Spielfluss-Tendenz',
+    karten_tendenz = models.PositiveSmallIntegerField(
+        default=10, verbose_name='Karten-Tendenz (1–20)',
+        help_text='1=sehr nachsichtig, 20=sehr kartenfreudig. Invariante: karten+spielfluss=21.',
+    )
+    spielfluss_tendenz = models.PositiveSmallIntegerField(
+        default=11, verbose_name='Spielfluss-Tendenz (1–20)',
+        help_text='1=pfeift viel ab, 20=lässt laufen. Invariante: karten+spielfluss=21.',
     )
     vorsaison_spiele   = models.PositiveSmallIntegerField(default=0, verbose_name='Spiele (Vorsaison)')
     vorsaison_gelb_avg = models.DecimalField(
@@ -4910,6 +4902,27 @@ class Referee(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def age(self):
+        """Berechnet Alter aus birth_date."""
+        if not self.birth_date:
+            return None
+        from django.utils import timezone
+        today = timezone.localdate()
+        bd = self.birth_date
+        return today.year - bd.year - ((today.month, today.day) < (bd.month, bd.day))
+
+    @property
+    def spielfluss_bucket(self):
+        """0=Pfeift viel ab, 1=Ausgewogen, 2=Lässt laufen."""
+        v = self.spielfluss_tendenz or 11
+        return 0 if v <= 7 else (1 if v <= 13 else 2)
+
+    @property
+    def karten_bucket(self):
+        """0=Nachsichtig, 1=Ausgewogen, 2=Kartenfreudig."""
+        return 2 - self.spielfluss_bucket
+
     def face_url(self):
         from .asset_urls import referee_face_url
         return referee_face_url(self.fm_uid)
@@ -4919,10 +4932,13 @@ class Referee(models.Model):
         return _flag_url(self.nationality_code) if self.nationality_code else ''
 
     def level_badge_class(self):
-        return f'ref-badge--{self.level}'
+        return f'ref-badge--{self.LEVEL_BADGE_MAP.get(self.level, "international")}'
 
     def level_display_upper(self):
-        return dict(self.LEVEL_CHOICES).get(self.level, self.level).upper()
+        return self.LEVEL_LABEL_MAP.get(self.level, str(self.level)).upper()
+
+    def get_level_display(self):
+        return self.LEVEL_LABEL_MAP.get(self.level, str(self.level))
 
 
 def pick_random_referee():

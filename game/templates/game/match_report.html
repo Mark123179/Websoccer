@@ -930,12 +930,12 @@
           {% if referee.flag_url %}<img class="ref-flag" src="{{ referee.flag_url }}" alt="{{ referee.nationality }}">{% endif %}
           {% if referee.nationality %}<span>{{ referee.nationality }}</span>{% endif %}
           {% if referee.age %}<span class="sep">&middot;</span><span>{{ referee.age }} Jahre</span>{% endif %}
-          <span class="ref-badge {{ referee.level_badge_class }}">{{ referee.get_level_display }}</span>
+          <span class="ref-badge {{ referee.level_badge_class }}">{{ referee.level_display_upper }}</span>
         </div>
       </div>
     </div>
 
-    {% if referee.quote %}<div class="ref-type">&#8222;{{ referee.quote }}&#8220;</div>{% endif %}
+    {% if referee.schlagwort %}<div class="ref-type">&#8222;{{ referee.schlagwort }}&#8220;</div>{% endif %}
 
     <div class="ref-section">
       <div class="ref-section-title">Tendenzen</div>
@@ -943,17 +943,17 @@
         <div class="ref-scale">
           <span class="ref-scale-label">Karten</span>
           <div class="ref-scale-track">
-            <span class="ref-step{% if referee.karten_tendenz == 'nachsichtig' %} is-active{% endif %}"><span class="dot"></span>Nachsichtig</span>
-            <span class="ref-step{% if referee.karten_tendenz == 'ausgewogen' %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
-            <span class="ref-step{% if referee.karten_tendenz == 'kartenfreudig' %} is-active is-hot{% endif %}"><span class="dot"></span>Kartenfreudig</span>
+            <span class="ref-step{% if referee.karten_bucket == 0 %} is-active{% endif %}"><span class="dot"></span>Nachsichtig</span>
+            <span class="ref-step{% if referee.karten_bucket == 1 %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
+            <span class="ref-step{% if referee.karten_bucket == 2 %} is-active is-hot{% endif %}"><span class="dot"></span>Kartenfreudig</span>
           </div>
         </div>
         <div class="ref-scale">
           <span class="ref-scale-label">Spielfluss</span>
           <div class="ref-scale-track">
-            <span class="ref-step{% if referee.spielfluss_tendenz == 'pfeift_viel_ab' %} is-active is-hot{% endif %}"><span class="dot"></span>Pfeift viel ab</span>
-            <span class="ref-step{% if referee.spielfluss_tendenz == 'ausgewogen' %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
-            <span class="ref-step{% if referee.spielfluss_tendenz == 'laesst_laufen' %} is-active{% endif %}"><span class="dot"></span>L&auml;sst laufen</span>
+            <span class="ref-step{% if referee.spielfluss_bucket == 0 %} is-active is-hot{% endif %}"><span class="dot"></span>Pfeift viel ab</span>
+            <span class="ref-step{% if referee.spielfluss_bucket == 1 %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
+            <span class="ref-step{% if referee.spielfluss_bucket == 2 %} is-active{% endif %}"><span class="dot"></span>L&auml;sst laufen</span>
           </div>
         </div>
       </div>

@@ -4020,13 +4020,13 @@ class ManagerNotesAdmin(admin.ModelAdmin):
 
 @admin.register(Referee)
 class RefereeAdmin(admin.ModelAdmin):
-    list_display  = ('name', 'nationality', 'age', 'level', 'karten_tendenz', 'spielfluss_tendenz', 'vorsaison_spiele')
-    list_filter   = ('level', 'karten_tendenz', 'spielfluss_tendenz', 'nationality')
+    list_display  = ('name', 'nationality', 'birth_date', 'level', 'karten_tendenz', 'spielfluss_tendenz', 'quote', 'vorsaison_spiele')
+    list_filter   = ('level', 'nationality')
     search_fields = ('name', 'nationality', 'fm_uid')
     ordering      = ('name',)
     fieldsets = (
-        (None, {'fields': ('fm_uid', 'name', 'nationality', 'nationality_code', 'age', 'level', 'quote')}),
-        ('Tendenzen', {'fields': ('karten_tendenz', 'spielfluss_tendenz')}),
+        (None, {'fields': ('fm_uid', 'name', 'nationality', 'nationality_code', 'birth_date', 'level', 'schlagwort', 'quote')}),
+        ('Tendenzen (1–20, Invariante: karten+spielfluss=21)', {'fields': ('karten_tendenz', 'spielfluss_tendenz')}),
         ('Vorsaison-Statistiken', {'fields': (
             'vorsaison_spiele', 'vorsaison_gelb_avg', 'vorsaison_rot',
             'vorsaison_elfmeter', 'vorsaison_umstritten', 'vorsaison_competitions',

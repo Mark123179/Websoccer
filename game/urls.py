@@ -151,6 +151,10 @@ from .views_creator import (
     creator_ki_angebote,
     creator_ki_transferzentrale,
     creator_sportgericht,
+    creator_referee_list,
+    creator_referee_edit,
+    creator_referee_save,
+    creator_referee_delete,
 )
 from .views_importer_api import (
     importer_next_job,
@@ -451,6 +455,14 @@ urlpatterns = [
     path('creator/managers/<int:manager_id>/coins/', creator_save_coins, name='creator_save_coins'),
     path('creator/managers/<int:manager_id>/satisfaction/<int:sat_id>/', creator_save_satisfaction, name='creator_save_satisfaction'),
     path('creator/managers/<int:manager_id>/satisfaction/add/', creator_add_satisfaction, name='creator_add_satisfaction'),
+
+    # Schiedsrichter
+    path('creator/referees/', creator_referee_list, name='creator_referee_list'),
+    path('creator/referees/new/', creator_referee_edit, name='creator_referee_new'),
+    path('creator/referees/new/save/', creator_referee_save, name='creator_referee_new_save'),
+    path('creator/referees/<int:referee_id>/', creator_referee_edit, name='creator_referee_edit'),
+    path('creator/referees/<int:referee_id>/save/', creator_referee_save, name='creator_referee_save'),
+    path('creator/referees/<int:referee_id>/delete/', creator_referee_delete, name='creator_referee_delete'),
 
     # Geführter Import-Hub
     path('creator/import/hub/', creator_import_hub, name='creator_import_hub'),

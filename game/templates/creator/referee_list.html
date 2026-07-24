@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator · Schiedsrichter{% endblock %}
+
+{% block content %}
+<section class="creator-section">
+
+  <div class="creator-header">
+    <div class="creator-header-inner">
+      <div class="creator-header-title">
+        <a class="creator-back" href="{% url 'creator_index' %}">← Creator Übersicht</a>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-top:.5rem">
+          <span class="creator-badge">CREATOR MODE</span>
+          <h1>Schiedsrichter</h1>
+        </div>
+        <p class="creator-subtitle">Alle Referees · Profil · Tendenzen · Vorsaison-Statistiken</p>
+      </div>
+      <div class="creator-stats">
+        <div class="creator-stat">
+          <strong>{{ total }}</strong>
+          <span>Schiedsrichter</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="creator-messages" style="margin-bottom:1rem">
+    {% for m in messages %}
+    <div class="creator-msg creator-msg-{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="ref-toolbar">
+    <form method="get" class="ref-search-form">
+      <input class="ref-search-input" type="text" name="q" value="{{ q }}" placeholder="Name suchen…" autofocus>
+      <button class="ref-search-btn" type="submit">Suchen</button>
+      {% if q %}<a class="ref-clear-btn" href="{% url 'creator_referee_list' %}">✕</a>{% endif %}
+    </form>
+    <a class="ref-new-btn" href="{% url 'creator_referee_new' %}">+ Neuer Schiedsrichter</a>
+  </div>
+
+  <div class="ref-grid">
+    {% for ref in referees %}
+    <a class="ref-card" href="{% url 'creator_referee_edit' referee_id=ref.pk %}">
+      <div class="ref-card-face">
+        {% if ref.fm_uid %}
+        <img src="/static/assets/referees/face_{{ ref.fm_uid }}.png"
+             alt="{{ ref.name }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        {% endif %}
+        <div class="ref-card-initials" {% if ref.fm_uid %}style="display:none"{% endif %}>
+          {{ ref.name|first }}
+        </div>
+      </div>
+      <div class="ref-card-body">
+        <div class="ref-card-name">{{ ref.name }}</div>
+        <div class="ref-card-meta">
+          {% if ref.nationality_code %}
+          <img class="ref-flag-sm" src="{{ ref.flag_url }}" alt="" onerror="this.style.display='none'">
+          {% endif %}
+          {% if ref.nationality %}<span>{{ ref.nationality }}</span>{% endif %}
+          {% if ref.age %}<span class="sep">·</span><span>{{ ref.age }} J.</span>{% endif %}
+        </div>
+        <div class="ref-card-footer">
+          <span class="ref-level-pill ref-level-pill--{{ ref.level }}">
+            {{ ref.get_level_display }}
+          </span>
+          <span class="ref-tendency-sm">
+            {% if ref.karten_bucket == 0 %}🟢 Nachsichtig{% elif ref.karten_bucket == 2 %}🟥 Kartenfreudig{% else %}⬜ Ausgewogen{% endif %}
+          </span>
+        </div>
+      </div>
+      <div class="ref-card-arrow">›</div>
+    </a>
+    {% empty %}
+    <div class="ref-empty">
+      {% if q %}Keine Schiedsrichter für „{{ q }}" gefunden.{% else %}Noch keine Schiedsrichter angelegt.{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+</section>
+
+<style>
+.creator-section { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.creator-back { color: #00d4ff88; text-decoration: none; font-size: .8rem; letter-spacing: .04em; display: inline-block; }
+.creator-back:hover { color: #00d4ff; }
+.creator-header { background: linear-gradient(135deg, #0a1628 0%, #03070c 100%); border: 1px solid #00d4ff22; border-radius: 12px; margin-bottom: 1.5rem; padding: 2rem; }
+.creator-header-inner { display: flex; justify-content: space-between; align-items: center; }
+.creator-header-title h1 { color: #fff; font-size: 1.8rem; margin: 0 0 .25rem; }
+.creator-subtitle { color: #00d4ff88; font-size: .85rem; margin: 0; }
+.creator-badge { background: #00d4ff; color: #03070c; font-size: .65rem; font-weight: 800; letter-spacing: .12em; padding: .25rem .6rem; border-radius: 4px; }
+.creator-stats { display: flex; gap: 2rem; }
+.creator-stat { text-align: center; }
+.creator-stat strong { display: block; font-size: 2rem; color: #00d4ff; font-weight: 800; }
+.creator-stat span { color: #8899aa; font-size: .8rem; }
+.creator-messages { display: flex; flex-direction: column; gap: .4rem; }
+.creator-msg { padding: .6rem 1rem; border-radius: 6px; font-size: .85rem; }
+.creator-msg-success { background: #0d2a1a; color: #30f29c; border: 1px solid #30f29c33; }
+.creator-msg-error { background: #2a0d0d; color: #ff4444; border: 1px solid #ff444433; }
+.creator-msg-warning { background: #2a1f0d; color: #ffaa00; border: 1px solid #ffaa0033; }
+
+.ref-toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+.ref-search-form { display: flex; align-items: center; gap: .5rem; flex: 1; }
+.ref-search-input { flex: 1; background: #050e1a; border: 1px solid #0d2035; border-radius: 8px; color: #cce8ff; padding: .6rem 1rem; font-size: .88rem; outline: none; }
+.ref-search-input:focus { border-color: #00d4ff55; }
+.ref-search-btn { background: #0d2035; border: 1px solid #00d4ff33; border-radius: 8px; color: #00d4ff; padding: .6rem 1.2rem; font-size: .82rem; cursor: pointer; font-weight: 700; }
+.ref-search-btn:hover { background: #162c45; }
+.ref-clear-btn { color: #556677; font-size: .9rem; text-decoration: none; padding: .4rem .6rem; }
+.ref-clear-btn:hover { color: #ff4444; }
+.ref-new-btn { background: linear-gradient(135deg, #00d4ff22, #0088ff11); border: 1px solid #00d4ff44; border-radius: 8px; color: #00d4ff; padding: .65rem 1.4rem; font-size: .82rem; font-weight: 800; text-decoration: none; letter-spacing: .04em; white-space: nowrap; }
+.ref-new-btn:hover { background: linear-gradient(135deg, #00d4ff33, #0088ff22); }
+
+.ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: .75rem; }
+.ref-card { display: flex; align-items: center; gap: .85rem; background: #050e1a; border: 1px solid #0d2035; border-radius: 10px; padding: .8rem 1rem; text-decoration: none; transition: border-color .18s, background .18s; }
+.ref-card:hover { border-color: #00d4ff55; background: #071525; }
+.ref-card-face { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; background: #071525; border: 2px solid #00d4ff22; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.ref-card-face img { width: 100%; height: 100%; object-fit: cover; }
+.ref-card-initials { color: #00d4ff; font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.ref-card-body { flex: 1; min-width: 0; }
+.ref-card-name { color: #cce8ff; font-weight: 700; font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ref-card-meta { display: flex; align-items: center; gap: .4rem; color: #8899aa; font-size: .72rem; margin-top: .15rem; }
+.ref-flag-sm { height: 11px; width: auto; border-radius: 1px; vertical-align: middle; }
+.sep { color: #334455; }
+.ref-card-footer { display: flex; align-items: center; gap: .6rem; margin-top: .35rem; }
+.ref-level-pill { font-size: .65rem; font-weight: 800; letter-spacing: .08em; padding: .2rem .55rem; border-radius: 4px; text-transform: uppercase; }
+.ref-level-pill--5 { background: #2a1f00; color: #ffcc00; border: 1px solid #ffcc0033; }
+.ref-level-pill--4 { background: #0a1e2a; color: #00d4ff; border: 1px solid #00d4ff33; }
+.ref-level-pill--3 { background: #0a1628; color: #8899cc; border: 1px solid #8899cc33; }
+.ref-level-pill--2 { background: #0d150a; color: #44aa66; border: 1px solid #44aa6633; }
+.ref-level-pill--1 { background: #1a1010; color: #aa6644; border: 1px solid #aa664433; }
+.ref-tendency-sm { font-size: .7rem; color: #556677; }
+.ref-card-arrow { color: #00d4ff33; font-size: 1.3rem; flex-shrink: 0; }
+.ref-empty { color: #334455; padding: 3rem; text-align: center; grid-column: 1/-1; font-size: .95rem; }
+</style>
+
+{% endblock %}
