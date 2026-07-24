@@ -4941,11 +4941,6 @@ class Referee(models.Model):
         return self.LEVEL_LABEL_MAP.get(self.level, str(self.level))
 
 
-def pick_random_referee():
-    """Gibt einen zufälligen Referee aus der DB zurück, oder None wenn leer."""
-    return Referee.objects.order_by('?').first()
-
-
 class SimulatedMatch(models.Model):
     """Gespeichertes Ergebnis einer Match-Engine-Simulation (zum Testen)."""
 

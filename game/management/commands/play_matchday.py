@@ -155,8 +155,14 @@ class Command(BaseCommand):
                     report_data=data,
                 )
                 try:
-                    from game.models import pick_random_referee
-                    sm.referee = pick_random_referee()
+                    from game.referee_service import pick_referee
+                    sm.referee = pick_referee(
+                        home_club=fixture.home_club,
+                        away_club=fixture.away_club,
+                        league=fixture.league,
+                        matchday=fixture.matchday,
+                        season=str(season),
+                    )
                     sm.save(update_fields=['referee'])
                 except Exception:
                     pass

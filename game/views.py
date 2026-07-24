@@ -5029,8 +5029,13 @@ def club_match_report(request, club_id):
                 match_type=match_type,
             )
             try:
-                from .models import pick_random_referee
-                sm.referee = pick_random_referee()
+                from .referee_service import pick_referee
+                _sim_season = _gss_sim.current_season if _gss_sim else '0'
+                sm.referee = pick_referee(
+                    home_club=club,
+                    away_club=opponent,
+                    season=str(_sim_season),
+                )
                 sm.save(update_fields=['referee'])
             except Exception:
                 pass

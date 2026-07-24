@@ -794,8 +794,14 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 report_data=data,
             )
             try:
-                from .models import pick_random_referee
-                sm.referee = pick_random_referee()
+                from .referee_service import pick_referee
+                sm.referee = pick_referee(
+                    home_club=fixture.home_club,
+                    away_club=fixture.away_club,
+                    league=fixture.league,
+                    matchday=fixture.matchday,
+                    season=str(season),
+                )
                 sm.save(update_fields=['referee'])
             except Exception:
                 pass

@@ -412,8 +412,13 @@ def simulate_cup_fixture(fixture) -> object:
             match_type='pokal',
         )
         try:
-            from .models import pick_random_referee
-            sm.referee = pick_random_referee()
+            from .referee_service import pick_referee
+            sm.referee = pick_referee(
+                home_club=fixture.home_club,
+                away_club=fixture.away_club,
+                cup_fixture=fixture,
+                season=fixture.cup_round.cup_season.season,
+            )
             sm.save(update_fields=['referee'])
         except Exception:
             pass
