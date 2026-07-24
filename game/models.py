@@ -6338,11 +6338,6 @@ class Sponsor(models.Model):
     @property
     def logo_url(self):
         from django.conf import settings
-        # Primär: logo.dev CDN (benötigt domain + LOGO_DEV_TOKEN)
-        token = getattr(settings, 'LOGO_DEV_TOKEN', '')
-        if self.domain and token:
-            return f'https://img.logo.dev/{self.domain}?token={token}&size=200&format=jpg'
-        # Fallback: lokales Asset (Live-Server /var/www/assets/sponsors/)
         base = getattr(settings, 'ASSETS_BASE_URL', '/assets/')
         return f'{base}sponsors/{self.bereich}/{self.slug}_sponsor.jpg'
 
