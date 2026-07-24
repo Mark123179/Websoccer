@@ -387,7 +387,10 @@ def _build_v2_offer(club, saison: str, slot: str, typ: str, wert_slot: int,
 
     factor = Decimal(str(1 + rng.uniform(-streuung, streuung)))
     ew_euros = int((Decimal(wert_slot) * factor).to_integral_value())
-    split_ratio = Decimal(str(splits[typ]))
+    # torgeld: 0.0-Split = 100 % variabel (per Tor); Fallback 0.5 für unbekannte Typen
+    _DEFAULT_SPLITS = {'sicherheit': 1.0, 'sieggeld': 0.5, 'torgeld': 0.0,
+                       'zieljaeger': 0.6, 'zuschauer': 0.5}
+    split_ratio = Decimal(str(splits.get(typ, _DEFAULT_SPLITS.get(typ, 0.5))))
     fix_euros = int((Decimal(ew_euros) * split_ratio).to_integral_value())
     var_ew_euros = ew_euros - fix_euros
 

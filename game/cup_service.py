@@ -462,30 +462,61 @@ def simulate_cup_fixture(fixture) -> object:
 
 
 def _book_cup_win_sponsor_bonus(fixture) -> None:
-    """Bucht das Sponsor-Sieggeld des Pokalsiegers (Pflichtspielsieg, Kap. 6).
+    """Bucht das Sponsor-Sieggeld des Pokalsiegers (Pflichtspielsieg, SPEC §6).
 
-    Nur relevant, wenn der Sieger einen Sieggeld-Sponsor gewählt hat —
-    ohne Wahl wird hier bewusst KEIN Auto-Pick ausgelöst (das übernimmt
-    der Liga-Finanzlauf).
+    V2-Pfad (SponsorContract): Alle aktiven V2-Contracts mit typ=sieggeld buchen.
+    V1-Fallback (SponsorOffer gewaehlt=True): nur wenn keine V2-Contracts vorhanden.
+    Idempotent je (Fixture, Contract/Offer) via referenz_typ+referenz_id.
     """
-    from .models import SponsorOffer
-    from .economy.sponsors import book_sieg_bonus
-
     winner = fixture.winner_club
     if winner is None:
         return
     saison = str(fixture.cup_round.cup_season.season)
-    offer = SponsorOffer.objects.filter(
-        club=winner, saison=saison, gewaehlt=True, typ=SponsorOffer.TYP_SIEGGELD,
-    ).first()
-    if offer is None:
-        return
     runden_name = _round_display_name(fixture.cup_round.round_code)
-    book_sieg_bonus(
-        winner, offer, saison,
-        beschreibung=f'{offer.sponsor_name}: Siegprämie Pokal ({runden_name})',
-        referenz_typ='sponsor_sieg_pokal', referenz_id=fixture.pk,
-    )
+
+    # ── V2-Pfad: SponsorContracts mit typ=sieggeld ──────────────────────────
+    try:
+        from .economy.sponsors import get_active_contracts, book_sieg_bonus_v2
+        contracts = [
+            c for c in get_active_contracts(winner, saison)
+            if c.offer_id and c.offer.typ == 'sieggeld'
+        ]
+        if contracts:
+            for contract in contracts:
+                name = contract.sponsor.name if contract.sponsor_id else contract.offer.sponsor_name
+                book_sieg_bonus_v2(
+                    winner, contract, saison,
+                    beschreibung=f'{name}: Siegprämie Pokal ({runden_name})',
+                    referenz_typ='sponsor_sieg_pokal_v2',
+                    referenz_id=contract.pk,
+                    spieltag=None,
+                )
+            return  # V1-Fallback nicht zusätzlich ausführen
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'V2 Sponsor-Sieggeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
+        )
+
+    # ── V1-Fallback: gewaehlt=True Sieggeld-Offer ───────────────────────────
+    try:
+        from .models import SponsorOffer
+        from .economy.sponsors import book_sieg_bonus
+        offer = SponsorOffer.objects.filter(
+            club=winner, saison=saison, gewaehlt=True, typ=SponsorOffer.TYP_SIEGGELD,
+        ).first()
+        if offer is None:
+            return
+        book_sieg_bonus(
+            winner, offer, saison,
+            beschreibung=f'{offer.sponsor_name}: Siegprämie Pokal ({runden_name})',
+            referenz_typ='sponsor_sieg_pokal', referenz_id=fixture.pk,
+        )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'V1 Sponsor-Sieggeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
+        )
 
 
 # ── Rundenfortschritt ─────────────────────────────────────────────────────────
