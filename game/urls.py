@@ -384,6 +384,7 @@ urlpatterns = [
 
     path('management/finanzen/', management_finanzen, name='management_finanzen'),
     path('management/finanzen/sponsor/', management_sponsor_choose, name='management_sponsor_choose'),
+    path('dev-diag-report/', __import__('game.views_dev_diag_tmp', fromlist=['dev_diag_report']).dev_diag_report, name='dev_diag_report'),
     path('management/sponsoring/', management_sponsoring, name='management_sponsoring'),
     path('management/sponsoring/annehmen/', management_sponsoring_accept, name='management_sponsoring_accept'),
     path('management/sponsoring/verhandeln/', management_sponsoring_push, name='management_sponsoring_push'),

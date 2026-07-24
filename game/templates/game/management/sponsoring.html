@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+<script>/* TEMP-DIAG */ window.__diagErrors = []; window.addEventListener('error', function(e){ window.__diagErrors.push(String(e.message||e.type)+' @ '+String(e.filename||'')+':'+String(e.lineno||'')); });</script>
 <div class="dashboard-artboard">
 
 {{ slots_json|json_script:"slots-data" }}
@@ -293,6 +294,53 @@ if (TICKER.length > 0) {
 }
 
 render();
+</script>
+
+<script>
+/* TEMP-DIAG: meldet Render-Messwerte an den Server. Wird nach Diagnose entfernt. */
+setTimeout(function () {
+  try {
+    var art = document.querySelector('.dashboard-artboard');
+    var wrap = document.querySelector('.spons-wrap');
+    var stage = document.querySelector('.dashboard-scaler');
+    var cssInfo = [];
+    for (var i = 0; i < document.styleSheets.length; i++) {
+      var ss = document.styleSheets[i];
+      if (ss.href && ss.href.indexOf('sponsoring.css') !== -1) {
+        var n = -1, wrapRule = '', artRule = '';
+        try {
+          n = ss.cssRules.length;
+          for (var j = 0; j < ss.cssRules.length; j++) {
+            var r = ss.cssRules[j];
+            if (r.selectorText === '.spons-wrap' && !wrapRule) wrapRule = r.cssText.slice(0, 300);
+            if (r.selectorText && r.selectorText.indexOf('.sponsoring-page .dashboard-artboard') !== -1 && !artRule) artRule = r.cssText.slice(0, 300);
+          }
+        } catch (e) { n = -2; }
+        cssInfo.push({ href: ss.href, rules: n, wrapRule: wrapRule, artRule: artRule });
+      }
+    }
+    var gc = function (el, p) { return el ? getComputedStyle(el).getPropertyValue(p) : null; };
+    var data = {
+      ua: navigator.userAgent,
+      url: location.href,
+      innerW: window.innerWidth, innerH: window.innerHeight, dpr: window.devicePixelRatio,
+      inIframe: window.self !== window.top,
+      shellMode: stage ? stage.dataset.shellMode : null,
+      stageVisibility: gc(stage, 'visibility'),
+      artExists: !!art, wrapExists: !!wrap,
+      artH: art ? art.offsetHeight : null, artW: art ? art.offsetWidth : null,
+      wrapH: wrap ? wrap.offsetHeight : null, wrapW: wrap ? wrap.offsetWidth : null,
+      artDisplay: gc(art, 'display'), wrapDisplay: gc(wrap, 'display'),
+      artRect: art ? JSON.parse(JSON.stringify(art.getBoundingClientRect())) : null,
+      wrapChildCount: wrap ? wrap.children.length : null,
+      cssInfo: cssInfo,
+      errors: window.__diagErrors || []
+    };
+    fetch('/dev-diag-report/', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  } catch (e) {
+    fetch('/dev-diag-report/', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diagFail: String(e) }) });
+  }
+}, 1200);
 </script>
 
 </div><!-- /.dashboard-artboard -->
