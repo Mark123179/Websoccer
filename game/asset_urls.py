@@ -127,8 +127,20 @@ def flag_url(code):
 
 
 def referee_face_url(fm_uid):
+    """Gibt die URL für das Schiedsrichter-Bild zurück.
+
+    Reihenfolge: referees/face_{uid}.png → .jpg → .jpeg
+    Prüft ggf. ASSETS_ROOT/referees/ direkt (falls gesetzt).
+    Fallback: referee_default.jpg.
+    """
     if not fm_uid:
         return asset_url('referees', 'referee_default.jpg')
+    assets_root = getattr(settings, 'ASSETS_ROOT', None)
+    if assets_root:
+        ref_dir = _os.path.join(str(assets_root).rstrip('/'), 'referees')
+        for ext in ('png', 'jpg', 'jpeg'):
+            if _os.path.exists(_os.path.join(ref_dir, f'face_{fm_uid}.{ext}')):
+                return asset_url('referees', f'face_{fm_uid}.{ext}')
     return asset_url('referees', f'face_{fm_uid}.png')
 
 

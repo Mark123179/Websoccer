@@ -131,6 +131,9 @@ class Command(BaseCommand):
             if errors:
                 for e in errors[:10]:
                     self.stdout.write(self.style.ERROR(f'  [ERROR] {e}'))
+                sys.exit(2)
+            if strict and warnings:
+                sys.exit(1)
             return
 
         # ── Bild-Auto-Copy (wie in creator_referee_save) ─────────────────────
