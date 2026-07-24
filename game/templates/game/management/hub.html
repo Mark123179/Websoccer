@@ -170,11 +170,11 @@
             </div>
             {% endif %}
 
-            <!-- SPONSORING — in Entwicklung -->
-            <div class="mhub-card mhub-card--locked mhub-card--sponsor">
+            <!-- SPONSORING -->
+            {% if club %}
+            <a href="{% url 'management_sponsoring' %}" class="mhub-card mhub-card--active mhub-card--sponsor">
                 <div class="mhub-card-bg"></div>
                 <div class="mhub-card-overlay"></div>
-                <span class="mhub-badge-dev">In Entwicklung</span>
                 <div class="mhub-card-body">
                     <div class="mhub-icon">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -182,9 +182,25 @@
                         </svg>
                     </div>
                     <h2 class="mhub-card-title">Sponsoring</h2>
-                    <p class="mhub-card-sub">Partner, Verträge &amp; Innehalten</p>
+                    <p class="mhub-card-sub">Partner, Verträge &amp; Einnahmen</p>
+                </div>
+            </a>
+            {% else %}
+            <div class="mhub-card mhub-card--locked mhub-card--sponsor">
+                <div class="mhub-card-bg"></div>
+                <div class="mhub-card-overlay"></div>
+                <span class="mhub-badge-dev">Kein Verein</span>
+                <div class="mhub-card-body">
+                    <div class="mhub-icon">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11 5.08V3c-3.87.49-7 3.85-7 7.92 0 4.07 3.13 7.43 7 7.92V16.9c-2.83-.48-5-2.94-5-5.9s2.17-5.42 5-5.92zM18.97 11c-.47-2.3-2-4.3-4.97-5V3C18 3.56 21 7 21 12s-3 8.44-7 9v-3c2.97-.7 4.5-2.7 4.97-5H15v-2h3.97z"/>
+                        </svg>
+                    </div>
+                    <h2 class="mhub-card-title">Sponsoring</h2>
+                    <p class="mhub-card-sub">Partner, Verträge &amp; Einnahmen</p>
                 </div>
             </div>
+            {% endif %}
 
             <!-- VEREINSNEWS — jetzt verfügbar -->
             {% if club %}
