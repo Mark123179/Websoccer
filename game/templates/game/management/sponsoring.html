@@ -8,12 +8,10 @@
 {% endblock %}
 
 {% block content %}
-<script>/* TEMP-DIAG */ window.__diagErrors = []; window.addEventListener('error', function(e){ window.__diagErrors.push(String(e.message||e.type)+' @ '+String(e.filename||'')+':'+String(e.lineno||'')); });</script>
 <div class="dashboard-artboard">
 
 {{ slots_json|json_script:"slots-data" }}
 {{ initial_state_json|json_script:"initial-state" }}
-{{ ticker_json|json_script:"ticker-data" }}
 
 <div class="sxp-wrap">
   <div class="pagehead">
@@ -59,11 +57,6 @@
       </div>
       <p class="sxp-note">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
     </div>
-    <div class="sxp-panel">
-      <div class="livehead"><span class="p"></span><span class="sxp-micro">Liga-Ticker · Fixierte Verträge</span></div>
-      <div id="ticker" style="display:flex;flex-direction:column;gap:12px"></div>
-      <p class="sxp-note" style="padding-top:4px;border-top:1px solid var(--line)">Neue Abschlüsse der Liga laufen hier ein, sobald andere Vereine ihre Sponsoren fixieren.</p>
-    </div>
   </div>
 </div>
 
@@ -79,7 +72,6 @@ const rate = n => n >= 1e6 ? mio(Math.round(n / 1e4) * 1e4) : n >= 1000 ? eur(Ma
 
 const SLOTS   = JSON.parse(document.getElementById('slots-data').textContent);
 const INITIAL = JSON.parse(document.getElementById('initial-state').textContent);
-const TICKER  = JSON.parse(document.getElementById('ticker-data').textContent);
 
 const TYPCOL = {
   'Sicherheit': ['rgba(34,230,255,.12)',  'var(--cyan)'],
@@ -89,7 +81,7 @@ const TYPCOL = {
   'Zuschauer':  ['rgba(255,159,28,.16)',  'var(--orange)'],
 };
 
-let G, openSlot, pending = null, fx = null, tickerN = 0, toastT;
+let G, openSlot, pending = null, fx = null, toastT;
 
 function initG() {
   G = SLOTS.map((s, si) => {
@@ -274,73 +266,8 @@ function render() {
   document.getElementById('lgFix').textContent  = pF;
   document.getElementById('lgVar').textContent  = pV;
   document.getElementById('lgOpen').textContent = Math.max(0, 100 - pF - pV);
-  renderTicker(false);
-}
-
-function renderTicker(isNew) {
-  const el = document.getElementById('ticker');
-  if (!TICKER.length) { el.innerHTML = ''; return; }
-  el.innerHTML = TICKER.slice(0, Math.max(tickerN, 1)).slice().reverse().map((t, i) =>
-    `<div class="tick-item ${t.limit?'limit':''} ${isNew&&i===0?'new':''}">
- <img src="${t.crest}" alt="" onerror="this.style.display='none'">
- <span style="min-width:0"><span class="tx"><b>${t.club}</b> ${t.text}</span>
- ${t.limit?`<span class="lim">Limit erreicht</span>`:`<span class="sl">${t.slot}</span>`}</span></div>`
-  ).join('');
-}
-
-if (TICKER.length > 0) {
-  tickerN = Math.min(3, TICKER.length);
-  setInterval(() => { if (tickerN < TICKER.length) { tickerN++; renderTicker(true); } }, 9000);
-}
 
 render();
-</script>
-
-<script>
-/* TEMP-DIAG: meldet Render-Messwerte an den Server. Wird nach Diagnose entfernt. */
-setTimeout(function () {
-  try {
-    var art = document.querySelector('.dashboard-artboard');
-    var wrap = document.querySelector('.sxp-wrap');
-    var stage = document.querySelector('.dashboard-scaler');
-    var cssInfo = [];
-    for (var i = 0; i < document.styleSheets.length; i++) {
-      var ss = document.styleSheets[i];
-      if (ss.href && ss.href.indexOf('sponsoring.css') !== -1) {
-        var n = -1, wrapRule = '', artRule = '';
-        try {
-          n = ss.cssRules.length;
-          for (var j = 0; j < ss.cssRules.length; j++) {
-            var r = ss.cssRules[j];
-            if (r.selectorText === '.sxp-wrap' && !wrapRule) wrapRule = r.cssText.slice(0, 300);
-            if (r.selectorText && r.selectorText.indexOf('.sxp-page .dashboard-artboard') !== -1 && !artRule) artRule = r.cssText.slice(0, 300);
-          }
-        } catch (e) { n = -2; }
-        cssInfo.push({ href: ss.href, rules: n, wrapRule: wrapRule, artRule: artRule });
-      }
-    }
-    var gc = function (el, p) { return el ? getComputedStyle(el).getPropertyValue(p) : null; };
-    var data = {
-      ua: navigator.userAgent,
-      url: location.href,
-      innerW: window.innerWidth, innerH: window.innerHeight, dpr: window.devicePixelRatio,
-      inIframe: window.self !== window.top,
-      shellMode: stage ? stage.dataset.shellMode : null,
-      stageVisibility: gc(stage, 'visibility'),
-      artExists: !!art, wrapExists: !!wrap,
-      artH: art ? art.offsetHeight : null, artW: art ? art.offsetWidth : null,
-      wrapH: wrap ? wrap.offsetHeight : null, wrapW: wrap ? wrap.offsetWidth : null,
-      artDisplay: gc(art, 'display'), wrapDisplay: gc(wrap, 'display'),
-      artRect: art ? JSON.parse(JSON.stringify(art.getBoundingClientRect())) : null,
-      wrapChildCount: wrap ? wrap.children.length : null,
-      cssInfo: cssInfo,
-      errors: window.__diagErrors || []
-    };
-    fetch('/dev-diag-report/', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-  } catch (e) {
-    fetch('/dev-diag-report/', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ diagFail: String(e) }) });
-  }
-}, 1200);
 </script>
 
 </div><!-- /.dashboard-artboard -->

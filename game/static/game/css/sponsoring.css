@@ -151,18 +151,6 @@
 .legend b { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 5px; vertical-align: middle; }
 .sxp-note { font-size: 11px; line-height: 1.5; color: var(--faint); font-weight: 700; }
 
-/* ── Ticker ─────────────────────────────────────────────── */
-.tick-item { display: flex; gap: 10px; align-items: flex-start; }
-.tick-item.limit { padding: 9px 10px; margin: 0 -10px; border: 1px solid rgba(255,209,102,.4); border-radius: 8px; background: rgba(255,209,102,.06); }
-.tick-item.new   { animation: tickin .5s ease-out; }
-@keyframes tickin { from{ opacity:0; transform:translateY(-10px) } to{ opacity:1; transform:none } }
-.tick-item img   { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(34,230,255,.2)); }
-.tick-item .tx   { font-size: 12px; font-weight: 800; line-height: 1.4; color: var(--muted); }
-.tick-item .tx b { color: var(--text); }
-.tick-item .sl   { display: block; margin-top: 2px; font-size: 10px; font-weight: 800; color: var(--faint); text-transform: uppercase; letter-spacing: .5px; }
-.tick-item .lim  { display: inline-block; margin-top: 3px; padding: 2px 7px; border-radius: 999px; border: 1px solid rgba(255,209,102,.4); color: var(--yellow); font-size: 9px; font-weight: 900; letter-spacing: .6px; text-transform: uppercase; }
-.livehead   { display: flex; align-items: center; gap: 8px; }
-.livehead .p { width: 7px; height: 7px; border-radius: 999px; background: var(--green); box-shadow: 0 0 8px var(--green); }
 
 /* ── Altbestand-Klassen (sp-*) bleiben für Compat ──────── */
 .sp-artboard { max-width: 1380px; margin: 0 auto; padding: 24px 32px 48px; position: relative; z-index: 1; }
