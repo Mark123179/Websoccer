@@ -6337,6 +6337,11 @@ class Sponsor(models.Model):
 
     @property
     def logo_url(self):
+        if self.domain:
+            return (
+                f'https://img.logo.dev/{self.domain}'
+                '?token=pk_QmUpoNKUTByAKyVZIVYYVw&size=400&format=jpg'
+            )
         from django.conf import settings
         base = getattr(settings, 'ASSETS_BASE_URL', '/assets/')
         return f'{base}sponsors/{self.bereich}/{self.slug}_sponsor.jpg'

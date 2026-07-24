@@ -4,7 +4,7 @@
 {% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=10">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -147,7 +147,7 @@
                             {% elif o.is_last_offen %}
                             <span class="sp-offer-badge sp-offer-badge--auto" title="Wird automatisch zum Saisonstart angenommen">Auto-Annahme</span>
                             {% else %}
-                            <span class="sp-offer-badge sp-offer-badge--typ">{{ o.typ|upper }}</span>
+                            <span class="sp-offer-badge sp-offer-badge--typ sp-offer-badge--{{ o.typ }}">{{ o.typ_label }}</span>
                             {% endif %}
                         </div>
 
@@ -266,6 +266,11 @@
                         <span class="sp-scenario-val sp-scenario-val--best">{{ proj_best_fmt }}</span>
                     </div>
                     <div class="sp-scenario-divider"></div>
+                    <div class="sp-scenario-bar-track">
+                        <div class="sp-scenario-bar-fix"  style="width:{{ slots_fix_pct }}%"></div>
+                        <div class="sp-scenario-bar-var"  style="width:0%"></div>
+                        <div class="sp-scenario-bar-open" style="width:{{ slots_open_pct }}%"></div>
+                    </div>
                     <div class="sp-scenario-legend">
                         <span class="sp-legend-dot sp-legend-dot--fix"></span>
                         <span class="sp-legend-label">Fix {{ slots_fix_pct }}&thinsp;%</span>

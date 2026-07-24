@@ -1221,26 +1221,33 @@ def _sponsoring_offer_var_text(offer) -> str:
         return '100 % garantiert'
     if typ == 'sieggeld':
         try:
-            return f'+ {float(v.get("betrag", 0)):,.0f} € je Pflichtspielsieg'.replace(',', '.')
+            betrag = int(float(v.get('betrag', 0)))
+            return f'+ {betrag:,.0f} \u20ac je Pflichtspielsieg'.replace(',', '.')
         except Exception:
-            return '+ X € je Sieg'
+            return '+ X \u20ac je Sieg'
     if typ == 'zuschauer':
         try:
             val = float(v.get('betrag', 0))
-            return f'+ {val:.4f} € je Heimspiel-Besucher'.replace('.', ',', 1)
+            betrag_fmt = f'{int(val):,.0f}'.replace(',', '.') if val == int(val) else f'{val:.2f}'.replace('.', ',')
+            return f'+ {betrag_fmt} \u20ac je Stadionbesucher'
         except Exception:
-            return '+ X € je Besucher'
+            return '+ X \u20ac je Besucher'
     if typ == 'torgeld':
         try:
-            return f'+ {float(v.get("betrag", 0)):,.2f} € je Tor'.replace(',', '.')
+            betrag = int(float(v.get('betrag', 0)))
+            return f'+ {betrag:,.0f} \u20ac je Pflichtspieltor'.replace(',', '.')
         except Exception:
-            return '+ X € je Tor'
+            return '+ X \u20ac je Tor'
     if typ == 'zieljaeger':
         ziel = v.get('ziel_label', 'Saisonziel')
         try:
-            return f'+ {float(v.get("betrag", 0)):,.0f} € bei "{ziel}"'.replace(',', '.')
+            betrag = float(v.get('betrag', 0))
+            mio = betrag / 1_000_000
+            betrag_str = (f'{mio:,.1f} Mio \u20ac'.replace(',', '.')
+                          if mio >= 1 else f'{int(betrag):,.0f} \u20ac'.replace(',', '.'))
+            return f'+ {betrag_str} bei {ziel}'
         except Exception:
-            return f'+ X € bei "{ziel}"'
+            return f'+ X Mio \u20ac bei {ziel}'
     return ''
 
 
@@ -1332,6 +1339,14 @@ def management_sponsoring(request):
         # Anzahl aktuell offener Angebote im Slot (für can_push Min-2-Check)
         offen_raw_count = sum(1 for o in raw_offers if o.status == 'offen')
 
+        _TYP_LABELS = {
+            'sicherheit': 'SICHERHEIT',
+            'sieggeld': 'SIEGGELD',
+            'torgeld': 'TORGELD',
+            'zieljaeger': 'ZIELJÄGER',
+            'zuschauer': 'ZUSCHAUER',
+        }
+
         offer_list = []
         for o in raw_offers:
             # fixierte zeigen wir auch (als done-Card); verprellte/abgesagte nur im Slot
@@ -1379,6 +1394,7 @@ def management_sponsoring(request):
                 'sponsor_name': o.sponsor_name,
                 'typ': o.typ,
                 'typ_display': o.get_typ_display(),
+                'typ_label': _TYP_LABELS.get(o.typ, o.typ.upper()),
                 'fix_fmt': _fmt_eur_sponsoring(fix_val),
                 'fix_val': fix_val,
                 'var_text': _sponsoring_offer_var_text(o),
