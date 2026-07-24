@@ -1,10 +1,25 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block body_class %}finanzen-page{% endblock %}
+{% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
 <style>
+/* ── Page-level layout (analog zu finanzen.css) ── */
+.sponsoring-page .gameViewport {
+  background:
+    radial-gradient(ellipse 900px 500px at 100% 0%, rgba(34,230,255,.10), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 0% 100%, rgba(48,242,156,.07), transparent 60%),
+    linear-gradient(135deg, #03070c, #07111a);
+}
+.sponsoring-page .dashboard-artboard {
+  position: relative;
+  z-index: 1;
+}
+.spons-wrap {
+  width: 100%;
+}
+
 :root{
   --bg0:#03070c; --bg1:#07111a;
   --panel:rgba(9,23,34,.82); --panel-strong:rgba(7,17,26,.92); --panel-soft:rgba(34,230,255,.07);
