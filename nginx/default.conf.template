@@ -57,7 +57,7 @@ server {
 
     # Bild-Assets (Spielergesichter, Club-Logos, Trophäen …) direkt von
     # der Platte (Bind-Mount /var/www/assets → /app/assets). Creator-Mode
-    # schreibt via web-Container in denselben Bind-Mount (ASSETS_ROOT=/app/assets).
+    # schreibt via web-Container in /var/www/assets (ASSETS_ROOT=/var/www/assets in .env).
     # Fehlende Dateien beantwortet nginx mit 404, der Client zeigt den Platzhalter.
     location /assets/ {
         alias /app/assets/;
