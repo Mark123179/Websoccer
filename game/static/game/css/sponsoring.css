@@ -222,10 +222,9 @@
     background: #111827;
     border: 1px solid rgba(255,255,255,.08);
     border-radius: 10px;
-    padding: 0;
+    padding: 0 0 4px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     transition: border-color .2s;
 }
 .sp-offer-card:hover { border-color: rgba(34,211,238,.3); }
@@ -253,8 +252,8 @@
 /* Card body padding */
 .sp-offer-head, .sp-offer-auto-hint, .sp-offer-amounts,
 .sp-offer-delta, .sp-risk-wrap, .sp-offer-runden, .sp-offer-actions {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 14px;
+    padding-right: 14px;
 }
 
 .sp-offer-head {
@@ -264,6 +263,21 @@
     gap: 8px;
     padding-top: 12px;
     padding-bottom: 4px;
+}
+.sp-offer-name-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+.sp-offer-logo-inline {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    background: #fff;
+    border-radius: 6px;
+    padding: 3px;
+    flex-shrink: 0;
 }
 .sp-offer-name { font-size: 14px; font-weight: 700; color: #f1f5f9; margin: 0 0 2px; }
 .sp-offer-typ  { font-size: 10px; color: #6b7280; margin: 0; text-transform: uppercase; letter-spacing: .04em; }

@@ -92,39 +92,7 @@
             </div>
         </div>
 
-        <!-- Sponsorenübersicht -->
-        <div class="fn-panel">
-            <p class="fn-panel-title">Sponsorenübersicht</p>
-            {% if sponsors %}
-            <div class="fn-sponsor-grid">
-                {% for sp in sponsors %}
-                <div class="fn-sponsor-card fn-sponsor-card--{{ sp.sponsor_type|lower }} {% if sp.sponsor_type == 'haupt' %}fn-sponsor-full{% endif %}">
-                    <div class="fn-sponsor-icon fn-sponsor-icon--nobg">
-                        {% if sp.sponsor_type == 'tv' %}
-                        <img src="{% static 'game/images/sponsors/tv-sponsor-logo.png' %}" alt="TV Sponsor" class="fn-sponsor-logo">
-                        {% elif sp.sponsor_type == 'trikot' %}
-                        <img src="{% static 'game/images/sponsors/trikot-sponsor-logo.png' %}" alt="Trikotsponsor" class="fn-sponsor-logo">
-                        {% elif sp.sponsor_type == 'haupt' %}
-                        <img src="{% static 'game/images/sponsors/haupt-sponsor-logo.png' %}" alt="Hauptsponsor" class="fn-sponsor-logo">
-                        {% elif sp.sponsor_type == 'ausrüster' %}
-                        <img src="{% static 'game/images/sponsors/ausruester-sponsor-logo.png' %}" alt="Ausrüster" class="fn-sponsor-logo">
-                        {% else %}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        {% endif %}
-                    </div>
-                    <div class="fn-sponsor-body">
-                        <p class="fn-sponsor-type">{{ sp.get_sponsor_type_display }}</p>
-                        <p class="fn-sponsor-amount">{{ sp.amount_mio }} Mio €</p>
-                        <p class="fn-sponsor-name">{{ sp.name }}</p>
-                        <p class="fn-sponsor-saison">/ Saison</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="fn-sponsors-empty">Keine Sponsorenverträge für diese Saison.</p>
-            {% endif %}
-        </div>
+        <!-- Sponsorenübersicht entfernt — läuft über /management/sponsoring/ -->
 
     </div><!-- /.fn-mid-row -->
 

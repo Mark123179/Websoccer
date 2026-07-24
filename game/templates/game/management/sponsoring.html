@@ -4,7 +4,7 @@
 {% block body_class %}sponsoring-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=10">
 {% endblock %}
 
 {% block content %}
@@ -128,16 +128,15 @@
                         {% if o.status == 'fixiert' %} sp-offer-card--done{% endif %}
                         {% if o.status == 'verprellt' or o.status == 'abgesagt' %} sp-offer-card--out{% endif %}">
 
-                        {% if o.logo_url %}
-                        <div class="sp-offer-logo-tile">
-                            <img src="{{ o.logo_url }}" alt="{{ o.sponsor_name }}" class="sp-offer-logo-img" loading="lazy" onerror="this.parentElement.style.display='none'">
-                        </div>
-                        {% endif %}
-
                         <div class="sp-offer-head">
-                            <div>
-                                <p class="sp-offer-name">{{ o.sponsor_name }}</p>
-                                <p class="sp-offer-typ">{{ o.typ_display }}</p>
+                            <div class="sp-offer-name-row">
+                                {% if o.logo_url %}
+                                <img src="{{ o.logo_url }}" alt="" class="sp-offer-logo-inline" loading="lazy" onerror="this.style.display='none'">
+                                {% endif %}
+                                <div>
+                                    <p class="sp-offer-name">{{ o.sponsor_name }}</p>
+                                    <p class="sp-offer-typ">{{ o.typ_display }}</p>
+                                </div>
                             </div>
                             {% if o.status == 'fixiert' %}
                             <span class="sp-offer-badge sp-offer-badge--done">Fixiert</span>
