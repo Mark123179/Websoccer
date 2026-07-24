@@ -54,6 +54,7 @@ SLOT_TO_BEREICH = {
 }
 
 EINHEIT_SIEG = 'sieg'
+EINHEIT_TOR = 'tor'
 EINHEIT_BESUCHER = 'besucher'
 EINHEIT_ZIEL = 'ziel'
 
@@ -63,11 +64,47 @@ _NAMEN = {
                    'ProSecura AG', 'Helvetia Kapital'],
     'sieggeld': ['VictoryBet Sports', 'Adrenalin Drinks', 'TurboOil Motorsport',
                  'Sprint Telekom', 'PowerPlay Media'],
+    'torgeld': ['GoalLine Sports', 'Tor-Energie GmbH', 'NetBuster Media',
+                'Schusskraft AG', 'Stürmer Finance'],
     'zieljaeger': ['Zenith Automobile', 'Falcon Airways', 'Titan Industrie',
                    'Apex Consulting', 'Meridian Tech'],
     'zuschauer': ['StadionBräu Brauerei', 'FanFood Catering', 'Arena Mobility',
                   'CityTrans Verkehr', 'Tribüne Textil'],
 }
+
+# ── Zieljäger: Ziel-Tier → P(Ziel) Kalibrierungstabelle (SPEC §4) ─────────
+GOAL_TIER_PROB: dict[str, float] = {
+    'meister':          0.08,
+    'top2':             0.14,
+    'top4':             0.22,
+    'top6':             0.34,
+    'top_half':         0.50,
+    'mittelfeld':       0.55,
+    'klassenerhalt':    0.65,
+    'avoid_relegation': 0.65,
+    'aufstieg':         0.30,
+    'abstieg_kampf':    0.55,
+}
+_DEFAULT_ZIEL_WKT = Decimal('0.35')
+
+
+def _ziel_wkt_from_goal_tier(club, saison: str) -> Decimal:
+    """P(Ziel) aus SeasonGoal.goal_tier (SPEC §4 — Zieljäger kalibriert auf Präsidenten-Erwartung)."""
+    try:
+        from game.models import SeasonGoal
+        goal = SeasonGoal.objects.filter(
+            club=club, season_number=int(saison),
+        ).first()
+        if goal and goal.goal_tier in GOAL_TIER_PROB:
+            return Decimal(str(GOAL_TIER_PROB[goal.goal_tier]))
+    except Exception:
+        pass
+    # Fallback: EconomyParameter-Scalar
+    try:
+        v = get_param('SPONSOR_ZIEL_PROB', saison)
+        return Decimal(str(v))
+    except Exception:
+        return _DEFAULT_ZIEL_WKT
 
 # Fiktive Slot-Namens-Pools (V2) für Slots ohne DB-Sponsor
 _NAMEN_V2 = {
@@ -199,6 +236,26 @@ def erwartete_besucher(club, saison: str) -> Decimal:
         .quantize(Decimal('0.01'))
 
 
+def erwartete_tore(club, saison: str) -> Decimal:
+    """Erwartete eigene Pflichtspieltore (stärkebasiert, SPEC §4 Torgeld).
+
+    Schätzung: Kaderstärke-Rang → Tore/Spiel × Spieltage.
+    Kalibrierung: Stärke 70 ≈ 1.4 Tore/Spiel (Bundesliga-Niveau).
+    """
+    try:
+        from game.season_goals import project_goal_for_club
+        p = project_goal_for_club(club)
+        spieltage, _ = _liga_spieltage(club, saison)
+        n = max(p['league_size'], 2)
+        rang = min(max(p['rank_in_league'], 1), n)
+        # Top-Verein (Rang 1) ≈ 2.2 Tore/Spiel; Letzter ≈ 0.8 Tore/Spiel
+        tore_pro_spiel = Decimal('2.2') - Decimal('1.4') * Decimal(rang - 1) / Decimal(n - 1)
+        tore_pro_spiel = max(Decimal('0.5'), tore_pro_spiel)
+        return (tore_pro_spiel * Decimal(spieltage)).quantize(Decimal('0.1'))
+    except Exception:
+        return Decimal('48')  # Bundesliga-Fallback
+
+
 # ── V1-Angebotsgenerator (bleibt für Backward-Compat) ────────────────────────
 
 def generate_offers(club, saison: str) -> list:
@@ -318,7 +375,7 @@ def _pick_sponsor(slot: str, saison: str, rng: random.Random,
 
 def _build_v2_offer(club, saison: str, slot: str, typ: str, wert_slot: int,
                     rng: random.Random, streuung: float, splits: dict,
-                    ziel_wkt: Decimal, e_siege, e_besucher,
+                    ziel_wkt: Decimal, e_siege, e_besucher, e_tore,
                     sponsor_id, sponsor_name: str) -> 'SponsorOffer':
     """Baut ein einzelnes SponsorOffer-Objekt (V2, status='offen')."""
     from game.models import SponsorOffer
@@ -342,6 +399,16 @@ def _build_v2_offer(club, saison: str, slot: str, typ: str, wert_slot: int,
             'einheit': EINHEIT_SIEG,
             'betrag': str(einzel.quantize(Decimal('0.01'))),
             'erwartete_events': str(e_siege),
+        }
+    elif typ == 'torgeld':
+        if e_tore is None or e_tore <= 0:
+            e_tore = Decimal('48')
+        einzel = Decimal(var_ew_euros) / e_tore
+        var_rate_cent = max(0, int(einzel * 100))
+        variable_json = {
+            'einheit': EINHEIT_TOR,
+            'betrag': str(einzel.quantize(Decimal('0.01'))),
+            'erwartete_events': str(e_tore),
         }
     elif typ == 'zuschauer':
         if e_besucher is None or e_besucher <= 0:
@@ -425,20 +492,31 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
 
         wert_slot = sponsorwert_slot(club, saison, slot)
 
-        andere = ['sieggeld', 'zieljaeger', 'zuschauer']
+        # SPEC §4.2: torgeld nie bei TV/Medien-Slot
+        andere = ['sieggeld', 'torgeld', 'zieljaeger', 'zuschauer']
+        if slot == 'tv':
+            andere = [t for t in andere if t != 'torgeld']
         rng.shuffle(andere)
         typen = ['sicherheit'] + andere[:max(0, n_offers - 1)]
         while len(typen) < n_offers:
-            typen.append(rng.choice(andere))
+            extra = rng.choice(andere)
+            if extra not in typen or typen.count(extra) < 1:
+                typen.append(extra)
         typen = typen[:n_offers]
+
+        # Ziel-Wahrscheinlichkeit aus SeasonGoal.goal_tier (SPEC §4, Kap. 12)
+        ziel_wkt = _ziel_wkt_from_goal_tier(club, saison)
 
         e_siege = None
         e_besucher = None
+        e_tore = None
         try:
             if any(t == 'sieggeld' for t in typen):
                 e_siege = erwartete_siege(club, saison)
             if any(t == 'zuschauer' for t in typen):
                 e_besucher = erwartete_besucher(club, saison)
+            if any(t == 'torgeld' for t in typen):
+                e_tore = erwartete_tore(club, saison)
         except Exception:
             pass
 
@@ -464,7 +542,7 @@ def generate_offers_v2(club, saison: str) -> dict[str, list]:
 
             offer = _build_v2_offer(
                 club, saison, slot, typ, wert_slot, rng, streuung,
-                splits, ziel_wkt, e_siege, e_besucher, sponsor_id, sp_name,
+                splits, ziel_wkt, e_siege, e_besucher, e_tore, sponsor_id, sp_name,
             )
             new_offers.append(offer)
 
@@ -923,16 +1001,28 @@ def book_zieljaeger_bonus(club, saison: str):
 
 # ── V2-Buchungspfade ──────────────────────────────────────────────────────────
 
-def sponsor_fix_rate_v2(contract, saison: str) -> Decimal:
-    """V2: Fixanteil je Spieltag aus SponsorContract.fix_saison."""
+def sponsor_fix_rate_v2(contract, saison: str, matchday: int = 0,
+                         total_matchdays: int = 0) -> Decimal:
+    """V2: Fixanteil je Spieltag aus SponsorContract.fix_saison.
+
+    Letzter Spieltag bekommt den Rundungs-Restbetrag, sodass
+    sum(fix_rate, alle ST) == fix_saison exakt aufgeht (SPEC §6 Rounding).
+    """
     from game.models import SponsorContract
 
     try:
         club = contract.club
     except Exception:
         club = SponsorContract.objects.select_related('club').get(pk=contract.pk).club
-    spieltage, _ = _liga_spieltage(club, saison)
-    return Decimal(contract.fix_saison / spieltage).quantize(Decimal('0.01'))
+
+    spieltage = total_matchdays or _liga_spieltage(club, saison)[0]
+    floor_rate = (Decimal(contract.fix_saison) / Decimal(spieltage)).quantize(Decimal('0.01'))
+
+    if matchday and total_matchdays and matchday >= total_matchdays:
+        # Letzter Spieltag: Restbetrag = fix_saison - (spieltage-1) × floor_rate
+        rest = Decimal(contract.fix_saison) - floor_rate * (spieltage - 1)
+        return max(rest, Decimal('0.00'))
+    return floor_rate
 
 
 def book_sieg_bonus_v2(club, contract, saison: str, *, beschreibung: str,
@@ -990,6 +1080,46 @@ def book_zuschauer_bonus_v2(club, contract, attendance: int, saison: str,
         )[:200],
         saison=saison, spieltag=spieltag,
         referenz_typ='sponsor_zuschauer_v2', referenz_id=contract.pk,
+        pflicht=True,
+    )
+
+
+def book_torgeld_bonus_v2(club, contract, own_goals: int, saison: str,
+                           spieltag: int | None = None):
+    """V2: Torgeld aus SponsorContract → var_rate × Anzahl eigene Tore (SPEC §6)."""
+    from game.models import FinanceTransaction
+    from .booking import book
+
+    offer = contract.offer
+    if offer is None or offer.typ != 'torgeld':
+        return None
+    if own_goals <= 0:
+        return None
+
+    einheit, betrag = _variable_v2(offer)
+    if einheit != EINHEIT_TOR or betrag <= 0:
+        return None
+
+    # Idempotenz: nur einmal pro Spieltag buchen
+    if spieltag and FinanceTransaction.objects.filter(
+        club=club, saison=saison, spieltag=spieltag, typ='SPONSOR_VARIABEL',
+        referenz_typ='sponsor_torgeld_v2', referenz_id=contract.pk,
+    ).exists():
+        return None
+
+    summe = (betrag * Decimal(own_goals)).quantize(Decimal('0.01'))
+    if summe <= 0:
+        return None
+
+    name = contract.sponsor.name if contract.sponsor_id else offer.sponsor_name
+    slot_label = SLOT_LABELS.get(contract.slot, contract.slot)
+    return book(
+        club, 'SPONSOR_VARIABEL', summe,
+        beschreibung=(
+            f'{name} ({slot_label}): Torgeld {own_goals} Tor(e) ST{spieltag}'
+        )[:200],
+        saison=saison, spieltag=spieltag,
+        referenz_typ='sponsor_torgeld_v2', referenz_id=contract.pk,
         pflicht=True,
     )
 
@@ -1057,16 +1187,41 @@ def book_sponsor_matchday_v2(club, saison: str, matchday: int,
     """V2-Buchung aller aktiven SponsorContracts für einen Spieltag.
 
     Bucht:
-      - SPONSOR_FIX je Contract: fix_saison / Spieltage
-      - SPONSOR_VARIABEL (Sieggeld) je Contract mit typ='sieggeld', wenn Sieg
-    Gibt die gebuchten FinanceTransaction-Objekte zurück.
+      - SPONSOR_FIX: fix_saison / Spieltage (letzter ST: Restbetrag)
+      - SPONSOR_VARIABEL (Sieggeld): bei Ligasieg
+      - SPONSOR_VARIABEL (Torgeld): je eigenem Pflichtspieltor
+      - SPONSOR_VARIABEL (Zuschauerbonus): nur beim Heimspiel
     """
-    from .booking import book
-
     saison = str(saison)
     contracts = get_active_contracts(club, saison)
     if not contracts:
         return []
+
+    # Spieltage gesamt — für Rounding-Remainder (letzter ST)
+    total_matchdays, _ = _liga_spieltage(club, saison)
+
+    # Heimspiel-Erkennung + Zuschauer aus MatchdayRevenue
+    is_home = (fixture is not None and fixture.home_club_id == club.pk)
+    attendance = 0
+    if is_home:
+        try:
+            from game.models import FinanceTransaction, MatchdayRevenue
+            tx_ticket = FinanceTransaction.objects.filter(
+                club=club, saison=saison, spieltag=matchday,
+                typ='TICKET', referenz_typ='matchday_revenue',
+            ).first()
+            if tx_ticket:
+                attendance = MatchdayRevenue.objects.get(pk=tx_ticket.referenz_id).attendance
+        except Exception:
+            attendance = 0
+
+    # Eigene Tore des Spieltags
+    own_goals = 0
+    if fixture is not None:
+        if is_home:
+            own_goals = fixture.home_goals or 0
+        elif fixture.away_club_id == club.pk:
+            own_goals = fixture.away_goals or 0
 
     booked = []
     for contract in contracts:
@@ -1074,8 +1229,13 @@ def book_sponsor_matchday_v2(club, saison: str, matchday: int,
             contract.offer.sponsor_name if contract.offer_id else f'Slot {contract.slot}'
         )
         slot_label = SLOT_LABELS.get(contract.slot, contract.slot)
-        fix_rate = sponsor_fix_rate_v2(contract, saison)
+
+        # ── Fixrate (mit Rounding-Remainder auf letztem Spieltag) ───────────
+        fix_rate = sponsor_fix_rate_v2(
+            contract, saison, matchday=matchday, total_matchdays=total_matchdays,
+        )
         if fix_rate > 0:
+            from .booking import book
             tx = book(
                 club, 'SPONSOR_FIX', fix_rate,
                 beschreibung=f'{name} ({slot_label}): Fixrate ST{matchday}'[:200],
@@ -1084,9 +1244,9 @@ def book_sponsor_matchday_v2(club, saison: str, matchday: int,
                 pflicht=True,
             )
             booked.append(tx)
-            result.setdefault('sponsor_fix', Decimal('0')) + tx.betrag
             result['sponsor_fix'] = result.get('sponsor_fix', Decimal('0')) + tx.betrag
 
+        # ── Sieggeld ─────────────────────────────────────────────────────────
         if fixture is not None and _club_won_fixture(club, fixture):
             sieg_tx = book_sieg_bonus_v2(
                 club, contract, saison,
@@ -1099,6 +1259,28 @@ def book_sponsor_matchday_v2(club, saison: str, matchday: int,
                 booked.append(sieg_tx)
                 result['sponsor_sieg'] = (
                     result.get('sponsor_sieg', Decimal('0')) + sieg_tx.betrag
+                )
+
+        # ── Torgeld ──────────────────────────────────────────────────────────
+        if own_goals > 0:
+            tor_tx = book_torgeld_bonus_v2(
+                club, contract, own_goals, saison, spieltag=matchday,
+            )
+            if tor_tx is not None:
+                booked.append(tor_tx)
+                result['sponsor_torgeld'] = (
+                    result.get('sponsor_torgeld', Decimal('0')) + tor_tx.betrag
+                )
+
+        # ── Zuschauerbonus (nur Heimspiel) ───────────────────────────────────
+        if is_home and attendance > 0:
+            zus_tx = book_zuschauer_bonus_v2(
+                club, contract, attendance, saison, spieltag=matchday,
+            )
+            if zus_tx is not None:
+                booked.append(zus_tx)
+                result['sponsor_zuschauer'] = (
+                    result.get('sponsor_zuschauer', Decimal('0')) + zus_tx.betrag
                 )
 
     return booked

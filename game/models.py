@@ -6332,6 +6332,12 @@ class Sponsor(models.Model):
     def __str__(self):
         return f'{self.name} ({self.get_bereich_display()})'
 
+    @property
+    def logo_url(self):
+        from django.conf import settings
+        base = getattr(settings, 'ASSETS_BASE_URL', '/assets/')
+        return f'{base}sponsors/{self.bereich}/{self.slug}_sponsor.jpg'
+
 
 class SponsorOffer(models.Model):
     """Sponsor-Jahresangebot (Spec Kap. 6.2) — Laufzeit genau 1 Saison.
@@ -6350,11 +6356,13 @@ class SponsorOffer(models.Model):
 
     TYP_SICHERHEIT = 'sicherheit'
     TYP_SIEGGELD = 'sieggeld'
+    TYP_TORGELD = 'torgeld'
     TYP_ZIELJAEGER = 'zieljaeger'
     TYP_ZUSCHAUER = 'zuschauer'
     TYP_CHOICES = [
         (TYP_SICHERHEIT, 'Sicherheit (100 % fix)'),
         (TYP_SIEGGELD, 'Sieggeld (fix + €/Sieg)'),
+        (TYP_TORGELD, 'Torgeld (fix + €/Tor)'),
         (TYP_ZIELJAEGER, 'Zieljäger (fix + Zielbonus)'),
         (TYP_ZUSCHAUER, 'Zuschauer (fix + €/Besucher)'),
     ]
@@ -6387,14 +6395,18 @@ class SponsorOffer(models.Model):
 
     # ── V2-Felder (Slot-Modell, Spec Kap. 6 V2) ──────────────────────────────
     STATUS_OFFEN = 'offen'
-    STATUS_ANGENOMMEN = 'angenommen'
+    STATUS_FIXIERT = 'fixiert'
+    STATUS_VERPRELLT = 'verprellt'
     STATUS_ABGESAGT = 'abgesagt'
+    STATUS_ANGENOMMEN = 'angenommen'  # V1-Legacy-Alias (=fixiert)
     STATUS_LEGACY = 'legacy'
     STATUS_CHOICES = [
-        (STATUS_OFFEN, 'Offen'),
-        (STATUS_ANGENOMMEN, 'Angenommen'),
-        (STATUS_ABGESAGT, 'Abgesagt'),
-        (STATUS_LEGACY, 'Alt (V1)'),
+        (STATUS_OFFEN,     'Offen'),
+        (STATUS_FIXIERT,   'Fixiert (Vertrag abgeschlossen)'),
+        (STATUS_VERPRELLT, 'Verprellt (Sponsor abgesprungen)'),
+        (STATUS_ABGESAGT,  'Abgesagt (durch anderen Slot-Contract)'),
+        (STATUS_ANGENOMMEN, 'Angenommen (V1-Legacy)'),
+        (STATUS_LEGACY,    'Alt (V1)'),
     ]
 
     slot = models.CharField(
