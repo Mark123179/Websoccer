@@ -256,11 +256,11 @@
                     <!-- Fix / Variabel / Offen Legende -->
                     <div class="sp-scenario-legend">
                         <span class="sp-legend-dot sp-legend-dot--fix"></span>
-                        <span class="sp-legend-label">Fix {{ slots_fixiert_count }}0 %</span>
+                        <span class="sp-legend-label">Fix {{ slots_fix_pct }} %</span>
                         <span class="sp-legend-dot sp-legend-dot--var"></span>
                         <span class="sp-legend-label">Variabel 0 %</span>
                         <span class="sp-legend-dot sp-legend-dot--open"></span>
-                        <span class="sp-legend-label">Offen {{ 5|add:"-"|add:slots_fixiert_count|stringformat:"d" }}0 %</span>
+                        <span class="sp-legend-label">Offen {{ slots_open_pct }} %</span>
                     </div>
                     <p class="sp-scenario-rule">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
                 </div>

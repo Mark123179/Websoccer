@@ -1455,6 +1455,9 @@ def management_sponsoring(request):
     proj_expected = int(expected_vol * Decimal('1.12'))
     proj_best     = int(expected_vol * Decimal('1.28'))
     proj_open_val = int((Decimal(5 - slots_fixiert_count) / 5) * sw) if sw else 0
+    # Legende-Prozente (je Slot = 20 %)
+    slots_fix_pct  = min(slots_fixiert_count, 5) * 20
+    slots_open_pct = max(5 - slots_fixiert_count, 0) * 20
 
     # ── Präsidenten-Erwartung ─────────────────────────────────────────────────
     try:
@@ -1516,6 +1519,8 @@ def management_sponsoring(request):
         'proj_expected_fmt': _fmt_eur_sponsoring(proj_expected) if proj_expected else '—',
         'proj_best_fmt': _fmt_eur_sponsoring(proj_best) if proj_best else '—',
         'proj_open_fmt': _fmt_eur_sponsoring(proj_open_val) if proj_open_val else '—',
+        'slots_fix_pct': slots_fix_pct,
+        'slots_open_pct': slots_open_pct,
         'president_goal': president_goal,
         'liga_ticker': liga_ticker,
     })

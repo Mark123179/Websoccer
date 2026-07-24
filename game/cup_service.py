@@ -447,7 +447,7 @@ def simulate_cup_fixture(fixture) -> object:
         fixture.status = fixture.STATUS_PLAYED
         fixture.save()
 
-    # ── Finanz-Hook: Sponsor-Sieggeld für den Pokalsieger ─────────────────────
+    # ── Finanz-Hook: Sponsor-Sieggeld + Torgeld für Pokalspiele ──────────────
     # Nach der Transaktion, fehlertolerant — Finanzfehler dürfen die
     # Simulation nicht rückwirkend brechen. Idempotent je Fixture.
     try:
@@ -456,6 +456,13 @@ def simulate_cup_fixture(fixture) -> object:
         import logging
         logging.getLogger(__name__).exception(
             'Sponsor-Sieggeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
+        )
+    try:
+        _book_cup_torgeld_sponsor_bonus(fixture)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            'Sponsor-Torgeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
         )
 
     return fixture
@@ -519,6 +526,48 @@ def _book_cup_win_sponsor_bonus(fixture) -> None:
         logging.getLogger(__name__).exception(
             'V1 Sponsor-Sieggeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
         )
+
+
+def _book_cup_torgeld_sponsor_bonus(fixture) -> None:
+    """Bucht das Sponsor-Torgeld für beide Teams nach einem Pokalspiel (V2, SPEC §6).
+
+    Für jedes Team: aktive V2-Contracts mit typ=torgeld → book_torgeld_bonus_v2.
+    Idempotent je (fixture.pk als spieltag, contract.pk als referenz_id).
+    """
+    saison = str(fixture.cup_round.cup_season.season)
+    # home_goals und away_goals stehen nach _resolve_winner auf dem Objekt.
+    home_goals = fixture.home_goals or 0
+    away_goals = fixture.away_goals or 0
+
+    pairs = []
+    if fixture.home_club_id and home_goals > 0:
+        pairs.append((fixture.home_club, home_goals))
+    if fixture.away_club_id and away_goals > 0:
+        pairs.append((fixture.away_club, away_goals))
+    if not pairs:
+        return
+
+    try:
+        from .economy.sponsors import get_active_contracts, book_torgeld_bonus_v2
+    except Exception:
+        return
+
+    for club, goals in pairs:
+        try:
+            contracts = [
+                c for c in get_active_contracts(club, saison)
+                if c.offer_id and c.offer.typ == 'torgeld'
+            ]
+            for contract in contracts:
+                book_torgeld_bonus_v2(
+                    club, contract, own_goals=goals, saison=saison,
+                    spieltag=fixture.pk,
+                )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'V2 Torgeld für %s Pokalspiel %s fehlgeschlagen', club, fixture.pk,
+            )
 
 
 # ── Rundenfortschritt ─────────────────────────────────────────────────────────
