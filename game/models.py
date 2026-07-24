@@ -4822,6 +4822,109 @@ class ManagerCareerEntry(models.Model):
         return f'{self.manager.name} @ {self.club.name} ({self.started_at:%d.%m.%Y} – {end})'
 
 
+class Referee(models.Model):
+    """Schiedsrichter-Datenbank — Profil + Tendenzen + Vorsaison-Statistiken."""
+
+    LEVEL_WELTKLASSE   = 'weltklasse'
+    LEVEL_INTERNATIONAL = 'international'
+    LEVEL_ERSTE_LIGA   = 'erste-liga'
+    LEVEL_ZWEITE_LIGA  = 'zweite-liga'
+    LEVEL_AUFSTEIGER   = 'aufsteiger'
+    LEVEL_CHOICES = [
+        (LEVEL_WELTKLASSE,   'Weltklasse'),
+        (LEVEL_INTERNATIONAL, 'International'),
+        (LEVEL_ERSTE_LIGA,   'Erste Liga'),
+        (LEVEL_ZWEITE_LIGA,  'Zweite Liga'),
+        (LEVEL_AUFSTEIGER,   'Aufsteiger'),
+    ]
+
+    KARTEN_NACHSICHTIG   = 'nachsichtig'
+    KARTEN_AUSGEWOGEN    = 'ausgewogen'
+    KARTEN_KARTENFREUDIG = 'kartenfreudig'
+    KARTEN_CHOICES = [
+        (KARTEN_NACHSICHTIG,   'Nachsichtig'),
+        (KARTEN_AUSGEWOGEN,    'Ausgewogen'),
+        (KARTEN_KARTENFREUDIG, 'Kartenfreudig'),
+    ]
+
+    SPIELFLUSS_PFEIFT    = 'pfeift_viel_ab'
+    SPIELFLUSS_AUSGEWOGEN = 'ausgewogen'
+    SPIELFLUSS_LAESST    = 'laesst_laufen'
+    SPIELFLUSS_CHOICES = [
+        (SPIELFLUSS_PFEIFT,    'Pfeift viel ab'),
+        (SPIELFLUSS_AUSGEWOGEN, 'Ausgewogen'),
+        (SPIELFLUSS_LAESST,    'Lässt laufen'),
+    ]
+
+    fm_uid = models.BigIntegerField(
+        unique=True,
+        null=True, blank=True,
+        verbose_name='FM UID',
+        help_text='Football-Manager interne UID (für Profilbild /assets/referees/face_{fm_uid}.png).',
+    )
+    name = models.CharField(max_length=120, verbose_name='Name')
+    nationality = models.CharField(
+        max_length=80, blank=True, verbose_name='Nationalität (DE)',
+        help_text='z. B. "Schweiz", "Frankreich"',
+    )
+    nationality_code = models.CharField(
+        max_length=10, blank=True, verbose_name='Flaggen-Code',
+        help_text='Assetserver-Code für flag_url(), z. B. "771" (CH) oder ISO-2 "fr".',
+    )
+    age = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name='Alter')
+    level = models.CharField(
+        max_length=20, choices=LEVEL_CHOICES,
+        default=LEVEL_INTERNATIONAL, verbose_name='Niveau',
+    )
+    quote = models.CharField(
+        max_length=200, blank=True, verbose_name='Kurzcharakter',
+        help_text='Erscheint kursiv im Popup, z. B. „Souveräner Spielleiter".',
+    )
+    karten_tendenz = models.CharField(
+        max_length=20, choices=KARTEN_CHOICES,
+        default=KARTEN_AUSGEWOGEN, verbose_name='Karten-Tendenz',
+    )
+    spielfluss_tendenz = models.CharField(
+        max_length=20, choices=SPIELFLUSS_CHOICES,
+        default=SPIELFLUSS_AUSGEWOGEN, verbose_name='Spielfluss-Tendenz',
+    )
+    vorsaison_spiele   = models.PositiveSmallIntegerField(default=0, verbose_name='Spiele (Vorsaison)')
+    vorsaison_gelb_avg = models.DecimalField(
+        max_digits=4, decimal_places=1, default=0,
+        verbose_name='Ø Gelb/Spiel (Vorsaison)',
+    )
+    vorsaison_rot           = models.PositiveSmallIntegerField(default=0, verbose_name='Rote Karten (Vorsaison)')
+    vorsaison_elfmeter      = models.PositiveSmallIntegerField(default=0, verbose_name='Elfmeter (Vorsaison)')
+    vorsaison_umstritten    = models.PositiveSmallIntegerField(default=0, verbose_name='Umstrittene Ents. (Vorsaison)')
+    vorsaison_competitions  = models.JSONField(
+        default=list, blank=True,
+        verbose_name='Wettbewerbe (Vorsaison)',
+        help_text='Liste von Wettbewerbsnamen, z. B. ["1. Bundesliga", "DFB-Pokal"].',
+    )
+
+    class Meta:
+        verbose_name = 'Schiedsrichter'
+        verbose_name_plural = 'Schiedsrichter'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def face_url(self):
+        from .asset_urls import referee_face_url
+        return referee_face_url(self.fm_uid)
+
+    def flag_url(self):
+        from .asset_urls import flag_url as _flag_url
+        return _flag_url(self.nationality_code) if self.nationality_code else ''
+
+    def level_badge_class(self):
+        return f'ref-badge--{self.level}'
+
+    def level_display_upper(self):
+        return dict(self.LEVEL_CHOICES).get(self.level, self.level).upper()
+
+
 class SimulatedMatch(models.Model):
     """Gespeichertes Ergebnis einer Match-Engine-Simulation (zum Testen)."""
 
@@ -4865,6 +4968,13 @@ class SimulatedMatch(models.Model):
         blank=True,
         verbose_name='Spiel-Nr. (Saison)',
         help_text='Laufende Spielnummer innerhalb der Saison, beginnt je Saison bei 1.',
+    )
+    referee = models.ForeignKey(
+        'Referee',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='matches',
+        verbose_name='Schiedsrichter',
     )
 
     @classmethod

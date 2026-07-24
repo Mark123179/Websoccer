@@ -1,0 +1,93 @@
+/* ============================================================
+   Schiedsrichter-Popup — 1:1 Port aus Design-Export
+   ============================================================ */
+.ref-overlay{
+  position:fixed;inset:0;z-index:10500;
+  background:rgba(3,7,12,.68);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+}
+.ref-overlay.is-hidden{display:none}
+.ref-modal{
+  width:448px;position:relative;padding:22px;
+  background:rgba(9,23,34,.94);
+  border:1px solid rgba(34,230,255,.38);border-radius:8px;
+  box-shadow:0 18px 70px rgba(0,0,0,.6),0 0 28px rgba(34,230,255,.14);
+  font-family:inherit;
+}
+.ref-close{
+  position:absolute;top:12px;right:12px;width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(3,10,16,.55);border:1px solid rgba(34,230,255,.18);border-radius:6px;
+  color:rgba(244,251,255,.64);font:700 13px/1 inherit;cursor:pointer;
+  transition:all .15s ease;
+}
+.ref-close:hover{border-color:rgba(34,230,255,.38);color:var(--text,#f4fbff)}
+/* Kopf */
+.ref-head{display:flex;align-items:center;gap:16px}
+.ref-cutout{
+  width:104px;height:104px;flex:0 0 auto;border-radius:50%;overflow:hidden;
+  border:1px solid rgba(34,230,255,.38);box-shadow:0 0 22px rgba(34,230,255,.25);
+  background:radial-gradient(circle at 50% 28%, rgba(34,230,255,.16), rgba(9,23,34,.92) 72%);
+}
+.ref-cutout img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.ref-head-info{min-width:0}
+.ref-kicker{font-size:11px;font-weight:900;letter-spacing:.8px;color:rgba(244,251,255,.38);text-transform:uppercase;margin-bottom:4px}
+.ref-name{font-size:25px;font-weight:900;line-height:1.1;color:var(--text,#f4fbff);margin-bottom:8px}
+.ref-meta{display:flex;align-items:center;gap:8px;row-gap:6px;flex-wrap:wrap;font-size:13px;font-weight:700;color:rgba(244,251,255,.82)}
+.ref-meta .sep{color:rgba(244,251,255,.38)}
+.ref-flag{width:18px;height:13px;border-radius:2px;display:block}
+/* Niveau-Badges */
+.ref-badge{
+  font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;
+  padding:3px 10px;border-radius:999px;white-space:nowrap;border:1px solid transparent;
+}
+.ref-badge--weltklasse{background:linear-gradient(135deg,#22e6ff,#0fa3cf);color:#04222b;border-color:rgba(44,231,255,.6);box-shadow:0 0 16px rgba(34,230,255,.35)}
+.ref-badge--international{background:rgba(34,230,255,.10);color:var(--cyan,#22e6ff);border-color:rgba(34,230,255,.38)}
+.ref-badge--erste-liga{background:rgba(48,242,156,.12);color:var(--green,#30f29c);border-color:rgba(48,242,156,.35)}
+.ref-badge--zweite-liga{background:rgba(255,255,255,.05);color:rgba(244,251,255,.82);border-color:rgba(255,255,255,.16)}
+.ref-badge--aufsteiger{background:rgba(255,159,28,.13);color:#ff9f1c;border-color:rgba(255,159,28,.4)}
+/* Quote */
+.ref-type{font-size:14px;font-style:italic;font-weight:500;color:rgba(244,251,255,.64);margin-top:14px}
+/* Sektionen */
+.ref-section{margin-top:14px;padding-top:14px;border-top:1px solid rgba(34,230,255,.18)}
+.ref-section-title{font-size:11px;font-weight:900;letter-spacing:.6px;color:rgba(244,251,255,.38);text-transform:uppercase}
+/* Tendenzen */
+.ref-scales{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ref-scale{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:8px}
+.ref-scale-label{font-size:11px;font-weight:900;letter-spacing:.4px;color:rgba(244,251,255,.38);text-transform:uppercase}
+.ref-scale-track{display:flex;gap:4px;background:rgba(3,10,16,.55);border:1px solid rgba(34,230,255,.18);border-radius:999px;padding:3px}
+.ref-step{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:5px 4px;border-radius:999px;border:1px solid transparent;
+  font-size:11px;font-weight:800;white-space:nowrap;color:rgba(244,251,255,.38);
+}
+.ref-step .dot{display:none;width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+.ref-step.is-active{background:rgba(34,230,255,.10);border-color:rgba(34,230,255,.38);color:var(--cyan,#22e6ff)}
+.ref-step.is-active .dot{display:block;background:var(--cyan,#22e6ff);box-shadow:0 0 8px var(--cyan,#22e6ff)}
+.ref-step.is-active.is-hot{background:rgba(255,209,102,.12);border-color:rgba(255,209,102,.4);color:var(--yellow,#ffd166)}
+.ref-step.is-active.is-hot .dot{background:var(--yellow,#ffd166);box-shadow:0 0 8px var(--yellow,#ffd166)}
+/* Vorsaison */
+.ref-comps-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ref-comps{display:flex;align-items:center;justify-content:flex-end;gap:12px;row-gap:4px;flex-wrap:wrap}
+.ref-comp{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:rgba(244,251,255,.64);white-space:nowrap}
+.ref-comp img{width:15px;height:15px;object-fit:contain;display:block}
+.ref-stats{
+  display:grid;grid-template-columns:repeat(5,1fr);margin-top:10px;
+  background:rgba(3,10,16,.55);border:1px solid rgba(34,230,255,.18);border-radius:6px;overflow:hidden;
+}
+.ref-stat{padding:10px 4px;text-align:center}
+.ref-stat+.ref-stat{border-left:1px solid rgba(34,230,255,.18)}
+.ref-stat-value{display:flex;align-items:center;justify-content:center;gap:5px;font-size:18px;font-weight:900;color:var(--text,#f4fbff)}
+.ref-stat-value.is-bad{color:var(--red,#ff5570)}
+.ref-stat-label{font-size:10px;font-weight:900;letter-spacing:.4px;color:rgba(244,251,255,.38);text-transform:uppercase;margin-top:3px}
+.card-chip{width:8px;height:11px;border-radius:2px;flex:0 0 auto}
+.card-chip--gelb{background:var(--yellow,#ffd166)}
+.card-chip--rot{background:var(--red,#ff5570)}
+/* Schiedsrichter-Link im Spielbericht */
+.ref-trigger{
+  background:none;border:none;padding:0;cursor:pointer;
+  color:var(--cyan,#22e6ff);font:inherit;font-size:inherit;font-weight:700;
+  text-decoration:underline;text-decoration-color:rgba(34,230,255,.35);
+  text-underline-offset:2px;transition:text-decoration-color .15s;
+}
+.ref-trigger:hover{text-decoration-color:var(--cyan,#22e6ff)}

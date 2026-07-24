@@ -47,6 +47,7 @@ from .models import (
     PlayerStrengthSnapshot,
     PlayerSuspensionRecord,
     PresidentSatisfaction,
+    Referee,
     SeasonGoal,
     PlayerClubHistory,
     PlayerTransferHistory,
@@ -4015,3 +4016,19 @@ class ManagerNotesAdmin(admin.ModelAdmin):
     @admin.display(description='Anzahl Notizen')
     def note_count(self, obj):
         return len(obj.data or [])
+
+
+@admin.register(Referee)
+class RefereeAdmin(admin.ModelAdmin):
+    list_display  = ('name', 'nationality', 'age', 'level', 'karten_tendenz', 'spielfluss_tendenz', 'vorsaison_spiele')
+    list_filter   = ('level', 'karten_tendenz', 'spielfluss_tendenz', 'nationality')
+    search_fields = ('name', 'nationality', 'fm_uid')
+    ordering      = ('name',)
+    fieldsets = (
+        (None, {'fields': ('fm_uid', 'name', 'nationality', 'nationality_code', 'age', 'level', 'quote')}),
+        ('Tendenzen', {'fields': ('karten_tendenz', 'spielfluss_tendenz')}),
+        ('Vorsaison-Statistiken', {'fields': (
+            'vorsaison_spiele', 'vorsaison_gelb_avg', 'vorsaison_rot',
+            'vorsaison_elfmeter', 'vorsaison_umstritten', 'vorsaison_competitions',
+        )}),
+    )

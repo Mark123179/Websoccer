@@ -8,6 +8,7 @@
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
+    <link rel="stylesheet" href="{% static 'game/css/referee_popup.css' %}?v=1">
 {% endblock %}
 
 {% block content %}
@@ -39,7 +40,10 @@
                 </div>
                 <div class="m">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
-                    <span>Wetter: &ndash; &middot; Schiedsrichter: &ndash;</span>
+                    <span>Wetter: &ndash; &middot; Schiedsrichter:
+                    {% if referee %}
+                        {% if referee.flag_url %}<img src="{{ referee.flag_url }}" alt="{{ referee.nationality }}" class="ref-flag" style="vertical-align:middle;margin:0 3px 1px 4px;">{% endif %}<button class="ref-trigger" type="button">{{ referee.name }}</button>
+                    {% else %}&ndash;{% endif %}</span>
                 </div>
                 <div class="m">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -908,5 +912,95 @@
 </div>{# /report #}
 </section>{# /spb-report #}
 
+{% if referee %}
+{# ── Schiedsrichter-Popup ─────────────────────────────────────────────── #}
+<div class="ref-overlay is-hidden" id="ref-overlay" role="dialog" aria-modal="true" aria-labelledby="ref-modal-name">
+  <div class="ref-modal">
+    <button class="ref-close" id="ref-close-btn" aria-label="Schließen">&#x2715;</button>
+
+    <div class="ref-head">
+      <div class="ref-cutout">
+        <img src="{{ referee.face_url }}" alt="{{ referee.name }}"
+             onerror="this.onerror=null;this.src='{% static 'assets/referees/referee_default.svg' %}'">
+      </div>
+      <div class="ref-head-info">
+        <div class="ref-kicker">Schiedsrichter</div>
+        <div class="ref-name" id="ref-modal-name">{{ referee.name }}</div>
+        <div class="ref-meta">
+          {% if referee.flag_url %}<img class="ref-flag" src="{{ referee.flag_url }}" alt="{{ referee.nationality }}">{% endif %}
+          {% if referee.nationality %}<span>{{ referee.nationality }}</span>{% endif %}
+          {% if referee.age %}<span class="sep">&middot;</span><span>{{ referee.age }} Jahre</span>{% endif %}
+          <span class="ref-badge {{ referee.level_badge_class }}">{{ referee.get_level_display }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if referee.quote %}<div class="ref-type">&#8222;{{ referee.quote }}&#8220;</div>{% endif %}
+
+    <div class="ref-section">
+      <div class="ref-section-title">Tendenzen</div>
+      <div class="ref-scales">
+        <div class="ref-scale">
+          <span class="ref-scale-label">Karten</span>
+          <div class="ref-scale-track">
+            <span class="ref-step{% if referee.karten_tendenz == 'nachsichtig' %} is-active{% endif %}"><span class="dot"></span>Nachsichtig</span>
+            <span class="ref-step{% if referee.karten_tendenz == 'ausgewogen' %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
+            <span class="ref-step{% if referee.karten_tendenz == 'kartenfreudig' %} is-active is-hot{% endif %}"><span class="dot"></span>Kartenfreudig</span>
+          </div>
+        </div>
+        <div class="ref-scale">
+          <span class="ref-scale-label">Spielfluss</span>
+          <div class="ref-scale-track">
+            <span class="ref-step{% if referee.spielfluss_tendenz == 'pfeift_viel_ab' %} is-active is-hot{% endif %}"><span class="dot"></span>Pfeift viel ab</span>
+            <span class="ref-step{% if referee.spielfluss_tendenz == 'ausgewogen' %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
+            <span class="ref-step{% if referee.spielfluss_tendenz == 'laesst_laufen' %} is-active{% endif %}"><span class="dot"></span>L&auml;sst laufen</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ref-section">
+      <div class="ref-comps-row">
+        <span class="ref-section-title">Vorsaison</span>
+        {% if referee.vorsaison_competitions %}
+        <div class="ref-comps">
+          {% for comp in referee.vorsaison_competitions %}
+          <span class="ref-comp">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:rgba(244,251,255,.38)"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2.2 1.8 4 4 4"/><path d="M17 6h3a1 1 0 0 1 1 1c0 2.2-1.8 4-4 4"/></svg>
+            {{ comp }}
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="ref-stats">
+        <div class="ref-stat" title="Geleitete Spiele">
+          <div class="ref-stat-value">{{ referee.vorsaison_spiele }}</div>
+          <div class="ref-stat-label">Spiele</div>
+        </div>
+        <div class="ref-stat" title="Gelbe Karten pro Spiel">
+          <div class="ref-stat-value"><span class="card-chip card-chip--gelb"></span>{{ referee.vorsaison_gelb_avg }}</div>
+          <div class="ref-stat-label">&Oslash;&nbsp;Gelb</div>
+        </div>
+        <div class="ref-stat" title="Rote Karten">
+          <div class="ref-stat-value"><span class="card-chip card-chip--rot"></span>{{ referee.vorsaison_rot }}</div>
+          <div class="ref-stat-label">Rot</div>
+        </div>
+        <div class="ref-stat" title="Verhängte Elfmeter">
+          <div class="ref-stat-value">{{ referee.vorsaison_elfmeter }}</div>
+          <div class="ref-stat-label">Elfmeter</div>
+        </div>
+        <div class="ref-stat" title="Umstrittene Entscheidungen">
+          <div class="ref-stat-value{% if referee.vorsaison_umstritten >= 5 %} is-bad{% endif %}">{{ referee.vorsaison_umstritten }}</div>
+          <div class="ref-stat-label">Umstritten</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
 <script src="{% static 'game/js/match_report_v2.js' %}?v=5"></script>
+{% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=1"></script>{% endif %}
 {% endblock %}

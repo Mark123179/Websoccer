@@ -5203,6 +5203,8 @@ def club_match_report(request, club_id):
         rc['ticker_extra_time'] = _et
         rc['ticker_manager_side'] = _mgr_side
 
+    _referee = getattr(latest, 'referee', None) if latest else None
+
     return render(request, 'game/match_report.html', {
         'club':             club,
         'latest_match':     latest,
@@ -5213,6 +5215,7 @@ def club_match_report(request, club_id):
         'competition_name': _comp_name,
         'competition_logo': _comp_logo,
         'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
+        'referee':          _referee,
     })
 
 
@@ -5220,7 +5223,7 @@ def match_report_by_id(request, sm_id):
     """Spielbericht direkt für einen SimulatedMatch (z. B. aus dem Spielplan)."""
     from .models import SimulatedMatch as SM
 
-    latest = get_object_or_404(SM.objects.select_related('home_club', 'away_club'), pk=sm_id)
+    latest = get_object_or_404(SM.objects.select_related('home_club', 'away_club', 'referee'), pk=sm_id)
     club   = latest.home_club
 
     _PLAN_LABELS = {
@@ -5370,6 +5373,7 @@ def match_report_by_id(request, sm_id):
         'competition_name': _comp_name,
         'competition_logo': _comp_logo,
         'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
+        'referee':          getattr(latest, 'referee', None),
     })
 
 

@@ -126,6 +126,12 @@ def flag_url(code):
     return asset_url('flags', f'{code}.png')
 
 
+def referee_face_url(fm_uid):
+    if not fm_uid:
+        return asset_url('referees', 'referee_default.svg')
+    return asset_url('referees', f'face_{fm_uid}.png')
+
+
 def competition_url(competition_id):
     if not competition_id:
         return ''
