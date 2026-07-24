@@ -1,10 +1,10 @@
 /* =========================================================
    Sponsoring Page  —  /management/sponsoring/
-   Scope: .sponsoring-page  (analog zu finanzen.css)
+   Scope: .sxp-page  (analog zu finanzen.css)
    ========================================================= */
 
 /* ── Dashboard-Artboard ────────────────────────────────── */
-.sponsoring-page .dashboard-artboard {
+.sxp-page .dashboard-artboard {
     min-height: 960px;
     background:
         radial-gradient(ellipse 900px 500px at 100% 0%, rgba(34,230,255,.09), transparent 60%),
@@ -13,7 +13,7 @@
 }
 
 /* ── Haupt-Grid ─────────────────────────────────────────── */
-.spons-wrap {
+.sxp-wrap {
     width: 100%;
     padding: 24px 28px 44px;
     display: grid;
@@ -35,14 +35,14 @@
     object-fit: contain; align-self: center;
     filter: drop-shadow(0 0 18px rgba(34,230,255,.28));
 }
-.spons-micro {
+.sxp-micro {
     font-size: 11px; font-weight: 900;
     letter-spacing: .7px; text-transform: uppercase;
     color: var(--faint);
 }
-.spons-h1  { font-size: 25px; font-weight: 900; letter-spacing: .5px; text-transform: uppercase; color: var(--text); }
-.spons-sub { font-size: 13px; font-weight: 600; color: var(--muted); }
-.spons-pill {
+.sxp-h1  { font-size: 25px; font-weight: 900; letter-spacing: .5px; text-transform: uppercase; color: var(--text); }
+.sxp-sub { font-size: 13px; font-weight: 600; color: var(--muted); }
+.sxp-pill {
     margin-left: auto; align-self: center;
     padding: 7px 12px; border-radius: 999px;
     border: 1px solid rgba(48,242,156,.4);
@@ -50,7 +50,7 @@
     color: var(--green); font-size: 11px; font-weight: 900;
     letter-spacing: .7px; text-transform: uppercase; white-space: nowrap;
 }
-.spons-pill.closed {
+.sxp-pill.closed {
     border-color: rgba(255,85,112,.4); background: rgba(255,85,112,.08); color: var(--red);
 }
 .ghost {
@@ -73,7 +73,7 @@
 /* ── KPI-Zeile ──────────────────────────────────────────── */
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .kpi  { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); padding: 14px 16px; }
-.kpi .spons-micro { display: block; margin-bottom: 5px; }
+.kpi .sxp-micro { display: block; margin-bottom: 5px; }
 .kpi strong { font-size: 20px; font-weight: 900; color: var(--cyan); }
 
 /* ── Regelbox ───────────────────────────────────────────── */
@@ -100,16 +100,16 @@
 .cards { padding: 2px 18px 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(246px, 1fr)); gap: 12px; }
 .card { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: rgba(255,255,255,.035); border: 1px solid var(--line); border-radius: 8px; transition: border-color .15s, background .15s; }
 .card:hover   { border-color: var(--line-strong); background: rgba(255,255,255,.055); }
-.card.pending { border-color: var(--line-strong); animation: spons-pulse 1s ease-in-out infinite; }
-.card.ok      { animation: spons-flashok .85s ease-out; }
-.card.fail    { animation: spons-flashfail .85s ease-out; }
+.card.pending { border-color: var(--line-strong); animation: sxp-pulse 1s ease-in-out infinite; }
+.card.ok      { animation: sxp-flashok .85s ease-out; }
+.card.fail    { animation: sxp-flashfail .85s ease-out; }
 .card.dim     { opacity: .42; }
 .card.chosen  { border-color: rgba(48,242,156,.45); }
 .card.gone    { border-color: rgba(255,85,112,.4); }
 .card.auto    { border-color: rgba(255,209,102,.45); }
-@keyframes spons-pulse    { 0%,100%{ box-shadow:0 0 0 0 rgba(34,230,255,0) } 50%{ box-shadow:0 0 24px 3px rgba(34,230,255,.4) } }
-@keyframes spons-flashok  { 0%{ background-color:rgba(48,242,156,.25) } 100%{ background-color:rgba(255,255,255,.035) } }
-@keyframes spons-flashfail{ 0%{ background-color:rgba(255,85,112,.3)  } 100%{ background-color:rgba(255,255,255,.035) } }
+@keyframes sxp-pulse    { 0%,100%{ box-shadow:0 0 0 0 rgba(34,230,255,0) } 50%{ box-shadow:0 0 24px 3px rgba(34,230,255,.4) } }
+@keyframes sxp-flashok  { 0%{ background-color:rgba(48,242,156,.25) } 100%{ background-color:rgba(255,255,255,.035) } }
+@keyframes sxp-flashfail{ 0%{ background-color:rgba(255,85,112,.3)  } 100%{ background-color:rgba(255,255,255,.035) } }
 .card .top { display: flex; align-items: center; gap: 10px; }
 .slogo { width: 38px; height: 38px; flex-shrink: 0; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background-color: #fff; background-position: center; background-repeat: no-repeat; background-size: 76%; }
 .card .nm { font-size: 13.5px; font-weight: 900; line-height: 1.15; display: block; color: var(--text); }
@@ -142,14 +142,14 @@
 .btn-sec:not([disabled]):hover { border-color: var(--line-strong); }
 
 /* ── Side-Panels ────────────────────────────────────────── */
-.spons-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.sxp-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
 .projrow      { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 800; color: var(--text); }
 .projrow span { color: var(--muted); }
 .stack   { display: flex; position: relative; height: 9px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
 .stack i { height: 100%; }
 .legend  { display: flex; gap: 12px; font-size: 10.5px; font-weight: 800; color: var(--faint); flex-wrap: wrap; }
 .legend b { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 5px; vertical-align: middle; }
-.spons-note { font-size: 11px; line-height: 1.5; color: var(--faint); font-weight: 700; }
+.sxp-note { font-size: 11px; line-height: 1.5; color: var(--faint); font-weight: 700; }
 
 /* ── Ticker ─────────────────────────────────────────────── */
 .tick-item { display: flex; gap: 10px; align-items: flex-start; }

@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block body_class %}sponsoring-page{% endblock %}
+{% block body_class %}sxp-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'game/css/sponsoring.css' %}?v=4">
 {% endblock %}
 
 {% block content %}
@@ -15,18 +15,18 @@
 {{ initial_state_json|json_script:"initial-state" }}
 {{ ticker_json|json_script:"ticker-data" }}
 
-<div class="spons-wrap">
+<div class="sxp-wrap">
   <div class="pagehead">
     <img class="crest" src="{{ club_crest_url }}" alt="" onerror="this.style.display='none'">
     <div>
-      <span class="spons-micro">{{ club.name }} · Finanzen · Sponsoring</span>
-      <h1 class="spons-h1">Sponsoren {{ season_label }}</h1>
-      <span class="spons-sub">Fünf Slots, Verträge für genau eine Saison — alle Angebote kalibriert auf die Erwartung des Präsidenten.</span>
+      <span class="sxp-micro">{{ club.name }} · Finanzen · Sponsoring</span>
+      <h1 class="sxp-h1">Sponsoren {{ season_label }}</h1>
+      <span class="sxp-sub">Fünf Slots, Verträge für genau eine Saison — alle Angebote kalibriert auf die Erwartung des Präsidenten.</span>
     </div>
     {% if fenster_offen %}
-    <span class="spons-pill">Saisonvorbereitung · Fenster offen</span>
+    <span class="sxp-pill">Saisonvorbereitung · Fenster offen</span>
     {% else %}
-    <span class="spons-pill closed">Fenster geschlossen · ab Spieltag 1</span>
+    <span class="sxp-pill closed">Fenster geschlossen · ab Spieltag 1</span>
     {% endif %}
     <a href="{% url 'management_finanzen' %}" class="ghost">← Finanzen</a>
   </div>
@@ -34,10 +34,10 @@
   <div class="col-main">
     <div class="toast" id="toast" style="display:none"></div>
     <div class="kpis">
-      <div class="kpi"><span class="spons-micro">Sponsorwert (Schätzung)</span><strong>{{ sponsorwert_fmt }}</strong></div>
-      <div class="kpi"><span class="spons-micro">Erwartetes Volumen</span><strong id="kVol"></strong></div>
-      <div class="kpi"><span class="spons-micro">Slots fixiert</span><strong id="kFix" style="color:var(--green)"></strong></div>
-      <div class="kpi"><span class="spons-micro">Verprellte Sponsoren</span><strong id="kGone"></strong></div>
+      <div class="kpi"><span class="sxp-micro">Sponsorwert (Schätzung)</span><strong>{{ sponsorwert_fmt }}</strong></div>
+      <div class="kpi"><span class="sxp-micro">Erwartetes Volumen</span><strong id="kVol"></strong></div>
+      <div class="kpi"><span class="sxp-micro">Slots fixiert</span><strong id="kFix" style="color:var(--green)"></strong></div>
+      <div class="kpi"><span class="sxp-micro">Verprellte Sponsoren</span><strong id="kGone"></strong></div>
     </div>
     <div class="rule"><span class="tag">Regel</span>
       <p>Ohne Sponsor startet kein Verein: Slots, die bis zum Anpfiff des 1. Spieltags offen sind, werden automatisch mit dem Sicherheits-Angebot besetzt — ohne Verhandlungsrunden. Bleibt in einem Slot nur noch ein Angebot übrig, gilt dieses als angenommen. Verprellte Sponsoren kehren in dieser Saison nicht zurück. Nachverhandeln bringt +7 / +10 / +12 % pro Runde auf Fixbetrag UND alle Boni, bei 18 / 38 / 62 % Abbruchrisiko.</p>
@@ -46,8 +46,8 @@
   </div>
 
   <div class="col-side">
-    <div class="spons-panel">
-      <span class="spons-micro">Szenario-Projektion</span>
+    <div class="sxp-panel">
+      <span class="sxp-micro">Szenario-Projektion</span>
       <div class="projrow"><span>Worst Case (nur Fix)</span><b id="pWorst" style="color:var(--red)"></b></div>
       <div class="projrow"><span>Erwartet</span><b id="pExp" style="color:var(--cyan)"></b></div>
       <div class="projrow"><span>Best Case (alle Boni)</span><b id="pBest" style="color:var(--green)"></b></div>
@@ -57,12 +57,12 @@
         <span><b style="background:var(--green)"></b>Variabel <span id="lgVar"></span> %</span>
         <span><b style="background:rgba(255,255,255,.25)"></b>Offen <span id="lgOpen"></span> %</span>
       </div>
-      <p class="spons-note">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
+      <p class="sxp-note">Offene Slots zählen mit ihrem Schätzwert. Je höher dein variabler Anteil, desto mehr hängt dein Budget an der Saison.</p>
     </div>
-    <div class="spons-panel">
-      <div class="livehead"><span class="p"></span><span class="spons-micro">Liga-Ticker · Fixierte Verträge</span></div>
+    <div class="sxp-panel">
+      <div class="livehead"><span class="p"></span><span class="sxp-micro">Liga-Ticker · Fixierte Verträge</span></div>
       <div id="ticker" style="display:flex;flex-direction:column;gap:12px"></div>
-      <p class="spons-note" style="padding-top:4px;border-top:1px solid var(--line)">Neue Abschlüsse der Liga laufen hier ein, sobald andere Vereine ihre Sponsoren fixieren.</p>
+      <p class="sxp-note" style="padding-top:4px;border-top:1px solid var(--line)">Neue Abschlüsse der Liga laufen hier ein, sobald andere Vereine ihre Sponsoren fixieren.</p>
     </div>
   </div>
 </div>
@@ -301,7 +301,7 @@ render();
 setTimeout(function () {
   try {
     var art = document.querySelector('.dashboard-artboard');
-    var wrap = document.querySelector('.spons-wrap');
+    var wrap = document.querySelector('.sxp-wrap');
     var stage = document.querySelector('.dashboard-scaler');
     var cssInfo = [];
     for (var i = 0; i < document.styleSheets.length; i++) {
@@ -312,8 +312,8 @@ setTimeout(function () {
           n = ss.cssRules.length;
           for (var j = 0; j < ss.cssRules.length; j++) {
             var r = ss.cssRules[j];
-            if (r.selectorText === '.spons-wrap' && !wrapRule) wrapRule = r.cssText.slice(0, 300);
-            if (r.selectorText && r.selectorText.indexOf('.sponsoring-page .dashboard-artboard') !== -1 && !artRule) artRule = r.cssText.slice(0, 300);
+            if (r.selectorText === '.sxp-wrap' && !wrapRule) wrapRule = r.cssText.slice(0, 300);
+            if (r.selectorText && r.selectorText.indexOf('.sxp-page .dashboard-artboard') !== -1 && !artRule) artRule = r.cssText.slice(0, 300);
           }
         } catch (e) { n = -2; }
         cssInfo.push({ href: ss.href, rules: n, wrapRule: wrapRule, artRule: artRule });
