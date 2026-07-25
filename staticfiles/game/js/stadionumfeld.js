@@ -128,14 +128,22 @@
       this.onUp   = this.onUp.bind(this);
       this.hideImg = function(e){ if (e && e.target){ e.target.style.display = 'none'; } };
       this.ratios = {};
+      this._clockStart = Date.now();
     }
 
     /* ---- lifecycle -------------------------------------------------- */
     init(){
+      var self=this;
       window.addEventListener('pointermove', this.onMove);
       window.addEventListener('pointerup', this.onUp);
       this.render();
       this.preloadRatios();
+      // Live-Countdown: jede Sekunde neu rendern solange ein Ausbau läuft.
+      setInterval(function(){
+        var b=self.state.building; if(!b) return;
+        var active=Object.keys(b).some(function(k){ return b[k]&&b[k].secs_left>0; });
+        if(active) self.forceUpdate();
+      }, 1000);
     }
     preloadRatios(){ var self=this; var seen={}; ['baustelle.png'].forEach(function(nm){ var u=self.url(nm); seen[u]=1; var im=new Image(); im.onload=function(){ self.ratios[u]=im.naturalWidth/im.naturalHeight; self.forceUpdate(); }; im.src=u; }); this.PLOTS.forEach(function(p){ var srcs=[]; if(p.baufeld) srcs.push(p.baufeld); var a=p.assets||{}; Object.keys(a).forEach(function(k){ srcs.push(a[k]); }); srcs.forEach(function(nm){ var u=self.url(nm); if(seen[u])return; seen[u]=1; var im=new Image(); im.onload=function(){ self.ratios[u]=im.naturalWidth/im.naturalHeight; if(self._rt)clearTimeout(self._rt); self._rt=setTimeout(function(){ self.forceUpdate(); },140); }; im.src=u; }); }); }
 
@@ -165,6 +173,8 @@
 
     /* ---- helpers (verbatim) ---------------------------------------- */
     bd(){ var v=parseInt(this.props.buildDays,10); return v>0?v:7; }
+    liveSecs(b){ if(!b||b.secs_left==null) return 0; var elapsed=Math.floor((Date.now()-this._clockStart)/1000); return Math.max(0, b.secs_left - elapsed); }
+    fmtDHM(secs){ if(secs==null||secs<=0) return '0m'; var d=Math.floor(secs/86400); var h=Math.floor((secs%86400)/3600); var m=Math.floor((secs%3600)/60); if(d>0) return d+'T '+h+'h '+m+'m'; if(h>0) return h+'h '+m+'m'; return m+'m'; }
     enc(p){ return encodeURI(p).replace(/\+/g,'%2B'); }
     url(n){ return ASSET_BASE + n; }
     tierOf(c){ var t=0; for(var i=0;i<this.tiers.length;i++){ if(c>=this.tiers[i].min) t=this.tiers[i].t; } return t; }
@@ -330,12 +340,12 @@
         var goDetail=function(e){ if(e&&e.stopPropagation)e.stopPropagation(); self.openDetail(p.id); };
         if(isStad){
           var ti=self.tiers[lvl];
-          if(b){ tone='yellow'; chipText=lvl+'+ · '+b.left+'T'; statusText='Stufe '+lvl+' → '+self.tiers[b.target].name+' · '+b.left+' T'; cardSub='Stadion-Ausbau'; actionLabel='Details'; actionFn=goDetail; av='warn'; }
+          if(b){ tone='yellow'; var hms=self.fmtDHM(self.liveSecs(b)); chipText=lvl+'+ · '+hms; statusText='Stufe '+lvl+' → '+self.tiers[b.target].name+' · '+hms; cardSub='Stadion-Ausbau'; actionLabel='Details'; actionFn=goDetail; av='warn'; }
           cardLabel='Stadion'; cardSub=cardSub||(ti.name+' · Standard im Hintergrund');
           empty=(lvl===0&&!b);
           showCard=(!hasImgSrc(src)&&!empty);
         } else {
-          if(b){ tone='yellow'; var to=b.target; chipText=(lvl===0?'Bau':lvl+'+')+' · '+b.left+'T'; statusText=(lvl===0?'Bau · Stufe 1':'Stufe '+lvl+' → '+to)+' · '+b.left+' T'; cardSub=(lvl===0?'Baustelle · Stufe 1':'Ausbau → Stufe '+to); actionLabel='Details'; actionFn=goDetail; av='warn'; }
+          if(b){ tone='yellow'; var to=b.target; var hms=self.fmtDHM(self.liveSecs(b)); chipText=(lvl===0?'Bau':lvl+'+')+' · '+hms; statusText=(lvl===0?'Bau · Stufe 1':'Stufe '+lvl+' → '+to)+' · '+hms; cardSub=(lvl===0?'Baustelle · Stufe 1':'Ausbau → Stufe '+to); actionLabel='Details'; actionFn=goDetail; av='warn'; }
           else if(lvl>0){ tone='green'; chipText='Stufe '+lvl; statusText='Stufe '+lvl+' · In Betrieb'; cardSub='Stufe '+lvl+' · Bild folgt'; if(lvl<p.max){ actionLabel='Ausbauen'; actionFn=goDetail; av='primary'; } else { showAction=false; } }
           else { empty=true; tone='faint'; chipText='frei'; statusText=(p.kind==='reserve'?'Baufeld frei · reserviert':'Baufeld frei'); actionLabel='Bauen'; actionFn=goDetail; av='primary'; }
           showCard=(!hasImgSrc(src)&&!empty);
@@ -398,7 +408,7 @@
       sel.isBuilding=!!bbuild; sel.canBuild=!bbuild&&blvl<p.max; sel.isMax=!bbuild&&blvl>=p.max;
       sel.buildHeading=p.kind==='stadium'?'Stadion-Ausbau':'Ausbau';
       sel.maxName=p.kind==='stadium'?this.tiers[p.max].name:('Stufe '+p.max);
-      if(bbuild){ sel.buildingText=(p.kind==='stadium'?('→ '+this.tiers[bbuild.target].name):('Ausbau → Stufe '+bbuild.target))+' · noch '+bbuild.left+' Tage'; var prog=Math.round((1-bbuild.left/bbuild.total)*100); sel.progTrack={position:'relative',height:'8px',borderRadius:'999px',background:'rgba(255,255,255,.08)',overflow:'hidden'}; sel.progFill={position:'absolute',left:0,top:0,bottom:0,width:prog+'%',borderRadius:'999px',background:'linear-gradient(90deg,var(--green),var(--cyan))'}; }
+      if(bbuild){ sel.buildingText=(p.kind==='stadium'?('→ '+this.tiers[bbuild.target].name):('Ausbau → Stufe '+bbuild.target))+' · '+this.fmtDHM(this.liveSecs(bbuild)); var prog=Math.round((1-bbuild.left/bbuild.total)*100); sel.progTrack={position:'relative',height:'8px',borderRadius:'999px',background:'rgba(255,255,255,.08)',overflow:'hidden'}; sel.progFill={position:'absolute',left:0,top:0,bottom:0,width:prog+'%',borderRadius:'999px',background:'linear-gradient(90deg,var(--green),var(--cyan))'}; }
       sel.buildLabel=(p.kind==='stadium')?('Auf '+this.tiers[Math.min(blvl+1,4)].name+' ausbauen · '+this.bd()+' Tage'):('Auf Stufe '+(blvl+1)+' ausbauen · '+this.bd()+' Tage');
       sel.buildHint=(blvl===0)?('Baufeld bebauen — Bauzeit '+this.bd()+' Tage, danach Stufe 1.'):('Ausbau startet eine Bauzeit von '+this.bd()+' Tagen. Im Umfeld erscheint der „+\u201c-Bauzustand.');
       sel.buildFn=function(){ self.startBuild(p.id); };

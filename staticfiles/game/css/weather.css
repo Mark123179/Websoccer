@@ -1,0 +1,369 @@
+/* ── Wetter-System: Icon + animiertes "SPIELTAG-WETTER"-Popup ─────────────
+   Popup-Positionierung übernimmt weather.js (Portal an document.body,
+   position:fixed, skaliert mit --game-scale). Das CSS hier definiert nur
+   Aussehen + Ein-/Ausblendung über .wx-pop--open.                        */
+
+.wx-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    outline: none;
+}
+
+.wx-badge--dim { opacity: 0.38; }
+.wx-badge--dim .wx-pop { display: none; }
+
+.wx-icon {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+}
+.wx-icon svg { width: 100%; height: 100%; display: block; }
+
+.wx-icon--normal { color: #ffd166; }
+.wx-icon--regen  { color: #7fb3d5; }
+.wx-icon--wind   { color: #9fb6c9; }
+.wx-icon--nebel  { color: #aab7c4; }
+.wx-icon--hitze  { color: #ff9f43; }
+.wx-icon--schnee { color: #bfe3ff; }
+
+.wx-temp {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+}
+.wx-temp--heat   { color: #ff9f43; }
+.wx-temp--normal { color: #c9d5de; }
+.wx-temp--cold   { color: #8fc7e8; }
+.wx-temp--frost  { color: #a9f2ff; text-shadow: 0 0 8px rgba(34, 230, 255, 0.6); }
+
+/* ── Popup-Karte ─────────────────────────────────────────────────────────── */
+.wx-pop {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    margin-left: -140px;
+    width: 280px;
+    display: block;
+    border-radius: 8px;
+    background: #0d1b26;
+    border: 1px solid rgba(120, 160, 190, 0.22);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.62);
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+    z-index: 4000;
+    text-align: left;
+    white-space: normal;
+}
+.wx-badge:hover > .wx-pop,
+.wx-badge:focus-visible > .wx-pop,
+.wx-pop.wx-pop--open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ── Szene (animierter Himmel + Rasenkante) ──────────────────────────────── */
+.wx-scene {
+    position: relative;
+    display: block;
+    height: 122px;
+    overflow: hidden;
+}
+.wx-scene i { position: absolute; display: block; }
+
+.wxs-grass {
+    left: 0; right: 0; bottom: 0; height: 18px;
+    background: linear-gradient(180deg, rgba(48, 242, 156, 0.06), rgba(48, 242, 156, 0.26));
+    border-top: 1px solid rgba(48, 242, 156, 0.3);
+}
+.wxs-vignette {
+    inset: 0;
+    box-shadow: inset 0 0 55px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+.wxs-tag {
+    position: absolute;
+    top: 10px; left: 12px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: rgba(244, 251, 255, 0.6);
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Szene: NORMAL */
+.wx-scene--normal { background: linear-gradient(180deg, #123a5e 0%, #0c2338 55%, #081726 100%); }
+.wx-scene--normal .wxs-glow {
+    inset: 0;
+    background: radial-gradient(circle at 76% 30%, rgba(255, 220, 130, 0.22), rgba(255, 220, 130, 0) 45%);
+}
+.wxs-sun {
+    top: 18px; right: 36px; width: 40px; height: 40px; border-radius: 999px;
+    background: radial-gradient(circle at 35% 35%, #fff3cf, #ffd166 58%, #edaa38);
+    animation: ws-sunpulse 4.5s ease-in-out infinite;
+}
+.wxs-mist { border-radius: 999px; background: rgba(244, 251, 255, 0.1); }
+.wxs-mist--a { top: 54px; left: 22px; width: 92px; height: 17px; filter: blur(4px); animation: ws-fog 11s ease-in-out infinite alternate; }
+.wxs-mist--b { top: 78px; left: 124px; width: 58px; height: 12px; background: rgba(244, 251, 255, 0.06); filter: blur(3px); animation: ws-fog 14s ease-in-out infinite alternate-reverse; }
+
+/* Szene: REGEN */
+.wx-scene--regen { background: linear-gradient(180deg, #1c2b38 0%, #101d29 55%, #0a141d 100%); }
+.wxs-cloud { border-radius: 999px; }
+.wxs-cloud--a { top: 16px; left: 24px; width: 122px; height: 25px; background: #223744; filter: blur(3px); animation: ws-fog 13s ease-in-out infinite alternate; }
+.wxs-cloud--b { top: 24px; left: 78px; width: 128px; height: 30px; background: linear-gradient(180deg, #46606f, #263f4e); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5); animation: ws-fog 10s ease-in-out infinite alternate-reverse; }
+.wxs-cloud--c { top: 10px; left: 104px; width: 54px; height: 38px; background: linear-gradient(180deg, #547082, #30505f); }
+.wxs-rf {
+    top: 48px; width: 1.5px; height: 9px; border-radius: 2px;
+    background: rgba(160, 220, 240, 0.32);
+    animation: ws-rain 1.4s linear infinite;
+}
+.wxs-rf:nth-of-type(4)  { left: 5%;  animation-delay: 0s;    animation-duration: 1.3s; }
+.wxs-rf:nth-of-type(5)  { left: 14%; animation-delay: 0.31s; animation-duration: 1.5s; }
+.wxs-rf:nth-of-type(6)  { left: 23%; animation-delay: 0.62s; animation-duration: 1.7s; }
+.wxs-rf:nth-of-type(7)  { left: 33%; animation-delay: 0.93s; animation-duration: 1.3s; }
+.wxs-rf:nth-of-type(8)  { left: 43%; animation-delay: 1.24s; animation-duration: 1.5s; }
+.wxs-rf:nth-of-type(9)  { left: 54%; animation-delay: 0.25s; animation-duration: 1.7s; }
+.wxs-rf:nth-of-type(10) { left: 64%; animation-delay: 0.56s; animation-duration: 1.3s; }
+.wxs-rf:nth-of-type(11) { left: 74%; animation-delay: 0.87s; animation-duration: 1.5s; }
+.wxs-rf:nth-of-type(12) { left: 85%; animation-delay: 1.18s; animation-duration: 1.7s; }
+.wxs-rf:nth-of-type(13) { left: 94%; animation-delay: 0.19s; animation-duration: 1.3s; }
+.wxs-rn {
+    top: 50px; width: 2.5px; height: 13px; border-radius: 2px;
+    background: linear-gradient(180deg, rgba(34, 230, 255, 0.15), rgba(150, 225, 245, 0.7));
+    animation: ws-rain 0.9s linear infinite;
+}
+.wxs-rn:nth-of-type(14) { left: 8%;  animation-delay: 0s;    animation-duration: 0.75s; }
+.wxs-rn:nth-of-type(15) { left: 18%; animation-delay: 0.23s; animation-duration: 0.87s; }
+.wxs-rn:nth-of-type(16) { left: 29%; animation-delay: 0.46s; animation-duration: 0.99s; }
+.wxs-rn:nth-of-type(17) { left: 40%; animation-delay: 0.69s; animation-duration: 1.11s; }
+.wxs-rn:nth-of-type(18) { left: 50%; animation-delay: 0.02s; animation-duration: 0.75s; }
+.wxs-rn:nth-of-type(19) { left: 61%; animation-delay: 0.25s; animation-duration: 0.87s; }
+.wxs-rn:nth-of-type(20) { left: 72%; animation-delay: 0.48s; animation-duration: 0.99s; }
+.wxs-rn:nth-of-type(21) { left: 84%; animation-delay: 0.71s; animation-duration: 1.11s; }
+.wxs-puddle {
+    bottom: 4px; height: 7px; border-radius: 999px;
+    background: rgba(150, 225, 245, 0.5);
+    animation: ws-puddle 2.4s ease-in-out infinite;
+}
+.wxs-puddle--a { left: 20%; width: 80px; filter: blur(4px); }
+.wxs-puddle--b { left: 62%; width: 52px; filter: blur(3px); animation-duration: 3.1s; animation-delay: 0.8s; }
+
+/* Szene: WIND */
+.wx-scene--wind { background: linear-gradient(180deg, #0f2c3e 0%, #0a1c2a 55%, #071420 100%); }
+.wxs-mist--w { top: 16px; left: auto; right: 26px; width: 84px; height: 19px; filter: blur(3px); animation: ws-fog 3s ease-in-out infinite alternate; }
+.wxs-streak {
+    left: -200px; height: 3px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(34, 230, 255, 0), rgba(34, 230, 255, 0.65));
+    filter: blur(0.5px);
+    animation: ws-wind 2.8s linear infinite;
+}
+.wxs-streak:nth-of-type(2) { top: 26px; width: 132px; animation-delay: 0s;    animation-duration: 2.4s; }
+.wxs-streak:nth-of-type(3) { top: 42px; width: 92px;  animation-delay: 0.9s;  animation-duration: 3s; }
+.wxs-streak:nth-of-type(4) { top: 58px; width: 148px; animation-delay: 1.6s;  animation-duration: 2.7s; }
+.wxs-streak:nth-of-type(5) { top: 78px; width: 80px;  animation-delay: 0.4s;  animation-duration: 3.3s; }
+.wxs-streak:nth-of-type(6) { top: 94px; width: 108px; animation-delay: 2.3s;  animation-duration: 2.9s; }
+.wxs-streak:nth-of-type(7) { top: 36px; width: 58px;  animation-delay: 2s;    animation-duration: 3.5s; }
+.wxs-streak:nth-of-type(8) { top: 70px; width: 50px;  animation-delay: 1.1s;  animation-duration: 3.2s; }
+.wxs-leaf {
+    left: -20px; width: 6px; height: 5px;
+    border-radius: 60% 40% 60% 40%;
+    background: rgba(48, 242, 156, 0.75);
+    animation: ws-leaf 4.6s ease-in-out infinite;
+}
+.wxs-leaf:nth-of-type(9)  { top: 48px; animation-delay: 0s;    animation-duration: 4.2s; }
+.wxs-leaf:nth-of-type(10) { top: 74px; animation-delay: 1.6s;  animation-duration: 5s; }
+.wxs-leaf:nth-of-type(11) { top: 90px; animation-delay: 3.1s;  animation-duration: 4.6s; }
+
+/* Szene: NEBEL */
+.wx-scene--nebel { background: linear-gradient(180deg, #1a2831 0%, #101b23 55%, #0a141c 100%); }
+.wxs-fogsun {
+    top: 12px; right: 44px; width: 34px; height: 34px; border-radius: 999px;
+    background: radial-gradient(circle, rgba(255, 220, 140, 0.3), rgba(255, 220, 140, 0) 70%);
+    filter: blur(2px);
+}
+.wxs-shaft {
+    top: -26px;
+    background: linear-gradient(180deg, rgba(244, 251, 255, 0.09), rgba(244, 251, 255, 0));
+    filter: blur(4px);
+}
+.wxs-shaft--a { left: 20px; width: 38px; height: 108px; transform: rotate(14deg); }
+.wxs-shaft--b { right: 50px; width: 34px; height: 100px; transform: rotate(-12deg); background: linear-gradient(180deg, rgba(244, 251, 255, 0.07), rgba(244, 251, 255, 0)); }
+.wxs-fogband {
+    left: -10%; width: 120%; border-radius: 999px;
+    background: rgba(244, 251, 255, 0.11);
+    animation: ws-fog 7s ease-in-out infinite alternate;
+}
+.wxs-fogband:nth-of-type(4) { top: 24px; height: 17px; background: rgba(244, 251, 255, 0.08); filter: blur(7px); animation-duration: 6s; }
+.wxs-fogband:nth-of-type(5) { top: 46px; height: 22px; background: rgba(244, 251, 255, 0.14); filter: blur(8px); animation-duration: 8s; animation-direction: alternate-reverse; }
+.wxs-fogband:nth-of-type(6) { top: 70px; height: 22px; filter: blur(8px); animation-duration: 7s; }
+.wxs-fogband:nth-of-type(7) { top: 94px; height: 20px; background: rgba(244, 251, 255, 0.16); filter: blur(9px); animation-duration: 9s; animation-direction: alternate-reverse; }
+.wx-scene--nebel .wxs-grass {
+    background: linear-gradient(180deg, rgba(48, 242, 156, 0.04), rgba(48, 242, 156, 0.14));
+    border-top-color: rgba(48, 242, 156, 0.16);
+}
+.wx-scene--nebel .wxs-vignette { box-shadow: inset 0 0 65px rgba(0, 0, 0, 0.6); }
+
+/* Szene: HITZE */
+.wx-scene--hitze { background: linear-gradient(180deg, #33261e 0%, #1c1720 55%, #0c1119 100%); }
+.wxs-glow--heat {
+    inset: 0;
+    background: radial-gradient(circle at 50% 26%, rgba(255, 159, 28, 0.3), rgba(255, 159, 28, 0) 60%);
+}
+.wxs-heatsun {
+    top: 16px; left: 50%; margin-left: -24px; width: 48px; height: 48px; border-radius: 999px;
+    background: radial-gradient(circle at 35% 35%, #ffe9b8, #ff9f1c 55%, #d85d00);
+    animation: ws-heatpulse 3.5s ease-in-out infinite;
+}
+.wxs-wave {
+    bottom: 18px; width: 3px; height: 16px; border-radius: 999px;
+    background: rgba(255, 180, 80, 0.45);
+    filter: blur(1px);
+    animation: ws-heat 2s ease-in infinite;
+}
+.wxs-wave:nth-of-type(3)  { left: 8%;  animation-delay: 0s;    animation-duration: 1.7s; }
+.wxs-wave:nth-of-type(4)  { left: 18%; animation-delay: 0.45s; animation-duration: 2.1s; }
+.wxs-wave:nth-of-type(5)  { left: 29%; animation-delay: 0.9s;  animation-duration: 2.5s; }
+.wxs-wave:nth-of-type(6)  { left: 39%; animation-delay: 1.35s; animation-duration: 1.7s; }
+.wxs-wave:nth-of-type(7)  { left: 50%; animation-delay: 1.8s;  animation-duration: 2.1s; }
+.wxs-wave:nth-of-type(8)  { left: 60%; animation-delay: 0.25s; animation-duration: 2.5s; }
+.wxs-wave:nth-of-type(9)  { left: 71%; animation-delay: 0.7s;  animation-duration: 1.7s; }
+.wxs-wave:nth-of-type(10) { left: 81%; animation-delay: 1.15s; animation-duration: 2.1s; }
+.wxs-wave:nth-of-type(11) { left: 92%; animation-delay: 1.6s;  animation-duration: 2.5s; }
+.wxs-haze {
+    left: 0; right: 0; bottom: 16px; height: 18px;
+    background: linear-gradient(180deg, rgba(255, 159, 28, 0), rgba(255, 159, 28, 0.3));
+    filter: blur(6px);
+    animation: ws-haze 3s ease-in-out infinite;
+}
+.wx-scene--hitze .wxs-grass {
+    background: linear-gradient(180deg, rgba(48, 242, 156, 0.05), rgba(48, 242, 156, 0.18));
+    border-top-color: rgba(48, 242, 156, 0.22);
+}
+
+/* Szene: SCHNEE/FROST */
+.wx-scene--schnee { background: linear-gradient(180deg, #1c3247 0%, #12212f 55%, #0c1824 100%); }
+.wxs-glow--snow {
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(200, 240, 255, 0.12), rgba(200, 240, 255, 0) 55%);
+}
+.wxs-sf {
+    top: -6px; width: 2px; height: 2px; border-radius: 999px;
+    background: rgba(244, 251, 255, 0.5);
+    animation: ws-snow 7s linear infinite;
+}
+.wxs-sf:nth-of-type(2)  { left: 3%;  animation-delay: 0s;    animation-duration: 6s; }
+.wxs-sf:nth-of-type(3)  { left: 13%; animation-delay: 0.9s;  animation-duration: 6.9s; }
+.wxs-sf:nth-of-type(4)  { left: 23%; animation-delay: 1.8s;  animation-duration: 7.8s; }
+.wxs-sf:nth-of-type(5)  { left: 33%; animation-delay: 2.7s;  animation-duration: 8.7s; }
+.wxs-sf:nth-of-type(6)  { left: 43%; animation-delay: 3.6s;  animation-duration: 9.6s; }
+.wxs-sf:nth-of-type(7)  { left: 53%; animation-delay: 4.5s;  animation-duration: 6s; }
+.wxs-sf:nth-of-type(8)  { left: 63%; animation-delay: 5.4s;  animation-duration: 6.9s; }
+.wxs-sf:nth-of-type(9)  { left: 73%; animation-delay: 0.3s;  animation-duration: 7.8s; }
+.wxs-sf:nth-of-type(10) { left: 84%; animation-delay: 1.2s;  animation-duration: 8.7s; }
+.wxs-sf:nth-of-type(11) { left: 94%; animation-delay: 2.1s;  animation-duration: 9.6s; }
+.wxs-sn {
+    top: -10px; width: 4px; height: 4px; border-radius: 999px;
+    background: rgba(244, 251, 255, 0.95);
+    animation: ws-snow 4s linear infinite;
+}
+.wxs-sn:nth-of-type(12) { left: 6%;  animation-delay: 0s;   animation-duration: 3.4s; }
+.wxs-sn:nth-of-type(13) { left: 22%; width: 5px; height: 5px; filter: blur(0.5px); animation-delay: 0.7s; animation-duration: 4.1s; }
+.wxs-sn:nth-of-type(14) { left: 40%; animation-delay: 1.4s; animation-duration: 4.8s; filter: blur(1px); }
+.wxs-sn:nth-of-type(15) { left: 57%; width: 5px; height: 5px; animation-delay: 2.1s; animation-duration: 5.5s; }
+.wxs-sn:nth-of-type(16) { left: 73%; animation-delay: 2.8s; animation-duration: 3.4s; filter: blur(0.5px); }
+.wxs-sn:nth-of-type(17) { left: 89%; width: 5px; height: 5px; animation-delay: 3.5s; animation-duration: 4.1s; filter: blur(1px); }
+.wxs-drift { height: 3px; border-radius: 999px; background: rgba(244, 251, 255, 0.25); filter: blur(2px); }
+.wxs-drift--a { bottom: 16px; left: 14%; width: 52px; }
+.wxs-drift--b { bottom: 14px; right: 20%; width: 36px; background: rgba(244, 251, 255, 0.2); }
+.wx-scene--schnee .wxs-grass {
+    background: linear-gradient(180deg, rgba(244, 251, 255, 0.08), rgba(244, 251, 255, 0.3));
+    border-top-color: rgba(244, 251, 255, 0.35);
+}
+.wx-scene--schnee .wxs-vignette { box-shadow: inset 0 0 55px rgba(0, 0, 0, 0.45), inset 0 0 90px rgba(160, 225, 255, 0.06); }
+
+/* ── Popup-Info-Bereich ──────────────────────────────────────────────────── */
+.wx-pop-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 11px 14px 13px;
+}
+.wx-pop-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.wx-pop-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #f4fbff;
+}
+.wx-pop .wx-pop-ic { display: inline-flex; width: 20px; height: 20px; flex: 0 0 auto; }
+.wx-pop .wx-pop-ic svg { width: 20px; height: 20px; display: block; }
+.wx-pop-temp {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+.wx-pop-temp.wx-temp--heat  { text-shadow: 0 0 14px rgba(255, 159, 28, 0.45); }
+.wx-pop-temp.wx-temp--frost { text-shadow: 0 0 14px rgba(34, 230, 255, 0.6); }
+.wx-pop-flavor {
+    display: block;
+    font-style: normal;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.55;
+    color: #94a7b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wx-scene i, .wxs-sun, .wxs-heatsun { animation: none !important; }
+}
+
+/* ── Keyframes (Vorlage UI 6.2) ──────────────────────────────────────────── */
+@keyframes ws-rain { 0% { transform: translate(0, -12px) rotate(10deg); opacity: 0; } 10% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translate(18px, 100px) rotate(10deg); opacity: 0; } }
+@keyframes ws-snow { 0% { transform: translateY(0) translateX(0); opacity: 0; } 10% { opacity: 1; } 55% { transform: translateY(75px) translateX(10px); } 90% { opacity: 1; } 100% { transform: translateY(145px) translateX(-5px); opacity: 0; } }
+@keyframes ws-wind { 0% { transform: translateX(0); opacity: 0; } 18% { opacity: 1; } 75% { opacity: 0.85; } 100% { transform: translateX(420px); opacity: 0; } }
+@keyframes ws-leaf { 0% { transform: translate(0, 0) rotate(0deg); opacity: 0; } 15% { opacity: 1; } 50% { transform: translate(170px, 12px) rotate(180deg); } 85% { opacity: 1; } 100% { transform: translate(360px, -8px) rotate(360deg); opacity: 0; } }
+@keyframes ws-fog { 0% { transform: translateX(-16px); } 100% { transform: translateX(22px); } }
+@keyframes ws-heat { 0% { transform: translateY(0) scaleX(1); opacity: 0; } 30% { opacity: 0.6; } 100% { transform: translateY(-52px) scaleX(1.7); opacity: 0; } }
+@keyframes ws-haze { 0%, 100% { opacity: 0.16; } 50% { opacity: 0.32; } }
+@keyframes ws-sunpulse { 0%, 100% { box-shadow: 0 0 26px rgba(255, 209, 102, 0.45), 0 0 70px rgba(255, 209, 102, 0.22); } 50% { box-shadow: 0 0 44px rgba(255, 209, 102, 0.7), 0 0 110px rgba(255, 209, 102, 0.35); } }
+@keyframes ws-heatpulse { 0%, 100% { box-shadow: 0 0 30px rgba(255, 159, 28, 0.5), 0 0 80px rgba(216, 93, 0, 0.3); } 50% { box-shadow: 0 0 55px rgba(255, 159, 28, 0.8), 0 0 130px rgba(216, 93, 0, 0.45); } }
+@keyframes ws-puddle { 0%, 100% { opacity: 0.07; } 50% { opacity: 0.16; } }
+
+/* ── Kalender-Kachel: Icon oben links, Temperatur darunter, transparent ──── */
+.wx-badge--tile {
+    position: absolute;
+    top: 24px;
+    left: 5px;
+    z-index: 2;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: transparent;
+}
+.wx-badge--tile .wx-icon { width: 16px; height: 16px; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7)); }
+.wx-badge--tile .wx-temp { font-size: 9.5px; font-weight: 800; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
+
+/* Spielvorschau-Karte (Nächstes Spiel) */
+.club-next-match-meta .wx-badge { margin-left: 6px; vertical-align: middle; }
+
+/* Spielbericht-Header */
+.hero-meta .wx-badge { margin: 0 2px; vertical-align: middle; }
+.hero-meta .wx-badge .wx-icon { width: 16px; height: 16px; }

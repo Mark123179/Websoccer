@@ -794,7 +794,6 @@ linear-gradient(160deg, rgba(8, 55, 70, 0.92), rgba(2, 10, 17, 0.98));
     margin-left: -15px;
     margin-right: -15px;
     opacity: 1;
-    mix-blend-mode: multiply;
     transform: scale(1.2);
     transform-origin: center;
 }
