@@ -3647,6 +3647,39 @@ def _weather_display_from_report(report_data) -> dict | None:
         return None
 
 
+def _ensure_weather_in_report(report_data: dict, sm=None) -> dict:
+    """Fügt Wetter in report_data ein, falls es fehlt (Altdaten-Kompatibilität).
+
+    Neue simulate_match()-Aufrufe speichern result['weather'] direkt. Ältere
+    SimulatedMatch-Einträge (vor der Wetter-Engine) haben keinen 'weather'-Key.
+    Für sie wird das Tageswetter des Spieldatums (simulated_at) nachgeschlagen
+    bzw. einmalig nachgewürfelt — ensure_weather_for_day ist unveränderlich pro
+    Tag, damit alle Altspiele desselben Tages dasselbe Wetter zeigen. Das
+    Ergebnis wird in report_data persistiert (reine Anzeige; die damalige
+    Simulation lief ohne Wettereffekte).
+    """
+    if not report_data:
+        return report_data
+    wx = report_data.get('weather')
+    if isinstance(wx, dict) and wx.get('type') and wx.get('temperature') is not None:
+        return report_data
+    if sm is None or getattr(sm, 'simulated_at', None) is None:
+        return report_data
+    try:
+        from .weather_service import ensure_weather_for_day
+        dw, _ = ensure_weather_for_day(sm.simulated_at.date())
+        report_data = dict(report_data)
+        report_data['weather'] = {
+            'type':        dw.weather_type,
+            'temperature': dw.temperature,
+        }
+        sm.report_data = report_data
+        sm.save(update_fields=['report_data'])
+    except Exception:
+        pass
+    return report_data
+
+
 def _ensure_ratings_in_report(report_data: dict) -> dict:
     """Fügt Spielernoten in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
 
@@ -5206,6 +5239,7 @@ def club_match_report(request, club_id):
     _report_data = _ensure_shirt_numbers_in_report(_report_data) if _report_data else _report_data
     _report_data = _ensure_cards_in_report(_report_data) if _report_data else _report_data
     _report_data = _ensure_bench_in_report(_report_data) if _report_data else _report_data
+    _report_data = _ensure_weather_in_report(_report_data, sm=latest) if _report_data else _report_data
 
     _comp_name = ''
     if latest:
@@ -5366,6 +5400,7 @@ def match_report_by_id(request, sm_id):
     _report_data = _ensure_shirt_numbers_in_report(_report_data)
     _report_data = _ensure_cards_in_report(_report_data)
     _report_data = _ensure_bench_in_report(_report_data)
+    _report_data = _ensure_weather_in_report(_report_data, sm=latest)
 
     _comp_name = ''
     if latest.match_type == 'pokal':
