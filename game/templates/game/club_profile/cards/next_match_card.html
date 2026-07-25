@@ -49,6 +49,7 @@
     <div class="club-next-match-meta">
         {% if profile.nextMatch.dateLabel %}<span>{{ profile.nextMatch.dateLabel }}</span>{% endif %}
         {% if profile.nextMatch.timeLabel %}<strong>{{ profile.nextMatch.timeLabel }}</strong>{% endif %}
+        {% include 'game/partials/weather_icon.html' with wx=profile.nextMatch.weather show_temp=True %}
         {% if profile.nextMatch.stadiumName %}<small>{{ profile.nextMatch.stadiumName }}</small>{% endif %}
     </div>
 

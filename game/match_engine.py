@@ -876,8 +876,13 @@ def _expected_goals(
     opp_compiled: Optional[dict] = None,
     own_zone: Optional[dict] = None,
     opp_zone: Optional[dict] = None,
+    exponent: float = 1.25,
 ) -> float:
-    """Expected Goals aus Linienstärken + Taktik-Modifikatoren (exp 1.25)."""
+    """Expected Goals aus Linienstärken + Taktik-Modifikatoren (exp 1.25).
+
+    exponent: Stärke-Exponent; Standard 1.25 (eingefroren). Wetter Schnee
+    setzt 1.18 (_WX_SNOW_XG_EXPONENT) — flachere Stärkekurve, mehr Zufall.
+    """
     own_off = (
         own_strength['overall'] * 0.45
         + own_strength['attack']   * 0.32
@@ -889,7 +894,7 @@ def _expected_goals(
         + opp_strength['goalkeeper'] * 0.23
     )
     ratio = own_off / max(opp_def, 1.0)
-    base_xg = 1.36 * (ratio ** 1.25)
+    base_xg = 1.36 * (ratio ** exponent)
 
     if own_compiled:
         base_xg *= own_compiled.get('xg_for', 1.0)
@@ -1278,6 +1283,116 @@ def _final_stats(home_total: dict, away_total: dict) -> dict:
     }
 
 
+# ── Wetter-Modifikatoren (Spez Wettersystem Juli 2026) ───────────────────────
+# Rein multiplikative/additive Faktoren auf bestehende Würfe — kein neues
+# Subsystem, keine neue Taktikoption. Angewendet PRO SEGMENT nach
+# compile_tactic() (also nach den Compiler-Clamps), in Haupt- UND
+# Verlängerungs-Loop. weather=None/'normal' = No-Op (hält die
+# Regressions-Baseline aller Massentest-/Validierungspfade stabil).
+
+_WX_SNOW_XG_EXPONENT     = 1.18   # statt 1.25 in _expected_goals
+_WX_SNOW_INJURY_FACTOR   = 1.15   # Verletzungswahrscheinlichkeit ×1.15
+_WX_WIND_SET_PIECE_FACTOR = 0.92  # Ecken/Freistöße/Elfmeter-xG ×0.92
+_WX_FOG_XG_JITTER        = 0.10   # Zufallsanteil ±10 % auf Segment-xG
+
+
+def _apply_weather_to_compiled(
+    comp: dict,
+    weather: Optional[str],
+    tactic_seg: Optional[dict],
+    minute: int,
+    active_plan: Optional[str] = None,
+) -> None:
+    """Wendet Wetter-Modifikatoren in-place auf ein frisch kompiliertes Taktik-Dict an.
+
+    Muss NACH compile_tactic() laufen, damit die Compiler-Clamps
+    (xg_for 0.80–1.30 etc.) die Wetterfaktoren nicht beschneiden.
+    Bewusst NICHT über zone_weights (_zone_factor clamp ±7 % würde
+    zonale Faktoren verschlucken).
+    """
+    if not weather or weather == 'normal':
+        return
+    t = tactic_seg or {}
+    focus = t.get('attack_focus', 'ausgewogen') or 'ausgewogen'
+    buildup = t.get('buildup') or {}
+    if not isinstance(buildup, dict):
+        buildup = {}
+    defending = t.get('defending') or {}
+    if not isinstance(defending, dict):
+        defending = {}
+
+    if weather == 'regen':
+        # Tiefer Rasen: Kombinationsspiel durch die Mitte leidet,
+        # hohe Flanken profitieren.
+        if focus in ('durch_mitte', 'ueber_halbraeume'):
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 0.95
+        elif focus == 'flanke_kopfball':
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 1.05
+        # Grätsch-Fouls ×1.10 — es gibt keinen separaten Grätsch-Wurf,
+        # daher auf den allgemeinen Foul-Wurf angewendet.
+        comp['foul_multiplier'] = comp.get('foul_multiplier', 1.0) * 1.10
+
+    elif weather == 'wind':
+        if focus in ('fluegelspiel', 'ueber_links', 'ueber_rechts', 'flanke_kopfball'):
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 0.92
+        elif focus == 'durch_mitte':
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 1.03
+        # Fernschüsse ×0.90 → "früher Abschluss" ist der Distanzschuss-Stil.
+        if (buildup.get('attack') or 'standard') == 'frueher_abschluss':
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 0.90
+
+    elif weather == 'nebel':
+        # Fernschüsse ×0.92
+        if (buildup.get('attack') or 'standard') == 'frueher_abschluss':
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 0.92
+        # Lange Diagonalbälle + Flügelspiel ×0.95
+        if (buildup.get('defense') or 'standard') == 'lange_baelle' or focus == 'fluegelspiel':
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 0.95
+        if focus == 'durch_mitte':
+            comp['xg_for'] = comp.get('xg_for', 1.0) * 1.03
+
+    elif weather == 'hitze':
+        # Fitness-/Ausdauerverbrauch ×1.18 (fließt in fatigue_cost_weighted
+        # → apply_match_freshness_losses und Spieler-fatigue_sum).
+        comp['fatigue_cost'] = comp.get('fatigue_cost', 1.0) * 1.18
+        # Intensives Pressing auf ≥2 Linien verliert ab Minute 60 an Wirkung.
+        if minute >= 60:
+            _press = t.get('pressing') or {}
+            if not isinstance(_press, dict):
+                _press = {}
+            _hi = sum(
+                1 for line in ('defense', 'midfield', 'attack')
+                if (_press.get(line) or 'normal') in ('intensiv', 'hoch')
+            )
+            if _hi >= 2:
+                comp['pressing_index'] = comp.get('pressing_index', 0.35) * 0.85
+                comp['pressing_ball_win_bonus'] = (
+                    comp.get('pressing_ball_win_bonus', 0.0) * 0.85
+                )
+        # Zeitspiel wirkt ×1.10: +10 % der CONDITION_PLAN_MODIFIERS['zeitspiel']-
+        # Deltas zusätzlich auf die bereits gefalteten Werte (exakte Rück-
+        # skalierung ist post-clamp nicht möglich — dokumentierte Näherung).
+        if active_plan == 'zeitspiel':
+            comp['xg_for']           = comp.get('xg_for', 1.0) - 0.006
+            comp['xg_against']       = comp.get('xg_against', 1.0) - 0.008
+            comp['shot_volume']      = comp.get('shot_volume', 1.0) - 0.014
+            comp['possession_bonus'] = comp.get('possession_bonus', 0.0) + 0.018
+            comp['pressing_index']   = max(0.0, comp.get('pressing_index', 0.35) - 0.010)
+            comp['fatigue_cost']     = max(0.0, comp.get('fatigue_cost', 1.0) - 0.004)
+
+    elif weather == 'schnee':
+        # Harte Zweikämpfe auf gefrorenem Boden: Fouls ×1.15.
+        if (defending.get('zweikampf') or 'normal') == 'hart':
+            comp['foul_multiplier'] = comp.get('foul_multiplier', 1.0) * 1.15
+        # Hohes Spieltempo bringt nur den halben Bonus: Hälfte der
+        # Tempo-Deltas (shot_volume +td·0.10, directness +td·0.15)
+        # zurücknehmen; Kosten (Risiko/Fatigue) bleiben voll.
+        td = (float(comp.get('tempo', 50.0)) - 50.0) / 50.0
+        if td > 0:
+            comp['shot_volume'] = comp.get('shot_volume', 1.0) - td * 0.05
+            comp['directness']  = comp.get('directness', 0.0) - td * 0.075
+
+
 # ── Minuten-Simulation (Port aus Standalone) ──────────────────────────────────
 
 def _with_active_plan(tactic: Optional[dict], plan: Optional[str]) -> dict:
@@ -1294,6 +1409,7 @@ def _simulate_match_minutes(
     away_team: dict,
     segment_minutes: int = 5,
     _return_als_state: bool = False,
+    weather: Optional[str] = None,
 ) -> dict:
     """Simuliert ein Spiel in 5-Minuten-Segmenten mit Live-Bedingungsauswertung.
 
@@ -1404,6 +1520,8 @@ def _simulate_match_minutes(
             h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
         )
         a_comp = compile_tactic(_a_team_seg, a_tactic_seg, half=half)
+        _apply_weather_to_compiled(h_comp, weather, h_tactic_seg, minute, h_plan)
+        _apply_weather_to_compiled(a_comp, weather, a_tactic_seg, minute, a_plan)
         h_str  = _calculate_lineup_strength(
             _h_team_seg, h_tactic_seg, h_comp,
             dismissed_pids=None,           # bereits aus _h_active herausgefiltert
@@ -1417,10 +1535,15 @@ def _simulate_match_minutes(
         last_h_comp, last_a_comp = h_comp, a_comp
         last_h_str,  last_a_str  = h_str,  a_str
 
-        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone) * HOME_XG_MULTIPLIER
-        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone) * AWAY_XG_MULTIPLIER
+        _xg_exp = _WX_SNOW_XG_EXPONENT if weather == 'schnee' else 1.25
+        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone, exponent=_xg_exp) * HOME_XG_MULTIPLIER
+        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone, exponent=_xg_exp) * AWAY_XG_MULTIPLIER
         h_xg_seg   = h_xg_match * seg_len / 90.0
         a_xg_seg   = a_xg_match * seg_len / 90.0
+        if weather == 'nebel':
+            # Zufallsanteil +10 %: mittelwertneutraler Jitter pro Team/Segment.
+            h_xg_seg *= random.uniform(1.0 - _WX_FOG_XG_JITTER, 1.0 + _WX_FOG_XG_JITTER)
+            a_xg_seg *= random.uniform(1.0 - _WX_FOG_XG_JITTER, 1.0 + _WX_FOG_XG_JITTER)
         h_xg_total += h_xg_seg
         a_xg_total += a_xg_seg
 
@@ -1518,6 +1641,10 @@ def _simulate_match_minutes(
         _a_sp = away_team.get('set_piece_attrs') or {}
         _h_sp_xg = _set_piece_xg(h_seg_stats['corners'], h_seg_stats['fouls'], _h_sp, _a_sp)
         _a_sp_xg = _set_piece_xg(a_seg_stats['corners'], a_seg_stats['fouls'], _a_sp, _h_sp)
+        if weather == 'wind':
+            # Standards ×0.92: Böen machen Ecken/Freistöße/Elfmeter unpräziser.
+            _h_sp_xg = {k: v * _WX_WIND_SET_PIECE_FACTOR for k, v in _h_sp_xg.items()}
+            _a_sp_xg = {k: v * _WX_WIND_SET_PIECE_FACTOR for k, v in _a_sp_xg.items()}
         _h_sp_pool = _h_cur or _active_lineup_players(h_als.get_active_lineup(), h_als.players_by_id)
         _a_sp_pool = _a_cur or _active_lineup_players(a_als.get_active_lineup(), a_als.players_by_id)
 
@@ -1797,6 +1924,7 @@ def _generate_injury_events(
     players: list[dict],
     club_side: str,
     medizin_factor: float = 1.0,
+    weather_factor: float = 1.0,
 ) -> list[dict]:
     """Zieht zufällige Verletzungsereignisse für einen Spieler-Pool (V1-Formel).
 
@@ -1815,7 +1943,7 @@ def _generate_injury_events(
         freshness = int(p.get('freshness') or 100)
         mp = int(p.get('minutes_played', 90) or 90)
         # Risiko proportional zur Einsatzzeit skalieren
-        prob = BASE_INJURY_RISK_PER_90 * freshness_injury_multiplier(freshness) * medizin_factor * (mp / 90.0)
+        prob = BASE_INJURY_RISK_PER_90 * freshness_injury_multiplier(freshness) * medizin_factor * weather_factor * (mp / 90.0)
         if random.random() >= prob:
             continue
         r = random.random()
@@ -2288,6 +2416,7 @@ def _simulate_extra_time_minutes(
     h_gk_str_override: Optional[float],
     a_gk_str_override: Optional[float],
     segment_minutes: int = 5,
+    weather: Optional[str] = None,
 ) -> dict:
     """Simuliert die Verlängerung (Minuten 91–120) mit vorhandenem ALS-Zustand.
 
@@ -2340,6 +2469,8 @@ def _simulate_extra_time_minutes(
             h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
         )
         a_comp = compile_tactic(_a_team_seg, a_tactic_seg, half='second')
+        _apply_weather_to_compiled(h_comp, weather, h_tactic_seg, minute, h_plan)
+        _apply_weather_to_compiled(a_comp, weather, a_tactic_seg, minute, a_plan)
 
         h_str = _calculate_lineup_strength(
             _h_team_seg, h_tactic_seg, h_comp,
@@ -2352,10 +2483,14 @@ def _simulate_extra_time_minutes(
             gk_strength_override=a_gk_str_override,
         )
 
-        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone) * HOME_XG_MULTIPLIER
-        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone) * AWAY_XG_MULTIPLIER
+        _xg_exp = _WX_SNOW_XG_EXPONENT if weather == 'schnee' else 1.25
+        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone, exponent=_xg_exp) * HOME_XG_MULTIPLIER
+        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone, exponent=_xg_exp) * AWAY_XG_MULTIPLIER
         h_xg_seg   = h_xg_match * seg_len / 90.0
         a_xg_seg   = a_xg_match * seg_len / 90.0
+        if weather == 'nebel':
+            h_xg_seg *= random.uniform(1.0 - _WX_FOG_XG_JITTER, 1.0 + _WX_FOG_XG_JITTER)
+            a_xg_seg *= random.uniform(1.0 - _WX_FOG_XG_JITTER, 1.0 + _WX_FOG_XG_JITTER)
         h_xg_total += h_xg_seg
         a_xg_total += a_xg_seg
 
@@ -2374,6 +2509,9 @@ def _simulate_extra_time_minutes(
         _a_sp_et = away_team.get('set_piece_attrs') or {}
         _h_sp_xg_et = _set_piece_xg(h_et_seg_stats['corners'], h_et_seg_stats['fouls'], _h_sp_et, _a_sp_et)
         _a_sp_xg_et = _set_piece_xg(a_et_seg_stats['corners'], a_et_seg_stats['fouls'], _a_sp_et, _h_sp_et)
+        if weather == 'wind':
+            _h_sp_xg_et = {k: v * _WX_WIND_SET_PIECE_FACTOR for k, v in _h_sp_xg_et.items()}
+            _a_sp_xg_et = {k: v * _WX_WIND_SET_PIECE_FACTOR for k, v in _a_sp_xg_et.items()}
         _h_sp_pool_et = _h_cur or _active_lineup_players(h_als.get_active_lineup(h_dismissed_pids), h_als.players_by_id)
         _a_sp_pool_et = _a_cur or _active_lineup_players(a_als.get_active_lineup(a_dismissed_pids), a_als.players_by_id)
 
@@ -2710,6 +2848,7 @@ def simulate_match(
     home_strength_malus: float = 1.0,
     away_strength_malus: float = 1.0,
     is_cup: bool = False,
+    weather=None,
 ) -> dict:
     """
     Simuliert ein Spiel und gibt ein vollständiges Report-Dict zurück.
@@ -2745,7 +2884,22 @@ def simulate_match(
     home_strength_malus / away_strength_malus:
         Stärke-Multiplikator für Nichtaufstellung (0.70 = 30 % Abzug).
         Wird von prepare_matchday_lineups gesetzt und vom Spieltags-Hook übergeben.
+
+    weather:
+        DayWeather-Instanz, Dict {'type'/'weather_type', 'temperature'} oder
+        None. None/'normal' = keine Wettereffekte (Baseline). Der gewürfelte
+        Wert wandert als result['weather'] in report_data (Anzeige).
     """
+    # 0. Wetter normalisieren (None = keine Effekte, hält Baseline stabil)
+    _wx_type: Optional[str] = None
+    _wx_temp: Optional[int] = None
+    if weather is not None:
+        if isinstance(weather, dict):
+            _wx_type = weather.get('type') or weather.get('weather_type')
+            _wx_temp = weather.get('temperature')
+        else:
+            _wx_type = getattr(weather, 'weather_type', None)
+            _wx_temp = getattr(weather, 'temperature', None)
     # 1. Aufstellungen sicherstellen
     # Trainerlose Vereine: optimal auto-auffüllen via ensure_default_tactic.
     # Gemanagte Vereine: bestehende Aufstellung verwenden; fehlt sie, wird sie
@@ -2858,7 +3012,9 @@ def simulate_match(
     away_team['planned_substitutions'] = list(getattr(away_tactic, 'substitutions', None) or [])
 
     # 4. Minuten-Simulation
-    sim = _simulate_match_minutes(home_team, away_team, _return_als_state=is_cup)
+    sim = _simulate_match_minutes(
+        home_team, away_team, _return_als_state=is_cup, weather=_wx_type,
+    )
 
     # 5. Tore/Vorlagen auf ORM-Spieler mappen
     h_goals_map: dict[int, dict] = {}
@@ -3040,15 +3196,18 @@ def simulate_match(
     from .freshness_service import MEDIZIN_INJURY_FACTOR, _stadium_level
     home_medizin = _stadium_level(home_club, 'medizin_level')
     away_medizin = _stadium_level(away_club, 'medizin_level')
+    _wx_injury = _WX_SNOW_INJURY_FACTOR if _wx_type == 'schnee' else 1.0
     h_injury_events = _generate_injury_events(
         h_players,
         club_side='home',
         medizin_factor=MEDIZIN_INJURY_FACTOR.get(home_medizin, 1.0),
+        weather_factor=_wx_injury,
     )
     a_injury_events = _generate_injury_events(
         a_players,
         club_side='away',
         medizin_factor=MEDIZIN_INJURY_FACTOR.get(away_medizin, 1.0),
+        weather_factor=_wx_injury,
     )
 
     h_teamwork = sum(p['teamwork'] for p in h_players)
@@ -3105,6 +3264,11 @@ def simulate_match(
         'home_xg': sim['home_xg'],
         'away_xg': sim['away_xg'],
         'simulation_mode': 'minutes',
+        # Wetter (Anzeige im Spielbericht; Altdaten ohne Key → kein Icon)
+        'weather': (
+            {'type': _wx_type, 'temperature': _wx_temp}
+            if _wx_type else None
+        ),
         'plan_activations':      sim.get('plan_activations', []),
         'condition_debug':       sim.get('condition_debug', {}),
         'home_compiled_tactic':  sim.get('home_compiled_tactic', {}),
@@ -3173,6 +3337,7 @@ def simulate_match(
                 deepcopy(home_team.get('tactic', {})),
                 deepcopy(away_team.get('tactic', {})),
                 _h_gk_ov, _a_gk_ov,
+                weather=_wx_type,
             )
 
             # Tore/Events aus VL in den Report integrieren
@@ -3347,6 +3512,7 @@ def simulate_ko_match(
     away_club,
     home_strength_malus: float = 1.0,
     away_strength_malus: float = 1.0,
+    weather=None,
 ) -> dict:
     """Öffentlicher Alias für simulate_match(is_cup=True).
 
@@ -3359,4 +3525,5 @@ def simulate_ko_match(
         home_strength_malus=home_strength_malus,
         away_strength_malus=away_strength_malus,
         is_cup=True,
+        weather=weather,
     )

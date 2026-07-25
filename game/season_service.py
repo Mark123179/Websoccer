@@ -758,6 +758,18 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
     results = []
     errors  = []
 
+    # ── Tageswetter (global, ein Wurf pro Sim-Tag; nie sim-blockierend) ──────
+    _matchday_weather = None
+    try:
+        from .weather_service import weather_for_match
+        _wx_date = next(
+            (f.scheduled_date for f in to_play if getattr(f, 'scheduled_date', None)),
+            None,
+        )
+        _matchday_weather = weather_for_match(_wx_date)
+    except Exception:
+        pass
+
     for fixture in to_play:
         home = fixture.home_club
         away = fixture.away_club
@@ -766,6 +778,7 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 home, away,
                 home_strength_malus=0.70 if fixture.home_lineup_malus else 1.0,
                 away_strength_malus=0.70 if fixture.away_lineup_malus else 1.0,
+                weather=_matchday_weather,
             )
             hg   = data['home_goals']
             ag   = data['away_goals']

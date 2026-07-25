@@ -163,15 +163,29 @@ def _build_global_calendar(club, calendar_offset):
                 'match_time':       '18:30',
             }
 
+    # Tageswetter: Vergangenheit gedimmt, heute..+7 voll, ab +8 kein Icon
+    from .weather_service import get_weather_for_date, weather_context
+    _wx_horizon = today + timedelta(days=7)
+
     calendar_days = []
     for offset in range(-3, 4):
         day = game_date + timedelta(days=offset)
+        day_weather = None
+        weather_dimmed = False
+        if day <= _wx_horizon:
+            try:
+                day_weather = weather_context(get_weather_for_date(day))
+            except Exception:
+                day_weather = None
+            weather_dimmed = day < today
         calendar_days.append({
             'date': day,
             'weekday': _WEEKDAY_LABELS[day.weekday()],
             'day_number': day.day,
             'is_today': day == today,
             'fixture': fixtures_by_date.get(day),
+            'weather': day_weather,
+            'weather_dimmed': weather_dimmed,
         })
 
     return {

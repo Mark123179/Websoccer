@@ -384,7 +384,16 @@ def simulate_cup_fixture(fixture) -> object:
 
     # Spiel simulieren — außerhalb der atomaren Transaktion, da der Match Engine
     # keine DB-Schreiboperationen durchführt.
-    data = simulate_ko_match(fixture.home_club, fixture.away_club)
+    _cup_weather = None
+    try:
+        from .weather_service import weather_for_match
+        _cup_round = getattr(fixture, 'cup_round', None)
+        _cup_weather = weather_for_match(
+            getattr(_cup_round, 'scheduled_date', None) if _cup_round else None
+        )
+    except Exception:
+        pass
+    data = simulate_ko_match(fixture.home_club, fixture.away_club, weather=_cup_weather)
 
     winner_id = data.get('winner_club_id')
     decided_by = data.get('decided_by', 'regular_time')

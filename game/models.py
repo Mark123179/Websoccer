@@ -7038,3 +7038,54 @@ class ForcedAuctionBid(models.Model):
 
     def __str__(self):
         return f'{self.club} bietet {self.amount} € ({self.auction})'
+
+
+# ── Wettersystem ──────────────────────────────────────────────────────────────
+
+class DayWeather(models.Model):
+    """Globales Tageswetter — ein Wurf pro Sim-Tag für alle Ligen/Wettbewerbe.
+
+    Der Sim-Tag entspricht dem echten Kalenderdatum (der globale Kalender
+    läuft auf date.today(), Fixtures haben scheduled_date). Einmal gewürfeltes
+    Wetter ist unveränderlich — es wird nie nachgewürfelt (get_or_create,
+    niemals update). Würfellogik: game/weather_service.py.
+    """
+
+    WEATHER_NORMAL = 'normal'
+    WEATHER_REGEN  = 'regen'
+    WEATHER_WIND   = 'wind'
+    WEATHER_NEBEL  = 'nebel'
+    WEATHER_HITZE  = 'hitze'
+    WEATHER_SCHNEE = 'schnee'
+
+    WEATHER_CHOICES = [
+        (WEATHER_NORMAL, 'Normal'),
+        (WEATHER_REGEN,  'Regen'),
+        (WEATHER_WIND,   'Starker Wind'),
+        (WEATHER_NEBEL,  'Nebel'),
+        (WEATHER_HITZE,  'Hitze'),
+        (WEATHER_SCHNEE, 'Schnee/Frost'),
+    ]
+
+    sim_day = models.DateField(
+        primary_key=True,
+        verbose_name='Sim-Tag',
+        help_text='Kalenderdatum des Sim-Tags (globaler Kalender).',
+    )
+    weather_type = models.CharField(
+        max_length=10,
+        choices=WEATHER_CHOICES,
+        verbose_name='Wetterart',
+    )
+    temperature = models.SmallIntegerField(
+        verbose_name='Temperatur (°C)',
+        help_text='Reiner Anzeigewert ohne Mechanik.',
+    )
+
+    class Meta:
+        ordering = ['sim_day']
+        verbose_name = 'Tageswetter'
+        verbose_name_plural = 'Tageswetter'
+
+    def __str__(self):
+        return f'{self.sim_day}: {self.get_weather_type_display()} ({self.temperature} °C)'

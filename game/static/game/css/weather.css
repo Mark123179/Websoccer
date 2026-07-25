@@ -1,0 +1,104 @@
+/* ── Wetter-System: Icon + Hover-Popup ──────────────────────────────────── */
+
+.wx-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    outline: none;
+}
+
+.wx-badge--dim { opacity: 0.38; }
+.wx-badge--dim .wx-pop { display: none; }
+
+.wx-icon {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+}
+.wx-icon svg { width: 100%; height: 100%; display: block; }
+
+.wx-icon--normal { color: #ffd166; }
+.wx-icon--regen  { color: #7fb3d5; }
+.wx-icon--wind   { color: #9fb6c9; }
+.wx-icon--nebel  { color: #aab7c4; }
+.wx-icon--hitze  { color: #ff9f43; }
+.wx-icon--schnee { color: #bfe3ff; }
+
+.wx-temp {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+}
+.wx-temp--heat   { color: #ff9f43; }
+.wx-temp--normal { color: #c9d5de; }
+.wx-temp--cold   { color: #8fc7e8; }
+.wx-temp--frost  { color: #5aa9e6; }
+
+/* Popup */
+.wx-pop {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    min-width: 210px;
+    max-width: 260px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(10, 18, 26, 0.97);
+    border: 1px solid rgba(120, 160, 190, 0.22);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease;
+    z-index: 400;
+    text-align: left;
+    white-space: normal;
+}
+.wx-pop::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(10, 18, 26, 0.97);
+}
+.wx-badge:hover .wx-pop,
+.wx-badge:focus-visible .wx-pop {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.wx-pop-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #e8f1f8;
+    margin-bottom: 4px;
+}
+.wx-pop-flavor {
+    display: block;
+    font-style: normal;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #94a7b8;
+}
+
+/* Kalender-Kachel: Icon rechts im Tageskopf */
+.ws-day-head .wx-badge { margin-left: auto; }
+.ws-day-head .wx-icon { width: 15px; height: 15px; }
+.ws-calendar-day .wx-pop { min-width: 190px; }
+
+/* Spielvorschau-Karte (Nächstes Spiel) */
+.club-next-match-meta .wx-badge { margin-left: 6px; vertical-align: middle; }
+
+/* Spielbericht-Header */
+.hero-meta .wx-badge { margin: 0 2px; vertical-align: middle; }
+.hero-meta .wx-icon { width: 16px; height: 16px; }

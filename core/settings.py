@@ -368,6 +368,13 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'game.tasks.generate_sponsor_offers',
         'schedule': int(os.environ.get('CELERY_SPONSOR_GENERATE_INTERVAL', 24 * 60 * 60)),
     },
+    # Wettersystem: nächtlicher Tick würfelt heute + 7 (idempotent, füllt
+    # fehlende Tage im Fenster nach; überschreibt nie gewürfeltes Wetter).
+    'roll-daily-weather-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': int(os.environ.get('CELERY_WEATHER_ROLL_INTERVAL', 24 * 60 * 60)),
+        'args': ('roll_daily_weather',),
+    },
     # Sponsoring V2: finalize_contracts und sponsor_season_close sind NICHT im
     # automatischen Beat-Schedule — sie werden ausschließlich aus den manuellen
     # Saison-Übergängen (finance_season_open / finance_season_close) heraus

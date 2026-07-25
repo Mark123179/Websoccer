@@ -3633,6 +3633,20 @@ def club_match_preview(request, club_id):
     )
 
 
+def _weather_display_from_report(report_data) -> dict | None:
+    """Wetter-Anzeige-Dict aus report_data['weather'] (Altdaten ohne Key → None)."""
+    if not report_data:
+        return None
+    wx = report_data.get('weather')
+    if not wx or not isinstance(wx, dict):
+        return None
+    try:
+        from .weather_service import weather_context_from_parts
+        return weather_context_from_parts(wx.get('type'), wx.get('temperature'))
+    except Exception:
+        return None
+
+
 def _ensure_ratings_in_report(report_data: dict) -> dict:
     """Fügt Spielernoten in report_data ein, falls sie fehlen (Altdaten-Kompatibilität).
 
@@ -5016,10 +5030,16 @@ def club_match_report(request, club_id):
                 except Exception:
                     pass
             # Pokalspiele: K.-o.-Modus mit Verlängerung und Elfmeterschießen
+            _probe_weather = None
+            try:
+                from .weather_service import weather_for_match
+                _probe_weather = weather_for_match()
+            except Exception:
+                pass
             if match_type == 'pokal':
-                data = simulate_ko_match(club, opponent)
+                data = simulate_ko_match(club, opponent, weather=_probe_weather)
             else:
-                data = simulate_match(club, opponent)
+                data = simulate_match(club, opponent, weather=_probe_weather)
             _gss_sim = GameSeasonState.objects.only('current_season').first()
             sm = SimulatedMatch.create_numbered(
                 _gss_sim.current_season if _gss_sim else '0',
@@ -5229,6 +5249,7 @@ def club_match_report(request, club_id):
         'competition_logo': _comp_logo,
         'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
         'referee':          _referee,
+        'report_weather':   _weather_display_from_report(_report_data),
     })
 
 
@@ -5387,6 +5408,7 @@ def match_report_by_id(request, sm_id):
         'competition_logo': _comp_logo,
         'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
         'referee':          getattr(latest, 'referee', None),
+        'report_weather':   _weather_display_from_report(_report_data),
     })
 
 

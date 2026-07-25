@@ -88,4 +88,5 @@
 - [Finanz-Ledger Buchungs-Konvention](finance-ledger-convention.md) — Budget-Mutationen NUR via book() (log_club_transaction = Legacy-Wrapper, bucht mit); saison = numerische Sim-Saison, nie TM-Label; Nav-Pills zentral in _nav_pills.html.
 - [Season rollover is manual](season-rollover-manual.md) — play_matchday → finance_season_close → current_season+1 per Shell → finance_season_open; sonst bleiben Kalibrierungs-Kennzahlen nicht_messbar.
 - [PlayerClubHistory Phase 0](player-club-history-phase0.md) — Creator/Admin-Edits = Korrektur (Suppress-Flag, KEINE Zeile); Karrierende per Name nicht pk ausschließen; from_db nur __dict__ lesen (N+1).
+- [Wettersystem V1](weather-system-v1.md) — globales DayWeather (SystemRandom, immutabel); Engine-Modifikatoren NACH compile_tactic; None/'normal' = strikter No-Op (Baseline-Schutz).
 - [Sponsoring V2 Architektur](sponsoring-v2-architecture.md) — V2-First/V1-Fallback; KEIN Auto-Finalize im Matchday-Run (bricht Idempotenz); fix_aktuell nullable → Fallback auf int(fix_betrag).

@@ -152,12 +152,21 @@ def build_match(club, opponent_club, kind, links):
             'backgroundImageUrl': stadium_image_for(home_club),
         }
         if kind == 'next':
+            next_weather = None
+            try:
+                from .weather_service import get_weather_for_date, weather_context
+                next_weather = weather_context(
+                    get_weather_for_date(fixture.scheduled_date)
+                )
+            except Exception:
+                next_weather = None
             return {
                 **base,
                 'dateLabel': disp.date_label,
                 'timeLabel': disp.time_label,
                 'stadiumName': disp.stadium_name or stadium_name_for(home_club),
                 'previewUrl': reverse('club_match_preview', kwargs={'club_id': club.id}),
+                'weather': next_weather,
             }
         rl = disp.result_label
         return {
