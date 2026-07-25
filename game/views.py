@@ -3258,8 +3258,7 @@ def _build_player_row(player, stats, form_map):
     if profile and profile.freshness is not None:
         fitness = int(round(float(profile.freshness)))
 
-    # Nation: flagcdn.com-SVG + 3-Buchstaben-Code
-    # Immer nationality_badges[0] (flagcdn.com), nicht nation_badge_url (FM-Crest)
+    # Nation: FM-Nation-ID-Flagge + 3-Buchstaben-Code
     nat_code = ''
     flag_url = ''
     nation_name = ''
@@ -3270,13 +3269,16 @@ def _build_player_row(player, stats, form_map):
         except Exception:
             pass
     if _raw_nat:
+        from .asset_urls import flag_url as _asset_flag_url
         country = _raw_nat.split(',')[0].strip()
         nation_name = country
         asset = COUNTRY_FLAG_ASSETS.get(country, {})
         iso2 = asset.get('code', '')
         if iso2:
             nat_code = _ISO2_TO_CODE3.get(iso2, iso2)
-            flag_url = f'https://flagcdn.com/{iso2.lower()}.svg'
+        aid = asset.get('asset_id', '')
+        if aid:
+            flag_url = _asset_flag_url(aid)
 
     # Status
     if player.is_ws_injured:
@@ -5433,10 +5435,11 @@ def club_news(request, club_id):
         nat = _raw_nat.split(',')[0].strip() if _raw_nat else ''
         flag_url = ''
         if nat:
+            from .asset_urls import flag_url as _asset_flag_url
             _fa = COUNTRY_FLAG_ASSETS.get(nat) or {}
-            _code = _fa.get('code', '')
-            if _code:
-                flag_url = f'https://flagcdn.com/16x12/{_code.lower()}.png'
+            _aid = _fa.get('asset_id', '')
+            if _aid:
+                flag_url = _asset_flag_url(_aid)
         fit_str = None
         try:
             fit_str = f'{round(float(p.rl_form_profile.rl_form_fit) * 100)}%'

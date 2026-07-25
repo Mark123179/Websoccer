@@ -1991,6 +1991,7 @@ class Player(models.Model):
 
     @property
     def nationality_badges(self):
+        from .asset_urls import flag_url as _flag_url
         countries = [
             country.strip()
             for country in self.nationalities.split(',')
@@ -2012,11 +2013,32 @@ class Player(models.Model):
                 'name': country,
                 'code': COUNTRY_FLAG_ASSETS.get(country, {'code': country[:2].upper()})['code'],
                 'flag_url': (
-                    f"https://flagcdn.com/{COUNTRY_FLAG_ASSETS[country]['code'].lower()}.svg"
-                ) if country in COUNTRY_FLAG_ASSETS else '',
+                    _flag_url(COUNTRY_FLAG_ASSETS[country]['asset_id'])
+                ) if country in COUNTRY_FLAG_ASSETS and COUNTRY_FLAG_ASSETS[country].get('asset_id') else '',
             }
             for country in countries
         ]
+
+    @property
+    def flag_url(self):
+        """Flag URL der primären Nationalität via FM-Nation-ID."""
+        from .asset_urls import flag_url as _flag_url
+        nation = (self.nt_nationality or '').strip()
+        if not nation and self.nationalities:
+            nation = self.nationalities.split(',')[0].strip()
+        if not nation:
+            return ''
+        asset = COUNTRY_FLAG_ASSETS.get(nation, {})
+        aid = asset.get('asset_id', '')
+        return _flag_url(aid) if aid else ''
+
+    @property
+    def nation_name(self):
+        """Primäre Nationalität (Ländername)."""
+        nation = (self.nt_nationality or '').strip()
+        if not nation and self.nationalities:
+            nation = self.nationalities.split(',')[0].strip()
+        return nation
 
     @property
     def primary_nation_crest(self):
