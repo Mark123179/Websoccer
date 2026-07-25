@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="{% static 'game/css/game-stage.css' %}?v=stage-4">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard.css' %}?v=gm-1">
     <link rel="stylesheet" href="{% static 'game/css/global-dashboard/header.css' %}?v=cal-4">
-    <link rel="stylesheet" href="{% static 'game/css/weather.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'game/css/weather.css' %}?v=3">
     {% if request.user.is_authenticated %}
     <link rel="stylesheet" href="{% static 'game/css/ai-chat.css' %}?v=3">
     <link rel="stylesheet" href="{% static 'game/css/notizen_tablet.css' %}?v=6">
@@ -156,6 +156,7 @@
     {% endif %}
 
     <script>window.wsAssetsBase="{{ assets_base_url }}";window.wsDefaultPlayerUrl="{{ default_player_url }}";</script>
+    <script src="{% static 'game/js/weather.js' %}?v=3"></script>
 
     {% if request.user.is_authenticated %}
     <!-- ===== AI CHAT WIDGET ===== -->

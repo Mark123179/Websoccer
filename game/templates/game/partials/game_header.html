@@ -17,8 +17,8 @@
                     <div class="ws-day-head">
                         <span>{{ day.weekday }}</span>
                         <strong>{{ day.day_number }}</strong>
-                        {% include 'game/partials/weather_icon.html' with wx=day.weather dimmed=day.weather_dimmed %}
                     </div>
+                    {% include 'game/partials/weather_icon.html' with wx=day.weather dimmed=day.weather_dimmed show_temp=True tile=True %}
 
                     {% if current_manager.club and forloop.counter0|divisibleby:3 %}<span class="ws-youth-badge" aria-hidden="true">U21</span>{% endif %}
                     {% if day.fixture %}

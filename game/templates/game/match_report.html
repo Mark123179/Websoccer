@@ -40,7 +40,11 @@
                 </div>
                 <div class="m">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
-                    <span>Wetter: {% if report_weather %}{% include 'game/partials/weather_icon.html' with wx=report_weather show_temp=True %} {{ report_weather.label }}{% else %}&ndash;{% endif %} &middot; Schiedsrichter:
+                    <span>Wetter: {% if report_weather %}{% include 'game/partials/weather_icon.html' with wx=report_weather show_temp=True %} {{ report_weather.label }}{% else %}&ndash;{% endif %}</span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="14" r="4.6"></circle><path d="M9.5 9.4h5.8l5.2-1.6v3.5l-6.2 1.9"></path></svg>
+                    <span>Schiedsrichter:
                     {% if referee %}
                         {% if referee.flag_url %}<img src="{{ referee.flag_url }}" alt="{{ referee.nationality }}" class="ref-flag" style="vertical-align:middle;margin:0 3px 1px 4px;">{% endif %}<button class="ref-trigger" type="button">{{ referee.name }}</button>
                     {% else %}&ndash;{% endif %}</span>
