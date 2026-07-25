@@ -4929,6 +4929,10 @@ class Referee(models.Model):
 
     def flag_url(self):
         from .asset_urls import flag_url as _flag_url
+        if self.nationality:
+            asset = COUNTRY_FLAG_ASSETS.get(self.nationality)
+            if asset and 'asset_id' in asset:
+                return _flag_url(asset['asset_id'])
         return _flag_url(self.nationality_code) if self.nationality_code else ''
 
     def level_badge_class(self):
