@@ -164,7 +164,7 @@ def _build_global_calendar(club, calendar_offset):
             }
 
     # Tageswetter: Vergangenheit gedimmt, heute..+7 voll, ab +8 kein Icon
-    from .weather_service import get_weather_for_date, weather_context
+    from .weather_service import ensure_weather_for_day, weather_context
     _wx_horizon = today + timedelta(days=7)
 
     calendar_days = []
@@ -174,7 +174,8 @@ def _build_global_calendar(club, calendar_offset):
         weather_dimmed = False
         if day <= _wx_horizon:
             try:
-                day_weather = weather_context(get_weather_for_date(day))
+                dw, _ = ensure_weather_for_day(day)
+                day_weather = weather_context(dw)
             except Exception:
                 day_weather = None
             weather_dimmed = day < today
