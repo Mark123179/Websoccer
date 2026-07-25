@@ -35,7 +35,7 @@
 .ref-name{font-size:25px;font-weight:900;line-height:1.1;color:var(--text,#f4fbff);margin-bottom:8px}
 .ref-meta{display:flex;align-items:center;gap:8px;row-gap:6px;flex-wrap:wrap;font-size:13px;font-weight:700;color:rgba(244,251,255,.82)}
 .ref-meta .sep{color:rgba(244,251,255,.38)}
-.ref-flag{width:18px;height:13px;border-radius:2px;display:block}
+.ref-flag{width:18px;height:13px;border-radius:2px;display:inline-block;vertical-align:middle}
 /* Niveau-Badges */
 .ref-badge{
   font-size:11px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;
