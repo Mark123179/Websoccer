@@ -834,14 +834,14 @@ class Club(models.Model):
     @property
     def kit_static_paths(self):
         import os as _os
-        from .asset_urls import ASSETS_BASE, assets_root
+        from .asset_urls import assets_root, _base as _assets_base
         stem = self._asset_stem()
         kits = []
         for label, suffix in (('Heim', 'home'), ('Auswärts', 'away'), ('Third', 'third')):
             url = ''
             assets_path = _os.path.join(assets_root(), 'clubs', 'kits', f'{stem}_{suffix}.png')
             if _os.path.exists(assets_path):
-                url = f'{ASSETS_BASE}clubs/kits/{stem}_{suffix}.png'
+                url = f'{_assets_base()}clubs/kits/{stem}_{suffix}.png'
             else:
                 for ext in ('svg', 'png'):
                     candidate = f'game/images/kits/{stem}_{suffix}.{ext}'
@@ -6008,8 +6008,8 @@ class MediaOutlet(models.Model):
         return self.name
 
     def logo_url(self):
-        from .asset_urls import ASSETS_BASE
-        return f'{ASSETS_BASE}media/{self.slug}_media.png'
+        from .asset_urls import _base as _assets_base
+        return f'{_assets_base()}media/{self.slug}_media.png'
 
     def to_vn_dict(self):
         return {

@@ -47,7 +47,7 @@
     <a class="ref-card" href="{% url 'creator_referee_edit' referee_id=ref.pk %}">
       <div class="ref-card-face">
         {% if ref.fm_uid %}
-        <img src="/static/assets/referees/face_{{ ref.fm_uid }}.png"
+        <img src="{{ assets_base_url }}referees/face_{{ ref.fm_uid }}.png"
              alt="{{ ref.name }}"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         {% endif %}

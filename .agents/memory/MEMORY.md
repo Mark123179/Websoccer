@@ -1,6 +1,7 @@
 - [Wide-shell scope rule](wide-shell-scope.md) — 1440×900 is locked golden master; only wide-shell CSS scope may extend layout horizontally.
 - [Flex-Kollaps bei min-height](flex-min-height-collapse.md) — flex:1-Kind in Container mit nur min-height kollabiert auf 0px; Artboard-Seiten = Block-Layout; Diagnose via temp dev-login.
 - [Adblock cosmetic filter trap](adblock-classname-trap.md) — CSS classes containing "spons*" are hidden by ad-blocker cosmetic filters (display:none injected client-side); use neutral prefixes like "sxp-".
+- [Asset URL single source of truth](asset-url-sot.md) — ASSETS_BASE_URL must be read at call time via _base(); frozen module-level constants miss env-var; ASSETS_BASE_URL=/assets/ + ASSETS_ROOT=/app/assets are prod-critical in .env.
 - [Authenticated preview screenshots](preview-screenshot-auth.md) — screenshot browser is logged out; use test-client force_login GET, or temporarily revert @login_required then restore.
 - [Scouting-System V1 decisions](scouting-system-v1.md) — Club-row lock serializes per-club money (bid locks = deadlock); earmarked bid w/o coin LOSES at settlement; never expose pool_count/strength.
 - [Europe-night map markers](europe-night-calibration.md) — placement is a hand-verified CITY_MAP_PCT table (TPS fallback); TPS has ~10px extrapolation error for Italian cities; pin positions must be verified against satellite RGB warmth (warmth=(R+G)/2-B > +20 = real city lights).

@@ -1,40 +1,30 @@
 """Zentrale Asset-URL-Bausteine.
 
-Produktions-Server (ASSETS_ROOT gesetzt): alle URLs zeigen auf
-https://playwebsoccer.de/assets/ — nginx liefert sie aus.
+Produktions-Server (Hetzner): ASSETS_BASE_URL=/assets/ in .env — nginx liefert
+/var/www/assets aus.
 
-Replit-Dev (kein ASSETS_ROOT): Uploads landen in game/static/assets/
-und werden von Django's staticfiles als /static/assets/ serviert.
+Replit-Dev (kein ASSETS_BASE_URL in .env): Fallback /static/assets/ — Django
+staticfiles serviert game/static/assets/.
+
+Single Source of Truth: settings.ASSETS_BASE_URL (gesetzt in core/settings.py).
+Alle URL-Builder lesen diesen Wert zur Laufzeit via _base() — KEINE Modul-Level-
+Konstanten, die beim Import eingefroren werden könnten.
 """
 
 import os as _os
 from django.conf import settings
 
 
-def _resolve_assets_base() -> str:
-    """Unterscheidet Produktiv-Server (Hetzner) von Replit-Dev.
-
-    Produktiv: ASSETS_ROOT = /var/www/assets (außerhalb Projekt)
-    Replit:    ASSETS_ROOT = <BASE_DIR>/game/static/assets (im Projekt)
-    """
-    assets_root = getattr(settings, 'ASSETS_ROOT', None)
-    # Replit-Dev erkennen: ASSETS_ROOT liegt im Projektverzeichnis
-    if assets_root and str(assets_root).startswith(str(settings.BASE_DIR)):
-        return '/static/assets/'
-    # Produktiv-Server: ASSETS_ROOT ist gesetzt und außerhalb Projekt
-    if assets_root:
-        return 'https://playwebsoccer.de/assets/'
-    return '/static/assets/'
-
-
-ASSETS_BASE = _resolve_assets_base()
+def _base() -> str:
+    """Liest ASSETS_BASE_URL zur Laufzeit aus settings — nie einfrieren."""
+    return getattr(settings, 'ASSETS_BASE_URL', '/static/assets/')
 
 
 def assets_root():
     """Dateisystem-Pfad für Asset-Uploads (Creator-Mode schreibt hierhin).
 
-    Server → ASSETS_ROOT env-var (z.B. /var/www/assets)
-    Fallback → <BASE_DIR>/game/static/assets/ (Replit, nie produktiv genutzt)
+    Server → ASSETS_ROOT env-var (z.B. /app/assets)
+    Fallback → <BASE_DIR>/game/static/assets/ (Replit-Dev)
     """
     root = getattr(settings, 'ASSETS_ROOT', None)
     if root:
@@ -48,7 +38,7 @@ def asset_url(category, filename):
     """Generische URL: asset_url('clubs/logos', '915_club.png')."""
     if not filename:
         return ''
-    return f"{ASSETS_BASE}{category.strip('/')}/{filename}"
+    return f"{_base()}{category.strip('/')}/{filename}"
 
 
 def default_player_url():
@@ -76,13 +66,13 @@ def club_stadium_url(fm_inside_id):
 def resolve_stadium_url(static_path):
     """Vollständige URL für ein gespeichertes Stadionbild.
 
-    - Neues Format 'clubs/stadiums/{id}_stadium.jpg' → externe URL
+    - Neues Format 'clubs/stadiums/{id}_stadium.jpg' → Asset-URL
     - Altes Format 'game/images/stadiums/...'        → lokale Static-URL (Fallback)
     """
     if not static_path:
         return ''
     if static_path.startswith('clubs/stadiums/'):
-        return f'{ASSETS_BASE}{static_path}'
+        return f'{_base()}{static_path}'
     from django.templatetags.static import static as _static
     return _static(static_path)
 
@@ -90,19 +80,19 @@ def resolve_stadium_url(static_path):
 def club_city_url(fm_inside_id):
     if not fm_inside_id:
         return ''
-    return f'{ASSETS_BASE}clubs/cities/{fm_inside_id}.jpg'
+    return f'{_base()}clubs/cities/{fm_inside_id}.jpg'
 
 
 def resolve_city_url(static_path):
     """Vollständige URL für ein gespeichertes Stadtbild.
 
-    - Neues Format 'clubs/cities/{fmid}.jpg' → externe URL
+    - Neues Format 'clubs/cities/{fmid}.jpg' → Asset-URL
     - Altes Format 'game/images/city/...'    → lokale Static-URL (Fallback)
     """
     if not static_path:
         return ''
     if static_path.startswith('clubs/cities/'):
-        return f'{ASSETS_BASE}{static_path}'
+        return f'{_base()}{static_path}'
     from django.templatetags.static import static as _static
     return _static(static_path)
 
@@ -117,7 +107,7 @@ def trophy_url(trophy_id):
     if not trophy_id:
         return ''
     clean_id = str(trophy_id).removesuffix('.png')
-    return f'{ASSETS_BASE}trophies/{clean_id}.png'
+    return f'{_base()}trophies/{clean_id}.png'
 
 
 def flag_url(code):
@@ -135,9 +125,9 @@ def referee_face_url(fm_uid):
     """
     if not fm_uid:
         return asset_url('referees', 'referee_default.svg')
-    assets_root = getattr(settings, 'ASSETS_ROOT', None)
-    if assets_root:
-        ref_dir = _os.path.join(str(assets_root).rstrip('/'), 'referees')
+    root = getattr(settings, 'ASSETS_ROOT', None)
+    if root:
+        ref_dir = _os.path.join(str(root).rstrip('/'), 'referees')
         for ext in ('png', 'jpg', 'jpeg'):
             if _os.path.exists(_os.path.join(ref_dir, f'face_{fm_uid}.{ext}')):
                 return asset_url('referees', f'face_{fm_uid}.{ext}')
@@ -148,7 +138,7 @@ def competition_url(competition_id):
     if not competition_id:
         return ''
     clean_id = str(competition_id).removesuffix('_comp.png').removesuffix('.png')
-    return f'{ASSETS_BASE}competitions/{clean_id}_comp.png'
+    return f'{_base()}competitions/{clean_id}_comp.png'
 
 
 def federation_url(asset_id):
@@ -159,7 +149,7 @@ def federation_url(asset_id):
     """
     if not asset_id:
         return ''
-    return f'{ASSETS_BASE}federations/{asset_id}_federation.png'
+    return f'{_base()}federations/{asset_id}_federation.png'
 
 
 def avatar_url(name):

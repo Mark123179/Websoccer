@@ -224,7 +224,9 @@ def current_manager(request):
         calendar_offset = 0
 
     from .asset_urls import default_player_url as _dp_url
+    from django.conf import settings as _cfg
     return {
+        'assets_base_url': _cfg.ASSETS_BASE_URL,
         'current_manager': {
             'name': manager_name,
             'role': trainer_type_label,

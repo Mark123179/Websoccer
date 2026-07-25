@@ -4177,7 +4177,7 @@ def creator_freie_vereine(request):
 
 @staff_member_required
 def creator_media_outlets(request):
-    from .asset_urls import ASSETS_BASE as _assets_base
+    from django.conf import settings as _s
     if request.method == 'POST':
         name  = request.POST.get('name', '').strip()
         slug  = request.POST.get('slug', '').strip()
@@ -4202,7 +4202,7 @@ def creator_media_outlets(request):
         return redirect('creator_media_outlets')
 
     outlets    = MediaOutlet.objects.all()
-    media_base = _assets_base + 'media/'
+    media_base = _s.ASSETS_BASE_URL + 'media/'
     return render(request, 'creator/media_outlets.html', {
         'outlets':    outlets,
         'media_base': media_base,

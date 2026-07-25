@@ -154,6 +154,8 @@
     <script src="{% static 'game/js/notizen_tablet.js' %}?v=6"></script>
     {% endif %}
 
+    <script>window.wsAssetsBase="{{ assets_base_url }}";window.wsDefaultPlayerUrl="{{ default_player_url }}";</script>
+
     {% if request.user.is_authenticated %}
     <!-- ===== AI CHAT WIDGET ===== -->
     <button class="ai-trigger" id="aiTrigger" aria-label="KI-Kloppo öffnen" title="KI-Kloppo — dein Trainer-Assistent">

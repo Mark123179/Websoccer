@@ -196,7 +196,7 @@ function blocksHTML(blocks){
       if(f.note&&p.note)stats.push(['Ø-Note',p.note,'#30f29c']);
       if(f.fit&&p.fit)stats.push(['Fitness',p.fit,'#30f29c']);
       return'<div class="blk-player">'+
-        (f.portrait!==false&&p.img?'<img src="'+p.img+'" onerror="this.onerror=null;this.src=\''+(window.wsDefaultPlayerUrl||'/static/assets/players/default_player.jpg')+'\'" alt="">':'')+
+        (f.portrait!==false&&p.img?'<img src="'+p.img+'" onerror="this.onerror=null;this.src=\''+(window.wsDefaultPlayerUrl||(window.wsAssetsBase||'/static/assets/')+'players/default_player.png')+'\'" alt="">':'')+
         '<div style="display:flex;flex-direction:column;gap:8px;min-width:0">'+
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong style="font-size:17px;font-weight:900">'+esc(p.n)+'</strong><span class="pos-badge">'+esc(p.pos)+'</span>'+(p.age?'<span style="font-size:11px;font-weight:800;color:rgba(244,251,255,.35);border:1px solid rgba(244,251,255,.15);border-radius:4px;padding:1px 5px">'+p.age+' J.</span>':'')+(p.flag?'<img src="'+p.flag+'" alt="'+esc(p.meta||'')+'" title="'+esc(p.meta||'')+'" class="nat-flag">':p.meta?'<span style="font-size:12px;font-weight:700;color:rgba(244,251,255,.5)">'+esc(p.meta)+'</span>':'')+'</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap">'+stats.map(function(s){return'<span class="stat-chip"><em>'+s[0]+'</em><b style="color:'+s[2]+'">'+s[1]+'</b></span>';}).join('')+'</div>'+
@@ -239,7 +239,7 @@ function blocksHTML(blocks){
       return'<div class="blk-player" style="flex-direction:column;align-items:flex-start;gap:12px;border-color:rgba(255,213,0,.3);background:linear-gradient(135deg,rgba(255,213,0,.05),rgba(255,195,0,.02))">'+
         '<div style="font-size:10px;font-weight:900;letter-spacing:1.5px;color:#ffd166;display:flex;align-items:center;gap:6px"><span>★</span> SPIELER DES SPIELS</div>'+
         '<div style="display:flex;align-items:center;gap:14px">'+
-        (mo.img?'<img src="'+mo.img+'" onerror="this.onerror=null;this.src=\''+(window.wsDefaultPlayerUrl||'/static/assets/players/default_player.jpg')+'\'" alt="" style="height:72px;width:54px;object-fit:cover;object-position:top center;border-radius:6px;filter:drop-shadow(0 0 10px rgba(255,213,0,.28))">':'')+
+        (mo.img?'<img src="'+mo.img+'" onerror="this.onerror=null;this.src=\''+(window.wsDefaultPlayerUrl||(window.wsAssetsBase||'/static/assets/')+'players/default_player.png')+'\'" alt="" style="height:72px;width:54px;object-fit:cover;object-position:top center;border-radius:6px;filter:drop-shadow(0 0 10px rgba(255,213,0,.28))">':'')+
         '<div style="display:flex;flex-direction:column;gap:8px">'+
         '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
         '<strong style="font-size:17px;font-weight:900">'+esc(mo.name)+'</strong>'+

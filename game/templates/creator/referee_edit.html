@@ -11,7 +11,7 @@
     <div class="ref-identity">
       <div class="ref-avatar-wrap">
         <img id="ref-face-preview"
-             {% if not is_new and ref.fm_uid %}src="/static/assets/referees/face_{{ ref.fm_uid }}.png"{% endif %}
+             {% if not is_new and ref.fm_uid %}src="{{ assets_base_url }}referees/face_{{ ref.fm_uid }}.png"{% endif %}
              alt="{{ ref.name }}"
              style="{% if is_new or not ref.fm_uid %}display:none{% endif %}"
              onerror="refImgFallback(this, 'avatar')">
@@ -116,7 +116,7 @@
           <div class="ref-image-zone">
             <div class="ref-current-img">
               <img id="ref-img-large"
-                   {% if not is_new and ref.fm_uid %}src="/static/assets/referees/face_{{ ref.fm_uid }}.png"{% endif %}
+                   {% if not is_new and ref.fm_uid %}src="{{ assets_base_url }}referees/face_{{ ref.fm_uid }}.png"{% endif %}
                    alt="{{ ref.name }}"
                    style="{% if is_new or not ref.fm_uid %}display:none{% endif %}"
                    onerror="refImgFallback(this, 'large')">
@@ -357,12 +357,13 @@ input[type=file] { display: none; }
 <script>
 // ── FM-UID Live-Vorschau ───────────────────────────────────────────────────
 // Fallback-Kette: referees .png → referees .jpg → players .png → players .jpg → referee_default.svg
+const _ASSETS_BASE = "{{ assets_base_url }}";
 const REF_FALLBACK_CHAIN = uid => [
-  `/static/assets/referees/face_${uid}.png`,
-  `/static/assets/referees/face_${uid}.jpg`,
-  `/static/assets/players/face_${uid}.png`,
-  `/static/assets/players/face_${uid}.jpg`,
-  `/static/assets/referees/referee_default.svg`,
+  `${_ASSETS_BASE}referees/face_${uid}.png`,
+  `${_ASSETS_BASE}referees/face_${uid}.jpg`,
+  `${_ASSETS_BASE}players/face_${uid}.png`,
+  `${_ASSETS_BASE}players/face_${uid}.jpg`,
+  `${_ASSETS_BASE}referees/referee_default.svg`,
 ];
 
 function _applyImg(url) {
