@@ -544,9 +544,10 @@ def _book_cup_torgeld_sponsor_bonus(fixture) -> None:
     Idempotent je (fixture.pk als spieltag, contract.pk als referenz_id).
     """
     saison = str(fixture.cup_round.cup_season.season)
-    # home_goals und away_goals stehen nach _resolve_winner auf dem Objekt.
-    home_goals = fixture.home_goals or 0
-    away_goals = fixture.away_goals or 0
+    # Endstand zählt: Tore aus 90 Minuten + Verlängerung (Elfmeterschießen
+    # zählt NICHT als Tore — Ökonomie-Prinzip: nur echte Spieltore vergüten).
+    home_goals = fixture.final_home_goals or 0
+    away_goals = fixture.final_away_goals or 0
 
     pairs = []
     if fixture.home_club_id and home_goals > 0:
