@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Preset „{{ preset.name }}" — Redaktion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap">
+    {% include 'showauction/_messages.html' %}
+    <div class="sxa-creator-head">
+        <h1>Preset „{{ preset.name }}"</h1>
+        <div class="sxa-creator-actions">
+            <a class="sxa-btn-small" href="{% url 'showauction_creator_presets' %}">‹ Presets</a>
+        </div>
+    </div>
+
+    <form class="sxa-panel sxa-form" method="post" action="{% url 'showauction_creator_preset_edit' preset.pk %}" style="max-width: none;">
+        {% csrf_token %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px;">
+            <label>Name <input type="text" name="name" value="{{ preset.name }}" required></label>
+            <label>Typfarbe <input type="text" name="color_hex" value="{{ preset.color_hex }}" pattern="#?[0-9a-fA-F]{6}"></label>
+            <label>Icon (optional) <input type="text" name="icon" value="{{ preset.icon }}"></label>
+            <label>Sortierung <input type="number" name="sort_order" value="{{ preset.sort_order }}"></label>
+        </div>
+        <label style="display: flex; align-items: center; gap: 8px; text-transform: none;">
+            <input type="checkbox" name="is_active" {% if preset.is_active %}checked{% endif %} style="width: 16px; height: 16px;"> Aktiv (für neue Auktionen wählbar)
+        </label>
+        <label>
+            Regeltext (Manager-Ansicht, Panel „So läuft diese Auktion")
+            <textarea name="rules_text" style="min-height: 110px; font-family: var(--font-sans); font-size: 13px;">{{ preset.rules_text }}</textarea>
+        </label>
+        <label>
+            Config — die 16 Regel-Achsen (JSON, deutsche Schlüssel)
+            <textarea name="config_json" spellcheck="false">{{ config_pretty }}</textarea>
+            <span class="sxa-form-help">
+                Beim Speichern läuft der strikte Validator: unbekannte Schlüssel, fehlende Pflichtachsen und unerlaubte
+                Kombinationen (z.&#8201;B. fallend ohne Preisverfall) werden mit deutschen Fehlermeldungen abgelehnt.
+                Prozentwerte sind Prozentzahlen (60 = 60&#8201;%), Beträge in Euro, Zeiten in Minuten bzw. Stunden.
+            </span>
+        </label>
+        <button class="sxa-btn-bid" type="submit" style="max-width: 320px;">Speichern (validiert)</button>
+    </form>
+</div>
+{% endblock %}

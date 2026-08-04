@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Show-Auktionen — Redaktion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap">
+    {% include 'showauction/_messages.html' %}
+    <div class="sxa-creator-head">
+        <h1>Show-Auktionen · Redaktion</h1>
+        <div class="sxa-creator-actions">
+            <a class="sxa-btn-small" href="{% url 'showauction_stage' %}">Zur Bühne</a>
+            <a class="sxa-btn-small" href="{% url 'showauction_creator_presets' %}">Presets ({{ presets|length }})</a>
+            <a class="sxa-btn-small is-green" href="{% url 'showauction_creator_new' %}">+ Neue Auktion</a>
+        </div>
+    </div>
+
+    <div class="sxa-panel">
+        <h3>Alle Auktionen</h3>
+        {% if auctions %}
+        <table class="sxa-table">
+            <thead>
+                <tr>
+                    <th>#</th><th>Spieler</th><th>Typ</th><th>Status</th>
+                    <th>Start</th><th>Ende</th><th>Ergebnis</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in auctions %}
+                <tr>
+                    <td>{{ a.pk }}</td>
+                    <td><b>{{ a.player.full_name }}</b></td>
+                    <td><span class="sxa-row-chip" style="--sxa-accent: {{ a.color_hex }}; --sxa-ink: #101010;">{{ a.type_name }}</span></td>
+                    <td><span class="sxa-status-pill is-{{ a.status }}">{{ a.get_status_display }}</span></td>
+                    <td>{% if a.starts_at %}{{ a.starts_at|date:"d.m. H:i" }}{% else %}–{% endif %}</td>
+                    <td>{% if a.ends_at %}{{ a.ends_at|date:"d.m. H:i" }}{% else %}–{% endif %}</td>
+                    <td>
+                        {% if a.status == 'settled' %}{{ a.winner_club.name }}
+                        {% elif a.status == 'failed' %}{{ a.fail_reason|truncatechars:40 }}
+                        {% else %}–{% endif %}
+                    </td>
+                    <td><a class="sxa-btn-small" href="{% url 'showauction_creator_edit' a.pk %}">Öffnen</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: var(--muted); font-size: 13px;">Noch keine Auktionen — lege die erste an.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

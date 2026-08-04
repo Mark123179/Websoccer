@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Benachrichtigungen – WebSoccer{% endblock %}
+
+{% block extra_css %}
+<style>
+.notif-wrap{max-width:760px;margin:0 auto;padding:26px 16px 48px;}
+.notif-wrap h1{font-size:22px;letter-spacing:.4px;margin:0 0 4px;}
+.notif-sub{font-size:13px;opacity:.55;margin:0 0 20px;}
+.notif-item{display:block;background:var(--panel,#101a24);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px;text-decoration:none;color:inherit;transition:border-color .15s ease;}
+a.notif-item:hover{border-color:rgba(34,230,255,.55);}
+.notif-item.is-unread{border-color:rgba(34,230,255,.45);box-shadow:inset 0 0 0 1px rgba(34,230,255,.12);}
+.notif-title{font-weight:600;font-size:14px;margin:0 0 4px;}
+.notif-body{font-size:13px;opacity:.75;margin:0 0 6px;}
+.notif-time{font-size:11px;opacity:.5;}
+.notif-empty{opacity:.6;padding:44px 0;text-align:center;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notif-wrap">
+    <h1>Benachrichtigungen</h1>
+    <p class="notif-sub">Auktions-Ereignisse und Manager-Nachrichten — beim Öffnen als gelesen markiert.</p>
+    {% for n in notifications %}
+        {% if n.url %}
+        <a class="notif-item{% if not n.is_read %} is-unread{% endif %}" href="{{ n.url }}">
+            <p class="notif-title">{{ n.title }}</p>
+            {% if n.body %}<p class="notif-body">{{ n.body }}</p>{% endif %}
+            <span class="notif-time">{{ n.created_at|date:'d.m.Y, H:i' }} Uhr</span>
+        </a>
+        {% else %}
+        <div class="notif-item{% if not n.is_read %} is-unread{% endif %}">
+            <p class="notif-title">{{ n.title }}</p>
+            {% if n.body %}<p class="notif-body">{{ n.body }}</p>{% endif %}
+            <span class="notif-time">{{ n.created_at|date:'d.m.Y, H:i' }} Uhr</span>
+        </div>
+        {% endif %}
+    {% empty %}
+        <p class="notif-empty">Keine Benachrichtigungen.</p>
+    {% endfor %}
+</div>
+{% endblock %}

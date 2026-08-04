@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Neue Show-Auktion — Redaktion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap">
+    {% include 'showauction/_messages.html' %}
+    <div class="sxa-creator-head">
+        <h1>Neue Show-Auktion</h1>
+        <div class="sxa-creator-actions">
+            <a class="sxa-btn-small" href="{% url 'showauction_creator' %}">‹ Zurück zur Liste</a>
+        </div>
+    </div>
+
+    <form class="sxa-panel sxa-form" method="post" action="{% url 'showauction_creator_new' %}">
+        {% csrf_token %}
+        <label>
+            Auktionstyp (Preset)
+            <select name="preset_id" required>
+                {% for p in presets %}
+                <option value="{{ p.pk }}">{{ p.name }} ({{ p.slug }})</option>
+                {% endfor %}
+            </select>
+            <span class="sxa-form-help">Die 16 Regel-Achsen kommen aus dem Preset und werden bei Anlage eingefroren. Abweichungen unten als Overrides.</span>
+        </label>
+
+        <label>
+            Spieler suchen (nur Vereinslose außerhalb von Scouting-Pool und Raum)
+            <input type="text" id="sxaPlayerSearch" placeholder="Mindestens 2 Zeichen …" autocomplete="off">
+        </label>
+        <div class="sxa-player-pick-list" id="sxaPlayerResults"></div>
+        <input type="hidden" name="player_id" id="sxaPlayerId" required>
+        <div class="sxa-ok-note" id="sxaPlayerChosen" hidden></div>
+
+        <label>
+            Typfarbe (leer = Preset-Farbe)
+            <input type="text" name="color_hex" placeholder="#ffd400" pattern="#?[0-9a-fA-F]{6}">
+            <span class="sxa-form-help">Cyan ist tabu — das ist die Funktionsfarbe der Oberfläche.</span>
+        </label>
+
+        <label>
+            Regeltext (leer = Preset-Text)
+            <textarea name="rules_text" style="min-height: 90px;" placeholder="So läuft diese Auktion …"></textarea>
+        </label>
+
+        <label>
+            Config-Overrides (JSON-Objekt, optional)
+            <textarea name="config_overrides_json" style="min-height: 120px;" placeholder='z.&#8201;B. {"laufzeit_minuten": 2880}'></textarea>
+            <span class="sxa-form-help">Wird über die Preset-Config gelegt und gegen den Validator geprüft (deutsche Fehlermeldungen).</span>
+        </label>
+
+        <label>
+            Teilnahmebedingungen (JSON-Liste, leer = Preset-Bedingungen)
+            <textarea name="conditions_json" style="min-height: 90px;" placeholder='z.&#8201;B. [{"art": "coins", "anzahl": 1}]'></textarea>
+        </label>
+
+        <button class="sxa-btn-bid" type="submit" style="max-width: 320px;">Als Entwurf anlegen</button>
+        <span class="sxa-form-help">Der Spieler betritt sofort den Raum (aus allen Suchen/Listen ausgeblendet). Start erst per Terminierung oder „Jetzt starten".</span>
+    </form>
+</div>
+
+<script>
+(function () {
+    'use strict';
+    var input = document.getElementById('sxaPlayerSearch');
+    var list = document.getElementById('sxaPlayerResults');
+    var hidden = document.getElementById('sxaPlayerId');
+    var chosen = document.getElementById('sxaPlayerChosen');
+    var t = null;
+
+    function fmtMw(mw) {
+        return mw === null || mw === undefined
+            ? 'MW unbekannt'
+            : 'MW ' + Number(mw).toLocaleString('de-DE') + ' €';
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(t);
+        var q = input.value.trim();
+        if (q.length < 2) { list.textContent = ''; return; }
+        t = setTimeout(function () {
+            fetch('{% url "showauction_creator_player_search" %}?q=' + encodeURIComponent(q), { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    list.textContent = '';
+                    (d.results || []).forEach(function (p) {
+                        var row = document.createElement('div');
+                        row.className = 'sxa-player-pick';
+                        var b = document.createElement('b');
+                        b.textContent = p.name;
+                        var meta = document.createElement('span');
+                        meta.style.color = 'var(--muted)';
+                        meta.style.fontSize = '12px';
+                        meta.textContent = (p.alter ? p.alter + ' J. · ' : '') + (p.position || '?') + ' · ' + fmtMw(p.mw);
+                        row.appendChild(b);
+                        row.appendChild(meta);
+                        row.addEventListener('click', function () {
+                            hidden.value = p.id;
+                            chosen.hidden = false;
+                            chosen.textContent = 'Ausgewählt: ' + p.name + ' (' + fmtMw(p.mw) + ')';
+                            list.querySelectorAll('.sxa-player-pick').forEach(function (el) { el.classList.remove('is-selected'); });
+                            row.classList.add('is-selected');
+                        });
+                        list.appendChild(row);
+                    });
+                    if (!(d.results || []).length) {
+                        var empty = document.createElement('div');
+                        empty.style.color = 'var(--faint)';
+                        empty.style.fontSize = '12px';
+                        empty.textContent = 'Keine passenden Vereinslosen gefunden.';
+                        list.appendChild(empty);
+                    }
+                });
+        }, 250);
+    });
+})();
+</script>
+{% endblock %}

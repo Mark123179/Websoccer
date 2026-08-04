@@ -1,0 +1,7 @@
+{% if messages %}
+<div class="sxa-messages">
+    {% for message in messages %}
+    <div class="sxa-message{% if message.tags == 'error' %} is-error{% elif message.tags == 'success' %} is-success{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}

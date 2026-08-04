@@ -48,8 +48,15 @@ def _create_booking(locked, typ, betrag, *, saison, spieltag, beschreibung,
     betrag = Decimal(str(betrag)).quantize(Decimal('0.01'))
     kontostand = locked.budget if locked.budget is not None else Decimal('0.00')
 
-    if betrag < 0 and not pflicht and kontostand + betrag < 0:
-        raise InsufficientFunds(locked, betrag, kontostand)
+    if betrag < 0 and not pflicht:
+        # Aktive Reservierungen (Escrow, z. B. Show-Auktion) mindern die
+        # Deckung: verfügbar = Kontostand − reserviert. Ohne aktive
+        # Reservierungen bleibt das Verhalten unverändert.
+        from game.economy import reservations
+        reserviert = reservations.reserved_money(locked)
+        verfuegbar = kontostand - reserviert
+        if verfuegbar + betrag < 0:
+            raise InsufficientFunds(locked, betrag, verfuegbar)
 
     tx = FinanceTransaction.objects.create(
         club=locked,

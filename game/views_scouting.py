@@ -137,7 +137,8 @@ def _search_players(search, watched_ids):
     Liefert nur öffentliche Felder (Name/Alter/Position/Marktwert/Flagge),
     niemals base_strength/potential. Cappt auf 40 Treffer.
     """
-    qs = Player.objects.select_related('real_life_club')
+    qs = (Player.objects.select_related('real_life_club')
+          .exclude(pool_status='show_auction'))
     if search['q']:
         qs = qs.filter(
             Q(first_name__icontains=search['q']) | Q(last_name__icontains=search['q'])

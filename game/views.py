@@ -1415,6 +1415,7 @@ def transfer_display_rows(rows):
     candidate_players = list(
         Player.objects.select_related('club')
         .exclude(id__in=[row.player_id for row in rows])
+        .exclude(pool_status='show_auction')
         .order_by('-market_value', 'last_name', 'first_name')[:36]
     )
     clubs = list(

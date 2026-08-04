@@ -6,4 +6,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     re_path(r'^media/(?P<name>.+)$', serve_media, name='serve_media'),
     path('', include('game.urls')),
+    path('', include('showauction.urls')),
 ]

@@ -100,7 +100,7 @@
                         </div>
                         <div class="aaa-player-freshness-body">
                             <dl>
-                                <span>Wechselsperre <b>Keine</b></span>
+                                <span>Wechselsperre <b>{% if player.transfer_lock_days_remaining %}{{ player.transfer_lock_days_remaining }} Tage{% else %}Keine{% endif %}</b></span>
                                 <span>Spielsperre <b>{% if player.is_ws_suspended %}{{ player.ws_suspension_matches_remaining }} Spiele{% else %}Keine{% endif %}</b></span>
                                 <span>Verletzung <b>{% if player.is_ws_injured %}{{ player.ws_injury_days_remaining }} Tage{% else %}Keine{% endif %}</b></span>
                             </dl>

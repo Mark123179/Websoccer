@@ -66,7 +66,12 @@ def reserved_budget(club):
 
 
 def available_budget(club):
-    return (club.budget or Decimal('0.00')) - reserved_budget(club)
+    """Verfügbar = Kontostand − Scouting-Gebote − generische Reservierungen
+    (FinanceReservation, z. B. Show-Auktion) — gemeinsame Sicht aller Module."""
+    from game.economy.reservations import reserved_money as finance_reserved_money
+    return ((club.budget or Decimal('0.00'))
+            - reserved_budget(club)
+            - finance_reserved_money(club))
 
 
 def current_squad_count(club):
@@ -315,8 +320,10 @@ def place_bid(club, manager, find, amount, today=None):
         if available_budget(club) < amount:
             raise ScoutingError('Das verfügbare Budget reicht für dieses Gebot nicht aus.')
 
+        from game.economy.reservations import reserved_slots as finance_reserved_slots
         limit = department.effective_squad_limit(club)
-        if current_squad_count(club) + reserved_slots(club) + 1 > limit:
+        if (current_squad_count(club) + reserved_slots(club)
+                + finance_reserved_slots(club) + 1 > limit):
             raise ScoutingError('Das Kaderlimit ist erreicht – kein freier Kaderplatz.')
 
         coin_earmarked = False

@@ -91,3 +91,4 @@
 - [Wettersystem V1](weather-system-v1.md) — globales DayWeather (SystemRandom, immutabel); Engine-Modifikatoren NACH compile_tactic; None/'normal' = strikter No-Op (Baseline-Schutz).
 - [Sponsoring V2 Architektur](sponsoring-v2-architecture.md) — V2-First/V1-Fallback; KEIN Auto-Finalize im Matchday-Run (bricht Idempotenz); fix_aktuell nullable → Fallback auf int(fix_betrag).
 - [Fixed-Popup im skalierten Stage](fixed-popup-in-scaled-stage.md) — transform:scale-Vorfahre fängt position:fixed ein; Popups per JS an body portalen + --game-scale nachziehen (weather.js-Muster).
+- [Show-Auktion V1](showauction-v1.md) — validate_config wirft+normalisiert (keine Fehlerliste); Escrow des Führenden bis consume = Kader/Geld-Schutz; Coin = letztes Lock; Dutch-Schritt = % vom MW.

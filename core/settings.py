@@ -139,6 +139,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     
     'game',
+    'showauction',
 ]
 MIDDLEWARE = [
     'game.middleware.DevNoCacheMiddleware',
@@ -374,6 +375,13 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'game.tasks.run_management_command',
         'schedule': int(os.environ.get('CELERY_WEATHER_ROLL_INTERVAL', 24 * 60 * 60)),
         'args': ('roll_daily_weather',),
+    },
+    # Show-Auktion (Spec §11): minütlicher Tick startet geplante und wickelt
+    # fällige Auktionen ab; idempotent, Lazy-Pfad in den Views ergänzt ihn.
+    'showauction-tick-minuetlich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': int(os.environ.get('CELERY_SHOWAUCTION_TICK_INTERVAL', 60)),
+        'args': ('showauction_tick',),
     },
     # Sponsoring V2: finalize_contracts und sponsor_season_close sind NICHT im
     # automatischen Beat-Schedule — sie werden ausschließlich aus den manuellen

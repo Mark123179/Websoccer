@@ -121,11 +121,27 @@ def _lock_clubs(club_ids):
 
 def _check_kaderplatz(club, saison=None):
     from .kader import effective_squad_limit, squad_count
+    from .reservations import reserved_slots
     limit = effective_squad_limit(club, saison)
-    if squad_count(club) >= limit:
+    reserviert = reserved_slots(club)
+    if squad_count(club) + reserviert >= limit:
+        hinweis = f' — davon {reserviert} reserviert' if reserviert else ''
         raise KaderVoll(
-            f'{club.name} hat keinen freien Kaderplatz (Limit {limit}).'
+            f'{club.name} hat keinen freien Kaderplatz (Limit {limit}{hinweis}).'
         )
+
+
+def _check_wechselsperre(player):
+    """Wechselsperre (z. B. 21 Tage nach Show-Auktions-Zuschlag) blockiert
+    jeden Vereinswechsel — Kauf, ablösefrei und Tausch (Spec §7.1)."""
+    lock = getattr(player, 'transfer_locked_until', None)
+    if lock:
+        from django.utils import timezone as _tz
+        if lock > _tz.localdate():
+            raise TransferError(
+                f'{player.first_name} {player.last_name} hat eine '
+                f'Wechselsperre bis {lock.strftime("%d.%m.%Y")}.'
+            )
 
 
 def _check_mindestkader(club, saison=None):
@@ -218,6 +234,7 @@ def execute_money_transfer(player, kaeufer, abloese, *, saison=None,
         aktuell = Player.objects.select_for_update().get(pk=player.pk)
         if aktuell.club_id != verkaeufer.pk:
             raise TransferError('Der Spieler hat den Verein bereits verlassen.')
+        _check_wechselsperre(aktuell)
         _check_kaderplatz(locked[kaeufer.pk], saison_str)
         _check_mindestkader(locked[verkaeufer.pk], saison_str)
 
@@ -272,6 +289,7 @@ def execute_free_transfer(player, aufnehmender, *, saison=None, spieltag=None):
         aktuell = Player.objects.select_for_update().get(pk=player.pk)
         if aktuell.club_id != (ex_club.pk if ex_club is not None else None):
             raise TransferError('Der Spieler hat den Verein bereits gewechselt.')
+        _check_wechselsperre(aktuell)
         _check_kaderplatz(locked[aufnehmender.pk], saison_str)
         if ex_club is not None:
             _check_mindestkader(locked[ex_club.pk], saison_str)
@@ -327,6 +345,8 @@ def execute_swap(player_a, player_b, *, saison=None, spieltag=None):
         if (aktuelle[player_a.pk].club_id != club_a.pk
                 or aktuelle[player_b.pk].club_id != club_b.pk):
             raise TransferError('Ein Spieler hat den Verein bereits gewechselt.')
+        _check_wechselsperre(aktuelle[player_a.pk])
+        _check_wechselsperre(aktuelle[player_b.pk])
         # Kadergrößen bleiben beim Tausch konstant — keine Limit-Checks nötig.
         entries = _abgabe_entries(
             club_a, vert_a, locked, player=player_a,

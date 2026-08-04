@@ -238,10 +238,17 @@ def current_manager(request):
     except (TypeError, ValueError):
         calendar_offset = 0
 
+    if manager_profile_obj is not None:
+        from .notifications import unread_count as _unread_count
+        unread_notifications = _unread_count(manager_profile_obj)
+    else:
+        unread_notifications = 0
+
     from .asset_urls import default_player_url as _dp_url
     from django.conf import settings as _cfg
     return {
         'assets_base_url': _cfg.ASSETS_BASE_URL,
+        'unread_notifications_count': unread_notifications,
         'current_manager': {
             'name': manager_name,
             'role': trainer_type_label,

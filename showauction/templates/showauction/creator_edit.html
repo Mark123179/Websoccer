@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Auktion #{{ a.pk }} — Redaktion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap">
+    {% include 'showauction/_messages.html' %}
+    <div class="sxa-creator-head">
+        <h1>Auktion #{{ a.pk }} · {{ a.player.full_name }}</h1>
+        <div class="sxa-creator-actions">
+            <a class="sxa-btn-small" href="{% url 'showauction_creator' %}">‹ Liste</a>
+            <a class="sxa-btn-small" href="{% url 'showauction_detail' a.pk %}">Manager-Ansicht</a>
+        </div>
+    </div>
+
+    <div class="sxa-panels" style="grid-template-columns: 1fr 1fr;">
+        <div class="sxa-panel">
+            <h3>Status &amp; Steuerung</h3>
+            <div class="sxa-data-row"><span>Status</span><span><span class="sxa-status-pill is-{{ a.status }}">{{ a.get_status_display }}</span></span></div>
+            <div class="sxa-data-row"><span>Typ</span><span class="is-type" style="--sxa-accent: {{ a.color_hex }};">{{ a.type_name }}</span></div>
+            <div class="sxa-data-row"><span>Marktwert (eingefroren)</span><span class="is-mono">{% if a.market_value_snapshot %}{{ a.market_value_snapshot }} €{% else %}–{% endif %}</span></div>
+            <div class="sxa-data-row"><span>Startpreis</span><span class="is-mono">{% if a.start_price %}{{ a.start_price }} €{% else %}frei{% endif %}</span></div>
+            <div class="sxa-data-row"><span>Start</span><span>{% if a.starts_at %}{{ a.starts_at|date:"D, d.m.Y H:i" }}{% else %}–{% endif %}</span></div>
+            <div class="sxa-data-row"><span>Ende</span><span>{% if a.ends_at %}{{ a.ends_at|date:"D, d.m.Y H:i" }}{% else %}offen{% endif %}</span></div>
+            {% if a.status == 'settled' %}
+            <div class="sxa-data-row"><span>Zuschlag</span><span class="is-green is-mono">{{ a.winning_amount }} € → {{ a.winner_club.name }}</span></div>
+            {% elif a.status == 'failed' %}
+            <div class="sxa-data-row"><span>Geplatzt</span><span>{{ a.fail_reason|default:'—' }}</span></div>
+            {% endif %}
+
+            {% if a.status == 'draft' or a.status == 'scheduled' %}
+            <form method="post" action="{% url 'showauction_creator_action' a.pk %}" style="margin-top: 14px; display: grid; gap: 8px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="schedule">
+                <label style="display: grid; gap: 6px; font-size: 11px; font-weight: 900; text-transform: uppercase; color: var(--faint);">
+                    Startzeitpunkt
+                    <input type="datetime-local" name="starts_at" required
+                           style="background: rgba(255,255,255,.05); border: 1px solid var(--line-strong); border-radius: 8px; color: var(--text); padding: 8px 10px;">
+                </label>
+                <button class="sxa-btn-small" type="submit">Terminieren</button>
+            </form>
+            <form method="post" action="{% url 'showauction_creator_action' a.pk %}" style="margin-top: 8px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="start_now">
+                <button class="sxa-btn-small is-green" type="submit">Jetzt starten (LIVE)</button>
+            </form>
+            {% endif %}
+            {% if a.status == 'draft' or a.status == 'scheduled' or a.status == 'running' %}
+            <form method="post" action="{% url 'showauction_creator_action' a.pk %}" style="margin-top: 8px;"
+                  onsubmit="return confirm('Auktion wirklich abbrechen? Reservierungen werden freigegeben, der Spieler verlässt den Raum.');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cancel">
+                <button class="sxa-btn-small is-danger" type="submit">Auktion abbrechen</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="sxa-panel">
+            <h3>Bühnenbild</h3>
+            <div style="display: flex; gap: 14px; align-items: flex-start;">
+                <div>
+                    <div style="color: var(--faint); font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 6px;">Hero-Bild</div>
+                    {% if a.hero_image %}
+                    <img class="sxa-preview-hero" src="{{ a.hero_image.url }}" alt="Hero">
+                    {% else %}
+                    <div class="sxa-preview-hero" style="display: grid; place-items: center; width: 200px; height: 240px; color: var(--faint); font-size: 12px;">Kein Bild</div>
+                    {% endif %}
+                </div>
+                <div style="flex: 1; display: grid; gap: 12px;">
+                    <form method="post" action="{% url 'showauction_creator_action' a.pk %}" enctype="multipart/form-data" style="display: grid; gap: 6px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="upload_hero">
+                        <input type="file" name="hero_image" accept="image/*" required style="color: var(--muted); font-size: 12px;">
+                        <button class="sxa-btn-small" type="submit">Hero hochladen (wird serverseitig freigestellt)</button>
+                        <span class="sxa-form-help">rembg entfernt den Hintergrund und normiert den Torso auf die Studio-Leinwand (640×760, unten bündig). Schlägt das fehl, wird das Original gespeichert und eine Warnung angezeigt.</span>
+                    </form>
+                    <form method="post" action="{% url 'showauction_creator_action' a.pk %}" enctype="multipart/form-data" style="display: grid; gap: 6px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="upload_logo">
+                        <input type="file" name="media_logo" accept="image/*" required style="color: var(--muted); font-size: 12px;">
+                        <button class="sxa-btn-small" type="submit">Medienlogo hochladen (ohne Freisteller)</button>
+                        {% if a.media_logo %}<img src="{{ a.media_logo.url }}" alt="Logo" style="max-width: 160px; max-height: 46px; object-fit: contain;">{% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'showauction_creator_action' a.pk %}" style="margin-top: 16px; display: grid; gap: 10px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_meta">
+                <label style="display: grid; gap: 6px; font-size: 11px; font-weight: 900; text-transform: uppercase; color: var(--faint);">
+                    Typfarbe
+                    <input type="text" name="color_hex" value="{{ a.color_hex }}" pattern="#?[0-9a-fA-F]{6}"
+                           style="background: rgba(255,255,255,.05); border: 1px solid var(--line-strong); border-radius: 8px; color: var(--text); padding: 8px 10px;">
+                </label>
+                <label style="display: grid; gap: 6px; font-size: 11px; font-weight: 900; text-transform: uppercase; color: var(--faint);">
+                    Regeltext
+                    <textarea name="rules_text" style="background: rgba(255,255,255,.05); border: 1px solid var(--line-strong); border-radius: 8px; color: var(--text); padding: 8px 10px; min-height: 90px; font-family: var(--font-sans); font-size: 13px;">{{ a.rules_text }}</textarea>
+                </label>
+                <button class="sxa-btn-small" type="submit">Darstellung speichern</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="sxa-panels" style="grid-template-columns: 1fr 1fr; margin-top: 16px;">
+        <div class="sxa-panel">
+            <h3>Gebote ({{ bids|length }})</h3>
+            {% if bids %}
+            <table class="sxa-table">
+                <thead><tr><th>Verein</th><th>Betrag</th><th>Status</th><th>Zeit</th></tr></thead>
+                <tbody>
+                    {% for b in bids %}
+                    <tr>
+                        <td>{{ b.club.name }}</td>
+                        <td class="is-mono">{{ b.amount }} €</td>
+                        <td>
+                            {% if b.is_leading %}<span class="sxa-status-pill is-running">führend</span>
+                            {% elif b.is_active %}<span class="sxa-status-pill">aktiv</span>
+                            {% else %}<span class="sxa-status-pill is-cancelled">inaktiv</span>{% endif %}
+                            {% if b.coin_charged %} <span title="Coin-Ticket bezahlt">🪙</span>{% endif %}
+                        </td>
+                        <td>{{ b.updated_at|date:"d.m. H:i:s" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: var(--muted); font-size: 13px;">Noch keine Gebote.</p>
+            {% endif %}
+        </div>
+
+        <div class="sxa-panel">
+            <h3>Eingefrorene Config</h3>
+            <pre style="background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 11px; line-height: 1.5; overflow-x: auto; color: var(--muted); margin: 0;">{{ cfg_pretty }}</pre>
+            <h3 style="margin-top: 14px;">Teilnahmebedingungen</h3>
+            <pre style="background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-size: 11px; line-height: 1.5; overflow-x: auto; color: var(--muted); margin: 0;">{{ conditions_pretty }}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

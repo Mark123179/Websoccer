@@ -1,4 +1,4 @@
-﻿import secrets
+import secrets
 
 from django.contrib.staticfiles import finders
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -1847,16 +1847,42 @@ class Player(models.Model):
                   '(Postfach-Hygiene).',
     )
 
+    # ── Wechselsperre (Show-Auktion, Spec §7.1) ────────────────────────────
+    transfer_locked_until = models.DateField(
+        'Wechselsperre bis',
+        null=True,
+        blank=True,
+        help_text='Bis zu diesem Datum (exklusiv) ist kein Vereinswechsel '
+                  'möglich. Wird u. a. beim Show-Auktions-Zuschlag gesetzt '
+                  '(21 Tage).',
+    )
+
+    @property
+    def is_transfer_locked(self):
+        if not self.transfer_locked_until:
+            return False
+        from django.utils import timezone as _tz
+        return self.transfer_locked_until > _tz.localdate()
+
+    @property
+    def transfer_lock_days_remaining(self):
+        if not self.transfer_locked_until:
+            return 0
+        from django.utils import timezone as _tz
+        return max((self.transfer_locked_until - _tz.localdate()).days, 0)
+
     # ── Scouting-Pool (Task #594) ──────────────────────────────────────────
     POOL_STATUS_NONE = 'none'
     POOL_STATUS_SCOUTABLE = 'scoutable'
     POOL_STATUS_AUCTION_RESERVED = 'auction_reserved'
     POOL_STATUS_UNAVAILABLE = 'unavailable'
+    POOL_STATUS_SHOW_AUCTION = 'show_auction'
     POOL_STATUS_CHOICES = [
         (POOL_STATUS_NONE, 'WSC-Spieler (kein Pool)'),
         (POOL_STATUS_SCOUTABLE, 'Scoutbar (Pool)'),
         (POOL_STATUS_AUCTION_RESERVED, 'Auktion reserviert'),
         (POOL_STATUS_UNAVAILABLE, 'Nicht verfügbar'),
+        (POOL_STATUS_SHOW_AUCTION, 'Show-Auktion (Raum)'),
     ]
     pool_status = models.CharField(
         'Pool-Status',
@@ -4280,6 +4306,7 @@ class CoinTransaction(models.Model):
     REASON_SEASON_GOAL = 'season_goal'
     REASON_BOOST_TRANSFER = 'boost_transfer'
     REASON_SCOUT_TALENT = 'scout_talent'
+    REASON_SHOW_AUCTION = 'show_auction'
 
     REASON_CHOICES = [
         (REASON_WIN,            'Sieg'),
@@ -4287,6 +4314,7 @@ class CoinTransaction(models.Model):
         (REASON_SEASON_GOAL,    'Saisonziel erfüllt'),
         (REASON_BOOST_TRANSFER, 'Transfermarkt-Boost'),
         (REASON_SCOUT_TALENT,   'Talentscout'),
+        (REASON_SHOW_AUCTION,   'Show-Auktion (Eintritt)'),
     ]
 
     manager = models.ForeignKey(
@@ -4309,6 +4337,39 @@ class CoinTransaction(models.Model):
     def __str__(self):
         sign = '+' if self.amount >= 0 else ''
         return f'{self.manager} {sign}{self.amount} ({self.get_reason_display()})'
+
+
+class Notification(models.Model):
+    """Minimale Manager-Benachrichtigung (Glocke im Header).
+
+    Ungebündelt: jedes Ereignis erzeugt eine eigene Zeile (Spec
+    Show-Auktion §12). Empfänger ist das ManagerProfile — nicht der Club —
+    damit auch vereinslose Manager erreichbar sind. Erstellung läuft über
+    game.notifications.notify(); die Liste unter /benachrichtigungen/
+    markiert beim Öffnen alles als gelesen.
+    """
+
+    recipient = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+    )
+    title = models.CharField(max_length=160)
+    body = models.CharField(max_length=240, blank=True, default='')
+    url = models.CharField(max_length=200, blank=True, default='')
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', 'is_read']),
+        ]
+        verbose_name = 'Benachrichtigung'
+        verbose_name_plural = 'Benachrichtigungen'
+
+    def __str__(self):
+        return f'{self.recipient}: {self.title}'
 
 
 class GameSeasonState(models.Model):
@@ -6158,6 +6219,17 @@ class FinanceTransaction(models.Model):
             models.Index(fields=['saison', 'typ']),
             models.Index(fields=['club', 'created_at']),
         ]
+        constraints = [
+            # Idempotenz-Schutz Show-Auktion (Spec E25): die Referenz
+            # showauction:{id}:settle darf nur EINMAL gebucht werden —
+            # doppeltes Abwickeln (Beat- und Lazy-Pfad gleichzeitig)
+            # ist damit strukturell unmöglich.
+            models.UniqueConstraint(
+                fields=['referenz_typ', 'referenz_id'],
+                condition=models.Q(referenz_typ='showauction_settle'),
+                name='unique_showauction_settle_booking',
+            ),
+        ]
         verbose_name = 'Finanzbuchung'
         verbose_name_plural = 'Finanzbuchungen'
 
@@ -6170,6 +6242,80 @@ class FinanceTransaction(models.Model):
         return (f'{self.club} | {self.get_typ_display()} | '
                 f'{sign}{self.betrag:,.0f} € (S{self.saison}'
                 + (f'/ST{self.spieltag}' if self.spieltag else '') + ')')
+
+
+class FinanceReservation(models.Model):
+    """Generische Geld-/Kaderplatz-Reservierung (Escrow-Fundament).
+
+    Eine Reservierung ist KEINE Buchung: Ledger und Kontostand bleiben
+    unberührt. Aktive Reservierungen reduzieren aber überall die
+    "verfügbare" Sicht (Spec Show-Auktion §8.2):
+    - booking._create_booking: Deckungsprüfung aktiver Ausgaben
+    - transfers._check_kaderplatz: Kaderlimit-Prüfung
+    - scouting.service: verfügbares Budget / freie Slots
+
+    Verwaltung ausschließlich über game/economy/reservations.py
+    (reserve / adjust / release / consume) — nie direkt Zeilen anlegen.
+    """
+
+    STATUS_ACTIVE = 'active'
+    STATUS_RELEASED = 'released'
+    STATUS_CONSUMED = 'consumed'
+    STATUS_CHOICES = [
+        (STATUS_ACTIVE, 'Aktiv'),
+        (STATUS_RELEASED, 'Freigegeben'),
+        (STATUS_CONSUMED, 'Verbraucht (gebucht)'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='finance_reservations',
+        verbose_name='Verein',
+    )
+    zweck = models.CharField(
+        max_length=32,
+        help_text="Modul-Kennung, z. B. 'showauction'.",
+    )
+    referenz = models.CharField(
+        max_length=64,
+        help_text="Eindeutige Referenz, z. B. 'showauction:bid:42'.",
+    )
+    betrag = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=0,
+        help_text='Reservierter Geldbetrag (≥ 0).',
+    )
+    slots = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Reservierte Kaderplätze.',
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default=STATUS_ACTIVE,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['referenz'],
+                condition=models.Q(status='active'),
+                name='unique_active_finance_reservation',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['club', 'status']),
+        ]
+        verbose_name = 'Finanz-Reservierung'
+        verbose_name_plural = 'Finanz-Reservierungen'
+
+    def __str__(self):
+        return (f'{self.club} | {self.referenz} | {self.betrag:,.0f} € '
+                f'+ {self.slots} Slot(s) [{self.get_status_display()}]')
 
 
 class SeasonEconomySnapshot(models.Model):

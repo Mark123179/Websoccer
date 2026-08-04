@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Auktionshaus — Transfers{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap" data-sxa-root data-csrf="{{ csrf_token }}">
+    {% include 'game/management/_scouting_tabs.html' %}
+
+    <section class="sxa-stage">
+        <img class="sxa-stage-bg" src="{% static 'showauction/studio-bg.png' %}" alt="">
+        <div class="sxa-stage-vignette"></div>
+        <div class="sxa-stage-title">
+            <small>Live aus dem Studio</small>
+            <strong>Auktionshaus</strong>
+        </div>
+
+        {% if live_auctions %}
+        <div class="sxa-podium-row is-n{{ live_auctions|length }}">
+            {% for s in live_auctions %}
+            <a class="sxa-podium is-z{{ s.dist }}"
+               href="{% url 'showauction_detail' s.auction.pk %}"
+               style="--sxa-dist: {{ s.dist }}; --sxa-accent: {{ s.farbe.accent }}; --sxa-ink: {{ s.farbe.ink }}; --sxa-chip-ink: {{ s.farbe.chip_ink }}; --sxa-rgb: {{ s.farbe.rgb }};">
+                <span class="sxa-chip-row">
+                    <span class="sxa-chip">{{ s.auction.type_name }}</span>
+                    {% if s.hot %}<span class="sxa-hot-badge">Endspurt</span>{% endif %}
+                    {% if s.coin_bedarf %}<span class="sxa-cond-chip">{{ s.coin_bedarf }} Coin</span>{% endif %}
+                </span>
+                <span class="sxa-holo">
+                    <span class="sxa-beam"></span>
+                    <span class="sxa-hero-box">
+                        {% if s.auction.hero_image %}
+                            <img src="{{ s.auction.hero_image.url }}" alt="{{ s.auction.player.full_name }}">
+                        {% else %}
+                            <span class="sxa-hero-fallback">{{ s.auction.player.first_name|slice:":1" }}{{ s.auction.player.last_name|slice:":1" }}</span>
+                        {% endif %}
+                    </span>
+                    <span class="sxa-pod"></span>
+                </span>
+                <span class="sxa-refl">
+                    {% if s.auction.hero_image %}<span style="display:block;width:100%;height:100%;transform:scaleY(-1);filter:blur(2px);background:url('{{ s.auction.hero_image.url }}') center bottom / auto 100% no-repeat;"></span>{% endif %}
+                </span>
+                <span class="sxa-podium-meta">
+                    <span class="sxa-podium-name">{{ s.auction.player.full_name }}</span><br>
+                    {% if s.restzeit_s is not None %}
+                    <span class="sxa-timer-pill{% if s.hot %} is-hot{% endif %}" data-sxa-countdown data-remaining="{{ s.restzeit_s }}">
+                        <small>{% if s.cfg.endebedingung == 'haltezeit' and s.bid_count %}Gebot hält noch{% else %}Endet in{% endif %}</small>
+                        <span data-sxa-time>–</span>
+                    </span>
+                    {% else %}
+                    <span class="sxa-timer-pill"><small>Sofortkauf</small><span>offen</span></span>
+                    {% endif %}
+                </span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="sxa-stage-empty">
+            Gerade steht kein Spieler auf der Bühne.
+            <small>Sobald die Redaktion eine Auktion startet, geht hier das Licht an.</small>
+        </div>
+        {% endif %}
+    </section>
+
+    {% if planned_auctions %}
+    <section class="sxa-section">
+        <div class="sxa-section-head">
+            <h2>Angekündigt</h2>
+            <span>Demnächst im Studio</span>
+        </div>
+        {% for s in planned_auctions %}
+        <a class="sxa-row-card" href="{% url 'showauction_detail' s.auction.pk %}"
+           style="--sxa-accent: {{ s.farbe.accent }}; --sxa-ink: {{ s.farbe.chip_ink }};">
+            <span class="sxa-row-chip">{{ s.auction.type_name }}</span>
+            <span>
+                <span class="sxa-row-name">{{ s.auction.player.full_name }}</span><br>
+                <span class="sxa-row-sub">Marktwert {{ s.mw_fmt|default:'—' }}{% if s.coin_bedarf %} · Eintritt: {{ s.coin_bedarf }} Coin{% endif %}</span>
+            </span>
+            <span class="sxa-row-right">
+                <b>{{ s.auction.starts_at|date:"D, d. b · H:i" }} Uhr</b>
+                {% if s.start_in_s is not None %}
+                <small>startet in <span data-sxa-countdown data-remaining="{{ s.start_in_s }}"><span data-sxa-time>–</span></span></small>
+                {% endif %}
+            </span>
+        </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if finished_rows %}
+    <section class="sxa-section">
+        <div class="sxa-section-head">
+            <h2>Zuletzt im Studio</h2>
+            <span>Die letzten Ergebnisse</span>
+        </div>
+        {% for row in finished_rows %}
+        <a class="sxa-row-card" href="{% url 'showauction_detail' row.a.pk %}"
+           style="--sxa-accent: {{ row.farbe.accent }}; --sxa-ink: {{ row.farbe.chip_ink }};">
+            <span class="sxa-row-chip">{{ row.a.type_name }}</span>
+            <span>
+                <span class="sxa-row-name">{{ row.a.player.full_name }}</span><br>
+                <span class="sxa-row-sub">{{ row.a.ends_at|date:"D, d. b · H:i" }} Uhr</span>
+            </span>
+            <span class="sxa-row-right">
+                {% if row.a.status == 'settled' %}
+                <b class="is-sold">{{ row.preis_fmt }}</b>
+                <small>Zuschlag: {{ row.a.winner_club.name }}</small>
+                {% else %}
+                <b class="is-failed">Geplatzt</b>
+                <small>{{ row.a.fail_reason|default:'ohne Zuschlag' }}</small>
+                {% endif %}
+            </span>
+        </a>
+        {% endfor %}
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'showauction/showauction.js' %}?v=1"></script>
+{% endblock %}

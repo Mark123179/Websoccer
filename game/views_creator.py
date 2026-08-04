@@ -607,7 +607,7 @@ def creator_vereinslose(request):
 
     qs = Player.objects.filter(club__isnull=True).exclude(
         loan_status='extern_loan'
-    ).order_by('last_name', 'first_name')
+    ).exclude(pool_status='show_auction').order_by('last_name', 'first_name')
 
     if q_name:
         from django.db.models import Q

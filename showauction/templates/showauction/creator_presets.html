@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Auktions-Presets — Redaktion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap">
+    {% include 'showauction/_messages.html' %}
+    <div class="sxa-creator-head">
+        <h1>Auktions-Presets</h1>
+        <div class="sxa-creator-actions">
+            <a class="sxa-btn-small" href="{% url 'showauction_creator' %}">‹ Zurück zur Liste</a>
+        </div>
+    </div>
+
+    <div class="sxa-panel">
+        <h3>Vorhandene Presets</h3>
+        <table class="sxa-table">
+            <thead><tr><th>Sortierung</th><th>Name</th><th>Slug</th><th>Farbe</th><th>Aktiv</th><th></th></tr></thead>
+            <tbody>
+                {% for p in presets %}
+                <tr>
+                    <td>{{ p.sort_order }}</td>
+                    <td><b>{{ p.name }}</b></td>
+                    <td class="is-mono">{{ p.slug }}</td>
+                    <td><span style="display: inline-block; width: 16px; height: 16px; border-radius: 4px; background: {{ p.color_hex }}; vertical-align: -3px;"></span> {{ p.color_hex }}</td>
+                    <td>{% if p.is_active %}<span class="sxa-status-pill is-running">aktiv</span>{% else %}<span class="sxa-status-pill">inaktiv</span>{% endif %}</td>
+                    <td><a class="sxa-btn-small" href="{% url 'showauction_creator_preset_edit' p.pk %}">Bearbeiten</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="color: var(--muted);">Keine Presets vorhanden.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="sxa-panel" style="margin-top: 16px;">
+        <h3>Neues Preset anlegen</h3>
+        <form class="sxa-form" method="post" action="{% url 'showauction_creator_presets' %}">
+            {% csrf_token %}
+            <label>Name <input type="text" name="name" required placeholder="z. B. Mitternachts-Auktion"></label>
+            <label>Slug <input type="text" name="slug" required placeholder="z. B. mitternacht" pattern="[a-z0-9-]+"></label>
+            <label>Typfarbe <input type="text" name="color_hex" placeholder="#ffd400" pattern="#?[0-9a-fA-F]{6}"></label>
+            <button class="sxa-btn-small is-green" type="submit" style="max-width: 240px;">Anlegen (inaktiv)</button>
+            <span class="sxa-form-help">Das Preset startet inaktiv mit leerer Config — die 16 Achsen konfigurierst du im nächsten Schritt.</span>
+        </form>
+    </div>
+</div>
+{% endblock %}

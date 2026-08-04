@@ -47,12 +47,12 @@
         </a>
 
         <div class="nav-quick-actions" aria-label="Manager Aktionen">
-            <a class="nav-action" href="/notifications/" aria-label="Benachrichtigungen">
+            <a class="nav-action" href="{% url 'notifications_page' %}" aria-label="Benachrichtigungen">
                 <svg aria-hidden="true" viewBox="0 0 24 24">
                     <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2Z"></path>
                     <path d="M10 21h4"></path>
                 </svg>
-                <span class="nav-badge" aria-label="2 neue Benachrichtigungen">2</span>
+                {% if unread_notifications_count %}<span class="nav-badge" aria-label="{{ unread_notifications_count }} neue Benachrichtigungen">{{ unread_notifications_count }}</span>{% endif %}
             </a>
             <a class="nav-action" href="/inbox/" aria-label="Posteingang">
                 <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-taktik.png' %}" alt=""></span>
                 Taktik
             </a>
-            <a href="{% url 'transfer_scouting' %}"{% if url_name == 'transfer_scouting' or url_name == 'transfer_watchlist' %} aria-current="page"{% endif %}>
+            <a href="{% url 'transfer_scouting' %}"{% if url_name == 'transfer_scouting' or url_name == 'transfer_watchlist' or url_name == 'showauction_stage' or url_name == 'showauction_detail' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-transfers.png' %}" alt=""></span>
                 Transfers
             </a>

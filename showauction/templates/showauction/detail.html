@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ player.full_name }} — Auktion{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<div class="sxa-wrap" data-sxa-root data-csrf="{{ csrf_token }}"
+     {% if a.status == 'running' or a.status == 'scheduled' %}data-sxa-poll="{% url 'showauction_status' a.pk %}" data-status="{{ a.status }}"{% endif %}
+     style="--sxa-accent: {{ s.farbe.accent }}; --sxa-ink: {{ s.farbe.ink }}; --sxa-chip-ink: {{ s.farbe.chip_ink }}; --sxa-rgb: {{ s.farbe.rgb }};">
+
+    <div class="sxa-back-row">
+        <a class="sxa-back-link" href="{% url 'showauction_stage' %}">‹ Zurück zur Übersicht</a>
+        {% if prev_auction or next_auction %}
+        <div class="sxa-nav-btns">
+            {% if prev_auction %}
+            <a class="sxa-nav-btn" href="{% url 'showauction_detail' prev_auction.pk %}">‹ <small>Vorherige Auktion</small>{{ prev_auction.player.full_name }}</a>
+            {% endif %}
+            {% if next_auction %}
+            <a class="sxa-nav-btn" href="{% url 'showauction_detail' next_auction.pk %}"><small>Nächste Auktion</small>{{ next_auction.player.full_name }} ›</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if a.status == 'settled' %}
+    <div class="sxa-result-banner is-sold">
+        <span>🔨</span>
+        <span>Zuschlag! <b>{{ a.winner_club.name }}</b> hat {{ player.full_name }} für <b>{{ s.preis_aktuell_fmt|default:a.winning_amount }}</b> verpflichtet{% if a.settled_at %} ({{ a.settled_at|date:"D, d. b · H:i" }} Uhr){% endif %}.</span>
+    </div>
+    {% elif a.status == 'failed' %}
+    <div class="sxa-result-banner is-failed">
+        <span>💥</span>
+        <span>Diese Auktion ist <b>geplatzt</b>{% if a.fail_reason %} — {{ a.fail_reason }}{% endif %}. {{ player.full_name }} hat das Studio ohne Wechsel verlassen.</span>
+    </div>
+    {% elif a.status == 'cancelled' %}
+    <div class="sxa-result-banner is-failed">
+        <span>🚫</span>
+        <span>Diese Auktion wurde von der Redaktion <b>abgebrochen</b>.</span>
+    </div>
+    {% elif a.status == 'scheduled' %}
+    <div class="sxa-result-banner">
+        <span>📅</span>
+        <span>Angekündigt: Diese Auktion startet am <b>{{ a.starts_at|date:"D, d. b · H:i" }} Uhr</b>{% if s.start_in_s is not None %} — in <b data-sxa-countdown data-remaining="{{ s.start_in_s }}"><span data-sxa-time>–</span></b>{% endif %}.</span>
+    </div>
+    {% endif %}
+
+    <div class="sxa-detail-hero">
+        <div class="sxa-show-col">
+            <div class="sxa-show-logo">
+                <b>TRANSFER<br>UPDATE</b>
+                <span>DIE SHOW</span>
+            </div>
+            <div class="sxa-show-player">
+                <a class="sxa-player-link" href="{% url 'player_detail' player.pk %}" title="Zum Spielerprofil">{{ player.full_name }}</a>
+                <div class="sxa-mw-caption">Marktwert</div>
+                <span class="sxa-mw-value">{{ s.mw_fmt|default:'unbekannt' }}</span>
+            </div>
+            <div class="sxa-show-club">
+                <span class="sxa-club-fallback">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                <div>
+                    <span class="sxa-show-club-name">Vereinslos</span>
+                    <div class="sxa-show-club-sub">Sofort verfügbar</div>
+                </div>
+            </div>
+            {% if a.media_logo %}
+            <div class="sxa-presenter">
+                <small>Präsentiert von</small>
+                <img src="{{ a.media_logo.url }}" alt="Medienpartner">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sxa-accent-col">
+            <div class="sxa-transfer-strip">TRANSFERS<br>K. Mbappé<br>J. Bellingham<br>F. Wirtz<br>E. Haaland<br>J. Musiala<br>L. Yamal<br>V. Gyökeres<br>D. Olmo<br>A. Isak<br>R. Araujo<br>X. Simons<br>B. Barcola<br>M. Olise<br>D. Szoboszlai<br>G. Xhaka<br>N. Schlotterbeck<br>P. Foden<br>V. Osimhen<br>R. Leão<br>J. Frimpong</div>
+            <div class="sxa-detail-hero-img">
+                {% if a.hero_image %}
+                    <img src="{{ a.hero_image.url }}" alt="{{ player.full_name }}">
+                {% else %}
+                    <span class="sxa-hero-fallback">{{ player.first_name|slice:":1" }}{{ player.last_name|slice:":1" }}</span>
+                {% endif %}
+            </div>
+            <div class="sxa-facts">
+                <div class="sxa-facts-row">
+                    <div class="sxa-fact">
+                        <small>Alter:</small>
+                        <div class="sxa-fact-badge">{{ player.age|default:'–' }} Jahre</div>
+                    </div>
+                    {% if groesse_fmt %}
+                    <div class="sxa-fact">
+                        <small>Größe:</small>
+                        <div class="sxa-fact-badge">{{ groesse_fmt }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if player.nationality_badges %}
+                <div class="sxa-fact">
+                    <small>Nationalität:</small>
+                    <div class="sxa-fact-badge">
+                        {% for nat in player.nationality_badges %}{% if forloop.first %}{% if nat.flag_url %}<img class="sxa-flag" src="{{ nat.flag_url }}" alt="" onerror="this.style.display='none'">{% endif %}{{ nat.name|default:nat.code }}{% endif %}{% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="sxa-fact">
+                    <small>Position:</small>
+                    <div class="sxa-pos-badges">
+                        {% if player.main_positions %}<div class="is-hp">HP: {{ player.main_positions|join:" · " }}</div>{% endif %}
+                        {% if player.secondary_positions %}<div class="is-np">NP: {{ player.secondary_positions|join:" · " }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="sxa-bid-block">
+                    <div class="sxa-fact">
+                        <small>{% if s.richtung == 'verdeckt' %}Gebote verdeckt{% elif s.richtung == 'fallend' %}Aktueller Preis{% elif s.richtung == 'fest' %}Festpreis{% else %}Aktuelles Gebot{% endif %}:</small>
+                    </div>
+                    <div class="sxa-bid-value-row">
+                        <div class="sxa-bid-value">{% if s.richtung == 'verdeckt' %}?? ??? ??? €{% else %}<span data-sxa-live-bid>{{ s.preis_aktuell_fmt|default:start_fmt }}</span>{% endif %}</div>
+                        {% if s.top_club and s.top_club.logo_url %}
+                        <img class="sxa-bidder-crest" src="{{ s.top_club.logo_url }}" alt="{{ s.top_club.name }}" title="Höchstbietender: {{ s.top_club.name }}" onerror="this.style.display='none'">
+                        {% endif %}
+                    </div>
+                    {% if s.richtung == 'verdeckt' %}
+                    <div class="sxa-bid-note">Verdeckte Gebote — Anzeige erst nach Auktionsende</div>
+                    {% elif s.top_club %}
+                    <div class="sxa-bidder-line">Höchstbietender: {{ s.top_club.name }}</div>
+                    {% endif %}
+                </div>
+                {% if s.restzeit_s is not None %}
+                <div class="sxa-detail-timer{% if s.hot %} is-hot{% endif %}" data-sxa-countdown data-sxa-main-clock data-remaining="{{ s.restzeit_s }}">
+                    <small>{% if s.cfg.endebedingung == 'haltezeit' and s.bid_count %}Gebot hält noch{% else %}Endet in{% endif %}</small>
+                    <b data-sxa-time>–</b>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="sxa-meta-bar">
+                <div class="sxa-meta-cell"><small>Startpreis</small><b>{{ start_fmt }}</b></div>
+                {% if min_inc_fmt %}
+                <div class="sxa-meta-sep"></div>
+                <div class="sxa-meta-cell"><small>Mindesterhöhung</small><b>{{ min_inc_fmt }}</b></div>
+                {% endif %}
+                <div class="sxa-meta-sep"></div>
+                <div class="sxa-meta-cell"><small>Auktionsbeginn</small><b>{% if a.starts_at %}{{ a.starts_at|date:"D, d. b · H:i" }} Uhr{% else %}–{% endif %}</b></div>
+                <div class="sxa-meta-sep"></div>
+                <div class="sxa-meta-cell"><small>Auktionsende</small><b>{% if s.cfg.endebedingung == 'haltezeit' %}offen (Haltezeit-Regel){% elif s.cfg.endebedingung == 'erster_zuschlag' and s.richtung == 'fest' %}offen (Sofortkauf){% elif a.ends_at %}{{ a.ends_at|date:"D, d. b · H:i" }} Uhr{% else %}offen{% endif %}</b></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sxa-panels">
+        <div class="sxa-panel">
+            <h3>Auktionsdaten</h3>
+            <div class="sxa-data-row"><span>Auktionstyp</span><span class="is-type">{{ a.type_name }}</span></div>
+            <div class="sxa-data-row"><span>Startpreis</span><span class="is-mono">{{ start_fmt }}</span></div>
+            {% if min_inc_fmt %}
+            <div class="sxa-data-row"><span>Mindesterhöhung</span><span class="is-mono">{{ min_inc_fmt }}</span></div>
+            {% endif %}
+            {% if s.naechstes_min_fmt and s.richtung != 'fallend' and s.richtung != 'fest' %}
+            <div class="sxa-data-row"><span>Mindestgebot</span><span class="is-mono" data-sxa-live-min>{{ s.naechstes_min_fmt }}</span></div>
+            {% endif %}
+            <div class="sxa-data-row">
+                <span>{% if s.richtung == 'verdeckt' %}Gebote im Umschlag{% else %}Aktuelles Gebot{% endif %}</span>
+                <span>
+                    {% if s.richtung == 'verdeckt' %}
+                        <span class="is-mono">{% if s.bid_count is not None %}<span data-sxa-live-count>{{ s.bid_count }}</span>{% else %}verdeckt{% endif %}</span>
+                    {% else %}
+                        {% if s.top_club and s.top_club.logo_url %}<img class="sxa-crest-mini" src="{{ s.top_club.logo_url }}" alt="" onerror="this.style.display='none'">{% endif %}
+                        <span class="is-mono is-green">{% if s.preis_aktuell_fmt %}<span data-sxa-live-bid>{{ s.preis_aktuell_fmt }}</span>{% else %}–{% endif %}</span>
+                    {% endif %}
+                </span>
+            </div>
+            {% if s.richtung == 'fallend' %}
+            {% if s.naechster_schritt_at %}
+            <div class="sxa-data-row"><span>Nächster Preisschritt</span><span>{{ s.naechster_schritt_at|date:"H:i" }} Uhr</span></div>
+            {% endif %}
+            {% if s.boden_fmt %}
+            <div class="sxa-data-row"><span>Preisboden</span><span class="is-mono">{{ s.boden_fmt }}</span></div>
+            {% endif %}
+            {% endif %}
+            <div class="sxa-data-row"><span>Auktionsbeginn</span><span>{% if a.starts_at %}{{ a.starts_at|date:"D, d. b · H:i" }} Uhr{% else %}–{% endif %}</span></div>
+            <div class="sxa-data-row"><span>Auktionsende</span><span>{% if s.cfg.endebedingung == 'haltezeit' %}offen (Haltezeit){% elif a.ends_at %}{{ a.ends_at|date:"D, d. b · H:i" }} Uhr{% else %}offen{% endif %}</span></div>
+            {% if s.restzeit_s is not None %}
+            <div class="sxa-data-row"><span>{% if s.cfg.endebedingung == 'haltezeit' and s.bid_count %}Gebot hält noch{% else %}Restzeit{% endif %}</span><span class="is-mono{% if s.hot %} is-hot-val{% endif %}" data-sxa-countdown data-remaining="{{ s.restzeit_s }}"><span data-sxa-time>–</span></span></div>
+            {% endif %}
+
+            <div class="sxa-heat">
+                <div class="sxa-heat-head">
+                    <span>{% if s.heat_verdeckt %}Gerüchteküche{% else %}Bietergefecht{% endif %}</span>
+                    <span class="{% if s.heat >= 80 %}is-heat-3{% elif s.heat >= 55 %}is-heat-2{% elif s.heat >= 30 %}is-heat-1{% else %}is-heat-0{% endif %}" data-sxa-heat-label>{{ s.heat_label|default:'' }}</span>
+                </div>
+                <div class="sxa-heat-track"><div class="sxa-heat-fill" data-sxa-heat-fill style="width: {{ s.heat }}%;"></div></div>
+                <div class="sxa-heat-desc">
+                    {% if s.heat_verdeckt %}
+                        {% if s.heat >= 55 %}Die Gerüchteküche brodelt — im Studio wird getuschelt.{% else %}In der Gerüchteküche ist es noch still.{% endif %}
+                    {% else %}
+                        {{ s.bid_count|default:0 }} Gebot{{ s.bid_count|default:0|pluralize:"e" }}{% if s.bieter_count %} von {{ s.bieter_count }} Manager{{ s.bieter_count|pluralize:"n" }}{% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if gebots_rows %}
+            <div class="sxa-heat">
+                <div class="sxa-heat-head"><span>Letzte Gebote</span></div>
+                {% for row in gebots_rows %}
+                <div class="sxa-data-row">
+                    <span>{% if row.club.logo_url %}<img class="sxa-crest-mini" src="{{ row.club.logo_url }}" alt="" onerror="this.style.display='none'">{% endif %}{{ row.club.name }}</span>
+                    <span class="is-mono{% if row.leading %} is-green{% endif %}">{{ row.fmt }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sxa-panel">
+            <h3>Positionen</h3>
+            <div class="sxa-pitch">
+                <div class="sxa-pitch-lines">
+                    <i class="l-box-top"></i><i class="l-box-bottom"></i><i class="l-mid"></i><i class="l-circle"></i>
+                </div>
+                {% for slot in position_slots %}
+                <span class="sxa-pitch-chip is-{{ slot.state }}" style="left: {{ slot.x }}%; top: {{ slot.y }}%;" title="{{ slot.code }}{% if slot.kind %} · {{ slot.kind }}{% endif %}">{{ slot.code }}</span>
+                {% endfor %}
+            </div>
+            <div class="sxa-pitch-legend">
+                <span><i class="dot-hp"></i>Hauptposition</span>
+                <span><i class="dot-np"></i>Nebenposition</span>
+            </div>
+        </div>
+
+        <div class="sxa-panel sxa-rules-panel">
+            <h3>So läuft diese Auktion</h3>
+            <div class="sxa-rules-intro"><strong>{{ a.type_name }}:</strong> {{ a.rules_text }}</div>
+            <div class="sxa-rules-list">
+                <div><span>—</span><span>Der Gebotsbetrag muss jederzeit vollständig verfügbar sein — er wird bis zum Auktionsende reserviert.</span></div>
+                <div><span>—</span><span>Euer Kaderlimit darf nicht überschritten werden.</span></div>
+                {% if min_inc_fmt %}
+                <div><span>—</span><span>Jedes Gebot muss das aktuelle Gebot um die Mindesterhöhung übertreffen.</span></div>
+                {% endif %}
+                {% if s.richtung == 'verdeckt' %}
+                <div><span>—</span><span>Ihr gebt genau ein verdecktes Gebot ab{% if s.cfg.gebot_aenderbar == 'ja' %} — bis zum Ende änderbar{% endif %}.</span></div>
+                {% endif %}
+                <div><span>—</span><span>Der Gewinner übernimmt den Spieler mit 21 Tagen Wechselsperre.</span></div>
+                {% for row in cond_rows %}
+                <div><span>—</span><span>{{ row }}</span></div>
+                {% endfor %}
+            </div>
+
+            {% if s.teilnahme_grund %}
+            <div class="sxa-rule-blocked">Du kannst nicht mitbieten: {{ s.teilnahme_grund }}</div>
+            {% endif %}
+
+            <div class="sxa-cta-stack">
+                {% if a.status == 'running' %}
+                    {% if s.richtung == 'fallend' or s.richtung == 'fest' %}
+                    <button class="sxa-btn-bid" data-sxa-open-buy {% if s.teilnahme_grund %}disabled{% endif %}>
+                        {% if s.richtung == 'fallend' %}Jetzt zuschlagen — {{ s.preis_aktuell_fmt }}{% else %}Kaufen für {{ start_fmt }}{% endif %}
+                    </button>
+                    {% else %}
+                    <button class="sxa-btn-bid" data-sxa-open-bid {% if s.teilnahme_grund %}disabled{% endif %}>
+                        {% if s.richtung == 'verdeckt' %}{% if s.mein_gebot %}Verdecktes Gebot ändern{% else %}Verdecktes Gebot abgeben{% endif %}{% else %}Gebot abgeben{% endif %}
+                    </button>
+                    {% endif %}
+                    {% if s.richtung == 'verdeckt' and s.mein_gebot_fmt %}
+                    <div class="sxa-my-bid-line">Dein verdecktes Gebot: {{ s.mein_gebot_fmt }}</div>
+                    {% elif s.mein_fuehrend and s.mein_gebot_fmt %}
+                    <div class="sxa-my-bid-line">Du führst mit {{ s.mein_gebot_fmt }}</div>
+                    {% elif s.mein_gebot_fmt %}
+                    <div class="sxa-my-bid-line" style="color: var(--yellow);">Du wurdest überboten — dein Gebot: {{ s.mein_gebot_fmt }}</div>
+                    {% endif %}
+                {% endif %}
+
+                {% if a.status == 'running' or a.status == 'scheduled' %}
+                <button class="sxa-btn-watch{% if s.beobachtet %} is-watched{% endif %}" data-sxa-watch="{% url 'showauction_watch' a.pk %}">
+                    <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.9z"></path></svg>
+                    <span data-sxa-watch-label>{% if s.beobachtet %}Auf der Beobachtungsliste{% else %}Beobachten{% endif %}</span>
+                </button>
+                <div class="sxa-watch-hint">Auf der Beobachtungsliste erhältst du Benachrichtigungen bei Überbietung, Endspurt und Auktionsende.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# ---------- Gebots-/Kauf-Modal (wird per JS an <body> portalt) ---------- #}
+    <div id="sxaBidOverlay" class="sxa-modal-overlay" hidden></div>
+    <div id="sxaBidModal" class="sxa-modal" hidden
+         data-min="{{ naechstes_min_int }}"
+         data-konto="{{ verfuegbar_int|default_if_none:'' }}"
+         data-bid-url="{% url 'showauction_bid' a.pk %}"
+         data-buy-url="{% url 'showauction_buy' a.pk %}">
+        <h4>{% if s.richtung == 'fallend' %}Zuschlag bestätigen{% elif s.richtung == 'fest' %}Kauf bestätigen{% elif s.richtung == 'verdeckt' %}Verdecktes Gebot{% else %}Gebot abgeben{% endif %}</h4>
+        <div class="sxa-modal-sub">{{ player.full_name }} · {{ a.type_name }}</div>
+
+        <div data-sxa-only-bid>
+            <div class="sxa-modal-minrow">
+                <span>{% if s.richtung == 'verdeckt' %}Mindestgebot{% else %}Mindestgebot{% endif %}</span>
+                <span id="sxaBidMinValue">{{ s.naechstes_min_fmt|default:'–' }}</span>
+            </div>
+            <div class="sxa-modal-inputrow">
+                <input id="sxaBidInput" inputmode="numeric" placeholder="0" autocomplete="off">
+                <b>€</b>
+            </div>
+            <div class="sxa-modal-feedback">
+                <span class="sxa-word" id="sxaBidWord">&#8203;</span>
+                <span class="sxa-err" id="sxaBidErr">&#8203;</span>
+            </div>
+        </div>
+
+        <div data-sxa-only-buy hidden>
+            <div class="sxa-modal-minrow">
+                <span>{% if s.richtung == 'fallend' %}Aktueller Preis{% else %}Festpreis{% endif %}</span>
+                <span>{% if s.richtung == 'fallend' %}{{ s.preis_aktuell_fmt }}{% else %}{{ start_fmt }}{% endif %}</span>
+            </div>
+            <div class="sxa-modal-hint">Der Server bucht den zum Klickzeitpunkt gültigen Preis — bei fallendem Preis kann er bereits eine Stufe tiefer liegen.</div>
+            <div class="sxa-modal-feedback">
+                <span></span>
+                <span class="sxa-err" id="sxaBidErrBuy">&#8203;</span>
+            </div>
+        </div>
+
+        {% if verfuegbar_fmt %}
+        <div class="sxa-modal-kontorow">
+            <span>Verfügbar: <span class="sxa-konto-val">{{ verfuegbar_fmt }}</span></span>
+            <span class="sxa-balance" id="sxaBalanceStatus">—</span>
+        </div>
+        <div class="sxa-modal-hint">Verfügbar = Kontostand minus laufende Reservierungen (Transfers, Scouting, Auktionen).</div>
+        {% endif %}
+        {% if s.coin_bedarf and not s.ticket_bezahlt %}
+        <div class="sxa-modal-hint">Eintritt: Mit deinem ersten Gebot wird {{ s.coin_bedarf }} Hoeneß-Coin fällig (kein Refund, auch wenn du nicht gewinnst).</div>
+        {% endif %}
+
+        <div class="sxa-modal-btns">
+            <button class="sxa-btn-cancel" id="sxaBidCancel" type="button">Abbrechen</button>
+            <button class="sxa-btn-confirm" id="sxaBidConfirm" type="button" disabled>{% if s.richtung == 'fallend' %}Zuschlag bestätigen{% elif s.richtung == 'fest' %}Kaufen{% else %}Gebot bestätigen{% endif %}</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'showauction/showauction.js' %}?v=1"></script>
+{% endblock %}
