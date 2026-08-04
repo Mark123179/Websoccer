@@ -1501,27 +1501,19 @@ def pitch_position_slots(player):
     coordinate_slots = [
         ('TW', 49, 89),
         ('LV', 18, 74),
-        ('IV', 33, 74),
         ('IV', 49, 74),
-        ('IV', 65, 74),
         ('RV', 80, 74),
         ('LOV', 14, 62),
-        ('DM', 30, 62),
         ('DM', 49, 62),
-        ('DM', 65, 62),
         ('ROV', 83, 62),
         ('LM', 14, 46),
-        ('ZM', 31, 46),
         ('ZM', 49, 46),
-        ('ZM', 65, 46),
         ('RM', 82, 46),
         ('LOM', 22, 33),
-        ('OM', 39, 33),
-        ('OM', 59, 33),
+        ('OM', 49, 33),
         ('ROM', 77, 33),
         ('LF', 28, 25),
-        ('ST', 43, 14),
-        ('ST', 57, 14),
+        ('ST', 49, 14),
         ('RF', 70, 25),
     ]
     main_positions = set(player.main_positions)
@@ -7307,8 +7299,8 @@ def upload_profile_image(request):
     _saved_to_obj_storage = False
     if getattr(_settings, 'USE_REPLIT_OBJECT_STORAGE', False):
         try:
-            from replit.object_storage import Client as _ObjClient
-            _obj_client = _ObjClient()
+            from game.object_storage_backend import get_client as _get_obj_client
+            _obj_client = _get_obj_client()
             _obj_client.upload_from_bytes(rel_path, data)
             _saved_to_obj_storage = True
         except Exception:
@@ -7369,8 +7361,8 @@ def reset_profile_image(request):
         _deleted_from_obj = False
         if getattr(_settings, 'USE_REPLIT_OBJECT_STORAGE', False):
             try:
-                from replit.object_storage import Client as _ObjClient
-                _ObjClient().delete(old_path, ignore_not_found=True)
+                from game.object_storage_backend import get_client as _get_obj_client
+                _get_obj_client().delete(old_path, ignore_not_found=True)
                 _deleted_from_obj = True
             except Exception:
                 pass

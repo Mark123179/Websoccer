@@ -46,7 +46,8 @@ class Command(BaseCommand):
             ))
             return
 
-        obj_client = ObjClient()
+        from game.object_storage_backend import get_client
+        obj_client = get_client()
 
         # Collect every active profile_image path that lives in object storage.
         # Paths starting with 'game/' are static assets, not uploaded files.

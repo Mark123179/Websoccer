@@ -6,9 +6,20 @@ from django.core.files.storage import Storage
 from django.urls import reverse
 
 
-def _get_client():
+def get_client():
+    """Object-Storage-Client mit expliziter Bucket-ID aus der Umgebung.
+
+    Die replit-Library kann den Default-Bucket nur über die .replit-Sektion
+    auflösen; in diesem Workspace liegt die ID stattdessen im Secret
+    DEFAULT_OBJECT_STORAGE_BUCKET_ID. Ohne explizite ID wirft jeder
+    Upload/Download einen DefaultBucketError.
+    """
     from replit.object_storage import Client
-    return Client()
+    bucket_id = os.environ.get('DEFAULT_OBJECT_STORAGE_BUCKET_ID', '').strip()
+    return Client(bucket_id=bucket_id) if bucket_id else Client()
+
+
+_get_client = get_client  # Bestandscode im Backend nutzt den alten Namen
 
 
 class ReplitObjectStorage(Storage):

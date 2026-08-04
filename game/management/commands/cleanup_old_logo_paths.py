@@ -35,8 +35,8 @@ def _is_old_format(path: str) -> bool:
 def _asset_exists_in_storage(key: str) -> bool:
     """Return True when the object-storage key exists.  Returns False on any error."""
     try:
-        from replit.object_storage import Client as ObjClient
-        client = ObjClient()
+        from game.object_storage_backend import get_client
+        client = get_client()
         objects = list(client.list(prefix=key))
         for obj in objects:
             obj_key = obj.key if hasattr(obj, 'key') else str(obj)

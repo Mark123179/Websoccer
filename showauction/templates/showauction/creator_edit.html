@@ -4,7 +4,7 @@
 {% block title %}Auktion #{{ a.pk }} — Redaktion{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -63,22 +63,22 @@
         <div class="sxa-panel">
             <h3>Bühnenbild</h3>
             <div style="display: flex; gap: 14px; align-items: flex-start;">
-                <div>
+                <form method="post" action="{% url 'showauction_creator_action' a.pk %}" enctype="multipart/form-data" data-sxa-hero-form>
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="upload_hero">
+                    <input type="file" name="hero_image" accept="image/*" data-sxa-hero-input style="display: none;">
                     <div style="color: var(--faint); font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 6px;">Hero-Bild</div>
-                    {% if a.hero_image %}
-                    <img class="sxa-preview-hero" src="{{ a.hero_image.url }}" alt="Hero">
-                    {% else %}
-                    <div class="sxa-preview-hero" style="display: grid; place-items: center; width: 200px; height: 240px; color: var(--faint); font-size: 12px;">Kein Bild</div>
-                    {% endif %}
-                </div>
+                    <div class="sxa-drop-zone" data-sxa-drop tabindex="0" role="button" aria-label="Hero-Bild hierher ziehen oder klicken">
+                        {% if a.hero_image %}
+                        <img src="{{ a.hero_image.url }}" alt="Hero">
+                        {% else %}
+                        <span class="sxa-drop-hint">Bild hierher ziehen<br>oder klicken</span>
+                        {% endif %}
+                        <span class="sxa-drop-busy">Wird freigestellt…</span>
+                    </div>
+                </form>
                 <div style="flex: 1; display: grid; gap: 12px;">
-                    <form method="post" action="{% url 'showauction_creator_action' a.pk %}" enctype="multipart/form-data" style="display: grid; gap: 6px;">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="upload_hero">
-                        <input type="file" name="hero_image" accept="image/*" required style="color: var(--muted); font-size: 12px;">
-                        <button class="sxa-btn-small" type="submit">Hero hochladen (wird serverseitig freigestellt)</button>
-                        <span class="sxa-form-help">rembg entfernt den Hintergrund und normiert den Torso auf die Studio-Leinwand (640×760, unten bündig). Schlägt das fehl, wird das Original gespeichert und eine Warnung angezeigt.</span>
-                    </form>
+                    <span class="sxa-form-help">Spielerfoto einfach in das Feld ziehen (oder Feld anklicken) — der Upload startet sofort, der Hintergrund wird automatisch entfernt und der Torso auf die Studio-Leinwand normiert (640×760, unten bündig). Schlägt der Freisteller fehl, wird das Original gespeichert und eine Warnung angezeigt.</span>
                     <form method="post" action="{% url 'showauction_creator_action' a.pk %}" enctype="multipart/form-data" style="display: grid; gap: 6px;">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="upload_logo">
@@ -141,4 +141,60 @@
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var form = document.querySelector('[data-sxa-hero-form]');
+    if (!form) return;
+    var input = form.querySelector('[data-sxa-hero-input]');
+    var zone = form.querySelector('[data-sxa-drop]');
+
+    function startUpload(files) {
+        if (zone.classList.contains('is-busy')) return;
+        if (!files || !files.length) return;
+        var f = files[0];
+        if (!f.type || f.type.indexOf('image/') !== 0) {
+            alert('Bitte eine Bilddatei verwenden (PNG, JPG oder WebP).');
+            return;
+        }
+        if (input.files.length === 0 || input.files[0] !== f) {
+            try {
+                var dt = new DataTransfer();
+                dt.items.add(f);
+                input.files = dt.files;
+            } catch (e) {
+                alert('Drag & Drop wird von diesem Browser nicht unterstützt — bitte das Feld anklicken.');
+                return;
+            }
+        }
+        zone.classList.add('is-busy');
+        form.submit();
+    }
+
+    zone.addEventListener('click', function () {
+        if (!zone.classList.contains('is-busy')) input.click();
+    });
+    zone.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); input.click(); }
+    });
+    input.addEventListener('change', function () { startUpload(input.files); });
+
+    ['dragenter', 'dragover'].forEach(function (t) {
+        zone.addEventListener(t, function (ev) { ev.preventDefault(); zone.classList.add('is-over'); });
+    });
+    zone.addEventListener('dragleave', function (ev) { ev.preventDefault(); zone.classList.remove('is-over'); });
+    zone.addEventListener('drop', function (ev) {
+        ev.preventDefault();
+        zone.classList.remove('is-over');
+        if (ev.dataTransfer && ev.dataTransfer.files) startUpload(ev.dataTransfer.files);
+    });
+
+    /* Bild neben der Zone fallen gelassen → Browser darf nicht wegnavigieren */
+    ['dragover', 'drop'].forEach(function (t) {
+        window.addEventListener(t, function (ev) {
+            if (!zone.contains(ev.target)) ev.preventDefault();
+        });
+    });
+})();
+</script>
 {% endblock %}

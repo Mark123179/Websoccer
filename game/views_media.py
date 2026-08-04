@@ -17,17 +17,19 @@ def serve_media(request, name):
         if not getattr(settings, 'USE_REPLIT_OBJECT_STORAGE', False):
             raise RuntimeError("Object Storage disabled — using local FS")
 
-        from replit.object_storage import Client
-        client = Client()
+        from game.object_storage_backend import get_client
+        client = get_client()
 
+        blob_missing = False
         try:
             bucket = client._Client__bucket()
             blob = bucket.get_blob(name)
             if blob is None:
-                raise Http404(f"Media file not found: {name}")
-            last_modified = blob.updated
-        except Http404:
-            raise
+                # Sicherer Bucket-Miss: weiter zum MEDIA_ROOT-Fallback
+                # (Altbestand); 404 erst, wenn auch dort nichts liegt.
+                blob_missing = True
+            else:
+                last_modified = blob.updated
         except Exception:
             blob = None
 
@@ -44,6 +46,8 @@ def serve_media(request, name):
 
         if blob is not None:
             data = blob.download_as_bytes()
+        elif blob_missing:
+            data = None  # bekannter Miss — kein zweiter Bucket-Roundtrip
         else:
             data = client.download_as_bytes(name)
 
