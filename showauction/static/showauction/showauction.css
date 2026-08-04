@@ -6,6 +6,23 @@
 /* ---------- Bühne ---------- */
 .sxa-wrap { max-width: 1152px; margin: 0 auto; }
 
+/* Bühnen-Seite: full-bleed — füllt den Content-Bereich rechts der Sidebar
+   komplett (Bühne 1884×1177.5, Header ~148px inkl. Abstand). NUR hier;
+   die Detailseite behält die zentrierte 1152px-Spalte. */
+.sxa-wrap--stage { max-width: none; margin: 0; }
+.sxa-wrap--stage .sxa-stage {
+    height: 1029px;
+    border: none; border-radius: 0; box-shadow: none;
+}
+.sxa-wrap--stage .sxa-stage-title { top: 38px; }
+.sxa-wrap--stage .sxa-podium-row { bottom: 168px; height: 560px; }
+.sxa-wrap--stage .sxa-podium {
+    --sxa-iw: calc(262px - var(--sxa-dist, 0) * 26px);
+    --sxa-ih: calc(400px - var(--sxa-dist, 0) * 38px);
+}
+.sxa-wrap--stage .sxa-podium-name { font-size: calc(21px - var(--sxa-dist, 0) * 1.6px); }
+.sxa-wrap--stage .sxa-section { margin: 18px 24px; }
+
 .sxa-stage {
     position: relative;
     height: 700px;

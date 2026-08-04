@@ -41,3 +41,10 @@ Server (`buy_now` rechnet `dutch_price` selbst, Client-Betrag wird ignoriert).
 Manager-Seiten setzen `game_header` via `build_game_header()` (sonst leerer globaler Header);
 Creator-Seiten haben projektweit KEINEN game_header — nicht "nachrüsten".
 Wechselsperre-Anzeige läuft über `player.transfer_lock_days_remaining`.
+
+## Full-bleed-Bühne (User-Vorgabe 2026-08-04)
+Die Bühnen-Seite ist bewusst full-bleed OHNE Scouting-Nav-Pills: `main.container` hat KEIN
+Padding (nur margin-left: var(--sidebar)); die Einrückung trägt allein der ws-game-header
+(margin 0 24px 22px). Restfläche der logischen Bühne (1884×1177.5) unter dem Header ≈ 1029px
+Stage-Höhe. Alles scoped unter `.sxa-wrap--stage` (Golden-Master-Regel) — Detailseite behält
+die zentrierte 1152px-Spalte MIT eigener Wrap-Klasse ohne Modifier.
