@@ -1,3 +1,9 @@
+<style>
+.cm-header-right{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem;}
+.cm-nav-pill{padding:.35rem .9rem;border-radius:20px;font-size:.78rem;font-weight:600;text-decoration:none;border:1px solid #0d2035;color:#556677;background:#050e1a;transition:all .15s;}
+.cm-nav-pill:hover{border-color:#00d4ff44;color:#aabbcc;}
+.cm-nav-pill.active{border-color:#00d4ff55;color:#00d4ff;background:#071525;}
+</style>
 <div class="cm-header-right">
   <a class="cm-nav-pill {% if nav_active == 'index' %}active{% endif %}" href="{% url 'creator_index' %}">Vereine &amp; Ligen</a>
   <a class="cm-nav-pill {% if nav_active == 'manager' %}active{% endif %}" href="{% url 'creator_manager_list' %}">Manager-Profile</a>
@@ -13,4 +19,5 @@
   <a class="cm-nav-pill {% if nav_active == 'simdiag' %}active{% endif %}" href="{% url 'creator_simulation_diagnostics' %}">Simulation-Diagnose</a>
   <a class="cm-nav-pill {% if nav_active == 'sysdiag' %}active{% endif %}" href="{% url 'creator_system_diagnostics' %}">Systemanalyse</a>
   <a class="cm-nav-pill {% if nav_active == 'antraege' %}active{% endif %}" href="{% url 'creator_timeline_overview' %}">Anträge</a>
+  <a class="cm-nav-pill {% if nav_active == 'showauktion' %}active{% endif %}" href="{% url 'showauction_creator' %}">Show-Auktion</a>
 </div>

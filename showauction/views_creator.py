@@ -73,6 +73,7 @@ def creator_auctions(request):
     return render(request, 'showauction/creator.html', {
         'auctions': auctions,
         'presets': presets,
+        'nav_active': 'showauktion',
     })
 
 
@@ -145,7 +146,10 @@ def creator_auction_new(request):
             return redirect('showauction_creator_new')
         messages.success(request, f'Auktion #{auction.pk} als Entwurf angelegt — Spieler ist im Raum.')
         return redirect('showauction_creator_edit', pk=auction.pk)
-    return render(request, 'showauction/creator_new.html', {'presets': presets})
+    return render(request, 'showauction/creator_new.html', {
+        'presets': presets,
+        'nav_active': 'showauktion',
+    })
 
 
 @staff_member_required
@@ -160,6 +164,7 @@ def creator_auction_edit(request, pk):
         'bids': bids,
         'cfg_pretty': json.dumps(a.config_snapshot, indent=2, ensure_ascii=False),
         'conditions_pretty': json.dumps(a.conditions or [], indent=2, ensure_ascii=False),
+        'nav_active': 'showauktion',
     })
 
 
