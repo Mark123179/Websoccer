@@ -4,7 +4,7 @@
 {% block title %}{{ player.full_name }} — Auktion{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -48,7 +48,6 @@
     </div>
     {% endif %}
 
-    <div class="sxa-panels">
     <div class="sxa-detail-hero">
         <div class="sxa-show-col">
             <div class="sxa-show-logo">
@@ -150,7 +149,8 @@
         </div>
     </div>
 
-        <div class="sxa-panel sxa-auction-data-panel">
+    <div class="sxa-panels">
+        <div class="sxa-panel">
             <h3>Auktionsdaten</h3>
             <div class="sxa-data-row"><span>Auktionstyp</span><span class="is-type">{{ a.type_name }}</span></div>
             <div class="sxa-data-row"><span>Startpreis</span><span class="is-mono">{{ start_fmt }}</span></div>
@@ -211,38 +211,9 @@
                 {% endfor %}
             </div>
             {% endif %}
-
-            <div class="sxa-cta-stack">
-                {% if a.status == 'running' %}
-                    {% if s.richtung == 'fallend' or s.richtung == 'fest' %}
-                    <button class="sxa-btn-bid" data-sxa-open-buy {% if s.teilnahme_grund %}disabled{% endif %}>
-                        {% if s.richtung == 'fallend' %}Jetzt zuschlagen — {{ s.preis_aktuell_fmt }}{% else %}Kaufen für {{ start_fmt }}{% endif %}
-                    </button>
-                    {% else %}
-                    <button class="sxa-btn-bid" data-sxa-open-bid {% if s.teilnahme_grund %}disabled{% endif %}>
-                        {% if s.richtung == 'verdeckt' %}{% if s.mein_gebot %}Verdecktes Gebot ändern{% else %}Verdecktes Gebot abgeben{% endif %}{% else %}Gebot abgeben{% endif %}
-                    </button>
-                    {% endif %}
-                    {% if s.richtung == 'verdeckt' and s.mein_gebot_fmt %}
-                    <div class="sxa-my-bid-line">Dein verdecktes Gebot: {{ s.mein_gebot_fmt }}</div>
-                    {% elif s.mein_fuehrend and s.mein_gebot_fmt %}
-                    <div class="sxa-my-bid-line">Du führst mit {{ s.mein_gebot_fmt }}</div>
-                    {% elif s.mein_gebot_fmt %}
-                    <div class="sxa-my-bid-line" style="color: var(--yellow);">Du wurdest überboten — dein Gebot: {{ s.mein_gebot_fmt }}</div>
-                    {% endif %}
-                {% endif %}
-
-                {% if a.status == 'running' or a.status == 'scheduled' %}
-                <button class="sxa-btn-watch{% if s.beobachtet %} is-watched{% endif %}" data-sxa-watch="{% url 'showauction_watch' a.pk %}">
-                    <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1-5.9L3.5 9.7l5.9-.9z"></path></svg>
-                    <span data-sxa-watch-label>{% if s.beobachtet %}Auf der Beobachtungsliste{% else %}Beobachten{% endif %}</span>
-                </button>
-                <div class="sxa-watch-hint">Auf der Beobachtungsliste erhältst du Benachrichtigungen bei Überbietung, Endspurt und Auktionsende.</div>
-                {% endif %}
-            </div>
         </div>
 
-        <div class="sxa-panel sxa-positions-panel">
+        <div class="sxa-panel">
             <h3>Positionen</h3>
             <div class="sxa-pitch">
                 {% for slot in position_slots %}
@@ -276,6 +247,35 @@
             {% if s.teilnahme_grund %}
             <div class="sxa-rule-blocked">Du kannst nicht mitbieten: {{ s.teilnahme_grund }}</div>
             {% endif %}
+
+            <div class="sxa-cta-stack">
+                {% if a.status == 'running' %}
+                    {% if s.richtung == 'fallend' or s.richtung == 'fest' %}
+                    <button class="sxa-btn-bid" data-sxa-open-buy {% if s.teilnahme_grund %}disabled{% endif %}>
+                        {% if s.richtung == 'fallend' %}Jetzt zuschlagen — {{ s.preis_aktuell_fmt }}{% else %}Kaufen für {{ start_fmt }}{% endif %}
+                    </button>
+                    {% else %}
+                    <button class="sxa-btn-bid" data-sxa-open-bid {% if s.teilnahme_grund %}disabled{% endif %}>
+                        {% if s.richtung == 'verdeckt' %}{% if s.mein_gebot %}Verdecktes Gebot ändern{% else %}Verdecktes Gebot abgeben{% endif %}{% else %}Gebot abgeben{% endif %}
+                    </button>
+                    {% endif %}
+                    {% if s.richtung == 'verdeckt' and s.mein_gebot_fmt %}
+                    <div class="sxa-my-bid-line">Dein verdecktes Gebot: {{ s.mein_gebot_fmt }}</div>
+                    {% elif s.mein_fuehrend and s.mein_gebot_fmt %}
+                    <div class="sxa-my-bid-line">Du führst mit {{ s.mein_gebot_fmt }}</div>
+                    {% elif s.mein_gebot_fmt %}
+                    <div class="sxa-my-bid-line" style="color: var(--yellow);">Du wurdest überboten — dein Gebot: {{ s.mein_gebot_fmt }}</div>
+                    {% endif %}
+                {% endif %}
+
+                {% if a.status == 'running' or a.status == 'scheduled' %}
+                <button class="sxa-btn-watch{% if s.beobachtet %} is-watched{% endif %}" data-sxa-watch="{% url 'showauction_watch' a.pk %}">
+                    <svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.9z"></path></svg>
+                    <span data-sxa-watch-label>{% if s.beobachtet %}Auf der Beobachtungsliste{% else %}Beobachten{% endif %}</span>
+                </button>
+                <div class="sxa-watch-hint">Auf der Beobachtungsliste erhältst du Benachrichtigungen bei Überbietung, Endspurt und Auktionsende.</div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -336,5 +336,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'showauction/showauction.js' %}?v=7"></script>
+<script src="{% static 'showauction/showauction.js' %}?v=6"></script>
 {% endblock %}
