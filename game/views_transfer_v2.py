@@ -22,6 +22,7 @@ from .models import Club, PlayerMarketValueSnapshot
 from .transfer_v2 import services
 from .transfer_v2.models import (
     DealRequest, ListingPin, RumorNews, TransferBid, TransferListing,
+    TransferRecord, TransferRecordPlayer, TransferReport, YouthLevyPayment,
 )
 from .transfer_v2.services import TransferActionError
 from .transfer_v2.youth_levy import calc_youth_levy
@@ -265,7 +266,14 @@ def transfer_shell_context(club):
 # ── Ticker ────────────────────────────────────────────────────────────────
 
 def _ticker_parts(listings, now):
-    """Laufband-Segmente aus vorhandenen Daten (KEINE neuen Inhalte)."""
+    """Laufband-Segmente aus vorhandenen Daten + Ereignis-Schicht (Task #823).
+
+    Bestehende Kategorien (Gebote, Endspurt, Anti-Sniping, Vereinslose,
+    Neue Listings, Leih-Deadline) bleiben erhalten; zusätzlich speisen
+    vollzogene Transfers/Leihen (TransferRecord) und frische Gerüchte
+    (RumorNews) das Laufband aus derselben Ereignis-Quelle wie die
+    Gerüchte-Engine.
+    """
     parts = []
 
     def plain(t):
@@ -333,6 +341,54 @@ def _ticker_parts(listings, now):
         plain('NEU AUF DER LISTE: ')
         player(l.player)
         plain(f' ab {_euro(l.min_bid)} +++ ')
+
+    # Vollzogene Transfers/Leihen (Ereignis-Schicht: TransferRecord, < 48 h).
+    done = (TransferRecord.objects
+            .filter(created_at__gte=now - timedelta(hours=48),
+                    is_cancelled=False)
+            .select_related('club_a', 'club_b')
+            .prefetch_related('players__player')
+            .order_by('-created_at')[:3])
+    for rec in done:
+        rps = list(rec.players.all())
+        lead_rp = next((rp for rp in rps if rp.player_id), None)
+        p = lead_rp.player if lead_rp else None
+        if rec.kind == TransferRecord.KIND_LOAN:
+            label = 'LEIHE FIX: '
+        elif rec.kind == TransferRecord.KIND_SWAP:
+            label = 'TAUSCH FIX: '
+        else:
+            label = 'TRANSFER FIX: '
+        plain(label)
+        if p is not None:
+            player(p)
+        else:
+            plain('Paket-Deal')
+        # Zielverein aus SPIELER-Sicht: SIDE_A wechselt zu club_b,
+        # SIDE_B wechselt zu club_a (z. B. angenommenes Kaufangebot).
+        if rec.kind == TransferRecord.KIND_SWAP:
+            dest, fee = rec.club_b, (rec.cash_b or rec.cash_a)
+        elif (lead_rp is not None
+              and lead_rp.side == TransferRecordPlayer.SIDE_B):
+            dest, fee = rec.club_a, (rec.cash_a or rec.cash_b)
+        else:
+            dest, fee = rec.club_b, (rec.cash_b or rec.cash_a)
+        if dest:
+            plain(' zu ')
+            clubpart(dest)
+        if rec.is_admin or rec.kind == TransferRecord.KIND_ADMIN:
+            plain(' (Admin) +++ ')
+        elif fee:
+            plain(f' für {_euro(fee)} +++ ')
+        else:
+            plain(' +++ ')
+
+    # Frisches Gerücht (dieselbe Ereignis-Quelle wie die Gerüchte-Karten).
+    fresh_rumor = (RumorNews.objects
+                   .filter(published_at__gte=now - timedelta(hours=24))
+                   .order_by('-published_at').first())
+    if fresh_rumor is not None:
+        plain(f'GERÜCHT ({fresh_rumor.outlet}): {fresh_rumor.headline} +++ ')
 
     # Leih-Deadline.
     from .transfer_v2.calendar_dates import loan_deadline_date
@@ -429,6 +485,252 @@ def transfer_market(request):
         **transfer_shell_context(club),
     }
     return render(request, 'game/transfer_v2/transfermarkt.html', context)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  HISTORIE (Reiter 5) — öffentliche Transfer-/Leih-Historie + Meldung
+# ══════════════════════════════════════════════════════════════════════════
+
+_HIST_PER_PAGE = 6
+
+
+def _levy_rows_for_record(record):
+    """Gebuchte Jugendabgaben eines Records → Aufklapp-Zeilen."""
+    rows = []
+    for lv in (YouthLevyPayment.objects.filter(record=record)
+               .select_related('payer_club', 'receiver_club', 'player')):
+        payer = lv.payer_club.name if lv.payer_club_id else '—'
+        recv = lv.receiver_club.name if lv.receiver_club_id else '—'
+        rows.append({
+            'who': payer,
+            'txt': f'an {recv}',
+            'amt': _euro(lv.amount),
+        })
+    return rows
+
+
+def _player_side_rows(record, side):
+    rows = []
+    for rp in (TransferRecordPlayer.objects
+               .filter(record=record, side=side)
+               .select_related('player')):
+        p = rp.player
+        if p is None:
+            continue
+        hp, np_ = _positions(p)
+        rows.append({
+            'name': p.full_name,
+            'age': p.age,
+            'hp': hp,
+            'np': np_,
+            'flag': p.flag_url,
+            'mw_fmt': _euro(rp.market_value_at_transfer or p.market_value),
+            'tm_url': _tm_url(p.full_name),
+            'player_url': reverse('player_detail', args=[p.pk]),
+        })
+    return rows
+
+
+def _record_direction(record):
+    """Anzeige-Richtung eines Nicht-Tausch-Records aus SPIELER-Sicht.
+
+    SIDE_A-Spieler wechseln club_a → club_b (Gegenwert cash_b);
+    SIDE_B-Spieler wechseln club_b → club_a (Gegenwert cash_a) — z. B. ein
+    angenommenes Kaufangebot des Initiators für einen Spieler des
+    Empfängers. NIE stur club_a → club_b rendern (Review Task #823).
+
+    Rückgabe: (abgebender Club|None, aufnehmender Club|None, fee_decimal,
+    reversed_flag) — reversed_flag=True bei SIDE_B-Richtung (club_b → club_a).
+    """
+    lead = (TransferRecordPlayer.objects.filter(record=record)
+            .select_related('player').first())
+    side_b = lead is not None and lead.side == TransferRecordPlayer.SIDE_B
+    if side_b:
+        return (record.club_b, record.club_a,
+                record.cash_a or record.cash_b, True)
+    return (record.club_a, record.club_b,
+            record.cash_b or record.cash_a, False)
+
+
+def _record_row(record):
+    """Ein TransferRecord → Template-Dict (Zeile + Aufklapp-Zusammenfassung)."""
+    a_rows = _player_side_rows(record, TransferRecordPlayer.SIDE_A)
+    b_rows = _player_side_rows(record, TransferRecordPlayer.SIDE_B)
+    is_swap = record.kind == TransferRecord.KIND_SWAP
+    is_admin = record.is_admin or record.kind == TransferRecord.KIND_ADMIN
+    is_loan = record.kind == TransferRecord.KIND_LOAN
+
+    # Richtung: bei Tausch neutral club_a ⇄ club_b; sonst aus den
+    # Spieler-Seiten abgeleitet (SIDE_B-Deals laufen club_b → club_a).
+    # reversed_dir dreht auch die Detail-Panels ("X gibt"): beim SIDE_B-Deal
+    # gibt der abgebende Verein die B-Spieler, nicht die A-Spieler.
+    reversed_dir = False
+    if is_swap:
+        from_club, to_club = record.club_a, record.club_b
+        fee_val = None
+    else:
+        from_club, to_club, fee_val, reversed_dir = _record_direction(record)
+    from_name = from_club.name if from_club else 'Vereinslos'
+    to_name = to_club.name if to_club else '—'
+
+    # Titel-Spieler + Bild (Erstspieler, bei Tausch generisch).
+    lead = a_rows[0] if a_rows else (b_rows[0] if b_rows else None)
+    if is_swap:
+        player_label = 'Tauschgeschäft'
+        sub_plain = f'{len(a_rows)} ⇄ {len(b_rows)} Spieler'
+        img = ''
+        arrow = '⇄'
+    else:
+        player_label = lead['name'] if lead else '—'
+        sub_plain = ''
+        img = ''
+        if lead:
+            try:
+                first = TransferRecordPlayer.objects.filter(
+                    record=record).select_related('player').first()
+                img = first.player.portrait_url if first and first.player else ''
+            except Exception:
+                img = ''
+        arrow = '→'
+
+    # Ablöse-Anzeige.
+    if is_admin:
+        fee_fmt = '— (Admin)'
+    elif is_loan:
+        fee_fmt = _euro(fee_val) if fee_val else 'ablösefrei'
+    elif is_swap:
+        if record.cash_b:
+            fee_fmt = '+ ' + _euro(record.cash_b)
+        elif record.cash_a:
+            fee_fmt = '+ ' + _euro(record.cash_a)
+        else:
+            fee_fmt = 'reiner Tausch'
+    else:
+        fee_fmt = _euro(fee_val) if fee_val else 'ablösefrei'
+
+    timing = record.get_timing_display()
+    if is_loan:
+        ev = record.get_loan_event_display() if record.loan_event else ''
+        until = record.get_loan_until_display() if record.loan_until else ''
+        timing = ' · '.join(x for x in (ev, until) if x) or timing
+
+    return {
+        'id': record.pk,
+        'date': f'{record.date.day:02d}.{record.date.month:02d}.{record.date.year}',
+        'kind': record.kind,
+        'kind_label': record.get_kind_display(),
+        'player': player_label,
+        'img': img,
+        'sub_plain': sub_plain,
+        'is_swap': is_swap,
+        'is_admin': is_admin,
+        'is_loan': is_loan,
+        'cancelled': record.is_cancelled,
+        'from_name': from_name,
+        'to_name': to_name,
+        'from_crest': (from_club.crest_static_path if from_club else ''),
+        'to_crest': (to_club.crest_static_path if to_club else ''),
+        'from_url': (reverse('club_detail', args=[from_club.pk])
+                     if from_club else ''),
+        'to_url': (reverse('club_detail', args=[to_club.pk])
+                   if to_club else ''),
+        'arrow': arrow,
+        'fee_fmt': fee_fmt,
+        'timing': timing,
+        # Detail-Panels folgen der ANZEIGE-Richtung: links = abgebender
+        # Verein. Bei SIDE_B-Richtung (reversed_dir) gibt der abgebende
+        # Verein die B-Spieler — Panels tauschen; Tausch bleibt neutral A/B.
+        'left_label': f'{from_name} gibt',
+        'right_label': f'{to_name} gibt',
+        'left_rows': b_rows if reversed_dir else a_rows,
+        'right_rows': a_rows if reversed_dir else b_rows,
+        'levy_rows': _levy_rows_for_record(record),
+    }
+
+
+@login_required
+def transfer_history(request):
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+
+    seg = request.GET.get('seg', 'transfers')
+    if seg not in ('transfers', 'leihen'):
+        seg = 'transfers'
+    only_mine = request.GET.get('mine') == '1'
+
+    qs = TransferRecord.objects.select_related('club_a', 'club_b')
+    if seg == 'leihen':
+        qs = qs.filter(kind=TransferRecord.KIND_LOAN)
+    else:
+        qs = qs.exclude(kind=TransferRecord.KIND_LOAN)
+    if only_mine:
+        from django.db.models import Q
+        qs = qs.filter(Q(club_a=club) | Q(club_b=club))
+
+    all_records = list(qs)
+    total = len(all_records)
+    pages = max(1, (total + _HIST_PER_PAGE - 1) // _HIST_PER_PAGE)
+    try:
+        page = int(request.GET.get('page', '1'))
+    except (TypeError, ValueError):
+        page = 1
+    page = max(1, min(page, pages))
+    start = (page - 1) * _HIST_PER_PAGE
+    rows = [_record_row(r) for r in all_records[start:start + _HIST_PER_PAGE]]
+
+    def _url(seg_, mine_, page_):
+        parts = [f'seg={seg_}']
+        if mine_:
+            parts.append('mine=1')
+        parts.append(f'page={page_}')
+        return '?' + '&'.join(parts)
+
+    hist_info = (f'{start + 1}–{min(start + _HIST_PER_PAGE, total)} von {total}'
+                 if total else 'Keine Einträge')
+
+    context = {
+        'game_header': build_game_header(
+            'Transfers', 'Historie · Öffentlich einsehbar', back_url='/'),
+        'active_tab': 'historie',
+        'club': club,
+        'seg': seg,
+        'only_mine': only_mine,
+        'rows': rows,
+        'page': page,
+        'pages_range': list(range(1, pages + 1)),
+        'total': total,
+        'hist_info': hist_info,
+        'url_transfers': _url('transfers', only_mine, 1),
+        'url_leihen': _url('leihen', only_mine, 1),
+        'url_mine': _url(seg, not only_mine, 1),
+        'seg_urls_page': [(_url(seg, only_mine, p), p) for p in range(1, pages + 1)],
+        **transfer_shell_context(club),
+    }
+    return render(request, 'game/transfer_v2/historie.html', context)
+
+
+@login_required
+@require_POST
+def transfer_report_create(request):
+    """Meldet einen Transfer an die Transferaufsicht (Begründung Pflicht)."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    record = get_object_or_404(TransferRecord, pk=request.POST.get('record_id'))
+    reason = (request.POST.get('reason') or '').strip()
+    seg = request.GET.get('seg', 'transfers')
+    back = f"{reverse('transfer_history')}?seg={seg}"
+    if not reason:
+        messages.error(request, 'Begründung ist Pflicht.')
+        return redirect(back)
+    report = TransferReport.objects.create(
+        record=record, reporter_club=club, reason=reason[:500])
+    from .transfer_v2 import push
+    push.report_received(report)
+    messages.success(
+        request, 'Meldung eingereicht — die Transferaufsicht wurde informiert.')
+    return redirect(back)
 
 
 # ── POST-Endpunkte ────────────────────────────────────────────────────────

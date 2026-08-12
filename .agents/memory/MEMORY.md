@@ -94,3 +94,4 @@
 - [Show-Auktion V1](showauction-v1.md) — validate_config wirft+normalisiert (keine Fehlerliste); Escrow des Führenden bis consume = Kader/Geld-Schutz; Coin = letztes Lock; Dutch-Schritt = % vom MW.
 - [Object-Storage Bucket-ID Pflicht](object-storage-bucket.md) — nie Client() direkt; get_client() übergibt DEFAULT_OBJECT_STORAGE_BUCKET_ID; stille except-pass-Fallbacks versteckten den kaputten Bucket.
 - [Transfersystem v2 Fundament](transfer-v2-foundation.md) — Reservierungszeilen sind Wahrheit (Cache nur Abbild); Settlement re-validiert Zustand + Kadergrenzen als Einheit; Konflikte enden deterministisch mit voller Rückabwicklung.
+- [Transfer v2 Ereignis-Schicht](transfer-v2-event-layer.md) — Gerüchte/Push/Ticker-Hooks IMMER außerhalb atomic-Blöcke, nebenwirkungs-isoliert; RNG injizierbar für Tests; max. 1 Gerücht je Spieler+Event+Tag.

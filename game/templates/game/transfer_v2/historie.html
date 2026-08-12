@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=7">
+{% endblock %}
+
+{% block content %}
+<div class="tv2-wrap" id="tv2-root">
+
+  {% if messages %}
+  <div class="tv2-flash-bar">
+    {% for m in messages %}
+    <div class="tv2-flash tv2-flash--{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% include 'game/transfer_v2/_tabs.html' %}
+
+  <div class="tv2-sec-head">
+    <span class="tv2-sec-title">Historie</span>
+    <span class="tv2-sec-sub">Vollzogene Transfers &amp; Leihen · öffentlich einsehbar</span>
+  </div>
+
+  <div class="tv2-hist-toolbar">
+    <div class="tv2-chip-group">
+      <a class="tv2-chip{% if seg == 'transfers' %} is-on{% endif %}" href="{{ url_transfers }}">Transfers</a>
+      <a class="tv2-chip{% if seg == 'leihen' %} is-on{% endif %}" href="{{ url_leihen }}">Leihen</a>
+    </div>
+    <a class="tv2-chip{% if only_mine %} is-on{% endif %}" href="{{ url_mine }}">Nur meine</a>
+    <span class="tv2-hist-note">{{ hist_info }}</span>
+  </div>
+
+  <section class="tv2-panel tv2-hist-panel">
+    <div class="tv2-hist-head">
+      <span>Datum</span><span>Spieler</span><span>Von → Nach</span>
+      <span class="tv2-right">Ablöse</span><span>Zeitpunkt</span><span></span>
+    </div>
+
+    {% for r in rows %}
+    <div class="tv2-hist-item{% if r.cancelled %} tv2-hist-item--cancelled{% endif %}">
+      <div class="tv2-hist-row" data-hist-toggle="{{ r.id }}" title="Zusammenfassung aufklappen">
+        <span class="tv2-hist-date">{{ r.date }}</span>
+        <div class="tv2-hist-player">
+          {% if r.img %}<img class="tv2-hist-img" src="{{ r.img }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% endif %}
+          <div class="tv2-hist-pmeta">
+            <div class="tv2-hist-name">{{ r.player }}</div>
+            {% if r.sub_plain %}<div class="tv2-hist-sub">{{ r.sub_plain }}</div>{% endif %}
+            {% if r.cancelled %}<div class="tv2-hist-sub tv2-hist-cancel">Admin-storniert</div>{% endif %}
+          </div>
+        </div>
+        <div class="tv2-hist-clubs">
+          {% if r.from_crest %}<img class="tv2-hist-crest" src="{{ r.from_crest }}" alt="">{% endif %}
+          <span class="tv2-hist-club">{{ r.from_name }}</span>
+          <span class="tv2-hist-arrow">{{ r.arrow }}</span>
+          {% if r.to_crest %}<img class="tv2-hist-crest" src="{{ r.to_crest }}" alt="">{% endif %}
+          <span class="tv2-hist-club">{{ r.to_name }}</span>
+        </div>
+        <span class="tv2-right tv2-hist-fee{% if r.is_admin %} tv2-hist-fee--admin{% endif %}">{{ r.fee_fmt }}</span>
+        <span class="tv2-hist-timing">{{ r.timing }}</span>
+        <form method="post" action="{% url 'transfer_report_create' %}?seg={{ seg }}"
+              class="tv2-hist-report-form" data-report="{{ r.id }}" onsubmit="return false;">
+          {% csrf_token %}
+          <input type="hidden" name="record_id" value="{{ r.id }}">
+          <button type="button" class="tv2-hist-report-btn" title="Transfer melden"
+                  data-report-open="{{ r.id }}" data-report-label="{{ r.player }} ({{ r.date }})">!</button>
+        </form>
+      </div>
+
+      <div class="tv2-hist-detail" data-hist-detail="{{ r.id }}" hidden>
+        <div class="tv2-hist-sides">
+          <div class="tv2-hist-side">
+            <div class="tv2-hist-side-label">{{ r.left_label }}</div>
+            {% for sp in r.left_rows %}
+            <div class="tv2-hist-side-row">
+              <a class="tv2-hist-side-name" href="{{ sp.player_url }}">{{ sp.name }}</a>
+              <span class="tv2-hist-side-meta">{{ sp.age }} · <span class="tv2-green">{{ sp.hp }}</span>{% if sp.np %} · <span class="tv2-gold">{{ sp.np }}</span>{% endif %} · MW <a href="{{ sp.tm_url }}" target="_blank" rel="noopener">{{ sp.mw_fmt }}</a></span>
+            </div>
+            {% empty %}<div class="tv2-hist-side-empty">—</div>{% endfor %}
+          </div>
+          <div class="tv2-hist-side">
+            <div class="tv2-hist-side-label">{{ r.right_label }}</div>
+            {% for sp in r.right_rows %}
+            <div class="tv2-hist-side-row">
+              <a class="tv2-hist-side-name" href="{{ sp.player_url }}">{{ sp.name }}</a>
+              <span class="tv2-hist-side-meta">{{ sp.age }} · <span class="tv2-green">{{ sp.hp }}</span>{% if sp.np %} · <span class="tv2-gold">{{ sp.np }}</span>{% endif %} · MW <a href="{{ sp.tm_url }}" target="_blank" rel="noopener">{{ sp.mw_fmt }}</a></span>
+            </div>
+            {% empty %}<div class="tv2-hist-side-empty">—</div>{% endfor %}
+          </div>
+        </div>
+        {% if r.levy_rows %}
+        <div class="tv2-hist-levy">
+          <div class="tv2-hist-levy-label">Jugendspielerabgabe</div>
+          {% for lv in r.levy_rows %}
+          <div class="tv2-hist-levy-row">
+            <span><b>{{ lv.who }}</b> zahlt {{ lv.txt }}</span>
+            <span class="tv2-gold">− {{ lv.amt }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <div class="tv2-hist-timing-note">Transferzeitpunkt: <span class="tv2-cyan">{{ r.timing }}</span></div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="tv2-hist-empty">Noch keine Einträge in dieser Ansicht.</div>
+    {% endfor %}
+
+    {% if pages_range|length > 1 %}
+    <div class="tv2-hist-pager">
+      {% for url, p in seg_urls_page %}
+      <a class="tv2-chip{% if p == page %} is-on{% endif %}" href="{{ url }}{% if only_mine %}&mine=1{% endif %}">{{ p }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </section>
+
+  <!-- ── MELDEN-MODAL ─────────────────────────────────────────────── -->
+  <div class="tv2-modal-overlay" id="tv2-report-overlay" hidden>
+    <div class="tv2-report-modal">
+      <div class="tv2-report-title">Transfer melden</div>
+      <div class="tv2-report-sub"><span id="tv2-report-target"></span> — die Meldung geht an die Transferaufsicht. Begründung ist Pflicht.</div>
+      <form method="post" action="{% url 'transfer_report_create' %}?seg={{ seg }}" id="tv2-report-form">
+        {% csrf_token %}
+        <input type="hidden" name="record_id" id="tv2-report-record" value="">
+        <textarea name="reason" id="tv2-report-reason" placeholder="Begründung (Pflichtfeld) …" required></textarea>
+        <div class="tv2-report-actions">
+          <button type="button" class="tv2-react-btn tv2-react-btn--nc" id="tv2-report-cancel">Abbrechen</button>
+          <button type="submit" class="tv2-react-btn tv2-react-btn--deny">Meldung einreichen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById('tv2-root');
+  if (!root) return;
+  // Aufklappen der Zusammenfassung.
+  root.addEventListener('click', function (e) {
+    var toggle = e.target.closest('[data-hist-toggle]');
+    if (toggle && !e.target.closest('[data-report-open]')) {
+      var id = toggle.getAttribute('data-hist-toggle');
+      var det = root.querySelector('[data-hist-detail="' + id + '"]');
+      if (det) det.hidden = !det.hidden;
+      return;
+    }
+    var rbtn = e.target.closest('[data-report-open]');
+    if (rbtn) {
+      e.stopPropagation();
+      var rid = rbtn.getAttribute('data-report-open');
+      document.getElementById('tv2-report-record').value = rid;
+      document.getElementById('tv2-report-target').textContent =
+        rbtn.getAttribute('data-report-label') || '';
+      document.getElementById('tv2-report-reason').value = '';
+      document.getElementById('tv2-report-overlay').hidden = false;
+    }
+  });
+  document.getElementById('tv2-report-cancel').addEventListener('click', function () {
+    document.getElementById('tv2-report-overlay').hidden = true;
+  });
+})();
+</script>
+{% endblock %}

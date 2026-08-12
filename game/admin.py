@@ -4069,3 +4069,71 @@ class RefereeAdmin(admin.ModelAdmin):
             'vorsaison_elfmeter', 'vorsaison_umstritten', 'vorsaison_competitions',
         )}),
     )
+
+
+# ── Transferaufsicht: Meldungen (Transfersystem v2) ────────────────────────
+
+from .transfer_v2.models import TransferReport
+
+
+@admin.register(TransferReport)
+class TransferReportAdmin(admin.ModelAdmin):
+    """Bearbeitungspfad der Transferaufsicht.
+
+    Statuswechsel weg von „Offen" gilt als Entscheidung: resolved_at wird
+    gesetzt und der meldende Verein per Push über das Ergebnis informiert.
+    """
+    list_display = ('id', 'record', 'reporter_club', 'kurz_grund',
+                    'status', 'created_at', 'resolved_at')
+    list_filter = ('status',)
+    search_fields = ('reason', 'reporter_club__name')
+    readonly_fields = ('record', 'reporter_club', 'reason',
+                       'created_at', 'resolved_at')
+    ordering = ('created_at',)
+    actions = ('mark_dismissed', 'mark_under_review')
+
+    @admin.display(description='Begründung')
+    def kurz_grund(self, obj):
+        r = obj.reason or ''
+        return r[:60] + ('…' if len(r) > 60 else '')
+
+    def _resolve(self, request, report, status):
+        from django.utils import timezone as _tz
+        from .transfer_v2 import push as _tpush
+        if report.status == status:
+            return False
+        report.status = status
+        report.resolved_at = _tz.now() if status != TransferReport.STATUS_OPEN else None
+        report.save(update_fields=['status', 'resolved_at'])
+        if status != TransferReport.STATUS_OPEN:
+            label = dict(TransferReport.STATUS_CHOICES).get(status, status)
+            _tpush.report_resolved(report, label)
+        return True
+
+    def save_model(self, request, obj, form, change):
+        """Statuswechsel im Änderungsformular löst den Ergebnis-Push aus."""
+        resolved_now = False
+        if change and 'status' in getattr(form, 'changed_data', []):
+            from django.utils import timezone as _tz
+            if obj.status != TransferReport.STATUS_OPEN:
+                obj.resolved_at = _tz.now()
+                resolved_now = True
+            else:
+                obj.resolved_at = None
+        super().save_model(request, obj, form, change)
+        if resolved_now:
+            from .transfer_v2 import push as _tpush
+            label = dict(TransferReport.STATUS_CHOICES).get(obj.status, obj.status)
+            _tpush.report_resolved(obj, label)
+
+    @admin.action(description='Ausgewählte Meldungen abweisen')
+    def mark_dismissed(self, request, queryset):
+        n = sum(1 for r in queryset if self._resolve(
+            request, r, TransferReport.STATUS_DISMISSED))
+        self.message_user(request, f'{n} Meldung(en) abgewiesen.')
+
+    @admin.action(description='Ausgewählte Meldungen ans Sportgericht (in Überprüfung)')
+    def mark_under_review(self, request, queryset):
+        n = sum(1 for r in queryset if self._resolve(
+            request, r, TransferReport.STATUS_UNDER_REVIEW))
+        self.message_user(request, f'{n} Meldung(en) in Überprüfung.')

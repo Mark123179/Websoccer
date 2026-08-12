@@ -10,6 +10,7 @@ Club-Zeilen (Race-Safety, Master-Spec §6). Kein Auto-Bieten.
     create_deal_request / accept_deal / decline_deal / withdraw_deal
     create_loan_listing / request_loan / accept_loan_request
 """
+import logging
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
@@ -25,8 +26,27 @@ from .models import (
     PendingTransfer, TransferBid, TransferListing, TransferRecord,
 )
 
+logger = logging.getLogger(__name__)
+
 CENT = Decimal('0.01')
 ZERO = Decimal('0.00')
+
+
+def _after_commit(hook):
+    """Registriert einen Nach-Commit-Hook für Push/Ereignis-Nebenwirkungen.
+
+    via transaction.on_commit(): läuft erst nach dem dauerhaften Commit der
+    ÄUSSERSTEN Transaktion (auch wenn der Service in einem umgebenden
+    atomic-Block aufgerufen wird), nie unter Lock, nie bei Rollback; ohne
+    aktive Transaktion sofort. Best-effort: JEDE Ausnahme (auch aus
+    Empfänger-Lookups) wird geloggt, nie propagiert.
+    """
+    def _run():
+        try:
+            hook()
+        except Exception:
+            logger.exception('Transfer-Nach-Commit-Hook fehlgeschlagen')
+    transaction.on_commit(_run)
 
 
 class TransferActionError(Exception):
@@ -35,6 +55,55 @@ class TransferActionError(Exception):
 
 def _q(v):
     return Decimal(str(v)).quantize(CENT)
+
+
+def _emit_transfer_done(record, player, saison):
+    """Meldet einen vollzogenen Kauf-/Options-Transfer an die Ereignis-Schicht.
+
+    Nebenwirkungs-isoliert (events.emit_event fängt Ausnahmen ab). Betroffen
+    = abgebender Verein (dessen Manager reagieren darf); die Summe ist die an
+    den Verkäufer geflossene Ablöse (cash_b).
+    """
+    if record is None or player is None:
+        return
+    from . import events
+    events.emit_event(
+        events.EVENT_TRANSFER_DONE, player=player,
+        club_a=record.club_a, club_b=record.club_b,
+        affected_club=record.club_a,
+        betrag=record.cash_b or record.cash_a, saison=saison)
+
+
+def _emit_deal_done(record, saison):
+    """Meldet einen vollzogenen Deal-Transfer (Kauf/Verkauf/Tausch) korrekt
+    aus SPIELER-Sicht an die Ereignis-Schicht.
+
+    Die Wechselrichtung wird aus den TransferRecordPlayer-Seiten abgeleitet
+    (NICHT aus der Initiator-Richtung des DealRequests): SIDE_A-Spieler
+    wechseln club_a → club_b (Gegenwert = cash_b), SIDE_B-Spieler wechseln
+    club_b → club_a (Gegenwert = cash_a). Max. 1 Gerücht pro Vorgang —
+    ausgespielt wird der Erstspieler; bei reinen SIDE_B-Deals (Kaufangebot
+    des Initiators) also mit korrekt gedrehter Richtung.
+    """
+    if record is None:
+        return
+    from . import events
+    from .models import TransferRecordPlayer
+    entries = list(TransferRecordPlayer.objects
+                   .filter(record=record).select_related('player'))
+    lead = next((e for e in entries if e.player_id), None)
+    if lead is None:
+        return
+    if lead.side == TransferRecordPlayer.SIDE_A:
+        abgebend, aufnehmend = record.club_a, record.club_b
+        betrag = record.cash_b or record.cash_a
+    else:
+        abgebend, aufnehmend = record.club_b, record.club_a
+        betrag = record.cash_a or record.cash_b
+    events.emit_event(
+        events.EVENT_TRANSFER_DONE, player=lead.player,
+        club_a=abgebend, club_b=aufnehmend, affected_club=abgebend,
+        betrag=betrag, saison=saison)
 
 
 # ── Gebots-Arithmetik ─────────────────────────────────────────────────────
@@ -149,6 +218,13 @@ def create_listing(player, seller, *, min_bid, buy_now=None, timing='SOFORT',
             listed_at=timezone.now(), ends_at=ends_at,
             status=TransferListing.STATUS_ACTIVE,
         )
+    # Ereignis-Schicht (Gerücht + Ticker) und Push an Beobachter — via
+    # on_commit, nebenwirkungs-isoliert (dürfen den Vorgang nie kippen).
+    from . import events, push
+    _after_commit(lambda: events.emit_event(
+        events.EVENT_LISTING_CREATED, player=player, club_a=seller,
+        affected_club=seller, betrag=_q(min_bid), saison=saison))
+    _after_commit(lambda: push.watchlist_listed(player, _q(min_bid)))
     return listing
 
 
@@ -206,6 +282,7 @@ def place_bid(listing, club, amount, *, saison=None):
             escrow.release_money(prev_club, escrow.bid_ref(listing.pk, prev_club.pk))
 
         # Anti-Sniping: Gebot < 60 min vor Ende → +24 h.
+        extended = False
         if first_bid:
             hours = int(get_param('TRANSFER_FREE_AGENT_STUNDEN', saison))
             listing.ends_at = now + timezone.timedelta(hours=hours)
@@ -215,12 +292,24 @@ def place_bid(listing, club, amount, *, saison=None):
             if (listing.ends_at - now) < timezone.timedelta(minutes=fenster):
                 listing.ends_at = listing.ends_at + timezone.timedelta(hours=verl)
                 listing.extensions += 1
+                extended = True
         listing.save(update_fields=['ends_at', 'extensions'])
 
         # Sofortkauf ersetzt: Höchstgebot ≥ Sofortkaufpreis.
         if listing.buy_now is not None and amount >= listing.buy_now:
             listing.buy_now = None
             listing.save(update_fields=['buy_now'])
+    # Push + Ereignis via on_commit (nebenwirkungs-isoliert).
+    from . import events, push
+    if prev_club is not None and prev_club.pk != bidder.pk:
+        _after_commit(lambda: push.bid_outbid(prev_club, listing, amount))
+    _after_commit(lambda: push.pinned_new_bid(listing, bidder, amount))
+    if extended:
+        _after_commit(lambda: push.pinned_extended(listing))
+    _after_commit(lambda: events.emit_event(
+        events.EVENT_BID_PLACED, player=listing.player,
+        club_a=listing.seller, club_b=bidder, affected_club=listing.seller,
+        betrag=amount, saison=saison))
     return bid
 
 
@@ -278,6 +367,10 @@ def buy_now(listing, buyer, *, saison=None, spieltag=None):
         )
         _finish_listing(listing, TransferListing.STATUS_SOLD)
         _release_all_bidder_reservations(listing)
+    # Push + Ereignis via on_commit (nebenwirkungs-isoliert).
+    from . import push
+    _after_commit(lambda: push.pinned_bought_now(listing, buyer))
+    _after_commit(lambda: _emit_transfer_done(record, listing.player, saison))
     return record
 
 
@@ -332,6 +425,7 @@ def close_listing(listing, *, saison=None, spieltag=None, force=False):
                    .select_related('club').first())
         if leading is None:
             _finish_listing(listing, TransferListing.STATUS_EXPIRED)
+            _after_commit(lambda: _after_close_no_bids(listing))
             return listing
 
         buyer = Club.objects.select_for_update().get(pk=leading.club_id)
@@ -342,7 +436,8 @@ def close_listing(listing, *, saison=None, spieltag=None, force=False):
             # (EXPIRED + Freigabe) bleibt bestehen.
             with transaction.atomic():
                 # Reservierung des Gewinners in Buchung überführen.
-                escrow.consume_money(buyer, escrow.bid_ref(listing.pk, buyer.pk))
+                escrow.consume_money(
+                    buyer, escrow.bid_ref(listing.pk, buyer.pk))
                 record = execution.execute_purchase(
                     listing, buyer, amount, timing=listing.timing,
                     saison=saison, spieltag=spieltag,
@@ -350,6 +445,15 @@ def close_listing(listing, *, saison=None, spieltag=None, force=False):
                 _finish_listing(listing, TransferListing.STATUS_SOLD)
                 # Alle anderen Bieter freigeben.
                 _release_all_bidder_reservations(listing)
+            loser_ids = set(listing.bids.exclude(club_id=buyer.pk)
+                            .values_list('club_id', flat=True))
+            # Push + Ereignis via zentralem Nach-Commit-Dispatch: läuft erst
+            # NACH dem dauerhaften Commit der ÄUSSERSTEN Transaktion (auch
+            # wenn close_listing in einem umgebenden atomic-Block aufgerufen
+            # wird), nie unter Lock, nie bei Rollback.
+            _after_commit(
+                lambda: _after_close_sold(
+                    listing, buyer, amount, record, loser_ids, saison))
             return record
         except (execution.ExecutionError, TransferActionError,
                 InsufficientFunds) as exc:
@@ -360,19 +464,57 @@ def close_listing(listing, *, saison=None, spieltag=None, force=False):
     return listing
 
 
-def _expire_listing_on_conflict(listing, grund):
-    """Konflikt-Abschluss: Auktion EXPIRED, gesamtes Escrow frei, Pushes."""
-    from game.notifications import notify_club
+def _after_close_no_bids(listing):
+    """Nach-Commit-Hook: Auktion ohne Gebote beendet (best-effort)."""
+    try:
+        from . import push as _push
+        _push.pinned_ended(listing)
+    except Exception:
+        logger.exception('Nach-Commit-Hook (no_bids) fehlgeschlagen')
 
+
+def _after_close_sold(listing, buyer, amount, record, loser_ids, saison):
+    """Nach-Commit-Hook: Zuschlag erteilt — Pushes + Ereignis (best-effort)."""
+    from game.models import Club
+    from . import push as _push
+    try:
+        _push.auction_won(buyer, listing, amount)
+        _push.pinned_ended(listing)
+    except Exception:
+        logger.exception('Zuschlag-Pushes fehlgeschlagen')
+    for cid in loser_ids:
+        try:
+            _push.auction_lost(Club.objects.get(pk=cid), listing)
+        except Exception:
+            logger.exception('auction_lost-Push fehlgeschlagen')
+    _emit_transfer_done(record, listing.player, saison)
+
+
+def _expire_listing_on_conflict(listing, grund):
+    """Konflikt-Abschluss: Auktion EXPIRED, gesamtes Escrow frei, Pushes.
+
+    Die Pushes laufen via zentralem Nach-Commit-Dispatch — ein
+    Benachrichtigungs-Fehler darf den Konflikt-Abschluss (EXPIRED +
+    Escrow-Freigabe) NIE zurückrollen.
+    """
     _finish_listing(listing, TransferListing.STATUS_EXPIRED)
     _release_all_bidder_reservations(listing)
+    bidder_ids = set(listing.bids.values_list('club_id', flat=True))
+    _after_commit(
+        lambda: _notify_conflict_expiry(listing, grund, bidder_ids))
+
+
+def _notify_conflict_expiry(listing, grund, bidder_ids):
+    """Nach-Commit-Hook: Pushes zum Konflikt-Abschluss (best-effort)."""
+    from game.models import Club
+    from game.notifications import notify_club
+
     msg = (f'Die Auktion für {listing.player.full_name} konnte nicht '
            f'vollzogen werden und wurde ohne Zuschlag beendet: {grund} '
            f'Alle Gebots-Reservierungen wurden freigegeben.')
     if listing.seller_id:
         notify_club(listing.seller, 'Auktion ohne Zuschlag beendet', msg)
-    for cid in set(listing.bids.values_list('club_id', flat=True)):
-        from game.models import Club
+    for cid in bidder_ids:
         notify_club(Club.objects.get(pk=cid),
                     'Auktion ohne Zuschlag beendet', msg)
 
@@ -598,6 +740,22 @@ def create_deal_request(from_club, to_club, *, typ, timing='SOFORT',
 
         if reserve_betrag > 0:
             escrow.reserve_money(initiator, escrow.deal_ref(deal.pk), reserve_betrag)
+    # Push an den Empfänger + Ereignis (Gerücht/Ticker) — via on_commit.
+    from . import events, push
+    _after_commit(lambda: push.deal_received(deal))
+    _ziel = to_players[0] if to_players else (
+        from_players[0] if from_players else None)
+    if _ziel is not None:
+        # Richtung aus Spieler-Sicht: Ziel auf TO-Seite = Empfänger gibt
+        # ab (to_club → from_club); Ziel auf FROM-Seite umgekehrt.
+        if to_players:
+            _ab, _auf = to_club, from_club
+        else:
+            _ab, _auf = from_club, to_club
+        _after_commit(lambda: events.emit_event(
+            events.EVENT_DEAL_SENT, player=_ziel,
+            club_a=_ab, club_b=_auf, affected_club=_ab,
+            betrag=cash_from or (loan_fee or ZERO), saison=saison))
     return deal
 
 
@@ -627,6 +785,14 @@ def _resolve_deal(deal, status):
         deal.save(update_fields=['status', 'resolved_at'])
         initiator = Club.objects.select_for_update().get(pk=deal.from_club_id)
         escrow.release_money(initiator, escrow.deal_ref(deal.pk))
+    # Push je Auflösungsart — via on_commit (nebenwirkungs-isoliert).
+    from . import push
+    if status == DealRequest.STATUS_DECLINED:
+        _after_commit(lambda: push.deal_declined(deal))
+    elif status == DealRequest.STATUS_WITHDRAWN:
+        _after_commit(lambda: push.deal_withdrawn(deal))
+    elif status == DealRequest.STATUS_EXPIRED:
+        _after_commit(lambda: push.deal_expired(deal))
     return deal
 
 
@@ -696,6 +862,22 @@ def accept_deal(deal, *, saison=None, spieltag=None):
         deal.status = DealRequest.STATUS_ACCEPTED
         deal.resolved_at = timezone.now()
         deal.save(update_fields=['status', 'resolved_at'])
+    # Push an den Initiator + Ereignis (Gerücht/Ticker) — außerhalb des Locks.
+    from . import events, push
+    _after_commit(lambda: push.deal_accepted(deal))
+    if deal.typ == DealRequest.TYP_LOAN:
+        # Leihe: Stammverein = Empfänger (to_club), Leihverein = Initiator.
+        _entries = list(deal.players.select_related('player').all())
+        _p = _entries[0].player if _entries else None
+        if _p is not None:
+            _after_commit(lambda: events.emit_event(
+                events.EVENT_LOAN_DONE, player=_p,
+                club_a=deal.to_club, club_b=deal.from_club,
+                affected_club=deal.to_club,
+                betrag=deal.loan_fee or ZERO, saison=saison))
+    else:
+        # Kauf/Verkauf/Tausch: Richtung aus den Record-Seiten ableiten.
+        _after_commit(lambda: _emit_deal_done(record, saison))
     return record
 
 
@@ -883,10 +1065,13 @@ def create_loan_listing(player, owner_club, *, fee_asking, until,
                 status=TransferListing.STATUS_ACTIVE).exists():
             raise TransferActionError(
                 f'{player.full_name} ist bereits auf dem Transfermarkt.')
-        return LoanListing.objects.create(
+        listing = LoanListing.objects.create(
             player=player, owner_club=owner_club, fee_asking=fee,
             until=until, buy_option_price=buy_option,
         )
+    from . import push
+    _after_commit(lambda: push.watchlist_loan_listed(player))
+    return listing
 
 
 def request_loan(loan_listing, loan_club, *, saison=None):
@@ -1015,6 +1200,13 @@ def end_loan(loan):
             record=rec, player=p, side=TransferRecordPlayer.SIDE_A,
             market_value_at_transfer=p.market_value,
         )
+    # Ereignis (Gerücht/Ticker) — Leih-RÜCKKEHR mit eigenem Textpool.
+    # Abgebend = Leihverein, aufnehmend = Stammverein; keine Gebühr.
+    from . import events
+    _after_commit(lambda: events.emit_event(
+        events.EVENT_LOAN_DONE, player=p,
+        club_a=l.loan_club, club_b=l.owner_club,
+        affected_club=l.owner_club, betrag=None, loan_return=True))
     return l
 
 
@@ -1037,6 +1229,8 @@ def request_recall(loan, owner_club):
         l.recall_requested = True
         l.recall_requested_at = timezone.now()
         l.save(update_fields=['recall_requested', 'recall_requested_at'])
+    from . import push
+    _after_commit(lambda: push.recall_requested(l))
     return l
 
 
@@ -1059,8 +1253,13 @@ def respond_recall(loan, loan_club, *, accept):
             l.recall_requested = False
             l.recall_requested_at = None
             l.save(update_fields=['recall_requested', 'recall_requested_at'])
+            from . import push
+            _after_commit(lambda: push.recall_answered(l, accepted=False))
             return l
-    return end_loan(l)
+    result = end_loan(l)
+    from . import push
+    _after_commit(lambda: push.recall_answered(result, accepted=True))
+    return result
 
 
 def exercise_buy_option(loan, buyer_club, *, saison=None, spieltag=None):
@@ -1070,10 +1269,14 @@ def exercise_buy_option(loan, buyer_club, *, saison=None, spieltag=None):
     Jugendabgabe, Leih-Ende, Wechselsperre, OPTION-Record).
     """
     try:
-        return execution.execute_option_purchase(
+        record = execution.execute_option_purchase(
             loan, buyer_club=buyer_club, saison=saison, spieltag=spieltag)
     except execution.ExecutionError as e:
         raise TransferActionError(str(e))
+    # Ereignis (Gerücht/Ticker) — via on_commit, isoliert.
+    # Abgebend = Stammverein (club_a), aufnehmend = Leihverein (club_b).
+    _after_commit(lambda: _emit_transfer_done(record, loan.player, saison))
+    return record
 
 
 # ── Kader anbieten: Statusboard (Task #821) ──────────────────────────────
@@ -1095,6 +1298,10 @@ def set_squad_offer_status(player, club, status):
         raise TransferActionError('Ungültiger Angebots-Status.')
     obj, _ = SquadOffer.objects.update_or_create(
         player=player, defaults={'status': status})
+    # Push an Beobachter des Spielers (Katalog §7 Punkt 1: Status geändert).
+    from . import push
+    label = dict(SquadOffer.STATUS_CHOICES).get(status, status)
+    _after_commit(lambda: push.watchlist_status_changed(player, label))
     return obj
 
 

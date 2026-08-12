@@ -467,7 +467,6 @@ def _cancel_pending_over_limit(p, *, saison=None, grund=''):
     dieses Spielers werden rückabgewickelt.
     """
     from game.models import Club
-    from game.notifications import notify_club
 
     record = p.record
     refund = Decimal('0.00')
@@ -530,9 +529,12 @@ def _cancel_pending_over_limit(p, *, saison=None, grund=''):
     p.executed_at = timezone.now()
     p.save(update_fields=['status', 'executed_at'])
 
+    # Pushes über den zentralen Nach-Commit-Dispatch des Push-Katalogs —
+    # ein Benachrichtigungs-Fehler darf Storno + Erstattung NIE zurückrollen.
+    from . import push
     msg = (f'Der WP/SE-Wechsel von {p.player.full_name} wurde storniert: '
            f'{grund or "Kadergrenzen am Stichtag verletzt."} '
            f'Erstattung: {refund:,.2f} €.')
-    notify_club(p.to_club, 'Transfer storniert (Kadergrenze)', msg)
+    push.pending_cancelled_limit(p.to_club, msg)
     if p.from_club:
-        notify_club(p.from_club, 'Transfer storniert (Kadergrenze)', msg)
+        push.pending_cancelled_limit(p.from_club, msg)

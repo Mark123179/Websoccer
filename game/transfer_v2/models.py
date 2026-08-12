@@ -694,11 +694,39 @@ class RumorNews(models.Model):
     )
     reaction_at = models.DateTimeField(null=True, blank=True)
     published_at = models.DateTimeField(default=timezone.now)
+    published_day = models.DateField(
+        null=True, blank=True,
+        help_text='Dedup-Tag: max. 1 Gerücht je Spieler+Event-Typ+Tag. '
+                  'Bei Spieler-Gerüchten PFLICHT (CheckConstraint + '
+                  'save()-Autofill); NULL nur ohne Spieler.',
+    )
+
+    def save(self, *args, **kwargs):
+        # Invariante: Spieler-Gerücht ⇒ Dedup-Tag gesetzt. Autofill deckt
+        # ORM-/Admin-Erzeugung ab; bulk_create-Umgehungen fängt der
+        # CheckConstraint auf DB-Ebene.
+        if self.player_id and self.published_day is None:
+            base = self.published_at or timezone.now()
+            self.published_day = timezone.localtime(base).date()
+        super().save(*args, **kwargs)
 
     class Meta:
         app_label = 'game'
         ordering = ['-published_at']
         indexes = [models.Index(fields=['-published_at'])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['player', 'event_type', 'published_day'],
+                condition=models.Q(player__isnull=False,
+                                   published_day__isnull=False),
+                name='uniq_rumor_player_event_day',
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(player__isnull=True)
+                           | models.Q(published_day__isnull=False)),
+                name='rumor_player_requires_day',
+            ),
+        ]
         verbose_name = 'Transfergerücht'
         verbose_name_plural = 'Transfergerüchte'
 

@@ -42,6 +42,8 @@ from .views_transfer_v2 import (
     transfer_market_buy_now,
     transfer_market_pin,
     transfer_rumor_react,
+    transfer_history,
+    transfer_report_create,
 )
 from .views_transfer_v2_deals import (
     transfer_loan_market,
@@ -428,6 +430,8 @@ urlpatterns = [
     path('transfers/markt/sofortkauf/', transfer_market_buy_now, name='transfer_market_buy_now'),
     path('transfers/markt/pin/', transfer_market_pin, name='transfer_market_pin'),
     path('transfers/markt/geruecht/', transfer_rumor_react, name='transfer_rumor_react'),
+    path('transfers/historie/', transfer_history, name='transfer_history'),
+    path('transfers/historie/melden/', transfer_report_create, name='transfer_report_create'),
 
     # Transfersystem v2 — Kader anbieten, Meine Deals, Deal-Builder (Task #821)
     path('transfers/leihmarkt/', transfer_loan_market, name='transfer_loan_market'),
