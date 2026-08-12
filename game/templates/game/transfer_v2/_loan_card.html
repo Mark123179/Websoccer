@@ -15,6 +15,27 @@
     <div class="tv2-board-meta">bis {{ l.until }} · Gebühr {{ l.fee_fmt }}{% if l.buy_fmt %} · Kaufoption <span class="tv2-green">{{ l.buy_fmt }}</span>{% endif %}</div>
   </div>
   {% if l.outgoing %}
-  <button type="button" class="tv2-btn tv2-btn--ghost" disabled title="Rückruf nur einvernehmlich">Zurückrufen</button>
+    {% if l.recall_requested %}
+    <span class="tv2-pill tv2-pill--gold">Rückruf angefragt</span>
+    {% else %}
+    <form method="post" action="{% url 'transfer_loan_recall_request' %}">{% csrf_token %}
+      <input type="hidden" name="loan_id" value="{{ l.id }}">
+      <button type="submit" class="tv2-btn tv2-btn--ghost" title="Rückruf nur einvernehmlich — der Leihverein muss zustimmen">Zurückrufen</button>
+    </form>
+    {% endif %}
+  {% else %}
+    {% if l.recall_requested %}
+    <div class="tv2-loan-recall-actions">
+      <span class="tv2-pill tv2-pill--gold">Rückruf angefragt</span>
+      <form method="post" action="{% url 'transfer_loan_recall_respond' %}">{% csrf_token %}
+        <input type="hidden" name="loan_id" value="{{ l.id }}">
+        <button type="submit" name="antwort" value="annehmen" class="tv2-btn tv2-btn--accept">Zustimmen</button>
+      </form>
+      <form method="post" action="{% url 'transfer_loan_recall_respond' %}">{% csrf_token %}
+        <input type="hidden" name="loan_id" value="{{ l.id }}">
+        <button type="submit" name="antwort" value="ablehnen" class="tv2-btn tv2-btn--decline">Ablehnen</button>
+      </form>
+    </div>
+    {% endif %}
   {% endif %}
 </div>

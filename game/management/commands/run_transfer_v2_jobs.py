@@ -13,6 +13,7 @@ from game.transfer_v2 import jobs
 JOBS = {
     'listings': lambda saison: jobs.close_due_listings(saison=saison),
     'deals': lambda saison: jobs.expire_due_deals(),
+    'loan_anfragen': lambda saison: jobs.expire_paused_loan_requests(saison=saison),
     'loans': lambda saison: jobs.end_due_loans(saison=saison),
     'pendings': lambda saison: jobs.execute_due_pendings(saison=saison),
     'locks': lambda saison: jobs.cleanup_expired_locks(),

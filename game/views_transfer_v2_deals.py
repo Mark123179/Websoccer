@@ -27,9 +27,10 @@ from .economy.params import get_param
 from .models import Club, League, Player, SquadOffer, WatchlistEntry
 from .models import COUNTRY_FLAG_ASSETS
 from .transfer_v2 import services
+from .transfer_v2.calendar_dates import loan_deadline_date, loan_market_paused
 from .transfer_v2.models import (
-    DealRequest, DealRequestPlayer, Loan, PendingTransfer, TransferBid,
-    TransferListing,
+    ClubPartnership, DealRequest, DealRequestPlayer, Loan, LoanListing,
+    PendingTransfer, TransferBid, TransferListing,
 )
 from .transfer_v2.services import TransferActionError
 from .views import build_game_header, current_manager_club, YOUTH_AGE_LIMIT
@@ -248,6 +249,7 @@ def transfer_offer_board(request):
         'verliehen': verliehen,
         'ausgeliehen': ausgeliehen,
         'min_bid_floor': int(get_param('TRANSFER_MIN_GEBOT')),
+        'loan_min_fee': int(get_param('LEIHE_MIN_GEBUEHR')),
         'sheets_json': [r['listing_sheet'] for r in rows],
         **transfer_shell_context(club),
     }
@@ -427,6 +429,7 @@ def transfer_my_deals(request):
             'buy_fmt': _euro(loan.buy_option) if loan.buy_option else '',
             'has_option': loan.buy_option is not None,
             'outgoing': outgoing,
+            'recall_requested': loan.recall_requested,
         }
 
     loans_out = [_loan_card(l, outgoing=True) for l in
@@ -545,6 +548,201 @@ def transfer_option_exercise(request):
             f'Kaufoption gezogen — {loan.player.full_name} gehört jetzt '
             f'{club.name}.')
     return redirect(f"{reverse('transfer_my_deals')}?seg=optionen")
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  LEIHMARKT (Reiter 2, Task #822)
+# ══════════════════════════════════════════════════════════════════════════
+
+@login_required
+def transfer_loan_market(request):
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+
+    fil = request.GET.get('f', '')
+    if fil not in ('', 'WP', 'SE', 'opt'):
+        fil = ''
+
+    qs = (
+        LoanListing.objects
+        .filter(status=LoanListing.STATUS_ACTIVE)
+        .select_related('player', 'owner_club')
+        .order_by('-created_at')
+    )
+    if fil in ('WP', 'SE'):
+        qs = qs.filter(until=fil)
+    elif fil == 'opt':
+        qs = qs.filter(buy_option_price__isnull=False)
+
+    # Leih-Limits des eigenen Vereins (rein) — für Hinweis-Anzeige.
+    rein_limit = int(get_param('LEIHE_LIMIT_REIN'))
+    rein_aktiv = Loan.objects.filter(
+        loan_club=club, ended_at__isnull=True).count()
+
+    from .views_transfer_v2 import _tm_url
+    rows = []
+    for ll in qs:
+        p = ll.player
+        card = _player_card(p)
+        paused = loan_market_paused(ll.until)
+        partner = ClubPartnership.are_partners(ll.owner_club, club)
+        fee = ll.fee_asking or Decimal('0')
+        rows.append({
+            **card,
+            'listing_id': ll.pk,
+            'owner': ll.owner_club.name,
+            'owner_crest': ll.owner_club.crest_static_path,
+            'owner_url': reverse('club_detail', args=[ll.owner_club.pk]),
+            'own_listing': ll.owner_club_id == club.pk,
+            'fee_fmt': ('0 €' if fee == 0 else _euro(fee)),
+            'fee_zero': fee == 0,
+            'partner': partner,
+            'until': ll.get_until_display(),
+            'until_code': ll.until,
+            'opt_fmt': (_euro(ll.buy_option_price)
+                        if ll.buy_option_price is not None else '—'),
+            'tm_url': _tm_url(p.full_name),
+            'paused': paused,
+        })
+
+    wp_deadline = loan_deadline_date('WP')
+    se_deadline = loan_deadline_date('SE')
+    wp_paused = loan_market_paused('WP')
+    se_paused = loan_market_paused('SE')
+    deadline_spieltage = int(get_param('LEIHE_DEADLINE_SPIELTAGE'))
+
+    context = {
+        'game_header': build_game_header(
+            'Transfers', 'Leihmarkt · Leihen bis WP oder Saisonende',
+            back_url='/'),
+        'active_tab': 'leihmarkt',
+        'club': club,
+        'fil': fil,
+        'rows': rows,
+        'wp_deadline': wp_deadline,
+        'se_deadline': se_deadline,
+        'wp_paused': wp_paused,
+        'se_paused': se_paused,
+        'all_paused': wp_paused and se_paused,
+        'deadline_spieltage': deadline_spieltage,
+        'min_fee_fmt': _euro(get_param('LEIHE_MIN_GEBUEHR')),
+        'rein_limit': rein_limit,
+        'rein_aktiv': rein_aktiv,
+        'rein_voll': rein_aktiv >= rein_limit,
+        **transfer_shell_context(club),
+    }
+    return render(request, 'game/transfer_v2/leihmarkt.html', context)
+
+
+@login_required
+@require_POST
+def transfer_loan_request(request):
+    """Leihanfrage aus dem Leihmarkt (reserviert die Gebühr, 7 Tage offen)."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    listing = get_object_or_404(
+        LoanListing, pk=request.POST.get('listing_id'))
+    try:
+        services.request_loan(listing, club)
+    except TransferActionError as exc:
+        messages.error(request, str(exc))
+        return redirect('transfer_loan_market')
+    fee = listing.fee_asking or Decimal('0')
+    note = (f'Leihanfrage für {listing.player.full_name} gesendet'
+            + (f' — {_euro(fee)} reserviert.' if fee > 0
+               else ' — 0 € (Partnerverein).'))
+    messages.success(request, note)
+    return redirect(f"{reverse('transfer_my_deals')}?seg=gesendet")
+
+
+@login_required
+@require_POST
+def transfer_loan_listing_create(request):
+    """„Auf den Leihmarkt stellen" aus dem Kader-anbieten-Board."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    player = get_object_or_404(Player, pk=request.POST.get('player_id'))
+    try:
+        fee = _parse_amount(request.POST.get('loan_fee') or '0') \
+            if (request.POST.get('loan_fee') or '').strip() else Decimal('0')
+        buy_raw = (request.POST.get('loan_buy') or '').strip()
+        buy = _parse_amount(buy_raw) if buy_raw else None
+        until = request.POST.get('loan_until', 'SE')
+        services.create_loan_listing(
+            player, club, fee_asking=fee, until=until,
+            buy_option_price=buy)
+    except TransferActionError as exc:
+        messages.error(request, str(exc))
+        return redirect(f"{reverse('transfer_offer_board')}?seg="
+                        f"{request.POST.get('seg', 'profis')}")
+    messages.success(
+        request, f'{player.full_name} steht ab sofort auf dem Leihmarkt.')
+    return redirect('transfer_loan_market')
+
+
+@login_required
+@require_POST
+def transfer_loan_listing_withdraw(request):
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    listing = get_object_or_404(
+        LoanListing, pk=request.POST.get('listing_id'))
+    try:
+        services.withdraw_loan_listing(listing, club)
+    except TransferActionError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(
+            request,
+            f'{listing.player.full_name} vom Leihmarkt zurückgezogen.')
+    return redirect('transfer_loan_market')
+
+
+@login_required
+@require_POST
+def transfer_loan_recall_request(request):
+    """Stammverein fragt Rückruf an (nur einvernehmlich)."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    loan = get_object_or_404(Loan, pk=request.POST.get('loan_id'))
+    try:
+        services.request_recall(loan, club)
+    except TransferActionError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(
+            request,
+            f'Rückruf angefragt — {loan.loan_club.name} muss zustimmen.')
+    return redirect(f"{reverse('transfer_my_deals')}?seg=leihen")
+
+
+@login_required
+@require_POST
+def transfer_loan_recall_respond(request):
+    """Leihverein stimmt dem Rückruf zu oder lehnt ab."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    loan = get_object_or_404(Loan, pk=request.POST.get('loan_id'))
+    accept = request.POST.get('antwort') == 'annehmen'
+    try:
+        services.respond_recall(loan, club, accept=accept)
+    except TransferActionError as exc:
+        messages.error(request, str(exc))
+    else:
+        if accept:
+            messages.success(
+                request,
+                f'Rückruf angenommen — {loan.player.full_name} kehrt zu '
+                f'{loan.owner_club.name} zurück.')
+        else:
+            messages.success(request, 'Rückruf abgelehnt — Leihe läuft weiter.')
+    return redirect(f"{reverse('transfer_my_deals')}?seg=leihen")
 
 
 # ══════════════════════════════════════════════════════════════════════════

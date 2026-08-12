@@ -170,6 +170,48 @@
       backdrop.addEventListener('click', function (ev) { if (ev.target === backdrop) backdrop.hidden = true; });
     }
 
+    /* Leih-Modal („Auf den Leihmarkt stellen", Task #822). */
+    var loanBackdrop = document.getElementById('tv2-loan-backdrop');
+    if (loanBackdrop && data) {
+      var loanSheets = {};
+      data.forEach(function (s) { loanSheets[s.id] = s; });
+      var loanMinFee = parseFloat(urls.getAttribute('data-loan-min-fee')) || 1000000;
+
+      function loanValidate() {
+        var feeRaw = document.getElementById('tv2-lo-fee').value;
+        var fee = parseAmount(feeRaw);
+        var check = document.getElementById('tv2-lo-check');
+        var cta = document.getElementById('tv2-lo-cta');
+        var msgs = [];
+        if (fee > 0 && fee < loanMinFee) msgs.push('Leihgebühr unter ' + euro(loanMinFee) + ' — nur 0 € (Partnerverein) oder ≥ Minimum.');
+        if (fee === 0) msgs.push('Hinweis: 0-€-Gebühr können nur aktive Partnervereine annehmen.');
+        check.innerHTML = msgs.map(function (m) { return '<div class="tv2-li-warn">' + esc(m) + '</div>'; }).join('');
+        cta.disabled = fee > 0 && fee < loanMinFee;
+        document.getElementById('tv2-lo-fee-hidden').value = feeRaw;
+        document.getElementById('tv2-lo-buy-hidden').value = document.getElementById('tv2-lo-buy').value;
+      }
+
+      document.querySelectorAll('[data-loan-open]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var sheet = loanSheets[btn.getAttribute('data-loan-open')];
+          if (!sheet) return;
+          document.getElementById('tv2-lo-title').textContent = 'Auf den Leihmarkt stellen — ' + sheet.name;
+          document.getElementById('tv2-lo-sub').textContent = sheet.sub;
+          document.getElementById('tv2-lo-pid').value = sheet.id;
+          document.getElementById('tv2-lo-fee').value = loanMinFee.toLocaleString('de-DE');
+          document.getElementById('tv2-lo-buy').value = '';
+          loanValidate();
+          loanBackdrop.hidden = false;
+        });
+      });
+
+      document.getElementById('tv2-lo-fee').addEventListener('input', loanValidate);
+      document.getElementById('tv2-lo-buy').addEventListener('input', loanValidate);
+      initChipGroup('tv2-lo-until', 'tv2-lo-until-hidden');
+      document.getElementById('tv2-lo-cancel').addEventListener('click', function () { loanBackdrop.hidden = true; });
+      loanBackdrop.addEventListener('click', function (ev) { if (ev.target === loanBackdrop) loanBackdrop.hidden = true; });
+    }
+
     /* Forum-Post-Modal. */
     var forumBtn = document.getElementById('tv2-forum-btn');
     var forumBackdrop = document.getElementById('tv2-forum-backdrop');

@@ -26,7 +26,7 @@
 
 <div class="tv2-tabs">
   <a class="tv2-tab{% if active_tab == 'markt' %} is-active{% endif %}" href="{% url 'transfer_market' %}">Transfermarkt</a>
-  <span class="tv2-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Leihmarkt<span class="tv2-tab-soon">bald</span></span>
+  <a class="tv2-tab{% if active_tab == 'leihmarkt' %} is-active{% endif %}" href="{% url 'transfer_loan_market' %}">Leihmarkt</a>
   <a class="tv2-tab{% if active_tab == 'deals' %} is-active{% endif %}" href="{% url 'transfer_my_deals' %}">Meine Deals{% if open_deal_count %}<span class="tv2-tab-badge">{{ open_deal_count }}</span>{% endif %}</a>
   <a class="tv2-tab{% if active_tab == 'anbieten' %} is-active{% endif %}" href="{% url 'transfer_offer_board' %}">Kader anbieten</a>
   <span class="tv2-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Historie<span class="tv2-tab-soon">bald</span></span>

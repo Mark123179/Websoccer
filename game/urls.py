@@ -44,6 +44,12 @@ from .views_transfer_v2 import (
     transfer_rumor_react,
 )
 from .views_transfer_v2_deals import (
+    transfer_loan_market,
+    transfer_loan_request,
+    transfer_loan_listing_create,
+    transfer_loan_listing_withdraw,
+    transfer_loan_recall_request,
+    transfer_loan_recall_respond,
     transfer_offer_board,
     transfer_offer_status,
     transfer_offer_create_listing,
@@ -424,6 +430,12 @@ urlpatterns = [
     path('transfers/markt/geruecht/', transfer_rumor_react, name='transfer_rumor_react'),
 
     # Transfersystem v2 — Kader anbieten, Meine Deals, Deal-Builder (Task #821)
+    path('transfers/leihmarkt/', transfer_loan_market, name='transfer_loan_market'),
+    path('transfers/leihmarkt/anfrage/', transfer_loan_request, name='transfer_loan_request'),
+    path('transfers/leihmarkt/listing/', transfer_loan_listing_create, name='transfer_loan_listing_create'),
+    path('transfers/leihmarkt/zurueckziehen/', transfer_loan_listing_withdraw, name='transfer_loan_listing_withdraw'),
+    path('transfers/leihen/rueckruf/', transfer_loan_recall_request, name='transfer_loan_recall_request'),
+    path('transfers/leihen/rueckruf-antwort/', transfer_loan_recall_respond, name='transfer_loan_recall_respond'),
     path('transfers/anbieten/', transfer_offer_board, name='transfer_offer_board'),
     path('transfers/anbieten/status/', transfer_offer_status, name='transfer_offer_status'),
     path('transfers/anbieten/listing/', transfer_offer_create_listing, name='transfer_offer_create_listing'),

@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=5">
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
@@ -67,8 +67,10 @@
         <button type="button" class="tv2-eye-btn" data-eye-toggle="{{ r.id }}" title="Beobachter anzeigen">👁 {{ r.watch_count }}</button>
         {% if r.locked or r.loaned_out %}
         <button type="button" class="tv2-btn tv2-btn--ghost" disabled title="Gesperrt / verliehen">Auf TL stellen</button>
+        <button type="button" class="tv2-btn tv2-btn--ghost" disabled title="Gesperrt / verliehen">Verleihen</button>
         {% else %}
         <button type="button" class="tv2-btn tv2-btn--primary" data-listing-open="{{ r.id }}">Auf TL stellen</button>
+        <button type="button" class="tv2-btn tv2-btn--ghost" data-loan-open="{{ r.id }}">Verleihen</button>
         {% endif %}
       </div>
 
@@ -154,6 +156,48 @@
     </div>
   </div>
 
+  <!-- ── LEIH-MODAL („Auf den Leihmarkt stellen") ─────────────────────── -->
+  <div class="tv2-modal-backdrop" id="tv2-loan-backdrop" hidden>
+    <div class="tv2-modal" role="dialog" aria-modal="true">
+      <div class="tv2-modal-title" id="tv2-lo-title">Auf den Leihmarkt stellen</div>
+      <div class="tv2-modal-sub" id="tv2-lo-sub"></div>
+
+      <div class="tv2-li-grid-inputs">
+        <div>
+          <label class="tv2-sheet-label" for="tv2-lo-fee">Leihgebühr (€, ≥ {{ loan_min_fee|floatformat:0 }} oder 0 für Partnerverein)</label>
+          <input id="tv2-lo-fee" class="tv2-sheet-input" inputmode="numeric" autocomplete="off">
+        </div>
+        <div>
+          <label class="tv2-sheet-label" for="tv2-lo-buy">Kaufoption (€, optional)</label>
+          <input id="tv2-lo-buy" class="tv2-sheet-input" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="tv2-li-chip-row">
+        <span class="tv2-sheet-label">Leihende</span>
+        <div class="tv2-chip-group" id="tv2-lo-until">
+          <button type="button" class="tv2-chip" data-val="WP">Winterpause</button>
+          <button type="button" class="tv2-chip is-on" data-val="SE">Saisonende</button>
+        </div>
+      </div>
+
+      <div class="tv2-li-check" id="tv2-lo-check"></div>
+      <div class="tv2-footnote">0-€-Gebühr können nur aktive Partnervereine annehmen. Keine Jugendabgabe bei Leihen. Gehalt zahlt ab Vollzug der aufnehmende Verein.</div>
+
+      <div class="tv2-sheet-actions">
+        <button type="button" class="tv2-btn tv2-btn--ghost tv2-btn--tall" id="tv2-lo-cancel">Abbrechen</button>
+        <form method="post" action="{% url 'transfer_loan_listing_create' %}" id="tv2-lo-form" class="tv2-sheet-form">{% csrf_token %}
+          <input type="hidden" name="player_id" id="tv2-lo-pid">
+          <input type="hidden" name="seg" value="{{ seg }}">
+          <input type="hidden" name="loan_fee" id="tv2-lo-fee-hidden">
+          <input type="hidden" name="loan_buy" id="tv2-lo-buy-hidden">
+          <input type="hidden" name="loan_until" id="tv2-lo-until-hidden" value="SE">
+          <button type="submit" class="tv2-btn tv2-btn--primary tv2-btn--tall" id="tv2-lo-cta">Auf Leihmarkt stellen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- ── FORUM-MODAL ──────────────────────────────────────────────────── -->
   <div class="tv2-modal-backdrop" id="tv2-forum-backdrop" hidden>
     <div class="tv2-modal" role="dialog" aria-modal="true">
@@ -170,11 +214,12 @@
   {{ sheets_json|json_script:"tv2-listing-data" }}
   <div id="tv2-board-urls"
        data-forum-url="{% url 'transfer_offer_forum' %}"
-       data-min-floor="{{ min_bid_floor }}"></div>
+       data-min-floor="{{ min_bid_floor }}"
+       data-loan-min-fee="{{ loan_min_fee }}"></div>
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'game/js/transfer_v2_deals.js' %}?v=5"></script>
+<script src="{% static 'game/js/transfer_v2_deals.js' %}?v=6"></script>
 {% endblock %}

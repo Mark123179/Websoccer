@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=6">
+{% endblock %}
+
+{% block content %}
+<div class="tv2-wrap" id="tv2-root">
+
+  {% if messages %}
+  <div class="tv2-flash-bar">
+    {% for m in messages %}
+    <div class="tv2-flash tv2-flash--{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% include 'game/transfer_v2/_tabs.html' %}
+
+  <!-- Deadline-Banner -->
+  <div class="tv2-loan-banner{% if all_paused %} tv2-loan-banner--paused{% endif %}">
+    {% if all_paused %}
+    <span class="tv2-loan-badge tv2-loan-badge--paused">LEIHMARKT PAUSIERT</span>
+    <span class="tv2-loan-banner-text">Leih-Deadline erreicht — keine neuen Leihen bis zum Stichtag. Rückrufe und Kaufoptionszüge bleiben jederzeit möglich.</span>
+    {% else %}
+    <span class="tv2-loan-badge">LEIHMARKT OFFEN</span>
+    <span class="tv2-loan-banner-text">
+      Leih-Deadline zur Winterpause: <b class="tv2-gold">{{ wp_deadline|date:'d.m.Y' }}</b>{% if wp_paused %} <span class="tv2-pill tv2-pill--red">erreicht</span>{% endif %}
+      · zum Saisonende: <b class="tv2-gold">{{ se_deadline|date:'d.m.Y' }}</b>{% if se_paused %} <span class="tv2-pill tv2-pill--red">erreicht</span>{% endif %}
+      ({{ deadline_spieltage }} Spieltage vor WP/SE) — danach keine neuen Leihen bis zum Stichtag. Rückrufe und Kaufoptionszüge bleiben jederzeit möglich.
+    </span>
+    {% endif %}
+  </div>
+
+  <section class="tv2-panel tv2-listing-sec">
+    <div class="tv2-loan-head">
+      <span class="tv2-sec-title">Leihbare Spieler</span>
+      {% if rein_voll %}<span class="tv2-pill tv2-pill--red">Leih-Limit (rein) erreicht: {{ rein_aktiv }}/{{ rein_limit }}</span>{% endif %}
+      <div class="tv2-chip-group tv2-loan-chips">
+        <a class="tv2-chip{% if fil == '' %} is-on{% endif %}" href="?">Alle</a>
+        <a class="tv2-chip{% if fil == 'WP' %} is-on{% endif %}" href="?f=WP">bis WP</a>
+        <a class="tv2-chip{% if fil == 'SE' %} is-on{% endif %}" href="?f=SE">bis SE</a>
+        <a class="tv2-chip{% if fil == 'opt' %} is-on{% endif %}" href="?f=opt">mit Kaufoption</a>
+      </div>
+    </div>
+
+    <div class="tv2-table-scroll">
+      <div class="tv2-loan-table">
+        <div class="tv2-loan-row tv2-loan-row--head">
+          <span>Spieler</span><span>Stammverein</span><span class="tv2-right">Leihgebühr</span><span>Dauer</span><span class="tv2-right">Kaufoption</span><span class="tv2-right">Marktwert</span><span></span>
+        </div>
+        {% for r in rows %}
+        <div class="tv2-loan-row">
+          <div class="tv2-loan-cell-player">
+            <a href="{{ r.player_url }}" title="Zum Spielerprofil"><img class="tv2-board-img" src="{{ r.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'"></a>
+            <div class="tv2-loan-cell-info">
+              <a class="tv2-board-name" href="{{ r.player_url }}">{% if r.flag %}<img class="tv2-flag" src="{{ r.flag }}" alt="" onerror="this.style.display='none'">{% endif %}{{ r.name }}</a>
+              <div class="tv2-board-meta">{{ r.age }} J. · <span class="tv2-hp">{{ r.hp }}</span>{% if r.np %} · <span class="tv2-np">{{ r.np }}</span>{% endif %}</div>
+            </div>
+          </div>
+          <a class="tv2-loan-cell-club" href="{{ r.owner_url }}" title="Zum Vereinsprofil">
+            {% if r.owner_crest %}<img class="tv2-row-crest" src="{{ r.owner_crest }}" alt="" onerror="this.style.display='none'">{% endif %}
+            <span class="tv2-row-clubname">{{ r.owner }}</span>
+          </a>
+          <div class="tv2-right">
+            <span class="{% if r.fee_zero %}tv2-green{% endif %}">{{ r.fee_fmt }}</span>
+            {% if r.fee_zero %}<div class="tv2-loan-partner-note">Partnerverein</div>{% endif %}
+          </div>
+          <div>bis {{ r.until }}</div>
+          <div class="tv2-right">{{ r.opt_fmt }}</div>
+          <div class="tv2-right"><a class="tv2-mw-link" href="{{ r.tm_url }}" target="_blank" rel="noopener" title="Marktwert auf transfermarkt.de">{{ r.mw_fmt }}</a></div>
+          <div class="tv2-right">
+            {% if r.own_listing %}
+            <form method="post" action="{% url 'transfer_loan_listing_withdraw' %}">{% csrf_token %}
+              <input type="hidden" name="listing_id" value="{{ r.listing_id }}">
+              <button type="submit" class="tv2-btn tv2-btn--ghost">Zurückziehen</button>
+            </form>
+            {% elif r.paused %}
+            <span class="tv2-pill tv2-pill--red">pausiert</span>
+            {% elif r.fee_zero and not r.partner %}
+            <button type="button" class="tv2-btn tv2-btn--ghost" disabled title="0-€-Gebühr nur für Partnervereine">Leihanfrage</button>
+            {% else %}
+            <form method="post" action="{% url 'transfer_loan_request' %}">{% csrf_token %}
+              <input type="hidden" name="listing_id" value="{{ r.listing_id }}">
+              <button type="submit" class="tv2-btn tv2-btn--primary"{% if rein_voll %} disabled title="Leih-Limit (rein) erreicht"{% endif %}>Leihanfrage</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="tv2-empty">Keine Spieler auf dem Leihmarkt{% if fil %} (Filter aktiv){% endif %}.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="tv2-footnote">Mindest-Leihgebühr {{ min_fee_fmt }} — 0 € nur bei aktiver Vereinspartnerschaft. Leihspieler zählen beim aufnehmenden Verein auf die Kadergrenze. Leih-Limits: 6 rein / 6 raus / 2 je Vereinspaar.</div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'game/js/transfer_v2_deals.js' %}?v=6"></script>
+{% endblock %}

@@ -972,6 +972,97 @@ def _execute_loan_from_deal(deal, *, saison=None):
 accept_loan_request = accept_deal  # Leihanfrage ist ein DealRequest(typ=LOAN).
 
 
+def withdraw_loan_listing(listing, owner_club):
+    """Stammverein nimmt ein aktives Leih-Listing vom Markt."""
+    with transaction.atomic():
+        l = LoanListing.objects.select_for_update().get(pk=listing.pk)
+        if l.owner_club_id != owner_club.pk:
+            raise TransferActionError('Nur der Stammverein kann zurückziehen.')
+        if l.status != LoanListing.STATUS_ACTIVE:
+            raise TransferActionError('Leih-Listing ist nicht mehr aktiv.')
+        l.status = LoanListing.STATUS_WITHDRAWN
+        l.save(update_fields=['status'])
+    return l
+
+
+def end_loan(loan):
+    """Beendet eine Leihe SOFORT (Spieler zurück zum Stammverein).
+
+    Gemeinsamer Endpfad für Stichtag-Ende (Job) und einvernehmlichen
+    Rückruf. Idempotent: eine bereits beendete Leihe ist ein No-Op.
+    """
+    from game.models import Player
+    from .models import TransferRecordPlayer
+
+    with transaction.atomic():
+        l = Loan.objects.select_for_update().get(pk=loan.pk)
+        if l.ended_at is not None:
+            return l
+        p = Player.objects.select_for_update().get(pk=l.player_id)
+        p.club = l.owner_club
+        p.loan_status = ''
+        p.loan_partner_club = None
+        p.save(update_fields=['club', 'loan_status', 'loan_partner_club'])
+        l.ended_at = timezone.now()
+        l.save(update_fields=['ended_at'])
+        rec = TransferRecord.objects.create(
+            kind=TransferRecord.KIND_LOAN, timing='SOFORT',
+            club_a=l.loan_club, club_b=l.owner_club,
+            cash_a=ZERO, cash_b=ZERO,
+            loan_event=TransferRecord.LOAN_EVENT_RETURN, loan_until=l.until,
+        )
+        TransferRecordPlayer.objects.create(
+            record=rec, player=p, side=TransferRecordPlayer.SIDE_A,
+            market_value_at_transfer=p.market_value,
+        )
+    return l
+
+
+def request_recall(loan, owner_club):
+    """Stammverein fragt den Rückruf an (nur einvernehmlich, Spec §5.3).
+
+    Setzt NUR das Anfrage-Flag — die Leihe endet erst, wenn der Leihverein
+    zustimmt (respond_recall). Jederzeit erlaubt, auch in der
+    Deadline-Phase.
+    """
+    with transaction.atomic():
+        l = Loan.objects.select_for_update().get(pk=loan.pk)
+        if l.ended_at is not None:
+            raise TransferActionError('Die Leihe ist bereits beendet.')
+        if l.owner_club_id != owner_club.pk:
+            raise TransferActionError(
+                'Nur der Stammverein kann einen Rückruf anfragen.')
+        if l.recall_requested:
+            raise TransferActionError('Rückruf ist bereits angefragt.')
+        l.recall_requested = True
+        l.recall_requested_at = timezone.now()
+        l.save(update_fields=['recall_requested', 'recall_requested_at'])
+    return l
+
+
+def respond_recall(loan, loan_club, *, accept):
+    """Leihverein antwortet auf eine Rückruf-Anfrage.
+
+    Zustimmung beendet die Leihe SOFORT (Spieler kehrt zurück, Gebühr wird
+    NICHT erstattet); Ablehnung setzt das Anfrage-Flag zurück.
+    """
+    with transaction.atomic():
+        l = Loan.objects.select_for_update().get(pk=loan.pk)
+        if l.ended_at is not None:
+            raise TransferActionError('Die Leihe ist bereits beendet.')
+        if l.loan_club_id != loan_club.pk:
+            raise TransferActionError(
+                'Nur der Leihverein kann auf den Rückruf antworten.')
+        if not l.recall_requested:
+            raise TransferActionError('Kein offener Rückruf.')
+        if not accept:
+            l.recall_requested = False
+            l.recall_requested_at = None
+            l.save(update_fields=['recall_requested', 'recall_requested_at'])
+            return l
+    return end_loan(l)
+
+
 def exercise_buy_option(loan, buyer_club, *, saison=None, spieltag=None):
     """Leihverein zieht die vereinbarte Kaufoption (Vollkauf sofort).
 

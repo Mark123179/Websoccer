@@ -553,6 +553,49 @@ a.tv2-cell-club:hover .tv2-row-clubname { color: #22e6ff; }
 .tv2-cd.is-over { color: rgba(244,251,255,.4); }
 .tv2-cd.is-hot { color: #ff8ba0; }
 
+/* ══════════════════════════════════════════════════════════════════════
+ * Task #822 — Leihmarkt
+ * ══════════════════════════════════════════════════════════════════════ */
+
+.tv2-loan-banner {
+    display: flex; align-items: center; gap: 12px; border: 1px solid rgba(44,231,255,.38);
+    border-radius: 8px; background: rgba(34,230,255,.07); padding: 12px 16px; margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+.tv2-loan-banner--paused { border-color: rgba(255,85,112,.4); background: rgba(255,85,112,.06); }
+.tv2-loan-badge {
+    font-size: 11px; font-weight: 900; letter-spacing: .8px; padding: 4px 9px; border-radius: 4px;
+    background: rgba(34,230,255,.14); border: 1px solid rgba(44,231,255,.38); color: #22e6ff;
+    white-space: nowrap;
+}
+.tv2-loan-badge--paused { background: rgba(255,85,112,.12); border-color: rgba(255,85,112,.4); color: #ff8ba0; }
+.tv2-loan-banner-text { font-size: 12.5px; font-weight: 700; color: rgba(244,251,255,.85); }
+.tv2-loan-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+.tv2-loan-chips { margin-left: auto; }
+.tv2-loan-chips .tv2-chip { text-decoration: none; }
+.tv2-loan-table { min-width: 940px; }
+.tv2-loan-row {
+    display: grid;
+    grid-template-columns: minmax(210px, 1.7fr) minmax(150px, 1.2fr) 120px 150px 130px 110px 130px;
+    gap: 8px; align-items: center; padding: 9px 2px; border-bottom: 1px solid rgba(255,255,255,.05);
+    font-size: 12.5px; font-weight: 800;
+}
+.tv2-loan-row--head {
+    padding: 6px 2px; border-bottom: 1px solid rgba(255,255,255,.09);
+    font-size: 11px; font-weight: 900; letter-spacing: .5px; text-transform: uppercase;
+    color: rgba(244,251,255,.38);
+}
+.tv2-loan-cell-player { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.tv2-loan-cell-info { min-width: 0; }
+.tv2-loan-cell-club { display: flex; align-items: center; gap: 7px; min-width: 0; text-decoration: none; color: inherit; }
+.tv2-loan-cell-club:hover .tv2-row-clubname { color: #22e6ff; }
+.tv2-right { text-align: right; }
+.tv2-loan-partner-note {
+    font-size: 9.5px; font-weight: 900; color: #3af7a6; text-transform: uppercase;
+    letter-spacing: .4px; margin-top: 2px;
+}
+.tv2-loan-recall-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
 /* Responsiv (Task #821) */
 @media (max-width: 1010px) {
     .tv2-board-row { grid-template-columns: 1fr; }

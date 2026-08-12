@@ -60,46 +60,46 @@ def expire_due_deals(*, now=None):
 
 
 def end_due_loans(*, saison=None, today=None):
-    """Beendet Leihen, deren WP-/SE-Stichtag erreicht ist (Spieler kehrt zurück)."""
-    from django.db import transaction
+    """Beendet Leihen, deren WP-/SE-Stichtag erreicht ist (Spieler kehrt zurück).
 
+    Rückruf ist EINVERNEHMLICH (Spec §5.3) und endet sofort über
+    services.respond_recall — hier zählt nur der Stichtag.
+    """
     from .calendar_dates import next_execution_date
-    from .models import Loan, TransferRecord, TransferRecordPlayer
+    from .models import Loan
+    from .services import end_loan
 
     today = today or timezone.localdate()
     done = 0
     for loan in Loan.objects.filter(ended_at__isnull=True):
         stichtag = next_execution_date(loan.until)
-        if stichtag > today and not loan.recall_requested:
+        if stichtag > today:
             continue
-        if loan.recall_requested:
-            # Rückruf wirkt zum nächsten Stichtag, nicht sofort.
-            if stichtag > today:
-                continue
-        with transaction.atomic():
-            from game.models import Player
-            l = Loan.objects.select_for_update().get(pk=loan.pk)
-            if l.ended_at is not None:
-                continue
-            p = Player.objects.select_for_update().get(pk=l.player_id)
-            p.club = l.owner_club
-            p.loan_status = ''
-            p.loan_partner_club = None
-            p.save(update_fields=['club', 'loan_status', 'loan_partner_club'])
-            l.ended_at = timezone.now()
-            l.save(update_fields=['ended_at'])
-            rec = TransferRecord.objects.create(
-                kind=TransferRecord.KIND_LOAN, timing='SOFORT',
-                club_a=l.loan_club, club_b=l.owner_club,
-                cash_a=Decimal('0'), cash_b=Decimal('0'),
-                loan_event=TransferRecord.LOAN_EVENT_RETURN, loan_until=l.until,
-            )
-            TransferRecordPlayer.objects.create(
-                record=rec, player=p, side=TransferRecordPlayer.SIDE_A,
-                market_value_at_transfer=p.market_value,
-            )
-            done += 1
+        end_loan(loan)
+        done += 1
     return {'beendet': done}
+
+
+def expire_paused_loan_requests(*, saison=None):
+    """Lässt offene Leihanfragen auslaufen, deren Markt pausiert ist.
+
+    Master-Spec §5.4 / Abnahme 23: Ab der Leih-Deadline sind Abschlüsse
+    gesperrt und OFFENE Anfragen laufen aus (Reservierung der Gebühr wird
+    über expire_deal freigegeben). Rückrufe/Optionszüge bleiben unberührt.
+    """
+    from .calendar_dates import loan_market_paused
+    from .models import DealRequest
+    from .services import expire_deal
+
+    done = 0
+    qs = DealRequest.objects.filter(
+        status=DealRequest.STATUS_OPEN, typ=DealRequest.TYP_LOAN,
+    ).values_list('pk', 'loan_until')
+    for pk, until in list(qs):
+        if loan_market_paused(until or 'WP', saison):
+            expire_deal(DealRequest.objects.get(pk=pk))
+            done += 1
+    return {'abgelaufen': done}
 
 
 def execute_due_pendings(*, saison=None, today=None):
@@ -177,6 +177,7 @@ def run_all(*, saison=None):
     return {
         'listings': close_due_listings(saison=saison),
         'deals': expire_due_deals(),
+        'loan_anfragen': expire_paused_loan_requests(saison=saison),
         'loans': end_due_loans(saison=saison),
         'pendings': execute_due_pendings(saison=saison),
         'locks': cleanup_expired_locks(),
