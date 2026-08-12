@@ -43,6 +43,21 @@ from .views_transfer_v2 import (
     transfer_market_pin,
     transfer_rumor_react,
 )
+from .views_transfer_v2_deals import (
+    transfer_offer_board,
+    transfer_offer_status,
+    transfer_offer_create_listing,
+    transfer_offer_forum,
+    transfer_my_deals,
+    transfer_deal_accept,
+    transfer_deal_decline,
+    transfer_deal_withdraw,
+    transfer_deal_bid_remove,
+    transfer_option_exercise,
+    transfer_deal_builder,
+    transfer_builder_target_players,
+    transfer_builder_send,
+)
 from .views_scouting import (
     transfer_scouting,
     scouting_start,
@@ -408,6 +423,21 @@ urlpatterns = [
     path('transfers/markt/pin/', transfer_market_pin, name='transfer_market_pin'),
     path('transfers/markt/geruecht/', transfer_rumor_react, name='transfer_rumor_react'),
 
+    # Transfersystem v2 — Kader anbieten, Meine Deals, Deal-Builder (Task #821)
+    path('transfers/anbieten/', transfer_offer_board, name='transfer_offer_board'),
+    path('transfers/anbieten/status/', transfer_offer_status, name='transfer_offer_status'),
+    path('transfers/anbieten/listing/', transfer_offer_create_listing, name='transfer_offer_create_listing'),
+    path('transfers/anbieten/forum/', transfer_offer_forum, name='transfer_offer_forum'),
+    path('transfers/deals/', transfer_my_deals, name='transfer_my_deals'),
+    path('transfers/deals/annehmen/', transfer_deal_accept, name='transfer_deal_accept'),
+    path('transfers/deals/ablehnen/', transfer_deal_decline, name='transfer_deal_decline'),
+    path('transfers/deals/zurueckziehen/', transfer_deal_withdraw, name='transfer_deal_withdraw'),
+    path('transfers/deals/gebot-entfernen/', transfer_deal_bid_remove, name='transfer_deal_bid_remove'),
+    path('transfers/deals/option-ziehen/', transfer_option_exercise, name='transfer_option_exercise'),
+    path('transfers/builder/', transfer_deal_builder, name='transfer_deal_builder'),
+    path('transfers/builder/ziel-spieler/', transfer_builder_target_players, name='transfer_builder_target_players'),
+    path('transfers/builder/senden/', transfer_builder_send, name='transfer_builder_send'),
+
     # Scouting-System (Task #594)
     path('transfers/scouting/', transfer_scouting, name='transfer_scouting'),
     path('transfers/scouting/auftrag/', scouting_start, name='scouting_start'),
@@ -545,3 +575,4 @@ urlpatterns = [
     path('creator-api/import-jobs/<int:job_id>/complete/', importer_complete, name='importer_complete'),
     path('creator-api/import-jobs/<int:job_id>/fail/', importer_fail, name='importer_fail'),
 ]
+

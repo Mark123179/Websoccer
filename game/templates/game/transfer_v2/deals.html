@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=5">
+{% endblock %}
+
+{% block content %}
+<div class="tv2-wrap" id="tv2-root">
+
+  {% if messages %}
+  <div class="tv2-flash-bar">
+    {% for m in messages %}
+    <div class="tv2-flash tv2-flash--{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% include 'game/transfer_v2/_tabs.html' %}
+
+  <div class="tv2-sec-head">
+    <span class="tv2-sec-title">Meine Deals</span>
+    <span class="tv2-sec-sub">Gebote, Anfragen, Kaufoptionen & Leihen</span>
+  </div>
+
+  <!-- Segment-Reiter -->
+  <div class="tv2-chip-group tv2-seg-group tv2-deal-segs">
+    <a class="tv2-chip{% if seg == 'gebote' %} is-on{% endif %}" href="?seg=gebote">Meine Gebote</a>
+    <a class="tv2-chip{% if seg == 'erhalten' %} is-on{% endif %}" href="?seg=erhalten">Anfragen erhalten{% if recv_count %}<span class="tv2-tab-badge">{{ recv_count }}</span>{% endif %}</a>
+    <a class="tv2-chip{% if seg == 'gesendet' %} is-on{% endif %}" href="?seg=gesendet">Anfragen gesendet</a>
+    <a class="tv2-chip{% if seg == 'optionen' %} is-on{% endif %}" href="?seg=optionen">Kaufoptionen</a>
+    <a class="tv2-chip{% if seg == 'leihen' %} is-on{% endif %}" href="?seg=leihen">Laufende Leihen</a>
+  </div>
+
+  {% if seg == 'gebote' %}
+  <section class="tv2-panel tv2-listing-sec">
+    <div class="tv2-sec-title tv2-sec-title--small">Meine Gebote</div>
+    {% for b in my_bids %}
+    <div class="tv2-deal-line">
+      <div class="tv2-deal-line-main">
+        <a class="tv2-board-name" href="{{ b.player_url }}">{{ b.player }}</a>
+        <div class="tv2-board-meta">{{ b.seller }} · Mein Gebot {{ b.my_bid_fmt }} · Höchstgebot <span class="tv2-green">{{ b.top_fmt }}</span></div>
+      </div>
+      {% if b.leading %}<span class="tv2-pill tv2-pill--green">Führend</span>{% else %}<span class="tv2-pill tv2-pill--gold">Überboten</span>{% endif %}
+      {% if b.ends_ms %}<span class="tv2-cd tv2-cd--gold" data-ends="{{ b.ends_ms }}">…</span>{% endif %}
+      {% if b.over %}
+      <form method="post" action="{% url 'transfer_deal_bid_remove' %}">{% csrf_token %}
+        <button type="submit" class="tv2-icon-x" title="Aus Liste entfernen">×</button>
+      </form>
+      {% else %}
+      <a class="tv2-btn tv2-btn--ghost" href="{% url 'transfer_market' %}">Erhöhen</a>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="tv2-empty">Keine aktiven Gebote.</div>
+    {% endfor %}
+    <div class="tv2-footnote">Gebote sind bindend — Freigabe nur durch Überbietung, Auktionsende oder Admin-Storno.</div>
+  </section>
+  {% endif %}
+
+  {% if seg == 'erhalten' %}
+  <section class="tv2-panel tv2-listing-sec">
+    <div class="tv2-sec-title tv2-sec-title--small">Anfragen erhalten</div>
+    {% for d in recv_rows %}
+    <div class="tv2-deal-line tv2-deal-line--click" data-summary-open="{{ d.id }}">
+      {% if d.crest %}<img class="tv2-deal-crest" src="{{ d.crest }}" alt="" onerror="this.style.display='none'">{% endif %}
+      <div class="tv2-deal-line-main">
+        <div class="tv2-board-name">{{ d.title }}</div>
+        <div class="tv2-board-meta">Zeitpunkt: <span class="tv2-cyan">{{ d.timing }}</span></div>
+      </div>
+      <span class="tv2-cd tv2-cd--gold" data-ends="{{ d.expires_ms }}">…</span>
+      <form method="post" action="{% url 'transfer_deal_accept' %}" onclick="event.stopPropagation()">{% csrf_token %}
+        <input type="hidden" name="deal_id" value="{{ d.id }}">
+        <button type="submit" class="tv2-btn tv2-btn--accept">Annehmen</button>
+      </form>
+      <form method="post" action="{% url 'transfer_deal_decline' %}" onclick="event.stopPropagation()">{% csrf_token %}
+        <input type="hidden" name="deal_id" value="{{ d.id }}">
+        <button type="submit" class="tv2-btn tv2-btn--decline">Ablehnen</button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="tv2-empty">Keine offenen Anfragen.</div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if seg == 'gesendet' %}
+  <section class="tv2-panel tv2-listing-sec">
+    <div class="tv2-deal-head">
+      <div class="tv2-sec-title tv2-sec-title--small">Anfragen gesendet</div>
+      <a class="tv2-btn tv2-btn--primary" href="{% url 'transfer_deal_builder' %}">Neue Anfrage (Deal-Builder)</a>
+    </div>
+    {% for d in sent_rows %}
+    <div class="tv2-deal-line tv2-deal-line--click" data-summary-open="{{ d.id }}">
+      {% if d.crest %}<img class="tv2-deal-crest" src="{{ d.crest }}" alt="" onerror="this.style.display='none'">{% endif %}
+      <div class="tv2-deal-line-main">
+        <div class="tv2-board-name">{{ d.title }}</div>
+        <div class="tv2-board-meta">Zeitpunkt: <span class="tv2-cyan">{{ d.timing }}</span>{% if d.reserved_fmt %} · Reserviert: <span class="tv2-gold">{{ d.reserved_fmt }}</span>{% endif %}</div>
+      </div>
+      <span class="tv2-cd tv2-cd--gold" data-ends="{{ d.expires_ms }}">…</span>
+      <form method="post" action="{% url 'transfer_deal_withdraw' %}" onclick="event.stopPropagation()">{% csrf_token %}
+        <input type="hidden" name="deal_id" value="{{ d.id }}">
+        <button type="submit" class="tv2-btn tv2-btn--decline">Zurückziehen</button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="tv2-empty">Keine offenen gesendeten Anfragen.</div>
+    {% endfor %}
+    <div class="tv2-footnote">Anfragen laufen nach 7 Tagen ab. Zurückziehen jederzeit vor Annahme → Reservierung sofort frei.</div>
+  </section>
+  {% endif %}
+
+  {% if seg == 'optionen' %}
+  <div class="tv2-two-col">
+    <section class="tv2-panel tv2-listing-sec">
+      <div class="tv2-sec-title tv2-sec-title--small tv2-cyan">Eigene Kaufoptionen</div>
+      {% for o in own_options %}
+      <div class="tv2-deal-line">
+        <div class="tv2-deal-line-main">
+          <a class="tv2-board-name" href="{{ o.player_url }}">{% if o.flag %}<img class="tv2-flag" src="{{ o.flag }}" alt="">{% endif %}{{ o.player }}</a>
+          <div class="tv2-board-meta"><span class="tv2-hp">{{ o.hp }}</span> · ausgeliehen von {{ o.owner }} · Optionspreis <b>{{ o.price_fmt }}</b></div>
+        </div>
+        <form method="post" action="{% url 'transfer_option_exercise' %}">{% csrf_token %}
+          <input type="hidden" name="loan_id" value="{{ o.loan_id }}">
+          <button type="submit" class="tv2-btn tv2-btn--accept">Option ziehen</button>
+        </form>
+      </div>
+      {% empty %}
+      <div class="tv2-empty">Keine eigenen Kaufoptionen.</div>
+      {% endfor %}
+    </section>
+    <section class="tv2-panel tv2-listing-sec tv2-foreign-opt">
+      <div class="tv2-sec-title tv2-sec-title--small tv2-gold">Fremde Optionen auf eigene Spieler</div>
+      {% for o in foreign_options %}
+      <div class="tv2-deal-line">
+        <div class="tv2-deal-line-main">
+          <div class="tv2-board-name">{{ o.player }}</div>
+          <div class="tv2-board-meta">{{ o.loan_club }} hält Kaufoption über <b class="tv2-gold">{{ o.price_fmt }}</b></div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="tv2-empty">Keine fremden Optionen.</div>
+      {% endfor %}
+    </section>
+  </div>
+  {% endif %}
+
+  {% if seg == 'leihen' %}
+  <div class="tv2-two-col">
+    <section class="tv2-panel tv2-listing-sec">
+      <div class="tv2-sec-title tv2-sec-title--small">Verliehen (raus)</div>
+      {% for l in loans_out %}
+      {% include 'game/transfer_v2/_loan_card.html' with l=l %}
+      {% empty %}
+      <div class="tv2-empty">Keine verliehenen Spieler.</div>
+      {% endfor %}
+      <div class="tv2-footnote">Rückruf nur einvernehmlich — der Leihverein muss zustimmen.</div>
+    </section>
+    <section class="tv2-panel tv2-listing-sec">
+      <div class="tv2-sec-title tv2-sec-title--small">Ausgeliehen (rein)</div>
+      {% for l in loans_in %}
+      {% include 'game/transfer_v2/_loan_card.html' with l=l %}
+      {% empty %}
+      <div class="tv2-empty">Keine ausgeliehenen Spieler.</div>
+      {% endfor %}
+    </section>
+  </div>
+  {% endif %}
+
+  <!-- ── ZUSAMMENFASSUNGS-POPUP ──────────────────────────────────────── -->
+  <div class="tv2-modal-backdrop" id="tv2-summary-backdrop" hidden>
+    <div class="tv2-modal tv2-modal--wide" role="dialog" aria-modal="true">
+      <div class="tv2-modal-title" id="tv2-sum-title">Deal-Zusammenfassung</div>
+      <div class="tv2-modal-sub" id="tv2-sum-sub"></div>
+      <div class="tv2-sum-quote" id="tv2-sum-quote" hidden></div>
+
+      <div class="tv2-sum-cols">
+        <div class="tv2-sum-col">
+          <div class="tv2-sum-col-head" id="tv2-sum-from-head"></div>
+          <div id="tv2-sum-from"></div>
+        </div>
+        <div class="tv2-sum-arrow">⇄</div>
+        <div class="tv2-sum-col">
+          <div class="tv2-sum-col-head" id="tv2-sum-to-head"></div>
+          <div id="tv2-sum-to"></div>
+        </div>
+      </div>
+
+      <div class="tv2-sum-levy">
+        <div class="tv2-sum-levy-title">Jugendspielerabgabe — wer zahlt an wen</div>
+        <div class="tv2-sum-levy-cols">
+          <div id="tv2-sum-levy-from"></div>
+          <div id="tv2-sum-levy-to"></div>
+        </div>
+      </div>
+
+      <div class="tv2-sheet-actions" id="tv2-sum-actions"></div>
+    </div>
+  </div>
+
+  {{ summaries_json|json_script:"tv2-summaries-data" }}
+  <div id="tv2-deal-urls"
+       data-accept-url="{% url 'transfer_deal_accept' %}"
+       data-decline-url="{% url 'transfer_deal_decline' %}"
+       data-withdraw-url="{% url 'transfer_deal_withdraw' %}"
+       data-csrf="{{ csrf_token }}"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'game/js/transfer_v2_deals.js' %}?v=5"></script>
+{% endblock %}

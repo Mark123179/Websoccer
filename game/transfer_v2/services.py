@@ -477,8 +477,11 @@ def create_deal_request(from_club, to_club, *, typ, timing='SOFORT',
     dem Empfänger gehören (gesperrt geprüft, erneut bei Annahme).
 
     Typ-Schemata (hart erzwungen, unabhängig von Formular-Validierung):
-    - CASH: Geld des Initiators gegen ≥1 Empfänger-Spieler; keine eigenen
-      Spieler, kein Gegen-Geld, keine Leihfelder.
+    - CASH (Kauf): Geld des Initiators gegen ≥1 Empfänger-Spieler; keine
+      eigenen Spieler, kein Gegen-Geld, keine Leihfelder.
+    - CASH (Verkauf): ≥1 eigener Spieler gegen Geld des Empfängers; keine
+      Empfänger-Spieler, kein eigenes Geld. Deckung des Empfängers wird bei
+      Annahme geprüft (accept_deal), nicht bei Erstellung.
     - SWAP: ≥1 Spieler auf BEIDEN Seiten; optional einseitiger Geldausgleich;
       keine Leihfelder.
     - LOAN: genau EIN Empfänger-Spieler, keine eigenen Spieler, kein
@@ -512,12 +515,22 @@ def create_deal_request(from_club, to_club, *, typ, timing='SOFORT',
             raise TransferActionError(
                 'Leihfelder nur bei Leihanfragen erlaubt.')
         if typ == DealRequest.TYP_CASH:
-            if from_players or not to_players:
+            # Zwei Richtungen: Kauf (Empfänger-Spieler gegen eigenes Geld)
+            # oder Verkauf (eigene Spieler gegen Empfänger-Geld).
+            kauf = bool(to_players) and not from_players
+            verkauf = bool(from_players) and not to_players
+            if not (kauf or verkauf):
                 raise TransferActionError(
-                    'Geld-Deal: nur Empfänger-Spieler gegen Geld.')
-            if cash_from <= 0 or cash_to:
+                    'Geld-Deal: Spieler nur auf EINER Seite (Kauf oder '
+                    'Verkauf).')
+            if kauf and (cash_from <= 0 or cash_to):
                 raise TransferActionError(
-                    'Geld-Deal: positiver Geldanteil des Initiators nötig.')
+                    'Geld-Deal (Kauf): positiver Geldanteil des Initiators '
+                    'nötig, kein Gegen-Geld.')
+            if verkauf and (cash_to <= 0 or cash_from):
+                raise TransferActionError(
+                    'Geld-Deal (Verkauf): positiver Geldanteil des '
+                    'Empfängers nötig, kein eigenes Geld.')
         else:  # SWAP / SWAP_CASH
             if not (from_players and to_players):
                 raise TransferActionError(
@@ -970,3 +983,141 @@ def exercise_buy_option(loan, buyer_club, *, saison=None, spieltag=None):
             loan, buyer_club=buyer_club, saison=saison, spieltag=spieltag)
     except execution.ExecutionError as e:
         raise TransferActionError(str(e))
+
+
+# ── Kader anbieten: Statusboard (Task #821) ──────────────────────────────
+
+def set_squad_offer_status(player, club, status):
+    """Setzt/aktualisiert den „Kader anbieten"-Status eines eigenen Spielers.
+
+    Reines Kommunikations-Statusboard (kein Zwang, keine Geldbewegung).
+    Eigentum wird hart geprüft — nur der besitzende Verein darf den Status
+    seiner Spieler setzen.
+    """
+    from game.models import SquadOffer
+
+    if club is None or player.club_id != club.pk:
+        raise TransferActionError(
+            f'{player.full_name} gehört nicht {club.name if club else "—"}.')
+    valid = {c[0] for c in SquadOffer.STATUS_CHOICES}
+    if status not in valid:
+        raise TransferActionError('Ungültiger Angebots-Status.')
+    obj, _ = SquadOffer.objects.update_or_create(
+        player=player, defaults={'status': status})
+    return obj
+
+
+def build_forum_post(club):
+    """Erzeugt den BB-Code-Forum-Post aller Spieler mit Status ≠ UVK.
+
+    Reine Text-Erzeugung aus dem gespeicherten Statusboard — keine
+    Push-Auslösung, kein Nebenwirkung.
+    """
+    from game.models import Player, SquadOffer
+
+    stmap = dict(SquadOffer.STATUS_CHOICES)
+    offers = {
+        o.player_id: o.status
+        for o in SquadOffer.objects.filter(player__club=club)
+        .exclude(status=SquadOffer.STATUS_UVK)
+    }
+    if not offers:
+        return ''
+    players = {
+        p.pk: p for p in Player.objects.filter(pk__in=offers)
+    }
+    lines = []
+    for pid, status in offers.items():
+        p = players.get(pid)
+        if not p:
+            continue
+        hp = ','.join(p.main_positions[:3]) or '—'
+        mw = int(p.market_value or 0)
+        mw_fmt = f'{mw:,}'.replace(',', '.') + ' €'
+        lines.append(
+            f'{hp} | {p.full_name} | {p.age} | {mw_fmt} | '
+            f'Status: {stmap.get(status, status)}')
+    if not lines:
+        return ''
+    from django.utils import timezone as _tz
+    stamp = _tz.localdate().strftime('%d.%m.%Y')
+    header = f'[b]{club.name} — Kaderangebote (Stand {stamp})[/b]'
+    footer = ('Anfragen gern ingame über den Deal-Builder oder hier '
+              'im Thread.')
+    return header + '\n' + '\n'.join(lines) + '\n\n' + footer
+
+
+def price_guidance(player, *, saison=None):
+    """Preisfindungs-Hilfe (§6.1): Spanne + bis zu 3 Referenzen.
+
+    Datengrundlage sind reale, vollzogene Geld-Transfers (TransferRecord
+    KIND_CASH mit genau EINEM Spieler) vergleichbarer Spieler derselben
+    Hauptposition. Bei < 3 vergleichbaren Treffern gibt es KEINE Anzeige
+    (bewusst „keine schlechten Daten"). Das Positionsbarometer gewichtet
+    die Spanne nach oben/unten (keine eigene UI).
+
+    Rückgabe:
+        {'show': bool, 'lo': int, 'hi': int, 'refs': [{...}]}  oder
+        {'show': False} wenn < 3 Vergleiche.
+    """
+    from game.models import PlayerMarketValueSnapshot
+    from .models import PositionBarometer, TransferRecordPlayer
+
+    hp = (player.main_position_1 or '').strip()
+    if not hp:
+        return {'show': False}
+
+    # Vergleichbare vollzogene Geld-Transfers: 1 Spieler, gleiche HP,
+    # tatsächlich Geld geflossen. market_value_at_transfer als Vergleichspreis.
+    entries = (
+        TransferRecordPlayer.objects
+        .filter(
+            record__kind=TransferRecord.KIND_CASH,
+            record__is_cancelled=False,
+            player__main_position_1=hp,
+            market_value_at_transfer__isnull=False,
+        )
+        .exclude(player_id=player.pk)
+        .select_related('record', 'player')
+        .order_by('-record__date', '-record__id')
+    )
+    refs_raw = []
+    prices = []
+    for e in entries:
+        preis = e.record.cash_b or e.record.cash_a
+        if not preis or preis <= 0:
+            continue
+        prices.append(Decimal(str(preis)))
+        if len(refs_raw) < 3:
+            refs_raw.append((e.player, preis, e.record.date))
+        if len(prices) >= 12:
+            break
+
+    if len(prices) < 3:
+        return {'show': False}
+
+    prices.sort()
+    lo = prices[0]
+    hi = prices[-1]
+
+    # Positionsbarometer-Gewicht (Nachfrageüberhang → teurer).
+    baro = PositionBarometer.objects.filter(position=hp).first()
+    weight = Decimal(str(baro.weight)) if baro else Decimal('1.000')
+    lo = _q(lo * weight)
+    hi = _q(hi * weight)
+    # Auf 100.000 € runden (wie Prototyp).
+    step = Decimal('100000')
+    lo = (lo / step).quantize(Decimal('1'), rounding=ROUND_HALF_UP) * step
+    hi = (hi / step).quantize(Decimal('1'), rounding=ROUND_HALF_UP) * step
+
+    refs = []
+    for rp, preis, datum in refs_raw:
+        rphp = ','.join(rp.main_positions[:1]) or hp
+        refs.append({
+            'name': rp.full_name,
+            'age': rp.age,
+            'hp': rphp,
+            'price': int(preis),
+            'date': datum.strftime('%d.%m.') if datum else '',
+        })
+    return {'show': True, 'lo': int(lo), 'hi': int(hi), 'refs': refs}

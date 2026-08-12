@@ -1,0 +1,20 @@
+{% load static %}
+{% comment %}Leih-Karte (verliehen raus / ausgeliehen rein). Kontext: l{% endcomment %}
+<div class="tv2-loan-card">
+  <img class="tv2-board-img" src="{{ l.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+  <div class="tv2-loan-info">
+    <div class="tv2-loan-name">
+      {% if l.flag %}<img class="tv2-flag" src="{{ l.flag }}" alt="">{% endif %}
+      <a class="tv2-board-name" href="{{ l.player_url }}">{{ l.player }}</a>
+      {% if l.outgoing %}<span class="tv2-cyan">→</span>{% else %}<span class="tv2-cyan">←</span>{% endif %}
+      {% if l.partner_crest %}<img class="tv2-loan-crest" src="{{ l.partner_crest }}" alt="" onerror="this.style.display='none'">{% endif %}
+      <span>{{ l.partner }}</span>
+      {% if l.has_option %}<span class="tv2-pill tv2-pill--green">mit Option</span>{% endif %}
+    </div>
+    <div class="tv2-board-meta">{{ l.age }} J. · <span class="tv2-hp">{{ l.hp }}</span>{% if l.np %} · <span class="tv2-np">{{ l.np }}</span>{% endif %} · MW {{ l.mw_fmt }}</div>
+    <div class="tv2-board-meta">bis {{ l.until }} · Gebühr {{ l.fee_fmt }}{% if l.buy_fmt %} · Kaufoption <span class="tv2-green">{{ l.buy_fmt }}</span>{% endif %}</div>
+  </div>
+  {% if l.outgoing %}
+  <button type="button" class="tv2-btn tv2-btn--ghost" disabled title="Rückruf nur einvernehmlich">Zurückrufen</button>
+  {% endif %}
+</div>

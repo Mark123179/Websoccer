@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=5">
+{% endblock %}
+
+{% block content %}
+<div class="tv2-wrap" id="tv2-root">
+
+  {% if messages %}
+  <div class="tv2-flash-bar">
+    {% for m in messages %}
+    <div class="tv2-flash tv2-flash--{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% include 'game/transfer_v2/_tabs.html' %}
+
+  <div class="tv2-sec-head">
+    <span class="tv2-sec-title">Kader anbieten</span>
+    <span class="tv2-sec-sub">Statusboard — Kommunikation, kein Zwang</span>
+  </div>
+
+  <!-- Segment-Reiter + Kaderstand -->
+  <section class="tv2-panel tv2-board-top">
+    <div class="tv2-chip-group tv2-seg-group">
+      <a class="tv2-chip{% if seg == 'profis' %} is-on{% endif %}" href="?seg=profis">Profis</a>
+      <a class="tv2-chip{% if seg == 'u21' %} is-on{% endif %}" href="?seg=u21">U21</a>
+    </div>
+    <div class="tv2-kaderstand">
+      Kaderstand: <b>{{ squad_count }}</b> · Minimum {{ squad_min }} · Obergrenze {{ squad_max }}
+      · verliehen <b class="tv2-gold">{{ verliehen }}</b> · ausgeliehen <b class="tv2-cyan">{{ ausgeliehen }}</b>
+    </div>
+    <button type="button" class="tv2-btn tv2-btn--ghost" id="tv2-forum-btn">Forum-Post generieren</button>
+  </section>
+
+  <!-- Spielerliste -->
+  <section class="tv2-panel tv2-listing-sec">
+    {% for r in rows %}
+    <div class="tv2-board-row">
+      <div class="tv2-board-main">
+        <a href="{{ r.player_url }}" title="Zum Spielerprofil"><img class="tv2-board-img" src="{{ r.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'"></a>
+        <div class="tv2-board-info">
+          <a class="tv2-board-name" href="{{ r.player_url }}">{% if r.flag %}<img class="tv2-flag" src="{{ r.flag }}" alt="" onerror="this.style.display='none'">{% endif %}{{ r.name }}</a>
+          <div class="tv2-board-meta">{{ r.age }} J. · <span class="tv2-hp">{{ r.hp }}</span>{% if r.np %} · <span class="tv2-np">{{ r.np }}</span>{% endif %} · MW {{ r.mw_fmt }}
+            {% if r.loaned_out %}<span class="tv2-pill tv2-pill--gold">verliehen</span>{% endif %}
+            {% if r.locked %}<span class="tv2-pill tv2-pill--red">wechselgesperrt {{ r.lock_days }} T</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="tv2-board-status">
+        <form method="post" action="{% url 'transfer_offer_status' %}" class="tv2-status-form">{% csrf_token %}
+          <input type="hidden" name="player_id" value="{{ r.id }}">
+          <input type="hidden" name="seg" value="{{ seg }}">
+          {% for sc in status_choices %}
+          <button type="submit" name="status" value="{{ sc.code }}" class="tv2-status-chip{% if r.status == sc.code %} is-on{% endif %}">{{ sc.label }}</button>
+          {% endfor %}
+        </form>
+      </div>
+
+      <div class="tv2-board-actions">
+        <button type="button" class="tv2-eye-btn" data-eye-toggle="{{ r.id }}" title="Beobachter anzeigen">👁 {{ r.watch_count }}</button>
+        {% if r.locked or r.loaned_out %}
+        <button type="button" class="tv2-btn tv2-btn--ghost" disabled title="Gesperrt / verliehen">Auf TL stellen</button>
+        {% else %}
+        <button type="button" class="tv2-btn tv2-btn--primary" data-listing-open="{{ r.id }}">Auf TL stellen</button>
+        {% endif %}
+      </div>
+
+      <div class="tv2-watchers" id="tv2-watchers-{{ r.id }}" hidden>
+        {% if r.watchers %}
+        {% for w in r.watchers %}
+        <span class="tv2-watcher-chip">{% if w.crest %}<img src="{{ w.crest }}" alt="" onerror="this.style.display='none'">{% endif %}{% if w.club_url %}<a href="{{ w.club_url }}">{{ w.club }}</a>{% else %}{{ w.club }}{% endif %} · {{ w.manager }}</span>
+        {% endfor %}
+        {% if r.watchers_extra %}<span class="tv2-watcher-more">+ {{ r.watchers_extra }} weitere</span>{% endif %}
+        <div class="tv2-watcher-note">Beobachter erhalten automatisch Push bei „auf TL gestellt" (inkl. Mindestgebot), „auf Leihmarkt gestellt" und „Status geändert".</div>
+        {% else %}
+        <div class="tv2-watcher-note">Noch keine Beobachter für diesen Spieler.</div>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="tv2-empty">Keine Spieler in diesem Segment.</div>
+    {% endfor %}
+  </section>
+
+  <!-- ── LISTING-MODAL („Auf Transfermarkt stellen") ─────────────────── -->
+  <div class="tv2-modal-backdrop" id="tv2-listing-backdrop" hidden>
+    <div class="tv2-modal tv2-modal--wide" role="dialog" aria-modal="true">
+      <div class="tv2-modal-title" id="tv2-li-title">Auf Transfermarkt stellen</div>
+      <div class="tv2-modal-sub" id="tv2-li-sub"></div>
+
+      <div class="tv2-li-grid-inputs">
+        <div>
+          <label class="tv2-sheet-label" for="tv2-li-min">Mindestgebot (€, ≥ {{ min_bid_floor|floatformat:0 }})</label>
+          <input id="tv2-li-min" class="tv2-sheet-input" inputmode="numeric" autocomplete="off">
+        </div>
+        <div>
+          <label class="tv2-sheet-label" for="tv2-li-buy">Sofortkaufpreis (optional)</label>
+          <input id="tv2-li-buy" class="tv2-sheet-input" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="tv2-li-chip-row">
+        <span class="tv2-sheet-label">Transferzeitpunkt</span>
+        <div class="tv2-chip-group" id="tv2-li-timing">
+          <button type="button" class="tv2-chip is-on" data-val="SOFORT">Sofort</button>
+          <button type="button" class="tv2-chip" data-val="WP">Winterpause</button>
+          <button type="button" class="tv2-chip" data-val="SE">Saisonende</button>
+        </div>
+      </div>
+      <div class="tv2-li-chip-row">
+        <span class="tv2-sheet-label">Laufzeit</span>
+        <div class="tv2-chip-group" id="tv2-li-duration">
+          <button type="button" class="tv2-chip" data-val="1">1</button>
+          <button type="button" class="tv2-chip" data-val="2">2</button>
+          <button type="button" class="tv2-chip is-on" data-val="3">3</button>
+          <button type="button" class="tv2-chip" data-val="5">5</button>
+          <button type="button" class="tv2-chip" data-val="7">7</button>
+          <span class="tv2-chip-suffix">Tage</span>
+        </div>
+      </div>
+
+      <div class="tv2-li-cols">
+        <div class="tv2-li-col">
+          <div class="tv2-li-col-title">Preisfindungs-Hilfe</div>
+          <div id="tv2-li-guidance"></div>
+        </div>
+        <div class="tv2-li-col">
+          <div class="tv2-li-col-title">Jugendspielerabgabe bei Verkauf</div>
+          <div id="tv2-li-levy"></div>
+        </div>
+      </div>
+
+      <div class="tv2-li-check" id="tv2-li-check"></div>
+
+      <div class="tv2-sheet-actions">
+        <button type="button" class="tv2-btn tv2-btn--ghost tv2-btn--tall" id="tv2-li-cancel">Abbrechen</button>
+        <form method="post" action="{% url 'transfer_offer_create_listing' %}" id="tv2-li-form" class="tv2-sheet-form">{% csrf_token %}
+          <input type="hidden" name="player_id" id="tv2-li-pid">
+          <input type="hidden" name="seg" value="{{ seg }}">
+          <input type="hidden" name="min_bid" id="tv2-li-min-hidden">
+          <input type="hidden" name="buy_now" id="tv2-li-buy-hidden">
+          <input type="hidden" name="timing" id="tv2-li-timing-hidden" value="SOFORT">
+          <input type="hidden" name="duration" id="tv2-li-duration-hidden" value="3">
+          <button type="submit" class="tv2-btn tv2-btn--primary tv2-btn--tall" id="tv2-li-cta">Listing erstellen</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FORUM-MODAL ──────────────────────────────────────────────────── -->
+  <div class="tv2-modal-backdrop" id="tv2-forum-backdrop" hidden>
+    <div class="tv2-modal" role="dialog" aria-modal="true">
+      <div class="tv2-modal-title">Forum-Post</div>
+      <div class="tv2-modal-sub">Alle Spieler mit Status ≠ Unverkäuflich</div>
+      <pre class="tv2-forum-pre" id="tv2-forum-text"></pre>
+      <div class="tv2-sheet-actions">
+        <button type="button" class="tv2-btn tv2-btn--ghost tv2-btn--tall" id="tv2-forum-close">Schließen</button>
+        <button type="button" class="tv2-btn tv2-btn--primary tv2-btn--tall" id="tv2-forum-copy">In Zwischenablage kopieren</button>
+      </div>
+    </div>
+  </div>
+
+  {{ sheets_json|json_script:"tv2-listing-data" }}
+  <div id="tv2-board-urls"
+       data-forum-url="{% url 'transfer_offer_forum' %}"
+       data-min-floor="{{ min_bid_floor }}"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'game/js/transfer_v2_deals.js' %}?v=5"></script>
+{% endblock %}

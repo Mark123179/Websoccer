@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=5">
+{% endblock %}
+
+{% block content %}
+<div class="tv2-wrap" id="tv2-root">
+
+  {% if messages %}
+  <div class="tv2-flash-bar">
+    {% for m in messages %}
+    <div class="tv2-flash tv2-flash--{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% include 'game/transfer_v2/_tabs.html' %}
+
+  <div class="tv2-sec-head">
+    <span class="tv2-sec-title">Deal-Builder</span>
+    <span class="tv2-sec-sub">Manager-zu-Manager-Anfrage · Tausch, Paket, Geld</span>
+    <a class="tv2-btn tv2-btn--ghost tv2-builder-back" href="{% url 'transfer_my_deals' %}?seg=gesendet">← Zurück zu Meine Deals</a>
+  </div>
+
+  <!-- Schritt 1: Zielverein -->
+  <section class="tv2-panel tv2-builder-target">
+    <div class="tv2-sec-title tv2-sec-title--small">1 · Zielverein wählen</div>
+    <div class="tv2-builder-selects">
+      <select class="tv2-sheet-input tv2-select" id="tv2-b-country"><option value="">Land…</option></select>
+      <select class="tv2-sheet-input tv2-select" id="tv2-b-league" disabled><option value="">Liga…</option></select>
+      <select class="tv2-sheet-input tv2-select" id="tv2-b-club" disabled><option value="">Verein…</option></select>
+    </div>
+    <div class="tv2-builder-clubinfo" id="tv2-b-clubinfo" hidden>
+      <img id="tv2-b-crest" class="tv2-deal-crest" src="" alt="" onerror="this.style.display='none'">
+      <span id="tv2-b-clubname" class="tv2-board-name"></span>
+      <span id="tv2-b-manager" class="tv2-pill tv2-pill--cyan"></span>
+    </div>
+  </section>
+
+  <!-- Schritt 2: Pakete -->
+  <div class="tv2-two-col tv2-builder-cols">
+    <section class="tv2-panel tv2-listing-sec">
+      <div class="tv2-builder-col-head">
+        <div class="tv2-sec-title tv2-sec-title--small">2 · Ich gebe ab <span class="tv2-count" id="tv2-b-from-count">0/{{ max_per_side }}</span></div>
+        <div class="tv2-chip-group" id="tv2-b-from-seg">
+          <button type="button" class="tv2-chip is-on" data-val="profis">Profis</button>
+          <button type="button" class="tv2-chip" data-val="u21">U21</button>
+        </div>
+      </div>
+      <div class="tv2-builder-list" id="tv2-b-from-list"></div>
+      <div class="tv2-builder-cash">
+        <label class="tv2-sheet-label" for="tv2-b-cash-from">+ Geld von mir (€)</label>
+        <input class="tv2-sheet-input" id="tv2-b-cash-from" inputmode="numeric" autocomplete="off" placeholder="0">
+      </div>
+    </section>
+
+    <section class="tv2-panel tv2-listing-sec">
+      <div class="tv2-builder-col-head">
+        <div class="tv2-sec-title tv2-sec-title--small">3 · Ich möchte <span class="tv2-count" id="tv2-b-to-count">0/{{ max_per_side }}</span></div>
+        <div class="tv2-chip-group" id="tv2-b-to-seg">
+          <button type="button" class="tv2-chip is-on" data-val="profis">Profis</button>
+          <button type="button" class="tv2-chip" data-val="u21">U21</button>
+        </div>
+      </div>
+      <div class="tv2-builder-list" id="tv2-b-to-list">
+        <div class="tv2-empty">Erst Zielverein wählen.</div>
+      </div>
+      <div class="tv2-builder-cash">
+        <label class="tv2-sheet-label" for="tv2-b-cash-to">+ Geld vom Zielverein (€)</label>
+        <input class="tv2-sheet-input" id="tv2-b-cash-to" inputmode="numeric" autocomplete="off" placeholder="0">
+      </div>
+    </section>
+  </div>
+
+  <!-- Schritt 3: Zeitpunkt + Nachricht + Zusammenfassung -->
+  <section class="tv2-panel tv2-builder-final">
+    <div class="tv2-li-chip-row">
+      <span class="tv2-sheet-label">Transferzeitpunkt</span>
+      <div class="tv2-chip-group" id="tv2-b-timing">
+        <button type="button" class="tv2-chip is-on" data-val="SOFORT">Sofort</button>
+        <button type="button" class="tv2-chip" data-val="WP">Winterpause</button>
+        <button type="button" class="tv2-chip" data-val="SE">Saisonende</button>
+      </div>
+      <span class="tv2-footnote" id="tv2-b-timing-note"></span>
+    </div>
+
+    <div class="tv2-builder-msg">
+      <label class="tv2-sheet-label" for="tv2-b-msg">Nachricht (optional, max. 280 Zeichen)</label>
+      <textarea class="tv2-sheet-input tv2-textarea" id="tv2-b-msg" maxlength="280" rows="2"></textarea>
+    </div>
+
+    <div class="tv2-builder-summary" id="tv2-b-summary">
+      <div class="tv2-sum-levy-title">Live-Zusammenfassung</div>
+      <div id="tv2-b-summary-body" class="tv2-builder-summary-body">Noch leer — Zielverein und Paket wählen.</div>
+      <div id="tv2-b-levy" class="tv2-builder-levy"></div>
+    </div>
+
+    <div class="tv2-sheet-actions">
+      <form method="post" action="{% url 'transfer_builder_send' %}" id="tv2-b-form" class="tv2-sheet-form">{% csrf_token %}
+        <input type="hidden" name="to_club_id" id="tv2-b-toclub-hidden">
+        <input type="hidden" name="from_players" id="tv2-b-from-hidden">
+        <input type="hidden" name="to_players" id="tv2-b-to-hidden">
+        <input type="hidden" name="cash_from" id="tv2-b-cashfrom-hidden">
+        <input type="hidden" name="cash_to" id="tv2-b-cashto-hidden">
+        <input type="hidden" name="timing" id="tv2-b-timing-hidden" value="SOFORT">
+        <input type="hidden" name="message" id="tv2-b-msg-hidden">
+        <button type="submit" class="tv2-btn tv2-btn--primary tv2-btn--tall" id="tv2-b-send" disabled>Anfrage senden</button>
+      </form>
+    </div>
+    <div class="tv2-footnote">Anfrage läuft 7 Tage · Geld von mir wird bis zur Entscheidung reserviert · max. {{ max_per_side }} Spieler je Seite.</div>
+  </section>
+
+  {{ countries_json|json_script:"tv2-countries-data" }}
+  {{ own_players_json|json_script:"tv2-own-players-data" }}
+  <div id="tv2-builder-urls"
+       data-target-url="{% url 'transfer_builder_target_players' %}"
+       data-levy-min="{{ levy_min }}"
+       data-levy-pct="{{ levy_pct_label }}"
+       data-max-side="{{ max_per_side }}"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'game/js/transfer_v2_deals.js' %}?v=5"></script>
+{% endblock %}
