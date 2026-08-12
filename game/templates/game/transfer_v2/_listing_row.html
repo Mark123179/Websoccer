@@ -1,0 +1,79 @@
+{% load static %}
+<div class="tv2-row-wrap"{% if filterable %} data-listing
+     data-scope="{% if item.is_fa %}frei{% else %}verein{% endif %}"
+     data-timing="{{ item.timing_code }}"
+     data-hp="{{ item.hp }}" data-np="{{ item.np }}"
+     data-mw="{{ item.mw_val }}"{% endif %}>
+  <div class="tv2-row">
+    <a class="tv2-cell-player" href="{{ item.player_url }}" title="Zum Spielerprofil">
+      <img class="tv2-row-img" src="{{ item.portrait }}" alt="{{ item.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+      <div class="tv2-cell-player-txt">
+        <div class="tv2-row-name">{% if item.flag %}<img class="tv2-flag" src="{{ item.flag }}" alt="" onerror="this.style.display='none'">{% endif %}{{ item.name }}</div>
+        <div class="tv2-row-meta">{{ item.age }} J. · <span class="tv2-hp" title="Hauptposition">{{ item.hp }}</span>{% if item.np %} · <span class="tv2-np" title="Nebenposition">{{ item.np }}</span>{% endif %}</div>
+      </div>
+    </a>
+    {% if item.seller_url %}
+    <a class="tv2-cell-club" href="{{ item.seller_url }}" title="Zum Vereinsprofil">
+      {% if item.seller_crest %}<img class="tv2-row-crest" src="{{ item.seller_crest }}" alt="" onerror="this.style.display='none'">{% endif %}
+      <div class="tv2-cell-club-txt">
+        <div class="tv2-row-clubname">{{ item.seller_name }}</div>
+        <div class="tv2-row-rl">RL: {{ item.rl }}</div>
+      </div>
+    </a>
+    {% else %}
+    <div class="tv2-cell-club">
+      <div class="tv2-cell-club-txt">
+        <div class="tv2-row-clubname">{{ item.seller_name }}</div>
+        <div class="tv2-row-rl">RL: {{ item.rl }}</div>
+      </div>
+    </div>
+    {% endif %}
+    <div class="tv2-ta-r">
+      <a class="tv2-mw-cell" href="{{ item.tm_url }}" target="_blank" rel="noopener" title="Marktwert auf transfermarkt.de">{{ item.mw_fmt }}</a>
+      <div><span class="tv2-trend {% if item.trend_zero %}tv2-trend--zero{% elif item.trend_up %}tv2-trend--up{% else %}tv2-trend--down{% endif %}">{{ item.trend_txt }}</span></div>
+    </div>
+    <div>
+      <span class="tv2-timing-pill{% if not item.timing_sofort %} tv2-timing-pill--late{% endif %}">{{ item.timing }}</span>
+      <div class="tv2-row-since">auf TL seit {{ item.since }}</div>
+    </div>
+    <div class="tv2-ta-r tv2-row-min">{{ item.min_fmt }}</div>
+    <div class="tv2-ta-r tv2-cell-top" data-bids-toggle title="Gebotsverlauf aufklappen">
+      <div class="tv2-row-top">{{ item.top_fmt }}</div>
+      {% if item.top_club_txt %}<div class="tv2-row-topclub{% if item.top_own %} tv2-row-topclub--own{% endif %}">{{ item.top_club_txt }}</div>{% endif %}
+    </div>
+    <div class="tv2-ta-r tv2-row-buy">{{ item.buy_fmt }}</div>
+    <div class="tv2-ta-r">
+      <span class="tv2-cd tv2-cd--{{ item.cd_kind }}" data-ends="{{ item.ends_at_ms }}">{{ item.cd_label }}</span>
+      {% if item.ext %}<div class="tv2-row-ext" title="Anti-Sniping: Jedes Gebot in der letzten Stunde verlängert die Auktion automatisch um 24 Stunden — ×{{ item.ext }} zeigt, wie oft bereits verlängert wurde.">+24h ×{{ item.ext }}</div>{% endif %}
+    </div>
+    <div class="tv2-ta-c tv2-cell-pin">
+      <span class="tv2-row-pincount">{{ item.pins }}</span>
+      <form method="post" action="{% url 'transfer_market_pin' %}">{% csrf_token %}
+        <input type="hidden" name="listing_id" value="{{ item.id }}">
+        <button type="submit" class="tv2-pin-btn{% if item.pinned %} is-pinned{% endif %}" title="{% if item.pinned %}Pin entfernen{% else %}Anpinnen{% endif %}">📌</button>
+      </form>
+    </div>
+    <div class="tv2-ta-r tv2-cell-actions">
+      {% if item.own %}
+      <span class="tv2-own-label" title="Eigenes Listing">Eigenes</span>
+      {% else %}
+      <button type="button" class="tv2-btn tv2-btn--primary tv2-btn--small" data-sheet-open="{{ item.id }}" data-buy="0">Bieten</button>
+      {% if item.has_buy %}
+      <button type="button" class="tv2-btn tv2-btn--ghost tv2-btn--small" data-sheet-open="{{ item.id }}" data-buy="1" title="Sofortkauf — {{ item.buy_fmt }}">Sofortkauf</button>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="tv2-bids-panel" hidden>
+    <div class="tv2-bids-title">Gebotsverlauf</div>
+    {% for b in item.bids %}
+    <div class="tv2-bids-row">
+      <span class="tv2-bids-club">{{ b.club }}</span>
+      <span class="tv2-bids-amt">{{ b.amt_fmt }}</span>
+      <span class="tv2-bids-time">{{ b.time_fmt }}</span>
+    </div>
+    {% empty %}
+    <div class="tv2-bids-none">Noch keine Gebote.</div>
+    {% endfor %}
+  </div>
+</div>

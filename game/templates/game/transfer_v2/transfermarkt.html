@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}scouting-page{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=3">
+{% endblock %}
+
+{% block content %}
+<div class="tv2-wrap" id="tv2-root">
+
+  {% if messages %}
+  <div class="tv2-flash-bar">
+    {% for m in messages %}
+    <div class="tv2-flash tv2-flash--{{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% include 'game/transfer_v2/_tabs.html' %}
+
+  <!-- ── TICKER ─────────────────────────────────────────────────────── -->
+  {% if ticker_enabled %}
+  <div class="tv2-ticker">
+    <div class="tv2-ticker-label"><span class="tv2-ticker-dot"></span>TRANSFER-TICKER</div>
+    <div class="tv2-ticker-track">
+      <div class="tv2-ticker-move">
+        <span class="tv2-ticker-run">
+          {% for tp in ticker %}{% if tp.kind == 'player' %}<a class="tv2-tk-player" href="{{ tp.url }}">{{ tp.t }}</a>{% elif tp.kind == 'club' %}<a class="tv2-tk-club" href="{{ tp.url }}">{{ tp.t }}</a>{% elif tp.kind == 'deadline' %}<span class="tv2-tk-deadline">{{ tp.t }}</span>{% else %}<span>{{ tp.t }}</span>{% endif %}{% endfor %}
+        </span>
+        <span class="tv2-ticker-run" aria-hidden="true">
+          {% for tp in ticker %}{% if tp.kind == 'player' %}<a class="tv2-tk-player" href="{{ tp.url }}">{{ tp.t }}</a>{% elif tp.kind == 'club' %}<a class="tv2-tk-club" href="{{ tp.url }}">{{ tp.t }}</a>{% elif tp.kind == 'deadline' %}<span class="tv2-tk-deadline">{{ tp.t }}</span>{% else %}<span>{{ tp.t }}</span>{% endif %}{% endfor %}
+        </span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── HEADLINER ──────────────────────────────────────────────────── -->
+  <div class="tv2-sec-head">
+    <span class="tv2-sec-title">Headliner</span>
+    <span class="tv2-sec-sub">Die 3 als Nächstes ablaufenden Auktionen</span>
+  </div>
+  <div class="tv2-headliner-grid">
+    {% for h in headliners %}
+    <article class="tv2-hl-card">
+      <div class="tv2-hl-strip"></div>
+      <div class="tv2-hl-top">
+        <div class="tv2-hl-badges">
+          <span class="tv2-hl-live">LIVE-AUKTION</span>
+          {% if h.ext %}<span class="tv2-hl-ext" title="Anti-Sniping: Jedes Gebot in der letzten Stunde verlängert die Auktion automatisch um 24 Stunden — ×{{ h.ext }} zeigt, wie oft bereits verlängert wurde.">+24h ×{{ h.ext }}</span>{% endif %}
+        </div>
+        <span class="tv2-cd tv2-cd--big tv2-cd--{{ h.cd_kind }}" data-ends="{{ h.ends_at_ms }}">{{ h.cd_label }}</span>
+      </div>
+      <div class="tv2-hl-body">
+        <a href="{{ h.player_url }}" title="Zum Spielerprofil"><img class="tv2-hl-img" src="{{ h.portrait }}" alt="{{ h.name }}" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'"></a>
+        <div class="tv2-hl-info">
+          <a class="tv2-hl-name" href="{{ h.player_url }}" title="Zum Spielerprofil">{{ h.name }}</a>
+          <div class="tv2-hl-meta">{% if h.flag %}<img class="tv2-flag" src="{{ h.flag }}" alt="" onerror="this.style.display='none'">{% endif %}{{ h.age }} J. · <span class="tv2-hp" title="Hauptposition">{{ h.hp }}</span>{% if h.np %} · <span class="tv2-np" title="Nebenposition">{{ h.np }}</span>{% endif %}</div>
+          {% if h.seller_url %}
+          <a class="tv2-hl-club" href="{{ h.seller_url }}" title="Zum Vereinsprofil">
+            {% if h.seller_crest %}<img src="{{ h.seller_crest }}" alt="" onerror="this.style.display='none'">{% endif %}
+            <span>{{ h.seller_name }}</span>
+          </a>
+          {% else %}
+          <div class="tv2-hl-club"><span>{{ h.seller_name }}</span></div>
+          {% endif %}
+          <div class="tv2-hl-mwrow">
+            <a class="tv2-mw-link" href="{{ h.tm_url }}" target="_blank" rel="noopener" title="Marktwert auf transfermarkt.de">MW {{ h.mw_fmt }}</a>
+            <span class="tv2-trend {% if h.trend_zero %}tv2-trend--zero{% elif h.trend_up %}tv2-trend--up{% else %}tv2-trend--down{% endif %}">{{ h.trend_txt }}</span>
+          </div>
+          <div class="tv2-hl-toprow">
+            <div>
+              <div class="tv2-hl-toplabel">Höchstgebot</div>
+              <div class="tv2-hl-topval">{{ h.top_fmt }}</div>
+              {% if h.top_club_txt %}<div class="tv2-hl-topclub{% if h.top_own %} tv2-hl-topclub--own{% endif %}">{{ h.top_club_txt }}</div>{% endif %}
+            </div>
+            <div class="tv2-hl-buy">
+              <div class="tv2-hl-toplabel">Sofortkauf</div>
+              <div class="tv2-hl-buyval">{{ h.buy_fmt }}</div>
+            </div>
+          </div>
+          <div class="tv2-hl-pins">📌 {{ h.pins }} gepinnt</div>
+        </div>
+      </div>
+      <div class="tv2-hl-actions">
+        {% if h.own %}
+        <span class="tv2-own-label" title="Eigenes Listing">Eigenes Listing</span>
+        {% else %}
+        <button type="button" class="tv2-btn tv2-btn--primary" data-sheet-open="{{ h.id }}" data-buy="0">Bieten</button>
+        {% if h.has_buy %}
+        <button type="button" class="tv2-btn tv2-btn--ghost" data-sheet-open="{{ h.id }}" data-buy="1">Sofortkauf</button>
+        {% else %}
+        <button type="button" class="tv2-btn tv2-btn--ghost" disabled>Kein Sofortkauf</button>
+        {% endif %}
+        {% endif %}
+      </div>
+    </article>
+    {% empty %}
+    <div class="tv2-empty">Keine laufenden Auktionen.</div>
+    {% endfor %}
+  </div>
+
+  <!-- ── FILTER ─────────────────────────────────────────────────────── -->
+  <section class="tv2-panel tv2-filterbar">
+    <span class="tv2-filter-label">Filter</span>
+    <div class="tv2-chip-group" data-filter-group="scope">
+      <button type="button" class="tv2-chip" data-val="verein">Vereinsspieler</button>
+      <button type="button" class="tv2-chip" data-val="frei">Vereinslose</button>
+    </div>
+    <div class="tv2-chip-group" data-filter-group="timing">
+      <button type="button" class="tv2-chip" data-val="SOFORT">Sofort</button>
+      <button type="button" class="tv2-chip" data-val="WP">Winterpause</button>
+      <button type="button" class="tv2-chip" data-val="SE">Saisonende</button>
+    </div>
+    <select id="tv2-fpos" class="tv2-select">
+      <option value="">Position: Alle</option>
+      {% for pos in position_options %}<option value="{{ pos }}">{{ pos }}</option>{% endfor %}
+    </select>
+    <div class="tv2-mw-inputs">
+      <input id="tv2-mw-von" class="tv2-input" inputmode="numeric" placeholder="MW von (Mio)">
+      <span class="tv2-mw-dash">–</span>
+      <input id="tv2-mw-bis" class="tv2-input" inputmode="numeric" placeholder="MW bis (Mio)">
+    </div>
+    <span class="tv2-filter-count" id="tv2-count">{{ listing_total }} von {{ listing_total }} Listings sichtbar</span>
+  </section>
+
+  <!-- ── GEPINNT ────────────────────────────────────────────────────── -->
+  {% if pinned_rows %}
+  <section class="tv2-panel tv2-listing-sec">
+    <div class="tv2-sec-head tv2-sec-head--inner">
+      <span class="tv2-sec-title tv2-sec-title--pinned">Gepinnt</span>
+      <span class="tv2-sec-sub">Deine markierten Listings</span>
+    </div>
+    <div class="tv2-table-scroll"><div class="tv2-table">
+      {% include 'game/transfer_v2/_listing_table_head.html' %}
+      {% for item in pinned_rows %}
+        {% include 'game/transfer_v2/_listing_row.html' with item=item filterable=False %}
+      {% endfor %}
+    </div></div>
+  </section>
+  {% endif %}
+
+  <!-- ── ALLE LISTINGS ──────────────────────────────────────────────── -->
+  <section class="tv2-panel tv2-listing-sec">
+    <div class="tv2-sec-head tv2-sec-head--inner">
+      <span class="tv2-sec-title">Alle Listings</span>
+      <span class="tv2-sec-sub">Auktionen mit Countdown — verbindliche Gebote</span>
+    </div>
+    <div class="tv2-table-scroll"><div class="tv2-table" id="tv2-all-listings">
+      {% include 'game/transfer_v2/_listing_table_head.html' %}
+      {% for item in all_rows %}
+        {% include 'game/transfer_v2/_listing_row.html' with item=item filterable=True %}
+      {% empty %}
+      <div class="tv2-empty">Keine Listings in dieser Sektion.</div>
+      {% endfor %}
+      <div class="tv2-empty" id="tv2-filter-empty" hidden>Keine Listings in dieser Sektion.</div>
+    </div></div>
+  </section>
+
+  <!-- ── GERÜCHTE ───────────────────────────────────────────────────── -->
+  {% if rumors %}
+  <section class="tv2-panel">
+    <div class="tv2-sec-head tv2-sec-head--inner">
+      <span class="tv2-sec-title">Transfergerüchte</span>
+      <span class="tv2-sec-sub">Aus den Vereinsnews · Medien berichten</span>
+    </div>
+    <div class="tv2-rumor-row">
+      {% for r in rumors %}
+      <div class="tv2-rumor-col">
+        <div class="tv2-rumor-card{% if r.reaction == 'DENIED' %} tv2-rumor-card--denied{% elif r.reaction == 'CONFIRMED' %} tv2-rumor-card--confirmed{% endif %}">
+          {% if r.img %}<img class="tv2-rumor-img" src="{{ r.img }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">{% else %}<img class="tv2-rumor-img" src="{% static 'game/images/default_player.svg' %}" alt="">{% endif %}
+          <span class="tv2-rumor-outlet">{{ r.outlet }}</span>
+          <div class="tv2-rumor-bottom">
+            <span class="tv2-rumor-tag">Transfergerücht</span>
+            <span class="tv2-rumor-title">{{ r.headline }}</span>
+          </div>
+        </div>
+        {% if r.can_react %}
+        <div class="tv2-rumor-react">
+          <form method="post" action="{% url 'transfer_rumor_react' %}">{% csrf_token %}
+            <input type="hidden" name="rumor_id" value="{{ r.id }}">
+            <input type="hidden" name="reaction" value="denied">
+            <button type="submit" class="tv2-react-btn tv2-react-btn--deny">Dementieren</button>
+          </form>
+          <form method="post" action="{% url 'transfer_rumor_react' %}">{% csrf_token %}
+            <input type="hidden" name="rumor_id" value="{{ r.id }}">
+            <input type="hidden" name="reaction" value="nc">
+            <button type="submit" class="tv2-react-btn tv2-react-btn--nc">Kein Kommentar</button>
+          </form>
+          <form method="post" action="{% url 'transfer_rumor_react' %}">{% csrf_token %}
+            <input type="hidden" name="rumor_id" value="{{ r.id }}">
+            <input type="hidden" name="reaction" value="confirmed">
+            <button type="submit" class="tv2-react-btn tv2-react-btn--confirm">Bestätigen</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- ── DEAL-SHEET-MODAL ───────────────────────────────────────────── -->
+  <div class="tv2-modal-backdrop" id="tv2-sheet-backdrop" hidden>
+    <div class="tv2-modal" role="dialog" aria-modal="true" aria-labelledby="tv2-sheet-title">
+      <div class="tv2-modal-title" id="tv2-sheet-title"></div>
+      <div class="tv2-modal-sub">Deal-Sheet — verbindliche Bestätigung</div>
+      <div class="tv2-sheet-player">
+        <img id="tv2-sheet-img" src="" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+        <div>
+          <div class="tv2-sheet-name" id="tv2-sheet-name"></div>
+          <div class="tv2-sheet-playersub" id="tv2-sheet-playersub"></div>
+        </div>
+      </div>
+      <div id="tv2-sheet-bidblock">
+        <label class="tv2-sheet-label" for="tv2-sheet-amount">Gebot (€)</label>
+        <input id="tv2-sheet-amount" class="tv2-sheet-input" inputmode="numeric" autocomplete="off">
+        <div class="tv2-sheet-minhint"><span id="tv2-sheet-minhint"></span> · Mindesterhöhung: max(100.000 €, 5 %), gerundet auf 50.000 €</div>
+      </div>
+      <div class="tv2-sheet-calc">
+        <div class="tv2-sheet-row"><span id="tv2-sheet-sumlabel">Gebotssumme</span><b id="tv2-sheet-sum"></b></div>
+        <div id="tv2-sheet-levyblock">
+          <div class="tv2-sheet-row tv2-sheet-row--line"><span>Jugendspielerabgabe (<span id="tv2-sheet-levypct">8 %</span>)</span><b class="tv2-gold" id="tv2-sheet-levy"></b></div>
+          <div id="tv2-sheet-dist"></div>
+          <div class="tv2-sheet-row tv2-sheet-row--line"><span>Auszahlung an Verkäufer</span><b class="tv2-green" id="tv2-sheet-payout"></b></div>
+        </div>
+        <div class="tv2-sheet-fanote" id="tv2-sheet-fanote" hidden>Vereinsloser Spieler — der Erlös geht an den Verband. Wechsel sofort.</div>
+        <div class="tv2-sheet-row tv2-sheet-row--line tv2-sheet-row--small"><span>Transferzeitpunkt</span><span class="tv2-cyan" id="tv2-sheet-timing"></span></div>
+      </div>
+      <div class="tv2-sheet-warn" id="tv2-sheet-warn"></div>
+      <div class="tv2-sheet-actions">
+        <button type="button" class="tv2-btn tv2-btn--ghost tv2-btn--tall" id="tv2-sheet-cancel">Abbrechen</button>
+        <form method="post" id="tv2-sheet-form" class="tv2-sheet-form">{% csrf_token %}
+          <input type="hidden" name="listing_id" id="tv2-sheet-listing">
+          <input type="hidden" name="amount" id="tv2-sheet-amount-hidden">
+          <button type="submit" class="tv2-btn tv2-btn--primary tv2-btn--tall" id="tv2-sheet-cta"></button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {{ sheets_json|json_script:"tv2-sheets-data" }}
+  <div id="tv2-urls"
+       data-bid-url="{% url 'transfer_market_bid' %}"
+       data-buy-url="{% url 'transfer_market_buy_now' %}"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'game/js/transfer_v2.js' %}?v=3"></script>
+{% endblock %}

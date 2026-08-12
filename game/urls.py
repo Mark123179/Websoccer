@@ -36,6 +36,13 @@ from .views_auth import auth_login, auth_register, auth_logout
 from .views_notifications import notifications_page
 from .views_ai import ai_chat
 from .views_notes import notizen_api
+from .views_transfer_v2 import (
+    transfer_market,
+    transfer_market_bid,
+    transfer_market_buy_now,
+    transfer_market_pin,
+    transfer_rumor_react,
+)
 from .views_scouting import (
     transfer_scouting,
     scouting_start,
@@ -393,6 +400,13 @@ urlpatterns = [
     path('management/finanzen/sponsoring/verhandeln/', management_sponsoring_push, name='management_sponsoring_push_compat'),
     path('management/halloffame/', management_halloffame, name='management_halloffame'),
     path('management/job-angebote/', management_job_offers, name='management_job_offers'),
+
+    # Transfersystem v2 — Transfermarkt (Task #820)
+    path('transfers/markt/', transfer_market, name='transfer_market'),
+    path('transfers/markt/gebot/', transfer_market_bid, name='transfer_market_bid'),
+    path('transfers/markt/sofortkauf/', transfer_market_buy_now, name='transfer_market_buy_now'),
+    path('transfers/markt/pin/', transfer_market_pin, name='transfer_market_pin'),
+    path('transfers/markt/geruecht/', transfer_rumor_react, name='transfer_rumor_react'),
 
     # Scouting-System (Task #594)
     path('transfers/scouting/', transfer_scouting, name='transfer_scouting'),

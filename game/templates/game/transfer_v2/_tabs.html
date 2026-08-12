@@ -1,0 +1,35 @@
+{% comment %}
+  Transfersystem v2 — gemeinsame Shell: 7 Reiter + Budget-Kopf (live).
+  Kontext: active_tab, konto_fmt, reserviert_fmt, verfuegbar_fmt,
+  open_deal_count.
+{% endcomment %}
+<div class="tv2-head">
+  <div>
+    <div class="tv2-title">Transfers</div>
+    <div class="tv2-subtitle">Transfermarkt · Jeder Tag ist Deadline Day</div>
+  </div>
+  <div class="tv2-budget">
+    <div class="tv2-budget-box">
+      <span class="tv2-budget-label">Kontostand</span>
+      <span class="tv2-budget-val">{{ konto_fmt }}</span>
+    </div>
+    <div class="tv2-budget-box">
+      <span class="tv2-budget-label">Reserviert</span>
+      <span class="tv2-budget-val tv2-gold">{{ reserviert_fmt }}</span>
+    </div>
+    <div class="tv2-budget-box tv2-budget-box--avail">
+      <span class="tv2-budget-label">Verfügbar</span>
+      <span class="tv2-budget-val tv2-cyan">{{ verfuegbar_fmt }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="tv2-tabs">
+  <a class="tv2-tab{% if active_tab == 'markt' %} is-active{% endif %}" href="{% url 'transfer_market' %}">Transfermarkt</a>
+  <span class="tv2-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Leihmarkt<span class="tv2-tab-soon">bald</span></span>
+  <span class="tv2-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Meine Deals{% if open_deal_count %}<span class="tv2-tab-badge">{{ open_deal_count }}</span>{% endif %}<span class="tv2-tab-soon">bald</span></span>
+  <span class="tv2-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Kader anbieten<span class="tv2-tab-soon">bald</span></span>
+  <span class="tv2-tab is-disabled" aria-disabled="true" title="Bald verfügbar">Historie<span class="tv2-tab-soon">bald</span></span>
+  <a class="tv2-tab{% if active_tab == 'scouting' %} is-active{% endif %}" href="{% url 'transfer_scouting' %}">Scouting</a>
+  <a class="tv2-tab{% if active_tab == 'watchlist' %} is-active{% endif %}" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
+</div>
