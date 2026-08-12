@@ -383,6 +383,24 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': int(os.environ.get('CELERY_SHOWAUCTION_TICK_INTERVAL', 60)),
         'args': ('showauction_tick',),
     },
+    # Transfersystem v2 (Master-Spec §4.5): minütlicher Tick schließt fällige
+    # Auktionen; Anfragen-Ablauf (Escrow-Freigabe!) stündlich; der Rest
+    # (Leih-Enden, Pending-Transfers, Locks, Positionsbarometer) täglich.
+    'transfer-v2-listings-minuetlich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': int(os.environ.get('CELERY_TRANSFER_V2_TICK_INTERVAL', 60)),
+        'args': ('run_transfer_v2_jobs', '--only', 'listings'),
+    },
+    'transfer-v2-deals-stuendlich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': int(os.environ.get('CELERY_TRANSFER_V2_DEALS_INTERVAL', 60 * 60)),
+        'args': ('run_transfer_v2_jobs', '--only', 'deals'),
+    },
+    'transfer-v2-jobs-taeglich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': int(os.environ.get('CELERY_TRANSFER_V2_DAILY_INTERVAL', 24 * 60 * 60)),
+        'args': ('run_transfer_v2_jobs',),
+    },
     # Sponsoring V2: finalize_contracts und sponsor_season_close sind NICHT im
     # automatischen Beat-Schedule — sie werden ausschließlich aus den manuellen
     # Saison-Übergängen (finance_season_open / finance_season_close) heraus

@@ -1,0 +1,57 @@
+/* ============================================================
+   WEBSOCCER — COLOR SYSTEM
+   A dark "football command center": near-black stadium base,
+   glass panels lined in cyan, green reserved for pitch/fitness/
+   positive sport values, plus yellow/red/orange signal accents.
+   Cyan is FUNCTIONAL LIGHT, not decoration. Green is sport-positive.
+   ============================================================ */
+:root {
+    /* ---- Base surfaces (darkest → lightest glass) ---- */
+    --app-bg: #03070c;            /* page base, behind everything */
+    --stadium-bg: #07111a;        /* secondary dark field */
+    --panel: rgba(9, 23, 34, 0.82);        /* default glass card */
+    --panel-strong: rgba(12, 31, 45, 0.94);/* opaque-er card / header */
+    --panel-soft: rgba(17, 43, 58, 0.72);  /* lighter inset panel */
+
+    /* ---- Cyan: functional light (lines, accents, focus) ---- */
+    --cyan: #22e6ff;
+    --cyan-soft: rgba(34, 230, 255, 0.14);
+    --line: rgba(44, 231, 255, 0.18);       /* hairline panel border */
+    --line-strong: rgba(44, 231, 255, 0.38);/* hover / active border */
+
+    /* ---- Sport signals ---- */
+    --green: #30f29c;   /* fitness, pitch, form, positive values */
+    --yellow: #ffd166;  /* caution, yellow card, neutral warning */
+    --red: #ff5570;     /* danger, red card, negative delta */
+    --orange-1: #ff9f1c;/* badge / creator-mode gradient top */
+    --orange-2: #d85d00;/* badge / creator-mode gradient bottom */
+
+    /* ---- Text ---- */
+    --text: #f4fbff;            /* primary, near-white cool */
+    --text-primary: #f4fbff;
+    --text-secondary: #aab8c3;
+    --text-muted: #6f808c;
+    --text-accent: #19f6ff;
+    --muted: rgba(244, 251, 255, 0.64);  /* labels, secondary copy */
+    --faint: rgba(244, 251, 255, 0.38);  /* uppercase micro-labels */
+    --dark-text: #061018;       /* text on cyan/green chips */
+
+    /* ---- Scrollbar ---- */
+    --scrollbar-track: rgba(255, 255, 255, 0.04);
+    --scrollbar-thumb: rgba(0, 240, 255, 0.35);
+    --scrollbar-thumb-hover: rgba(0, 240, 255, 0.55);
+
+    /* ---- Semantic aliases (use these in product code) ---- */
+    --surface-page: var(--app-bg);
+    --surface-card: var(--panel);
+    --surface-card-strong: var(--panel-strong);
+    --surface-inset: rgba(255, 255, 255, 0.035);
+    --border-hairline: var(--line);
+    --border-active: var(--line-strong);
+    --accent: var(--cyan);
+    --accent-positive: var(--green);
+    --accent-warning: var(--yellow);
+    --accent-danger: var(--red);
+    --text-body: var(--text);
+    --text-label: var(--faint);
+}

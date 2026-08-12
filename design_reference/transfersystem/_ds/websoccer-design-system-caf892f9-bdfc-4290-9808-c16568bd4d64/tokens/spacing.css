@@ -1,0 +1,46 @@
+/* ============================================================
+   WEBSOCCER — SPACING, RADII, SHADOWS, LAYOUT
+   Compact, dense manager-data spacing on a fixed wide shell.
+   One small radius (8px) everywhere; depth comes from a single
+   big soft shadow plus a cyan glow. Pill radius (999px) only on
+   badges, chips and progress bars.
+   ============================================================ */
+:root {
+    /* ---- Spacing scale ---- */
+    --space-1: 4px;
+    --space-2: 6px;
+    --space-3: 8px;
+    --space-4: 10px;
+    --space-5: 12px;
+    --space-6: 14px;
+    --space-7: 16px;   /* default grid gap between cards */
+    --space-8: 18px;   /* default card padding */
+    --space-9: 20px;
+    --space-10: 22px;
+    --space-12: 28px;
+    --space-14: 44px;  /* hero / page outer padding */
+
+    /* ---- Card rhythm ---- */
+    --card-padding: 18px;
+    --card-gap: 16px;
+
+    /* ---- Radii ---- */
+    --radius: 8px;        /* cards, panels, buttons, inputs */
+    --radius-sm: 6px;     /* chips, value pills, small inset */
+    --radius-xs: 4px;     /* calendar arrows, tiny tags */
+    --radius-pill: 999px; /* badges, dots, progress tracks */
+
+    /* ---- Elevation ---- */
+    --shadow: 0 18px 70px rgba(0, 0, 0, 0.46);   /* card lift */
+    --shadow-nav: 12px 0 50px rgba(0, 0, 0, 0.3);/* sidebar */
+    --glow: 0 0 28px rgba(34, 230, 255, 0.18);   /* cyan halo */
+    --glow-strong: 0 0 18px rgba(34, 230, 255, 0.12);
+
+    /* ---- Layout ---- */
+    --sidebar: 232px;
+    --shell-base-width: 1884px;  /* golden-master logical width */
+    --shell-base-height: 1177.5px;
+
+    /* ---- Borders ---- */
+    --border-width: 1px;
+}

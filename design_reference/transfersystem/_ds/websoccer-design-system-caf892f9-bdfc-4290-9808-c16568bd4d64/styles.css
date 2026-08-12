@@ -1,0 +1,11 @@
+/* ============================================================
+   WEBSOCCER DESIGN SYSTEM — GLOBAL ENTRY
+   Consumers link THIS one file. It is a list of @imports only;
+   every token, font and base rule lives in tokens/*.css.
+   ============================================================ */
+@import "tokens/fonts.css";
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
+@import "tokens/backgrounds.css";
+@import "tokens/base.css";

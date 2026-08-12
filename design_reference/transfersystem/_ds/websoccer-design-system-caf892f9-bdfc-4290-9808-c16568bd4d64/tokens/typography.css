@@ -1,0 +1,47 @@
+/* ============================================================
+   WEBSOCCER — TYPOGRAPHY
+   One family (Inter) carries the whole UI. Hierarchy comes from
+   WEIGHT and SIZE, not from a second typeface. Headings, KPI
+   values and badges are heavy (800/900); micro-labels are
+   uppercase + letter-spaced; body is 700 by default (the product
+   runs bold — links and nav are weight 700).
+   ============================================================ */
+:root {
+    --font-sans: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+    --font-display: var(--font-sans); /* same family, used at 900 */
+    --font-mono: ui-monospace, monospace; /* @kind font */
+
+    /* ---- Weights (default body 700; headings/KPI 900) ---- */
+    --fw-regular: 400; /* @kind font */
+    --fw-medium: 500;  /* @kind font */
+    --fw-semibold: 600;/* @kind font */
+    --fw-bold: 700;    /* @kind font */
+    --fw-extrabold: 800;/* @kind font */
+    --fw-black: 900;   /* @kind font */
+
+    /* ---- Type scale (px) ---- */
+    --fs-hero: 42px;       /* page hero h1 */
+    --fs-hero-card: 40px;  /* big card headline */
+    --fs-display: 32px;    /* player name / profile h2 */
+    --fs-vs: 36px;         /* VS mark */
+    --fs-title: 27px;      /* control-room / page title */
+    --fs-h2: 26px;         /* card hero name */
+    --fs-kpi: 28px;        /* stat-value */
+    --fs-kpi-card: 24px;   /* kpi-card strong */
+    --fs-stat: 18px;       /* mini-stat / signal strong */
+    --fs-body-lg: 16px;    /* hero paragraph */
+    --fs-body: 15px;       /* body, page intro */
+    --fs-base: 14px;       /* default control text */
+    --fs-sm: 13px;         /* meta, sublabels */
+    --fs-xs: 12px;         /* uppercase micro-labels */
+    --fs-2xs: 11px;        /* badge counts, tiny tags */
+
+    /* ---- Card / section title (uppercase, tracked) ---- */
+    --card-title-size: 15px;
+    --card-title-tracking: 0.7px;
+
+    /* ---- Line heights ---- */
+    --lh-tight: 1.06;   /* @kind other */
+    --lh-snug: 1.2;     /* @kind other */
+    --lh-body: 1.55;    /* @kind other */
+}

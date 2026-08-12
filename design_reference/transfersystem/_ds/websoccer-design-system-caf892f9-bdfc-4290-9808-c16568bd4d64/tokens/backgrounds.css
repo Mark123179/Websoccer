@@ -1,0 +1,73 @@
+/* ============================================================
+   WEBSOCCER — SIGNATURE BACKGROUNDS
+   The brand's atmosphere is built from layered CSS gradients, not
+   photos: a near-black diagonal base, cyan flood-light from the
+   top-right, a green pitch-glow from the bottom-left, and a faint
+   56px engineering grid fixed behind everything. Screens add a
+   white "stadium-light" bloom at the top edge.
+   These are exposed as custom properties so any surface can reuse
+   the exact recipe, plus helper classes for quick application.
+   ============================================================ */
+:root {
+    /* Page atmosphere — used on <body> */
+    --bg-app:
+        radial-gradient(circle at 74% 8%, rgba(34, 230, 255, 0.14), transparent 24%),
+        radial-gradient(circle at 40% 110%, rgba(48, 242, 156, 0.12), transparent 28%),
+        linear-gradient(135deg, #02050a 0%, #07121d 48%, #02050a 100%);
+
+    /* The fixed 56px grid overlay */
+    --bg-grid:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    --bg-grid-size: 56px 56px;
+
+    /* Stadium dashboard field (start / list / player screens) */
+    --bg-stadium-field:
+        linear-gradient(rgba(2, 7, 12, 0.76), rgba(2, 7, 12, 0.96)),
+        radial-gradient(circle at 62% 0%, rgba(34, 230, 255, 0.2), transparent 26%),
+        radial-gradient(circle at 18% 100%, rgba(48, 242, 156, 0.13), transparent 28%),
+        linear-gradient(120deg, rgba(6, 21, 31, 0.92), rgba(4, 10, 16, 0.98));
+
+    /* Hero / VS / match card glass with top-right white spec */
+    --bg-card-hero:
+        linear-gradient(rgba(7, 20, 31, 0.88), rgba(5, 15, 23, 0.9)),
+        radial-gradient(circle at 75% 15%, rgba(255, 255, 255, 0.16), transparent 22%);
+
+    /* Header context block (green-lit) */
+    --bg-header-context:
+        linear-gradient(180deg, rgba(9, 64, 82, 0.94), rgba(4, 19, 31, 0.98)),
+        radial-gradient(circle at 50% 0%, rgba(48, 242, 156, 0.18), transparent 60%);
+}
+
+/* Helper: full page atmosphere */
+.ds-app-bg {
+    background: var(--bg-app);
+    color: var(--text);
+    position: relative;
+}
+.ds-app-bg::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--bg-grid);
+    background-size: var(--bg-grid-size);
+}
+
+/* Helper: stadium dashboard surface */
+.ds-stadium {
+    background: var(--bg-stadium-field);
+    position: relative;
+}
+.ds-stadium::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.82;
+    background:
+        radial-gradient(ellipse at 48% 0%, rgba(255, 255, 255, 0.28), transparent 5%),
+        linear-gradient(180deg, rgba(20, 140, 78, 0.16), transparent 42%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 82px);
+}

@@ -747,6 +747,20 @@ class Club(models.Model):
         decimal_places=2
     )
 
+    # Transfersystem v2: harte Reservierungen (Escrow-Cache). Invariante:
+    # reserved = Summe der Geldanteile aller führenden eigenen Gebote +
+    # aller offenen gesendeten Deal-/Leihanfragen. Verfügbar = budget − reserved.
+    # Wird transaktional nachgeführt und ist per
+    # game.transfer_v2.escrow.recalc_reserved(club) reparierbar; die aktiven
+    # FinanceReservation-Zeilen bleiben die Wahrheit, dieses Feld der Cache.
+    reserved = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        default=0,
+        verbose_name='Reserviert (€)',
+        help_text='Cache der aktiven harten Reservierungen (Transfersystem v2).',
+    )
+
     fan_popularity = models.PositiveSmallIntegerField(
         default=50,
         validators=[MinValueValidator(1), MaxValueValidator(100)],
@@ -7235,3 +7249,16 @@ class DayWeather(models.Model):
 
     def __str__(self):
         return f'{self.sim_day}: {self.get_weather_type_display()} ({self.temperature} °C)'
+
+
+# ── Transfersystem v2 (Task #819) ──────────────────────────────────────────
+# Modelle liegen in game/transfer_v2/models.py (app_label='game'); hier
+# importiert, damit sie im "game"-App-Register erscheinen und Migrationen
+# erzeugt werden.
+from game.transfer_v2.models import (  # noqa: E402,F401
+    TransferListing, TransferBid, ListingPin, SquadOffer,
+    DealRequest, DealRequestPlayer, LoanListing, Loan,
+    TransferRecord, TransferRecordPlayer, YouthLevyPayment, TransferReport,
+    TransferLock, PendingTransfer, ClubPartnership, RumorNews,
+    PositionBarometer, SellOnClause, BuybackClause,
+)

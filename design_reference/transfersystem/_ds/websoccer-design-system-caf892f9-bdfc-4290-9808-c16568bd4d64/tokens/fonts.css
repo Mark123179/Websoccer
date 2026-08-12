@@ -1,0 +1,8 @@
+/* ============================================================
+   WEBSOCCER — WEBFONTS
+   The product UI is set entirely in Inter (declared in the
+   original Django CSS: `font-family: Inter, "Segoe UI", …`).
+   Inter ships weights 400–900; the command-center look leans
+   hard on 800/900 for headings, KPI values and badges.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');

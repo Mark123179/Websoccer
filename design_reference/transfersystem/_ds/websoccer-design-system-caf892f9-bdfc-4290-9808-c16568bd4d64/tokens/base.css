@@ -1,0 +1,63 @@
+/* ============================================================
+   WEBSOCCER — BASE RESET
+   Minimal global reset + body atmosphere + the brand's thin cyan
+   scrollbars. Everything is dark-first.
+   ============================================================ */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+}
+html::-webkit-scrollbar { width: 6px; }
+html::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+html::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-pill);
+}
+html::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    color: var(--text);
+    background: var(--bg-app);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--bg-grid);
+    background-size: var(--bg-grid-size);
+}
+
+a {
+    color: var(--cyan);
+    font-weight: var(--fw-bold);
+    text-decoration: none;
+}
+a:hover { color: #8ff5ff; }
+
+/* Thin cyan scrollbar utility for inner scroll areas */
+.ds-scrollarea {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    scrollbar-width: thin;
+}
+.ds-scrollarea::-webkit-scrollbar { width: 6px; height: 6px; }
+.ds-scrollarea::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: var(--radius-pill);
+}
+.ds-scrollarea::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--radius-pill);
+}
+.ds-scrollarea::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
