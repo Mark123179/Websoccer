@@ -18,6 +18,7 @@ JOBS = {
     'pendings': lambda saison: jobs.execute_due_pendings(saison=saison),
     'locks': lambda saison: jobs.cleanup_expired_locks(),
     'barometer': lambda saison: jobs.update_position_barometer(),
+    'ki_deals': lambda saison: jobs.respond_ai_deals(saison=saison),
 }
 
 

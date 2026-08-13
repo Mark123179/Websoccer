@@ -5437,3 +5437,448 @@ def creator_referee_delete(request, referee_id):
     ref.delete()
     messages.success(request, f'Schiedsrichter „{name}" gelöscht.')
     return redirect('creator_referee_list')
+
+
+# ── Transferaufsicht (Task #824) ──────────────────────────────────────────
+
+@staff_member_required
+def creator_transferaufsicht(request):
+    """Creator-Transferaufsicht — Melde-Queue, Admin-Aktionen, Settings."""
+    import json as _json
+
+    from .economy.params import current_season as _cur_season, get_param
+    from .models import EconomyParameter
+    from .transfer_v2.models import (
+        ClubPartnership, CreatorActionLog, LoanListing, SquadLimitNote,
+        TransferListing, TransferRecord, TransferReport,
+    )
+
+    saison = _cur_season()
+
+    # ── Melde-Queue ───────────────────────────────────────────────────────
+    open_reports = (
+        TransferReport.objects
+        .filter(status=TransferReport.STATUS_OPEN)
+        .select_related('reporter_club', 'record', 'record__club_a', 'record__club_b')
+        .prefetch_related('record__players__player', 'record__youth_levies')
+        .order_by('created_at')
+    )
+
+    # ── Historie-Zugriff ──────────────────────────────────────────────────
+    record_search_id = request.GET.get('record_id', '').strip()
+    searched_record = None
+    if record_search_id:
+        try:
+            searched_record = (
+                TransferRecord.objects
+                .select_related('club_a', 'club_b')
+                .prefetch_related('players__player', 'youth_levies')
+                .get(pk=int(record_search_id))
+            )
+        except (TransferRecord.DoesNotExist, ValueError):
+            pass
+
+    recent_records = (
+        TransferRecord.objects
+        .select_related('club_a', 'club_b')
+        .prefetch_related('players__player')
+        .order_by('-date', '-id')[:20]
+    )
+
+    # ── Aktive Auktionen ──────────────────────────────────────────────────
+    active_listings = (
+        TransferListing.objects
+        .filter(status=TransferListing.STATUS_ACTIVE)
+        .select_related('player', 'seller')
+        .order_by('ends_at', 'id')
+    )
+    active_loan_listings = (
+        LoanListing.objects
+        .filter(status=LoanListing.STATUS_ACTIVE)
+        .select_related('player', 'owner_club')
+        .order_by('-created_at')
+    )
+
+    # ── Kadergrenzen-Vermerke ─────────────────────────────────────────────
+    squad_notes = (
+        SquadLimitNote.objects
+        .select_related('club', 'player')
+        .order_by('-created_at')[:50]
+    )
+
+    # ── ClubPartnerships ──────────────────────────────────────────────────
+    partnerships = (
+        ClubPartnership.objects
+        .filter(active=True)
+        .select_related('club_a', 'club_b')
+        .order_by('club_a__name')
+    )
+    all_clubs = Club.objects.order_by('name')
+
+    # ── Aktionsprotokoll ──────────────────────────────────────────────────
+    action_logs = (
+        CreatorActionLog.objects
+        .select_related('actor')
+        .order_by('-created_at')[:30]
+    )
+
+    # ── Settings-Parameter ────────────────────────────────────────────────
+    SETTINGS_KEYS = [
+        'RUMOR_P_NEWS', 'RUMOR_P_EXACT', 'LEIHE_LIMIT_REIN',
+        'LEIHE_LIMIT_RAUS', 'LEIHE_LIMIT_JE_PAAR', 'LEIHE_DEADLINE_SPIELTAGE',
+        'TRANSFER_WECHSELSPERRE_TAGE', 'LEIHE_MIN_GEBUEHR',
+        'TRANSFER_MIN_GEBOT', 'TRANSFER_MIN_ERHOEHUNG_ABS',
+        'TRANSFER_MIN_ERHOEHUNG_PCT', 'TRANSFER_ERHOEHUNG_RUNDUNG',
+        'TRANSFER_TICKER_ENABLED',
+    ]
+    settings_rows = []
+    for key in SETTINGS_KEYS:
+        try:
+            val = get_param(key, saison)
+        except Exception:
+            val = None
+        settings_rows.append({
+            'key': key,
+            'value_json': _json.dumps(val, ensure_ascii=False),
+        })
+
+    return render(request, 'creator/transferaufsicht.html', {
+        'nav_active': 'aufsicht',
+        'open_reports': open_reports,
+        'searched_record': searched_record,
+        'record_search_id': record_search_id,
+        'recent_records': recent_records,
+        'active_listings': active_listings,
+        'active_loan_listings': active_loan_listings,
+        'squad_notes': squad_notes,
+        'partnerships': partnerships,
+        'all_clubs': all_clubs,
+        'action_logs': action_logs,
+        'settings_rows': settings_rows,
+        'saison': saison,
+    })
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_report_action(request):
+    """Meldung abweisen oder in Überprüfung stellen."""
+    from .transfer_v2.admin_actions import log_creator_action
+    from .transfer_v2.models import TransferReport
+    from .transfer_v2 import push
+
+    report = get_object_or_404(TransferReport, pk=request.POST.get('report_id'))
+    action = request.POST.get('action', '')
+
+    if action == 'dismiss':
+        report.status = TransferReport.STATUS_DISMISSED
+        report.resolved_at = timezone.now()
+        report.save(update_fields=['status', 'resolved_at'])
+        push.report_resolved(report, 'abgewiesen')
+        messages.success(request, f'Meldung #{report.pk} abgewiesen.')
+        log_creator_action(
+            request.user, 'report_dismiss',
+            f'Report #{report.pk}',
+            report_id=report.pk,
+        )
+    elif action == 'review':
+        report.status = TransferReport.STATUS_UNDER_REVIEW
+        report.resolved_at = timezone.now()
+        report.save(update_fields=['status', 'resolved_at'])
+        push.report_resolved(report, 'in Überprüfung (Sportgericht)')
+        messages.success(request, f'Meldung #{report.pk} in Überprüfung gestellt.')
+        log_creator_action(
+            request.user, 'report_review',
+            f'Report #{report.pk}',
+            report_id=report.pk,
+        )
+    else:
+        messages.error(request, 'Unbekannte Aktion.')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_cancel_record(request):
+    """Admin-Storno eines TransferRecords."""
+    from .transfer_v2.admin_actions import TransferActionError, admin_cancel_record
+
+    record_id = request.POST.get('record_id', '').strip()
+    grund = request.POST.get('grund', '').strip()
+
+    if not grund:
+        messages.error(request, 'Bitte einen Grund angeben.')
+        return redirect('creator_transferaufsicht')
+
+    try:
+        from .transfer_v2.models import TransferRecord as _TR
+        record = get_object_or_404(_TR, pk=int(record_id))
+        admin_cancel_record(record, grund=grund, actor=request.user)
+        messages.success(request, f'Record #{record_id} erfolgreich storniert.')
+    except TransferActionError as exc:
+        messages.error(request, f'Fehler: {exc}')
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültige Record-ID.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_admin_transfer(request):
+    """Admin-Transfer (kein Ablöse, keine Abgabe)."""
+    from .transfer_v2.admin_actions import TransferActionError, admin_transfer
+
+    try:
+        player_id = int(request.POST.get('player_id', ''))
+        to_club_id = int(request.POST.get('to_club_id', ''))
+        grund = request.POST.get('grund', '').strip()
+        player = get_object_or_404(Player, pk=player_id)
+        to_club = get_object_or_404(Club, pk=to_club_id)
+        admin_transfer(player, to_club, actor=request.user, grund=grund)
+        messages.success(request, f'{player.full_name} → {to_club.name} (Admin-Transfer).')
+    except TransferActionError as exc:
+        messages.error(request, f'Fehler: {exc}')
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültige Spieler- oder Verein-ID.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_cancel_listing(request):
+    """Admin-Storno einer aktiven Auktion (kein Zuschlag)."""
+    from .transfer_v2.admin_actions import TransferActionError, admin_cancel_listing
+    from .transfer_v2.models import TransferListing
+
+    try:
+        listing_id = int(request.POST.get('listing_id', ''))
+        grund = request.POST.get('grund', '').strip()
+        listing = get_object_or_404(TransferListing, pk=listing_id)
+        admin_cancel_listing(listing, grund=grund, actor=request.user)
+        messages.success(request, f'Listing #{listing_id} storniert.')
+    except TransferActionError as exc:
+        messages.error(request, f'Fehler: {exc}')
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültige Listing-ID.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_close_listing(request):
+    """Vorzeitiger Zuschlag einer aktiven Auktion."""
+    from .transfer_v2.admin_actions import admin_close_listing_now
+    from .transfer_v2.models import TransferListing
+
+    try:
+        listing_id = int(request.POST.get('listing_id', ''))
+        listing = get_object_or_404(TransferListing, pk=listing_id)
+        admin_close_listing_now(listing, actor=request.user)
+        messages.success(request, f'Listing #{listing_id}: vorzeitiger Zuschlag erteilt.')
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültige Listing-ID.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_cancel_loan_listing(request):
+    """Admin-Storno eines aktiven Leih-Listings."""
+    from .transfer_v2.admin_actions import log_creator_action
+    from .transfer_v2.models import LoanListing
+
+    try:
+        listing_id = int(request.POST.get('listing_id', ''))
+        grund = request.POST.get('grund', '').strip()
+        listing = get_object_or_404(LoanListing, pk=listing_id)
+        from django.db import transaction as _transaction
+        with _transaction.atomic():
+            lst = LoanListing.objects.select_for_update().get(pk=listing_id)
+            if lst.status != LoanListing.STATUS_ACTIVE:
+                messages.error(request, 'Leih-Listing ist nicht aktiv.')
+                return redirect('creator_transferaufsicht')
+            lst.status = LoanListing.STATUS_WITHDRAWN
+            lst.save(update_fields=['status'])
+        messages.success(request, f'Leih-Listing #{listing_id} storniert.')
+        log_creator_action(
+            request.user, 'admin_cancel_loan_listing',
+            f'LoanListing #{listing_id} ({listing.player})',
+            grund=grund, listing_id=listing_id,
+        )
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültige Listing-ID.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_squad_note(request):
+    """Kadergrenzen-Vermerk im Sportgericht anmerken."""
+    from .transfer_v2.admin_actions import log_creator_action
+    from .transfer_v2.models import SquadLimitNote
+
+    try:
+        note_id = int(request.POST.get('note_id', ''))
+        note = get_object_or_404(SquadLimitNote, pk=note_id)
+        note.status = SquadLimitNote.STATUS_SPORTGERICHT
+        note.save(update_fields=['status'])
+        messages.success(request, f'Vermerk #{note_id} im Sportgericht angemerkt.')
+        log_creator_action(
+            request.user, 'squad_note_sportgericht',
+            f'SquadLimitNote #{note_id}',
+            note_id=note_id,
+        )
+    except (ValueError, TypeError):
+        messages.error(request, 'Ungültige Vermerks-ID.')
+    except Exception as exc:
+        messages.error(request, f'Fehler: {exc}')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_partnership(request):
+    """ClubPartnership anlegen oder deaktivieren."""
+    from .transfer_v2.admin_actions import log_creator_action
+    from .transfer_v2.models import ClubPartnership
+
+    action = request.POST.get('action', '')
+
+    if action == 'create':
+        try:
+            club_a_id = int(request.POST.get('club_a_id', ''))
+            club_b_id = int(request.POST.get('club_b_id', ''))
+            club_a = get_object_or_404(Club, pk=club_a_id)
+            club_b = get_object_or_404(Club, pk=club_b_id)
+            if club_a_id == club_b_id:
+                messages.error(request, 'Verein A und B müssen unterschiedlich sein.')
+            else:
+                ClubPartnership.objects.update_or_create(
+                    club_a=club_a if club_a_id < club_b_id else club_b,
+                    club_b=club_b if club_a_id < club_b_id else club_a,
+                    defaults={'active': True},
+                )
+                messages.success(request, f'Partnerschaft {club_a.name} ↔ {club_b.name} angelegt.')
+                log_creator_action(
+                    request.user, 'partnership_create',
+                    f'{club_a.name} ↔ {club_b.name}',
+                    club_a_id=club_a_id, club_b_id=club_b_id,
+                )
+        except (ValueError, TypeError):
+            messages.error(request, 'Ungültige Verein-ID.')
+    elif action == 'deactivate':
+        try:
+            partnership_id = int(request.POST.get('partnership_id', ''))
+            partnership = get_object_or_404(ClubPartnership, pk=partnership_id)
+            partnership.active = False
+            partnership.save(update_fields=['active'])
+            messages.success(request, 'Partnerschaft deaktiviert.')
+            log_creator_action(
+                request.user, 'partnership_deactivate',
+                f'Partnership #{partnership_id}',
+                partnership_id=partnership_id,
+            )
+        except (ValueError, TypeError):
+            messages.error(request, 'Ungültige Partnerschaft-ID.')
+    else:
+        messages.error(request, 'Unbekannte Aktion.')
+
+    return redirect('creator_transferaufsicht')
+
+
+@staff_member_required
+@require_POST
+def creator_transferaufsicht_setting(request):
+    """Einzel-Einstellung (EconomyParameter) für Transferaufsicht speichern."""
+    import json as _json
+
+    from .economy.params import current_season as _cur_season, get_param
+    from .models import EconomyParameter
+    from .transfer_v2.admin_actions import log_creator_action
+
+    saison = _cur_season()
+
+    def _typ_kategorie(v):
+        if isinstance(v, bool):
+            return 'Wahrheitswert'
+        if isinstance(v, (int, float)):
+            return 'Zahl'
+        if isinstance(v, str):
+            return 'Text'
+        if isinstance(v, dict):
+            return 'Objekt'
+        if isinstance(v, list):
+            return 'Liste'
+        return 'Unbekannt'
+
+    key = (request.POST.get('key') or '').strip()
+    raw = request.POST.get('value') or ''
+
+    ALLOWED_KEYS = {
+        'RUMOR_P_NEWS', 'RUMOR_P_EXACT', 'LEIHE_LIMIT_REIN',
+        'LEIHE_LIMIT_RAUS', 'LEIHE_LIMIT_JE_PAAR', 'LEIHE_DEADLINE_SPIELTAGE',
+        'TRANSFER_WECHSELSPERRE_TAGE', 'LEIHE_MIN_GEBUEHR',
+        'TRANSFER_MIN_GEBOT', 'TRANSFER_MIN_ERHOEHUNG_ABS',
+        'TRANSFER_MIN_ERHOEHUNG_PCT', 'TRANSFER_ERHOEHUNG_RUNDUNG',
+        'TRANSFER_TICKER_ENABLED',
+    }
+
+    if key not in ALLOWED_KEYS:
+        messages.error(request, f'Unbekannter Parameter-Key „{key}".')
+        return redirect('creator_transferaufsicht')
+
+    alt_row = (
+        EconomyParameter.objects.filter(key=key)
+        .order_by('-saison').first()
+    )
+    if alt_row is None:
+        messages.error(
+            request,
+            f'Parameter „{key}" existiert nicht — neue Keys entstehen '
+            'nur über Seed-Migrationen.',
+        )
+        return redirect('creator_transferaufsicht')
+
+    try:
+        neu = _json.loads(raw)
+    except ValueError as exc:
+        messages.error(request, f'Ungültiges JSON für {key}: {exc}')
+        return redirect('creator_transferaufsicht')
+
+    alt = get_param(key, saison)
+    if _typ_kategorie(neu) != _typ_kategorie(alt):
+        messages.error(
+            request,
+            f'Typwechsel abgelehnt: {key} ist bisher '
+            f'{_typ_kategorie(alt)}, der neue Wert wäre '
+            f'{_typ_kategorie(neu)} — das würde Transferlogik brechen.',
+        )
+        return redirect('creator_transferaufsicht')
+
+    EconomyParameter.objects.update_or_create(
+        saison=saison, key=key, defaults={'value': neu},
+    )
+    messages.success(request, f'{key} für Saison {saison} gespeichert.')
+    log_creator_action(
+        request.user, 'setting_save',
+        f'EconomyParameter {key}',
+        key=key, saison=saison, neuer_wert=neu,
+    )
+    return redirect('creator_transferaufsicht')

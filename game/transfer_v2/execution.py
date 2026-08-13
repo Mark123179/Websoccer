@@ -529,6 +529,19 @@ def _cancel_pending_over_limit(p, *, saison=None, grund=''):
     p.executed_at = timezone.now()
     p.save(update_fields=['status', 'executed_at'])
 
+    # Kadergrenzen-Vermerk je betroffenem Verein anlegen (additiv).
+    from .models import SquadLimitNote
+    note_text = (f'WP/SE-Transfer {p.player.full_name} storniert: '
+                 f'{grund or "Kadergrenzen am Stichtag verletzt."} '
+                 f'Erstattung: {refund:,.2f} €.')
+    SquadLimitNote.objects.create(
+        club=p.to_club, player=p.player, text=note_text,
+    )
+    if p.from_club:
+        SquadLimitNote.objects.create(
+            club=p.from_club, player=p.player, text=note_text,
+        )
+
     # Pushes über den zentralen Nach-Commit-Dispatch des Push-Katalogs —
     # ein Benachrichtigungs-Fehler darf Storno + Erstattung NIE zurückrollen.
     from . import push

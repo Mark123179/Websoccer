@@ -172,6 +172,12 @@ def update_position_barometer():
     return {'positionen': updated}
 
 
+def respond_ai_deals(*, saison=None):
+    """KI-Vereine beantworten offene Deal-Anfragen auf Basis der Schmerzgrenze."""
+    from .ai_deals import respond_open_deals
+    return respond_open_deals(saison=saison)
+
+
 def run_all(*, saison=None):
     """Führt alle Jobs einmal aus (für das Management-Command)."""
     return {
@@ -182,4 +188,5 @@ def run_all(*, saison=None):
         'pendings': execute_due_pendings(saison=saison),
         'locks': cleanup_expired_locks(),
         'barometer': update_position_barometer(),
+        'ki_deals': respond_ai_deals(saison=saison),
     }

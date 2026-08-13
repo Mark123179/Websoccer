@@ -790,3 +790,61 @@ class BuybackClause(models.Model):
         app_label = 'game'
         verbose_name = 'Rückkaufoption'
         verbose_name_plural = 'Rückkaufoptionen'
+
+
+# ── Task #824: Creator-Transferaufsicht ───────────────────────────────────
+
+class SquadLimitNote(models.Model):
+    """Kadergrenzen-Vermerk (automatisch bei WP/SE-Storno + manuell)."""
+
+    STATUS_OPEN = 'OPEN'
+    STATUS_SPORTGERICHT = 'SPORTGERICHT'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Offen'),
+        (STATUS_SPORTGERICHT, 'Im Sportgericht'),
+    ]
+
+    club = models.ForeignKey(
+        'game.Club', on_delete=models.CASCADE,
+        related_name='squad_limit_notes', verbose_name='Verein',
+    )
+    player = models.ForeignKey(
+        'game.Player', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='squad_limit_notes', verbose_name='Spieler',
+    )
+    text = models.CharField(max_length=500, verbose_name='Text')
+    status = models.CharField(
+        max_length=14, choices=STATUS_CHOICES, default=STATUS_OPEN,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'game'
+        ordering = ['-created_at']
+        verbose_name = 'Kadergrenzen-Vermerk'
+        verbose_name_plural = 'Kadergrenzen-Vermerke'
+
+    def __str__(self):
+        return f'SquadLimitNote #{self.pk} [{self.club}] {self.status}'
+
+
+class CreatorActionLog(models.Model):
+    """Protokoll von Creator-Aktionen (Transferaufsicht)."""
+
+    actor = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='creator_action_logs', verbose_name='Akteur',
+    )
+    action = models.CharField(max_length=40, verbose_name='Aktion')
+    target = models.CharField(max_length=200, verbose_name='Ziel')
+    details = models.JSONField(default=dict, blank=True, verbose_name='Details')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'game'
+        ordering = ['-created_at']
+        verbose_name = 'Creator-Aktionsprotokoll'
+        verbose_name_plural = 'Creator-Aktionsprotokolle'
+
+    def __str__(self):
+        return f'CreatorActionLog #{self.pk} {self.action} by {self.actor}'

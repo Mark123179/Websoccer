@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Creator – Transferaufsicht{% endblock %}
+
+{% block content %}
+<section class="cm-section">
+
+  <div class="cm-header">
+    <div class="cm-header-left">
+      <span class="cm-badge">CREATOR MODE</span>
+      <h1>Transferaufsicht</h1>
+    </div>
+    {% include 'creator/_nav_pills.html' with nav_active='aufsicht' %}
+  </div>
+
+  <style>
+    .cta-panel {
+      background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.08);
+      border-radius:8px; padding:18px 22px; margin-bottom:24px;
+    }
+    .cta-panel-title {
+      font-size:.78rem; font-weight:700; color:#8a9bb0;
+      text-transform:uppercase; letter-spacing:.06em; margin:0 0 14px 0;
+    }
+    .cta-panel-title.red { color:#e05252; }
+    .cta-panel-title.blue { color:#00b4ff; }
+    .cta-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .cta-table th {
+      background:rgba(0,0,0,.5); color:#8a9bb0; font-weight:600;
+      text-transform:uppercase; letter-spacing:.05em; font-size:.72rem;
+      padding:9px 12px; text-align:left;
+      border-bottom:1px solid rgba(255,255,255,.08); white-space:nowrap;
+    }
+    .cta-table td {
+      padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.05);
+      color:#c8d4e0; vertical-align:top;
+    }
+    .cta-table tr:hover td { background:rgba(255,255,255,.03); }
+    .cta-empty { color:#8a9bb0; font-size:.82rem; margin:0; }
+    .cta-form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .cta-form select, .cta-form input[type=text], .cta-form input[type=number],
+    .cta-form textarea {
+      background:#0d1520; border:1px solid rgba(255,255,255,.15);
+      color:#c8d4e0; border-radius:6px; padding:6px 10px; font-size:.8rem;
+    }
+    .cta-form textarea { min-width:200px; }
+    .cta-btn {
+      background:rgba(224,82,82,.16); color:#e58080;
+      border:1px solid rgba(224,82,82,.45); border-radius:6px;
+      padding:6px 14px; font-size:.78rem; font-weight:700; cursor:pointer;
+      white-space:nowrap;
+    }
+    .cta-btn:hover { background:rgba(224,82,82,.3); color:#fff; }
+    .cta-btn-blue {
+      background:rgba(0,180,255,.12); color:#00c4ff;
+      border:1px solid rgba(0,180,255,.35); border-radius:6px;
+      padding:6px 14px; font-size:.78rem; font-weight:700; cursor:pointer;
+      white-space:nowrap;
+    }
+    .cta-btn-blue:hover { background:rgba(0,180,255,.25); color:#fff; }
+    .cta-btn-green {
+      background:rgba(76,201,132,.12); color:#4cc984;
+      border:1px solid rgba(76,201,132,.35); border-radius:6px;
+      padding:6px 14px; font-size:.78rem; font-weight:700; cursor:pointer;
+      white-space:nowrap;
+    }
+    .cta-btn-green:hover { background:rgba(76,201,132,.25); color:#fff; }
+    .cta-badge {
+      display:inline-block; padding:2px 9px; border-radius:20px;
+      font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    }
+    .cta-badge--open { background:rgba(224,82,82,.15); color:#e05252; border:1px solid rgba(224,82,82,.4); }
+    .cta-badge--review { background:rgba(224,140,82,.15); color:#e08c52; border:1px solid rgba(224,140,82,.4); }
+    .cta-badge--done { background:rgba(76,201,132,.12); color:#4cc984; border:1px solid rgba(76,201,132,.35); }
+    .cta-badge--admin { background:rgba(0,180,255,.12); color:#00c4ff; border:1px solid rgba(0,180,255,.3); }
+    .cta-log-row { display:flex; gap:10px; font-size:.78rem; color:#8a9bb0; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+    .cta-log-action { color:#c8d4e0; font-weight:600; min-width:160px; }
+    .cta-log-target { flex:1; }
+    .cta-setting-row { display:flex; gap:10px; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.04); flex-wrap:wrap; }
+    .cta-setting-key { font-family:monospace; font-size:.8rem; color:#00c4ff; min-width:220px; }
+    .cta-setting-val { background:#0d1520; border:1px solid rgba(255,255,255,.15); color:#c8d4e0; border-radius:4px; padding:4px 8px; font-size:.78rem; font-family:monospace; min-width:200px; }
+    details summary { cursor:pointer; color:#8a9bb0; font-size:.76rem; }
+    details summary:hover { color:#c8d4e0; }
+  </style>
+
+  {% if messages %}
+  <div style="margin-bottom:18px;">
+    {% for m in messages %}
+    <div style="padding:9px 14px;border-radius:6px;font-size:.82rem;margin-bottom:6px;
+                {% if m.tags == 'error' %}background:rgba(224,82,82,.12);color:#e58080;border:1px solid rgba(224,82,82,.35);
+                {% else %}background:rgba(76,201,132,.1);color:#4cc984;border:1px solid rgba(76,201,132,.3);{% endif %}">
+      {{ m }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ①  Melde-Queue -->
+  <div class="cta-panel">
+    <p class="cta-panel-title red">① Melde-Queue (Transfer-Meldungen)</p>
+    {% if open_reports %}
+    <table class="cta-table">
+      <thead>
+        <tr>
+          <th>Melder</th>
+          <th>Begründung</th>
+          <th>Transfer-Snapshot</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rep in open_reports %}
+        <tr>
+          <td>
+            {{ rep.reporter_club.name }}<br>
+            <span style="color:#8a9bb0;font-size:.72rem;">{{ rep.created_at|date:"d.m.Y H:i" }}</span>
+          </td>
+          <td style="max-width:200px;">{{ rep.reason }}</td>
+          <td>
+            <details>
+              <summary>Record #{{ rep.record.pk }} ansehen</summary>
+              <div style="margin-top:6px;padding:8px;background:rgba(0,0,0,.3);border-radius:5px;font-size:.76rem;">
+                <div>Art: <strong>{{ rep.record.get_kind_display }}</strong> · Datum: {{ rep.record.date|date:"d.m.Y" }}</div>
+                <div>A: {{ rep.record.club_a.name|default:"(vereinslos)" }} · B: {{ rep.record.club_b.name|default:"—" }}</div>
+                <div>cash_b: {{ rep.record.cash_b|floatformat:0 }} € · cash_a: {{ rep.record.cash_a|floatformat:0 }} €</div>
+                {% if rep.record.players.all %}
+                <div style="margin-top:4px;">Spieler:
+                  {% for rp in rep.record.players.all %}
+                  {{ rp.player.full_name|default:"(gelöscht)" }} (Seite {{ rp.side }}, MW {{ rp.market_value_at_transfer|floatformat:0 }} €){% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </div>
+                {% endif %}
+                {% if rep.record.youth_levies.all %}
+                <div style="margin-top:4px;">Jugendabgaben:
+                  {% for lev in rep.record.youth_levies.all %}
+                  {{ lev.amount|floatformat:0 }} € ({{ lev.percent|floatformat:1 }} %){% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </details>
+          </td>
+          <td>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_report_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="report_id" value="{{ rep.pk }}">
+                <input type="hidden" name="action" value="dismiss">
+                <button type="submit" class="cta-btn">Abweisen</button>
+              </form>
+              <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_report_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="report_id" value="{{ rep.pk }}">
+                <input type="hidden" name="action" value="review">
+                <button type="submit" class="cta-btn-blue">In Überprüfung</button>
+              </form>
+              <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_cancel_record' %}">
+                {% csrf_token %}
+                <input type="hidden" name="record_id" value="{{ rep.record.pk }}">
+                <input type="text" name="grund" placeholder="Pflicht-Grund" required style="min-width:140px;">
+                <button type="submit" class="cta-btn">Record stornieren</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="cta-empty">Keine offenen Meldungen.</p>
+    {% endif %}
+  </div>
+
+  <!-- ②  Historie-Zugriff -->
+  <div class="cta-panel">
+    <p class="cta-panel-title">② Historie-Zugriff</p>
+    <form class="cta-form" method="get" action="{% url 'creator_transferaufsicht' %}">
+      <input type="number" name="record_id" value="{{ record_search_id }}" placeholder="Record-ID" style="width:120px;">
+      <button type="submit" class="cta-btn-blue">Suchen</button>
+    </form>
+    {% if searched_record %}
+    <div style="margin-top:12px;padding:10px;background:rgba(0,180,255,.06);border:1px solid rgba(0,180,255,.2);border-radius:6px;font-size:.8rem;">
+      <strong>Record #{{ searched_record.pk }}</strong> — {{ searched_record.get_kind_display }} · {{ searched_record.date|date:"d.m.Y" }}<br>
+      A: {{ searched_record.club_a.name|default:"(vereinslos)" }} · B: {{ searched_record.club_b.name|default:"—" }}<br>
+      cash_b: {{ searched_record.cash_b|floatformat:0 }} € · storniert: {{ searched_record.is_cancelled|yesno:"Ja,Nein" }}
+      {% if not searched_record.is_cancelled %}
+      <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_cancel_record' %}" style="margin-top:8px;">
+        {% csrf_token %}
+        <input type="hidden" name="record_id" value="{{ searched_record.pk }}">
+        <input type="text" name="grund" placeholder="Pflicht-Grund" required style="min-width:200px;">
+        <button type="submit" class="cta-btn">Admin-Storno</button>
+      </form>
+      {% endif %}
+    </div>
+    {% elif record_search_id %}
+    <p class="cta-empty" style="margin-top:8px;">Record #{{ record_search_id }} nicht gefunden.</p>
+    {% endif %}
+    <div style="margin-top:16px;">
+      <p style="font-size:.76rem;color:#8a9bb0;margin-bottom:8px;">Letzte 20 Records:</p>
+      <table class="cta-table">
+        <thead>
+          <tr><th>#</th><th>Art</th><th>Datum</th><th>A</th><th>B</th><th>cash_b</th><th>Status</th><th>Aktion</th></tr>
+        </thead>
+        <tbody>
+          {% for rec in recent_records %}
+          <tr>
+            <td>{{ rec.pk }}</td>
+            <td>{{ rec.get_kind_display }}</td>
+            <td>{{ rec.date|date:"d.m.Y" }}</td>
+            <td>{{ rec.club_a.name|default:"—" }}</td>
+            <td>{{ rec.club_b.name|default:"—" }}</td>
+            <td>{{ rec.cash_b|floatformat:0 }} €</td>
+            <td>
+              {% if rec.is_cancelled %}<span class="cta-badge cta-badge--review">Storniert</span>
+              {% elif rec.is_admin %}<span class="cta-badge cta-badge--admin">Admin</span>
+              {% else %}<span class="cta-badge cta-badge--done">OK</span>{% endif %}
+            </td>
+            <td>
+              {% if not rec.is_cancelled %}
+              <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_cancel_record' %}">
+                {% csrf_token %}
+                <input type="hidden" name="record_id" value="{{ rec.pk }}">
+                <input type="text" name="grund" placeholder="Grund" required style="width:100px;">
+                <button type="submit" class="cta-btn" style="padding:3px 8px;font-size:.72rem;">Storno</button>
+              </form>
+              {% else %}<span style="color:#8a9bb0;font-size:.72rem;">—</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ③  Admin-Transfer-Formular -->
+  <div class="cta-panel">
+    <p class="cta-panel-title blue">③ Admin-Transfer (ohne Ablöse / ohne Abgabe)</p>
+    <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_admin_transfer' %}">
+      {% csrf_token %}
+      <input type="number" name="player_id" placeholder="Spieler-ID" required style="width:110px;">
+      <select name="to_club_id" required>
+        <option value="">Zielverein wählen …</option>
+        {% for club in all_clubs %}
+        <option value="{{ club.pk }}">{{ club.name }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="grund" placeholder="Grund (optional)" style="min-width:160px;">
+      <button type="submit" class="cta-btn-blue">Admin-Transfer ausführen</button>
+    </form>
+  </div>
+
+  <!-- ④  Aktive Auktionen -->
+  <div class="cta-panel">
+    <p class="cta-panel-title">④ Aktive Auktionen</p>
+    {% if active_listings %}
+    <p style="font-size:.76rem;color:#8a9bb0;margin-bottom:8px;">Transfer-Listings:</p>
+    <table class="cta-table">
+      <thead>
+        <tr><th>#</th><th>Spieler</th><th>Verkäufer</th><th>Mindestgebot</th><th>Endet</th><th>Aktionen</th></tr>
+      </thead>
+      <tbody>
+        {% for lst in active_listings %}
+        <tr>
+          <td>{{ lst.pk }}</td>
+          <td>{{ lst.player.full_name }}</td>
+          <td>{{ lst.seller.name|default:"(vereinslos)" }}</td>
+          <td>{{ lst.min_bid|floatformat:0 }} €</td>
+          <td>{{ lst.ends_at|date:"d.m.Y H:i"|default:"—" }}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_close_listing' %}">
+                {% csrf_token %}
+                <input type="hidden" name="listing_id" value="{{ lst.pk }}">
+                <button type="submit" class="cta-btn-green" onclick="return confirm('Vorzeitiger Zuschlag für Listing #{{ lst.pk }}?')">Zuschlag jetzt</button>
+              </form>
+              <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_cancel_listing' %}">
+                {% csrf_token %}
+                <input type="hidden" name="listing_id" value="{{ lst.pk }}">
+                <input type="text" name="grund" placeholder="Grund" style="width:100px;">
+                <button type="submit" class="cta-btn" onclick="return confirm('Auktion #{{ lst.pk }} stornieren?')">Stornieren</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="cta-empty">Keine aktiven Transfer-Listings.</p>
+    {% endif %}
+
+    {% if active_loan_listings %}
+    <p style="font-size:.76rem;color:#8a9bb0;margin:16px 0 8px 0;">Leih-Listings:</p>
+    <table class="cta-table">
+      <thead>
+        <tr><th>#</th><th>Spieler</th><th>Stammverein</th><th>Gebühr</th><th>Bis</th><th>Aktion</th></tr>
+      </thead>
+      <tbody>
+        {% for lst in active_loan_listings %}
+        <tr>
+          <td>{{ lst.pk }}</td>
+          <td>{{ lst.player.full_name }}</td>
+          <td>{{ lst.owner_club.name }}</td>
+          <td>{{ lst.fee_asking|floatformat:0 }} €</td>
+          <td>{{ lst.get_until_display }}</td>
+          <td>
+            <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_cancel_loan_listing' %}">
+              {% csrf_token %}
+              <input type="hidden" name="listing_id" value="{{ lst.pk }}">
+              <input type="text" name="grund" placeholder="Grund" style="width:100px;">
+              <button type="submit" class="cta-btn" onclick="return confirm('Leih-Listing #{{ lst.pk }} stornieren?')">Stornieren</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="cta-empty" style="margin-top:10px;">Keine aktiven Leih-Listings.</p>
+    {% endif %}
+  </div>
+
+  <!-- ⑤  Kadergrenzen-Vermerke -->
+  <div class="cta-panel">
+    <p class="cta-panel-title">⑤ Kadergrenzen-Vermerke</p>
+    {% if squad_notes %}
+    <table class="cta-table">
+      <thead>
+        <tr><th>Verein</th><th>Spieler</th><th>Text</th><th>Status</th><th>Erstellt</th><th>Aktion</th></tr>
+      </thead>
+      <tbody>
+        {% for note in squad_notes %}
+        <tr>
+          <td>{{ note.club.name }}</td>
+          <td>{{ note.player.full_name|default:"—" }}</td>
+          <td style="max-width:300px;font-size:.76rem;">{{ note.text }}</td>
+          <td>
+            {% if note.status == 'OPEN' %}<span class="cta-badge cta-badge--open">Offen</span>
+            {% else %}<span class="cta-badge cta-badge--review">Sportgericht</span>{% endif %}
+          </td>
+          <td>{{ note.created_at|date:"d.m.Y H:i" }}</td>
+          <td>
+            {% if note.status == 'OPEN' %}
+            <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_squad_note' %}">
+              {% csrf_token %}
+              <input type="hidden" name="note_id" value="{{ note.pk }}">
+              <button type="submit" class="cta-btn-blue" style="padding:3px 8px;font-size:.72rem;">Im Sportgericht anmerken</button>
+            </form>
+            {% else %}<span style="color:#8a9bb0;font-size:.72rem;">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="cta-empty">Keine Kadergrenzen-Vermerke.</p>
+    {% endif %}
+  </div>
+
+  <!-- ⑥  ClubPartnership-Pflege -->
+  <div class="cta-panel">
+    <p class="cta-panel-title">⑥ Vereinspartnerschaften</p>
+    <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_partnership' %}" style="margin-bottom:16px;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+      <select name="club_a_id" required>
+        <option value="">Verein A …</option>
+        {% for club in all_clubs %}<option value="{{ club.pk }}">{{ club.name }}</option>{% endfor %}
+      </select>
+      <select name="club_b_id" required>
+        <option value="">Verein B …</option>
+        {% for club in all_clubs %}<option value="{{ club.pk }}">{{ club.name }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="cta-btn-green">Partnerschaft anlegen</button>
+    </form>
+    {% if partnerships %}
+    <table class="cta-table">
+      <thead>
+        <tr><th>Verein A</th><th>Verein B</th><th>Aktiv</th><th>Aktion</th></tr>
+      </thead>
+      <tbody>
+        {% for p in partnerships %}
+        <tr>
+          <td>{{ p.club_a.name }}</td>
+          <td>{{ p.club_b.name }}</td>
+          <td><span class="cta-badge cta-badge--done">Ja</span></td>
+          <td>
+            <form class="cta-form" method="post" action="{% url 'creator_transferaufsicht_partnership' %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="deactivate">
+              <input type="hidden" name="partnership_id" value="{{ p.pk }}">
+              <button type="submit" class="cta-btn" style="padding:3px 8px;font-size:.72rem;">Deaktivieren</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="cta-empty">Keine aktiven Vereinspartnerschaften.</p>
+    {% endif %}
+  </div>
+
+  <!-- ⑦  Link: Vereinsloser-Pool -->
+  <div class="cta-panel">
+    <p class="cta-panel-title">⑦ Vereinsloser-Pool</p>
+    <a href="{% url 'creator_vereinslose' %}" class="cta-btn-blue" style="display:inline-block;padding:7px 18px;text-decoration:none;border-radius:6px;">→ Vereinslose verwalten</a>
+  </div>
+
+  <!-- ⑧  Aktionsprotokoll -->
+  <div class="cta-panel">
+    <p class="cta-panel-title">⑧ Aktionsprotokoll (letzte 30)</p>
+    {% if action_logs %}
+    <div>
+      {% for log in action_logs %}
+      <div class="cta-log-row">
+        <span style="color:#8a9bb0;min-width:120px;font-size:.72rem;">{{ log.created_at|date:"d.m.Y H:i" }}</span>
+        <span class="cta-log-action">{{ log.action }}</span>
+        <span class="cta-log-target">{{ log.target }}</span>
+        <span style="color:#8a9bb0;font-size:.72rem;">{{ log.actor.username|default:"—" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="cta-empty">Noch keine Aktionen protokolliert.</p>
+    {% endif %}
+  </div>
+
+  <!-- ⑨  Settings-Panel -->
+  <div class="cta-panel">
+    <p class="cta-panel-title blue">⑨ Transfer-Settings (Saison {{ saison }})</p>
+    {% for row in settings_rows %}
+    <form class="cta-setting-row" method="post" action="{% url 'creator_transferaufsicht_setting' %}">
+      {% csrf_token %}
+      <input type="hidden" name="key" value="{{ row.key }}">
+      <span class="cta-setting-key">{{ row.key }}</span>
+      <input type="text" name="value" value="{{ row.value_json }}" class="cta-setting-val">
+      <button type="submit" class="cta-btn-blue" style="padding:4px 12px;font-size:.76rem;">Speichern</button>
+    </form>
+    {% endfor %}
+  </div>
+
+</section>
+{% endblock %}

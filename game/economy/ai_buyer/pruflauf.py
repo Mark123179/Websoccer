@@ -96,14 +96,21 @@ def _offene_ki_angebote(club, *, dry_run):
     Im Scharfbetrieb zählen nur versendete Angebote; Trockenlauf-Angebote
     (Status 'berechnet') blockieren die Kadenz des Scharfbetriebs nicht,
     zählen aber im Trockenlauf selbst (realistische Simulation).
+    Im Scharfbetrieb werden zusätzlich offene v2-DealRequests mitgezählt.
     """
     from game.models import AITransferOffer
 
     status = (AITransferOffer.OFFENE_STATUS if dry_run
               else (AITransferOffer.STATUS_VERSENDET,))
-    return AITransferOffer.objects.filter(
+    count = AITransferOffer.objects.filter(
         buyer_club=club, status__in=status,
     ).count()
+    if not dry_run:
+        from game.transfer_v2.models import DealRequest
+        count += DealRequest.objects.filter(
+            from_club=club, status=DealRequest.STATUS_OPEN,
+        ).count()
+    return count
 
 
 def _fenster_angebote(club, window_id, kauftyp=None):
@@ -131,6 +138,27 @@ def _kaderplatz_frei(club, saison):
     """Käufer-Kaderplatz-Gate (Spec 9.1): Käufe nur mit freiem Platz."""
     from ..kader import effective_squad_limit, squad_count
     return squad_count(club) < effective_squad_limit(club, saison)
+
+
+def _erstgebot_fuer_kandidat(wertung, kauftyp, params):
+    """Berechnet das Erstgebot (Stufe 1) für einen Kandidaten.
+
+    Repliziert die Stufe-1-Logik aus offers.gebot_fuer_stufe ohne ein
+    persistiertes AITransferOffer-Objekt zu benötigen: erstellt ein
+    transientes Dummy-Offer-Objekt, um gebot_fuer_stufe direkt nutzen
+    zu können.
+    """
+    import secrets as _secrets
+    from .offers import gebot_fuer_stufe, max_gebot_fuer
+
+    class _FakeOffer:
+        pass
+
+    max_gebot = max_gebot_fuer(kauftyp, wertung, params)
+    fake = _FakeOffer()
+    fake.max_gebot = max_gebot
+    fake.noise_seed = _secrets.token_hex(16)
+    return gebot_fuer_stufe(fake, 1, params)
 
 
 def _kauf_versuchen(club, kandidatenliste, *, kauftyp, params, saison,
@@ -168,22 +196,49 @@ def _kauf_versuchen(club, kandidatenliste, *, kauftyp, params, saison,
                 }
             continue  # kein Deal (Forderung über Max) → nächster Kandidat
         # Manager-Verein → Angebot (Postfach bzw. Trockenlauf-Berechnung).
+        if dry_run:
+            # Trockenlauf: AITransferOffer mit STATUS_BERECHNET (Creator-Transferzentrale).
+            try:
+                offer = create_offer(
+                    club, player, kauftyp=kauftyp, wertung=kandidat['wertung'],
+                    params=params, saison=saison, window_id=window_id,
+                    dry_run=True, luecken_score=luecken_score,
+                    begruendung=begruendung,
+                )
+            except AIBuyerError:
+                continue
+            return {
+                'aktion': 'berechnet',
+                'offer_id': offer.pk,
+                'player_id': player.pk,
+                'player': player.full_name,
+                'seller': seller.name,
+                'gebot': str(offer.aktuelles_gebot),
+            }
+        # Scharfbetrieb: v2-DealRequest erzeugen (sichtbar unter /transfers/deals/).
+        from game.transfer_v2.services import (
+            TransferActionError, create_deal_request,
+        )
         try:
-            offer = create_offer(
-                club, player, kauftyp=kauftyp, wertung=kandidat['wertung'],
-                params=params, saison=saison, window_id=window_id,
-                dry_run=dry_run, luecken_score=luecken_score,
-                begruendung=begruendung,
+            gebot = _erstgebot_fuer_kandidat(kandidat['wertung'], kauftyp, params)
+            msg = begruendung[:280] if begruendung else ''
+            deal = create_deal_request(
+                club, seller,
+                typ='CASH',
+                cash_from=gebot,
+                to_players=[player],
+                message=msg,
+                saison=saison,
             )
-        except AIBuyerError:
+        except (AIBuyerError, TransferActionError):
             continue
         return {
-            'aktion': 'berechnet' if dry_run else 'angebot',
-            'offer_id': offer.pk,
+            'aktion': 'angebot',
+            'deal_id': deal.pk,
             'player_id': player.pk,
             'player': player.full_name,
             'seller': seller.name,
-            'gebot': str(offer.aktuelles_gebot),
+            'gebot': str(gebot),
         }
     return {'aktion': None}
 

@@ -192,6 +192,16 @@ from .views_creator import (
     creator_referee_edit,
     creator_referee_save,
     creator_referee_delete,
+    creator_transferaufsicht,
+    creator_transferaufsicht_report_action,
+    creator_transferaufsicht_cancel_record,
+    creator_transferaufsicht_admin_transfer,
+    creator_transferaufsicht_cancel_listing,
+    creator_transferaufsicht_close_listing,
+    creator_transferaufsicht_cancel_loan_listing,
+    creator_transferaufsicht_squad_note,
+    creator_transferaufsicht_partnership,
+    creator_transferaufsicht_setting,
 )
 from .views_importer_api import (
     importer_next_job,
@@ -321,6 +331,9 @@ urlpatterns = [
         name='squad_set_sale_status'
     ),
 
+    # Legacy-Manager-UI-Routen (Phase 4/6): View-Funktionen bleiben erhalten,
+    # da die Wirtschaftslogik (negotiation, ai_buyer) und Tests diese weiter
+    # nutzen. Die Einbindung in die Kader-UI (squad_page.html) wurde entfernt.
     path(
         'transfers/bid/',
         transfer_place_bid,
@@ -480,6 +493,16 @@ urlpatterns = [
     path('creator/ki-angebote/', creator_ki_angebote, name='creator_ki_angebote'),
     path('creator/ki-transferzentrale/', creator_ki_transferzentrale, name='creator_ki_transferzentrale'),
     path('creator/sportgericht/', creator_sportgericht, name='creator_sportgericht'),
+    path('creator/transferaufsicht/', creator_transferaufsicht, name='creator_transferaufsicht'),
+    path('creator/transferaufsicht/meldung/', creator_transferaufsicht_report_action, name='creator_transferaufsicht_report_action'),
+    path('creator/transferaufsicht/storno-record/', creator_transferaufsicht_cancel_record, name='creator_transferaufsicht_cancel_record'),
+    path('creator/transferaufsicht/admin-transfer/', creator_transferaufsicht_admin_transfer, name='creator_transferaufsicht_admin_transfer'),
+    path('creator/transferaufsicht/storno-listing/', creator_transferaufsicht_cancel_listing, name='creator_transferaufsicht_cancel_listing'),
+    path('creator/transferaufsicht/zuschlag/', creator_transferaufsicht_close_listing, name='creator_transferaufsicht_close_listing'),
+    path('creator/transferaufsicht/storno-leihlisting/', creator_transferaufsicht_cancel_loan_listing, name='creator_transferaufsicht_cancel_loan_listing'),
+    path('creator/transferaufsicht/vermerk/', creator_transferaufsicht_squad_note, name='creator_transferaufsicht_squad_note'),
+    path('creator/transferaufsicht/partnerschaft/', creator_transferaufsicht_partnership, name='creator_transferaufsicht_partnership'),
+    path('creator/transferaufsicht/setting/', creator_transferaufsicht_setting, name='creator_transferaufsicht_setting'),
     path('creator/medien/<int:outlet_id>/loeschen/', creator_media_outlet_delete, name='creator_media_outlet_delete'),
     path('creator/simulation-diagnostics/', creator_simulation_diagnostics, name='creator_simulation_diagnostics'),
     path('creator/system-diagnostics/', creator_system_diagnostics, name='creator_system_diagnostics'),

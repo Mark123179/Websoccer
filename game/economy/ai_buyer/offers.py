@@ -108,6 +108,8 @@ def _manager_kadenz_ok(seller, window_id, params, *, dry_run):
 
     Im Trockenlauf zählen 'berechnet'-Angebote mit (realistische
     Simulation), im Scharfbetrieb nur wirklich versendete.
+    Im Scharfbetrieb werden zusätzlich offene v2-DealRequests von
+    KI-Vereinen an diesen Manager-Verein mitgezählt.
     """
     from game.models import AITransferOffer
 
@@ -116,6 +118,13 @@ def _manager_kadenz_ok(seller, window_id, params, *, dry_run):
     offen = AITransferOffer.objects.filter(
         seller_club=seller, status__in=status,
     ).count()
+    if not dry_run:
+        from game.transfer_v2.models import DealRequest
+        offen += DealRequest.objects.filter(
+            to_club=seller,
+            status=DealRequest.STATUS_OPEN,
+            from_club__managed_by__isnull=True,
+        ).count()
     if offen >= int(params.get('max_offen_manager', 2)):
         return False
     im_fenster = AITransferOffer.objects.filter(

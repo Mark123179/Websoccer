@@ -95,3 +95,4 @@
 - [Object-Storage Bucket-ID Pflicht](object-storage-bucket.md) — nie Client() direkt; get_client() übergibt DEFAULT_OBJECT_STORAGE_BUCKET_ID; stille except-pass-Fallbacks versteckten den kaputten Bucket.
 - [Transfersystem v2 Fundament](transfer-v2-foundation.md) — Reservierungszeilen sind Wahrheit (Cache nur Abbild); Settlement re-validiert Zustand + Kadergrenzen als Einheit; Konflikte enden deterministisch mit voller Rückabwicklung.
 - [Transfer v2 Ereignis-Schicht](transfer-v2-event-layer.md) — Gerüchte/Push/Ticker-Hooks IMMER außerhalb atomic-Blöcke, nebenwirkungs-isoliert; RNG injizierbar für Tests; max. 1 Gerücht je Spieler+Event+Tag.
+- [Transfer v2 Creator/KI](transfer-v2-creator-ai.md) — Admin-Storno = Ganz-oder-gar-nicht; KI-Deal-Antwort via Schmerzgrenze (24h-Bedenkzeit); KI-Käufer live = DealRequest, dry_run = AITransferOffer; Regression nur mit --seasons 20 vergleichbar.
