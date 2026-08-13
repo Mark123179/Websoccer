@@ -204,12 +204,14 @@ class DealRequest(models.Model):
     ]
 
     STATUS_OPEN = 'OPEN'
+    STATUS_COUNTER = 'COUNTER'
     STATUS_ACCEPTED = 'ACCEPTED'
     STATUS_DECLINED = 'DECLINED'
     STATUS_WITHDRAWN = 'WITHDRAWN'
     STATUS_EXPIRED = 'EXPIRED'
     STATUS_CHOICES = [
         (STATUS_OPEN, 'Offen'),
+        (STATUS_COUNTER, 'Gegenforderung'),
         (STATUS_ACCEPTED, 'Angenommen'),
         (STATUS_DECLINED, 'Abgelehnt'),
         (STATUS_WITHDRAWN, 'Zurückgezogen'),
@@ -246,6 +248,11 @@ class DealRequest(models.Model):
     message = models.CharField(max_length=280, blank=True, default='')
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default=STATUS_OPEN,
+    )
+    # Gegenforderung der KI (quantisiert). Nur bei status=COUNTER gesetzt.
+    # Enthält NIE die interne Schmerzgrenze — nur den gerundeten Betrag.
+    counter_offer = models.DecimalField(
+        **_MONEY, null=True, blank=True, verbose_name='Gegenforderung (€)',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(verbose_name='Läuft ab am')

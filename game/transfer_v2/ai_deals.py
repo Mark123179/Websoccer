@@ -5,8 +5,12 @@ KI-Vereine (managed_by_id IS NULL) beantworten offene DealRequest-Anfragen
 Basis der Schmerzgrenzen-Bewertung.
 
 Anfragen bekommen 24 Stunden Bedenkzeit; jüngere werden übersprungen.
-Entscheidung per Schmerzgrenzen-Vergleich: angebotener Wert >= Schmerzgrenze
-→ accept_deal, sonst → decline_deal.
+Entscheidung per Schmerzgrenzen-Vergleich mit Verhandlungszone:
+- angebotener Wert >= Schmerzgrenze → accept_deal
+- angebotener Wert >= Schmerzgrenze × moderate_luecke_min → counter_deal
+  (Gegenforderung = Schmerzgrenze × gegenforderung_faktor, quantisiert;
+  die interne Schmerzgrenze wird NIE offengelegt)
+- sonst → decline_deal
 
 dry_run=True (aus KI_KAEUFER-Parameter): kein Schreibzugriff, nur zählen/loggen.
 """
@@ -19,12 +23,43 @@ from game.economy.params import get_decimal, get_param
 from game.economy.schmerzgrenze import bewertung
 
 from .models import DealRequest, DealRequestPlayer
-from .services import TransferActionError, accept_deal, decline_deal
+from .services import (
+    TransferActionError, accept_deal, counter_deal, decline_deal,
+)
 
 logger = logging.getLogger(__name__)
 
 ZERO = Decimal('0.00')
 _24H = timezone.timedelta(hours=24)
+
+# Entscheidungs-Codes von _bewerte_deal
+ACCEPT = 'accept'
+COUNTER = 'counter'
+DECLINE = 'decline'
+
+
+def _verkaeufer_params(saison):
+    """KI_VERKAEUFER-Parameter mit robusten Fallbacks (Seed 0129)."""
+    try:
+        p = get_param('KI_VERKAEUFER', saison)
+        if not isinstance(p, dict):
+            p = {}
+    except Exception:
+        p = {}
+    return {
+        'moderate_luecke_min': Decimal(str(p.get('moderate_luecke_min', 0.70))),
+        'gegenforderung_faktor': Decimal(str(p.get('gegenforderung_faktor', 1.1))),
+        'gebot_quantisierung': Decimal(str(p.get('gebot_quantisierung', 10000))),
+    }
+
+
+def _quantisiere_auf(betrag, schritt):
+    """Rundet auf den nächsten Quantisierungs-Schritt AUF (nie unter Forderung)."""
+    schritt = Decimal(str(schritt))
+    if schritt <= 0:
+        return betrag.quantize(Decimal('0.01'))
+    import math
+    return Decimal(math.ceil(betrag / schritt)) * schritt
 
 
 def _schmerzgrenze_fuer(player, saison):
@@ -87,7 +122,11 @@ def _bewerte_deal(deal, saison):
     """Bewertet einen Deal aus Sicht des KI-Empfängers (to_club).
 
     Returns:
-        (annehmen: bool, grund: str)
+        (entscheidung: 'accept'|'counter'|'decline',
+         gegenforderung: Decimal|None,  # nur bei 'counter' gesetzt
+         grund: str)
+    Die interne Schmerzgrenze taucht nur im Log-Grund auf, nie in
+    Manager-sichtbaren Daten.
     """
     typ = deal.typ
 
@@ -97,24 +136,39 @@ def _bewerte_deal(deal, saison):
         .select_related('player', 'player__strength_profile')
     )
 
+    p = _verkaeufer_params(saison)
+
     if typ == DealRequest.TYP_LOAN:
         angeboten = Decimal(str(deal.loan_fee)) if deal.loan_fee is not None else ZERO
         gefordert, grenze = _geforderter_wert_loan(deal, saison)
         if gefordert is None:
-            return False, 'Keine Schmerzgrenzen-Datenbasis für Leihspieler'
+            return DECLINE, None, 'Keine Schmerzgrenzen-Datenbasis für Leihspieler'
         if angeboten >= gefordert:
-            return True, f'Leihgebühr {angeboten} >= Schwelle {gefordert}'
-        return False, f'Leihgebühr {angeboten} < Schwelle {gefordert} (5% von {grenze})'
+            return ACCEPT, None, f'Leihgebühr {angeboten} >= Schwelle {gefordert}'
+        # Leih-Gegenforderung: gleiche Verhandlungszone wie Kauf-Deals
+        # (moderate_luecke_min/gegenforderung_faktor aus KI_VERKAEUFER),
+        # max. 1 Runde pro Anfrage.
+        if (angeboten >= gefordert * p['moderate_luecke_min']
+                and deal.counter_offer is None):
+            forderung = _quantisiere_auf(
+                gefordert * p['gegenforderung_faktor'],
+                p['gebot_quantisierung'])
+            return COUNTER, forderung, (
+                f'Leihgebühr {angeboten} in Verhandlungszone '
+                f'(>= {p["moderate_luecke_min"]}×{gefordert}) '
+                f'— Gegenforderung {forderung}')
+        return DECLINE, None, (
+            f'Leihgebühr {angeboten} < Schwelle {gefordert} (5% von {grenze})')
 
     # Für CASH, SWAP, SWAP_CASH: geforderter Wert = Summe Schmerzgrenzen TO-Spieler
     if not to_eintraege:
-        return False, 'Keine Spieler auf TO-Seite (kein Abgabegegenstand)'
+        return DECLINE, None, 'Keine Spieler auf TO-Seite (kein Abgabegegenstand)'
 
     gefordert = ZERO
     for eintrag in to_eintraege:
         grenze = _schmerzgrenze_fuer(eintrag.player, saison)
         if grenze is None:
-            return False, (
+            return DECLINE, None, (
                 f'Keine Schmerzgrenzen-Datenbasis für Spieler '
                 f'{eintrag.player_id} — KI verkauft nicht ohne Bewertung'
             )
@@ -125,13 +179,34 @@ def _bewerte_deal(deal, saison):
     elif typ in (DealRequest.TYP_SWAP, DealRequest.TYP_SWAP_CASH):
         angeboten = _angebotener_wert_swap(deal, saison)
         if angeboten is None:
-            return False, 'Keine Schmerzgrenzen-Datenbasis für angebotene FROM-Spieler'
+            return DECLINE, None, (
+                'Keine Schmerzgrenzen-Datenbasis für angebotene FROM-Spieler')
     else:
-        return False, f'Unbekannter Deal-Typ: {typ}'
+        return DECLINE, None, f'Unbekannter Deal-Typ: {typ}'
 
     if angeboten >= gefordert:
-        return True, f'Angebot {angeboten} >= Schmerzgrenze {gefordert}'
-    return False, f'Angebot {angeboten} < Schmerzgrenze {gefordert}'
+        return ACCEPT, None, f'Angebot {angeboten} >= Schmerzgrenze {gefordert}'
+
+    # Verhandlungszone: Angebot knapp unter der Grenze → Gegenforderung.
+    # Nur wenn noch keine Gegenforderung gestellt wurde (max. 1 Runde).
+    if (angeboten >= gefordert * p['moderate_luecke_min']
+            and deal.counter_offer is None):
+        # Gegenforderung bezieht sich auf den GELDANTEIL des Initiators:
+        # Gesamtforderung × Faktor minus Wert der angebotenen FROM-Spieler.
+        # Sie ersetzt die KOMPLETTE Geld-Seite des Deals (cash_to entfällt).
+        gesamt = gefordert * p['gegenforderung_faktor']
+        sachwert = angeboten - Decimal(str(deal.cash_from)) + Decimal(str(deal.cash_to))
+        geldanteil = gesamt - sachwert
+        # geldanteil <= 0: Der Sachwert allein deckt die Forderung bereits —
+        # das Angebot lag nur wegen des geforderten cash_to in der Zone.
+        # Gegenforderung = 0 € (reiner Tausch, cash_to entfällt bei Annahme).
+        forderung = (_quantisiere_auf(geldanteil, p['gebot_quantisierung'])
+                     if geldanteil > 0 else ZERO)
+        return COUNTER, forderung, (
+            f'Angebot {angeboten} in Verhandlungszone '
+            f'(>= {p["moderate_luecke_min"]}×{gefordert}) '
+            f'— Gegenforderung {forderung}')
+    return DECLINE, None, f'Angebot {angeboten} < Schmerzgrenze {gefordert}'
 
 
 def respond_open_deals(*, saison=None, now=None):
@@ -179,6 +254,7 @@ def respond_open_deals(*, saison=None, now=None):
     pks = list(qs)
     angenommen = 0
     abgelehnt = 0
+    gegenforderungen = 0
     fehler = 0
     uebersprungen = 0
 
@@ -208,21 +284,24 @@ def respond_open_deals(*, saison=None, now=None):
                 uebersprungen += 1
                 continue
 
-            annehmen, grund = _bewerte_deal(deal, saison)
+            entscheidung, forderung, grund = _bewerte_deal(deal, saison)
 
             if dry_run:
-                entscheidung = 'ANGENOMMEN' if annehmen else 'ABGELEHNT'
+                label = {ACCEPT: 'ANGENOMMEN', COUNTER: 'GEGENFORDERUNG',
+                         DECLINE: 'ABGELEHNT'}[entscheidung]
                 logger.info(
                     'ai_deals [dry_run] Deal #%s: %s — %s',
-                    pk, entscheidung, grund,
+                    pk, label, grund,
                 )
-                if annehmen:
+                if entscheidung == ACCEPT:
                     angenommen += 1
+                elif entscheidung == COUNTER:
+                    gegenforderungen += 1
                 else:
                     abgelehnt += 1
                 continue
 
-            if annehmen:
+            if entscheidung == ACCEPT:
                 try:
                     accept_deal(deal, saison=saison)
                     angenommen += 1
@@ -235,6 +314,25 @@ def respond_open_deals(*, saison=None, now=None):
                         abgelehnt += 1
                         logger.warning(
                             'ai_deals: Deal #%s accept_deal fehlgeschlagen '
+                            '(%s) — als ABGELEHNT gebucht', pk, exc)
+                    except Exception as exc2:
+                        fehler += 1
+                        logger.exception(
+                            'ai_deals: Deal #%s Fallback-decline fehlgeschlagen: %s',
+                            pk, exc2)
+            elif entscheidung == COUNTER:
+                try:
+                    counter_deal(deal, forderung)
+                    gegenforderungen += 1
+                    logger.info(
+                        'ai_deals: Deal #%s GEGENFORDERUNG — %s', pk, grund)
+                except (TransferActionError, Exception) as exc:
+                    # Fallback: ablehnen (z.B. Race auf Status)
+                    try:
+                        decline_deal(deal)
+                        abgelehnt += 1
+                        logger.warning(
+                            'ai_deals: Deal #%s counter_deal fehlgeschlagen '
                             '(%s) — als ABGELEHNT gebucht', pk, exc)
                     except Exception as exc2:
                         fehler += 1
@@ -260,6 +358,7 @@ def respond_open_deals(*, saison=None, now=None):
     result = {
         'angenommen': angenommen,
         'abgelehnt': abgelehnt,
+        'gegenforderungen': gegenforderungen,
         'fehler': fehler,
         'uebersprungen': uebersprungen,
     }

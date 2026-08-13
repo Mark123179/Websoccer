@@ -359,7 +359,9 @@ def transfer_my_deals(request):
     )
     sent = (
         DealRequest.objects
-        .filter(from_club=club, status=DealRequest.STATUS_OPEN)
+        .filter(from_club=club,
+                status__in=(DealRequest.STATUS_OPEN,
+                            DealRequest.STATUS_COUNTER))
         .select_related('to_club').prefetch_related('players__player')
         .order_by('expires_at')
     )
@@ -369,6 +371,7 @@ def transfer_my_deals(request):
         reserved = deal.cash_from if not received else Decimal('0')
         if deal.typ == DealRequest.TYP_LOAN and not received:
             reserved = deal.loan_fee or Decimal('0')
+        is_counter = deal.status == DealRequest.STATUS_COUNTER
         return {
             'id': deal.pk,
             'title': _deal_title(deal, perspective_club=club),
@@ -376,6 +379,10 @@ def transfer_my_deals(request):
             'timing': deal.get_timing_display(),
             'reserved_fmt': _euro(reserved) if reserved else '',
             'expires_ms': int(deal.expires_at.timestamp() * 1000),
+            'is_counter': is_counter,
+            'counter_fmt': (_euro(deal.counter_offer)
+                            if is_counter and deal.counter_offer is not None
+                            else ''),
         }
 
     recv_rows = [_deal_row(d, received=True) for d in recv]
@@ -515,6 +522,43 @@ def transfer_deal_withdraw(request):
         return redirect('transfer_my_deals')
     services.withdraw_deal(deal)
     messages.success(request, 'Anfrage zurückgezogen — Reservierung frei.')
+    return redirect(f"{reverse('transfer_my_deals')}?seg=gesendet")
+
+
+@login_required
+@require_POST
+def transfer_deal_counter_accept(request):
+    """Initiator nimmt die KI-Gegenforderung an → Deal zum counter_offer."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    deal = get_object_or_404(DealRequest, pk=request.POST.get('deal_id'))
+    if deal.from_club_id != club.pk:
+        messages.error(request, 'Diese Anfrage betrifft nicht deinen Verein.')
+        return redirect('transfer_my_deals')
+    try:
+        services.accept_counter_deal(deal)
+    except TransferActionError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(
+            request, 'Gegenforderung angenommen — Deal vollzogen.')
+    return redirect(f"{reverse('transfer_my_deals')}?seg=gesendet")
+
+
+@login_required
+@require_POST
+def transfer_deal_counter_decline(request):
+    """Initiator lehnt die KI-Gegenforderung ab → Reservierung frei."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return redirect('management_hub')
+    deal = get_object_or_404(DealRequest, pk=request.POST.get('deal_id'))
+    if deal.from_club_id != club.pk:
+        messages.error(request, 'Diese Anfrage betrifft nicht deinen Verein.')
+        return redirect('transfer_my_deals')
+    services.decline_counter_deal(deal)
+    messages.success(request, 'Gegenforderung abgelehnt — Reservierung frei.')
     return redirect(f"{reverse('transfer_my_deals')}?seg=gesendet")
 
 

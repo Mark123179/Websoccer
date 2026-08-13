@@ -98,12 +98,27 @@
       <div class="tv2-deal-line-main">
         <div class="tv2-board-name">{{ d.title }}</div>
         <div class="tv2-board-meta">Zeitpunkt: <span class="tv2-cyan">{{ d.timing }}</span>{% if d.reserved_fmt %} · Reserviert: <span class="tv2-gold">{{ d.reserved_fmt }}</span>{% endif %}</div>
+        {% if d.is_counter %}
+        <div class="tv2-board-meta">Gegenforderung: <span class="tv2-gold"><b>{{ d.counter_fmt }}</b></span></div>
+        {% endif %}
       </div>
+      {% if d.is_counter %}<span class="tv2-pill tv2-pill--gold">Gegenforderung</span>{% endif %}
       <span class="tv2-cd tv2-cd--gold" data-ends="{{ d.expires_ms }}">…</span>
+      {% if d.is_counter %}
+      <form method="post" action="{% url 'transfer_deal_counter_accept' %}" onclick="event.stopPropagation()">{% csrf_token %}
+        <input type="hidden" name="deal_id" value="{{ d.id }}">
+        <button type="submit" class="tv2-btn tv2-btn--accept">Annehmen ({{ d.counter_fmt }})</button>
+      </form>
+      <form method="post" action="{% url 'transfer_deal_counter_decline' %}" onclick="event.stopPropagation()">{% csrf_token %}
+        <input type="hidden" name="deal_id" value="{{ d.id }}">
+        <button type="submit" class="tv2-btn tv2-btn--decline">Ablehnen</button>
+      </form>
+      {% else %}
       <form method="post" action="{% url 'transfer_deal_withdraw' %}" onclick="event.stopPropagation()">{% csrf_token %}
         <input type="hidden" name="deal_id" value="{{ d.id }}">
         <button type="submit" class="tv2-btn tv2-btn--decline">Zurückziehen</button>
       </form>
+      {% endif %}
     </div>
     {% empty %}
     <div class="tv2-empty">Keine offenen gesendeten Anfragen.</div>

@@ -770,15 +770,98 @@ def decline_deal(deal):
 
 
 def expire_deal(deal):
-    """7-Tage-Ablauf → Reservierung frei."""
+    """7-Tage-Ablauf → Reservierung frei (auch für offene Gegenforderungen)."""
     return _resolve_deal(deal, DealRequest.STATUS_EXPIRED)
+
+
+def counter_deal(deal, betrag):
+    """KI stellt eine Gegenforderung: Status → COUNTER, Betrag speichern.
+
+    `betrag` ist der bereits quantisierte Geldanteil (cash_from bzw.
+    loan_fee), den der Initiator zahlen müsste — NIE die interne
+    Schmerzgrenze. Die bestehende Reservierung des Initiators bleibt
+    unverändert; die Differenz wird erst bei Annahme geprüft/reserviert.
+    Max. eine Gegenforderung pro Anfrage.
+    """
+    with transaction.atomic():
+        deal = DealRequest.objects.select_for_update().get(pk=deal.pk)
+        if deal.status != DealRequest.STATUS_OPEN:
+            raise TransferActionError('Anfrage ist nicht mehr offen.')
+        if deal.counter_offer is not None:
+            raise TransferActionError(
+                'Es wurde bereits eine Gegenforderung gestellt.')
+        deal.counter_offer = _q(betrag)
+        deal.status = DealRequest.STATUS_COUNTER
+        deal.save(update_fields=['counter_offer', 'status'])
+    return deal
+
+
+def accept_counter_deal(deal, *, saison=None, spieltag=None):
+    """Initiator nimmt die Gegenforderung an: Geldanteil auf counter_offer
+    anheben (Deckung prüfen + Reservierung nachziehen), dann normaler
+    Deal-Vollzug über accept_deal — alles in EINER Transaktion, ein
+    Fehler rollt auch die Statusänderung zurück (Deal bleibt COUNTER).
+    """
+    from game.models import Club
+
+    with transaction.atomic():
+        deal = DealRequest.objects.select_for_update().get(pk=deal.pk)
+        if (deal.status != DealRequest.STATUS_COUNTER
+                or deal.counter_offer is None):
+            raise TransferActionError('Keine offene Gegenforderung.')
+        if timezone.now() >= deal.expires_at:
+            raise TransferActionError('Anfrage ist bereits abgelaufen.')
+        betrag = _q(deal.counter_offer)
+        initiator = Club.objects.select_for_update().get(pk=deal.from_club_id)
+        ref = escrow.deal_ref(deal.pk)
+        if escrow.available(initiator, exclude_referenz=ref) < betrag:
+            raise TransferActionError(
+                'Die Gegenforderung übersteigt die verfügbaren Mittel.')
+        if deal.typ == DealRequest.TYP_LOAN:
+            deal.loan_fee = betrag
+            deal.status = DealRequest.STATUS_OPEN
+            deal.save(update_fields=['loan_fee', 'status'])
+        else:
+            # Die Gegenforderung ersetzt die KOMPLETTE Geld-Seite des Deals:
+            # sie ist als Netto-Geldanteil des Initiators berechnet
+            # (Gesamtforderung minus Sachwert der FROM-Spieler). Ein etwaiges
+            # cash_to (Geld vom KI-Empfänger) muss auf 0, sonst zahlt die KI
+            # den Altbetrag weiter aus und erhält weniger als gefordert.
+            deal.cash_from = betrag
+            deal.cash_to = ZERO
+            deal.status = DealRequest.STATUS_OPEN
+            deal.save(update_fields=['cash_from', 'cash_to', 'status'])
+        escrow.reserve_money(initiator, ref, betrag)
+        return accept_deal(deal, saison=saison, spieltag=spieltag)
+
+
+def decline_counter_deal(deal):
+    """Initiator lehnt die Gegenforderung ab → DECLINED, Reservierung frei.
+
+    Kein Push: der Initiator handelt selbst, der KI-Empfänger braucht
+    keine Benachrichtigung.
+    """
+    from game.models import Club
+    with transaction.atomic():
+        deal = DealRequest.objects.select_for_update().get(pk=deal.pk)
+        if deal.status != DealRequest.STATUS_COUNTER:
+            return deal
+        deal.status = DealRequest.STATUS_DECLINED
+        deal.resolved_at = timezone.now()
+        deal.save(update_fields=['status', 'resolved_at'])
+        initiator = Club.objects.select_for_update().get(pk=deal.from_club_id)
+        escrow.release_money(initiator, escrow.deal_ref(deal.pk))
+    return deal
 
 
 def _resolve_deal(deal, status):
     from game.models import Club
     with transaction.atomic():
         deal = DealRequest.objects.select_for_update().get(pk=deal.pk)
-        if deal.status != DealRequest.STATUS_OPEN:
+        # COUNTER zählt als offen: Ablauf/Rückzug muss die Reservierung
+        # des Initiators ebenfalls freigeben.
+        if deal.status not in (DealRequest.STATUS_OPEN,
+                               DealRequest.STATUS_COUNTER):
             return deal
         deal.status = status
         deal.resolved_at = timezone.now()

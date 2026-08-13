@@ -50,7 +50,8 @@ def expire_due_deals(*, now=None):
 
     now = now or timezone.now()
     due = DealRequest.objects.filter(
-        status=DealRequest.STATUS_OPEN, expires_at__lte=now,
+        status__in=(DealRequest.STATUS_OPEN, DealRequest.STATUS_COUNTER),
+        expires_at__lte=now,
     ).values_list('pk', flat=True)
     done = 0
     for pk in list(due):
@@ -93,7 +94,8 @@ def expire_paused_loan_requests(*, saison=None):
 
     done = 0
     qs = DealRequest.objects.filter(
-        status=DealRequest.STATUS_OPEN, typ=DealRequest.TYP_LOAN,
+        status__in=(DealRequest.STATUS_OPEN, DealRequest.STATUS_COUNTER),
+        typ=DealRequest.TYP_LOAN,
     ).values_list('pk', 'loan_until')
     for pk, until in list(qs):
         if loan_market_paused(until or 'WP', saison):
