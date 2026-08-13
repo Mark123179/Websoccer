@@ -23,6 +23,94 @@
         <!-- ── LINKE SPALTE ─────────────────────────────────────── -->
         <div class="sg-left">
 
+            {% if transfer_reports %}
+            <!-- Transfermeldungen im Sportgericht -->
+            <div class="sg-panel sg-panel--reports">
+                <p class="sg-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Transfermeldungen
+                    <span class="sg-count-badge">{{ transfer_reports|length }}</span>
+                </p>
+                <div class="sg-report-list">
+                    {% for rep in transfer_reports %}
+                    <div class="sg-report-card">
+                        <div class="sg-report-meta">
+                            <span class="sg-report-club">{{ rep.reporter_club.name }}</span>
+                            <span class="sg-report-date">{{ rep.created_at|date:"d.m.Y" }}</span>
+                        </div>
+                        {% with players=rep.record.players.all %}
+                        {% if players %}
+                        <p class="sg-report-player">
+                            {% for rp in players %}{{ rp.player.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                            — {{ rep.record.club_a.name }} → {{ rep.record.club_b.name }}
+                        </p>
+                        {% endif %}
+                        {% endwith %}
+                        <p class="sg-report-reason">{{ rep.reason }}</p>
+                        {% if request.user.is_staff %}
+                        <div class="sg-report-actions">
+                            <form method="post" action="{% url 'sportgericht_report_action' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="report_id" value="{{ rep.pk }}">
+                                <input type="hidden" name="action" value="close">
+                                <button type="submit" class="sg-btn-action sg-btn-action--confirm">✓ Bestätigen</button>
+                            </form>
+                            <form method="post" action="{% url 'sportgericht_report_action' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="report_id" value="{{ rep.pk }}">
+                                <input type="hidden" name="action" value="dismiss">
+                                <button type="submit" class="sg-btn-action sg-btn-action--dismiss">✕ Zurückweisen</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <p class="sg-report-reason" style="margin-bottom:0;font-style:italic;">Wird vom Sportgericht geprüft.</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if squad_limit_notes %}
+            <!-- Kaderlimit-Vermerke im Sportgericht -->
+            <div class="sg-panel sg-panel--notes">
+                <p class="sg-panel-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Kaderlimit-Vermerke
+                    <span class="sg-count-badge">{{ squad_limit_notes|length }}</span>
+                </p>
+                <div class="sg-report-list">
+                    {% for note in squad_limit_notes %}
+                    <div class="sg-report-card">
+                        <div class="sg-report-meta">
+                            <span class="sg-report-club">{{ note.club.name }}</span>
+                            <span class="sg-report-date">{{ note.created_at|date:"d.m.Y" }}</span>
+                        </div>
+                        {% if note.player %}
+                        <p class="sg-report-player">{{ note.player.full_name }}</p>
+                        {% endif %}
+                        <p class="sg-report-reason">{{ note.text }}</p>
+                        {% if request.user.is_staff %}
+                        <div class="sg-report-actions">
+                            <form method="post" action="{% url 'sportgericht_squad_note_action' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="note_id" value="{{ note.pk }}">
+                                <button type="submit" class="sg-btn-action sg-btn-action--confirm">✓ Erledigt</button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <p class="sg-report-reason" style="margin-bottom:0;font-style:italic;">Wird vom Sportgericht geprüft.</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
             <div class="sg-page-header">
                 <p class="sg-page-label">
                     <a href="/management/" style="color:inherit;text-decoration:none;">Management</a>

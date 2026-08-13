@@ -5254,11 +5254,33 @@ def creator_sportgericht(request):
         .order_by('-resolved_at')[:20]
     )
 
+    from .transfer_v2.models import TransferReport, SquadLimitNote
+    transfer_reports = (
+        TransferReport.objects
+        .filter(status=TransferReport.STATUS_UNDER_REVIEW)
+        .select_related(
+            'reporter_club',
+            'record',
+            'record__club_a',
+            'record__club_b',
+        )
+        .prefetch_related('record__players__player')
+        .order_by('-created_at')
+    )
+    squad_limit_notes_sg = (
+        SquadLimitNote.objects
+        .filter(status=SquadLimitNote.STATUS_SPORTGERICHT)
+        .select_related('club', 'player')
+        .order_by('-created_at')
+    )
+
     return render(request, 'creator/sportgericht.html', {
         'case_rows': case_rows,
         'auction_rows': auction_rows,
         'resolved_cases': resolved_cases,
         'ki_summary': ki_summary,
+        'transfer_reports': transfer_reports,
+        'squad_limit_notes_sg': squad_limit_notes_sg,
     })
 
 

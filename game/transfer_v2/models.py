@@ -513,10 +513,12 @@ class TransferReport(models.Model):
     STATUS_OPEN = 'OPEN'
     STATUS_DISMISSED = 'DISMISSED'
     STATUS_UNDER_REVIEW = 'UNDER_REVIEW'
+    STATUS_CONFIRMED = 'CONFIRMED'
     STATUS_CHOICES = [
         (STATUS_OPEN, 'Offen'),
         (STATUS_DISMISSED, 'Abgewiesen'),
         (STATUS_UNDER_REVIEW, 'In Überprüfung (Sportgericht)'),
+        (STATUS_CONFIRMED, 'Bestätigt (Sportgericht)'),
     ]
 
     record = models.ForeignKey(

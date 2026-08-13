@@ -359,5 +359,122 @@
     {% endif %}
   </div>
 
+  <!-- ── Transfermeldungen im Sportgericht (Task #841) ──────────────────── -->
+  <div class="csg-panel">
+    <p class="csg-panel-title">
+      Transfermeldungen im Sportgericht
+      {% if transfer_reports %}
+      <span style="display:inline-block;padding:2px 9px;border-radius:20px;background:rgba(201,168,76,.15);
+                   color:#c9a84c;border:1px solid rgba(201,168,76,.4);font-size:.7rem;margin-left:6px;">
+        {{ transfer_reports|length }}
+      </span>
+      {% endif %}
+    </p>
+    {% if transfer_reports %}
+    <table class="csg-table">
+      <thead>
+        <tr>
+          <th>Meldung&nbsp;#</th>
+          <th>Melder</th>
+          <th>Spieler / Transfer</th>
+          <th>Begründung</th>
+          <th>Gemeldet</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rep in transfer_reports %}
+        <tr>
+          <td>#{{ rep.pk }}</td>
+          <td>{{ rep.reporter_club.name }}</td>
+          <td>
+            {% for rp in rep.record.players.all %}
+            {{ rp.player.full_name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+            <span style="color:#8a9bb0;font-size:.75rem;">
+              {{ rep.record.club_a.name }} → {{ rep.record.club_b.name }}
+            </span>
+          </td>
+          <td style="max-width:220px;word-break:break-word;">{{ rep.reason }}</td>
+          <td>{{ rep.created_at|date:"d.m.Y" }}</td>
+          <td>
+            <div class="csg-form">
+              <form method="post" action="{% url 'sportgericht_report_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="report_id" value="{{ rep.pk }}">
+                <input type="hidden" name="action" value="close">
+                <input type="hidden" name="next" value="creator">
+                <button type="submit" style="background:rgba(76,201,132,.14);color:#4cc984;border-color:rgba(76,201,132,.4);">
+                  ✓ Bestätigen
+                </button>
+              </form>
+              <form method="post" action="{% url 'sportgericht_report_action' %}">
+                {% csrf_token %}
+                <input type="hidden" name="report_id" value="{{ rep.pk }}">
+                <input type="hidden" name="action" value="dismiss">
+                <input type="hidden" name="next" value="creator">
+                <button type="submit">✕ Zurückweisen</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="csg-empty">Keine Transfermeldungen im Sportgericht-Status.</p>
+    {% endif %}
+  </div>
+
+  <!-- ── Kaderlimit-Vermerke im Sportgericht (Task #841) ─────────────────── -->
+  <div class="csg-panel">
+    <p class="csg-panel-title">
+      Kaderlimit-Vermerke im Sportgericht
+      {% if squad_limit_notes_sg %}
+      <span style="display:inline-block;padding:2px 9px;border-radius:20px;background:rgba(224,82,82,.12);
+                   color:#e05252;border:1px solid rgba(224,82,82,.4);font-size:.7rem;margin-left:6px;">
+        {{ squad_limit_notes_sg|length }}
+      </span>
+      {% endif %}
+    </p>
+    {% if squad_limit_notes_sg %}
+    <table class="csg-table">
+      <thead>
+        <tr>
+          <th>Vermerk&nbsp;#</th>
+          <th>Verein</th>
+          <th>Spieler</th>
+          <th>Text</th>
+          <th>Erstellt</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for note in squad_limit_notes_sg %}
+        <tr>
+          <td>#{{ note.pk }}</td>
+          <td>{{ note.club.name }}</td>
+          <td>{% if note.player %}{{ note.player.full_name }}{% else %}<span style="color:#8a9bb0;">—</span>{% endif %}</td>
+          <td style="max-width:240px;word-break:break-word;">{{ note.text }}</td>
+          <td>{{ note.created_at|date:"d.m.Y" }}</td>
+          <td>
+            <form class="csg-form" method="post" action="{% url 'sportgericht_squad_note_action' %}">
+              {% csrf_token %}
+              <input type="hidden" name="note_id" value="{{ note.pk }}">
+              <input type="hidden" name="next" value="creator">
+              <button type="submit" style="background:rgba(76,201,132,.14);color:#4cc984;border-color:rgba(76,201,132,.4);">
+                ✓ Erledigt
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="csg-empty">Keine Kaderlimit-Vermerke im Sportgericht-Status.</p>
+    {% endif %}
+  </div>
+
 </section>
 {% endblock %}

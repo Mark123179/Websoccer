@@ -96,6 +96,8 @@ from .views_management import (
     coin_shop_purchase,
     management_sportgericht,
     sportgericht_ticket_submit,
+    sportgericht_report_action,
+    sportgericht_squad_note_action,
     management_finanzen,
     management_sponsor_choose,
     management_sponsoring,
@@ -425,6 +427,8 @@ urlpatterns = [
 
     path('management/sportgericht/', management_sportgericht, name='management_sportgericht'),
     path('management/sportgericht/ticket/', sportgericht_ticket_submit, name='sportgericht_ticket_submit'),
+    path('management/sportgericht/meldung/', sportgericht_report_action, name='sportgericht_report_action'),
+    path('management/sportgericht/vermerk/', sportgericht_squad_note_action, name='sportgericht_squad_note_action'),
 
     path('management/finanzen/', management_finanzen, name='management_finanzen'),
     path('management/finanzen/sponsor/', management_sponsor_choose, name='management_sponsor_choose'),

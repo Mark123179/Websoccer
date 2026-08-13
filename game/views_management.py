@@ -64,7 +64,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction as db_transaction
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -792,6 +792,7 @@ def _inactivity_status(manager, squad_scope, season):
 @login_required(login_url='/auth/login/')
 def management_sportgericht(request):
     from .models import SupportTicket, InactivityRecord, GameSeasonState, Club
+    from .transfer_v2.models import TransferReport, SquadLimitNote
 
     my_club = current_manager_club(user=request.user)
     # Vereinslose Manager dürfen die Seite sehen (Aktivitätscheck + Support)
@@ -854,6 +855,32 @@ def management_sportgericht(request):
                 .order_by('ends_on')
             )
 
+    # ── TransferReports im Sportgericht ────────────────────────────────
+    transfer_reports = (
+        TransferReport.objects
+        .filter(status=TransferReport.STATUS_UNDER_REVIEW)
+        .select_related(
+            'reporter_club',
+            'record',
+            'record__club_a',
+            'record__club_b',
+        )
+        .prefetch_related('record__players__player')
+        .order_by('-created_at')
+    )
+
+    # ── Kadergrenzen-Vermerke im Sportgericht ──────────────────────────
+    # Manager sieht nur Vermerke seines eigenen Vereins
+    squad_limit_notes = (
+        SquadLimitNote.objects
+        .filter(
+            status=SquadLimitNote.STATUS_SPORTGERICHT,
+            **(({'club': my_club} if my_club else {'club__isnull': True})),
+        )
+        .select_related('club', 'player')
+        .order_by('-created_at')
+    )
+
     return render(request, 'game/management/sportgericht.html', {
         'club': my_club,
         'all_manager_rows': all_manager_rows,
@@ -864,7 +891,105 @@ def management_sportgericht(request):
         'season': season,
         'insolvency_case': insolvency_case,
         'insolvency_auctions': insolvency_auctions,
+        'transfer_reports': transfer_reports,
+        'squad_limit_notes': squad_limit_notes,
     })
+
+
+def _sportgericht_redirect(request):
+    """Zurück zur Herkunftsseite (Creator- oder Manager-Sportgericht)."""
+    if request.POST.get('next') == 'creator' and request.user.is_staff:
+        return redirect('creator_sportgericht')
+    return redirect('management_sportgericht')
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def sportgericht_report_action(request):
+    """POST: TransferReport aus Sportgericht abschließen.
+
+    Autorisierung: NUR Staff (Sportgericht-Instanz = Creator). Manager sehen
+    die Meldungen zur Transparenz, dürfen aber nicht final entscheiden.
+    """
+    from django.utils import timezone as tz
+    from .transfer_v2.models import TransferReport
+    from .transfer_v2.admin_actions import log_creator_action
+    from .transfer_v2 import push
+
+    if not request.user.is_staff:
+        from django.http import JsonResponse
+        return JsonResponse(
+            {'error': 'Nur das Sportgericht (Staff) darf Meldungen abschließen.'},
+            status=403,
+        )
+
+    report = get_object_or_404(TransferReport, pk=request.POST.get('report_id'))
+
+    # Nur Meldungen die im Sportgericht-Status sind
+    if report.status != TransferReport.STATUS_UNDER_REVIEW:
+        messages.error(request, 'Diese Meldung ist nicht im Sportgericht-Status.')
+        return _sportgericht_redirect(request)
+
+    action = request.POST.get('action', '')
+    if action in ('close', 'dismiss'):
+        if action == 'close':
+            report.status = TransferReport.STATUS_CONFIRMED
+            label = 'bestätigt/erledigt'
+            result_label = 'vom Sportgericht bestätigt'
+        else:
+            report.status = TransferReport.STATUS_DISMISSED
+            label = 'zurückgewiesen'
+            result_label = 'vom Sportgericht zurückgewiesen'
+        report.resolved_at = tz.now()
+        report.save(update_fields=['status', 'resolved_at'])
+        messages.success(request, f'Meldung #{report.pk} {label}.')
+        log_creator_action(
+            request.user, 'sportgericht_report_close',
+            f'Report #{report.pk}',
+            report_id=report.pk,
+            report_action=action,
+            outcome=report.status,
+        )
+        # Melder über das Ergebnis informieren (fehlertolerant)
+        push.report_resolved(report, result_label)
+    else:
+        messages.error(request, 'Unbekannte Aktion.')
+
+    return _sportgericht_redirect(request)
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def sportgericht_squad_note_action(request):
+    """POST: SquadLimitNote im Sportgericht als erledigt markieren.
+
+    Autorisierung: NUR Staff (Sportgericht-Instanz = Creator).
+    """
+    from .transfer_v2.models import SquadLimitNote
+    from .transfer_v2.admin_actions import log_creator_action
+
+    if not request.user.is_staff:
+        from django.http import JsonResponse
+        return JsonResponse(
+            {'error': 'Nur das Sportgericht (Staff) darf Vermerke abschließen.'},
+            status=403,
+        )
+
+    note = get_object_or_404(SquadLimitNote, pk=request.POST.get('note_id'))
+
+    if note.status != SquadLimitNote.STATUS_SPORTGERICHT:
+        messages.error(request, 'Dieser Vermerk ist nicht im Sportgericht-Status.')
+        return _sportgericht_redirect(request)
+
+    note.status = SquadLimitNote.STATUS_OPEN
+    note.save(update_fields=['status'])
+    messages.success(request, f'Kaderlimit-Vermerk #{note.pk} als erledigt markiert.')
+    log_creator_action(
+        request.user, 'sportgericht_squad_note_close',
+        f'SquadLimitNote #{note.pk}',
+        note_id=note.pk,
+    )
+    return _sportgericht_redirect(request)
 
 
 @login_required(login_url='/auth/login/')
