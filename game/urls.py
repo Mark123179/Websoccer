@@ -217,12 +217,8 @@ from .views_importer_api import (
     importer_fail,
 )
 from .views_transfermarkt import (
+    legacy_gone,
     squad_set_sale_status,
-    transfer_place_bid,
-    transfer_accept_counter,
-    transfer_cancel_negotiation,
-    ai_offer_accept,
-    ai_offer_reject,
 )
 
 
@@ -335,36 +331,38 @@ urlpatterns = [
         name='squad_set_sale_status'
     ),
 
-    # Legacy-Manager-UI-Routen (Phase 4/6): View-Funktionen bleiben erhalten,
-    # da die Wirtschaftslogik (negotiation, ai_buyer) und Tests diese weiter
-    # nutzen. Die Einbindung in die Kader-UI (squad_page.html) wurde entfernt.
+    # Legacy-Manager-UI-Routen (Phase 4/6) — STILLGELEGT (Task #840):
+    # Alle fünf Endpunkte antworten mit 410 Gone. Die View-Funktionen in
+    # views_transfermarkt.py bleiben als DEPRECATED erhalten (interne
+    # Logik/Tests), sind aber nicht mehr erreichbar. Manager-Transfers
+    # laufen ausschließlich über den v2-Transfermarkt.
     path(
         'transfers/bid/',
-        transfer_place_bid,
+        legacy_gone,
         name='transfer_place_bid'
     ),
 
     path(
         'transfers/accept-counter/',
-        transfer_accept_counter,
+        legacy_gone,
         name='transfer_accept_counter'
     ),
 
     path(
         'transfers/cancel/',
-        transfer_cancel_negotiation,
+        legacy_gone,
         name='transfer_cancel_negotiation'
     ),
 
     path(
         'transfers/ki-angebot/annehmen/',
-        ai_offer_accept,
+        legacy_gone,
         name='ai_offer_accept'
     ),
 
     path(
         'transfers/ki-angebot/ablehnen/',
-        ai_offer_reject,
+        legacy_gone,
         name='ai_offer_reject'
     ),
 

@@ -445,25 +445,35 @@ class TransfermarktViewTests(TestCase):
         self.assertEqual(self.ki_spieler.sale_category, 'UVK')
 
     def test_gebot_leakt_keine_schmerzgrenze(self):
+        # Legacy-Endpunkt stillgelegt (Task #840): Kernlogik direkt testen.
         # Einziges Profil im KI-Kader → Kernspieler-Zuschlag: Grenze 3 Mio
         # (±5 %); 2,4 Mio liegt deterministisch in der Gegenforderungs-Zone.
+        result = place_bid(
+            self.ki_spieler, self.club_b, Decimal('2400000'))
+        self.assertEqual(result['ergebnis'], 'gegenforderung')
+        # Die Gegenforderung ist der einzige nach außen sichtbare Wert —
+        # die Schmerzgrenze selbst taucht im Ergebnis-Dict nicht auf.
+        self.assertIsNotNone(result['gegenforderung'])
+        for key in result:
+            self.assertNotIn('schmerz', key.lower())
+            self.assertNotIn('grenze_eff', key.lower())
+
+    def test_legacy_bid_endpoint_gone(self):
+        # Task #840: Legacy-Route antwortet 410 — auch für eingeloggte
+        # Manager; es entsteht keine TransferNegotiation mehr.
         self.client.force_login(self.user_b)
+        vorher = TransferNegotiation.objects.count()
         r = self.client.post(reverse('transfer_place_bid'), {
             'player_id': self.ki_spieler.pk, 'betrag': '2400000',
         })
-        self.assertEqual(r.status_code, 200)
-        data = r.json()
-        self.assertTrue(data['ok'])
-        self.assertEqual(data['ergebnis'], 'gegenforderung')
-        text = r.content.decode('utf-8').lower()
-        self.assertNotIn('schmerzgrenze', text)
-        self.assertNotIn('noise_seed', text)
-        self.assertNotIn('grenze_eff', text)
+        self.assertEqual(r.status_code, 410)
+        self.assertEqual(TransferNegotiation.objects.count(), vorher)
 
     def test_gebot_ohne_verein_verboten(self):
+        # Task #840: Route stillgelegt — 410 unabhängig vom Vereinsstatus.
         ohne = User.objects.create_user('ohneclub', password='x')
         self.client.force_login(ohne)
         r = self.client.post(reverse('transfer_place_bid'), {
             'player_id': self.ki_spieler.pk, 'betrag': '1000000',
         })
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(r.status_code, 410)

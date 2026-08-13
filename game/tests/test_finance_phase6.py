@@ -291,11 +291,15 @@ class DryRunTests(TestCase):
             manager_annehmen(self.offer)
 
     def test_view_findet_trockenlauf_angebot_nicht(self):
+        # Task #840: Legacy-Route stillgelegt — 410 statt 404; ein
+        # Trockenlauf-Angebot bleibt in jedem Fall unantastbar.
         self.client.force_login(self.user)
         resp = self.client.post(
             reverse('ai_offer_accept'), {'offer_id': self.offer.pk},
         )
-        self.assertEqual(resp.status_code, 404)
+        self.assertEqual(resp.status_code, 410)
+        self.offer.refresh_from_db()
+        self.assertEqual(self.offer.status, AITransferOffer.STATUS_BERECHNET)
 
     def test_scharfschalten_storniert_trockenlauf_altbestand(self):
         # 'berechnet'-Angebote aus dem Trockenlauf haben kein gueltig_bis und
@@ -405,17 +409,21 @@ class SerializerLeakTests(TestCase):
         self.assertNotIn('9876543', werte)
 
     def test_reject_response_ohne_interna(self):
+        # Task #840: Legacy-Route stillgelegt — statische 410-Antwort darf
+        # erst recht keine Interna enthalten und nichts am Angebot ändern.
         self.client.force_login(self.user)
         resp = self.client.post(
             reverse('ai_offer_reject'), {'offer_id': self.offer.pk},
         )
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, 410)
         body = resp.content.decode()
         self.assertNotIn('bewertung', body)
         self.assertNotIn('max_gebot', body)
         self.assertNotIn('noise_seed', body)
         self.assertNotIn(self.offer.noise_seed, body)
         self.assertNotIn('9876543', body)
+        self.offer.refresh_from_db()
+        self.assertEqual(self.offer.status, AITransferOffer.STATUS_VERSENDET)
 
 
 class ManagerAnnehmenTests(TestCase):
@@ -747,18 +755,16 @@ class AblehnungNachAblaufTests(TestCase):
             manager_ablehnen(self.offer, params=self.params)
 
     def test_stale_page_post_abgelaufenes_angebot(self):
-        # Manager hat die Kaderseite offen gelassen und klickt nach Ablauf
-        # auf „Ablehnen" — der Endpoint darf keine Eskalation auslösen.
+        # Task #840: Legacy-Route stillgelegt — der stale POST prallt mit
+        # 410 ab und löst weder Eskalation noch Statuswechsel aus.
         self.client.force_login(self.user)
+        stufe_vorher = self.offer.stufe
         resp = self.client.post(
             reverse('ai_offer_reject'), {'offer_id': self.offer.pk},
         )
-        self.assertEqual(resp.status_code, 400)
-        self.assertIn('abgelaufen', resp.content.decode())
+        self.assertEqual(resp.status_code, 410)
         self.offer.refresh_from_db()
-        self.assertEqual(self.offer.status,
-                         AITransferOffer.STATUS_ABGELAUFEN)
-        self.assertEqual(self.offer.stufe, 1)
+        self.assertEqual(self.offer.stufe, stufe_vorher)
 
     def test_annahme_nach_ablauf_weiterhin_blockiert(self):
         with self.assertRaises(AIBuyerError):

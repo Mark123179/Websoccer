@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .economy.ai_buyer import (
@@ -26,6 +27,20 @@ from .economy.transfers import TransferError
 from .models import AITransferOffer, Club, Player, TransferNegotiation
 
 SALE_CATEGORIES = {code for code, _ in Player.SALE_CATEGORY_CHOICES}
+
+
+@csrf_exempt
+def legacy_gone(request):
+    """410 Gone für stillgelegte Legacy-Verhandlungs-Endpunkte (Task #840).
+
+    Die Manager-UI läuft vollständig über den v2-Transfermarkt; die alten
+    JSON-POST-Endpunkte (TransferNegotiation / AITransferOffer-Postfach)
+    sind deaktiviert. Kein @login_required/@csrf nötig — die Antwort ist
+    statisch, hat keine Nebenwirkungen und leakt nichts; so sehen auch
+    stale Clients ohne Token sauber die 410 statt einer CSRF-403.
+    """
+    return JsonResponse(
+        {'error': 'Diese Funktion ist nicht mehr verfügbar.'}, status=410)
 
 
 def _viewer_club(request):
@@ -92,7 +107,10 @@ def _nego_payload(nego):
 @login_required
 @require_POST
 def transfer_place_bid(request):
-    """Manager-Gebot auf einen Spieler eines managerlosen Vereins."""
+    """DEPRECATED (Task #840): URL zeigt auf legacy_gone; Funktion bleibt
+    für interne Logik/Tests erhalten, ist aber nicht mehr geroutet.
+
+    Manager-Gebot auf einen Spieler eines managerlosen Vereins."""
     bidder = _viewer_club(request)
     if bidder is None:
         return _fehler('Du führst aktuell keinen Verein.', 403)
@@ -150,7 +168,9 @@ def _own_negotiation(request, bidder):
 @login_required
 @require_POST
 def transfer_accept_counter(request):
-    """Gegenforderung der KI annehmen → Deal zur Gegenforderung."""
+    """DEPRECATED (Task #840): URL zeigt auf legacy_gone; nicht mehr geroutet.
+
+    Gegenforderung der KI annehmen → Deal zur Gegenforderung."""
     bidder = _viewer_club(request)
     if bidder is None:
         return _fehler('Du führst aktuell keinen Verein.', 403)
@@ -178,7 +198,9 @@ def transfer_accept_counter(request):
 @login_required
 @require_POST
 def transfer_cancel_negotiation(request):
-    """Laufende Verhandlung abbrechen (Absage + Cooldown)."""
+    """DEPRECATED (Task #840): URL zeigt auf legacy_gone; nicht mehr geroutet.
+
+    Laufende Verhandlung abbrechen (Absage + Cooldown)."""
     bidder = _viewer_club(request)
     if bidder is None:
         return _fehler('Du führst aktuell keinen Verein.', 403)
@@ -221,7 +243,9 @@ def _own_ai_offer(request, club):
 @login_required
 @require_POST
 def ai_offer_accept(request):
-    """KI-Kaufangebot annehmen → Transfer zum aktuellen Gebot."""
+    """DEPRECATED (Task #840): URL zeigt auf legacy_gone; nicht mehr geroutet.
+
+    KI-Kaufangebot annehmen → Transfer zum aktuellen Gebot."""
     club = _viewer_club(request)
     if club is None:
         return _fehler('Du führst aktuell keinen Verein.', 403)
@@ -246,7 +270,9 @@ def ai_offer_accept(request):
 @login_required
 @require_POST
 def ai_offer_reject(request):
-    """KI-Kaufangebot ablehnen → KI bessert ggf. nach oder zieht zurück."""
+    """DEPRECATED (Task #840): URL zeigt auf legacy_gone; nicht mehr geroutet.
+
+    KI-Kaufangebot ablehnen → KI bessert ggf. nach oder zieht zurück."""
     club = _viewer_club(request)
     if club is None:
         return _fehler('Du führst aktuell keinen Verein.', 403)
