@@ -4,7 +4,8 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=11">
 {% endblock %}
 
 {% block content %}
@@ -18,7 +19,7 @@
   </div>
   {% endif %}
 
-  {% include 'game/management/_scouting_tabs.html' %}
+  {% include 'game/transfer_v2/_tabs.html' %}
 
   {% if not club %}
   <div class="watch-clubless-note">
@@ -62,9 +63,13 @@
           </div>
           {% for r in search_results %}
           <div class="watch-row watch-search-row">
-            <span class="watch-player"><span class="watch-flag">{{ r.flag }}</span>{{ r.name }}</span>
+            <span class="watch-player">
+              <img class="watch-portrait" src="{{ r.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+              {% if r.flag_img %}<img class="watch-flag-img" src="{{ r.flag_img }}" alt="" onerror="this.style.display='none'">{% else %}<span class="watch-flag">{{ r.flag }}</span>{% endif %}
+              <a class="watch-player-link" href="{{ r.player_url }}">{{ r.name }}</a>
+            </span>
             <span>{{ r.age }}</span>
-            <span>{{ r.hp }}</span>
+            <span><span class="tv2-hp">{{ r.hp }}</span>{% if r.np %} · <span class="tv2-np">{{ r.np }}</span>{% endif %}</span>
             <span>{{ r.market_value_fmt }}</span>
             <span class="watch-row-action">
               <form method="post" action="{% url 'scouting_watchlist_add' %}">
@@ -91,9 +96,16 @@
           </div>
           {% for e in entries %}
           <div class="watch-row watch-row--entry">
-            <span class="watch-player"><span class="watch-flag">{{ e.flag }}</span>{{ e.name }}</span>
+            <span class="watch-player">
+              <img class="watch-portrait" src="{{ e.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+              {% if e.flag_img %}<img class="watch-flag-img" src="{{ e.flag_img }}" alt="" onerror="this.style.display='none'">{% else %}<span class="watch-flag">{{ e.flag }}</span>{% endif %}
+              <span class="watch-player-txt">
+                <a class="watch-player-link" href="{{ e.player_url }}">{{ e.name }}</a>
+                <span class="watch-player-club">{% if e.club_crest %}<img class="watch-club-crest" src="{{ e.club_crest }}" alt="" onerror="this.style.display='none'">{% endif %}{{ e.club_name }}</span>
+              </span>
+            </span>
             <span>{{ e.age }}</span>
-            <span>{{ e.hp }}</span>
+            <span><span class="tv2-hp">{{ e.hp }}</span>{% if e.np %} · <span class="tv2-np">{{ e.np }}</span>{% endif %}</span>
             <span>{{ e.market_value_fmt }}</span>
             <span class="watch-status watch-status--{{ e.status }}">{{ e.status_label }}</span>
             <span class="watch-row-action">

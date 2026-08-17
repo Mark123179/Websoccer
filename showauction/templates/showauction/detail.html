@@ -4,6 +4,7 @@
 {% block title %}{{ player.full_name }} — Auktion{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=6">
 {% endblock %}
 
@@ -11,6 +12,7 @@
 <div class="sxa-wrap" data-sxa-root data-csrf="{{ csrf_token }}"
      {% if a.status == 'running' or a.status == 'scheduled' %}data-sxa-poll="{% url 'showauction_status' a.pk %}" data-status="{{ a.status }}"{% endif %}
      style="--sxa-accent: {{ s.farbe.accent }}; --sxa-ink: {{ s.farbe.ink }}; --sxa-chip-ink: {{ s.farbe.chip_ink }}; --sxa-rgb: {{ s.farbe.rgb }};">
+    {% include 'game/transfer_v2/_tabs.html' %}
 
     <div class="sxa-back-row">
         <a class="sxa-back-link" href="{% url 'showauction_stage' %}">‹ Zurück zur Übersicht</a>

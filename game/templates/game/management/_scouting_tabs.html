@@ -1,8 +1,0 @@
-{% with active=request.resolver_match.url_name %}
-<div class="sc-tabs">
-  <a class="sc-tab{% if active == 'transfer_market' or active == 'transfer_loan_market' or active == 'transfer_my_deals' or active == 'transfer_offer_board' or active == 'transfer_history' or active == 'transfer_deal_builder' %} is-active{% endif %}" href="{% url 'transfer_market' %}">Transfers</a>
-  <a class="sc-tab{% if active == 'transfer_scouting' %} is-active{% endif %}" href="{% url 'transfer_scouting' %}">Scouting</a>
-  <a class="sc-tab{% if active == 'showauction_stage' or active == 'showauction_detail' %} is-active{% endif %}" href="{% url 'showauction_stage' %}">Auktionen</a>
-  <a class="sc-tab{% if active == 'transfer_watchlist' %} is-active{% endif %}" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
-</div>
-{% endwith %}

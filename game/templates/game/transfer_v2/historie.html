@@ -4,7 +4,7 @@
 {% block body_class %}scouting-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=8">
 {% endblock %}
 
 {% block content %}
@@ -76,8 +76,13 @@
             <div class="tv2-hist-side-label">{{ r.left_label }}</div>
             {% for sp in r.left_rows %}
             <div class="tv2-hist-side-row">
-              <a class="tv2-hist-side-name" href="{{ sp.player_url }}">{{ sp.name }}</a>
-              <span class="tv2-hist-side-meta">{{ sp.age }} · <span class="tv2-green">{{ sp.hp }}</span>{% if sp.np %} · <span class="tv2-gold">{{ sp.np }}</span>{% endif %} · MW <a href="{{ sp.tm_url }}" target="_blank" rel="noopener">{{ sp.mw_fmt }}</a></span>
+              <div class="tv2-hist-side-main">
+                <img class="tv2-hist-side-img" src="{{ sp.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                <div>
+                  <a class="tv2-hist-side-name" href="{{ sp.player_url }}">{% if sp.flag %}<img class="tv2-flag" src="{{ sp.flag }}" alt="" onerror="this.style.display='none'">{% endif %}{{ sp.name }}</a>
+                  <span class="tv2-hist-side-meta">{{ sp.age }} J. · <span class="tv2-green">{{ sp.hp }}</span>{% if sp.np %} · <span class="tv2-gold">{{ sp.np }}</span>{% endif %} · MW <a href="{{ sp.tm_url }}" target="_blank" rel="noopener">{{ sp.mw_fmt }}</a></span>
+                </div>
+              </div>
             </div>
             {% empty %}<div class="tv2-hist-side-empty">—</div>{% endfor %}
           </div>
@@ -85,8 +90,13 @@
             <div class="tv2-hist-side-label">{{ r.right_label }}</div>
             {% for sp in r.right_rows %}
             <div class="tv2-hist-side-row">
-              <a class="tv2-hist-side-name" href="{{ sp.player_url }}">{{ sp.name }}</a>
-              <span class="tv2-hist-side-meta">{{ sp.age }} · <span class="tv2-green">{{ sp.hp }}</span>{% if sp.np %} · <span class="tv2-gold">{{ sp.np }}</span>{% endif %} · MW <a href="{{ sp.tm_url }}" target="_blank" rel="noopener">{{ sp.mw_fmt }}</a></span>
+              <div class="tv2-hist-side-main">
+                <img class="tv2-hist-side-img" src="{{ sp.portrait }}" alt="" onerror="this.onerror=null;this.src='{% static 'game/images/default_player.svg' %}'">
+                <div>
+                  <a class="tv2-hist-side-name" href="{{ sp.player_url }}">{% if sp.flag %}<img class="tv2-flag" src="{{ sp.flag }}" alt="" onerror="this.style.display='none'">{% endif %}{{ sp.name }}</a>
+                  <span class="tv2-hist-side-meta">{{ sp.age }} J. · <span class="tv2-green">{{ sp.hp }}</span>{% if sp.np %} · <span class="tv2-gold">{{ sp.np }}</span>{% endif %} · MW <a href="{{ sp.tm_url }}" target="_blank" rel="noopener">{{ sp.mw_fmt }}</a></span>
+                </div>
+              </div>
             </div>
             {% empty %}<div class="tv2-hist-side-empty">—</div>{% endfor %}
           </div>

@@ -1,13 +1,15 @@
 {% comment %}
-  Transfersystem v2 — gemeinsame Shell: 7 Reiter + Budget-Kopf (live).
-  Kontext: active_tab, konto_fmt, reserviert_fmt, verfuegbar_fmt,
-  open_deal_count.
+  Transfersystem v2 — einheitliche Navigation für alle Transfer-/Scouting-/Auktions-Seiten.
+  Kontext: konto_fmt, reserviert_fmt, verfuegbar_fmt, open_deal_count.
+  active_tab kann explizit gesetzt werden; sonst wird der URL-Name ausgewertet.
 {% endcomment %}
+{% with url_name=request.resolver_match.url_name %}
 <div class="tv2-head">
   <div>
     <div class="tv2-title">Transfers</div>
-    <div class="tv2-subtitle">Transfermarkt · Jeder Tag ist Deadline Day</div>
+    <div class="tv2-subtitle">{{ game_header.subtitle|default:'Jeder Tag ist Deadline Day' }}</div>
   </div>
+  {% if konto_fmt %}
   <div class="tv2-budget">
     <div class="tv2-budget-box">
       <span class="tv2-budget-label">Kontostand</span>
@@ -22,14 +24,17 @@
       <span class="tv2-budget-val tv2-cyan">{{ verfuegbar_fmt }}</span>
     </div>
   </div>
+  {% endif %}
 </div>
 
 <div class="tv2-tabs">
-  <a class="tv2-tab{% if active_tab == 'markt' %} is-active{% endif %}" href="{% url 'transfer_market' %}">Transfermarkt</a>
-  <a class="tv2-tab{% if active_tab == 'leihmarkt' %} is-active{% endif %}" href="{% url 'transfer_loan_market' %}">Leihmarkt</a>
-  <a class="tv2-tab{% if active_tab == 'deals' %} is-active{% endif %}" href="{% url 'transfer_my_deals' %}">Meine Deals{% if open_deal_count %}<span class="tv2-tab-badge">{{ open_deal_count }}</span>{% endif %}</a>
-  <a class="tv2-tab{% if active_tab == 'anbieten' %} is-active{% endif %}" href="{% url 'transfer_offer_board' %}">Kader anbieten</a>
-  <a class="tv2-tab{% if active_tab == 'historie' %} is-active{% endif %}" href="{% url 'transfer_history' %}">Historie</a>
-  <a class="tv2-tab{% if active_tab == 'scouting' %} is-active{% endif %}" href="{% url 'transfer_scouting' %}">Scouting</a>
-  <a class="tv2-tab{% if active_tab == 'watchlist' %} is-active{% endif %}" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
+  <a class="tv2-tab{% if active_tab == 'markt' or url_name == 'transfer_market' %} is-active{% endif %}" href="{% url 'transfer_market' %}">Transfermarkt</a>
+  <a class="tv2-tab{% if active_tab == 'leihmarkt' or url_name == 'transfer_loan_market' %} is-active{% endif %}" href="{% url 'transfer_loan_market' %}">Leihmarkt</a>
+  <a class="tv2-tab{% if active_tab == 'deals' or url_name == 'transfer_my_deals' or url_name == 'transfer_deal_builder' %} is-active{% endif %}" href="{% url 'transfer_my_deals' %}">Meine Deals{% if open_deal_count %}<span class="tv2-tab-badge">{{ open_deal_count }}</span>{% endif %}</a>
+  <a class="tv2-tab{% if active_tab == 'anbieten' or url_name == 'transfer_offer_board' %} is-active{% endif %}" href="{% url 'transfer_offer_board' %}">Kader anbieten</a>
+  <a class="tv2-tab{% if active_tab == 'historie' or url_name == 'transfer_history' %} is-active{% endif %}" href="{% url 'transfer_history' %}">Historie</a>
+  <a class="tv2-tab{% if active_tab == 'auktionen' or url_name == 'showauction_stage' or url_name == 'showauction_detail' or url_name == 'showauction_creator' %} is-active{% endif %}" href="{% url 'showauction_stage' %}">Auktionen</a>
+  <a class="tv2-tab{% if active_tab == 'scouting' or url_name == 'transfer_scouting' %} is-active{% endif %}" href="{% url 'transfer_scouting' %}">Scouting</a>
+  <a class="tv2-tab{% if active_tab == 'watchlist' or url_name == 'transfer_watchlist' %} is-active{% endif %}" href="{% url 'transfer_watchlist' %}">Beobachtungsliste</a>
 </div>
+{% endwith %}

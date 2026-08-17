@@ -244,13 +244,20 @@ def stage(request):
     mitte = (len(arranged) - 1) / 2 if arranged else 0
     for i, s in enumerate(arranged):
         s['dist'] = min(2, int(round(abs(i - mitte))))
+    shell = {}
+    if club:
+        from game.views_transfer_v2 import transfer_shell_context
+        shell = transfer_shell_context(club)
     return render(request, 'showauction/stage.html', {
         'game_header': build_game_header(
-            'Auktionshaus', 'Transfers · Show-Auktionen', back_url='/'),
+            'Auktionshaus', 'Transfers · Show-Auktionen',
+            back_url=reverse('transfer_market')),
+        'active_tab': 'auktionen',
         'live_auctions': arranged,
         'planned_auctions': geplant,
         'finished_rows': finished_rows,
         'now': now,
+        **shell,
     })
 
 
@@ -308,10 +315,17 @@ def detail(request, pk):
     if getattr(a.player, 'height_cm', None):
         groesse_fmt = f'{a.player.height_cm / 100:.2f}'.replace('.', ',') + ' m'
 
+    shell = {}
+    if club:
+        from game.views_transfer_v2 import transfer_shell_context
+        shell = transfer_shell_context(club)
+
     return render(request, 'showauction/detail.html', {
         'game_header': build_game_header(
             a.player.full_name, 'Transfers · Auktionshaus',
             back_url=reverse('showauction_stage')),
+        'active_tab': 'auktionen',
+        **shell,
         's': state,
         'a': a,
         'player': a.player,

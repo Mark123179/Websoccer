@@ -524,6 +524,7 @@ def _player_side_rows(record, side):
             'hp': hp,
             'np': np_,
             'flag': p.flag_url,
+            'portrait': p.portrait_url,
             'mw_fmt': _euro(rp.market_value_at_transfer or p.market_value),
             'tm_url': _tm_url(p.full_name),
             'player_url': reverse('player_detail', args=[p.pk]),

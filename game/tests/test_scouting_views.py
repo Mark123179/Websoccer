@@ -422,10 +422,17 @@ class ClublessWatchlistTests(ScoutingViewsBase):
 
     def test_search_results_never_leak_strength_or_potential(self):
         resp = self.cl_client.get(reverse('transfer_watchlist'), {'q': 'Pool'})
-        allowed = {'player_id', 'name', 'age', 'flag', 'hp', 'market_value_fmt'}
+        # Nur öffentliche Felder (Identität/Optik/MW) — NIE Stärke/Potential.
+        allowed = {
+            'player_id', 'name', 'age', 'flag', 'flag_img', 'portrait',
+            'hp', 'np', 'club_name', 'club_crest', 'player_url',
+            'market_value_fmt',
+        }
+        forbidden = {'base_strength', 'potential', 'strength', 'pool_count'}
         self.assertTrue(resp.context['search_results'])
         for r in resp.context['search_results']:
             self.assertEqual(set(r.keys()), allowed)
+            self.assertFalse(set(r.keys()) & forbidden)
 
     def test_add_with_invalid_player_id_does_not_crash(self):
         for bad in ('abc', '', '999999'):

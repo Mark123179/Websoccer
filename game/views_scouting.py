@@ -14,6 +14,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .views import build_game_header, current_manager_club
@@ -165,12 +166,19 @@ def _search_players(search, watched_ids):
         iso2 = geo.player_country_iso2(p) or ''
         if land and iso2.upper() != land:
             continue
+        rl_club = p.real_life_club if p.real_life_club_id else None
         results.append({
             'player_id': p.id,
             'name': p.full_name,
             'age': p.age,
             'flag': _flag_emoji(iso2),
+            'flag_img': p.flag_url,
+            'portrait': p.portrait_static_path,
             'hp': p.main_position_1 or '—',
+            'np': p.main_position_2 or '',
+            'club_name': rl_club.name if rl_club else '—',
+            'club_crest': rl_club.crest_static_path if rl_club else '',
+            'player_url': reverse('player_detail', args=[p.id]),
             'market_value_fmt': _euro(p.market_value),
         })
         if len(results) >= 40:
@@ -289,9 +297,12 @@ def transfer_scouting(request):
     scoutable_count = sum(1 for c in countries if c['status'] == 'scoutable')
     building_count = sum(1 for c in countries if c['status'] == 'building')
 
+    from .views_transfer_v2 import transfer_shell_context
+
     context = {
         'game_header': build_game_header('Scouting', 'Transfers · Scoutingnetzwerk', back_url='/'),
         'active_tab': 'scouting',
+        **transfer_shell_context(club),
         'club': club,
         'dept': dept_info,
         'scope_tiles': scope_tiles,
@@ -461,12 +472,19 @@ def transfer_watchlist(request):
         p = w.player
         watched_ids.add(p.id)
         iso2 = geo.player_country_iso2(p) or ''
+        ws_club = p.club if p.club_id else None
         entries.append({
             'player_id': p.id,
             'name': p.full_name,
             'age': p.age,
             'flag': _flag_emoji(iso2),
+            'flag_img': p.flag_url,
+            'portrait': p.portrait_static_path,
             'hp': p.main_position_1 or '—',
+            'np': p.main_position_2 or '',
+            'club_name': ws_club.name if ws_club else 'Vereinslos',
+            'club_crest': ws_club.crest_static_path if ws_club else '',
+            'player_url': reverse('player_detail', args=[p.id]),
             'market_value_fmt': _euro(p.market_value),
             'status': w.status,
             'status_label': w.get_status_display(),
@@ -496,10 +514,16 @@ def transfer_watchlist(request):
             'created': s.created_at,
         })
 
+    shell = {}
+    if club:
+        from .views_transfer_v2 import transfer_shell_context
+        shell = transfer_shell_context(club)
+
     context = {
         'game_header': build_game_header('Beobachtungsliste', 'Transfers · Scouting', back_url='/'),
         'active_tab': 'watchlist',
         'club': club,
+        **shell,
         'entries': entries,
         'search': search,
         'search_results': search_results,

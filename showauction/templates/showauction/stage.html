@@ -4,11 +4,13 @@
 {% block title %}Auktionshaus — Transfers{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=8">
 <link rel="stylesheet" href="{% static 'showauction/showauction.css' %}?v=6">
 {% endblock %}
 
 {% block content %}
 <div class="sxa-wrap sxa-wrap--stage" data-sxa-root data-csrf="{{ csrf_token }}">
+    {% include 'game/transfer_v2/_tabs.html' %}
     <section class="sxa-stage">
         <img class="sxa-stage-bg" src="{% static 'showauction/studio-bg.png' %}" alt="">
         <div class="sxa-stage-vignette"></div>
