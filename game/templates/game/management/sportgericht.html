@@ -428,5 +428,12 @@ document.getElementById('screenshot-input') && document.getElementById('screensh
     var label = document.getElementById('file-name');
     if (label) label.textContent = this.files.length ? this.files[0].name : 'Screenshot anhängen (optional)';
 });
+/* Escape schließt das Ticket-Formular, wenn es offen ist. */
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        var wrap = document.getElementById('ticket-form-wrap');
+        if (wrap && wrap.style.display !== 'none') toggleTicketForm();
+    }
+});
 </script>
 {% endblock %}
