@@ -561,6 +561,11 @@
   display: flex; align-items: center; justify-content: center;
 }
 .sc-bid-modal[hidden] { display: none; }
+/* Portal an <body> (modal_portal.js): mit Stage-Scale mitskalieren. */
+.sc-bid-modal.is-portaled > .sc-bid-modal-card {
+  transform: scale(var(--game-scale, 1));
+  transform-origin: center center;
+}
 .sc-bid-modal-card {
   background: var(--sc-panel); border: 1px solid var(--sc-cyan);
   border-radius: 8px; padding: 22px; width: 360px;
@@ -590,8 +595,21 @@
   border-bottom: 1px solid rgba(0,210,235,0.1);
 }
 .watch-head { color: var(--sc-muted); font-weight: 600; text-transform: uppercase; font-size: 11px; }
-.watch-player { font-weight: 600; display: flex; gap: 7px; align-items: center; }
+.watch-player { font-weight: 600; display: flex; gap: 7px; align-items: center; min-width: 0; }
 .watch-flag { font-size: 14px; }
+.watch-portrait {
+  width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+  border: 1px solid rgba(0,210,235,.25); background: rgba(255,255,255,.04);
+}
+.watch-flag-img { width: 16px; height: 11px; object-fit: cover; border-radius: 2px; flex: 0 0 auto; }
+.watch-player-link { color: inherit; text-decoration: none; }
+.watch-player-link:hover { color: var(--sc-cyan); }
+.watch-player-txt { display: flex; flex-direction: column; min-width: 0; }
+.watch-player-club {
+  display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700;
+  color: var(--sc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.watch-club-crest { width: 12px; height: 12px; object-fit: contain; flex: 0 0 auto; }
 .watch-status--watched { color: var(--sc-cyan); }
 .watch-status--bid { color: var(--sc-green); }
 .community-form { display: flex; flex-direction: column; gap: 6px; }
