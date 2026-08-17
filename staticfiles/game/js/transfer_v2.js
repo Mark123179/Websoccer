@@ -251,6 +251,10 @@
     document.addEventListener('keydown', function (ev) {
         if (ev.key === 'Escape') { closeSheet(); }
     });
+    /* bfcache-Guard: Browser-Back/-Forward kann ein offenes Modal einfrieren. */
+    window.addEventListener('pageshow', function (ev) {
+        if (ev.persisted) { closeSheet(); }
+    });
     if (elAmount) { elAmount.addEventListener('input', recalc); }
     if (elForm) {
         elForm.addEventListener('submit', function () {

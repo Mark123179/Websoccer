@@ -558,5 +558,28 @@
     initOfferBoard();
     initDeals();
     initBuilder();
+
+    /* Escape-Taste schließt offene Modals (alle vier Backdrops). */
+    var _backdropIds = [
+      'tv2-listing-backdrop',
+      'tv2-loan-backdrop',
+      'tv2-forum-backdrop',
+      'tv2-summary-backdrop',
+    ];
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      _backdropIds.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el && !el.hidden) el.hidden = true;
+      });
+    });
+    /* bfcache-Guard: Browser-Back/-Forward kann ein offenes Modal einfrieren. */
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      _backdropIds.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.hidden = true;
+      });
+    });
   });
 })();
