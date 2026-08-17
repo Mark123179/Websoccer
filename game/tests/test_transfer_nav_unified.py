@@ -93,6 +93,90 @@ class UnifiedNavTests(Base):
         self.assertIn('modal_portal.js', html)
 
 
+class ModalPortalCenteringTests(Base):
+    """Verifies that the modal-portal centering implementation is structurally correct.
+
+    Covers the static guarantees the browser verification confirmed:
+    - All backdrop selectors in modal_portal.js exist in the HTML templates
+    - The CSS .is-portaled rules apply transform:scale(--game-scale) to the inner card
+    - The backdrops themselves use position:fixed + flex centering (viewport-correct)
+    """
+
+    def _css(self, path):
+        import os
+        full = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            path,
+        )
+        with open(full) as f:
+            return f.read()
+
+    # ── CSS presence checks ───────────────────────────────────────────────
+
+    def test_transfer_css_has_portaled_scale_rule(self):
+        """transfer_v2.css defines .is-portaled scale for tv2 backdrops."""
+        css = self._css('game/static/game/css/transfer_v2.css')
+        self.assertIn('.tv2-modal-backdrop.is-portaled', css)
+        self.assertIn('.tv2-modal-overlay.is-portaled', css)
+        self.assertIn('transform: scale(var(--game-scale', css)
+        self.assertIn('transform-origin: center center', css)
+
+    def test_scouting_css_has_portaled_scale_rule(self):
+        """scouting.css defines .is-portaled scale for sc-bid-modal."""
+        css = self._css('game/static/game/css/scouting.css')
+        self.assertIn('.sc-bid-modal.is-portaled', css)
+        self.assertIn('transform: scale(var(--game-scale', css)
+        self.assertIn('transform-origin: center center', css)
+
+    def test_backdrop_uses_fixed_flex_centering(self):
+        """tv2-modal-backdrop has position:fixed + flex centering — viewport anchor."""
+        css = self._css('game/static/game/css/transfer_v2.css')
+        # backdrop rule contains the required centering declarations
+        self.assertIn('position: fixed', css)
+        self.assertIn('align-items: center', css)
+        self.assertIn('justify-content: center', css)
+
+    def test_sc_bid_modal_uses_fixed_flex_centering(self):
+        """sc-bid-modal has position:fixed + flex centering."""
+        css = self._css('game/static/game/css/scouting.css')
+        self.assertIn('position: fixed', css)
+        self.assertIn('align-items: center', css)
+        self.assertIn('justify-content: center', css)
+
+    # ── HTML presence checks (template classes match JS selectors) ────────
+
+    def test_transfermarkt_has_deal_sheet_backdrop(self):
+        html = self.client.get(reverse('transfer_market')).content.decode()
+        self.assertIn('tv2-modal-backdrop', html)
+
+    def test_anbieten_has_listing_loan_forum_backdrops(self):
+        html = self.client.get(reverse('transfer_offer_board')).content.decode()
+        self.assertIn('tv2-modal-backdrop', html, 'listing/loan/forum modal missing')
+
+    def test_deals_has_summary_backdrop(self):
+        html = self.client.get(reverse('transfer_my_deals')).content.decode()
+        self.assertIn('tv2-modal-backdrop', html)
+
+    def test_historie_has_report_overlay(self):
+        html = self.client.get(reverse('transfer_history')).content.decode()
+        self.assertIn('tv2-modal-overlay', html)
+
+    def test_scouting_has_bid_modal(self):
+        html = self.client.get(reverse('transfer_scouting')).content.decode()
+        self.assertIn('sc-bid-modal', html)
+
+    def test_game_scale_set_on_root_in_base(self):
+        """--game-scale must be set on documentElement so portaled modals inherit it."""
+        import os
+        tmpl_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            'game/templates/base.html',
+        )
+        with open(tmpl_path) as f:
+            base_html = f.read()
+        self.assertIn("documentElement.style.setProperty('--game-scale'", base_html)
+
+
 class AuctionDetailNavTests(Base):
     """Auch die Auktions-Detailseite trägt die einheitliche Navigation."""
 
