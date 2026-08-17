@@ -149,8 +149,12 @@
 
 <script>
 (function () {
-  var root = document.getElementById('tv2-root');
-  if (!root) return;
+  var root    = document.getElementById('tv2-root');
+  var overlay = document.getElementById('tv2-report-overlay');
+  if (!root || !overlay) return;
+
+  function closeModal() { overlay.hidden = true; }
+
   // Aufklappen der Zusammenfassung.
   root.addEventListener('click', function (e) {
     var toggle = e.target.closest('[data-hist-toggle]');
@@ -168,11 +172,26 @@
       document.getElementById('tv2-report-target').textContent =
         rbtn.getAttribute('data-report-label') || '';
       document.getElementById('tv2-report-reason').value = '';
-      document.getElementById('tv2-report-overlay').hidden = false;
+      overlay.hidden = false;
     }
   });
-  document.getElementById('tv2-report-cancel').addEventListener('click', function () {
-    document.getElementById('tv2-report-overlay').hidden = true;
+
+  // Abbrechen-Button.
+  document.getElementById('tv2-report-cancel').addEventListener('click', closeModal);
+
+  // Klick auf den Overlay-Hintergrund (nicht auf das Modal-Fenster selbst).
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeModal();
+  });
+
+  // Escape-Taste schließt das Modal.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !overlay.hidden) closeModal();
+  });
+
+  // bfcache-Guard: Browser-Back/-Forward kann ein offenes Modal einfrieren.
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) closeModal();
   });
 })();
 </script>
