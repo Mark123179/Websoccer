@@ -5,16 +5,16 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
 <div class="transfer-scouting-page">
 
   {% if messages %}
-  <div class="scouting-flash">
+  <div class="tv2-flash-bar">
     {% for m in messages %}
-    <div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>
+    <div class="tv2-flash{% if m.tags == 'error' %} tv2-flash--error{% endif %}">{{ m }}</div>
     {% endfor %}
   </div>
   {% endif %}
@@ -31,29 +31,31 @@
   <div class="watchlist-layout">
     <div class="watchlist-col-main">
 
-      <section class="watch-add-panel">
-        <h2 class="scout-panel-title">SPIELER HINZUFÜGEN</h2>
+      <section class="tv2-panel watch-add-panel">
+        <div class="tv2-sec-head">
+          <span class="tv2-sec-title">Spieler hinzufügen</span>
+        </div>
         <form method="get" action="{% url 'transfer_watchlist' %}" class="watch-search-form">
-          <input type="text" name="q" value="{{ search.q }}" class="bid-modal-input watch-search-input"
-                 placeholder="Spieler suchen …" autocomplete="off">
-          <select name="pos" class="scout-select">
+          <input type="text" name="q" value="{{ search.q }}" class="tv2-input watch-search-input"
+                 placeholder="Spieler suchen …" autocomplete="off" style="width:100%;min-width:0;">
+          <select name="pos" class="tv2-select">
             <option value="">Alle Positionen</option>
             {% for p in positions %}
             <option value="{{ p }}"{% if p == search.pos %} selected{% endif %}>{{ p }}</option>
             {% endfor %}
           </select>
-          <select name="land" class="scout-select">
+          <select name="land" class="tv2-select">
             <option value="">Alle Länder</option>
             {% for c in submit_countries %}
             <option value="{{ c.iso2 }}"{% if c.iso2 == search.land %} selected{% endif %}>{{ c.flag }} {{ c.name }}</option>
             {% endfor %}
           </select>
-          <select name="sort" class="scout-select">
+          <select name="sort" class="tv2-select">
             <option value="market_value"{% if search.sort == 'market_value' %} selected{% endif %}>Marktwert ↓</option>
             <option value="age"{% if search.sort == 'age' %} selected{% endif %}>Jüngste zuerst</option>
             <option value="name"{% if search.sort == 'name' %} selected{% endif %}>Name A–Z</option>
           </select>
-          <button type="submit" class="scout-go-btn">Suchen</button>
+          <button type="submit" class="tv2-btn tv2-btn--primary">Suchen</button>
         </form>
 
         {% if search_results %}
@@ -76,19 +78,22 @@
                 {% csrf_token %}
                 <input type="hidden" name="player_id" value="{{ r.player_id }}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="watch-add-btn" title="Zur Beobachtungsliste hinzufügen">+ Merken</button>
+                <button type="submit" class="tv2-btn tv2-btn--primary tv2-btn--small" title="Zur Beobachtungsliste hinzufügen">+ Merken</button>
               </form>
             </span>
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <p class="bids-empty">Keine passenden Spieler gefunden.</p>
+        <p class="tv2-empty">Keine passenden Spieler gefunden.</p>
         {% endif %}
       </section>
 
-      <section class="watchlist-panel">
-        <h2 class="scout-panel-title">BEOBACHTUNGSLISTE ({{ entries|length }})</h2>
+      <section class="tv2-panel watchlist-panel">
+        <div class="tv2-sec-head">
+          <span class="tv2-sec-title">Beobachtungsliste</span>
+          <span class="tv2-sec-sub">({{ entries|length }})</span>
+        </div>
         {% if entries %}
         <div class="watch-table">
           <div class="watch-row watch-row--entry watch-head">
@@ -113,35 +118,38 @@
                 {% csrf_token %}
                 <input type="hidden" name="player_id" value="{{ e.player_id }}">
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="watch-remove-btn" title="Von der Liste entfernen">✕</button>
+                <button type="submit" class="tv2-icon-x" title="Von der Liste entfernen">✕</button>
               </form>
             </span>
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <p class="bids-empty">Noch keine beobachteten Spieler. Nutze die Suche oben oder beobachte Spieler über die Scout-Ergebnisse.</p>
+        <p class="tv2-empty">Noch keine beobachteten Spieler. Nutze die Suche oben oder beobachte Spieler über die Scout-Ergebnisse.</p>
         {% endif %}
       </section>
 
     </div>
 
-    <aside class="community-panel">
-      <h2 class="scout-panel-title">COMMUNITY-PROFIL EINREICHEN <span class="scout-info" title="Reiche reale Spielerprofile ein und erhöhe so die Community-Abdeckung eines Landes.">ⓘ</span></h2>
+    <aside class="tv2-panel community-panel">
+      <div class="tv2-sec-head">
+        <span class="tv2-sec-title">Community-Profil einreichen</span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="sc-info-icon" title="Reiche reale Spielerprofile ein und erhöhe so die Community-Abdeckung eines Landes."><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5" stroke-linecap="round"></path><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"></circle></svg>
+      </div>
       <form method="post" action="{% url 'scouting_community_submit' %}" class="community-form">
         {% csrf_token %}
-        <label class="scout-field-label">Land</label>
-        <select name="iso2" class="scout-select" required>
+        <label class="tv2-sheet-label">Land</label>
+        <select name="iso2" class="tv2-select" required style="margin-top:0;margin-bottom:8px;">
           <option value="">Land wählen</option>
           {% for c in submit_countries %}
           <option value="{{ c.iso2 }}">{{ c.flag }} {{ c.name }}</option>
           {% endfor %}
         </select>
-        <label class="scout-field-label">Spielername</label>
-        <input type="text" name="player_name" class="bid-modal-input" placeholder="z. B. Emir Yılmaz">
-        <label class="scout-field-label">Transfermarkt-URL</label>
-        <input type="url" name="tm_url" class="bid-modal-input" placeholder="https://www.transfermarkt.de/…" required>
-        <button type="submit" class="scout-go-btn">Profil einreichen</button>
+        <label class="tv2-sheet-label">Spielername</label>
+        <input type="text" name="player_name" class="tv2-sheet-input" style="margin-bottom:8px;" placeholder="z. B. Emir Yılmaz">
+        <label class="tv2-sheet-label">Transfermarkt-URL</label>
+        <input type="url" name="tm_url" class="tv2-sheet-input" style="margin-bottom:12px;" placeholder="https://www.transfermarkt.de/…" required>
+        <button type="submit" class="tv2-btn tv2-btn--primary" style="width:100%;min-height:38px;">Profil einreichen</button>
       </form>
 
       {% if my_subs %}

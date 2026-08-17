@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'game/css/transfer_v2.css' %}?v=8">
-<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'game/css/scouting.css' %}?v=12">
 {% endblock %}
 
 {% block content %}
@@ -495,18 +495,18 @@
 </div>
 
 <!-- ── GEBOTS-DIALOG ──────────────────────────────────────────────────── -->
-<div class="sc-bid-modal" id="bid-modal" hidden>
-  <div class="sc-bid-modal-card">
-    <h3 class="sc-bid-modal-title" id="bid-modal-title">Angebot abgeben</h3>
+<div class="tv2-modal-backdrop" id="bid-modal" hidden>
+  <div class="tv2-modal">
+    <div class="tv2-modal-title" id="bid-modal-title">Angebot abgeben</div>
     <form method="post" action="{% url 'scouting_bid' %}">
       {% csrf_token %}
       <input type="hidden" name="find_id" id="bid-find-id">
-      <label class="sc-bid-modal-label">Gebot (€)</label>
-      <input type="text" name="amount" id="bid-amount" class="sc-bid-modal-input" inputmode="numeric">
-      <p class="sc-bid-modal-hint" id="bid-min-hint"></p>
-      <div class="sc-bid-modal-actions">
-        <button type="button" class="sc-result-btn js-close-bid">Abbrechen</button>
-        <button type="submit" class="sc-result-btn sc-result-btn--cyan">Gebot abgeben</button>
+      <label class="tv2-sheet-label">Gebot (€)</label>
+      <input type="text" name="amount" id="bid-amount" class="tv2-sheet-input" inputmode="numeric" style="margin-bottom:4px;">
+      <p class="tv2-sheet-minhint" id="bid-min-hint"></p>
+      <div class="tv2-sheet-actions">
+        <button type="button" class="tv2-btn tv2-btn--ghost js-close-bid" style="flex:1;">Abbrechen</button>
+        <button type="submit" class="tv2-btn tv2-btn--primary" style="flex:1;">Gebot abgeben</button>
       </div>
     </form>
   </div>
