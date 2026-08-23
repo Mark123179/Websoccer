@@ -32,7 +32,7 @@ sentry-sdk==2.68.0        # Error-Monitoring + Django-Integration (core/settings
 posthog==7.39.1           # User-Analytics + Feature-Flags (core/settings.py)
 
 # --- KI ---
-openai==2.45.0            # OpenAI-API (game/views_ai.py)
+openai==3.1.0             # OpenAI-API (game/views_ai.py)
 
 # --- Bildverarbeitung ---
 pillow==12.3.0            # PIL (game/player_assets.py, game/views_media.py)
@@ -50,8 +50,9 @@ click==8.4.2             # Celery-CLI-Dep
 click-didyoumean==0.3.1  # Celery-CLI-Dep
 click-plugins==1.1.1.2   # Celery-CLI-Dep
 click-repl==0.3.0        # Celery-CLI-Dep (celery shell)
-httpcore==1.0.9           # httpx-Dep (openai intern)
-httpx==0.28.1             # openai-Pflichtdep
+httpcore2==2.10.0         # httpx2-Dep (openai intern)
+httpx2==2.10.0            # openai-Pflichtdep (v3 nutzt httpx2 statt httpx)
+truststore==0.10.4        # httpx2/openai-Dep (System-Zertifikatsspeicher)
 idna==3.18                # requests/httpx-Dep
 jiter==0.16.0             # openai JSON-Parser
 kombu==5.6.2             # Celery-Messaging-Layer
