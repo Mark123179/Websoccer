@@ -6,7 +6,7 @@
 # =============================================================
 
 # --- Django-Stack ---
-Django==6.0.7
+Django==6.1
 asgiref==3.12.1           # Django-Pflichtdep (async support)
 sqlparse==0.6.0           # Django-Pflichtdep (SQL-Formatierung); CVE-2026-71491/59894/59893/54284 gepatcht
 tzdata==2026.3            # IANA-Zeitzonendaten (TIME_ZONE=Europe/Berlin)

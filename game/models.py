@@ -2290,8 +2290,8 @@ class Player(models.Model):
         return ' | '.join(lines)
 
     @classmethod
-    def from_db(cls, db, field_names, values):
-        instance = super().from_db(db, field_names, values)
+    def from_db(cls, db, field_names, values, **kwargs):
+        instance = super().from_db(db, field_names, values, **kwargs)
         # Geladenen Vereinsstand merken, um echte Vereinswechsel beim
         # Speichern zu erkennen (Vereinsstationen-Historie, Phase 0
         # Finanzsystem). Wichtig: nur aus __dict__ lesen — bei .only()/
