@@ -105,7 +105,7 @@
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-datencenter.png' %}" alt=""></span>
                 Datencenter
             </a>
-            <a href="{% url 'management_hub' %}"{% if url_name == 'management_hub' or url_name == 'stadium_detail' %} aria-current="page"{% endif %}>
+            <a href="{% url 'management_hub' %}"{% if url_name == 'management_hub' or url_name == 'stadium_detail' or url_name == 'stadium_editor' %} aria-current="page"{% endif %}>
                 <span class="nav-icon nav-icon--png"><img src="{% static 'game/images/icons/nav-management.png' %}" alt=""></span>
                 Management
             </a>

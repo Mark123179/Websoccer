@@ -74,6 +74,29 @@ class StadiumEditorTests(TestCase):
         self.assertIn("const expandButton = document.getElementById('btnExpand');", editor_js)
         self.assertIn('if(expandButton){', editor_js)
 
+    def test_editor_is_embedded_in_the_global_management_shell(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('stadium_editor'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<nav class="navbar"', html=False)
+        self.assertContains(response, 'class="ws-game-header"', html=False)
+        self.assertContains(response, 'class="ws-calendar-strip"', html=False)
+        self.assertContains(response, 'href="/management/" aria-current="page"', html=False)
+        self.assertContains(response, '← ZUR STADIONVERWALTUNG')
+        self.assertContains(response, 'id="btnSave"', html=False)
+        self.assertNotContains(response, 'BLUEPRINT')
+        self.assertNotContains(response, 'STADION-EDITOR · ZURÜCK')
+        self.assertNotContains(response, '<body>\n', html=False)
+
+    def test_stadium_management_remains_editor_entry_page(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('stadium_detail'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Stadion-Editor')
+        self.assertContains(response, reverse('stadium_editor'))
+
     def test_staff_manager_receives_simulator_markup(self):
         self.user.is_staff = True
         self.user.save(update_fields=['is_staff'])

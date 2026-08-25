@@ -166,7 +166,8 @@ function initStadium(stadium, savedDesign){
   undoStack.length = 0; redoStack.length = 0;
   fillPreviewCache.clear();
   if(document.getElementById('pressList')) syncPressList();
-  document.getElementById('stadiumTitle').innerHTML =
+  const title = document.getElementById('stadiumTitle');
+  if(title) title.innerHTML =
     `${D.meta.name} <span>${D.meta.club || ''} · ${Number(D.capacity_total || D.meta.capacity || 0).toLocaleString('de-DE')} Plätze</span>`;
   if(typeof syncUndoButtons==='function') syncUndoButtons();
   if(typeof syncSel==='function') syncSel();
@@ -1480,7 +1481,8 @@ function expandStand(stand, seatType, amount){
     built += rows*perRow; remaining -= rows*perRow;
   }
   D.meta.capacity = blocks.reduce((a,b)=>a+b.capacity,0);
-  document.getElementById('stadiumTitle').innerHTML =
+  const title = document.getElementById('stadiumTitle');
+  if(title) title.innerHTML =
     `${D.meta.name} <span>${D.meta.club} · ${D.meta.capacity.toLocaleString('de-DE')} Plätze</span>`;
   recompose(); syncPressList();
   toast(`Ausbau ${stand}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
@@ -1716,7 +1718,8 @@ window.addEventListener('resize', resize);
     initStadium(geometry, design);
     buildPaletteUI(); syncPal(); resize();
   }catch(error){
-    document.getElementById('stadiumTitle').textContent = error.message || 'Editor nicht verfügbar';
+    const title = document.getElementById('stadiumTitle');
+    if(title) title.textContent = error.message || 'Editor nicht verfügbar';
     toast(error.message || 'Editor nicht verfügbar');
   }
 })();

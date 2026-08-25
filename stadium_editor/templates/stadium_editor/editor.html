@@ -1,9 +1,10 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<title>{{ stadium.name }} – Stadion-Editor</title>
+
+{% block title %}{{ stadium.name }} – Stadion-Editor{% endblock %}
+{% block body_class %}stadium-editor-page{% endblock %}
+
+{% block extra_css %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
@@ -15,23 +16,22 @@
   --text:#f4fbff; --muted:rgba(244,251,255,.64); --faint:rgba(244,251,255,.38);
   --radius:8px;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  width:1440px;height:900px;overflow:hidden;background:var(--app-bg);
-  color:var(--text);font:13px/1.45 system-ui,'Segoe UI',sans-serif;
+.stadium-editor-content{
+  height:860px;min-height:760px;overflow:hidden;
   display:flex;flex-direction:column;
+  color:var(--text);font:13px/1.45 system-ui,'Segoe UI',sans-serif;
+  background:var(--app-bg);
 }
-/* ── Topbar ─────────────────────────────────────── */
-.topbar{
+.stadium-editor-content *{box-sizing:border-box}
+/* ── Editor-Werkzeugleiste ───────────────────────── */
+.editor-toolbar{
   height:56px;flex:0 0 56px;display:flex;align-items:center;gap:16px;
   padding:0 20px;background:var(--panel-strong);
   border-bottom:1px solid var(--line);
 }
-.brand{font-family:Cinzel,serif;font-size:17px;letter-spacing:.14em;color:var(--gold)}
-.brand small{font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.28em;color:var(--muted);display:block;margin-top:-2px}
-.tb-title{font-family:Oswald,sans-serif;font-size:15px;font-weight:500;letter-spacing:.05em}
-.tb-title span{color:var(--faint);font-weight:400;margin-left:8px;font-size:12px}
-.tb-spacer{flex:1}
+.editor-back{font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;color:var(--muted);text-decoration:none}
+.editor-back:hover{color:var(--cyan)}
+.editor-toolbar-spacer{flex:1}
 .viewtoggle{display:flex;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
 .viewtoggle button{
   font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;padding:8px 18px;
@@ -48,14 +48,14 @@ body{
 .btn.primary:hover{background:rgba(34,230,255,.26)}
 .btn:disabled{opacity:.35;cursor:default}
 /* ── Layout ─────────────────────────────────────── */
-.main{flex:1;display:flex;min-height:0}
+.stadium-editor-content .main{flex:1;display:flex;min-height:0}
 .tools{
   width:282px;flex:0 0 282px;background:var(--panel);
   border-right:1px solid var(--line);padding:14px;overflow-y:auto;
   display:flex;flex-direction:column;gap:14px;
 }
 .stage{flex:1;position:relative;background:var(--stadium-bg)}
-canvas{position:absolute;inset:0}
+.stage canvas{position:absolute;inset:0}
 #cvOverlay{cursor:crosshair}
 /* ── Panels ─────────────────────────────────────── */
 .panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;background:rgba(7,17,26,.5)}
@@ -126,13 +126,13 @@ canvas{position:absolute;inset:0}
 }
 #toast.show{opacity:1}
 </style>
-</head>
-<body>
+{% endblock %}
 
-<div class="topbar">
-  <a class="brand" href="{% url 'stadium_detail' %}" style="text-decoration:none">BLUEPRINT<small>STADION-EDITOR · ZURÜCK</small></a>
-  <div class="tb-title" id="stadiumTitle"></div>
-  <div class="tb-spacer"></div>
+{% block content %}
+<div class="stadium-editor-content">
+<div class="editor-toolbar">
+  <a class="editor-back" href="{% url 'stadium_detail' %}">← ZUR STADIONVERWALTUNG</a>
+  <div class="editor-toolbar-spacer"></div>
   <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
@@ -272,7 +272,11 @@ canvas{position:absolute;inset:0}
     <div id="toast"></div>
   </div>
 </div>
+</div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 window.STADIUM_EDITOR = {
   geometryUrl: "{% url 'stadium_editor_geometry' %}",
@@ -282,6 +286,5 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=1"></script>
-</body>
-</html>
+<script src="{% static 'stadium_editor/editor.js' %}?v=2"></script>
+{% endblock %}

@@ -3,10 +3,11 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from game.models import Stadium
-from game.views import current_manager_club
+from game.views import build_game_header, current_manager_club
 
 from .capacity import distribute_capacities
 from .image_validation import InvalidImageData, normalize_design_payload
@@ -36,7 +37,9 @@ def stadium_editor(request):
     try:
         geometry = StadiumGeometry.objects.get(stadium=stadium)
     except StadiumGeometry.DoesNotExist:
-        return render(request, 'stadium_editor/unavailable.html', status=200)
+        return render(request, 'stadium_editor/unavailable.html', {
+            'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
+        }, status=200)
     design = StadiumDesign.objects.filter(stadium=stadium).first()
     return render(request, 'stadium_editor/editor.html', {
         'stadium': stadium,
@@ -44,6 +47,7 @@ def stadium_editor(request):
         'design': design.design if design else {},
         'is_editor_admin': bool(request.user.is_staff),
         'attribution': geometry.attribution,
+        'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
     })
 
 
