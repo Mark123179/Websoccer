@@ -128,6 +128,8 @@ class StadiumEditorTests(TestCase):
         self.assertIn('grid-template-columns:282px minmax(0,1fr) 300px', template)
         self.assertIn('height:904px;flex:0 0 904px', template)
         self.assertIn('grid-template-rows:minmax(0,1fr)', template)
+        self.assertIn('.main.has-admin .stage{grid-column:2;grid-row:1}', template)
+        self.assertIn('.main.has-admin .admin-tools{grid-column:3;grid-row:1}', template)
         self.assertIn('@media (max-width:980px)', template)
         self.assertIn('display:flex;flex-direction:column;min-height:0', template)
 

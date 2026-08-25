@@ -55,19 +55,19 @@
 .stadium-editor-content .main.has-admin{
   grid-template-columns:282px minmax(0,1fr) 300px;
 }
-.stadium-editor-content .main.has-admin .stage{grid-column:2}
-.stadium-editor-content .main.has-admin .admin-tools{grid-column:3}
+.stadium-editor-content .main.has-admin .stage{grid-column:2;grid-row:1}
+.stadium-editor-content .main.has-admin .admin-tools{grid-column:3;grid-row:1}
 .tools{
   min-width:0;background:var(--panel);
   border-right:1px solid var(--line);padding:14px;overflow-y:auto;
-  display:flex;flex-direction:column;gap:14px;
+  display:flex;flex-direction:column;gap:14px;grid-column:1;grid-row:1;
 }
 .admin-tools{
   min-width:0;background:rgba(9,23,34,.64);
   border-left:1px solid var(--line);padding:14px;overflow-y:auto;
 }
 .admin-tools .panel{background:rgba(7,17,26,.72)}
-.stage{height:100%;min-width:0;min-height:0;position:relative;background:var(--stadium-bg)}
+.stage{height:100%;min-width:0;min-height:0;position:relative;background:var(--stadium-bg);grid-column:2;grid-row:1}
 .stage canvas{position:absolute;inset:0}
 #cvOverlay{cursor:crosshair}
 /* ── Panels ─────────────────────────────────────── */
@@ -316,5 +316,5 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=5"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=6"></script>
 {% endblock %}
