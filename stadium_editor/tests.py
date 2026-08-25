@@ -2,6 +2,7 @@ import base64
 import io
 from datetime import timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -68,8 +69,7 @@ class StadiumEditorTests(TestCase):
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         editor_js = (
-            __import__('pathlib').Path(__file__).resolve().parent
-            / 'static' / 'stadium_editor' / 'editor.js'
+            Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
         ).read_text(encoding='utf-8')
         self.assertIn("const expandButton = document.getElementById('btnExpand');", editor_js)
         self.assertIn('if(expandButton){', editor_js)
@@ -104,6 +104,26 @@ class StadiumEditorTests(TestCase):
         response = self.client.get(reverse('stadium_editor'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ausbau · Simulator')
+        self.assertContains(response, 'class="main has-admin"', html=False)
+        self.assertContains(response, 'class="admin-tools"', html=False)
+
+    def test_manager_editor_uses_the_full_middle_area_without_admin_column(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('stadium_editor'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="main"', html=False)
+        self.assertNotContains(response, 'class="main has-admin"', html=False)
+        self.assertNotContains(response, 'class="admin-tools"', html=False)
+
+    def test_editor_layout_has_staff_rail_and_narrow_screen_fallback(self):
+        template = (
+            Path(__file__).resolve().parent / 'templates' / 'stadium_editor' / 'editor.html'
+        ).read_text(encoding='utf-8')
+
+        self.assertIn('grid-template-columns:282px minmax(0,1fr) 300px', template)
+        self.assertIn('@media (max-width:980px)', template)
+        self.assertIn('display:flex;flex-direction:column;min-height:0', template)
 
     def test_bundled_seed_makes_a_supported_stadium_editor_ready(self):
         self.geometry.delete()

@@ -17,7 +17,7 @@
   --radius:8px;
 }
 .stadium-editor-content{
-  height:860px;min-height:760px;overflow:hidden;
+  width:100%;height:960px;min-height:960px;overflow:hidden;
   display:flex;flex-direction:column;
   color:var(--text);font:13px/1.45 system-ui,'Segoe UI',sans-serif;
   background:var(--app-bg);
@@ -48,13 +48,25 @@
 .btn.primary:hover{background:rgba(34,230,255,.26)}
 .btn:disabled{opacity:.35;cursor:default}
 /* ── Layout ─────────────────────────────────────── */
-.stadium-editor-content .main{flex:1;display:flex;min-height:0}
+.stadium-editor-content .main{
+  flex:1;display:grid;grid-template-columns:282px minmax(0,1fr);min-height:0;
+}
+.stadium-editor-content .main.has-admin{
+  grid-template-columns:282px minmax(0,1fr) 300px;
+}
+.stadium-editor-content .main.has-admin .stage{grid-column:2}
+.stadium-editor-content .main.has-admin .admin-tools{grid-column:3}
 .tools{
-  width:282px;flex:0 0 282px;background:var(--panel);
+  min-width:0;background:var(--panel);
   border-right:1px solid var(--line);padding:14px;overflow-y:auto;
   display:flex;flex-direction:column;gap:14px;
 }
-.stage{flex:1;position:relative;background:var(--stadium-bg)}
+.admin-tools{
+  min-width:0;background:rgba(9,23,34,.64);
+  border-left:1px solid var(--line);padding:14px;overflow-y:auto;
+}
+.admin-tools .panel{background:rgba(7,17,26,.72)}
+.stage{min-width:0;min-height:0;position:relative;background:var(--stadium-bg)}
 .stage canvas{position:absolute;inset:0}
 #cvOverlay{cursor:crosshair}
 /* ── Panels ─────────────────────────────────────── */
@@ -125,6 +137,21 @@
   padding:9px 18px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .25s;
 }
 #toast.show{opacity:1}
+@media (max-width:980px){
+  .stadium-editor-content{
+    height:auto;min-height:1100px;overflow:visible;
+  }
+  .stadium-editor-content .main,
+  .stadium-editor-content .main.has-admin{
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .tools,.admin-tools{
+    width:100%;flex:none;overflow:visible;border-left:0;
+    border-right:0;border-bottom:1px solid var(--line);
+  }
+  .stage{height:560px;min-height:560px;flex:none;order:2}
+  .admin-tools{order:3}
+}
 </style>
 {% endblock %}
 
@@ -145,7 +172,7 @@
   <button class="btn primary" id="btnSave">SPEICHERN</button>
 </div>
 
-<div class="main">
+<div class="main{% if is_editor_admin %} has-admin{% endif %}">
   <div class="tools" id="toolsPanel">
 
     <div class="panel">
@@ -230,7 +257,19 @@
       <button class="btn" id="btnRedo" disabled>↷ WIEDER</button>
     </div>
 
-    {% if is_editor_admin %}
+    <div class="panel">
+      <h3>Blockarten</h3>
+      <div class="legend" style="flex-direction:column;align-items:flex-start;gap:7px">
+        <span><span class="key" style="border:1.5px solid var(--cyan)"></span>Sitzplätze</span>
+        <span><span class="key" style="border:1.5px dashed var(--cyan)"></span>Stehplätze</span>
+        <span><span class="key" style="border:1.5px solid var(--gold)"></span>VIP / Logen</span>
+      </div>
+    </div>
+
+  </div>
+
+  {% if is_editor_admin %}
+  <aside class="admin-tools" aria-label="Admin-Werkzeuge">
     <div class="panel" id="expandPanel">
       <h3>Ausbau · Simulator <span style="color:var(--gold)">· Admin</span></h3>
       <div class="subtools open" style="margin-top:0">
@@ -246,18 +285,8 @@
         <button class="btn" id="btnExpand">AUSBAUEN</button>
       </div>
     </div>
-    {% endif %}
-
-    <div class="panel">
-      <h3>Blockarten</h3>
-      <div class="legend" style="flex-direction:column;align-items:flex-start;gap:7px">
-        <span><span class="key" style="border:1.5px solid var(--cyan)"></span>Sitzplätze</span>
-        <span><span class="key" style="border:1.5px dashed var(--cyan)"></span>Stehplätze</span>
-        <span><span class="key" style="border:1.5px solid var(--gold)"></span>VIP / Logen</span>
-      </div>
-    </div>
-
-  </div>
+  </aside>
+  {% endif %}
 
   <div class="stage" id="stage">
     <canvas id="cvBase"></canvas>
