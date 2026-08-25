@@ -73,6 +73,8 @@ class StadiumEditorTests(TestCase):
         ).read_text(encoding='utf-8')
         self.assertIn("const expandButton = document.getElementById('btnExpand');", editor_js)
         self.assertIn('if(expandButton){', editor_js)
+        self.assertIn('new ResizeObserver', editor_js)
+        self.assertIn('if(!nextW || !nextH) return;', editor_js)
 
     def test_editor_is_embedded_in_the_global_management_shell(self):
         self.client.force_login(self.user)

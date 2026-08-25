@@ -90,7 +90,9 @@ const cvBase = document.getElementById('cvBase'),
       cvOverlay = document.getElementById('cvOverlay');
 let W, H;
 function resize(){
-  W = stage.clientWidth; H = stage.clientHeight;
+  const nextW = stage.clientWidth, nextH = stage.clientHeight;
+  if(!nextW || !nextH) return;
+  W = nextW; H = nextH;
   for(const c of [cvBase,cvBlocks,cvOverlay]){ c.width=W; c.height=H; }
   fitView(); renderAll();
 }
@@ -1706,6 +1708,13 @@ document.getElementById('textFont').addEventListener('change', makeTextOverlay);
 
 /* Geometrie und Gestaltung gehören immer zum angemeldeten Verein. */
 window.addEventListener('resize', resize);
+if(window.ResizeObserver){
+  let stageResizeFrame = 0;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(stageResizeFrame);
+    stageResizeFrame = requestAnimationFrame(resize);
+  }).observe(stage);
+}
 (async function boot(){
   try{
     const [geometryResponse, designResponse] = await Promise.all([
