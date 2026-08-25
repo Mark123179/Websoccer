@@ -76,6 +76,7 @@ class StadiumEditorTests(TestCase):
         self.assertIn('new ResizeObserver', editor_js)
         self.assertIn('if(!nextW || !nextH || !D) return;', editor_js)
         self.assertIn('if(!D) return;', editor_js)
+        self.assertIn('requestAnimationFrame(() => requestAnimationFrame(resize))', editor_js)
 
     def test_editor_is_embedded_in_the_global_management_shell(self):
         self.client.force_login(self.user)
@@ -125,6 +126,8 @@ class StadiumEditorTests(TestCase):
         ).read_text(encoding='utf-8')
 
         self.assertIn('grid-template-columns:282px minmax(0,1fr) 300px', template)
+        self.assertIn('height:904px;flex:0 0 904px', template)
+        self.assertIn('grid-template-rows:minmax(0,1fr)', template)
         self.assertIn('@media (max-width:980px)', template)
         self.assertIn('display:flex;flex-direction:column;min-height:0', template)
 

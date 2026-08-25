@@ -1727,6 +1727,7 @@ if(window.ResizeObserver){
     const design = designResponse.ok ? await designResponse.json() : {};
     initStadium(geometry, design);
     buildPaletteUI(); syncPal(); resize();
+    requestAnimationFrame(() => requestAnimationFrame(resize));
   }catch(error){
     const title = document.getElementById('stadiumTitle');
     if(title) title.textContent = error.message || 'Editor nicht verfügbar';

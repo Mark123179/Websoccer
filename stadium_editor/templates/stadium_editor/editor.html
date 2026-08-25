@@ -49,7 +49,8 @@
 .btn:disabled{opacity:.35;cursor:default}
 /* ── Layout ─────────────────────────────────────── */
 .stadium-editor-content .main{
-  flex:1;display:grid;grid-template-columns:282px minmax(0,1fr);min-height:0;
+  height:904px;flex:0 0 904px;display:grid;
+  grid-template-columns:282px minmax(0,1fr);grid-template-rows:minmax(0,1fr);min-height:0;
 }
 .stadium-editor-content .main.has-admin{
   grid-template-columns:282px minmax(0,1fr) 300px;
@@ -66,7 +67,7 @@
   border-left:1px solid var(--line);padding:14px;overflow-y:auto;
 }
 .admin-tools .panel{background:rgba(7,17,26,.72)}
-.stage{min-width:0;min-height:0;position:relative;background:var(--stadium-bg)}
+.stage{height:100%;min-width:0;min-height:0;position:relative;background:var(--stadium-bg)}
 .stage canvas{position:absolute;inset:0}
 #cvOverlay{cursor:crosshair}
 /* ── Panels ─────────────────────────────────────── */
@@ -143,7 +144,7 @@
   }
   .stadium-editor-content .main,
   .stadium-editor-content .main.has-admin{
-    display:flex;flex-direction:column;min-height:0;
+    height:auto;flex:initial;display:flex;flex-direction:column;min-height:0;
   }
   .tools,.admin-tools{
     width:100%;flex:none;overflow:visible;border-left:0;
@@ -315,5 +316,5 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=4"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=5"></script>
 {% endblock %}
