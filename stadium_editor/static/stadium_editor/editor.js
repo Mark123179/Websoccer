@@ -91,7 +91,7 @@ const cvBase = document.getElementById('cvBase'),
 let W, H;
 function resize(){
   const nextW = stage.clientWidth, nextH = stage.clientHeight;
-  if(!nextW || !nextH) return;
+  if(!nextW || !nextH || !D) return;
   W = nextW; H = nextH;
   for(const c of [cvBase,cvBlocks,cvOverlay]){ c.width=W; c.height=H; }
   fitView(); renderAll();
@@ -932,6 +932,7 @@ function render3D(){
 
 /* ── Renderdispatch ───────────────────────────────────────────── */
 function renderAll(){
+  if(!D) return;
   if(view==='2d'){ renderBase(); renderBlocks(); renderOverlay(); }
   else render3D();
 }
