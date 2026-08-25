@@ -5437,6 +5437,11 @@ class ClubRecord(models.Model):
         related_name='hall_of_fame_records',
     )
     record_key = models.CharField(max_length=60)
+    custom_label = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text='Freie Bezeichnung für die zwei offenen Vereinsrekordplätze.',
+    )
     source = models.CharField(max_length=4, choices=SOURCE_CHOICES)
     value_numeric = models.DecimalField(max_digits=15, decimal_places=2)
     value_display = models.CharField(max_length=160)
@@ -5558,6 +5563,7 @@ class ClubRecordCorrectionRequest(models.Model):
         related_name='hall_of_fame_correction_requests',
     )
     record_key = models.CharField(max_length=60)
+    custom_label = models.CharField(max_length=120, blank=True)
     requester = models.ForeignKey(
         ManagerProfile,
         on_delete=models.CASCADE,
@@ -5565,8 +5571,17 @@ class ClubRecordCorrectionRequest(models.Model):
     )
     old_value = models.CharField(max_length=160, blank=True)
     new_value = models.CharField(max_length=160)
+    new_numeric_value = models.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
     new_holder = models.CharField(max_length=160, blank=True)
     new_date = models.CharField(max_length=40, blank=True)
+    new_season = models.CharField(max_length=20, blank=True)
+    new_competition = models.CharField(max_length=120, blank=True)
+    new_context = models.CharField(max_length=200, blank=True)
     source_reference = models.TextField()
     requester_note = models.TextField(blank=True)
     status = models.CharField(

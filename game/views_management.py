@@ -86,7 +86,7 @@ from .asset_urls import (
     default_player_url,
 )
 from .records.hall_geometry import CLUB_SLOT_STYLES, PANEL_SLOT_STYLES
-from .records.registry import RECORDS_BY_KEY
+from .records.hall_catalog import HALL_RECORD_SLOTS, SLOTS_BY_KEY
 
 
 def _get_stadium_or_none(club):
@@ -2018,6 +2018,8 @@ def management_halloffame(request):
         return value.strftime('%d.%m.') if value else ''
 
     def payload(record, definition_key, label):
+        if record and record.custom_label:
+            label = record.custom_label
         if record is None:
             return {
                 'record': None, 'key': definition_key, 'label': label,
@@ -2095,7 +2097,7 @@ def management_halloffame(request):
     def build_slots(keys, styles, labels):
         result = []
         for index, key in enumerate(keys):
-            record = records.get(key) if not key.startswith(('player_empty_', 'coach_empty_', 'club_empty_',)) else None
+            record = records.get(key)  # Editable hall slots may have researched SEED records.
             item = payload(record, key, labels[key])
             if keys is club_keys:
                 item['style_class'] = (
@@ -2103,6 +2105,8 @@ def management_halloffame(request):
                     'zelle--reserve' if key in {'club_empty_15', 'club_empty_16'}
                     else 'zelle--leer'
                 )
+            else:
+                item['style_class'] = 'nische--belegt' if record else 'nische--leer'
             item['style'] = styles[index]
             item['index'] = index + 1
             result.append(item)
@@ -2118,8 +2122,75 @@ def management_halloffame(request):
         'club_slots': build_slots(club_keys, CLUB_SLOT_STYLES, club_labels),
         'hall_club_name': club.name if club else 'Noch kein Verein zugewiesen',
         'hall_club_logo': club_logo_url(club.fm_inside_id) if club and club.fm_inside_id else '',
+        'can_submit_record_request': bool(
+            club and request.user.is_authenticated and getattr(request.user, 'manager_profile', None)
+        ),
+        'show_record_request_form': request.GET.get('antrag') == '1',
+        'record_request_slots': HALL_RECORD_SLOTS,
     }
     return render(request, 'game/management/halloffame.html', context)
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def management_halloffame_correction_request(request):
+    """Submit a researched Hall of Fame correction for the current club."""
+    from .models import ClubRecord, ClubRecordCorrectionRequest
+
+    club = current_manager_club(user=request.user)
+    room = request.POST.get('room', 'entrance')
+    mode = request.POST.get('mode', 'echt')
+    form_url = reverse('management_halloffame') + f'?raum={room}&modus={mode}&antrag=1'
+    if not club:
+        messages.error(request, 'Du brauchst einen eigenen Verein für einen Rekordantrag.')
+        return redirect(form_url)
+
+    record_key = (request.POST.get('record_key') or '').strip()
+    slot = SLOTS_BY_KEY.get(record_key)
+    if slot is None:
+        messages.error(request, 'Bitte einen gültigen Rekordplatz auswählen.')
+        return redirect(form_url)
+
+    new_value = (request.POST.get('new_value') or '').strip()
+    source_reference = (request.POST.get('source_reference') or '').strip()
+    try:
+        new_numeric_value = Decimal(
+            (request.POST.get('new_numeric_value') or '').strip().replace(',', '.')
+        )
+    except Exception:
+        new_numeric_value = None
+    if not new_value or new_numeric_value is None or not source_reference:
+        messages.error(request, 'Wert, Vergleichswert und Quelle sind erforderlich.')
+        return redirect(form_url)
+
+    custom_label = (request.POST.get('custom_label') or '').strip()
+    if slot.custom_label and not custom_label:
+        messages.error(request, 'Bitte einen Namen für den freien Vereinsrekord eingeben.')
+        return redirect(form_url)
+
+    current_record = ClubRecord.objects.filter(
+        club=club,
+        record_key=record_key,
+        source=ClubRecord.SOURCE_SEED,
+    ).only('value_display').first()
+    ClubRecordCorrectionRequest.objects.create(
+        club=club,
+        record_key=record_key,
+        custom_label=custom_label[:120] if slot.custom_label else '',
+        requester=request.user.manager_profile,
+        old_value=current_record.value_display if current_record else '',
+        new_value=new_value[:160],
+        new_numeric_value=new_numeric_value,
+        new_holder=(request.POST.get('new_holder') or '').strip()[:160],
+        new_date=(request.POST.get('new_date') or '').strip()[:40],
+        new_season=(request.POST.get('new_season') or '').strip()[:20],
+        new_competition=(request.POST.get('new_competition') or '').strip()[:120],
+        new_context=(request.POST.get('new_context') or '').strip()[:200],
+        source_reference=source_reference,
+        requester_note=(request.POST.get('requester_note') or '').strip(),
+    )
+    messages.success(request, 'Rekordänderung wurde zur Prüfung eingereicht.')
+    return redirect(reverse('management_halloffame') + f'?raum={room}&modus={mode}')
 
 
 # ------------------------------------------------------------------ #

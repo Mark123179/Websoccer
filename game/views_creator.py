@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from decimal import Decimal, InvalidOperation
 
 from django.apps import apps
@@ -19,7 +20,7 @@ from .models import (
     SeasonGoal, ManagerProfile, ManagerCareerStation, HoenessCoin,
     CoinTransaction, PresidentSatisfaction, TacticSetup,
     PlayerEditLog, PlayerRLFormProfile, GameSeasonState,
-    MediaOutlet, Referee,
+    MediaOutlet, Referee, HistoricCoach, ClubRecord,
 )
 from . import strength_engine as se
 from .strength_service import compute_strength_for_player, compute_rl_form_for_player
@@ -704,6 +705,41 @@ def creator_club_edit(request, club_id):
     all_clubs = Club.objects.exclude(id=club_id).order_by('name')
 
     active_tab = request.GET.get('tab', 'bilder')
+    if active_tab not in {
+        'bilder', 'stammdaten', 'infrastruktur', 'pokale', 'sponsoring',
+        'saisonziele', 'kader', 'import_defekte', 'rekorde',
+    }:
+        active_tab = 'bilder'
+    active_record_section = request.GET.get('rekordbereich', 'player')
+    if active_record_section not in {'player', 'coach', 'club'}:
+        active_record_section = 'player'
+
+    from .records.hall_catalog import HALL_RECORD_SLOTS
+    seed_records = {
+        record.record_key: record
+        for record in ClubRecord.objects.filter(
+            club=club,
+            source=ClubRecord.SOURCE_SEED,
+        )
+    }
+    record_sections = []
+    for room, label in (
+        ('player', 'Spielerrekorde'),
+        ('coach', 'Trainerrekorde'),
+        ('club', 'Vereinsrekorde'),
+    ):
+        record_sections.append({
+            'key': room,
+            'label': label,
+            'rows': [
+                {
+                    'slot': slot,
+                    'record': seed_records.get(slot.key),
+                }
+                for slot in HALL_RECORD_SLOTS
+                if slot.room == room
+            ],
+        })
 
     from .models import ClubPlayerImportJob
     from .club_import import validation as _val
@@ -741,6 +777,9 @@ def creator_club_edit(request, club_id):
         'latest_import_job': latest_import_job,
         'import_error_count': import_error_count,
         'import_warning_count': import_warning_count,
+        'record_sections': record_sections,
+        'active_record_section': active_record_section,
+        'historic_coaches': HistoricCoach.objects.order_by('name'),
     })
 
 
@@ -1441,6 +1480,123 @@ def creator_player_delete(request, player_id):
 def _redirect_tab(club_id, tab):
     from django.urls import reverse
     return redirect(reverse('creator_club_edit', args=[club_id]) + f'?tab={tab}')
+
+
+def _parse_record_decimal(raw):
+    try:
+        return Decimal((raw or '').strip().replace(',', '.'))
+    except (InvalidOperation, AttributeError):
+        return None
+
+
+def _parse_record_date(raw):
+    raw = (raw or '').strip()
+    if not raw:
+        return None
+    try:
+        return date.fromisoformat(raw)
+    except ValueError:
+        return False
+
+
+def _record_editor_data(request, club, record_key):
+    """Validate one Creator-maintained SEED record and return its payload."""
+    from .records.hall_catalog import SLOTS_BY_KEY
+
+    slot = SLOTS_BY_KEY.get(record_key)
+    if slot is None:
+        raise ValueError('Unbekannter Rekordplatz.')
+
+    value_display = (request.POST.get('value_display') or '').strip()
+    value_numeric = _parse_record_decimal(request.POST.get('value_numeric'))
+    if not value_display or value_numeric is None:
+        raise ValueError('Rekordwert und Vergleichswert sind erforderlich.')
+
+    record_date = _parse_record_date(request.POST.get('record_date'))
+    if record_date is False:
+        raise ValueError('Bitte ein gültiges Datum verwenden.')
+
+    holder_player = None
+    holder_player_id = (request.POST.get('holder_player_id') or '').strip()
+    if holder_player_id:
+        holder_player = Player.objects.filter(
+            pk=holder_player_id,
+            club=club,
+        ).first()
+        if holder_player is None:
+            raise ValueError('Der gewählte Spieler gehört nicht zu diesem Verein.')
+
+    holder_coach = None
+    holder_coach_id = (request.POST.get('holder_coach_id') or '').strip()
+    if holder_coach_id:
+        holder_coach = HistoricCoach.objects.filter(pk=holder_coach_id).first()
+        if holder_coach is None:
+            raise ValueError('Der gewählte Trainer wurde nicht gefunden.')
+
+    opponent_club = None
+    opponent_club_id = (request.POST.get('opponent_club_id') or '').strip()
+    if opponent_club_id:
+        opponent_club = Club.objects.filter(pk=opponent_club_id).first()
+        if opponent_club is None:
+            raise ValueError('Der gewählte Gegnerverein wurde nicht gefunden.')
+
+    custom_label = (request.POST.get('custom_label') or '').strip()
+    if slot.custom_label and not custom_label:
+        raise ValueError('Bitte einen Namen für diesen Vereinsrekord eingeben.')
+
+    return {
+        'value_numeric': value_numeric,
+        'value_display': value_display[:160],
+        'holder_name': (request.POST.get('holder_name') or '').strip()[:160],
+        'holder_player': holder_player,
+        'holder_coach': holder_coach,
+        'opponent_name': (request.POST.get('opponent_name') or '').strip()[:160],
+        'opponent_club': opponent_club,
+        'context_line': (request.POST.get('context_line') or '').strip()[:200],
+        'record_date': record_date,
+        'season': (request.POST.get('season') or '').strip()[:20],
+        'competition': (request.POST.get('competition') or '').strip()[:120],
+        'source_note': (request.POST.get('source_note') or '').strip(),
+        'custom_label': custom_label[:120] if slot.custom_label else '',
+    }
+
+
+@staff_member_required
+@require_POST
+def creator_save_record(request, club_id, record_key):
+    """Create, update or remove one researched, real-world club record."""
+    from .records.hall_catalog import SLOTS_BY_KEY
+
+    club = get_object_or_404(Club, pk=club_id)
+    if record_key not in SLOTS_BY_KEY:
+        messages.error(request, 'Unbekannter Rekordplatz.')
+        return _redirect_tab(club_id, 'rekorde')
+
+    record = ClubRecord.objects.filter(
+        club=club,
+        record_key=record_key,
+        source=ClubRecord.SOURCE_SEED,
+    ).first()
+    if request.POST.get('action') == 'delete':
+        if record:
+            record.delete()
+            messages.success(request, 'Echter Vereinsrekord gelöscht.')
+        return _redirect_tab(club_id, 'rekorde')
+
+    try:
+        payload = _record_editor_data(request, club, record_key)
+    except ValueError as exc:
+        messages.error(request, str(exc))
+        return _redirect_tab(club_id, 'rekorde')
+
+    ClubRecord.objects.update_or_create(
+        club=club,
+        record_key=record_key,
+        source=ClubRecord.SOURCE_SEED,
+        defaults=payload,
+    )
+    messages.success(request, 'Echter Vereinsrekord gespeichert.')
+    return _redirect_tab(club_id, 'rekorde')
 
 
 @require_POST

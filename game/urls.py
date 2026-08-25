@@ -85,6 +85,7 @@ from .views_scouting import (
     creator_moderate_submission,
     creator_timeline_overview,
     creator_moderate_timeline,
+    creator_moderate_record_correction,
 )
 from .views_management import (
     management_hub,
@@ -106,6 +107,7 @@ from .views_management import (
     management_sponsoring_accept,
     management_sponsoring_push,
     management_halloffame,
+    management_halloffame_correction_request,
     management_job_offers,
     management_stadionumfeld,
     stadionumfeld_save,
@@ -130,6 +132,7 @@ from .views_creator import (
     creator_save_stammdaten,
     creator_save_infrastruktur,
     creator_save_source_ids,
+    creator_save_record,
     creator_add_trophy,
     creator_delete_trophy,
     creator_edit_trophy,
@@ -439,6 +442,7 @@ urlpatterns = [
     path('management/finanzen/sponsoring/annehmen/', management_sponsoring_accept, name='management_sponsoring_accept_compat'),
     path('management/finanzen/sponsoring/verhandeln/', management_sponsoring_push, name='management_sponsoring_push_compat'),
     path('management/halloffame/', management_halloffame, name='management_halloffame'),
+    path('management/halloffame/antrag/', management_halloffame_correction_request, name='management_halloffame_correction_request'),
     path('management/job-angebote/', management_job_offers, name='management_job_offers'),
 
     # Transfersystem v2 — Transfermarkt (Task #820)
@@ -491,6 +495,7 @@ urlpatterns = [
     path('creator/scouting/<int:submission_id>/moderieren/', creator_moderate_submission, name='creator_moderate_submission'),
     path('creator/antraege/', creator_timeline_overview, name='creator_timeline_overview'),
     path('creator/antraege/<int:entry_id>/moderieren/', creator_moderate_timeline, name='creator_moderate_timeline'),
+    path('creator/antraege/rekorde/<int:request_id>/moderieren/', creator_moderate_record_correction, name='creator_moderate_record_correction'),
 
     path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
     path('creator/finanzen/', creator_finanzanalyse, name='creator_finanzanalyse'),
@@ -528,6 +533,7 @@ urlpatterns = [
     path('creator/players/<int:player_id>/delete/', creator_player_delete, name='creator_player_delete'),
     path('creator/clubs/<int:club_id>/players/new/', creator_new_player, name='creator_new_player'),
     path('creator/clubs/<int:club_id>/stammdaten/', creator_save_stammdaten, name='creator_save_stammdaten'),
+    path('creator/clubs/<int:club_id>/rekorde/<str:record_key>/', creator_save_record, name='creator_save_record'),
     path('creator/clubs/<int:club_id>/infrastruktur/', creator_save_infrastruktur, name='creator_save_infrastruktur'),
     path('creator/clubs/<int:club_id>/source-ids/', creator_save_source_ids, name='creator_save_source_ids'),
     path('creator/clubs/<int:club_id>/trophies/add/', creator_add_trophy, name='creator_add_trophy'),

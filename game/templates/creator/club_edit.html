@@ -54,9 +54,114 @@
     <a class="creator-tab {% if active_tab == 'pokale' %}active{% endif %}" href="?tab=pokale">Pokale <span class="creator-tab-badge">{{ trophies|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'sponsoring' %}active{% endif %}" href="?tab=sponsoring">Sponsoring <span class="creator-tab-badge">{{ sponsors|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'saisonziele' %}active{% endif %}" href="?tab=saisonziele">Saisonziele</a>
+    <a class="creator-tab {% if active_tab == 'rekorde' %}active{% endif %}" href="?tab=rekorde">Rekorde</a>
     <a class="creator-tab {% if active_tab == 'kader' %}active{% endif %}" href="?tab=kader">Kader <span class="creator-tab-badge">{{ players|length }}</span></a>
     <a class="creator-tab {% if active_tab == 'import_defekte' %}active{% endif %} {% if import_defekte %}creator-tab-has-errors{% endif %}" href="?tab=import_defekte">Import-Defekte{% if import_defekte %} <span class="creator-tab-badge creator-tab-badge-error">{{ import_defekte|length }}</span>{% endif %}</a>
   </nav>
+
+  <!-- ═══ TAB: REKORDE ══════════════════════════════════════════════════════ -->
+  {% if active_tab == 'rekorde' %}
+  <section class="creator-records">
+    <div class="creator-card">
+      <div class="creator-card-head">
+        <h2>Echte Vereinsgeschichte</h2>
+        <span class="creator-records-note">Nur diese Werte sind manuell pflegbar. Manager-Rekorde werden automatisch berechnet.</span>
+      </div>
+      <div class="creator-card-body">
+        <nav class="creator-record-subtabs" aria-label="Rekordbereich">
+          {% for section in record_sections %}
+          <a class="{% if active_record_section == section.key %}active{% endif %}" href="?tab=rekorde&amp;rekordbereich={{ section.key }}">{{ section.label }}</a>
+          {% endfor %}
+        </nav>
+
+        {% for section in record_sections %}
+          {% if active_record_section == section.key %}
+          <div class="creator-record-list">
+            {% for row in section.rows %}
+            <form class="creator-record-row" method="post" action="{% url 'creator_save_record' club_id=club.id record_key=row.slot.key %}">
+              {% csrf_token %}
+              <div class="creator-record-title">
+                {% if row.slot.custom_label %}
+                <label>Rekordname
+                  <input name="custom_label" maxlength="120" value="{{ row.record.custom_label }}" placeholder="Zum Beispiel: Meiste Derby-Siege">
+                </label>
+                {% else %}
+                <strong>{{ row.slot.label }}</strong>
+                {% endif %}
+                <small>Platz {{ row.slot.slot }} · echte Geschichte</small>
+              </div>
+              <div class="creator-record-fields">
+                <label>Anzeige
+                  <input name="value_display" maxlength="160" value="{{ row.record.value_display }}" placeholder="z. B. 8:0 oder 42 Tore">
+                </label>
+                <label>Vergleichswert
+                  <input name="value_numeric" inputmode="decimal" value="{{ row.record.value_numeric|default_if_none:'' }}" placeholder="z. B. 8">
+                </label>
+                <label>Rekordhalter
+                  <input name="holder_name" maxlength="160" value="{{ row.record.holder_name }}" placeholder="Name">
+                </label>
+                {% if section.key == 'player' %}
+                <label>Spieler verknüpfen
+                  <select name="holder_player_id">
+                    <option value="">Nicht verknüpfen</option>
+                    {% for player in players %}
+                    <option value="{{ player.id }}"{% if row.record.holder_player_id == player.id %} selected{% endif %}>{{ player.full_name }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                {% elif section.key == 'coach' %}
+                <label>Trainer verknüpfen
+                  <select name="holder_coach_id">
+                    <option value="">Nicht verknüpfen</option>
+                    {% for coach in historic_coaches %}
+                    <option value="{{ coach.id }}"{% if row.record.holder_coach_id == coach.id %} selected{% endif %}>{{ coach.name }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                {% else %}
+                <label>Gegnerverein
+                  <select name="opponent_club_id">
+                    <option value="">Nicht verknüpfen</option>
+                    {% for other_club in all_clubs %}
+                    <option value="{{ other_club.id }}"{% if row.record.opponent_club_id == other_club.id %} selected{% endif %}>{{ other_club.name }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                {% endif %}
+                <label>Saison
+                  <input name="season" maxlength="20" value="{{ row.record.season }}" placeholder="z. B. 2012/13">
+                </label>
+                <label>Datum
+                  <input type="date" name="record_date" value="{{ row.record.record_date|date:'Y-m-d' }}">
+                </label>
+                <label>Wettbewerb
+                  <input name="competition" maxlength="120" value="{{ row.record.competition }}" placeholder="optional">
+                </label>
+                <label>Gegnername
+                  <input name="opponent_name" maxlength="160" value="{{ row.record.opponent_name }}" placeholder="optional">
+                </label>
+                <label class="creator-record-wide">Zusatztext
+                  <input name="context_line" maxlength="200" value="{{ row.record.context_line }}" placeholder="optional">
+                </label>
+                <label class="creator-record-wide">Quelle
+                  <input name="source_note" value="{{ row.record.source_note }}" placeholder="Recherchequelle oder Hinweis">
+                </label>
+              </div>
+              <div class="creator-record-actions">
+                <button type="submit" class="creator-btn creator-btn-primary">💾 Speichern</button>
+                {% if row.record %}
+                <button type="submit" name="action" value="delete" class="creator-btn creator-btn-danger" onclick="return confirm('Diesen echten Vereinsrekord löschen?')">Löschen</button>
+                {% endif %}
+              </div>
+            </form>
+            {% endfor %}
+          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
   <!-- ═══ TAB: BILDER ═══════════════════════════════════════════════════════ -->
   {% if active_tab == 'bilder' %}
@@ -973,6 +1078,25 @@
 .creator-btn-icon:hover { background: #00d4ff22; }
 .creator-btn-danger-sm { background: #ff334415; border: 1px solid #ff334433; border-radius: 5px; color: #ff8899; cursor: pointer; font-size: .75rem; padding: .25rem .5rem; }
 .creator-btn-danger-sm:hover { background: #ff334430; }
+.creator-records-note { color: #7e91a6; font-size: .72rem; text-transform: none; letter-spacing: 0; }
+.creator-record-subtabs { display:flex; gap:.55rem; flex-wrap:wrap; margin-bottom:1rem; }
+.creator-record-subtabs a { padding:.35rem .85rem; border:1px solid #16324d; border-radius:999px; color:#8ca0b4; background:#07111e; text-decoration:none; font-size:.76rem; font-weight:700; }
+.creator-record-subtabs a.active { border-color:#00d4ff66; color:#00d4ff; background:#00d4ff12; }
+.creator-record-list { display:flex; flex-direction:column; gap:.75rem; }
+.creator-record-row { display:grid; grid-template-columns:190px minmax(0,1fr) auto; gap:1rem; padding:1rem; background:#07111e; border:1px solid #102944; border-radius:8px; align-items:start; }
+.creator-record-title strong { color:#e3edf6; font-size:.84rem; display:block; margin-bottom:.35rem; }
+.creator-record-title small { color:#658099; font-size:.68rem; }
+.creator-record-title label { color:#91a6ba; font-size:.7rem; font-weight:700; display:grid; gap:.35rem; }
+.creator-record-fields { display:grid; grid-template-columns:repeat(3,minmax(120px,1fr)); gap:.65rem; }
+.creator-record-fields label { color:#7f96aa; font-size:.66rem; font-weight:700; display:grid; gap:.28rem; }
+.creator-record-fields input, .creator-record-fields select, .creator-record-title input { width:100%; box-sizing:border-box; background:#040b14; color:#dbe9f4; border:1px solid #1a3a58; border-radius:4px; padding:.42rem .5rem; font-size:.76rem; }
+.creator-record-wide { grid-column:span 2; }
+.creator-record-actions { display:flex; flex-direction:column; gap:.45rem; align-items:stretch; }
+@media (max-width: 900px) {
+  .creator-record-row { grid-template-columns:1fr; }
+  .creator-record-fields { grid-template-columns:repeat(2,minmax(120px,1fr)); }
+  .creator-record-actions { flex-direction:row; }
+}
 .creator-status-btn { padding: .25rem .65rem; border-radius: 5px; font-size: .72rem; font-weight: 700; cursor: pointer; border: 1px solid #334455; background: #030a12; color: #556677; }
 .creator-status-btn.active { background: #00d4ff15; border-color: #00d4ff44; color: #00d4ff; }
 

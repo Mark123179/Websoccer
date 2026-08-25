@@ -4,7 +4,7 @@
 {% block title %}Ruhmeshalle{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/ruhmeshalle.css' %}?v=hall-2">
+<link rel="stylesheet" href="{% static 'game/css/ruhmeshalle.css' %}?v=hall-3">
 {% endblock %}
 
 {% block content %}
@@ -134,6 +134,9 @@
       <div class="rh-modus" role="group" aria-label="Modus">
         <a class="rh-modus-btn" href="{% url 'management_halloffame' %}?raum={{ hall_room }}&amp;modus=echt" aria-pressed="{% if hall_mode == 'echt' %}true{% else %}false{% endif %}"><span>Echte Geschichte</span><small>Reale Vereinshistorie</small></a>
         <a class="rh-modus-btn" href="{% url 'management_halloffame' %}?raum={{ hall_room }}&amp;modus=neu" aria-pressed="{% if hall_mode == 'neu' %}true{% else %}false{% endif %}"><span>Neue Geschichte</span><small>Seit Beginn der Liga</small></a>
+        {% if can_submit_record_request %}
+        <a class="rh-request-trigger" href="{% url 'management_halloffame' %}?raum={{ hall_room }}&amp;modus={{ hall_mode }}&amp;antrag=1">Rekordänderung vorschlagen</a>
+        {% endif %}
       </div>
       <div class="rh-trenner" aria-hidden="true"></div>
       <div class="rh-raumnav">
@@ -146,5 +149,61 @@
       </div>
     </nav>
   </main>
+
+  {% if show_record_request_form and can_submit_record_request %}
+  <section class="rh-request-panel" aria-labelledby="rh-request-title">
+    <div>
+      <p class="rh-request-kicker">Ruhmeshalle · Antrag</p>
+      <h2 id="rh-request-title">Rekordänderung vorschlagen</h2>
+      <p>Dein Vorschlag wird erst nach Prüfung durch den Creator als echte Vereinsgeschichte übernommen.</p>
+    </div>
+    <form method="post" action="{% url 'management_halloffame_correction_request' %}" class="rh-request-form">
+      {% csrf_token %}
+      <input type="hidden" name="room" value="{{ hall_room }}">
+      <input type="hidden" name="mode" value="{{ hall_mode }}">
+      <label>Rekord
+        <select name="record_key" required>
+          {% for slot in record_request_slots %}
+          <option value="{{ slot.key }}">{{ slot.room|title }} · {{ slot.label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Rekordwert
+        <input name="new_value" maxlength="160" placeholder="z. B. 8:0, 42 Tore oder 120 Mio. €" required>
+      </label>
+      <label>Vergleichswert
+        <input name="new_numeric_value" inputmode="decimal" placeholder="z. B. 8, 42 oder 120000000" required>
+      </label>
+      <label>Rekordhalter
+        <input name="new_holder" maxlength="160" placeholder="optional">
+      </label>
+      <label>Datum
+        <input type="date" name="new_date">
+      </label>
+      <label>Saison
+        <input name="new_season" maxlength="20" placeholder="optional">
+      </label>
+      <label>Wettbewerb
+        <input name="new_competition" maxlength="120" placeholder="optional">
+      </label>
+      <label>Freier Rekordname
+        <input name="custom_label" maxlength="120" placeholder="nur für freie Vereinsplätze">
+      </label>
+      <label class="rh-request-wide">Zusatztext
+        <input name="new_context" maxlength="200" placeholder="optional">
+      </label>
+      <label class="rh-request-wide">Quelle
+        <textarea name="source_reference" required placeholder="Link, Buch, Archiv oder andere belegbare Quelle"></textarea>
+      </label>
+      <label class="rh-request-wide">Anmerkung
+        <textarea name="requester_note" placeholder="optional"></textarea>
+      </label>
+      <div class="rh-request-actions">
+        <button type="submit">Antrag einreichen</button>
+        <a href="{% url 'management_halloffame' %}?raum={{ hall_room }}&amp;modus={{ hall_mode }}">Abbrechen</a>
+      </div>
+    </form>
+  </section>
+  {% endif %}
 </section>
 {% endblock %}

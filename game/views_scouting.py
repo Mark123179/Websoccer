@@ -20,6 +20,8 @@ from django.views.decorators.http import require_POST
 from .views import build_game_header, current_manager_club
 from .models import (
     CommunitySubmission,
+    ClubRecord,
+    ClubRecordCorrectionRequest,
     CountryNetwork,
     ManagerTimelineEntry,
     Player,
@@ -623,9 +625,18 @@ def creator_timeline_overview(request):
     pending = ManagerTimelineEntry.objects.filter(
         status=ManagerTimelineEntry.STATUS_PENDING
     ).select_related('manager', 'club', 'player').order_by('created_at')
+    record_requests = ClubRecordCorrectionRequest.objects.filter(
+        status=ClubRecordCorrectionRequest.STATUS_OPEN,
+    ).select_related('club', 'requester__user').order_by('created_at')
+    active_tab = request.GET.get('tab', 'timeline')
+    if active_tab not in {'timeline', 'rekorde'}:
+        active_tab = 'timeline'
     context = {
         'pending': pending,
         'pending_count': pending.count(),
+        'record_requests': record_requests,
+        'record_request_count': record_requests.count(),
+        'active_tab': active_tab,
     }
     return render(request, 'creator/timeline_overview.html', context)
 
@@ -652,3 +663,65 @@ def creator_moderate_timeline(request, entry_id):
     else:
         messages.error(request, 'Ungültige Aktion.')
     return redirect('creator_timeline_overview')
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def creator_moderate_record_correction(request, request_id):
+    """Moderate a manager's researched Hall of Fame correction."""
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Nur Staff-Mitglieder.')
+
+    from .records.hall_catalog import SLOTS_BY_KEY
+
+    correction = get_object_or_404(ClubRecordCorrectionRequest, pk=request_id)
+    action = request.POST.get('action', '').strip()
+    decision_note = (request.POST.get('decision_note') or '').strip()
+    if correction.status != ClubRecordCorrectionRequest.STATUS_OPEN:
+        messages.error(request, 'Dieser Antrag wurde bereits bearbeitet.')
+        return redirect(reverse('creator_timeline_overview') + '?tab=rekorde')
+
+    if action == 'approve':
+        if correction.record_key not in SLOTS_BY_KEY or correction.new_numeric_value is None:
+            messages.error(request, 'Der Antrag enthält keine gültigen Rekorddaten.')
+            return redirect(reverse('creator_timeline_overview') + '?tab=rekorde')
+        try:
+            record_date = date.fromisoformat(correction.new_date) if correction.new_date else None
+        except ValueError:
+            messages.error(request, 'Der Antrag enthält ein ungültiges Datum.')
+            return redirect(reverse('creator_timeline_overview') + '?tab=rekorde')
+
+        ClubRecord.objects.update_or_create(
+            club=correction.club,
+            record_key=correction.record_key,
+            source=ClubRecord.SOURCE_SEED,
+            defaults={
+                'custom_label': correction.custom_label,
+                'value_numeric': correction.new_numeric_value,
+                'value_display': correction.new_value,
+                'holder_name': correction.new_holder,
+                'record_date': record_date,
+                'season': correction.new_season,
+                'competition': correction.new_competition,
+                'context_line': correction.new_context,
+                'source_note': correction.source_reference,
+            },
+        )
+        correction.status = ClubRecordCorrectionRequest.STATUS_ACCEPTED
+        messages.success(request, 'Rekordänderung angenommen und als echte Geschichte gespeichert.')
+    elif action == 'reject':
+        correction.status = ClubRecordCorrectionRequest.STATUS_REJECTED
+        messages.success(request, 'Rekordänderung abgelehnt.')
+    else:
+        messages.error(request, 'Ungültige Aktion.')
+        return redirect(reverse('creator_timeline_overview') + '?tab=rekorde')
+
+    from django.utils import timezone
+    correction.decided_by = request.user
+    correction.decided_at = timezone.now()
+    correction.decision_note = decision_note
+    correction.save(update_fields=[
+        'status', 'decided_by', 'decided_at', 'decision_note', 'updated_at',
+    ])
+    return redirect(reverse('creator_timeline_overview') + '?tab=rekorde')

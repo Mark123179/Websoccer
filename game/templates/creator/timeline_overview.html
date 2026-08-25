@@ -9,74 +9,95 @@
 
 {% block content %}
 <div class="transfer-scouting-page">
-
   {% if messages %}
   <div class="scouting-flash">
-    {% for m in messages %}
-    <div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>
-    {% endfor %}
+    {% for m in messages %}<div class="scouting-flash-item scouting-flash-{{ m.tags }}">{{ m }}</div>{% endfor %}
   </div>
   {% endif %}
 
   <div class="watchlist-layout">
-    <section class="watchlist-panel" style="flex:1 1 auto;max-width:none;">
+    <section class="watchlist-panel requests-panel">
+      <div class="requests-tabs" role="tablist" aria-label="Anträge">
+        <a class="{% if active_tab == 'timeline' %}active{% endif %}" href="{% url 'creator_timeline_overview' %}?tab=timeline">Timeline <span>{{ pending_count }}</span></a>
+        <a class="{% if active_tab == 'rekorde' %}active{% endif %}" href="{% url 'creator_timeline_overview' %}?tab=rekorde">Rekordänderungen <span>{{ record_request_count }}</span></a>
+      </div>
+
+      {% if active_tab == 'timeline' %}
       <h2 class="scout-panel-title">TIMELINE-ANTRÄGE ({{ pending_count }})</h2>
       {% if pending %}
       <div class="watch-table" style="min-width:860px;">
         <div class="watch-row watch-head moderate-head">
-          <span style="width:130px;">Manager</span>
-          <span style="width:140px;">Verein</span>
-          <span style="width:100px;">Datum</span>
-          <span style="width:90px;">Kategorie</span>
-          <span style="width:200px;">Überschrift</span>
-          <span style="width:180px;">Fließtext</span>
-          <span style="width:110px;">Aktion</span>
+          <span style="width:130px;">Manager</span><span style="width:140px;">Verein</span><span style="width:100px;">Datum</span><span style="width:90px;">Kategorie</span><span style="width:200px;">Überschrift</span><span style="width:180px;">Fließtext</span><span style="width:110px;">Aktion</span>
         </div>
         {% for e in pending %}
         <div class="watch-row moderate-row" style="align-items:flex-start;padding-top:10px;padding-bottom:10px;">
-          <span style="width:130px;word-break:break-word;">{{ e.manager.name|default:e.manager.user.username }}</span>
-          <span style="width:140px;word-break:break-word;">{{ e.club_name|default:'—' }}</span>
-          <span style="width:100px;">{{ e.event_date|date:'d.m.Y' }}</span>
-          <span style="width:90px;"><span class="tl-cat-badge tl-cat-{{ e.category }}">{{ e.get_category_display }}</span></span>
-          <span style="width:200px;word-break:break-word;font-weight:700;">{{ e.title }}</span>
-          <span style="width:180px;word-break:break-word;color:#8899aa;font-size:12px;">{{ e.body|default:'—'|truncatechars:80 }}</span>
+          <span style="width:130px;word-break:break-word;">{{ e.manager.name|default:e.manager.user.username }}</span><span style="width:140px;word-break:break-word;">{{ e.club_name|default:'—' }}</span><span style="width:100px;">{{ e.event_date|date:'d.m.Y' }}</span><span style="width:90px;"><span class="tl-cat-badge tl-cat-{{ e.category }}">{{ e.get_category_display }}</span></span><span style="width:200px;word-break:break-word;font-weight:700;">{{ e.title }}</span><span style="width:180px;word-break:break-word;color:#8899aa;font-size:12px;">{{ e.body|default:'—'|truncatechars:80 }}</span>
           <span class="moderate-actions" style="width:110px;">
-            <form method="post" action="{% url 'creator_moderate_timeline' e.id %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="approve">
-              <button type="submit" class="result-btn result-btn--cyan">Annehmen</button>
-            </form>
-            <form method="post" action="{% url 'creator_moderate_timeline' e.id %}">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="reject">
-              <button type="submit" class="result-btn">Ablehnen</button>
-            </form>
+            <form method="post" action="{% url 'creator_moderate_timeline' e.id %}">{% csrf_token %}<input type="hidden" name="action" value="approve"><button type="submit" class="result-btn result-btn--cyan">Annehmen</button></form>
+            <form method="post" action="{% url 'creator_moderate_timeline' e.id %}">{% csrf_token %}<input type="hidden" name="action" value="reject"><button type="submit" class="result-btn">Ablehnen</button></form>
           </span>
         </div>
         {% endfor %}
       </div>
+      {% else %}<p class="bids-empty">Keine offenen Timeline-Anträge.</p>{% endif %}
+
       {% else %}
-      <p class="bids-empty">Keine offenen Timeline-Anträge.</p>
+      <h2 class="scout-panel-title">REKORDÄNDERUNGEN ({{ record_request_count }})</h2>
+      {% if record_requests %}
+      <div class="record-request-list">
+        {% for r in record_requests %}
+        <article class="record-request-card">
+          <header>
+            <strong>{{ r.club.name }}</strong>
+            <span>eingereicht von {{ r.requester.name|default:r.requester.user.username }} · {{ r.created_at|date:'d.m.Y H:i' }}</span>
+          </header>
+          <div class="record-request-data">
+            <div><small>Rekord</small><b>{{ r.custom_label|default:r.record_key }}</b></div>
+            <div><small>Alt</small><b>{{ r.old_value|default:'—' }}</b></div>
+            <div><small>Neu</small><b>{{ r.new_value }}</b><em>Vergleichswert: {{ r.new_numeric_value }}</em></div>
+            <div><small>Halter</small><b>{{ r.new_holder|default:'—' }}</b></div>
+            <div><small>Kontext</small><b>{{ r.new_season|default:'' }} {% if r.new_competition %}· {{ r.new_competition }}{% endif %}</b><em>{{ r.new_date }}</em></div>
+          </div>
+          {% if r.new_context %}<p class="record-request-context">{{ r.new_context }}</p>{% endif %}
+          <p class="record-request-source"><strong>Quelle:</strong> {{ r.source_reference|linebreaksbr }}</p>
+          {% if r.requester_note %}<p class="record-request-note">{{ r.requester_note|linebreaksbr }}</p>{% endif %}
+          <div class="record-request-actions">
+            <form method="post" action="{% url 'creator_moderate_record_correction' r.id %}">
+              {% csrf_token %}<input type="hidden" name="action" value="approve"><input name="decision_note" maxlength="500" placeholder="Entscheidungsnotiz (optional)"><button type="submit" class="result-btn result-btn--cyan">Annehmen</button>
+            </form>
+            <form method="post" action="{% url 'creator_moderate_record_correction' r.id %}">
+              {% csrf_token %}<input type="hidden" name="action" value="reject"><input name="decision_note" maxlength="500" placeholder="Begründung (optional)"><button type="submit" class="result-btn">Ablehnen</button>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}<p class="bids-empty">Keine offenen Rekordänderungen.</p>{% endif %}
       {% endif %}
     </section>
   </div>
 </div>
 
 <style>
-.tl-cat-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: #03070c;
-}
-.tl-cat-verein  { background: #22e6ff; }
-.tl-cat-titel   { background: #ffd166; }
-.tl-cat-finale  { background: #ff5570; }
-.tl-cat-jugend  { background: #30f29c; }
-.tl-cat-status  { background: #ff5570; }
+.requests-panel { flex:1 1 auto; max-width:none; }
+.requests-tabs { display:flex; gap:8px; margin-bottom:18px; border-bottom:1px solid #18344d; padding-bottom:10px; }
+.requests-tabs a { text-decoration:none; color:#8197aa; border:1px solid #1b3c56; border-radius:5px; padding:7px 10px; font-size:12px; font-weight:800; }
+.requests-tabs a.active { color:#00131b; background:#22e6ff; border-color:#22e6ff; }
+.requests-tabs span { display:inline-grid; min-width:18px; height:18px; place-items:center; border-radius:50%; background:#071525; color:#a8c9d8; font-size:10px; margin-left:3px; }
+.requests-tabs a.active span { background:#00131b; color:#22e6ff; }
+.record-request-list { display:grid; gap:12px; }
+.record-request-card { border:1px solid #17334b; background:#061321; border-radius:7px; padding:14px; }
+.record-request-card header { display:flex; gap:10px; justify-content:space-between; align-items:baseline; color:#d5effb; }
+.record-request-card header span { color:#7992a6; font-size:12px; }
+.record-request-data { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin:12px 0; }
+.record-request-data div { padding:8px; background:#030b12; border:1px solid #102a41; border-radius:4px; }
+.record-request-data small { display:block; color:#658399; text-transform:uppercase; font-size:9px; font-weight:800; margin-bottom:4px; }
+.record-request-data b { color:#dcecf6; font-size:12px; }
+.record-request-data em { display:block; color:#6d8699; font-size:10px; font-style:normal; margin-top:3px; }
+.record-request-source,.record-request-note,.record-request-context { color:#a4bdcb; font-size:12px; line-height:1.45; margin:8px 0; }
+.record-request-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.record-request-actions form { display:flex; gap:8px; }
+.record-request-actions input { flex:1; min-width:0; background:#030b12; color:#dcecf6; border:1px solid #1a3a58; border-radius:4px; padding:6px 8px; font-size:11px; }
+@media (max-width:900px) { .record-request-data { grid-template-columns:repeat(2,minmax(0,1fr)); } .record-request-actions { grid-template-columns:1fr; } }
 </style>
 {% endblock %}
