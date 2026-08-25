@@ -58,6 +58,32 @@ class HallOfFameViewTests(TestCase):
         self.assertContains(response, 'Trainer')
         self.assertContains(response, 'Verein')
 
+    def test_record_request_is_hidden_modal_with_top_right_trigger(self):
+        response = self.client.get(reverse('management_halloffame'))
+
+        self.assertContains(response, 'class="rh-antrag"')
+        self.assertContains(response, 'aria-haspopup="dialog"')
+        self.assertContains(
+            response,
+            'class="rh-antrag-overlay" role="dialog" aria-modal="true" aria-labelledby="rh-request-title" hidden',
+        )
+        self.assertContains(response, 'class="rh-antrag-close"')
+
+        response = self.client.get(
+            reverse('management_halloffame'),
+            {'raum': 'player', 'modus': 'neu', 'antrag': '1'},
+        )
+
+        self.assertContains(
+            response,
+            'class="rh-antrag-overlay" role="dialog" aria-modal="true" aria-labelledby="rh-request-title"',
+        )
+        self.assertNotContains(
+            response,
+            'aria-labelledby="rh-request-title" hidden',
+        )
+        self.assertContains(response, 'class="rh-request-form"')
+
     def test_real_history_keeps_seed_until_sim_record_is_better(self):
         self._record(
             source=ClubRecord.SOURCE_SEED,
