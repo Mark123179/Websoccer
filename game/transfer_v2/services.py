@@ -49,6 +49,15 @@ def _after_commit(hook):
     transaction.on_commit(_run)
 
 
+def _rebuild_hall_of_fame_records(record):
+    """Aktualisiert Transferrekorde nach einem dauerhaft abgeschlossenen Deal."""
+    if record is None:
+        return
+    from game.records.engine import rebuild_for_club
+    for club_id in sorted({record.club_a_id, record.club_b_id} - {None}):
+        rebuild_for_club(club_id)
+
+
 class TransferActionError(Exception):
     """Fachlicher Fehler (deutsche Meldung für die UI)."""
 
@@ -371,6 +380,7 @@ def buy_now(listing, buyer, *, saison=None, spieltag=None):
     from . import push
     _after_commit(lambda: push.pinned_bought_now(listing, buyer))
     _after_commit(lambda: _emit_transfer_done(record, listing.player, saison))
+    _after_commit(lambda: _rebuild_hall_of_fame_records(record))
     return record
 
 
@@ -488,6 +498,7 @@ def _after_close_sold(listing, buyer, amount, record, loser_ids, saison):
         except Exception:
             logger.exception('auction_lost-Push fehlgeschlagen')
     _emit_transfer_done(record, listing.player, saison)
+    _rebuild_hall_of_fame_records(record)
 
 
 def _expire_listing_on_conflict(listing, grund):
@@ -961,6 +972,7 @@ def accept_deal(deal, *, saison=None, spieltag=None):
     else:
         # Kauf/Verkauf/Tausch: Richtung aus den Record-Seiten ableiten.
         _after_commit(lambda: _emit_deal_done(record, saison))
+        _after_commit(lambda: _rebuild_hall_of_fame_records(record))
     return record
 
 
@@ -1359,6 +1371,7 @@ def exercise_buy_option(loan, buyer_club, *, saison=None, spieltag=None):
     # Ereignis (Gerücht/Ticker) — via on_commit, isoliert.
     # Abgebend = Stammverein (club_a), aufnehmend = Leihverein (club_b).
     _after_commit(lambda: _emit_transfer_done(record, loan.player, saison))
+    _after_commit(lambda: _rebuild_hall_of_fame_records(record))
     return record
 
 

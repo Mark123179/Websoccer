@@ -8,6 +8,7 @@ Wiederverwendbar aus Web-Views UND Management-Commands.
 
 from django.db import transaction
 from django.db.models import Avg, Sum, Count, Min, Max, Q
+import logging
 
 
 _WS_LIGA_SOURCE = 'ws_liga'
@@ -22,6 +23,8 @@ _COMPETITION_FOR_MATCH_TYPE = {
     'freundschaft': 'Freundschaft',
     'pokal':        'Pokal',
 }
+
+logger = logging.getLogger(__name__)
 
 
 def _apply_match_suspensions(
@@ -805,6 +808,7 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 home_goals=hg,
                 away_goals=ag,
                 report_data=data,
+                match_type='liga',
             )
             try:
                 from .referee_service import pick_referee
@@ -847,6 +851,26 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
         if all_played:
             state.is_simulated = True
             state.save(update_fields=['is_simulated', 'updated_at'])
+
+    # Ruhmeshallen-Rekorde folgen dem kanonischen Ligaspieltagspfad – sowohl
+    # die Verwaltungsansicht als auch der Management-Command landen hier.
+    # Nur erfolgreich persistierte Fixtures zählen; die Materialisierung darf
+    # einen gespeicherten Spieltag niemals nachträglich fehlschlagen lassen.
+    if results:
+        try:
+            from .records.engine import rebuild_for_club
+            affected_club_ids = {
+                club_id
+                for fixture, _, _, _ in results
+                for club_id in (fixture.home_club_id, fixture.away_club_id)
+            }
+            for club_id in sorted(affected_club_ids):
+                rebuild_for_club(club_id)
+        except Exception:
+            logger.exception(
+                'Ruhmeshallen-Rebuild für Liga %s, Saison %s, Spieltag %s fehlgeschlagen',
+                league.pk, season, matchday,
+            )
 
     # ── Finanz-Spieltagslauf (Phase 1) ────────────────────────────────────────
     # Nach der sportlichen Simulation, außerhalb ihrer Transaktion. Idempotent

@@ -5046,6 +5046,7 @@ class SimulatedMatch(models.Model):
     """Gespeichertes Ergebnis einer Match-Engine-Simulation (zum Testen)."""
 
     MATCH_TYPE_CHOICES = [
+        ('liga',         'Ligaspiel'),
         ('freundschaft', 'Freundschaftsspiel'),
         ('pokal',        'Pokal'),
     ]
@@ -5391,6 +5392,207 @@ class CupFixture(models.Model):
         home = self.home_club.short_name if self.home_club else '?'
         away = self.away_club.short_name if self.away_club else '?'
         return f'{self.cup_round} — {home} vs {away}'
+
+
+class HistoricCoach(models.Model):
+    """Historische Trainerentität für Seed-Rekorde der Ruhmeshalle."""
+
+    fm_inside_id = models.CharField(
+        max_length=80,
+        unique=True,
+        verbose_name='FM-Inside-ID',
+    )
+    name = models.CharField(max_length=160, verbose_name='Name')
+    nationality = models.CharField(max_length=100, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Historischer Trainer'
+        verbose_name_plural = 'Historische Trainer'
+
+    def __str__(self):
+        return self.name
+
+
+class ClubRecord(models.Model):
+    """Materialisierter Rekordstand je Verein, Rekord und Quelle.
+
+    ``SEED`` wird ausschließlich durch die spätere Creator-Pflege geschrieben.
+    Die Recompute-Engine arbeitet nur mit ``SIM`` und kann damit recherchierte
+    Werte strukturell nicht überschreiben.
+    """
+
+    SOURCE_SEED = 'SEED'
+    SOURCE_SIM = 'SIM'
+    SOURCE_CHOICES = [
+        (SOURCE_SEED, 'Echte Geschichte'),
+        (SOURCE_SIM, 'Neue Geschichte'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='hall_of_fame_records',
+    )
+    record_key = models.CharField(max_length=60)
+    source = models.CharField(max_length=4, choices=SOURCE_CHOICES)
+    value_numeric = models.DecimalField(max_digits=15, decimal_places=2)
+    value_display = models.CharField(max_length=160)
+    holder_name = models.CharField(max_length=160)
+    holder_player = models.ForeignKey(
+        Player,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    holder_coach = models.ForeignKey(
+        HistoricCoach,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    holder_manager = models.ForeignKey(
+        ManagerProfile,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    opponent_name = models.CharField(max_length=160, blank=True)
+    opponent_club = models.ForeignKey(
+        Club,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+    )
+    context_line = models.CharField(max_length=200, blank=True)
+    record_date = models.DateField(null=True, blank=True)
+    period_from = models.DateField(null=True, blank=True)
+    period_to = models.DateField(null=True, blank=True)
+    season = models.CharField(max_length=20, blank=True)
+    competition = models.CharField(max_length=120, blank=True)
+    source_note = models.TextField(blank=True)
+    linked_match = models.ForeignKey(
+        SimulatedMatch,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='hall_of_fame_records',
+    )
+    is_anonymized = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['club', 'record_key', 'source'],
+                name='unique_club_record_source',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['club', 'source']),
+            models.Index(fields=['record_key', 'source']),
+        ]
+        verbose_name = 'Vereinsrekord'
+        verbose_name_plural = 'Vereinsrekorde'
+
+    def __str__(self):
+        return f'{self.club} — {self.record_key} ({self.source})'
+
+
+class ClubRecordBreak(models.Model):
+    """Unveränderliches Ereignisprotokoll eines tatsächlichen Rekordwechsels."""
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='hall_of_fame_record_breaks',
+    )
+    record_key = models.CharField(max_length=60)
+    old_value_numeric = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+    )
+    old_value_display = models.CharField(max_length=160, blank=True)
+    old_holder_name = models.CharField(max_length=160, blank=True)
+    new_value_numeric = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+    )
+    new_value_display = models.CharField(max_length=160, blank=True)
+    new_holder_name = models.CharField(max_length=160, blank=True)
+    broke_seed = models.BooleanField(default=False)
+    season = models.CharField(max_length=20, blank=True)
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-occurred_at', '-id']
+        indexes = [
+            models.Index(fields=['club', 'record_key', '-occurred_at']),
+        ]
+        verbose_name = 'Rekordwechsel'
+        verbose_name_plural = 'Rekordwechsel'
+
+    def __str__(self):
+        return f'{self.club} — {self.record_key}: {self.old_value_display} → {self.new_value_display}'
+
+
+class ClubRecordCorrectionRequest(models.Model):
+    """Antragsschicht für spätere Creator-Pflege der Rekorddaten."""
+
+    STATUS_OPEN = 'open'
+    STATUS_ACCEPTED = 'accepted'
+    STATUS_REJECTED = 'rejected'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Offen'),
+        (STATUS_ACCEPTED, 'Angenommen'),
+        (STATUS_REJECTED, 'Abgelehnt'),
+    ]
+
+    club = models.ForeignKey(
+        Club,
+        on_delete=models.CASCADE,
+        related_name='hall_of_fame_correction_requests',
+    )
+    record_key = models.CharField(max_length=60)
+    requester = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='hall_of_fame_correction_requests',
+    )
+    old_value = models.CharField(max_length=160, blank=True)
+    new_value = models.CharField(max_length=160)
+    new_holder = models.CharField(max_length=160, blank=True)
+    new_date = models.CharField(max_length=40, blank=True)
+    source_reference = models.TextField()
+    requester_note = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_OPEN,
+    )
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='decided_hall_of_fame_correction_requests',
+    )
+    decided_at = models.DateTimeField(null=True, blank=True)
+    decision_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['status', '-created_at']
+        verbose_name = 'Rekordkorrekturantrag'
+        verbose_name_plural = 'Rekordkorrekturanträge'
+
+    def __str__(self):
+        return f'{self.club} — {self.record_key} ({self.status})'
 
 
 class ClubPlayerImportJob(models.Model):

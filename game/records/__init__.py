@@ -1,0 +1,1 @@
+"""Ruhmeshalle: Registry und materialisierte Rekord-Engine."""

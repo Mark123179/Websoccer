@@ -201,4 +201,20 @@ def finance_season_close(saison: str) -> dict:
             'closed_at bleibt offen.'
         )
 
+    # Die materialisierte Geschichte wird am Saisonabschluss nochmals für
+    # alle Vereine aufgebaut. Der Spieltags-Hook hält sie während der Saison
+    # aktuell; dieser Lauf deckt Pokal- und Titeländerungen ab.
+    try:
+        from game.models import Club
+        from game.records.engine import rebuild_for_club
+        report['ruhmeshalle'] = {
+            'clubs': sum(
+                1 for club in Club.objects.order_by('pk')
+                for _ in [rebuild_for_club(club)]
+            ),
+        }
+    except Exception as exc:
+        report['errors'].append(f'Ruhmeshalle: {exc}')
+        logger.exception('Ruhmeshalle-Recompute für Saison %s fehlgeschlagen', saison)
+
     return report

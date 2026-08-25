@@ -134,6 +134,25 @@ def referee_face_url(fm_uid):
     return asset_url('referees', f'face_{fm_uid}.png')
 
 
+def coach_face_url(fm_inside_id):
+    """Gibt die URL für ein historisches Trainerbild zurück."""
+    if not fm_inside_id:
+        return asset_url('coaches', 'coach_default.svg')
+    root = getattr(settings, 'ASSETS_ROOT', None)
+    if root:
+        coach_dir = _os.path.join(str(root).rstrip('/'), 'coaches')
+        for ext in ('png', 'jpg', 'jpeg'):
+            if _os.path.exists(_os.path.join(coach_dir, f'face_{fm_inside_id}.{ext}')):
+                return asset_url('coaches', f'face_{fm_inside_id}.{ext}')
+    return asset_url('coaches', f'face_{fm_inside_id}.png')
+
+
+def manager_avatar_url(manager):
+    """Löst den Avatar eines Managerprofils über die zentrale Asset-Basis auf."""
+    image_name = getattr(manager, 'profile_image', '') if manager else ''
+    return avatar_url(image_name)
+
+
 def competition_url(competition_id):
     if not competition_id:
         return ''

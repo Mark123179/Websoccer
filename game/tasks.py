@@ -97,3 +97,22 @@ def sponsor_season_close(saison: str | None = None):
         'sponsor_season_close',
         *(['--saison', saison] if saison else []),
     )
+
+
+@shared_task(name='game.tasks.rebuild_club_records')
+def rebuild_club_records(club_id: int | None = None):
+    """Materialisiert die Ruhmeshallen-SIM-Rekorde direkt über den Zentralpfad."""
+    from game.models import Club
+    from game.records.engine import rebuild_for_club
+
+    clubs = Club.objects.order_by('pk')
+    if club_id is not None:
+        clubs = clubs.filter(pk=club_id)
+    result = []
+    for club in clubs:
+        result.append({
+            'club_id': club.pk,
+            'club': club.name,
+            'summary': rebuild_for_club(club),
+        })
+    return result

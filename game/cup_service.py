@@ -13,11 +13,15 @@ game/cup_service.py — DFB-Pokal / K.-O.-Wettbewerb Service
 from __future__ import annotations
 
 import random
+import logging
 from datetime import date, timedelta
 
 from django.db import transaction
 
 from .random_utils import stable_seed
+
+
+logger = logging.getLogger(__name__)
 
 
 # ── Rundencode-Tabelle ────────────────────────────────────────────────────────
@@ -472,6 +476,17 @@ def simulate_cup_fixture(fixture) -> object:
         import logging
         logging.getLogger(__name__).exception(
             'Sponsor-Torgeld für Pokalspiel %s fehlgeschlagen', fixture.pk,
+        )
+    # Ruhmeshallen-Rekorde sind eine nachgelagerte Materialisierung. Der
+    # Rebuild läuft erst NACH dem dauerhaften Fixture-Commit und darf einen
+    # erfolgreichen Pokalspieltag nie rückwirkend fehlschlagen lassen.
+    try:
+        from .records.engine import rebuild_for_club
+        for club_id in sorted({fixture.home_club_id, fixture.away_club_id} - {None}):
+            rebuild_for_club(club_id)
+    except Exception:
+        logger.exception(
+            'Ruhmeshallen-Rebuild für Pokalspiel %s fehlgeschlagen', fixture.pk,
         )
 
     return fixture
