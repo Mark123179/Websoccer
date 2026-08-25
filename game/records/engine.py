@@ -97,10 +97,6 @@ def _fixture_date(fixture):
     return simulated.simulated_at.date() if simulated else None
 
 
-def _not_friendly(simulated):
-    return simulated is None or simulated.match_type != 'freundschaft'
-
-
 def _league_matches(club):
     fixtures = (
         SeasonFixture.objects
@@ -155,8 +151,6 @@ def _cup_matches(club):
     )
     rows = []
     for fixture in fixtures:
-        if not _not_friendly(fixture.simulated_match):
-            continue
         if fixture.final_home_goals is None or fixture.final_away_goals is None:
             continue
         winner_id = fixture.winner_club_id

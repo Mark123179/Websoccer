@@ -156,6 +156,25 @@ class HallOfFameRecordEngineTests(TestCase):
         self.assertEqual(record.value_display, '10:0')
         self.assertEqual(record.record_date, historic_date + timedelta(days=1))
 
+    def test_standalone_friendly_match_is_not_counted(self):
+        self._league_fixture(date(2026, 8, 1), 1, 0)
+        SimulatedMatch.objects.create(
+            home_club=self.club,
+            away_club=self.opponent,
+            home_goals=99,
+            away_goals=0,
+            match_type='freundschaft',
+        )
+
+        rebuild_for_club(self.club)
+
+        record = ClubRecord.objects.get(
+            club=self.club,
+            record_key='biggest_win',
+            source=ClubRecord.SOURCE_SIM,
+        )
+        self.assertEqual(record.value_display, '1:0')
+
     def test_live_manager_gets_new_history_records_without_career_entry(self):
         manager = ManagerProfile.objects.create(name='Aktiver Trainer')
         self.club.managed_by = manager
