@@ -1,92 +1,150 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Hall of Fame{% endblock %}
-{% block body_class %}halloffame-page{% endblock %}
+{% block title %}Ruhmeshalle{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/halloffame.css' %}?v=11">
+<link rel="stylesheet" href="{% static 'game/css/ruhmeshalle.css' %}?v=hall-2">
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-artboard">
-<div class="hof-bg-wrap">
-    <img src="{% static 'game/images/backgrounds/halloffame-bg.jpg' %}" alt="" class="hof-bg-img">
+<section class="ruhmeshalle-page" aria-label="Ruhmeshalle">
+  <main class="ruhmeshalle-artboard{% if hall_room == 'player' or hall_room == 'coach' %} rh-raum--panels{% endif %}" data-modus="{{ hall_mode }}">
+    {% if hall_room == 'entrance' %}
+      <img class="ruhmeshalle-bg" src="{% static 'game/images/halloffame/raum_eingang.jpg' %}" alt="Eingangshalle der Ruhmeshalle">
 
-    <div class="hof-overlay">
+    {% elif hall_room == 'player' or hall_room == 'coach' %}
+      <img class="ruhmeshalle-bg" src="{% static 'game/images/halloffame/raum_spieler.jpg' %}" alt="Galerie der {% if hall_room == 'player' %}Spieler{% else %}Trainer{% endif %}">
+      <header class="rh-kopf">
+        {% if hall_club_logo %}<img src="{{ hall_club_logo }}" alt="Wappen {{ hall_club_name }}">{% endif %}
+        <h1>Galerie der {% if hall_room == 'player' %}Spieler{% else %}Trainer{% endif %}</h1>
+        <p>{{ hall_club_name }}</p>
+      </header>
+      <section class="rh-zone--panels" aria-label="Galerie der {% if hall_room == 'player' %}Spieler{% else %}Trainer{% endif %}">
+        {% if hall_room == 'player' %}
+          {% for slot in player_slots %}
+            <article class="nische {{ slot.style_class }}" style="{{ slot.style }}"{% if slot.record %} tabindex="0"{% endif %}>
+              {% if slot.record %}
+                <div class="tafel">
+                  <div class="seite seite--vorne">
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="tafel-inhalt">
+                      <div class="tafel-label">{{ slot.label|linebreaksbr }}</div>
+                      <div class="tafel-wert wert--xl"><b>{{ slot.value }}</b>{% if slot.unit %}<small>{{ slot.unit }}</small>{% endif %}</div>
+                      <div class="tafel-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>
+                    </div>
+                  </div>
+                  <div class="seite seite--hinten">
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="rueck">
+                      <div class="rueck-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>
+                      {% if slot.season %}<div class="rueck-zeile">{{ slot.season }}</div>{% endif %}
+                      {% if slot.date %}<div class="rueck-zeile">Stand {{ slot.date }}</div>{% endif %}
+                      {% if slot.context %}<div class="rueck-zeile">{{ slot.context }}</div>{% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% else %}
+                <div class="tafel">
+                  <div class="seite seite--vorne seite--leer">
+                    <div class="leer-label">{{ slot.label|linebreaksbr }}</div>
+                    <div class="leer-text">Dieser Rekord wartet noch auf seine Geschichte.</div>
+                  </div>
+                </div>
+              {% endif %}
+            </article>
+          {% endfor %}
+        {% else %}
+          {% for slot in coach_slots %}
+            <article class="nische {{ slot.style_class }}" style="{{ slot.style }}"{% if slot.record %} tabindex="0"{% endif %}>
+              {% if slot.record %}
+                <div class="tafel">
+                  <div class="seite seite--vorne">
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="tafel-inhalt">
+                      <div class="tafel-label">{{ slot.label|linebreaksbr }}</div>
+                      <div class="tafel-wert wert--xl"><b>{{ slot.value }}</b>{% if slot.unit %}<small>{{ slot.unit }}</small>{% endif %}</div>
+                      <div class="tafel-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>
+                    </div>
+                  </div>
+                  <div class="seite seite--hinten">
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="rueck">
+                      <div class="rueck-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>
+                      {% if slot.period %}<div class="rueck-zeile">{{ slot.period }}</div>{% endif %}
+                      {% if slot.context %}<div class="rueck-zeile">{{ slot.context }}</div>{% endif %}
+                      {% if slot.season %}<div class="rueck-zeile">{{ slot.season }}</div>{% endif %}
+                    </div>
+                  </div>
+                </div>
+              {% else %}
+                <div class="tafel">
+                  <div class="seite seite--vorne seite--leer">
+                    <div class="leer-label">{{ slot.label|linebreaksbr }}</div>
+                    <div class="leer-text">Dieser Rekord wartet noch auf seine Geschichte.</div>
+                  </div>
+                </div>
+              {% endif %}
+            </article>
+          {% endfor %}
+        {% endif %}
+      </section>
 
-        {# ── KPI-Streifen (5 schmale Kacheln) ──────────────────── #}
-        <div class="hof-kpi hof-kpi--1">
-            <div class="hof-kpi-label">Dienstältester Manager</div>
-            {% if longest_manager %}
-            <div class="hof-kpi-value">{{ longest_manager.name }}</div>
-            <div class="hof-kpi-sub">{{ longest_manager.days }} Tag{{ longest_manager.days|pluralize:"e" }}</div>
-            <div class="hof-kpi-sub">{{ longest_manager.started }} – {{ longest_manager.ended }}</div>
-            {% else %}
-            <div class="hof-kpi-value">–</div>
+    {% else %}
+      <img class="ruhmeshalle-bg" src="{% static 'game/images/halloffame/raum_verein.jpg' %}" alt="Vereinsrekorde">
+      <section class="rh-zone" aria-label="Vereinsrekorde">
+        {% for slot in club_slots %}
+          <div class="zelle {{ slot.style_class }}" style="{{ slot.style }}"{% if slot.record %} tabindex="0"{% endif %}>
+            {% if slot.record %}
+              <div class="z-dreh">
+                <div class="z-seite z-seite--vorne">
+                  {% if slot.is_trophy %}
+                    <img class="mark trophy" src="{% if slot.key == 'championships' %}{% static 'game/images/halloffame/platzhalter/trophaee_meisterschale.png' %}{% else %}{% static 'game/images/halloffame/platzhalter/trophaee_pokal_neu.png' %}{% endif %}" alt="">
+                  {% elif slot.key == 'record_signing' or slot.key == 'record_sale' %}
+                    <img class="cutout" src="{{ slot.image_url }}" alt="">
+                  {% else %}
+                    {% if hall_club_logo %}<img class="mark wappen" src="{{ hall_club_logo }}" alt="">{% endif %}
+                  {% endif %}
+                  <div class="lbl">{{ slot.label|linebreaksbr }}</div>
+                  <div class="wert wert--xl"><b>{{ slot.value }}</b>{% if slot.unit %}<small>{{ slot.unit }}</small>{% endif %}</div>
+                </div>
+                <div class="z-seite z-seite--hinten">
+                  <div class="z-rueck">
+                    {% if slot.holder_name %}<div class="rueck-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>{% endif %}
+                    {% if slot.opponent_name %}<div class="rueck-gegner">{% if slot.opponent_url %}<a href="{{ slot.opponent_url }}">{{ slot.opponent_name }}</a>{% else %}{{ slot.opponent_name }}{% endif %}</div>{% endif %}
+                    {% if slot.season or slot.date %}<div class="rueck-zeile">{{ slot.season }}{% if slot.season and slot.date %} · {% endif %}{{ slot.date }}</div>{% endif %}
+                    {% if slot.competition %}<div class="rueck-zeile">{{ slot.competition }}</div>{% endif %}
+                    {% if slot.context %}<div class="rueck-zeile">{{ slot.context }}</div>{% endif %}
+                    {% if slot.match_url %}<div class="rueck-link"><a href="{{ slot.match_url }}">Spielbericht</a></div>{% endif %}
+                  </div>
+                </div>
+              </div>
+            {% elif slot.style_class != 'zelle--reserve' %}
+              <div class="z-seite">
+                <div class="lbl">{{ slot.label|linebreaksbr }}</div>
+                <div class="z-leer">Dieser Rekord wartet noch auf seine Geschichte.</div>
+              </div>
             {% endif %}
-        </div>
-
-        <div class="hof-kpi hof-kpi--2">
-            <div class="hof-kpi-label">Rekordtorschütze</div>
-            {% if top_scorer %}
-            <div class="hof-kpi-value">{{ top_scorer.name }}</div>
-            <div class="hof-kpi-sub">{{ top_scorer.value }} Tore</div>
-            {% else %}
-            <div class="hof-kpi-value">–</div>
-            {% endif %}
-        </div>
-
-        <div class="hof-kpi hof-kpi--3">
-            <div class="hof-kpi-label">Rekordspieler</div>
-            {% if most_appearances %}
-            <div class="hof-kpi-value">{{ most_appearances.name }}</div>
-            <div class="hof-kpi-sub">{{ most_appearances.value }} Einsätze</div>
-            {% else %}
-            <div class="hof-kpi-value">–</div>
-            {% endif %}
-        </div>
-
-        <div class="hof-kpi hof-kpi--4">
-            <div class="hof-kpi-label">Dienstältester Manager</div>
-            {% if longest_manager %}
-            <div class="hof-kpi-value">{{ longest_manager.name }}</div>
-            <div class="hof-kpi-sub">{{ longest_manager.days }} Tage</div>
-            {% else %}
-            <div class="hof-kpi-value">–</div>
-            {% endif %}
-        </div>
-
-        <div class="hof-kpi hof-kpi--5">
-            <div class="hof-kpi-label">Teuerster Transfer</div>
-            {% if most_expensive_transfer %}
-            <div class="hof-kpi-value">{{ most_expensive_transfer.name }}</div>
-            <div class="hof-kpi-sub">{{ most_expensive_transfer.value }}</div>
-            {% else %}
-            <div class="hof-kpi-value">–</div>
-            {% endif %}
-        </div>
-
-        {# ── Große Bildkacheln (6 Tiles) ────────────────────────── #}
-        {% for lc in legendary_coaches %}
-        <div class="hof-lc hof-lc--{{ forloop.counter }}">
-            {% if lc.image %}
-            <img src="{{ lc.image }}" alt="{{ lc.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:4px;">
-            {% endif %}
-            <div class="hof-lc-tag">{{ lc.name }}</div>
-        </div>
+          </div>
         {% endfor %}
+      </section>
+    {% endif %}
 
-        {# ── Legende-Reihe ───────────────────────────────────────── #}
-        {% for leg in legends %}
-        <div class="hof-leg {% if forloop.first %}hof-leg--portrait{% else %}hof-leg--s{{ forloop.counter|add:"-1" }}{% endif %}">
-            <div class="hof-leg-label">{{ leg.label }}</div>
-            <div class="hof-leg-name {% if leg.name|length > 12 %}hof-leg-name--sm{% endif %}">{{ leg.name }}</div>
-            {% if leg.detail %}<div class="hof-leg-detail">{{ leg.detail }}</div>{% endif %}
-        </div>
-        {% endfor %}
-
-    </div>
-</div>
-</div>
+    <nav class="rh-bodenleiste" aria-label="Ruhmeshalle Navigation">
+      <div class="rh-modus" role="group" aria-label="Modus">
+        <a class="rh-modus-btn" href="{% url 'management_halloffame' %}?raum={{ hall_room }}&amp;modus=echt" aria-pressed="{% if hall_mode == 'echt' %}true{% else %}false{% endif %}"><span>Echte Geschichte</span><small>Reale Vereinshistorie</small></a>
+        <a class="rh-modus-btn" href="{% url 'management_halloffame' %}?raum={{ hall_room }}&amp;modus=neu" aria-pressed="{% if hall_mode == 'neu' %}true{% else %}false{% endif %}"><span>Neue Geschichte</span><small>Seit Beginn der Liga</small></a>
+      </div>
+      <div class="rh-trenner" aria-hidden="true"></div>
+      <div class="rh-raumnav">
+        <a class="rh-pfeil" href="{% url 'management_halloffame' %}?raum={% if hall_room == 'entrance' %}club{% elif hall_room == 'player' %}entrance{% elif hall_room == 'coach' %}player{% else %}coach{% endif %}&amp;modus={{ hall_mode }}" aria-label="Voriger Raum">&#8249;</a>
+        <a href="{% url 'management_halloffame' %}?raum=entrance&amp;modus={{ hall_mode }}"{% if hall_room == 'entrance' %} aria-current="page"{% endif %}>Eingang</a>
+        <a href="{% url 'management_halloffame' %}?raum=player&amp;modus={{ hall_mode }}"{% if hall_room == 'player' %} aria-current="page"{% endif %}>Spieler</a>
+        <a href="{% url 'management_halloffame' %}?raum=coach&amp;modus={{ hall_mode }}"{% if hall_room == 'coach' %} aria-current="page"{% endif %}>Trainer</a>
+        <a href="{% url 'management_halloffame' %}?raum=club&amp;modus={{ hall_mode }}"{% if hall_room == 'club' %} aria-current="page"{% endif %}>Verein</a>
+        <a class="rh-pfeil" href="{% url 'management_halloffame' %}?raum={% if hall_room == 'entrance' %}player{% elif hall_room == 'player' %}coach{% elif hall_room == 'coach' %}club{% else %}entrance{% endif %}&amp;modus={{ hall_mode }}" aria-label="Nächster Raum">&#8250;</a>
+      </div>
+    </nav>
+  </main>
+</section>
 {% endblock %}

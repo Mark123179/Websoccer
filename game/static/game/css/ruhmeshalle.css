@@ -1,0 +1,862 @@
+/* ============================================================
+   RUHMESHALLE — gemeinsames Stylesheet
+   Ziel: game/static/game/css/ruhmeshalle.css (1:1 übernehmbar)
+   ------------------------------------------------------------
+   Geometrie, Typografie und Filterwerte folgen den verbindlichen
+   Vorlagen: vorlagen/vereinsrekorde.html (Vereinswand) und
+   vorlagen/tafel_demo.html (Hexagon-Tafel mit Flip).
+
+   Umrechnungsnotiz: Die vw-Typografie der Vereinswand-Vorlage
+   wurde auf px umgerechnet (Basis ≈1900px-Viewport), damit Text
+   und fixes Artboard in der Demo nicht auseinanderlaufen:
+     .72vw→13px · 2.35vw→42px · 1.75vw→32px · 1.28vw→23px ·
+     .6vw→11px · .62vw→11.5px
+
+   Bronzefilter — dokumentierte Endwerte:
+     Motive/CutOuts: grayscale(1) sepia(.48) brightness(.82)
+                     contrast(1.16) saturate(1.3)
+     Fallback-CutOut (dunkle Silhouette): brightness(1.35)
+     Wappen: brightness(.9) contrast(1.05) — bewusst erkennbar
+     Rückseite (Flip): Filter fährt auf grayscale(.55) sepia(.18)
+                       brightness(.98) zurück
+   ============================================================ */
+
+/* ---------- Token-Fallbacks (im Spiel setzt base.html per JS) -- */
+:root {
+  --sidebar: 232px;
+  --dashboard-shell-width: 1884px;
+  --dashboard-content-width: calc(var(--dashboard-shell-width) - var(--sidebar));
+  --dashboard-artboard-width: var(--dashboard-content-width);
+
+  --hall-black: #06060a;
+  --hall-stone: #14120f;
+  --hall-niche: #0d0c0b;
+  --gold: #c8a24c;
+  --gold-bright: #e9cd85;
+  --gold-dim: rgba(200, 162, 76, .34);
+  --engrave: rgba(216, 194, 142, .62);
+  --text-quiet: rgba(226, 214, 190, .52);
+
+  /* Hexagon: flache Ober-/Unterkante, Spitzen seitlich auf halber Höhe */
+  --hexa: polygon(11% 0%, 89% 0%, 100% 47%, 89% 100%, 11% 100%, 0% 47%);
+}
+
+/* ---------- Artboard (Layout-Contract) -------------------------- */
+.ruhmeshalle-artboard {
+  width: var(--dashboard-artboard-width);   /* NIE überschreiben */
+  position: relative;
+  font-family: Inter, "Segoe UI", Roboto, Arial, Helvetica, sans-serif;
+  color: var(--text-quiet);
+  background: var(--hall-black);
+}
+.ruhmeshalle-page {
+  width: var(--dashboard-artboard-width);
+  margin: 0;
+}
+.ruhmeshalle-bg { width: 100%; height: auto; display: block; }
+
+/* Ersatzhintergrund für Räume ohne fertiges Raumbild (Spieler/Trainer).
+   Wird durch <img class="ruhmeshalle-bg" src="hintergruende/raum_spieler.png">
+   ersetzt, sobald das Rendering vorliegt — die Nischenzone in % bleibt gültig. */
+.rh-bg-demo {
+  width: 100%;
+  aspect-ratio: 2800 / 1563;
+  display: block;
+  background:
+    radial-gradient(52% 30% at 50% 0%, rgba(200, 162, 76, .13), transparent 70%),
+    radial-gradient(90% 34% at 50% 102%, rgba(200, 162, 76, .07), transparent 72%),
+    linear-gradient(180deg, #0a0908 0%, #100e0c 36%, #0b0a09 62%, #060606 100%);
+  position: relative;
+}
+.rh-bg-demo::after { /* Marmorboden-Reflex unter der Nischenzone */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 19%;
+  background:
+    linear-gradient(180deg, rgba(200, 162, 76, .05), transparent 60%),
+    linear-gradient(180deg, rgba(0, 0, 0, .55), transparent 30%);
+}
+
+/* ---------- Raumkopf (nur Räume mit Ersatzhintergrund) ---------- */
+.rh-kopf {
+  position: absolute;
+  top: 4.6%;
+  left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+  pointer-events: none;
+  z-index: 3;
+}
+.rh-kopf img {
+  width: 52px; height: 52px;
+  object-fit: contain;
+  filter: brightness(.92) drop-shadow(0 0 16px rgba(200, 162, 76, .3));
+}
+.rh-kopf h1 {
+  margin: 0;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 30px;
+  letter-spacing: .3em;
+  text-indent: .3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
+}
+.rh-kopf p {
+  margin: 0;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: .5em;
+  text-indent: .5em;
+  text-transform: uppercase;
+  color: rgba(216, 194, 142, .4);
+}
+
+/* ============================================================
+   HEXAGON-GALERIEN (Spieler, Trainer)
+   Grid in einer prozentual definierten Nischenzone —
+   keine Einzelpositionen.
+   ============================================================ */
+.rh-zone--reihe8 {
+  position: absolute;
+  inset: 24% 3% 21% 3%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 1.6%;
+  z-index: 2;
+  transition: opacity .35s ease;
+}
+
+.nische {
+  position: relative;
+  perspective: 1400px;
+}
+.nische::before { /* Vertiefung in der Wand */
+  content: "";
+  position: absolute;
+  inset: -12px -9px;
+  clip-path: var(--hexa);
+  background: var(--hall-niche);
+  box-shadow:
+    inset 0 22px 44px rgba(0, 0, 0, .92),
+    inset 0 -14px 30px rgba(0, 0, 0, .8);
+}
+.nische::after { /* Lichtkegel von oben */
+  content: "";
+  position: absolute;
+  inset: -12px -9px;
+  clip-path: var(--hexa);
+  background: radial-gradient(78% 46% at 50% -6%, rgba(255, 224, 166, .2), transparent 68%);
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Perspektivische Neigung pro Grid-Spalte, festes Winkel-Set */
+.nische:nth-child(1) .tafel { transform: rotateY(10deg); }
+.nische:nth-child(2) .tafel { transform: rotateY(7deg); }
+.nische:nth-child(3) .tafel { transform: rotateY(4deg); }
+.nische:nth-child(4) .tafel { transform: rotateY(1.5deg); }
+.nische:nth-child(5) .tafel { transform: rotateY(-1.5deg); }
+.nische:nth-child(6) .tafel { transform: rotateY(-4deg); }
+.nische:nth-child(7) .tafel { transform: rotateY(-7deg); }
+.nische:nth-child(8) .tafel { transform: rotateY(-10deg); }
+
+.tafel {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform .62s cubic-bezier(.4, .05, .2, 1);
+}
+.nische--belegt { cursor: pointer; }
+.nische--belegt:hover .tafel,
+.nische--belegt:focus-within .tafel { transform: rotateY(180deg) !important; }
+
+.seite {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--hexa);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: linear-gradient(178deg, #191512 0%, #0b0a09 74%);
+  overflow: hidden;
+}
+/* clip-path bricht backface-visibility (Chromium) — Sichtbarkeit
+   läuft deshalb zusätzlich über eine zeitversetzte Opacity-Weiche,
+   die auf halber Drehung umschaltet. */
+.seite { transition: opacity .1s linear; }
+.seite--vorne { opacity: 1; transition-delay: .26s; }
+.seite--hinten { transform: rotateY(180deg); opacity: 0; pointer-events: none; }
+.nische--belegt:hover .seite--vorne,
+.nische--belegt:focus-within .seite--vorne { opacity: 0; transition-delay: .26s; }
+.nische--belegt:hover .seite--hinten,
+.nische--belegt:focus-within .seite--hinten { opacity: 1; pointer-events: auto; transition-delay: .26s; }
+
+/* Goldkante */
+.kante {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--hexa);
+  background: linear-gradient(155deg, var(--gold-bright), var(--gold) 26%, rgba(120, 94, 40, .5) 58%, var(--gold) 100%);
+  padding: 1.5px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: .9;
+  pointer-events: none;
+  z-index: 4;
+  filter: drop-shadow(0 0 7px rgba(233, 205, 133, .34));
+}
+
+/* Ebene 1: Bild · Ebene 2: Bronzefilter + Verlauf (::after) */
+.tafel-bild { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+.tafel-bild img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 16%;
+  display: block;
+  filter: grayscale(1) sepia(.48) brightness(.82) contrast(1.16) saturate(1.3);
+  transition: filter .62s ease;
+}
+.tafel-bild::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgba(10, 9, 8, .86) 0%, transparent 26%, transparent 44%, rgba(8, 7, 6, .9) 86%, #080706 100%),
+    linear-gradient(0deg, rgba(200, 150, 60, .2), rgba(200, 150, 60, .2));
+  pointer-events: none;
+}
+/* CutOuts liegen frei auf dunklem Stein */
+.tafel-bild--cutout {
+  background: radial-gradient(78% 52% at 50% 26%, #241f19 0%, #100e0c 58%, #0a0908 100%);
+}
+.tafel-bild--cutout img {
+  position: absolute;
+  left: 50%; top: 11%;
+  width: 132%; height: auto;
+  transform: translateX(-50%);
+  object-fit: contain;
+}
+/* Ausnahme 1: dunkle Fallback-Silhouette heller filtern */
+.tafel-bild--fallback img { filter: grayscale(1) sepia(.55) brightness(1.35) contrast(1.05); }
+
+/* Ebene 3: Daten */
+.tafel-inhalt {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 14px;
+}
+.tafel-label {
+  margin-top: 26px;
+  height: 32px; /* fest zweizeilig — hält die Werte auf einer Linie */
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: .19em;
+  line-height: 1.42;
+  color: var(--engrave);
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .9);
+}
+.tafel-wert { margin-top: auto; margin-bottom: 30px; text-align: center; }
+.tafel-wert b {
+  display: block;
+  font-family: "Bodoni Moda", Didot, Georgia, serif;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: .01em;
+  color: var(--gold-bright);
+  text-shadow: 0 2px 18px rgba(200, 150, 60, .4), 0 1px 0 rgba(0, 0, 0, .8);
+}
+.wert--xl b { font-size: 40px; }
+.wert--l  b { font-size: 30px; }
+.wert--s  b { font-size: 21px; letter-spacing: -.01em; }
+.tafel-wert small {
+  display: block;
+  margin-top: 8px;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 500;
+  font-size: 9.5px;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+}
+
+/* Rückseite: Filter fährt zurück (Ausnahme 3), Links nur hier */
+.seite--hinten .tafel-bild img {
+  filter: grayscale(.55) sepia(.18) brightness(.98) contrast(1.05);
+  object-position: 50% 12%;
+}
+.seite--hinten .tafel-bild--fallback img { filter: grayscale(.4) sepia(.2) brightness(1.35); }
+.seite--hinten .tafel-bild::after {
+  background: linear-gradient(180deg, rgba(8, 7, 6, .62) 0%, rgba(8, 7, 6, .78) 40%, #070605 88%);
+}
+.rueck {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 18px 30px;
+  text-align: center;
+  gap: 8px;
+}
+.rueck-name {
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: .09em;
+  color: var(--gold-bright);
+}
+.rueck-name a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--gold-dim); }
+.rueck-name a:hover { border-bottom-color: var(--gold-bright); }
+.rueck-zeile { font-size: 11px; line-height: 1.6; color: var(--text-quiet); }
+.rueck-gegner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(226, 214, 190, .72);
+}
+.rueck-gegner img { width: 22px; height: 22px; object-fit: contain; }
+.rueck-gegner a { color: inherit; text-decoration: none; }
+.rueck-gegner a:hover { color: var(--gold-bright); }
+.rueck-vor {
+  margin-top: 4px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(200, 162, 76, .16);
+  font-size: 10px;
+  letter-spacing: .05em;
+  color: rgba(226, 214, 190, .4);
+}
+.rueck-link a {
+  font-family: Cinzel, Georgia, serif;
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold-dim);
+}
+.rueck-link a:hover { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+
+/* Leerer Slot: dreht nicht, kein Bild, kein Link */
+.nische--leer .tafel { cursor: default; }
+.nische--leer:hover .tafel { transform: none; }
+.seite--leer {
+  background: linear-gradient(178deg, #100e0c 0%, #080706 78%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+}
+.seite--leer .kante { opacity: .28; filter: none; }
+.leer-label {
+  margin-top: 26px;
+  height: 32px;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: .19em;
+  line-height: 1.42;
+  color: rgba(216, 194, 142, .3);
+  text-align: center;
+  text-transform: uppercase;
+}
+.leer-text {
+  margin-top: auto;
+  margin-bottom: 42px;
+  font-size: 10.5px;
+  line-height: 1.75;
+  font-style: italic;
+  color: rgba(226, 214, 190, .24);
+  text-align: center;
+  max-width: 19ch;
+}
+
+/* ============================================================
+   PANEL-GALERIE (Spieler/Trainer mit fertigem Raumbild)
+   Die Hexagon-Rahmen liegen im Hintergrundbild — die Tafeln
+   sind Glasflächen INNERHALB der Rahmen. Nur die Tafel dreht,
+   der Rahmen nicht. Positionen: vermessen (assets/mess_spieler.png).
+   ============================================================ */
+.rh-raum--panels .rh-kopf { top: 3.1%; }
+.rh-raum--panels .rh-kopf img { width: 42px; height: 42px; }
+.rh-raum--panels .rh-kopf h1 { font-size: 25px; }
+.rh-raum--panels .rh-kopf p { font-size: 10.5px; }
+.rh-raum--panels .rh-bodenleiste { bottom: 5%; }
+
+.rh-zone--panels {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transition: opacity .35s ease;
+}
+.rh-zone--panels .nische { position: absolute; }
+.rh-zone--panels .nische::before,
+.rh-zone--panels .nische::after { display: none; } /* Nische + Licht liegen im Bild */
+.rh-zone--panels .kante { display: none; }         /* Goldrahmen liegt im Bild */
+/* Die Kontur jedes Panels ist als --form (Polygon, vermessen am Raumbild)
+   an der Nische hinterlegt — die Tafel füllt den Rahmen exakt aus,
+   die Perspektive steckt in der Form selbst, nicht in einer Drehung. */
+.rh-zone--panels .tafel { transform: none; }
+.rh-zone--panels .nische--belegt:hover .tafel,
+.rh-zone--panels .nische--belegt:focus-within .tafel { transform: rotateY(180deg) !important; }
+
+/* Panelform: angedeutete Taille wie die Rahmen im Bild.
+   Die Füllung ist bewusst fast transparent — Rauchglas, kein Stein. */
+.rh-zone--panels .seite {
+  clip-path: var(--form, polygon(1% 3%, 99% 0%, 91% 47%, 99% 100%, 1% 97%, 9% 47%));
+  background: linear-gradient(188deg, rgba(16, 13, 11, .82) 0%, rgba(8, 7, 6, .88) 55%, rgba(4, 4, 4, .93) 100%);
+}
+.rh-zone--panels .seite--hinten {
+  background: linear-gradient(188deg, rgba(12, 10, 8, .92), rgba(3, 3, 3, .96));
+}
+.rh-zone--panels .tafel-bild--cutout { background: none; }
+.rh-zone--panels .tafel-bild--cutout img {
+  top: 26%;
+  width: 58%;
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 96%);
+          mask-image: linear-gradient(180deg, #000 60%, transparent 96%);
+}
+.rh-zone--panels .tafel-bild::after {
+  background:
+    radial-gradient(90% 40% at 50% 0%, rgba(255, 224, 166, .1), transparent 70%),
+    linear-gradient(180deg, transparent 40%, rgba(5, 5, 4, .55) 82%, rgba(4, 4, 4, .75) 100%),
+    linear-gradient(0deg, rgba(200, 150, 60, .1), rgba(200, 150, 60, .1));
+}
+.rh-zone--panels .tafel-label {
+  position: absolute;
+  top: 13.5%;
+  left: 19%;
+  right: 19%;
+  margin: 0;
+  height: auto;
+  font-size: 11.5px;
+  letter-spacing: .16em;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  overflow-wrap: break-word;
+  max-width: none;
+}
+.rh-zone--panels .tafel-wert { position: absolute; bottom: 15%; left: 16%; right: 16%; margin: 0; }
+.rh-zone--panels .tafel-name {
+  position: absolute;
+  bottom: 9.5%;
+  left: 18%;
+  right: 18%;
+  text-align: center;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: .12em;
+  color: var(--gold-bright);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rh-zone--panels .tafel-name a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--gold-dim); pointer-events: auto; }
+.rh-zone--panels .tafel-name a:hover { color: #fff; border-bottom-color: var(--gold-bright); }
+.rh-zone--panels .wert--xl b { font-size: 44px; }
+.rh-zone--panels .wert--l  b { font-size: 33px; }
+.rh-zone--panels .wert--s  b { font-size: 23px; }
+.rh-zone--panels .tafel-wert small { font-size: 10.5px; }
+.rh-zone--panels .rueck { inset: auto 0 11% 0; padding: 0 14%; gap: 9px; }
+.rh-zone--panels .rueck-name { font-size: 15px; }
+.rh-zone--panels .rueck-zeile { font-size: 12px; }
+.rh-zone--panels .seite--leer { background: linear-gradient(188deg, rgba(12, 10, 8, .32), rgba(4, 4, 4, .45)); }
+.rh-zone--panels .leer-label { position: absolute; top: 13.5%; left: 20%; right: 20%; margin: 0; height: auto; font-size: 11.5px; hyphens: auto; -webkit-hyphens: auto; max-width: none; }
+.rh-zone--panels .leer-text { position: absolute; bottom: 23%; left: 22%; right: 22%; margin: 0; max-width: none; font-size: 11.5px; line-height: 1.7; }
+
+/* ============================================================
+   VEREINSWAND (Räume 04 und 06)
+   Die Rahmen liegen im Hintergrundbild. Zellpositionen stammen
+   aus der verbindlichen Vorlage (vermessen in
+   vorlagen/vereinsrekorde_build.py) und sind KEINE freien
+   Design-Entscheidungen — bei neuem Raumbild liefert build.py
+   die Formeln (Spaltengrenzen konstant, Kanten linear).
+   ============================================================ */
+.rh-zone { position: absolute; inset: 0; z-index: 2; transition: opacity .35s ease; }
+
+.zelle {
+  position: absolute;
+  perspective: 1200px;
+}
+.z-dreh {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform .62s cubic-bezier(.4, .05, .2, 1);
+}
+.zelle--belegt { cursor: pointer; }
+.zelle--belegt:hover .z-dreh,
+.zelle--belegt:focus-within .z-dreh { transform: rotateY(180deg); }
+
+.z-seite {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--form, none);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(20, 17, 14, .34), rgba(6, 6, 6, .62));
+}
+/* Chrome-Bug: clip-path deaktiviert Backface-Culling — Seiten deshalb zusätzlich per opacity zur Flip-Mitte umschalten */
+.z-seite--vorne { opacity: 1; transition: opacity 0s linear .16s; }
+.zelle--belegt:hover .z-seite--vorne,
+.zelle--belegt:focus-within .z-seite--vorne { opacity: 0; }
+.z-seite--hinten {
+  transform: rotateY(180deg);
+  background: linear-gradient(180deg, rgba(16, 13, 10, .9), rgba(5, 5, 5, .95));
+  opacity: 0;
+  transition: opacity 0s linear .16s;
+}
+.zelle--belegt:hover .z-seite--hinten,
+.zelle--belegt:focus-within .z-seite--hinten { opacity: 1; }
+/* Inhalt folgt der Wandneigung (aus den Polygon-Kanten berechnet) */
+.zelle .lbl,
+.zelle .wert,
+.zelle .z-rueck,
+.zelle .z-leer,
+.zelle img.mark { transform: skewY(var(--kipp, 0deg)); }
+/* Schrägen-Abstand: Inhalt beginnt/endet an der Glaskante, nicht an der BBox */
+.z-seite::before { content: ""; flex: none; height: var(--pado, 0%); }
+.z-seite::after { content: ""; flex: none; height: var(--padu, 0%); }
+
+/* Motiv hinter den Daten — still, läuft ins Schwarz aus */
+.z-motiv { position: absolute; inset: 0; z-index: 0; }
+.z-motiv img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: .55;
+  filter: grayscale(1) sepia(.48) brightness(.82) contrast(1.16) saturate(1.3);
+}
+.z-motiv::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 7, 6, .88) 0%, transparent 30%, transparent 46%, rgba(6, 6, 6, .92) 82%, #060606 100%),
+    linear-gradient(0deg, rgba(200, 150, 60, .16), rgba(200, 150, 60, .16));
+}
+.z-seite--hinten .z-motiv img { opacity: .4; filter: grayscale(.55) sepia(.18) brightness(.9) contrast(1.05); }
+.z-seite--hinten .z-motiv::after { background: linear-gradient(180deg, rgba(6, 6, 6, .72), rgba(5, 5, 5, .9)); }
+
+.zelle img.cutout {
+  position: absolute;
+  left: 50%; top: 24%;
+  width: 50%;
+  transform: translateX(-50%);
+  opacity: .42;
+  z-index: 1;
+  filter: grayscale(1) sepia(.55) brightness(1.35) contrast(1.05);
+  -webkit-mask-image: linear-gradient(180deg, #000 34%, transparent 68%);
+          mask-image: linear-gradient(180deg, #000 34%, transparent 68%);
+}
+/* Zellen mit Portrait: Betrag unter das Bild schieben statt mittig */
+.zelle:has(img.cutout) .wert { margin-top: auto; margin-bottom: 9%; padding-bottom: 0; }
+.zelle img.mark { position: relative; z-index: 2; margin-top: 5%; }
+.zelle img.trophy {
+  width: 26%;
+  opacity: .92;
+  filter: brightness(1.02) drop-shadow(0 0 16px rgba(200, 160, 70, .34));
+}
+.zelle img.wappen { /* Ausnahme 2: Wappen bleibt erkennbar */
+  width: 23%;
+  filter: brightness(1.04) contrast(1.06) drop-shadow(0 0 12px rgba(0, 0, 0, .95));
+}
+.lbl {
+  position: relative;
+  z-index: 2;
+  margin-top: 10%;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: .16em;
+  line-height: 1.5;
+  color: var(--engrave);
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .95);
+}
+.wert {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding-bottom: 6%;
+  text-align: center;
+}
+.wert b {
+  display: block;
+  font-family: "Bodoni Moda", Didot, serif;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold-bright);
+  text-shadow: 0 2px 22px rgba(200, 150, 60, .5), 0 1px 2px rgba(0, 0, 0, .9);
+}
+.wert--xl b { font-size: 37px; }
+.wert--l  b { font-size: 29px; }
+.wert--s  b { font-size: 21px; letter-spacing: -.01em; }
+.wert small {
+  display: block;
+  margin-top: 8px;
+  font-family: Cinzel, Georgia, serif;
+  font-size: 10px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+}
+
+/* Rückseite der Wandzelle */
+.z-rueck {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 12px 7%;
+  text-align: center;
+  width: 100%;
+}
+.z-rueck .rueck-name { font-size: 12.5px; }
+.z-rueck .rueck-zeile { font-size: 10.5px; line-height: 1.5; }
+
+/* Leere Zelle: dreht nicht */
+.zelle--leer .z-seite { background: linear-gradient(180deg, rgba(14, 12, 10, .3), rgba(6, 6, 6, .5)); }
+.zelle--leer .lbl { color: rgba(226, 205, 155, .3); }
+.z-leer {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0 14px 6%;
+  font-size: 11.5px;
+  line-height: 1.8;
+  font-style: italic;
+  text-align: center;
+  color: rgba(226, 214, 190, .24);
+}
+/* Reserve: die Nische bleibt sichtbar leer — reine Architektur */
+.zelle--reserve, .zelle--reserve .z-seite { background: none; cursor: default; }
+
+/* ============================================================
+   BODENLEISTE — ein schwebendes Bedienelement je Raum
+   ============================================================ */
+.rh-bodenleiste {
+  position: absolute;
+  bottom: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+  padding: 9px 20px;
+  background: linear-gradient(180deg, rgba(14, 12, 9, .93), rgba(5, 4, 3, .96));
+  border: 1px solid rgba(200, 162, 76, .28);
+  border-radius: 5px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(233, 205, 133, .12);
+  backdrop-filter: blur(10px);
+  z-index: 6;
+  white-space: nowrap;
+}
+.rh-modus { display: flex; gap: 5px; }
+.rh-modus-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 7px 13px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+  text-align: left;
+  text-decoration: none;
+}
+.rh-modus-btn span {
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(216, 194, 142, .42);
+}
+.rh-modus-btn small { font-size: 9.5px; color: rgba(226, 214, 190, .32); }
+.rh-modus-btn:hover { border-color: rgba(200, 162, 76, .3); }
+.rh-modus-btn[aria-pressed="true"] {
+  border-color: rgba(200, 162, 76, .45);
+  background: linear-gradient(180deg, rgba(200, 162, 76, .14), rgba(200, 162, 76, .04));
+}
+.rh-modus-btn[aria-pressed="true"] span { color: var(--gold-bright); }
+
+.rh-trenner { width: 1px; background: linear-gradient(180deg, transparent, var(--gold), transparent); }
+
+.rh-raumnav { display: flex; align-items: center; gap: 15px; }
+.rh-raumnav a {
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(216, 194, 142, .42);
+  text-decoration: none;
+  padding: 4px 1px;
+  border-bottom: 1px solid transparent;
+  transition: color .15s ease;
+}
+.rh-raumnav a:hover { color: var(--gold-bright); }
+.rh-raumnav a[aria-current="page"] { color: var(--gold-bright); border-bottom-color: var(--gold); }
+.rh-pfeil {
+  font-family: Georgia, serif;
+  font-size: 19px !important;
+  line-height: 1;
+  padding: 0 3px !important;
+  border: none !important;
+  color: var(--gold) !important;
+}
+.rh-pfeil:hover { color: var(--gold-bright) !important; }
+
+/* ---------- Antragsbutton + Overlay (einziges Overlay) ---------- */
+.rh-antrag {
+  position: absolute;
+  top: 4%;
+  right: 2.4%;
+  z-index: 5;
+  padding: 8px 15px;
+  background: rgba(8, 7, 5, .55);
+  border: 1px solid rgba(200, 162, 76, .2);
+  border-radius: 3px;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(216, 194, 142, .45);
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.rh-antrag:hover { border-color: var(--gold); color: var(--gold-bright); }
+.ruhmeshalle-artboard[data-modus="neu"] .rh-antrag { display: none; }
+
+.rh-antrag-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 2, 1, .78);
+  backdrop-filter: blur(4px);
+}
+.rh-antrag-overlay[hidden] { display: none; }
+.rh-antrag-formular {
+  width: 430px;
+  padding: 28px 32px;
+  background: linear-gradient(180deg, #14110d, #080706);
+  border: 1px solid rgba(200, 162, 76, .35);
+  border-radius: 4px;
+  box-shadow: 0 40px 90px rgba(0, 0, 0, .9);
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.rh-antrag-formular h2 {
+  margin: 0 0 2px;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold-bright);
+  text-align: center;
+}
+.rh-formular-hinweis {
+  margin: 0 0 4px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-quiet);
+  text-align: center;
+}
+.rh-feld { display: flex; flex-direction: column; gap: 5px; }
+.rh-feld label {
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 9.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(216, 194, 142, .45);
+}
+.rh-feld label abbr { color: var(--gold); text-decoration: none; }
+.rh-feld input, .rh-feld select, .rh-feld textarea {
+  padding: 9px 11px;
+  background: #0b0a08;
+  border: 1px solid rgba(200, 162, 76, .18);
+  border-radius: 3px;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  color: #e8dfc9;
+}
+.rh-feld input:focus, .rh-feld select:focus, .rh-feld textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(200, 162, 76, .25);
+}
+.rh-formular-aktionen { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.rh-formular-aktionen button {
+  padding: 9px 17px;
+  border-radius: 3px;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.rh-btn-abbrechen { background: transparent; border: 1px solid rgba(200, 162, 76, .2); color: rgba(216, 194, 142, .45); }
+.rh-btn-abbrechen:hover { border-color: rgba(200, 162, 76, .4); color: #e8dfc9; }
+.rh-btn-senden { background: linear-gradient(180deg, var(--gold), #8a6c2c); border: none; color: #14110d; }
+.rh-btn-senden:hover { filter: brightness(1.1); }
+
+/* ---------- Modus-Wechsel: kurzes Abdunkeln --------------------- */
+.ruhmeshalle-artboard.rh-wechsel .rh-zone,
+.ruhmeshalle-artboard.rh-wechsel .rh-zone--reihe8 { opacity: 0; }
+.ruhmeshalle-artboard.rh-wechsel .ruhmeshalle-bg,
+.ruhmeshalle-artboard.rh-wechsel .rh-bg-demo { filter: brightness(.45); }
+.ruhmeshalle-bg, .rh-bg-demo { transition: filter .35s ease; }
+
+/* ---------- Reduced Motion: Einblenden statt Drehung ------------ */
+@media (prefers-reduced-motion: reduce) {
+  .tafel, .z-dreh { transition: none; }
+  .nische--belegt:hover .tafel,
+  .nische--belegt:focus-within .tafel,
+  .zelle--belegt:hover .z-dreh,
+  .zelle--belegt:focus-within .z-dreh { transform: none !important; }
+  .seite, .z-seite { transition: opacity .25s ease; }
+  .seite--hinten, .z-seite--hinten { transform: none; opacity: 0; pointer-events: none; }
+  .nische--belegt:hover .seite--hinten,
+  .zelle--belegt:hover .z-seite--hinten { opacity: 1; pointer-events: auto; }
+  .nische--belegt:hover .seite--vorne,
+  .zelle--belegt:hover .z-seite--vorne { opacity: 0; }
+}

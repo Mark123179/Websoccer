@@ -65,6 +65,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction as db_transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -79,6 +80,13 @@ from .economy.stadium import (
 from .stadium_costs import get_expansion_cost, get_kostenmatrix, max_kapazitaet
 from .stadium_revenue import record_matchday_revenue
 from .views import current_manager_club, build_game_header
+from .asset_urls import (
+    club_logo_url,
+    coach_face_url,
+    default_player_url,
+)
+from .records.hall_geometry import CLUB_SLOT_STYLES, PANEL_SLOT_STYLES
+from .records.registry import RECORDS_BY_KEY
 
 
 def _get_stadium_or_none(club):
@@ -1905,121 +1913,211 @@ def management_sponsoring_push(request):
 
 @login_required(login_url='/auth/login/')
 def management_halloffame(request):
-    from datetime import date
-    from django.db.models import Sum
-    from .models import (
-        ManagerCareerStation, PlayerSeasonStat,
-        PlayerTransferHistory, ClubTrophy,
-    )
+    from .models import ClubRecord
 
     club = current_manager_club(user=request.user)
-    today = date.today()
+    mode = request.GET.get('modus', 'echt').lower()
+    if mode not in {'echt', 'neu'}:
+        mode = 'echt'
+    room = request.GET.get('raum', 'entrance').lower()
+    if room not in {'entrance', 'player', 'coach', 'club'}:
+        room = 'entrance'
 
-    # ── Dienstältester Manager ────────────────────────────────────────
-    longest_manager = None
+    records = {}
     if club:
-        best, best_days = None, -1
-        for s in ManagerCareerStation.objects.filter(club=club).select_related('manager'):
-            if not s.started_at:
-                continue
-            end = s.ended_at if s.ended_at else today
-            days = (end - s.started_at).days
-            if days > best_days:
-                best_days, best = days, s
-        if best:
-            end_date = best.ended_at if best.ended_at else today
-            longest_manager = {
-                'name': best.manager.name,
-                'days': best_days,
-                'started': best.started_at.strftime('%d.%m.%Y'),
-                'ended': end_date.strftime('%d.%m.%Y'),
-                'active': best.ended_at is None,
+        rows = list(
+            ClubRecord.objects
+            .filter(club=club, source__in=(
+                (ClubRecord.SOURCE_SIM,) if mode == 'neu'
+                else (ClubRecord.SOURCE_SEED, ClubRecord.SOURCE_SIM)
+            ))
+            .select_related(
+                'holder_player', 'holder_coach', 'holder_manager',
+                'opponent_club', 'linked_match',
+            )
+        )
+        if mode == 'neu':
+            records = {row.record_key: row for row in rows}
+        else:
+            by_key = {}
+            for row in rows:
+                by_key.setdefault(row.record_key, {})[row.source] = row
+            lower_value_wins = {'worst_season', 'fewest_conceded_season'}
+            for key, sources in by_key.items():
+                seed = sources.get(ClubRecord.SOURCE_SEED)
+                sim = sources.get(ClubRecord.SOURCE_SIM)
+                if not seed or not sim:
+                    records[key] = sim or seed
+                elif (
+                    sim.value_numeric < seed.value_numeric
+                    if key in lower_value_wins
+                    else sim.value_numeric > seed.value_numeric
+                ):
+                    records[key] = sim
+                else:
+                    records[key] = seed
+
+    panel_labels = {
+        'top_scorer': 'Rekordtorschütze',
+        'top_assists': 'Rekordvorlagengeber',
+        'most_apps_field': 'Meiste\nSpiele Feldspieler',
+        'most_apps_gk': 'Meiste\nSpiele Torwart',
+        'most_titles_player': 'Meiste\nTitel Spieler',
+        'highest_market_value': 'Höchster\nMarktwert',
+        'player_empty_7': 'Schnellstes\nTor',
+        'player_empty_8': 'Meiste\nSpieler des Spiels',
+        'longest_tenure': 'Längste\nAmtszeit',
+        'most_matches_coach': 'Meiste\nSpiele',
+        'most_titles_coach': 'Meiste\nTitel',
+        'best_ppg_coach': 'Bester\nPunkteschnitt',
+        'most_wins_coach': 'Meiste\nSiege',
+        'coach_empty_6': 'Höchster\nSieg',
+        'coach_empty_7': 'Längste\nSiegesserie',
+        'coach_empty_8': 'Beste\nSaison',
+    }
+    club_labels = {
+        'biggest_win': 'Höchster\nSieg',
+        'biggest_defeat': 'Höchste\nNiederlage',
+        'longest_win_streak': 'Längste\nSiegesserie',
+        'longest_unbeaten': 'Serie ohne\nNiederlage',
+        'longest_winless': 'Serie ohne\nSieg',
+        'best_season': 'Beste\nSaison',
+        'worst_season': 'Schlechteste\nSaison',
+        'most_goals_season': 'Meiste Tore\nSaison',
+        'fewest_conceded_season': 'Wenigste\nGegentore',
+        'championships': 'Meisterschaften',
+        'cup_wins': 'Pokal\nsiege',
+        'international_titles': 'Internationale\nTitel',
+        'record_signing': 'Teuerster\nEinkauf',
+        'record_sale': 'Teuerster\nVerkauf',
+        'club_empty_15': '',
+        'club_empty_16': '',
+    }
+    unit_by_key = {
+        'top_scorer': 'Tore', 'top_assists': 'Vorlagen',
+        'most_apps_field': 'Spiele', 'most_apps_gk': 'Spiele',
+        'most_titles_player': 'Titel', 'most_matches_coach': 'Spiele',
+        'most_titles_coach': 'Titel', 'most_wins_coach': 'Siege',
+        'longest_tenure': 'Jahre', 'longest_win_streak': 'Spiele',
+        'longest_unbeaten': 'Spiele', 'longest_winless': 'Spiele',
+        'most_goals_season': 'Tore', 'fewest_conceded_season': 'Gegentore',
+        'championships': 'Titel', 'cup_wins': 'Titel',
+    }
+
+    def season_text(value):
+        value = str(value or '').strip()
+        if not value:
+            return ''
+        if value.isdigit():
+            return f'Saison #{int(value)}'
+        if len(value) >= 4 and value[:4].isdigit() and '/' in value:
+            return f'Saison #{int(value[:4])}'
+        return value
+
+    def short_date(value):
+        return value.strftime('%d.%m.') if value else ''
+
+    def payload(record, definition_key, label):
+        if record is None:
+            return {
+                'record': None, 'key': definition_key, 'label': label,
+                'style_class': 'nische--leer', 'value': '', 'unit': '',
+                'holder_name': '', 'holder_url': '', 'image_url': default_player_url(),
+                'image_class': 'tafel-bild--cutout tafel-bild--fallback',
             }
 
-    # ── Rekordtorschütze (aktuelle Kader-Spieler dieses Vereins) ─────
-    top_scorer = None
-    if club:
-        row = (
-            PlayerSeasonStat.objects
-            .filter(player__club=club)
-            .values('player__first_name', 'player__last_name')
-            .annotate(total=Sum('goals'))
-            .order_by('-total')
-            .first()
-        )
-        if row and row['total']:
-            top_scorer = {
-                'name': f"{row['player__first_name']} {row['player__last_name']}",
-                'value': row['total'],
-            }
+        holder = record.holder_player or record.holder_manager or record.holder_coach
+        holder_url = ''
+        image_url = default_player_url()
+        image_class = 'tafel-bild--cutout tafel-bild--fallback'
+        if record.holder_player:
+            holder_url = reverse('player_detail', kwargs={'player_id': record.holder_player_id})
+            image_url = record.holder_player.portrait_static_path
+            image_class = 'tafel-bild--cutout'
+        elif record.holder_manager:
+            holder_url = reverse('manager_profile')
+            image_url = record.holder_manager.profile_image and (
+                '/media/' + record.holder_manager.profile_image
+            ) or default_player_url()
+        elif record.holder_coach:
+            image_url = coach_face_url(record.holder_coach.fm_inside_id)
 
-    # ── Rekordspieler (meiste Einsätze) ──────────────────────────────
-    most_appearances = None
-    if club:
-        row = (
-            PlayerSeasonStat.objects
-            .filter(player__club=club)
-            .values('player__first_name', 'player__last_name')
-            .annotate(total=Sum('matches'))
-            .order_by('-total')
-            .first()
-        )
-        if row and row['total']:
-            most_appearances = {
-                'name': f"{row['player__first_name']} {row['player__last_name']}",
-                'value': row['total'],
-            }
+        value = record.value_display
+        unit = unit_by_key.get(definition_key, '')
+        if definition_key in {'highest_market_value', 'best_ppg_coach'}:
+            unit = ''
+        if definition_key in {'biggest_win', 'biggest_defeat'}:
+            unit = season_text(record.season)
+        return {
+            'record': record, 'key': definition_key, 'label': label,
+            'style_class': 'nische--belegt' if definition_key.startswith(
+                ('top_', 'most_', 'highest_', 'longest_', 'best_',)
+            ) and definition_key not in {'longest_win_streak', 'longest_unbeaten', 'longest_winless'}
+            else 'zelle--belegt',
+            'value': value, 'unit': unit,
+            'holder_name': record.holder_name, 'holder_url': holder_url,
+            'image_url': image_url, 'image_class': image_class,
+            'opponent_name': record.opponent_name,
+            'opponent_url': reverse('club_detail', kwargs={'club_id': record.opponent_club_id})
+                if record.opponent_club_id else '',
+            'context': record.context_line,
+            'season': season_text(record.season),
+            'date': short_date(record.record_date),
+            'period': (
+                f'{short_date(record.period_from)} – {short_date(record.period_to)}'
+                if record.period_from and record.period_to else ''
+            ),
+            'competition': record.competition,
+            'match_url': reverse('match_report_by_id', kwargs={'sm_id': record.linked_match_id})
+                if record.linked_match_id else '',
+            'is_trophy': definition_key in {'championships', 'cup_wins'},
+            'image_class': image_class,
+        }
 
-    # ── Vereinstitel gesamt ───────────────────────────────────────────
-    total_titles = 0
-    if club:
-        total_titles = (
-            ClubTrophy.objects.filter(club=club)
-            .aggregate(t=Sum('count'))['t'] or 0
-        )
+    panel_keys = (
+        'top_scorer', 'top_assists', 'most_apps_field', 'most_apps_gk',
+        'most_titles_player', 'highest_market_value',
+        'player_empty_7', 'player_empty_8',
+    )
+    coach_keys = (
+        'longest_tenure', 'most_matches_coach', 'most_titles_coach',
+        'best_ppg_coach', 'most_wins_coach',
+        'coach_empty_6', 'coach_empty_7', 'coach_empty_8',
+    )
+    club_keys = (
+        'biggest_win', 'biggest_defeat', 'longest_win_streak',
+        'longest_unbeaten', 'longest_winless', 'best_season',
+        'worst_season', 'most_goals_season', 'fewest_conceded_season',
+        'championships', 'cup_wins', 'international_titles',
+        'record_signing', 'record_sale', 'club_empty_15', 'club_empty_16',
+    )
 
-    # ── Größter Transfer (Abgang) ─────────────────────────────────────
-    biggest_transfer = None
-    if club:
-        t = (
-            PlayerTransferHistory.objects
-            .filter(from_club=club, fee_eur__isnull=False)
-            .select_related('player')
-            .order_by('-fee_eur')
-            .first()
-        )
-        if t:
-            fee_m = t.fee_eur / 1_000_000
-            biggest_transfer = {
-                'name': f"{t.player.first_name} {t.player.last_name}",
-                'value': f"{fee_m:,.0f} Mio. €".replace(',', '.'),
-            }
-
-    # ── Meiste Vorlagen ───────────────────────────────────────────────
-    most_assists = None
-    if club:
-        row = (
-            PlayerSeasonStat.objects
-            .filter(player__club=club)
-            .values('player__first_name', 'player__last_name')
-            .annotate(total=Sum('assists'))
-            .order_by('-total')
-            .first()
-        )
-        if row and row['total']:
-            most_assists = {
-                'name': f"{row['player__first_name']} {row['player__last_name']}",
-                'value': row['total'],
-            }
+    def build_slots(keys, styles, labels):
+        result = []
+        for index, key in enumerate(keys):
+            record = records.get(key) if not key.startswith(('player_empty_', 'coach_empty_', 'club_empty_',)) else None
+            item = payload(record, key, labels[key])
+            if keys is club_keys:
+                item['style_class'] = (
+                    'zelle--belegt' if record else
+                    'zelle--reserve' if key in {'club_empty_15', 'club_empty_16'}
+                    else 'zelle--leer'
+                )
+            item['style'] = styles[index]
+            item['index'] = index + 1
+            result.append(item)
+        return result
 
     context = {
         'club': club,
-        'longest_manager': longest_manager,
-        'top_scorer': top_scorer,
-        'most_appearances': most_appearances,
-        'most_assists': most_assists,
-        'total_titles': total_titles,
-        'biggest_transfer': biggest_transfer,
+        'hall_mode': mode,
+        'hall_mode_label': 'Echte Geschichte' if mode == 'echt' else 'Neue Geschichte',
+        'hall_room': room,
+        'player_slots': build_slots(panel_keys, PANEL_SLOT_STYLES, panel_labels),
+        'coach_slots': build_slots(coach_keys, PANEL_SLOT_STYLES, panel_labels),
+        'club_slots': build_slots(club_keys, CLUB_SLOT_STYLES, club_labels),
+        'hall_club_name': club.name if club else 'Noch kein Verein zugewiesen',
+        'hall_club_logo': club_logo_url(club.fm_inside_id) if club and club.fm_inside_id else '',
     }
     return render(request, 'game/management/halloffame.html', context)
 
