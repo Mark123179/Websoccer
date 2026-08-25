@@ -2025,16 +2025,21 @@ def management_halloffame(request):
                 'record': None, 'key': definition_key, 'label': label,
                 'style_class': 'nische--leer', 'value': '', 'unit': '',
                 'holder_name': '', 'holder_url': '', 'image_url': default_player_url(),
+                'image_fallback_url': default_player_url(),
                 'image_class': 'tafel-bild--cutout tafel-bild--fallback',
             }
 
         holder = record.holder_player or record.holder_manager or record.holder_coach
         holder_url = ''
         image_url = default_player_url()
+        image_fallback_url = default_player_url()
         image_class = 'tafel-bild--cutout tafel-bild--fallback'
         if record.holder_player:
             holder_url = reverse('player_detail', kwargs={'player_id': record.holder_player_id})
-            image_url = record.holder_player.portrait_static_path
+            image_url = (
+                record.holder_player.cmt_headshot_url
+                or record.holder_player.portrait_static_path
+            )
             image_class = 'tafel-bild--cutout'
         elif record.holder_manager:
             holder_url = reverse('manager_profile')
@@ -2058,7 +2063,8 @@ def management_halloffame(request):
             else 'zelle--belegt',
             'value': value, 'unit': unit,
             'holder_name': record.holder_name, 'holder_url': holder_url,
-            'image_url': image_url, 'image_class': image_class,
+            'image_url': image_url, 'image_fallback_url': image_fallback_url,
+            'image_class': image_class,
             'opponent_name': record.opponent_name,
             'opponent_url': reverse('club_detail', kwargs={'club_id': record.opponent_club_id})
                 if record.opponent_club_id else '',

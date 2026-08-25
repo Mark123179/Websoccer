@@ -112,8 +112,10 @@ def _league_matches(club):
     )
     rows = []
     for fixture in fixtures:
-        if not _not_friendly(fixture.simulated_match):
-            continue
+        # A SeasonFixture is, by definition, a scheduled league match.  Older
+        # simulation rows may still carry ``match_type='freundschaft'`` from
+        # their generic report factory; using that report flag here would
+        # silently discard real Bundesliga results from club records.
         home_goals = int(fixture.home_goals)
         away_goals = int(fixture.away_goals)
         if home_goals > away_goals:
@@ -626,6 +628,22 @@ def _coach_records(club, matches, title_events):
         .select_related('manager')
         .order_by('started_at', 'pk')
     )
+    # Career history is an additive archive. Newly assigned managers can
+    # already lead fixtures before a historical entry exists, and "Neue
+    # Geschichte" must still show their live records.  Use the first
+    # documented fixture as the conservative start of that live tenure.
+    if not entries and club.managed_by_id:
+        dated_matches = [match.record_date for match in matches if match.record_date]
+        live_start = min(dated_matches) if dated_matches else timezone.localdate()
+
+        class _LiveManagerEntry:
+            manager = club.managed_by
+            manager_id = club.managed_by_id
+            started_at = live_start
+            ended_at = None
+
+        entries = [_LiveManagerEntry()]
+
     candidates = {
         'longest_tenure': [],
         'most_matches_coach': [],

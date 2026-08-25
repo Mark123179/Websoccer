@@ -141,7 +141,7 @@ class HallOfFameRecordEngineTests(TestCase):
         self.assertEqual(break_event.old_value_numeric, Decimal('4'))
         self.assertEqual(break_event.new_value_numeric, Decimal('5'))
 
-    def test_friendlies_are_strictly_excluded_and_source_date_is_kept(self):
+    def test_league_fixture_counts_even_with_legacy_friendly_report_type(self):
         historic_date = date(2026, 8, 1)
         self._league_fixture(historic_date, 2, 0)
         self._league_fixture(historic_date + timedelta(days=1), 10, 0, friendly=True)
@@ -153,8 +153,31 @@ class HallOfFameRecordEngineTests(TestCase):
             record_key='biggest_win',
             source=ClubRecord.SOURCE_SIM,
         )
-        self.assertEqual(record.value_display, '2:0')
-        self.assertEqual(record.record_date, historic_date)
+        self.assertEqual(record.value_display, '10:0')
+        self.assertEqual(record.record_date, historic_date + timedelta(days=1))
+
+    def test_live_manager_gets_new_history_records_without_career_entry(self):
+        manager = ManagerProfile.objects.create(name='Aktiver Trainer')
+        self.club.managed_by = manager
+        self.club.save(update_fields=['managed_by'])
+        start = date(2026, 8, 1)
+        self._league_fixture(start, 2, 0)
+        self._league_fixture(start + timedelta(days=3), 1, 1)
+
+        rebuild_for_club(self.club)
+
+        record = ClubRecord.objects.get(
+            club=self.club,
+            record_key='most_matches_coach',
+            source=ClubRecord.SOURCE_SIM,
+        )
+        self.assertEqual(record.holder_manager_id, manager.pk)
+        self.assertEqual(record.value_numeric, Decimal('2'))
+        self.assertTrue(ClubRecord.objects.filter(
+            club=self.club,
+            record_key='longest_tenure',
+            source=ClubRecord.SOURCE_SIM,
+        ).exists())
 
     def test_best_ppg_requires_thirty_league_matches(self):
         manager = ManagerProfile.objects.create(name='Punktesammler')

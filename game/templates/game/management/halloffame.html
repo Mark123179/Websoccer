@@ -27,7 +27,7 @@
               {% if slot.record %}
                 <div class="tafel">
                   <div class="seite seite--vorne">
-                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" data-fallback="{{ slot.image_fallback_url }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" alt=""></div>
                     <div class="tafel-inhalt">
                       <div class="tafel-label">{{ slot.label|linebreaksbr }}</div>
                       <div class="tafel-wert wert--xl"><b>{{ slot.value }}</b>{% if slot.unit %}<small>{{ slot.unit }}</small>{% endif %}</div>
@@ -35,7 +35,7 @@
                     </div>
                   </div>
                   <div class="seite seite--hinten">
-                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" data-fallback="{{ slot.image_fallback_url }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" alt=""></div>
                     <div class="rueck">
                       <div class="rueck-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>
                       {% if slot.season %}<div class="rueck-zeile">{{ slot.season }}</div>{% endif %}
@@ -60,7 +60,7 @@
               {% if slot.record %}
                 <div class="tafel">
                   <div class="seite seite--vorne">
-                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" data-fallback="{{ slot.image_fallback_url }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" alt=""></div>
                     <div class="tafel-inhalt">
                       <div class="tafel-label">{{ slot.label|linebreaksbr }}</div>
                       <div class="tafel-wert wert--xl"><b>{{ slot.value }}</b>{% if slot.unit %}<small>{{ slot.unit }}</small>{% endif %}</div>
@@ -68,7 +68,7 @@
                     </div>
                   </div>
                   <div class="seite seite--hinten">
-                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" alt=""></div>
+                    <div class="tafel-bild {{ slot.image_class }}"><img src="{{ slot.image_url }}" data-fallback="{{ slot.image_fallback_url }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" alt=""></div>
                     <div class="rueck">
                       <div class="rueck-name">{% if slot.holder_url %}<a href="{{ slot.holder_url }}">{{ slot.holder_name }}</a>{% else %}{{ slot.holder_name }}{% endif %}</div>
                       {% if slot.period %}<div class="rueck-zeile">{{ slot.period }}</div>{% endif %}
@@ -101,7 +101,7 @@
                   {% if slot.is_trophy %}
                     <img class="mark trophy" src="{% if slot.key == 'championships' %}{% static 'game/images/halloffame/platzhalter/trophaee_meisterschale.png' %}{% else %}{% static 'game/images/halloffame/platzhalter/trophaee_pokal_neu.png' %}{% endif %}" alt="">
                   {% elif slot.key == 'record_signing' or slot.key == 'record_sale' %}
-                    <img class="cutout" src="{{ slot.image_url }}" alt="">
+                    <img class="cutout" src="{{ slot.image_url }}" data-fallback="{{ slot.image_fallback_url }}" onerror="this.onerror=null;this.src=this.dataset.fallback;" alt="">
                   {% else %}
                     {% if hall_club_logo %}<img class="mark wappen" src="{{ hall_club_logo }}" alt="">{% endif %}
                   {% endif %}

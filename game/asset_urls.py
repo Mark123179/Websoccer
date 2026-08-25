@@ -48,6 +48,14 @@ def default_player_url():
 def player_face_url(fm_inside_id):
     if not fm_inside_id:
         return ''
+    # Imported record-holder portraits can be JPEG or WebP as well as PNG.
+    # Resolve the locally cached variant when one exists while retaining the
+    # canonical PNG URL as the production fallback for the broader FM pack.
+    player_dir = _os.path.join(assets_root(), 'players')
+    for extension in ('png', 'jpg', 'jpeg', 'webp'):
+        filename = f'face_{fm_inside_id}.{extension}'
+        if _os.path.exists(_os.path.join(player_dir, filename)):
+            return asset_url('players', filename)
     return asset_url('players', f'face_{fm_inside_id}.png')
 
 
