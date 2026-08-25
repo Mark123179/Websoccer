@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Stadion-Editor nicht verfügbar{% endblock %}
+
+{% block content %}
+<div class="dashboard-artboard" style="padding:32px;min-height:560px;">
+    <section style="max-width:680px;border:1px solid rgba(44,231,255,.3);background:#08131c;padding:26px;">
+        <p style="color:#22e6ff;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Stadion-Editor</p>
+        <h1 style="margin:10px 0;color:#fff;">Für dieses Stadion fehlt noch eine Blaupause.</h1>
+        <p style="color:rgba(255,255,255,.72);line-height:1.6;">Es wird bewusst keine Ersatzgeometrie erzeugt. Die Kapazität und Stadionökonomie deines Vereins bleiben unverändert.</p>
+        <a href="{% url 'stadium_detail' %}" style="display:inline-block;margin-top:18px;color:#22e6ff;">Zur Stadionverwaltung</a>
+    </section>
+</div>
+{% endblock %}

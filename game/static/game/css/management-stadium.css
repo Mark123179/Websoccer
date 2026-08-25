@@ -89,6 +89,26 @@
 
 .st-stadium-name strong { font-weight: 800; }
 
+.st-editor-button {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 8px;
+    padding: 6px 10px;
+    border: 1px solid rgba(44, 231, 255, .55);
+    border-radius: 5px;
+    color: var(--cyan, #22e6ff);
+    background: rgba(3, 14, 21, .35);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.st-editor-button:hover {
+    background: rgba(44, 231, 255, .13);
+}
+
 .st-hero-capacity {
     display: flex;
     flex-direction: column;

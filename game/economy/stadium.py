@@ -304,6 +304,11 @@ def resolve_due_expansions(stadium) -> int:
             angewendet += 1
     if angewendet:
         stadium.refresh_from_db()
+        # Die Geometrie ist eine reine Visualisierung. Nach einer echten,
+        # bereits gebuchten Kapazitätsänderung darf sie daher niemals den
+        # Ausbau zurückdrehen oder neue Ränge erfinden.
+        from stadium_editor.services import refresh_geometry_after_capacity_change
+        refresh_geometry_after_capacity_change(stadium)
     return angewendet
 
 

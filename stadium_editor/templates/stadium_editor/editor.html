@@ -1,0 +1,287 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>{{ stadium.name }} – Stadion-Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+:root{
+  --app-bg:#03070c; --stadium-bg:#07111a;
+  --panel:rgba(9,23,34,.82); --panel-strong:rgba(12,31,45,.94);
+  --line:rgba(44,231,255,.18); --line-strong:rgba(44,231,255,.38);
+  --cyan:#22e6ff; --green:#30f29c; --gold:#E9C783; --red:#ff5570;
+  --text:#f4fbff; --muted:rgba(244,251,255,.64); --faint:rgba(244,251,255,.38);
+  --radius:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  width:1440px;height:900px;overflow:hidden;background:var(--app-bg);
+  color:var(--text);font:13px/1.45 system-ui,'Segoe UI',sans-serif;
+  display:flex;flex-direction:column;
+}
+/* ── Topbar ─────────────────────────────────────── */
+.topbar{
+  height:56px;flex:0 0 56px;display:flex;align-items:center;gap:16px;
+  padding:0 20px;background:var(--panel-strong);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-family:Cinzel,serif;font-size:17px;letter-spacing:.14em;color:var(--gold)}
+.brand small{font-family:Oswald,sans-serif;font-size:10px;letter-spacing:.28em;color:var(--muted);display:block;margin-top:-2px}
+.tb-title{font-family:Oswald,sans-serif;font-size:15px;font-weight:500;letter-spacing:.05em}
+.tb-title span{color:var(--faint);font-weight:400;margin-left:8px;font-size:12px}
+.tb-spacer{flex:1}
+.viewtoggle{display:flex;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+.viewtoggle button{
+  font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;padding:8px 18px;
+  background:transparent;color:var(--muted);border:0;cursor:pointer;
+}
+.viewtoggle button.active{background:rgba(34,230,255,.14);color:var(--cyan)}
+.btn{
+  font-family:Oswald,sans-serif;font-size:12px;letter-spacing:.1em;padding:9px 18px;
+  border-radius:var(--radius);border:1px solid var(--line-strong);
+  background:transparent;color:var(--text);cursor:pointer;transition:background .15s;
+}
+.btn:hover{background:rgba(34,230,255,.1)}
+.btn.primary{background:rgba(34,230,255,.16);border-color:var(--cyan);color:var(--cyan)}
+.btn.primary:hover{background:rgba(34,230,255,.26)}
+.btn:disabled{opacity:.35;cursor:default}
+/* ── Layout ─────────────────────────────────────── */
+.main{flex:1;display:flex;min-height:0}
+.tools{
+  width:282px;flex:0 0 282px;background:var(--panel);
+  border-right:1px solid var(--line);padding:14px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:14px;
+}
+.stage{flex:1;position:relative;background:var(--stadium-bg)}
+canvas{position:absolute;inset:0}
+#cvOverlay{cursor:crosshair}
+/* ── Panels ─────────────────────────────────────── */
+.panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;background:rgba(7,17,26,.5)}
+.panel h3{
+  font-family:Oswald,sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:9px;
+}
+.sel-status{font-size:12px;color:var(--muted);min-height:17px}
+.sel-status b{color:var(--cyan);font-weight:600}
+.rowbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.rowbtns .btn{padding:6px 10px;font-size:10px;flex:1;text-align:center;min-width:70px}
+/* Palette */
+.palette{display:grid;grid-template-columns:repeat(8,1fr);gap:5px}
+.swatch{
+  aspect-ratio:1;border-radius:4px;cursor:pointer;border:2px solid transparent;
+  position:relative;transition:transform .1s;
+}
+.swatch:hover{transform:scale(1.12)}
+.swatch.sel1{border-color:var(--cyan);box-shadow:0 0 6px rgba(34,230,255,.6)}
+.swatch.sel2{border-color:var(--gold);box-shadow:0 0 6px rgba(233,199,131,.6)}
+.pal-hint{font-size:10px;color:var(--faint);margin-top:7px}
+.pal-hint i{font-style:normal;color:var(--cyan)} .pal-hint em{font-style:normal;color:var(--gold)}
+/* Tools */
+.toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.toolgrid .btn{padding:8px 6px;font-size:11px;text-align:center}
+.toolgrid .btn.active{background:rgba(34,230,255,.16);border-color:var(--cyan);color:var(--cyan)}
+.subtools{margin-top:9px;display:none;flex-direction:column;gap:8px}
+.subtools.open{display:flex}
+.subtools label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.subtools input[type=range]{flex:1;accent-color:var(--cyan)}
+.subtools input[type=text]{
+  background:rgba(3,7,12,.8);border:1px solid var(--line);border-radius:5px;
+  color:var(--text);padding:7px 9px;font-size:13px;width:100%;
+}
+.subtools select{background:rgba(3,7,12,.8);border:1px solid var(--line);border-radius:5px;color:var(--text);padding:6px}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* Press button */
+.pressbtn{
+  font-family:Oswald,sans-serif;font-size:14px;font-weight:600;letter-spacing:.22em;
+  padding:13px;border-radius:var(--radius);width:100%;
+  background:linear-gradient(180deg,rgba(233,199,131,.22),rgba(233,199,131,.1));
+  border:1px solid var(--gold);color:var(--gold);cursor:pointer;transition:all .12s;
+}
+.pressbtn:hover{background:linear-gradient(180deg,rgba(233,199,131,.34),rgba(233,199,131,.16))}
+.pressbtn:active{transform:translateY(2px)}
+.pressbtn:disabled{opacity:.3;cursor:default;transform:none}
+/* Undo bar */
+.undobar{display:flex;gap:6px}
+.undobar .btn{flex:1;text-align:center}
+/* Legende + Statusbar */
+.legend{display:flex;gap:14px;font-size:10px;color:var(--muted);align-items:center}
+.legend .key{display:inline-block;width:16px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.statusbar{
+  position:absolute;left:0;right:0;bottom:0;height:30px;display:flex;align-items:center;
+  gap:18px;padding:0 16px;background:rgba(3,7,12,.72);border-top:1px solid var(--line);
+  font-size:11px;color:var(--muted);backdrop-filter:blur(4px);
+}
+.statusbar .sb-r{margin-left:auto;display:flex;gap:16px;align-items:center}
+/* 3D rotation slider */
+#rot3d{display:none;align-items:center;gap:10px;font-size:11px;color:var(--muted)}
+#rot3d input{width:130px;accent-color:var(--cyan)}
+/* Toast */
+#toast{
+  position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  background:var(--panel-strong);border:1px solid var(--line-strong);border-radius:var(--radius);
+  padding:9px 18px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="{% url 'stadium_detail' %}" style="text-decoration:none">BLUEPRINT<small>STADION-EDITOR · ZURÜCK</small></a>
+  <div class="tb-title" id="stadiumTitle"></div>
+  <div class="tb-spacer"></div>
+  <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
+    <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
+    <button class="btn" id="btnShot" title="Aktuelle 3D-Ansicht als PNG speichern">📷 PNG</button></div>
+  <button class="btn active" id="btnDots">⣿ PUNKTE</button>
+  <div class="viewtoggle">
+    <button id="btn2d" class="active">2D · BEARBEITEN</button>
+    <button id="btn3d">3D · ANSICHT</button>
+  </div>
+  <button class="btn primary" id="btnSave">SPEICHERN</button>
+</div>
+
+<div class="main">
+  <div class="tools" id="toolsPanel">
+
+    <div class="panel">
+      <h3>Auswahl · Zauberstab</h3>
+      <div class="sel-status" id="selStatus">Kein Block gewählt — klick ins Stadion.</div>
+      <div class="rowbtns">
+        <button class="btn" id="btnSelTier">+ Rang</button>
+        <button class="btn" id="btnSelStand">+ Tribüne</button>
+        <button class="btn" id="btnSelNone">Leeren</button>
+        <button class="btn" id="btnErase" title="Gestaltung der Auswahl entfernen">↺ Beton</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Palette</h3>
+      <div class="palette" id="palette"></div>
+      <div class="pal-hint">Klick = <i>Hauptfarbe</i> · Rechtsklick = <em>Zweitfarbe</em></div>
+      <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+        <input type="color" id="colorPick" value="#e9c783" style="width:38px;height:28px;border:1px solid var(--line);border-radius:5px;background:transparent;cursor:pointer">
+        <button class="btn" id="btnAddColor" style="flex:1">+ ZUR PALETTE</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Werkzeug</h3>
+      <div class="toolgrid">
+        <button class="btn active" data-tool="fill">FÜLLEN</button>
+        <button class="btn" data-tool="pattern">MUSTER</button>
+        <button class="btn" data-tool="text">TEXT</button>
+        <button class="btn filebtn" data-tool="image">BILD<input type="file" id="imgInput" accept="image/*"></button>
+      </div>
+      <div class="subtools" id="subPattern">
+        <label>Art
+          <select id="patternKind">
+            <option value="hstripe">Streifen · quer</option>
+            <option value="vstripe">Streifen · hoch</option>
+            <option value="check">Karo</option>
+            <option value="frame">Rahmen</option>
+          </select>
+        </label>
+        <label>Breite <input type="range" id="patternW" min="1" max="8" value="3"></label>
+      </div>
+      <div class="subtools" id="subText">
+        <input type="text" id="textInput" placeholder="MIA SAN MIA" maxlength="40">
+        <label>Schrift
+          <select id="textFont">
+            <option value="Oswald">Oswald</option>
+            <option value="Anton">Anton (ultrafett)</option>
+            <option value="Bebas Neue">Bebas Neue</option>
+            <option value="Archivo Black">Archivo Black</option>
+            <option value="Cinzel">Cinzel (Serifen)</option>
+            <option value="Germania One">Germania One (Fraktur)</option>
+            <option value="Permanent Marker">Permanent Marker</option>
+          </select>
+        </label>
+        <label>Größe <input type="range" id="textSize" min="8" max="80" value="28"></label>
+        <label>Drehung <input type="range" id="textRot" min="-180" max="180" value="0"></label>
+        <label title="+ wölbt nach oben · − nach unten">Biegung <input type="range" id="textBend" min="-100" max="100" value="0"></label>
+        <label style="justify-content:flex-start;gap:8px"><input type="checkbox" id="textBg" style="accent-color:var(--cyan)"> Fläche in Zweitfarbe</label>
+        <button class="btn" id="btnAlignT">AN TRIBÜNE AUSRICHTEN</button>
+      </div>
+      <div class="subtools" id="subImage">
+        <label>Größe <input type="range" id="imgScale" min="10" max="400" value="100"></label>
+        <label>Drehung <input type="range" id="imgRot" min="-180" max="180" value="0"></label>
+        <label title="Hintergrund entfernen — helle, dunkle und blasse Bereiche werden transparent">Freistellen <input type="range" id="imgCut" min="0" max="100" value="0"></label>
+        <label title="Farben vor dem Pressen kräftiger machen">Farbkraft <input type="range" id="imgBoost" min="0" max="100" value="30"></label>
+        <label title="Weiche Verläufe als feines Muster erhalten (gut für Fotos)">Mischen <input type="range" id="imgDither" min="0" max="100" value="40"></label>
+        <button class="btn" id="btnAlignI">AN TRIBÜNE AUSRICHTEN</button>
+        <div style="font-size:10px;color:var(--faint)">Vorschau zeigt das Press-Ergebnis. Ziehen positioniert. Ohne Auswahl presst die Vorlage auf alle Blöcke darunter.</div>
+      </div>
+    </div>
+
+    <button class="pressbtn" id="btnPress" disabled>PRESSEN</button>
+
+    <div class="panel">
+      <h3>Gepresst</h3>
+      <div id="pressList"></div>
+    </div>
+
+    <div class="undobar">
+      <button class="btn" id="btnUndo" disabled>↶ RÜCKGÄNGIG</button>
+      <button class="btn" id="btnRedo" disabled>↷ WIEDER</button>
+    </div>
+
+    {% if is_editor_admin %}
+    <div class="panel" id="expandPanel">
+      <h3>Ausbau · Simulator <span style="color:var(--gold)">· Admin</span></h3>
+      <div class="subtools open" style="margin-top:0">
+        <label>Tribüne
+          <select id="expStand"><option>NORD</option><option>SUED</option><option>OST</option><option>WEST</option></select>
+        </label>
+        <label>Sitzart
+          <select id="expType"><option value="SITZ">Sitzplätze</option><option value="STEH">Stehplätze</option><option value="VIP">VIP</option></select>
+        </label>
+        <label>Menge
+          <select id="expAmount"><option>1000</option><option>2000</option><option>5000</option><option>10000</option><option>20000</option></select>
+        </label>
+        <button class="btn" id="btnExpand">AUSBAUEN</button>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <h3>Blockarten</h3>
+      <div class="legend" style="flex-direction:column;align-items:flex-start;gap:7px">
+        <span><span class="key" style="border:1.5px solid var(--cyan)"></span>Sitzplätze</span>
+        <span><span class="key" style="border:1.5px dashed var(--cyan)"></span>Stehplätze</span>
+        <span><span class="key" style="border:1.5px solid var(--gold)"></span>VIP / Logen</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="cvBase"></canvas>
+    <canvas id="cvBlocks"></canvas>
+    <canvas id="cvOverlay"></canvas>
+    <div class="statusbar">
+      <span id="sbHover">–</span>
+      <div class="sb-r">
+        <span id="sbInfo">{{ attribution }}</span>
+      </div>
+    </div>
+    <div id="toast"></div>
+  </div>
+</div>
+
+<script>
+window.STADIUM_EDITOR = {
+  geometryUrl: "{% url 'stadium_editor_geometry' %}",
+  designUrl: "{% url 'stadium_editor_design' %}",
+  saveUrl: "{% url 'stadium_editor_save_design' %}",
+  csrfToken: "{{ csrf_token }}",
+  isAdmin: {{ is_editor_admin|yesno:'true,false' }}
+};
+</script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=1"></script>
+</body>
+</html>

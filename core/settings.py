@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     
     'game',
     'showauction',
+    'stadium_editor',
 ]
 MIDDLEWARE = [
     'game.middleware.DevNoCacheMiddleware',
