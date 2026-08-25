@@ -34,7 +34,7 @@
    ============================================================ */
 .st-hero {
     position: relative;
-    height: 394px;        /* 260px Inhalt + 134px hinter Kalender (112px + 22px) */
+    height: 384px;        /* 250px Inhalt + 134px hinter Kalender (112px + 22px) */
     margin-top: -134px;   /* rutscht hinter ws-game-header */
     flex-shrink: 0;
     overflow: hidden;
