@@ -14,6 +14,15 @@
     overflow: visible;
 }
 
+/* Die Desktop-Stadionseite ist für die feste Game-Shell als Vollansicht
+   ausgelegt. Der abschließende Außenabstand darf keinen 1px-Überhang
+   erzeugen; auf schmalen Ansichten bleibt der Seiten-Scroll aktiv. */
+@media (min-width: 981px) {
+    body.stadium-detail-page .gameScroll {
+        overflow-y: hidden;
+    }
+}
+
 /* Kalender bleibt über dem Hero-Bild */
 .stadium-detail-page .ws-game-header {
     position: relative;
@@ -143,7 +152,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 18px;
-    padding: 20px 24px 24px;
+    padding: 20px 24px 0;
     align-items: stretch;
     flex: 1;
 }
