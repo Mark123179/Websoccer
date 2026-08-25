@@ -400,7 +400,17 @@
 
                 const contentH = Math.max(BASE_HEIGHT, stage.scrollHeight);
                 spacer.style.width  = `${vw}px`;
-                spacer.style.height = `${Math.ceil(contentH * scale)}px`;
+                /*
+                 * The baseline stage is height-bound to the viewport. Avoid
+                 * turning a fractional floating-point result at that exact
+                 * boundary into a one-pixel page scrollbar. Real content
+                 * overflow still gets rounded up and remains scrollable.
+                 */
+                const scaledContentH = contentH * scale;
+                const spacerHeight = contentH <= BASE_HEIGHT + 0.01
+                    ? vh
+                    : Math.ceil(scaledContentH);
+                spacer.style.height = `${spacerHeight}px`;
 
                 document.documentElement.style.setProperty('--game-scale', scale);
                 document.documentElement.style.setProperty('--dashboard-shell-width', `${logicalShellW}px`);
