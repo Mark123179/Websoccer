@@ -7,7 +7,7 @@
 {% block body_class %}stadium-detail-page{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=27">
+<link rel="stylesheet" href="{% static 'game/css/management-stadium.css' %}?v=28">
 {% endblock %}
 
 {% block content %}
@@ -38,7 +38,7 @@
          DJANGO-MESSAGES
          ======================================================== -->
     {% if messages %}
-    <ul class="st-messages" style="padding:10px 24px 0;">
+    <ul class="st-messages" role="status" aria-live="polite" aria-atomic="true">
         {% for msg in messages %}
         <li class="st-message st-message--{{ msg.tags }}">{{ msg }}</li>
         {% endfor %}
@@ -387,6 +387,13 @@
     if (typeEl)  typeEl.addEventListener('change', aktualisieren);
     if (countEl) countEl.addEventListener('input',  aktualisieren);
     aktualisieren();
+
+    // Meldungen schweben über dem Layout und verschwinden nach kurzer Zeit.
+    document.querySelectorAll('.st-messages').forEach(function (messages) {
+        window.setTimeout(function () {
+            messages.classList.add('st-messages--dismissed');
+        }, 4000);
+    });
 })();
 </script>
 {% endblock %}

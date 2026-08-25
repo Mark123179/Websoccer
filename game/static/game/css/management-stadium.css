@@ -8,6 +8,7 @@
 .stadium-detail-page .dashboard-artboard {
     background: #0a0e17;
     min-height: 860px;
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -810,12 +811,27 @@
    DJANGO-MESSAGES
    ============================================================ */
 .st-messages {
+    position: absolute;
+    z-index: 20;
+    top: 10px;
+    left: 24px;
+    right: 24px;
     list-style: none;
-    margin: 0 0 14px;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
+    pointer-events: none;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 240ms ease, transform 240ms ease, visibility 0s linear 240ms;
+}
+
+.st-messages--dismissed {
+    opacity: 0;
+    transform: translateY(-6px);
+    visibility: hidden;
 }
 
 .st-message {
@@ -823,6 +839,7 @@
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
+    pointer-events: auto;
 }
 
 .st-message--success { background: rgba(92,184,92,0.15); border: 1px solid rgba(92,184,92,0.30); color: #7ed47e; }
