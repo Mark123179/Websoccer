@@ -1958,6 +1958,7 @@ def home(request):
     active_managers = [
         {
             'name':     mp.name,
+            'title':    __import__('game.manager_profile', fromlist=['current_title']).current_title(mp),
             'crest':    _manager_clubs[mp.id].crest_static_path if mp.id in _manager_clubs else '',
             'club_url': f'/clubs/{_manager_clubs[mp.id].id}/' if mp.id in _manager_clubs else '',
         }
@@ -5750,16 +5751,31 @@ def public_manager_profile(request, username):
         profile = target_user.manager_profile
     except Exception:
         profile = None
-    target_club = current_manager_club(target_user)
+    target_club = Club.objects.filter(managed_by=profile).first() if profile else None
     crest_url = ''
     if target_club and target_club.fm_inside_id:
         from .asset_urls import club_crest_url as _crest_url
         crest_url = _crest_url(target_club.fm_inside_id)
+    from django.templatetags.static import static as _static
+    from django.conf import settings as _settings
+    from .manager_profile import current_title, merged_visibility
+    visibility = merged_visibility(profile) if profile else {}
+    profile_image_url = ''
+    if profile and visibility.get('profile_image') == 'all':
+        raw = profile.profile_image or ''
+        profile_image_url = (
+            _settings.MEDIA_URL + raw
+            if raw and not raw.startswith('game/')
+            else _static(raw or CURRENT_MANAGER_PROFILE_IMAGE)
+        )
     return render(request, 'game/public_manager_profile.html', {
         'profile':     profile,
         'target_user': target_user,
         'target_club': target_club,
         'crest_url':   crest_url,
+        'profile_image_url': profile_image_url,
+        'active_title': current_title(profile) if profile and visibility.get('title') == 'all' else '',
+        'visibility': visibility,
     })
 
 
@@ -6767,6 +6783,41 @@ def manager_profile(request):
     timeline_clubs_json = json.loads(json.dumps(_tl_clubs, default=str))
 
     timeline_events_json = json.loads(json.dumps(_tl_js, default=str))
+    from .manager_profile import (
+        merged_visibility,
+        title_payload,
+        xp_progress,
+    )
+    _title_payload = title_payload(manager_profile_obj)
+    _xp_progress = xp_progress(manager_profile_obj)
+    _score_rank = (
+        ManagerProfile.objects.filter(season_score__gt=manager_profile_obj.season_score).count() + 1
+    )
+    _score_total = ManagerProfile.objects.count()
+    from .models import ManagerTeamPhoto
+    _team_photos = list(
+        ManagerTeamPhoto.objects.filter(manager=manager_profile_obj)
+        .select_related('club')
+    )
+    _season_state = GameSeasonState.objects.first()
+    _active_season = _season_state.current_season if _season_state else 0
+    _vacation_blocks = list(
+        manager_profile_obj.vacation_blocks.filter(season=_active_season)
+    )
+    _vacation_days_used = sum(block.day_count for block in _vacation_blocks)
+    _privacy_labels = (
+        ('profile_image', 'Profilbild'),
+        ('nickname', 'Nickname'),
+        ('title', 'Titel'),
+        ('trainer_type', 'Trainer-Typ'),
+        ('nationality', 'Landesflagge'),
+        ('favourite_club', 'Lieblingsverein'),
+        ('email', 'E-Mail-Adresse'),
+        ('birthday', 'Geburtstag'),
+        ('residence', 'Wohnort'),
+        ('member_since', 'Registriert am'),
+        ('last_login', 'Letzte Anmeldung'),
+    )
 
     return render(request, 'game/manager_profile.html', {
         'tab': tab,
@@ -6778,6 +6829,16 @@ def manager_profile(request):
         ),
         'trainer_types_selectable': trainer_types_selectable,
         'trainer_types_unlockable': trainer_types_unlockable,
+        'title_data': _title_payload,
+        'visibility_settings': merged_visibility(manager_profile_obj),
+        'privacy_fields': [
+            {'key': key, 'label': label, 'value': merged_visibility(manager_profile_obj)[key]}
+            for key, label in _privacy_labels
+        ],
+        'team_photos': _team_photos,
+        'vacation_blocks': _vacation_blocks,
+        'vacation_days_remaining': max(0, 14 - _vacation_days_used),
+        'active_season': _active_season,
         'map_stations': map_stations,
         'photo_map_markers': photo_map_markers,
         'country_zoom_box_json': country_zoom_box_json,
@@ -6786,7 +6847,7 @@ def manager_profile(request):
         'manager': {
             'name': manager_name,
             'trainer_type': manager_profile_obj.trainer_type_label,
-            'active_type': manager_profile_obj.trainer_type_label,
+            'active_type': _title_payload['active_label'] or 'Kein Titel gewählt',
             'flag': manager_profile_obj.nationality_flag,
             'flag_url': manager_profile_obj.nationality_flag,
             'flag_name': manager_profile_obj.nationality_name,
@@ -6798,14 +6859,17 @@ def manager_profile(request):
             'member_since': member_since_display,
             'profile_image_url': profile_image_url,
             'has_custom_avatar': _has_custom_avatar,
-            'level': manager_profile_obj.level,
+            'level': _xp_progress['level'],
             'xp': manager_profile_obj.xp,
-            'xp_max': manager_profile_obj.xp_max,
-            'xp_pct': manager_profile_obj.xp_pct,
-            'xp_label': manager_profile_obj.xp_label,
-            'highscore': manager_profile_obj.highscore,
-            'highscore_rank': '–',
-            'highscore_delta': '',
+            'xp_max': _xp_progress['next_cost'],
+            'xp_pct': _xp_progress['percent'],
+            'xp_label': _xp_progress['label'],
+            'season_score': manager_profile_obj.season_score,
+            'season_score_rank': _score_rank,
+            'season_score_total': _score_total,
+            'season_score_delta': manager_profile_obj.season_score - manager_profile_obj.previous_season_score,
+            'inactivity_season_count': manager_profile_obj.inactivity_season_count,
+            'inactivity_streak': manager_profile_obj.inactivity_streak,
             'trophies': trophies_count,
             'trophies_list_mini': trophies_list[:3],
             'games_total': games,
@@ -6815,8 +6879,15 @@ def manager_profile(request):
             'losses': losses,
             'win_rate': win_rate,
             'win_rate_detail': win_rate_detail,
-            'not_fielded': '1/3',
-            'transfer_ban': 'Keine',
+            'not_fielded': (
+                f'{manager_profile_obj.inactivity_season_count}/5 Saison · '
+                f'{manager_profile_obj.inactivity_streak}/3 in Folge'
+            ),
+            'transfer_ban': (
+                'Bis zur nächsten Aufstellung'
+                if manager_profile_obj.transfer_ban_until
+                else 'Keine'
+            ),
             'last_login': last_login_display,
             'last_login_date': last_login_date,
             'last_login_time': last_login_time,
@@ -6968,6 +7039,59 @@ def set_trainer_type(request):
 
     from django.shortcuts import redirect
     return redirect('manager_profile')
+
+
+@require_POST
+@login_required
+def set_manager_title(request):
+    from .manager_profile import select_title
+
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+    try:
+        label = select_title(profile, request.POST.get('title_key', '').strip())
+    except ValueError as exc:
+        return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'title': label})
+    return redirect('manager_profile')
+
+
+@require_POST
+@login_required
+def manager_vacation(request):
+    from datetime import date as _date
+    from .manager_profile import create_vacation_block, end_vacation_early
+    from .models import GameSeasonState, ManagerVacationBlock
+
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+    try:
+        if request.POST.get('action') == 'end':
+            block = get_object_or_404(
+                ManagerVacationBlock,
+                pk=request.POST.get('block_id'),
+                manager=profile,
+            )
+            end_vacation_early(block)
+        else:
+            state = GameSeasonState.objects.first()
+            season = state.current_season if state else 0
+            block = create_vacation_block(
+                profile,
+                season,
+                _date.fromisoformat(request.POST.get('starts_on', '')),
+                _date.fromisoformat(request.POST.get('ends_on', '')),
+            )
+    except (ValueError, TypeError) as exc:
+        return JsonResponse({'ok': False, 'error': str(exc)}, status=400)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True, 'block_id': block.pk})
+    return redirect(f"{reverse('manager_profile')}?tab=einstellungen")
 
 
 def save_career_station(request):
@@ -7363,6 +7487,7 @@ def update_manager_profile(request):
 
     new_name = request.POST.get('display_name', '').strip()
     nationality_name = request.POST.get('nationality_name', '').strip()
+    residence = request.POST.get('residence', '').strip()
 
     update_fields = ['updated_at']
 
@@ -7397,11 +7522,24 @@ def update_manager_profile(request):
         profile.nationality_flag = f'https://flagcdn.com/{info["code"].lower()}.svg'
         update_fields += ['nationality_name', 'nationality_flag']
 
-    trainer_type_val = request.POST.get('trainer_type', '').strip()
-    valid_types = dict(ManagerProfile.TRAINER_TYPE_CHOICES)
-    if trainer_type_val and trainer_type_val in valid_types:
-        profile.trainer_type = trainer_type_val
-        update_fields.append('trainer_type')
+    if 'residence' in request.POST:
+        profile.residence = residence[:120]
+        update_fields.append('residence')
+
+    visibility = dict(profile.visibility_settings or {})
+    for key in (
+        'profile_image', 'nickname', 'title', 'trainer_type', 'nationality',
+        'favourite_club', 'email', 'birthday', 'residence', 'member_since',
+        'last_login',
+    ):
+        field_name = f'visibility_{key}'
+        if field_name in request.POST:
+            value = request.POST.get(field_name)
+            if value in {'all', 'private'}:
+                visibility[key] = value
+    if visibility != (profile.visibility_settings or {}):
+        profile.visibility_settings = visibility
+        update_fields.append('visibility_settings')
 
     favourite_club_id = request.POST.get('favourite_club_id', '').strip()
     if favourite_club_id == '':

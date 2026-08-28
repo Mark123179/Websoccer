@@ -692,7 +692,8 @@ def prepare_matchday_lineups(league, matchday, season):
           'bench_rebuilt': Anzahl Bänke, die automatisch neu aufgebaut wurden,
         }
     """
-    from .models import InactivityRecord, Player, SeasonFixture, TacticSetup
+    from .models import Player, SeasonFixture, TacticSetup
+    from .manager_profile import is_on_vacation, record_inactivity, reset_inactivity_after_lineup
 
     fixtures = list(
         SeasonFixture.objects.filter(
@@ -736,6 +737,8 @@ def prepare_matchday_lineups(league, matchday, season):
             if confirmed_for_matchday:
                 setattr(fixture, lineup_attr, True)
                 fixture_dirty = True
+                if manager is not None:
+                    reset_inactivity_after_lineup(manager)
 
                 # Bank-Validierung: ungültige/leere Bänke automatisch neu aufbauen.
                 # Manuell gesetzte Bänke mit ausschließlich gültigen Spielern bleiben unberührt.
@@ -769,6 +772,14 @@ def prepare_matchday_lineups(league, matchday, season):
                     continue
             else:
                 # Gemanagter Verein ohne gültige oder bestätigte Aufstellung.
+                if is_on_vacation(manager, season=season):
+                    # Urlaub ersetzt die eigene Bestätigung durch eine sichere
+                    # Standardaufstellung; weder Malus noch Zähler laufen.
+                    ensure_default_tactic(club)
+                    setattr(fixture, lineup_attr, True)
+                    fixture_dirty = True
+                    stats['filled'] += 1
+                    continue
                 if setup is None:
                     setup, _ = TacticSetup.objects.get_or_create(
                         club=club,
@@ -786,14 +797,14 @@ def prepare_matchday_lineups(league, matchday, season):
                 # nur der Malus wird angewendet.
 
                 # Sportgericht-Strafpunkt + Stärkemalus (30 %)
-                _, created = InactivityRecord.objects.get_or_create(
-                    manager=manager,
-                    club=club,
+                _record, is_new_record = record_inactivity(
+                    manager,
+                    club,
+                    str(season),
+                    f'Spieltag {matchday}',
                     squad_scope=SQUAD_PRO,
-                    season=str(season),
-                    matchday_label=f'Spieltag {matchday}',
                 )
-                if created:
+                if is_new_record:
                     setattr(fixture, malus_attr, True)
                     stats['penalized'] += 1
 

@@ -872,6 +872,24 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
                 league.pk, season, matchday,
             )
 
+        # Externe Bilderzeugung muss außerhalb des Simulations-Transactions
+        # laufen. Der Job ist idempotent je Manager+Saison.
+        _first_matchday = (
+            SeasonFixture.objects.filter(season=season)
+            .order_by('matchday')
+            .values_list('matchday', flat=True)
+            .first()
+        )
+        if _first_matchday == matchday:
+            try:
+                from django.core.management import call_command
+                call_command('generate_manager_team_photos', season=int(season))
+            except Exception:
+                logger.exception(
+                    'Mannschaftsfoto-Erzeugung für Saison %s konnte nicht abgeschlossen werden.',
+                    season,
+                )
+
     # ── Finanz-Spieltagslauf (Phase 1) ────────────────────────────────────────
     # Nach der sportlichen Simulation, außerhalb ihrer Transaktion. Idempotent
     # je Verein+Spieltag (FinanceMatchdayRun) — Fehler hier dürfen die

@@ -218,7 +218,9 @@ def current_manager(request):
 
     if manager_profile_obj:
         manager_name = manager_profile_obj.name
-        trainer_type_label = manager_profile_obj.trainer_type_label
+        from .manager_profile import current_title
+        active_title_label = current_title(manager_profile_obj)
+        trainer_type_label = active_title_label or manager_profile_obj.trainer_type_label
         _raw = manager_profile_obj.profile_image or ''
         if _raw and not _raw.startswith('game/'):
             from django.conf import settings as _settings
@@ -252,6 +254,7 @@ def current_manager(request):
         'current_manager': {
             'name': manager_name,
             'role': trainer_type_label,
+            'title': active_title_label if manager_profile_obj else '',
             'club': club,
             'club_name': club_name,
             'club_url': club_url,

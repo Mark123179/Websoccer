@@ -23,6 +23,8 @@ from .views import (
     close_matchday_view,
     manager_profile,
     set_trainer_type,
+    set_manager_title,
+    manager_vacation,
     update_manager_profile,
     upload_profile_image,
     reset_profile_image,
@@ -383,6 +385,8 @@ urlpatterns = [
 
     path('manager/profil/', manager_profile, name='manager_profile'),
     path('manager/set-type/', set_trainer_type, name='set_trainer_type'),
+    path('manager/set-title/', set_manager_title, name='set_manager_title'),
+    path('manager/vacation/', manager_vacation, name='manager_vacation'),
     path('manager/update-profile/', update_manager_profile, name='update_manager_profile'),
     path('manager/upload-image/', upload_profile_image, name='upload_profile_image'),
     path('manager/reset-image/', reset_profile_image, name='reset_profile_image'),

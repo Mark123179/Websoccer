@@ -4005,6 +4005,29 @@ class ManagerProfile(models.Model):
     xp_max = models.PositiveIntegerField(default=15000)
     level = models.PositiveIntegerField(default=1)
     highscore = models.CharField(max_length=50, blank=True, default='–')
+    active_title_key = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        default=None,
+        verbose_name='Aktiver Titel',
+    )
+    title_progress = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Titel-Fortschritt',
+    )
+    season_score = models.IntegerField(default=0, verbose_name='Saison-Score')
+    previous_season_score = models.IntegerField(default=0, verbose_name='Vorheriger Saison-Score')
+    inactivity_season_count = models.PositiveSmallIntegerField(default=0)
+    inactivity_streak = models.PositiveSmallIntegerField(default=0)
+    transfer_ban_until = models.DateField(null=True, blank=True)
+    residence = models.CharField(max_length=120, blank=True, default='')
+    visibility_settings = models.JSONField(
+        default=dict,
+        blank=True,
+        verbose_name='Sichtbarkeitseinstellungen',
+    )
     updated_at = models.DateTimeField(auto_now=True)
     last_seen = models.DateTimeField(
         null=True, blank=True,
@@ -4053,6 +4076,133 @@ class ManagerProfile(models.Model):
     @property
     def xp_label(self):
         return f'{self.xp:,} / {self.xp_max:,} XP'.replace(',', '.')
+
+
+class ManagerTitle(models.Model):
+    """Ein dauerhaft freigeschalteter Titel eines Managers."""
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='titles',
+        verbose_name='Manager',
+    )
+    title_key = models.CharField(max_length=50, verbose_name='Titel')
+    unlocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['title_key']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager', 'title_key'],
+                name='manager_title_unique_key',
+            ),
+        ]
+        verbose_name = 'Manager-Titel'
+        verbose_name_plural = 'Manager-Titel'
+
+    def __str__(self):
+        return f'{self.manager} – {self.title_key}'
+
+
+class ManagerSeasonScore(models.Model):
+    """Persistierter Saison-Score für Rangliste und Trendanzeige."""
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='season_scores',
+    )
+    season = models.PositiveSmallIntegerField()
+    score = models.IntegerField(default=0)
+    rank = models.PositiveIntegerField(null=True, blank=True)
+    total_managers = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-season', 'rank', 'manager_id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager', 'season'],
+                name='manager_season_score_unique',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.manager} – Saison {self.season}: {self.score}'
+
+
+class ManagerVacationBlock(models.Model):
+    """Geplanter Urlaubsblock; maximal zwei Blöcke pro Saison."""
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='vacation_blocks',
+    )
+    season = models.PositiveSmallIntegerField()
+    starts_on = models.DateField()
+    ends_on = models.DateField()
+    ended_early_at = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['season', 'starts_on']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager', 'season', 'starts_on'],
+                name='manager_vacation_start_unique',
+            ),
+        ]
+
+    @property
+    def effective_end(self):
+        return self.ended_early_at or self.ends_on
+
+    @property
+    def day_count(self):
+        return (self.effective_end - self.starts_on).days + 1
+
+    def is_active(self, on_date=None):
+        from datetime import date
+        on_date = on_date or date.today()
+        return self.starts_on <= on_date <= self.effective_end
+
+    def __str__(self):
+        return f'{self.manager} – Urlaub {self.starts_on} bis {self.effective_end}'
+
+
+class ManagerTeamPhoto(models.Model):
+    """Ein unveränderliches Mannschaftsfoto je Manager und Saison."""
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='team_photos',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='manager_team_photos',
+    )
+    season = models.PositiveSmallIntegerField()
+    roster_names = models.JSONField(default=list)
+    image = models.ImageField(upload_to='manager_team_photos/%Y/', blank=True)
+    generated_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-season', '-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['manager', 'season'],
+                name='manager_team_photo_unique_season',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.manager} – Mannschaftsfoto Saison {self.season}'
 
 
 class ManagerCareerStation(models.Model):
@@ -4467,6 +4617,12 @@ class GameSeasonState(models.Model):
                     'Vereinsstationen-Snapshot für Saison %s fehlgeschlagen',
                     self.current_season,
                 )
+            # Inaktivitätszähler gelten immer nur für eine Saison.
+            ManagerProfile.objects.update(
+                inactivity_season_count=0,
+                inactivity_streak=0,
+                transfer_ban_until=None,
+            )
 
         # Finanz-Saisonjobs (Spec Kap. 15): Beim Vorrücken der Saisonnummer
         # die alte Saison finanziell abschließen (Backstop, idempotent) und

@@ -70,15 +70,15 @@
             <div class="mp-xp-track"><div class="mp-xp-fill" style="width:{{ manager.xp_pct }}%"></div></div>
             <small class="mp-kpi-sub">{{ manager.xp_label }}</small>
         </div>
-        <!-- 2: Highscore -->
+        <!-- 2: Saison-Score -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
                 <svg viewBox="0 0 16 16" fill="rgba(255,209,102,.85)"><path d="M8 2l1.5 3 3.2.5-2.3 2.2.5 3.3L8 9.5l-2.9 1.5.5-3.3-2.3-2.2 3.2-.5z"/></svg>
-                HIGHSCORE
+                SAISON-SCORE
             </span>
-            <strong class="mp-kpi-big mp-kpi-gold">{{ manager.highscore }}</strong>
-            {% if manager.highscore_delta %}<span class="mp-kpi-delta">{{ manager.highscore_delta }}</span>{% endif %}
-            <small class="mp-kpi-sub">{{ manager.highscore_rank }}</small>
+            <strong class="mp-kpi-big mp-kpi-gold">{{ manager.season_score }}</strong>
+            <span class="mp-kpi-delta">{% if manager.season_score_delta > 0 %}+{% endif %}{{ manager.season_score_delta }} diese Woche</span>
+            <small class="mp-kpi-sub">Platz {{ manager.season_score_rank }} von {{ manager.season_score_total }}</small>
         </div>
         <!-- 3: Trophäen -->
         <div class="mp-kpi-cell">
@@ -173,6 +173,10 @@
     <a href="?tab=profil" class="mp-tab {% if tab == 'profil' %}is-active{% endif %}">
         <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
         Profil
+    </a>
+    <a href="?tab=mannschaftsfotos" class="mp-tab {% if tab == 'mannschaftsfotos' %}is-active{% endif %}">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="3" width="14" height="12" rx="2"/><circle cx="7" cy="8" r="2"/><path d="M3 14l4-4 3 2 2-2 3 4"/></svg>
+        Mannschaftsfotos
     </a>
     <a href="?tab=einstellungen" class="mp-tab {% if tab == 'einstellungen' %}is-active{% endif %}">
         <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="2"/><path d="M9 1v2m0 12v2M1 9h2m12 0h2M3.2 3.2l1.4 1.4m8.8 8.8 1.4 1.4M3.2 14.8l1.4-1.4m8.8-8.8 1.4-1.4"/></svg>
@@ -521,48 +525,85 @@
         </div>
     </article>
 
-    <article class="mp-card2 mp-badges2">
+    <article class="mp-card2 mp-titles2">
         <header class="mp-card2-header">
-            <h3>BADGES &amp; AUSZEICHNUNGEN</h3>
-            <a href="?tab=auszeichnungen">Alle ansehen</a>
+            <h3>TITEL</h3>
+            <button class="mp-title-all-toggle" type="button" data-title-all>Alle ansehen</button>
         </header>
-        <p class="mp-badges2-lbl">DIREKT WÄHLBAR</p>
+        <p class="mp-titles2-lbl">DIREKT WÄHLBAR</p>
         <div class="mp-types2-grid">
-            {% for t in trainer_types_selectable %}
-            <form method="post" action="{% url 'set_trainer_type' %}">
+            {% for t in title_data.free %}
+            <form method="post" action="{% url 'set_manager_title' %}" data-title-form>
                 {% csrf_token %}
-                <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
+                <input type="hidden" name="title_key" value="{{ t.key }}">
                 <button type="submit" class="mp-type2-tile{% if t.active %} is-active{% endif %}">{{ t.label }}</button>
             </form>
             {% endfor %}
         </div>
-        <p class="mp-badges2-lbl" style="margin-top:12px;">FREISCHALTBARE TITEL</p>
+        <p class="mp-titles2-lbl" style="margin-top:12px;">FREISCHALTBARE TITEL</p>
         <div class="mp-unlock2-list">
-            {% for t in trainer_types_unlockable %}
+            {% for t in title_data.featured_unlockable %}
             {% if t.unlocked %}
-            <form method="post" action="{% url 'set_trainer_type' %}">
+            <form method="post" action="{% url 'set_manager_title' %}" data-title-form>
                 {% csrf_token %}
-                <input type="hidden" name="trainer_type_key" value="{{ t.key }}">
-                <button type="submit" class="mp-unlock2 is-unlocked">
+                <input type="hidden" name="title_key" value="{{ t.key }}">
+                <button type="submit" class="mp-unlock2 is-unlocked{% if t.active %} is-active{% endif %}">
                     <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span class="mp-unlock2-check">✓</span></div>
-                    <small>{{ t.condition }}</small>
+                    <small>{{ t.description }}</small>
                 </button>
             </form>
             {% else %}
             <div class="mp-unlock2">
-                <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span class="mp-unlock2-prog">{{ t.progress }}/{{ t.max }}</span></div>
-                <small>{{ t.condition }}</small>
-                <div class="mp-unlock2-bar"><div class="mp-unlock2-fill" style="width:{% widthratio t.progress t.max 100 %}%"></div></div>
+                <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span class="mp-unlock2-prog">{{ t.value }}/{{ t.target }}</span></div>
+                <small>{{ t.description }}</small>
+                <div class="mp-unlock2-bar"><div class="mp-unlock2-fill" style="width:{{ t.percent }}%"></div></div>
             </div>
             {% endif %}
             {% endfor %}
         </div>
+        <dialog class="mp-title-dialog" id="mpTitleDialog">
+            <button type="button" class="mp-title-dialog-close" data-title-close aria-label="Schließen">×</button>
+            <h3>ALLE FREISCHALTBAREN TITEL</h3>
+            <div class="mp-unlock2-list">
+                {% for t in title_data.unlockable %}
+                <div class="mp-unlock2{% if t.unlocked %} is-unlocked{% endif %}">
+                    <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span>{{ t.value }}/{{ t.target }}</span></div>
+                    <small>{{ t.description }}</small>
+                    <div class="mp-unlock2-bar"><div class="mp-unlock2-fill" style="width:{{ t.percent }}%"></div></div>
+                    <small>{{ t.manager_percent }} % der Manager haben diesen Titel</small>
+                </div>
+                {% endfor %}
+            </div>
+        </dialog>
     </article>
 
     </div>
 
 </div>
 
+</section>
+
+{% elif tab == 'mannschaftsfotos' %}
+<section class="mp-tab-content mp-team-photos">
+    {% for photo in team_photos %}
+    <article class="mp-card2 mp-team-photo-card">
+        <header class="mp-card2-header">
+            <h3>Saison {{ photo.season }}{% if photo.club %} · {{ photo.club.name }}{% endif %}</h3>
+            {% if photo.generated_at %}<small>{{ photo.generated_at|date:"d.m.Y" }}</small>{% endif %}
+        </header>
+        {% if photo.image %}
+        <img class="mp-team-photo-image" src="{{ photo.image.url }}" alt="Mannschaftsfoto Saison {{ photo.season }}">
+        {% endif %}
+        <ol class="mp-team-photo-roster">
+            {% for player_name in photo.roster_names %}<li>{{ player_name }}</li>{% endfor %}
+        </ol>
+    </article>
+    {% empty %}
+    <article class="mp-card2 mp-team-photo-empty">
+        <h3>Noch kein Mannschaftsfoto</h3>
+        <p>Das Foto wird einmal pro Saison am ersten Pflichtspieltag serverseitig erzeugt.</p>
+    </article>
+    {% endfor %}
 </section>
 
 {% elif tab == 'einstellungen' %}
@@ -618,32 +659,6 @@
                                     {% if c.crest_url %}<img src="{{ c.crest_url }}" alt="">{% endif %}<span>{{ c.name }}</span>
                                 </li>
                                 {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="mp-account-row">
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-                        <span>Trainer-Typ</span>
-                        <div class="mp-csel" data-mp-csel data-mp-csel-id="type">
-                            <button class="mp-csel-btn" type="button" aria-haspopup="listbox">
-                                <span class="mp-csel-label">{{ manager.active_type }}</span>
-                                <svg class="mp-csel-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
-                            </button>
-                            <ul class="mp-csel-list" role="listbox">
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'laptoptrainer' %} is-selected{% endif %}" data-value="laptoptrainer"><span>Laptoptrainer</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'taktikfuchs' %} is-selected{% endif %}" data-value="taktikfuchs"><span>Taktikfuchs</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'motivator' %} is-selected{% endif %}" data-value="motivator"><span>Motivator</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'talentschmied' %} is-selected{% endif %}" data-value="talentschmied"><span>Talentschmied</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'transferstratege' %} is-selected{% endif %}" data-value="transferstratege"><span>Transferstratege</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'pokaljager' %} is-selected{% endif %}" data-value="pokaljager"><span>Pokaljäger</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'offensivarchitekt' %} is-selected{% endif %}" data-value="offensivarchitekt"><span>Offensivarchitekt</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'underdog' %} is-selected{% endif %}" data-value="underdog"><span>Underdog-Flüsterer</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'aufstiegsheld' %} is-selected{% endif %}" data-value="aufstiegsheld"><span>Aufstiegsheld</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'defensivmeister' %} is-selected{% endif %}" data-value="defensivmeister"><span>Defensivmeister</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'weltenbummler' %} is-selected{% endif %}" data-value="weltenbummler"><span>Weltenbummler</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'serienmeister' %} is-selected{% endif %}" data-value="serienmeister"><span>Serienmeister</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'feuerwehrmann' %} is-selected{% endif %}" data-value="feuerwehrmann"><span>Feuerwehrmann</span></li>
-                                <li class="mp-csel-opt{% if manager_trainer_type_key == 'vereinslegende' %} is-selected{% endif %}" data-value="vereinslegende"><span>Vereinslegende</span></li>
                             </ul>
                         </div>
                     </div>
@@ -713,24 +728,45 @@
                 <p class="mp-privacy-desc">Lege fest, welche Informationen andere Manager sehen dürfen.</p>
                 <div class="mp-privacy-table">
                     <div class="mp-privacy-thead"><span>Feld</span><span>Öffentlich anzeigen</span></div>
-                    {% for field in "Profilbild,Nickname,Trainer-Typ,Landesflagge,Lieblingsverein,E-Mail-Adresse,Geburtstag,Wohnort,Registriert am,Letzte Anmeldung"|split:"," %}
+                    {% for field in privacy_fields %}
                     <div class="mp-privacy-row">
-                        <span class="mp-privacy-field">{{ field }}</span>
+                        <span class="mp-privacy-field">{{ field.label }}</span>
                         <div class="mp-privacy-controls">
-                            <label class="mp-toggle">
-                                <input type="checkbox" {% if forloop.counter <= 5 %}checked{% endif %}>
-                                <span class="mp-toggle-track"></span>
-                            </label>
-                            <select class="mp-visibility-select" aria-label="{{ field }} Sichtbarkeit">
-                                <option {% if forloop.counter <= 5 %}selected{% endif %}>Für alle</option>
-                                <option>Freunde</option>
-                                <option {% if forloop.counter > 5 %}selected{% endif %}>Nur ich</option>
+                            <select class="mp-visibility-select" name="visibility_{{ field.key }}" form="mpPrivacyForm" aria-label="{{ field.label }} Sichtbarkeit">
+                                <option value="all"{% if field.value == 'all' %} selected{% endif %}>Für alle</option>
+                                <option value="private"{% if field.value != 'all' %} selected{% endif %}>Nur ich</option>
                             </select>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-                <button class="mp-btn mp-btn-primary" type="button">Speichern</button>
+                <form id="mpPrivacyForm" method="post" action="{% url 'update_manager_profile' %}">
+                    {% csrf_token %}
+                    <button class="mp-btn mp-btn-primary" type="submit">Speichern</button>
+                </form>
+            </article>
+            <article class="mp-card mp-card-vacation">
+                <h3>Urlaubsmodus · Saison {{ active_season }}</h3>
+                <p class="mp-privacy-desc">{{ vacation_days_remaining }} von 14 Tagen verfügbar · maximal zwei Blöcke.</p>
+                {% for block in vacation_blocks %}
+                <div class="mp-vacation-row">
+                    <span>{{ block.starts_on|date:"d.m.Y" }} – {{ block.effective_end|date:"d.m.Y" }}</span>
+                    {% if block.is_active %}
+                    <form method="post" action="{% url 'manager_vacation' %}">
+                        {% csrf_token %}<input type="hidden" name="action" value="end"><input type="hidden" name="block_id" value="{{ block.pk }}">
+                        <button class="mp-btn mp-btn-secondary" type="submit">Vorzeitig beenden</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% if vacation_blocks|length < 2 and vacation_days_remaining >= 5 %}
+                <form class="mp-vacation-form" method="post" action="{% url 'manager_vacation' %}">
+                    {% csrf_token %}
+                    <label>Von <input type="date" name="starts_on" required></label>
+                    <label>Bis <input type="date" name="ends_on" required></label>
+                    <button class="mp-btn mp-btn-primary" type="submit">Urlaub eintragen</button>
+                </form>
+                {% endif %}
             </article>
         </div>
 
@@ -754,6 +790,15 @@
 {{ timeline_events_json|json_script:"mp-tl-events-data" }}
 {{ timeline_clubs_json|json_script:"mp-tl-clubs-data" }}
 {{ station_switcher_json|json_script:"mp-stations-data" }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var dialog = document.getElementById('mpTitleDialog');
+    var open = document.querySelector('[data-title-all]');
+    var close = document.querySelector('[data-title-close]');
+    if (dialog && open) open.addEventListener('click', function () { dialog.showModal(); });
+    if (dialog && close) close.addEventListener('click', function () { dialog.close(); });
+});
+</script>
 <script>
 var MP_TL_EVENTS = JSON.parse(document.getElementById('mp-tl-events-data').textContent);
 var MP_TL_CLUBS  = JSON.parse(document.getElementById('mp-tl-clubs-data').textContent);

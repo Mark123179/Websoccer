@@ -1,7 +1,61 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model, login
+from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import redirect
 
 _LAST_SEEN_INTERVAL_S = 120
+
+
+class ManagerTransferBanMiddleware:
+    """Enforce the inactivity transfer ban across all transfer POST routes."""
+
+    # These actions do not create, accept or improve a transfer commitment.
+    _ALLOWED_DURING_BAN = {
+        'transfer_market_pin',
+        'transfer_rumor_react',
+        'transfer_report_create',
+        'transfer_deal_decline',
+        'transfer_deal_withdraw',
+        'transfer_deal_counter_decline',
+        'transfer_deal_bid_remove',
+        'transfer_loan_listing_withdraw',
+        'scouting_watch',
+        'scouting_withdraw',
+        'scouting_reject',
+        'scouting_watchlist_add',
+        'scouting_watchlist_remove',
+        'scouting_community_submit',
+    }
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if (
+            request.method == 'POST'
+            and request.path.startswith('/transfers/')
+            and request.user.is_authenticated
+            and request.resolver_match
+            and request.resolver_match.url_name not in self._ALLOWED_DURING_BAN
+        ):
+            try:
+                profile = request.user.manager_profile
+            except Exception:
+                profile = None
+            if profile is not None and profile.transfer_ban_until:
+                text = (
+                    'Transfersperre: Bestätige beim nächsten Pflichtspiel '
+                    'eigenhändig deine Aufstellung, um sie zu beenden.'
+                )
+                if (
+                    request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    or 'application/json' in request.headers.get('Accept', '')
+                ):
+                    return JsonResponse({'ok': False, 'error': text}, status=403)
+                messages.error(request, text)
+                return redirect(request.META.get('HTTP_REFERER') or '/transfers/markt/')
+        return self.get_response(request)
 
 
 class LastSeenMiddleware:
