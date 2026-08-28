@@ -66,6 +66,82 @@ VISIBILITY_DEFAULTS = {
     'last_login': 'private',
 }
 
+LOGIN_REWARD_XP = (5, 10, 15, 20, 25, 30, 50)
+
+
+def award_login_reward(manager):
+    """Award one daily login step, once per local calendar day.
+
+    The streak intentionally uses consecutive local dates rather than request
+    count. A missed day starts a new track; milestone flags belong to that
+    track and are reset with it.
+    """
+    from .models import Club, ManagerProfile
+
+    today = timezone.localdate()
+    with transaction.atomic():
+        locked = ManagerProfile.objects.select_for_update().get(pk=manager.pk)
+        if locked.login_last_date == today:
+            return {
+                'streak': locked.login_streak,
+                'points_today': locked.login_points_today,
+                'next_reward_days': max(0, 8 - min(locked.login_streak, 7)),
+            }
+
+        yesterday = today - timedelta(days=1)
+        continuing = locked.login_last_date == yesterday
+        streak = locked.login_streak + 1 if continuing else 1
+        points = LOGIN_REWARD_XP[min(streak, len(LOGIN_REWARD_XP)) - 1]
+        award_xp = points
+        day14 = locked.login_day14_awarded if continuing else False
+        day30 = locked.login_day30_awarded if continuing else False
+        money_paid = locked.login_day30_money_paid if continuing else False
+        if streak >= 14 and not day14:
+            award_xp += 100
+            day14 = True
+        if streak >= 30 and not day30:
+            award_xp += 250
+            day30 = True
+
+        locked.login_streak = streak
+        locked.login_last_date = today
+        locked.login_points_today = award_xp
+        locked.login_day14_awarded = day14
+        locked.login_day30_awarded = day30
+        update_fields = [
+            'login_streak', 'login_last_date', 'login_points_today',
+            'login_day14_awarded', 'login_day30_awarded', 'updated_at',
+        ]
+        if streak >= 30 and not money_paid:
+            club = Club.objects.filter(managed_by=locked).first()
+            if club:
+                from .economy.booking import book
+                book(
+                    club, 'KORREKTUR_ADMIN', 1_000_000,
+                    beschreibung='Login-Belohnung · 30-Tage-Serie',
+                    referenz_typ='manager_login', referenz_id=locked.pk,
+                    pflicht=True,
+                )
+                locked.login_day30_money_paid = True
+                money_paid = True
+                update_fields.append('login_day30_money_paid')
+        locked.xp = locked.xp + award_xp
+        update_fields.append('xp')
+        locked.save(update_fields=update_fields)
+
+    manager.login_streak = locked.login_streak
+    manager.login_last_date = locked.login_last_date
+    manager.login_points_today = locked.login_points_today
+    manager.login_day14_awarded = locked.login_day14_awarded
+    manager.login_day30_awarded = locked.login_day30_awarded
+    manager.login_day30_money_paid = locked.login_day30_money_paid
+    manager.xp = locked.xp
+    return {
+        'streak': locked.login_streak,
+        'points_today': locked.login_points_today,
+        'next_reward_days': max(0, 8 - min(locked.login_streak, 7)),
+    }
+
 
 def level_threshold(level):
     """Total XP needed to reach *level* (level 1 starts at zero)."""

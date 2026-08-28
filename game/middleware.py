@@ -66,6 +66,13 @@ class LastSeenMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        if request.user.is_authenticated:
+            try:
+                mp = request.user.manager_profile
+                from .manager_profile import award_login_reward
+                award_login_reward(mp)
+            except Exception:
+                pass
         response = self.get_response(request)
         if request.user.is_authenticated:
             try:

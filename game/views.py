@@ -6914,9 +6914,9 @@ def manager_profile(request):
             'transfer_out': transfer_out_str,
             'transfer_in': transfer_in_str,
         },
-        'login_streak': 7,
-        'login_points_today': 150,
-        'next_reward_days': 2,
+        'login_streak': manager_profile_obj.login_streak,
+        'login_points_today': manager_profile_obj.login_points_today,
+        'next_reward_days': max(0, 8 - min(manager_profile_obj.login_streak, 7)),
         'country_choices': sorted(COUNTRY_FLAG_ASSETS.keys()),
         'country_choices_with_flags': [
             {'name': k, 'code': v['code'].lower()}

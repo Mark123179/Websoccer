@@ -4022,6 +4022,12 @@ class ManagerProfile(models.Model):
     inactivity_season_count = models.PositiveSmallIntegerField(default=0)
     inactivity_streak = models.PositiveSmallIntegerField(default=0)
     transfer_ban_until = models.DateField(null=True, blank=True)
+    login_streak = models.PositiveSmallIntegerField(default=0)
+    login_last_date = models.DateField(null=True, blank=True)
+    login_points_today = models.PositiveIntegerField(default=0)
+    login_day14_awarded = models.BooleanField(default=False)
+    login_day30_awarded = models.BooleanField(default=False)
+    login_day30_money_paid = models.BooleanField(default=False)
     residence = models.CharField(max_length=120, blank=True, default='')
     visibility_settings = models.JSONField(
         default=dict,

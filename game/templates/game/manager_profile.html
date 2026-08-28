@@ -92,7 +92,7 @@
                 {% for t in manager.trophies_list_mini %}<img src="{% static t.icon %}" alt="{{ t.name }}">{% endfor %}
             </div>
             {% endif %}
-            <small class="mp-kpi-sub"><a href="?tab=profil">Alle ansehen</a></small>
+            <small class="mp-kpi-sub"><button class="mp-inline-action" type="button" data-trophy-all>Alle ansehen</button></small>
         </div>
         <!-- 4: Spiele -->
         <div class="mp-kpi-cell">
@@ -325,7 +325,7 @@
         <article class="mp-card2">
             <header class="mp-card2-header">
                 <h3>TROPHÄENSAMMLUNG</h3>
-                <a href="?tab=profil">Alle ansehen</a>
+                <button class="mp-inline-action" type="button" data-trophy-all>Alle ansehen</button>
             </header>
             {% if trophies_list %}
             <div class="mp-trophies2-grid">
@@ -773,6 +773,43 @@
     </div>
 </section>
 
+<!-- Trophäenvitrine: bewusst als echtes Overlay statt Navigation zurück auf
+     dieselbe Profilseite. Die Trophäen stammen vollständig aus der DB-Liste. -->
+<div class="mp-trophy-vitrine" id="mpTrophyVitrine" aria-hidden="true">
+    <div class="mp-trophy-vitrine-backdrop" data-trophy-close></div>
+    <section class="mp-trophy-vitrine-dialog" role="dialog" aria-modal="true"
+             aria-labelledby="mpTrophyVitrineTitle">
+        <header class="mp-trophy-vitrine-head">
+            <div>
+                <span class="mp-kpi-lbl">SAMMLUNG</span>
+                <h2 id="mpTrophyVitrineTitle">TROPHÄENVITRINE</h2>
+            </div>
+            <button class="mp-modal-close" type="button" data-trophy-close
+                    aria-label="Vitrine schließen">×</button>
+        </header>
+        <div class="mp-trophy-vitrine-shelf" id="mpTrophyVitrineShelf">
+            {% for trophy in trophies_list %}
+            <article class="mp-trophy-vitrine-item" title="{{ trophy.name }}">
+                <div class="mp-trophy-vitrine-cup">
+                    <img src="{% static trophy.icon %}" alt="{{ trophy.name }}">
+                </div>
+                <strong>{{ trophy.name }}</strong>
+                <span>{{ trophy.count }}× gewonnen</span>
+            </article>
+            {% empty %}
+            <p class="mp-card2-empty">Noch keine Trophäen in der Vitrine.</p>
+            {% endfor %}
+        </div>
+        <footer class="mp-trophy-vitrine-footer">
+            <button class="mp-vitrine-page" type="button" data-trophy-prev
+                    aria-label="Vorherige Vitrinenseite">‹</button>
+            <span id="mpTrophyVitrinePage">1 / 1</span>
+            <button class="mp-vitrine-page" type="button" data-trophy-next
+                    aria-label="Nächste Vitrinenseite">›</button>
+        </footer>
+    </section>
+</div>
+
 {% else %}
 <section class="mp-tab-content mp-coming-soon">
     <div class="mp-coming-soon-inner">
@@ -797,6 +834,57 @@ document.addEventListener('DOMContentLoaded', function () {
     var close = document.querySelector('[data-title-close]');
     if (dialog && open) open.addEventListener('click', function () { dialog.showModal(); });
     if (dialog && close) close.addEventListener('click', function () { dialog.close(); });
+});
+</script>
+<script>
+/* Trophäenvitrine: Overlay bleibt außerhalb des skalierten Game-Shells. */
+document.addEventListener('DOMContentLoaded', function () {
+    var vitrine = document.getElementById('mpTrophyVitrine');
+    if (!vitrine) return;
+    if (vitrine.parentNode !== document.body) document.body.appendChild(vitrine);
+    var items = Array.prototype.slice.call(vitrine.querySelectorAll('.mp-trophy-vitrine-item'));
+    var shelf = document.getElementById('mpTrophyVitrineShelf');
+    var pageLabel = document.getElementById('mpTrophyVitrinePage');
+    var prev = vitrine.querySelector('[data-trophy-prev]');
+    var next = vitrine.querySelector('[data-trophy-next]');
+    var page = 0;
+    var perPage = 3;
+    function render() {
+        var pages = Math.max(1, Math.ceil(items.length / perPage));
+        page = Math.max(0, Math.min(page, pages - 1));
+        items.forEach(function (item, index) {
+            item.hidden = index < page * perPage || index >= (page + 1) * perPage;
+        });
+        if (pageLabel) pageLabel.textContent = (page + 1) + ' / ' + pages;
+        if (prev) prev.disabled = page === 0;
+        if (next) next.disabled = page >= pages - 1;
+        if (shelf) shelf.classList.toggle('is-empty', !items.length);
+    }
+    function open() {
+        page = 0; render();
+        vitrine.classList.add('is-open');
+        vitrine.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('mp-modal-open');
+        var close = vitrine.querySelector('[data-trophy-close]');
+        if (close) close.focus();
+    }
+    function close() {
+        vitrine.classList.remove('is-open');
+        vitrine.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('mp-modal-open');
+    }
+    document.querySelectorAll('[data-trophy-all]').forEach(function (button) {
+        button.addEventListener('click', open);
+    });
+    vitrine.querySelectorAll('[data-trophy-close]').forEach(function (button) {
+        button.addEventListener('click', close);
+    });
+    if (prev) prev.addEventListener('click', function () { page -= 1; render(); });
+    if (next) next.addEventListener('click', function () { page += 1; render(); });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && vitrine.classList.contains('is-open')) close();
+    });
+    render();
 });
 </script>
 <script>

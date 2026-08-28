@@ -1,9 +1,11 @@
 from datetime import date, timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from game.manager_profile import (
+    award_login_reward,
     create_vacation_block,
     level_from_xp,
     level_threshold,
@@ -27,6 +29,56 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertEqual(level_threshold(4), 2700)
         self.assertEqual(level_from_xp(799), 1)
         self.assertEqual(level_from_xp(800), 2)
+
+    def test_login_reward_progression_is_daily_and_idempotent(self):
+        with patch('game.manager_profile.timezone.localdate', return_value=date(2026, 8, 28)):
+            first = award_login_reward(self.manager)
+            repeated = award_login_reward(self.manager)
+        self.manager.refresh_from_db()
+        self.assertEqual(first['points_today'], 5)
+        self.assertEqual(repeated['points_today'], 5)
+        self.assertEqual(self.manager.login_streak, 1)
+        self.assertEqual(self.manager.xp, 5)
+
+        with patch('game.manager_profile.timezone.localdate', return_value=date(2026, 8, 29)):
+            second = award_login_reward(self.manager)
+        self.manager.refresh_from_db()
+        self.assertEqual(second['points_today'], 10)
+        self.assertEqual(self.manager.login_streak, 2)
+        self.assertEqual(self.manager.xp, 15)
+
+    def test_login_streak_breaks_after_missed_day(self):
+        self.manager.login_streak = 6
+        self.manager.login_last_date = date(2026, 8, 25)
+        self.manager.login_day14_awarded = True
+        self.manager.save(update_fields=[
+            'login_streak', 'login_last_date', 'login_day14_awarded',
+        ])
+        with patch('game.manager_profile.timezone.localdate', return_value=date(2026, 8, 28)):
+            result = award_login_reward(self.manager)
+        self.manager.refresh_from_db()
+        self.assertEqual(result['points_today'], 5)
+        self.assertEqual(self.manager.login_streak, 1)
+        self.assertFalse(self.manager.login_day14_awarded)
+
+    def test_login_milestones_add_bonus_xp(self):
+        self.manager.login_streak = 13
+        self.manager.login_last_date = date(2026, 8, 27)
+        self.manager.save(update_fields=['login_streak', 'login_last_date'])
+        with patch('game.manager_profile.timezone.localdate', return_value=date(2026, 8, 28)):
+            day14 = award_login_reward(self.manager)
+        self.assertEqual(day14['points_today'], 150)
+
+        self.manager.refresh_from_db()
+        self.manager.login_streak = 29
+        self.manager.login_last_date = date(2026, 8, 27)
+        self.manager.login_day14_awarded = True
+        self.manager.save(update_fields=[
+            'login_streak', 'login_last_date', 'login_day14_awarded',
+        ])
+        with patch('game.manager_profile.timezone.localdate', return_value=date(2026, 8, 28)):
+            day30 = award_login_reward(self.manager)
+        self.assertEqual(day30['points_today'], 300)
 
     def test_free_title_can_be_selected_but_locked_title_cannot(self):
         select_title(self.manager, 'quaelix')

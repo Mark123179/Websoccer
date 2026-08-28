@@ -391,6 +391,11 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-card2-header h3 { font-size: 14px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(180,200,230,.52); margin: 0; }
 .mp-card2-header a  { font-size: 14px; color: var(--mp-cyan); text-decoration: none; flex-shrink: 0; }
 .mp-card2-header a:hover { text-decoration: underline; }
+.mp-inline-action {
+    border: 0; padding: 0; background: transparent; color: var(--mp-cyan);
+    font: inherit; cursor: pointer;
+}
+.mp-inline-action:hover { text-decoration: underline; }
 .mp-card2-empty { color: var(--mp-sub); font-size: 12px; text-align: center; padding: 20px 0; margin: 0; }
 
 /* Trophäen */
@@ -415,6 +420,55 @@ body.manager-profile-page .nav-menu a:first-child {
     color: #fff; font: 900 13px/1 Inter, system-ui, sans-serif;
 }
 .mp-trophy2-slot small { font-size: 13px; font-weight: 700; color: var(--mp-sub); line-height: 1.25; }
+
+/* Trophäenvitrine */
+.mp-modal-open { overflow: hidden; }
+.mp-trophy-vitrine {
+    position: fixed; inset: 0; z-index: 10050; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+}
+.mp-trophy-vitrine.is-open { display: flex; }
+.mp-trophy-vitrine-backdrop {
+    position: absolute; inset: 0; background: rgba(1, 8, 14, .86);
+    backdrop-filter: blur(5px);
+}
+.mp-trophy-vitrine-dialog {
+    position: relative; width: min(720px, 100%); max-height: min(680px, 90vh);
+    overflow: auto; padding: 22px; color: var(--mp-text, #f4fbff);
+    background: linear-gradient(165deg, #0b2432, #061018 70%);
+    border: 1px solid rgba(255,209,102,.32); border-radius: 10px;
+    box-shadow: 0 28px 80px rgba(0,0,0,.6), 0 0 32px rgba(255,209,102,.08);
+}
+.mp-trophy-vitrine-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.mp-trophy-vitrine-head h2 { margin: 5px 0 0; font-size: 20px; letter-spacing: .12em; color: #ffd166; }
+.mp-modal-close { border: 0; background: transparent; color: var(--mp-sub); font-size: 28px; line-height: 1; cursor: pointer; }
+.mp-modal-close:hover { color: #fff; }
+.mp-trophy-vitrine-shelf {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;
+    min-height: 220px; padding: 18px 0 22px;
+    border-bottom: 1px solid rgba(255,209,102,.18);
+}
+.mp-trophy-vitrine-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    min-height: 190px; padding: 12px 8px; text-align: center;
+    background: linear-gradient(180deg, rgba(255,209,102,.08), rgba(255,209,102,.025));
+    border: 1px solid rgba(255,209,102,.18); border-radius: 7px;
+}
+.mp-trophy-vitrine-item[hidden] { display: none; }
+.mp-trophy-vitrine-cup { display: grid; place-items: center; flex: 1; width: 100%; }
+.mp-trophy-vitrine-cup img { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 0 18px rgba(255,209,102,.35)); }
+.mp-trophy-vitrine-item strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+.mp-trophy-vitrine-item span { margin-top: 5px; color: var(--mp-sub); font-size: 11px; }
+.mp-trophy-vitrine-footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 16px; color: var(--mp-sub); font-size: 12px; }
+.mp-vitrine-page { width: 30px; height: 30px; border: 1px solid rgba(44,231,255,.3); border-radius: 4px; background: rgba(44,231,255,.06); color: var(--mp-cyan); font-size: 22px; line-height: 1; cursor: pointer; }
+.mp-vitrine-page:disabled { opacity: .3; cursor: default; }
+@media (max-width: 600px) {
+    .mp-trophy-vitrine { padding: 12px; }
+    .mp-trophy-vitrine-dialog { padding: 16px; }
+    .mp-trophy-vitrine-shelf { gap: 8px; }
+    .mp-trophy-vitrine-item { min-height: 150px; padding-inline: 4px; }
+    .mp-trophy-vitrine-cup img { width: 76px; height: 76px; }
+}
 
 /* Login rewards */
 .mp-login2-reward { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
