@@ -122,9 +122,9 @@ class ModalPortalCenteringTests(Base):
         self.assertIn('transform-origin: center center', css)
 
     def test_scouting_css_has_portaled_scale_rule(self):
-        """scouting.css defines .is-portaled scale for sc-bid-modal."""
+        """scouting.css scales the shared tv2 modal after body portaling."""
         css = self._css('game/static/game/css/scouting.css')
-        self.assertIn('.sc-bid-modal.is-portaled', css)
+        self.assertIn('#bid-modal.is-portaled > .tv2-modal', css)
         self.assertIn('transform: scale(var(--game-scale', css)
         self.assertIn('transform-origin: center center', css)
 
@@ -137,8 +137,9 @@ class ModalPortalCenteringTests(Base):
         self.assertIn('justify-content: center', css)
 
     def test_sc_bid_modal_uses_fixed_flex_centering(self):
-        """sc-bid-modal has position:fixed + flex centering."""
-        css = self._css('game/static/game/css/scouting.css')
+        """The shared scouting backdrop has fixed viewport centering."""
+        css = self._css('game/static/game/css/transfer_v2.css')
+        self.assertIn('.tv2-modal-backdrop', css)
         self.assertIn('position: fixed', css)
         self.assertIn('align-items: center', css)
         self.assertIn('justify-content: center', css)
@@ -163,7 +164,8 @@ class ModalPortalCenteringTests(Base):
 
     def test_scouting_has_bid_modal(self):
         html = self.client.get(reverse('transfer_scouting')).content.decode()
-        self.assertIn('sc-bid-modal', html)
+        self.assertIn('id="bid-modal"', html)
+        self.assertIn('tv2-modal-backdrop', html)
 
     def test_game_scale_set_on_root_in_base(self):
         """--game-scale must be set on documentElement so portaled modals inherit it."""
