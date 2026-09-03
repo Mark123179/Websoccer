@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kalender · Websoccer{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'game/css/calendar.css' %}?v=1">
+{% endblock %}
+
+{% block content %}
+<section class="calendar-screen" aria-labelledby="calendar-title">
+    <header class="calendar-toolbar">
+        <div class="calendar-heading">
+            <span class="calendar-eyebrow">Kalender</span>
+            <h1 id="calendar-title">
+                <span class="calendar-heading-season">Saison #{{ calendar_season_number }}</span>
+                <span class="calendar-heading-subtitle">
+                    Saison #{{ calendar_season_number }}: {{ calendar_season_start|date:"d.m.Y" }}
+                    → {{ calendar_season_end|date:"d.m.Y" }}
+                    · Saison #{{ calendar_season_number|add:"1" }} vorläufig aus Saison #{{ calendar_season_number }} übernommen
+                </span>
+            </h1>
+        </div>
+        <div class="calendar-controls" aria-label="Kalendersteuerung">
+            <nav class="calendar-view-tabs" aria-label="Kalenderansicht">
+                <a class="calendar-view-tab{% if calendar_active_view == 'year' %} is-active{% endif %}"
+                   data-calendar-view="year" href="?{{ calendar_view_queries.year }}">Jahr</a>
+                <a class="calendar-view-tab{% if calendar_active_view == 'month' %} is-active{% endif %}"
+                   data-calendar-view="month" href="?{{ calendar_view_queries.month }}">Monat</a>
+                <a class="calendar-view-tab{% if calendar_active_view == 'week' %} is-active{% endif %}"
+                   data-calendar-view="week" href="?{{ calendar_view_queries.week }}">Woche</a>
+            </nav>
+            <div class="calendar-filter-row" aria-label="Wettbewerbe filtern">
+                {% for filter in calendar_filters %}
+                    <a class="calendar-filter calendar-filter--{{ filter.key }}{% if filter.active %} is-active{% endif %}"
+                       href="?{{ filter.query }}"
+                       data-calendar-filter="{{ filter.key }}"
+                       aria-pressed="{{ filter.active|yesno:'true,false' }}">{{ filter.label }}</a>
+                {% endfor %}
+                <span class="calendar-control-divider" aria-hidden="true"></span>
+                <a class="calendar-step" href="?{{ calendar_prev_query }}" aria-label="Einen Monat zurück">‹</a>
+                <a class="calendar-step" href="?{{ calendar_next_query }}" aria-label="Einen Monat weiter">›</a>
+                <a class="calendar-today" href="?{{ calendar_today_query }}">Heute</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="calendar-season-track" aria-label="Saison-Zeitachse">
+        <div class="calendar-track-labels">
+            <span>SAISONSTART {{ calendar_season_start|date:"d.m.Y" }}</span>
+            <span class="calendar-track-current"><i></i>Saison #{{ calendar_season_number }}</span>
+            <span class="calendar-track-forecast"><i></i>Saison #{{ calendar_season_number|add:"1" }} (Prognose)</span>
+            <span>SAISONENDE {{ calendar_season_end|date:"d.m.Y" }}</span>
+        </div>
+        <div class="calendar-track-bar">
+            <span class="calendar-track-live"></span>
+            <span class="calendar-track-forecast-bar"></span>
+            <span class="calendar-track-today" style="left: {{ calendar_today_position }}%;" aria-label="Heute"></span>
+        </div>
+    </section>
+
+    <div class="calendar-layout">
+        <main class="calendar-main">
+            <section class="calendar-view calendar-view--year{% if calendar_active_view != 'year' %} is-hidden{% endif %}"
+                     data-calendar-panel="year" aria-label="Jahresansicht">
+                <div class="calendar-month-grid">
+                    {% for month in calendar_months %}
+                        <article class="calendar-month-card season-{{ month.season_key }}">
+                            <div class="calendar-month-image" style="background-image:url('{% static month.image %}')"></div>
+                            <div class="calendar-month-tint"></div>
+                            <header class="calendar-month-head">
+                                <div>
+                                    <h2>{{ month.name }}</h2>
+                                    <span>{{ month.season }}</span>
+                                </div>
+                                <strong>{{ month.year }}</strong>
+                            </header>
+                            <div class="calendar-month-meta">
+                                <span class="calendar-season-chip">Saison #{{ calendar_season_number }}</span>
+                                <span>{{ month.fixture_count }} {% if month.fixture_count == 1 %}Spiel{% else %}Spiele{% endif %}</span>
+                            </div>
+                            <div class="calendar-mini-weekdays" aria-hidden="true">
+                                <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+                            </div>
+                            <div class="calendar-mini-grid">
+                                {% for cell in month.cells %}
+                                    {% if cell.empty %}
+                                        <span class="calendar-mini-day is-empty"></span>
+                                    {% else %}
+                                        <a class="calendar-mini-day{% if cell.is_today %} is-today{% endif %}{% if cell.is_selected %} is-selected{% endif %}{% if cell.fixtures %} has-fixture{% endif %}"
+                                           href="?view=year&calendar_date={{ cell.iso_date }}&filters={{ calendar_filter_string }}"
+                                           aria-label="{{ cell.iso_date }}{% if cell.fixtures %}, Spiel{% endif %}">
+                                            {{ cell.number }}
+                                            {% if cell.fixtures %}<i aria-hidden="true"></i>{% endif %}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="calendar-view calendar-view--month{% if calendar_active_view != 'month' %} is-hidden{% endif %}"
+                     data-calendar-panel="month" aria-label="Monatsansicht">
+                <header class="calendar-large-month">
+                    <div class="calendar-large-month-image" style="background-image:url('{% static calendar_month.image %}')"></div>
+                    <div class="calendar-large-month-copy">
+                        <span>{{ calendar_month.season }} · Saison #{{ calendar_season_number }}</span>
+                        <h2>{{ calendar_month.name }} {{ calendar_month.year }}</h2>
+                        <strong>{{ calendar_month.fixture_count }} Spiele im ausgewählten Monat</strong>
+                    </div>
+                </header>
+                <div class="calendar-month-weekdays">
+                    <span>Montag</span><span>Dienstag</span><span>Mittwoch</span><span>Donnerstag</span><span>Freitag</span><span>Samstag</span><span>Sonntag</span>
+                </div>
+                <div class="calendar-month-large-grid">
+                    {% for cell in calendar_month.cells %}
+                        <div class="calendar-large-day{% if cell.empty %} is-empty{% endif %}{% if cell.is_today %} is-today{% endif %}{% if cell.is_selected %} is-selected{% endif %}">
+                            {% if not cell.empty %}
+                                <a class="calendar-large-day-number" href="?view=month&calendar_date={{ cell.iso_date }}&filters={{ calendar_filter_string }}">{{ cell.number }}</a>
+                                {% for fixture in cell.fixtures %}
+                                    <a class="calendar-match-tile comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}"
+                                       href="?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
+                                        <img src="{{ fixture.opponent_crest }}" alt="" loading="lazy">
+                                        <span class="calendar-match-tile-copy">
+                                            <strong>{{ fixture.time }} · {{ fixture.opponent_short }}</strong>
+                                            <small>{{ fixture.competition }} · {{ fixture.venue_short }}</small>
+                                        </span>
+                                        <em>{{ fixture.status }}</em>
+                                    </a>
+                                {% endfor %}
+                                {% if not cell.fixtures %}<span class="calendar-rest">Spielfrei</span>{% endif %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="calendar-view calendar-view--week{% if calendar_active_view != 'week' %} is-hidden{% endif %}"
+                     data-calendar-panel="week" aria-label="Wochenansicht">
+                <header class="calendar-week-head">
+                    <span class="calendar-eyebrow">Wochenansicht</span>
+                    <h2>{{ calendar_week_label }}</h2>
+                    <p>Alle Termine der ausgewählten Kalenderwoche</p>
+                </header>
+                <div class="calendar-week-grid">
+                    {% for day in calendar_week_days %}
+                        <article class="calendar-week-day{% if day.is_today %} is-today{% endif %}">
+                            <header><span>{{ day.weekday }}</span><strong>{{ day.number }}</strong></header>
+                            {% for fixture in day.fixtures %}
+                                <a class="calendar-week-match comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}"
+                                   href="?view=week&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
+                                    <span class="calendar-week-competition">
+                                        <img src="{{ fixture.competition_logo }}" alt="">
+                                        {{ fixture.competition }}
+                                    </span>
+                                    <img class="calendar-week-crest" src="{{ fixture.opponent_crest }}" alt="">
+                                    <strong>{{ fixture.opponent_name }}</strong>
+                                    <b>{{ fixture.time }} Uhr</b>
+                                    <small>{{ fixture.venue }} · {{ fixture.matchday_label }}</small>
+                                    <em>{{ fixture.status }}</em>
+                                </a>
+                            {% empty %}
+                                <div class="calendar-week-empty"><span>—</span><strong>Spielfrei</strong><small>Training &amp; Regeneration</small></div>
+                            {% endfor %}
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        </main>
+
+        <aside class="calendar-aside">
+            <section class="calendar-detail-panel" aria-labelledby="calendar-detail-title">
+                <span class="calendar-eyebrow">Ausgewählter Tag</span>
+                <h2 id="calendar-detail-title">{{ calendar_selected_label }}</h2>
+                {% if calendar_detail_fixture %}
+                    <div class="calendar-detail-competition comp-{{ calendar_detail_fixture.competition_kind }}">
+                        <img src="{{ calendar_detail_fixture.competition_logo }}" alt="">
+                        <span>{{ calendar_detail_fixture.competition }}</span>
+                    </div>
+                    <div class="calendar-detail-opponent">
+                        <img src="{{ calendar_detail_fixture.opponent_crest }}" alt="{{ calendar_detail_fixture.opponent_name }}">
+                        <div><span>{{ calendar_detail_fixture.matchday_label }}</span><strong>{{ calendar_detail_fixture.opponent_name }}</strong></div>
+                    </div>
+                    <dl class="calendar-detail-facts">
+                        <div><dt>Wann</dt><dd>{{ calendar_detail_fixture.date_label }} · {{ calendar_detail_fixture.time }} Uhr</dd></div>
+                        <div><dt>Ort</dt><dd>{{ calendar_detail_fixture.venue }}{% if calendar_detail_fixture.stadium %} · Heimstadion{% endif %}</dd></div>
+                        <div><dt>Wettbewerb</dt><dd>{{ calendar_detail_fixture.competition }} · {{ calendar_detail_fixture.matchday_label }}</dd></div>
+                        <div><dt>Status</dt><dd class="{% if calendar_detail_fixture.forecast %}is-forecast{% elif calendar_detail_fixture.lineup_set %}is-ready{% endif %}">{{ calendar_detail_fixture.status }}{% if calendar_detail_fixture.result %} · {{ calendar_detail_fixture.result }}{% endif %}</dd></div>
+                    </dl>
+                    <div class="calendar-detail-actions">
+                        <a href="{{ current_manager.club_url }}matches/next/">Spielvorschau <span>›</span></a>
+                        <a href="{{ current_manager.tactics_url }}">Taktik &amp; Aufstellung <span>›</span></a>
+                        <a href="{{ calendar_detail_fixture.opponent_url }}">Gegner analysieren <span>›</span></a>
+                    </div>
+                {% else %}
+                    <div class="calendar-detail-empty">
+                        <span class="calendar-empty-icon" aria-hidden="true">○</span>
+                        <strong>Kein Spieltermin</strong>
+                        <p>Für diesen Tag ist kein Termin in den gewählten Wettbewerben eingetragen.</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <section class="calendar-upcoming" aria-labelledby="upcoming-title">
+                <header><span class="calendar-eyebrow">Nächste Termine</span><h2 id="upcoming-title">Deine nächsten Spiele</h2></header>
+                {% for fixture in calendar_upcoming %}
+                    <a class="calendar-upcoming-item comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}"
+                       href="?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
+                        <span class="calendar-upcoming-point" aria-hidden="true"></span>
+                        <img class="calendar-upcoming-crest" src="{{ fixture.opponent_crest }}" alt="">
+                        <span class="calendar-upcoming-copy"><strong>{{ fixture.opponent_short }}</strong><small>{{ fixture.date_label }} · {{ fixture.time }} · {{ fixture.venue_short }}</small></span>
+                        <em>{% if fixture.days_until == 0 %}heute{% elif fixture.days_until == 1 %}morgen{% else %}in {{ fixture.days_until }}d{% endif %}</em>
+                    </a>
+                {% empty %}
+                    <p class="calendar-upcoming-empty">Keine weiteren Termine in den gewählten Filtern.</p>
+                {% endfor %}
+            </section>
+        </aside>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+    const tabs = document.querySelectorAll('[data-calendar-view]');
+    const panels = document.querySelectorAll('[data-calendar-panel]');
+    tabs.forEach((tab) => tab.addEventListener('click', (event) => {
+        event.preventDefault();
+        const view = tab.dataset.calendarView;
+        tabs.forEach((item) => item.classList.toggle('is-active', item.dataset.calendarView === view));
+        panels.forEach((panel) => panel.classList.toggle('is-hidden', panel.dataset.calendarPanel !== view));
+        history.replaceState(null, '', tab.href);
+    }));
+})();
+</script>
+{% endblock %}

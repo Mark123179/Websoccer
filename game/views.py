@@ -1,5 +1,6 @@
 import json
 import os
+import calendar as _calendar
 from collections import OrderedDict
 from datetime import date, timedelta
 from django.db import models as _db_models
@@ -30,6 +31,7 @@ from .models import (
     ClubNewsItem,
     ClubPublicProfile,
     ClubTrophy,
+    CupFixture,
     COUNTRY_FLAG_ASSETS,
     DataSource,
     GameSeasonState,
@@ -1202,6 +1204,385 @@ def calendar_offset_from_request(request):
         return int(request.GET.get('calendar_offset', 0))
     except (TypeError, ValueError):
         return 0
+
+
+_CALENDAR_MONTHS = (
+    ('Januar', '01-januar'),
+    ('Februar', '02-februar'),
+    ('März', '03-maerz'),
+    ('April', '04-april'),
+    ('Mai', '05-mai'),
+    ('Juni', '06-juni'),
+    ('Juli', '07-juli'),
+    ('August', '08-august'),
+    ('September', '09-september'),
+    ('Oktober', '10-oktober'),
+    ('November', '11-november'),
+    ('Dezember', '12-dezember'),
+)
+_CALENDAR_WEEKDAYS = ('Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So')
+_CALENDAR_SEASONS = {
+    0: ('Winter', 'winter'),
+    1: ('Winter', 'winter'),
+    2: ('Frühling', 'spring'),
+    3: ('Frühling', 'spring'),
+    4: ('Frühling', 'spring'),
+    5: ('Sommer', 'summer'),
+    6: ('Sommer', 'summer'),
+    7: ('Sommer', 'summer'),
+    8: ('Herbst', 'autumn'),
+    9: ('Herbst', 'autumn'),
+    10: ('Herbst', 'autumn'),
+    11: ('Winter', 'winter'),
+}
+_CALENDAR_DE_MONTHS_SHORT = (
+    'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez',
+)
+
+
+def _calendar_date(value):
+    try:
+        return date.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _calendar_fixture_payload(fixture, club, *, is_cup=False, forecast=False):
+    """Turn the two fixture sources into one display shape for the calendar."""
+    if is_cup:
+        match_date = fixture.cup_round.scheduled_date
+        home = fixture.home_club
+        away = fixture.away_club
+        competition = fixture.cup_round.cup_season.competition
+        round_labels = {
+            'round_of_64': '1. Runde',
+            'round_of_32': '1. Runde',
+            'round_of_18': '1. Runde',
+            'round_of_16': '2. Runde',
+            'quarter_final': 'Viertelfinale',
+            'semi_final': 'Halbfinale',
+            'final': 'Finale',
+        }
+        round_label = round_labels.get(
+            fixture.cup_round.round_code,
+            fixture.cup_round.round_code.replace('_', ' ').title(),
+        )
+        played = fixture.status == CupFixture.STATUS_PLAYED
+        result = ''
+        if played and fixture.home_goals_90 is not None:
+            home_goals = (fixture.home_goals_90 or 0) + (fixture.home_goals_et or 0)
+            away_goals = (fixture.away_goals_90 or 0) + (fixture.away_goals_et or 0)
+            suffix = (
+                ' n.V.' if fixture.decided_by == CupFixture.DECIDED_BY_ET
+                else ' n.E.' if fixture.decided_by == CupFixture.DECIDED_BY_PENALTIES
+                else ''
+            )
+            result = f'{home_goals}:{away_goals}{suffix}'
+        competition_kind = 'pokal'
+        matchday_label = round_label
+        lineup_set = False
+        fixture_id = f'cup-{fixture.pk}'
+    else:
+        match_date = fixture.scheduled_date
+        home = fixture.home_club
+        away = fixture.away_club
+        competition = fixture.league
+        played = fixture.is_played
+        result = fixture.result_display or ''
+        competition_kind = (
+            'europa' if any(word in competition.name.lower() for word in ('champions', 'europa', 'conference'))
+            else 'liga'
+        )
+        matchday_label = f'{fixture.matchday}. Spieltag'
+        lineup_set = fixture.home_lineup_set if fixture.home_club_id == club.pk else fixture.away_lineup_set
+        fixture_id = f'liga-{fixture.pk}'
+
+    if not match_date or not home or not away:
+        return None
+    is_home = home.pk == club.pk
+    opponent = away if is_home else home
+    stadium = stadium_static_path(home)
+    if forecast:
+        status = 'Prognose'
+    elif played:
+        status = 'abgeschlossen'
+    elif lineup_set:
+        status = 'Aufstellung gespeichert'
+    else:
+        status = 'Aufstellung offen'
+    return {
+        'id': fixture_id,
+        'date': match_date,
+        'iso_date': match_date.isoformat(),
+        'date_label': f'{match_date.day:02d}.{match_date.month:02d}.{match_date.year}',
+        'weekday': _CALENDAR_WEEKDAYS[match_date.weekday()],
+        'time': (
+            fixture.scheduled_time.strftime('%H:%M')
+            if not is_cup and fixture.scheduled_time
+            else '18:30'
+        ),
+        'opponent_name': opponent.name,
+        'opponent_short': getattr(opponent, 'short_name', '') or opponent.name,
+        'opponent_crest': opponent.crest_static_path,
+        'opponent_url': f'/clubs/{opponent.pk}/',
+        'competition': competition.name,
+        'competition_kind': competition_kind,
+        'competition_logo': competition_logo_static_path(competition),
+        'matchday_label': matchday_label,
+        'venue': 'Heimspiel' if is_home else 'Auswärts',
+        'venue_short': 'H' if is_home else 'A',
+        'stadium': stadium,
+        'result': result,
+        'status': status,
+        'is_played': played,
+        'lineup_set': lineup_set,
+        'forecast': forecast,
+        'home_name': home.name,
+        'away_name': away.name,
+        'home_crest': home.crest_static_path,
+        'away_crest': away.crest_static_path,
+    }
+
+
+def _calendar_month_payload(year, month, fixtures_by_date, selected_date):
+    first_weekday, days_in_month = _calendar.monthrange(year, month)
+    cells = [{'empty': True} for _ in range(first_weekday)]
+    for day_number in range(1, days_in_month + 1):
+        current = date(year, month, day_number)
+        cells.append({
+            'empty': False,
+            'number': day_number,
+            'iso_date': current.isoformat(),
+            'is_today': current == date.today(),
+            'is_selected': current == selected_date,
+            'fixtures': fixtures_by_date.get(current, []),
+        })
+    while len(cells) % 7:
+        cells.append({'empty': True})
+    month_name, image_name = _CALENDAR_MONTHS[month - 1]
+    season_name, season_key = _CALENDAR_SEASONS[month - 1]
+    return {
+        'number': month,
+        'name': month_name,
+        'year': year,
+        'image': f'game/images/calendar/months/{image_name}.png',
+        'season': season_name,
+        'season_key': season_key,
+        'cells': cells,
+        'fixture_count': sum(len(cell.get('fixtures', [])) for cell in cells),
+    }
+
+
+@login_required(login_url='/auth/login/')
+def calendar_view(request):
+    """Detailed season calendar, backed by the existing league and cup fixtures."""
+    club = current_manager_club(user=request.user)
+    active_season = str(GameSeasonState.objects.values_list('current_season', flat=True).first() or 0)
+    if club:
+        fixture_seasons = list(
+            SeasonFixture.objects.filter(
+                _db_models.Q(home_club=club) | _db_models.Q(away_club=club),
+                scheduled_date__isnull=False,
+            ).values_list('season', flat=True).distinct()
+        )
+        if active_season not in fixture_seasons and fixture_seasons:
+            active_season = sorted(fixture_seasons)[-1]
+
+    fixture_payloads = []
+    if club:
+        season_fixtures = (
+            SeasonFixture.objects
+            .filter(
+                season=active_season,
+                scheduled_date__isnull=False,
+            )
+            .filter(_db_models.Q(home_club=club) | _db_models.Q(away_club=club))
+            .select_related('home_club', 'away_club', 'league')
+            .order_by('scheduled_date', 'scheduled_time', 'pk')
+        )
+        fixture_payloads.extend(
+            payload for fixture in season_fixtures
+            if (payload := _calendar_fixture_payload(fixture, club))
+        )
+        cup_fixtures = (
+            CupFixture.objects
+            .filter(
+                cup_round__cup_season__season=active_season,
+                cup_round__scheduled_date__isnull=False,
+                is_bye=False,
+            )
+            .filter(_db_models.Q(home_club=club) | _db_models.Q(away_club=club))
+            .select_related(
+                'home_club', 'away_club',
+                'cup_round__cup_season__competition',
+            )
+            .order_by('cup_round__scheduled_date', 'pk')
+        )
+        fixture_payloads.extend(
+            payload for fixture in cup_fixtures
+            if (payload := _calendar_fixture_payload(fixture, club, is_cup=True))
+        )
+
+    # A season without its own schedule gets a clearly marked +364-day preview.
+    has_next_schedule = (
+        SeasonFixture.objects.filter(
+            season=str(int(active_season) + 1) if active_season.isdigit() else '',
+            scheduled_date__isnull=False,
+        ).filter(
+            _db_models.Q(home_club=club) | _db_models.Q(away_club=club)
+        ).exists()
+        if club else False
+    )
+    if club and active_season.isdigit() and not has_next_schedule:
+        for original in list(fixture_payloads):
+            preview = original.copy()
+            preview['id'] = f'{original["id"]}-forecast'
+            preview['date'] = original['date'] + timedelta(days=364)
+            preview['iso_date'] = preview['date'].isoformat()
+            preview['date_label'] = f'{preview["date"].day:02d}.{preview["date"].month:02d}.{preview["date"].year}'
+            preview['weekday'] = _CALENDAR_WEEKDAYS[preview['date'].weekday()]
+            preview['forecast'] = True
+            preview['status'] = 'Prognose'
+            fixture_payloads.append(preview)
+
+    filters_raw = request.GET.get('filters', 'liga,pokal,europa')
+    selected_filters = {
+        item for item in filters_raw.split(',')
+        if item in {'liga', 'pokal', 'europa'}
+    } or {'liga', 'pokal', 'europa'}
+    visible_fixtures = [
+        fixture for fixture in fixture_payloads
+        if fixture['competition_kind'] in selected_filters
+    ]
+    fixtures_by_date = {}
+    for fixture in visible_fixtures:
+        fixtures_by_date.setdefault(fixture['date'], []).append(fixture)
+
+    today = date.today()
+    selected_date = _calendar_date(request.GET.get('calendar_date')) or today
+    if request.GET.get('calendar_date') is None:
+        future_dates = sorted(day for day in fixtures_by_date if day >= today)
+        if future_dates:
+            selected_date = future_dates[0]
+    selected_month = _calendar_month_payload(
+        selected_date.year, selected_date.month, fixtures_by_date, selected_date,
+    )
+    year_months = [
+        _calendar_month_payload(selected_date.year, month, fixtures_by_date, selected_date)
+        for month in range(1, 13)
+    ]
+    week_start = selected_date - timedelta(days=selected_date.weekday())
+    week_days = [
+        {
+            'date': week_start + timedelta(days=offset),
+            'iso_date': (week_start + timedelta(days=offset)).isoformat(),
+            'weekday': _CALENDAR_WEEKDAYS[(week_start + timedelta(days=offset)).weekday()],
+            'number': (week_start + timedelta(days=offset)).day,
+            'fixtures': fixtures_by_date.get(week_start + timedelta(days=offset), []),
+            'is_today': week_start + timedelta(days=offset) == today,
+        }
+        for offset in range(7)
+    ]
+    detail_fixture = (fixtures_by_date.get(selected_date) or [None])[0]
+    upcoming = []
+    for fixture in [
+        fixture for fixture in sorted(
+            visible_fixtures,
+            key=lambda item: (item['date'], item['time'], item['id']),
+        )
+        if fixture['date'] >= today
+    ][:5]:
+        fixture['days_until'] = (fixture['date'] - today).days
+        upcoming.append(fixture)
+    season_dates = [fixture['date'] for fixture in fixture_payloads if not fixture['forecast']]
+    season_start = min(season_dates) if season_dates else date(today.year, 8, 15)
+    season_end = max(season_dates) if season_dates else date(today.year + 1, 5, 15)
+    season_span = max(1, (season_end - season_start).days)
+    today_position = max(0, min(100, round((today - season_start).days / season_span * 100)))
+    active_view = request.GET.get('view', 'year')
+    if active_view not in {'year', 'month', 'week'}:
+        active_view = 'year'
+
+    def _shift_month(source, amount):
+        month_index = source.year * 12 + source.month - 1 + amount
+        target_year, target_month_zero = divmod(month_index, 12)
+        target_month = target_month_zero + 1
+        return date(
+            target_year,
+            target_month,
+            min(source.day, _calendar.monthrange(target_year, target_month)[1]),
+        )
+
+    if active_view == 'week':
+        previous_date = selected_date - timedelta(days=7)
+        next_date = selected_date + timedelta(days=7)
+    elif active_view == 'year':
+        previous_date = _shift_month(selected_date, -12)
+        next_date = _shift_month(selected_date, 12)
+    else:
+        previous_date = _shift_month(selected_date, -1)
+        next_date = _shift_month(selected_date, 1)
+
+    def _query(view=None, selected=None, filters=None):
+        params = {
+            'view': view or active_view,
+            'calendar_date': (selected or selected_date).isoformat(),
+            'filters': ','.join(sorted(filters or selected_filters)),
+        }
+        return '&'.join(f'{key}={value}' for key, value in params.items())
+
+    calendar_filter_string = ','.join(sorted(selected_filters))
+    filter_queries = {}
+    for filter_item in ('liga', 'pokal', 'europa'):
+        next_filters = set(selected_filters)
+        if filter_item in next_filters and len(next_filters) > 1:
+            next_filters.remove(filter_item)
+        else:
+            next_filters.add(filter_item)
+        filter_queries[filter_item] = _query(filters=next_filters)
+
+    return render(request, 'game/calendar.html', {
+        'game_header': build_game_header('Kalender', f'Saison #{active_season}', '/'),
+        'calendar_active_view': active_view,
+        'calendar_year': selected_date.year,
+        'calendar_months': year_months,
+        'calendar_month': selected_month,
+        'calendar_week_days': week_days,
+        'calendar_week_label': (
+            f'{week_start.day}. {_CALENDAR_DE_MONTHS_SHORT[week_start.month - 1]}'
+            f' – {(week_start + timedelta(days=6)).day}. '
+            f'{_CALENDAR_DE_MONTHS_SHORT[(week_start + timedelta(days=6)).month - 1]} '
+            f'{(week_start + timedelta(days=6)).year}'
+        ),
+        'calendar_detail_fixture': detail_fixture,
+        'calendar_upcoming': upcoming,
+        'calendar_selected_date': selected_date,
+        'calendar_selected_label': (
+            f'{_CALENDAR_WEEKDAYS[selected_date.weekday()]}, '
+            f'{selected_date.day:02d}.{selected_date.month:02d}.{selected_date.year}'
+        ),
+        'calendar_filters': [
+            {
+                'key': key,
+                'label': key.upper(),
+                'active': key in selected_filters,
+                'query': filter_queries[key],
+            }
+            for key in ('liga', 'pokal', 'europa')
+        ],
+        'calendar_filter_string': calendar_filter_string,
+        'calendar_season_number': active_season,
+        'calendar_season_start': season_start,
+        'calendar_season_end': season_end,
+        'calendar_today_position': today_position,
+        'calendar_prev_query': _query(selected=previous_date),
+        'calendar_next_query': _query(selected=next_date),
+        'calendar_today_query': _query(selected=today),
+        'calendar_view_queries': {
+            view: _query(view=view) for view in ('year', 'month', 'week')
+        },
+    })
 
 
 def grade_badge_class(grade):

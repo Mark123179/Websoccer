@@ -18,6 +18,7 @@ from .views import (
     squad_assign_shirt,
     squad_move_to_youth,
     home,
+    calendar_view,
     league_detail,
     simulate_matchday_view,
     close_matchday_view,
@@ -233,6 +234,7 @@ urlpatterns = [
         home,
         name='home'
     ),
+    path('kalender/', calendar_view, name='calendar'),
 
     path(
         'clubs/',
