@@ -2,8 +2,47 @@
 
 <header class="ws-game-header">
     <div class="ws-header-context">
-        <strong>{{ game_header.title }}</strong>
-        <span>{{ game_header.subtitle }}</span>
+        <div class="ws-header-context-top">
+            <a class="ws-header-manager" href="{% url 'manager_profile' %}">
+                <img class="ws-header-manager-avatar" src="{{ current_manager.profile_image }}" alt="{{ current_manager.name }}">
+                <span class="ws-header-manager-copy">
+                    <small>Manager</small>
+                    <strong>{{ current_manager.name }}</strong>
+                    <em>
+                        <img class="manager-title-flag" src="{{ current_manager.nationality_flag }}" alt="" aria-hidden="true"{% if not current_manager.nationality_flag %} style="display:none"{% endif %}>
+                        {{ current_manager.role }}
+                    </em>
+                </span>
+            </a>
+            <div class="ws-header-actions" aria-label="Manager Aktionen">
+                <a class="nav-action" href="{% url 'notifications_page' %}" aria-label="Benachrichtigungen">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 2v1h16v-1l-2-2Z"></path>
+                        <path d="M10 21h4"></path>
+                    </svg>
+                    {% if unread_notifications_count %}<span class="nav-badge" aria-label="{{ unread_notifications_count }} neue Benachrichtigungen">{{ unread_notifications_count }}</span>{% endif %}
+                </a>
+                <a class="nav-action{% if request.resolver_match.url_name == 'calendar' %} is-active{% endif %}"
+                   href="{% url 'calendar' %}" aria-label="Kalender öffnen" title="Kalender">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2Z"></path>
+                        <path d="M8 2v4M16 2v4M3 9h18"></path>
+                        <path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2M15 17h2"></path>
+                    </svg>
+                </a>
+                <a class="nav-action" href="/inbox/" aria-label="Posteingang">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="M4 6h16v12H4z"></path>
+                        <path d="m4 7 8 6 8-6"></path>
+                    </svg>
+                    <span class="nav-badge" aria-label="3 neue Nachrichten">3</span>
+                </a>
+            </div>
+        </div>
+        <div class="ws-header-context-copy">
+            <strong>{{ game_header.title }}</strong>
+            <span>{{ game_header.subtitle }}</span>
+        </div>
     </div>
 
     <nav class="ws-calendar-strip" aria-label="Spielkalender">
