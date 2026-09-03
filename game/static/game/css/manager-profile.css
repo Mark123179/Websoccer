@@ -107,10 +107,11 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-edit-profile-btn svg { width: 10px; height: 10px; }
 .mp-edit-profile-btn:hover { border-color: var(--mp-cyan); color: var(--mp-cyan); }
 
-/* KPI v2 — 8-col grid */
+/* KPI v2 — 9-col grid */
 .mp-kpi-v2 {
     flex: 1; min-width: 0;
-    display: grid; grid-template-columns: repeat(8, 1fr);
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr .9fr 1.15fr 1fr .95fr 1.05fr .95fr;
     border-left: 1px solid var(--mp-line);
 }
 .mp-kpi-cell {
@@ -910,7 +911,7 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-edit-profile-btn { margin-top: auto; border-radius: 6px; font-size: 10px; }
 
 .mp-kpi-v2 {
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: 1.2fr 1fr 1fr .9fr 1.15fr 1fr .95fr 1.05fr .95fr;
     min-width: 0;
     overflow: hidden;
     border: 1px solid var(--mp-border);
@@ -988,15 +989,14 @@ body.manager-profile-page .nav-menu a:first-child {
     display: grid;
     grid-template-columns: 336px 684px minmax(0, 1fr);
     gap: 16px;
-    align-items: stretch;
+    align-items: start;
 }
-.mp-profil-col-left { display: contents; }
-.mp-profil-col-left > .mp-card2:first-child { grid-column: 1 / -1; grid-row: 1; }
-.mp-profil-col-left > .mp-login2 { grid-column: 1; grid-row: 2; }
-.mp-card2-map { grid-column: 2; grid-row: 2; min-height: 430px; }
-.mp-stats2 { grid-column: 3; grid-row: 2; max-height: none; }
-.mp-profil-titles { grid-column: 1 / span 2; grid-row: 3; }
-.mp-profil-records { grid-column: 3; grid-row: 3; }
+.mp-profil-col-left { display: flex; flex-direction: column; gap: 16px; }
+.mp-profil-col-left > .mp-card2:last-child { flex: 1; }
+.mp-card2-map { grid-column: 2; grid-row: 1; min-height: 430px; }
+.mp-stats2 { grid-column: 3; grid-row: 1; max-height: none; }
+.mp-profil-titles { grid-column: 1 / span 2; grid-row: 2; }
+.mp-profil-records { grid-column: 3; grid-row: 2; }
 .mp-card2 {
     padding: 16px;
     border-radius: 8px;
@@ -1165,9 +1165,7 @@ body.manager-profile-page .nav-menu a:first-child {
     .mp-stats2,
     .mp-profil-titles,
     .mp-profil-records { grid-column: 1; grid-row: auto; }
-    .mp-profil-col-left { display: contents; }
-    .mp-profil-col-left > .mp-card2:first-child,
-    .mp-profil-col-left > .mp-login2 { grid-column: 1; grid-row: auto; }
+    .mp-profil-col-left { display: flex; grid-column: 1; grid-row: auto; }
     .mp-settings-grid { grid-template-columns: 1fr; }
     .mp-types2-grid { grid-template-columns: repeat(2, 1fr); }
 }

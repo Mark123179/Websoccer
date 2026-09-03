@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.staticfiles import finders
+from django.templatetags.static import static
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render, get_object_or_404
@@ -6574,7 +6575,11 @@ def manager_profile(request):
         {
             'name': t.competition_name,
             'count': t.count,
-            'icon': t.trophy_static_path or _default_icons[i % len(_default_icons)],
+            'icon_url': (
+                static(f'game/images/trophies/{t.trophy_asset_id}.png')
+                if t.trophy_asset_id
+                else static(_default_icons[i % len(_default_icons)])
+            ),
         }
         for i, t in enumerate(db_trophies)
     ]

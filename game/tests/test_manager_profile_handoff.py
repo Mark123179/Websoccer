@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
 from game.manager_profile import (
     award_login_reward,
@@ -122,3 +123,25 @@ class ManagerProfileHandoffTests(TestCase):
                 second_start + timedelta(days=8),
                 second_start + timedelta(days=12),
             )
+
+    def test_profile_does_not_force_name_onboarding_for_existing_account(self):
+        self.manager.name_confirmed = False
+        self.manager.save(update_fields=['name_confirmed'])
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('manager_profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'mpOnboardingBanner')
+        self.assertNotContains(response, 'not name_confirmed')
+        self.assertContains(response, 'data-open-edit-profile')
+
+    def test_profile_renders_nine_kpis_and_resolved_trophy_urls(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('manager_profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'REGISTRIERT AM')
+        self.assertContains(response, 'class="mp-kpi-cell"', count=9)
+        self.assertNotContains(response, '/static/assets/trophies/')

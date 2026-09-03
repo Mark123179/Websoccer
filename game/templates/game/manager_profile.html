@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-90">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-91">
 {% endblock %}
 
 {% block content %}
@@ -97,7 +97,7 @@
             <strong class="mp-kpi-big mp-kpi-cyan">{{ manager.trophies }}</strong>
             {% if manager.trophies_list_mini %}
             <div class="mp-kpi-trophies-mini">
-                {% for t in manager.trophies_list_mini %}<img src="{% static t.icon %}" alt="{{ t.name }}">{% endfor %}
+                {% for t in manager.trophies_list_mini %}<img src="{{ t.icon_url }}" alt="{{ t.name }}">{% endfor %}
             </div>
             {% endif %}
             <small class="mp-kpi-sub"><button class="mp-inline-action" type="button" data-trophy-all>Alle ansehen</button></small>
@@ -164,17 +164,17 @@
             <strong class="mp-kpi-medium">{{ manager.last_login_date }}</strong>
             {% if manager.last_login_time %}<small class="mp-kpi-sub">{{ manager.last_login_time }}</small>{% endif %}
         </div>
+        <!-- 9: Registriert am -->
+        <div class="mp-kpi-cell">
+            <span class="mp-kpi-lbl">
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M3 5h10v9H3zM5 2v5M11 2v5M3 8h10"/></svg>
+                REGISTRIERT AM
+            </span>
+            <strong class="mp-kpi-medium">{{ manager.registered }}</strong>
+            <small class="mp-kpi-sub">Gründungsmitglied</small>
+        </div>
     </div>
 </header>
-
-<!-- Onboarding Banner -->
-{% if not name_confirmed and can_edit_profile %}
-<div class="mp-onboarding-banner" id="mpOnboardingBanner">
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 7h.01"/></svg>
-    <span>Willkommen! Lege jetzt deinen <strong>Managernamen</strong> fest.</span>
-    <button class="mp-onboarding-cta" type="button" data-open-edit-profile>Namen festlegen</button>
-</div>
-{% endif %}
 
 <!-- Tabs -->
 <nav class="mp-tabs" aria-label="Manager-Bereiche">
@@ -339,7 +339,7 @@
             <div class="mp-trophies2-grid">
                 {% for trophy in trophies_list %}
                 <div class="mp-trophy2-slot">
-                    <img src="{% static trophy.icon %}" alt="{{ trophy.name }}">
+                    <img src="{{ trophy.icon_url }}" alt="{{ trophy.name }}">
                     <span class="mp-trophy2-count">{{ trophy.count }}×</span>
                     <small>{{ trophy.name }}</small>
                 </div>
@@ -806,7 +806,7 @@
             {% for trophy in trophies_list %}
             <article class="mp-trophy-vitrine-item" title="{{ trophy.name }}">
                 <div class="mp-trophy-vitrine-cup">
-                    <img src="{% static trophy.icon %}" alt="{{ trophy.name }}">
+                    <img src="{{ trophy.icon_url }}" alt="{{ trophy.name }}">
                 </div>
                 <strong>{{ trophy.name }}</strong>
                 <span>{{ trophy.count }}× gewonnen</span>
@@ -1775,7 +1775,6 @@ var CITY_COORDS = {{ city_coords_json|safe }};
                     saveBtn.disabled = false; saveBtn.textContent = origText;
                     if (data.ok) {
                         closeModal();
-                        if (data.name_confirmed) { const banner = document.getElementById('mpOnboardingBanner'); if (banner) banner.remove(); }
                         if (data.display_name) { document.querySelectorAll('.mp-manager-name, [data-manager-name]').forEach(el => { el.textContent = data.display_name; }); }
                     } else if (data.error === 'name_taken')   showInlineError('Dieser Name ist bereits vergeben.');
                     else if (data.error === 'name_invalid')   showInlineError('Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie - . \' _ enthalten.');
@@ -1783,7 +1782,7 @@ var CITY_COORDS = {{ city_coords_json|safe }};
                 }).catch(() => { saveBtn.disabled = false; saveBtn.textContent = origText; showInlineError('Netzwerkfehler – bitte versuche es erneut.'); });
         });
     }
-    {% if not name_confirmed or request.GET.name_taken or request.GET.name_invalid %}
+    {% if request.GET.name_taken or request.GET.name_invalid %}
     window.addEventListener('load', function () { setTimeout(openModal, 300); });
     {% endif %}
 })();
