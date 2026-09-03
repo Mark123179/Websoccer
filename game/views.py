@@ -1256,7 +1256,25 @@ def _calendar_date(value):
     except (TypeError, ValueError):
         return None
 
-
+def _calendar_fixture_detail_url(fixture, club, *, is_cup=False, forecast=False):
+    """Return the exact calendar destination, never a generic next-match link."""
+    if forecast:
+        return None, None
+    if fixture.simulated_match_id:
+        return (
+            reverse('match_report_by_id', args=[fixture.simulated_match_id]),
+            'Spielbericht',
+        )
+    if is_cup:
+        cup_season = fixture.cup_round.cup_season
+        return (
+            reverse('cup_tree', args=[cup_season.competition_id, cup_season.season]),
+            'Pokalansicht',
+        )
+    return (
+        reverse('club_match_fixture_preview', args=[club.pk, fixture.pk]),
+        'Spielvorschau',
+    )
 def _calendar_fixture_payload(fixture, club, *, is_cup=False, forecast=False):
     """Turn the two fixture sources into one display shape for the calendar."""
     if is_cup:
@@ -1320,6 +1338,12 @@ def _calendar_fixture_payload(fixture, club, *, is_cup=False, forecast=False):
         status = 'Aufstellung gespeichert'
     else:
         status = 'Aufstellung offen'
+    detail_url, detail_label = _calendar_fixture_detail_url(
+        fixture,
+        club,
+        is_cup=is_cup,
+        forecast=forecast,
+    )
     return {
         'id': fixture_id,
         'date': match_date,
@@ -1351,6 +1375,8 @@ def _calendar_fixture_payload(fixture, club, *, is_cup=False, forecast=False):
         'away_name': away.name,
         'home_crest': home.crest_static_path,
         'away_crest': away.crest_static_path,
+        'detail_url': detail_url,
+        'detail_label': detail_label,
     }
 
 
@@ -1457,6 +1483,8 @@ def calendar_view(request):
             preview['weekday'] = _CALENDAR_WEEKDAYS[preview['date'].weekday()]
             preview['forecast'] = True
             preview['status'] = 'Prognose'
+            preview['detail_url'] = None
+            preview['detail_label'] = None
             fixture_payloads.append(preview)
 
     filters_raw = request.GET.get('filters', 'liga,pokal,europa')
@@ -2888,8 +2916,6 @@ def split_absence_labels(rows):
     }
 
 
-
-
 def opponent_absence_rows(opponent_club):
     """Gibt echte Sperr- und Verletzungsdaten des Gegners zurück."""
     if not opponent_club:
@@ -3970,7 +3996,27 @@ def club_table(request, club_id):
     )
 
 
-def club_match_preview(request, club_id):
+def club_match_preview(request, club_id, fixture_id=None):
+    if fixture_id is not None:
+        fixture = get_object_or_404(
+            SeasonFixture.objects.select_related('home_club', 'away_club'),
+            _db_models.Q(pk=fixture_id) & (
+                _db_models.Q(home_club_id=club_id)
+                | _db_models.Q(away_club_id=club_id)
+            ),
+        )
+        opponent = (
+            fixture.away_club
+            if fixture.home_club_id == club_id
+            else fixture.home_club
+        )
+        match_date = fixture.scheduled_date.strftime('%d.%m.%Y') if fixture.scheduled_date else 'noch offen'
+        return render_public_club_stub(
+            request,
+            club_id,
+            'Spielvorschau',
+            f'Vorbericht für das Spiel gegen {opponent.name} am {match_date}.',
+        )
     return render_public_club_stub(
         request,
         club_id,

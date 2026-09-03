@@ -285,6 +285,12 @@ urlpatterns = [
     ),
 
     path(
+        'clubs/<int:club_id>/matches/<int:fixture_id>/preview/',
+        club_match_preview,
+        name='club_match_fixture_preview'
+    ),
+
+    path(
         'clubs/<int:club_id>/matches/last/',
         club_match_report,
         name='club_match_report'

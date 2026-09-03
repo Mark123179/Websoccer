@@ -119,7 +119,7 @@
                                 {% for fixture in cell.fixtures %}
                                     <a class="calendar-match-tile comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}{% if fixture.stadium %} has-stadium{% endif %}"
                                        {% if fixture.stadium %}style="--calendar-stadium-image: url('{{ fixture.stadium }}');"{% endif %}
-                                       href="?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
+                                       href="{% if fixture.detail_url %}{{ fixture.detail_url }}{% else %}?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}{% endif %}">
                                         <img class="calendar-match-tile-crest" src="{{ fixture.opponent_crest }}" alt="" loading="lazy">
                                         <span class="calendar-match-tile-copy">
                                             <strong>{{ fixture.time }} · {{ fixture.opponent_short }}</strong>
@@ -149,7 +149,7 @@
                             {% for fixture in day.fixtures %}
                                 <a class="calendar-week-match comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}{% if fixture.stadium %} has-stadium{% endif %}"
                                    {% if fixture.stadium %}style="--calendar-stadium-image: url('{{ fixture.stadium }}');"{% endif %}
-                                   href="?view=week&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
+                                   href="{% if fixture.detail_url %}{{ fixture.detail_url }}{% else %}?view=week&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}{% endif %}">
                                     <span class="calendar-week-competition">
                                         <img src="{{ fixture.competition_logo }}" alt="">
                                         {{ fixture.competition }}
@@ -190,7 +190,9 @@
                         <div><dt>Status</dt><dd class="{% if calendar_detail_fixture.forecast %}is-forecast{% elif calendar_detail_fixture.lineup_set %}is-ready{% endif %}">{{ calendar_detail_fixture.status }}{% if calendar_detail_fixture.result %} · {{ calendar_detail_fixture.result }}{% endif %}</dd></div>
                     </dl>
                     <div class="calendar-detail-actions">
-                        <a href="{{ current_manager.club_url }}matches/next/">Spielvorschau <span>›</span></a>
+                        {% if calendar_detail_fixture.detail_url %}
+                            <a href="{{ calendar_detail_fixture.detail_url }}">{{ calendar_detail_fixture.detail_label }} <span>›</span></a>
+                        {% endif %}
                         <a href="{{ current_manager.tactics_url }}">Taktik &amp; Aufstellung <span>›</span></a>
                         <a href="{{ calendar_detail_fixture.opponent_url }}">Gegner analysieren <span>›</span></a>
                     </div>
@@ -207,7 +209,7 @@
                 <header><span class="calendar-eyebrow">Nächste Termine</span><h2 id="upcoming-title">Deine nächsten Spiele</h2></header>
                 {% for fixture in calendar_upcoming %}
                     <a class="calendar-upcoming-item comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}"
-                       href="?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
+                       href="{% if fixture.detail_url %}{{ fixture.detail_url }}{% else %}?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}{% endif %}">
                         <span class="calendar-upcoming-point" aria-hidden="true"></span>
                         <img class="calendar-upcoming-crest" src="{{ fixture.opponent_crest }}" alt="">
                         <span class="calendar-upcoming-copy"><strong>{{ fixture.opponent_short }}</strong><small>{{ fixture.date_label }} · {{ fixture.time }} · {{ fixture.venue_short }}</small></span>

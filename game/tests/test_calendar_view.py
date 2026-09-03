@@ -6,6 +6,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from game.models import Club, ClubPublicProfile, GameSeasonState, League, SeasonFixture
+from game.models import (
 
 
 class CalendarViewTests(TestCase):
@@ -161,3 +162,134 @@ class CalendarViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['calendar_month']['fixture_count'], 0)
         self.assertIsNone(response.context['calendar_detail_fixture'])
+
+    def test_calendar_links_future_league_fixture_to_its_specific_preview(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('calendar'), {
+            'view': 'month',
+            'calendar_date': '2026-09-05',
+        })
+        fixture = response.context['calendar_detail_fixture']
+        expected_url = reverse(
+            'club_match_fixture_preview',
+            args=[self.club.pk, self.fixture.pk],
+        )
+        self.assertEqual(fixture['detail_url'], expected_url)
+        self.assertEqual(fixture['detail_label'], 'Spielvorschau')
+        self.assertContains(response, f'href="{expected_url}"')
+
+        preview_response = self.client.get(expected_url)
+        self.assertEqual(preview_response.status_code, 200)
+        self.assertContains(preview_response, 'SV Termin')
+        self.assertContains(preview_response, '05.09.2026')
+
+    def test_calendar_links_played_league_fixture_to_its_report(self):
+        simulated = SimulatedMatch.objects.create(
+            home_club=self.club,
+            away_club=self.opponent,
+            home_goals=2,
+            away_goals=1,
+            report_data={'match_stats': {}},
+        )
+        self.fixture.is_played = True
+        self.fixture.home_goals = 2
+        self.fixture.away_goals = 1
+        self.fixture.simulated_match = simulated
+        self.fixture.save()
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('calendar'), {
+            'view': 'week',
+            'calendar_date': '2026-09-05',
+        })
+        fixture = response.context['calendar_detail_fixture']
+        expected_url = reverse('match_report_by_id', args=[simulated.pk])
+        self.assertEqual(fixture['detail_url'], expected_url)
+        self.assertEqual(fixture['detail_label'], 'Spielbericht')
+        self.assertContains(response, f'href="{expected_url}"')
+
+    def test_calendar_uses_cup_tree_and_forecasts_have_no_detail_url(self):
+        cup = League.objects.create(
+            name='Kalenderpokal',
+            country='Deutschland',
+            competition_type=League.COMPETITION_TYPE_CUP,
+        )
+        cup_season = CupSeason.objects.create(
+            competition=cup,
+            season='0',
+        )
+        cup_round = CupRound.objects.create(
+            cup_season=cup_season,
+            round_number=1,
+            round_code='round_of_32',
+            scheduled_date=date(2026, 9, 12),
+        )
+        CupFixture.objects.create(
+            cup_round=cup_round,
+            bracket_position=1,
+            home_club=self.club,
+            away_club=self.opponent,
+            status=CupFixture.STATUS_SCHEDULED,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('calendar'), {
+            'view': 'month',
+            'calendar_date': '2026-09-12',
+        })
+        cup_fixture = response.context['calendar_detail_fixture']
+        expected_url = reverse('cup_tree', args=[cup.pk, cup_season.season])
+        self.assertEqual(cup_fixture['detail_url'], expected_url)
+        self.assertEqual(cup_fixture['detail_label'], 'Pokalansicht')
+
+        forecast = next(
+            fixture for fixture in response.context['calendar_upcoming']
+            if fixture['forecast']
+        )
+        self.assertIsNone(forecast['detail_url'])
+
+    def test_calendar_links_played_cup_fixture_to_its_report(self):
+        cup = League.objects.create(
+            name='Berichtspokal',
+            country='Deutschland',
+            competition_type=League.COMPETITION_TYPE_CUP,
+        )
+        cup_season = CupSeason.objects.create(
+            competition=cup,
+            season='0',
+        )
+        cup_round = CupRound.objects.create(
+            cup_season=cup_season,
+            round_number=1,
+            round_code='round_of_32',
+            scheduled_date=date(2026, 9, 12),
+        )
+        simulated = SimulatedMatch.objects.create(
+            home_club=self.club,
+            away_club=self.opponent,
+            home_goals=1,
+            away_goals=0,
+            report_data={'match_stats': {}},
+            match_type='pokal',
+        )
+        CupFixture.objects.create(
+            cup_round=cup_round,
+            bracket_position=1,
+            home_club=self.club,
+            away_club=self.opponent,
+            simulated_match=simulated,
+            status=CupFixture.STATUS_PLAYED,
+            home_goals_90=1,
+            away_goals_90=0,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('calendar'), {
+            'view': 'week',
+            'calendar_date': '2026-09-12',
+        })
+        fixture = response.context['calendar_detail_fixture']
+        expected_url = reverse('match_report_by_id', args=[simulated.pk])
+        self.assertEqual(fixture['detail_url'], expected_url)
+        self.assertEqual(fixture['detail_label'], 'Spielbericht')
+        self.assertContains(response, f'href="{expected_url}"')
