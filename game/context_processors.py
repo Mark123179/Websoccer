@@ -4,6 +4,7 @@ from datetime import date, timedelta
 from django.db.models import Q
 from django.templatetags.static import static as _static
 
+from .asset_urls import resolve_stadium_url
 from .models import Club, CupFixture, ManagerProfile, SeasonFixture
 from .competition_assets import competition_logo_static_path
 
@@ -43,6 +44,16 @@ _STADIUM_ASSETS = {
 _WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 
 
+def _stadium_asset_url(club):
+    if not club:
+        return ''
+    profile = club._state.fields_cache.get('public_profile')
+    profile_path = getattr(profile, 'stadium_image_static_path', '')
+    if profile_path:
+        return resolve_stadium_url(profile_path)
+    return resolve_stadium_url(_STADIUM_ASSETS.get(club.fm_inside_id, ''))
+
+
 def _build_global_calendar(club, calendar_offset):
     today = date.today()
     game_date = today + timedelta(days=calendar_offset)
@@ -60,7 +71,10 @@ def _build_global_calendar(club, calendar_offset):
             )
             .filter(Q(home_club=club) | Q(away_club=club))
             .exclude(league__name__icontains='U21')
-            .select_related('home_club', 'away_club', 'league')
+            .select_related(
+                'home_club', 'away_club', 'league',
+                'home_club__public_profile',
+            )
         )
 
         for f in qs:
@@ -71,9 +85,7 @@ def _build_global_calendar(club, calendar_offset):
 
             # Stadionbild immer vom Heimverein des Fixtures
             home_club_of_fixture = f.home_club
-            fixture_stadium = _STADIUM_ASSETS.get(
-                home_club_of_fixture.fm_inside_id if home_club_of_fixture else None, ''
-            )
+            fixture_stadium = _stadium_asset_url(home_club_of_fixture)
 
             if f.is_played and f.home_goals is not None and f.away_goals is not None:
                 result = f'{f.home_goals}:{f.away_goals}'
@@ -114,6 +126,7 @@ def _build_global_calendar(club, calendar_offset):
             .select_related(
                 'home_club', 'away_club',
                 'cup_round__cup_season__competition',
+                'home_club__public_profile',
             )
         )
         for cf in cup_qs:
@@ -146,9 +159,7 @@ def _build_global_calendar(club, calendar_offset):
                 cf.cup_round.round_code.replace('_', ' ').title(),
             )
 
-            cup_stadium = _STADIUM_ASSETS.get(
-                cf.home_club.fm_inside_id if cf.home_club else None, ''
-            )
+            cup_stadium = _stadium_asset_url(cf.home_club)
             cup_comp_logo = competition_logo_static_path(cup_comp)
             fixtures_by_date[scheduled_date] = {
                 'opponent_name':    cup_opponent.name if cup_opponent else 'Freilos',

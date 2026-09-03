@@ -17,6 +17,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import redirect, render, get_object_or_404
 from django.db.models import Avg, Count, F, Sum
 from django.utils import timezone
+from .asset_urls import resolve_stadium_url
 from .club_profile import build_club_profile_context
 from .club_profile_highlights import nt_confederation_badge
 from .competition_assets import (
@@ -1131,7 +1132,15 @@ def market_area_points(points):
 
 
 def stadium_static_path(club):
-    if not club or not club.fm_inside_id:
+    if not club:
+        return ''
+
+    profile = club._state.fields_cache.get('public_profile')
+    profile_path = getattr(profile, 'stadium_image_static_path', '')
+    if profile_path:
+        return profile_path
+
+    if not club.fm_inside_id:
         return ''
 
     stadium_assets = {
@@ -1302,7 +1311,7 @@ def _calendar_fixture_payload(fixture, club, *, is_cup=False, forecast=False):
         return None
     is_home = home.pk == club.pk
     opponent = away if is_home else home
-    stadium = stadium_static_path(home)
+    stadium = resolve_stadium_url(stadium_static_path(home))
     if forecast:
         status = 'Prognose'
     elif played:
@@ -1398,7 +1407,10 @@ def calendar_view(request):
                 scheduled_date__isnull=False,
             )
             .filter(_db_models.Q(home_club=club) | _db_models.Q(away_club=club))
-            .select_related('home_club', 'away_club', 'league')
+            .select_related(
+                'home_club', 'away_club', 'league',
+                'home_club__public_profile',
+            )
             .order_by('scheduled_date', 'scheduled_time', 'pk')
         )
         fixture_payloads.extend(
@@ -1416,6 +1428,7 @@ def calendar_view(request):
             .select_related(
                 'home_club', 'away_club',
                 'cup_round__cup_season__competition',
+                'home_club__public_profile',
             )
             .order_by('cup_round__scheduled_date', 'pk')
         )

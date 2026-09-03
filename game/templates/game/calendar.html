@@ -4,7 +4,7 @@
 {% block title %}Kalender · Websoccer{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/calendar.css' %}?v=1">
+<link rel="stylesheet" href="{% static 'game/css/calendar.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -37,9 +37,6 @@
                        data-calendar-filter="{{ filter.key }}"
                        aria-pressed="{{ filter.active|yesno:'true,false' }}">{{ filter.label }}</a>
                 {% endfor %}
-                <span class="calendar-control-divider" aria-hidden="true"></span>
-                <a class="calendar-step" href="?{{ calendar_prev_query }}" aria-label="Einen Monat zurück">‹</a>
-                <a class="calendar-step" href="?{{ calendar_next_query }}" aria-label="Einen Monat weiter">›</a>
                 <a class="calendar-today" href="?{{ calendar_today_query }}">Heute</a>
             </div>
         </div>
@@ -120,9 +117,10 @@
                             {% if not cell.empty %}
                                 <a class="calendar-large-day-number" href="?view=month&calendar_date={{ cell.iso_date }}&filters={{ calendar_filter_string }}">{{ cell.number }}</a>
                                 {% for fixture in cell.fixtures %}
-                                    <a class="calendar-match-tile comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}"
+                                    <a class="calendar-match-tile comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}{% if fixture.stadium %} has-stadium{% endif %}"
+                                       {% if fixture.stadium %}style="--calendar-stadium-image: url('{{ fixture.stadium }}');"{% endif %}
                                        href="?view=month&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
-                                        <img src="{{ fixture.opponent_crest }}" alt="" loading="lazy">
+                                        <img class="calendar-match-tile-crest" src="{{ fixture.opponent_crest }}" alt="" loading="lazy">
                                         <span class="calendar-match-tile-copy">
                                             <strong>{{ fixture.time }} · {{ fixture.opponent_short }}</strong>
                                             <small>{{ fixture.competition }} · {{ fixture.venue_short }}</small>
@@ -149,7 +147,8 @@
                         <article class="calendar-week-day{% if day.is_today %} is-today{% endif %}">
                             <header><span>{{ day.weekday }}</span><strong>{{ day.number }}</strong></header>
                             {% for fixture in day.fixtures %}
-                                <a class="calendar-week-match comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}"
+                                <a class="calendar-week-match comp-{{ fixture.competition_kind }}{% if fixture.forecast %} is-forecast{% endif %}{% if fixture.stadium %} has-stadium{% endif %}"
+                                   {% if fixture.stadium %}style="--calendar-stadium-image: url('{{ fixture.stadium }}');"{% endif %}
                                    href="?view=week&calendar_date={{ fixture.iso_date }}&filters={{ calendar_filter_string }}">
                                     <span class="calendar-week-competition">
                                         <img src="{{ fixture.competition_logo }}" alt="">
@@ -179,7 +178,8 @@
                         <img src="{{ calendar_detail_fixture.competition_logo }}" alt="">
                         <span>{{ calendar_detail_fixture.competition }}</span>
                     </div>
-                    <div class="calendar-detail-opponent">
+                    <div class="calendar-detail-opponent{% if calendar_detail_fixture.stadium %} has-stadium{% endif %}"
+                         {% if calendar_detail_fixture.stadium %}style="--calendar-stadium-image: url('{{ calendar_detail_fixture.stadium }}');"{% endif %}>
                         <img src="{{ calendar_detail_fixture.opponent_crest }}" alt="{{ calendar_detail_fixture.opponent_name }}">
                         <div><span>{{ calendar_detail_fixture.matchday_label }}</span><strong>{{ calendar_detail_fixture.opponent_name }}</strong></div>
                     </div>
