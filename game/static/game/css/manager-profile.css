@@ -840,3 +840,305 @@ body.manager-profile-page .nav-menu a:first-child {
     margin-left: 6px;
     vertical-align: middle;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   High-fidelity pass — handoff frames 2a, 2b and 1d
+   These rules intentionally stay scoped to the manager profile.
+══════════════════════════════════════════════════════════════════ */
+.mp-dashboard {
+    --mp-r: 8px;
+    --mp-panel: rgba(9, 23, 34, .82);
+    --mp-border: rgba(44, 231, 255, .18);
+}
+
+.mp-header {
+    display: grid;
+    grid-template-columns: 352px minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+    padding: 16px 44px;
+    background: linear-gradient(180deg, rgba(3, 10, 16, .74), rgba(3, 10, 16, .42));
+}
+.mp-header-identity {
+    width: auto;
+    min-width: 0;
+    padding: 16px;
+    gap: 14px;
+    border: 1px solid var(--mp-border);
+    border-radius: 8px;
+    background: rgba(12, 31, 45, .94);
+}
+.mp-avatar-wrap,
+.mp-avatar-wrap img {
+    width: 88px;
+    height: 88px;
+    border-radius: 8px;
+}
+.mp-avatar-wrap {
+    border: 1px solid rgba(44, 231, 255, .38);
+    box-shadow: 0 0 18px rgba(34, 230, 255, .25);
+    overflow: hidden;
+}
+.mp-avatar-edit,
+.mp-avatar-reset {
+    bottom: 4px;
+    border-radius: 5px;
+    background: rgba(3, 12, 20, .86);
+}
+.mp-avatar-edit { right: 4px; }
+.mp-avatar-reset { left: 4px; }
+.mp-header-crest {
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(0 0 10px rgba(34, 230, 255, .32));
+}
+.mp-identity-block { gap: 5px; }
+.mp-manager-name { font-size: 20px; font-weight: 900; line-height: 1.08; }
+.mp-flag-row { gap: 6px; font-size: 11px; font-weight: 700; }
+.mp-flag-img { width: 18px; height: 12px; }
+.mp-type-badge {
+    width: fit-content;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+.mp-club-row { margin-top: 2px; }
+.mp-club-row strong { font-size: 12px; font-weight: 800; }
+.mp-club-row small { font-size: 10px; font-weight: 700; color: rgba(244, 251, 255, .38); }
+.mp-edit-profile-btn { margin-top: auto; border-radius: 6px; font-size: 10px; }
+
+.mp-kpi-v2 {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mp-border);
+    border-radius: 8px;
+    background: rgba(9, 23, 34, .82);
+}
+.mp-kpi-cell { justify-content: flex-start; gap: 5px; padding: 15px 11px 12px; }
+.mp-kpi-lbl {
+    gap: 4px;
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    color: rgba(244, 251, 255, .46);
+}
+.mp-kpi-lbl svg { width: 11px; height: 11px; }
+.mp-kpi-big { font-size: 21px; font-weight: 900; line-height: 1; }
+.mp-kpi-medium { font-size: 14px; font-weight: 900; line-height: 1.2; }
+.mp-kpi-sub { font-size: 9px; font-weight: 700; color: rgba(244, 251, 255, .38); }
+.mp-kpi-level-row { gap: 8px; align-items: center; }
+.mp-kpi-level-row small { font-size: 8.5px; font-weight: 900; letter-spacing: .05em; }
+.mp-kpi-delta { font-size: 9px; font-weight: 800; }
+.mp-kpi-ban-ok { font-size: 14px; font-weight: 900; }
+
+.mp-tabs {
+    padding: 0 44px;
+    background: rgba(4, 15, 24, .74);
+}
+.mp-tab {
+    gap: 6px;
+    padding: 11px 16px 10px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+.mp-tab svg { width: 12px; height: 12px; }
+.mp-tab-content { gap: 16px; padding: 16px 44px 40px; }
+
+.mp-tl2 { border-radius: 8px; }
+.mp-tl2-header {
+    min-height: 54px;
+    padding: 10px 16px;
+    gap: 10px;
+    background: rgba(6, 17, 27, .78);
+}
+.mp-tl2-heading { font-size: 11px; font-weight: 900; letter-spacing: .1em; }
+.mp-tl2-filters { gap: 6px; }
+.mp-tl2-filter,
+.mp-tl2-einreichen,
+.mp-tl2-antraege,
+.mp-tl2-manuell,
+.mp-tl2-today-btn {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: .07em;
+}
+.mp-tl2-nav-btn { width: 28px; height: 28px; border-radius: 6px; font-size: 16px; }
+.mp-tl2-admin-badge { font-size: 8px; border-radius: 999px; }
+.mp-tl2-farbcode { min-height: 34px; gap: 14px; padding: 8px 16px; }
+.mp-tl2-fc-label,
+.mp-tl2-fc-item { font-size: 8.5px; font-weight: 800; }
+.mp-tl2-fc-dot { width: 7px; height: 7px; }
+
+.mp-vbar { min-height: 82px; border-radius: 8px; }
+.mp-vbar-crest { width: 58px; height: 58px; margin: 11px 0 11px 14px; }
+.mp-vbar-info { width: 220px; padding: 12px 16px; }
+.mp-vbar-name { max-width: 170px; font-size: 12px; font-weight: 900; }
+.mp-vbar-period { font-size: 9px; font-weight: 700; }
+.mp-vbar-stat { padding: 10px 7px; }
+.mp-vbar-stat span { font-size: 8px; font-weight: 900; letter-spacing: .08em; }
+.mp-vbar-stat strong { font-size: 17px; font-weight: 900; }
+
+.mp-profil-grid {
+    display: grid;
+    grid-template-columns: 336px 684px minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+.mp-profil-col-left { grid-column: 1; grid-row: 1; gap: 16px; }
+.mp-card2-map { grid-column: 2; grid-row: 1; min-height: 430px; }
+.mp-stats2 { grid-column: 3; grid-row: 1; max-height: none; }
+.mp-profil-titles { grid-column: 1 / span 2; grid-row: 2; }
+.mp-profil-records { grid-column: 3; grid-row: 2; }
+.mp-card2 {
+    padding: 16px;
+    border-radius: 8px;
+}
+.mp-card2-header { margin-bottom: 12px; }
+.mp-card2-header h3 { font-size: 11px; font-weight: 900; letter-spacing: .1em; }
+.mp-card2-header a,
+.mp-inline-action { font-size: 10px; font-weight: 800; }
+.mp-card2 .mp-trophies2-grid { padding: 2px 0 0; }
+.mp-trophy2-slot { padding: 8px 2px; border: 0; background: transparent; }
+.mp-trophy2-count { font-size: 9px; }
+.mp-trophy2-slot small { font-size: 9.5px; }
+.mp-photo-map { min-height: 360px; max-height: none; }
+.mp-stat2-row { padding: 7px 0; font-size: 10.5px; }
+.mp-stats2-hint { font-size: 9.5px; }
+.mp-types2-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mp-type2-tile { min-height: 34px; border-radius: 6px; font-size: 10px; text-align: center; }
+.mp-unlock2-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mp-unlock2 { min-height: 62px; padding: 9px 10px; border-radius: 6px; }
+.mp-unlock2 small { font-size: 9px; }
+.mp-records2-grid { grid-template-columns: 1fr; gap: 7px; }
+.mp-record2 { gap: 3px; padding: 7px 9px; border-radius: 6px; }
+.mp-record2 span { font-size: 8px; font-weight: 900; }
+.mp-record2 strong { font-size: 11px; word-break: normal; }
+
+.mp-team-photos {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px 44px 40px;
+}
+.mp-team-photos-intro {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 4px 0 2px;
+}
+.mp-team-photos-intro h2 {
+    margin: 3px 0 0;
+    color: #f4fbff;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+.mp-team-photos-kicker {
+    color: var(--mp-cyan);
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+.mp-team-photos-intro p {
+    max-width: 480px;
+    margin: 0;
+    color: var(--mp-sub);
+    font-size: 10px;
+}
+.mp-team-photo-card { padding: 16px; }
+.mp-team-photo-image {
+    aspect-ratio: 21 / 9;
+    max-height: 520px;
+    border-radius: 8px;
+    border: 1px solid rgba(44, 231, 255, .18);
+}
+.mp-team-photo-roster {
+    columns: 4;
+    margin: 0;
+    padding: 14px 18px 4px 34px;
+    font-size: 10px;
+}
+.mp-team-photo-empty {
+    display: grid;
+    place-content: center;
+    min-height: 430px;
+    text-align: center;
+    background:
+        radial-gradient(circle at 50% 35%, rgba(34, 230, 255, .08), transparent 42%),
+        rgba(9, 23, 34, .82);
+}
+
+.mp-dashboard--einstellungen .mp-header {
+    grid-template-columns: 1fr;
+    padding-block: 12px;
+}
+.mp-dashboard--einstellungen .mp-header-identity {
+    min-height: 76px;
+    align-items: center;
+    padding: 11px 14px;
+}
+.mp-dashboard--einstellungen .mp-avatar-wrap,
+.mp-dashboard--einstellungen .mp-avatar-wrap img {
+    width: 52px;
+    height: 52px;
+}
+.mp-dashboard--einstellungen .mp-avatar-edit,
+.mp-dashboard--einstellungen .mp-avatar-reset,
+.mp-dashboard--einstellungen .mp-header-crest,
+.mp-dashboard--einstellungen .mp-kpi-v2 { display: none; }
+.mp-dashboard--einstellungen .mp-avatar-col { gap: 0; }
+.mp-dashboard--einstellungen .mp-manager-name { font-size: 16px; }
+.mp-settings-identity-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--mp-sub);
+    font-size: 10px;
+    font-weight: 700;
+}
+.mp-settings-account-state {
+    width: fit-content;
+    margin-top: 2px;
+    padding: 3px 8px;
+    border: 1px solid rgba(48, 242, 156, .3);
+    border-radius: 999px;
+    background: rgba(48, 242, 156, .1);
+    color: var(--mp-green);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+.mp-settings-content { padding: 24px 44px 40px; }
+.mp-settings-grid { gap: 16px; }
+.mp-settings-col { gap: 16px; }
+.mp-card { padding: 16px; border-radius: 8px; }
+.mp-card h3 { font-size: 10px; font-weight: 900; letter-spacing: .09em; }
+
+@media (max-width: 1180px) {
+    .mp-header { grid-template-columns: 320px minmax(0, 1fr); padding-inline: 24px; }
+    .mp-tabs { padding-inline: 24px; }
+    .mp-tab-content,
+    .mp-team-photos,
+    .mp-settings-content { padding-inline: 24px; }
+    .mp-profil-grid { grid-template-columns: 300px minmax(420px, 1fr) 280px; }
+}
+
+@media (max-width: 900px) {
+    .mp-header { grid-template-columns: 1fr; }
+    .mp-kpi-v2 { grid-template-columns: repeat(4, 1fr); }
+    .mp-profil-grid { grid-template-columns: 1fr; }
+    .mp-profil-col-left,
+    .mp-card2-map,
+    .mp-stats2,
+    .mp-profil-titles,
+    .mp-profil-records { grid-column: 1; grid-row: auto; }
+    .mp-settings-grid { grid-template-columns: 1fr; }
+    .mp-types2-grid { grid-template-columns: repeat(2, 1fr); }
+}

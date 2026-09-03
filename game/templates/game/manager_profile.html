@@ -7,11 +7,11 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-88">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-89">
 {% endblock %}
 
 {% block content %}
-<div class="mp-dashboard">
+<div class="mp-dashboard mp-dashboard--{{ tab }}">
 
 <!-- ══════════════════════════════════════════════════════════════
      HEADER  —  Identity Left  +  KPI v2 Right
@@ -37,6 +37,13 @@
         </div>
         <div class="mp-identity-block">
             <h1 class="mp-manager-name">{{ manager.name }}</h1>
+            {% if tab == 'einstellungen' %}
+            <div class="mp-settings-identity-meta">
+                {% if manager.flag_url %}<img src="{{ manager.flag_url }}" alt="" class="mp-flag-img">{% endif %}
+                <span>{{ manager.flag_name|default:"–" }} · {{ manager.active_type }} · {{ manager.club_name }}</span>
+            </div>
+            <span class="mp-settings-account-state">KONTO VERIFIZIERT</span>
+            {% else %}
             <div class="mp-flag-row">
                 {% if manager.flag_url %}<img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img" id="mpSidebarFlagImg">{% endif %}
                 {% if manager.flag_name %}<span>{{ manager.flag_name }}</span>{% endif %}
@@ -52,6 +59,7 @@
                 <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"/><path d="M7 3L9 5"/></svg>
                 Profil bearbeiten
             </button>
+            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -320,7 +328,7 @@
 ══════════════════════════════════════════════════════════════ -->
 <div class="mp-profil-grid">
 
-    <!-- Spalte 1: Trophäen + Login + Rekordbuch -->
+    <!-- Spalte 1: Trophäen + Login -->
     <div class="mp-profil-col-left">
         <article class="mp-card2">
             <header class="mp-card2-header">
@@ -364,17 +372,6 @@
             </div>
         </article>
 
-        <article class="mp-card2">
-            <header class="mp-card2-header"><h3>REKORDBUCH</h3></header>
-            <div class="mp-records2-grid">
-                <div class="mp-record2"><span>HÖCHSTER SIEG</span><strong class="mp-s2-win">{{ records.highest_win }}</strong></div>
-                <div class="mp-record2"><span>MEISTE SIEGE IN FOLGE</span><strong>{{ records.wins_in_row }}</strong></div>
-                <div class="mp-record2"><span>HÖCHSTE NIEDERLAGE</span><strong class="mp-s2-loss">{{ records.highest_loss }}</strong></div>
-                <div class="mp-record2"><span>MEISTE TORE (SPIEL)</span><strong>{{ records.most_goals }}</strong></div>
-                <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_out }}</strong></div>
-                <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_in }}</strong></div>
-            </div>
-        </article>
     </div>
 
     <!-- Spalte 2: Europa-Karte -->
@@ -499,8 +496,6 @@
         {% endif %}
     </article>
 
-    <div class="mp-profil-col-right">
-
     <!-- Spalte 3: Statistik -->
     <article class="mp-card2 mp-stats2" id="mpStatsCard">
         <header class="mp-card2-header">
@@ -525,9 +520,9 @@
         </div>
     </article>
 
-    <article class="mp-card2 mp-titles2">
+    <article class="mp-card2 mp-titles2 mp-profil-titles">
         <header class="mp-card2-header">
-            <h3>TITEL</h3>
+            <h3>TRAINER-TITEL &amp; BADGES</h3>
             <button class="mp-title-all-toggle" type="button" data-title-all>Alle ansehen</button>
         </header>
         <p class="mp-titles2-lbl">DIREKT WÄHLBAR</p>
@@ -577,7 +572,17 @@
         </dialog>
     </article>
 
-    </div>
+    <article class="mp-card2 mp-profil-records">
+        <header class="mp-card2-header"><h3>REKORDBUCH</h3></header>
+        <div class="mp-records2-grid">
+            <div class="mp-record2"><span>HÖCHSTER SIEG</span><strong class="mp-s2-win">{{ records.highest_win }}</strong></div>
+            <div class="mp-record2"><span>MEISTE SIEGE IN FOLGE</span><strong>{{ records.wins_in_row }}</strong></div>
+            <div class="mp-record2"><span>HÖCHSTE NIEDERLAGE</span><strong class="mp-s2-loss">{{ records.highest_loss }}</strong></div>
+            <div class="mp-record2"><span>MEISTE TORE (SPIEL)</span><strong>{{ records.most_goals }}</strong></div>
+            <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_out }}</strong></div>
+            <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_in }}</strong></div>
+        </div>
+    </article>
 
 </div>
 
@@ -585,10 +590,17 @@
 
 {% elif tab == 'mannschaftsfotos' %}
 <section class="mp-tab-content mp-team-photos">
+    <header class="mp-team-photos-intro">
+        <div>
+            <span class="mp-team-photos-kicker">SAISONARCHIV</span>
+            <h2>MANNSCHAFTSFOTOS</h2>
+        </div>
+        <p>Die offiziellen Kaderaufnahmen deiner Trainerstationen – Saison für Saison.</p>
+    </header>
     {% for photo in team_photos %}
     <article class="mp-card2 mp-team-photo-card">
         <header class="mp-card2-header">
-            <h3>Saison {{ photo.season }}{% if photo.club %} · {{ photo.club.name }}{% endif %}</h3>
+            <h3>Saison #{{ photo.season }}{% if photo.club %} · {{ photo.club.name }}{% endif %}</h3>
             {% if photo.generated_at %}<small>{{ photo.generated_at|date:"d.m.Y" }}</small>{% endif %}
         </header>
         {% if photo.image %}
@@ -980,20 +992,12 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
         });
         var allTs = allPostT0.map(function(ev){ return Date.parse(ev.date_iso); }).sort(function(a,b){return a-b;});
 
-        /* ── Kompakte Zeitdomäne (Gesamtansicht): T0 → max(letzter Event, HEUTE) + 45 Tage ── */
+        /* ── Feste Gesamtdomäne aus der Designvorlage ── */
         var range;
         if (zoomSeason) {
             range = getRange();
         } else {
-            var domainEnd = allTs.length
-                ? Math.max(allTs[allTs.length-1], today.getTime()) + 45*86400000
-                : today.getTime() + 90*86400000;
-            var spanDays  = (domainEnd - T0_MS) / 86400000;
-            /* Breite: genug für Karten-Anti-Kollision ODER proportional (min 900, max 2900) */
-            var minForCards = PAD_L + PAD_R + allPostT0.length * (CARD_W + GAP);
-            var propW       = PAD_L + PAD_R + Math.round(spanDays * 0.70);
-            var compactW    = Math.min(2900, Math.max(900, minForCards, propW));
-            range = { t0: T0_MS, t1: domainEnd, W: compactW };
+            range = getRange();
         }
 
         track.innerHTML = '';
@@ -1037,12 +1041,9 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                 track.appendChild(mlbl);
             }
         } else {
-            /* Saison-Labels nur anzeigen wenn: Events in dieser Saison ODER HEUTE liegt darin */
+            /* Die drei Referenz-Saisons bleiben immer sichtbar und klickbar. */
             SEASONS.forEach(function(s) {
                 if (s.t1 < range.t0 || s.t0 > range.t1) return; /* außerhalb Domäne */
-                var hasEvent = allTs.some(function(ts){ return ts >= s.t0 && ts <= s.t1; });
-                var hasHeute = today.getTime() >= s.t0 && today.getTime() <= s.t1;
-                if (!hasEvent && !hasHeute) return; /* leere Saison überspringen */
                 var sx = X(s.mid, range);
                 var slbl = document.createElement('span');
                 slbl.textContent = s.label;
