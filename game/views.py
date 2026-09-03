@@ -6562,6 +6562,11 @@ def manager_profile(request):
     club_name = club.name if club else 'Kein Verein'
     club_crest = club.crest_static_path if club else ''
     club_url = f'/clubs/{club.id}/' if club else '/clubs/'
+    current_stadium_image = (
+        resolve_stadium_url(club_profile.stadium_image_static_path)
+        if club_profile and club_profile.stadium_image_static_path
+        else ''
+    )
 
     # --- Trophies from ClubTrophy ---
     db_trophies = list(club.public_trophies.all()) if club else []
@@ -7268,11 +7273,13 @@ def manager_profile(request):
 
     timeline_events_json = json.loads(json.dumps(_tl_js, default=str))
     from .manager_profile import (
+        current_title,
         merged_visibility,
         title_payload,
         xp_progress,
     )
     _title_payload = title_payload(manager_profile_obj)
+    _active_title = current_title(manager_profile_obj)
     _xp_progress = xp_progress(manager_profile_obj)
     _score_rank = (
         ManagerProfile.objects.filter(season_score__gt=manager_profile_obj.season_score).count() + 1
@@ -7314,6 +7321,8 @@ def manager_profile(request):
         'trainer_types_selectable': trainer_types_selectable,
         'trainer_types_unlockable': trainer_types_unlockable,
         'title_data': _title_payload,
+        'active_title': _active_title,
+        'current_stadium_image': current_stadium_image,
         'visibility_settings': merged_visibility(manager_profile_obj),
         'privacy_fields': [
             {'key': key, 'label': label, 'value': merged_visibility(manager_profile_obj)[key]}
@@ -7331,7 +7340,7 @@ def manager_profile(request):
         'manager': {
             'name': manager_name,
             'trainer_type': manager_profile_obj.trainer_type_label,
-            'active_type': _title_payload['active_label'] or 'Kein Titel gewählt',
+            'active_type': _active_title or 'Kein Titel gewählt',
             'flag': manager_profile_obj.nationality_flag,
             'flag_url': manager_profile_obj.nationality_flag,
             'flag_name': manager_profile_obj.nationality_name,

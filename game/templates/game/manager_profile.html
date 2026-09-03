@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-92">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-93">
 {% endblock %}
 
 {% block content %}
@@ -48,7 +48,7 @@
                 {% if manager.flag_url %}<img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img" id="mpSidebarFlagImg">{% endif %}
                 {% if manager.flag_name %}<span>{{ manager.flag_name }}</span>{% endif %}
             </div>
-            <span class="mp-type-badge" id="mpSidebarRole">{{ manager.active_type }}</span>
+            <span class="mp-type-badge" id="mpSidebarRole">{{ active_title|default:"Kein Titel gewählt" }}</span>
             <a class="mp-club-row" href="{{ manager.club_url }}">
                 <strong>{{ manager.club_name }}</strong>
                 <small>Seit {{ manager.club_since }} · {{ manager.club_season }}</small>
@@ -198,7 +198,7 @@
 <!-- ══════════════════════════════════════════════════════════════
      KARRIERE TIMELINE v2
 ══════════════════════════════════════════════════════════════ -->
-<div class="mp-tl2">
+<div class="mp-tl2"{% if current_stadium_image %} style="--mp-current-stadium-image:url('{{ current_stadium_image }}')"{% endif %}>
     <div class="mp-tl2-header">
         <h2 class="mp-tl2-heading">KARRIERE TIMELINE</h2>
         <div class="mp-tl2-filters" id="mpTl2Filters">

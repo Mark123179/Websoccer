@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -13,7 +14,7 @@ from game.manager_profile import (
     select_title,
     title_payload,
 )
-from game.models import ManagerProfile, ManagerTitle
+from game.models import Club, ClubPublicProfile, League, ManagerProfile, ManagerTitle
 
 
 class ManagerProfileHandoffTests(TestCase):
@@ -84,7 +85,7 @@ class ManagerProfileHandoffTests(TestCase):
     def test_free_title_can_be_selected_but_locked_title_cannot(self):
         select_title(self.manager, 'quaelix')
         self.manager.refresh_from_db()
-        self.assertEqual(self.manager.active_title_key, 'quaelix')
+        self.assertEqual(self.manager.active_title, 'quaelix')
         with self.assertRaises(ValueError):
             select_title(self.manager, 'pokaljaeger')
 
@@ -160,3 +161,43 @@ class ManagerProfileHandoffTests(TestCase):
                 self.assertContains(response, 'data-trophy-all')
                 self.assertContains(response, 'id="mpTrophyVitrine"')
                 self.assertContains(response, 'id="mpTrophyVitrineShelf"')
+
+    def test_profile_uses_current_club_stadium_and_one_persisted_active_title(self):
+        league = League.objects.create(name='Profil-Liga', country='Deutschland')
+        club = Club.objects.create(
+            name='Aktueller Profilverein',
+            short_name='APV',
+            founded_year=1900,
+            budget=Decimal('1000000.00'),
+            league=league,
+            managed_by=self.manager,
+        )
+        ClubPublicProfile.objects.create(
+            club=club,
+            stadium_image_static_path='game/images/stadiums/germany/b-dortmund.jpg',
+        )
+        select_title(self.manager, 'quaelix')
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('manager_profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_title'], 'Quälix')
+        self.assertEqual(
+            response.context['manager']['active_type'],
+            response.context['active_title'],
+        )
+        self.assertEqual(
+            response.context['current_manager']['title'],
+            response.context['active_title'],
+        )
+        self.assertEqual(
+            response.context['current_manager']['role'],
+            response.context['active_title'],
+        )
+        self.assertContains(response, '>Quälix</span>')
+        self.assertContains(
+            response,
+            "--mp-current-stadium-image:url('/static/game/images/stadiums/germany/b-dortmund.jpg')",
+        )
+        self.assertNotContains(response, 'fc-bayern-stadium.jpg')

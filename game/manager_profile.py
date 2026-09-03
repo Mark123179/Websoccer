@@ -229,7 +229,7 @@ def title_payload(manager):
             **details,
             **title_progress(manager, key),
             'unlocked': key in unlocked,
-            'active': key == manager.active_title_key,
+            'active': key == manager.active_title,
             'manager_percent': round(holder_count / total_managers * 100),
         })
     unlockable.sort(
@@ -240,10 +240,10 @@ def title_payload(manager):
         )
     )
     return {
-        'active_key': manager.active_title_key,
-        'active_label': TITLE_LABELS.get(manager.active_title_key, ''),
+        'active_key': manager.active_title,
+        'active_label': current_title(manager),
         'free': [
-            {'key': key, 'label': label, 'active': key == manager.active_title_key}
+            {'key': key, 'label': label, 'active': key == manager.active_title}
             for key, label in FREE_TITLES
         ],
         'unlockable': unlockable,
@@ -256,13 +256,13 @@ def select_title(manager, key):
         raise ValueError('Dieser Titel existiert nicht.')
     if key in UNLOCKABLE_BY_KEY and not manager.titles.filter(title_key=key).exists():
         raise ValueError('Dieser Titel ist noch nicht freigeschaltet.')
-    manager.active_title_key = key
-    manager.save(update_fields=['active_title_key', 'updated_at'])
+    manager.active_title = key
+    manager.save(update_fields=['active_title', 'updated_at'])
     return TITLE_LABELS[key]
 
 
 def current_title(manager):
-    return TITLE_LABELS.get(manager.active_title_key, '')
+    return TITLE_LABELS.get(manager.active_title, '')
 
 
 def is_on_vacation(manager, on_date=None, season=None):

@@ -207,7 +207,7 @@ body.manager-profile-page .nav-menu a:first-child {
     border: 1px solid var(--mp-border); border-radius: var(--mp-r);
     overflow: hidden; position: relative;
     background: rgba(9,23,34,.9);
-    background-image: url('/static/game/images/backgrounds/fc-bayern-stadium.jpg');
+    background-image: var(--mp-current-stadium-image, none);
     background-size: cover; background-position: center 40%;
 }
 .mp-tl2::before {

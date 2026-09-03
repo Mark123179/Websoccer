@@ -4005,7 +4005,7 @@ class ManagerProfile(models.Model):
     xp_max = models.PositiveIntegerField(default=15000)
     level = models.PositiveIntegerField(default=1)
     highscore = models.CharField(max_length=50, blank=True, default='–')
-    active_title_key = models.CharField(
+    active_title = models.CharField(
         max_length=50,
         null=True,
         blank=True,
