@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-89">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-90">
 {% endblock %}
 
 {% block content %}
@@ -51,7 +51,7 @@
             <span class="mp-type-badge" id="mpSidebarRole">{{ manager.active_type }}</span>
             <a class="mp-club-row" href="{{ manager.club_url }}">
                 <strong>{{ manager.club_name }}</strong>
-                <small>Seit {{ manager.club_since }} ({{ manager.club_season }})</small>
+                <small>Seit {{ manager.club_since }} · {{ manager.club_season }}</small>
                 <small>Mitglied seit: {{ manager.member_since }}</small>
             </a>
             {% if can_edit_profile %}
@@ -531,7 +531,10 @@
             <form method="post" action="{% url 'set_manager_title' %}" data-title-form>
                 {% csrf_token %}
                 <input type="hidden" name="title_key" value="{{ t.key }}">
-                <button type="submit" class="mp-type2-tile{% if t.active %} is-active{% endif %}">{{ t.label }}</button>
+                <button type="submit" class="mp-type2-tile{% if t.active %} is-active{% endif %}" aria-pressed="{% if t.active %}true{% else %}false{% endif %}">
+                    <span>{{ t.label }}</span>
+                    {% if t.active %}<small class="mp-title-active-tag">AKTIV</small>{% endif %}
+                </button>
             </form>
             {% endfor %}
         </div>
@@ -579,8 +582,8 @@
             <div class="mp-record2"><span>MEISTE SIEGE IN FOLGE</span><strong>{{ records.wins_in_row }}</strong></div>
             <div class="mp-record2"><span>HÖCHSTE NIEDERLAGE</span><strong class="mp-s2-loss">{{ records.highest_loss }}</strong></div>
             <div class="mp-record2"><span>MEISTE TORE (SPIEL)</span><strong>{{ records.most_goals }}</strong></div>
-            <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_out }}</strong></div>
-            <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_in }}</strong></div>
+            <div class="mp-record2"><span>TEUERSTER TRANSFER (AUSGABE)</span><strong>{{ records.transfer_in }}</strong></div>
+            <div class="mp-record2"><span>TEUERSTER TRANSFER (EINNAHME)</span><strong>{{ records.transfer_out }}</strong></div>
         </div>
     </article>
 
@@ -849,6 +852,48 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-title-form]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var button = form.querySelector('button[type="submit"]');
+            if (!button) return;
+            button.disabled = true;
+            fetch(form.action, {
+                method: 'POST',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                body: new FormData(form)
+            }).then(function (response) {
+                return response.json().then(function (data) {
+                    if (!response.ok) throw new Error(data.error || 'Titel konnte nicht gewählt werden.');
+                    return data;
+                });
+            }).then(function (data) {
+                document.querySelectorAll('[data-title-form] button').forEach(function (item) {
+                    item.classList.remove('is-active');
+                    item.setAttribute('aria-pressed', 'false');
+                    var activeTag = item.querySelector('.mp-title-active-tag');
+                    if (activeTag) activeTag.remove();
+                });
+                button.classList.add('is-active');
+                button.setAttribute('aria-pressed', 'true');
+                var tag = document.createElement('small');
+                tag.className = 'mp-title-active-tag';
+                tag.textContent = 'AKTIV';
+                button.appendChild(tag);
+                document.querySelectorAll('#mpSidebarRole').forEach(function (item) {
+                    item.textContent = data.title;
+                });
+            }).catch(function (error) {
+                window.alert(error.message);
+            }).finally(function () {
+                button.disabled = false;
+            });
+        });
+    });
+});
+</script>
+<script>
 /* Trophäenvitrine: Overlay bleibt außerhalb des skalierten Game-Shells. */
 document.addEventListener('DOMContentLoaded', function () {
     var vitrine = document.getElementById('mpTrophyVitrine');
@@ -919,10 +964,17 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
 <script>
 (function () {
     /* ── Zeitdomäne & Geometrie ── */
-    var T0_MS   = Date.parse('2023-07-15');
-    var T1_MS   = Date.parse('2026-08-20');
+    var validTimelineEvents = (MP_TL_EVENTS || []).filter(function (ev) {
+        return ev.title && ev.date_iso && !isNaN(Date.parse(ev.date_iso));
+    });
+    var eventTimes = validTimelineEvents.map(function (ev) {
+        return Date.parse(ev.date_iso);
+    }).sort(function (a, b) { return a - b; });
+    var DAY_MS = 86400000;
+    var T0_MS = eventTimes.length ? eventTimes[0] - (75 * DAY_MS) : Date.now() - (180 * DAY_MS);
+    var T1_MS = eventTimes.length ? Math.max(eventTimes[eventTimes.length - 1], Date.now()) + (75 * DAY_MS) : Date.now() + (180 * DAY_MS);
     var PAD_L   = 56, PAD_R = 96;
-    var CARD_W  = 234, GAP = 16, BASE_W = 2900;
+    var CARD_W  = 234, GAP = 16, BASE_W = Math.max(1256, 420 + validTimelineEvents.length * 285);
     var TRACK_H = 352, AXIS_Y = 176; /* 352/2 */
 
     /* ── Solid-Fill Palette ── */
@@ -962,11 +1014,21 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
     var today        = new Date();
 
     /* ── Saisongrenzen ── */
-    var SEASONS = [
-        { label:'2023/24', mid:Date.parse('2024-01-01'), t0:Date.parse('2023-07-01'), t1:Date.parse('2024-06-30') },
-        { label:'2024/25', mid:Date.parse('2025-01-01'), t0:Date.parse('2024-07-01'), t1:Date.parse('2025-06-30') },
-        { label:'2025/26', mid:Date.parse('2026-01-01'), t0:Date.parse('2025-07-01'), t1:Date.parse('2026-06-30') },
-    ];
+    var seasonYears = [];
+    validTimelineEvents.forEach(function (ev) {
+        var d = new Date(Date.parse(ev.date_iso));
+        var startYear = d.getMonth() >= 6 ? d.getFullYear() : d.getFullYear() - 1;
+        if (seasonYears.indexOf(startYear) === -1) seasonYears.push(startYear);
+    });
+    seasonYears.sort(function (a, b) { return a - b; });
+    var SEASONS = seasonYears.map(function (year, index) {
+        return {
+            label: '#' + index,
+            mid: Date.parse((year + 1) + '-01-01'),
+            t0: Date.parse(year + '-07-01'),
+            t1: Date.parse((year + 1) + '-06-30')
+        };
+    });
 
     function getRange() {
         if (zoomSeason) {
@@ -985,10 +1047,10 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
     /* ── Haupt-Render ── */
     function render() {
         /* ── Alle Post-T0 Events für Kompakt-Breite + Saison-Filter ── */
-        var allPostT0 = (MP_TL_EVENTS||[]).filter(function(ev) {
+        var allPostT0 = validTimelineEvents.filter(function(ev) {
             if (!ev.title || !ev.date_iso) return false;
             var ts = Date.parse(ev.date_iso);
-            return !isNaN(ts) && ts >= T0_MS;
+            return !isNaN(ts);
         });
         var allTs = allPostT0.map(function(ev){ return Date.parse(ev.date_iso); }).sort(function(a,b){return a-b;});
 
@@ -1027,7 +1089,8 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
         /* Saison- oder Monats-Labels */
         if (zoomSeason) {
             var MONTHS = ['Jul','Aug','Sep','Okt','Nov','Dez','Jan','Feb','Mär','Apr','Mai','Jun'];
-            var baseYear = parseInt(zoomSeason.split('/')[0]);
+            var selectedSeason = SEASONS.find(function (season) { return season.label === zoomSeason; });
+            var baseYear = selectedSeason ? new Date(selectedSeason.t0).getFullYear() : new Date(range.t0).getFullYear();
             for (var mi=0; mi<12; mi++) {
                 var yr = mi < 6 ? baseYear : baseYear+1;
                 var mo = mi < 6 ? mi+6 : mi-6;
@@ -1041,12 +1104,12 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                 track.appendChild(mlbl);
             }
         } else {
-            /* Die drei Referenz-Saisons bleiben immer sichtbar und klickbar. */
+            /* Nur Saisons mit echten Karriereereignissen anzeigen. */
             SEASONS.forEach(function(s) {
                 if (s.t1 < range.t0 || s.t0 > range.t1) return; /* außerhalb Domäne */
                 var sx = X(s.mid, range);
                 var slbl = document.createElement('span');
-                slbl.textContent = s.label;
+                slbl.textContent = 'SAISON ' + s.label;
                 slbl.style.cssText = 'position:absolute;left:'+sx+'px;bottom:5px;'+
                     'transform:translateX(-50%);font:700 10px/1.1 Inter,system-ui,sans-serif;'+
                     'letter-spacing:.01em;color:rgba(244,251,255,.5);white-space:nowrap;'+

@@ -6619,8 +6619,8 @@ def manager_profile(request):
     ppg = f'{points / games:.2f}'.replace('.', ',') if games else '0,00'
     gpg = f'{goals_scored / games:.2f}'.replace('.', ',') if games else '0,00'
     gagpg = f'{goals_against / games:.2f}'.replace('.', ',') if games else '0,00'
-    win_rate = f'{win_pct} %'
-    win_rate_detail = f'{wins} S · {draws} U · {losses} N'
+    win_rate = f'{win_pct}%'
+    win_rate_detail = f'{wins} S / {draws} U / {losses} N'
 
     # --- Streak computation (longest run of consecutive wins / losses) ---
     max_win_streak = 0
@@ -6719,7 +6719,12 @@ def manager_profile(request):
             transfer_out_str = f'{fee_fmt} – {best_out.player.full_name} ({date_fmt})'
 
     # --- Manager profile + career stations (real career history) ---
-    from .models import ManagerProfile, ManagerCareerStation, COUNTRY_FLAG_ASSETS
+    from .models import (
+        ManagerProfile,
+        ManagerCareerEntry,
+        ManagerCareerStation,
+        COUNTRY_FLAG_ASSETS,
+    )
     from django.db.models import Sum as _Sum
     if request.user.is_authenticated:
         manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
@@ -6930,6 +6935,14 @@ def manager_profile(request):
 
     # --- Derive active career station for header display ---
     _active_st = next((st for st in db_stations if st.ended_at is None), None)
+    # The career history model is the canonical source for a real takeover
+    # date. Older profiles may not yet have a matching editable map station.
+    _career_entry = (
+        ManagerCareerEntry.objects.filter(manager=manager_profile_obj, active=True)
+        .select_related('club')
+        .order_by('-started_at')
+        .first()
+    )
 
     def _fmt_de_date(d):
         if d is None:
@@ -6953,8 +6966,12 @@ def manager_profile(request):
             return f'{years} Jahr{"e" if years != 1 else ""}'
         return f'{rem_months} Monat{"e" if rem_months != 1 else ""}'
 
-    if _active_st and _active_st.started_at:
-        _club_since_dt = _active_st.started_at
+    if (_active_st and _active_st.started_at) or _career_entry:
+        _club_since_dt = (
+            _active_st.started_at
+            if _active_st and _active_st.started_at
+            else _career_entry.started_at
+        )
         _club_since_str = _fmt_de_date(_club_since_dt)
         _current_period_str = f'{_club_since_str} – heute'
         _time_label_str = _time_elapsed_de(_club_since_dt)
@@ -6964,12 +6981,12 @@ def manager_profile(request):
         _start_year = _club_since_dt.year if _club_since_dt.month >= 8 else _club_since_dt.year - 1
         _curr_year = _today.year if _today.month >= 8 else _today.year - 1
         _season_num = max(1, _curr_year - _start_year + 1)
-        _club_season_str = f'{_season_num}. Saison'
+        _club_season_str = f'Saison #{max(0, _season_num - 1)}'
     else:
         _club_since_str = '–'
         _current_period_str = '–'
         _time_label_str = '–'
-        _club_season_str = '1. Saison'
+        _club_season_str = 'Saison #0'
 
     # --- Photo map markers (satellite image, lat/lng-calibrated) ---
     photo_map_markers = []
@@ -7184,8 +7201,20 @@ def manager_profile(request):
                            'crest_url': _tl_cr or '', 'is_active': _tl_act,
                            'station_key': str(_tl_st.id) if _tl_st.id else ''})
     else:
-        _tl_js.append({'date_iso': '', 'date': '–', 'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
-                       'title': 'Willkommen', 'body': f'Übernahme von {club_name}',
+        # Every managed club needs at least one visible takeover event. Use
+        # the canonical career entry first, then the account creation date as
+        # the best available historical boundary for legacy profiles.
+        _fallback_takeover = (
+            _career_entry.started_at
+            if _career_entry
+            else (
+                manager_profile_obj.member_since
+                or (request.user.date_joined.date() if request.user.date_joined else date.today())
+            )
+        )
+        _tl_js.append({'date_iso': _to_iso(_fallback_takeover), 'date': _fmt_de(_fallback_takeover),
+                       'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
+                       'title': 'Amtsantritt', 'body': f'Übernahme von {club_name}',
                        'crest_url': club_crest or '', 'is_active': True, 'station_key': ''})
     for _tl_tr in db_trophies:
         _tl_js.append({'date_iso': '', 'date': '–', 'type': 'titel', 'cat': 'TITEL', 'tone': 'gold',
@@ -7376,7 +7405,9 @@ def manager_profile(request):
         'all_clubs': _clubs_with_crests,
         'manager_trainer_type_key': manager_profile_obj.trainer_type,
         'manager_favourite_club_id': manager_profile_obj.favourite_club_id or '',
-        'can_edit_profile': request.user.is_superuser,
+        # This is the signed-in manager's private profile. Editing must not be
+        # restricted to site administrators.
+        'can_edit_profile': request.user.is_authenticated,
         'has_custom_image': bool(_raw_image) and not _raw_image.startswith('game/'),
         'name_confirmed': request.user.is_authenticated and manager_profile_obj.name_confirmed,
         'city_coords_json': city_coords_json,
@@ -7406,7 +7437,10 @@ def _station_season_breakdown(started_at, ended_at, total_games, total_titles):
     rows = []
     for i in range(num):
         yr = start_yr + i
-        label = f'{yr}/{str(yr + 1)[-2:]}'
+        # The simulation exposes seasons as stable numeric ids (#0, #1, ...).
+        # Calendar-year labels are implementation details and caused different
+        # profile areas to disagree about the same season.
+        label = f'#{i}'
         if i == num - 1:
             g = leftover_g
             t = leftover_t

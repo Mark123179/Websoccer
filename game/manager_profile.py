@@ -247,7 +247,7 @@ def title_payload(manager):
             for key, label in FREE_TITLES
         ],
         'unlockable': unlockable,
-        'featured_unlockable': unlockable[:4],
+        'featured_unlockable': unlockable[:3],
     }
 
 
