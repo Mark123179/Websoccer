@@ -391,6 +391,11 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-card2-header h3 { font-size: 14px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(180,200,230,.52); margin: 0; }
 .mp-card2-header a  { font-size: 14px; color: var(--mp-cyan); text-decoration: none; flex-shrink: 0; }
 .mp-card2-header a:hover { text-decoration: underline; }
+.mp-inline-action {
+    border: 0; padding: 0; background: transparent; color: var(--mp-cyan);
+    font: inherit; cursor: pointer;
+}
+.mp-inline-action:hover { text-decoration: underline; }
 .mp-card2-empty { color: var(--mp-sub); font-size: 12px; text-align: center; padding: 20px 0; margin: 0; }
 
 /* Trophäen */
@@ -415,6 +420,55 @@ body.manager-profile-page .nav-menu a:first-child {
     color: #fff; font: 900 13px/1 Inter, system-ui, sans-serif;
 }
 .mp-trophy2-slot small { font-size: 13px; font-weight: 700; color: var(--mp-sub); line-height: 1.25; }
+
+/* Trophäenvitrine */
+.mp-modal-open { overflow: hidden; }
+.mp-trophy-vitrine {
+    position: fixed; inset: 0; z-index: 10050; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+}
+.mp-trophy-vitrine.is-open { display: flex; }
+.mp-trophy-vitrine-backdrop {
+    position: absolute; inset: 0; background: rgba(1, 8, 14, .86);
+    backdrop-filter: blur(5px);
+}
+.mp-trophy-vitrine-dialog {
+    position: relative; width: min(720px, 100%); max-height: min(680px, 90vh);
+    overflow: auto; padding: 22px; color: var(--mp-text, #f4fbff);
+    background: linear-gradient(165deg, #0b2432, #061018 70%);
+    border: 1px solid rgba(255,209,102,.32); border-radius: 10px;
+    box-shadow: 0 28px 80px rgba(0,0,0,.6), 0 0 32px rgba(255,209,102,.08);
+}
+.mp-trophy-vitrine-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.mp-trophy-vitrine-head h2 { margin: 5px 0 0; font-size: 20px; letter-spacing: .12em; color: #ffd166; }
+.mp-modal-close { border: 0; background: transparent; color: var(--mp-sub); font-size: 28px; line-height: 1; cursor: pointer; }
+.mp-modal-close:hover { color: #fff; }
+.mp-trophy-vitrine-shelf {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;
+    min-height: 220px; padding: 18px 0 22px;
+    border-bottom: 1px solid rgba(255,209,102,.18);
+}
+.mp-trophy-vitrine-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    min-height: 190px; padding: 12px 8px; text-align: center;
+    background: linear-gradient(180deg, rgba(255,209,102,.08), rgba(255,209,102,.025));
+    border: 1px solid rgba(255,209,102,.18); border-radius: 7px;
+}
+.mp-trophy-vitrine-item[hidden] { display: none; }
+.mp-trophy-vitrine-cup { display: grid; place-items: center; flex: 1; width: 100%; }
+.mp-trophy-vitrine-cup img { width: 104px; height: 104px; object-fit: contain; filter: drop-shadow(0 0 18px rgba(255,209,102,.35)); }
+.mp-trophy-vitrine-item strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+.mp-trophy-vitrine-item span { margin-top: 5px; color: var(--mp-sub); font-size: 11px; }
+.mp-trophy-vitrine-footer { display: flex; align-items: center; justify-content: center; gap: 16px; padding-top: 16px; color: var(--mp-sub); font-size: 12px; }
+.mp-vitrine-page { width: 30px; height: 30px; border: 1px solid rgba(44,231,255,.3); border-radius: 4px; background: rgba(44,231,255,.06); color: var(--mp-cyan); font-size: 22px; line-height: 1; cursor: pointer; }
+.mp-vitrine-page:disabled { opacity: .3; cursor: default; }
+@media (max-width: 600px) {
+    .mp-trophy-vitrine { padding: 12px; }
+    .mp-trophy-vitrine-dialog { padding: 16px; }
+    .mp-trophy-vitrine-shelf { gap: 8px; }
+    .mp-trophy-vitrine-item { min-height: 150px; padding-inline: 4px; }
+    .mp-trophy-vitrine-cup img { width: 76px; height: 76px; }
+}
 
 /* Login rewards */
 .mp-login2-reward { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -562,8 +616,8 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-record2 span   { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--mp-sub); line-height: 1.3; }
 .mp-record2 strong { font-size: 16px; font-weight: 700; color: rgba(244,251,255,.9); word-break: break-all; }
 
-/* ─── BADGES ─────────────────────────────────────────────────── */
-.mp-badges2-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(180,200,230,.38); margin-bottom: 7px; }
+/* ─── TITEL ──────────────────────────────────────────────────── */
+.mp-titles2-lbl { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(180,200,230,.38); margin-bottom: 7px; }
 .mp-types2-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-bottom: 4px; }
 .mp-type2-tile { width: 100%; padding: 5px 8px; font-size: 11px; font-weight: 600; background: rgba(44,231,255,.04); border: 1px solid rgba(44,231,255,.12); border-radius: 4px; color: var(--mp-sub); cursor: pointer; transition: all .15s; text-align: left; }
 .mp-type2-tile:hover     { border-color: rgba(34,230,255,.28); color: rgba(244,251,255,.8); }
@@ -572,6 +626,7 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-unlock2-list { display: flex; flex-direction: column; gap: 5px; }
 .mp-unlock2 { padding: 6px 8px; background: rgba(44,231,255,.03); border: 1px solid rgba(44,231,255,.1); border-radius: 4px; display: flex; flex-direction: column; gap: 3px; font-size: 11px; width: 100%; }
 .mp-unlock2.is-unlocked { border-color: rgba(48,242,156,.3); background: rgba(48,242,156,.05); cursor: pointer; }
+.mp-unlock2.is-active { box-shadow: 0 0 0 1px var(--mp-green); }
 .mp-unlock2-hdr { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .mp-unlock2-hdr > span:first-child { font-weight: 600; color: rgba(244,251,255,.85); }
 .mp-unlock2-check { font-size: 13px; font-weight: 700; color: var(--mp-green); }
@@ -579,6 +634,18 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-unlock2 small { font-size: 13px; color: var(--mp-sub); }
 .mp-unlock2-bar   { height: 3px; background: rgba(44,231,255,.1); border-radius: 2px; overflow: hidden; }
 .mp-unlock2-fill  { height: 100%; background: var(--mp-cyan); border-radius: 2px; }
+.mp-title-all-toggle { border: 0; background: transparent; color: var(--mp-cyan); cursor: pointer; font-size: 11px; }
+.mp-title-dialog { width: min(720px, 90vw); max-height: 80vh; overflow: auto; color: #f4fbff; background: #07121c; border: 1px solid rgba(44,231,255,.28); border-radius: 10px; padding: 24px; }
+.mp-title-dialog::backdrop { background: rgba(2,7,12,.78); }
+.mp-title-dialog-close { float: right; background: transparent; border: 0; color: #fff; font-size: 24px; cursor: pointer; }
+.mp-team-photos { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; padding: 24px 28px; }
+.mp-team-photo-image { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
+.mp-team-photo-roster { columns: 3; column-gap: 24px; padding-left: 22px; color: var(--mp-sub); font-size: 12px; }
+.mp-team-photo-roster li { break-inside: avoid; margin: 3px 0; }
+.mp-vacation-row, .mp-vacation-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.mp-vacation-row > span { flex: 1; color: rgba(244,251,255,.8); font-size: 12px; }
+.mp-vacation-form label { display: flex; flex-direction: column; gap: 3px; color: var(--mp-sub); font-size: 11px; }
+.mp-vacation-form input { color-scheme: dark; background: rgba(44,231,255,.05); border: 1px solid rgba(44,231,255,.16); color: #f4fbff; padding: 6px; border-radius: 4px; }
 
 /* ─── EINSTELLUNGEN ─────────────────────────────────────────── */
 .mp-settings-content { gap: 0; padding: 20px 28px; }

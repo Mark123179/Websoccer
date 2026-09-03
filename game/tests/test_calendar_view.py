@@ -5,9 +5,17 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from game.models import Club, ClubPublicProfile, GameSeasonState, League, SeasonFixture
 from game.models import (
-
+    Club,
+    ClubPublicProfile,
+    CupFixture,
+    CupRound,
+    CupSeason,
+    GameSeasonState,
+    League,
+    SeasonFixture,
+    SimulatedMatch,
+)
 
 class CalendarViewTests(TestCase):
     def setUp(self):
@@ -92,6 +100,17 @@ class CalendarViewTests(TestCase):
         )
         self.assertContains(response, 'has-stadium')
         self.assertContains(response, '--calendar-stadium-image:')
+        self.assertContains(response, '--calendar-day-image:')
+
+        fixture_day = next(
+            cell
+            for cell in response.context['calendar_month']['cells']
+            if cell.get('iso_date') == '2026-09-05'
+        )
+        self.assertEqual(
+            fixture_day['stadium'],
+            '/static/game/images/stadiums/germany/fc-bayern.jpg',
+        )
 
     def test_calendar_header_has_no_chevron_step_buttons(self):
         self.client.force_login(self.user)

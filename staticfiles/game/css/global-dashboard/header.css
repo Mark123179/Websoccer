@@ -164,11 +164,12 @@
 
 .ws-fixture-card::before {
     background:
-        linear-gradient(180deg, rgba(236, 252, 255, 0.48), rgba(220, 237, 239, 0.28)),
+        linear-gradient(180deg, rgba(236, 252, 255, 0.22), rgba(220, 237, 239, 0.12)),
         var(--fixture-stadium, none) center / cover no-repeat;
     content: "";
+    filter: saturate(.9) contrast(1.06);
     inset: 0;
-    opacity: 0.46;
+    opacity: 0.72;
     position: absolute;
 }
 

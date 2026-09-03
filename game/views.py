@@ -1385,13 +1385,22 @@ def _calendar_month_payload(year, month, fixtures_by_date, selected_date):
     cells = [{'empty': True} for _ in range(first_weekday)]
     for day_number in range(1, days_in_month + 1):
         current = date(year, month, day_number)
+        day_fixtures = fixtures_by_date.get(current, [])
         cells.append({
             'empty': False,
             'number': day_number,
             'iso_date': current.isoformat(),
             'is_today': current == date.today(),
             'is_selected': current == selected_date,
-            'fixtures': fixtures_by_date.get(current, []),
+            'fixtures': day_fixtures,
+            'stadium': next(
+                (
+                    fixture['stadium']
+                    for fixture in day_fixtures
+                    if fixture.get('stadium') and not fixture.get('forecast')
+                ),
+                '',
+            ),
         })
     while len(cells) % 7:
         cells.append({'empty': True})
@@ -1483,6 +1492,7 @@ def calendar_view(request):
             preview['weekday'] = _CALENDAR_WEEKDAYS[preview['date'].weekday()]
             preview['forecast'] = True
             preview['status'] = 'Prognose'
+            preview['stadium'] = ''
             preview['detail_url'] = None
             preview['detail_label'] = None
             fixture_payloads.append(preview)

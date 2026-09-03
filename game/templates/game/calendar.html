@@ -4,7 +4,7 @@
 {% block title %}Kalender · Websoccer{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/calendar.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'game/css/calendar.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -113,7 +113,8 @@
                 </div>
                 <div class="calendar-month-large-grid">
                     {% for cell in calendar_month.cells %}
-                        <div class="calendar-large-day{% if cell.empty %} is-empty{% endif %}{% if cell.is_today %} is-today{% endif %}{% if cell.is_selected %} is-selected{% endif %}">
+                        <div class="calendar-large-day{% if cell.empty %} is-empty{% endif %}{% if cell.is_today %} is-today{% endif %}{% if cell.is_selected %} is-selected{% endif %}{% if cell.stadium %} has-stadium{% endif %}"
+                             {% if cell.stadium %}style="--calendar-day-image: url('{{ cell.stadium }}');"{% endif %}>
                             {% if not cell.empty %}
                                 <a class="calendar-large-day-number" href="?view=month&calendar_date={{ cell.iso_date }}&filters={{ calendar_filter_string }}">{{ cell.number }}</a>
                                 {% for fixture in cell.fixtures %}
