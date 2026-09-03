@@ -72,8 +72,9 @@ class CalendarViewTests(TestCase):
         self.assertLess(notification_pos, calendar_pos)
         self.assertLess(calendar_pos, inbox_pos)
         self.assertIn('aria-label="Kalender öffnen"', html)
-        self.assertIn('ws-header-manager', html)
-        self.assertIn('ws-header-actions', html)
+        self.assertIn('class="manager-profile"', html)
+        self.assertIn('class="nav-quick-actions"', html)
+        self.assertNotIn('ws-header-context-copy', html)
 
     def test_calendar_renders_real_fixture_and_all_views(self):
         self.client.force_login(self.user)

@@ -57,134 +57,12 @@
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    justify-content: space-between;
+    gap: 0;
     margin-right: 0;
+    max-width: 210px;
     min-height: 112px;
-    padding: 12px 14px;
-}
-
-.ws-header-context-top {
-    align-items: flex-start;
-    display: flex;
-    gap: 6px;
-    justify-content: space-between;
-    min-width: 0;
-}
-
-.ws-header-manager {
-    align-items: center;
-    border-radius: 5px;
-    color: var(--text);
-    display: flex;
-    gap: 7px;
-    min-width: 0;
-    padding: 2px;
-}
-
-.ws-header-manager:hover {
-    color: var(--text);
-}
-
-.ws-header-manager-avatar {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--line-strong);
-    border-radius: 6px;
-    box-shadow: 0 0 14px rgba(34, 230, 255, 0.14);
-    flex: 0 0 32px;
-    height: 32px;
-    object-fit: cover;
-    object-position: center top;
-    width: 32px;
-}
-
-.ws-header-manager-copy {
-    display: block;
-    min-width: 0;
-}
-
-.ws-header-manager-copy small,
-.ws-header-manager-copy strong,
-.ws-header-manager-copy em {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.ws-header-manager-copy small {
-    color: var(--muted);
-    font-size: 8px;
-    font-weight: 700;
-    line-height: 1.1;
-}
-
-.ws-header-manager-copy strong {
-    color: #fff;
-    font-size: 11px;
-    line-height: 1.2;
-}
-
-.ws-header-manager-copy em {
-    align-items: center;
-    color: var(--text-accent);
-    display: flex;
-    font-size: 8px;
-    font-style: normal;
-    font-weight: 800;
-    gap: 3px;
-    line-height: 1.2;
-    margin-top: 2px;
-}
-
-.ws-header-manager-copy .manager-title-flag {
-    height: 8px;
-    width: 12px;
-}
-
-.ws-header-actions {
-    display: grid;
-    flex: 0 0 auto;
-    gap: 3px;
-    grid-template-columns: repeat(3, 27px);
-}
-
-.ws-header-actions .nav-action {
-    border-radius: 5px;
-    height: 27px;
-    width: 27px;
-}
-
-.ws-header-actions .nav-action svg {
-    height: 15px;
-    width: 15px;
-}
-
-.ws-header-actions .nav-badge {
-    font-size: 8px;
-    height: 14px;
-    min-width: 14px;
-    padding: 0 3px;
-    right: -4px;
-    top: -5px;
-}
-
-.ws-header-context-copy {
-    min-width: 0;
-}
-
-.ws-header-context-copy strong {
-    color: #ffffff;
-    font-size: 20px;
-    font-weight: 900;
-    line-height: 1.05;
-    overflow-wrap: anywhere;
-}
-
- .ws-header-context-copy span {
-    color: rgba(219, 242, 255, 0.72);
-    font-size: 12px;
-    margin-top: 5px;
+    padding: 5px 8px;
+    width: 100%;
 }
 
 .ws-calendar-strip {
@@ -428,17 +306,12 @@
         margin: 0 12px 16px;
     }
 
-    .ws-header-context,
     .ws-calendar-arrow {
         min-height: 78px;
     }
 
     .ws-calendar-day {
         height: 78px;
-    }
-
-    .ws-header-context strong {
-        font-size: 19px;
     }
 
     .ws-calendar-days {
