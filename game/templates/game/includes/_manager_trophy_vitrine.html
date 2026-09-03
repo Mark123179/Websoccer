@@ -1,0 +1,49 @@
+<!-- Trophäenvitrine: einzige Trophäenansicht des Managerprofils. -->
+<div class="mp-trophy-vitrine" id="mpTrophyVitrine" aria-hidden="true">
+    <div class="mp-trophy-vitrine-backdrop" data-trophy-close></div>
+    <section class="mp-trophy-vitrine-dialog" role="dialog" aria-modal="true"
+             aria-labelledby="mpTrophyVitrineTitle">
+        <header class="mp-trophy-vitrine-head">
+            <div>
+                <h2 id="mpTrophyVitrineTitle">TROPHÄENVITRINE</h2>
+                <small>Alle gewonnenen Titel deiner Karriere · {{ manager.name }}</small>
+            </div>
+            <span class="mp-trophy-vitrine-total">{{ manager.trophies }} TITEL</span>
+            <button class="mp-modal-close" type="button" data-trophy-close
+                    aria-label="Vitrine schließen">✕</button>
+        </header>
+        <div class="mp-trophy-vitrine-body">
+            <div class="mp-trophy-vitrine-cabinet" id="mpTrophyVitrineShelf">
+                {% for trophy in trophies_list %}
+                <article class="mp-trophy-vitrine-item" tabindex="0">
+                    <span class="mp-trophy-vitrine-reflection" aria-hidden="true"></span>
+                    <img class="mp-trophy-vitrine-cup" src="{{ trophy.icon_url }}" alt="{{ trophy.name }}">
+                    <div class="mp-trophy-vitrine-tooltip" role="tooltip">
+                        <div class="mp-trophy-vitrine-tooltip-head">
+                            <img src="{{ trophy.icon_url }}" alt="">
+                            <strong>{{ trophy.name }}</strong>
+                            <span>{{ trophy.count }}×</span>
+                        </div>
+                        <div class="mp-trophy-vitrine-win">
+                            {% if manager.club_crest %}<img src="{{ manager.club_crest }}" alt="">{% endif %}
+                            <span><b>{{ manager.club_name }}</b><small>Saison nicht erfasst</small></span>
+                        </div>
+                    </div>
+                </article>
+                {% empty %}
+                <p class="mp-trophy-vitrine-empty">Noch keine Trophäen in der Vitrine.</p>
+                {% endfor %}
+            </div>
+            <div class="mp-trophy-vitrine-note">
+                <small>Über einen Pokal fahren für Details · 3 Trophäen pro Regalboden</small>
+            </div>
+        </div>
+        <footer class="mp-trophy-vitrine-footer">
+            <button class="mp-vitrine-page" type="button" data-trophy-prev
+                    aria-label="Vorherige Vitrinenseite">‹</button>
+            <span id="mpTrophyVitrinePage">1 / 1</span>
+            <button class="mp-vitrine-page" type="button" data-trophy-next
+                    aria-label="Nächste Vitrinenseite">›</button>
+        </footer>
+    </section>
+</div>

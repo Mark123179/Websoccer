@@ -145,3 +145,18 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertContains(response, 'REGISTRIERT AM')
         self.assertContains(response, 'class="mp-kpi-cell"', count=9)
         self.assertNotContains(response, '/static/assets/trophies/')
+        self.assertNotContains(response, 'TROPHÄENSAMMLUNG')
+        self.assertContains(response, 'TROPHÄENVITRINE')
+        self.assertContains(response, 'data-trophy-all')
+        self.assertContains(response, 'var perPage = 15')
+
+    def test_trophy_action_and_vitrine_exist_on_every_manager_profile_tab(self):
+        self.client.force_login(self.user)
+
+        for tab in ('profil', 'mannschaftsfotos', 'einstellungen'):
+            with self.subTest(tab=tab):
+                response = self.client.get(reverse('manager_profile'), {'tab': tab})
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'data-trophy-all')
+                self.assertContains(response, 'id="mpTrophyVitrine"')
+                self.assertContains(response, 'id="mpTrophyVitrineShelf"')

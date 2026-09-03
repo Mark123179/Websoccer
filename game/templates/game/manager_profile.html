@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-91">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-92">
 {% endblock %}
 
 {% block content %}
@@ -328,28 +328,8 @@
 ══════════════════════════════════════════════════════════════ -->
 <div class="mp-profil-grid">
 
-    <!-- Spalte 1: Trophäen + Login -->
+    <!-- Spalte 1: Login-Belohnungen; Trophäen gibt es ausschließlich in der Vitrine -->
     <div class="mp-profil-col-left">
-        <article class="mp-card2">
-            <header class="mp-card2-header">
-                <h3>TROPHÄENSAMMLUNG</h3>
-                <button class="mp-inline-action" type="button" data-trophy-all>Alle ansehen</button>
-            </header>
-            {% if trophies_list %}
-            <div class="mp-trophies2-grid">
-                {% for trophy in trophies_list %}
-                <div class="mp-trophy2-slot">
-                    <img src="{{ trophy.icon_url }}" alt="{{ trophy.name }}">
-                    <span class="mp-trophy2-count">{{ trophy.count }}×</span>
-                    <small>{{ trophy.name }}</small>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="mp-card2-empty">Noch keine Trophäen.</p>
-            {% endif %}
-        </article>
-
         <article class="mp-card2 mp-login2">
             <header class="mp-card2-header">
                 <h3>LOGIN BELOHNUNGEN</h3>
@@ -788,43 +768,6 @@
     </div>
 </section>
 
-<!-- Trophäenvitrine: bewusst als echtes Overlay statt Navigation zurück auf
-     dieselbe Profilseite. Die Trophäen stammen vollständig aus der DB-Liste. -->
-<div class="mp-trophy-vitrine" id="mpTrophyVitrine" aria-hidden="true">
-    <div class="mp-trophy-vitrine-backdrop" data-trophy-close></div>
-    <section class="mp-trophy-vitrine-dialog" role="dialog" aria-modal="true"
-             aria-labelledby="mpTrophyVitrineTitle">
-        <header class="mp-trophy-vitrine-head">
-            <div>
-                <span class="mp-kpi-lbl">SAMMLUNG</span>
-                <h2 id="mpTrophyVitrineTitle">TROPHÄENVITRINE</h2>
-            </div>
-            <button class="mp-modal-close" type="button" data-trophy-close
-                    aria-label="Vitrine schließen">×</button>
-        </header>
-        <div class="mp-trophy-vitrine-shelf" id="mpTrophyVitrineShelf">
-            {% for trophy in trophies_list %}
-            <article class="mp-trophy-vitrine-item" title="{{ trophy.name }}">
-                <div class="mp-trophy-vitrine-cup">
-                    <img src="{{ trophy.icon_url }}" alt="{{ trophy.name }}">
-                </div>
-                <strong>{{ trophy.name }}</strong>
-                <span>{{ trophy.count }}× gewonnen</span>
-            </article>
-            {% empty %}
-            <p class="mp-card2-empty">Noch keine Trophäen in der Vitrine.</p>
-            {% endfor %}
-        </div>
-        <footer class="mp-trophy-vitrine-footer">
-            <button class="mp-vitrine-page" type="button" data-trophy-prev
-                    aria-label="Vorherige Vitrinenseite">‹</button>
-            <span id="mpTrophyVitrinePage">1 / 1</span>
-            <button class="mp-vitrine-page" type="button" data-trophy-next
-                    aria-label="Nächste Vitrinenseite">›</button>
-        </footer>
-    </section>
-</div>
-
 {% else %}
 <section class="mp-tab-content mp-coming-soon">
     <div class="mp-coming-soon-inner">
@@ -834,6 +777,8 @@
     </div>
 </section>
 {% endif %}
+
+{% include "game/includes/_manager_trophy_vitrine.html" %}
 
 </div>
 {% endblock %}
@@ -905,7 +850,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var prev = vitrine.querySelector('[data-trophy-prev]');
     var next = vitrine.querySelector('[data-trophy-next]');
     var page = 0;
-    var perPage = 3;
+    var perPage = 15;
     function render() {
         var pages = Math.max(1, Math.ceil(items.length / perPage));
         page = Math.max(0, Math.min(page, pages - 1));
@@ -916,6 +861,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (prev) prev.disabled = page === 0;
         if (next) next.disabled = page >= pages - 1;
         if (shelf) shelf.classList.toggle('is-empty', !items.length);
+        var footer = vitrine.querySelector('.mp-trophy-vitrine-footer');
+        if (footer) footer.hidden = pages <= 1;
     }
     function open() {
         page = 0; render();
