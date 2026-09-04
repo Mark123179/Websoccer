@@ -6573,7 +6573,24 @@ def manager_profile(request):
     )
 
     # --- Trophies from ClubTrophy ---
-    db_trophies = list(club.public_trophies.all()) if club else []
+    club_trophies = list(club.public_trophies.all()) if club else []
+    trophy_aliases = (
+        ('bundesliga',),
+        ('dfb-pokal',),
+        ('supercup',),
+    )
+    db_trophies = []
+    for aliases in trophy_aliases:
+        trophy = next(
+            (
+                item for item in club_trophies
+                if any(alias in item.competition_name.casefold() for alias in aliases)
+                and item.count > 0
+            ),
+            None,
+        )
+        if trophy is not None:
+            db_trophies.append(trophy)
     _default_icons = [
         'game/images/icons/Default Trophy 1.png',
         'game/images/icons/Default Trophy 2.png',
@@ -6584,11 +6601,11 @@ def manager_profile(request):
     def _kpi_trophy_url(competition_name, fallback_url):
         normalized = competition_name.casefold()
         if 'bundesliga' in normalized or 'meisterschaft' in normalized:
-            return static('game/images/trophies/manager-meisterschale.png')
+            return static('game/images/competitions/bundesliga.png')
         if 'dfb-pokal' in normalized:
-            return static('game/images/trophies/manager-dfb-pokal.png')
+            return static('game/images/competitions/dfb-pokal.png')
         if 'supercup' in normalized:
-            return static('game/images/trophies/manager-supercup.png')
+            return static('game/images/competitions/supercup.png')
         return fallback_url
 
     trophies_list = []
@@ -6604,17 +6621,38 @@ def manager_profile(request):
             'icon_url': trophy_url,
             'kpi_icon_url': _kpi_trophy_url(trophy.competition_name, trophy_url),
         })
-    trophies_count = sum(t.count for t in db_trophies)
+    trophies_count = len(trophies_list)
 
     # --- Match stats from MatchResult (full career history) ---
+    simulated_results = False
     if club:
         all_results = list(
             MatchResult.objects.filter(club=club)
             .select_related('home_club', 'away_club')
             .order_by('sort_order', 'id')
         )
+        if not all_results:
+            all_results = list(
+                SimulatedMatch.objects.filter(
+                    _db_models.Q(home_club=club) | _db_models.Q(away_club=club)
+                )
+                .select_related('home_club', 'away_club')
+                .order_by('simulated_at', 'id')
+            )
+            simulated_results = True
     else:
         all_results = []
+
+    def _manager_result_label(match):
+        if not simulated_results:
+            return match.result_label
+        club_goals = match.home_goals if match.home_club_id == club.id else match.away_goals
+        opponent_goals = match.away_goals if match.home_club_id == club.id else match.home_goals
+        if club_goals > opponent_goals:
+            return MatchResult.RESULT_WIN
+        if club_goals < opponent_goals:
+            return MatchResult.RESULT_LOSS
+        return MatchResult.RESULT_DRAW
 
     wins = 0
     draws = 0
@@ -6628,11 +6666,12 @@ def manager_profile(request):
             club_g, opp_g = hg, ag
         else:
             club_g, opp_g = ag, hg
-        if m.result_label == MatchResult.RESULT_WIN:
+        result_label = _manager_result_label(m)
+        if result_label == MatchResult.RESULT_WIN:
             wins += 1
-        elif m.result_label == MatchResult.RESULT_DRAW:
+        elif result_label == MatchResult.RESULT_DRAW:
             draws += 1
-        elif m.result_label == MatchResult.RESULT_LOSS:
+        elif result_label == MatchResult.RESULT_LOSS:
             losses += 1
         goals_scored += club_g
         goals_against += opp_g
@@ -6646,7 +6685,7 @@ def manager_profile(request):
     gpg = f'{goals_scored / games:.2f}'.replace('.', ',') if games else '0,00'
     gagpg = f'{goals_against / games:.2f}'.replace('.', ',') if games else '0,00'
     win_rate = f'{win_pct}%'
-    win_rate_detail = f'{wins} S / {draws} U / {losses} N'
+    win_rate_detail = f'{wins} S · {draws} U · {losses} N'
 
     # --- Streak computation (longest run of consecutive wins / losses) ---
     max_win_streak = 0
@@ -6654,10 +6693,11 @@ def manager_profile(request):
     cur_win = 0
     cur_loss = 0
     for m in all_results:
-        if m.result_label == MatchResult.RESULT_WIN:
+        result_label = _manager_result_label(m)
+        if result_label == MatchResult.RESULT_WIN:
             cur_win += 1
             cur_loss = 0
-        elif m.result_label == MatchResult.RESULT_LOSS:
+        elif result_label == MatchResult.RESULT_LOSS:
             cur_loss += 1
             cur_win = 0
         else:
@@ -6701,8 +6741,9 @@ def manager_profile(request):
             club_g, opp_g = ag, hg
             opp_name = m.home_club.name if m.home_club else '?'
         total_goals = hg + ag
-        is_win = m.result_label == MatchResult.RESULT_WIN
-        is_loss = m.result_label == MatchResult.RESULT_LOSS
+        result_label = _manager_result_label(m)
+        is_win = result_label == MatchResult.RESULT_WIN
+        is_loss = result_label == MatchResult.RESULT_LOSS
         margin = club_g - opp_g
         if is_win and margin > best_win_margin:
             best_win_margin = margin
@@ -6765,6 +6806,10 @@ def manager_profile(request):
         .select_related('club', 'club__public_profile')
         .order_by('order')
     )
+    closed_station_games = sum(
+        station.games_played for station in db_stations if station.ended_at is not None
+    )
+    career_games = closed_station_games + games
 
     # --- Timeline events built from real DB data ---
     timeline_events = []
@@ -6946,10 +6991,11 @@ def manager_profile(request):
             else '–'
         )
     )
-    _ll = request.user.last_login if (request.user.is_authenticated and request.user.last_login) else None
+    _ll = manager_profile_obj.last_seen
+    _ll = timezone.localtime(_ll) if _ll else None
     last_login_display = _ll.strftime('%d.%m.%Y, %H:%M') if _ll else '–'
-    last_login_date    = _ll.strftime('%d.%m.%Y') if _ll else '–'
-    last_login_time    = _ll.strftime('%H:%M') + ' Uhr' if _ll else ''
+    last_login_date = _ll.strftime('%d.%m.%Y') if _ll else '–'
+    last_login_time = _ll.strftime('%H:%M') + ' Uhr' if _ll else ''
     _raw_image = manager_profile_obj.profile_image or ''
     _has_custom_avatar = bool(_raw_image and not _raw_image.startswith('game/'))
     if _has_custom_avatar:
@@ -7119,7 +7165,14 @@ def manager_profile(request):
             ag = m.away_goals or 0
             club_g = hg if m.home_club_id == c_id else ag
             opp_g = ag if m.home_club_id == c_id else hg
-            rl = m.result_label
+            if hasattr(m, 'result_label'):
+                rl = m.result_label
+            elif club_g > opp_g:
+                rl = MatchResult.RESULT_WIN
+            elif club_g < opp_g:
+                rl = MatchResult.RESULT_LOSS
+            else:
+                rl = MatchResult.RESULT_DRAW
             if rl == MatchResult.RESULT_WIN:
                 w += 1
             elif rl == MatchResult.RESULT_DRAW:
@@ -7134,7 +7187,18 @@ def manager_profile(request):
         def _div2(x): return f'{x / g2:.2f}'.replace('.', ',') if g2 else '0,00'
         mw2 = ml2 = cw2 = cl2 = 0
         for m in results_list:
-            rl = m.result_label
+            hg = m.home_goals or 0
+            ag = m.away_goals or 0
+            club_g = hg if m.home_club_id == c_id else ag
+            opp_g = ag if m.home_club_id == c_id else hg
+            if hasattr(m, 'result_label'):
+                rl = m.result_label
+            elif club_g > opp_g:
+                rl = MatchResult.RESULT_WIN
+            elif club_g < opp_g:
+                rl = MatchResult.RESULT_LOSS
+            else:
+                rl = MatchResult.RESULT_DRAW
             if rl == MatchResult.RESULT_WIN:
                 cw2 += 1; cl2 = 0
             elif rl == MatchResult.RESULT_LOSS:
@@ -7158,6 +7222,14 @@ def manager_profile(request):
             .select_related('home_club', 'away_club')
             .order_by('sort_order', 'id')
         ) if _cid else []
+        if _cid and not _st_results:
+            _st_results = list(
+                SimulatedMatch.objects.filter(
+                    _db_models.Q(home_club_id=_cid) | _db_models.Q(away_club_id=_cid)
+                )
+                .select_related('home_club', 'away_club')
+                .order_by('simulated_at', 'id')
+            )
         _ss_stats = _station_match_stats(_cid, _st_results)
         _st_nm = _ss_st.custom_club_name or (_ss_st.club.name if _ss_st.club else _ss_st.city_name or '?')
         _st_cr = _ss_st.club.crest_static_path if _ss_st.club else club_crest
@@ -7381,7 +7453,7 @@ def manager_profile(request):
             'inactivity_streak': manager_profile_obj.inactivity_streak,
             'trophies': trophies_count,
             'trophies_list_mini': trophies_list[:3],
-            'games_total': games,
+            'games_total': career_games,
             'games_since': ('seit ' + db_stations[0].started_at.strftime('%b. %Y') if db_stations and db_stations[0].started_at else ''),
             'wins': wins,
             'draws': draws,

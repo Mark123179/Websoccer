@@ -5,6 +5,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from game.manager_profile import (
     award_login_reward,
@@ -15,7 +16,15 @@ from game.manager_profile import (
     select_title,
     title_payload,
 )
-from game.models import Club, ClubPublicProfile, ClubTrophy, League, ManagerProfile, ManagerTitle
+from game.models import (
+    Club,
+    ClubPublicProfile,
+    ClubTrophy,
+    League,
+    ManagerProfile,
+    ManagerTitle,
+    SimulatedMatch,
+)
 
 
 class ManagerProfileHandoffTests(TestCase):
@@ -255,9 +264,75 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertNotContains(response, 'fc-bayern-stadium.jpg')
         self.assertEqual(
             response.context['manager']['trophies_list_mini'][0]['kpi_icon_url'],
-            '/static/game/images/trophies/manager-meisterschale.png',
+            '/static/game/images/competitions/bundesliga.png',
         )
+        self.assertEqual(response.context['manager']['trophies'], 1)
         self.assertEqual(
             response.context['trophies_list'][0]['icon_url'],
             '/static/game/images/trophies/22.png',
         )
+
+    def test_kpis_use_simulated_matches_competition_logos_and_last_seen(self):
+        league = League.objects.create(name='KPI-Liga', country='Deutschland')
+        club = Club.objects.create(
+            name='KPI-Verein',
+            short_name='KPI',
+            founded_year=1900,
+            budget=Decimal('1000000.00'),
+            league=league,
+            managed_by=self.manager,
+        )
+        opponent = Club.objects.create(
+            name='KPI-Gegner',
+            short_name='KPG',
+            founded_year=1901,
+            budget=Decimal('1000000.00'),
+            league=league,
+        )
+        ClubTrophy.objects.create(
+            club=club,
+            competition_name='Bundesliga',
+            count=8,
+            trophy_asset_id='22',
+        )
+        ClubTrophy.objects.create(
+            club=club,
+            competition_name='DFB-Pokal',
+            count=5,
+            trophy_asset_id='1301397',
+        )
+        ClubTrophy.objects.create(
+            club=club,
+            competition_name='DFL-Supercup',
+            count=4,
+            trophy_asset_id='1301395',
+        )
+        SimulatedMatch.objects.create(
+            home_club=club,
+            away_club=opponent,
+            home_goals=2,
+            away_goals=1,
+        )
+        self.manager.last_seen = timezone.now()
+        self.manager.save(update_fields=['last_seen'])
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('manager_profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['manager']['trophies'], 3)
+        self.assertEqual(response.context['manager']['games_total'], 1)
+        self.assertEqual(response.context['manager']['win_rate'], '100%')
+        self.assertEqual(
+            response.context['manager']['last_login_date'],
+            timezone.localdate().strftime('%d.%m.%Y'),
+        )
+        self.assertEqual(
+            [item['kpi_icon_url'] for item in response.context['manager']['trophies_list_mini']],
+            [
+                '/static/game/images/competitions/bundesliga.png',
+                '/static/game/images/competitions/dfb-pokal.png',
+                '/static/game/images/competitions/supercup.png',
+            ],
+        )
+        self.assertContains(response, '1 S · 0 U · 0 N')

@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-96">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-97">
 {% endblock %}
 
 {% block content %}
@@ -69,7 +69,7 @@
         <!-- 1: Level -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2L3 4v4c0 3.5 2.2 6 5 7 2.8-1 5-3.5 5-7V4L8 2z"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2L3 4v4c0 3.5 2.2 6 5 7 2.8-1 5-3.5 5-7V4L8 2z"/></svg>
                 MANAGERLEVEL
             </span>
             <div class="mp-kpi-level-row">
@@ -82,7 +82,7 @@
         <!-- 2: Saison-Score -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="rgba(255,209,102,.85)"><path d="M8 2l1.5 3 3.2.5-2.3 2.2.5 3.3L8 9.5l-2.9 1.5.5-3.3-2.3-2.2 3.2-.5z"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="rgba(255,209,102,.85)"><path d="M8 2l1.5 3 3.2.5-2.3 2.2.5 3.3L8 9.5l-2.9 1.5.5-3.3-2.3-2.2 3.2-.5z"/></svg>
                 SAISON-SCORE
             </span>
             <strong class="mp-kpi-big mp-kpi-gold">{{ manager.season_score }}</strong>
@@ -95,7 +95,7 @@
         <!-- 3: Trophäen -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.75)" stroke-width="1.6" stroke-linecap="round"><path d="M4 3h8v3a4 4 0 0 1-8 0V3z"/><path d="M8 10v2M5 14h6"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.75)" stroke-width="1.6" stroke-linecap="round"><path d="M4 3h8v3a4 4 0 0 1-8 0V3z"/><path d="M8 10v2M5 14h6"/></svg>
                 TROPHÄEN
             </span>
             <strong class="mp-kpi-big mp-kpi-cyan">{{ manager.trophies }}</strong>
@@ -109,16 +109,16 @@
         <!-- 4: Spiele -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
                 SPIELE GESAMT
             </span>
             <strong class="mp-kpi-big">{{ manager.games_total }}</strong>
-            {% if manager.games_since %}<small class="mp-kpi-sub">{{ manager.games_since }}</small>{% endif %}
+            <small class="mp-kpi-sub">{{ manager.games_since|default:"seit –" }}</small>
         </div>
         <!-- 5: Siegquote -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M2 12l4-5 3 3 3-5 4 4"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M2 12l4-5 3 3 3-5 4 4"/></svg>
                 SIEGQUOTE
             </span>
             <strong class="mp-kpi-big mp-kpi-green">{{ manager.win_rate }}</strong>
@@ -132,12 +132,12 @@
         <!-- 6: Nicht aufgestellt -->
         <div class="mp-kpi-cell mp-kpi-cell--not-fielded">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,209,102,.85)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2.5L14.5 14h-13L8 2.5z"/><path d="M8 7v3M8 12.2v.01" stroke-linecap="round"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(255,209,102,.85)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2.5L14.5 14h-13L8 2.5z"/><path d="M8 7v3M8 12.2v.01" stroke-linecap="round"/></svg>
                 NICHT AUFGESTELLT
             </span>
             <div class="mp-not-fielded-values">
-                <strong>{{ manager.not_fielded_season }}<span>/5</span> <small>SAISON</small></strong>
-                <strong>{{ manager.not_fielded_streak }}<span>/3</span> <small>FOLGE</small></strong>
+                <strong>{{ manager.not_fielded_season }}<span>/5</span> <small>Saison</small></strong>
+                <strong>{{ manager.not_fielded_streak }}<span>/3</span> <small>Folge</small></strong>
             </div>
             <small class="mp-stage-rules" title="Stufe 1: Stärkemalus + Hinweis · Stufe 2 (2 in Folge oder 3 in der Saison): Transfersperre bis zur nächsten eigenen Aufstellung · Stufe 3 (3 in Folge oder 5 in der Saison): Entlassung + Timeline-Eintrag · Urlaubsmodus pausiert beide Zähler">
                 <svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h2v4H7z"/></svg>
@@ -147,7 +147,7 @@
         <!-- 7: Transfersperre -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>
                 TRANSFERSPERRE
             </span>
             {% if manager.transfer_ban == 'Keine' %}
@@ -163,7 +163,7 @@
         <!-- 8: Letzte Anmeldung -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
                 LETZTE ANMELDUNG
             </span>
             <strong class="mp-kpi-login">{{ manager.last_login_date }}{% if manager.last_login_time %}<br><span>{{ manager.last_login_time }}</span>{% endif %}</strong>
@@ -171,7 +171,7 @@
         <!-- 9: Registriert am -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.75)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
+                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.75)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
                 REGISTRIERT AM
             </span>
             <strong class="mp-kpi-medium">{{ manager.registered }}</strong>
