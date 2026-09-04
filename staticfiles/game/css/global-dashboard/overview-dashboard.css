@@ -13,7 +13,7 @@ body.overview-home-page {
         #02070d;
 }
 
-.overview-home-page .start-dashboard {
+.overview-home-page .container {
     background:
         radial-gradient(circle at 58% 0%, rgba(255, 255, 255, 0.09), transparent 22%),
         radial-gradient(circle at 22% 18%, rgba(37, 244, 238, 0.10), transparent 28%),
@@ -21,9 +21,35 @@ body.overview-home-page {
         linear-gradient(180deg, rgba(1, 8, 14, 0.14), rgba(1, 8, 14, 0.92)),
         url("../../images/backgrounds/player-profile-stadium-atmosphere.svg") center / cover no-repeat,
         #02070d;
+    position: relative;
+}
+
+.overview-home-page .container::before {
+    background:
+        radial-gradient(ellipse at 48% 0%, rgba(255, 255, 255, 0.28), transparent 5%),
+        linear-gradient(180deg, rgba(20, 140, 78, 0.16), transparent 42%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 82px);
+    content: "";
+    inset: 0;
+    opacity: 0.82;
+    pointer-events: none;
+    position: absolute;
+}
+
+.overview-home-page .container > * {
+    position: relative;
+    z-index: 1;
+}
+
+.overview-home-page .start-dashboard {
+    background: transparent;
     /* overflow-x:hidden Fake-Fix entfernt — Layout-Contract verbietet
        das Verstecken horizontaler Überläufe auf Haupt-Wrappern. */
     padding: 22px 22px 30px;
+}
+
+.overview-home-page .start-dashboard::before {
+    content: none;
 }
 
 /* ============================================================
@@ -175,6 +201,9 @@ body.overview-home-page {
     flex-direction: column;
     grid-column: 9 / span 8;
     grid-row: 1;
+    --overview-card-bg-opacity: 0.68;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.9);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.62);
 }
 
 .overview-last-match-card {
@@ -182,6 +211,9 @@ body.overview-home-page {
     flex-direction: column;
     grid-column: 17 / span 4;
     grid-row: 1;
+    --overview-card-bg-opacity: 0.68;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.9);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.62);
 }
 
 .overview-manager-widget {
