@@ -15,7 +15,7 @@ from game.manager_profile import (
     select_title,
     title_payload,
 )
-from game.models import Club, ClubPublicProfile, League, ManagerProfile, ManagerTitle
+from game.models import Club, ClubPublicProfile, ClubTrophy, League, ManagerProfile, ManagerTitle
 
 
 class ManagerProfileHandoffTests(TestCase):
@@ -223,6 +223,11 @@ class ManagerProfileHandoffTests(TestCase):
             club=club,
             stadium_image_static_path='game/images/stadiums/germany/b-dortmund.jpg',
         )
+        ClubTrophy.objects.create(
+            club=club,
+            competition_name='Bundesliga',
+            trophy_asset_id='22',
+        )
         select_title(self.manager, 'quaelix')
         self.client.force_login(self.user)
 
@@ -248,3 +253,11 @@ class ManagerProfileHandoffTests(TestCase):
             "--mp-current-stadium-image:url('/static/game/images/stadiums/germany/b-dortmund.jpg')",
         )
         self.assertNotContains(response, 'fc-bayern-stadium.jpg')
+        self.assertEqual(
+            response.context['manager']['trophies_list_mini'][0]['kpi_icon_url'],
+            '/static/game/images/trophies/manager-meisterschale.png',
+        )
+        self.assertEqual(
+            response.context['trophies_list'][0]['icon_url'],
+            '/static/game/images/trophies/22.png',
+        )

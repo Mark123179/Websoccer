@@ -6580,18 +6580,30 @@ def manager_profile(request):
         'game/images/icons/Default Trophy 3.png',
         'game/images/icons/Default Trophy 4.png',
     ]
-    trophies_list = [
-        {
-            'name': t.competition_name,
-            'count': t.count,
-            'icon_url': (
-                static(f'game/images/trophies/{t.trophy_asset_id}.png')
-                if t.trophy_asset_id
-                else static(_default_icons[i % len(_default_icons)])
-            ),
-        }
-        for i, t in enumerate(db_trophies)
-    ]
+
+    def _kpi_trophy_url(competition_name, fallback_url):
+        normalized = competition_name.casefold()
+        if 'bundesliga' in normalized or 'meisterschaft' in normalized:
+            return static('game/images/trophies/manager-meisterschale.png')
+        if 'dfb-pokal' in normalized:
+            return static('game/images/trophies/manager-dfb-pokal.png')
+        if 'supercup' in normalized:
+            return static('game/images/trophies/manager-supercup.png')
+        return fallback_url
+
+    trophies_list = []
+    for i, trophy in enumerate(db_trophies):
+        trophy_url = (
+            static(f'game/images/trophies/{trophy.trophy_asset_id}.png')
+            if trophy.trophy_asset_id
+            else static(_default_icons[i % len(_default_icons)])
+        )
+        trophies_list.append({
+            'name': trophy.competition_name,
+            'count': trophy.count,
+            'icon_url': trophy_url,
+            'kpi_icon_url': _kpi_trophy_url(trophy.competition_name, trophy_url),
+        })
     trophies_count = sum(t.count for t in db_trophies)
 
     # --- Match stats from MatchResult (full career history) ---

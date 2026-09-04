@@ -6,7 +6,10 @@ db.sqlite3
 .vscode/
 output/
 game/static/game/images/player_composites/
-game/static/game/images/trophies/
+game/static/game/images/trophies/*
+!game/static/game/images/trophies/manager-meisterschale.png
+!game/static/game/images/trophies/manager-dfb-pokal.png
+!game/static/game/images/trophies/manager-supercup.png
 security-audit.log
 
 # --- Secrets, Logs & Debug-Dumps (niemals committen) ---

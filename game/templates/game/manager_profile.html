@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-95">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-96">
 {% endblock %}
 
 {% block content %}
@@ -101,13 +101,13 @@
             <strong class="mp-kpi-big mp-kpi-cyan">{{ manager.trophies }}</strong>
             {% if manager.trophies_list_mini %}
             <div class="mp-kpi-trophies-mini">
-                {% for t in manager.trophies_list_mini %}<img src="{{ t.icon_url }}" alt="{{ t.name }}">{% endfor %}
+                {% for t in manager.trophies_list_mini %}<img src="{{ t.kpi_icon_url }}" alt="{{ t.name }}">{% endfor %}
             </div>
             {% endif %}
             <small class="mp-kpi-sub"><button class="mp-inline-action" type="button" data-trophy-all>Alle ansehen</button></small>
         </div>
         <!-- 4: Spiele -->
-        <div class="mp-kpi-cell mp-kpi-cell--not-fielded">
+        <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
                 SPIELE GESAMT
@@ -130,7 +130,7 @@
             <small class="mp-kpi-sub">{{ manager.win_rate_detail }}</small>
         </div>
         <!-- 6: Nicht aufgestellt -->
-        <div class="mp-kpi-cell">
+        <div class="mp-kpi-cell mp-kpi-cell--not-fielded">
             <span class="mp-kpi-lbl">
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,209,102,.85)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2.5L14.5 14h-13L8 2.5z"/><path d="M8 7v3M8 12.2v.01" stroke-linecap="round"/></svg>
                 NICHT AUFGESTELLT
