@@ -42,6 +42,7 @@ from .models import (
     LeagueSeasonState,
     LeagueStandings,
     ManagerProfile,
+    ManagerCompetitionTitle,
     MatchResult,
     Player,
     PlayerAwardTitle,
@@ -6572,11 +6573,31 @@ def manager_profile(request):
         else ''
     )
 
-    # Managererfolge dürfen nicht aus der historischen Titelsammlung des
-    # aktuellen Vereins abgeleitet werden. Solange es keine persönlich
-    # gewonnenen und dem Manager zugeordneten Titel gibt, bleibt die Vitrine leer.
-    trophies_list = []
-    trophies_count = 0
+    manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+    personal_titles = list(
+        ManagerCompetitionTitle.objects.filter(manager=manager_profile_obj)
+        .select_related('club', 'competition')
+        .order_by('-won_at', '-id')
+    )
+    trophy_groups = OrderedDict()
+    for title in personal_titles:
+        group = trophy_groups.setdefault(title.competition_name, {
+            'name': title.competition_name,
+            'icon_url': title.trophy_static_path,
+            'count': 0,
+            'wins': [],
+        })
+        group['count'] += 1
+        group['wins'].append({
+            'club_name': title.club.name,
+            'club_crest': title.club.crest_static_path,
+            'season': title.season,
+        })
+    trophies_list = list(trophy_groups.values())
+    trophies_count = len(personal_titles)
 
     # --- Match stats from MatchResult (full career history) ---
     simulated_results = False
@@ -6742,20 +6763,11 @@ def manager_profile(request):
 
     # --- Manager profile + career stations (real career history) ---
     from .models import (
-        ManagerProfile,
         ManagerCareerEntry,
         ManagerCareerStation,
         COUNTRY_FLAG_ASSETS,
     )
     from django.db.models import Sum as _Sum
-    if request.user.is_authenticated:
-        manager_profile_obj, _ = ManagerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'name': request.user.username},
-        )
-    else:
-        manager_profile_obj = ManagerProfile.objects.first()
-
     db_stations = list(
         ManagerCareerStation.objects.filter(manager=manager_profile_obj)
         .select_related('club', 'club__public_profile')
@@ -6807,6 +6819,17 @@ def manager_profile(request):
             'crest': club_crest,
         })
 
+    for _title in personal_titles:
+        timeline_events.append({
+            'date': _fmt_de(timezone.localtime(_title.won_at).date()),
+            'type': 'titel',
+            'tone': 'gold',
+            'title': _title.competition_name,
+            'body': f'{_title.season} · {_title.club.name}',
+            'icon': 'trophy',
+            'crest': _title.club.crest_static_path,
+        })
+
     # Transfer events from PlayerTransferHistory
     if club:
         top_transfers = (
@@ -6837,7 +6860,7 @@ def manager_profile(request):
             if st.club:
                 station_crest = st.club.crest_static_path
                 station_club_name = st.club.name
-                trophy_total = 0
+                trophy_total = st.titles_count
             else:
                 station_crest = club_crest
                 station_club_name = st.city_name
@@ -7186,7 +7209,7 @@ def manager_profile(request):
                 _zeit2 = f'{_rm2} Monat{"e" if _rm2 != 1 else ""}'
         else:
             _zeit2 = '–'
-        _trophy2 = 0
+        _trophy2 = _ss_st.titles_count
         _switcher.append({
             'key': str(_ss_st.id),
             'name': _st_nm,
@@ -7253,6 +7276,26 @@ def manager_profile(request):
                        'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
                        'title': 'Amtsantritt', 'body': f'Übernahme von {club_name}',
                        'crest_url': club_crest or '', 'is_active': True, 'station_key': ''})
+    for _title in personal_titles:
+        _won_date = timezone.localtime(_title.won_at).date()
+        _station = next((
+            station for station in db_stations
+            if station.club_id == _title.club_id
+            and (not station.started_at or station.started_at <= _won_date)
+            and (not station.ended_at or station.ended_at >= _won_date)
+        ), None)
+        _tl_js.append({
+            'date_iso': _to_iso(_won_date),
+            'date': _fmt_de(_won_date),
+            'type': 'titel',
+            'cat': 'TITEL',
+            'tone': 'gold',
+            'title': _title.competition_name,
+            'body': f'{_title.season} · {_title.club.name}',
+            'crest_url': _title.club.crest_static_path or '',
+            'is_active': False,
+            'station_key': str(_station.id) if _station else '',
+        })
     if club:
         for _tl_t in (PlayerTransferHistory.objects.filter(to_club=club).exclude(fee_eur=None).exclude(fee_eur=0).select_related('player').order_by('-fee_eur')[:2]):
             _fee_tl = f'€{int(_tl_t.fee_eur):,}'.replace(',', '.')
@@ -7500,9 +7543,7 @@ def _station_season_breakdown(started_at, ended_at, total_games, total_titles):
     return rows
 
 
-def _build_trainer_types_unlockable(club, trophies_count=None):
-    if trophies_count is None:
-        trophies_count = sum(t.count for t in club.public_trophies.all()) if club else 0
+def _build_trainer_types_unlockable(club, trophies_count=0):
     return [
         {'key': 'aufstiegsheld', 'label': 'Aufstiegsheld', 'condition': '3 Aufstiege geschafft', 'progress': 0, 'max': 3, 'unlocked': False},
         {'key': 'defensivmeister', 'label': 'Defensivmeister', 'condition': 'Wenigste Gegentore der gesamten Simulation', 'progress': 0, 'max': 1, 'unlocked': False},
@@ -7536,12 +7577,13 @@ _ALWAYS_SELECTABLE_KEYS = {
 }
 
 
-def _get_unlocked_achievement_keys():
-    club = (
-        Club.objects.filter(fm_inside_id=915).first()
-        or Club.objects.filter(name__icontains='Bayern').first()
-    )
-    return {t['key'] for t in _build_trainer_types_unlockable(club) if t['unlocked']}
+def _get_unlocked_achievement_keys(profile):
+    trophies_count = profile.competition_titles.count()
+    return {
+        item['key']
+        for item in _build_trainer_types_unlockable(None, trophies_count)
+        if item['unlocked']
+    }
 
 
 @login_required
@@ -7555,13 +7597,13 @@ def set_trainer_type(request):
         from django.shortcuts import redirect
         return redirect('manager_profile')
 
-    allowed = _ALWAYS_SELECTABLE_KEYS | _get_unlocked_achievement_keys()
+    from .models import ManagerProfile
+    profile, _ = ManagerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'name': request.user.username},
+    )
+    allowed = _ALWAYS_SELECTABLE_KEYS | _get_unlocked_achievement_keys(profile)
     if key in allowed:
-        from .models import ManagerProfile
-        profile, _ = ManagerProfile.objects.get_or_create(
-            user=request.user,
-            defaults={'name': request.user.username},
-        )
         profile.trainer_type = key
         profile.save(update_fields=['trainer_type', 'updated_at'])
 

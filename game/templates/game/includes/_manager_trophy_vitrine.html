@@ -24,10 +24,12 @@
                             <strong>{{ trophy.name }}</strong>
                             <span>{{ trophy.count }}×</span>
                         </div>
+                        {% for win in trophy.wins %}
                         <div class="mp-trophy-vitrine-win">
-                            {% if manager.club_crest %}<img src="{{ manager.club_crest }}" alt="">{% endif %}
-                            <span><b>{{ manager.club_name }}</b><small>Saison nicht erfasst</small></span>
+                            {% if win.club_crest %}<img src="{{ win.club_crest }}" alt="">{% endif %}
+                            <span><b>{{ win.club_name }}</b><small>Saison {{ win.season }}</small></span>
                         </div>
+                        {% endfor %}
                     </div>
                 </article>
                 {% empty %}

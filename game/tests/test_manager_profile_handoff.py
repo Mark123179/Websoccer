@@ -21,10 +21,15 @@ from game.models import (
     ClubPublicProfile,
     ClubTrophy,
     League,
+    LeagueSeasonState,
+    LeagueStandings,
     ManagerProfile,
+    ManagerCompetitionTitle,
     ManagerTitle,
+    SeasonFixture,
     SimulatedMatch,
 )
+from game.season_service import record_manager_competition_title
 
 
 class ManagerProfileHandoffTests(TestCase):
@@ -343,3 +348,141 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertNotContains(response, '8×')
         self.assertNotContains(response, '5×')
         self.assertContains(response, '1 S · 0 U · 0 N')
+
+    def test_profile_uses_only_personal_titles_and_keeps_winning_club(self):
+        league = League.objects.create(name='Titel-Liga', country='Deutschland')
+        old_club = Club.objects.create(
+            name='Titelverein', short_name='TV', founded_year=1900,
+            budget=Decimal('1000000.00'), league=league,
+        )
+        new_club = Club.objects.create(
+            name='Neuer Verein', short_name='NV', founded_year=1901,
+            budget=Decimal('1000000.00'), league=league, managed_by=self.manager,
+        )
+        ManagerCompetitionTitle.objects.create(
+            manager=self.manager,
+            club=old_club,
+            competition=league,
+            competition_name=league.name,
+            season='2026',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('manager_profile'))
+
+        self.assertEqual(response.context['manager']['trophies'], 1)
+        self.assertEqual(response.context['trophies_list'][0]['count'], 1)
+        self.assertContains(response, 'Titelverein')
+        self.assertContains(response, 'Saison 2026')
+        self.assertNotContains(response, '<b>Neuer Verein</b>')
+
+    def test_recording_competition_title_is_idempotent_and_snapshots_manager(self):
+        league = League.objects.create(name='Meister-Liga', country='Deutschland')
+        club = Club.objects.create(
+            name='Meisterverein', short_name='MV', founded_year=1900,
+            budget=Decimal('1000000.00'), league=league, managed_by=self.manager,
+        )
+
+        first = record_manager_competition_title(league, '2026', club)
+        second = record_manager_competition_title(league, '2026', club)
+        club.managed_by = None
+        club.save(update_fields=['managed_by'])
+
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(ManagerCompetitionTitle.objects.count(), 1)
+        title = ManagerCompetitionTitle.objects.get()
+        self.assertEqual(title.manager, self.manager)
+        self.assertEqual(title.club, club)
+        self.assertEqual(title.competition_name, 'Meister-Liga')
+        self.assertEqual(title.season, '2026')
+
+    def test_league_completion_records_each_season_once(self):
+        from game.season_service import close_matchday
+
+        league = League.objects.create(name='Mehrjahresliga', country='Deutschland')
+        champion = Club.objects.create(
+            name='Serienmeister', short_name='SM', founded_year=1900,
+            budget=Decimal('1000000.00'), league=league, managed_by=self.manager,
+        )
+        opponent = Club.objects.create(
+            name='Verfolger', short_name='VF', founded_year=1901,
+            budget=Decimal('1000000.00'), league=league,
+        )
+        for season in ('1', '2'):
+            SeasonFixture.objects.create(
+                league=league, season=season, matchday=1,
+                home_club=champion, away_club=opponent, is_played=True,
+            )
+            LeagueStandings.objects.create(
+                league=league, club=champion, season=season,
+                position=1, points=3,
+            )
+            LeagueStandings.objects.create(
+                league=league, club=opponent, season=season,
+                position=2, points=0,
+            )
+            LeagueSeasonState.objects.create(
+                league=league, season=season,
+                current_matchday=1, is_simulated=True,
+            )
+            close_matchday(league, season)
+            close_matchday(league, season)
+
+        self.assertEqual(
+            set(self.manager.competition_titles.values_list('season', flat=True)),
+            {'1', '2'},
+        )
+        self.assertEqual(self.manager.competition_titles.count(), 2)
+
+    def test_unmanaged_league_is_not_retroactively_awarded_on_retry(self):
+        from game.season_service import close_matchday
+
+        league = League.objects.create(name='Managerlose Liga', country='Deutschland')
+        champion = Club.objects.create(
+            name='Managerloser Meister', short_name='MM', founded_year=1900,
+            budget=Decimal('1000000.00'), league=league,
+        )
+        opponent = Club.objects.create(
+            name='Zweiter', short_name='ZW', founded_year=1901,
+            budget=Decimal('1000000.00'), league=league,
+        )
+        SeasonFixture.objects.create(
+            league=league, season='1', matchday=1,
+            home_club=champion, away_club=opponent, is_played=True,
+        )
+        LeagueStandings.objects.create(
+            league=league, club=champion, season='1', position=1, points=3,
+        )
+        LeagueSeasonState.objects.create(
+            league=league, season='1',
+            current_matchday=1, is_simulated=True,
+        )
+
+        close_matchday(league, '1')
+        champion.managed_by = self.manager
+        champion.save(update_fields=['managed_by'])
+        close_matchday(league, '1')
+
+        self.assertFalse(self.manager.competition_titles.exists())
+
+    def test_historical_club_trophies_are_never_backfilled(self):
+        league = League.objects.create(name='Historische Liga', country='Deutschland')
+        club = Club.objects.create(
+            name='Traditionsverein', short_name='TV', founded_year=1900,
+            budget=Decimal('1000000.00'), league=league, managed_by=self.manager,
+        )
+        ClubTrophy.objects.create(
+            club=club, competition_name='Historische Liga', count=12,
+        )
+
+        self.assertFalse(
+            ManagerCompetitionTitle.objects.filter(manager=self.manager).exists()
+        )
+
+        self.client.force_login(self.user)
+        self.client.post(
+            reverse('set_trainer_type'),
+            {'trainer_type_key': 'serienmeister'},
+        )
+        self.manager.refresh_from_db()
+        self.assertNotEqual(self.manager.trainer_type, 'serienmeister')

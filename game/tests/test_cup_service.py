@@ -14,6 +14,7 @@ game/tests/test_cup_service.py
 
 from unittest.mock import MagicMock, patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 from game.cup_service import (
@@ -32,7 +33,15 @@ from game.cup_service import (
     schedule_cup_round,
     simulate_cup_fixture,
 )
-from game.models import Club, CupFixture, CupRound, CupSeason, League, Player
+from game.models import (
+    Club,
+    CupFixture,
+    CupRound,
+    CupSeason,
+    League,
+    ManagerCompetitionTitle,
+    Player,
+)
 
 
 def _make_league(name='Testliga', competition_type='league', country='Deutschland'):
@@ -436,6 +445,11 @@ class AdvanceCupRoundTests(TestCase):
         bl         = _make_league('BL Final')
         home       = _make_club(bl, 'Finalist H')
         away       = _make_club(bl, 'Finalist A')
+        manager_user = get_user_model().objects.create_user(
+            username='cup-winning-manager',
+        )
+        home.managed_by = manager_user.manager_profile
+        home.save(update_fields=['managed_by'])
         CupFixture.objects.create(
             cup_round=cup_round,
             bracket_position=1,
@@ -450,6 +464,43 @@ class AdvanceCupRoundTests(TestCase):
         cup_season.refresh_from_db()
         self.assertEqual(cup_season.winner_club_id, home.pk)
         self.assertEqual(cup_season.status, CupSeason.STATUS_COMPLETED)
+        title = ManagerCompetitionTitle.objects.get()
+        self.assertEqual(title.manager, manager_user.manager_profile)
+        self.assertEqual(title.club, home)
+        self.assertEqual(title.competition, pokal)
+        self.assertEqual(title.season, cup_season.season)
+
+        advance_cup_round(cup_round)
+        self.assertEqual(ManagerCompetitionTitle.objects.count(), 1)
+
+    def test_unmanaged_final_is_not_retroactively_awarded_on_retry(self):
+        pokal = _make_league('Pokal ohne Manager', competition_type='cup')
+        cup_season = _make_cup_season(pokal)
+        cup_round = _make_cup_round(
+            cup_season, round_number=5, round_code='final'
+        )
+        bl = _make_league('BL ohne Manager')
+        home = _make_club(bl, 'Managerloser Sieger')
+        away = _make_club(bl, 'Finalgegner')
+        CupFixture.objects.create(
+            cup_round=cup_round,
+            bracket_position=1,
+            home_club=home,
+            away_club=away,
+            winner_club=home,
+            is_bye=False,
+            status=CupFixture.STATUS_PLAYED,
+        )
+
+        advance_cup_round(cup_round)
+        manager_user = get_user_model().objects.create_user(
+            username='late-cup-manager',
+        )
+        home.managed_by = manager_user.manager_profile
+        home.save(update_fields=['managed_by'])
+        advance_cup_round(cup_round)
+
+        self.assertFalse(ManagerCompetitionTitle.objects.exists())
 
 
 # ── 7. schedule_cup_round ────────────────────────────────────────────────────

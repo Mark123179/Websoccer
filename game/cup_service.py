@@ -639,6 +639,13 @@ def _advance_cup_round_locked(cup_round) -> object | None:
         if not fixtures:
             raise CupRoundNotCompleteError('Runde enthält keine Spiele.')
 
+        cup_season = cup_round_locked.cup_season
+        if (
+            cup_round_locked.status == CupRound.STATUS_COMPLETED
+            and cup_season.status == cup_season.STATUS_COMPLETED
+        ):
+            return None
+
         incomplete = [
             f for f in fixtures
             if f.status not in (CupFixture.STATUS_PLAYED, CupFixture.STATUS_BYE)
@@ -652,12 +659,16 @@ def _advance_cup_round_locked(cup_round) -> object | None:
         cup_round_locked.save(update_fields=['status'])
 
         winners = [f.winner_club for f in fixtures if f.winner_club]
-        cup_season = cup_round_locked.cup_season
-
         if len(winners) == 1:
             cup_season.winner_club = winners[0]
             cup_season.status = cup_season.STATUS_COMPLETED
             cup_season.save(update_fields=['winner_club', 'status'])
+            from .season_service import record_manager_competition_title
+            record_manager_competition_title(
+                cup_season.competition,
+                cup_season.season,
+                winners[0],
+            )
             return None
 
         next_round_number = cup_round_locked.round_number + 1

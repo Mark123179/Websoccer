@@ -99,3 +99,4 @@
 - [Transfer v2 Creator/KI](transfer-v2-creator-ai.md) — Admin-Storno = Ganz-oder-gar-nicht; KI-Deal-Antwort via Schmerzgrenze (24h-Bedenkzeit); KI-Käufer live = DealRequest, dry_run = AITransferOffer; Regression nur mit --seasons 20 vergleichbar.
 - [Stadioneditor-Kapazitätsregel](stadium-editor-capacity-rule.md) — Stadium bleibt alleinige Kapazitätsquelle; Visualisierung verteilt nur serverseitig und darf Ausbauten nie zurückdrehen.
 - [Managerprofil KPI-Abnahme](manager-profile-kpi-acceptance.md) — KPI nur mit geliefertem Selfcheck abnehmen; KPI zeigt Wettbewerbslogos, Vitrine Pokalabbildungen.
+- [Persönliche Manager-Titel](manager-competition-titles.md) — Titel nur beim ersten saisonbezogenen Wettbewerbsabschluss dem dann verantwortlichen Manager zuordnen; nie ClubTrophy rückladen.

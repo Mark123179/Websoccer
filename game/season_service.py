@@ -27,6 +27,24 @@ _COMPETITION_FOR_MATCH_TYPE = {
 logger = logging.getLogger(__name__)
 
 
+def record_manager_competition_title(competition, season, winner_club):
+    """Ordnet einen neuen Wettbewerbstitel dem aktuell Verantwortlichen zu."""
+    from .models import ManagerCompetitionTitle
+
+    if winner_club is None or winner_club.managed_by_id is None:
+        return None
+    title, _ = ManagerCompetitionTitle.objects.get_or_create(
+        competition=competition,
+        season=str(season),
+        defaults={
+            'manager_id': winner_club.managed_by_id,
+            'club': winner_club,
+            'competition_name': competition.name,
+        },
+    )
+    return title
+
+
 def _apply_match_suspensions(
     card_data: list,
     competition: str,
@@ -934,7 +952,8 @@ def close_matchday(league, season: str) -> dict:
     Wirft ValueError wenn der Spieltag noch nicht simuliert ist.
     Entsperrt TacticSetup.is_locked für alle Clubs der Liga.
     """
-    from .models import TacticSetup, SeasonFixture
+    from django.utils import timezone
+    from .models import LeagueStandings, TacticSetup, SeasonFixture
 
     state = get_season_state(league, season)
 
@@ -948,6 +967,7 @@ def close_matchday(league, season: str) -> dict:
     season_complete = (closed_matchday >= max_md)
 
     with transaction.atomic():
+        state = type(state).objects.select_for_update().get(pk=state.pk)
         if not season_complete:
             state.current_matchday += 1
             state.is_simulated      = False
@@ -963,6 +983,25 @@ def close_matchday(league, season: str) -> dict:
             .distinct()
         )
         TacticSetup.objects.filter(club_id__in=club_ids, squad_scope='pro').update(is_locked=False)
+
+        if season_complete and state.completed_at is None:
+            winner = (
+                LeagueStandings.objects.filter(league=league, season=season)
+                .select_related('club__managed_by')
+                .order_by('position', '-points', 'club_id')
+                .first()
+            )
+            if winner:
+                state.champion_club = winner.club
+                state.completed_at = timezone.now()
+                state.save(update_fields=[
+                    'champion_club', 'completed_at', 'updated_at',
+                ])
+                league.season_winner = winner.club
+                league.save(update_fields=['season_winner'])
+                record_manager_competition_title(
+                    league, season, winner.club
+                )
 
     # ── Fällige Scouting-Zuschlagstermine automatisch auflösen ───────────────
     # Beim Vorrücken des Spieltags entscheiden sich überfällige Gebote ohne

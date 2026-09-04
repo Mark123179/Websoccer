@@ -4260,11 +4260,68 @@ class ManagerCareerStation(models.Model):
 
     @property
     def titles_count(self):
-        if self.club_id:
-            from django.db.models import Sum
-            result = ClubTrophy.objects.filter(club_id=self.club_id).aggregate(total=Sum('count'))
-            return result['total'] or 0
-        return 0
+        if not self.club_id:
+            return 0
+        titles = ManagerCompetitionTitle.objects.filter(
+            manager=self.manager,
+            club_id=self.club_id,
+        )
+        if self.started_at:
+            titles = titles.filter(won_at__date__gte=self.started_at)
+        if self.ended_at:
+            titles = titles.filter(won_at__date__lte=self.ended_at)
+        return titles.count()
+
+
+class ManagerCompetitionTitle(models.Model):
+    """Ein persönlich unter einem Manager gewonnener Wettbewerb."""
+
+    manager = models.ForeignKey(
+        ManagerProfile,
+        on_delete=models.CASCADE,
+        related_name='competition_titles',
+    )
+    club = models.ForeignKey(
+        'Club',
+        on_delete=models.PROTECT,
+        related_name='manager_competition_titles',
+    )
+    competition = models.ForeignKey(
+        League,
+        on_delete=models.PROTECT,
+        related_name='manager_titles',
+    )
+    competition_name = models.CharField(max_length=120)
+    season = models.CharField(max_length=20)
+    won_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-won_at', '-id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['competition', 'season'],
+                name='unique_manager_title_competition_season',
+            ),
+        ]
+        verbose_name = 'Persönlicher Manager-Titel'
+        verbose_name_plural = 'Persönliche Manager-Titel'
+
+    @property
+    def trophy_asset_id(self):
+        return ClubTrophy.COMPETITION_DEFAULT_ASSETS.get(
+            self.competition_name, ''
+        )
+
+    @property
+    def trophy_static_path(self):
+        from .player_assets import get_cached_trophy_static_path
+        return get_cached_trophy_static_path(self.trophy_asset_id)
+
+    def __str__(self):
+        return (
+            f'{self.manager} – {self.competition_name} '
+            f'{self.season} ({self.club})'
+        )
 
 
 class ManagerTimelineEntry(models.Model):
@@ -4683,6 +4740,19 @@ class LeagueSeasonState(models.Model):
         default=False,
         verbose_name='Simuliert',
         help_text='Alle Spiele des aktiven Spieltags wurden simuliert.',
+    )
+    champion_club = models.ForeignKey(
+        'Club',
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name='completed_league_seasons',
+        verbose_name='Meister dieser Saison',
+    )
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Saison abgeschlossen am',
     )
     updated_at = models.DateTimeField(auto_now=True)
 
