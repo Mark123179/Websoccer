@@ -11,6 +11,7 @@ from game.manager_profile import (
     create_vacation_block,
     level_from_xp,
     level_threshold,
+    current_title,
     select_title,
     title_payload,
 )
@@ -135,7 +136,46 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'mpOnboardingBanner')
         self.assertNotContains(response, 'not name_confirmed')
-        self.assertContains(response, 'data-open-edit-profile')
+        self.assertNotContains(response, 'Profil bearbeiten')
+        self.assertNotContains(response, 'data-open-edit-profile')
+        self.assertContains(response, 'data-title-edit')
+
+    def test_trainer_type_is_visible_title_until_an_explicit_title_is_selected(self):
+        self.manager.trainer_type = 'taktikfuchs'
+        self.manager.active_title = None
+        self.manager.save(update_fields=['trainer_type', 'active_title'])
+
+        self.assertEqual(current_title(self.manager), 'Taktikfuchs')
+        self.assertEqual(title_payload(self.manager)['active_key'], 'taktikfuchs')
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('manager_profile'))
+        self.assertContains(
+            response,
+            '<span id="mpSidebarRole" data-active-manager-title>Taktikfuchs</span>',
+            html=True,
+        )
+        self.assertContains(
+            response,
+            '<span class="mp-type-badge" data-active-manager-title>Taktikfuchs</span>',
+            html=True,
+        )
+        self.assertNotContains(response, 'Kein Titel gewählt')
+
+    def test_registered_manager_name_cannot_be_changed_from_profile_endpoint(self):
+        self.manager.name = 'Fest registriert'
+        self.manager.save(update_fields=['name'])
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('update_manager_profile'),
+            {'display_name': 'Neuer Name'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.manager.refresh_from_db()
+        self.assertEqual(self.manager.name, 'Fest registriert')
+        self.assertNotIn('display_name', response.json())
 
     def test_profile_renders_nine_kpis_and_resolved_trophy_urls(self):
         self.client.force_login(self.user)

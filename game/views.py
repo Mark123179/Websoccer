@@ -7983,36 +7983,10 @@ def update_manager_profile(request):
         defaults={'name': request.user.username},
     )
 
-    new_name = request.POST.get('display_name', '').strip()
     nationality_name = request.POST.get('nationality_name', '').strip()
     residence = request.POST.get('residence', '').strip()
 
     update_fields = ['updated_at']
-
-    if new_name and new_name != profile.name:
-        import re
-        from urllib.parse import urlencode
-        from django.urls import reverse
-        MIN_NAME_LENGTH = 2
-        MAX_NAME_LENGTH = 100
-        ALLOWED_NAME_RE = re.compile(r'^[\w\s\-\.\']+$', re.UNICODE)
-        if len(new_name) < MIN_NAME_LENGTH or len(new_name) > MAX_NAME_LENGTH or not ALLOWED_NAME_RE.match(new_name):
-            if is_ajax:
-                return JsonResponse({'ok': False, 'error': 'name_invalid', 'attempted_name': new_name})
-            params = urlencode({'name_invalid': '1', 'attempted_name': new_name})
-            return redirect(f"{reverse('manager_profile')}?{params}")
-        taken = ManagerProfile.objects.filter(name=new_name).exclude(pk=profile.pk).exists()
-        if taken:
-            if is_ajax:
-                return JsonResponse({'ok': False, 'error': 'name_taken', 'attempted_name': new_name})
-            params = urlencode({'name_taken': '1', 'attempted_name': new_name})
-            return redirect(f"{reverse('manager_profile')}?{params}")
-        profile.name = new_name
-        update_fields.append('name')
-
-    if not profile.name_confirmed and profile.name != request.user.username:
-        profile.name_confirmed = True
-        update_fields.append('name_confirmed')
 
     if nationality_name and nationality_name in COUNTRY_FLAG_ASSETS:
         info = COUNTRY_FLAG_ASSETS[nationality_name]
@@ -8057,8 +8031,6 @@ def update_manager_profile(request):
     if is_ajax:
         return JsonResponse({
             'ok': True,
-            'name_confirmed': profile.name_confirmed,
-            'display_name': profile.name,
             'trainer_type_label': profile.trainer_type_label,
             'flag_url': profile.nationality_flag,
             'flag_name': profile.nationality_name,

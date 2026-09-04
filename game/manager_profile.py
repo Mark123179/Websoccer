@@ -239,11 +239,12 @@ def title_payload(manager):
             item['label'],
         )
     )
+    active_key = manager.active_title or manager.trainer_type
     return {
-        'active_key': manager.active_title,
+        'active_key': active_key,
         'active_label': current_title(manager),
         'free': [
-            {'key': key, 'label': label, 'active': key == manager.active_title}
+            {'key': key, 'label': label, 'active': key == active_key}
             for key, label in FREE_TITLES
         ],
         'unlockable': unlockable,
@@ -262,7 +263,7 @@ def select_title(manager, key):
 
 
 def current_title(manager):
-    return TITLE_LABELS.get(manager.active_title, '')
+    return TITLE_LABELS.get(manager.active_title) or manager.trainer_type_label
 
 
 def is_on_vacation(manager, on_date=None, season=None):

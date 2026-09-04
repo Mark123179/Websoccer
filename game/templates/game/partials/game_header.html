@@ -9,7 +9,7 @@
                 <strong class="mp-sidebar-name">{{ current_manager.name }}</strong>
                 <small>
                     <img class="manager-title-flag" id="mpSidebarFlagImg" src="{{ current_manager.nationality_flag }}" alt="" aria-hidden="true"{% if not current_manager.nationality_flag %} style="display:none"{% endif %}>
-                    <span id="mpSidebarRole">{{ current_manager.role }}</span>
+                    <span id="mpSidebarRole" data-active-manager-title>{{ current_manager.role }}</span>
                 </small>
             </span>
         </a>

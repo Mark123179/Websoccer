@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-93">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-94">
 {% endblock %}
 
 {% block content %}
@@ -40,7 +40,7 @@
             {% if tab == 'einstellungen' %}
             <div class="mp-settings-identity-meta">
                 {% if manager.flag_url %}<img src="{{ manager.flag_url }}" alt="" class="mp-flag-img">{% endif %}
-                <span>{{ manager.flag_name|default:"–" }} · {{ manager.active_type }} · {{ manager.club_name }}</span>
+                <span>{{ manager.flag_name|default:"–" }} · <span data-active-manager-title>{{ manager.active_type }}</span> · {{ manager.club_name }}</span>
             </div>
             <span class="mp-settings-account-state">KONTO VERIFIZIERT</span>
             {% else %}
@@ -48,18 +48,19 @@
                 {% if manager.flag_url %}<img src="{{ manager.flag_url }}" alt="{{ manager.flag_name }}" class="mp-flag-img" id="mpSidebarFlagImg">{% endif %}
                 {% if manager.flag_name %}<span>{{ manager.flag_name }}</span>{% endif %}
             </div>
-            <span class="mp-type-badge" id="mpSidebarRole">{{ active_title|default:"Kein Titel gewählt" }}</span>
+            <div class="mp-title-editor">
+                <span class="mp-type-badge" data-active-manager-title>{{ active_title }}</span>
+                {% if can_edit_profile %}
+                <button class="mp-title-edit-btn" type="button" data-title-edit aria-label="Trainer-Titel ändern" title="Trainer-Titel ändern">
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"/><path d="M7 3L9 5"/></svg>
+                </button>
+                {% endif %}
+            </div>
             <a class="mp-club-row" href="{{ manager.club_url }}">
                 <strong>{{ manager.club_name }}</strong>
                 <small>Seit {{ manager.club_since }} · {{ manager.club_season }}</small>
                 <small>Mitglied seit: {{ manager.member_since }}</small>
             </a>
-            {% if can_edit_profile %}
-            <button class="mp-edit-profile-btn" type="button" data-open-edit-profile>
-                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z"/><path d="M7 3L9 5"/></svg>
-                Profil bearbeiten
-            </button>
-            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -541,15 +542,41 @@
         </div>
         <dialog class="mp-title-dialog" id="mpTitleDialog">
             <button type="button" class="mp-title-dialog-close" data-title-close aria-label="Schließen">×</button>
-            <h3>ALLE FREISCHALTBAREN TITEL</h3>
+            <h3>TRAINER-TITEL WÄHLEN</h3>
+            <p class="mp-titles2-lbl">DIREKT WÄHLBAR</p>
+            <div class="mp-types2-grid">
+                {% for t in title_data.free %}
+                <form method="post" action="{% url 'set_manager_title' %}" data-title-form>
+                    {% csrf_token %}
+                    <input type="hidden" name="title_key" value="{{ t.key }}">
+                    <button type="submit" class="mp-type2-tile{% if t.active %} is-active{% endif %}" aria-pressed="{% if t.active %}true{% else %}false{% endif %}">
+                        <span>{{ t.label }}</span>
+                        {% if t.active %}<small class="mp-title-active-tag">AKTIV</small>{% endif %}
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+            <p class="mp-titles2-lbl" style="margin-top:18px;">FREISCHALTBARE TITEL</p>
             <div class="mp-unlock2-list">
                 {% for t in title_data.unlockable %}
-                <div class="mp-unlock2{% if t.unlocked %} is-unlocked{% endif %}">
+                {% if t.unlocked %}
+                <form method="post" action="{% url 'set_manager_title' %}" data-title-form>
+                    {% csrf_token %}
+                    <input type="hidden" name="title_key" value="{{ t.key }}">
+                    <button type="submit" class="mp-unlock2 is-unlocked{% if t.active %} is-active{% endif %}" aria-pressed="{% if t.active %}true{% else %}false{% endif %}">
+                        <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span class="mp-unlock2-check">✓</span></div>
+                        <small>{{ t.description }}</small>
+                        {% if t.active %}<small class="mp-title-active-tag">AKTIV</small>{% endif %}
+                    </button>
+                </form>
+                {% else %}
+                <div class="mp-unlock2">
                     <div class="mp-unlock2-hdr"><span>{{ t.label }}</span><span>{{ t.value }}/{{ t.target }}</span></div>
                     <small>{{ t.description }}</small>
                     <div class="mp-unlock2-bar"><div class="mp-unlock2-fill" style="width:{{ t.percent }}%"></div></div>
                     <small>{{ t.manager_percent }} % der Manager haben diesen Titel</small>
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
         </dialog>
@@ -790,9 +817,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var dialog = document.getElementById('mpTitleDialog');
-    var open = document.querySelector('[data-title-all]');
+    var openers = document.querySelectorAll('[data-title-all], [data-title-edit]');
     var close = document.querySelector('[data-title-close]');
-    if (dialog && open) open.addEventListener('click', function () { dialog.showModal(); });
+    if (dialog) openers.forEach(function (open) {
+        open.addEventListener('click', function () { dialog.showModal(); });
+    });
     if (dialog && close) close.addEventListener('click', function () { dialog.close(); });
 });
 </script>
@@ -814,21 +843,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     return data;
                 });
             }).then(function (data) {
-                document.querySelectorAll('[data-title-form] button').forEach(function (item) {
+                var selectedKey = form.querySelector('input[name="title_key"]').value;
+                document.querySelectorAll('[data-title-form]').forEach(function (titleForm) {
+                    var item = titleForm.querySelector('button[type="submit"]');
+                    if (!item) return;
                     item.classList.remove('is-active');
                     item.setAttribute('aria-pressed', 'false');
                     var activeTag = item.querySelector('.mp-title-active-tag');
                     if (activeTag) activeTag.remove();
+                    var titleKey = titleForm.querySelector('input[name="title_key"]').value;
+                    if (titleKey === selectedKey) {
+                        item.classList.add('is-active');
+                        item.setAttribute('aria-pressed', 'true');
+                        var mirroredTag = document.createElement('small');
+                        mirroredTag.className = 'mp-title-active-tag';
+                        mirroredTag.textContent = 'AKTIV';
+                        item.appendChild(mirroredTag);
+                    }
                 });
-                button.classList.add('is-active');
-                button.setAttribute('aria-pressed', 'true');
-                var tag = document.createElement('small');
-                tag.className = 'mp-title-active-tag';
-                tag.textContent = 'AKTIV';
-                button.appendChild(tag);
-                document.querySelectorAll('#mpSidebarRole').forEach(function (item) {
+                document.querySelectorAll('[data-active-manager-title]').forEach(function (item) {
                     item.textContent = data.title;
                 });
+                if (dialog && dialog.open) dialog.close();
             }).catch(function (error) {
                 window.alert(error.message);
             }).finally(function () {
@@ -1655,83 +1691,6 @@ var CITY_COORDS = {{ city_coords_json|safe }};
                 else { errorEl.textContent = 'Fehler: ' + (data.error || 'Unbekannter Fehler'); errorEl.style.display = 'block'; }
             }).catch(() => { saveBtn.disabled = false; saveBtn.textContent = 'Speichern'; errorEl.textContent = 'Netzwerkfehler'; errorEl.style.display = 'block'; });
     });
-})();
-</script>
-
-<!-- ═══ EDIT PROFILE MODAL ═══ -->
-<div class="mp-edit-profile-overlay" id="mpEditProfileOverlay" aria-modal="true" role="dialog" aria-label="Profil bearbeiten">
-    <div class="mp-edit-profile-modal" id="mpEditProfileModal">
-        <header class="mp-edit-modal-header">
-            <h2>Profil bearbeiten</h2>
-            <button class="mp-edit-modal-close" type="button" aria-label="Schließen">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg>
-            </button>
-        </header>
-        <form method="post" action="{% url 'update_manager_profile' %}" class="mp-edit-modal-form">
-            {% csrf_token %}
-            <label class="mp-edit-label" for="mpEditDisplayName">
-                <span>Anzeigename</span>
-                <input type="text" id="mpEditDisplayName" name="display_name"
-                    class="mp-edit-input{% if request.GET.name_taken or request.GET.name_invalid %} mp-edit-input--error{% endif %}"
-                    value="{% if request.GET.name_taken or request.GET.name_invalid %}{{ request.GET.attempted_name }}{% else %}{{ manager.name }}{% endif %}"
-                    maxlength="100" required autocomplete="off">
-                {% if request.GET.name_taken %}<span class="mp-edit-error">Dieser Name ist bereits vergeben.</span>
-                {% elif request.GET.name_invalid %}<span class="mp-edit-error">Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie - . ' _ enthalten.</span>{% endif %}
-            </label>
-            <label class="mp-edit-label" for="mpEditNationality">
-                <span>Nationalität</span>
-                <select id="mpEditNationality" name="nationality_name" class="mp-edit-select">
-                    {% for country in country_choices %}
-                    <option value="{{ country }}" {% if country == current_nationality %}selected{% endif %}>{{ country }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <div class="mp-edit-modal-actions">
-                <button type="button" class="mp-btn mp-btn-secondary mp-edit-modal-close">Abbrechen</button>
-                <button type="submit" class="mp-btn mp-btn-primary">Speichern</button>
-            </div>
-        </form>
-    </div>
-</div>
-<script>
-(function () {
-    const overlay = document.getElementById('mpEditProfileOverlay');
-    const modal   = document.getElementById('mpEditProfileModal');
-    if (!overlay || !modal) return;
-    function openModal()  { overlay.classList.add('is-open'); modal.querySelector('#mpEditDisplayName').focus(); }
-    function closeModal() { overlay.classList.remove('is-open'); }
-    document.querySelectorAll('[data-open-edit-profile]').forEach(btn => btn.addEventListener('click', openModal));
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeModal(); });
-    modal.querySelectorAll('.mp-edit-modal-close').forEach(btn => btn.addEventListener('click', closeModal));
-    const editForm = modal.querySelector('.mp-edit-modal-form');
-    if (editForm) {
-        const nameInput = editForm.querySelector('#mpEditDisplayName');
-        const saveBtn   = editForm.querySelector('[type="submit"]');
-        let errorEl     = editForm.querySelector('.mp-edit-error');
-        function showInlineError(msg) {
-            if (!errorEl) { errorEl = document.createElement('span'); errorEl.className = 'mp-edit-error'; nameInput.insertAdjacentElement('afterend', errorEl); }
-            errorEl.textContent = msg; errorEl.style.display = ''; nameInput.classList.add('mp-edit-input--error');
-        }
-        function clearInlineError() { if (errorEl) errorEl.style.display = 'none'; nameInput.classList.remove('mp-edit-input--error'); }
-        editForm.addEventListener('submit', function (e) {
-            e.preventDefault(); clearInlineError(); saveBtn.disabled = true;
-            const origText = saveBtn.textContent; saveBtn.textContent = 'Speichert…';
-            fetch(editForm.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: new FormData(editForm) })
-                .then(r => r.json()).then(data => {
-                    saveBtn.disabled = false; saveBtn.textContent = origText;
-                    if (data.ok) {
-                        closeModal();
-                        if (data.display_name) { document.querySelectorAll('.mp-manager-name, [data-manager-name]').forEach(el => { el.textContent = data.display_name; }); }
-                    } else if (data.error === 'name_taken')   showInlineError('Dieser Name ist bereits vergeben.');
-                    else if (data.error === 'name_invalid')   showInlineError('Der Name muss mindestens 2 Zeichen lang sein und darf nur Buchstaben, Ziffern, Leerzeichen sowie - . \' _ enthalten.');
-                    else showInlineError('Speichern fehlgeschlagen – bitte versuche es erneut.');
-                }).catch(() => { saveBtn.disabled = false; saveBtn.textContent = origText; showInlineError('Netzwerkfehler – bitte versuche es erneut.'); });
-        });
-    }
-    {% if request.GET.name_taken or request.GET.name_invalid %}
-    window.addEventListener('load', function () { setTimeout(openModal, 300); });
-    {% endif %}
 })();
 </script>
 

@@ -92,6 +92,14 @@ body.manager-profile-page .nav-menu a:first-child {
     color: var(--mp-cyan); font-size: 14px; font-weight: 600;
     letter-spacing: .05em; text-transform: uppercase;
 }
+.mp-title-editor { display: inline-flex; align-items: center; gap: 5px; width: fit-content; }
+.mp-title-edit-btn {
+    display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0;
+    border: 1px solid var(--mp-border); border-radius: 4px; color: var(--mp-sub);
+    background: rgba(7,18,28,.55); cursor: pointer;
+}
+.mp-title-edit-btn svg { width: 11px; height: 11px; }
+.mp-title-edit-btn:hover, .mp-title-edit-btn:focus-visible { border-color: var(--mp-cyan); color: var(--mp-cyan); outline: none; }
 .mp-club-row {
     display: flex; flex-direction: column; gap: 1px;
     text-decoration: none; color: inherit;
