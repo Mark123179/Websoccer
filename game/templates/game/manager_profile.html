@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-97">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-98">
 {% endblock %}
 
 {% block content %}
@@ -178,23 +178,23 @@
             <small class="mp-kpi-sub">Gründungsmitglied</small>
         </div>
     </div>
-</header>
 
-<!-- Tabs -->
-<nav class="mp-tabs" aria-label="Manager-Bereiche">
-    <a href="?tab=profil" class="mp-tab {% if tab == 'profil' %}is-active{% endif %}">
-        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
-        Profil
-    </a>
-    <a href="?tab=mannschaftsfotos" class="mp-tab {% if tab == 'mannschaftsfotos' %}is-active{% endif %}">
-        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="3" width="14" height="12" rx="2"/><circle cx="7" cy="8" r="2"/><path d="M3 14l4-4 3 2 2-2 3 4"/></svg>
-        Mannschaftsfotos
-    </a>
-    <a href="?tab=einstellungen" class="mp-tab {% if tab == 'einstellungen' %}is-active{% endif %}">
-        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="2"/><path d="M9 1v2m0 12v2M1 9h2m12 0h2M3.2 3.2l1.4 1.4m8.8 8.8 1.4 1.4M3.2 14.8l1.4-1.4m8.8-8.8 1.4-1.4"/></svg>
-        Sicherheit &amp; Einstellungen
-    </a>
-</nav>
+    <!-- Tabs -->
+    <nav class="mp-tabs" aria-label="Manager-Bereiche">
+        <a href="?tab=profil" class="mp-tab {% if tab == 'profil' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="6" r="3"/><path d="M3 16c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            Profil
+        </a>
+        <a href="?tab=mannschaftsfotos" class="mp-tab {% if tab == 'mannschaftsfotos' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="3" width="14" height="12" rx="2"/><circle cx="7" cy="8" r="2"/><path d="M3 14l4-4 3 2 2-2 3 4"/></svg>
+            Mannschaftsfotos
+        </a>
+        <a href="?tab=einstellungen" class="mp-tab {% if tab == 'einstellungen' %}is-active{% endif %}">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="9" r="2"/><path d="M9 1v2m0 12v2M1 9h2m12 0h2M3.2 3.2l1.4 1.4m8.8 8.8 1.4 1.4M3.2 14.8l1.4-1.4m8.8-8.8 1.4-1.4"/></svg>
+            Sicherheit &amp; Einstellungen
+        </a>
+    </nav>
+</header>
 
 {% if tab == 'profil' %}
 <section class="mp-tab-content">
