@@ -6572,56 +6572,11 @@ def manager_profile(request):
         else ''
     )
 
-    # --- Trophies from ClubTrophy ---
-    club_trophies = list(club.public_trophies.all()) if club else []
-    trophy_aliases = (
-        ('bundesliga',),
-        ('dfb-pokal',),
-        ('supercup',),
-    )
-    db_trophies = []
-    for aliases in trophy_aliases:
-        trophy = next(
-            (
-                item for item in club_trophies
-                if any(alias in item.competition_name.casefold() for alias in aliases)
-                and item.count > 0
-            ),
-            None,
-        )
-        if trophy is not None:
-            db_trophies.append(trophy)
-    _default_icons = [
-        'game/images/icons/Default Trophy 1.png',
-        'game/images/icons/Default Trophy 2.png',
-        'game/images/icons/Default Trophy 3.png',
-        'game/images/icons/Default Trophy 4.png',
-    ]
-
-    def _kpi_trophy_url(competition_name, fallback_url):
-        normalized = competition_name.casefold()
-        if 'bundesliga' in normalized or 'meisterschaft' in normalized:
-            return static('game/images/competitions/bundesliga.png')
-        if 'dfb-pokal' in normalized:
-            return static('game/images/competitions/dfb-pokal.png')
-        if 'supercup' in normalized:
-            return static('game/images/competitions/supercup.png')
-        return fallback_url
-
+    # Managererfolge dürfen nicht aus der historischen Titelsammlung des
+    # aktuellen Vereins abgeleitet werden. Solange es keine persönlich
+    # gewonnenen und dem Manager zugeordneten Titel gibt, bleibt die Vitrine leer.
     trophies_list = []
-    for i, trophy in enumerate(db_trophies):
-        trophy_url = (
-            static(f'game/images/trophies/{trophy.trophy_asset_id}.png')
-            if trophy.trophy_asset_id
-            else static(_default_icons[i % len(_default_icons)])
-        )
-        trophies_list.append({
-            'name': trophy.competition_name,
-            'count': trophy.count,
-            'icon_url': trophy_url,
-            'kpi_icon_url': _kpi_trophy_url(trophy.competition_name, trophy_url),
-        })
-    trophies_count = len(trophies_list)
+    trophies_count = 0
 
     # --- Match stats from MatchResult (full career history) ---
     simulated_results = False
@@ -6852,18 +6807,6 @@ def manager_profile(request):
             'crest': club_crest,
         })
 
-    # Trophy events from ClubTrophy
-    for trophy in db_trophies:
-        timeline_events.append({
-            'date': '–',
-            'type': 'titel',
-            'tone': 'gold',
-            'title': trophy.competition_name,
-            'body': f'{trophy.count}x gewonnen mit {club_name}',
-            'icon': 'trophy',
-            'crest': club_crest,
-        })
-
     # Transfer events from PlayerTransferHistory
     if club:
         top_transfers = (
@@ -6894,10 +6837,7 @@ def manager_profile(request):
             if st.club:
                 station_crest = st.club.crest_static_path
                 station_club_name = st.club.name
-                trophy_total = (
-                    ClubTrophy.objects.filter(club_id=st.club_id)
-                    .aggregate(total=_Sum('count'))['total'] or 0
-                )
+                trophy_total = 0
             else:
                 station_crest = club_crest
                 station_club_name = st.city_name
@@ -7211,7 +7151,6 @@ def manager_profile(request):
                 'losses': l2, 'loss_pct': _pct2(l2), 'goals': gf, 'goals_against': ga, 'points': pts2,
                 'ppg': _div2(pts2), 'gpg': _div2(gf), 'gapg': _div2(ga), 'win_streak': mw2, 'loss_streak': ml2}
 
-    from django.db.models import Sum as _Sum2
     from datetime import date as _dc2
 
     _switcher = []
@@ -7247,7 +7186,7 @@ def manager_profile(request):
                 _zeit2 = f'{_rm2} Monat{"e" if _rm2 != 1 else ""}'
         else:
             _zeit2 = '–'
-        _trophy2 = int(ClubTrophy.objects.filter(club_id=_cid).aggregate(total=_Sum2('count'))['total'] or 0) if _cid else 0
+        _trophy2 = 0
         _switcher.append({
             'key': str(_ss_st.id),
             'name': _st_nm,
@@ -7314,10 +7253,6 @@ def manager_profile(request):
                        'type': 'verein', 'cat': 'VEREIN', 'tone': 'cyan',
                        'title': 'Amtsantritt', 'body': f'Übernahme von {club_name}',
                        'crest_url': club_crest or '', 'is_active': True, 'station_key': ''})
-    for _tl_tr in db_trophies:
-        _tl_js.append({'date_iso': '', 'date': '–', 'type': 'titel', 'cat': 'TITEL', 'tone': 'gold',
-                       'title': _tl_tr.competition_name, 'body': f'{_tl_tr.count}× gewonnen',
-                       'crest_url': club_crest or '', 'is_active': False, 'station_key': ''})
     if club:
         for _tl_t in (PlayerTransferHistory.objects.filter(to_club=club).exclude(fee_eur=None).exclude(fee_eur=0).select_related('player').order_by('-fee_eur')[:2]):
             _fee_tl = f'€{int(_tl_t.fee_eur):,}'.replace(',', '.')

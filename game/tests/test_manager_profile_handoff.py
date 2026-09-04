@@ -262,17 +262,12 @@ class ManagerProfileHandoffTests(TestCase):
             "--mp-current-stadium-image:url('/static/game/images/stadiums/germany/b-dortmund.jpg')",
         )
         self.assertNotContains(response, 'fc-bayern-stadium.jpg')
-        self.assertEqual(
-            response.context['manager']['trophies_list_mini'][0]['kpi_icon_url'],
-            '/static/game/images/competitions/bundesliga.png',
-        )
-        self.assertEqual(response.context['manager']['trophies'], 1)
-        self.assertEqual(
-            response.context['trophies_list'][0]['icon_url'],
-            '/static/game/images/trophies/22.png',
-        )
+        self.assertEqual(response.context['manager']['trophies_list_mini'], [])
+        self.assertEqual(response.context['manager']['trophies'], 0)
+        self.assertEqual(response.context['trophies_list'], [])
+        self.assertContains(response, 'Noch keine Trophäen in der Vitrine.')
 
-    def test_kpis_use_simulated_matches_competition_logos_and_last_seen(self):
+    def test_kpis_ignore_club_history_and_use_simulated_matches_and_last_seen(self):
         league = League.objects.create(name='KPI-Liga', country='Deutschland')
         club = Club.objects.create(
             name='KPI-Verein',
@@ -320,19 +315,16 @@ class ManagerProfileHandoffTests(TestCase):
         response = self.client.get(reverse('manager_profile'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['manager']['trophies'], 3)
+        self.assertEqual(response.context['manager']['trophies'], 0)
         self.assertEqual(response.context['manager']['games_total'], 1)
         self.assertEqual(response.context['manager']['win_rate'], '100%')
         self.assertEqual(
             response.context['manager']['last_login_date'],
             timezone.localdate().strftime('%d.%m.%Y'),
         )
-        self.assertEqual(
-            [item['kpi_icon_url'] for item in response.context['manager']['trophies_list_mini']],
-            [
-                '/static/game/images/competitions/bundesliga.png',
-                '/static/game/images/competitions/dfb-pokal.png',
-                '/static/game/images/competitions/supercup.png',
-            ],
-        )
+        self.assertEqual(response.context['manager']['trophies_list_mini'], [])
+        self.assertEqual(response.context['trophies_list'], [])
+        self.assertContains(response, '0 TITEL')
+        self.assertNotContains(response, '8×')
+        self.assertNotContains(response, '5×')
         self.assertContains(response, '1 S · 0 U · 0 N')
