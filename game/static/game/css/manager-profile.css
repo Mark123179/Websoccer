@@ -870,10 +870,14 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-header {
     display: grid;
     grid-template-columns: 363px minmax(973px, 1fr);
-    grid-template-rows: auto 1fr;
+    grid-template-rows: max-content max-content;
     column-gap: 16px;
     row-gap: 0;
     align-items: start;
+    align-content: start;
+    height: fit-content;
+    min-height: 0;
+    flex: none;
     padding: 16px 44px 0;
     background: linear-gradient(180deg, rgba(3, 10, 16, .74), rgba(3, 10, 16, .42));
 }
