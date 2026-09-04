@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-100">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-101">
 {% endblock %}
 
 {% block content %}
@@ -328,11 +328,11 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════
-     GRID REIHE 1 — 336px | 684px | 1fr
+     GRID REIHE 1 — proportional 336 | 684 | 300
 ══════════════════════════════════════════════════════════════ -->
 <div class="mp-profil-grid">
 
-    <!-- Spalte 1: Login-Belohnungen; Trophäen gibt es ausschließlich in der Vitrine -->
+    <!-- Spalte 1: Login-Belohnungen + Titel-Fortschritte -->
     <div class="mp-profil-col-left">
         <article class="mp-card2 mp-login2">
             <header class="mp-card2-header">
@@ -353,6 +353,33 @@
                 {% endfor %}
                 <span class="mp-login2-pip">14</span>
                 <span class="mp-login2-pip">30</span>
+            </div>
+        </article>
+
+        <article class="mp-card2 mp-achievements2">
+            <header class="mp-card2-header">
+                <h3>TITEL</h3>
+                <button class="mp-title-all-toggle" type="button" data-title-all>Alle ansehen</button>
+            </header>
+            <div class="mp-achievements2-list">
+                {% for t in title_progress_cards %}
+                <div class="mp-achievement2{% if t.unlocked %} is-unlocked{% endif %}">
+                    <div class="mp-achievement2-head">
+                        <strong>{{ t.label }}</strong>
+                        {% if t.unlocked %}
+                        <span class="mp-achievement2-earned">✓ Erhalten</span>
+                        {% else %}
+                        <span>{{ t.value }}/{{ t.target }}</span>
+                        {% endif %}
+                    </div>
+                    <small>{{ t.description }} · schaltet Titel „{{ t.label }}“ frei</small>
+                    {% if not t.unlocked %}
+                    <div class="mp-achievement2-track">
+                        <span style="width:{{ t.percent }}%"></span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
         </article>
 

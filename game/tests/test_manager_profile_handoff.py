@@ -206,6 +206,15 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertContains(response, '1<span>/3</span>')
         self.assertContains(response, 'Stufen-Regeln')
         self.assertContains(response, 'class="mp-kpi-login"')
+        self.assertContains(response, 'class="mp-achievement2"', count=4)
+        self.assertEqual(
+            [item['key'] for item in response.context['title_progress_cards']],
+            ['pokaljaeger', 'serienmeister', 'weltenbummler', 'aufstiegsheld'],
+        )
+        self.assertContains(response, 'Pokaljäger')
+        self.assertContains(response, 'Serienmeister')
+        self.assertContains(response, 'Weltenbummler')
+        self.assertContains(response, 'Aufstiegsheld')
 
     def test_trophy_action_and_vitrine_exist_on_every_manager_profile_tab(self):
         self.client.force_login(self.user)

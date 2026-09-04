@@ -1086,11 +1086,18 @@ body.manager-profile-page .nav-menu a:first-child {
 
 .mp-profil-grid {
     display: grid;
-    grid-template-columns: 336px 684px minmax(0, 1fr);
+    grid-template-columns:
+        minmax(250px, 336fr)
+        minmax(520px, 684fr)
+        minmax(230px, 300fr);
     gap: 16px;
     align-items: start;
 }
-.mp-profil-col-left { display: block; }
+.mp-profil-col-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 .mp-card2-map { grid-column: 2; grid-row: 1; min-height: 430px; }
 .mp-stats2 { grid-column: 3; grid-row: 1; max-height: none; }
 .mp-profil-titles { grid-column: 1 / span 2; grid-row: 2; }
@@ -1104,6 +1111,54 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-card2-header a,
 .mp-inline-action { font-size: 10px; font-weight: 800; }
 .mp-login2 { min-height: 146px; }
+.mp-achievements2 { flex: 1; }
+.mp-achievements2-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.mp-achievement2 {
+    padding: 8px 10px;
+    border: 1px solid var(--mp-border);
+    border-radius: 6px;
+    background: rgba(255,255,255,.02);
+}
+.mp-achievement2.is-unlocked {
+    border-color: rgba(48,242,156,.4);
+    background: rgba(48,242,156,.07);
+}
+.mp-achievement2-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 800;
+}
+.mp-achievement2-head strong { color: #f4fbff; }
+.mp-achievement2-head > span { color: rgba(244,251,255,.38); }
+.mp-achievement2-head .mp-achievement2-earned { color: var(--mp-green); }
+.mp-achievement2 small {
+    display: block;
+    margin-top: 3px;
+    color: rgba(244,251,255,.38);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.mp-achievement2-track {
+    height: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255,255,255,.07);
+}
+.mp-achievement2-track span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg,#19c8e0,#22e6ff);
+}
 .mp-photo-map { min-height: 360px; max-height: none; }
 .mp-stat2-row { padding: 7px 0; font-size: 10.5px; }
 .mp-stats2-hint { font-size: 9.5px; }
@@ -1255,7 +1310,12 @@ body.manager-profile-page .nav-menu a:first-child {
     .mp-tab-content,
     .mp-team-photos,
     .mp-settings-content { padding-inline: 24px; }
-    .mp-profil-grid { grid-template-columns: 300px minmax(420px, 1fr) 280px; }
+    .mp-profil-grid {
+        grid-template-columns:
+            minmax(250px, 336fr)
+            minmax(520px, 684fr)
+            minmax(230px, 300fr);
+    }
 }
 
 @media (max-width: 900px) {

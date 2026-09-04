@@ -7302,6 +7302,14 @@ def manager_profile(request):
         xp_progress,
     )
     _title_payload = title_payload(manager_profile_obj)
+    _title_progress_by_key = {
+        item['key']: item for item in _title_payload['unlockable']
+    }
+    _title_progress_cards = [
+        _title_progress_by_key[key]
+        for key in ('pokaljaeger', 'serienmeister', 'weltenbummler', 'aufstiegsheld')
+        if key in _title_progress_by_key
+    ]
     _active_title = current_title(manager_profile_obj)
     _xp_progress = xp_progress(manager_profile_obj)
     _score_rank = (
@@ -7344,6 +7352,7 @@ def manager_profile(request):
         'trainer_types_selectable': trainer_types_selectable,
         'trainer_types_unlockable': trainer_types_unlockable,
         'title_data': _title_payload,
+        'title_progress_cards': _title_progress_cards,
         'active_title': _active_title,
         'current_stadium_image': current_stadium_image,
         'visibility_settings': merged_visibility(manager_profile_obj),
