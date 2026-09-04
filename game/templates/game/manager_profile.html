@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-103">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-105">
 {% endblock %}
 
 {% block content %}
@@ -288,7 +288,7 @@
             </div>
             <label class="mp-tle-check">
                 <input type="checkbox" id="mpTleTrophy">
-                <span>Trophäe anzeigen 🏆</span>
+                <span>Trophäe anzeigen</span>
             </label>
             <p class="mp-tle-error" id="mpTleError"></p>
         </div>
@@ -682,6 +682,16 @@
                         <span class="mp-verified-badge">Verifiziert</span>
                     </div>
                     <div class="mp-account-row">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M5 1.5v3M11 1.5v3"/></svg>
+                        <span>Geburtsdatum</span>
+                        <strong>{{ manager.birthday|date:"d.m.Y"|default:"–" }}</strong>
+                    </div>
+                    <label class="mp-account-row mp-account-row--editable" for="mpResidence">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 14s5-4.1 5-8a5 5 0 1 0-10 0c0 3.9 5 8 5 8z"/><circle cx="8" cy="6" r="1.7"/></svg>
+                        <span>Wohnort</span>
+                        <input id="mpResidence" class="mp-account-input" type="text" maxlength="120" value="{{ manager.residence|default:'' }}" placeholder="Wohnort eintragen">
+                    </label>
+                    <div class="mp-account-row">
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="1"/><path d="M2 7h12"/></svg>
                         <span>Land</span>
                         <div class="mp-csel" data-mp-csel data-mp-csel-id="land">
@@ -747,6 +757,29 @@
                     Deine Daten sind sicher. Wir verwenden moderne Sicherheitsstandards.
                 </p>
             </article>
+            <article class="mp-card mp-card-vacation">
+                <h3>Urlaubsmodus · Saison {{ active_season }}</h3>
+                <p class="mp-privacy-desc">{{ vacation_days_remaining }} von 14 Tagen verfügbar · maximal zwei Blöcke.</p>
+                {% for block in vacation_blocks %}
+                <div class="mp-vacation-row">
+                    <span>{{ block.starts_on|date:"d.m.Y" }} – {{ block.effective_end|date:"d.m.Y" }}</span>
+                    {% if block.is_active %}
+                    <form method="post" action="{% url 'manager_vacation' %}">
+                        {% csrf_token %}<input type="hidden" name="action" value="end"><input type="hidden" name="block_id" value="{{ block.pk }}">
+                        <button class="mp-btn mp-btn-secondary" type="submit">Vorzeitig beenden</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% if vacation_blocks|length < 2 and vacation_days_remaining >= 5 %}
+                <form class="mp-vacation-form" method="post" action="{% url 'manager_vacation' %}">
+                    {% csrf_token %}
+                    <label>Von <input type="date" name="starts_on" required></label>
+                    <label>Bis <input type="date" name="ends_on" required></label>
+                    <button class="mp-btn mp-btn-primary" type="submit">Urlaub eintragen</button>
+                </form>
+                {% endif %}
+            </article>
         </div>
 
         <div class="mp-settings-col">
@@ -801,29 +834,6 @@
                     {% csrf_token %}
                     <button class="mp-btn mp-btn-primary" type="submit">Speichern</button>
                 </form>
-            </article>
-            <article class="mp-card mp-card-vacation">
-                <h3>Urlaubsmodus · Saison {{ active_season }}</h3>
-                <p class="mp-privacy-desc">{{ vacation_days_remaining }} von 14 Tagen verfügbar · maximal zwei Blöcke.</p>
-                {% for block in vacation_blocks %}
-                <div class="mp-vacation-row">
-                    <span>{{ block.starts_on|date:"d.m.Y" }} – {{ block.effective_end|date:"d.m.Y" }}</span>
-                    {% if block.is_active %}
-                    <form method="post" action="{% url 'manager_vacation' %}">
-                        {% csrf_token %}<input type="hidden" name="action" value="end"><input type="hidden" name="block_id" value="{{ block.pk }}">
-                        <button class="mp-btn mp-btn-secondary" type="submit">Vorzeitig beenden</button>
-                    </form>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                {% if vacation_blocks|length < 2 and vacation_days_remaining >= 5 %}
-                <form class="mp-vacation-form" method="post" action="{% url 'manager_vacation' %}">
-                    {% csrf_token %}
-                    <label>Von <input type="date" name="starts_on" required></label>
-                    <label>Bis <input type="date" name="ends_on" required></label>
-                    <button class="mp-btn mp-btn-primary" type="submit">Urlaub eintragen</button>
-                </form>
-                {% endif %}
             </article>
         </div>
 
@@ -1194,7 +1204,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
             }
             if (ev.trophy) {
                 extraHtml += '<span style="position:absolute;right:'+((ev.crest_url?46:10)+(ev.player_img?36:0))+'px;bottom:10px;'+
-                    'font-size:20px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">🏆</span>';
+                    'font-size:20px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">Trophäe</span>';
             }
             var resultHtml = ev.result
                 ? '<span style="display:inline-block;margin-left:7px;padding:2px 7px;border-radius:3px;'+
@@ -1663,7 +1673,7 @@ var CITY_COORDS = {{ city_coords_json|safe }};
 
     function lookupCoords(cityName) { return CITY_COORDS[cityName.trim().toLowerCase()] || null; }
     function applyCoords(coords, cityName) {
-        if (coords) { fldMapX.value = coords[0]; fldMapY.value = coords[1]; hintEl.textContent = '📍 Kartenposition automatisch erkannt für „' + cityName + '"'; hintEl.style.color = '#30f29c'; }
+        if (coords) { fldMapX.value = coords[0]; fldMapY.value = coords[1]; hintEl.textContent = 'Kartenposition automatisch erkannt für „' + cityName + '"'; hintEl.style.color = '#30f29c'; }
         else { hintEl.textContent = 'Stadt nicht in der Datenbank — Standardposition wird verwendet.'; hintEl.style.color = 'rgba(180,195,230,0.5)'; fldMapX.value = '271'; fldMapY.value = '214'; }
     }
 
@@ -1694,7 +1704,7 @@ var CITY_COORDS = {{ city_coords_json|safe }};
             fldCityCountry.value = d.country || ''; fldStartYear.value = d.started || ''; fldEndYear.value = d.ended || '';
             fldGames.value = d.games || ''; fldMapX.value = d.x || '271'; fldMapY.value = d.y || '214';
             const knownCoords = lookupCoords(d.city || '');
-            if (knownCoords) { hintEl.textContent = '📍 Bekannte Stadt: ' + d.city; hintEl.style.color = '#30f29c'; } else hintEl.textContent = '';
+            if (knownCoords) { hintEl.textContent = 'Bekannte Stadt: ' + d.city; hintEl.style.color = '#30f29c'; } else hintEl.textContent = '';
             showForm('Station bearbeiten');
         });
     });
@@ -1810,7 +1820,11 @@ var CITY_COORDS = {{ city_coords_json|safe }};
         saveBtn.addEventListener('click', function () {
             var nationalityName = getCselVal('land'), favouriteClubId = getCselVal('club'), trainerType = getCselVal('type');
             saveBtn.disabled = true; saveBtn.textContent = '…';
-            var body = 'nationality_name=' + encodeURIComponent(nationalityName) + '&favourite_club_id=' + encodeURIComponent(favouriteClubId) + '&trainer_type=' + encodeURIComponent(trainerType);
+            var residence = document.getElementById('mpResidence');
+            var body = 'nationality_name=' + encodeURIComponent(nationalityName) +
+                '&favourite_club_id=' + encodeURIComponent(favouriteClubId) +
+                '&trainer_type=' + encodeURIComponent(trainerType) +
+                '&residence=' + encodeURIComponent(residence ? residence.value : '');
             fetch('{% url "update_manager_profile" %}', { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':getCsrfToken(),'Content-Type':'application/x-www-form-urlencoded'}, body:body })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {

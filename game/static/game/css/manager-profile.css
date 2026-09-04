@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════
-   Manager Profile  —  FM Broadcast v2  (h700-70)
+   Manager Profile  —  FM Broadcast v2  (h700-105)
    1440 × 900 golden master — wide-shell scope only
 ══════════════════════════════════════════════════════════════════ */
 
@@ -27,6 +27,25 @@ body.manager-profile-page .nav-menu a:first-child {
     display: flex;
     flex-direction: column;
     gap: 0;
+}
+
+.mp-account-row--editable {
+    cursor: text;
+}
+.mp-account-input {
+    min-width: 0;
+    flex: 1;
+    padding: 5px 7px;
+    border: 1px solid rgba(44,231,255,.16);
+    border-radius: 4px;
+    outline: none;
+    background: rgba(44,231,255,.05);
+    color: rgba(244,251,255,.9);
+    font: inherit;
+}
+.mp-account-input:focus {
+    border-color: rgba(34,230,255,.65);
+    box-shadow: 0 0 0 2px rgba(34,230,255,.08);
 }
 
 /* ─── HEADER ─────────────────────────────────────────────────── */
@@ -862,6 +881,9 @@ body.manager-profile-page .nav-menu a:first-child {
    These rules intentionally stay scoped to the manager profile.
 ══════════════════════════════════════════════════════════════════ */
 .mp-dashboard {
+    width: 1440px;
+    min-width: 1440px;
+    margin-inline: auto;
     --mp-r: 8px;
     --mp-panel: rgba(9, 23, 34, .82);
     --mp-border: rgba(44, 231, 255, .18);
@@ -1458,30 +1480,9 @@ button.mp-trainer-title { cursor: pointer; }
 .mp-card h3 { font-size: 10px; font-weight: 900; letter-spacing: .09em; }
 
 @media (max-width: 1360px) {
-    .mp-header { grid-template-columns: 320px minmax(0, 1fr); padding-inline: 24px; }
-    .mp-tab-content,
-    .mp-team-photos,
-    .mp-settings-content { padding-inline: 24px; }
-    .mp-profil-grid {
-        grid-template-columns:
-            minmax(250px, 336fr)
-            minmax(520px, 684fr)
-            minmax(230px, 300fr);
-    }
+    /* The shell scales the fixed artboard as a whole. Do not reflow the handoff. */
 }
 
 @media (max-width: 900px) {
-    .mp-header { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
-    .mp-header-identity { grid-column: 1; grid-row: 1; }
-    .mp-kpi-v2 { grid-column: 1; grid-row: 2; }
-    .mp-tabs { grid-column: 1; grid-row: 3; }
-    .mp-kpi-v2 { grid-template-columns: repeat(4, 1fr); }
-    .mp-profil-grid { grid-template-columns: 1fr; }
-    .mp-card2-map,
-    .mp-stats2,
-    .mp-profil-titles,
-    .mp-profil-records { grid-column: 1; grid-row: auto; }
-    .mp-profil-col-left { display: flex; grid-column: 1; grid-row: auto; }
-    .mp-settings-grid { grid-template-columns: 1fr; }
-    .mp-types2-grid { grid-template-columns: repeat(2, 1fr); }
+    /* Preserve the 1440px artboard; game-stage.css owns responsive scaling. */
 }

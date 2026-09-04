@@ -7373,7 +7373,6 @@ def manager_profile(request):
     _privacy_labels = (
         ('profile_image', 'Profilbild'),
         ('nickname', 'Nickname'),
-        ('title', 'Titel'),
         ('trainer_type', 'Trainer-Typ'),
         ('nationality', 'Landesflagge'),
         ('favourite_club', 'Lieblingsverein'),
@@ -7425,6 +7424,8 @@ def manager_profile(request):
             'club_since': _club_since_str,
             'club_season': _club_season_str,
             'member_since': member_since_display,
+            'birthday': None,
+            'residence': manager_profile_obj.residence,
             'profile_image_url': profile_image_url,
             'has_custom_avatar': _has_custom_avatar,
             'level': _xp_progress['level'],

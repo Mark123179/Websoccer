@@ -238,6 +238,39 @@ class ManagerProfileHandoffTests(TestCase):
                 self.assertContains(response, 'id="mpTrophyVitrine"')
                 self.assertContains(response, 'id="mpTrophyVitrineShelf"')
 
+    def test_settings_match_handoff_fields_and_column_order(self):
+        self.manager.residence = 'Köln, Deutschland'
+        self.manager.save(update_fields=['residence'])
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('manager_profile'), {'tab': 'einstellungen'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['privacy_fields']), 10)
+        self.assertNotIn('title', {
+            field['key'] for field in response.context['privacy_fields']
+        })
+        self.assertContains(response, 'Geburtsdatum')
+        self.assertContains(response, 'id="mpResidence"')
+        self.assertContains(response, 'value="Köln, Deutschland"')
+        left_column = response.content.decode().split(
+            '<div class="mp-settings-col">', 2
+        )[1]
+        self.assertIn('mp-card-vacation', left_column)
+
+    def test_account_settings_save_residence(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('update_manager_profile'),
+            {'residence': 'Köln, Deutschland'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.manager.refresh_from_db()
+        self.assertEqual(self.manager.residence, 'Köln, Deutschland')
+
     def test_profile_uses_current_club_stadium_and_one_persisted_active_title(self):
         league = League.objects.create(name='Profil-Liga', country='Deutschland')
         club = Club.objects.create(
