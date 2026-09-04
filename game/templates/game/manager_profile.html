@@ -685,11 +685,11 @@
                         {% if request.user.is_authenticated %}<strong>{{ request.user.email }}</strong>{% else %}<strong>–</strong>{% endif %}
                         <span class="mp-verified-badge">Verifiziert</span>
                     </div>
-                    <div class="mp-account-row">
+                    <label class="mp-account-row mp-account-row--editable" for="mpBirthDate">
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M5 1.5v3M11 1.5v3"/></svg>
                         <span>Geburtsdatum</span>
-                        <strong>{{ manager.birthday|date:"d.m.Y"|default:"–" }}</strong>
-                    </div>
+                        <input id="mpBirthDate" class="mp-account-input" type="date" value="{{ manager.birthday|date:'Y-m-d' }}" max="{% now 'Y-m-d' %}">
+                    </label>
                     <label class="mp-account-row mp-account-row--editable" for="mpResidence">
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 14s5-4.1 5-8a5 5 0 1 0-10 0c0 3.9 5 8 5 8z"/><circle cx="8" cy="6" r="1.7"/></svg>
                         <span>Wohnort</span>
@@ -1825,10 +1825,12 @@ var CITY_COORDS = {{ city_coords_json|safe }};
             var nationalityName = getCselVal('land'), favouriteClubId = getCselVal('club'), trainerType = getCselVal('type');
             saveBtn.disabled = true; saveBtn.textContent = '…';
             var residence = document.getElementById('mpResidence');
+            var birthDate = document.getElementById('mpBirthDate');
             var body = 'nationality_name=' + encodeURIComponent(nationalityName) +
                 '&favourite_club_id=' + encodeURIComponent(favouriteClubId) +
                 '&trainer_type=' + encodeURIComponent(trainerType) +
-                '&residence=' + encodeURIComponent(residence ? residence.value : '');
+                '&residence=' + encodeURIComponent(residence ? residence.value : '') +
+                '&birth_date=' + encodeURIComponent(birthDate ? birthDate.value : '');
             fetch('{% url "update_manager_profile" %}', { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest','X-CSRFToken':getCsrfToken(),'Content-Type':'application/x-www-form-urlencoded'}, body:body })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
@@ -1840,7 +1842,7 @@ var CITY_COORDS = {{ city_coords_json|safe }};
                         var badge = document.querySelector('.mp-type-badge'); if (badge && data.trainer_type_label) badge.textContent = data.trainer_type_label;
                         var sidebarFlag = document.getElementById('mpSidebarFlagImg'); if (sidebarFlag) { if (data.flag_url) { sidebarFlag.src = data.flag_url; sidebarFlag.style.display = ''; } else sidebarFlag.style.display = 'none'; }
                         var sidebarRole = document.getElementById('mpSidebarRole'); if (sidebarRole && data.trainer_type_label) sidebarRole.textContent = data.trainer_type_label;
-                    } else { saveBtn.textContent = 'Fehler'; setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000); }
+                    } else { saveBtn.textContent = data.error || 'Fehler'; setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 3000); }
                 }).catch(function () { saveBtn.disabled = false; saveBtn.textContent = 'Fehler'; setTimeout(function () { saveBtn.textContent = 'Speichern'; }, 2000); });
         });
     })();

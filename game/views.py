@@ -6231,6 +6231,11 @@ def public_manager_profile(request, username):
         'crest_url':   crest_url,
         'profile_image_url': profile_image_url,
         'active_title': current_title(profile) if profile and visibility.get('title') == 'all' else '',
+        'public_birth_date': (
+            profile.birth_date
+            if profile and visibility.get('birthday') == 'all'
+            else None
+        ),
         'visibility': visibility,
     })
 
@@ -7433,7 +7438,7 @@ def manager_profile(request):
             'club_since': _club_since_str,
             'club_season': _club_season_str,
             'member_since': member_since_display,
-            'birthday': None,
+            'birthday': manager_profile_obj.birth_date,
             'residence': manager_profile_obj.residence,
             'profile_image_url': profile_image_url,
             'has_custom_avatar': _has_custom_avatar,
@@ -8052,6 +8057,7 @@ def update_manager_profile(request):
 
     from django.shortcuts import redirect
     from django.http import JsonResponse
+    from django.utils.dateparse import parse_date
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if not request.user.is_authenticated:
@@ -8069,6 +8075,25 @@ def update_manager_profile(request):
     residence = request.POST.get('residence', '').strip()
 
     update_fields = ['updated_at']
+
+    if 'birth_date' in request.POST:
+        birth_date_raw = request.POST.get('birth_date', '').strip()
+        try:
+            birth_date = parse_date(birth_date_raw) if birth_date_raw else None
+        except ValueError:
+            birth_date = None
+        if birth_date_raw and birth_date is None:
+            error = 'Bitte gib ein gültiges Geburtsdatum ein.'
+            if is_ajax:
+                return JsonResponse({'ok': False, 'error': error}, status=400)
+            return redirect(f"{reverse('manager_profile')}?tab=einstellungen")
+        if birth_date and birth_date > timezone.localdate():
+            error = 'Das Geburtsdatum darf nicht in der Zukunft liegen.'
+            if is_ajax:
+                return JsonResponse({'ok': False, 'error': error}, status=400)
+            return redirect(f"{reverse('manager_profile')}?tab=einstellungen")
+        profile.birth_date = birth_date
+        update_fields.append('birth_date')
 
     if nationality_name and nationality_name in COUNTRY_FLAG_ASSETS:
         info = COUNTRY_FLAG_ASSETS[nationality_name]

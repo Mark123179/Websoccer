@@ -3996,6 +3996,11 @@ class ManagerProfile(models.Model):
         default='',
     )
     member_since = models.DateField(null=True, blank=True)
+    birth_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='Geburtsdatum',
+    )
     profile_image = models.CharField(max_length=200, blank=True, default='')
     name_confirmed = models.BooleanField(
         default=False,
@@ -4064,9 +4069,14 @@ class ManagerProfile(models.Model):
 
     def clean(self):
         from django.core.exceptions import ValidationError
+        from django.utils import timezone
         if self.nationality_name and not self.nationality_flag:
             raise ValidationError(
                 {'nationality_name': 'Eine Nationalität darf nur gesetzt werden, wenn auch ein Flag-URL vorhanden ist.'}
+            )
+        if self.birth_date and self.birth_date > timezone.localdate():
+            raise ValidationError(
+                {'birth_date': 'Das Geburtsdatum darf nicht in der Zukunft liegen.'}
             )
 
     @property

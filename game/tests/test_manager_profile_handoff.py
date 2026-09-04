@@ -309,7 +309,8 @@ class ManagerProfileHandoffTests(TestCase):
 
     def test_settings_match_handoff_fields_and_column_order(self):
         self.manager.residence = 'Köln, Deutschland'
-        self.manager.save(update_fields=['residence'])
+        self.manager.birth_date = date(1987, 6, 12)
+        self.manager.save(update_fields=['residence', 'birth_date'])
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('manager_profile'), {'tab': 'einstellungen'})
@@ -320,6 +321,8 @@ class ManagerProfileHandoffTests(TestCase):
             field['key'] for field in response.context['privacy_fields']
         })
         self.assertContains(response, 'Geburtsdatum')
+        self.assertContains(response, 'id="mpBirthDate"')
+        self.assertContains(response, 'value="1987-06-12"')
         self.assertContains(response, 'id="mpResidence"')
         self.assertContains(response, 'value="Köln, Deutschland"')
         left_column = response.content.decode().split(
@@ -339,6 +342,64 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.manager.refresh_from_db()
         self.assertEqual(self.manager.residence, 'Köln, Deutschland')
+
+    def test_account_settings_save_change_and_clear_birth_date(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('update_manager_profile'),
+            {'birth_date': '1990-04-23'},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.manager.refresh_from_db()
+        self.assertEqual(self.manager.birth_date, date(1990, 4, 23))
+
+        response = self.client.post(
+            reverse('update_manager_profile'),
+            {'birth_date': ''},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.manager.refresh_from_db()
+        self.assertIsNone(self.manager.birth_date)
+
+    def test_account_settings_reject_invalid_or_future_birth_date(self):
+        self.manager.birth_date = date(1990, 4, 23)
+        self.manager.save(update_fields=['birth_date'])
+        self.client.force_login(self.user)
+
+        for birth_date in ('kein-datum', '2026-02-30', '2999-01-01'):
+            with self.subTest(birth_date=birth_date):
+                response = self.client.post(
+                    reverse('update_manager_profile'),
+                    {'birth_date': birth_date},
+                    HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+                )
+
+                self.assertEqual(response.status_code, 400)
+                self.assertFalse(response.json()['ok'])
+                self.manager.refresh_from_db()
+                self.assertEqual(self.manager.birth_date, date(1990, 4, 23))
+
+    def test_birthday_visibility_controls_public_profile(self):
+        self.manager.birth_date = date(1987, 6, 12)
+        self.manager.visibility_settings = {'birthday': 'private'}
+        self.manager.save(update_fields=['birth_date', 'visibility_settings'])
+
+        response = self.client.get(
+            reverse('public_manager_profile', args=[self.user.username])
+        )
+        self.assertNotContains(response, '12.06.1987')
+
+        self.manager.visibility_settings = {'birthday': 'all'}
+        self.manager.save(update_fields=['visibility_settings'])
+        response = self.client.get(
+            reverse('public_manager_profile', args=[self.user.username])
+        )
+        self.assertContains(response, '12.06.1987')
 
     def test_profile_uses_current_club_stadium_and_one_persisted_active_title(self):
         league = League.objects.create(name='Profil-Liga', country='Deutschland')
