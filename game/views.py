@@ -7376,10 +7376,8 @@ def manager_profile(request):
             'losses': losses,
             'win_rate': win_rate,
             'win_rate_detail': win_rate_detail,
-            'not_fielded': (
-                f'{manager_profile_obj.inactivity_season_count}/5 Saison · '
-                f'{manager_profile_obj.inactivity_streak}/3 in Folge'
-            ),
+            'not_fielded_season': manager_profile_obj.inactivity_season_count,
+            'not_fielded_streak': manager_profile_obj.inactivity_streak,
             'transfer_ban': (
                 'Bis zur nächsten Aufstellung'
                 if manager_profile_obj.transfer_ban_until

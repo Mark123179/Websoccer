@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-94">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-95">
 {% endblock %}
 
 {% block content %}
@@ -86,13 +86,16 @@
                 SAISON-SCORE
             </span>
             <strong class="mp-kpi-big mp-kpi-gold">{{ manager.season_score }}</strong>
-            <span class="mp-kpi-delta">{% if manager.season_score_delta > 0 %}+{% endif %}{{ manager.season_score_delta }} diese Woche</span>
+            <span class="mp-kpi-delta">
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 10V2M2.5 5.5L6 2l3.5 3.5"/></svg>
+                {% if manager.season_score_delta > 0 %}+{% endif %}{{ manager.season_score_delta }} diese Woche
+            </span>
             <small class="mp-kpi-sub">Platz {{ manager.season_score_rank }} von {{ manager.season_score_total }}</small>
         </div>
         <!-- 3: Trophäen -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M4 3h8v3a4 4 0 0 1-8 0V3z"/><path d="M8 10v2M5 14h6M4 3H2v2a3 3 0 0 0 2.8 3M12 3h2v2a3 3 0 0 1-2.8 3"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.75)" stroke-width="1.6" stroke-linecap="round"><path d="M4 3h8v3a4 4 0 0 1-8 0V3z"/><path d="M8 10v2M5 14h6"/></svg>
                 TROPHÄEN
             </span>
             <strong class="mp-kpi-big mp-kpi-cyan">{{ manager.trophies }}</strong>
@@ -104,7 +107,7 @@
             <small class="mp-kpi-sub"><button class="mp-inline-action" type="button" data-trophy-all>Alle ansehen</button></small>
         </div>
         <!-- 4: Spiele -->
-        <div class="mp-kpi-cell">
+        <div class="mp-kpi-cell mp-kpi-cell--not-fielded">
             <span class="mp-kpi-lbl">
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
                 SPIELE GESAMT
@@ -132,13 +135,14 @@
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,209,102,.85)" stroke-width="1.6" stroke-linejoin="round"><path d="M8 2.5L14.5 14h-13L8 2.5z"/><path d="M8 7v3M8 12.2v.01" stroke-linecap="round"/></svg>
                 NICHT AUFGESTELLT
             </span>
-            <strong class="mp-kpi-big">{{ manager.not_fielded }}</strong>
-            <div class="mp-nf-pips">
-                <span class="mp-nf-pip is-used"></span>
-                <span class="mp-nf-pip"></span>
-                <span class="mp-nf-pip"></span>
+            <div class="mp-not-fielded-values">
+                <strong>{{ manager.not_fielded_season }}<span>/5</span> <small>SAISON</small></strong>
+                <strong>{{ manager.not_fielded_streak }}<span>/3</span> <small>FOLGE</small></strong>
             </div>
-            <small class="mp-kpi-sub">ab 3: Transfersperre</small>
+            <small class="mp-stage-rules" title="Stufe 1: Stärkemalus + Hinweis · Stufe 2 (2 in Folge oder 3 in der Saison): Transfersperre bis zur nächsten eigenen Aufstellung · Stufe 3 (3 in Folge oder 5 in der Saison): Entlassung + Timeline-Eintrag · Urlaubsmodus pausiert beide Zähler">
+                <svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 3a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-1 4h2v4H7z"/></svg>
+                Stufen-Regeln
+            </small>
         </div>
         <!-- 7: Transfersperre -->
         <div class="mp-kpi-cell">
@@ -162,13 +166,12 @@
                 <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M8 4v4l2.5 2.5"/></svg>
                 LETZTE ANMELDUNG
             </span>
-            <strong class="mp-kpi-medium">{{ manager.last_login_date }}</strong>
-            {% if manager.last_login_time %}<small class="mp-kpi-sub">{{ manager.last_login_time }}</small>{% endif %}
+            <strong class="mp-kpi-login">{{ manager.last_login_date }}{% if manager.last_login_time %}<br><span>{{ manager.last_login_time }}</span>{% endif %}</strong>
         </div>
         <!-- 9: Registriert am -->
         <div class="mp-kpi-cell">
             <span class="mp-kpi-lbl">
-                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.8)" stroke-width="1.6" stroke-linecap="round"><path d="M3 5h10v9H3zM5 2v5M11 2v5M3 8h10"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" stroke="rgba(34,230,255,.75)" stroke-width="1.6"><rect x="2" y="3" width="12" height="11" rx="1.5"/><path d="M2 7h12M6 3v2M10 3v2"/></svg>
                 REGISTRIERT AM
             </span>
             <strong class="mp-kpi-medium">{{ manager.registered }}</strong>

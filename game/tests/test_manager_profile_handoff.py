@@ -178,18 +178,25 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertNotIn('display_name', response.json())
 
     def test_profile_renders_nine_kpis_and_resolved_trophy_urls(self):
+        self.manager.inactivity_season_count = 2
+        self.manager.inactivity_streak = 1
+        self.manager.save(update_fields=['inactivity_season_count', 'inactivity_streak'])
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('manager_profile'))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'REGISTRIERT AM')
-        self.assertContains(response, 'class="mp-kpi-cell"', count=9)
+        self.assertContains(response, 'class="mp-kpi-cell', count=9)
         self.assertNotContains(response, '/static/assets/trophies/')
         self.assertNotContains(response, 'TROPHÄENSAMMLUNG')
         self.assertContains(response, 'TROPHÄENVITRINE')
         self.assertContains(response, 'data-trophy-all')
         self.assertContains(response, 'var perPage = 15')
+        self.assertContains(response, '2<span>/5</span>')
+        self.assertContains(response, '1<span>/3</span>')
+        self.assertContains(response, 'Stufen-Regeln')
+        self.assertContains(response, 'class="mp-kpi-login"')
 
     def test_trophy_action_and_vitrine_exist_on_every_manager_profile_tab(self):
         self.client.force_login(self.user)
