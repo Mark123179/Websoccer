@@ -7364,6 +7364,15 @@ def manager_profile(request):
         ManagerTeamPhoto.objects.filter(manager=manager_profile_obj)
         .select_related('club')
     )
+    for _team_photo in _team_photos:
+        _roster_count = len(_team_photo.roster_names)
+        _team_photo.roster_count = _roster_count
+        _team_photo.roster_rows = (
+            2 if _roster_count <= 20
+            else 3 if _roster_count <= 30
+            else 4 if _roster_count <= 44
+            else 5
+        )
     _season_state = GameSeasonState.objects.first()
     _active_season = _season_state.current_season if _season_state else 0
     _vacation_blocks = list(

@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-105">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-106">
 {% endblock %}
 
 {% block content %}
@@ -643,7 +643,11 @@
         <p>Die offiziellen Kaderaufnahmen deiner Trainerstationen – Saison für Saison.</p>
     </header>
     {% for photo in team_photos %}
-    <article class="mp-card2 mp-team-photo-card">
+    <article
+        class="mp-card2 mp-team-photo-card mp-team-photo-card--{{ photo.roster_rows }}-rows"
+        data-roster-count="{{ photo.roster_count }}"
+        data-roster-rows="{{ photo.roster_rows }}"
+    >
         <header class="mp-card2-header">
             <h3>Saison #{{ photo.season }}{% if photo.club %} · {{ photo.club.name }}{% endif %}</h3>
             {% if photo.generated_at %}<small>{{ photo.generated_at|date:"d.m.Y" }}</small>{% endif %}
@@ -651,7 +655,7 @@
         {% if photo.image %}
         <img class="mp-team-photo-image" src="{{ photo.image.url }}" alt="Mannschaftsfoto Saison {{ photo.season }}">
         {% endif %}
-        <ol class="mp-team-photo-roster">
+        <ol class="mp-team-photo-roster" aria-label="{{ photo.roster_count }} Spieler in {{ photo.roster_rows }} Reihen">
             {% for player_name in photo.roster_names %}<li>{{ player_name }}</li>{% endfor %}
         </ol>
     </article>

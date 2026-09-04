@@ -675,8 +675,8 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-title-dialog-close { float: right; background: transparent; border: 0; color: #fff; font-size: 24px; cursor: pointer; }
 .mp-team-photos { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; padding: 24px 28px; }
 .mp-team-photo-image { display: block; width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; }
-.mp-team-photo-roster { columns: 3; column-gap: 24px; padding-left: 22px; color: var(--mp-sub); font-size: 12px; }
-.mp-team-photo-roster li { break-inside: avoid; margin: 3px 0; }
+.mp-team-photo-roster { padding-left: 22px; color: var(--mp-sub); font-size: 12px; }
+.mp-team-photo-roster li { min-width: 0; margin: 3px 0; }
 .mp-vacation-row, .mp-vacation-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 .mp-vacation-row > span { flex: 1; color: rgba(244,251,255,.8); font-size: 12px; }
 .mp-vacation-form label { display: flex; flex-direction: column; gap: 3px; color: var(--mp-sub); font-size: 11px; }
@@ -1411,10 +1411,22 @@ button.mp-trainer-title { cursor: pointer; }
     border: 1px solid rgba(44, 231, 255, .18);
 }
 .mp-team-photo-roster {
-    columns: 4;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    column-gap: 24px;
     margin: 0;
     padding: 14px 18px 4px 34px;
     font-size: 10px;
+}
+.mp-team-photo-card--2-rows .mp-team-photo-roster { grid-template-rows: repeat(2, minmax(0, auto)); }
+.mp-team-photo-card--3-rows .mp-team-photo-roster { grid-template-rows: repeat(3, minmax(0, auto)); }
+.mp-team-photo-card--4-rows .mp-team-photo-roster { grid-template-rows: repeat(4, minmax(0, auto)); }
+.mp-team-photo-card--5-rows .mp-team-photo-roster { grid-template-rows: repeat(5, minmax(0, auto)); }
+.mp-team-photo-roster li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .mp-team-photo-empty {
     display: grid;

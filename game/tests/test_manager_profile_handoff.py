@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -25,6 +26,7 @@ from game.models import (
     LeagueStandings,
     ManagerProfile,
     ManagerCompetitionTitle,
+    ManagerTeamPhoto,
     ManagerTitle,
     SeasonFixture,
     SimulatedMatch,
@@ -237,6 +239,73 @@ class ManagerProfileHandoffTests(TestCase):
                 self.assertContains(response, 'data-trophy-all')
                 self.assertContains(response, 'id="mpTrophyVitrine"')
                 self.assertContains(response, 'id="mpTrophyVitrineShelf"')
+
+    def test_team_photo_rosters_render_18_40_and_60_players_in_handoff_rows(self):
+        for season, player_count in enumerate((18, 40, 60), start=1):
+            ManagerTeamPhoto.objects.create(
+                manager=self.manager,
+                season=season,
+                roster_names=[
+                    f'Spieler {player_number:02d}'
+                    for player_number in range(1, player_count + 1)
+                ],
+            )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('manager_profile'),
+            {'tab': 'mannschaftsfotos'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        for player_count, row_count in ((18, 2), (40, 4), (60, 5)):
+            with self.subTest(player_count=player_count):
+                self.assertContains(
+                    response,
+                    f'class="mp-card2 mp-team-photo-card mp-team-photo-card--{row_count}-rows"',
+                )
+                self.assertContains(
+                    response,
+                    f'data-roster-count="{player_count}"',
+                )
+                self.assertContains(
+                    response,
+                    f'data-roster-rows="{row_count}"',
+                )
+                self.assertContains(
+                    response,
+                    f'aria-label="{player_count} Spieler in {row_count} Reihen"',
+                )
+        self.assertContains(response, '<li>Spieler 60</li>', html=True)
+        self.assertNotContains(response, 'Noch kein Mannschaftsfoto')
+
+    def test_team_photo_empty_state_remains_separately_covered(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse('manager_profile'),
+            {'tab': 'mannschaftsfotos'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Noch kein Mannschaftsfoto')
+        self.assertContains(response, 'mp-team-photo-empty')
+        self.assertNotContains(response, 'data-roster-count')
+
+    def test_team_photo_handoff_rows_fit_the_fixed_1440_artboard(self):
+        css_path = finders.find('game/css/manager-profile.css')
+        with open(css_path, encoding='utf-8') as css_file:
+            css = ''.join(css_file.read().split())
+
+        self.assertIn('grid-auto-flow:column', css)
+        self.assertIn('grid-auto-columns:minmax(0,1fr)', css)
+        for row_count in (2, 4, 5):
+            with self.subTest(row_count=row_count):
+                self.assertIn(
+                    f'.mp-team-photo-card--{row_count}-rows'
+                    f'.mp-team-photo-roster{{grid-template-rows:repeat({row_count},minmax(0,auto))',
+                    css,
+                )
 
     def test_settings_match_handoff_fields_and_column_order(self):
         self.manager.residence = 'Köln, Deutschland'
