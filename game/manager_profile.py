@@ -220,8 +220,22 @@ def evaluate_titles(manager):
 
 def title_payload(manager):
     unlocked = evaluate_titles(manager)
+    from django.db.models import Q
     from .models import ManagerProfile, ManagerTitle
     total_managers = max(1, ManagerProfile.objects.count())
+    active_key = manager.active_title or manager.trainer_type
+    free = []
+    for key, label in FREE_TITLES:
+        holder_count = ManagerProfile.objects.filter(
+            Q(active_title=key)
+            | (Q(active_title='') & Q(trainer_type=key))
+        ).count()
+        free.append({
+            'key': key,
+            'label': label,
+            'active': key == active_key,
+            'manager_percent': round(holder_count / total_managers * 100),
+        })
     unlockable = []
     for key, details in UNLOCKABLE_BY_KEY.items():
         holder_count = ManagerTitle.objects.filter(title_key=key).count()
@@ -239,14 +253,10 @@ def title_payload(manager):
             item['label'],
         )
     )
-    active_key = manager.active_title or manager.trainer_type
     return {
         'active_key': active_key,
         'active_label': current_title(manager),
-        'free': [
-            {'key': key, 'label': label, 'active': key == active_key}
-            for key, label in FREE_TITLES
-        ],
+        'free': free,
         'unlockable': unlockable,
         'featured_unlockable': unlockable[:3],
     }

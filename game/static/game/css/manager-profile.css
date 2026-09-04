@@ -1098,7 +1098,25 @@ body.manager-profile-page .nav-menu a:first-child {
     flex-direction: column;
     gap: 16px;
 }
-.mp-card2-map { grid-column: 2; grid-row: 1; min-height: 430px; }
+.mp-card2-map {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 430px;
+    padding: 0;
+}
+.mp-card2-map > .mp-card2-header {
+    position: absolute;
+    z-index: 30;
+    top: 0;
+    right: 0;
+    left: 0;
+    margin: 0;
+    padding: 14px 16px 34px;
+    background: linear-gradient(180deg,rgba(3,10,17,.94),rgba(3,10,17,.62) 55%,transparent);
+    pointer-events: none;
+}
+.mp-card2-map > .mp-card2-header > * { pointer-events: auto; }
 .mp-stats2 { grid-column: 3; grid-row: 1; max-height: none; }
 .mp-profil-titles { grid-column: 1 / span 2; grid-row: 2; }
 .mp-profil-records { grid-column: 3; grid-row: 2; }
@@ -1159,10 +1177,102 @@ body.manager-profile-page .nav-menu a:first-child {
     border-radius: inherit;
     background: linear-gradient(90deg,#19c8e0,#22e6ff);
 }
-.mp-photo-map { min-height: 360px; max-height: none; }
+.mp-photo-map {
+    width: 100%;
+    min-height: 430px;
+    max-height: none;
+    border-radius: inherit;
+}
+.mp-photo-map-scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.mp-photo-map-scene .mp-photo-map-bg {
+    object-fit: fill;
+}
 .mp-stat2-row { padding: 7px 0; font-size: 10.5px; }
+.mp-stat2-row strong.mp-s2-win,
+.mp-record2 strong.mp-s2-win { color: var(--mp-green); }
+.mp-stat2-row strong.mp-s2-loss,
+.mp-record2 strong.mp-s2-loss { color: var(--mp-red); }
+.mp-stat2-row strong.mp-s2-cyan { color: var(--mp-cyan); }
 .mp-stats2-hint { font-size: 9.5px; }
-.mp-types2-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.mp-trainer-titles-header { align-items: center; }
+.mp-title-legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(244,251,255,.38);
+    font-size: 8px;
+    font-weight: 700;
+}
+.mp-title-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.mp-title-legend i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(244,251,255,.35);
+}
+.mp-title-legend i.is-active { background: var(--mp-cyan); }
+.mp-title-legend i.is-unlocked { background: var(--mp-gold); }
+.mp-title-legend i.is-locked {
+    border: 1px dashed rgba(244,251,255,.35);
+    background: transparent;
+}
+.mp-trainer-titles-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 6px;
+}
+.mp-trainer-titles-grid form { margin: 0; }
+.mp-trainer-title {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 10px;
+    border: 1px solid var(--mp-border);
+    border-radius: 6px;
+    background: rgba(255,255,255,.03);
+    text-align: left;
+}
+button.mp-trainer-title { cursor: pointer; }
+.mp-trainer-title strong {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: rgba(244,251,255,.64);
+    font-size: 10.5px;
+    font-weight: 800;
+}
+.mp-trainer-title small {
+    margin-top: 2px;
+    color: rgba(244,251,255,.38);
+    font-size: 8.5px;
+    font-weight: 700;
+}
+.mp-trainer-title.is-active {
+    border-color: rgba(44,231,255,.55);
+    background: rgba(34,230,255,.16);
+    box-shadow: 0 0 14px rgba(34,230,255,.18);
+}
+.mp-trainer-title.is-active strong { color: var(--mp-cyan); }
+.mp-trainer-title.is-active small { color: rgba(34,230,255,.65); }
+.mp-trainer-title.is-unlocked {
+    border-color: rgba(255,209,102,.55);
+    background: rgba(255,209,102,.1);
+    box-shadow: 0 0 14px rgba(255,209,102,.14);
+}
+.mp-trainer-title.is-unlocked strong { color: var(--mp-gold); }
+.mp-trainer-title.is-unlocked small { color: rgba(255,209,102,.7); }
+.mp-trainer-title.is-locked {
+    border-style: dashed;
+    opacity: .65;
+}
+.mp-trainer-title.is-locked strong { color: rgba(244,251,255,.38); }
+.mp-trainer-title.is-locked svg { width: 9px; height: 9px; flex: 0 0 auto; }
 .mp-type2-tile {
     display: flex;
     align-items: center;
@@ -1192,8 +1302,18 @@ body.manager-profile-page .nav-menu a:first-child {
 .mp-unlock2-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .mp-unlock2 { min-height: 62px; padding: 9px 10px; border-radius: 6px; }
 .mp-unlock2 small { font-size: 9px; }
-.mp-records2-grid { grid-template-columns: 1fr; gap: 7px; }
-.mp-record2 { gap: 3px; padding: 7px 9px; border-radius: 6px; }
+.mp-records2-grid { grid-template-columns: 1fr; gap: 0; }
+.mp-record2 {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid rgba(44,231,255,.07);
+    border-radius: 0;
+    background: transparent;
+}
 .mp-record2 span { font-size: 8px; font-weight: 900; }
 .mp-record2 strong { font-size: 11px; word-break: normal; }
 

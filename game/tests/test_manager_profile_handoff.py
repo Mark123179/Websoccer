@@ -215,6 +215,12 @@ class ManagerProfileHandoffTests(TestCase):
         self.assertContains(response, 'Serienmeister')
         self.assertContains(response, 'Weltenbummler')
         self.assertContains(response, 'Aufstiegsheld')
+        self.assertContains(response, 'mp-photo-map-scene')
+        self.assertContains(response, 'baseScale * 2.6')
+        self.assertNotContains(response, 'markers.length === 1 && Array.isArray(COUNTRY_BBOX)')
+        self.assertContains(response, 'class="mp-trainer-title is-locked"', count=9)
+        self.assertContains(response, '% der Manager')
+        self.assertContains(response, '<rect x="3" y="7" width="10" height="7" rx="1"/>', html=False)
 
     def test_trophy_action_and_vitrine_exist_on_every_manager_profile_tab(self):
         self.client.force_login(self.user)
