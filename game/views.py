@@ -2314,8 +2314,12 @@ def home(request):
 
     club_news = ClubNewsItem.objects.all()[:5]
     sim_news = ClubNewsItem.objects.all()[:5]
-    home_stadium_static_path = stadium_static_path(next_match_home_club)
-    last_match_home_stadium_static_path = stadium_static_path(last_match_home_club)
+    home_stadium_static_path = resolve_stadium_url(
+        stadium_static_path(next_match_home_club)
+    )
+    last_match_home_stadium_static_path = resolve_stadium_url(
+        stadium_static_path(last_match_home_club)
+    )
 
     # ── Livespiele: nächster offener Spieltag je Liga ───────────────────────
     try:

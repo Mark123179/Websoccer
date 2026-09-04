@@ -201,6 +201,9 @@ body.overview-home-page {
     flex-direction: column;
     grid-column: 9 / span 8;
     grid-row: 1;
+    --overview-card-bg-opacity: 0.68;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.9);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.62);
 }
 
 .overview-last-match-card {
@@ -208,6 +211,9 @@ body.overview-home-page {
     flex-direction: column;
     grid-column: 17 / span 4;
     grid-row: 1;
+    --overview-card-bg-opacity: 0.68;
+    --overview-card-shade-left: rgba(3, 10, 16, 0.9);
+    --overview-card-shade-right: rgba(3, 10, 16, 0.62);
 }
 
 .overview-manager-widget {

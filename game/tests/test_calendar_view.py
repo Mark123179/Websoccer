@@ -16,7 +16,6 @@ from game.models import (
     SeasonFixture,
     SimulatedMatch,
 )
-
 class CalendarViewTests(TestCase):
     def setUp(self):
         GameSeasonState.objects.create(current_season=0, is_started=True)
@@ -62,6 +61,17 @@ class CalendarViewTests(TestCase):
         response = self.client.get(reverse('calendar'))
         self.assertEqual(response.status_code, 302)
         self.assertIn('/auth/login/', response.url)
+
+    def test_overview_stadium_background_uses_absolute_static_url(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('home'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "--overview-card-bg: url('/static/game/images/stadiums/germany/fc-bayern.jpg')",
+        )
 
     def test_topbar_calendar_action_sits_between_notifications_and_inbox(self):
         self.client.force_login(self.user)
