@@ -1,6 +1,7 @@
 """Distribution of authoritative Stadium capacities over geometry blocks."""
 
 from copy import deepcopy
+import math
 
 
 STANDS = ('NORD', 'OST', 'SUED', 'WEST')
@@ -30,6 +31,15 @@ def _field(stand, seat_type):
 def _normalise_type(block):
     raw = str(block.get('type', 'SITZ')).upper()
     return TYPE_ALIASES.get(raw, raw if raw in SEAT_TYPES else 'SITZ')
+
+
+def _stadium_capacity_total(stadium):
+    """Work for runtime and historical migration model instances alike."""
+    return sum(
+        int(getattr(stadium, _field(stand, seat_type), 0) or 0)
+        for stand in STANDS
+        for seat_type in SEAT_TYPES
+    )
 
 
 def distribute_capacities(stadium, geometry):
@@ -87,6 +97,11 @@ def distribute_capacities(stadium, geometry):
             for index, value, _weight, _block_id in allocations:
                 blocks[index]['capacity'] = value
                 blocks[index]['type'] = _normalise_type(blocks[index])
+                # The editor contract uses a complete rectangular grid.  Its
+                # width is geometric, while its height follows authoritative
+                # assigned capacity; the final row is intentionally padded.
+                width = max(1, int(blocks[index]['seats']))
+                blocks[index]['rows'] = max(1, math.ceil(value / width))
     result['capacity_source'] = 'Stadium'
-    result['capacity_total'] = int(stadium.capacity_total)
+    result['capacity_total'] = _stadium_capacity_total(stadium)
     return result

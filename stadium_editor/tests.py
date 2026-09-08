@@ -13,9 +13,11 @@ from PIL import Image
 from game.economy.stadium import resolve_due_expansions
 from game.models import Club, League, Stadium, StadiumExpansion
 from stadium_editor.capacity import distribute_capacities
-from stadium_editor.image_validation import InvalidImageData, validate_and_quantize_data_url
+from stadium_editor.contracts import geometry_blocks, project_rle, spatial_project_design
+from stadium_editor.image_validation import InvalidImageData, normalize_design_payload, validate_and_quantize_data_url
 from stadium_editor.models import StadiumDesign, StadiumGeometry
-from stadium_editor.seed import seed_existing_stadiums
+from stadium_editor.seed import load_blueprints, seed_existing_stadiums
+from stadium_editor.services import refresh_geometry_after_capacity_change
 
 
 def _geometry(blocks):
@@ -151,6 +153,20 @@ class StadiumEditorTests(TestCase):
             self.stadium.capacity_total,
         )
 
+    def test_bvb_override_is_exact_52_block_prototype(self):
+        blocks = load_blueprints()['borussiadortmund']['blocks']
+        self.assertEqual(len(blocks), 52)
+        self.assertEqual(len({block['id'] for block in blocks}), 52)
+        self.assertEqual(len({str(block['quad']) for block in blocks}), 52)
+        self.assertEqual(
+            {key: blocks[0][key] for key in ('id', 'stand', 'tier', 'rows', 'seats')},
+            {'id': 0, 'stand': 'SUED', 'tier': 'OBER', 'rows': 31, 'seats': 51},
+        )
+        self.assertEqual(
+            blocks[0]['quad'],
+            [[21.69, -122.48], [49.39, -118.53], [39.02, -93.64], [17.14, -96.76]],
+        )
+
     def test_missing_blueprint_has_a_clear_non_404_page(self):
         self.geometry.delete()
         self.client.force_login(self.user)
@@ -167,9 +183,154 @@ class StadiumEditorTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         design = StadiumDesign.objects.get(stadium=self.stadium).design
-        self.assertEqual(design, {'version': 1, 'palette': ['#112233'], 'blocks': [{'id': 0, 'rle': [[1, 0]]}]})
+        self.assertEqual(design['version'], 2)
+        self.assertEqual(design['blocks'][0]['rows'] * design['blocks'][0]['seats'], 10)
         self.stadium.refresh_from_db()
         self.assertEqual(self.stadium.capacity_total, 11)
+
+    def test_geometry_endpoint_metadata_round_trips_through_v2_save(self):
+        self.client.force_login(self.user)
+        geometry = self.client.get(reverse('stadium_editor_geometry')).json()
+        payload = {
+            'version': 2,
+            'stadium': self.stadium.name,
+            'blickrichtung': 'NORD',
+            'palette': ['#112233'],
+            'blocks': [
+                {
+                    **{key: block[key] for key in ('id', 'stand', 'tier', 'order', 'rows', 'seats')},
+                    'rle': [[block['rows'] * block['seats'], 0]],
+                }
+                for block in geometry['blocks']
+            ],
+        }
+        response = self.client.post(
+            reverse('stadium_editor_save_design'),
+            data=payload,
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_v2_rejects_browser_owned_metadata_and_duplicate_or_unknown_ids(self):
+        geometry = distribute_capacities(self.stadium, self.geometry.geometry)
+        block = geometry['blocks'][0]
+        payload = {
+            'version': 2, 'palette': ['#112233'], 'blickrichtung': 'NORD',
+            'blocks': [{
+                'id': 0, 'stand': block['stand'], 'tier': 'UNTER', 'order': 0,
+                'rows': block['rows'], 'seats': block['seats'],
+                'rle': [[block['rows'] * block['seats'], 0]],
+            }],
+        }
+        payload['blocks'][0]['rows'] += 1
+        with self.assertRaises(InvalidImageData):
+            normalize_design_payload(payload, geometry=geometry, stadium_name=self.stadium.name)
+        canonical = dict(payload['blocks'][0], rows=block['rows'])
+        payload['blocks'] = [dict(canonical, id=999)]
+        with self.assertRaisesRegex(InvalidImageData, 'Unbekannte Block-ID'):
+            normalize_design_payload(payload, geometry=geometry, stadium_name=self.stadium.name)
+        payload['blocks'] = [dict(canonical, rle=[[1, 0]])]
+        with self.assertRaisesRegex(InvalidImageData, 'Sitzfolge muss exakt'):
+            normalize_design_payload(payload, geometry=geometry, stadium_name=self.stadium.name)
+        payload['blocks'].append(dict(payload['blocks'][0]))
+        with self.assertRaises(InvalidImageData):
+            normalize_design_payload(payload, geometry=geometry, stadium_name=self.stadium.name)
+
+    def test_empty_palette_is_rejected_before_default_runs_are_generated(self):
+        geometry = distribute_capacities(self.stadium, self.geometry.geometry)
+        with self.assertRaisesRegex(InvalidImageData, 'mindestens eine Farbe'):
+            normalize_design_payload(
+                {'version': 2, 'palette': [], 'blocks': []},
+                geometry=geometry,
+                stadium_name=self.stadium.name,
+            )
+
+    def test_large_legacy_rle_is_bounded_by_the_trusted_grid(self):
+        result = project_rle([[65_535, 1]] * 10_000, (2, 2), (2, 2))
+        self.assertEqual(result, [[4, 1]])
+
+    def test_large_v1_payload_is_bounded_during_normalization(self):
+        geometry = distribute_capacities(self.stadium, self.geometry.geometry)
+        result = normalize_design_payload(
+            {
+                'palette': ['#000000', '#ffffff'],
+                'blocks': [{'id': 0, 'rle': [[65_535, 1]] * 10_000}],
+            },
+            geometry=geometry,
+            stadium_name=self.stadium.name,
+        )
+        block = result['blocks'][0]
+        self.assertEqual(sum(run[0] for run in block['rle']), block['rows'] * block['seats'])
+
+    def test_v1_upgrade_uses_complete_effective_grid(self):
+        geometry = distribute_capacities(self.stadium, self.geometry.geometry)
+        result = normalize_design_payload(
+            {'palette': ['#112233'], 'blocks': [{'id': 0, 'rle': [[1, 0]]}]},
+            geometry=geometry, stadium_name=self.stadium.name)
+        self.assertEqual(result['version'], 2)
+        for block in result['blocks']:
+            self.assertEqual(sum(run[0] for run in block['rle']), block['rows'] * block['seats'])
+
+    def test_block_order_is_left_to_right_from_the_pitch(self):
+        geometry = _geometry([
+            {**_block(10, stand='NORD'), 'quad': [[2, 2], [3, 2], [3, 1], [2, 1]]},
+            {**_block(11, stand='NORD'), 'quad': [[-3, 2], [-2, 2], [-2, 1], [-3, 1]]},
+            {**_block(12, stand='SUED'), 'quad': [[2, -2], [3, -2], [3, -1], [2, -1]]},
+            {**_block(13, stand='SUED'), 'quad': [[-3, -2], [-2, -2], [-2, -1], [-3, -1]]},
+        ])
+        by_id = {block['id']: block for block in geometry_blocks(geometry)}
+        self.assertEqual((by_id[11]['order'], by_id[10]['order']), (0, 1))
+        self.assertEqual((by_id[12]['order'], by_id[13]['order']), (0, 1))
+
+    def test_two_dimensional_resize_keeps_asymmetric_pattern_orientation(self):
+        result = project_rle(
+            [[1, 1], [1, 2], [1, 3], [1, 4]],
+            (2, 2),
+            (4, 4),
+        )
+        decoded = [colour for count, colour in result for _ in range(count)]
+        self.assertEqual(decoded[:4], [1, 1, 2, 2])
+        self.assertEqual(decoded[-4:], [3, 3, 4, 4])
+
+    def test_spatial_projection_transfers_across_changed_block_id(self):
+        old = _geometry([_block(7, rows=2, seats=2)])
+        new_block = _block(99, rows=2, seats=2)
+        new = _geometry([new_block])
+        design = {'palette': ['#000000', '#ffffff'],
+                  'blocks': [{'id': 7, 'rows': 2, 'seats': 2,
+                              'rle': [[1, 1], [3, 0]]}]}
+        result = spatial_project_design(design, old, new, 'Arena')
+        self.assertEqual(result['blocks'][0]['id'], 99)
+        self.assertEqual(result['blocks'][0]['rle'], [[1, 1], [3, 0]])
+
+    def test_spatial_projection_ignores_oversized_historical_dimensions(self):
+        old = _geometry([_block(7, rows=2, seats=2)])
+        new = _geometry([_block(99, rows=2, seats=2)])
+        design = {
+            'palette': ['#000000', '#ffffff'],
+            'blocks': [{
+                'id': 7, 'rows': 1_000_000, 'seats': 1_000_000,
+                'rle': [[65_535, 1]] * 10_000,
+            }],
+        }
+        result = spatial_project_design(design, old, new, 'Arena')
+        self.assertEqual(result['blocks'][0]['rle'], [[4, 1]])
+
+    def test_visible_endpoint_filters_opposite_and_side_lower_blocks(self):
+        payload = {
+            'version': 2, 'blickrichtung': 'NORD', 'palette': ['#000000'],
+            'blocks': [
+                {'id': 1, 'stand': 'NORD', 'tier': 'OBER'},
+                {'id': 2, 'stand': 'WEST', 'tier': 'UNTER'},
+                {'id': 3, 'stand': 'OST', 'tier': 'OBER'},
+                {'id': 4, 'stand': 'SUED', 'tier': 'UNTER'},
+            ],
+        }
+        StadiumDesign.objects.create(
+            stadium=self.stadium, design=payload, blickrichtung='NORD')
+        self.client.force_login(self.user)
+        result = self.client.get(reverse('stadium_editor_visible_design')).json()
+        self.assertEqual([block['id'] for block in result['blocks']], [1, 2])
 
     def test_oversized_data_url_is_rejected(self):
         image = Image.new('RGB', (481, 1), '#336699')
@@ -204,3 +365,30 @@ class StadiumEditorTests(TestCase):
         self.geometry.refresh_from_db()
         self.assertEqual(self.geometry.geometry['blocks'][0]['rows'], 42)
         self.assertIn('42 Reihen', self.geometry.last_warning)
+
+    def test_capacity_change_resizes_design_even_when_raw_geometry_is_unchanged(self):
+        self.stadium.nord_seating = 50
+        self.stadium.save(update_fields=['nord_seating'])
+        self.geometry.geometry = _geometry([_block(0, rows=10, seats=10)])
+        self.geometry.save(update_fields=['geometry'])
+        StadiumDesign.objects.create(
+            stadium=self.stadium,
+            design={
+                'version': 2,
+                'stadium': self.stadium.name,
+                'blickrichtung': 'NORD',
+                'palette': ['#000000', '#ffffff'],
+                'blocks': [{
+                    'id': 0, 'stand': 'NORD', 'tier': 'UNTER', 'order': 0,
+                    'rows': 5, 'seats': 10, 'rle': [[1, 1], [49, 0]],
+                }],
+            },
+        )
+        self.stadium.nord_seating = 60
+        self.stadium.save(update_fields=['nord_seating'])
+        refresh_geometry_after_capacity_change(self.stadium)
+        self.geometry.refresh_from_db()
+        design = StadiumDesign.objects.get(stadium=self.stadium).design
+        self.assertEqual(self.geometry.geometry['blocks'][0]['rows'], 10)
+        self.assertEqual((design['blocks'][0]['rows'], design['blocks'][0]['seats']), (6, 10))
+        self.assertEqual(sum(run[0] for run in design['blocks'][0]['rle']), 60)

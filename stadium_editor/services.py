@@ -5,7 +5,10 @@ from copy import deepcopy
 from django.db import transaction
 
 from .capacity import SEAT_TYPES, STANDS, _field
+from .capacity import distribute_capacities
 from .models import StadiumGeometry
+from .models import StadiumDesign
+from .contracts import geometry_blocks, project_rle, rle_length
 
 MAX_ROWS = 42
 
@@ -81,6 +84,7 @@ def refresh_geometry_after_capacity_change(stadium):
             row = StadiumGeometry.objects.select_for_update().get(stadium=stadium)
         except StadiumGeometry.DoesNotExist:
             return ''
+        old_geometry = deepcopy(row.geometry)
         updated, warning = _grow_existing_rows(stadium, deepcopy(row.geometry))
         update_fields = []
         if updated != row.geometry:
@@ -92,4 +96,39 @@ def refresh_geometry_after_capacity_change(stadium):
         if update_fields:
             update_fields.append('updated_at')
             row.save(update_fields=update_fields)
+        # A completed expansion changes the authoritative raster.  Project the
+        # saved visual layer to it while retaining row-major orientation.
+        design_row = StadiumDesign.objects.select_for_update().filter(stadium=stadium).first()
+        if design_row and design_row.design.get('version') == 2:
+            trusted_blocks = geometry_blocks(distribute_capacities(stadium, updated))
+            current_blocks = design_row.design.get('blocks', [])
+            current_shapes = {
+                item.get('id'): (item.get('rows'), item.get('seats'))
+                for item in current_blocks
+            }
+            trusted_shapes = {
+                block['id']: (block['rows'], block['seats'])
+                for block in trusted_blocks
+            }
+            if current_shapes != trusted_shapes:
+                old_by_id = {
+                    block['id']: block for block in current_blocks
+                }
+                new_blocks = []
+                for block in trusted_blocks:
+                    previous = next(
+                        (item for item in current_blocks
+                         if item.get('id') == block['id']), None)
+                    if previous:
+                        old_meta = old_by_id.get(block['id'], block)
+                        rle = project_rle(previous.get('rle', []),
+                                          (old_meta['rows'], old_meta['seats']),
+                                          (block['rows'], block['seats']))
+                    else:
+                        rle = [[block['rows'] * block['seats'], 0]]
+                    new_blocks.append({**block, 'rle': rle})
+                design = deepcopy(design_row.design)
+                design['blocks'] = new_blocks
+                design_row.design = design
+                design_row.save(update_fields=['design', 'updated_at'])
         return warning

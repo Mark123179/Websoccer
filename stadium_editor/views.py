@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -12,6 +13,7 @@ from game.views import build_game_header, current_manager_club
 from .capacity import distribute_capacities
 from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
+from .contracts import geometry_blocks, visible_blocks
 
 
 def _owned_stadium(request):
@@ -25,7 +27,11 @@ def _owned_stadium(request):
 
 
 def _geometry_payload(stadium, geometry):
-    return distribute_capacities(stadium, geometry)
+    payload = distribute_capacities(stadium, geometry)
+    trusted = {block['id']: block for block in geometry_blocks(payload)}
+    for position, block in enumerate(payload['blocks']):
+        block.update(trusted[block.get('id', position)])
+    return payload
 
 
 @login_required(login_url='/auth/login/')
@@ -76,6 +82,20 @@ def stadium_editor_design(request):
 
 
 @login_required(login_url='/auth/login/')
+@require_GET
+def stadium_editor_visible_design(request):
+    stadium = _owned_stadium(request)
+    if not stadium:
+        return JsonResponse({'error': 'Stadion nicht gefunden.'}, status=404)
+    design = StadiumDesign.objects.filter(stadium=stadium).first()
+    if not design:
+        return JsonResponse({})
+    payload = deepcopy(design.design)
+    payload['blocks'] = visible_blocks(payload, design.blickrichtung)
+    return JsonResponse(payload)
+
+
+@login_required(login_url='/auth/login/')
 @require_POST
 def stadium_editor_save_design(request):
     stadium = _owned_stadium(request)
@@ -87,10 +107,18 @@ def stadium_editor_save_design(request):
         payload = json.loads(request.body.decode('utf-8'))
         if not isinstance(payload, dict):
             raise ValueError
-        sanitized = normalize_design_payload(payload)
+        geometry = _geometry_payload(
+            stadium, StadiumGeometry.objects.get(stadium=stadium).geometry)
+        sanitized = normalize_design_payload(
+            payload, geometry=geometry, stadium_name=stadium.name,
+            blickrichtung=payload.get('blickrichtung', 'NORD'),
+        )
+    except StadiumGeometry.DoesNotExist:
+        return JsonResponse({'error': 'Keine Geometrie hinterlegt.'}, status=409)
     except (UnicodeDecodeError, json.JSONDecodeError, ValueError, InvalidImageData) as exc:
         return JsonResponse({'error': str(exc) or 'Ungültiges Design.'}, status=400)
     design, _created = StadiumDesign.objects.get_or_create(stadium=stadium)
     design.design = sanitized
-    design.save(update_fields=['design', 'updated_at'])
+    design.blickrichtung = sanitized['blickrichtung']
+    design.save(update_fields=['design', 'blickrichtung', 'updated_at'])
     return JsonResponse({'ok': True, 'updated_at': design.updated_at.isoformat()})

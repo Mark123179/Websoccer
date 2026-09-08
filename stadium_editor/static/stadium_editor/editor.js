@@ -58,20 +58,20 @@ let pressId = 1;
 const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
 let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
+let blickrichtung = 'NORD';
 let overlay = null;                               // {kind:'text'|'image', canvas, wx, wy, scale, rot}
 const undoStack = [], redoStack = [];
 
-/* Die Geometrie bestimmt die Form; die vom Server zugewiesene Kapazität
-   bestimmt, wie viele Sitzpunkte ein Block tatsächlich zeigt. */
+/* Rastermaße gehören zur Geometrie. Kapazitäten sind wirtschaftliche Daten
+   und dürfen weder die sichtbaren Reihen aufblasen noch den Export kürzen. */
 function renderableBlock(block, index){
   const geometryRows = Math.max(1, Number(block.rows) || 1);
   const geometrySeats = Math.max(1, Number(block.seats) || 1);
-  const capacity = Math.max(0, Number.isFinite(Number(block.capacity))
-    ? Number(block.capacity) : geometryRows * geometrySeats);
-  const seats = Math.max(1, Math.min(geometrySeats, capacity || 1));
-  const rows = Math.max(1, Math.ceil(capacity / seats));
+  const capacity = geometryRows * geometrySeats;
+  const seats = geometrySeats;
+  const rows = geometryRows;
   return Object.assign({}, block, {
-    id: index,
+    id: Number.isInteger(Number(block.id)) ? Number(block.id) : index,
     geometryRows,
     geometrySeats,
     capacity,
@@ -80,7 +80,7 @@ function renderableBlock(block, index){
   });
 }
 function isRenderableSeat(block, row, seat){
-  return row * block.seats + seat < block.capacity;
+  return row >= 0 && row < block.rows && seat >= 0 && seat < block.seats;
 }
 
 /* ── Canvas-Setup ─────────────────────────────────────────────── */
@@ -129,6 +129,7 @@ function blockAt(wx, wy){
 /* ── Texturen: pro Block ein Mini-Canvas (seats × rows px) ────── */
 function restoreSavedDesign(savedDesign){
   if(!savedDesign || typeof savedDesign !== 'object') return;
+  if(['NORD','SUED','OST','WEST'].includes(savedDesign.blickrichtung)) blickrichtung = savedDesign.blickrichtung;
   if(Array.isArray(savedDesign.palette) && savedDesign.palette.length){
     PALETTE = savedDesign.palette.filter(hex => /^#[0-9a-f]{6}$/i.test(hex)).map(hex => [hex, 'Gespeichert']);
     if(!PALETTE.length) return;
@@ -136,8 +137,9 @@ function restoreSavedDesign(savedDesign){
     PAL_LAB = PAL_RGB.map(c => rgb2lab(...c));
   }
   if(!Array.isArray(savedDesign.blocks)) return;
+  const indices = new Map(blocks.map((block, index) => [block.id, index]));
   for(const saved of savedDesign.blocks){
-    const index = Number(saved.id);
+    const index = indices.get(Number(saved.id));
     if(!Number.isInteger(index) || !seatData[index] || !Array.isArray(saved.rle)) continue;
     let cursor = 0;
     for(const pair of saved.rle){
@@ -1502,15 +1504,19 @@ if(expandButton){
 
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
-  const out = {version:1, stadium:D.meta.name, palette:PALETTE.map(p=>p[0]),
+  const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
     blocks: blocks.map((b,i)=>{
-      const d = seatData[i].subarray(0, b.capacity), rle=[];
+      const d = seatData[i], rle=[];
       if(d.length){
         let cur=d[0], n=1;
         for(let k=1;k<d.length;k++){ if(d[k]===cur&&n<65535)n++; else{rle.push([n,cur]);cur=d[k];n=1;} }
         rle.push([n,cur]);
       }
-      return {id:b.id, rle};
+      return {
+        id:b.id, stand:b.stand, tier:(b.tier==='RANG1' ? 'UNTER' : (b.tier==='UNTER' ? 'UNTER' : 'OBER')),
+        order:b.order,
+        rows:b.rows, seats:b.seats, rle
+      };
     })};
   const button = document.getElementById('btnSave');
   button.disabled = true;

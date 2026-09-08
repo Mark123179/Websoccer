@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 BUNDLED_SOURCE = Path(__file__).with_name('blueprints') / 'stadium_data_all.js.gz'
+BVB_V2_SOURCE = Path(__file__).with_name('blueprints') / 'bvb_blocks_v2.json'
 
 
 def _key(value):
@@ -22,11 +23,22 @@ def load_blueprints(source=BUNDLED_SOURCE):
     match = re.search(r'const\s+STADIUMS\s*=\s*(\[.*\])\s*;\s*$', text, re.S)
     if not match:
         raise ValueError('Die BLUEPRINT-Datei enthält keine STADIUMS-JSON-Liste.')
-    return {
+    blueprints = {
         _key(item.get('meta', {}).get('club')): item
         for item in json.loads(match.group(1))
         if isinstance(item, dict)
     }
+    # Production never reads attached_assets.  The upstream BVB bundle has
+    # 51 legacy shapes, so this checked-in topology supplies stable identities.
+    if Path(source) == BUNDLED_SOURCE:
+        exact = json.loads(BVB_V2_SOURCE.read_text(encoding='utf-8'))
+        bvb = deepcopy(blueprints.get(_key('Borussia Dortmund'), {}))
+        bvb.update({key: deepcopy(value) for key, value in exact.items()
+                    if key in ('meta', 'outline', 'blocks')})
+        if len(bvb.get('blocks', [])) != 52:
+            raise ValueError('Die BVB-V2-Ressource muss exakt 52 Blöcke enthalten.')
+        blueprints[_key('Borussia Dortmund')] = bvb
+    return blueprints
 
 
 def normalise_block_types(stadium, geometry):

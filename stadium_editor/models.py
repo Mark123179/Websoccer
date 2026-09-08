@@ -35,6 +35,7 @@ class StadiumDesign(models.Model):
         related_name='editor_design',
     )
     design = models.JSONField(default=dict)
+    blickrichtung = models.CharField(max_length=4, default='NORD')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
