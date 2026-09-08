@@ -1,5 +1,7 @@
 """The server-owned version 2 stadium-editor export contract."""
 
+import math
+
 STANDS = {'NORD', 'SUED', 'OST', 'WEST'}
 TIERS = {'UNTER', 'OBER'}
 
@@ -7,6 +9,58 @@ TIERS = {'UNTER', 'OBER'}
 def canonical_tier(value):
     value = str(value or '').upper()
     return 'UNTER' if value in ('UNTER', 'RANG1', 'LOWER', '1') else 'OBER'
+
+
+def axis_theta(geometry):
+    """Return the authoritative pitch axis, accepting old source geometry."""
+    value = (geometry.get('meta', {}) if isinstance(geometry, dict) else {}).get('axisTheta', 0)
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError('Die Geometrie enthält kein gültiges axisTheta.')
+    return value
+
+
+def _number(value):
+    return (isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value))
+
+
+def contract_quad(legacy_quad, field_center=(0, 0)):
+    """Turn raw A,B,C,D quads into front-left, front-right, back-right, back-left."""
+    if (not isinstance(legacy_quad, list) or len(legacy_quad) != 4
+            or not all(isinstance(point, list) and len(point) == 2
+                       and all(_number(value) for value in point) for point in legacy_quad)):
+        raise ValueError('Die Geometrie enthält ein ungültiges Block-Quad.')
+    if (not isinstance(field_center, list) or len(field_center) != 2
+            or not all(_number(value) for value in field_center)):
+        field_center = (0, 0)
+    a, b, c, d = legacy_quad
+    midpoint = lambda p, q: ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
+    ab, cd = midpoint(a, b), midpoint(c, d)
+    distance = lambda p: (p[0] - field_center[0]) ** 2 + (p[1] - field_center[1]) ** 2
+    # Preserve pairs across the trapezoid; the closer pair is the front edge.
+    front, back = (cd, ab) if distance(cd) <= distance(ab) else (ab, cd)
+    forward = (front[0] - field_center[0], front[1] - field_center[1])
+    length = math.hypot(*forward)
+    if length < 1e-9:
+        # Degenerate location is invalid for a stadium block contract.
+        raise ValueError('Die Geometrie enthält ein Block-Quad ohne Feldbezug.')
+    left = (-forward[1] / length, forward[0] / length)
+    front_points = (c, d) if front == cd else (a, b)
+    back_points = (a, b) if front == cd else (c, d)
+    score = lambda p: (p[0] - front[0]) * left[0] + (p[1] - front[1]) * left[1]
+    fl, fr = sorted(front_points, key=score, reverse=True)
+    # Match each back endpoint to its nearest front endpoint.
+    if ((back_points[0][0] - fl[0]) ** 2 + (back_points[0][1] - fl[1]) ** 2
+            <= (back_points[1][0] - fl[0]) ** 2 + (back_points[1][1] - fl[1]) ** 2):
+        bl, br = back_points
+    else:
+        br, bl = back_points
+    return [fl, fr, br, bl]
+
+
+def legacy_seat_axis_reversed(legacy_quad, field_center=(0, 0)):
+    """Whether legacy u=0 (raw D) differs from canonical u=0 (front-left)."""
+    return contract_quad(legacy_quad, field_center)[0] != legacy_quad[3]
 
 
 def geometry_blocks(geometry):
@@ -31,16 +85,21 @@ def geometry_blocks(geometry):
         if rows < 1 or seats < 1:
             raise ValueError(f'Die Geometrie von Block {block_id} hat ungültige Maße.')
         tier = canonical_tier(block.get('tier'))
+        z0, z1 = block.get('z0'), block.get('z1')
+        if not _number(z0) or not _number(z1) or z1 <= z0:
+            raise ValueError(f'Die Geometrie von Block {block_id} hat ungültige Höhen.')
         result.append({'id': block_id, 'stand': stand, 'tier': tier,
                        'order': 0, 'rows': rows, 'seats': seats,
-                       '_quad': block.get('quad')})
+                       'quad': contract_quad(block.get('quad'),
+                                             geometry.get('meta', {}).get('fieldC', [0, 0])),
+                       'z0': z0, 'z1': z1, '_legacy_quad': block.get('quad')})
         ids.add(block_id)
     groups = {}
     for block in result:
         groups.setdefault((block['stand'], block['tier']), []).append(block)
     for (stand, _tier), members in groups.items():
         def left_to_right(block):
-            quad = block['_quad']
+            quad = block['_legacy_quad']
             if not isinstance(quad, list) or len(quad) != 4:
                 return block['id']
             x = sum(point[0] for point in quad) / 4
@@ -54,8 +113,55 @@ def geometry_blocks(geometry):
             }[stand]
         for order, block in enumerate(sorted(members, key=left_to_right)):
             block['order'] = order
-    return [{key: value for key, value in block.items() if key != '_quad'}
+    return [{key: value for key, value in block.items() if key != '_legacy_quad'}
             for block in result]
+
+
+def _is_complete_canonical(block, supplied_axis):
+    """A complete spatial V2 record already uses the canonical seat axis.
+
+    Its dimensions may legitimately describe the previous expansion state, so
+    this marker must not depend on equality with today's effective geometry.
+    """
+    return (isinstance(block, dict) and _number(supplied_axis)
+            and all(key in block for key in
+                    ('stand', 'tier', 'order', 'rows', 'seats', 'quad', 'z0', 'z1')))
+
+
+def hydrate_design(design, geometry, stadium_name, blickrichtung='NORD'):
+    """Build a complete V2 response from visual data and server geometry."""
+    if not isinstance(design, dict):
+        design = {}
+    trusted = geometry_blocks(geometry)
+    raw = {block.get('id', index): block for index, block in
+           enumerate(geometry.get('blocks', []))}
+    expected_axis = axis_theta(geometry)
+    saved = {item.get('id'): item for item in design.get('blocks', [])
+             if isinstance(item, dict)}
+    blocks = []
+    for meta in trusted:
+        old = saved.get(meta['id'], {})
+        old_rows, old_seats = old.get('rows'), old.get('seats')
+        rle = old.get('rle', [])
+        if not isinstance(old_rows, int) or not isinstance(old_seats, int) or old_rows < 1 or old_seats < 1:
+            old_rows, old_seats = meta['rows'], meta['seats']
+        # Earlier V2 was serialized in the editor's raw D→C seat direction.
+        # A complete spatial record is the durable marker that RLE is already
+        # canonical FL→FR, making repeated hydration idempotent.
+        if (not _is_complete_canonical(old, design.get('axisTheta'))
+                and legacy_seat_axis_reversed(raw[meta['id']]['quad'],
+                                              geometry.get('meta', {}).get('fieldC', [0, 0]))):
+            rle = reverse_rle_rows(rle, old_rows, old_seats)
+        if (old_rows, old_seats) != (meta['rows'], meta['seats']):
+            rle = project_rle(rle, (old_rows, old_seats), (meta['rows'], meta['seats']))
+        elif rle_length(rle) != meta['rows'] * meta['seats']:
+            rle = project_rle(rle, (old_rows, old_seats), (meta['rows'], meta['seats']))
+        blocks.append({**meta, 'rle': rle or [[meta['rows'] * meta['seats'], 0]]})
+    direction = str(design.get('blickrichtung', blickrichtung)).upper()
+    if direction not in STANDS:
+        direction = blickrichtung if blickrichtung in STANDS else 'NORD'
+    return {'version': 2, 'stadium': stadium_name, 'axisTheta': expected_axis,
+            'blickrichtung': direction, 'palette': design.get('palette', []), 'blocks': blocks}
 
 
 def rle_length(rle):
@@ -133,6 +239,15 @@ def _encode(values):
     return out
 
 
+def reverse_rle_rows(rle, rows, seats):
+    """Reverse the seat axis of a bounded row-major RLE stream, preserving rows."""
+    size = rows * seats
+    values = decode_rle(rle, size)
+    values = (values + [0] * max(0, size - len(values)))[:size]
+    return _encode([value for row in range(rows)
+                    for value in reversed(values[row * seats:(row + 1) * seats])])
+
+
 def spatial_project_design(old_design, old_geometry, new_geometry, stadium_name,
                            blickrichtung='NORD'):
     """Project seats through world-space quads for topology replacements."""
@@ -151,6 +266,10 @@ def spatial_project_design(old_design, old_geometry, new_geometry, stadium_name,
         declared_size = rows * seats
         values = decode_rle(rle, declared_size)
         values = (values + [0] * (rows * seats))[:rows * seats]
+        if (_is_complete_canonical(item, old_design.get('axisTheta'))
+                and legacy_seat_axis_reversed(raw_old[block_id]['quad'],
+                                              old_geometry.get('meta', {}).get('fieldC', [0, 0]))):
+            values = decode_rle(reverse_rle_rows(_encode(values), rows, seats), declared_size)
         sources.append((raw_old[block_id]['quad'], rows, seats, values))
     raw_new = {block.get('id', i): block
                for i, block in enumerate(new_geometry.get('blocks', []))}
@@ -171,8 +290,12 @@ def spatial_project_design(old_design, old_geometry, new_geometry, stadium_name,
                         colour = source[old_row * old_seats + col]
                         break
                 values.append(colour)
+        if legacy_seat_axis_reversed(raw_new[meta['id']]['quad'],
+                                     new_geometry.get('meta', {}).get('fieldC', [0, 0])):
+            values = decode_rle(reverse_rle_rows(_encode(values), meta['rows'], meta['seats']),
+                                meta['rows'] * meta['seats'])
         blocks.append({**meta, 'rle': _encode(values)})
-    return {'version': 2, 'stadium': stadium_name,
+    return {'version': 2, 'stadium': stadium_name, 'axisTheta': axis_theta(new_geometry),
             'blickrichtung': blickrichtung, 'palette': old_design.get('palette', []),
             'blocks': blocks}
 
