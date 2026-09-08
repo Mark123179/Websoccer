@@ -185,123 +185,158 @@ id = "0fjIy8MDMUxiYa4wzp-4L"
 uri = "file://attached_assets/freiburg_city.png"
 type = "image"
 title = "Freiburg im Breisgau — KI-generiert"
+logical_id = "a427147c-a666-4a33-b3ae-f3d754815b29"
 
 [[outputs]]
 id = "oTNQHcx47_t-rYJiptlYe"
 uri = "file://spieler_export.csv"
 type = "table"
 title = "Alle Spieler — Vollexport (19.237 Spieler)"
+logical_id = "615c80d2-45e8-4fb1-a35a-78cad2ed2f5b"
 
 [[outputs]]
 id = "Ssnvo6MCmNiNQnzgZOEpr"
 uri = "file://spieler_export_komplett.csv"
 type = "table"
 title = "Vollexport — alle Spieler, alle Daten (116 Spalten)"
+logical_id = "393fa3cc-e77f-4d7f-83f7-634f3b659e5d"
 
 [[outputs]]
 id = "vnERWLPCTfGOrwJeUQenc"
 uri = "file://websoccer_sim_export.zip"
 type = "unspecified"
 title = "Websoccer Simulation Export (Standalone)"
+logical_id = "0fc65163-52a6-47d0-acac-77125e816723"
 
 [[outputs]]
 id = "A_53K5frN4WvAUkXTZCh0"
 uri = "file://exports/websoccer_sim_export.zip"
 type = "unspecified"
 title = "websoccer_sim_export.zip — exp 1.25 Final"
+logical_id = "16e3ebc2-f939-44e6-bbc7-b0267577c051"
 
 [[outputs]]
 id = "kTGTn3vdFHUKOlZNquOyi"
 uri = "file://exports/tactic_test_results_minutes_10k.json"
 type = "unspecified"
 title = "JSON — 10k Minuten-Batch (50.000 Sims)"
+logical_id = "59bb5742-02f5-4731-920e-ba7b6ac3b5d0"
 
 [[outputs]]
 id = "IzdW34De76rsskB7rjtT1"
 uri = "file://exports/tactic_test_results_minutes_10k.csv"
 type = "table"
 title = "CSV — 10k Minuten-Batch (Balancing-Auswertung)"
+logical_id = "7249444b-a9f7-41c8-8ca1-d453608405fa"
 
 [[outputs]]
 id = "9NtYaDbxZOsf4d3eIt696"
 uri = "file://exports/tactic_test_results_v2_10k.json"
 type = "unspecified"
 title = "JSON — V2 Balance 10k (50.000 Sims)"
+logical_id = "987eaa17-c5b6-49ae-9332-e75398210329"
 
 [[outputs]]
 id = "Ib5n60ko2C0mHpIZScyvq"
 uri = "file://exports/tactic_test_results_v2_10k.csv"
 type = "table"
 title = "CSV — V2 Balance 10k (mit plan_segment_stats)"
+logical_id = "89c2c29a-88bf-4830-988f-e2058c435f83"
 
 [[outputs]]
 id = "z9-qHGp2uzOv1O54hBJKJ"
 uri = "file://exports/strength_scaling_results_5k.json"
 type = "unspecified"
 title = "strength_scaling_results_5k.json"
+logical_id = "e6c26aee-5fbb-4af1-9c89-f444c9566213"
 
 [[outputs]]
 id = "cfH6izEgFAcBovON3AB0H"
 uri = "file://exports/strength_scaling_results_5k.csv"
 type = "table"
 title = "strength_scaling_results_5k.csv"
+logical_id = "79f5c62e-47e2-414a-a3ee-19c82ecdcbe9"
 
 [[outputs]]
 id = "k8EeCQsTfvrgpTAXTb2B7"
 uri = "file://exports/balance_matrix_exp125_10k.json"
 type = "unspecified"
 title = "balance_matrix_exp125_10k.json"
+logical_id = "aeb378df-7c18-4ff6-b7e5-eb16d1338259"
 
 [[outputs]]
 id = "dyHzSJ3KWHL6ASRKv0y-H"
 uri = "file://exports/balance_matrix_exp125_10k.csv"
 type = "table"
 title = "balance_matrix_exp125_10k.csv"
+logical_id = "e920080f-8885-435a-a527-7727fa70f7c5"
 
 [[outputs]]
 id = "YfMNDIWldLwP68amDQQjq"
 uri = "file://game/static/game/css/job-angebote-download.txt"
 type = "text"
 title = "job-angebote.css"
+logical_id = "0b1e0912-5104-46f0-b34b-5e217a3861c0"
 
 [[outputs]]
 id = "6GUgtq_BODla5gvfVMkH3"
 uri = "file://attached_assets/ws_import_overview.zip"
 type = "unspecified"
 title = "WS Import — komplette Übersicht (Code + Templates + Tests)"
+logical_id = "cf485c52-d2a5-4e2b-800e-2da513ef3aa8"
 
 [[outputs]]
 id = "WqkQYkw2HSejUh_jdXsRY"
 uri = "file://docs/cmtracker_integration.md"
 type = "text"
 title = "cmtracker-Integration — Doku, Feldmapping & Live-Modus-Plan"
+logical_id = "11eab33b-1d61-42f0-8e0c-8d0eac89cadf"
 
 [[outputs]]
 id = "tqiEfXTINkpBqD57yYiV2"
 uri = "file://manager_profile_export.zip"
 type = "unspecified"
 title = "Managerprofil – alle relevanten Dateien"
+logical_id = "2e3ac8b6-4c34-4ccd-be11-dc921dab5284"
 
 [[outputs]]
 id = "MrldTMM-rucssIC2aMFXD"
 uri = "file://docs/kalibrierung_aktuell_saison0.txt"
 type = "text"
 title = "Kalibrierung Lauf 1 — Saison 0, Spieltag 6 (19.07.2026, Text)"
+logical_id = "f7df940c-e8bd-4f53-be0d-bdb4bdb4ad79"
 
 [[outputs]]
 id = "rMXGjjSfJZDvh6s4bryEF"
 uri = "file://docs/kalibrierung_aktuell_saison0.json"
 type = "unspecified"
 title = "Kalibrierung Lauf 1 — Saison 0, Spieltag 6 (19.07.2026, JSON)"
+logical_id = "f7ee0c89-0444-42ff-a397-6a43552d9e8a"
 
 [[outputs]]
 id = "d0zzLWBl2wJ2fB5J2OWo_"
 uri = "file://docs/kalibrierung_lauf2_saison0.txt"
 type = "text"
 title = "Kalibrierung Lauf 2 — Saison 0, abgeschlossen (20.07.2026, Text)"
+logical_id = "95e977e3-ba5e-4387-8b82-994407c587fb"
 
 [[outputs]]
 id = "fmTKJqgF-reGK1Kcwltzb"
 uri = "file://docs/kalibrierung_lauf2_saison0.json"
 type = "unspecified"
 title = "Kalibrierung Lauf 2 — Saison 0, abgeschlossen (20.07.2026, JSON)"
+logical_id = "26dc2a23-f920-4939-bedd-545d05343c42"
+
+[[outputs]]
+id = "2NYPn5YxlATTZdT2mzIN3"
+uri = "file://exports/bvb-stadioneditor-design.json"
+type = "unspecified"
+title = "BVB Stadioneditor-JSON"
+description = "Zuletzt gespeichertes Design des Signal Iduna Parks aus dem Stadioneditor; gespeichert am 08.09.2026 um 11:11 Uhr (Europe/Berlin)."
+logical_id = "44f11e1a-b9cf-4271-af3f-14723795e35d"
+content_hash = "sha256:f4c4e508f49d70ec08ea747e95145f9eef4df7d2cea59e16ecb2df80a9c31894"
+size = 28277
+mtime_ms = 1788858774206
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/44f11e1a-b9cf-4271-af3f-14723795e35d/88737628-0ba1-453c-af40-686fd85e5357"
+storage_version_token = "1788858779003824"
+content_type = "application/octet-stream"
