@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=20">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=21">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -36,7 +36,7 @@
                 </div>
                 <div class="m">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
-                    <span>{% if club.stadium %}{{ club.stadium.name }}, {{ club.stadium.city }}{% else %}Stadion nicht erfasst{% endif %}</span>
+                    <span>{% if stadium_home_club.stadium %}{{ stadium_home_club.stadium.name }}, {{ stadium_home_club.stadium.city }}{% else %}Stadion nicht erfasst{% endif %}</span>
                 </div>
                 <div class="m">
                     <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
@@ -108,6 +108,20 @@
 
         {# ══════════════════════════════ ÜBERSICHT ══════════════════════ #}
         <section class="panel" data-tab="uebersicht">
+            {% if report.home_club_id %}
+            <section class="match-stadium"
+                     data-stadium-live-mode
+                     data-scene-url="{% url 'stadium_live_scene' report.home_club_id %}"
+                     aria-label="Stadion von {{ report.home_club_name }}">
+                <canvas aria-label="2D-Ansicht des Heimstadions"></canvas>
+                <header class="live-stage__header">
+                    <span>{{ report.home_club_name }}</span>
+                    <strong>{% if stadium_home_club.stadium %}{{ stadium_home_club.stadium.name }}{% else %}Heimstadion{% endif %}</strong>
+                </header>
+                <p class="live-stage__status" role="status">Stadion wird geladen …</p>
+                <div class="live-stage__help">Ziehen: Kamera · Mausrad: Zoom · Doppelklick: zurücksetzen</div>
+            </section>
+            {% endif %}
             <div class="ov-grid">
 
                 <section class="card mod-momentum">
@@ -1005,6 +1019,7 @@
 </div>
 {% endif %}
 
-<script src="{% static 'game/js/match_report_v2.js' %}?v=5"></script>
+<script src="{% static 'game/js/match_report_v2.js' %}?v=6"></script>
+<script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=4"></script>
 {% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=1"></script>{% endif %}
 {% endblock %}

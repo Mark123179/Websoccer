@@ -565,6 +565,19 @@ class StadiumEditorTests(TestCase):
         )
         self.assertContains(response, 'stadium_editor/live_mode.js')
 
+    def test_match_report_mount_uses_report_home_club_scene_url(self):
+        template = (
+            Path(__file__).resolve().parents[1]
+            / 'game' / 'templates' / 'game' / 'match_report.html'
+        ).read_text(encoding='utf-8')
+        self.assertIn(
+            "{% url 'stadium_live_scene' report.home_club_id %}",
+            template,
+        )
+        self.assertNotIn('data-stadium-geometry', template)
+        self.assertIn('data-stadium-live-mode', template)
+        self.assertIn('stadium_editor/live_mode.js', template)
+
     def test_live_mode_renderer_uses_quads_and_height_not_stand_dimensions(self):
         source = (
             Path(__file__).resolve().parent

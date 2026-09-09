@@ -5531,7 +5531,12 @@ def club_match_report(request, club_id):
             simulated_match__report_data__isnull=False,
         )
         .exclude(simulated_match__report_data={})
-        .select_related('simulated_match', 'home_club', 'away_club')
+        .select_related(
+            'simulated_match',
+            'simulated_match__home_club__stadium',
+            'home_club',
+            'away_club',
+        )
         .order_by(F('scheduled_date').desc(nulls_last=True), '-id')
         .first()
     )
@@ -5660,7 +5665,8 @@ def club_match_report(request, club_id):
                 _comp_name = ''
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
     rc.update(_build_v2_report_extras(_report_data, rc))
-    rc.update(_build_stadium_capacity_extras(club))
+    _stadium_home_club = latest.home_club if latest else club
+    rc.update(_build_stadium_capacity_extras(_stadium_home_club))
     # ── Ticker-Anreicherung ───────────────────────────────────────────────
     if rc.get('combined_events') and latest:
         _mgr_side = None
@@ -5692,6 +5698,7 @@ def club_match_report(request, club_id):
         'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
         'referee':          _referee,
         'report_weather':   _weather_display_from_report(_report_data),
+        'stadium_home_club': _stadium_home_club,
     })
 
 
@@ -5699,7 +5706,14 @@ def match_report_by_id(request, sm_id):
     """Spielbericht direkt für einen SimulatedMatch (z. B. aus dem Spielplan)."""
     from .models import SimulatedMatch as SM
 
-    latest = get_object_or_404(SM.objects.select_related('home_club', 'away_club', 'referee'), pk=sm_id)
+    latest = get_object_or_404(
+        SM.objects.select_related(
+            'home_club__stadium',
+            'away_club',
+            'referee',
+        ),
+        pk=sm_id,
+    )
     club   = latest.home_club
 
     _PLAN_LABELS = {
@@ -5820,7 +5834,7 @@ def match_report_by_id(request, sm_id):
             _comp_name = ''
     _comp_logo = competition_logo_static_path(_comp_name) if _comp_name else ''
     rc.update(_build_v2_report_extras(_report_data, rc))
-    rc.update(_build_stadium_capacity_extras(club))
+    rc.update(_build_stadium_capacity_extras(latest.home_club))
     # ── Ticker-Anreicherung ───────────────────────────────────────────────
     if rc.get('combined_events') and latest:
         _m_club = current_manager_club(user=request.user)
@@ -5852,6 +5866,7 @@ def match_report_by_id(request, sm_id):
         'is_admin':         bool(getattr(request.user, 'is_superuser', False)),
         'referee':          getattr(latest, 'referee', None),
         'report_weather':   _weather_display_from_report(_report_data),
+        'stadium_home_club': latest.home_club,
     })
 
 
