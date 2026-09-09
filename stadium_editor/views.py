@@ -7,13 +7,14 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from game.models import Stadium
+from game.models import Club, Stadium
 from game.views import build_game_header, current_manager_club
 
 from .capacity import distribute_capacities
 from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
 from .contracts import geometry_blocks, visible_blocks
+from .live_scene import LiveSceneError, build_live_scene
 
 
 def _owned_stadium(request):
@@ -122,3 +123,27 @@ def stadium_editor_save_design(request):
     design.blickrichtung = sanitized['blickrichtung']
     design.save(update_fields=['design', 'blickrichtung', 'updated_at'])
     return JsonResponse({'ok': True, 'updated_at': design.updated_at.isoformat()})
+
+
+@require_GET
+def stadium_live_scene(request, club_id):
+    try:
+        club = Club.objects.select_related('stadium').get(pk=club_id)
+        stadium = club.stadium
+    except (Club.DoesNotExist, Stadium.DoesNotExist):
+        return JsonResponse({'error': 'Stadion nicht gefunden.'}, status=404)
+    try:
+        geometry = StadiumGeometry.objects.get(stadium=stadium)
+        design = StadiumDesign.objects.get(stadium=stadium)
+    except StadiumGeometry.DoesNotExist:
+        return JsonResponse({'error': 'Keine Stadion-Geometrie hinterlegt.'}, status=404)
+    except StadiumDesign.DoesNotExist:
+        return JsonResponse({'error': 'Kein Stadion-Design hinterlegt.'}, status=404)
+    try:
+        payload = build_live_scene(stadium, geometry.geometry, design.design)
+    except (LiveSceneError, ValueError) as exc:
+        return JsonResponse(
+            {'error': str(exc) or 'Ungültige Stadion-Scene.'},
+            status=409,
+        )
+    return JsonResponse(payload)

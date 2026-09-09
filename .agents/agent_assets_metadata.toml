@@ -354,3 +354,17 @@ mtime_ms = 1788932270673
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/cfe95bae-699d-408e-b02e-654f75d0deac/a95cb4a6-166e-452c-9316-6c4c5cdadff1"
 storage_version_token = "1788932473142500"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "lHkuFdz2f-UWj_UNS4twX"
+uri = "file://exports/stadion-live-scene.json"
+type = "unspecified"
+title = "Signal Iduna Park – Live Scene"
+description = "Kanonischer Live-Scene-Vertrag mit 52 Blöcken, pitch-zentrierten Quads, Höhen, Palette und RLE."
+logical_id = "c8705d33-37d9-431f-b181-2479e8424cd4"
+content_hash = "sha256:c7d54130da03f01a7f29ad3c1847a4ad0c61dac79d9ec90211e76a244552b565"
+size = 89569
+mtime_ms = 1788942919072
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/c8705d33-37d9-431f-b181-2479e8424cd4/83864b72-2fbb-4dfe-957e-a348539c7e89"
+storage_version_token = "1788943422021054"
+content_type = "application/octet-stream"

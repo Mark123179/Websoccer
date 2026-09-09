@@ -1,10 +1,13 @@
 import base64
 import io
+import json
+import math
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +18,7 @@ from game.models import Club, League, Stadium, StadiumExpansion
 from stadium_editor.capacity import distribute_capacities
 from stadium_editor.contracts import geometry_blocks, project_rle, spatial_project_design
 from stadium_editor.image_validation import InvalidImageData, normalize_design_payload, validate_and_quantize_data_url
+from stadium_editor.live_scene import LiveSceneError, build_live_scene
 from stadium_editor.models import StadiumDesign, StadiumGeometry
 from stadium_editor.seed import load_blueprints, seed_existing_stadiums
 from stadium_editor.services import refresh_geometry_after_capacity_change
@@ -331,6 +335,118 @@ class StadiumEditorTests(TestCase):
         self.client.force_login(self.user)
         result = self.client.get(reverse('stadium_editor_visible_design')).json()
         self.assertEqual([block['id'] for block in result['blocks']], [1, 2])
+
+    def _live_scene_records(self, *, quad=None, theta=0):
+        self.stadium.nord_seating = 4
+        self.stadium.save(update_fields=['nord_seating'])
+        raw = _geometry([{
+            **_block(0, rows=2, seats=2),
+            'quad': quad or [[-2, 4], [2, 4], [1, 2], [-1, 2]],
+        }])
+        raw['meta']['axisTheta'] = theta
+        self.geometry.geometry = raw
+        self.geometry.save(update_fields=['geometry'])
+        design = StadiumDesign.objects.create(
+            stadium=self.stadium,
+            blickrichtung='NORD',
+            design={
+                'version': 2,
+                'stadium': self.stadium.name,
+                'blickrichtung': 'NORD',
+                'palette': ['#000000', '#ffffff'],
+                'blocks': [{
+                    'id': 0, 'stand': 'NORD', 'tier': 'UNTER',
+                    'order': 0, 'rows': 2, 'seats': 2,
+                    'rle': [[1, 1], [3, 0]],
+                }],
+            },
+        )
+        return raw, design
+
+    def test_live_scene_normalizes_quad_and_uses_pitch_frame(self):
+        # Rotate a pitch-frame block into world coordinates; the scene must
+        # rotate it back and expose the canonical front-first point order.
+        pitch_quad = [[-2, 4], [2, 4], [1, 2], [-1, 2]]
+        world_quad = [[-point[1], point[0]] for point in pitch_quad]
+        geometry, design = self._live_scene_records(
+            quad=world_quad, theta=math.pi / 2)
+
+        result = build_live_scene(self.stadium, geometry, design.design)
+
+        self.assertEqual(result['schema'], 'websoccer.stadium-live-scene')
+        self.assertEqual(result['version'], 1)
+        self.assertNotIn('axisTheta', result)
+        self.assertEqual(
+            result['blocks'][0]['quad'],
+            [[-1.0, 2.0], [1.0, 2.0], [2.0, 4.0], [-2.0, 4.0]],
+        )
+        self.assertEqual(result['pitch'], {'length': 105.0, 'width': 68.0})
+        self.assertEqual(result['roof'], {'mode': 'procedural-ring'})
+
+    def test_live_scene_reverses_each_rle_row_when_quad_requires_it(self):
+        geometry, design = self._live_scene_records(
+            quad=[[2, 4], [-2, 4], [-1, 2], [1, 2]])
+        design.design['blocks'][0]['rle'] = [
+            [1, 0], [1, 1], [1, 1], [1, 0],
+        ]
+        result = build_live_scene(self.stadium, geometry, design.design)
+        self.assertEqual(
+            result['blocks'][0]['quad'],
+            [[-1.0, 2.0], [1.0, 2.0], [2.0, 4.0], [-2.0, 4.0]],
+        )
+        self.assertEqual(
+            result['blocks'][0]['rle'],
+            [[1, 1], [2, 0], [1, 1]],
+        )
+
+    def test_live_scene_endpoint_is_public_and_returns_all_blocks(self):
+        self._live_scene_records()
+        response = self.client.get(
+            reverse('stadium_live_scene', args=[self.club.pk]))
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        self.assertEqual(result['club']['id'], self.club.pk)
+        self.assertEqual([block['id'] for block in result['blocks']], [0])
+
+    def test_live_scene_endpoint_reports_missing_design_and_bad_geometry(self):
+        url = reverse('stadium_live_scene', args=[self.club.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+        self.assertIn('Design', response.json()['error'])
+
+        _geometry_value, _design = self._live_scene_records(
+            quad=[[0, 2], [0, 2], [1, 1], [-1, 1]])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 409)
+        self.assertIn('doppelte Punkte', response.json()['error'])
+
+    def test_live_scene_rejects_wrong_rle_length_and_browser_dimensions(self):
+        geometry, design = self._live_scene_records()
+        design.design['blocks'][0]['rle'] = [[3, 0]]
+        with self.assertRaisesRegex(LiveSceneError, 'exakt 4'):
+            build_live_scene(self.stadium, geometry, design.design)
+
+        design.design['blocks'][0]['rows'] = 999
+        with self.assertRaisesRegex(LiveSceneError, 'Ausbauzustand'):
+            build_live_scene(self.stadium, geometry, design.design)
+
+    def test_live_scene_command_matches_the_canonical_serializer(self):
+        geometry, design = self._live_scene_records()
+        output = Path(self.id().replace('.', '_') + '.json')
+        try:
+            call_command(
+                'export_stadium_live_scene',
+                club_id=self.club.pk,
+                output=str(output),
+                verbosity=0,
+            )
+            exported = json.loads(output.read_text(encoding='utf-8'))
+        finally:
+            output.unlink(missing_ok=True)
+        self.assertEqual(
+            exported,
+            build_live_scene(self.stadium, geometry, design.design),
+        )
 
     def test_oversized_data_url_is_rejected(self):
         image = Image.new('RGB', (481, 1), '#336699')

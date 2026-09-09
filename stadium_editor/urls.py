@@ -6,6 +6,7 @@ from .views import (
     stadium_editor_visible_design,
     stadium_editor_geometry,
     stadium_editor_save_design,
+    stadium_live_scene,
 )
 
 
@@ -15,4 +16,5 @@ urlpatterns = [
     path('management/stadion/editor/design/', stadium_editor_design, name='stadium_editor_design'),
     path('management/stadion/editor/design/visible/', stadium_editor_visible_design, name='stadium_editor_visible_design'),
     path('management/stadion/editor/design/save/', stadium_editor_save_design, name='stadium_editor_save_design'),
+    path('stadion/<int:club_id>/live-scene/', stadium_live_scene, name='stadium_live_scene'),
 ]
