@@ -20,7 +20,12 @@ from stadium_editor.contracts import geometry_blocks, project_rle, spatial_proje
 from stadium_editor.image_validation import InvalidImageData, normalize_design_payload, validate_and_quantize_data_url
 from stadium_editor.live_scene import LiveSceneError, build_live_scene
 from stadium_editor.models import StadiumDesign, StadiumGeometry
-from stadium_editor.seed import load_blueprints, seed_existing_stadiums
+from stadium_editor.seed import (
+    BVB_NORD_STANDING_BLOCK_IDS,
+    load_blueprints,
+    normalise_block_types,
+    seed_existing_stadiums,
+)
 from stadium_editor.services import refresh_geometry_after_capacity_change
 
 
@@ -177,6 +182,91 @@ class StadiumEditorTests(TestCase):
         self.assertEqual(blueprint['roofs'][0]['id'], 'roof-0')
         self.assertEqual(len({roof['id'] for roof in blueprint['roofs']}),
                          len(blueprint['roofs']))
+
+    def test_bvb_nord_standing_capacity_uses_all_lower_tier_blocks(self):
+        self.club.name = 'Borussia Dortmund'
+        self.club.save(update_fields=['name'])
+        self.stadium.nord_standing = 14_239
+        self.stadium.nord_seating = 8_829
+        self.stadium.save(update_fields=['nord_standing', 'nord_seating'])
+
+        raw = normalise_block_types(
+            self.stadium,
+            load_blueprints()['borussiadortmund'],
+        )
+        original_ids = [block['id'] for block in raw['blocks']]
+        distributed = distribute_capacities(self.stadium, raw)
+        north = [block for block in distributed['blocks']
+                 if block['stand'] == 'NORD']
+        standing = [block for block in north if block['type'] == 'STEH']
+        seating = [block for block in north if block['type'] == 'SITZ']
+
+        self.assertEqual(
+            {block['id'] for block in standing},
+            BVB_NORD_STANDING_BLOCK_IDS,
+        )
+        self.assertTrue(all(block['tier'] == 'UNTER' for block in standing))
+        self.assertTrue(all(block['tier'] == 'OBER' for block in seating))
+        self.assertEqual(sum(block['capacity'] for block in standing), 14_239)
+        self.assertEqual(sum(block['capacity'] for block in seating), 8_829)
+        self.assertLessEqual(max(block['rows'] for block in standing), 56)
+        self.assertEqual([block['id'] for block in distributed['blocks']], original_ids)
+        self.assertEqual(distributed['capacity_total'], self.stadium.capacity_total)
+
+    def test_bvb_nord_grid_projects_existing_design_into_matching_live_scene(self):
+        self.club.name = 'Borussia Dortmund'
+        self.club.save(update_fields=['name'])
+        self.stadium.nord_standing = 14_239
+        self.stadium.nord_seating = 8_829
+        self.stadium.save(update_fields=['nord_standing', 'nord_seating'])
+
+        new_raw = normalise_block_types(
+            self.stadium,
+            load_blueprints()['borussiadortmund'],
+        )
+        old_raw = json.loads(json.dumps(new_raw))
+        for block in old_raw['blocks']:
+            if block['id'] == 10:
+                block['type'] = 'STEH'
+            elif block['id'] in BVB_NORD_STANDING_BLOCK_IDS:
+                block['type'] = 'SITZ'
+        old_effective = distribute_capacities(self.stadium, old_raw)
+        new_effective = distribute_capacities(self.stadium, new_raw)
+        old_design = {
+            'version': 2,
+            'stadium': self.stadium.name,
+            'blickrichtung': 'NORD',
+            'palette': ['#111111', '#f4d20b'],
+            'blocks': [{
+                **{key: block[key] for key in
+                   ('id', 'stand', 'tier', 'order', 'rows', 'seats')},
+                'rle': [[block['rows'] * block['seats'], block['id'] % 2]],
+            } for block in geometry_blocks(old_effective)],
+        }
+
+        projected = spatial_project_design(
+            old_design,
+            old_effective,
+            new_effective,
+            self.stadium.name,
+        )
+        scene = build_live_scene(self.stadium, new_raw, projected)
+        editor_shapes = {
+            block['id']: (block['rows'], block['seats'])
+            for block in geometry_blocks(new_effective)
+        }
+        live_shapes = {
+            block['id']: (block['rows'], block['seats'])
+            for block in scene['blocks']
+        }
+
+        self.assertEqual(live_shapes, editor_shapes)
+        self.assertEqual(set(live_shapes), set(range(52)))
+        for block in projected['blocks']:
+            self.assertEqual(
+                sum(run[0] for run in block['rle']),
+                block['rows'] * block['seats'],
+            )
 
     def test_missing_blueprint_has_a_clear_non_404_page(self):
         self.geometry.delete()

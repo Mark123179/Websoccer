@@ -10,6 +10,7 @@ from pathlib import Path
 
 BUNDLED_SOURCE = Path(__file__).with_name('blueprints') / 'stadium_data_all.js.gz'
 BVB_V2_SOURCE = Path(__file__).with_name('blueprints') / 'bvb_blocks_v2.json'
+BVB_NORD_STANDING_BLOCK_IDS = frozenset(range(37, 43))
 
 
 def _key(value):
@@ -117,6 +118,13 @@ def load_blueprints(source=BUNDLED_SOURCE):
     # 51 legacy shapes, so this checked-in topology supplies stable identities.
     if Path(source) == BUNDLED_SOURCE:
         exact = json.loads(BVB_V2_SOURCE.read_text(encoding='utf-8'))
+        # The economic model has one Nord standing bucket, but the visual
+        # standing terrace spans all six lower-tier Nord blocks.  Keeping this
+        # mapping beside the canonical topology prevents the whole bucket from
+        # being assigned to the first upper-tier block by generic normalisation.
+        for block in exact.get('blocks', []):
+            if block.get('id') in BVB_NORD_STANDING_BLOCK_IDS:
+                block['type'] = 'STEH'
         bvb = deepcopy(blueprints.get(_key('Borussia Dortmund'), {}))
         bvb.update({key: deepcopy(value) for key, value in exact.items()
                     if key in ('meta', 'outline', 'blocks')})
