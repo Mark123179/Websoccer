@@ -97,6 +97,32 @@ button{font-family:inherit}
 .linklike svg{width:13px;height:13px}
 
 /* ── Overview grid ────────────────────────────────────── */
+.match-stadium{
+  position:relative;height:clamp(260px,36vw,460px);margin-bottom:14px;overflow:hidden;
+  border:1px solid var(--line);border-radius:var(--radius);background:
+    radial-gradient(ellipse at 50% 72%,rgba(19,74,87,.42),transparent 48%),
+    linear-gradient(#07111a,#020508);box-shadow:var(--shadow)
+}
+.match-stadium canvas{display:block;width:100%;height:100%;cursor:grab}
+.match-stadium canvas:active{cursor:grabbing}
+.match-stadium .live-stage__header{
+  position:absolute;left:24px;top:20px;display:flex;flex-direction:column;
+  padding-left:12px;border-left:2px solid var(--cyan);
+  text-transform:uppercase;letter-spacing:.12em;pointer-events:none
+}
+.match-stadium .live-stage__header span{font-size:10px;color:var(--muted)}
+.match-stadium .live-stage__header strong{font-size:15px;color:var(--text)}
+.match-stadium .live-stage__status{
+  position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);
+  margin:0;padding:10px 14px;border:1px solid rgba(34,230,255,.28);
+  border-radius:4px;background:rgba(3,7,12,.84);color:var(--muted)
+}
+.match-stadium .live-stage__status[hidden]{display:none}
+.match-stadium .live-stage__status.is-error{color:var(--red);border-color:rgba(255,85,112,.45)}
+.match-stadium .live-stage__help{
+  position:absolute;right:18px;bottom:14px;color:var(--faint);
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none
+}
 .ov-grid{display:grid;gap:14px;align-items:stretch;grid-template-columns:1.5fr 1fr 1fr;grid-template-areas:"momentum keystats story" "ticker lineups zones"}
 .mod-momentum{grid-area:momentum;display:flex;flex-direction:column}
 .mod-story{grid-area:story}
@@ -108,6 +134,12 @@ button{font-family:inherit}
   .ov-grid{grid-template-columns:1fr 1fr;grid-template-areas:"momentum momentum" "keystats story" "ticker lineups" "zones zones"}
   .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
   .hero-team.home{justify-content:center}
+  .match-stadium{height:320px}
+}
+@media(max-width:600px){
+  .match-stadium{height:250px}
+  .match-stadium .live-stage__header{left:16px;top:14px}
+  .match-stadium .live-stage__help{display:none}
 }
 
 /* ── Momentum chart ──────────────────────────────────── */
