@@ -1,0 +1,24 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ stadium.name }} – 2D-Livemodus</title>
+  <link rel="stylesheet" href="{% static 'stadium_editor/live_mode.css' %}?v=3">
+</head>
+<body>
+  <main class="live-stage"
+        data-stadium-live-mode
+        data-scene-url="{{ scene_url }}">
+    <canvas aria-label="2D-Ansicht von {{ stadium.name }}"></canvas>
+    <header class="live-stage__header">
+      <span>{{ club.name }}</span>
+      <strong>{{ stadium.name }}</strong>
+    </header>
+    <p class="live-stage__status" role="status">Stadion wird geladen …</p>
+    <div class="live-stage__help">Ziehen: Kamera · Mausrad: Zoom · Doppelklick: zurücksetzen</div>
+  </main>
+  <script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=3"></script>
+</body>
+</html>

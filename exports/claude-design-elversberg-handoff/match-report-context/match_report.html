@@ -1,0 +1,1025 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Spielbericht{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=21">
+    {% if is_admin %}
+    <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
+    {% endif %}
+    <link rel="stylesheet" href="{% static 'game/css/referee_popup.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<section class="spb-report">
+<div class="report">
+
+    {% if report %}
+
+    {# ── Hero-Header ──────────────────────────────────────────────────── #}
+    <section class="hero">
+        <div class="hero-info">
+            <div class="hero-comp">
+                {% if competition_logo %}
+                    <img src="{{ competition_logo }}" alt="{{ competition_name }}">
+                {% endif %}
+                <div>
+                    <b>{{ competition_name|default:"Freundschaftsspiel"|upper }}</b>
+                    <span>{{ latest_match.match_type|default:"freundschaft"|capfirst }}</span>
+                </div>
+            </div>
+            <div class="hero-meta">
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"></rect><path d="M3 9h18M8 3v3M16 3v3"></path></svg>
+                    <span>{{ latest_match.simulated_at|date:"D, d. M." }} &middot; <strong>{{ latest_match.simulated_at|date:"H:i" }}</strong></span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>
+                    <span>{% if stadium_home_club.stadium %}{{ stadium_home_club.stadium.name }}, {{ stadium_home_club.stadium.city }}{% else %}Stadion nicht erfasst{% endif %}</span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>
+                    <span>Wetter: {% if report_weather %}{% include 'game/partials/weather_icon.html' with wx=report_weather show_temp=True %} {{ report_weather.label }}{% else %}&ndash;{% endif %}</span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="14" r="4.6"></circle><path d="M9.5 9.4h5.8l5.2-1.6v3.5l-6.2 1.9"></path></svg>
+                    <span>Schiedsrichter:
+                    {% if referee %}
+                        {% if referee.flag_url %}<img src="{{ referee.flag_url }}" alt="{{ referee.nationality }}" class="ref-flag" style="vertical-align:middle;margin:0 3px 1px 4px;">{% endif %}<button class="ref-trigger" type="button">{{ referee.name }}</button>
+                    {% else %}&ndash;{% endif %}</span>
+                </div>
+                <div class="m">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Kapazit&auml;t: {% if rc.stadium_capacity %}{{ rc.stadium_capacity }}{% else %}&ndash;{% endif %} &middot; Auslastung: {% if rc.attendance_pct %}{{ rc.attendance_pct }}%{% else %}&ndash;{% endif %}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-team home">
+            <div class="nm">
+                <b>{{ report.home_club_name }}</b>
+                <small>{{ report.home_formation }}</small>
+            </div>
+            {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
+            {% if report.home_club_crest %}
+                <img class="hero-crest home" src="{{ report.home_club_crest }}" alt="{{ report.home_club_name }}">
+            {% else %}
+                <span class="hero-crest-fallback">{{ report.home_club_short }}</span>
+            {% endif %}
+            {% if report.home_club_id %}</a>{% endif %}
+        </div>
+
+        <div class="hero-score">
+            <div class="hs-nums"><b>{{ report.home_goals }}</b><i>:</i><b>{{ report.away_goals }}</b></div>
+            {% if rc.ht_score %}
+            <div class="hs-ht">HZ {{ rc.ht_score }}</div>
+            {% endif %}
+        </div>
+
+        <div class="hero-team away">
+            {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
+            {% if report.away_club_crest %}
+                <img class="hero-crest away" src="{{ report.away_club_crest }}" alt="{{ report.away_club_name }}">
+            {% else %}
+                <span class="hero-crest-fallback">{{ report.away_club_short }}</span>
+            {% endif %}
+            {% if report.away_club_id %}</a>{% endif %}
+            <div class="nm">
+                <b>{{ report.away_club_name }}</b>
+                <small>{{ report.away_formation }}</small>
+            </div>
+        </div>
+    </section>
+
+    {# ── Tabs ─────────────────────────────────────────────────────────── #}
+    <nav class="tabs" id="tabbar">
+        <button class="tab active" data-tab="uebersicht">&Uuml;bersicht</button>
+        <button class="tab" data-tab="ticker">Ticker</button>
+        <button class="tab" data-tab="statistik">Statistik</button>
+        <button class="tab" data-tab="aufstellungen">Aufstellungen</button>
+        <button class="tab" data-tab="spieler">Spieler</button>
+        {% if is_admin %}
+        <button class="tab" data-tab="admin-bericht">Admin-Bericht</button>
+        {% endif %}
+    </nav>
+
+    <div id="panels">
+
+        {# ══════════════════════════════ ÜBERSICHT ══════════════════════ #}
+        <section class="panel" data-tab="uebersicht">
+            {% if report.home_club_id %}
+            <section class="match-stadium"
+                     data-stadium-live-mode
+                     data-scene-url="{% url 'stadium_live_scene' report.home_club_id %}"
+                     aria-label="Stadion von {{ report.home_club_name }}">
+                <canvas aria-label="2D-Ansicht des Heimstadions"></canvas>
+                <header class="live-stage__header">
+                    <span>{{ report.home_club_name }}</span>
+                    <strong>{% if stadium_home_club.stadium %}{{ stadium_home_club.stadium.name }}{% else %}Heimstadion{% endif %}</strong>
+                </header>
+                <p class="live-stage__status" role="status">Stadion wird geladen …</p>
+                <div class="live-stage__help">Ziehen: Kamera · Mausrad: Zoom · Doppelklick: zurücksetzen</div>
+            </section>
+            {% endif %}
+            <div class="ov-grid">
+
+                <section class="card mod-momentum">
+                    <div class="card-title ttl-i">Match Momentum</div>
+                    <div class="momentum-box spb-momentum-box" id="momentumBox"></div>
+                </section>
+
+                <section class="card mod-keystats">
+                    <p class="card-title">Key Stats</p>
+                    <div class="stat-list">
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_possession }}%</span>
+                            <div class="mid"><div class="lab">Ballbesitz</div>
+                                <div class="stat-bar"><i class="h" style="width:{{ report.match_stats.home_possession }}%"></i><i class="a" style="width:{{ report.match_stats.away_possession }}%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_possession }}%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_shots }}</span>
+                            <div class="mid"><div class="lab">Sch&uuml;sse</div>
+                                <div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_shots }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_shots_on_target }}</span>
+                            <div class="mid"><div class="lab">Auf Tor</div>
+                                <div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_shots_on_target }}</span>
+                        </div>
+                        {% if rc.home_xg %}
+                        <div class="stat-row">
+                            <span class="hv">{{ rc.home_xg }}</span>
+                            <div class="mid"><div class="lab">xG</div>
+                                <div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:0 }}%"></i></div>
+                            </div>
+                            <span class="av">{{ rc.away_xg }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_corners }}</span>
+                            <div class="mid"><div class="lab">Ecken</div>
+                                <div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_corners }}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="hv">{{ report.match_stats.home_fouls }}</span>
+                            <div class="mid"><div class="lab">Fouls</div>
+                                <div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div>
+                            </div>
+                            <span class="av">{{ report.match_stats.away_fouls }}</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card mod-story">
+                    <p class="card-title">Match Story</p>
+                    <p style="margin:0;color:var(--muted);font-size:13.5px;line-height:1.62">{{ rc.story }}</p>
+                </section>
+
+                <section class="card mod-ticker">
+                    <div class="card-head"><p class="card-title">Live-Ticker</p><button class="linklike" id="toTicker">Alle Ereignisse</button></div>
+                    <div class="ov-ticker-list" id="ovTickerList">
+                        {% for evt in rc.combined_events|slice:":8" %}
+                            {% include 'game/partials/_match_report_ev_row.html' with evt=evt report=report %}
+                        {% empty %}
+                            <p style="color:var(--muted);font-size:13px;">Keine nennenswerten Ereignisse.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="card mod-lineups">
+                    <p class="card-title">Aufstellungen</p>
+                    {% if rc.home_pitch_players or rc.away_pitch_players %}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+                                <span class="legend-team">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.home_club_short }}{% endif %}</span>
+                                <span style="font-size:11px;font-weight:800;color:var(--muted);">{{ report.home_formation }}</span>
+                            </div>
+                            <div class="pitch mini">
+                                <div class="pm line"></div><div class="pm circle"></div><div class="pm spot"></div>
+                                <div class="pm box top"></div><div class="pm six top"></div>
+                                <div class="pm box bot"></div><div class="pm six bot"></div>
+                                {% for p in rc.home_pitch_players %}
+                                <span class="pdot dot-home" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%;width:21px;height:21px;font-size:9.5px;">{{ p.shirt_number|default:"" }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+                                <span class="legend-team">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="" style="width:16px;height:16px;object-fit:contain;">{% endif %}{{ report.away_club_short }}{% endif %}</span>
+                                <span style="font-size:11px;font-weight:800;color:var(--muted);">{{ report.away_formation }}</span>
+                            </div>
+                            <div class="pitch mini">
+                                <div class="pm line"></div><div class="pm circle"></div><div class="pm spot"></div>
+                                <div class="pm box top"></div><div class="pm six top"></div>
+                                <div class="pm box bot"></div><div class="pm six bot"></div>
+                                {% for p in rc.away_pitch_players %}
+                                <span class="pdot dot-away" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%;width:21px;height:21px;font-size:9.5px;">{{ p.shirt_number|default:"" }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color:var(--muted);font-size:12px;margin:0;">Keine Aufstellungsdaten.</p>
+                    {% endif %}
+                </section>
+
+                <section class="card mod-zones">
+                    <p class="card-title">Angriffszonen</p>
+                    {% if rc.home_att_total %}
+                    <div class="zone-team">
+                        <div class="zt-head">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_short }}</a>{% else %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_short }}{% endif %}</div>
+                        <div class="zone-grid">
+                            <div class="zone {% if rc.home_att_max_zone == 'l' %}hi{% endif %}"><div class="p">{{ rc.home_att_l_pct }}%</div><div class="l">Links</div></div>
+                            <div class="zone {% if rc.home_att_max_zone == 'c' %}hi{% endif %}"><div class="p">{{ rc.home_att_c_pct }}%</div><div class="l">Zentrum</div></div>
+                            <div class="zone {% if rc.home_att_max_zone == 'r' %}hi{% endif %}"><div class="p">{{ rc.home_att_r_pct }}%</div><div class="l">Rechts</div></div>
+                        </div>
+                    </div>
+                    <div class="zone-team away">
+                        <div class="zt-head">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_short }}</a>{% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_short }}{% endif %}</div>
+                        <div class="zone-grid">
+                            <div class="zone {% if rc.away_att_max_zone == 'l' %}hi{% endif %}"><div class="p">{{ rc.away_att_l_pct }}%</div><div class="l">Links</div></div>
+                            <div class="zone {% if rc.away_att_max_zone == 'c' %}hi{% endif %}"><div class="p">{{ rc.away_att_c_pct }}%</div><div class="l">Zentrum</div></div>
+                            <div class="zone {% if rc.away_att_max_zone == 'r' %}hi{% endif %}"><div class="p">{{ rc.away_att_r_pct }}%</div><div class="l">Rechts</div></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color:var(--muted);font-size:12px;">Keine Zonendaten.</p>
+                    {% endif %}
+                </section>
+
+            </div>
+        </section>
+
+        {# ══════════════════════════════ TICKER ══════════════════════════ #}
+        <section class="panel" data-tab="ticker" hidden>
+<!-- ── SVG-Sprite ─────────────────────────────────────────────────────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ball" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="M12 8.4l3.1 2.3-1.2 3.6h-3.8L8.9 10.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 3.5v4.9M15.1 10.7l4.7-1.9M13.9 14.3l3.4 4.2M10.1 14.3l-3.4 4.2M8.9 10.7L4.2 8.8" stroke="currentColor" stroke-width="1.3"/></symbol>
+  <symbol id="i-ball-solid" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.9"/><path d="M12 8.4l3.1 2.3-1.2 3.6h-3.8L8.9 10.7z" fill="currentColor"/></symbol>
+  <symbol id="i-karte" viewBox="0 0 24 24" fill="none"><rect x="8" y="4.5" width="8.5" height="13.5" rx="1.6" transform="rotate(9 12 12)" fill="currentColor"/></symbol>
+  <symbol id="i-wechsel" viewBox="0 0 24 24" fill="none"><g class="arrow-in"><path d="M5 8.2h10.5" stroke="#30f29c" stroke-width="2.2" stroke-linecap="round"/><path d="M12.7 5.4l2.8 2.8-2.8 2.8" stroke="#30f29c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g><g class="arrow-out"><path d="M19 15.8H8.5" stroke="#ff5570" stroke-width="2.2" stroke-linecap="round"/><path d="M11.3 13l-2.8 2.8 2.8 2.8" stroke="#ff5570" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g></symbol>
+  <symbol id="i-kreuz" viewBox="0 0 24 24" fill="none"><path d="M10.2 4.5h3.6v5.7h5.7v3.6h-5.7v5.7h-3.6v-5.7H4.5v-3.6h5.7z" fill="#ff5570"/></symbol>
+  <symbol id="i-ecke" viewBox="0 0 24 24" fill="none"><path d="M6.5 20.5v-16" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M6.5 4.5l9 2.7-9 2.7z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 20.5h8.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-pfeife" viewBox="0 0 24 24" fill="none"><circle cx="9.5" cy="14" r="4.6" stroke="currentColor" stroke-width="1.9"/><path d="M9.5 9.4h5.8l5.2-1.6v3.5l-6.2 1.9" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-alu" viewBox="0 0 24 24" fill="none"><path d="M4 19.5V6.5h16v13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.5 13l5-4M14.5 13l-5-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+  <symbol id="i-var" viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.9"/><path d="M10.5 8.3l4 2.2-4 2.2z" fill="currentColor"/><path d="M9.5 20h5M12 16v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-elfmeter" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="4.2" stroke="currentColor" stroke-width="1.9"/><path d="M4.5 20c2.5-3.4 12.5-3.4 15 0" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></symbol>
+  <symbol id="i-abseits" viewBox="0 0 24 24" fill="none"><path d="M7 21V3.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M7 4.5h10l-2.5 3 2.5 3H7" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24" fill="none"><path d="M9 5v14M15 5v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+</svg>
+
+<div class="tk-wrap" id="ticker" data-flt="alle">
+
+  <!-- Filter-Chips -->
+  <div class="tk-chips">
+    <div class="tk-chip active" data-flt="alle">Alle</div>
+    <div class="tk-chip" data-flt="tore">Tore</div>
+    <div class="tk-chip" data-flt="karten">Karten</div>
+    <div class="tk-chip" data-flt="wechsel">Wechsel</div>
+    <span class="tk-context">Spielbericht &middot; Analyse nach Abpfiff</span>
+  </div>
+
+  <!-- Spielverlauf-Leiste -->
+  {% if rc.ticker_verlauf_markers %}
+  <div class="tk-verlauf">
+    <div class="tk-verlauf-head">
+      <span class="tk-label">Spielverlauf</span>
+      <div class="tk-legend">
+        <span><svg width="12" height="12" style="color:var(--cyan)"><use href="#i-ball-solid"/></svg>Tor Gegner</span>
+        <span><svg width="12" height="12" style="color:var(--green)"><use href="#i-ball-solid"/></svg>Dein Tor</span>
+        <span><span class="sw-gelb"></span>Gelb</span>
+        <span><span class="sw-rot"></span>Rot</span>
+        <span><svg width="12" height="12"><use href="#i-wechsel"/></svg>Wechsel</span>
+        <span><span class="sw-verletzung"></span>Verletzung</span>
+      </div>
+    </div>
+    <div class="tk-verlauf-body">
+      {% if rc.ticker_manager_side == 'home' %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
+      {% elif rc.ticker_manager_side == 'away' %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest top" src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest bottom" src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+      {% else %}
+        {% if report.home_club_crest %}<img class="tk-lane-crest top" src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+        {% if report.away_club_crest %}<img class="tk-lane-crest bottom" src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
+      {% endif %}
+      <div class="tk-verlauf-track">
+        <div class="tk-baseline"></div>
+        <div class="tk-hz-tick"></div><span class="tk-hz-label">HZ</span>
+        <span class="tk-t-start">1'</span><span class="tk-t-end">90+'</span>
+        {% for m in rc.ticker_verlauf_markers %}
+        <a class="tk-marker {{ m.marker_class }} {{ m.lane }}{% if m.inner %} inner{% endif %}"
+           style="left:{{ m.left_pct }}%"
+           {% if m.event_id %}href="#{{ m.event_id }}"{% endif %}
+           title="{{ m.title }}">
+          {% if m.has_icon and m.icon %}<svg width="{% if m.marker_class == 'm-wechsel' %}10{% else %}11{% endif %}" height="{% if m.marker_class == 'm-wechsel' %}10{% else %}11{% endif %}"><use href="#{{ m.icon }}"/></svg>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Timeline -->
+  <div class="tk-timeline">
+    <div class="tk-spine"></div>
+    <div class="tk-events">
+
+      {% for evt in rc.combined_events %}
+
+      {% if evt.type == 'divider_anpfiff' %}
+      <div class="tk-row" style="--d:0.1s">
+        <div class="tk-node tk-node-big"><svg width="12" height="12"><use href="#i-pfeife"/></svg></div>
+        <div class="tk-divider-card">
+          <span class="tk-dlabel">Anpfiff</span><span class="tk-dmin">1'</span>
+          <div class="tk-dline"></div>
+          <span class="tk-dinfo">
+            {% if rc.ticker_manager_side == 'home' %}
+              {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+              {{ report.home_club_name }}<span class="tk-own-tag">Dein Verein</span>
+              <span class="tk-dvs">vs.</span>
+              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
+            {% elif rc.ticker_manager_side == 'away' %}
+              {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+              {{ report.home_club_name }}<span class="tk-dvs">vs.</span>
+              {{ report.away_club_name }}<span class="tk-own-tag">Dein Verein</span>{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
+            {% else %}
+              {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+              {{ report.home_club_name }}<span class="tk-dvs">vs.</span>
+              {{ report.away_club_name }}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% elif evt.type == 'divider_halbzeit' %}
+      <div class="tk-row" style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-node-big"><svg width="11" height="11"><use href="#i-pause"/></svg></div>
+        <div class="tk-divider-card">
+          <span class="tk-dlabel">Halbzeit</span><span class="tk-dmin">{{ evt.minute }}'</span>
+          <div class="tk-dline"></div>
+          <span class="tk-score-pill">
+            {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+            <b>{{ evt.score_h }}:{{ evt.score_a }}</b>
+            {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% elif evt.type == 'divider_abpfiff' %}
+      <div class="tk-row" style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-node-big tk-final"><svg width="12" height="12"><use href="#i-pfeife"/></svg></div>
+        <div class="tk-divider-card tk-final">
+          <span class="tk-dlabel">Abpfiff</span><span class="tk-dmin">{{ evt.minute }}'</span>
+          <div class="tk-dline"></div>
+          <span class="tk-dfaint">Endstand</span>
+          <span class="tk-score-pill">
+            {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="{{ report.home_club_short }}">{% endif %}
+            <b>{{ evt.score_h }}:{{ evt.score_a }}</b>
+            {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="{{ report.away_club_short }}">{% endif %}
+          </span>
+        </div>
+      </div>
+
+      {% elif evt.type == 'goal' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-tor{% if evt.ticker_own %} own{% endif %}"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-node-goal"><svg width="16" height="16"><use href="#i-ball"/></svg></div>
+        <div class="tk-goal-card">
+          <div class="tk-sweep"></div>
+          <div class="tk-goal-head">
+            <span class="tk-min">{{ evt.minute }}'</span>
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{% endif %}
+            <span class="tk-name">{{ evt.scorer_name }}</span>
+            <span class="tk-badge tk-b-tor">TOR</span>
+            {% if evt.goal_label %}<span class="tk-badge tk-b-extra">{{ evt.goal_label|upper }}</span>{% endif %}
+            <span class="tk-score">{{ evt.score_h }}:{{ evt.score_a }}</span>
+          </div>
+          <p>{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% elif evt.type == 'card' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-karte{% if evt.card_type == 'rot' or evt.card_type == 'gelbrot' %} tk-flash-r{% else %} tk-flash-y{% endif %}"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        {% if evt.card_type == 'rot' or evt.card_type == 'gelbrot' %}
+        <div class="tk-node tk-c-red-glow"><svg width="10" height="10" class="tk-anim-card" style="color:var(--red)"><use href="#i-karte"/></svg></div>
+        {% else %}
+        <div class="tk-node tk-c-yellow"><svg width="10" height="10" class="tk-anim-card" style="color:var(--yellow)"><use href="#i-karte"/></svg></div>
+        {% endif %}
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          <p>{% if evt.card_type == 'rot' %}<span class="tk-tag tk-t-rot">ROTE KARTE</span>{% elif evt.card_type == 'gelbrot' %}<span class="tk-tag tk-t-rot">GELB-ROT</span>{% else %}<span class="tk-tag tk-t-gelb">GELBE KARTE</span>{% endif %} &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% elif evt.type == 'sub' or evt.type == 'gk_red_off' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-wechsel"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-c-green"><svg width="11" height="11"><use href="#i-wechsel"/></svg></div>
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          <p><span class="tk-tag tk-t-wechsel">WECHSEL</span> &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% elif evt.type == 'injury' %}
+      {% if evt.group_role == 'start' %}<div class="tk-group"><div class="tk-group-link"></div>{% endif %}
+      <div class="tk-row tk-ev tk-k-wechsel"
+           {% if evt.ticker_id %}id="{{ evt.ticker_id }}"{% endif %}
+           style="--d:{{ evt.ticker_delay }}">
+        <div class="tk-node tk-c-red"><svg width="9" height="9" class="tk-anim-injury"><use href="#i-kreuz"/></svg></div>
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          <p><span class="tk-tag tk-t-verletzung">VERLETZUNG</span> &mdash; {% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% if evt.group_role == 'end' %}</div>{% endif %}
+
+      {% else %}
+      {# Narrative: Ecke, Alu, Chance, Parade, Foul, Spielfluss, VAR, Elfmeter-Pfiff, Abseits #}
+      <div class="tk-row tk-ev" style="--d:{{ evt.ticker_delay|default:'0.3s' }}">
+        {% if evt.type == 'alu' or evt.type == 'near_miss' or evt.type == 'fk_cross_miss' or evt.type == 'fk_direct_miss' %}
+        <div class="tk-node tk-c-neutral"><svg width="11" height="11" style="color:rgba(244,251,255,.7)"><use href="#i-alu"/></svg></div>
+        {% elif evt.type == 'corner_miss' %}
+        <div class="tk-node tk-c-neutral"><svg width="11" height="11" style="color:rgba(244,251,255,.7)"><use href="#i-ecke"/></svg></div>
+        {% elif evt.type == 'var' %}
+        <div class="tk-node"><svg width="11" height="11" style="color:var(--cyan)"><use href="#i-var"/></svg></div>
+        {% elif evt.type == 'penalty' or evt.type == 'elfmeter_pfiff' %}
+        <div class="tk-node"><svg width="11" height="11" style="color:var(--cyan)"><use href="#i-elfmeter"/></svg></div>
+        {% elif evt.type == 'offside' %}
+        <div class="tk-node tk-c-yellow"><svg width="11" height="11" style="color:var(--yellow)"><use href="#i-abseits"/></svg></div>
+        {% else %}
+        <div class="tk-node tk-c-neutral"><svg width="8" height="8" style="color:rgba(244,251,255,.45)"><use href="#i-ball-solid"/></svg></div>
+        {% endif %}
+        <div class="tk-ev-line">
+          <span class="tk-min">{{ evt.minute }}'</span>
+          {% if evt.team == 'home' or evt.team == 'away' %}
+          <span class="tk-teamchip {% if evt.ticker_own %}own{% else %}opp{% endif %}">
+            {% if evt.team == 'home' %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}<span>{{ report.home_club_short }}</span>
+            {% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}<span>{{ report.away_club_short }}</span>{% endif %}
+          </span>
+          {% endif %}
+          <p>{% if evt.type == 'corner_miss' %}<span class="tk-tag tk-t-ecke">ECKE</span> &mdash; {% elif evt.type == 'fk_direct_miss' or evt.type == 'fk_cross_miss' %}<span class="tk-tag tk-t-ecke">FREISTOSS</span> &mdash; {% elif evt.type == 'alu' or evt.type == 'near_miss' %}<span class="tk-tag tk-t-alu">ALU / PFOSTEN</span> &mdash; {% elif evt.type == 'var' %}<span class="tk-tag tk-t-var">VAR</span> &mdash; {% elif evt.type == 'penalty' or evt.type == 'elfmeter_pfiff' %}<span class="tk-tag tk-t-elfmeter">ELFMETER</span> &mdash; {% elif evt.type == 'offside' %}<span class="tk-tag tk-t-abseits">ABSEITS</span> &mdash; {% endif %}{% if evt.commentary_html %}{{ evt.commentary_html }}{% else %}{{ evt.commentary }}{% endif %}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% endfor %}
+
+    </div>
+  </div>
+
+</div>
+        </section>
+
+        {# ══════════════════════════════ STATISTIK ═══════════════════════ #}
+        <section class="panel" data-tab="statistik" hidden>
+            <section class="card">
+                <p class="card-title">Teamstatistiken</p>
+                <div class="stat-teamhead">
+                    <div class="tm">
+                        {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
+                        {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+                        {{ report.home_club_name }}
+                        {% if report.home_club_id %}</a>{% endif %}
+                    </div>
+                    <div class="vs">{{ report.home_goals }}&nbsp;:&nbsp;{{ report.away_goals }}</div>
+                    <div class="tm away">
+                        {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
+                        {{ report.away_club_name }}
+                        {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
+                        {% if report.away_club_id %}</a>{% endif %}
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="stat-group">
+                        <h4>Angriff</h4>
+                        <div class="stat-list">
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_possession }}%</span><div class="mid"><div class="lab">Ballbesitz</div><div class="stat-bar"><i class="h" style="width:{{ report.match_stats.home_possession }}%"></i><i class="a" style="width:{{ report.match_stats.away_possession }}%"></i></div></div><span class="av">{{ report.match_stats.away_possession }}%</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots }}</span><div class="mid"><div class="lab">Torsch&uuml;sse</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_shots_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_shots_pct|default:50 }}%"></i></div></div><span class="av">{{ report.match_stats.away_shots }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_shots_on_target }}</span><div class="mid"><div class="lab">Sch&uuml;sse aufs Tor</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_shots_on_target }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_great_chances }}</span><div class="mid"><div class="lab">Gro&szlig;chancen</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_great_chances }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.home_xg|default:0 }}</span><div class="mid"><div class="lab">xG (Expected Goals)</div><div class="stat-bar"><i class="h" style="width:{{ rc.home_xg_pct|default:50 }}%"></i><i class="a" style="width:{{ rc.away_xg_pct|default:50 }}%"></i></div></div><span class="av">{{ rc.away_xg|default:0 }}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-group">
+                        <h4>Standards &amp; Ecken</h4>
+                        <div class="stat-list">
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_corners }}</span><div class="mid"><div class="lab">Ecken</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_corners }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_free_kicks }}</span><div class="mid"><div class="lab">Freist&ouml;&szlig;e</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_free_kicks }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_penalties }}</span><div class="mid"><div class="lab">Elfmeter</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_penalties }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.home_sp_goals|default:0 }}</span><div class="mid"><div class="lab">Tore aus Standards</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.away_sp_goals|default:0 }}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-group">
+                        <h4>Zweikampf &amp; Disziplin</h4>
+                        <div class="stat-list">
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_duels_won_pct }}%</span><div class="mid"><div class="lab">Zweik&auml;mpfe gewonnen</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_duels_won_pct }}%</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_fouls }}</span><div class="mid"><div class="lab">Fouls</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_fouls }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_offsides }}</span><div class="mid"><div class="lab">Abseits</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_offsides }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_yellow }}</span><div class="mid"><div class="lab">Gelbe Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_yellow }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_red }}</span><div class="mid"><div class="lab">Rote Karten</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_red }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_ball_wins }}</span><div class="mid"><div class="lab">Pressing-Gewinne</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_ball_wins }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ report.match_stats.home_pressing_bypassed }}</span><div class="mid"><div class="lab">Pressing &uuml;berspielt</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ report.match_stats.away_pressing_bypassed }}</span></div>
+                        </div>
+                    </div>
+
+                    <div class="stat-group">
+                        <h4>Passspiel &amp; Physis</h4>
+                        <div class="stat-list">
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_passes }}</span><div class="mid"><div class="lab">Erfolgreiche P&auml;sse</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_passes }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_pass_accuracy }}%</span><div class="mid"><div class="lab">Passquote</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_pass_accuracy }}%</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_distance_km }}</span><div class="mid"><div class="lab">Laufleistung (km)</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_distance_km }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_saves }}</span><div class="mid"><div class="lab">Paraden</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_saves }}</span></div>
+                            <div class="stat-row"><span class="hv">{{ rc.extended_stats.home_ball_touches }}</span><div class="mid"><div class="lab">Ballkontakte</div><div class="stat-bar"><i class="h" style="width:50%"></i><i class="a" style="width:50%"></i></div></div><span class="av">{{ rc.extended_stats.away_ball_touches }}</span></div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <section class="card" style="margin-top:14px;">
+                <p class="card-title">Formation &amp; Taktik pro Halbzeit</p>
+                <div class="htt-grid">
+                    <div class="htt-team">
+                        <div class="htt-head">
+                            <span class="tm">{% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_name }}</a>{% else %}{% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}{{ report.home_club_name }}{% endif %}</span>
+                        </div>
+                        <div class="htt-halves">
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.home.ht1_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.home.ht1_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.home.ht1_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.home.ht1_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.home.ht1_lines.effort }}</span></div>
+                        </div>
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.home.ht2_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.home.ht2_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.home.ht2_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.home.ht2_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.home.ht2_lines.effort }}</span></div>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="htt-team">
+                        <div class="htt-head">
+                            <span class="tm">{% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_name }}</a>{% else %}{% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}{{ report.away_club_name }}{% endif %}</span>
+                        </div>
+                        <div class="htt-halves">
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">1. HZ</span><span class="form">{{ rc.half_tactics.away.ht1_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.away.ht1_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.away.ht1_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.away.ht1_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.away.ht1_lines.effort }}</span></div>
+                        </div>
+                        <div class="htt-half">
+                            <div class="htt-half-title"><span class="hz">2. HZ</span><span class="form">{{ rc.half_tactics.away.ht2_formation }}</span></div>
+                            <div class="htt-line"><span class="lab">Abwehr</span><span class="val">{{ rc.half_tactics.away.ht2_lines.defense }}</span></div>
+                            <div class="htt-line"><span class="lab">Mittelfeld</span><span class="val">{{ rc.half_tactics.away.ht2_lines.midfield }}</span></div>
+                            <div class="htt-line"><span class="lab">Angriff</span><span class="val">{{ rc.half_tactics.away.ht2_lines.attack }}</span></div>
+                            <div class="htt-line"><span class="lab">Einsatz</span><span class="val">{{ rc.half_tactics.away.ht2_lines.effort }}</span></div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        {# ══════════════════════════════ AUFSTELLUNGEN ═══════════════════ #}
+        <section class="panel" data-tab="aufstellungen" hidden>
+            <div class="lineup-layout">
+                <div class="bench-column">
+                <aside class="card bench-col">
+                    <p class="card-title">Ersatzbank</p>
+                    <div class="subhead">{{ report.home_club_short }}</div>
+                    <div class="bench-list">
+                        {% for b in rc.home_bench_display %}
+                        {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="n">{{ b.shirt_number|default:"" }}</span>
+                            <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
+                            {% if b.came_on %}
+                            <span class="in">&#8593; {{ b.on_minute }}'</span>
+                            {% else %}
+                            <span class="bnk">Bank</span>
+                            {% endif %}
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
+                    </div>
+                </aside>
+                <aside class="card subs-card">
+                    <p class="card-title">Auswechslungen</p>
+                    <div class="subhead">{{ report.home_club_short }}</div>
+                    <div class="bench-subs">
+                        {% for sub in rc.home_substitutions %}
+                        <div class="bsub">
+                            <span class="min">{{ sub.minute }}'</span>
+                            <span class="sub-badge inline" title="Wechsel">&#8646;</span>
+                            <div class="sw">
+                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
+                    </div>
+                </aside>
+                </div>
+
+                <div class="lineup-center">
+                    <div class="card">
+                        <p class="card-title">Startaufstellungen</p>
+                        <div class="lineup-grid">
+                    <div>
+                        <div class="lu-head">
+                            <div class="tm">
+                                {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
+                                {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+                                <div><b>{{ report.home_club_name }}</b></div>
+                                {% if report.home_club_id %}</a>{% endif %}
+                            </div>
+                            <span class="lu-form">{{ report.home_formation|default:"&ndash;" }}</span>
+                        </div>
+                        <div class="pitch big">
+                            {% for p in rc.home_pitch_players %}
+                            <div class="pnode home" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
+                                {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
+                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
+                                <span class="nm">{{ p.name }}</span>
+                                {% if p.id %}</a>{% endif %}
+                            </div>
+                            {% empty %}
+                            <p style="color:var(--muted);font-size:12px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">Keine Aufstellungsdaten.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="lu-head">
+                            <div class="tm">
+                                {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
+                                {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
+                                <div><b>{{ report.away_club_name }}</b></div>
+                                {% if report.away_club_id %}</a>{% endif %}
+                            </div>
+                            <span class="lu-form">{{ report.away_formation|default:"&ndash;" }}</span>
+                        </div>
+                        <div class="pitch big">
+                            {% for p in rc.away_pitch_players %}
+                            <div class="pnode away" style="left:{{ p.pitch_x }}%;top:{{ p.pitch_y }}%">
+                                {% if p.id %}<a class="pnode-link" href="{% url 'player_detail' p.id %}">{% endif %}
+                                <div class="ph">{% if p.portrait_url %}<img src="{{ p.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}<span class="num">{{ p.shirt_number|default:"" }}</span>{% if p.sub_off %}<span class="sub-badge off" title="Ausgewechselt{% if p.sub_off_minute %} ({{ p.sub_off_minute }}'){% endif %}">&#8595;</span>{% endif %}</div>
+                                <span class="nm">{{ p.name }}</span>
+                                {% if p.id %}</a>{% endif %}
+                            </div>
+                            {% empty %}
+                            <p style="color:var(--muted);font-size:12px;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);">Keine Aufstellungsdaten.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="bench-column">
+                <aside class="card bench-col">
+                    <p class="card-title">Ersatzbank</p>
+                    <div class="subhead">{{ report.away_club_short }}</div>
+                    <div class="bench-list">
+                        {% for b in rc.away_bench_display %}
+                        {% if b.id %}<a class="bench-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="bench-row">{% endif %}
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="n">{{ b.shirt_number|default:"" }}</span>
+                            <span class="nm">{{ b.name }}<small>{{ b.position }}</small></span>
+                            {% if b.came_on %}
+                            <span class="in">&#8593; {{ b.on_minute }}'</span>
+                            {% else %}
+                            <span class="bnk">Bank</span>
+                            {% endif %}
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bankspieler.</p>{% endfor %}
+                    </div>
+                </aside>
+                <aside class="card subs-card">
+                    <p class="card-title">Auswechslungen</p>
+                    <div class="subhead">{{ report.away_club_short }}</div>
+                    <div class="bench-subs">
+                        {% for sub in rc.away_substitutions %}
+                        <div class="bsub">
+                            <span class="min">{{ sub.minute }}'</span>
+                            <span class="sub-badge inline" title="Wechsel">&#8646;</span>
+                            <div class="sw">
+                                <span class="on">&#8593; {% if sub.in_id %}<a class="plink" href="{% url 'player_detail' sub.in_id %}">{{ sub.in_name }}</a>{% else %}{{ sub.in_name }}{% endif %}</span>
+                                {% if sub.out_name %}<span class="off">&#8595; {% if sub.out_id %}<a class="plink" href="{% url 'player_detail' sub.out_id %}">{{ sub.out_name }}</a>{% else %}{{ sub.out_name }}{% endif %}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% empty %}<p style="color:var(--muted);font-size:12px;">Keine Wechsel</p>{% endfor %}
+                    </div>
+                </aside>
+                </div>
+            </div>
+        </section>
+
+        {# ══════════════════════════════ SPIELER ══════════════════════════ #}
+        <section class="panel" data-tab="spieler" hidden>
+            <div class="players-grid">
+
+                <div>
+                {% if report.man_of_the_match %}
+                {% with motm=report.man_of_the_match %}
+                <div class="motm-card">
+                    {% if motm.id %}<a class="crest-link motm-link" href="{% url 'player_detail' motm.id %}">{% endif %}
+                    {% if motm.portrait_url %}<img class="por" src="{{ motm.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% elif motm.club_crest %}<img class="por" src="{{ motm.club_crest }}" alt="">{% else %}<div class="por">{{ motm.name|slice:":1" }}</div>{% endif %}
+                    {% if motm.id %}</a>{% endif %}
+                    <div class="badge">&#9733; Spieler des Spiels</div>
+                    <h3>{% if motm.id %}<a class="plink" href="{% url 'player_detail' motm.id %}">{{ motm.name }}</a>{% else %}{{ motm.name }}{% endif %}</h3>
+                    <div class="pos">{{ motm.position }} &middot; {{ motm.club_name }}</div>
+                    <div class="bignote">{{ motm.rating }}</div>
+                    {% if rc.motm_goals or rc.motm_assists or rc.motm_card_type %}
+                    <div class="line">
+                        {% if rc.motm_goals %}<div class="s"><b>{{ rc.motm_goals }}</b><small>Tor{% if rc.motm_goals != 1 %}e{% endif %}</small></div>{% endif %}
+                        {% if rc.motm_assists %}<div class="s"><b>{{ rc.motm_assists }}</b><small>Vorlage{% if rc.motm_assists != 1 %}n{% endif %}</small></div>{% endif %}
+                        {% if rc.motm_card_type == 'yellow' %}<div class="s"><b><span class="card-yel"></span></b><small>Gelbe Karte</small></div>{% elif rc.motm_card_type == 'red' %}<div class="s"><b><span class="card-red"></span></b><small>Rote Karte</small></div>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endwith %}
+                {% else %}
+                <section class="card"><p class="card-title">Spieler des Spiels</p><p style="color:var(--muted);font-size:12px;">Nicht ermittelt.</p></section>
+                {% endif %}
+                </div>
+
+                <section class="card">
+                    <div class="pl-team-head">
+                        {% if report.home_club_id %}<a class="crest-link" href="{% url 'club_detail' report.home_club_id %}">{% endif %}
+                        {% if report.home_club_crest %}<img src="{{ report.home_club_crest }}" alt="">{% endif %}
+                        <b>{{ report.home_club_name }}</b>
+                        {% if report.home_club_id %}</a>{% endif %}
+                    </div>
+                    <div class="subhead">Startelf &middot; nach Position</div>
+                    <div class="pl-list">
+                        {% for r in report.home_ratings %}{% if not r.is_sub %}
+                        {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
+                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if r.id in rc.home_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
+                            <span class="n">{{ r.shirt_number|default:"" }}</span>
+                            <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
+                            <div class="pl-badges">
+                                {% if r.goals %}<span class="mini-chip tor">{{ r.goals }} Tor{% if r.goals != 1 %}e{% endif %}</span>{% endif %}
+                                {% if r.assists %}<span class="mini-chip vor">{{ r.assists }} Vorlage{% if r.assists != 1 %}n{% endif %}</span>{% endif %}
+                                {% if r.card_type == 'yellow' %}<span class="card-yel"></span>{% elif r.card_type == 'red' %}<span class="card-red"></span>{% endif %}
+                            </div>
+                            <span class="note {% if r.rating <= 2.0 %}n1{% elif r.rating <= 3.0 %}n2{% elif r.rating <= 4.0 %}n3{% elif r.rating <= 5.0 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
+                        {% if r.id %}</a>{% else %}</div>{% endif %}
+                        {% endif %}{% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bewertungen.</p>{% endfor %}
+                    </div>
+                    {% if rc.home_bench_display %}
+                    <div class="subhead subhead-gap">Ersatzbank</div>
+                    <div class="pl-list">
+                        {% for b in rc.home_bench_display %}
+                        {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="n">{{ b.shirt_number|default:"" }}</span>
+                            <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
+                            <div class="pl-badges">
+                                {% if b.goals %}<span class="mini-chip tor">{{ b.goals }} Tor{% if b.goals != 1 %}e{% endif %}</span>{% endif %}
+                                {% if b.assists %}<span class="mini-chip vor">{{ b.assists }} Vorlage{% if b.assists != 1 %}n{% endif %}</span>{% endif %}
+                                {% if b.card_type == 'yellow' %}<span class="card-yel"></span>{% elif b.card_type == 'red' %}<span class="card-red"></span>{% endif %}
+                            </div>
+                            {% if b.came_on %}
+                            <span class="note {% if b.rating <= 2.0 %}n1{% elif b.rating <= 3.0 %}n2{% elif b.rating <= 4.0 %}n3{% elif b.rating <= 5.0 %}n4{% else %}n5{% endif %}">{{ b.rating }}</span>
+                            {% else %}
+                            <span class="note-dash">&ndash;</span>
+                            {% endif %}
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </section>
+
+                <section class="card">
+                    <div class="pl-team-head">
+                        {% if report.away_club_id %}<a class="crest-link" href="{% url 'club_detail' report.away_club_id %}">{% endif %}
+                        {% if report.away_club_crest %}<img src="{{ report.away_club_crest }}" alt="">{% endif %}
+                        <b>{{ report.away_club_name }}</b>
+                        {% if report.away_club_id %}</a>{% endif %}
+                    </div>
+                    <div class="subhead">Startelf &middot; nach Position</div>
+                    <div class="pl-list">
+                        {% for r in report.away_ratings %}{% if not r.is_sub %}
+                        {% if r.id %}<a class="pl-row" href="{% url 'player_detail' r.id %}">{% else %}<div class="pl-row">{% endif %}
+                            <span class="ph-slot">{% if r.portrait_url %}<img src="{{ r.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if r.id in rc.away_sub_out_ids %}<span class="sub-badge off" title="Ausgewechselt">&#8595;</span>{% endif %}</span>
+                            <span class="n">{{ r.shirt_number|default:"" }}</span>
+                            <div class="who"><b>{{ r.name }}</b><small>{{ r.position }}</small></div>
+                            <div class="pl-badges">
+                                {% if r.goals %}<span class="mini-chip tor">{{ r.goals }} Tor{% if r.goals != 1 %}e{% endif %}</span>{% endif %}
+                                {% if r.assists %}<span class="mini-chip vor">{{ r.assists }} Vorlage{% if r.assists != 1 %}n{% endif %}</span>{% endif %}
+                                {% if r.card_type == 'yellow' %}<span class="card-yel"></span>{% elif r.card_type == 'red' %}<span class="card-red"></span>{% endif %}
+                            </div>
+                            <span class="note {% if r.rating <= 2.0 %}n1{% elif r.rating <= 3.0 %}n2{% elif r.rating <= 4.0 %}n3{% elif r.rating <= 5.0 %}n4{% else %}n5{% endif %}">{{ r.rating }}</span>
+                        {% if r.id %}</a>{% else %}</div>{% endif %}
+                        {% endif %}{% empty %}<p style="color:var(--muted);font-size:12px;">Keine Bewertungen.</p>{% endfor %}
+                    </div>
+                    {% if rc.away_bench_display %}
+                    <div class="subhead subhead-gap">Ersatzbank</div>
+                    <div class="pl-list">
+                        {% for b in rc.away_bench_display %}
+                        {% if b.id %}<a class="pl-row" href="{% url 'player_detail' b.id %}">{% else %}<div class="pl-row">{% endif %}
+                            <span class="ph-slot">{% if b.portrait_url %}<img src="{{ b.portrait_url }}" alt="" onerror="this.onerror=null;this.src='{{ default_player_url }}'">{% endif %}{% if b.came_on %}<span class="sub-badge on" title="Eingewechselt">&#8593;</span>{% endif %}</span>
+                            <span class="n">{{ b.shirt_number|default:"" }}</span>
+                            <div class="who"><b>{{ b.name }}</b><small>{{ b.position }}{% if b.came_on %} &middot; <span style="color:var(--green);">&#8593; {{ b.on_minute }}'</span>{% endif %}</small></div>
+                            <div class="pl-badges">
+                                {% if b.goals %}<span class="mini-chip tor">{{ b.goals }} Tor{% if b.goals != 1 %}e{% endif %}</span>{% endif %}
+                                {% if b.assists %}<span class="mini-chip vor">{{ b.assists }} Vorlage{% if b.assists != 1 %}n{% endif %}</span>{% endif %}
+                                {% if b.card_type == 'yellow' %}<span class="card-yel"></span>{% elif b.card_type == 'red' %}<span class="card-red"></span>{% endif %}
+                            </div>
+                            {% if b.came_on %}
+                            <span class="note {% if b.rating <= 2.0 %}n1{% elif b.rating <= 3.0 %}n2{% elif b.rating <= 4.0 %}n3{% elif b.rating <= 5.0 %}n4{% else %}n5{% endif %}">{{ b.rating }}</span>
+                            {% else %}
+                            <span class="note-dash">&ndash;</span>
+                            {% endif %}
+                        {% if b.id %}</a>{% else %}</div>{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </section>
+
+            </div>
+        </section>
+
+        {# ══════════════════════════════ ADMIN-BERICHT (nur Superuser) ═══ #}
+        {% if is_admin %}
+        <section class="panel" data-tab="admin-bericht" hidden>
+            <div class="admin-note"><b>Admin-Bericht:</b> Vollst&auml;ndiger Engine-Debug-Bericht (ohne Live-Ticker) &mdash; nur f&uuml;r Administratoren sichtbar.</div>
+            {% include 'game/partials/_match_report_admin.html' %}
+        </section>
+        {% endif %}
+
+    </div>{# /panels #}
+
+    {{ rc.momentum_payload|json_script:"spb-momentum-data" }}
+
+    {% else %}
+    <div class="spb-empty">
+        <p>Noch kein Spiel simuliert &mdash; w&auml;hle unten einen Gegner und starte die Simulation.</p>
+    </div>
+    {% endif %}
+
+    {# ── Simulate Form (nur Admin) ──────────────────────────────────── #}
+    {% if is_admin and all_clubs %}
+    <section class="card" style="margin-top:20px;">
+        <p class="card-title">Neues Spiel simulieren</p>
+        <form method="post" action="{% url 'club_match_report' club.id %}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+            {% csrf_token %}
+            <span style="font-weight:800;">{{ club.name }} <em style="opacity:.55;font-style:normal;">(Heim)</em></span>
+            <span style="color:var(--muted);">vs.</span>
+            <select name="opponent_id" class="chip" style="cursor:pointer;">
+                {% for opp in all_clubs %}
+                    <option value="{{ opp.id }}">{{ opp.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="match_type" class="chip" style="cursor:pointer;">
+                <option value="freundschaft">Freundschaftsspiel</option>
+                <option value="pokal">Pokal</option>
+            </select>
+            <button type="submit" class="chip active" style="border:0;">&#9654; Spiel simulieren</button>
+        </form>
+        {% if sim_error %}
+        <p style="color:var(--red);font-size:12px;margin-top:10px;">Fehler: {{ sim_error }}</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
+</div>{# /report #}
+</section>{# /spb-report #}
+
+{% if referee %}
+{# ── Schiedsrichter-Popup ─────────────────────────────────────────────── #}
+<div class="ref-overlay is-hidden" id="ref-overlay" role="dialog" aria-modal="true" aria-labelledby="ref-modal-name">
+  <div class="ref-modal">
+    <button class="ref-close" id="ref-close-btn" aria-label="Schließen">&#x2715;</button>
+
+    <div class="ref-head">
+      <div class="ref-cutout">
+        <img src="{{ referee.face_url }}" alt="{{ referee.name }}"
+             onerror="this.onerror=null;this.src='{% static 'assets/referees/referee_default.svg' %}'">
+      </div>
+      <div class="ref-head-info">
+        <div class="ref-kicker">Schiedsrichter</div>
+        <div class="ref-name" id="ref-modal-name">{{ referee.name }}</div>
+        <div class="ref-meta">
+          {% if referee.flag_url %}<img class="ref-flag" src="{{ referee.flag_url }}" alt="{{ referee.nationality }}">{% endif %}
+          {% if referee.nationality %}<span>{{ referee.nationality }}</span>{% endif %}
+          {% if referee.age %}<span class="sep">&middot;</span><span>{{ referee.age }} Jahre</span>{% endif %}
+          <span class="ref-badge {{ referee.level_badge_class }}">{{ referee.level_display_upper }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if referee.schlagwort %}<div class="ref-type">&#8222;{{ referee.schlagwort }}&#8220;</div>{% endif %}
+
+    <div class="ref-section">
+      <div class="ref-section-title">Tendenzen</div>
+      <div class="ref-scales">
+        <div class="ref-scale">
+          <span class="ref-scale-label">Karten</span>
+          <div class="ref-scale-track">
+            <span class="ref-step{% if referee.karten_bucket == 0 %} is-active{% endif %}"><span class="dot"></span>Nachsichtig</span>
+            <span class="ref-step{% if referee.karten_bucket == 1 %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
+            <span class="ref-step{% if referee.karten_bucket == 2 %} is-active is-hot{% endif %}"><span class="dot"></span>Kartenfreudig</span>
+          </div>
+        </div>
+        <div class="ref-scale">
+          <span class="ref-scale-label">Spielfluss</span>
+          <div class="ref-scale-track">
+            <span class="ref-step{% if referee.spielfluss_bucket == 0 %} is-active is-hot{% endif %}"><span class="dot"></span>Pfeift viel ab</span>
+            <span class="ref-step{% if referee.spielfluss_bucket == 1 %} is-active{% endif %}"><span class="dot"></span>Ausgewogen</span>
+            <span class="ref-step{% if referee.spielfluss_bucket == 2 %} is-active{% endif %}"><span class="dot"></span>L&auml;sst laufen</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ref-section">
+      <div class="ref-comps-row">
+        <span class="ref-section-title">Vorsaison</span>
+        {% if referee.vorsaison_competitions %}
+        <div class="ref-comps">
+          {% for comp in referee.vorsaison_competitions %}
+          <span class="ref-comp">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:rgba(244,251,255,.38)"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2.2 1.8 4 4 4"/><path d="M17 6h3a1 1 0 0 1 1 1c0 2.2-1.8 4-4 4"/></svg>
+            {{ comp }}
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="ref-stats">
+        <div class="ref-stat" title="Geleitete Spiele">
+          <div class="ref-stat-value">{{ referee.vorsaison_spiele }}</div>
+          <div class="ref-stat-label">Spiele</div>
+        </div>
+        <div class="ref-stat" title="Gelbe Karten pro Spiel">
+          <div class="ref-stat-value"><span class="card-chip card-chip--gelb"></span>{{ referee.vorsaison_gelb_avg }}</div>
+          <div class="ref-stat-label">&Oslash;&nbsp;Gelb</div>
+        </div>
+        <div class="ref-stat" title="Rote Karten">
+          <div class="ref-stat-value"><span class="card-chip card-chip--rot"></span>{{ referee.vorsaison_rot }}</div>
+          <div class="ref-stat-label">Rot</div>
+        </div>
+        <div class="ref-stat" title="Verhängte Elfmeter">
+          <div class="ref-stat-value">{{ referee.vorsaison_elfmeter }}</div>
+          <div class="ref-stat-label">Elfmeter</div>
+        </div>
+        <div class="ref-stat" title="Umstrittene Entscheidungen">
+          <div class="ref-stat-value{% if referee.vorsaison_umstritten >= 5 %} is-bad{% endif %}">{{ referee.vorsaison_umstritten }}</div>
+          <div class="ref-stat-label">Umstritten</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
+<script src="{% static 'game/js/match_report_v2.js' %}?v=6"></script>
+<script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=4"></script>
+{% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=1"></script>{% endif %}
+{% endblock %}

@@ -1,0 +1,117 @@
+# Live-Scene-Vertrag — Übergabe an Replit
+
+Ziel: Stadioneditor und 2D-Livemodus zeigen **dasselbe Stadionmodell aus zwei Kameras**.
+Der Livemodus rekonstruiert keine Geometrie. Er rendert, was der Server liefert.
+
+## Grundsatz
+
+Der Livemodus darf Stadiongeometrie **nicht** aus `stand`, `tier`, `order`, `rows`,
+`seats` ableiten. Ein Block ist ein individuelles Viereck mit echter Höhe. `rows`/`seats`
+bestimmen ausschließlich die **Rasterteilung innerhalb** dieses Vierecks, niemals seine
+Lage oder Form.
+
+Design-JSON bleibt Design-JSON. Die Geometrie wird nicht in den Design-Export gepackt.
+Stattdessen erzeugt der Server aus **StadiumGeometry + StadiumDesign** eine Scene.
+
+```
+StadiumGeometry (Verein)  +  StadiumDesign (RLE, Palette)
+                    ↓  serverseitig gemerged
+              LIVE SCENE  (ein Endpunkt, ein Schema)
+                    ↓
+        2D-Live-Kamera   /   Editor-Top-Kameraa
+```
+
+## Endpunkt
+
+```
+GET /stadion/<club_id>/live-scene
+```
+
+Liefert die Scene für das Heimstadion. Bestehende Design- und Editor-Endpunkte bleiben
+unverändert.
+
+## Scene-Schema
+
+```json
+{
+  "version": 1,
+  "stadium": "Signal Iduna Park",
+  "club": 907,
+  "units": "m",
+  "frame": "pitch",
+  "pitch":   { "length": 105.0, "width": 68.0 },
+  "homeStand": "SUED",
+  "palette": ["#3a4148", "#f4f6f8", "#101216", "…"],
+  "blocks": [
+    {
+      "id": 27,
+      "stand": "OST", "tier": "UNTER", "order": 3,
+      "rows": 40, "seats": 54,
+      "quad": [[x,y],[x,y],[x,y],[x,y]],
+      "z0": 1.0, "z1": 14.53,
+      "type": "seating",
+      "rle": [[162,0],[17,8],[37,0]]
+    }
+  ],
+  "outline": [[x,y], …],
+  "roof": [ { "quad": [[x,y],[x,y],[x,y],[x,y]], "z": 42.0 } ]
+}
+```
+
+### Die vier Punkte, die alles entscheiden
+
+**1. Koordinaten bereits im Feldsystem liefern (`"frame": "pitch"`).**
+Ursprung = Spielfeldmittelpunkt. `+X` = Längsachse des Spielfelds. `+Y` = Querachse.
+Meter. **Kein `axisTheta` mehr** — der Server dreht einmal korrekt, statt dass jeder
+Client rät. Damit sind `pitch.length/width` und die Blockkoordinaten garantiert im
+selben Maßstab.
+
+*Warum:* Der aktuelle Export enthält keine Feldreferenz. Seine freie Innenfläche misst
+ca. **78 × 82 m** — ein 105 × 68-Feld passt dort nicht hinein. Der Livemodus muss den
+Bowl deshalb schätzweise einpassen (aktuell ×1,31 in X), was Blockformen verzerrt.
+Mit `frame: "pitch"` entfällt jede Schätzung.
+
+**2. Punktreihenfolge im `quad` festnageln.**
+Verbindlich: `[vorne-links, vorne-rechts, hinten-rechts, hinten-links]` aus Sicht des
+Spielfelds. „Vorne" = die spielfeldnahe Kante (Reihe 0).
+
+*Warum:* **12 der 52 Blöcke** im aktuellen Export sind inkonsistent gewickelt
+(IDs 1, 8, 9, 10, 23, 24, 34, 35, 36, 46, 47, 48) — bei Block 4 ist `quad[2]` die
+Rückkante zu `quad[1]`, bei Block 10 zu `quad[0]`. Solche Vierecke rendern als
+verdrehte Bänder. Der Livemodus sortiert sie derzeit notdürftig um.
+
+**3. RLE-Leserichtung und Invariante.**
+Sitz für Sitz, Reihe für Reihe. Reihe 0 = vorderste (spielfeldnahe) Reihe, innerhalb der
+Reihe links → rechts aus Sicht des Spielfelds. Invariante: `sum(rle[i][0]) == rows * seats`.
+Serverseitig beim Speichern validieren.
+
+**4. Kamerastandpunkt ≠ Blickrichtung.**
+`blickrichtung` darf nicht beides bedeuten. Die Scene liefert nur `homeStand` (wo die
+Heimkurve steht). **Kamerastandpunkt, Winkel, Höhe und Zoom gehören dem Client** — der
+Livemodus setzt seine Kamera selbst und cullt, was außerhalb des Ausschnitts liegt.
+Der Server liefert immer **alle** Blöcke, auch die hinter der Kamera.
+
+## Datenfehler, die vorher raus müssen
+
+**Block 10 ist korrupt.** `rows: 274` statt 31 (Basisgeometrie), `z1: 189,77` m,
+Grundriss bis 240 m aus dem Stadion heraus — der Editor hat den Ausbau in einen
+einzelnen Block geschrieben und den Grundriss mitskaliert. Der Livemodus verwirft den
+Block aktuell per Plausibilitätsprüfung; dadurch fehlt der komplette NORD-Oberrang.
+
+Nach dem Fix gegenprüfen: `rows` je Block plausibel gegen die Blockfamilie
+(Reihenhöhe `(z1-z0)/rows` und `rows` innerhalb Faktor 3 des Medians).
+
+## Validierung, die der Server abweisen muss
+
+- `sum(rle) != rows * seats`
+- doppelte oder unbekannte Block-IDs
+- `quad` mit ≠ 4 Punkten, nicht-endlichen Werten oder inkonsistenter Wicklung
+- `z1 <= z0`
+- Blockreihen außerhalb Faktor 3 des Familienmedians (Ausbau-Bug)
+- clientseitig gelieferte Geometrie: **immer** durch die Servergeometrie ersetzen
+
+## Nicht im Scope
+
+- Kamera-, Zoom- und Cull-Logik des Livemodus (gehört dem Client)
+- wirtschaftliche Stadionkapazität
+- Nachzeichnen von Grundrissen für Vereine ohne Geometrie

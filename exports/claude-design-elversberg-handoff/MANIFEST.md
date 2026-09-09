@@ -39,6 +39,11 @@
 `CHECKSUMS.sha256` enthält SHA-256-Prüfsummen aller Paketdateien außer sich
 selbst.
 
+Das vollständige Verzeichnis und das herunterladbare ZIP werden mit
+`python scripts/build_elversberg_handoff.py` erzeugt. Dabei werden Runtime-Scene,
+Renderer, Spielbericht-Kontext und Dortmund-Vergleich vor jeder Paketierung aus
+ihren kanonischen Projektquellen aktualisiert.
+
 ## Wichtiger Datenhinweis
 
 Die Elversberg-Live-Scene ist ein Demonstrationsstand des laufenden Ausbaus:
