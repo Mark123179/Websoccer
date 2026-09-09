@@ -188,6 +188,43 @@ def _scene_rle(rle, rows, seats, palette_size, block_id, reverse_rows):
     return _encode(reversed_values)
 
 
+def _scene_roof(geometry, center, theta):
+    raw_segments = geometry.get('roofs')
+    if raw_segments is None or raw_segments == []:
+        return {'mode': 'procedural-ring'}
+    if not isinstance(raw_segments, list) or len(raw_segments) > 1_000:
+        raise LiveSceneError('Die Dachgeometrie enthält keine gültige Segmentliste.')
+    segments, ids = [], set()
+    for position, segment in enumerate(raw_segments):
+        if not isinstance(segment, dict):
+            raise LiveSceneError('Die Dachgeometrie enthält ein ungültiges Segment.')
+        segment_id = segment.get('id')
+        if not isinstance(segment_id, str) or not segment_id or segment_id in ids:
+            raise LiveSceneError('Die Dachgeometrie enthält ungültige oder doppelte Segment-IDs.')
+        raw_quad = segment.get('quad')
+        heights = segment.get('heights')
+        if not isinstance(raw_quad, list) or len(raw_quad) != 4:
+            raise LiveSceneError(f'Dachsegment {segment_id}: quad muss genau vier Punkte haben.')
+        if not isinstance(heights, list) or len(heights) != 4:
+            raise LiveSceneError(f'Dachsegment {segment_id}: heights muss genau vier Werte haben.')
+        quad = [
+            _rounded_point(_rotate_to_pitch(
+                _point(point, f'Dachsegment {segment_id}: quad'), center, theta))
+            for point in raw_quad
+        ]
+        if len({tuple(point) for point in quad}) != 4 or _polygon_area(quad) <= EPSILON:
+            raise LiveSceneError(f'Dachsegment {segment_id}: quad hat keine gültige Fläche.')
+        scene_heights = [_number(value, f'Dachsegment {segment_id}: heights')
+                         for value in heights]
+        segments.append({
+            'id': segment_id,
+            'quad': quad,
+            'heights': scene_heights,
+        })
+        ids.add(segment_id)
+    return {'mode': 'explicit', 'segments': segments}
+
+
 def _home_stand(geometry):
     meta_value = str((geometry.get('meta') or {}).get('homeStand', '')).upper()
     if meta_value in STANDS:
@@ -328,5 +365,5 @@ def build_live_scene(stadium, geometry, design):
         'palette': [colour.lower() for colour in palette],
         'blocks': scene_blocks,
         'outline': scene_outline,
-        'roof': {'mode': 'procedural-ring'},
+        'roof': _scene_roof(geometry, center, theta),
     }

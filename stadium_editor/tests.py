@@ -148,6 +148,8 @@ class StadiumEditorTests(TestCase):
             StadiumGeometry,
         )
         self.assertEqual((seeded, skipped), (1, 0))
+        self.assertEqual(
+            StadiumGeometry.objects.get(stadium=self.stadium).schema_version, 2)
         self.client.force_login(self.user)
         editor = self.client.get(reverse('stadium_editor'))
         self.assertEqual(editor.status_code, 200)
@@ -158,7 +160,8 @@ class StadiumEditorTests(TestCase):
         )
 
     def test_bvb_override_is_exact_52_block_prototype(self):
-        blocks = load_blueprints()['borussiadortmund']['blocks']
+        blueprint = load_blueprints()['borussiadortmund']
+        blocks = blueprint['blocks']
         self.assertEqual(len(blocks), 52)
         self.assertEqual(len({block['id'] for block in blocks}), 52)
         self.assertEqual(len({str(block['quad']) for block in blocks}), 52)
@@ -170,6 +173,10 @@ class StadiumEditorTests(TestCase):
             blocks[0]['quad'],
             [[21.69, -122.48], [49.39, -118.53], [39.02, -93.64], [17.14, -96.76]],
         )
+        self.assertGreater(len(blueprint['roofs']), 20)
+        self.assertEqual(blueprint['roofs'][0]['id'], 'roof-0')
+        self.assertEqual(len({roof['id'] for roof in blueprint['roofs']}),
+                         len(blueprint['roofs']))
 
     def test_missing_blueprint_has_a_clear_non_404_page(self):
         self.geometry.delete()
@@ -398,6 +405,34 @@ class StadiumEditorTests(TestCase):
             result['blocks'][0]['rle'],
             [[1, 1], [2, 0], [1, 1]],
         )
+
+    def test_live_scene_exports_explicit_roof_in_pitch_frame(self):
+        geometry, design = self._live_scene_records(theta=math.pi / 2)
+        geometry['roofs'] = [{
+            'id': 'roof-main',
+            'quad': [[-4, -2], [-4, 2], [-2, 1], [-2, -1]],
+            'heights': [24, 24, 19, 19],
+        }]
+
+        result = build_live_scene(self.stadium, geometry, design.design)
+
+        self.assertEqual(result['roof']['mode'], 'explicit')
+        self.assertEqual(result['roof']['segments'], [{
+            'id': 'roof-main',
+            'quad': [[-2.0, 4.0], [2.0, 4.0], [1.0, 2.0], [-1.0, 2.0]],
+            'heights': [24.0, 24.0, 19.0, 19.0],
+        }])
+
+    def test_live_scene_rejects_duplicate_roof_ids(self):
+        geometry, design = self._live_scene_records()
+        segment = {
+            'id': 'roof-main',
+            'quad': [[-2, 4], [2, 4], [1, 2], [-1, 2]],
+            'heights': [24, 24, 19, 19],
+        }
+        geometry['roofs'] = [segment, dict(segment)]
+        with self.assertRaisesRegex(LiveSceneError, 'doppelte Segment-IDs'):
+            build_live_scene(self.stadium, geometry, design.design)
 
     def test_live_scene_endpoint_is_public_and_returns_all_blocks(self):
         self._live_scene_records()

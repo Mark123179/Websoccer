@@ -549,6 +549,7 @@ function render3D(){
   });
   // Dachprofil-Infos: Position innerhalb der Tribüne + Ecknachbarn
   const roofMeta = (D.meta && D.meta.roof) || {type:'ring'};
+  const explicitRoofs = Array.isArray(D.roofs) ? D.roofs : [];
   const roofInfo = new Map();
   {
     const byStand = {};
@@ -591,7 +592,15 @@ function render3D(){
     if(b.z0 > 3) items.push({ kind:'soffit', i, key: depth + .002 });
     if(outerSet.has(b.id)){
       items.push({ kind:'wall', i, key: depth - .01 });
-      if(roofOn && !b.noroof) items.push({ kind:'roof', i, key: depth - .005 });
+      if(roofOn && !explicitRoofs.length && !b.noroof) items.push({ kind:'roof', i, key: depth - .005 });
+    }
+  }
+  if(roofOn && explicitRoofs.length){
+    for(const roof of explicitRoofs){
+      if(!Array.isArray(roof.quad) || roof.quad.length!==4 ||
+         !Array.isArray(roof.heights) || roof.heights.length!==4) continue;
+      const mid = roof.quad.reduce((p,q)=>[p[0]+q[0]/4,p[1]+q[1]/4],[0,0]);
+      items.push({kind:'explicitRoof', roof, key:to3(mid[0],mid[1],0)[2]-.005});
     }
   }
   const ext = D.meta.exterior || null;
@@ -914,6 +923,37 @@ function render3D(){
         ctx.beginPath(); ctx.moveTo(p[0][0],p[0][1]); ctx.lineTo(p[1][0],p[1][1]);
         ctx.strokeStyle='rgba(34,230,255,.6)'; ctx.lineWidth=1.3; ctx.stroke();
       }
+      continue;
+    }
+    if(it.kind==='explicitRoof'){
+      const roof = it.roof;
+      const p = roof.quad.map((point,index)=>to3(point[0],point[1],roof.heights[index]));
+      ctx.beginPath();
+      p.forEach((s,q)=>q?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]));
+      ctx.closePath();
+      const bb = (roofMeta.bright !== undefined) ? roofMeta.bright
+                 : (roofMeta.tone==='hell' ? .8 : 0);
+      const roofA = tilt3d < 42 ? (bb>.3 ? .5 : .25) : .62;
+      ctx.fillStyle = `rgba(${Math.round(14+180*bb)},${Math.round(32+172*bb)},${Math.round(42+170*bb)},${roofA})`;
+      ctx.fill();
+      if(roofMeta.diamond){
+        ctx.strokeStyle='rgba(230,245,250,.22)'; ctx.lineWidth=.5;
+        ctx.beginPath();
+        ctx.moveTo(p[0][0],p[0][1]); ctx.lineTo(p[2][0],p[2][1]);
+        ctx.moveTo(p[1][0],p[1][1]); ctx.lineTo(p[3][0],p[3][1]);
+        ctx.stroke();
+      }
+      if(roofMeta.girders || roofMeta.spokes){
+        ctx.strokeStyle = roofMeta.girders ||
+          (bb>.4 ? 'rgba(30,60,75,.5)' : 'rgba(34,230,255,.28)');
+        ctx.lineWidth = roofMeta.girders ? 1.5 : .7;
+        for(const f of roofMeta.girders ? [.2,.5,.8] : [.33,.66]){
+          const q0=[p[0][0]+(p[1][0]-p[0][0])*f,p[0][1]+(p[1][1]-p[0][1])*f];
+          const q1=[p[3][0]+(p[2][0]-p[3][0])*f,p[3][1]+(p[2][1]-p[3][1])*f];
+          ctx.beginPath(); ctx.moveTo(q0[0],q0[1]); ctx.lineTo(q1[0],q1[1]); ctx.stroke();
+        }
+      }
+      ctx.strokeStyle='rgba(34,230,255,.32)'; ctx.lineWidth=.6; ctx.stroke();
       continue;
     }
     const p = [ to3(A[0],A[1],b.z1), to3(B[0],B[1],b.z1),      // außen = hoch

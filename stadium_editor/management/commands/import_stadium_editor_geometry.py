@@ -42,6 +42,7 @@ class Command(BaseCommand):
                     stadium=stadium,
                     defaults={
                         'geometry': geometry,
+                        'schema_version': 2,
                         'source': 'OpenStreetMap/BLUEPRINT-Import',
                         'attribution': 'Blaupause: OpenStreetMap-Daten (ODbL)',
                     },
