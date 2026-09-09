@@ -13,7 +13,7 @@ from game.views import build_game_header, current_manager_club
 from .capacity import distribute_capacities
 from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
-from .contracts import axis_theta, geometry_blocks, hydrate_design, visible_blocks
+from .contracts import geometry_blocks, visible_blocks
 
 
 def _owned_stadium(request):
@@ -31,13 +31,7 @@ def _geometry_payload(stadium, geometry):
     trusted = {block['id']: block for block in geometry_blocks(payload)}
     for position, block in enumerate(payload['blocks']):
         block.update(trusted[block.get('id', position)])
-    payload['axisTheta'] = axis_theta(payload)
     return payload
-
-
-def _hydrated_design(stadium, row, design):
-    return hydrate_design(design.design, _geometry_payload(stadium, row.geometry),
-                          stadium.name, design.blickrichtung)
 
 
 @login_required(login_url='/auth/login/')
@@ -84,13 +78,7 @@ def stadium_editor_design(request):
     if not stadium:
         return JsonResponse({'error': 'Stadion nicht gefunden.'}, status=404)
     design = StadiumDesign.objects.filter(stadium=stadium).first()
-    if not design:
-        return JsonResponse({})
-    try:
-        row = StadiumGeometry.objects.get(stadium=stadium)
-        return JsonResponse(_hydrated_design(stadium, row, design))
-    except StadiumGeometry.DoesNotExist:
-        return JsonResponse({})
+    return JsonResponse(design.design if design else {})
 
 
 @login_required(login_url='/auth/login/')
@@ -102,12 +90,8 @@ def stadium_editor_visible_design(request):
     design = StadiumDesign.objects.filter(stadium=stadium).first()
     if not design:
         return JsonResponse({})
-    try:
-        row = StadiumGeometry.objects.get(stadium=stadium)
-        payload = _hydrated_design(stadium, row, design)
-    except StadiumGeometry.DoesNotExist:
-        return JsonResponse({})
-    payload['blocks'] = visible_blocks(payload, payload['blickrichtung'])
+    payload = deepcopy(design.design)
+    payload['blocks'] = visible_blocks(payload, design.blickrichtung)
     return JsonResponse(payload)
 
 
@@ -137,5 +121,4 @@ def stadium_editor_save_design(request):
     design.design = sanitized
     design.blickrichtung = sanitized['blickrichtung']
     design.save(update_fields=['design', 'blickrichtung', 'updated_at'])
-    return JsonResponse({'ok': True, 'updated_at': design.updated_at.isoformat(),
-                         'design': sanitized})
+    return JsonResponse({'ok': True, 'updated_at': design.updated_at.isoformat()})

@@ -21,20 +21,3 @@ blockieren.
 effektive Raster projizieren, auch wenn die Rohgeometrie unverändert bleibt.
 Topologiewechsel räumlich über Block-Quads projizieren; keine zusätzlichen
 Ränge automatisch erzeugen.
-
-Der externe Raumvertrag verwendet Quads immer als
-`[vorne-links, vorne-rechts, hinten-rechts, hinten-links]` aus Spielfeldsicht;
-RLE läuft zeilenweise ab Reihe 0 vorne und innerhalb jeder Reihe links nach
-rechts. Legacy-RLE muss deshalb pro Reihe gespiegelt werden, wenn dessen
-interne D→C-Achse rechts→links verläuft.
-
-Ausbaugeometrie wird stets aus unveränderlichen Referenzmaßen abgeleitet:
-Vorderkante und `z0` bleiben fest, Hinterkante und `z1` wachsen proportional
-zu `effektive rows / reference_rows`.
-
-**Why:** Eine reine Quad-Umordnung spiegelt asymmetrische Sitzmuster; Skalieren
-bereits skalierter Quads erzeugt bei wiederholten Ausbauten Geometriedrift.
-
-**How to apply:** Raumwerte serverseitig setzen und Browserwerte strikt
-validieren. Kanonische V2-Datensätze nicht erneut spiegeln; Legacy-Datensätze
-genau einmal beim Anreichern in die kanonische Sitzachse überführen.

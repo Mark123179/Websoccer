@@ -97,12 +97,8 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
     if geometry is None:
         return {'version': 1, 'palette': clean_palette, 'blocks': clean_blocks}
 
-    from .contracts import (axis_theta, geometry_blocks, legacy_seat_axis_reversed,
-                            project_rle, reverse_rle_rows, rle_length)
+    from .contracts import geometry_blocks, project_rle, rle_length
     trusted = geometry_blocks(geometry)
-    trusted_axis = axis_theta(geometry)
-    raw_by_id = {block.get('id', position): block
-                 for position, block in enumerate(geometry.get('blocks', []))}
     by_id = {}
     for block in clean_blocks:
         if block['id'] in by_id:
@@ -116,8 +112,6 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
     if payload.get('version', 1) not in (1, 2):
         raise InvalidImageData('Nicht unterstützte Design-Version.')
     result = []
-    if is_v2 and payload.get('axisTheta') != trusted_axis:
-        raise InvalidImageData('axisTheta stimmt nicht mit der Servergeometrie überein.')
     for meta in trusted:
         supplied = by_id.get(meta['id'])
         if supplied is None:
@@ -125,7 +119,7 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
         else:
             original = next(item for item in blocks if item.get('id') == meta['id'])
             if is_v2:
-                for key in ('stand', 'tier', 'order', 'rows', 'seats', 'quad', 'z0', 'z1'):
+                for key in ('stand', 'tier', 'order', 'rows', 'seats'):
                     if original.get(key) != meta[key]:
                         raise InvalidImageData(
                             f"Block {meta['id']}: {key} stimmt nicht mit der Servergeometrie überein.")
@@ -139,17 +133,11 @@ def normalize_design_payload(payload, *, geometry=None, stadium_name=None, blick
                 target_size = meta['rows'] * meta['seats']
                 source_len = min(rle_length(supplied['rle']), target_size)
                 source_rows = max(1, (source_len + meta['seats'] - 1) // meta['seats'])
-                legacy_rle = supplied['rle']
-                if legacy_seat_axis_reversed(
-                        raw_by_id[meta['id']]['quad'],
-                        geometry.get('meta', {}).get('fieldC', [0, 0])):
-                    legacy_rle = reverse_rle_rows(legacy_rle, source_rows, meta['seats'])
-                rle = project_rle(legacy_rle, (source_rows, meta['seats']),
+                rle = project_rle(supplied['rle'], (source_rows, meta['seats']),
                                   (meta['rows'], meta['seats']))
         result.append({**meta, 'rle': rle})
     direction = str(payload.get('blickrichtung', blickrichtung)).upper()
     if direction not in ('NORD', 'SUED', 'OST', 'WEST'):
         raise InvalidImageData('Blickrichtung muss NORD, SUED, OST oder WEST sein.')
     return {'version': 2, 'stadium': stadium_name or payload.get('stadium', ''),
-            'axisTheta': trusted_axis, 'blickrichtung': direction,
-            'palette': clean_palette, 'blocks': result}
+            'blickrichtung': direction, 'palette': clean_palette, 'blocks': result}

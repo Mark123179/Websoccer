@@ -77,13 +77,6 @@ def normalise_block_types(stadium, geometry):
                     block['type'] = primary
     result.setdefault('meta', {})
     result['meta']['name'] = stadium.name
-    for block in blocks:
-        # These baselines are deliberately copied once, before authoritative
-        # capacity distribution changes the effective depth of a block.
-        block.setdefault('reference_rows', block.get('rows'))
-        block.setdefault('reference_quad', deepcopy(block.get('quad')))
-        block.setdefault('reference_z0', block.get('z0'))
-        block.setdefault('reference_z1', block.get('z1'))
     return result
 
 

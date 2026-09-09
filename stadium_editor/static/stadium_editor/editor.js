@@ -64,16 +64,12 @@ const undoStack = [], redoStack = [];
 
 /* Rastermaße gehören zur Geometrie. Kapazitäten sind wirtschaftliche Daten
    und dürfen weder die sichtbaren Reihen aufblasen noch den Export kürzen. */
-function renderableBlock(block, index, isContract=true){
+function renderableBlock(block, index){
   const geometryRows = Math.max(1, Number(block.rows) || 1);
   const geometrySeats = Math.max(1, Number(block.seats) || 1);
   const capacity = geometryRows * geometrySeats;
   const seats = geometrySeats;
   const rows = geometryRows;
-  // V2 transport is front-left/front-right/back-right/back-left.  The editor
-  // renderer intentionally remains on its longstanding A,B,C,D raw order.
-  const contractQuad = Array.isArray(block.quad) && block.quad.length === 4 ? block.quad : null;
-  const legacyQuad = contractQuad && isContract ? [contractQuad[3], contractQuad[2], contractQuad[1], contractQuad[0]] : block.quad;
   return Object.assign({}, block, {
     id: Number.isInteger(Number(block.id)) ? Number(block.id) : index,
     geometryRows,
@@ -81,7 +77,6 @@ function renderableBlock(block, index, isContract=true){
     capacity,
     rows,
     seats,
-    quad: legacyQuad,
   });
 }
 function isRenderableSeat(block, row, seat){
@@ -1441,7 +1436,7 @@ function addNewTier(refBlocks, seatType, rows){
               [B[0], B[1]], [A[0], A[1]] ],
       z0: rb.z1 + 2, z1: rb.z1 + 2 + slope*rows,
     };
-    const renderBlock = renderableBlock(nb, blocks.length, false);
+    const renderBlock = renderableBlock(nb, blocks.length);
     blocks.push(renderBlock);
     baseData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
     seatData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
@@ -1509,7 +1504,7 @@ if(expandButton){
 
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
-  const out = {version:2, stadium:D.meta.name, axisTheta:D.axisTheta, blickrichtung, palette:PALETTE.map(p=>p[0]),
+  const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
     blocks: blocks.map((b,i)=>{
       const d = seatData[i], rle=[];
       if(d.length){
@@ -1520,8 +1515,7 @@ async function exportDesign(){
       return {
         id:b.id, stand:b.stand, tier:(b.tier==='RANG1' ? 'UNTER' : (b.tier==='UNTER' ? 'UNTER' : 'OBER')),
         order:b.order,
-        rows:b.rows, seats:b.seats,
-        quad:[b.quad[3], b.quad[2], b.quad[1], b.quad[0]], z0:b.z0, z1:b.z1, rle
+        rows:b.rows, seats:b.seats, rle
       };
     })};
   const button = document.getElementById('btnSave');

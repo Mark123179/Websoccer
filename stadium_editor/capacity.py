@@ -42,38 +42,6 @@ def _stadium_capacity_total(stadium):
     )
 
 
-def _reference(block):
-    """Immutable visual baseline; old rows safely fall back to their raw shape."""
-    try:
-        rows = int(block.get('reference_rows', block['rows']))
-        quad = deepcopy(block.get('reference_quad', block['quad']))
-        z0 = block.get('reference_z0', block['z0'])
-        z1 = block.get('reference_z1', block['z1'])
-        if (rows < 1 or len(quad) != 4 or not all(isinstance(point, list) and len(point) == 2
-                                                   and all(isinstance(v, (int, float)) and not isinstance(v, bool)
-                                                           and math.isfinite(v) for v in point) for point in quad)
-                or not all(isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
-                           for v in (z0, z1)) or z1 <= z0):
-            raise ValueError
-    except (KeyError, TypeError, ValueError):
-        raise CapacityDistributionError('Blockreferenz für die räumliche Skalierung ist ungültig.')
-    return rows, quad, z0, z1
-
-
-def _scale_spatial_block(block):
-    reference_rows, reference_quad, reference_z0, reference_z1 = _reference(block)
-    ratio = int(block['rows']) / reference_rows
-    a, b, c, d = reference_quad
-    # Raw legacy order: the C-D front edge stays anchored at the pitch.
-    block['quad'] = [
-        [d[0] + (a[0] - d[0]) * ratio, d[1] + (a[1] - d[1]) * ratio],
-        [c[0] + (b[0] - c[0]) * ratio, c[1] + (b[1] - c[1]) * ratio],
-        deepcopy(c), deepcopy(d),
-    ]
-    block['z0'] = reference_z0
-    block['z1'] = reference_z0 + (reference_z1 - reference_z0) * ratio
-
-
 def distribute_capacities(stadium, geometry):
     """Return geometry with exact server-authoritative block capacities.
 
@@ -134,7 +102,6 @@ def distribute_capacities(stadium, geometry):
                 # assigned capacity; the final row is intentionally padded.
                 width = max(1, int(blocks[index]['seats']))
                 blocks[index]['rows'] = max(1, math.ceil(value / width))
-                _scale_spatial_block(blocks[index])
     result['capacity_source'] = 'Stadium'
     result['capacity_total'] = _stadium_capacity_total(stadium)
     return result
