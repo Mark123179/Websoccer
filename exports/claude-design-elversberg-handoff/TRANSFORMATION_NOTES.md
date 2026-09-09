@@ -41,6 +41,11 @@ erkennen. Diese Blöcke überspannen jeweils eine breite Ecke.
 Für sie wurde daher wie für alle anderen Blöcke die explizite
 Quellkonvention verwendet, statt eine radiale Form zu schätzen.
 
+Der Server-Serializer behandelt entsprechend `quad[2]` und `quad[3]` immer als
+spielfeldnahe Rasterkante und `quad[0]` und `quad[1]` als äußere Kante. Nur die
+Links-/Rechtsrichtung dieser Kanten wird aus der Lage zum Spielfeld bestimmt.
+Eine Radius-Sortierung darf die Kanten-Zugehörigkeit nicht überschreiben.
+
 ## Kapazität
 
 Die Summe aller gelieferten Raster beträgt:

@@ -79,7 +79,9 @@ def _canonical_quad(raw_quad, center, theta, block_id):
 
     Stored editor geometry uses the historical ``outer-left, outer-right,
     inner-right, inner-left`` convention. The scene contract instead exposes
-    ``front-left, front-right, back-right, back-left`` from the pitch.
+    ``front-left, front-right, back-right, back-left`` from the pitch.  The
+    source edge membership is authoritative: radial sorting is ambiguous for
+    blocks that span a wide stadium corner.
     """
     if not isinstance(raw_quad, list) or len(raw_quad) != 4:
         raise LiveSceneError(f'Block {block_id}: quad muss genau vier Punkte haben.')
@@ -90,24 +92,15 @@ def _canonical_quad(raw_quad, center, theta, block_id):
     if len({(round(x, 9), round(y, 9)) for x, y in transformed}) != 4:
         raise LiveSceneError(f'Block {block_id}: quad enthält doppelte Punkte.')
 
-    by_radius = sorted(
-        range(4),
-        key=lambda index: transformed[index][0] ** 2 + transformed[index][1] ** 2,
-    )
-    front_indices = set(by_radius[:2])
-    back_indices = set(by_radius[2:])
-    front_radius = max(
-        transformed[index][0] ** 2 + transformed[index][1] ** 2
-        for index in front_indices
-    )
-    back_radius = min(
-        transformed[index][0] ** 2 + transformed[index][1] ** 2
-        for index in back_indices
-    )
-    if back_radius - front_radius <= EPSILON:
-        raise LiveSceneError(
-            f'Block {block_id}: Vorder- und Hinterkante sind nicht eindeutig.'
-        )
+    if (
+        _segments_cross(
+            transformed[0], transformed[1], transformed[2], transformed[3])
+        or _segments_cross(
+            transformed[1], transformed[2], transformed[3], transformed[0])
+    ):
+        raise LiveSceneError(f'Block {block_id}: quad ist selbstüberschneidend.')
+    if _polygon_area(transformed) <= EPSILON:
+        raise LiveSceneError(f'Block {block_id}: quad hat keine Fläche.')
 
     centroid = (
         sum(point[0] for point in transformed) / 4,
@@ -121,31 +114,11 @@ def _canonical_quad(raw_quad, center, theta, block_id):
     lateral = lambda index: (
         transformed[index][0] * left[0] + transformed[index][1] * left[1]
     )
-    front_left, front_right = sorted(
-        front_indices, key=lateral, reverse=True)
-    back_left, back_right = sorted(
-        back_indices, key=lateral, reverse=True)
-    canonical = [
-        transformed[front_left],
-        transformed[front_right],
-        transformed[back_right],
-        transformed[back_left],
-    ]
-    if _polygon_area(canonical) <= EPSILON:
-        raise LiveSceneError(f'Block {block_id}: quad hat keine Fläche.')
-    if (
-        _segments_cross(canonical[0], canonical[1], canonical[2], canonical[3])
-        or _segments_cross(canonical[1], canonical[2], canonical[3], canonical[0])
-    ):
-        raise LiveSceneError(f'Block {block_id}: quad ist selbstüberschneidend.')
-
-    # The editor maps columns along raw quad[3] -> raw quad[2]. Preserve the
-    # visual choreography while changing the scene contract to left -> right.
-    if front_indices != {2, 3}:
-        raise LiveSceneError(
-            f'Block {block_id}: historische Rasterkante ist nicht spielfeldnah.'
-        )
-    reverse_rows = front_left == 2
+    # The editor maps columns along raw quad[3] -> raw quad[2]. Preserve that
+    # choreography, reversing rows only when this edge runs right-to-left.
+    reverse_rows = lateral(3) < lateral(2)
+    order = (2, 3, 0, 1) if reverse_rows else (3, 2, 1, 0)
+    canonical = [transformed[index] for index in order]
     return [_rounded_point(point) for point in canonical], reverse_rows
 
 

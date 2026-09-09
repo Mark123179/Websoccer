@@ -18,7 +18,7 @@ from game.models import Club, League, Stadium, StadiumExpansion
 from stadium_editor.capacity import distribute_capacities
 from stadium_editor.contracts import geometry_blocks, project_rle, spatial_project_design
 from stadium_editor.image_validation import InvalidImageData, normalize_design_payload, validate_and_quantize_data_url
-from stadium_editor.live_scene import LiveSceneError, build_live_scene
+from stadium_editor.live_scene import LiveSceneError, _canonical_quad, build_live_scene
 from stadium_editor.models import StadiumDesign, StadiumGeometry
 from stadium_editor.seed import (
     BVB_NORD_STANDING_BLOCK_IDS,
@@ -516,6 +516,41 @@ class StadiumEditorTests(TestCase):
             result['blocks'][0]['rle'],
             [[1, 1], [2, 0], [1, 1]],
         )
+
+    def test_live_scene_accepts_wide_corner_quads_without_moving_points(self):
+        canonical_quads = {
+            8: [[-38.177404, -51.782271], [-64.17281, -49.130745],
+                [-73.683324, -56.418538], [-43.525527, -59.036896]],
+            9: [[-17.292988, -51.842815], [-35.744619, -51.803559],
+                [-40.752157, -59.059602], [-19.700177, -59.07093]],
+            12: [[36.905169, -51.795453], [18.140159, -51.849435],
+                 [20.680344, -59.0776], [42.083036, -59.055741]],
+            13: [[65.569767, -48.604632], [39.39158, -51.771748],
+                 [44.930547, -59.042348], [75.355655, -55.849463]],
+            18: [[38.516756, 51.766764], [64.583127, 48.952869],
+                 [74.192259, 56.23203], [43.922465, 59.030545]],
+            19: [[17.513206, 51.844834], [36.063454, 51.796946],
+                 [41.127346, 59.048057], [19.962659, 59.069249]],
+            22: [[-36.572245, 51.787607], [-17.921175, 51.837366],
+                 [-20.411434, 59.068259], [-41.693759, 59.042963]],
+            23: [[-65.177314, 48.790322], [-39.044567, 51.762669],
+                 [-44.519521, 59.034765], [-74.882634, 56.063592]],
+        }
+        for block_id, expected in canonical_quads.items():
+            with self.subTest(block_id=block_id):
+                # Reconstruct the documented source convention:
+                # outer-left, outer-right, inner-right, inner-left.
+                source = [expected[3], expected[2], expected[1], expected[0]]
+                result, _reverse_rows = _canonical_quad(
+                    source, (0, 0), 0, block_id)
+                self.assertEqual(result, expected)
+                self.assertCountEqual(result, source)
+
+    def test_live_scene_rejects_a_genuinely_self_crossing_source_quad(self):
+        geometry, design = self._live_scene_records(
+            quad=[[-2, 4], [1, 2], [2, 4], [-1, 2]])
+        with self.assertRaisesRegex(LiveSceneError, 'selbstüberschneidend'):
+            build_live_scene(self.stadium, geometry, design.design)
 
     def test_live_scene_exports_explicit_roof_in_pitch_frame(self):
         geometry, design = self._live_scene_records(theta=math.pi / 2)
