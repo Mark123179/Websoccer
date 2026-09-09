@@ -188,10 +188,28 @@ def _scene_rle(rle, rows, seats, palette_size, block_id, reverse_rows):
     return _encode(reversed_values)
 
 
-def _scene_roof(geometry, center, theta):
+def _scene_roof(geometry, center, theta, scene_outline, raw_blocks):
     raw_segments = geometry.get('roofs')
     if raw_segments is None or raw_segments == []:
-        return {'mode': 'procedural-ring'}
+        meta = geometry.get('meta') or {}
+        roof_meta = meta.get('roof') if isinstance(meta.get('roof'), dict) else {}
+        depth = _number(roof_meta.get('depth', 1.35), 'Dachtiefe')
+        if depth <= 0:
+            raise LiveSceneError('Dachtiefe muss größer als null sein.')
+        outline_center = _rounded_point((
+            sum(point[0] for point in scene_outline) / len(scene_outline),
+            sum(point[1] for point in scene_outline) / len(scene_outline),
+        ))
+        return {
+            'mode': 'procedural-ring',
+            'center': outline_center,
+            'depth': depth,
+            'innerEnvelope': [82.0, 60.0] if meta.get('track') else [59.5, 41.0],
+            'excludedBlockIds': sorted(
+                block_id for block_id, block in raw_blocks.items()
+                if block.get('noroof') is True
+            ),
+        }
     if not isinstance(raw_segments, list) or len(raw_segments) > 1_000:
         raise LiveSceneError('Die Dachgeometrie enthält keine gültige Segmentliste.')
     segments, ids = [], set()
@@ -365,5 +383,6 @@ def build_live_scene(stadium, geometry, design):
         'palette': [colour.lower() for colour in palette],
         'blocks': scene_blocks,
         'outline': scene_outline,
-        'roof': _scene_roof(geometry, center, theta),
+        'roof': _scene_roof(
+            geometry, center, theta, scene_outline, raw_blocks),
     }

@@ -478,7 +478,28 @@ class StadiumEditorTests(TestCase):
             [[-1.0, 2.0], [1.0, 2.0], [2.0, 4.0], [-2.0, 4.0]],
         )
         self.assertEqual(result['pitch'], {'length': 105.0, 'width': 68.0})
-        self.assertEqual(result['roof'], {'mode': 'procedural-ring'})
+        self.assertEqual(result['roof'], {
+            'mode': 'procedural-ring',
+            'center': [0.0, 0.0],
+            'depth': 1.35,
+            'innerEnvelope': [59.5, 41.0],
+            'excludedBlockIds': [],
+        })
+
+    def test_live_scene_resolves_editor_roof_inputs(self):
+        geometry, design = self._live_scene_records()
+        geometry['outline'] = [[8, -2], [12, -2], [12, 2], [8, 2]]
+        geometry['meta']['track'] = True
+        geometry['meta']['roof'] = {'depth': 1.45}
+        geometry['blocks'][0]['noroof'] = True
+        result = build_live_scene(self.stadium, geometry, design.design)
+        self.assertEqual(result['roof'], {
+            'mode': 'procedural-ring',
+            'center': [10.0, 0.0],
+            'depth': 1.45,
+            'innerEnvelope': [82.0, 60.0],
+            'excludedBlockIds': [0],
+        })
 
     def test_live_scene_reverses_each_rle_row_when_quad_requires_it(self):
         geometry, design = self._live_scene_records(
@@ -532,6 +553,31 @@ class StadiumEditorTests(TestCase):
         result = response.json()
         self.assertEqual(result['club']['id'], self.club.pk)
         self.assertEqual([block['id'] for block in result['blocks']], [0])
+
+    def test_live_mode_is_public_and_loads_canonical_scene_endpoint(self):
+        self._live_scene_records()
+        response = self.client.get(
+            reverse('stadium_live_mode', args=[self.club.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('stadium_live_scene', args=[self.club.pk]),
+        )
+        self.assertContains(response, 'stadium_editor/live_mode.js')
+
+    def test_live_mode_renderer_uses_quads_and_height_not_stand_dimensions(self):
+        source = (
+            Path(__file__).resolve().parent
+            / 'static' / 'stadium_editor' / 'live_mode.js'
+        ).read_text(encoding='utf-8')
+        self.assertIn('bilinearPoint(block.quad, u0, v0)', source)
+        self.assertIn('block.z0 + (block.z1 - block.z0) * v0', source)
+        self.assertIn(
+            'proceduralRoofRing(scene.blocks, scene.roof.center)',
+            source,
+        )
+        self.assertIn('Math.atan2(point[1], point[0])', source)
+        self.assertNotIn('fetch(`/management/stadion/editor/geometry/', source)
 
     def test_live_scene_endpoint_reports_missing_design_and_bad_geometry(self):
         url = reverse('stadium_live_scene', args=[self.club.pk])

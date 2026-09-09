@@ -147,3 +147,18 @@ def stadium_live_scene(request, club_id):
             status=409,
         )
     return JsonResponse(payload)
+
+
+@require_GET
+def stadium_live_mode(request, club_id):
+    """Public 2D stadium view backed exclusively by the canonical live scene."""
+    try:
+        club = Club.objects.select_related('stadium').get(pk=club_id)
+        stadium = club.stadium
+    except (Club.DoesNotExist, Stadium.DoesNotExist):
+        return HttpResponse('Stadion nicht gefunden.', status=404)
+    return render(request, 'stadium_editor/live_mode.html', {
+        'club': club,
+        'stadium': stadium,
+        'scene_url': reverse('stadium_live_scene', args=[club.pk]),
+    })

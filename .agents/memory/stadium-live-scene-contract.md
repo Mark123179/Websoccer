@@ -16,3 +16,15 @@ manipulierbar und könnten nach Ausbauten veralten.
 Scene liefert alle Blöcke in Metern, pitch-zentriert und mit kanonischen Quads;
 Kamera und Culling bleiben Client-Aufgabe. Geometrie nie aus dem Design
 zurückschreiben oder aus `rows`/`seats` schätzen.
+
+Beim deterministischen Dachring gelten zwei verschiedene Zentren: Das
+transformierte Umrisszentrum steuert radiale Außenring-Auswahl und
+Winkelsortierung; die Dachinnenkante wird dagegen immer um den kanonischen
+Spielfeldursprung `[0,0]` geklemmt.
+
+**Why:** Bei asymmetrischen Stadien kann das Umrisszentrum deutlich vom
+Spielfeldzentrum abweichen. Ein gemeinsames Zentrum verändert dann die
+Dachflächen gegenüber dem Editor.
+
+**How to apply:** Beide Rollen im Scene-Vertrag getrennt halten. Das
+Umrisszentrum niemals als Zentrum der Spielfeld-/Laufbahn-Enveloppe verwenden.
