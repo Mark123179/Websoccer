@@ -382,3 +382,17 @@ mtime_ms = 1788952485619
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/442d0a33-fe61-45f5-8e37-c42ce2052af4/cea33583-3c34-4b8d-9139-bef2994ea176"
 storage_version_token = "1788952552028651"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "-wOMW1vRrFrOpag_e7hv2"
+uri = "file://exports/claude-design-elversberg-prototyp-handoff.zip"
+type = "unspecified"
+title = "Claude Design – Elversberg-Stadionpaket"
+description = "Geprüftes Übergabe-ZIP mit 14.643-Plätze-Demoscene, 52 Blöcken, Blaupause, Quelldaten, aktuellem Renderer, Briefing und Dortmund-Vergleich."
+logical_id = "50bce4e3-727b-4f6d-b58b-1217089a2ad8"
+content_hash = "sha256:43bd1ca4100ca31458c29ca52eaa64405b9b8e3559de85985dc8a480a3112d66"
+size = 308199
+mtime_ms = 1788962669239
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/50bce4e3-727b-4f6d-b58b-1217089a2ad8/4ab94b38-8a6e-4ba1-876e-57bec0d4abe4"
+storage_version_token = "1788962727871447"
+content_type = "application/octet-stream"

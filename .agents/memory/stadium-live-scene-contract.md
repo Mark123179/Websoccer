@@ -28,3 +28,18 @@ Dachflächen gegenüber dem Editor.
 
 **How to apply:** Beide Rollen im Scene-Vertrag getrennt halten. Das
 Umrisszentrum niemals als Zentrum der Spielfeld-/Laufbahn-Enveloppe verwenden.
+
+Breite Eckblöcke dürfen nicht ausschließlich über die zwei radial nächsten
+Punkte in Vorder- und Hinterkante zerlegt werden. Wenn die Quellgeometrie eine
+explizite Kantenkonvention besitzt, ist diese Konvention autoritativ und die
+vier vorhandenen Punkte werden nur in die kanonische Scene-Reihenfolge
+überführt.
+
+**Why:** Ein Eckblock kann einen so großen Winkel überspannen, dass ein äußerer
+Eckpunkt näher an der Spielfeldmitte liegt als der gegenüberliegende innere
+Punkt. Eine reine Distanzsortierung erzeugt dann trotz gültigem Quellquad ein
+scheinbar selbstüberschneidendes Runtime-Quad.
+
+**How to apply:** Bei neuen Stadionimporten die Quellreihenfolge dokumentieren
+und verlustfrei normalisieren. Niemals Punkte verschieben oder die Form aus
+`rows`, `seats`, Tribünenseite oder Kapazität schätzen.
