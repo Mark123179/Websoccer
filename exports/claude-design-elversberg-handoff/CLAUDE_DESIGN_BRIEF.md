@@ -84,19 +84,17 @@ Blockraster, Palette und Scene-Vertrag erhalten bleiben.
 
 ### Dach
 
-Das Quellmaterial liefert keine expliziten Dachsegmente, sondern nur die
-Information eines Ringdachs. Deshalb enthält die Scene:
+Die Dachform ist anhand der in `TRANSFORMATION_NOTES.md` festgelegten Luft- und
+Seitenreferenzen vermessen. Die Scene enthält 26 pitch-zentrierte Segmente:
 
 ```json
 {
-  "mode": "procedural-ring"
+  "mode": "explicit"
 }
 ```
 
-Der aktuelle Renderer kann diesen Modus darstellen. Das Dach darf für den
-Prototyp atmosphärisch verbessert werden, aber nicht als neue autoritative
-Geometrie in die Scene zurückgeschrieben werden. Eine spätere Vermessung
-expliziter Dachsegmente wäre ein separater Arbeitsschritt.
+Die Quads folgen den gelieferten Außen- und Innenkanten der Oberrangblöcke.
+Blocknamen und Rastermaße werden nicht zur Geometrieableitung verwendet.
 
 ### Normalisierte Eckpunkte
 
@@ -151,7 +149,7 @@ Screenshot. Der Vergleich soll insbesondere zeigen:
 |---|---:|---:|
 | Kapazitätsstand | 14.643 | 81.365 |
 | Blöcke | 52 | 52 |
-| Dach | prozeduraler Ring | 28 explizite Segmente |
+| Dach | 26 explizite Segmente | 28 explizite Segmente |
 | Charakter | kompakt/asymmetrisch | groß/geschlossen |
 
 Die Dortmund-Geometrie darf niemals auf Elversberg übertragen werden.
@@ -164,7 +162,7 @@ Die Dortmund-Geometrie darf niemals auf Elversberg übertragen werden.
 - Die RLE-Länge stimmt für jeden Block exakt mit `rows × seats` überein.
 - Ober- und Unterränge bleiben anhand ihrer gelieferten Höhen unterscheidbar.
 - `homeStand: "SUED"` bleibt erhalten.
-- Das prozedurale Ringdach wird dargestellt.
+- Alle 26 expliziten Dachsegmente werden dargestellt.
 - Orbit, Zoom und Reset funktionieren.
 - Desktop, Tablet und Smartphone haben keinen horizontalen Overflow.
 - Fehlerhaftes oder nicht ladbares JSON zeigt einen sichtbaren Fehlerzustand.

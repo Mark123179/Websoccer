@@ -569,6 +569,24 @@ class StadiumEditorTests(TestCase):
             'heights': [24.0, 24.0, 19.0, 19.0],
         }])
 
+    def test_elversberg_demo_uses_explicit_pitch_centered_roof_segments(self):
+        scene_path = (
+            Path(__file__).resolve().parents[1]
+            / 'exports' / 'elversberg-live-scene-demo.json'
+        )
+        scene = json.loads(scene_path.read_text(encoding='utf-8'))
+
+        self.assertEqual(scene['roof']['mode'], 'explicit')
+        self.assertEqual(len(scene['roof']['segments']), 26)
+        self.assertEqual(
+            [segment['id'] for segment in scene['roof']['segments']],
+            [f'roof-{index}' for index in range(26)],
+        )
+        for segment in scene['roof']['segments']:
+            self.assertEqual(len(segment['quad']), 4)
+            self.assertEqual(len(segment['heights']), 4)
+            self.assertGreater(segment['heights'][0], segment['heights'][2])
+
     def test_live_scene_rejects_duplicate_roof_ids(self):
         geometry, design = self._live_scene_records()
         segment = {

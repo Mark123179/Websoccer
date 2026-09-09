@@ -73,6 +73,20 @@ dagegen autoritativ.
 
 ## Dach
 
-Die Quelle nennt ein Ringdach, liefert jedoch keine Dachsegmente. Die Runtime-
-Scene verwendet deshalb den bestehenden Vertragsmodus `procedural-ring`.
-Explizite Dachquads wurden nicht erfunden.
+Als Referenzen für die Dachform sind festgelegt:
+
+- die gelieferte orthogonale Draufsicht `elversberg_blaupause.png` für die
+  Außenkontur und Segmentgrenzen,
+- die datierten Baufortschritts- und Seitenaufnahmen auf
+  `https://stadiumdb.com/constructions/ger/ursapharm_arena` für Dachneigung
+  und Höhenwirkung,
+- die offizielle Stadionseite
+  `https://sv07elversberg.de/ursapharm-arena/daten-fakten` zur Kontrolle von
+  Spielfeldmaß und stadionseitiger Dachbeleuchtung.
+
+Die Runtime-Scene verwendet 26 explizite Dachquads. Ihre Grundflächen stammen
+ausschließlich aus den gelieferten Außenkanten der 26 Oberrangblöcke und deren
+pitch-seitigen Kanten; weder Blocknamen noch `rows`/`seats` bestimmen die Form.
+Die Z-Werte sind an die gelieferten Blockhöhen `z0`/`z1` gebunden. Damit bleibt
+die asymmetrische, pitch-zentrierte Kontur erhalten, ohne eine generische
+Ringfläche im Renderer zu erzeugen.
