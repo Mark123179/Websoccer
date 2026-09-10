@@ -59,6 +59,8 @@ FACILITY_MAX_LEVEL = 3
 
 import math
 from datetime import timedelta
+from django.core.paginator import Paginator
+from django.core.exceptions import ValidationError
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -72,6 +74,7 @@ from django.views.decorators.http import require_POST
 from .models import (
     Club, CupFixture, FacilityConstruction, MatchdayRevenue,
     SeasonFixture, StadiumExpansion, StadionumfeldConfig,
+    FriendlyFixture, NeutralVenue,
 )
 from .economy.booking import book
 from .economy.stadium import (
@@ -87,6 +90,81 @@ from .asset_urls import (
 )
 from .records.hall_geometry import CLUB_SLOT_STYLES, PANEL_SLOT_STYLES
 from .records.hall_catalog import HALL_RECORD_SLOTS, SLOTS_BY_KEY
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def friendly_action(request):
+    """Small JSON endpoint for the friendlies shell; UI can remain template-agnostic."""
+    from .friendlies.services import (
+        accept_marketplace_offer, accept_request, create_directed_request,
+        create_marketplace_offer, decline_request, withdraw_request,
+    )
+    from .models import NeutralVenue
+    from django.utils.dateparse import parse_datetime
+    club = current_manager_club(user=request.user)
+    if club is None:
+        return JsonResponse({'error': 'Dir ist noch kein Verein zugewiesen.'}, status=403)
+    action = request.POST.get('action', '')
+    try:
+        scope = request.POST.get('squad_scope', FriendlyFixture.SQUAD_PRO)
+        if scope == FriendlyFixture.SQUAD_U21:
+            raise ValidationError(
+                'Die U21 hat noch keinen Kader — der Jugendspielbetrieb ist in Arbeit.'
+            )
+        if action == 'request':
+            target = Club.objects.filter(pk=request.POST.get('target_club')).first()
+            if target is None:
+                raise ValidationError('Bitte einen gültigen Gegner auswählen.')
+            kickoff = parse_datetime(request.POST.get('kickoff_at', ''))
+            if kickoff is None:
+                raise ValidationError('Bitte einen gültigen Termin auswählen.')
+            if timezone.is_naive(kickoff):
+                kickoff = timezone.make_aware(kickoff)
+            obj = create_directed_request(
+                sender_club=club, target_club=target, kickoff_at=kickoff,
+                squad_scope=scope,
+                venue_type=request.POST.get('venue_type', 'heim'),
+                neutral_stadium=NeutralVenue.objects.filter(pk=request.POST.get('neutral_stadium')).first()
+                if request.POST.get('neutral_stadium') else None,
+                extra_time=request.POST.get('extra_time') == '1',
+                penalties=request.POST.get('penalties') == '1',
+                penalties_after_90=request.POST.get('penalties_after_90') == '1',
+                comment=request.POST.get('comment', ''),
+            )
+        elif action == 'offer':
+            kickoff = parse_datetime(request.POST.get('kickoff_at', ''))
+            if kickoff is None:
+                raise ValidationError('Bitte einen gültigen Termin auswählen.')
+            if timezone.is_naive(kickoff):
+                kickoff = timezone.make_aware(kickoff)
+            obj = create_marketplace_offer(
+                sender_club=club, kickoff_at=kickoff,
+                squad_scope=scope,
+                venue_type=request.POST.get('venue_type', 'heim'),
+                offered_role=request.POST.get('role', FriendlyFixture.VENUE_HOME),
+                neutral_stadium=NeutralVenue.objects.filter(pk=request.POST.get('neutral_stadium')).first()
+                if request.POST.get('neutral_stadium') else None,
+                extra_time=request.POST.get('extra_time') == '1',
+                penalties=request.POST.get('penalties') == '1',
+                penalties_after_90=request.POST.get('penalties_after_90') == '1',
+                comment=request.POST.get('comment', ''),
+            )
+        elif action == 'accept':
+            obj = accept_request(request.POST['fixture_id'], club)
+        elif action == 'decline':
+            obj = decline_request(request.POST['fixture_id'], club)
+        elif action == 'withdraw':
+            obj = withdraw_request(request.POST['fixture_id'], club)
+        elif action == 'accept_offer':
+            obj = accept_marketplace_offer(request.POST['fixture_id'], club)
+        else:
+            return JsonResponse({'error': 'Unbekannte Aktion.'}, status=400)
+        return JsonResponse({'ok': True, 'fixture_id': obj.pk, 'status': obj.status})
+    except ValidationError as exc:
+        return JsonResponse({'error': '; '.join(exc.messages)}, status=400)
+    except FriendlyFixture.DoesNotExist:
+        return JsonResponse({'error': 'Die Anfrage wurde nicht gefunden.'}, status=404)
 
 
 def _get_stadium_or_none(club):
@@ -163,6 +241,92 @@ def management_hub(request):
         'stadium':           stadium,
         'stadium_bg':        stadium_bg,
         'stadium_bg_filter': stadium_bg_filter,
+    })
+
+
+@login_required(login_url='/auth/login/')
+def management_friendlies(request):
+    """Operations desk for directed friendlies, offers and match history."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        messages.error(request, 'Dir ist noch kein Verein zugewiesen.')
+        return redirect('management_hub')
+    scope = request.GET.get('squad', FriendlyFixture.SQUAD_PRO)
+    if scope not in {FriendlyFixture.SQUAD_PRO, FriendlyFixture.SQUAD_U21}:
+        scope = FriendlyFixture.SQUAD_PRO
+    tab = request.GET.get('tab', 'schedule')
+    if tab not in {'schedule', 'market', 'requests', 'tournaments', 'history'}:
+        tab = 'schedule'
+    def crest(team):
+        return club_logo_url(team.fm_inside_id) if team and team.fm_inside_id else ''
+    incoming = FriendlyFixture.objects.filter(
+        target_club=club, sender_club__isnull=False, status=FriendlyFixture.STATUS_REQUESTED,
+        squad_scope=scope,
+    ).select_related('sender_club', 'neutral_stadium')
+    outgoing = FriendlyFixture.objects.filter(
+        sender_club=club, target_club__isnull=False, status=FriendlyFixture.STATUS_REQUESTED,
+        squad_scope=scope,
+    ).select_related('target_club', 'neutral_stadium')
+    offers = FriendlyFixture.objects.filter(
+        target_club__isnull=True, status=FriendlyFixture.STATUS_REQUESTED,
+        squad_scope=scope,
+    ).exclude(sender_club=club).select_related('sender_club', 'neutral_stadium')
+    own_offers = FriendlyFixture.objects.filter(
+        sender_club=club, target_club__isnull=True, status=FriendlyFixture.STATUS_REQUESTED,
+        squad_scope=scope,
+    ).select_related('neutral_stadium')
+    history_status = request.GET.get('status', 'all')
+    history = FriendlyFixture.objects.filter(
+        status__in=[FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED],
+        squad_scope=scope,
+    ).filter(sender_club=club) | FriendlyFixture.objects.filter(
+        status__in=[FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED],
+        squad_scope=scope, target_club=club,
+    )
+    if history_status in {FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED}:
+        history = history.filter(status=history_status)
+    history = history.select_related('sender_club', 'target_club', 'neutral_stadium',
+                                      'simulated_match').order_by('-kickoff_at', '-pk')
+    history_page = Paginator(history, 10).get_page(request.GET.get('page', 1))
+    history_rows = []
+    for fixture in history_page.object_list:
+        sender, target = fixture.sender_club, fixture.target_club
+        home, away = (
+            (target, sender)
+            if fixture.offered_role == FriendlyFixture.VENUE_AWAY
+            else (sender, target)
+        )
+        history_rows.append({'fixture': fixture, 'home': home, 'away': away,
+                             'home_logo': crest(home), 'away_logo': crest(away)})
+
+    opponents = Club.objects.exclude(pk=club.pk).select_related('managed_by').order_by('name')
+    def card(fixture, own=False):
+        sender, target = fixture.sender_club, fixture.target_club
+        home, away = (
+            (target, sender)
+            if fixture.offered_role == FriendlyFixture.VENUE_AWAY
+            else (sender, target)
+        )
+        return {
+            'fixture': fixture, 'home': home, 'away': away,
+            'home_logo': crest(home), 'away_logo': crest(away),
+            'venue': fixture.get_venue_type_display(),
+            'rules': [label for enabled, label in (
+                (fixture.extra_time, 'Verlängerung'),
+                (fixture.penalties, 'Elfmeterschießen'),
+                (fixture.penalties_after_90, 'Direkt nach 90'),
+            ) if enabled],
+            'own': own,
+        }
+    return render(request, 'game/management/friendlies.html', {
+        'club': club, 'scope': scope, 'tab': tab,
+        'opponents': opponents, 'neutral_venues': NeutralVenue.objects.filter(is_active=True),
+        'club_logo': crest(club), 'incoming': [card(x) for x in incoming],
+        'outgoing': [card(x) for x in outgoing], 'offers': [card(x) for x in offers],
+        'own_offers': [card(x, True) for x in own_offers],
+        'history_page': history_page, 'history_rows': history_rows, 'history_status': history_status,
+        'open_count': incoming.count() + outgoing.count(),
+        'u21_empty_text': 'Die U21 hat noch keinen Kader — der Jugendspielbetrieb ist in Arbeit.',
     })
 
 

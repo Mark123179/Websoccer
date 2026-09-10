@@ -32,6 +32,8 @@ from .models import (
     ManagerProfile,
     MatchdayRevenue,
     MatchResult,
+    FriendlyFixture,
+    NeutralVenue,
     Player,
     PlayerAwardTitle,
     PlayerDataReview,
@@ -1586,12 +1588,13 @@ class TacticSetupAdmin(admin.ModelAdmin):
     list_display = (
         'club',
         'squad_scope',
+        'context',
         'formation_code',
         'is_confirmed',
         'confirmed_at',
         'updated_at',
     )
-    list_filter = ('squad_scope', 'is_confirmed')
+    list_filter = ('squad_scope', 'context', 'is_confirmed')
     search_fields = ('club__name',)
     readonly_fields = ('updated_at',)
 
@@ -1608,6 +1611,24 @@ class TacticTemplateAdmin(admin.ModelAdmin):
     list_filter = ('squad_scope',)
     search_fields = ('club__name', 'name')
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(NeutralVenue)
+class NeutralVenueAdmin(admin.ModelAdmin):
+    list_display = ('name', 'city', 'capacity', 'is_active')
+    list_filter = ('is_active', 'city')
+    search_fields = ('name', 'city')
+
+
+@admin.register(FriendlyFixture)
+class FriendlyFixtureAdmin(admin.ModelAdmin):
+    list_display = (
+        'sender_club', 'target_club', 'squad_scope', 'kickoff_at',
+        'venue_type', 'status', 'simulated_match',
+    )
+    list_filter = ('status', 'squad_scope', 'venue_type', 'season')
+    search_fields = ('sender_club__name', 'target_club__name', 'comment')
+    readonly_fields = ('created_at', 'resolved_at')
 
 
 class PlayerSourceRatingInline(admin.TabularInline):

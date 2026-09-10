@@ -102,3 +102,4 @@
 - [Managerprofil KPI-Abnahme](manager-profile-kpi-acceptance.md) — KPI nur mit geliefertem Selfcheck abnehmen; KPI zeigt Wettbewerbslogos, Vitrine Pokalabbildungen.
 - [Persönliche Manager-Titel](manager-competition-titles.md) — Titel nur beim ersten saisonbezogenen Wettbewerbsabschluss dem dann verantwortlichen Manager zuordnen; nie ClubTrophy rückladen.
 - [KPI-Selbstcheck im Nullzustand](manager-profile-kpi-zero-state.md) — geliefertes Skript verlangt 1–6 Logos, obwohl die verbindliche Nullzustands-Spec bei 0 Trophäen keine Logos erlaubt.
+- [Freundschaftsspiel-Sandkasten](friendly-sandbox-invariants.md) — eigener Taktikkontext, neutrale Engine-Boni, 3h-Terminfenster, tokenisierte Tick-Lease und fail-closed Saisonbereinigung.

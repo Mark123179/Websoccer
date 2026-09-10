@@ -26,6 +26,7 @@ from .tactics import (
     default_substitutions,
     formation_slots,
     slot_key_for,
+    SQUAD_YOUTH,
 )
 
 DUMMY_STRENGTH = Decimal('50.00')
@@ -260,7 +261,7 @@ def _build_bench(players, used_pks, max_bench=7):
     return bench_pks
 
 
-def ensure_default_tactic(club):
+def ensure_default_tactic(club, tactic_context='pflicht', squad_scope=SQUAD_PRO):
     """Legt TacticSetup (Pro-Kader) an oder repariert ihn.
 
     Formationsauswahl: alle gültigen 11-Spieler-Formationen werden bewertet.
@@ -273,9 +274,19 @@ def ensure_default_tactic(club):
     """
     from .models import Player, TacticSetup
 
+    # Keep the public API permissive for old callers, while never silently
+    # putting a friendly setup into the Pflichtspiel row (or vice versa).
+    context = (
+        TacticSetup.CONTEXT_FREUNDSCHAFT
+        if tactic_context == TacticSetup.CONTEXT_FREUNDSCHAFT
+        else TacticSetup.CONTEXT_PFLICHT
+    )
+    scope = SQUAD_YOUTH if squad_scope == SQUAD_YOUTH else SQUAD_PRO
+
     tactic, _created = TacticSetup.objects.get_or_create(
         club=club,
-        squad_scope=SQUAD_PRO,
+        squad_scope=scope,
+        context=context,
         defaults={
             'formation': default_formation(),
             'lineup': {},
@@ -303,6 +314,10 @@ def ensure_default_tactic(club):
     all_players = list(
         Player.objects.filter(club=club).select_related('strength_profile')
     )
+    # The youth squad does not exist yet.  In particular, do not accidentally
+    # use the professional squad to populate a U21 tactic.
+    if scope == SQUAD_YOUTH:
+        all_players = []
     # Verletzte Spieler sind nicht aufstellbar
     players = [p for p in all_players if not p.is_ws_injured]
     if len(players) < 11:
@@ -469,7 +484,11 @@ def calculate_team_strength(club, malus=Decimal('1.0')):
 
     empty = {k: DUMMY_STRENGTH for k in ('goalkeeper', 'defense', 'midfield', 'attack', 'overall')}
     try:
-        setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
+        setup = TacticSetup.objects.get(
+            club=club,
+            squad_scope=SQUAD_PRO,
+            context=TacticSetup.CONTEXT_PFLICHT,
+        )
     except TacticSetup.DoesNotExist:
         return empty
 
@@ -715,7 +734,11 @@ def prepare_matchday_lineups(league, matchday, season):
         ):
             setup = None
             try:
-                setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
+                setup = TacticSetup.objects.get(
+                    club=club,
+                    squad_scope=SQUAD_PRO,
+                    context=TacticSetup.CONTEXT_PFLICHT,
+                )
                 lineup_valid = has_valid_lineup(setup, club=club)
             except TacticSetup.DoesNotExist:
                 lineup_valid = False
@@ -784,6 +807,7 @@ def prepare_matchday_lineups(league, matchday, season):
                     setup, _ = TacticSetup.objects.get_or_create(
                         club=club,
                         squad_scope=SQUAD_PRO,
+                        context=TacticSetup.CONTEXT_PFLICHT,
                         defaults={
                             'formation': default_formation(),
                             'lineup': {},
@@ -835,7 +859,11 @@ def club_readiness_status(club):
     player_count = Player.objects.filter(club=club).count()
 
     try:
-        setup = TacticSetup.objects.get(club=club, squad_scope=SQUAD_PRO)
+        setup = TacticSetup.objects.get(
+            club=club,
+            squad_scope=SQUAD_PRO,
+            context=TacticSetup.CONTEXT_PFLICHT,
+        )
         has_tactic = True
         valid = has_valid_lineup(setup, club=club)
         # TW-Slot direkt aus Lineup ableiten (has_valid_lineup hat schon alle Checks)

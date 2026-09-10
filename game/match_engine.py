@@ -111,6 +111,11 @@ def _clamp(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, v))
 
 
+def _knockout_report_duration(do_extra_time: bool) -> int:
+    """Elfmeterschießen allein verlängert keine Einsatzzeit."""
+    return 120 if do_extra_time else 90
+
+
 def _poisson(lam: float) -> int:
     """Poisson-Zufallsvariable (Knuth-Algorithmus)."""
     if lam <= 0.0:
@@ -1410,6 +1415,7 @@ def _simulate_match_minutes(
     segment_minutes: int = 5,
     _return_als_state: bool = False,
     weather: Optional[str] = None,
+    neutral_venue: bool = False,
 ) -> dict:
     """Simuliert ein Spiel in 5-Minuten-Segmenten mit Live-Bedingungsauswertung.
 
@@ -1517,7 +1523,9 @@ def _simulate_match_minutes(
         a_tactic_seg = _with_active_plan(away_base_tactic, a_plan)
         h_comp = compile_tactic(_h_team_seg, h_tactic_seg, half=half)
         h_comp['pressing_index'] = _clamp(
-            h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
+            h_comp.get('pressing_index', 0.35)
+            + (0.0 if neutral_venue else HOME_PRESSING_BONUS),
+            0.0, 1.0,
         )
         a_comp = compile_tactic(_a_team_seg, a_tactic_seg, half=half)
         _apply_weather_to_compiled(h_comp, weather, h_tactic_seg, minute, h_plan)
@@ -1536,8 +1544,8 @@ def _simulate_match_minutes(
         last_h_str,  last_a_str  = h_str,  a_str
 
         _xg_exp = _WX_SNOW_XG_EXPONENT if weather == 'schnee' else 1.25
-        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone, exponent=_xg_exp) * HOME_XG_MULTIPLIER
-        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone, exponent=_xg_exp) * AWAY_XG_MULTIPLIER
+        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone, exponent=_xg_exp) * (1.0 if neutral_venue else HOME_XG_MULTIPLIER)
+        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone, exponent=_xg_exp) * (1.0 if neutral_venue else AWAY_XG_MULTIPLIER)
         h_xg_seg   = h_xg_match * seg_len / 90.0
         a_xg_seg   = a_xg_match * seg_len / 90.0
         if weather == 'nebel':
@@ -1625,7 +1633,7 @@ def _simulate_match_minutes(
         # Gibt realistischen Bereich: ~30-70% je nach Spielcharakter
         poss_noise = random.gauss(0.0, 4.0)
         home_poss = int(round(_clamp(
-            50 + HOME_POSSESSION_BONUS
+            50 + (0.0 if neutral_venue else HOME_POSSESSION_BONUS)
             + (h_str['overall'] - a_str['overall']) / total_strength * 22
             + poss_delta + build_delta + _game_poss_offset + poss_noise,
             30, 70,
@@ -2417,6 +2425,7 @@ def _simulate_extra_time_minutes(
     a_gk_str_override: Optional[float],
     segment_minutes: int = 5,
     weather: Optional[str] = None,
+    neutral_venue: bool = False,
 ) -> dict:
     """Simuliert die Verlängerung (Minuten 91–120) mit vorhandenem ALS-Zustand.
 
@@ -2466,7 +2475,9 @@ def _simulate_extra_time_minutes(
         a_tactic_seg = _with_active_plan(away_base_tactic, a_plan)
         h_comp = compile_tactic(_h_team_seg, h_tactic_seg, half='second')
         h_comp['pressing_index'] = _clamp(
-            h_comp.get('pressing_index', 0.35) + HOME_PRESSING_BONUS, 0.0, 1.0
+            h_comp.get('pressing_index', 0.35)
+            + (0.0 if neutral_venue else HOME_PRESSING_BONUS),
+            0.0, 1.0,
         )
         a_comp = compile_tactic(_a_team_seg, a_tactic_seg, half='second')
         _apply_weather_to_compiled(h_comp, weather, h_tactic_seg, minute, h_plan)
@@ -2484,8 +2495,8 @@ def _simulate_extra_time_minutes(
         )
 
         _xg_exp = _WX_SNOW_XG_EXPONENT if weather == 'schnee' else 1.25
-        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone, exponent=_xg_exp) * HOME_XG_MULTIPLIER
-        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone, exponent=_xg_exp) * AWAY_XG_MULTIPLIER
+        h_xg_match = _expected_goals(h_str, a_str, h_comp, a_comp, h_zone, a_zone, exponent=_xg_exp) * (1.0 if neutral_venue else HOME_XG_MULTIPLIER)
+        a_xg_match = _expected_goals(a_str, h_str, a_comp, h_comp, a_zone, h_zone, exponent=_xg_exp) * (1.0 if neutral_venue else AWAY_XG_MULTIPLIER)
         h_xg_seg   = h_xg_match * seg_len / 90.0
         a_xg_seg   = a_xg_match * seg_len / 90.0
         if weather == 'nebel':
@@ -2849,6 +2860,13 @@ def simulate_match(
     away_strength_malus: float = 1.0,
     is_cup: bool = False,
     weather=None,
+    *,
+    tactic_context: str = 'pflicht',
+    squad_scope: str = SQUAD_PRO,
+    extra_time: Optional[bool] = None,
+    penalties: Optional[bool] = None,
+    penalties_after_90: bool = False,
+    neutral_venue: bool = False,
 ) -> dict:
     """
     Simuliert ein Spiel und gibt ein vollständiges Report-Dict zurück.
@@ -2890,6 +2908,20 @@ def simulate_match(
         None. None/'normal' = keine Wettereffekte (Baseline). Der gewürfelte
         Wert wandert als result['weather'] in report_data (Anzeige).
     """
+    # Legacy cup behavior remains unchanged unless a new control is explicit.
+    _knockout = bool(is_cup or extra_time is not None or penalties is not None or penalties_after_90)
+    _do_extra_time = bool(is_cup) if extra_time is None else bool(extra_time)
+    _do_penalties = (
+        True if penalties_after_90
+        else (bool(is_cup) if penalties is None else bool(penalties))
+    )
+    if penalties_after_90:
+        _do_extra_time = False
+    tactic_context = (
+        'freundschaft' if tactic_context == 'freundschaft' else 'pflicht'
+    )
+    squad_scope = 'youth' if squad_scope == 'youth' else SQUAD_PRO
+
     # 0. Wetter normalisieren (None = keine Effekte, hält Baseline stabil)
     _wx_type: Optional[str] = None
     _wx_temp: Optional[int] = None
@@ -2908,25 +2940,27 @@ def simulate_match(
     from .models import TacticSetup as _TacticSetup
 
     if home_club.managed_by_id is None:
-        home_tactic, _ = ensure_default_tactic(home_club)
+        home_tactic, _ = ensure_default_tactic(home_club, tactic_context=tactic_context, squad_scope=squad_scope)
     else:
         home_tactic, _ = _TacticSetup.objects.get_or_create(
             club=home_club,
-            squad_scope=SQUAD_PRO,
+            squad_scope=squad_scope,
+            context=(_TacticSetup.CONTEXT_FREUNDSCHAFT if tactic_context == _TacticSetup.CONTEXT_FREUNDSCHAFT else _TacticSetup.CONTEXT_PFLICHT),
             defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
         )
-        if not has_valid_lineup(home_tactic, club=home_club):
+        if squad_scope != 'youth' and not has_valid_lineup(home_tactic, club=home_club):
             patch_managed_lineup(home_club, home_tactic)
 
     if away_club.managed_by_id is None:
-        away_tactic, _ = ensure_default_tactic(away_club)
+        away_tactic, _ = ensure_default_tactic(away_club, tactic_context=tactic_context, squad_scope=squad_scope)
     else:
         away_tactic, _ = _TacticSetup.objects.get_or_create(
             club=away_club,
-            squad_scope=SQUAD_PRO,
+            squad_scope=squad_scope,
+            context=(_TacticSetup.CONTEXT_FREUNDSCHAFT if tactic_context == _TacticSetup.CONTEXT_FREUNDSCHAFT else _TacticSetup.CONTEXT_PFLICHT),
             defaults={'formation': default_formation(), 'lineup': {}, 'bench': []},
         )
-        if not has_valid_lineup(away_tactic, club=away_club):
+        if squad_scope != 'youth' and not has_valid_lineup(away_tactic, club=away_club):
             patch_managed_lineup(away_club, away_tactic)
 
     # 1b. Default-Taktik V1: Taktik-Einstellungen anhand des konkreten Matchups setzen.
@@ -3013,7 +3047,8 @@ def simulate_match(
 
     # 4. Minuten-Simulation
     sim = _simulate_match_minutes(
-        home_team, away_team, _return_als_state=is_cup, weather=_wx_type,
+        home_team, away_team, _return_als_state=_knockout, weather=_wx_type,
+        neutral_venue=neutral_venue,
     )
 
     # 5. Tore/Vorlagen auf ORM-Spieler mappen
@@ -3306,7 +3341,7 @@ def simulate_match(
     result['man_of_the_match'] = ratings['man_of_the_match']
 
     # 7. K.-o.-Modus: Verlängerung + Elfmeter (nur wenn is_cup=True)
-    if is_cup:
+    if _knockout:
         h_goals_90 = sim['home_goals']
         a_goals_90 = sim['away_goals']
         result['home_goals_90'] = h_goals_90
@@ -3330,15 +3365,25 @@ def simulate_match(
             _h_gk_ov = sim['h_gk_str_override']
             _a_gk_ov = sim['a_gk_str_override']
 
-            et = _simulate_extra_time_minutes(
-                _h_als, _a_als, _h_dis, _a_dis,
-                home_team, away_team,
-                h_goals_90, a_goals_90,
-                deepcopy(home_team.get('tactic', {})),
-                deepcopy(away_team.get('tactic', {})),
-                _h_gk_ov, _a_gk_ov,
-                weather=_wx_type,
-            )
+            if _do_extra_time:
+                et = _simulate_extra_time_minutes(
+                    _h_als, _a_als, _h_dis, _a_dis,
+                    home_team, away_team,
+                    h_goals_90, a_goals_90,
+                    deepcopy(home_team.get('tactic', {})),
+                    deepcopy(away_team.get('tactic', {})),
+                    _h_gk_ov, _a_gk_ov,
+                    weather=_wx_type,
+                    neutral_venue=neutral_venue,
+                )
+            else:
+                et = {
+                    'home_goals': h_goals_90, 'away_goals': a_goals_90,
+                    'home_goals_et': 0, 'away_goals_et': 0,
+                    'home_xg_et': 0.0, 'away_xg_et': 0.0,
+                    'goal_events_et': [], 'sp_near_miss_events_et': [],
+                    'et_dismissal_events': [],
+                }
 
             # Tore/Events aus VL in den Report integrieren
             result['home_goals']    = et['home_goals']
@@ -3356,13 +3401,15 @@ def simulate_match(
             )
             result['dismissal_events'] = result.get('dismissal_events', []) + et['et_dismissal_events']
 
-            # Spieler-Zeitfenster auf 120 Minuten aktualisieren
+            # Spieler-Zeitfenster nur bei echter Verlängerung auf 120 Minuten
+            # erweitern. Direktes Elfmeterschießen bleibt ein 90-Minuten-Spiel.
+            _report_duration = _knockout_report_duration(_do_extra_time)
             h_all_subs   = _h_als.sub_events
             a_all_subs   = _a_als.sub_events
-            h_mmap_120   = _build_minutes_played_map(h_all_subs, game_duration=120)
-            a_mmap_120   = _build_minutes_played_map(a_all_subs, game_duration=120)
-            h_wmap_120   = _build_windows_map(h_all_subs, game_duration=120)
-            a_wmap_120   = _build_windows_map(a_all_subs, game_duration=120)
+            h_mmap_120   = _build_minutes_played_map(h_all_subs, game_duration=_report_duration)
+            a_mmap_120   = _build_minutes_played_map(a_all_subs, game_duration=_report_duration)
+            h_wmap_120   = _build_windows_map(h_all_subs, game_duration=_report_duration)
+            a_wmap_120   = _build_windows_map(a_all_subs, game_duration=_report_duration)
 
             for p in result['home_players']:
                 pid = p.get('id')
@@ -3371,8 +3418,8 @@ def simulate_match(
                 if pid in h_wmap_120:
                     p['on_minute'], p['off_minute'] = h_wmap_120[pid]
                 elif p.get('off_minute', 90) == 90:
-                    p['off_minute'] = 120
-                p['minutes_played'] = h_mmap_120.get(pid, 120)
+                    p['off_minute'] = _report_duration
+                p['minutes_played'] = h_mmap_120.get(pid, _report_duration)
 
             for p in result['away_players']:
                 pid = p.get('id')
@@ -3381,8 +3428,8 @@ def simulate_match(
                 if pid in a_wmap_120:
                     p['on_minute'], p['off_minute'] = a_wmap_120[pid]
                 elif p.get('off_minute', 90) == 90:
-                    p['off_minute'] = 120
-                p['minutes_played'] = a_mmap_120.get(pid, 120)
+                    p['off_minute'] = _report_duration
+                p['minutes_played'] = a_mmap_120.get(pid, _report_duration)
 
             # ET-Tore in bestehende Player-Rows eintragen
             for evt in et['goal_events_et']:
@@ -3463,7 +3510,7 @@ def simulate_match(
                 )
                 result['decided_by']     = 'extra_time'
                 result['penalty_events'] = []
-            else:
+            elif _do_penalties:
                 # ── Elfmeterschießen ─────────────────────────────────────────
                 _match_seed = (home_club.pk * 2246822519 + away_club.pk * 2654435761) & 0xFFFFFFFF
                 shootout = _simulate_penalty_shootout(
@@ -3503,6 +3550,12 @@ def simulate_match(
                 result['winner_club_id']  = shootout['winner_club_id']
                 result['decided_by']      = 'penalties'
                 result['penalty_events']  = shootout['penalty_events']
+            else:
+                result['home_penalties'] = None
+                result['away_penalties'] = None
+                result['winner_club_id'] = None
+                result['decided_by'] = 'draw'
+                result['penalty_events'] = []
 
     return result
 

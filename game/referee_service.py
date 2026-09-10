@@ -213,10 +213,8 @@ def pick_referee(home_club, away_club, *,
             candidates = _filter_pool(_preloaded, nation)
 
     else:
-        # Freundschaft: nationale Refs wenn bekannt, sonst beliebig
-        candidates = _filter_pool(_preloaded, nation) if nation else []
-        if not candidates:
-            candidates = _filter_pool(_preloaded, None)
+        # Freundschaft: vollständiger Weltpool, ohne Nations- oder Stufenfilter.
+        candidates = _filter_pool(_preloaded, None)
 
     # ── Rotationssperre (nur Liga) ──────────────────────────────────────────
     excluded = set()

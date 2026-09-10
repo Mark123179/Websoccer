@@ -72,7 +72,11 @@ class Command(BaseCommand):
             for fixture in fixtures:
                 for side, club in (('Heim', fixture.home_club), ('Auswärts', fixture.away_club)):
                     try:
-                        setup = TacticSetup.objects.get(club=club, squad_scope='pro')
+                        setup = TacticSetup.objects.get(
+                            club=club,
+                            squad_scope='pro',
+                            context=TacticSetup.CONTEXT_PFLICHT,
+                        )
                         valid = has_valid_lineup(setup)
                     except TacticSetup.DoesNotExist:
                         valid = False

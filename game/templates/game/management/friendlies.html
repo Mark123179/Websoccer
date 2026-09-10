@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Freundschaftsspiele{% endblock %}
+{% block body_class %}friendlies-page ws-page-backdrop{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'game/css/management-friendlies.css' %}?v=1">{% endblock %}
+{% block content %}
+<main class="friendly-desk">
+  <header class="friendly-head">
+    <div><span class="eyebrow">Management / Spielplanung</span><h1>Freundschaftsspiele</h1><p>Dein Match-Planning Desk für Testspiele, Inserate und Anfragen.</p></div>
+    <div class="mode-switch">
+      <a class="{% if scope == 'pro' %}is-active{% endif %}" href="?tab={{ tab }}&squad=pro">Profis</a>
+      <a class="{% if scope == 'youth' %}is-active{% endif %}" href="?tab={{ tab }}&squad=youth">U21</a>
+      {% if scope == 'youth' %}<b>U21-MODUS</b>{% endif %}
+    </div>
+  </header>
+  <nav class="friendly-tabs" aria-label="Freundschaftsspiele">
+    <a class="{% if tab == 'schedule' %}is-active{% endif %}" href="?tab=schedule&squad={{ scope }}">Spiel ansetzen</a>
+    <a class="{% if tab == 'market' %}is-active{% endif %}" href="?tab=market&squad={{ scope }}">Spielbörse</a>
+    <a class="{% if tab == 'requests' %}is-active{% endif %}" href="?tab=requests&squad={{ scope }}">Offene Anfragen <em>· {{ open_count }}</em></a>
+    <a class="{% if tab == 'tournaments' %}is-active{% endif %}" href="?tab=tournaments&squad={{ scope }}">Turniere</a>
+    <a class="{% if tab == 'history' %}is-active{% endif %}" href="?tab=history&squad={{ scope }}">Historie</a>
+  </nav>
+  {% if messages %}<div class="friendly-messages">{% for message in messages %}<div>{{ message }}</div>{% endfor %}</div>{% endif %}
+  {% if scope == 'youth' %}
+  <section class="u21-empty-panel" aria-live="polite"><div class="u21-empty">{{ u21_empty_text }}</div></section>
+  {% elif tab == 'schedule' %}
+  <section class="desk-grid">
+    <div class="panel">
+      <div class="panel-title"><span>01</span><div><h2>Spiel ansetzen</h2><p>Gerichtete Anfrage an einen Verein</p></div></div>
+      <form class="friendly-form" method="post" action="{% url 'friendly_action' %}">
+        {% csrf_token %}<input type="hidden" name="action" value="request"><input type="hidden" name="squad_scope" value="{{ scope }}">
+        <label>Heimmannschaft<input value="{{ club.name }}" disabled></label>
+        <label>Gastmannschaft<select name="target_club" required><option value="">Verein wählen</option>{% for opponent in opponents %}<option value="{{ opponent.pk }}">{{ opponent.name }}{% if not opponent.managed_by_id %} · KI{% endif %}</option>{% endfor %}</select></label>
+        <div class="form-row"><label>Datum<input type="date" name="kickoff_date" required></label><label>Uhrzeit<input type="time" name="kickoff_time" required></label></div>
+        <label>Spielort<select name="venue_type"><option value="heim">Heimstadion</option><option value="gast">Stadion des Gegners</option><option value="neutral">Neutraler Platz</option></select></label>
+        <label class="neutral-choice">Neutralstadion<select name="neutral_stadium"><option value="">Bitte wählen</option>{% for venue in neutral_venues %}<option value="{{ venue.pk }}">{{ venue.name }} · {{ venue.city }}</option>{% endfor %}</select></label>
+        <fieldset><legend>Regeln</legend><label class="check"><input type="checkbox" name="extra_time" value="1"> Mit Verlängerung</label><label class="check"><input type="checkbox" name="penalties" value="1"> Mit Elfmeterschießen</label><label class="check"><input type="checkbox" name="penalties_after_90" value="1"> Direkt nach 90 Minuten</label></fieldset>
+        <label>Kommentar <span class="optional">optional</span><textarea name="comment" maxlength="200" placeholder="Zum Beispiel: Kader testen, Anstoßwunsch ..."></textarea></label>
+        <button class="primary" type="submit">Anfrage senden <span>→</span></button>
+      </form>
+      <p class="desk-note">Freundschaftsspiele erscheinen nicht im Kalender. Geplante und gespielte Partien findest du in der Historie.</p>
+    </div>
+    <aside class="preview panel"><div class="panel-title"><span>LIVE</span><div><h2>Vorschau</h2><p>So wird die Partie angelegt</p></div></div><div class="preview-match"><div><img src="{{ club_logo }}" alt=""><strong>{{ club.short_name|default:club.name }}</strong></div><b>VS</b><div class="opponent-mark">?</div></div><div class="preview-rule">Termin und Gegner werden nach deiner Auswahl angezeigt</div></aside>
+  </section>
+  {% elif tab == 'market' %}
+  <section class="desk-grid">
+    <div class="panel"><div class="panel-title"><span>02</span><div><h2>Partie ausschreiben</h2><p>Wer zuerst annimmt, spielt</p></div></div>
+      <form class="friendly-form" method="post" action="{% url 'friendly_action' %}">{% csrf_token %}<input type="hidden" name="action" value="offer"><input type="hidden" name="squad_scope" value="{{ scope }}">
+        <fieldset><legend>Meine Rolle</legend><div class="radio-row"><label><input type="radio" name="role" value="heim" checked> Heimmannschaft</label><label><input type="radio" name="role" value="gast"> Gastmannschaft</label></div></fieldset>
+        <div class="form-row"><label>Datum<input type="date" name="kickoff_date" required></label><label>Uhrzeit<input type="time" name="kickoff_time" required></label></div>
+        <label>Spielort<select name="venue_type"><option value="heim">Mein Stadion</option><option value="gast">Stadion des Annehmenden</option><option value="neutral">Neutraler Platz</option></select></label>
+        <label class="neutral-choice">Neutralstadion<select name="neutral_stadium"><option value="">Bitte wählen</option>{% for venue in neutral_venues %}<option value="{{ venue.pk }}">{{ venue.name }} · {{ venue.city }}</option>{% endfor %}</select></label>
+        <fieldset><legend>Regeln</legend><label class="check"><input type="checkbox" name="extra_time" value="1"> Mit Verlängerung</label><label class="check"><input type="checkbox" name="penalties" value="1"> Mit Elfmeterschießen</label><label class="check"><input type="checkbox" name="penalties_after_90" value="1"> Direkt nach 90 Minuten</label></fieldset>
+        <label>Kommentar <span class="optional">optional</span><textarea name="comment" maxlength="200"></textarea></label><button class="primary" type="submit">Inserat veröffentlichen <span>→</span></button>
+      </form>
+    </div>
+    <div class="panel"><div class="panel-title"><span>MARKT</span><div><h2>Offene Partien</h2><p>Inserate anderer Manager</p></div></div>{% for item in offers %}{% include 'game/management/_friendly_card.html' with item=item action='accept_offer' button='Annehmen' %}{% empty %}<div class="empty">Aktuell keine offenen Inserate.</div>{% endfor %}{% for item in own_offers %}{% include 'game/management/_friendly_card.html' with item=item action='withdraw' button='Zurückziehen' %}{% endfor %}</div>
+  </section>
+  {% elif tab == 'requests' %}
+  <section class="desk-grid"><div class="panel"><div class="panel-title"><span>03</span><div><h2>Eingehende Anfragen</h2><p>Entscheide direkt, ohne Gegenvorschlag</p></div></div>{% for item in incoming %}{% include 'game/management/_friendly_card.html' with item=item action='accept' button='Annehmen' second_action='decline' second_button='Ablehnen' %}{% empty %}<div class="empty">Keine offenen Anfragen.</div>{% endfor %}</div><div class="panel"><div class="panel-title"><span>03</span><div><h2>Ausgehende Anfragen</h2><p>Warte auf die Antwort des Managers</p></div></div>{% for item in outgoing %}{% include 'game/management/_friendly_card.html' with item=item action='withdraw' button='Zurückziehen' %}{% empty %}<div class="empty">Du hast keine ausgehenden Anfragen.</div>{% endfor %}</div></section>
+  {% elif tab == 'tournaments' %}<section class="placeholder panel"><span class="eyebrow">Task 932</span><h2>Turniere</h2><p>Der Turnierbereich ist in Entwicklung. Hier entstehen bald eigene Wettbewerbe, Spielpläne und Prämien.</p></section>
+  {% else %}
+  <section class="panel history-panel"><div class="panel-title"><span>05</span><div><h2>Historie</h2><p>Geplante und gespielte Partien</p></div><div class="filter-row"><a href="?tab=history&squad={{ scope }}&status=all">Alle</a><a href="?tab=history&squad={{ scope }}&status=geplant">Geplant</a><a href="?tab=history&squad={{ scope }}&status=gespielt">Gespielt</a></div></div>
+    <div class="history-list">{% for row in history_rows %}<div class="history-row"><time>{{ row.fixture.kickoff_at|date:"d.m.Y · H:i" }}</time><span class="team">{{ row.home.name }} <img src="{{ row.home_logo }}" alt=""></span><strong>{% if row.fixture.status == 'gespielt' and row.fixture.simulated_match %}{{ row.fixture.simulated_match.home_goals }} : {{ row.fixture.simulated_match.away_goals }}{% else %}– : –{% endif %}</strong><span class="team"><img src="{{ row.away_logo }}" alt=""> {{ row.away.name }}</span><span class="status status-{{ row.fixture.status }}">{{ row.fixture.get_status_display }}</span>{% if row.fixture.simulated_match_id %}<a href="{% url 'match_report_by_id' row.fixture.simulated_match_id %}">Spielbericht</a>{% endif %}</div>{% empty %}<div class="empty">Noch keine Partien in dieser Ansicht.</div>{% endfor %}</div>
+    <div class="pager"><span>Seite {{ history_page.number }} von {{ history_page.paginator.num_pages|default:1 }} · {{ history_page.paginator.count }} Spiele</span>{% if history_page.has_previous %}<a href="?tab=history&squad={{ scope }}&status={{ history_status }}&page={{ history_page.previous_page_number }}">Zurück</a>{% endif %}{% if history_page.has_next %}<a href="?tab=history&squad={{ scope }}&status={{ history_status }}&page={{ history_page.next_page_number }}">Weiter</a>{% endif %}</div>
+  </section>{% endif %}
+</main>
+<script>
+document.querySelectorAll('form[action$="/management/freundschaften/action/"]').forEach(function(form){form.addEventListener('submit',function(e){e.preventDefault();var date=form.querySelector('[name="kickoff_date"]'),time=form.querySelector('[name="kickoff_time"]');if(date&&time){var hidden=document.createElement('input');hidden.type='hidden';hidden.name='kickoff_at';hidden.value=date.value+'T'+time.value+':00';form.appendChild(hidden)}fetch(form.getAttribute('action'),{method:'POST',body:new FormData(form),headers:{'X-Requested-With':'XMLHttpRequest'}}).then(function(r){return r.json()}).then(function(d){if(d.ok){location.reload()}else{alert(d.error||'Die Aktion konnte nicht ausgeführt werden.')}}).catch(function(){alert('Die Aktion konnte nicht ausgeführt werden.')})})});
+</script>
+{% endblock %}

@@ -48,6 +48,7 @@ from game.match_engine import (
     _get_active_gk,
     _simulate_penalty_shootout,
     _clamp,
+    _knockout_report_duration,
     PENALTY_BASE_PROB,
     PENALTY_SHOOTER_COEFF,
     PENALTY_GK_COEFF,
@@ -311,6 +312,10 @@ class TestSimulatePenaltyShootout(unittest.TestCase):
 # ── T15–T20: simulate_match / simulate_ko_match (Signatur + Mock-Aufruftests) ──
 
 class TestSimulateMatchKoInterface(unittest.TestCase):
+    def test_direct_penalties_keep_ninety_minute_report_duration(self):
+        self.assertEqual(_knockout_report_duration(False), 90)
+        self.assertEqual(_knockout_report_duration(True), 120)
+
     def test_t15_ko_match_symbol_exists(self):
         """T15: simulate_ko_match ist im Modul game.match_engine exportiert."""
         import game.match_engine as me

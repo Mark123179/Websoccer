@@ -861,7 +861,11 @@ def simulate_matchday(league, season: str, matchday: int) -> dict:
 
         # ── Taktik-Lock für alle Clubs der Liga ───────────────────────────────
         club_ids = [f.home_club_id for f in all_fixtures] + [f.away_club_id for f in all_fixtures]
-        TacticSetup.objects.filter(club_id__in=club_ids, squad_scope='pro').update(is_locked=True)
+        TacticSetup.objects.filter(
+            club_id__in=club_ids,
+            squad_scope='pro',
+            context=TacticSetup.CONTEXT_PFLICHT,
+        ).update(is_locked=True)
 
         # ── Spieltag-Status setzen ────────────────────────────────────────────
         state = get_season_state(league, season)
@@ -982,7 +986,11 @@ def close_matchday(league, season: str) -> dict:
             .values_list('home_club_id', flat=True)
             .distinct()
         )
-        TacticSetup.objects.filter(club_id__in=club_ids, squad_scope='pro').update(is_locked=False)
+        TacticSetup.objects.filter(
+            club_id__in=club_ids,
+            squad_scope='pro',
+            context=TacticSetup.CONTEXT_PFLICHT,
+        ).update(is_locked=False)
 
         if season_complete and state.completed_at is None:
             winner = (

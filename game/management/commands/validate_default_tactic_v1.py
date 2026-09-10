@@ -72,6 +72,7 @@ def _make_club(league: League, tag: str, strength: int, run_id: str) -> Club:
     TacticSetup.objects.create(
         club=club,
         squad_scope=SQUAD_PRO,
+        context=TacticSetup.CONTEXT_PFLICHT,
         formation=formation,
         lineup=lineup,
         bench=[],

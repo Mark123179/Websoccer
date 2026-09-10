@@ -341,6 +341,11 @@ _INSOLVENCY_REMINDER_INTERVAL = float(
     os.environ.get('CELERY_INSOLVENCY_REMINDER_INTERVAL', 24 * 60 * 60)
 )
 CELERY_BEAT_SCHEDULE = {
+    'friendly-tick-minuetlich': {
+        'task': 'game.tasks.run_management_command',
+        'schedule': int(os.environ.get('CELERY_FRIENDLY_TICK_INTERVAL', 60)),
+        'args': ('run_friendly_tick',),
+    },
     'city-pin-check-taeglich': {
         'task': 'game.tasks.run_management_command',
         'schedule': _CITY_PIN_CHECK_INTERVAL,

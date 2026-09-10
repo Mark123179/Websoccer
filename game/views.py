@@ -3021,7 +3021,15 @@ def player_name(player_lookup, player_id):
     return option['name'] if option else ''
 
 
-def build_tactics_context(request, club, setup, squad_scope, payload=None, form_errors=None):
+def build_tactics_context(
+    request,
+    club,
+    setup,
+    squad_scope,
+    payload=None,
+    form_errors=None,
+    friendly_fixture=None,
+):
     payload = payload or tactic_payload_from_setup(setup)
     player_options = player_options_for_squad(club, squad_scope)
     available_ids = selectable_ids_from_options(player_options)
@@ -3115,6 +3123,41 @@ def build_tactics_context(request, club, setup, squad_scope, payload=None, form_
         Club.objects.exclude(id=club.id).order_by('name').first()
     )
     next_match = profile['nextMatch']
+    if friendly_fixture is not None:
+        from .club_profile import club_stub, stadium_image_for
+        sender = friendly_fixture.sender_club
+        target = friendly_fixture.target_club
+        home_club, away_club = (
+            (target, sender)
+            if friendly_fixture.offered_role == friendly_fixture.VENUE_AWAY
+            else (sender, target)
+        )
+        if friendly_fixture.venue_type == friendly_fixture.VENUE_NEUTRAL:
+            stadium_name = str(friendly_fixture.neutral_stadium)
+        else:
+            venue_club = (
+                away_club
+                if friendly_fixture.venue_type == friendly_fixture.VENUE_AWAY
+                else home_club
+            )
+            try:
+                stadium_name = venue_club.stadium.name
+            except Exception:
+                stadium_name = ''
+        next_match = {
+            'id': f'friendly-{friendly_fixture.pk}',
+            'competitionName': 'Freundschaftsspiel',
+            'ntNationality': None,
+            'matchdayLabel': 'Testspiel',
+            'homeClub': club_stub(home_club),
+            'awayClub': club_stub(away_club),
+            'backgroundImageUrl': stadium_image_for(home_club),
+            'dateLabel': friendly_fixture.kickoff_at.strftime('%d.%m.%Y'),
+            'timeLabel': friendly_fixture.kickoff_at.strftime('%H:%M Uhr'),
+            'stadiumName': stadium_name,
+            'previewUrl': '#',
+        }
+        opponent_club = away_club if home_club.pk == club.pk else home_club
     templates = list(
         club.tactic_templates.filter(squad_scope=squad_scope).order_by('name')
     )
@@ -3275,9 +3318,80 @@ def club_tactics(request, club_id):
     squad_scope = normalize_squad_scope(
         request.POST.get('squad_scope') or request.GET.get('squad')
     )
+    from datetime import datetime, time as datetime_time
+    from django.db.models import Q
+    from .models import CupFixture, FriendlyFixture
+
+    now = timezone.now()
+    next_friendly = (
+        FriendlyFixture.objects
+        .filter(
+            Q(sender_club=club) | Q(target_club=club),
+            squad_scope=squad_scope,
+            status=FriendlyFixture.STATUS_PLANNED,
+            kickoff_at__gte=now,
+        )
+        .select_related('sender_club', 'target_club', 'neutral_stadium')
+        .order_by('kickoff_at', 'pk')
+        .first()
+    )
+    next_fixture = (
+        SeasonFixture.objects
+        .filter(
+            Q(home_club=club) | Q(away_club=club),
+            is_played=False,
+        )
+        .filter(
+            Q(scheduled_date__gt=timezone.localdate())
+            | Q(
+                scheduled_date=timezone.localdate(),
+                scheduled_time__gte=timezone.localtime(now).time(),
+            )
+            | Q(
+                scheduled_date=timezone.localdate(),
+                scheduled_time__isnull=True,
+            )
+        )
+        .order_by('scheduled_date', 'scheduled_time', 'pk')
+        .first()
+    )
+    next_fixture_at = None
+    if next_fixture is not None:
+        next_fixture_at = timezone.make_aware(datetime.combine(
+            next_fixture.scheduled_date,
+            next_fixture.scheduled_time or datetime_time.min,
+        ))
+    next_cup = (
+        CupFixture.objects
+        .filter(
+            Q(home_club=club) | Q(away_club=club),
+            status=CupFixture.STATUS_SCHEDULED,
+            cup_round__scheduled_date__gte=now.date(),
+        )
+        .select_related('cup_round')
+        .order_by('cup_round__scheduled_date', 'pk')
+        .first()
+    )
+    if next_cup is not None:
+        next_cup_at = timezone.make_aware(datetime.combine(
+            next_cup.cup_round.scheduled_date,
+            datetime_time.min,
+        ))
+        if next_fixture_at is None or next_cup_at < next_fixture_at:
+            next_fixture_at = next_cup_at
+    friendly_is_next = bool(
+        next_friendly
+        and (next_fixture_at is None or next_friendly.kickoff_at < next_fixture_at)
+    )
+    tactic_context = (
+        TacticSetup.CONTEXT_FREUNDSCHAFT
+        if friendly_is_next
+        else TacticSetup.CONTEXT_PFLICHT
+    )
     setup, _created = TacticSetup.objects.get_or_create(
         club=club,
         squad_scope=squad_scope,
+        context=tactic_context,
     )
 
     if request.method == 'POST':
@@ -3338,6 +3452,7 @@ def club_tactics(request, club_id):
                     squad_scope,
                     payload=payload,
                     form_errors=errors,
+                    friendly_fixture=next_friendly if friendly_is_next else None,
                 )
                 return render(request, 'game/tactics.html', context)
 
@@ -3369,13 +3484,13 @@ def club_tactics(request, club_id):
                 squad_scope,
                 payload=payload,
                 form_errors=errors,
+                friendly_fixture=next_friendly if friendly_is_next else None,
             )
             return render(request, 'game/tactics.html', context)
 
         # Spieltagnummer der nächsten Partie ermitteln (für Bestätigungs-Tracking)
         _next_matchday_nr = None
-        if squad_scope == 'pro':
-            from django.db.models import Q
+        if squad_scope == 'pro' and tactic_context == TacticSetup.CONTEXT_PFLICHT:
             today = timezone.now().date()
             next_fixture = (
                 SeasonFixture.objects
@@ -3408,7 +3523,13 @@ def club_tactics(request, club_id):
         from .match_readiness import ensure_default_bench
         ensure_default_bench(setup)
 
-    context = build_tactics_context(request, club, setup, squad_scope)
+    context = build_tactics_context(
+        request,
+        club,
+        setup,
+        squad_scope,
+        friendly_fixture=next_friendly if friendly_is_next else None,
+    )
     return render(request, 'game/tactics.html', context)
 
 
@@ -4253,7 +4374,11 @@ def _ensure_bench_in_report(report_data: dict) -> dict:
         }
         tactic = (
             _TacticSetup.objects
-            .filter(club_id=club_id, squad_scope=_SQUAD_PRO)
+            .filter(
+                club_id=club_id,
+                squad_scope=_SQUAD_PRO,
+                context=_TacticSetup.CONTEXT_PFLICHT,
+            )
             .first()
         )
         current_bench_ids = list(getattr(tactic, 'bench', None) or [])
@@ -5656,7 +5781,9 @@ def club_match_report(request, club_id):
 
     _comp_name = ''
     if latest:
-        if latest.match_type == 'pokal':
+        if latest.match_type == 'freundschaft':
+            _comp_name = 'Freundschaftsspiel'
+        elif latest.match_type == 'pokal':
             _comp_name = 'DFB-Pokal'
         else:
             try:
@@ -5825,7 +5952,9 @@ def match_report_by_id(request, sm_id):
     _report_data = _ensure_weather_in_report(_report_data, sm=latest)
 
     _comp_name = ''
-    if latest.match_type == 'pokal':
+    if latest.match_type == 'freundschaft':
+        _comp_name = 'Freundschaftsspiel'
+    elif latest.match_type == 'pokal':
         _comp_name = 'DFB-Pokal'
     else:
         try:

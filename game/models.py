@@ -1263,6 +1263,13 @@ class MatchResult(models.Model):
 
 
 class TacticSetup(models.Model):
+    CONTEXT_PFLICHT = 'pflicht'
+    CONTEXT_FREUNDSCHAFT = 'freundschaft'
+    CONTEXT_CHOICES = (
+        (CONTEXT_PFLICHT, 'Pflichtspiel'),
+        (CONTEXT_FREUNDSCHAFT, 'Freundschaftsspiel'),
+    )
+
     club = models.ForeignKey(
         Club,
         on_delete=models.CASCADE,
@@ -1272,6 +1279,11 @@ class TacticSetup(models.Model):
         max_length=12,
         choices=SQUAD_SCOPE_CHOICES,
         default=SQUAD_PRO,
+    )
+    context = models.CharField(
+        max_length=16,
+        choices=CONTEXT_CHOICES,
+        default=CONTEXT_PFLICHT,
     )
     formation = models.JSONField(default=default_formation, blank=True)
     lineup = models.JSONField(default=default_lineup, blank=True)
@@ -1300,11 +1312,11 @@ class TacticSetup(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['club', 'squad_scope'],
-                name='unique_club_tactic_setup_scope',
+                fields=['club', 'squad_scope', 'context'],
+                name='unique_club_tactic_setup_scope_context',
             ),
         ]
-        ordering = ['club__name', 'squad_scope']
+        ordering = ['club__name', 'squad_scope', 'context']
         verbose_name = 'Taktik'
         verbose_name_plural = 'Taktiken'
 
@@ -1325,7 +1337,10 @@ class TacticSetup(models.Model):
         return field_player_count(self.formation)
 
     def __str__(self):
-        return f'{self.club} - {self.get_squad_scope_display()} - {self.formation_code}'
+        return (
+            f'{self.club} - {self.get_squad_scope_display()} - '
+            f'{self.get_context_display()} - {self.formation_code}'
+        )
 
 
 class TacticTemplate(models.Model):
@@ -1613,6 +1628,108 @@ class SeasonFixture(models.Model):
     def __str__(self):
         result = f' ({self.home_goals}:{self.away_goals})' if self.is_played else ''
         return f'[{self.league}] ST{self.matchday}: {self.home_club.short_name} vs {self.away_club.short_name}{result}'
+
+
+class NeutralVenue(models.Model):
+    """A curated venue which is not owned by either participating club."""
+
+    name = models.CharField(max_length=160)
+    city = models.CharField(max_length=100)
+    capacity = models.PositiveIntegerField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['city', 'name']
+
+    def __str__(self):
+        return f'{self.name}, {self.city}'
+
+
+class FriendlyFixture(models.Model):
+    """Complete lifecycle of a directed friendly request or marketplace offer."""
+
+    SQUAD_PRO = 'pro'
+    # Reuse the existing tactics scope value so a future youth squad plugs into
+    # TacticSetup without a translation layer.
+    SQUAD_U21 = 'youth'
+    SQUAD_SCOPE_CHOICES = [(SQUAD_PRO, 'Profis'), (SQUAD_U21, 'U21')]
+    STATUS_REQUESTED = STATUS_ANGEFRAGT = 'angefragt'
+    STATUS_PLANNED = STATUS_GEPLANT = 'geplant'
+    STATUS_PLAYED = STATUS_GESPIELT = 'gespielt'
+    STATUS_DECLINED = STATUS_ABGELEHNT = 'abgelehnt'
+    STATUS_WITHDRAWN = STATUS_ZURUECKGEZOGEN = 'zurueckgezogen'
+    STATUS_EXPIRED = STATUS_VERFALLEN = 'verfallen'
+    STATUS_NOT_PLAYED = STATUS_NICHT_AUSGETRAGEN = 'nicht_ausgetragen'
+    STATUS_RUNNING = 'simuliert_laeuft'
+    STATUS_CHOICES = [
+        (STATUS_REQUESTED, 'Angefragt'), (STATUS_PLANNED, 'Geplant'),
+        (STATUS_PLAYED, 'Gespielt'), (STATUS_DECLINED, 'Abgelehnt'),
+        (STATUS_WITHDRAWN, 'Zurückgezogen'), (STATUS_EXPIRED, 'Verfallen'),
+        (STATUS_NOT_PLAYED, 'Nicht ausgetragen'), (STATUS_RUNNING, 'Simulation läuft'),
+    ]
+    VENUE_HOME = 'heim'
+    VENUE_AWAY = 'gast'
+    VENUE_NEUTRAL = 'neutral'
+    VENUE_CHOICES = [(VENUE_HOME, 'Heimstadion'), (VENUE_AWAY, 'Gaststadion'),
+                     (VENUE_NEUTRAL, 'Neutraler Platz')]
+    ROLE_CHOICES = [(VENUE_HOME, 'Heim'), (VENUE_AWAY, 'Gast')]
+
+    squad_scope = models.CharField(max_length=12, choices=SQUAD_SCOPE_CHOICES, default=SQUAD_PRO)
+    sender_club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='sent_friendlies')
+    target_club = models.ForeignKey(Club, null=True, blank=True, on_delete=models.CASCADE,
+                                    related_name='received_friendlies')
+    offered_role = models.CharField(max_length=8, choices=ROLE_CHOICES, blank=True)
+    venue_type = models.CharField(max_length=8, choices=VENUE_CHOICES, default=VENUE_HOME)
+    neutral_stadium = models.ForeignKey(NeutralVenue, null=True, blank=True,
+                                        on_delete=models.PROTECT, related_name='friendlies')
+    kickoff_at = models.DateTimeField()
+    extra_time = models.BooleanField(default=False)
+    penalties = models.BooleanField(default=False)
+    penalties_after_90 = models.BooleanField(default=False)
+    comment = models.CharField(max_length=200, blank=True)
+    status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_REQUESTED)
+    simulated_match = models.OneToOneField('SimulatedMatch', null=True, blank=True,
+                                           on_delete=models.SET_NULL, related_name='friendly_fixture')
+    season = models.CharField(max_length=20, default='0', db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    simulation_claimed_at = models.DateTimeField(null=True, blank=True)
+    simulation_claim = models.UUIDField(null=True, blank=True, editable=False)
+    simulation_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
+    next_simulation_attempt_at = models.DateTimeField(
+        null=True, blank=True, db_index=True, editable=False,
+    )
+    simulation_last_error = models.TextField(blank=True, default='', editable=False)
+
+    class Meta:
+        ordering = ['kickoff_at', 'pk']
+        indexes = [models.Index(fields=['status', 'kickoff_at'], name='friendly_status_kickoff')]
+        constraints = [
+            models.CheckConstraint(condition=~models.Q(sender_club=models.F('target_club')),
+                                   name='friendly_sender_not_target'),
+            models.CheckConstraint(condition=(
+                models.Q(penalties_after_90=False) |
+                models.Q(penalties=True, extra_time=False)
+            ), name='friendly_penalties_after_90_rules'),
+            models.CheckConstraint(condition=(
+                models.Q(venue_type='neutral', neutral_stadium__isnull=False) |
+                models.Q(venue_type__in=['heim', 'gast'], neutral_stadium__isnull=True)
+            ), name='friendly_neutral_venue_consistent'),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.penalties_after_90 and (not self.penalties or self.extra_time):
+            raise ValidationError('Elfmeter nach 90 erfordern Elfmeterschießen ohne Verlängerung.')
+        if self.venue_type == self.VENUE_NEUTRAL and not self.neutral_stadium_id:
+            raise ValidationError('Ein neutraler Spielort muss ausgewählt werden.')
+        if self.venue_type != self.VENUE_NEUTRAL and self.neutral_stadium_id:
+            raise ValidationError('Ein Neutralstadion ist nur bei neutralem Spielort zulässig.')
+        if self.target_club_id and self.sender_club_id == self.target_club_id:
+            raise ValidationError('Ein Verein kann nicht gegen sich selbst spielen.')
+
+    def __str__(self):
+        return f'{self.sender_club} – {self.target_club or "offenes Inserat"} ({self.kickoff_at:%d.%m.%Y %H:%M})'
 
 
 class Player(models.Model):
@@ -4675,7 +4792,14 @@ class GameSeasonState(models.Model):
                 started = self.is_started and not previous.is_started
                 is_transition = advanced or started
 
-        super().save(*args, **kwargs)
+        if advanced and prev_season is not None:
+            from django.db import transaction
+            from game.friendlies.services import cleanup_season
+            with transaction.atomic():
+                cleanup_season(prev_season)
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
         # Beim Vorrücken der Saisonnummer: Vereinsstationen-Snapshot für die
         # neue Saison (Ausbildungsabgabe, Phase 0 Finanzsystem). Fehler dürfen
