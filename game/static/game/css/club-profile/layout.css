@@ -67,6 +67,14 @@ body.club-profile-page {
         --club-row-2: 292px;
         --club-row-3: 253px;
     }
+
+    /* Auf breiten, höhengebundenen Screens die drei Kartenreihen nur
+       vertikal leicht komprimieren. Breite, Schrift und Grid bleiben gleich. */
+    .dashboard-scaler[data-shell-mode="wide"] .club-profile-shell {
+        --club-row-1: 433px;
+        --club-row-2: 298px;
+        --club-row-3: 253px;
+    }
 }
 
 .club-profile-shell::before {
