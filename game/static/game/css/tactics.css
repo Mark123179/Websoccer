@@ -12,6 +12,16 @@ body.tactics-page .nav-menu a:nth-child(5) {
     color: var(--text);
 }
 
+body.tactics-page {
+    --ws-page-backdrop:
+        linear-gradient(rgba(2, 8, 14, 0.78), rgba(2, 8, 14, 0.96)),
+        url("../images/backgrounds/player-profile-stadium-atmosphere.svg") center top / cover no-repeat,
+        #02070d;
+    --ws-page-backdrop-overlay:
+        radial-gradient(ellipse at 52% 0%, rgba(255, 255, 255, 0.18), transparent 7%),
+        linear-gradient(180deg, rgba(0, 184, 255, 0.1), transparent 38%);
+}
+
 .tactics-dashboard {
     --tactics-panel: rgba(5, 19, 30, 0.84);
     --tactics-panel-strong: rgba(6, 23, 36, 0.94);
@@ -21,22 +31,14 @@ body.tactics-page .nav-menu a:nth-child(5) {
     --tactics-yellow: #ffd21f;
     --tactics-red: #ff4258;
     --tactics-cyan: #16cfff;
-    background:
-        linear-gradient(rgba(2, 8, 14, 0.78), rgba(2, 8, 14, 0.96)),
-        url("../images/backgrounds/player-profile-stadium-atmosphere.svg") center top / cover no-repeat;
+    background: transparent;
     min-height: 100%;
     padding: 24px;
     position: relative;
 }
 
 .tactics-dashboard::before {
-    background:
-        radial-gradient(ellipse at 52% 0%, rgba(255, 255, 255, 0.18), transparent 7%),
-        linear-gradient(180deg, rgba(0, 184, 255, 0.1), transparent 38%);
-    content: "";
-    inset: 0;
-    pointer-events: none;
-    position: absolute;
+    display: none;
 }
 
 .tactics-dashboard > * {

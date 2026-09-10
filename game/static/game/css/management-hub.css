@@ -5,23 +5,33 @@
    ========================================================= */
 
 /* ---- Seitenstruktur ---- */
+body.management-hub-page {
+    --ws-page-backdrop:
+        linear-gradient(
+            to right,
+            rgba(6, 11, 18, 0.15) 0%,
+            rgba(6, 11, 18, 0.35) 35%,
+            rgba(6, 11, 18, 0.72) 58%,
+            rgba(6, 11, 18, 0.88) 100%
+        ),
+        url("../images/backgrounds/management-hub-bg.jpg") center left / cover no-repeat,
+        #060b12;
+}
+
 .management-hub-page .dashboard-artboard {
     position: relative;
     min-height: 960px;
     display: flex;
     align-items: stretch;
     overflow: hidden;
-    background: #060b12;
+    background: transparent;
 }
 
 /* Vollbild-Hintergrund: Manager-Büro */
 .mhub-bg {
     position: absolute;
     inset: 0;
-    background-image: var(--mhub-bg-url);
-    background-size: cover;
-    background-position: center left;
-    background-repeat: no-repeat;
+    display: none;
     z-index: 0;
 }
 
