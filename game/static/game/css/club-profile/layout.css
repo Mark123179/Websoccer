@@ -49,6 +49,26 @@ body.club-profile-page {
     background: transparent;
 }
 
+@media (min-width: 1381px) {
+    /* Nur auf der Desktop-Vereinsübersicht: den ungenutzten Abstand
+       zwischen globalem Kalender und erster Kartenreihe kompakter halten. */
+    body.club-profile-page .ws-game-header {
+        margin-bottom: 8px;
+    }
+
+    .club-profile-shell {
+        padding-top: 6px;
+    }
+
+    /* Wide-Shell darf horizontal wachsen, aber die vertikale 1440×900-
+       Geometrie nicht mit dem physischen vw aufblasen. */
+    .dashboard-scaler[data-shell-mode="wide"] .club-profile-shell {
+        --club-row-1: 390px;
+        --club-row-2: 270px;
+        --club-row-3: 235px;
+    }
+}
+
 .club-profile-shell::before {
     display: none;
 }
