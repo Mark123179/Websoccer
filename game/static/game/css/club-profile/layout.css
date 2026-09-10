@@ -60,12 +60,12 @@ body.club-profile-page {
         padding-top: 6px;
     }
 
-    /* Wide-Shell darf horizontal wachsen, aber die vertikale 1440×900-
-       Geometrie nicht mit dem physischen vw aufblasen. */
-    .dashboard-scaler[data-shell-mode="wide"] .club-profile-shell {
-        --club-row-1: 390px;
-        --club-row-2: 270px;
-        --club-row-3: 235px;
+    /* Im 1440×900-Base-Shell den freigewordenen Platz für die Karten
+       nutzen; Wide-Shell behält unverändert seine bisherigen Clamps. */
+    .dashboard-scaler[data-shell-mode="base"] .club-profile-shell {
+        --club-row-1: 420px;
+        --club-row-2: 292px;
+        --club-row-3: 253px;
     }
 }
 
