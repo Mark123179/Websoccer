@@ -11,6 +11,15 @@
     font-family: 'Inter', sans-serif;
 }
 
+/* Die 1440×900-Golden-Master-Basis behält den bisherigen 1010px-Artboard.
+   Nur die dynamische Wide-Shell nutzt die zusätzlich verfügbare Inhaltsbreite. */
+.dashboard-scaler[data-shell-mode="wide"] .tv2-wrap {
+    box-sizing: border-box;
+    width: min(100%, var(--dashboard-artboard-width));
+    max-width: none;
+    margin-inline: 0;
+}
+
 .tv2-cyan  { color: #22e6ff; }
 .tv2-green { color: #30f29c; }
 .tv2-gold  { color: #ffd166; }
