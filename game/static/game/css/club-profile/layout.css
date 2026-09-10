@@ -50,6 +50,10 @@ body.club-profile-page {
 }
 
 @media (min-width: 1381px) {
+    body.club-profile-page .gameScroll {
+        overflow-y: hidden;
+    }
+
     /* Nur auf der Desktop-Vereinsübersicht: den ungenutzten Abstand
        zwischen globalem Kalender und erster Kartenreihe kompakter halten. */
     body.club-profile-page .ws-game-header {
