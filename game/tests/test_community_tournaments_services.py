@@ -1,8 +1,11 @@
 from datetime import timedelta
 from decimal import Decimal
+from time import monotonic
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.test import TestCase
 from django.utils import timezone
 
@@ -196,18 +199,182 @@ class CommunityTournamentServiceTests(TestCase):
         self.assertEqual(rank_standings(tournament, group=home.group)[0].entry_id,
                          home.entry_id)
 
-    def _finish_open_matches(self, tournament):
-        for match in CommunityTournamentMatch.objects.filter(
-                round__phase__tournament=tournament, counted=False):
-            match.friendly_fixture.status = FriendlyFixture.STATUS_PLAYED
-            report = {'home_goals': 1, 'away_goals': 0,
-                      'winner_club_id': match.home_entry.club_id}
-            simulated = SimulatedMatch.create_numbered(
-                season=tournament.season, home_club=match.home_entry.club,
-                away_club=match.away_entry.club, home_goals=1, away_goals=0,
-                report_data=report, match_type='freundschaft')
-            match.friendly_fixture.simulated_match = simulated
-            match.friendly_fixture.save(update_fields=['status', 'simulated_match'])
+    def _finish_open_matches(self, tournament, *, round_number=None):
+        matches = CommunityTournamentMatch.objects.filter(
+            round__phase__tournament=tournament,
+            counted=False,
+        )
+        if round_number is not None:
+            matches = matches.filter(round__number=round_number)
+        for match in matches.select_related(
+                'friendly_fixture', 'home_entry__club', 'away_entry__club'):
+            self._set_result(match, 1, 0)
+
+    def _join_full_field(self, tournament):
+        for club in self.clubs:
+            join_tournament(tournament.pk, club)
+        self.assertEqual(tournament.entries.count(), 16)
+
+    def _complete_max_field_tournament(self, tournament):
+        """Play each available round once and return progression query count."""
+        started_at = monotonic()
+        total_queries = 0
+        while True:
+            next_round = (CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+                counted=False,
+            ).order_by('round__number').values_list('round__number', flat=True).first())
+            if next_round is None:
+                break
+            self._finish_open_matches(tournament, round_number=next_round)
+            with CaptureQueriesContext(connection) as queries:
+                changed = advance_tournament(tournament.pk)
+            self.assertGreater(changed, 0)
+            total_queries += len(queries)
+        tournament.refresh_from_db()
+        return total_queries, monotonic() - started_at
+
+    def _assert_max_field_completion_is_idempotent(
+            self, tournament, *, expected_matches, expected_query_limit,
+            expected_runtime_limit=15, has_explicit_winner=True):
+        query_count, runtime = self._complete_max_field_tournament(tournament)
+        self.assertLessEqual(query_count, expected_query_limit)
+        self.assertLess(
+            runtime,
+            expected_runtime_limit,
+            f'Maximalfeld-Durchlauf überschritt {expected_runtime_limit} Sekunden.',
+        )
+        self.assertEqual(tournament.status, tournament.STATUS_COMPLETED)
+        if has_explicit_winner:
+            self.assertIsNotNone(tournament.winner_entry_id)
+        self.assertEqual(
+            CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+            ).count(),
+            expected_matches,
+        )
+        self.assertEqual(
+            CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+                counted=True,
+                friendly_fixture__simulated_match__isnull=False,
+            ).count(),
+            expected_matches,
+        )
+        simulated_match_ids = list(CommunityTournamentMatch.objects.filter(
+            round__phase__tournament=tournament,
+        ).values_list('friendly_fixture__simulated_match_id', flat=True))
+        self.assertEqual(len(set(simulated_match_ids)), expected_matches)
+        self.assertEqual(
+            sorted(tournament.entries.values_list('final_rank', flat=True)),
+            list(range(1, tournament.entries.count() + 1)),
+        )
+
+        standings_before = list(tournament.standings.order_by('entry_id').values_list(
+            'entry_id', 'played', 'wins', 'draws', 'losses',
+            'goals_for', 'goals_against', 'points',
+        ))
+        bracket_before = list(CommunityTournamentMatch.objects.filter(
+            round__phase__tournament=tournament,
+        ).order_by('pk').values_list(
+            'pk', 'counted', 'winner_entry_id', 'home_goals', 'away_goals',
+        ))
+        reward_count = FinanceTransaction.objects.filter(
+            referenz_typ='community_tournament_reward',
+            referenz_id=tournament.pk,
+        ).count()
+        self.assertEqual(reward_count, 3)
+
+        with CaptureQueriesContext(connection) as repeated_advance:
+            self.assertEqual(advance_tournament(tournament.pk), 0)
+
+        self.assertLessEqual(len(repeated_advance), 4)
+        self.assertEqual(
+            list(tournament.standings.order_by('entry_id').values_list(
+                'entry_id', 'played', 'wins', 'draws', 'losses',
+                'goals_for', 'goals_against', 'points',
+            )),
+            standings_before,
+        )
+        self.assertEqual(
+            list(CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+            ).order_by('pk').values_list(
+                'pk', 'counted', 'winner_entry_id', 'home_goals', 'away_goals',
+            )),
+            bracket_before,
+        )
+        self.assertEqual(
+            FinanceTransaction.objects.filter(
+                referenz_typ='community_tournament_reward',
+                referenz_id=tournament.pk,
+            ).count(),
+            reward_count,
+        )
+
+    def test_16_team_league_completes_with_unique_final_table(self):
+        tournament = self.create('liga', 16)
+        self._join_full_field(tournament)
+        set_reward_plan(
+            tournament.pk, {'payouts': {'1': 100, '2': 50, '3': 25}},
+            is_admin=True,
+        )
+        start_tournament(tournament.pk, organizer=self.organizer)
+
+        self.assertEqual(
+            CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+            ).count(),
+            120,
+        )
+        self._assert_max_field_completion_is_idempotent(
+            tournament, expected_matches=120, expected_query_limit=1_600,
+            has_explicit_winner=False,
+        )
+        self.assertEqual(
+            sorted(tournament.entries.values_list('final_rank', flat=True)),
+            list(range(1, 17)),
+        )
+
+    def test_16_team_cup_completes_with_one_winner_and_idempotent_bracket(self):
+        tournament = self.create('pokal', 16)
+        self._join_full_field(tournament)
+        set_reward_plan(
+            tournament.pk, {'payouts': {'1': 100, '2': 50, '3': 25}},
+            is_admin=True,
+        )
+        start_tournament(tournament.pk, organizer=self.organizer)
+
+        self._assert_max_field_completion_is_idempotent(
+            tournament, expected_matches=15, expected_query_limit=350,
+        )
+        self.assertEqual(
+            CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+                winner_entry=tournament.winner_entry,
+            ).count(),
+            4,
+        )
+
+    def test_16_team_group_knockout_completes_with_one_winner_and_idempotent_bracket(self):
+        tournament = self.create('gruppen_ko', 16)
+        self._join_full_field(tournament)
+        set_reward_plan(
+            tournament.pk, {'payouts': {'1': 100, '2': 50, '3': 25}},
+            is_admin=True,
+        )
+        start_tournament(tournament.pk, organizer=self.organizer)
+
+        self.assertEqual(
+            CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament,
+                round__number__lte=3,
+            ).count(),
+            24,
+        )
+        self._assert_max_field_completion_is_idempotent(
+            tournament, expected_matches=31, expected_query_limit=700,
+        )
 
     def test_pokal_reaches_winner_and_repeated_advance_is_idempotent(self):
         tournament = self.create('pokal', 4)
