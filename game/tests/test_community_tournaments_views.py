@@ -55,6 +55,13 @@ class CommunityTournamentViewsTests(TestCase):
         return self.client.post(reverse("tournament_action"), data,
                                 HTTP_X_REQUESTED_WITH="XMLHttpRequest")
 
+    def _tournament(self, name, organizer=None, status=CommunityTournament.STATUS_OPEN,
+                    squad_scope="pro"):
+        return CommunityTournament.objects.create(
+            organizer=organizer or self.club, name=name, format="pokal",
+            field_size=4, status=status, squad_scope=squad_scope,
+            schedule=self._schedule(2))
+
     def test_authenticated_list_has_cards_wizard_and_u21_empty_state(self):
         response = self.client.get(reverse("management_friendlies"),
                                     {"tab": "tournaments"})
@@ -65,8 +72,11 @@ class CommunityTournamentViewsTests(TestCase):
         self.assertContains(response, "3 · Spielplan")
         self.assertContains(response, "4 · Prämie")
         youth = self.client.get(reverse("management_friendlies"),
-                                {"tab": "tournaments", "squad": "youth"})
+                                {"tab": "schedule", "squad": "youth"})
         self.assertContains(youth, "Die U21 hat noch keinen Kader — der Jugendspielbetrieb ist in Arbeit.")
+        youth_tournaments = self.client.get(reverse("management_friendlies"),
+                                             {"tab": "tournaments", "squad": "youth"})
+        self.assertContains(youth_tournaments, "Turniere filtern")
 
     def test_format_sizes_are_declared_in_wizard_contract(self):
         response = self.client.get(reverse("management_friendlies"),
@@ -143,3 +153,104 @@ class CommunityTournamentViewsTests(TestCase):
         page = self.client.get(reverse("management_friendlies"),
                                {"tab": "tournaments"})
         self.assertContains(page, "Prämien können nur gelesen werden")
+
+    def test_tournament_status_filters_show_only_requested_lifecycle_group(self):
+        self._tournament("Open Cup")
+        self._tournament("Running Cup", status=CommunityTournament.STATUS_RUNNING)
+        self._tournament("Completed Cup", status=CommunityTournament.STATUS_COMPLETED)
+
+        for status, expected, hidden in (
+            ("offen", "Open Cup", ("Running Cup", "Completed Cup")),
+            ("laufend", "Running Cup", ("Open Cup", "Completed Cup")),
+            ("abgeschlossen", "Completed Cup", ("Open Cup", "Running Cup")),
+        ):
+            with self.subTest(status=status):
+                response = self.client.get(reverse("management_friendlies"), {
+                    "tab": "tournaments", "tournament_status": status,
+                })
+                self.assertContains(response, expected)
+                for name in hidden:
+                    self.assertNotContains(response, name)
+
+    def test_participation_filters_combine_with_status_filter(self):
+        organized = self._tournament(
+            "Organized Complete", status=CommunityTournament.STATUS_COMPLETED)
+        joined = self._tournament(
+            "Joined Complete", organizer=self.other,
+            status=CommunityTournament.STATUS_COMPLETED)
+        self._tournament(
+            "Other Complete", organizer=self.other,
+            status=CommunityTournament.STATUS_COMPLETED)
+        CommunityTournamentEntry.objects.create(tournament=joined, club=self.club)
+
+        organized_page = self.client.get(reverse("management_friendlies"), {
+            "tab": "tournaments", "tournament_status": "abgeschlossen",
+            "tournament_participation": "organized",
+        })
+        self.assertContains(organized_page, organized.name)
+        self.assertNotContains(organized_page, joined.name)
+
+        joined_page = self.client.get(reverse("management_friendlies"), {
+            "tab": "tournaments", "tournament_status": "abgeschlossen",
+            "tournament_participation": "joined",
+        })
+        self.assertContains(joined_page, joined.name)
+        self.assertNotContains(joined_page, organized.name)
+        self.assertNotContains(joined_page, "Other Complete")
+
+    def test_invalid_tournament_filters_fall_back_and_empty_message_matches_filter(self):
+        self._tournament("Visible by fallback")
+        fallback = self.client.get(reverse("management_friendlies"), {
+            "tab": "tournaments", "tournament_status": "unknown",
+            "tournament_participation": "strangers",
+        })
+        self.assertContains(fallback, "Visible by fallback")
+        self.assertEqual(fallback.context["tournament_status"], "all")
+        self.assertEqual(fallback.context["tournament_participation"], "all")
+
+        empty = self.client.get(reverse("management_friendlies"), {
+            "tab": "tournaments", "tournament_status": "laufend",
+            "tournament_participation": "joined",
+        })
+        self.assertContains(
+            empty,
+            "Keine laufenden Community-Turniere, an denen dein Verein teilnimmt.")
+
+    def test_filter_selection_survives_detail_and_squad_navigation(self):
+        tournament = self._tournament(
+            "Persistent Cup", organizer=self.other,
+            status=CommunityTournament.STATUS_COMPLETED)
+        youth_tournament = self._tournament(
+            "Youth Persistent Cup", organizer=self.other,
+            status=CommunityTournament.STATUS_COMPLETED, squad_scope="youth")
+        CommunityTournamentEntry.objects.create(tournament=tournament, club=self.club)
+        CommunityTournamentEntry.objects.create(tournament=youth_tournament, club=self.club)
+        params = {
+            "tab": "tournaments", "squad": "pro",
+            "tournament_status": "abgeschlossen",
+            "tournament_participation": "joined",
+        }
+        listing = self.client.get(reverse("management_friendlies"), params)
+        detail_href = (
+            f"?tab=tournaments&squad=pro&tournament={tournament.pk}"
+            f"&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=joined")
+        self.assertContains(listing, detail_href)
+
+        detail = self.client.get(reverse("management_friendlies"), {
+            **params, "tournament": tournament.pk,
+        })
+        self.assertContains(
+            detail,
+            "?tab=tournaments&squad=pro&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=joined")
+
+        youth = self.client.get(reverse("management_friendlies"), {
+            **params, "squad": "youth",
+        })
+        self.assertContains(youth, f"<h3>{youth_tournament.name}</h3>", html=True)
+        self.assertNotContains(youth, f"<h3>{tournament.name}</h3>", html=True)
+        self.assertContains(
+            youth,
+            "?tab=tournaments&squad=pro&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=joined")

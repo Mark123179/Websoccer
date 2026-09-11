@@ -329,10 +329,50 @@ def management_friendlies(request):
             ) if enabled],
             'own': own,
         }
-    selected_scope = FriendlyFixture.SQUAD_U21 if scope == 'u21' else FriendlyFixture.SQUAD_PRO
+    selected_scope = scope
     current_season = _season()
+    tournament_status = request.GET.get('tournament_status', 'all')
+    allowed_tournament_statuses = {
+        'all',
+        CommunityTournament.STATUS_OPEN,
+        CommunityTournament.STATUS_RUNNING,
+        CommunityTournament.STATUS_COMPLETED,
+    }
+    if tournament_status not in allowed_tournament_statuses:
+        tournament_status = 'all'
+    tournament_participation = request.GET.get('tournament_participation', 'all')
+    allowed_tournament_participation = {'all', 'organized', 'joined'}
+    if tournament_participation not in allowed_tournament_participation:
+        tournament_participation = 'all'
     tournaments = CommunityTournament.objects.select_related('organizer').filter(
         season=current_season, squad_scope=selected_scope)
+    if tournament_status != 'all':
+        tournaments = tournaments.filter(status=tournament_status)
+    if tournament_participation == 'organized':
+        tournaments = tournaments.filter(organizer=club)
+    elif tournament_participation == 'joined':
+        tournaments = tournaments.filter(entries__club=club).distinct()
+    status_empty_labels = {
+        CommunityTournament.STATUS_OPEN: 'offenen',
+        CommunityTournament.STATUS_RUNNING: 'laufenden',
+        CommunityTournament.STATUS_COMPLETED: 'abgeschlossenen',
+    }
+    participation_empty_labels = {
+        'organized': 'die von dir veranstaltet wurden',
+        'joined': 'an denen dein Verein teilnimmt',
+    }
+    if tournament_status == 'all' and tournament_participation == 'all':
+        tournament_empty_text = 'Noch keine Community-Turniere. Erstelle den ersten Wettbewerb.'
+    elif tournament_status == 'all':
+        tournament_empty_text = (
+            f'Keine Community-Turniere, {participation_empty_labels[tournament_participation]}.')
+    elif tournament_participation == 'all':
+        tournament_empty_text = (
+            f'Keine {status_empty_labels[tournament_status]} Community-Turniere in dieser Saison.')
+    else:
+        tournament_empty_text = (
+            f'Keine {status_empty_labels[tournament_status]} Community-Turniere, '
+            f'{participation_empty_labels[tournament_participation]}.')
     tournament_detail = None
     if request.GET.get('tournament'):
         tournament_detail = get_object_or_404(
@@ -401,6 +441,12 @@ def management_friendlies(request):
         'open_count': incoming.count() + outgoing.count(),
         'u21_empty_text': 'Die U21 hat noch keinen Kader — der Jugendspielbetrieb ist in Arbeit.',
         'tournaments': tournaments, 'tournament_detail': tournament_detail,
+        'tournament_status': tournament_status,
+        'tournament_participation': tournament_participation,
+        'tournament_filter_params': (
+            f'tournament_status={tournament_status}&'
+            f'tournament_participation={tournament_participation}'),
+        'tournament_empty_text': tournament_empty_text,
         'tournament_formats': CommunityTournament.FORMAT_CHOICES,
         'field_sizes': FIELD_SIZES,
         'is_admin': request.user.is_superuser,
