@@ -530,6 +530,31 @@
             margin-left: var(--sidebar);
             min-height: 100vh;
         }
+        /*
+         * Gemeinsame Hintergrundebene für klassische Seiten:
+         * Sie gehört zum gesamten Inhaltsbereich und beginnt deshalb bereits
+         * hinter der globalen Kalenderzeile. Die jeweilige Seite liefert nur
+         * Motiv und Overlay über Custom Properties; ihre innere Geometrie
+         * bleibt davon vollständig unberührt.
+         */
+        body.ws-page-backdrop .container {
+            background: var(--ws-page-backdrop, #02070d);
+            isolation: isolate;
+            position: relative;
+        }
+        body.ws-page-backdrop .container::before {
+            background: var(--ws-page-backdrop-overlay, none);
+            content: "";
+            inset: 0;
+            opacity: var(--ws-page-backdrop-overlay-opacity, 1);
+            pointer-events: none;
+            position: absolute;
+            z-index: 0;
+        }
+        body.ws-page-backdrop .container > * {
+            position: relative;
+            z-index: 1;
+        }
         .hero {
             padding: 44px;
         }

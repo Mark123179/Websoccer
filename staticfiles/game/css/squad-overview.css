@@ -27,6 +27,20 @@
     --sq-glow-teal: 0 0 14px rgba(40, 240, 199, 0.48);
 }
 
+body.club-profile-page {
+    --ws-page-backdrop:
+        radial-gradient(circle at 58% 0%, rgba(255, 255, 255, 0.1), transparent 18%),
+        radial-gradient(circle at 18% 18%, rgba(35, 228, 245, 0.13), transparent 27%),
+        linear-gradient(90deg, rgba(1, 7, 13, 0.95), rgba(1, 12, 19, 0.78), rgba(1, 7, 13, 0.96)),
+        url("../images/backgrounds/player-profile-stadium-atmosphere.svg") center / cover no-repeat,
+        #02070d;
+    --ws-page-backdrop-overlay:
+        radial-gradient(ellipse at 52% 5%, rgba(255, 255, 255, 0.18), transparent 19%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.022) 0 1px, transparent 1px 78px),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 78px);
+    --ws-page-backdrop-overlay-opacity: 0.9;
+}
+
 .squad-layout {
     width: min(100%, var(--dashboard-artboard-width, var(--club-artboard-width)));
     margin-inline: auto;

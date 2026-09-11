@@ -42,6 +42,18 @@
 }
 
 /* ---------- Artboard (Layout-Contract) -------------------------- */
+body.ruhmeshalle-shell-page {
+  --ws-page-backdrop:
+    radial-gradient(ellipse at 50% 0%, rgba(200, 162, 76, .13), transparent 48%),
+    linear-gradient(180deg, rgba(6, 6, 10, .18), rgba(6, 6, 10, .78)),
+    var(--ruhmeshalle-room-bg) center top / cover no-repeat,
+    var(--hall-black);
+}
+body.ruhmeshalle-room--entrance { --ruhmeshalle-room-bg: url("../images/halloffame/raum_eingang.jpg"); }
+body.ruhmeshalle-room--player,
+body.ruhmeshalle-room--coach { --ruhmeshalle-room-bg: url("../images/halloffame/raum_spieler.jpg"); }
+body.ruhmeshalle-room--club { --ruhmeshalle-room-bg: url("../images/halloffame/raum_verein.jpg"); }
+
 .ruhmeshalle-artboard {
   width: var(--dashboard-artboard-width);   /* NIE überschreiben */
   position: relative;

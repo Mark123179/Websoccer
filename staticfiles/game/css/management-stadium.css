@@ -5,8 +5,12 @@
    ========================================================= */
 
 /* ---- Root-Artboard ---- */
+body.stadium-detail-page {
+    --ws-page-backdrop: #0a0e17;
+}
+
 .stadium-detail-page .dashboard-artboard {
-    background: #0a0e17;
+    background: transparent;
     min-height: 860px;
     position: relative;
     display: flex;

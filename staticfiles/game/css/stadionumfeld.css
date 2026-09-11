@@ -10,6 +10,13 @@
 @keyframes vu-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
 @keyframes vu-rise { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
+body.stadionumfeld-page {
+    --ws-page-backdrop:
+        radial-gradient(120% 80% at 90% -10%, rgba(34, 230, 255, .10), transparent 45%),
+        radial-gradient(120% 90% at 0% 110%, rgba(48, 242, 156, .07), transparent 50%),
+        linear-gradient(160deg, #04090f, #070f18 60%, #04090f);
+}
+
 .vu-page {
     --panel:       rgba(9, 23, 34, 0.82);
     --cyan:        #22e6ff;
@@ -30,10 +37,7 @@
     border-radius: 14px;
     color: var(--text);
     font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-    background:
-        radial-gradient(120% 80% at 90% -10%, rgba(34, 230, 255, .10), transparent 45%),
-        radial-gradient(120% 90% at 0% 110%, rgba(48, 242, 156, .07), transparent 50%),
-        linear-gradient(160deg, #04090f, #070f18 60%, #04090f);
+    background: transparent;
 }
 
 .vu-page * { box-sizing: border-box; }
