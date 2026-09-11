@@ -65,6 +65,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction as db_transaction
+from django.db.models import Count, Exists, OuterRef
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -350,8 +351,16 @@ def management_friendlies(request):
         tournaments = tournaments.filter(status=tournament_status)
     if tournament_participation == 'organized':
         tournaments = tournaments.filter(organizer=club)
-    elif tournament_participation == 'joined':
-        tournaments = tournaments.filter(entries__club=club).distinct()
+    tournaments = tournaments.annotate(
+        entry_count=Count('entries', distinct=True),
+        joined=Exists(
+            CommunityTournamentEntry.objects.filter(
+                tournament_id=OuterRef('pk'), club=club,
+            )
+        ),
+    )
+    if tournament_participation == 'joined':
+        tournaments = tournaments.filter(joined=True)
     status_empty_labels = {
         CommunityTournament.STATUS_OPEN: 'offenen',
         CommunityTournament.STATUS_RUNNING: 'laufenden',
@@ -380,9 +389,7 @@ def management_friendlies(request):
             pk=request.GET['tournament'], season=current_season,
             squad_scope=selected_scope)
     for tournament in tournaments:
-        tournament.entry_count = tournament.entries.count()
         tournament.is_organizer = tournament.organizer_id == club.pk
-        tournament.joined = tournament.entries.filter(club=club).exists()
         amount = tournament.reward_plan.get('payouts', {}).get('1', 0)
         try:
             tournament.reward_amount = f'{Decimal(str(amount)):,.0f}'.replace(',', '.')

@@ -6,7 +6,9 @@ tournament algorithm (the latter is covered by the friendlies service tests).
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -182,6 +184,7 @@ class CommunityTournamentViewsTests(TestCase):
             "Other Complete", organizer=self.other,
             status=CommunityTournament.STATUS_COMPLETED)
         CommunityTournamentEntry.objects.create(tournament=joined, club=self.club)
+        CommunityTournamentEntry.objects.create(tournament=joined, club=self.other)
 
         organized_page = self.client.get(reverse("management_friendlies"), {
             "tab": "tournaments", "tournament_status": "abgeschlossen",
@@ -195,8 +198,34 @@ class CommunityTournamentViewsTests(TestCase):
             "tournament_participation": "joined",
         })
         self.assertContains(joined_page, joined.name)
+        self.assertContains(joined_page, "2/4 Teams")
         self.assertNotContains(joined_page, organized.name)
         self.assertNotContains(joined_page, "Other Complete")
+
+    def test_tournament_list_query_count_does_not_grow_per_card(self):
+        first = self._tournament("First Cup")
+        CommunityTournamentEntry.objects.create(
+            tournament=first, club=self.club)
+
+        self.client.get(
+            reverse("management_friendlies"), {"tab": "tournaments"})
+        with CaptureQueriesContext(connection) as one_card_queries:
+            one_card_page = self.client.get(
+                reverse("management_friendlies"), {"tab": "tournaments"})
+        self.assertContains(one_card_page, "1/4 Teams")
+        baseline_query_count = len(one_card_queries)
+
+        for index in range(5):
+            tournament = self._tournament(f"Additional Cup {index}")
+            CommunityTournamentEntry.objects.create(
+                tournament=tournament, club=self.other)
+
+        with CaptureQueriesContext(connection) as many_card_queries:
+            many_card_page = self.client.get(
+                reverse("management_friendlies"), {"tab": "tournaments"})
+
+        self.assertEqual(len(many_card_queries), baseline_query_count)
+        self.assertContains(many_card_page, "1/4 Teams", count=6)
 
     def test_invalid_tournament_filters_fall_back_and_empty_message_matches_filter(self):
         self._tournament("Visible by fallback")
