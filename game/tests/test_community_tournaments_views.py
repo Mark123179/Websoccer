@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from game.models import (
     Club, CommunityTournament, CommunityTournamentApplication,
-    CommunityTournamentEntry, League, ManagerProfile,
+    CommunityTournamentEntry, FriendlyFixture, League, ManagerProfile,
 )
 
 
@@ -226,6 +226,43 @@ class CommunityTournamentViewsTests(TestCase):
 
         self.assertEqual(len(many_card_queries), baseline_query_count)
         self.assertContains(many_card_page, "1/4 Teams", count=6)
+
+    def test_key_tabs_stay_within_query_budgets_and_keep_request_count(self):
+        FriendlyFixture.objects.create(
+            sender_club=self.other,
+            target_club=self.club,
+            kickoff_at=timezone.now() + timedelta(days=1),
+            status=FriendlyFixture.STATUS_REQUESTED,
+        )
+        self._tournament("Query Budget Cup")
+
+        expectations = (
+            ("schedule", 23, "Spiel ansetzen"),
+            ("market", 24, "Offene Partien"),
+            ("requests", 22, "Eingehende Anfragen"),
+            ("tournaments", 23, "Query Budget Cup"),
+            ("history", 22, "Historie"),
+        )
+        captured_sql = {}
+        for tab, maximum, expected_text in expectations:
+            with self.subTest(tab=tab):
+                self.client.get(reverse("management_friendlies"), {"tab": tab})
+                with CaptureQueriesContext(connection) as queries:
+                    response = self.client.get(
+                        reverse("management_friendlies"), {"tab": tab})
+                self.assertLessEqual(
+                    len(queries), maximum,
+                    f"{tab} used {len(queries)} queries:\n"
+                    + "\n".join(query["sql"] for query in queries.captured_queries),
+                )
+                self.assertContains(response, expected_text)
+                self.assertContains(response, "Offene Anfragen <em>· 1</em>", html=True)
+                captured_sql[tab] = " ".join(
+                    query["sql"] for query in queries.captured_queries).lower()
+
+        self.assertNotIn("game_neutralvenue", captured_sql["tournaments"])
+        self.assertNotIn("game_communitytournament", captured_sql["requests"])
+        self.assertNotIn("game_communitytournament", captured_sql["market"])
 
     def test_invalid_tournament_filters_fall_back_and_empty_message_matches_filter(self):
         self._tournament("Visible by fallback")

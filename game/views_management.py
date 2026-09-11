@@ -275,44 +275,12 @@ def management_friendlies(request):
     incoming = FriendlyFixture.objects.filter(
         target_club=club, sender_club__isnull=False, status=FriendlyFixture.STATUS_REQUESTED,
         squad_scope=scope,
-    ).select_related('sender_club', 'neutral_stadium')
+    )
     outgoing = FriendlyFixture.objects.filter(
         sender_club=club, target_club__isnull=False, status=FriendlyFixture.STATUS_REQUESTED,
         squad_scope=scope,
-    ).select_related('target_club', 'neutral_stadium')
-    offers = FriendlyFixture.objects.filter(
-        target_club__isnull=True, status=FriendlyFixture.STATUS_REQUESTED,
-        squad_scope=scope,
-    ).exclude(sender_club=club).select_related('sender_club', 'neutral_stadium')
-    own_offers = FriendlyFixture.objects.filter(
-        sender_club=club, target_club__isnull=True, status=FriendlyFixture.STATUS_REQUESTED,
-        squad_scope=scope,
-    ).select_related('neutral_stadium')
-    history_status = request.GET.get('status', 'all')
-    history = FriendlyFixture.objects.filter(
-        status__in=[FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED],
-        squad_scope=scope,
-    ).filter(sender_club=club) | FriendlyFixture.objects.filter(
-        status__in=[FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED],
-        squad_scope=scope, target_club=club,
     )
-    if history_status in {FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED}:
-        history = history.filter(status=history_status)
-    history = history.select_related('sender_club', 'target_club', 'neutral_stadium',
-                                      'simulated_match').order_by('-kickoff_at', '-pk')
-    history_page = Paginator(history, 10).get_page(request.GET.get('page', 1))
-    history_rows = []
-    for fixture in history_page.object_list:
-        sender, target = fixture.sender_club, fixture.target_club
-        home, away = (
-            (target, sender)
-            if fixture.offered_role == FriendlyFixture.VENUE_AWAY
-            else (sender, target)
-        )
-        history_rows.append({'fixture': fixture, 'home': home, 'away': away,
-                             'home_logo': crest(home), 'away_logo': crest(away)})
 
-    opponents = Club.objects.exclude(pk=club.pk).select_related('managed_by').order_by('name')
     def card(fixture, own=False):
         sender, target = fixture.sender_club, fixture.target_club
         home, away = (
@@ -331,149 +299,206 @@ def management_friendlies(request):
             ) if enabled],
             'own': own,
         }
-    selected_scope = scope
-    current_season = _season()
-    tournament_status = request.GET.get('tournament_status', 'all')
-    allowed_tournament_statuses = {
-        'all',
-        CommunityTournament.STATUS_OPEN,
-        CommunityTournament.STATUS_RUNNING,
-        CommunityTournament.STATUS_COMPLETED,
-    }
-    if tournament_status not in allowed_tournament_statuses:
-        tournament_status = 'all'
-    tournament_participation = request.GET.get('tournament_participation', 'all')
-    allowed_tournament_participation = {'all', 'organized', 'joined'}
-    if tournament_participation not in allowed_tournament_participation:
-        tournament_participation = 'all'
-    tournament_search_query = request.GET.get('q', '').strip()
-    tournaments = CommunityTournament.objects.select_related('organizer').filter(
-        season=current_season, squad_scope=selected_scope)
-    if tournament_status != 'all':
-        tournaments = tournaments.filter(status=tournament_status)
-    if tournament_participation == 'organized':
-        tournaments = tournaments.filter(organizer=club)
-    tournaments = tournaments.annotate(
-        entry_count=Count('entries', distinct=True),
-        joined=Exists(
-            CommunityTournamentEntry.objects.filter(
-                tournament_id=OuterRef('pk'), club=club,
-            )
-        ),
-    )
-    if tournament_participation == 'joined':
-        tournaments = tournaments.filter(joined=True)
-    if tournament_search_query:
-        tournaments = tournaments.filter(
-            Q(name__icontains=tournament_search_query)
-            | Q(organizer__name__icontains=tournament_search_query)
-        )
-    status_empty_labels = {
-        CommunityTournament.STATUS_OPEN: 'offenen',
-        CommunityTournament.STATUS_RUNNING: 'laufenden',
-        CommunityTournament.STATUS_COMPLETED: 'abgeschlossenen',
-    }
-    participation_empty_labels = {
-        'organized': 'die von dir veranstaltet wurden',
-        'joined': 'an denen dein Verein teilnimmt',
-    }
-    if tournament_search_query:
-        tournament_empty_text = (
-            f'Keine Community-Turniere für „{tournament_search_query}“ gefunden.')
-    elif tournament_status == 'all' and tournament_participation == 'all':
-        tournament_empty_text = 'Noch keine Community-Turniere. Erstelle den ersten Wettbewerb.'
-    elif tournament_status == 'all':
-        tournament_empty_text = (
-            f'Keine Community-Turniere, {participation_empty_labels[tournament_participation]}.')
-    elif tournament_participation == 'all':
-        tournament_empty_text = (
-            f'Keine {status_empty_labels[tournament_status]} Community-Turniere in dieser Saison.')
-    else:
-        tournament_empty_text = (
-            f'Keine {status_empty_labels[tournament_status]} Community-Turniere, '
-            f'{participation_empty_labels[tournament_participation]}.')
-    tournament_detail = None
-    if request.GET.get('tournament'):
-        tournament_detail = get_object_or_404(
-            CommunityTournament.objects.select_related('organizer'),
-            pk=request.GET['tournament'], season=current_season,
-            squad_scope=selected_scope)
-    for tournament in tournaments:
-        tournament.is_organizer = tournament.organizer_id == club.pk
-        amount = tournament.reward_plan.get('payouts', {}).get('1', 0)
-        try:
-            tournament.reward_amount = f'{Decimal(str(amount)):,.0f}'.replace(',', '.')
-        except (TypeError, ValueError):
-            tournament.reward_amount = ''
-    if tournament_detail:
-        tournament_detail.entry_count = tournament_detail.entries.count()
-        from django.utils.dateparse import parse_datetime
-        normalized_schedule = []
-        for item in (tournament_detail.schedule or []):
-            raw = item.get('kickoff_at') if isinstance(item, dict) else item
-            parsed = parse_datetime(raw) if isinstance(raw, str) else raw
-            normalized_schedule.append({'scheduled_at': parsed or raw})
-        tournament_detail.schedule_rows = normalized_schedule
-        tournament_detail.entry_rows = tournament_detail.entries.select_related('club')
-        tournament_detail.application_rows = tournament_detail.applications.select_related('club')
-        tournament_detail.own_application = tournament_detail.applications.filter(
-            club=club).first()
-        tournament_detail.round_rows = CommunityTournamentRound.objects.filter(
-            phase__tournament=tournament_detail).prefetch_related('matches__home_entry__club',
-                                                                    'matches__away_entry__club')
-        tournament_detail.standing_rows = rank_standings(tournament_detail)
-        tournament_detail.group_standing_sections = []
-        tournament_detail.knockout_round_rows = []
-        if tournament_detail.format == CommunityTournament.FORMAT_GROUP_KO:
-            groups = sorted(set(tournament_detail.entries.exclude(
-                group='').values_list('group', flat=True)))
-            tournament_detail.group_standing_sections = [
-                {'group': group, 'rows': rank_standings(tournament_detail, group=group)}
-                for group in groups
-            ]
-            for section in tournament_detail.group_standing_sections:
-                for row in section['rows']:
-                    row.is_own = row.entry.club_id == club.pk
-            tournament_detail.knockout_round_rows = tournament_detail.round_rows.filter(
-                number__gt=3)
-        for standing in tournament_detail.standing_rows:
-            standing.is_own = standing.entry.club_id == club.pk
-        tournament_detail.own_standing = next(
-            (row for row in tournament_detail.standing_rows if row.is_own), None)
-        tournament_detail.eligible_ai = Club.objects.filter(
-            managed_by__isnull=True).exclude(
-                pk__in=tournament_detail.entries.values('club_id')).order_by('name')
-        tournament_detail.eligible_ai = [
-            candidate for candidate in tournament_detail.eligible_ai
-            if not candidate_schedule_conflicts(candidate, tournament_detail)
-        ]
-        tournament_detail.is_organizer = tournament_detail.organizer_id == club.pk
-    return render(request, 'game/management/friendlies.html', {
+
+    context = {
         'club': club, 'scope': scope, 'tab': tab,
-        'opponents': opponents, 'neutral_venues': NeutralVenue.objects.filter(is_active=True),
-        'club_logo': crest(club), 'incoming': [card(x) for x in incoming],
-        'outgoing': [card(x) for x in outgoing], 'offers': [card(x) for x in offers],
-        'own_offers': [card(x, True) for x in own_offers],
-        'history_page': history_page, 'history_rows': history_rows, 'history_status': history_status,
-        'open_count': incoming.count() + outgoing.count(),
+        'club_logo': crest(club), 'incoming': [], 'outgoing': [],
+        'offers': [], 'own_offers': [], 'history_rows': [],
+        'open_count': None,
         'u21_empty_text': 'Die U21 hat noch keinen Kader — der Jugendspielbetrieb ist in Arbeit.',
-        'tournaments': tournaments, 'tournament_detail': tournament_detail,
-        'tournament_status': tournament_status,
-        'tournament_participation': tournament_participation,
-        'tournament_search_query': tournament_search_query,
+        'tournaments': [], 'tournament_detail': None,
+        'tournament_status': 'all', 'tournament_participation': 'all',
+        'tournament_search_query': '',
         'tournament_filter_params': urlencode({
-            'tournament_status': tournament_status,
-            'tournament_participation': tournament_participation,
-            'q': tournament_search_query,
+            'tournament_status': 'all',
+            'tournament_participation': 'all',
+            'q': '',
         }),
-        'tournament_empty_text': tournament_empty_text,
         'tournament_formats': CommunityTournament.FORMAT_CHOICES,
         'field_sizes': FIELD_SIZES,
         'is_admin': request.user.is_superuser,
-        'eligible_ai': (Club.objects.filter(managed_by__isnull=True)
-                       .exclude(pk=club.pk).order_by('name')),
-        'neutral_venues': NeutralVenue.objects.filter(is_active=True),
-    })
+    }
+
+    visible_tab = scope != FriendlyFixture.SQUAD_U21 or tab == 'tournaments'
+    if visible_tab and tab == 'schedule':
+        context['opponents'] = Club.objects.exclude(
+            pk=club.pk).select_related('managed_by').order_by('name')
+        context['neutral_venues'] = NeutralVenue.objects.filter(is_active=True)
+    elif visible_tab and tab == 'market':
+        offers = FriendlyFixture.objects.filter(
+            target_club__isnull=True, status=FriendlyFixture.STATUS_REQUESTED,
+            squad_scope=scope,
+        ).exclude(sender_club=club).select_related('sender_club', 'neutral_stadium')
+        own_offers = FriendlyFixture.objects.filter(
+            sender_club=club, target_club__isnull=True,
+            status=FriendlyFixture.STATUS_REQUESTED, squad_scope=scope,
+        ).select_related('neutral_stadium')
+        context['offers'] = [card(item) for item in offers]
+        context['own_offers'] = [card(item, True) for item in own_offers]
+        context['neutral_venues'] = NeutralVenue.objects.filter(is_active=True)
+    elif visible_tab and tab == 'requests':
+        context['incoming'] = [
+            card(item) for item in incoming.select_related('sender_club', 'neutral_stadium')
+        ]
+        context['outgoing'] = [
+            card(item) for item in outgoing.select_related('target_club', 'neutral_stadium')
+        ]
+        context['open_count'] = len(context['incoming']) + len(context['outgoing'])
+    elif visible_tab and tab == 'history':
+        history_status = request.GET.get('status', 'all')
+        history = FriendlyFixture.objects.filter(
+            status__in=[FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED],
+            squad_scope=scope, sender_club=club,
+        ) | FriendlyFixture.objects.filter(
+            status__in=[FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED],
+            squad_scope=scope, target_club=club,
+        )
+        if history_status in {FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_PLAYED}:
+            history = history.filter(status=history_status)
+        history = history.select_related(
+            'sender_club', 'target_club', 'neutral_stadium',
+            'simulated_match').order_by('-kickoff_at', '-pk')
+        history_page = Paginator(history, 10).get_page(request.GET.get('page', 1))
+        context['history_page'] = history_page
+        context['history_status'] = history_status
+        for fixture in history_page.object_list:
+            sender, target = fixture.sender_club, fixture.target_club
+            home, away = (
+                (target, sender)
+                if fixture.offered_role == FriendlyFixture.VENUE_AWAY
+                else (sender, target)
+            )
+            context['history_rows'].append({
+                'fixture': fixture, 'home': home, 'away': away,
+                'home_logo': crest(home), 'away_logo': crest(away),
+            })
+    elif tab == 'tournaments':
+        current_season = _season()
+        tournament_status = request.GET.get('tournament_status', 'all')
+        if tournament_status not in {
+            'all', CommunityTournament.STATUS_OPEN,
+            CommunityTournament.STATUS_RUNNING, CommunityTournament.STATUS_COMPLETED,
+        }:
+            tournament_status = 'all'
+        tournament_participation = request.GET.get('tournament_participation', 'all')
+        if tournament_participation not in {'all', 'organized', 'joined'}:
+            tournament_participation = 'all'
+        tournament_search_query = request.GET.get('q', '').strip()
+        tournaments = CommunityTournament.objects.select_related('organizer').filter(
+            season=current_season, squad_scope=scope)
+        if tournament_status != 'all':
+            tournaments = tournaments.filter(status=tournament_status)
+        if tournament_participation == 'organized':
+            tournaments = tournaments.filter(organizer=club)
+        tournaments = tournaments.annotate(
+            entry_count=Count('entries', distinct=True),
+            joined=Exists(CommunityTournamentEntry.objects.filter(
+                tournament_id=OuterRef('pk'), club=club)),
+        )
+        if tournament_participation == 'joined':
+            tournaments = tournaments.filter(joined=True)
+        if tournament_search_query:
+            tournaments = tournaments.filter(
+                Q(name__icontains=tournament_search_query)
+                | Q(organizer__name__icontains=tournament_search_query)
+            )
+        status_empty_labels = {
+            CommunityTournament.STATUS_OPEN: 'offenen',
+            CommunityTournament.STATUS_RUNNING: 'laufenden',
+            CommunityTournament.STATUS_COMPLETED: 'abgeschlossenen',
+        }
+        participation_empty_labels = {
+            'organized': 'die von dir veranstaltet wurden',
+            'joined': 'an denen dein Verein teilnimmt',
+        }
+        if tournament_search_query:
+            tournament_empty_text = (
+                f'Keine Community-Turniere für „{tournament_search_query}“ gefunden.')
+        elif tournament_status == 'all' and tournament_participation == 'all':
+            tournament_empty_text = (
+                'Noch keine Community-Turniere. Erstelle den ersten Wettbewerb.')
+        elif tournament_status == 'all':
+            tournament_empty_text = (
+                f'Keine Community-Turniere, '
+                f'{participation_empty_labels[tournament_participation]}.')
+        elif tournament_participation == 'all':
+            tournament_empty_text = (
+                f'Keine {status_empty_labels[tournament_status]} '
+                'Community-Turniere in dieser Saison.')
+        else:
+            tournament_empty_text = (
+                f'Keine {status_empty_labels[tournament_status]} Community-Turniere, '
+                f'{participation_empty_labels[tournament_participation]}.')
+        tournament_detail = None
+        if request.GET.get('tournament'):
+            tournament_detail = get_object_or_404(
+                CommunityTournament.objects.select_related('organizer'),
+                pk=request.GET['tournament'], season=current_season, squad_scope=scope)
+        for tournament in tournaments:
+            tournament.is_organizer = tournament.organizer_id == club.pk
+            amount = tournament.reward_plan.get('payouts', {}).get('1', 0)
+            try:
+                tournament.reward_amount = f'{Decimal(str(amount)):,.0f}'.replace(',', '.')
+            except (TypeError, ValueError):
+                tournament.reward_amount = ''
+        if tournament_detail:
+            tournament_detail.entry_count = tournament_detail.entries.count()
+            from django.utils.dateparse import parse_datetime
+            tournament_detail.schedule_rows = []
+            for item in (tournament_detail.schedule or []):
+                raw = item.get('kickoff_at') if isinstance(item, dict) else item
+                parsed = parse_datetime(raw) if isinstance(raw, str) else raw
+                tournament_detail.schedule_rows.append({'scheduled_at': parsed or raw})
+            tournament_detail.entry_rows = tournament_detail.entries.select_related('club')
+            tournament_detail.application_rows = (
+                tournament_detail.applications.select_related('club'))
+            tournament_detail.own_application = tournament_detail.applications.filter(
+                club=club).first()
+            tournament_detail.round_rows = CommunityTournamentRound.objects.filter(
+                phase__tournament=tournament_detail).prefetch_related(
+                    'matches__home_entry__club', 'matches__away_entry__club')
+            tournament_detail.standing_rows = rank_standings(tournament_detail)
+            tournament_detail.group_standing_sections = []
+            tournament_detail.knockout_round_rows = []
+            if tournament_detail.format == CommunityTournament.FORMAT_GROUP_KO:
+                groups = sorted(set(tournament_detail.entries.exclude(
+                    group='').values_list('group', flat=True)))
+                tournament_detail.group_standing_sections = [
+                    {'group': group, 'rows': rank_standings(tournament_detail, group=group)}
+                    for group in groups
+                ]
+                for section in tournament_detail.group_standing_sections:
+                    for row in section['rows']:
+                        row.is_own = row.entry.club_id == club.pk
+                tournament_detail.knockout_round_rows = (
+                    tournament_detail.round_rows.filter(number__gt=3))
+            for standing in tournament_detail.standing_rows:
+                standing.is_own = standing.entry.club_id == club.pk
+            tournament_detail.own_standing = next(
+                (row for row in tournament_detail.standing_rows if row.is_own), None)
+            eligible_ai = Club.objects.filter(managed_by__isnull=True).exclude(
+                pk__in=tournament_detail.entries.values('club_id')).order_by('name')
+            tournament_detail.eligible_ai = [
+                candidate for candidate in eligible_ai
+                if not candidate_schedule_conflicts(candidate, tournament_detail)
+            ]
+            tournament_detail.is_organizer = tournament_detail.organizer_id == club.pk
+        context.update({
+            'tournaments': tournaments, 'tournament_detail': tournament_detail,
+            'tournament_status': tournament_status,
+            'tournament_participation': tournament_participation,
+            'tournament_search_query': tournament_search_query,
+            'tournament_filter_params': urlencode({
+                'tournament_status': tournament_status,
+                'tournament_participation': tournament_participation,
+                'q': tournament_search_query,
+            }),
+            'tournament_empty_text': tournament_empty_text,
+        })
+
+    if context['open_count'] is None:
+        context['open_count'] = incoming.count() + outgoing.count()
+    return render(request, 'game/management/friendlies.html', context)
 
 
 @login_required(login_url='/auth/login/')
