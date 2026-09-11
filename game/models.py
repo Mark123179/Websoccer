@@ -1732,6 +1732,175 @@ class FriendlyFixture(models.Model):
         return f'{self.sender_club} – {self.target_club or "offenes Inserat"} ({self.kickoff_at:%d.%m.%Y %H:%M})'
 
 
+class CommunityTournament(models.Model):
+    """A manager-created competition in the friendly sandbox."""
+    FORMAT_LEAGUE = 'liga'
+    FORMAT_CUP = 'pokal'
+    FORMAT_GROUP_KO = 'gruppen_ko'
+    FORMAT_CHOICES = [(FORMAT_LEAGUE, 'Liga'), (FORMAT_CUP, 'Pokal'),
+                      (FORMAT_GROUP_KO, 'Gruppenphase + K.o.')]
+    ACCESS_OPEN = 'offen'
+    ACCESS_CODE = 'code'
+    ACCESS_APPLICATION = 'bewerbung'
+    ACCESS_CHOICES = [(ACCESS_OPEN, 'Offen'), (ACCESS_CODE, 'Code'),
+                      (ACCESS_APPLICATION, 'Bewerbung')]
+    STATUS_DRAFT = 'entwurf'
+    STATUS_OPEN = 'offen'
+    STATUS_RUNNING = 'laufend'
+    STATUS_COMPLETED = 'abgeschlossen'
+    STATUS_CANCELLED = 'abgebrochen'
+    STATUS_CHOICES = [(STATUS_DRAFT, 'Entwurf'), (STATUS_OPEN, 'Anmeldung'),
+                      (STATUS_RUNNING, 'Laufend'), (STATUS_COMPLETED, 'Abgeschlossen'),
+                      (STATUS_CANCELLED, 'Abgebrochen')]
+
+    name = models.CharField(max_length=120)
+    description = models.TextField(blank=True)
+    organizer = models.ForeignKey(Club, on_delete=models.CASCADE,
+                                  related_name='community_tournaments')
+    season = models.CharField(max_length=20, default='0', db_index=True)
+    squad_scope = models.CharField(max_length=12, default=FriendlyFixture.SQUAD_PRO,
+                                   choices=FriendlyFixture.SQUAD_SCOPE_CHOICES)
+    format = models.CharField(max_length=16, choices=FORMAT_CHOICES)
+    field_size = models.PositiveSmallIntegerField()
+    home_and_away = models.BooleanField(default=False)
+    neutral_venue = models.ForeignKey(NeutralVenue, null=True, blank=True,
+                                      on_delete=models.PROTECT, related_name='tournaments')
+    access = models.CharField(max_length=16, choices=ACCESS_CHOICES, default=ACCESS_OPEN)
+    invitation_code = models.CharField(max_length=80, blank=True, default='')
+    rules = models.JSONField(default=dict, blank=True)
+    schedule = models.JSONField(default=list, blank=True)
+    reward_plan = models.JSONField(default=dict, blank=True)
+    rewards_paid_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    created_at = models.DateTimeField(auto_now_add=True)
+    opened_at = models.DateTimeField(null=True, blank=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    winner_entry = models.ForeignKey(
+        'CommunityTournamentEntry', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='won_tournaments',
+    )
+
+    class Meta:
+        ordering = ['-created_at', 'pk']
+        indexes = [models.Index(fields=['season', 'status'])]
+
+    def __str__(self):
+        return self.name
+
+
+class CommunityTournamentEntry(models.Model):
+    tournament = models.ForeignKey(CommunityTournament, on_delete=models.CASCADE,
+                                   related_name='entries')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='tournament_entries')
+    is_ai = models.BooleanField(default=False)
+    group = models.CharField(max_length=8, blank=True, default='')
+    draw_position = models.PositiveSmallIntegerField(null=True, blank=True)
+    final_rank = models.PositiveSmallIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['tournament', 'club'],
+                                                name='community_tournament_club_unique')]
+        ordering = ['draw_position', 'pk']
+
+
+class CommunityTournamentApplication(models.Model):
+    OPEN = 'offen'
+    ACCEPTED = 'angenommen'
+    REJECTED = 'abgelehnt'
+    WITHDRAWN = 'zurueckgezogen'
+    STATUS_CHOICES = [(OPEN, 'Offen'), (ACCEPTED, 'Angenommen'),
+                      (REJECTED, 'Abgelehnt'), (WITHDRAWN, 'Zurückgezogen')]
+    tournament = models.ForeignKey(CommunityTournament, on_delete=models.CASCADE,
+                                   related_name='applications')
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='tournament_applications')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['tournament', 'club'],
+                                                name='community_tournament_application_unique')]
+
+
+class CommunityTournamentPhase(models.Model):
+    tournament = models.ForeignKey(CommunityTournament, on_delete=models.CASCADE,
+                                   related_name='phases')
+    name = models.CharField(max_length=80)
+    phase_type = models.CharField(max_length=20)
+    number = models.PositiveSmallIntegerField(default=1)
+    status = models.CharField(max_length=16, default='pending')
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['tournament', 'number'],
+                                                name='community_tournament_phase_number_unique')]
+        ordering = ['number']
+
+
+class CommunityTournamentRound(models.Model):
+    phase = models.ForeignKey(CommunityTournamentPhase, on_delete=models.CASCADE,
+                              related_name='rounds')
+    number = models.PositiveSmallIntegerField(default=1)
+    name = models.CharField(max_length=80, blank=True)
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=16, default='pending')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['phase', 'number'],
+                                                name='community_tournament_round_number_unique')]
+        ordering = ['number']
+
+
+class CommunityTournamentStanding(models.Model):
+    tournament = models.ForeignKey(CommunityTournament, on_delete=models.CASCADE,
+                                   related_name='standings')
+    entry = models.ForeignKey(CommunityTournamentEntry, on_delete=models.CASCADE,
+                              related_name='standing')
+    group = models.CharField(max_length=8, blank=True, default='')
+    played = models.PositiveSmallIntegerField(default=0)
+    wins = models.PositiveSmallIntegerField(default=0)
+    draws = models.PositiveSmallIntegerField(default=0)
+    losses = models.PositiveSmallIntegerField(default=0)
+    goals_for = models.PositiveSmallIntegerField(default=0)
+    goals_against = models.PositiveSmallIntegerField(default=0)
+    points = models.IntegerField(default=0)
+    random_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['tournament', 'entry'],
+                                                name='community_tournament_standing_unique')]
+        ordering = ['pk']
+
+
+class CommunityTournamentMatch(models.Model):
+    round = models.ForeignKey(CommunityTournamentRound, on_delete=models.CASCADE,
+                              related_name='matches')
+    home_entry = models.ForeignKey(CommunityTournamentEntry, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name='home_tournament_matches')
+    away_entry = models.ForeignKey(CommunityTournamentEntry, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name='away_tournament_matches')
+    friendly_fixture = models.OneToOneField(FriendlyFixture, null=True, blank=True,
+                                             on_delete=models.SET_NULL, related_name='tournament_match')
+    home_leg = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='return_leg')
+    status = models.CharField(max_length=20, default='pending')
+    counted = models.BooleanField(default=False)
+    winner_entry = models.ForeignKey(CommunityTournamentEntry, null=True, blank=True,
+                                     on_delete=models.SET_NULL, related_name='won_tournament_matches')
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+    home_goals = models.PositiveSmallIntegerField(null=True, blank=True)
+    away_goals = models.PositiveSmallIntegerField(null=True, blank=True)
+    home_penalties = models.PositiveSmallIntegerField(null=True, blank=True)
+    away_penalties = models.PositiveSmallIntegerField(null=True, blank=True)
+    forfeiture = models.CharField(max_length=16, blank=True, default='')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['round', 'home_entry', 'away_entry'],
+                                                name='community_tournament_match_unique')]
+        ordering = ['scheduled_at', 'pk']
+
+
 class Player(models.Model):
     POSITION_CHOICES = [
         ('TW', 'TW'),
@@ -6825,6 +6994,11 @@ class FinanceTransaction(models.Model):
                 fields=['referenz_typ', 'referenz_id'],
                 condition=models.Q(referenz_typ='showauction_settle'),
                 name='unique_showauction_settle_booking',
+            ),
+            models.UniqueConstraint(
+                fields=['club', 'referenz_typ', 'referenz_id'],
+                condition=models.Q(referenz_typ='community_tournament_reward'),
+                name='unique_community_tournament_reward',
             ),
         ]
         verbose_name = 'Finanzbuchung'

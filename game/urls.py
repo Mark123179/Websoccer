@@ -116,6 +116,7 @@ from .views_management import (
     stadionumfeld_save,
     friendly_action,
     management_friendlies,
+    tournament_action,
 )
 from .views_creator import (
     creator_index,
@@ -439,6 +440,7 @@ urlpatterns = [
     path('management/stadion/einnahmen/', stadium_record_revenue, name='stadium_record_revenue'),
     path('management/stadion/einrichtung-ausbauen/', facility_upgrade, name='facility_upgrade'),
     path('management/freundschaften/action/', friendly_action, name='friendly_action'),
+    path('management/freundschaften/turnier/action/', tournament_action, name='tournament_action'),
     path('management/freundschaften/', management_friendlies, name='management_friendlies'),
 
     path('management/praesident/', president_office, name='president_office'),

@@ -41,6 +41,25 @@ def _clubs_for_fixture(fixture):
 
 
 def _collision(club, kickoff_at, scope, exclude=None):
+    # Community tournament matches share the same squad-context collision
+    # window, while remaining outside the global calendar.
+    from game.models import CommunityTournamentMatch
+    tournament_matches = CommunityTournamentMatch.objects.filter(
+        Q(home_entry__club=club) | Q(away_entry__club=club),
+        round__phase__tournament__squad_scope=scope,
+        friendly_fixture__status__in=[
+            FriendlyFixture.STATUS_PLANNED, FriendlyFixture.STATUS_RUNNING,
+        ],
+        scheduled_at__gt=kickoff_at - timedelta(hours=3),
+        scheduled_at__lt=kickoff_at + timedelta(hours=3),
+    )
+    if exclude and getattr(exclude, 'pk', None):
+        if isinstance(exclude, FriendlyFixture):
+            tournament_matches = tournament_matches.exclude(friendly_fixture_id=exclude.pk)
+        else:
+            tournament_matches = tournament_matches.exclude(pk=exclude.pk)
+    if tournament_matches.exists():
+        return True
     if CupFixture.objects.filter(
         Q(home_club=club) | Q(away_club=club),
         status=CupFixture.STATUS_SCHEDULED,
@@ -399,12 +418,26 @@ def run_tick(now=None):
                 'der Tick fährt mit der nächsten Partie fort.',
                 fixture_id,
             )
-    return {'expired': expired, 'processed': processed}
+    # Tournament progression is deliberately a second, idempotent pass: the
+    # friendly simulator remains the sole owner of match simulation.
+    tournament_processed = 0
+    try:
+        from game.friendlies.tournaments import (
+            advance_due_tournaments, cleanup_orphaned_tournaments,
+        )
+        tournament_processed = advance_due_tournaments(now)
+        cleanup_orphaned_tournaments(now)
+    except Exception:
+        logger.exception('Turnierfortschreibung im Freundschafts-Tick fehlgeschlagen.')
+    return {'expired': expired, 'processed': processed,
+            'tournaments': tournament_processed}
 
 
 @transaction.atomic
 def cleanup_season(season):
     """Delete every friendly lifecycle row and report for an old season."""
+    from game.friendlies.tournaments import cleanup_season as cleanup_tournaments
+    cleanup_tournaments(season)
     fixtures = FriendlyFixture.objects.select_for_update().filter(season=str(season))
     match_ids = list(
         fixtures.exclude(simulated_match_id=None)

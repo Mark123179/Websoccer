@@ -74,8 +74,19 @@ from django.views.decorators.http import require_POST
 from .models import (
     Club, CupFixture, FacilityConstruction, MatchdayRevenue,
     SeasonFixture, StadiumExpansion, StadionumfeldConfig,
-    FriendlyFixture, NeutralVenue,
+    FriendlyFixture, NeutralVenue, CommunityTournament,
+    CommunityTournamentEntry, CommunityTournamentApplication,
+    CommunityTournamentPhase, CommunityTournamentRound, CommunityTournamentMatch,
+    CommunityTournamentStanding,
 )
+from .friendlies.tournaments import (
+    FIELD_SIZES, create_tournament, join_tournament, apply_tournament,
+    decide_application, start_tournament, set_reward_plan,
+    withdraw_application, remove_participant, reschedule_round,
+    rotate_invitation_code, rank_standings,
+    candidate_schedule_conflicts,
+)
+from .friendlies.services import _season
 from .economy.booking import book
 from .economy.stadium import (
     expansion_bauzeit_tage, pending_expansion_seats, resolve_due_expansions,
@@ -318,6 +329,68 @@ def management_friendlies(request):
             ) if enabled],
             'own': own,
         }
+    selected_scope = FriendlyFixture.SQUAD_U21 if scope == 'u21' else FriendlyFixture.SQUAD_PRO
+    current_season = _season()
+    tournaments = CommunityTournament.objects.select_related('organizer').filter(
+        season=current_season, squad_scope=selected_scope)
+    tournament_detail = None
+    if request.GET.get('tournament'):
+        tournament_detail = get_object_or_404(
+            CommunityTournament.objects.select_related('organizer'),
+            pk=request.GET['tournament'], season=current_season,
+            squad_scope=selected_scope)
+    for tournament in tournaments:
+        tournament.entry_count = tournament.entries.count()
+        tournament.is_organizer = tournament.organizer_id == club.pk
+        tournament.joined = tournament.entries.filter(club=club).exists()
+        amount = tournament.reward_plan.get('payouts', {}).get('1', 0)
+        try:
+            tournament.reward_amount = f'{Decimal(str(amount)):,.0f}'.replace(',', '.')
+        except (TypeError, ValueError):
+            tournament.reward_amount = ''
+    if tournament_detail:
+        tournament_detail.entry_count = tournament_detail.entries.count()
+        from django.utils.dateparse import parse_datetime
+        normalized_schedule = []
+        for item in (tournament_detail.schedule or []):
+            raw = item.get('kickoff_at') if isinstance(item, dict) else item
+            parsed = parse_datetime(raw) if isinstance(raw, str) else raw
+            normalized_schedule.append({'scheduled_at': parsed or raw})
+        tournament_detail.schedule_rows = normalized_schedule
+        tournament_detail.entry_rows = tournament_detail.entries.select_related('club')
+        tournament_detail.application_rows = tournament_detail.applications.select_related('club')
+        tournament_detail.own_application = tournament_detail.applications.filter(
+            club=club).first()
+        tournament_detail.round_rows = CommunityTournamentRound.objects.filter(
+            phase__tournament=tournament_detail).prefetch_related('matches__home_entry__club',
+                                                                    'matches__away_entry__club')
+        tournament_detail.standing_rows = rank_standings(tournament_detail)
+        tournament_detail.group_standing_sections = []
+        tournament_detail.knockout_round_rows = []
+        if tournament_detail.format == CommunityTournament.FORMAT_GROUP_KO:
+            groups = sorted(set(tournament_detail.entries.exclude(
+                group='').values_list('group', flat=True)))
+            tournament_detail.group_standing_sections = [
+                {'group': group, 'rows': rank_standings(tournament_detail, group=group)}
+                for group in groups
+            ]
+            for section in tournament_detail.group_standing_sections:
+                for row in section['rows']:
+                    row.is_own = row.entry.club_id == club.pk
+            tournament_detail.knockout_round_rows = tournament_detail.round_rows.filter(
+                number__gt=3)
+        for standing in tournament_detail.standing_rows:
+            standing.is_own = standing.entry.club_id == club.pk
+        tournament_detail.own_standing = next(
+            (row for row in tournament_detail.standing_rows if row.is_own), None)
+        tournament_detail.eligible_ai = Club.objects.filter(
+            managed_by__isnull=True).exclude(
+                pk__in=tournament_detail.entries.values('club_id')).order_by('name')
+        tournament_detail.eligible_ai = [
+            candidate for candidate in tournament_detail.eligible_ai
+            if not candidate_schedule_conflicts(candidate, tournament_detail)
+        ]
+        tournament_detail.is_organizer = tournament_detail.organizer_id == club.pk
     return render(request, 'game/management/friendlies.html', {
         'club': club, 'scope': scope, 'tab': tab,
         'opponents': opponents, 'neutral_venues': NeutralVenue.objects.filter(is_active=True),
@@ -327,7 +400,138 @@ def management_friendlies(request):
         'history_page': history_page, 'history_rows': history_rows, 'history_status': history_status,
         'open_count': incoming.count() + outgoing.count(),
         'u21_empty_text': 'Die U21 hat noch keinen Kader — der Jugendspielbetrieb ist in Arbeit.',
+        'tournaments': tournaments, 'tournament_detail': tournament_detail,
+        'tournament_formats': CommunityTournament.FORMAT_CHOICES,
+        'field_sizes': FIELD_SIZES,
+        'is_admin': request.user.is_superuser,
+        'eligible_ai': (Club.objects.filter(managed_by__isnull=True)
+                       .exclude(pk=club.pk).order_by('name')),
+        'neutral_venues': NeutralVenue.objects.filter(is_active=True),
     })
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def tournament_action(request):
+    """Mutating endpoints for the community-tournament desk."""
+    club = current_manager_club(user=request.user)
+    if not club:
+        return JsonResponse({'error': 'Dir ist noch kein Verein zugewiesen.'}, status=403)
+    action = request.POST.get('action')
+    def posted_bool(name):
+        return str(request.POST.get(name, '')).strip().lower() in {'1', 'true', 'on', 'yes'}
+    try:
+        requested_scope = request.GET.get('squad')
+        if requested_scope is None:
+            selected_scope = FriendlyFixture.SQUAD_PRO
+        elif requested_scope in (FriendlyFixture.SQUAD_PRO, FriendlyFixture.SQUAD_U21):
+            selected_scope = requested_scope
+        else:
+            raise ValidationError('Unbekannter Kader-Kontext.')
+        if action == 'create':
+            posted_scope = request.POST.get('squad_scope', FriendlyFixture.SQUAD_PRO)
+            if posted_scope == 'u21':
+                posted_scope = FriendlyFixture.SQUAD_U21
+            if posted_scope not in (FriendlyFixture.SQUAD_PRO, FriendlyFixture.SQUAD_U21):
+                raise ValidationError('Unbekannter Kader-Kontext.')
+            if posted_scope != selected_scope:
+                raise ValidationError('Der Kader-Kontext entspricht nicht der Ansicht.')
+        else:
+            from .models import CommunityTournament as _Tournament
+            tournament_id = request.POST.get('tournament_id')
+            if action in ('accept_application', 'reject_application',
+                          'withdraw_application'):
+                tournament_obj = _Tournament.objects.filter(
+                    applications__pk=request.POST.get('application_id')).first()
+            elif action == 'remove_participant':
+                tournament_obj = _Tournament.objects.filter(
+                    entries__pk=request.POST.get('entry_id')).first()
+            elif action == 'reschedule_round':
+                tournament_obj = _Tournament.objects.filter(
+                    phases__rounds__pk=request.POST.get('round_id')).first()
+            else:
+                tournament_obj = _Tournament.objects.filter(pk=tournament_id).first()
+            if tournament_obj is None:
+                raise ValidationError('Turnier nicht gefunden.')
+            if (tournament_obj.season != _season() or
+                    tournament_obj.squad_scope != selected_scope):
+                raise ValidationError('Turnier ist in dieser Ansicht nicht verfügbar.')
+        if action == 'create':
+            fmt = request.POST.get('format', CommunityTournament.FORMAT_LEAGUE)
+            size = int(request.POST.get('field_size', 4))
+            count = ((size - 1) * (2 if posted_bool('home_and_away') else 1)
+                     if fmt == CommunityTournament.FORMAT_LEAGUE
+                     else (3 + (2 if size == 8 else 3)
+                           if fmt == CommunityTournament.FORMAT_GROUP_KO
+                           else (size.bit_length() - 1) *
+                           (2 if posted_bool('home_and_away') else 1)))
+            schedule = [{'kickoff_at': request.POST.get('schedule_%s' % i)}
+                        for i in range(count)]
+            tournament = create_tournament(
+                organizer=club, name=request.POST.get('name', ''),
+                description=request.POST.get('description', ''), format=fmt,
+                field_size=size, schedule=schedule,
+                squad_scope=posted_scope,
+                home_and_away=posted_bool('home_and_away'),
+                neutral_venue=NeutralVenue.objects.filter(
+                    pk=request.POST.get('neutral_venue')).first()
+                    if request.POST.get('neutral_venue') else None,
+                access=request.POST.get('access', CommunityTournament.ACCESS_OPEN),
+                invitation_code=request.POST.get('invitation_code', ''),
+                rules={'extra_time': posted_bool('extra_time'),
+                       'penalties': posted_bool('penalties') or
+                                   fmt in (CommunityTournament.FORMAT_CUP,
+                                           CommunityTournament.FORMAT_GROUP_KO)},
+                reward_plan={'payouts': {
+                    key[7:]: value for key, value in request.POST.items()
+                    if key.startswith('payout_') and value
+                }} if request.user.is_superuser else {},
+                is_admin=request.user.is_superuser)
+        elif action == 'join':
+            tournament = join_tournament(request.POST['tournament_id'], club,
+                                         code=request.POST.get('code', ''))
+        elif action == 'apply':
+            tournament = apply_tournament(request.POST['tournament_id'], club)
+        elif action in ('accept_application', 'reject_application'):
+            application = decide_application(
+                request.POST['application_id'], club,
+                action == 'accept_application')
+            tournament = application.tournament
+        elif action == 'start':
+            ids = [int(v) for v in request.POST.getlist('ai_clubs') if v.isdigit()]
+            ai_clubs = Club.objects.filter(pk__in=ids, managed_by__isnull=True)
+            tournament = start_tournament(
+                request.POST['tournament_id'], organizer=club,
+                ai_clubs=ai_clubs,
+                shrink_to=int(request.POST['shrink_to'])
+                if request.POST.get('shrink_to') else None,
+                allow_byes=posted_bool('allow_byes'))
+        elif action == 'reward':
+            payouts = {}
+            for key, value in request.POST.items():
+                if key.startswith('payout_') and value:
+                    payouts[key[7:]] = value
+            tournament = set_reward_plan(
+                request.POST['tournament_id'], {'payouts': payouts},
+                is_admin=request.user.is_superuser)
+        elif action == 'withdraw_application':
+            tournament = withdraw_application(request.POST['application_id'], club)
+        elif action == 'remove_participant':
+            tournament = remove_participant(request.POST['tournament_id'],
+                                            request.POST['entry_id'], club)
+        elif action == 'reschedule_round':
+            tournament = reschedule_round(request.POST['round_id'],
+                                           request.POST['kickoff_at'], club)
+        elif action == 'rotate_code':
+            tournament = rotate_invitation_code(request.POST['tournament_id'],
+                                                club, request.POST.get('code', ''))
+        else:
+            return JsonResponse({'error': 'Unbekannte Turnieraktion.'}, status=400)
+        return JsonResponse({'ok': True, 'tournament_id': tournament.tournament_id
+                             if hasattr(tournament, 'tournament_id') else tournament.pk})
+    except (ValidationError, ValueError, KeyError) as exc:
+        message = '; '.join(exc.messages) if hasattr(exc, 'messages') else str(exc)
+        return JsonResponse({'error': message}, status=400)
 
 
 # ------------------------------------------------------------------ #
