@@ -66,7 +66,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction as db_transaction
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -431,8 +431,37 @@ def management_friendlies(request):
                 f'{participation_empty_labels[tournament_participation]}.')
         tournament_detail = None
         if request.GET.get('tournament'):
+            detail_matches = CommunityTournamentMatch.objects.select_related(
+                'home_entry__club', 'away_entry__club',
+                'friendly_fixture__simulated_match',
+            )
+            detail_rounds = CommunityTournamentRound.objects.prefetch_related(
+                Prefetch('matches', queryset=detail_matches, to_attr='detail_matches'),
+            )
+            detail_phases = CommunityTournamentPhase.objects.prefetch_related(
+                Prefetch('rounds', queryset=detail_rounds, to_attr='detail_rounds'),
+            )
             tournament_detail = get_object_or_404(
-                CommunityTournament.objects.select_related('organizer'),
+                CommunityTournament.objects.select_related('organizer').prefetch_related(
+                    Prefetch(
+                        'entries',
+                        queryset=CommunityTournamentEntry.objects.select_related('club'),
+                        to_attr='detail_entries',
+                    ),
+                    Prefetch(
+                        'applications',
+                        queryset=CommunityTournamentApplication.objects.select_related('club'),
+                        to_attr='detail_applications',
+                    ),
+                    Prefetch(
+                        'standings',
+                        queryset=CommunityTournamentStanding.objects.select_related(
+                            'entry__club',
+                        ),
+                        to_attr='detail_standings',
+                    ),
+                    Prefetch('phases', queryset=detail_phases, to_attr='detail_phases'),
+                ),
                 pk=request.GET['tournament'], season=current_season, squad_scope=scope)
         for tournament in tournaments:
             tournament.is_organizer = tournament.organizer_id == club.pk
@@ -442,47 +471,84 @@ def management_friendlies(request):
             except (TypeError, ValueError):
                 tournament.reward_amount = ''
         if tournament_detail:
-            tournament_detail.entry_count = tournament_detail.entries.count()
+            tournament_detail.entry_count = len(tournament_detail.detail_entries)
             from django.utils.dateparse import parse_datetime
             tournament_detail.schedule_rows = []
             for item in (tournament_detail.schedule or []):
                 raw = item.get('kickoff_at') if isinstance(item, dict) else item
                 parsed = parse_datetime(raw) if isinstance(raw, str) else raw
                 tournament_detail.schedule_rows.append({'scheduled_at': parsed or raw})
-            tournament_detail.entry_rows = tournament_detail.entries.select_related('club')
-            tournament_detail.application_rows = (
-                tournament_detail.applications.select_related('club'))
-            tournament_detail.own_application = tournament_detail.applications.filter(
-                club=club).first()
-            tournament_detail.round_rows = CommunityTournamentRound.objects.filter(
-                phase__tournament=tournament_detail).prefetch_related(
-                    'matches__home_entry__club', 'matches__away_entry__club')
-            tournament_detail.standing_rows = rank_standings(tournament_detail)
+            tournament_detail.entry_rows = tournament_detail.detail_entries
+            tournament_detail.application_rows = tournament_detail.detail_applications
+            tournament_detail.own_application = next(
+                (application for application in tournament_detail.detail_applications
+                 if application.club_id == club.pk),
+                None,
+            )
+            tournament_detail.round_rows = [
+                round_row
+                for phase in tournament_detail.detail_phases
+                for round_row in phase.detail_rounds
+            ]
+            detail_matches = [
+                match
+                for round_row in tournament_detail.round_rows
+                for match in round_row.detail_matches
+            ]
+            tournament_detail.standing_rows = rank_standings(
+                tournament_detail,
+                standings=tournament_detail.detail_standings,
+                matches=detail_matches,
+            )
             tournament_detail.group_standing_sections = []
             tournament_detail.knockout_round_rows = []
             if tournament_detail.format == CommunityTournament.FORMAT_GROUP_KO:
-                groups = sorted(set(tournament_detail.entries.exclude(
-                    group='').values_list('group', flat=True)))
+                groups = sorted({
+                    entry.group
+                    for entry in tournament_detail.detail_entries
+                    if entry.group
+                })
                 tournament_detail.group_standing_sections = [
-                    {'group': group, 'rows': rank_standings(tournament_detail, group=group)}
+                    {
+                        'group': group,
+                        'rows': rank_standings(
+                            tournament_detail,
+                            group=group,
+                            standings=tournament_detail.detail_standings,
+                            matches=detail_matches,
+                        ),
+                    }
                     for group in groups
                 ]
                 for section in tournament_detail.group_standing_sections:
                     for row in section['rows']:
                         row.is_own = row.entry.club_id == club.pk
-                tournament_detail.knockout_round_rows = (
-                    tournament_detail.round_rows.filter(number__gt=3))
+                tournament_detail.knockout_round_rows = [
+                    round_row for round_row in tournament_detail.round_rows
+                    if round_row.number > 3
+                ]
             for standing in tournament_detail.standing_rows:
                 standing.is_own = standing.entry.club_id == club.pk
             tournament_detail.own_standing = next(
                 (row for row in tournament_detail.standing_rows if row.is_own), None)
-            eligible_ai = Club.objects.filter(managed_by__isnull=True).exclude(
-                pk__in=tournament_detail.entries.values('club_id')).order_by('name')
-            tournament_detail.eligible_ai = [
-                candidate for candidate in eligible_ai
-                if not candidate_schedule_conflicts(candidate, tournament_detail)
-            ]
             tournament_detail.is_organizer = tournament_detail.organizer_id == club.pk
+            tournament_detail.eligible_ai = []
+            if (
+                tournament_detail.is_organizer
+                and tournament_detail.status == CommunityTournament.STATUS_OPEN
+                and tournament_detail.entry_count < tournament_detail.field_size
+            ):
+                eligible_ai = Club.objects.filter(
+                    managed_by__isnull=True,
+                ).exclude(
+                    pk__in=[
+                        entry.club_id for entry in tournament_detail.detail_entries
+                    ],
+                ).order_by('name')
+                tournament_detail.eligible_ai = [
+                    candidate for candidate in eligible_ai
+                    if not candidate_schedule_conflicts(candidate, tournament_detail)
+                ]
         context.update({
             'tournaments': tournaments, 'tournament_detail': tournament_detail,
             'tournament_status': tournament_status,

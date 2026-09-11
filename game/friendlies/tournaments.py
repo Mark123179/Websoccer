@@ -811,17 +811,47 @@ def _update_standings(match):
     home.save(); away.save()
 
 
-def rank_standings(tournament, *, group=''):
+def rank_standings(tournament, *, group='', standings=None, matches=None):
     """Authoritative table order: points, goal difference, goals, H2H, draw."""
-    rows = list(tournament.standings.filter(group=group).select_related('entry'))
-    phase_filter = {}
-    if tournament.format == CommunityTournament.FORMAT_LEAGUE:
-        phase_filter['round__phase__phase_type'] = CommunityTournament.FORMAT_LEAGUE
-    elif tournament.format == CommunityTournament.FORMAT_GROUP_KO:
-        phase_filter['round__number__lte'] = 3
-        if group:
-            phase_filter['home_entry__group'] = group
-            phase_filter['away_entry__group'] = group
+    if standings is None:
+        rows = list(tournament.standings.filter(group=group).select_related('entry'))
+    else:
+        rows = [row for row in standings if row.group == group]
+
+    def relevant_matches(ids):
+        if matches is None:
+            phase_filter = {}
+            if tournament.format == CommunityTournament.FORMAT_LEAGUE:
+                phase_filter['round__phase__phase_type'] = CommunityTournament.FORMAT_LEAGUE
+            elif tournament.format == CommunityTournament.FORMAT_GROUP_KO:
+                phase_filter['round__number__lte'] = 3
+                if group:
+                    phase_filter['home_entry__group'] = group
+                    phase_filter['away_entry__group'] = group
+            return CommunityTournamentMatch.objects.filter(
+                round__phase__tournament=tournament, counted=True,
+                **phase_filter, home_entry_id__in=ids, away_entry_id__in=ids,
+            )
+        return [
+            match for match in matches
+            if match.counted
+            and match.home_entry_id in ids
+            and match.away_entry_id in ids
+            and (
+                tournament.format != CommunityTournament.FORMAT_LEAGUE
+                or match.round.phase.phase_type == CommunityTournament.FORMAT_LEAGUE
+            )
+            and (
+                tournament.format != CommunityTournament.FORMAT_GROUP_KO
+                or (
+                    match.round.number <= 3
+                    and (not group or (
+                        match.home_entry.group == group
+                        and match.away_entry.group == group
+                    ))
+                )
+            )
+        ]
     def key(row):
         gd = row.goals_for - row.goals_against
         return (-row.points, -gd, -row.goals_for)
@@ -836,10 +866,8 @@ def rank_standings(tournament, *, group=''):
         tied = rows[i:j]
         ids = {r.entry_id for r in tied}
         mini = {r.entry_id: [0, 0, 0] for r in tied}
-        for match in CommunityTournamentMatch.objects.filter(
-                round__phase__tournament=tournament, counted=True,
-                **phase_filter,
-                home_entry_id__in=ids, away_entry_id__in=ids):
+        tied_matches = relevant_matches(ids)
+        for match in tied_matches:
             if match.home_goals is None:
                 continue
             mini[match.home_entry_id][0] += match.home_goals
@@ -847,10 +875,7 @@ def rank_standings(tournament, *, group=''):
             mini[match.away_entry_id][0] += match.away_goals or 0
             mini[match.away_entry_id][1] += match.home_goals
         # Recompute mutual points from every leg before mutual GD/GF.
-        for match in CommunityTournamentMatch.objects.filter(
-                round__phase__tournament=tournament, counted=True,
-                **phase_filter,
-                home_entry_id__in=ids, away_entry_id__in=ids):
+        for match in tied_matches:
             if match.home_goals is None:
                 continue
             if match.home_goals > match.away_goals:

@@ -48,6 +48,35 @@ class CommunityTournamentViewsTests(TestCase):
 
     def _create(self, **extra):
         data = {
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="tour-manager", password="password")
+        self.profile = ManagerProfile.objects.get(user=self.user)
+        self.profile.name = "Tour Manager"
+        self.profile.save(update_fields=["name"])
+        league = League.objects.create(name="Testliga", country="DE")
+        self.club = Club.objects.create(name="Organizer FC", short_name="ORG",
+                                        league=league, founded_year=1900, budget=0,
+                                        managed_by=self.profile)
+        self.other_user = get_user_model().objects.create_user(
+            username="other-manager", password="password")
+        other_profile = ManagerProfile.objects.get(user=self.other_user)
+        other_profile.name = "Other Manager"
+        other_profile.save(update_fields=["name"])
+        self.other = Club.objects.create(name="Other FC", short_name="OTH",
+                                         league=league, founded_year=1901, budget=0,
+                                         managed_by=other_profile)
+        self.ai = Club.objects.create(name="Computer FC", short_name="CPU",
+                                      league=league, founded_year=1902, budget=0)
+        self.client.login(username="tour-manager", password="password")
+
+    def _schedule(self, count):
+        start = timezone.now() + timedelta(days=2)
+        return [(start + timedelta(days=i)).strftime("%Y-%m-%dT%H:%M")
+                for i in range(count)]
+
+    def _create(self, **extra):
+        data = {
             "action": "create", "name": "Test Cup", "format": "pokal",
             "field_size": "4", "access": "offen",
         }
@@ -352,6 +381,102 @@ class CommunityTournamentViewsTests(TestCase):
             "tab": "tournaments", "squad": "pro",
             "tournament_status": "abgeschlossen",
             "tournament_participation": "all", "q": "Search & Find",
+        }
+        listing = self.client.get(reverse("management_friendlies"), params)
+        self.assertIn(
+            f"?tab=tournaments&squad=pro&tournament={tournament.pk}"
+            "&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
+            listing.content.decode())
+
+        detail = self.client.get(
+            reverse("management_friendlies"), {**params, "tournament": tournament.pk})
+        detail_body = detail.content.decode()
+        self.assertIn(
+            "?tab=tournaments&squad=pro"
+            "&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
+            detail_body)
+        self.assertIn(
+            "?tab=tournaments&squad=youth"
+            "&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
+            detail_body)
+
+    def test_tournament_detail_query_count_does_not_grow_with_large_schedule(self):
+        def build_detail_tournament(name, team_count):
+            tournament = CommunityTournament.objects.create(
+                organizer=self.club,
+                name=name,
+                format=CommunityTournament.FORMAT_GROUP_KO,
+                field_size=team_count,
+                status=CommunityTournament.STATUS_RUNNING,
+                schedule=self._schedule(6),
+            )
+            entries = []
+            for index in range(team_count):
+                club = Club.objects.create(
+                    name=f"{name} Club {index}",
+                    short_name=f"C{index:02}",
+                    league=self.club.league,
+                    founded_year=1900 + index,
+                    budget=0,
+                )
+                entry = CommunityTournamentEntry.objects.create(
+                    tournament=tournament,
+                    club=club,
+                    is_ai=True,
+                    group=chr(ord("A") + index // 4),
+                    draw_position=index + 1,
+                )
+                CommunityTournamentStanding.objects.create(
+                    tournament=tournament,
+                    entry=entry,
+                    group=entry.group,
+                    random_order=index,
+                )
+                entries.append(entry)
+            phase = CommunityTournamentPhase.objects.create(
+                tournament=tournament,
+                name="Gruppenphase",
+                phase_type=CommunityTournament.FORMAT_GROUP_KO,
+            )
+            for round_number in range(1, team_count // 2 + 1):
+                round_row = CommunityTournamentRound.objects.create(
+                    phase=phase,
+                    number=round_number,
+                    name=f"Runde {round_number}",
+                    scheduled_at=timezone.now() + timedelta(days=round_number),
+                )
+                home = entries[(round_number - 1) * 2 % team_count]
+                away = entries[((round_number - 1) * 2 + 1) % team_count]
+                CommunityTournamentMatch.objects.create(
+                    round=round_row,
+                    home_entry=home,
+                    away_entry=away,
+                    counted=True,
+                    home_goals=1,
+                    away_goals=0,
+                )
+            return tournament
+
+        small = build_detail_tournament("Small Detail Cup", 4)
+        large = build_detail_tournament("Large Detail Cup", 16)
+        url = reverse("management_friendlies")
+
+        self.client.get(url, {"tab": "tournaments", "tournament": small.pk})
+        with CaptureQueriesContext(connection) as small_queries:
+            small_page = self.client.get(
+                url, {"tab": "tournaments", "tournament": small.pk})
+        with CaptureQueriesContext(connection) as large_queries:
+            large_page = self.client.get(
+                url, {"tab": "tournaments", "tournament": large.pk})
+
+        self.assertEqual(large_page.status_code, 200)
+        self.assertContains(large_page, "Large Detail Cup Club 15")
+        self.assertContains(large_page, "Gruppe D")
+        self.assertContains(large_page, "Runde 8")
+        self.assertEqual(len(large_queries), len(small_queries))
         }
         listing = self.client.get(reverse("management_friendlies"), params)
         self.assertIn(
