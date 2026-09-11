@@ -283,3 +283,56 @@ class CommunityTournamentViewsTests(TestCase):
             youth,
             "?tab=tournaments&squad=pro&tournament_status=abgeschlossen"
             "&amp;tournament_participation=joined")
+
+    def test_search_matches_tournament_or_organizer_and_combines_with_filters(self):
+        named = self._tournament(
+            "Autumn Invitational", organizer=self.other,
+            status=CommunityTournament.STATUS_COMPLETED)
+        organized = self._tournament(
+            "Different Name", status=CommunityTournament.STATUS_COMPLETED)
+        self._tournament("Autumn Running", status=CommunityTournament.STATUS_RUNNING)
+
+        by_name = self.client.get(reverse("management_friendlies"), {
+            "tab": "tournaments", "tournament_status": "abgeschlossen",
+            "q": "AUTUMN",
+        })
+        self.assertContains(by_name, named.name)
+        self.assertNotContains(by_name, organized.name)
+        self.assertNotContains(by_name, "Autumn Running")
+
+        by_organizer = self.client.get(reverse("management_friendlies"), {
+            "tab": "tournaments", "tournament_status": "abgeschlossen",
+            "tournament_participation": "organized", "q": "organizer",
+        })
+        self.assertContains(by_organizer, organized.name)
+        self.assertNotContains(by_organizer, named.name)
+
+    def test_search_and_filters_survive_detail_and_squad_navigation(self):
+        tournament = self._tournament(
+            "Search & Find Cup", organizer=self.other,
+            status=CommunityTournament.STATUS_COMPLETED)
+        params = {
+            "tab": "tournaments", "squad": "pro",
+            "tournament_status": "abgeschlossen",
+            "tournament_participation": "all", "q": "Search & Find",
+        }
+        listing = self.client.get(reverse("management_friendlies"), params)
+        self.assertIn(
+            f"?tab=tournaments&squad=pro&tournament={tournament.pk}"
+            "&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
+            listing.content.decode())
+
+        detail = self.client.get(
+            reverse("management_friendlies"), {**params, "tournament": tournament.pk})
+        detail_body = detail.content.decode()
+        self.assertIn(
+            "?tab=tournaments&squad=pro"
+            "&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
+            detail_body)
+        self.assertIn(
+            "?tab=tournaments&squad=youth"
+            "&tournament_status=abgeschlossen"
+            "&amp;tournament_participation=all&amp;q=Search+%26+Find",
+            detail_body)

@@ -1,5 +1,6 @@
 import json
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from game.stadium_brightness import get_stadium_tile_filter
 from game.asset_urls import resolve_stadium_url as _resolve_stadium_url
@@ -65,7 +66,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction as db_transaction
-from django.db.models import Count, Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -345,6 +346,7 @@ def management_friendlies(request):
     allowed_tournament_participation = {'all', 'organized', 'joined'}
     if tournament_participation not in allowed_tournament_participation:
         tournament_participation = 'all'
+    tournament_search_query = request.GET.get('q', '').strip()
     tournaments = CommunityTournament.objects.select_related('organizer').filter(
         season=current_season, squad_scope=selected_scope)
     if tournament_status != 'all':
@@ -361,6 +363,11 @@ def management_friendlies(request):
     )
     if tournament_participation == 'joined':
         tournaments = tournaments.filter(joined=True)
+    if tournament_search_query:
+        tournaments = tournaments.filter(
+            Q(name__icontains=tournament_search_query)
+            | Q(organizer__name__icontains=tournament_search_query)
+        )
     status_empty_labels = {
         CommunityTournament.STATUS_OPEN: 'offenen',
         CommunityTournament.STATUS_RUNNING: 'laufenden',
@@ -370,7 +377,10 @@ def management_friendlies(request):
         'organized': 'die von dir veranstaltet wurden',
         'joined': 'an denen dein Verein teilnimmt',
     }
-    if tournament_status == 'all' and tournament_participation == 'all':
+    if tournament_search_query:
+        tournament_empty_text = (
+            f'Keine Community-Turniere für „{tournament_search_query}“ gefunden.')
+    elif tournament_status == 'all' and tournament_participation == 'all':
         tournament_empty_text = 'Noch keine Community-Turniere. Erstelle den ersten Wettbewerb.'
     elif tournament_status == 'all':
         tournament_empty_text = (
@@ -450,9 +460,12 @@ def management_friendlies(request):
         'tournaments': tournaments, 'tournament_detail': tournament_detail,
         'tournament_status': tournament_status,
         'tournament_participation': tournament_participation,
-        'tournament_filter_params': (
-            f'tournament_status={tournament_status}&'
-            f'tournament_participation={tournament_participation}'),
+        'tournament_search_query': tournament_search_query,
+        'tournament_filter_params': urlencode({
+            'tournament_status': tournament_status,
+            'tournament_participation': tournament_participation,
+            'q': tournament_search_query,
+        }),
         'tournament_empty_text': tournament_empty_text,
         'tournament_formats': CommunityTournament.FORMAT_CHOICES,
         'field_sizes': FIELD_SIZES,
