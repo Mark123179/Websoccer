@@ -25,19 +25,21 @@ export function Collector() {
               </div>
               <div className="collector__serial">PASS · 001 / 026</div>
               <div className="collector__competition">
-                <span className="collector__cupmark" aria-hidden="true">✦</span>
+                <span className="collector__cupmark" aria-hidden="true"><i /></span>
                 <span>UEFA CHAMPIONS LEAGUE</span>
-                <strong>FINALE</strong>
+                <strong>FINAL PASS</strong>
               </div>
               <div className="collector__score" aria-label="Bayer 04 Leverkusen 1, RB Leipzig 0">
                 <div className="collector__team collector__team--home">
+                  <span className="collector__crest collector__crest--home" aria-hidden="true">B04</span>
                   <b>1</b>
                   <span>Bayer 04<br />Leverkusen</span>
                 </div>
-                <span className="collector__versus">—</span>
+                <span className="collector__versus">FT</span>
                 <div className="collector__team collector__team--away">
                   <span>RB<br />Leipzig</span>
                   <b>0</b>
+                  <span className="collector__crest collector__crest--away" aria-hidden="true">RB</span>
                 </div>
               </div>
               <div className="collector__venue">
