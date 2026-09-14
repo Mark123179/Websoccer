@@ -7461,9 +7461,9 @@ def manager_profile(request):
     for _mte in _mte_qs:
         _tl_js.append(_timeline_entry_js(_mte))
 
-    # The collector pass is deliberately a transient demo event.  Keep it out
-    # of the database (and out of ordinary manager profiles) so the approved
-    # visual can be reviewed without changing a manager's career history.
+    # The compact panorama ticket is deliberately a transient demo event.
+    # Keep it out of the database (and ordinary manager profiles) so the
+    # approved visual can be reviewed without changing career history.
     if request.user.is_superuser:
         _demo_ticket_date = date(2026, 5, 30)
         _tl_js.append({
@@ -7494,15 +7494,9 @@ def manager_profile(request):
                 'score': '1:0',
                 'status': 'FT',
                 'competition': 'UEFA Champions League',
-                'label': 'FINAL PASS',
                 'venue': 'München',
                 'date': '30.05.2026',
-                'serial': '001 / 026',
-                'number': '000184',
                 'barcode': '04 · CL · 260530',
-                # Fixed server-owned design tokens; the renderer never accepts
-                # a user-controlled color or URL for this demo.
-                'home_band': '#a5212a',
                 'stadium_url': static(
                     'game/images/stadiums/germany/b-leverkusen.jpg'
                 ),

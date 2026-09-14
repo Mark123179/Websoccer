@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-108">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-109">
 {% endblock %}
 
 {% block content %}
@@ -1202,13 +1202,13 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
 
             var ticketHtml = '';
 {% if request.user.is_superuser %}
-            /* Collector V2 ticket.  This branch is intentionally opt-in:
-               ordinary timeline cards below retain their existing markup. */
+            /* Compact panorama/admission ticket. This branch is intentionally
+               opt-in; ordinary timeline cards below retain their markup. */
             if (isTicket) {
                 var ticket = ev.ticket;
                 var home = ticket.home || {};
                 var away = ticket.away || {};
-                /* The demo's band is a server-owned fixed token. */
+                /* The demo's club-color strip is a server-owned fixed token. */
                 var ticketBand = '#a5212a';
                 var ticketPhoto = esc(ticket.stadium_url || '');
                 ticketHtml =
@@ -1219,36 +1219,31 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                         '<div class="mp-tlticket-hero">' +
                             '<div class="mp-tlticket-photo"></div>' +
                             '<div class="mp-tlticket-shade"></div>' +
-                            '<div class="mp-tlticket-clubband"><span>'+esc(home.short)+'</span><span>WERKSELF</span></div>' +
-                            '<div class="mp-tlticket-serial">PASS · '+esc(ticket.serial)+'</div>' +
+                            '<div class="mp-tlticket-clubband"><span>'+esc(home.short)+'</span><span>VS</span><span>'+esc(away.short)+'</span></div>' +
                             '<div class="mp-tlticket-competition">' +
-                                '<span class="mp-tlticket-cupmark" aria-hidden="true"><i></i></span>' +
                                 '<span>'+esc(ticket.competition)+'</span>' +
-                                '<strong>'+esc(ticket.label)+'</strong>' +
+                                '<time>'+esc(ticket.date)+'</time>' +
                             '</div>' +
                             '<div class="mp-tlticket-score" aria-label="'+
                                 esc((home.name || '')+' '+(ticket.home_score == null ? '' : ticket.home_score)+
                                     ', '+(away.name || '')+' '+(ticket.away_score == null ? '' : ticket.away_score))+'">' +
                                 '<div class="mp-tlticket-team mp-tlticket-team--home">' +
                                     '<span class="mp-tlticket-crest mp-tlticket-crest--home" aria-hidden="true">'+esc(home.mark)+'</span>' +
-                                    '<b>'+esc(ticket.home_score)+'</b><span>'+esc(home.short)+'</span>' +
+                                    '<span>'+esc(home.short)+'</span>' +
                                 '</div>' +
-                                '<span class="mp-tlticket-versus">'+esc(ticket.status)+'</span>' +
+                                '<strong class="mp-tlticket-score-value">'+esc(ticket.score)+'</strong>' +
                                 '<div class="mp-tlticket-team mp-tlticket-team--away">' +
-                                    '<span>'+esc(away.short)+'</span><b>'+esc(ticket.away_score)+'</b>' +
+                                    '<span>'+esc(away.short)+'</span>' +
                                     '<span class="mp-tlticket-crest mp-tlticket-crest--away" aria-hidden="true">'+esc(away.mark)+'</span>' +
                                 '</div>' +
                             '</div>' +
-                            '<div class="mp-tlticket-venue"><span>FINALE · '+esc(ticket.venue)+'</span><span>'+esc(ticket.date)+'</span></div>' +
+                            '<div class="mp-tlticket-venue"><span>'+esc(ticket.status)+' · '+esc(ticket.venue)+'</span></div>' +
                         '</div>' +
-                        '<div class="mp-tlticket-tear" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>' +
-                        '<aside class="mp-tlticket-stub" aria-label="Ticketabriss mit Seriennummer">' +
-                            '<div class="mp-tlticket-stub-top"><span>FINALPASS</span><strong>CL·26</strong></div>' +
-                            '<div class="mp-tlticket-stub-star" aria-hidden="true">✦</div>' +
-                            '<span class="mp-tlticket-stub-label">SAMMLER-EDITION</span>' +
-                            '<div class="mp-tlticket-barcode" aria-label="Ticketcode '+esc(ticket.barcode)+'"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>' +
+                        '<div class="mp-tlticket-tear" aria-hidden="true"></div>' +
+                        '<aside class="mp-tlticket-stub" aria-label="Abtrennbarer Ticketabschnitt">' +
+                            '<span class="mp-tlticket-stub-label">ADMISSION</span>' +
+                            '<div class="mp-tlticket-barcode" aria-label="Ticketcode '+esc(ticket.barcode)+'"></div>' +
                             '<code>'+esc(ticket.barcode)+'</code>' +
-                            '<span class="mp-tlticket-stub-no">NO. '+esc(ticket.number)+'</span>' +
                         '</aside>' +
                     '</article>';
             }
@@ -1276,11 +1271,9 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
 
             /* Karte */
             var card = document.createElement('div');
-            /* A 191px ticket occupies the available half-track exactly; keep
-               it inside the 352px track while retaining normal card geometry. */
-            var cardTop = isTicket
-                ? (isTop ? 'top:0;' : 'top:161px;')
-                : (isTop ? 'bottom:50%;margin-bottom:20px;' : 'top:50%;margin-top:20px;');
+            /* Tickets use the same top/bottom timeline placement as every
+               other card; their compact height keeps them in the normal lane. */
+            var cardTop = isTop ? 'bottom:50%;margin-bottom:20px;' : 'top:50%;margin-top:20px;';
             card.style.cssText = 'position:absolute;left:'+rawX+'px;'+cardTop+
                 'width:'+CARD_W+'px;border-radius:8px;padding:10px 12px 12px;'+
                 'background:'+C.grad+';border:1px solid rgba(6,16,24,.16);'+

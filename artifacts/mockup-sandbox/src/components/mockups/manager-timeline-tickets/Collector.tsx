@@ -2,10 +2,10 @@ import './collector.css';
 
 export function Collector() {
   return (
-    <main className="collector" aria-label="Manager-Karriere-Timeline, Sammlerticket">
+    <main className="collector" aria-label="Manager-Karriere-Timeline, kompakte Eintrittskarte">
       <div className="collector__crop">
         <header className="collector__header">
-          <span className="collector__eyebrow">KARRIERE · ARCHIV 08</span>
+          <span className="collector__eyebrow">KARRIERE · SPIELTAG</span>
           <h1>Karriere Timeline</h1>
           <span className="collector__rule" aria-hidden="true" />
         </header>
@@ -15,36 +15,31 @@ export function Collector() {
           <div className="collector__stem" aria-hidden="true" />
           <div className="collector__dot" aria-hidden="true" />
 
-          <article className="collector__ticket" aria-label="Champions League Finale, Bayer 04 Leverkusen 1 zu 0 RB Leipzig">
+          <article className="collector__ticket" aria-label="Bayer 04 Leverkusen 1 zu 0 RB Leipzig">
             <div className="collector__hero">
               <div className="collector__photo" />
               <div className="collector__shade" />
               <div className="collector__clubband">
-                <span>BAYER 04</span>
-                <span>WERKSELF</span>
+                <span>BUNDESLIGA</span>
+                <span>15. JUN. 2026</span>
               </div>
-              <div className="collector__serial">PASS · 001 / 026</div>
               <div className="collector__competition">
-                <span className="collector__cupmark" aria-hidden="true"><i /></span>
-                <span>UEFA CHAMPIONS LEAGUE</span>
-                <strong>FINAL PASS</strong>
+                <span>BayArena · Leverkusen</span>
               </div>
               <div className="collector__score" aria-label="Bayer 04 Leverkusen 1, RB Leipzig 0">
                 <div className="collector__team collector__team--home">
                   <span className="collector__crest collector__crest--home" aria-hidden="true">B04</span>
-                  <b>1</b>
                   <span>Bayer 04<br />Leverkusen</span>
                 </div>
-                <span className="collector__versus">FT</span>
+                <strong className="collector__score-number">1 : 0</strong>
                 <div className="collector__team collector__team--away">
                   <span>RB<br />Leipzig</span>
-                  <b>0</b>
                   <span className="collector__crest collector__crest--away" aria-hidden="true">RB</span>
                 </div>
               </div>
               <div className="collector__venue">
-                <span>FINALE · MÜNCHEN</span>
-                <span>30.05.2026</span>
+                <span>AMTSSPRACH · VEREIN</span>
+                <span>1. SPIEL</span>
               </div>
             </div>
 
@@ -62,16 +57,14 @@ export function Collector() {
 
             <aside className="collector__stub" aria-label="Ticketabriss mit Seriennummer">
               <div className="collector__stub-top">
-                <span>FINALPASS</span>
+                <span>VEREIN</span>
                 <strong>CL·26</strong>
               </div>
-              <div className="collector__stub-star" aria-hidden="true">✦</div>
-              <span className="collector__stub-label">SAMMLER-EDITION</span>
+              <span className="collector__stub-label">EINTRITT</span>
               <div className="collector__barcode" aria-label="Ticketcode 04CL260530">
                 <i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
               </div>
-              <code>04 · CL · 260530</code>
-              <span className="collector__stub-no">NO. 000184</span>
+              <code>04 · 1:0 · 260615</code>
             </aside>
           </article>
 

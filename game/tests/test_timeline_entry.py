@@ -89,7 +89,7 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertIn('Sichtbar', html)
         self.assertNotIn('Unsichtbar', html)
 
-    def test_superuser_gets_one_transient_collector_ticket(self):
+    def test_superuser_gets_one_transient_compact_panorama_ticket(self):
         self.user.is_superuser = True
         self.user.save(update_fields=['is_superuser'])
         before_count = ManagerTimelineEntry.objects.count()
@@ -98,6 +98,9 @@ class TimelineEntrySubmitTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'mp-tlticket-card')
+        self.assertContains(response, 'mp-tlticket-stub-label')
+        self.assertNotContains(response, 'FINAL PASS')
+        self.assertNotContains(response, 'SAMMLER-EDITION')
         tickets = [
             event for event in response.context['timeline_events_json']
             if event.get('ticket')
@@ -112,14 +115,15 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertEqual(ticket['away']['name'], 'RB Leipzig')
         self.assertEqual(ticket['score'], '1:0')
         self.assertEqual(ticket['status'], 'FT')
-        self.assertEqual(ticket['serial'], '001 / 026')
-        self.assertEqual(ticket['number'], '000184')
+        self.assertEqual(ticket['competition'], 'UEFA Champions League')
+        self.assertNotIn('serial', ticket)
+        self.assertNotIn('number', ticket)
         self.assertTrue(ticket['stadium_url'].endswith(
             '/game/images/stadiums/germany/b-leverkusen.jpg'
         ))
         self.assertEqual(ManagerTimelineEntry.objects.count(), before_count)
 
-    def test_normal_manager_has_no_collector_and_result_keeps_badge_data(self):
+    def test_normal_manager_has_no_compact_ticket_and_result_keeps_badge_data(self):
         self._post(self._payload(title='Normales Ergebnis'))
         entry = ManagerTimelineEntry.objects.get(
             manager=self.manager, title='Normales Ergebnis'
