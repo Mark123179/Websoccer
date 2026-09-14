@@ -89,6 +89,56 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertIn('Sichtbar', html)
         self.assertNotIn('Unsichtbar', html)
 
+    def test_superuser_gets_one_transient_collector_ticket(self):
+        self.user.is_superuser = True
+        self.user.save(update_fields=['is_superuser'])
+        before_count = ManagerTimelineEntry.objects.count()
+
+        response = self.client.get('/manager/profil/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'mp-tlticket-card')
+        tickets = [
+            event for event in response.context['timeline_events_json']
+            if event.get('ticket')
+        ]
+        self.assertEqual(len(tickets), 1)
+        ticket = tickets[0]['ticket']
+        self.assertEqual(tickets[0]['date_iso'], '2026-05-30')
+        self.assertEqual(tickets[0]['type'], 'finale')
+        self.assertEqual(ticket['home']['name'], 'Bayer 04 Leverkusen')
+        self.assertEqual(ticket['home']['short'], 'Bayer 04')
+        self.assertEqual(ticket['home']['mark'], 'B04')
+        self.assertEqual(ticket['away']['name'], 'RB Leipzig')
+        self.assertEqual(ticket['score'], '1:0')
+        self.assertEqual(ticket['status'], 'FT')
+        self.assertEqual(ticket['serial'], '001 / 026')
+        self.assertEqual(ticket['number'], '000184')
+        self.assertTrue(ticket['stadium_url'].endswith(
+            '/game/images/stadiums/germany/b-leverkusen.jpg'
+        ))
+        self.assertEqual(ManagerTimelineEntry.objects.count(), before_count)
+
+    def test_normal_manager_has_no_collector_and_result_keeps_badge_data(self):
+        self._post(self._payload(title='Normales Ergebnis'))
+        entry = ManagerTimelineEntry.objects.get(
+            manager=self.manager, title='Normales Ergebnis'
+        )
+        entry.status = ManagerTimelineEntry.STATUS_APPROVED
+        entry.save(update_fields=['status'])
+
+        response = self.client.get('/manager/profil/')
+
+        self.assertEqual(response.status_code, 200)
+        events = response.context['timeline_events_json']
+        self.assertFalse(any(event.get('ticket') for event in events))
+        self.assertContains(response, 'var isTicket = false;')
+        result_event = next(
+            event for event in events if event['title'] == 'Normales Ergebnis'
+        )
+        self.assertEqual(result_event['result'], '3:1')
+        self.assertContains(response, 'var resultHtml = !isTicket && ev.result')
+
     def test_invalid_category_rejected(self):
         resp = self._post(self._payload(category='xxx'))
         self.assertEqual(resp.status_code, 400)

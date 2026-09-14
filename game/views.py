@@ -7461,6 +7461,54 @@ def manager_profile(request):
     for _mte in _mte_qs:
         _tl_js.append(_timeline_entry_js(_mte))
 
+    # The collector pass is deliberately a transient demo event.  Keep it out
+    # of the database (and out of ordinary manager profiles) so the approved
+    # visual can be reviewed without changing a manager's career history.
+    if request.user.is_superuser:
+        _demo_ticket_date = date(2026, 5, 30)
+        _tl_js.append({
+            'date_iso': _demo_ticket_date.isoformat(),
+            'date': _fmt_de(_demo_ticket_date),
+            'type': 'finale',
+            'cat': 'FINALE',
+            'tone': 'red',
+            'title': 'Champions League Finale',
+            'body': 'Bayer 04 Leverkusen 1:0 RB Leipzig',
+            'crest_url': '',
+            'is_active': False,
+            'station_key': '',
+            'result': '1:0',
+            'ticket': {
+                'home': {
+                    'name': 'Bayer 04 Leverkusen',
+                    'short': 'Bayer 04',
+                    'mark': 'B04',
+                },
+                'away': {
+                    'name': 'RB Leipzig',
+                    'short': 'RB Leipzig',
+                    'mark': 'RB',
+                },
+                'home_score': 1,
+                'away_score': 0,
+                'score': '1:0',
+                'status': 'FT',
+                'competition': 'UEFA Champions League',
+                'label': 'FINAL PASS',
+                'venue': 'München',
+                'date': '30.05.2026',
+                'serial': '001 / 026',
+                'number': '000184',
+                'barcode': '04 · CL · 260530',
+                # Fixed server-owned design tokens; the renderer never accepts
+                # a user-controlled color or URL for this demo.
+                'home_band': '#a5212a',
+                'stadium_url': static(
+                    'game/images/stadiums/germany/b-leverkusen.jpg'
+                ),
+            },
+        })
+
     # Vereins-Optionen fürs Einreichen-Modal (Karrierestationen + Kader)
     _tl_clubs = []
     if db_stations:

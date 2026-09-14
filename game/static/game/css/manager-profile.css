@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════
-   Manager Profile  —  FM Broadcast v2  (h700-105)
+   Manager Profile  —  FM Broadcast v2  (h700-108)
    1440 × 900 golden master — wide-shell scope only
 ══════════════════════════════════════════════════════════════════ */
 
@@ -343,6 +343,137 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 .mp-tl2-card-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 16px; font-weight: 700; color: rgba(244,251,255,.92); margin-bottom: 3px; }
 .mp-tl2-card-body  { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin: 0; font-size: 14px; color: rgba(180,200,230,.62); line-height: 1.4; }
+
+/* ─── COLLECTOR V2 TICKET ─────────────────────────────────────── */
+.mp-tlticket-card {
+    box-sizing: border-box; height: 191px; padding: 0 !important; overflow: visible !important;
+    color: #f3efe5; border: 1px solid rgba(217,182,111,.7) !important;
+    border-radius: 3px !important; background: #161c1a !important;
+    box-shadow: 0 14px 30px rgba(0,0,0,.35), 0 0 0 4px rgba(15,20,18,.35) !important;
+}
+.mp-tlticket, .mp-tlticket * { box-sizing: border-box; }
+.mp-tlticket {
+    display: flex; width: 100%; max-width: 234px; height: 189px; overflow: hidden;
+    color: #f3efe5; border-radius: 2px; background: #161c1a;
+    font-family: "Trebuchet MS", system-ui, sans-serif;
+}
+.mp-tlticket-hero { position: relative; width: 177px; min-width: 177px; overflow: hidden; }
+.mp-tlticket-photo {
+    position: absolute; inset: 0;
+    background: var(--mp-tlticket-photo) center / cover no-repeat;
+    filter: saturate(.72) contrast(1.1);
+}
+.mp-tlticket-shade {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(16,22,20,.42), rgba(16,20,19,.92) 74%);
+}
+.mp-tlticket-clubband {
+    position: absolute; top: 0; left: 0; display: flex;
+    justify-content: space-between; width: 100%; padding: 7px 8px;
+    color: #fff5e2; background: var(--mp-tlticket-band);
+    font: 800 6px/1 ui-monospace, SFMono-Regular, monospace;
+    letter-spacing: .1em;
+}
+.mp-tlticket-serial {
+    position: absolute; top: 31px; right: 8px; color: #d9b66f;
+    font: 6px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: .08em;
+}
+.mp-tlticket-competition {
+    position: absolute; top: 42px; left: 10px; display: grid;
+    grid-template-columns: 20px 1fr; column-gap: 6px; align-items: center;
+    color: #d9b66f; font: 6px/1 ui-monospace, SFMono-Regular, monospace;
+    letter-spacing: .08em;
+}
+.mp-tlticket-competition strong {
+    grid-column: 2; margin-top: -2px; color: #fff8e9;
+    font: 12px/1 Georgia, serif; letter-spacing: .11em;
+}
+.mp-tlticket-cupmark {
+    position: relative; grid-row: span 2; display: grid; place-items: center;
+    width: 18px; height: 18px; border: 1px solid #d9b66f; border-radius: 50%;
+}
+.mp-tlticket-cupmark::before, .mp-tlticket-cupmark::after {
+    position: absolute; width: 5px; height: 1px; content: ""; background: #d9b66f;
+    transform: rotate(45deg);
+}
+.mp-tlticket-cupmark::after { transform: rotate(-45deg); }
+.mp-tlticket-score {
+    position: absolute; top: 84px; left: 9px; display: flex;
+    align-items: center; width: 159px; color: #fff8e9;
+}
+.mp-tlticket-team {
+    display: flex; align-items: center; width: 68px; gap: 3px;
+    overflow: hidden; font-size: 7px; font-weight: 700; line-height: 1.16;
+}
+.mp-tlticket-team > span:not(.mp-tlticket-crest) {
+    min-width: 0; overflow: hidden; text-overflow: ellipsis;
+}
+.mp-tlticket-team b {
+    color: #d9b66f; font: 400 29px/.8 Georgia, serif;
+}
+.mp-tlticket-team--away { justify-content: flex-end; text-align: right; }
+.mp-tlticket-team--away b { order: 2; }
+.mp-tlticket-crest {
+    display: grid; place-items: center; width: 17px; height: 17px; flex: 0 0 17px;
+    color: #fff8e9; border: 1px solid currentColor; border-radius: 50%;
+    font: 800 5px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -.04em;
+}
+.mp-tlticket-crest--home { color: #d9b66f; }
+.mp-tlticket-crest--away { color: rgba(255,248,233,.72); }
+.mp-tlticket-versus {
+    flex: 1; color: #d9b66f; font: 800 7px/1 ui-monospace, SFMono-Regular, monospace;
+    letter-spacing: .12em; text-align: center; opacity: .9;
+}
+.mp-tlticket-venue {
+    position: absolute; right: 9px; bottom: 10px; left: 9px; display: flex;
+    justify-content: space-between; padding-top: 6px; color: rgba(255,248,233,.78);
+    border-top: 1px solid rgba(217,182,111,.42);
+    font: 6px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: .08em;
+}
+.mp-tlticket-tear {
+    position: relative; width: 9px; min-width: 9px; background: #161c1a;
+}
+.mp-tlticket-tear::before {
+    position: absolute; top: 0; bottom: 0; left: 4px;
+    border-left: 1px dashed rgba(217,182,111,.7); content: "";
+}
+.mp-tlticket-tear span {
+    position: relative; display: block; width: 7px; height: 7px; margin: 7px 0 7px 1px;
+    border-radius: 50%; background: #111615;
+}
+.mp-tlticket-stub {
+    position: relative; display: flex; flex: 1; flex-direction: column;
+    align-items: center; padding: 9px 6px; color: #d9b66f;
+    background: linear-gradient(180deg, #28332e, #171d1a);
+}
+.mp-tlticket-stub-top {
+    display: flex; flex-direction: column; align-items: center;
+    font: 6px/1.5 ui-monospace, SFMono-Regular, monospace; letter-spacing: .12em;
+}
+.mp-tlticket-stub-top strong { color: #fff6e5; font-size: 8px; }
+.mp-tlticket-stub-star { margin: 10px 0 6px; font-size: 17px; }
+.mp-tlticket-stub-label {
+    color: rgba(243,239,229,.7); font: 5px/1 ui-monospace, SFMono-Regular, monospace;
+    letter-spacing: .08em; text-align: center; writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+.mp-tlticket-barcode {
+    display: flex; align-items: stretch; height: 28px; margin-top: auto; margin-bottom: 4px;
+}
+.mp-tlticket-barcode i {
+    display: block; width: 1px; margin-right: 2px; background: #d9b66f;
+}
+.mp-tlticket-barcode i:nth-child(3n) { width: 3px; margin-right: 1px; }
+.mp-tlticket-barcode i:nth-child(4n) { width: 2px; }
+.mp-tlticket-stub code {
+    color: #fff6e5; font: 6px/1 ui-monospace, SFMono-Regular, monospace;
+    letter-spacing: .05em; white-space: nowrap;
+}
+.mp-tlticket-stub-no {
+    position: absolute; right: 7px; bottom: 8px; color: rgba(217,182,111,.72);
+    font: 5px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: .08em;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+}
 
 .mp-tl2-farbcode {
     display: flex; align-items: center; gap: 14px; padding: 7px 14px;

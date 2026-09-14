@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-107">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-108">
 {% endblock %}
 
 {% block content %}
@@ -1172,6 +1172,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
             if (isNaN(ts)) return;
             var tone = ev.tone || 'cyan';
             var C    = TONE[tone] || TONE.cyan;
+            var isTicket = {% if request.user.is_superuser %}!!ev.ticket{% else %}false{% endif %};
             var rawX = X(ts, range);
             var isTop = idx % 2 === 0;
 
@@ -1199,18 +1200,72 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                   'filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));" alt="">'
                 : '';
 
+            var ticketHtml = '';
+{% if request.user.is_superuser %}
+            /* Collector V2 ticket.  This branch is intentionally opt-in:
+               ordinary timeline cards below retain their existing markup. */
+            if (isTicket) {
+                var ticket = ev.ticket;
+                var home = ticket.home || {};
+                var away = ticket.away || {};
+                /* The demo's band is a server-owned fixed token. */
+                var ticketBand = '#a5212a';
+                var ticketPhoto = esc(ticket.stadium_url || '');
+                ticketHtml =
+                    '<article class="mp-tlticket" aria-label="'+
+                        esc((home.name || '')+' '+(ticket.score || '')+' '+(away.name || ''))+
+                        '" style="--mp-tlticket-photo:url(&quot;'+ticketPhoto+
+                        '&quot;);--mp-tlticket-band:'+ticketBand+';">' +
+                        '<div class="mp-tlticket-hero">' +
+                            '<div class="mp-tlticket-photo"></div>' +
+                            '<div class="mp-tlticket-shade"></div>' +
+                            '<div class="mp-tlticket-clubband"><span>'+esc(home.short)+'</span><span>WERKSELF</span></div>' +
+                            '<div class="mp-tlticket-serial">PASS · '+esc(ticket.serial)+'</div>' +
+                            '<div class="mp-tlticket-competition">' +
+                                '<span class="mp-tlticket-cupmark" aria-hidden="true"><i></i></span>' +
+                                '<span>'+esc(ticket.competition)+'</span>' +
+                                '<strong>'+esc(ticket.label)+'</strong>' +
+                            '</div>' +
+                            '<div class="mp-tlticket-score" aria-label="'+
+                                esc((home.name || '')+' '+(ticket.home_score == null ? '' : ticket.home_score)+
+                                    ', '+(away.name || '')+' '+(ticket.away_score == null ? '' : ticket.away_score))+'">' +
+                                '<div class="mp-tlticket-team mp-tlticket-team--home">' +
+                                    '<span class="mp-tlticket-crest mp-tlticket-crest--home" aria-hidden="true">'+esc(home.mark)+'</span>' +
+                                    '<b>'+esc(ticket.home_score)+'</b><span>'+esc(home.short)+'</span>' +
+                                '</div>' +
+                                '<span class="mp-tlticket-versus">'+esc(ticket.status)+'</span>' +
+                                '<div class="mp-tlticket-team mp-tlticket-team--away">' +
+                                    '<span>'+esc(away.short)+'</span><b>'+esc(ticket.away_score)+'</b>' +
+                                    '<span class="mp-tlticket-crest mp-tlticket-crest--away" aria-hidden="true">'+esc(away.mark)+'</span>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="mp-tlticket-venue"><span>FINALE · '+esc(ticket.venue)+'</span><span>'+esc(ticket.date)+'</span></div>' +
+                        '</div>' +
+                        '<div class="mp-tlticket-tear" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>' +
+                        '<aside class="mp-tlticket-stub" aria-label="Ticketabriss mit Seriennummer">' +
+                            '<div class="mp-tlticket-stub-top"><span>FINALPASS</span><strong>CL·26</strong></div>' +
+                            '<div class="mp-tlticket-stub-star" aria-hidden="true">✦</div>' +
+                            '<span class="mp-tlticket-stub-label">SAMMLER-EDITION</span>' +
+                            '<div class="mp-tlticket-barcode" aria-label="Ticketcode '+esc(ticket.barcode)+'"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>' +
+                            '<code>'+esc(ticket.barcode)+'</code>' +
+                            '<span class="mp-tlticket-stub-no">NO. '+esc(ticket.number)+'</span>' +
+                        '</aside>' +
+                    '</article>';
+            }
+{% endif %}
+
             /* Extras: Spielerbild, Trophäe, Ergebnis */
             var extraHtml = '';
-            if (ev.player_img) {
+            if (!isTicket && ev.player_img) {
                 extraHtml += '<img src="'+esc(ev.player_img)+'" style="position:absolute;right:'+(ev.crest_url?46:10)+'px;bottom:8px;'+
                     'width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top;'+
                     'background:rgba(6,16,24,.25);filter:drop-shadow(0 2px 8px rgba(0,0,0,.6));" alt="">';
             }
-            if (ev.trophy) {
+            if (!isTicket && ev.trophy) {
                 extraHtml += '<span style="position:absolute;right:'+((ev.crest_url?46:10)+(ev.player_img?36:0))+'px;bottom:10px;'+
                     'font-size:20px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));">Trophäe</span>';
             }
-            var resultHtml = ev.result
+            var resultHtml = !isTicket && ev.result
                 ? '<span style="display:inline-block;margin-left:7px;padding:2px 7px;border-radius:3px;'+
                   'background:'+C.chip+';color:'+C.chipTxt+';font:900 11px/1 Inter,system-ui,sans-serif;'+
                   'vertical-align:middle;">'+esc(ev.result)+'</span>'
@@ -1221,12 +1276,17 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
 
             /* Karte */
             var card = document.createElement('div');
-            var cardTop = isTop ? 'bottom:50%;margin-bottom:20px;' : 'top:50%;margin-top:20px;';
+            /* A 191px ticket occupies the available half-track exactly; keep
+               it inside the 352px track while retaining normal card geometry. */
+            var cardTop = isTicket
+                ? (isTop ? 'top:0;' : 'top:161px;')
+                : (isTop ? 'bottom:50%;margin-bottom:20px;' : 'top:50%;margin-top:20px;');
             card.style.cssText = 'position:absolute;left:'+rawX+'px;'+cardTop+
                 'width:'+CARD_W+'px;border-radius:8px;padding:10px 12px 12px;'+
                 'background:'+C.grad+';border:1px solid rgba(6,16,24,.16);'+
                 'box-shadow:0 12px 34px rgba(0,0,0,.2);overflow:hidden;';
-            card.innerHTML =
+            if (isTicket) card.className = 'mp-tlticket-card';
+            card.innerHTML = isTicket ? ticketHtml :
                 '<div style="display:flex;align-items:center;gap:7px;">' +
                     '<span style="width:20px;height:20px;border-radius:5px;'+
                         'background:'+C.chip+';display:flex;align-items:center;'+
