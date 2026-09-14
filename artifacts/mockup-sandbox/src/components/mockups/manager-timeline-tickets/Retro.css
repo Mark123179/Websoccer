@@ -1,0 +1,61 @@
+.retro-timeline {
+  --retro-ink: #28231d;
+  --retro-paper: #e6d5ae;
+  position: relative;
+  isolation: isolate;
+  width: 520px;
+  height: 680px;
+  overflow: hidden;
+  color: #f2e7c8;
+  font-family: Georgia, 'Times New Roman', serif;
+  background:
+    linear-gradient(180deg, rgba(22, 29, 26, .45), rgba(17, 23, 20, .88)),
+    url('/__mockup/images/tickets/frankfurt.jpg') center / cover;
+}
+.retro-timeline, .retro-timeline * { box-sizing: border-box; }
+.retro-timeline__crop { position: absolute; inset: 0; overflow: hidden; }
+.retro-timeline__paper-grain { position: absolute; inset: 0; opacity: .18; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E"); mix-blend-mode: screen; }
+.retro-timeline__eyebrow { position: absolute; top: 22px; left: 0; width: 100%; margin: 0; color: #d4bf91; font: 700 9px/1 'Courier New', monospace; letter-spacing: .22em; text-align: center; }
+.retro-timeline__heading { position: absolute; top: 42px; left: 0; width: 100%; margin: 0; color: rgba(243,231,200,.72); font-size: 17px; letter-spacing: .09em; line-height: 1; text-align: center; text-transform: uppercase; }
+.retro-timeline__track { position: absolute; top: 155px; left: 0; width: 520px; height: 370px; }
+.retro-timeline__axis { position: absolute; top: 190px; left: 0; width: 100%; height: 1px; background: rgba(231, 204, 144, .32); }
+.retro-timeline__axis::before, .retro-timeline__axis::after { position: absolute; top: -3px; width: 7px; height: 7px; border: 1px solid #cfb574; border-radius: 50%; content: ''; }
+.retro-timeline__axis::before { left: 7%; } .retro-timeline__axis::after { right: 7%; }
+.retro-timeline__stem { position: absolute; bottom: 50%; left: 168px; width: 1px; height: 22px; background: #d2b66d; }
+.retro-timeline__dot { position: absolute; top: 186px; left: 168px; z-index: 2; width: 9px; height: 9px; border: 2px solid #28231d; border-radius: 50%; background: #d2b66d; transform: translateX(-50%); }
+.retro-timeline__tick { position: absolute; bottom: 9px; left: 168px; color: rgba(232, 216, 180, .45); font: 11px/1 'Courier New', monospace; transform: translateX(-50%); }
+.retro-ticket { position: absolute; bottom: calc(50% + 22px); left: 143px; display: flex; width: 234px; height: 180px; overflow: hidden; color: var(--retro-ink); background: var(--retro-paper); box-shadow: 5px 8px 20px rgba(9, 12, 11, .35); transform: rotate(-1.5deg); }
+.retro-ticket::before, .retro-ticket::after { position: absolute; z-index: 3; top: -4px; bottom: -4px; width: 8px; background: radial-gradient(circle, transparent 0 3px, var(--retro-paper) 3.2px) 0 0 / 8px 8px; content: ''; }
+.retro-ticket::before { left: -4px; } .retro-ticket::after { right: -4px; }
+.retro-ticket__photo { position: absolute; inset: 0 54px 0 0; opacity: .3; background: url('/__mockup/images/tickets/frankfurt.jpg') center / cover; mix-blend-mode: multiply; }
+.retro-ticket__ink-wash { position: absolute; inset: 0 54px 0 0; background: linear-gradient(180deg, rgba(49, 79, 65, .6), rgba(230, 213, 174, .12) 72%); }
+.retro-ticket__club-band { position: absolute; z-index: 1; top: 0; left: 0; width: 180px; height: 13px; padding: 2px 9px; display: flex; justify-content: space-between; color: #f1e1b7; background: #b21e28; font: 700 6px/9px 'Courier New', monospace; letter-spacing: .08em; }
+.retro-ticket__main { position: relative; z-index: 2; width: 180px; padding: 18px 10px 8px; }
+.retro-ticket__masthead { display: flex; align-items: center; gap: 5px; font-family: 'Courier New', monospace; }
+.retro-ticket__mark { padding: 3px 4px; color: #f1e1b7; background: #28231d; font-size: 8px; font-weight: 700; }
+.retro-ticket__competition { flex: 1; font-size: 7px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+.retro-ticket__edition { font-size: 9px; }
+.retro-ticket__rule { height: 1px; margin: 6px 0 9px; background: #66583e; }
+.retro-ticket__match { display: grid; grid-template-columns: 1fr 47px 1fr; align-items: center; gap: 3px; }
+.retro-ticket__team { display: flex; align-items: center; gap: 4px; min-width: 0; font: 700 7.5px/1.12 'Courier New', monospace; text-transform: uppercase; }
+.retro-ticket__team--away { flex-direction: row-reverse; text-align: right; }
+.retro-ticket__team-name { min-width: 0; overflow: hidden; }
+.retro-ticket__crest { display: grid; flex: 0 0 23px; place-items: center; width: 23px; height: 23px; color: #f1e1b7; border: 1px solid #28231d; border-radius: 50%; font: 700 6px/1 Georgia, serif; }
+.retro-ticket__crest--home { background: #b21e28; } .retro-ticket__crest--away { background: #28231d; }
+.retro-ticket__score { text-align: center; }
+.retro-ticket__score strong { display: block; font: 700 26px/.85 Georgia, serif; letter-spacing: -.08em; }
+.retro-ticket__score small { display: block; margin-top: 5px; font: 700 5px/1 'Courier New', monospace; }
+.retro-ticket__venue { display: flex; justify-content: space-between; margin-top: 12px; border-top: 1px solid rgba(40,35,29,.45); padding-top: 4px; font: 700 6px/1 'Courier New', monospace; }
+.retro-ticket__date { display: flex; align-items: baseline; justify-content: space-between; margin-top: 7px; font: 6px/1 'Courier New', monospace; }
+.retro-ticket__date b { font-size: 9px; }
+.retro-ticket__stamp { position: absolute; right: 8px; bottom: 9px; padding: 3px; color: #b21e28; border: 1px solid #b21e28; font: 700 6px/1.1 'Courier New', monospace; letter-spacing: .06em; transform: rotate(-7deg); }
+.retro-ticket__stub { position: relative; z-index: 2; width: 54px; padding: 16px 6px 7px; border-left: 1px dashed rgba(40,35,29,.8); background: rgba(216,194,148,.88); text-align: center; }
+.retro-ticket__stub::before, .retro-ticket__stub::after { position: absolute; left: -5px; width: 9px; height: 9px; border-radius: 50%; background: #5a655b; content: ''; }
+.retro-ticket__stub::before { top: 29px; } .retro-ticket__stub::after { bottom: 27px; }
+.retro-ticket__stub-label, .retro-ticket__stub-date, .retro-ticket__stub small, .retro-ticket__serial { display: block; font: 700 6px/1.15 'Courier New', monospace; }
+.retro-ticket__stub strong { display: block; margin: 7px 0 8px; font: 700 18px/.8 Georgia, serif; }
+.retro-ticket__stub-date { border-top: 1px solid rgba(40,35,29,.45); padding-top: 5px; }
+.retro-ticket__barcode { display: flex; align-items: stretch; justify-content: center; height: 30px; gap: 2px; margin: 12px 0 5px; }
+.retro-ticket__barcode i { display: block; background: #28231d; }
+.retro-ticket__serial { margin-top: 12px; font-size: 5px; transform: rotate(90deg) translateX(12px); transform-origin: center; }
+.retro-timeline__context-label { position: absolute; bottom: 29px; left: 0; width: 100%; margin: 0; color: rgba(232,216,180,.47); font: 700 9px/1 'Courier New', monospace; letter-spacing: .1em; text-align: center; text-transform: uppercase; }

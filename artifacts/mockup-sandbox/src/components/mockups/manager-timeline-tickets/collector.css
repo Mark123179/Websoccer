@@ -1,0 +1,73 @@
+.collector {
+  --ink: #f3efe5;
+  --muted: rgba(243, 239, 229, .5);
+  --gold: #d9b66f;
+  --red: #a5212a;
+  position: relative;
+  isolation: isolate;
+  width: 520px;
+  height: 680px;
+  overflow: hidden;
+  color: var(--ink);
+  background: #111615 url('/__mockup/images/tickets/leverkusen.jpg') center 42% / cover no-repeat;
+  font-family: "Trebuchet MS", system-ui, sans-serif;
+}
+.collector::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: linear-gradient(180deg, rgba(14, 20, 20, .88), rgba(17, 22, 20, .52) 35%, rgba(10, 14, 14, .95));
+}
+.collector::after {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  content: "";
+  opacity: .13;
+  background-image: radial-gradient(rgba(255,255,255,.7) .5px, transparent .7px);
+  background-size: 5px 5px;
+  mix-blend-mode: screen;
+}
+.collector, .collector * { box-sizing: border-box; }
+.collector__crop { position: absolute; inset: 0; overflow: hidden; }
+.collector__header { position: absolute; top: 25px; left: 0; width: 100%; text-align: center; }
+.collector__eyebrow { display: block; color: var(--gold); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 8px; letter-spacing: .23em; }
+.collector__header h1 { margin: 9px 0 0; color: rgba(243,239,229,.82); font-size: 16px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.collector__rule { display: block; width: 52px; height: 1px; margin: 12px auto 0; background: var(--gold); opacity: .6; }
+.collector__track { position: absolute; top: 164px; left: 0; width: 520px; height: 352px; }
+.collector__axis { position: absolute; top: 175px; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, rgba(217,182,111,.38) 12%, rgba(217,182,111,.38) 88%, transparent); }
+.collector__axis::before, .collector__axis::after { position: absolute; top: -2px; width: 5px; height: 5px; content: ""; border: 1px solid var(--gold); border-radius: 50%; opacity: .55; }
+.collector__axis::before { left: 8%; } .collector__axis::after { right: 8%; }
+.collector__stem { position: absolute; bottom: 50%; left: 168px; width: 1px; height: 20px; background: var(--gold); opacity: .6; }
+.collector__dot { position: absolute; top: 171px; left: 168px; z-index: 2; width: 9px; height: 9px; border: 2px solid #1b201d; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 3px rgba(217,182,111,.18); transform: translateX(-50%); }
+.collector__ticket { position: absolute; bottom: calc(50% + 20px); left: 143px; display: flex; width: 234px; height: 191px; overflow: visible; color: #f3efe5; border: 1px solid rgba(217,182,111,.7); border-radius: 3px; background: #161c1a; box-shadow: 0 14px 30px rgba(0,0,0,.35), 0 0 0 4px rgba(15,20,18,.35); }
+.collector__hero { position: relative; width: 177px; min-width: 177px; overflow: hidden; }
+.collector__photo { position: absolute; inset: 0; background: url('/__mockup/images/tickets/leverkusen.jpg') center / cover; filter: saturate(.72) contrast(1.1); }
+.collector__shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16,22,20,.42), rgba(16,20,19,.92) 74%); }
+.collector__clubband { position: absolute; top: 0; left: 0; display: flex; justify-content: space-between; width: 100%; padding: 7px 8px; color: #fff5e2; background: var(--red); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 6px; font-weight: 800; letter-spacing: .1em; }
+.collector__serial { position: absolute; top: 31px; right: 8px; color: var(--gold); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 6px; letter-spacing: .08em; }
+.collector__competition { position: absolute; top: 42px; left: 10px; display: grid; grid-template-columns: 20px 1fr; column-gap: 6px; align-items: center; color: var(--gold); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 6px; letter-spacing: .08em; }
+.collector__competition strong { grid-column: 2; margin-top: -2px; color: #fff8e9; font-family: Georgia, serif; font-size: 13px; letter-spacing: .14em; }
+.collector__cupmark { grid-row: span 2; display: grid; place-items: center; width: 18px; height: 18px; border: 1px solid var(--gold); border-radius: 50%; font-size: 9px; }
+.collector__score { position: absolute; top: 84px; left: 9px; display: flex; align-items: center; width: 159px; color: #fff8e9; }
+.collector__team { display: flex; align-items: center; width: 68px; gap: 4px; font-size: 7px; font-weight: 700; line-height: 1.16; }
+.collector__team b { color: var(--gold); font-family: Georgia, serif; font-size: 29px; font-weight: 400; line-height: .8; }
+.collector__team--away { justify-content: flex-end; text-align: right; } .collector__team--away b { order: 2; }
+.collector__versus { flex: 1; color: var(--gold); font-family: Georgia, serif; font-size: 13px; text-align: center; opacity: .8; }
+.collector__venue { position: absolute; right: 9px; bottom: 10px; left: 9px; display: flex; justify-content: space-between; padding-top: 6px; color: rgba(255,248,233,.78); border-top: 1px solid rgba(217,182,111,.42); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 6px; letter-spacing: .08em; }
+.collector__tear { position: relative; width: 9px; min-width: 9px; background: #161c1a; }
+.collector__tear::before { position: absolute; top: 0; bottom: 0; left: 4px; border-left: 1px dashed rgba(217,182,111,.7); content: ""; }
+.collector__tear span { position: relative; display: block; width: 7px; height: 7px; margin: 7px 0 7px 1px; border-radius: 50%; background: #111615; }
+.collector__stub { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; padding: 9px 6px; color: var(--gold); background: #202824; }
+.collector__stub-top { display: flex; flex-direction: column; align-items: center; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 6px; letter-spacing: .12em; line-height: 1.5; }
+.collector__stub-top strong { color: #fff6e5; font-size: 8px; }
+.collector__stub-star { margin: 10px 0 6px; font-size: 17px; }
+.collector__stub-label { color: rgba(243,239,229,.7); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 5px; letter-spacing: .08em; text-align: center; writing-mode: vertical-rl; transform: rotate(180deg); }
+.collector__barcode { display: flex; align-items: stretch; height: 28px; margin-top: auto; margin-bottom: 4px; }
+.collector__barcode i { display: block; width: 1px; margin-right: 2px; background: var(--gold); } .collector__barcode i:nth-child(3n) { width: 3px; margin-right: 1px; } .collector__barcode i:nth-child(4n) { width: 2px; }
+.collector__stub code { color: #fff6e5; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 6px; letter-spacing: .05em; white-space: nowrap; }
+.collector__stub-no { position: absolute; right: 7px; bottom: 8px; color: rgba(217,182,111,.72); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 5px; writing-mode: vertical-rl; transform: rotate(180deg); }
+.collector__tick { position: absolute; bottom: 8px; left: 168px; color: rgba(217,182,111,.42); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; transform: translateX(-50%); }
+.collector__context-label { position: absolute; bottom: 27px; left: 0; width: 100%; color: rgba(243,239,229,.32); font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; letter-spacing: .16em; text-align: center; }
