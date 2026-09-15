@@ -13,6 +13,7 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import {blockSupportQuads} from './stadium_geometry_helpers.js?v=23';
 
 export const PRESET = Object.freeze({
   height: 42,        // Kamerahöhe über Rasen (m)
@@ -246,9 +247,8 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     const nCols = Math.max(1, Math.round(f.width / rules.seatPitch));
     const rle = decodeRle(b.rle, b.rows * b.seats);
     const rise = b.z1 - b.z0;
-    const wallBase = Number.isFinite(Number(b.wallBaseZ))
-      ? Math.min(Number(b.z0), Number(b.wallBaseZ))
-      : 0;
+    const support = blockSupportQuads(b);
+    const wallBase = support.wallBase;
     const P = (u, v, z) => toWorld(lerp2(lerp2(f.A, f.B, u), lerp2(f.D, f.C, u), v), z);
 
     // Stufen: Trittfläche auf z_i, Setzstufe auf z_{i+1}
@@ -267,16 +267,18 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     }
     // Vorschau-Oberränge erhalten eine geschlossene schräge Unterseite bis
     // zur Auflagerhöhe, ohne eine neue Wand bis zum Boden zu erzeugen.
-    if (wallBase > 0) {
+    if (support.underside) {
       pushQuad(
-        P(0, 0, b.z0), P(1, 0, b.z0),
-        P(1, 1, wallBase), P(0, 1, wallBase),
+        ...support.underside.map(point => toWorld(point, point[2])),
         rules.soffitColor, true,
       );
     }
     // Seitenwände der Blöcke (schließen Stufen seitlich, sichtbar an offenen Ecken)
-    for (const side of [0, 1]) {
-      pushQuad(P(side, 0, b.z0), P(side, 1, b.z1), P(side, 1, wallBase), P(side, 0, wallBase), rules.wallColor, true);
+    for (const wall of support.sideWalls) {
+      pushQuad(
+        ...wall.map(point => toWorld(point, point[2])),
+        rules.wallColor, true,
+      );
     }
 
     // Sitze auf festem Raster; Farbe aus der RLE-Zelle

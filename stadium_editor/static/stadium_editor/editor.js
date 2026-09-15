@@ -1133,7 +1133,7 @@ async function ensureThreeStage(){
 /* ── Undo / Redo ──────────────────────────────────────────────── */
 function currentSnapshot(){
   return {
-    blocks: structuredClone(blocks),
+    blocks: expansionGeometry.snapshotBlocks(blocks),
     base: baseData.map(a=>a.slice()),
     press: pressings.map(p=>({...p})),
   };
@@ -1605,51 +1605,27 @@ const MAX_ROWS = 42;
 const MAX_PREVIEW_CAPACITY = 150000;
 const MIN_EXPANSION_SEATS = 1000;
 const EXPANSION_SECTOR_HALF_ANGLE = Math.PI/3;
+
+const expansionGeometry = window.StadiumExpansionGeometry;
 function pitchLocal(point){
-  const [cx,cy] = D?.meta?.fieldC || [D?._cx || 0,D?._cy || 0];
-  const theta = Number(D?.meta?.axisTheta) || 0;
-  const dx=point[0]-cx, dy=point[1]-cy, ct=Math.cos(theta), st=Math.sin(theta);
-  return [dx*ct+dy*st, -dx*st+dy*ct];
+  return expansionGeometry.pitchLocal(point,D);
 }
 function angleDistance(left,right){
-  return Math.abs(((left-right)+Math.PI*3)%(Math.PI*2)-Math.PI);
+  return expansionGeometry.angleDistance(left,right);
 }
 function blockExpansionInfo(block){
-  const outer=quadPoint(block.quad,.5,1), inner=quadPoint(block.quad,.5,0);
-  const center=block.quad.reduce((sum,point)=>[
-    sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
-  const localOuter=pitchLocal(outer), localInner=pitchLocal(inner);
-  const localCenter=pitchLocal(center);
-  return {
-    block, outer, inner,
-    angle:Math.atan2(localCenter[1],localCenter[0]),
-    radius:Math.hypot(localOuter[0],localOuter[1]),
-  };
+  return expansionGeometry.blockExpansionInfo(block,D);
 }
 function outerEnvelope(sourceBlocks=blocks){
-  const info=sourceBlocks.map(blockExpansionInfo);
-  return info.filter(candidate=>!info.some(other=>{
-    if(other===candidate || Number(other.block.z0)<=Number(candidate.block.z0)) return false;
-    return Math.hypot(
-      candidate.outer[0]-other.inner[0],
-      candidate.outer[1]-other.inner[1],
-    ) < 12;
-  })).map(item=>item.block);
+  return expansionGeometry.outerEnvelope(sourceBlocks,D);
 }
 function standAngle(stand){
-  const labelled=[...baseBlockGeometry.values()]
-    .filter(block=>block.stand===stand)
-    .map(block=>blockExpansionInfo(block).angle);
-  if(!labelled.length) return null;
-  const vector=labelled.reduce((sum,angle)=>[
-    sum[0]+Math.cos(angle),sum[1]+Math.sin(angle)],[0,0]);
-  return Math.atan2(vector[1],vector[0]);
+  return expansionGeometry.standAngles([...baseBlockGeometry.values()],D).get(stand) ?? null;
 }
 function expansionEnvelope(stand){
-  const center=standAngle(stand);
-  if(!Number.isFinite(center)) return [];
-  return outerEnvelope().filter(block=>
-    angleDistance(blockExpansionInfo(block).angle,center)<=EXPANSION_SECTOR_HALF_ANGLE);
+  return expansionGeometry.expansionEnvelope(
+    stand,blocks,[...baseBlockGeometry.values()],D,
+  );
 }
 function previewRoofs(){
   const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
@@ -1810,8 +1786,7 @@ if(expandButton){
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
   const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
-    blocks: blocks.flatMap((b,i)=>{
-      if(b.simulated) return [];
+    blocks: expansionGeometry.persistentBlockEntries(blocks).flatMap(({block:b,index:i})=>{
       const shape = designBlockShape.get(b.sourceId);
       if(!shape) return [];
       const d = seatData[i].slice(0, shape.rows*shape.seats), rle=[];
@@ -1839,7 +1814,7 @@ async function exportDesign(){
 
 /* ── Interaktion ──────────────────────────────────────────────── */
 cvOverlay.addEventListener('mousemove', e => {
-  const [wx,wy] = s2w(e.offsetX, e.offsetY);
+  const [wx,wy] = s2w(e.offsetX,e.offsetY);
   if(dragOverlay && overlay){ overlay.wx = wx-dragOff[0]; overlay.wy = wy-dragOff[1]; renderOverlay(); return; }
   const b = blockAt(wx,wy);
   const nid = b?b.id:null;

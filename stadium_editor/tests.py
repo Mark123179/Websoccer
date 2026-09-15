@@ -106,9 +106,9 @@ class StadiumEditorTests(TestCase):
         self.assertIn('D?.surroundings || {}', editor_js)
         self.assertIn('const MAX_PREVIEW_CAPACITY = 150000;', editor_js)
         self.assertIn('const MIN_EXPANSION_SEATS = 1000;', editor_js)
-        self.assertIn('blocks: structuredClone(blocks)', editor_js)
+        self.assertIn('blocks: expansionGeometry.snapshotBlocks(blocks)', editor_js)
         self.assertIn('designBlockShape.get(b.sourceId)', editor_js)
-        self.assertIn('if(b.simulated) return [];', editor_js)
+        self.assertIn('expansionGeometry.persistentBlockEntries(blocks)', editor_js)
         self.assertIn('previewId: `preview-', editor_js)
         self.assertIn('const sourceId = block.simulated', editor_js)
         self.assertIn('function expansionEnvelope(stand){', editor_js)
@@ -146,15 +146,29 @@ class StadiumEditorTests(TestCase):
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stage' / 'stadium_stage.js'
         ).read_text(encoding='utf-8')
-        self.assertIn('const wallBase = Number.isFinite(Number(b.wallBaseZ))', stage_js)
-        self.assertIn('P(1, 1, wallBase)', stage_js)
-        self.assertIn('P(1, 1, wallBase), P(0, 1, wallBase)', stage_js)
+        self.assertIn("import {blockSupportQuads} from './stadium_geometry_helpers.js?v=23'", stage_js)
+        self.assertIn('const support = blockSupportQuads(b);', stage_js)
+        self.assertIn('for (const wall of support.sideWalls)', stage_js)
 
     def test_stage_adapter_roof_fallback_and_expansion_undo_behavior(self):
         script = (
             Path(__file__).resolve().parent
             / 'tests_js'
             / 'test_stadium_stage_adapter.mjs'
+        )
+        subprocess.run(
+            ['node', '--test', str(script)],
+            cwd=Path(__file__).resolve().parent.parent,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_stadium_expansion_geometry_contract(self):
+        script = (
+            Path(__file__).resolve().parent
+            / 'tests_js'
+            / 'test_stadium_expansion_geometry.mjs'
         )
         subprocess.run(
             ['node', '--test', str(script)],
