@@ -1642,7 +1642,7 @@ function previewRoofs(){
       currentByLineage.set(key,block);
     }
   }
-  return roofs.map(roof=>{
+  const moved=roofs.map(roof=>{
     if(!Array.isArray(roof.quad) || roof.quad.length!==4) return roof;
     const center=roof.quad.reduce((sum,point)=>[
       sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
@@ -1678,6 +1678,7 @@ function previewRoofs(){
       simulated:true,
     };
   });
+  return expansionGeometry.stitchRoofSegments(moved,roofs);
 }
 function roofsFor2D(){
   return previewRoofs() || [];

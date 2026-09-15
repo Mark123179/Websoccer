@@ -13,7 +13,7 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helpers.js?v=24';
+import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helpers.js?v=25';
 
 export const PRESET = Object.freeze({
   height: 42,        // Kamerahöhe über Rasen (m)
@@ -362,7 +362,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       const a = edges[i][0], b2 = edges[i][1];
       const L = Math.hypot(b2[0] - a[0], b2[1] - a[1]); if (L < 0.05) continue;
       const [zTopA, zTopB] = hasExpansion
-        ? facadeEdgeTopHeights([a, b2], facadeBlocks)
+        ? facadeEdgeTopHeights([a, b2], facadeBlocks, 2.5, roofSegs)
         : [globalTop, globalTop];
       const A0 = toWorld(a, groundLevel), B0 = toWorld(b2, groundLevel);
       const A1 = toWorld(a, zTopA), B1 = toWorld(b2, zTopB);

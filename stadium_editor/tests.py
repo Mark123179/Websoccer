@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=24',
+            'stadium_editor/editor.js?v=25',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -187,11 +187,14 @@ class StadiumEditorTests(TestCase):
         ).read_text(encoding='utf-8')
         self.assertIn(
             "import {blockSupportQuads, facadeEdgeTopHeights} "
-            "from './stadium_geometry_helpers.js?v=24'",
+            "from './stadium_geometry_helpers.js?v=25'",
             stage_js,
         )
         self.assertIn('const hasExpansion = scene.blocks.some', stage_js)
-        self.assertIn('facadeEdgeTopHeights([a, b2], facadeBlocks)', stage_js)
+        self.assertIn(
+            'facadeEdgeTopHeights([a, b2], facadeBlocks, 2.5, roofSegs)',
+            stage_js,
+        )
         self.assertIn('const support = blockSupportQuads(b);', stage_js)
         self.assertIn('for (const wall of support.sideWalls)', stage_js)
 

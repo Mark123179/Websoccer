@@ -98,6 +98,47 @@
     return blocks.flatMap((block, index) => block.simulated ? [] : [{block, index}]);
   }
 
+  function stitchRoofSegments(segments, baselineSegments = segments, tolerance = 4) {
+    const result = structuredClone(segments);
+    const vertices = [];
+    result.forEach((segment, segmentIndex) => {
+      const baseline = baselineSegments[segmentIndex];
+      if (!Array.isArray(segment.quad) || segment.quad.length !== 4 ||
+          !Array.isArray(segment.heights) || segment.heights.length !== 4 ||
+          !Array.isArray(baseline?.quad) || baseline.quad.length !== 4) return;
+      segment.quad.forEach((point, pointIndex) => vertices.push({
+        segmentIndex, pointIndex, point,
+        height: Number(segment.heights[pointIndex]),
+        baseline: baseline.quad[pointIndex],
+      }));
+    });
+    const seen = new Set();
+    for (const vertex of vertices) {
+      const key = `${vertex.segmentIndex}:${vertex.pointIndex}`;
+      if (seen.has(key)) continue;
+      const cluster = vertices.filter(other =>
+        other.segmentIndex !== vertex.segmentIndex &&
+        Math.hypot(
+          other.baseline[0] - vertex.baseline[0],
+          other.baseline[1] - vertex.baseline[1],
+        ) <= tolerance
+      );
+      cluster.push(vertex);
+      if (cluster.length < 2) continue;
+      const average = cluster.reduce((sum, item) => ({
+        x: sum.x + item.point[0] / cluster.length,
+        y: sum.y + item.point[1] / cluster.length,
+        z: sum.z + item.height / cluster.length,
+      }), {x: 0, y: 0, z: 0});
+      for (const item of cluster) {
+        result[item.segmentIndex].quad[item.pointIndex] = [average.x, average.y];
+        result[item.segmentIndex].heights[item.pointIndex] = average.z;
+        seen.add(`${item.segmentIndex}:${item.pointIndex}`);
+      }
+    }
+    return result;
+  }
+
   return {
     angleDistance,
     blockExpansionInfo,
@@ -107,5 +148,6 @@
     persistentBlockEntries,
     snapshotBlocks,
     standAngles,
+    stitchRoofSegments,
   };
 }));

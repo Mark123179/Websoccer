@@ -6,7 +6,7 @@ import {applyEditorDesign} from '../static/stadium_editor/stadium_stage_adapter.
 import {
   blockSupportQuads,
   facadeEdgeTopHeights,
-} from '../static/stadium_editor/stage/stadium_geometry_helpers.js?v=24';
+} from '../static/stadium_editor/stage/stadium_geometry_helpers.js?v=25';
 
 const require = createRequire(import.meta.url);
 const geometryApi = require('../static/stadium_editor/expansion_geometry.js');
@@ -137,6 +137,35 @@ test('facade edges use nearby stand heights instead of the stadium maximum', () 
   assert.deepEqual(north.map(Math.round), [33, 33]);
   assert.deepEqual(west.map(Math.round), [15, 15]);
   assert.ok(west.every(height => height < 20), 'WEST must not inherit NORD/SUED height');
+});
+
+test('facade reaches the local roof edge when a roof is present', () => {
+  const block = {...makeBlock(1, 'WEST', [-80, 0], 40), z1: 12};
+  const roof = [{
+    quad: [[-84, 20], [-84, -20], [-70, -20], [-70, 20]],
+    heights: [19, 21, 16, 16],
+  }];
+  const heights = facadeEdgeTopHeights(
+    [[-84, 20], [-84, -20]], [block], 2.5, roof,
+  );
+  assert.deepEqual(heights, [19, 21]);
+});
+
+test('adjacent roof seams share their moved position and height', () => {
+  const baseline = [
+    {quad: [[0, 10], [10, 10], [8, 5], [0, 5]], heights: [10, 10, 8, 8]},
+    {quad: [[10, 10], [20, 10], [20, 5], [8, 5]], heights: [10, 10, 8, 8]},
+  ];
+  const moved = structuredClone(baseline);
+  moved[0].quad[1] = [12, 12];
+  moved[0].heights[1] = 14;
+  moved[1].quad[0] = [10, 10];
+  moved[1].heights[0] = 10;
+  const stitched = geometryApi.stitchRoofSegments(moved, baseline);
+  assert.deepEqual(stitched[0].quad[1], [11, 11]);
+  assert.deepEqual(stitched[1].quad[0], [11, 11]);
+  assert.equal(stitched[0].heights[1], 12);
+  assert.equal(stitched[1].heights[0], 12);
 });
 
 test('preview expansion blocks are restored by undo snapshots and omitted from export', () => {
