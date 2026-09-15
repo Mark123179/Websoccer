@@ -1014,7 +1014,7 @@ function scheduleStageDesignUpdate(){
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
-    import('./stadium_stage_adapter.js').then(({applyEditorDesign})=>{
+    import('./stadium_stage_adapter.js?v=17').then(({applyEditorDesign})=>{
       const scene = applyEditorDesign(stageScene, blocks, seatData, PALETTE, D);
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
       stageThree.update({
@@ -1053,7 +1053,7 @@ async function ensureThreeStage(){
   stageAdapter = {kind:'loading'};
   try{
     const {mountStadiumStage, applyEditorDesign} =
-      await import('./stadium_stage_adapter.js');
+      await import('./stadium_stage_adapter.js?v=17');
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
     if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
     stageScene = await response.json();

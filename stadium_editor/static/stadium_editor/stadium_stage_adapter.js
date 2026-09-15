@@ -120,6 +120,9 @@ function editorRowRunsRightToLeft(block, geometry) {
 
 export function applyEditorDesign(scene, blocks, seatData, palette, geometry = null) {
   const next = structuredClone(scene);
+  if (!next.surroundings && geometry?.surroundings) {
+    next.surroundings = structuredClone(geometry.surroundings);
+  }
   const colours = palette.map(item => Array.isArray(item) ? item[0] : item);
   if (colours.length) next.palette = colours;
   const sourceById = new Map(
@@ -295,6 +298,7 @@ export async function mountStadiumStage({
         scene: blackboxScene(state.scene),
         ...size,
         drawPitch: true,
+        surroundings: mode === 'editor' ? true : null,
         rules: mode === 'editor'
           ? {...mod.RULES, seatPitch: .8, rowPitch: 1}
           : mod.RULES,

@@ -100,6 +100,12 @@ class StadiumEditorTests(TestCase):
         self.assertIn('function editorBackground(){', editor_js)
         self.assertIn('D?.surroundings || {}', editor_js)
         self.assertIn('requestAnimationFrame(() => requestAnimationFrame(resize))', editor_js)
+        adapter_js = (
+            Path(__file__).resolve().parent
+            / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
+        ).read_text(encoding='utf-8')
+        self.assertIn("surroundings: mode === 'editor' ? true : null", adapter_js)
+        self.assertIn('geometry?.surroundings', adapter_js)
 
     def test_editor_is_embedded_in_the_global_management_shell(self):
         self.client.force_login(self.user)
