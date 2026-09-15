@@ -86,6 +86,10 @@ class StadiumEditorTests(TestCase):
         self.assertNotContains(response, 'Ausbau · Simulator')
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
+        self.assertContains(
+            response,
+            'stadium_editor/editor.js?v=23',
+        )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
         ).read_text(encoding='utf-8')
@@ -117,6 +121,10 @@ class StadiumEditorTests(TestCase):
         self.assertIn('baseData = seatData.map(data => data.slice());', editor_js)
         self.assertIn('D, previewCapacity(), previewRoofs())', editor_js)
         self.assertIn('requestAnimationFrame(() => requestAnimationFrame(resize))', editor_js)
+        self.assertIn('const EDITOR_ASSET_URL = new URL(document.currentScript.src);', editor_js)
+        self.assertIn('url.search = EDITOR_ASSET_URL.search;', editor_js)
+        self.assertIn("editorModuleUrl('./stadium_stage_adapter.js')", editor_js)
+        self.assertNotIn('stadium_stage_adapter.js?v=', editor_js)
         adapter_js = (
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
@@ -131,6 +139,9 @@ class StadiumEditorTests(TestCase):
         self.assertIn("mode: 'explicit'", adapter_js)
         self.assertIn('function conformExteriorPoint(point, baselineBlocks, currentByLineage)', adapter_js)
         self.assertIn('next.facadeSegments = next.facadeSegments.map(edge => edge.map(conform))', adapter_js)
+        self.assertIn('const adapterUrl = new URL(import.meta.url);', adapter_js)
+        self.assertIn('stageUrl.search = adapterUrl.search;', adapter_js)
+        self.assertNotIn('stadium_stage.js?v=', adapter_js)
         stage_js = (
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stage' / 'stadium_stage.js'

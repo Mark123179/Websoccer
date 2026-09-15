@@ -1045,6 +1045,15 @@ function render3D(){
 
 }
 
+/* Keep every module in the editor renderer chain on the entry script's version. */
+const EDITOR_ASSET_URL = new URL(document.currentScript.src);
+function editorModuleUrl(path){
+  const url = new URL(path, EDITOR_ASSET_URL);
+  url.search = EDITOR_ASSET_URL.search;
+  return url.href;
+}
+const STADIUM_STAGE_ADAPTER_URL = editorModuleUrl('./stadium_stage_adapter.js');
+
 /* ── Renderdispatch ───────────────────────────────────────────── */
 function renderAll(){
   if(!D) return;
@@ -1059,7 +1068,7 @@ function scheduleStageDesignUpdate(){
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
-    import('./stadium_stage_adapter.js?v=22').then(({applyEditorDesign})=>{
+    import(STADIUM_STAGE_ADAPTER_URL).then(({applyEditorDesign})=>{
       const scene = applyEditorDesign(
         stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
@@ -1099,7 +1108,7 @@ async function ensureThreeStage(){
   stageAdapter = {kind:'loading'};
   try{
     const {mountStadiumStage, applyEditorDesign} =
-      await import('./stadium_stage_adapter.js?v=22');
+      await import(STADIUM_STAGE_ADAPTER_URL);
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
     if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
     stageScene = await response.json();

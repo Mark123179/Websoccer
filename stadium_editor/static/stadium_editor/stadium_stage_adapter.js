@@ -2,9 +2,16 @@
  * Shared adapter for the supplied stadium_stage.js black box.
  * Runtime consumers only pass canonical Live Scenes to this module.
  */
+function stageModuleUrl() {
+  const adapterUrl = new URL(import.meta.url);
+  const stageUrl = new URL('./stage/stadium_stage.js', adapterUrl);
+  stageUrl.search = adapterUrl.search;
+  return stageUrl.href;
+}
+
 export const STADIUM_STAGE_CONFIG = Object.freeze({
   enabled: true,
-  module: './stage/stadium_stage.js?v=22',
+  get module() { return stageModuleUrl(); },
 });
 
 let stageModulePromise;
