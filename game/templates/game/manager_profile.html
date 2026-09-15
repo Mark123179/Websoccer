@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-110">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-111">
 {% endblock %}
 
 {% block content %}
@@ -1231,7 +1231,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                         '<div class="mp-tlticket-hero">' +
                             '<div class="mp-tlticket-photo"></div>' +
                             '<div class="mp-tlticket-shade"></div>' +
-                            '<div class="mp-tlticket-clubband"><span>'+esc(home.short)+'</span><span>VS</span><span>'+esc(away.short)+'</span></div>' +
+                            '<div class="mp-tlticket-clubband"><span></span><span>MATCH TICKET</span><span></span></div>' +
                             '<div class="mp-tlticket-competition">' +
                                 '<span>'+(ticket.competition_logo_url ? '<img class="mp-tlticket-competition-logo" src="'+esc(ticket.competition_logo_url)+'" alt="">' : '')+esc(ticket.competition)+'</span>' +
                                 '<time>'+esc(ticket.date)+'</time>' +
@@ -1241,11 +1241,9 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                                     ', '+(away.name || '')+' '+(ticket.away_score == null ? '' : ticket.away_score))+'">' +
                                 '<div class="mp-tlticket-team mp-tlticket-team--home">' +
                                     (home.crest_url ? '<img class="mp-tlticket-crest mp-tlticket-crest--home" src="'+esc(home.crest_url)+'" alt="">' : '<span class="mp-tlticket-crest mp-tlticket-crest--home" aria-hidden="true">'+esc(home.mark)+'</span>') +
-                                    '<span>'+esc(home.short)+'</span>' +
                                 '</div>' +
                                 '<strong class="mp-tlticket-score-value">'+esc(ticket.score)+'</strong>' +
                                 '<div class="mp-tlticket-team mp-tlticket-team--away">' +
-                                    '<span>'+esc(away.short)+'</span>' +
                                     (away.crest_url ? '<img class="mp-tlticket-crest mp-tlticket-crest--away" src="'+esc(away.crest_url)+'" alt="">' : '<span class="mp-tlticket-crest mp-tlticket-crest--away" aria-hidden="true">'+esc(away.mark)+'</span>') +
                                 '</div>' +
                             '</div>' +
