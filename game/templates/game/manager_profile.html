@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-112">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-113">
 {% endblock %}
 
 {% block content %}
@@ -1224,11 +1224,8 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                 var ticketBand = '#a5212a';
                 var ticketPhoto = esc(ticket.stadium_url || '');
                 var competitionMark = ticket.competition_logo_url
-                    ? '<img class="mp-tlticket-stub-competition" src="'+esc(ticket.competition_logo_url)+'" alt="'+esc(ticket.competition || 'Wettbewerb')+'">'
-                    : '<span class="mp-tlticket-stub-competition mp-tlticket-stub-competition--fallback" aria-label="'+esc(ticket.competition || 'Wettbewerb')+'">'+
-                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">'+
-                            '<path d="M7 3h10v5a5 5 0 0 1-10 0V3Z"/><path d="M7 5H3v2a4 4 0 0 0 4 4M17 5h4v2a4 4 0 0 1-4 4M12 13v5M8 21h8M9 18h6"/>'+
-                        '</svg></span>';
+                    ? '<img class="mp-tlticket-stub-competition" src="'+esc(ticket.competition_logo_url)+'" alt="'+esc(ticket.competition || 'Wettbewerb')+'" onerror="this.hidden=true">'
+                    : '';
                 ticketHtml =
                     '<article class="mp-tlticket" aria-label="'+
                         esc((home.name || '')+' '+(ticket.score || '')+' '+(away.name || ''))+
@@ -1237,7 +1234,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                         '<div class="mp-tlticket-hero">' +
                             '<div class="mp-tlticket-photo"></div>' +
                             '<div class="mp-tlticket-shade"></div>' +
-                            '<div class="mp-tlticket-clubband"><span class="mp-tlticket-title">'+esc(ev.title || ev.cat || 'FINALE')+'</span></div>' +
+                            '<div class="mp-tlticket-clubband"><span class="mp-tlticket-title">'+esc(ev.title || 'SPIELERGEBNIS')+'</span></div>' +
                             '<div class="mp-tlticket-competition">' +
                                 '<span>'+esc(ticket.competition)+'</span>' +
                                 '<time>'+esc(ticket.date)+'</time>' +

@@ -14,3 +14,9 @@ Die bestätigte kompakte Gestaltung verzichtet im Ergebnisbereich auf Vereinsnam
 **Why:** Die Vereinsnamen machten das 86-Pixel-Ticket zu kleinteilig. Der Nutzer bestätigte die reduzierte Wappen–Ergebnis–Wappen-Darstellung ausdrücklich als passend.
 
 **How to apply:** Vereinsnamen nicht wieder in den Ergebnisbereich setzen. Automatische Finaleinträge dürfen einen generischen Finaltitel verwenden; manuelle besondere Ergebnisse zeigen die frei gewählte Überschrift.
+
+Wettbewerbslogos müssen auf das echte, zum ausgewählten Wettbewerb gehörende Asset zeigen. Keine gezeichneten Ersatzpokale verwenden. Ohne individuelle Überschrift lautet der neutrale Ticket-Titel „SPIELERGEBNIS“, nicht „Finale“.
+
+**Why:** Finalspiele werden systemseitig als eigene Ereignisse erzeugt; manuelle Ergebnistickets sind auch für Derbys und Überraschungssiege gedacht. Ein generisches „Finale“ wäre daher sachlich falsch.
+
+**How to apply:** Den kanonischen Wettbewerbs-Assetpfad auch dann hinterlegen, wenn die Datei noch fehlt, damit später automatisch das Original erscheint.

@@ -8041,6 +8041,13 @@ def _timeline_entry_js(entry):
         if entry.opponent_name:
             opponent = Club.objects.filter(name__iexact=entry.opponent_name).first()
         competition_name = entry.competition_name or entry.get_category_display()
+        competition = League.objects.filter(name=competition_name).first()
+        competition_logo_url = competition_logo_static_path(
+            competition or competition_name
+        )
+        if not competition_logo_url and competition:
+            from .asset_urls import competition_url
+            competition_logo_url = competition_url(competition.id)
         home_name = entry.club_name or (entry.club.name if entry.club_id else 'Verein')
         away_name = entry.opponent_name or 'Gegner'
         payload['ticket'] = {
@@ -8059,7 +8066,7 @@ def _timeline_entry_js(entry):
             'score': entry.result_text,
             'status': 'FT',
             'competition': competition_name,
-            'competition_logo_url': competition_logo_static_path(competition_name),
+            'competition_logo_url': competition_logo_url,
             'venue': entry.title,
             'date': f'{d.day:02d}.{d.month:02d}.{d.year}',
             'barcode': f'{entry.category[:3].upper()} · {d:%y%m%d}',

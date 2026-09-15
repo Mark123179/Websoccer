@@ -104,7 +104,8 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertContains(response, 'mp-tlticket-card')
         self.assertContains(response, 'mp-tlticket-stub-label')
         self.assertContains(response, 'mp-tlticket-stub-competition')
-        self.assertContains(response, "esc(ev.title || ev.cat || 'FINALE')")
+        self.assertContains(response, "esc(ev.title || 'SPIELERGEBNIS')")
+        self.assertNotContains(response, 'mp-tlticket-stub-competition--fallback')
         self.assertNotContains(response, 'FINAL PASS')
         self.assertNotContains(response, 'SAMMLER-EDITION')
         tickets = [
@@ -149,6 +150,9 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertEqual(result_event['ticket']['home']['name'], 'TLE FC')
         self.assertEqual(result_event['ticket']['away']['name'], 'TLE Gegner')
         self.assertEqual(result_event['ticket']['competition'], 'TLE Testliga')
+        self.assertTrue(result_event['ticket']['competition_logo_url'].endswith(
+            f'/competitions/{self.league.id}_comp.png'
+        ))
         self.assertContains(response, 'var isTicket = !!ev.ticket;')
         self.assertContains(response, 'var resultHtml = !isTicket && ev.result')
         self.assertContains(response, 'requestAnimationFrame(scrollToToday)')

@@ -435,10 +435,6 @@ img.mp-tlticket-crest {
     display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 22px;
     object-fit: contain; color: #18252b;
 }
-.mp-tlticket-stub-competition--fallback {
-    border: 1px solid rgba(24,37,43,.32); border-radius: 50%;
-}
-.mp-tlticket-stub-competition svg { width: 16px; height: 16px; }
 .mp-tlticket-stub-label {
     color: #18252b; font: 800 5px/1 ui-monospace, SFMono-Regular, monospace;
     letter-spacing: .08em; text-align: center; writing-mode: vertical-rl;
