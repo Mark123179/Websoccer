@@ -28,6 +28,46 @@ function orientedCorners(quad) {
   return {A: front[0], B: front[1], C: back[1], D: back[0]};
 }
 
+function pointSegmentDistance(point, left, right) {
+  const dx = right[0] - left[0];
+  const dy = right[1] - left[1];
+  const lengthSq = dx * dx + dy * dy || 1;
+  const amount = Math.max(0, Math.min(1,
+    ((point[0] - left[0]) * dx + (point[1] - left[1]) * dy) / lengthSq,
+  ));
+  return Math.hypot(
+    point[0] - (left[0] + dx * amount),
+    point[1] - (left[1] + dy * amount),
+  );
+}
+
+export function facadeEdgeTopHeights(edge, blocks, margin = 2.5) {
+  const samples = blocks
+    .filter(block => Array.isArray(block.quad) && block.quad.length === 4)
+    .map(block => {
+      const {C, D} = orientedCorners(block.quad);
+      return {left: D, right: C, height: Number(block.z1) + margin};
+    })
+    .filter(sample => Number.isFinite(sample.height));
+  return edge.map(point => {
+    if (!samples.length) return margin;
+    const distances = samples.map(sample => ({
+      sample,
+      distance: pointSegmentDistance(point, sample.left, sample.right),
+    }));
+    const nearest = Math.min(...distances.map(item => item.distance));
+    const local = distances.filter(item => item.distance <= nearest + 6);
+    let weightedHeight = 0;
+    let totalWeight = 0;
+    for (const item of local) {
+      const weight = 1 / ((item.distance - nearest + 0.75) ** 2);
+      weightedHeight += item.sample.height * weight;
+      totalWeight += weight;
+    }
+    return weightedHeight / totalWeight;
+  });
+}
+
 const lerp = (left, right, amount) => [
   left[0] + (right[0] - left[0]) * amount,
   left[1] + (right[1] - left[1]) * amount,

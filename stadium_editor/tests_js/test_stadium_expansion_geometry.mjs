@@ -3,7 +3,10 @@ import {createRequire} from 'node:module';
 import test from 'node:test';
 
 import {applyEditorDesign} from '../static/stadium_editor/stadium_stage_adapter.js';
-import {blockSupportQuads} from '../static/stadium_editor/stage/stadium_geometry_helpers.js?v=23';
+import {
+  blockSupportQuads,
+  facadeEdgeTopHeights,
+} from '../static/stadium_editor/stage/stadium_geometry_helpers.js?v=24';
 
 const require = createRequire(import.meta.url);
 const geometryApi = require('../static/stadium_editor/expansion_geometry.js');
@@ -120,6 +123,20 @@ test('tier underside and side walls terminate at support height', () => {
   for (const wall of surfaces.sideWalls) {
     assert.deepEqual(wall.map(point => point[2]), [7, 12, 4, 4]);
   }
+});
+
+test('facade edges use nearby stand heights instead of the stadium maximum', () => {
+  const blocks = [
+    {...makeBlock(1, 'NORD', [0, 80], 40), z1: 30, wallBaseZ: 8},
+    {...makeBlock(2, 'SUED', [0, -80], 40), z1: 30, wallBaseZ: 8},
+    {...makeBlock(3, 'WEST', [-80, 0], 40), z1: 12},
+    {...makeBlock(4, 'OST', [80, 0], 40), z1: 12},
+  ];
+  const north = facadeEdgeTopHeights([[-20, 80], [20, 80]], blocks);
+  const west = facadeEdgeTopHeights([[-80, 20], [-80, -20]], blocks);
+  assert.deepEqual(north.map(Math.round), [33, 33]);
+  assert.deepEqual(west.map(Math.round), [15, 15]);
+  assert.ok(west.every(height => height < 20), 'WEST must not inherit NORD/SUED height');
 });
 
 test('preview expansion blocks are restored by undo snapshots and omitted from export', () => {

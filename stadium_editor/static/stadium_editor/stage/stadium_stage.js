@@ -13,7 +13,7 @@
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import {blockSupportQuads} from './stadium_geometry_helpers.js?v=23';
+import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helpers.js?v=24';
 
 export const PRESET = Object.freeze({
   height: 42,        // Kamerahöhe über Rasen (m)
@@ -351,19 +351,30 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   // Fassade: Außenkontur senkrecht bis über den obersten Rang (nur Außenansicht)
   if (drawFacade && scene.outline && scene.outline.length > 3) {
-    const zTop = Math.max(...scene.blocks.map(b => b.z1)) + 2.5;
-    const floors = Math.max(3, Math.round(zTop / 4.2));
+    const globalTop = Math.max(...scene.blocks.map(b => b.z1)) + 2.5;
+    const hasExpansion = scene.blocks.some(b => Number.isFinite(Number(b.wallBaseZ)));
+    const facadeBlocks = scene.blocks.filter(b => !covered.has(b.id));
+    const floors = Math.max(3, Math.round(globalTop / 4.2));
     const o = scene.outline, fp = [], fuv = [];
     let run = 0;
     const edges = scene.facadeSegments || o.map((p, i) => [p, o[(i + 1) % o.length]]);   // Szene kann Innenkanten ausschließen
     for (let i = 0; i < edges.length; i++) {
       const a = edges[i][0], b2 = edges[i][1];
       const L = Math.hypot(b2[0] - a[0], b2[1] - a[1]); if (L < 0.05) continue;
-      const A0 = toWorld(a, groundLevel), B0 = toWorld(b2, groundLevel), A1 = toWorld(a, zTop), B1 = toWorld(b2, zTop);
+      const [zTopA, zTopB] = hasExpansion
+        ? facadeEdgeTopHeights([a, b2], facadeBlocks)
+        : [globalTop, globalTop];
+      const A0 = toWorld(a, groundLevel), B0 = toWorld(b2, groundLevel);
+      const A1 = toWorld(a, zTopA), B1 = toWorld(b2, zTopB);
       const u0 = run / 12, u1 = (run + L) / 12; run += L;
       fp.push(A0.x, A0.y, A0.z, B0.x, B0.y, B0.z, B1.x, B1.y, B1.z, A0.x, A0.y, A0.z, B1.x, B1.y, B1.z, A1.x, A1.y, A1.z);
       fuv.push(u0, 0, u1, 0, u1, 1, u0, 0, u1, 1, u0, 1);
-      pushQuad(A1, B1, B1.clone().setY(zTop + 0.6), A1.clone().setY(zTop + 0.6), rules.fasciaColor);
+      pushQuad(
+        A1, B1,
+        B1.clone().setY(zTopB + 0.6),
+        A1.clone().setY(zTopA + 0.6),
+        rules.fasciaColor,
+      );
     }
     const fg = new THREE.BufferGeometry();
     fg.setAttribute('position', new THREE.Float32BufferAttribute(fp, 3)); fg.setAttribute('uv', new THREE.Float32BufferAttribute(fuv, 2)); fg.computeVertexNormals();
