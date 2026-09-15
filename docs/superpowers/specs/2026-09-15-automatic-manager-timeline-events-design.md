@@ -17,8 +17,11 @@ Neu automatisch gespeichert werden:
 3. Entlassungen
 4. Einvernehmliche Trennungen
 5. Amtszeitenden ohne genauer gespeicherten Grund
+6. Die erste Beförderung eines Jugendspielers in den Profikader innerhalb der gesamten Managerkarriere
 
 Urlaub, Inaktivitätsanzeige und andere allgemeine Statusmeldungen erzeugen keine zusätzlichen Timeline-Ereignisse.
+
+Tabellen-Meilensteine wie Herbstmeisterschaft oder die Übernahme von Platz 1 werden nicht automatisch gespeichert. Sie können bei besonderer Bedeutung weiterhin manuell eingereicht werden.
 
 ## Datenmodell
 
@@ -67,18 +70,34 @@ Ein konkreter Trennungsgrund und das allgemeine Amtszeitende dürfen nicht als z
 
 Das Ereignis enthält den betroffenen Verein und das Enddatum. Bereits vorhandene automatische Entlassungseinträge werden über ihre Quelle erkannt und nicht dupliziert.
 
+## Erste Jugend-Beförderung
+
+Die erste Beförderung eines Jugendspielers in den Profikader erzeugt genau ein grünes JUGEND-Ereignis für die gesamte Managerkarriere. Es enthält:
+
+- Spielername,
+- Alter zum Zeitpunkt der Beförderung,
+- Verein,
+- Beförderungsdatum.
+
+Der bestehende Prüfpunkt für den Titel „Talentschmied“ wird als Auslöser verwendet. Der Quellschlüssel ist managerbezogen und kennzeichnet die erste Jugend-Beförderung dauerhaft. Weitere Beförderungen erzeugen unabhängig von Verein, Amtszeit oder Saison keine zusätzlichen automatischen JUGEND-Ereignisse.
+
+Ein späterer manueller Eintrag für eine besonders wichtige Jugend-Beförderung bleibt möglich.
+
 ## Historischer Backfill
 
 Ein idempotenter Verwaltungsbefehl durchsucht:
 
 - alle abgeschlossenen Finalspiele mit eindeutig ermittelbaren damaligen Managern,
-- alle beendeten Manageramtszeiten.
+- alle beendeten Manageramtszeiten,
+- vorhandene historische Daten zur jeweils ersten Jugend-Beförderung eines Managers.
 
 Er legt fehlende Systemereignisse an und überspringt bereits vorhandene. Er verändert keine manuellen Einträge und keine bestehenden Karriere-, Titel- oder Matchdaten.
 
 Bei historischen Finalsiegern erzeugt der Backfill das goldene Finalticket. Die bisher aus dem persönlichen Titel abgeleitete Timeline-Karte wird anschließend bei der Timeline-Zusammenstellung unterdrückt, statt den persönlichen Titel-Datensatz zu löschen.
 
 Wenn historische Daten für eine eindeutige Managerzuordnung, einen Gegner oder ein Ergebnis nicht ausreichen, wird der Datensatz protokolliert und übersprungen statt geraten.
+
+Fehlen historische Beförderungsdaten, besteht für das JUGEND-Ereignis kein Backfill-Zwang. Der Backfill protokolliert und überspringt diesen Fall.
 
 ## Darstellung
 
@@ -106,4 +125,7 @@ Die Tests prüfen:
 - Fallback „Amtszeit beendet“ bei fehlendem Grund,
 - vollständigen und wiederholbaren historischen Backfill,
 - Überspringen uneindeutiger historischer Daten,
+- genau ein automatisches JUGEND-Ereignis pro Managerkarriere,
+- unverändertes Ausbleiben weiterer automatischer JUGEND-Ereignisse nach späteren Beförderungen,
+- Spielername, damaliges Alter, Verein und Datum im JUGEND-Ereignis,
 - unveränderte manuelle Moderation und bestehende Timeline-Darstellung.
