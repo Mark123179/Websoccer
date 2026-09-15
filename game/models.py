@@ -4668,6 +4668,8 @@ class ManagerTimelineEntry(models.Model):
         related_name='manager_timeline_entries',
     )
     result_text = models.CharField(max_length=20, blank=True)
+    opponent_name = models.CharField(max_length=150, blank=True)
+    competition_name = models.CharField(max_length=150, blank=True)
     show_trophy = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

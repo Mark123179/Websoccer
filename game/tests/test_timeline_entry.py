@@ -49,6 +49,8 @@ class TimelineEntrySubmitTests(TestCase):
             'title': 'Pokalsieg',
             'body': 'Ein großartiger Abend.',
             'result_text': '3:1',
+            'opponent_name': 'TLE Gegner',
+            'competition_name': 'TLE Testliga',
             'show_trophy': True,
             'player_id': '',
         }
@@ -73,6 +75,8 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertIn('Pr\u00fcfung', data.get('message', ''))
         entry = ManagerTimelineEntry.objects.get(manager=self.manager, title='Pokalsieg')
         self.assertEqual(entry.status, ManagerTimelineEntry.STATUS_PENDING)
+        self.assertEqual(entry.opponent_name, 'TLE Gegner')
+        self.assertEqual(entry.competition_name, 'TLE Testliga')
 
     def test_pending_not_visible_on_profile(self):
         """Nur genehmigte Eintr\u00e4ge erscheinen im \u00f6ffentlichen Profil."""
@@ -123,7 +127,7 @@ class TimelineEntrySubmitTests(TestCase):
         ))
         self.assertEqual(ManagerTimelineEntry.objects.count(), before_count)
 
-    def test_normal_manager_has_no_compact_ticket_and_result_keeps_badge_data(self):
+    def test_normal_manager_result_is_compact_ticket(self):
         self._post(self._payload(title='Normales Ergebnis'))
         entry = ManagerTimelineEntry.objects.get(
             manager=self.manager, title='Normales Ergebnis'
@@ -135,14 +139,39 @@ class TimelineEntrySubmitTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         events = response.context['timeline_events_json']
-        self.assertFalse(any(event.get('ticket') for event in events))
-        self.assertContains(response, 'var isTicket = false;')
         result_event = next(
             event for event in events if event['title'] == 'Normales Ergebnis'
         )
         self.assertEqual(result_event['result'], '3:1')
+        self.assertEqual(result_event['ticket']['score'], '3:1')
+        self.assertEqual(result_event['ticket']['home']['name'], 'TLE FC')
+        self.assertEqual(result_event['ticket']['away']['name'], 'TLE Gegner')
+        self.assertEqual(result_event['ticket']['competition'], 'TLE Testliga')
+        self.assertContains(response, 'var isTicket = !!ev.ticket;')
         self.assertContains(response, 'var resultHtml = !isTicket && ev.result')
         self.assertContains(response, 'requestAnimationFrame(scrollToToday)')
+
+    def test_legacy_result_without_ticket_details_still_becomes_ticket(self):
+        entry = ManagerTimelineEntry.objects.create(
+            manager=self.manager,
+            club=self.club,
+            club_name='TLE FC',
+            event_date='2026-09-15',
+            category='finale',
+            title='Finale Dahoam',
+            result_text='5:0',
+            status=ManagerTimelineEntry.STATUS_APPROVED,
+        )
+
+        response = self.client.get('/manager/profil/')
+
+        event = next(
+            item for item in response.context['timeline_events_json']
+            if item.get('entry_id') == entry.id
+        )
+        self.assertEqual(event['ticket']['score'], '5:0')
+        self.assertEqual(event['ticket']['away']['name'], 'Gegner')
+        self.assertEqual(event['ticket']['competition'], 'Finale')
 
     def test_invalid_category_rejected(self):
         resp = self._post(self._payload(category='xxx'))

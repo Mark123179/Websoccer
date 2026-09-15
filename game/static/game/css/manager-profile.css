@@ -381,6 +381,11 @@ body.manager-profile-page .nav-menu a:first-child {
     letter-spacing: .05em; text-transform: uppercase; white-space: nowrap;
 }
 .mp-tlticket-competition span { overflow: hidden; text-overflow: ellipsis; }
+.mp-tlticket-competition span { display: flex; align-items: center; gap: 3px; }
+.mp-tlticket-competition-logo {
+    width: 9px; height: 9px; flex: 0 0 9px; object-fit: contain;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+}
 .mp-tlticket-competition time { flex-shrink: 0; color: rgba(255,245,226,.62); }
 .mp-tlticket-score {
     position: absolute; top: 29px; right: 6px; left: 6px; display: grid;
@@ -404,6 +409,10 @@ body.manager-profile-page .nav-menu a:first-child {
     display: grid; place-items: center; width: 13px; height: 13px; flex: 0 0 13px;
     color: #fff8e9; border: 1px solid currentColor; border-radius: 50%;
     font: 800 4px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -.04em;
+}
+img.mp-tlticket-crest {
+    object-fit: contain; border: 0; border-radius: 0;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.55));
 }
 .mp-tlticket-crest--home { color: #f6d47d; }
 .mp-tlticket-crest--away { color: rgba(255,248,233,.82); }

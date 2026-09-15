@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-109">
+    <link rel="stylesheet" href="{% static 'game/css/manager-profile.css' %}?v=h700-110">
 {% endblock %}
 
 {% block content %}
@@ -258,6 +258,18 @@
                     <input type="date" id="mpTleDate">
                 </label>
             </div>
+            <div class="mp-tle-row2">
+                <label class="mp-tle-field">
+                    <span>Gegner (bei Ergebnis)</span>
+                    <input type="text" id="mpTleOpponent" maxlength="150" list="mpTleClubOptions" placeholder="z. B. Borussia Dortmund">
+                </label>
+                <label class="mp-tle-field">
+                    <span>Wettbewerb (bei Ergebnis)</span>
+                    <input type="text" id="mpTleCompetition" maxlength="150" list="mpTleCompetitionOptions" placeholder="z. B. UEFA Champions League">
+                </label>
+            </div>
+            <datalist id="mpTleClubOptions"></datalist>
+            <datalist id="mpTleCompetitionOptions"></datalist>
             <label class="mp-tle-field">
                 <span>Kategorie <em class="mp-tle-cat-dot" id="mpTleCatDot"></em></span>
                 <select id="mpTleCat">
@@ -862,6 +874,7 @@
 {% block extra_js %}
 {{ timeline_events_json|json_script:"mp-tl-events-data" }}
 {{ timeline_clubs_json|json_script:"mp-tl-clubs-data" }}
+{{ timeline_ticket_options_json|json_script:"mp-tl-ticket-options-data" }}
 {{ station_switcher_json|json_script:"mp-stations-data" }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -979,6 +992,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <script>
 var MP_TL_EVENTS = JSON.parse(document.getElementById('mp-tl-events-data').textContent);
 var MP_TL_CLUBS  = JSON.parse(document.getElementById('mp-tl-clubs-data').textContent);
+var MP_TL_TICKET_OPTIONS = JSON.parse(document.getElementById('mp-tl-ticket-options-data').textContent);
 var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textContent);
 </script>
 <script>
@@ -1172,7 +1186,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
             if (isNaN(ts)) return;
             var tone = ev.tone || 'cyan';
             var C    = TONE[tone] || TONE.cyan;
-            var isTicket = {% if request.user.is_superuser %}!!ev.ticket{% else %}false{% endif %};
+            var isTicket = !!ev.ticket;
             var rawX = X(ts, range);
             var isTop = idx % 2 === 0;
 
@@ -1201,9 +1215,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                 : '';
 
             var ticketHtml = '';
-{% if request.user.is_superuser %}
-            /* Compact panorama/admission ticket. This branch is intentionally
-               opt-in; ordinary timeline cards below retain their markup. */
+            /* Jedes Ereignis mit Ergebnis erhält das kompakte Panorama-Ticket. */
             if (isTicket) {
                 var ticket = ev.ticket;
                 var home = ticket.home || {};
@@ -1221,20 +1233,20 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                             '<div class="mp-tlticket-shade"></div>' +
                             '<div class="mp-tlticket-clubband"><span>'+esc(home.short)+'</span><span>VS</span><span>'+esc(away.short)+'</span></div>' +
                             '<div class="mp-tlticket-competition">' +
-                                '<span>'+esc(ticket.competition)+'</span>' +
+                                '<span>'+(ticket.competition_logo_url ? '<img class="mp-tlticket-competition-logo" src="'+esc(ticket.competition_logo_url)+'" alt="">' : '')+esc(ticket.competition)+'</span>' +
                                 '<time>'+esc(ticket.date)+'</time>' +
                             '</div>' +
                             '<div class="mp-tlticket-score" aria-label="'+
                                 esc((home.name || '')+' '+(ticket.home_score == null ? '' : ticket.home_score)+
                                     ', '+(away.name || '')+' '+(ticket.away_score == null ? '' : ticket.away_score))+'">' +
                                 '<div class="mp-tlticket-team mp-tlticket-team--home">' +
-                                    '<span class="mp-tlticket-crest mp-tlticket-crest--home" aria-hidden="true">'+esc(home.mark)+'</span>' +
+                                    (home.crest_url ? '<img class="mp-tlticket-crest mp-tlticket-crest--home" src="'+esc(home.crest_url)+'" alt="">' : '<span class="mp-tlticket-crest mp-tlticket-crest--home" aria-hidden="true">'+esc(home.mark)+'</span>') +
                                     '<span>'+esc(home.short)+'</span>' +
                                 '</div>' +
                                 '<strong class="mp-tlticket-score-value">'+esc(ticket.score)+'</strong>' +
                                 '<div class="mp-tlticket-team mp-tlticket-team--away">' +
                                     '<span>'+esc(away.short)+'</span>' +
-                                    '<span class="mp-tlticket-crest mp-tlticket-crest--away" aria-hidden="true">'+esc(away.mark)+'</span>' +
+                                    (away.crest_url ? '<img class="mp-tlticket-crest mp-tlticket-crest--away" src="'+esc(away.crest_url)+'" alt="">' : '<span class="mp-tlticket-crest mp-tlticket-crest--away" aria-hidden="true">'+esc(away.mark)+'</span>') +
                                 '</div>' +
                             '</div>' +
                             '<div class="mp-tlticket-venue"><span>'+esc(ticket.status)+' · '+esc(ticket.venue)+'</span></div>' +
@@ -1247,7 +1259,6 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                         '</aside>' +
                     '</article>';
             }
-{% endif %}
 
             /* Extras: Spielerbild, Trophäe, Ergebnis */
             var extraHtml = '';
@@ -1357,6 +1368,8 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
         var inpTitle = document.getElementById('mpTleTitle');
         var inpBody  = document.getElementById('mpTleBody');
         var inpRes   = document.getElementById('mpTleResult');
+        var inpOpponent = document.getElementById('mpTleOpponent');
+        var inpCompetition = document.getElementById('mpTleCompetition');
         var chkTro   = document.getElementById('mpTleTrophy');
         var errEl    = document.getElementById('mpTleError');
         var saveBtn  = document.getElementById('mpTleSave');
@@ -1368,6 +1381,14 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
             o.value = String(i);
             o.textContent = c.name;
             selClub.appendChild(o);
+        });
+        (MP_TL_TICKET_OPTIONS.clubs || []).forEach(function(name) {
+            var o = document.createElement('option'); o.value = name;
+            document.getElementById('mpTleClubOptions').appendChild(o);
+        });
+        (MP_TL_TICKET_OPTIONS.competitions || []).forEach(function(name) {
+            var o = document.createElement('option'); o.value = name;
+            document.getElementById('mpTleCompetitionOptions').appendChild(o);
         });
 
         function fillPlayers() {
@@ -1423,6 +1444,8 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                     body: inpBody.value.trim(),
                     player_id: selPlay.value || '',
                     result_text: inpRes.value.trim(),
+                    opponent_name: inpOpponent.value.trim(),
+                    competition_name: inpCompetition.value.trim(),
                     show_trophy: chkTro.checked,
                 }),
             }).then(function(r) { return r.json(); }).then(function(res) {
@@ -1434,13 +1457,13 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                     setTimeout(function() {
                         errEl.style.color = '';
                         closeModal();
-                        inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; chkTro.checked = false; selPlay.value = '';
+                        inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; inpOpponent.value = ''; inpCompetition.value = ''; chkTro.checked = false; selPlay.value = '';
                     }, 2500);
                 } else {
                     MP_TL_EVENTS.push(res.event);
                     render();
                     closeModal();
-                    inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; chkTro.checked = false; selPlay.value = '';
+                    inpTitle.value = ''; inpBody.value = ''; inpRes.value = ''; inpOpponent.value = ''; inpCompetition.value = ''; chkTro.checked = false; selPlay.value = '';
                 }
             }).catch(function() {
                 saveBtn.disabled = false;

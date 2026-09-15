@@ -7466,6 +7466,8 @@ def manager_profile(request):
     # approved visual can be reviewed without changing career history.
     if request.user.is_superuser:
         _demo_ticket_date = date(2026, 5, 30)
+        _demo_home = Club.objects.filter(name__icontains='Leverkusen').first()
+        _demo_away = Club.objects.filter(name__icontains='RB Leipzig').first()
         _tl_js.append({
             'date_iso': _demo_ticket_date.isoformat(),
             'date': _fmt_de(_demo_ticket_date),
@@ -7483,17 +7485,20 @@ def manager_profile(request):
                     'name': 'Bayer 04 Leverkusen',
                     'short': 'Bayer 04',
                     'mark': 'B04',
+                    'crest_url': _demo_home.crest_static_path if _demo_home else '',
                 },
                 'away': {
                     'name': 'RB Leipzig',
                     'short': 'RB Leipzig',
                     'mark': 'RB',
+                    'crest_url': _demo_away.crest_static_path if _demo_away else '',
                 },
                 'home_score': 1,
                 'away_score': 0,
                 'score': '1:0',
                 'status': 'FT',
                 'competition': 'UEFA Champions League',
+                'competition_logo_url': competition_logo_static_path('UEFA Champions League'),
                 'venue': 'München',
                 'date': '30.05.2026',
                 'barcode': '04 · CL · 260530',
@@ -7527,6 +7532,14 @@ def manager_profile(request):
                               .order_by('last_name', 'first_name')
                           ]})
     timeline_clubs_json = json.loads(json.dumps(_tl_clubs, default=str))
+    timeline_ticket_options_json = {
+        'clubs': list(
+            Club.objects.order_by('name').values_list('name', flat=True)
+        ),
+        'competitions': list(
+            League.objects.order_by('name').values_list('name', flat=True).distinct()
+        ),
+    }
 
     timeline_events_json = json.loads(json.dumps(_tl_js, default=str))
     from .manager_profile import (
@@ -7702,6 +7715,7 @@ def manager_profile(request):
         'station_switcher_json': station_switcher_json,
         'timeline_events_json': timeline_events_json,
         'timeline_clubs_json': timeline_clubs_json,
+        'timeline_ticket_options_json': timeline_ticket_options_json,
     })
 
 
@@ -8001,7 +8015,7 @@ def _timeline_entry_js(entry):
         except Exception:
             player_img = ''
     d = entry.event_date
-    return {
+    payload = {
         'date_iso': d.isoformat(),
         'date': f'{d.day}. {_TL_DE_MON[d.month - 1]} {d.year}',
         'type': entry.category,
@@ -8014,12 +8028,44 @@ def _timeline_entry_js(entry):
         'station_key': '',
         'player_img': player_img,
         'result': entry.result_text,
+        'opponent_name': entry.opponent_name,
+        'competition_name': entry.competition_name,
         'trophy': entry.show_trophy,
         'status': entry.status,
         'club_name': entry.club_name,
         'entry_id': entry.id,
         'is_custom': True,
     }
+    if entry.result_text:
+        opponent = None
+        if entry.opponent_name:
+            opponent = Club.objects.filter(name__iexact=entry.opponent_name).first()
+        competition_name = entry.competition_name or entry.get_category_display()
+        home_name = entry.club_name or (entry.club.name if entry.club_id else 'Verein')
+        away_name = entry.opponent_name or 'Gegner'
+        payload['ticket'] = {
+            'home': {
+                'name': home_name,
+                'short': home_name,
+                'mark': ''.join(part[:1] for part in home_name.split())[:3].upper(),
+                'crest_url': crest,
+            },
+            'away': {
+                'name': away_name,
+                'short': away_name,
+                'mark': ''.join(part[:1] for part in away_name.split())[:3].upper() or '?',
+                'crest_url': opponent.crest_static_path if opponent else '',
+            },
+            'score': entry.result_text,
+            'status': 'FT',
+            'competition': competition_name,
+            'competition_logo_url': competition_logo_static_path(competition_name),
+            'venue': entry.title,
+            'date': f'{d.day:02d}.{d.month:02d}.{d.year}',
+            'barcode': f'{entry.category[:3].upper()} · {d:%y%m%d}',
+            'stadium_url': static('game/images/stadiums/germany/b-leverkusen.jpg'),
+        }
+    return payload
 
 
 def submit_timeline_entry(request):
@@ -8097,6 +8143,8 @@ def submit_timeline_entry(request):
             return JsonResponse({'ok': False, 'error': 'Spieler nicht gefunden'}, status=400)
 
     result_text = (data.get('result_text') or '').strip()[:20]
+    opponent_name = (data.get('opponent_name') or '').strip()[:150]
+    competition_name = (data.get('competition_name') or '').strip()[:150]
     show_trophy = bool(data.get('show_trophy'))
 
     entry = ManagerTimelineEntry.objects.create(
@@ -8109,6 +8157,8 @@ def submit_timeline_entry(request):
         body=body,
         player=player,
         result_text=result_text,
+        opponent_name=opponent_name,
+        competition_name=competition_name,
         show_trophy=show_trophy,
         status=ManagerTimelineEntry.STATUS_PENDING,
     )

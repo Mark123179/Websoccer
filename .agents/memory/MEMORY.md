@@ -104,3 +104,4 @@
 - [KPI-Selbstcheck im Nullzustand](manager-profile-kpi-zero-state.md) — geliefertes Skript verlangt 1–6 Logos, obwohl die verbindliche Nullzustands-Spec bei 0 Trophäen keine Logos erlaubt.
 - [Freundschaftsspiel-Sandkasten](friendly-sandbox-invariants.md) — eigener Taktikkontext, neutrale Engine-Boni, 3h-Terminfenster, tokenisierte Tick-Lease und fail-closed Saisonbereinigung.
 - [Turnier-Zustandsautomat testen](tournament-state-machine-testing.md) — Grünpfadtests reichen nicht: Rückspiele, Ausfall-Freilose, Gruppen-H2H und Endplatzierungen separat durchspielen.
+- [Manager-Timeline Ergebnis-Tickets](manager-timeline-result-tickets.md) — jedes Timeline-Ereignis mit Ergebnis ist ein Panorama-Ticket; fehlende Altdaten dürfen das Ticket nicht verhindern.
