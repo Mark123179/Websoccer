@@ -302,3 +302,60 @@ class TimelineEntryModerationTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         self.entry.refresh_from_db()
         self.assertEqual(self.entry.status, ManagerTimelineEntry.STATUS_PENDING)
+
+    def test_staff_can_update_only_existing_ticket_details(self):
+        opponent = Club.objects.create(
+            name='TLE Gegner 2', short_name='G2', founded_year=1901,
+            budget=1_000_000, fan_popularity=40, league=self.league,
+        )
+        original = {
+            'status': self.entry.status,
+            'result_text': self.entry.result_text,
+            'title': self.entry.title,
+            'body': self.entry.body,
+            'reviewed_at': self.entry.reviewed_at,
+        }
+        client = Client()
+        client.force_login(self.admin)
+
+        response = client.post(
+            f'/creator/antraege/{self.entry.id}/ticketdaten/',
+            {'opponent_id': opponent.id, 'competition_id': self.league.id},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.opponent_name, opponent.name)
+        self.assertEqual(self.entry.competition_name, self.league.name)
+        for field, value in original.items():
+            self.assertEqual(getattr(self.entry, field), value)
+
+    def test_non_staff_cannot_update_ticket_details(self):
+        client = Client()
+        client.force_login(self.user)
+
+        response = client.post(
+            f'/creator/antraege/{self.entry.id}/ticketdaten/',
+            {'opponent_id': self.club.id, 'competition_id': self.league.id},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.entry.refresh_from_db()
+        self.assertEqual(self.entry.opponent_name, '')
+        self.assertEqual(self.entry.competition_name, '')
+
+    def test_overview_lists_approved_legacy_result_for_ticket_editing(self):
+        self.entry.status = ManagerTimelineEntry.STATUS_APPROVED
+        self.entry.result_text = '2:1'
+        self.entry.save(update_fields=['status', 'result_text'])
+        client = Client()
+        client.force_login(self.admin)
+
+        response = client.get('/creator/antraege/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'TICKETDATEN BEARBEITEN')
+        self.assertContains(
+            response,
+            f'/creator/antraege/{self.entry.id}/ticketdaten/',
+        )

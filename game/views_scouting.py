@@ -19,10 +19,12 @@ from django.views.decorators.http import require_POST
 
 from .views import build_game_header, current_manager_club
 from .models import (
+    Club,
     CommunitySubmission,
     ClubRecord,
     ClubRecordCorrectionRequest,
     CountryNetwork,
+    League,
     ManagerTimelineEntry,
     Player,
     ScoutingBid,
@@ -625,6 +627,11 @@ def creator_timeline_overview(request):
     pending = ManagerTimelineEntry.objects.filter(
         status=ManagerTimelineEntry.STATUS_PENDING
     ).select_related('manager', 'club', 'player').order_by('created_at')
+    ticket_entries = ManagerTimelineEntry.objects.exclude(
+        result_text=''
+    ).select_related('manager', 'club').order_by('-event_date', '-id')
+    clubs = Club.objects.order_by('name')
+    competitions = League.objects.order_by('country', 'name')
     record_requests = ClubRecordCorrectionRequest.objects.filter(
         status=ClubRecordCorrectionRequest.STATUS_OPEN,
     ).select_related('club', 'requester__user').order_by('created_at')
@@ -634,6 +641,9 @@ def creator_timeline_overview(request):
     context = {
         'pending': pending,
         'pending_count': pending.count(),
+        'ticket_entries': ticket_entries,
+        'clubs': clubs,
+        'competitions': competitions,
         'record_requests': record_requests,
         'record_request_count': record_requests.count(),
         'active_tab': active_tab,
@@ -663,6 +673,25 @@ def creator_moderate_timeline(request, entry_id):
     else:
         messages.error(request, 'Ungültige Aktion.')
     return redirect('creator_timeline_overview')
+
+
+@login_required(login_url='/auth/login/')
+@require_POST
+def creator_update_timeline_ticket(request, entry_id):
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Nur Staff-Mitglieder.')
+
+    entry = get_object_or_404(ManagerTimelineEntry, pk=entry_id)
+    opponent = get_object_or_404(Club, pk=request.POST.get('opponent_id'))
+    competition = get_object_or_404(
+        League, pk=request.POST.get('competition_id')
+    )
+    entry.opponent_name = opponent.name
+    entry.competition_name = competition.name
+    entry.save(update_fields=['opponent_name', 'competition_name'])
+    messages.success(request, 'Ticketdaten aktualisiert.')
+    return redirect(reverse('creator_timeline_overview') + '?tab=timeline')
 
 
 @login_required(login_url='/auth/login/')

@@ -41,6 +41,40 @@
       </div>
       {% else %}<p class="bids-empty">Keine offenen Timeline-Anträge.</p>{% endif %}
 
+      <h2 class="scout-panel-title ticket-data-title">TICKETDATEN BEARBEITEN</h2>
+      {% if ticket_entries %}
+      <div class="ticket-data-list">
+        {% for e in ticket_entries %}
+        <form class="ticket-data-card" method="post" action="{% url 'creator_update_timeline_ticket' e.id %}">
+          {% csrf_token %}
+          <div class="ticket-data-summary">
+            <strong>{{ e.event_date|date:'d.m.Y' }} · {{ e.title }}</strong>
+            <span>{{ e.manager.name|default:e.manager.user.username }} · {{ e.club_name|default:'—' }} · {{ e.result_text }}</span>
+          </div>
+          <label>
+            <span>Gegner</span>
+            <select name="opponent_id" required>
+              <option value="">Verein auswählen</option>
+              {% for club in clubs %}
+              <option value="{{ club.id }}"{% if club.name == e.opponent_name %} selected{% endif %}>{{ club.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            <span>Wettbewerb</span>
+            <select name="competition_id" required>
+              <option value="">Wettbewerb auswählen</option>
+              {% for competition in competitions %}
+              <option value="{{ competition.id }}"{% if competition.name == e.competition_name %} selected{% endif %}>{{ competition.name }} · {{ competition.country }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit" class="result-btn result-btn--cyan">Speichern</button>
+        </form>
+        {% endfor %}
+      </div>
+      {% else %}<p class="bids-empty">Keine Ergebnis-Tickets vorhanden.</p>{% endif %}
+
       {% else %}
       <h2 class="scout-panel-title">REKORDÄNDERUNGEN ({{ record_request_count }})</h2>
       {% if record_requests %}
@@ -85,6 +119,15 @@
 .requests-tabs a.active { color:#00131b; background:#22e6ff; border-color:#22e6ff; }
 .requests-tabs span { display:inline-grid; min-width:18px; height:18px; place-items:center; border-radius:50%; background:#071525; color:#a8c9d8; font-size:10px; margin-left:3px; }
 .requests-tabs a.active span { background:#00131b; color:#22e6ff; }
+.ticket-data-title { margin-top:28px; }
+.ticket-data-list { display:grid; gap:8px; }
+.ticket-data-card { display:grid; grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr) minmax(180px,1fr) auto; gap:10px; align-items:end; padding:10px; border:1px solid #17334b; background:#061321; border-radius:7px; }
+.ticket-data-summary { min-width:0; align-self:center; }
+.ticket-data-summary strong,.ticket-data-summary span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ticket-data-summary strong { color:#dcecf6; font-size:12px; }
+.ticket-data-summary span { color:#7892a7; font-size:11px; margin-top:3px; }
+.ticket-data-card label span { display:block; color:#658399; font-size:9px; font-weight:800; text-transform:uppercase; margin-bottom:4px; }
+.ticket-data-card select { width:100%; min-width:0; background:#030b12; color:#dcecf6; border:1px solid #1a3a58; border-radius:4px; padding:7px 8px; font-size:11px; }
 .record-request-list { display:grid; gap:12px; }
 .record-request-card { border:1px solid #17334b; background:#061321; border-radius:7px; padding:14px; }
 .record-request-card header { display:flex; gap:10px; justify-content:space-between; align-items:baseline; color:#d5effb; }
@@ -98,6 +141,6 @@
 .record-request-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
 .record-request-actions form { display:flex; gap:8px; }
 .record-request-actions input { flex:1; min-width:0; background:#030b12; color:#dcecf6; border:1px solid #1a3a58; border-radius:4px; padding:6px 8px; font-size:11px; }
-@media (max-width:900px) { .record-request-data { grid-template-columns:repeat(2,minmax(0,1fr)); } .record-request-actions { grid-template-columns:1fr; } }
+@media (max-width:900px) { .ticket-data-card { grid-template-columns:1fr; align-items:stretch; } .record-request-data { grid-template-columns:repeat(2,minmax(0,1fr)); } .record-request-actions { grid-template-columns:1fr; } }
 </style>
 {% endblock %}

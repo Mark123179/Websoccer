@@ -88,6 +88,7 @@ from .views_scouting import (
     creator_moderate_submission,
     creator_timeline_overview,
     creator_moderate_timeline,
+    creator_update_timeline_ticket,
     creator_moderate_record_correction,
 )
 from .views_management import (
@@ -513,6 +514,7 @@ urlpatterns = [
     path('creator/scouting/<int:submission_id>/moderieren/', creator_moderate_submission, name='creator_moderate_submission'),
     path('creator/antraege/', creator_timeline_overview, name='creator_timeline_overview'),
     path('creator/antraege/<int:entry_id>/moderieren/', creator_moderate_timeline, name='creator_moderate_timeline'),
+    path('creator/antraege/<int:entry_id>/ticketdaten/', creator_update_timeline_ticket, name='creator_update_timeline_ticket'),
     path('creator/antraege/rekorde/<int:request_id>/moderieren/', creator_moderate_record_correction, name='creator_moderate_record_correction'),
 
     path('creator/medien/', creator_media_outlets, name='creator_media_outlets'),
