@@ -4671,6 +4671,17 @@ class ManagerTimelineEntry(models.Model):
     opponent_name = models.CharField(max_length=150, blank=True)
     competition_name = models.CharField(max_length=150, blank=True)
     show_trophy = models.BooleanField(default=False)
+    system_entry = models.BooleanField(default=False)
+    source_type = models.CharField(max_length=50, null=True, blank=True)
+    source_key = models.CharField(max_length=200, null=True, blank=True)
+    tone_override = models.CharField(max_length=20, null=True, blank=True)
+    cup_fixture = models.ForeignKey(
+        'CupFixture',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='manager_timeline_entries',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     STATUS_PENDING = 'pending'
@@ -4690,6 +4701,16 @@ class ManagerTimelineEntry(models.Model):
 
     class Meta:
         ordering = ['event_date', 'id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source_type', 'source_key'],
+                condition=models.Q(
+                    ('source_type__isnull', False),
+                    ('source_key__isnull', False),
+                ),
+                name='unique_manager_timeline_source',
+            ),
+        ]
         verbose_name = 'Manager-Timeline-Eintrag'
         verbose_name_plural = 'Manager-Timeline-Einträge'
 
@@ -4698,7 +4719,12 @@ class ManagerTimelineEntry(models.Model):
 
     @property
     def tone(self):
-        return self.CATEGORY_TONES.get(self.category, 'cyan')
+        return self.tone_override or self.CATEGORY_TONES.get(self.category, 'cyan')
+
+    @property
+    def is_system(self):
+        """Compatibility/readability alias for consumers of the event layer."""
+        return self.system_entry
 
 
 class ManagerNotes(models.Model):
@@ -5841,6 +5867,24 @@ class CupFixture(models.Model):
         on_delete=models.SET_NULL,
         related_name='cup_away_fixtures',
         verbose_name='Auswärtsverein',
+    )
+    # Snapshot manager responsibility at kickoff; Club.managed_by may change
+    # before a completed final is materialized.
+    home_manager = models.ForeignKey(
+        'ManagerProfile',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_home_fixtures',
+        verbose_name='Heimmanager zum Spielzeitpunkt',
+    )
+    away_manager = models.ForeignKey(
+        'ManagerProfile',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='cup_away_fixtures',
+        verbose_name='Auswärtsmanager zum Spielzeitpunkt',
     )
     winner_club = models.ForeignKey(
         'Club',

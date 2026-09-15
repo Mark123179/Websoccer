@@ -93,7 +93,7 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertIn('Sichtbar', html)
         self.assertNotIn('Unsichtbar', html)
 
-    def test_superuser_gets_one_transient_compact_panorama_ticket(self):
+    def test_superuser_does_not_get_transient_compact_panorama_ticket(self):
         self.user.is_superuser = True
         self.user.save(update_fields=['is_superuser'])
         before_count = ManagerTimelineEntry.objects.count()
@@ -101,33 +101,13 @@ class TimelineEntrySubmitTests(TestCase):
         response = self.client.get('/manager/profil/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'mp-tlticket-card')
-        self.assertContains(response, 'mp-tlticket-stub-label')
-        self.assertContains(response, 'mp-tlticket-stub-competition')
-        self.assertContains(response, "esc(ev.title || 'SPIELERGEBNIS')")
+        self.assertNotContains(response, 'Champions League Finale')
         self.assertNotContains(response, 'mp-tlticket-stub-competition--fallback')
-        self.assertNotContains(response, 'FINAL PASS')
-        self.assertNotContains(response, 'SAMMLER-EDITION')
         tickets = [
             event for event in response.context['timeline_events_json']
             if event.get('ticket')
         ]
-        self.assertEqual(len(tickets), 1)
-        ticket = tickets[0]['ticket']
-        self.assertEqual(tickets[0]['date_iso'], '2026-05-30')
-        self.assertEqual(tickets[0]['type'], 'finale')
-        self.assertEqual(ticket['home']['name'], 'Bayer 04 Leverkusen')
-        self.assertEqual(ticket['home']['short'], 'Bayer 04')
-        self.assertEqual(ticket['home']['mark'], 'B04')
-        self.assertEqual(ticket['away']['name'], 'RB Leipzig')
-        self.assertEqual(ticket['score'], '1:0')
-        self.assertEqual(ticket['status'], 'FT')
-        self.assertEqual(ticket['competition'], 'UEFA Champions League')
-        self.assertNotIn('serial', ticket)
-        self.assertNotIn('number', ticket)
-        self.assertTrue(ticket['stadium_url'].endswith(
-            '/game/images/stadiums/germany/b-leverkusen.jpg'
-        ))
+        self.assertEqual(len(tickets), 0)
         self.assertEqual(ManagerTimelineEntry.objects.count(), before_count)
 
     def test_normal_manager_result_is_compact_ticket(self):

@@ -6968,6 +6968,7 @@ def manager_profile(request):
             'crest': club_crest,
         })
 
+    from .models import ManagerTimelineEntry as _MTE
     for _title in personal_titles:
         timeline_events.append({
             'date': _fmt_de(timezone.localtime(_title.won_at).date()),
@@ -7427,6 +7428,20 @@ def manager_profile(request):
                        'crest_url': club_crest or '', 'is_active': True, 'station_key': ''})
     for _title in personal_titles:
         _won_date = timezone.localtime(_title.won_at).date()
+        # A final winner already has the canonical result ticket.  Keep the
+        # personal title row untouched (trophies/statistics use it), but do
+        # not render a second gold card for the same competition and date.
+        _has_final_ticket = _MTE.objects.filter(
+            manager=manager_profile_obj,
+            system_entry=True,
+            category='finale',
+            tone_override='gold',
+            event_date=_won_date,
+            club_id=_title.club_id,
+            competition_name=_title.competition_name,
+        ).exists()
+        if _has_final_ticket:
+            continue
         _station = next((
             station for station in db_stations
             if station.club_id == _title.club_id
@@ -7453,60 +7468,20 @@ def manager_profile(request):
                            'title': 'Einkauf', 'body': f'{_fee_tl} für {_tl_t.player.full_name}',
                            'crest_url': club_crest or '', 'is_active': False, 'station_key': ''})
     # Vom Manager eingereichte Timeline-Einträge (nur genehmigte öffentlich)
-    from .models import ManagerTimelineEntry as _MTE
     _mte_qs = _MTE.objects.filter(
         manager=manager_profile_obj,
-        status=_MTE.STATUS_APPROVED,
-    ).select_related('club', 'player').order_by('event_date', 'id')
+    ).filter(
+        _db_models.Q(system_entry=True)
+        | _db_models.Q(status=_MTE.STATUS_APPROVED)
+    ).select_related(
+        'club',
+        'player',
+        'cup_fixture__home_club',
+        'cup_fixture__away_club',
+        'cup_fixture__cup_round__cup_season__competition',
+    ).order_by('event_date', 'id')
     for _mte in _mte_qs:
         _tl_js.append(_timeline_entry_js(_mte))
-
-    # The compact panorama ticket is deliberately a transient demo event.
-    # Keep it out of the database (and ordinary manager profiles) so the
-    # approved visual can be reviewed without changing career history.
-    if request.user.is_superuser:
-        _demo_ticket_date = date(2026, 5, 30)
-        _demo_home = Club.objects.filter(name__icontains='Leverkusen').first()
-        _demo_away = Club.objects.filter(name__icontains='RB Leipzig').first()
-        _tl_js.append({
-            'date_iso': _demo_ticket_date.isoformat(),
-            'date': _fmt_de(_demo_ticket_date),
-            'type': 'finale',
-            'cat': 'FINALE',
-            'tone': 'red',
-            'title': 'Champions League Finale',
-            'body': 'Bayer 04 Leverkusen 1:0 RB Leipzig',
-            'crest_url': '',
-            'is_active': False,
-            'station_key': '',
-            'result': '1:0',
-            'ticket': {
-                'home': {
-                    'name': 'Bayer 04 Leverkusen',
-                    'short': 'Bayer 04',
-                    'mark': 'B04',
-                    'crest_url': _demo_home.crest_static_path if _demo_home else '',
-                },
-                'away': {
-                    'name': 'RB Leipzig',
-                    'short': 'RB Leipzig',
-                    'mark': 'RB',
-                    'crest_url': _demo_away.crest_static_path if _demo_away else '',
-                },
-                'home_score': 1,
-                'away_score': 0,
-                'score': '1:0',
-                'status': 'FT',
-                'competition': 'UEFA Champions League',
-                'competition_logo_url': competition_logo_static_path('UEFA Champions League'),
-                'venue': 'München',
-                'date': '30.05.2026',
-                'barcode': '04 · CL · 260530',
-                'stadium_url': static(
-                    'game/images/stadiums/germany/b-leverkusen.jpg'
-                ),
-            },
-        })
 
     # Vereins-Optionen fürs Einreichen-Modal (Karrierestationen + Kader)
     _tl_clubs = []
@@ -8035,33 +8010,55 @@ def _timeline_entry_js(entry):
         'club_name': entry.club_name,
         'entry_id': entry.id,
         'is_custom': True,
+        'is_system': entry.system_entry,
+        'source_type': entry.source_type or '',
     }
     if entry.result_text:
+        fixture = entry.cup_fixture if entry.cup_fixture_id else None
         opponent = None
-        if entry.opponent_name:
-            opponent = Club.objects.filter(name__iexact=entry.opponent_name).first()
-        competition_name = entry.competition_name or entry.get_category_display()
-        competition = League.objects.filter(name=competition_name).first()
+        if fixture:
+            home_club = fixture.home_club
+            away_club = fixture.away_club
+            home_name = home_club.name
+            away_name = away_club.name
+            home_crest = home_club.crest_static_path
+            away_crest = away_club.crest_static_path
+            competition = fixture.cup_round.cup_season.competition
+            competition_name = competition.name
+        else:
+            if entry.opponent_name:
+                opponent = Club.objects.filter(
+                    name__iexact=entry.opponent_name
+                ).first()
+            competition_name = (
+                entry.competition_name or entry.get_category_display()
+            )
+            competition = League.objects.filter(name=competition_name).first()
+            home_name = (
+                entry.club_name
+                or (entry.club.name if entry.club_id else 'Verein')
+            )
+            away_name = entry.opponent_name or 'Gegner'
+            home_crest = crest
+            away_crest = opponent.crest_static_path if opponent else ''
         competition_logo_url = competition_logo_static_path(
             competition or competition_name
         )
         if not competition_logo_url and competition:
             from .asset_urls import competition_url
             competition_logo_url = competition_url(competition.id)
-        home_name = entry.club_name or (entry.club.name if entry.club_id else 'Verein')
-        away_name = entry.opponent_name or 'Gegner'
         payload['ticket'] = {
             'home': {
                 'name': home_name,
                 'short': home_name,
                 'mark': ''.join(part[:1] for part in home_name.split())[:3].upper(),
-                'crest_url': crest,
+                'crest_url': home_crest,
             },
             'away': {
                 'name': away_name,
                 'short': away_name,
                 'mark': ''.join(part[:1] for part in away_name.split())[:3].upper() or '?',
-                'crest_url': opponent.crest_static_path if opponent else '',
+                'crest_url': away_crest,
             },
             'score': entry.result_text,
             'status': 'FT',

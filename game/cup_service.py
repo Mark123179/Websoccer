@@ -14,9 +14,10 @@ from __future__ import annotations
 
 import random
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 from django.db import transaction
+from django.utils import timezone
 
 from .random_utils import stable_seed
 
@@ -449,6 +450,11 @@ def simulate_cup_fixture(fixture) -> object:
             winner_club = fixture.home_club
 
         fixture.simulated_match = sm
+        # Keep the historical responsibility on the fixture itself.  The
+        # live Club.managed_by pointer may be changed before the round is
+        # advanced and must not rewrite a manager's final event.
+        fixture.home_manager_id = fixture.home_club.managed_by_id
+        fixture.away_manager_id = fixture.away_club.managed_by_id
         fixture.home_goals_90 = home_goals_90
         fixture.away_goals_90 = away_goals_90
         fixture.home_goals_et = home_goals_et_raw if decided_by in ('extra_time', 'penalties') else None
@@ -664,11 +670,45 @@ def _advance_cup_round_locked(cup_round) -> object | None:
             cup_season.status = cup_season.STATUS_COMPLETED
             cup_season.save(update_fields=['winner_club', 'status'])
             from .season_service import record_manager_competition_title
+            final_manager = None
+            if cup_round_locked.round_code == 'final':
+                final_fixture_for_title = next(
+                    (f for f in fixtures if f.winner_club_id == winners[0].pk),
+                    None,
+                )
+                if final_fixture_for_title:
+                    final_manager = (
+                        final_fixture_for_title.home_manager
+                        if final_fixture_for_title.home_club_id == winners[0].pk
+                        else final_fixture_for_title.away_manager
+                    )
+            final_date = (
+                cup_round_locked.scheduled_date
+                or (
+                    fixtures[0].simulated_match.simulated_at.date()
+                    if fixtures[0].simulated_match_id else None
+                )
+            )
             record_manager_competition_title(
                 cup_season.competition,
                 cup_season.season,
                 winners[0],
+                won_at=(
+                    timezone.make_aware(datetime.combine(final_date, time.min))
+                    if final_date else None
+                ),
+                manager=final_manager,
             )
+            # This is the authoritative completion boundary for a final:
+            # every fixture is played and the season winner is committed.
+            if cup_round_locked.round_code == 'final':
+                from .manager_timeline_service import create_final_events
+                final_fixture = next(
+                    (f for f in fixtures if f.winner_club_id == winners[0].pk),
+                    None,
+                )
+                if final_fixture:
+                    create_final_events(final_fixture)
             return None
 
         next_round_number = cup_round_locked.round_number + 1

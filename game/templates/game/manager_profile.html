@@ -1220,8 +1220,8 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                 var ticket = ev.ticket;
                 var home = ticket.home || {};
                 var away = ticket.away || {};
-                /* The demo's club-color strip is a server-owned fixed token. */
-                var ticketBand = '#a5212a';
+                /* Finals use gold for the winner and red for the loser. */
+                var ticketBand = tone === 'gold' ? '#b9872b' : '#a5212a';
                 var ticketPhoto = esc(ticket.stadium_url || '');
                 var competitionMark = ticket.competition_logo_url
                     ? '<img class="mp-tlticket-stub-competition" src="'+esc(ticket.competition_logo_url)+'" alt="'+esc(ticket.competition || 'Wettbewerb')+'" onerror="this.hidden=true">'
@@ -1234,7 +1234,9 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
                         '<div class="mp-tlticket-hero">' +
                             '<div class="mp-tlticket-photo"></div>' +
                             '<div class="mp-tlticket-shade"></div>' +
-                            '<div class="mp-tlticket-clubband"><span class="mp-tlticket-title">'+esc(ev.title || 'SPIELERGEBNIS')+'</span></div>' +
+                            '<div class="mp-tlticket-clubband"><span class="mp-tlticket-title">'+
+                                esc(ev.is_system ? (ev.title || 'SPIELERGEBNIS') : 'SPIELERGEBNIS')+
+                                '</span></div>' +
                             '<div class="mp-tlticket-competition">' +
                                 '<span>'+esc(ticket.competition)+'</span>' +
                                 '<time>'+esc(ticket.date)+'</time>' +

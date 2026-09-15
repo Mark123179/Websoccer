@@ -105,3 +105,4 @@
 - [Freundschaftsspiel-Sandkasten](friendly-sandbox-invariants.md) — eigener Taktikkontext, neutrale Engine-Boni, 3h-Terminfenster, tokenisierte Tick-Lease und fail-closed Saisonbereinigung.
 - [Turnier-Zustandsautomat testen](tournament-state-machine-testing.md) — Grünpfadtests reichen nicht: Rückspiele, Ausfall-Freilose, Gruppen-H2H und Endplatzierungen separat durchspielen.
 - [Manager-Timeline Ergebnis-Tickets](manager-timeline-result-tickets.md) — jedes Timeline-Ereignis mit Ergebnis ist ein Panorama-Ticket; fehlende Altdaten dürfen das Ticket nicht verhindern.
+- [Automatische Manager-Timeline](automatic-manager-timeline.md) — Systemereignisse brauchen stabile Quellen; Finals nur nach verbindlichem Abschluss und mit Spielzeit-Manager-Snapshot.

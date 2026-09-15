@@ -2159,12 +2159,12 @@ def creator_save_manager_profil(request, manager_id):
 def creator_save_manager_club(request, manager_id):
     manager = get_object_or_404(ManagerProfile, id=manager_id)
     action = request.POST.get('action', '')
+    from .services import record_club_assignment, record_club_departure
 
     if action == 'unassign':
         old_club = Club.objects.filter(managed_by=manager).first()
         if old_club:
-            old_club.managed_by = None
-            old_club.save(update_fields=['managed_by'])
+            record_club_departure(manager, reason='mutual')
             messages.success(request, f'Verein „{old_club.name}" wurde vom Manager getrennt.')
         else:
             messages.error(request, 'Kein Verein zugeordnet.')
@@ -2176,19 +2176,12 @@ def creator_save_manager_club(request, manager_id):
             return _redirect_manager_tab(manager_id, 'verein')
         new_club = get_object_or_404(Club, id=club_id)
 
-        # Remove manager from current club first
-        old_club = Club.objects.filter(managed_by=manager).exclude(id=new_club.id).first()
-        if old_club:
-            old_club.managed_by = None
-            old_club.save(update_fields=['managed_by'])
-
         # Remove existing manager from new club if occupied
         if new_club.managed_by and new_club.managed_by_id != manager_id:
             displaced = new_club.managed_by
             messages.warning(request, f'Manager „{displaced.name}" wurde von „{new_club.name}" entfernt.')
 
-        new_club.managed_by = manager
-        new_club.save(update_fields=['managed_by'])
+        record_club_assignment(manager, new_club)
         messages.success(request, f'Manager erfolgreich „{new_club.name}" zugeordnet.')
 
     return _redirect_manager_tab(manager_id, 'verein')

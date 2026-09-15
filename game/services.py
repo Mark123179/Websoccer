@@ -27,7 +27,8 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
     order).
     """
     from django.db.models import Max
-    from .models import ManagerCareerStation, Club
+    from .models import ManagerCareerStation, ManagerCareerEntry, Club
+    from .manager_timeline_service import finish_manager_career
 
     if assignment_date is None:
         assignment_date = _date.today()
@@ -39,6 +40,9 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
         # departure step.
         if club.managed_by_id and club.managed_by_id != manager_profile.pk:
             incumbent = club.managed_by
+            finish_manager_career(
+                incumbent, club, assignment_date - timedelta(days=1), 'fired'
+            )
             ManagerCareerStation.objects.filter(
                 manager=incumbent, ended_at__isnull=True
             ).update(ended_at=assignment_date - timedelta(days=1))
@@ -55,6 +59,26 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
             open_qs.update(ended_at=assignment_date - timedelta(days=1))
 
         # Release any other club this manager previously held
+        old_clubs = list(
+            Club.objects.filter(managed_by=manager_profile).exclude(pk=club.pk)
+        )
+        for old_club in old_clubs:
+            finish_manager_career(
+                manager_profile, old_club,
+                assignment_date - timedelta(days=1), 'resign'
+            )
+        # Legacy data can have an active career row even when the live club
+        # pointer was cleared manually.  Close those rows as well so the
+        # manager-level partial uniqueness constraint remains usable.
+        for old_entry in ManagerCareerEntry.objects.filter(
+            manager=manager_profile, active=True
+        ).exclude(club=club).select_related('club'):
+            finish_manager_career(
+                manager_profile,
+                old_entry.club,
+                assignment_date - timedelta(days=1),
+                'resign',
+            )
         Club.objects.filter(managed_by=manager_profile).update(managed_by=None)
 
         # Assign
@@ -98,9 +122,18 @@ def record_club_assignment(manager_profile, club, assignment_date=None):
             started_at=assignment_date,
             order=max_order + 1,
         )
+        if not ManagerCareerEntry.objects.filter(
+            manager=manager_profile, club=club, active=True
+        ).exists():
+            ManagerCareerEntry.objects.create(
+                manager=manager_profile,
+                club=club,
+                started_at=assignment_date,
+                active=True,
+            )
 
 
-def record_club_departure(manager_profile, departure_date=None):
+def record_club_departure(manager_profile, departure_date=None, reason=None):
     """Record that *manager_profile* leaves their current club on *departure_date*.
 
     Side-effects (all atomic):
@@ -108,11 +141,19 @@ def record_club_departure(manager_profile, departure_date=None):
     2. The club whose managed_by == manager_profile is released (managed_by=None).
     """
     from .models import ManagerCareerStation, Club
+    from .manager_timeline_service import finish_manager_career
 
     if departure_date is None:
         departure_date = _date.today()
 
     with transaction.atomic():
+        for entry in list(
+            manager_profile.career_entries.filter(active=True).select_related('club')
+        ):
+            finish_manager_career(
+                manager_profile, entry.club, departure_date,
+                reason if reason is not None else entry.end_reason,
+            )
         ManagerCareerStation.objects.filter(
             manager=manager_profile, ended_at__isnull=True
         ).update(ended_at=departure_date)

@@ -27,19 +27,23 @@ _COMPETITION_FOR_MATCH_TYPE = {
 logger = logging.getLogger(__name__)
 
 
-def record_manager_competition_title(competition, season, winner_club):
+def record_manager_competition_title(
+    competition, season, winner_club, won_at=None, manager=None
+):
     """Ordnet einen neuen Wettbewerbstitel dem aktuell Verantwortlichen zu."""
     from .models import ManagerCompetitionTitle
 
-    if winner_club is None or winner_club.managed_by_id is None:
+    manager_id = manager.pk if manager is not None else getattr(winner_club, 'managed_by_id', None)
+    if winner_club is None or manager_id is None:
         return None
     title, _ = ManagerCompetitionTitle.objects.get_or_create(
         competition=competition,
         season=str(season),
         defaults={
-            'manager_id': winner_club.managed_by_id,
+            'manager_id': manager_id,
             'club': winner_club,
             'competition_name': competition.name,
+            **({'won_at': won_at} if won_at is not None else {}),
         },
     )
     return title

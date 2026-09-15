@@ -899,7 +899,11 @@ def _dismiss_manager_action(modeladmin, request, queryset):
     dismissed = 0
     for club in queryset:
         if club.managed_by_id:
-            record_club_departure(club.managed_by, departure_date=date.today())
+            record_club_departure(
+                club.managed_by,
+                departure_date=date.today(),
+                reason='fired',
+            )
             dismissed += 1
     modeladmin.message_user(
         request,

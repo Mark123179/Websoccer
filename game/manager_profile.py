@@ -326,7 +326,8 @@ def end_vacation_early(block):
 
 def record_inactivity(manager, club, season, matchday_label, squad_scope='pro'):
     """Record one missed lineup and apply the three-stage sanction ladder."""
-    from .models import InactivityRecord, ManagerCareerEntry, ManagerTimelineEntry
+    from .models import InactivityRecord
+    from .manager_timeline_service import finish_manager_career
     from .notifications import notify
 
     if is_on_vacation(manager, season=season):
@@ -355,22 +356,8 @@ def record_inactivity(manager, club, season, matchday_label, squad_scope='pro'):
         notify(manager, 'Aufstellung nicht abgegeben',
                f'Saison {manager.inactivity_season_count}/5 · in Folge {manager.inactivity_streak}/3.')
     if manager.inactivity_streak >= 3 or manager.inactivity_season_count >= 5:
-        ManagerCareerEntry.objects.filter(manager=manager, active=True).update(
-            active=False, ended_at=date.today(), end_reason='fired'
-        )
+        finish_manager_career(manager, club, date.today(), 'fired')
         club.__class__.objects.filter(pk=club.pk, managed_by=manager).update(managed_by=None)
-        ManagerTimelineEntry.objects.get_or_create(
-            manager=manager,
-            event_date=date.today(),
-            category='status',
-            title='Entlassung',
-            defaults={
-                'club': club,
-                'club_name': club.name,
-                'body': 'Der Verein wurde wegen anhaltender Inaktivität freigegeben.',
-                'status': 'approved',
-            },
-        )
         notify(manager, 'Verein verloren',
                f'{club.name} wurde wegen anhaltender Inaktivität freigegeben.')
     manager.save(update_fields=update_fields)
