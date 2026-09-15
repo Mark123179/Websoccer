@@ -2,12 +2,15 @@ import base64
 import io
 import json
 import math
+import tempfile
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +30,8 @@ from stadium_editor.seed import (
     seed_existing_stadiums,
 )
 from stadium_editor.services import refresh_geometry_after_capacity_change
+from stadium_editor.blueprints.v2 import imports as blueprint_v2
+from stadium_editor.management.commands.import_stadium_blueprint_v2 import Command as BlueprintV2Command
 
 
 def _geometry(blocks):
@@ -647,9 +652,11 @@ class StadiumEditorTests(TestCase):
 
     def test_live_scene_endpoint_reports_missing_design_and_bad_geometry(self):
         url = reverse('stadium_live_scene', args=[self.club.pk])
+        self.geometry.geometry['meta'].update(axisTheta=0, fieldC=[0, 0])
+        self.geometry.save(update_fields=['geometry'])
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
-        self.assertIn('Design', response.json()['error'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['blocks'][0]['id'], 0)
 
         _geometry_value, _design = self._live_scene_records(
             quad=[[0, 2], [0, 2], [1, 1], [-1, 1]])
@@ -745,3 +752,239 @@ class StadiumEditorTests(TestCase):
         self.assertEqual(self.geometry.geometry['blocks'][0]['rows'], 10)
         self.assertEqual((design['blocks'][0]['rows'], design['blocks'][0]['seats']), (6, 10))
         self.assertEqual(sum(run[0] for run in design['blocks'][0]['rle']), 60)
+
+    def test_v2_reference_generators_produce_valid_physical_scenes(self):
+        for key in ('bvb', 'elversberg', 'campnou', 'olympiastadion'):
+            with self.subTest(source=key):
+                scene = blueprint_v2.generate(key)
+                reference = json.loads(
+                    (blueprint_v2.ROOT / f'{key}_v2.json').read_text(
+                        encoding='utf-8')
+                )
+                self.assertEqual(scene, reference)
+                self.assertTrue(scene['blocks'])
+                for block in scene['blocks']:
+                    self.assertGreater(block['z1'], block['z0'])
+                    self.assertEqual(
+                        sum(run[0] for run in block['rle']),
+                        block['rows'] * block['seats'],
+                    )
+                    self.assertEqual(len(block['quad']), 4)
+
+    def test_v2_reference_guard_rejects_geometry_drift(self):
+        scene = json.loads(
+            (blueprint_v2.ROOT / 'bvb_v2.json').read_text(encoding='utf-8'))
+        scene['blocks'][0]['rows'] += 1
+        with self.assertRaisesRegex(ValueError, 'geprüften Referenz'):
+            blueprint_v2.assert_reviewed_reference('bvb', scene)
+
+    def test_v2_scene_to_geometry_round_trips_quads_and_explicit_roof(self):
+        scene = {
+            'schema': 'websoccer.stadium-live-scene',
+            'version': 1,
+            'stadium': 'Test',
+            'palette': ['#000000', '#ffffff'],
+            'outline': [[-10, -10], [10, -10], [10, 10], [-10, 10]],
+            'blocks': [{
+                'id': 0, 'stand': 'NORD', 'tier': 'UNTER', 'order': 0,
+                'rows': 2, 'seats': 2,
+                'quad': [[-2, 4], [2, 4], [1, 2], [-1, 2]],
+                'z0': 1, 'z1': 2, 'type': 'seating',
+                'rle': [[4, 0]],
+            }],
+            'roof': {
+                'mode': 'explicit',
+                'segments': [{
+                    'id': 'roof-0',
+                    'quad': [[-3, 5], [3, 5], [2, 4], [-2, 4]],
+                    'heights': [5, 5, 4, 4],
+                }],
+            },
+        }
+        geometry = blueprint_v2.scene_to_geometry(scene)
+        self.assertEqual(geometry['roofs'], scene['roof']['segments'])
+        effective = distribute_capacities(self.stadium, geometry)
+        design = blueprint_v2.standard_design(scene, geometry=effective,
+                                              stadium_name=self.stadium.name)
+        live = build_live_scene(self.stadium, effective, design)
+        self.assertEqual(live['blocks'][0]['quad'], scene['blocks'][0]['quad'])
+        self.assertEqual(live['roof'], scene['roof'])
+
+    def test_v2_physical_rows_are_not_rewritten_but_legacy_rows_are(self):
+        physical = _geometry([_block(0, rows=1, seats=5)])
+        physical['physical_grid'] = 'v2'
+        self.stadium.nord_seating = 11
+        self.stadium.save(update_fields=['nord_seating'])
+        result = distribute_capacities(self.stadium, physical)
+        self.assertEqual(result['blocks'][0]['rows'], 1)
+        legacy = distribute_capacities(self.stadium, _geometry([
+            _block(0, rows=1, seats=5),
+        ]))
+        self.assertEqual(legacy['blocks'][0]['rows'], 3)
+
+    def test_v2_command_rejects_unmapped_id_and_dry_run_does_not_write(self):
+        with self.assertRaisesRegex(CommandError, 'nicht in der expliziten'):
+            call_command(
+                'import_stadium_blueprint_v2', club_id=999999, verbosity=0,
+            )
+        before = StadiumGeometry.objects.get(pk=self.geometry.pk).geometry
+        fixture_scene = {
+            'stadium': self.stadium.name,
+            'palette': ['#000000', '#ffffff'],
+            'outline': [[-10, -10], [10, -10], [10, 10], [-10, 10]],
+            'blocks': [{
+                'id': 10, 'stand': 'NORD', 'tier': 'UNTER', 'order': 0,
+                'rows': 3, 'seats': 5,
+                'quad': [[-2, 4], [2, 4], [1, 2], [-1, 2]],
+                'z0': 1, 'z1': 2, 'type': 'seating',
+                'rle': [[15, 0]],
+            }],
+        }
+        mapping = {
+            self.club.pk: {
+                'source_key': 'fixture', 'osm': 'dortmund.json',
+                'steckbrief': 'Fixture',
+            },
+        }
+        with patch.object(BlueprintV2Command, 'mapping', mapping), \
+                patch.object(blueprint_v2, 'generate', return_value=fixture_scene), \
+                patch.object(blueprint_v2, 'assert_reviewed_reference'), \
+                patch.object(blueprint_v2, 'load_steckbrief',
+                             return_value={'Fixture': {'_global': {}}}):
+            call_command(
+                'import_stadium_blueprint_v2',
+                club_id=self.club.pk,
+                source_root=str(Path(__file__).resolve().parent / 'blueprints' / 'v2'),
+                dry_run=True,
+                verbosity=0,
+            )
+        self.geometry.refresh_from_db()
+        self.assertEqual(self.geometry.geometry, before)
+
+    def test_v2_command_apply_backs_up_and_resets_design_with_injected_mapping(self):
+        scene = {
+            'stadium': self.stadium.name,
+            'palette': ['#000000', '#ffffff'],
+            'outline': [[-10, -10], [10, -10], [10, 10], [-10, 10]],
+            'blocks': [{
+                'id': 10, 'stand': 'NORD', 'tier': 'UNTER', 'order': 0,
+                'rows': 3, 'seats': 5,
+                'quad': [[-2, 4], [2, 4], [1, 2], [-1, 2]],
+                'z0': 1, 'z1': 2, 'type': 'seating',
+                'rle': [[15, 0]],
+            }],
+        }
+        self.stadium.nord_seating = 11
+        self.stadium.save(update_fields=['nord_seating'])
+        old_design = StadiumDesign.objects.create(
+            stadium=self.stadium,
+            design={'version': 2, 'palette': ['#111111'], 'blocks': []},
+        )
+        mapping = {
+            self.club.pk: {
+                'source_key': 'fixture', 'osm': 'dortmund.json',
+                'steckbrief': 'Fixture',
+            },
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch.object(BlueprintV2Command, 'mapping', mapping), \
+                    patch.object(blueprint_v2, 'generate', return_value=scene), \
+                    patch.object(blueprint_v2, 'assert_reviewed_reference'), \
+                    patch.object(blueprint_v2, 'load_steckbrief',
+                                 return_value={'Fixture': {'_global': {}}}):
+                call_command(
+                    'import_stadium_blueprint_v2',
+                    club_id=self.club.pk, source_root=str(
+                        Path(__file__).resolve().parent / 'blueprints' / 'v2'),
+                    apply=True, confirm=True, backup_dir=tmp, verbosity=0,
+                )
+            self.assertTrue(list(Path(tmp).glob('*.json')))
+        self.geometry.refresh_from_db()
+        old_design.refresh_from_db()
+        self.assertEqual(self.geometry.source, 'OSM/BLUEPRINT V2')
+        self.assertEqual(old_design.design['blocks'][0]['id'], 10)
+        self.assertEqual(old_design.design['blocks'][0]['rle'], [[15, 0]])
+        self.assertNotEqual(old_design.design, {'version': 2, 'palette': ['#111111'], 'blocks': []})
+        self.assertNotIn('steckbrief', self.geometry.geometry)
+        self.geometry.steckbrief = {'_global': {'roofType': 'edited'}}
+        self.geometry.save(update_fields=['steckbrief'])
+        response = self.client.get(
+            reverse('stadium_live_scene', args=[self.club.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['steckbrief'], {'roofType': 'edited'})
+
+    def test_v2_expansion_within_physical_grid_preserves_geometry_and_design(self):
+        self.stadium.nord_seating = 20
+        self.stadium.save(update_fields=['nord_seating'])
+        geometry = _geometry([{
+            **_block(4, rows=2, seats=10),
+            'physical_grid': 'v2',
+            'capacity': 11,
+        }])
+        geometry['physical_grid'] = 'v2'
+        self.geometry.geometry = geometry
+        self.geometry.save(update_fields=['geometry'])
+        StadiumDesign.objects.create(
+            stadium=self.stadium,
+            design={
+                'version': 2, 'palette': ['#000000'],
+                'blocks': [{
+                    'id': 4, 'stand': 'NORD', 'tier': 'UNTER', 'order': 0,
+                    'rows': 2, 'seats': 10, 'rle': [[20, 0]],
+                }],
+            },
+        )
+        refresh_geometry_after_capacity_change(self.stadium)
+        self.geometry.refresh_from_db()
+        updated = self.geometry.geometry['blocks'][0]
+        self.assertEqual(updated['id'], 4)
+        self.assertEqual(updated['rows'], 2)
+        self.assertEqual(updated['quad'], geometry['blocks'][0]['quad'])
+        design = StadiumDesign.objects.get(stadium=self.stadium).design
+        self.assertEqual(design['blocks'][0]['id'], 4)
+        self.assertEqual(design['blocks'][0]['rows'], 2)
+        self.assertEqual(design['blocks'][0]['rle'], [[20, 0]])
+
+    def test_v2_outer_tier_starts_beyond_existing_outer_edge(self):
+        self.stadium.nord_seating = 431
+        self.stadium.save(update_fields=['nord_seating'])
+        geometry = _geometry([{
+            **_block(4, rows=42, seats=10),
+            'capacity': 420,
+        }])
+        geometry['physical_grid'] = 'v2'
+        self.geometry.geometry = geometry
+        self.geometry.save(update_fields=['geometry'])
+
+        refresh_geometry_after_capacity_change(self.stadium)
+
+        self.geometry.refresh_from_db()
+        old, new = self.geometry.geometry['blocks']
+        self.assertEqual(old['id'], 4)
+        self.assertGreater(new['id'], old['id'])
+        old_outer = [
+            sum(point[axis] for point in old['quad'][:2]) / 2
+            for axis in (0, 1)
+        ]
+        old_inner = [
+            sum(point[axis] for point in old['quad'][2:]) / 2
+            for axis in (0, 1)
+        ]
+        new_inner = [
+            sum(point[axis] for point in new['quad'][2:]) / 2
+            for axis in (0, 1)
+        ]
+        dx, dy = (
+            old_outer[0] - old_inner[0],
+            old_outer[1] - old_inner[1],
+        )
+        length = math.hypot(dx, dy)
+        outward_gap = (
+            (new_inner[0] - old_outer[0]) * dx / length
+            + (new_inner[1] - old_outer[1]) * dy / length
+        )
+        self.assertAlmostEqual(outward_gap, 2.0)
+        self.assertEqual(
+            sum(block['capacity'] for block in self.geometry.geometry['blocks']),
+            431,
+        )

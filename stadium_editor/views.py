@@ -14,7 +14,11 @@ from .capacity import distribute_capacities
 from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
 from .contracts import geometry_blocks, visible_blocks
-from .live_scene import LiveSceneError, build_live_scene
+from .live_scene import (
+    LiveSceneError,
+    build_live_scene,
+    standard_design_for_geometry,
+)
 
 
 def _owned_stadium(request):
@@ -133,14 +137,20 @@ def stadium_live_scene(request, club_id):
     except (Club.DoesNotExist, Stadium.DoesNotExist):
         return JsonResponse({'error': 'Stadion nicht gefunden.'}, status=404)
     try:
-        geometry = StadiumGeometry.objects.get(stadium=stadium)
-        design = StadiumDesign.objects.get(stadium=stadium)
+        geometry_row = StadiumGeometry.objects.get(stadium=stadium)
+        geometry = deepcopy(geometry_row.geometry)
+        if geometry_row.steckbrief:
+            geometry['steckbrief'] = deepcopy(geometry_row.steckbrief)
+        design = StadiumDesign.objects.filter(stadium=stadium).first()
     except StadiumGeometry.DoesNotExist:
         return JsonResponse({'error': 'Keine Stadion-Geometrie hinterlegt.'}, status=404)
-    except StadiumDesign.DoesNotExist:
-        return JsonResponse({'error': 'Kein Stadion-Design hinterlegt.'}, status=404)
     try:
-        payload = build_live_scene(stadium, geometry.geometry, design.design)
+        design_payload = (
+            design.design if design is not None
+            else standard_design_for_geometry(
+                stadium, _geometry_payload(stadium, geometry))
+        )
+        payload = build_live_scene(stadium, geometry, design_payload)
     except (LiveSceneError, ValueError) as exc:
         return JsonResponse(
             {'error': str(exc) or 'Ungültige Stadion-Scene.'},

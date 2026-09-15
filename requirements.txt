@@ -68,3 +68,4 @@ pyasn1==0.6.4            # Krypto-Dep (cryptography/pyOpenSSL); CVE-Fix 0.6.4
 msgpack==1.2.1           # Celery-Serializer-Dep; CVE GHSA-6v7p-g79w-8964 gepatcht
 py7zr==1.1.3             # Archiv-Dep; CVE-2026-23879/55206/55195 gepatcht
 rembg[cpu]
+shapely==2.1.2           # Stadion-Blaupause V2: robuste OSM-Polygonoperationen

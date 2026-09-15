@@ -6,6 +6,7 @@ integrations = ["github:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["geos"]
 
 [workflows]
 runButton = "Project"
@@ -113,6 +114,10 @@ externalPort = 80
 [[ports]]
 localPort = 5050
 externalPort = 3001
+
+[[ports]]
+localPort = 8765
+externalPort = 3002
 
 [[ports]]
 localPort = 23636

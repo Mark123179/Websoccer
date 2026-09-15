@@ -72,6 +72,14 @@ def distribute_capacities(stadium, geometry):
             raise CapacityDistributionError('Blockmaße müssen ganzzahlig sein.')
         groups[field].append((index, weight, str(block.get('id', index))))
 
+    # V2 rows/seats describe the physical raster (0.8m x 0.5m), not an
+    # economic capacity-derived grid.  Capacity still gets distributed
+    # exactly as before, but never changes that physical shape.  Historical
+    # geometry has no marker and deliberately keeps the old behaviour.
+    physical_grid = (
+        result.get('physical_grid') in ('v2', 'V2', 'physical', True)
+        or result.get('grid') in ('physical-v2', 'physical')
+    )
     for stand in STANDS:
         for seat_type in SEAT_TYPES:
             field = _field(stand, seat_type)
@@ -100,8 +108,9 @@ def distribute_capacities(stadium, geometry):
                 # The editor contract uses a complete rectangular grid.  Its
                 # width is geometric, while its height follows authoritative
                 # assigned capacity; the final row is intentionally padded.
-                width = max(1, int(blocks[index]['seats']))
-                blocks[index]['rows'] = max(1, math.ceil(value / width))
+                if not physical_grid:
+                    width = max(1, int(blocks[index]['seats']))
+                    blocks[index]['rows'] = max(1, math.ceil(value / width))
     result['capacity_source'] = 'Stadium'
     result['capacity_total'] = _stadium_capacity_total(stadium)
     return result

@@ -1,0 +1,58 @@
+{
+ "Signal Iduna Park": {
+  "SUED": {
+   "tiers": 1,
+   "rake": 30,
+   "standing": true
+  },
+  "_global": {
+   "corners": "closed",
+   "roofType": "ring",
+   "pylons": {
+    "count": 8,
+    "color": "#f7d418",
+    "height": 62
+   }
+  }
+ },
+ "Olympiastadion Berlin": {
+  "_global": {
+   "corners": "oval",
+   "roofType": "ring",
+   "track": true,
+   "gap": "Marathontor (West)",
+   "sunken": 12
+  }
+ },
+ "Camp Nou": {
+  "WEST": {
+   "roof": true,
+   "span": 30
+  },
+  "_global": {
+   "corners": "oval",
+   "roofType": "partial",
+   "floodlights": {
+    "type": "rim"
+   }
+  }
+ },
+ "URSAPHARM-Arena an der Kaiserlinde": {
+  "OST": {
+   "standing": true
+  },
+  "NORD": {
+   "tiers": 1,
+   "rake": 24,
+   "roof": true
+  },
+  "_global": {
+   "corners": "open",
+   "roofType": "separate",
+   "floodlights": {
+    "count": 4,
+    "height": 30
+   }
+  }
+ }
+}

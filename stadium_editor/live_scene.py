@@ -234,6 +234,32 @@ def _home_stand(geometry):
     return best if standing[best] else None
 
 
+def standard_design_for_geometry(stadium, geometry):
+    """Build a complete safe design for geometry rows without a saved design."""
+    primary = getattr(stadium.club, 'color_primary', None) or '#3a4148'
+    secondary = getattr(stadium.club, 'color_secondary', None) or '#f4f6f8'
+    palette = [str(primary).lower(), str(secondary).lower()]
+    blocks = []
+    for block in geometry.get('blocks', []):
+        rows, seats = int(block['rows']), int(block['seats'])
+        values = []
+        for row in range(rows):
+            colour = 1 if 0.45 <= (row + .5) / rows < .60 else 0
+            values.extend([colour] * seats)
+        blocks.append({
+            key: block[key]
+            for key in ('id', 'stand', 'tier', 'order', 'rows', 'seats')
+            if key in block
+        } | {'rle': _encode(values)})
+    return {
+        'version': 2,
+        'stadium': stadium.name,
+        'blickrichtung': 'NORD',
+        'palette': palette,
+        'blocks': blocks,
+    }
+
+
 def build_live_scene(stadium, geometry, design):
     """Merge trusted geometry and visual design into one read-only scene."""
     if not isinstance(geometry, dict):
@@ -334,7 +360,24 @@ def build_live_scene(stadium, geometry, design):
         raise LiveSceneError('Der Stadionumriss hat keine Fläche.')
 
     club = stadium.club
-    return {
+    scene_meta = geometry.get('scene_meta')
+    if not isinstance(scene_meta, dict):
+        scene_meta = {}
+    club_colors = geometry.get('clubColors') or scene_meta.get('clubColors')
+    if not isinstance(club_colors, dict):
+        club_colors = {}
+    if not club_colors:
+        club_colors = {
+            'primary': getattr(club, 'color_primary', None) or palette[0],
+            'secondary': getattr(club, 'color_secondary', None) or palette[1],
+        }
+    main_stand = geometry.get('mainStand') or scene_meta.get('mainStand')
+    if main_stand not in STANDS:
+        main_stand = _home_stand(geometry)
+    far_stand = geometry.get('farStand') or scene_meta.get('farStand')
+    if far_stand not in STANDS and main_stand in STANDS:
+        far_stand = {'NORD': 'SUED', 'SUED': 'NORD', 'OST': 'WEST', 'WEST': 'OST'}[main_stand]
+    result = {
         'schema': SCHEMA,
         'version': VERSION,
         'stadium': stadium.name,
@@ -359,3 +402,22 @@ def build_live_scene(stadium, geometry, design):
         'roof': _scene_roof(
             geometry, center, theta, scene_outline, raw_blocks),
     }
+    # Blueprint V2 metadata is additive.  Only emit fields that were actually
+    # supplied, except for authoritative capacity and camera stands.
+    result.update({
+        'mainStand': main_stand,
+        'farStand': far_stand,
+        'capacity': int(stadium.capacity_total),
+        'clubColors': club_colors,
+    })
+    optional = (
+        'source', 'steckbrief', 'facade', 'facadeSegments', 'standsBounds',
+        'groundHole', 'track', 'surroundings',
+    )
+    for key in optional:
+        value = geometry.get(key, scene_meta.get(key))
+        if value is not None:
+            if key == 'steckbrief' and isinstance(value, dict) and '_global' in value:
+                value = value['_global']
+            result[key] = value
+    return result

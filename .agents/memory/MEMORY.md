@@ -99,6 +99,7 @@
 - [Transfer v2 Creator/KI](transfer-v2-creator-ai.md) — Admin-Storno = Ganz-oder-gar-nicht; KI-Deal-Antwort via Schmerzgrenze (24h-Bedenkzeit); KI-Käufer live = DealRequest, dry_run = AITransferOffer; Regression nur mit --seasons 20 vergleichbar.
 - [Stadioneditor-Kapazitätsregel](stadium-editor-capacity-rule.md) — Stadium bleibt alleinige Kapazitätsquelle; Visualisierung verteilt nur serverseitig und darf Ausbauten nie zurückdrehen.
 - [Stadion-Live-Scene-Vertrag](stadium-live-scene-contract.md) — Design bleibt geometriefrei; Runtime-Scene merged serverseitig Geometrie+RLE im pitch-zentrierten Koordinatensystem.
+- [Stadion-Blaupause V2](stadium-blueprint-v2.md) — V2-Raster ist physisch und kapazitätsunabhängig; Importe nur über explizite Club-ID mit Backup und Scene-Adapter.
 - [Managerprofil KPI-Abnahme](manager-profile-kpi-acceptance.md) — KPI nur mit geliefertem Selfcheck abnehmen; KPI zeigt Wettbewerbslogos, Vitrine Pokalabbildungen.
 - [Persönliche Manager-Titel](manager-competition-titles.md) — Titel nur beim ersten saisonbezogenen Wettbewerbsabschluss dem dann verantwortlichen Manager zuordnen; nie ClubTrophy rückladen.
 - [KPI-Selbstcheck im Nullzustand](manager-profile-kpi-zero-state.md) — geliefertes Skript verlangt 1–6 Logos, obwohl die verbindliche Nullzustands-Spec bei 0 Trophäen keine Logos erlaubt.

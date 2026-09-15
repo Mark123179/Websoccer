@@ -12,6 +12,7 @@ class StadiumGeometry(models.Model):
         related_name='editor_geometry',
     )
     geometry = models.JSONField(default=dict)
+    steckbrief = models.JSONField(default=dict)
     schema_version = models.PositiveSmallIntegerField(default=1)
     source = models.CharField(max_length=120, blank=True, default='OSM')
     attribution = models.CharField(
