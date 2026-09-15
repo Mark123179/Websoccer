@@ -1027,6 +1027,6 @@
 
 <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 <script src="{% static 'game/js/match_report_v2.js' %}?v=6"></script>
-<script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=5"></script>
+{% include 'stadium_editor/_live_mode_script.html' %}
 {% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=1"></script>{% endif %}
 {% endblock %}

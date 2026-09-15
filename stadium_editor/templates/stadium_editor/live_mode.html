@@ -32,6 +32,6 @@
     <p class="live-stage__status" role="status">Stadion wird geladen …</p>
     <div class="live-stage__help">Ziehen: Kamera · Mausrad: Zoom · Doppelklick: zurücksetzen</div>
   </main>
-  <script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=5"></script>
+  {% include 'stadium_editor/_live_mode_script.html' %}
 </body>
 </html>

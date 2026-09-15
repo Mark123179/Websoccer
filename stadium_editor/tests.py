@@ -142,6 +142,45 @@ class StadiumEditorTests(TestCase):
         self.assertIn('const adapterUrl = new URL(import.meta.url);', adapter_js)
         self.assertIn('stageUrl.search = adapterUrl.search;', adapter_js)
         self.assertNotIn('stadium_stage.js?v=', adapter_js)
+        live_mode_js = (
+            Path(__file__).resolve().parent
+            / 'static' / 'stadium_editor' / 'live_mode.js'
+        ).read_text(encoding='utf-8')
+        self.assertIn('const LIVE_MODE_ASSET_URL = new URL(import.meta.url);', live_mode_js)
+        self.assertIn('url.search = LIVE_MODE_ASSET_URL.search;', live_mode_js)
+        self.assertIn(
+            "import(liveModeModuleUrl('./stadium_stage_adapter.js'))",
+            live_mode_js,
+        )
+        self.assertNotIn('stadium_stage_adapter.js?v=', live_mode_js)
+        shared_entry = (
+            Path(__file__).resolve().parent
+            / 'templates' / 'stadium_editor' / '_live_mode_script.html'
+        ).read_text(encoding='utf-8')
+        self.assertRegex(
+            shared_entry,
+            r"stadium_editor/live_mode\.js' %\}\?v=\d+",
+        )
+        project_root = Path(__file__).resolve().parents[1]
+        direct_consumers = []
+        shared_include_consumers = []
+        for template_path in project_root.rglob('templates/**/*.html'):
+            consumer = template_path.read_text(encoding='utf-8')
+            if template_path.name != '_live_mode_script.html':
+                if 'stadium_editor/live_mode.js' in consumer:
+                    direct_consumers.append(str(template_path.relative_to(project_root)))
+                if "{% include 'stadium_editor/_live_mode_script.html' %}" in consumer:
+                    shared_include_consumers.append(
+                        str(template_path.relative_to(project_root))
+                    )
+        self.assertEqual(direct_consumers, [])
+        self.assertCountEqual(
+            shared_include_consumers,
+            [
+                'game/templates/game/match_report.html',
+                'stadium_editor/templates/stadium_editor/live_mode.html',
+            ],
+        )
         stage_js = (
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stage' / 'stadium_stage.js'
@@ -724,7 +763,10 @@ class StadiumEditorTests(TestCase):
         self.assertIn('data-stadium-live-mode', template)
         self.assertIn('data-stadium-stage', template)
         self.assertIn('type="importmap"', template)
-        self.assertIn('stadium_editor/live_mode.js', template)
+        self.assertIn(
+            "{% include 'stadium_editor/_live_mode_script.html' %}",
+            template,
+        )
 
     def test_club_colour_derivation_is_distinct_and_never_overwrites_admin_values(self):
         image = Image.new('RGBA', (80, 40), '#c8102e')

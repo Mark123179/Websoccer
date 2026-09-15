@@ -1,6 +1,14 @@
 const SCHEMA = 'websoccer.stadium-live-scene';
 const EPSILON = 1e-7;
-import {mountStadiumStage} from './stadium_stage_adapter.js';
+const LIVE_MODE_ASSET_URL = new URL(import.meta.url);
+
+function liveModeModuleUrl(path) {
+  const url = new URL(path, LIVE_MODE_ASSET_URL);
+  url.search = LIVE_MODE_ASSET_URL.search;
+  return url.href;
+}
+
+const stageAdapterPromise = import(liveModeModuleUrl('./stadium_stage_adapter.js'));
 
 export function bilinearPoint(quad, u, v) {
   const [frontLeft, frontRight, backRight, backLeft] = quad;
@@ -459,6 +467,7 @@ export class StadiumCanvasErrorRenderer {
 async function mount(stage) {
   const status = stage.querySelector('.live-stage__status');
   try {
+    const {mountStadiumStage} = await stageAdapterPromise;
     const scene = await loadLiveScene(stage.dataset.sceneUrl);
     const canvas = stage.querySelector('canvas');
     const controls = {
