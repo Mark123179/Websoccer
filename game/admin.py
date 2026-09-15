@@ -1008,7 +1008,8 @@ class ClubAdmin(admin.ModelAdmin):
         return [
             (None, {
                 'fields': (
-                    'name', 'short_name', 'founded_year', 'budget', 'fan_popularity', 'league',
+                    'name', 'short_name', 'color_primary', 'color_secondary',
+                    'founded_year', 'budget', 'fan_popularity', 'league',
                     'fm_inside_id', 'api_football_id',
                 ),
             }),

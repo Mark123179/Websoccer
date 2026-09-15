@@ -4,7 +4,7 @@
 {% block title %}Spielbericht{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=21">
+    <link rel="stylesheet" href="{% static 'game/css/match_report_v2.css' %}?v=22">
     {% if is_admin %}
     <link rel="stylesheet" href="{% static 'game/css/match_report.css' %}?v=13">
     {% endif %}
@@ -116,7 +116,9 @@
             <section class="match-stadium"
                      data-stadium-live-mode
                      data-scene-url="{% url 'stadium_live_scene' report.home_club_id %}"
+                     data-mode="match" data-camera="match" data-day="false" data-exposure="1"
                      aria-label="Stadion von {{ report.home_club_name }}">
+                <div data-stadium-stage></div>
                 <canvas aria-label="2D-Ansicht des Heimstadions"></canvas>
                 <header class="live-stage__header">
                     <span>{{ report.home_club_name }}</span>
@@ -1023,7 +1025,8 @@
 </div>
 {% endif %}
 
+<script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 <script src="{% static 'game/js/match_report_v2.js' %}?v=6"></script>
-<script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=4"></script>
+<script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=5"></script>
 {% if referee %}<script src="{% static 'game/js/referee_popup.js' %}?v=1"></script>{% endif %}
 {% endblock %}

@@ -32,6 +32,7 @@ from stadium_editor.seed import (
 from stadium_editor.services import refresh_geometry_after_capacity_change
 from stadium_editor.blueprints.v2 import imports as blueprint_v2
 from stadium_editor.management.commands.import_stadium_blueprint_v2 import Command as BlueprintV2Command
+from game.management.commands.derive_stadium_club_colors import derive_palette
 
 
 def _geometry(blocks):
@@ -92,6 +93,8 @@ class StadiumEditorTests(TestCase):
         self.assertIn('new ResizeObserver', editor_js)
         self.assertIn('if(!nextW || !nextH || !D) return;', editor_js)
         self.assertIn('if(!D) return;', editor_js)
+        self.assertIn("if(view!=='3d' || !stageThree) return;", editor_js)
+        self.assertIn('if(stageThree) activateThreeStage();', editor_js)
         self.assertIn('requestAnimationFrame(() => requestAnimationFrame(resize))', editor_js)
 
     def test_editor_is_embedded_in_the_global_management_shell(self):
@@ -622,6 +625,9 @@ class StadiumEditorTests(TestCase):
             reverse('stadium_live_scene', args=[self.club.pk]),
         )
         self.assertContains(response, 'stadium_editor/live_mode.js')
+        self.assertContains(response, 'data-stadium-stage')
+        self.assertContains(response, 'type="importmap"')
+        self.assertContains(response, 'three.module.js')
 
     def test_match_report_mount_uses_report_home_club_scene_url(self):
         template = (
@@ -634,7 +640,40 @@ class StadiumEditorTests(TestCase):
         )
         self.assertNotIn('data-stadium-geometry', template)
         self.assertIn('data-stadium-live-mode', template)
+        self.assertIn('data-stadium-stage', template)
+        self.assertIn('type="importmap"', template)
         self.assertIn('stadium_editor/live_mode.js', template)
+
+    def test_club_colour_derivation_is_distinct_and_never_overwrites_admin_values(self):
+        image = Image.new('RGBA', (80, 40), '#c8102e')
+        for x in range(40, 80):
+            for y in range(40):
+                image.putpixel((x, y), (21, 84, 184, 255))
+        with tempfile.NamedTemporaryFile(suffix='.png') as handle:
+            image.save(handle, format='PNG')
+            primary, secondary = derive_palette(Path(handle.name))
+        self.assertNotEqual(primary, secondary)
+
+        self.club.color_primary = '#112233'
+        self.club.color_secondary = '#445566'
+        self.club.save(update_fields=['color_primary', 'color_secondary'])
+        with patch(
+            'game.management.commands.derive_stadium_club_colors._crest_path',
+            return_value=Path('/unused.png'),
+        ), patch(
+            'game.management.commands.derive_stadium_club_colors.derive_palette',
+            return_value=('#abcdef', '#fedcba'),
+        ):
+            call_command(
+                'derive_stadium_club_colors',
+                club_ids=[self.club.pk],
+                verbosity=0,
+            )
+        self.club.refresh_from_db()
+        self.assertEqual(
+            (self.club.color_primary, self.club.color_secondary),
+            ('#112233', '#445566'),
+        )
 
     def test_live_mode_renderer_uses_quads_and_height_not_stand_dimensions(self):
         source = (
@@ -648,7 +687,15 @@ class StadiumEditorTests(TestCase):
             source,
         )
         self.assertIn('Math.atan2(point[1], point[0])', source)
+        self.assertIn('new StadiumCanvasErrorRenderer', source)
         self.assertNotIn('fetch(`/management/stadion/editor/geometry/', source)
+        adapter = (
+            Path(__file__).resolve().parent
+            / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
+        ).read_text(encoding='utf-8')
+        self.assertIn('sceneRotationQuarterTurn', adapter)
+        self.assertIn('alignPitchStripeMeshes(THREE, object, phi)', adapter)
+        self.assertIn('pitchGroup.remove(stripe)', adapter)
 
     def test_live_scene_endpoint_reports_missing_design_and_bad_geometry(self):
         url = reverse('stadium_live_scene', args=[self.club.pk])

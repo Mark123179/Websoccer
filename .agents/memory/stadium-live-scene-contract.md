@@ -43,3 +43,12 @@ scheinbar selbstüberschneidendes Runtime-Quad.
 **How to apply:** Bei neuen Stadionimporten die Quellreihenfolge dokumentieren
 und verlustfrei normalisieren. Niemals Punkte verschieben oder die Form aus
 `rows`, `seats`, Tribünenseite oder Kapazität schätzen.
+
+Renderer mit engerem Vertrag dürfen fehlende Live-Scene-Darstellungen nur in
+einer flüchtigen Kopie normalisieren; kanonische Scene, Design und Geometrie
+bleiben unverändert.
+
+**Why:** Sonst verändern Renderergrenzen dauerhaft den gemeinsamen Datenvertrag.
+
+**How to apply:** Zum Beispiel `procedural-ring` nur für einen Renderer, der
+explizite Dachsegmente benötigt, transient auflösen und nie zurückschreiben.

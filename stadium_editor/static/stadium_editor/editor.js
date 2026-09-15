@@ -58,6 +58,7 @@ let pressId = 1;
 const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
 let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
+let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
 let blickrichtung = 'NORD';
 let overlay = null;                               // {kind:'text'|'image', canvas, wx, wy, scale, rot}
 const undoStack = [], redoStack = [];
@@ -976,7 +977,70 @@ function render3D(){
 function renderAll(){
   if(!D) return;
   if(view==='2d'){ renderBase(); renderBlocks(); renderOverlay(); }
-  else render3D();
+  else { render3D(); scheduleStageDesignUpdate(); }
+}
+
+function scheduleStageDesignUpdate(){
+  if(!stageThree || !stageScene) return;
+  clearTimeout(stageUpdateTimer);
+  stageUpdateTimer = setTimeout(()=>{
+    import('./stadium_stage_adapter.js').then(({applyEditorDesign})=>{
+      const scene = applyEditorDesign(stageScene, blocks, seatData, PALETTE, D);
+      if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
+      stageThree.update({
+        scene,
+        camera: document.getElementById('stageCamera')?.value || 'orbit',
+        day: Boolean(document.getElementById('stageDay')?.checked),
+        orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
+      }).catch(useLegacyThreePreview);
+    }).catch(()=>{});
+  }, 180);
+}
+
+function useLegacyThreePreview(){
+  stageThree = null;
+  stageAdapter = null;
+  document.getElementById('stage').classList.remove('stage-three-ready');
+  document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=false);
+  if(view==='3d') render3D();
+}
+
+function activateThreeStage(){
+  if(view!=='3d' || !stageThree) return;
+  document.getElementById('stage').classList.add('stage-three-ready');
+  document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=true);
+}
+
+async function ensureThreeStage(){
+  if(stageThree){
+    activateThreeStage();
+    return;
+  }
+  if(stageAdapter || !D) return;
+  const host = document.getElementById('stageThree');
+  if(!host) return;
+  stageAdapter = {kind:'loading'};
+  try{
+    const {mountStadiumStage, applyEditorDesign} =
+      await import('./stadium_stage_adapter.js');
+    const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
+    if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
+    stageScene = await response.json();
+    const initialScene = applyEditorDesign(stageScene, blocks, seatData, PALETTE, D);
+    const mounted = await mountStadiumStage({
+      element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
+      day: false, exposure: 1, fallback: ()=>null,
+    });
+    stageAdapter = mounted;
+    if(mounted.kind === 'three'){
+      stageThree = mounted;
+      activateThreeStage();
+    }else{
+      stageAdapter = null;
+    }
+  }catch(_error){
+    stageAdapter = null;
+  }
 }
 
 /* ── Undo / Redo ──────────────────────────────────────────────── */
@@ -1712,24 +1776,34 @@ let r3dPending = false;
 function requestRender3D(){
   if(r3dPending) return;
   r3dPending = true;
-  requestAnimationFrame(()=>{ r3dPending=false; if(view==='3d') render3D(); });
+  requestAnimationFrame(()=>{ r3dPending=false; if(view==='3d'){ render3D(); scheduleStageDesignUpdate(); } });
 }
 document.getElementById('btn2d').onclick = ()=> setView('2d');
 document.getElementById('btn3d').onclick = ()=> setView('3d');
 document.getElementById('yawSlider').addEventListener('input', e=>{ yaw3d=+e.target.value; requestRender3D(); });
-document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; render3D(); });
+document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; renderAll(); });
 document.getElementById('tiltSlider').addEventListener('input', e=>{ tilt3d=+e.target.value; requestRender3D(); });
+document.getElementById('stageCamera').addEventListener('change', scheduleStageDesignUpdate);
+document.getElementById('stageDay').addEventListener('change', scheduleStageDesignUpdate);
 document.getElementById('btnShot').addEventListener('click', ()=>{
+  if(stageThree?.stage?.renderer?.domElement){
+    stageThree.stage.render();
+    stageThree.stage.renderer.domElement.toBlob(downloadStagePng, 'image/png');
+    return;
+  }
   const c = document.createElement('canvas'); c.width=W; c.height=H;
   const g = c.getContext('2d');
   g.drawImage(cvBase,0,0); g.drawImage(cvBlocks,0,0);
-  c.toBlob(b=>{
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = `${D.meta.name.replace(/\s+/g,'_')}_ansicht.png`; a.click();
-    toast('Ansicht als PNG gespeichert.');
-  }, 'image/png');
+  c.toBlob(downloadStagePng, 'image/png');
 });
+function downloadStagePng(blob){
+  if(!blob) return toast('PNG konnte nicht erstellt werden.');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${D.meta.name.replace(/\s+/g,'_')}_ansicht.png`; a.click();
+  window.setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  toast('Ansicht als PNG gespeichert.');
+}
 function setView(v){
   view = v;
   document.getElementById('btn2d').classList.toggle('active', v==='2d');
@@ -1737,7 +1811,16 @@ function setView(v){
   document.getElementById('rot3d').style.display = v==='3d' ? 'flex' : 'none';
   document.getElementById('toolsPanel').style.opacity = v==='3d' ? .35 : 1;
   document.getElementById('toolsPanel').style.pointerEvents = v==='3d' ? 'none' : 'auto';
+  if(v==='3d'){
+    if(stageThree) activateThreeStage();
+    else ensureThreeStage();
+  }
+  if(v==='2d'){
+    document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=false);
+    document.getElementById('stage').classList.remove('stage-three-ready');
+  }
   renderAll();
+  if(v==='3d') scheduleStageDesignUpdate();
 }
 
 /* Toast */

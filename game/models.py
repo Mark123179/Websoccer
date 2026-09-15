@@ -740,6 +740,18 @@ class Club(models.Model):
 
     name = models.CharField(max_length=100)
     short_name = models.CharField(max_length=20)
+    color_primary = models.CharField(
+        max_length=7,
+        blank=True,
+        verbose_name='Primärfarbe',
+        help_text='Hex-Farbe für Stadion-Standarddesigns, z. B. #c8102e.',
+    )
+    color_secondary = models.CharField(
+        max_length=7,
+        blank=True,
+        verbose_name='Sekundärfarbe',
+        help_text='Hex-Farbe für Stadion-Standarddesigns, z. B. #ffffff.',
+    )
     founded_year = models.IntegerField()
 
     budget = models.DecimalField(

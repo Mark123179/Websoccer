@@ -4,21 +4,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ stadium.name }} – 2D-Livemodus</title>
-  <link rel="stylesheet" href="{% static 'stadium_editor/live_mode.css' %}?v=3">
+  <title>{{ stadium.name }} – Livemodus</title>
+  <link rel="stylesheet" href="{% static 'stadium_editor/live_mode.css' %}?v=4">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 </head>
 <body>
   <main class="live-stage"
         data-stadium-live-mode
-        data-scene-url="{{ scene_url }}">
+        data-scene-url="{{ scene_url }}"
+        data-mode="live"
+        data-camera="orbit"
+        data-day="false"
+        data-exposure="1">
+    <div data-stadium-stage></div>
     <canvas aria-label="2D-Ansicht von {{ stadium.name }}"></canvas>
     <header class="live-stage__header">
       <span>{{ club.name }}</span>
       <strong>{{ stadium.name }}</strong>
     </header>
+    <div class="live-stage__controls" aria-label="Stadionkamera">
+      <select data-stage-camera aria-label="Kamera">
+        <option value="orbit">Orbit</option><option value="match">Match</option><option value="seat">Sitz</option>
+      </select>
+      <label><input type="checkbox" data-stage-day> Tag</label>
+      <label>Belichtung <input type="range" data-stage-exposure min=".6" max="1.6" step=".05" value="1"></label>
+    </div>
     <p class="live-stage__status" role="status">Stadion wird geladen …</p>
     <div class="live-stage__help">Ziehen: Kamera · Mausrad: Zoom · Doppelklick: zurücksetzen</div>
   </main>
-  <script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=3"></script>
+  <script type="module" src="{% static 'stadium_editor/live_mode.js' %}?v=5"></script>
 </body>
 </html>

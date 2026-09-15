@@ -69,6 +69,10 @@
 .admin-tools .panel{background:rgba(7,17,26,.72)}
 .stage{height:100%;min-width:0;min-height:0;position:relative;background:var(--stadium-bg);grid-column:2;grid-row:1}
 .stage canvas{position:absolute;inset:0}
+#stageThree{position:absolute;inset:0;z-index:0;visibility:hidden}
+#stageThree canvas{position:static;width:100%;height:100%}
+.stage-three-ready #stageThree{visibility:visible;z-index:2}
+.stage-three-ready #cvBase,.stage-three-ready #cvBlocks,.stage-three-ready #cvOverlay{z-index:0}
 #cvOverlay{cursor:crosshair}
 /* ── Panels ─────────────────────────────────────── */
 .panel{border:1px solid var(--line);border-radius:var(--radius);padding:11px 12px;background:rgba(7,17,26,.5)}
@@ -163,6 +167,8 @@
   <div class="editor-toolbar-spacer"></div>
   <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
+    <select id="stageCamera" aria-label="3D-Kamera"><option value="orbit">Orbit</option><option value="seat">Sitz</option></select>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageDay" style="accent-color:var(--cyan)"> Tag</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
     <button class="btn" id="btnShot" title="Aktuelle 3D-Ansicht als PNG speichern">📷 PNG</button></div>
   <button class="btn active" id="btnDots">⣿ PUNKTE</button>
@@ -290,6 +296,7 @@
   {% endif %}
 
   <div class="stage" id="stage">
+    <div id="stageThree" data-stadium-stage aria-label="Interaktive 3D-Stadionansicht"></div>
     <canvas id="cvBase"></canvas>
     <canvas id="cvBlocks"></canvas>
     <canvas id="cvOverlay"></canvas>
@@ -307,14 +314,16 @@
 {% endblock %}
 
 {% block extra_js %}
+<script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 <script>
 window.STADIUM_EDITOR = {
   geometryUrl: "{% url 'stadium_editor_geometry' %}",
   designUrl: "{% url 'stadium_editor_design' %}",
+  liveSceneUrl: "{% url 'stadium_live_scene' stadium.club_id %}",
   saveUrl: "{% url 'stadium_editor_save_design' %}",
   csrfToken: "{{ csrf_token }}",
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=8"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=9"></script>
 {% endblock %}
