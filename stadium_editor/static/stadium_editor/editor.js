@@ -252,6 +252,7 @@ function drawBlockDots(ctx, i, proj){
 /* ── Basis-Layer: Blaupause + Spielfeld ───────────────────────── */
 function renderBase(){
   const ctx = cvBase.getContext('2d');
+  const bg = D.bg || {};
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#03070c'; ctx.fillRect(0,0,W,H);
   // dezentes Raster
@@ -260,16 +261,16 @@ function renderBase(){
   for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
   const path = pts => { ctx.beginPath(); pts.forEach((p,i)=>{const s=w2s(p[0],p[1]); i?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]);}); };
   // Grün
-  for(const g of D.bg.green){ path(g); ctx.closePath(); ctx.fillStyle='rgba(48,242,156,.045)'; ctx.fill(); }
+  for(const g of bg.green || []){ path(g); ctx.closePath(); ctx.fillStyle='rgba(48,242,156,.045)'; ctx.fill(); }
   // Wasser
-  for(const g of D.bg.water){ path(g); ctx.closePath(); ctx.fillStyle='rgba(34,140,255,.08)'; ctx.fill(); }
+  for(const g of bg.water || []){ path(g); ctx.closePath(); ctx.fillStyle='rgba(34,140,255,.08)'; ctx.fill(); }
   // Straßen
-  for(const r of D.bg.roads){
+  for(const r of bg.roads || []){
     path(r.p); ctx.strokeStyle=`rgba(34,230,255,${r.w===3?.30:r.w===2?.22:.13})`;
     ctx.lineWidth=r.w*.9; ctx.stroke();
   }
   // Gebäude
-  for(const g of D.bg.buildings){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
+  for(const g of bg.buildings || []){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
   drawPitch(ctx, w2s, 1);
 }
 function drawPitch(ctx, toScreen, alpha){
@@ -466,6 +467,7 @@ function fillPreviewTex(id){
 function render3D(){
   const ctx = cvBlocks.getContext('2d');
   const bctx = cvBase.getContext('2d');
+  const bg = D.bg || {};
   bctx.clearRect(0,0,W,H); ctx.clearRect(0,0,W,H);
   cvOverlay.getContext('2d').clearRect(0,0,W,H);
   bctx.fillStyle='#03070c'; bctx.fillRect(0,0,W,H);
@@ -480,9 +482,9 @@ function render3D(){
   };
   // Blaupause flach am Boden
   const path3 = pts => { bctx.beginPath(); pts.forEach((p,i)=>{const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]);}); };
-  for(const g of D.bg.green){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
-  for(const r of D.bg.roads){ path3(r.p); bctx.strokeStyle=`rgba(34,230,255,${r.w===3?.22:.1})`; bctx.lineWidth=r.w*.8; bctx.stroke(); }
-  for(const g of D.bg.buildings){ path3(g); bctx.closePath(); bctx.strokeStyle='rgba(34,230,255,.28)'; bctx.lineWidth=.8; bctx.stroke(); }
+  for(const g of bg.green || []){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
+  for(const r of bg.roads || []){ path3(r.p); bctx.strokeStyle=`rgba(34,230,255,${r.w===3?.22:.1})`; bctx.lineWidth=r.w*.8; bctx.stroke(); }
+  for(const g of bg.buildings || []){ path3(g); bctx.closePath(); bctx.strokeStyle='rgba(34,230,255,.28)'; bctx.lineWidth=.8; bctx.stroke(); }
   // Bodenplatte: schließt Durchblicke bei flachen Winkeln
   bctx.beginPath();
   D.outline.forEach((p,i)=>{ const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]); });
