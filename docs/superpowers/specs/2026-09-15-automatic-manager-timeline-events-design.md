@@ -8,7 +8,7 @@ Alle bereits vorhandenen historischen Daten werden einmalig nachgetragen.
 
 ## Automatische Ereignisse
 
-Bereits vorhandene automatische Amtsantritte, Vereinswechsel und Titel bleiben erhalten.
+Bereits vorhandene automatische Amtsantritte und Vereinswechsel bleiben erhalten. Automatische Titel ohne Finalspiel, beispielsweise Meisterschaften und Aufstiege, behalten ihre normale Titelkarte.
 
 Neu automatisch gespeichert werden:
 
@@ -35,6 +35,12 @@ Manuelle Einträge behalten Moderationsstatus und bestehenden Ablauf. Systemeint
 ## Finalspiele
 
 Nach dem verbindlichen Abschluss eines Finalspiels entsteht für jeden der beiden beteiligten Manager genau ein Ereignis. Beide Einträge verweisen auf dasselbe Spiel, besitzen aber managerbezogene Quellschlüssel.
+
+Der Sieger erhält ein goldenes Panorama-Finalticket als Titelereignis. Der Verlierer erhält dasselbe Panorama-Finalticket in Rot mit der Bedeutung „Finale verloren“.
+
+Für einen Finalsieger darf nicht zusätzlich eine separate goldene Titelkarte zum selben Wettbewerb und Datum in der Timeline erscheinen. Der zugrunde liegende persönliche Titel-Datensatz bleibt für Trophäen, Statistiken und Managererfolge erhalten; nur seine separate Darstellung in der Timeline wird unterdrückt, wenn ein passendes Finalticket existiert.
+
+Titel ohne Finalspiel, insbesondere Meisterschaften und Aufstiege, bleiben unverändert als normale Titelkarten sichtbar.
 
 Das Ereignis enthält:
 
@@ -68,13 +74,17 @@ Ein idempotenter Verwaltungsbefehl durchsucht:
 - alle abgeschlossenen Finalspiele mit eindeutig ermittelbaren damaligen Managern,
 - alle beendeten Manageramtszeiten.
 
-Er legt fehlende Systemereignisse an und überspringt bereits vorhandene. Er verändert keine manuellen Einträge und keine bestehenden Karriere- oder Matchdaten.
+Er legt fehlende Systemereignisse an und überspringt bereits vorhandene. Er verändert keine manuellen Einträge und keine bestehenden Karriere-, Titel- oder Matchdaten.
+
+Bei historischen Finalsiegern erzeugt der Backfill das goldene Finalticket. Die bisher aus dem persönlichen Titel abgeleitete Timeline-Karte wird anschließend bei der Timeline-Zusammenstellung unterdrückt, statt den persönlichen Titel-Datensatz zu löschen.
 
 Wenn historische Daten für eine eindeutige Managerzuordnung, einen Gegner oder ein Ergebnis nicht ausreichen, wird der Datensatz protokolliert und übersprungen statt geraten.
 
 ## Darstellung
 
-- Finalspiele erscheinen als Ergebnis-Tickets.
+- Finalspiele erscheinen als Ergebnis-Tickets: Gold für den Sieger, Rot für den Verlierer.
+- Pro Manager und Finalspiel erscheint genau eine Karte.
+- Eine separate Final-Titelkarte wird beim Sieger unterdrückt, sobald das zugehörige Finalticket vorhanden ist.
 - Amtszeitenden erscheinen als normale Statuskarten.
 - Manuelle Ergebnis-Tickets verwenden ohne Überschrift den neutralen Titel „SPIELERGEBNIS“.
 - Automatische Finaltickets verwenden einen konkreten Finaltitel.
@@ -85,6 +95,10 @@ Wenn historische Daten für eine eindeutige Managerzuordnung, einen Gegner oder 
 Die Tests prüfen:
 
 - je ein Finalereignis für beide zum Spielzeitpunkt verantwortlichen Manager,
+- genau eine sichtbare Karte pro Manager und Finale,
+- goldenes Finalticket für den Sieger und rotes Finalticket für den Verlierer,
+- Unterdrückung nur der doppelten Final-Titelkarte, ohne den persönlichen Titel-Datensatz zu löschen,
+- unveränderte Titelkarten für Meisterschaften, Aufstiege und andere Titel ohne Finalspiel,
 - korrekte Vereine, Wettbewerb, Ergebnis und Logo-Verknüpfungen,
 - keine Duplikate bei wiederholtem Abschluss,
 - jeden unterstützten Trennungsgrund,
