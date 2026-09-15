@@ -1016,6 +1016,7 @@ function useLegacyThreePreview(){
 
 function activateThreeStage(){
   if(view!=='3d' || !stageThree) return;
+  document.getElementById('stageThree').style.visibility = 'visible';
   document.getElementById('stage').classList.add('stage-three-ready');
   document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=true);
 }
@@ -1038,7 +1039,7 @@ async function ensureThreeStage(){
     const initialScene = applyEditorDesign(stageScene, blocks, seatData, PALETTE, D);
     const mounted = await mountStadiumStage({
       element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
-      day: false, exposure: 1, fallback: ()=>null,
+      day: false, exposure: 1.1, fallback: ()=>null,
     });
     stageAdapter = mounted;
     if(mounted.kind === 'three'){
@@ -1785,7 +1786,17 @@ let r3dPending = false;
 function requestRender3D(){
   if(r3dPending) return;
   r3dPending = true;
-  requestAnimationFrame(()=>{ r3dPending=false; if(view==='3d'){ render3D(); scheduleStageDesignUpdate(); } });
+  requestAnimationFrame(()=>{
+    r3dPending=false;
+    if(view!=='3d') return;
+    if(stageThree){
+      stageThree.update({
+        orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
+      }).catch(useLegacyThreePreview);
+    }else if(!stageAdapter){
+      render3D();
+    }
+  });
 }
 document.getElementById('btn2d').onclick = ()=> setView('2d');
 document.getElementById('btn3d').onclick = ()=> setView('3d');
@@ -1793,7 +1804,11 @@ document.getElementById('yawSlider').addEventListener('input', e=>{ yaw3d=+e.tar
 document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; renderAll(); });
 document.getElementById('tiltSlider').addEventListener('input', e=>{ tilt3d=+e.target.value; requestRender3D(); });
 document.getElementById('stageCamera').addEventListener('change', scheduleStageDesignUpdate);
-document.getElementById('stageDay').addEventListener('change', scheduleStageDesignUpdate);
+document.getElementById('stageDay').addEventListener('change', ()=>{
+  if(!stageThree) return;
+  const day = Boolean(document.getElementById('stageDay').checked);
+  stageThree.update({day, exposure: day ? 1.5 : 1.1}).catch(useLegacyThreePreview);
+});
 document.getElementById('btnShot').addEventListener('click', ()=>{
   if(stageThree?.stage?.renderer?.domElement){
     stageThree.stage.render();
@@ -1825,6 +1840,7 @@ function setView(v){
     else ensureThreeStage();
   }
   if(v==='2d'){
+    document.getElementById('stageThree').style.visibility = 'hidden';
     document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=false);
     document.getElementById('stage').classList.remove('stage-three-ready');
   }

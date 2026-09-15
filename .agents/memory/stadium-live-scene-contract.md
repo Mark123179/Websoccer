@@ -52,3 +52,14 @@ bleiben unverändert.
 
 **How to apply:** Zum Beispiel `procedural-ring` nur für einen Renderer, der
 explizite Dachsegmente benötigt, transient auflösen und nie zurückschreiben.
+
+## Kamera- und Sichtwechsel
+
+Orbit-Kameraänderungen dürfen die Stadiongeometrie nicht neu erzeugen. Eine
+ausgeblendete WebGL-Bühne muss ihre Layoutgröße behalten.
+
+**Why:** Große Sitzgeometrien machen jeden Rebuild während Slider-, Drag- oder
+2D/3D-Wechseln sichtbar langsam.
+
+**How to apply:** Kamera-Matrizen direkt aktualisieren; nur Scene-, Licht-,
+Kameraart- oder echte Größenänderungen dürfen einen Rebuild auslösen.

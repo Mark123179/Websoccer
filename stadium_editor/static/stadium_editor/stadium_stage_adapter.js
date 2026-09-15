@@ -251,6 +251,8 @@ export async function mountStadiumStage({
   let fallbackRenderer = null;
   let stage = null;
   let resizeTimer = 0;
+  let lastWidth = 0;
+  let lastHeight = 0;
   let disposed = false;
   let rebuilding = Promise.resolve();
   const state = {
@@ -286,11 +288,16 @@ export async function mountStadiumStage({
       const oldStage = stage;
       const webglCanvas = createCanvas(element);
       const size = dimensions(element);
+      lastWidth = size.width;
+      lastHeight = size.height;
       const options = {
         canvas: webglCanvas,
         scene: blackboxScene(state.scene),
         ...size,
         drawPitch: true,
+        rules: mode === 'editor'
+          ? {...mod.RULES, seatPitch: .8, rowPitch: 1}
+          : mod.RULES,
         view: state.camera,
         orbit: state.orbit,
         lighting: state.day ? 'day' : 'night',
@@ -310,7 +317,10 @@ export async function mountStadiumStage({
           );
         }
       }
-      if (stage.renderer) stage.renderer.toneMappingExposure = state.exposure;
+      if (stage.renderer) {
+        stage.renderer.toneMapping = THREE.LinearToneMapping;
+        stage.renderer.toneMappingExposure = state.exposure;
+      }
       stage.render();
       oldStage?.dispose();
       element.parentElement?.classList.add('stage-three');
@@ -331,6 +341,32 @@ export async function mountStadiumStage({
       return rebuilding;
     };
 
+    const updateOrbitCamera = orbitPatch => {
+      if (!stage?.camera || state.camera !== 'orbit') return false;
+      state.orbit = {...state.orbit, ...orbitPatch};
+      const targetY = state.orbit.targetZ;
+      const currentRadius = Math.hypot(
+        stage.camera.position.x,
+        stage.camera.position.y - targetY,
+        stage.camera.position.z,
+      );
+      const radius = state.orbit.distance || currentRadius;
+      const azimuth = state.orbit.azimuth * Math.PI / 180;
+      const elevation = state.orbit.elevation * Math.PI / 180;
+      stage.camera.fov = state.orbit.fov;
+      stage.camera.aspect = dimensions(element).width / dimensions(element).height;
+      THREE.PerspectiveCamera.prototype.updateProjectionMatrix.call(stage.camera);
+      stage.camera.position.set(
+        Math.sin(azimuth) * Math.cos(elevation) * radius,
+        Math.sin(elevation) * radius + targetY,
+        Math.cos(azimuth) * Math.cos(elevation) * radius,
+      );
+      stage.camera.lookAt(0, targetY, 0);
+      stage.camera.updateMatrixWorld(true);
+      stage.render();
+      return true;
+    };
+
     await build();
 
     let drag = null;
@@ -346,21 +382,7 @@ export async function mountStadiumStage({
       state.orbit.elevation = Math.max(8, Math.min(
         78, drag.elevation - (event.clientY - drag.y) * .18,
       ));
-      const targetY = state.orbit.targetZ;
-      const radius = Math.hypot(
-        stage.camera.position.x,
-        stage.camera.position.y - targetY,
-        stage.camera.position.z,
-      );
-      const azimuth = state.orbit.azimuth * Math.PI / 180;
-      const elevation = state.orbit.elevation * Math.PI / 180;
-      stage.camera.position.set(
-        Math.sin(azimuth) * Math.cos(elevation) * radius,
-        Math.sin(elevation) * radius + state.orbit.targetZ,
-        Math.cos(azimuth) * Math.cos(elevation) * radius,
-      );
-      stage.camera.lookAt(0, state.orbit.targetZ, 0);
-      stage.render();
+      updateOrbitCamera(state.orbit);
     });
     element.addEventListener('pointerup', () => { drag = null; });
     element.addEventListener('wheel', event => {
@@ -369,15 +391,18 @@ export async function mountStadiumStage({
       state.orbit.fov = Math.max(24, Math.min(
         72, state.orbit.fov * Math.exp(event.deltaY * .001),
       ));
-      clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => rebuild({}).catch(() => {}), 80);
+      updateOrbitCamera({fov: state.orbit.fov});
     }, {passive: false});
     element.addEventListener('dblclick', () => {
       state.orbit = {azimuth: 40, elevation: 32, distance: 0, fov: 38, targetZ: 8};
-      rebuild({}).catch(() => {});
+      updateOrbitCamera(state.orbit);
     });
 
     const observer = new ResizeObserver(() => {
+      const size = dimensions(element);
+      if (!element.offsetParent || (size.width === lastWidth && size.height === lastHeight)) {
+        return;
+      }
       clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(() => rebuild({}).catch(() => {}), 120);
     });
@@ -390,12 +415,18 @@ export async function mountStadiumStage({
         const patch = {...next};
         if ('floodlight' in patch && !('day' in patch)) patch.day = !patch.floodlight;
         if ('camera' in patch) patch.camera = cameraName(patch.camera);
-        const onlyExposure = Object.keys(patch).every(key => key === 'exposure');
+        const keys = Object.keys(patch);
+        const onlyExposure = keys.every(key => key === 'exposure');
         if (onlyExposure && stage?.renderer) {
           state.exposure = Number(patch.exposure) || 1;
           stage.renderer.toneMappingExposure = state.exposure;
           stage.render();
           return Promise.resolve();
+        }
+        const onlyOrbit = keys.length > 0 && keys.every(key => key === 'orbit');
+        if (onlyOrbit) {
+          if (state.camera !== 'orbit') return Promise.resolve();
+          if (updateOrbitCamera(patch.orbit || {})) return Promise.resolve();
         }
         return rebuild(patch);
       },
