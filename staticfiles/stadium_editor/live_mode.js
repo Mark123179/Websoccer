@@ -1,5 +1,6 @@
 const SCHEMA = 'websoccer.stadium-live-scene';
 const EPSILON = 1e-7;
+import {mountStadiumStage} from './stadium_stage_adapter.js';
 
 export function bilinearPoint(quad, u, v) {
   const [frontLeft, frontRight, backRight, backLeft] = quad;
@@ -421,13 +422,73 @@ export class StadiumLiveRenderer {
   }
 }
 
+export class StadiumCanvasErrorRenderer {
+  constructor(canvas, error) {
+    this.canvas = canvas;
+    this.error = error;
+    this.render();
+    if (typeof ResizeObserver !== 'undefined') {
+      this.observer = new ResizeObserver(() => this.render());
+      this.observer.observe(canvas);
+    }
+  }
+
+  render() {
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.max(1, this.canvas.clientWidth);
+    const height = Math.max(1, this.canvas.clientHeight);
+    this.canvas.width = Math.round(width * ratio);
+    this.canvas.height = Math.round(height * ratio);
+    const context = this.canvas.getContext('2d', {alpha: false});
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.fillStyle = '#03070c';
+    context.fillRect(0, 0, width, height);
+    context.strokeStyle = 'rgba(34,230,255,.18)';
+    context.strokeRect(width * .15, height * .2, width * .7, height * .6);
+    context.fillStyle = '#8ea2af';
+    context.font = '600 12px system-ui, sans-serif';
+    context.textAlign = 'center';
+    context.fillText('STADIONANSICHT NICHT VERFÜGBAR', width / 2, height / 2 - 4);
+    context.fillStyle = '#607481';
+    context.font = '11px system-ui, sans-serif';
+    context.fillText(this.error?.message || 'Die Live Scene konnte nicht geladen werden.',
+      width / 2, height / 2 + 18);
+  }
+}
+
 async function mount(stage) {
   const status = stage.querySelector('.live-stage__status');
   try {
     const scene = await loadLiveScene(stage.dataset.sceneUrl);
-    new StadiumLiveRenderer(stage.querySelector('canvas'), scene);
+    const canvas = stage.querySelector('canvas');
+    const controls = {
+      camera: stage.dataset.camera || 'orbit',
+      day: stage.dataset.day === 'true',
+      exposure: Number(stage.dataset.exposure || 1),
+    };
+    const mounted = await mountStadiumStage({
+      element: stage.querySelector('[data-stadium-stage]'), canvas, scene, ...controls,
+      mode: stage.dataset.mode || 'live',
+      fallback: fallbackCanvas => new StadiumLiveRenderer(fallbackCanvas, scene),
+    });
+    stage._stadiumStage = mounted;
+    const camera = stage.querySelector('[data-stage-camera]');
+    const day = stage.querySelector('[data-stage-day]');
+    const exposure = stage.querySelector('[data-stage-exposure]');
+    const updateStage = () => {
+      stage.dataset.camera = camera?.value || 'orbit';
+      stage.dataset.day = String(Boolean(day?.checked));
+      stage.dataset.exposure = exposure?.value || '1';
+      if (stage._stadiumStage?.kind === 'three') {
+        stage._stadiumStage.update({camera: stage.dataset.camera, day: day?.checked,
+          floodlight: !day?.checked, exposure: Number(stage.dataset.exposure)}).catch(() => {});
+      }
+    };
+    [camera, day, exposure].filter(Boolean).forEach(control => control.addEventListener('input', updateStage));
     status.hidden = true;
   } catch (error) {
+    stage.classList.add('stage-fallback');
+    new StadiumCanvasErrorRenderer(stage.querySelector('canvas'), error);
     status.textContent = error.message;
     status.classList.add('is-error');
   }

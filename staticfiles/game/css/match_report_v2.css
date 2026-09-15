@@ -104,6 +104,10 @@ button{font-family:inherit}
     linear-gradient(#07111a,#020508);box-shadow:var(--shadow)
 }
 .match-stadium canvas{display:block;width:100%;height:100%;cursor:grab}
+.match-stadium > [data-stadium-stage],.match-stadium > canvas{position:absolute;inset:0}
+.match-stadium > [data-stadium-stage]{z-index:0}
+.match-stadium > [data-stadium-stage] canvas{position:absolute;width:100%;height:100%}
+.match-stadium.stage-three > canvas{visibility:hidden}
 .match-stadium canvas:active{cursor:grabbing}
 .match-stadium .live-stage__header{
   position:absolute;left:24px;top:20px;display:flex;flex-direction:column;

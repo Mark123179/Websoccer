@@ -369,10 +369,14 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 .mp-tlticket-clubband {
     position: absolute; top: 0; left: 0; display: flex; align-items: center;
-    justify-content: space-between; width: 100%; height: 13px; padding: 0 7px;
+    justify-content: center; width: 100%; height: 13px; padding: 0 7px;
     color: #fff5e2; background: var(--mp-tlticket-band);
     font: 800 5.5px/1 ui-monospace, SFMono-Regular, monospace;
     letter-spacing: .06em; text-transform: uppercase;
+}
+.mp-tlticket-title {
+    display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; text-align: center;
 }
 .mp-tlticket-competition {
     position: absolute; top: 17px; right: 7px; left: 7px; display: flex;
@@ -388,27 +392,22 @@ body.manager-profile-page .nav-menu a:first-child {
 }
 .mp-tlticket-competition time { flex-shrink: 0; color: rgba(255,245,226,.62); }
 .mp-tlticket-score {
-    position: absolute; top: 29px; right: 6px; left: 6px; display: grid;
-    grid-template-columns: 1fr auto 1fr; align-items: center; gap: 5px;
+    position: absolute; top: 24px; right: 9px; left: 9px; display: grid;
+    grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
     color: #fff8e9;
 }
 .mp-tlticket-team {
-    display: flex; align-items: center; min-width: 0; gap: 3px;
-    overflow: hidden; font-size: 6px; font-weight: 800; line-height: 1;
-}
-.mp-tlticket-team > span:not(.mp-tlticket-crest) {
-    min-width: 0; overflow: hidden; text-overflow: ellipsis;
-    white-space: nowrap;
+    display: flex; align-items: center; justify-content: center; min-width: 0;
+    overflow: visible; line-height: 1;
 }
 .mp-tlticket-score-value {
-    color: #fff4d5; font: 800 23px/.85 "Space Mono", ui-monospace, monospace;
+    color: #fff4d5; font: 900 42px/.82 "Space Mono", ui-monospace, monospace;
     letter-spacing: -.1em; text-shadow: 0 2px 8px rgba(0,0,0,.4);
 }
-.mp-tlticket-team--away { justify-content: flex-end; text-align: right; }
 .mp-tlticket-crest {
-    display: grid; place-items: center; width: 13px; height: 13px; flex: 0 0 13px;
+    display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px;
     color: #fff8e9; border: 1px solid currentColor; border-radius: 50%;
-    font: 800 4px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -.04em;
+    font: 800 9px/1 ui-monospace, SFMono-Regular, monospace; letter-spacing: -.04em;
 }
 img.mp-tlticket-crest {
     object-fit: contain; border: 0; border-radius: 0;
@@ -432,6 +431,10 @@ img.mp-tlticket-crest {
     align-items: center; padding: 7px 4px 4px; color: #18252b;
     background: #f4eee2; border-left: 0;
 }
+.mp-tlticket-stub-competition {
+    display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 22px;
+    object-fit: contain; color: #18252b;
+}
 .mp-tlticket-stub-label {
     color: #18252b; font: 800 5px/1 ui-monospace, SFMono-Regular, monospace;
     letter-spacing: .08em; text-align: center; writing-mode: vertical-rl;
@@ -439,7 +442,7 @@ img.mp-tlticket-crest {
     position: absolute; top: 7px; left: 4px;
 }
 .mp-tlticket-barcode {
-    width: 22px; height: 39px; margin-top: 2px;
+    width: 22px; height: 27px; margin-top: 4px;
     background: repeating-linear-gradient(90deg, #18252b 0 1px, transparent 1px 3px, #18252b 3px 5px, transparent 5px 7px);
 }
 .mp-tlticket-stub code {

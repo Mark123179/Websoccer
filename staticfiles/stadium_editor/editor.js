@@ -53,11 +53,15 @@ function nearestColor(r,g,b){
 
 /* ── Daten & Zustand ──────────────────────────────────────────── */
 let D, blocks, seatData, baseData, texCache;
+let baseDisplayCapacity = 0, baseBlockCapacity = 0;
+let designBlockShape = new Map();
+let baseBlockGeometry = new Map();
 let pressings = [];            // gepresste Objekte
 let pressId = 1;
 const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
 let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
+let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
 let blickrichtung = 'NORD';
 let overlay = null;                               // {kind:'text'|'image', canvas, wx, wy, scale, rot}
 const undoStack = [], redoStack = [];
@@ -70,8 +74,14 @@ function renderableBlock(block, index){
   const capacity = geometryRows * geometrySeats;
   const seats = geometrySeats;
   const rows = geometryRows;
+  const canonicalId = Number(block.sourceId ?? block.id);
+  const sourceId = block.simulated || !Number.isInteger(canonicalId)
+    ? null
+    : canonicalId;
   return Object.assign({}, block, {
-    id: Number.isInteger(Number(block.id)) ? Number(block.id) : index,
+    id: index,
+    sourceId,
+    lineageId: block.lineageId ?? sourceId,
     geometryRows,
     geometrySeats,
     capacity,
@@ -98,13 +108,39 @@ function resize(){
 }
 /* Welt → Screen (2D): Stadion mittig, Blaupause sichtbar */
 let SC = 1, CX = 0, CY = 0;
+function stadiumMaxRadius(){
+  const configured = Number(D?.meta?.maxR);
+  const center = D?.meta?.fieldC || [D?._cx || 0, D?._cy || 0];
+  const points = [
+    ...(D?.outline || []),
+    ...(blocks || []).flatMap(block => block.quad || []),
+  ];
+  const derived = Math.max(1, ...points.map(point =>
+    Math.hypot(point[0] - center[0], point[1] - center[1])));
+  return Number.isFinite(configured) && configured > 0
+    ? Math.max(configured, derived)
+    : derived;
+}
 function fitView(){
-  const R = 430 * (D ? D.meta.maxR/138 : 1);      // relative Stadiongröße konstant halten
+  const R = 430 * (D ? stadiumMaxRadius()/138 : 1); // relative Stadiongröße konstant halten
   SC = Math.min(W, H) / (2*R) * 1.55;
   CX = W/2; CY = H/2 + 6;
 }
 const w2s = (x,y) => [CX + x*SC, CY - y*SC];
 const s2w = (px,py) => [(px-CX)/SC, (CY-py)/SC];
+function editorBackground(){
+  const legacy = D?.bg || {};
+  const live = D?.surroundings || {};
+  return {
+    green: legacy.green || live.green || [],
+    water: legacy.water || live.water || [],
+    roads: legacy.roads || live.roads || [],
+    buildings: (legacy.buildings || live.buildings || [])
+      .map(building => Array.isArray(building) ? building : building.poly)
+      .filter(Array.isArray),
+    trees: legacy.trees || live.trees || [],
+  };
+}
 
 /* ── Geometrie-Helfer ─────────────────────────────────────────── */
 function quadPoint(q, u, v){                      // v=0 innen (D-C), v=1 außen (A-B)
@@ -137,7 +173,7 @@ function restoreSavedDesign(savedDesign){
     PAL_LAB = PAL_RGB.map(c => rgb2lab(...c));
   }
   if(!Array.isArray(savedDesign.blocks)) return;
-  const indices = new Map(blocks.map((block, index) => [block.id, index]));
+  const indices = new Map(blocks.map((block, index) => [block.sourceId, index]));
   for(const saved of savedDesign.blocks){
     const index = indices.get(Number(saved.id));
     if(!Number.isInteger(index) || !seatData[index] || !Array.isArray(saved.rle)) continue;
@@ -154,9 +190,18 @@ function restoreSavedDesign(savedDesign){
 function initStadium(stadium, savedDesign){
   D = stadium;
   blocks = D.blocks.map(renderableBlock);
+  baseBlockCapacity = blocks.reduce((total, block) => total + block.capacity, 0);
+  baseDisplayCapacity = Number(D.capacity_total || D.meta.capacity || baseBlockCapacity);
+  designBlockShape = new Map(blocks.map(block => [
+    block.sourceId, {rows:block.rows, seats:block.seats},
+  ]));
+  baseBlockGeometry = new Map(blocks.map(block => [
+    block.sourceId, structuredClone(block),
+  ]));
   seatData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   baseData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   restoreSavedDesign(savedDesign);
+  baseData = seatData.map(data => data.slice());
   pressings = [];
   texCache = blocks.map(b => {
     const c = document.createElement('canvas');
@@ -170,11 +215,19 @@ function initStadium(stadium, savedDesign){
   undoStack.length = 0; redoStack.length = 0;
   fillPreviewCache.clear();
   if(document.getElementById('pressList')) syncPressList();
-  const title = document.getElementById('stadiumTitle');
-  if(title) title.innerHTML =
-    `${D.meta.name} <span>${D.meta.club || ''} · ${Number(D.capacity_total || D.meta.capacity || 0).toLocaleString('de-DE')} Plätze</span>`;
+  syncStadiumTitle();
   if(typeof syncUndoButtons==='function') syncUndoButtons();
   if(typeof syncSel==='function') syncSel();
+}
+function previewCapacity(){
+  const currentBlockCapacity = blocks.reduce(
+    (total, block) => total + block.capacity, 0);
+  return baseDisplayCapacity + currentBlockCapacity - baseBlockCapacity;
+}
+function syncStadiumTitle(){
+  const title = document.getElementById('stadiumTitle');
+  if(title) title.innerHTML =
+    `${D.meta.name} <span>${D.meta.club || ''} · ${previewCapacity().toLocaleString('de-DE')} Plätze</span>`;
 }
 function updateTexture(i){
   const b = blocks[i], c = texCache[i], ctx = c.getContext('2d');
@@ -251,6 +304,7 @@ function drawBlockDots(ctx, i, proj){
 /* ── Basis-Layer: Blaupause + Spielfeld ───────────────────────── */
 function renderBase(){
   const ctx = cvBase.getContext('2d');
+  const bg = editorBackground();
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#03070c'; ctx.fillRect(0,0,W,H);
   // dezentes Raster
@@ -259,16 +313,16 @@ function renderBase(){
   for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
   const path = pts => { ctx.beginPath(); pts.forEach((p,i)=>{const s=w2s(p[0],p[1]); i?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]);}); };
   // Grün
-  for(const g of D.bg.green){ path(g); ctx.closePath(); ctx.fillStyle='rgba(48,242,156,.045)'; ctx.fill(); }
+  for(const g of bg.green || []){ path(g); ctx.closePath(); ctx.fillStyle='rgba(48,242,156,.045)'; ctx.fill(); }
   // Wasser
-  for(const g of D.bg.water){ path(g); ctx.closePath(); ctx.fillStyle='rgba(34,140,255,.08)'; ctx.fill(); }
+  for(const g of bg.water || []){ path(g); ctx.closePath(); ctx.fillStyle='rgba(34,140,255,.08)'; ctx.fill(); }
   // Straßen
-  for(const r of D.bg.roads){
+  for(const r of bg.roads || []){
     path(r.p); ctx.strokeStyle=`rgba(34,230,255,${r.w===3?.30:r.w===2?.22:.13})`;
     ctx.lineWidth=r.w*.9; ctx.stroke();
   }
   // Gebäude
-  for(const g of D.bg.buildings){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
+  for(const g of bg.buildings || []){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
   drawPitch(ctx, w2s, 1);
 }
 function drawPitch(ctx, toScreen, alpha){
@@ -349,8 +403,8 @@ function crownPath(ctx, cx, cy, r, seed){
   ctx.closePath();
 }
 function drawTrees(ctx, toScreen){
-  if(!D.bg.trees) return;
-  for(const t of D.bg.trees){
+  const trees = editorBackground().trees;
+  for(const t of trees){
     const s = toScreen(t[0], t[1]);
     if(s[0]<-14||s[1]<-14||s[0]>W+14||s[1]>H+14) continue;
     const sd = treeSeed(t);
@@ -369,6 +423,20 @@ function drawTrees(ctx, toScreen){
 function renderBlocks(){
   const ctx = cvBlocks.getContext('2d');
   ctx.clearRect(0,0,W,H);
+  if(roofOn){
+    ctx.save();
+    ctx.setLineDash([6,4]);
+    ctx.strokeStyle='rgba(138,145,153,.52)';
+    ctx.lineWidth=1;
+    for(const roof of roofsFor2D()){
+      const p=roof.quad.map(pt=>w2s(pt[0],pt[1]));
+      ctx.beginPath();
+      p.forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   for(let i=0;i<blocks.length;i++){
     const b = blocks[i];
     const p = b.quad.map(pt => w2s(pt[0],pt[1]));
@@ -465,6 +533,7 @@ function fillPreviewTex(id){
 function render3D(){
   const ctx = cvBlocks.getContext('2d');
   const bctx = cvBase.getContext('2d');
+  const bg = editorBackground();
   bctx.clearRect(0,0,W,H); ctx.clearRect(0,0,W,H);
   cvOverlay.getContext('2d').clearRect(0,0,W,H);
   bctx.fillStyle='#03070c'; bctx.fillRect(0,0,W,H);
@@ -472,16 +541,18 @@ function render3D(){
   const yaw = yaw3d*Math.PI/180, tilt = tilt3d*Math.PI/180;
   const cy2 = Math.cos(yaw), sy2 = Math.sin(yaw);
   const cT = Math.cos(tilt), sT = Math.sin(tilt);
-  const S3 = Math.min(W,H)/900 * 1.78 * (138/D.meta.maxR);
+  const S3 = Math.min(W,H)/900 * 1.78 * (138/stadiumMaxRadius());
   const to3 = (x,y,z) => {
     const X = x*cy2 - y*sy2, Y = x*sy2 + y*cy2;
     return [W/2 + X*S3, H/2 + 95 + (Y*cT)*-S3 - z*sT*S3, Y];
   };
+  const finiteProjection = points =>
+    points.every(point => point.every(Number.isFinite));
   // Blaupause flach am Boden
   const path3 = pts => { bctx.beginPath(); pts.forEach((p,i)=>{const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]);}); };
-  for(const g of D.bg.green){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
-  for(const r of D.bg.roads){ path3(r.p); bctx.strokeStyle=`rgba(34,230,255,${r.w===3?.22:.1})`; bctx.lineWidth=r.w*.8; bctx.stroke(); }
-  for(const g of D.bg.buildings){ path3(g); bctx.closePath(); bctx.strokeStyle='rgba(34,230,255,.28)'; bctx.lineWidth=.8; bctx.stroke(); }
+  for(const g of bg.green || []){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
+  for(const r of bg.roads || []){ path3(r.p); bctx.strokeStyle=`rgba(34,230,255,${r.w===3?.22:.1})`; bctx.lineWidth=r.w*.8; bctx.stroke(); }
+  for(const g of bg.buildings || []){ path3(g); bctx.closePath(); bctx.strokeStyle='rgba(34,230,255,.28)'; bctx.lineWidth=.8; bctx.stroke(); }
   // Bodenplatte: schließt Durchblicke bei flachen Winkeln
   bctx.beginPath();
   D.outline.forEach((p,i)=>{ const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]); });
@@ -683,6 +754,7 @@ function render3D(){
         ? Math.max(...blocks.map(bb=>bb.z1)) + 2 : b.z1;
       const p = [ to3(As[0],As[1],zW), to3(Bs[0],Bs[1],zW),
                   to3(Bs[0],Bs[1],0),    to3(As[0],As[1],0) ];
+      if(!finiteProjection(p)) continue;
       const g = ctx.createLinearGradient(0,(p[0][1]+p[1][1])/2, 0,(p[2][1]+p[3][1])/2);
       g.addColorStop(0,'#10222f'); g.addColorStop(1,'#04090e');
       ctx.beginPath();
@@ -713,6 +785,7 @@ function render3D(){
       if(!facesCamera(P,Q)) continue;
       const p = [ to3(P[0],P[1],it.b1.z1), to3(Q[0],Q[1],it.b2.z1),
                   to3(Q[0],Q[1],0),        to3(P[0],P[1],0) ];
+      if(!finiteProjection(p)) continue;
       const g = ctx.createLinearGradient(0,(p[0][1]+p[1][1])/2, 0,(p[2][1]+p[3][1])/2);
       g.addColorStop(0,'#10222f'); g.addColorStop(1,'#04090e');
       ctx.beginPath(); p.forEach((s,q)=> q?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]));
@@ -972,27 +1045,126 @@ function render3D(){
 
 }
 
+/* Keep every module in the editor renderer chain on the entry script's version. */
+const EDITOR_ASSET_URL = new URL(document.currentScript.src);
+function editorModuleUrl(path){
+  const url = new URL(path, EDITOR_ASSET_URL);
+  url.search = EDITOR_ASSET_URL.search;
+  return url.href;
+}
+const STADIUM_STAGE_ADAPTER_URL = editorModuleUrl('./stadium_stage_adapter.js');
+
 /* ── Renderdispatch ───────────────────────────────────────────── */
 function renderAll(){
   if(!D) return;
   if(view==='2d'){ renderBase(); renderBlocks(); renderOverlay(); }
-  else render3D();
+  else {
+    if(!stageAdapter || stageAdapter.kind==='canvas') render3D();
+    scheduleStageDesignUpdate();
+  }
+}
+
+function scheduleStageDesignUpdate(){
+  if(!stageThree || !stageScene) return;
+  clearTimeout(stageUpdateTimer);
+  stageUpdateTimer = setTimeout(()=>{
+    import(STADIUM_STAGE_ADAPTER_URL).then(({applyEditorDesign})=>{
+      const scene = applyEditorDesign(
+        stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
+      if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
+      stageThree.update({
+        scene,
+        camera: document.getElementById('stageCamera')?.value || 'orbit',
+        day: Boolean(document.getElementById('stageDay')?.checked),
+        orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
+      }).catch(useLegacyThreePreview);
+    }).catch(()=>{});
+  }, 180);
+}
+
+function useLegacyThreePreview(){
+  stageThree = null;
+  stageAdapter = null;
+  document.getElementById('stage').classList.remove('stage-three-ready');
+  document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=false);
+  if(view==='3d') render3D();
+}
+
+function activateThreeStage(){
+  if(view!=='3d' || !stageThree) return;
+  document.getElementById('stageThree').style.visibility = 'visible';
+  document.getElementById('stage').classList.add('stage-three-ready');
+  document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=true);
+}
+
+async function ensureThreeStage(){
+  if(stageThree){
+    activateThreeStage();
+    return;
+  }
+  if(stageAdapter || !D) return;
+  const host = document.getElementById('stageThree');
+  if(!host) return;
+  stageAdapter = {kind:'loading'};
+  try{
+    const {mountStadiumStage, applyEditorDesign} =
+      await import(STADIUM_STAGE_ADAPTER_URL);
+    const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
+    if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
+    stageScene = await response.json();
+    const initialScene = applyEditorDesign(
+      stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
+    const mounted = await mountStadiumStage({
+      element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
+      day: false, exposure: 1.1, fallback: ()=>null,
+    });
+    stageAdapter = mounted;
+    if(mounted.kind === 'three'){
+      stageThree = mounted;
+      activateThreeStage();
+    }else{
+      stageAdapter = null;
+    }
+  }catch(_error){
+    stageAdapter = null;
+  }
 }
 
 /* ── Undo / Redo ──────────────────────────────────────────────── */
-function snapshotFull(){
-  undoStack.push({
+function currentSnapshot(){
+  return {
+    blocks: structuredClone(blocks),
     base: baseData.map(a=>a.slice()),
     press: pressings.map(p=>({...p})),
-  });
+  };
+}
+function snapshotFull(){
+  undoStack.push(currentSnapshot());
   if(undoStack.length>30) undoStack.shift();
   redoStack.length = 0; syncUndoButtons();
 }
+function restoreSnapshot(snap){
+  blocks = structuredClone(snap.blocks);
+  baseData = snap.base.map(a=>a.slice());
+  seatData = blocks.map(block=>new Uint8Array(block.rows*block.seats));
+  texCache = blocks.map(block=>{
+    const c=document.createElement('canvas');
+    c.width=block.seats; c.height=block.rows;
+    return c;
+  });
+  pressings = snap.press.map(p=>({...p}));
+  for(const id of [...selection]){
+    if(!blocks[id]) selection.delete(id);
+  }
+  hoverBlock = null;
+  fillPreviewCache.clear();
+  fitView();
+  syncStadiumTitle();
+}
 function applySnap(stackFrom, stackTo){
   const snap = stackFrom.pop(); if(!snap) return;
-  stackTo.push({ base: baseData.map(a=>a.slice()), press: pressings.map(p=>({...p})) });
-  baseData.forEach((a,i)=>a.set(snap.base[i]));
-  pressings = snap.press.map(p=>({...p}));
+  stackTo.push(currentSnapshot());
+  restoreSnapshot(snap);
   syncUndoButtons(); recompose(); syncPressList();
 }
 function syncUndoButtons(){
@@ -1428,22 +1600,111 @@ function editPressing(id){
   quantizeOverlay(); buildPreview(); renderOverlay(); syncPressButton();
   toast('Zum Bearbeiten geladen — PRESSEN übernimmt es wieder.');
 }
-/* ── AUSBAU (Mechanik C): Reihen an den äußersten Rang, dann neuer Rang ── */
+/* ── AUSBAU: gemeinsame geometrische Sektoren + flüchtige Ränge ── */
 const MAX_ROWS = 42;
-function standCenter(){ return [D._cx, D._cy]; }
-function outerTierOf(stand, seatType){
-  const cand = blocks.filter(b=>b.stand===stand && b.type===seatType);
-  if(!cand.length) return null;
-  const [cx,cy] = standCenter();
-  const rad = b => { const m = quadPoint(b.quad,.5,1); return Math.hypot(m[0]-cx,m[1]-cy); };
-  const byTier = {};
-  for(const b of cand){ (byTier[b.tier]=byTier[b.tier]||[]).push(b); }
-  let best=null, bestR=-1;
-  for(const t in byTier){
-    const r = byTier[t].reduce((a,b)=>a+rad(b),0)/byTier[t].length;
-    if(r>bestR){ bestR=r; best=byTier[t]; }
+const MAX_PREVIEW_CAPACITY = 150000;
+const MIN_EXPANSION_SEATS = 1000;
+const EXPANSION_SECTOR_HALF_ANGLE = Math.PI/3;
+function pitchLocal(point){
+  const [cx,cy] = D?.meta?.fieldC || [D?._cx || 0,D?._cy || 0];
+  const theta = Number(D?.meta?.axisTheta) || 0;
+  const dx=point[0]-cx, dy=point[1]-cy, ct=Math.cos(theta), st=Math.sin(theta);
+  return [dx*ct+dy*st, -dx*st+dy*ct];
+}
+function angleDistance(left,right){
+  return Math.abs(((left-right)+Math.PI*3)%(Math.PI*2)-Math.PI);
+}
+function blockExpansionInfo(block){
+  const outer=quadPoint(block.quad,.5,1), inner=quadPoint(block.quad,.5,0);
+  const center=block.quad.reduce((sum,point)=>[
+    sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
+  const localOuter=pitchLocal(outer), localInner=pitchLocal(inner);
+  const localCenter=pitchLocal(center);
+  return {
+    block, outer, inner,
+    angle:Math.atan2(localCenter[1],localCenter[0]),
+    radius:Math.hypot(localOuter[0],localOuter[1]),
+  };
+}
+function outerEnvelope(sourceBlocks=blocks){
+  const info=sourceBlocks.map(blockExpansionInfo);
+  return info.filter(candidate=>!info.some(other=>{
+    if(other===candidate || Number(other.block.z0)<=Number(candidate.block.z0)) return false;
+    return Math.hypot(
+      candidate.outer[0]-other.inner[0],
+      candidate.outer[1]-other.inner[1],
+    ) < 12;
+  })).map(item=>item.block);
+}
+function standAngle(stand){
+  const labelled=[...baseBlockGeometry.values()]
+    .filter(block=>block.stand===stand)
+    .map(block=>blockExpansionInfo(block).angle);
+  if(!labelled.length) return null;
+  const vector=labelled.reduce((sum,angle)=>[
+    sum[0]+Math.cos(angle),sum[1]+Math.sin(angle)],[0,0]);
+  return Math.atan2(vector[1],vector[0]);
+}
+function expansionEnvelope(stand){
+  const center=standAngle(stand);
+  if(!Number.isFinite(center)) return [];
+  return outerEnvelope().filter(block=>
+    angleDistance(blockExpansionInfo(block).angle,center)<=EXPANSION_SECTOR_HALF_ANGLE);
+}
+function previewRoofs(){
+  const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
+  if(!roofs.length) return null;
+  if(!baseBlockGeometry.size) return roofs;
+  const baseline=outerEnvelope([...baseBlockGeometry.values()]);
+  if(!baseline.length) return roofs;
+  const currentByLineage=new Map();
+  for(const block of blocks){
+    const key=block.lineageId ?? block.sourceId;
+    if(key===null || key===undefined) continue;
+    const current=currentByLineage.get(key);
+    if(!current || blockExpansionInfo(block).radius>blockExpansionInfo(current).radius){
+      currentByLineage.set(key,block);
+    }
   }
-  return best;
+  return roofs.map(roof=>{
+    if(!Array.isArray(roof.quad) || roof.quad.length!==4) return roof;
+    const center=roof.quad.reduce((sum,point)=>[
+      sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
+    const local=pitchLocal(center);
+    const angle=Math.atan2(local[1],local[0]);
+    const base=baseline.reduce((best,block)=>
+      !best || angleDistance(blockExpansionInfo(block).angle,angle) <
+      angleDistance(blockExpansionInfo(best).angle,angle) ? block : best,null);
+    const current=currentByLineage.get(base.lineageId ?? base.sourceId) || base;
+    const baseEdge=[base.quad[0],base.quad[1]];
+    const currentEdge=[current.quad[0],current.quad[1]];
+    const edgeDx=baseEdge[1][0]-baseEdge[0][0];
+    const edgeDy=baseEdge[1][1]-baseEdge[0][1];
+    const edgeLengthSq=edgeDx*edgeDx+edgeDy*edgeDy || 1;
+    const dz=Number(current.z1)-Number(base.z1);
+    const movedQuad=roof.quad.map(point=>{
+      const t=Math.max(0,Math.min(1,
+        ((point[0]-baseEdge[0][0])*edgeDx+(point[1]-baseEdge[0][1])*edgeDy) /
+        edgeLengthSq));
+      const dx=(currentEdge[0][0]-baseEdge[0][0])*(1-t) +
+        (currentEdge[1][0]-baseEdge[1][0])*t;
+      const dy=(currentEdge[0][1]-baseEdge[0][1])*(1-t) +
+        (currentEdge[1][1]-baseEdge[1][1])*t;
+      return [point[0]+dx,point[1]+dy];
+    });
+    const movement=movedQuad.reduce((total,point,index)=>total+
+      Math.hypot(point[0]-roof.quad[index][0],point[1]-roof.quad[index][1]),0);
+    if(movement+Math.abs(dz)<1e-7) return roof;
+    return {
+      ...roof,
+      quad:movedQuad,
+      heights:(roof.heights || []).map(height=>Number(height)+dz),
+      simulated:true,
+    };
+  });
+}
+function roofsFor2D(){
+  return previewRoofs() || [];
 }
 function growBlockRows(i, add){
   const b = blocks[i];
@@ -1457,19 +1718,25 @@ function growBlockRows(i, add){
   nb.set(baseData[i]);                              // alte Reihen bleiben, neue = 0 (Beton)
   baseData[i] = nb;
   b.rows += add;
+  b.geometryRows = b.rows;
   b.capacity += add * b.seats;
   const c = texCache[i]; c.width = b.seats; c.height = b.rows;
   seatData[i] = new Uint8Array(b.rows*b.seats);
 }
 function addNewTier(refBlocks, seatType, rows){
-  const tierName = 'RANG' + (new Set(blocks.map(b=>b.tier)).size + 1);
   for(const rb of refBlocks){
+    const level=(Number(rb.previewLevel)||0)+1;
+    const lineage=rb.lineageId ?? rb.sourceId ?? rb.id;
+    const tierName=`AUSBAU${level}`;
     const [A,B] = rb.quad;
     const dL = [(rb.quad[0][0]-rb.quad[3][0])/rb.rows, (rb.quad[0][1]-rb.quad[3][1])/rb.rows];
     const dR = [(rb.quad[1][0]-rb.quad[2][0])/rb.rows, (rb.quad[1][1]-rb.quad[2][1])/rb.rows];
     const slope = (rb.z1-rb.z0)/rb.rows || .77;
     const nb = {
-      id: blocks.length, tier: tierName, stand: rb.stand,
+      id: blocks.length, tier: tierName, stand: rb.stand, order:rb.order,
+      previewId: `preview-${lineage}-${level}-${seatType}`,
+      simulated: true,
+      lineageId:lineage, previewLevel:level, supportZ:Number(rb.z1),
       rows, seats: rb.seats, capacity: rows * rb.seats, type: seatType,
       quad: [ [A[0]+dL[0]*rows, A[1]+dL[1]*rows],
               [B[0]+dR[0]*rows, B[1]+dR[1]*rows],
@@ -1485,50 +1752,48 @@ function addNewTier(refBlocks, seatType, rows){
   }
 }
 function expandStand(stand, seatType, amount){
-  const cap = 120000;
-  if(D.meta.capacity >= cap) { toast('Maximalkapazität 120.000 erreicht.'); return 0; }
-  amount = Math.min(amount, cap - D.meta.capacity);
+  amount = Math.floor(Number(amount) || 0);
+  if(amount < MIN_EXPANSION_SEATS){
+    toast('Ein Ausbau muss mindestens 1.000 Plätze umfassen.');
+    return 0;
+  }
+  const currentCapacity = previewCapacity();
+  if(currentCapacity >= MAX_PREVIEW_CAPACITY){
+    toast('Maximalkapazität 150.000 erreicht.');
+    return 0;
+  }
+  amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
+  const outer=expansionEnvelope(stand);
+  if(!outer.length){
+    toast(`Für ${stand} wurden keine ausbaubaren Tribünensegmente gefunden.`);
+    return 0;
+  }
+  const perRow=outer.reduce((total,block)=>total+block.seats,0);
+  const rows=Math.min(
+    MAX_ROWS,
+    Math.ceil(amount/perRow),
+    Math.floor((MAX_PREVIEW_CAPACITY-currentCapacity)/perRow),
+  );
+  if(rows<1){
+    toast('Für diesen Ausbau ist bis 150.000 Plätze keine vollständige Reihe mehr möglich.');
+    return 0;
+  }
   snapshotFull();
-  let remaining = amount, built = 0;
-  let outer = outerTierOf(stand, seatType);
-  if(outer){
-    const perRow = outer.reduce((a,b)=>a+b.seats,0);
-    const room = Math.min(...outer.map(b=>MAX_ROWS-b.rows));
-    const want = Math.ceil(remaining/perRow);
-    const add = Math.max(0, Math.min(room, want));
-    if(add>0){
-      for(const b of outer) growBlockRows(b.id, add);
-      built += add*perRow; remaining -= add*perRow;
+  for(const block of outer){
+    let remainingRows=rows;
+    if(block.simulated && block.type===seatType){
+      const available=Math.max(0,MAX_ROWS-block.rows);
+      const grow=Math.min(available,remainingRows);
+      if(grow){
+        growBlockRows(blocks.indexOf(block),grow);
+        remainingRows-=grow;
+      }
     }
+    if(remainingRows) addNewTier([block],seatType,remainingRows);
   }
-  if(remaining > 0){
-    /* neuer Rang über dem äußersten Rang der Tribüne (egal welcher Sitzart) */
-    const [cx,cy] = standCenter();
-    const rad = b => { const m = quadPoint(b.quad,.5,1); return Math.hypot(m[0]-cx,m[1]-cy); };
-    const standBlocks = blocks.filter(b=>b.stand===stand);
-    const byTier = {};
-    for(const b of standBlocks){ (byTier[b.tier]=byTier[b.tier]||[]).push(b); }
-    let ref=null, bestR=-1;
-    for(const t in byTier){
-      const r = byTier[t].reduce((a,b)=>a+rad(b),0)/byTier[t].length;
-      if(r>bestR){ bestR=r; ref=byTier[t]; }
-    }
-    const perRow = ref.reduce((a,b)=>a+b.seats,0);
-    let rows = Math.min(MAX_ROWS, Math.max(4, Math.ceil(remaining/perRow)));
-    // Tiefe deckeln: neuer Rang darf die Nachbartribünen um höchstens 35 % überragen
-    const rMaxNb = Math.max(...blocks.filter(b=>b.stand!==stand).map(rad));
-    const rRef = Math.max(...ref.map(rad));
-    const stepPerRow = Math.max(.4, (rRef - Math.min(...ref.map(b=>{
-      const m = quadPoint(b.quad,.5,0); return Math.hypot(m[0]-cx,m[1]-cy); }))) / ref[0].rows);
-    const roomOut = Math.max(6, (rMaxNb*1.35 - rRef) / stepPerRow);
-    rows = Math.min(rows, Math.round(roomOut));
-    addNewTier(ref, seatType, rows);
-    built += rows*perRow; remaining -= rows*perRow;
-  }
-  D.meta.capacity = blocks.reduce((a,b)=>a+b.capacity,0);
-  const title = document.getElementById('stadiumTitle');
-  if(title) title.innerHTML =
-    `${D.meta.name} <span>${D.meta.club} · ${D.meta.capacity.toLocaleString('de-DE')} Plätze</span>`;
+  const built=rows*perRow;
+  fitView();
+  syncStadiumTitle();
   recompose(); syncPressList();
   toast(`Ausbau ${stand}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
   return built;
@@ -1545,18 +1810,21 @@ if(expandButton){
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
   const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
-    blocks: blocks.map((b,i)=>{
-      const d = seatData[i], rle=[];
+    blocks: blocks.flatMap((b,i)=>{
+      if(b.simulated) return [];
+      const shape = designBlockShape.get(b.sourceId);
+      if(!shape) return [];
+      const d = seatData[i].slice(0, shape.rows*shape.seats), rle=[];
       if(d.length){
         let cur=d[0], n=1;
         for(let k=1;k<d.length;k++){ if(d[k]===cur&&n<65535)n++; else{rle.push([n,cur]);cur=d[k];n=1;} }
         rle.push([n,cur]);
       }
-      return {
-        id:b.id, stand:b.stand, tier:(b.tier==='RANG1' ? 'UNTER' : (b.tier==='UNTER' ? 'UNTER' : 'OBER')),
+      return [{
+        id:b.sourceId, stand:b.stand, tier:(b.tier==='RANG1' ? 'UNTER' : (b.tier==='UNTER' ? 'UNTER' : 'OBER')),
         order:b.order,
-        rows:b.rows, seats:b.seats, rle
-      };
+        rows:shape.rows, seats:shape.seats, rle
+      }];
     })};
   const button = document.getElementById('btnSave');
   button.disabled = true;
@@ -1712,24 +1980,48 @@ let r3dPending = false;
 function requestRender3D(){
   if(r3dPending) return;
   r3dPending = true;
-  requestAnimationFrame(()=>{ r3dPending=false; if(view==='3d') render3D(); });
+  requestAnimationFrame(()=>{
+    r3dPending=false;
+    if(view!=='3d') return;
+    if(stageThree){
+      stageThree.update({
+        orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
+      }).catch(useLegacyThreePreview);
+    }else if(!stageAdapter){
+      render3D();
+    }
+  });
 }
 document.getElementById('btn2d').onclick = ()=> setView('2d');
 document.getElementById('btn3d').onclick = ()=> setView('3d');
 document.getElementById('yawSlider').addEventListener('input', e=>{ yaw3d=+e.target.value; requestRender3D(); });
-document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; render3D(); });
+document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; renderAll(); });
 document.getElementById('tiltSlider').addEventListener('input', e=>{ tilt3d=+e.target.value; requestRender3D(); });
+document.getElementById('stageCamera').addEventListener('change', scheduleStageDesignUpdate);
+document.getElementById('stageDay').addEventListener('change', ()=>{
+  if(!stageThree) return;
+  const day = Boolean(document.getElementById('stageDay').checked);
+  stageThree.update({day, exposure: day ? 1.5 : 1.1}).catch(useLegacyThreePreview);
+});
 document.getElementById('btnShot').addEventListener('click', ()=>{
+  if(stageThree?.stage?.renderer?.domElement){
+    stageThree.stage.render();
+    stageThree.stage.renderer.domElement.toBlob(downloadStagePng, 'image/png');
+    return;
+  }
   const c = document.createElement('canvas'); c.width=W; c.height=H;
   const g = c.getContext('2d');
   g.drawImage(cvBase,0,0); g.drawImage(cvBlocks,0,0);
-  c.toBlob(b=>{
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = `${D.meta.name.replace(/\s+/g,'_')}_ansicht.png`; a.click();
-    toast('Ansicht als PNG gespeichert.');
-  }, 'image/png');
+  c.toBlob(downloadStagePng, 'image/png');
 });
+function downloadStagePng(blob){
+  if(!blob) return toast('PNG konnte nicht erstellt werden.');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${D.meta.name.replace(/\s+/g,'_')}_ansicht.png`; a.click();
+  window.setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  toast('Ansicht als PNG gespeichert.');
+}
 function setView(v){
   view = v;
   document.getElementById('btn2d').classList.toggle('active', v==='2d');
@@ -1737,7 +2029,17 @@ function setView(v){
   document.getElementById('rot3d').style.display = v==='3d' ? 'flex' : 'none';
   document.getElementById('toolsPanel').style.opacity = v==='3d' ? .35 : 1;
   document.getElementById('toolsPanel').style.pointerEvents = v==='3d' ? 'none' : 'auto';
+  if(v==='3d'){
+    if(stageThree) activateThreeStage();
+    else ensureThreeStage();
+  }
+  if(v==='2d'){
+    document.getElementById('stageThree').style.visibility = 'hidden';
+    document.querySelectorAll('#cvBase,#cvBlocks,#cvOverlay').forEach(c=>c.hidden=false);
+    document.getElementById('stage').classList.remove('stage-three-ready');
+  }
   renderAll();
+  if(v==='3d') scheduleStageDesignUpdate();
 }
 
 /* Toast */
