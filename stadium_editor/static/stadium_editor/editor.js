@@ -428,7 +428,7 @@ function renderBlocks(){
     ctx.setLineDash([6,4]);
     ctx.strokeStyle='rgba(138,145,153,.52)';
     ctx.lineWidth=1;
-    for(const roof of previewRoofs()){
+    for(const roof of roofsFor2D()){
       const p=roof.quad.map(pt=>w2s(pt[0],pt[1]));
       ctx.beginPath();
       p.forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));
@@ -1059,7 +1059,7 @@ function scheduleStageDesignUpdate(){
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
-    import('./stadium_stage_adapter.js?v=19').then(({applyEditorDesign})=>{
+    import('./stadium_stage_adapter.js?v=22').then(({applyEditorDesign})=>{
       const scene = applyEditorDesign(
         stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
@@ -1099,7 +1099,7 @@ async function ensureThreeStage(){
   stageAdapter = {kind:'loading'};
   try{
     const {mountStadiumStage, applyEditorDesign} =
-      await import('./stadium_stage_adapter.js?v=19');
+      await import('./stadium_stage_adapter.js?v=22');
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
     if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
     stageScene = await response.json();
@@ -1596,7 +1596,6 @@ const MAX_ROWS = 42;
 const MAX_PREVIEW_CAPACITY = 150000;
 const MIN_EXPANSION_SEATS = 1000;
 const EXPANSION_SECTOR_HALF_ANGLE = Math.PI/3;
-const STAND_ANGLES = {SUED:0, OST:Math.PI/2, NORD:Math.PI, WEST:-Math.PI/2};
 function pitchLocal(point){
   const [cx,cy] = D?.meta?.fieldC || [D?._cx || 0,D?._cy || 0];
   const theta = Number(D?.meta?.axisTheta) || 0;
@@ -1628,15 +1627,25 @@ function outerEnvelope(sourceBlocks=blocks){
     ) < 12;
   })).map(item=>item.block);
 }
+function standAngle(stand){
+  const labelled=[...baseBlockGeometry.values()]
+    .filter(block=>block.stand===stand)
+    .map(block=>blockExpansionInfo(block).angle);
+  if(!labelled.length) return null;
+  const vector=labelled.reduce((sum,angle)=>[
+    sum[0]+Math.cos(angle),sum[1]+Math.sin(angle)],[0,0]);
+  return Math.atan2(vector[1],vector[0]);
+}
 function expansionEnvelope(stand){
-  const center=STAND_ANGLES[stand];
+  const center=standAngle(stand);
   if(!Number.isFinite(center)) return [];
   return outerEnvelope().filter(block=>
     angleDistance(blockExpansionInfo(block).angle,center)<=EXPANSION_SECTOR_HALF_ANGLE);
 }
 function previewRoofs(){
   const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
-  if(!roofs.length || !baseBlockGeometry.size) return roofs;
+  if(!roofs.length) return null;
+  if(!baseBlockGeometry.size) return roofs;
   const baseline=outerEnvelope([...baseBlockGeometry.values()]);
   if(!baseline.length) return roofs;
   const currentByLineage=new Map();
@@ -1658,18 +1667,35 @@ function previewRoofs(){
       !best || angleDistance(blockExpansionInfo(block).angle,angle) <
       angleDistance(blockExpansionInfo(best).angle,angle) ? block : best,null);
     const current=currentByLineage.get(base.lineageId ?? base.sourceId) || base;
-    const baseOuter=quadPoint(base.quad,.5,1);
-    const currentOuter=quadPoint(current.quad,.5,1);
-    const dx=currentOuter[0]-baseOuter[0], dy=currentOuter[1]-baseOuter[1];
+    const baseEdge=[base.quad[0],base.quad[1]];
+    const currentEdge=[current.quad[0],current.quad[1]];
+    const edgeDx=baseEdge[1][0]-baseEdge[0][0];
+    const edgeDy=baseEdge[1][1]-baseEdge[0][1];
+    const edgeLengthSq=edgeDx*edgeDx+edgeDy*edgeDy || 1;
     const dz=Number(current.z1)-Number(base.z1);
-    if(Math.abs(dx)+Math.abs(dy)+Math.abs(dz)<1e-7) return roof;
+    const movedQuad=roof.quad.map(point=>{
+      const t=Math.max(0,Math.min(1,
+        ((point[0]-baseEdge[0][0])*edgeDx+(point[1]-baseEdge[0][1])*edgeDy) /
+        edgeLengthSq));
+      const dx=(currentEdge[0][0]-baseEdge[0][0])*(1-t) +
+        (currentEdge[1][0]-baseEdge[1][0])*t;
+      const dy=(currentEdge[0][1]-baseEdge[0][1])*(1-t) +
+        (currentEdge[1][1]-baseEdge[1][1])*t;
+      return [point[0]+dx,point[1]+dy];
+    });
+    const movement=movedQuad.reduce((total,point,index)=>total+
+      Math.hypot(point[0]-roof.quad[index][0],point[1]-roof.quad[index][1]),0);
+    if(movement+Math.abs(dz)<1e-7) return roof;
     return {
       ...roof,
-      quad:roof.quad.map(point=>[point[0]+dx,point[1]+dy]),
+      quad:movedQuad,
       heights:(roof.heights || []).map(height=>Number(height)+dz),
       simulated:true,
     };
   });
+}
+function roofsFor2D(){
+  return previewRoofs() || [];
 }
 function growBlockRows(i, add){
   const b = blocks[i];

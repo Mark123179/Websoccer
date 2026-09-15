@@ -4,7 +4,7 @@
  */
 export const STADIUM_STAGE_CONFIG = Object.freeze({
   enabled: true,
-  module: './stage/stadium_stage.js',
+  module: './stage/stadium_stage.js?v=22',
 });
 
 let stageModulePromise;
@@ -139,6 +139,39 @@ function canonicalEditorQuad(block, geometry, fallback) {
   return order.map(index => transformed[index]);
 }
 
+function pointSegmentProjection(point, left, right) {
+  const dx = right[0] - left[0];
+  const dy = right[1] - left[1];
+  const lengthSq = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1,
+    ((point[0] - left[0]) * dx + (point[1] - left[1]) * dy) / lengthSq,
+  ));
+  const projected = [left[0] + dx * t, left[1] + dy * t];
+  return {t, distance: Math.hypot(point[0] - projected[0], point[1] - projected[1])};
+}
+
+function conformExteriorPoint(point, baselineBlocks, currentByLineage) {
+  let nearest = null;
+  for (const baseline of baselineBlocks) {
+    const projection = pointSegmentProjection(point, baseline.quad[3], baseline.quad[2]);
+    if (!nearest || projection.distance < nearest.projection.distance) {
+      nearest = {baseline, projection};
+    }
+  }
+  if (!nearest || nearest.projection.distance > 35) return point;
+  const current = currentByLineage.get(String(nearest.baseline.id));
+  if (!current || current === nearest.baseline) return point;
+  const t = nearest.projection.t;
+  const baseLeft = nearest.baseline.quad[3], baseRight = nearest.baseline.quad[2];
+  const nextLeft = current.quad[3], nextRight = current.quad[2];
+  return [
+    point[0] + (nextLeft[0] - baseLeft[0]) * (1 - t) +
+      (nextRight[0] - baseRight[0]) * t,
+    point[1] + (nextLeft[1] - baseLeft[1]) * (1 - t) +
+      (nextRight[1] - baseRight[1]) * t,
+  ];
+}
+
 export function applyEditorDesign(
   scene, blocks, seatData, palette, geometry = null, previewCapacity = null,
   previewRoofs = null,
@@ -175,6 +208,7 @@ export function applyEditorDesign(
     return {
       ...target,
       id: sceneId,
+      lineageId: block.lineageId ?? block.sourceId ?? block.id,
       stand: block.stand,
       tier: block.tier,
       order: block.order ?? target.order ?? sourceIndex,
@@ -199,7 +233,7 @@ export function applyEditorDesign(
   next.capacity = Number.isFinite(Number(previewCapacity))
     ? Number(previewCapacity)
     : renderedCapacity;
-  if (Array.isArray(previewRoofs)) {
+  if (Array.isArray(previewRoofs) && previewRoofs.length) {
     next.roof = {
       mode: 'explicit',
       segments: previewRoofs.map((segment, index) => ({
@@ -209,6 +243,21 @@ export function applyEditorDesign(
         heights: segment.heights?.map(Number),
       })),
     };
+  }
+  const currentByLineage = new Map();
+  for (const block of next.blocks) {
+    const key = String(block.lineageId ?? block.id);
+    const current = currentByLineage.get(key);
+    const radius = Math.hypot(...midpoint(block));
+    if (!current || radius > Math.hypot(...midpoint(current))) {
+      currentByLineage.set(key, block);
+    }
+  }
+  const baselineBlocks = scene.blocks || [];
+  const conform = point => conformExteriorPoint(point, baselineBlocks, currentByLineage);
+  if (Array.isArray(next.outline)) next.outline = next.outline.map(conform);
+  if (Array.isArray(next.facadeSegments)) {
+    next.facadeSegments = next.facadeSegments.map(edge => edge.map(conform));
   }
   return next;
 }

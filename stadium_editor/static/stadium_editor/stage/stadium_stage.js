@@ -265,6 +265,15 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       const h = Math.min(b.z0 - 0.5, rules.soffitMax);
       pushQuad(P(0, 0, b.z0), P(1, 0, b.z0), P(1, 0, b.z0 - h), P(0, 0, b.z0 - h), rules.soffitColor, true);
     }
+    // Vorschau-Oberränge erhalten eine geschlossene schräge Unterseite bis
+    // zur Auflagerhöhe, ohne eine neue Wand bis zum Boden zu erzeugen.
+    if (wallBase > 0) {
+      pushQuad(
+        P(0, 0, b.z0), P(1, 0, b.z0),
+        P(1, 1, wallBase), P(0, 1, wallBase),
+        rules.soffitColor, true,
+      );
+    }
     // Seitenwände der Blöcke (schließen Stufen seitlich, sichtbar an offenen Ecken)
     for (const side of [0, 1]) {
       pushQuad(P(side, 0, b.z0), P(side, 1, b.z1), P(side, 1, wallBase), P(side, 0, wallBase), rules.wallColor, true);

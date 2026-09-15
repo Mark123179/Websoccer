@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import math
+import subprocess
 import tempfile
 from datetime import timedelta
 from decimal import Decimal
@@ -107,7 +108,10 @@ class StadiumEditorTests(TestCase):
         self.assertIn('previewId: `preview-', editor_js)
         self.assertIn('const sourceId = block.simulated', editor_js)
         self.assertIn('function expansionEnvelope(stand){', editor_js)
+        self.assertIn('function standAngle(stand){', editor_js)
         self.assertIn('function previewRoofs(){', editor_js)
+        self.assertIn('for(const roof of roofsFor2D()){', editor_js)
+        self.assertIn('const movedQuad=roof.quad.map(point=>{', editor_js)
         self.assertIn('lineageId:lineage, previewLevel:level, supportZ:Number(rb.z1)', editor_js)
         self.assertIn('hoverBlock = null;', editor_js)
         self.assertIn('baseData = seatData.map(data => data.slice());', editor_js)
@@ -125,12 +129,29 @@ class StadiumEditorTests(TestCase):
         self.assertIn('Number.isFinite(Number(previewCapacity))', adapter_js)
         self.assertIn('wallBaseZ: Number.isFinite(Number(block.supportZ))', adapter_js)
         self.assertIn("mode: 'explicit'", adapter_js)
+        self.assertIn('function conformExteriorPoint(point, baselineBlocks, currentByLineage)', adapter_js)
+        self.assertIn('next.facadeSegments = next.facadeSegments.map(edge => edge.map(conform))', adapter_js)
         stage_js = (
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stage' / 'stadium_stage.js'
         ).read_text(encoding='utf-8')
         self.assertIn('const wallBase = Number.isFinite(Number(b.wallBaseZ))', stage_js)
         self.assertIn('P(1, 1, wallBase)', stage_js)
+        self.assertIn('P(1, 1, wallBase), P(0, 1, wallBase)', stage_js)
+
+    def test_stage_adapter_roof_fallback_and_expansion_undo_behavior(self):
+        script = (
+            Path(__file__).resolve().parent
+            / 'tests_js'
+            / 'test_stadium_stage_adapter.mjs'
+        )
+        subprocess.run(
+            ['node', '--test', str(script)],
+            cwd=Path(__file__).resolve().parent.parent,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
 
     def test_editor_is_embedded_in_the_global_management_shell(self):
         self.client.force_login(self.user)

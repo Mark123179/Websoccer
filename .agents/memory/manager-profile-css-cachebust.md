@@ -30,5 +30,10 @@ confusing "half the fix works" symptom (new styles present, but the new JS behav
 for the same feature, bump BOTH `?v=` query strings together on every edit to either, even if you
 only touched one of the two files this time.
 
+**Dynamic module chains must be bumped end to end.** A versioned entry script can still load stale
+behavior when it imports an adapter under an older `?v=` or that adapter imports an unversioned
+renderer. Version the template entry, every changed dynamic import, and every changed nested module
+in the same change.
+
 ## Update Juli 2026: DEBUG-No-Store-Middleware
 ?v=-Bump allein reicht nicht, wenn der Client das HTML selbst (mit altem ?v=-Link) aus Browser-/Proxy-Cache lädt. Seitdem: `game.middleware.DevNoCacheMiddleware` (erste Position in MIDDLEWARE, nur bei DEBUG aktiv) setzt `Cache-Control: no-store` auf alle dynamischen Antworten. Statische Dateien laufen in runserver NICHT durch die Middleware — dafür bleibt der ?v=-Bump nötig.
