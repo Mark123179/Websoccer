@@ -103,6 +103,8 @@ class TimelineEntrySubmitTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'mp-tlticket-card')
         self.assertContains(response, 'mp-tlticket-stub-label')
+        self.assertContains(response, 'mp-tlticket-stub-competition')
+        self.assertContains(response, "esc(ev.title || ev.cat || 'FINALE')")
         self.assertNotContains(response, 'FINAL PASS')
         self.assertNotContains(response, 'SAMMLER-EDITION')
         tickets = [
