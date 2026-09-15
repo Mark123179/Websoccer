@@ -288,6 +288,9 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     if (ey.y < 0) ey.negate();
     basis.makeBasis(ex, ey, ez);
     tmpQ.setFromRotationMatrix(basis);
+    tmpQ.multiply(new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0), Math.PI,
+    ));
     for (let i = 0; i < nRows; i++) {
       const v = (i + 0.5) / nRows, zTread = b.z0 + (i / nRows) * rise;
       const row = Math.min(b.rows - 1, Math.floor(v * b.rows));

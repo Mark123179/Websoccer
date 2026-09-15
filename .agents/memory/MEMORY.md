@@ -107,3 +107,4 @@
 - [Turnier-Zustandsautomat testen](tournament-state-machine-testing.md) — Grünpfadtests reichen nicht: Rückspiele, Ausfall-Freilose, Gruppen-H2H und Endplatzierungen separat durchspielen.
 - [Manager-Timeline Ergebnis-Tickets](manager-timeline-result-tickets.md) — jedes Timeline-Ereignis mit Ergebnis ist ein Panorama-Ticket; fehlende Altdaten dürfen das Ticket nicht verhindern.
 - [Automatische Manager-Timeline](automatic-manager-timeline.md) — Systemereignisse brauchen stabile Quellen; Finals nur nach verbindlichem Abschluss und mit Spielzeit-Manager-Snapshot.
+- [Stadionausbau-Vorschauvertrag](stadium-expansion-preview-contract.md) — Baugröße ist absolut statt bestandsproportional; Sitzkamera-Events gehören an das ersetzbare WebGL-Canvas.

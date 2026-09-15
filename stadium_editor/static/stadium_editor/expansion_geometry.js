@@ -98,6 +98,10 @@
     return blocks.flatMap((block, index) => block.simulated ? [] : [{block, index}]);
   }
 
+  function expansionVisualRows(amount) {
+    return Math.max(1, Math.ceil(Math.max(0, Number(amount) || 0) / 1000));
+  }
+
   function stitchRoofSegments(segments, baselineSegments = segments, tolerance = 4) {
     const result = structuredClone(segments);
     const vertices = [];
@@ -143,6 +147,7 @@
     angleDistance,
     blockExpansionInfo,
     expansionEnvelope,
+    expansionVisualRows,
     outerEnvelope,
     pitchLocal,
     persistentBlockEntries,

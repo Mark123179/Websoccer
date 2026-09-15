@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=25',
+            'stadium_editor/editor.js?v=29',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -142,6 +142,13 @@ class StadiumEditorTests(TestCase):
         self.assertIn('const adapterUrl = new URL(import.meta.url);', adapter_js)
         self.assertIn('stageUrl.search = adapterUrl.search;', adapter_js)
         self.assertNotIn('stadium_stage.js?v=', adapter_js)
+        self.assertIn(
+            "webglCanvas.addEventListener('pointerdown', startDrag)",
+            adapter_js,
+        )
+        self.assertIn("window.addEventListener('pointermove', moveDrag)", adapter_js)
+        self.assertIn("state.seatLook.yaw = Math.max(-80", adapter_js)
+        self.assertIn("state.seatLook.pitch = Math.max(-20", adapter_js)
         live_mode_js = (
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'live_mode.js'
@@ -197,6 +204,7 @@ class StadiumEditorTests(TestCase):
         )
         self.assertIn('const support = blockSupportQuads(b);', stage_js)
         self.assertIn('for (const wall of support.sideWalls)', stage_js)
+        self.assertIn('new THREE.Vector3(0, 1, 0), Math.PI', stage_js)
 
     def test_stage_adapter_roof_fallback_and_expansion_undo_behavior(self):
         script = (

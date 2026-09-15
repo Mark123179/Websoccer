@@ -168,6 +168,12 @@ test('adjacent roof seams share their moved position and height', () => {
   assert.equal(stitched[1].heights[0], 12);
 });
 
+test('absolute expansion size maps 10k and 20k to distinct visible rows', () => {
+  assert.equal(geometryApi.expansionVisualRows(10_000), 10);
+  assert.equal(geometryApi.expansionVisualRows(20_000), 20);
+  assert.equal(geometryApi.expansionVisualRows(68_001), 69);
+});
+
 test('preview expansion blocks are restored by undo snapshots and omitted from export', () => {
   const persistent = {id: 1, sourceId: 1, rows: 2, seats: 2};
   const preview = {id: 2, previewId: 'preview-1', simulated: true, rows: 3, seats: 2};
