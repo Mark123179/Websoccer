@@ -97,6 +97,8 @@ class StadiumEditorTests(TestCase):
         self.assertIn('if(stageThree) activateThreeStage();', editor_js)
         self.assertIn('function stadiumMaxRadius(){', editor_js)
         self.assertNotIn('138/D.meta.maxR', editor_js)
+        self.assertIn('function editorBackground(){', editor_js)
+        self.assertIn('D?.surroundings || {}', editor_js)
         self.assertIn('requestAnimationFrame(() => requestAnimationFrame(resize))', editor_js)
 
     def test_editor_is_embedded_in_the_global_management_shell(self):

@@ -114,6 +114,19 @@ function fitView(){
 }
 const w2s = (x,y) => [CX + x*SC, CY - y*SC];
 const s2w = (px,py) => [(px-CX)/SC, (CY-py)/SC];
+function editorBackground(){
+  const legacy = D?.bg || {};
+  const live = D?.surroundings || {};
+  return {
+    green: legacy.green || live.green || [],
+    water: legacy.water || live.water || [],
+    roads: legacy.roads || live.roads || [],
+    buildings: (legacy.buildings || live.buildings || [])
+      .map(building => Array.isArray(building) ? building : building.poly)
+      .filter(Array.isArray),
+    trees: legacy.trees || live.trees || [],
+  };
+}
 
 /* ── Geometrie-Helfer ─────────────────────────────────────────── */
 function quadPoint(q, u, v){                      // v=0 innen (D-C), v=1 außen (A-B)
@@ -260,7 +273,7 @@ function drawBlockDots(ctx, i, proj){
 /* ── Basis-Layer: Blaupause + Spielfeld ───────────────────────── */
 function renderBase(){
   const ctx = cvBase.getContext('2d');
-  const bg = D.bg || {};
+  const bg = editorBackground();
   ctx.clearRect(0,0,W,H);
   ctx.fillStyle = '#03070c'; ctx.fillRect(0,0,W,H);
   // dezentes Raster
@@ -359,8 +372,8 @@ function crownPath(ctx, cx, cy, r, seed){
   ctx.closePath();
 }
 function drawTrees(ctx, toScreen){
-  if(!D.bg.trees) return;
-  for(const t of D.bg.trees){
+  const trees = editorBackground().trees;
+  for(const t of trees){
     const s = toScreen(t[0], t[1]);
     if(s[0]<-14||s[1]<-14||s[0]>W+14||s[1]>H+14) continue;
     const sd = treeSeed(t);
@@ -475,7 +488,7 @@ function fillPreviewTex(id){
 function render3D(){
   const ctx = cvBlocks.getContext('2d');
   const bctx = cvBase.getContext('2d');
-  const bg = D.bg || {};
+  const bg = editorBackground();
   bctx.clearRect(0,0,W,H); ctx.clearRect(0,0,W,H);
   cvOverlay.getContext('2d').clearRect(0,0,W,H);
   bctx.fillStyle='#03070c'; bctx.fillRect(0,0,W,H);
