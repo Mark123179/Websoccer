@@ -1311,11 +1311,17 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
         zoomSeason = null;
         if (resetChip) resetChip.style.display = 'none';
         render();
+        scrollToToday();
+    }
+    function scrollToToday() {
         scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
     }
     if (resetChip) resetChip.addEventListener('click', clearZoom);
 
     render();
+    /* Neue/freigeschaltete Einträge liegen meist am aktuellen Datum.
+       Nach dem ersten Layout den HEUTE-Bereich statt des Karriereanfangs zeigen. */
+    requestAnimationFrame(scrollToToday);
 
     /* ── Filter-Buttons ── */
     document.querySelectorAll('.mp-tl2-filter').forEach(function(btn) {
@@ -1333,7 +1339,7 @@ var MP_STATIONS  = JSON.parse(document.getElementById('mp-stations-data').textCo
     document.getElementById('mpTl2NavR').addEventListener('click', function() { scrollEl.scrollLeft += STEP; });
     document.getElementById('mpTl2Today').addEventListener('click', function() {
         if (zoomSeason) clearZoom();
-        else scrollEl.scrollLeft = Math.max(0, X(today.getTime(), getRange()) - scrollEl.clientWidth/2);
+        else scrollToToday();
     });
 
     /* ── Eintrag einreichen (Modal) ── */

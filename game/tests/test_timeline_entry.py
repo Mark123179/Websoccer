@@ -142,6 +142,7 @@ class TimelineEntrySubmitTests(TestCase):
         )
         self.assertEqual(result_event['result'], '3:1')
         self.assertContains(response, 'var resultHtml = !isTicket && ev.result')
+        self.assertContains(response, 'requestAnimationFrame(scrollToToday)')
 
     def test_invalid_category_rejected(self):
         resp = self._post(self._payload(category='xxx'))
