@@ -480,6 +480,8 @@ function render3D(){
     const X = x*cy2 - y*sy2, Y = x*sy2 + y*cy2;
     return [W/2 + X*S3, H/2 + 95 + (Y*cT)*-S3 - z*sT*S3, Y];
   };
+  const finiteProjection = points =>
+    points.every(point => point.every(Number.isFinite));
   // Blaupause flach am Boden
   const path3 = pts => { bctx.beginPath(); pts.forEach((p,i)=>{const s=to3(p[0],p[1],0); i?bctx.lineTo(s[0],s[1]):bctx.moveTo(s[0],s[1]);}); };
   for(const g of bg.green || []){ path3(g); bctx.closePath(); bctx.fillStyle='rgba(48,242,156,.04)'; bctx.fill(); }
@@ -686,6 +688,7 @@ function render3D(){
         ? Math.max(...blocks.map(bb=>bb.z1)) + 2 : b.z1;
       const p = [ to3(As[0],As[1],zW), to3(Bs[0],Bs[1],zW),
                   to3(Bs[0],Bs[1],0),    to3(As[0],As[1],0) ];
+      if(!finiteProjection(p)) continue;
       const g = ctx.createLinearGradient(0,(p[0][1]+p[1][1])/2, 0,(p[2][1]+p[3][1])/2);
       g.addColorStop(0,'#10222f'); g.addColorStop(1,'#04090e');
       ctx.beginPath();
@@ -716,6 +719,7 @@ function render3D(){
       if(!facesCamera(P,Q)) continue;
       const p = [ to3(P[0],P[1],it.b1.z1), to3(Q[0],Q[1],it.b2.z1),
                   to3(Q[0],Q[1],0),        to3(P[0],P[1],0) ];
+      if(!finiteProjection(p)) continue;
       const g = ctx.createLinearGradient(0,(p[0][1]+p[1][1])/2, 0,(p[2][1]+p[3][1])/2);
       g.addColorStop(0,'#10222f'); g.addColorStop(1,'#04090e');
       ctx.beginPath(); p.forEach((s,q)=> q?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]));
@@ -979,7 +983,10 @@ function render3D(){
 function renderAll(){
   if(!D) return;
   if(view==='2d'){ renderBase(); renderBlocks(); renderOverlay(); }
-  else { render3D(); scheduleStageDesignUpdate(); }
+  else {
+    if(!stageAdapter || stageAdapter.kind==='canvas') render3D();
+    scheduleStageDesignUpdate();
+  }
 }
 
 function scheduleStageDesignUpdate(){
