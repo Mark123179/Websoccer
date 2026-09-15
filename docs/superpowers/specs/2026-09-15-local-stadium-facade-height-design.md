@@ -14,8 +14,9 @@ Fassadenkante:
 
 1. Für jeden Fassadenpunkt werden die räumlich nächstliegenden äußeren
    Tribünenblöcke ermittelt.
-2. Die lokale Zielhöhe ergibt sich aus deren Oberkante plus dem bestehenden
-   Fassadenaufschlag.
+2. Wenn an dieser Stelle ein Dach vorhanden ist, ergibt sich die lokale
+   Zielhöhe aus der Unterkante des nächstliegenden Dachsegments. Nur ohne
+   lokales Dach wird die Blockoberkante plus Fassadenaufschlag verwendet.
 3. Zwischen benachbarten Fassadenpunkten werden unterschiedliche Höhen direkt
    als geneigte oder abgestufte Oberkante verbunden.
 4. An gemeinsam genutzten Eckübergängen werden die lokalen Höhen gewichtet
@@ -31,6 +32,12 @@ WEST- und OST-Abschnitte behalten ihre vorherige Höhe.
 - Die Wandfläche wird als Quad mit zwei möglicherweise unterschiedlichen
   Oberkantenhöhen erzeugt.
 - Die obere Abschlussblende folgt derselben geneigten Kante.
+- Benachbarte Dachsegmente verwenden an gemeinsamen Übergängen dieselben
+  gemittelten XY-Punkte und Höhen. Dadurch öffnen sich beim unterschiedlichen
+  Wachstum angrenzender Sektoren keine breiten Dachspalten.
+- Die Nahtangleichung betrifft nur tatsächlich benachbarte Segmentpunkte
+  innerhalb einer kleinen geometrischen Toleranz; gegenüberliegende oder
+  getrennte Dachflächen werden nicht miteinander verbunden.
 - Texturkoordinaten verwenden weiterhin den horizontalen Fassadenlauf; die
   vertikale Skalierung orientiert sich an der lokalen Maximalhöhe.
 - Pylone, Bodenöffnung, Dachsegmente und Blockgeometrie werden durch diese
@@ -41,8 +48,12 @@ WEST- und OST-Abschnitte behalten ihre vorherige Höhe.
 - Ohne simulierte Erweiterung bleibt das bisherige Fassadenbild unverändert.
 - Eine unveränderte Stadionseite darf nicht die Maximalhöhe einer entfernten
   ausgebauten Seite übernehmen.
-- Die lokale Fassadenhöhe liegt knapp oberhalb des zugeordneten äußeren Blocks,
-  aber nicht pauschal oberhalb des höchsten Blocks im Stadion.
+- Die lokale Fassadenhöhe endet an der lokalen Dachunterkante. Ohne Dach liegt
+  sie knapp oberhalb des zugeordneten äußeren Blocks, aber nie pauschal oberhalb
+  des höchsten Blocks im Stadion.
+- Dachsegmente dürfen nach der transienten Verschiebung nicht sichtbar
+  schweben; gemeinsame Segmentnähte bleiben geschlossen beziehungsweise werden
+  gegenüber dem aktuellen Zustand verkleinert.
 - Bestehende Fassadensegmente und die transient verschobene Außenkontur bleiben
   die geometrische Grundlage.
 
@@ -53,6 +64,10 @@ WEST- und OST-Abschnitte behalten ihre vorherige Höhe.
   Eckübergänge werden höher.
 - Gegenüberliegende Seiten mit stark unterschiedlichen Höhen erzeugen keine
   senkrechten Wandkeile.
+- Die Fassadenoberkante berührt an mehreren Punkten die jeweilige lokale
+  Dachunterkante.
+- Gemeinsam angrenzende Dachsegmente behalten nach NORD-/SÜD-Ausbau deckungsgleiche
+  Nahtpunkte; der maximale Spalt wächst nicht gegenüber dem Ausgangszustand.
 - Stadion ohne Ausbau rendert dieselben Fassadenhöhen wie zuvor.
 - Bestehende Ausbau-, Dach-, Undo-/Redo- und Cache-Ketten-Tests bleiben grün.
 
