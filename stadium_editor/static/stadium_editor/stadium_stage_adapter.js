@@ -141,6 +141,7 @@ function canonicalEditorQuad(block, geometry, fallback) {
 
 export function applyEditorDesign(
   scene, blocks, seatData, palette, geometry = null, previewCapacity = null,
+  previewRoofs = null,
 ) {
   const next = structuredClone(scene);
   if (!next.surroundings && geometry?.surroundings) {
@@ -182,6 +183,9 @@ export function applyEditorDesign(
       quad: canonicalEditorQuad(block, geometry, target.quad),
       z0: Number(block.z0),
       z1: Number(block.z1),
+      wallBaseZ: Number.isFinite(Number(block.supportZ))
+        ? Number(block.supportZ)
+        : undefined,
       type: target.type || {
         STEH: 'standing',
         SITZ: 'seating',
@@ -195,6 +199,17 @@ export function applyEditorDesign(
   next.capacity = Number.isFinite(Number(previewCapacity))
     ? Number(previewCapacity)
     : renderedCapacity;
+  if (Array.isArray(previewRoofs)) {
+    next.roof = {
+      mode: 'explicit',
+      segments: previewRoofs.map((segment, index) => ({
+        ...segment,
+        id: segment.id ?? `editor-roof-${index}`,
+        quad: segment.quad.map(point => editorPointToScene(point, geometry)),
+        heights: segment.heights?.map(Number),
+      })),
+    };
+  }
   return next;
 }
 

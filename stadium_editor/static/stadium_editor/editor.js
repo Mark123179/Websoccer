@@ -55,6 +55,7 @@ function nearestColor(r,g,b){
 let D, blocks, seatData, baseData, texCache;
 let baseDisplayCapacity = 0, baseBlockCapacity = 0;
 let designBlockShape = new Map();
+let baseBlockGeometry = new Map();
 let pressings = [];            // gepresste Objekte
 let pressId = 1;
 const selection = new Set();
@@ -74,11 +75,13 @@ function renderableBlock(block, index){
   const seats = geometrySeats;
   const rows = geometryRows;
   const canonicalId = Number(block.sourceId ?? block.id);
+  const sourceId = block.simulated || !Number.isInteger(canonicalId)
+    ? null
+    : canonicalId;
   return Object.assign({}, block, {
     id: index,
-    sourceId: block.simulated || !Number.isInteger(canonicalId)
-      ? null
-      : canonicalId,
+    sourceId,
+    lineageId: block.lineageId ?? sourceId,
     geometryRows,
     geometrySeats,
     capacity,
@@ -191,6 +194,9 @@ function initStadium(stadium, savedDesign){
   baseDisplayCapacity = Number(D.capacity_total || D.meta.capacity || baseBlockCapacity);
   designBlockShape = new Map(blocks.map(block => [
     block.sourceId, {rows:block.rows, seats:block.seats},
+  ]));
+  baseBlockGeometry = new Map(blocks.map(block => [
+    block.sourceId, structuredClone(block),
   ]));
   seatData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   baseData = blocks.map(b => new Uint8Array(b.rows * b.seats));
@@ -417,6 +423,20 @@ function drawTrees(ctx, toScreen){
 function renderBlocks(){
   const ctx = cvBlocks.getContext('2d');
   ctx.clearRect(0,0,W,H);
+  if(roofOn){
+    ctx.save();
+    ctx.setLineDash([6,4]);
+    ctx.strokeStyle='rgba(138,145,153,.52)';
+    ctx.lineWidth=1;
+    for(const roof of previewRoofs()){
+      const p=roof.quad.map(pt=>w2s(pt[0],pt[1]));
+      ctx.beginPath();
+      p.forEach((point,index)=>index?ctx.lineTo(point[0],point[1]):ctx.moveTo(point[0],point[1]));
+      ctx.closePath();
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
   for(let i=0;i<blocks.length;i++){
     const b = blocks[i];
     const p = b.quad.map(pt => w2s(pt[0],pt[1]));
@@ -1039,9 +1059,9 @@ function scheduleStageDesignUpdate(){
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
-    import('./stadium_stage_adapter.js?v=18').then(({applyEditorDesign})=>{
+    import('./stadium_stage_adapter.js?v=19').then(({applyEditorDesign})=>{
       const scene = applyEditorDesign(
-        stageScene, blocks, seatData, PALETTE, D, previewCapacity());
+        stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
       stageThree.update({
         scene,
@@ -1079,12 +1099,12 @@ async function ensureThreeStage(){
   stageAdapter = {kind:'loading'};
   try{
     const {mountStadiumStage, applyEditorDesign} =
-      await import('./stadium_stage_adapter.js?v=18');
+      await import('./stadium_stage_adapter.js?v=19');
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
     if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
     stageScene = await response.json();
     const initialScene = applyEditorDesign(
-      stageScene, blocks, seatData, PALETTE, D, previewCapacity());
+      stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
     const mounted = await mountStadiumStage({
       element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
       day: false, exposure: 1.1, fallback: ()=>null,
@@ -1571,24 +1591,85 @@ function editPressing(id){
   quantizeOverlay(); buildPreview(); renderOverlay(); syncPressButton();
   toast('Zum Bearbeiten geladen — PRESSEN übernimmt es wieder.');
 }
-/* ── AUSBAU (Mechanik C): Reihen an den äußersten Rang, dann neuer Rang ── */
+/* ── AUSBAU: gemeinsame geometrische Sektoren + flüchtige Ränge ── */
 const MAX_ROWS = 42;
 const MAX_PREVIEW_CAPACITY = 150000;
 const MIN_EXPANSION_SEATS = 1000;
-function standCenter(){ return [D._cx, D._cy]; }
-function outerTierOf(stand, seatType){
-  const cand = blocks.filter(b=>b.stand===stand && b.type===seatType);
-  if(!cand.length) return null;
-  const [cx,cy] = standCenter();
-  const rad = b => { const m = quadPoint(b.quad,.5,1); return Math.hypot(m[0]-cx,m[1]-cy); };
-  const byTier = {};
-  for(const b of cand){ (byTier[b.tier]=byTier[b.tier]||[]).push(b); }
-  let best=null, bestR=-1;
-  for(const t in byTier){
-    const r = byTier[t].reduce((a,b)=>a+rad(b),0)/byTier[t].length;
-    if(r>bestR){ bestR=r; best=byTier[t]; }
+const EXPANSION_SECTOR_HALF_ANGLE = Math.PI/3;
+const STAND_ANGLES = {SUED:0, OST:Math.PI/2, NORD:Math.PI, WEST:-Math.PI/2};
+function pitchLocal(point){
+  const [cx,cy] = D?.meta?.fieldC || [D?._cx || 0,D?._cy || 0];
+  const theta = Number(D?.meta?.axisTheta) || 0;
+  const dx=point[0]-cx, dy=point[1]-cy, ct=Math.cos(theta), st=Math.sin(theta);
+  return [dx*ct+dy*st, -dx*st+dy*ct];
+}
+function angleDistance(left,right){
+  return Math.abs(((left-right)+Math.PI*3)%(Math.PI*2)-Math.PI);
+}
+function blockExpansionInfo(block){
+  const outer=quadPoint(block.quad,.5,1), inner=quadPoint(block.quad,.5,0);
+  const center=block.quad.reduce((sum,point)=>[
+    sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
+  const localOuter=pitchLocal(outer), localInner=pitchLocal(inner);
+  const localCenter=pitchLocal(center);
+  return {
+    block, outer, inner,
+    angle:Math.atan2(localCenter[1],localCenter[0]),
+    radius:Math.hypot(localOuter[0],localOuter[1]),
+  };
+}
+function outerEnvelope(sourceBlocks=blocks){
+  const info=sourceBlocks.map(blockExpansionInfo);
+  return info.filter(candidate=>!info.some(other=>{
+    if(other===candidate || Number(other.block.z0)<=Number(candidate.block.z0)) return false;
+    return Math.hypot(
+      candidate.outer[0]-other.inner[0],
+      candidate.outer[1]-other.inner[1],
+    ) < 12;
+  })).map(item=>item.block);
+}
+function expansionEnvelope(stand){
+  const center=STAND_ANGLES[stand];
+  if(!Number.isFinite(center)) return [];
+  return outerEnvelope().filter(block=>
+    angleDistance(blockExpansionInfo(block).angle,center)<=EXPANSION_SECTOR_HALF_ANGLE);
+}
+function previewRoofs(){
+  const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
+  if(!roofs.length || !baseBlockGeometry.size) return roofs;
+  const baseline=outerEnvelope([...baseBlockGeometry.values()]);
+  if(!baseline.length) return roofs;
+  const currentByLineage=new Map();
+  for(const block of blocks){
+    const key=block.lineageId ?? block.sourceId;
+    if(key===null || key===undefined) continue;
+    const current=currentByLineage.get(key);
+    if(!current || blockExpansionInfo(block).radius>blockExpansionInfo(current).radius){
+      currentByLineage.set(key,block);
+    }
   }
-  return best;
+  return roofs.map(roof=>{
+    if(!Array.isArray(roof.quad) || roof.quad.length!==4) return roof;
+    const center=roof.quad.reduce((sum,point)=>[
+      sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
+    const local=pitchLocal(center);
+    const angle=Math.atan2(local[1],local[0]);
+    const base=baseline.reduce((best,block)=>
+      !best || angleDistance(blockExpansionInfo(block).angle,angle) <
+      angleDistance(blockExpansionInfo(best).angle,angle) ? block : best,null);
+    const current=currentByLineage.get(base.lineageId ?? base.sourceId) || base;
+    const baseOuter=quadPoint(base.quad,.5,1);
+    const currentOuter=quadPoint(current.quad,.5,1);
+    const dx=currentOuter[0]-baseOuter[0], dy=currentOuter[1]-baseOuter[1];
+    const dz=Number(current.z1)-Number(base.z1);
+    if(Math.abs(dx)+Math.abs(dy)+Math.abs(dz)<1e-7) return roof;
+    return {
+      ...roof,
+      quad:roof.quad.map(point=>[point[0]+dx,point[1]+dy]),
+      heights:(roof.heights || []).map(height=>Number(height)+dz),
+      simulated:true,
+    };
+  });
 }
 function growBlockRows(i, add){
   const b = blocks[i];
@@ -1608,16 +1689,19 @@ function growBlockRows(i, add){
   seatData[i] = new Uint8Array(b.rows*b.seats);
 }
 function addNewTier(refBlocks, seatType, rows){
-  const tierName = 'RANG' + (new Set(blocks.map(b=>b.tier)).size + 1);
   for(const rb of refBlocks){
+    const level=(Number(rb.previewLevel)||0)+1;
+    const lineage=rb.lineageId ?? rb.sourceId ?? rb.id;
+    const tierName=`AUSBAU${level}`;
     const [A,B] = rb.quad;
     const dL = [(rb.quad[0][0]-rb.quad[3][0])/rb.rows, (rb.quad[0][1]-rb.quad[3][1])/rb.rows];
     const dR = [(rb.quad[1][0]-rb.quad[2][0])/rb.rows, (rb.quad[1][1]-rb.quad[2][1])/rb.rows];
     const slope = (rb.z1-rb.z0)/rb.rows || .77;
     const nb = {
-      id: blocks.length, tier: tierName, stand: rb.stand,
-      previewId: `preview-${rb.stand}-${tierName}-${rb.id}-${blocks.length}`,
+      id: blocks.length, tier: tierName, stand: rb.stand, order:rb.order,
+      previewId: `preview-${lineage}-${level}-${seatType}`,
       simulated: true,
+      lineageId:lineage, previewLevel:level, supportZ:Number(rb.z1),
       rows, seats: rb.seats, capacity: rows * rb.seats, type: seatType,
       quad: [ [A[0]+dL[0]*rows, A[1]+dL[1]*rows],
               [B[0]+dR[0]*rows, B[1]+dR[1]*rows],
@@ -1644,56 +1728,35 @@ function expandStand(stand, seatType, amount){
     return 0;
   }
   amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
-  snapshotFull();
-  let remaining = amount, built = 0;
-  let capacityRoom = MAX_PREVIEW_CAPACITY - currentCapacity;
-  let outer = outerTierOf(stand, seatType);
-  if(outer){
-    const perRow = outer.reduce((a,b)=>a+b.seats,0);
-    const room = Math.min(...outer.map(b=>MAX_ROWS-b.rows));
-    const want = Math.ceil(remaining/perRow);
-    const allowed = Math.floor(capacityRoom/perRow);
-    const add = Math.max(0, Math.min(room, want, allowed));
-    if(add>0){
-      for(const b of outer) growBlockRows(blocks.indexOf(b), add);
-      const added = add*perRow;
-      built += added;
-      remaining = Math.max(0, remaining-added);
-      capacityRoom -= added;
-    }
-  }
-  if(remaining > 0 && capacityRoom > 0){
-    /* neuer Rang über dem äußersten Rang der Tribüne (egal welcher Sitzart) */
-    const [cx,cy] = standCenter();
-    const rad = b => { const m = quadPoint(b.quad,.5,1); return Math.hypot(m[0]-cx,m[1]-cy); };
-    const standBlocks = blocks.filter(b=>b.stand===stand);
-    const byTier = {};
-    for(const b of standBlocks){ (byTier[b.tier]=byTier[b.tier]||[]).push(b); }
-    let ref=null, bestR=-1;
-    for(const t in byTier){
-      const r = byTier[t].reduce((a,b)=>a+rad(b),0)/byTier[t].length;
-      if(r>bestR){ bestR=r; ref=byTier[t]; }
-    }
-    const perRow = ref.reduce((a,b)=>a+b.seats,0);
-    let rows = Math.min(MAX_ROWS, Math.max(4, Math.ceil(remaining/perRow)));
-    // Tiefe deckeln: neuer Rang darf die Nachbartribünen um höchstens 35 % überragen
-    const rMaxNb = Math.max(...blocks.filter(b=>b.stand!==stand).map(rad));
-    const rRef = Math.max(...ref.map(rad));
-    const stepPerRow = Math.max(.4, (rRef - Math.min(...ref.map(b=>{
-      const m = quadPoint(b.quad,.5,0); return Math.hypot(m[0]-cx,m[1]-cy); }))) / ref[0].rows);
-    const roomOut = Math.max(6, (rMaxNb*1.35 - rRef) / stepPerRow);
-    rows = Math.min(rows, Math.round(roomOut), Math.floor(capacityRoom/perRow));
-    if(rows >= 4){
-      addNewTier(ref, seatType, rows);
-      built += rows*perRow;
-    }
-  }
-  if(!built){
-    undoStack.pop();
-    syncUndoButtons();
-    toast('Für diesen Ausbau ist bis 150.000 Plätze kein vollständiger Rang mehr möglich.');
+  const outer=expansionEnvelope(stand);
+  if(!outer.length){
+    toast(`Für ${stand} wurden keine ausbaubaren Tribünensegmente gefunden.`);
     return 0;
   }
+  const perRow=outer.reduce((total,block)=>total+block.seats,0);
+  const rows=Math.min(
+    MAX_ROWS,
+    Math.ceil(amount/perRow),
+    Math.floor((MAX_PREVIEW_CAPACITY-currentCapacity)/perRow),
+  );
+  if(rows<1){
+    toast('Für diesen Ausbau ist bis 150.000 Plätze keine vollständige Reihe mehr möglich.');
+    return 0;
+  }
+  snapshotFull();
+  for(const block of outer){
+    let remainingRows=rows;
+    if(block.simulated && block.type===seatType){
+      const available=Math.max(0,MAX_ROWS-block.rows);
+      const grow=Math.min(available,remainingRows);
+      if(grow){
+        growBlockRows(blocks.indexOf(block),grow);
+        remainingRows-=grow;
+      }
+    }
+    if(remainingRows) addNewTier([block],seatType,remainingRows);
+  }
+  const built=rows*perRow;
   fitView();
   syncStadiumTitle();
   recompose(); syncPressList();

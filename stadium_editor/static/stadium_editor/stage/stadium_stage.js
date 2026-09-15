@@ -246,6 +246,9 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     const nCols = Math.max(1, Math.round(f.width / rules.seatPitch));
     const rle = decodeRle(b.rle, b.rows * b.seats);
     const rise = b.z1 - b.z0;
+    const wallBase = Number.isFinite(Number(b.wallBaseZ))
+      ? Math.min(Number(b.z0), Number(b.wallBaseZ))
+      : 0;
     const P = (u, v, z) => toWorld(lerp2(lerp2(f.A, f.B, u), lerp2(f.D, f.C, u), v), z);
 
     // Stufen: Trittfläche auf z_i, Setzstufe auf z_{i+1}
@@ -256,7 +259,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       pushQuad(P(0, v1, z0), P(1, v1, z0), P(1, v1, z1), P(0, v1, z1), rules.riserColor, true);
     }
     // Außenwand hinter dem letzten Rang
-    if (!covered.has(b.id)) pushQuad(P(0, 1, b.z1), P(1, 1, b.z1), P(1, 1, 0), P(0, 1, 0), rules.wallColor, true);
+    if (!covered.has(b.id)) pushQuad(P(0, 1, b.z1), P(1, 1, b.z1), P(1, 1, wallBase), P(0, 1, wallBase), rules.wallColor, true);
     // Blende unter der Vorderkante (Umlauf zwischen den Rängen)
     if (b.z0 > 3) {
       const h = Math.min(b.z0 - 0.5, rules.soffitMax);
@@ -264,7 +267,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     }
     // Seitenwände der Blöcke (schließen Stufen seitlich, sichtbar an offenen Ecken)
     for (const side of [0, 1]) {
-      pushQuad(P(side, 0, b.z0), P(side, 1, b.z1), P(side, 1, 0), P(side, 0, 0), rules.wallColor, true);
+      pushQuad(P(side, 0, b.z0), P(side, 1, b.z1), P(side, 1, wallBase), P(side, 0, wallBase), rules.wallColor, true);
     }
 
     // Sitze auf festem Raster; Farbe aus der RLE-Zelle
