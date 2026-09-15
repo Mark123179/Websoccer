@@ -118,7 +118,30 @@ function editorRowRunsRightToLeft(block, geometry) {
   return lateral(3) < lateral(2);
 }
 
-export function applyEditorDesign(scene, blocks, seatData, palette, geometry = null) {
+function editorPointToScene(point, geometry) {
+  const center = geometry?.meta?.fieldC || [0, 0];
+  const theta = Number(geometry?.meta?.axisTheta) || 0;
+  const dx = point[0] - center[0];
+  const dy = point[1] - center[1];
+  const ct = Math.cos(theta);
+  const st = Math.sin(theta);
+  return [dx * ct + dy * st, -dx * st + dy * ct];
+}
+
+function canonicalEditorQuad(block, geometry, fallback) {
+  if (!geometry || !Array.isArray(block?.quad) || block.quad.length !== 4) {
+    return fallback;
+  }
+  const transformed = block.quad.map(point => editorPointToScene(point, geometry));
+  const order = editorRowRunsRightToLeft(block, geometry)
+    ? [2, 3, 0, 1]
+    : [3, 2, 1, 0];
+  return order.map(index => transformed[index]);
+}
+
+export function applyEditorDesign(
+  scene, blocks, seatData, palette, geometry = null, previewCapacity = null,
+) {
   const next = structuredClone(scene);
   if (!next.surroundings && geometry?.surroundings) {
     next.surroundings = structuredClone(geometry.surroundings);
@@ -126,20 +149,52 @@ export function applyEditorDesign(scene, blocks, seatData, palette, geometry = n
   const colours = palette.map(item => Array.isArray(item) ? item[0] : item);
   if (colours.length) next.palette = colours;
   const sourceById = new Map(
-    (blocks || []).map((block, index) => [String(block.id), {block, index}]),
+    (blocks || []).map((block, index) => [
+      String(block.previewId ?? block.sourceId ?? block.id), {block, index},
+    ]),
   );
-  next.blocks.forEach(target => {
-    const source = sourceById.get(String(target.id));
+  const targetById = new Map(
+    (next.blocks || []).map(target => [String(target.id), target]),
+  );
+  next.blocks = Array.from(sourceById.values()).map(({block, index: sourceIndex}) => {
+    const sceneId = block.previewId ?? block.sourceId ?? block.id;
+    const target = targetById.get(String(sceneId)) || {};
+    const source = {block, index: sourceIndex};
     const values = source && seatData?.[source.index];
-    if (!values || values.length !== target.rows * target.seats) return;
-    let canonical = Array.from(values);
+    const rows = Math.max(1, Number(block.rows) || 1);
+    const seats = Math.max(1, Number(block.seats) || 1);
+    let canonical = values?.length === rows * seats
+      ? Array.from(values)
+      : Array(rows * seats).fill(0);
     if (geometry && editorRowRunsRightToLeft(source.block, geometry)) {
-      canonical = Array.from({length: target.rows}, (_unused, row) =>
-        canonical.slice(row * target.seats, (row + 1) * target.seats).reverse()
+      canonical = Array.from({length: rows}, (_unused, row) =>
+        canonical.slice(row * seats, (row + 1) * seats).reverse()
       ).flat();
     }
-    target.rle = rle(canonical);
+    return {
+      ...target,
+      id: sceneId,
+      stand: block.stand,
+      tier: block.tier,
+      order: block.order ?? target.order ?? sourceIndex,
+      rows,
+      seats,
+      quad: canonicalEditorQuad(block, geometry, target.quad),
+      z0: Number(block.z0),
+      z1: Number(block.z1),
+      type: target.type || {
+        STEH: 'standing',
+        SITZ: 'seating',
+        VIP: 'vip',
+      }[block.type] || 'seating',
+      rle: rle(canonical),
+    };
   });
+  const renderedCapacity = next.blocks.reduce(
+    (total, block) => total + block.rows * block.seats, 0);
+  next.capacity = Number.isFinite(Number(previewCapacity))
+    ? Number(previewCapacity)
+    : renderedCapacity;
   return next;
 }
 

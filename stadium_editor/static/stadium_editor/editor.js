@@ -53,6 +53,8 @@ function nearestColor(r,g,b){
 
 /* ── Daten & Zustand ──────────────────────────────────────────── */
 let D, blocks, seatData, baseData, texCache;
+let baseDisplayCapacity = 0, baseBlockCapacity = 0;
+let designBlockShape = new Map();
 let pressings = [];            // gepresste Objekte
 let pressId = 1;
 const selection = new Set();
@@ -71,8 +73,12 @@ function renderableBlock(block, index){
   const capacity = geometryRows * geometrySeats;
   const seats = geometrySeats;
   const rows = geometryRows;
+  const canonicalId = Number(block.sourceId ?? block.id);
   return Object.assign({}, block, {
-    id: Number.isInteger(Number(block.id)) ? Number(block.id) : index,
+    id: index,
+    sourceId: block.simulated || !Number.isInteger(canonicalId)
+      ? null
+      : canonicalId,
     geometryRows,
     geometrySeats,
     capacity,
@@ -101,11 +107,16 @@ function resize(){
 let SC = 1, CX = 0, CY = 0;
 function stadiumMaxRadius(){
   const configured = Number(D?.meta?.maxR);
-  if(Number.isFinite(configured) && configured > 0) return configured;
   const center = D?.meta?.fieldC || [D?._cx || 0, D?._cy || 0];
-  const radii = (D?.outline || []).map(point =>
-    Math.hypot(point[0] - center[0], point[1] - center[1]));
-  return Math.max(1, ...radii.filter(Number.isFinite));
+  const points = [
+    ...(D?.outline || []),
+    ...(blocks || []).flatMap(block => block.quad || []),
+  ];
+  const derived = Math.max(1, ...points.map(point =>
+    Math.hypot(point[0] - center[0], point[1] - center[1])));
+  return Number.isFinite(configured) && configured > 0
+    ? Math.max(configured, derived)
+    : derived;
 }
 function fitView(){
   const R = 430 * (D ? stadiumMaxRadius()/138 : 1); // relative Stadiongröße konstant halten
@@ -159,7 +170,7 @@ function restoreSavedDesign(savedDesign){
     PAL_LAB = PAL_RGB.map(c => rgb2lab(...c));
   }
   if(!Array.isArray(savedDesign.blocks)) return;
-  const indices = new Map(blocks.map((block, index) => [block.id, index]));
+  const indices = new Map(blocks.map((block, index) => [block.sourceId, index]));
   for(const saved of savedDesign.blocks){
     const index = indices.get(Number(saved.id));
     if(!Number.isInteger(index) || !seatData[index] || !Array.isArray(saved.rle)) continue;
@@ -176,9 +187,15 @@ function restoreSavedDesign(savedDesign){
 function initStadium(stadium, savedDesign){
   D = stadium;
   blocks = D.blocks.map(renderableBlock);
+  baseBlockCapacity = blocks.reduce((total, block) => total + block.capacity, 0);
+  baseDisplayCapacity = Number(D.capacity_total || D.meta.capacity || baseBlockCapacity);
+  designBlockShape = new Map(blocks.map(block => [
+    block.sourceId, {rows:block.rows, seats:block.seats},
+  ]));
   seatData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   baseData = blocks.map(b => new Uint8Array(b.rows * b.seats));
   restoreSavedDesign(savedDesign);
+  baseData = seatData.map(data => data.slice());
   pressings = [];
   texCache = blocks.map(b => {
     const c = document.createElement('canvas');
@@ -192,11 +209,19 @@ function initStadium(stadium, savedDesign){
   undoStack.length = 0; redoStack.length = 0;
   fillPreviewCache.clear();
   if(document.getElementById('pressList')) syncPressList();
-  const title = document.getElementById('stadiumTitle');
-  if(title) title.innerHTML =
-    `${D.meta.name} <span>${D.meta.club || ''} · ${Number(D.capacity_total || D.meta.capacity || 0).toLocaleString('de-DE')} Plätze</span>`;
+  syncStadiumTitle();
   if(typeof syncUndoButtons==='function') syncUndoButtons();
   if(typeof syncSel==='function') syncSel();
+}
+function previewCapacity(){
+  const currentBlockCapacity = blocks.reduce(
+    (total, block) => total + block.capacity, 0);
+  return baseDisplayCapacity + currentBlockCapacity - baseBlockCapacity;
+}
+function syncStadiumTitle(){
+  const title = document.getElementById('stadiumTitle');
+  if(title) title.innerHTML =
+    `${D.meta.name} <span>${D.meta.club || ''} · ${previewCapacity().toLocaleString('de-DE')} Plätze</span>`;
 }
 function updateTexture(i){
   const b = blocks[i], c = texCache[i], ctx = c.getContext('2d');
@@ -1014,8 +1039,9 @@ function scheduleStageDesignUpdate(){
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
-    import('./stadium_stage_adapter.js?v=17').then(({applyEditorDesign})=>{
-      const scene = applyEditorDesign(stageScene, blocks, seatData, PALETTE, D);
+    import('./stadium_stage_adapter.js?v=18').then(({applyEditorDesign})=>{
+      const scene = applyEditorDesign(
+        stageScene, blocks, seatData, PALETTE, D, previewCapacity());
       if(!roofOn) scene.roof = {mode:'explicit', segments:[]};
       stageThree.update({
         scene,
@@ -1053,11 +1079,12 @@ async function ensureThreeStage(){
   stageAdapter = {kind:'loading'};
   try{
     const {mountStadiumStage, applyEditorDesign} =
-      await import('./stadium_stage_adapter.js?v=17');
+      await import('./stadium_stage_adapter.js?v=18');
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
     if(!response.ok) throw new Error('Live Scene konnte nicht geladen werden.');
     stageScene = await response.json();
-    const initialScene = applyEditorDesign(stageScene, blocks, seatData, PALETTE, D);
+    const initialScene = applyEditorDesign(
+      stageScene, blocks, seatData, PALETTE, D, previewCapacity());
     const mounted = await mountStadiumStage({
       element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
       day: false, exposure: 1.1, fallback: ()=>null,
@@ -1075,19 +1102,40 @@ async function ensureThreeStage(){
 }
 
 /* ── Undo / Redo ──────────────────────────────────────────────── */
-function snapshotFull(){
-  undoStack.push({
+function currentSnapshot(){
+  return {
+    blocks: structuredClone(blocks),
     base: baseData.map(a=>a.slice()),
     press: pressings.map(p=>({...p})),
-  });
+  };
+}
+function snapshotFull(){
+  undoStack.push(currentSnapshot());
   if(undoStack.length>30) undoStack.shift();
   redoStack.length = 0; syncUndoButtons();
 }
+function restoreSnapshot(snap){
+  blocks = structuredClone(snap.blocks);
+  baseData = snap.base.map(a=>a.slice());
+  seatData = blocks.map(block=>new Uint8Array(block.rows*block.seats));
+  texCache = blocks.map(block=>{
+    const c=document.createElement('canvas');
+    c.width=block.seats; c.height=block.rows;
+    return c;
+  });
+  pressings = snap.press.map(p=>({...p}));
+  for(const id of [...selection]){
+    if(!blocks[id]) selection.delete(id);
+  }
+  hoverBlock = null;
+  fillPreviewCache.clear();
+  fitView();
+  syncStadiumTitle();
+}
 function applySnap(stackFrom, stackTo){
   const snap = stackFrom.pop(); if(!snap) return;
-  stackTo.push({ base: baseData.map(a=>a.slice()), press: pressings.map(p=>({...p})) });
-  baseData.forEach((a,i)=>a.set(snap.base[i]));
-  pressings = snap.press.map(p=>({...p}));
+  stackTo.push(currentSnapshot());
+  restoreSnapshot(snap);
   syncUndoButtons(); recompose(); syncPressList();
 }
 function syncUndoButtons(){
@@ -1525,6 +1573,8 @@ function editPressing(id){
 }
 /* ── AUSBAU (Mechanik C): Reihen an den äußersten Rang, dann neuer Rang ── */
 const MAX_ROWS = 42;
+const MAX_PREVIEW_CAPACITY = 150000;
+const MIN_EXPANSION_SEATS = 1000;
 function standCenter(){ return [D._cx, D._cy]; }
 function outerTierOf(stand, seatType){
   const cand = blocks.filter(b=>b.stand===stand && b.type===seatType);
@@ -1552,6 +1602,7 @@ function growBlockRows(i, add){
   nb.set(baseData[i]);                              // alte Reihen bleiben, neue = 0 (Beton)
   baseData[i] = nb;
   b.rows += add;
+  b.geometryRows = b.rows;
   b.capacity += add * b.seats;
   const c = texCache[i]; c.width = b.seats; c.height = b.rows;
   seatData[i] = new Uint8Array(b.rows*b.seats);
@@ -1565,6 +1616,8 @@ function addNewTier(refBlocks, seatType, rows){
     const slope = (rb.z1-rb.z0)/rb.rows || .77;
     const nb = {
       id: blocks.length, tier: tierName, stand: rb.stand,
+      previewId: `preview-${rb.stand}-${tierName}-${rb.id}-${blocks.length}`,
+      simulated: true,
       rows, seats: rb.seats, capacity: rows * rb.seats, type: seatType,
       quad: [ [A[0]+dL[0]*rows, A[1]+dL[1]*rows],
               [B[0]+dR[0]*rows, B[1]+dR[1]*rows],
@@ -1580,23 +1633,36 @@ function addNewTier(refBlocks, seatType, rows){
   }
 }
 function expandStand(stand, seatType, amount){
-  const cap = 120000;
-  if(D.meta.capacity >= cap) { toast('Maximalkapazität 120.000 erreicht.'); return 0; }
-  amount = Math.min(amount, cap - D.meta.capacity);
+  amount = Math.floor(Number(amount) || 0);
+  if(amount < MIN_EXPANSION_SEATS){
+    toast('Ein Ausbau muss mindestens 1.000 Plätze umfassen.');
+    return 0;
+  }
+  const currentCapacity = previewCapacity();
+  if(currentCapacity >= MAX_PREVIEW_CAPACITY){
+    toast('Maximalkapazität 150.000 erreicht.');
+    return 0;
+  }
+  amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
   snapshotFull();
   let remaining = amount, built = 0;
+  let capacityRoom = MAX_PREVIEW_CAPACITY - currentCapacity;
   let outer = outerTierOf(stand, seatType);
   if(outer){
     const perRow = outer.reduce((a,b)=>a+b.seats,0);
     const room = Math.min(...outer.map(b=>MAX_ROWS-b.rows));
     const want = Math.ceil(remaining/perRow);
-    const add = Math.max(0, Math.min(room, want));
+    const allowed = Math.floor(capacityRoom/perRow);
+    const add = Math.max(0, Math.min(room, want, allowed));
     if(add>0){
-      for(const b of outer) growBlockRows(b.id, add);
-      built += add*perRow; remaining -= add*perRow;
+      for(const b of outer) growBlockRows(blocks.indexOf(b), add);
+      const added = add*perRow;
+      built += added;
+      remaining = Math.max(0, remaining-added);
+      capacityRoom -= added;
     }
   }
-  if(remaining > 0){
+  if(remaining > 0 && capacityRoom > 0){
     /* neuer Rang über dem äußersten Rang der Tribüne (egal welcher Sitzart) */
     const [cx,cy] = standCenter();
     const rad = b => { const m = quadPoint(b.quad,.5,1); return Math.hypot(m[0]-cx,m[1]-cy); };
@@ -1616,14 +1682,20 @@ function expandStand(stand, seatType, amount){
     const stepPerRow = Math.max(.4, (rRef - Math.min(...ref.map(b=>{
       const m = quadPoint(b.quad,.5,0); return Math.hypot(m[0]-cx,m[1]-cy); }))) / ref[0].rows);
     const roomOut = Math.max(6, (rMaxNb*1.35 - rRef) / stepPerRow);
-    rows = Math.min(rows, Math.round(roomOut));
-    addNewTier(ref, seatType, rows);
-    built += rows*perRow; remaining -= rows*perRow;
+    rows = Math.min(rows, Math.round(roomOut), Math.floor(capacityRoom/perRow));
+    if(rows >= 4){
+      addNewTier(ref, seatType, rows);
+      built += rows*perRow;
+    }
   }
-  D.meta.capacity = blocks.reduce((a,b)=>a+b.capacity,0);
-  const title = document.getElementById('stadiumTitle');
-  if(title) title.innerHTML =
-    `${D.meta.name} <span>${D.meta.club} · ${D.meta.capacity.toLocaleString('de-DE')} Plätze</span>`;
+  if(!built){
+    undoStack.pop();
+    syncUndoButtons();
+    toast('Für diesen Ausbau ist bis 150.000 Plätze kein vollständiger Rang mehr möglich.');
+    return 0;
+  }
+  fitView();
+  syncStadiumTitle();
   recompose(); syncPressList();
   toast(`Ausbau ${stand}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
   return built;
@@ -1640,18 +1712,21 @@ if(expandButton){
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
   const out = {version:2, stadium:D.meta.name, blickrichtung, palette:PALETTE.map(p=>p[0]),
-    blocks: blocks.map((b,i)=>{
-      const d = seatData[i], rle=[];
+    blocks: blocks.flatMap((b,i)=>{
+      if(b.simulated) return [];
+      const shape = designBlockShape.get(b.sourceId);
+      if(!shape) return [];
+      const d = seatData[i].slice(0, shape.rows*shape.seats), rle=[];
       if(d.length){
         let cur=d[0], n=1;
         for(let k=1;k<d.length;k++){ if(d[k]===cur&&n<65535)n++; else{rle.push([n,cur]);cur=d[k];n=1;} }
         rle.push([n,cur]);
       }
-      return {
-        id:b.id, stand:b.stand, tier:(b.tier==='RANG1' ? 'UNTER' : (b.tier==='UNTER' ? 'UNTER' : 'OBER')),
+      return [{
+        id:b.sourceId, stand:b.stand, tier:(b.tier==='RANG1' ? 'UNTER' : (b.tier==='UNTER' ? 'UNTER' : 'OBER')),
         order:b.order,
-        rows:b.rows, seats:b.seats, rle
-      };
+        rows:shape.rows, seats:shape.seats, rle
+      }];
     })};
   const button = document.getElementById('btnSave');
   button.disabled = true;

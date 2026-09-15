@@ -289,6 +289,7 @@
         <label>Menge
           <select id="expAmount"><option>1000</option><option>2000</option><option>5000</option><option>10000</option><option>20000</option></select>
         </label>
+        <p class="muted" style="margin:0">Vorschau bis maximal 150.000 Plätze</p>
         <button class="btn" id="btnExpand">AUSBAUEN</button>
       </div>
     </div>
@@ -325,5 +326,5 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=17"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=18"></script>
 {% endblock %}

@@ -99,6 +99,16 @@ class StadiumEditorTests(TestCase):
         self.assertNotIn('138/D.meta.maxR', editor_js)
         self.assertIn('function editorBackground(){', editor_js)
         self.assertIn('D?.surroundings || {}', editor_js)
+        self.assertIn('const MAX_PREVIEW_CAPACITY = 150000;', editor_js)
+        self.assertIn('const MIN_EXPANSION_SEATS = 1000;', editor_js)
+        self.assertIn('blocks: structuredClone(blocks)', editor_js)
+        self.assertIn('designBlockShape.get(b.sourceId)', editor_js)
+        self.assertIn('if(b.simulated) return [];', editor_js)
+        self.assertIn('previewId: `preview-', editor_js)
+        self.assertIn('sourceId: block.simulated', editor_js)
+        self.assertIn('hoverBlock = null;', editor_js)
+        self.assertIn('baseData = seatData.map(data => data.slice());', editor_js)
+        self.assertIn('D, previewCapacity())', editor_js)
         self.assertIn('requestAnimationFrame(() => requestAnimationFrame(resize))', editor_js)
         adapter_js = (
             Path(__file__).resolve().parent
@@ -106,6 +116,10 @@ class StadiumEditorTests(TestCase):
         ).read_text(encoding='utf-8')
         self.assertIn("surroundings: mode === 'editor' ? true : null", adapter_js)
         self.assertIn('geometry?.surroundings', adapter_js)
+        self.assertIn('next.blocks = Array.from(sourceById.values())', adapter_js)
+        self.assertIn('block.previewId ?? block.sourceId ?? block.id', adapter_js)
+        self.assertIn('quad: canonicalEditorQuad(block, geometry, target.quad)', adapter_js)
+        self.assertIn('Number.isFinite(Number(previewCapacity))', adapter_js)
 
     def test_editor_is_embedded_in_the_global_management_shell(self):
         self.client.force_login(self.user)
@@ -137,6 +151,7 @@ class StadiumEditorTests(TestCase):
         response = self.client.get(reverse('stadium_editor'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Ausbau · Simulator')
+        self.assertContains(response, 'Vorschau bis maximal 150.000 Plätze')
         self.assertContains(response, 'class="main has-admin"', html=False)
         self.assertContains(response, 'class="admin-tools"', html=False)
 

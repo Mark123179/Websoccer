@@ -74,3 +74,17 @@ alte Editor-Hilfswerte. Ein fehlender Radius machte die 2D-Skalierung zu `NaN`.
 
 **How to apply:** Explizite gültige Metadaten verwenden, sonst Mittelpunkt und
 maximalen Konturradius aus `outline` berechnen.
+
+## Editor- und Scene-Identitäten
+
+Der Stadioneditor verwendet fortlaufende lokale Blockindizes für Interaktion
+und Undo. Kanonische Speicher-IDs und flüchtige Vorschau-IDs bleiben davon
+getrennt.
+
+**Why:** Kanonische Block-IDs müssen eindeutig, aber nicht fortlaufend sein.
+Ausbauvorschauen können zusätzliche Blöcke erzeugen; eine gemeinsame ID würde
+bei Lücken kollidieren und 2D-Auswahl, 3D-Scene oder Designexport vertauschen.
+
+**How to apply:** Persistierte Blöcke behalten eine separate kanonische ID.
+Nur temporäre Vorschau-Blöcke erhalten eine eigene Renderer-ID und werden nie
+als Geometrie oder Kapazität gespeichert.
