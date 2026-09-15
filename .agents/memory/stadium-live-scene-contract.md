@@ -63,3 +63,14 @@ ausgeblendete WebGL-Bühne muss ihre Layoutgröße behalten.
 
 **How to apply:** Kamera-Matrizen direkt aktualisieren; nur Scene-, Licht-,
 Kameraart- oder echte Größenänderungen dürfen einen Rebuild auslösen.
+
+## Abgeleitete Ansichtsgrenzen
+
+Runtime-Ansichten dürfen optionale Legacy-Metadaten wie `meta.maxR` nicht
+voraussetzen; Ansichtsgrenzen werden aus der Live-Scene-Kontur abgeleitet.
+
+**Why:** Kanonische Live Scenes enthalten die Geometrie, aber nicht zwingend
+alte Editor-Hilfswerte. Ein fehlender Radius machte die 2D-Skalierung zu `NaN`.
+
+**How to apply:** Explizite gültige Metadaten verwenden, sonst Mittelpunkt und
+maximalen Konturradius aus `outline` berechnen.

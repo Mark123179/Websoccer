@@ -99,8 +99,16 @@ function resize(){
 }
 /* Welt → Screen (2D): Stadion mittig, Blaupause sichtbar */
 let SC = 1, CX = 0, CY = 0;
+function stadiumMaxRadius(){
+  const configured = Number(D?.meta?.maxR);
+  if(Number.isFinite(configured) && configured > 0) return configured;
+  const center = D?.meta?.fieldC || [D?._cx || 0, D?._cy || 0];
+  const radii = (D?.outline || []).map(point =>
+    Math.hypot(point[0] - center[0], point[1] - center[1]));
+  return Math.max(1, ...radii.filter(Number.isFinite));
+}
 function fitView(){
-  const R = 430 * (D ? D.meta.maxR/138 : 1);      // relative Stadiongröße konstant halten
+  const R = 430 * (D ? stadiumMaxRadius()/138 : 1); // relative Stadiongröße konstant halten
   SC = Math.min(W, H) / (2*R) * 1.55;
   CX = W/2; CY = H/2 + 6;
 }
@@ -475,7 +483,7 @@ function render3D(){
   const yaw = yaw3d*Math.PI/180, tilt = tilt3d*Math.PI/180;
   const cy2 = Math.cos(yaw), sy2 = Math.sin(yaw);
   const cT = Math.cos(tilt), sT = Math.sin(tilt);
-  const S3 = Math.min(W,H)/900 * 1.78 * (138/D.meta.maxR);
+  const S3 = Math.min(W,H)/900 * 1.78 * (138/stadiumMaxRadius());
   const to3 = (x,y,z) => {
     const X = x*cy2 - y*sy2, Y = x*sy2 + y*cy2;
     return [W/2 + X*S3, H/2 + 95 + (Y*cT)*-S3 - z*sT*S3, Y];
