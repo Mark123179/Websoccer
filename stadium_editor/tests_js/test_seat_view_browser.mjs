@@ -93,6 +93,9 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
     'three',
     'the editor must render the WebGL seat view',
   );
+  const seatStats = await page.evaluate(() => window.seatViewTest.api.stage.stats);
+  assert.ok(seatStats.seats > 2_000, 'the WebGL stage must create individual seat instances');
+  assert.equal(seatStats.seats, 2_604);
 
   const initial = await snapshot(page);
   assert.ok(

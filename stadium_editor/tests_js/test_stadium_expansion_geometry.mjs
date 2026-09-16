@@ -174,6 +174,33 @@ test('absolute expansion size maps 10k and 20k to distinct visible rows', () => 
   assert.equal(geometryApi.expansionVisualRows(68_001), 69);
 });
 
+test('resizing a painted block projects its asymmetric pattern across every new row', () => {
+  const source = new Uint8Array([
+    1, 2, 3, 4,
+    5, 6, 7, 8,
+  ]);
+  const projected = geometryApi.projectSeatGrid(source, 2, 4, 4, 4);
+  assert.deepEqual(Array.from(projected), [
+    1, 2, 3, 4,
+    1, 2, 3, 4,
+    5, 6, 7, 8,
+    5, 6, 7, 8,
+  ]);
+  assert.equal(projected.filter(value => value !== 0).length, projected.length);
+});
+
+test('a new preview tier inherits the full local colour distribution', () => {
+  const source = new Uint8Array([
+    1, 1, 2, 2,
+    3, 3, 4, 4,
+    5, 5, 6, 6,
+  ]);
+  const inherited = geometryApi.projectSeatGrid(source, 3, 4, 6, 8);
+  assert.equal(inherited.length, 48);
+  assert.deepEqual(new Set(inherited), new Set(source));
+  assert.equal(inherited.filter(value => value === 0).length, 0);
+});
+
 test('expands every exterior section of the selected stand as one batch', () => {
   const {blocks, geometry} = fixture();
   const northCenter = blocks.find(block => block.stand === 'NORD');

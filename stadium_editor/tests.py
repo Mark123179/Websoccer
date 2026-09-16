@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=31',
+            'stadium_editor/editor.js?v=33',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -201,6 +201,11 @@ class StadiumEditorTests(TestCase):
             "from './stadium_geometry_helpers.js?v=25'",
             stage_js,
         )
+        self.assertIn(
+            "import {buildSeatRenderPlan, seatBasis} "
+            "from './seat_rendering.js?v=2'",
+            stage_js,
+        )
         self.assertIn('const hasExpansion = scene.blocks.some', stage_js)
         self.assertIn(
             'facadeEdgeTopHeights([a, b2], facadeBlocks, 2.5, roofSegs)',
@@ -208,7 +213,7 @@ class StadiumEditorTests(TestCase):
         )
         self.assertIn('const support = blockSupportQuads(b);', stage_js)
         self.assertIn('for (const wall of support.sideWalls)', stage_js)
-        self.assertIn('new THREE.Vector3(0, 1, 0), Math.PI', stage_js)
+        self.assertNotIn('new THREE.Vector3(0, 1, 0), Math.PI', stage_js)
 
     def test_stage_adapter_roof_fallback_and_expansion_undo_behavior(self):
         script = (

@@ -108,3 +108,4 @@
 - [Manager-Timeline Ergebnis-Tickets](manager-timeline-result-tickets.md) — jedes Timeline-Ereignis mit Ergebnis ist ein Panorama-Ticket; fehlende Altdaten dürfen das Ticket nicht verhindern.
 - [Automatische Manager-Timeline](automatic-manager-timeline.md) — Systemereignisse brauchen stabile Quellen; Finals nur nach verbindlichem Abschluss und mit Spielzeit-Manager-Snapshot.
 - [Stadionausbau-Vorschauvertrag](stadium-expansion-preview-contract.md) — Baugröße ist absolut statt bestandsproportional; Sitzkamera-Events gehören an das ersetzbare WebGL-Canvas.
+- [Stadionsitz-Basis](stadium-seat-basis.md) — Sitzachsen für Quaternionen müssen rechtshändig bleiben; Hochachse nie allein spiegeln, Lehnenrichtung geometrisch ableiten.

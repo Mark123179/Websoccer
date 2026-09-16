@@ -1698,21 +1698,24 @@ function allocateCapacity(total, refBlocks){
 }
 function growBlockRows(i, add, capacityAdd){
   const b = blocks[i];
+  const oldRows = b.rows;
   const [A,B,C,Dq] = b.quad;
   const dL = [(A[0]-Dq[0])/b.rows, (A[1]-Dq[1])/b.rows];
   const dR = [(B[0]-C[0])/b.rows, (B[1]-C[1])/b.rows];
   b.quad[0] = [A[0]+dL[0]*add, A[1]+dL[1]*add];
   b.quad[1] = [B[0]+dR[0]*add, B[1]+dR[1]*add];
   b.z1 = b.z1 + ((b.z1-b.z0)/b.rows || .77) * add;
-  const nb = new Uint8Array((b.rows+add)*b.seats);
-  nb.set(baseData[i]);                              // alte Reihen bleiben, neue = 0 (Beton)
-  baseData[i] = nb;
+  baseData[i] = expansionGeometry.projectSeatGrid(
+    baseData[i],oldRows,b.seats,oldRows+add,b.seats,
+  );
+  seatData[i] = expansionGeometry.projectSeatGrid(
+    seatData[i],oldRows,b.seats,oldRows+add,b.seats,
+  );
   b.rows += add;
   b.geometryRows = b.rows;
   b.capacity += capacityAdd;
   b.previewCapacity = b.capacity;
   const c = texCache[i]; c.width = b.seats; c.height = b.rows;
-  seatData[i] = new Uint8Array(b.rows*b.seats);
 }
 function addNewTier(refBlocks, seatType, rows, totalCapacity){
   const capacityShares=allocateCapacity(totalCapacity,refBlocks);
@@ -1739,9 +1742,14 @@ function addNewTier(refBlocks, seatType, rows, totalCapacity){
       z0: rb.z1 + 2, z1: rb.z1 + 2 + slope*rows,
     };
     const renderBlock = renderableBlock(nb, blocks.length);
+    const sourceIndex=blocks.indexOf(rb);
     blocks.push(renderBlock);
-    baseData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
-    seatData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
+    baseData.push(expansionGeometry.projectSeatGrid(
+      baseData[sourceIndex],rb.rows,rb.seats,renderBlock.rows,renderBlock.seats,
+    ));
+    seatData.push(expansionGeometry.projectSeatGrid(
+      seatData[sourceIndex],rb.rows,rb.seats,renderBlock.rows,renderBlock.seats,
+    ));
     const c = document.createElement('canvas'); c.width=renderBlock.seats; c.height=renderBlock.rows;
     texCache.push(c);
     created.push(renderBlock);

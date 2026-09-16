@@ -14,6 +14,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helpers.js?v=25';
+import {buildSeatRenderPlan, seatBasis} from './seat_rendering.js?v=2';
 
 export const PRESET = Object.freeze({
   height: 42,        // Kamerahöhe über Rasen (m)
@@ -28,7 +29,8 @@ export const PRESET = Object.freeze({
 export const RULES = Object.freeze({
   seatPitch: 0.5,    // m je Sitz
   rowPitch: 0.8,     // m je Reihe (Stufenkante)
-  seatBox: [0.42, 0.45, 0.40], // Sitzschale b × h × t
+  seatBox: [0.42, 0.56, 0.42], // Sitzschale b × h × t
+  seatClearance: 0.04, // Mindestabstand zur Trittfläche
   soffitMax: 6,      // Blende unter der Vorderkante, max. Höhe
   gapPanelMax: 3.0,  // Fugenpaneel nur bis zu dieser Lücke — offene Ecken bleiben offen
   fascia: 1.2,       // Traufkante des Dachs (m)
@@ -67,13 +69,6 @@ function orientBlock(q) {
   const width = (len2(v2(A, B)) + len2(v2(D, C))) / 2;
   const depth = (len2(v2(A, D)) + len2(v2(B, C))) / 2;
   return { A, B, C, D, width, depth, n };
-}
-
-function decodeRle(rle, total) {
-  const out = new Uint8Array(total);
-  let i = 0;
-  for (const [n, c] of rle) { out.fill(c, i, Math.min(total, i + n)); i += n; }
-  return out;
 }
 
 /* Drehung der Szene, sodass die Kameraseite (mainStand) bei +Y liegt. */
@@ -237,16 +232,25 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   }
 
   let seatCount = 0;
+  const seatPaletteCounts = Array(palette.length).fill(0);
   const seatTransforms = [], seatColors = [], seatIndex = [];
   const tmpM = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), tmpS = new THREE.Vector3(1, 1, 1), tmpP = new THREE.Vector3();
   const basis = new THREE.Matrix4();
 
   for (const b of drawn) {
     const f = frames.get(b.id);
-    const nRows = Math.max(1, Math.round(f.depth / rules.rowPitch));
-    const nCols = Math.max(1, Math.round(f.width / rules.seatPitch));
-    const rle = decodeRle(b.rle, b.rows * b.seats);
+    const seatPlan = buildSeatRenderPlan({
+      width: f.width, depth: f.depth,
+      rowPitch: rules.rowPitch, seatPitch: rules.seatPitch,
+      rows: b.rows, seats: b.seats, rle: b.rle,
+      paletteSize: palette.length,
+    });
+    const nRows = seatPlan.rows;
+    const nCols = seatPlan.cols;
     const rise = b.z1 - b.z0;
+    const seatClearance = Math.max(
+      rules.seatClearance, rise / nRows - 0.36,
+    );
     const support = blockSupportQuads(b);
     const wallBase = support.wallBase;
     const P = (u, v, z) => toWorld(lerp2(lerp2(f.A, f.B, u), lerp2(f.D, f.C, u), v), z);
@@ -282,26 +286,26 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     }
 
     // Sitze auf festem Raster; Farbe aus der RLE-Zelle
-    const ex = toWorld(f.B, 0).sub(toWorld(f.A, 0)).normalize();          // Reihenrichtung
-    const ez = toWorld(mid(f.D, f.C), 0).sub(toWorld(mid(f.A, f.B), 0)).normalize(); // nach hinten
-    const ey = new THREE.Vector3().crossVectors(ez, ex).normalize();
-    if (ey.y < 0) ey.negate();
-    basis.makeBasis(ex, ey, ez);
+    const axes = seatBasis(
+      toWorld(f.A, 0).toArray(), toWorld(f.B, 0).toArray(),
+      toWorld(f.D, 0).toArray(), toWorld(f.C, 0).toArray(),
+    );
+    basis.makeBasis(
+      new THREE.Vector3(...axes.right),
+      new THREE.Vector3(...axes.up),
+      new THREE.Vector3(...axes.back),
+    );
     tmpQ.setFromRotationMatrix(basis);
-    tmpQ.multiply(new THREE.Quaternion().setFromAxisAngle(
-      new THREE.Vector3(0, 1, 0), Math.PI,
-    ));
     for (let i = 0; i < nRows; i++) {
       const v = (i + 0.5) / nRows, zTread = b.z0 + (i / nRows) * rise;
-      const row = Math.min(b.rows - 1, Math.floor(v * b.rows));
       for (let j = 0; j < nCols; j++) {
         const u = (j + 0.5) / nCols;
-        const col = Math.min(b.seats - 1, Math.floor(u * b.seats));
-        const idx = rle[row * b.seats + col];
-        tmpP.copy(P(u, v, zTread + rules.seatBox[1] / 2));
+        const idx = seatPlan.colours[i * nCols + j];
+        tmpP.copy(P(u, v, zTread + seatClearance));
         tmpM.compose(tmpP, tmpQ, tmpS);
         seatTransforms.push(tmpM.clone()); seatIndex.push({ block: b.id, row: i, col: j, position: tmpP.clone() });
         seatColors.push(palette[idx] || palette[0]);
+        seatPaletteCounts[idx in palette ? idx : 0]++;
         seatCount++;
       }
     }
@@ -503,10 +507,17 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   let seats = null;
   if (seatMode === 'instances' && seatCount) {
     // Sitzschale: Sitzfläche + Rückenlehne, beides in einer Geometrie (Instanzen bleiben ein Draw-Call)
-    const pan = new THREE.BoxGeometry(rules.seatBox[0], 0.08, rules.seatBox[2]); pan.translate(0, -0.12, 0);
-    const back = new THREE.BoxGeometry(rules.seatBox[0], 0.36, 0.06); back.translate(0, 0.06, rules.seatBox[2] / 2 - 0.03);
+    const pan = new THREE.BoxGeometry(rules.seatBox[0], 0.10, rules.seatBox[2]);
+    pan.translate(0, 0.12, -0.02);
+    const back = new THREE.BoxGeometry(rules.seatBox[0], 0.52, 0.08);
+    back.translate(0, 0.30, rules.seatBox[2] / 2 - 0.04);
     const geo = mergeGeometries([pan, back]);
-    seats = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x1a1d21, emissiveIntensity: 1 }), seatCount);
+    // Vereinsfarben müssen auch im Nachtmodus und bei steilen Lehnen exakt
+    // lesbar bleiben. Die Stufen liefern weiterhin die räumliche Schattierung;
+    // die getrennten Schalen werden selbst nicht vom Flutlicht abgedunkelt.
+    seats = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({
+      color: 0xffffff, toneMapped: false,
+    }), seatCount);
     for (let i = 0; i < seatCount; i++) { seats.setMatrixAt(i, seatTransforms[i]); seats.setColorAt(i, seatColors[i]); }
     seats.instanceMatrix.needsUpdate = true; seats.instanceColor.needsUpdate = true;
     three.add(seats);
@@ -574,6 +585,12 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   return {
     project, render, dispose, camera, renderer, seatAt, adaptQuality,
-    stats: { blocks: drawn.length, blocksTotal: scene.blocks.length, seats: seatCount, roof: roofSegs.length, mainStand, rotationDeg: Math.round(phi * 180 / Math.PI), spots: spotCount, roofEdges: roofEdgeMids.length },
+    stats: {
+      blocks: drawn.length, blocksTotal: scene.blocks.length,
+      seats: seatCount, seatPaletteCounts,
+      roof: roofSegs.length, mainStand,
+      rotationDeg: Math.round(phi * 180 / Math.PI),
+      spots: spotCount, roofEdges: roofEdgeMids.length,
+    },
   };
 }
