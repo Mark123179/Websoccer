@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=29',
+            'stadium_editor/editor.js?v=31',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -112,6 +112,10 @@ class StadiumEditorTests(TestCase):
         self.assertIn('previewId: `preview-', editor_js)
         self.assertIn('const sourceId = block.simulated', editor_js)
         self.assertIn('function expansionEnvelope(stand){', editor_js)
+        self.assertNotIn('function outerTierOf(stand', editor_js)
+        self.assertIn('let ref=expansionEnvelope(stand);', editor_js)
+        self.assertIn('expansionGeometry.expansionStep(', editor_js)
+        self.assertIn('clearToast();', editor_js)
         self.assertIn('function standAngle(stand){', editor_js)
         self.assertIn('function previewRoofs(){', editor_js)
         self.assertIn('for(const roof of roofsFor2D()){', editor_js)

@@ -174,6 +174,66 @@ test('absolute expansion size maps 10k and 20k to distinct visible rows', () => 
   assert.equal(geometryApi.expansionVisualRows(68_001), 69);
 });
 
+test('expands every exterior section of the selected stand as one batch', () => {
+  const {blocks, geometry} = fixture();
+  const northCenter = blocks.find(block => block.stand === 'NORD');
+  const northUpper = {
+    ...structuredClone(northCenter),
+    id: 20,
+    sourceId: 20,
+    lineageId: 20,
+    tier: 'OBER',
+    order: 20,
+    rows: 18,
+    z0: 12,
+    z1: 26,
+    quad: northCenter.quad.map(point => [
+      point[0] * 1.22,
+      point[1] * 1.22,
+    ]),
+  };
+  const northWest = makeBlock(21, 'NORD', [-48, 64], 28);
+  blocks.push(northUpper, northWest);
+
+  const selected = geometryApi.expansionEnvelope(
+    'NORD', blocks, blocks, geometry,
+  );
+  const selectedIds = new Set(selected.map(block => block.id));
+  assert.ok(selectedIds.has(20), 'the upper north section must be selected');
+  assert.ok(selectedIds.has(21), 'the north-west transition must be selected');
+  assert.ok(selectedIds.size >= 2, 'NORD must contain multiple exterior sections');
+  assert.ok(
+    selected.every(block => block.stand === 'NORD'),
+    'no other stand may enter the NORD batch',
+  );
+
+  const before = new Map(blocks.map(block => [block.id, block.rows]));
+  const step = geometryApi.expansionStep(selected, 'SITZ', 10);
+  assert.equal(step.kind, 'grow');
+  assert.equal(step.rows, 10);
+  for (const block of step.blocks) block.rows += step.rows;
+
+  for (const block of blocks) {
+    assert.equal(
+      block.rows,
+      before.get(block.id) + (selectedIds.has(block.id) ? 10 : 0),
+      `${block.stand} block ${block.id} changed unexpectedly`,
+    );
+  }
+});
+
+test('starts one complete new tier when a selected section cannot grow', () => {
+  const {blocks, geometry} = fixture(Math.PI / 5, true);
+  const selected = geometryApi.expansionEnvelope(
+    'NORD', blocks, blocks, geometry,
+  );
+  selected[0].rows = 42;
+  const step = geometryApi.expansionStep(selected, 'SITZ', 20);
+  assert.equal(step.kind, 'tier');
+  assert.equal(step.rows, 20);
+  assert.deepEqual(step.blocks, selected);
+});
+
 test('preview expansion blocks are restored by undo snapshots and omitted from export', () => {
   const persistent = {id: 1, sourceId: 1, rows: 2, seats: 2};
   const preview = {id: 2, previewId: 'preview-1', simulated: true, rows: 3, seats: 2};

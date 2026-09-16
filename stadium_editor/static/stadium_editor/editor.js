@@ -1167,6 +1167,7 @@ function applySnap(stackFrom, stackTo){
   const snap = stackFrom.pop(); if(!snap) return;
   stackTo.push(currentSnapshot());
   restoreSnapshot(snap);
+  clearToast();
   syncUndoButtons(); recompose(); syncPressList();
 }
 function syncUndoButtons(){
@@ -1629,24 +1630,6 @@ function expansionEnvelope(stand){
     stand,blocks,[...baseBlockGeometry.values()],D,
   );
 }
-function outerTierOf(stand,seatType=null){
-  const candidates=expansionEnvelope(stand).filter(
-    block=>!seatType || block.type===seatType,
-  );
-  if(!candidates.length) return null;
-  const byTier=new Map();
-  for(const block of candidates){
-    const list=byTier.get(block.tier) || [];
-    list.push(block);
-    byTier.set(block.tier,list);
-  }
-  return [...byTier.values()].sort((left,right)=>{
-    const radius=items=>items.reduce(
-      (total,block)=>total+blockExpansionInfo(block).radius,0,
-    )/items.length;
-    return radius(right)-radius(left);
-  })[0];
-}
 function previewRoofs(){
   const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
   if(!roofs.length) return null;
@@ -1785,16 +1768,17 @@ function expandStand(stand, seatType, amount){
   const totalRows=expansionGeometry.expansionVisualRows(amount);
   let remainingRows=totalRows;
   let remainingCapacity=amount;
-  let ref=outerTierOf(stand);
+  let ref=expansionEnvelope(stand);
   while(remainingRows>0 && ref?.length){
-    const room=ref.every(block=>block.type===seatType)
-      ? Math.max(0,Math.min(...ref.map(block=>MAX_ROWS-block.rows)))
-      : 0;
-    const rows=Math.min(remainingRows,room || MAX_ROWS);
+    const step=expansionGeometry.expansionStep(
+      ref,seatType,remainingRows,MAX_ROWS,
+    );
+    if(!step) break;
+    const rows=step.rows;
     const capacityPart=rows===remainingRows
       ? remainingCapacity
       : Math.round(amount*rows/totalRows);
-    if(room){
+    if(step.kind==='grow'){
       const shares=allocateCapacity(capacityPart,ref);
       ref.forEach((block,index)=>
         growBlockRows(blocks.indexOf(block),rows,shares[index]));
@@ -2062,6 +2046,12 @@ function setView(v){
 
 /* Toast */
 let toastT;
+function clearToast(){
+  const t = document.getElementById('toast');
+  clearTimeout(toastT);
+  t.classList.remove('show');
+  t.textContent = '';
+}
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');

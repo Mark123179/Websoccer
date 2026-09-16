@@ -102,6 +102,22 @@
     return Math.max(1, Math.ceil(Math.max(0, Number(amount) || 0) / 1000));
   }
 
+  function expansionStep(refBlocks, seatType, remainingRows, maxRows = 42) {
+    if (!Array.isArray(refBlocks) || !refBlocks.length || remainingRows <= 0) {
+      return null;
+    }
+    const room = refBlocks.every(block => block.type === seatType)
+      ? Math.max(0, Math.min(...refBlocks.map(block =>
+        maxRows - Number(block.rows || 0)
+      )))
+      : 0;
+    return {
+      kind: room > 0 ? 'grow' : 'tier',
+      rows: Math.min(remainingRows, room || maxRows),
+      blocks: refBlocks,
+    };
+  }
+
   function stitchRoofSegments(segments, baselineSegments = segments, tolerance = 4) {
     const result = structuredClone(segments);
     const vertices = [];
@@ -147,6 +163,7 @@
     angleDistance,
     blockExpansionInfo,
     expansionEnvelope,
+    expansionStep,
     expansionVisualRows,
     outerEnvelope,
     pitchLocal,

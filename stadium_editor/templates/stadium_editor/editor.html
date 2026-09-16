@@ -61,10 +61,12 @@
   min-width:0;background:var(--panel);
   border-right:1px solid var(--line);padding:14px;overflow-y:auto;
   display:flex;flex-direction:column;gap:14px;grid-column:1;grid-row:1;
+  position:relative;z-index:3;
 }
 .admin-tools{
   min-width:0;background:rgba(9,23,34,.64);
   border-left:1px solid var(--line);padding:14px;overflow-y:auto;
+  position:relative;z-index:3;
 }
 .admin-tools .panel{background:rgba(7,17,26,.72)}
 .stage{height:100%;min-width:0;min-height:0;position:relative;background:var(--stadium-bg);grid-column:2;grid-row:1}
@@ -326,6 +328,6 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=29"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=29"></script>
+<script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=31"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=31"></script>
 {% endblock %}
