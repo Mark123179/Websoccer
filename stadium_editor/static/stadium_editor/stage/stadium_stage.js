@@ -15,6 +15,12 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helpers.js?v=25';
 import {buildSeatRenderPlan, seatBasis} from './seat_rendering.js?v=2';
+import {PITCH, buildPitchLayout} from './pitch_geometry.js?v=1';
+
+const SKY_URLS = Object.freeze({
+  day: new URL('./assets/stadium_sky_day.png?v=1', import.meta.url).href,
+  night: new URL('./assets/stadium_sky_night.png?v=1', import.meta.url).href,
+});
 
 export const PRESET = Object.freeze({
   height: 42,        // Kamerahöhe über Rasen (m)
@@ -37,8 +43,6 @@ export const RULES = Object.freeze({
   seatMinL: 0.22, wallColor: 0x101316, treadColor: 0x22262b, riserColor: 0x15181c, soffitColor: 0x1c2025,
   roofColor: 0x4a525b, fasciaColor: 0x8a9199, facadeColor: 0x2b3037, buildingColor: 0x2a2f36, greenColor: 0x11301c, roadColor: 0x1a1e23, groundColor: 0x0d1115, pitchColor: 0x0f5a2b, pitchColor2: 0x0d5027,
 });
-
-const PITCH = { length: 105, width: 68 };
 
 /* ── Geometrie-Hilfen ───────────────────────────────────────────────── */
 const v2 = (a, b) => [b[0] - a[0], b[1] - a[1]];
@@ -143,6 +147,16 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   const three = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera();
   three.add(camera);
+  let active = true;
+  let skyTexture = null;
+  let skyMesh = null;
+  if (isSeat) {
+    skyTexture = new THREE.TextureLoader().load(
+      night ? SKY_URLS.night : SKY_URLS.day,
+      () => { if (active) render(); },
+    );
+    skyTexture.colorSpace = THREE.SRGBColorSpace;
+  }
 
   /* Kamera: Preset, Hauptpunkt unter der Bildmitte — exakt die Projektion der bisherigen Bühne,
    * nur als echte (nicht gespiegelte) Kamera. */
@@ -182,6 +196,28 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   }
   camera.updateProjectionMatrix = applyCamera;
   applyCamera();
+  if (skyTexture) {
+    const distance = 500;
+    const imageAspect = 2688 / 1520;
+    const viewHeight = 2 * Math.tan(camera.fov * Math.PI / 360) * distance;
+    const viewWidth = viewHeight * camera.aspect;
+    const skyWidth = Math.max(viewWidth, viewHeight * imageAspect) * 1.02;
+    const skyHeight = Math.max(viewHeight, viewWidth / imageAspect) * 1.02;
+    skyMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(skyWidth, skyHeight),
+      new THREE.MeshBasicMaterial({
+        map: skyTexture,
+        depthTest: false,
+        depthWrite: false,
+        fog: false,
+        toneMapped: false,
+      }),
+    );
+    skyMesh.position.z = -distance;
+    skyMesh.renderOrder = -1000;
+    skyMesh.frustumCulled = false;
+    camera.add(skyMesh);
+  }
 
   /* Licht: Hemisphäre + eine Richtung von der Kameraseite — genug für Schalen und Stufen */
   three.add(new THREE.HemisphereLight(night ? 0x3a4454 : 0xdfe7f1, night ? 0x07090d : 0x0a0d12, night ? 0.7 : 1.25));
@@ -524,6 +560,15 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   }
 
   // Laufbahn (Steckbrief/Szene): Tartanring zwischen Innenraum und Rängen, Innenraum als Rasen
+  if (isSeat) {
+    const seatGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(360, 280),
+      new THREE.MeshLambertMaterial({color: rules.greenColor}),
+    );
+    seatGround.rotation.x = -Math.PI / 2;
+    seatGround.position.y = -0.02;
+    three.add(seatGround);
+  }
   if (scene.track && scene.track.outer) {
     const shape = new THREE.Shape(scene.track.outer.map(p => { const r = rot(p); return new THREE.Vector2(-r[0], -r[1]); }));
     if (scene.track.inner) shape.holes.push(new THREE.Path(scene.track.inner.map(p => { const r = rot(p); return new THREE.Vector2(-r[0], -r[1]); })));
@@ -537,23 +582,34 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   // Spielfeld nur für die Abnahme — im Spiel gehört der Rasen der Bühne
   if (drawPitch) {
     const g = new THREE.Group();
-    const stripes = 10;
-    for (let i = 0; i < stripes; i++) {
-      const w = PITCH.length / stripes;
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, PITCH.width), new THREE.MeshLambertMaterial({ color: i % 2 ? rules.pitchColor : rules.pitchColor2, emissive: night ? 0x0b3a1a : 0x000000, emissiveIntensity: night ? 0.3 : 0 }));
-      m.rotation.x = -Math.PI / 2; m.position.set(-(-PITCH.length / 2 + w * (i + 0.5)), 0.01, 0); g.add(m);
+    const pitchLayout = buildPitchLayout(phi);
+    for (const stripe of pitchLayout.stripes) {
+      const [a, b, c, d] = stripe.quad.map(
+        ([x, z]) => new THREE.Vector3(x, 0.01, z),
+      );
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+        a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z,
+        a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z,
+      ], 3));
+      geometry.computeVertexNormals();
+      g.add(new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+        color: stripe.index % 2 ? rules.pitchColor : rules.pitchColor2,
+        emissive: night ? 0x0b3a1a : 0x000000,
+        emissiveIntensity: night ? 0.3 : 0,
+        side: THREE.DoubleSide,
+      })));
     }
-    const line = (x0, y0, x1, y1) => {
-      const a = toWorld([x0, y0], 0.03), b2 = toWorld([x1, y1], 0.03);
+    for (const segment of pitchLayout.lines) {
+      const a = new THREE.Vector3(segment.from[0], 0.03, segment.from[1]);
+      const b2 = new THREE.Vector3(segment.to[0], 0.03, segment.to[1]);
       const L = a.distanceTo(b2); const mm = new THREE.Mesh(new THREE.BoxGeometry(L, 0.02, 0.12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       mm.position.copy(a).lerp(b2, 0.5); mm.lookAt(b2); mm.rotateY(Math.PI / 2); g.add(mm);
-    };
-    const hx = PITCH.length / 2, hy = PITCH.width / 2;
-    line(-hx, -hy, hx, -hy); line(-hx, hy, hx, hy); line(-hx, -hy, -hx, hy); line(hx, -hy, hx, hy); line(0, -hy, 0, hy);
-    for (const s of [-1, 1]) { line(s * hx, -20.16, s * (hx - 16.5), -20.16); line(s * hx, 20.16, s * (hx - 16.5), 20.16); line(s * (hx - 16.5), -20.16, s * (hx - 16.5), 20.16);
-      line(s * hx, -9.16, s * (hx - 5.5), -9.16); line(s * hx, 9.16, s * (hx - 5.5), 9.16); line(s * (hx - 5.5), -9.16, s * (hx - 5.5), 9.16); }
+    }
     const circ = new THREE.Mesh(new THREE.RingGeometry(9.03, 9.15, 64), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    circ.rotation.x = -Math.PI / 2; circ.position.y = 0.03; g.add(circ);
+    circ.rotation.x = -Math.PI / 2;
+    circ.position.set(pitchLayout.center[0], 0.03, pitchLayout.center[1]);
+    g.add(circ);
     three.add(g);
   }
 
@@ -581,13 +637,29 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     if (fps < 40 && pr > 0.6) renderer.setPixelRatio(Math.max(0.6, pr - 0.2));
     else if (fps > 70 && pr < max) renderer.setPixelRatio(Math.min(max, pr + 0.2));
   }
-  function dispose() { renderer.dispose(); bodyGeo.dispose(); roofGeo.dispose(); if (seats) seats.geometry.dispose(); }
+  function dispose() {
+    active = false;
+    renderer.dispose();
+    bodyGeo.dispose();
+    roofGeo.dispose();
+    skyTexture?.dispose();
+    skyMesh?.geometry.dispose();
+    skyMesh?.material.dispose();
+    if (seats) seats.geometry.dispose();
+  }
 
   return {
     project, render, dispose, camera, renderer, seatAt, adaptQuality,
+    backgroundReady() {
+      return !skyTexture ||
+        Boolean(skyTexture.image?.complete && skyTexture.image?.naturalWidth);
+    },
     stats: {
       blocks: drawn.length, blocksTotal: scene.blocks.length,
       seats: seatCount, seatPaletteCounts,
+      pitchStripes: drawPitch ? 10 : 0,
+      pitchLines: drawPitch ? 17 : 0,
+      sky: isSeat ? (night ? 'night' : 'day') : null,
       roof: roofSegs.length, mainStand,
       rotationDeg: Math.round(phi * 180 / Math.PI),
       spots: spotCount, roofEdges: roofEdgeMids.length,

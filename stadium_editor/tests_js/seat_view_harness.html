@@ -23,7 +23,7 @@
   <script type="module">
     import {
       mountStadiumStage,
-    } from '/stadium_editor/static/stadium_editor/stadium_stage_adapter.js';
+    } from '/stadium_editor/static/stadium_editor/stadium_stage_adapter.js?v=7';
 
     const block = (id, stand, quad) => ({
       id, stand, tier: 'UNTEN', order: 0, rows: 8, seats: 16,
@@ -39,11 +39,28 @@
       outline: [[-74, -42], [74, -42], [74, 42], [-74, 42]],
       roof: {mode: 'explicit', segments: []},
     };
+    const query = new URLSearchParams(window.location.search);
+    const turn = Number(query.get('turn') || 0) * Math.PI / 180;
+    if (turn) {
+      const c = Math.cos(turn), s = Math.sin(turn);
+      const rotate = ([x, y]) => [x * c - y * s, x * s + y * c];
+      scene.blocks.forEach(item => { item.quad = item.quad.map(rotate); });
+      scene.outline = scene.outline.map(rotate);
+    }
+    const day = query.get('lighting') !== 'night';
     const element = document.getElementById('editor-stage');
     window.seatViewTest = {scene, element};
     window.seatViewTest.api = await mountStadiumStage({
-      element, scene, mode: 'editor', camera: 'seat',
+      element, scene, mode: 'editor', camera: 'seat', day,
     });
+    while (!window.seatViewTest.api.stage.backgroundReady()) {
+      await new Promise(resolve => window.setTimeout(resolve, 20));
+    }
+    const stats = window.seatViewTest.api.stage.stats;
+    document.body.dataset.sky = stats.sky;
+    document.body.dataset.pitchStripes = String(stats.pitchStripes);
+    document.body.dataset.pitchLines = String(stats.pitchLines);
+    document.body.dataset.rotation = String(stats.rotationDeg);
     window.seatViewTest.ready = true;
   </script>
 </body>

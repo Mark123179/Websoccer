@@ -37,52 +37,26 @@ function loadThreeModule() {
   return threeModulePromise;
 }
 
-export function sceneRotationQuarterTurn(scene) {
-  const main = scene.mainStand || 'SUED';
-  const points = scene.blocks
-    .filter(block => block.stand === main)
-    .flatMap(block => block.quad);
-  if (!points.length) return 0;
-  const center = points.reduce(
-    (sum, point) => [sum[0] + point[0] / points.length,
-      sum[1] + point[1] / points.length],
+function blockMidpoint(block) {
+  return block.quad.reduce(
+    (sum, point) => [sum[0] + point[0] / block.quad.length,
+      sum[1] + point[1] / block.quad.length],
     [0, 0],
   );
-  const theta = Math.atan2(center[1], center[0]);
-  const phi = Math.PI / 2 - theta;
-  return Math.round(phi / (Math.PI / 2)) * (Math.PI / 2);
 }
 
-export function alignPitchStripeMeshes(THREE, pitchGroup, phi) {
-  const stripes = pitchGroup.children.slice(0, 10);
-  const stripeGroup = new THREE.Group();
-  stripes.forEach(stripe => {
-    pitchGroup.remove(stripe);
-    stripeGroup.add(stripe);
-  });
-  stripeGroup.rotation.y = phi;
-  pitchGroup.add(stripeGroup);
-  return stripeGroup;
-}
-
-function withPitchRotation(THREE, scene, factory) {
-  const phi = sceneRotationQuarterTurn(scene);
-  if (Math.abs(phi) < 1e-7) return factory();
-  const originalAdd = THREE.Scene.prototype.add;
-  THREE.Scene.prototype.add = function addWithAlignedPitch(...objects) {
-    objects.forEach(object => {
-      const children = object?.isGroup ? object.children : [];
-      const pitchStripes = children.length >= 10 &&
-        children.slice(0, 10).every(child => child.geometry?.type === 'PlaneGeometry');
-      if (pitchStripes) alignPitchStripeMeshes(THREE, object, phi);
-    });
-    return originalAdd.apply(this, objects);
-  };
-  try {
-    return factory();
-  } finally {
-    THREE.Scene.prototype.add = originalAdd;
-  }
+export function selectSeatBlock(scene) {
+  return (scene.blocks || [])
+    .filter(block => ['WEST', 'OST'].includes(block.stand) &&
+      Array.isArray(block.quad) && block.quad.length === 4)
+    .sort((left, right) => {
+      const leftMid = blockMidpoint(left);
+      const rightMid = blockMidpoint(right);
+      return Math.abs(leftMid[1]) - Math.abs(rightMid[1]) ||
+        Number(left.z0 || 0) - Number(right.z0 || 0) ||
+        (left.stand === 'WEST' ? -1 : 1) ||
+        String(left.id).localeCompare(String(right.id));
+    })[0] || null;
 }
 
 function webglAvailable() {
@@ -438,19 +412,15 @@ export async function mountStadiumStage({
         orbit: state.orbit,
         lighting: state.day ? 'day' : 'night',
       };
-      stage = withPitchRotation(
-        THREE, options.scene, () => mod.createStadiumStage(options),
-      );
+      stage = mod.createStadiumStage(options);
       if (state.camera === 'seat' && !options.seat) {
-        const block = options.scene.blocks?.[0];
+        const block = selectSeatBlock(options.scene);
         const seat = block && stage.seatAt(
           block.id, Math.floor(block.rows / 2), Math.floor(block.seats / 2),
         );
         if (seat) {
           stage.dispose();
-          stage = withPitchRotation(
-            THREE, options.scene, () => mod.createStadiumStage({...options, seat}),
-          );
+          stage = mod.createStadiumStage({...options, seat});
         }
       }
       if (stage.renderer) {

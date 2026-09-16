@@ -8,7 +8,7 @@ const adapterPath = new URL(
 );
 const adapterSource = await readFile(adapterPath, 'utf8');
 const adapterUrl = `data:text/javascript;base64,${Buffer.from(adapterSource).toString('base64')}`;
-const {applyEditorDesign} = await import(adapterUrl);
+const {applyEditorDesign, selectSeatBlock} = await import(adapterUrl);
 const editorPath = new URL('../static/stadium_editor/editor.js', import.meta.url);
 const editorSource = await readFile(editorPath, 'utf8');
 
@@ -62,6 +62,27 @@ const expandedBlock = {
   z1: 7,
   supportZ: 2,
 };
+
+test('seat view always selects the central lower WEST or OST block', () => {
+  const candidates = [
+    {...originalBlock, id: 'NORD', stand: 'NORD'},
+    {...originalBlock, id: 'WEST-FAR', stand: 'WEST',
+      quad: [[-70, 24], [-70, 48], [-82, 52], [-82, 20]]},
+    {...originalBlock, id: 'OST-UPPER', stand: 'OST', z0: 12,
+      quad: [[70, 8], [70, -8], [82, -10], [82, 10]]},
+    {...originalBlock, id: 'WEST-CENTRAL', stand: 'WEST', z0: 1,
+      quad: [[-70, -8], [-70, 8], [-82, 10], [-82, -10]]},
+  ];
+  assert.equal(
+    selectSeatBlock({blocks: candidates}).id,
+    'WEST-CENTRAL',
+  );
+  assert.equal(
+    selectSeatBlock({blocks: candidates.reverse()}).id,
+    'WEST-CENTRAL',
+    'selection must not depend on the last or first editor block',
+  );
+});
 
 test('preserves procedural roof through expansion and undo without explicit editor roofs', () => {
   const expanded = applyEditorDesign(

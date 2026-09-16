@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=33',
+            'stadium_editor/editor.js?v=34',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -206,6 +206,13 @@ class StadiumEditorTests(TestCase):
             "from './seat_rendering.js?v=2'",
             stage_js,
         )
+        self.assertIn(
+            "import {PITCH, buildPitchLayout} "
+            "from './pitch_geometry.js?v=1'",
+            stage_js,
+        )
+        self.assertIn('stadium_sky_day.png?v=1', stage_js)
+        self.assertIn('stadium_sky_night.png?v=1', stage_js)
         self.assertIn('const hasExpansion = scene.blocks.some', stage_js)
         self.assertIn(
             'facadeEdgeTopHeights([a, b2], facadeBlocks, 2.5, roofSegs)',
@@ -220,6 +227,20 @@ class StadiumEditorTests(TestCase):
             Path(__file__).resolve().parent
             / 'tests_js'
             / 'test_stadium_stage_adapter.mjs'
+        )
+        subprocess.run(
+            ['node', '--test', str(script)],
+            cwd=Path(__file__).resolve().parent.parent,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_stadium_pitch_geometry_quarter_turn_contract(self):
+        script = (
+            Path(__file__).resolve().parent
+            / 'tests_js'
+            / 'test_stadium_pitch_geometry.mjs'
         )
         subprocess.run(
             ['node', '--test', str(script)],
@@ -843,9 +864,9 @@ class StadiumEditorTests(TestCase):
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
         ).read_text(encoding='utf-8')
-        self.assertIn('sceneRotationQuarterTurn', adapter)
-        self.assertIn('alignPitchStripeMeshes(THREE, object, phi)', adapter)
-        self.assertIn('pitchGroup.remove(stripe)', adapter)
+        self.assertIn('selectSeatBlock(options.scene)', adapter)
+        self.assertNotIn('THREE.Scene.prototype.add', adapter)
+        self.assertNotIn('alignPitchStripeMeshes', adapter)
 
     def test_live_scene_endpoint_reports_missing_design_and_bad_geometry(self):
         url = reverse('stadium_live_scene', args=[self.club.pk])

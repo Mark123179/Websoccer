@@ -109,3 +109,4 @@
 - [Automatische Manager-Timeline](automatic-manager-timeline.md) — Systemereignisse brauchen stabile Quellen; Finals nur nach verbindlichem Abschluss und mit Spielzeit-Manager-Snapshot.
 - [Stadionausbau-Vorschauvertrag](stadium-expansion-preview-contract.md) — Baugröße ist absolut statt bestandsproportional; Sitzkamera-Events gehören an das ersetzbare WebGL-Canvas.
 - [Stadionsitz-Basis](stadium-seat-basis.md) — Sitzachsen für Quaternionen müssen rechtshändig bleiben; Hochachse nie allein spiegeln, Lehnenrichtung geometrisch ableiten.
+- [Sitzansicht-Himmel für 16:9-Fotos](stadium-seat-sky.md) — normale Himmelsfotos als überdeckende kamerafeste Fernfläche zeigen, nicht als 360°-Panorama.

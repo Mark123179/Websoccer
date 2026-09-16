@@ -61,6 +61,25 @@ function distance(left, right) {
   return Math.hypot(...left.map((value, index) => value - right[index]));
 }
 
+async function backgroundSample(page) {
+  return page.evaluate(() => {
+    const renderer = window.seatViewTest.api.stage.renderer;
+    const gl = renderer.getContext();
+    const width = gl.drawingBufferWidth;
+    const height = gl.drawingBufferHeight;
+    const samples = [];
+    for (const xRatio of [.05, .25, .5, .75, .95]) {
+      const rgba = new Uint8Array(4);
+      gl.readPixels(
+        Math.floor(width * xRatio), Math.floor(height * .92),
+        1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba,
+      );
+      samples.push(Array.from(rgba));
+    }
+    return samples;
+  });
+}
+
 async function drag(page, dx, dy) {
   const canvas = page.locator('#editor-stage canvas');
   const box = await canvas.boundingBox();
@@ -96,6 +115,15 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   const seatStats = await page.evaluate(() => window.seatViewTest.api.stage.stats);
   assert.ok(seatStats.seats > 2_000, 'the WebGL stage must create individual seat instances');
   assert.equal(seatStats.seats, 2_604);
+  assert.equal(seatStats.pitchStripes, 10);
+  assert.equal(seatStats.pitchLines, 17);
+  assert.equal(seatStats.sky, 'day');
+  await page.waitForFunction(
+    () => window.seatViewTest.api.stage.backgroundReady(),
+  );
+  const daySky = await backgroundSample(page);
+  assert.ok(daySky.every(pixel => pixel[3] === 255), 'day sky must fill the view');
+  assert.ok(daySky.some(pixel => pixel[2] > 80), 'day sky must contain blue pixels');
 
   const initial = await snapshot(page);
   assert.ok(
@@ -130,6 +158,42 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   assert.ok(Math.abs(reset.yaw) < 0.1, 'double-click resets yaw toward the pitch');
   assert.ok(Math.abs(reset.pitch) < 0.1, 'double-click resets pitch');
   assert.ok(distance(initial.position, reset.position) < 1e-6);
+
+  await page.evaluate(async () => {
+    await window.seatViewTest.api.update({day: false});
+  });
+  await page.waitForFunction(
+    () => window.seatViewTest.api.stage.backgroundReady(),
+  );
+  const nightStats = await page.evaluate(
+    () => window.seatViewTest.api.stage.stats,
+  );
+  assert.equal(nightStats.sky, 'night');
+  const nightPosition = await snapshot(page);
+  assert.ok(distance(initial.position, nightPosition.position) < 1e-6);
+  const nightSky = await backgroundSample(page);
+  assert.ok(nightSky.every(pixel => pixel[3] === 255), 'night sky must fill the view');
+  assert.notDeepEqual(nightSky, daySky, 'day/night must swap the sky texture');
+
+  for (const degrees of [0, 90, 180, 270]) {
+    await page.evaluate(async ({degrees}) => {
+      const testState = window.seatViewTest;
+      const radians = degrees * Math.PI / 180;
+      const c = Math.cos(radians), s = Math.sin(radians);
+      const point = ([x, y]) => [x * c - y * s, x * s + y * c];
+      const scene = structuredClone(testState.scene);
+      scene.blocks.forEach(block => { block.quad = block.quad.map(point); });
+      scene.outline = scene.outline.map(point);
+      await testState.api.update({scene, day: true});
+    }, {degrees});
+    const pitchCenter = await page.evaluate(
+      () => window.seatViewTest.api.project(0, 0, 0.03),
+    );
+    assert.ok(pitchCenter.visible, `${degrees}° pitch center must face the seat`);
+    const stats = await page.evaluate(() => window.seatViewTest.api.stage.stats);
+    assert.equal(stats.pitchStripes, 10);
+    assert.equal(stats.pitchLines, 17);
+  }
 
   await page.locator('#editor-stage canvas').evaluate(
     canvas => { canvas.dataset.beforeRebuild = 'yes'; },
