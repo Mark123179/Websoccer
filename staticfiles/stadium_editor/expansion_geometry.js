@@ -102,6 +102,43 @@
     return Math.max(1, Math.ceil(Math.max(0, Number(amount) || 0) / 1000));
   }
 
+  function projectSeatGrid(values, oldRows, oldSeats, newRows, newSeats) {
+    if (!values || values.length !== oldRows * oldSeats ||
+        oldRows < 1 || oldSeats < 1 || newRows < 1 || newSeats < 1) {
+      throw new Error('Ungültiges Sitzraster.');
+    }
+    const projected = new Uint8Array(newRows * newSeats);
+    for (let row = 0; row < newRows; row++) {
+      const sourceRow = Math.min(
+        oldRows - 1, Math.floor((row + .5) / newRows * oldRows),
+      );
+      for (let seat = 0; seat < newSeats; seat++) {
+        const sourceSeat = Math.min(
+          oldSeats - 1, Math.floor((seat + .5) / newSeats * oldSeats),
+        );
+        projected[row * newSeats + seat] =
+          values[sourceRow * oldSeats + sourceSeat];
+      }
+    }
+    return projected;
+  }
+
+  function expansionStep(refBlocks, seatType, remainingRows, maxRows = 42) {
+    if (!Array.isArray(refBlocks) || !refBlocks.length || remainingRows <= 0) {
+      return null;
+    }
+    const room = refBlocks.every(block => block.type === seatType)
+      ? Math.max(0, Math.min(...refBlocks.map(block =>
+        maxRows - Number(block.rows || 0)
+      )))
+      : 0;
+    return {
+      kind: room > 0 ? 'grow' : 'tier',
+      rows: Math.min(remainingRows, room || maxRows),
+      blocks: refBlocks,
+    };
+  }
+
   function stitchRoofSegments(segments, baselineSegments = segments, tolerance = 4) {
     const result = structuredClone(segments);
     const vertices = [];
@@ -147,10 +184,12 @@
     angleDistance,
     blockExpansionInfo,
     expansionEnvelope,
+    expansionStep,
     expansionVisualRows,
     outerEnvelope,
     pitchLocal,
     persistentBlockEntries,
+    projectSeatGrid,
     snapshotBlocks,
     standAngles,
     stitchRoofSegments,

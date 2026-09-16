@@ -292,11 +292,11 @@
       var self=this, s=this.state;
       var fmt=function(n){ return (n||0).toLocaleString('de-DE'); };
       var TONE={green:'#30f29c',cyan:'#22e6ff',yellow:'#ffd166',faint:'rgba(244,251,255,.55)'};
-      var todF={tag:'',abend:'brightness(1.03) saturate(1.1) sepia(.16) hue-rotate(-12deg)',nacht:'brightness(.4) saturate(.72) contrast(1.1)'};
+      var todF={tag:'',abend:'brightness(1.03) saturate(1.1) sepia(.16) hue-rotate(-12deg)',nacht:'brightness(.62) saturate(.82) contrast(1.05)'};
       var wetF={sommer:'',herbst:'saturate(1.2) sepia(.16) hue-rotate(-10deg)',winter:'saturate(.72) brightness(1.06)',schnee:'saturate(.58) brightness(1.14) contrast(.95)',weihnachten:'saturate(1.06) brightness(.97)'};
       var stageFilter=((todF[s.tod]||'')+' '+(wetF[s.wetter]||'')).trim()||'none';
       var sceneStyle={position:'absolute',inset:0,zIndex:2,filter:stageFilter,transition:'filter .4s ease'};
-      var todT={tag:null,abend:'linear-gradient(0deg, rgba(255,120,30,.18), rgba(255,80,40,.05) 45%, transparent 72%)',nacht:'radial-gradient(120% 100% at 50% -8%, rgba(26,66,128,.36), transparent 56%), linear-gradient(0deg, rgba(2,7,20,.6), rgba(4,11,26,.28))'};
+      var todT={tag:null,abend:'linear-gradient(0deg, rgba(255,120,30,.18), rgba(255,80,40,.05) 45%, transparent 72%)',nacht:'radial-gradient(120% 100% at 50% -8%, rgba(36,78,138,.28), transparent 58%), linear-gradient(0deg, rgba(2,7,20,.38), rgba(4,11,26,.18))'};
       var wetT={sommer:null,herbst:'linear-gradient(0deg, rgba(190,110,20,.14), transparent 60%)',winter:'linear-gradient(0deg, rgba(180,210,235,.16), rgba(210,228,245,.04) 50%, transparent)',schnee:'linear-gradient(0deg, rgba(225,240,255,.22), rgba(235,245,255,.06) 50%, transparent)',weihnachten:'radial-gradient(90% 70% at 50% 110%, rgba(255,60,60,.13), transparent 60%), linear-gradient(0deg, rgba(40,120,60,.1), transparent 55%)'};
       var tints=[todT[s.tod],wetT[s.wetter]].filter(Boolean);
       var envTintStyle={position:'absolute',inset:0,zIndex:4,pointerEvents:'none',background:tints.length?tints.join(','):'transparent',transition:'background .4s ease'};

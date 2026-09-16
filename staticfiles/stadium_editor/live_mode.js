@@ -473,6 +473,7 @@ async function mount(stage) {
     const controls = {
       camera: stage.dataset.camera || 'orbit',
       day: stage.dataset.day === 'true',
+      floodlight: stage.dataset.floodlight === 'true',
       exposure: Number(stage.dataset.exposure || 1),
     };
     const mounted = await mountStadiumStage({
@@ -483,17 +484,39 @@ async function mount(stage) {
     stage._stadiumStage = mounted;
     const camera = stage.querySelector('[data-stage-camera]');
     const day = stage.querySelector('[data-stage-day]');
+    const floodlight = stage.querySelector('[data-stage-floodlight]');
     const exposure = stage.querySelector('[data-stage-exposure]');
-    const updateStage = () => {
+    const updateCamera = () => {
       stage.dataset.camera = camera?.value || 'orbit';
-      stage.dataset.day = String(Boolean(day?.checked));
-      stage.dataset.exposure = exposure?.value || '1';
       if (stage._stadiumStage?.kind === 'three') {
-        stage._stadiumStage.update({camera: stage.dataset.camera, day: day?.checked,
-          floodlight: !day?.checked, exposure: Number(stage.dataset.exposure)}).catch(() => {});
+        stage._stadiumStage.update({
+          camera: stage.dataset.camera,
+        }).catch(() => {});
       }
     };
-    [camera, day, exposure].filter(Boolean).forEach(control => control.addEventListener('input', updateStage));
+    const updateDay = () => {
+      stage.dataset.day = String(Boolean(day?.checked));
+      stage._stadiumStage?.update({
+        day: Boolean(day?.checked),
+      }).catch(() => {});
+    };
+    const updateFloodlight = () => {
+      stage.dataset.floodlight = String(Boolean(floodlight?.checked));
+      stage._stadiumStage?.update({
+        floodlight: Boolean(floodlight?.checked),
+      }).catch(() => {});
+    };
+    const updateExposure = () => {
+      stage.dataset.exposure = exposure?.value || '1';
+      stage._stadiumStage?.update({
+        exposure: Number(stage.dataset.exposure),
+      }).catch(() => {});
+    };
+    [[camera, updateCamera], [day, updateDay]].forEach(([control, handler]) => {
+      if (control) control.addEventListener('input', handler);
+    });
+    floodlight?.addEventListener('input', updateFloodlight);
+    exposure?.addEventListener('input', updateExposure);
     status.hidden = true;
   } catch (error) {
     stage.classList.add('stage-fallback');

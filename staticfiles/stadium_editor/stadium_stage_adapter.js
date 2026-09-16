@@ -37,52 +37,26 @@ function loadThreeModule() {
   return threeModulePromise;
 }
 
-export function sceneRotationQuarterTurn(scene) {
-  const main = scene.mainStand || 'SUED';
-  const points = scene.blocks
-    .filter(block => block.stand === main)
-    .flatMap(block => block.quad);
-  if (!points.length) return 0;
-  const center = points.reduce(
-    (sum, point) => [sum[0] + point[0] / points.length,
-      sum[1] + point[1] / points.length],
+function blockMidpoint(block) {
+  return block.quad.reduce(
+    (sum, point) => [sum[0] + point[0] / block.quad.length,
+      sum[1] + point[1] / block.quad.length],
     [0, 0],
   );
-  const theta = Math.atan2(center[1], center[0]);
-  const phi = Math.PI / 2 - theta;
-  return Math.round(phi / (Math.PI / 2)) * (Math.PI / 2);
 }
 
-export function alignPitchStripeMeshes(THREE, pitchGroup, phi) {
-  const stripes = pitchGroup.children.slice(0, 10);
-  const stripeGroup = new THREE.Group();
-  stripes.forEach(stripe => {
-    pitchGroup.remove(stripe);
-    stripeGroup.add(stripe);
-  });
-  stripeGroup.rotation.y = phi;
-  pitchGroup.add(stripeGroup);
-  return stripeGroup;
-}
-
-function withPitchRotation(THREE, scene, factory) {
-  const phi = sceneRotationQuarterTurn(scene);
-  if (Math.abs(phi) < 1e-7) return factory();
-  const originalAdd = THREE.Scene.prototype.add;
-  THREE.Scene.prototype.add = function addWithAlignedPitch(...objects) {
-    objects.forEach(object => {
-      const children = object?.isGroup ? object.children : [];
-      const pitchStripes = children.length >= 10 &&
-        children.slice(0, 10).every(child => child.geometry?.type === 'PlaneGeometry');
-      if (pitchStripes) alignPitchStripeMeshes(THREE, object, phi);
-    });
-    return originalAdd.apply(this, objects);
-  };
-  try {
-    return factory();
-  } finally {
-    THREE.Scene.prototype.add = originalAdd;
-  }
+export function selectSeatBlock(scene) {
+  return (scene.blocks || [])
+    .filter(block => ['WEST', 'OST'].includes(block.stand) &&
+      Array.isArray(block.quad) && block.quad.length === 4)
+    .sort((left, right) => {
+      const leftMid = blockMidpoint(left);
+      const rightMid = blockMidpoint(right);
+      return Math.abs(leftMid[1]) - Math.abs(rightMid[1]) ||
+        Number(left.z0 || 0) - Number(right.z0 || 0) ||
+        (left.stand === 'WEST' ? -1 : 1) ||
+        String(left.id).localeCompare(String(right.id));
+    })[0] || null;
 }
 
 function webglAvailable() {
@@ -375,7 +349,7 @@ function cameraName(value) {
 
 export async function mountStadiumStage({
   element, canvas: fallbackCanvas, scene, fallback, mode = 'live',
-  camera = 'orbit', day = false, exposure = 1, onReady,
+  camera = 'orbit', day = false, floodlight = false, exposure = 1, onReady,
 } = {}) {
   let fallbackRenderer = null;
   let stage = null;
@@ -389,6 +363,7 @@ export async function mountStadiumStage({
     scene,
     camera: cameraName(camera),
     day: Boolean(day),
+    floodlight: Boolean(floodlight),
     exposure: Number(exposure) || 1,
     orbit: {azimuth: 40, elevation: 32, distance: 0, fov: 38, targetZ: 8},
     seatLook: {yaw: 0, pitch: 0},
@@ -437,26 +412,21 @@ export async function mountStadiumStage({
         view: state.camera,
         orbit: state.orbit,
         lighting: state.day ? 'day' : 'night',
+        floodlight: state.floodlight,
+        exposure: state.exposure,
       };
-      stage = withPitchRotation(
-        THREE, options.scene, () => mod.createStadiumStage(options),
-      );
+      stage = mod.createStadiumStage(options);
       if (state.camera === 'seat' && !options.seat) {
-        const block = options.scene.blocks?.[0];
+        const block = selectSeatBlock(options.scene);
         const seat = block && stage.seatAt(
           block.id, Math.floor(block.rows / 2), Math.floor(block.seats / 2),
         );
         if (seat) {
           stage.dispose();
-          stage = withPitchRotation(
-            THREE, options.scene, () => mod.createStadiumStage({...options, seat}),
-          );
+          stage = mod.createStadiumStage({...options, seat});
         }
       }
-      if (stage.renderer) {
-        stage.renderer.toneMapping = THREE.LinearToneMapping;
-        stage.renderer.toneMappingExposure = state.exposure;
-      }
+      stage.setExposure?.(state.exposure, false);
       if (state.camera === 'seat' &&
           (state.seatLook.yaw || state.seatLook.pitch)) {
         updateSeatCamera(state.seatLook);
@@ -592,13 +562,24 @@ export async function mountStadiumStage({
       get stage() { return stage; },
       update(next = {}) {
         const patch = {...next};
-        if ('floodlight' in patch && !('day' in patch)) patch.day = !patch.floodlight;
         if ('camera' in patch) patch.camera = cameraName(patch.camera);
         const keys = Object.keys(patch);
-        const onlyExposure = keys.every(key => key === 'exposure');
-        if (onlyExposure && stage?.renderer) {
-          state.exposure = Number(patch.exposure) || 1;
-          stage.renderer.toneMappingExposure = state.exposure;
+        const onlyRuntimeLighting = keys.length > 0 && keys.every(
+          key => ['day', 'floodlight', 'exposure'].includes(key),
+        );
+        if (onlyRuntimeLighting && stage) {
+          if ('day' in patch) {
+            state.day = Boolean(patch.day);
+            stage.setLightingMode?.(state.day ? 'day' : 'night', false);
+          }
+          if ('floodlight' in patch) {
+            state.floodlight = Boolean(patch.floodlight);
+            stage.setFloodlights?.(state.floodlight, false);
+          }
+          if ('exposure' in patch) {
+            state.exposure = Number(patch.exposure) || 1;
+            stage.setExposure?.(state.exposure, false);
+          }
           stage.render();
           return Promise.resolve();
         }

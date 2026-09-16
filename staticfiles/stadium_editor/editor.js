@@ -1078,6 +1078,7 @@ function scheduleStageDesignUpdate(){
         scene,
         camera: document.getElementById('stageCamera')?.value || 'orbit',
         day: Boolean(document.getElementById('stageDay')?.checked),
+        floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
       }).catch(useLegacyThreePreview);
     }).catch(()=>{});
@@ -1118,7 +1119,9 @@ async function ensureThreeStage(){
       stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
     const mounted = await mountStadiumStage({
       element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
-      day: false, exposure: 1.1, fallback: ()=>null,
+      day: false,
+      floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
+      exposure: 1.1, fallback: ()=>null,
     });
     stageAdapter = mounted;
     if(mounted.kind === 'three'){
@@ -1167,6 +1170,7 @@ function applySnap(stackFrom, stackTo){
   const snap = stackFrom.pop(); if(!snap) return;
   stackTo.push(currentSnapshot());
   restoreSnapshot(snap);
+  clearToast();
   syncUndoButtons(); recompose(); syncPressList();
 }
 function syncUndoButtons(){
@@ -1629,24 +1633,6 @@ function expansionEnvelope(stand){
     stand,blocks,[...baseBlockGeometry.values()],D,
   );
 }
-function outerTierOf(stand,seatType=null){
-  const candidates=expansionEnvelope(stand).filter(
-    block=>!seatType || block.type===seatType,
-  );
-  if(!candidates.length) return null;
-  const byTier=new Map();
-  for(const block of candidates){
-    const list=byTier.get(block.tier) || [];
-    list.push(block);
-    byTier.set(block.tier,list);
-  }
-  return [...byTier.values()].sort((left,right)=>{
-    const radius=items=>items.reduce(
-      (total,block)=>total+blockExpansionInfo(block).radius,0,
-    )/items.length;
-    return radius(right)-radius(left);
-  })[0];
-}
 function previewRoofs(){
   const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
   if(!roofs.length) return null;
@@ -1715,21 +1701,24 @@ function allocateCapacity(total, refBlocks){
 }
 function growBlockRows(i, add, capacityAdd){
   const b = blocks[i];
+  const oldRows = b.rows;
   const [A,B,C,Dq] = b.quad;
   const dL = [(A[0]-Dq[0])/b.rows, (A[1]-Dq[1])/b.rows];
   const dR = [(B[0]-C[0])/b.rows, (B[1]-C[1])/b.rows];
   b.quad[0] = [A[0]+dL[0]*add, A[1]+dL[1]*add];
   b.quad[1] = [B[0]+dR[0]*add, B[1]+dR[1]*add];
   b.z1 = b.z1 + ((b.z1-b.z0)/b.rows || .77) * add;
-  const nb = new Uint8Array((b.rows+add)*b.seats);
-  nb.set(baseData[i]);                              // alte Reihen bleiben, neue = 0 (Beton)
-  baseData[i] = nb;
+  baseData[i] = expansionGeometry.projectSeatGrid(
+    baseData[i],oldRows,b.seats,oldRows+add,b.seats,
+  );
+  seatData[i] = expansionGeometry.projectSeatGrid(
+    seatData[i],oldRows,b.seats,oldRows+add,b.seats,
+  );
   b.rows += add;
   b.geometryRows = b.rows;
   b.capacity += capacityAdd;
   b.previewCapacity = b.capacity;
   const c = texCache[i]; c.width = b.seats; c.height = b.rows;
-  seatData[i] = new Uint8Array(b.rows*b.seats);
 }
 function addNewTier(refBlocks, seatType, rows, totalCapacity){
   const capacityShares=allocateCapacity(totalCapacity,refBlocks);
@@ -1756,9 +1745,14 @@ function addNewTier(refBlocks, seatType, rows, totalCapacity){
       z0: rb.z1 + 2, z1: rb.z1 + 2 + slope*rows,
     };
     const renderBlock = renderableBlock(nb, blocks.length);
+    const sourceIndex=blocks.indexOf(rb);
     blocks.push(renderBlock);
-    baseData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
-    seatData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
+    baseData.push(expansionGeometry.projectSeatGrid(
+      baseData[sourceIndex],rb.rows,rb.seats,renderBlock.rows,renderBlock.seats,
+    ));
+    seatData.push(expansionGeometry.projectSeatGrid(
+      seatData[sourceIndex],rb.rows,rb.seats,renderBlock.rows,renderBlock.seats,
+    ));
     const c = document.createElement('canvas'); c.width=renderBlock.seats; c.height=renderBlock.rows;
     texCache.push(c);
     created.push(renderBlock);
@@ -1785,16 +1779,17 @@ function expandStand(stand, seatType, amount){
   const totalRows=expansionGeometry.expansionVisualRows(amount);
   let remainingRows=totalRows;
   let remainingCapacity=amount;
-  let ref=outerTierOf(stand);
+  let ref=expansionEnvelope(stand);
   while(remainingRows>0 && ref?.length){
-    const room=ref.every(block=>block.type===seatType)
-      ? Math.max(0,Math.min(...ref.map(block=>MAX_ROWS-block.rows)))
-      : 0;
-    const rows=Math.min(remainingRows,room || MAX_ROWS);
+    const step=expansionGeometry.expansionStep(
+      ref,seatType,remainingRows,MAX_ROWS,
+    );
+    if(!step) break;
+    const rows=step.rows;
     const capacityPart=rows===remainingRows
       ? remainingCapacity
       : Math.round(amount*rows/totalRows);
-    if(room){
+    if(step.kind==='grow'){
       const shares=allocateCapacity(capacityPart,ref);
       ref.forEach((block,index)=>
         growBlockRows(blocks.indexOf(block),rows,shares[index]));
@@ -2019,7 +2014,12 @@ document.getElementById('stageCamera').addEventListener('change', scheduleStageD
 document.getElementById('stageDay').addEventListener('change', ()=>{
   if(!stageThree) return;
   const day = Boolean(document.getElementById('stageDay').checked);
-  stageThree.update({day, exposure: day ? 1.5 : 1.1}).catch(useLegacyThreePreview);
+  stageThree.update({day}).catch(useLegacyThreePreview);
+});
+document.getElementById('stageFloodlight').addEventListener('change', ()=>{
+  if(!stageThree) return;
+  const floodlight = Boolean(document.getElementById('stageFloodlight').checked);
+  stageThree.update({floodlight}).catch(useLegacyThreePreview);
 });
 document.getElementById('btnShot').addEventListener('click', ()=>{
   if(stageThree?.stage?.renderer?.domElement){
@@ -2062,6 +2062,12 @@ function setView(v){
 
 /* Toast */
 let toastT;
+function clearToast(){
+  const t = document.getElementById('toast');
+  clearTimeout(toastT);
+  t.classList.remove('show');
+  t.textContent = '';
+}
 function toast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
