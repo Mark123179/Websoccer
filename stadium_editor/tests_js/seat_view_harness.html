@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Stadioneditor Sitzkamera Browser-Test</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/stadium_editor/static/stadium_editor/stage/vendor/three.module.js",
+        "three/addons/": "/stadium_editor/static/stadium_editor/stage/vendor/addons/"
+      }
+    }
+  </script>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; }
+    #editor-stage { width: 960px; height: 540px; }
+  </style>
+</head>
+<body>
+  <main aria-label="Stadioneditor">
+    <div id="editor-stage" data-stadium-stage></div>
+  </main>
+  <script type="module">
+    import {
+      mountStadiumStage,
+    } from '/stadium_editor/static/stadium_editor/stadium_stage_adapter.js';
+
+    const block = (id, stand, quad) => ({
+      id, stand, tier: 'UNTEN', order: 0, rows: 8, seats: 16,
+      quad, z0: 0.5, z1: 8, type: 'seating', rle: [[128, 0]],
+    });
+    const scene = {
+      mainStand: 'WEST',
+      palette: ['#d81920'],
+      blocks: [
+        block('WEST-UNTEN', 'WEST', [[-58, -34], [-58, 34], [-72, 40], [-72, -40]]),
+        block('OST-UNTEN', 'OST', [[58, 34], [58, -34], [72, -40], [72, 40]]),
+      ],
+      outline: [[-74, -42], [74, -42], [74, 42], [-74, 42]],
+      roof: {mode: 'explicit', segments: []},
+    };
+    const element = document.getElementById('editor-stage');
+    window.seatViewTest = {scene, element};
+    window.seatViewTest.api = await mountStadiumStage({
+      element, scene, mode: 'editor', camera: 'seat',
+    });
+    window.seatViewTest.ready = true;
+  </script>
+</body>
+</html>
