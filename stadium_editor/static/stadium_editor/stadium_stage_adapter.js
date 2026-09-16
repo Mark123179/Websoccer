@@ -413,6 +413,7 @@ export async function mountStadiumStage({
         orbit: state.orbit,
         lighting: state.day ? 'day' : 'night',
         floodlight: state.floodlight,
+        exposure: state.exposure,
       };
       stage = mod.createStadiumStage(options);
       if (state.camera === 'seat' && !options.seat) {
@@ -425,10 +426,7 @@ export async function mountStadiumStage({
           stage = mod.createStadiumStage({...options, seat});
         }
       }
-      if (stage.renderer) {
-        stage.renderer.toneMapping = THREE.LinearToneMapping;
-        stage.renderer.toneMappingExposure = state.exposure;
-      }
+      stage.setExposure?.(state.exposure, false);
       if (state.camera === 'seat' &&
           (state.seatLook.yaw || state.seatLook.pitch)) {
         updateSeatCamera(state.seatLook);
@@ -566,16 +564,22 @@ export async function mountStadiumStage({
         const patch = {...next};
         if ('camera' in patch) patch.camera = cameraName(patch.camera);
         const keys = Object.keys(patch);
-        const onlyFloodlight = keys.length === 1 && keys[0] === 'floodlight';
-        if (onlyFloodlight && stage?.setFloodlights) {
-          state.floodlight = Boolean(patch.floodlight);
-          stage.setFloodlights(state.floodlight);
-          return Promise.resolve();
-        }
-        const onlyExposure = keys.every(key => key === 'exposure');
-        if (onlyExposure && stage?.renderer) {
-          state.exposure = Number(patch.exposure) || 1;
-          stage.renderer.toneMappingExposure = state.exposure;
+        const onlyRuntimeLighting = keys.length > 0 && keys.every(
+          key => ['day', 'floodlight', 'exposure'].includes(key),
+        );
+        if (onlyRuntimeLighting && stage) {
+          if ('day' in patch) {
+            state.day = Boolean(patch.day);
+            stage.setLightingMode?.(state.day ? 'day' : 'night', false);
+          }
+          if ('floodlight' in patch) {
+            state.floodlight = Boolean(patch.floodlight);
+            stage.setFloodlights?.(state.floodlight, false);
+          }
+          if ('exposure' in patch) {
+            state.exposure = Number(patch.exposure) || 1;
+            stage.setExposure?.(state.exposure, false);
+          }
           stage.render();
           return Promise.resolve();
         }

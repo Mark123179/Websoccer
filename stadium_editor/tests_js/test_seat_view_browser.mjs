@@ -155,6 +155,7 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   const daySky = await backgroundSample(page);
   assert.ok(daySky.every(pixel => pixel[3] === 255), 'day sky must fill the view');
   assert.ok(daySky.some(pixel => pixel[2] > 80), 'day sky must contain blue pixels');
+  const dayField = await fieldBrightness(page);
 
   const initial = await snapshot(page);
   assert.ok(
@@ -210,9 +211,27 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   assert.ok(Math.abs(reset.pitch) < 0.1, 'double-click resets pitch');
   assert.ok(distance(initial.position, reset.position) < 1e-6);
 
-  await page.evaluate(async () => {
+  const dayNightToggle = await page.evaluate(async () => {
+    const before = window.seatViewTest.api.stage;
+    const canvas = before.renderer.domElement;
+    const cameraPosition = before.camera.position.toArray();
     await window.seatViewTest.api.update({day: false, floodlight: false});
+    return {
+      sameStage: before === window.seatViewTest.api.stage,
+      sameCanvas: canvas === window.seatViewTest.api.stage.renderer.domElement,
+      cameraPosition,
+      nextCameraPosition: window.seatViewTest.api.stage.camera.position.toArray(),
+      lightingMode: window.seatViewTest.api.stage.stats.lightingMode,
+    };
   });
+  assert.equal(dayNightToggle.sameStage, true);
+  assert.equal(dayNightToggle.sameCanvas, true);
+  assert.deepEqual(
+    dayNightToggle.nextCameraPosition,
+    dayNightToggle.cameraPosition,
+    'day/night changes must keep geometry and camera in place',
+  );
+  assert.equal(dayNightToggle.lightingMode, 'night');
   await page.waitForFunction(
     () => window.seatViewTest.api.stage.backgroundReady(),
   );
@@ -226,6 +245,14 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   assert.ok(nightSky.every(pixel => pixel[3] === 255), 'night sky must fill the view');
   assert.notDeepEqual(nightSky, daySky, 'day/night must swap the sky texture');
   const darkField = await fieldBrightness(page);
+  assert.ok(
+    darkField > 12,
+    `ambient night must keep the unlit field readable (${darkField})`,
+  );
+  assert.ok(
+    dayField > darkField,
+    `daylight must remain visibly brighter than ambient night (${dayField} > ${darkField})`,
+  );
   await page.evaluate(async () => {
     window.__nightStage = window.seatViewTest.api.stage;
     await window.seatViewTest.api.update({floodlight: true});
@@ -242,6 +269,16 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
     true,
     'floodlight toggles must not rebuild stadium geometry',
   );
+  const exposureToggle = await page.evaluate(async () => {
+    const before = window.seatViewTest.api.stage;
+    await window.seatViewTest.api.update({exposure: 1.1});
+    return {
+      sameStage: before === window.seatViewTest.api.stage,
+      exposure: window.seatViewTest.api.stage.stats.toneMappingExposure,
+    };
+  });
+  assert.equal(exposureToggle.sameStage, true);
+  assert.ok(exposureToggle.exposure > 1.1);
   assert.equal(
     await page.evaluate(
       () => window.seatViewTest.api.stage.stats.floodlightEnabled,

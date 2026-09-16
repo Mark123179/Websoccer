@@ -111,3 +111,4 @@
 - [Stadionsitz-Basis](stadium-seat-basis.md) — Sitzachsen für Quaternionen müssen rechtshändig bleiben; Hochachse nie allein spiegeln, Lehnenrichtung geometrisch ableiten.
 - [Sitzansicht-Himmel für 16:9-Fotos](stadium-seat-sky.md) — normale Himmelsfotos als überdeckende kamerafeste Fernfläche zeigen, nicht als 360°-Panorama.
 - [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Flutlicht ist unabhängig von Tag/Nacht; viele Rim-Köpfe nutzen höchstens 12 echte SpotLights.
+- [Stadion-Umgebungslichtvertrag](stadium-ambient-lighting.md) — Tag/Nacht wechselt Lichtsets in-place; Exposure bleibt Multiplikator, ACES-Schatten brauchen mehrere Lichtlagen.

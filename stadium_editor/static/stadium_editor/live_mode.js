@@ -486,15 +486,19 @@ async function mount(stage) {
     const day = stage.querySelector('[data-stage-day]');
     const floodlight = stage.querySelector('[data-stage-floodlight]');
     const exposure = stage.querySelector('[data-stage-exposure]');
-    const updateCameraAndDay = () => {
+    const updateCamera = () => {
       stage.dataset.camera = camera?.value || 'orbit';
-      stage.dataset.day = String(Boolean(day?.checked));
       if (stage._stadiumStage?.kind === 'three') {
         stage._stadiumStage.update({
           camera: stage.dataset.camera,
-          day: Boolean(day?.checked),
         }).catch(() => {});
       }
+    };
+    const updateDay = () => {
+      stage.dataset.day = String(Boolean(day?.checked));
+      stage._stadiumStage?.update({
+        day: Boolean(day?.checked),
+      }).catch(() => {});
     };
     const updateFloodlight = () => {
       stage.dataset.floodlight = String(Boolean(floodlight?.checked));
@@ -508,8 +512,9 @@ async function mount(stage) {
         exposure: Number(stage.dataset.exposure),
       }).catch(() => {});
     };
-    [camera, day].filter(Boolean).forEach(control =>
-      control.addEventListener('input', updateCameraAndDay));
+    [[camera, updateCamera], [day, updateDay]].forEach(([control, handler]) => {
+      if (control) control.addEventListener('input', handler);
+    });
     floodlight?.addEventListener('input', updateFloodlight);
     exposure?.addEventListener('input', updateExposure);
     status.hidden = true;

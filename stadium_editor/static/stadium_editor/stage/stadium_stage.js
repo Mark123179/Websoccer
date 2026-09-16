@@ -17,6 +17,7 @@ import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helper
 import {buildSeatRenderPlan, seatBasis} from './seat_rendering.js?v=2';
 import {PITCH, buildPitchLayout} from './pitch_geometry.js?v=1';
 import {buildFloodlightPlan} from './stadium_lighting.js?v=1';
+import {lightingPreset} from './stadium_lighting_presets.js?v=1';
 
 const SKY_URLS = Object.freeze({
   day: new URL('./assets/stadium_sky_day.png?v=1', import.meta.url).href,
@@ -122,8 +123,8 @@ function facadeTexture(floors) {
 /* ── Modul ──────────────────────────────────────────────────────────── */
 export function createStadiumStage({ canvas, scene, width, height, drawPitch = false, preset = PRESET, rules = RULES, seatMode = 'instances',
                                      view = 'match', orbit = {}, surroundings = null, facade = null, seat = null, lighting = 'day',
-                                     floodlight = false, design = null }) {
-  const night = lighting === 'night';
+                                     floodlight = false, exposure = 1, design = null }) {
+  let lightingMode = lighting === 'night' ? 'night' : 'day';
   const isSeat = view === 'seat';
   const isOrbit = view === 'orbit' || isSeat;
   const ORBIT = Object.assign({ azimuth: 40, elevation: 32, distance: 0, fov: 38, targetZ: 8 }, orbit);
@@ -145,19 +146,22 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   renderer.setSize(W, H, false);
   renderer.setClearColor(0x000000, 0);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
   const three = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera();
   three.add(camera);
   let active = true;
-  let skyTexture = null;
+  const skyTextures = {};
   let skyMesh = null;
   if (isSeat) {
-    skyTexture = new THREE.TextureLoader().load(
-      night ? SKY_URLS.night : SKY_URLS.day,
-      () => { if (active) render(); },
-    );
-    skyTexture.colorSpace = THREE.SRGBColorSpace;
+    for (const mode of ['day', 'night']) {
+      skyTextures[mode] = new THREE.TextureLoader().load(
+        SKY_URLS[mode],
+        () => { if (active && lightingMode === mode) render(); },
+      );
+      skyTextures[mode].colorSpace = THREE.SRGBColorSpace;
+    }
   }
 
   /* Kamera: Preset, Hauptpunkt unter der Bildmitte — exakt die Projektion der bisherigen Bühne,
@@ -198,7 +202,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   }
   camera.updateProjectionMatrix = applyCamera;
   applyCamera();
-  if (skyTexture) {
+  if (isSeat) {
     const distance = 500;
     const imageAspect = 2688 / 1520;
     const viewHeight = 2 * Math.tan(camera.fov * Math.PI / 360) * distance;
@@ -208,7 +212,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     skyMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(skyWidth, skyHeight),
       new THREE.MeshBasicMaterial({
-        map: skyTexture,
+        map: skyTextures[lightingMode],
         depthTest: false,
         depthWrite: false,
         fog: false,
@@ -221,11 +225,17 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     camera.add(skyMesh);
   }
 
-  /* Licht: Hemisphäre + eine Richtung von der Kameraseite — genug für Schalen und Stufen */
-  three.add(new THREE.HemisphereLight(night ? 0x3a4454 : 0xdfe7f1, night ? 0x07090d : 0x0a0d12, night ? 0.7 : 1.25));
-  const sun = new THREE.DirectionalLight(0xffffff, night ? 0.08 : 0.95);
-  sun.position.set(-40, 90, 120);
-  three.add(sun);
+  const hemisphere = new THREE.HemisphereLight();
+  const ambient = new THREE.AmbientLight();
+  const keyLight = new THREE.DirectionalLight();
+  const fillLight = new THREE.DirectionalLight();
+  three.add(hemisphere, ambient, keyLight, fillLight);
+  const lightingMaterials = {
+    buildings: new Set(),
+    structures: new Set(),
+    roofs: new Set(),
+    pitch: new Set(),
+  };
   const lightPlan = buildFloodlightPlan(scene);
   const floodlightSources = [];
   const fixtureMaterials = new Set();
@@ -236,7 +246,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     target.position.copy(toWorld(fixture.target, fixture.target[2]));
     three.add(target);
     const reach = position.distanceTo(target.position) * 1.65;
-    const source = new THREE.SpotLight(0xfff4d6, 0, reach, 0.72, 0.72, 1);
+    const source = new THREE.SpotLight(0xf4f7ff, 0, reach, 0.72, 0.72, 1);
     source.position.copy(position);
     source.target = target;
     source.userData.onIntensity = fixture.kind === 'rim' ? 460 : 960;
@@ -484,7 +494,8 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   if (drawSurroundings && scene.surroundings) {
     const S = scene.surroundings;
     const shapeOf = pts => new THREE.Shape(pts.map(p => { const r = rot(p); return new THREE.Vector2(-r[0], -r[1]); }));
-    const bMat = new THREE.MeshLambertMaterial({ color: night ? 0x14181d : rules.buildingColor });
+    const bMat = new THREE.MeshLambertMaterial();
+    lightingMaterials.buildings.add(bMat);
     for (const b2 of S.buildings || []) {
       try {
         const geo = new THREE.ExtrudeGeometry(shapeOf(b2.poly), { depth: b2.h || 9, bevelEnabled: false });
@@ -527,13 +538,22 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   bodyGeo.setAttribute('uv', new THREE.Float32BufferAttribute(buv, 2));
   bodyGeo.computeVertexNormals();
   const concrete = concreteTexture('#8b8f95', 11);
-  three.add(new THREE.Mesh(bodyGeo, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, map: concrete })));
+  const bodyMaterial = new THREE.MeshLambertMaterial({
+    vertexColors: true, side: THREE.DoubleSide, map: concrete,
+  });
+  lightingMaterials.structures.add(bodyMaterial);
+  three.add(new THREE.Mesh(bodyGeo, bodyMaterial));
   // Dach-Unterseiten: nur Vorderseiten, Normale nach unten → von oben unsichtbar (Regel: nie eine Dachoberseite)
   const roofGeo = new THREE.BufferGeometry();
   roofGeo.setAttribute('position', new THREE.Float32BufferAttribute(roofPos, 3));
   roofGeo.setAttribute('color', new THREE.Float32BufferAttribute(roofCol, 3));
   roofGeo.computeVertexNormals();
-  three.add(new THREE.Mesh(roofGeo, new THREE.MeshLambertMaterial({ vertexColors: true, side: isOrbit ? THREE.DoubleSide : THREE.FrontSide })));
+  const roofMaterial = new THREE.MeshLambertMaterial({
+    vertexColors: true,
+    side: isOrbit ? THREE.DoubleSide : THREE.FrontSide,
+  });
+  lightingMaterials.roofs.add(roofMaterial);
+  three.add(new THREE.Mesh(roofGeo, roofMaterial));
 
   // Sitze als Instanzen
   let seats = null;
@@ -589,12 +609,12 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
         a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z,
       ], 3));
       geometry.computeVertexNormals();
-      g.add(new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+      const pitchMaterial = new THREE.MeshLambertMaterial({
         color: stripe.index % 2 ? rules.pitchColor : rules.pitchColor2,
-        emissive: night ? 0x0b3a1a : 0x000000,
-        emissiveIntensity: night ? 0.3 : 0,
         side: THREE.DoubleSide,
-      })));
+      });
+      lightingMaterials.pitch.add(pitchMaterial);
+      g.add(new THREE.Mesh(geometry, pitchMaterial));
     }
     for (const segment of pitchLayout.lines) {
       const a = new THREE.Vector3(segment.from[0], 0.03, segment.from[1]);
@@ -620,6 +640,52 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     return { x: (ndc.x + 1) / 2 * W, y: (1 - ndc.y) / 2 * H, d, visible: d > preset.near };
   }
   function render() { renderer.render(three, camera); }
+  let exposureMultiplier = Math.max(0.2, Number(exposure) || 1);
+  function setExposure(value, shouldRender = true) {
+    exposureMultiplier = Math.max(0.2, Number(value) || 1);
+    renderer.toneMappingExposure =
+      lightingPreset(lightingMode).exposure * exposureMultiplier;
+    if (shouldRender) render();
+    return renderer.toneMappingExposure;
+  }
+  function setLightingMode(mode, shouldRender = true) {
+    lightingMode = mode === 'night' ? 'night' : 'day';
+    const config = lightingPreset(lightingMode);
+    renderer.setClearColor(config.background, 1);
+    hemisphere.color.setHex(config.hemisphere.sky);
+    hemisphere.groundColor.setHex(config.hemisphere.ground);
+    hemisphere.intensity = config.hemisphere.intensity;
+    ambient.color.setHex(config.ambient.color);
+    ambient.intensity = config.ambient.intensity;
+    keyLight.color.setHex(config.key.color);
+    keyLight.intensity = config.key.intensity;
+    keyLight.position.fromArray(config.key.position);
+    fillLight.color.setHex(config.fill.color);
+    fillLight.intensity = config.fill.intensity;
+    fillLight.position.fromArray(config.fill.position);
+    for (const material of lightingMaterials.buildings) {
+      material.color.setHex(config.building);
+    }
+    for (const material of lightingMaterials.structures) {
+      material.emissive.setHex(config.structureEmissive);
+      material.emissiveIntensity = config.structureEmissiveIntensity;
+    }
+    for (const material of lightingMaterials.roofs) {
+      material.emissive.setHex(config.roofEmissive);
+      material.emissiveIntensity = config.roofEmissiveIntensity;
+    }
+    for (const material of lightingMaterials.pitch) {
+      material.emissive.setHex(config.pitchEmissive);
+      material.emissiveIntensity = config.pitchEmissiveIntensity;
+    }
+    if (skyMesh) {
+      skyMesh.material.map = skyTextures[lightingMode];
+      skyMesh.material.needsUpdate = true;
+    }
+    setExposure(exposureMultiplier, false);
+    if (shouldRender) render();
+    return lightingMode;
+  }
   function seatAt(blockId, row, col) {           // Sitz für den Sitzblick: nächste Instanz zum gewünschten Raster
     let best = null, bd = 1e9;
     for (const sIx of seatIndex) { if (sIx.block !== blockId) continue; const d = Math.abs(sIx.row - row) + Math.abs(sIx.col - col); if (d < bd) { bd = d; best = sIx; } }
@@ -650,6 +716,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     if (shouldRender) render();
     return floodlightsEnabled;
   }
+  setLightingMode(lightingMode, false);
   setFloodlights(floodlight, false);
   function dispose() {
     active = false;
@@ -666,6 +733,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
         if (material.map) textures.add(material.map);
       }
     });
+    Object.values(skyTextures).forEach(texture => textures.add(texture));
     geometries.forEach(geometry => geometry.dispose());
     textures.forEach(texture => texture.dispose());
     materials.forEach(material => material.dispose());
@@ -674,17 +742,20 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   return {
     project, render, dispose, camera, renderer, seatAt, adaptQuality,
-    setFloodlights,
+    setFloodlights, setLightingMode, setExposure,
     backgroundReady() {
-      return !skyTexture ||
-        Boolean(skyTexture.image?.complete && skyTexture.image?.naturalWidth);
+      const texture = skyTextures[lightingMode];
+      return !texture ||
+        Boolean(texture.image?.complete && texture.image?.naturalWidth);
     },
     stats: {
       blocks: drawn.length, blocksTotal: scene.blocks.length,
       seats: seatCount, seatPaletteCounts,
       pitchStripes: drawPitch ? 10 : 0,
       pitchLines: drawPitch ? 17 : 0,
-      sky: isSeat ? (night ? 'night' : 'day') : null,
+      get sky() { return isSeat ? lightingMode : null; },
+      get lightingMode() { return lightingMode; },
+      get toneMappingExposure() { return renderer.toneMappingExposure; },
       roof: roofSegs.length, mainStand,
       rotationDeg: Math.round(phi * 180 / Math.PI),
       floodlightType: lightPlan.type,

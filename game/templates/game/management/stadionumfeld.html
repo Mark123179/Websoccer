@@ -5,7 +5,7 @@
 {% block body_class %}stadionumfeld-page ws-page-backdrop{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=13">
+<link rel="stylesheet" href="{% static 'game/css/stadionumfeld.css' %}?v=14">
 {% endblock %}
 
 {% block content %}
@@ -33,5 +33,5 @@
   window.__VU_UPGRADE_URL__ = "{% url 'facility_upgrade' %}";
   window.__VU_CSRF__        = "{{ csrf_token }}";
 </script>
-<script src="{% static 'game/js/stadionumfeld.js' %}?v=13"></script>
+<script src="{% static 'game/js/stadionumfeld.js' %}?v=14"></script>
 {% endblock %}

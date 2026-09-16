@@ -2014,7 +2014,7 @@ document.getElementById('stageCamera').addEventListener('change', scheduleStageD
 document.getElementById('stageDay').addEventListener('change', ()=>{
   if(!stageThree) return;
   const day = Boolean(document.getElementById('stageDay').checked);
-  stageThree.update({day, exposure: day ? 1.5 : 1.1}).catch(useLegacyThreePreview);
+  stageThree.update({day}).catch(useLegacyThreePreview);
 });
 document.getElementById('stageFloodlight').addEventListener('change', ()=>{
   if(!stageThree) return;

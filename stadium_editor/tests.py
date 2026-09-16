@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=35',
+            'stadium_editor/editor.js?v=36',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -882,8 +882,11 @@ class StadiumEditorTests(TestCase):
             / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
         ).read_text(encoding='utf-8')
         self.assertIn('selectSeatBlock(options.scene)', adapter)
-        self.assertIn('stage.setFloodlights(state.floodlight)', adapter)
-        self.assertIn("keys[0] === 'floodlight'", adapter)
+        self.assertIn('const onlyRuntimeLighting = keys.length > 0', adapter)
+        self.assertIn("['day', 'floodlight', 'exposure'].includes(key)", adapter)
+        self.assertIn('stage.setLightingMode?.', adapter)
+        self.assertIn('stage.setFloodlights?.', adapter)
+        self.assertIn('stage.setExposure?.', adapter)
         self.assertNotIn('THREE.Scene.prototype.add', adapter)
         self.assertNotIn('alignPitchStripeMeshes', adapter)
 
