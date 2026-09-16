@@ -384,12 +384,14 @@ export async function mountStadiumStage({
   let lastHeight = 0;
   let disposed = false;
   let rebuilding = Promise.resolve();
+  let drag = null;
   const state = {
     scene,
     camera: cameraName(camera),
     day: Boolean(day),
     exposure: Number(exposure) || 1,
     orbit: {azimuth: 40, elevation: 32, distance: 0, fov: 38, targetZ: 8},
+    seatLook: {yaw: 0, pitch: 0},
   };
 
   const showFallback = reason => {
@@ -416,6 +418,10 @@ export async function mountStadiumStage({
       if (disposed) return;
       const oldStage = stage;
       const webglCanvas = createCanvas(element);
+      webglCanvas.style.touchAction = 'none';
+      webglCanvas.addEventListener('pointerdown', startDrag);
+      webglCanvas.addEventListener('dblclick', resetCamera);
+      webglCanvas.addEventListener('wheel', handleWheel, {passive: false});
       const size = dimensions(element);
       lastWidth = size.width;
       lastHeight = size.height;
@@ -450,6 +456,10 @@ export async function mountStadiumStage({
       if (stage.renderer) {
         stage.renderer.toneMapping = THREE.LinearToneMapping;
         stage.renderer.toneMappingExposure = state.exposure;
+      }
+      if (state.camera === 'seat' &&
+          (state.seatLook.yaw || state.seatLook.pitch)) {
+        updateSeatCamera(state.seatLook);
       }
       stage.render();
       oldStage?.dispose();
@@ -497,36 +507,75 @@ export async function mountStadiumStage({
       return true;
     };
 
-    await build();
+    const updateSeatCamera = lookPatch => {
+      if (!stage?.camera || state.camera !== 'seat') return false;
+      state.seatLook = {...state.seatLook, ...lookPatch};
+      const yaw = state.seatLook.yaw * Math.PI / 180;
+      const pitch = state.seatLook.pitch * Math.PI / 180;
+      const position = stage.camera.position;
+      const up = new THREE.Vector3(0, 1, 0);
+      const direction = new THREE.Vector3(-position.x, 0, -position.z).normalize();
+      direction.applyAxisAngle(up, -yaw);
+      const right = new THREE.Vector3().crossVectors(direction, up).normalize();
+      direction.applyAxisAngle(right, pitch);
+      stage.camera.up.copy(up);
+      stage.camera.lookAt(position.clone().addScaledVector(direction, 100));
+      stage.camera.updateMatrixWorld(true);
+      stage.render();
+      return true;
+    };
 
-    let drag = null;
-    element.addEventListener('pointerdown', event => {
-      if (state.camera !== 'orbit') return;
-      drag = {x: event.clientX, y: event.clientY,
-        azimuth: state.orbit.azimuth, elevation: state.orbit.elevation};
-      element.setPointerCapture(event.pointerId);
-    });
-    element.addEventListener('pointermove', event => {
+    function startDrag(event) {
+      if (!['orbit', 'seat'].includes(state.camera)) return;
+      drag = state.camera === 'seat'
+        ? {mode: 'seat', x: event.clientX, y: event.clientY,
+          yaw: state.seatLook.yaw, pitch: state.seatLook.pitch}
+        : {mode: 'orbit', x: event.clientX, y: event.clientY,
+          azimuth: state.orbit.azimuth, elevation: state.orbit.elevation};
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch (_error) {}
+      event.preventDefault();
+    }
+    const moveDrag = event => {
       if (!drag || !stage?.camera) return;
+      if (drag.mode === 'seat') {
+        state.seatLook.yaw = Math.max(-80, Math.min(
+          80, drag.yaw - (event.clientX - drag.x) * .2,
+        ));
+        state.seatLook.pitch = Math.max(-20, Math.min(
+          20, drag.pitch - (event.clientY - drag.y) * .14,
+        ));
+        updateSeatCamera(state.seatLook);
+        return;
+      }
       state.orbit.azimuth = drag.azimuth + (event.clientX - drag.x) * .25;
       state.orbit.elevation = Math.max(8, Math.min(
         78, drag.elevation - (event.clientY - drag.y) * .18,
       ));
       updateOrbitCamera(state.orbit);
-    });
-    element.addEventListener('pointerup', () => { drag = null; });
-    element.addEventListener('wheel', event => {
+    };
+    window.addEventListener('pointermove', moveDrag);
+    const stopDrag = () => { drag = null; };
+    window.addEventListener('pointerup', stopDrag);
+    window.addEventListener('pointercancel', stopDrag);
+    function handleWheel(event) {
       if (state.camera !== 'orbit' || !stage?.camera) return;
       event.preventDefault();
       state.orbit.fov = Math.max(24, Math.min(
         72, state.orbit.fov * Math.exp(event.deltaY * .001),
       ));
       updateOrbitCamera({fov: state.orbit.fov});
-    }, {passive: false});
-    element.addEventListener('dblclick', () => {
+    }
+    function resetCamera() {
+      if (state.camera === 'seat') {
+        state.seatLook = {yaw: 0, pitch: 0};
+        updateSeatCamera(state.seatLook);
+        return;
+      }
       state.orbit = {azimuth: 40, elevation: 32, distance: 0, fov: 38, targetZ: 8};
       updateOrbitCamera(state.orbit);
-    });
+    }
+
+    await build();
 
     const observer = new ResizeObserver(() => {
       const size = dimensions(element);
@@ -565,6 +614,9 @@ export async function mountStadiumStage({
         disposed = true;
         clearTimeout(resizeTimer);
         observer.disconnect();
+        window.removeEventListener('pointermove', moveDrag);
+        window.removeEventListener('pointerup', stopDrag);
+        window.removeEventListener('pointercancel', stopDrag);
         stage?.dispose();
         element.replaceChildren();
       },

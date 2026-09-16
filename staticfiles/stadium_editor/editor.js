@@ -71,7 +71,9 @@ const undoStack = [], redoStack = [];
 function renderableBlock(block, index){
   const geometryRows = Math.max(1, Number(block.rows) || 1);
   const geometrySeats = Math.max(1, Number(block.seats) || 1);
-  const capacity = geometryRows * geometrySeats;
+  const capacity = Number.isFinite(Number(block.previewCapacity))
+    ? Number(block.previewCapacity)
+    : geometryRows * geometrySeats;
   const seats = geometrySeats;
   const rows = geometryRows;
   const canonicalId = Number(block.sourceId ?? block.id);
@@ -1627,6 +1629,24 @@ function expansionEnvelope(stand){
     stand,blocks,[...baseBlockGeometry.values()],D,
   );
 }
+function outerTierOf(stand,seatType=null){
+  const candidates=expansionEnvelope(stand).filter(
+    block=>!seatType || block.type===seatType,
+  );
+  if(!candidates.length) return null;
+  const byTier=new Map();
+  for(const block of candidates){
+    const list=byTier.get(block.tier) || [];
+    list.push(block);
+    byTier.set(block.tier,list);
+  }
+  return [...byTier.values()].sort((left,right)=>{
+    const radius=items=>items.reduce(
+      (total,block)=>total+blockExpansionInfo(block).radius,0,
+    )/items.length;
+    return radius(right)-radius(left);
+  })[0];
+}
 function previewRoofs(){
   const roofs=Array.isArray(D?.roofs) ? D.roofs : [];
   if(!roofs.length) return null;
@@ -1642,7 +1662,7 @@ function previewRoofs(){
       currentByLineage.set(key,block);
     }
   }
-  return roofs.map(roof=>{
+  const moved=roofs.map(roof=>{
     if(!Array.isArray(roof.quad) || roof.quad.length!==4) return roof;
     const center=roof.quad.reduce((sum,point)=>[
       sum[0]+point[0]/4,sum[1]+point[1]/4],[0,0]);
@@ -1678,11 +1698,22 @@ function previewRoofs(){
       simulated:true,
     };
   });
+  return expansionGeometry.stitchRoofSegments(moved,roofs);
 }
 function roofsFor2D(){
   return previewRoofs() || [];
 }
-function growBlockRows(i, add){
+function allocateCapacity(total, refBlocks){
+  const weightTotal=refBlocks.reduce((sum,block)=>sum+block.seats,0) || refBlocks.length;
+  let allocated=0;
+  return refBlocks.map((block,index)=>{
+    if(index===refBlocks.length-1) return total-allocated;
+    const share=Math.round(total*(block.seats || 1)/weightTotal);
+    allocated+=share;
+    return share;
+  });
+}
+function growBlockRows(i, add, capacityAdd){
   const b = blocks[i];
   const [A,B,C,Dq] = b.quad;
   const dL = [(A[0]-Dq[0])/b.rows, (A[1]-Dq[1])/b.rows];
@@ -1695,12 +1726,16 @@ function growBlockRows(i, add){
   baseData[i] = nb;
   b.rows += add;
   b.geometryRows = b.rows;
-  b.capacity += add * b.seats;
+  b.capacity += capacityAdd;
+  b.previewCapacity = b.capacity;
   const c = texCache[i]; c.width = b.seats; c.height = b.rows;
   seatData[i] = new Uint8Array(b.rows*b.seats);
 }
-function addNewTier(refBlocks, seatType, rows){
-  for(const rb of refBlocks){
+function addNewTier(refBlocks, seatType, rows, totalCapacity){
+  const capacityShares=allocateCapacity(totalCapacity,refBlocks);
+  const created=[];
+  for(let refIndex=0;refIndex<refBlocks.length;refIndex++){
+    const rb=refBlocks[refIndex];
     const level=(Number(rb.previewLevel)||0)+1;
     const lineage=rb.lineageId ?? rb.sourceId ?? rb.id;
     const tierName=`AUSBAU${level}`;
@@ -1713,7 +1748,8 @@ function addNewTier(refBlocks, seatType, rows){
       previewId: `preview-${lineage}-${level}-${seatType}`,
       simulated: true,
       lineageId:lineage, previewLevel:level, supportZ:Number(rb.z1),
-      rows, seats: rb.seats, capacity: rows * rb.seats, type: seatType,
+      rows, seats: rb.seats, previewCapacity:capacityShares[refIndex],
+      capacity:capacityShares[refIndex], type: seatType,
       quad: [ [A[0]+dL[0]*rows, A[1]+dL[1]*rows],
               [B[0]+dR[0]*rows, B[1]+dR[1]*rows],
               [B[0], B[1]], [A[0], A[1]] ],
@@ -1725,7 +1761,9 @@ function addNewTier(refBlocks, seatType, rows){
     seatData.push(new Uint8Array(renderBlock.rows * renderBlock.seats));
     const c = document.createElement('canvas'); c.width=renderBlock.seats; c.height=renderBlock.rows;
     texCache.push(c);
+    created.push(renderBlock);
   }
+  return created;
 }
 function expandStand(stand, seatType, amount){
   amount = Math.floor(Number(amount) || 0);
@@ -1739,35 +1777,40 @@ function expandStand(stand, seatType, amount){
     return 0;
   }
   amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
-  const outer=expansionEnvelope(stand);
-  if(!outer.length){
+  if(!expansionEnvelope(stand).length){
     toast(`Für ${stand} wurden keine ausbaubaren Tribünensegmente gefunden.`);
     return 0;
   }
-  const perRow=outer.reduce((total,block)=>total+block.seats,0);
-  const rows=Math.min(
-    MAX_ROWS,
-    Math.ceil(amount/perRow),
-    Math.floor((MAX_PREVIEW_CAPACITY-currentCapacity)/perRow),
-  );
-  if(rows<1){
-    toast('Für diesen Ausbau ist bis 150.000 Plätze keine vollständige Reihe mehr möglich.');
+  snapshotFull();
+  const totalRows=expansionGeometry.expansionVisualRows(amount);
+  let remainingRows=totalRows;
+  let remainingCapacity=amount;
+  let ref=outerTierOf(stand);
+  while(remainingRows>0 && ref?.length){
+    const room=ref.every(block=>block.type===seatType)
+      ? Math.max(0,Math.min(...ref.map(block=>MAX_ROWS-block.rows)))
+      : 0;
+    const rows=Math.min(remainingRows,room || MAX_ROWS);
+    const capacityPart=rows===remainingRows
+      ? remainingCapacity
+      : Math.round(amount*rows/totalRows);
+    if(room){
+      const shares=allocateCapacity(capacityPart,ref);
+      ref.forEach((block,index)=>
+        growBlockRows(blocks.indexOf(block),rows,shares[index]));
+    }else{
+      ref=addNewTier(ref,seatType,rows,capacityPart);
+    }
+    remainingRows-=rows;
+    remainingCapacity-=capacityPart;
+  }
+  if(remainingRows>0){
+    undoStack.pop();
+    syncUndoButtons();
+    toast('Für diesen Ausbau konnte kein äußerer Rang angelegt werden.');
     return 0;
   }
-  snapshotFull();
-  for(const block of outer){
-    let remainingRows=rows;
-    if(block.simulated && block.type===seatType){
-      const available=Math.max(0,MAX_ROWS-block.rows);
-      const grow=Math.min(available,remainingRows);
-      if(grow){
-        growBlockRows(blocks.indexOf(block),grow);
-        remainingRows-=grow;
-      }
-    }
-    if(remainingRows) addNewTier([block],seatType,remainingRows);
-  }
-  const built=rows*perRow;
+  const built=amount;
   fitView();
   syncStadiumTitle();
   recompose(); syncPressList();
