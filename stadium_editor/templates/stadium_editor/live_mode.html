@@ -15,6 +15,7 @@
         data-mode="live"
         data-camera="orbit"
         data-day="false"
+        data-floodlight="false"
         data-exposure="1">
     <div data-stadium-stage></div>
     <canvas aria-label="2D-Ansicht von {{ stadium.name }}"></canvas>
@@ -27,6 +28,7 @@
         <option value="orbit">Orbit</option><option value="match">Match</option><option value="seat">Sitz</option>
       </select>
       <label><input type="checkbox" data-stage-day> Tag</label>
+      <label><input type="checkbox" data-stage-floodlight> Flutlicht</label>
       <label>Belichtung <input type="range" data-stage-exposure min=".6" max="1.6" step=".05" value="1"></label>
     </div>
     <p class="live-stage__status" role="status">Stadion wird geladen …</p>

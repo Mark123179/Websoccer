@@ -23,13 +23,14 @@
   <script type="module">
     import {
       mountStadiumStage,
-    } from '/stadium_editor/static/stadium_editor/stadium_stage_adapter.js?v=7';
+    } from '/stadium_editor/static/stadium_editor/stadium_stage_adapter.js?v=8';
 
+    const query = new URLSearchParams(window.location.search);
     const block = (id, stand, quad) => ({
       id, stand, tier: 'UNTEN', order: 0, rows: 8, seats: 16,
       quad, z0: 0.5, z1: 8, type: 'seating', rle: [[128, 0]],
     });
-    const scene = {
+    let scene = {
       mainStand: 'WEST',
       palette: ['#d81920'],
       blocks: [
@@ -38,8 +39,14 @@
       ],
       outline: [[-74, -42], [74, -42], [74, 42], [-74, 42]],
       roof: {mode: 'explicit', segments: []},
+      standsBounds: [-72, -40, 72, 40],
+      steckbrief: {floodlights: {type: 'mast', count: 4, height: 34}},
     };
-    const query = new URLSearchParams(window.location.search);
+    if (query.get('scene') === 'campnou') {
+      scene = await fetch(
+        '/stadium_editor/blueprints/v2/campnou_v2.json',
+      ).then(response => response.json());
+    }
     const turn = Number(query.get('turn') || 0) * Math.PI / 180;
     if (turn) {
       const c = Math.cos(turn), s = Math.sin(turn);
@@ -48,10 +55,17 @@
       scene.outline = scene.outline.map(rotate);
     }
     const day = query.get('lighting') !== 'night';
+    const floodlight = query.get('floodlight') === 'on';
+    const camera = query.get('camera') || 'seat';
+    if (query.get('floodlightType') === 'rim') {
+      scene.steckbrief.floodlights = {type: 'rim'};
+    } else if (query.get('floodlightType') === 'none') {
+      delete scene.steckbrief.floodlights;
+    }
     const element = document.getElementById('editor-stage');
     window.seatViewTest = {scene, element};
     window.seatViewTest.api = await mountStadiumStage({
-      element, scene, mode: 'editor', camera: 'seat', day,
+      element, scene, mode: 'editor', camera, day, floodlight,
     });
     while (!window.seatViewTest.api.stage.backgroundReady()) {
       await new Promise(resolve => window.setTimeout(resolve, 20));
@@ -60,7 +74,24 @@
     document.body.dataset.sky = stats.sky;
     document.body.dataset.pitchStripes = String(stats.pitchStripes);
     document.body.dataset.pitchLines = String(stats.pitchLines);
+    document.body.dataset.seats = String(stats.seats);
     document.body.dataset.rotation = String(stats.rotationDeg);
+    document.body.dataset.floodlight = String(stats.floodlightEnabled);
+    document.body.dataset.floodlightFixtures = String(stats.floodlightFixtures);
+    if (query.get('toggleFloodlight') === 'on') {
+      const before = window.seatViewTest.api.stage;
+      const position = before.camera.position.clone();
+      await window.seatViewTest.api.update({floodlight: !stats.floodlightEnabled});
+      document.body.dataset.sameStage = String(
+        before === window.seatViewTest.api.stage,
+      );
+      document.body.dataset.sameCameraPosition = String(
+        position.distanceTo(window.seatViewTest.api.stage.camera.position) < 1e-9,
+      );
+      document.body.dataset.toggledFloodlight = String(
+        window.seatViewTest.api.stage.stats.floodlightEnabled,
+      );
+    }
     window.seatViewTest.ready = true;
   </script>
 </body>

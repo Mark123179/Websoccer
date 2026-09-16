@@ -171,6 +171,7 @@
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
     <select id="stageCamera" aria-label="3D-Kamera"><option value="orbit">Orbit</option><option value="seat">Sitz</option></select>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageDay" style="accent-color:var(--cyan)"> Tag</label>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageFloodlight" style="accent-color:var(--cyan)"> Flutlicht</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
     <button class="btn" id="btnShot" title="Aktuelle 3D-Ansicht als PNG speichern">📷 PNG</button></div>
   <button class="btn active" id="btnDots">⣿ PUNKTE</button>
@@ -328,6 +329,6 @@ window.STADIUM_EDITOR = {
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
-<script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=34"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=34"></script>
+<script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=35"></script>
 {% endblock %}

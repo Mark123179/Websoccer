@@ -80,6 +80,27 @@ async function backgroundSample(page) {
   });
 }
 
+async function fieldBrightness(page) {
+  const pixels = await page.evaluate(() => {
+    const gl = window.seatViewTest.api.stage.renderer.getContext();
+    const width = gl.drawingBufferWidth;
+    const height = gl.drawingBufferHeight;
+    const result = [];
+    for (const yRatio of [.18, .28, .38]) {
+      for (const xRatio of [.2, .4, .6, .8]) {
+        const rgba = new Uint8Array(4);
+        gl.readPixels(
+          Math.floor(width * xRatio), Math.floor(height * yRatio),
+          1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rgba,
+        );
+        result.push(...rgba.slice(0, 3));
+      }
+    }
+    return result;
+  });
+  return pixels.reduce((sum, value) => sum + value, 0) / pixels.length;
+}
+
 async function drag(page, dx, dy) {
   const canvas = page.locator('#editor-stage canvas');
   const box = await canvas.boundingBox();
@@ -102,9 +123,15 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   });
   t.after(() => browser.close());
   const page = await browser.newPage({viewport: {width: 1100, height: 700}});
+  const browserErrors = [];
+  page.on('console', message => {
+    if (message.type() === 'error') browserErrors.push(message.text());
+  });
+  page.on('pageerror', error => browserErrors.push(error.message));
   const port = server.address().port;
+  const origin = `http://127.0.0.1:${port}`;
   await page.goto(
-    `http://127.0.0.1:${port}/stadium_editor/tests_js/seat_view_harness.html`,
+    `${origin}/stadium_editor/tests_js/seat_view_harness.html`,
   );
   await page.waitForFunction(() => window.seatViewTest?.ready);
   assert.equal(
@@ -114,10 +141,14 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   );
   const seatStats = await page.evaluate(() => window.seatViewTest.api.stage.stats);
   assert.ok(seatStats.seats > 2_000, 'the WebGL stage must create individual seat instances');
-  assert.equal(seatStats.seats, 2_604);
+  assert.equal(seatStats.seats, 2_790);
   assert.equal(seatStats.pitchStripes, 10);
   assert.equal(seatStats.pitchLines, 17);
   assert.equal(seatStats.sky, 'day');
+  assert.equal(seatStats.floodlightType, 'mast');
+  assert.equal(seatStats.floodlightFixtures, 4);
+  assert.equal(seatStats.floodlightSources, 4);
+  assert.equal(seatStats.floodlightEnabled, false);
   await page.waitForFunction(
     () => window.seatViewTest.api.stage.backgroundReady(),
   );
@@ -129,6 +160,26 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   assert.ok(
     Math.hypot(initial.position[0], initial.position[2]) > 50,
     'seat camera must be fixed on the WEST/OST stand',
+  );
+  const lightToggle = await page.evaluate(async () => {
+    const before = window.seatViewTest.api.stage;
+    await window.seatViewTest.api.update({floodlight: true});
+    return {
+      sameStage: before === window.seatViewTest.api.stage,
+      enabled: window.seatViewTest.api.stage.stats.floodlightEnabled,
+      fixtures: window.seatViewTest.api.stage.stats.floodlightFixtures,
+      sources: window.seatViewTest.api.stage.stats.floodlightSources,
+    };
+  });
+  assert.deepEqual(lightToggle, {
+    sameStage: true, enabled: true, fixtures: 4, sources: 4,
+  });
+  assert.ok(
+    distance(initial.position, (await snapshot(page)).position) < 1e-6,
+    'floodlight toggle must not move the seat camera',
+  );
+  await page.evaluate(
+    () => window.seatViewTest.api.update({floodlight: false}),
   );
 
   await drag(page, 180, 0);
@@ -160,7 +211,7 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   assert.ok(distance(initial.position, reset.position) < 1e-6);
 
   await page.evaluate(async () => {
-    await window.seatViewTest.api.update({day: false});
+    await window.seatViewTest.api.update({day: false, floodlight: false});
   });
   await page.waitForFunction(
     () => window.seatViewTest.api.stage.backgroundReady(),
@@ -174,6 +225,49 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
   const nightSky = await backgroundSample(page);
   assert.ok(nightSky.every(pixel => pixel[3] === 255), 'night sky must fill the view');
   assert.notDeepEqual(nightSky, daySky, 'day/night must swap the sky texture');
+  const darkField = await fieldBrightness(page);
+  await page.evaluate(async () => {
+    window.__nightStage = window.seatViewTest.api.stage;
+    await window.seatViewTest.api.update({floodlight: true});
+  });
+  const lightField = await fieldBrightness(page);
+  assert.ok(
+    lightField > darkField * 1.35,
+    `floodlight must visibly brighten the stadium (${darkField} -> ${lightField})`,
+  );
+  assert.equal(
+    await page.evaluate(
+      () => window.seatViewTest.api.stage === window.__nightStage,
+    ),
+    true,
+    'floodlight toggles must not rebuild stadium geometry',
+  );
+  assert.equal(
+    await page.evaluate(
+      () => window.seatViewTest.api.stage.stats.floodlightEnabled,
+    ),
+    true,
+  );
+  await page.evaluate(
+    () => window.seatViewTest.api.update({camera: 'orbit'}),
+  );
+  assert.equal(
+    await page.evaluate(
+      () => window.seatViewTest.api.stage.stats.floodlightEnabled,
+    ),
+    true,
+    'orbit rebuild must preserve the floodlight state',
+  );
+  await page.evaluate(
+    () => window.seatViewTest.api.update({camera: 'seat'}),
+  );
+  assert.equal(
+    await page.evaluate(
+      () => window.seatViewTest.api.stage.stats.floodlightEnabled,
+    ),
+    true,
+    'seat rebuild must preserve the floodlight state',
+  );
 
   for (const degrees of [0, 90, 180, 270]) {
     await page.evaluate(async ({degrees}) => {
@@ -193,6 +287,7 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
     const stats = await page.evaluate(() => window.seatViewTest.api.stage.stats);
     assert.equal(stats.pitchStripes, 10);
     assert.equal(stats.pitchLines, 17);
+    assert.equal(stats.floodlightEnabled, true);
   }
 
   await page.locator('#editor-stage canvas').evaluate(
@@ -214,4 +309,20 @@ test('seat view pointer controls survive renderer rebuilds', async t => {
     'pointer controls must remain bound after the canvas is replaced',
   );
   assert.ok(distance(initial.position, rebuilt.position) < 1e-6);
+
+  await page.goto(
+    `${origin}/stadium_editor/tests_js/seat_view_harness.html` +
+    '?scene=campnou&camera=orbit&lighting=night&floodlight=on',
+  );
+  await page.waitForFunction(() => window.seatViewTest?.ready);
+  const rimStats = await page.evaluate(() => window.seatViewTest.api.stage.stats);
+  assert.equal(rimStats.floodlightType, 'rim');
+  assert.equal(rimStats.floodlightFixtures, 102);
+  assert.equal(rimStats.floodlightSources, 12);
+  assert.equal(rimStats.floodlightEnabled, true);
+  assert.equal(
+    browserErrors.filter(message => /shader|uniform|webgl/i.test(message)).length,
+    0,
+    'bounded Camp Nou rim lighting must render without WebGL shader failures',
+  );
 });

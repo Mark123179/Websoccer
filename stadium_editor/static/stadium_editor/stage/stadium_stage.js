@@ -16,6 +16,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {blockSupportQuads, facadeEdgeTopHeights} from './stadium_geometry_helpers.js?v=25';
 import {buildSeatRenderPlan, seatBasis} from './seat_rendering.js?v=2';
 import {PITCH, buildPitchLayout} from './pitch_geometry.js?v=1';
+import {buildFloodlightPlan} from './stadium_lighting.js?v=1';
 
 const SKY_URLS = Object.freeze({
   day: new URL('./assets/stadium_sky_day.png?v=1', import.meta.url).href,
@@ -120,7 +121,8 @@ function facadeTexture(floors) {
 
 /* ── Modul ──────────────────────────────────────────────────────────── */
 export function createStadiumStage({ canvas, scene, width, height, drawPitch = false, preset = PRESET, rules = RULES, seatMode = 'instances',
-                                     view = 'match', orbit = {}, surroundings = null, facade = null, seat = null, lighting = 'day', design = null }) {
+                                     view = 'match', orbit = {}, surroundings = null, facade = null, seat = null, lighting = 'day',
+                                     floodlight = false, design = null }) {
   const night = lighting === 'night';
   const isSeat = view === 'seat';
   const isOrbit = view === 'orbit' || isSeat;
@@ -224,18 +226,27 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
   const sun = new THREE.DirectionalLight(0xffffff, night ? 0.08 : 0.95);
   sun.position.set(-40, 90, 120);
   three.add(sun);
-  const spotTargets = [[-30, 0], [0, 0], [30, 0]].map(p => { const t = new THREE.Object3D(); t.position.copy(toWorld(p, 0)); three.add(t); return t; });
-  let spotCount = 0;
-  const addSpot = (pos, tIx) => {                 // Flutlicht: ein Spot je Position, Ziel auf dem Feld
-    if (!night) return; spotCount++;
-    const target = spotTargets[tIx % spotTargets.length];
-    const reach = pos.distanceTo(target.position) * 1.35;          // Feldspot: endet kurz hinter dem Feld
-    const L = new THREE.SpotLight(0xfff4d6, 650, reach, 0.5, 0.65, 1);
-    L.position.copy(pos); L.target = target; three.add(L);
-    const fill = new THREE.SpotLight(0xe9dfc8, 180, 0, 1.15, 0.9, 1);  // Streulicht: breit, schwach, ohne Reichweite — Ränge werden gleichmäßig hell
-    fill.position.copy(pos); fill.target = target; three.add(fill);
+  const lightPlan = buildFloodlightPlan(scene);
+  const floodlightSources = [];
+  const fixtureMaterials = new Set();
+  const floodlightFill = new THREE.HemisphereLight(0xddeeff, 0x222833, 0);
+  three.add(floodlightFill);
+  const addSpot = (fixture, position) => {
+    const target = new THREE.Object3D();
+    target.position.copy(toWorld(fixture.target, fixture.target[2]));
+    three.add(target);
+    const reach = position.distanceTo(target.position) * 1.65;
+    const source = new THREE.SpotLight(0xfff4d6, 0, reach, 0.72, 0.72, 1);
+    source.position.copy(position);
+    source.target = target;
+    source.userData.onIntensity = fixture.kind === 'rim' ? 460 : 960;
+    three.add(source);
+    floodlightSources.push(source);
   };
-  const fixtureMat = new THREE.MeshLambertMaterial({ color: 0x9aa3ab, emissive: night ? 0xfff0b0 : 0x000000, emissiveIntensity: night ? 1.6 : 0 });
+  const fixtureMat = new THREE.MeshLambertMaterial({
+    color: 0x9aa3ab, emissive: 0x000000, emissiveIntensity: 0,
+  });
+  fixtureMaterials.add(fixtureMat);
 
   /* ── Bauteile sammeln ─────────────────────────────────────────────── */
   const bodyPos = [], bodyCol = [], roofPos = [], roofCol = [];
@@ -362,7 +373,6 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   // Dach: nur Unterseite und Traufkante; Segmente über der Kameraseite entfallen
   const roofSegs = (scene.roof && scene.roof.segments) || [];
-  const roofEdgeMids = [];
   const camLimit = PITCH.width / 2 + 6;
   for (const seg of roofSegs) {
     const q = seg.quad.map(rot);
@@ -383,13 +393,6 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       return !best || d < best.d ? { e, d } : best; }, null).e;
     const p0 = pts[inner[0]], p1 = pts[inner[1]];
     pushQuad(p0, p1, p1.clone().setY(p1.y - rules.fascia), p0.clone().setY(p0.y - rules.fascia), rules.fasciaColor, true);
-    // Leuchten alle ~9 m auf der Traufkante, zum Feld gerichtet
-    const edgeLen = p0.distanceTo(p1), nFix = Math.max(1, Math.round(edgeLen / 9));
-    for (let k = 0; k < nFix; k++) {
-      const fp = p0.clone().lerp(p1, (k + 0.5) / nFix); fp.y -= 0.2;
-      const fx = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.45, 0.5), fixtureMat); fx.position.copy(fp); fx.lookAt(new THREE.Vector3(0, 0, 0)); three.add(fx);
-    }
-    roofEdgeMids.push(p0.clone().lerp(p1, 0.5));
   }
 
   // Fassade: Außenkontur senkrecht bis über den obersten Rang (nur Außenansicht)
@@ -437,41 +440,45 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       const w = toWorld(p2, h / 2); m.position.copy(w); three.add(m);
     }
   }
-  if (sb.floodlights && sb.floodlights.type === 'rim') {
-    // Leuchten auf der Oberkante des obersten Rangs, rundum alle ~12 m; nachts Spots von dort
-    const tops = new Map();
-    for (const b of scene.blocks) { const k = b.stand + '|' + b.order; if (!tops.has(k) || tops.get(k).z1 < b.z1) tops.set(k, b); }
-    const rimPts = [];
-    for (const b of tops.values()) {
-      const f = frames.get(b.id); const L = len2(v2(f.D, f.C)); const nF = Math.max(1, Math.round(L / 12));
-      for (let k = 0; k < nF; k++) {
-        const p2 = lerp2(f.D, f.C, (k + 0.5) / nF); const w = toWorld(p2, b.z1 + 1.6);
-        const fx = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 0.5), fixtureMat); fx.position.copy(w); fx.lookAt(new THREE.Vector3(0, 0, 0)); three.add(fx);
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 1.6, 6), new THREE.MeshLambertMaterial({ color: 0x8a9199 })); pole.position.copy(toWorld(p2, b.z1 + 0.8)); three.add(pole);
-        rimPts.push(w);
-      }
+  for (const fixture of lightPlan.fixtures) {
+    const position = toWorld(fixture.position, fixture.position[2]);
+    if (fixture.kind === 'rim') {
+      const head = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 0.6, 0.5), fixtureMat,
+      );
+      head.position.copy(position);
+      head.lookAt(new THREE.Vector3(0, 0, 0));
+      three.add(head);
+      const polePosition = [
+        fixture.position[0], fixture.position[1],
+        fixture.position[2] - fixture.poleHeight / 2,
+      ];
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.12, fixture.poleHeight, 6),
+        new THREE.MeshLambertMaterial({color: 0x8a9199}),
+      );
+      pole.position.copy(toWorld(polePosition, polePosition[2]));
+      three.add(pole);
+    } else {
+      const polePosition = [
+        fixture.position[0], fixture.position[1], fixture.poleHeight / 2,
+      ];
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.7, fixture.poleHeight, 8),
+        new THREE.MeshLambertMaterial({color: 0x9aa3ab}),
+      );
+      pole.position.copy(toWorld(polePosition, polePosition[2]));
+      three.add(pole);
+      const head = new THREE.Mesh(
+        new THREE.BoxGeometry(6, 3, 1.2), fixtureMat,
+      );
+      head.position.copy(position);
+      head.lookAt(new THREE.Vector3(0, fixture.position[2], 0));
+      three.add(head);
     }
-    if (night) {
-      const groups = { left: [], right: [], far: [], near: [] };
-      for (const m of rimPts) { const k = Math.abs(m.x) > Math.abs(m.z) ? (m.x > 0 ? 'right' : 'left') : (m.z < 0 ? 'far' : 'near'); groups[k].push(m); }
-      for (const [k, list] of Object.entries(groups)) {
-        if (!list.length) continue;
-        list.sort((a, b2) => (k === 'far' || k === 'near') ? a.x - b2.x : a.z - b2.z);
-        [0.2, 0.5, 0.8].forEach((t, i) => addSpot(list[Math.floor(list.length * t)].clone().setY(list[0].y + 1), i));
-      }
-    }
-  } else if (sb.floodlights) {
-    const n = sb.floodlights.count || 4, h = sb.floodlights.height || 32;
-    const bb = scene.standsBounds || [-90, -60, 90, 60];
-    const corners = [[bb[2] + 6, bb[3] + 6], [bb[0] - 6, bb[3] + 6], [bb[0] - 6, bb[1] - 6], [bb[2] + 6, bb[1] - 6]];
-    for (let k = 0; k < n; k++) {
-      const p2 = corners[k % 4];
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, h, 8), new THREE.MeshLambertMaterial({ color: 0x9aa3ab }));
-      pole.position.copy(toWorld(p2, h / 2)); three.add(pole);
-      const head = new THREE.Mesh(new THREE.BoxGeometry(6, 3, 1.2), new THREE.MeshLambertMaterial({ color: 0xe8eef4, emissive: night ? 0xfff0b0 : 0x556066, emissiveIntensity: night ? 1.8 : 1 }));
-      head.position.copy(toWorld(p2, h + 1.5)); head.lookAt(new THREE.Vector3(0, h + 1.5, 0)); three.add(head);
-      addSpot(toWorld(p2, h + 1.5), k);
-    }
+  }
+  for (const source of lightPlan.sources) {
+    addSpot(source, toWorld(source.position, source.position[2]));
   }
   // Umfeld aus OSM: Gebäude extrudiert, Straßen und Grün flach
   if (drawSurroundings && scene.surroundings) {
@@ -510,17 +517,6 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     }
     const ground = new THREE.Mesh(new THREE.ShapeGeometry(gShape), new THREE.MeshLambertMaterial({ color: rules.groundColor, side: THREE.DoubleSide }));
     ground.rotation.x = -Math.PI / 2; ground.position.y = groundLevel - 0.05; three.add(ground);
-  }
-
-  if (night && roofEdgeMids.length) {
-    const groups = { left: [], right: [], far: [], near: [] };
-    for (const m of roofEdgeMids) { const k = Math.abs(m.x) > Math.abs(m.z) ? (m.x > 0 ? 'right' : 'left') : (m.z < 0 ? 'far' : 'near'); groups[k].push(m); }
-    for (const [k, list] of Object.entries(groups)) {
-      if (!list.length) continue;
-      list.sort((a, b) => (k === 'far' || k === 'near') ? a.x - b.x : a.z - b.z);
-      const picks = list.length >= 3 ? [list[Math.floor(list.length * 0.2)], list[Math.floor(list.length * 0.5)], list[Math.floor(list.length * 0.8)]] : list;
-      picks.forEach((m, i) => addSpot(m.clone().setY(m.y + 2), i));
-    }
   }
 
   // Körper als ein Mesh
@@ -637,19 +633,48 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     if (fps < 40 && pr > 0.6) renderer.setPixelRatio(Math.max(0.6, pr - 0.2));
     else if (fps > 70 && pr < max) renderer.setPixelRatio(Math.min(max, pr + 0.2));
   }
+  let floodlightsEnabled = false;
+  function setFloodlights(enabled, shouldRender = true) {
+    floodlightsEnabled = Boolean(enabled);
+    for (const source of floodlightSources) {
+      source.visible = floodlightsEnabled;
+      source.intensity = floodlightsEnabled ? source.userData.onIntensity : 0;
+    }
+    floodlightFill.intensity =
+      floodlightsEnabled && floodlightSources.length ? 0.2 : 0;
+    for (const material of fixtureMaterials) {
+      material.emissive.setHex(floodlightsEnabled ? 0xfff0b0 : 0x000000);
+      material.emissiveIntensity = floodlightsEnabled ? 1.8 : 0;
+      material.needsUpdate = true;
+    }
+    if (shouldRender) render();
+    return floodlightsEnabled;
+  }
+  setFloodlights(floodlight, false);
   function dispose() {
     active = false;
+    const geometries = new Set();
+    const materials = new Set();
+    const textures = new Set();
+    three.traverse(object => {
+      if (object.geometry) geometries.add(object.geometry);
+      const objectMaterials = Array.isArray(object.material)
+        ? object.material : [object.material];
+      for (const material of objectMaterials) {
+        if (!material) continue;
+        materials.add(material);
+        if (material.map) textures.add(material.map);
+      }
+    });
+    geometries.forEach(geometry => geometry.dispose());
+    textures.forEach(texture => texture.dispose());
+    materials.forEach(material => material.dispose());
     renderer.dispose();
-    bodyGeo.dispose();
-    roofGeo.dispose();
-    skyTexture?.dispose();
-    skyMesh?.geometry.dispose();
-    skyMesh?.material.dispose();
-    if (seats) seats.geometry.dispose();
   }
 
   return {
     project, render, dispose, camera, renderer, seatAt, adaptQuality,
+    setFloodlights,
     backgroundReady() {
       return !skyTexture ||
         Boolean(skyTexture.image?.complete && skyTexture.image?.naturalWidth);
@@ -662,7 +687,10 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       sky: isSeat ? (night ? 'night' : 'day') : null,
       roof: roofSegs.length, mainStand,
       rotationDeg: Math.round(phi * 180 / Math.PI),
-      spots: spotCount, roofEdges: roofEdgeMids.length,
+      floodlightType: lightPlan.type,
+      floodlightFixtures: lightPlan.fixtures.length,
+      floodlightSources: lightPlan.sources.length,
+      get floodlightEnabled() { return floodlightsEnabled; },
     },
   };
 }

@@ -349,7 +349,7 @@ function cameraName(value) {
 
 export async function mountStadiumStage({
   element, canvas: fallbackCanvas, scene, fallback, mode = 'live',
-  camera = 'orbit', day = false, exposure = 1, onReady,
+  camera = 'orbit', day = false, floodlight = false, exposure = 1, onReady,
 } = {}) {
   let fallbackRenderer = null;
   let stage = null;
@@ -363,6 +363,7 @@ export async function mountStadiumStage({
     scene,
     camera: cameraName(camera),
     day: Boolean(day),
+    floodlight: Boolean(floodlight),
     exposure: Number(exposure) || 1,
     orbit: {azimuth: 40, elevation: 32, distance: 0, fov: 38, targetZ: 8},
     seatLook: {yaw: 0, pitch: 0},
@@ -411,6 +412,7 @@ export async function mountStadiumStage({
         view: state.camera,
         orbit: state.orbit,
         lighting: state.day ? 'day' : 'night',
+        floodlight: state.floodlight,
       };
       stage = mod.createStadiumStage(options);
       if (state.camera === 'seat' && !options.seat) {
@@ -562,9 +564,14 @@ export async function mountStadiumStage({
       get stage() { return stage; },
       update(next = {}) {
         const patch = {...next};
-        if ('floodlight' in patch && !('day' in patch)) patch.day = !patch.floodlight;
         if ('camera' in patch) patch.camera = cameraName(patch.camera);
         const keys = Object.keys(patch);
+        const onlyFloodlight = keys.length === 1 && keys[0] === 'floodlight';
+        if (onlyFloodlight && stage?.setFloodlights) {
+          state.floodlight = Boolean(patch.floodlight);
+          stage.setFloodlights(state.floodlight);
+          return Promise.resolve();
+        }
         const onlyExposure = keys.every(key => key === 'exposure');
         if (onlyExposure && stage?.renderer) {
           state.exposure = Number(patch.exposure) || 1;

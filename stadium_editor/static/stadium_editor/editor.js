@@ -1078,6 +1078,7 @@ function scheduleStageDesignUpdate(){
         scene,
         camera: document.getElementById('stageCamera')?.value || 'orbit',
         day: Boolean(document.getElementById('stageDay')?.checked),
+        floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
       }).catch(useLegacyThreePreview);
     }).catch(()=>{});
@@ -1118,7 +1119,9 @@ async function ensureThreeStage(){
       stageScene, blocks, seatData, PALETTE, D, previewCapacity(), previewRoofs());
     const mounted = await mountStadiumStage({
       element: host, scene: initialScene, mode: 'editor', camera: 'orbit',
-      day: false, exposure: 1.1, fallback: ()=>null,
+      day: false,
+      floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
+      exposure: 1.1, fallback: ()=>null,
     });
     stageAdapter = mounted;
     if(mounted.kind === 'three'){
@@ -2012,6 +2015,11 @@ document.getElementById('stageDay').addEventListener('change', ()=>{
   if(!stageThree) return;
   const day = Boolean(document.getElementById('stageDay').checked);
   stageThree.update({day, exposure: day ? 1.5 : 1.1}).catch(useLegacyThreePreview);
+});
+document.getElementById('stageFloodlight').addEventListener('change', ()=>{
+  if(!stageThree) return;
+  const floodlight = Boolean(document.getElementById('stageFloodlight').checked);
+  stageThree.update({floodlight}).catch(useLegacyThreePreview);
 });
 document.getElementById('btnShot').addEventListener('click', ()=>{
   if(stageThree?.stage?.renderer?.domElement){

@@ -88,7 +88,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=34',
+            'stadium_editor/editor.js?v=35',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -241,6 +241,20 @@ class StadiumEditorTests(TestCase):
             Path(__file__).resolve().parent
             / 'tests_js'
             / 'test_stadium_pitch_geometry.mjs'
+        )
+        subprocess.run(
+            ['node', '--test', str(script)],
+            cwd=Path(__file__).resolve().parent.parent,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_stadium_floodlight_planning_contract(self):
+        script = (
+            Path(__file__).resolve().parent
+            / 'tests_js'
+            / 'test_stadium_lighting.mjs'
         )
         subprocess.run(
             ['node', '--test', str(script)],
@@ -860,11 +874,16 @@ class StadiumEditorTests(TestCase):
         self.assertIn('Math.atan2(point[1], point[0])', source)
         self.assertIn('new StadiumCanvasErrorRenderer', source)
         self.assertNotIn('fetch(`/management/stadion/editor/geometry/', source)
+        self.assertIn("stage.querySelector('[data-stage-floodlight]')", source)
+        self.assertIn('control.addEventListener', source)
+        self.assertNotIn('floodlight: !day?.checked', source)
         adapter = (
             Path(__file__).resolve().parent
             / 'static' / 'stadium_editor' / 'stadium_stage_adapter.js'
         ).read_text(encoding='utf-8')
         self.assertIn('selectSeatBlock(options.scene)', adapter)
+        self.assertIn('stage.setFloodlights(state.floodlight)', adapter)
+        self.assertIn("keys[0] === 'floodlight'", adapter)
         self.assertNotIn('THREE.Scene.prototype.add', adapter)
         self.assertNotIn('alignPitchStripeMeshes', adapter)
 
