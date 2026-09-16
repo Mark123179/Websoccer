@@ -47,6 +47,12 @@
         '/stadium_editor/blueprints/v2/campnou_v2.json',
       ).then(response => response.json());
     }
+    const seatColor = query.get('seatColor');
+    if (seatColor === 'light' || seatColor === 'dark') {
+      const color = seatColor === 'light' ? '#edf2f7' : '#111820';
+      scene.palette = (scene.palette?.length ? scene.palette : ['#d81920'])
+        .map(() => color);
+    }
     const turn = Number(query.get('turn') || 0) * Math.PI / 180;
     if (turn) {
       const c = Math.cos(turn), s = Math.sin(turn);
@@ -59,6 +65,8 @@
     const camera = query.get('camera') || 'seat';
     if (query.get('floodlightType') === 'rim') {
       scene.steckbrief.floodlights = {type: 'rim'};
+    } else if (query.get('floodlightType') === 'mast') {
+      scene.steckbrief.floodlights = {type: 'mast', count: 4, height: 34};
     } else if (query.get('floodlightType') === 'none') {
       delete scene.steckbrief.floodlights;
     }
