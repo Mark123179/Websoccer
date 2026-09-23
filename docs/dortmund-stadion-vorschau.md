@@ -18,13 +18,13 @@ expliziter Fehler statt einer stillen Rückkehr zur alten Geometrie.
   weder sein geprüfter Referenz-JSON noch sein Importpfad still ersetzt.
 - Die zwei gelieferten UnityFS-Bundles sind bytegleich (SHA-256
   `b626002f437097d92e914b93e7036257e63b9574c0d2a8f4fa8592407b2bad66`),
-  je 209 MB. Hier gibt es keinen UnityFS-Extractor; Mesh-, Material- und
-  Lightmap-Pixel lassen sich deshalb nicht sicher auslesen oder performant
-  als Browser-Assets ausliefern. Die Objektliste (681 Renderer) enthält Namen,
-  aber keine Geometrie. Lightmap-JSON (146 Karten) enthält Zuordnungen, nicht
-  die Texturpixel; die 140 Lightprobes enthalten Positionen/SH-Koeffizienten,
-  jedoch keine zugehörigen Renderer-Meshes. Keine der Dateien wird ignoriert
-  wegen ihrer Herkunft, sondern wegen der fehlenden ausführbaren Asset-Kette.
+  je 209 MB. Zum Zeitpunkt dieser Vorschau gab es noch keinen getesteten
+  UnityFS-Extractor. **Nachtrag:** Die spätere tatsächliche Extraktion von
+  Meshes, Texturen und Lightmap-Bildpixeln ist in
+  [dortmund-unity-assets-pruefung.md](dortmund-unity-assets-pruefung.md)
+  dokumentiert. Das Lightmap-JSON enthält weiterhin nur Zuordnungen;
+  Lightprobes enthalten Positionen/SH-Koeffizienten, keine Meshes. Die
+  Vorschau selbst benutzt unverändert nur die separate ZIP-Szene.
 - Der separate Sitzdatensatz hat 71.659 generierte Unity-Sitze mit Y als Höhe,
   X/Z als Grundriss und Rotationen; er wurde zur Maßableitung genutzt, **nicht**
   als wirtschaftliche Kapazität oder als 71.659 Einzelobjekte im Browser.
