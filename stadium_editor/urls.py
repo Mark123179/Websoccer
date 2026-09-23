@@ -10,6 +10,7 @@ from .views import (
     stadium_live_scene,
     dortmund_preview,
     dortmund_preview_scene,
+    dortmund_original_miniature,
 )
 
 
@@ -23,4 +24,5 @@ urlpatterns = [
     path('stadion/<int:club_id>/live/', stadium_live_mode, name='stadium_live_mode'),
     path('stadion/dortmund/vorschau/', dortmund_preview, name='dortmund_preview'),
     path('stadion/dortmund/vorschau/scene/', dortmund_preview_scene, name='dortmund_preview_scene'),
+    path('stadion/dortmund/original-miniatur/', dortmund_original_miniature, name='dortmund_original_miniature'),
 ]

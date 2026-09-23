@@ -1,0 +1,50 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dortmund · Originalgeometrie und Ausbauprobe</title>
+  <link rel="stylesheet" href="{% static 'stadium_editor/dortmund_original.css' %}?v=1">
+  <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
+</head>
+<body>
+  <main class="miniature">
+    <header>
+      <div class="eyebrow">Signal Iduna Park · isolierte Geometrieprobe</div>
+      <h1>Dortmund, aus Originaldaten.</h1>
+      <p>Originalmeshes aus dem Unity-Stadionpaket. Der Ausbau ist eine <strong>exemplarische geometrische Ergänzung</strong> der rückwärtigen Tribüne, kein aktivierter Bauauftrag.</p>
+    </header>
+    <section class="viewer" aria-label="3D-Stadionansicht">
+      <div id="scene" data-assets="{% static 'stadium_editor/dortmund_original/' %}"></div>
+      <div class="viewer__top">
+        <span class="tag">Nur ansehen · keine Speicherung</span>
+        <span class="tag" id="metrics">Lädt …</span>
+      </div>
+      <div class="viewer__bottom">Ziehen: drehen · Mausrad: zoomen · Doppelklick: Ansicht zurücksetzen</div>
+      <div id="fallback" class="fallback" hidden>
+        <img id="fallback-image" src="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}"
+             data-before="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}"
+             data-after="{% static 'stadium_editor/dortmund_original/ausbau-2d.webp' %}"
+             data-cutaway="{% static 'stadium_editor/dortmund_original/ausbau-offen-2d.webp' %}"
+             alt="Erhöhte 2D-Projektion der extrahierten Dortmunder Originalmeshes">
+        <p>WebGL ist hier nicht verfügbar. Dies ist eine berechnete 2D-Projektion der Originalmeshes; der Ausbau ist ein modellierter Zusatz. Zum Drehen oder Zoomen wird WebGL benötigt.</p>
+      </div>
+    </section>
+    <nav class="controls" aria-label="Ansicht und Ausbaustand">
+      <div class="segmented" role="group" aria-label="Ausbaustand">
+        <button type="button" data-state="before" aria-pressed="true">Original</button>
+        <button type="button" data-state="after" aria-pressed="false">Mit Ausbauprobe</button>
+        <button type="button" data-state="cutaway" aria-pressed="false">Ausbau · ohne Dachhaut</button>
+      </div>
+      <div class="segmented" role="group" aria-label="Perspektive">
+        <button type="button" data-view="diagonal" aria-pressed="true">Schräg oben</button>
+        <button type="button" data-view="rear" aria-pressed="false">Rückseite</button>
+        <button type="button" data-view="top" aria-pressed="false">Dachöffnung</button>
+      </div>
+    </nav>
+    <aside class="note"><strong>Was sich ändert:</strong> An der rückwärtigen Oberrang-Kante werden zusätzliche Stufen und Sitzreihen, zwei Eckanschlüsse, eine erhöhte Dachfortsetzung mit Trägern sowie eine neue Außenfassade ergänzt. Die unveränderte Unity-Hülle bleibt als Vergleich erhalten; die Erweiterung ist ein maßstäblicher Prototyp, <em>kein</em> aus Unity extrahiertes fertiges Ausbau-Mesh. Materialien und Beleuchtung sind reduziert; die Kapazität wird nicht neu berechnet.</aside>
+  </main>
+  <script type="module" src="{% static 'stadium_editor/dortmund_original.js' %}?v=3"></script>
+</body>
+</html>

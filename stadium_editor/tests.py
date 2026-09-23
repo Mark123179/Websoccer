@@ -37,6 +37,33 @@ from stadium_editor.management.commands.import_stadium_blueprint_v2 import Comma
 from game.management.commands.derive_stadium_club_colors import derive_palette
 
 
+class DortmundOriginalMiniatureTests(SimpleTestCase):
+    def test_isolated_read_only_page_and_source_manifest(self):
+        import struct
+
+        response = self.client.get(reverse('dortmund_original_miniature'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ausbau · ohne Dachhaut')
+        self.assertNotContains(response, 'dortmund_original/manifest.json')
+        self.assertEqual(self.client.post(reverse('dortmund_original_miniature')).status_code, 405)
+        root = Path(__file__).parent / 'static/stadium_editor/dortmund_original'
+        manifest = json.loads((root / 'manifest.json').read_text())
+        binary = (root / 'geometry.bin').read_bytes()
+        size = len(binary)
+        self.assertEqual(manifest['format'], 'unity-mesh-binary-v1')
+        self.assertGreaterEqual(len(manifest['meshes']), 300)
+        self.assertIn('center3_21.001', [m['name'] for m in manifest['meshes']])
+        self.assertIn('C_back1_C1-HardcoreHome.001',
+                      [m['name'] for m in manifest['meshes']])
+        for mesh in manifest['meshes']:
+            self.assertLessEqual(mesh['uvOffset'] + mesh['vertexCount'] * 8, size)
+            for part in mesh['parts']:
+                self.assertLessEqual(part['indexOffset'] + part['indexCount'] * 4, size)
+                indices = struct.unpack_from('<' + 'I' * part['indexCount'],
+                                             binary, part['indexOffset'])
+                self.assertLess(max(indices), mesh['vertexCount'])
+
+
 class DortmundPreviewGeometryTests(SimpleTestCase):
     def test_ring_renderer_height_contract(self):
         script = Path(__file__).resolve().parent / 'tests_js' / 'test_roof_ring_profile.mjs'

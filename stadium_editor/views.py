@@ -206,3 +206,9 @@ def dortmund_preview(request):
         'preview': True,
         'current_url': reverse('stadium_live_mode', args=[3]),
     })
+
+
+@require_GET
+def dortmund_original_miniature(request):
+    """Isolated asset review; no design, capacity or geometry database access."""
+    return render(request, 'stadium_editor/dortmund_original_miniature.html')
