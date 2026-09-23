@@ -38,12 +38,27 @@ from game.management.commands.derive_stadium_club_colors import derive_palette
 
 
 class DortmundOriginalMiniatureTests(SimpleTestCase):
+    def test_expansion_model_uses_real_seat_rows_and_does_not_change_editor(self):
+        script = Path(__file__).parent / 'tests_js/test_dortmund_expansion_model.mjs'
+        subprocess.run(
+            ['node', '--test', str(script)],
+            cwd=Path(__file__).parent.parent,
+            capture_output=True, text=True, check=True,
+        )
+        source = Path(__file__).parent / 'templates/stadium_editor/dortmund_original_miniature.html'
+        template = source.read_text()
+        self.assertIn('data-side="back"', template)
+        self.assertIn('data-side="front"', template)
+        self.assertIn('data-side="left"', template)
+        self.assertIn('data-side="right"', template)
+        self.assertIn('roof-plan', template)
+
     def test_isolated_read_only_page_and_source_manifest(self):
         import struct
 
         response = self.client.get(reverse('dortmund_original_miniature'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Ausbau · ohne Dachhaut')
+        self.assertContains(response, 'Vier unabhängig veränderbare Tribünen')
         self.assertNotContains(response, 'dortmund_original/manifest.json')
         self.assertEqual(self.client.post(reverse('dortmund_original_miniature')).status_code, 405)
         root = Path(__file__).parent / 'static/stadium_editor/dortmund_original'

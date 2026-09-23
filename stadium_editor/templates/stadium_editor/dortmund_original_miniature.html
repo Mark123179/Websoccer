@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dortmund · Originalgeometrie und Ausbauprobe</title>
-  <link rel="stylesheet" href="{% static 'stadium_editor/dortmund_original.css' %}?v=1">
+  <link rel="stylesheet" href="{% static 'stadium_editor/dortmund_original.css' %}?v=2">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
 </head>
 <body>
@@ -13,7 +13,7 @@
     <header>
       <div class="eyebrow">Signal Iduna Park · isolierte Geometrieprobe</div>
       <h1>Dortmund, aus Originaldaten.</h1>
-      <p>Originalmeshes aus dem Unity-Stadionpaket. Der Ausbau ist eine <strong>exemplarische geometrische Ergänzung</strong> der rückwärtigen Tribüne, kein aktivierter Bauauftrag.</p>
+      <p>Originalmeshes aus dem Unity-Stadionpaket. Vier unabhängig veränderbare Tribünen und ein gemeinsam verformtes Dach – eine <strong>isolierte Geometrieprobe</strong>, kein aktivierter Bauauftrag.</p>
     </header>
     <section class="viewer" aria-label="3D-Stadionansicht">
       <div id="scene" data-assets="{% static 'stadium_editor/dortmund_original/' %}"></div>
@@ -24,18 +24,18 @@
       <div class="viewer__bottom">Ziehen: drehen · Mausrad: zoomen · Doppelklick: Ansicht zurücksetzen</div>
       <div id="fallback" class="fallback" hidden>
         <img id="fallback-image" src="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}"
-             data-before="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}"
-             data-after="{% static 'stadium_editor/dortmund_original/ausbau-2d.webp' %}"
-             data-cutaway="{% static 'stadium_editor/dortmund_original/ausbau-offen-2d.webp' %}"
              alt="Erhöhte 2D-Projektion der extrahierten Dortmunder Originalmeshes">
-        <p>WebGL ist hier nicht verfügbar. Dies ist eine berechnete 2D-Projektion der Originalmeshes; der Ausbau ist ein modellierter Zusatz. Zum Drehen oder Zoomen wird WebGL benötigt.</p>
+        <svg id="roof-plan" viewBox="-170 -157 340 314" role="img" hidden
+             aria-label="Dachgrundriss mit hervorgehobenen ausgebauten Tribünen"></svg>
+        <p>2D-Ersatzansicht ohne WebGL: Original als Mesh-Projektion, veränderter Zustand als maßbasierter Dachgrundriss. Zum Drehen wird WebGL benötigt.</p>
       </div>
     </section>
     <nav class="controls" aria-label="Ansicht und Ausbaustand">
-      <div class="segmented" role="group" aria-label="Ausbaustand">
-        <button type="button" data-state="before" aria-pressed="true">Original</button>
-        <button type="button" data-state="after" aria-pressed="false">Mit Ausbauprobe</button>
-        <button type="button" data-state="cutaway" aria-pressed="false">Ausbau · ohne Dachhaut</button>
+      <div class="segmented" role="group" aria-label="Vergleichsszenarien">
+        <button type="button" data-preset="original" aria-pressed="true">Original</button>
+        <button type="button" data-preset="one" aria-pressed="false">Eine Tribüne</button>
+        <button type="button" data-preset="neighbors" aria-pressed="false">Benachbart</button>
+        <button type="button" data-preset="opposite" aria-pressed="false">Gegenüber</button>
       </div>
       <div class="segmented" role="group" aria-label="Perspektive">
         <button type="button" data-view="diagonal" aria-pressed="true">Schräg oben</button>
@@ -43,8 +43,22 @@
         <button type="button" data-view="top" aria-pressed="false">Dachöffnung</button>
       </div>
     </nav>
-    <aside class="note"><strong>Was sich ändert:</strong> An der rückwärtigen Oberrang-Kante werden zusätzliche Stufen und Sitzreihen, zwei Eckanschlüsse, eine erhöhte Dachfortsetzung mit Trägern sowie eine neue Außenfassade ergänzt. Die unveränderte Unity-Hülle bleibt als Vergleich erhalten; die Erweiterung ist ein maßstäblicher Prototyp, <em>kein</em> aus Unity extrahiertes fertiges Ausbau-Mesh. Materialien und Beleuchtung sind reduziert; die Kapazität wird nicht neu berechnet.</aside>
+    <section class="build-panel" aria-label="Tribünen einzeln ausbauen">
+      <div class="build-panel__heading">
+        <div><span class="eyebrow">Ausbau-Labor</span><h2>Tribüne für Tribüne</h2></div>
+        <strong id="seat-count" aria-live="polite">Sitzdaten werden geladen …</strong>
+      </div>
+      <div class="stand-controls">
+        <div class="stand-row"><span>Rücktribüne</span><span data-side-count="back">+0</span><button type="button" data-side="back" data-action="minus" aria-label="Rücktribüne verkleinern">−</button><button type="button" data-side="back" data-action="plus" aria-label="Rücktribüne ausbauen">+</button></div>
+        <div class="stand-row"><span>Rechte Tribüne</span><span data-side-count="right">+0</span><button type="button" data-side="right" data-action="minus" aria-label="Rechte Tribüne verkleinern">−</button><button type="button" data-side="right" data-action="plus" aria-label="Rechte Tribüne ausbauen">+</button></div>
+        <div class="stand-row"><span>Vordertribüne</span><span data-side-count="front">+0</span><button type="button" data-side="front" data-action="minus" aria-label="Vordertribüne verkleinern">−</button><button type="button" data-side="front" data-action="plus" aria-label="Vordertribüne ausbauen">+</button></div>
+        <div class="stand-row"><span>Linke Tribüne</span><span data-side-count="left">+0</span><button type="button" data-side="left" data-action="minus" aria-label="Linke Tribüne verkleinern">−</button><button type="button" data-side="left" data-action="plus" aria-label="Linke Tribüne ausbauen">+</button></div>
+      </div>
+      <p id="limit-note" role="status"></p>
+      <p class="build-panel__hint">Jedes + fügt mindestens 1.000 aus gemessenen Oberrang-Sitzreihen abgeleitete Plätze hinzu. 120.000 ist die Gesamtobergrenze; unter den derzeit gemessenen Dach-/Pylonabständen sind höchstens 85.833 modellierte Sitze erreichbar.</p>
+    </section>
+    <aside class="note"><strong>Was zu sehen ist:</strong> Der Originalzustand bleibt unverändert. Die Vergleichsgeometrie erweitert Oberränge um zusammenhängende Flächen aus gemessenen Sitzreihen; das Dach, Träger und Fassadenteile werden bis in die vier Ecken stetig verformt. Bestehende besetzte Sitzflächen bleiben an ihrem Platz. Neue Sitze verwenden das gelieferte Stuhlmesh. Keine statische Bauplanung: Lightmaps, Statik und die produktive Stadionkapazität bleiben unangetastet. Die Basis sind 71.659 modellierte Sitzpositionen, nicht die wirtschaftliche Datenbankkapazität.</aside>
   </main>
-  <script type="module" src="{% static 'stadium_editor/dortmund_original.js' %}?v=3"></script>
+  <script type="module" src="{% static 'stadium_editor/dortmund_original.js' %}?v=10"></script>
 </body>
 </html>
