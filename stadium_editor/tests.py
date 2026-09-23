@@ -12,7 +12,7 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
@@ -32,8 +32,82 @@ from stadium_editor.seed import (
 )
 from stadium_editor.services import refresh_geometry_after_capacity_change
 from stadium_editor.blueprints.v2 import imports as blueprint_v2
+from stadium_editor.blueprints.v2.dortmund_preview import load_preview
 from stadium_editor.management.commands.import_stadium_blueprint_v2 import Command as BlueprintV2Command
 from game.management.commands.derive_stadium_club_colors import derive_palette
+
+
+class DortmundPreviewGeometryTests(SimpleTestCase):
+    def test_ring_renderer_height_contract(self):
+        script = Path(__file__).resolve().parent / 'tests_js' / 'test_roof_ring_profile.mjs'
+        subprocess.run(
+            ['node', '--test', str(script)],
+            cwd=Path(__file__).resolve().parent.parent,
+            check=True, capture_output=True, text=True,
+        )
+
+    def test_measured_scene_has_valid_grid_and_closed_ring(self):
+        from shapely.geometry import Polygon, box
+
+        scene = load_preview()
+        blocks = scene['blocks']
+        self.assertEqual(len(blocks), 120)
+        self.assertEqual(len({block['id'] for block in blocks}), len(blocks))
+        self.assertEqual(set(block['stand'] for block in blocks),
+                         {'NORD', 'OST', 'SUED', 'WEST'})
+        self.assertEqual(set(block['tier'] for block in blocks), {'UNTER', 'OBER'})
+        for block in blocks:
+            with self.subTest(block=block['id']):
+                self.assertTrue(Polygon(block['quad']).is_valid)
+                self.assertGreater(Polygon(block['quad']).area, 0)
+                self.assertGreater(block['z1'], block['z0'])
+                self.assertGreater(block['rows'], 0)
+                self.assertGreater(block['seats'], 0)
+                self.assertEqual(sum(count for count, _ in block['rle']),
+                                 block['rows'] * block['seats'])
+        ring = scene['roof']['ring']
+        outer, inner = Polygon(ring['outer']), Polygon(ring['inner'])
+        self.assertTrue(outer.is_valid and inner.is_valid)
+        self.assertTrue(outer.contains(inner))
+        self.assertTrue(inner.contains(box(-52.5, -34, 52.5, 34)))
+        self.assertGreater(ring['zOuter'], max(block['z1'] for block in blocks))
+        self.assertGreater(ring['zOuter'], ring['zInner'])
+        self.assertEqual(len(scene['roof']['segments']), 60)
+        self.assertEqual(len({s['id'] for s in scene['roof']['segments']}), 60)
+        self.assertEqual(scene['steckbrief']['pylons']['count'], 8)
+
+
+class DortmundPreviewEndpointTests(TestCase):
+    def test_preview_does_not_modify_stadium_or_manager_design(self):
+        league = League.objects.create(name='Vorschau-Liga', country='DE')
+        club = Club.objects.create(
+            pk=3, name='Borussia Dortmund', short_name='BVB',
+            founded_year=1909, budget=0, league=league,
+        )
+        stadium = Stadium.objects.create(
+            club=club, name='Signal Iduna Park', city='Dortmund',
+            nord_seating=42000,
+        )
+        geometry = StadiumGeometry.objects.create(
+            stadium=stadium, geometry={'blocks': []}, steckbrief={'test': True},
+        )
+        design = StadiumDesign.objects.create(
+            stadium=stadium, design={'custom': 'saved'},
+        )
+        page = self.client.get(reverse('dortmund_preview'))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, reverse('dortmund_preview_scene'))
+        self.assertContains(page, reverse('stadium_live_mode', args=[3]))
+        response = self.client.get(reverse('dortmund_preview_scene'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['capacity'], stadium.capacity_total)
+        self.assertEqual(len(response.json()['blocks']), 120)
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        geometry.refresh_from_db()
+        design.refresh_from_db()
+        self.assertEqual(geometry.geometry, {'blocks': []})
+        self.assertEqual(geometry.steckbrief, {'test': True})
+        self.assertEqual(design.design, {'custom': 'saved'})
 
 
 def _geometry(blocks):

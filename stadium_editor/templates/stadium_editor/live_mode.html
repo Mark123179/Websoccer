@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ stadium.name }} – Livemodus</title>
-  <link rel="stylesheet" href="{% static 'stadium_editor/live_mode.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'stadium_editor/live_mode.css' %}?v=10">
   <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}","three/addons/":"{% static 'stadium_editor/stage/vendor/addons/' %}"}}</script>
 </head>
 <body>
@@ -22,6 +22,8 @@
     <header class="live-stage__header">
       <span>{{ club.name }}</span>
       <strong>{{ stadium.name }}</strong>
+      {% if preview %}<span class="live-stage__preview">Vorschau · keine gespeicherten Daten geändert</span>
+      <a class="live-stage__compare" href="{{ current_url }}">Bisherige Ansicht ansehen ↗</a>{% endif %}
     </header>
     <div class="live-stage__controls" aria-label="Stadionkamera">
       <select data-stage-camera aria-label="Kamera">

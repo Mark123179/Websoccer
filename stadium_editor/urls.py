@@ -8,6 +8,8 @@ from .views import (
     stadium_editor_save_design,
     stadium_live_mode,
     stadium_live_scene,
+    dortmund_preview,
+    dortmund_preview_scene,
 )
 
 
@@ -19,4 +21,6 @@ urlpatterns = [
     path('management/stadion/editor/design/save/', stadium_editor_save_design, name='stadium_editor_save_design'),
     path('stadion/<int:club_id>/live-scene/', stadium_live_scene, name='stadium_live_scene'),
     path('stadion/<int:club_id>/live/', stadium_live_mode, name='stadium_live_mode'),
+    path('stadion/dortmund/vorschau/', dortmund_preview, name='dortmund_preview'),
+    path('stadion/dortmund/vorschau/scene/', dortmund_preview_scene, name='dortmund_preview_scene'),
 ]

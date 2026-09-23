@@ -73,10 +73,22 @@ export function validateScene(scene) {
     Array.isArray(scene.roof.segments) &&
     scene.roof.segments.every(segment =>
       typeof segment.id === 'string' &&
-      Array.isArray(segment.quad) && segment.quad.length === 4 &&
+      Array.isArray(segment.quad) &&
+      (segment.quad.length === 4 ||
+       (scene.preview === true && scene.roof.ring &&
+        segment.quad.length >= 4 && segment.quad.length <= 32)) &&
       segment.quad.every(assertPoint) &&
-      Array.isArray(segment.heights) && segment.heights.length === 4 &&
-      segment.heights.every(Number.isFinite))
+      Array.isArray(segment.heights) && segment.heights.length === segment.quad.length &&
+      segment.heights.every(Number.isFinite)) &&
+    (!scene.roof.ring || (
+      Array.isArray(scene.roof.ring.outer) && scene.roof.ring.outer.length >= 4 &&
+      scene.roof.ring.outer.every(assertPoint) &&
+      Array.isArray(scene.roof.ring.inner) && scene.roof.ring.inner.length >= 4 &&
+      scene.roof.ring.inner.every(assertPoint) &&
+      Number.isFinite(scene.roof.ring.zInner) &&
+      Number.isFinite(scene.roof.ring.zOuter) &&
+      scene.roof.ring.zOuter > scene.roof.ring.zInner
+    ))
   );
   if (!proceduralRoof && !explicitRoof) {
     throw new Error('Unbekannter Dachmodus.');

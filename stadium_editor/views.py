@@ -1,5 +1,6 @@
 import json
 from copy import deepcopy
+from zipfile import BadZipFile
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -11,6 +12,7 @@ from game.models import Club, Stadium
 from game.views import build_game_header, current_manager_club
 
 from .capacity import distribute_capacities
+from .blueprints.v2.dortmund_preview import load_preview
 from .image_validation import InvalidImageData, normalize_design_payload
 from .models import StadiumDesign, StadiumGeometry
 from .contracts import geometry_blocks, visible_blocks
@@ -171,4 +173,36 @@ def stadium_live_mode(request, club_id):
         'club': club,
         'stadium': stadium,
         'scene_url': reverse('stadium_live_scene', args=[club.pk]),
+    })
+
+
+@require_GET
+def dortmund_preview_scene(request):
+    """Review the uploaded scene without touching persisted geometry or designs."""
+    try:
+        stadium = Stadium.objects.get(club_id=3)
+        scene = load_preview()
+    except Stadium.DoesNotExist:
+        return JsonResponse({'error': 'Dortmunder Stadion nicht gefunden.'}, status=404)
+    except (OSError, KeyError, BadZipFile, ValueError) as exc:
+        return JsonResponse({'error': f'Vorschauquelle nicht verfügbar: {exc}'}, status=503)
+    scene['capacity'] = stadium.capacity_total
+    scene['preview'] = True
+    response = JsonResponse(scene)
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
+@require_GET
+def dortmund_preview(request):
+    try:
+        stadium = Stadium.objects.select_related('club').get(club_id=3)
+    except Stadium.DoesNotExist:
+        return HttpResponse('Dortmunder Stadion nicht gefunden.', status=404)
+    return render(request, 'stadium_editor/live_mode.html', {
+        'club': stadium.club,
+        'stadium': stadium,
+        'scene_url': reverse('dortmund_preview_scene'),
+        'preview': True,
+        'current_url': reverse('stadium_live_mode', args=[3]),
     })
