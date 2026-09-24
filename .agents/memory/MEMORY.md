@@ -113,3 +113,4 @@
 - [Stadion-Flutlicht-Laufzeitvertrag](stadium-floodlight-runtime.md) — Flutlicht ist unabhängig von Tag/Nacht; viele Rim-Köpfe nutzen höchstens 12 echte SpotLights.
 - [Stadion-Umgebungslichtvertrag](stadium-ambient-lighting.md) — Tag/Nacht wechselt Lichtsets in-place; Exposure bleibt Multiplikator, ACES-Schatten brauchen mehrere Lichtlagen.
 - [Dortmund Unity seat/mesh frame](dortmund-unity-frame.md) — Sitz-JSON ist ungedreht, Mesh-Export hat 90° Parent-Rotation gebacken; Standzuordnung immer gegen Crowd-Bounds prüfen.
+- [Dortmund roof layers](dortmund-roof-layers.md) — Dachhaut, Decke und Träger überlagern sich in mehreren Unity-Meshes; einzelne Dachmeshes ausblenden reicht für Innenansichten nicht.

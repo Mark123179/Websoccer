@@ -3,7 +3,7 @@
   padding: clamp(22px, 4vw, 56px);
   color: #f5f4ed;
   background: #0b1012;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
 }
 
 .dortmund120__header {
@@ -84,6 +84,76 @@
   height: 100%;
 }
 
+.dortmund120__scene-controls {
+  position: absolute;
+  z-index: 4;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid #53615f;
+  border-radius: 7px;
+  background: #10191de8;
+}
+
+.dortmund120__scene-controls button {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 7px 9px;
+  background: transparent;
+  color: #bac7c3;
+  font: 700 11px "IBM Plex Mono", monospace;
+  cursor: pointer;
+}
+
+.dortmund120__scene-controls button:hover,
+.dortmund120__scene-controls button.is-active {
+  border-color: #d6b94e;
+  background: #40371f;
+  color: #f5d77c;
+}
+
+.dortmund120__scene-wrap--capture .dortmund120__scene {
+  background: #162225;
+}
+
+.dortmund120__panel {
+  border: 1px solid #344347;
+  border-radius: 9px;
+  padding: 16px 18px;
+  background: #172124;
+  color: #c4cfcb;
+  line-height: 1.55;
+}
+
+.dortmund120__panel h2 {
+  margin: 8px 0 5px;
+  color: #f1f2eb;
+  font-size: 22px;
+  letter-spacing: -.03em;
+}
+
+.dortmund120__panel p { margin: 0; font-size: 13px; }
+.dortmund120__panel ul { margin: 10px 0 0; padding-left: 18px; font-size: 13px; }
+.dortmund120__label {
+  color: #e7bd55;
+  font: 800 11px "IBM Plex Mono", monospace;
+  letter-spacing: .15em;
+}
+.dortmund120__row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #65562c;
+  border-radius: 5px;
+  background: #302a19;
+  font-size: 12px;
+}
+.dortmund120__row b { color: #f5cb59; }
+.dortmund120__panel small { display: block; margin-top: 13px; color: #9eadaa; font-size: 11px; }
+
 .dortmund120__scene canvas {
   display: block;
   touch-action: none;
@@ -149,6 +219,23 @@
   color: #aeb8b6;
   font-size: 11px;
 }
+.dortmund120__start-3d {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px solid #d8ac38;
+  border-radius: 5px;
+  background: #40371f;
+  color: #f5cb59;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dortmund120__start-3d:focus-visible,
+.dortmund120__scene-controls button:focus-visible {
+  outline: 2px solid #f5cb59;
+  outline-offset: 2px;
+}
 
 .dortmund120__disclaimer {
   max-width: 1400px;
@@ -200,6 +287,41 @@
   gap: 14px;
 }
 
+.dortmund120__capacity.dortmund120__calculation {
+  align-items: center;
+}
+
+.dortmund120__calculation > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dortmund120__calculation .dortmund120__capacity-unit {
+  font-size: 11px;
+}
+
+body:has(.dortmund120__scene-wrap--capture) .dortmund120 {
+  padding: 0;
+  min-height: 0;
+  height: 100vh;
+}
+body:has(.dortmund120__scene-wrap--capture) .dortmund120 > :not(.dortmund120__viewer),
+body:has(.dortmund120__scene-wrap--capture) .dortmund120__viewer-tag,
+body:has(.dortmund120__scene-wrap--capture) .dortmund120__viewer-help {
+  display: none;
+}
+body:has(.dortmund120__scene-wrap--capture) .dortmund120__viewer {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
 @media (max-width: 700px) {
   .dortmund120 {
     padding: 20px 14px;
@@ -220,8 +342,18 @@
     display: none;
   }
 
-  .dortmund120__viewer-tag {
+  .dortmund120__scene-controls {
+    top: 10px;
+    right: 10px;
+  }
+
+  .dortmund120__scene-controls button {
+    padding: 6px 7px;
     font-size: 10px;
+  }
+
+  .dortmund120__viewer-tag {
+    display: none;
   }
 
   .dortmund120__concept-grid,
@@ -231,11 +363,28 @@
   }
 
   .dortmund120__calculation {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
   }
 
   .dortmund120__calculation > span {
     display: none;
+  }
+  .dortmund120__calculation .dortmund120__capacity-label {
+    font-size: 10px;
+  }
+  .dortmund120__calculation strong {
+    font-size: clamp(20px, 5.8vw, 28px);
+  }
+  .dortmund120__calculation .dortmund120__capacity-unit {
+    font-size: 9px;
+  }
+  .dortmund120__fallback {
+    justify-content: flex-start;
+    padding: 58px 10px 12px;
+  }
+  .dortmund120__fallback img {
+    max-height: 70%;
   }
 
   .dortmund120__concept-grid .dortmund120__viewer {
