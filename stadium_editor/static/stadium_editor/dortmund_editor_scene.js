@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js';
+import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js?v=49';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 

@@ -64,7 +64,11 @@ let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
 let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
 const isDortmundScene = Boolean(EDITOR.dortmundScene);
 let dortmundFullConcept = false;
-let blickrichtung = 'NORD';
+// The Dortmund blueprint kept model-local stand IDs; mapped OSM north is
+// near +Z, while the blueprint calls that edge OST. Do not rewrite economic IDs.
+const dortmundStandLabels = {OST: 'Nord', SUED: 'Ost', WEST: 'Süd', NORD: 'West'};
+const standLabel = stand => isDortmundScene ? (dortmundStandLabels[stand] || stand) : stand;
+let blickrichtung = isDortmundScene ? 'OST' : 'NORD';
 let overlay = null;                               // {kind:'text'|'image', canvas, wx, wy, scale, rot}
 const undoStack = [], redoStack = [];
 
@@ -1855,7 +1859,7 @@ function expandStand(stand, seatType, amount){
   }
   amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
   if(!expansionEnvelope(stand).length){
-    toast(`Für ${stand} wurden keine ausbaubaren Tribünensegmente gefunden.`);
+    toast(`Für ${standLabel(stand)} wurden keine ausbaubaren Tribünensegmente gefunden.`);
     return 0;
   }
   snapshotFull();
@@ -1893,7 +1897,7 @@ function expandStand(stand, seatType, amount){
   fitView();
   syncStadiumTitle();
   recompose(); syncPressList();
-  toast(`Ausbau ${stand}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
+  toast(`Ausbau ${standLabel(stand)}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
   return built;
 }
 function setDortmundConcept(full){
@@ -2004,7 +2008,7 @@ cvOverlay.addEventListener('mousemove', e => {
   const nid = b?b.id:null;
   if(nid!==hoverBlock){ hoverBlock=nid; renderOverlay(); }
   document.getElementById('sbHover').textContent = b
-    ? `${b.stand} · ${b.tier}rang · Block ${b.id} · ${b.capacity.toLocaleString('de-DE')} Plätze (${{SITZ:'Sitz',STEH:'Steh',VIP:'VIP'}[b.type]})`
+    ? `${standLabel(b.stand)} · ${b.tier}rang · Block ${b.id} · ${b.capacity.toLocaleString('de-DE')} Plätze (${{SITZ:'Sitz',STEH:'Steh',VIP:'VIP'}[b.type]})`
     : '–';
 });
 cvOverlay.addEventListener('mousedown', e => {

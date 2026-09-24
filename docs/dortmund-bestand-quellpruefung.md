@@ -269,3 +269,39 @@ Der [flache Editor-Eckblick](../screenshots/dortmund-farbangleichung-editor-flac
 zeigt die Anschlüsse ohne Dach. Diese Aufnahmen stammen aus dem
 Software-WebGL-Testbrowser; die Editor-Szene wurde wie zuvor isoliert
 aufgenommen, nicht über einen angemeldeten Managerzugang.
+
+## Ausbauanschlüsse und kartennah benannte Stadionseiten
+
+Die gespeicherten Dortmunder Block-IDs behalten ihre bisherigen internen
+Tribünennamen, damit Kapazitäten und Ausbauaufträge nicht umsortiert werden.
+Die dargestellten Himmelsnamen folgen dagegen der vorhandenen Ausrichtung
+des OSM-Auszugs: Die Modellachse +Z liegt ungefähr nach Norden und +X
+ungefähr nach Osten (Kartenumgebung um etwa 0,16 rad gedreht). Daher zeigt
+die 2D-Auswahl nun **Nord = intern OST (+Z)**, **Ost = intern SUED (+X)**,
+**Süd = intern WEST (−Z)** und **West = intern NORD (−X)**. Gleiches gilt
+für die Auswahl im Ausbaupanel. Das alte „Süd-Maximum“ auf +X heißt in der
+Vergleichsbeschriftung deshalb Ost-Maximum; der technische Routenname
+bleibt aus Kompatibilitätsgründen bestehen. Diese kartenausgerichtete
+Zuordnung ist eine Näherung, keine vermessene geographische Ausrichtung
+der Unity-Quelldatei.
+
+Bei einseitigem Ausbau bleibt die Breite an den freien Enden innerhalb
+der benachbarten Bestandskanten; separate Stirnwände und Dachabschlüsse
+schließen die neuen Flächen ab. An gemeinsamen Ausbau-Ecken verbinden
+eigene Dach-Eckstücke die Seitenelemente. Die Rundum-Variante behält ihre
+bisherige vierseitige Grundform; die Originaldateien bleiben unangetastet.
+Auf Wunsch wurde ausschließlich der alte Dortmunder 2D-Design-Datensatz
+verworfen (einschließlich Sitzfarben, Palette und Blickrichtung), nicht
+die Stadiongeometrie, wirtschaftliche Kapazität oder Ausbauaufträge.
+
+Sichtprüfung mit Dach an/aus:
+[einseitiges Vergleichskonzept mit Dach](../screenshots/dortmund-1006-sued-aussen-dach-an.png),
+[ohne Dach](../screenshots/dortmund-1006-sued-aussen-dach-aus.png) und
+[flacher Außenblick](../screenshots/dortmund-1006-sued-flach-dach-aus.png).
+[Editor: Nordausbau ohne Dach](../screenshots/dortmund-1006-editor-north.png),
+[Ostausbau mit Dach](../screenshots/dortmund-1006-editor-east.png) und
+[separater Rundum-Entwurf](../screenshots/dortmund-1006-editor-rundum.png).
+Die Aufnahmen stammen aus Software-WebGL; die Editor-Szene läuft in einem
+isolierten Browser-Testbett. Der Winkel des beigefügten Fehlerbildes ist
+nicht als Kamerawert überliefert; die flache Außenaufnahme ist daher nur
+ein ähnlicher Blick, kein pixelgleicher Vorher-/Nachher-Vergleich.

@@ -43,6 +43,7 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
   const charcoal = new THREE.MeshStandardMaterial({ color: '#36484a', roughness: .7, side: THREE.DoubleSide });
   const glazing = new THREE.MeshStandardMaterial({ color: '#496167', roughness: .32, metalness: .25, side: THREE.DoubleSide });
   const materials = [concrete, seating, roofEdge, metal, charcoal, glazing];
+  const derivedGeometries: any[] = [];
   const cutawayNames = roofSurfaceNames;
 
   const quad = (name: string, a: Point, b: Point, c: Point, d: Point, material: any) => {
@@ -72,7 +73,11 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
   for (const object of world.children) {
     const name = object.name?.replace(/^ORIGINAL_/, '');
     if (!shellNames.has(name)) continue;
-    const geometry = object.geometry;
+    // Keep the Unity mesh byte-for-byte intact. Only the visible concept gets
+    // a private copy of the displaced roof/shell geometry.
+    const geometry = object.geometry.clone();
+    object.geometry = geometry;
+    derivedGeometries.push(geometry);
     const positions = geometry.attributes.position;
     for (let i = 0; i < positions.count; i++) {
       const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
@@ -163,6 +168,14 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
       roofStrip(`NEW_X_EAVE_${sign}`, [sign * 126, 77, -151], [sign * 126, 77, 151], [sign * 130, 76, 153], [sign * 130, 76, -153]);
       roofStrip(`NEW_Z_EAVE_${sign}`, [-128, 77, sign * 149], [128, 77, sign * 149], [130, 76, sign * 153], [-130, 76, sign * 153]);
     }
+    for (const [xSign, zSign] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+      // The two eave runs meet at the same outer corner but have different
+      // inner endpoints. This triangular return closes the exposed seam.
+      const xInner: Point = [xSign * 126, 77, zSign * 151];
+      const zInner: Point = [xSign * 128, 77, zSign * 149];
+      const outer: Point = [xSign * 130, 76, zSign * 153];
+      quad(`NEW_CORNER_EAVE_${xSign}_${zSign}`, xInner, outer, zInner, zInner, roofEdge);
+    }
   } else {
     for (let row = 0; row < 12; row++) {
       const a = row / 12, b = (row + 1) / 12;
@@ -186,6 +199,12 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
       [171, 112, 119], [171, 112, -119], charcoal);
     roofStrip('NEW_PLUS_X_EAVE', [166, 113, -119], [166, 113, 119],
       [171, 112, 119], [171, 112, -119]);
+    for (const sign of [-1, 1]) {
+      const mainEave: Point = [166, 113, sign * 119];
+      const endEave: Point = [165, 112, sign * 112];
+      const outer: Point = [171, 112, sign * 119];
+      quad(`NEW_CORNER_EAVE_PLUS_X_${sign}`, mainEave, outer, endEave, endEave, roofEdge);
+    }
   }
 
   materials.push(...addSeatingRhythm(THREE, group, variant));
@@ -193,6 +212,7 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
   return {
     dispose: () => {
       group.traverse((object: any) => object.geometry?.dispose());
+      derivedGeometries.forEach((geometry: any) => geometry.dispose());
       materials.forEach(material => material.dispose());
     },
   };

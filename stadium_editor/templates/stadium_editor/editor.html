@@ -6,7 +6,7 @@
 {% block body_class %}stadium-editor-page{% endblock %}
 
 {% block extra_css %}
-{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=4">{% endif %}
+{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=6">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
@@ -200,14 +200,14 @@
     <div class="de-inspector">
       <span class="de-eyebrow">GRUNDRISS · RANGBEARBEITUNG</span>
       <h2>Tribüne auswählen</h2>
-      <p>Wähle eine Tribüne oder einzelne Blöcke direkt im Grundriss. Gestaltungswerkzeuge und gespeicherte Entwürfe bleiben erhalten.</p>
+      <p>Wähle eine Tribüne oder einzelne Blöcke direkt im Grundriss. Der bisherige Dortmunder 2D-Entwurf wurde verworfen; neue Gestaltungen können gespeichert werden.</p>
       <div class="de-stands" role="group" aria-label="Tribüne auswählen">
-        <button type="button" data-de-stand="NORD">Nord <b>{{ stadium.nord_standing|add:stadium.nord_seating|add:stadium.nord_vip }}</b></button>
-        <button type="button" data-de-stand="OST">Ost <b>{{ stadium.ost_standing|add:stadium.ost_seating|add:stadium.ost_vip }}</b></button>
-        <button type="button" data-de-stand="SUED">Süd <b>{{ stadium.sued_standing|add:stadium.sued_seating|add:stadium.sued_vip }}</b></button>
-        <button type="button" data-de-stand="WEST">West <b>{{ stadium.west_standing|add:stadium.west_seating|add:stadium.west_vip }}</b></button>
+        <button type="button" data-de-stand="OST">Nord <b>{{ stadium.ost_standing|add:stadium.ost_seating|add:stadium.ost_vip }}</b></button>
+        <button type="button" data-de-stand="SUED">Ost <b>{{ stadium.sued_standing|add:stadium.sued_seating|add:stadium.sued_vip }}</b></button>
+        <button type="button" data-de-stand="WEST">Süd <b>{{ stadium.west_standing|add:stadium.west_seating|add:stadium.west_vip }}</b></button>
+        <button type="button" data-de-stand="NORD">West <b>{{ stadium.nord_standing|add:stadium.nord_seating|add:stadium.nord_vip }}</b></button>
       </div>
-      <p class="de-stand-note">Zahlen: aktuelle, wirtschaftliche Plätze · Vorschauplätze nicht enthalten.</p>
+      <p class="de-stand-note">Kartenorientierte Näherung (Modellachse zur OSM-Karte um etwa 16° gedreht), keine Vermessung. Zahlen: aktuelle wirtschaftliche Plätze · Vorschauplätze nicht enthalten.</p>
     </div>
     {% endif %}
 
@@ -310,7 +310,7 @@
       <h3>Ausbau · {% if is_dortmund_editor %}Vorschau{% else %}Simulator{% endif %} <span style="color:var(--gold)">· Admin</span></h3>
       <div class="subtools open" style="margin-top:0">
         <label>Tribüne
-          <select id="expStand"><option>NORD</option><option>SUED</option><option>OST</option><option>WEST</option></select>
+          <select id="expStand"><option value="OST">Nord</option><option value="SUED">Ost</option><option value="WEST">Süd</option><option value="NORD">West</option></select>
         </label>
         <label>Sitzart
           <select id="expType"><option value="SITZ">Sitzplätze</option><option value="STEH">Stehplätze</option><option value="VIP">VIP</option></select>
@@ -400,5 +400,5 @@ window.STADIUM_EDITOR = {
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=47"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=49"></script>
 {% endblock %}

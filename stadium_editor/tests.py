@@ -1,5 +1,6 @@
 import base64
 import io
+import importlib
 import json
 import math
 import subprocess
@@ -7,11 +8,14 @@ import tempfile
 from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.apps import apps
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.db import connection
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -176,11 +180,12 @@ class DortmundEditorIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Rundum planen.')
         self.assertContains(response, 'stadium_editor/dortmund_editor.css')
-        self.assertContains(response, 'data-de-stand="NORD"')
+        self.assertContains(response, 'data-de-stand="OST">Nord')
+        self.assertContains(response, 'data-de-stand="NORD">West')
         self.assertContains(response, 'id="deMenuLink"')
         self.assertContains(response, 'data-de-scene="rundum"')
         self.assertContains(response, 'dortmundScene: true')
-        self.assertContains(response, 'NoDraw-Quellflächen sind anhand ihrer gespeicherten deckenden Materialwerte')
+        self.assertContains(response, 'Originale NoDraw-Außenwände sind nur in der Bestandsvorschau')
         self.assertNotContains(response, reverse('dortmund_original_miniature'))
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertNotContains(response, 'data-de-amount="20000"')
@@ -260,6 +265,36 @@ class StadiumEditorTests(TestCase):
             ]),
         )
 
+    def test_dortmund_design_reset_leaves_other_designs_and_geometry_alone(self):
+        other = StadiumDesign.objects.create(
+            stadium=self.stadium, design={'blocks': [{'id': 10}]},
+        )
+        dortmund = Club.objects.create(
+            pk=3, name='Dortmund Test', short_name='DTT',
+            founded_year=1909, budget=0, league=self.league,
+        )
+        stadium = Stadium.objects.create(
+            club=dortmund, name='Dortmund Teststadion', city='Dortmund',
+        )
+        original_geometry = {'meta': {'source': 'keep'}, 'blocks': []}
+        StadiumGeometry.objects.create(stadium=stadium, geometry=original_geometry)
+        StadiumDesign.objects.create(
+            stadium=stadium, design={'palette': ['#ff0000']},
+            blickrichtung='SUED',
+        )
+        migration = importlib.import_module(
+            'stadium_editor.migrations.0008_discard_legacy_dortmund_design'
+        )
+        migration.discard_legacy_dortmund_design(
+            apps, SimpleNamespace(connection=connection),
+        )
+        self.assertFalse(StadiumDesign.objects.filter(stadium=stadium).exists())
+        self.assertEqual(StadiumDesign.objects.get(pk=other.pk).design, other.design)
+        self.assertEqual(
+            StadiumGeometry.objects.get(stadium=stadium).geometry,
+            original_geometry,
+        )
+
     def test_capacity_distribution_is_exact_and_remainder_uses_largest_block(self):
         distributed = distribute_capacities(self.stadium, self.geometry.geometry)
         assigned = [block['capacity'] for block in distributed['blocks']]
@@ -276,7 +311,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=44',
+            'stadium_editor/editor.js?v=49',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
