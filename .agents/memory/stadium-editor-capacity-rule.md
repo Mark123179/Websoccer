@@ -21,3 +21,19 @@ blockieren.
 effektive Raster projizieren, auch wenn die Rohgeometrie unverändert bleibt.
 Topologiewechsel räumlich über Block-Quads projizieren; keine zusätzlichen
 Ränge automatisch erzeugen.
+
+Die 120.000er-Grenze ist eine globale Spielregel, **keine** Grenze des
+ursprünglichen OSM-Grundrisses oder des Unity-Dachs. Spieler sollen die Tribüne
+frei wählen können; auch Vereine mit etwa 14.000 Ausgangsplätzen sollen
+grundsätzlich durch größere Bauphasen bis zur Gesamtgrenze wachsen können.
+Extrem einseitige Ausbauten sind nicht schon deshalb baulich plausibel und
+brauchen einen eigenen, klar als Konzept erkennbaren Rang-/Dach-/Eckentwurf.
+
+**Why:** Der Nutzer hat ausdrücklich klargestellt, dass der alte Grundriss
+keine ewige Schranke sein soll. Die Dortmunder Unity-Stuhlpositionszahl ist
+zudem nicht die wirtschaftliche Stadionkapazität.
+
+**How to apply:** 120.000 gegen die wirtschaftliche Kapazität prüfen und
+Spielentscheidung, neue Bauphase sowie visuelle Machbarkeitsstudie trennen;
+keine aus dem alten Mesh abgeleitete Seitenquote als universelle Regel
+verwenden. Erst verifizierte Ausbauregeln produktiv machen.

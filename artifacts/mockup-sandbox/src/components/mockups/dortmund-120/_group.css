@@ -1,0 +1,245 @@
+.dortmund120 {
+  min-height: 100vh;
+  padding: clamp(22px, 4vw, 56px);
+  color: #f5f4ed;
+  background: #0b1012;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.dortmund120__header {
+  max-width: 900px;
+  margin: 0 auto 24px;
+}
+
+.dortmund120__eyebrow {
+  color: #f0c453;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.dortmund120__header h1 {
+  margin: 9px 0;
+  font-size: clamp(32px, 5vw, 58px);
+  letter-spacing: -.05em;
+  line-height: 1.05;
+}
+
+.dortmund120__intro {
+  margin: 0;
+  color: #aeb8b6;
+  line-height: 1.55;
+}
+
+.dortmund120__capacity {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  max-width: 900px;
+  margin: 0 auto 18px;
+  padding: 17px 22px;
+  border: 1px solid #574a26;
+  border-radius: 12px;
+  background: linear-gradient(105deg, #302a19, #172124 74%);
+}
+
+.dortmund120__capacity-label {
+  color: #f1d98f;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dortmund120__capacity strong {
+  color: #f5cb59;
+  font-size: clamp(32px, 5vw, 48px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.04em;
+  line-height: 1;
+}
+
+.dortmund120__capacity-unit {
+  color: #c4cfcb;
+  font-size: 14px;
+}
+
+.dortmund120__viewer {
+  position: relative;
+  max-width: 1400px;
+  height: min(64vw, 680px);
+  min-height: 360px;
+  margin: 0 auto 18px;
+  overflow: hidden;
+  border: 1px solid #344347;
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 50% 35%, #263132, #10191b 72%);
+}
+
+.dortmund120__scene-wrap,
+.dortmund120__scene,
+.dortmund120__scene canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dortmund120__scene canvas {
+  display: block;
+  touch-action: none;
+}
+
+.dortmund120__viewer-tag,
+.dortmund120__viewer-help {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid #576260;
+  border-radius: 6px;
+  background: #10191ddd;
+  color: #eee;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.dortmund120__viewer-tag {
+  top: 15px;
+  left: 15px;
+  padding: 8px 11px;
+}
+
+.dortmund120__viewer-help {
+  bottom: 14px;
+  left: 16px;
+  padding: 7px 10px;
+  color: #d2dcda;
+}
+
+.dortmund120__viewer-help span {
+  color: #f0c453;
+}
+
+.dortmund120__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 38px 18px;
+  background: #142023;
+  color: #d5dfdd;
+  text-align: center;
+}
+
+.dortmund120__fallback img {
+  display: block;
+  width: 100%;
+  max-width: 1080px;
+  max-height: calc(100% - 36px);
+  object-fit: contain;
+}
+
+.dortmund120__fallback p {
+  margin: 7px 0 0;
+  font-size: 12px;
+}
+
+.dortmund120__fallback small {
+  margin-top: 4px;
+  color: #aeb8b6;
+  font-size: 11px;
+}
+
+.dortmund120__disclaimer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 15px 18px;
+  border-left: 3px solid #d8ac38;
+  background: #172124;
+  color: #c4cfcb;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dortmund120__disclaimer strong {
+  color: #fff;
+}
+
+.dortmund120__disclaimer p {
+  margin: 5px 0 0;
+}
+
+.dortmund120__disclaimer b {
+  color: #f5cb59;
+}
+
+.dortmund120__concept-grid,
+.dortmund120__source-grid,
+.dortmund120__strategy-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.dortmund120__concept-grid {
+  grid-template-columns: minmax(0, 1fr) 230px;
+}
+
+.dortmund120__source-grid {
+  grid-template-columns: 1.1fr .9fr;
+}
+
+.dortmund120__strategy-grid {
+  grid-template-columns: 1.25fr .9fr;
+}
+
+.dortmund120__calculation {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1.2fr;
+  align-items: center;
+  gap: 14px;
+}
+
+@media (max-width: 700px) {
+  .dortmund120 {
+    padding: 20px 14px;
+  }
+
+  .dortmund120__capacity {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 14px;
+  }
+
+  .dortmund120__viewer {
+    height: 62vh;
+    min-height: 360px;
+  }
+
+  .dortmund120__viewer-help {
+    display: none;
+  }
+
+  .dortmund120__viewer-tag {
+    font-size: 10px;
+  }
+
+  .dortmund120__concept-grid,
+  .dortmund120__source-grid,
+  .dortmund120__strategy-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dortmund120__calculation {
+    grid-template-columns: 1fr;
+  }
+
+  .dortmund120__calculation > span {
+    display: none;
+  }
+
+  .dortmund120__concept-grid .dortmund120__viewer {
+    min-height: 290px !important;
+    height: 350px !important;
+  }
+}
