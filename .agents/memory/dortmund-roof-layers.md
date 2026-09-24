@@ -34,3 +34,16 @@ structurally viable new outer shell.
 **How to apply:** Keep source and assumption provenance separate in the UI,
 retain the original opaque roof in the unchanged baseline, and compare exterior,
 interior, corner and opposite viewpoints before treating a concept as integrated.
+
+For Dortmund concept expansions, color every newly constructed rank, seat
+symbol, facade, plinth and junction neutral grey; leave the exported Unity
+meshes in their source preview materials, including their existing yellow.
+
+**Why:** The user explicitly rejected treating hypothetical new additions as
+yellow club-colored surfaces, and a solid yellow slab was read as neither seats
+nor standing rows. Neutral micro-seat symbols with gaps express a possible
+layout without implying a measured seat count.
+
+**How to apply:** Distinguish source geometry from conceptual construction by
+provenance and color. New seating marks are illustrative only; never count them
+as evidence for a real stadium capacity.

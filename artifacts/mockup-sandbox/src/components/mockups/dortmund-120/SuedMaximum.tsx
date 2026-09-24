@@ -1,4 +1,5 @@
 import './_group.css';
+import './SuedMaximum.css';
 import { StadiumScene } from './_OriginalScene';
 
 export function SuedMaximum() {
@@ -14,7 +15,24 @@ export function SuedMaximum() {
       <div className="dortmund120__viewer-tag">ORIGINAL · ABGELEITET · NEU ANGENOMMEN</div>
       <div className="dortmund120__viewer-help">Ziehen: drehen <span>·</span> Mausrad: zoomen <span>·</span> Dach transparent zur Einsicht</div>
     </section>
-    <section className="dortmund120__strategy-grid"><div className="dortmund120__panel"><div className="dortmund120__label">Asymmetrische Strategie</div><h2>Ein hoher Rang auf geschlossenem Unterbau.</h2><p>Die Original-Dach- und Pylonmeshes samt UVs werden an der +x-Seite als Konzept verformt, nicht nur ausgeblendet. Dachflächen sind zur Einsicht transparent. Neue Rangflächen, durchgehende Außenwand, Stirnwände und Anschlüsse verwenden vereinfachte Materialien nach Original-Kategorien; sie sind <b>keine</b> Originalbauteile. Die Quelldatei bleibt unverändert.</p></div><div className="dortmund120__panel"><div className="dortmund120__label">Offene Prüfpunkte</div><ul><li>Statik, Lastabtragung und Fundamente unbekannt</li><li>Sichtlinien und Fluchtwege ungeprüft</li><li>Keine Sitzzählung, Original-Shader oder Zulassung behauptet</li></ul></div></section>
+    <section className="sued120__raster-note" aria-label="Leseschlüssel für Rangflächen">
+      <div className="sued120__raster-visual" aria-hidden="true">
+        <span className="sued120__raster-block"><i /><i /><i /><i /><i /></span>
+        <span className="sued120__raster-block sued120__raster-block--neutral"><i /><i /><i /><i /><i /></span>
+        <span className="sued120__raster-block sued120__raster-block--dark"><i /><i /><i /><i /><i /></span>
+      </div>
+      <div className="sued120__raster-copy">
+        <div className="dortmund120__label">Leseschlüssel · Rangraster</div>
+        <strong>Die Ausbaufläche ist kein glatter Boden.</strong>
+         <p>Die hellgrauen Flächen tragen schematische Sitzmarkierungen; ausgesparte Streifen zeigen mögliche Gänge. Sie belegen weder eine tatsächliche Sitz- und Stehplatzverteilung noch eine gemessene Platzanzahl. Gelbe Bauteile stammen aus der abgeleiteten Originalhülle, nicht aus den neuen Rängen.</p>
+      </div>
+      <div className="sued120__raster-key">
+        <span><b className="sued120__swatch sued120__swatch--rows" />Rang / Reihen</span>
+        <span><b className="sued120__swatch sued120__swatch--walk" />Gang / Band</span>
+        <span><b className="sued120__swatch sued120__swatch--source" />Originalbestand</span>
+      </div>
+    </section>
+    <section className="dortmund120__strategy-grid"><div className="dortmund120__panel"><div className="dortmund120__label">Asymmetrische Strategie</div><h2>Ein hoher Rang auf geschlossenem Unterbau.</h2><p>Die Original-Dach- und Pylonmeshes samt UVs werden an der +x-Seite als Konzept verformt, nicht nur ausgeblendet. Dachflächen sind zur Einsicht transparent. Neue Rangflächen mit schematischen Sitzmarkierungen, Außenwand, Stirnwände und Anschlüsse sind neutral grau; sie sind <b>keine</b> Originalbauteile. Die Quelldatei bleibt unverändert.</p></div><div className="dortmund120__panel"><div className="dortmund120__label">Offene Prüfpunkte</div><ul><li>Statik, Lastabtragung und Fundamente unbekannt</li><li>Sichtlinien und Fluchtwege ungeprüft</li><li>Keine Sitzzählung, Original-Shader oder Zulassung behauptet</li></ul></div></section>
     <aside className="dortmund120__disclaimer"><strong>Einordnung vor jeder Entscheidung</strong><p><b>81.365 + 38.635 = 120.000</b> ist eine konzeptionelle Rechenzeile, keine physische Kapazitätsmessung. Die 71.659 Positionen stammen aus der Quelldatei. Die gemessene kleine Original-Verformungsprobe endet bei etwa <b>85.833 modellierten Sitzen</b>; dieser Großbau geht weit darüber hinaus und ist nicht geometrisch als 120.000er Stadion belegt. Die +x-/Süd-Zuordnung ist eine Annahme.</p></aside>
   </main>;
 }

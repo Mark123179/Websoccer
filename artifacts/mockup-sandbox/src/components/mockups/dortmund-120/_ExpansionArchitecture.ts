@@ -1,5 +1,6 @@
 type Variant = 'original' | 'rundum' | 'sued';
 type Point = [number, number, number];
+import { addSeatingRhythm } from './_SeatingRhythm';
 
 const smooth = (min: number, max: number, value: number) => {
   const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
@@ -24,12 +25,12 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
     if (!material) throw new Error(`Originalbauteil ${name} fehlt; Ausbau kann nicht dargestellt werden.`);
     return (Array.isArray(material) ? material[0] : material).clone();
   };
-  // These come from the exported Unity material assignments. Concrete and
-  // seating are categorical preview shades; the roof retains its source UV/map.
+  // Original geometry keeps its source material/UVs. Every newly constructed
+  // surface is neutral grey, distinct from Dortmund's original yellow parts.
   const concrete = sourceMaterial('back1_6.001');
-  const seating = sourceMaterial('back1_0.001');
-  const roofEdge = sourceMaterial('center3_13.001');
-  const metal = sourceMaterial('center3_21.001');
+  const seating = new THREE.MeshStandardMaterial({ color: '#858d8b', roughness: .9, side: THREE.DoubleSide });
+  const roofEdge = new THREE.MeshStandardMaterial({ color: '#697574', roughness: .72, metalness: .12, side: THREE.DoubleSide });
+  const metal = new THREE.MeshStandardMaterial({ color: '#74817f', roughness: .65, metalness: .2, side: THREE.DoubleSide });
   const charcoal = new THREE.MeshStandardMaterial({ color: '#36484a', roughness: .7, side: THREE.DoubleSide });
   const glazing = new THREE.MeshStandardMaterial({ color: '#496167', roughness: .32, metalness: .25, side: THREE.DoubleSide });
   const materials = [concrete, seating, roofEdge, metal, charcoal, glazing];
@@ -93,7 +94,7 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
       const cutaway = originalMaterials.map((original: any) => {
         const copy = original.clone();
         copy.transparent = true;
-        copy.opacity = .065;
+        copy.opacity = .026;
         copy.depthWrite = false;
         materials.push(copy);
         return copy;
@@ -182,6 +183,7 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
       [171, 112, 119], [171, 112, -119]);
   }
 
+  materials.push(...addSeatingRhythm(THREE, group, variant));
   world.add(group);
   return {
     dispose: () => {
