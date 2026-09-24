@@ -114,6 +114,36 @@
   color: #f5d77c;
 }
 
+.dortmund120__roof-toggle {
+  position: absolute;
+  z-index: 4;
+  top: 58px;
+  right: 15px;
+  padding: 9px 12px;
+  border: 1px solid #53615f;
+  border-radius: 7px;
+  background: #10191de8;
+  color: #f5f4ed;
+  font: 700 11px "IBM Plex Mono", monospace;
+  cursor: pointer;
+}
+.dortmund120__roof-toggle:hover:not(:disabled),
+.dortmund120__roof-toggle[aria-pressed="true"] { border-color: #f0c453; color: #f0c453; }
+.dortmund120__roof-toggle:disabled { opacity: .55; cursor: not-allowed; }
+.dortmund120__osm-credit {
+  position: absolute;
+  z-index: 4;
+  bottom: 50px;
+  left: 14px;
+  max-width: calc(100% - 28px);
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: #10191ddf;
+  color: #c3cfca;
+  font: 10px "IBM Plex Mono", monospace;
+}
+.dortmund120__osm-credit a { color: #e5ece8; text-decoration: underline; text-underline-offset: 2px; }
+
 .dortmund120__scene-wrap--capture .dortmund120__scene {
   background: #162225;
 }
@@ -345,7 +375,13 @@ body:has(.dortmund120__scene-wrap--capture) .dortmund120__viewer {
   .dortmund120__scene-controls {
     top: 10px;
     right: 10px;
+    max-width: calc(100% - 20px);
+    overflow-x: auto;
+    white-space: nowrap;
   }
+
+  .dortmund120__roof-toggle { top: 54px; right: 10px; }
+  .dortmund120__osm-credit { bottom: 10px; }
 
   .dortmund120__scene-controls button {
     padding: 6px 7px;

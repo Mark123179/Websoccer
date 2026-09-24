@@ -8,8 +8,8 @@ export function Current() {
         <div className="dortmund120__eyebrow">Signal Iduna Park · Originalgeometrie</div>
         <h1>Dortmund, aus Originaldaten.</h1>
         <p className="dortmund120__intro">
-          Die isolierte Miniatur verwendet die extrahierten Unity-Originalmeshes
-          des Stadions.
+          Das Stadion verwendet die extrahierten Unity-Originalmeshes. Die
+          Umgebung ist ein vereinfachter 3D-Auszug aus OSM und einem groben Höhenraster.
         </p>
       </header>
 
@@ -23,8 +23,7 @@ export function Current() {
         <OriginalScene />
         <div className="dortmund120__viewer-tag">Originalmeshes · nur ansehen</div>
         <div className="dortmund120__viewer-help">
-          Ziehen: drehen <span>·</span> Mausrad: zoomen <span>·</span> Doppelklick:
-          zurücksetzen
+          Ziehen: drehen <span>·</span> Mausrad: zoomen <span>·</span> Dach ein-/ausblenden
         </div>
       </section>
 

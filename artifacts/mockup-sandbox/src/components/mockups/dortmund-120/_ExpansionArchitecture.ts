@@ -14,6 +14,15 @@ const shellNames = new Set([
   'center3_21.001', 'center3_25.001', 'center3_26.001', 'center3_29.001',
 ]);
 
+// Surfaces/layers removed by the viewer's roof cutaway. Supporting pylons and
+// trusses are intentionally excluded so the structural frame stays legible.
+export const roofSurfaceNames = new Set([
+  'center3_0.001', 'center3_1.001', 'center3_12.001',
+  'center3_13.001', 'center3_14.001', 'center3_25.001',
+  'center3_26.001', 'center3_29.001', 'center3_30.001',
+  'center3_17.001',
+]);
+
 export function addExpansionArchitecture(THREE: any, world: any, variant: Variant) {
   if (variant === 'original') return null;
   const group = new THREE.Group();
@@ -34,11 +43,7 @@ export function addExpansionArchitecture(THREE: any, world: any, variant: Varian
   const charcoal = new THREE.MeshStandardMaterial({ color: '#36484a', roughness: .7, side: THREE.DoubleSide });
   const glazing = new THREE.MeshStandardMaterial({ color: '#496167', roughness: .32, metalness: .25, side: THREE.DoubleSide });
   const materials = [concrete, seating, roofEdge, metal, charcoal, glazing];
-  const cutawayNames = new Set([
-    'center3_0.001', 'center3_1.001', 'center3_12.001',
-    'center3_13.001', 'center3_14.001', 'center3_25.001',
-    'center3_26.001', 'center3_29.001',
-  ]);
+  const cutawayNames = roofSurfaceNames;
 
   const quad = (name: string, a: Point, b: Point, c: Point, d: Point, material: any) => {
     const geometry = new THREE.BufferGeometry();
