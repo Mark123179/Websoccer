@@ -21,6 +21,7 @@ export function Rundum() {
   const [rise, setRise] = useState(18);
   const [preset, setPreset] = useState<Preset>(5000);
   const [saved, setSaved] = useState(false);
+  const [handoff, setHandoff] = useState(false);
 
   const total = useMemo(() => preset * 4, [preset]);
   const active = standMeta[selected];
@@ -33,7 +34,7 @@ export function Rundum() {
         <h1>Rundum planen.</h1>
         <p className="dortmund120__intro">2D-Rangflächen bearbeiten, Ausbaugrößen je Tribüne simulieren und das Ergebnis direkt im drehbaren 3D-Modell prüfen.</p>
       </div>
-      <div className="rundum-editor__status"><i /> Entwurf · lokal gespeichert</div>
+      <div className="rundum-editor__status"><i /> Dortmund · Admin-Entwurf</div>
     </header>
 
     <section className="rundum-editor__toolbar" aria-label="Ansicht und Aktionen">
@@ -85,6 +86,14 @@ export function Rundum() {
         <label className="rundum-editor__field"><span>Anstieg <b>{rise}°</b></span><input type="range" min="8" max="32" value={rise} onChange={(event) => { setRise(Number(event.target.value)); setSaved(false); }} /></label>
         <div className="rundum-editor__metric"><span>Simulierte Reihen</span><strong>{rows}</strong><small>visuelle Näherung</small></div>
         <div className="rundum-editor__hint">Tipp: Ziehe die 3D-Ansicht später mit der Maus, um Dach, Innenraum und Außenhülle aus jedem Winkel zu prüfen.</div>
+        <div className="rundum-editor__handoff">
+          <span className="dortmund120__label">Verbindung zur Stadionverwaltung</span>
+          <strong>Simulation bleibt Vorschau</strong>
+          <p>Der verbindliche Ausbau wird vorher im Stadion-Menü beauftragt. Dieser Editor übernimmt den aktuellen Planstand und löst keinen Auftrag aus.</p>
+          <button className="rundum-editor__handoff-button" onClick={() => setHandoff(true)}>
+            {handoff ? 'Menü-Verbindung vorbereitet' : 'Ausbau im Stadion-Menü öffnen'}
+          </button>
+        </div>
       </aside>
     </section> : <section className="dortmund120__viewer rundum-editor__model" aria-label="Drehbares Ausbau-3D-Modell">
       <StadiumScene variant="rundum" />
@@ -97,6 +106,14 @@ export function Rundum() {
       <div className="rundum-editor__preset-grid">{([1000, 5000, 10000, 20000] as Preset[]).map((value) => <button key={value} className={preset === value ? 'is-active' : ''} onClick={() => { setPreset(value); setSaved(false); }}><strong>{value.toLocaleString('de-DE')}</strong><span>pro Tribüne</span></button>)}</div>
       <div className="rundum-editor__total"><span>Vierseitiges Zielbild</span><strong>{total.toLocaleString('de-DE')}</strong><small>illustrative Plätze · nicht gemessen</small></div>
     </section>
+     <section className="rundum-editor__admin-note">
+       <div>
+         <span className="dortmund120__label">Berechtigung</span>
+         <strong>Nur für Stadion-Admins</strong>
+       </div>
+       <p>Manager bearbeiten weiterhin ihren gespeicherten Entwurf. Ausbauwerte, Kosten und Baufortschritt werden ausschließlich über das Stadion-Menü verwaltet.</p>
+       <span className="rundum-editor__connection"><i /> Menü verbunden · Vorschau synchronisiert</span>
+     </section>
     <aside className="dortmund120__disclaimer"><strong>Konzeptstatus</strong><p>Die editorischen Rangflächen und Simulationswerte sind visuelle Ausbauvarianten. Sie ersetzen keine Sitzplanung, Statik, Sichtlinien-, Fluchtweg- oder Genehmigungsprüfung. Originalbestand und neue neutrale Rangflächen bleiben im 3D-Modell unterscheidbar.</p></aside>
   </main>;
 }
