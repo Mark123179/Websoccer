@@ -4,6 +4,60 @@ Stand: 24. September 2026. Die Browseransichten sind **kein Unity-Render**.
 Diese Prüfung trennt Informationen aus dem gelieferten Bundle von Annahmen
 der reduzierten Vorschau.
 
+## Nachprüfung der gemeldeten dunklen Außenkante
+
+Die erneut gelieferte Bundle-Datei
+`attached_assets/dortmundv3_1790253864852.bundle` ist bytegleich mit der
+bereits geprüften Datei (SHA-256:
+`b626002f437097d92e914b93e7036257e63b9574c0d2a8f4fa8592407b2bad66`).
+Die ebenfalls gelieferten Lichtmap-/Lichtprobe- und Sitzdateien enthalten
+keine zusätzliche Fassadengeometrie. Die Aufnahme
+`attached_assets/image_1790253745777.png` zeigt eine schräge Ansicht der
+−X/−Z-Seite mit Dach. Der vorhandene Preset „Gegenseite“ schaut bei Azimut
+−2,28 rad, Elevation 0,53 rad und Abstand 490 m auf diese beiden Seiten;
+die Aufnahme kann zusätzlich frei gedreht worden sein. Sie enthält **keine
+Kameraposition oder Orbit-Werte**:
+Eine Zuordnung *jedes einzelnen Bildpixels* zu einem Unity-Dreieck wäre
+deshalb vorgetäuschte Genauigkeit. Die Untersuchung unten ordnet stattdessen
+die sichtbare lange −Z-Kante den Weltkoordinaten und Meshes zu.
+
+Die dunkle Zone ist nicht einheitlich: In der gelieferten 602 × 292-Aufnahme
+ist etwa Pixel (225, 190) dunkelgrau `(36, 45, 45)`, während (225, 200)
+genau die Hintergrundfarbe `(22, 34, 37)` hat. Der obere Teil zeigt somit
+auch dunkle vorhandene Bauteile; der darunter sichtbare Hintergrund ist
+eine tatsächliche Sichtöffnung, nicht bloß ein schwarzes Wandmaterial.
+Kamerawinkel, Dachkante und die fehlende Originalbeleuchtung verstärken
+die Wirkung. Die Browseransichten setzen `DoubleSide` ein und zeigen damit
+auch Rückseiten von nach *innen* gerichteten Flächen; eine von außen
+sichtbare Rückseite ist noch keine äußere Abschlusswand.
+
+| Bereich an −Z | Nachweis aus exportierten Dreiecken | Bedeutung |
+| --- | --- | --- |
+| Oberrang mittig, \|X\| < 50 m, Y 16–36 m | `right2_5.001`, Material `st051_star002.015`: 1.040 hinreichend vertikale Dreiecke mit 2.075 m² Projektion in Richtung **+Z (innen)**, 0 m² in Richtung −Z. Die Rangstufen liegen etwa Z −84…−112 m. | Viel echte Geometrie, aber kein nach außen orientierter flächiger Abschluss. |
+| Unterbau mittig | `right1_1.001` liegt bei Y 3–12,5 m und Z −83…−93 m; `right1_4.001` ist stellenweise weiter außen bei Z −111…−72 m, aber nicht als durchgehende Außenhaut. | Die hellen Teilflächen und die dunklen Zwischenräume stammen von unterschiedlichen echten Teilen bzw. freien Sichtlinien. |
+| Äußere Ecke | `right2_13.001` (`NoDraw_.005`) liegt bei X 63,65…94,40 m, Y 16,46…36,74 m, Z −116,54…−64,28 m. | Die bereits wiederhergestellte Quellfläche verschließt nur die Ecke, nicht die Mitte der langen Seite. |
+
+Die Exportprüfung umfasst 319 ausgewählte Meshes. Von den übrigen 362
+MeshFiltern wurde jeder mit der **vollständigen** Parent-Transformation
+erneut vermessen. Bei Z < −95 m, Y innerhalb 4–37 m, mindestens 10 m
+X-Spannweite und 3 m Höhenspannweite findet sich nur ein nicht exportiertes
+Mesh mit vertikaler Z-Projektionsfläche über 1 m²:
+`right_nf_nr_2` (`st051_emit001.003`, 4,2 m²). Das ist ein
+Emissions-/Beleuchtungsteil, keine ausgelassene Fassadenplatte. Die
+Lichtmaps könnten die Helligkeit der vorhandenen Teile verändern, aber
+keine fehlenden Dreiecke erzeugen. Der Export schließt also hier keine
+nachweisbare breite Außenwand durch den Namensfilter aus; an der
+mittleren äußeren Kante liefert das Bundle keine belegte durchgehende
+Abschlussfläche. Die gespeicherten Unity-Shader-Passes sind weiterhin
+nicht auflösbar; die genaue Materialwirkung lässt sich ohne Originalrender
+mit demselben Orbit nicht verbindlich vergleichen.
+
+**Folge:** Weder im produktiven Editor noch im genehmigten Vergleich wird
+eine neue Bestandswand ergänzt oder ein Rangteil zur Wand umgedeutet. Die
+bereits quellbelegten `NoDraw_`-Flächen bleiben in beiden Ansichten erhalten.
+Dieser Befund betrifft nur die reduzierte Bestandsvorschau; Rundum-Entwurf,
+2D-Bearbeitung/Speichern, Kapazität und Ökonomie werden nicht verändert.
+
 ## Quellen und Koordinaten
 
 `attached_assets/dortmundv3_1790167703231.bundle` enthält 681 Meshes,
