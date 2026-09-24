@@ -396,3 +396,17 @@ mtime_ms = 1788964916335
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/50bce4e3-727b-4f6d-b58b-1217089a2ad8/28574060-5792-4ed6-8c9a-2d4256b904ae"
 storage_version_token = "1788973001717200"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "dtS6rxjSuK6IMNlS69pRW"
+uri = "file://screenshots/dortmund-gegenseite-referenz.png"
+type = "image"
+title = "Gegenseite im aktuellen Rundum-Modell"
+description = "Niedriger Blickwinkel im produktiven Editor, vor einer Fassadenkorrektur."
+logical_id = "828efcf8-112c-40b1-9469-6bd238990474"
+content_hash = "sha256:fb6ca7cb64a835ca1cc4fcaac692f5e6408e77b24f40b4e596b349033d16850e"
+size = 142726
+mtime_ms = 1790250126767
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/828efcf8-112c-40b1-9469-6bd238990474/95721bec-560c-4c64-b18a-ec43ac4edb53"
+storage_version_token = "1790250136421265"
+content_type = "image/png"
