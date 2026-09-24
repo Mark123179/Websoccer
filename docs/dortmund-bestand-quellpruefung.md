@@ -4,6 +4,12 @@ Stand: 24. September 2026. Die Browseransichten sind **kein Unity-Render**.
 Diese Prüfung trennt Informationen aus dem gelieferten Bundle von Annahmen
 der reduzierten Vorschau.
 
+**Aktuelle Darstellungsentscheidung:** Nach dieser Quellprüfung wurde die
+Schließung der Gegenseite ausdrücklich als **Rekonstruktion** freigegeben.
+Die Ergänzung ist kein Unity-Original; die folgenden älteren Aussagen zur
+damals bewusst offenen Browseransicht dokumentieren den Zustand vor dieser
+Freigabe. Die Quellenbefunde und ihre Unsicherheit gelten unverändert.
+
 ## Nachprüfung der gemeldeten dunklen Außenkante
 
 Die erneut gelieferte Bundle-Datei
@@ -52,9 +58,10 @@ Abschlussfläche. Die gespeicherten Unity-Shader-Passes sind weiterhin
 nicht auflösbar; die genaue Materialwirkung lässt sich ohne Originalrender
 mit demselben Orbit nicht verbindlich vergleichen.
 
-**Folge:** Weder im produktiven Editor noch im genehmigten Vergleich wird
-eine neue Bestandswand ergänzt oder ein Rangteil zur Wand umgedeutet. Die
-bereits quellbelegten `NoDraw_`-Flächen bleiben in beiden Ansichten erhalten.
+**Folge des damaligen Originalabgleichs:** Keine neue Wand ist als Unity-Original
+nachweisbar. Die später ausdrücklich beauftragte, separat gekennzeichnete
+Rekonstruktion ist unten dokumentiert; sie deutet kein Rangteil zur Quellwand
+um. Die belegten `NoDraw_`-Flächen bleiben in beiden Ansichten erhalten.
 Dieser Befund betrifft nur die reduzierte Bestandsvorschau; Rundum-Entwurf,
 2D-Bearbeitung/Speichern, Kapazität und Ökonomie werden nicht verändert.
 
@@ -198,5 +205,38 @@ Zielpunkt, Projektion/Bildwinkel, Auflösung und Dach-/Sichtbarkeitszustand.
 Eine zuordenbare Kameraaufnahme desselben Zustands in der Browserprobe
 erlaubt dann den Abgleich von Geometrie, Material und Beleuchtung. Bis dahin
 ist **keine fehlende Originalfassade nachgewiesen** und eine Farbangleichung
-an das bisherige Browserbild wäre unbegründet. Deshalb bleiben die
-Produktiv- und Vergleichsgeometrie unverändert.
+an das bisherige Browserbild wäre unbegründet. Beim Originalabgleich blieben
+Produktiv- und Vergleichsgeometrie deshalb unverändert; die spätere,
+ausdrücklich nicht als Original ausgegebene Rekonstruktion ist unten beschrieben.
+
+## Später beauftragte Rekonstruktion der Gegenseite
+
+Nach dem Originalabgleich wurde eine **sichtbar geschlossene und als
+Rekonstruktion gekennzeichnete** Bestands-Gegenseite ausdrücklich freigegeben.
+Diese Entscheidung ändert den Quellenbefund oben nicht: Die ergänzte Fläche
+ist ein neutral eingefärbter, separat benannter Browser-Zusatz, **keine**
+nachgewiesene Unity-Fassade. Es werden keine Fenster, Glasbänder oder
+Originalmaterialien behauptet. Die exportierten Dreiecke, einschließlich der
+drei `NoDraw_`-Flächen, bleiben unverändert und sichtbar.
+
+Die ergänzte Hülle folgt der −X-Seite von Z +64,5 bis −64,3 m, führt über
+den −X/−Z-Bogen zur −Z-Kante und schließt diese bis X +63,65 m bei
+Z −116,54 m. Sie reicht vom Boden bis etwa 36,6 m. Nur unter der belegten
+`right2_13.001`-Eckfläche (+X/−Z, Beginn Y 16,46 m) setzt sie die untere
+Hülle bis X +94,4 m fort. Damit wird die originale obere Eckfläche weder
+überzeichnet noch zur Rekonstruktion umgedeutet. Die Abmessungen sind
+visuelle Annahmen für die Vorschau, keine vermessene Bestandsaufnahme.
+Im Rundum-Konzept wird diese Ergänzung nicht gezeichnet.
+
+Gleicher Preset „Gegenseite“ (Azimut −2,28 rad, Elevation 0,53 rad,
+Distanz 490 m), 1440 × 900 Pixel: [vor der Ergänzung, Dach an](../screenshots/dortmund-bestandswaende-gegenseite-dach-on.png),
+[Vergleich danach, Dach an](../screenshots/dortmund-rekonstruktion-gegenseite-dach-an.png),
+[Vergleich danach, Dach aus](../screenshots/dortmund-rekonstruktion-gegenseite-dach-aus.png),
+[gedrehter Eckblick ohne Dach](../screenshots/dortmund-rekonstruktion-gegenseite-ecke.png)
+und [flacher Außenblick ohne Dach](../screenshots/dortmund-rekonstruktion-gegenseite-flach.png).
+Die Vergleichsaufnahme enthält eine schematische OSM-Umgebung; die
+[Editor-Szene mit Dach](../screenshots/dortmund-editor-rekonstruktion-gegenseite-dach-an.png)
+und [ohne Dach](../screenshots/dortmund-editor-rekonstruktion-gegenseite-dach-aus.png)
+zeigen dieselbe Fassadengeometrie ohne diese Umgebung. Der Editor-Nachweis
+zeigt die produktive 3D-Szenenkomponente in einem isolierten Browser-Testbett,
+nicht eine authentifizierte Aufnahme der kompletten Editoroberfläche.

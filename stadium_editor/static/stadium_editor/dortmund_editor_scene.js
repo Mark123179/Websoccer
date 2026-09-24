@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
+import {addReconstructedFacade, reconstructedFacadeVisible} from './dortmund_reconstructed_facade.js';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -44,7 +45,7 @@ export async function mountDortmundScene({element, onStatus}) {
   const camera = new THREE.PerspectiveCamera(42, 1, 1, 2400);
   const target = new THREE.Vector3(0, 25, 0);
   let azimuth = .88, elevation = .56, distance = 490;
-  let frame = 0, disposed = false, concept = null, colorBands = null, roofOn = true;
+  let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), roof = [], shell = [];
   let resizeObserver;
@@ -88,6 +89,7 @@ export async function mountDortmundScene({element, onStatus}) {
     controls.removeEventListener('pointermove', move);
     controls.removeEventListener('wheel', wheel);
     if (concept) concept.dispose();
+    facade?.dispose();
     if (colorBands) {
       colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
     }
@@ -153,16 +155,18 @@ export async function mountDortmundScene({element, onStatus}) {
         geometry, source: new Float32Array(geometry.attributes.position.array),
       });
     }
+    facade = addReconstructedFacade(THREE, world);
     if (disposed) return null;
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();
-    onStatus('Unity-Mesh-Auszug geladen · NoDraw-Quellflächen vereinfacht dargestellt');
+    onStatus('Unity-Mesh-Auszug + rekonstruierte, nicht quellbelegte Bestandsfassade');
     const animate = () => { if (disposed) return; render(); frame = requestAnimationFrame(animate); };
     animate();
     return {
       kind: 'three', stage: {renderer, render}, dispose,
-      update({weights, designColors, roofVisible, cameraPreset, orbit, day, floodlight} = {}) {
+       update({weights, designColors, roofVisible, fullConcept, cameraPreset, orbit, day, floodlight} = {}) {
         if (disposed) return Promise.resolve();
+         facade.group.visible = reconstructedFacadeVisible(facade.group.visible, fullConcept);
         if (weights && JSON.stringify(weights) !== lastWeights) {
           lastWeights = JSON.stringify(weights);
           const next = Object.fromEntries(sideOrder.map(side => [side, clamp(Number(weights[side]) || 0, 0, 1)]));
@@ -175,8 +179,9 @@ export async function mountDortmundScene({element, onStatus}) {
           roof.forEach(mesh => {
             mesh.material = concept ? mesh.userData.cutaway : mesh.userData.original;
           });
-          onStatus(concept ? 'Unity-Mesh-Auszug + graue Konzeptbauteile · keine Sitzplatzmessung'
-            : 'Unity-Mesh-Auszug · keine vollständige Materialwiedergabe oder Platzmessung');
+           onStatus(fullConcept ? 'Unity-Mesh-Auszug + Rundum-Konzept · Entwurf, keine Bestandsfassade'
+             : concept ? 'Unity-Mesh-Auszug + rekonstruierte Bestandsfassade + graue Konzeptbauteile'
+             : 'Unity-Mesh-Auszug + rekonstruierte, nicht quellbelegte Bestandsfassade');
         }
         if (designColors && JSON.stringify(designColors) !== lastColors) {
           lastColors = JSON.stringify(designColors);

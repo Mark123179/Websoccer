@@ -5,14 +5,15 @@ export function Current() {
   return (
     <main className="dortmund120">
       <header className="dortmund120__header">
-        <div className="dortmund120__eyebrow">Signal Iduna Park · Originalgeometrie</div>
-        <h1>Dortmund, aus Originaldaten.</h1>
+        <div className="dortmund120__eyebrow">Signal Iduna Park · Originalgeometrie + Rekonstruktion</div>
+        <h1>Dortmund, aus Originaldaten ergänzt.</h1>
         <p className="dortmund120__intro">
           Die Bestandsansicht zeigt einen Auszug der Unity-Meshes mit vereinfachten Materialien
           und nur vier repräsentativen Texturen – kein Unity-Originalrender. Echte NoDraw-Quellflächen werden mit
           neutraler Farbe gezeigt: Ihre gespeicherten Materialwerte sind deckend,
-          die exakte Unity-Shaderwirkung bleibt ungeklärt. An den übrigen Seiten
-          sind nicht überall geschlossene Außenwände belegt; es wurden keine ergänzt.
+          die exakte Unity-Shaderwirkung bleibt ungeklärt. Die offene Gegenseite wird
+          durch eine schlichte, separat gezeichnete Rekonstruktion geschlossen;
+          diese Außenwand ist nicht durch die Unity-Datei belegt.
           Die Umgebung ist ein vereinfachter 3D-Auszug aus OSM und einem groben Höhenraster.
         </p>
       </header>
@@ -25,7 +26,7 @@ export function Current() {
 
       <section className="dortmund120__viewer" aria-label="3D-Vorschau des Unity-Mesh-Auszugs">
         <OriginalScene />
-        <div className="dortmund120__viewer-tag">Unity-Mesh-Auszug · keine ergänzten Bestandsfassaden · nur ansehen</div>
+        <div className="dortmund120__viewer-tag">Unity-Mesh-Auszug + rekonstruierte Gegenseite (kein Unity-Original) · nur ansehen</div>
         <div className="dortmund120__viewer-help">
           Ziehen: drehen <span>·</span> Mausrad: zoomen <span>·</span> Dach ein-/ausblenden
         </div>

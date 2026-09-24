@@ -1104,7 +1104,7 @@ function updateDortmundStage(){
       if(top) designColors[stand] = PALETTE[top[0]]?.[0];
     }
     stageThree.update({
-      weights, designColors, roofVisible: roofOn,
+      weights, designColors, roofVisible: roofOn, fullConcept: dortmundFullConcept,
       day: Boolean(document.getElementById('stageDay')?.checked),
       floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
     });
@@ -1113,8 +1113,8 @@ function updateDortmundStage(){
     if(label) label.textContent = dortmundFullConcept
       ? 'Rundum-Konzept · vier Seiten · keine vermessene Kapazität'
       : delta
-        ? `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · +${delta.toLocaleString('de-DE')} nur 2D-/3D-Entwurf`
-        : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Unity-Mesh-Auszug als Referenz`;
+        ? `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze + rekonstruierte Gegenseite · +${delta.toLocaleString('de-DE')} nur 2D-/3D-Entwurf`
+        : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Unity-Mesh-Auszug + rekonstruierte Gegenseite`;
   }).catch(error => showDortmundSceneError(error));
 }
 function showDortmundSceneError(error){

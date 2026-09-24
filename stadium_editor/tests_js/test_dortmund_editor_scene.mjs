@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {conceptWeights, SIDES, ROOF_NAMES, SHELL_NAMES} from '../static/stadium_editor/dortmund_concept.js';
 import {previewSupportsMaterial, sourceOpaqueColor} from '../static/stadium_editor/dortmund_source_materials.js';
+import {RECONSTRUCTED_FACADE_SPANS, reconstructedFacadeVisible} from '../static/stadium_editor/dortmund_reconstructed_facade.js';
 
 test('editor stands map to the exported Unity world axes', () => {
   assert.deepEqual(SIDES, {
@@ -42,4 +43,30 @@ test('NoDraw surfaces use verified source material state, not a guessed fallback
   assert.ok(affected.every(part => part.color === '#e7e7e7' && part.supported));
   assert.equal(previewSupportsMaterial({material: 'NoDraw_.003'}), false);
   assert.equal(previewSupportsMaterial({material: 'st051_wall_bsm'}), true);
+});
+
+test('the reconstruction is separate, joins the source corner and matches the comparison', () => {
+  const [enclosure, lower] = RECONSTRUCTED_FACADE_SPANS;
+  assert.deepEqual(enclosure.points.at(-1), lower.points[0]);
+  assert.deepEqual(enclosure.points[0], [-93.35, 64.5]);
+  assert.deepEqual(lower.points.at(-1), [94.4, -64.3]);
+  assert.equal(lower.top, 16.46); // real right2_13 starts here
+  assert.ok(enclosure.top <= 36.7);
+  const comparison = readFileSync(
+    new URL('../../artifacts/mockup-sandbox/src/components/mockups/dortmund-120/_ReconstructedFacade.ts', import.meta.url),
+    'utf8');
+  const editor = readFileSync(
+    new URL('../static/stadium_editor/dortmund_reconstructed_facade.js', import.meta.url), 'utf8');
+  const spans = text => text.match(/export const RECONSTRUCTED_FACADE_SPANS = \[([\s\S]*?)\];/)[1];
+  assert.equal(spans(editor), spans(comparison));
+});
+
+test('Rundum stays free of the reconstructed Bestand wall after camera and light changes', () => {
+  let visible = reconstructedFacadeVisible(true, true); // select Rundum
+  assert.equal(visible, false);
+  visible = reconstructedFacadeVisible(visible, undefined); // move camera
+  visible = reconstructedFacadeVisible(visible, undefined); // change daylight
+  assert.equal(visible, false);
+  visible = reconstructedFacadeVisible(visible, false); // return to Bestand
+  assert.equal(visible, true);
 });

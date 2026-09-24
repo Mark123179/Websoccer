@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { addExpansionArchitecture, roofSurfaceNames } from './_ExpansionArchitecture';
 import { addOsmSurroundings } from './_OsmSurroundings';
 import { previewSupportsMaterial, sourceOpaqueColor } from './_SourceMaterials';
+import { addReconstructedFacade } from './_ReconstructedFacade';
 
 type SceneStatus = 'loading' | 'webgl' | 'fallback';
 type SceneVariant = 'original' | 'rundum' | 'sued';
@@ -142,6 +143,7 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
           own(geometry);
         }
         own({ dispose: () => materialCache.forEach(material => material.dispose()) });
+        if (variant === 'original') own(addReconstructedFacade(THREE, world));
         const expansion = addExpansionArchitecture(THREE, world, variant);
         if (expansion) own(expansion);
         own(addOsmSurroundings(THREE, scene, variant));
@@ -191,7 +193,7 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
         window.addEventListener('storage', syncRoof);
         resources.push({ dispose: () => { renderer.domElement.removeEventListener('pointerdown', down); renderer.domElement.removeEventListener('pointerup', up); renderer.domElement.removeEventListener('pointercancel', up); renderer.domElement.removeEventListener('pointermove', move); presetHandlers.forEach(([key, handler]) => window.removeEventListener(`dortmund-camera-${key}`, handler)); window.removeEventListener('storage', syncCamera); window.removeEventListener('storage', syncRoof); } });
         setStatus('webgl'); setMessage(variant === 'original'
-          ? 'Unity-Mesh-Auszug · NoDraw-Quellflächen vereinfacht dargestellt · Ziehen zum Drehen'
+           ? 'Unity-Mesh-Auszug + rekonstruierte, nicht quellbelegte Bestandsfassade · Ziehen zum Drehen'
           : 'Unity-Mesh-Auszug + abgeleitete Ausbaugeometrie · Ziehen zum Drehen');
         const animate = () => { if (disposed) return; renderer.render(scene, camera); frame = window.requestAnimationFrame(animate); }; animate();
       } catch (error) { if (!disposed) { setStatus('fallback'); setMessage(error instanceof Error ? error.message : '3D nicht verfügbar · Ersatzansicht'); } }
