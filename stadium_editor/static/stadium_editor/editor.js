@@ -124,6 +124,18 @@ function stadiumMaxRadius(){
     : derived;
 }
 function fitView(){
+  if(document.querySelector('.stadium-editor-content.is-dortmund') && blocks?.length){
+    const points = blocks.flatMap(block => block.quad || []);
+    const xs = points.map(point => point[0]), ys = points.map(point => point[1]);
+    const left = Math.min(...xs), right = Math.max(...xs);
+    const bottom = Math.min(...ys), top = Math.max(...ys);
+    if(right > left && top > bottom){
+      SC = .78 * Math.min((W-80)/(right-left), (H-130)/(top-bottom));
+      CX = W/2 - (left+right)/2 * SC;
+      CY = H/2 + (bottom+top)/2 * SC;
+      return;
+    }
+  }
   const R = 430 * (D ? stadiumMaxRadius()/138 : 1); // relative Stadiongröße konstant halten
   SC = Math.min(W, H) / (2*R) * 1.55;
   CX = W/2; CY = H/2 + 6;
@@ -228,8 +240,13 @@ function previewCapacity(){
 }
 function syncStadiumTitle(){
   const title = document.getElementById('stadiumTitle');
-  if(title) title.innerHTML =
-    `${D.meta.name} <span>${D.meta.club || ''} · ${previewCapacity().toLocaleString('de-DE')} Plätze</span>`;
+  if(title){
+    title.textContent = D.meta.name;
+    const detail = document.createElement('span');
+    const delta = previewCapacity() - baseDisplayCapacity;
+    detail.textContent = ` ${D.meta.club || ''} · ${previewCapacity().toLocaleString('de-DE')} ${delta ? 'Plätze inklusive Vorschau' : 'bestehende Plätze'}`;
+    title.appendChild(detail);
+  }
 }
 function updateTexture(i){
   const b = blocks[i], c = texCache[i], ctx = c.getContext('2d');
@@ -1144,6 +1161,7 @@ function currentSnapshot(){
   };
 }
 function snapshotFull(){
+  setEditorSaveState('Ungespeicherte Änderung', 'is-dirty');
   undoStack.push(currentSnapshot());
   if(undoStack.length>30) undoStack.shift();
   redoStack.length = 0; syncUndoButtons();
@@ -1608,7 +1626,7 @@ function editPressing(id){
 }
 /* ── AUSBAU: gemeinsame geometrische Sektoren + flüchtige Ränge ── */
 const MAX_ROWS = 42;
-const MAX_PREVIEW_CAPACITY = 150000;
+const MAX_PREVIEW_CAPACITY = Number(EDITOR.maxPreviewCapacity);
 const MIN_EXPANSION_SEATS = 1000;
 const EXPANSION_SECTOR_HALF_ANGLE = Math.PI/3;
 
@@ -1767,7 +1785,7 @@ function expandStand(stand, seatType, amount){
   }
   const currentCapacity = previewCapacity();
   if(currentCapacity >= MAX_PREVIEW_CAPACITY){
-    toast('Maximalkapazität 150.000 erreicht.');
+    toast(`Maximalkapazität ${MAX_PREVIEW_CAPACITY.toLocaleString('de-DE')} erreicht.`);
     return 0;
   }
   amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
@@ -1820,6 +1838,50 @@ if(expandButton){
                 +document.getElementById('expAmount').value);
   });
 }
+function setEditorSaveState(message, className = ''){
+  const node = document.getElementById('deSaveState');
+  if(!node) return;
+  node.textContent = message;
+  node.classList.toggle('is-dirty', className === 'is-dirty');
+  node.classList.toggle('is-error', className === 'is-error');
+}
+function syncMenuHandoff(){
+  const link = document.getElementById('deMenuLink');
+  if(!link) return;
+  const stand = document.getElementById('expStand')?.value || document.querySelector('.de-stands .is-active')?.dataset.deStand || 'NORD';
+  const amount = document.getElementById('expAmount')?.value || '1000';
+  const type = document.getElementById('expType')?.value || 'SITZ';
+  const url = new URL(link.getAttribute('href'), window.location.origin);
+  url.searchParams.set('stand', stand);
+  url.searchParams.set('seats_added', amount);
+  url.searchParams.set('seat_type', type);
+  url.hash = 'expand-form';
+  link.href = url.pathname + url.search + url.hash;
+}
+document.querySelectorAll('[data-de-stand]').forEach(button => {
+  button.addEventListener('click', () => {
+    if(!blocks) return;
+    selection.clear();
+    blocks.forEach(block => { if(block.stand === button.dataset.deStand) selection.add(block.id); });
+    const select = document.getElementById('expStand');
+    if(select) select.value = button.dataset.deStand;
+    syncSel();
+  });
+});
+document.querySelectorAll('[data-de-amount]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.getElementById('expAmount').value = button.dataset.deAmount;
+    document.querySelectorAll('[data-de-amount]').forEach(item => {
+      const active = item === button;
+      item.classList.toggle('is-active', active);
+      item.setAttribute('aria-pressed', String(active));
+    });
+    syncMenuHandoff();
+  });
+});
+['expStand','expAmount','expType'].forEach(id =>
+  document.getElementById(id)?.addEventListener('change', syncMenuHandoff));
+syncMenuHandoff();
 
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
@@ -1841,12 +1903,19 @@ async function exportDesign(){
     })};
   const button = document.getElementById('btnSave');
   button.disabled = true;
+  setEditorSaveState('Speichert …');
   try{
     const response = await fetch(EDITOR.saveUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken':EDITOR.csrfToken}, body:JSON.stringify(out)});
     const body = await response.json();
     if(!response.ok) throw new Error(body.error || 'Speichern fehlgeschlagen.');
     toast('Gestaltung gespeichert.');
-  }catch(error){ toast(error.message || 'Speichern fehlgeschlagen.'); }
+    setEditorSaveState(blocks.some(block => block.simulated)
+      ? 'Gestaltung gespeichert · Ausbauvorschau nur in dieser Sitzung'
+      : 'Entwurf gespeichert');
+  }catch(error){
+    toast(error.message || 'Speichern fehlgeschlagen.');
+    setEditorSaveState(error.message || 'Speichern fehlgeschlagen.', 'is-error');
+  }
   finally{ button.disabled = false; }
 }
 
@@ -1887,6 +1956,17 @@ function syncSel(){
   document.getElementById('selStatus').innerHTML = n
     ? `<b>${n}</b> Blöcke · <b>${seats.toLocaleString('de-DE')}</b> Plätze`
     : 'Kein Block gewählt — klick ins Stadion.';
+  const stand = n ? blocks[[...selection].pop()]?.stand : null;
+  document.querySelectorAll('[data-de-stand]').forEach(button => {
+    const active = button.dataset.deStand === stand;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  if(stand){
+    const select = document.getElementById('expStand');
+    if(select) select.value = stand;
+  }
+  syncMenuHandoff();
   syncPressButton(); renderOverlay();
 }
 function syncPressButton(){
@@ -2096,7 +2176,8 @@ if(window.ResizeObserver){
     ]);
     const geometry = await geometryResponse.json();
     if(!geometryResponse.ok) throw new Error(geometry.error || 'Geometrie konnte nicht geladen werden.');
-    const design = designResponse.ok ? await designResponse.json() : {};
+    if(!designResponse.ok) throw new Error('Gespeicherter Entwurf konnte nicht geladen werden.');
+    const design = await designResponse.json();
     initStadium(geometry, design);
     buildPaletteUI(); syncPal(); resize();
     requestAnimationFrame(() => requestAnimationFrame(resize));
@@ -2104,5 +2185,6 @@ if(window.ResizeObserver){
     const title = document.getElementById('stadiumTitle');
     if(title) title.textContent = error.message || 'Editor nicht verfügbar';
     toast(error.message || 'Editor nicht verfügbar');
+    setEditorSaveState(error.message || 'Editor nicht verfügbar', 'is-error');
   }
 })();

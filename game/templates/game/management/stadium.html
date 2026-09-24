@@ -343,6 +343,20 @@
     // Erste Kachel direkt als aktiv markieren
     const firstCard = document.querySelector('.st-stand-card');
     if (firstCard) firstCard.classList.add('st-stand-card--selected');
+    // Der Editor übergibt nur Formular-Vorgaben; ein Auftrag entsteht erst
+    // durch einen bewussten Klick auf „Bauen“ in diesem Menü.
+    const handoff = new URLSearchParams(window.location.search);
+    const requestedStand = handoff.get('stand');
+    const requestedType = handoff.get('seat_type');
+    const requestedCount = Number(handoff.get('seats_added'));
+    if (['NORD','OST','SUED','WEST'].includes(requestedStand)) {
+        const card = document.querySelector(`.st-stand-card[data-stand-val="${requestedStand}"]`);
+        card?.click();
+    }
+    if (['STEH','SITZ','VIP'].includes(requestedType) && typeEl) typeEl.value = requestedType;
+    if (Number.isInteger(requestedCount) && requestedCount >= 1 && requestedCount <= 50000 && countEl) {
+        countEl.value = requestedCount;
+    }
 
     function formatEuro(betrag) {
         return betrag.toLocaleString('de-DE', {

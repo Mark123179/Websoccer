@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}{{ stadium.name }} – Stadion-Editor{% endblock %}
 {% block body_class %}stadium-editor-page{% endblock %}
 
 {% block extra_css %}
+{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=1">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 :root{
   --app-bg:#03070c; --stadium-bg:#07111a;
@@ -163,9 +165,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="stadium-editor-content">
+<div class="stadium-editor-content{% if is_dortmund_editor %} is-dortmund{% endif %}">
+{% if is_dortmund_editor %}
+<header class="de-hero">
+  <div><span class="de-eyebrow">SIGNAL IDUNA PARK · AUSBAUEDITOR</span>
+    <h1>Rundum planen.</h1>
+    <p>2D-Rangflächen bearbeiten, Ausbaugrößen simulieren und den Entwurf in 3D prüfen.</p>
+  </div>
+  <div class="de-hero-status"><i></i> Dortmund · {% if is_editor_admin %}Admin-Entwurf{% else %}Manager-Entwurf{% endif %}</div>
+</header>
+{% endif %}
 <div class="editor-toolbar">
-  <a class="editor-back" href="{% url 'stadium_detail' %}">← ZUR STADIONVERWALTUNG</a>
+  <a class="editor-back" href="{% url 'stadium_detail' %}">← {% if is_dortmund_editor %}STADION-MENÜ{% else %}ZUR STADIONVERWALTUNG{% endif %}</a>
   <div class="editor-toolbar-spacer"></div>
   <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
@@ -177,13 +188,28 @@
   <button class="btn active" id="btnDots">⣿ PUNKTE</button>
   <div class="viewtoggle">
     <button id="btn2d" class="active">2D · BEARBEITEN</button>
-    <button id="btn3d">3D · ANSICHT</button>
+    <button id="btn3d">3D · PRÜFEN</button>
   </div>
+  {% if is_dortmund_editor %}<span id="deSaveState" class="de-save-state" role="status" aria-live="polite">Entwurf geladen</span>{% endif %}
   <button class="btn primary" id="btnSave">SPEICHERN</button>
 </div>
 
 <div class="main{% if is_editor_admin %} has-admin{% endif %}">
   <div class="tools" id="toolsPanel">
+    {% if is_dortmund_editor %}
+    <div class="de-inspector">
+      <span class="de-eyebrow">GRUNDRISS · RANGBEARBEITUNG</span>
+      <h2>Tribüne auswählen</h2>
+      <p>Wähle eine Tribüne oder einzelne Blöcke direkt im Grundriss. Gestaltungswerkzeuge und gespeicherte Entwürfe bleiben erhalten.</p>
+      <div class="de-stands" role="group" aria-label="Tribüne auswählen">
+        <button type="button" data-de-stand="NORD">Nord <b>{{ stadium.nord_standing|add:stadium.nord_seating|add:stadium.nord_vip }}</b></button>
+        <button type="button" data-de-stand="OST">Ost <b>{{ stadium.ost_standing|add:stadium.ost_seating|add:stadium.ost_vip }}</b></button>
+        <button type="button" data-de-stand="SUED">Süd <b>{{ stadium.sued_standing|add:stadium.sued_seating|add:stadium.sued_vip }}</b></button>
+        <button type="button" data-de-stand="WEST">West <b>{{ stadium.west_standing|add:stadium.west_seating|add:stadium.west_vip }}</b></button>
+      </div>
+      <p class="de-stand-note">Zahlen: aktuelle, wirtschaftliche Plätze · Vorschauplätze nicht enthalten.</p>
+    </div>
+    {% endif %}
 
     <div class="panel">
       <h3>Auswahl · Zauberstab</h3>
@@ -281,7 +307,7 @@
   {% if is_editor_admin %}
   <aside class="admin-tools" aria-label="Admin-Werkzeuge">
     <div class="panel" id="expandPanel">
-      <h3>Ausbau · Simulator <span style="color:var(--gold)">· Admin</span></h3>
+      <h3>Ausbau · {% if is_dortmund_editor %}Vorschau{% else %}Simulator{% endif %} <span style="color:var(--gold)">· Admin</span></h3>
       <div class="subtools open" style="margin-top:0">
         <label>Tribüne
           <select id="expStand"><option>NORD</option><option>SUED</option><option>OST</option><option>WEST</option></select>
@@ -290,16 +316,30 @@
           <select id="expType"><option value="SITZ">Sitzplätze</option><option value="STEH">Stehplätze</option><option value="VIP">VIP</option></select>
         </label>
         <label>Menge
-          <select id="expAmount"><option>1000</option><option>2000</option><option>5000</option><option>10000</option><option>20000</option></select>
+          <select id="expAmount"><option>1000</option>{% if not is_dortmund_editor %}<option>2000</option>{% endif %}<option>5000</option><option>10000</option><option>20000</option></select>
         </label>
-        <p class="muted" style="margin:0">Vorschau bis maximal 150.000 Plätze</p>
-        <button class="btn" id="btnExpand">AUSBAUEN</button>
+        {% if is_dortmund_editor %}
+        <div class="de-presets" role="group" aria-label="Vorschauschritt">
+          <button type="button" data-de-amount="1000" class="is-active">1.000</button>
+          <button type="button" data-de-amount="5000">5.000</button>
+          <button type="button" data-de-amount="10000">10.000</button>
+          <button type="button" data-de-amount="20000">20.000</button>
+        </div>
+        {% endif %}
+        <p class="muted" style="margin:0">{% if is_dortmund_editor %}Nur Entwurfsvorschau, bis maximal {{ preview_capacity_limit|intcomma }} Plätze. Kein Bauauftrag, keine Abbuchung.{% else %}Vorschau bis maximal 150.000 Plätze{% endif %}</p>
+        <button class="btn" id="btnExpand">{% if is_dortmund_editor %}VORSCHAU HINZUFÜGEN{% else %}AUSBAUEN{% endif %}</button>
       </div>
     </div>
   </aside>
   {% endif %}
 
   <div class="stage" id="stage">
+    {% if is_dortmund_editor %}
+    <div class="de-stage-heading">
+      <div><span class="de-eyebrow">GRUNDRISS · ECHTE STADIONBLÖCKE</span><h2 id="stadiumTitle">{{ stadium.name }}</h2></div>
+      <span>2D bearbeiten · 3D prüfen</span>
+    </div>
+    {% endif %}
     <div id="stageThree" data-stadium-stage aria-label="Interaktive 3D-Stadionansicht"></div>
     <canvas id="cvBase"></canvas>
     <canvas id="cvBlocks"></canvas>
@@ -313,6 +353,20 @@
     <div id="toast"></div>
   </div>
 </div>
+{% if is_dortmund_editor %}
+<section class="de-footer">
+  <div><span class="de-eyebrow">STADIONVERWALTUNG</span><h2>Ausbau im Menü beauftragen</h2>
+    <p>Diese Seite speichert nur die Gestaltung. Verbindliche Ausbauten werden ausschließlich im Stadion-Menü bestellt und nach Fertigstellung in den Entwurf übernommen.</p>
+    <a class="de-menu-link" id="deMenuLink" href="{% url 'stadium_detail' %}">Ausbau im Stadion-Menü öffnen →</a>
+  </div>
+  <div class="de-build-status"><span class="de-eyebrow">AKTUELLER STAND</span>
+    <strong>{{ stadium.capacity_total }} Plätze</strong>
+    {% for job in pending_expansions %}<p>Im Bau: +{{ job.seats_added }} {{ job.get_seat_type_display }} · {{ job.get_stand_display }} · bis {{ job.completes_at|date:"d.m.Y" }}</p>{% empty %}<p>Keine laufenden Ausbauaufträge</p>{% endfor %}
+    <a href="{% url 'dortmund_original_miniature' %}" target="_blank" rel="noopener">Detailliertes 3D-Konzept ansehen ↗</a>
+    <small>Konzeptansicht ist nicht mit ungespeicherten Entwurfsänderungen synchronisiert.</small>
+  </div>
+</section>
+{% endif %}
 </div>
 
 {% endblock %}
@@ -326,9 +380,10 @@ window.STADIUM_EDITOR = {
   liveSceneUrl: "{% url 'stadium_live_scene' stadium.club_id %}",
   saveUrl: "{% url 'stadium_editor_save_design' %}",
   csrfToken: "{{ csrf_token }}",
+  maxPreviewCapacity: {{ preview_capacity_limit }},
   isAdmin: {{ is_editor_admin|yesno:'true,false' }}
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=36"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=39"></script>
 {% endblock %}

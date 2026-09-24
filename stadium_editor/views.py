@@ -8,7 +8,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
-from game.models import Club, Stadium
+from game.models import Club, Stadium, StadiumExpansion
+from game.stadium_costs import max_kapazitaet
 from game.views import build_game_header, current_manager_club
 
 from .capacity import distribute_capacities
@@ -54,11 +55,18 @@ def stadium_editor(request):
             'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
         }, status=200)
     design = StadiumDesign.objects.filter(stadium=stadium).first()
+    pending_expansions = (
+        StadiumExpansion.objects.filter(stadium=stadium, applied=False)
+        .order_by('completes_at', 'pk')
+    )
     return render(request, 'stadium_editor/editor.html', {
         'stadium': stadium,
         'geometry': geometry,
         'design': design.design if design else {},
         'is_editor_admin': bool(request.user.is_staff),
+        'is_dortmund_editor': stadium.club_id == 3,
+        'preview_capacity_limit': max_kapazitaet() if stadium.club_id == 3 else 150000,
+        'pending_expansions': pending_expansions,
         'attribution': geometry.attribution,
         'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
     })

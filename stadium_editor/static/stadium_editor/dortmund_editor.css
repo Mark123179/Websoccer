@@ -1,0 +1,209 @@
+.stadium-editor-content.is-dortmund {
+  height: auto;
+  min-height: 960px;
+  overflow: visible;
+  padding: 20px;
+  gap: 14px;
+  background: #101b1e;
+  color: #ecf0e9;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+}
+.is-dortmund .de-eyebrow {
+  color: #d3b859;
+  font: 700 10px "IBM Plex Mono", monospace;
+  letter-spacing: .16em;
+}
+.is-dortmund .de-hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 8px 10px;
+}
+.is-dortmund .de-hero h1 {
+  margin: 7px 0;
+  color: #f4f2e8;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.1;
+  letter-spacing: -.055em;
+}
+.is-dortmund .de-hero p { margin: 0; color: #abbab4; font-size: 13px; }
+.is-dortmund .de-hero-status {
+  padding: 10px 14px;
+  border: 1px solid #425a52;
+  border-radius: 40px;
+  white-space: nowrap;
+  color: #c0cfc5;
+  font: 11px "IBM Plex Mono", monospace;
+}
+.is-dortmund .de-hero-status i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #8eaf73;
+}
+.stadium-editor-content.is-dortmund .editor-toolbar {
+  height: auto;
+  min-height: 62px;
+  flex: none;
+  flex-wrap: wrap;
+  padding: 9px 14px;
+  border: 1px solid #384c4b;
+  border-radius: 8px;
+  background: #172326;
+}
+.is-dortmund .editor-back,
+.is-dortmund .btn,
+.is-dortmund .viewtoggle button {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+.is-dortmund .btn,
+.is-dortmund .viewtoggle { border-color: #50625c; }
+.is-dortmund .btn:hover { background: #343720; }
+.is-dortmund .btn.primary {
+  background: #473e24;
+  border-color: #d9b950;
+  color: #f6db78;
+}
+.is-dortmund .viewtoggle button.active {
+  background: #403a24;
+  color: #f1d778;
+}
+.is-dortmund .de-save-state { color: #a3b5aa; font: 11px "IBM Plex Mono", monospace; }
+.is-dortmund .de-save-state.is-error { color: #ff8993; }
+.is-dortmund .de-save-state.is-dirty { color: #f1d778; }
+.stadium-editor-content.is-dortmund .main,
+.stadium-editor-content.is-dortmund .main.has-admin {
+  height: auto;
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  grid-template-rows: minmax(590px, 700px) auto;
+  gap: 14px;
+}
+.stadium-editor-content.is-dortmund .stage,
+.stadium-editor-content.is-dortmund .main.has-admin .stage {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 590px;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #385352;
+  border-radius: 9px;
+  background: #0b191c;
+}
+.stadium-editor-content.is-dortmund .tools {
+  grid-column: 2;
+  grid-row: 1;
+  border: 1px solid #344847;
+  border-radius: 9px;
+  background: #172326;
+}
+.stadium-editor-content.is-dortmund .admin-tools,
+.stadium-editor-content.is-dortmund .main.has-admin .admin-tools {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+}
+.is-dortmund .admin-tools .panel {
+  padding: 18px;
+  background: linear-gradient(110deg,#172326,#252c24);
+}
+.is-dortmund .panel { border-color: #3a5250; background: #122022; }
+.is-dortmund .panel h3 { color: #c8ad56; }
+.is-dortmund .stage .de-stage-heading {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  padding: 13px 18px 22px;
+  pointer-events: none;
+  background: linear-gradient(#0c191be8, #0c191b00);
+}
+.is-dortmund .de-stage-heading h2 {
+  margin: 4px 0;
+  font-size: 17px;
+  color: #f2efe4;
+}
+.is-dortmund .de-stage-heading h2 span { color: #a4b2aa; font-size: 12px; font-weight: 400; }
+.is-dortmund .de-stage-heading > span { color: #9caea7; font-size: 10px; }
+.is-dortmund .de-inspector { padding: 5px 1px 10px; }
+.is-dortmund .de-inspector h2 { margin: 7px 0; font-size: 24px; }
+.is-dortmund .de-inspector p { color: #a0b2a9; font-size: 11px; line-height: 1.5; }
+.is-dortmund .de-stands { display: grid; gap: 6px; margin: 14px 0; }
+.is-dortmund .de-stands button,
+.is-dortmund .de-presets button {
+  padding: 10px 12px;
+  border: 1px solid #405452;
+  border-radius: 6px;
+  background: #122124;
+  color: #c4d0c9;
+  text-align: left;
+  cursor: pointer;
+  font: 700 11px "IBM Plex Mono", monospace;
+}
+.is-dortmund .de-stands button b { float: right; font-weight: 400; }
+.is-dortmund .de-stands button.is-active,
+.is-dortmund .de-presets button.is-active {
+  border-color: #d4b94e;
+  background: #3e3722;
+  color: #f4d871;
+}
+.is-dortmund .de-stands button:focus-visible,
+.is-dortmund .de-presets button:focus-visible,
+.is-dortmund a:focus-visible { outline: 2px solid #f4d871; outline-offset: 2px; }
+.is-dortmund .de-presets { display: flex; gap: 7px; flex-wrap: wrap; }
+.is-dortmund .de-presets button { flex: 1; min-width: 65px; text-align: center; }
+.is-dortmund #expandPanel .subtools.open { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) 2fr auto; align-items: center; }
+.is-dortmund #expandPanel .subtools p { grid-column: 1 / -2; }
+.is-dortmund #btnExpand { grid-column: -2; grid-row: 1; }
+.is-dortmund .de-footer {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  padding: 22px;
+  border: 1px solid #394e47;
+  border-radius: 9px;
+  background: linear-gradient(115deg,#172326,#232a23);
+}
+.is-dortmund .de-footer h2 { margin: 5px 0; font-size: 22px; }
+.is-dortmund .de-footer p { color: #b2c0b6; line-height: 1.5; }
+.is-dortmund .de-menu-link,
+.is-dortmund .de-build-status a { color: #e6cd72; }
+.is-dortmund .de-build-status { display: grid; align-content: start; gap: 7px; }
+.is-dortmund .de-build-status strong { font-size: 23px; color: #eed16e; }
+.is-dortmund .de-build-status p { margin: 0; font-size: 11px; }
+.is-dortmund .de-build-status small { color: #97a8a0; }
+@media (max-width: 980px) {
+  .stadium-editor-content.is-dortmund .main,
+  .stadium-editor-content.is-dortmund .main.has-admin {
+    display: flex;
+    flex-direction: column;
+  }
+  .stadium-editor-content.is-dortmund .stage,
+  .stadium-editor-content.is-dortmund .main.has-admin .stage { order: 0; height: 60vh; min-height: 420px; }
+  .stadium-editor-content.is-dortmund .tools { order: 1; overflow: visible; }
+  .stadium-editor-content.is-dortmund .admin-tools { order: 2; }
+  .is-dortmund #expandPanel .subtools.open { display: flex; }
+}
+@media (max-width: 620px) {
+  .stadium-editor-content.is-dortmund { padding: 8px; }
+  .is-dortmund .de-hero { display: block; }
+  .is-dortmund .de-hero-status { display: inline-block; margin-top: 14px; }
+  .is-dortmund .editor-toolbar-spacer { display: none; }
+  .is-dortmund #rot3d { flex-wrap: wrap; width: 100%; order: 5; }
+  .is-dortmund .de-footer { grid-template-columns: 1fr; }
+  .is-dortmund .de-stage-heading > span { display: none; }
+}

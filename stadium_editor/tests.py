@@ -18,7 +18,7 @@ from django.utils import timezone
 from PIL import Image
 
 from game.economy.stadium import resolve_due_expansions
-from game.models import Club, League, Stadium, StadiumExpansion
+from game.models import Club, EconomyParameter, League, Stadium, StadiumExpansion
 from stadium_editor.capacity import distribute_capacities
 from stadium_editor.contracts import geometry_blocks, project_rle, spatial_project_design
 from stadium_editor.image_validation import InvalidImageData, normalize_design_payload, validate_and_quantize_data_url
@@ -152,6 +152,75 @@ class DortmundPreviewEndpointTests(TestCase):
         self.assertEqual(design.design, {'custom': 'saved'})
 
 
+class DortmundEditorIntegrationTests(TestCase):
+    def setUp(self):
+        EconomyParameter.objects.create(saison='0', key='STADION_MAX', value=120000)
+        league = League.objects.create(name='Dortmund-Editor-Liga', country='DE')
+        self.user = User.objects.create_user('dortmund-manager', password='pass')
+        self.club = Club.objects.create(
+            pk=3, name='Borussia Dortmund', short_name='BVB',
+            founded_year=1909, budget=1000000,
+            league=league, managed_by=self.user.manager_profile,
+        )
+        self.stadium = Stadium.objects.create(
+            club=self.club, name='Signal Iduna Park', city='Dortmund',
+            nord_seating=1000,
+        )
+        StadiumGeometry.objects.create(
+            stadium=self.stadium, geometry=_geometry([_block(0)]),
+        )
+
+    def test_dortmund_manager_sees_real_editor_without_admin_simulation(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('stadium_editor'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Rundum planen.')
+        self.assertContains(response, 'stadium_editor/dortmund_editor.css')
+        self.assertContains(response, 'data-de-stand="NORD"')
+        self.assertContains(response, 'id="deMenuLink"')
+        self.assertContains(response, reverse('dortmund_original_miniature'))
+        self.assertNotContains(response, 'id="btnExpand"')
+        self.assertNotContains(response, 'data-de-amount="20000"')
+
+    def test_admin_sees_preview_but_not_an_order_button(self):
+        self.user.is_staff = True
+        self.user.save(update_fields=['is_staff'])
+        self.client.force_login(self.user)
+        StadiumExpansion.objects.create(
+            stadium=self.stadium, stand='NORD', seat_type='SITZ',
+            seats_added=5000, cost=Decimal('100'), applied=False,
+            completes_at=timezone.now() + timedelta(days=2),
+        )
+        response = self.client.get(reverse('stadium_editor'))
+        self.assertContains(response, 'data-de-amount="20000"')
+        self.assertContains(response, 'VORSCHAU HINZUFÜGEN')
+        self.assertContains(response, f'maxPreviewCapacity: {response.context["preview_capacity_limit"]}')
+        self.assertContains(response, 'Im Bau: +5000')
+        self.assertContains(response, '1000 Plätze')
+        self.stadium.refresh_from_db()
+        self.assertEqual(self.stadium.capacity_total, 1000)
+        self.assertEqual(self.stadium.expansions.count(), 1)
+        self.assertEqual(self.club.budget, 1000000)
+
+    def test_other_club_keeps_existing_editor_and_cannot_access_dortmund(self):
+        other = User.objects.create_user('other-manager', password='pass')
+        club = Club.objects.create(
+            name='Other Club', short_name='OTHER', founded_year=1900,
+            budget=0, league=self.club.league,
+            managed_by=other.manager_profile,
+        )
+        Stadium.objects.create(club=club, name='Other Park', city='Other')
+        StadiumGeometry.objects.create(
+            stadium=club.stadium, geometry=_geometry([_block(0)]),
+        )
+        self.client.force_login(other)
+        response = self.client.get(reverse('stadium_editor'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Rundum planen.')
+        self.assertNotContains(response, 'dortmund_editor.css')
+        self.assertEqual(self.client.get(reverse('stadium_editor_geometry')).json()['capacity_total'], 0)
+
+
 def _geometry(blocks):
     return {
         'meta': {'name': 'Test-Arena', 'club': 'FC Test', 'maxR': 100},
@@ -204,7 +273,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=36',
+            'stadium_editor/editor.js?v=39',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
@@ -220,7 +289,7 @@ class StadiumEditorTests(TestCase):
         self.assertNotIn('138/D.meta.maxR', editor_js)
         self.assertIn('function editorBackground(){', editor_js)
         self.assertIn('D?.surroundings || {}', editor_js)
-        self.assertIn('const MAX_PREVIEW_CAPACITY = 150000;', editor_js)
+        self.assertIn('const MAX_PREVIEW_CAPACITY = Number(EDITOR.maxPreviewCapacity);', editor_js)
         self.assertIn('const MIN_EXPANSION_SEATS = 1000;', editor_js)
         self.assertIn('blocks: expansionGeometry.snapshotBlocks(blocks)', editor_js)
         self.assertIn('designBlockShape.get(b.sourceId)', editor_js)
