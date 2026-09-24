@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { addExpansionArchitecture, roofSurfaceNames } from './_ExpansionArchitecture';
 import { addOsmSurroundings } from './_OsmSurroundings';
 import { previewSupportsMaterial, sourceOpaqueColor } from './_SourceMaterials';
-import { addReconstructedFacade } from './_ReconstructedFacade';
+import { addReconstructedFacade, sourceFacadePreviewColor } from './_ReconstructedFacade';
 
 type SceneStatus = 'loading' | 'webgl' | 'fallback';
 type SceneVariant = 'original' | 'rundum' | 'sued';
@@ -131,7 +131,16 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
             indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
             geometry.addGroup(start, part.indexCount, materials.length);
             const key = part.texture || part.material;
-            if (!materialCache.has(key)) materialCache.set(key, new THREE.MeshStandardMaterial({ color: part.texture ? '#ffffff' : sourceOpaqueColor(part) || materialColor(part.material), roughness: .83, metalness: .08, side: THREE.DoubleSide, ...(part.texture ? { map: textures[part.texture] } : {}) }));
+            if (!materialCache.has(key)) {
+              const sourceColor = sourceOpaqueColor(part) ?? null;
+              const previewColor = sourceFacadePreviewColor(entry.name, sourceColor, variant === 'original');
+              const matched = previewColor !== sourceColor;
+              materialCache.set(key, new THREE.MeshStandardMaterial({
+                color: part.texture ? '#ffffff' : previewColor || materialColor(part.material),
+                roughness: matched ? .9 : .83, metalness: matched ? 0 : .08, side: THREE.DoubleSide,
+                ...(part.texture ? { map: textures[part.texture] } : {}),
+              }));
+            }
             materials.push(materialCache.get(key));
           }
           if (!indices.length) { geometry.dispose(); continue; }

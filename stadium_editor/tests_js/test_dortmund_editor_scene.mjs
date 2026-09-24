@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {conceptWeights, SIDES, ROOF_NAMES, SHELL_NAMES} from '../static/stadium_editor/dortmund_concept.js';
 import {previewSupportsMaterial, sourceOpaqueColor} from '../static/stadium_editor/dortmund_source_materials.js';
-import {RECONSTRUCTED_FACADE_SPANS, reconstructedFacadeVisible} from '../static/stadium_editor/dortmund_reconstructed_facade.js';
+import {
+  FACADE_PREVIEW_COLOR, SOURCE_FACADE_MESH_NAMES, sourceFacadePreviewColor,
+  RECONSTRUCTED_FACADE_SPANS, reconstructedFacadeVisible,
+} from '../static/stadium_editor/dortmund_reconstructed_facade.js';
 
 test('editor stands map to the exported Unity world axes', () => {
   assert.deepEqual(SIDES, {
@@ -43,6 +46,29 @@ test('NoDraw surfaces use verified source material state, not a guessed fallback
   assert.ok(affected.every(part => part.color === '#e7e7e7' && part.supported));
   assert.equal(previewSupportsMaterial({material: 'NoDraw_.003'}), false);
   assert.equal(previewSupportsMaterial({material: 'st051_wall_bsm'}), true);
+});
+
+test('only original exterior wall parts match the reconstructed wall in Bestand', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../static/stadium_editor/dortmund_original/manifest.json', import.meta.url), 'utf8'));
+  const sourceWalls = manifest.meshes.flatMap(mesh => mesh.parts
+    .filter(part => sourceOpaqueColor(part))
+    .map(part => [mesh.name, sourceOpaqueColor(part)]));
+  assert.deepEqual(sourceWalls.map(([name]) => name).sort(), [...SOURCE_FACADE_MESH_NAMES].sort());
+  for (const [name, color] of sourceWalls) {
+    assert.equal(sourceFacadePreviewColor(name, color, true), FACADE_PREVIEW_COLOR);
+    assert.equal(sourceFacadePreviewColor(name, color, false), '#e7e7e7');
+  }
+  assert.equal(sourceFacadePreviewColor('roof_1', '#e7e7e7', true), '#e7e7e7');
+  assert.equal(sourceFacadePreviewColor('right2_13.001', null, true), null);
+  const comparison = readFileSync(
+    new URL('../../artifacts/mockup-sandbox/src/components/mockups/dortmund-120/_ReconstructedFacade.ts', import.meta.url), 'utf8');
+  const editor = readFileSync(
+    new URL('../static/stadium_editor/dortmund_reconstructed_facade.js', import.meta.url), 'utf8');
+  assert.equal(editor.match(/export const FACADE_PREVIEW_COLOR = '([^']+)'/)[1],
+    comparison.match(/export const FACADE_PREVIEW_COLOR = '([^']+)'/)[1]);
+  assert.equal(editor.match(/export const SOURCE_FACADE_MESH_NAMES = new Set\(\[([\s\S]*?)\]\)/)[1],
+    comparison.match(/export const SOURCE_FACADE_MESH_NAMES = new Set\(\[([\s\S]*?)\]\)/)[1]);
 });
 
 test('the reconstruction is separate, joins the source corner and matches the comparison', () => {

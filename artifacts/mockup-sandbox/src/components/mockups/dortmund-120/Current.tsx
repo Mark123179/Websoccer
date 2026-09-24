@@ -9,9 +9,11 @@ export function Current() {
         <h1>Dortmund, aus Originaldaten ergänzt.</h1>
         <p className="dortmund120__intro">
           Die Bestandsansicht zeigt einen Auszug der Unity-Meshes mit vereinfachten Materialien
-          und nur vier repräsentativen Texturen – kein Unity-Originalrender. Echte NoDraw-Quellflächen werden mit
-          neutraler Farbe gezeigt: Ihre gespeicherten Materialwerte sind deckend,
-          die exakte Unity-Shaderwirkung bleibt ungeklärt. Die offene Gegenseite wird
+          und nur vier repräsentativen Texturen – kein Unity-Originalrender. Die echten
+          NoDraw-Außenwandflächen sind in dieser Vorschau an den Farbton der Rekonstruktion
+          angeglichen; ihr exportierter Materialwert bleibt unverändert. Das ist keine
+          belegte Unity-Originalfarbe, und die exakte Shaderwirkung bleibt ungeklärt.
+          Die offene Gegenseite wird
           durch eine schlichte, separat gezeichnete Rekonstruktion geschlossen;
           diese Außenwand ist nicht durch die Unity-Datei belegt.
           Die Umgebung ist ein vereinfachter 3D-Auszug aus OSM und einem groben Höhenraster.

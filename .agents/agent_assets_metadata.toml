@@ -438,3 +438,17 @@ mtime_ms = 1790250479875
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bda75fa0-ad42-482a-94e3-fdd19e86f7c0/5c3cfa70-3776-4c86-8916-778ad70ac2c1"
 storage_version_token = "1790250744864733"
 content_type = "image/png"
+
+[[outputs]]
+id = "msLQPc1VjjVBuWE7w4DFJ"
+uri = "file://screenshots/dortmund-farbangleichung-editor-flach.png"
+type = "image"
+title = "Gegenseite nach Farbangleichung"
+description = "Flacher Eckblick auf die Bestandsvorschau ohne Dach; Original-Wandmeshes und Rekonstruktion mit gleichem Grundfarbton."
+logical_id = "d35361dc-1f0a-4ac7-9813-d67b97dd6442"
+content_hash = "sha256:f366aa101a5239662db6799432c7b2861da62251092d3d4e734940ffef5a6475"
+size = 162061
+mtime_ms = 1790267716045
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/d35361dc-1f0a-4ac7-9813-d67b97dd6442/00624c2c-2e91-45bd-9529-3cf42757d308"
+storage_version_token = "1790267779172654"
+content_type = "image/png"

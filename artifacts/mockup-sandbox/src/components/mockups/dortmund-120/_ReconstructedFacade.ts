@@ -1,5 +1,16 @@
 // Preview-only enclosure. These coordinates are NOT exported Unity geometry.
 // The last, low segment meets the real right2_13 NoDraw corner at y=16.46.
+export const FACADE_PREVIEW_COLOR = '#737e7a';
+export const SOURCE_FACADE_MESH_NAMES = new Set([
+  'back2_1.001', 'left2_1.001', 'right2_13.001',
+]);
+
+// The source color remains in the manifest; this is a Bestand-only preview choice.
+export function sourceFacadePreviewColor(meshName: string, sourceColor: string | null, isBestand: boolean) {
+  return isBestand && sourceColor && SOURCE_FACADE_MESH_NAMES.has(meshName)
+    ? FACADE_PREVIEW_COLOR : sourceColor;
+}
+
 export const RECONSTRUCTED_FACADE_SPANS = [
   {name: 'MINUS_X', top: 36.6, points: [[-93.35, 64.5], [-93.35, -64.3],
     [-94.4, -85.7], [-90.8, -96.7], [-84, -106.1], [-74.7, -112.9],
@@ -12,7 +23,7 @@ export function addReconstructedFacade(THREE: any, world: any) {
   const group = new THREE.Group();
   group.name = 'RECONSTRUCTED_NOT_UNITY_BESTAND_FACADE';
   const material = new THREE.MeshStandardMaterial({
-    color: '#737e7a', roughness: .9, side: THREE.DoubleSide,
+    color: FACADE_PREVIEW_COLOR, roughness: .9, side: THREE.DoubleSide,
   });
   for (const {name, top, points} of RECONSTRUCTED_FACADE_SPANS) {
     for (let i = 0; i < points.length - 1; i++) {

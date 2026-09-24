@@ -6,6 +6,11 @@ der reduzierten Vorschau.
 
 **Aktuelle Darstellungsentscheidung:** Nach dieser Quellprüfung wurde die
 Schließung der Gegenseite ausdrücklich als **Rekonstruktion** freigegeben.
+Danach wurden die drei originalen `NoDraw_`-Außenwände nur in der
+Bestandsvorschau an deren Grundfarbton angeglichen. Diese Farbwahl ist
+**kein Quellenbefund** und verändert weder den Unity-Export noch dessen
+gespeicherte Materialwerte. Im Rundum-Konzept behalten die Quellflächen
+ihre zuvor abgeleitete helle Browserfarbe.
 Die Ergänzung ist kein Unity-Original; die folgenden älteren Aussagen zur
 damals bewusst offenen Browseransicht dokumentieren den Zustand vor dieser
 Freigabe. Die Quellenbefunde und ihre Unsicherheit gelten unverändert.
@@ -240,3 +245,27 @@ und [ohne Dach](../screenshots/dortmund-editor-rekonstruktion-gegenseite-dach-au
 zeigen dieselbe Fassadengeometrie ohne diese Umgebung. Der Editor-Nachweis
 zeigt die produktive 3D-Szenenkomponente in einem isolierten Browser-Testbett,
 nicht eine authentifizierte Aufnahme der kompletten Editoroberfläche.
+
+## Farbangleichung in der Bestandsvorschau
+
+Die originalen Außenwandmeshes `back2_1.001`, `left2_1.001` und
+`right2_13.001` bleiben als `ORIGINAL_`-Objekte erhalten. Nur in der
+Bestandsdarstellung erhalten sie ein separates Vorschaumaterial mit
+dem Grundton `#737e7a` sowie derselben Rauheit und Metallizität wie
+die rekonstruierte Wand. Schattierungen durch Licht bleiben möglich.
+Beim Wechsel zum Rundum-Konzept stellt der Editor ihre bisherigen
+hellen Quellvorschau-Materialien wieder her. Die Vergleichsansicht
+trennt „Original“ und „Rundum“ ebenso. Dach, Sitzränge und übrige
+Quellmaterialien sind nicht betroffen. `#e7e7e7` im Export bleibt der
+aus gespeicherten NoDraw-Werten abgeleitete Wert; `#737e7a` ist eine
+nutzergewünschte **Browserfarbe**, keine belegte Unity-Originalfarbe.
+
+Gleiche Kamera „Gegenseite“ wie oben: [Vergleich nach der Farbangleichung
+mit Dach](../screenshots/dortmund-farbangleichung-vergleich-dach-an.png)
+und [ohne Dach](../screenshots/dortmund-farbangleichung-vergleich-dach-aus.png);
+[Editor-Szene mit Dach](../screenshots/dortmund-farbangleichung-editor-dach-an.png)
+und [ohne Dach](../screenshots/dortmund-farbangleichung-editor-dach-aus.png).
+Der [flache Editor-Eckblick](../screenshots/dortmund-farbangleichung-editor-flach.png)
+zeigt die Anschlüsse ohne Dach. Diese Aufnahmen stammen aus dem
+Software-WebGL-Testbrowser; die Editor-Szene wurde wie zuvor isoliert
+aufgenommen, nicht über einen angemeldeten Managerzugang.

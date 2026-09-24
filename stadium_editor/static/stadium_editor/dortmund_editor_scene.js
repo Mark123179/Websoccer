@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js';
 import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
-import {addReconstructedFacade, reconstructedFacadeVisible} from './dortmund_reconstructed_facade.js';
+import {addReconstructedFacade, reconstructedFacadeVisible, sourceFacadePreviewColor} from './dortmund_reconstructed_facade.js?v=2';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -47,7 +47,8 @@ export async function mountDortmundScene({element, onStatus}) {
   let azimuth = .88, elevation = .56, distance = 490;
   let frame = 0, disposed = false, concept = null, colorBands = null, facade = null, roofOn = true;
   let lastWeights = '', lastColors = '';
-  const geometries = [], textures = [], materials = new Map(), roof = [], shell = [];
+  const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
+  const facadeSourceParts = [], roof = [], shell = [];
   let resizeObserver;
   const positionCamera = () => {
     camera.position.set(target.x + distance * Math.sin(azimuth) * Math.cos(elevation),
@@ -95,6 +96,7 @@ export async function mountDortmundScene({element, onStatus}) {
     }
     geometries.forEach(item => item.dispose());
     materials.forEach(item => item.dispose());
+    facadeMaterials.forEach(item => item.dispose());
     textures.forEach(item => item.dispose());
     renderer.dispose();
     if (controls.parentNode === element) element.removeChild(controls);
@@ -119,7 +121,7 @@ export async function mountDortmundScene({element, onStatus}) {
         new Float32Array(new Float32Array(binary, entry.positionOffset, entry.vertexCount * 3)), 3));
       geometry.setAttribute('uv', new THREE.BufferAttribute(
         new Float32Array(binary, entry.uvOffset, entry.vertexCount * 2), 2));
-      const indices = [], groupMaterials = [];
+      const indices = [], groupMaterials = [], sourcePartSlots = [];
       for (const part of entry.parts) {
         if (!previewSupportsMaterial(part)) continue;
         const start = indices.length;
@@ -131,7 +133,21 @@ export async function mountDortmundScene({element, onStatus}) {
           roughness: .83, metalness: .08, side: THREE.DoubleSide,
           ...(part.texture ? {map: imageMaps[part.texture]} : {}),
         }));
-        groupMaterials.push(materials.get(key));
+        const original = materials.get(key);
+        const previewColor = sourceFacadePreviewColor(entry.name, sourceOpaqueColor(part), true);
+        if (previewColor && previewColor !== sourceOpaqueColor(part)) {
+          if (!facadeMaterials.has(key)) {
+            const preview = original.clone();
+            preview.color.set(previewColor);
+            preview.roughness = .9;
+            preview.metalness = 0;
+            facadeMaterials.set(key, preview);
+          }
+          sourcePartSlots.push({index: groupMaterials.length, original, preview: facadeMaterials.get(key)});
+          groupMaterials.push(facadeMaterials.get(key));
+        } else {
+          groupMaterials.push(original);
+        }
       }
       if (!indices.length) { geometry.dispose(); continue; }
       geometry.setIndex(indices);
@@ -140,6 +156,7 @@ export async function mountDortmundScene({element, onStatus}) {
       const mesh = new THREE.Mesh(geometry, groupMaterials);
       mesh.name = `ORIGINAL_${entry.name}`;
       world.add(mesh);
+      sourcePartSlots.forEach(slot => facadeSourceParts.push({mesh, ...slot}));
       if (ROOF_NAMES.has(entry.name)) {
         roof.push(mesh);
         // Cutaway copies do not change the original roof materials.
@@ -167,6 +184,10 @@ export async function mountDortmundScene({element, onStatus}) {
        update({weights, designColors, roofVisible, fullConcept, cameraPreset, orbit, day, floodlight} = {}) {
         if (disposed) return Promise.resolve();
          facade.group.visible = reconstructedFacadeVisible(facade.group.visible, fullConcept);
+         // A scene-mode switch must restore the untouched source preview in Rundum.
+         facadeSourceParts.forEach(({mesh, index, original, preview}) => {
+           mesh.material[index] = facade.group.visible ? preview : original;
+         });
         if (weights && JSON.stringify(weights) !== lastWeights) {
           lastWeights = JSON.stringify(weights);
           const next = Object.fromEntries(sideOrder.map(side => [side, clamp(Number(weights[side]) || 0, 0, 1)]));
