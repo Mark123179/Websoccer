@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js';
+import {addExistingFacade} from './dortmund_existing_facade.js';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -46,6 +47,7 @@ export async function mountDortmundScene({element, onStatus}) {
   let frame = 0, disposed = false, concept = null, colorBands = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), roof = [], shell = [];
+  let existingFacade;
   let resizeObserver;
   const positionCamera = () => {
     camera.position.set(target.x + distance * Math.sin(azimuth) * Math.cos(elevation),
@@ -87,6 +89,7 @@ export async function mountDortmundScene({element, onStatus}) {
     controls.removeEventListener('pointermove', move);
     controls.removeEventListener('wheel', wheel);
     if (concept) concept.dispose();
+    existingFacade?.dispose();
     if (colorBands) {
       colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
     }
@@ -151,6 +154,7 @@ export async function mountDortmundScene({element, onStatus}) {
         geometry, source: new Float32Array(geometry.attributes.position.array),
       });
     }
+    existingFacade = addExistingFacade(THREE, world);
     if (disposed) return null;
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();

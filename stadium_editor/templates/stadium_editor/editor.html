@@ -350,7 +350,7 @@
       <strong id="deSceneStatus" role="status">Originalmeshes werden geladen …</strong>
       <span id="deSceneData">Bestand · Originalmodell als Referenz</span>
       <span>{{ completed_expansion_count }} fertiggestellte Ausbauaufträge im aktuellen Platzbestand berücksichtigt · 3D-Original ist kein vermessener Nachbau dieser Arbeiten.</span>
-      <small>Original: Unity-Meshes und Texturen · Grau: schematischer Ausbau · Farbbänder: 2D-Gestaltung. Ausbauschritte sind keine vermessenen Plätze. Dach aus = Präsentationsschnitt.</small>
+      <small>Original: Unity-Meshes und Texturen · Gegenüberliegende kurze und lange Bestands-Außenfassade: ergänzte Rekonstruktion, kein Unity-Original · Grau: schematischer Ausbau · Farbbänder: 2D-Gestaltung. Ausbauschritte sind keine vermessenen Plätze. Dach aus = Präsentationsschnitt.</small>
     </div>
     <div id="deSceneFallback" class="de-scene-fallback" hidden>
       <img src="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}" alt="Dortmunder Originalmodell als 2D-Ersatzansicht">
@@ -401,5 +401,5 @@ window.STADIUM_EDITOR = {
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=41"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=42"></script>
 {% endblock %}

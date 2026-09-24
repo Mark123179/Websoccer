@@ -2172,8 +2172,22 @@ document.getElementById('yawSlider').addEventListener('input', e=>{ yaw3d=+e.tar
 document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; renderAll(); });
 document.getElementById('tiltSlider').addEventListener('input', e=>{ tilt3d=+e.target.value; requestRender3D(); });
 document.getElementById('stageCamera').addEventListener('change', scheduleStageDesignUpdate);
-if(isDortmundScene) document.getElementById('stageCamera').addEventListener('change', e =>
-  stageThree?.update({cameraPreset: e.target.value}));
+if(isDortmundScene) document.getElementById('stageCamera').addEventListener('change', e => {
+  const presets = {
+    exterior:[.88,.56], interior:[-1.2,.63], 'roof-corner':[.34,1.03],
+    opposite:[-2.28,.53], distance:[.6,.57],
+  };
+  const preset = presets[e.target.value];
+  if(preset){
+    // Keep both sliders in the preset's orbit. Otherwise moving "Neigung"
+    // silently jumps "Gegenseite" back to the Außen camera.
+    yaw3d = ((((preset[0] - .88) * 180 / Math.PI) + 180) % 360 + 360) % 360 - 180;
+    tilt3d = 90 - preset[1] * 180 / Math.PI;
+    document.getElementById('yawSlider').value = yaw3d;
+    document.getElementById('tiltSlider').value = tilt3d;
+  }
+  stageThree?.update({cameraPreset: e.target.value});
+});
 document.getElementById('stageDay').addEventListener('change', ()=>{
   if(!stageThree) return;
   const day = Boolean(document.getElementById('stageDay').checked);

@@ -410,3 +410,31 @@ mtime_ms = 1790250126767
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/828efcf8-112c-40b1-9469-6bd238990474/95721bec-560c-4c64-b18a-ec43ac4edb53"
 storage_version_token = "1790250136421265"
 content_type = "image/png"
+
+[[outputs]]
+id = "VNVTwBewMymeLAG7OE3Cj"
+uri = "file://screenshots/dortmund-bestand-gegenseite-tatsaechlich-vorher.png"
+type = "image"
+title = "Bestand · Gegenseite vorher"
+description = "Originaler Kamerawinkel mit offener kurzer und langer Außenkante."
+logical_id = "160bd96f-5345-4602-b7aa-df17073d79d7"
+content_hash = "sha256:f30a9af77a03f0871526b80693a0aa2e7e0f03bd6640afa74570dda16d7cc9fe"
+size = 124415
+mtime_ms = 1790250372235
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/160bd96f-5345-4602-b7aa-df17073d79d7/a81bd8db-d255-4cb8-9cc2-7b7f1123ef33"
+storage_version_token = "1790250744262714"
+content_type = "image/png"
+
+[[outputs]]
+id = "V11cT7fO_7nKsEf8-XGgI"
+uri = "file://screenshots/dortmund-bestand-gegenseite-nachher.png"
+type = "image"
+title = "Bestand · Gegenseite nachher"
+description = "Gleicher Kamerawinkel mit ergänzten Fassaden und Eckanschlüssen."
+logical_id = "bda75fa0-ad42-482a-94e3-fdd19e86f7c0"
+content_hash = "sha256:d7e05cf66b5521eba5c1d4caa80a572aa01c1f3e5b1a8133d55524ef9277148f"
+size = 143498
+mtime_ms = 1790250479875
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/bda75fa0-ad42-482a-94e3-fdd19e86f7c0/5c3cfa70-3776-4c86-8916-778ad70ac2c1"
+storage_version_token = "1790250744864733"
+content_type = "image/png"

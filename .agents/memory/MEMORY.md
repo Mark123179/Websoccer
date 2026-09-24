@@ -115,3 +115,4 @@
 - [Dortmund Unity seat/mesh frame](dortmund-unity-frame.md) — Sitz-JSON ist ungedreht, Mesh-Export hat 90° Parent-Rotation gebacken; Standzuordnung immer gegen Crowd-Bounds prüfen.
 - [Dortmund roof layers](dortmund-roof-layers.md) — Dachhaut, Decke und Träger überlagern sich in mehreren Unity-Meshes; einzelne Dachmeshes ausblenden reicht für Innenansichten nicht.
 - [Dortmund OSM context](dortmund-osm-context.md) — Umgebung aus realen OSM-Lagen und grobem DEM, nicht aus erfundenen Bergen; Modell-Nord und Kartennord müssen getrennt kalibriert werden.
+- [Dortmund Bestand facade attribution](dortmund-bestand-facade-attribution.md) — Gegenseite meint im Bestand zwei offene Fassaden; ergänzte Hülle nie als Unity-Original ausgeben.
