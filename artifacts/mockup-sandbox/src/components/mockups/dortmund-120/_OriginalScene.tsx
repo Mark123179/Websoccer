@@ -217,6 +217,10 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
     {!capture && <div className="dortmund120__osm-credit">
       3D-Umgebung: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap-Mitwirkende</a>
       <span> · Höhen: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> (90-m-Raster)</span>
+      <span> · Gebäudehöhen und Baumkronen schematisch</span>
+    </div>}
+    {!capture && variant !== 'original' && <div className="dortmund120__neighbor-note">
+      Stadion Rote Erde: bestehende Nachbaranlage · Überschneidung des Konzepts ungeprüft
     </div>}
     {status !== 'webgl' && !capture && <div className="dortmund120__fallback">
       {!fallbackMissing && <img src={`${ASSET_BASE}${fallback}`} alt={`3D-Vergleichsbild: ${variant}`} onError={() => setFallbackMissing(true)} />}

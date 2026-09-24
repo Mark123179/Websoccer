@@ -143,6 +143,19 @@
   font: 10px "IBM Plex Mono", monospace;
 }
 .dortmund120__osm-credit a { color: #e5ece8; text-decoration: underline; text-underline-offset: 2px; }
+.dortmund120__neighbor-note {
+  position: absolute;
+  z-index: 4;
+  right: 14px;
+  bottom: 14px;
+  max-width: min(330px, 42%);
+  padding: 6px 9px;
+  border: 1px solid #756546;
+  border-radius: 4px;
+  background: #171d1deb;
+  color: #ead39e;
+  font: 10px/1.5 "IBM Plex Mono", monospace;
+}
 
 .dortmund120__scene-wrap--capture .dortmund120__scene {
   background: #162225;
@@ -262,7 +275,8 @@
   cursor: pointer;
 }
 .dortmund120__start-3d:focus-visible,
-.dortmund120__scene-controls button:focus-visible {
+.dortmund120__scene-controls button:focus-visible,
+.dortmund120__roof-toggle:focus-visible {
   outline: 2px solid #f5cb59;
   outline-offset: 2px;
 }
@@ -381,7 +395,8 @@ body:has(.dortmund120__scene-wrap--capture) .dortmund120__viewer {
   }
 
   .dortmund120__roof-toggle { top: 54px; right: 10px; }
-  .dortmund120__osm-credit { bottom: 10px; }
+  .dortmund120__osm-credit { bottom: 10px; max-width: calc(100% - 20px); }
+  .dortmund120__neighbor-note { display: none; }
 
   .dortmund120__scene-controls button {
     padding: 6px 7px;
