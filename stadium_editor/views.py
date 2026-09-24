@@ -67,6 +67,9 @@ def stadium_editor(request):
         'is_dortmund_editor': stadium.club_id == 3,
         'preview_capacity_limit': max_kapazitaet() if stadium.club_id == 3 else 150000,
         'pending_expansions': pending_expansions,
+        'completed_expansion_count': StadiumExpansion.objects.filter(
+            stadium=stadium, applied=True,
+        ).count() if stadium.club_id == 3 else 0,
         'attribution': geometry.attribution,
         'game_header': build_game_header('Stadion', 'Editor', reverse('stadium_detail')),
     })

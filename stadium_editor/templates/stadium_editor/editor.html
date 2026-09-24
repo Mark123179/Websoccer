@@ -6,7 +6,7 @@
 {% block body_class %}stadium-editor-page{% endblock %}
 
 {% block extra_css %}
-{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=1">{% endif %}
+{% if is_dortmund_editor %}<link rel="stylesheet" href="{% static 'stadium_editor/dortmund_editor.css' %}?v=3">{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Cinzel:wght@600&family=Anton&family=Bebas+Neue&family=Archivo+Black&family=Germania+One&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
@@ -180,7 +180,7 @@
   <div class="editor-toolbar-spacer"></div>
   <div id="rot3d"><span>Drehung</span><input type="range" id="yawSlider" min="-180" max="180" value="0">
     <span>Neigung</span><input type="range" id="tiltSlider" min="28" max="80" value="54" style="width:90px">
-    <select id="stageCamera" aria-label="3D-Kamera"><option value="orbit">Orbit</option><option value="seat">Sitz</option></select>
+    <select id="stageCamera" aria-label="3D-Kamera">{% if is_dortmund_editor %}<option value="exterior">Außen</option><option value="interior">Innen</option><option value="roof-corner">Dach / Ecke</option><option value="opposite">Gegenseite</option><option value="distance">Fernansicht</option>{% else %}<option value="orbit">Orbit</option><option value="seat">Sitz</option>{% endif %}</select>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageDay" style="accent-color:var(--cyan)"> Tag</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="stageFloodlight" style="accent-color:var(--cyan)"> Flutlicht</label>
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="roofChk" checked style="accent-color:var(--cyan)"> Dach</label>
@@ -341,6 +341,22 @@
     </div>
     {% endif %}
     <div id="stageThree" data-stadium-stage aria-label="Interaktive 3D-Stadionansicht"></div>
+    {% if is_dortmund_editor %}
+    <div class="de-scene-panel" id="deScenePanel" aria-label="3D-Modellstatus">
+      <div class="de-scene-switch" role="group" aria-label="Modellzustand">
+        <button type="button" data-de-scene="bestand" class="is-active" aria-pressed="true">BESTAND / ENTWURF</button>
+        <button type="button" data-de-scene="rundum" aria-pressed="false">RUNDUM-KONZEPT</button>
+      </div>
+      <strong id="deSceneStatus" role="status">Originalmeshes werden geladen …</strong>
+      <span id="deSceneData">Bestand · Originalmodell als Referenz</span>
+      <span>{{ completed_expansion_count }} fertiggestellte Ausbauaufträge im aktuellen Platzbestand berücksichtigt · 3D-Original ist kein vermessener Nachbau dieser Arbeiten.</span>
+      <small>Original: Unity-Meshes und Texturen · Grau: schematischer Ausbau · Farbbänder: 2D-Gestaltung. Ausbauschritte sind keine vermessenen Plätze. Dach aus = Präsentationsschnitt.</small>
+    </div>
+    <div id="deSceneFallback" class="de-scene-fallback" hidden>
+      <img src="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}" alt="Dortmunder Originalmodell als 2D-Ersatzansicht">
+      <span>3D nicht verfügbar · 2D-Editor weiterhin nutzbar</span>
+    </div>
+    {% endif %}
     <canvas id="cvBase"></canvas>
     <canvas id="cvBlocks"></canvas>
     <canvas id="cvOverlay"></canvas>
@@ -362,8 +378,7 @@
   <div class="de-build-status"><span class="de-eyebrow">AKTUELLER STAND</span>
     <strong>{{ stadium.capacity_total }} Plätze</strong>
     {% for job in pending_expansions %}<p>Im Bau: +{{ job.seats_added }} {{ job.get_seat_type_display }} · {{ job.get_stand_display }} · bis {{ job.completes_at|date:"d.m.Y" }}</p>{% empty %}<p>Keine laufenden Ausbauaufträge</p>{% endfor %}
-    <a href="{% url 'dortmund_original_miniature' %}" target="_blank" rel="noopener">Detailliertes 3D-Konzept ansehen ↗</a>
-    <small>Konzeptansicht ist nicht mit ungespeicherten Entwurfsänderungen synchronisiert.</small>
+    <small>Das Rundum-Konzept ist direkt in der 3D-Ansicht verfügbar. Nur im Stadion-Menü beauftragte und fertiggestellte Ausbauten ändern die reale Kapazität.</small>
   </div>
 </section>
 {% endif %}
@@ -381,9 +396,10 @@ window.STADIUM_EDITOR = {
   saveUrl: "{% url 'stadium_editor_save_design' %}",
   csrfToken: "{{ csrf_token }}",
   maxPreviewCapacity: {{ preview_capacity_limit }},
-  isAdmin: {{ is_editor_admin|yesno:'true,false' }}
+  isAdmin: {{ is_editor_admin|yesno:'true,false' }},
+  dortmundScene: {{ is_dortmund_editor|yesno:'true,false' }}
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=39"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=41"></script>
 {% endblock %}

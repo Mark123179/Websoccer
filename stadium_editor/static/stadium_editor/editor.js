@@ -62,6 +62,8 @@ const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
 let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
 let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
+const isDortmundScene = Boolean(EDITOR.dortmundScene);
+let dortmundFullConcept = false;
 let blickrichtung = 'NORD';
 let overlay = null;                               // {kind:'text'|'image', canvas, wx, wy, scale, rot}
 const undoStack = [], redoStack = [];
@@ -1083,7 +1085,52 @@ function renderAll(){
   }
 }
 
+function updateDortmundStage(){
+  if(!stageThree || !isDortmundScene) return;
+  const baseline = new Map([...baseBlockGeometry.values()].map(b => [b.sourceId, b.capacity]));
+  import(editorModuleUrl('./dortmund_concept.js')).then(({conceptWeights}) => {
+    if(!stageThree || view!=='3d') return;
+    const weights = conceptWeights(blocks, baseline, dortmundFullConcept);
+    const designColors = {};
+    for(const stand of ['NORD','SUED','OST','WEST']){
+      const counts = new Map();
+      blocks.forEach((block,i) => {
+        if(block.stand!==stand) return;
+        for(const color of seatData[i] || []){
+          if(color) counts.set(color,(counts.get(color) || 0)+1);
+        }
+      });
+      const top = [...counts].sort((a,b)=>b[1]-a[1])[0];
+      if(top) designColors[stand] = PALETTE[top[0]]?.[0];
+    }
+    stageThree.update({
+      weights, designColors, roofVisible: roofOn,
+      day: Boolean(document.getElementById('stageDay')?.checked),
+      floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
+    });
+    const delta = Math.max(0, previewCapacity() - baseDisplayCapacity);
+    const label = document.getElementById('deSceneData');
+    if(label) label.textContent = dortmundFullConcept
+      ? 'Rundum-Konzept · vier Seiten · keine vermessene Kapazität'
+      : delta
+        ? `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · +${delta.toLocaleString('de-DE')} nur 2D-/3D-Entwurf`
+        : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Original-3D als Referenz`;
+  }).catch(error => showDortmundSceneError(error));
+}
+function showDortmundSceneError(error){
+  if(!isDortmundScene) return;
+  const node = document.getElementById('deSceneStatus');
+  if(node) node.textContent = `3D nicht verfügbar: ${error.message || 'Ladefehler'}. 2D-Bearbeitung bleibt verfügbar.`;
+  const fallback = document.getElementById('deSceneFallback');
+  if(fallback) fallback.hidden = false;
+}
 function scheduleStageDesignUpdate(){
+  if(isDortmundScene){
+    if(!stageThree) return;
+    clearTimeout(stageUpdateTimer);
+    stageUpdateTimer = setTimeout(updateDortmundStage, 180);
+    return;
+  }
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
@@ -1103,6 +1150,10 @@ function scheduleStageDesignUpdate(){
 }
 
 function useLegacyThreePreview(){
+  if(isDortmundScene){
+    showDortmundSceneError(new Error('WebGL-Ansicht konnte nicht aktualisiert werden'));
+    return;
+  }
   stageThree = null;
   stageAdapter = null;
   document.getElementById('stage').classList.remove('stage-three-ready');
@@ -1127,6 +1178,19 @@ async function ensureThreeStage(){
   if(!host) return;
   stageAdapter = {kind:'loading'};
   try{
+    if(isDortmundScene){
+      const {mountDortmundScene} = await import(editorModuleUrl('./dortmund_editor_scene.js'));
+      const mounted = await mountDortmundScene({
+        element: host,
+        onStatus: text => { const node = document.getElementById('deSceneStatus'); if(node) node.textContent = text; },
+      });
+      stageAdapter = mounted;
+      stageThree = mounted;
+      document.getElementById('deSceneFallback').hidden = true;
+      activateThreeStage();
+      updateDortmundStage();
+      return;
+    }
     const {mountStadiumStage, applyEditorDesign} =
       await import(STADIUM_STAGE_ADAPTER_URL);
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
@@ -1149,6 +1213,7 @@ async function ensureThreeStage(){
     }
   }catch(_error){
     stageAdapter = null;
+    showDortmundSceneError(_error);
   }
 }
 
@@ -1824,12 +1889,24 @@ function expandStand(stand, seatType, amount){
     return 0;
   }
   const built=amount;
+  if(isDortmundScene) setDortmundConcept(false);
   fitView();
   syncStadiumTitle();
   recompose(); syncPressList();
   toast(`Ausbau ${stand}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
   return built;
 }
+function setDortmundConcept(full){
+  dortmundFullConcept = full;
+  document.querySelectorAll('[data-de-scene]').forEach(button => {
+    const active = (button.dataset.deScene === 'rundum') === full;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  scheduleStageDesignUpdate();
+}
+document.querySelectorAll('[data-de-scene]').forEach(button =>
+  button.addEventListener('click', () => setDortmundConcept(button.dataset.deScene === 'rundum')));
 const expandButton = document.getElementById('btnExpand');
 if(expandButton){
   expandButton.addEventListener('click', ()=>{
@@ -2077,6 +2154,10 @@ function requestRender3D(){
     r3dPending=false;
     if(view!=='3d') return;
     if(stageThree){
+      if(isDortmundScene){
+        stageThree.update({orbit: {azimuth: yaw3d, elevation: 90 - tilt3d}});
+        return;
+      }
       stageThree.update({
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
       }).catch(useLegacyThreePreview);
@@ -2091,6 +2172,8 @@ document.getElementById('yawSlider').addEventListener('input', e=>{ yaw3d=+e.tar
 document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; renderAll(); });
 document.getElementById('tiltSlider').addEventListener('input', e=>{ tilt3d=+e.target.value; requestRender3D(); });
 document.getElementById('stageCamera').addEventListener('change', scheduleStageDesignUpdate);
+if(isDortmundScene) document.getElementById('stageCamera').addEventListener('change', e =>
+  stageThree?.update({cameraPreset: e.target.value}));
 document.getElementById('stageDay').addEventListener('change', ()=>{
   if(!stageThree) return;
   const day = Boolean(document.getElementById('stageDay').checked);
@@ -2122,6 +2205,7 @@ function downloadStagePng(blob){
 }
 function setView(v){
   view = v;
+  if(isDortmundScene) document.getElementById('stage').classList.toggle('de-view-3d', v==='3d');
   document.getElementById('btn2d').classList.toggle('active', v==='2d');
   document.getElementById('btn3d').classList.toggle('active', v==='3d');
   document.getElementById('rot3d').style.display = v==='3d' ? 'flex' : 'none';

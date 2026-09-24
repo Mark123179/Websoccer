@@ -139,6 +139,55 @@
 }
 .is-dortmund .de-stage-heading h2 span { color: #a4b2aa; font-size: 12px; font-weight: 400; }
 .is-dortmund .de-stage-heading > span { color: #9caea7; font-size: 10px; }
+.is-dortmund .de-scene-panel {
+  display: none;
+  position: absolute;
+  left: 16px;
+  bottom: 42px;
+  z-index: 5;
+  width: min(430px, calc(100% - 32px));
+  padding: 11px 13px;
+  border: 1px solid #64715c;
+  border-radius: 8px;
+  background: rgba(13, 26, 28, .94);
+  color: #e9e6d7;
+  pointer-events: auto;
+  font: 11px/1.5 "IBM Plex Mono", monospace;
+}
+.is-dortmund .stage.de-view-3d .de-scene-panel { display: grid; gap: 5px; }
+.is-dortmund .de-scene-panel strong { color: #eed16e; font-size: 11px; }
+.is-dortmund .de-scene-panel small { color: #b7c7bd; }
+.is-dortmund .de-scene-switch { display: flex; gap: 6px; }
+.is-dortmund .de-scene-switch button {
+  padding: 6px 9px;
+  border: 1px solid #52645a;
+  border-radius: 4px;
+  background: #1a2b2c;
+  color: #d4dfd5;
+  font: inherit;
+  cursor: pointer;
+}
+.is-dortmund .de-scene-switch button.is-active {
+  border-color: #e2c761;
+  background: #403b26;
+  color: #f5dd80;
+}
+.is-dortmund .stage.de-view-3d .de-scene-fallback:not([hidden]) {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 3;
+  background: #172326;
+  color: #f5dd80;
+}
+.is-dortmund .de-scene-fallback img {
+  display: block;
+  max-width: 78%;
+  max-height: 73%;
+  object-fit: contain;
+}
+.is-dortmund .de-scene-fallback span { position: absolute; bottom: 18px; }
 .is-dortmund .de-inspector { padding: 5px 1px 10px; }
 .is-dortmund .de-inspector h2 { margin: 7px 0; font-size: 24px; }
 .is-dortmund .de-inspector p { color: #a0b2a9; font-size: 11px; line-height: 1.5; }

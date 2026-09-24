@@ -178,7 +178,10 @@ class DortmundEditorIntegrationTests(TestCase):
         self.assertContains(response, 'stadium_editor/dortmund_editor.css')
         self.assertContains(response, 'data-de-stand="NORD"')
         self.assertContains(response, 'id="deMenuLink"')
-        self.assertContains(response, reverse('dortmund_original_miniature'))
+        self.assertContains(response, 'data-de-scene="rundum"')
+        self.assertContains(response, 'dortmundScene: true')
+        self.assertContains(response, 'Original: Unity-Meshes und Texturen')
+        self.assertNotContains(response, reverse('dortmund_original_miniature'))
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertNotContains(response, 'data-de-amount="20000"')
 
@@ -273,7 +276,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=39',
+            'stadium_editor/editor.js?v=41',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'
