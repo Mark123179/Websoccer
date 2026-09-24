@@ -146,3 +146,57 @@ Bundle keiner nachgewiesen. Die vorhandenen hellen Quellflächen an
 +X/+Z sind in der [Außenperspektive ohne Dach](../screenshots/dortmund-bestandswaende-quellflaechen-aussen.png)
 sichtbar. Der [produktive Editor mit Dach aus](../screenshots/dortmund-editor-bestandswaende-gegenseite-dach-aus.png)
 zeigt dieselbe Bestandstrennung.
+
+## Herkunft der früheren Fassadenbilder
+
+| Aufnahme / Ansicht | Was sichtbar ist | Herkunft und Aussagekraft |
+| --- | --- | --- |
+| [Bestand vor der Browser-Ergänzung](../screenshots/dortmund-bestand-gegenseite-tatsaechlich-vorher.png) | Echte ausgewählte Bundle-Meshes in vereinfachter Browserbeleuchtung; damals waren einzelne `NoDraw_`-Quellflächen noch ausgelassen. | Keine verbindliche Unity-Farbe und kein Beweis für eine geschlossene Außenwand. |
+| [Bestand mit vermeintlichen „Fenstern“](../screenshots/dortmund-vergleich-bestand-gegenseite-nachher.png) | Zusätzlich zu den Quellmeshes eine von der Browserimplementierung gezeichnete Wand auf −X und −Z samt diagonalen Übergängen, dunklen Bändern auf 7–12 und 23–28 m, Gesims und regelmäßigen Pfosten. | Die frühere Ergänzung hieß `RECONSTRUCTED_EXISTING_FACADE`; ihre Wandfarbe (`#707975`) und „Verglasung“ (`#26383a`) waren **frei gewählt**. Weder Unity-Fenster noch aus OSM gemessene Öffnungen. Die Ergänzung ist entfernt. |
+| [Bestand mit Quellflächen](../screenshots/dortmund-bestandswaende-gegenseite-dach-on.png), [Dach aus](../screenshots/dortmund-bestandswaende-gegenseite-dach-off.png) | Ausgewählte Originaldreiecke einschließlich der drei `NoDraw_`-Flächen; nicht texturierte Materialien als Kategorienfarben, `NoDraw_` anhand gespeicherter deckender Werte hellgrau. | Aktuelle **Mesh-Vorschau**, nicht Unity-Originalrender. Offene Bereiche an −X/−Z bleiben offen. |
+| [Rundum-Konzept](../screenshots/dortmund-rundum-gegenseite-nachher.png) | Eigene vierseitige Ausbauhülle mit konstruierten Wänden, Bändern, Stützen und Dachanschlüssen. | Entwurf, **nicht** Bestandsfassade; die dortige einfarbige Wand belegt keine Quelle für eine Bestandswand. |
+
+Die alte Fensterwand ist in der Git-Historie anhand der inzwischen entfernten
+Dateien `_ExistingFacade.ts` und `dortmund_existing_facade.js` nachvollziehbar.
+Das Paket lieferte dagegen `back2_1.001`, `left2_1.001` und `right2_13.001`
+als tatsächliche `NoDraw_`-Dreiecke. Ihre Browserfarbe ist eine Annäherung an
+gespeicherte Materialwerte, nicht eine Aufnahme der Shaderausgabe.
+
+## Originalabgleich: derzeitige Grenze
+
+Die beiden aktuellen 3D-Ansichten verwenden **identische** exportierte
+`manifest.json` und `geometry.bin` und für den Bestand dieselben vier
+Basecolor-Texturen, Kameraparameter (Perspektive 42°, Zielpunkt
+`(0, 25, 0)`, „Gegenseite“: Azimut −2,28 rad, Elevation 0,53 rad,
+Distanz 490 m), Beleuchtungswerte und Materialzuordnung. Dach *an* bzw.
+*aus* ist jeweils ein Browser-Schalter. Damit sind die Aufnahmen innerhalb
+der Browserdarstellung vergleichbar; die Szene ist **keine** vollständige
+Unity-Szene. Die OSM-Umgebung des Vergleichs ist eine separate schematische
+Kulisse und keine Fassadenquelle.
+
+Es liegt im Arbeitsverzeichnis kein zuordenbarer **Originalrender aus Unity
+mit Kameradaten**, keine `.unity`-Szenendatei und keine zugehörigen
+Shader-/Pass-Quelldateien vor. Die hochgeladene
+[`image_1790253745777.png`](../attached_assets/image_1790253745777.png)
+zeigt eine Browseraufnahme ohne auslesbare Orbit-Daten, **keinen
+nachgewiesenen Unity-Originalrender**. Die gelieferten Lightmap-JSONs
+beschreiben Renderer-Indizes und UV-Offsets, nicht die komplette
+Szenenbeleuchtung; die Bundle-Texturen allein ersetzen keine aufgelösten
+Shader/Passes oder eine Szenenhierarchie mit externen Objekten.
+
+| Vergleichsbereich | Geometrie in der Browserprobe | Was ohne Unity-Referenz offen bleibt |
+| --- | --- | --- |
+| −Z-Mitte, Dach an | Rang- und Unterbauteile; zwischen ihnen teils Hintergrund statt Außenhaut. | Ob die vollständige Unity-Szene zusätzliche Objekte lädt; wie Shader und Licht diese Teile erscheinen lassen. |
+| −X und −X/−Z-Ecke, Dach aus | Rangstruktur und offene Sichtlinien; keine ergänzte Bestandswand. | Ob anderswo in der Unity-Szene eine abschließende Wand liegt. |
+| +X, +Z und +X/−Z-Ecke | Die drei belegten `NoDraw_`-Flächen, hell vereinfacht dargestellt. | Tatsächlicher `NoDraw_`-Shader-Pass, Culling, Licht und endgültige Farbe. |
+
+Für einen **gleichwinkligen Originalvergleich** benötigt man die vollständige
+Unity-Szene (inklusive möglicher separat geladener Gebäude-/Prefab-Objekte),
+ihre referenzierten Shader/Materialien, Texturen und Lightmaps samt Zuordnung
+und Beleuchtung sowie einen Unity-Render der −X/−Z-Seite mit Kameraposition,
+Zielpunkt, Projektion/Bildwinkel, Auflösung und Dach-/Sichtbarkeitszustand.
+Eine zuordenbare Kameraaufnahme desselben Zustands in der Browserprobe
+erlaubt dann den Abgleich von Geometrie, Material und Beleuchtung. Bis dahin
+ist **keine fehlende Originalfassade nachgewiesen** und eine Farbangleichung
+an das bisherige Browserbild wäre unbegründet. Deshalb bleiben die
+Produktiv- und Vergleichsgeometrie unverändert.

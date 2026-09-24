@@ -30,7 +30,7 @@ export async function mountDortmundScene({element, onStatus}) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
-  renderer.domElement.setAttribute('aria-label', 'Drehbares Originalmodell des Signal Iduna Parks mit konzeptioneller Erweiterung');
+  renderer.domElement.setAttribute('aria-label', 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung');
   element.replaceChildren(renderer.domElement);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#162225');

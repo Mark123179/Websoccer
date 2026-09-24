@@ -9,7 +9,7 @@ export function Current() {
         <h1>Dortmund, aus Originaldaten.</h1>
         <p className="dortmund120__intro">
           Die Bestandsansicht zeigt einen Auszug der Unity-Meshes mit vereinfachten Materialien
-          und nur vier repräsentativen Texturen. Echte NoDraw-Quellflächen werden mit
+          und nur vier repräsentativen Texturen – kein Unity-Originalrender. Echte NoDraw-Quellflächen werden mit
           neutraler Farbe gezeigt: Ihre gespeicherten Materialwerte sind deckend,
           die exakte Unity-Shaderwirkung bleibt ungeklärt. An den übrigen Seiten
           sind nicht überall geschlossene Außenwände belegt; es wurden keine ergänzt.
@@ -23,7 +23,7 @@ export function Current() {
         <span className="dortmund120__capacity-unit">Plätze</span>
       </section>
 
-      <section className="dortmund120__viewer" aria-label="Originale 3D-Stadionansicht">
+      <section className="dortmund120__viewer" aria-label="3D-Vorschau des Unity-Mesh-Auszugs">
         <OriginalScene />
         <div className="dortmund120__viewer-tag">Unity-Mesh-Auszug · keine ergänzten Bestandsfassaden · nur ansehen</div>
         <div className="dortmund120__viewer-help">
