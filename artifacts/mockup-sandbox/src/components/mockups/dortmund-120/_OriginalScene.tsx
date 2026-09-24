@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { addExpansionArchitecture, roofSurfaceNames } from './_ExpansionArchitecture';
 import { addOsmSurroundings } from './_OsmSurroundings';
-import { addExistingFacade } from './_ExistingFacade';
+import { previewSupportsMaterial } from './_SourceMaterials';
 
 type SceneStatus = 'loading' | 'webgl' | 'fallback';
 type SceneVariant = 'original' | 'rundum' | 'sued';
@@ -37,7 +37,7 @@ const presets: Record<Preset, [number, number, number]> = {
 export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<SceneStatus>('loading');
-  const [message, setMessage] = useState('Originalmeshes und Ausbaugeometrie werden geladen …');
+  const [message, setMessage] = useState('Unity-Meshes und Ausbaugeometrie werden geladen …');
   const [fallbackMissing, setFallbackMissing] = useState(false);
   const [mobile3D, setMobile3D] = useState(() => window.innerWidth >= 700);
   const [roofVisible, setRoofVisible] = useState(() =>
@@ -125,6 +125,7 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
           const indices: number[] = [];
           const materials: any[] = [];
           for (const part of entry.parts) {
+            if (!previewSupportsMaterial(part.material)) continue;
             const start = indices.length;
             indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
             geometry.addGroup(start, part.indexCount, materials.length);
@@ -141,7 +142,6 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
           own(geometry);
         }
         own({ dispose: () => materialCache.forEach(material => material.dispose()) });
-        own(addExistingFacade(THREE, world));
         const expansion = addExpansionArchitecture(THREE, world, variant);
         if (expansion) own(expansion);
         own(addOsmSurroundings(THREE, scene, variant));
@@ -191,8 +191,8 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
         window.addEventListener('storage', syncRoof);
         resources.push({ dispose: () => { renderer.domElement.removeEventListener('pointerdown', down); renderer.domElement.removeEventListener('pointerup', up); renderer.domElement.removeEventListener('pointercancel', up); renderer.domElement.removeEventListener('pointermove', move); presetHandlers.forEach(([key, handler]) => window.removeEventListener(`dortmund-camera-${key}`, handler)); window.removeEventListener('storage', syncCamera); window.removeEventListener('storage', syncRoof); } });
         setStatus('webgl'); setMessage(variant === 'original'
-          ? 'Originalmeshes + rekonstruierte Bestands-Außenfassaden · Ziehen zum Drehen'
-          : 'Originalmeshes + rekonstruierte Bestandsfassaden + abgeleitete Ausbaugeometrie · Ziehen zum Drehen');
+          ? 'Unity-Mesh-Auszug · NoDraw in dieser Vorschau ausgelassen · Ziehen zum Drehen'
+          : 'Unity-Mesh-Auszug + abgeleitete Ausbaugeometrie · Ziehen zum Drehen');
         const animate = () => { if (disposed) return; renderer.render(scene, camera); frame = window.requestAnimationFrame(animate); }; animate();
       } catch (error) { if (!disposed) { setStatus('fallback'); setMessage(error instanceof Error ? error.message : '3D nicht verfügbar · Ersatzansicht'); } }
     }
@@ -207,7 +207,7 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
     applyRoofRef.current(next);
   };
 
-  const fallback = variant === 'original' ? 'bestand-3d.webp' : variant === 'rundum' ? 'rundum-3d.webp' : 'sued-3d.webp';
+  const fallback = variant === 'rundum' ? 'rundum-3d.webp' : 'sued-3d.webp';
   const capture = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('capture') === '1';
   return <div className={`dortmund120__scene-wrap ${capture ? 'dortmund120__scene-wrap--capture' : ''}`}>
     <div className="dortmund120__scene" ref={hostRef} />
@@ -227,9 +227,10 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
       Stadion Rote Erde: bestehende Nachbaranlage · Überschneidung des Konzepts ungeprüft
     </div>}
     {status !== 'webgl' && !capture && <div className="dortmund120__fallback">
-      {!fallbackMissing && <img src={`${ASSET_BASE}${fallback}`} alt={`3D-Vergleichsbild: ${variant}`} onError={() => setFallbackMissing(true)} />}
+      {!fallbackMissing && variant !== 'original' && <img src={`${ASSET_BASE}${fallback}`} alt={`3D-Vergleichsbild: ${variant}`} onError={() => setFallbackMissing(true)} />}
       <p>{message}</p>
-      <small>{fallbackMissing ? 'Auch das Ersatzbild konnte nicht geladen werden.' : 'Standbild aus dem entsprechenden 3D-Zustand · Drehen erfordert WebGL.'}</small>
+      <small>{variant === 'original' ? 'Bestands-Mesh-Auszug erfordert WebGL; ältere Standbilder geben die Materiallage nicht zuverlässig wieder.' :
+        fallbackMissing ? 'Auch das Ersatzbild konnte nicht geladen werden.' : 'Standbild aus dem entsprechenden 3D-Zustand · Drehen erfordert WebGL.'}</small>
       {!mobile3D && <button className="dortmund120__start-3d" type="button" onClick={() => { setStatus('loading'); setMobile3D(true); }}>3D starten</button>}
     </div>}
   </div>;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js';
-import {addExistingFacade} from './dortmund_existing_facade.js';
+import {previewSupportsMaterial} from './dortmund_source_materials.js';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -47,7 +47,6 @@ export async function mountDortmundScene({element, onStatus}) {
   let frame = 0, disposed = false, concept = null, colorBands = null, roofOn = true;
   let lastWeights = '', lastColors = '';
   const geometries = [], textures = [], materials = new Map(), roof = [], shell = [];
-  let existingFacade;
   let resizeObserver;
   const positionCamera = () => {
     camera.position.set(target.x + distance * Math.sin(azimuth) * Math.cos(elevation),
@@ -89,7 +88,6 @@ export async function mountDortmundScene({element, onStatus}) {
     controls.removeEventListener('pointermove', move);
     controls.removeEventListener('wheel', wheel);
     if (concept) concept.dispose();
-    existingFacade?.dispose();
     if (colorBands) {
       colorBands.traverse(object => { object.geometry?.dispose(); object.material?.dispose(); });
     }
@@ -121,6 +119,7 @@ export async function mountDortmundScene({element, onStatus}) {
         new Float32Array(binary, entry.uvOffset, entry.vertexCount * 2), 2));
       const indices = [], groupMaterials = [];
       for (const part of entry.parts) {
+        if (!previewSupportsMaterial(part.material)) continue;
         const start = indices.length;
         indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
         geometry.addGroup(start, part.indexCount, groupMaterials.length);
@@ -154,11 +153,10 @@ export async function mountDortmundScene({element, onStatus}) {
         geometry, source: new Float32Array(geometry.attributes.position.array),
       });
     }
-    existingFacade = addExistingFacade(THREE, world);
     if (disposed) return null;
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();
-    onStatus('Originalmeshes geladen · Bestand (Referenzmodell)');
+    onStatus('Unity-Mesh-Auszug geladen · NoDraw-Materialien in Vorschau ausgelassen');
     const animate = () => { if (disposed) return; render(); frame = requestAnimationFrame(animate); };
     animate();
     return {
@@ -177,8 +175,8 @@ export async function mountDortmundScene({element, onStatus}) {
           roof.forEach(mesh => {
             mesh.material = concept ? mesh.userData.cutaway : mesh.userData.original;
           });
-          onStatus(concept ? 'Originalmeshes + graue Konzeptbauteile · schematische Geometrie, keine Sitzplatzmessung'
-            : 'Originalmeshes · Bestand als Referenz, nicht als aktueller Platznachweis');
+          onStatus(concept ? 'Unity-Mesh-Auszug + graue Konzeptbauteile · keine Sitzplatzmessung'
+            : 'Unity-Mesh-Auszug · keine vollständige Materialwiedergabe oder Platzmessung');
         }
         if (designColors && JSON.stringify(designColors) !== lastColors) {
           lastColors = JSON.stringify(designColors);

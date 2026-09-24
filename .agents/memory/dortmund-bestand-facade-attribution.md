@@ -1,10 +1,10 @@
 ---
-name: Dortmund Bestand facade attribution
-description: How to interpret and label the two exterior elevations missing from the Unity export.
+name: Dortmund Bestand source attribution
+description: Source evidence versus conjecture for the Dortmund facade and unknown Unity shader.
 ---
 
-The Dortmund Bestand export lacks usable exterior enclosure on the opposing short and long sides. Supplementary geometry may close those sides for the 3D presentation, but must remain visually and verbally distinguishable from the extracted Unity meshes. The approved Rundum concept is a separate model state; do not diagnose a Bestand complaint by checking only Rundum.
+Do not fill apparent gaps in the Dortmund Bestand with invented exterior walls or glazing. The approved Rundum concept is a separate design state, not evidence of the existing stadium. Camera labels like „Gegenseite“ do not identify material or geometry provenance.
 
-**Why:** A complaint about "Gegenseite" was initially interpreted as the Rundum expansion, although the user meant the original Bestand. The opposite camera showed open undersides where the Unity export has no corresponding lower facade, while editing the expansion would not solve that gap.
+**Why:** A prior complaint about „Gegenseite“ meant Bestand, not Rundum; closing perceived gaps on two sides as „reconstructed facades“ invented source architecture. The source's `NoDraw_` materials have an unresolved shader, so their name does not establish what Unity drew.
 
-**How to apply:** Verify the selected model state and camera before geometry changes. Keep Bestand capacity and source data untouched; identify reconstructed presentation surfaces accurately in labels and tests.
+**How to apply:** Verify model state, coordinates, mesh, renderer, shader and texture evidence before changing geometry. Treat omission of unsupported shader surfaces in the browser as a disclosed preview policy, not an assertion of their Unity visibility. Keep capacity and source data untouched.

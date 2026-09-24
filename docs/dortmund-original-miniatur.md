@@ -22,6 +22,13 @@ Zuordnung benötigt weitere Auswertung) wurden **nicht** als originalgetreu
 übernommen. Die Crowd-Meshes sind texturierte Flächen und nicht 71.659
 individuelle Stuhlmodelle.
 
+`NoDraw_`-Materialteile bleiben im Export nachweisbar, werden in der
+Browseransicht aber ausgelassen: Ihre tatsächliche Shaderwirkung in Unity
+ist nicht geklärt. Der gleiche konservative Vorschauvertrag gilt im
+produktiven Editor und im freigegebenen Vergleich. Befund mit
+Koordinaten und Renderer-Eigenschaften:
+[`dortmund-bestand-quellpruefung.md`](dortmund-bestand-quellpruefung.md).
+
 Im Browser landen eine 16,9-MiB-Binärdatei, ein ~92-KiB-Manifest und vier
 verkleinerte WebP-Texturen (zusammen unter 40 KiB), **nicht** das 200-MiB-Bundle.
 Die Geometrie ist nicht als allgemeines glTF versprochen; das Format
@@ -29,7 +36,9 @@ Die Geometrie ist nicht als allgemeines glTF versprochen; das Format
 je selektiertem Mesh ein Draw-Objekt mit UVs und vereinfachtem Material
 angelegt. `python scripts/render_dortmund_miniature_2d.py` rendert den
 Originalzustand aus denselben Dreiecken als statischen CPU-Z-Buffer-Fallback.
-Dieser hat keinen Orbit/Zoom. Ausbauzustände werden stattdessen im Browser
+Dieses ältere Standbild kann die ungeklärte `NoDraw_`-Materiallage nicht
+verlässlich wiedergeben und ist **kein Unity-Vergleichsrender**.
+Es hat keinen Orbit/Zoom. Ausbauzustände werden stattdessen im Browser
 als dynamischer, maßbasierter Dachgrundriss mit vier unabhängigen Seiten
 gezeigt; ältere Ausbau-Standbilder werden nicht mehr verwendet.
 

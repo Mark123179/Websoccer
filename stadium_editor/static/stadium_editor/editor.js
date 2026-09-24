@@ -1114,7 +1114,7 @@ function updateDortmundStage(){
       ? 'Rundum-Konzept · vier Seiten · keine vermessene Kapazität'
       : delta
         ? `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · +${delta.toLocaleString('de-DE')} nur 2D-/3D-Entwurf`
-        : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Original-3D als Referenz`;
+        : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Unity-Mesh-Auszug als Referenz`;
   }).catch(error => showDortmundSceneError(error));
 }
 function showDortmundSceneError(error){

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {previewSupportsMaterial} from './dortmund_source_materials.js';
 import {ORDER, countState, nextStep, warpPositions, addedChairPositions, terraceTriangles}
   from './dortmund_expansion_model.mjs?v=2';
 
@@ -251,6 +252,7 @@ async function main() {
       let indices = [];
       const materials = [];
       for (const part of entry.parts) {
+        if (!previewSupportsMaterial(part.material)) continue;
         const start = indices.length;
         indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
         geometry.addGroup(start, part.indexCount, materials.length);

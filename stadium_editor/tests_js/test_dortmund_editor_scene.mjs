@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {conceptWeights, SIDES, ROOF_NAMES, SHELL_NAMES} from '../static/stadium_editor/dortmund_concept.js';
-import * as THREE from '../static/stadium_editor/stage/vendor/three.module.js';
-import {addExistingFacade} from '../static/stadium_editor/dortmund_existing_facade.js';
+import {previewSupportsMaterial} from '../static/stadium_editor/dortmund_source_materials.js';
 
 test('editor stands map to the exported Unity world axes', () => {
   assert.deepEqual(SIDES, {
@@ -31,17 +31,12 @@ test('only unsaved increases are conceptual; completed baseline stays reference'
   });
 });
 
-test('the missing short and long Bestand elevations are real surfaces, not a camera overlay', () => {
-  const world = new THREE.Group();
-  const facade = addExistingFacade(THREE, world);
-  const ray = new THREE.Raycaster();
-  ray.set(new THREE.Vector3(-200, 15, 0), new THREE.Vector3(1, 0, 0));
-  assert.ok(ray.intersectObjects(world.children, true).some(hit =>
-    hit.object.name === 'RECONSTRUCTED_SHORT_MINUS_X_WALL'));
-  ray.set(new THREE.Vector3(0, 15, -200), new THREE.Vector3(0, 0, 1));
-  assert.ok(ray.intersectObjects(world.children, true).some(hit =>
-    hit.object.name === 'RECONSTRUCTED_LONG_MINUS_Z_WALL'));
-  assert.ok(world.children[0].children.some(child =>
-    child.name === 'RECONSTRUCTED_CORNER_MINUS_X_MINUS_Z_WALL'));
-  facade.dispose();
+test('unresolved NoDraw materials stay in the source manifest but are not rendered as opaque walls', () => {
+  const manifest = JSON.parse(readFileSync(
+    new URL('../static/stadium_editor/dortmund_original/manifest.json', import.meta.url), 'utf8'));
+  const affected = manifest.meshes.flatMap(mesh =>
+    mesh.parts.filter(part => !previewSupportsMaterial(part.material)).map(() => mesh.name)).sort();
+  assert.deepEqual(affected, ['back2_1.001', 'left2_1.001', 'right2_13.001']);
+  assert.equal(previewSupportsMaterial('NoDraw_.003'), false);
+  assert.equal(previewSupportsMaterial('st051_wall_bsm'), true);
 });

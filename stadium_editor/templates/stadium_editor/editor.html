@@ -347,14 +347,13 @@
         <button type="button" data-de-scene="bestand" class="is-active" aria-pressed="true">BESTAND / ENTWURF</button>
         <button type="button" data-de-scene="rundum" aria-pressed="false">RUNDUM-KONZEPT</button>
       </div>
-      <strong id="deSceneStatus" role="status">Originalmeshes werden geladen …</strong>
-      <span id="deSceneData">Bestand · Originalmodell als Referenz</span>
+      <strong id="deSceneStatus" role="status">Unity-Mesh-Auszug wird geladen …</strong>
+      <span id="deSceneData">Bestand · Mesh-Auszug als Referenz</span>
       <span>{{ completed_expansion_count }} fertiggestellte Ausbauaufträge im aktuellen Platzbestand berücksichtigt · 3D-Original ist kein vermessener Nachbau dieser Arbeiten.</span>
-      <small>Original: Unity-Meshes und Texturen · Gegenüberliegende kurze und lange Bestands-Außenfassade: ergänzte Rekonstruktion, kein Unity-Original · Grau: schematischer Ausbau · Farbbänder: 2D-Gestaltung. Ausbauschritte sind keine vermessenen Plätze. Dach aus = Präsentationsschnitt.</small>
+      <small>Bestand: ausgewählte Unity-Meshes, vier repräsentative Texturen und vereinfachte Materialien. NoDraw-Materialien sind in dieser Vorschau ausgelassen; ihre Wirkung in Unity ist ungeklärt. Keine ergänzten Bestandsfassaden. Grau: schematischer Ausbau · Farbbänder: 2D-Gestaltung. Ausbauschritte sind keine vermessenen Plätze. Dach aus = Präsentationsschnitt.</small>
     </div>
     <div id="deSceneFallback" class="de-scene-fallback" hidden>
-      <img src="{% static 'stadium_editor/dortmund_original/original-2d.webp' %}" alt="Dortmunder Originalmodell als 2D-Ersatzansicht">
-      <span>3D nicht verfügbar · 2D-Editor weiterhin nutzbar</span>
+      <span>3D nicht verfügbar · älteres Standbild zeigt die ungeklärte Materiallage nicht zuverlässig · 2D-Editor weiterhin nutzbar</span>
     </div>
     {% endif %}
     <canvas id="cvBase"></canvas>
@@ -401,5 +400,5 @@ window.STADIUM_EDITOR = {
 };
 </script>
 <script src="{% static 'stadium_editor/expansion_geometry.js' %}?v=35"></script>
-<script src="{% static 'stadium_editor/editor.js' %}?v=42"></script>
+<script src="{% static 'stadium_editor/editor.js' %}?v=43"></script>
 {% endblock %}

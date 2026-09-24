@@ -8,9 +8,11 @@ export function Current() {
         <div className="dortmund120__eyebrow">Signal Iduna Park · Originalgeometrie</div>
         <h1>Dortmund, aus Originaldaten.</h1>
         <p className="dortmund120__intro">
-          Das Stadion verwendet die extrahierten Unity-Originalmeshes. Die fehlende
-          gegenüberliegende kurze und lange Außenfassade ist ergänzt und kein Unity-Original.
-          Die Umgebung ist ein vereinfachter 3D-Auszug aus OSM und einem groben Höhenraster.
+          Die Bestandsansicht zeigt einen Auszug der Unity-Meshes mit vereinfachten Materialien
+          und nur vier repräsentativen Texturen. Die NoDraw-Flächen sind in dieser Vorschau
+          ausgelassen; wie sie in Unity aussahen, ist nicht geklärt. Es sind keine
+          Bestandsfassaden ergänzt. Die Umgebung ist ein vereinfachter 3D-Auszug aus OSM
+          und einem groben Höhenraster.
         </p>
       </header>
 
@@ -22,7 +24,7 @@ export function Current() {
 
       <section className="dortmund120__viewer" aria-label="Originale 3D-Stadionansicht">
         <OriginalScene />
-        <div className="dortmund120__viewer-tag">Originalmeshes + ergänzte Fassaden · nur ansehen</div>
+        <div className="dortmund120__viewer-tag">Unity-Mesh-Auszug · keine ergänzten Bestandsfassaden · nur ansehen</div>
         <div className="dortmund120__viewer-help">
           Ziehen: drehen <span>·</span> Mausrad: zoomen <span>·</span> Dach ein-/ausblenden
         </div>
