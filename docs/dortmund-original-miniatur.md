@@ -22,10 +22,10 @@ Zuordnung benötigt weitere Auswertung) wurden **nicht** als originalgetreu
 übernommen. Die Crowd-Meshes sind texturierte Flächen und nicht 71.659
 individuelle Stuhlmodelle.
 
-`NoDraw_`-Materialteile bleiben im Export nachweisbar, werden in der
-Browseransicht aber ausgelassen: Ihre tatsächliche Shaderwirkung in Unity
-ist nicht geklärt. Der gleiche konservative Vorschauvertrag gilt im
-produktiven Editor und im freigegebenen Vergleich. Befund mit
+`NoDraw_`-Materialteile bleiben im Export nachweisbar und werden anhand
+der gespeicherten deckenden Materialkonfiguration in neutralem Farbton
+gezeichnet. Die genaue Shaderwirkung in Unity ist nicht geklärt. Der
+gleiche Vorschauvertrag gilt im produktiven Editor und im freigegebenen Vergleich. Befund mit
 Koordinaten und Renderer-Eigenschaften:
 [`dortmund-bestand-quellpruefung.md`](dortmund-bestand-quellpruefung.md).
 

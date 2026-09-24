@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {previewSupportsMaterial} from './dortmund_source_materials.js';
+import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 import {ORDER, countState, nextStep, warpPositions, addedChairPositions, terraceTriangles}
   from './dortmund_expansion_model.mjs?v=2';
 
@@ -252,13 +252,13 @@ async function main() {
       let indices = [];
       const materials = [];
       for (const part of entry.parts) {
-        if (!previewSupportsMaterial(part.material)) continue;
+        if (!previewSupportsMaterial(part)) continue;
         const start = indices.length;
         indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
         geometry.addGroup(start, part.indexCount, materials.length);
         const key = part.texture || part.material;
         if (!materialCache.has(key)) materialCache.set(key, paint(
-          part.texture ? '#ffffff' : shade(part.material),
+          part.texture ? '#ffffff' : sourceOpaqueColor(part) || shade(part.material),
           part.texture ? {map: textures[part.texture]} : {},
         ));
         materials.push(materialCache.get(key));

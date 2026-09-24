@@ -180,7 +180,7 @@ class DortmundEditorIntegrationTests(TestCase):
         self.assertContains(response, 'id="deMenuLink"')
         self.assertContains(response, 'data-de-scene="rundum"')
         self.assertContains(response, 'dortmundScene: true')
-        self.assertContains(response, 'NoDraw-Materialien sind in dieser Vorschau ausgelassen')
+        self.assertContains(response, 'NoDraw-Quellflächen sind anhand ihrer gespeicherten deckenden Materialwerte')
         self.assertNotContains(response, reverse('dortmund_original_miniature'))
         self.assertNotContains(response, 'id="btnExpand"')
         self.assertNotContains(response, 'data-de-amount="20000"')
@@ -276,7 +276,7 @@ class StadiumEditorTests(TestCase):
         self.assertContains(response, 'Blaupause: OpenStreetMap-Daten (ODbL)')
         self.assertContains(
             response,
-            'stadium_editor/editor.js?v=43',
+            'stadium_editor/editor.js?v=44',
         )
         editor_js = (
             Path(__file__).resolve().parent / 'static' / 'stadium_editor' / 'editor.js'

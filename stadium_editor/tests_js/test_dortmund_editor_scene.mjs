@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {conceptWeights, SIDES, ROOF_NAMES, SHELL_NAMES} from '../static/stadium_editor/dortmund_concept.js';
-import {previewSupportsMaterial} from '../static/stadium_editor/dortmund_source_materials.js';
+import {previewSupportsMaterial, sourceOpaqueColor} from '../static/stadium_editor/dortmund_source_materials.js';
 
 test('editor stands map to the exported Unity world axes', () => {
   assert.deepEqual(SIDES, {
@@ -31,12 +31,15 @@ test('only unsaved increases are conceptual; completed baseline stays reference'
   });
 });
 
-test('unresolved NoDraw materials stay in the source manifest but are not rendered as opaque walls', () => {
+test('NoDraw surfaces use verified source material state, not a guessed fallback', () => {
   const manifest = JSON.parse(readFileSync(
     new URL('../static/stadium_editor/dortmund_original/manifest.json', import.meta.url), 'utf8'));
   const affected = manifest.meshes.flatMap(mesh =>
-    mesh.parts.filter(part => !previewSupportsMaterial(part.material)).map(() => mesh.name)).sort();
-  assert.deepEqual(affected, ['back2_1.001', 'left2_1.001', 'right2_13.001']);
-  assert.equal(previewSupportsMaterial('NoDraw_.003'), false);
-  assert.equal(previewSupportsMaterial('st051_wall_bsm'), true);
+    mesh.parts.filter(part => part.material.startsWith('NoDraw_'))
+      .map(part => ({mesh: mesh.name, color: sourceOpaqueColor(part), supported: previewSupportsMaterial(part)})));
+  assert.deepEqual(affected.map(part => part.mesh).sort(),
+    ['back2_1.001', 'left2_1.001', 'right2_13.001']);
+  assert.ok(affected.every(part => part.color === '#e7e7e7' && part.supported));
+  assert.equal(previewSupportsMaterial({material: 'NoDraw_.003'}), false);
+  assert.equal(previewSupportsMaterial({material: 'st051_wall_bsm'}), true);
 });

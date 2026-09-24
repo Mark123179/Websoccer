@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { addExpansionArchitecture, roofSurfaceNames } from './_ExpansionArchitecture';
 import { addOsmSurroundings } from './_OsmSurroundings';
-import { previewSupportsMaterial } from './_SourceMaterials';
+import { previewSupportsMaterial, sourceOpaqueColor } from './_SourceMaterials';
 
 type SceneStatus = 'loading' | 'webgl' | 'fallback';
 type SceneVariant = 'original' | 'rundum' | 'sued';
@@ -10,7 +10,7 @@ type Preset = 'exterior' | 'interior' | 'roof-corner' | 'opposite' | 'surroundin
 const ASSET_BASE = '/__mockup/images/dortmund-120/';
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-interface Part { indexOffset: number; indexCount: number; texture?: string; material: string }
+interface Part { indexOffset: number; indexCount: number; texture?: string; material: string; sourceOpaqueColor?: string }
 interface Entry { name: string; positionOffset: number; uvOffset: number; vertexCount: number; parts: Part[] }
 interface Manifest { format: string; textures: string[]; meshes: Entry[] }
 
@@ -125,12 +125,12 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
           const indices: number[] = [];
           const materials: any[] = [];
           for (const part of entry.parts) {
-            if (!previewSupportsMaterial(part.material)) continue;
+            if (!previewSupportsMaterial(part)) continue;
             const start = indices.length;
             indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
             geometry.addGroup(start, part.indexCount, materials.length);
             const key = part.texture || part.material;
-            if (!materialCache.has(key)) materialCache.set(key, new THREE.MeshStandardMaterial({ color: part.texture ? '#ffffff' : materialColor(part.material), roughness: .83, metalness: .08, side: THREE.DoubleSide, ...(part.texture ? { map: textures[part.texture] } : {}) }));
+            if (!materialCache.has(key)) materialCache.set(key, new THREE.MeshStandardMaterial({ color: part.texture ? '#ffffff' : sourceOpaqueColor(part) || materialColor(part.material), roughness: .83, metalness: .08, side: THREE.DoubleSide, ...(part.texture ? { map: textures[part.texture] } : {}) }));
             materials.push(materialCache.get(key));
           }
           if (!indices.length) { geometry.dispose(); continue; }
@@ -191,7 +191,7 @@ export function StadiumScene({ variant = 'original' }: { variant?: SceneVariant 
         window.addEventListener('storage', syncRoof);
         resources.push({ dispose: () => { renderer.domElement.removeEventListener('pointerdown', down); renderer.domElement.removeEventListener('pointerup', up); renderer.domElement.removeEventListener('pointercancel', up); renderer.domElement.removeEventListener('pointermove', move); presetHandlers.forEach(([key, handler]) => window.removeEventListener(`dortmund-camera-${key}`, handler)); window.removeEventListener('storage', syncCamera); window.removeEventListener('storage', syncRoof); } });
         setStatus('webgl'); setMessage(variant === 'original'
-          ? 'Unity-Mesh-Auszug · NoDraw in dieser Vorschau ausgelassen · Ziehen zum Drehen'
+          ? 'Unity-Mesh-Auszug · NoDraw-Quellflächen vereinfacht dargestellt · Ziehen zum Drehen'
           : 'Unity-Mesh-Auszug + abgeleitete Ausbaugeometrie · Ziehen zum Drehen');
         const animate = () => { if (disposed) return; renderer.render(scene, camera); frame = window.requestAnimationFrame(animate); }; animate();
       } catch (error) { if (!disposed) { setStatus('fallback'); setMessage(error instanceof Error ? error.message : '3D nicht verfügbar · Ersatzansicht'); } }

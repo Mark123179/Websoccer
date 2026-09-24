@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {buildConcept, warpShell, ROOF_NAMES, SHELL_NAMES} from './dortmund_concept.js';
-import {previewSupportsMaterial} from './dortmund_source_materials.js';
+import {previewSupportsMaterial, sourceOpaqueColor} from './dortmund_source_materials.js';
 
 const ASSET_BASE = new URL('./dortmund_original/', import.meta.url);
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -119,13 +119,13 @@ export async function mountDortmundScene({element, onStatus}) {
         new Float32Array(binary, entry.uvOffset, entry.vertexCount * 2), 2));
       const indices = [], groupMaterials = [];
       for (const part of entry.parts) {
-        if (!previewSupportsMaterial(part.material)) continue;
+        if (!previewSupportsMaterial(part)) continue;
         const start = indices.length;
         indices.push(...new Uint32Array(binary, part.indexOffset, part.indexCount));
         geometry.addGroup(start, part.indexCount, groupMaterials.length);
         const key = part.texture || part.material;
         if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({
-          color: part.texture ? '#ffffff' : shade(part.material),
+          color: part.texture ? '#ffffff' : sourceOpaqueColor(part) || shade(part.material),
           roughness: .83, metalness: .08, side: THREE.DoubleSide,
           ...(part.texture ? {map: imageMaps[part.texture]} : {}),
         }));
@@ -156,7 +156,7 @@ export async function mountDortmundScene({element, onStatus}) {
     if (disposed) return null;
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();
-    onStatus('Unity-Mesh-Auszug geladen · NoDraw-Materialien in Vorschau ausgelassen');
+    onStatus('Unity-Mesh-Auszug geladen · NoDraw-Quellflächen vereinfacht dargestellt');
     const animate = () => { if (disposed) return; render(); frame = requestAnimationFrame(animate); };
     animate();
     return {

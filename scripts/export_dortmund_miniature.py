@@ -62,6 +62,30 @@ def rotate(v, q):
             z + d*tz + a*ty - b*tx)
 
 
+def sourced_opaque_color(material, renderer):
+    """Only annotate NoDraw when its saved PBR values support a solid preview.
+
+    The Unity shader itself is unavailable here. This is source-derived color
+    and blend-state evidence, not a reconstruction of that shader's output.
+    """
+    if not material.m_Name.startswith("NoDraw_"):
+        return None
+    colors = dict(material.m_SavedProperties.m_Colors)
+    floats = dict(material.m_SavedProperties.m_Floats)
+    color = colors.get("baseColorFactor")
+    textures = dict(material.m_SavedProperties.m_TexEnvs)
+    base = textures.get("baseColorTexture")
+    if not (renderer.m_Enabled and material.m_CustomRenderQueue == 2000
+            and color is not None and color.a >= 0.999
+            and floats.get("_BUILTIN_SrcBlend") == 1
+            and floats.get("_BUILTIN_DstBlend") == 0
+            and floats.get("_AlphaClip") == 0
+            and not (base and base.m_Texture)):
+        raise ValueError(f"Unsupported NoDraw material state: {material.m_Name}")
+    return "#" + "".join(f"{round(max(0, min(1, getattr(color, c))) * 255):02x}"
+                         for c in "rgb")
+
+
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
     env = UnityPy.load(str(SOURCE))
@@ -116,8 +140,11 @@ def main():
             index_offset = len(data)
             for tri in triangles:
                 data.extend(struct.pack("<III", *tri))
-            parts.append({"indexOffset": index_offset, "indexCount": len(triangles) * 3,
-                          "material": material_name, "texture": tex})
+            part = {"indexOffset": index_offset, "indexCount": len(triangles) * 3,
+                    "material": material_name, "texture": tex}
+            if material and material_name.startswith("NoDraw_"):
+                part["sourceOpaqueColor"] = sourced_opaque_color(material, renderer)
+            parts.append(part)
         meshes.append({"name": mesh.m_Name, "pathId": str(filt.m_Mesh.path_id),
                        "hierarchy": "/".join(reversed(chain)), "vertexCount": len(vertices),
                        "positionOffset": pos_offset, "uvOffset": uv_offset,
