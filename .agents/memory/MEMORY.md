@@ -119,3 +119,4 @@
 - [Dortmund Bestand source attribution](dortmund-bestand-facade-attribution.md) — Gegenseite darf als beschriftete Rekonstruktion geschlossen sein; niemals als Unity-Quelle ausgeben.
 - [WebGL-Screenshot-Falle](software-webgl-screenshots.md) — Leere Preview-Aufnahme ist kein Beweis für defekte Three.js-Szene; Software-WebGL kann separat geprüft werden.
 - [Stadion-Kachel](club-stadium-presentation.md) — Automatische statt manueller Drehung; transparentes Modell über dem ursprünglichen Kachelhintergrund.
+- [Kleiderstangen-Vorlage](manager-kit-rack-handoff.md) — Managerprofil-Trikots strikt 1:1 übernehmen; Unklarheiten direkt melden, übriges Profil nicht ändern.
