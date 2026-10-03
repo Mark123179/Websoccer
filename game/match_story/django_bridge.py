@@ -1,4 +1,4 @@
-"""The only Django-dependent addition to the frozen v4 narrator.
+"""The only Django-dependent addition to the frozen v4.1 narrator.
 
 Timing and narration are never rewritten. Full beat payloads are persisted.
 Historical snapshots are explicitly unknown unless supplied by an export.

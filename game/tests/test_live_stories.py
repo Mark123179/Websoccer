@@ -77,8 +77,10 @@ class LiveStoryAcceptanceTests(TestCase):
                     with patch('game.match_story.django_bridge.narrate',
                                wraps=__import__('game.match_story', fromlist=['narrate']).narrate) as narrator:
                         first = build_story_for(sm, snapshot=snapshot)
+                        self.assertEqual(first.version, 'v4.1')
                         a = list(first.events.values('text', 'offset_s', 'duration_s', 'payload'))
                         second = build_story_for(sm, force=True)
+                        self.assertEqual(second.version, 'v4.1')
                         b = list(second.events.values('text', 'offset_s', 'duration_s', 'payload'))
                         self.assertEqual(narrator.call_count, 2)
                     self.assertEqual(a, b)
@@ -93,9 +95,22 @@ class LiveStoryAcceptanceTests(TestCase):
                     self.assertEqual(sm.report_data, export['report_data'])
                     self.assertEqual(StoryAudit.objects.filter(target=str(ident)).count(), 1)
 
+    def test_version_remains_per_story_until_explicit_rebuild(self):
+        old = self.story(source='legacy-version')
+        old.version = 'v4'
+        old.save(update_fields=['version'])
+        reused = build_story_for(old.match)
+        self.assertEqual(reused.pk, old.pk)
+        self.assertEqual(reused.version, 'v4')
+        self.assertFalse(StoryAudit.objects.filter(target=str(old.match_id)).exists())
+        rebuilt = build_story_for(old.match, force=True)
+        self.assertEqual(rebuilt.version, 'v4.1')
+        backup = StoryAudit.objects.get(target=str(old.match_id), action='rebuild_backup')
+        self.assertEqual(backup.details['story']['version'], 'v4')
+
     def test_frozen_package_byte_for_byte(self):
-        with zipfile.ZipFile(ROOT / 'attached_assets/files_1791021008494.zip') as outer:
-            with zipfile.ZipFile(io.BytesIO(outer.read('match_story_v4_baseline.zip'))) as inner:
+        with zipfile.ZipFile(ROOT / 'attached_assets/files_1791040103862.zip') as outer:
+            with zipfile.ZipFile(io.BytesIO(outer.read('match_story_v4_1.zip'))) as inner:
                 for name in inner.namelist():
                     if not name.endswith('/'):
                         self.assertEqual((ROOT / 'game' / name).read_bytes(), inner.read(name), name)

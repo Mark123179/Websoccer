@@ -1,0 +1,37 @@
+[
+  {
+    "match_id": 197,
+    "stored_version": "v4",
+    "v41_source_diagnostics": [
+      "Kernzahlen home: erwartet Schüsse/aufs Tor/Ecken/Karten (8, 1, 5, 0), erzählt (8, 2, 5, 0)"
+    ]
+  },
+  {
+    "match_id": 201,
+    "stored_version": "v4",
+    "v41_source_diagnostics": [
+      "Kernzahlen away: erwartet Schüsse/aufs Tor/Ecken/Karten (7, 0, 5, 3), erzählt (7, 1, 5, 3)"
+    ]
+  },
+  {
+    "match_id": 210,
+    "stored_version": "v4",
+    "v41_source_diagnostics": [
+      "Kernzahlen home: erwartet Schüsse/aufs Tor/Ecken/Karten (5, 2, 8, 0), erzählt (5, 3, 8, 0)"
+    ]
+  },
+  {
+    "match_id": 213,
+    "stored_version": "v4",
+    "v41_source_diagnostics": [
+      "Kernzahlen away: erwartet Schüsse/aufs Tor/Ecken/Karten (7, 1, 6, 3), erzählt (7, 4, 6, 3)"
+    ]
+  },
+  {
+    "match_id": 245,
+    "stored_version": "v4",
+    "v41_source_diagnostics": [
+      "Kernzahlen home: erwartet Schüsse/aufs Tor/Ecken/Karten (3, 0, 4, 2), erzählt (3, 1, 4, 2)"
+    ]
+  }
+]

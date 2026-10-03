@@ -123,3 +123,4 @@
 - [Kleiderstangen-Vorlage](manager-kit-rack-handoff.md) — Managerprofil-Trikots strikt 1:1 übernehmen; Unklarheiten direkt melden, übriges Profil nicht ändern.
 - [Live-Ticker timing](live-ticker-timing.md) — v4-Zeiten unverändert übernehmen; Elfmeterschießen ergänzt das Gesamtbudget um 14 Sekunden Rahmen.
 - [Verifikationsbelege](verification-evidence.md) — Parität braucht identische Startbedingungen; Baseline-Tests und Diagnosezahlen nicht ohne Kontrollläufe interpretieren.
+- [Persistierte Tickertexte](persisted-ticker-stories.md) — Gelesene Geschichten bei Paketwechseln erhalten; nur freigegebene Fälle mit Export neu aufbauen, Version pro Geschichte.

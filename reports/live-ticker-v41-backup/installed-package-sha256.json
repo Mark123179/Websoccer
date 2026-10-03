@@ -1,0 +1,16 @@
+{
+  "match_story/cli.py": "561554b605cdc6e1379876cde373e5456d8f47ecaa0818b01769b027ab748d22",
+  "match_story/model.py": "8cb7a93a5033e8e1bae7d0fe366c4d939588fb7387f36c49bcc289e72ff88a38",
+  "match_story/render.py": "45ddb013c344b4a8263303a54619cc4a55e23762fd4e135eb1174629424025bf",
+  "match_story/__init__.py": "21c629b09e5fd935740bb8205bafdda8514157fdb8f8ceb421905839fe0cdace",
+  "match_story/narrator.py": "a251c7e28e171aea164457d0624c2e8c4ae51ffc469f1a3fa751de70f3a8ed96",
+  "match_story/state.py": "8cecd3cbab40a4a2e1672dfea121e597a2362ea0c67ef5d40ceb85a5aa092426",
+  "match_story/phases.py": "515262d1a45770440c70bd2481fbd28657da288c94db3eb5719cfc9da3014603",
+  "match_story/actors.py": "afd55f7e9215915f444ae9b9c3d645d39f26f7d671b50c798620a65b77ae4604",
+  "match_story/compose.py": "d4ba4fb8f920bd58b627a38a16f0bc1b29bc4ff85355c03213cee7663ff2b010",
+  "match_story/budget.py": "d46b075bee3a971869609b8ea5319e1878ffbbbd136a4b45aefe6de4f8edd1cf",
+  "match_story/context.py": "a11566185fca19f57dd8a5b04eb68e0ae4ed81aaef35429cd30a3351fedb0288",
+  "match_story/planner.py": "1420feb2526f157a00a9c1e3ee5abf69e4fd112c55f2360d333ede7dea9c2c5a",
+  "match_story/pools/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "match_story/pools/de.py": "cd8e7ac6f5325fe1d19285ddabb40293ee855b26aba74d8473e8748201f50c8c"
+}

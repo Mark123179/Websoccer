@@ -1,0 +1,30 @@
+{
+  "rebuilt": [
+    237,
+    239,
+    242,
+    244
+  ],
+  "new_version": "v4.1",
+  "untouched_v4_stories": 197,
+  "all_201_simulated_matches_unchanged": true,
+  "source_inconsistent_games_untouched": [
+    197,
+    201,
+    210,
+    213,
+    245
+  ],
+  "backup_sha256": {
+    "237": "a1cb4c264ddb3d514e59adb96025bad9b89b92714560f7cd845fe4371b27ecf1",
+    "239": "39d0787462213d07d8a5a4b7a20b66119252cb34cbdd16f748430a54571406c2",
+    "242": "496f0a6c3b20ea124c96efb01e2f405eb296300aa5f59bce73c283f156047fca",
+    "244": "baf35646a19c2b94f651677d6e7c39a598793a6984c4f82d6eb69b5632f5eba3"
+  },
+  "fresh_suite": {
+    "tests": 1482,
+    "errors": 0,
+    "failures": 0,
+    "isolated_postgresql": true
+  }
+}

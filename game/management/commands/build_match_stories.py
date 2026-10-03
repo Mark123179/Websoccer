@@ -6,7 +6,7 @@ from game.match_story.django_bridge import build_story_for
 
 
 class Command(BaseCommand):
-    help = 'Build frozen v4 match stories; historical games stay released.'
+    help = 'Build frozen v4.1 match stories; existing stories retain their version unless forced.'
 
     def add_arguments(self, parser):
         parser.add_argument('--since', type=int, default=0)

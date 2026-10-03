@@ -31,7 +31,7 @@ class MatchStory(models.Model):
     round = models.ForeignKey(MatchStoryRound, on_delete=models.PROTECT,
                                related_name='stories')
     source_key = models.CharField(max_length=80)
-    version = models.CharField(max_length=16, default='v4')
+    version = models.CharField(max_length=16, default='v4.1')
     kickoff_at = models.DateTimeField()
     duration_s = models.FloatField()
     final_score = models.CharField(max_length=16)

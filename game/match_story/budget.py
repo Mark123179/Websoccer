@@ -74,6 +74,7 @@ def distribute(ctx, rng: random.Random):
         min_ontarget = [0] * n
         min_corners = [0] * n
         min_fouls = [0] * n
+        nm_shots = [0] * n          # Ecken-Fastchancen: Schuss, aber nie aufs Tor
         for g in goals:
             i = seg_index(g['minute'], fm)
             min_shots[i] += 1
@@ -86,6 +87,7 @@ def distribute(ctx, rng: random.Random):
                 if nm.get('type', '').startswith('corner'):
                     min_corners[i] += 1
                     min_shots[i] += 1
+                    nm_shots[i] += 1
         for c in ctx.cards:
             if c.get('club_side') == side:
                 min_fouls[seg_index(c['minute'], fm)] += 1
@@ -97,11 +99,21 @@ def distribute(ctx, rng: random.Random):
         fouls_total = max(int(st.get('fouls', 0)), sum(min_fouls))
         shots = _spread(shots_total, w, rng, min_shots)
         # aufs Tor: Teilmenge der Schüsse je Block
+        # Kapazität je Block: Schüsse minus Ecken-Fastchancen (die sind nie aufs Tor).
+        # Ohne diesen Abzug landet ein Schuss aufs Tor in einem Block, der ihn nicht erzählen kann.
         ot = list(min_ontarget)
-        pool = [i for i in range(n) for _ in range(shots[i] - ot[i]) if shots[i] > ot[i]]
+        cap = [max(shots[i] - nm_shots[i], ot[i]) for i in range(n)]
+        pool = [i for i in range(n) for _ in range(max(0, cap[i] - ot[i]))]
         rng.shuffle(pool)
         for i in pool[:max(0, ot_total - sum(ot))]:
             ot[i] += 1
+        # Reicht die Kapazität nicht (Engine-Daten inkonsistent), Rest in Bloecke mit freien Schuessen
+        rest = ot_total - sum(ot)
+        if rest > 0:
+            spare = [i for i in range(n) for _ in range(max(0, shots[i] - ot[i]))]
+            rng.shuffle(spare)
+            for i in spare[:rest]:
+                ot[i] += 1
         corners = _spread(corners_total, w, rng, min_corners)
         # Fouls: leicht Richtung Gegner-Ballbesitz gewichtet (wer nicht den Ball hat, foult)
         w_f = [x * (1.0 if ctx.team(side).stats.get('possession', 50) >= 50 else 1.2) for x in w]
