@@ -23,6 +23,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
                   side_effect=[self.club, fixture] if explicit else [self.club]) as lookup,
             patch('game.fixture_display.get_next_fixture', return_value=fixture) as next_fixture,
             patch('game.competition_assets.competition_logo_static_path', return_value='/league.png'),
+            patch('game.match_preview.build_match_preview_context', return_value={}),
             patch('game.views.render', return_value=HttpResponse()) as render,
         ):
             club_match_preview(self.request, 1, fixture_id=3 if explicit else None)
@@ -50,17 +51,44 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertEqual(context['competition_name'], 'Wettbewerb')
         self.assertEqual(context['competition_logo'], '')
 
-    def test_template_has_three_empty_panels_and_decorative_layers(self):
+    def test_template_has_three_briefing_panels_and_empty_state(self):
         html = render_to_string('game/club_match_preview.html', {
-            'competition_name': 'Bundesliga', 'competition_logo': '',
+            'competition_name': 'Bundesliga', 'competition_logo': '', 'preview': {},
         })
         self.assertEqual(html.count('class="match-preview-panel'), 4)  # container + 3 panels
-        self.assertIn('<h1>Bundesliga</h1>', html)
+        self.assertIn('>Bundesliga</h1>', html)
         self.assertIn('match-preview-content', html)
-        self.assertIn('locker-room.png', html)
         self.assertNotIn('match-preview-scene__foreground', html)
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
+        self.assertIn('Der Spielplan ist derzeit frei.', html)
+        self.assertIn('match-preview.js?v=preview-8', html)
+
+    def test_partial_fixture_keeps_missing_weather_and_referee_visible(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'competition_name': 'Bundesliga', 'competition_logo': '',
+            'preview': {
+                'has_fixture': True, 'home': {'name': 'Heim'},
+                'away': {'name': 'Gast'}, 'opponent': {'name': 'Gast'},
+                'weather': {'label': 'Schnee', 'temperature': 0},
+            },
+        })
+        self.assertIn('Noch nicht angesetzt', html)
+        self.assertIn('Schnee · 0 °C', html)
+        self.assertIn('kein 3D-Modell', html)
+
+    def test_pitch_coordinates_are_unlocalized_and_snapshot_text_is_escaped(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'competition_name': 'Bundesliga', 'competition_logo': '',
+            'preview': {'lineup': [{
+                'id': 1, 'name': '<script>bad</script>', 'short_name': '<script>',
+                'x': 12.5, 'y': 84.5, 'number': None, 'url': '', 'portrait_url': '',
+            }]},
+        })
+        self.assertIn('left:12.5%;top:84.5%', html)
+        self.assertIn('&lt;script&gt;', html)
+        self.assertNotIn('<script>bad', html)
+        self.assertNotIn('>None<', html)
 
     def test_sam_mask_preserves_approved_segmentation_and_frame(self):
         assets = Path(settings.BASE_DIR) / 'game/static/game/images/match-preview'

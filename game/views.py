@@ -4136,6 +4136,7 @@ def club_table(request, club_id):
 def club_match_preview(request, club_id, fixture_id=None):
     from .fixture_display import get_next_fixture
     from .competition_assets import competition_logo_static_path
+    from .match_preview import build_match_preview_context
 
     club = get_object_or_404(Club.objects.select_related('league'), id=club_id)
     if fixture_id is not None:
@@ -4158,6 +4159,7 @@ def club_match_preview(request, club_id, fixture_id=None):
             'club': club,
             'competition_name': competition_name,
             'competition_logo': competition_logo_static_path(competition) if competition else '',
+            'preview': build_match_preview_context(club, fixture),
             'game_header': build_game_header(
                 competition_name, 'Spielvorschau', reverse_club_detail(club),
             ),

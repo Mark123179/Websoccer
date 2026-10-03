@@ -20,6 +20,12 @@ Die Spielvorschau soll folgende Inhalte zeigen:
 
 **How to apply:** Alle genannten Inhalte berücksichtigen; fehlende Daten nicht durch erfundene Spieler, Ergebnisse oder Bewertungen ersetzen.
 
+Die Vorschau darf beim Öffnen weder eine Begegnung vorberechnen noch neue Wetter- oder Schiedsrichterentscheidungen treffen.
+
+**Why:** Eine wiederholt geöffnete Informationsseite darf den Spielzustand und spätere Simulationsergebnisse nicht verändern. Bisher stehen Schiedsrichter erst im gespeicherten Spiel zur Verfügung; eine Vorschau darf diese Datenlücke nicht durch eine versteckte Zuweisung beim Seitenaufruf schließen.
+
+**How to apply:** Neue verbindliche Vorabinformationen außerhalb der Anzeige erzeugen und speichern; die Vorschau liest sie anschließend. Ohne solche Daten einen klaren Offen-Status zeigen.
+
 Der Kabinenhintergrund muss über die ganze Seite reichen, auch hinter den Kalender. Anschließend dürfen die drei Kacheln größer werden.
 
 **Why:** Der Nutzer beanstandet den sichtbaren Beginn des Kabinenfotos unter dem Kalender und verlangt diese Anpassung vor der weiteren Gestaltung.
