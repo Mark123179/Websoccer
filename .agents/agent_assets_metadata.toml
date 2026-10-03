@@ -550,3 +550,31 @@ mtime_ms = 1791041041374
 storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/06af99ee-c9ea-454a-9b78-447f9c9a0cc3/4eb980bb-e51e-4d62-90d7-568107447bb3"
 storage_version_token = "1791041050119258"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "-i8x0piRVZC2bRWL0xkiM"
+uri = "file://reports/match-preview-ai/edge-details.png"
+type = "image"
+title = "Detailprüfung: Original und KI-Maske"
+description = "Oben das Original, unten der nicht eingebaute KI-Versuch. Die Maske schließt zu viel Boden ein und ist noch nicht geeignet."
+logical_id = "5b335c62-42c4-4776-b775-51f42f755030"
+content_hash = "sha256:2f62348c8ece5cd8a5adba657a6008ea907494fe64184fa39bbd334108703897"
+size = 1170215
+mtime_ms = 1791043834707
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/5b335c62-42c4-4776-b775-51f42f755030/b6a26116-530d-45c6-93ba-9ab4b8bf7eaa"
+storage_version_token = "1791043876717321"
+content_type = "image/png"
+
+[[outputs]]
+id = "1IExbK4g-ZNgCx8Tlc5xm"
+uri = "file://reports/match-preview-ai/object-mask.png"
+type = "image"
+title = "KI-Objektmaske – nicht freigegeben"
+description = "Schwarz-Weiß-Maske auf Originalgröße gebracht. Nur zur Prüfung; nicht in die Spielvorschau übernommen."
+logical_id = "6b419451-b292-4abf-b326-6067f07b587c"
+content_hash = "sha256:3768730e7dd954750f2867b2b6d4a994b28a120028b5bb293ec66c8b201d97f3"
+size = 16358
+mtime_ms = 1791043833047
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:6e4eaecc-e6c5-4f64-8de5-e8845034f33b/6b419451-b292-4abf-b326-6067f07b587c/52243fd3-c92a-465f-a26c-be7ab7f535a2"
+storage_version_token = "1791043877501348"
+content_type = "image/png"

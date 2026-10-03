@@ -14,3 +14,9 @@ Stuhl und Tasche im Originalbild unangetastet lassen; nur die darüberliegenden 
 **Why:** Der Nutzer beanstandete die sichtbaren Freistellungskanten ausdrücklich: „Die Kacheln sollten einfach nur dahinter“.
 
 **How to apply:** Keine ausgeschnittenen RGB-Kopien der Bildobjekte darüberlegen. Die Kartenmaske und das Originalfoto müssen dieselbe Bildprojektion verwenden, einschließlich Cover-Skalierung und Zentrierung.
+
+Generativ erzeugte Schwarz-Weiß-Bilder nicht als pixelgenaue Objektsegmentierung behandeln.
+
+**Why:** Die KI-Bildbearbeitung lieferte trotz ausdrücklicher Vorgabe ein quadratisches Bild mit veränderten Objektkonturen. Zurückskalieren auf die Originalgröße ließ störende Bodenflächen um die Objekte frei.
+
+**How to apply:** Jede externe Maske gegen die Originalkonturen in vergrößerten Ausschnitten prüfen. Identische Bildabmessungen allein beweisen keine geometrische Übereinstimmung; für exakte Konturen ein Segmentierungsverfahren bevorzugen.
