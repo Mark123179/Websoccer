@@ -62,7 +62,13 @@ const selection = new Set();
 let tool = 'fill', col1 = 3, col2 = 1;           // Start: Rot / Weiß
 let view = '2d', yaw3d = 0, tilt3d = 54, roofOn = true, dotMode = true;
 let stageAdapter = null, stageThree = null, stageScene = null, stageUpdateTimer = 0;
-let blickrichtung = 'NORD';
+const isDortmundScene = Boolean(EDITOR.dortmundScene);
+let dortmundFullConcept = false;
+// The Dortmund blueprint kept model-local stand IDs; mapped OSM north is
+// near +Z, while the blueprint calls that edge OST. Do not rewrite economic IDs.
+const dortmundStandLabels = {OST: 'Nord', SUED: 'Ost', WEST: 'Süd', NORD: 'West'};
+const standLabel = stand => isDortmundScene ? (dortmundStandLabels[stand] || stand) : stand;
+let blickrichtung = isDortmundScene ? 'OST' : 'NORD';
 let overlay = null;                               // {kind:'text'|'image', canvas, wx, wy, scale, rot}
 const undoStack = [], redoStack = [];
 
@@ -124,6 +130,18 @@ function stadiumMaxRadius(){
     : derived;
 }
 function fitView(){
+  if(document.querySelector('.stadium-editor-content.is-dortmund') && blocks?.length){
+    const points = blocks.flatMap(block => block.quad || []);
+    const xs = points.map(point => point[0]), ys = points.map(point => point[1]);
+    const left = Math.min(...xs), right = Math.max(...xs);
+    const bottom = Math.min(...ys), top = Math.max(...ys);
+    if(right > left && top > bottom){
+      SC = .78 * Math.min((W-80)/(right-left), (H-130)/(top-bottom));
+      CX = W/2 - (left+right)/2 * SC;
+      CY = H/2 + (bottom+top)/2 * SC;
+      return;
+    }
+  }
   const R = 430 * (D ? stadiumMaxRadius()/138 : 1); // relative Stadiongröße konstant halten
   SC = Math.min(W, H) / (2*R) * 1.55;
   CX = W/2; CY = H/2 + 6;
@@ -133,13 +151,18 @@ const s2w = (px,py) => [(px-CX)/SC, (CY-py)/SC];
 function editorBackground(){
   const legacy = D?.bg || {};
   const live = D?.surroundings || {};
+  const buildings = (legacy.buildings || live.buildings || [])
+    .map(building => ({poly: Array.isArray(building) ? building : building.poly,
+      height: Array.isArray(building) ? 9 : (building.h ?? 9)}))
+    .filter(building => Array.isArray(building.poly));
   return {
+    source: live.source || legacy.source || '',
+    treeSource: legacy.treeSource || live.treeSource || '',
     green: legacy.green || live.green || [],
     water: legacy.water || live.water || [],
     roads: legacy.roads || live.roads || [],
-    buildings: (legacy.buildings || live.buildings || [])
-      .map(building => Array.isArray(building) ? building : building.poly)
-      .filter(Array.isArray),
+    buildings: buildings.map(building => building.poly),
+    buildingHeights: buildings.map(building => building.height),
     trees: legacy.trees || live.trees || [],
   };
 }
@@ -228,8 +251,13 @@ function previewCapacity(){
 }
 function syncStadiumTitle(){
   const title = document.getElementById('stadiumTitle');
-  if(title) title.innerHTML =
-    `${D.meta.name} <span>${D.meta.club || ''} · ${previewCapacity().toLocaleString('de-DE')} Plätze</span>`;
+  if(title){
+    title.textContent = D.meta.name;
+    const detail = document.createElement('span');
+    const delta = previewCapacity() - baseDisplayCapacity;
+    detail.textContent = ` ${D.meta.club || ''} · ${previewCapacity().toLocaleString('de-DE')} ${delta ? 'Plätze inklusive Vorschau' : 'bestehende Plätze'}`;
+    title.appendChild(detail);
+  }
 }
 function updateTexture(i){
   const b = blocks[i], c = texCache[i], ctx = c.getContext('2d');
@@ -325,6 +353,7 @@ function renderBase(){
   }
   // Gebäude
   for(const g of bg.buildings || []){ path(g); ctx.closePath(); ctx.strokeStyle='rgba(34,230,255,.4)'; ctx.lineWidth=1; ctx.stroke(); }
+  drawTrees(ctx, w2s);
   drawPitch(ctx, w2s, 1);
 }
 function drawPitch(ctx, toScreen, alpha){
@@ -1066,7 +1095,52 @@ function renderAll(){
   }
 }
 
+function updateDortmundStage(){
+  if(!stageThree || !isDortmundScene) return;
+  const baseline = new Map([...baseBlockGeometry.values()].map(b => [b.sourceId, b.capacity]));
+  import(editorModuleUrl('./dortmund_concept.js')).then(({conceptWeights}) => {
+    if(!stageThree || view!=='3d') return;
+    const weights = conceptWeights(blocks, baseline, dortmundFullConcept);
+    const designColors = {};
+    for(const stand of ['NORD','SUED','OST','WEST']){
+      const counts = new Map();
+      blocks.forEach((block,i) => {
+        if(block.stand!==stand) return;
+        for(const color of seatData[i] || []){
+          if(color) counts.set(color,(counts.get(color) || 0)+1);
+        }
+      });
+      const top = [...counts].sort((a,b)=>b[1]-a[1])[0];
+      if(top) designColors[stand] = PALETTE[top[0]]?.[0];
+    }
+    stageThree.update({
+      weights, designColors, roofVisible: roofOn, fullConcept: dortmundFullConcept,
+      day: Boolean(document.getElementById('stageDay')?.checked),
+      floodlight: Boolean(document.getElementById('stageFloodlight')?.checked),
+    });
+    const delta = Math.max(0, previewCapacity() - baseDisplayCapacity);
+    const label = document.getElementById('deSceneData');
+    if(label) label.textContent = dortmundFullConcept
+      ? 'Rundum-Konzept · vier Seiten · keine vermessene Kapazität'
+      : delta
+        ? `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze + rekonstruierte Gegenseite · +${delta.toLocaleString('de-DE')} nur 2D-/3D-Entwurf`
+        : `Bestand ${baseDisplayCapacity.toLocaleString('de-DE')} Plätze · Unity-Mesh-Auszug + rekonstruierte Gegenseite`;
+  }).catch(error => showDortmundSceneError(error));
+}
+function showDortmundSceneError(error){
+  if(!isDortmundScene) return;
+  const node = document.getElementById('deSceneStatus');
+  if(node) node.textContent = `3D nicht verfügbar: ${error.message || 'Ladefehler'}. 2D-Bearbeitung bleibt verfügbar.`;
+  const fallback = document.getElementById('deSceneFallback');
+  if(fallback) fallback.hidden = false;
+}
 function scheduleStageDesignUpdate(){
+  if(isDortmundScene){
+    if(!stageThree) return;
+    clearTimeout(stageUpdateTimer);
+    stageUpdateTimer = setTimeout(updateDortmundStage, 180);
+    return;
+  }
   if(!stageThree || !stageScene) return;
   clearTimeout(stageUpdateTimer);
   stageUpdateTimer = setTimeout(()=>{
@@ -1086,6 +1160,10 @@ function scheduleStageDesignUpdate(){
 }
 
 function useLegacyThreePreview(){
+  if(isDortmundScene){
+    showDortmundSceneError(new Error('WebGL-Ansicht konnte nicht aktualisiert werden'));
+    return;
+  }
   stageThree = null;
   stageAdapter = null;
   document.getElementById('stage').classList.remove('stage-three-ready');
@@ -1110,6 +1188,21 @@ async function ensureThreeStage(){
   if(!host) return;
   stageAdapter = {kind:'loading'};
   try{
+    if(isDortmundScene){
+      const {mountDortmundScene} = await import(editorModuleUrl('./dortmund_editor_scene.js'));
+      const mounted = await mountDortmundScene({
+        element: host,
+        surroundings: editorBackground(),
+        frame: D.meta,
+        onStatus: text => { const node = document.getElementById('deSceneStatus'); if(node) node.textContent = text; },
+      });
+      stageAdapter = mounted;
+      stageThree = mounted;
+      document.getElementById('deSceneFallback').hidden = true;
+      activateThreeStage();
+      updateDortmundStage();
+      return;
+    }
     const {mountStadiumStage, applyEditorDesign} =
       await import(STADIUM_STAGE_ADAPTER_URL);
     const response = await fetch(EDITOR.liveSceneUrl, {credentials:'same-origin'});
@@ -1132,6 +1225,7 @@ async function ensureThreeStage(){
     }
   }catch(_error){
     stageAdapter = null;
+    showDortmundSceneError(_error);
   }
 }
 
@@ -1144,6 +1238,7 @@ function currentSnapshot(){
   };
 }
 function snapshotFull(){
+  setEditorSaveState('Ungespeicherte Änderung', 'is-dirty');
   undoStack.push(currentSnapshot());
   if(undoStack.length>30) undoStack.shift();
   redoStack.length = 0; syncUndoButtons();
@@ -1608,7 +1703,7 @@ function editPressing(id){
 }
 /* ── AUSBAU: gemeinsame geometrische Sektoren + flüchtige Ränge ── */
 const MAX_ROWS = 42;
-const MAX_PREVIEW_CAPACITY = 150000;
+const MAX_PREVIEW_CAPACITY = Number(EDITOR.maxPreviewCapacity);
 const MIN_EXPANSION_SEATS = 1000;
 const EXPANSION_SECTOR_HALF_ANGLE = Math.PI/3;
 
@@ -1767,12 +1862,12 @@ function expandStand(stand, seatType, amount){
   }
   const currentCapacity = previewCapacity();
   if(currentCapacity >= MAX_PREVIEW_CAPACITY){
-    toast('Maximalkapazität 150.000 erreicht.');
+    toast(`Maximalkapazität ${MAX_PREVIEW_CAPACITY.toLocaleString('de-DE')} erreicht.`);
     return 0;
   }
   amount = Math.min(amount, MAX_PREVIEW_CAPACITY - currentCapacity);
   if(!expansionEnvelope(stand).length){
-    toast(`Für ${stand} wurden keine ausbaubaren Tribünensegmente gefunden.`);
+    toast(`Für ${standLabel(stand)} wurden keine ausbaubaren Tribünensegmente gefunden.`);
     return 0;
   }
   snapshotFull();
@@ -1806,12 +1901,24 @@ function expandStand(stand, seatType, amount){
     return 0;
   }
   const built=amount;
+  if(isDortmundScene) setDortmundConcept(false);
   fitView();
   syncStadiumTitle();
   recompose(); syncPressList();
-  toast(`Ausbau ${stand}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
+  toast(`Ausbau ${standLabel(stand)}: ${built.toLocaleString('de-DE')} ${seatType}-Plätze gebaut.`);
   return built;
 }
+function setDortmundConcept(full){
+  dortmundFullConcept = full;
+  document.querySelectorAll('[data-de-scene]').forEach(button => {
+    const active = (button.dataset.deScene === 'rundum') === full;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  scheduleStageDesignUpdate();
+}
+document.querySelectorAll('[data-de-scene]').forEach(button =>
+  button.addEventListener('click', () => setDortmundConcept(button.dataset.deScene === 'rundum')));
 const expandButton = document.getElementById('btnExpand');
 if(expandButton){
   expandButton.addEventListener('click', ()=>{
@@ -1820,6 +1927,50 @@ if(expandButton){
                 +document.getElementById('expAmount').value);
   });
 }
+function setEditorSaveState(message, className = ''){
+  const node = document.getElementById('deSaveState');
+  if(!node) return;
+  node.textContent = message;
+  node.classList.toggle('is-dirty', className === 'is-dirty');
+  node.classList.toggle('is-error', className === 'is-error');
+}
+function syncMenuHandoff(){
+  const link = document.getElementById('deMenuLink');
+  if(!link) return;
+  const stand = document.getElementById('expStand')?.value || document.querySelector('.de-stands .is-active')?.dataset.deStand || 'NORD';
+  const amount = document.getElementById('expAmount')?.value || '1000';
+  const type = document.getElementById('expType')?.value || 'SITZ';
+  const url = new URL(link.getAttribute('href'), window.location.origin);
+  url.searchParams.set('stand', stand);
+  url.searchParams.set('seats_added', amount);
+  url.searchParams.set('seat_type', type);
+  url.hash = 'expand-form';
+  link.href = url.pathname + url.search + url.hash;
+}
+document.querySelectorAll('[data-de-stand]').forEach(button => {
+  button.addEventListener('click', () => {
+    if(!blocks) return;
+    selection.clear();
+    blocks.forEach(block => { if(block.stand === button.dataset.deStand) selection.add(block.id); });
+    const select = document.getElementById('expStand');
+    if(select) select.value = button.dataset.deStand;
+    syncSel();
+  });
+});
+document.querySelectorAll('[data-de-amount]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.getElementById('expAmount').value = button.dataset.deAmount;
+    document.querySelectorAll('[data-de-amount]').forEach(item => {
+      const active = item === button;
+      item.classList.toggle('is-active', active);
+      item.setAttribute('aria-pressed', String(active));
+    });
+    syncMenuHandoff();
+  });
+});
+['expStand','expAmount','expType'].forEach(id =>
+  document.getElementById(id)?.addEventListener('change', syncMenuHandoff));
+syncMenuHandoff();
 
 /* ── Export ───────────────────────────────────────────────────── */
 async function exportDesign(){
@@ -1841,12 +1992,19 @@ async function exportDesign(){
     })};
   const button = document.getElementById('btnSave');
   button.disabled = true;
+  setEditorSaveState('Speichert …');
   try{
     const response = await fetch(EDITOR.saveUrl, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-CSRFToken':EDITOR.csrfToken}, body:JSON.stringify(out)});
     const body = await response.json();
     if(!response.ok) throw new Error(body.error || 'Speichern fehlgeschlagen.');
     toast('Gestaltung gespeichert.');
-  }catch(error){ toast(error.message || 'Speichern fehlgeschlagen.'); }
+    setEditorSaveState(blocks.some(block => block.simulated)
+      ? 'Gestaltung gespeichert · Ausbauvorschau nur in dieser Sitzung'
+      : 'Entwurf gespeichert');
+  }catch(error){
+    toast(error.message || 'Speichern fehlgeschlagen.');
+    setEditorSaveState(error.message || 'Speichern fehlgeschlagen.', 'is-error');
+  }
   finally{ button.disabled = false; }
 }
 
@@ -1858,7 +2016,7 @@ cvOverlay.addEventListener('mousemove', e => {
   const nid = b?b.id:null;
   if(nid!==hoverBlock){ hoverBlock=nid; renderOverlay(); }
   document.getElementById('sbHover').textContent = b
-    ? `${b.stand} · ${b.tier}rang · Block ${b.id} · ${b.capacity.toLocaleString('de-DE')} Plätze (${{SITZ:'Sitz',STEH:'Steh',VIP:'VIP'}[b.type]})`
+    ? `${standLabel(b.stand)} · ${b.tier}rang · Block ${b.id} · ${b.capacity.toLocaleString('de-DE')} Plätze (${{SITZ:'Sitz',STEH:'Steh',VIP:'VIP'}[b.type]})`
     : '–';
 });
 cvOverlay.addEventListener('mousedown', e => {
@@ -1887,6 +2045,17 @@ function syncSel(){
   document.getElementById('selStatus').innerHTML = n
     ? `<b>${n}</b> Blöcke · <b>${seats.toLocaleString('de-DE')}</b> Plätze`
     : 'Kein Block gewählt — klick ins Stadion.';
+  const stand = n ? blocks[[...selection].pop()]?.stand : null;
+  document.querySelectorAll('[data-de-stand]').forEach(button => {
+    const active = button.dataset.deStand === stand;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  if(stand){
+    const select = document.getElementById('expStand');
+    if(select) select.value = stand;
+  }
+  syncMenuHandoff();
   syncPressButton(); renderOverlay();
 }
 function syncPressButton(){
@@ -1997,6 +2166,10 @@ function requestRender3D(){
     r3dPending=false;
     if(view!=='3d') return;
     if(stageThree){
+      if(isDortmundScene){
+        stageThree.update({orbit: {azimuth: yaw3d, elevation: 90 - tilt3d}});
+        return;
+      }
       stageThree.update({
         orbit: {azimuth: yaw3d, elevation: 90 - tilt3d},
       }).catch(useLegacyThreePreview);
@@ -2011,6 +2184,22 @@ document.getElementById('yawSlider').addEventListener('input', e=>{ yaw3d=+e.tar
 document.getElementById('roofChk').addEventListener('change', e=>{ roofOn=e.target.checked; renderAll(); });
 document.getElementById('tiltSlider').addEventListener('input', e=>{ tilt3d=+e.target.value; requestRender3D(); });
 document.getElementById('stageCamera').addEventListener('change', scheduleStageDesignUpdate);
+if(isDortmundScene) document.getElementById('stageCamera').addEventListener('change', e => {
+  const presets = {
+    exterior:[.88,.56], interior:[-1.2,.63], 'roof-corner':[.34,1.03],
+    opposite:[-2.28,.53], distance:[.6,.57],
+  };
+  const preset = presets[e.target.value];
+  if(preset){
+    // Keep both sliders in the preset's orbit. Otherwise moving "Neigung"
+    // silently jumps "Gegenseite" back to the Außen camera.
+    yaw3d = ((((preset[0] - .88) * 180 / Math.PI) + 180) % 360 + 360) % 360 - 180;
+    tilt3d = 90 - preset[1] * 180 / Math.PI;
+    document.getElementById('yawSlider').value = yaw3d;
+    document.getElementById('tiltSlider').value = tilt3d;
+  }
+  stageThree?.update({cameraPreset: e.target.value});
+});
 document.getElementById('stageDay').addEventListener('change', ()=>{
   if(!stageThree) return;
   const day = Boolean(document.getElementById('stageDay').checked);
@@ -2042,6 +2231,7 @@ function downloadStagePng(blob){
 }
 function setView(v){
   view = v;
+  if(isDortmundScene) document.getElementById('stage').classList.toggle('de-view-3d', v==='3d');
   document.getElementById('btn2d').classList.toggle('active', v==='2d');
   document.getElementById('btn3d').classList.toggle('active', v==='3d');
   document.getElementById('rot3d').style.display = v==='3d' ? 'flex' : 'none';
@@ -2096,7 +2286,8 @@ if(window.ResizeObserver){
     ]);
     const geometry = await geometryResponse.json();
     if(!geometryResponse.ok) throw new Error(geometry.error || 'Geometrie konnte nicht geladen werden.');
-    const design = designResponse.ok ? await designResponse.json() : {};
+    if(!designResponse.ok) throw new Error('Gespeicherter Entwurf konnte nicht geladen werden.');
+    const design = await designResponse.json();
     initStadium(geometry, design);
     buildPaletteUI(); syncPal(); resize();
     requestAnimationFrame(() => requestAnimationFrame(resize));
@@ -2104,5 +2295,6 @@ if(window.ResizeObserver){
     const title = document.getElementById('stadiumTitle');
     if(title) title.textContent = error.message || 'Editor nicht verfügbar';
     toast(error.message || 'Editor nicht verfügbar');
+    setEditorSaveState(error.message || 'Editor nicht verfügbar', 'is-error');
   }
 })();

@@ -18,6 +18,7 @@ import {buildSeatRenderPlan, seatBasis} from './seat_rendering.js?v=2';
 import {PITCH, buildPitchLayout} from './pitch_geometry.js?v=1';
 import {buildFloodlightPlan} from './stadium_lighting.js?v=1';
 import {lightingPreset} from './stadium_lighting_presets.js?v=1';
+import {ringVertexHeight, ringFasciaHeights} from './roof_ring_profile.mjs?v=1';
 
 const SKY_URLS = Object.freeze({
   day: new URL('./assets/stadium_sky_day.png?v=1', import.meta.url).href,
@@ -45,6 +46,29 @@ export const RULES = Object.freeze({
   seatMinL: 0.22, wallColor: 0x101316, treadColor: 0x22262b, riserColor: 0x15181c, soffitColor: 0x1c2025,
   roofColor: 0x4a525b, fasciaColor: 0x8a9199, facadeColor: 0x2b3037, buildingColor: 0x2a2f36, greenColor: 0x11301c, roadColor: 0x1a1e23, groundColor: 0x0d1115, pitchColor: 0x0f5a2b, pitchColor2: 0x0d5027,
 });
+
+// ShapeGeometry triangulates the annulus in 2D; each contour vertex keeps its
+// measured height before the mesh is rotated into the horizontal stadium plane.
+export function buildRingRoofGeometry(ringRoof, rot) {
+  const contour = points => points.map(point => {
+    const r = rot(point);
+    return new THREE.Vector2(-r[0], -r[1]);
+  });
+  const outer = contour(ringRoof.outer);
+  const inner = contour(ringRoof.inner);
+  const shape = new THREE.Shape(outer);
+  shape.holes.push(new THREE.Path(inner));
+  const geometry = new THREE.ShapeGeometry(shape);
+  const positions = geometry.getAttribute('position');
+  for (let i = 0; i < positions.count; i++) {
+    const x = positions.getX(i), y = positions.getY(i);
+    positions.setZ(i, ringVertexHeight(
+      x, y, inner, ringRoof.zInner, ringRoof.zOuter));
+  }
+  positions.needsUpdate = true;
+  geometry.computeVertexNormals();
+  return geometry;
+}
 
 /* ── Geometrie-Hilfen ───────────────────────────────────────────────── */
 const v2 = (a, b) => [b[0] - a[0], b[1] - a[1]];
@@ -381,23 +405,41 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     }
   }
 
-  // Dach: nur Unterseite und Traufkante; Segmente über der Kameraseite entfallen
+  // Dach: Dortmunds vermessener geschlossener Kranz oder die bisherigen Einzelplatten.
   const roofSegs = (scene.roof && scene.roof.segments) || [];
   const camLimit = PITCH.width / 2 + 6;
-  for (const seg of roofSegs) {
+  const ringRoof = scene.roof && scene.roof.ring;
+  if (ringRoof) {
+    const ringMaterial = new THREE.MeshLambertMaterial({
+      color: rules.roofColor, side: THREE.DoubleSide,
+    });
+    lightingMaterials.roofs.add(ringMaterial);
+    const mesh = new THREE.Mesh(buildRingRoofGeometry(ringRoof, rot), ringMaterial);
+    mesh.rotation.x = -Math.PI / 2;
+    three.add(mesh);
+    for (let i = 0; i < ringRoof.inner.length; i++) {
+      const a = ringRoof.inner[i], b = ringRoof.inner[(i + 1) % ringRoof.inner.length];
+      if (!isOrbit && (rot(a)[1] + rot(b)[1]) / 2 > camLimit) continue;
+      const fascia = ringFasciaHeights(ringRoof.zInner, rules.fascia);
+      const p0 = toWorld(a, fascia.top), p1 = toWorld(b, fascia.top);
+      pushQuad(p0, p1, p1.clone().setY(fascia.bottom),
+        p0.clone().setY(fascia.bottom), rules.fasciaColor, true);
+    }
+  }
+  for (const seg of ringRoof ? [] : roofSegs) {
     const q = seg.quad.map(rot);
     const cy = q.reduce((s, p) => s + p[1], 0) / 4;
     if (!isOrbit && cy > camLimit) continue;
-    const hs = seg.heights || [seg.z, seg.z, seg.z, seg.z];
+    const hs = seg.heights || seg.quad.map(() => seg.z);
     const pts = seg.quad.map((p, i) => toWorld(p, hs[i]));
     // Unterseite: Wicklung so, dass die Normale nach unten zeigt (von oben unsichtbar)
     const c = new THREE.Color(rules.roofColor);
     const tri = (a, b2, d) => { roofPos.push(a.x, a.y, a.z, b2.x, b2.y, b2.z, d.x, d.y, d.z); roofCol.push(c.r, c.g, c.b, c.r, c.g, c.b, c.r, c.g, c.b); };
     // jedes Dreieck einzeln so wickeln, dass seine Normale nach unten zeigt — robust auch bei verdrehten Quads
     const down = (a, b2, d) => { const n = new THREE.Vector3().crossVectors(b2.clone().sub(a), d.clone().sub(a)); return n.y > 0 ? tri(a, d, b2) : tri(a, b2, d); };
-    down(pts[0], pts[1], pts[2]); down(pts[0], pts[2], pts[3]);
+    for (let i = 1; i + 1 < pts.length; i++) down(pts[0], pts[i], pts[i + 1]);
     // Traufkante an der feldnahen Kante
-    const edges = [[0, 1], [1, 2], [2, 3], [3, 0]];
+    const edges = seg.quad.map((_, i) => [i, (i + 1) % seg.quad.length]);
     const inner = edges.reduce((best, e) => {
       const m = mid(seg.quad[e[0]], seg.quad[e[1]]); const d = pitchDistance(m);
       return !best || d < best.d ? { e, d } : best; }, null).e;
@@ -446,7 +488,12 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
       let target = ((k + 0.5) / n) * total, acc = 0, pos = o[0];
       for (const [a, b2, L] of segs) { if (acc + L >= target) { const t = (target - acc) / L; pos = [a[0] + (b2[0] - a[0]) * t, a[1] + (b2[1] - a[1]) * t]; break; } acc += L; }
       const out = Math.hypot(pos[0], pos[1]) || 1; const p2 = [pos[0] * (1 + 4 / out), pos[1] * (1 + 4 / out)];
-      const m = new THREE.Mesh(new THREE.BoxGeometry(2.4, h, 2.4), new THREE.MeshLambertMaterial({ color: col }));
+      const m = new THREE.Mesh(new THREE.BoxGeometry(2.4, h, 2.4),
+        new THREE.MeshLambertMaterial({
+          color: col,
+          emissive: scene.preview ? col : 0x000000,
+          emissiveIntensity: scene.preview ? 0.28 : 0,
+        }));
       const w = toWorld(p2, h / 2); m.position.copy(w); three.add(m);
     }
   }
@@ -577,12 +624,15 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
 
   // Laufbahn (Steckbrief/Szene): Tartanring zwischen Innenraum und Rängen, Innenraum als Rasen
   if (isSeat) {
+    const grassMaterial = scene.preview
+      ? new THREE.MeshBasicMaterial({color: 0x164829, toneMapped: false})
+      : new THREE.MeshLambertMaterial({color: rules.greenColor});
     const seatGround = new THREE.Mesh(
       new THREE.PlaneGeometry(360, 280),
-      new THREE.MeshLambertMaterial({color: rules.greenColor}),
+      grassMaterial,
     );
     seatGround.rotation.x = -Math.PI / 2;
-    seatGround.position.y = -0.02;
+    seatGround.position.y = scene.preview ? 0.12 : -0.02;
     three.add(seatGround);
   }
   if (scene.track && scene.track.outer) {
@@ -601,7 +651,7 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
     const pitchLayout = buildPitchLayout(phi);
     for (const stripe of pitchLayout.stripes) {
       const [a, b, c, d] = stripe.quad.map(
-        ([x, z]) => new THREE.Vector3(x, 0.01, z),
+        ([x, z]) => new THREE.Vector3(x, scene.preview ? 0.16 : 0.01, z),
       );
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute([
@@ -609,11 +659,16 @@ export function createStadiumStage({ canvas, scene, width, height, drawPitch = f
         a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z,
       ], 3));
       geometry.computeVertexNormals();
-      const pitchMaterial = new THREE.MeshLambertMaterial({
-        color: stripe.index % 2 ? rules.pitchColor : rules.pitchColor2,
-        side: THREE.DoubleSide,
-      });
-      lightingMaterials.pitch.add(pitchMaterial);
+      const pitchMaterial = scene.preview
+        ? new THREE.MeshBasicMaterial({
+          color: stripe.index % 2 ? 0x216b3e : 0x1b5e36,
+          side: THREE.DoubleSide, toneMapped: false,
+        })
+        : new THREE.MeshLambertMaterial({
+          color: stripe.index % 2 ? rules.pitchColor : rules.pitchColor2,
+          side: THREE.DoubleSide,
+        });
+      if (!scene.preview) lightingMaterials.pitch.add(pitchMaterial);
       g.add(new THREE.Mesh(geometry, pitchMaterial));
     }
     for (const segment of pitchLayout.lines) {
