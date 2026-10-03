@@ -1181,6 +1181,12 @@ img.mp-tlticket-crest {
 .mp-tab svg { width: 12px; height: 12px; }
 .mp-tab-content { gap: 16px; padding: 16px 44px 40px; }
 
+/* Match the header's 44px insets, including the rack's two 1px borders. */
+.mp-dashboard--trikots > .kit-rack {
+    width: calc(100% - 88px - 2px);
+    margin-inline: auto;
+}
+
 .mp-tl2 { border-radius: 8px; }
 .mp-tl2-header {
     min-height: 54px;

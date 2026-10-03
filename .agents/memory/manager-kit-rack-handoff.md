@@ -15,6 +15,15 @@ melden. Spielraum für abweichungen haben wir hier nicht.“
 Licht oder Bewegungsverhalten vornehmen. Unklare Integrations- oder
 Datenanforderungen vor einer Umsetzung mit dem Nutzer klären.
 
+Ausdrücklich freigegebene Ausnahmen: Die Kleiderstange muss mittig und
+bündig mit dem oberen Profilbereich stehen; die Haken sollen etwas höher
+liegen, damit sie realistisch an der Stange hängen.
+
+**Why:** Der Nutzer verlangte diese beiden Korrekturen an der übernommenen Vorlage.
+
+**How to apply:** Nur diese Ausrichtung und Hakenhöhe anpassen; die restliche
+Gestaltung und das Bewegungsverhalten bleiben nach der Vorlage unverändert.
+
 ## Freigegebener Datenumfang
 
 Der Nutzer hat ausdrücklich die drei Trikots aus der Vorlage gewählt,

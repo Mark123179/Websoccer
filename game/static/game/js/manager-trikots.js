@@ -151,7 +151,7 @@ async function buildKit(k, i) {
   const v = new THREE.Vector3(), acc = new THREE.Vector3(); let n = 0; const yCut = b2.max.y - KIT_H * 0.03;
   inner.traverse(o => { if (!o.isMesh) return; const p = o.geometry.attributes.position; for (let j = 0; j < p.count; j += 3) { v.fromBufferAttribute(p, j).applyMatrix4(o.matrixWorld); if (v.y > yCut) { acc.add(v); n++; } } });
   if (n) acc.divideScalar(n); else acc.set((b2.min.x + b2.max.x) / 2, b2.max.y, (b2.min.z + b2.max.z) / 2);
-  const hookInset = KIT_H * -0.002;          // Hakenbogen liegt auf der Stange auf
+  const hookInset = KIT_H * -0.002 + 6;          // Hakenbogen liegt auf der Stange auf
   const holder = new THREE.Group(); holder.add(inner);
   inner.position.set(-acc.x, -(acc.y - hookInset) + inner.position.y, -acc.z);
   const pivot = new THREE.Group(); pivot.add(holder); scene.add(pivot);

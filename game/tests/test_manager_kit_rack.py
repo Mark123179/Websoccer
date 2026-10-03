@@ -9,10 +9,16 @@ from game.manager_kit_reference import reference_kits
 
 
 class ManagerKitSourceTests(SimpleTestCase):
-    def test_javascript_matches_the_approved_handoff_byte_for_byte(self):
+    def test_javascript_only_changes_the_approved_hook_height(self):
         path = Path(__file__).resolve().parents[1] / 'static/game/js/manager-trikots.js'
+        modified = path.read_bytes()
+        self.assertEqual(modified.count(b'const hookInset = KIT_H * -0.002 + 6;'), 1)
+        original = modified.replace(
+            b'const hookInset = KIT_H * -0.002 + 6;',
+            b'const hookInset = KIT_H * -0.002;',
+        )
         self.assertEqual(
-            hashlib.sha256(path.read_bytes()).hexdigest(),
+            hashlib.sha256(original).hexdigest(),
             'e4a05311ed0a93760cd32843dca30ec83cfbf588974bc83a9a572b72b43ce8e9',
         )
 
