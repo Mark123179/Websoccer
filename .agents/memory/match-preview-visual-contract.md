@@ -26,6 +26,12 @@ Die Vorschau darf beim Öffnen weder eine Begegnung vorberechnen noch neue Wette
 
 **How to apply:** Neue verbindliche Vorabinformationen außerhalb der Anzeige erzeugen und speichern; die Vorschau liest sie anschließend. Ohne solche Daten einen klaren Offen-Status zeigen.
 
+Für die visuelle Prüfung hat der Nutzer Dummy-Daten für Trainer, Wetter und Schiedsrichter sowie Dortmunds 3D-Stadion als Test auch bei anderen Spielorten angefordert. Stadionfoto und 3D stehen nebeneinander statt hinter einer Umschaltung. Das Gegner-Spielfeld soll etwas länger sein und das Originalbild der Taktikansicht verwenden.
+
+**Why:** Der Nutzer hat diese Testdarstellung ausdrücklich angefordert, um die bisher offenen Bereiche vollständig beurteilen zu können.
+
+**How to apply:** Fehlende Daten nur in der Anzeige durch klar gekennzeichnete Testdaten ergänzen, niemals speichern oder in die Simulation übernehmen. Dortmunds Testmodell nicht als das reale Stadion eines anderen Vereins beschriften. Bestehende echte Daten weiterhin verwenden.
+
 Der Kabinenhintergrund muss über die ganze Seite reichen, auch hinter den Kalender. Anschließend dürfen die drei Kacheln größer werden.
 
 **Why:** Der Nutzer beanstandet den sichtbaren Beginn des Kabinenfotos unter dem Kalender und verlangt diese Anpassung vor der weiteren Gestaltung.

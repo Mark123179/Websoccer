@@ -84,7 +84,7 @@ class MatchPreviewContextTests(SimpleTestCase):
             simulated_match_id=None,
         )
 
-    def context(self, viewed=None, players=(), last=None):
+    def context(self, viewed=None, players=(), last=None, day_weather=None):
         with (
             patch.object(briefing.Player.objects, 'filter') as squad,
             patch.object(briefing, '_season_leaders', return_value=[]),
@@ -94,7 +94,7 @@ class MatchPreviewContextTests(SimpleTestCase):
             patch.object(briefing.Player.objects, 'in_bulk', return_value={}),
         ):
             squad.return_value.order_by.return_value = list(players)
-            weather.return_value.first.return_value = None
+            weather.return_value.first.return_value = day_weather
             result = briefing.build_match_preview_context(viewed or self.home, self.fixture)
             if self.fixture:
                 expected = self.away if (viewed or self.home).pk == self.home.pk else self.home
@@ -109,7 +109,8 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual(result['stadium']['name'], 'Heim-Arena')
         self.assertEqual(result['home']['kit_url'], '/915-home.png')
         self.assertEqual(result['away']['kit_url'], '/907-away.png')
-        self.assertFalse(result['stadium']['model_available'])
+        self.assertTrue(result['stadium']['model_available'])
+        self.assertTrue(result['stadium']['model_is_demo'])
         self.assertEqual(result['time_label'], '18:30 Uhr')
 
     def test_away_role_still_uses_home_stadium_and_reverses_opponent(self):
@@ -117,10 +118,11 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual(result['opponent']['id'], 2)
         self.assertEqual(result['stadium']['location'], 'Heim-Stadt')
 
-    def test_only_home_dortmund_gets_its_3d_model(self):
+    def test_home_dortmund_model_is_not_misattributed_as_other_venue(self):
         self.fixture.home_club, self.fixture.away_club = self.away, self.home
         result = self.context(self.home)
         self.assertTrue(result['stadium']['model_available'])
+        self.assertFalse(result['stadium']['model_is_demo'])
         self.assertIn('dortmund_editor_scene.js', result['stadium']['model_scene_url'])
 
     def test_no_fixture_never_invents_opponent_or_runs_squad_queries(self):
@@ -131,6 +133,18 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertIsNone(result['home'])
         self.assertEqual(result['lineup'], [])
         self.assertEqual(result['absences'], [])
+        self.assertIsNone(result['trainer'])
+        self.assertIsNone(result['referee'])
+        self.assertIsNone(result['weather'])
+        self.assertFalse(result['stadium']['model_available'])
+
+    def test_saved_weather_has_priority_over_display_only_demo(self):
+        real_weather = {'type': 'rain', 'label': 'Regen', 'temperature': 0}
+        with patch.object(briefing, 'weather_context', return_value=real_weather.copy()):
+            result = self.context(day_weather=NS(pk=1))
+        self.assertEqual(result['weather']['label'], 'Regen')
+        self.assertEqual(result['weather']['temperature'], 0)
+        self.assertNotIn('is_demo', result['weather'])
 
     def test_injuries_suspensions_and_unknown_values_are_honest(self):
         hurt = player(1, ws_injury_type='Muskelverletzung', ws_injury_days_remaining=4)
@@ -141,18 +155,21 @@ class MatchPreviewContextTests(SimpleTestCase):
         self.assertEqual(result['absences'][0]['duration'], '4 Tage')
         self.assertEqual(result['absences'][1]['player']['id'], 2)
         self.assertEqual(result['spotlights'][-1]['player']['id'], 1)
-        self.assertIsNone(result['referee'])
-        self.assertIsNone(result['weather'])
+        self.assertTrue(result['referee']['is_demo'])
+        self.assertTrue(result['weather']['is_demo'])
+        self.assertTrue(result['trainer']['is_demo'])
+        self.assertEqual(result['weather']['temperature'], 18)
 
     def test_future_referee_is_not_borrowed_from_last_match(self):
         result = self.context()
-        self.assertIsNone(result['referee'])
+        self.assertTrue(result['referee']['is_demo'])
         self.fixture.simulated_match_id = 9
         referee = NS(name='Angesetzter Referee', face_url=lambda: '/real-ref.png')
         self.fixture.simulated_match = NS(referee=referee)
         result = self.context()
         self.assertEqual(result['referee']['name'], referee.name)
         self.assertEqual(result['referee']['portrait_url'], '/real-ref.png')
+        self.assertNotIn('is_demo', result['referee'])
 
     def test_news_query_is_latest_published_news_not_pinned_sort_order(self):
         self.context()

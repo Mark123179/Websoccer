@@ -23,7 +23,7 @@ Bestehende nächste-Spiel- und konkrete-Fixture-Routen nutzen ein eigenes Django
 Hintergrund und SAM-Kartenmaske haben dieselbe Originalgröße und dieselbe
 Cover-Ausrichtung auf der gesamten Inhaltsfläche. Es gibt keine Simulation,
 historische Backfills oder Datenmutation beim Öffnen.
-Isoliertes JS unterstützt Foto/3D-Umschaltung, verzögertes Laden und
+Isoliertes JS unterstützt das verzögerte Laden der sichtbaren 3D-Ansicht und
 ehrliche Bild-Ausfallzustände; Django escaped alle Texte.
 
 Die Aufstellung stammt aus dem letzten kanonischen Gegner-Spielbericht,
@@ -33,11 +33,15 @@ und numerische Spielsaison gebunden. Stadion und Ort gehören immer zum
 Heimverein, der Gegner wird relativ zum aufgerufenen Verein bestimmt.
 Vereinsnews beziehen sich auf den aufgerufenen Verein.
 
-Fehlende Daten werden nicht erfunden: ein zukünftiger Referee ist im
-vorhandenen Modell noch nicht angesetzt, sondern erst am simulierten Spiel
-gespeichert. Das vorhandene Live-3D-Modell ist Dortmund-spezifisch und darf
-nicht für andere Stadien ausgegeben werden. Vorhandenes Tageswetter wird
-gelesen, nicht beim Seitenaufruf gewürfelt.
+Auf ausdrücklichen Nutzerwunsch werden fehlende Trainer-, Wetter- und
+Schiedsrichterdaten vorübergehend durch gekennzeichnete Testdaten ergänzt.
+Diese bleiben reine Anzeigedaten, ohne Speicherung oder Simulationseinfluss.
+Vorhandene echte Daten haben Vorrang. Stadionfoto und 3D stehen nebeneinander;
+für andere Spielorte ist Dortmunds Modell ausdrücklich als Testmodell
+beschriftet, nicht als Modell des tatsächlichen Heimstadions.
+Vorhandenes Tageswetter wird gelesen, nicht beim Seitenaufruf gewürfelt.
+Das Gegner-Spielfeld wird etwas länger und verwendet das Spielfeldbild
+der bestehenden Taktikansicht anstelle synthetischer CSS-Markierungen.
 
 ## Prüfung
 

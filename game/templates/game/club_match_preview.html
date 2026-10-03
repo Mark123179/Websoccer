@@ -7,7 +7,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-8">
+    <link rel="stylesheet" href="{% static 'game/css/match-preview.css' %}?v=preview-11">
 {% endblock %}
 
 {% block content %}
@@ -24,11 +24,7 @@
                 </header>
 
                 {% if preview.lineup %}
-                    <div class="mp-pitch" aria-label="Aufstellung des Gegners">
-                        <span class="mp-pitch-line mp-pitch-line--half" aria-hidden="true"></span>
-                        <span class="mp-pitch-circle" aria-hidden="true"></span>
-                        <span class="mp-pitch-box mp-pitch-box--top" aria-hidden="true"></span>
-                        <span class="mp-pitch-box mp-pitch-box--bottom" aria-hidden="true"></span>
+                    <div class="mp-pitch" role="group" aria-label="Spielfeld mit Aufstellung des Gegners">
                         {% for player in preview.lineup %}
                             {% if player.url %}<a class="mp-player-marker" href="{{ player.url }}" style="left:{{ player.x|unlocalize }}%;top:{{ player.y|unlocalize }}%" aria-label="{{ player.name }}{% if player.position %}, {{ player.position }}{% endif %}">{% else %}<div class="mp-player-marker" style="left:{{ player.x|unlocalize }}%;top:{{ player.y|unlocalize }}%" aria-label="{{ player.name }}{% if player.position %}, {{ player.position }}{% endif %}">{% endif %}
                                 <span class="mp-player-portrait">
@@ -46,14 +42,14 @@
                 {% endif %}
 
                 {% if preview.trainer %}
-                    {% if preview.trainer.url %}<a class="mp-trainer" href="{{ preview.trainer.url }}">{% else %}<div class="mp-trainer">{% endif %}
+                    {% if preview.trainer.url and not preview.trainer.is_demo %}<a class="mp-trainer" href="{{ preview.trainer.url }}">{% else %}<div class="mp-trainer">{% endif %}
                         <span class="mp-avatar mp-avatar--trainer">
                             {% if preview.trainer.portrait_url %}<img src="{{ preview.trainer.portrait_url }}" alt="" loading="lazy" data-fallback-image>{% endif %}
                             <span class="mp-image-fallback" data-image-fallback aria-hidden="true">T</span>
                         </span>
                         <span class="mp-trainer-copy"><small>{{ preview.trainer.kind|default:"Trainer" }}</small><strong>{{ preview.trainer.name|default:"—" }}</strong></span>
-                        <span class="mp-inline-arrow" aria-hidden="true">↗</span>
-                    {% if preview.trainer.url %}</a>{% else %}</div>{% endif %}
+                        {% if preview.trainer.is_demo %}<span class="mp-demo-badge">Testdaten</span>{% elif preview.trainer.url %}<span class="mp-inline-arrow" aria-hidden="true">↗</span>{% endif %}
+                    {% if preview.trainer.url and not preview.trainer.is_demo %}</a>{% else %}</div>{% endif %}
                 {% else %}
                     <p class="mp-inline-empty">Trainer nicht hinterlegt.</p>
                 {% endif %}
@@ -145,39 +141,45 @@
                         <div class="mp-match-facts" aria-label="Spieldetails">
                             {% if preview.stadium.name or preview.stadium.location %}<div class="mp-fact mp-fact--venue"><span class="mp-fact-symbol" aria-hidden="true">⌖</span><span><small>Austragungsort</small><strong>{{ preview.stadium.name|default:"Stadion" }}</strong>{% if preview.stadium.location %}<em>{{ preview.stadium.location }}</em>{% endif %}</span></div>{% endif %}
                             {% if preview.date_label or preview.time_label %}<div class="mp-fact"><span class="mp-fact-symbol" aria-hidden="true">◷</span><span><small>Anstoß</small><strong>{% if preview.date_label %}{{ preview.date_label }}{% endif %}{% if preview.time_label %}{% if preview.date_label %}<br>{% endif %}{{ preview.time_label }}{% endif %}</strong></span></div>{% endif %}
-                            <div class="mp-fact"><span class="mp-fact-symbol" aria-hidden="true">◉</span><span><small>Schiedsrichter</small><strong>{% if preview.referee %}{{ preview.referee.name }}{% else %}Noch nicht angesetzt{% endif %}</strong></span></div>
-                            <div class="mp-fact"><span class="mp-fact-symbol mp-weather-icon {{ preview.weather.icon_class }}" aria-hidden="true"></span><span><small>Wetter</small><strong>{% if preview.weather %}{{ preview.weather.label }} · {{ preview.weather.temperature }} °C{% else %}Prognose noch offen{% endif %}</strong></span></div>
+                            <div class="mp-fact"><span class="mp-fact-symbol" aria-hidden="true">◉</span><span><small>Schiedsrichter</small><strong>{% if preview.referee %}{{ preview.referee.name|default:"Noch nicht angesetzt" }}{% else %}Noch nicht angesetzt{% endif %}</strong>{% if preview.referee.is_demo %}<em class="mp-demo-badge">Testdaten</em>{% endif %}</span></div>
+                            <div class="mp-fact"><span class="mp-fact-symbol mp-weather-icon {{ preview.weather.icon_class }}" aria-hidden="true"></span><span><small>Wetter</small><strong>{% if preview.weather %}{{ preview.weather.label|default:"Prognose offen" }}{% if preview.weather.temperature or preview.weather.temperature == 0 %} · {{ preview.weather.temperature }} °C{% endif %}{% else %}Prognose noch offen{% endif %}</strong>{% if preview.weather.is_demo %}<em class="mp-demo-badge">Testdaten</em>{% endif %}</span></div>
                         </div>
 
                         <section class="mp-stadium" aria-labelledby="mp-stadium-title">
                             <div class="mp-stadium-head">
                                 <div><span class="mp-eyebrow">Spielort</span><h2 id="mp-stadium-title">{{ preview.stadium.name|default:"Stadion" }}</h2></div>
-                                <div class="mp-view-toggle" role="tablist" aria-label="Stadionansicht">
-                                    <button type="button" role="tab" id="mp-photo-tab" aria-selected="true" aria-controls="mp-stadium-photo" data-stadium-tab="photo">Foto</button>
-                                    {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
-                                        <button type="button" role="tab" id="mp-model-tab" aria-selected="false" aria-controls="mp-stadium-model" tabindex="-1" data-stadium-tab="model">3D</button>
-                                    {% else %}
-                                        <button type="button" role="tab" aria-selected="false" aria-disabled="true" disabled title="Kein 3D-Modell verfügbar">3D</button>
-                                    {% endif %}
-                                </div>
                             </div>
-                            <div class="mp-stadium-viewport">
-                                <div class="mp-stadium-view is-active" role="tabpanel" id="mp-stadium-photo" aria-labelledby="mp-photo-tab" data-stadium-view="photo">
-                                    {% if preview.stadium.photo_url %}
-                                        <img class="mp-stadium-photo" src="{{ preview.stadium.photo_url }}" alt="{{ preview.stadium.name|default:'Stadion' }}" loading="lazy" data-fallback-image>
-                                        <span class="mp-image-fallback mp-stadium-fallback" data-image-fallback hidden>Stadionfoto nicht verfügbar</span>
-                                    {% else %}
-                                        <span class="mp-stadium-fallback">Kein Stadionfoto verfügbar</span>
-                                    {% endif %}
-                                </div>
-                                {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
-                                    <div class="mp-stadium-view mp-stadium-view--model" role="tabpanel" id="mp-stadium-model" aria-labelledby="mp-model-tab" data-stadium-view="model" hidden>
-                                        <div class="mp-stadium-model-stage" data-club-stadium-stage></div>
-                                        <div class="mp-stadium-model-status" data-club-stadium-status role="status" aria-live="polite">3D-Stadion wird geladen, sobald die Ansicht geöffnet wird …</div>
+                            <div class="mp-stadium-panes">
+                                <section class="mp-stadium-pane" aria-labelledby="mp-stadium-photo-title">
+                                    <header class="mp-stadium-pane-heading">
+                                        <h3 id="mp-stadium-photo-title">Foto</h3>
+                                    </header>
+                                    <div class="mp-stadium-viewport">
+                                        {% if preview.stadium.photo_url %}
+                                            <img class="mp-stadium-photo" src="{{ preview.stadium.photo_url }}" alt="{{ preview.stadium.name|default:'Stadion' }}" loading="lazy" data-fallback-image>
+                                            <span class="mp-image-fallback mp-stadium-fallback" data-image-fallback hidden>Stadionfoto nicht verfügbar</span>
+                                        {% else %}
+                                            <span class="mp-stadium-fallback">Kein Stadionfoto verfügbar</span>
+                                        {% endif %}
                                     </div>
-                                {% endif %}
+                                </section>
+                                <section class="mp-stadium-pane" aria-labelledby="mp-stadium-model-title">
+                                    <header class="mp-stadium-pane-heading">
+                                        <h3 id="mp-stadium-model-title">{% if preview.stadium.model_is_demo %}Dortmund · Testmodell{% else %}{{ preview.stadium.model_name|default:"3D-Stadion" }}{% endif %}</h3>
+                                        {% if preview.stadium.model_is_demo %}<span class="mp-demo-badge">Testdaten</span>{% endif %}
+                                    </header>
+                                    {% if preview.stadium.model_is_demo %}<p class="mp-stadium-model-name">{{ preview.stadium.model_name|default:"Signal Iduna Park · Dortmund" }}</p>{% endif %}
+                                    <div class="mp-stadium-viewport">
+                                        {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
+                                            <div class="mp-stadium-model-stage" data-club-stadium-stage></div>
+                                            <div class="mp-stadium-model-status" data-club-stadium-status role="status" aria-live="polite">3D-Stadion wird geladen …</div>
+                                        {% else %}
+                                            <span class="mp-stadium-fallback">Kein 3D-Modell verfügbar</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if preview.stadium.model_is_demo %}<p class="mp-stadium-demo-note">Dortmunder Testmodell – nicht das Stadion des angezeigten Vereins.</p>{% endif %}
+                                </section>
                             </div>
-                            {% if not preview.stadium.model_available %}<p class="mp-caption">Für dieses Stadion liegt noch kein 3D-Modell vor.</p>{% endif %}
                         </section>
                     {% else %}
                         <div class="mp-no-fixture">
@@ -243,8 +245,9 @@
 
 {% block extra_js %}
     {{ block.super }}
-    <script src="{% static 'game/js/match-preview.js' %}?v=preview-8" defer></script>
+    <script src="{% static 'game/js/match-preview.js' %}?v=preview-11" defer></script>
     {% if preview.stadium.model_available and preview.stadium.model_scene_url %}
-        <script src="{% static 'game/js/club-stadium.js' %}" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>
+        <script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
+        <script src="{% static 'game/js/club-stadium.js' %}?v=3" data-scene-url="{{ preview.stadium.model_scene_url }}" defer></script>
     {% endif %}
 {% endblock %}

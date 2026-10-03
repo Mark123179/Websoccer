@@ -62,7 +62,7 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         self.assertNotIn('foreground.png', html)
         self.assertNotIn('Vorbericht für das Spiel', html)
         self.assertIn('Der Spielplan ist derzeit frei.', html)
-        self.assertIn('match-preview.js?v=preview-8', html)
+        self.assertIn('match-preview.js?v=preview-11', html)
 
     def test_partial_fixture_keeps_missing_weather_and_referee_visible(self):
         html = render_to_string('game/club_match_preview.html', {
@@ -75,7 +75,41 @@ class MatchPreviewLayoutTests(SimpleTestCase):
         })
         self.assertIn('Noch nicht angesetzt', html)
         self.assertIn('Schnee · 0 °C', html)
-        self.assertIn('kein 3D-Modell', html)
+        self.assertIn('mp-stadium-panes', html)
+
+    def test_demo_fields_and_model_are_labeled_and_visible_beside_photo(self):
+        html = render_to_string('game/club_match_preview.html', {
+            'competition_name': 'Bundesliga', 'competition_logo': '',
+            'preview': {
+                'has_fixture': True, 'home': {'name': 'Heim'},
+                'away': {'name': 'Gast'}, 'opponent': {'name': 'Gast'},
+                'trainer': {'name': 'Demo-Trainer', 'is_demo': True},
+                'referee': {'name': 'Demo-Referee', 'is_demo': True},
+                'weather': {'label': 'Sonnig', 'temperature': 18, 'is_demo': True},
+                'stadium': {
+                    'name': 'Heimstadion', 'photo_url': '/venue.jpg',
+                    'model_available': True, 'model_is_demo': True,
+                    'model_name': 'Signal Iduna Park · Dortmund',
+                    'model_scene_url': '/dortmund-scene.js',
+                },
+            },
+        })
+        self.assertGreaterEqual(html.count('Testdaten'), 3)
+        self.assertIn('Testmodell', html)
+        self.assertIn('mp-stadium-panes', html)
+        self.assertIn('data-club-stadium-stage', html)
+        self.assertIn('club-stadium.js', html)
+        self.assertIn('type="importmap"', html)
+        self.assertIn('stage/vendor/three.module.js', html)
+        self.assertNotIn('data-stadium-tab', html)
+        self.assertNotIn('data-stadium-view', html)
+
+    def test_pitch_uses_tactics_image_and_has_more_length(self):
+        from pathlib import Path
+        css = Path('game/static/game/css/match-preview.css').read_text()
+        self.assertIn('../images/backgrounds/spielfeld.png', css)
+        self.assertIn('height: 380px;', css)
+        self.assertNotIn('.mp-pitch::before', css)
 
     def test_pitch_coordinates_are_unlocalized_and_snapshot_text_is_escaped(self):
         html = render_to_string('game/club_match_preview.html', {

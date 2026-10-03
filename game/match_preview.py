@@ -129,8 +129,10 @@ def _stadium(home):
         'photo_url': resolve_stadium_url(photo) if photo else (
             club_stadium_url(home.fm_inside_id) if home else ''
         ),
-        # This is the existing, club-specific live scene, not a generic stand-in.
-        'model_available': bool(home and home.pk == 3 and home.fm_inside_id == 907),
+        # The user explicitly requested Dortmund's model as a labeled visual test.
+        'model_available': bool(home),
+        'model_is_demo': bool(home and not (home.pk == 3 and home.fm_inside_id == 907)),
+        'model_name': 'Signal Iduna Park · Dortmund',
         'model_scene_url': static('stadium_editor/dortmund_editor_scene.js') + '?v=54',
         'url': reverse('club_detail', kwargs={'club_id': home.pk}) if home else '',
     }
@@ -274,6 +276,22 @@ def build_match_preview_context(club, fixture):
             preview['weather'] = weather_context(weather) if weather else None
             if preview['weather']:
                 preview['weather']['icon_class'] = preview['weather']['type']
+        # Display-only test data: never persist or feed these into simulation.
+        if not preview['trainer']:
+            preview['trainer'] = {
+                'name': 'Alexander Weber', 'kind': 'Trainer', 'url': '',
+                'portrait_url': static('game/images/managers/default-manager.png'),
+                'is_demo': True,
+            }
+        if not preview['referee']:
+            preview['referee'] = {
+                'name': 'Max Mustermann', 'portrait_url': '', 'is_demo': True,
+            }
+        if not preview['weather']:
+            preview['weather'] = {
+                'label': 'Sonnig', 'temperature': 18, 'type': 'sunny',
+                'icon_class': 'sunny', 'is_demo': True,
+            }
     preview['news'] = [
         {'title': item.title, 'date_label': _date(item.published_at),
          'url': reverse('club_news_detail', kwargs={'club_id': club.pk, 'news_id': item.pk}),
