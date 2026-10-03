@@ -4235,6 +4235,27 @@ def _ensure_ratings_in_report(report_data: dict) -> dict:
     return report_data
 
 
+def _ensure_crests_in_report(report_data, sm=None):
+    """Resolve legacy static paths and current asset URLs at render time only."""
+    if not report_data:
+        return report_data
+    from .asset_urls import resolve_club_crest_url
+
+    report_data = dict(report_data)
+    for side in ('home', 'away'):
+        key = f'{side}_club_crest'
+        path = report_data.get(key)
+        if not path and sm is not None:
+            path = getattr(sm, f'{side}_club').crest_static_path
+        report_data[key] = resolve_club_crest_url(path)
+    motm = report_data.get('man_of_the_match')
+    if motm and motm.get('club_crest'):
+        report_data['man_of_the_match'] = {
+            **motm, 'club_crest': resolve_club_crest_url(motm['club_crest']),
+        }
+    return report_data
+
+
 def _ensure_portraits_in_report(report_data: dict) -> dict:
     """Gleicht Portrait-URLs in report_data immer mit der DB ab.
 
@@ -5428,8 +5449,6 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
     """Bündelt die Zusatzwerte für das neue Spielbericht-Design (Übersicht-Tab)."""
     if not report_data:
         return {}
-    from django.templatetags.static import static as _static
-
     home_name = report_data.get('home_club_name', '')
     away_name = report_data.get('away_club_name', '')
     home_short = report_data.get('home_club_short', home_name)
@@ -5444,8 +5463,8 @@ def _build_v2_report_extras(report_data, rc, club_home_id=None):
     momentum_payload = {
         'momentum': momentum,
         'markers': momentum_markers,
-        'home_crest': _static(home_crest) if home_crest else None,
-        'away_crest': _static(away_crest) if away_crest else None,
+        'home_crest': home_crest or None,
+        'away_crest': away_crest or None,
         'home_initial': (home_short or '?')[:1],
         'away_initial': (away_short or '?')[:1],
     }
@@ -5778,6 +5797,7 @@ def club_match_report(request, club_id):
     _report_data = _ensure_cards_in_report(_report_data) if _report_data else _report_data
     _report_data = _ensure_bench_in_report(_report_data) if _report_data else _report_data
     _report_data = _ensure_weather_in_report(_report_data, sm=latest) if _report_data else _report_data
+    _report_data = _ensure_crests_in_report(_report_data, sm=latest)
 
     _comp_name = ''
     if latest:
@@ -5950,6 +5970,7 @@ def match_report_by_id(request, sm_id):
     _report_data = _ensure_cards_in_report(_report_data)
     _report_data = _ensure_bench_in_report(_report_data)
     _report_data = _ensure_weather_in_report(_report_data, sm=latest)
+    _report_data = _ensure_crests_in_report(_report_data, sm=latest)
 
     _comp_name = ''
     if latest.match_type == 'freundschaft':

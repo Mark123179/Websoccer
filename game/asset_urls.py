@@ -65,6 +65,22 @@ def club_logo_url(fm_inside_id):
     return asset_url('clubs/logos', f'{fm_inside_id}_club.png')
 
 
+def resolve_club_crest_url(path):
+    """Resolve saved report crests without changing their club/FM identity."""
+    if not path:
+        return ''
+    # Old reports can contain a frozen development asset base.
+    for prefix in ('/static/assets/', '/assets/', 'assets/'):
+        if path.startswith(prefix + 'clubs/logos/'):
+            return asset_url('clubs/logos', path[len(prefix + 'clubs/logos/'):])
+    if path.startswith('clubs/logos/'):
+        return asset_url('clubs/logos', path[len('clubs/logos/'):])
+    if path.startswith(('/', 'https://', 'http://')):
+        return path
+    from django.templatetags.static import static
+    return static(path)
+
+
 def club_stadium_url(fm_inside_id):
     if not fm_inside_id:
         return ''
