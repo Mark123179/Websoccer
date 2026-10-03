@@ -1,13 +1,30 @@
 ---
 name: Spielvorschau visual contract
-description: User-approved scope and reference-image boundaries for the empty match preview.
+description: Required match-preview content, full-page locker-room background and approved object masking.
 ---
 
 Die Spielvorschau übernimmt aus dem Referenz-Screenshot ausschließlich den Aufbau: drei Kacheln, die mittlere breiter; Stuhl links unten und Tasche rechts unten liegen vor den Kacheln. Der separat gelieferte neutrale Kabinenhintergrund bleibt die tatsächliche Bildquelle. Bestehende Produktfarben bleiben erhalten, Kacheln leicht transparent.
 
 **Why:** Der Nutzer hat ausdrücklich nur die Art und Weise der Referenz bestellt, nicht deren Mannschaften, Texte, Farben oder Inhalte.
 
-**How to apply:** Wettbewerb oben im Header, sonst Kacheln leer lassen. Inhalte werden später separat definiert; keine Aufstellungen, Hinweise oder Beispielwerte vorwegnehmen.
+**How to apply:** Der Nutzer hat die Inhalte inzwischen vorgegeben und lässt die Gestaltung frei. Die frühere Beschränkung auf leere Kacheln gilt nicht mehr.
+
+Die Spielvorschau soll folgende Inhalte zeigen:
+
+- Wettbewerb, Spieltag, Verein X gegen Verein Y, Ort, Datum, Uhrzeit, Stadionname, Wetter und Schiedsrichter.
+- Letzte Aufstellung des Gegners auf einem Spielfeld mit Spielerbildern, Trainer mit Profilbild, letztes Gegnerergebnis samt Wappen, Form sowie verletzte und gesperrte Gegner inklusive Namen.
+- Letzte Vereinsnews; Top-Torjäger, Notenbester, bester Spieler des letzten Spiels mit Note und wertvollster Spieler, jeweils mit Spielerbild.
+- Stadionfoto, 3D-Stadionmodell und die beiden Heim-/Auswärtstrikots, die die Teams tatsächlich in dieser Begegnung verwenden.
+
+**Why:** Der Nutzer gibt die Informationsanforderungen vor, lässt die Gestaltung frei und verlangt ausdrücklich die Qualität eines AAA-Managers.
+
+**How to apply:** Alle genannten Inhalte berücksichtigen; fehlende Daten nicht durch erfundene Spieler, Ergebnisse oder Bewertungen ersetzen.
+
+Der Kabinenhintergrund muss über die ganze Seite reichen, auch hinter den Kalender. Anschließend dürfen die drei Kacheln größer werden.
+
+**Why:** Der Nutzer beanstandet den sichtbaren Beginn des Kabinenfotos unter dem Kalender und verlangt diese Anpassung vor der weiteren Gestaltung.
+
+**How to apply:** Hintergrund und Objektmaske bei der Vergrößerung weiterhin identisch projizieren. Die Kalenderfunktion darf durch die Hintergrunddarstellung nicht verändert werden.
 
 Stuhl und Tasche im Originalbild unangetastet lassen; nur die darüberliegenden Kacheln an den Objektkonturen maskieren.
 
