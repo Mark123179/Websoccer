@@ -1,0 +1,16 @@
+<article class="club-profile-card partner-profile-card stadium-model-card">
+    <h2 class="club-card-title">3D-Stadion</h2>
+
+    {% if club.pk == 3 %}
+        <div class="stadium-model-viewport">
+            <div class="stadium-model-stage" data-club-stadium-stage></div>
+            <div class="stadium-model-status" data-club-stadium-status role="status" aria-live="polite">
+                Stadion wird geladen …
+            </div>
+        </div>
+    {% else %}
+        <div class="stadium-model-unavailable" role="status">
+            Noch kein 3D-Modell verfügbar.
+        </div>
+    {% endif %}
+</article>

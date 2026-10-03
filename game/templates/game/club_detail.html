@@ -10,7 +10,7 @@
 
 {% block extra_css %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}?v=ghost-37">
+    <link rel="stylesheet" href="{% static 'game/css/club-profile.css' %}?v=ghost-41">
 
 {% endblock %}
 
@@ -28,10 +28,14 @@
         {% include 'game/club_profile/cards/stadium_card.html' %}
         {% include 'game/club_profile/cards/city_card.html' %}
         {% include 'game/club_profile/cards/kits_card.html' %}
-        {% include 'game/club_profile/cards/partner_club_card.html' %}
+        {% include 'game/club_profile/cards/stadium_model_card.html' %}
         {% include 'game/club_profile/cards/news_card.html' %}
     </main>
 </section>
 
-<script src="{% static 'game/js/club-profile.js' %}?v=37" defer></script>
+<script src="{% static 'game/js/club-profile.js' %}?v=41" defer></script>
+{% if club.pk == 3 %}
+<script type="importmap">{"imports":{"three":"{% static 'stadium_editor/stage/vendor/three.module.js' %}"}}</script>
+<script src="{% static 'game/js/club-stadium.js' %}?v=3" data-scene-url="{% static 'stadium_editor/dortmund_editor_scene.js' %}?v=54" defer></script>
+{% endif %}
 {% endblock %}

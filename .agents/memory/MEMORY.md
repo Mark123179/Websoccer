@@ -118,3 +118,4 @@
 - [Dortmund single-side expansion edges](dortmund-single-side-expansion-edges.md) — Endkappen allein schließen Einzel-Ausbau nicht: Rangbreite am freien Ende auf Bestandskante begrenzen; Rundum darf verbreitern.
 - [Dortmund Bestand source attribution](dortmund-bestand-facade-attribution.md) — Gegenseite darf als beschriftete Rekonstruktion geschlossen sein; niemals als Unity-Quelle ausgeben.
 - [WebGL-Screenshot-Falle](software-webgl-screenshots.md) — Leere Preview-Aufnahme ist kein Beweis für defekte Three.js-Szene; Software-WebGL kann separat geprüft werden.
+- [Stadion-Kachel](club-stadium-presentation.md) — Automatische statt manueller Drehung; transparentes Modell über dem ursprünglichen Kachelhintergrund.

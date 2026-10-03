@@ -20,11 +20,17 @@ const shade = name => {
 const url = file => new URL(file, ASSET_BASE).href;
 const sideOrder = ['NORD', 'SUED', 'OST', 'WEST'];
 
-export async function mountDortmundScene({element, onStatus, surroundings, frame: editorFrame}) {
+export async function mountDortmundScene({
+  element, onStatus = () => {}, surroundings, frame: editorFrame,
+  includeSurroundings = true, interactive = true, autoRotate = false, compact = false,
+  transparentBackground = false, compactZoom = 1,
+}) {
   if (!window.WebGLRenderingContext) throw new Error('WebGL ist auf diesem Gerät nicht verfügbar.');
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'high-performance'});
+    renderer = new THREE.WebGLRenderer({
+      antialias: true, powerPreference: 'high-performance', alpha: transparentBackground,
+    });
   } catch (_) {
     throw new Error('WebGL konnte nicht gestartet werden.');
   }
@@ -32,12 +38,15 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
-  renderer.domElement.setAttribute('aria-label', 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung');
+  renderer.domElement.setAttribute('aria-label', interactive
+    ? 'Drehbarer Unity-Mesh-Auszug des Signal Iduna Parks mit vereinfachten Materialien und konzeptioneller Erweiterung'
+    : 'Automatisch rotierende 3D-Ansicht des Signal Iduna Parks');
   element.replaceChildren(renderer.domElement);
   const scene = new THREE.Scene();
   const nightEnvironment = '#030b0d';
-  scene.background = new THREE.Color(nightEnvironment);
-  scene.fog = new THREE.Fog(nightEnvironment, 850, 1800);
+  scene.background = transparentBackground ? null : new THREE.Color(nightEnvironment);
+  scene.fog = transparentBackground ? null : new THREE.Fog(nightEnvironment, 850, 1800);
+  if (transparentBackground) renderer.setClearColor(0x000000, 0);
   const world = new THREE.Group();
   scene.add(world);
   scene.add(new THREE.HemisphereLight(0xe7f1f2, 0x344045, 1.35));
@@ -52,6 +61,37 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
   const geometries = [], textures = [], materials = new Map(), facadeMaterials = new Map();
   const facadeSourceParts = [], roof = [], shell = [];
   let resizeObserver;
+  let animationActive = true, lastAnimationTime = null;
+  const fitCompactCamera = () => {
+    const bounds = new THREE.Box3().setFromObject(world);
+    if (bounds.isEmpty()) return;
+    target.copy(bounds.getCenter(new THREE.Vector3()));
+    const corners = [];
+    for (const x of [bounds.min.x, bounds.max.x])
+      for (const y of [bounds.min.y, bounds.max.y])
+        for (const z of [bounds.min.z, bounds.max.z])
+          corners.push(new THREE.Vector3(x, y, z).sub(target));
+    const tanY = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    const tanX = tanY * camera.aspect;
+    let required = 150;
+    // Fit the entire rotation, not just the initial angle of the small tile.
+    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 16) {
+      const direction = new THREE.Vector3(
+        Math.sin(angle) * Math.cos(elevation), Math.sin(elevation),
+        Math.cos(angle) * Math.cos(elevation));
+      const right = new THREE.Vector3(Math.cos(angle), 0, -Math.sin(angle));
+      const up = new THREE.Vector3(
+        -Math.sin(angle) * Math.sin(elevation), Math.cos(elevation),
+        -Math.cos(angle) * Math.sin(elevation));
+      for (const corner of corners) {
+        const depth = corner.dot(direction);
+        required = Math.max(required,
+          Math.abs(corner.dot(right)) / tanX + depth,
+          Math.abs(corner.dot(up)) / tanY + depth);
+      }
+    }
+    distance = required * 1.10 / compactZoom;
+  };
   const positionCamera = () => {
     camera.position.set(target.x + distance * Math.sin(azimuth) * Math.cos(elevation),
       target.y + distance * Math.sin(elevation),
@@ -64,6 +104,8 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    if (compact) fitCompactCamera();
+    if (!animationActive) render();
   };
   const render = () => { positionCamera(); renderer.render(scene, camera); };
   const controls = renderer.domElement;
@@ -77,11 +119,13 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
     lastX = e.clientX; lastY = e.clientY;
   };
   const wheel = e => { e.preventDefault(); distance = clamp(distance * Math.exp(e.deltaY * .0008), 190, 1300); };
-  controls.addEventListener('pointerdown', down);
-  controls.addEventListener('pointerup', up);
-  controls.addEventListener('pointercancel', up);
-  controls.addEventListener('pointermove', move);
-  controls.addEventListener('wheel', wheel, {passive: false});
+  if (interactive) {
+    controls.addEventListener('pointerdown', down);
+    controls.addEventListener('pointerup', up);
+    controls.addEventListener('pointercancel', up);
+    controls.addEventListener('pointermove', move);
+    controls.addEventListener('wheel', wheel, {passive: false});
+  }
   const dispose = () => {
     disposed = true;
     cancelAnimationFrame(frame);
@@ -105,8 +149,10 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
     if (controls.parentNode === element) element.removeChild(controls);
   };
   try {
-    environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
-    scene.add(environment.group);
+    if (includeSurroundings) {
+      environment = buildDortmundSurroundings(THREE, surroundings, editorFrame);
+      scene.add(environment.group);
+    }
     const [manifestResponse, binaryResponse] = await Promise.all([
       fetch(url('manifest.json')), fetch(url('geometry.bin')),
     ]);
@@ -182,10 +228,24 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
     resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(element); resize();
     onStatus('Unity-Mesh-Auszug + rekonstruierte, nicht quellbelegte Bestandsfassade');
-    const animate = () => { if (disposed) return; render(); frame = requestAnimationFrame(animate); };
-    animate();
+    const animate = timestamp => {
+      if (disposed || !animationActive) return;
+      if (autoRotate && lastAnimationTime !== null)
+        azimuth += Math.min((timestamp - lastAnimationTime) / 1000, .1) * .12;
+      lastAnimationTime = timestamp;
+      render();
+      frame = requestAnimationFrame(animate);
+    };
+    animate(performance.now());
     return {
       kind: 'three', stage: {renderer, render}, dispose,
+      setActive(active) {
+        if (disposed || Boolean(active) === animationActive) return;
+        animationActive = Boolean(active);
+        lastAnimationTime = null;
+        if (animationActive) frame = requestAnimationFrame(animate);
+        else cancelAnimationFrame(frame);
+      },
        update({weights, designColors, roofVisible, fullConcept, cameraPreset, orbit, day, floodlight} = {}) {
         if (disposed) return Promise.resolve();
          facade.group.visible = reconstructedFacadeVisible(facade.group.visible, fullConcept);
@@ -263,7 +323,7 @@ export async function mountDortmundScene({element, onStatus, surroundings, frame
           elevation = clamp(Number(orbit.elevation) * Math.PI / 180, .15, 1.35);
         }
          // Daylight remains a subtle tint; the map environment must retain its dark neon contrast.
-         if (typeof day === 'boolean') {
+          if (typeof day === 'boolean' && !transparentBackground) {
            const environmentColor = day ? '#081719' : nightEnvironment;
            scene.background.set(environmentColor);
            scene.fog.color.set(environmentColor);
